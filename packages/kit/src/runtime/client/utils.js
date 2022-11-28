@@ -26,27 +26,71 @@ export function scroll_state() {
 
 const warned = new WeakSet();
 
+/** @typedef { 'preload-code' | 'preload-data' | 'noscroll' | 'reload' } AnchorShortAttribute */
+/** @typedef { `data-sveltekit-${AnchorShortAttribute}`} AnchorAttribute */
+
+const anchor_attribute_valid_values = /** @type {const} */ ({
+	'data-sveltekit-preload-code': ['', 'off', 'tap', 'hover', 'viewport', 'page'],
+	'data-sveltekit-preload-data': ['', 'off', 'tap', 'hover'],
+	'data-sveltekit-noscroll': ['', 'off'],
+	'data-sveltekit-reload': ['', 'off']
+});
+
+/** @typedef {typeof anchor_attribute_valid_values['data-sveltekit-preload-data'][number]} PreloadDataValidValues */
+/** @typedef {typeof anchor_attribute_valid_values['data-sveltekit-preload-code'][number]} PreloadCodeValidValues */
+/** @typedef {typeof anchor_attribute_valid_values['data-sveltekit-noscroll'][number]} NoscrollValidValues */
+/** @typedef {typeof anchor_attribute_valid_values['data-sveltekit-reload'][number]} ReloadValidValues */
+
 /**
  * @param {Element} element
- * @param {string} name
- * @param {string | null} value
- * @param {string[]} options
+ * @param {T} attributeName
+ * @returns {typeof anchor_attribute_valid_values[T][number] | null}
+ * @template {AnchorAttribute} T
  */
-function validate(element, name, value, options) {
-	if (warned.has(element)) return;
-	if (value === null) return;
-	if (!options.includes(value)) {
-		warned.add(element);
-		console.error(
-			`Unexpected value for ${name} — should be one of ${options
-				.map((option) => JSON.stringify(option))
-				.join(', ')}`,
-			element
-		);
-	}
+function getValidatedAttribute(element, attributeName) {
+	const value = element.getAttribute(attributeName);
+	return validateAttributeValue(element, attributeName, value);
 }
 
-/** @type {Record<string, number>} */
+/**
+ * @param {Element} element
+ * @param {T} attributeName
+ * @param {string | null} value
+ * @returns {typeof anchor_attribute_valid_values[T][number] | null}
+ * @template {AnchorAttribute} T
+ */
+function validateAttributeValue(element, attributeName, value) {
+	// we don't want to waste resources on validation in production
+	if (__SVELTEKIT_DEV__) {
+		if (warned.has(element) || value === null) return null;
+		// @ts-expect-error - includes is dumb
+		if (!anchor_attribute_valid_values[attributeName].includes(value)) {
+			console.error(
+				`Unexpected value for ${attributeName} — should be one of ${anchor_attribute_valid_values[
+					attributeName
+				]
+					.map((option) => JSON.stringify(option))
+					.join(', ')}`,
+				element
+			);
+		}
+	}
+
+	return /** @type {typeof anchor_attribute_valid_values[T][number] | null} */ (value);
+}
+
+/** @typedef {
+		{
+			[key in
+				typeof anchor_attribute_valid_values['data-sveltekit-preload-data'][number]
+				| typeof anchor_attribute_valid_values['data-sveltekit-preload-code'][number]
+			]: number
+		} & {
+			'': number
+		}} Levels
+	*/
+
+/** @type {Levels} */
 const levels = {
 	tap: PRIORITY_TAP,
 	hover: PRIORITY_HOVER,
@@ -67,10 +111,10 @@ export function find_anchor(element, base) {
 	/** @type {string | null} */
 	let noscroll = null;
 
-	/** @type {string | null} */
+	/** @type {typeof anchor_attribute_valid_values['data-sveltekit-preload-code'][number] | null} */
 	let preload_code = null;
 
-	/** @type {string | null} */
+	/** @type {typeof anchor_attribute_valid_values['data-sveltekit-preload-data'][number] | null} */
 	let preload_data = null;
 
 	/** @type {string | null} */
@@ -83,7 +127,8 @@ export function find_anchor(element, base) {
 		}
 
 		if (a) {
-			if (preload_code === null) preload_code = element.getAttribute('data-sveltekit-preload-code');
+			if (preload_code === null)
+				preload_code = getValidatedAttribute(element, 'data-sveltekit-preload-code');
 			if (preload_data === null) preload_data = element.getAttribute('data-sveltekit-preload-data');
 			if (noscroll === null) noscroll = element.getAttribute('data-sveltekit-noscroll');
 			if (reload === null) reload = element.getAttribute('data-sveltekit-reload');
