@@ -47,7 +47,7 @@ const anchor_attribute_valid_values = /** @type {const} */ ({
  * @returns {typeof anchor_attribute_valid_values[T][number] | null}
  * @template {AnchorAttribute} T
  */
-function get_validated_attribute(element, name) {
+function link_option(element, name) {
 	const value = element.getAttribute(name);
 	return __SVELTEKIT_DEV__ ? validate_attribute_value(element, name, value) : value;
 }
@@ -104,12 +104,10 @@ export function find_anchor(element, base) {
 		}
 
 		if (a) {
-			if (preload_code === null)
-				preload_code = get_validated_attribute(element, 'data-sveltekit-preload-code');
-			if (preload_data === null)
-				preload_data = get_validated_attribute(element, 'data-sveltekit-preload-data');
-			if (noscroll === null) noscroll = get_validated_attribute(element, 'data-sveltekit-noscroll');
-			if (reload === null) reload = get_validated_attribute(element, 'data-sveltekit-reload');
+			if (preload_code === null) preload_code = link_option(element, 'data-sveltekit-preload-code');
+			if (preload_data === null) preload_data = link_option(element, 'data-sveltekit-preload-data');
+			if (noscroll === null) noscroll = link_option(element, 'data-sveltekit-noscroll');
+			if (reload === null) reload = link_option(element, 'data-sveltekit-reload');
 		}
 
 		// @ts-expect-error handle shadow roots
