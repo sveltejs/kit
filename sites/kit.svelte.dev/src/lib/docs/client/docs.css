@@ -342,6 +342,7 @@ pre.language-diff code {
 
 .ts-block-property > .code-block {
 	margin: 0;
+	padding-left: 1rem;
 	border-radius: 0;
 	box-shadow: none;
 	/* background: var(--back-light); */
@@ -357,17 +358,21 @@ pre.language-diff code {
 }
 
 .ts-block-property-children {
-	margin: 1rem -1rem 2rem 1rem;
+	margin: 0rem -1rem 0rem 1rem;
 }
 
 .ts-block-property-children .ts-block-property > .code-block {
-	border: none;
+	/* border: none; */
 }
 
 .ts-block-property-bullets .tag {
 	font-size: 1.4rem;
 	text-transform: uppercase;
 	color: #666;
+}
+
+.ts-block-property ul:last-child {
+	margin-bottom: 0;
 }
 
 /* we need to have a come-to-jesus moment about the site-kit css */
