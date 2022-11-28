@@ -8,10 +8,7 @@
 		"target": "esnext",
 		"skipLibCheck": true,
 		"moduleResolution": "node16",
-		"baseUrl": ".",
-		"paths": {
-			"@sveltejs/kit": ["../kit/types/index"]
-		}
+		"baseUrl": "."
 	},
 	"include": ["**/*.js"]
 }
