@@ -45,7 +45,9 @@ function link_option(element, name) {
 		element.getAttribute(`data-sveltekit-${name}`)
 	);
 
-	return __SVELTEKIT_DEV__ ? validate_link_option(element, name, value) : value;
+	if (__SVELTEKIT_DEV__) validate_link_option(element, name, value);
+
+	return value;
 }
 
 /**
@@ -56,19 +58,19 @@ function link_option(element, name) {
  * @param {U} value
  */
 function validate_link_option(element, name, value) {
-	if (warned.has(element) || value === null) return /** @type {U} */ (null);
+	if (value === null) return;
 
 	// @ts-expect-error - includes is dumb
-	if (!valid_link_options[name].includes(value)) {
+	if (!warned.has(element) && !valid_link_options[name].includes(value)) {
 		console.error(
 			`Unexpected value for ${name} — should be one of ${valid_link_options[name]
 				.map((option) => JSON.stringify(option))
 				.join(', ')}`,
 			element
 		);
-	}
 
-	return value;
+		warned.add(element);
+	}
 }
 
 const levels = {
