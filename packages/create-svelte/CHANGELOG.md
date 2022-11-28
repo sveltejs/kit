@@ -1,5 +1,11 @@
 # create-svelte
 
+## 2.0.0-next.196
+
+### Patch Changes
+
+- Update app.d.ts files ([#7003](https://github.com/sveltejs/kit/pull/7003))
+
 ## 2.0.0-next.195
 
 ### Patch Changes
