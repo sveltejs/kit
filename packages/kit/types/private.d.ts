@@ -152,6 +152,9 @@ export interface Logger {
 export type MaybePromise<T> = T | Promise<T>;
 
 export interface Prerendered {
+	/**
+	 * A map of `path` to `{ file }` objects, where a path like `/foo` corresponds to `foo.html` and a path like `/bar/` corresponds to `bar/index.html`.
+	 */
 	pages: Map<
 		string,
 		{
@@ -159,6 +162,9 @@ export interface Prerendered {
 			file: string;
 		}
 	>;
+	/**
+	 * A map of `path` to `{ type }` objects.
+	 */
 	assets: Map<
 		string,
 		{
@@ -166,6 +172,9 @@ export interface Prerendered {
 			type: string;
 		}
 	>;
+	/**
+	 * A map of redirects encountered during prerendering.
+	 */
 	redirects: Map<
 		string,
 		{

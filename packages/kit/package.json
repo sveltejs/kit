@@ -53,11 +53,10 @@
 		"!src/core/**/test",
 		"types",
 		"svelte-kit.js",
-		"postinstall.js",
-		"scripts/special-types"
+		"postinstall.js"
 	],
 	"scripts": {
-		"build": "pnpm types",
+		"build": "echo \"TODO remove build script from packages/kit\"",
 		"lint": "prettier --check . --config ../../.prettierrc --ignore-path .gitignore",
 		"check": "tsc",
 		"check:all": "tsc && pnpm -r --filter=\"./**\" check",
@@ -66,7 +65,6 @@
 		"test": "pnpm test:unit && pnpm test:integration",
 		"test:integration": "pnpm -r --workspace-concurrency 1 --filter=\"./test/**\" test",
 		"test:unit": "uvu src \"(spec\\.js|test[\\\\/]index\\.js)\"",
-		"types": "node scripts/extract-types.js",
 		"postinstall": "node postinstall.js"
 	},
 	"exports": {

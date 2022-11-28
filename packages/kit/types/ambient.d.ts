@@ -5,10 +5,9 @@
  * /// <reference types="@sveltejs/kit" />
  *
  * declare namespace App {
+ * 	interface Error {}
  * 	interface Locals {}
- *
  * 	interface PageData {}
- *
  * 	interface Platform {}
  * }
  * ```
@@ -65,11 +64,6 @@ declare namespace App {
 	export interface Platform {}
 }
 
-/**
- * ```ts
- * import { browser, building, dev, version } from '$app/environment';
- * ```
- */
 declare module '$app/environment' {
 	/**
 	 * `true` if the app is running in the browser.
@@ -92,17 +86,14 @@ declare module '$app/environment' {
 	export const version: string;
 }
 
-/**
- * ```ts
- * import { enhance, applyAction } from '$app/forms';
- * ```
- */
 declare module '$app/forms' {
 	import type { ActionResult } from '@sveltejs/kit';
 
 	type MaybePromise<T> = T | Promise<T>;
 
-	export type SubmitFunction<
+	// this is duplicated in @sveltejs/kit because create-svelte tests fail
+	// if we use the imported version. TODO investigate
+	type SubmitFunction<
 		Success extends Record<string, unknown> | undefined = Record<string, any>,
 		Invalid extends Record<string, unknown> | undefined = Record<string, any>
 	> = (input: {
@@ -166,9 +157,10 @@ declare module '$app/forms' {
 	/**
 	 * Use this function to deserialize the response from a form submission.
 	 * Usage:
-	 * ```
-	 * const res = await fetch('/form?/action', { method: 'POST', body: formData });
-	 * const result = deserialize(await res.text());
+	 *
+	 * ```js
+	 * const response = await fetch('/form?/action', { method: 'POST', body: formData });
+	 * const result = deserialize(await response.text());
 	 * ```
 	 */
 	export function deserialize<
@@ -177,20 +169,6 @@ declare module '$app/forms' {
 	>(serialized: string): ActionResult<Success, Invalid>;
 }
 
-/**
- * ```ts
- * import {
- * 	afterNavigate,
- * 	beforeNavigate,
- * 	disableScrollHandling,
- * 	goto,
- * 	invalidate,
- * 	invalidateAll,
- * 	preloadCode,
- * 	preloadData
- * } from '$app/navigation';
- * ```
- */
 declare module '$app/navigation' {
 	import { BeforeNavigate, AfterNavigate } from '@sveltejs/kit';
 
@@ -291,11 +269,6 @@ declare module '$app/navigation' {
 	export function afterNavigate(callback: (navigation: AfterNavigate) => void): void;
 }
 
-/**
- * ```ts
- * import { base, assets } from '$app/paths';
- * ```
- */
 declare module '$app/paths' {
 	/**
 	 * A string that matches [`config.kit.paths.base`](https://kit.svelte.dev/docs/configuration#paths).
@@ -312,10 +285,6 @@ declare module '$app/paths' {
 }
 
 /**
- * ```ts
- * import { getStores, navigating, page, updated } from '$app/stores';
- * ```
- *
  * Stores on the server are _contextual_ — they are added to the [context](https://svelte.dev/tutorial/context-api) of your root component. This means that `page` is unique to each request, rather than shared between multiple requests handled by the same server simultaneously.
  *
  * Because of that, you must subscribe to the stores during component initialization (which happens automatically if you reference the store value, e.g. as `$page`, in a component) before you can use them.
@@ -353,10 +322,6 @@ declare module '$app/stores' {
 }
 
 /**
- * ```ts
- * import { build, files, prerendered, version } from '$service-worker';
- * ```
- *
  * This module is only available to [service workers](https://kit.svelte.dev/docs/service-workers).
  */
 declare module '$service-worker' {
@@ -387,10 +352,9 @@ declare module '@sveltejs/kit/hooks' {
 	 * A helper function for sequencing multiple `handle` calls in a middleware-like manner.
 	 *
 	 * ```js
-	 * /// file: src/hooks.js
+	 * /// file: src/hooks.server.js
 	 * import { sequence } from '@sveltejs/kit/hooks';
 	 *
-	 * /** @type {import('@sveltejs/kit').Handle} *\/
 	 * async function first({ event, resolve }) {
 	 * 	console.log('first pre-processing');
 	 * 	const result = await resolve(event, {
@@ -404,7 +368,6 @@ declare module '@sveltejs/kit/hooks' {
 	 * 	return result;
 	 * }
 	 *
-	 * /** @type {import('@sveltejs/kit').Handle} *\/
 	 * async function second({ event, resolve }) {
 	 * 	console.log('second pre-processing');
 	 * 	const result = await resolve(event, {
