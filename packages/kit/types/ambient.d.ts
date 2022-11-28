@@ -64,11 +64,6 @@ declare namespace App {
 	export interface Platform {}
 }
 
-/**
- * ```ts
- * import { browser, building, dev, version } from '$app/environment';
- * ```
- */
 declare module '$app/environment' {
 	/**
 	 * `true` if the app is running in the browser.
@@ -91,11 +86,6 @@ declare module '$app/environment' {
 	export const version: string;
 }
 
-/**
- * ```ts
- * import { enhance, applyAction } from '$app/forms';
- * ```
- */
 declare module '$app/forms' {
 	import type { ActionResult, SubmitFunction } from '@sveltejs/kit';
 
@@ -152,20 +142,6 @@ declare module '$app/forms' {
 	>(serialized: string): ActionResult<Success, Invalid>;
 }
 
-/**
- * ```ts
- * import {
- * 	afterNavigate,
- * 	beforeNavigate,
- * 	disableScrollHandling,
- * 	goto,
- * 	invalidate,
- * 	invalidateAll,
- * 	prefetch,
- * 	prefetchRoutes
- * } from '$app/navigation';
- * ```
- */
 declare module '$app/navigation' {
 	import { BeforeNavigate, AfterNavigate } from '@sveltejs/kit';
 
@@ -267,11 +243,6 @@ declare module '$app/navigation' {
 	export function afterNavigate(callback: (navigation: AfterNavigate) => void): void;
 }
 
-/**
- * ```ts
- * import { base, assets } from '$app/paths';
- * ```
- */
 declare module '$app/paths' {
 	/**
 	 * A string that matches [`config.kit.paths.base`](https://kit.svelte.dev/docs/configuration#paths).
@@ -288,10 +259,6 @@ declare module '$app/paths' {
 }
 
 /**
- * ```ts
- * import { getStores, navigating, page, updated } from '$app/stores';
- * ```
- *
  * Stores on the server are _contextual_ — they are added to the [context](https://svelte.dev/tutorial/context-api) of your root component. This means that `page` is unique to each request, rather than shared between multiple requests handled by the same server simultaneously.
  *
  * Because of that, you must subscribe to the stores during component initialization (which happens automatically if you reference the store value, e.g. as `$page`, in a component) before you can use them.
@@ -329,10 +296,6 @@ declare module '$app/stores' {
 }
 
 /**
- * ```ts
- * import { build, files, prerendered, version } from '$service-worker';
- * ```
- *
  * This module is only available to [service workers](https://kit.svelte.dev/docs/service-workers).
  */
 declare module '$service-worker' {

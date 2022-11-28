@@ -1,5 +1,55 @@
 import { modules } from './type-info.js';
 
+/** @param {string} content */
+export function replace_placeholders(content) {
+	return content
+		.replace(/> TYPES: (.+)/g, (_, name) => {
+			const module = modules.find((module) => module.name === name);
+			const { types } = module;
+
+			return `${module.comment}\n\n${types
+				.map((type) => {
+					const markdown =
+						`<div class="ts-block">${fence(type.snippet)}` +
+						type.children.map(stringify).join('\n\n') +
+						`</div>`;
+					return `#### ${type.name}\n\n${type.comment}\n\n${markdown}`;
+				})
+				.join('\n\n')}`;
+		})
+		.replace('> MODULES', () => {
+			return modules
+				.map((module) => {
+					if (module.exports.length === 0 && !module.exempt) return '';
+
+					let import_block = '';
+
+					if (module.exports.length > 0) {
+						// deduplication is necessary for now, because of `error()` overload
+						const exports = Array.from(new Set(module.exports.map((x) => x.name)));
+
+						let declaration = `import { ${exports.join(', ')} } from '${module.name}';`;
+						if (declaration.length > 80) {
+							declaration = `import {\n\t${exports.join(',\n\t')}\n} from '${module.name}';`;
+						}
+
+						import_block = fence(declaration, 'js');
+					}
+
+					return `### ${module.name}\n\n${import_block}\n\n${module.comment}\n\n${module.exports
+						.map((type) => {
+							const markdown =
+								`<div class="ts-block">${fence(type.snippet)}` +
+								type.children.map(stringify).join('\n\n') +
+								`</div>`;
+							return `#### ${type.name}\n\n${type.comment}\n\n${markdown}`;
+						})
+						.join('\n\n')}`;
+				})
+				.join('\n\n');
+		});
+}
+
 /** @param {'types' | 'exports'} kind */
 export function render(kind) {
 	return modules

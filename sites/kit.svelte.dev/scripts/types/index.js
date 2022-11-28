@@ -96,8 +96,6 @@ function get_types(code, statements) {
 					.replace(/\s*(\/\*…\*\/)\s*/g, '/*…*/')
 					.trim();
 
-				// let markdown = `<div class="ts-block">${fence(snippet)}` + children.join('\n\n') + `</div>`;
-
 				const collection =
 					ts.isVariableStatement(statement) || ts.isFunctionDeclaration(statement)
 						? exports
@@ -215,7 +213,7 @@ function read_d_ts_file(file) {
 
 	modules.push({
 		name: '@sveltejs/kit',
-		comment: 'The following can be imported from `@sveltejs/kit`:',
+		comment: '',
 		...get_types(code, node.statements)
 	});
 }
@@ -225,9 +223,8 @@ function read_d_ts_file(file) {
 	const node = ts.createSourceFile('private.d.ts', code, ts.ScriptTarget.Latest, true);
 
 	modules.push({
-		name: 'Additional types',
-		comment:
-			'The following are referenced by the public types documented above, but cannot be imported directly:',
+		name: 'Private types',
+		comment: '',
 		...get_types(code, node.statements)
 	});
 }

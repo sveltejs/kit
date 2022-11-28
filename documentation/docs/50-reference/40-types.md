@@ -2,7 +2,17 @@
 title: Types
 ---
 
-**TYPES**
+### Public types
+
+The following types can be imported from `@sveltejs/kit`:
+
+> TYPES: @sveltejs/kit
+
+### Private types
+
+The following are referenced by the public types documented above, but cannot be imported directly:
+
+> TYPES: Private types
 
 ### Generated types
 
@@ -141,3 +151,7 @@ Others are required for SvelteKit to work properly, and should also be left unto
 	}
 }
 ```
+
+### App
+
+> TYPES: App
