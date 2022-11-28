@@ -80,12 +80,36 @@ const levels = {
 
 /**
  * @param {Element} element
+ * @returns {Element | null}
+ */
+function parent_element(element) {
+	let parent = element.assignedSlot ?? element.parentNode;
+
+	// @ts-expect-error handle shadow roots
+	if (parent?.nodeType === 11) parent = parent.host;
+
+	return /** @type {Element} */ (parent);
+}
+
+/**
+ * @param {Element} element
+ * @param {Element} target
+ */
+export function find_anchor(element, target) {
+	while (element !== target) {
+		if (element.nodeName.toUpperCase() === 'A') {
+			return /** @type {HTMLAnchorElement | SVGAElement} */ (element);
+		}
+
+		element = /** @type {Element} */ (parent_element(element));
+	}
+}
+
+/**
+ * @param {HTMLAnchorElement | SVGAElement} a
  * @param {string} base
  */
-export function find_anchor(element, base) {
-	/** @type {HTMLAnchorElement | SVGAElement | undefined} */
-	let a;
-
+export function get_link_options(a, base) {
 	/** @type {typeof valid_link_options['noscroll'][number] | null} */
 	let noscroll = null;
 
@@ -98,24 +122,16 @@ export function find_anchor(element, base) {
 	/** @type {typeof valid_link_options['reload'][number] | null} */
 	let reload = null;
 
+	/** @type {Element} */
+	let element = a;
+
 	while (element !== document.documentElement) {
-		if (!a && element.nodeName.toUpperCase() === 'A') {
-			// SVG <a> elements have a lowercase name
-			a = /** @type {HTMLAnchorElement | SVGAElement} */ (element);
-		}
+		if (preload_code === null) preload_code = link_option(element, 'preload-code');
+		if (preload_data === null) preload_data = link_option(element, 'preload-data');
+		if (noscroll === null) noscroll = link_option(element, 'noscroll');
+		if (reload === null) reload = link_option(element, 'reload');
 
-		if (a) {
-			if (preload_code === null) preload_code = link_option(element, 'preload-code');
-			if (preload_data === null) preload_data = link_option(element, 'preload-data');
-			if (noscroll === null) noscroll = link_option(element, 'noscroll');
-			if (reload === null) reload = link_option(element, 'reload');
-		}
-
-		// @ts-expect-error handle shadow roots
-		element = element.assignedSlot ?? element.parentNode;
-
-		// @ts-expect-error handle shadow roots
-		if (element.nodeType === 11) element = element.host;
+		element = /** @type {Element} */ (parent_element(element));
 	}
 
 	/** @type {URL | undefined} */

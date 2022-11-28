@@ -6,7 +6,13 @@ import {
 	normalize_path,
 	add_data_suffix
 } from '../../utils/url.js';
-import { find_anchor, get_base_uri, is_external_url, scroll_state } from './utils.js';
+import {
+	find_anchor,
+	get_base_uri,
+	get_link_options,
+	is_external_url,
+	scroll_state
+} from './utils.js';
 import {
 	lock_fetch,
 	unlock_fetch,
@@ -1221,7 +1227,10 @@ export function create_client({ target, base }) {
 		 * @param {number} priority
 		 */
 		function preload(element, priority) {
-			const { url, options, external } = find_anchor(element, base);
+			const a = find_anchor(element, target);
+			if (!a) return;
+
+			const { url, options, external } = get_link_options(a, base);
 
 			if (!external) {
 				if (priority <= options.preload_data) {
@@ -1236,7 +1245,7 @@ export function create_client({ target, base }) {
 			observer.disconnect();
 
 			for (const a of target.querySelectorAll('a')) {
-				const { url, external, options } = find_anchor(a, base);
+				const { url, external, options } = get_link_options(a, base);
 
 				if (external) continue;
 
@@ -1444,11 +1453,11 @@ export function create_client({ target, base }) {
 				if (event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
 				if (event.defaultPrevented) return;
 
-				const { a, url, options, has } = find_anchor(
-					/** @type {Element} */ (event.composedPath()[0]),
-					base
-				);
-				if (!a || !url) return;
+				const a = find_anchor(/** @type {Element} */ (event.composedPath()[0]), target);
+				if (!a) return;
+
+				const { url, options, has } = get_link_options(a, base);
+				if (!url) return;
 
 				const is_svg_a_element = a instanceof SVGAElement;
 
