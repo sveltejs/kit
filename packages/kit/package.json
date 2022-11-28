@@ -28,16 +28,16 @@
 		"@types/connect": "^3.4.35",
 		"@types/marked": "^4.0.7",
 		"@types/mime": "^3.0.1",
-		"@types/node": "^16.11.68",
+		"@types/node": "^16.18.3",
 		"@types/sade": "^1.7.4",
 		"@types/set-cookie-parser": "^2.4.2",
-		"marked": "^4.2.2",
+		"marked": "^4.2.3",
 		"rollup": "^2.79.1",
-		"svelte": "^3.52.0",
+		"svelte": "^3.53.1",
 		"svelte-preprocess": "^4.10.7",
-		"typescript": "^4.8.4",
+		"typescript": "^4.9.3",
 		"uvu": "^0.5.6",
-		"vite": "^3.2.1"
+		"vite": "^3.2.4"
 	},
 	"peerDependencies": {
 		"svelte": "^3.44.0",
