@@ -26,20 +26,14 @@ export function scroll_state() {
 
 const warned = new WeakSet();
 
-/** @typedef { 'preload-code' | 'preload-data' | 'noscroll' | 'reload' } AnchorShortAttribute */
-/** @typedef { `data-sveltekit-${AnchorShortAttribute}`} LinkOptionName */
+/** @typedef {keyof typeof valid_link_options} LinkOptionName */
 
 const valid_link_options = /** @type {const} */ ({
-	'data-sveltekit-preload-code': ['', 'off', 'tap', 'hover', 'viewport', 'page'],
-	'data-sveltekit-preload-data': ['', 'off', 'tap', 'hover'],
-	'data-sveltekit-noscroll': ['', 'off'],
-	'data-sveltekit-reload': ['', 'off']
+	'preload-code': ['', 'off', 'tap', 'hover', 'viewport', 'page'],
+	'preload-data': ['', 'off', 'tap', 'hover'],
+	noscroll: ['', 'off'],
+	reload: ['', 'off']
 });
-
-/** @typedef {typeof valid_link_options['data-sveltekit-preload-data'][number]} PreloadDataValidValues */
-/** @typedef {typeof valid_link_options['data-sveltekit-preload-code'][number]} PreloadCodeValidValues */
-/** @typedef {typeof valid_link_options['data-sveltekit-noscroll'][number]} NoscrollValidValues */
-/** @typedef {typeof valid_link_options['data-sveltekit-reload'][number]} ReloadValidValues */
 
 /**
  * @template {LinkOptionName} T
@@ -49,7 +43,7 @@ const valid_link_options = /** @type {const} */ ({
  * @returns {U}
  */
 function link_option(element, name) {
-	const value = /** @type {U} */ (element.getAttribute(name));
+	const value = /** @type {U} */ (element.getAttribute(`data-sveltekit-${name}`));
 	return __SVELTEKIT_DEV__ ? validate_attribute_value(element, name, value) : value;
 }
 
@@ -90,16 +84,16 @@ export function find_anchor(element, base) {
 	/** @type {HTMLAnchorElement | SVGAElement | undefined} */
 	let a;
 
-	/** @type {NoscrollValidValues | null} */
+	/** @type {typeof valid_link_options['noscroll'][number] | null} */
 	let noscroll = null;
 
-	/** @type {PreloadCodeValidValues | null} */
+	/** @type {typeof valid_link_options['preload-code'][number] | null} */
 	let preload_code = null;
 
-	/** @type {PreloadDataValidValues | null} */
+	/** @type {typeof valid_link_options['preload-data'][number] | null} */
 	let preload_data = null;
 
-	/** @type {ReloadValidValues | null} */
+	/** @type {typeof valid_link_options['reload'][number] | null} */
 	let reload = null;
 
 	while (element !== document.documentElement) {
@@ -109,10 +103,10 @@ export function find_anchor(element, base) {
 		}
 
 		if (a) {
-			if (preload_code === null) preload_code = link_option(element, 'data-sveltekit-preload-code');
-			if (preload_data === null) preload_data = link_option(element, 'data-sveltekit-preload-data');
-			if (noscroll === null) noscroll = link_option(element, 'data-sveltekit-noscroll');
-			if (reload === null) reload = link_option(element, 'data-sveltekit-reload');
+			if (preload_code === null) preload_code = link_option(element, 'preload-code');
+			if (preload_data === null) preload_data = link_option(element, 'preload-data');
+			if (noscroll === null) noscroll = link_option(element, 'noscroll');
+			if (reload === null) reload = link_option(element, 'reload');
 		}
 
 		// @ts-expect-error handle shadow roots
