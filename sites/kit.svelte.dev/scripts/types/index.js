@@ -65,7 +65,7 @@ function get_types(code, statements) {
 				if (ts.isInterfaceDeclaration(statement)) {
 					if (statement.members.length > 0) {
 						for (const member of statement.members) {
-							children.push(stringify_type_element(member));
+							children.push(munge_type_element(member));
 						}
 
 						// collapse `interface Foo {/* lots of stuff*/}` into `interface Foo {…}`
@@ -96,14 +96,14 @@ function get_types(code, statements) {
 					.replace(/\s*(\/\*…\*\/)\s*/g, '/*…*/')
 					.trim();
 
-				let markdown = `<div class="ts-block">${fence(snippet)}` + children.join('\n\n') + `</div>`;
+				// let markdown = `<div class="ts-block">${fence(snippet)}` + children.join('\n\n') + `</div>`;
 
 				const collection =
 					ts.isVariableStatement(statement) || ts.isFunctionDeclaration(statement)
 						? exports
 						: types;
 
-				collection.push({ name, comment, markdown });
+				collection.push({ name, comment, snippet, children });
 			}
 		}
 
@@ -112,6 +112,75 @@ function get_types(code, statements) {
 	}
 
 	return { types, exports };
+}
+
+/**
+ * @param {ts.TypeElement} member
+ */
+function munge_type_element(member, depth = 1) {
+	// @ts-ignore
+	const doc = member.jsDoc?.[0];
+
+	/** @type {string} */
+	const children = [];
+
+	const name = member.name?.escapedText;
+	let snippet = member.getText();
+
+	for (let i = 0; i < depth; i += 1) {
+		snippet = snippet.replace(/^\t/gm, '');
+	}
+
+	if (
+		ts.isPropertySignature(member) &&
+		ts.isTypeLiteralNode(member.type) &&
+		member.type.members.some((member) => member.jsDoc?.[0].comment)
+	) {
+		let a = 0;
+		while (snippet[a] !== '{') a += 1;
+
+		snippet = snippet.slice(0, a + 1) + '/*…*/}';
+
+		for (const child of member.type.members) {
+			children.push(munge_type_element(child, depth + 1));
+		}
+	}
+
+	/** @type {string[]} */
+	const bullets = [];
+
+	for (const tag of doc?.tags ?? []) {
+		const type = tag.tagName.escapedText;
+
+		switch (tag.tagName.escapedText) {
+			case 'param':
+				bullets.push(`- \`${tag.name.getText()}\` ${tag.comment}`);
+				break;
+
+			case 'default':
+				bullets.push(`- <span class="tag">default</span> \`${tag.comment}\``);
+				break;
+
+			case 'returns':
+				bullets.push(`- <span class="tag">returns</span> ${tag.comment}`);
+				break;
+
+			default:
+				console.log(`unhandled JSDoc tag: ${type}`); // TODO indicate deprecated stuff
+		}
+	}
+
+	return {
+		name,
+		snippet,
+		comment: (doc?.comment ?? '')
+			.replace(/\/\/\/ type: (.+)/g, '/** @type {$1} */')
+			.replace(/^(  )+/gm, (match, spaces) => {
+				return '\t'.repeat(match.length / 2);
+			}),
+		bullets,
+		children
+	};
 }
 
 /**

@@ -1,8 +1,8 @@
 import fs from 'fs';
 import path from 'path';
 import glob from 'tiny-glob/sync.js';
-import { extract_frontmatter, transform } from '../docs/server/markdown';
-import { render_modules } from '../docs/server/modules';
+import { extract_frontmatter, transform } from '../docs/server/markdown.js';
+import { render } from '../docs/server/render.js';
 import { slugify } from '../docs/server';
 
 const categories = [
@@ -36,8 +36,8 @@ export function content() {
 			const filepath = `../../documentation/${category.slug}/${file}`;
 			const markdown = fs
 				.readFileSync(filepath, 'utf-8')
-				.replace('**TYPES**', () => render_modules('types'))
-				.replace('**EXPORTS**', () => render_modules('exports'));
+				.replace('**TYPES**', () => render('types'))
+				.replace('**EXPORTS**', () => render('exports'));
 
 			const { body, metadata } = extract_frontmatter(markdown);
 

@@ -8,7 +8,7 @@ import 'prismjs/components/prism-typescript.js';
 import 'prism-svelte';
 import { escape, extract_frontmatter, transform } from './markdown.js';
 import { modules } from './type-info.js';
-import { render_modules } from './modules.js';
+import { render } from './render.js';
 import { parse_route_id } from '../../../../../../packages/kit/src/utils/routing.js';
 import ts from 'typescript';
 import MagicString from 'magic-string';
@@ -63,8 +63,8 @@ export async function read_file(file) {
 
 	const markdown = fs
 		.readFileSync(`${base}/${file}`, 'utf-8')
-		.replace('**TYPES**', () => render_modules('types'))
-		.replace('**EXPORTS**', () => render_modules('exports'));
+		.replace('**TYPES**', () => render('types'))
+		.replace('**EXPORTS**', () => render('exports'));
 
 	const highlighter = await createShikiHighlighter({ theme: 'css-variables' });
 
