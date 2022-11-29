@@ -1168,3 +1168,22 @@ test.describe('cookies', () => {
 		await expect(page.locator('p')).toHaveText('foo=bar');
 	});
 });
+
+test.describe('Interactivity', () => {
+	test('click events on removed elements are ignored', async ({ page }) => {
+		let errored = false;
+
+		page.on('pageerror', (err) => {
+			console.error(err);
+			errored = true;
+		});
+
+		await page.goto('/interactivity/toggle-element');
+		expect(await page.textContent('button')).toBe('remove');
+
+		await page.click('button');
+		expect(await page.textContent('button')).toBe('add');
+
+		expect(errored).toBe(false);
+	});
+});

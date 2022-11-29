@@ -98,24 +98,26 @@ export function find_anchor(element, base) {
 	/** @type {typeof valid_link_options['reload'][number] | null} */
 	let reload = null;
 
-	while (element !== document.documentElement) {
-		if (!a && element.nodeName.toUpperCase() === 'A') {
-			// SVG <a> elements have a lowercase name
-			a = /** @type {HTMLAnchorElement | SVGAElement} */ (element);
+	if (document.contains(element)) {
+		while (element !== document.documentElement) {
+			if (!a && element.nodeName.toUpperCase() === 'A') {
+				// SVG <a> elements have a lowercase name
+				a = /** @type {HTMLAnchorElement | SVGAElement} */ (element);
+			}
+
+			if (a) {
+				if (preload_code === null) preload_code = link_option(element, 'preload-code');
+				if (preload_data === null) preload_data = link_option(element, 'preload-data');
+				if (noscroll === null) noscroll = link_option(element, 'noscroll');
+				if (reload === null) reload = link_option(element, 'reload');
+			}
+
+			// @ts-expect-error handle shadow roots
+			element = element.assignedSlot ?? element.parentNode;
+
+			// @ts-expect-error handle shadow roots
+			if (element.nodeType === 11) element = element.host;
 		}
-
-		if (a) {
-			if (preload_code === null) preload_code = link_option(element, 'preload-code');
-			if (preload_data === null) preload_data = link_option(element, 'preload-data');
-			if (noscroll === null) noscroll = link_option(element, 'noscroll');
-			if (reload === null) reload = link_option(element, 'reload');
-		}
-
-		// @ts-expect-error handle shadow roots
-		element = element.assignedSlot ?? element.parentNode;
-
-		// @ts-expect-error handle shadow roots
-		if (element.nodeType === 11) element = element.host;
 	}
 
 	/** @type {URL | undefined} */
