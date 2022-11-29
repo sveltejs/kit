@@ -31,6 +31,9 @@ export async function dev(vite, vite_config, svelte_config) {
 	// @ts-expect-error
 	globalThis.__SVELTEKIT_BROWSER__ = false;
 
+	// @ts-expect-error
+	globalThis.__SVELTEKIT_DEV__ = true;
+
 	sync.init(svelte_config, vite_config.mode);
 
 	/** @type {import('types').Respond} */
@@ -102,6 +105,7 @@ export async function dev(vite, vite_config, svelte_config) {
 							module_nodes.push(module_node);
 
 							result.shared = module;
+							result.shared_id = node.shared;
 						}
 
 						if (node.server) {
@@ -163,7 +167,8 @@ export async function dev(vite, vite_config, svelte_config) {
 										const url = path.resolve(cwd, endpoint.file);
 										return await vite.ssrLoadModule(url);
 								  }
-								: null
+								: null,
+							endpoint_id: endpoint?.file
 						};
 					})
 				),
