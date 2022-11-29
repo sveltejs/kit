@@ -10,7 +10,7 @@ html {
 body {
 	font-size: 1.6rem;
 	font-family: var(--font);
-	line-height: var(--lh);
+	line-height: 1.5;
 	color: var(--text);
 	background-color: var(--back);
 }
@@ -56,12 +56,9 @@ h3,
 h4,
 h5,
 h6 {
-	line-height: 1.25;
+	font-weight: 400;
+	line-height: 1.35;
 	color: var(--heading);
-}
-
-h3 {
-	font-weight: 300;
 }
 
 p,

@@ -18,21 +18,23 @@
 	<meta name="description" content="Frequently asked questions about SvelteKit" />
 </svelte:head>
 
-<div class="faqs stretch">
+<div class="faqs">
 	<h1>Frequently Asked Questions</h1>
-	{#each data.sections as faq}
-		<article class="faq">
-			<h2 id={faq.slug}>
-				{faq.title}
-				<Permalink href="#{faq.slug}" />
-			</h2>
-			{@html faq.content}
-		</article>
-	{/each}
-	<p>
-		See also the <a href="https://svelte.dev/faq" rel="external">Svelte FAQ</a> for questions relating
-		to Svelte directly.
-	</p>
+	<div class="faqs-content listify">
+		{#each data.sections as faq}
+			<article class="faq">
+				<h2 id={faq.slug}>
+					{faq.title}
+					<Permalink href="#{faq.slug}" />
+				</h2>
+				{@html faq.content}
+			</article>
+		{/each}
+		<p>
+			See also the <a href="https://svelte.dev/faq" rel="external">Svelte FAQ</a> for questions relating
+			to Svelte directly.
+		</p>
+	</div>
 </div>
 
 <style>
@@ -41,9 +43,15 @@
 		grid-gap: 1em;
 		min-height: calc(100vh - var(--nav-h));
 		padding: var(--top-offset) var(--side-nav) 6rem var(--side-nav);
-		max-width: var(--main-width);
+		/* max-width: var(--sk-line-max-width); */
 		margin: 0 auto;
 		tab-size: 2;
+	}
+
+	h1,
+	.faqs-content {
+		max-width: var(--sk-line-max-width);
+		margin: 0 auto;
 	}
 
 	.faqs :global(.anchor) {
@@ -85,7 +93,7 @@
 		padding-bottom: 0.2rem;
 		color: var(--text);
 		/* max-width: 24em; */
-		font-size: var(--h3);
+		/* font-size: var(--h3); */
 		font-weight: 400;
 		border-bottom: 1px solid #ddd;
 	}
@@ -93,7 +101,7 @@
 	.faqs :global(h3) {
 		font-family: inherit;
 		font-weight: 600;
-		font-size: 2rem;
+		/* font-size: 2rem; */
 		color: var(--second);
 		margin: 2rem 0 1.6rem 0;
 		padding-left: 0;
@@ -111,21 +119,6 @@
 	/* TODO this page must be missing some styles from somewhere. the whole thing needs tidying up */
 	.faqs :global(a) :global(code) {
 		color: var(--prime);
-	}
-
-	.faq:first-child {
-		margin: 2rem 0;
-		padding-bottom: 4rem;
-		border-bottom: var(--border-w) solid #6767785b; /* based on --second */
-	}
-	.faq:first-child h2 {
-		font-size: 4rem;
-		font-weight: 400;
-		color: var(--second);
-	}
-
-	:global(.faqs .faq ul) {
-		margin-left: 3.2rem;
 	}
 
 	@media (max-width: 768px) {

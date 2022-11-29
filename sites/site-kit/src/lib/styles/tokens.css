@@ -1,54 +1,83 @@
 :root {
 	/* colors */
-	--back: #ffffff;
-	--back-light: #f6fafd;
-	--back-api: #e5eef5;
-	--prime: #ff3e00;
-	--second: #676778;
-	--flash: #40b3ff;
-	--highlight: #ffff82;
-	--heading: #222;
-	--text: #444;
-	--second-text: #7b7766;
-	--sidebar-text: rgba(255, 255, 255, 0.9);
-	--border-w: 0.3rem; /* border-width  */
-	--border-r: 0.4rem; /* border-radius */
+	--sk-back: #ffffff;
+	--sk-back-1: #f6fafd;
+	--sk-back-2: #e5eef5;
+	--sk-theme-1: #ff3e00;
+	--sk-theme-2: #676778;
+	--sk-theme-3: #40b3ff;
+	--sk-text-1: #222;
+	--sk-text-2: #444;
 
 	/* dimensions */
-	--nav-h: 6rem;
-	--top-offset: 6rem;
-	--sidebar-w: 30rem;
-	--sidebar-mid-w: 36rem;
-	--sidebar-large-w: 48rem;
-	--main-width: 80rem;
-	--side-nav: 2.4rem;
-	--side-page: var(--side-nav);
+	--sk-nav-height: 6rem;
+	--sk-page-padding-top: 6rem;
+	--sk-page-padding-side: 2.4rem;
+	--sk-page-sidebar-width: 30rem;
+	--sk-thick-border-width: 0.3rem;
+	--sk-border-radius: 0.4rem;
 
 	/* typography */
-	--code-fs: 1.3rem;
-	--h6: 1.4rem;
-	--h5: 1.6rem;
-	--h4: 1.8rem; /* default font-size */
-	--h3: 2.6rem;
-	--h2: 3rem;
-	--h1: 3.2rem;
-	--linemax: 72rem; /* max line-length */
-	--lh: 1.5; /* base line-height */
-	--font: 'Overpass', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu,
+	--sk-font: 'Overpass', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu,
 		Cantarell, 'Fira Sans', 'Droid Sans', 'Helvetica Neue', sans-serif;
-	--font-mono: 'Fira Mono', monospace;
+	--sk-font-mono: 'Fira Mono', monospace;
+	--sk-text-xl: 3.6rem;
+	--sk-text-l: 2.4rem;
+	--sk-text-m: 1.8rem;
+	--sk-text-s: 1.6rem;
+	--sk-text-xs: 1.3rem;
+	--sk-line-max-width: 72rem;
 }
 
 @media screen and (min-width: 480px) {
 	:root {
-		--side-nav: 3.2rem;
+		--sk-page-padding-side: 3.2rem;
 	}
 }
 
 @media screen and (min-width: 768px) {
 	:root {
-		--side-page: 14vw;
-		--top-offset: 10rem;
-		--side-nav: 4.8rem;
+		--sk-text-xl: 5.4rem;
+		--sk-page-padding-top: 10rem;
+		--sk-page-padding-side: 4.8rem;
 	}
+}
+
+/* legacy — existing site-kit uses these, and upgrading svelte.dev will be easier if we keep them around for now */
+:root {
+	/* colors */
+	--back: var(--sk-back);
+	--back-light: var(--sk-back-1);
+	--back-api: var(--sk-back-2);
+	--prime: var(--sk-theme-1);
+	--second: var(--sk-theme-2);
+	--flash: var(--sk-theme-3);
+	--heading: var(--sk-text-1);
+	--text: var(--sk-text-2);
+	--sidebar-text: rgba(255, 255, 255, 0.9);
+
+	/* dimensions */
+	--nav-h: var(--sk-nav-height);
+	--top-offset: var(--sk-page-padding-top);
+	--side-nav: var(--sk-page-padding-side);
+	--sidebar-w: var(--sk-page-sidebar-width);
+	--border-w: var(--sk-thick-border-width);
+	--border-r: var(--sk-border-radius);
+
+	/* typography */
+	--font: var(--sk-font);
+	--font-mono: var(--sk-font-mono);
+	--h1: var(--sk-text-xl);
+	--h2: var(--sk-text-l);
+	--h3: var(--sk-text-m);
+	--h4: var(--sk-text-s);
+	--h5: var(--sk-text-s);
+	--h6: var(--sk-text-xs);
+	--code-fs: var(--sk-text-xs);
+	--linemax: var(--sk-line-max-width);
+
+	/* unused in this project */
+	--main-width: 80rem;
+	--sidebar-mid-w: 36rem;
+	--sidebar-large-w: 48rem;
 }

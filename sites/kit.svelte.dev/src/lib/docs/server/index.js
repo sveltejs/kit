@@ -339,6 +339,10 @@ function parse({ body, code, codespan }) {
 				// throw new Error(`Unexpected <h${level}> in ${file}`);
 			}
 
+			// TODO this is a temporary hack — update the docs instead. the nodeLinker thing
+			// is so that levels are preserved for the FAQs
+			if (level >= 3 && !body.includes('nodeLinker')) level -= 1;
+
 			return `<h${level} id="${slug}">${html}<a href="#${slug}" class="anchor"><span class="visually-hidden">permalink</span></a></h${level}>`;
 		},
 		code: (source, language) => code(source, language, current),

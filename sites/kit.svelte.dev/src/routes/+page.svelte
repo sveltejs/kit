@@ -92,7 +92,6 @@ npm run dev -- --open</code
 		height: 100%;
 		display: flex;
 		flex-direction: column;
-		color: var(--second-text);
 	}
 
 	.orange-highlight {

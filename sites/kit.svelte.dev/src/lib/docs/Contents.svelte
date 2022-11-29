@@ -47,7 +47,7 @@
 	}
 
 	.sidebar {
-		padding: var(--top-offset) 0 6.4rem 3.2rem;
+		padding: calc(var(--sk-nav-height) + 4rem) 0 6.4rem 3.2rem;
 		font-family: var(--font);
 		overflow-y: auto;
 		height: 100%;
@@ -68,7 +68,7 @@
 		transition: color 0.2s;
 		border-bottom: none;
 		padding: 0;
-		color: var(--sidebar-text);
+		color: rgba(255, 255, 255, 0.9);
 		user-select: none;
 	}
 
