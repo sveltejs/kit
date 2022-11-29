@@ -37,11 +37,16 @@ const valid_link_options = /** @type {const} */ ({
 
 /**
  * @template {LinkOptionName} T
+ * @typedef {typeof valid_link_options[T][number]} ValidLinkOptions
+ */
+
+/**
+ * @template {LinkOptionName} T
  * @param {Element} element
  * @param {T} name
  */
 function link_option(element, name) {
-	const value = /** @type {typeof valid_link_options[T][number] | null} */ (
+	const value = /** @type {ValidLinkOptions<T> | null} */ (
 		element.getAttribute(`data-sveltekit-${name}`)
 	);
 
@@ -52,7 +57,7 @@ function link_option(element, name) {
 
 /**
  * @template {LinkOptionName} T
- * @template {typeof valid_link_options[T][number] | null} U
+ * @template {ValidLinkOptions<T> | null} U
  * @param {Element} element
  * @param {T} name
  * @param {U} value
@@ -133,16 +138,16 @@ export function get_link_info(a, base) {
  * @param {HTMLFormElement | HTMLAnchorElement | SVGAElement} element
  */
 export function get_router_options(element) {
-	/** @type {typeof valid_link_options['noscroll'][number] | null} */
+	/** @type {ValidLinkOptions<'noscroll'> | null} */
 	let noscroll = null;
 
-	/** @type {typeof valid_link_options['preload-code'][number] | null} */
+	/** @type {ValidLinkOptions<'preload-code'> | null} */
 	let preload_code = null;
 
-	/** @type {typeof valid_link_options['preload-data'][number] | null} */
+	/** @type {ValidLinkOptions<'preload-data'> | null} */
 	let preload_data = null;
 
-	/** @type {typeof valid_link_options['reload'][number] | null} */
+	/** @type {ValidLinkOptions<'reload'> | null} */
 	let reload = null;
 
 	/** @type {Element} */
