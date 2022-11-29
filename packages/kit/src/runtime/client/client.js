@@ -1537,9 +1537,7 @@ export function create_client({ target, base }) {
 
 				const submitter = /** @type {HTMLButtonElement | HTMLInputElement} */ (event.submitter);
 
-				const method = event.submitter?.hasAttribute('formmethod')
-					? submitter.formMethod
-					: form.method;
+				const method = submitter.formMethod || form.method;
 
 				if (method !== 'get') return;
 
