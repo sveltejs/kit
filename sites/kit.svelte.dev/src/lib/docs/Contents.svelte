@@ -43,7 +43,6 @@
 		overflow: hidden;
 		background-color: var(--sk-theme-2);
 		color: white;
-		min-height: 100vh;
 	}
 
 	.sidebar {
@@ -92,17 +91,6 @@
 		font-weight: 700;
 	}
 
-	.active::after {
-		content: '';
-		position: absolute;
-		right: 0;
-		top: 2px;
-		width: 0;
-		height: 0;
-		border: 6px solid transparent;
-		border-right-color: white;
-	}
-
 	ul ul,
 	ul ul li {
 		margin: 0;
@@ -136,6 +124,10 @@
 			padding-right: 0;
 		}
 
+		nav {
+			min-height: 100vh;
+		}
+
 		nav::after {
 			content: '';
 			position: fixed;
@@ -150,6 +142,17 @@
 				rgba(103, 103, 120, 0.7) 50%,
 				rgba(103, 103, 120, 1) 100%
 			);
+		}
+
+		.active::after {
+			content: '';
+			position: absolute;
+			right: 0;
+			top: 2px;
+			width: 0;
+			height: 0;
+			border: 6px solid transparent;
+			border-right-color: white;
 		}
 
 		.ts-toggle {

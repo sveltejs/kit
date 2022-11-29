@@ -20,11 +20,6 @@
 	}
 }
 
-.content h1 {
-	font-size: 3.2rem;
-	margin: 0;
-}
-
 .content .anchor {
 	position: absolute;
 	display: block;
@@ -43,17 +38,7 @@
 	bottom: 1rem;
 }
 
-@media (min-width: 400px) {
-	.content h1 {
-		font-size: 4.2rem;
-	}
-}
-
 @media (min-width: 768px) {
-	.content h1 {
-		font-size: 5.4rem;
-	}
-
 	.content .anchor:focus,
 	.content h2:hover .anchor,
 	.content h2:hover .anchor,
