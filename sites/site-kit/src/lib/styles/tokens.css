@@ -43,6 +43,20 @@
 	}
 }
 
+@media (prefers-color-scheme: dark) {
+	:root {
+		/* TODO create tokens for all the ad-hoc styles used on the site, so we can offer dark mode */
+		/* --sk-back: #222;
+		--sk-back-1: #333;
+		--sk-back-2: #444;
+		--sk-theme-1: #ff3e00;
+		--sk-theme-2: #676778;
+		--sk-theme-3: #40b3ff;
+		--sk-text-1: #fff;
+		--sk-text-2: #ddd; */
+	}
+}
+
 /* legacy — existing site-kit uses these, and upgrading svelte.dev will be easier if we keep them around for now */
 :root {
 	/* colors */
