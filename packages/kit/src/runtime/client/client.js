@@ -1535,14 +1535,16 @@ export function create_client({ target, base }) {
 					HTMLFormElement.prototype.cloneNode.call(event.target)
 				);
 
-				const submitter = /** @type {HTMLButtonElement | HTMLInputElement | null} */ (event.submitter);
+				const submitter = /** @type {HTMLButtonElement | HTMLInputElement | null} */ (
+					event.submitter
+				);
 
-				const method = submitter.formMethod || form.method;
+				const method = submitter?.formMethod || form.method;
 
 				if (method !== 'get') return;
 
 				const url = new URL(
-					event.submitter?.hasAttribute('formaction') ? submitter.formAction : form.action
+					(event.submitter?.hasAttribute('formaction') && submitter?.formAction) || form.action
 				);
 
 				if (is_external_url(url, base)) return;
