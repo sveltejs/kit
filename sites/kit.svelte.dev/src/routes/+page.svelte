@@ -95,11 +95,11 @@ npm run dev -- --open</code
 	}
 
 	.orange-highlight {
-		color: var(--prime);
+		color: var(--sk-theme-1);
 	}
 
 	.blurb-shifter {
-		margin-top: calc(-10rem + var(--side-nav));
+		margin-top: calc(-10rem + var(--sk-page-padding-side));
 	}
 
 	@media (min-width: 900px) {

@@ -73,7 +73,7 @@
 	}
 
 	.controls {
-		max-width: calc(var(--linemax) + 1rem);
+		max-width: calc(var(--sk-line-max-width) + 1rem);
 		border-top: 1px solid #eee;
 		padding: 1rem 0 0 0;
 		display: grid;
@@ -94,7 +94,7 @@
 		font-size: 1.2rem;
 		text-transform: uppercase;
 		font-weight: 600;
-		color: var(--second);
+		color: var(--sk-theme-2);
 	}
 
 	.controls span.faded {

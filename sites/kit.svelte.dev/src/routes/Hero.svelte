@@ -9,14 +9,17 @@
 <section class="hero-banner">
 	<div class="hero-container">
 		<div class="hero-text">
-			<img alt="{title}" width="400" height="50" class="logotype" src={logotype} />
+			<img alt={title} width="400" height="50" class="logotype" src={logotype} />
 			<div class="tagline">{tagline}</div>
 		</div>
 
 		<div class="hero-image">
 			<picture sizes="(min-width: 480px) 800px, (min-width: 1024px) 480px, 600px">
 				{#each Object.entries(background.sources) as [format, images]}
-					<source srcset={images.map((i) => `${i.src} ${i.w}w`).join(', ')} type={'image/' + format} /> 
+					<source
+						srcset={images.map((i) => `${i.src} ${i.w}w`).join(', ')}
+						type={'image/' + format}
+					/>
 				{/each}
 				<img src={background.fallback.src} {alt} />
 			</picture>
@@ -28,11 +31,20 @@
 	.hero-banner {
 		max-width: 100vw;
 		background: rgb(211, 214, 217);
-		background: radial-gradient(34.14% 72.25% at 47.58% 31.75%, rgba(232, 244, 255, 0.52) 0%, rgba(255, 255, 255, 0) 100%),
-linear-gradient(92.4deg, #D1D4D7 14.67%, rgba(238, 247, 255, 0.48) 54.37%, rgba(206, 216, 224, 0.62) 92.49%),
-linear-gradient(0deg, #DBE7EF, #DBE7EF);
+		background: radial-gradient(
+				34.14% 72.25% at 47.58% 31.75%,
+				rgba(232, 244, 255, 0.52) 0%,
+				rgba(255, 255, 255, 0) 100%
+			),
+			linear-gradient(
+				92.4deg,
+				#d1d4d7 14.67%,
+				rgba(238, 247, 255, 0.48) 54.37%,
+				rgba(206, 216, 224, 0.62) 92.49%
+			),
+			linear-gradient(0deg, #dbe7ef, #dbe7ef);
 		position: relative;
-		padding: 8rem var(--side-nav) 0;
+		padding: 8rem var(--sk-page-padding-side) 0;
 		display: flex;
 		justify-content: flex-start;
 		align-items: center;
@@ -64,9 +76,9 @@ linear-gradient(0deg, #DBE7EF, #DBE7EF);
 		letter-spacing: 0.1em;
 		text-align: center;
 		text-transform: uppercase;
-		color: var(--text);
+		color: var(--sk-text-2);
 		max-width: 12em;
-		font-family: var(--font);
+		font-family: var(--sk-font);
 	}
 
 	.logotype {
@@ -87,7 +99,7 @@ linear-gradient(0deg, #DBE7EF, #DBE7EF);
 		width: 600px;
 		height: 450px;
 		object-fit: cover;
-		transform: translate(-2%,-10%);
+		transform: translate(-2%, -10%);
 	}
 
 	@media (min-width: 480px) {
@@ -103,7 +115,7 @@ linear-gradient(0deg, #DBE7EF, #DBE7EF);
 
 	@media (min-width: 1024px) {
 		.hero-banner {
-			padding: 0 var(--side-nav);
+			padding: 0 var(--sk-page-padding-side);
 		}
 
 		.hero-text {

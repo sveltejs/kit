@@ -57,7 +57,7 @@
 		-webkit-appearance: none;
 		width: 100%;
 		height: 3.2rem;
-		border-radius: var(--border-r);
+		border-radius: var(--sk-border-radius);
 		background: no-repeat 1rem 50% / 1em 1em url(../icons/search.svg);
 	}
 

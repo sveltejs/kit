@@ -16,11 +16,11 @@
 	@media (min-width: 832px) {
 		.grid {
 			grid-template-rows: unset;
-			grid-template-columns: var(--sidebar-w) 1fr;
+			grid-template-columns: var(--sk-page-sidebar-width) 1fr;
 		}
 
 		.toc-container {
-			width: var(--sidebar-w);
+			width: var(--sk-page-sidebar-width);
 			height: 100vh;
 			overflow: auto;
 			position: fixed;

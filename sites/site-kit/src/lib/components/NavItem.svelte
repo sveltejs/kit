@@ -17,15 +17,15 @@
 
 <style>
 	a {
-		font-size: var(--h5);
+		font-size: var(--sk-text-s);
 	}
 
 	a:hover {
-		color: var(--flash);
+		color: var(--sk-theme-3);
 		opacity: 1;
 	}
 
 	[aria-current] {
-		color: var(--prime);
+		color: var(--sk-theme-1);
 	}
 </style>

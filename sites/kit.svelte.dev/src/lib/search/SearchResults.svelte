@@ -21,7 +21,7 @@
 		font-weight: normal;
 		text-transform: uppercase;
 		background-color: white;
-		border-radius: 0 0 var(--border-r) var(--border-r);
+		border-radius: 0 0 var(--sk-border-radius) var(--sk-border-radius);
 		pointer-events: all;
 	}
 </style>

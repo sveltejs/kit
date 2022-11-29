@@ -44,12 +44,12 @@
 		flex-direction: column;
 		border-bottom: none;
 		color: var(--back);
-		border-radius: var(--border-r);
+		border-radius: var(--sk-border-radius);
 	}
 
 	.how {
 		padding: 1em;
-		border-radius: var(--border-r);
+		border-radius: var(--sk-border-radius);
 	}
 
 	.how :global(pre) {
@@ -80,14 +80,14 @@
 		border-radius: 4px;
 		background: var(--back);
 		border: 1px solid white;
-		color: var(--second);
-		font-size: var(--h6);
+		color: var(--sk-theme-2);
+		font-size: var(--sk-text-xs);
 		text-decoration: none;
 	}
 
 	.how :global(.cta) {
-		border: 1px solid var(--prime);
-		background-color: var(--prime);
+		border: 1px solid var(--sk-theme-1);
+		background-color: var(--sk-theme-1);
 		color: white;
 	}
 
@@ -97,9 +97,9 @@
 	}
 
 	.how :global(.cta):hover {
-		/* border: 1px solid var(--prime); */
+		/* border: 1px solid var(--sk-theme-1); */
 		background-color: transparent;
-		color: var(--prime);
+		color: var(--sk-theme-1);
 	}
 
 	.box :global(.cta)::after,
@@ -130,27 +130,27 @@
 	.box :global(h2) {
 		padding: 0;
 		margin: 0 0 0.5em 0;
-		font-size: var(--h2);
+		font-size: var(--sk-text-l);
 		font-weight: 300;
 		color: white;
 	}
 
 	.blurb :global(p) {
-		font-size: var(--h5);
+		font-size: var(--sk-text-s);
 	}
 
 	.one {
-		background: var(--prime);
+		background: var(--sk-theme-1);
 		grid-area: one;
 	}
 
 	.two {
-		background: var(--flash);
+		background: var(--sk-theme-3);
 		grid-area: two;
 	}
 
 	.three {
-		background: var(--second);
+		background: var(--sk-theme-2);
 		grid-area: three;
 	}
 
@@ -159,7 +159,7 @@
 		   breaking the grid layout */
 		min-width: 0;
 		grid-area: how;
-		background: var(--back-light);
+		background: var(--sk-back-1);
 		box-shadow: inset 1px 1px 3px rgba(81, 81, 81, 0.2);
 	}
 

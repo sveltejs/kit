@@ -9,9 +9,9 @@ html {
 
 body {
 	font-size: 1.6rem;
-	font-family: var(--font);
+	font-family: var(--sk-font);
 	line-height: 1.5;
-	color: var(--text);
+	color: var(--sk-text-2);
 	background-color: var(--back);
 }
 
@@ -32,22 +32,22 @@ a:hover {
 }
 
 h6 {
-	font-size: var(--h6);
+	font-size: var(--sk-text-xs);
 }
 h5 {
-	font-size: var(--h5);
+	font-size: var(--sk-text-s);
 }
 h4 {
-	font-size: var(--h4);
+	font-size: var(--sk-text-s);
 }
 h3 {
-	font-size: var(--h3);
+	font-size: var(--sk-text-m);
 }
 h2 {
-	font-size: var(--h2);
+	font-size: var(--sk-text-l);
 }
 h1 {
-	font-size: var(--h1);
+	font-size: var(--sk-text-xl);
 }
 
 h1,
@@ -58,7 +58,7 @@ h5,
 h6 {
 	font-weight: 400;
 	line-height: 1.35;
-	color: var(--heading);
+	color: var(--sk-text-1);
 }
 
 p,
@@ -73,8 +73,8 @@ strong {
 
 code,
 kbd {
-	font-size: var(--code-fs);
-	font-family: var(--font-mono);
+	font-size: var(--sk-text-xs);
+	font-family: var(--sk-font-mono);
 	line-height: 1.7;
 }
 
@@ -87,7 +87,7 @@ code {
 	padding: 0.4rem;
 	margin: 0 0.2rem;
 	top: -0.1rem;
-	background: var(--back-api);
+	background: var(--sk-back-2);
 }
 
 pre {
@@ -105,7 +105,7 @@ pre code {
 }
 
 ::selection {
-	background: var(--flash);
+	background: var(--sk-theme-3);
 	color: white;
 }
 
@@ -114,12 +114,12 @@ blockquote {
 	position: relative;
 	margin: 1.6rem 0 2.4rem;
 	padding: 2rem 2.4rem 1.8rem 2.4rem;
-	max-width: var(--linemax);
+	max-width: var(--sk-line-max-width);
 }
 
 blockquote p,
 blockquote ul {
-	font-size: var(--h5);
+	font-size: var(--sk-text-s);
 }
 
 blockquote :last-child {
@@ -153,7 +153,7 @@ button > svg {
 a {
 	position: relative;
 	padding: 0 0 1px 0;
-	color: var(--prime);
+	color: var(--sk-theme-1);
 }
 
 /*  lists ---------------------------------- */
@@ -167,7 +167,7 @@ a {
 
 .listify li,
 .listify li {
-	max-width: calc(var(--linemax) - var(--list-padding));
+	max-width: calc(var(--sk-line-max-width) - var(--list-padding));
 	line-height: 1.5;
 	margin: 0 0 0.5em 0;
 }
@@ -177,7 +177,7 @@ a {
 	position: absolute;
 	margin-top: 1.1rem;
 	margin-left: -1.8rem;
-	background-color: var(--second);
+	background-color: var(--sk-theme-2);
 	width: 0.6rem;
 	height: 0.6rem;
 	border-radius: 2px;
@@ -191,7 +191,7 @@ a {
 /*  tables --------------------------------- */
 table {
 	width: 100%;
-	font-size: var(--h5);
+	font-size: var(--sk-text-s);
 }
 
 td,
@@ -212,7 +212,7 @@ figcaption,
 	max-width: none;
 	margin: 0 auto;
 	padding: 1.6rem 0 0 0.8rem;
-	font: 1.2rem/1.6 var(--font-mono);
+	font: 1.2rem/1.6 var(--sk-font-mono);
 }
 
 /* visually hidden, but accessible to assistive tech */

@@ -93,7 +93,7 @@
 	}
 
 	a:focus {
-		background: var(--second);
+		background: var(--sk-theme-2);
 		color: white;
 		outline: none;
 	}
@@ -109,7 +109,7 @@
 
 	a strong {
 		font-size: 1.6rem;
-		color: var(--text);
+		color: var(--sk-text-2);
 	}
 
 	a span {

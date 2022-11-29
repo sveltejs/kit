@@ -7,7 +7,7 @@
 <style>
 	a {
 		background: white;
-		color: var(--text);
+		color: var(--sk-text-2);
 		border: 2px solid black;
 		padding: 8px;
 		position: absolute;

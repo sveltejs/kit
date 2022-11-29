@@ -1,7 +1,7 @@
 @import './base.css';
 
 :root {
-	--code-bg: var(--back-light);
+	--code-bg: var(--sk-back-1);
 	--code-base: hsl(45, 7%, 35%);
 	--code-comment: hsl(0, 0%, 41%);
 	--code-keyword: hsl(204, 88%, 35%);

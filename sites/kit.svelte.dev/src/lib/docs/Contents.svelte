@@ -41,14 +41,14 @@
 		top: 0;
 		left: 0;
 		overflow: hidden;
-		background-color: var(--second);
+		background-color: var(--sk-theme-2);
 		color: white;
 		min-height: 100vh;
 	}
 
 	.sidebar {
 		padding: calc(var(--sk-nav-height) + 4rem) 0 6.4rem 3.2rem;
-		font-family: var(--font);
+		font-family: var(--sk-font);
 		overflow-y: auto;
 		height: 100%;
 		bottom: auto;
@@ -75,7 +75,7 @@
 	.section {
 		display: block;
 		padding-bottom: 0.8rem;
-		font-size: var(--h6);
+		font-size: var(--sk-text-xs);
 		text-transform: uppercase;
 		letter-spacing: 0.1em;
 		font-weight: 600;
@@ -84,7 +84,7 @@
 	.page {
 		display: block;
 		font-size: 1.6rem;
-		font-family: var(--font);
+		font-family: var(--sk-font);
 		padding-bottom: 0.6em;
 	}
 
@@ -117,15 +117,15 @@
 
 	.ts-toggle {
 		border-top: 1px solid rgba(255, 255, 255, 0.2);
-		background-color: var(--second);
+		background-color: var(--sk-theme-2);
 		color: white;
 	}
 
 	@media (min-width: 600px) {
 		.sidebar {
 			columns: 2;
-			padding-left: var(--side-nav);
-			padding-right: var(--side-nav);
+			padding-left: var(--sk-page-padding-side);
+			padding-right: var(--sk-page-padding-side);
 		}
 	}
 
@@ -141,7 +141,7 @@
 			position: fixed;
 			left: 0;
 			bottom: calc(42px + var(--ukr-footer-height));
-			width: var(--sidebar-w);
+			width: var(--sk-page-sidebar-width);
 			height: 2em;
 			pointer-events: none;
 			background: linear-gradient(
@@ -154,7 +154,7 @@
 
 		.ts-toggle {
 			position: fixed;
-			width: var(--sidebar-w);
+			width: var(--sk-page-sidebar-width);
 			bottom: var(--ukr-footer-height);
 			z-index: 1;
 			margin-right: 0;

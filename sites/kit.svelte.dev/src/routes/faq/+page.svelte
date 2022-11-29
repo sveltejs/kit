@@ -41,8 +41,8 @@
 	.faqs {
 		grid-template-columns: 1fr 1fr;
 		grid-gap: 1em;
-		min-height: calc(100vh - var(--nav-h));
-		padding: var(--top-offset) var(--side-nav) 6rem var(--side-nav);
+		min-height: calc(100vh - var(--sk-nav-height));
+		padding: var(--sk-page-padding-top) var(--sk-page-padding-side) 6rem var(--sk-page-padding-side);
 		/* max-width: var(--sk-line-max-width); */
 		margin: 0 auto;
 		tab-size: 2;
@@ -91,9 +91,9 @@
 		margin: 0rem 0 1rem 0;
 		padding-top: 6rem;
 		padding-bottom: 0.2rem;
-		color: var(--text);
+		color: var(--sk-text-2);
 		/* max-width: 24em; */
-		/* font-size: var(--h3); */
+		/* font-size: var(--sk-text-m); */
 		font-weight: 400;
 		border-bottom: 1px solid #ddd;
 	}
@@ -102,7 +102,7 @@
 		font-family: inherit;
 		font-weight: 600;
 		/* font-size: 2rem; */
-		color: var(--second);
+		color: var(--sk-theme-2);
 		margin: 2rem 0 1.6rem 0;
 		padding-left: 0;
 		background: transparent;
@@ -118,7 +118,7 @@
 
 	/* TODO this page must be missing some styles from somewhere. the whole thing needs tidying up */
 	.faqs :global(a) :global(code) {
-		color: var(--prime);
+		color: var(--sk-theme-1);
 	}
 
 	@media (max-width: 768px) {

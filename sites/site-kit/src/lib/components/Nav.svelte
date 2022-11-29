@@ -95,10 +95,10 @@
 		);
 		position: fixed;
 		width: 100vw;
-		height: var(--nav-h);
+		height: var(--sk-nav-height);
 		margin: 0 auto;
 		background-color: white;
-		font-family: var(--font);
+		font-family: var(--sk-font);
 		z-index: 100;
 		user-select: none;
 		transition: transform 0.2s;
@@ -127,23 +127,23 @@
 	}
 
 	ul :global(a) {
-		color: var(--text);
+		color: var(--sk-text-2);
 	}
 
 	.home {
 		width: 30rem;
-		height: var(--nav-h);
+		height: var(--sk-nav-height);
 		display: flex;
 		text-indent: -9999px;
-		background-position: calc(var(--side-nav) - 1rem) 50%;
+		background-position: calc(var(--sk-page-padding-side) - 1rem) 50%;
 		background-repeat: no-repeat;
 		background-size: auto 70%;
 	}
 
 	button {
 		position: absolute;
-		top: calc(var(--nav-h) / 2 - 1rem);
-		right: var(--side-nav);
+		top: calc(var(--sk-nav-height) / 2 - 1rem);
+		right: var(--sk-page-padding-side);
 		line-height: 1;
 	}
 
@@ -153,7 +153,7 @@
 			display: none;
 			width: 100%;
 			background: white;
-			padding: 1rem var(--side-nav);
+			padding: 1rem var(--sk-page-padding-side);
 		}
 
 		.open ul {
@@ -161,15 +161,15 @@
 		}
 
 		ul.external {
-			padding: 1rem var(--side-nav) 1rem;
+			padding: 1rem var(--sk-page-padding-side) 1rem;
 		}
 
 		ul.external::before {
 			content: '';
 			position: absolute;
 			top: 0;
-			left: var(--side-nav);
-			width: calc(100% - 2 * var(--side-nav));
+			left: var(--sk-page-padding-side);
+			width: calc(100% - 2 * var(--sk-page-padding-side));
 			height: 1px;
 			background: radial-gradient(circle at center, rgba(0, 0, 0, 0.1), rgba(0, 0, 0, 0.05));
 		}
@@ -215,7 +215,7 @@
 
 		ul.external {
 			width: 30rem;
-			padding: 0 var(--side-nav) 0 0;
+			padding: 0 var(--sk-page-padding-side) 0 0;
 			justify-content: end;
 		}
 

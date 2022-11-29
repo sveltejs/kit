@@ -70,7 +70,7 @@
 	main {
 		position: relative;
 		margin: 0 auto;
-		padding-top: var(--nav-h);
+		padding-top: var(--sk-nav-height);
 		overflow: auto;
 		overflow-x: hidden;
 	}
@@ -159,7 +159,7 @@
 	}
 
 	:global(.examples-container, .repl-outer, .tutorial-outer) {
-		height: calc(100vh - var(--nav-h) - var(--ukr-footer-height)) !important;
+		height: calc(100vh - var(--sk-nav-height) - var(--ukr-footer-height)) !important;
 	}
 
 	:global(.toggle) {
