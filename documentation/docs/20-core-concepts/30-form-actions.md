@@ -452,4 +452,4 @@ Some forms don't need to `POST` data to the server — search inputs, for exampl
 </form>
 ```
 
-As with `<a>` elements, you can use the [`data-sveltekit-reload`](/docs/link-options#data-sveltekit-reload) and [`data-sveltekit-noscroll`](/docs/link-options#data-sveltekit-noscroll) options to control the router's behaviour.
+As with `<a>` elements, you can set the [`data-sveltekit-reload`](/docs/link-options#data-sveltekit-reload) and [`data-sveltekit-noscroll`](/docs/link-options#data-sveltekit-noscroll) attributes on the `<form>` to control the router's behaviour.
