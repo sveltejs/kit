@@ -23,6 +23,7 @@ import { stores } from './singletons.js';
 import { unwrap_promises } from '../../utils/promises.js';
 import * as devalue from 'devalue';
 import { INDEX_KEY, PRELOAD_PRIORITIES, SCROLL_KEY } from './constants.js';
+import { validate_common_exports } from '../../utils/exports.js';
 
 const routes = parse(nodes, server_loads, dictionary, matchers);
 
@@ -550,6 +551,10 @@ export function create_client({ target, base }) {
 		};
 
 		const node = await loader();
+
+		if (__SVELTEKIT_DEV__) {
+			validate_common_exports(node.shared);
+		}
 
 		if (node.shared?.load) {
 			/** @param {string[]} deps */
