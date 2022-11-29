@@ -1535,7 +1535,7 @@ export function create_client({ target, base }) {
 					HTMLFormElement.prototype.cloneNode.call(event.target)
 				);
 
-				const submitter = /** @type {HTMLButtonElement | HTMLInputElement} */ (event.submitter);
+				const submitter = /** @type {HTMLButtonElement | HTMLInputElement | null} */ (event.submitter);
 
 				const method = submitter.formMethod || form.method;
 
