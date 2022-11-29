@@ -37,7 +37,7 @@
 		content = document.querySelector('.content');
 		const { top } = content.getBoundingClientRect();
 
-		headings = content.querySelectorAll('h3[id]');
+		headings = content.querySelectorAll('h2[id]');
 
 		positions = Array.from(headings).map((heading) => {
 			const style = getComputedStyle(heading);
@@ -128,16 +128,6 @@
 		background: var(--sk-back-1);
 		border-left-color: var(--sk-theme-1);
 	}
-
-	/* a.active::before {
-		content: '';
-		position: absolute;
-		left: 0;
-		top: 4px;
-		width: 2px;
-		height: calc(100% - 8px);
-		background-color: var(--sk-theme-1);
-	} */
 
 	@media (min-width: 1300px) {
 		.on-this-page {

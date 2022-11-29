@@ -350,8 +350,3 @@ pre.language-diff code {
 .ts-block-property ul:last-child {
 	margin-bottom: 0;
 }
-
-/* we need to have a come-to-jesus moment about the site-kit css */
-.listify ul > li::before {
-	margin-top: 0.8rem !important;
-}
