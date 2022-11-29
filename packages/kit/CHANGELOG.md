@@ -1,5 +1,11 @@
 # @sveltejs/kit
 
+## 1.0.0-next.568
+
+### Patch Changes
+
+- [fix] add migration hint for renamed methods ([#7874](https://github.com/sveltejs/kit/pull/7874))
+
 ## 1.0.0-next.567
 
 ### Patch Changes
