@@ -1,7 +1,10 @@
+import { building } from '$app/environment';
 import { json } from '@sveltejs/kit';
 
-// @ts-expect-error
-thisvariableisnotdefined;
+if (!building) {
+	// @ts-expect-error
+	thisvariableisnotdefined;
+}
 
 export function GET() {
 	return json({
