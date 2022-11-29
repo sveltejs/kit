@@ -1250,7 +1250,10 @@ export function create_client({ target, base }) {
 
 			for (const a of target.querySelectorAll('a')) {
 				const { url, external } = get_link_info(a, base);
+				if (external) continue;
+
 				const options = get_router_options(a);
+				if (options.reload) continue;
 
 				if (external || options.reload) continue;
 
