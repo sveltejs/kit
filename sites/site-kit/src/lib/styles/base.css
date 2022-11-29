@@ -147,15 +147,12 @@ button {
 	cursor: pointer;
 }
 
-button[disabled],
-.btn[disabled],
-.btn:hover[disabled] {
+button[disabled] {
 	opacity: 0.55;
 	pointer-events: none;
 }
 
-button > svg,
-.btn > svg {
+button > svg {
 	position: relative;
 	top: -0.1rem;
 	width: 2rem !important;
@@ -163,60 +160,11 @@ button > svg,
 	stroke: currentColor !important;
 }
 
-/*  reset ------- */
-.btn {
-	--btn-h: 4rem;
-	--btn-outline: 0.2rem;
-	--btn-font: var(--font);
-	--btn-calc-h: calc(var(--btn-h) - var(--btn-outline) * 2);
-	--btn-hover: linear-gradient(to top, rgba(0, 0, 0, 0.07), rgba(0, 0, 0, 0.07));
-
-	position: relative;
-	margin: 0 0.8rem 0.8rem 0;
-	vertical-align: middle;
-	white-space: nowrap;
-	display: inline-block;
-	zoom: 1;
-	border: none transparent;
-	font: var(--h4) var(--btn-font);
-	border-radius: var(--border-r);
-	color: currentColor;
-	cursor: pointer;
-}
-
-/*  default */
-.btn {
-	line-height: var(--btn-h);
-	height: var(--btn-h);
-	padding: 0 1.6rem;
-	transition: all 0.1s;
-}
-
-.btn:hover {
-	transform: scale(0.98);
-	mix-blend-mode: multiply;
-	background-image: var(--btn-hover);
-}
-
-/*  optional */
-.btn[outline] {
-	line-height: var(--btn-calc-h);
-	height: var(--btn-calc-h);
-	border: var(--btn-outline) solid currentColor;
-	background-color: white;
-	color: currentColor;
-}
-
 /*  links ------------------------------------- */
 a {
 	position: relative;
 	padding: 0 0 1px 0;
 	color: var(--prime);
-}
-
-a.no-underline {
-	border-bottom: none;
-	padding: 0;
 }
 
 /*  lists ---------------------------------- */
