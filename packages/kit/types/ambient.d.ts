@@ -92,7 +92,8 @@ declare module '$app/forms' {
 	type MaybePromise<T> = T | Promise<T>;
 
 	// this is duplicated in @sveltejs/kit because create-svelte tests fail
-	// if we use the imported version. TODO investigate
+	// if we use the imported version. See https://github.com/sveltejs/kit/pull/7003#issuecomment-1330921789
+	// for why this happens (it's likely a bug in TypeScript, but one that is so rare that it's unlikely to be fixed)
 	type SubmitFunction<
 		Success extends Record<string, unknown> | undefined = Record<string, any>,
 		Invalid extends Record<string, unknown> | undefined = Record<string, any>
