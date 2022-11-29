@@ -98,7 +98,7 @@ export function find_anchor(element, base) {
 	/** @type {typeof valid_link_options['reload'][number] | null} */
 	let reload = null;
 
-	while (element !== document.documentElement) {
+	while (element && element !== document.documentElement) {
 		if (!a && element.nodeName.toUpperCase() === 'A') {
 			// SVG <a> elements have a lowercase name
 			a = /** @type {HTMLAnchorElement | SVGAElement} */ (element);
@@ -115,7 +115,7 @@ export function find_anchor(element, base) {
 		element = element.assignedSlot ?? element.parentNode;
 
 		// @ts-expect-error handle shadow roots
-		if (element.nodeType === 11) element = element.host;
+		if (element?.nodeType === 11) element = element.host;
 	}
 
 	/** @type {URL | undefined} */
