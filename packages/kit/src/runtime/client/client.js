@@ -1555,7 +1555,7 @@ export function create_client({ target, base }) {
 				event.preventDefault();
 				event.stopPropagation();
 
-				// @ts-ignore `URLSearchParams(fd)` is kosher, but typescript doesn't know that
+				// @ts-expect-error `URLSearchParams(fd)` is kosher, but typescript doesn't know that
 				url.search = new URLSearchParams(new FormData(event.target)).toString();
 
 				navigate({
