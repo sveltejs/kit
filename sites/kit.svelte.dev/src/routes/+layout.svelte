@@ -55,17 +55,6 @@
 	{/if}
 </main>
 
-<a target="_blank" rel="noopener noreferrer" href="https://www.stopputin.net/">
-	<div class="ukr">
-		<span class="small">
-			<strong>We stand with Ukraine.</strong> Donate →
-		</span>
-		<span class="large">
-			<strong>We stand with Ukraine.</strong> Petition your leaders. Show your support.
-		</span>
-	</div>
-</a>
-
 <style>
 	main {
 		position: relative;
@@ -136,42 +125,17 @@
 		align-items: center;
 	}
 
-	/** Ukraine banner */
-	:root {
-		--ukr-footer-height: 48px;
-	}
-
-	main {
-		padding-bottom: var(--ukr-footer-height);
-	}
-
-	.ukr {
-		background-color: #0066cc;
-		color: white;
-		position: fixed;
-		display: flex;
-		align-items: center;
-		justify-content: center;
-		bottom: 0;
-		width: 100vw;
-		height: var(--ukr-footer-height);
-		z-index: 999;
-	}
-
 	:global(.examples-container, .repl-outer, .tutorial-outer) {
-		height: calc(100vh - var(--sk-nav-height) - var(--ukr-footer-height)) !important;
+		height: calc(100vh - var(--sk-nav-height)) !important;
 	}
 
 	:global(.toggle) {
-		bottom: var(--ukr-footer-height) !important;
+		bottom: 0 !important;
 	}
 
 	@media (max-width: 830px) {
 		:global(aside) {
 			z-index: 9999 !important;
 		}
-	}
-	.ukr strong {
-		color: #ffcc00;
 	}
 </style>

@@ -140,7 +140,7 @@
 			content: '';
 			position: fixed;
 			left: 0;
-			bottom: calc(42px + var(--ukr-footer-height));
+			bottom: 42px;
 			width: var(--sk-page-sidebar-width);
 			height: 2em;
 			pointer-events: none;
@@ -155,7 +155,7 @@
 		.ts-toggle {
 			position: fixed;
 			width: var(--sk-page-sidebar-width);
-			bottom: var(--ukr-footer-height);
+			bottom: 0;
 			z-index: 1;
 			margin-right: 0;
 		}
