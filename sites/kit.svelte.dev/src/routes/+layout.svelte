@@ -1,5 +1,5 @@
 <script>
-	import '@sveltejs/site-kit/base.css';
+	import '@sveltejs/site-kit/styles/index.css';
 	import { browser } from '$app/environment';
 	import { page, navigating } from '$app/stores';
 	import { Icon, Icons, Nav, NavItem, PreloadingIndicator, SkipLink } from '@sveltejs/site-kit';

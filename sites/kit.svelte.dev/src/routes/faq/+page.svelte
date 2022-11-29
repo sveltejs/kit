@@ -2,10 +2,9 @@
 	import { Permalink } from '@sveltejs/site-kit';
 	import '$lib/docs/client/docs.css';
 	import '$lib/docs/client/shiki.css';
-	import '@sveltejs/site-kit/code.css';
 	import * as hovers from '$lib/docs/client/hovers.js';
 
-	/** @type {import('./$types').Data} */
+	/** @type {import('./$types').PageData} */
 	export let data;
 
 	hovers.setup();

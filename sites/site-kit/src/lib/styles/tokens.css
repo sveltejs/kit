@@ -1,0 +1,54 @@
+:root {
+	/* colors */
+	--back: #ffffff;
+	--back-light: #f6fafd;
+	--back-api: #e5eef5;
+	--prime: #ff3e00;
+	--second: #676778;
+	--flash: #40b3ff;
+	--highlight: #ffff82;
+	--heading: #222;
+	--text: #444;
+	--second-text: #7b7766;
+	--sidebar-text: rgba(255, 255, 255, 0.9);
+	--border-w: 0.3rem; /* border-width  */
+	--border-r: 0.4rem; /* border-radius */
+
+	/* dimensions */
+	--nav-h: 6rem;
+	--top-offset: 6rem;
+	--sidebar-w: 30rem;
+	--sidebar-mid-w: 36rem;
+	--sidebar-large-w: 48rem;
+	--main-width: 80rem;
+	--side-nav: 2.4rem;
+	--side-page: var(--side-nav);
+
+	/* typography */
+	--code-fs: 1.3rem;
+	--h6: 1.4rem;
+	--h5: 1.6rem;
+	--h4: 1.8rem; /* default font-size */
+	--h3: 2.6rem;
+	--h2: 3rem;
+	--h1: 3.2rem;
+	--linemax: 72rem; /* max line-length */
+	--lh: 1.5; /* base line-height */
+	--font: 'Overpass', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu,
+		Cantarell, 'Fira Sans', 'Droid Sans', 'Helvetica Neue', sans-serif;
+	--font-mono: 'Fira Mono', monospace;
+}
+
+@media screen and (min-width: 480px) {
+	:root {
+		--side-nav: 3.2rem;
+	}
+}
+
+@media screen and (min-width: 768px) {
+	:root {
+		--side-page: 14vw;
+		--top-offset: 10rem;
+		--side-nav: 4.8rem;
+	}
+}

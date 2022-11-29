@@ -1,7 +1,6 @@
 <script>
 	import { page } from '$app/stores';
 	import { Icon } from '@sveltejs/site-kit';
-	import '@sveltejs/site-kit/code.css';
 	import '$lib/docs/client/docs.css';
 	import '$lib/docs/client/shiki.css';
 	import * as hovers from '$lib/docs/client/hovers.js';

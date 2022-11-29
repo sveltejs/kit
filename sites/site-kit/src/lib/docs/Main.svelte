@@ -1,6 +1,5 @@
 <script>
 	import { getFragment, onNavigate } from '../utils/navigation';
-	import '../code.css';
 
 	export let path;
 

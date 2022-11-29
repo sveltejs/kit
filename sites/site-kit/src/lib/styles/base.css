@@ -1,104 +1,3 @@
-/*
------------------------------------------------
-	vars – css custom-properties
-
-	NOTE
-	- some vars change inside media-queries!
-	- under normal conditions, there's no need to touch these
------------------------------------------------
-*/
-:root {
-	--nav-h: 6rem;
-	--top-offset: 6rem;
-	--sidebar-w: 30rem;
-	--sidebar-mid-w: 36rem;
-	--sidebar-large-w: 48rem;
-	--main-width: 80rem;
-	--side-nav: 2.4rem;
-	--side-page: var(--side-nav);
-
-	/* easings */
-	--out-back: cubic-bezier(0.175, 0.885, 0.32, 1.275);
-}
-
-@media screen and (min-width: 480px) {
-	:root {
-		--side-nav: 3.2rem;
-	}
-}
-
-@media screen and (min-width: 768px) {
-	:root {
-		--side-page: 14vw;
-		--top-offset: 10rem;
-		--side-nav: 4.8rem;
-	}
-}
-
-/*	theme vars */
-.theme-default {
-	--back: #ffffff;
-	--back-light: #f6fafd;
-	--back-api: #e5eef5;
-	--prime: #ff3e00;
-	--second: #676778;
-	--flash: #40b3ff;
-	--highlight: #ffff82;
-	--heading: #222;
-	--text: #444;
-	--second-text: #7b7766;
-	--sidebar-text: rgba(255, 255, 255, 0.9);
-	--border-w: 0.3rem; /* border-width  */
-	--border-r: 0.4rem; /* border-radius */
-}
-
-/*	typo vars */
-.typo-default {
-	--code-fs: 1.3rem;
-	--h6: 1.4rem;
-	--h5: 1.6rem;
-	--h4: 1.8rem; /* default font-size */
-	--h3: 2.6rem;
-	--h2: 3rem;
-	--h1: 3.2rem;
-	--linemax: 72rem; /* max line-length */
-	--lh: 1.5; /* base line-height */
-}
-
-body {
-	--font: 'Overpass', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu,
-		Cantarell, 'Fira Sans', 'Droid Sans', 'Helvetica Neue', sans-serif;
-	--font-mono: 'Fira Mono', monospace;
-}
-
-/*	fonts ---------------------------------- */
-/* overpass-300normal - latin */
-@font-face {
-	font-family: 'Overpass';
-	font-style: normal;
-	font-weight: 300;
-	src: local('Overpass Light '), local('Overpass-Light'),
-		url('./fonts/overpass/overpass-latin-300.woff2') format('woff2');
-}
-
-/* overpass-600normal - latin */
-@font-face {
-	font-family: 'Overpass';
-	font-style: normal;
-	font-weight: 600;
-	src: local('Overpass Bold '), local('Overpass-Bold'),
-		url('./fonts/overpass/overpass-latin-600.woff2') format('woff2');
-}
-
-/* fira-mono-400normal - latin */
-@font-face {
-	font-family: 'Fira Mono';
-	font-style: normal;
-	font-weight: 400;
-	src: local('Fira Mono Regular '), local('Fira Mono-Regular'),
-		url('./fonts/fira-mono/fira-mono-latin-400.woff2') format('woff2');
-}
-
 /*	base reset ----------------------------- */
 html {
 	font-size: 62.5%;
@@ -108,10 +7,12 @@ html {
 	border-collapse: collapse;
 }
 
-html,
 body {
-	width: 100%;
-	height: 100%;
+	font-size: 1.6rem;
+	font-family: var(--font);
+	line-height: var(--lh);
+	color: var(--text);
+	background-color: var(--back);
 }
 
 * {
@@ -120,7 +21,6 @@ body {
 	padding: 0;
 }
 
-/*	link reset ----------------------------- */
 a {
 	text-decoration: none;
 	cursor: pointer;
@@ -131,37 +31,6 @@ a:hover {
 	text-decoration: underline;
 }
 
-/* a:hover, a:active { color: var(--flash) } */
-
-/*
------------------------------------------------
-	global styles
------------------------------------------------
-*/
-
-/*	typography ----------------------------- */
-body {
-	font: 400 var(--h4) / var(--lh) var(--font);
-	background-color: var(--back);
-	color: var(--text);
-
-	/* default spacing of Overpass is a bit too airy */
-	/* letter-spacing: -.013em; */
-}
-
-h1,
-h2,
-h3,
-h4,
-h5,
-h6,
-blockquote {
-	position: relative;
-	margin: 0;
-	color: var(--heading);
-}
-
-/* h1, h2, h3, h4, h5, h6 { font-weight: 600 } */
 h6 {
 	font-size: var(--h6);
 }
@@ -187,7 +56,6 @@ h3,
 h4,
 h5,
 h6 {
-	font-family: var(--font);
 	line-height: 1.25;
 	color: var(--heading);
 }
@@ -202,8 +70,6 @@ ul {
 	margin: 0 0 1em 0;
 }
 
-.b,
-b,
 strong {
 	font-weight: 600;
 }
@@ -212,7 +78,9 @@ tt,
 code,
 kbd,
 samp {
-	font: 400 var(--code-fs) / 1.7 var(--font-mono);
+	font-size: var(--code-fs);
+	font-family: var(--font-mono);
+	line-height: 1.7;
 }
 
 code {
@@ -343,26 +211,13 @@ button > svg,
 a {
 	position: relative;
 	padding: 0 0 1px 0;
-	/* border-bottom: 1px solid currentColor; */
 	color: var(--prime);
-	/* transition: color .2s, border .2s, padding .2s; */
-}
-
-/* a:hover  {
-	color: var(--flash);
-} */
-
-a:hover {
-	/* padding: 0; */
-	/* border-bottom: 2px solid currentColor; */
 }
 
 a.no-underline {
 	border-bottom: none;
 	padding: 0;
 }
-
-/* a:hover:not(.disabled) > .icon { stroke: var(--flash) } */
 
 /*  lists ---------------------------------- */
 .listify ol,
