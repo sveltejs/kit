@@ -47,7 +47,7 @@
 	}
 
 	.sidebar {
-		padding: calc(var(--sk-nav-height) + 4rem) 0 6.4rem 3.2rem;
+		padding: calc(var(--sk-nav-height) + var(--sk-page-padding-top)) 0 6.4rem 3.2rem;
 		font-family: var(--sk-font);
 		overflow-y: auto;
 		height: 100%;

@@ -38,7 +38,7 @@
 @media screen and (min-width: 768px) {
 	:root {
 		--sk-text-xl: 5.4rem;
-		--sk-page-padding-top: 10rem;
+		--sk-page-padding-top: 8rem;
 		--sk-page-padding-side: 4.8rem;
 	}
 }
