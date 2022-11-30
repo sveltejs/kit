@@ -37,11 +37,16 @@ const valid_link_options = /** @type {const} */ ({
 
 /**
  * @template {LinkOptionName} T
+ * @typedef {typeof valid_link_options[T][number]} ValidLinkOptions
+ */
+
+/**
+ * @template {LinkOptionName} T
  * @param {Element} element
  * @param {T} name
  */
 function link_option(element, name) {
-	const value = /** @type {typeof valid_link_options[T][number] | null} */ (
+	const value = /** @type {ValidLinkOptions<T> | null} */ (
 		element.getAttribute(`data-sveltekit-${name}`)
 	);
 
@@ -52,7 +57,7 @@ function link_option(element, name) {
 
 /**
  * @template {LinkOptionName} T
- * @template {typeof valid_link_options[T][number] | null} U
+ * @template {ValidLinkOptions<T> | null} U
  * @param {Element} element
  * @param {T} name
  * @param {U} value
@@ -80,80 +85,88 @@ const levels = {
 
 /**
  * @param {Element} element
+ * @returns {Element | null}
+ */
+function parent_element(element) {
+	let parent = element.assignedSlot ?? element.parentNode;
+
+	// @ts-expect-error handle shadow roots
+	if (parent?.nodeType === 11) parent = parent.host;
+
+	return /** @type {Element} */ (parent);
+}
+
+/**
+ * @param {Element} element
+ * @param {Element} target
+ */
+export function find_anchor(element, target) {
+	while (element !== target) {
+		if (element.nodeName.toUpperCase() === 'A') {
+			return /** @type {HTMLAnchorElement | SVGAElement} */ (element);
+		}
+
+		element = /** @type {Element} */ (parent_element(element));
+	}
+}
+
+/**
+ * @param {HTMLAnchorElement | SVGAElement} a
  * @param {string} base
  */
-export function find_anchor(element, base) {
-	/** @type {HTMLAnchorElement | SVGAElement | undefined} */
-	let a;
-
-	/** @type {typeof valid_link_options['noscroll'][number] | null} */
-	let noscroll = null;
-
-	/** @type {typeof valid_link_options['preload-code'][number] | null} */
-	let preload_code = null;
-
-	/** @type {typeof valid_link_options['preload-data'][number] | null} */
-	let preload_data = null;
-
-	/** @type {typeof valid_link_options['reload'][number] | null} */
-	let reload = null;
-
-	while (element !== document.documentElement) {
-		if (!a && element.nodeName.toUpperCase() === 'A') {
-			// SVG <a> elements have a lowercase name
-			a = /** @type {HTMLAnchorElement | SVGAElement} */ (element);
-		}
-
-		if (a) {
-			if (preload_code === null) preload_code = link_option(element, 'preload-code');
-			if (preload_data === null) preload_data = link_option(element, 'preload-data');
-			if (noscroll === null) noscroll = link_option(element, 'noscroll');
-			if (reload === null) reload = link_option(element, 'reload');
-		}
-
-		// @ts-expect-error handle shadow roots
-		element = element.assignedSlot ?? element.parentNode;
-
-		// @ts-expect-error handle shadow roots
-		if (element.nodeType === 11) element = element.host;
-	}
-
+export function get_link_info(a, base) {
 	/** @type {URL | undefined} */
 	let url;
 
 	try {
-		url = a && new URL(a instanceof SVGAElement ? a.href.baseVal : a.href, document.baseURI);
+		url = new URL(a instanceof SVGAElement ? a.href.baseVal : a.href, document.baseURI);
 	} catch {}
 
-	const options = {
+	const has = {
+		rel_external: (a.getAttribute('rel') || '').split(/\s+/).includes('external'),
+		download: a.hasAttribute('download'),
+		target: !!(a instanceof SVGAElement ? a.target.baseVal : a.target)
+	};
+
+	const external =
+		!url || is_external_url(url, base) || has.rel_external || has.target || has.download;
+
+	return { url, has, external };
+}
+
+/**
+ * @param {HTMLFormElement | HTMLAnchorElement | SVGAElement} element
+ */
+export function get_router_options(element) {
+	/** @type {ValidLinkOptions<'noscroll'> | null} */
+	let noscroll = null;
+
+	/** @type {ValidLinkOptions<'preload-code'> | null} */
+	let preload_code = null;
+
+	/** @type {ValidLinkOptions<'preload-data'> | null} */
+	let preload_data = null;
+
+	/** @type {ValidLinkOptions<'reload'> | null} */
+	let reload = null;
+
+	/** @type {Element} */
+	let el = element;
+
+	while (el !== document.documentElement) {
+		if (preload_code === null) preload_code = link_option(el, 'preload-code');
+		if (preload_data === null) preload_data = link_option(el, 'preload-data');
+		if (noscroll === null) noscroll = link_option(el, 'noscroll');
+		if (reload === null) reload = link_option(el, 'reload');
+
+		el = /** @type {Element} */ (parent_element(el));
+	}
+
+	return {
 		preload_code: levels[preload_code ?? 'off'],
 		preload_data: levels[preload_data ?? 'off'],
 		noscroll: noscroll === 'off' ? false : noscroll === '' ? true : null,
 		reload: reload === 'off' ? false : reload === '' ? true : null
-	};
-
-	const has = a
-		? {
-				rel_external: (a.getAttribute('rel') || '').split(/\s+/).includes('external'),
-				download: a.hasAttribute('download'),
-				target: !!(a instanceof SVGAElement ? a.target.baseVal : a.target)
-		  }
-		: {};
-
-	const external =
-		!url ||
-		is_external_url(url, base) ||
-		options.reload ||
-		has.rel_external ||
-		has.target ||
-		has.download;
-
-	return {
-		a,
-		url,
-		options,
-		external,
-		has
 	};
 }
 

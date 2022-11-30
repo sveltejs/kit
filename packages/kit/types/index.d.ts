@@ -715,12 +715,13 @@ export interface NavigationTarget {
 
 /**
  * - `enter`: The app has hydrated
+ * - `form`: The user submitted a `<form>`
  * - `leave`: The user is leaving the app by closing the tab or using the back/forward buttons to go to a different document
  * - `link`: Navigation was triggered by a link click
  * - `goto`: Navigation was triggered by a `goto(...)` call or a redirect
  * - `popstate`: Navigation was triggered by back/forward navigation
  */
-export type NavigationType = 'enter' | 'leave' | 'link' | 'goto' | 'popstate';
+export type NavigationType = 'enter' | 'form' | 'leave' | 'link' | 'goto' | 'popstate';
 
 export interface Navigation {
 	/**
@@ -733,6 +734,7 @@ export interface Navigation {
 	to: NavigationTarget | null;
 	/**
 	 * The type of navigation:
+	 * - `form`: The user submitted a `<form>`
 	 * - `leave`: The user is leaving the app by closing the tab or using the back/forward buttons to go to a different document
 	 * - `link`: Navigation was triggered by a link click
 	 * - `goto`: Navigation was triggered by a `goto(...)` call or a redirect
@@ -766,6 +768,7 @@ export interface AfterNavigate extends Navigation {
 	/**
 	 * The type of navigation:
 	 * - `enter`: The app has hydrated
+	 * - `form`: The user submitted a `<form>`
 	 * - `link`: Navigation was triggered by a link click
 	 * - `goto`: Navigation was triggered by a `goto(...)` call or a redirect
 	 * - `popstate`: Navigation was triggered by back/forward navigation
