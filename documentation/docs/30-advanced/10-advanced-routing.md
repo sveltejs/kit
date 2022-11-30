@@ -2,7 +2,7 @@
 title: Advanced routing
 ---
 
-### Rest parameters
+## Rest parameters
 
 If the number of route segments is unknown, you can use rest syntax — for example you might implement GitHub's file viewer like so...
 
@@ -24,7 +24,7 @@ If the number of route segments is unknown, you can use rest syntax — for exam
 
 > `src/routes/a/[...rest]/z/+page.svelte` will match `/a/z` (i.e. there's no parameter at all) as well as `/a/b/z` and `/a/b/c/z` and so on. Make sure you check that the value of the rest parameter is valid, for example using a [matcher](#matching).
 
-#### 404 pages
+### 404 pages
 
 Rest parameters also allow you to render custom 404s. Given these routes...
 
@@ -63,13 +63,13 @@ export function load(event) {
 
 > If you don't handle 404 cases, they will appear in [`handleError`](/docs/hooks#shared-hooks-handleerror)
 
-### Optional parameters
+## Optional parameters
 
 A route like `[lang]/home` contains a parameter named `lang` which is required. Sometimes it's beneficial to make these parameters optional, so that in this example both `home` and `en/home` point to the same page. You can do that by wrapping the parameter in another bracket pair: `[[lang]]/home`
 
 Note that an optional route parameter cannot follow a rest parameter (`[...rest]/[[optional]]`), since parameters are matched 'greedily' and the optional parameter would always be unused.
 
-### Matching
+## Matching
 
 A route like `src/routes/archive/[page]` would match `/archive/3`, but it would also match `/archive/potato`. We don't want that. You can ensure that route parameters are well-formed by adding a _matcher_ — which takes the parameter string (`"3"` or `"potato"`) and returns `true` if it is valid — to your [`params`](/docs/configuration#files) directory...
 
@@ -92,7 +92,7 @@ If the pathname doesn't match, SvelteKit will try to match other routes (using t
 
 > Matchers run both on the server and in the browser.
 
-### Sorting
+## Sorting
 
 It's possible for multiple routes to match a given path. For example each of these routes would match `/foo-abc`:
 
@@ -121,7 +121,7 @@ src/routes/[b]/+page.svelte
 src/routes/[...catchall]/+page.svelte
 ```
 
-### Encoding
+## Encoding
 
 Some characters can't be used on the filesystem — `/` on Linux and Mac, `\ / : * ? " < > |` on Windows. The `#` and `%` characters have special meaning in URLs, and the `[ ] ( )` characters have special meaning to SvelteKit, so these also can't be used directly as part of your route.
 
@@ -162,11 +162,11 @@ The format for a Unicode escape sequence is `[u+nnnn]` where `nnnn` is a valid v
 
 > Since TypeScript [struggles](https://github.com/microsoft/TypeScript/issues/13399) with directories with a leading `.` character, you may find it useful to encode these characters when creating e.g. [`.well-known`](https://en.wikipedia.org/wiki/Well-known_URI) routes: `src/routes/[x+2e]well-known/...`
 
-### Advanced layouts
+## Advanced layouts
 
 By default, the _layout hierarchy_ mirrors the _route hierarchy_. In some cases, that might not be what you want.
 
-#### (group)
+### (group)
 
 Perhaps you have some routes that are 'app' routes that should have one layout (e.g. `/dashboard` or `/item`), and others that are 'marketing' routes that should have a different layout (`/blog` or `/testimonials`). We can group these routes with a directory whose name is wrapped in parentheses — unlike normal directories, `(app)` and `(marketing)` do not affect the URL pathname of the routes inside them:
 
@@ -186,13 +186,13 @@ src/routes/
 
 You can also put a `+page` directly inside a `(group)`, for example if `/` should be an `(app)` or a `(marketing)` page.
 
-#### Breaking out of layouts
+### Breaking out of layouts
 
 The root layout applies to every page of your app — if omitted, it defaults to `<slot />`. If you want some pages to have a different layout hierarchy than the rest, then you can put your entire app inside one or more groups _except_ the routes that should not inherit the common layouts.
 
 In the example above, the `/admin` route does not inherit either the `(app)` or `(marketing)` layouts.
 
-#### +page@
+### +page@
 
 Pages can break out of the current layout hierarchy on a route-by-route basis. Suppose we have an `/item/[id]/embed` route inside the `(app)` group from the previous example:
 
@@ -229,7 +229,7 @@ src/routes/
 └ +layout.svelte
 ```
 
-#### +layout@
+### +layout@
 
 Like pages, layouts can _themselves_ break out of their parent layout hierarchy, using the same technique. For example, a `+layout@.svelte` component would reset the hierarchy for all its child routes.
 
@@ -247,7 +247,7 @@ src/routes/
 └ +layout.svelte
 ```
 
-#### When to use layout groups
+### When to use layout groups
 
 Not all use cases are suited for layout grouping, nor should you feel compelled to use them. It might be that your use case would result in complex `(group)` nesting, or that you don't want to introduce a `(group)` for a single outlier. It's perfectly fine to use other means such as composition (reusable `load` functions or Svelte components) or if-statements to achieve what you want. The following example shows a layout that rewinds to the root layout and reuses components and functions that other layouts can also use:
 

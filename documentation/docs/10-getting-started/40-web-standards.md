@@ -8,7 +8,7 @@ These APIs are available in all modern browsers and in many non-browser environm
 
 In particular, you'll get comfortable with the following:
 
-### Fetch APIs
+## Fetch APIs
 
 SvelteKit uses [`fetch`](https://developer.mozilla.org/en-US/docs/Web/API/fetch) for getting data from the network. It's available in [hooks](/docs/hooks) and [server routes](/docs/routing#server) as well as in the browser.
 
@@ -16,15 +16,15 @@ SvelteKit uses [`fetch`](https://developer.mozilla.org/en-US/docs/Web/API/fetch)
 
 Besides `fetch` itself, the [Fetch API](https://developer.mozilla.org/en-US/docs/Web/API/Fetch_API) includes the following interfaces:
 
-#### Request
+### Request
 
 An instance of [`Request`](https://developer.mozilla.org/en-US/docs/Web/API/Request) is accessible in [hooks](/docs/hooks) and [server routes](/docs/routing#server) as `event.request`. It contains useful methods like `request.json()` and `request.formData()` for getting data that was posted to an endpoint.
 
-#### Response
+### Response
 
 An instance of [`Response`](https://developer.mozilla.org/en-US/docs/Web/API/Response) is returned from `await fetch(...)` and handlers in `+server.js` files. Fundamentally, a SvelteKit app is a machine for turning a `Request` into a `Response`.
 
-#### Headers
+### Headers
 
 The [`Headers`](https://developer.mozilla.org/en-US/docs/Web/API/Headers) interface allows you to read incoming `request.headers` and set outgoing `response.headers`:
 
@@ -45,7 +45,7 @@ export function GET(event) {
 }
 ```
 
-### FormData
+## FormData
 
 When dealing with HTML native form submissions you'll be working with [`FormData`](https://developer.mozilla.org/en-US/docs/Web/API/FormData) objects.
 
@@ -68,15 +68,15 @@ export async function POST(event) {
 }
 ```
 
-### Stream APIs
+## Stream APIs
 
 Most of the time, your endpoints will return complete data, as in the `userAgent` example above. Sometimes, you may need to return a response that's too large to fit in memory in one go, or is delivered in chunks, and for this the platform provides [streams](https://developer.mozilla.org/en-US/docs/Web/API/Streams_API) — [ReadableStream](https://developer.mozilla.org/en-US/docs/Web/API/ReadableStream), [WritableStream](https://developer.mozilla.org/en-US/docs/Web/API/WritableStream) and [TransformStream](https://developer.mozilla.org/en-US/docs/Web/API/TransformStream).
 
-### URL APIs
+## URL APIs
 
 URLs are represented by the [`URL`](https://developer.mozilla.org/en-US/docs/Web/API/URL) interface, which includes useful properties like `origin` and `pathname` (and, in the browser, `hash`). This interface shows up in various places — `event.url` in [hooks](/docs/hooks) and [server routes](/docs/routing#server), [`$page.url`](/docs/modules#$app-stores) in [pages](/docs/routing#page), `from` and `to` in [`beforeNavigate` and `afterNavigate`](/docs/modules#$app-navigation) and so on.
 
-#### URLSearchParams
+### URLSearchParams
 
 Wherever you encounter a URL, you can access query parameters via `url.searchParams`, which is an instance of [`URLSearchParams`](https://developer.mozilla.org/en-US/docs/Web/API/URLSearchParams):
 
@@ -93,7 +93,7 @@ export {};
 const foo = url.searchParams.get('foo');
 ```
 
-### Web Crypto
+## Web Crypto
 
 The [Web Crypto API](https://developer.mozilla.org/en-US/docs/Web/API/Web_Crypto_API) is made available via the `crypto` global. It's used internally for [Content Security Policy](/docs/configuration#csp) headers, but you can also use it for things like generating UUIDs:
 

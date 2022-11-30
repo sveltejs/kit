@@ -40,13 +40,13 @@ import Foo from 'your-library/Foo.svelte';
 
 > You should avoid using [SvelteKit-specific modules](/docs/modules) like `$app` in your packages unless you intend for them to only be consumable by other SvelteKit projects. E.g. rather than using `import { browser } from '$app/environment'` you could use [`import.meta.env.SSR`](https://vitejs.dev/guide/env-and-mode.html#env-variables) to make the library available to all Vite-based projects or better yet use [Node conditional exports](https://nodejs.org/api/packages.html#conditional-exports) to make it work for all bundlers. You may also wish to pass in things like the current URL or a navigation action as a prop rather than relying directly on `$app/stores`, `$app/navigation`, etc. Writing your app in this more generic fashion will also make it easier to setup tools for testing, UI demos and so on.
 
-### Options
+## Options
 
 `svelte-package` accepts the following options:
 
 - `-w`/`--watch` — watch files in `src/lib` for changes and rebuild the package
 
-### Publishing
+## Publishing
 
 To publish the generated package:
 
@@ -56,7 +56,7 @@ npm publish ./package
 
 The `./package` above is referring to the directory name generated, change accordingly if you configure a custom [`package.dir`](/docs/configuration).
 
-### Caveats
+## Caveats
 
 All relative file imports need to be fully specified, adhering to Node's ESM algorithm. This means you cannot import the file `src/lib/something/index.js` like `import { something } from './something`, instead you need to import it like this: `import { something } from './something/index.js`. If you are using TypeScript, you need to import `.ts` files the same way, but using a `.js` file ending, _not_ a `.ts` file ending (this isn't under our control, the TypeScript team has made that decision). Setting `"moduleResolution": "NodeNext"` in your `tsconfig.json` or `jsconfig.json` will help you with this.
 

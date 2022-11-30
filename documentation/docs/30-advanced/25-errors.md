@@ -4,13 +4,13 @@ title: Errors
 
 Errors are an inevitable fact of software development. SvelteKit handles errors differently depending on where they occur, what kind of errors they are, and the nature of the incoming request.
 
-### Error objects
+## Error objects
 
 SvelteKit distinguishes between expected and unexpected errors, both of which are represented as simple `{ message: string }` objects by default.
 
 You can add additional properties, like a `code` or a tracking `id`, as shown below.
 
-### Expected errors
+## Expected errors
 
 An _expected_ error is one created with the [`error`](/docs/modules#sveltejs-kit-error) helper imported from `@sveltejs/kit`:
 
@@ -67,7 +67,7 @@ throw error(404, {
 +throw error(404, 'Not found');
 ```
 
-### Unexpected errors
+## Unexpected errors
 
 An _unexpected_ error is any other exception that occurs while handling a request. Since these can contain sensitive information, unexpected error messages and stack traces are not exposed to users.
 
@@ -99,7 +99,7 @@ export function handleError({ error, event }) {
 }
 ```
 
-### Responses
+## Responses
 
 If an error occurs inside `handle` or inside a [`+server.js`](/docs/routing#server) request handler, SvelteKit will respond with either a fallback error page or a JSON representation of the error object, depending on the request's `Accept` headers.
 
@@ -126,7 +126,7 @@ If the error instead occurs inside a `load` function while rendering a page, Sve
 
 The exception is when the error occurs inside the root `+layout.js` or `+layout.server.js`, since the root layout would ordinarily _contain_ the `+error.svelte` component. In this case, SvelteKit uses the fallback error page.
 
-### Type safety
+## Type safety
 
 If you're using TypeScript and need to customize the shape of errors, you can do so by declaring an `App.Error` interface in your app (by convention, in `src/app.d.ts`, though it can live anywhere that TypeScript can 'see'):
 

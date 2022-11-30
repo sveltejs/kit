@@ -72,6 +72,7 @@ export async function read_file(file) {
 	const { metadata, body } = extract_frontmatter(markdown);
 
 	const { content, sections } = parse({
+		file,
 		body: generate_ts_from_js(body),
 		code: (source, language, current) => {
 			const hash = createHash('sha256');
@@ -286,12 +287,13 @@ export async function read_file(file) {
 
 /**
  * @param {{
+ *   file: string;
  *   body: string;
  *   code: (source: string, language: string, current: string) => string;
  *   codespan: (source: string) => string;
  * }} opts
  */
-function parse({ body, code, codespan }) {
+function parse({ file, body, code, codespan }) {
 	const headings = [];
 
 	/** @type {import('./types').Section[]} */
@@ -326,7 +328,7 @@ function parse({ body, code, codespan }) {
 
 			const slug = headings.filter(Boolean).join('-');
 
-			if (level === 3) {
+			if (level === 2) {
 				section = {
 					title,
 					slug,
@@ -334,18 +336,14 @@ function parse({ body, code, codespan }) {
 				};
 
 				sections.push(section);
-			} else if (level === 4) {
-				section.sections.push({
+			} else if (level === 3) {
+				(section?.sections ?? sections).push({
 					title,
 					slug
 				});
 			} else {
-				// throw new Error(`Unexpected <h${level}> in ${file}`);
+				throw new Error(`Unexpected <h${level}> in ${file}`);
 			}
-
-			// TODO this is a temporary hack — update the docs instead. the nodeLinker thing
-			// is so that levels are preserved for the FAQs
-			if (level >= 3 && !body.includes('nodeLinker')) level -= 1;
 
 			return `<h${level} id="${slug}">${html}<a href="#${slug}" class="permalink"><span class="visually-hidden">permalink</span></a></h${level}>`;
 		},

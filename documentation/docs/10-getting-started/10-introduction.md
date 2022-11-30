@@ -2,13 +2,13 @@
 title: Introduction
 ---
 
-### Before we begin
+## Before we begin
 
 > SvelteKit is in release candidate phase for 1.0 while we address reported issues and add polish. If you get stuck, reach out for help in the [Discord chatroom](https://svelte.dev/chat).
 >
 > See the [migration guides](/docs/migrating) for help upgrading from Sapper.
 
-### What is SvelteKit?
+## What is SvelteKit?
 
 SvelteKit is a framework for building extremely high-performance web apps.
 
