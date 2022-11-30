@@ -1,6 +1,6 @@
 .text h2 {
 	margin-top: 7rem;
-	border-bottom: 1px solid #ddd;
+	border-bottom: 1px solid var(--sk-back-2);
 }
 
 .text h3 {
