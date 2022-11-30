@@ -55,7 +55,7 @@
 
 	@media (min-width: 1320px) {
 		.container {
-			--sk-page-sidebar-width: max(30rem, 33.333vw);
+			--sk-page-sidebar-width: max(30rem, 30vw);
 		}
 
 		.page {
