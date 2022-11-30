@@ -155,38 +155,6 @@ a {
 	color: var(--sk-theme-1);
 }
 
-/*  lists ---------------------------------- */
-.listify ol,
-.listify ul {
-	--list-padding: 3rem;
-	list-style: none;
-	color: currentColor;
-	margin-left: var(--list-padding);
-}
-
-.listify li,
-.listify li {
-	max-width: calc(var(--sk-line-max-width) - var(--list-padding));
-	line-height: 1.5;
-	margin: 0 0 0.5em 0;
-}
-
-.listify ul > li:before {
-	content: '';
-	position: absolute;
-	margin-top: 0.8rem;
-	margin-left: -1.8rem;
-	background-color: var(--sk-theme-2);
-	width: 0.6rem;
-	height: 0.6rem;
-	border-radius: 2px;
-	opacity: 0.7;
-}
-
-.listify ol {
-	list-style: decimal;
-}
-
 /*  tables --------------------------------- */
 table {
 	width: 100%;
@@ -225,55 +193,4 @@ figcaption,
 	position: absolute;
 	width: 1px;
 	white-space: nowrap;
-}
-
-/* permalinks */
-[id] {
-	scroll-margin-top: calc(var(--sk-nav-height) + 4rem);
-}
-
-a.anchor {
-	position: absolute !important;
-	display: block;
-	background: url(@sveltejs/site-kit/icons/link.svg) 0 50% no-repeat;
-	background-size: 1em 1em;
-	width: 1.4em;
-	height: 1em;
-	left: -1.3em;
-	opacity: 1;
-	transition: opacity 0.2s;
-	bottom: 0.25em;
-}
-
-/* .faqs :global(h2 > .anchor),
-.faqs :global(h3 > .anchor) {
-	bottom: 0.3em;
-} */
-
-@media (min-width: 768px) {
-	:global(.anchor:focus),
-	:global(h2):hover .anchor,
-	:global(h3):hover .anchor,
-	:global(h4):hover .anchor,
-	:global(h5):hover .anchor,
-	:global(h6):hover .anchor {
-		opacity: 1;
-	}
-
-	/* :global(h5) .anchor,
-	:global(h6) .anchor {
-		bottom: 0.25em;
-	} */
-}
-
-@media (max-width: 768px) {
-	[id] {
-		/* scroll-margin-top: 10rem; */
-	}
-
-	a.anchor {
-		transform: scale(0.6);
-		opacity: 1;
-		left: -1em;
-	}
 }

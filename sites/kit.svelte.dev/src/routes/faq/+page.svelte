@@ -1,5 +1,4 @@
 <script>
-	import '$lib/docs/client/docs.css';
 	import '$lib/docs/client/shiki.css';
 	import * as hovers from '$lib/docs/client/hovers.js';
 
@@ -19,23 +18,21 @@
 
 <div class="faqs text">
 	<h1>Frequently Asked Questions</h1>
-	<div class="faqs-content listify">
-		{#each data.sections as faq}
-			<article class="faq">
-				<h2 id={faq.slug}>
-					{faq.title}
+	<div class="faqs-content">
+		<section>
+			{#each data.sections as faq}
+				<article class="faq">
+					<h2 id={faq.slug}>
+						{faq.title}
 
-					<a href="#{faq.slug}" class="anchor">
-						<span class="visually-hidden">permalink</span>
-					</a>
-				</h2>
-				{@html faq.content}
-			</article>
-		{/each}
-		<p>
-			See also the <a href="https://svelte.dev/faq" rel="external">Svelte FAQ</a> for questions relating
-			to Svelte directly.
-		</p>
+						<a href="#{faq.slug}" class="permalink">
+							<span class="visually-hidden">permalink</span>
+						</a>
+					</h2>
+					{@html faq.content}
+				</article>
+			{/each}
+		</section>
 	</div>
 </div>
 
@@ -49,10 +46,5 @@
 	.faqs-content {
 		max-width: var(--sk-line-max-width);
 		margin: 0 auto;
-	}
-
-	/* TODO this page must be missing some styles from somewhere. the whole thing needs tidying up */
-	.faqs :global(a) :global(code) {
-		color: var(--sk-theme-1);
 	}
 </style>

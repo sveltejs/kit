@@ -1,7 +1,6 @@
 <script>
 	import { page } from '$app/stores';
 	import { Icon } from '@sveltejs/site-kit';
-	import '$lib/docs/client/docs.css';
 	import '$lib/docs/client/shiki.css';
 	import * as hovers from '$lib/docs/client/hovers.js';
 	import OnThisPage from './OnThisPage.svelte';
@@ -25,7 +24,7 @@
 	<meta name="Description" content="{data.page.title} • SvelteKit documentation" />
 </svelte:head>
 
-<div class="text content listify">
+<div class="text content">
 	<h1>{data.page.title}</h1>
 
 	<a class="edit" href="https://github.com/sveltejs/kit/edit/master/documentation/{data.page.file}">
@@ -56,6 +55,26 @@
 <OnThisPage details={data.page} sections={data.page.sections} />
 
 <style>
+	.content {
+		width: 100%;
+		margin: 0;
+		padding: var(--sk-page-padding-top) var(--sk-page-padding-side);
+	}
+
+	@media (min-width: 832px) {
+		/* can't use vars in @media :( */
+		.content {
+			padding-left: calc(var(--sk-page-sidebar-width) + var(--sk-page-padding-side));
+		}
+	}
+
+	@media (min-width: 1300px) {
+		/* can't use vars in @media :( */
+		.content {
+			padding-right: calc(var(--sk-page-sidebar-width) + var(--sk-page-padding-side));
+		}
+	}
+
 	.edit {
 		position: relative;
 		font-size: 1.4rem;

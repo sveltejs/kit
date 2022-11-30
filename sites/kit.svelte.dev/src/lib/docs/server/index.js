@@ -343,7 +343,7 @@ function parse({ body, code, codespan }) {
 			// is so that levels are preserved for the FAQs
 			if (level >= 3 && !body.includes('nodeLinker')) level -= 1;
 
-			return `<h${level} id="${slug}">${html}<a href="#${slug}" class="anchor"><span class="visually-hidden">permalink</span></a></h${level}>`;
+			return `<h${level} id="${slug}">${html}<a href="#${slug}" class="permalink"><span class="visually-hidden">permalink</span></a></h${level}>`;
 		},
 		code: (source, language) => code(source, language, current),
 		codespan

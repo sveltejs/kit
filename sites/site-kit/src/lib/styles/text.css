@@ -12,3 +12,305 @@
 .text ul {
 	margin: 1em 0;
 }
+
+.text section {
+	max-width: var(--sk-line-max-width);
+	padding: 0 0 0 1rem;
+}
+
+.text section h2,
+.text section h3,
+.text section h4 {
+	margin-left: -1rem;
+}
+
+/* code */
+.text code {
+	padding: 0.2rem 0.4rem;
+	margin: 0 0.2rem;
+	top: -0.1rem;
+	background: var(--sk-back-2);
+}
+
+.text pre code {
+	padding: 0;
+	margin: 0;
+	top: 0;
+	background: transparent;
+}
+
+.text pre {
+	margin: 0;
+	margin-bottom: 2rem;
+	width: 100%;
+	padding: 1rem;
+	box-shadow: inset 1px 1px 6px hsla(205.7, 63.6%, 30.8%, 0.06);
+}
+
+/** hacky overrides to allow filenames inside code blocks —
+    TODO change the CSS in site-kit so we can get rid of this */
+.code-block {
+	background-color: var(--code-bg);
+	color: var(--code-base);
+	border-radius: 0.5rem;
+	margin: 1em 0;
+	font-size: 14px;
+	/* max-width: var(--sk-line-max-width); */
+	box-shadow: inset 1px 1px 6px hsla(205.7, 63.6%, 30.8%, 0.06);
+	overflow: hidden;
+}
+
+.code-block pre {
+	background-color: transparent;
+	margin: 0;
+	box-shadow: none;
+}
+
+.code-block h5 {
+	font-family: var(--sk-font-mono);
+	font-size: 1.2rem;
+	font-weight: 400;
+	padding: 1rem 1rem 0.8rem 1rem;
+	margin: 0;
+	color: var(--sk-text-2);
+	background: var(--sk-back-2);
+	border-radius: var(--sk-border-radius) var(--sk-border-radius) 0 0;
+	box-shadow: 0 1px 6px hsla(205.7, 63.6%, 30.8%, 0.06);
+}
+
+.code-block a {
+	border-bottom: 1px dotted var(--sk-theme-1);
+}
+
+.code-block a:hover {
+	border-bottom: 1px solid var(--sk-theme-1);
+	text-decoration: none !important;
+}
+
+.code-block.border {
+	border-left: 5px solid var(--sk-theme-2);
+}
+
+/** TODO another thing that belongs in site-kit */
+pre.language-diff code {
+	color: rgba(0, 0, 0, 0.4);
+}
+
+.language-diff .inserted,
+.language-diff .deleted {
+	position: relative;
+}
+
+.language-diff .inserted {
+	color: hsl(120, 100%, 25%);
+}
+
+.language-diff .deleted {
+	color: hsl(2, 80%, 47%);
+	user-select: none;
+}
+
+.language-diff .inserted::before,
+.language-diff .deleted::before {
+	position: absolute;
+	left: -0.6rem;
+	top: -0.2rem;
+	font-size: 1.2rem;
+}
+
+.language-diff .inserted::before {
+	content: '+';
+}
+
+.language-diff .deleted::before {
+	content: '-';
+}
+
+/** make long comments wrap on mobile */
+.token.comment.wrapped {
+	display: block;
+	white-space: pre-wrap;
+	padding-left: calc(var(--indent) + 2ch);
+	text-indent: calc(-1 * var(--indent) - 2ch);
+	min-height: 1.35em;
+}
+
+.api-section {
+	background: var(--sk-back-2);
+	padding: 1rem;
+	margin-bottom: 1rem;
+	max-width: var(--sk-line-max-width);
+	border-radius: var(--sk-border-radius);
+}
+
+.ts-block {
+	margin: 1em 0;
+	max-width: var(--sk-line-max-width);
+	background: white;
+	border-radius: var(--sk-border-radius);
+	filter: drop-shadow(2px 2px 8px rgba(0, 0, 0, 0.08));
+	overflow: hidden;
+}
+
+.ts-block > .code-block {
+	margin: 0;
+	border-radius: 0;
+	box-shadow: none;
+	background: white;
+}
+
+.ts-block .ts-block-property p {
+	margin: 1rem 0;
+}
+
+.ts-block-property .code-block {
+	margin: 1rem 0;
+}
+
+.ts-block-property > .code-block {
+	margin: 0;
+	padding-left: 1rem;
+	border-radius: 0;
+	box-shadow: none;
+	border-top: 1px solid var(--sk-back-2);
+}
+
+.ts-block-property-details {
+	padding: 0 1rem 0 2rem;
+}
+
+.ts-block-property-details blockquote {
+	margin: 1rem 0;
+}
+
+.ts-block-property-children {
+	margin: 0rem -1rem 0rem 1rem;
+}
+
+.ts-block-property-bullets .tag {
+	font-size: 1.4rem;
+	text-transform: uppercase;
+	color: #666;
+}
+
+.ts-block-property ul:last-child {
+	margin-bottom: 0;
+}
+
+/* permalinks */
+.text [id] {
+	scroll-margin-top: calc(var(--sk-nav-height) + 4rem);
+}
+
+.text a.permalink {
+	position: absolute !important;
+	display: block;
+	background: url(@sveltejs/site-kit/icons/link.svg) 0 50% no-repeat;
+	background-size: 1em 1em;
+	width: 1.4em;
+	height: 1em;
+	left: -1.3em;
+	opacity: 0;
+	transition: opacity 0.2s;
+	bottom: 0.25em;
+}
+
+@media (min-width: 768px) {
+	.text a.permalink:focus,
+	.text h2:hover a.permalink,
+	.text h3:hover a.permalink,
+	.text h4:hover a.permalink,
+	.text h5:hover a.permalink,
+	.text h6:hover a.permalink {
+		opacity: 1;
+	}
+}
+
+@media (max-width: 768px) {
+	.text a.permalink {
+		transform: scale(0.6);
+		opacity: 1;
+		left: -1em;
+	}
+}
+
+/* lists */
+.text ol,
+.text ul {
+	--list-padding: 3rem;
+	margin-left: var(--list-padding);
+}
+
+.text ul {
+	list-style: none;
+}
+
+.text ol {
+	list-style: decimal;
+}
+
+.text li {
+	max-width: calc(var(--sk-line-max-width) - var(--list-padding));
+	line-height: 1.5;
+	margin: 0 0 0.5em 0;
+}
+
+.text li:before {
+	content: '';
+	position: absolute;
+	margin-top: 0.8rem;
+	margin-left: -1.8rem;
+	background-color: var(--sk-theme-2);
+	width: 0.6rem;
+	height: 0.6rem;
+	border-radius: 2px;
+	opacity: 0.7;
+}
+
+.text table {
+	margin: 1em 0;
+}
+
+.text small {
+	font-size: var(--sk-text-s);
+	float: right;
+	pointer-events: all;
+	color: var(--sk-theme-1);
+	cursor: pointer;
+}
+
+.text blockquote {
+	color: rgba(0, 0, 0, 0.7);
+	background-color: rgba(255, 62, 0, 0.1);
+	border-left: 4px solid #ff3e00;
+	padding: 1rem;
+}
+
+.text blockquote :first-child {
+	margin-top: 0;
+}
+
+.text blockquote :last-child {
+	margin-bottom: 0;
+}
+
+.text blockquote code {
+	background: #d5e2ea;
+}
+
+.text blockquote pre code {
+	background: transparent;
+}
+
+.text section a:hover {
+	text-decoration: underline;
+}
+
+.text section a code {
+	color: inherit;
+	background: rgba(255, 62, 0, 0.1) !important;
+}
+
+.text ul ul {
+	margin-bottom: 0;
+}
