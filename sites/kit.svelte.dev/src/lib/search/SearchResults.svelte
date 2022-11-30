@@ -10,7 +10,7 @@
 
 {#if results.length > 0}
 	<SearchResultList {results} {query} on:select />
-{:else}
+{:else if query}
 	<p class="info">No results</p>
 {/if}
 
