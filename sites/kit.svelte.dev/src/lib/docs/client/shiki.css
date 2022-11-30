@@ -4,7 +4,7 @@
 
 :root {
 	--shiki-color-text: var(--code-base);
-	--shiki-color-background: transparent;
+	--shiki-color-background: var(--sk-back-1);
 	--shiki-token-constant: var(--code-base);
 	--shiki-token-string: var(--code-string);
 	--shiki-token-comment: var(--code-comment);

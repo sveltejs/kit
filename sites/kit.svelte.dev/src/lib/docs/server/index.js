@@ -107,10 +107,10 @@ export async function read_file(file) {
 			let version_class = '';
 			if (language === 'generated-ts' || language === 'generated-svelte') {
 				language = language.replace('generated-', '');
-				version_class = ' ts-version';
+				version_class = 'ts-version';
 			} else if (language === 'original-js' || language === 'original-svelte') {
 				language = language.replace('original-', '');
-				version_class = ' js-version';
+				version_class = 'js-version';
 			}
 
 			if (language === 'dts') {
@@ -221,9 +221,13 @@ export async function read_file(file) {
 				html = `<pre class='language-${plang}'><code>${highlighted}</code></pre>`;
 			}
 
-			html = `<div class="code-block${version_class} ${options.style ?? ''}">${
-				options.file ? `<h5>${options.file}</h5>` : ''
-			}${html}</div>`;
+			if (options.file) {
+				html = html.replace('<pre', `<pre data-file="${options.file}"`);
+			}
+
+			if (version_class) {
+				html = html.replace(/class=('|")/, `class=$1${version_class} `);
+			}
 
 			type_regex.lastIndex = 0;
 

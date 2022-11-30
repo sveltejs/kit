@@ -18,18 +18,6 @@ pre {
 	-moz-tab-size: 2;
 }
 
-.code-block pre {
-	background-color: var(--code-bg);
-	color: var(--code-base);
-	border-radius: 0.5rem;
-	padding: 1rem;
-	font-size: 14px;
-}
-
-.code-block pre code {
-	color: var(--code-base);
-}
-
 .token {
 	color: var(--code-base);
 }

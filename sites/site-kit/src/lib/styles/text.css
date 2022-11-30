@@ -40,8 +40,7 @@
 }
 
 .text pre {
-	margin: 0;
-	margin-bottom: 2rem;
+	margin: 1em 0;
 	width: 100%;
 	padding: 1rem;
 	box-shadow: inset 1px 1px 6px hsla(205.7, 63.6%, 30.8%, 0.06);
@@ -49,50 +48,45 @@
 
 /** hacky overrides to allow filenames inside code blocks —
     TODO change the CSS in site-kit so we can get rid of this */
-.code-block {
+.text pre {
 	background-color: var(--code-bg);
 	color: var(--code-base);
 	border-radius: 0.5rem;
-	margin: 1em 0;
 	font-size: 14px;
 	/* max-width: var(--sk-line-max-width); */
 	box-shadow: inset 1px 1px 6px hsla(205.7, 63.6%, 30.8%, 0.06);
 	overflow: hidden;
 }
 
-.code-block pre {
-	background-color: transparent;
-	margin: 0;
-	box-shadow: none;
-}
-
-.code-block h5 {
+.text pre[data-file]::before {
+	content: attr(data-file);
+	display: block;
+	width: 100%;
 	font-family: var(--sk-font-mono);
 	font-size: 1.2rem;
 	font-weight: 400;
 	padding: 1rem 1rem 0.8rem 1rem;
-	margin: 0;
+	margin: -1rem 0 1rem -1rem;
 	color: var(--sk-text-2);
 	background: var(--sk-back-2);
 	border-radius: var(--sk-border-radius) var(--sk-border-radius) 0 0;
 	box-shadow: 0 1px 6px hsla(205.7, 63.6%, 30.8%, 0.06);
 }
 
-.code-block a {
+.text pre a {
 	border-bottom: 1px dotted var(--sk-theme-1);
 }
 
-.code-block a:hover {
+.text pre a:hover {
 	border-bottom: 1px solid var(--sk-theme-1);
 	text-decoration: none !important;
 }
 
-.code-block.border {
+.text pre.border {
 	border-left: 5px solid var(--sk-theme-2);
 }
 
-/** TODO another thing that belongs in site-kit */
-pre.language-diff code {
+.text pre.language-diff code {
 	color: rgba(0, 0, 0, 0.4);
 }
 
@@ -152,7 +146,8 @@ pre.language-diff code {
 	overflow: hidden;
 }
 
-.ts-block > .code-block {
+.ts-block > pre {
+	--shiki-color-background: white;
 	margin: 0;
 	border-radius: 0;
 	box-shadow: none;
@@ -163,11 +158,11 @@ pre.language-diff code {
 	margin: 1rem 0;
 }
 
-.ts-block-property .code-block {
+.ts-block-property pre {
 	margin: 1rem 0;
 }
 
-.ts-block-property > .code-block {
+.ts-block-property > pre {
 	margin: 0;
 	padding-left: 1rem;
 	border-radius: 0;
@@ -255,7 +250,7 @@ pre.language-diff code {
 	margin: 0 0 0.5em 0;
 }
 
-.text li:before {
+.text ul li:before {
 	content: '';
 	position: absolute;
 	margin-top: 0.8rem;
