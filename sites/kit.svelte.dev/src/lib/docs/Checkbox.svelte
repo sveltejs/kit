@@ -7,7 +7,7 @@
 <style>
 	input[type='checkbox'] {
 		--size: 1.2em;
-		--bg: rgba(255, 255, 255, 0.2);
+		--bg: var(--sk-theme-2);
 		--fg: white;
 		--bg-active: var(--bg);
 		--fg-active: var(--fg);

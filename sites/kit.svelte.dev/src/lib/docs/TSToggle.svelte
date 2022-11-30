@@ -37,6 +37,15 @@
 		width: 100%;
 		height: 42px;
 		z-index: 2;
-		padding: 0 3.2rem;
+		padding: 0 var(--sk-page-padding-side);
+		margin: 0 auto;
+	}
+
+	@media (min-width: 832px) {
+		.input-output-toggle {
+			padding-left: 3.2rem;
+			width: 30rem;
+			margin: 0 0 0 auto;
+		}
 	}
 </style>

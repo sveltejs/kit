@@ -41,8 +41,8 @@
 		top: 0;
 		left: 0;
 		overflow: hidden;
-		background-color: var(--sk-theme-2);
-		color: white;
+		background-color: var(--sk-back-1);
+		color: var(--sk-theme-2);
 	}
 
 	.sidebar {
@@ -67,7 +67,7 @@
 		transition: color 0.2s;
 		border-bottom: none;
 		padding: 0;
-		color: rgba(255, 255, 255, 0.9);
+		color: var(--sk-theme-2);
 		user-select: none;
 	}
 
@@ -96,17 +96,11 @@
 		margin: 0;
 	}
 
-	a:hover,
-	.section:hover,
-	.page:hover,
-	.active {
-		color: white;
-	}
-
 	.ts-toggle {
-		border-top: 1px solid rgba(255, 255, 255, 0.2);
-		background-color: var(--sk-theme-2);
-		color: white;
+		width: calc(100% - 1px);
+		border-top: 1px solid var(--sk-back-2);
+		/* border-right: 1px solid var(--sk-theme-2); */
+		background-color: var(--sk-back-1);
 	}
 
 	@media (min-width: 600px) {
@@ -117,11 +111,29 @@
 		}
 	}
 
+	@media (min-width: 700px) {
+		.sidebar {
+			columns: 3;
+		}
+	}
+
 	@media (min-width: 832px) {
 		.sidebar {
 			columns: 1;
 			padding-left: 3.2rem;
 			padding-right: 0;
+			width: 30rem;
+			margin: 0 0 0 auto;
+		}
+
+		.sidebar::before {
+			content: '';
+			position: absolute;
+			width: 0;
+			height: 100%;
+			top: 0;
+			right: 0;
+			border-right: 1px solid var(--sk-theme-2);
 		}
 
 		nav {
@@ -133,18 +145,18 @@
 			position: fixed;
 			left: 0;
 			bottom: 42px;
-			width: var(--sk-page-sidebar-width);
+			width: calc(var(--sk-page-sidebar-width) - 1px);
 			height: 2em;
 			pointer-events: none;
 			background: linear-gradient(
 				to bottom,
-				rgba(103, 103, 120, 0) 0%,
-				rgba(103, 103, 120, 0.7) 50%,
-				rgba(103, 103, 120, 1) 100%
+				rgba(246, 250, 253, 0) 0%,
+				rgba(246, 250, 253, 0.7) 50%,
+				rgba(246, 250, 253, 1) 100%
 			);
 		}
 
-		.active::after {
+		/* .active::after {
 			content: '';
 			position: absolute;
 			right: 0;
@@ -153,11 +165,26 @@
 			height: 0;
 			border: 6px solid transparent;
 			border-right-color: white;
+		} */
+
+		.active::after {
+			--size: 1.2rem;
+			content: '';
+			position: absolute;
+			width: var(--size);
+			height: var(--size);
+			top: -0.1rem;
+			right: calc(-0.6rem - 2px);
+			background-color: var(--sk-back);
+			border-left: 1px solid var(--sk-theme-2);
+			border-bottom: 1px solid var(--sk-theme-2);
+			transform: translateY(0.2rem) rotate(45deg);
+			z-index: 2;
 		}
 
 		.ts-toggle {
 			position: fixed;
-			width: var(--sk-page-sidebar-width);
+			width: calc(var(--sk-page-sidebar-width) - 1px);
 			bottom: 0;
 			z-index: 1;
 			margin-right: 0;

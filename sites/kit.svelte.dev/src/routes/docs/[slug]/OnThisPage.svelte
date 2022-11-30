@@ -96,7 +96,14 @@
 
 <style>
 	.on-this-page {
-		display: none;
+		display: var(--on-this-page-display);
+		position: fixed;
+		padding: 0 var(--sk-page-padding-side) 0 0;
+		width: var(--on-this-page-width);
+		top: calc(var(--sk-page-padding-top) + var(--sk-nav-height));
+		/* right: 0; */
+		left: var(--on-this-page-left);
+		right: var(--on-this-page-right);
 	}
 
 	h2 {
@@ -127,18 +134,5 @@
 	a.active {
 		background: var(--sk-back-1);
 		border-left-color: var(--sk-theme-1);
-	}
-
-	@media (min-width: 1300px) {
-		.on-this-page {
-			display: block;
-			padding: 0 var(--sk-page-padding-side);
-			width: calc(var(--sk-page-sidebar-width) - 15px); /* substract scrollbar */
-			position: fixed;
-			top: calc(var(--sk-page-padding-top) + var(--sk-nav-height));
-			left: calc(
-				var(--sk-page-sidebar-width) + var(--sk-page-padding-side) + var(--sk-line-max-width)
-			);
-		}
 	}
 </style>

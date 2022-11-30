@@ -57,20 +57,20 @@
 	.content {
 		width: 100%;
 		margin: 0;
-		padding: var(--sk-page-padding-top) var(--sk-page-padding-side);
+		/* padding: var(--sk-page-padding-top) var(--sk-page-padding-side); */
 	}
 
 	@media (min-width: 832px) {
 		/* can't use vars in @media :( */
 		.content {
-			padding-left: calc(var(--sk-page-sidebar-width) + var(--sk-page-padding-side));
+			/* padding-left: calc(var(--sk-page-sidebar-width) + var(--sk-page-padding-side)); */
 		}
 	}
 
 	@media (min-width: 1300px) {
 		/* can't use vars in @media :( */
 		.content {
-			padding-right: calc(var(--sk-page-sidebar-width) + var(--sk-page-padding-side));
+			/* padding-right: calc(var(--sk-page-sidebar-width) + var(--sk-page-padding-side)); */
 		}
 	}
 
