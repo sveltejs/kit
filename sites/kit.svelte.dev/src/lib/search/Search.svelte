@@ -59,6 +59,7 @@
 		height: 3.2rem;
 		border-radius: var(--sk-border-radius);
 		background: no-repeat 1rem 50% / 1em 1em url(../icons/search.svg);
+		color: var(--sk-text-3);
 	}
 
 	input:focus + label {
