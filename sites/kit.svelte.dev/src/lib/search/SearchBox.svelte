@@ -222,12 +222,12 @@
 	}
 
 	input::selection {
-		background-color: rgba(255, 255, 255, 0.4);
+		background-color: var(--sk-back-translucent);
 	}
 
 	input:focus-visible {
 		background: var(--sk-theme-2);
-		color: white;
+		color: var(--sk-back);
 		outline: none;
 	}
 
@@ -248,12 +248,12 @@
 
 	button[aria-label='Close']:focus-visible {
 		background: var(--sk-theme-2);
-		color: white;
+		color: var(--sk-back);
 		outline: none;
 	}
 
 	input:focus-visible + button[aria-label='Close'] {
-		color: white;
+		color: var(--sk-back);
 	}
 
 	.modal-background,
@@ -267,7 +267,8 @@
 	}
 
 	.modal-background {
-		background: rgba(255, 255, 255, 0.7);
+		background: var(--sk-back);
+		opacity: 0.7;
 	}
 
 	.modal {
@@ -300,7 +301,7 @@
 	}
 
 	.results-container {
-		background: white;
+		background: var(--sk-back);
 		border-radius: 0 0 var(--sk-border-radius) var(--sk-border-radius);
 		pointer-events: all;
 	}
@@ -310,7 +311,7 @@
 		font-size: 1.2rem;
 		font-weight: normal;
 		text-transform: uppercase;
-		background-color: white;
+		background-color: var(--sk-back);
 		border-radius: 0 0 var(--sk-border-radius) var(--sk-border-radius);
 		pointer-events: all;
 	}
@@ -323,12 +324,12 @@
 	}
 
 	a:hover {
-		background: #eee;
+		background: var(--sk-back-1);
 	}
 
 	a:focus {
-		background: var(--sk-theme-2);
-		color: white;
+		background: var(--sk-text-3);
+		color: var(--sk-back);
 		outline: none;
 	}
 
@@ -345,7 +346,7 @@
 		font-size: 1rem;
 		text-transform: uppercase;
 		font-weight: 600;
-		color: #999;
+		color: var(--sk-text-2);
 	}
 
 	a strong {
@@ -355,16 +356,16 @@
 	}
 
 	a:focus small {
-		color: rgba(255, 255, 255, 0.6);
+		color: var(--sk-text-2);
 	}
 
 	a:focus strong {
-		color: white;
+		color: var(--sk-back);
 	}
 
 	a strong :global(mark) {
 		background: var(--sk-theme-2);
-		color: white;
+		color: var(--sk-back);
 		text-decoration: none;
 		border-radius: 1px;
 	}
@@ -384,7 +385,7 @@
 	}
 
 	a:focus + [aria-label='Delete'] {
-		color: white;
+		color: var(--sk-back);
 	}
 
 	button[aria-label='Delete']:hover {
@@ -394,7 +395,7 @@
 
 	button[aria-label='Delete']:focus-visible {
 		background: var(--sk-theme-2);
-		color: white;
+		color: var(--sk-back);
 		opacity: 1;
 		outline: none;
 	}

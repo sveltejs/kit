@@ -30,19 +30,19 @@
 <style>
 	.hero-banner {
 		max-width: 100vw;
-		background: rgb(211, 214, 217);
+		background: hsl(210, 7%, 84%);
 		background: radial-gradient(
 				34.14% 72.25% at 47.58% 31.75%,
-				rgba(232, 244, 255, 0.52) 0%,
-				rgba(255, 255, 255, 0) 100%
+				hsla(209, 100%, 95%, 0.52) 0%,
+				hsla(0, 0%, 100%, 0) 100%
 			),
 			linear-gradient(
 				92.4deg,
-				#d1d4d7 14.67%,
-				rgba(238, 247, 255, 0.48) 54.37%,
-				rgba(206, 216, 224, 0.62) 92.49%
+				hsl(210, 7%, 83%) 14.67%,
+				hsla(208, 100%, 97%, 0.48) 54.37%,
+				hsla(207, 22%, 84%, 0.62) 92.49%
 			),
-			linear-gradient(0deg, #dbe7ef, #dbe7ef);
+			linear-gradient(0deg, hsl(204, 38%, 90%), hsl(204, 38%, 90%));
 		position: relative;
 		padding: 8rem var(--sk-page-padding-side) 0;
 		display: flex;
@@ -76,7 +76,7 @@
 		letter-spacing: 0.1em;
 		text-align: center;
 		text-transform: uppercase;
-		color: var(--sk-text-2);
+		color: var(--sk-text);
 		max-width: 12em;
 		font-family: var(--sk-font);
 	}
@@ -145,6 +145,28 @@
 			justify-content: flex-start;
 			margin: 0 auto;
 			padding: 0;
+		}
+	}
+
+	@media (prefers-color-scheme: dark) {
+		.hero-banner {
+			background: hsl(210, 7%, 20%);
+			background: radial-gradient(
+					64.14% 72.25% at 47.58% 31.75%,
+					hsla(209, 100%, 75%, 0.52) 0%,
+					hsla(0, 0%, 100%, 0) 100%
+				),
+				linear-gradient(
+					92.4deg,
+					hsl(210, 7%, 16%) 14.67%,
+					hsla(208, 100%, 23%, 0.48) 54.37%,
+					hsla(207, 22%, 13%, 0.62) 92.49%
+				),
+				linear-gradient(0deg, hsl(204, 38%, 20%), hsl(204, 10%, 90%));
+		}
+
+		.hero-text {
+			mix-blend-mode: screen;
 		}
 	}
 </style>

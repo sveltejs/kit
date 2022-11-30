@@ -79,7 +79,7 @@
 		padding: 0.8rem 1.6rem;
 		border-radius: 4px;
 		background: var(--back);
-		border: 1px solid white;
+		border: 1px solid var(--sk-back);
 		color: var(--sk-theme-2);
 		font-size: var(--sk-text-xs);
 		text-decoration: none;
@@ -88,7 +88,7 @@
 	.how :global(.cta) {
 		border: 1px solid var(--sk-theme-1);
 		background-color: var(--sk-theme-1);
-		color: white;
+		color: var(--sk-back);
 	}
 
 	.box :global(.cta):hover {
@@ -132,7 +132,7 @@
 		margin: 0 0 0.5em 0;
 		font-size: var(--sk-text-l);
 		font-weight: 300;
-		color: white;
+		color: var(--sk-back);
 	}
 
 	.blurb :global(p) {
