@@ -140,18 +140,18 @@
 .ts-block {
 	margin: 1em 0;
 	max-width: var(--sk-line-max-width);
-	background: white;
+	background: var(--sk-code-ts-bg);
 	border-radius: var(--sk-border-radius);
 	filter: drop-shadow(2px 2px 8px rgba(0, 0, 0, 0.08));
 	overflow: hidden;
 }
 
 .ts-block > pre {
-	--shiki-color-background: white;
+	--shiki-color-background: var(--sk-code-ts-bg);
 	margin: 0;
 	border-radius: 0;
 	box-shadow: none;
-	background: white;
+	background: var(--sk-code-ts-bg);
 }
 
 .ts-block .ts-block-property p {

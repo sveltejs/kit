@@ -4,7 +4,6 @@
 	--sk-back-1: hsl(var(--sk-back-1-hsl));
 	--sk-back-2: hsl(206, 44%, 93%);
 	--sk-back-3: hsl(206, 20%, 80%);
-	/* --sk-back-3: var(--sk-theme-2); */
 	--sk-theme-1: hsl(15, 100%, 50%);
 	--sk-theme-2: hsl(240, 8%, 44%);
 	--sk-theme-3: hsl(204, 100%, 63%);
@@ -13,6 +12,7 @@
 	--sk-text-3: var(--sk-theme-2);
 
 	--sk-code-bg: var(--sk-back-1);
+	--sk-code-ts-bg: var(--sk-back);
 	--sk-code-base: hsl(45, 7%, 35%);
 	--sk-code-comment: hsl(0, 0%, 41%);
 	--sk-code-keyword: hsl(204, 88%, 35%);
@@ -85,9 +85,10 @@
 
 		--sk-back-1-hsl: 0, 0%, 16%;
 
+		--sk-code-ts-bg: var(--sk-back-1);
 		--sk-code-bg: var(--sk-back-1);
 		--sk-code-base: hsl(45, 7%, 75%);
-		--sk-code-comment: hsl(0, 0%, 41%);
+		--sk-code-comment: hsl(0, 0%, 51%);
 		--sk-code-keyword: hsl(204, 88%, 65%);
 		--sk-code-function: hsl(19, 67%, 75%);
 		--sk-code-string: hsl(41, 37%, 68%);
