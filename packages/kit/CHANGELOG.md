@@ -1,5 +1,19 @@
 # @sveltejs/kit
 
+## 1.0.0-next.570
+
+### Patch Changes
+
+- Remove prepublishOnly script ([#7893](https://github.com/sveltejs/kit/pull/7893))
+
+## 1.0.0-next.569
+
+### Patch Changes
+
+- Ignore elements that are no longer in the document ([#7881](https://github.com/sveltejs/kit/pull/7881))
+
+- [breaking] Use client-side routing for `<form method="GET">` ([#7828](https://github.com/sveltejs/kit/pull/7828))
+
 ## 1.0.0-next.568
 
 ### Patch Changes
