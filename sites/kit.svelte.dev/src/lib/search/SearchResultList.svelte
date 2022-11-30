@@ -65,7 +65,7 @@
 	ul :global(ul) {
 		margin-left: 0.8em !important;
 		padding-left: 0em;
-		border-left: 1px solid #eee;
+		border-left: 1px solid var(--sk-back-5);
 	}
 
 	li {
@@ -124,11 +124,11 @@
 
 	a span :global(mark) {
 		background: none;
-		color: #111;
+		color: var(--sk-text-1);
 		background: var(--highlight-color);
 		outline: 2px solid var(--highlight-color);
 		border-top: 2px solid var(--highlight-color);
-		mix-blend-mode: darken;
+		/* mix-blend-mode: darken; */
 	}
 
 	a:focus span {
@@ -147,7 +147,7 @@
 	}
 
 	a strong :global(mark) {
-		color: black;
+		color: var(--sk-text-1);
 		background: var(--highlight-color);
 		outline: 2px solid var(--highlight-color);
 		/* border-top: 2px solid var(--highlight-color); */
