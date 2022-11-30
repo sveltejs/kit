@@ -1255,8 +1255,6 @@ export function create_client({ target, base }) {
 				const options = get_router_options(a);
 				if (options.reload) continue;
 
-				if (external || options.reload) continue;
-
 				if (options.preload_code === PRELOAD_PRIORITIES.viewport) {
 					observer.observe(a);
 				}
