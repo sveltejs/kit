@@ -1,5 +1,4 @@
 <script>
-	import '$lib/docs/client/shiki.css';
 	import * as hovers from '$lib/docs/client/hovers.js';
 
 	/** @type {import('./$types').PageData} */

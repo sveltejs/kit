@@ -11,11 +11,18 @@
 	--code-template-string: hsl(2, 80%, 47%);
 	--code-tags: var(--code-function);
 	--code-important: var(--code-string);
-}
 
-pre {
-	tab-size: 2;
-	-moz-tab-size: 2;
+	--shiki-color-text: var(--code-base);
+	--shiki-color-background: var(--sk-back-1);
+	--shiki-token-constant: var(--code-base);
+	--shiki-token-string: var(--code-string);
+	--shiki-token-comment: var(--code-comment);
+	--shiki-token-keyword: var(--code-keyword);
+	--shiki-token-parameter: var(--code-base);
+	--shiki-token-function: var(--code-function);
+	--shiki-token-string-expression: var(--code-string);
+	--shiki-token-punctuation: var(--code-base);
+	--shiki-token-link: var(--code-keyword);
 }
 
 .token {
@@ -57,4 +64,17 @@ pre {
 .token.template-string .interpolation-punctuation,
 .token.template-string .string {
 	color: var(--code-template-string);
+}
+
+.language-id {
+	display: none;
+}
+
+pre.twoslash .error,
+pre.twoslash .error-behind {
+	display: none;
+}
+
+pre.twoslash data-lsp {
+	border-bottom: 1px dotted rgba(0, 0, 0, 0.2);
 }
