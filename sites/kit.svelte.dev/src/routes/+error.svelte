@@ -1,5 +1,4 @@
 <script>
-	import { dev } from '$app/environment';
 	import { page } from '$app/stores';
 
 	// we don't want to use <svelte:window bind:online> here, because we only care about the online
@@ -12,7 +11,9 @@
 </svelte:head>
 
 <div class="container">
-	{#if online}
+	{#if $page.status === 404}
+		<h1>Not found</h1>
+	{:else if online}
 		<h1>Yikes!</h1>
 
 		{#if $page.error.message}
@@ -22,19 +23,13 @@
 		{/if}
 
 		{#if $page.status >= 500}
-			{#if dev && $page.error.stack}
-				<pre>{$page.error.stack}</pre>
-			{:else}
-				<p>Please try reloading the page.</p>
+			<p>Please try reloading the page.</p>
 
-				<p>
-					If the error persists, please drop by <a href="https://svelte.dev/chat"
-						>Discord chatroom</a
-					>
-					and let us know, or raise an issue on
-					<a href="https://github.com/sveltejs/svelte">GitHub</a>. Thanks!
-				</p>
-			{/if}
+			<p>
+				If the error persists, please drop by <a href="https://svelte.dev/chat">Discord chatroom</a>
+				and let us know, or raise an issue on
+				<a href="https://github.com/sveltejs/svelte">GitHub</a>. Thanks!
+			</p>
 		{/if}
 	{:else}
 		<h1>It looks like you're offline</h1>
