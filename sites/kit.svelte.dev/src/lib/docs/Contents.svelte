@@ -89,6 +89,7 @@
 
 	.active {
 		font-weight: 700;
+		color: var(--sk-text-1);
 	}
 
 	ul ul,

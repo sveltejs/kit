@@ -78,16 +78,16 @@
 		max-width: 15em;
 		padding: 0.8rem 1.6rem;
 		border-radius: 4px;
-		background: var(--back);
-		border: 1px solid var(--sk-back-1);
-		color: var(--sk-theme-2);
+		background: white;
+		border: 1px solid white;
+		color: #222;
 		font-size: var(--sk-text-xs);
 		text-decoration: none;
 	}
 
 	.how :global(.cta) {
-		border: 1px solid var(--sk-theme-1);
-		background-color: var(--sk-theme-1);
+		border: 1px solid var(--sk-theme-1-variant);
+		background-color: var(--sk-theme-1-variant);
 		color: var(--sk-back-1);
 	}
 
@@ -129,28 +129,29 @@
 
 	.box :global(h2) {
 		padding: 0;
-		margin: 0 0 0.5em 0;
 		font-size: var(--sk-text-l);
 		font-weight: 300;
-		color: var(--sk-back-1);
+		color: white;
 	}
 
 	.blurb :global(p) {
 		font-size: var(--sk-text-s);
+		margin: 1em 0;
+		color: white;
 	}
 
 	.one {
-		background: var(--sk-theme-1);
+		background: var(--sk-theme-1-variant);
 		grid-area: one;
 	}
 
 	.two {
-		background: var(--sk-theme-3);
+		background: var(--sk-theme-3-variant);
 		grid-area: two;
 	}
 
 	.three {
-		background: var(--sk-theme-2);
+		background: var(--sk-theme-2-variant);
 		grid-area: three;
 	}
 
