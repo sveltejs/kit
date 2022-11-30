@@ -12,6 +12,7 @@
 	/* dimensions */
 	--sk-nav-height: 6rem;
 	--sk-page-padding-top: 6rem;
+	--sk-page-padding-bottom: 6rem;
 	--sk-page-padding-side: 2.4rem;
 	--sk-page-sidebar-width: 30rem;
 	--sk-thick-border-width: 0.3rem;
@@ -23,7 +24,7 @@
 	--sk-font-mono: 'Fira Mono', monospace;
 	--sk-text-xl: 3.6rem;
 	--sk-text-l: 2.4rem;
-	--sk-text-m: 1.8rem;
+	--sk-text-m: 2rem;
 	--sk-text-s: 1.6rem;
 	--sk-text-xs: 1.3rem;
 	--sk-line-max-width: 72rem;

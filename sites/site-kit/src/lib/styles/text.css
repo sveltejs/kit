@@ -1,0 +1,14 @@
+.text h2 {
+	margin-top: 7rem;
+	border-bottom: 1px solid #ddd;
+}
+
+.text h3 {
+	margin-top: 5rem;
+}
+
+.text p,
+.text ol,
+.text ul {
+	margin: 1em 0;
+}

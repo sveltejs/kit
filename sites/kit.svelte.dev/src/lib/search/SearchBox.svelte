@@ -202,7 +202,7 @@
 	</div>
 {/if}
 
-<div aria-live="assertive">
+<div aria-live="assertive" class="visually-hidden">
 	{#if $searching && search?.results.length === 0}
 		<p>No results</p>
 	{/if}

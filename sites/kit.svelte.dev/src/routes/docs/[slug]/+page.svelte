@@ -25,7 +25,7 @@
 	<meta name="Description" content="{data.page.title} • SvelteKit documentation" />
 </svelte:head>
 
-<div class="content listify">
+<div class="text content listify">
 	<h1>{data.page.title}</h1>
 
 	<a class="edit" href="https://github.com/sveltejs/kit/edit/master/documentation/{data.page.file}">
