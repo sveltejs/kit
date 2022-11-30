@@ -81,7 +81,7 @@ code {
 	position: relative;
 	border-radius: 0.3em;
 	white-space: nowrap;
-	color: #444;
+	color: var(--sk-text-2);
 	-webkit-font-smoothing: initial;
 	padding: 0.4rem;
 	margin: 0 0.2rem;

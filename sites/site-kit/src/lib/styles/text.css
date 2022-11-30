@@ -250,12 +250,12 @@
 	margin: 0 0 0.5em 0;
 }
 
-.text ul li:before {
+.text ul li::before {
 	content: '';
 	position: absolute;
 	margin-top: 0.8rem;
 	margin-left: -1.8rem;
-	background-color: var(--sk-theme-2);
+	background-color: var(--sk-back-3);
 	width: 0.6rem;
 	height: 0.6rem;
 	border-radius: 2px;
@@ -290,7 +290,7 @@
 }
 
 .text blockquote code {
-	background: #d5e2ea;
+	background: var(--sk-back-4);
 }
 
 .text blockquote pre code {

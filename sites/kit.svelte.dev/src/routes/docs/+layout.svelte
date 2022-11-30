@@ -38,6 +38,16 @@
 			top: 0;
 		}
 
+		.toc-container::before {
+			content: '';
+			position: fixed;
+			width: 0;
+			height: 100%;
+			top: 0;
+			left: calc(var(--sk-page-sidebar-width) - 1px);
+			border-right: 1px solid var(--sk-back-3);
+		}
+
 		.page {
 			padding-left: calc(var(--sk-page-sidebar-width) + var(--sk-page-padding-side));
 		}

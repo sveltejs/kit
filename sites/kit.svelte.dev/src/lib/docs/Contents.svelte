@@ -99,7 +99,6 @@
 	.ts-toggle {
 		width: calc(100% - 1px);
 		border-top: 1px solid var(--sk-back-2);
-		/* border-right: 1px solid var(--sk-theme-2); */
 		background-color: var(--sk-back-1);
 	}
 
@@ -124,16 +123,7 @@
 			padding-right: 0;
 			width: 30rem;
 			margin: 0 0 0 auto;
-		}
-
-		.sidebar::before {
-			content: '';
-			position: absolute;
-			width: 0;
-			height: 100%;
-			top: 0;
-			right: 0;
-			border-right: 1px solid var(--sk-back-3);
+			overflow: hidden;
 		}
 
 		nav {
@@ -150,20 +140,20 @@
 			pointer-events: none;
 			background: linear-gradient(
 				to bottom,
-				rgba(246, 250, 253, 0) 0%,
-				rgba(246, 250, 253, 0.7) 50%,
-				rgba(246, 250, 253, 1) 100%
+				hsla(var(--sk-back-1-hsl), 0) 0%,
+				hsla(var(--sk-back-1-hsl), 0.7) 50%,
+				hsl(var(--sk-back-1-hsl)) 100%
 			);
 		}
 
 		.active::after {
-			--size: 1.2rem;
+			--size: 1rem;
 			content: '';
 			position: absolute;
 			width: var(--size);
 			height: var(--size);
 			top: -0.1rem;
-			right: calc(-0.6rem - 2px);
+			right: calc(-0.5 * var(--size));
 			background-color: var(--sk-back);
 			border-left: 1px solid var(--sk-theme-2);
 			border-bottom: 1px solid var(--sk-theme-2);

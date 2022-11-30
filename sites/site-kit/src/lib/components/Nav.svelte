@@ -97,7 +97,7 @@
 		width: 100vw;
 		height: var(--sk-nav-height);
 		margin: 0 auto;
-		background-color: white;
+		background-color: var(--sk-back);
 		font-family: var(--sk-font);
 		z-index: 100;
 		user-select: none;

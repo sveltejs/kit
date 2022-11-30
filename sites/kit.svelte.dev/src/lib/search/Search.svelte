@@ -49,7 +49,7 @@
 
 	input {
 		padding: 0.5em 0.5em 0.4em 2em;
-		border: 1px solid #ccc;
+		border: 1px solid var(--sk-back-2);
 		font-family: inherit;
 		font-size: 1.4rem;
 		/* text-align: center; */
@@ -71,7 +71,7 @@
 	}
 
 	label {
-		color: #666;
+		color: var(--sk-text-3);
 		position: absolute;
 		top: calc(50% - 0.9rem);
 		right: 0;
@@ -85,10 +85,10 @@
 
 	kbd {
 		display: none;
-		background: #eee;
-		border: 1px solid #ddd;
+		background: var(--sk-back-1);
+		border: 1px solid var(--sk-back-2);
 		padding: 0.2rem 0.2rem 0rem 0.2rem;
-		color: #666;
+		color: var(--sk-text-3);
 		font-size: inherit;
 		font-family: inherit;
 		border-radius: 2px;
