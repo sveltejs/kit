@@ -5,7 +5,7 @@
 	export let data;
 </script>
 
-<div class="grid">
+<div>
 	<slot />
 	<div class="toc-container">
 		<Contents contents={data.sections} />
@@ -14,11 +14,6 @@
 
 <style>
 	@media (min-width: 832px) {
-		.grid {
-			grid-template-rows: unset;
-			grid-template-columns: var(--sk-page-sidebar-width) 1fr;
-		}
-
 		.toc-container {
 			width: var(--sk-page-sidebar-width);
 			height: 100vh;

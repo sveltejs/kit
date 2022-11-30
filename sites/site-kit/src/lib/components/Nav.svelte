@@ -147,7 +147,7 @@
 		line-height: 1;
 	}
 
-	@media (max-width: 799px) {
+	@media (max-width: 800px) {
 		ul {
 			position: relative;
 			display: none;
