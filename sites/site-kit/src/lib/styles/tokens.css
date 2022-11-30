@@ -1,13 +1,16 @@
 :root {
 	/* colors */
 	--sk-back: #ffffff;
-	--sk-back-1: #f6fafd;
-	--sk-back-2: #e5eef5;
-	--sk-theme-1: #ff3e00;
-	--sk-theme-2: #676778;
-	--sk-theme-3: #40b3ff;
-	--sk-text-1: #222;
-	--sk-text-2: #444;
+	--sk-back-1: hsl(206, 64%, 98%);
+	--sk-back-2: hsl(206, 44%, 93%);
+	--sk-back-3: var(--sk-theme-2);
+	--sk-theme-1: hsl(15, 100%, 50%);
+	--sk-theme-2: hsl(240, 8%, 44%);
+	--sk-theme-3: hsl(204, 100%, 63%);
+	--sk-text-1: hsl(0, 0%, 13%);
+	--sk-text-2: hsl(0, 0%, 27%);
+	--sk-text-3: var(--sk-theme-2);
+	--sk-text-4: hsla(0, 0%, 0%, 0.7); /* used for text on coloured backgrounds e.g. blockquotes */
 
 	/* dimensions */
 	--sk-nav-height: 6rem;
@@ -47,14 +50,17 @@
 @media (prefers-color-scheme: dark) {
 	:root {
 		/* TODO create tokens for all the ad-hoc styles used on the site, so we can offer dark mode */
-		/* --sk-back: #222;
-		--sk-back-1: #333;
-		--sk-back-2: #444;
-		--sk-theme-1: #ff3e00;
-		--sk-theme-2: #676778;
-		--sk-theme-3: #40b3ff;
-		--sk-text-1: #fff;
-		--sk-text-2: #ddd; */
+		--sk-back: hsl(0, 0%, 13%);
+		--sk-back-1: hsl(0, 0%, 20%);
+		--sk-back-2: hsl(0, 0%, 27%);
+		--sk-back-3: hsl(0, 0%, 40%);
+		--sk-theme-1: hsl(15, 100%, 55%);
+		--sk-theme-2: hsl(240, 8%, 44%);
+		--sk-theme-3: hsl(204, 100%, 63%);
+		--sk-text-1: hsl(0, 0%, 100%);
+		--sk-text-2: hsl(0, 0%, 87%);
+		--sk-text-3: hsl(0, 0%, 80%);
+		--sk-text-4: hsla(0, 0%, 100%, 0.9);
 	}
 }
 

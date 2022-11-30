@@ -275,8 +275,8 @@
 }
 
 .text blockquote {
-	color: rgba(0, 0, 0, 0.7);
-	background-color: rgba(255, 62, 0, 0.1);
+	color: var(--sk-text-4);
+	background-color: rgba(255, 62, 0, 0.2);
 	border-left: 4px solid #ff3e00;
 	padding: 1rem;
 }

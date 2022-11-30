@@ -101,7 +101,6 @@
 		padding: 0 var(--sk-page-padding-side) 0 0;
 		width: var(--on-this-page-width);
 		top: calc(var(--sk-page-padding-top) + var(--sk-nav-height));
-		/* right: 0; */
 		left: var(--on-this-page-left);
 		right: var(--on-this-page-right);
 	}
@@ -112,7 +111,7 @@
 		font-weight: 400;
 		margin: 0 0 1rem 0;
 		padding: 0 0 0 0.6rem;
-		color: var(--sk-theme-2);
+		color: var(--sk-text-3);
 	}
 
 	ul {
@@ -122,7 +121,7 @@
 	a {
 		display: block;
 		padding: 0.3rem 0.5rem;
-		color: var(--sk-theme-2);
+		color: var(--sk-text-3);
 		border-left: 2px solid transparent;
 	}
 

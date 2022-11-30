@@ -57,21 +57,6 @@
 	.content {
 		width: 100%;
 		margin: 0;
-		/* padding: var(--sk-page-padding-top) var(--sk-page-padding-side); */
-	}
-
-	@media (min-width: 832px) {
-		/* can't use vars in @media :( */
-		.content {
-			/* padding-left: calc(var(--sk-page-sidebar-width) + var(--sk-page-padding-side)); */
-		}
-	}
-
-	@media (min-width: 1300px) {
-		/* can't use vars in @media :( */
-		.content {
-			/* padding-right: calc(var(--sk-page-sidebar-width) + var(--sk-page-padding-side)); */
-		}
 	}
 
 	.edit {
@@ -92,7 +77,7 @@
 
 	.controls {
 		max-width: calc(var(--sk-line-max-width) + 1rem);
-		border-top: 1px solid #eee;
+		border-top: 1px solid var(--sk-back-2);
 		padding: 1rem 0 0 0;
 		display: grid;
 		grid-template-columns: 1fr 1fr;
@@ -112,7 +97,7 @@
 		font-size: 1.2rem;
 		text-transform: uppercase;
 		font-weight: 600;
-		color: var(--sk-theme-2);
+		color: var(--sk-text-3);
 	}
 
 	.controls span.faded {

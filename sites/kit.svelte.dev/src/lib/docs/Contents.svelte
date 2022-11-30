@@ -42,7 +42,7 @@
 		left: 0;
 		overflow: hidden;
 		background-color: var(--sk-back-1);
-		color: var(--sk-theme-2);
+		color: var(--sk-text-3);
 	}
 
 	.sidebar {
@@ -67,7 +67,7 @@
 		transition: color 0.2s;
 		border-bottom: none;
 		padding: 0;
-		color: var(--sk-theme-2);
+		color: var(--sk-text-3);
 		user-select: none;
 	}
 
@@ -133,7 +133,7 @@
 			height: 100%;
 			top: 0;
 			right: 0;
-			border-right: 1px solid var(--sk-theme-2);
+			border-right: 1px solid var(--sk-back-3);
 		}
 
 		nav {
@@ -155,17 +155,6 @@
 				rgba(246, 250, 253, 1) 100%
 			);
 		}
-
-		/* .active::after {
-			content: '';
-			position: absolute;
-			right: 0;
-			top: 2px;
-			width: 0;
-			height: 0;
-			border: 6px solid transparent;
-			border-right-color: white;
-		} */
 
 		.active::after {
 			--size: 1.2rem;
