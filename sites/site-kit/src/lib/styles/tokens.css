@@ -12,6 +12,20 @@
 	--sk-text-2: hsl(0, 0%, 27%);
 	--sk-text-3: var(--sk-theme-2);
 
+	--sk-code-bg: var(--sk-back-1);
+	--sk-code-base: hsl(45, 7%, 35%);
+	--sk-code-comment: hsl(0, 0%, 41%);
+	--sk-code-keyword: hsl(204, 88%, 35%);
+	--sk-code-function: hsl(19, 67%, 44%);
+	--sk-code-string: hsl(41, 37%, 38%);
+	--sk-code-number: hsl(120, 100%, 25%);
+	--sk-code-template-string: hsl(2, 80%, 47%);
+	--sk-code-tags: var(--code-function);
+	--sk-code-important: var(--code-string);
+	--sk-code-diff-base: hsla(0, 0%, 0%, 0.4);
+	--sk-code-diff-inserted: hsl(120, 100%, 25%);
+	--sk-code-diff-removed: hsl(2, 80%, 47%);
+
 	/* used for coloured backgrounds e.g. blockquotes */
 	--sk-back-translucent: hsla(0, 0%, 0%, 0.1);
 	--sk-text-translucent: hsla(0, 0%, 0%, 0.7);
@@ -58,18 +72,32 @@
 		/* TODO create tokens for all the ad-hoc styles used on the site, so we can offer dark mode */
 		--sk-back: hsl(0, 0%, 13%);
 		/* --sk-back-1: hsl(0, 0%, 20%); */
-		--sk-back-2: hsl(0, 0%, 27%);
+		--sk-back-2: hsl(0, 0%, 22%);
 		--sk-back-3: hsl(0, 0%, 40%);
 		--sk-back-translucent: hsla(0, 0%, 100%, 0.1);
 		--sk-theme-1: hsl(15, 100%, 55%);
 		--sk-theme-2: hsl(240, 8%, 44%);
 		--sk-theme-3: hsl(204, 100%, 63%);
-		--sk-text-1: hsl(0, 0%, 100%);
-		--sk-text-2: hsl(0, 0%, 87%);
+		--sk-text-1: hsl(0, 0%, 90%);
+		--sk-text-2: hsl(0, 0%, 80%);
 		--sk-text-3: hsl(0, 0%, 80%);
 		--sk-text-translucent: hsla(0, 0%, 100%, 0.9);
 
-		--sk-back-1-hsl: 0, 0%, 20%;
+		--sk-back-1-hsl: 0, 0%, 16%;
+
+		--sk-code-bg: var(--sk-back-1);
+		--sk-code-base: hsl(45, 7%, 75%);
+		--sk-code-comment: hsl(0, 0%, 41%);
+		--sk-code-keyword: hsl(204, 88%, 65%);
+		--sk-code-function: hsl(19, 67%, 75%);
+		--sk-code-string: hsl(41, 37%, 68%);
+		--sk-code-number: hsl(120, 100%, 25%);
+		--sk-code-template-string: hsl(2, 80%, 47%);
+		--sk-code-tags: var(--code-function);
+		--sk-code-important: var(--code-string);
+		--sk-code-diff-base: hsla(0, 0%, 100%, 0.4);
+		--sk-code-diff-inserted: hsl(120, 100%, 35%);
+		--sk-code-diff-removed: hsl(2, 80%, 47%);
 	}
 }
 
@@ -85,6 +113,17 @@
 	--heading: var(--sk-text-1);
 	--text: var(--sk-text-2);
 	--sidebar-text: rgba(255, 255, 255, 0.9);
+
+	--code-bg: var(--sk-code-bg);
+	--code-base: var(--sk-code-base);
+	--code-comment: var(--sk-code-comment);
+	--code-keyword: var(--sk-code-keyword);
+	--code-function: var(--sk-code-function);
+	--code-string: var(--sk-code-string);
+	--code-number: var(--sk-code-number);
+	--code-template-string: var(--sk-code-template-string);
+	--code-tags: var(--sk-code-tags);
+	--code-important: var(--sk-code-important);
 
 	/* dimensions */
 	--nav-h: var(--sk-nav-height);

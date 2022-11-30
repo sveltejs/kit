@@ -1,58 +1,47 @@
 @import './base.css';
 
 :root {
-	--code-bg: var(--sk-back-1);
-	--code-base: hsl(45, 7%, 35%);
-	--code-comment: hsl(0, 0%, 41%);
-	--code-keyword: hsl(204, 88%, 35%);
-	--code-function: hsl(19, 67%, 44%);
-	--code-string: hsl(41, 37%, 38%);
-	--code-number: hsl(120, 100%, 25%);
-	--code-template-string: hsl(2, 80%, 47%);
-	--code-tags: var(--code-function);
-	--code-important: var(--code-string);
-
-	--shiki-color-text: var(--code-base);
+	--shiki-color-text: var(--sk-code-base);
 	--shiki-color-background: var(--sk-back-1);
-	--shiki-token-constant: var(--code-base);
-	--shiki-token-string: var(--code-string);
-	--shiki-token-comment: var(--code-comment);
-	--shiki-token-keyword: var(--code-keyword);
-	--shiki-token-parameter: var(--code-base);
-	--shiki-token-function: var(--code-function);
-	--shiki-token-string-expression: var(--code-string);
-	--shiki-token-punctuation: var(--code-base);
-	--shiki-token-link: var(--code-keyword);
+	--shiki-token-constant: var(--sk-code-base);
+	--shiki-token-string: var(--sk-code-string);
+	--shiki-token-comment: var(--sk-code-comment);
+	--shiki-token-keyword: var(--sk-code-keyword);
+	--shiki-token-parameter: var(--sk-code-base);
+	--shiki-token-function: var(--sk-code-function);
+	--shiki-token-string-expression: var(--sk-code-string);
+	--shiki-token-punctuation: var(--sk-code-base);
+	--shiki-token-link: var(--sk-code-keyword);
 }
 
 .token {
-	color: var(--code-base);
+	color: var(--sk-code-base);
 }
 
 .token.tag,
 .token.attr-value .attr-equals {
-	color: var(--code-function);
+	color: var(--sk-code-function);
 }
 
 .token.string,
 .token.interpolation-punctuation,
 .token.attr-value,
 .token.inserted {
-	color: var(--code-string);
+	color: var(--sk-code-string);
 }
 
 .token.builtin,
 .token.function {
-	color: var(--code-function);
+	color: var(--sk-code-function);
 }
 
 .token.keyword,
 .token.boolean {
-	color: var(--code-keyword);
+	color: var(--sk-code-keyword);
 }
 
 .token.comment {
-	color: var(--code-comment);
+	color: var(--sk-code-comment);
 }
 
 .token.deleted {
@@ -61,7 +50,7 @@
 
 .token.template-string .interpolation-punctuation,
 .token.template-string .string {
-	color: var(--code-template-string);
+	color: var(--sk-code-template-string);
 }
 
 .language-id {

@@ -87,7 +87,7 @@
 }
 
 .text pre.language-diff code {
-	color: rgba(0, 0, 0, 0.4);
+	color: var(--sk-code-diff-base);
 }
 
 .language-diff .inserted,
@@ -96,11 +96,11 @@
 }
 
 .language-diff .inserted {
-	color: hsl(120, 100%, 25%);
+	color: var(--sk-code-diff-inserted);
 }
 
 .language-diff .deleted {
-	color: hsl(2, 80%, 47%);
+	color: var(--sk-code-diff-removed);
 	user-select: none;
 }
 
@@ -291,6 +291,7 @@
 
 .text blockquote code {
 	background: var(--sk-back-translucent);
+	color: var(--sk-text-1);
 }
 
 .text blockquote pre code {
