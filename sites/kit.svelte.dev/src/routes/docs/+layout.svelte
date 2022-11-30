@@ -17,7 +17,7 @@
 
 <style>
 	.container {
-		--sk-page-sidebar-width: 30rem;
+		--sk-page-sidebar-width: 28rem;
 		--on-this-page-left: auto;
 		--on-this-page-right: 0;
 	}
@@ -56,11 +56,7 @@
 		}
 	}
 
-	@media (min-width: 1320px) {
-		.container {
-			--sk-page-sidebar-width: max(30rem, 30vw);
-		}
-
+	@media (min-width: 1200px) {
 		.page {
 			--on-this-page-display: block;
 
@@ -71,6 +67,12 @@
 				var(--on-this-page-width) + var(--sk-page-padding-side) + var(--extra-padding)
 			);
 			margin: 0 auto;
+		}
+	}
+
+	@media (min-width: 1420px) {
+		.container {
+			--sk-page-sidebar-width: max(30rem, 30vw);
 		}
 	}
 
