@@ -12,25 +12,21 @@
 
 <div class="container">
 	{#if $page.status === 404}
-		<h1>Not found</h1>
+		<h1>Not found!</h1>
 	{:else if online}
 		<h1>Yikes!</h1>
 
 		{#if $page.error.message}
 			<p class="error">{$page.status}: {$page.error.message}</p>
-		{:else}
-			<p class="error">Encountered a {$page.status} error</p>
 		{/if}
 
-		{#if $page.status >= 500}
-			<p>Please try reloading the page.</p>
+		<p>Please try reloading the page.</p>
 
-			<p>
-				If the error persists, please drop by <a href="https://svelte.dev/chat">Discord chatroom</a>
-				and let us know, or raise an issue on
-				<a href="https://github.com/sveltejs/svelte">GitHub</a>. Thanks!
-			</p>
-		{/if}
+		<p>
+			If the error persists, please drop by <a href="https://svelte.dev/chat">Discord chatroom</a>
+			and let us know, or raise an issue on
+			<a href="https://github.com/sveltejs/svelte">GitHub</a>. Thanks!
+		</p>
 	{:else}
 		<h1>It looks like you're offline</h1>
 
