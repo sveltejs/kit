@@ -49,7 +49,7 @@
 
 	input {
 		padding: 0.5em 0.5em 0.4em 2em;
-		border: 1px solid var(--sk-back-4);
+		border: 1px solid var(--sk-back-translucent);
 		font-family: inherit;
 		font-size: 1.4rem;
 		/* text-align: center; */
@@ -85,8 +85,8 @@
 
 	kbd {
 		display: none;
-		background: var(--sk-back-3);
-		border: 1px solid var(--sk-back-4);
+		background: var(--sk-back-2);
+		border: 1px solid var(--sk-back-translucent);
 		padding: 0.2rem 0.2rem 0rem 0.2rem;
 		color: var(--sk-text-3);
 		font-size: inherit;
