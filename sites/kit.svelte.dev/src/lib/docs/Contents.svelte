@@ -155,8 +155,8 @@
 			top: -0.1rem;
 			right: calc(-0.5 * var(--size));
 			background-color: var(--sk-back);
-			border-left: 1px solid var(--sk-theme-2);
-			border-bottom: 1px solid var(--sk-theme-2);
+			border-left: 1px solid var(--sk-back-3);
+			border-bottom: 1px solid var(--sk-back-3);
 			transform: translateY(0.2rem) rotate(45deg);
 			z-index: 2;
 		}

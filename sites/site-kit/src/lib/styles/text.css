@@ -275,7 +275,7 @@
 }
 
 .text blockquote {
-	color: var(--sk-text-4);
+	color: var(--sk-text-translucent);
 	background-color: rgba(255, 62, 0, 0.2);
 	border-left: 4px solid #ff3e00;
 	padding: 1rem;
@@ -290,7 +290,7 @@
 }
 
 .text blockquote code {
-	background: var(--sk-back-4);
+	background: var(--sk-back-translucent);
 }
 
 .text blockquote pre code {
