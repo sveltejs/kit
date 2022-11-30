@@ -6,7 +6,14 @@ import {
 	normalize_path,
 	add_data_suffix
 } from '../../utils/url.js';
-import { find_anchor, get_base_uri, is_external_url, scroll_state } from './utils.js';
+import {
+	find_anchor,
+	get_base_uri,
+	get_link_info,
+	get_router_options,
+	is_external_url,
+	scroll_state
+} from './utils.js';
 import {
 	lock_fetch,
 	unlock_fetch,
@@ -1221,9 +1228,15 @@ export function create_client({ target, base }) {
 		 * @param {number} priority
 		 */
 		function preload(element, priority) {
-			const { url, options, external } = find_anchor(element, base);
+			const a = find_anchor(element, target);
+			if (!a) return;
 
-			if (!external) {
+			const { url, external } = get_link_info(a, base);
+			if (external) return;
+
+			const options = get_router_options(a);
+
+			if (!options.reload) {
 				if (priority <= options.preload_data) {
 					preload_data(/** @type {URL} */ (url));
 				} else if (priority <= options.preload_code) {
@@ -1236,9 +1249,11 @@ export function create_client({ target, base }) {
 			observer.disconnect();
 
 			for (const a of target.querySelectorAll('a')) {
-				const { url, external, options } = find_anchor(a, base);
-
+				const { url, external } = get_link_info(a, base);
 				if (external) continue;
+
+				const options = get_router_options(a);
+				if (options.reload) continue;
 
 				if (options.preload_code === PRELOAD_PRIORITIES.viewport) {
 					observer.observe(a);
@@ -1444,11 +1459,12 @@ export function create_client({ target, base }) {
 				if (event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
 				if (event.defaultPrevented) return;
 
-				const { a, url, options, has } = find_anchor(
-					/** @type {Element} */ (event.composedPath()[0]),
-					base
-				);
-				if (!a || !url) return;
+				const a = find_anchor(/** @type {Element} */ (event.composedPath()[0]), target);
+				if (!a) return;
+
+				const { url, external, has } = get_link_info(a, base);
+				const options = get_router_options(a);
+				if (!url) return;
 
 				const is_svg_a_element = a instanceof SVGAElement;
 
@@ -1470,7 +1486,7 @@ export function create_client({ target, base }) {
 				if (has.download) return;
 
 				// Ignore the following but fire beforeNavigate
-				if (options.reload || has.rel_external || has.target) {
+				if (external || options.reload) {
 					const navigation = before_navigate({ url, type: 'link' });
 					if (!navigation) {
 						event.preventDefault();
@@ -1510,6 +1526,54 @@ export function create_client({ target, base }) {
 					accepted: () => event.preventDefault(),
 					blocked: () => event.preventDefault(),
 					type: 'link'
+				});
+			});
+
+			target.addEventListener('submit', (event) => {
+				if (event.defaultPrevented) return;
+
+				const form = /** @type {HTMLFormElement} */ (
+					HTMLFormElement.prototype.cloneNode.call(event.target)
+				);
+
+				const submitter = /** @type {HTMLButtonElement | HTMLInputElement | null} */ (
+					event.submitter
+				);
+
+				const method = submitter?.formMethod || form.method;
+
+				if (method !== 'get') return;
+
+				const url = new URL(
+					(event.submitter?.hasAttribute('formaction') && submitter?.formAction) || form.action
+				);
+
+				if (is_external_url(url, base)) return;
+
+				const { noscroll, reload } = get_router_options(
+					/** @type {HTMLFormElement} */ (event.target)
+				);
+				if (reload) return;
+
+				event.preventDefault();
+				event.stopPropagation();
+
+				// @ts-expect-error `URLSearchParams(fd)` is kosher, but typescript doesn't know that
+				url.search = new URLSearchParams(new FormData(event.target)).toString();
+
+				navigate({
+					url,
+					scroll: noscroll ? scroll_state() : null,
+					keepfocus: false,
+					redirect_chain: [],
+					details: {
+						state: {},
+						replaceState: false
+					},
+					nav_token: {},
+					accepted: () => {},
+					blocked: () => {},
+					type: 'form'
 				});
 			});
 
