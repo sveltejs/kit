@@ -11,6 +11,10 @@ test('validates +layout.server.js, +layout.js, +page.js', () => {
 		load: () => {}
 	});
 
+	validate_common_exports({
+		_unknown: () => {}
+	});
+
 	assert.throws(() => {
 		validate_common_exports({
 			actions: {}
@@ -24,6 +28,10 @@ test('validates +page.server.js', () => {
 		actions: {}
 	});
 
+	validate_page_server_exports({
+		_unknown: () => {}
+	});
+
 	assert.throws(() => {
 		validate_page_server_exports({
 			answer: 42
@@ -34,6 +42,10 @@ test('validates +page.server.js', () => {
 test('validates +server.js', () => {
 	validate_server_exports({
 		GET: () => {}
+	});
+
+	validate_server_exports({
+		_unknown: () => {}
 	});
 
 	assert.throws(() => {

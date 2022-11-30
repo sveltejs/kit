@@ -12,10 +12,12 @@ function validator(expected) {
 		if (!module) return;
 
 		for (const key in module) {
-			if (!set.has(key)) {
+			if (key[0] !== '_' && !set.has(key)) {
 				const valid = expected.join(', ');
 				throw new Error(
-					`Invalid export '${key}'${route_id ? ` in ${route_id}` : ''} (valid exports are ${valid})`
+					`Invalid export '${key}'${
+						route_id ? ` in ${route_id}` : ''
+					} (valid exports are ${valid}, or anything with a '_' prefix)`
 				);
 			}
 		}
