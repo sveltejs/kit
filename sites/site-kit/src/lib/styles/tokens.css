@@ -1,9 +1,10 @@
 :root {
 	/* colors */
-	--sk-back: hsl(0, 0%, 100%);
-	--sk-back-1: hsl(var(--sk-back-1-hsl));
-	--sk-back-2: hsl(206, 44%, 93%);
-	--sk-back-3: hsl(206, 20%, 80%);
+	--sk-back-1: hsl(0, 0%, 100%);
+	--sk-back-2: hsl(0, 0%, 100%); /* same as sk-back-1 in light mode, different in dark mode */
+	--sk-back-3: hsl(var(--sk-back-3-hsl));
+	--sk-back-4: hsl(206, 44%, 93%);
+	--sk-back-5: hsl(206, 20%, 80%);
 	--sk-theme-1: hsl(15, 100%, 50%);
 	--sk-theme-2: hsl(240, 8%, 44%);
 	--sk-theme-3: hsl(204, 100%, 63%);
@@ -11,8 +12,8 @@
 	--sk-text-2: hsl(0, 0%, 27%);
 	--sk-text-3: var(--sk-theme-2);
 
-	--sk-code-bg: var(--sk-back-1);
-	--sk-code-ts-bg: var(--sk-back);
+	--sk-code-bg: var(--sk-back-3);
+	--sk-code-ts-bg: var(--sk-back-1);
 	--sk-code-base: hsl(45, 7%, 35%);
 	--sk-code-comment: hsl(0, 0%, 41%);
 	--sk-code-keyword: hsl(204, 88%, 35%);
@@ -30,7 +31,7 @@
 	--sk-back-translucent: hsla(0, 0%, 0%, 0.1);
 	--sk-text-translucent: hsla(0, 0%, 0%, 0.7);
 
-	--sk-back-1-hsl: 206, 64%, 98%; /* so that we can use it for the gradient in the sidebar */
+	--sk-back-3-hsl: 206, 64%, 98%; /* so that we can use it for the gradient in the sidebar */
 
 	/* dimensions */
 	--sk-nav-height: 6rem;
@@ -70,10 +71,11 @@
 @media (prefers-color-scheme: dark) {
 	:root {
 		/* TODO create tokens for all the ad-hoc styles used on the site, so we can offer dark mode */
-		--sk-back: hsl(0, 0%, 13%);
-		/* --sk-back-1: hsl(0, 0%, 20%); */
-		--sk-back-2: hsl(0, 0%, 22%);
-		--sk-back-3: hsl(0, 0%, 40%);
+		--sk-back-1: hsl(0, 0%, 10%);
+		--sk-back-2: hsl(0, 0%, 18%);
+		/* --sk-back-3: hsl(0, 0%, 20%); */
+		--sk-back-4: hsl(0, 0%, 22%);
+		--sk-back-5: hsl(0, 0%, 40%);
 		--sk-back-translucent: hsla(0, 0%, 100%, 0.1);
 		--sk-theme-1: hsl(15, 100%, 55%);
 		--sk-theme-2: hsl(240, 8%, 44%);
@@ -83,10 +85,10 @@
 		--sk-text-3: hsl(0, 0%, 80%);
 		--sk-text-translucent: hsla(0, 0%, 100%, 0.9);
 
-		--sk-back-1-hsl: 0, 0%, 16%;
+		--sk-back-3-hsl: 0, 0%, 14%;
 
-		--sk-code-ts-bg: var(--sk-back-1);
-		--sk-code-bg: var(--sk-back-1);
+		--sk-code-ts-bg: var(--sk-back-2);
+		--sk-code-bg: var(--sk-back-3);
 		--sk-code-base: hsl(45, 7%, 75%);
 		--sk-code-comment: hsl(0, 0%, 51%);
 		--sk-code-keyword: hsl(204, 88%, 65%);
@@ -105,9 +107,9 @@
 /* legacy — existing site-kit uses these, and upgrading svelte.dev will be easier if we keep them around for now */
 :root {
 	/* colors */
-	--back: var(--sk-back);
-	--back-light: var(--sk-back-1);
-	--back-api: var(--sk-back-2);
+	--back: var(--sk-back-1);
+	--back-light: var(--sk-back-3);
+	--back-api: var(--sk-back-4);
 	--prime: var(--sk-theme-1);
 	--second: var(--sk-theme-2);
 	--flash: var(--sk-theme-3);

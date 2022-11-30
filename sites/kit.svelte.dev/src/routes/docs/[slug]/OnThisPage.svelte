@@ -127,11 +127,11 @@
 
 	a:hover {
 		text-decoration: none;
-		background: var(--sk-back-1);
+		background: var(--sk-back-3);
 	}
 
 	a.active {
-		background: var(--sk-back-1);
+		background: var(--sk-back-3);
 		border-left-color: var(--sk-theme-1);
 	}
 </style>

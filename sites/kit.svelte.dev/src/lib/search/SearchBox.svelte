@@ -227,7 +227,7 @@
 
 	input:focus-visible {
 		background: var(--sk-theme-2);
-		color: var(--sk-back);
+		color: var(--sk-back-1);
 		outline: none;
 	}
 
@@ -248,12 +248,12 @@
 
 	button[aria-label='Close']:focus-visible {
 		background: var(--sk-theme-2);
-		color: var(--sk-back);
+		color: var(--sk-back-1);
 		outline: none;
 	}
 
 	input:focus-visible + button[aria-label='Close'] {
-		color: var(--sk-back);
+		color: var(--sk-back-1);
 	}
 
 	.modal-background,
@@ -267,7 +267,7 @@
 	}
 
 	.modal-background {
-		background: var(--sk-back);
+		background: var(--sk-back-1);
 		opacity: 0.7;
 	}
 
@@ -301,7 +301,7 @@
 	}
 
 	.results-container {
-		background: var(--sk-back);
+		background: var(--sk-back-1);
 		border-radius: 0 0 var(--sk-border-radius) var(--sk-border-radius);
 		pointer-events: all;
 	}
@@ -311,7 +311,7 @@
 		font-size: 1.2rem;
 		font-weight: normal;
 		text-transform: uppercase;
-		background-color: var(--sk-back);
+		background-color: var(--sk-back-1);
 		border-radius: 0 0 var(--sk-border-radius) var(--sk-border-radius);
 		pointer-events: all;
 	}
@@ -324,12 +324,12 @@
 	}
 
 	a:hover {
-		background: var(--sk-back-1);
+		background: var(--sk-back-3);
 	}
 
 	a:focus {
 		background: var(--sk-text-3);
-		color: var(--sk-back);
+		color: var(--sk-back-1);
 		outline: none;
 	}
 
@@ -360,12 +360,12 @@
 	}
 
 	a:focus strong {
-		color: var(--sk-back);
+		color: var(--sk-back-1);
 	}
 
 	a strong :global(mark) {
 		background: var(--sk-theme-2);
-		color: var(--sk-back);
+		color: var(--sk-back-1);
 		text-decoration: none;
 		border-radius: 1px;
 	}
@@ -385,7 +385,7 @@
 	}
 
 	a:focus + [aria-label='Delete'] {
-		color: var(--sk-back);
+		color: var(--sk-back-1);
 	}
 
 	button[aria-label='Delete']:hover {
@@ -395,7 +395,7 @@
 
 	button[aria-label='Delete']:focus-visible {
 		background: var(--sk-theme-2);
-		color: var(--sk-back);
+		color: var(--sk-back-1);
 		opacity: 1;
 		outline: none;
 	}

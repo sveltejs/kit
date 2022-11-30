@@ -2,7 +2,7 @@
 
 :root {
 	--shiki-color-text: var(--sk-code-base);
-	--shiki-color-background: var(--sk-back-1);
+	--shiki-color-background: var(--sk-back-3);
 	--shiki-token-constant: var(--sk-code-base);
 	--shiki-token-string: var(--sk-code-string);
 	--shiki-token-comment: var(--sk-code-comment);

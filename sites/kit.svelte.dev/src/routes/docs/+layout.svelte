@@ -46,7 +46,7 @@
 			height: 100%;
 			top: 0;
 			left: calc(var(--sk-page-sidebar-width) - 1px);
-			border-right: 1px solid var(--sk-back-3);
+			border-right: 1px solid var(--sk-back-5);
 		}
 
 		.page {

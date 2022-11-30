@@ -79,7 +79,7 @@
 		padding: 0.8rem 1.6rem;
 		border-radius: 4px;
 		background: var(--back);
-		border: 1px solid var(--sk-back);
+		border: 1px solid var(--sk-back-1);
 		color: var(--sk-theme-2);
 		font-size: var(--sk-text-xs);
 		text-decoration: none;
@@ -88,7 +88,7 @@
 	.how :global(.cta) {
 		border: 1px solid var(--sk-theme-1);
 		background-color: var(--sk-theme-1);
-		color: var(--sk-back);
+		color: var(--sk-back-1);
 	}
 
 	.box :global(.cta):hover {
@@ -132,7 +132,7 @@
 		margin: 0 0 0.5em 0;
 		font-size: var(--sk-text-l);
 		font-weight: 300;
-		color: var(--sk-back);
+		color: var(--sk-back-1);
 	}
 
 	.blurb :global(p) {
@@ -159,7 +159,7 @@
 		   breaking the grid layout */
 		min-width: 0;
 		grid-area: how;
-		background: var(--sk-back-1);
+		background: var(--sk-back-3);
 		box-shadow: inset 1px 1px 3px rgba(81, 81, 81, 0.2);
 	}
 

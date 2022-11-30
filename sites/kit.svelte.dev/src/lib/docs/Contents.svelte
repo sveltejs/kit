@@ -41,7 +41,7 @@
 		top: 0;
 		left: 0;
 		overflow: hidden;
-		background-color: var(--sk-back-1);
+		background-color: var(--sk-back-3);
 		color: var(--sk-text-3);
 	}
 
@@ -98,8 +98,8 @@
 
 	.ts-toggle {
 		width: calc(100% - 1px);
-		border-top: 1px solid var(--sk-back-2);
-		background-color: var(--sk-back-1);
+		border-top: 1px solid var(--sk-back-4);
+		background-color: var(--sk-back-3);
 	}
 
 	@media (min-width: 600px) {
@@ -140,9 +140,9 @@
 			pointer-events: none;
 			background: linear-gradient(
 				to bottom,
-				hsla(var(--sk-back-1-hsl), 0) 0%,
-				hsla(var(--sk-back-1-hsl), 0.7) 50%,
-				hsl(var(--sk-back-1-hsl)) 100%
+				hsla(var(--sk-back-3-hsl), 0) 0%,
+				hsla(var(--sk-back-3-hsl), 0.7) 50%,
+				hsl(var(--sk-back-3-hsl)) 100%
 			);
 		}
 
@@ -154,9 +154,9 @@
 			height: var(--size);
 			top: -0.1rem;
 			right: calc(-0.5 * var(--size));
-			background-color: var(--sk-back);
-			border-left: 1px solid var(--sk-back-3);
-			border-bottom: 1px solid var(--sk-back-3);
+			background-color: var(--sk-back-1);
+			border-left: 1px solid var(--sk-back-5);
+			border-bottom: 1px solid var(--sk-back-5);
 			transform: translateY(0.2rem) rotate(45deg);
 			z-index: 2;
 		}

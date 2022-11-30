@@ -77,7 +77,7 @@
 
 	.controls {
 		max-width: calc(var(--sk-line-max-width) + 1rem);
-		border-top: 1px solid var(--sk-back-2);
+		border-top: 1px solid var(--sk-back-4);
 		padding: 1rem 0 0 0;
 		display: grid;
 		grid-template-columns: 1fr 1fr;

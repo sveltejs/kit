@@ -1,6 +1,6 @@
 .text h2 {
 	margin-top: 7rem;
-	border-bottom: 1px solid var(--sk-back-2);
+	border-bottom: 1px solid var(--sk-back-4);
 }
 
 .text h3 {
@@ -29,7 +29,7 @@
 	padding: 0.2rem 0.4rem;
 	margin: 0 0.2rem;
 	top: -0.1rem;
-	background: var(--sk-back-2);
+	background: var(--sk-back-4);
 }
 
 .text pre code {
@@ -68,7 +68,7 @@
 	padding: 1rem 1rem 0.8rem 1rem;
 	margin: -1rem 0 1rem -1rem;
 	color: var(--sk-text-2);
-	background: var(--sk-back-2);
+	background: var(--sk-back-4);
 	border-radius: var(--sk-border-radius) var(--sk-border-radius) 0 0;
 	box-shadow: 0 1px 6px hsla(205.7, 63.6%, 30.8%, 0.06);
 }
@@ -130,7 +130,7 @@
 }
 
 .api-section {
-	background: var(--sk-back-2);
+	background: var(--sk-back-4);
 	padding: 1rem;
 	margin-bottom: 1rem;
 	max-width: var(--sk-line-max-width);
@@ -167,7 +167,7 @@
 	padding-left: 1rem;
 	border-radius: 0;
 	box-shadow: none;
-	border-top: 1px solid var(--sk-back-2);
+	border-top: 1px solid var(--sk-back-4);
 }
 
 .ts-block-property-details {
@@ -255,7 +255,7 @@
 	position: absolute;
 	margin-top: 0.8rem;
 	margin-left: -1.8rem;
-	background-color: var(--sk-back-3);
+	background-color: var(--sk-back-5);
 	width: 0.6rem;
 	height: 0.6rem;
 	border-radius: 2px;

@@ -6,7 +6,7 @@
 
 <style>
 	a {
-		background: var(--sk-back);
+		background: var(--sk-back-1);
 		color: var(--sk-text-2);
 		border: 2px solid var(--sk-text-1);
 		padding: 8px;
