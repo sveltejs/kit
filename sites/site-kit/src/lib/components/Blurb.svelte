@@ -169,6 +169,10 @@
 		grid-area: what;
 	}
 
+	.what :global(p) {
+		color: var(--sk-text-2);
+	}
+
 	@media (min-width: 900px) {
 		.blurb {
 			grid-column-gap: 1em;
