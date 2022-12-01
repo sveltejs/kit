@@ -14,6 +14,7 @@
 	--sk-text-1: hsl(0, 0%, 13%);
 	--sk-text-2: hsl(0, 0%, 27%);
 	--sk-text-3: var(--sk-theme-2);
+	--sk-scrollbar: rgba(0, 0, 0, 0.3);
 
 	/* same in light mode, different in dark mode */
 	--sk-theme-1-variant: hsl(15, 100%, 50%);
@@ -90,6 +91,7 @@
 		--sk-text-2: hsl(0, 0%, 80%);
 		--sk-text-3: hsl(0, 0%, 65%);
 		--sk-text-translucent: hsla(0, 0%, 100%, 0.9);
+		--sk-scrollbar: rgba(255, 255, 255, 0.3);
 
 		--sk-back-3-hsl: 0, 0%, 14%;
 		--sk-theme-1-variant: hsl(15, 100%, 40%);

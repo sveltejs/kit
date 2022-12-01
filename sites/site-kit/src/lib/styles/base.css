@@ -22,6 +22,22 @@ body {
 	box-sizing: inherit;
 	margin: 0;
 	padding: 0;
+	scrollbar-width: thin;
+	scrollbar-color: var(--sk-scrollbar) transparent;
+	-webkit-overflow-scrolling: touch;
+}
+
+*::-webkit-scrollbar {
+	width: 0.5rem;
+}
+
+*::-webkit-scrollbar-track {
+	background: transparent;
+}
+
+*::-webkit-scrollbar-thumb {
+	background-color: var(--sk-scrollbar);
+	border-radius: 0.25rem;
 }
 
 a {

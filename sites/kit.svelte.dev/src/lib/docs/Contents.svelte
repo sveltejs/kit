@@ -53,13 +53,6 @@
 		bottom: auto;
 		width: 100%;
 		columns: 2;
-		scrollbar-width: none; /* Firefox */
-		-ms-overflow-style: none; /* Internet Explorer 10+ */
-	}
-
-	.sidebar::-webkit-scrollbar {
-		width: 0;
-		height: 0;
 	}
 
 	li {
