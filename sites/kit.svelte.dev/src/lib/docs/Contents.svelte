@@ -40,15 +40,12 @@
 	nav {
 		top: 0;
 		left: 0;
-		overflow: hidden;
-		background-color: var(--sk-back-3);
 		color: var(--sk-text-3);
 	}
 
 	.sidebar {
-		padding: calc(var(--sk-nav-height) + var(--sk-page-padding-top)) 0 6.4rem 3.2rem;
+		padding: var(--sk-page-padding-top) 0 var(--sk-page-padding-top) 3.2rem;
 		font-family: var(--sk-font);
-		overflow-y: auto;
 		height: 100%;
 		bottom: auto;
 		width: 100%;
@@ -60,6 +57,10 @@
 		line-height: 1.2;
 		margin: 0;
 		margin-bottom: 4rem;
+	}
+
+	li:last-child {
+		margin-bottom: 0;
 	}
 
 	a {
@@ -124,7 +125,6 @@
 			padding-right: 0;
 			width: var(--sidebar-menu-width);
 			margin: 0 0 0 auto;
-			overflow: hidden;
 		}
 
 		nav {

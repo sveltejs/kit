@@ -114,8 +114,10 @@
 		background: var(--shadow-gradient);
 	}
 
-	nav:not(.visible):not(:focus-within) {
-		transform: translate(0, calc(-100% - 1rem));
+	@media (max-width: 800px) {
+		nav:not(.visible):not(:focus-within) {
+			transform: translate(0, calc(-100% - 1rem));
+		}
 	}
 
 	ul {
