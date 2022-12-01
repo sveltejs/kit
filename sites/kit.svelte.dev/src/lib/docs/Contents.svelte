@@ -128,14 +128,14 @@
 		}
 
 		nav {
-			min-height: 100vh;
+			min-height: calc(100vh - var(--ts-toggle-height));
 		}
 
 		nav::after {
 			content: '';
 			position: fixed;
 			left: 0;
-			bottom: 42px;
+			bottom: var(--ts-toggle-height);
 			width: calc(var(--sidebar-width) - 1px);
 			height: 2em;
 			pointer-events: none;

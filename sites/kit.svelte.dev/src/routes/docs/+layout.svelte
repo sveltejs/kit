@@ -19,6 +19,7 @@
 	.container {
 		--sidebar-menu-width: 28rem;
 		--sidebar-width: var(--sidebar-menu-width);
+		--ts-toggle-height: 4.2rem;
 	}
 
 	.page {
@@ -29,7 +30,7 @@
 	@media (min-width: 832px) {
 		.toc-container {
 			width: var(--sidebar-width);
-			height: 100vh;
+			height: calc(100vh - var(--ts-toggle-height));
 			overflow: auto;
 			position: fixed;
 			left: 0;

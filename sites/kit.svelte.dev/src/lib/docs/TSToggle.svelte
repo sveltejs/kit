@@ -35,7 +35,7 @@
 		user-select: none;
 		align-items: center;
 		width: 100%;
-		height: 42px;
+		height: var(--ts-toggle-height);
 		z-index: 2;
 		padding: 0 var(--sk-page-padding-side);
 		margin: 0 auto;
