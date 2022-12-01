@@ -22,7 +22,6 @@
 	}
 
 	.page {
-		--extra-padding: 0rem;
 		--on-this-page-display: none;
 		padding: var(--sk-page-padding-top) var(--sk-page-padding-side);
 	}
@@ -48,7 +47,7 @@
 		}
 
 		.page {
-			padding-left: calc(var(--sidebar-width) + var(--sk-page-padding-side) + var(--extra-padding));
+			padding-left: calc(var(--sidebar-width) + var(--sk-page-padding-side));
 		}
 	}
 
