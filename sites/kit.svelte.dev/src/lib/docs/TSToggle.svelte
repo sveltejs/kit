@@ -35,8 +35,17 @@
 		user-select: none;
 		align-items: center;
 		width: 100%;
-		height: 42px;
+		height: var(--ts-toggle-height);
 		z-index: 2;
-		padding: 0 3.2rem;
+		padding: 0 var(--sk-page-padding-side);
+		margin: 0 auto;
+	}
+
+	@media (min-width: 832px) {
+		.input-output-toggle {
+			padding-left: 3.2rem;
+			width: var(--sidebar-menu-width);
+			margin: 0 0 0 auto;
+		}
 	}
 </style>

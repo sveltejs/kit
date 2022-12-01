@@ -6,7 +6,7 @@ A `+page.server.js` file can export _actions_, which allow you to `POST` data to
 
 When using `<form>`, client-side JavaScript is optional, but you can easily _progressively enhance_ your form interactions with JavaScript to provide the best user experience.
 
-### Default actions
+## Default actions
 
 In the simplest case, a page declares a `default` action:
 
@@ -44,7 +44,7 @@ We can also invoke the action from other pages (for example if there's a login w
 </form>
 ```
 
-### Named actions
+## Named actions
 
 Instead of one `default` action, a page can have as many named actions as it needs:
 
@@ -90,7 +90,7 @@ As well as the `action` attribute, we can use the `formaction` attribute on a bu
 
 > We can't have default actions next to named actions, because if you POST to a named action without a redirect, the query parameter is persisted in the URL, which means the next default POST would go through the named action from before.
 
-### Anatomy of an action
+## Anatomy of an action
 
 Each action receives a `RequestEvent` object, allowing you to read the data with `request.formData()`. After processing the request (for example, logging the user in by setting a cookie), the action can respond with data that will be available through the `form` property on the corresponding page and through `$page.form` app-wide until the next update.
 
@@ -138,7 +138,7 @@ export const actions = {
 {/if}
 ```
 
-#### Validation errors
+### Validation errors
 
 If the request couldn't be processed because of invalid data, you can return validation errors — along with the previously submitted form values — back to the user so that they can try again. The `invalid` function lets you return an HTTP status code (typically 400 or 422, in the case of validation errors) along with the data. The status code is available through `$page.status` and the data through `form`:
 
@@ -192,7 +192,7 @@ export const actions = {
 
 The returned data must be serializable as JSON. Beyond that, the structure is entirely up to you. For example, if you had multiple forms on the page, you could distinguish which `<form>` the returned `form` data referred to with an `id` property or similar.
 
-#### Redirects
+### Redirects
 
 Redirects (and errors) work exactly the same as in [`load`](/docs/load#redirects):
 
@@ -231,7 +231,7 @@ export const actions = {
 };
 ```
 
-### Loading data
+## Loading data
 
 After an action runs, the page will be re-rendered (unless a redirect or an unexpected error occurs), with the action's return value available to the page as the `form` prop. This means that your page's `load` functions will run after the action completes.
 
@@ -295,11 +295,11 @@ export const actions = {
 };
 ```
 
-### Progressive enhancement
+## Progressive enhancement
 
 In the preceding sections we built a `/login` action that [works without client-side JavaScript](https://kryogenix.org/code/browser/everyonehasjs.html) — not a `fetch` in sight. That's great, but when JavaScript _is_ available we can progressively enhance our form interactions to provide a better user experience.
 
-#### use:enhance
+### use:enhance
 
 The easiest way to progressively enhance a form is to add the `use:enhance` action:
 
@@ -345,7 +345,7 @@ To customise the behaviour, you can provide a function that runs immediately bef
 
 You can use these functions to show and hide loading UI, and so on.
 
-#### applyAction
+### applyAction
 
 If you provide your own callbacks, you may need to reproduce part of the default `use:enhance` behaviour, such as showing the nearest `+error` boundary. Most of the time, calling `update` passed to the callback is enough. If you need more customization you can do so with `applyAction`:
 
@@ -381,7 +381,7 @@ The behaviour of `applyAction(result)` depends on `result.type`:
 - `redirect` — calls `goto(result.location)`
 - `error` — renders the nearest `+error` boundary with `result.error`
 
-#### Custom event listener
+### Custom event listener
 
 We can also implement progressive enhancement ourselves, without `use:enhance`, with a normal event listener on the `<form>`:
 
@@ -436,11 +436,11 @@ const response = await fetch(this.action, {
 });
 ```
 
-### Alternatives
+## Alternatives
 
 Form actions are the preferred way to send data to the server, since they can be progressively enhanced, but you can also use [`+server.js`](/docs/routing#server) files to expose (for example) a JSON API.
 
-### GET vs POST
+## GET vs POST
 
 As we've seen, to invoke a form action you must use `method="POST"`.
 

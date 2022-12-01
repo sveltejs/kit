@@ -4,18 +4,18 @@ title: Server-only modules
 
 Like a good friend, SvelteKit keeps your secrets. When writing your backend and frontend in the same repository, it can be easy to accidentally import sensitive data into your front-end code (environment variables containing API keys, for example). SvelteKit provides a way to prevent this entirely: server-only modules.
 
-### Private environment variables
+## Private environment variables
 
 The `$env/static/private` and `$env/dynamic/private` modules, which are covered in the [modules](/docs/modules) section, can only be imported into modules that only run on the server, such as [`hooks.server.js`](/docs/hooks#server-hooks) or [`+page.server.js`](/docs/routing#page-page-server-js).
 
-### Your modules
+## Your modules
 
 You can make your own modules server-only in two ways:
 
 - adding `.server` to the filename, e.g. `secrets.server.js`
 - placing them in `$lib/server`, e.g. `$lib/server/secrets.js`
 
-### How it works
+## How it works
 
 Any time you have public-facing code that imports server-only code (whether directly or indirectly)...
 

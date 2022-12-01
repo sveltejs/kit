@@ -1,0 +1,36 @@
+{
+	"name": "@sveltejs/site-kit",
+	"version": "2.1.4",
+	"description": "Styles and components for use in *.svelte.dev websites",
+	"type": "module",
+	"svelte": "index.js",
+	"scripts": {
+		"dev": "vite dev",
+		"build": "svelte-kit sync && svelte-package",
+		"release": "npm run build && cd package && npm publish"
+	},
+	"repository": {
+		"type": "git",
+		"url": "git+https://github.com/sveltejs/site-kit.git"
+	},
+	"author": "Rich Harris",
+	"license": "MIT",
+	"bugs": {
+		"url": "https://github.com/sveltejs/site-kit/issues"
+	},
+	"homepage": "https://github.com/sveltejs/site-kit#readme",
+	"devDependencies": {
+		"@sveltejs/kit": "next",
+		"@sveltejs/package": "^1.0.0-next.5",
+		"svelte": "^3.46.3",
+		"svelte2tsx": "^0.4.14",
+		"typescript": "^4.5.5",
+		"vite": "^3.1.8"
+	},
+	"dependencies": {
+		"golden-fleece": "^1.0.9"
+	},
+	"publishConfig": {
+		"access": "public"
+	}
+}
