@@ -57,7 +57,7 @@
 	--sk-text-m: 2rem;
 	--sk-text-s: 1.6rem;
 	--sk-text-xs: 1.3rem;
-	--sk-line-max-width: 72rem;
+	--sk-line-max-width: 84rem;
 }
 
 @media screen and (min-width: 480px) {

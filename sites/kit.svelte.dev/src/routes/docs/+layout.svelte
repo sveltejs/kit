@@ -72,17 +72,17 @@
 
 	@media (min-width: 1420px) {
 		.container {
-			--sk-page-sidebar-width: max(30rem, 30vw);
+			--sk-page-sidebar-width: max(30rem, 25vw);
 		}
-	}
 
-	@media (min-width: 1620px) {
 		.page {
-			--extra-padding: 2rem;
-			--on-this-page-left: calc(
-				var(--sk-page-sidebar-width) + var(--sk-line-max-width) + 2 *
-					(var(--sk-page-padding-side) + var(--extra-padding))
-			);
+			padding: var(--sk-page-padding-top)
+				calc(var(--sk-page-sidebar-width) + var(--sk-page-padding-side));
+			margin: 0 auto;
+			max-width: var(--sk-line-max-width);
+			box-sizing: content-box;
+
+			--on-this-page-left: calc(100vw - (var(--sk-page-sidebar-width)));
 			--on-this-page-right: auto;
 		}
 	}
