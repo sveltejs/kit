@@ -361,7 +361,7 @@ export interface SSRState {
 	prerender_default?: PrerenderOption;
 }
 
-export type StrictBody = string | ArrayBufferView;
+export type StrictBody = string | ArrayBufferView | FormData | URLSearchParams;
 
 export interface Uses {
 	dependencies: Set<string>;

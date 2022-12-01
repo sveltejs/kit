@@ -6,3 +6,10 @@ export function GET({ params }) {
 		name: params.dynamic
 	});
 }
+
+/** @type {import('@sveltejs/kit').RequestHandler} */
+export function POST({ params }) {
+	return json({
+		name: params.dynamic
+	});
+}

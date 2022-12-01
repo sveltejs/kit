@@ -551,6 +551,14 @@ test.describe('Load', () => {
 		expect(await page.textContent('p')).toBe('This text comes from the server load function');
 	});
 
+	test('formdata or urlsearchparams allowed as body for post request in load function', async ({
+		page,
+		request
+	}) => {
+		await page.goto('load/fetch-formdata');
+		await page.goto('load/fetch-urlsearchparams');
+	});
+
 	test('load does not call fetch if max-age allows it', async ({ page, request }) => {
 		await request.get('/load/cache-control/reset');
 
