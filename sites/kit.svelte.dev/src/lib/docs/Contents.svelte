@@ -145,6 +145,8 @@
 				hsla(var(--sk-back-3-hsl), 0.7) 50%,
 				hsl(var(--sk-back-3-hsl)) 100%
 			);
+			background-repeat: no-repeat;
+			background-size: calc(100% - 3rem) 100%; /* cover text but not scrollbar */
 		}
 
 		.active::after {
