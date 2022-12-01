@@ -129,7 +129,7 @@
 			columns: 1;
 			padding-left: 3.2rem;
 			padding-right: 0;
-			width: 30rem;
+			width: var(--sidebar-menu-width);
 			margin: 0 0 0 auto;
 			overflow: hidden;
 		}
@@ -143,7 +143,7 @@
 			position: fixed;
 			left: 0;
 			bottom: 42px;
-			width: calc(var(--sk-page-sidebar-width) - 1px);
+			width: calc(var(--sidebar-width) - 1px);
 			height: 2em;
 			pointer-events: none;
 			background: linear-gradient(
@@ -171,7 +171,7 @@
 
 		.ts-toggle {
 			position: fixed;
-			width: calc(var(--sk-page-sidebar-width) - 1px);
+			width: calc(var(--sidebar-width) - 1px);
 			bottom: 0;
 			z-index: 1;
 			margin-right: 0;

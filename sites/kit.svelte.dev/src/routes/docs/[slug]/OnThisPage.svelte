@@ -99,10 +99,9 @@
 		display: var(--on-this-page-display);
 		position: fixed;
 		padding: 0 var(--sk-page-padding-side) 0 0;
-		width: var(--on-this-page-width);
+		width: min(280px, calc(var(--sidebar-width) - var(--sk-page-padding-side)));
 		top: calc(var(--sk-page-padding-top) + var(--sk-nav-height));
-		left: var(--on-this-page-left);
-		right: var(--on-this-page-right);
+		left: calc(100vw - (var(--sidebar-width)));
 	}
 
 	h2 {
