@@ -27,19 +27,6 @@ body {
 	-webkit-overflow-scrolling: touch;
 }
 
-*::-webkit-scrollbar {
-	width: 0.5rem;
-}
-
-*::-webkit-scrollbar-track {
-	background: transparent;
-}
-
-*::-webkit-scrollbar-thumb {
-	background-color: var(--sk-scrollbar);
-	border-radius: 0.25rem;
-}
-
 a {
 	position: relative;
 	text-decoration: none;
