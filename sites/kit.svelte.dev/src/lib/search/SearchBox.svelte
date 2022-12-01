@@ -229,7 +229,7 @@
 
 	input:focus-visible {
 		background: var(--sk-theme-2);
-		color: var(--sk-back-1);
+		color: white;
 		outline: none;
 	}
 
