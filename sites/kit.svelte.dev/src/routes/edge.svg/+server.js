@@ -44,7 +44,6 @@ function render(lat, lon, city) {
 	const phi = deg_to_rad * (90 - lat);
 
 	const x = projection([lon, lat]);
-	console.log({ lon, lat, lambda, phi, x });
 
 	return `<?xml version="1.0" encoding="UTF-8"?>
 		<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${w} ${h}">
