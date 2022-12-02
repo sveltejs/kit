@@ -17,7 +17,6 @@ const w = 1000;
 const h = 1000;
 
 const rad_to_deg = 180 / Math.PI;
-const deg_to_rad = Math.PI / 180;
 
 const projection = geoSatellite()
 	.distance(distance)
@@ -38,12 +37,9 @@ const path = geoPath(projection);
 function render(lat, lon, city) {
 	projection.rotate([-lon - 10, -lat + 20, 0]);
 
+	const [x, y] = projection([lon, lat]);
+
 	const sphere = path({ type: 'Sphere' });
-
-	const lambda = deg_to_rad * -lon;
-	const phi = deg_to_rad * (90 - lat);
-
-	const x = projection([lon, lat]);
 
 	return `<?xml version="1.0" encoding="UTF-8"?>
 		<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${w} ${h}">
@@ -51,27 +47,27 @@ function render(lat, lon, city) {
 				<stop offset="0%" stop-color="hsla(0, 0%, 0%, 0.4)" />
 				<stop offset="10%" stop-color="hsla(0, 0%, 0%, 0.3)" />
 				<stop offset="60%" stop-color="hsla(0, 0%, 0%, 0.1)" />
-				<stop offset="100%" stop-color="hsla(0, 0%, 0%, 0)"  />
+				<stop offset="100%" stop-color="hsla(0, 0%, 0%, 0)" />
 			</radialGradient>
 
 			<radialGradient id="ocean" fx="25%" fy="25%" cx="25%" cy="25%" r="75%">
 				<stop offset="0%" stop-color="hsl(206, 64%, 98%)" />
-				<stop offset="100%" stop-color="hsl(206, 20%, 80%)"  />
+				<stop offset="100%" stop-color="hsl(206, 20%, 80%)" />
 			</radialGradient>
 
 			<radialGradient id="land" fx="25%" fy="25%" cx="25%" cy="25%" r="75%">
 				<stop offset="0%" stop-color="white" />
-				<stop offset="100%" stop-color="hsl(206, 64%, 98%)"  />
+				<stop offset="100%" stop-color="hsl(206, 64%, 98%)" />
 			</radialGradient>
 
-			<ellipse cx="520" cy="850" rx="400" ry="100" fill="url(#shadow)" />
+			<ellipse cx="${0.52 * w}" cy="${0.85 * h}" rx="${0.4 * w}" ry="${0.1 * h}" fill="url(#shadow)" />
 
 			<path d="${sphere}" stroke="black" fill="url(#ocean)"/>
 			<path d="${path(graticule)}" stroke="rgba(0,0,0,0.2)" fill="none"/>
 			<path d="${path(land)}" stroke="black" fill="url(#land)"/>
 			<path d="${sphere}" stroke="black" fill="none"/>
 
-			<g transform="translate(${x[0]},${x[1]})">
+			<g transform="translate(${x},${y})">
 				<circle r="5" stroke="#ff3e00" stroke-width="5" stroke-opacity="1" fill="none"/>
 				<circle r="15" stroke="#ff3e00" stroke-width="5" stroke-opacity="0.6" fill="none"/>
 				<circle r="25" stroke="#ff3e00" stroke-width="5" stroke-opacity="0.2" fill="none"/>

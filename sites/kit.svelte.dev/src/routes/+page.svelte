@@ -156,6 +156,10 @@ npm run dev -- --open</code
 		font-size: 2.8rem;
 	}
 
+	h2:not(.grid h2) {
+		text-align: center;
+	}
+
 	.definition {
 		font-size: var(--sk-text-l);
 	}
