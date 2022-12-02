@@ -13,7 +13,7 @@ import {
 	strip_data_suffix
 } from '../../utils/url.js';
 import { exec } from '../../utils/routing.js';
-import { INVALIDATED_HEADER, redirect_json_response, render_data } from './data/index.js';
+import { redirect_json_response, render_data } from './data/index.js';
 import { add_cookies_to_headers, get_cookies } from './cookie.js';
 import { create_fetch } from './fetch.js';
 import { Redirect } from '../control.js';
@@ -228,16 +228,6 @@ export async function respond(request, options, state) {
 					for (const key in headers) {
 						const value = headers[key];
 						response.headers.set(key, /** @type {string} */ (value));
-					}
-
-					if (is_data_request) {
-						// set the Vary header on __data.json requests to ensure we don't cache
-						// incomplete responses with skipped data loads
-						// https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Vary
-						const vary = response.headers.get('Vary');
-						if (vary !== '*') {
-							response.headers.append('Vary', INVALIDATED_HEADER);
-						}
 					}
 
 					add_cookies_to_headers(response.headers, Object.values(new_cookies));
