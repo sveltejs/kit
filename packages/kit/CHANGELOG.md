@@ -1,5 +1,15 @@
 # @sveltejs/kit
 
+## 1.0.0-next.571
+
+### Patch Changes
+
+- [fix] use searchParams for x-sveltekit-invalidated ([#7912](https://github.com/sveltejs/kit/pull/7912))
+
+- [fix] correct Vite config merging with force option ([#7911](https://github.com/sveltejs/kit/pull/7911))
+
+- [fix] rebuild manifest when client hooks or param matcher file is added/removed ([#7915](https://github.com/sveltejs/kit/pull/7915))
+
 ## 1.0.0-next.570
 
 ### Patch Changes
