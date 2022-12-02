@@ -49,6 +49,7 @@
 
 	.globe {
 		width: 100%;
+		aspect-ratio: 1;
 		order: 2;
 	}
 
