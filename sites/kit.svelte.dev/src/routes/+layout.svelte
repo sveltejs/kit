@@ -5,7 +5,7 @@
 	import { Icon, Icons, Nav, NavItem, PreloadingIndicator, SkipLink } from '@sveltejs/site-kit';
 	import Search from '$lib/search/Search.svelte';
 	import SearchBox from '$lib/search/SearchBox.svelte';
-	import Logo from './svelte-logo.svg';
+	import Logo from './home/svelte-logo.svg';
 </script>
 
 <Icons />
