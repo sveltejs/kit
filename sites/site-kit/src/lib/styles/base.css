@@ -27,6 +27,12 @@ body {
 	-webkit-overflow-scrolling: touch;
 }
 
+p,
+ul,
+ol {
+	margin: 1em 0;
+}
+
 a {
 	position: relative;
 	text-decoration: none;
