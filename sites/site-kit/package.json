@@ -20,12 +20,11 @@
 	},
 	"homepage": "https://github.com/sveltejs/site-kit#readme",
 	"devDependencies": {
-		"@sveltejs/kit": "next",
-		"@sveltejs/package": "^1.0.0-next.5",
-		"svelte": "^3.46.3",
-		"svelte2tsx": "^0.4.14",
-		"typescript": "^4.5.5",
-		"vite": "^3.1.8"
+		"@sveltejs/kit": "workspace:*",
+		"@sveltejs/package": "workspace:*",
+		"svelte": "^3.53.1",
+		"typescript": "^4.9.3",
+		"vite": "^3.2.4"
 	},
 	"dependencies": {
 		"golden-fleece": "^1.0.9"
