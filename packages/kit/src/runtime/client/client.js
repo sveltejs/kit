@@ -1700,12 +1700,15 @@ export function create_client({ target, base }) {
 async function load_data(url, invalid) {
 	const data_url = new URL(url);
 	data_url.pathname = add_data_suffix(url.pathname);
+	if (__SVELTEKIT_DEV__ && url.searchParams.has('x-sveltekit-invalidated')) {
+		throw new Error('Cannot used reserved query parameter "x-sveltekit-invalidated"');
+	}
+	data_url.searchParams.append(
+		'x-sveltekit-invalidated',
+		invalid.map((x) => (x ? '1' : '')).join('_')
+	);
 
-	const res = await native_fetch(data_url.href, {
-		headers: {
-			'x-sveltekit-invalidated': invalid.map((x) => (x ? '1' : '')).join(',')
-		}
-	});
+	const res = await native_fetch(data_url.href);
 	const data = await res.json();
 
 	if (!res.ok) {

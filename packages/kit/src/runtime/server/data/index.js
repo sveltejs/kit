@@ -27,8 +27,9 @@ export async function render_data(event, route, options, state, trailing_slash) 
 		const node_ids = [...route.page.layouts, route.page.leaf];
 
 		const invalidated =
-			event.request.headers.get(INVALIDATED_HEADER)?.split(',').map(Boolean) ??
+			event.url.searchParams.get(INVALIDATED_HEADER)?.split('_').map(Boolean) ??
 			node_ids.map(() => true);
+		event.url.searchParams.delete(INVALIDATED_HEADER);
 
 		let aborted = false;
 

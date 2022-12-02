@@ -101,14 +101,15 @@ test.describe('a11y', () => {
 });
 
 test.describe('Caching', () => {
-	test('caches __data.json requests with Vary header', async ({ page, app }) => {
+	test('caches __data.json requests with invalidated search param', async ({ page, app }) => {
 		await page.goto('/');
 		const [, response] = await Promise.all([
 			app.goto('/caching/server-data'),
-			page.waitForResponse((request) => request.url().endsWith('server-data/__data.json'))
+			page.waitForResponse((request) =>
+				request.url().endsWith('server-data/__data.json?x-sveltekit-invalidated=_1')
+			)
 		]);
 		expect(response.headers()['cache-control']).toBe('public, max-age=30');
-		expect(response.headers()['vary']).toBe('x-sveltekit-invalidated');
 	});
 });
 
