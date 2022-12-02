@@ -51,7 +51,7 @@
 	</div>
 </div>
 
-<OnThisPage details={data.page} sections={data.page.sections} />
+<OnThisPage details={data.page} />
 
 <style>
 	.content {
