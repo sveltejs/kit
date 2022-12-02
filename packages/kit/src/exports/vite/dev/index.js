@@ -204,6 +204,7 @@ export async function dev(vite, vite_config, svelte_config) {
 		vite.watcher.on(event, (file) => {
 			if (
 				file.startsWith(svelte_config.kit.files.routes + path.sep) ||
+				file.startsWith(svelte_config.kit.files.params + path.sep) ||
 				// in contrast to server hooks, client hooks are written to the client manifest
 				// and therefore need rebuilding when they are added/removed
 				file.startsWith(svelte_config.kit.files.hooks.client)
