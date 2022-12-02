@@ -2,6 +2,7 @@
 	import Section from '@sveltejs/site-kit/components/Section.svelte';
 	import Features from './Features.svelte';
 	import Hero from './Hero.svelte';
+	import Try from './Try.svelte';
 	import Video from './Video.svelte';
 </script>
 
@@ -45,35 +46,9 @@
 			</p>
 		</div>
 	</div>
-
-	<div class="grid" style="--columns: 2">
-		<div class="description">
-			<p>
-				SvelteKit is a framework for building web applications of all sizes, with a beautiful
-				development experience and flexible filesystem-based routing.
-			</p>
-
-			<p>
-				Unlike single-page apps, SvelteKit doesn't compromise on SEO, progressive enhancement or the
-				initial load experience — but unlike traditional server-rendered apps, navigation is
-				instantaneous for that native-app-like feel.
-			</p>
-
-			<p>
-				<a href="https://node.new/sveltekit">Try it on StackBlitz</a> or create a project locally.
-			</p>
-		</div>
-
-		<div>
-			<pre><code
-					>npm create <span class="orange-highlight">svelte</span>@latest my-app
-cd my-app
-npm install
-npm run dev -- --open</code
-				></pre>
-		</div>
-	</div>
 </Section>
+
+<Try />
 
 <Section
 	--background="radial-gradient(circle at top right, rgb(230, 233, 236), rgb(244, 245, 247))"
@@ -88,8 +63,9 @@ npm run dev -- --open</code
 			<p>
 				SvelteKit is built on Svelte, a different kind of UI framework. It uses a compiler to let
 				you write breathtakingly concise components that do minimal work in the browser, using
-				languages you already know — HTML, CSS and JavaScript. It's a love letter to web
-				development.
+				languages you already know — HTML, CSS and JavaScript. <strong
+					style="color: var(--sk-theme-2)">It's a love letter to web development.</strong
+				>
 			</p>
 
 			<p>
@@ -126,20 +102,6 @@ npm run dev -- --open</code
 <style>
 	:global(.hero-container:dir(rtl)) {
 		max-width: 116rem;
-	}
-
-	pre {
-		height: 100%;
-		display: flex;
-		flex-direction: column;
-		background: var(--sk-back-3);
-		border-radius: var(--sk-border-radius);
-		padding: 2rem;
-		box-shadow: inset 1px 1px 6px hsla(205.7, 63.6%, 30.8%, 0.06);
-	}
-
-	.orange-highlight {
-		color: var(--sk-theme-1);
 	}
 
 	.grid {
