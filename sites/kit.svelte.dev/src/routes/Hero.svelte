@@ -1,16 +1,14 @@
 <script>
-	export let alt;
-	export let title;
-	export let tagline;
-	export let logotype;
-	export let background;
+	import logotype from './svelte-kit-logotype.svg';
+	import background from './svelte-kit-machine.webp?w=1440;800;600;480&format=avif;webp;png&picture';
 </script>
 
 <section class="hero-banner">
 	<div class="hero-container">
 		<div class="hero-text">
-			<img alt={title} width="400" height="50" class="logotype" src={logotype} />
-			<div class="tagline">{tagline}</div>
+			<img alt="SvelteKit logotype" width="400" height="50" class="logotype" src={logotype} />
+			<div class="tagline">web development, streamlined</div>
+			<a class="cta" href="/docs/introduction">read the docs</a>
 		</div>
 
 		<div class="hero-image">
@@ -21,7 +19,7 @@
 						type={'image/' + format}
 					/>
 				{/each}
-				<img src={background.fallback.src} {alt} />
+				<img src={background.fallback.src} alt="SvelteKit illustration" />
 			</picture>
 		</div>
 	</div>
@@ -55,7 +53,6 @@
 		width: 100%;
 		max-width: 90rem;
 		margin: 0 auto;
-		/* display: flex; */
 		justify-content: center;
 	}
 
@@ -64,20 +61,17 @@
 		flex-direction: column;
 		justify-content: center;
 		align-items: center;
-		mix-blend-mode: multiply;
 	}
 
 	.hero-banner .tagline {
 		margin-top: 0;
 		position: relative;
-		font-size: 2rem;
+		font-size: var(--sk-text-l);
 		font-weight: 200;
 		line-height: 1.2;
-		letter-spacing: 0.1em;
 		text-align: center;
-		text-transform: uppercase;
 		color: var(--sk-text);
-		max-width: 12em;
+		/* max-width: 12em; */
 		font-family: var(--sk-font);
 	}
 
@@ -93,6 +87,7 @@
 		flex: 1;
 		justify-content: center;
 		align-items: center;
+		pointer-events: none;
 	}
 
 	.hero-image img {
@@ -100,6 +95,15 @@
 		height: 450px;
 		object-fit: cover;
 		transform: translate(-2%, -10%);
+	}
+
+	.cta {
+		background: var(--sk-theme-1);
+		padding: 0.5em 1em;
+		font-size: var(--sk-text-m);
+		border-radius: var(--sk-border-radius);
+		color: white;
+		margin: 1em 0;
 	}
 
 	@media (min-width: 480px) {
@@ -119,7 +123,7 @@
 		}
 
 		.hero-text {
-			margin-top: -10rem;
+			margin-top: -5rem;
 			align-items: flex-end;
 			flex: 1;
 		}
@@ -136,11 +140,11 @@
 
 		.hero-banner .tagline {
 			text-align: right;
-			max-width: 12em;
+			/* max-width: 12em; */
 		}
 
 		.hero-container {
-			height: 70vh;
+			height: 45vh;
 			display: flex;
 			justify-content: flex-start;
 			margin: 0 auto;

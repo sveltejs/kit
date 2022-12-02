@@ -15,6 +15,7 @@
 		"@sveltejs/amp": "workspace:*",
 		"@sveltejs/kit": "workspace:*",
 		"@sveltejs/site-kit": "^2.1.4",
+		"@types/d3-geo": "^3.0.2",
 		"@types/node": "^16.18.3",
 		"flexsearch": "^0.7.31",
 		"magic-string": "^0.26.7",
@@ -29,5 +30,11 @@
 		"vite": "^3.2.4",
 		"vite-imagetools": "^4.0.11"
 	},
-	"type": "module"
+	"type": "module",
+	"dependencies": {
+		"@vercel/edge": "^0.1.2",
+		"d3-geo": "^3.0.1",
+		"d3-geo-projection": "^4.0.0",
+		"topojson-client": "^3.1.0"
+	}
 }
