@@ -97,9 +97,9 @@ export function GET({ request, url }) {
 		city = url.searchParams.get('city') ?? 'New York City'
 	} = geolocation(request);
 
-	console.log({ latitude, longitude, city });
-
-	const svg = render(+latitude, +longitude, city).replace(/\d\.\d+/g, (match) => match.slice(0, 4));
+	const svg = render(+latitude, +longitude, decodeURIComponent(city)).replace(/\d\.\d+/g, (match) =>
+		match.slice(0, 4)
+	);
 
 	return new Response(svg, {
 		headers: {
