@@ -2,4 +2,4 @@
 '@sveltejs/kit': minor
 ---
 
-Checks if element is null before reading getAttribute
+Checks that element is not null before reading getAttribute
