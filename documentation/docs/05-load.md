@@ -6,9 +6,14 @@ A [`+page.svelte`](/docs/routing#page-page-svelte) or [`+layout.svelte`](/docs/r
 
 If the `load` function is defined in `+page.js` or `+layout.js` it will run both on the server and in the browser. If it's instead defined in `+page.server.js` or `+layout.server.js` it will only run on the server, in which case it can (for example) make database calls and access private [environment variables](/docs/modules#$env-static-private), but can only return data that can be serialized as JSON. In both cases, the return value (if there is one) must be an object.
 
-```ts
-h1 = element("h1");
-h1.textContent = `Hello ${name}!`;
+```js
+/// file: src/routes/+page.js
+/** @type {import('./$types').PageLoad} */
+export function load(event) {
+	return {
+		some: 'data'
+	};
+}
 ```
 
 ### Input properties
