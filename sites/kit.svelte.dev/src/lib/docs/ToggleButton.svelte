@@ -1,12 +1,15 @@
 <script>
-	export let checked;
+	export let pressed;
+	export let label;
 </script>
 
-<input type="checkbox" bind:checked />
+<button aria-pressed={pressed ? "true" : "false" } on:click={ () => pressed = !pressed}>
+	<span class="visually-hidden">{label}</span>
+</button>
 
 <style>
-	input[type='checkbox'] {
-		--size: 1.2em;
+	button {
+		--size: 1em;
 		--bg: var(--sk-theme-2);
 		--fg: white;
 		--bg-active: var(--bg);
@@ -19,11 +22,11 @@
 		border-radius: 0.5em;
 		-webkit-appearance: none;
 		appearance: none;
-		outline: none;
+		outline-offset: 2px;
 		border: transparent;
 	}
 
-	input[type='checkbox']::before {
+	button::before {
 		content: '';
 		position: absolute;
 		display: block;
@@ -37,11 +40,11 @@
 		box-sizing: border-box;
 	}
 
-	input[type='checkbox']:checked::before {
+	button[aria-pressed="true"]::before {
 		background: var(--bg-active);
 	}
 
-	input[type='checkbox']::after {
+	button::after {
 		content: '';
 		position: absolute;
 		display: block;
@@ -56,7 +59,7 @@
 		transition: background 0.2s ease-out, left 0.2s ease-out;
 	}
 
-	input[type='checkbox']:checked::after {
+	button[aria-pressed="true"]::after {
 		background: var(--fg-active);
 		left: calc(100% - var(--size) + 2px);
 	}

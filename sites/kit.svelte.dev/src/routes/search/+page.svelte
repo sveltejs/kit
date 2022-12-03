@@ -10,6 +10,7 @@
 </svelte:head>
 
 <main>
+	<h1>Search</h1>
 	<form>
 		<input name="q" value={data.query} placeholder="Search" spellcheck="false" />
 	</form>
