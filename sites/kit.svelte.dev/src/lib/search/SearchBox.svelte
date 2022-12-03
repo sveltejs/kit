@@ -233,10 +233,6 @@
 		outline: none;
 	}
 
-	input::placeholder {
-		color: rgba(255, 255, 255, 0.5);
-	}
-
 	input:focus-visible::placeholder {
 		color: rgba(255, 255, 255, 0.5);
 	}
