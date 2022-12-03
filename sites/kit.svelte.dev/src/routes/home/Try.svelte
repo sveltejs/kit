@@ -11,7 +11,7 @@ npm install
 npm run dev -- --open</code
 			></pre>
 
-		<p>or <a href="https://node.new/sveltekit">create an app on StackBlitz</a></p>
+		<p>or <a href="https://sveltekit.new">create an app on StackBlitz</a></p>
 	</div>
 </Section>
 
