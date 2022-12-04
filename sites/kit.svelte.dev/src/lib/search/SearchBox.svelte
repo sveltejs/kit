@@ -148,6 +148,7 @@
 				value={$query}
 				placeholder="Search"
 				aria-describedby="search-description"
+				aria-label="Search"
 				spellcheck="false"
 			/>
 
