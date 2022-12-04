@@ -325,8 +325,22 @@
 		padding: 1rem;
 	}
 
+	:root {
+		--sk-search-bg-hover: hsl(0, 0%, 93%);
+		--sk-search-small-focus: hsla(0, 0%, 100%, 0.6);
+		--sk-search-strong-focus: hsl(0, 0%, 100%);
+	}
+
+	@media (prefers-color-scheme: dark) {
+		:root {
+			--sk-search-bg-hover: #3a3939;
+			--sk-search-small-focus: var(--sk-text-2);
+			--sk-search-strong-focus: var(--sk-text-1);
+		}
+	}
+
 	a:hover {
-		background: var(--sk-theme-2);
+		background: var(--sk-search-bg-hover);
 	}
 
 	a:focus {
@@ -358,11 +372,11 @@
 	}
 
 	a:focus small {
-		color: var(--sk-text-2);
+		color: var(--sk-search-small-focus);
 	}
 
 	a:focus strong {
-		color: var(--sk-text-1);
+		color: var(--sk-search-strong-focus);
 	}
 
 	a strong :global(mark) {
