@@ -327,21 +327,19 @@
 	}
 
 	:root {
-		--sk-search-bg-hover: hsl(0, 0%, 93%);
 		--sk-search-small-focus: hsla(0, 0%, 100%, 0.6);
 		--sk-search-strong-focus: hsl(0, 0%, 100%);
 	}
 
 	@media (prefers-color-scheme: dark) {
 		:root {
-			--sk-search-bg-hover: #3a3939;
 			--sk-search-small-focus: var(--sk-text-2);
 			--sk-search-strong-focus: var(--sk-text-1);
 		}
 	}
 
 	a:hover {
-		background: var(--sk-search-bg-hover);
+		background: var(--sk-back-4);
 	}
 
 	a:focus {
