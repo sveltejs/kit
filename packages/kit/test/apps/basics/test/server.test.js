@@ -443,10 +443,10 @@ test.describe('Miscellaneous', () => {
 test.describe('multiple consecutive optionals', () => {
 	test('multiple consecutive optionals should not throw exception', async ({ page }) => {
 		await page.goto('/optional');
-		expect(await page.textContent('h1')).toBe('ok')
+		expect(await page.textContent('h1')).toBe('ok');
 		await page.goto('/optional/a');
-		expect(await page.textContent('h1')).toBe('ok')
+		expect(await page.textContent('h1')).toBe('ok');
 		await page.goto('/optional/a/b');
-		expect(await page.textContent('h1')).toBe('ok')
+		expect(await page.textContent('h1')).toBe('ok');
 	});
 });
