@@ -1,5 +1,19 @@
 # @sveltejs/kit
 
+## 1.0.0-next.572
+
+### Minor Changes
+
+- Checks that element is not null before reading getAttribute ([#7930](https://github.com/sveltejs/kit/pull/7930))
+
+### Patch Changes
+
+- [chore] update `magic-string` ([#7931](https://github.com/sveltejs/kit/pull/7931))
+
+- add $app and $env to optimizeDeps.exclude so that libraries using these work correctly when prebundled ([#7933](https://github.com/sveltejs/kit/pull/7933))
+
+- reload dev page on change of app.html ([#7944](https://github.com/sveltejs/kit/pull/7944))
+
 ## 1.0.0-next.571
 
 ### Patch Changes
