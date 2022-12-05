@@ -1,2 +1,2 @@
-export const SSR = false;
+export const BROWSER = true;
 export const DEV = false;

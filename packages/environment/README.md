@@ -8,7 +8,7 @@ Install with `npm install @sveltejs/environment`, then import as needed:
 
 ```js
 // svelte.config.js
-import { DEV, SSR } from '@sveltejs/environment';
+import { BROWSER, DEV } from '@sveltejs/environment';
 ```
 ## Changelog
 
