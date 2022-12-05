@@ -1,9 +1,9 @@
-import { SSR } from '@sveltejs/environment';
+import { BROWSER } from '@sveltejs/environment';
 
 /**
  * @type {import('$app/environment').browser}
  */
-export const browser = !SSR;
+export const browser = BROWSER;
 
 /**
  * @type {import('$app/environment').dev}

@@ -11,6 +11,7 @@
 	"type": "module",
 	"exports": {
 		".": {
+			"types": "./index.d.ts",
 			"browser": {
 				"development": "./dev-browser.js",
 				"default": "./prod-browser.js"

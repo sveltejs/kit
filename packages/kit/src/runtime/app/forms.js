@@ -1,7 +1,7 @@
 import * as devalue from 'devalue';
 import { client } from '../client/singletons.js';
 import { invalidateAll } from './navigation.js';
-import { SSR } from '@sveltejs/environment';
+import { BROWSER } from '@sveltejs/environment';
 
 /**
  * @param {string} name
@@ -13,7 +13,7 @@ function guard(name) {
 }
 
 /** @type {import('$app/forms').applyAction} */
-export const applyAction = SSR ? guard('applyAction') : client.apply_action;
+export const applyAction = BROWSER ? client.apply_action: guard('applyAction');
 
 /** @type {import('$app/forms').deserialize} */
 export function deserialize(result) {
