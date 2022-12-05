@@ -49,19 +49,18 @@
 
 <main id="main">
 	<slot />
-
-	{#if browser}
-		<SearchBox />
-	{/if}
 </main>
+
+{#if browser}
+	<SearchBox />
+{/if}
 
 <style>
 	main {
 		position: relative;
 		margin: 0 auto;
 		padding-top: var(--sk-nav-height);
-		overflow: auto;
-		overflow-x: hidden;
+		overflow: hidden;
 	}
 
 	.small {
