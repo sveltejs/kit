@@ -4,7 +4,7 @@
 
 ## Usage
 
-Install with `npm i -D @sveltejs/adapter-static`, then add the adapter to your `svelte.config.js`:
+Install with `npm i -D @sveltejs/adapter-static`, then add the adapter to your `svelte.config.js`...
 
 ```js
 // svelte.config.js
@@ -18,18 +18,23 @@ export default {
       pages: 'build',
       assets: 'build',
       fallback: null,
-      precompress: false
-    }),
-
-    prerender: {
-      // This can be false if you're using a fallback (i.e. SPA mode)
-      default: true
-    }
+      precompress: false,
+      strict: true
+    })
   }
 };
 ```
 
-> ⚠️ You must ensure SvelteKit's [`trailingSlash`](https://kit.svelte.dev/docs/configuration#trailingslash) option is set appropriately for your environment. If your host does not render `/a.html` upon receiving a request for `/a` then you will need to set `trailingSlash: 'always'` to create `/a/index.html` instead.
+...and add the [`prerender`](https://kit.svelte.dev/docs/page-options#prerender) option to your root layout:
+
+```js
+// src/routes/+layout.js
+
+// This can be false if you're using a fallback (i.e. SPA mode)
+export const prerender = true;
+```
+
+> ⚠️ You must ensure SvelteKit's [`trailingSlash`](https://kit.svelte.dev/docs/page-options#trailingslash) option is set appropriately for your environment. If your host does not render `/a.html` upon receiving a request for `/a` then you will need to set `trailingSlash: 'always'` to create `/a/index.html` instead.
 
 ## Zero-config support
 
@@ -44,9 +49,6 @@ export default {
   kit: {
 -    adapter: adapter({...}),
 +    adapter: adapter(),
-
-    prerender: {
-      default: true
     }
   }
 };
@@ -70,11 +72,42 @@ Specify a fallback page for SPA mode, e.g. `index.html` or `200.html` or `404.ht
 
 If `true`, precompresses files with brotli and gzip. This will generate `.br` and `.gz` files.
 
+### strict
+
+By default, `adapter-static` checks that either all pages and endpoints (if any) of your app were prerendered, or you have the `fallback` option set. This check exists to prevent you from accidentally publishing an app where some parts of it are not accessible, because they are not contained in the final output. If you know this is ok (for example when a certain page only exists conditionally), you can set `strict` to `false` to turn off this check.
+
 ## SPA mode
 
 You can use `adapter-static` to create a single-page app or SPA by specifying a **fallback page**.
 
 > In most situations this is not recommended: it harms SEO, tends to slow down perceived performance, and makes your app inaccessible to users if JavaScript fails or is disabled (which happens [more often than you probably think](https://kryogenix.org/code/browser/everyonehasjs.html)).
+
+If you want to create a simple SPA with no prerendered routes, the necessary config looks like this:
+
+```js
+// svelte.config.js
+import adapter from '@sveltejs/adapter-static';
+
+export default {
+  kit: {
+    adapter: adapter({
+      fallback: '200.html'
+    }),
+    prerender: { entries: [] }
+  }
+};
+```
+
+```js
+// src/routes/+layout.js
+export const ssr = false;
+```
+
+You can also turn only part of your app into an SPA.
+
+Let's go through these options one by one:
+
+### Add fallback page
 
 The fallback page is an HTML page created by SvelteKit that loads your app and navigates to the correct route. For example [Surge](https://surge.sh/help/adding-a-200-page-for-client-side-routing), a static web host, lets you add a `200.html` file that will handle any requests that don't correspond to static assets or prerendered pages. We can create that file like so:
 
@@ -91,11 +124,34 @@ export default {
 };
 ```
 
-When operating in SPA mode, you can omit `config.kit.prerender.default` (or set it to `false`, its default value), and only pages that have the [`prerender`](https://kit.svelte.dev/docs/page-options#prerender) option set will be prerendered at build time.
+> How to configure this behaviour does however depend on your hosting solution and is not part of SvelteKit. It is recommended to search the host's documentation on how to redirect requests.
 
-SvelteKit will still crawl your app's entry points looking for prerenderable pages. If `svelte-kit build` fails because of pages that can't be loaded outside the browser, you can set `config.kit.prerender.entries` to `[]` to prevent this from happening. (Setting `config.kit.prerender.enabled` also has this effect, but would prevent the fallback page from being generated.)
+### Turn off prerendering
 
-> ⚠️ During development, SvelteKit will still attempt to server-side render your routes. This means accessing things that are only available in the browser (such as the `window` object) will result in errors, even though this would be valid in the output app. To align the behavior of SvelteKit's dev mode with your SPA, you can [call `resolve()` with a parameter of `{ssr: false}` inside the `handle()` hook](https://kit.svelte.dev/docs/hooks#handle).
+When operating in SPA mode, you can omit the [`prerender`](https://kit.svelte.dev/docs/page-options#prerender) option from your root layout (or set it to `false`, its default value), and only pages that have the `prerender` option set will be prerendered at build time.
+
+SvelteKit will still crawl your app's entry points looking for prerenderable pages. If `svelte-kit build` fails because of pages that can't be loaded outside the browser, you can set `config.kit.prerender.entries` to `[]` to prevent this from happening. (Setting `config.kit.prerender.enabled` to `false` also has this effect, but would prevent the fallback page from being generated.)
+
+You can also add turn off prerendering only to parts of your app, if you want other parts to be prerendered.
+
+### Turn off ssr
+
+During development, SvelteKit will still attempt to server-side render your routes. This means accessing things that are only available in the browser (such as the `window` object) will result in errors, even though this would be valid in the output app. To align the behavior of SvelteKit's dev mode with your SPA, you can [add `export const ssr = false` to your root `+layout`](https://kit.svelte.dev/docs/page-options#ssr). You can also add this option only to parts of your app, if you want other parts to be prerendered.
+
+### Apache
+
+To run an SPA on [Apache](https://httpd.apache.org/), you should add a `static/.htaccess` file to route requests to the fallback page:
+
+```
+<IfModule mod_rewrite.c>
+  RewriteEngine On
+  RewriteBase /
+  RewriteRule ^200\.html$ - [L]
+  RewriteCond %{REQUEST_FILENAME} !-f
+  RewriteCond %{REQUEST_FILENAME} !-d
+  RewriteRule . /200.html [L]
+</IfModule>
+```
 
 ## GitHub Pages
 
@@ -106,7 +162,7 @@ You will have to prevent GitHub's provided Jekyll from managing your site by put
 A config for GitHub Pages might look like the following:
 
 ```js
-const dev = process.env.NODE_ENV === 'development';
+const dev = process.argv.includes('dev');
 
 /** @type {import('@sveltejs/kit').Config} */
 const config = {

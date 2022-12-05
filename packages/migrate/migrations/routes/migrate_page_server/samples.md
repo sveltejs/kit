@@ -153,3 +153,29 @@ export function load() {
 	return ;
 }
 ```
+
+## A get function that only returns body
+
+```js before
+import something from 'somewhere';
+
+/** @type {import('./$types').RequestHandler} */
+export function get() {
+	return {
+		body: {
+			a: something
+		}
+	};
+}
+```
+
+```js after
+import something from 'somewhere';
+
+/** @type {import('./$types').PageServerLoad} */
+export function load() {
+	return {
+		a: something
+	};
+}
+```

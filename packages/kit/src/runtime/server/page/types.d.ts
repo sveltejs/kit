@@ -1,21 +1,12 @@
-import { ResponseHeaders, SSRNode, CspDirectives } from 'types';
-import { HttpError } from '../../control.js';
+import { CookieSerializeOptions } from 'cookie';
+import { SSRNode, CspDirectives } from 'types';
 
 export interface Fetched {
 	url: string;
-	body?: string | null;
-	response: {
-		status: number;
-		statusText: string;
-		headers: ResponseHeaders;
-		body: string;
-	};
-}
-
-export interface FetchState {
-	fetched: Fetched[];
-	cookies: string[];
-	new_cookies: string[];
+	method: string;
+	request_body?: string | ArrayBufferView | null;
+	response_body: string;
+	response: Response;
 }
 
 export type Loaded = {
@@ -37,8 +28,8 @@ export interface CspOpts {
 	prerender: boolean;
 }
 
-export interface SerializedHttpError extends Pick<HttpError, 'message' | 'status'> {
-	name: 'HttpError';
-	stack: '';
-	__is_http_error: true;
+export interface Cookie {
+	name: string;
+	value: string;
+	options: CookieSerializeOptions;
 }

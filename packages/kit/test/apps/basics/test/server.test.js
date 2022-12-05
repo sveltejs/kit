@@ -1,5 +1,6 @@
 import { expect } from '@playwright/test';
-import { test } from '../../../utils.js';
+import { start_server, test } from '../../../utils.js';
+import { fetch } from 'undici';
 import { createHash, randomBytes } from 'node:crypto';
 
 /** @typedef {import('@playwright/test').Response} Response */
@@ -19,6 +20,43 @@ test.describe('Content-Type', () => {
 	test('sets Content-Type on page', async ({ request }) => {
 		const response = await request.get('/content-type-header');
 		expect(response.headers()['content-type']).toBe('text/html');
+	});
+});
+
+test.describe('Cookies', () => {
+	test('does not forward cookies from external domains', async ({ request }) => {
+		const { close, port } = await start_server(async (req, res) => {
+			if (req.url === '/') {
+				res.writeHead(200, {
+					'set-cookie': 'external=true',
+					'access-control-allow-origin': '*'
+				});
+
+				res.end('ok');
+			} else {
+				res.writeHead(404);
+				res.end('not found');
+			}
+		});
+
+		const response = await request.get(`/load/fetch-external-no-cookies?port=${port}`);
+		expect(response.headers()['set-cookie']).not.toContain('external=true');
+
+		close();
+	});
+});
+
+test.describe('CSRF', () => {
+	test('Blocks requests with incorrect origin', async ({ baseURL }) => {
+		const res = await fetch(`${baseURL}/csrf`, {
+			method: 'POST',
+			headers: {
+				'content-type': 'application/x-www-form-urlencoded'
+			}
+		});
+
+		expect(res.status).toBe(403);
+		expect(await res.text()).toBe('Cross-site POST form submissions are forbidden');
 	});
 });
 
@@ -148,17 +186,39 @@ test.describe('Errors', () => {
 		);
 	});
 
-	test('throw error(..) in endpoint', async ({ page, read_errors }) => {
-		const res = await page.goto('/errors/endpoint-throw-error');
+	test('throw error(...) in endpoint', async ({ request, read_errors }) => {
+		// HTML
+		{
+			const res = await request.get('/errors/endpoint-throw-error', {
+				headers: {
+					accept: 'text/html'
+				}
+			});
 
-		const error = read_errors('/errors/endpoint-throw-error');
-		expect(error).toBe(undefined);
+			const error = read_errors('/errors/endpoint-throw-error');
+			expect(error).toBe(undefined);
 
-		expect(await res?.text()).toBe('You shall not pass');
-		expect(res?.status()).toBe(401);
+			expect(res.status()).toBe(401);
+			expect(await res.text()).toContain(
+				'This is the static error page with the following message: You shall not pass'
+			);
+		}
+
+		// JSON (default)
+		{
+			const res = await request.get('/errors/endpoint-throw-error');
+
+			const error = read_errors('/errors/endpoint-throw-error');
+			expect(error).toBe(undefined);
+
+			expect(res.status()).toBe(401);
+			expect(await res.json()).toEqual({
+				message: 'You shall not pass'
+			});
+		}
 	});
 
-	test('throw redirect(..) in endpoint', async ({ page, read_errors }) => {
+	test('throw redirect(...) in endpoint', async ({ page, read_errors }) => {
 		const res = await page.goto('/errors/endpoint-throw-redirect');
 		expect(res?.status()).toBe(200); // redirects are opaque to the browser
 
@@ -167,6 +227,68 @@ test.describe('Errors', () => {
 
 		expect(await page.textContent('h1')).toBe('the answer is 42');
 	});
+
+	test('error thrown in handle results in a rendered error page or JSON response', async ({
+		request
+	}) => {
+		// HTML
+		{
+			const res = await request.get('/errors/error-in-handle', {
+				headers: {
+					accept: 'text/html'
+				}
+			});
+
+			expect(res.status()).toBe(500);
+			expect(await res.text()).toContain(
+				'This is the static error page with the following message: Error in handle'
+			);
+		}
+
+		// JSON (default)
+		{
+			const res = await request.get('/errors/error-in-handle');
+
+			const error = await res.json();
+
+			expect(error.stack).toBe(undefined);
+			expect(res.status()).toBe(500);
+			expect(error).toEqual({
+				message: 'Error in handle'
+			});
+		}
+	});
+
+	test('expected error thrown in handle results in a rendered error page or JSON response', async ({
+		request
+	}) => {
+		// HTML
+		{
+			const res = await request.get('/errors/expected-error-in-handle', {
+				headers: {
+					accept: 'text/html'
+				}
+			});
+
+			expect(res.status()).toBe(500);
+			expect(await res.text()).toContain(
+				'This is the static error page with the following message: Expected error in handle'
+			);
+		}
+
+		// JSON (default)
+		{
+			const res = await request.get('/errors/expected-error-in-handle');
+
+			const error = await res.json();
+
+			expect(error.stack).toBe(undefined);
+			expect(res.status()).toBe(500);
+			expect(error).toEqual({
+				message: 'Expected error in handle'
+			});
+		}
+	});
 });
 
 test.describe('Load', () => {
@@ -174,7 +296,38 @@ test.describe('Load', () => {
 		request
 	}) => {
 		const response = await request.get('/errors/error-in-layout');
-		expect(await response.text()).toContain('Error: 500');
+		expect(await response.text()).toContain('Error: 404');
+	});
+
+	test('fetch does not load a file with a # character', async ({ request }) => {
+		const response = await request.get('/load/static-file-with-hash');
+		expect(await response.text()).toContain('status: 404');
+	});
+
+	test('includes origin header on non-GET internal request', async ({ page, baseURL }) => {
+		await page.goto('/load/fetch-origin-internal');
+		expect(await page.textContent('h1')).toBe(`origin: ${new URL(baseURL).origin}`);
+	});
+
+	test('includes origin header on external request', async ({ page, baseURL }) => {
+		const { port, close } = await start_server((req, res) => {
+			if (req.url === '/') {
+				res.writeHead(200, {
+					'content-type': 'application/json',
+					'access-control-allow-origin': '*'
+				});
+
+				res.end(JSON.stringify({ origin: req.headers.origin }));
+			} else {
+				res.writeHead(404);
+				res.end('not found');
+			}
+		});
+
+		await page.goto(`/load/fetch-origin-external?port=${port}`);
+		expect(await page.textContent('h1')).toBe(`origin: ${new URL(baseURL).origin}`);
+
+		close();
 	});
 });
 
@@ -182,7 +335,7 @@ test.describe('Routing', () => {
 	test('event.params are available in handle', async ({ request }) => {
 		const response = await request.get('/routing/params-in-handle/banana');
 		expect(await response.json()).toStrictEqual({
-			key: 'routing/params-in-handle/[x]',
+			key: '/routing/params-in-handle/[x]',
 			params: { x: 'banana' }
 		});
 	});
@@ -197,15 +350,17 @@ test.describe('Routing', () => {
 });
 
 test.describe('Shadowed pages', () => {
-	test('Action can return undefined', async ({ request }) => {
+	test('Action can return undefined', async ({ baseURL, request }) => {
 		const response = await request.post('/shadowed/simple/post', {
+			form: {},
 			headers: {
-				accept: 'application/json'
+				accept: 'application/json',
+				origin: new URL(baseURL).origin
 			}
 		});
 
-		expect(response.status()).toBe(204);
-		expect(await response.text()).toEqual('');
+		expect(response.status()).toBe(200);
+		expect(await response.json()).toEqual({ data: '-1', type: 'success', status: 204 });
 	});
 });
 
@@ -216,6 +371,8 @@ test.describe('Static files', () => {
 
 		response = await request.get('/subdirectory/static.json');
 		expect(await response.json()).toBe('subdirectory file');
+
+		expect(response.headers()['access-control-allow-origin']).toBe('*');
 
 		response = await request.get('/favicon.ico');
 		expect(response.status()).toBe(200);
@@ -258,6 +415,18 @@ test.describe('setHeaders', () => {
 		const response = await page.goto('/headers/set-cookie/sub');
 		const cookies = (await response?.allHeaders())['set-cookie'];
 		expect(cookies.includes('cookie1=value1') && cookies.includes('cookie2=value2')).toBe(true);
+	});
+});
+
+test.describe('cookies', () => {
+	test('cookie.serialize created correct cookie header string', async ({ page }) => {
+		const response = await page.goto('/cookies/serialize');
+		const cookies = await response.headerValue('set-cookie');
+		expect(
+			cookies.includes('before=before') &&
+				cookies.includes('after=after') &&
+				cookies.includes('endpoint=endpoint')
+		).toBe(true);
 	});
 });
 

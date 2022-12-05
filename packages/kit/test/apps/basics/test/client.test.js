@@ -7,26 +7,147 @@ test.skip(({ javaScriptEnabled }) => !javaScriptEnabled);
 
 test.describe.configure({ mode: 'parallel' });
 
+test.describe('a11y', () => {
+	test('resets focus', async ({ page, clicknav, browserName }) => {
+		const tab = browserName === 'webkit' ? 'Alt+Tab' : 'Tab';
+
+		await page.goto('/accessibility/a');
+
+		await clicknav('[href="/accessibility/b"]');
+		expect(await page.innerHTML('h1')).toBe('b');
+		expect(await page.evaluate(() => (document.activeElement || {}).nodeName)).toBe('BODY');
+		await page.keyboard.press(tab);
+
+		expect(await page.evaluate(() => (document.activeElement || {}).nodeName)).toBe('BUTTON');
+		expect(await page.evaluate(() => (document.activeElement || {}).textContent)).toBe('focus me');
+
+		await clicknav('[href="/accessibility/a"]');
+		expect(await page.innerHTML('h1')).toBe('a');
+		expect(await page.evaluate(() => (document.activeElement || {}).nodeName)).toBe('BODY');
+
+		await page.keyboard.press(tab);
+		expect(await page.evaluate(() => (document.activeElement || {}).nodeName)).toBe('BUTTON');
+		expect(await page.evaluate(() => (document.activeElement || {}).textContent)).toBe('focus me');
+
+		expect(await page.evaluate(() => document.documentElement.getAttribute('tabindex'))).toBe(null);
+	});
+
+	test('applies autofocus after a navigation', async ({ page, clicknav }) => {
+		await page.goto('/accessibility/autofocus/a');
+
+		await clicknav('[href="/accessibility/autofocus/b"]');
+		expect(await page.innerHTML('h1')).toBe('b');
+		expect(await page.evaluate(() => (document.activeElement || {}).nodeName)).toBe('INPUT');
+	});
+
+	(process.env.KIT_E2E_BROWSER === 'webkit' ? test.skip : test)(
+		'applies autofocus after an enhanced form submit',
+		async ({ page }) => {
+			await page.goto('/accessibility/autofocus/b');
+
+			await page.click('#submit');
+			await page.waitForFunction(() => document.activeElement?.nodeName === 'INPUT', null, {
+				timeout: 1000
+			});
+		}
+	);
+
+	test('announces client-side navigation', async ({ page, clicknav, javaScriptEnabled }) => {
+		await page.goto('/accessibility/a');
+
+		const has_live_region = (await page.innerHTML('body')).includes('aria-live');
+
+		if (javaScriptEnabled) {
+			expect(has_live_region).toBeTruthy();
+
+			// live region should exist, but be empty
+			expect(await page.innerHTML('[aria-live]')).toBe('');
+
+			await clicknav('[href="/accessibility/b"]');
+			expect(await page.innerHTML('[aria-live]')).toBe('b'); // TODO i18n
+		} else {
+			expect(has_live_region).toBeFalsy();
+		}
+	});
+
+	test('reset selection', async ({ page, clicknav }) => {
+		await page.goto('/selection/a');
+
+		expect(
+			await page.evaluate(() => {
+				const range = document.createRange();
+				range.selectNodeContents(document.body);
+				const selection = getSelection();
+				if (selection) {
+					selection.removeAllRanges();
+					selection.addRange(range);
+					return selection.rangeCount;
+				}
+				return -1;
+			})
+		).toBe(1);
+
+		await clicknav('[href="/selection/b"]');
+		expect(
+			await page.evaluate(() => {
+				const selection = getSelection();
+				if (selection) {
+					return selection.rangeCount;
+				}
+				return -1;
+			})
+		).toBe(0);
+	});
+});
+
+test.describe('Caching', () => {
+	test('caches __data.json requests with invalidated search param', async ({ page, app }) => {
+		await page.goto('/');
+		const [, response] = await Promise.all([
+			app.goto('/caching/server-data'),
+			page.waitForResponse((request) =>
+				request.url().endsWith('server-data/__data.json?x-sveltekit-invalidated=_1')
+			)
+		]);
+		expect(response.headers()['cache-control']).toBe('public, max-age=30');
+	});
+});
+
 test.describe('beforeNavigate', () => {
-	test('prevents navigation triggered by link click', async ({ clicknav, page, baseURL }) => {
+	test('prevents navigation triggered by link click', async ({ page, baseURL }) => {
 		await page.goto('/before-navigate/prevent-navigation');
 
-		try {
-			await clicknav('[href="/before-navigate/a"]', { timeout: 1000 });
-			expect(false).toBe(true);
-		} catch (/** @type {any} */ e) {
-			expect(e.message).toMatch('page.waitForNavigation: Timeout 1000ms exceeded');
-		}
+		await page.click('[href="/before-navigate/a"]');
+		await page.waitForLoadState('networkidle');
 
 		expect(page.url()).toBe(baseURL + '/before-navigate/prevent-navigation');
-		expect(await page.innerHTML('pre')).toBe('true');
+		expect(await page.innerHTML('pre')).toBe('1 false link');
+	});
+
+	test('prevents navigation to external', async ({ page, baseURL }) => {
+		await page.goto('/before-navigate/prevent-navigation');
+		await page.click('h1'); // The browsers block attempts to prevent navigation on a frame that's never had a user gesture.
+
+		page.on('dialog', (dialog) => dialog.dismiss());
+
+		page.click('a[href="https://google.de"]'); // do NOT await this, promise only resolves after successful navigation, which never happens
+		await page.waitForTimeout(500);
+		await expect(page.locator('pre')).toHaveText('1 true link');
+		expect(page.url()).toBe(baseURL + '/before-navigate/prevent-navigation');
 	});
 
 	test('prevents navigation triggered by goto', async ({ page, app, baseURL }) => {
 		await page.goto('/before-navigate/prevent-navigation');
 		await app.goto('/before-navigate/a');
 		expect(page.url()).toBe(baseURL + '/before-navigate/prevent-navigation');
-		expect(await page.innerHTML('pre')).toBe('true');
+		expect(await page.innerHTML('pre')).toBe('1 false goto');
+	});
+
+	test('prevents external navigation triggered by goto', async ({ page, app, baseURL }) => {
+		await page.goto('/before-navigate/prevent-navigation');
+		await app.goto('https://google.de');
+		expect(page.url()).toBe(baseURL + '/before-navigate/prevent-navigation');
+		expect(await page.innerHTML('pre')).toBe('1 true goto');
 	});
 
 	test('prevents navigation triggered by back button', async ({ page, app, baseURL }) => {
@@ -35,7 +156,7 @@ test.describe('beforeNavigate', () => {
 		await page.click('h1'); // The browsers block attempts to prevent navigation on a frame that's never had a user gesture.
 
 		await page.goBack();
-		expect(await page.innerHTML('pre')).toBe('true');
+		expect(await page.innerHTML('pre')).toBe('1 false popstate');
 		expect(page.url()).toBe(baseURL + '/before-navigate/prevent-navigation');
 	});
 
@@ -51,6 +172,17 @@ test.describe('beforeNavigate', () => {
 
 		await page.close({ runBeforeUnload: true });
 		expect(await type).toBe('beforeunload');
+		expect(await page.innerHTML('pre')).toBe('1 true leave');
+	});
+
+	test('is not triggered on redirect', async ({ page, baseURL }) => {
+		await page.goto('/before-navigate/prevent-navigation');
+
+		await page.click('[href="/before-navigate/redirect"]');
+		await page.waitForLoadState('networkidle');
+
+		expect(page.url()).toBe(baseURL + '/before-navigate/prevent-navigation');
+		expect(await page.innerHTML('pre')).toBe('1 false link');
 	});
 });
 
@@ -267,7 +399,7 @@ test.describe('Endpoints', () => {
 	});
 });
 
-test.describe('Errors', () => {
+test.describe.serial('Errors', () => {
 	test('client-side load errors', async ({ page }) => {
 		await page.goto('/errors/load-client');
 
@@ -304,6 +436,32 @@ test.describe('Errors', () => {
 			'This is your custom error page saying: "Error: 401"'
 		);
 		expect(await page.innerHTML('h1')).toBe('401');
+	});
+
+	test('Root error falls back to error.html (unexpected error)', async ({ page, clicknav }) => {
+		await page.goto('/errors/error-html');
+		await clicknav('button:text-is("Unexpected")');
+
+		expect(await page.textContent('h1')).toBe('Error - 500');
+		expect(await page.textContent('p')).toBe(
+			'This is the static error page with the following message: Failed to load'
+		);
+	});
+
+	test('Root error falls back to error.html (expected error)', async ({ page, clicknav }) => {
+		await page.goto('/errors/error-html');
+		await clicknav('button:text-is("Expected")');
+
+		expect(await page.textContent('h1')).toBe('Error - 401');
+		expect(await page.textContent('p')).toBe(
+			'This is the static error page with the following message: Not allowed'
+		);
+	});
+
+	test('Root 404 redirects somewhere due to root layout', async ({ page, baseURL, clicknav }) => {
+		await page.goto('/errors/error-html');
+		await clicknav('button:text-is("Redirect")');
+		expect(page.url()).toBe(baseURL + '/load');
 	});
 });
 
@@ -372,64 +530,118 @@ test.describe('Load', () => {
 		expect(await page.textContent('pre')).toBe(JSON.stringify({ foo: { bar: 'Custom layout' } }));
 	});
 
+	test('keeps server data when valid while not reusing client load data', async ({
+		page,
+		clicknav
+	}) => {
+		await page.goto('/load/url-query-param');
+
+		expect(await page.textContent('h1')).toBe('Hello ');
+		expect(await page.textContent('p')).toBe('This text comes from the server load function');
+
+		await clicknav('a[href="/load/url-query-param?currentClientState=ABC"]');
+		expect(await page.textContent('h1')).toBe('Hello ABC');
+		expect(await page.textContent('p')).toBe('This text comes from the server load function');
+
+		await clicknav('a[href="/load/url-query-param?currentClientState=DEF"]');
+		expect(await page.textContent('h1')).toBe('Hello DEF');
+		expect(await page.textContent('p')).toBe('This text comes from the server load function');
+
+		await clicknav('a[href="/load/url-query-param"]');
+		expect(await page.textContent('h1')).toBe('Hello ');
+		expect(await page.textContent('p')).toBe('This text comes from the server load function');
+	});
+
+	test('load does not call fetch if max-age allows it', async ({ page, request }) => {
+		await request.get('/load/cache-control/reset');
+
+		page.addInitScript(`
+			window.now = 0;
+			window.performance.now = () => now;
+		`);
+
+		await page.goto('/load/cache-control');
+		expect(await page.textContent('p')).toBe('Count is 0');
+		await page.waitForTimeout(500);
+		await page.click('button');
+		await page.waitForTimeout(500);
+		expect(await page.textContent('p')).toBe('Count is 0');
+
+		await page.evaluate(() => (window.now = 2500));
+		await page.click('button');
+		await expect(page.locator('p')).toHaveText('Count is 2');
+	});
+
+	test('__data.json has cache-control: private, no-store', async ({ page, clicknav }) => {
+		await page.goto('/load/server-data-nostore?x=1');
+
+		const [response] = await Promise.all([
+			page.waitForResponse((response) => /__data\.js/.test(response.url())),
+			clicknav('[href="/load/server-data-nostore?x=2"]')
+		]);
+
+		expect(response.headers()['cache-control']).toBe('private, no-store');
+	});
+
+	test('cache with body hash', async ({ page, clicknav }) => {
+		// 1. go to the page (first load, we expect the right data)
+		await page.goto('/load/fetch-cache-control/load-data');
+		expect(await page.textContent('div#fr')).toBe(JSON.stringify({ hi: 'bonjour' }));
+		expect(await page.textContent('div#hu')).toBe(JSON.stringify({ hi: 'szia' }));
+
+		// 2. change to another route (client side)
+		await clicknav('[href="/load/fetch-cache-control"]');
+
+		// 3. come back to the original page (client side)
+		let did_request_data = false;
+		page.on('request', (request) => {
+			if (request.url().endsWith('fetch-cache-control/load-data')) {
+				did_request_data = true;
+			}
+		});
+		await clicknav('[href="/load/fetch-cache-control/load-data"]');
+
+		// 4. data should still be the same (and cached)
+		expect(await page.textContent('div#fr')).toBe(JSON.stringify({ hi: 'bonjour' }));
+		expect(await page.textContent('div#hu')).toBe(JSON.stringify({ hi: 'szia' }));
+		expect(did_request_data).toBe(false);
+	});
+
 	if (process.env.DEV) {
-		test('using window.fetch causes a warning', async ({ page }) => {
-			const port = 5173;
+		test('using window.fetch causes a warning', async ({ page, baseURL }) => {
+			await Promise.all([
+				page.goto('/load/window-fetch/incorrect'),
+				page.waitForEvent('console', {
+					predicate: (message) => {
+						return (
+							message.text() ===
+							`Loading ${baseURL}/load/window-fetch/data.json using \`window.fetch\`. For best results, use the \`fetch\` that is passed to your \`load\` function: https://kit.svelte.dev/docs/load#making-fetch-requests`
+						);
+					},
+					timeout: 3_000
+				})
+			]);
+			expect(await page.textContent('h1')).toBe('42');
 
 			/** @type {string[]} */
 			const warnings = [];
-
 			page.on('console', (msg) => {
 				if (msg.type() === 'warning') {
 					warnings.push(msg.text());
 				}
 			});
 
-			await page.goto('/load/window-fetch/incorrect');
-			expect(await page.textContent('h1')).toBe('42');
-
-			expect(warnings).toContain(
-				`Loading http://localhost:${port}/load/window-fetch/data.json using \`window.fetch\`. For best results, use the \`fetch\` that is passed to your \`load\` function: https://kit.svelte.dev/docs/load#input-fetch`
-			);
-
-			warnings.length = 0;
-
 			await page.goto('/load/window-fetch/correct');
 			expect(await page.textContent('h1')).toBe('42');
 
 			expect(warnings).not.toContain(
-				`Loading http://localhost:${port}/load/window-fetch/data.json using \`window.fetch\`. For best results, use the \`fetch\` that is passed to your \`load\` function: https://kit.svelte.dev/docs/load#input-fetch`
+				`Loading ${baseURL}/load/window-fetch/data.json using \`window.fetch\`. For best results, use the \`fetch\` that is passed to your \`load\` function: https://kit.svelte.dev/docs/load#making-fetch-requests`
 			);
 		});
 	}
 });
 
 test.describe('Page options', () => {
-	test('disables router if router=false', async ({ page, clicknav }) => {
-		await page.goto('/no-router/a');
-
-		await page.click('button');
-		expect(await page.textContent('button')).toBe('clicks: 1');
-
-		await Promise.all([page.waitForNavigation(), page.click('[href="/no-router/b"]')]);
-		expect(await page.textContent('button')).toBe('clicks: 0');
-
-		// wait until hydration before interacting with button
-		await page.waitForSelector('body.started');
-
-		await page.click('button');
-		expect(await page.textContent('button')).toBe('clicks: 1');
-
-		// wait until hydration before attempting backwards client-side navigation
-		await page.waitForSelector('body.started');
-
-		await clicknav('[href="/no-router/a"]');
-		expect(await page.textContent('button')).toBe('clicks: 1');
-
-		await Promise.all([page.waitForNavigation(), page.click('[href="/no-router/b"]')]);
-		expect(await page.textContent('button')).toBe('clicks: 0');
-	});
-
 	test('applies generated component styles with ssr=false (hides announcer)', async ({
 		page,
 		clicknav
@@ -457,8 +669,8 @@ test.describe('Prefetching', () => {
 		// also wait for network processing to complete, see
 		// https://playwright.dev/docs/network#network-events
 		await Promise.all([
-			page.waitForResponse(`${baseURL}/routing/prefetched.json`),
-			app.prefetch('/routing/prefetched')
+			page.waitForResponse(`${baseURL}/routing/preloading/preloaded.json`),
+			app.preloadData('/routing/preloading/preloaded')
 		]);
 
 		// svelte request made is environment dependent
@@ -470,46 +682,54 @@ test.describe('Prefetching', () => {
 			expect(requests.filter((req) => req.endsWith('.js')).length).toBeGreaterThan(0);
 		}
 
-		expect(requests.includes(`${baseURL}/routing/prefetched.json`)).toBe(true);
+		expect(requests.includes(`${baseURL}/routing/preloading/preloaded.json`)).toBe(true);
 
 		requests = [];
-		await app.goto('/routing/prefetched');
+		await app.goto('/routing/preloading/preloaded');
 		expect(requests).toEqual([]);
 
 		try {
-			await app.prefetch('https://example.com');
+			await app.preloadData('https://example.com');
 			throw new Error('Error was not thrown');
 		} catch (/** @type {any} */ e) {
-			expect(e.message).toMatch('Attempted to prefetch a URL that does not belong to this app');
+			expect(e.message).toMatch('Attempted to preload a URL that does not belong to this app');
 		}
 	});
 
-	test('chooses correct route when hash route is prefetched but regular route is clicked', async ({
+	test('chooses correct route when hash route is preloaded but regular route is clicked', async ({
 		app,
 		page
 	}) => {
 		await page.goto('/routing/a');
-		await app.prefetch('/routing/prefetched/hash-route#please-dont-show-me');
-		await app.goto('/routing/prefetched/hash-route');
+		await app.preloadData('/routing/preloading/hash-route#please-dont-show-me');
+		await app.goto('/routing/preloading/hash-route');
 		await expect(page.locator('h1')).not.toHaveText('Oopsie');
 	});
 
 	test('does not rerun load on calls to duplicate preload hash route', async ({ app, page }) => {
 		await page.goto('/routing/a');
 
-		await app.prefetch('/routing/prefetched/hash-route#please-dont-show-me');
-		await app.prefetch('/routing/prefetched/hash-route#please-dont-show-me');
-		await app.goto('/routing/prefetched/hash-route#please-dont-show-me');
+		await app.preloadData('/routing/preloading/hash-route#please-dont-show-me');
+		await app.preloadData('/routing/preloading/hash-route#please-dont-show-me');
+		await app.goto('/routing/preloading/hash-route#please-dont-show-me');
 		await expect(page.locator('p')).toHaveText('Loaded 1 times.');
 	});
 
 	test('does not rerun load on calls to different preload hash route', async ({ app, page }) => {
 		await page.goto('/routing/a');
 
-		await app.prefetch('/routing/prefetched/hash-route#please-dont-show-me');
-		await app.prefetch('/routing/prefetched/hash-route#please-dont-show-me-jr');
-		await app.goto('/routing/prefetched/hash-route#please-dont-show-me');
+		await app.preloadData('/routing/preloading/hash-route#please-dont-show-me');
+		await app.preloadData('/routing/preloading/hash-route#please-dont-show-me-jr');
+		await app.goto('/routing/preloading/hash-route#please-dont-show-me');
 		await expect(page.locator('p')).toHaveText('Loaded 1 times.');
+	});
+
+	test('does rerun load when preload errored', async ({ app, page }) => {
+		await page.goto('/routing/a');
+
+		await app.preloadData('/routing/preloading/preload-error');
+		await app.goto('/routing/preloading/preload-error');
+		await expect(page.locator('p')).toHaveText('hello');
 	});
 });
 
@@ -517,7 +737,7 @@ test.describe('Routing', () => {
 	test('navigates to a new page without reloading', async ({ app, page, clicknav }) => {
 		await page.goto('/routing');
 
-		await app.prefetch('/routing/a').catch((e) => {
+		await app.preloadData('/routing/a').catch((e) => {
 			// from error handler tests; ignore
 			if (!e.message.includes('Crashing now')) throw e;
 		});
@@ -551,9 +771,13 @@ test.describe('Routing', () => {
 		await page.click('[href="#target"]');
 		expect(await page.textContent('#window-hash')).toBe('#target');
 		expect(await page.textContent('#page-url-hash')).toBe('#target');
+		await page.click('[href="/routing/hashes/pagestore"]');
+		await expect(page.locator('#window-hash')).toHaveText('#target'); // hashchange doesn't fire for these
+		await expect(page.locator('#page-url-hash')).toHaveText('');
 	});
 
 	test('does not normalize external path', async ({ page }) => {
+		/** @type {Array<string|undefined>} */
 		const urls = [];
 
 		const { port, close } = await start_server((req, res) => {
@@ -570,13 +794,50 @@ test.describe('Routing', () => {
 			await close();
 		}
 	});
+
+	test('ignores popstate events from outside the router', async ({ page }) => {
+		await page.goto('/routing/external-popstate');
+		expect(await page.textContent('h1')).toBe('hello');
+
+		await page.click('button');
+		expect(await page.textContent('h1')).toBe('hello');
+
+		await page.goBack();
+		expect(await page.textContent('h1')).toBe('hello');
+
+		await page.goForward();
+		expect(await page.textContent('h1')).toBe('hello');
+	});
+
+	test('ignores clicks outside the app target', async ({ page }) => {
+		await page.goto('/routing/link-outside-app-target/source');
+
+		await page.click('[href="/routing/link-outside-app-target/target"]');
+		expect(await page.textContent('h1')).toBe('target: 0');
+	});
+
+	test('responds to <form method="GET"> submission without reload', async ({ page }) => {
+		await page.goto('/routing/form-get');
+		expect(await page.textContent('h1')).toBe('...');
+		expect(await page.textContent('h2')).toBe('enter');
+
+		const requests = [];
+		page.on('request', (request) => requests.push(request.url()));
+
+		await page.locator('input').fill('updated');
+		await page.click('button');
+
+		expect(requests).toEqual([]);
+		expect(await page.textContent('h1')).toBe('updated');
+		expect(await page.textContent('h2')).toBe('form');
+	});
 });
 
 test.describe('Shadow DOM', () => {
 	test('client router captures anchors in shadow dom', async ({ app, page, clicknav }) => {
 		await page.goto('/routing/shadow-dom');
 
-		await app.prefetch('/routing/a').catch((e) => {
+		await app.preloadData('/routing/a').catch((e) => {
 			// from error handler tests; ignore
 			if (!e.message.includes('Crashing now')) throw e;
 		});
@@ -588,14 +849,46 @@ test.describe('Shadow DOM', () => {
 		await clicknav('div[id="clickme"]');
 		expect(await page.textContent('h1')).toBe('a');
 
-		expect(requests).toEqual([]);
+		expect(requests.filter((url) => !url.endsWith('/favicon.png'))).toEqual([]);
 	});
 });
 
-test('Can use browser-only global on client-only page', async ({ page, read_errors }) => {
-	await page.goto('/no-ssr/browser-only-global');
-	await expect(page.locator('p')).toHaveText('Works');
-	expect(read_errors('/no-ssr/browser-only-global')).toBe(undefined);
+test.describe('SPA mode / no SSR', () => {
+	test('Can use browser-only global on client-only page through ssr config in handle', async ({
+		page,
+		read_errors
+	}) => {
+		await page.goto('/no-ssr/browser-only-global');
+		await expect(page.locator('p')).toHaveText('Works');
+		expect(read_errors('/no-ssr/browser-only-global')).toBe(undefined);
+	});
+
+	test('Can use browser-only global on client-only page through ssr config in +layout.js', async ({
+		page,
+		read_errors
+	}) => {
+		await page.goto('/no-ssr/ssr-page-config');
+		await expect(page.locator('p')).toHaveText('Works');
+		expect(read_errors('/no-ssr/ssr-page-config')).toBe(undefined);
+	});
+
+	test('Can use browser-only global on client-only page through ssr config in +page.js', async ({
+		page,
+		read_errors
+	}) => {
+		await page.goto('/no-ssr/ssr-page-config/layout/inherit');
+		await expect(page.locator('p')).toHaveText('Works');
+		expect(read_errors('/no-ssr/ssr-page-config/layout/inherit')).toBe(undefined);
+	});
+
+	test('Cannot use browser-only global on page because of ssr config in +page.js', async ({
+		page
+	}) => {
+		await page.goto('/no-ssr/ssr-page-config/layout/overwrite');
+		await expect(page.locator('p')).toHaveText(
+			'This is your custom error page saying: "document is not defined"'
+		);
+	});
 });
 
 test.describe('$app/stores', () => {
@@ -670,14 +963,248 @@ test.describe.serial('Invalidation', () => {
 		await page.goto('/load/invalidation/forced');
 		expect(await page.textContent('h1')).toBe('a: 0, b: 1');
 
-		await page.click('button');
-		await page.waitForLoadState('networkidle');
-		await page.waitForTimeout(0); // apparently necessary
+		await page.click('button.invalidateall');
+		await page.evaluate(() => window.promise);
 		expect(await page.textContent('h1')).toBe('a: 2, b: 3');
 
-		await page.click('button');
-		await page.waitForLoadState('networkidle');
-		await page.waitForTimeout(0);
+		await page.click('button.invalidateall');
+		await page.evaluate(() => window.promise);
 		expect(await page.textContent('h1')).toBe('a: 4, b: 5');
+	});
+
+	test('server-only load functions are re-run following goto with forced invalidation', async ({
+		page,
+		request
+	}) => {
+		await request.get('/load/invalidation/forced/reset');
+
+		await page.goto('/load/invalidation/forced');
+		expect(await page.textContent('h1')).toBe('a: 0, b: 1');
+
+		await page.click('button.goto');
+		await page.evaluate(() => window.promise);
+		expect(await page.textContent('h1')).toBe('a: 2, b: 3');
+	});
+
+	test('multiple invalidations run concurrently', async ({ page, request }) => {
+		await page.goto('/load/invalidation/multiple');
+		expect(await page.textContent('p')).toBe('layout: 0, page: 0');
+
+		await page.click('button.layout');
+		await page.click('button.layout');
+		await page.click('button.page');
+		await page.click('button.page');
+		await page.click('button.layout');
+		await page.click('button.page');
+		await page.click('button.all');
+		await expect(page.locator('p')).toHaveText('layout: 4, page: 4');
+	});
+
+	test('invalidateAll persists through redirects', async ({ page }) => {
+		await page.goto('/load/invalidation/multiple/redirect');
+		await page.click('button.redirect');
+		await expect(page.locator('p.redirect-state')).toHaveText('Redirect state: done');
+	});
+
+	test('+layout(.server).js is re-run when server dep is invalidated', async ({ page }) => {
+		await page.goto('/load/invalidation/depends');
+		const server = await page.textContent('p.server');
+		const shared = await page.textContent('p.shared');
+		expect(server).toBeDefined();
+		expect(shared).toBeDefined();
+
+		await page.click('button.server');
+		await page.evaluate(() => window.promise);
+		const next_server = await page.textContent('p.server');
+		const next_shared = await page.textContent('p.shared');
+		expect(server).not.toBe(next_server);
+		expect(shared).not.toBe(next_shared);
+	});
+
+	test('+layout.js is re-run when shared dep is invalidated', async ({ page, clicknav }) => {
+		await page.goto('/load/invalidation/depends');
+		const server = await page.textContent('p.server');
+		const shared = await page.textContent('p.shared');
+		expect(server).toBeDefined();
+		expect(shared).toBeDefined();
+
+		await page.click('button.shared');
+		await page.evaluate(() => window.promise);
+		const next_server = await page.textContent('p.server');
+		const next_shared = await page.textContent('p.shared');
+		expect(server).toBe(next_server);
+		expect(shared).not.toBe(next_shared);
+	});
+
+	test('Parameter use is tracked even for routes that do not use the parameters', async ({
+		page,
+		clicknav
+	}) => {
+		await page.goto('/load/invalidation/params');
+
+		await clicknav('[href="/load/invalidation/params/1"]');
+		expect(await page.textContent('pre')).toBe('{"a":"1"}');
+
+		await clicknav('[href="/load/invalidation/params/1/x"]');
+		expect(await page.textContent('pre')).toBe('{"a":"1","b":"x"}');
+
+		await page.goBack();
+		expect(await page.textContent('pre')).toBe('{"a":"1"}');
+	});
+
+	test('route.id use is tracked for server-only load functions', async ({ page, clicknav }) => {
+		await page.goto('/load/invalidation/route/server/a');
+		expect(await page.textContent('h1')).toBe('route.id: /load/invalidation/route/server/a');
+
+		await clicknav('[href="/load/invalidation/route/server/b"]');
+		expect(await page.textContent('h1')).toBe('route.id: /load/invalidation/route/server/b');
+	});
+
+	test('route.id use is tracked for shared load functions', async ({ page, clicknav }) => {
+		await page.goto('/load/invalidation/route/shared/a');
+		expect(await page.textContent('h1')).toBe('route.id: /load/invalidation/route/shared/a');
+
+		await clicknav('[href="/load/invalidation/route/shared/b"]');
+		expect(await page.textContent('h1')).toBe('route.id: /load/invalidation/route/shared/b');
+	});
+
+	test('$page.url can safely be mutated', async ({ page }) => {
+		await page.goto('/load/mutated-url?q=initial');
+		expect(await page.textContent('h1')).toBe('initial');
+
+		await page.click('button');
+		expect(await page.textContent('h1')).toBe('updated');
+	});
+});
+
+test.describe('data-sveltekit attributes', () => {
+	test('data-sveltekit-preload-data', async ({ baseURL, page }) => {
+		/** @type {string[]} */
+		const requests = [];
+		page.on('request', (r) => requests.push(r.url()));
+
+		const module = process.env.DEV
+			? `${baseURL}/src/routes/data-sveltekit/preload-data/target/+page.svelte`
+			: `${baseURL}/_app/immutable/components/pages/data-sveltekit/preload-data/target/_page`;
+
+		await page.goto('/data-sveltekit/preload-data');
+		await page.locator('#one').dispatchEvent('mousemove');
+		await Promise.all([
+			page.waitForTimeout(100), // wait for preloading to start
+			page.waitForLoadState('networkidle') // wait for preloading to finish
+		]);
+		expect(requests.find((r) => r.startsWith(module))).toBeDefined();
+
+		requests.length = 0;
+		await page.goto('/data-sveltekit/preload-data');
+		await page.locator('#two').dispatchEvent('mousemove');
+		await Promise.all([
+			page.waitForTimeout(100), // wait for preloading to start
+			page.waitForLoadState('networkidle') // wait for preloading to finish
+		]);
+		expect(requests.find((r) => r.startsWith(module))).toBeDefined();
+
+		requests.length = 0;
+		await page.goto('/data-sveltekit/preload-data');
+		await page.locator('#three').dispatchEvent('mousemove');
+		await Promise.all([
+			page.waitForTimeout(100), // wait for preloading to start
+			page.waitForLoadState('networkidle') // wait for preloading to finish
+		]);
+		expect(requests.find((r) => r.startsWith(module))).toBeUndefined();
+	});
+
+	test('data-sveltekit-reload', async ({ baseURL, page, clicknav }) => {
+		/** @type {string[]} */
+		const requests = [];
+		page.on('request', (r) => requests.push(r.url()));
+
+		await page.goto('/data-sveltekit/reload');
+		await page.click('#one');
+		expect(requests).toContain(`${baseURL}/data-sveltekit/reload/target`);
+
+		requests.length = 0;
+		await page.goto('/data-sveltekit/reload');
+		await page.click('#two');
+		expect(requests).toContain(`${baseURL}/data-sveltekit/reload/target`);
+
+		requests.length = 0;
+		await page.goto('/data-sveltekit/reload');
+		await clicknav('#three');
+		expect(requests).not.toContain(`${baseURL}/data-sveltekit/reload/target`);
+	});
+
+	test('data-sveltekit-noscroll', async ({ page, clicknav }) => {
+		await page.goto('/data-sveltekit/noscroll');
+		// await page.evaluate(() => window.scrollTo(0, 1000));
+		await clicknav('#one');
+		expect(await page.evaluate(() => window.scrollY)).toBeGreaterThan(1000);
+
+		await page.goto('/data-sveltekit/noscroll');
+		await clicknav('#two');
+		expect(await page.evaluate(() => window.scrollY)).toBeGreaterThan(1000);
+
+		await page.goto('/data-sveltekit/noscroll');
+		// await page.evaluate(() => window.scrollTo(0, 1000));
+		await clicknav('#three');
+		expect(await page.evaluate(() => window.scrollY)).toBe(0);
+	});
+});
+
+test.describe('Content negotiation', () => {
+	test('+server.js next to +page.svelte works', async ({ page }) => {
+		await page.goto('/routing/content-negotiation');
+		expect(await page.textContent('p')).toBe('Hi');
+
+		for (const method of ['GET', 'PUT', 'PATCH', 'POST', 'DELETE']) {
+			await page.click(`button:has-text("${method}")`);
+			await page.waitForFunction(
+				(method) => document.querySelector('pre')?.textContent === method,
+				method
+			);
+		}
+	});
+
+	test('use:enhance uses action, not POST handler', async ({ page }) => {
+		await page.goto('/routing/content-negotiation');
+
+		await Promise.all([
+			page.waitForResponse('/routing/content-negotiation'),
+			page.click('button:has-text("Submit")')
+		]);
+
+		await expect(page.locator('[data-testid="form-result"]')).toHaveText('form.submitted: true');
+	});
+});
+
+test.describe('cookies', () => {
+	test('etag forwards cookies', async ({ page }) => {
+		await page.goto('/cookies/forwarded-in-etag');
+		await expect(page.locator('p')).toHaveText('foo=bar');
+		await Promise.all([page.waitForNavigation(), page.click('button')]);
+		await expect(page.locator('p')).toHaveText('foo=bar');
+	});
+});
+
+test.describe('Interactivity', () => {
+	test('click events on removed elements are ignored', async ({ page }) => {
+		let errored = false;
+
+		page.on('pageerror', (err) => {
+			console.error(err);
+			errored = true;
+		});
+
+		await page.goto('/interactivity/toggle-element');
+		expect(await page.textContent('button')).toBe('remove');
+
+		await page.click('button');
+		expect(await page.textContent('button')).toBe('add');
+		expect(await page.textContent('a')).toBe('add');
+
+		await page.click('a');
+		expect(await page.textContent('a')).toBe('remove');
+
+		expect(errored).toBe(false);
 	});
 });

@@ -1,52 +1,50 @@
+import { applyAction } from '$app/forms';
 import {
 	afterNavigate,
 	beforeNavigate,
 	goto,
 	invalidate,
-	prefetch,
-	prefetchRoutes
+	invalidateAll,
+	preloadCode,
+	preloadData
 } from '$app/navigation';
-import { CSRPageNode, CSRPageNodeLoader, CSRRoute, Uses } from 'types';
-import { HttpError } from '../control.js';
-import { SerializedHttpError } from '../server/page/types.js';
+import { CSRPageNode, CSRPageNodeLoader, CSRRoute, TrailingSlash, Uses } from 'types';
 
 export interface Client {
 	// public API, exposed via $app/navigation
 	after_navigate: typeof afterNavigate;
 	before_navigate: typeof beforeNavigate;
-	disable_scroll_handling: () => void;
+	disable_scroll_handling(): void;
 	goto: typeof goto;
 	invalidate: typeof invalidate;
-	prefetch: typeof prefetch;
-	prefetch_routes: typeof prefetchRoutes;
+	invalidateAll: typeof invalidateAll;
+	preload_code: typeof preloadCode;
+	preload_data: typeof preloadData;
+	apply_action: typeof applyAction;
 
 	// private API
-	_hydrate: (opts: {
+	_hydrate(opts: {
 		status: number;
-		error: Error | SerializedHttpError;
+		error: App.Error;
 		node_ids: number[];
 		params: Record<string, string>;
-		routeId: string | null;
-	}) => Promise<void>;
-	_start_router: () => void;
+		route: { id: string | null };
+		data: Array<import('types').ServerDataNode | null>;
+		form: Record<string, any> | null;
+	}): Promise<void>;
+	_start_router(): void;
 }
 
 export type NavigationIntent = {
-	/**
-	 * `url.pathname + url.search`
-	 */
+	/** `url.pathname + url.search`  */
 	id: string;
-	/**
-	 * The route parameters
-	 */
+	/** Whether we are invalidating or navigating */
+	invalidating: boolean;
+	/** The route parameters */
 	params: Record<string, string>;
-	/**
-	 * The route that matches `path`
-	 */
+	/** The route that matches `path` */
 	route: CSRRoute;
-	/**
-	 * The destination URL
-	 */
+	/** The destination URL */
 	url: URL;
 };
 
@@ -69,18 +67,20 @@ export type BranchNode = {
 	server: DataNode | null;
 	shared: DataNode | null;
 	data: Record<string, any> | null;
+	slash?: TrailingSlash;
 };
 
 export interface DataNode {
 	type: 'data';
 	data: Record<string, any> | null;
 	uses: Uses;
+	slash?: TrailingSlash;
 }
 
-export type NavigationState = {
+export interface NavigationState {
 	branch: Array<BranchNode | undefined>;
-	error: HttpError | Error | null;
+	error: App.Error | null;
 	params: Record<string, string>;
-	session_id: number;
+	route: CSRRoute | null;
 	url: URL;
-};
+}

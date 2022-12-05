@@ -10,7 +10,7 @@ import { dist } from './utils.js';
 const disclaimer = `
 ${bold(cyan('Welcome to SvelteKit!'))}
 
-${bold(red('This is beta software; expect bugs and missing features.'))}
+${bold(red('This is release candidate software; expect bugs and missing features.'))}
 
 Problems? Open an issue on ${cyan('https://github.com/sveltejs/kit/issues')} if none exists already.
 `;
@@ -110,6 +110,14 @@ async function main() {
 					initial: false,
 					active: 'Yes',
 					inactive: 'No'
+				},
+				{
+					type: 'toggle',
+					name: 'vitest',
+					message: 'Add Vitest for unit testing?',
+					initial: false,
+					active: 'Yes',
+					inactive: 'No'
 				}
 			],
 			{
@@ -148,6 +156,11 @@ async function main() {
 	if (options.playwright) {
 		console.log(bold('✔ Playwright'));
 		console.log(cyan('  https://playwright.dev'));
+	}
+
+	if (options.vitest) {
+		console.log(bold('✔ Vitest'));
+		console.log(cyan('  https://vitest.dev'));
 	}
 
 	console.log('\nInstall community-maintained integrations:');

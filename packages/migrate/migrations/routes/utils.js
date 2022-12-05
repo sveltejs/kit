@@ -183,7 +183,7 @@ export function guess_indent(content) {
 		return Math.min(count, previous);
 	}, Infinity);
 
-	return new Array(min + 1).join(' ');
+	return ' '.repeat(min);
 }
 
 /**
@@ -493,4 +493,40 @@ export function rewrite_type(node, code, old_type, new_type) {
 		const start = type.getStart();
 		code.overwrite(start, start + old_type.length, new_type);
 	}
+}
+
+/**
+ * Does the HTTP verbs uppercase migration if it didn't happen yet. If a string
+ * is returned, the migration was done or wasn't needed. If undefined is returned,
+ * the migration is needed but couldn't be done.
+ *
+ * @param {string[]} methods
+ * @param {NonNullable<ReturnType<typeof parse>>} file
+ */
+export function uppercase_migration(methods, file) {
+	const old_methods = new Set(
+		['get', 'post', 'put', 'patch', 'del'].filter((name) => file.exports.map.has(name))
+	);
+
+	if (old_methods.size && !methods.length) {
+		for (const statement of file.ast.statements) {
+			for (const method of old_methods) {
+				const fn = get_function_node(
+					statement,
+					/** @type{string} */ (file.exports.map.get(method))
+				);
+				if (!fn?.name) {
+					continue;
+				}
+				file.code.overwrite(
+					fn.name.getStart(),
+					fn.name.getEnd(),
+					method === 'del' ? 'DELETE' : method.toUpperCase()
+				);
+				old_methods.delete(method);
+			}
+		}
+	}
+
+	return old_methods.size ? undefined : file.code.toString();
 }

@@ -1,5 +1,215 @@
 # create-svelte
 
+## 2.0.0-next.198
+
+### Patch Changes
+
+- Upgrade dependencies in templates ([#7866](https://github.com/sveltejs/kit/pull/7866))
+
+## 2.0.0-next.197
+
+### Patch Changes
+
+- Upgrade dependencies ([#7852](https://github.com/sveltejs/kit/pull/7852))
+
+## 2.0.0-next.196
+
+### Patch Changes
+
+- Update app.d.ts files ([#7003](https://github.com/sveltejs/kit/pull/7003))
+
+## 2.0.0-next.195
+
+### Patch Changes
+
+- [breaking] Replace `data-sveltekit-prefetch` with `-preload-code` and `-preload-data` ([#7776](https://github.com/sveltejs/kit/pull/7776))
+
+- Upgrade to Playwright 1.28.1 ([#7696](https://github.com/sveltejs/kit/pull/7696))
+
+## 2.0.0-next.194
+
+### Patch Changes
+
+- fix playwright glob filter ([#7826](https://github.com/sveltejs/kit/pull/7826))
+
+## 2.0.0-next.193
+
+### Patch Changes
+
+- Added the option to add Vitest to new projects ([#5708](https://github.com/sveltejs/kit/pull/5708))
+
+## 2.0.0-next.192
+
+### Patch Changes
+
+- Ignore Vite timestamp files by default in `create-svelte` templates (added to `.gitignore`) ([#7660](https://github.com/sveltejs/kit/pull/7660))
+
+## 2.0.0-next.191
+
+### Patch Changes
+
+- Add `style="display: contents"` to wrapper element by default ([#7652](https://github.com/sveltejs/kit/pull/7652))
+
+## 2.0.0-next.190
+
+### Patch Changes
+
+- [fix] remove Sverdle from Stackblitz template ([#7448](https://github.com/sveltejs/kit/pull/7448))
+
+## 2.0.0-next.189
+
+### Patch Changes
+
+- update dependencies ([#7355](https://github.com/sveltejs/kit/pull/7355))
+
+## 2.0.0-next.188
+
+### Patch Changes
+
+- Use aria-current instead of active class in nav ([#7376](https://github.com/sveltejs/kit/pull/7376))
+
+## 2.0.0-next.187
+
+### Patch Changes
+
+- Add missing titles and descriptions to the Sverdle pages ([#7351](https://github.com/sveltejs/kit/pull/7351))
+
+* Use `justify-content: flex-start;` on Sverdle CSS to avoid compatibility issues ([#7352](https://github.com/sveltejs/kit/pull/7352))
+
+## 2.0.0-next.186
+
+### Patch Changes
+
+- [feat] add reset option to update method of enhance ([#7326](https://github.com/sveltejs/kit/pull/7326))
+
+## 2.0.0-next.185
+
+### Patch Changes
+
+- Warn user when they accidentally try to publish the `./` directory ([#7280](https://github.com/sveltejs/kit/pull/7280))
+
+## 2.0.0-next.184
+
+### Patch Changes
+
+- fix sverdle guesses incorrectly cleared by form `enhance` ([#7241](https://github.com/sveltejs/kit/pull/7241))
+
+## 2.0.0-next.183
+
+### Patch Changes
+
+- [feat] extract and export types from create-svelte ([#7111](https://github.com/sveltejs/kit/pull/7111))
+
+## 2.0.0-next.182
+
+### Patch Changes
+
+- Work around SSR transform bug ([#7088](https://github.com/sveltejs/kit/pull/7088))
+
+## 2.0.0-next.181
+
+### Patch Changes
+
+- Fix template description for SvelteKit demo app ([#7076](https://github.com/sveltejs/kit/pull/7076))
+
+## 2.0.0-next.180
+
+### Patch Changes
+
+- Replace /todos page in demo app with /sverdle ([#6979](https://github.com/sveltejs/kit/pull/6979))
+
+## 2.0.0-next.179
+
+### Patch Changes
+
+- [breaking] rename App.PageError to App.Error ([#6963](https://github.com/sveltejs/kit/pull/6963))
+
+## 2.0.0-next.178
+
+### Patch Changes
+
+- [fix] prettier not formatting svelte files ([#6866](https://github.com/sveltejs/kit/pull/6866))
+
+## 2.0.0-next.177
+
+### Patch Changes
+
+- [chore] bump vite ([#6829](https://github.com/sveltejs/kit/pull/6829))
+
+## 2.0.0-next.176
+
+### Patch Changes
+
+- SvelteKit 1.0 RC ([#6707](https://github.com/sveltejs/kit/pull/6707))
+
+## 2.0.0-next.175
+
+### Patch Changes
+
+- [breaking] update use:enhance usage ([#6697](https://github.com/sveltejs/kit/pull/6697))
+
+* [breaking] hooks file rename ([#6697](https://github.com/sveltejs/kit/pull/6697))
+
+## 2.0.0-next.174
+
+### Patch Changes
+
+- Remove cookie package from demo app ([#6602](https://github.com/sveltejs/kit/pull/6602))
+
+## 2.0.0-next.173
+
+### Patch Changes
+
+- [breaking] Replace `POST`/`PUT`/`PATCH`/`DELETE` in `+page.server.js` with `export const actions` ([#6469](https://github.com/sveltejs/kit/pull/6469))
+
+## 2.0.0-next.172
+
+### Patch Changes
+
+- Bump vite-plugin-svelte and required vite version ([#6583](https://github.com/sveltejs/kit/pull/6583))
+
+## 2.0.0-next.171
+
+### Patch Changes
+
+- Use `invalidateAll()` ([#6493](https://github.com/sveltejs/kit/pull/6493))
+
+## 2.0.0-next.170
+
+### Patch Changes
+
+- reorder create-svelte templates such that library is last ([#6481](https://github.com/sveltejs/kit/pull/6481))
+
+## 2.0.0-next.169
+
+### Patch Changes
+
+- Move `data-sveltekit-prefetch` to `<nav>` element ([#6442](https://github.com/sveltejs/kit/pull/6442))
+
+## 2.0.0-next.168
+
+### Patch Changes
+
+- [chore] bump ts version and ensure it works with latest changes ([#6428](https://github.com/sveltejs/kit/pull/6428))
+
+## 2.0.0-next.167
+
+### Patch Changes
+
+- [breaking] Replace `sveltekit:*` with valid HTML attributes like `data-sveltekit-*` ([#6170](https://github.com/sveltejs/kit/pull/6170))
+
+## 2.0.0-next.166
+
+### Patch Changes
+
+- Remove App.PrivateEnv and App.PublicEnv placeholders ([#6413](https://github.com/sveltejs/kit/pull/6413))
+
+## 2.0.0-next.165
+
+### Patch Changes
+
+- Update to Vite 3.1.0-beta.1 ([#6407](https://github.com/sveltejs/kit/pull/6407))
+
 ## 2.0.0-next.164
 
 ### Patch Changes

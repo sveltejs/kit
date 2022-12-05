@@ -1,146 +1,201 @@
-const param_pattern = /^(\.\.\.)?(\w+)(?:=(\w+))?$/;
+const param_pattern = /^(\[)?(\.\.\.)?(\w+)(?:=(\w+))?(\])?$/;
 
-/** @param {string} id */
+/**
+ * Creates the regex pattern, extracts parameter names, and generates types for a route
+ * @param {string} id
+ */
 export function parse_route_id(id) {
-	/** @type {string[]} */
-	const names = [];
-
-	/** @type {string[]} */
-	const types = [];
-
-	// `/foo` should get an optional trailing slash, `/foo.json` should not
-	// const add_trailing_slash = !/\.[a-z]+$/.test(key);
-	let add_trailing_slash = true;
-
-	if (/\]\[/.test(id)) {
-		throw new Error(`Invalid route ${id} — parameters must be separated`);
-	}
-
-	if (count_occurrences('[', id) !== count_occurrences(']', id)) {
-		throw new Error(`Invalid route ${id} — brackets are unbalanced`);
-	}
+	/** @type {import('types').RouteParam[]} */
+	const params = [];
 
 	const pattern =
-		id === ''
+		id === '/'
 			? /^\/$/
 			: new RegExp(
-					`^${id
-						.split(/(?:\/|$)/)
-						.filter(affects_path)
-						.map((segment, i, segments) => {
-							const decoded_segment = decodeURIComponent(segment);
+					`^${get_route_segments(id)
+						.map((segment) => {
 							// special case — /[...rest]/ could contain zero segments
-							const match = /^\[\.\.\.(\w+)(?:=(\w+))?\]$/.exec(decoded_segment);
-							if (match) {
-								names.push(match[1]);
-								types.push(match[2]);
+							const rest_match = /^\[\.\.\.(\w+)(?:=(\w+))?\]$/.exec(segment);
+							if (rest_match) {
+								params.push({
+									name: rest_match[1],
+									matcher: rest_match[2],
+									optional: false,
+									rest: true,
+									chained: true
+								});
 								return '(?:/(.*))?';
 							}
+							// special case — /[[optional]]/ could contain zero segments
+							const optional_match = /^\[\[(\w+)(?:=(\w+))?\]\]$/.exec(segment);
+							if (optional_match) {
+								params.push({
+									name: optional_match[1],
+									matcher: optional_match[2],
+									optional: true,
+									rest: false,
+									chained: true
+								});
+								return '(?:/([^/]+))?';
+							}
 
-							const is_last = i === segments.length - 1;
+							if (!segment) {
+								return;
+							}
 
-							return (
-								decoded_segment &&
-								'/' +
-									decoded_segment
-										.split(/\[(.+?)\]/)
-										.map((content, i) => {
-											if (i % 2) {
-												const match = param_pattern.exec(content);
-												if (!match) {
-													throw new Error(
-														`Invalid param: ${content}. Params and matcher names can only have underscores and alphanumeric characters.`
-													);
-												}
+							const parts = segment.split(/\[(.+?)\](?!\])/);
+							const result = parts
+								.map((content, i) => {
+									if (i % 2) {
+										if (content.startsWith('x+')) {
+											return escape(String.fromCharCode(parseInt(content.slice(2), 16)));
+										}
 
-												const [, rest, name, type] = match;
-												names.push(name);
-												types.push(type);
-												return rest ? '(.*?)' : '([^/]+?)';
-											}
+										if (content.startsWith('u+')) {
+											return escape(
+												String.fromCharCode(
+													...content
+														.slice(2)
+														.split('-')
+														.map((code) => parseInt(code, 16))
+												)
+											);
+										}
 
-											if (is_last && content.includes('.')) add_trailing_slash = false;
+										const match = param_pattern.exec(content);
+										if (!match) {
+											throw new Error(
+												`Invalid param: ${content}. Params and matcher names can only have underscores and alphanumeric characters.`
+											);
+										}
 
-											return (
-												content // allow users to specify characters on the file system in an encoded manner
-													.normalize()
-													// We use [ and ] to denote parameters, so users must encode these on the file
-													// system to match against them. We don't decode all characters since others
-													// can already be epressed and so that '%' can be easily used directly in filenames
-													.replace(/%5[Bb]/g, '[')
-													.replace(/%5[Dd]/g, ']')
-													// '#', '/', and '?' can only appear in URL path segments in an encoded manner.
-													// They will not be touched by decodeURI so need to be encoded here, so
-													// that we can match against them.
-													// We skip '/' since you can't create a file with it on any OS
-													.replace(/#/g, '%23')
-													.replace(/\?/g, '%3F')
-													// escape characters that have special meaning in regex
-													.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
-											); // TODO handle encoding
-										})
-										.join('')
-							);
+										const [, is_optional, is_rest, name, matcher] = match;
+										// It's assumed that the following invalid route id cases are already checked
+										// - unbalanced brackets
+										// - optional param following rest param
+
+										params.push({
+											name,
+											matcher,
+											optional: !!is_optional,
+											rest: !!is_rest,
+											chained: is_rest ? i === 1 && parts[0] === '' : false
+										});
+										return is_rest ? '(.*?)' : is_optional ? '([^/]*)?' : '([^/]+?)';
+									}
+
+									return escape(content);
+								})
+								.join('');
+
+							return '/' + result;
 						})
-						.join('')}${add_trailing_slash ? '/?' : ''}$`
+						.join('')}/?$`
 			  );
 
-	return { pattern, names, types };
+	return { pattern, params };
 }
 
 /**
  * Returns `false` for `(group)` segments
  * @param {string} segment
  */
-export function affects_path(segment) {
+function affects_path(segment) {
 	return !/^\([^)]+\)$/.test(segment);
 }
 
 /**
- * Turns a route ID into a path, if possible
- * @param {string} id
+ * Splits a route id into its segments, removing segments that
+ * don't affect the path (i.e. groups). The root route is represented by `/`
+ * and will be returned as `['']`.
+ * @param {string} route
+ * @returns string[]
  */
-export function get_path(id) {
-	if (id.includes('[')) return null;
-	return `/${id.split('/').filter(affects_path).join('/')}`;
+export function get_route_segments(route) {
+	return route.slice(1).split('/').filter(affects_path);
 }
 
 /**
  * @param {RegExpMatchArray} match
- * @param {string[]} names
- * @param {string[]} types
+ * @param {import('types').RouteParam[]} params
  * @param {Record<string, import('types').ParamMatcher>} matchers
  */
-export function exec(match, names, types, matchers) {
+export function exec(match, params, matchers) {
 	/** @type {Record<string, string>} */
-	const params = {};
+	const result = {};
 
-	for (let i = 0; i < names.length; i += 1) {
-		const name = names[i];
-		const type = types[i];
-		const value = match[i + 1] || '';
+	const values = match.slice(1);
 
-		if (type) {
-			const matcher = matchers[type];
-			if (!matcher) throw new Error(`Missing "${type}" param matcher`); // TODO do this ahead of time?
+	let buffered = '';
 
-			if (!matcher(value)) return;
+	for (let i = 0; i < params.length; i += 1) {
+		const param = params[i];
+		let value = values[i];
+
+		if (param.chained && param.rest && buffered) {
+			// in the `[[lang=lang]]/[...rest]` case, if `lang` didn't
+			// match, we roll it over into the rest value
+			value = value ? buffered + '/' + value : buffered;
 		}
 
-		params[name] = value;
+		buffered = '';
+
+		if (value === undefined) {
+			// if `value` is undefined, it means this is
+			// an optional or rest parameter
+			if (param.rest) result[param.name] = '';
+		} else {
+			if (param.matcher && !matchers[param.matcher](value)) {
+				// in the `/[[a=b]]/[[c=d]]` case, if the value didn't satisfy the `b` matcher,
+				// try again with the next segment by shifting values rightwards
+				if (param.optional && param.chained) {
+					// @ts-expect-error TypeScript is... wrong
+					let j = values.indexOf(undefined, i);
+
+					if (j === -1) {
+						// we can't shift values any further, so hang on to this value
+						// so it can be rolled into a subsequent `[...rest]` param
+						const next = params[i + 1];
+						if (next?.rest && next.chained) {
+							buffered = value;
+						} else {
+							return;
+						}
+					}
+
+					while (j >= i) {
+						values[j] = values[j - 1];
+						j -= 1;
+					}
+
+					continue;
+				}
+
+				// otherwise, if the matcher returns `false`, the route did not match
+				return;
+			}
+
+			result[param.name] = value;
+		}
 	}
 
-	return params;
+	if (buffered) return;
+	return result;
 }
 
-/**
- * @param {string} needle
- * @param {string} haystack
- */
-function count_occurrences(needle, haystack) {
-	let count = 0;
-	for (let i = 0; i < haystack.length; i += 1) {
-		if (haystack[i] === needle) count += 1;
-	}
-	return count;
+/** @param {string} str */
+function escape(str) {
+	return (
+		str
+			.normalize()
+			// escape [ and ] before escaping other characters, since they are used in the replacements
+			.replace(/[[\]]/g, '\\$&')
+			// replace %, /, ? and # with their encoded versions because decode_pathname leaves them untouched
+			.replace(/%/g, '%25')
+			.replace(/\//g, '%2[Ff]')
+			.replace(/\?/g, '%3[Ff]')
+			.replace(/#/g, '%23')
+			// escape characters that have special meaning in regex
+			.replace(/[.*+?^${}()|\\]/g, '\\$&')
+	);
 }

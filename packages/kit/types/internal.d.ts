@@ -1,12 +1,10 @@
 import { OutputAsset, OutputChunk } from 'rollup';
 import { SvelteComponent } from 'svelte/internal';
 import {
-	Action,
 	Config,
-	ExternalFetch,
 	ServerLoad,
 	Handle,
-	HandleError,
+	HandleServerError,
 	KitConfig,
 	Load,
 	RequestEvent,
@@ -14,19 +12,28 @@ import {
 	ResolveOptions,
 	Server,
 	ServerInitOptions,
-	SSRManifest
+	SSRManifest,
+	HandleFetch,
+	Actions,
+	HandleClientError
 } from './index.js';
-import { HttpMethod, MaybePromise, RequestOptions, TrailingSlash } from './private.js';
+import {
+	HttpMethod,
+	MaybePromise,
+	PrerenderOption,
+	RequestOptions,
+	TrailingSlash
+} from './private.js';
 
 export interface ServerModule {
 	Server: typeof InternalServer;
 
 	override(options: {
+		building: boolean;
 		paths: {
 			base: string;
 			assets: string;
 		};
-		prerendering: boolean;
 		protocol?: 'http' | 'https';
 		read(file: string): Buffer;
 	}): void;
@@ -40,6 +47,7 @@ export interface Asset {
 
 export interface BuildData {
 	app_dir: string;
+	app_path: string;
 	manifest_data: ManifestData;
 	service_worker: string | null;
 	client: {
@@ -49,6 +57,7 @@ export interface BuildData {
 			file: string;
 			imports: string[];
 			stylesheets: string[];
+			fonts: string[];
 		};
 		vite_manifest: import('vite').Manifest;
 	};
@@ -63,8 +72,7 @@ export interface CSRPageNode {
 	component: typeof SvelteComponent;
 	shared: {
 		load?: Load;
-		hydrate?: boolean;
-		router?: boolean;
+		trailingSlash?: TrailingSlash;
 	};
 	server: boolean;
 }
@@ -77,7 +85,7 @@ export type CSRPageNodeLoader = () => Promise<CSRPageNode>;
  */
 export type CSRRoute = {
 	id: string;
-	exec: (path: string) => undefined | Record<string, string>;
+	exec(path: string): undefined | Record<string, string>;
 	errors: Array<CSRPageNodeLoader | undefined>;
 	layouts: Array<[boolean, CSRPageNodeLoader] | undefined>;
 	leaf: [boolean, CSRPageNodeLoader];
@@ -85,15 +93,14 @@ export type CSRRoute = {
 
 export type GetParams = (match: RegExpExecArray) => Record<string, string>;
 
-export interface Hooks {
-	externalFetch: ExternalFetch;
+export interface ServerHooks {
+	handleFetch: HandleFetch;
 	handle: Handle;
-	handleError: HandleError;
+	handleError: HandleServerError;
 }
 
-export interface ImportNode {
-	name: string;
-	dynamic: boolean;
+export interface ClientHooks {
+	handleError: HandleClientError;
 }
 
 export class InternalServer extends Server {
@@ -113,11 +120,6 @@ export interface ManifestData {
 	matchers: Record<string, string>;
 }
 
-export interface MethodOverride {
-	parameter: string;
-	allowed: string[];
-}
-
 export interface PageNode {
 	depth: number;
 	component?: string; // TODO supply default component if it's missing (bit of an edge case)
@@ -130,11 +132,6 @@ export interface PageNode {
 	 */
 	child_pages?: PageNode[];
 }
-
-export type PayloadScriptAttributes =
-	| { type: 'data'; url: string; body?: string }
-	| { type: 'server_data' }
-	| { type: 'validation_errors' };
 
 export interface PrerenderDependency {
 	response: Response;
@@ -161,6 +158,14 @@ export interface Respond {
 	(request: Request, options: SSROptions, state: SSRState): Promise<Response>;
 }
 
+export interface RouteParam {
+	name: string;
+	matcher: string;
+	optional: boolean;
+	rest: boolean;
+	chained: boolean;
+}
+
 /**
  * Represents a route segment in the app. It can either be an intermediate node
  * with only layout/error pages, or a leaf, at which point either `page` and `leaf`
@@ -172,8 +177,7 @@ export interface RouteData {
 
 	segment: string;
 	pattern: RegExp;
-	names: string[];
-	types: string[];
+	params: RouteParam[];
 
 	layout: PageNode | null;
 	error: PageNode | null;
@@ -211,12 +215,8 @@ export type ServerData =
 export interface ServerDataNode {
 	type: 'data';
 	data: Record<string, any> | null;
-	uses: {
-		dependencies?: string[];
-		params?: string[];
-		parent?: number | void; // 1 or undefined
-		url?: number | void; // 1 or undefined
-	};
+	uses: Uses;
+	slash?: TrailingSlash;
 }
 
 /**
@@ -232,9 +232,11 @@ export interface ServerDataSkippedNode {
  */
 export interface ServerErrorNode {
 	type: 'error';
-	// Either-or situation, but we don't want to have to do a type assertion
-	error?: Record<string, any>;
-	httperror?: { status: number; message: string };
+	error: App.Error;
+	/**
+	 * Only set for HttpErrors
+	 */
+	status?: number;
 }
 
 export interface SSRComponent {
@@ -262,23 +264,26 @@ export interface SSRNode {
 	imports: string[];
 	/** external CSS files */
 	stylesheets: string[];
+	/** external font files */
+	fonts: string[];
 	/** inlined styles */
-	inline_styles?: () => MaybePromise<Record<string, string>>;
+	inline_styles?(): MaybePromise<Record<string, string>>;
 
 	shared: {
 		load?: Load;
-		hydrate?: boolean;
-		prerender?: boolean;
-		router?: boolean;
+		prerender?: PrerenderOption;
+		ssr?: boolean;
+		csr?: boolean;
+		trailingSlash?: TrailingSlash;
 	};
 
 	server: {
 		load?: ServerLoad;
-		prerender?: boolean;
-		POST?: Action;
-		PATCH?: Action;
-		PUT?: Action;
-		DELETE?: Action;
+		prerender?: PrerenderOption;
+		ssr?: boolean;
+		csr?: boolean;
+		trailingSlash?: TrailingSlash;
+		actions?: Actions;
 	};
 
 	// store this in dev so we can print serialization errors
@@ -289,27 +294,22 @@ export type SSRNodeLoader = () => Promise<SSRNode>;
 
 export interface SSROptions {
 	csp: ValidatedConfig['kit']['csp'];
+	csrf: {
+		check_origin: boolean;
+	};
 	dev: boolean;
-	get_stack: (error: Error) => string | undefined;
-	handle_error(error: Error & { frame?: string }, event: RequestEvent): void;
-	hooks: Hooks;
-	hydrate: boolean;
+	handle_error(error: Error & { frame?: string }, event: RequestEvent): MaybePromise<App.Error>;
+	hooks: ServerHooks;
 	manifest: SSRManifest;
-	method_override: MethodOverride;
 	paths: {
 		base: string;
 		assets: string;
 	};
-	prerender: {
-		default: boolean;
-		enabled: boolean;
-	};
 	public_env: Record<string, string>;
 	read(file: string): Buffer;
 	root: SSRComponent['default'];
-	router: boolean;
-	service_worker?: string;
-	template({
+	service_worker: boolean;
+	app_template({
 		head,
 		body,
 		assets,
@@ -320,8 +320,9 @@ export interface SSROptions {
 		assets: string;
 		nonce: string;
 	}): string;
-	template_contains_nonce: boolean;
-	trailing_slash: TrailingSlash;
+	app_template_contains_nonce: boolean;
+	error_template({ message, status }: { message: string; status: number }): string;
+	version: string;
 }
 
 export interface SSRErrorPage {
@@ -334,33 +335,39 @@ export interface PageNodeIndexes {
 	leaf: number;
 }
 
-export type SSREndpoint = Partial<Record<HttpMethod, RequestHandler>>;
+export type SSREndpoint = Partial<Record<HttpMethod, RequestHandler>> & {
+	prerender?: PrerenderOption;
+	trailingSlash?: TrailingSlash;
+};
 
 export interface SSRRoute {
 	id: string;
 	pattern: RegExp;
-	names: string[];
-	types: string[];
-
+	params: RouteParam[];
 	page: PageNodeIndexes | null;
-
 	endpoint: (() => Promise<SSREndpoint>) | null;
 }
 
 export interface SSRState {
 	fallback?: string;
-	getClientAddress: () => string;
+	getClientAddress(): string;
 	initiator?: SSRRoute | SSRErrorPage;
 	platform?: any;
 	prerendering?: PrerenderOptions;
+	/**
+	 * When fetching data from a +server.js endpoint in `load`, the page's
+	 * prerender option is inherited by the endpoint, unless overridden
+	 */
+	prerender_default?: PrerenderOption;
 }
 
-export type StrictBody = string | Uint8Array;
+export type StrictBody = string | ArrayBufferView;
 
 export interface Uses {
 	dependencies: Set<string>;
 	params: Set<string>;
 	parent: boolean;
+	route: boolean;
 	url: boolean;
 }
 
@@ -376,5 +383,6 @@ declare global {
 	const __SVELTEKIT_APP_VERSION__: string;
 	const __SVELTEKIT_APP_VERSION_FILE__: string;
 	const __SVELTEKIT_APP_VERSION_POLL_INTERVAL__: number;
+	const __SVELTEKIT_BROWSER__: boolean;
 	const __SVELTEKIT_DEV__: boolean;
 }

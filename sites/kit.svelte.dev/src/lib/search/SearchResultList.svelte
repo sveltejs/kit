@@ -37,7 +37,7 @@
 	{#each results as result, i}
 		<li>
 			<a
-				sveltekit:prefetch
+				data-sveltekit-preload-data
 				href={result.href}
 				on:click={() => dispatch('select', { href: result.href })}
 				data-has-node={result.node ? true : undefined}
@@ -65,7 +65,7 @@
 	ul :global(ul) {
 		margin-left: 0.8em !important;
 		padding-left: 0em;
-		border-left: 1px solid #eee;
+		border-left: 1px solid var(--sk-back-5);
 	}
 
 	li {
@@ -93,7 +93,7 @@
 	}
 
 	a:focus {
-		background: var(--second);
+		background: var(--sk-theme-2);
 		color: white;
 		outline: none;
 	}
@@ -103,18 +103,18 @@
 		display: block;
 		white-space: nowrap;
 		line-height: 1;
+		overflow: hidden;
+		text-overflow: ellipsis;
 	}
 
 	a strong {
 		font-size: 1.6rem;
-		color: var(--text);
+		color: var(--sk-text-2);
 	}
 
 	a span {
 		font-size: 1.2rem;
 		color: #737373;
-		overflow: hidden;
-		text-overflow: ellipsis;
 		margin: 0.4rem 0 0 0;
 	}
 
@@ -124,11 +124,11 @@
 
 	a span :global(mark) {
 		background: none;
-		color: #111;
+		color: var(--sk-text-1);
 		background: var(--highlight-color);
 		outline: 2px solid var(--highlight-color);
 		border-top: 2px solid var(--highlight-color);
-		mix-blend-mode: darken;
+		/* mix-blend-mode: darken; */
 	}
 
 	a:focus span {
@@ -147,7 +147,7 @@
 	}
 
 	a strong :global(mark) {
-		color: black;
+		color: var(--sk-text-1);
 		background: var(--highlight-color);
 		outline: 2px solid var(--highlight-color);
 		/* border-top: 2px solid var(--highlight-color); */

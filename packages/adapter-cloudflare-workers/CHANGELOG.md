@@ -1,5 +1,41 @@
 # @sveltejs/adapter-cloudflare-workers
 
+## 1.0.0-next.60
+
+### Patch Changes
+
+- update dependencies ([#7355](https://github.com/sveltejs/kit/pull/7355))
+
+## 1.0.0-next.59
+
+### Patch Changes
+
+- Use config.kit.paths.base prefix for static assets ([#4448](https://github.com/sveltejs/kit/pull/4448))
+
+## 1.0.0-next.58
+
+### Patch Changes
+
+- Add config option to set custom `wrangler.toml` file name ([#7104](https://github.com/sveltejs/kit/pull/7104))
+
+## 1.0.0-next.57
+
+### Patch Changes
+
+- Include ambient.d.ts files in adapter packages. ([#6917](https://github.com/sveltejs/kit/pull/6917))
+
+## 1.0.0-next.56
+
+### Patch Changes
+
+- [chore] bump esbuild ([#6829](https://github.com/sveltejs/kit/pull/6829))
+
+## 1.0.0-next.55
+
+### Patch Changes
+
+- Update to esbuild 0.15 ([#6740](https://github.com/sveltejs/kit/pull/6740))
+
 ## 1.0.0-next.54
 
 ### Patch Changes

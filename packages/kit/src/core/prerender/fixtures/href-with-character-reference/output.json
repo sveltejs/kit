@@ -1,0 +1,11 @@
+{
+	"hrefs": [
+		"/styles.css",
+		"/favicon.png",
+		"/test&ampersand",
+		"/test\"quotation",
+		"/test♡decimal",
+		"/test♥hex"
+	],
+	"ids": []
+}

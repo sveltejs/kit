@@ -1,0 +1,67 @@
+@import './base.css';
+
+:root {
+	--shiki-color-text: var(--sk-code-base);
+	--shiki-color-background: var(--sk-back-3);
+	--shiki-token-constant: var(--sk-code-base);
+	--shiki-token-string: var(--sk-code-string);
+	--shiki-token-comment: var(--sk-code-comment);
+	--shiki-token-keyword: var(--sk-code-keyword);
+	--shiki-token-parameter: var(--sk-code-base);
+	--shiki-token-function: var(--sk-code-function);
+	--shiki-token-string-expression: var(--sk-code-string);
+	--shiki-token-punctuation: var(--sk-code-base);
+	--shiki-token-link: var(--sk-code-keyword);
+}
+
+.token {
+	color: var(--sk-code-base);
+}
+
+.token.tag,
+.token.attr-value .attr-equals {
+	color: var(--sk-code-function);
+}
+
+.token.string,
+.token.interpolation-punctuation,
+.token.attr-value,
+.token.inserted {
+	color: var(--sk-code-string);
+}
+
+.token.builtin,
+.token.function {
+	color: var(--sk-code-function);
+}
+
+.token.keyword,
+.token.boolean {
+	color: var(--sk-code-keyword);
+}
+
+.token.comment {
+	color: var(--sk-code-comment);
+}
+
+.token.deleted {
+	color: #fc9b9b;
+}
+
+.token.template-string .interpolation-punctuation,
+.token.template-string .string {
+	color: var(--sk-code-template-string);
+}
+
+.language-id {
+	display: none;
+}
+
+pre.twoslash .error,
+pre.twoslash .error-behind {
+	display: none;
+}
+
+pre.twoslash data-lsp {
+	border-bottom: 1px dotted rgba(0, 0, 0, 0.2);
+}

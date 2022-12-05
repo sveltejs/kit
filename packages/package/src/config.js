@@ -26,6 +26,7 @@ export async function load_config({ cwd = process.cwd() } = {}) {
 function process_config(config, { cwd = process.cwd() } = {}) {
 	return {
 		extensions: config.extensions ?? ['.svelte'],
+		kit: config.kit,
 		package: {
 			source: path.resolve(cwd, config.kit?.files?.lib ?? config.package?.source ?? 'src/lib'),
 			dir: config.package?.dir ?? 'package',

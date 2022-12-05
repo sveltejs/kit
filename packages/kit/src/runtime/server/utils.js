@@ -1,3 +1,7 @@
+import * as devalue from 'devalue';
+import { coalesce_to_error } from '../../utils/error.js';
+import { negotiate } from '../../utils/http.js';
+import { has_data_suffix } from '../../utils/url.js';
 import { HttpError } from '../control.js';
 
 /** @param {any} body */
@@ -16,57 +20,6 @@ export function is_pojo(body) {
 	}
 
 	return true;
-}
-
-/**
- * Serialize an error into a JSON string through `error_to_pojo`.
- * This is necessary because `JSON.stringify(error) === '{}'`
- *
- * @param {Error | HttpError} error
- * @param {(error: Error) => string | undefined} get_stack
- */
-export function serialize_error(error, get_stack) {
-	return JSON.stringify(error_to_pojo(error, get_stack));
-}
-
-/**
- * Transform an error into a POJO, by copying its `name`, `message`
- * and (in dev) `stack`, plus any custom properties, plus recursively
- * serialized `cause` properties.
- * Our own HttpError gets a meta property attached so we can identify it on the client.
- *
- * @param {HttpError | Error } error
- * @param {(error: Error) => string | undefined} get_stack
- */
-export function error_to_pojo(error, get_stack) {
-	if (error instanceof HttpError) {
-		return /** @type {import('./page/types').SerializedHttpError} */ ({
-			message: error.message,
-			status: error.status,
-			__is_http_error: true // TODO we should probably make this unnecessary
-		});
-	}
-
-	const {
-		name,
-		message,
-		stack,
-		// @ts-expect-error i guess typescript doesn't know about error.cause yet
-		cause,
-		...custom
-	} = error;
-
-	/** @type {Record<string, any>} */
-	const object = { name, message, stack: get_stack(error) };
-
-	if (cause) object.cause = error_to_pojo(cause, get_stack);
-
-	for (const key in custom) {
-		// @ts-expect-error
-		object[key] = custom[key];
-	}
-
-	return object;
 }
 
 // TODO: Remove for 1.0
@@ -113,4 +66,142 @@ export function allowed_methods(mod) {
 	if (mod.GET || mod.HEAD) allowed.push('HEAD');
 
 	return allowed;
+}
+
+/**
+ * @template {'prerender' | 'ssr' | 'csr' | 'trailingSlash'} Option
+ * @template {Option extends 'prerender' ? import('types').PrerenderOption : Option extends 'trailingSlash' ? import('types').TrailingSlash : boolean} Value
+ *
+ * @param {Array<import('types').SSRNode | undefined>} nodes
+ * @param {Option} option
+ *
+ * @returns {Value | undefined}
+ */
+export function get_option(nodes, option) {
+	return nodes.reduce((value, node) => {
+		// TODO remove for 1.0
+		for (const thing of [node?.server, node?.shared]) {
+			if (thing && ('router' in thing || 'hydrate' in thing)) {
+				throw new Error(
+					'`export const hydrate` and `export const router` have been replaced with `export const csr`. See https://github.com/sveltejs/kit/pull/6446'
+				);
+			}
+		}
+
+		return /** @type {any} TypeScript's too dumb to understand this */ (
+			node?.shared?.[option] ?? node?.server?.[option] ?? value
+		);
+	}, /** @type {Value | undefined} */ (undefined));
+}
+
+/**
+ * Return as a response that renders the error.html
+ *
+ * @param {import('types').SSROptions} options
+ * @param {number} status
+ * @param {string} message
+ */
+export function static_error_page(options, status, message) {
+	return new Response(options.error_template({ status, message }), {
+		headers: { 'content-type': 'text/html; charset=utf-8' },
+		status
+	});
+}
+
+/**
+ * @param {import('types').RequestEvent} event
+ * @param {import('types').SSROptions} options
+ * @param {unknown} error
+ */
+export async function handle_fatal_error(event, options, error) {
+	error = error instanceof HttpError ? error : coalesce_to_error(error);
+	const status = error instanceof HttpError ? error.status : 500;
+	const body = await handle_error_and_jsonify(event, options, error);
+
+	// ideally we'd use sec-fetch-dest instead, but Safari — quelle surprise — doesn't support it
+	const type = negotiate(event.request.headers.get('accept') || 'text/html', [
+		'application/json',
+		'text/html'
+	]);
+
+	if (has_data_suffix(event.url.pathname) || type === 'application/json') {
+		return new Response(JSON.stringify(body), {
+			status,
+			headers: { 'content-type': 'application/json; charset=utf-8' }
+		});
+	}
+
+	return static_error_page(options, status, body.message);
+}
+
+/**
+ * @param {import('types').RequestEvent} event
+ * @param {import('types').SSROptions} options
+ * @param {any} error
+ * @returns {import('types').MaybePromise<App.Error>}
+ */
+export function handle_error_and_jsonify(event, options, error) {
+	if (error instanceof HttpError) {
+		return error.body;
+	} else {
+		return options.handle_error(error, event);
+	}
+}
+
+/**
+ * @param {number} status
+ * @param {string} location
+ */
+export function redirect_response(status, location) {
+	const response = new Response(undefined, {
+		status,
+		headers: { location }
+	});
+	return response;
+}
+
+/**
+ * @param {import('types').RequestEvent} event
+ * @param {Error & { path: string }} error
+ */
+export function clarify_devalue_error(event, error) {
+	if (error.path) {
+		return `Data returned from \`load\` while rendering ${event.route.id} is not serializable: ${error.message} (data${error.path})`;
+	}
+
+	if (error.path === '') {
+		return `Data returned from \`load\` while rendering ${event.route.id} is not a plain object`;
+	}
+
+	// belt and braces — this should never happen
+	return error.message;
+}
+
+/** @param {import('types').ServerDataNode | import('types').ServerDataSkippedNode | import('types').ServerErrorNode | null} node */
+export function serialize_data_node(node) {
+	if (!node) return 'null';
+
+	if (node.type === 'error' || node.type === 'skip') {
+		return JSON.stringify(node);
+	}
+
+	const stringified = devalue.stringify(node.data);
+
+	const uses = [];
+
+	if (node.uses.dependencies.size > 0) {
+		uses.push(`"dependencies":${JSON.stringify(Array.from(node.uses.dependencies))}`);
+	}
+
+	if (node.uses.params.size > 0) {
+		uses.push(`"params":${JSON.stringify(Array.from(node.uses.params))}`);
+	}
+
+	if (node.uses.parent) uses.push(`"parent":1`);
+	if (node.uses.route) uses.push(`"route":1`);
+	if (node.uses.url) uses.push(`"url":1`);
+
+	return `{"type":"data","data":${stringified},"uses":{${uses.join(',')}}${
+		node.slash ? `,"slash":${JSON.stringify(node.slash)}` : ''
+	}}`;
 }

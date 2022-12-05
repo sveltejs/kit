@@ -5,9 +5,16 @@ const config = {
 	kit: {
 		adapter: adapter(),
 
-		prerender: {
-			default: true,
-			entries: ['*', '/content.json']
+		alias: {
+			'@sveltejs/site-kit': '../site-kit/src/lib'
+		}
+	},
+
+	vitePlugin: {
+		experimental: {
+			inspector: {
+				holdMode: true
+			}
 		}
 	}
 };

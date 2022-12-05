@@ -1,0 +1,19 @@
+{
+	"name": "~TODO~",
+	"version": "0.0.1",
+	"scripts": {
+		"dev": "vite dev",
+		"build": "svelte-kit sync && svelte-package",
+		"prepublishOnly": "echo 'Did you mean to publish `./package/`, instead of `./`?' && exit 1"
+	},
+	"devDependencies": {
+		"@sveltejs/adapter-auto": "workspace:*",
+		"@sveltejs/kit": "workspace:*",
+		"@sveltejs/package": "workspace:*",
+		"svelte": "^3.53.1",
+		"tslib": "^2.4.1",
+		"typescript": "^4.9.3",
+		"vite": "^3.2.4"
+	},
+	"type": "module"
+}

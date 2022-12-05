@@ -1,5 +1,95 @@
 # @sveltejs/adapter-vercel
 
+## 1.0.0-next.84
+
+### Patch Changes
+
+- [fix] Write redirects for prerendered pages with trailing slashes ([#7747](https://github.com/sveltejs/kit/pull/7747))
+
+## 1.0.0-next.83
+
+### Patch Changes
+
+- [fix] handle root route for split config ([#7741](https://github.com/sveltejs/kit/pull/7741))
+
+## 1.0.0-next.82
+
+### Patch Changes
+
+- Handle redirects inside SvelteKit ([#7719](https://github.com/sveltejs/kit/pull/7719))
+
+## 1.0.0-next.81
+
+### Patch Changes
+
+- update dependencies ([#7355](https://github.com/sveltejs/kit/pull/7355))
+
+## 1.0.0-next.80
+
+### Patch Changes
+
+- [fix] don't fail on unknown error message ([#7312](https://github.com/sveltejs/kit/pull/7312))
+
+## 1.0.0-next.79
+
+### Patch Changes
+
+- Use config.kit.paths.base prefix for static assets ([#4448](https://github.com/sveltejs/kit/pull/4448))
+
+## 1.0.0-next.78
+
+### Patch Changes
+
+- Transfer server data as devalue-encoded JSON ([#7177](https://github.com/sveltejs/kit/pull/7177))
+
+## 1.0.0-next.77
+
+### Patch Changes
+
+- Redact error message if `getRequest` fails ([#6936](https://github.com/sveltejs/kit/pull/6936))
+
+## 1.0.0-next.76
+
+### Patch Changes
+
+- [chore] bump esbuild ([#6829](https://github.com/sveltejs/kit/pull/6829))
+
+## 1.0.0-next.75
+
+### Patch Changes
+
+- Ignore warnings when traced file fails to parse ([#6810](https://github.com/sveltejs/kit/pull/6810))
+
+## 1.0.0-next.74
+
+### Patch Changes
+
+- Update to esbuild 0.15 ([#6740](https://github.com/sveltejs/kit/pull/6740))
+
+## 1.0.0-next.73
+
+### Patch Changes
+
+- [breaking] request creation cleanup ([#6681](https://github.com/sveltejs/kit/pull/6681))
+
+## 1.0.0-next.72
+
+### Patch Changes
+
+- Fix `global is not defined` runtime error building with `edge: true` option ([#6425](https://github.com/sveltejs/kit/pull/6425))
+
+## 1.0.0-next.71
+
+### Patch Changes
+
+- Use devalue to serialize server-only `load` return values ([#6318](https://github.com/sveltejs/kit/pull/6318))
+
+## 1.0.0-next.70
+
+### Patch Changes
+
+- Don't use top-level-await, as it is not supported right now ([#6360](https://github.com/sveltejs/kit/pull/6360))
+
 ## 1.0.0-next.69
 
 ### Patch Changes

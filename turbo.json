@@ -1,20 +1,15 @@
 {
 	"$schema": "https://turborepo.org/schema.json",
 	"pipeline": {
-		"@sveltejs/kit#build": {
-			"dependsOn": ["^build"],
-			"inputs": ["rollup.config.js", "src/**", "scripts/**", "types/**"],
-			"outputs": ["dist/**", "docs/**", "assets/**"],
-			"outputMode": "new-only"
-		},
 		"kit.svelte.dev#build": {
-			"dependsOn": ["^build", "$VERCEL", "$ENABLE_VC_BUILD"],
+			"dependsOn": ["^build"],
 			"inputs": ["src/**", "../../packages/kit/docs/**", "../../documentation/**"],
 			"outputs": [".vercel_build_output/**", ".vercel/output/**"],
-			"outputMode": "new-only"
+			"outputMode": "new-only",
+			"env": ["VERCEL", "ENABLE_VC_BUILD"]
 		},
 		"build": {
-			"dependsOn": ["^build", "$VERCEL", "$ENABLE_VC_BUILD"],
+			"dependsOn": ["^build"],
 			"inputs": ["src/**", "scripts/**", "shared/**", "templates/**"],
 			"outputs": [
 				"files/**",
@@ -23,11 +18,15 @@
 				".vercel_build_output/**",
 				".vercel/output/**"
 			],
-			"outputMode": "new-only"
+			"outputMode": "new-only",
+			"env": ["VERCEL", "ENABLE_VC_BUILD"]
 		},
 		"check": {
 			"dependsOn": ["prepare"],
 			"inputs": [
+				"index.js",
+				"index.d.ts",
+				"ambient.d.ts",
 				"src/**",
 				"types/**",
 				".svelte-kit/types/**",
@@ -53,9 +52,10 @@
 			"outputMode": "new-only"
 		},
 		"test": {
-			"dependsOn": ["^build", "$CI", "$TURBO_CACHE_KEY"],
+			"dependsOn": ["^build"],
 			"outputs": ["coverage/", "test-results/**"],
-			"outputMode": "new-only"
+			"outputMode": "new-only",
+			"env": ["CI", "TURBO_CACHE_KEY"]
 		},
 		"lint": {
 			"outputs": [],

@@ -6,7 +6,12 @@ export function mkdirp(dir) {
 	try {
 		fs.mkdirSync(dir, { recursive: true });
 	} catch (/** @type {any} */ e) {
-		if (e.code === 'EEXIST') return;
+		if (e.code === 'EEXIST') {
+			if (!fs.statSync(dir).isDirectory()) {
+				throw new Error(`Cannot create directory ${dir}, a file already exists at this position`);
+			}
+			return;
+		}
 		throw e;
 	}
 }
@@ -105,4 +110,68 @@ export function walk(cwd, dirs = false) {
 /** @param {string} str */
 export function posixify(str) {
 	return str.replace(/\\/g, '/');
+}
+
+/**
+ * Like `path.join`, but posixified and with a leading `./` if necessary
+ * @param {string[]} str
+ */
+export function join_relative(...str) {
+	let result = posixify(path.join(...str));
+	if (!result.startsWith('.')) {
+		result = `./${result}`;
+	}
+	return result;
+}
+
+/**
+ * Like `path.relative`, but always posixified and with a leading `./` if necessary.
+ * Useful for JS imports so the path can safely reside inside of `node_modules`.
+ * Otherwise paths could be falsely interpreted as package paths.
+ * @param {string} from
+ * @param {string} to
+ */
+export function relative_path(from, to) {
+	return join_relative(path.relative(from, to));
+}
+
+/**
+ * Prepend given path with `/@fs` prefix
+ * @param {string} str
+ */
+export function to_fs(str) {
+	str = posixify(str);
+	return `/@fs${
+		// Windows/Linux separation - Windows starts with a drive letter, we need a / in front there
+		str.startsWith('/') ? '' : '/'
+	}${str}`;
+}
+
+/**
+ * Given an entry point like [cwd]/src/hooks, returns a filename like [cwd]/src/hooks.js or [cwd]/src/hooks/index.js
+ * @param {string} entry
+ * @returns {string|null}
+ */
+export function resolve_entry(entry) {
+	if (fs.existsSync(entry)) {
+		const stats = fs.statSync(entry);
+		if (stats.isDirectory()) {
+			return resolve_entry(path.join(entry, 'index'));
+		}
+
+		return entry;
+	} else {
+		const dir = path.dirname(entry);
+
+		if (fs.existsSync(dir)) {
+			const base = path.basename(entry);
+			const files = fs.readdirSync(dir);
+
+			const found = files.find((file) => file.replace(/\.[^.]+$/, '') === base);
+
+			if (found) return path.join(dir, found);
+		}
+	}
+
+	return null;
 }

@@ -1,5 +1,6 @@
-export function load({ setHeaders }) {
-	setHeaders({
-		'set-cookie': 'cookie1=value1'
+/** @type {import('./$types').LayoutServerLoad} */
+export function load({ cookies }) {
+	cookies.set('cookie1', 'value1', {
+		secure: false // safari
 	});
 }

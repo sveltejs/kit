@@ -88,7 +88,7 @@ const options = object(
 			// TODO: remove this for the 1.0 release
 			amp: error(
 				(keypath) =>
-					`${keypath} has been removed. See https://kit.svelte.dev/docs/seo#amp for details on how to support AMP`
+					`${keypath} has been removed. See https://kit.svelte.dev/docs/seo#manual-setup-amp for details on how to support AMP`
 			),
 
 			appDir: validate('_app', (input, keypath) => {
@@ -107,20 +107,26 @@ const options = object(
 				return input;
 			}),
 
-			browser: validate({ hydrate: true, router: true }, (input, keypath) => {
-				const value = object({ hydrate: boolean(true), router: boolean(true) })(input, keypath);
-				if (!value.hydrate && value.router) {
-					throw new Error(
-						'config.kit.browser.router cannot be true if config.kit.browser.hydrate is false'
-					);
-				}
-				return value;
+			// TODO: remove this for the 1.0 release
+			browser: object({
+				hydrate: error(
+					(keypath) =>
+						`${keypath} has been removed. You can set \`export const csr = false\` inside the top level +layout.js instead. See the PR for more information: https://github.com/sveltejs/kit/pull/6197`
+				),
+				router: error(
+					(keypath) =>
+						`${keypath} has been removed. You can set \`export const csr = false\` inside the top level +layout.js instead. See the PR for more information: https://github.com/sveltejs/kit/pull/6197`
+				)
 			}),
 
 			csp: object({
 				mode: list(['auto', 'hash', 'nonce']),
 				directives,
 				reportOnly: directives
+			}),
+
+			csrf: object({
+				checkOrigin: boolean(true)
 			}),
 
 			// TODO: remove this for the 1.0 release
@@ -135,12 +141,29 @@ const options = object(
 
 			files: object({
 				assets: string('static'),
-				hooks: string(join('src', 'hooks')),
+				hooks: (input, keypath) => {
+					// TODO remove this for the 1.0 release
+					if (typeof input === 'string') {
+						throw new Error(
+							`${keypath} is an object with { server: string, client: string } now. See the PR for more information: https://github.com/sveltejs/kit/pull/6586`
+						);
+					}
+
+					return object({
+						client: string(join('src', 'hooks.client')),
+						server: string(join('src', 'hooks.server'))
+					})(input, keypath);
+				},
 				lib: string(join('src', 'lib')),
 				params: string(join('src', 'params')),
 				routes: string(join('src', 'routes')),
 				serviceWorker: string(join('src', 'service-worker')),
-				template: string(join('src', 'app.html'))
+				appTemplate: string(join('src', 'app.html')),
+				errorTemplate: string(join('src', 'error.html')),
+				// TODO: remove this for the 1.0 release
+				template: error(
+					() => 'config.kit.files.template has been renamed to config.kit.files.appTemplate'
+				)
 			}),
 
 			// TODO: remove this for the 1.0 release
@@ -160,20 +183,10 @@ const options = object(
 
 			inlineStyleThreshold: number(0),
 
-			methodOverride: object({
-				parameter: string('_method'),
-				allowed: validate([], (input, keypath) => {
-					if (!Array.isArray(input) || !input.every((method) => typeof method === 'string')) {
-						throw new Error(`${keypath} must be an array of strings`);
-					}
-
-					if (input.map((i) => i.toUpperCase()).includes('GET')) {
-						throw new Error(`${keypath} cannot contain "GET"`);
-					}
-
-					return input;
-				})
-			}),
+			methodOverride: error(
+				() =>
+					'Method overrides have been removed in favor of actions. See the PR for more information: https://github.com/sveltejs/kit/pull/6469'
+			),
 
 			moduleExtensions: string_array(['.js', '.ts']),
 
@@ -219,10 +232,16 @@ const options = object(
 				crawl: boolean(true),
 				createIndexFiles: error(
 					(keypath) =>
-						`${keypath} has been removed — it is now controlled by the trailingSlash option. See https://kit.svelte.dev/docs/configuration#trailingslash`
+						`${keypath} has been removed — it is now controlled by the trailingSlash option. See https://kit.svelte.dev/docs/page-options#trailingslash`
 				),
-				default: boolean(false),
-				enabled: boolean(true),
+				default: error(
+					(keypath) =>
+						`${keypath} has been removed. You can set it inside the top level +layout.js instead. See the PR for more information: https://github.com/sveltejs/kit/pull/6197`
+				),
+				enabled: error(
+					(keypath) =>
+						`${keypath} has been removed. You can wrap any code that should not be executed during build in a \`if (!building) {...}\` block. See the discussion for more information: https://github.com/sveltejs/kit/discussions/7716`
+				),
 				entries: validate(['*'], (input, keypath) => {
 					if (!Array.isArray(input) || !input.every((page) => typeof page === 'string')) {
 						throw new Error(`${keypath} must be an array of strings`);
@@ -241,23 +260,36 @@ const options = object(
 
 				// TODO: remove this for the 1.0 release
 				force: validate(undefined, (input, keypath) => {
-					if (typeof input !== 'undefined') {
-						const newSetting = input ? 'continue' : 'fail';
-						const needsSetting = newSetting === 'continue';
-						throw new Error(
-							`${keypath} has been removed in favor of \`onError\`. In your case, set \`onError\` to "${newSetting}"${
-								needsSetting ? '' : ' (or leave it undefined)'
-							} to get the same behavior as you would with \`force: ${JSON.stringify(input)}\``
-						);
-					}
+					const new_input = input ? 'warn' : 'fail';
+					const needs_option = new_input === 'warn';
+					throw new Error(
+						`${keypath} has been removed in favor of \`handleHttpError\`. In your case, set \`handleHttpError\` to "${new_input}"${
+							needs_option ? '' : ' (or leave it undefined)'
+						} to get the same behavior as you would with \`force: ${JSON.stringify(input)}\``
+					);
 				}),
 
-				onError: validate('fail', (input, keypath) => {
+				handleHttpError: validate('fail', (input, keypath) => {
 					if (typeof input === 'function') return input;
-					if (['continue', 'fail'].includes(input)) return input;
-					throw new Error(
-						`${keypath} should be either a custom function or one of "continue" or "fail"`
-					);
+					if (['fail', 'warn', 'ignore'].includes(input)) return input;
+					throw new Error(`${keypath} should be "fail", "warn", "ignore" or a custom function`);
+				}),
+
+				handleMissingId: validate('fail', (input, keypath) => {
+					if (typeof input === 'function') return input;
+					if (['fail', 'warn', 'ignore'].includes(input)) return input;
+					throw new Error(`${keypath} should be "fail", "warn", "ignore" or a custom function`);
+				}),
+
+				// TODO: remove this for the 1.0 release
+				onError: validate(undefined, (input, keypath) => {
+					let message = `${keypath} has been renamed to \`handleHttpError\``;
+
+					if (input === 'continue') {
+						message += ', and "continue" has been renamed to "warn"';
+					}
+
+					throw new Error(message);
 				}),
 
 				origin: validate('http://sveltekit-prerender', (input, keypath) => {
@@ -289,7 +321,10 @@ const options = object(
 			),
 
 			// TODO remove for 1.0
-			router: error((keypath) => `${keypath} has been moved to config.kit.browser.router`),
+			router: error(
+				(keypath) =>
+					`${keypath} has been removed. You can set \`export const csr = false\` inside the top level +layout.js (or +layout.server.js) instead. See the PR for more information: https://github.com/sveltejs/kit/pull/6197`
+			),
 
 			// TODO remove for 1.0
 			routes: error(
@@ -305,13 +340,16 @@ const options = object(
 			// TODO remove this for 1.0
 			ssr: error(
 				(keypath) =>
-					`${keypath} has been removed — use the handle hook instead: https://kit.svelte.dev/docs/hooks#handle`
+					`${keypath} has been removed — use the handle hook instead: https://kit.svelte.dev/docs/hooks#server-hooks-handle`
 			),
 
 			// TODO remove this for 1.0
 			target: error((keypath) => `${keypath} is no longer required, and should be removed`),
 
-			trailingSlash: list(['never', 'always', 'ignore']),
+			trailingSlash: error(
+				(keypath, input) =>
+					`${keypath} has been removed. You can set \`export const trailingSlash = '${input}'\` inside a top level +layout.js (or +layout.server.js) instead. See the PR for more information: https://github.com/sveltejs/kit/pull/7719`
+			),
 
 			version: object({
 				name: string(Date.now().toString()),
@@ -399,8 +437,6 @@ function string(fallback, allow_empty = true) {
  */
 function string_array(fallback) {
 	return validate(fallback, (input, keypath) => {
-		if (input === undefined) return input;
-
 		if (!Array.isArray(input) || input.some((value) => typeof value !== 'string')) {
 			throw new Error(`${keypath} must be an array of strings, if specified`);
 		}
@@ -476,12 +512,10 @@ function assert_string(input, keypath) {
 	}
 }
 
-/** @param {(keypath?: string) => string} fn */
+/** @param {(keypath?: string, input?: any) => string} fn */
 function error(fn) {
 	return validate(undefined, (input, keypath) => {
-		if (input !== undefined) {
-			throw new Error(fn(keypath));
-		}
+		throw new Error(fn(keypath, input));
 	});
 }
 

@@ -1,12 +1,11 @@
-import devalue from 'devalue';
+import * as devalue from 'devalue';
 import { readable, writable } from 'svelte/store';
-import * as cookie from 'cookie';
 import { hash } from '../../hash.js';
-import { render_json_payload_script } from '../../../utils/escape.js';
+import { serialize_data } from './serialize_data.js';
 import { s } from '../../../utils/misc.js';
 import { Csp } from './csp.js';
-import { serialize_error } from '../utils.js';
-import { HttpError } from '../../control.js';
+import { uneval_action_response } from './actions.js';
+import { clarify_devalue_error } from '../utils.js';
 
 // TODO rename this function/module
 
@@ -20,21 +19,19 @@ const updated = {
  * @param {{
  *   branch: Array<import('./types').Loaded>;
  *   fetched: Array<import('./types').Fetched>;
- *   cookies: import('set-cookie-parser').Cookie[];
  *   options: import('types').SSROptions;
  *   state: import('types').SSRState;
- *   page_config: { hydrate: boolean, router: boolean };
+ *   page_config: { ssr: boolean; csr: boolean };
  *   status: number;
- *   error: HttpError | Error | null;
+ *   error: App.Error | null;
  *   event: import('types').RequestEvent;
  *   resolve_opts: import('types').RequiredResolveOptions;
- *   validation_errors: Record<string, string> | undefined;
+ *   action_result?: import('types').ActionResult;
  * }} opts
  */
 export async function render_response({
 	branch,
 	fetched,
-	cookies,
 	options,
 	state,
 	page_config,
@@ -42,14 +39,14 @@ export async function render_response({
 	error = null,
 	event,
 	resolve_opts,
-	validation_errors
+	action_result
 }) {
 	if (state.prerendering) {
 		if (options.csp.mode === 'nonce') {
 			throw new Error('Cannot use prerendering if config.kit.csp.mode === "nonce"');
 		}
 
-		if (options.template_contains_nonce) {
+		if (options.app_template_contains_nonce) {
 			throw new Error('Cannot use prerendering if page template contains %sveltekit.nonce%');
 		}
 	}
@@ -58,6 +55,7 @@ export async function render_response({
 
 	const stylesheets = new Set(entry.stylesheets);
 	const modulepreloads = new Set(entry.imports);
+	const fonts = new Set(options.manifest._.entry.fonts);
 
 	/** @type {Set<string>} */
 	const link_header_preloads = new Set();
@@ -68,13 +66,12 @@ export async function render_response({
 
 	let rendered;
 
-	const stack = error instanceof HttpError ? undefined : error?.stack;
+	const form_value =
+		action_result?.type === 'success' || action_result?.type === 'invalid'
+			? action_result.data ?? null
+			: null;
 
-	if (error && options.dev && !(error instanceof HttpError)) {
-		error.stack = options.get_stack(error);
-	}
-
-	if (resolve_opts.ssr) {
+	if (page_config.ssr) {
 		/** @type {Record<string, any>} */
 		const props = {
 			stores: {
@@ -82,7 +79,8 @@ export async function render_response({
 				navigating: writable(null),
 				updated
 			},
-			components: await Promise.all(branch.map(({ node }) => node.component()))
+			components: await Promise.all(branch.map(({ node }) => node.component())),
+			form: form_value
 		};
 
 		let data = {};
@@ -97,15 +95,12 @@ export async function render_response({
 		props.page = {
 			error,
 			params: /** @type {Record<string, any>} */ (event.params),
-			routeId: event.routeId,
+			route: event.route,
 			status,
 			url: event.url,
-			data
+			data,
+			form: form_value
 		};
-
-		if (validation_errors) {
-			props.errors = validation_errors;
-		}
 
 		// TODO remove this for 1.0
 		/**
@@ -135,6 +130,10 @@ export async function render_response({
 				node.stylesheets.forEach((url) => stylesheets.add(url));
 			}
 
+			if (node.fonts) {
+				node.fonts.forEach((url) => fonts.add(url));
+			}
+
 			if (node.inline_styles) {
 				Object.entries(await node.inline_styles()).forEach(([k, v]) => inline_styles.set(k, v));
 			}
@@ -143,7 +142,8 @@ export async function render_response({
 		rendered = { head: '', html: '', css: { code: '', map: null } };
 	}
 
-	let { head, html: body } = rendered;
+	let head = '';
+	let body = rendered.html;
 
 	const csp = new Csp(options.csp, {
 		dev: options.dev,
@@ -174,37 +174,43 @@ export async function render_response({
 	/** @param {string} path */
 	const prefixed = (path) => (path.startsWith('/') ? path : `${assets}/${path}`);
 
-	// prettier-ignore
-	const init_app = `
-		import { set_public_env, start } from ${s(prefixed(entry.file))};
+	const serialized = { data: '', form: 'null' };
 
-		set_public_env(${s(options.public_env)});
+	try {
+		serialized.data = `[${branch
+			.map(({ server_data }) => {
+				if (server_data?.type === 'data') {
+					const data = devalue.uneval(server_data.data);
 
-		start({
-			target: document.querySelector('[data-sveltekit-hydrate="${target}"]').parentNode,
-			paths: ${s(options.paths)},
-			route: ${!!page_config.router},
-			spa: ${!resolve_opts.ssr},
-			trailing_slash: ${s(options.trailing_slash)},
-			hydrate: ${resolve_opts.ssr && page_config.hydrate ? `{
-				status: ${status},
-				error: ${error && serialize_error(error, e => e.stack)},
-				node_ids: [${branch.map(({ node }) => node.index).join(', ')}],
-				params: ${devalue(event.params)},
-				routeId: ${s(event.routeId)}
-			}` : 'null'}
-		});
-	`;
+					const uses = [];
+					if (server_data.uses.dependencies.size > 0) {
+						uses.push(`dependencies:${s(Array.from(server_data.uses.dependencies))}`);
+					}
 
-	// we use an anonymous function instead of an arrow function to support
-	// older browsers (https://github.com/sveltejs/kit/pull/5417)
-	const init_service_worker = `
-		if ('serviceWorker' in navigator) {
-			addEventListener('load', function () {
-				navigator.serviceWorker.register('${options.service_worker}');
-			});
-		}
-	`;
+					if (server_data.uses.params.size > 0) {
+						uses.push(`params:${s(Array.from(server_data.uses.params))}`);
+					}
+
+					if (server_data.uses.parent) uses.push(`parent:1`);
+					if (server_data.uses.route) uses.push(`route:1`);
+					if (server_data.uses.url) uses.push(`url:1`);
+
+					return `{type:"data",data:${data},uses:{${uses.join(',')}}${
+						server_data.slash ? `,slash:${s(server_data.slash)}` : ''
+					}}`;
+				}
+
+				return s(server_data);
+			})
+			.join(',')}]`;
+	} catch (e) {
+		const error = /** @type {any} */ (e);
+		throw new Error(clarify_devalue_error(event, error));
+	}
+
+	if (form_value) {
+		serialized.form = uneval_action_response(form_value, /** @type {string} */ (event.route.id));
+	}
 
 	if (inline_styles.size > 0) {
 		const content = Array.from(inline_styles.values()).join('\n');
@@ -220,31 +226,75 @@ export async function render_response({
 
 	for (const dep of stylesheets) {
 		const path = prefixed(dep);
-		const attributes = [];
 
-		if (csp.style_needs_nonce) {
-			attributes.push(`nonce="${csp.nonce}"`);
+		if (resolve_opts.preload({ type: 'css', path })) {
+			const attributes = [];
+
+			if (csp.style_needs_nonce) {
+				attributes.push(`nonce="${csp.nonce}"`);
+			}
+
+			if (inline_styles.has(dep)) {
+				// don't load stylesheets that are already inlined
+				// include them in disabled state so that Vite can detect them and doesn't try to add them
+				attributes.push('disabled', 'media="(max-width: 0)"');
+			} else {
+				const preload_atts = ['rel="preload"', 'as="style"'].concat(attributes);
+				link_header_preloads.add(`<${encodeURI(path)}>; ${preload_atts.join(';')}; nopush`);
+			}
+
+			attributes.unshift('rel="stylesheet"');
+			head += `\n\t\t<link href="${path}" ${attributes.join(' ')}>`;
 		}
-
-		if (inline_styles.has(dep)) {
-			// don't load stylesheets that are already inlined
-			// include them in disabled state so that Vite can detect them and doesn't try to add them
-			attributes.push('disabled', 'media="(max-width: 0)"');
-		} else {
-			const preload_atts = ['rel="preload"', 'as="style"'].concat(attributes);
-			link_header_preloads.add(`<${encodeURI(path)}>; ${preload_atts.join(';')}; nopush`);
-		}
-
-		attributes.unshift('rel="stylesheet"');
-		head += `\n\t<link href="${path}" ${attributes.join(' ')}>`;
 	}
 
-	if (page_config.router || page_config.hydrate) {
+	for (const dep of fonts) {
+		const path = prefixed(dep);
+
+		if (resolve_opts.preload({ type: 'font', path })) {
+			const ext = dep.slice(dep.lastIndexOf('.') + 1);
+			const attributes = [
+				'rel="preload"',
+				'as="font"',
+				`type="font/${ext}"`,
+				`href="${path}"`,
+				'crossorigin'
+			];
+
+			head += `\n\t\t<link ${attributes.join(' ')}>`;
+		}
+	}
+
+	if (page_config.csr) {
+		// prettier-ignore
+		const init_app = `
+			import { start } from ${s(prefixed(entry.file))};
+
+			start({
+				env: ${s(options.public_env)},
+				hydrate: ${page_config.ssr ? `{
+					status: ${status},
+					error: ${devalue.uneval(error)},
+					node_ids: [${branch.map(({ node }) => node.index).join(', ')}],
+					params: ${devalue.uneval(event.params)},
+					route: ${s(event.route)},
+					data: ${serialized.data},
+					form: ${serialized.form}
+				}` : 'null'},
+				paths: ${s(options.paths)},
+				target: document.querySelector('[data-sveltekit-hydrate="${target}"]').parentNode,
+				version: ${s(options.version)}
+			});
+		`;
+
 		for (const dep of modulepreloads) {
 			const path = prefixed(dep);
-			link_header_preloads.add(`<${encodeURI(path)}>; rel="modulepreload"; nopush`);
-			if (state.prerendering) {
-				head += `\n\t<link rel="modulepreload" href="${path}">`;
+
+			if (resolve_opts.preload({ type: 'js', path })) {
+				link_header_preloads.add(`<${encodeURI(path)}>; rel="modulepreload"; nopush`);
+				if (state.prerendering) {
+					head += `\n\t\t<link rel="modulepreload" href="${path}">`;
+				}
 			}
 		}
 
@@ -259,43 +309,32 @@ export async function render_response({
 		body += `\n\t\t<script ${attributes.join(' ')}>${init_app}</script>`;
 	}
 
-	if (resolve_opts.ssr && page_config.hydrate) {
-		/** @type {string[]} */
-		const serialized_data = [];
-
-		for (const { url, body, response } of fetched) {
-			serialized_data.push(
-				render_json_payload_script(
-					{ type: 'data', url, body: typeof body === 'string' ? hash(body) : undefined },
-					response
-				)
-			);
-		}
-
-		if (branch.some((node) => node.server_data)) {
-			serialized_data.push(
-				render_json_payload_script(
-					{ type: 'server_data' },
-					branch.map(({ server_data }) => server_data)
-				)
-			);
-		}
-
-		if (validation_errors) {
-			serialized_data.push(
-				render_json_payload_script({ type: 'validation_errors' }, validation_errors)
-			);
-		}
-
-		body += `\n\t${serialized_data.join('\n\t')}`;
+	if (page_config.ssr && page_config.csr) {
+		body += `\n\t${fetched
+			.map((item) =>
+				serialize_data(item, resolve_opts.filterSerializedResponseHeaders, !!state.prerendering)
+			)
+			.join('\n\t')}`;
 	}
 
 	if (options.service_worker) {
+		const opts = options.dev ? `, { type: 'module' }` : '';
+
+		// we use an anonymous function instead of an arrow function to support
+		// older browsers (https://github.com/sveltejs/kit/pull/5417)
+		const init_service_worker = `
+			if ('serviceWorker' in navigator) {
+				addEventListener('load', function () {
+					navigator.serviceWorker.register('${prefixed('service-worker.js')}'${opts});
+				});
+			}
+		`;
+
 		// always include service worker unless it's turned off explicitly
 		csp.add_script(init_service_worker);
 
 		head += `
-			<script${csp.script_needs_nonce ? ` nonce="${csp.nonce}"` : ''}>${init_service_worker}</script>`;
+		<script${csp.script_needs_nonce ? ` nonce="${csp.nonce}"` : ''}>${init_service_worker}</script>`;
 	}
 
 	if (state.prerendering) {
@@ -316,14 +355,18 @@ export async function render_response({
 		}
 	}
 
+	// add the content after the script/css links so the link elements are parsed first
+	head += rendered.head;
+
 	// TODO flush chunks as early as we can
 	const html =
 		(await resolve_opts.transformPageChunk({
-			html: options.template({ head, body, assets, nonce: /** @type {string} */ (csp.nonce) }),
+			html: options.app_template({ head, body, assets, nonce: /** @type {string} */ (csp.nonce) }),
 			done: true
 		})) || '';
 
 	const headers = new Headers({
+		'x-sveltekit-page': 'true',
 		'content-type': 'text/html',
 		etag: `"${hash(html)}"`
 	});
@@ -338,20 +381,9 @@ export async function render_response({
 			headers.set('content-security-policy-report-only', report_only_header);
 		}
 
-		for (const new_cookie of cookies) {
-			const { name, value, ...options } = new_cookie;
-			// @ts-expect-error
-			headers.append('set-cookie', cookie.serialize(name, value, options));
-		}
-
 		if (link_header_preloads.size) {
 			headers.set('link', Array.from(link_header_preloads).join(', '));
 		}
-	}
-
-	if (error && options.dev && !(error instanceof HttpError)) {
-		// reset stack, otherwise it may be 'fixed' a second time
-		error.stack = stack;
 	}
 
 	return new Response(html, {

@@ -1,10 +1,11 @@
 export type Options = {
 	name: string;
-	template: 'default' | 'skeleton' | 'libskeleton';
+	template: 'default' | 'skeleton' | 'skeletonlib';
 	types: 'typescript' | 'checkjs' | null;
 	prettier: boolean;
 	eslint: boolean;
 	playwright: boolean;
+	vitest: boolean;
 };
 
 export type File = {
@@ -18,9 +19,10 @@ export type Condition =
 	| 'typescript'
 	| 'checkjs'
 	| 'playwright'
+	| 'vitest'
 	| 'skeleton'
 	| 'default'
-	| 'libskeleton';
+	| 'skeletonlib';
 
 export type Common = {
 	files: Array<{

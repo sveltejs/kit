@@ -1,10 +1,45 @@
+import fs from 'fs';
 import path from 'path';
 import { get_env } from '../../exports/vite/utils.js';
-import { GENERATED_COMMENT } from '../constants.js';
-import { create_types } from '../env.js';
+import { GENERATED_COMMENT } from '../../constants.js';
+import { create_dynamic_types, create_static_types } from '../env.js';
 import { write_if_changed } from './utils.js';
+import { fileURLToPath } from 'url';
 
-const types_reference = '/// <reference types="@sveltejs/kit" />\n\n';
+// TODO these types should be described in a neutral place, rather than
+// inside either `packages/kit` or `kit.svelte.dev`
+const descriptions_dir = fileURLToPath(new URL('../../../types/synthetic', import.meta.url));
+
+/** @param {string} filename */
+function read_description(filename) {
+	const content = fs.readFileSync(`${descriptions_dir}/${filename}`, 'utf8');
+	return `/**\n${content
+		.trim()
+		.split('\n')
+		.map((line) => ` * ${line}`)
+		.join('\n')}\n */`;
+}
+
+/**
+ * @param {import('../env.js').EnvData} env
+ */
+const template = (env) => `
+${GENERATED_COMMENT}
+
+/// <reference types="@sveltejs/kit" />
+
+${read_description('$env+static+private.md')}
+${create_static_types('private', env)}
+
+${read_description('$env+static+public.md')}
+${create_static_types('public', env)}
+
+${read_description('$env+dynamic+private.md')}
+${create_dynamic_types('private', env)}
+
+${read_description('$env+dynamic+public.md')}
+${create_dynamic_types('public', env)}
+`;
 
 /**
  * Writes ambient declarations including types reference to @sveltejs/kit,
@@ -18,10 +53,6 @@ export function write_ambient(config, mode) {
 
 	write_if_changed(
 		path.join(config.outDir, 'ambient.d.ts'),
-		GENERATED_COMMENT +
-			types_reference +
-			create_types('$env/static/public', env.public) +
-			'\n\n' +
-			create_types('$env/static/private', env.private)
+		template({ ...env, prefix: config.env.publicPrefix })
 	);
 }

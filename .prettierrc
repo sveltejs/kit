@@ -21,6 +21,7 @@
 			"files": [
 				"**/CHANGELOG.md",
 				"**/.svelte-kit/**",
+				"documentation/**/*.md",
 				"packages/package/test/fixtures/**/expected/**/*",
 				"packages/package/test/watch/expected/**/*",
 				"packages/package/test/watch/package/**/*",

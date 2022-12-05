@@ -1,7 +1,5 @@
-import { fetch, Response, Request, Headers } from 'undici';
+import { fetch, Response, Request, Headers, FormData } from 'undici';
 import { ReadableStream, TransformStream, WritableStream } from 'stream/web';
-import { Readable } from 'stream';
-import { Request as NodeFetchRequest } from 'node-fetch';
 import { webcrypto as crypto } from 'crypto';
 
 /** @type {Record<string, any>} */
@@ -9,22 +7,12 @@ const globals = {
 	crypto,
 	fetch,
 	Response,
-	// TODO remove the superclass as soon as Undici supports formData
-	// https://github.com/nodejs/undici/issues/974
-	Request: class extends Request {
-		// @ts-expect-error
-		formData() {
-			return new NodeFetchRequest(this.url, {
-				method: this.method,
-				headers: this.headers,
-				body: this.body && Readable.from(this.body)
-			}).formData();
-		}
-	},
+	Request,
 	Headers,
 	ReadableStream,
 	TransformStream,
-	WritableStream
+	WritableStream,
+	FormData
 };
 
 // exported for dev/preview and node environments

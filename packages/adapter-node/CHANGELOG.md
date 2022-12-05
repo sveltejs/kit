@@ -1,5 +1,99 @@
 # @sveltejs/adapter-node
 
+## 1.0.0-next.102
+
+### Patch Changes
+
+- [docs] update reference to `getClientAddress()` ([#7907](https://github.com/sveltejs/kit/pull/7907))
+
+## 1.0.0-next.101
+
+### Patch Changes
+
+- Update docs ([#7744](https://github.com/sveltejs/kit/pull/7744))
+
+## 1.0.0-next.100
+
+### Patch Changes
+
+- update dependencies ([#7355](https://github.com/sveltejs/kit/pull/7355))
+
+## 1.0.0-next.99
+
+### Patch Changes
+
+- [fix] take into account deep exports for external packages ([#7311](https://github.com/sveltejs/kit/pull/7311))
+
+## 1.0.0-next.98
+
+### Patch Changes
+
+- Use config.kit.paths.base prefix for static assets ([#4448](https://github.com/sveltejs/kit/pull/4448))
+
+## 1.0.0-next.97
+
+### Patch Changes
+
+- [chore] update dependency @rollup/plugin-json to v5 ([#7204](https://github.com/sveltejs/kit/pull/7204))
+
+## 1.0.0-next.96
+
+### Patch Changes
+
+- Disable builtin modules warning ([#7031](https://github.com/sveltejs/kit/pull/7031))
+
+## 1.0.0-next.95
+
+### Patch Changes
+
+- Redact error message if `getRequest` fails ([#6936](https://github.com/sveltejs/kit/pull/6936))
+
+## 1.0.0-next.94
+
+### Patch Changes
+
+- Add missing Rollup dependency ([#6927](https://github.com/sveltejs/kit/pull/6927))
+
+## 1.0.0-next.93
+
+### Patch Changes
+
+- Bundle with rollup instead of esbuild ([#6896](https://github.com/sveltejs/kit/pull/6896))
+
+## 1.0.0-next.92
+
+### Patch Changes
+
+- [chore] bump esbuild ([#6829](https://github.com/sveltejs/kit/pull/6829))
+
+## 1.0.0-next.91
+
+### Patch Changes
+
+- Allow streaming when `BODY_SIZE_LIMIT` is set ([#6702](https://github.com/sveltejs/kit/pull/6702))
+
+## 1.0.0-next.90
+
+### Patch Changes
+
+- Update to esbuild 0.15 ([#6740](https://github.com/sveltejs/kit/pull/6740))
+
+* Improve performance by compressing in parallel ([#6710](https://github.com/sveltejs/kit/pull/6710))
+
+## 1.0.0-next.89
+
+### Patch Changes
+
+- [breaking] request creation cleanup ([#6681](https://github.com/sveltejs/kit/pull/6681))
+
+* [breaking] limit adapter-node request size ([#6684](https://github.com/sveltejs/kit/pull/6684))
+
+## 1.0.0-next.88
+
+### Patch Changes
+
+- Bundle non-production dependencies with esbuild ([#6372](https://github.com/sveltejs/kit/pull/6372))
+
 ## 1.0.0-next.87
 
 ### Patch Changes

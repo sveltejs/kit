@@ -15,15 +15,13 @@ export interface AdapterEntry {
 	 * if it should be treated as a fallback for the current route. For example, `/foo/[c]`
 	 * is a fallback for `/foo/a-[b]`, and `/[...catchall]` is a fallback for all routes
 	 */
-	filter: (route: RouteDefinition) => boolean;
+	filter(route: RouteDefinition): boolean;
 
 	/**
 	 * A function that is invoked once the entry has been created. This is where you
 	 * should write the function to the filesystem and generate redirect manifests.
 	 */
-	complete: (entry: {
-		generateManifest: (opts: { relativePath: string; format?: 'esm' | 'cjs' }) => string;
-	}) => MaybePromise<void>;
+	complete(entry: { generateManifest(opts: { relativePath: string }): string }): MaybePromise<void>;
 }
 
 // Based on https://github.com/josh-hemphill/csp-typed-directives/blob/latest/src/csp.types.ts
@@ -53,7 +51,13 @@ export interface AdapterEntry {
 
 export namespace Csp {
 	type ActionSource = 'strict-dynamic' | 'report-sample';
-	type BaseSource = 'self' | 'unsafe-eval' | 'unsafe-hashes' | 'unsafe-inline' | 'none';
+	type BaseSource =
+		| 'self'
+		| 'unsafe-eval'
+		| 'unsafe-hashes'
+		| 'unsafe-inline'
+		| 'wasm-unsafe-eval'
+		| 'none';
 	type CryptoSource = `${'nonce' | 'sha256' | 'sha384' | 'sha512'}-${string}`;
 	type FrameSource = HostSource | SchemeSource | 'self' | 'none';
 	type HostNameScheme = `${string}.${string}` | 'localhost';
@@ -148,6 +152,9 @@ export interface Logger {
 export type MaybePromise<T> = T | Promise<T>;
 
 export interface Prerendered {
+	/**
+	 * A map of `path` to `{ file }` objects, where a path like `/foo` corresponds to `foo.html` and a path like `/bar/` corresponds to `bar/index.html`.
+	 */
 	pages: Map<
 		string,
 		{
@@ -155,6 +162,9 @@ export interface Prerendered {
 			file: string;
 		}
 	>;
+	/**
+	 * A map of `path` to `{ type }` objects.
+	 */
 	assets: Map<
 		string,
 		{
@@ -162,6 +172,9 @@ export interface Prerendered {
 			type: string;
 		}
 	>;
+	/**
+	 * A map of redirects encountered during prerendering.
+	 */
 	redirects: Map<
 		string,
 		{
@@ -173,7 +186,7 @@ export interface Prerendered {
 	paths: string[];
 }
 
-export interface PrerenderErrorHandler {
+export interface PrerenderHttpErrorHandler {
 	(details: {
 		status: number;
 		path: string;
@@ -182,19 +195,24 @@ export interface PrerenderErrorHandler {
 	}): void;
 }
 
-export type PrerenderOnErrorValue = 'fail' | 'continue' | PrerenderErrorHandler;
+export interface PrerenderMissingIdHandler {
+	(details: { path: string; id: string; referrers: string[] }): void;
+}
+
+export type PrerenderHttpErrorHandlerValue = 'fail' | 'warn' | 'ignore' | PrerenderHttpErrorHandler;
+export type PrerenderMissingIdHandlerValue = 'fail' | 'warn' | 'ignore' | PrerenderMissingIdHandler;
+
+export type PrerenderOption = boolean | 'auto';
+
+export type PrerenderMap = Map<string, PrerenderOption>;
 
 export interface RequestOptions {
-	getClientAddress: () => string;
+	getClientAddress(): string;
 	platform?: App.Platform;
 }
 
-/** `string[]` is only for set-cookie, everything else must be type of `string` */
-export type ResponseHeaders = Record<string, string | number | string[] | null>;
-
 export interface RouteDefinition {
 	id: string;
-	type: 'page' | 'endpoint';
 	pattern: RegExp;
 	segments: RouteSegment[];
 	methods: HttpMethod[];
@@ -207,3 +225,12 @@ export interface RouteSegment {
 }
 
 export type TrailingSlash = 'never' | 'always' | 'ignore';
+
+/**
+ * This doesn't actually exist, it's a way to better distinguish the type
+ */
+declare const uniqueSymbol: unique symbol;
+
+export interface UniqueInterface {
+	readonly [uniqueSymbol]: unknown;
+}

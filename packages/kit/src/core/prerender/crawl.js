@@ -1,3 +1,5 @@
+import { decode } from './entities.js';
+
 const DOCTYPE = 'DOCTYPE';
 const CDATA_OPEN = '[CDATA[';
 const CDATA_CLOSE = ']]>';
@@ -12,6 +14,9 @@ const WHITESPACE = /[\s\n\r]/;
 
 /** @param {string} html */
 export function crawl(html) {
+	/** @type {string[]} */
+	const ids = [];
+
 	/** @type {string[]} */
 	const hrefs = [];
 
@@ -123,7 +128,9 @@ export function crawl(html) {
 								let escaped = false;
 
 								while (i < html.length) {
-									if (!escaped) {
+									if (escaped) {
+										escaped = false;
+									} else {
 										const char = html[i];
 
 										if (html[i] === quote) {
@@ -147,8 +154,14 @@ export function crawl(html) {
 								i -= 1;
 							}
 
+							value = decode(value);
+
 							if (name === 'href') {
 								href = value;
+							} else if (name === 'id') {
+								ids.push(value);
+							} else if (name === 'name') {
+								if (tag === 'A') ids.push(value);
 							} else if (name === 'rel') {
 								rel = value;
 							} else if (name === 'src') {
@@ -190,5 +203,5 @@ export function crawl(html) {
 		i += 1;
 	}
 
-	return hrefs;
+	return { ids, hrefs };
 }

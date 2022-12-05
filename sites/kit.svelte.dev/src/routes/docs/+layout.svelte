@@ -3,42 +3,71 @@
 
 	/** @type {import('./$types').LayoutData} */
 	export let data;
-
-	$: contents = data.sections.map((section) => ({
-		path: `/docs/${section.slug}`,
-		title: section.title,
-		sections: section.sections.map((subsection) => ({
-			path: `/docs/${section.slug}#${subsection.slug}`,
-			title: subsection.title,
-			sections: subsection.sections.map((subsection) => ({
-				path: `/docs/${section.slug}#${subsection.slug}`,
-				title: subsection.title
-			}))
-		}))
-	}));
 </script>
 
-<div class="grid">
-	<slot />
+<div class="container">
+	<div class="page">
+		<slot />
+	</div>
+
 	<div class="toc-container">
-		<Contents {contents} />
+		<Contents contents={data.sections} />
 	</div>
 </div>
 
 <style>
-	@media (min-width: 832px) {
-		.grid {
-			grid-template-rows: unset;
-			grid-template-columns: var(--sidebar-w) 1fr;
-		}
+	.container {
+		--sidebar-menu-width: 28rem;
+		--sidebar-width: var(--sidebar-menu-width);
+		--ts-toggle-height: 4.2rem;
+	}
 
+	.page {
+		--on-this-page-display: none;
+		padding: var(--sk-page-padding-top) var(--sk-page-padding-side);
+	}
+
+	.toc-container {
+		background: var(--sk-back-3);
+	}
+
+	@media (min-width: 832px) {
 		.toc-container {
-			width: var(--sidebar-w);
-			height: 100vh;
-			overflow: auto;
+			width: var(--sidebar-width);
+			height: calc(100vh - var(--sk-nav-height) - var(--ts-toggle-height));
 			position: fixed;
 			left: 0;
+			top: var(--sk-nav-height);
+			overflow-x: hidden;
+			overflow-y: auto;
+		}
+
+		.toc-container::before {
+			content: '';
+			position: fixed;
+			width: 0;
+			height: 100%;
 			top: 0;
+			left: calc(var(--sidebar-width) - 1px);
+			border-right: 1px solid var(--sk-back-5);
+		}
+
+		.page {
+			padding-left: calc(var(--sidebar-width) + var(--sk-page-padding-side));
+		}
+	}
+
+	@media (min-width: 1200px) {
+		.container {
+			--sidebar-width: max(28rem, 23vw);
+		}
+
+		.page {
+			--on-this-page-display: block;
+			padding: var(--sk-page-padding-top) calc(var(--sidebar-width) + var(--sk-page-padding-side));
+			margin: 0 auto;
+			max-width: var(--sk-line-max-width);
+			box-sizing: content-box;
 		}
 	}
 </style>

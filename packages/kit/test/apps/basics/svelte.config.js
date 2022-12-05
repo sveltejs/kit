@@ -2,10 +2,11 @@
 const config = {
 	kit: {
 		prerender: {
-			onError: 'continue'
+			handleHttpError: 'warn'
 		},
-		methodOverride: {
-			allowed: ['PUT', 'PATCH', 'DELETE']
+
+		version: {
+			name: 'TEST_VERSION'
 		}
 	}
 };

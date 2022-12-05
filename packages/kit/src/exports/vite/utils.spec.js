@@ -1,16 +1,9 @@
 import path from 'path';
 import { test } from 'uvu';
 import * as assert from 'uvu/assert';
-import { normalizePath } from 'vite';
 import { validate_config } from '../../core/config/index.js';
 import { posixify } from '../../utils/filesystem.js';
-import {
-	deep_merge,
-	get_aliases,
-	merge_vite_configs,
-	prevent_illegal_rollup_imports,
-	prevent_illegal_vite_imports
-} from './utils.js';
+import { deep_merge, get_app_aliases, get_config_aliases } from './utils.js';
 
 test('basic test no conflicts', async () => {
 	const merged = deep_merge(
@@ -180,31 +173,6 @@ test('merge including toString', () => {
 	assert.equal(Object.keys(merged), ['toString', 'constructor', 'y']);
 });
 
-test('merge resolve.alias', () => {
-	const merged = merge_vite_configs(
-		{
-			resolve: {
-				alias: [{ find: /foo/, replacement: 'bar' }]
-			}
-		},
-		{
-			resolve: {
-				alias: {
-					alpha: 'beta'
-				}
-			}
-		}
-	);
-	assert.equal(merged, {
-		resolve: {
-			alias: [
-				{ find: /foo/, replacement: 'bar' },
-				{ find: 'alpha', replacement: 'beta' }
-			]
-		}
-	});
-});
-
 test('transform kit.alias to resolve.alias', () => {
 	const config = validate_config({
 		kit: {
@@ -218,7 +186,10 @@ test('transform kit.alias to resolve.alias', () => {
 		}
 	});
 
-	const transformed = get_aliases(config.kit).map((entry) => {
+	// combine aliases from config with generated and runtime aliases
+	const aliases = [...get_app_aliases(config.kit), ...get_config_aliases(config.kit)];
+
+	const transformed = aliases.map((entry) => {
 		const replacement = posixify(path.relative('.', entry.replacement));
 
 		return {
@@ -237,151 +208,6 @@ test('transform kit.alias to resolve.alias', () => {
 		{ find: /^\$regexChar$/.toString(), replacement: 'windows/path' },
 		{ find: /^\$regexChar\/(.+)$/.toString(), replacement: 'windows/path/$1' }
 	]);
-});
-
-/** @typedef {{id: string, importedIds: Array<string>, dynamicallyImportedIds: Array<string> }} RollupNode */
-
-/** @type {(id: string) => RollupNode | null} */
-const rollup_node_getter = (id) => {
-	/** @type {{[key: string]: RollupNode}} */
-	const nodes = {
-		'/test/path1.js': {
-			id: '/test/path1.js',
-			importedIds: ['/test/path2.js', '/test/path3.js'],
-			dynamicallyImportedIds: ['/test/path4.js', '/test/path5.js']
-		},
-		'/test/path2.js': {
-			id: '/test/path2.js',
-			importedIds: ['/test/path3.js'],
-			dynamicallyImportedIds: ['/test/path5.js']
-		},
-		'/test/path3.js': {
-			id: '/test/path3.js',
-			importedIds: ['/test/path5.js'],
-			dynamicallyImportedIds: ['/test/path1.js']
-		},
-		'/test/path4.js': {
-			id: '/test/path4.js',
-			importedIds: ['/test/path5.js'],
-			dynamicallyImportedIds: ['/test/path3.js']
-		},
-		'/test/path5.js': {
-			id: '/test/path5.js',
-			importedIds: ['/test/path1.js'],
-			dynamicallyImportedIds: ['/test/path3.js']
-		},
-		'/bad/static.js': {
-			id: '/bad/static.js',
-			importedIds: ['/statically-imports/bad/module.js'],
-			dynamicallyImportedIds: ['/test/path1.js']
-		},
-		'/statically-imports/bad/module.js': {
-			id: '/statically-imports/bad/module.js',
-			importedIds: ['/illegal/boom.js'],
-			dynamicallyImportedIds: ['/test/path2.js']
-		},
-		'/bad/dynamic.js': {
-			id: '/bad/dynamic.js',
-			importedIds: ['/dynamically-imports/bad/module.js'],
-			dynamicallyImportedIds: ['/test/path1.js']
-		},
-		'/dynamically-imports/bad/module.js': {
-			id: '/dynamically-imports/bad/module.js',
-			importedIds: ['/test/path5.js'],
-			dynamicallyImportedIds: ['/test/path2.js', '/illegal/boom.js']
-		},
-		'/illegal/boom.js': {
-			id: '/illegal/boom.js',
-			importedIds: [],
-			dynamicallyImportedIds: []
-		}
-	};
-	return nodes[id] ?? null;
-};
-
-const illegal_imports = new Set([normalizePath('/illegal/boom.js')]);
-const ok_rollup_node = rollup_node_getter('/test/path1.js');
-const bad_rollup_node_static = rollup_node_getter('/bad/static.js');
-const bad_rollup_node_dynamic = rollup_node_getter('/bad/dynamic.js');
-
-test('allows ok rollup imports', () => {
-	assert.not.throws(() => {
-		// @ts-ignore
-		prevent_illegal_rollup_imports(rollup_node_getter, ok_rollup_node, illegal_imports, '');
-	});
-});
-
-test('does not allow bad static rollup imports', () => {
-	assert.throws(() => {
-		// @ts-ignore
-		prevent_illegal_rollup_imports(rollup_node_getter, bad_rollup_node_static, illegal_imports, '');
-	});
-});
-
-test('does not allow bad dynamic rollup imports', () => {
-	assert.throws(() => {
-		prevent_illegal_rollup_imports(
-			// @ts-ignore
-			rollup_node_getter,
-			bad_rollup_node_dynamic,
-			illegal_imports
-		);
-	});
-});
-
-/** @typedef {{id: string, importedModules: Set<ViteNode>}} ViteNode */
-
-/** @type {ViteNode} */
-const ok_vite_node = {
-	id: '/test/ok.js',
-	importedModules: new Set([
-		{
-			id: '/test/path1.js',
-			importedModules: new Set([
-				{
-					id: '/test/path2.js',
-					importedModules: new Set()
-				}
-			])
-		},
-		{ id: '/test/path3.js', importedModules: new Set() }
-	])
-};
-
-/** @type {ViteNode} */
-const bad_vite_node = {
-	id: '/test/bad-static.js',
-	importedModules: new Set([
-		{
-			id: '/test/path1.js',
-			importedModules: new Set([
-				{
-					id: '/test/path2.js',
-					importedModules: new Set([
-						{
-							id: '/illegal/boom.js',
-							importedModules: new Set()
-						}
-					])
-				}
-			])
-		},
-		{ id: '/test/path3.js', importedModules: new Set() }
-	])
-};
-
-test('allows ok vite imports', () => {
-	assert.not.throws(() => {
-		// @ts-ignore
-		prevent_illegal_vite_imports(ok_vite_node, illegal_imports, '');
-	});
-});
-
-test('does not allow bad static rollup imports', () => {
-	assert.throws(() => {
-		// @ts-ignore
-		prevent_illegal_vite_imports(bad_vite_node, illegal_imports, '');
-	});
 });
 
 test.run();

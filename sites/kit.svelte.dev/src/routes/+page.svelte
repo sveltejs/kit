@@ -1,14 +1,14 @@
 <script>
+	import { Blurb } from '@sveltejs/site-kit';
+	import Hero from './Hero.svelte';
+	import Logotype from './svelte-kit-logotype.svg';
+	import Machine from './svelte-kit-machine.webp?w=1440;800;600;480&format=avif;webp;png&picture';
+
 	// code highlighting
-	import '$lib/docs/client/docs.css';
-	import '$lib/docs/client/shiki.css';
-	import '@sveltejs/site-kit/code.css';
 	import * as hovers from '$lib/docs/client/hovers.js';
 	hovers.setup();
 
 	// images
-	import Machine from '$img/svelte-kit-machine.webp?w=1440;800&format=avif;webp;png&meta';
-	import { Hero, Blurb } from '@sveltejs/site-kit';
 	import Adapters from './Adapters.svelte';
 	import Fun from './Fun.svelte';
 	import Grow from './Grow.svelte';
@@ -27,11 +27,10 @@
 <h1 class="visually-hidden">SvelteKit</h1>
 <Hero
 	title="SvelteKit"
-	logotype="images/svelte-kit-logotype.svg"
+	logotype={Logotype}
 	tagline="The fastest way to build svelte apps"
 	background={Machine}
 	alt="SvelteKit illustration"
-	width={800}
 />
 
 <div class="blurb-shifter">
@@ -53,7 +52,7 @@
 				of an SPA
 			</p>
 
-			<a sveltekit:prefetch href="/docs" class="cta">read the docs</a>
+			<a data-sveltekit-preload-data href="/docs" class="cta">read the docs</a>
 		</div>
 
 		<div slot="three">
@@ -63,7 +62,7 @@
 				support and more
 			</p>
 
-			<a sveltekit:prefetch href="/docs" class="cta">read the docs</a>
+			<a data-sveltekit-preload-data href="/docs" class="cta">read the docs</a>
 		</div>
 
 		<div class="description" slot="what">
@@ -90,7 +89,7 @@ cd my-app
 npm install
 npm run dev -- --open</code
 				></pre>
-			<a sveltekit:prefetch href="/docs" class="cta">get started</a>
+			<a data-sveltekit-preload-data href="/docs" class="cta">get started</a>
 		</div>
 	</Blurb>
 </div>
@@ -140,15 +139,14 @@ npm run dev -- --open</code
 		height: 100%;
 		display: flex;
 		flex-direction: column;
-		color: var(--second-text);
 	}
 
 	.orange-highlight {
-		color: var(--prime);
+		color: var(--sk-theme-1);
 	}
 
 	.blurb-shifter {
-		margin-top: calc(-10rem + var(--side-nav));
+		margin-top: calc(-10rem + var(--sk-page-padding-side));
 	}
 
 	@media (min-width: 900px) {

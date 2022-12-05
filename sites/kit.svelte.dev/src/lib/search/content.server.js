@@ -1,6 +1,8 @@
 import fs from 'fs';
-import { extract_frontmatter, transform } from '../docs/server/markdown';
-import { render_modules } from '../docs/server/modules';
+import path from 'path';
+import glob from 'tiny-glob/sync.js';
+import { extract_frontmatter, transform } from '../docs/server/markdown.js';
+import { render, replace_placeholders } from '../docs/server/render.js';
 import { slugify } from '../docs/server';
 
 const categories = [
@@ -24,21 +26,19 @@ export function content() {
 	for (const category of categories) {
 		const breadcrumbs = category.label ? [category.label] : [];
 
-		for (const file of fs.readdirSync(`../../documentation/${category.slug}`)) {
-			const match = /\d{2}-(.+)\.md/.exec(file);
+		for (const file of glob('**/*.md', { cwd: `../../documentation/${category.slug}` })) {
+			const basename = path.basename(file);
+			const match = /\d{2}-(.+)\.md/.exec(basename);
 			if (!match) continue;
 
 			const slug = match[1];
 
 			const filepath = `../../documentation/${category.slug}/${file}`;
-			const markdown = fs
-				.readFileSync(filepath, 'utf-8')
-				.replace('**TYPES**', () => render_modules('types'))
-				.replace('**EXPORTS**', () => render_modules('exports'));
+			const markdown = replace_placeholders(fs.readFileSync(filepath, 'utf-8'));
 
 			const { body, metadata } = extract_frontmatter(markdown);
 
-			const sections = body.trim().split(/^### /m);
+			const sections = body.trim().split(/^## /m);
 			const intro = sections.shift().trim();
 			const rank = +metadata.rank || undefined;
 
@@ -54,7 +54,7 @@ export function content() {
 				const h3 = lines.shift();
 				const content = lines.join('\n');
 
-				const subsections = content.trim().split('#### ');
+				const subsections = content.trim().split('### ');
 
 				const intro = subsections.shift().trim();
 
@@ -90,8 +90,8 @@ function plaintext(markdown) {
 	return transform(markdown, {
 		code: block,
 		blockquote: block,
-		html: () => {
-			throw new Error('TODO implement HTML');
+		html: (html) => {
+			return html;
 		},
 		hr: () => '',
 		list: block,

@@ -1,126 +1,29 @@
 <script>
-	import { onMount } from 'svelte';
-	import { afterNavigate } from '$app/navigation';
 	import { page } from '$app/stores';
+	import TSToggle from './TSToggle.svelte';
 
 	export let contents = [];
-
-	let path = null;
-
-	/** @type {HTMLElement} */
-	let content;
-
-	/** @type {NodeListOf<HTMLElement>} */
-	let headings;
-
-	/** @type {number[]} */
-	let positions = [];
-
-	onMount(async () => {
-		await document.fonts.ready;
-
-		update();
-		highlight();
-	});
-
-	afterNavigate(() => {
-		update();
-		highlight();
-	});
-
-	function update() {
-		content = document.querySelector('.content');
-		const { top } = content.getBoundingClientRect();
-
-		// don't update `selected` for headings above level 4, see _sections.js
-		headings = content.querySelectorAll('[id]:not([data-scrollignore])');
-
-		positions = Array.from(headings).map((heading) => {
-			const style = getComputedStyle(heading);
-			return heading.getBoundingClientRect().top - parseFloat(style.scrollMarginTop) - top;
-		});
-	}
-
-	function highlight() {
-		const { top } = content.getBoundingClientRect();
-
-		let i = headings.length;
-
-		while (i--) {
-			if (positions[i] + top < 10) {
-				const heading = headings[i];
-				path = `${$page.url.pathname}#${heading.id}`;
-				return;
-			}
-		}
-
-		path = $page.url.pathname;
-	}
-
-	/** @param {URL} url */
-	function select(url) {
-		// belt...
-		setTimeout(() => {
-			path = url.pathname + url.hash;
-		});
-
-		// ...and braces
-		window.addEventListener(
-			'scroll',
-			() => {
-				path = url.pathname + url.hash;
-			},
-			{ once: true }
-		);
-	}
 </script>
 
-<svelte:window on:scroll={highlight} on:resize={update} on:hashchange={() => select($page.url)} />
-
-<nav>
+<nav aria-label="Docs">
 	<ul class="sidebar">
 		{#each contents as section}
 			<li>
-				<a
-					sveltekit:prefetch
-					class="section"
-					class:active={section.path === path}
-					href={section.path}
-					on:click={(e) => select(new URL(e.currentTarget.href))}
-				>
+				<span class="section">
 					{section.title}
-				</a>
+				</span>
 
 				<ul>
-					{#each section.sections as subsection}
+					{#each section.pages as { title, path }}
 						<li>
 							<a
-								sveltekit:prefetch
-								class="subsection"
-								class:active={subsection.path === path}
-								href={subsection.path}
-								on:click={(e) => select(new URL(e.currentTarget.href))}
+								data-sveltekit-preload-data
+								class="page"
+								class:active={path === $page.url.pathname}
+								href={path}
 							>
-								{subsection.title}
+								{title}
 							</a>
-
-							{#if section.path === $page.url.pathname}
-								<ul>
-									{#each subsection.sections as subsection}
-										<li>
-											<a
-												sveltekit:prefetch
-												class="nested subsection"
-												class:active={subsection.path === path}
-												href={subsection.path}
-												on:click={(e) => select(new URL(e.currentTarget.href))}
-											>
-												{subsection.title}
-											</a>
-										</li>
-									{/each}
-								</ul>
-							{/if}
 						</li>
 					{/each}
 				</ul>
@@ -129,19 +32,20 @@
 	</ul>
 </nav>
 
+<div class="ts-toggle">
+	<TSToggle />
+</div>
+
 <style>
 	nav {
 		top: 0;
 		left: 0;
-		overflow: hidden;
-		background-color: var(--second);
-		color: white;
+		color: var(--sk-text-3);
 	}
 
 	.sidebar {
-		padding: var(--top-offset) 0 6.4rem 3.2rem;
-		font-family: var(--font);
-		overflow-y: auto;
+		padding: var(--sk-page-padding-top) 0 var(--sk-page-padding-top) 3.2rem;
+		font-family: var(--sk-font);
 		height: 100%;
 		bottom: auto;
 		width: 100%;
@@ -155,48 +59,38 @@
 		margin-bottom: 4rem;
 	}
 
+	li:last-child {
+		margin-bottom: 0;
+	}
+
 	a {
 		position: relative;
 		transition: color 0.2s;
 		border-bottom: none;
 		padding: 0;
-		color: var(--sidebar-text);
+		color: var(--sk-text-3);
 		user-select: none;
 	}
 
 	.section {
 		display: block;
 		padding-bottom: 0.8rem;
-		font-size: var(--h6);
+		font-size: var(--sk-text-xs);
 		text-transform: uppercase;
 		letter-spacing: 0.1em;
 		font-weight: 600;
 	}
 
-	.subsection {
+	.page {
 		display: block;
 		font-size: 1.6rem;
-		font-family: var(--font);
+		font-family: var(--sk-font);
 		padding-bottom: 0.6em;
 	}
 
 	.active {
 		font-weight: 700;
-	}
-
-	.active::after {
-		content: '';
-		position: absolute;
-		right: 0;
-		top: 2px;
-		width: 0;
-		height: 0;
-		border: 6px solid transparent;
-		border-right-color: white;
-	}
-
-	.nested {
-		padding-left: 1.2rem;
+		color: var(--sk-text-1);
 	}
 
 	ul ul,
@@ -204,18 +98,23 @@
 		margin: 0;
 	}
 
-	a:hover,
-	.section:hover,
-	.subsection:hover,
-	.active {
-		color: white;
+	.ts-toggle {
+		width: calc(100% - 1px);
+		border-top: 1px solid var(--sk-back-4);
+		background-color: var(--sk-back-3);
 	}
 
 	@media (min-width: 600px) {
 		.sidebar {
 			columns: 2;
-			padding-left: var(--side-nav);
-			padding-right: var(--side-nav);
+			padding-left: var(--sk-page-padding-side);
+			padding-right: var(--sk-page-padding-side);
+		}
+	}
+
+	@media (min-width: 700px) {
+		.sidebar {
+			columns: 3;
 		}
 	}
 
@@ -224,23 +123,53 @@
 			columns: 1;
 			padding-left: 3.2rem;
 			padding-right: 0;
+			width: var(--sidebar-menu-width);
+			margin: 0 0 0 auto;
+		}
+
+		nav {
+			min-height: calc(100vh - var(--ts-toggle-height));
 		}
 
 		nav::after {
 			content: '';
 			position: fixed;
 			left: 0;
-			bottom: 0;
-			width: var(--sidebar-w);
+			bottom: var(--ts-toggle-height);
+			width: calc(var(--sidebar-width) - 1px);
 			height: 2em;
 			pointer-events: none;
-			height: var(--top-offset);
 			background: linear-gradient(
 				to bottom,
-				rgba(103, 103, 120, 0) 0%,
-				rgba(103, 103, 120, 0.7) 50%,
-				rgba(103, 103, 120, 1) 100%
+				hsla(var(--sk-back-3-hsl), 0) 0%,
+				hsla(var(--sk-back-3-hsl), 0.7) 50%,
+				hsl(var(--sk-back-3-hsl)) 100%
 			);
+			background-repeat: no-repeat;
+			background-size: calc(100% - 3rem) 100%; /* cover text but not scrollbar */
+		}
+
+		.active::after {
+			--size: 1rem;
+			content: '';
+			position: absolute;
+			width: var(--size);
+			height: var(--size);
+			top: -0.1rem;
+			right: calc(-0.5 * var(--size));
+			background-color: var(--sk-back-1);
+			border-left: 1px solid var(--sk-back-5);
+			border-bottom: 1px solid var(--sk-back-5);
+			transform: translateY(0.2rem) rotate(45deg);
+			z-index: 2;
+		}
+
+		.ts-toggle {
+			position: fixed;
+			width: calc(var(--sidebar-width) - 1px);
+			bottom: 0;
+			z-index: 1;
+			margin-right: 0;
 		}
 	}
 </style>

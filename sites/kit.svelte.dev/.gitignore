@@ -1,5 +1,7 @@
 .DS_Store
 .env
 /.svelte-kit/
+/.snippets
 /build/
 /functions/
+/src/lib/docs/server/type-info.js

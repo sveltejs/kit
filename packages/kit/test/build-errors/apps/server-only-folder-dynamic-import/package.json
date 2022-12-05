@@ -1,0 +1,20 @@
+{
+	"name": "server-only-folder-dynamic-import",
+	"version": "0.0.1",
+	"private": true,
+	"scripts": {
+		"dev": "vite dev",
+		"build": "vite build",
+		"preview": "vite preview",
+		"check": "svelte-kit sync && tsc && svelte-check --tsconfig ./jsconfig.json",
+		"check:watch": "svelte-check --tsconfig ./jsconfig.json --watch"
+	},
+	"devDependencies": {
+		"@sveltejs/kit": "workspace:*",
+		"svelte": "^3.53.1",
+		"svelte-check": "^2.9.2",
+		"typescript": "^4.9.3",
+		"vite": "^3.2.4"
+	},
+	"type": "module"
+}

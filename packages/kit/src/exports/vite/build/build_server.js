@@ -1,10 +1,17 @@
 import fs from 'fs';
 import path from 'path';
-import { mkdirp, posixify } from '../../../utils/filesystem.js';
-import { get_vite_config, merge_vite_configs, resolve_entry } from '../utils.js';
-import { load_template } from '../../../core/config/index.js';
+import { mergeConfig } from 'vite';
+import { mkdirp, posixify, resolve_entry } from '../../../utils/filesystem.js';
+import { get_vite_config } from '../utils.js';
+import { load_error_page, load_template } from '../../../core/config/index.js';
 import { runtime_directory } from '../../../core/utils.js';
-import { create_build, find_deps, get_default_build_config, is_http_method } from './utils.js';
+import {
+	create_build,
+	find_deps,
+	get_default_build_config,
+	is_http_method,
+	resolve_symlinks
+} from './utils.js';
 import { s } from '../../../utils/misc.js';
 
 /**
@@ -14,25 +21,31 @@ import { s } from '../../../utils/misc.js';
  *   has_service_worker: boolean;
  *   runtime: string;
  *   template: string;
+ *   error_page: string;
  * }} opts
  */
-const server_template = ({ config, hooks, has_service_worker, runtime, template }) => `
+const server_template = ({ config, hooks, has_service_worker, runtime, template, error_page }) => `
 import root from '__GENERATED__/root.svelte';
 import { respond } from '${runtime}/server/index.js';
 import { set_paths, assets, base } from '${runtime}/paths.js';
-import { set_prerendering } from '${runtime}/env.js';
+import { set_building, set_version } from '${runtime}/env.js';
 import { set_private_env } from '${runtime}/env-private.js';
 import { set_public_env } from '${runtime}/env-public.js';
 
-const template = ({ head, body, assets, nonce }) => ${s(template)
+const app_template = ({ head, body, assets, nonce }) => ${s(template)
 	.replace('%sveltekit.head%', '" + head + "')
 	.replace('%sveltekit.body%', '" + body + "')
 	.replace(/%sveltekit\.assets%/g, '" + assets + "')
 	.replace(/%sveltekit\.nonce%/g, '" + nonce + "')};
 
+const error_template = ({ status, message }) => ${s(error_page)
+	.replace(/%sveltekit\.status%/g, '" + status + "')
+	.replace(/%sveltekit\.error\.message%/g, '" + message + "')};
+
 let read = null;
 
 set_paths(${s(config.kit.paths)});
+set_version(${s(config.kit.version.name)});
 
 let default_protocol = 'https';
 
@@ -41,7 +54,7 @@ let default_protocol = 'https';
 export function override(settings) {
 	default_protocol = settings.protocol || default_protocol;
 	set_paths(settings.paths);
-	set_prerendering(settings.prerendering);
+	set_building(settings.building);
 	read = settings.read;
 }
 
@@ -49,10 +62,12 @@ export class Server {
 	constructor(manifest) {
 		this.options = {
 			csp: ${s(config.kit.csp)},
+			csrf: {
+				check_origin: ${s(config.kit.csrf.checkOrigin)},
+			},
 			dev: false,
-			get_stack: error => String(error), // for security
 			handle_error: (error, event) => {
-				this.options.hooks.handleError({
+				return this.options.hooks.handleError({
 					error,
 					event,
 
@@ -61,26 +76,19 @@ export class Server {
 					get request() {
 						throw new Error('request in handleError has been replaced with event. See https://github.com/sveltejs/kit/pull/3384 for details');
 					}
-				});
-				error.stack = this.options.get_stack(error);
+				}) ?? { message: event.route.id != null ? 'Internal Error' : 'Not Found' };
 			},
 			hooks: null,
-			hydrate: ${s(config.kit.browser.hydrate)},
 			manifest,
-			method_override: ${s(config.kit.methodOverride)},
 			paths: { base, assets },
-			prerender: {
-				default: ${config.kit.prerender.default},
-				enabled: ${config.kit.prerender.enabled}
-			},
 			public_env: {},
 			read,
 			root,
-			service_worker: ${has_service_worker ? "base + '/service-worker.js'" : 'null'},
-			router: ${s(config.kit.browser.router)},
-			template,
-			template_contains_nonce: ${template.includes('%sveltekit.nonce%')},
-			trailing_slash: ${s(config.kit.trailingSlash)}
+			service_worker: ${has_service_worker},
+			app_template,
+			app_template_contains_nonce: ${template.includes('%sveltekit.nonce%')},
+			error_template,
+			version: ${s(config.kit.version.name)}
 		};
 	}
 
@@ -107,10 +115,16 @@ export class Server {
 
 		if (!this.options.hooks) {
 			const module = await import(${s(hooks)});
+
+			// TODO remove this for 1.0
+			if (module.externalFetch) {
+				throw new Error('externalFetch has been removed — use handleFetch instead. See https://github.com/sveltejs/kit/pull/6565 for details');
+			}
+
 			this.options.hooks = {
 				handle: module.handle || (({ event, resolve }) => resolve(event)),
 				handleError: module.handleError || (({ error }) => console.error(error.stack)),
-				externalFetch: module.externalFetch || fetch
+				handleFetch: module.handleFetch || (({ request, fetch }) => fetch(request))
 			};
 		}
 	}
@@ -150,7 +164,24 @@ export async function build_server(options, client) {
 		service_worker_entry_file
 	} = options;
 
-	let hooks_file = resolve_entry(config.kit.files.hooks);
+	let hooks_file = resolve_entry(config.kit.files.hooks.server);
+
+	// TODO remove for 1.0
+	if (!hooks_file) {
+		const old_file = resolve_entry(path.join(process.cwd(), 'src', 'hooks'));
+		if (old_file && fs.existsSync(old_file)) {
+			throw new Error(
+				`Rename your server hook file from ${posixify(
+					path.relative(process.cwd(), old_file)
+				)} to ${posixify(
+					path.relative(process.cwd(), config.kit.files.hooks.server)
+				)}${path.extname(
+					old_file
+				)} (because there's also client hooks now). See the PR for more information: https://github.com/sveltejs/kit/pull/6586`
+			);
+		}
+	}
+
 	if (!hooks_file || !fs.existsSync(hooks_file)) {
 		hooks_file = path.join(config.kit.outDir, 'build/hooks.js');
 		fs.writeFileSync(hooks_file, '');
@@ -205,11 +236,12 @@ export async function build_server(options, client) {
 			hooks: app_relative(hooks_file),
 			has_service_worker: config.kit.serviceWorker.register && !!service_worker_entry_file,
 			runtime: posixify(path.relative(build_dir, runtime_directory)),
-			template: load_template(cwd, config)
+			template: load_template(cwd, config),
+			error_page: load_error_page(config)
 		})
 	);
 
-	const merged_config = merge_vite_configs(
+	const merged_config = mergeConfig(
 		get_default_build_config({ config, input, ssr: true, outDir: `${output_dir}/server` }),
 		await get_vite_config(vite_config, vite_config_env)
 	);
@@ -253,15 +285,19 @@ export async function build_server(options, client) {
 		/** @type {string[]} */
 		const stylesheets = [];
 
+		/** @type {string[]} */
+		const fonts = [];
+
 		if (node.component) {
 			const entry = find_deps(client.vite_manifest, node.component, true);
 
 			imported.push(...entry.imports);
 			stylesheets.push(...entry.stylesheets);
+			fonts.push(...entry.fonts);
 
 			exports.push(
 				`export const component = async () => (await import('../${
-					vite_manifest[node.component].file
+					resolve_symlinks(vite_manifest, node.component).chunk.file
 				}')).default;`,
 				`export const file = '${entry.file}';` // TODO what is this?
 			);
@@ -272,6 +308,7 @@ export async function build_server(options, client) {
 
 			imported.push(...entry.imports);
 			stylesheets.push(...entry.stylesheets);
+			fonts.push(...entry.fonts);
 
 			imports.push(`import * as shared from '../${vite_manifest[node.shared].file}';`);
 			exports.push(`export { shared };`);
@@ -284,7 +321,8 @@ export async function build_server(options, client) {
 
 		exports.push(
 			`export const imports = ${s(imported)};`,
-			`export const stylesheets = ${s(stylesheets)};`
+			`export const stylesheets = ${s(stylesheets)};`,
+			`export const fonts = ${s(fonts)};`
 		);
 
 		/** @type {string[]} */
@@ -324,7 +362,7 @@ function get_methods(cwd, output, manifest_data) {
 	const lookup = {};
 	output.forEach((chunk) => {
 		if (!chunk.facadeModuleId) return;
-		const id = chunk.facadeModuleId.slice(cwd.length + 1);
+		const id = posixify(path.relative(cwd, chunk.facadeModuleId));
 		lookup[id] = chunk.exports;
 	});
 

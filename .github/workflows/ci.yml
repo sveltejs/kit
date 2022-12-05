@@ -9,27 +9,28 @@ on:
 env:
   TURBO_TOKEN: ${{ secrets.TURBO_TOKEN }}
   TURBO_TEAM: svelte
+  # we call `pnpm playwright install` instead
+  PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD: '1'
 
 # cancel in-progress runs on new commits to same PR (gitub.event.number)
 concurrency:
   group: ${{ github.workflow }}-${{ github.event.number || github.sha }}
   cancel-in-progress: true
 
+permissions:
+  contents: read # to fetch code (actions/checkout)
+
 jobs:
   Lint:
     runs-on: ubuntu-latest
-    env:
-      # not needed for linting
-      PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD: '1'
     steps:
       - uses: actions/checkout@v3
-      - uses: pnpm/action-setup@v2.2.2
+      - uses: pnpm/action-setup@v2.2.4
       - uses: actions/setup-node@v3
         with:
           node-version: '16.x'
           cache: pnpm
       - run: pnpm install --frozen-lockfile
-      - run: cd packages/kit && pnpm build
       - run: pnpm turbo run lint check
   Tests:
     runs-on: ${{ matrix.os }}
@@ -46,25 +47,23 @@ jobs:
             e2e-browser: 'firefox'
           - node-version: 16
             os: macOS-latest
-            e2e-browser: 'safari'
+            e2e-browser: 'webkit'
           - node-version: 18
             os: ubuntu-latest
             e2e-browser: 'chromium'
     env:
       TURBO_CACHE_KEY: ${{ matrix.os }}-${{ matrix.node-version }}
-      # Install playwright's binray under node_modules so it will be cached together
-      PLAYWRIGHT_BROWSERS_PATH: '0'
       KIT_E2E_BROWSER: ${{matrix.e2e-browser}}
     steps:
       - run: git config --global core.autocrlf false
       - uses: actions/checkout@v3
-      - uses: pnpm/action-setup@v2.2.2
+      - uses: pnpm/action-setup@v2.2.4
       - uses: actions/setup-node@v3
         with:
           node-version: ${{ matrix.node-version }}
           cache: pnpm
       - run: pnpm install --frozen-lockfile
-      - run: pnpm playwright install
+      - run: pnpm playwright install ${{ matrix.e2e-browser }}
       - run: pnpm test
       - name: Archive test results
         if: failure()

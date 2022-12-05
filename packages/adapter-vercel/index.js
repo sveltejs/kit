@@ -4,85 +4,8 @@ import { fileURLToPath } from 'url';
 import { nodeFileTrace } from '@vercel/nft';
 import esbuild from 'esbuild';
 
-// rules for clean URLs and trailing slash handling,
-// generated with @vercel/routing-utils
-const redirects = {
-	always: [
-		{
-			src: '^/(?:(.+)/)?index(?:\\.html)?/?$',
-			headers: {
-				Location: '/$1/'
-			},
-			status: 308
-		},
-		{
-			src: '^/(.*)\\.html/?$',
-			headers: {
-				Location: '/$1/'
-			},
-			status: 308
-		},
-		{
-			src: '^/\\.well-known(?:/.*)?$'
-		},
-		{
-			src: '^/((?:[^/]+/)*[^/\\.]+)$',
-			headers: {
-				Location: '/$1/'
-			},
-			status: 308
-		},
-		{
-			src: '^/((?:[^/]+/)*[^/]+\\.\\w+)/$',
-			headers: {
-				Location: '/$1'
-			},
-			status: 308
-		}
-	],
-	never: [
-		{
-			src: '^/(?:(.+)/)?index(?:\\.html)?/?$',
-			headers: {
-				Location: '/$1'
-			},
-			status: 308
-		},
-		{
-			src: '^/(.*)\\.html/?$',
-			headers: {
-				Location: '/$1'
-			},
-			status: 308
-		},
-		{
-			src: '^/(.*)/$',
-			headers: {
-				Location: '/$1'
-			},
-			status: 308
-		}
-	],
-	ignore: [
-		{
-			src: '^/(?:(.+)/)?index(?:\\.html)?/?$',
-			headers: {
-				Location: '/$1'
-			},
-			status: 308
-		},
-		{
-			src: '^/(.*)\\.html/?$',
-			headers: {
-				Location: '/$1'
-			},
-			status: 308
-		}
-	]
-};
-
 /** @type {import('.').default} **/
-export default function ({ external = [], edge, split } = {}) {
+const plugin = function ({ external = [], edge, split } = {}) {
 	return {
 		name: '@sveltejs/adapter-vercel',
 
@@ -90,35 +13,52 @@ export default function ({ external = [], edge, split } = {}) {
 			const node_version = get_node_version();
 
 			const dir = '.vercel/output';
-
 			const tmp = builder.getBuildDirectory('vercel-tmp');
 
+			builder.rimraf(dir);
 			builder.rimraf(tmp);
 
 			const files = fileURLToPath(new URL('./files', import.meta.url).href);
 
 			const dirs = {
-				static: `${dir}/static`,
+				static: `${dir}/static${builder.config.kit.paths.base}`,
 				functions: `${dir}/functions`
 			};
 
-			const prerendered_redirects = Array.from(
-				builder.prerendered.redirects,
-				([src, redirect]) => ({
+			/** @type {any[]} */
+			const prerendered_redirects = [];
+
+			/** @type {Record<string, { path: string }>} */
+			const overrides = {};
+
+			for (const [src, redirect] of builder.prerendered.redirects) {
+				prerendered_redirects.push({
 					src,
 					headers: {
 						Location: redirect.location
 					},
 					status: redirect.status
-				})
-			);
+				});
+			}
+
+			for (const [path, page] of builder.prerendered.pages) {
+				if (path.endsWith('/') && path !== '/') {
+					prerendered_redirects.push(
+						{ src: path, dest: path.slice(0, -1) },
+						{ src: path.slice(0, -1), status: 308, headers: { Location: path } }
+					);
+
+					overrides[page.file] = { path: path.slice(1, -1) };
+				} else {
+					overrides[page.file] = { path: path.slice(1) };
+				}
+			}
 
 			/** @type {any[]} */
 			const routes = [
-				...redirects[builder.config.kit.trailingSlash],
 				...prerendered_redirects,
 				{
-					src: `/${builder.config.kit.appDir}/.+`,
+					src: `/${builder.getAppPath()}/.+`,
 					headers: {
 						'cache-control': 'public, immutable, max-age=31536000'
 					}
@@ -189,7 +129,8 @@ export default function ({ external = [], edge, split } = {}) {
 					platform: 'browser',
 					format: 'esm',
 					external,
-					sourcemap: 'linked'
+					sourcemap: 'linked',
+					banner: { js: 'globalThis.global = globalThis;' }
 				});
 
 				write(
@@ -226,7 +167,7 @@ export default function ({ external = [], edge, split } = {}) {
 
 							const src = `${sliced_pattern}(?:/__data.json)?$`; // TODO adding /__data.json is a temporary workaround — those endpoints should be treated as distinct routes
 
-							await generate_function(route.id || 'index', src, entry.generateManifest);
+							await generate_function(route.id.slice(1) || 'index', src, entry.generateManifest);
 						}
 					};
 				});
@@ -241,23 +182,21 @@ export default function ({ external = [], edge, split } = {}) {
 
 			builder.log.minor('Writing routes...');
 
-			/** @type {Record<string, { path: string }>} */
-			const overrides = {};
-			builder.prerendered.pages.forEach((page, src) => {
-				overrides[page.file] = { path: src.slice(1) };
-			});
-
 			write(
 				`${dir}/config.json`,
-				JSON.stringify({
-					version: 3,
-					routes,
-					overrides
-				})
+				JSON.stringify(
+					{
+						version: 3,
+						routes,
+						overrides
+					},
+					null,
+					'  '
+				)
 			);
 		}
 	};
-}
+};
 
 /**
  * @param {string} file
@@ -307,9 +246,14 @@ async function create_function_bundle(builder, entry, dir, runtime) {
 		// pending https://github.com/vercel/nft/issues/284
 		if (error.message.startsWith('Failed to resolve dependency node:')) return;
 
+		// parse errors are likely not js and can safely be ignored,
+		// such as this html file in "main" meant for nw instead of node:
+		// https://github.com/vercel/nft/issues/311
+		if (error.message.startsWith('Failed to parse')) return;
+
 		if (error.message.startsWith('Failed to resolve dependency')) {
 			const match = /Cannot find module '(.+?)' loaded from (.+)/;
-			const [, module, importer] = match.exec(error.message);
+			const [, module, importer] = match.exec(error.message) ?? [, error.message, '(unknown)'];
 
 			if (!resolution_failures.has(importer)) {
 				resolution_failures.set(importer, []);
@@ -389,3 +333,5 @@ async function create_function_bundle(builder, entry, dir, runtime) {
 
 	write(`${dir}/package.json`, JSON.stringify({ type: 'module' }));
 }
+
+export default plugin;

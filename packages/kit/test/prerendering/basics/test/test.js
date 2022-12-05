@@ -25,14 +25,12 @@ test('renders a server-side redirect', () => {
 	const html = read('redirect-server.html');
 	assert.equal(html, '<meta http-equiv="refresh" content="0;url=https://example.com/redirected">');
 
-	const json = read('redirect-server/__data.json');
-	assert.equal(
-		json,
-		JSON.stringify({
-			type: 'redirect',
-			location: 'https://example.com/redirected'
-		})
-	);
+	const data = JSON.parse(read('redirect-server/__data.json'));
+
+	assert.equal(data, {
+		type: 'redirect',
+		location: 'https://example.com/redirected'
+	});
 });
 
 test('does not double-encode redirect locations', () => {
@@ -78,30 +76,36 @@ test('loads a file with spaces in the filename', () => {
 });
 
 test('generates __data.json file for shadow endpoints', () => {
-	assert.equal(
-		read('__data.json'),
-		JSON.stringify({
-			type: 'data',
-			nodes: [null, { type: 'data', data: { message: 'hello' }, uses: {} }]
-		})
-	);
-	assert.equal(
-		read('shadowed-get/__data.json'),
-		JSON.stringify({
-			type: 'data',
-			nodes: [null, { type: 'data', data: { answer: 42 }, uses: {} }]
-		})
-	);
+	let data = JSON.parse(read('__data.json'));
+	assert.equal(data, {
+		type: 'data',
+		nodes: [
+			null,
+			{
+				type: 'data',
+				data: [{ message: 1 }, 'hello'],
+				uses: {}
+			}
+		]
+	});
+
+	data = JSON.parse(read('shadowed-get/__data.json'));
+	assert.equal(data, {
+		type: 'data',
+		nodes: [
+			null,
+			{
+				type: 'data',
+				data: [{ answer: 1 }, 42],
+				uses: {}
+			}
+		]
+	});
 });
 
 test('does not prerender page with shadow endpoint with non-load handler', () => {
 	assert.ok(!fs.existsSync(`${build}/shadowed-post.html`));
 	assert.ok(!fs.existsSync(`${build}/shadowed-post/__data.json`));
-});
-
-test('does not prerender page with prerender = false in +page.server.js', () => {
-	assert.ok(!fs.existsSync(`${build}/page-server-options.html`));
-	assert.ok(!fs.existsSync(`${build}/page-server-options/__data.json`));
 });
 
 test('decodes paths when writing files', () => {
@@ -175,13 +179,19 @@ test('prerenders binary data', async () => {
 });
 
 test('fetches data from local endpoint', () => {
-	assert.equal(
-		read('origin/__data.json'),
-		JSON.stringify({
-			type: 'data',
-			nodes: [null, { type: 'data', data: { message: 'hello' }, uses: {} }]
-		})
-	);
+	const data = JSON.parse(read('origin/__data.json'));
+
+	assert.equal(data, {
+		type: 'data',
+		nodes: [
+			null,
+			{
+				type: 'data',
+				data: [{ message: 1 }, 'hello'],
+				uses: {}
+			}
+		]
+	});
 	assert.equal(read('origin/message.json'), JSON.stringify({ message: 'hello' }));
 });
 
@@ -208,6 +218,28 @@ test('$env - includes environment variables', () => {
 test('prerenders a page in a (group)', () => {
 	const content = read('grouped.html');
 	assert.ok(content.includes('<h1>grouped</h1>'));
+});
+
+test('injects relative service worker', () => {
+	const content = read('index.html');
+	assert.ok(content.includes(`navigator.serviceWorker.register('./service-worker.js')`));
+});
+
+test('define service worker variables', () => {
+	const content = read('service-worker.js');
+	assert.ok(content.includes(`MY_ENV DEFINED`));
+});
+
+test('prerendered.paths omits trailing slashes for endpoints', () => {
+	const content = read('service-worker.js');
+
+	for (const path of [
+		'/trailing-slash/page/',
+		'/trailing-slash/page/__data.json',
+		'/trailing-slash/standalone-endpoint.json'
+	]) {
+		assert.ok(content.includes(`"${path}"`), `Missing ${path}`);
+	}
 });
 
 test.run();

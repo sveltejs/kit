@@ -1,46 +1,44 @@
 import { create_client } from './client.js';
 import { init } from './singletons.js';
 import { set_paths } from '../paths.js';
-
-export { set_public_env } from '../env-public.js';
+import { set_public_env } from '../env-public.js';
+import { set_version } from '../env.js';
 
 /**
  * @param {{
+ *   env: Record<string, string>;
+ *   hydrate: Parameters<import('./types').Client['_hydrate']>[0];
  *   paths: {
  *     assets: string;
  *     base: string;
  *   },
- *   target: Element;
- *   route: boolean;
- *   spa: boolean;
- *   trailing_slash: import('types').TrailingSlash;
- *   hydrate: {
- *     status: number;
- *     error: Error | (import('../server/page/types').SerializedHttpError);
- *     node_ids: number[];
- *     params: Record<string, string>;
- *     routeId: string | null;
- *   };
+ *   target: HTMLElement;
+ *   version: string;
  * }} opts
  */
-export async function start({ paths, target, route, spa, trailing_slash, hydrate }) {
+export async function start({ env, hydrate, paths, target, version }) {
+	set_public_env(env);
+	set_paths(paths);
+	set_version(version);
+
+	if (__SVELTEKIT_DEV__ && target === document.body) {
+		console.warn(
+			`Placing %sveltekit.body% directly inside <body> is not recommended, as your app may break for users who have certain browser extensions installed.\n\nConsider wrapping it in an element:\n\n<div style="display: contents">\n  %sveltekit.body%\n</div>`
+		);
+	}
+
 	const client = create_client({
 		target,
-		base: paths.base,
-		trailing_slash
+		base: paths.base
 	});
 
 	init({ client });
-	set_paths(paths);
 
 	if (hydrate) {
 		await client._hydrate(hydrate);
+	} else {
+		client.goto(location.href, { replaceState: true });
 	}
 
-	if (route) {
-		if (spa) client.goto(location.href, { replaceState: true });
-		client._start_router();
-	}
-
-	dispatchEvent(new CustomEvent('sveltekit:start'));
+	client._start_router();
 }

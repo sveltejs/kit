@@ -2,12 +2,7 @@ import fs from 'fs';
 import path from 'path';
 import { mkdirp, copy, dist } from './utils.js';
 
-/**
- * Create a new SvelteKit project.
- *
- * @param {string} cwd - Path to the directory to create
- * @param {import('./types/internal').Options} options
- */
+/** @type {import('./types/index').create} */
 export async function create(cwd, options) {
 	mkdirp(cwd);
 
@@ -83,7 +78,7 @@ function write_common_files(cwd, options, name) {
  * @returns {boolean}
  */
 function matches_condition(condition, options) {
-	if (condition === 'default' || condition === 'skeleton' || condition === 'libskeleton') {
+	if (condition === 'default' || condition === 'skeleton' || condition === 'skeletonlib') {
 		return options.template === condition;
 	}
 	if (condition === 'typescript' || condition === 'checkjs') {

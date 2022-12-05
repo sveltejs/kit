@@ -24,15 +24,13 @@ test.describe('base path', () => {
 		);
 	});
 
-	// TODO re-enable these once we upgrade to Vite 3
-	// https://github.com/sveltejs/kit/pull/4891#issuecomment-1125471630
-	test.skip('sets_paths', async ({ page }) => {
+	test('sets_paths', async ({ page }) => {
 		await page.goto('/path-base/base/');
 		expect(await page.textContent('[data-source="base"]')).toBe('/path-base');
 		expect(await page.textContent('[data-source="assets"]')).toBe('/_svelte_kit_assets');
 	});
 
-	test.skip('loads javascript', async ({ page, javaScriptEnabled }) => {
+	test('loads javascript', async ({ page, javaScriptEnabled }) => {
 		await page.goto('/path-base/base/');
 		expect(await page.textContent('button')).toBe('clicks: 0');
 
@@ -42,7 +40,7 @@ test.describe('base path', () => {
 		}
 	});
 
-	test.skip('loads CSS', async ({ page }) => {
+	test('loads CSS', async ({ page }) => {
 		await page.goto('/path-base/base/');
 		expect(
 			await page.evaluate(() => {
@@ -52,7 +50,7 @@ test.describe('base path', () => {
 		).toBe('rgb(255, 0, 0)');
 	});
 
-	test.skip('inlines CSS', async ({ page, javaScriptEnabled }) => {
+	test('inlines CSS', async ({ page, javaScriptEnabled }) => {
 		await page.goto('/path-base/base/');
 		if (process.env.DEV) {
 			const ssr_style = await page.evaluate(() => document.querySelector('style[data-sveltekit]'));
@@ -78,7 +76,7 @@ test.describe('base path', () => {
 		}
 	});
 
-	test.skip('sets params correctly', async ({ page, clicknav }) => {
+	test('sets params correctly', async ({ page, clicknav }) => {
 		await page.goto('/path-base/base/one');
 
 		expect(await page.textContent('h2')).toBe('one');
@@ -153,9 +151,9 @@ test.describe('trailingSlash', () => {
 		expect(await page.textContent('h2')).toBe('/slash/child/');
 	});
 
-	test('ignores trailing slash on endpoint', async ({ baseURL, request }) => {
+	test('removes trailing slash on endpoint', async ({ baseURL, request }) => {
 		const r1 = await request.get('/path-base/endpoint/');
-		expect(r1.url()).toBe(`${baseURL}/path-base/endpoint/`);
+		expect(r1.url()).toBe(`${baseURL}/path-base/endpoint`);
 		expect(await r1.text()).toBe('hi');
 
 		const r2 = await request.get('/path-base/endpoint');
@@ -163,32 +161,41 @@ test.describe('trailingSlash', () => {
 		expect(await r2.text()).toBe('hi');
 	});
 
-	test('can fetch data from page-endpoint', async ({ request, baseURL }) => {
+	test('adds trailing slash to endpoint', async ({ baseURL, request }) => {
+		const r1 = await request.get('/path-base/endpoint-with-slash');
+		expect(r1.url()).toBe(`${baseURL}/path-base/endpoint-with-slash/`);
+		expect(await r1.text()).toBe('hi');
+
+		const r2 = await request.get('/path-base/endpoint-with-slash/');
+		expect(r2.url()).toBe(`${baseURL}/path-base/endpoint-with-slash/`);
+		expect(await r2.text()).toBe('hi');
+	});
+
+	test('can fetch data from page-endpoint', async ({ request }) => {
 		const r = await request.get('/path-base/page-endpoint/__data.json');
-		expect(r.url()).toBe(`${baseURL}/path-base/page-endpoint/__data.json`);
-		expect(await r.json()).toEqual({
+		const data = await r.json();
+
+		expect(data).toEqual({
 			type: 'data',
-			nodes: [null, { type: 'data', data: { message: 'hi' }, uses: {} }]
+			nodes: [
+				{ type: 'data', data: [null], uses: {}, slash: 'always' },
+				{ type: 'data', data: [{ message: 1 }, 'hi'], uses: {} }
+			]
 		});
 	});
 
-	test('accounts for trailingSlash when prefetching', async ({
-		app,
-		baseURL,
-		page,
-		javaScriptEnabled
-	}) => {
+	test('accounts for trailingSlash when preloading', async ({ app, page, javaScriptEnabled }) => {
 		if (!javaScriptEnabled) return;
 
-		await page.goto('/path-base/prefetching');
+		await page.goto('/path-base/preloading');
 
 		/** @type {string[]} */
 		let requests = [];
-		page.on('request', (r) => requests.push(r.url()));
+		page.on('request', (r) => requests.push(new URL(r.url()).pathname));
 
 		// also wait for network processing to complete, see
 		// https://playwright.dev/docs/network#network-events
-		await app.prefetch('/path-base/prefetching/prefetched');
+		await app.preloadData('/path-base/preloading/preloaded');
 
 		// svelte request made is environment dependent
 		if (process.env.DEV) {
@@ -197,10 +204,10 @@ test.describe('trailingSlash', () => {
 			expect(requests.filter((req) => req.endsWith('.js')).length).toBeGreaterThan(0);
 		}
 
-		expect(requests.includes(`${baseURL}/path-base/prefetching/prefetched/__data.json`)).toBe(true);
+		expect(requests.includes(`/path-base/preloading/preloaded/__data.json`)).toBe(true);
 
 		requests = [];
-		await app.goto('/path-base/prefetching/prefetched');
+		await app.goto('/path-base/preloading/preloaded');
 		expect(requests).toEqual([]);
 	});
 });

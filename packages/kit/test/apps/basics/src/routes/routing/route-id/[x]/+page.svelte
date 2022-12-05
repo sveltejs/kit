@@ -5,5 +5,5 @@
 	export let data;
 </script>
 
-<h1>routeId in load: {data.routeId}</h1>
-<h2>routeId in store: {$page.routeId}</h2>
+<h1>route.id in load: {data.route.id}</h1>
+<h2>route.id in store: {$page.route.id}</h2>

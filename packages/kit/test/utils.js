@@ -37,16 +37,16 @@ export const test = base.extend({
 			afterNavigate: () => page.evaluate(() => afterNavigate(() => {})),
 
 			/**
+			 * @param {string[]} urls
+			 * @returns {Promise<void>}
+			 */
+			preloadCode: (...urls) => page.evaluate((urls) => preloadCode(...urls), urls),
+
+			/**
 			 * @param {string} url
 			 * @returns {Promise<void>}
 			 */
-			prefetch: (url) => page.evaluate((/** @type {string} */ url) => prefetch(url), url),
-
-			/**
-			 * @param {string[]} [urls]
-			 * @returns {Promise<void>}
-			 */
-			prefetchRoutes: (urls) => page.evaluate((urls) => prefetchRoutes(urls), urls)
+			preloadData: (url) => page.evaluate((/** @type {string} */ url) => preloadData(url), url)
 		});
 	},
 
@@ -56,10 +56,11 @@ export const test = base.extend({
 		 * @param {{ timeout: number }} options
 		 */
 		async function clicknav(selector, options) {
+			const element = page.locator(selector);
 			if (javaScriptEnabled) {
-				await Promise.all([page.waitForNavigation(options), page.click(selector)]);
+				await Promise.all([page.waitForNavigation(options), element.click()]);
 			} else {
-				await page.click(selector);
+				await element.click();
 			}
 		}
 
@@ -78,16 +79,6 @@ export const test = base.extend({
 	},
 
 	page: async ({ page, javaScriptEnabled }, use) => {
-		if (javaScriptEnabled) {
-			page.addInitScript({
-				content: `
-					addEventListener('sveltekit:start', () => {
-						document.body.classList.add('started');
-					});
-				`
-			});
-		}
-
 		// automatically wait for kit started event after navigation functions if js is enabled
 		const page_navigation_functions = ['goto', 'goBack', 'reload'];
 		page_navigation_functions.forEach((fn) => {
@@ -99,7 +90,7 @@ export const test = base.extend({
 			// @ts-expect-error
 			page[fn] = async function (...args) {
 				const res = await page_fn.call(page, ...args);
-				if (javaScriptEnabled) {
+				if (javaScriptEnabled && args[1]?.wait_for_started !== false) {
 					await page.waitForSelector('body.started', { timeout: 5000 });
 				}
 				return res;
@@ -125,7 +116,7 @@ export const test = base.extend({
 const known_devices = {
 	chromium: devices['Desktop Chrome'],
 	firefox: devices['Desktop Firefox'],
-	safari: devices['Desktop Safari']
+	webkit: devices['Desktop Safari']
 };
 const test_browser = /** @type {keyof typeof known_devices} */ (
 	process.env.KIT_E2E_BROWSER ?? 'chromium'
@@ -147,10 +138,10 @@ export const config = {
 	// generous timeouts on CI
 	timeout: process.env.CI ? 45000 : 15000,
 	webServer: {
-		command: process.env.DEV ? 'npm run dev' : 'npm run build && npm run preview',
+		command: process.env.DEV ? 'pnpm dev' : 'pnpm build && pnpm preview',
 		port: process.env.DEV ? 5173 : 4173
 	},
-	retries: process.env.CI ? 5 : 0,
+	retries: process.env.CI ? 2 : 0,
 	projects: [
 		{
 			name: `${test_browser}-${process.env.DEV ? 'dev' : 'build'}`,

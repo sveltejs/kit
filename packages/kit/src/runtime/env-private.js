@@ -1,4 +1,3 @@
-/** @type {App.PrivateEnv} */
 export let env = {};
 
 /** @type {(environment: Record<string, string>) => void} */

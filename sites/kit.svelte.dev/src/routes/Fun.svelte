@@ -3,7 +3,7 @@
 
 	Svelte's a compiler that turns <code>&lt;h1&gt;Hello &lcub;name&rcub;!&lt;/h1&gt;</code> into:
 
-	<div class="code-block"><pre class="language-typescript"><code>h1 <span class="token operator">=</span> <span class="token function">element</span><span class="token punctuation">(</span><span class="token string">"h1"</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+	<div class="text"><pre class="language-typescript"><code>h1 <span class="token operator">=</span> <span class="token function">element</span><span class="token punctuation">(</span><span class="token string">"h1"</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
 h1<span class="token punctuation">.</span>textContent <span class="token operator">=</span> <span class="token template-string"><span class="token template-punctuation string">`</span><span class="token string">Hello </span><span class="token interpolation"><span class="token interpolation-punctuation punctuation">$&lcub;</span>name<span class="token interpolation-punctuation punctuation">&rcub;</span></span><span class="token string">!</span><span class="token template-punctuation string">`</span></span><span class="token punctuation">;</span></code></pre></div>
 
 	<p class="description">No <code>useState</code>, <code>ref</code>, or virtual DOM.<br/>
