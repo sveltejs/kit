@@ -1201,7 +1201,7 @@ test.describe('Interactivity', () => {
 		await page.click('button');
 		expect(await page.textContent('button')).toBe('add');
 		expect(await page.textContent('a')).toBe('add');
-		
+
 		await page.click('a');
 		expect(await page.textContent('a')).toBe('remove');
 
