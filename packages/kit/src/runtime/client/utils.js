@@ -1,4 +1,4 @@
-import { DEV, SSR } from '@sveltejs/environment';
+import { BROWSER, DEV } from '@sveltejs/environment';
 import { writable } from 'svelte/store';
 import { assets } from '../paths.js';
 import { version } from '../env.js';
@@ -210,7 +210,7 @@ export function create_updated_store() {
 	let timeout;
 
 	async function check() {
-		if (DEV || SSR) return false;
+		if (DEV || !BROWSER) return false;
 
 		clearTimeout(timeout);
 

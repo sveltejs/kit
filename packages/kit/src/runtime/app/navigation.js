@@ -1,4 +1,4 @@
-import { SSR } from '@sveltejs/environment';
+import { BROWSER } from '@sveltejs/environment';
 import { client } from '../client/singletons.js';
 
 /**
@@ -10,16 +10,16 @@ function guard(name) {
 	};
 }
 
-export const disableScrollHandling = SSR
-	? guard('disableScrollHandling')
-	: client.disable_scroll_handling;
-export const goto = SSR ? guard('goto') : client.goto;
-export const invalidate = SSR ? guard('invalidate') : client.invalidate;
-export const invalidateAll = SSR ? guard('invalidateAll') : client.invalidateAll;
-export const preloadData = SSR ? guard('preloadData') : client.preload_data;
-export const preloadCode = SSR ? guard('preloadCode') : client.preload_code;
-export const beforeNavigate = SSR ? () => {} : client.before_navigate;
-export const afterNavigate = SSR ? () => {} : client.after_navigate;
+export const disableScrollHandling = BROWSER
+	? client.disable_scroll_handling
+	: guard('disableScrollHandling');
+export const goto = BROWSER ? client.goto : guard('goto');
+export const invalidate = BROWSER ? client.invalidate : guard('invalidate');
+export const invalidateAll = BROWSER ? client.invalidateAll : guard('invalidateAll');
+export const preloadData = BROWSER ? client.preload_data : guard('preloadData');
+export const preloadCode = BROWSER ? client.preload_code : guard('preloadCode');
+export const beforeNavigate = BROWSER ? client.before_navigate : () => {};
+export const afterNavigate = BROWSER ? client.after_navigate : () => {};
 
 // TODO remove for 1.0 release
 /** @param {any} _args */
