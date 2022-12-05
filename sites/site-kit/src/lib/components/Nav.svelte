@@ -49,7 +49,7 @@
 	<div class="modal-background hide-if-desktop" on:click={() => (open = false)} />
 {/if}
 
-<nav class:visible={visible || open} class:open bind:this={nav}>
+<nav class:visible={visible || open} class:open bind:this={nav} aria-label="Primary">
 	<a href="/" class="nav-spot home" title={home_title} style="background-image: url({logo})">
 		{home}
 	</a>

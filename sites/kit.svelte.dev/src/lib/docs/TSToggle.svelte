@@ -1,5 +1,5 @@
 <script>
-	import Checkbox from './Checkbox.svelte';
+	import ToggleButton from './ToggleButton.svelte';
 
 	let checked = prefers_ts();
 	$: toggle(checked);
@@ -22,10 +22,9 @@
 	}
 </script>
 
-<!-- svelte-ignore a11y-label-has-associated-control -->
-<label class="input-output-toggle">
-	JavaScript <Checkbox bind:checked /> TypeScript
-</label>
+<div class="input-output-toggle">
+	<span aria-hidden="true">JavaScript</span> <ToggleButton bind:pressed={checked} label="TypeScript code examples" /> <span aria-hidden="true">TypeScript</span>
+</div>
 
 <style>
 	.input-output-toggle {
