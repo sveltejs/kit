@@ -275,7 +275,7 @@ importers:
       cookie: ^0.5.0
       devalue: ^4.2.0
       kleur: ^4.1.5
-      magic-string: ^0.26.7
+      magic-string: ^0.27.0
       marked: ^4.2.3
       mime: ^3.0.0
       rollup: ^2.79.1
@@ -295,7 +295,7 @@ importers:
       cookie: 0.5.0
       devalue: 4.2.0
       kleur: 4.1.5
-      magic-string: 0.26.7
+      magic-string: 0.27.0
       mime: 3.0.0
       sade: 1.8.1
       set-cookie-parser: 2.5.1
@@ -630,7 +630,7 @@ importers:
     specifiers:
       '@types/prompts': ^2.4.1
       kleur: ^4.1.5
-      magic-string: ^0.26.7
+      magic-string: ^0.27.0
       prettier: ^2.8.0
       prompts: ^2.4.2
       tiny-glob: ^0.2.9
@@ -638,7 +638,7 @@ importers:
       uvu: ^0.5.6
     dependencies:
       kleur: 4.1.5
-      magic-string: 0.26.7
+      magic-string: 0.27.0
       prompts: 2.4.2
       tiny-glob: 0.2.9
       typescript: 4.9.3
@@ -679,7 +679,7 @@ importers:
       '@sveltejs/site-kit': ^2.1.4
       '@types/node': ^16.18.3
       flexsearch: ^0.7.31
-      magic-string: ^0.26.7
+      magic-string: ^0.27.0
       marked: ^4.2.3
       prism-svelte: ^0.5.0
       prismjs: ^1.29.0
@@ -698,7 +698,7 @@ importers:
       '@sveltejs/site-kit': link:../site-kit
       '@types/node': 16.18.3
       flexsearch: 0.7.31
-      magic-string: 0.26.7
+      magic-string: 0.27.0
       marked: 4.2.3
       prism-svelte: 0.5.0
       prismjs: 1.29.0
@@ -1017,7 +1017,6 @@ packages:
 
   /@jridgewell/sourcemap-codec/1.4.14:
     resolution: {integrity: sha512-XPSJHWmi394fuUuzDnGz1wiKqWfo1yXecHQMRf2l6hztTO+nPru658AyDngaBe7isIxEkRsPR3FZh+s7iVa4Uw==}
-    dev: true
 
   /@jridgewell/trace-mapping/0.3.17:
     resolution: {integrity: sha512-MCNzAp77qzKca9+W/+I0+sEpaUnZoeasnghNeVc41VZCEKaCH73Vq3BZZ/SzWIgrqE4H4ceI+p+b6C0mHf9T4g==}
@@ -3211,6 +3210,12 @@ packages:
     engines: {node: '>=12'}
     dependencies:
       sourcemap-codec: 1.4.8
+
+  /magic-string/0.27.0:
+    resolution: {integrity: sha512-8UnnX2PeRAPZuN12svgR9j7M1uWMovg/CEnIwIG0LFkXSJJe4PdfUGiTGl8V9bsBHFUtfVINcSyYxd7q+kx9fA==}
+    engines: {node: '>=12'}
+    dependencies:
+      '@jridgewell/sourcemap-codec': 1.4.14
 
   /make-dir/3.1.0:
     resolution: {integrity: sha512-g3FeP20LNwhALb/6Cz6Dd4F2ngze0jz7tbzrD2wAV+o9FeNHe4rL+yK2md0J/fiSf1sa1ADhXqi5+oVwOM/eGw==}

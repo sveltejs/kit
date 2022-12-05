@@ -17,7 +17,7 @@
 		"@sveltejs/site-kit": "^2.1.4",
 		"@types/node": "^16.18.3",
 		"flexsearch": "^0.7.31",
-		"magic-string": "^0.26.7",
+		"magic-string": "^0.27.0",
 		"marked": "^4.2.3",
 		"prism-svelte": "^0.5.0",
 		"prismjs": "^1.29.0",
