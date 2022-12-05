@@ -1,4 +1,4 @@
-# @sveltejs/adapter-node
+# @sveltejs/environment
 
 Package which uses export conditions to return environment information in a way that works with major bundlers and runtimes.
 
