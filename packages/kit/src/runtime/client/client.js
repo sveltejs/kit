@@ -1,4 +1,4 @@
-import { DEV } from '@sveltejs/environment';
+import { DEV } from 'esm-env';
 import { onMount, tick } from 'svelte';
 import {
 	make_trackable,
