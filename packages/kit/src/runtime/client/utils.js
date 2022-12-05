@@ -1,4 +1,4 @@
-import { BROWSER, DEV } from '@sveltejs/environment';
+import { BROWSER, DEV } from 'esm-env';
 import { writable } from 'svelte/store';
 import { assets } from '../paths.js';
 import { version } from '../env.js';

@@ -1,7 +1,7 @@
 import * as devalue from 'devalue';
 import { client } from '../client/singletons.js';
 import { invalidateAll } from './navigation.js';
-import { BROWSER } from '@sveltejs/environment';
+import { BROWSER } from 'esm-env';
 
 /**
  * @param {string} name

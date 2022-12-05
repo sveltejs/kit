@@ -1,4 +1,4 @@
-import { DEV } from '@sveltejs/environment';
+import { DEV } from 'esm-env';
 import { hash } from '../hash.js';
 
 let loading = 0;

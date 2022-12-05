@@ -1,4 +1,4 @@
-import { BROWSER } from '@sveltejs/environment';
+import { BROWSER } from 'esm-env';
 import { client } from '../client/singletons.js';
 
 /**

@@ -261,13 +261,9 @@ importers:
     devDependencies:
       '@sveltejs/adapter-auto': link:../../../adapter-auto
 
-  packages/environment:
-    specifiers: {}
-
   packages/kit:
     specifiers:
       '@playwright/test': ^1.28.1
-      '@sveltejs/environment': workspace:*
       '@sveltejs/vite-plugin-svelte': ^1.3.1
       '@types/connect': ^3.4.35
       '@types/cookie': ^0.5.1
@@ -278,6 +274,7 @@ importers:
       '@types/set-cookie-parser': ^2.4.2
       cookie: ^0.5.0
       devalue: ^4.2.0
+      esm-env: ^1.0.0
       kleur: ^4.1.5
       magic-string: ^0.27.0
       marked: ^4.2.3
@@ -294,11 +291,11 @@ importers:
       uvu: ^0.5.6
       vite: ^3.2.4
     dependencies:
-      '@sveltejs/environment': link:../environment
       '@sveltejs/vite-plugin-svelte': 1.3.1_svelte@3.53.1+vite@3.2.4
       '@types/cookie': 0.5.1
       cookie: 0.5.0
       devalue: 4.2.0
+      esm-env: 1.0.0
       kleur: 4.1.5
       magic-string: 0.27.0
       mime: 3.0.0
@@ -2453,6 +2450,10 @@ packages:
     resolution: {integrity: sha512-vbRorB5FUQWvla16U8R/qgaFIya2qGzwDrNmCZuYKrbdSUMG6I1ZCGQRefkRVhuOkIGVne7BQ35DSfo1qvJqFg==}
     engines: {node: '>=0.8.0'}
     dev: true
+
+  /esm-env/1.0.0:
+    resolution: {integrity: sha512-Cf6VksWPsTuW01vU9Mk/3vRue91Zevka5SjyNf3nEpokFRuqt/KjUQoGAwq9qMmhpLTHmXzSIrFRw8zxWzmFBA==}
+    dev: false
 
   /esprima/4.0.1:
     resolution: {integrity: sha512-eGuFFw7Upda+g4p+QHvnW0RyTX/SVeJBDM/gCtMARO0cLuT2HcEKnTPvhjV6aGeqrCB/sbNop0Kszm0jsaWU4A==}

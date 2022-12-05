@@ -1,4 +1,4 @@
-import { BROWSER } from '@sveltejs/environment';
+import { BROWSER } from 'esm-env';
 
 /**
  * @type {import('$app/environment').browser}
