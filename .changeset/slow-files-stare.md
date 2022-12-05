@@ -1,6 +1,5 @@
 ---
-'@sveltejs/environment': patch
 '@sveltejs/kit': patch
 ---
 
-[feat] @sveltejs/environment
+[fix] allow SvelteKit to be used without bundling
