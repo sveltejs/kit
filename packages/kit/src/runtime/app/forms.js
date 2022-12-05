@@ -1,4 +1,5 @@
 import * as devalue from 'devalue';
+import { error } from '../../exports/index.js';
 import { client } from '../client/singletons.js';
 import { invalidateAll } from './navigation.js';
 
@@ -103,7 +104,13 @@ export function enhance(form, submit = () => {}) {
 				signal: controller.signal
 			});
 
-			result = deserialize(await response.text());
+			const response_text = await response.text();
+
+			if (response.headers.get('content-type') !== 'application/json') {
+				throw error(response.status, response_text);
+			}
+
+			result = deserialize(response_text);
 		} catch (error) {
 			if (/** @type {any} */ (error)?.name === 'AbortError') return;
 			result = { type: 'error', error };
