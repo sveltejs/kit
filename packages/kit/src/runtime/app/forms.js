@@ -13,7 +13,7 @@ function guard(name) {
 }
 
 /** @type {import('$app/forms').applyAction} */
-export const applyAction = BROWSER ? client.apply_action: guard('applyAction');
+export const applyAction = BROWSER ? client.apply_action : guard('applyAction');
 
 /** @type {import('$app/forms').deserialize} */
 export function deserialize(result) {
