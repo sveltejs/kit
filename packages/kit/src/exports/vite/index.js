@@ -274,7 +274,13 @@ function kit() {
 					external: ['@sveltejs/kit']
 				},
 				optimizeDeps: {
-					exclude: ['@sveltejs/kit']
+					exclude: [
+						'@sveltejs/kit',
+						// exclude kit features so that libraries using them work even when they are prebundled
+						// this does not affect app code, just handling of imported libraries that use $app or $env
+						'$app',
+						'$env'
+					]
 				}
 			};
 
