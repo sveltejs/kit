@@ -7,7 +7,7 @@
 		"directory": "packages/environment"
 	},
 	"license": "MIT",
-	"homepage": "https://kit.svelte.dev",
+	"homepage": "https://github.com/sveltejs/kit/blob/master/packages/environment/CHANGELOG.md",
 	"type": "module",
 	"exports": {
 		".": {
