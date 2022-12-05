@@ -153,7 +153,7 @@ export function get_router_options(element) {
 	/** @type {Element} */
 	let el = element;
 
-	while (el !== document.documentElement) {
+	while (el && el !== document.documentElement) {
 		if (preload_code === null) preload_code = link_option(el, 'preload-code');
 		if (preload_data === null) preload_data = link_option(el, 'preload-data');
 		if (noscroll === null) noscroll = link_option(el, 'noscroll');
