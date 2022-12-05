@@ -1,3 +1,4 @@
+import { DEV } from '@sveltejs/environment';
 import { hash } from '../hash.js';
 
 let loading = 0;
@@ -12,7 +13,7 @@ export function unlock_fetch() {
 	loading -= 1;
 }
 
-if (import.meta.env.DEV) {
+if (DEV) {
 	let can_inspect_stack_trace = false;
 
 	const check_stack_trace = async () => {

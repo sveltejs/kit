@@ -1,3 +1,4 @@
+import { DEV } from '@sveltejs/environment';
 import { onMount, tick } from 'svelte';
 import {
 	make_trackable,
@@ -668,7 +669,7 @@ export function create_client({ target, base }) {
 				}
 			});
 
-			if (import.meta.env.DEV) {
+			if (DEV) {
 				try {
 					lock_fetch();
 					data = (await node.shared.load.call(null, load_input)) ?? null;
@@ -1293,7 +1294,7 @@ export function create_client({ target, base }) {
 		},
 
 		disable_scroll_handling: () => {
-			if (import.meta.env.DEV && started && !updating) {
+			if (DEV && started && !updating) {
 				throw new Error('Can only disable scroll handling during navigation');
 			}
 

@@ -1,6 +1,7 @@
 import * as devalue from 'devalue';
 import { client } from '../client/singletons.js';
 import { invalidateAll } from './navigation.js';
+import { SSR } from '@sveltejs/environment';
 
 /**
  * @param {string} name
@@ -11,10 +12,8 @@ function guard(name) {
 	};
 }
 
-const ssr = import.meta.env.SSR;
-
 /** @type {import('$app/forms').applyAction} */
-export const applyAction = ssr ? guard('applyAction') : client.apply_action;
+export const applyAction = SSR ? guard('applyAction') : client.apply_action;
 
 /** @type {import('$app/forms').deserialize} */
 export function deserialize(result) {

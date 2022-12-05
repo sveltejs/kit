@@ -1,7 +1,9 @@
+import { SSR } from '@sveltejs/environment';
+
 /**
  * @type {import('$app/environment').browser}
  */
-export const browser = !import.meta.env.SSR;
+export const browser = !SSR;
 
 /**
  * @type {import('$app/environment').dev}
