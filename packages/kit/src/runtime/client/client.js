@@ -1640,6 +1640,12 @@ export function create_client({ target, base }) {
 
 			const url = new URL(location.href);
 
+			if (!__SVELTEKIT_EMBEDDED__) {
+				// See https://github.com/sveltejs/kit/pull/4935#issuecomment-1328093358 for one motivation
+				// of determining the params on the client side.
+				params = get_navigation_intent(url, false)?.params || {};
+			}
+
 			/** @type {import('./types').NavigationFinished | undefined} */
 			let result;
 
