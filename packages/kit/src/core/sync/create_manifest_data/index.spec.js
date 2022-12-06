@@ -386,6 +386,35 @@ test('optional parameters', () => {
 	]);
 });
 
+test('nested optionals', () => {
+	const { nodes, routes } = create('samples/nested-optionals');
+	assert.equal(nodes.map(simplify_node), [
+		default_layout,
+		default_error,
+		{ component: 'samples/nested-optionals/[[a]]/[[b]]/+page.svelte' }
+	]);
+
+	assert.equal(routes.map(simplify_route), [
+		{
+			id: '/',
+			pattern: '/^/$/'
+		},
+		{
+			id: '/[[a]]/[[b]]',
+			pattern: '/^(?:/([^/]+))?(?:/([^/]+))?/?$/',
+			page: {
+				layouts: [0],
+				errors: [1],
+				leaf: nodes.findIndex((node) => node.component?.includes('/[[a]]/[[b]]'))
+			}
+		},
+		{
+			id: '/[[a]]',
+			pattern: '/^(?:/([^/]+))?/?$/'
+		}
+	]);
+});
+
 test('ignores files and directories with leading underscores', () => {
 	const { routes } = create('samples/hidden-underscore');
 
