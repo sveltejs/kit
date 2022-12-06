@@ -25,7 +25,7 @@
 			.attr('height', height);
 
 		const path = d3.geoPath()
-  	  .projection(projection);
+			.projection(projection);
 
 		const g = svg.append('g');
 
