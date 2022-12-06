@@ -140,7 +140,7 @@
 		}
 
 		.hero-container {
-			height: 70vh;
+			height: 55vh;
 			display: flex;
 			justify-content: flex-start;
 			margin: 0 auto;
