@@ -11,7 +11,7 @@
 		<div class="text"><pre class="language-typescript"><code>h1 <span class="token operator">=</span> <span class="token function">element</span><span class="token punctuation">(</span><span class="token string">"h1"</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
 h1<span class="token punctuation">.</span>textContent <span class="token operator">=</span> <span class="token template-string"><span class="token template-punctuation string">`</span><span class="token string">Hello </span><span class="token interpolation"><span class="token interpolation-punctuation punctuation">$&lcub;</span>name<span class="token interpolation-punctuation punctuation">&rcub;</span></span><span class="token string">!</span><span class="token template-punctuation string">`</span></span><span class="token punctuation">;</span></code></pre></div>
 		<br />
-		<p>Svelte is easy, consistent, and fun, which is why developers consistently rank Svelte as the framework
+		<p>Svelte is easy, understandable, and fun, which is why developers consistently rank Svelte as the framework
 					they're
 					<a href="https://insights.stackoverflow.com/survey/2021#section-most-loved-dreaded-and-wanted-web-frameworks">most</a> <a href="https://tsh.io/state-of-frontend/#which-of-the-following-frameworks-would-you-like-to-learn-in-the-future">excited</a> <a href="https://2021.stateofjs.com/en-US/libraries/front-end-frameworks/">about</a> <a href="https://twitter.com/Rich_Harris/status/1589675637195042817">using</a>.
 
