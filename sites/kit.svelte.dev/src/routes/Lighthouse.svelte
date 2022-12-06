@@ -3,7 +3,7 @@
 </script>
 
 <div class="container">
-	<div>
+	<div class="description">
 		<h3>Starts fast, <br /><span style="font-weight:bold">Stays fast</span></h3>
 		Server-side rendering ensures your visitors aren't left staring at loading spinners.<br />
 		Client-side navigation makes your app feel like it's 2022.
@@ -20,6 +20,10 @@
 		grid-template-columns: repeat(1, minmax(0, 1fr));
 		gap: 50px;
 		color: white;
+	}
+
+	.description {
+		line-height: 200%;
 	}
 
 	h3 {

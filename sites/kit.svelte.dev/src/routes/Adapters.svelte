@@ -68,6 +68,7 @@
 
 	.anywhere {
 		grid-column: span 10 / span 10;
+		line-height: 200%;
 	}
 
 	.code-container {
