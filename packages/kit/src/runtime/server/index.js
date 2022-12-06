@@ -17,6 +17,7 @@ import { redirect_json_response, render_data } from './data/index.js';
 import { add_cookies_to_headers, get_cookies } from './cookie.js';
 import { create_fetch } from './fetch.js';
 import { Redirect } from '../control.js';
+import { json } from '../../exports/index.js';
 
 /* global __SVELTEKIT_ADAPTER_NAME__ */
 
@@ -40,9 +41,12 @@ export async function respond(request, options, state) {
 			is_form_content_type(request);
 
 		if (forbidden) {
-			return new Response(`Cross-site ${request.method} form submissions are forbidden`, {
-				status: 403
-			});
+			return json(
+				{ message: `Cross-site ${request.method} form submissions are forbidden` },
+				{
+					status: 403
+				}
+			);
 		}
 	}
 
