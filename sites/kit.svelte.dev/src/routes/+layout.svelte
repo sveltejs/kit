@@ -50,7 +50,7 @@
 <main id="main">
 	<slot />
 
-  {#if browser}
+	{#if browser}
 		<SearchBox />
 	{/if}
 </main>
