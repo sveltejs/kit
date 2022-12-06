@@ -2,9 +2,10 @@
 	import Lighthouse from './lighthouse.png';
 </script>
 
+<h2>Starts fast, <span style="font-weight:bold">Stays fast</span></h2>
+
 <div class="container">
 	<div class="description">
-		<h3>Starts fast, <br /><span style="font-weight:bold">Stays fast</span></h3>
 		Server-side rendering ensures your visitors aren't left staring at loading spinners.<br />
 		Client-side navigation makes your app feel like it's 2022.
 	</div>
@@ -15,6 +16,11 @@
 </div>
 
 <style>
+	h2 {
+		margin-bottom: 1em;
+		color: white;
+	}
+
 	.container {
 		display: grid;
 		grid-template-columns: repeat(1, minmax(0, 1fr));

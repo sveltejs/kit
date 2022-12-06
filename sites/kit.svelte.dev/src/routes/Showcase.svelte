@@ -10,7 +10,7 @@
 	];
 </script>
 
-<h2>built with SvelteKit</h2>
+<h2>Built with SvelteKit</h2>
 
 <div class="grid" style="--columns: 3">
 	{#each showcase as { url, image }}

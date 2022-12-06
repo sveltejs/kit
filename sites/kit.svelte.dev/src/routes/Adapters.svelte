@@ -31,10 +31,11 @@
 	update();
 </script>
 
+<h2>Deploy Anywhere</h2>
+
 <div class="container">
 
 	<div class="anywhere">
-		<h3>Deploy Anywhere</h3>
 		<p>SvelteKit builds instant, optimized bundles with the Svelte compiler and code-splitting.</p>
 		<p>Deploy to over 20 different platforms with community adapters by changing just a single line of code.</p>
 	</div>
@@ -54,6 +55,10 @@
 </div>
 
 <style>
+	h2 {
+		margin-bottom: 1em;
+	}
+
 	.container {
 		display: grid;
 		grid-template-columns: repeat(10, minmax(0, 1fr));

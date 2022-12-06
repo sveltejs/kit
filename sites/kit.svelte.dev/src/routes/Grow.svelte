@@ -55,9 +55,9 @@
 	});
 </script>
 
-<h3>
+<h2>
 	SvelteKit grows with you,<br /><span style="font-weight:bold">whatever</span> you're building
-</h3>
+</h2>
 
 <img src={Grow} alt="Build SSGs, MPAs, PWAs, or SPAs." />
 
@@ -73,7 +73,7 @@
 </div>
 
 <style>
-	h3 {
+	h2 {
 		margin-bottom: 3rem;
 	}
 
