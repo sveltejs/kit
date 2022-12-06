@@ -28,17 +28,14 @@ export async function handle_action_json_request(event, options, server) {
 			maybe_throw_migration_error(server);
 		}
 		// TODO should this be a different error altogether?
-		return json(
-			{ message: 'POST method not allowed. No actions exist for this page' },
-			{
-				status: 405,
-				headers: {
-					// https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/405
-					// "The server must generate an Allow header field in a 405 status code response"
-					allow: 'GET'
-				}
+		return new Response('POST method not allowed. No actions exist for this page', {
+			status: 405,
+			headers: {
+				// https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/405
+				// "The server must generate an Allow header field in a 405 status code response"
+				allow: 'GET'
 			}
-		);
+		});
 	}
 
 	check_named_default_separate(actions);
