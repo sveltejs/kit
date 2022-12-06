@@ -2,7 +2,7 @@
 	import { onMount } from 'svelte';
 	import * as d3 from 'd3';
 	import { csvParse } from 'd3-dsv';
-	import * as topojson from 'topojson';
+	import * as topojson from 'topojson-client';
 
 	import Grow from './grow.svg';
 

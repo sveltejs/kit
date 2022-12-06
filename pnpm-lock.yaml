@@ -688,7 +688,7 @@ importers:
       shiki-twoslash: ^3.1.0
       svelte: ^3.53.1
       tiny-glob: ^0.2.9
-      topojson: ^3.0.2
+      topojson-client: ^3.1.0
       typescript: ^4.9.3
       uvu: ^0.5.6
       vite: ^3.2.4
@@ -710,7 +710,7 @@ importers:
       shiki-twoslash: 3.1.0
       svelte: 3.53.1
       tiny-glob: 0.2.9
-      topojson: 3.0.2
+      topojson-client: 3.1.0
       typescript: 4.9.3
       uvu: 0.5.6
       vite: 3.2.5_@types+node@16.18.6
@@ -4656,36 +4656,11 @@ packages:
     dependencies:
       is-number: 7.0.0
 
-  /topojson-client/3.0.0:
-    resolution: {integrity: sha512-2phZ98wg/iKvsWxbB6JQcq0/N0f+sRx8ZogdvjCg+CjaJdmV0knP0OQwK5XbgnytAPx5lPZk41kiWpgH2w9FHg==}
+  /topojson-client/3.1.0:
+    resolution: {integrity: sha512-605uxS6bcYxGXw9qi62XyrV6Q3xwbndjachmNxu8HWTtVPxZfEJN9fd/SZS1Q54Sn2y0TMyMxFj/cJINqGHrKw==}
     hasBin: true
     dependencies:
       commander: 2.20.3
-    dev: true
-
-  /topojson-server/3.0.0:
-    resolution: {integrity: sha512-UhhwQk4e2+lwhAVYkja3J5nQHQmKwORDuIQPkMnFFZFcLqWKLQWI3u7fZWtNIXTElBjTYdBUL1kzi1+oS/qDQw==}
-    hasBin: true
-    dependencies:
-      commander: 2.20.3
-    dev: true
-
-  /topojson-simplify/3.0.2:
-    resolution: {integrity: sha512-gyYSVRt4jO/0RJXKZQPzTDQRWV+D/nOfiljNUv0HBXslFLtq3yxRHrl7jbrjdbda5Ytdr7M8BZUI4OxU7tnbRQ==}
-    hasBin: true
-    dependencies:
-      commander: 2.20.3
-      topojson-client: 3.0.0
-    dev: true
-
-  /topojson/3.0.2:
-    resolution: {integrity: sha512-u3zeuL6WEVL0dmsRn7uHZKc4Ao4gpW3sORUv+N3ezLTvY3JdCuyg0hvpWiIfFw8p/JwVN++SvAsFgcFEeR15rQ==}
-    deprecated: Use topojson-client, topojson-server or topojson-simplify directly.
-    hasBin: true
-    dependencies:
-      topojson-client: 3.0.0
-      topojson-server: 3.0.0
-      topojson-simplify: 3.0.2
     dev: true
 
   /totalist/3.0.0:
