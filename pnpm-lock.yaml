@@ -678,7 +678,7 @@ importers:
       '@sveltejs/kit': workspace:*
       '@sveltejs/site-kit': ^2.1.4
       '@types/node': ^16.18.3
-      d3: ^7.6.1
+      d3: ^7.7.0
       d3-dsv: ^3.0.1
       flexsearch: ^0.7.31
       magic-string: ^0.27.0
@@ -700,7 +700,7 @@ importers:
       '@sveltejs/kit': link:../../packages/kit
       '@sveltejs/site-kit': link:../site-kit
       '@types/node': 16.18.6
-      d3: 7.6.1
+      d3: 7.7.0
       d3-dsv: 3.0.1
       flexsearch: 0.7.31
       magic-string: 0.27.0
@@ -2040,8 +2040,8 @@ packages:
       d3-transition: 3.0.1_d3-selection@3.0.0
     dev: true
 
-  /d3/7.6.1:
-    resolution: {integrity: sha512-txMTdIHFbcpLx+8a0IFhZsbp+PfBBPt8yfbmukZTQFroKuFqIwqswF0qE5JXWefylaAVpSXFoKm3yP+jpNLFLw==}
+  /d3/7.7.0:
+    resolution: {integrity: sha512-VEwHCMgMjD2WBsxeRGUE18RmzxT9Bn7ghDpzvTEvkLSBAKgTMydJjouZTjspgQfRHpPt/PB3EHWBa6SSyFQq4g==}
     engines: {node: '>=12'}
     dependencies:
       d3-array: 3.2.0
