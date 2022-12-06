@@ -1,4 +1,3 @@
-import { json } from '../../../exports/index.js';
 import { compact } from '../../../utils/array.js';
 import { normalize_error } from '../../../utils/error.js';
 import { add_data_suffix } from '../../../utils/url.js';

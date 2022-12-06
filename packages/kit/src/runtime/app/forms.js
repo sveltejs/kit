@@ -1,5 +1,4 @@
 import * as devalue from 'devalue';
-import { error } from '../../exports/index.js';
 import { client } from '../client/singletons.js';
 import { invalidateAll } from './navigation.js';
 
