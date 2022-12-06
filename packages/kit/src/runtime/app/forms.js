@@ -104,13 +104,7 @@ export function enhance(form, submit = () => {}) {
 				signal: controller.signal
 			});
 
-			const response_text = await response.text();
-
-			if (response.headers.get('content-type') !== 'application/json') {
-				throw error(response.status, response_text);
-			}
-
-			result = deserialize(response_text);
+			result = deserialize(await response.text());
 		} catch (error) {
 			if (/** @type {any} */ (error)?.name === 'AbortError') return;
 			result = { type: 'error', error };
