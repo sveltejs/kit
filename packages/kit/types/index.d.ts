@@ -326,6 +326,11 @@ export interface KitConfig {
 		checkOrigin?: boolean;
 	};
 	/**
+	 * Whether or not the app is embedded inside a larger app. If `true`, SvelteKit will add its event listeners related to navigation etc on the parent of `%sveltekit.body%` instead of `window`.
+	 * @default false
+	 */
+	embedded?: boolean;
+	/**
 	 * Environment variable configuration
 	 */
 	env?: {
