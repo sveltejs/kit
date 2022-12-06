@@ -37,7 +37,7 @@
 		"worktop": "0.8.0-next.14"
 	},
 	"devDependencies": {
-		"@types/node": "^16.18.3",
+		"@types/node": "^16.18.6",
 		"@types/ws": "^8.5.3",
 		"typescript": "^4.9.3"
 	},

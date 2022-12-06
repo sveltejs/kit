@@ -60,8 +60,7 @@
 		position: relative;
 		margin: 0 auto;
 		padding-top: var(--sk-nav-height);
-		overflow: auto;
-		overflow-x: hidden;
+		overflow: hidden;
 	}
 
 	.small {
