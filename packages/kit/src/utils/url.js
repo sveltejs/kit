@@ -1,3 +1,5 @@
+import { BROWSER } from 'esm-env';
+
 const absolute = /^([a-z]+:)?\/?\//;
 const scheme = /^[a-z]+:/;
 
@@ -101,7 +103,7 @@ export function make_trackable(url, callback) {
 		});
 	}
 
-	if (!__SVELTEKIT_BROWSER__) {
+	if (!BROWSER) {
 		// @ts-ignore
 		tracked[Symbol.for('nodejs.util.inspect.custom')] = (depth, opts, inspect) => {
 			return inspect(url, opts);

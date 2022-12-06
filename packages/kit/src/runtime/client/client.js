@@ -382,7 +382,7 @@ export function create_client({ target, base }) {
 
 	/** @param {import('./types').NavigationFinished} result */
 	function initialize(result) {
-		if (__SVELTEKIT_DEV__ && document.querySelector('vite-error-overlay')) return;
+		if (DEV && document.querySelector('vite-error-overlay')) return;
 
 		current = result.state;
 
@@ -1701,7 +1701,7 @@ export function create_client({ target, base }) {
 async function load_data(url, invalid) {
 	const data_url = new URL(url);
 	data_url.pathname = add_data_suffix(url.pathname);
-	if (__SVELTEKIT_DEV__ && url.searchParams.has('x-sveltekit-invalidated')) {
+	if (DEV && url.searchParams.has('x-sveltekit-invalidated')) {
 		throw new Error('Cannot used reserved query parameter "x-sveltekit-invalidated"');
 	}
 	data_url.searchParams.append(
@@ -1794,7 +1794,7 @@ function add_url_properties(type, target) {
 }
 
 function pre_update() {
-	if (__SVELTEKIT_DEV__) {
+	if (DEV) {
 		return () => {
 			check_for_removed_attributes();
 		};
@@ -1833,7 +1833,7 @@ function reset_focus() {
 	}
 }
 
-if (__SVELTEKIT_DEV__) {
+if (DEV) {
 	// Nasty hack to silence harmless warnings the user can do nothing about
 	const console_warn = console.warn;
 	console.warn = function warn(...args) {

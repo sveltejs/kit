@@ -51,7 +51,9 @@ function link_option(element, name) {
 		element.getAttribute(`data-sveltekit-${name}`)
 	);
 
-	if (__SVELTEKIT_DEV__) validate_link_option(element, name, value);
+	if (DEV) {
+		validate_link_option(element, name, value);
+	}
 
 	return value;
 }
