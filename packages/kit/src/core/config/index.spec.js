@@ -113,7 +113,7 @@ const get_defaults = (prefix = '') => ({
 			crawl: true,
 			createIndexFiles: undefined,
 			default: undefined,
-			enabled: undefined,
+			enabled: true,
 			entries: ['*'],
 			force: undefined,
 			handleHttpError: 'fail',

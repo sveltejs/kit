@@ -436,6 +436,11 @@ export interface KitConfig {
 		 */
 		crawl?: boolean;
 		/**
+		 * Set this to `false` to disable prerendering altogether
+		 * @default true
+		 */
+		enabled?: boolean;
+		/**
 		 * An array of pages to prerender, or start crawling from (if `crawl: true`). The `*` string includes all non-dynamic routes (i.e. pages with no `[parameters]`, because SvelteKit doesn't know what value the parameters should have).
 		 * @default ["*"]
 		 */
