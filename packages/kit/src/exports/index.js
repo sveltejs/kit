@@ -9,10 +9,7 @@ import { BROWSER, DEV } from 'esm-env';
  * @param {any} message
  */
 export function error(status, message) {
-	if (
-		(!BROWSER || DEV) &&
-		(isNaN(status) || status < 400 || status > 599)
-	) {
+	if ((!BROWSER || DEV) && (isNaN(status) || status < 400 || status > 599)) {
 		throw new Error(`HTTP error status codes must be between 400 and 599 — ${status} is invalid`);
 	}
 
@@ -21,10 +18,7 @@ export function error(status, message) {
 
 /** @type {import('@sveltejs/kit').redirect} */
 export function redirect(status, location) {
-	if (
-		(!BROWSER || DEV) &&
-		(isNaN(status) || status < 300 || status > 308)
-	) {
+	if ((!BROWSER || DEV) && (isNaN(status) || status < 300 || status > 308)) {
 		throw new Error('Invalid status code');
 	}
 
