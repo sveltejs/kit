@@ -18,16 +18,18 @@ export function is_action_json_request(event) {
 /**
  * @param {import('types').RequestEvent} event
  * @param {import('types').SSROptions} options
- * @param {import('types').SSRNode['server']} server
+ * @param {import('types').SSRNode['server'] | undefined} server
  */
 export async function handle_action_json_request(event, options, server) {
-	const actions = server.actions;
+	const actions = server?.actions;
 
 	if (!actions) {
-		maybe_throw_migration_error(server);
+		if (server) {
+			maybe_throw_migration_error(server);
+		}
 		// TODO should this be a different error altogether?
-		return new Response(
-			JSON.stringify({ message: 'POST method not allowed. No actions exist for this page' }),
+		return json(
+			{ message: 'POST method not allowed. No actions exist for this page' },
 			{
 				status: 405,
 				headers: {
