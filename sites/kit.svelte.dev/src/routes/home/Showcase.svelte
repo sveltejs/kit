@@ -1,20 +1,30 @@
 <script>
 	import Section from '@sveltejs/site-kit/components/Section.svelte';
-	import monogram from './showcase/monogram.png';
-	import raster from './showcase/raster.png';
-	import trading_strategy from './showcase/trading-strategy.png';
+	import pudding from './showcase/pudding.jpg';
+	import evidence from './showcase/evidence.jpg';
+	import fieuzal from './showcase/fieuzal.jpg';
+	import gitbook from './showcase/gitbook.jpg';
+	import monogram from './showcase/monogram.jpg';
+	import raster from './showcase/raster.jpg';
+	import trading_strategy from './showcase/trading-strategy.jpg';
+	import senja from './showcase/senja.jpg';
 
 	const showcase = [
-		{ url: 'monogram.io', image: monogram },
+		{ url: 'pudding.cool', image: pudding },
+		{ url: 'fieuzal.com', image: fieuzal },
+		{ url: 'evidence.dev', image: evidence },
+		{ url: 'gitbook.com', image: gitbook },
 		{ url: 'raster.app', image: raster },
-		{ url: 'tradingstrategy.ai', image: trading_strategy }
+		{ url: 'monogram.io', image: monogram },
+		{ url: 'tradingstrategy.ai', image: trading_strategy },
+		{ url: 'senja.io', image: senja }
 	];
 </script>
 
 <Section --background="var(--sk-theme-2)">
-	<!-- <h2>built with SvelteKit</h2> -->
+	<h2>showcase</h2>
 
-	<div class="grid" style="--columns: 3">
+	<div class="showcase">
 		{#each showcase as { url, image }}
 			<a class="drop-shadow" href="https://{url}" target="_blank" rel="noreferrer">
 				<img src={image} alt="Screenshot of {url}" />
@@ -26,10 +36,15 @@
 
 <style>
 	h2 {
+		color: var(--sk-back-1);
 		margin-bottom: 1em;
+		text-transform: uppercase;
+		font-size: var(--sk-text-s);
+		text-align: center;
 	}
 
-	div.grid {
+	.showcase {
+		display: grid;
 		gap: 2rem;
 	}
 
@@ -75,5 +90,17 @@
 
 	a:hover img {
 		transform: scale(1.05);
+	}
+
+	@media (min-width: 400px) {
+		.showcase {
+			grid-template-columns: repeat(2, 1fr);
+		}
+	}
+
+	@media (min-width: 720px) {
+		.showcase {
+			grid-template-columns: repeat(4, 1fr);
+		}
 	}
 </style>
