@@ -2,6 +2,10 @@
 	max-width: 116rem;
 }
 
+.home h2 {
+	font-size: var(--sk-text-xl);
+}
+
 .home .grid {
 	display: grid;
 	gap: 1em;
@@ -13,6 +17,10 @@
 }
 
 @media (min-width: 900px) {
+	.home h2 {
+		font-size: var(--sk-text-xxl);
+	}
+
 	.home .grid {
 		grid-template-columns: repeat(var(--columns), 1fr);
 		gap: 7rem;

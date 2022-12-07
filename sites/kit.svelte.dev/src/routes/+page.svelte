@@ -6,6 +6,7 @@
 	import Try from './home/Try.svelte';
 	import Video from './home/Video.svelte';
 	import './home/common.css';
+	import Deployment from './home/Deployment.svelte';
 </script>
 
 <svelte:head>
@@ -101,6 +102,8 @@
 
 	<Features />
 
+	<Deployment />
+
 	<Showcase />
 </div>
 
@@ -111,7 +114,7 @@
 
 	.definition em {
 		font-style: normal;
-		font-size: var(--sk-text-xl);
+		font-size: var(--sk-text-xxl);
 		color: var(--sk-theme-1);
 	}
 
@@ -130,15 +133,7 @@
 		display: block;
 	}
 
-	h2 {
-		font-size: var(--sk-text-xl);
-	}
-
 	@media (min-width: 900px) {
-		h2 {
-			font-size: var(--sk-text-xxl);
-		}
-
 		.definition .description {
 			display: inline;
 		}
