@@ -1,8 +1,6 @@
 <script>
 	import logotype from './svelte-kit-logotype.svg';
 	import background from './svelte-kit-machine.webp?w=1440;800;600;480&format=avif;webp;png&picture';
-
-	console.log(background);
 </script>
 
 <section class="hero">
