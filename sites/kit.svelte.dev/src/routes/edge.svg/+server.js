@@ -29,14 +29,13 @@ const projection = geoSatellite()
 const path = geoPath(projection);
 
 /**
- *
  * @param {number} lat
  * @param {number} lon
  * @param {string} city
  * @param {string} country
- * @returns
+ * @param {boolean} dark
  */
-function render(lat, lon, city, country) {
+function render(lat, lon, city, country, dark) {
 	projection.rotate([-lon - 10, -lat + 20, 0]);
 
 	const [x, y] = projection([lon, lat]);
@@ -44,27 +43,13 @@ function render(lat, lon, city, country) {
 	const sphere = path({ type: 'Sphere' });
 	const label = `${city}, ${country}`;
 
+	const ocean_colour_scene = dark ? 'rgb(120,120,120)' : 'rgb(185,183,172)';
+	const landfill = dark ? '#222' : 'white';
+
 	return `<?xml version="1.0" encoding="UTF-8"?>
 		<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${w} ${h}">
-			<radialGradient id="shadow" fx="40%" fy="50%" cx="50%" cy="50%" r="50%">
-				<stop offset="0%" stop-color="hsla(0, 0%, 0%, 0.4)" />
-				<stop offset="10%" stop-color="hsla(0, 0%, 0%, 0.3)" />
-				<stop offset="60%" stop-color="hsla(0, 0%, 0%, 0.1)" />
-				<stop offset="100%" stop-color="hsla(0, 0%, 0%, 0)" />
-			</radialGradient>
-
-			<radialGradient id="ocean" fx="25%" fy="25%" cx="25%" cy="25%" r="75%">
-				<stop offset="0%" stop-color="hsl(206, 64%, 98%)" />
-				<stop offset="100%" stop-color="hsl(206, 20%, 80%)" />
-			</radialGradient>
-
-			<radialGradient id="land" fx="25%" fy="25%" cx="25%" cy="25%" r="75%">
-				<stop offset="0%" stop-color="white" />
-				<stop offset="100%" stop-color="hsl(206, 64%, 98%)" />
-			</radialGradient>
-
-			<path d="${sphere}" stroke="none" fill="rgb(185,183,172)"/>
-			<path d="${path(land)}" stroke="none" fill="white"/>
+			<path d="${sphere}" stroke="none" fill="${ocean_colour_scene}"/>
+			<path d="${path(land)}" stroke="none" fill="${landfill}"/>
 
 			<g transform="translate(${x},${y})">
 				<circle r="20" fill="#ff3e00" stroke="white" stroke-width="5"/>
@@ -92,12 +77,14 @@ export function GET({ request, url }) {
 	const longitude = q.get('lon') ?? h.get('x-vercel-ip-longitude') ?? '-74';
 	const city = q.get('city') ?? h.get('x-vercel-ip-city') ?? 'New York City';
 	const country = q.get('country') ?? h.get('x-vercel-ip-country') ?? 'USA';
+	const dark = q.has('dark');
 
 	const svg = render(
 		+latitude,
 		+longitude,
 		decodeURIComponent(city),
-		decodeURIComponent(country)
+		decodeURIComponent(country),
+		dark
 	).replace(/\d\.\d+/g, (match) => match.slice(0, 4));
 
 	return new Response(svg, {

@@ -28,15 +28,15 @@
 
 	<div class="grid" style="--columns: 3">
 		<div class="platforms left">
-			<div>
+			<div class="invert">
 				<img src={html5} alt="HTML5 logo" />
 				<span><span class="large">Static</span> HTML</span>
 			</div>
-			<div>
+			<div class="invert">
 				<img src={node} alt="Node logo" />
 				<span>Node.js</span>
 			</div>
-			<div>
+			<div class="invert invert-hover">
 				<img src={vercel} alt="Vercel logo" style="transform: translate(0,-0.2rem)" />
 				<span>Vercel</span>
 			</div>
@@ -55,7 +55,7 @@
 				<img src={firebase} alt="Firebase logo" />
 				<span>Firebase</span>
 			</div>
-			<div>
+			<div class="invert invert-hover">
 				<img src={deno} alt="Deno logo" />
 				<span>Deno</span>
 			</div>
@@ -74,10 +74,10 @@
 		</div>
 
 		<div class="globe">
-			<img
+			<!-- <img
 				src="/edge.svg"
 				alt="Dynamically rendered map of the world, centered on the user's location"
-			/>
+			/> -->
 
 			<span> rendered on the edge, just for you </span>
 		</div>
@@ -85,24 +85,19 @@
 </Section>
 
 <style>
-	.grid {
-		/* margin-top: 4rem; */
-	}
-
 	.globe {
+		position: relative;
 		width: 100%;
 		max-height: 40rem;
 		text-align: center;
-	}
-
-	.globe img {
-		width: 100%;
-		height: 100%;
-		object-fit: contain;
+		background: url(/edge.svg) no-repeat center;
 	}
 
 	.globe span {
-		position: relative;
+		position: absolute;
+		bottom: -4rem;
+		left: 0;
+		width: 100%;
 		color: var(--sk-text-3);
 		font-size: var(--sk-text-xs);
 	}
@@ -145,14 +140,16 @@
 
 	.platforms img {
 		--size: 4rem;
+		--invert: 0;
+		--invert-hover: 0;
 		width: var(--size);
 		height: var(--size);
 		object-fit: contain;
-		filter: opacity(0.5) grayscale(100%);
+		filter: invert(var(--invert)) opacity(0.5) grayscale(100%);
 	}
 
 	.platforms div:hover img {
-		filter: none;
+		filter: invert(var(--invert-hover));
 	}
 
 	.platforms div:hover span {
@@ -182,7 +179,6 @@
 			display: grid;
 			grid-template-columns: none;
 			grid-template-rows: repeat(4, 1fr);
-			gap: 0;
 			align-items: center;
 		}
 
@@ -227,6 +223,20 @@
 		.platforms.left div {
 			--direction: 1;
 			flex-direction: row-reverse;
+		}
+	}
+
+	@media (prefers-color-scheme: dark) {
+		.globe {
+			background-image: url(/edge.svg?dark);
+		}
+
+		.invert img {
+			--invert: 1;
+		}
+
+		.invert-hover img {
+			--invert-hover: 1;
 		}
 	}
 </style>
