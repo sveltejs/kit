@@ -2,6 +2,11 @@
 	max-width: 116rem;
 }
 
+.home {
+	--background-1: radial-gradient(circle at top right, rgb(230, 233, 236), rgb(244, 245, 247));
+	--background-2: var(--sk-theme-2);
+}
+
 .home h2 {
 	font-size: var(--sk-text-xl);
 	line-height: 1.2;
@@ -25,5 +30,13 @@
 	.home .grid {
 		grid-template-columns: repeat(var(--columns), 1fr);
 		gap: 7rem;
+	}
+}
+
+@media (prefers-color-scheme: dark) {
+	.home {
+		/* --background-1: radial-gradient(circle at top right, rgb(49, 49, 49), rgb(77, 77, 77)); */
+		--background-1: #222;
+		--background-2: #444;
 	}
 }

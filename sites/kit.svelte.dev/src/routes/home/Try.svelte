@@ -2,7 +2,7 @@
 	import Section from '@sveltejs/site-kit/components/Section.svelte';
 </script>
 
-<Section --background="var(--sk-theme-2)">
+<Section --background="var(--background-2)">
 	<div class="grid" style="--columns: 2">
 		<h2>see for yourself</h2>
 		<div class="try">

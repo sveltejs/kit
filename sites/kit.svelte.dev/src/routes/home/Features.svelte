@@ -2,7 +2,7 @@
 	import Section from '@sveltejs/site-kit/components/Section.svelte';
 </script>
 
-<Section>
+<Section --background="var(--sk-back-1)">
 	<div class="container">
 		<div class="features">
 			<h2><span>features? we got 'em.</span></h2>
@@ -78,7 +78,7 @@
 
 	p,
 	strong {
-		color: var(--sk-theme-2);
+		color: var(--sk-text-3);
 	}
 
 	@media (min-width: 600px) {

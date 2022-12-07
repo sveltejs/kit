@@ -12,9 +12,7 @@
 	import plus from '$lib/icons/plus.svg';
 </script>
 
-<Section
-	--background="radial-gradient(circle at top right, rgb(230, 233, 236), rgb(244, 245, 247))"
->
+<Section --background="var(--background-1)">
 	<div class="grid" style="--columns: 3">
 		<h2>deploy anywhere</h2>
 		<div class="blurb">

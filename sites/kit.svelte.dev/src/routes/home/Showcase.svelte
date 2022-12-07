@@ -21,7 +21,7 @@
 	];
 </script>
 
-<Section --background="var(--sk-theme-2)">
+<Section --background="var(--background-2)">
 	<h2>showcase</h2>
 
 	<div class="showcase">
@@ -36,7 +36,7 @@
 
 <style>
 	h2 {
-		color: var(--sk-back-1);
+		color: white;
 		margin-bottom: 1em;
 		text-transform: uppercase;
 		font-size: var(--sk-text-s);

@@ -22,7 +22,7 @@
 
 	<Hero />
 
-	<Section>
+	<Section --background="var(--sk-back-1)">
 		<div class="grid" style="--columns: 3">
 			<div>
 				<h2>fast</h2>
@@ -56,9 +56,7 @@
 
 	<Try />
 
-	<Section
-		--background="radial-gradient(circle at top right, rgb(230, 233, 236), rgb(244, 245, 247))"
-	>
+	<Section --background="var(--background-1)">
 		<p class="definition">
 			<em>/ˈsvɛlt/</em> <span class="adjective">adjective</span>
 			<span class="description">attractively thin, graceful and stylish</span>
