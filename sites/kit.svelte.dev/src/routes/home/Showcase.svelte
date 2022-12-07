@@ -26,7 +26,7 @@
 
 	<div class="showcase">
 		{#each showcase as { url, image }}
-			<a class="drop-shadow" href="https://{url}" target="_blank" rel="noreferrer">
+			<a href="https://{url}" target="_blank" rel="noreferrer">
 				<img src={image} alt="Screenshot of {url}" />
 				<span>{url}</span>
 			</a>
