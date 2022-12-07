@@ -60,7 +60,7 @@
 		--background="radial-gradient(circle at top right, rgb(230, 233, 236), rgb(244, 245, 247))"
 	>
 		<p class="definition">
-			<em>/svelt/</em> <span class="adjective">adjective</span>
+			<em>/ˈsvɛlt/</em> <span class="adjective">adjective</span>
 			<span class="description">attractively thin, graceful and stylish</span>
 		</p>
 
