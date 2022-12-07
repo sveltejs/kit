@@ -75,7 +75,8 @@ function render(lat, lon, city, country) {
 					fill="white"
 					text-anchor="start"
 					alignment-baseline="middle"
-					style="font-family: 'Fira Mono', monospace; font-size: ${font_size}; font-weight: bold"
+					dominant-baseline="middle"
+					style="font-family: 'Courier', 'Courier New'; font-size: ${font_size}px; font-weight: bold"
 				>${label.toUpperCase()}</text>
 			</g>
 		</svg>
