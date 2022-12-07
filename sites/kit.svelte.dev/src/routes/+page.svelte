@@ -105,6 +105,10 @@
 	<Deployment />
 
 	<Showcase />
+
+	<footer>
+		<p>SvelteKit is free and open source software released under the MIT license.</p>
+	</footer>
 </div>
 
 <style>
@@ -131,6 +135,22 @@
 
 	.definition .description {
 		display: block;
+	}
+
+	footer {
+		padding: 1em var(--sk-page-padding-side);
+		text-align: center;
+	}
+
+	footer p {
+		max-width: 20em;
+		margin: 0 auto;
+	}
+
+	@media (min-width: 680px) {
+		footer p {
+			max-width: none;
+		}
 	}
 
 	@media (min-width: 900px) {
