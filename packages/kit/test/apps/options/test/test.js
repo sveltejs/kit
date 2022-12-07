@@ -229,3 +229,12 @@ test.describe('Vite options', () => {
 		expect(await page.textContent('h2')).toBe(`${mode} === ${mode} === ${mode}`);
 	});
 });
+
+test.describe('Routing', () => {
+	test('ignores clicks outside the app target', async ({ page }) => {
+		await page.goto('/path-base/routing/link-outside-app-target/source');
+
+		await page.click('[href="/path-base/routing/link-outside-app-target/target"]');
+		await expect(page.locator('h2')).toHaveText('target: 0');
+	});
+});
