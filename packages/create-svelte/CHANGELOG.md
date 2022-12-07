@@ -1,5 +1,49 @@
 # create-svelte
 
+## 2.0.0-next.198
+
+### Patch Changes
+
+- Upgrade dependencies in templates ([#7866](https://github.com/sveltejs/kit/pull/7866))
+
+## 2.0.0-next.197
+
+### Patch Changes
+
+- Upgrade dependencies ([#7852](https://github.com/sveltejs/kit/pull/7852))
+
+## 2.0.0-next.196
+
+### Patch Changes
+
+- Update app.d.ts files ([#7003](https://github.com/sveltejs/kit/pull/7003))
+
+## 2.0.0-next.195
+
+### Patch Changes
+
+- [breaking] Replace `data-sveltekit-prefetch` with `-preload-code` and `-preload-data` ([#7776](https://github.com/sveltejs/kit/pull/7776))
+
+- Upgrade to Playwright 1.28.1 ([#7696](https://github.com/sveltejs/kit/pull/7696))
+
+## 2.0.0-next.194
+
+### Patch Changes
+
+- fix playwright glob filter ([#7826](https://github.com/sveltejs/kit/pull/7826))
+
+## 2.0.0-next.193
+
+### Patch Changes
+
+- Added the option to add Vitest to new projects ([#5708](https://github.com/sveltejs/kit/pull/5708))
+
+## 2.0.0-next.192
+
+### Patch Changes
+
+- Ignore Vite timestamp files by default in `create-svelte` templates (added to `.gitignore`) ([#7660](https://github.com/sveltejs/kit/pull/7660))
+
 ## 2.0.0-next.191
 
 ### Patch Changes

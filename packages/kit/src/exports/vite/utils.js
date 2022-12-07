@@ -1,5 +1,5 @@
 import path from 'path';
-import { loadConfigFromFile, loadEnv } from 'vite';
+import { loadConfigFromFile, loadEnv, mergeConfig } from 'vite';
 import { runtime_directory } from '../../core/utils.js';
 import { posixify } from '../../utils/filesystem.js';
 
@@ -19,23 +19,13 @@ export async function get_vite_config(config, config_env) {
 	if (!loaded) {
 		throw new Error('Could not load Vite config');
 	}
-	return { ...loaded.config, mode: config_env.mode };
-}
-
-/**
- * @param {...import('vite').UserConfig} configs
- * @returns {import('vite').UserConfig}
- */
-export function merge_vite_configs(...configs) {
-	return deep_merge(
-		...configs.map((config) => ({
-			...config,
-			resolve: {
-				...config.resolve,
-				alias: normalize_alias(config.resolve?.alias || {})
-			}
-		}))
-	);
+	return mergeConfig(loaded.config, {
+		// CLI opts
+		mode: config_env.mode,
+		logLevel: config.logLevel,
+		clearScreen: config.clearScreen,
+		optimizeDeps: { force: config.optimizeDeps.force }
+	});
 }
 
 /**
@@ -52,16 +42,6 @@ export function deep_merge(...objects) {
 	/** @type {string[]} */
 	objects.forEach((o) => merge_into(result, o));
 	return result;
-}
-
-/**
- * normalize kit.vite.resolve.alias as an array
- * @param {import('vite').AliasOptions} o
- * @returns {import('vite').Alias[]}
- */
-function normalize_alias(o) {
-	if (Array.isArray(o)) return o;
-	return Object.entries(o).map(([find, replacement]) => ({ find, replacement }));
 }
 
 /**

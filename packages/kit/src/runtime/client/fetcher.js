@@ -26,7 +26,12 @@ if (import.meta.env.DEV) {
 		const url = input instanceof Request ? input.url : input.toString();
 		const stack = /** @type {string} */ (new Error().stack);
 
-		const heuristic = can_inspect_stack_trace ? stack.includes('load_node') : loading;
+		// check if fetch was called via load_node. the lock method only checks if it was called at the
+		// same time, but not necessarily if it was called from `load`
+		// we use just the filename as the method name sometimes does not appear on the CI
+		const heuristic = can_inspect_stack_trace
+			? stack.includes('src/runtime/client/client.js')
+			: loading;
 		if (heuristic) {
 			console.warn(
 				`Loading ${url} using \`window.fetch\`. For best results, use the \`fetch\` that is passed to your \`load\` function: https://kit.svelte.dev/docs/load#making-fetch-requests`

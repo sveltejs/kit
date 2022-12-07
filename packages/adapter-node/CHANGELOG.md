@@ -1,5 +1,17 @@
 # @sveltejs/adapter-node
 
+## 1.0.0-next.102
+
+### Patch Changes
+
+- [docs] update reference to `getClientAddress()` ([#7907](https://github.com/sveltejs/kit/pull/7907))
+
+## 1.0.0-next.101
+
+### Patch Changes
+
+- Update docs ([#7744](https://github.com/sveltejs/kit/pull/7744))
+
 ## 1.0.0-next.100
 
 ### Patch Changes

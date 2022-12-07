@@ -69,8 +69,8 @@ export function allowed_methods(mod) {
 }
 
 /**
- * @template {'prerender' | 'ssr' | 'csr'} Option
- * @template {Option extends 'prerender' ? import('types').PrerenderOption : boolean} Value
+ * @template {'prerender' | 'ssr' | 'csr' | 'trailingSlash'} Option
+ * @template {Option extends 'prerender' ? import('types').PrerenderOption : Option extends 'trailingSlash' ? import('types').TrailingSlash : boolean} Value
  *
  * @param {Array<import('types').SSRNode | undefined>} nodes
  * @param {Option} option
@@ -113,10 +113,10 @@ export function static_error_page(options, status, message) {
  * @param {import('types').SSROptions} options
  * @param {unknown} error
  */
-export function handle_fatal_error(event, options, error) {
+export async function handle_fatal_error(event, options, error) {
 	error = error instanceof HttpError ? error : coalesce_to_error(error);
 	const status = error instanceof HttpError ? error.status : 500;
-	const body = handle_error_and_jsonify(event, options, error);
+	const body = await handle_error_and_jsonify(event, options, error);
 
 	// ideally we'd use sec-fetch-dest instead, but Safari — quelle surprise — doesn't support it
 	const type = negotiate(event.request.headers.get('accept') || 'text/html', [
@@ -138,7 +138,7 @@ export function handle_fatal_error(event, options, error) {
  * @param {import('types').RequestEvent} event
  * @param {import('types').SSROptions} options
  * @param {any} error
- * @returns {App.Error}
+ * @returns {import('types').MaybePromise<App.Error>}
  */
 export function handle_error_and_jsonify(event, options, error) {
 	if (error instanceof HttpError) {
@@ -201,5 +201,7 @@ export function serialize_data_node(node) {
 	if (node.uses.route) uses.push(`"route":1`);
 	if (node.uses.url) uses.push(`"url":1`);
 
-	return `{"type":"data","data":${stringified},"uses":{${uses.join(',')}}}`;
+	return `{"type":"data","data":${stringified},"uses":{${uses.join(',')}}${
+		node.slash ? `,"slash":${JSON.stringify(node.slash)}` : ''
+	}}`;
 }

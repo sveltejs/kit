@@ -77,11 +77,6 @@ export async function prerender() {
 	/** @type {import('types').ValidatedKitConfig} */
 	const config = (await load_config()).kit;
 
-	if (!config.prerender.enabled) {
-		output_and_exit({ prerendered, prerender_map });
-		return;
-	}
-
 	/** @type {import('types').Logger} */
 	const log = logger({
 		verbose: verbose === 'true'
@@ -111,8 +106,8 @@ export async function prerender() {
 	const manifest = (await import(pathToFileURL(manifest_path).href)).manifest;
 
 	override({
+		building: true,
 		paths: config.paths,
-		prerendering: true,
 		read: (file) => readFileSync(join(config.files.assets, file))
 	});
 
@@ -137,7 +132,7 @@ export async function prerender() {
 		config.prerender.handleMissingId,
 		({ path, id, referrers }) => {
 			return (
-				`The following pages contain links to ${path}#${id}, but no element with id="${id}" exists on ${path}:` +
+				`The following pages contain links to ${path}#${id}, but no element with id="${id}" exists on ${path} - see the \`handleMissingId\` option in https://kit.svelte.dev/docs/configuration#prerender for more info:` +
 				referrers.map((l) => `\n  - ${l}`).join('')
 			);
 		}
@@ -262,11 +257,13 @@ export async function prerender() {
 				}
 
 				if (hash) {
-					if (!expected_hashlinks.has(pathname + hash)) {
-						expected_hashlinks.set(pathname + hash, new Set());
+					const key = decodeURI(pathname + hash);
+
+					if (!expected_hashlinks.has(key)) {
+						expected_hashlinks.set(key, new Set());
 					}
 
-					/** @type {Set<string>} */ (expected_hashlinks.get(pathname + hash)).add(decoded);
+					/** @type {Set<string>} */ (expected_hashlinks.get(key)).add(decoded);
 				}
 
 				enqueue(decoded, decodeURI(pathname), pathname);

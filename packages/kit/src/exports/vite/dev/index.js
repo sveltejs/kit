@@ -156,9 +156,7 @@ export async function dev(vite, vite_config, svelte_config) {
 						return {
 							id: route.id,
 							pattern: route.pattern,
-							names: route.names,
-							types: route.types,
-							optional: route.optional,
+							params: route.params,
 							page: route.page,
 							endpoint: endpoint
 								? async () => {
@@ -204,7 +202,13 @@ export async function dev(vite, vite_config, svelte_config) {
 	 */
 	const watch = (event, cb) => {
 		vite.watcher.on(event, (file) => {
-			if (file.startsWith(svelte_config.kit.files.routes + path.sep)) {
+			if (
+				file.startsWith(svelte_config.kit.files.routes + path.sep) ||
+				file.startsWith(svelte_config.kit.files.params + path.sep) ||
+				// in contrast to server hooks, client hooks are written to the client manifest
+				// and therefore need rebuilding when they are added/removed
+				file.startsWith(svelte_config.kit.files.hooks.client)
+			) {
 				cb(file);
 			}
 		});
@@ -230,6 +234,18 @@ export async function dev(vite, vite_config, svelte_config) {
 
 		sync.update(svelte_config, manifest_data, file);
 	});
+
+	const { appTemplate } = svelte_config.kit.files;
+	// vite client only executes a full reload if the triggering html file path is index.html
+	// kit defaults to src/app.html, so unless user changed that to index.html
+	// send the vite client a full-reload event without path being set
+	if (appTemplate !== 'index.html') {
+		vite.watcher.on('change', (file) => {
+			if (file === appTemplate) {
+				vite.ws.send({ type: 'full-reload' });
+			}
+		});
+	}
 
 	const assets = svelte_config.kit.paths.assets ? SVELTE_KIT_ASSETS : svelte_config.kit.paths.base;
 	const asset_server = sirv(svelte_config.kit.files.assets, {
@@ -428,28 +444,29 @@ export async function dev(vite, vite_config, svelte_config) {
 							check_origin: svelte_config.kit.csrf.checkOrigin
 						},
 						dev: true,
-						handle_error: (error, event) => {
-							return (
-								hooks.handleError({
-									error: new Proxy(error, {
-										get: (target, property) => {
-											if (property === 'stack') {
-												return fix_stack_trace(error);
-											}
-
-											return Reflect.get(target, property, target);
+						handle_error: async (error, event) => {
+							const error_object = await hooks.handleError({
+								error: new Proxy(error, {
+									get: (target, property) => {
+										if (property === 'stack') {
+											return fix_stack_trace(error);
 										}
-									}),
-									event,
 
-									// TODO remove for 1.0
-									// @ts-expect-error
-									get request() {
-										throw new Error(
-											'request in handleError has been replaced with event. See https://github.com/sveltejs/kit/pull/3384 for details'
-										);
+										return Reflect.get(target, property, target);
 									}
-								}) ?? { message: event.route.id != null ? 'Internal Error' : 'Not Found' }
+								}),
+								event,
+
+								// TODO remove for 1.0
+								// @ts-expect-error
+								get request() {
+									throw new Error(
+										'request in handleError has been replaced with event. See https://github.com/sveltejs/kit/pull/3384 for details'
+									);
+								}
+							});
+							return (
+								error_object ?? { message: event.route.id != null ? 'Internal Error' : 'Not Found' }
 							);
 						},
 						hooks,
@@ -480,7 +497,6 @@ export async function dev(vite, vite_config, svelte_config) {
 						service_worker:
 							svelte_config.kit.serviceWorker.register &&
 							!!resolve_entry(svelte_config.kit.files.serviceWorker),
-						trailing_slash: svelte_config.kit.trailingSlash,
 						version: svelte_config.kit.version.name
 					},
 					{

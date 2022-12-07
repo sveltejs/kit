@@ -13,11 +13,11 @@ Code in these modules will run when the application starts up, making them usefu
 
 > You can configure the location of these files with [`config.kit.files.hooks`](/docs/configuration#files).
 
-### Server hooks
+## Server hooks
 
 The following hooks can be added to `src/hooks.server.js`:
 
-#### handle
+### handle
 
 This function runs every time the SvelteKit server receives a [request](/docs/web-standards#fetch-apis-request) — whether that happens while the app is running, or during [prerendering](/docs/page-options#prerender) — and determines the [response](/docs/web-standards#fetch-apis-response). It receives an `event` object representing the request and a function called `resolve`, which renders the route and generates a `Response`. This allows you to modify response headers or bodies, or bypass SvelteKit entirely (for implementing routes programmatically, for example).
 
@@ -72,7 +72,7 @@ You can add call multiple `handle` functions with [the `sequence` helper functio
 
 - `transformPageChunk(opts: { html: string, done: boolean }): MaybePromise<string | undefined>` — applies custom transforms to HTML. If `done` is true, it's the final chunk. Chunks are not guaranteed to be well-formed HTML (they could include an element's opening tag but not its closing tag, for example) but they will always be split at sensible boundaries such as `%sveltekit.head%` or layout/page components.
 - `filterSerializedResponseHeaders(name: string, value: string): boolean` — determines which headers should be included in serialized responses when a `load` function loads a resource with `fetch`. By default, none will be included.
-- `preload(input: { type: 'js' | 'css' | 'font' | 'asset', path: string }): boolean` — determines what files should be added to the `<head>` tag to preload it. The method is called with each file that was found at build time while constructing the code chunks — so if you for example have `import './styles.css` in your `+page.svelte`, `preload` will be called with the resolved path to that CSS file when visiting that page. Preloading can improve performance because things are downloaded sooner, but they can also hurt core web vitals because too many things may be downloaded unnecessarily. By default, `js` and `css` files will be preloaded. `asset` files are not preloaded at all currently, but we may add this later after evaluating feedback.
+- `preload(input: { type: 'js' | 'css' | 'font' | 'asset', path: string }): boolean` — determines what files should be added to the `<head>` tag to preload it. The method is called with each file that was found at build time while constructing the code chunks — so if you for example have `import './styles.css` in your `+page.svelte`, `preload` will be called with the resolved path to that CSS file when visiting that page. Note that in dev mode `preload` is _not_ called, since it depends on analysis that happens at build time. Preloading can improve performance by downloading assets sooner, but it can also hurt if too much is downloaded unnecessarily. By default, `js` and `css` files will be preloaded. `asset` files are not preloaded at all currently, but we may add this later after evaluating feedback.
 
 ```js
 /// file: src/hooks.server.js
@@ -90,7 +90,7 @@ export async function handle({ event, resolve }) {
 
 Note that `resolve(...)` will never throw an error, it will always return a `Promise<Response>` with the appropriate status code. If an error is thrown elsewhere during `handle`, it is treated as fatal, and SvelteKit will respond with a JSON representation of the error or a fallback error page — which can be customised via `src/error.html` — depending on the `Accept` header. You can read more about error handling [here](/docs/errors).
 
-#### handleFetch
+### handleFetch
 
 This function allows you to modify (or replace) a `fetch` request that happens inside a `load` function that runs on the server (or during pre-rendering).
 
@@ -132,11 +132,11 @@ export async function handleFetch({ event, request, fetch }) {
 }
 ```
 
-### Shared hooks
+## Shared hooks
 
 The following can be added to `src/hooks.server.js` _and_ `src/hooks.client.js`:
 
-#### handleError
+### handleError
 
 If an unexpected error is thrown during loading or rendering, this function will be called with the `error` and the `event`. This allows for two things:
 
@@ -157,7 +157,7 @@ declare namespace App {
 
 ```js
 /// file: src/hooks.server.js
-// @errors: 2322 2571
+// @errors: 2322 2571 2339
 // @filename: ambient.d.ts
 const Sentry: any;
 
@@ -170,14 +170,14 @@ export function handleError({ error, event }) {
 
 	return {
 		message: 'Whoops!',
-		code: error.code ?? 'UNKNOWN'
+		code: error?.code ?? 'UNKNOWN'
 	};
 }
 ```
 
 ```js
 /// file: src/hooks.client.js
-// @errors: 2322 2571
+// @errors: 2322 2571 2339
 // @filename: ambient.d.ts
 const Sentry: any;
 
@@ -190,7 +190,7 @@ export function handleError({ error, event }) {
 
 	return {
 		message: 'Whoops!',
-		code: error.code ?? 'UNKNOWN'
+		code: error?.code ?? 'UNKNOWN'
 	};
 }
 ```
@@ -200,3 +200,5 @@ export function handleError({ error, event }) {
 This function is not called for _expected_ errors (those thrown with the [`error`](/docs/modules#sveltejs-kit-error) function imported from `@sveltejs/kit`).
 
 During development, if an error occurs because of a syntax error in your Svelte code, the passed in error has a `frame` property appended highlighting the location of the error.
+
+> Make sure that `handleError` _never_ throws an error

@@ -11,10 +11,9 @@ import { join_relative } from '../../utils/filesystem.js';
  *   build_data: import('types').BuildData;
  *   relative_path: string;
  *   routes: import('types').RouteData[];
- *   format?: 'esm' | 'cjs'
  * }} opts
  */
-export function generate_manifest({ build_data, relative_path, routes, format = 'esm' }) {
+export function generate_manifest({ build_data, relative_path, routes }) {
 	/**
 	 * @type {Map<any, number>} The new index of each node in the filtered nodes array
 	 */
@@ -55,13 +54,7 @@ export function generate_manifest({ build_data, relative_path, routes, format = 
 	});
 
 	/** @type {(path: string) => string} */
-	const load =
-		format === 'esm'
-			? (path) => `import('${path}')`
-			: (path) => `Promise.resolve().then(() => require('${path}'))`;
-
-	/** @type {(path: string) => string} */
-	const loader = (path) => `() => ${load(path)}`;
+	const loader = (path) => `() => import('${path}')`;
 
 	const assets = build_data.manifest_data.assets.map((asset) => asset.file);
 	if (build_data.service_worker) {
@@ -99,8 +92,8 @@ export function generate_manifest({ build_data, relative_path, routes, format = 
 			],
 			routes: [
 				${routes.map(route => {
-					route.types.forEach(type => {
-						if (type) matchers.add(type);
+					route.params.forEach(param => {
+						if (param.matcher) matchers.add(param.matcher);
 					});
 
 					if (!route.page && !route.endpoint) return;
@@ -108,16 +101,14 @@ export function generate_manifest({ build_data, relative_path, routes, format = 
 					return `{
 					id: ${s(route.id)},
 					pattern: ${route.pattern},
-					names: ${s(route.names)},
-					types: ${s(route.types)},
-					optional: ${s(route.optional)},
+					params: ${s(route.params)},
 					page: ${route.page ? `{ layouts: ${get_nodes(route.page.layouts)}, errors: ${get_nodes(route.page.errors)}, leaf: ${reindexed.get(route.page.leaf)} }` : 'null'},
 					endpoint: ${route.endpoint ? loader(join_relative(relative_path, resolve_symlinks(build_data.server.vite_manifest, route.endpoint.file).chunk.file)) : 'null'}
 				}`;
 				}).filter(Boolean).join(',\n\t\t\t\t')}
 			],
 			matchers: async () => {
-				${Array.from(matchers).map(type => `const { match: ${type} } = await ${load(join_relative(relative_path, `/entries/matchers/${type}.js`))}`).join('\n\t\t\t\t')}
+				${Array.from(matchers).map(type => `const { match: ${type} } = await import ('${(join_relative(relative_path, `/entries/matchers/${type}.js`))}')`).join('\n\t\t\t\t')}
 				return { ${Array.from(matchers).join(', ')} };
 			}
 		}

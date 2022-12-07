@@ -10,6 +10,7 @@
 </svelte:head>
 
 <main>
+	<h1>Search</h1>
 	<form>
 		<input name="q" value={data.query} placeholder="Search" spellcheck="false" />
 	</form>
@@ -38,10 +39,11 @@
 		height: 100%;
 		font-family: inherit;
 		font-size: inherit;
-		border: 1px solid #ccc;
-		border-radius: var(--border-r);
+		border: 1px solid var(--sk-back-5);
+		border-radius: var(--sk-border-radius);
 		padding-left: var(--size);
 		border-radius: var(--size);
 		background: no-repeat 1rem 50% / 2rem 2rem url($lib/icons/search.svg);
+		color: var(--sk-text-1);
 	}
 </style>

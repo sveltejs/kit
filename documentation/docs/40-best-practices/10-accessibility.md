@@ -8,7 +8,7 @@ Here's how SvelteKit's built-in accessibility features work and what you need to
 
 We recognize that accessibility can be hard to get right. If you want to suggest improvements to how SvelteKit handles accessibility, please [open a GitHub issue](https://github.com/sveltejs/kit/issues).
 
-### Route announcements
+## Route announcements
 
 In traditional server-rendered applications, every navigation (e.g. clicking on an `<a>` tag) triggers a full page reload. When this happens, screen readers and other assistive technology will read out the new page's title so that users understand that the page has changed.
 
@@ -25,7 +25,7 @@ Because of this behavior, every page in your app should have a unique, descripti
 
 This will allow screen readers and other assistive technology to identify the new page after a navigation occurs. Providing a descriptive title is also important for [SEO](/docs/seo#manual-setup-title-and-meta).
 
-### Focus management
+## Focus management
 
 In traditional server-rendered applications, every navigation will reset focus to the top of the page. This ensures that people browsing the web with a keyboard or screen reader will start interacting with the page from the beginning.
 
@@ -45,7 +45,7 @@ afterNavigate(() => {
 
 You can also programmatically navigate to a different page using the [`goto`](/docs/modules#$app-navigation-goto) function. By default, this will have the same client-side routing behavior as clicking on a link. However, `goto` also accepts a `keepFocus` option that will preserve the currently-focused element instead of resetting focus. If you enable this option, make sure the currently-focused element still exists on the page after navigation. If the element no longer exists, the user's focus will be lost, making for a confusing experience for assistive technology users.
 
-### The "lang" attribute
+## The "lang" attribute
 
 By default, SvelteKit's page template sets the default language of the document to English. If your content is not in English, you should update the `<html>` element in `src/app.html` to have the correct [`lang`](https://developer.mozilla.org/en-US/docs/Web/HTML/Global_attributes/lang#accessibility) attribute. This will ensure that any assistive technology reading the document uses the correct pronunciation. For example, if your content is in German, you should update `app.html` to the following:
 
@@ -78,7 +78,7 @@ export function handle({ event, resolve }) {
 }
 ```
 
-### Further reading
+## Further reading
 
 For the most part, building an accessible SvelteKit app is the same as building an accessible web app. You should be able to apply information from the following general accessibility resources to any web experience you build:
 

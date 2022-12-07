@@ -5,10 +5,10 @@ import {
 	goto,
 	invalidate,
 	invalidateAll,
-	prefetch,
-	prefetchRoutes
+	preloadCode,
+	preloadData
 } from '$app/navigation';
-import { CSRPageNode, CSRPageNodeLoader, CSRRoute, Uses } from 'types';
+import { CSRPageNode, CSRPageNodeLoader, CSRRoute, TrailingSlash, Uses } from 'types';
 
 export interface Client {
 	// public API, exposed via $app/navigation
@@ -18,8 +18,8 @@ export interface Client {
 	goto: typeof goto;
 	invalidate: typeof invalidate;
 	invalidateAll: typeof invalidateAll;
-	prefetch: typeof prefetch;
-	prefetch_routes: typeof prefetchRoutes;
+	preload_code: typeof preloadCode;
+	preload_data: typeof preloadData;
 	apply_action: typeof applyAction;
 
 	// private API
@@ -67,12 +67,14 @@ export type BranchNode = {
 	server: DataNode | null;
 	shared: DataNode | null;
 	data: Record<string, any> | null;
+	slash?: TrailingSlash;
 };
 
 export interface DataNode {
 	type: 'data';
 	data: Record<string, any> | null;
 	uses: Uses;
+	slash?: TrailingSlash;
 }
 
 export interface NavigationState {
