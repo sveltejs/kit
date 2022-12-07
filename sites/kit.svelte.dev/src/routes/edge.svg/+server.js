@@ -101,7 +101,8 @@ export function GET({ request, url }) {
 
 	return new Response(svg, {
 		headers: {
-			'content-type': 'image/svg+xml'
+			'content-type': 'image/svg+xml',
+			'cache-control': 'private, max-age=3600'
 		}
 	});
 }
