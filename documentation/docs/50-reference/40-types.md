@@ -2,19 +2,19 @@
 title: Types
 ---
 
-### Public types
+## Public types
 
 The following types can be imported from `@sveltejs/kit`:
 
 > TYPES: @sveltejs/kit
 
-### Private types
+## Private types
 
 The following are referenced by the public types documented above, but cannot be imported directly:
 
 > TYPES: Private types
 
-### Generated types
+## Generated types
 
 The `RequestHandler` and `Load` types both accept a `Params` argument allowing you to type the `params` object. For example this endpoint expects `foo`, `bar` and `baz` params:
 
@@ -100,7 +100,7 @@ export async function load({ params, fetch }) {
 >
 >     { "extends": "./.svelte-kit/tsconfig.json" }
 
-#### Default tsconfig.json
+### Default tsconfig.json
 
 The generated `.svelte-kit/tsconfig.json` file contains a mixture of options. Some are generated programmatically based on your project configuration, and should generally not be overridden without good reason:
 
@@ -152,6 +152,6 @@ Others are required for SvelteKit to work properly, and should also be left unto
 }
 ```
 
-### App
+## App
 
 > TYPES: App

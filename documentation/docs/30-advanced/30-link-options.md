@@ -6,7 +6,7 @@ In SvelteKit, `<a>` elements (rather than framework-specific `<Link>` components
 
 You can customise the behaviour of links with `data-sveltekit-*` attributes. These can be applied to the `<a>` itself, or to a parent element.
 
-### data-sveltekit-preload-data
+## data-sveltekit-preload-data
 
 Before the browser registers that the user has clicked on a link, we can detect that they've hovered the mouse over it (on desktop) or that a `touchstart` or `mousedown` event was triggered. In both cases, we can make an educated guess that a `click` event is coming.
 
@@ -39,7 +39,7 @@ In these cases, you can specify the `"tap"` value, which causes SvelteKit to cal
 
 Data will never be preloaded if the user has chosen reduced data usage, meaning [`navigator.connection.saveData`](https://developer.mozilla.org/en-US/docs/Web/API/NetworkInformation/saveData) is `true`.
 
-### data-sveltekit-preload-code
+## data-sveltekit-preload-code
 
 Even in cases where you don't want to preload _data_ for a link, it can be beneficial to preload the _code_. The `data-sveltekit-preload-code` attribute works similarly to `data-sveltekit-preload-data`, except that it can take one of four values, in decreasing 'eagerness':
 
@@ -54,7 +54,7 @@ Note that `viewport` and `eager` only apply to links that are present in the DOM
 
 As with `data-sveltekit-preload-data`, this attribute will be ignored if the user has chosen reduced data usage.
 
-### data-sveltekit-reload
+## data-sveltekit-reload
 
 Occasionally, we need to tell SvelteKit not to handle a link, but allow the browser to handle it. Adding a `data-sveltekit-reload` attribute to a link...
 
@@ -66,7 +66,7 @@ Occasionally, we need to tell SvelteKit not to handle a link, but allow the brow
 
 Links with a `rel="external"` attribute will receive the same treatment. In addition, they will be ignored during [prerendering](/docs/page-options#prerender).
 
-### data-sveltekit-noscroll
+## data-sveltekit-noscroll
 
 When navigating to internal links, SvelteKit mirrors the browser's default navigation behaviour: it will change the scroll position to 0,0 so that the user is at the very top left of the page (unless the link includes a `#hash`, in which case it will scroll to the element with a matching ID).
 
@@ -78,7 +78,7 @@ In certain cases, you may wish to disable this behaviour. Adding a `data-sveltek
 
 ...will prevent scrolling after the link is clicked.
 
-### Disabling options
+## Disabling options
 
 To disable any of these options inside an element where they have been enabled, use the `"off"` value:
 

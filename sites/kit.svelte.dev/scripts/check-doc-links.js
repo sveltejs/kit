@@ -17,7 +17,7 @@ for (const doc of doc_filenames) {
 
 	const content = fs.readFileSync(`${cwd}/${doc}`, 'utf-8');
 
-	const headlines = content.matchAll(/### .+/g);
+	const headlines = content.matchAll(/## .+/g);
 	if (!headlines) continue;
 
 	let last_headline = '';

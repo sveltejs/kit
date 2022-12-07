@@ -1,6 +1,6 @@
 {
 	"name": "@sveltejs/adapter-node",
-	"version": "1.0.0-next.101",
+	"version": "1.0.0-next.102",
 	"repository": {
 		"type": "git",
 		"url": "https://github.com/sveltejs/kit",
@@ -33,7 +33,7 @@
 	},
 	"devDependencies": {
 		"@sveltejs/kit": "workspace:*",
-		"@types/node": "^16.18.3",
+		"@types/node": "^16.18.6",
 		"c8": "^7.12.0",
 		"polka": "^1.0.0-next.22",
 		"rimraf": "^3.0.2",

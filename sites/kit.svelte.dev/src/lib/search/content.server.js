@@ -38,7 +38,7 @@ export function content() {
 
 			const { body, metadata } = extract_frontmatter(markdown);
 
-			const sections = body.trim().split(/^### /m);
+			const sections = body.trim().split(/^## /m);
 			const intro = sections.shift().trim();
 			const rank = +metadata.rank || undefined;
 
@@ -54,7 +54,7 @@ export function content() {
 				const h3 = lines.shift();
 				const content = lines.join('\n');
 
-				const subsections = content.trim().split('#### ');
+				const subsections = content.trim().split('### ');
 
 				const intro = subsections.shift().trim();
 

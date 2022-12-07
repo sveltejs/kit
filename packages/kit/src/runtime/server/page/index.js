@@ -40,9 +40,7 @@ export async function render_page(event, route, page, options, state, resolve_op
 
 	if (is_action_json_request(event)) {
 		const node = await options.manifest._.nodes[page.leaf]();
-		if (node.server) {
-			return handle_action_json_request(event, options, node.server);
-		}
+		return handle_action_json_request(event, options, node?.server);
 	}
 
 	try {

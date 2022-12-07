@@ -92,15 +92,14 @@ npm run dev -- --open</code
 		height: 100%;
 		display: flex;
 		flex-direction: column;
-		color: var(--second-text);
 	}
 
 	.orange-highlight {
-		color: var(--prime);
+		color: var(--sk-theme-1);
 	}
 
 	.blurb-shifter {
-		margin-top: calc(-10rem + var(--side-nav));
+		margin-top: calc(-10rem + var(--sk-page-padding-side));
 	}
 
 	@media (min-width: 900px) {

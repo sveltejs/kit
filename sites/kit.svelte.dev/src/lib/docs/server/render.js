@@ -54,11 +54,11 @@ export function replace_placeholders(content) {
 					if (t.name === 'Config' || t.name === 'KitConfig') {
 						// special case — we want these to be on a separate page
 						children =
-							'<div class="ts-block-property-details">\n\nSee the [configuration reference](/docs#configuration) for details.</div>';
+							'<div class="ts-block-property-details">\n\nSee the [configuration reference](/docs/configuration) for details.</div>';
 					}
 
 					const markdown = `<div class="ts-block">${fence(t.snippet)}` + children + `</div>`;
-					return `#### ${t.name}\n\n${t.comment}\n\n${markdown}\n\n`;
+					return `### ${t.name}\n\n${t.comment}\n\n${markdown}\n\n`;
 				})
 				.join('')}`;
 		})
@@ -81,13 +81,13 @@ export function replace_placeholders(content) {
 						import_block = fence(declaration, 'js');
 					}
 
-					return `### ${module.name}\n\n${import_block}\n\n${module.comment}\n\n${module.exports
+					return `## ${module.name}\n\n${import_block}\n\n${module.comment}\n\n${module.exports
 						.map((type) => {
 							const markdown =
 								`<div class="ts-block">${fence(type.snippet)}` +
 								type.children.map(stringify).join('\n\n') +
 								`</div>`;
-							return `#### ${type.name}\n\n${type.comment}\n\n${markdown}`;
+							return `### ${type.name}\n\n${type.comment}\n\n${markdown}`;
 						})
 						.join('\n\n')}`;
 				})
@@ -105,13 +105,13 @@ export function render(kind) {
 
 			if (skip) return '';
 
-			return `### ${module.name}\n\n${module.comment}\n\n${module[kind]
+			return `## ${module.name}\n\n${module.comment}\n\n${module[kind]
 				.map((type) => {
 					const markdown =
 						`<div class="ts-block">${fence(type.snippet)}` +
 						type.children.map(stringify).join('\n\n') +
 						`</div>`;
-					return `#### ${type.name}\n\n${type.comment}\n\n${markdown}`;
+					return `### ${type.name}\n\n${type.comment}\n\n${markdown}`;
 				})
 				.join('\n\n')}`;
 		})

@@ -3,7 +3,7 @@ import { test } from 'uvu';
 import * as assert from 'uvu/assert';
 import { validate_config } from '../../core/config/index.js';
 import { posixify } from '../../utils/filesystem.js';
-import { deep_merge, get_app_aliases, get_config_aliases, merge_vite_configs } from './utils.js';
+import { deep_merge, get_app_aliases, get_config_aliases } from './utils.js';
 
 test('basic test no conflicts', async () => {
 	const merged = deep_merge(
@@ -171,31 +171,6 @@ test('merge including toString', () => {
 		}
 	);
 	assert.equal(Object.keys(merged), ['toString', 'constructor', 'y']);
-});
-
-test('merge resolve.alias', () => {
-	const merged = merge_vite_configs(
-		{
-			resolve: {
-				alias: [{ find: /foo/, replacement: 'bar' }]
-			}
-		},
-		{
-			resolve: {
-				alias: {
-					alpha: 'beta'
-				}
-			}
-		}
-	);
-	assert.equal(merged, {
-		resolve: {
-			alias: [
-				{ find: /foo/, replacement: 'bar' },
-				{ find: 'alpha', replacement: 'beta' }
-			]
-		}
-	});
 });
 
 test('transform kit.alias to resolve.alias', () => {

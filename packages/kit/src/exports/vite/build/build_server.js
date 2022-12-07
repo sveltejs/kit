@@ -1,7 +1,8 @@
 import fs from 'fs';
 import path from 'path';
+import { mergeConfig } from 'vite';
 import { mkdirp, posixify, resolve_entry } from '../../../utils/filesystem.js';
-import { get_vite_config, merge_vite_configs } from '../utils.js';
+import { get_vite_config } from '../utils.js';
 import { load_error_page, load_template } from '../../../core/config/index.js';
 import { runtime_directory } from '../../../core/utils.js';
 import {
@@ -240,7 +241,7 @@ export async function build_server(options, client) {
 		})
 	);
 
-	const merged_config = merge_vite_configs(
+	const merged_config = mergeConfig(
 		get_default_build_config({ config, input, ssr: true, outDir: `${output_dir}/server` }),
 		await get_vite_config(vite_config, vite_config_env)
 	);

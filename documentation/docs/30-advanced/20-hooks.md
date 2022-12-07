@@ -13,11 +13,11 @@ Code in these modules will run when the application starts up, making them usefu
 
 > You can configure the location of these files with [`config.kit.files.hooks`](/docs/configuration#files).
 
-### Server hooks
+## Server hooks
 
 The following hooks can be added to `src/hooks.server.js`:
 
-#### handle
+### handle
 
 This function runs every time the SvelteKit server receives a [request](/docs/web-standards#fetch-apis-request) — whether that happens while the app is running, or during [prerendering](/docs/page-options#prerender) — and determines the [response](/docs/web-standards#fetch-apis-response). It receives an `event` object representing the request and a function called `resolve`, which renders the route and generates a `Response`. This allows you to modify response headers or bodies, or bypass SvelteKit entirely (for implementing routes programmatically, for example).
 
@@ -90,7 +90,7 @@ export async function handle({ event, resolve }) {
 
 Note that `resolve(...)` will never throw an error, it will always return a `Promise<Response>` with the appropriate status code. If an error is thrown elsewhere during `handle`, it is treated as fatal, and SvelteKit will respond with a JSON representation of the error or a fallback error page — which can be customised via `src/error.html` — depending on the `Accept` header. You can read more about error handling [here](/docs/errors).
 
-#### handleFetch
+### handleFetch
 
 This function allows you to modify (or replace) a `fetch` request that happens inside a `load` function that runs on the server (or during pre-rendering).
 
@@ -121,6 +121,7 @@ For cross-origin requests, `cookie` will be included if the request URL belongs 
 If your app and your API are on sibling subdomains — `www.my-domain.com` and `api.my-domain.com` for example — then a cookie belonging to a common parent domain like `my-domain.com` will _not_ be included, because SvelteKit has no way to know which domain the cookie belongs to. In these cases you will need to manually include the cookie using `handleFetch`:
 
 ```js
+/// file: src/hooks.server.js
 // @errors: 2345
 /** @type {import('@sveltejs/kit').HandleFetch} */
 export async function handleFetch({ event, request, fetch }) {
@@ -132,11 +133,11 @@ export async function handleFetch({ event, request, fetch }) {
 }
 ```
 
-### Shared hooks
+## Shared hooks
 
 The following can be added to `src/hooks.server.js` _and_ `src/hooks.client.js`:
 
-#### handleError
+### handleError
 
 If an unexpected error is thrown during loading or rendering, this function will be called with the `error` and the `event`. This allows for two things:
 

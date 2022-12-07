@@ -150,7 +150,7 @@ export async function write_types(config, manifest_data, file) {
 	const id = '/' + posixify(path.relative(config.kit.files.routes, path.dirname(file)));
 
 	const route = manifest_data.routes.find((route) => route.id === id);
-	if (!route) return; // this shouldn't ever happen
+	if (!route) return;
 	if (!route.leaf && !route.layout && !route.endpoint) return; // nothing to do
 
 	update_types(config, create_routes_map(manifest_data), route);
@@ -401,7 +401,7 @@ function process_node(node, outdir, is_page, proxies, all_pages_have_load = true
 						? `./proxy${replace_ext_with_js(basename)}`
 						: path_to_original(outdir, node.server);
 
-					type = `Expand<Kit.AwaitedActions<typeof import('${from}').actions>> | undefined`;
+					type = `Expand<Kit.AwaitedActions<typeof import('${from}').actions>> | null`;
 				}
 			}
 			exports.push(`export type ActionData = ${type};`);

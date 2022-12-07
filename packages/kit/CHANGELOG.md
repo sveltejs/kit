@@ -1,5 +1,43 @@
 # @sveltejs/kit
 
+## 1.0.0-next.572
+
+### Minor Changes
+
+- Checks that element is not null before reading getAttribute ([#7930](https://github.com/sveltejs/kit/pull/7930))
+
+### Patch Changes
+
+- [chore] update `magic-string` ([#7931](https://github.com/sveltejs/kit/pull/7931))
+
+- add $app and $env to optimizeDeps.exclude so that libraries using these work correctly when prebundled ([#7933](https://github.com/sveltejs/kit/pull/7933))
+
+- reload dev page on change of app.html ([#7944](https://github.com/sveltejs/kit/pull/7944))
+
+## 1.0.0-next.571
+
+### Patch Changes
+
+- [fix] use searchParams for x-sveltekit-invalidated ([#7912](https://github.com/sveltejs/kit/pull/7912))
+
+- [fix] correct Vite config merging with force option ([#7911](https://github.com/sveltejs/kit/pull/7911))
+
+- [fix] rebuild manifest when client hooks or param matcher file is added/removed ([#7915](https://github.com/sveltejs/kit/pull/7915))
+
+## 1.0.0-next.570
+
+### Patch Changes
+
+- Remove prepublishOnly script ([#7893](https://github.com/sveltejs/kit/pull/7893))
+
+## 1.0.0-next.569
+
+### Patch Changes
+
+- Ignore elements that are no longer in the document ([#7881](https://github.com/sveltejs/kit/pull/7881))
+
+- [breaking] Use client-side routing for `<form method="GET">` ([#7828](https://github.com/sveltejs/kit/pull/7828))
+
 ## 1.0.0-next.568
 
 ### Patch Changes

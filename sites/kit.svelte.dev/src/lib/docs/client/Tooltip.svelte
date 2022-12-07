@@ -31,7 +31,7 @@
 
 <style>
 	.tooltip-container {
-		--bg: var(--second);
+		--bg: var(--sk-theme-2);
 		--arrow-size: 0.4rem;
 		position: absolute;
 		transform: translate(var(--offset), calc(2rem + var(--arrow-size)));
@@ -43,8 +43,8 @@
 		color: #fff;
 		text-align: left;
 		padding: 0.4rem 0.6rem;
-		border-radius: var(--border-r);
-		font-family: var(--font-mono);
+		border-radius: var(--sk-border-radius);
+		font-family: var(--sk-font-mono);
 		font-size: 1.2rem;
 		white-space: pre-wrap;
 		z-index: 100;
