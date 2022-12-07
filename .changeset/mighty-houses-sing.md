@@ -5,4 +5,4 @@
 '@sveltejs/adapter-vercel': patch
 ---
 
-update esbuild to 0.16
+[breaking] update esbuild to 0.16
