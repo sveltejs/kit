@@ -1,38 +1,214 @@
 <script>
 	import Section from '@sveltejs/site-kit/components/Section.svelte';
+	import html5 from './logos/html5.svg';
+	import node from './logos/node.svg';
+	import vercel from './logos/vercel.svg';
+	import netlify from './logos/netlify.svg';
+	import cloudflare from './logos/cloudflare.svg';
+	import firebase from './logos/firebase.svg';
+	import deno from './logos/deno.svg';
+	import lambda from './logos/lambda.svg';
+	import appengine from './logos/appengine.svg';
+	import plus from '$lib/icons/plus.svg';
 </script>
 
-<Section>
-	<h2>deploy anywhere</h2>
+<Section
+	--background="radial-gradient(circle at top right, rgb(230, 233, 236), rgb(244, 245, 247))"
+>
 	<div class="grid" style="--columns: 3">
-		<div class="platforms">
-			<p>one</p>
-			<p>two</p>
-			<p>three</p>
-			<p>four</p>
+		<h2>deploy anywhere</h2>
+		<div class="blurb">
+			<p>
+				Export static HTML files. Run your own Node server. Deploy code to the edge of the world. If
+				a platform runs JavaScript, it runs SvelteKit — in some cases with <strong
+					>zero configuration</strong
+				>.
+			</p>
+			<p>Want to try deploying somewhere else? Swap out your adapter with a single line of code.</p>
+		</div>
+	</div>
+
+	<div class="grid" style="--columns: 3">
+		<div class="platforms left">
+			<div>
+				<img src={html5} alt="HTML5 logo" />
+				<span><span class="large">Static</span> HTML</span>
+			</div>
+			<div>
+				<img src={node} alt="Node logo" />
+				<span>Node.js</span>
+			</div>
+			<div>
+				<img src={vercel} alt="Vercel logo" style="transform: translate(0,-0.2rem)" />
+				<span>Vercel</span>
+			</div>
+			<div>
+				<img src={netlify} alt="Netlify logo" />
+				<span>Netlify</span>
+			</div>
+			<div>
+				<img src={cloudflare} alt="Cloudflare logo" />
+				<span>Cloudflare</span>
+			</div>
 		</div>
 
-		<img
-			class="globe"
-			src="/edge.svg"
-			alt="Dynamically rendered map of the world, centered on the user's location"
-		/>
+		<div class="platforms right">
+			<div>
+				<img src={firebase} alt="Firebase logo" />
+				<span>Firebase</span>
+			</div>
+			<div>
+				<img src={deno} alt="Deno logo" />
+				<span>Deno</span>
+			</div>
+			<div>
+				<img src={lambda} alt="AWS Lambda logo" />
+				<span>AWS</span>
+			</div>
+			<div>
+				<img src={appengine} alt="AppEngine logo" />
+				<span>AppEngine</span>
+			</div>
+			<div>
+				<img src={plus} alt="Plus sign" />
+				<span>More...</span>
+			</div>
+		</div>
 
-		<div class="platforms">
-			<p>one</p>
-			<p>two</p>
-			<p>three</p>
-			<p>four</p>
+		<div class="globe">
+			<img
+				src="/edge.svg"
+				alt="Dynamically rendered map of the world, centered on the user's location"
+			/>
 		</div>
 	</div>
 </Section>
 
 <style>
+	.grid {
+		/* margin-top: 4rem; */
+	}
+
 	.globe {
 		width: 100%;
-		aspect-ratio: 1;
+		max-height: 40rem;
+	}
+
+	.globe img {
+		width: 100%;
+		height: 100%;
+		object-fit: contain;
+	}
+
+	.platforms {
+		display: grid;
+		grid-template-columns: repeat(5, 1fr);
+		gap: 1rem;
+		align-items: center;
+	}
+
+	.platforms div {
+		display: flex;
+		flex-direction: column;
+		gap: 1rem;
+		align-items: center;
+	}
+
+	.platforms.left {
+		justify-content: flex-end;
+		flex-direction: column-reverse;
+	}
+
+	.platforms div span {
+		font-size: var(--sk-text-xs);
+		color: var(--sk-text-3);
+		text-align: center;
+	}
+
+	.platforms img {
+		--size: 4rem;
+		width: var(--size);
+		height: var(--size);
+		object-fit: contain;
+		filter: opacity(0.5) grayscale(100%);
+	}
+
+	.platforms div:hover img {
+		filter: none;
+	}
+
+	.platforms div:hover span {
+		color: var(--sk-text-1);
+	}
+
+	p {
+		margin-top: 0;
+	}
+
+	.large {
+		display: none;
+	}
+
+	@media (min-width: 600px) {
+		.large {
+			display: initial;
+		}
 	}
 
 	@media (min-width: 900px) {
+		.blurb {
+			grid-column: 2 / 4;
+		}
+
+		.platforms {
+			display: grid;
+			grid-template-columns: none;
+			grid-template-rows: repeat(4, 1fr);
+			gap: 0;
+			align-items: center;
+		}
+
+		.platforms div {
+			--direction: -1;
+			flex-direction: row;
+			align-items: center;
+			gap: 2rem;
+			height: 100%;
+		}
+
+		.platforms.left {
+			order: 1;
+		}
+
+		.globe {
+			order: 2;
+		}
+
+		.platforms.right {
+			order: 3;
+		}
+
+		.platforms div:first-child,
+		.platforms div:last-child {
+			transform: translate(calc(var(--direction) * 5rem), 0);
+		}
+
+		.platforms div:nth-child(2) {
+			transform: translate(calc(var(--direction) * 1rem), -0.2rem);
+		}
+
+		.platforms div:nth-child(4) {
+			transform: translate(calc(var(--direction) * 1rem), 0.2rem);
+		}
+
+		.platforms.left {
+			justify-content: flex-end;
+			flex-direction: row-reverse;
+		}
+
+		.platforms.left div {
+			--direction: 1;
+			flex-direction: row-reverse;
+		}
 	}
 </style>

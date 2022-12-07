@@ -10,7 +10,7 @@
 .home .grid {
 	display: grid;
 	gap: 1em;
-	margin: 0 0 6rem 0;
+	margin: 0 0 4rem 0;
 }
 
 .home .grid:last-child {

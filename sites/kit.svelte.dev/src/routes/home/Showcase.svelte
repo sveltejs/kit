@@ -11,10 +11,8 @@
 	];
 </script>
 
-<Section
-	--background="radial-gradient(circle at top right, rgb(230, 233, 236), rgb(244, 245, 247))"
->
-	<h2>built with SvelteKit</h2>
+<Section --background="var(--sk-theme-2)">
+	<!-- <h2>built with SvelteKit</h2> -->
 
 	<div class="grid" style="--columns: 3">
 		{#each showcase as { url, image }}
