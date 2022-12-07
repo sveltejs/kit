@@ -1,5 +1,4 @@
 <script>
-	import testimonials from './testimonials.mp4';
 	import volume_off from './volume-off.svg';
 	import volume_high from './volume-high.svg';
 	import { onMount } from 'svelte';
@@ -41,7 +40,7 @@
 
 <div class="video-player">
 	<video
-		src={testimonials}
+		src="https://sveltejs.github.io/assets/svelte-origins-preview.mp4"
 		loop
 		bind:this={video}
 		bind:muted
