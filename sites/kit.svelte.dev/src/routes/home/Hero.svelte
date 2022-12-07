@@ -1,32 +1,32 @@
 <script>
 	import logotype from './svelte-kit-logotype.svg';
 	import background from './svelte-kit-machine.webp?w=1440;800;600;480&format=avif;webp;png&picture';
+
+	console.log(background);
 </script>
 
-<section class="hero-banner">
-	<div class="hero-container">
+<section class="hero">
+	<div class="hero-contents">
 		<div class="hero-text">
 			<img alt="SvelteKit logotype" width="400" height="50" class="logotype" src={logotype} />
 			<div class="tagline">web development, streamlined</div>
 			<a class="cta" href="/docs/introduction">read the docs</a>
 		</div>
 
-		<div class="hero-image">
-			<picture sizes="(min-width: 480px) 800px, (min-width: 1024px) 480px, 600px">
-				{#each Object.entries(background.sources) as [format, images]}
-					<source
-						srcset={images.map((i) => `${i.src} ${i.w}w`).join(', ')}
-						type={'image/' + format}
-					/>
-				{/each}
-				<img src={background.fallback.src} alt="SvelteKit illustration" />
-			</picture>
-		</div>
+		<picture class="hero-image" sizes="(min-width: 480px) 800px, (min-width: 1024px) 480px, 600px">
+			{#each Object.entries(background.sources) as [format, images]}
+				<source
+					srcset={images.map((i) => `${i.src} ${i.w}w`).join(', ')}
+					type={'image/' + format}
+				/>
+			{/each}
+			<img src={background.fallback.src} alt="SvelteKit illustration" />
+		</picture>
 	</div>
 </section>
 
 <style>
-	.hero-banner {
+	.hero {
 		max-width: 100vw;
 		background: hsl(210, 7%, 84%);
 		background: radial-gradient(
@@ -42,62 +42,53 @@
 			),
 			linear-gradient(0deg, hsl(204, 38%, 90%), hsl(204, 38%, 90%));
 		position: relative;
-		padding: 8rem var(--sk-page-padding-side) 0;
-		display: flex;
-		justify-content: flex-start;
-		align-items: center;
-		overflow: hidden;
+		padding: 8rem var(--sk-page-padding-side);
 	}
 
-	.hero-container {
-		width: 100%;
-		max-width: 90rem;
+	.hero-contents {
+		position: relative;
+		max-width: 48rem;
 		margin: 0 auto;
-		justify-content: center;
+		padding-bottom: 10rem;
 	}
 
 	.hero-text {
-		display: flex;
-		flex-direction: column;
-		justify-content: center;
-		align-items: center;
+		text-align: center;
 	}
 
-	.hero-banner .tagline {
-		margin-top: 0;
-		position: relative;
+	.hero .tagline {
 		font-size: var(--sk-text-l);
 		font-weight: 200;
 		line-height: 1.2;
-		text-align: center;
 		color: var(--sk-text);
-		/* max-width: 12em; */
 		font-family: var(--sk-font);
+		max-width: 12em;
+		margin: 0 auto;
 	}
 
 	.logotype {
 		position: relative;
 		width: 100%;
 		max-width: 400px;
-		margin: 0 0 2rem 0;
+		margin: 0 0 1rem 0;
 	}
 
 	.hero-image {
-		display: flex;
-		flex: 1;
-		justify-content: center;
-		align-items: center;
-		pointer-events: none;
+		--size: 64rem;
+		position: absolute;
+		left: calc(50% - 0.53 * var(--size));
+		bottom: -28rem;
 	}
 
 	.hero-image img {
-		width: 600px;
-		height: 450px;
+		width: var(--size);
+		aspect-ratio: 4 / 3;
 		object-fit: cover;
-		transform: translate(-2%, -10%);
+		pointer-events: none;
 	}
 
 	.cta {
+		display: inline-block;
 		background: var(--sk-theme-1);
 		padding: 0.5em 1em;
 		font-size: var(--sk-text-m);
@@ -106,54 +97,35 @@
 		margin: 1em 0;
 	}
 
-	@media (min-width: 480px) {
-		.hero-banner .tagline {
-			max-width: auto;
-		}
-
-		.hero-image img {
-			width: 800px;
-			height: 600px;
+	@media (min-width: 400px) {
+		.hero .tagline {
+			max-width: none;
 		}
 	}
 
-	@media (min-width: 1024px) {
-		.hero-banner {
-			padding: 0 var(--sk-page-padding-side);
+	@media (min-width: 768px) {
+		.hero {
+			padding: calc(16rem + var(--sk-nav-height)) var(--sk-page-padding-side) 16rem;
+		}
+		.hero-contents {
+			max-width: calc(120rem - 2 * var(--side-nav));
+			padding-bottom: 0rem;
 		}
 
 		.hero-text {
-			margin-top: -5rem;
-			align-items: flex-end;
-			flex: 1;
+			text-align: left;
 		}
 
 		.hero-image {
-			flex: 1.2;
-		}
-
-		.hero-image img {
-			width: 480px;
-			object-fit: contain;
-			transform: scale(1.8);
-		}
-
-		.hero-banner .tagline {
-			text-align: right;
-			/* max-width: 12em; */
-		}
-
-		.hero-container {
-			height: 45vh;
-			display: flex;
-			justify-content: flex-start;
-			margin: 0 auto;
-			padding: 0;
+			--size: min(100vw, 120rem);
+			left: auto;
+			right: -20rem;
+			bottom: calc(-5rem - 0.38 * var(--size));
 		}
 	}
 
 	@media (prefers-color-scheme: dark) {
-		.hero-banner {
+		.hero {
 			background: hsl(210, 7%, 20%);
 			background: radial-gradient(
 					64.14% 72.25% at 47.58% 31.75%,
