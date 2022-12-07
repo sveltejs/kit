@@ -76,13 +76,13 @@
 		position: absolute;
 		left: calc(50% - 0.53 * var(--size));
 		bottom: -28rem;
+		pointer-events: none;
 	}
 
 	.hero-image img {
 		width: var(--size);
 		aspect-ratio: 4 / 3;
 		object-fit: cover;
-		pointer-events: none;
 	}
 
 	.cta {
