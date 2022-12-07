@@ -151,13 +151,23 @@ test.describe('trailingSlash', () => {
 		expect(await page.textContent('h2')).toBe('/slash/child/');
 	});
 
-	test('ignores trailing slash on endpoint', async ({ baseURL, request }) => {
+	test('removes trailing slash on endpoint', async ({ baseURL, request }) => {
 		const r1 = await request.get('/path-base/endpoint/');
-		expect(r1.url()).toBe(`${baseURL}/path-base/endpoint/`);
+		expect(r1.url()).toBe(`${baseURL}/path-base/endpoint`);
 		expect(await r1.text()).toBe('hi');
 
 		const r2 = await request.get('/path-base/endpoint');
 		expect(r2.url()).toBe(`${baseURL}/path-base/endpoint`);
+		expect(await r2.text()).toBe('hi');
+	});
+
+	test('adds trailing slash to endpoint', async ({ baseURL, request }) => {
+		const r1 = await request.get('/path-base/endpoint-with-slash');
+		expect(r1.url()).toBe(`${baseURL}/path-base/endpoint-with-slash/`);
+		expect(await r1.text()).toBe('hi');
+
+		const r2 = await request.get('/path-base/endpoint-with-slash/');
+		expect(r2.url()).toBe(`${baseURL}/path-base/endpoint-with-slash/`);
 		expect(await r2.text()).toBe('hi');
 	});
 
@@ -167,14 +177,17 @@ test.describe('trailingSlash', () => {
 
 		expect(data).toEqual({
 			type: 'data',
-			nodes: [null, { type: 'data', data: [{ message: 1 }, 'hi'], uses: {} }]
+			nodes: [
+				{ type: 'data', data: [null], uses: {}, slash: 'always' },
+				{ type: 'data', data: [{ message: 1 }, 'hi'], uses: {} }
+			]
 		});
 	});
 
-	test('accounts for trailingSlash when prefetching', async ({ app, page, javaScriptEnabled }) => {
+	test('accounts for trailingSlash when preloading', async ({ app, page, javaScriptEnabled }) => {
 		if (!javaScriptEnabled) return;
 
-		await page.goto('/path-base/prefetching');
+		await page.goto('/path-base/preloading');
 
 		/** @type {string[]} */
 		let requests = [];
@@ -182,7 +195,7 @@ test.describe('trailingSlash', () => {
 
 		// also wait for network processing to complete, see
 		// https://playwright.dev/docs/network#network-events
-		await app.prefetch('/path-base/prefetching/prefetched');
+		await app.preloadData('/path-base/preloading/preloaded');
 
 		// svelte request made is environment dependent
 		if (process.env.DEV) {
@@ -191,10 +204,10 @@ test.describe('trailingSlash', () => {
 			expect(requests.filter((req) => req.endsWith('.js')).length).toBeGreaterThan(0);
 		}
 
-		expect(requests.includes(`/path-base/prefetching/prefetched/__data.json`)).toBe(true);
+		expect(requests.includes(`/path-base/preloading/preloaded/__data.json`)).toBe(true);
 
 		requests = [];
-		await app.goto('/path-base/prefetching/prefetched');
+		await app.goto('/path-base/preloading/preloaded');
 		expect(requests).toEqual([]);
 	});
 });

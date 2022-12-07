@@ -101,14 +101,15 @@ test.describe('a11y', () => {
 });
 
 test.describe('Caching', () => {
-	test('caches __data.json requests with Vary header', async ({ page, app }) => {
+	test('caches __data.json requests with invalidated search param', async ({ page, app }) => {
 		await page.goto('/');
 		const [, response] = await Promise.all([
 			app.goto('/caching/server-data'),
-			page.waitForResponse((request) => request.url().endsWith('server-data/__data.json'))
+			page.waitForResponse((request) =>
+				request.url().endsWith('server-data/__data.json?x-sveltekit-invalidated=_1')
+			)
 		]);
 		expect(response.headers()['cache-control']).toBe('public, max-age=30');
-		expect(response.headers()['vary']).toBe('x-sveltekit-invalidated');
 	});
 });
 
@@ -607,32 +608,34 @@ test.describe('Load', () => {
 	});
 
 	if (process.env.DEV) {
-		test('using window.fetch causes a warning', async ({ page }) => {
-			const port = 5173;
+		test('using window.fetch causes a warning', async ({ page, baseURL }) => {
+			await Promise.all([
+				page.goto('/load/window-fetch/incorrect'),
+				page.waitForEvent('console', {
+					predicate: (message) => {
+						return (
+							message.text() ===
+							`Loading ${baseURL}/load/window-fetch/data.json using \`window.fetch\`. For best results, use the \`fetch\` that is passed to your \`load\` function: https://kit.svelte.dev/docs/load#making-fetch-requests`
+						);
+					},
+					timeout: 3_000
+				})
+			]);
+			expect(await page.textContent('h1')).toBe('42');
 
 			/** @type {string[]} */
 			const warnings = [];
-
 			page.on('console', (msg) => {
 				if (msg.type() === 'warning') {
 					warnings.push(msg.text());
 				}
 			});
 
-			await page.goto('/load/window-fetch/incorrect');
-			expect(await page.textContent('h1')).toBe('42');
-
-			expect(warnings).toContain(
-				`Loading http://localhost:${port}/load/window-fetch/data.json using \`window.fetch\`. For best results, use the \`fetch\` that is passed to your \`load\` function: https://kit.svelte.dev/docs/load#making-fetch-requests`
-			);
-
-			warnings.length = 0;
-
 			await page.goto('/load/window-fetch/correct');
 			expect(await page.textContent('h1')).toBe('42');
 
 			expect(warnings).not.toContain(
-				`Loading http://localhost:${port}/load/window-fetch/data.json using \`window.fetch\`. For best results, use the \`fetch\` that is passed to your \`load\` function: https://kit.svelte.dev/docs/load#making-fetch-requests`
+				`Loading ${baseURL}/load/window-fetch/data.json using \`window.fetch\`. For best results, use the \`fetch\` that is passed to your \`load\` function: https://kit.svelte.dev/docs/load#making-fetch-requests`
 			);
 		});
 	}
@@ -666,8 +669,8 @@ test.describe('Prefetching', () => {
 		// also wait for network processing to complete, see
 		// https://playwright.dev/docs/network#network-events
 		await Promise.all([
-			page.waitForResponse(`${baseURL}/routing/prefetching/prefetched.json`),
-			app.prefetch('/routing/prefetching/prefetched')
+			page.waitForResponse(`${baseURL}/routing/preloading/preloaded.json`),
+			app.preloadData('/routing/preloading/preloaded')
 		]);
 
 		// svelte request made is environment dependent
@@ -679,53 +682,53 @@ test.describe('Prefetching', () => {
 			expect(requests.filter((req) => req.endsWith('.js')).length).toBeGreaterThan(0);
 		}
 
-		expect(requests.includes(`${baseURL}/routing/prefetching/prefetched.json`)).toBe(true);
+		expect(requests.includes(`${baseURL}/routing/preloading/preloaded.json`)).toBe(true);
 
 		requests = [];
-		await app.goto('/routing/prefetching/prefetched');
+		await app.goto('/routing/preloading/preloaded');
 		expect(requests).toEqual([]);
 
 		try {
-			await app.prefetch('https://example.com');
+			await app.preloadData('https://example.com');
 			throw new Error('Error was not thrown');
 		} catch (/** @type {any} */ e) {
-			expect(e.message).toMatch('Attempted to prefetch a URL that does not belong to this app');
+			expect(e.message).toMatch('Attempted to preload a URL that does not belong to this app');
 		}
 	});
 
-	test('chooses correct route when hash route is prefetched but regular route is clicked', async ({
+	test('chooses correct route when hash route is preloaded but regular route is clicked', async ({
 		app,
 		page
 	}) => {
 		await page.goto('/routing/a');
-		await app.prefetch('/routing/prefetching/hash-route#please-dont-show-me');
-		await app.goto('/routing/prefetching/hash-route');
+		await app.preloadData('/routing/preloading/hash-route#please-dont-show-me');
+		await app.goto('/routing/preloading/hash-route');
 		await expect(page.locator('h1')).not.toHaveText('Oopsie');
 	});
 
 	test('does not rerun load on calls to duplicate preload hash route', async ({ app, page }) => {
 		await page.goto('/routing/a');
 
-		await app.prefetch('/routing/prefetching/hash-route#please-dont-show-me');
-		await app.prefetch('/routing/prefetching/hash-route#please-dont-show-me');
-		await app.goto('/routing/prefetching/hash-route#please-dont-show-me');
+		await app.preloadData('/routing/preloading/hash-route#please-dont-show-me');
+		await app.preloadData('/routing/preloading/hash-route#please-dont-show-me');
+		await app.goto('/routing/preloading/hash-route#please-dont-show-me');
 		await expect(page.locator('p')).toHaveText('Loaded 1 times.');
 	});
 
 	test('does not rerun load on calls to different preload hash route', async ({ app, page }) => {
 		await page.goto('/routing/a');
 
-		await app.prefetch('/routing/prefetching/hash-route#please-dont-show-me');
-		await app.prefetch('/routing/prefetching/hash-route#please-dont-show-me-jr');
-		await app.goto('/routing/prefetching/hash-route#please-dont-show-me');
+		await app.preloadData('/routing/preloading/hash-route#please-dont-show-me');
+		await app.preloadData('/routing/preloading/hash-route#please-dont-show-me-jr');
+		await app.goto('/routing/preloading/hash-route#please-dont-show-me');
 		await expect(page.locator('p')).toHaveText('Loaded 1 times.');
 	});
 
-	test('does rerun load when prefetch errored', async ({ app, page }) => {
+	test('does rerun load when preload errored', async ({ app, page }) => {
 		await page.goto('/routing/a');
 
-		await app.prefetch('/routing/prefetching/prefetch-error');
-		await app.goto('/routing/prefetching/prefetch-error');
+		await app.preloadData('/routing/preloading/preload-error');
+		await app.goto('/routing/preloading/preload-error');
 		await expect(page.locator('p')).toHaveText('hello');
 	});
 });
@@ -734,7 +737,7 @@ test.describe('Routing', () => {
 	test('navigates to a new page without reloading', async ({ app, page, clicknav }) => {
 		await page.goto('/routing');
 
-		await app.prefetch('/routing/a').catch((e) => {
+		await app.preloadData('/routing/a').catch((e) => {
 			// from error handler tests; ignore
 			if (!e.message.includes('Crashing now')) throw e;
 		});
@@ -791,13 +794,50 @@ test.describe('Routing', () => {
 			await close();
 		}
 	});
+
+	test('ignores popstate events from outside the router', async ({ page }) => {
+		await page.goto('/routing/external-popstate');
+		expect(await page.textContent('h1')).toBe('hello');
+
+		await page.click('button');
+		expect(await page.textContent('h1')).toBe('hello');
+
+		await page.goBack();
+		expect(await page.textContent('h1')).toBe('hello');
+
+		await page.goForward();
+		expect(await page.textContent('h1')).toBe('hello');
+	});
+
+	test('ignores clicks outside the app target', async ({ page }) => {
+		await page.goto('/routing/link-outside-app-target/source');
+
+		await page.click('[href="/routing/link-outside-app-target/target"]');
+		expect(await page.textContent('h1')).toBe('target: 0');
+	});
+
+	test('responds to <form method="GET"> submission without reload', async ({ page }) => {
+		await page.goto('/routing/form-get');
+		expect(await page.textContent('h1')).toBe('...');
+		expect(await page.textContent('h2')).toBe('enter');
+
+		const requests = [];
+		page.on('request', (request) => requests.push(request.url()));
+
+		await page.locator('input').fill('updated');
+		await page.click('button');
+
+		expect(requests).toEqual([]);
+		expect(await page.textContent('h1')).toBe('updated');
+		expect(await page.textContent('h2')).toBe('form');
+	});
 });
 
 test.describe('Shadow DOM', () => {
 	test('client router captures anchors in shadow dom', async ({ app, page, clicknav }) => {
 		await page.goto('/routing/shadow-dom');
 
-		await app.prefetch('/routing/a').catch((e) => {
+		await app.preloadData('/routing/a').catch((e) => {
 			// from error handler tests; ignore
 			if (!e.message.includes('Crashing now')) throw e;
 		});
@@ -1027,41 +1067,49 @@ test.describe.serial('Invalidation', () => {
 		await clicknav('[href="/load/invalidation/route/shared/b"]');
 		expect(await page.textContent('h1')).toBe('route.id: /load/invalidation/route/shared/b');
 	});
+
+	test('$page.url can safely be mutated', async ({ page }) => {
+		await page.goto('/load/mutated-url?q=initial');
+		expect(await page.textContent('h1')).toBe('initial');
+
+		await page.click('button');
+		expect(await page.textContent('h1')).toBe('updated');
+	});
 });
 
 test.describe('data-sveltekit attributes', () => {
-	test('data-sveltekit-prefetch', async ({ baseURL, page }) => {
+	test('data-sveltekit-preload-data', async ({ baseURL, page }) => {
 		/** @type {string[]} */
 		const requests = [];
 		page.on('request', (r) => requests.push(r.url()));
 
 		const module = process.env.DEV
-			? `${baseURL}/src/routes/data-sveltekit/prefetch/target/+page.svelte`
-			: `${baseURL}/_app/immutable/components/pages/data-sveltekit/prefetch/target/_page`;
+			? `${baseURL}/src/routes/data-sveltekit/preload-data/target/+page.svelte`
+			: `${baseURL}/_app/immutable/components/pages/data-sveltekit/preload-data/target/_page`;
 
-		await page.goto('/data-sveltekit/prefetch');
+		await page.goto('/data-sveltekit/preload-data');
 		await page.locator('#one').dispatchEvent('mousemove');
 		await Promise.all([
-			page.waitForTimeout(100), // wait for prefetching to start
-			page.waitForLoadState('networkidle') // wait for prefetching to finish
+			page.waitForTimeout(100), // wait for preloading to start
+			page.waitForLoadState('networkidle') // wait for preloading to finish
 		]);
 		expect(requests.find((r) => r.startsWith(module))).toBeDefined();
 
 		requests.length = 0;
-		await page.goto('/data-sveltekit/prefetch');
+		await page.goto('/data-sveltekit/preload-data');
 		await page.locator('#two').dispatchEvent('mousemove');
 		await Promise.all([
-			page.waitForTimeout(100), // wait for prefetching to start
-			page.waitForLoadState('networkidle') // wait for prefetching to finish
+			page.waitForTimeout(100), // wait for preloading to start
+			page.waitForLoadState('networkidle') // wait for preloading to finish
 		]);
 		expect(requests.find((r) => r.startsWith(module))).toBeDefined();
 
 		requests.length = 0;
-		await page.goto('/data-sveltekit/prefetch');
+		await page.goto('/data-sveltekit/preload-data');
 		await page.locator('#three').dispatchEvent('mousemove');
 		await Promise.all([
-			page.waitForTimeout(100), // wait for prefetching to start
-			page.waitForLoadState('networkidle') // wait for prefetching to finish
+			page.waitForTimeout(100), // wait for preloading to start
+			page.waitForLoadState('networkidle') // wait for preloading to finish
 		]);
 		expect(requests.find((r) => r.startsWith(module))).toBeUndefined();
 	});
@@ -1135,5 +1183,28 @@ test.describe('cookies', () => {
 		await expect(page.locator('p')).toHaveText('foo=bar');
 		await Promise.all([page.waitForNavigation(), page.click('button')]);
 		await expect(page.locator('p')).toHaveText('foo=bar');
+	});
+});
+
+test.describe('Interactivity', () => {
+	test('click events on removed elements are ignored', async ({ page }) => {
+		let errored = false;
+
+		page.on('pageerror', (err) => {
+			console.error(err);
+			errored = true;
+		});
+
+		await page.goto('/interactivity/toggle-element');
+		expect(await page.textContent('button')).toBe('remove');
+
+		await page.click('button');
+		expect(await page.textContent('button')).toBe('add');
+		expect(await page.textContent('a')).toBe('add');
+
+		await page.click('a');
+		expect(await page.textContent('a')).toBe('remove');
+
+		expect(errored).toBe(false);
 	});
 });

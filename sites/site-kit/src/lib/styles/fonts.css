@@ -1,0 +1,23 @@
+@font-face {
+	font-family: 'Overpass';
+	font-style: normal;
+	font-weight: 300;
+	src: local('Overpass Light '), local('Overpass-Light'),
+		url('./fonts/overpass/overpass-latin-300.woff2') format('woff2');
+}
+
+@font-face {
+	font-family: 'Overpass';
+	font-style: normal;
+	font-weight: 600;
+	src: local('Overpass Bold '), local('Overpass-Bold'),
+		url('./fonts/overpass/overpass-latin-600.woff2') format('woff2');
+}
+
+@font-face {
+	font-family: 'Fira Mono';
+	font-style: normal;
+	font-weight: 400;
+	src: local('Fira Mono Regular '), local('Fira Mono-Regular'),
+		url('./fonts/fira-mono/fira-mono-latin-400.woff2') format('woff2');
+}

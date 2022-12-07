@@ -1,6 +1,6 @@
 {
 	"name": "@sveltejs/adapter-auto",
-	"version": "1.0.0-next.88",
+	"version": "1.0.0-next.90",
 	"repository": {
 		"type": "git",
 		"url": "https://github.com/sveltejs/kit",
@@ -30,10 +30,11 @@
 		"check": "tsc"
 	},
 	"devDependencies": {
-		"@types/node": "^16.11.68",
-		"typescript": "^4.8.4"
+		"@sveltejs/kit": "workspace:*",
+		"@types/node": "^16.18.6",
+		"typescript": "^4.9.3"
 	},
 	"dependencies": {
-		"import-meta-resolve": "^2.1.0"
+		"import-meta-resolve": "^2.2.0"
 	}
 }

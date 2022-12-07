@@ -22,7 +22,6 @@ const config = {
 		appDir: '_wheee',
 		inlineStyleThreshold: 1024,
 		outDir: '.custom-out-dir',
-		trailingSlash: 'always',
 		paths: {
 			base: '/path-base',
 			assets: 'https://cdn.example.com/stuff'

@@ -3,7 +3,7 @@ import { render_page } from './page/index.js';
 import { render_response } from './page/render.js';
 import { respond_with_error } from './page/respond_with_error.js';
 import { is_form_content_type } from '../../utils/http.js';
-import { GENERIC_ERROR, handle_fatal_error, redirect_response } from './utils.js';
+import { GENERIC_ERROR, get_option, handle_fatal_error, redirect_response } from './utils.js';
 import {
 	decode_pathname,
 	decode_params,
@@ -13,7 +13,7 @@ import {
 	strip_data_suffix
 } from '../../utils/url.js';
 import { exec } from '../../utils/routing.js';
-import { INVALIDATED_HEADER, render_data } from './data/index.js';
+import { redirect_json_response, render_data } from './data/index.js';
 import { add_cookies_to_headers, get_cookies } from './cookie.js';
 import { create_fetch } from './fetch.js';
 import { Redirect } from '../control.js';
@@ -70,13 +70,14 @@ export async function respond(request, options, state) {
 	if (is_data_request) decoded = strip_data_suffix(decoded) || '/';
 
 	if (!state.prerendering?.fallback) {
+		// TODO this could theoretically break — should probably be inside a try-catch
 		const matchers = await options.manifest._.matchers();
 
 		for (const candidate of options.manifest._.routes) {
 			const match = candidate.pattern.exec(decoded);
 			if (!match) continue;
 
-			const matched = exec(match, candidate, matchers);
+			const matched = exec(match, candidate.params, matchers);
 			if (matched) {
 				route = candidate;
 				params = decode_params(matched);
@@ -85,34 +86,17 @@ export async function respond(request, options, state) {
 		}
 	}
 
-	if (route?.page && !is_data_request) {
-		const normalized = normalize_path(url.pathname, options.trailing_slash);
-
-		if (normalized !== url.pathname && !state.prerendering?.fallback) {
-			return new Response(undefined, {
-				status: 301,
-				headers: {
-					'x-sveltekit-normalize': '1',
-					location:
-						// ensure paths starting with '//' are not treated as protocol-relative
-						(normalized.startsWith('//') ? url.origin + normalized : normalized) +
-						(url.search === '?' ? '' : url.search)
-				}
-			});
-		}
-	}
+	/** @type {import('types').TrailingSlash | void} */
+	let trailing_slash = undefined;
 
 	/** @type {Record<string, string>} */
 	const headers = {};
 
-	const { cookies, new_cookies, get_cookie_header } = get_cookies(request, url, options);
-
-	if (state.prerendering && !state.prerendering.fallback) disable_search(url);
-
 	/** @type {import('types').RequestEvent} */
 	const event = {
-		cookies,
-		// @ts-expect-error this is added in the next step, because `create_fetch` needs a reference to `event`
+		// @ts-expect-error `cookies` and `fetch` need to be created after the `event` itself
+		cookies: null,
+		// @ts-expect-error
 		fetch: null,
 		getClientAddress:
 			state.getClientAddress ||
@@ -148,8 +132,6 @@ export async function respond(request, options, state) {
 		},
 		url
 	};
-
-	event.fetch = create_fetch({ event, options, state, get_cookie_header });
 
 	// TODO remove this for 1.0
 	/**
@@ -193,108 +175,50 @@ export async function respond(request, options, state) {
 		preload: default_preload
 	};
 
-	/**
-	 *
-	 * @param {import('types').RequestEvent} event
-	 * @param {import('types').ResolveOptions} [opts]
-	 */
-	async function resolve(event, opts) {
-		try {
-			if (opts) {
-				// TODO remove for 1.0
-				if ('transformPage' in opts) {
-					throw new Error(
-						'transformPage has been replaced by transformPageChunk — see https://github.com/sveltejs/kit/pull/5657 for more information'
-					);
-				}
-
-				if ('ssr' in opts) {
-					throw new Error(
-						'ssr has been removed, set it in the appropriate +layout.js instead. See the PR for more information: https://github.com/sveltejs/kit/pull/6197'
-					);
-				}
-
-				resolve_opts = {
-					transformPageChunk: opts.transformPageChunk || default_transform,
-					filterSerializedResponseHeaders: opts.filterSerializedResponseHeaders || default_filter,
-					preload: opts.preload || default_preload
-				};
-			}
-
-			if (state.prerendering?.fallback) {
-				return await render_response({
-					event,
-					options,
-					state,
-					page_config: { ssr: false, csr: true },
-					status: 200,
-					error: null,
-					branch: [],
-					fetched: [],
-					resolve_opts
-				});
-			}
-
-			if (route) {
-				/** @type {Response} */
-				let response;
-
-				if (is_data_request) {
-					response = await render_data(event, route, options, state);
-				} else if (route.endpoint && (!route.page || is_endpoint_request(event))) {
-					response = await render_endpoint(event, await route.endpoint(), state);
-				} else if (route.page) {
-					response = await render_page(event, route, route.page, options, state, resolve_opts);
-				} else {
-					// a route will always have a page or an endpoint, but TypeScript
-					// doesn't know that
-					throw new Error('This should never happen');
-				}
-
-				return response;
-			}
-
-			if (state.initiator === GENERIC_ERROR) {
-				return new Response('Internal Server Error', {
-					status: 500
-				});
-			}
-
-			// if this request came direct from the user, rather than
-			// via a `fetch` in a `load`, render a 404 page
-			if (!state.initiator) {
-				return await respond_with_error({
-					event,
-					options,
-					state,
-					status: 404,
-					error: new Error(`Not found: ${event.url.pathname}`),
-					resolve_opts
-				});
-			}
-
-			if (state.prerendering) {
-				return new Response('not found', { status: 404 });
-			}
-
-			// we can't load the endpoint from our own manifest,
-			// so we need to make an actual HTTP request
-			return await fetch(request);
-		} catch (error) {
-			// HttpError from endpoint can end up here - TODO should it be handled there instead?
-			return handle_fatal_error(event, options, error);
-		} finally {
-			event.cookies.set = () => {
-				throw new Error('Cannot use `cookies.set(...)` after the response has been generated');
-			};
-
-			event.setHeaders = () => {
-				throw new Error('Cannot use `setHeaders(...)` after the response has been generated');
-			};
-		}
-	}
-
 	try {
+		// determine whether we need to redirect to add/remove a trailing slash
+		if (route && !is_data_request) {
+			if (route.page) {
+				const nodes = await Promise.all([
+					// we use == here rather than === because [undefined] serializes as "[null]"
+					...route.page.layouts.map((n) => (n == undefined ? n : options.manifest._.nodes[n]())),
+					options.manifest._.nodes[route.page.leaf]()
+				]);
+
+				trailing_slash = get_option(nodes, 'trailingSlash');
+			} else if (route.endpoint) {
+				const node = await route.endpoint();
+				trailing_slash = node.trailingSlash;
+			}
+
+			const normalized = normalize_path(url.pathname, trailing_slash ?? 'never');
+
+			if (normalized !== url.pathname && !state.prerendering?.fallback) {
+				return new Response(undefined, {
+					status: 301,
+					headers: {
+						'x-sveltekit-normalize': '1',
+						location:
+							// ensure paths starting with '//' are not treated as protocol-relative
+							(normalized.startsWith('//') ? url.origin + normalized : normalized) +
+							(url.search === '?' ? '' : url.search)
+					}
+				});
+			}
+		}
+
+		const { cookies, new_cookies, get_cookie_header } = get_cookies(
+			request,
+			url,
+			options.dev,
+			trailing_slash ?? 'never'
+		);
+
+		event.cookies = cookies;
+		event.fetch = create_fetch({ event, options, state, get_cookie_header });
+
+		if (state.prerendering && !state.prerendering.fallback) disable_search(url);
+
 		const response = await options.hooks.handle({
 			event,
 			resolve: (event, opts) =>
@@ -304,16 +228,6 @@ export async function respond(request, options, state) {
 					for (const key in headers) {
 						const value = headers[key];
 						response.headers.set(key, /** @type {string} */ (value));
-					}
-
-					if (is_data_request) {
-						// set the Vary header on __data.json requests to ensure we don't cache
-						// incomplete responses with skipped data loads
-						// https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Vary
-						const vary = response.headers.get('Vary');
-						if (vary !== '*') {
-							response.headers.append('Vary', INVALIDATED_HEADER);
-						}
 					}
 
 					add_cookies_to_headers(response.headers, Object.values(new_cookies));
@@ -365,11 +279,125 @@ export async function respond(request, options, state) {
 			}
 		}
 
+		// Edge case: If user does `return Response(30x)` in handle hook while processing a data request,
+		// we need to transform the redirect response to a corresponding JSON response.
+		if (is_data_request && response.status >= 300 && response.status <= 308) {
+			const location = response.headers.get('location');
+			if (location) {
+				return redirect_json_response(new Redirect(/** @type {any} */ (response.status), location));
+			}
+		}
+
 		return response;
 	} catch (error) {
 		if (error instanceof Redirect) {
-			return redirect_response(error.status, error.location);
+			if (is_data_request) {
+				return redirect_json_response(error);
+			} else {
+				return redirect_response(error.status, error.location);
+			}
 		}
-		return handle_fatal_error(event, options, error);
+		return await handle_fatal_error(event, options, error);
+	}
+
+	/**
+	 *
+	 * @param {import('types').RequestEvent} event
+	 * @param {import('types').ResolveOptions} [opts]
+	 */
+	async function resolve(event, opts) {
+		try {
+			if (opts) {
+				// TODO remove for 1.0
+				if ('transformPage' in opts) {
+					throw new Error(
+						'transformPage has been replaced by transformPageChunk — see https://github.com/sveltejs/kit/pull/5657 for more information'
+					);
+				}
+
+				if ('ssr' in opts) {
+					throw new Error(
+						'ssr has been removed, set it in the appropriate +layout.js instead. See the PR for more information: https://github.com/sveltejs/kit/pull/6197'
+					);
+				}
+
+				resolve_opts = {
+					transformPageChunk: opts.transformPageChunk || default_transform,
+					filterSerializedResponseHeaders: opts.filterSerializedResponseHeaders || default_filter,
+					preload: opts.preload || default_preload
+				};
+			}
+
+			if (state.prerendering?.fallback) {
+				return await render_response({
+					event,
+					options,
+					state,
+					page_config: { ssr: false, csr: true },
+					status: 200,
+					error: null,
+					branch: [],
+					fetched: [],
+					resolve_opts
+				});
+			}
+
+			if (route) {
+				/** @type {Response} */
+				let response;
+
+				if (is_data_request) {
+					response = await render_data(event, route, options, state, trailing_slash ?? 'never');
+				} else if (route.endpoint && (!route.page || is_endpoint_request(event))) {
+					response = await render_endpoint(event, await route.endpoint(), state);
+				} else if (route.page) {
+					response = await render_page(event, route, route.page, options, state, resolve_opts);
+				} else {
+					// a route will always have a page or an endpoint, but TypeScript
+					// doesn't know that
+					throw new Error('This should never happen');
+				}
+
+				return response;
+			}
+
+			if (state.initiator === GENERIC_ERROR) {
+				return new Response('Internal Server Error', {
+					status: 500
+				});
+			}
+
+			// if this request came direct from the user, rather than
+			// via a `fetch` in a `load`, render a 404 page
+			if (!state.initiator) {
+				return await respond_with_error({
+					event,
+					options,
+					state,
+					status: 404,
+					error: new Error(`Not found: ${event.url.pathname}`),
+					resolve_opts
+				});
+			}
+
+			if (state.prerendering) {
+				return new Response('not found', { status: 404 });
+			}
+
+			// we can't load the endpoint from our own manifest,
+			// so we need to make an actual HTTP request
+			return await fetch(request);
+		} catch (error) {
+			// HttpError from endpoint can end up here - TODO should it be handled there instead?
+			return await handle_fatal_error(event, options, error);
+		} finally {
+			event.cookies.set = () => {
+				throw new Error('Cannot use `cookies.set(...)` after the response has been generated');
+			};
+
+			event.setHeaders = () => {
+				throw new Error('Cannot use `setHeaders(...)` after the response has been generated');
+			};
+		}
 	}
 }

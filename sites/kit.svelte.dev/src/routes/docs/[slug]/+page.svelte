@@ -1,9 +1,6 @@
 <script>
 	import { page } from '$app/stores';
 	import { Icon } from '@sveltejs/site-kit';
-	import '@sveltejs/site-kit/code.css';
-	import '$lib/docs/client/docs.css';
-	import '$lib/docs/client/shiki.css';
 	import * as hovers from '$lib/docs/client/hovers.js';
 	import OnThisPage from './OnThisPage.svelte';
 
@@ -26,7 +23,7 @@
 	<meta name="Description" content="{data.page.title} • SvelteKit documentation" />
 </svelte:head>
 
-<div class="content listify">
+<div class="text content">
 	<h1>{data.page.title}</h1>
 
 	<a class="edit" href="https://github.com/sveltejs/kit/edit/master/documentation/{data.page.file}">
@@ -57,6 +54,11 @@
 <OnThisPage details={data.page} sections={data.page.sections} />
 
 <style>
+	.content {
+		width: 100%;
+		margin: 0;
+	}
+
 	.edit {
 		position: relative;
 		font-size: 1.4rem;
@@ -74,8 +76,8 @@
 	}
 
 	.controls {
-		max-width: calc(var(--linemax) + 1rem);
-		border-top: 1px solid #eee;
+		max-width: calc(var(--sk-line-max-width) + 1rem);
+		border-top: 1px solid var(--sk-back-4);
 		padding: 1rem 0 0 0;
 		display: grid;
 		grid-template-columns: 1fr 1fr;
@@ -95,7 +97,7 @@
 		font-size: 1.2rem;
 		text-transform: uppercase;
 		font-weight: 600;
-		color: var(--second);
+		color: var(--sk-text-3);
 	}
 
 	.controls span.faded {

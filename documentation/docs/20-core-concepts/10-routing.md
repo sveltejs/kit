@@ -12,9 +12,9 @@ At the heart of SvelteKit is a _filesystem-based router_. The routes of your app
 
 Each route directory contains one or more _route files_, which can be identified by their `+` prefix.
 
-### +page
+## +page
 
-#### +page.svelte
+### +page.svelte
 
 A `+page.svelte` component defines a page of your app. By default, pages are rendered both on the server ([SSR](/docs/glossary#ssr)) for the initial request and in the browser ([CSR](/docs/glossary#csr-and-spa)) for subsequent navigation.
 
@@ -44,7 +44,7 @@ A `+page.svelte` component defines a page of your app. By default, pages are ren
 
 > Note that SvelteKit uses `<a>` elements to navigate between routes, rather than a framework-specific `<Link>` component.
 
-#### +page.js
+### +page.js
 
 Often, a page will need to load some data before it can be rendered. For this, we add a `+page.js` (or `+page.ts`, if you're TypeScript-inclined) module that exports a `load` function:
 
@@ -75,7 +75,7 @@ As well as `load`, `+page.js` can export values that configure the page's behavi
 
 You can find more information about these in [page options](/docs/page-options).
 
-#### +page.server.js
+### +page.server.js
 
 If your `load` function can only run on the server — for example, if it needs to fetch data from a database or you need to access private [environment variables](/docs/modules#$env-static-private) like API keys — then you can rename `+page.js` to `+page.server.js` and change the `PageLoad` type to `PageServerLoad`.
 
@@ -114,7 +114,7 @@ Like `+page.js`, `+page.server.js` can export [page options](/docs/page-options)
 
 A `+page.server.js` file can also export _actions_. If `load` lets you read data from the server, `actions` let you write data _to_ the server using the `<form>` element. To learn how to use them, see the [form actions](/docs/form-actions) section.
 
-### +error
+## +error
 
 If an error occurs during `load`, SvelteKit will render a default error page. You can customise this error page on a per-route basis by adding an `+error.svelte` file:
 
@@ -133,13 +133,13 @@ SvelteKit will 'walk up the tree' looking for the closest error boundary — if 
 
 You can read more about error handling [here](/docs/errors).
 
-### +layout
+## +layout
 
 So far, we've treated pages as entirely standalone components — upon navigation, the existing `+page.svelte` component will be destroyed, and a new one will take its place.
 
 But in many apps, there are elements that should be visible on _every_ page, such as top-level navigation or a footer. Instead of repeating them in every `+page.svelte`, we can put them in _layouts_.
 
-#### +layout.svelte
+### +layout.svelte
 
 To create a layout that applies to every page, make a file called `src/routes/+layout.svelte`. The default layout (the one that SvelteKit uses if you don't bring your own) looks like this...
 
@@ -203,7 +203,7 @@ We can create a layout that only applies to pages below `/settings` (while inher
 
 By default, each layout inherits the next layout above it. Sometimes that isn't what you want - in this case, [advanced layouts](/docs/advanced-routing#advanced-layouts) can help you.
 
-#### +layout.js
+### +layout.js
 
 Just like `+page.svelte` loading data from `+page.js`, your `+layout.svelte` component can get data from a [`load`](/docs/load) function in `+layout.js`.
 
@@ -236,13 +236,13 @@ Data returned from a layout's `load` function is also available to all its child
 
 > Often, layout data is unchanged when navigating between pages. SvelteKit will intelligently re-run [`load`](/docs/load) functions when necessary.
 
-#### +layout.server.js
+### +layout.server.js
 
 To run your layout's `load` function on the server, move it to `+layout.server.js`, and change the `LayoutLoad` type to `LayoutServerLoad`.
 
 Like `+layout.js`, `+layout.server.js` can export [page options](/docs/page-options) — `prerender`, `ssr` and `csr`.
 
-### +server
+## +server
 
 As well as pages, you can define routes with a `+server.js` file (sometimes referred to as an 'API route' or an 'endpoint'), which gives you full control over the response. Your `+server.js` file (or `+server.ts`) exports functions corresponding to HTTP verbs like `GET`, `POST`, `PATCH`, `PUT` and `DELETE` that take a `RequestEvent` argument and return a [`Response`](https://developer.mozilla.org/en-US/docs/Web/API/Response) object.
 
@@ -271,11 +271,11 @@ export function GET({ url }) {
 
 The first argument to `Response` can be a [`ReadableStream`](https://developer.mozilla.org/en-US/docs/Web/API/ReadableStream), making it possible to stream large amounts of data or create server-sent events (unless deploying to platforms that buffer responses, like AWS Lambda).
 
-You can use the `error`, `redirect` and `json` methods from `@sveltejs/kit` for convenience (but you don't have to).
+You can use the [`error`](/docs/modules#sveltejs-kit-error), [`redirect`](/docs/modules#sveltejs-kit-redirect) and [`json`](/docs/modules#sveltejs-kit-json) methods from `@sveltejs/kit` for convenience (but you don't have to).
 
 If an error is thrown (either `throw error(...)` or an unexpected error), the response will be a JSON representation of the error or a fallback error page — which can be customised via `src/error.html` — depending on the `Accept` header. The [`+error.svelte`](#error) component will _not_ be rendered in this case. You can read more about error handling [here](/docs/errors).
 
-#### Receiving data
+### Receiving data
 
 By exporting `POST`/`PUT`/`PATCH`/`DELETE` handlers, `+server.js` files can be used to create a complete API:
 
@@ -319,14 +319,14 @@ export async function POST({ request }) {
 
 > In general, [form actions](/docs/form-actions) are a better way to submit data from the browser to the server.
 
-#### Content negotiation
+### Content negotiation
 
 `+server.js` files can be placed in the same directory as `+page` files, allowing the same route to be either a page or an API endpoint. To determine which, SvelteKit applies the following rules:
 
 - `PUT`/`PATCH`/`DELETE` requests are always handled by `+server.js` since they do not apply to pages
 - `GET`/`POST` requests are treated as page requests if the `accept` header prioritises `text/html` (in other words, it's a browser page request), else they are handled by `+server.js`
 
-### $types
+## $types
 
 Throughout the examples above, we've been importing types from a `$types.d.ts` file. This is a file SvelteKit creates for you in a hidden directory if you're using TypeScript (or JavaScript with JSDoc type annotations) to give you type safety when working with your root files.
 
@@ -342,7 +342,7 @@ For example, annotating `export let data` with `PageData` (or `LayoutData`, for 
 
 In turn, annotating the `load` function with `PageLoad`, `PageServerLoad`, `LayoutLoad` or `LayoutServerLoad` (for `+page.js`, `+page.server.js`, `+layout.js` and `+layout.server.js` respectively) ensures that `params` and the return value are correctly typed.
 
-### Other files
+## Other files
 
 Any other files inside a route directory are ignored by SvelteKit. This means you can colocate components and utility modules with the routes that need them.
 

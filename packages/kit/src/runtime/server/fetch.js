@@ -128,6 +128,17 @@ export function create_fetch({ event, options, state, get_cookie_header }) {
 					throw new Error('Request body must be a string or TypedArray');
 				}
 
+				if (!request.headers.has('accept')) {
+					request.headers.set('accept', '*/*');
+				}
+
+				if (!request.headers.has('accept-language')) {
+					request.headers.set(
+						'accept-language',
+						/** @type {string} */ (event.request.headers.get('accept-language'))
+					);
+				}
+
 				response = await respond(request, options, state);
 
 				const set_cookie = response.headers.get('set-cookie');

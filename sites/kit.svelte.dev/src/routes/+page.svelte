@@ -41,7 +41,7 @@
 				of an SPA
 			</p>
 
-			<a data-sveltekit-prefetch href="/docs" class="cta">read the docs</a>
+			<a data-sveltekit-preload-data href="/docs" class="cta">read the docs</a>
 		</div>
 
 		<div slot="three">
@@ -51,7 +51,7 @@
 				support and more
 			</p>
 
-			<a data-sveltekit-prefetch href="/docs" class="cta">read the docs</a>
+			<a data-sveltekit-preload-data href="/docs" class="cta">read the docs</a>
 		</div>
 
 		<div class="description" slot="what">
@@ -78,7 +78,7 @@ cd my-app
 npm install
 npm run dev -- --open</code
 				></pre>
-			<a data-sveltekit-prefetch href="/docs" class="cta">get started</a>
+			<a data-sveltekit-preload-data href="/docs" class="cta">get started</a>
 		</div>
 	</Blurb>
 </div>
@@ -92,15 +92,14 @@ npm run dev -- --open</code
 		height: 100%;
 		display: flex;
 		flex-direction: column;
-		color: var(--second-text);
 	}
 
 	.orange-highlight {
-		color: var(--prime);
+		color: var(--sk-theme-1);
 	}
 
 	.blurb-shifter {
-		margin-top: calc(-10rem + var(--side-nav));
+		margin-top: calc(-10rem + var(--sk-page-padding-side));
 	}
 
 	@media (min-width: 900px) {

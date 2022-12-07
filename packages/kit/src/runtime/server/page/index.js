@@ -223,7 +223,7 @@ export async function render_page(event, route, page, options, state, resolve_op
 					}
 
 					const status = err instanceof HttpError ? err.status : 500;
-					const error = handle_error_and_jsonify(event, options, err);
+					const error = await handle_error_and_jsonify(event, options, err);
 
 					while (i--) {
 						if (page.errors[i]) {

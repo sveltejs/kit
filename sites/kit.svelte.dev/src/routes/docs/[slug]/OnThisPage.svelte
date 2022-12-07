@@ -37,7 +37,7 @@
 		content = document.querySelector('.content');
 		const { top } = content.getBoundingClientRect();
 
-		headings = content.querySelectorAll('h3[id]');
+		headings = content.querySelectorAll('h2[id]');
 
 		positions = Array.from(headings).map((heading) => {
 			const style = getComputedStyle(heading);
@@ -96,7 +96,12 @@
 
 <style>
 	.on-this-page {
-		display: none;
+		display: var(--on-this-page-display);
+		position: fixed;
+		padding: 0 var(--sk-page-padding-side) 0 0;
+		width: min(280px, calc(var(--sidebar-width) - var(--sk-page-padding-side)));
+		top: calc(var(--sk-page-padding-top) + var(--sk-nav-height));
+		left: calc(100vw - (var(--sidebar-width)));
 	}
 
 	h2 {
@@ -105,7 +110,7 @@
 		font-weight: 400;
 		margin: 0 0 1rem 0;
 		padding: 0 0 0 0.6rem;
-		color: var(--second);
+		color: var(--sk-text-3);
 	}
 
 	ul {
@@ -115,38 +120,17 @@
 	a {
 		display: block;
 		padding: 0.3rem 0.5rem;
-		color: var(--second);
+		color: var(--sk-text-3);
 		border-left: 2px solid transparent;
 	}
 
 	a:hover {
 		text-decoration: none;
-		background: var(--back-light);
+		background: var(--sk-back-3);
 	}
 
 	a.active {
-		background: var(--back-light);
-		border-left-color: var(--prime);
-	}
-
-	/* a.active::before {
-		content: '';
-		position: absolute;
-		left: 0;
-		top: 4px;
-		width: 2px;
-		height: calc(100% - 8px);
-		background-color: var(--prime);
-	} */
-
-	@media (min-width: 1300px) {
-		.on-this-page {
-			display: block;
-			padding: 0 var(--side-nav);
-			width: calc(var(--sidebar-w) - 15px); /* substract scrollbar */
-			position: fixed;
-			top: calc(var(--top-offset) + var(--nav-h));
-			left: calc(var(--sidebar-w) + var(--side-nav) + var(--linemax));
-		}
+		background: var(--sk-back-3);
+		border-left-color: var(--sk-theme-1);
 	}
 </style>

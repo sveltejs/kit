@@ -113,7 +113,7 @@ const get_defaults = (prefix = '') => ({
 			crawl: true,
 			createIndexFiles: undefined,
 			default: undefined,
-			enabled: true,
+			enabled: undefined,
 			entries: ['*'],
 			force: undefined,
 			handleHttpError: 'fail',
@@ -127,7 +127,7 @@ const get_defaults = (prefix = '') => ({
 		routes: undefined,
 		ssr: undefined,
 		target: undefined,
-		trailingSlash: 'never',
+		trailingSlash: undefined,
 		version: {
 			name: Date.now().toString(),
 			pollInterval: 0

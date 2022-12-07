@@ -817,6 +817,8 @@ test.describe('Load', () => {
 
 		if (javaScriptEnabled) {
 			expect(headers).toEqual({
+				accept: '*/*',
+				'accept-language': 'en-US',
 				// the referer will be the previous page in the client-side
 				// navigation case
 				referer: `${baseURL}/load`,
@@ -827,7 +829,10 @@ test.describe('Load', () => {
 				connection: 'keep-alive'
 			});
 		} else {
-			expect(headers).toEqual({});
+			expect(headers).toEqual({
+				accept: '*/*',
+				'accept-language': 'en-US'
+			});
 		}
 	});
 
@@ -1159,7 +1164,7 @@ test.describe('$app/stores', () => {
 		expect(await page.textContent('#nav-status')).toBe('not currently navigating');
 
 		if (javaScriptEnabled) {
-			await app.prefetchRoutes(['/store/navigating/b']);
+			await app.preloadCode('/store/navigating/b');
 
 			const res = await Promise.all([
 				page.click('a[href="/store/navigating/b"]'),
@@ -1290,28 +1295,32 @@ test.describe('Redirects', () => {
 
 		await clicknav('[href="/redirect/missing-status/a"]');
 
+		const message = process.env.DEV || !javaScriptEnabled ? 'Invalid status code' : 'Redirect loop';
+
 		expect(page.url()).toBe(`${baseURL}/redirect/missing-status/a`);
 		expect(await page.textContent('h1')).toBe('500');
 		expect(await page.textContent('#message')).toBe(
-			'This is your custom error page saying: "Invalid status code"'
+			`This is your custom error page saying: "${message}"`
 		);
 
 		if (!javaScriptEnabled) {
 			// handleError is not invoked for client-side navigation
 			const lines = read_errors('/redirect/missing-status/a').stack.split('\n');
-			expect(lines[0]).toBe('Error: Invalid status code');
+			expect(lines[0]).toBe(`Error: ${message}`);
 		}
 	});
 
-	test('errors on invalid status', async ({ baseURL, page, clicknav }) => {
+	test('errors on invalid status', async ({ baseURL, page, clicknav, javaScriptEnabled }) => {
 		await page.goto('/redirect');
 
 		await clicknav('[href="/redirect/missing-status/b"]');
 
+		const message = process.env.DEV || !javaScriptEnabled ? 'Invalid status code' : 'Redirect loop';
+
 		expect(page.url()).toBe(`${baseURL}/redirect/missing-status/b`);
 		expect(await page.textContent('h1')).toBe('500');
 		expect(await page.textContent('#message')).toBe(
-			'This is your custom error page saying: "Invalid status code"'
+			`This is your custom error page saying: "${message}"`
 		);
 	});
 
@@ -1327,6 +1336,32 @@ test.describe('Redirects', () => {
 		if (javaScriptEnabled) {
 			expect(await page.textContent('h1')).toBe('Hazaa!');
 		}
+	});
+
+	test('redirect response in handle hook', async ({ baseURL, clicknav, page }) => {
+		await page.goto('/redirect');
+
+		await clicknav('[href="/redirect/in-handle?response"]');
+
+		await page.waitForURL('/redirect/c');
+		expect(await page.textContent('h1')).toBe('c');
+		expect(page.url()).toBe(`${baseURL}/redirect/c`);
+
+		await page.goBack();
+		expect(page.url()).toBe(`${baseURL}/redirect`);
+	});
+
+	test('throw redirect in handle hook', async ({ baseURL, clicknav, page }) => {
+		await page.goto('/redirect');
+
+		await clicknav('[href="/redirect/in-handle?throw"]');
+
+		await page.waitForURL('/redirect/c');
+		expect(await page.textContent('h1')).toBe('c');
+		expect(page.url()).toBe(`${baseURL}/redirect/c`);
+
+		await page.goBack();
+		expect(page.url()).toBe(`${baseURL}/redirect`);
 	});
 });
 

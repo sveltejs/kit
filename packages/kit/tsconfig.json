@@ -16,6 +16,11 @@
 		"noUnusedLocals": true,
 		"noUnusedParameters": true
 	},
-	"include": ["scripts/**/*", "src/**/*", "types/**/*"],
+	"include": [
+		"scripts/**/*",
+		"src/**/*",
+		"types/**/*",
+		"../../sites/kit.svelte.dev/scripts/extract-types.js"
+	],
 	"exclude": ["./**/write_types/test/**"]
 }

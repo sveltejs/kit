@@ -1,7 +1,8 @@
 import fs from 'fs';
 import path from 'path';
+import { mergeConfig } from 'vite';
 import { mkdirp, posixify, resolve_entry } from '../../../utils/filesystem.js';
-import { get_vite_config, merge_vite_configs } from '../utils.js';
+import { get_vite_config } from '../utils.js';
 import { load_error_page, load_template } from '../../../core/config/index.js';
 import { runtime_directory } from '../../../core/utils.js';
 import {
@@ -27,7 +28,7 @@ const server_template = ({ config, hooks, has_service_worker, runtime, template,
 import root from '__GENERATED__/root.svelte';
 import { respond } from '${runtime}/server/index.js';
 import { set_paths, assets, base } from '${runtime}/paths.js';
-import { set_prerendering, set_version } from '${runtime}/env.js';
+import { set_building, set_version } from '${runtime}/env.js';
 import { set_private_env } from '${runtime}/env-private.js';
 import { set_public_env } from '${runtime}/env-public.js';
 
@@ -53,7 +54,7 @@ let default_protocol = 'https';
 export function override(settings) {
 	default_protocol = settings.protocol || default_protocol;
 	set_paths(settings.paths);
-	set_prerendering(settings.prerendering);
+	set_building(settings.building);
 	read = settings.read;
 }
 
@@ -87,7 +88,6 @@ export class Server {
 			app_template,
 			app_template_contains_nonce: ${template.includes('%sveltekit.nonce%')},
 			error_template,
-			trailing_slash: ${s(config.kit.trailingSlash)},
 			version: ${s(config.kit.version.name)}
 		};
 	}
@@ -241,7 +241,7 @@ export async function build_server(options, client) {
 		})
 	);
 
-	const merged_config = merge_vite_configs(
+	const merged_config = mergeConfig(
 		get_default_build_config({ config, input, ssr: true, outDir: `${output_dir}/server` }),
 		await get_vite_config(vite_config, vite_config_env)
 	);

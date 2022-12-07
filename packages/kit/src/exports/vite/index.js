@@ -35,9 +35,6 @@ const enforced_config = {
 			formats: true
 		},
 		manifest: true,
-		modulePreload: {
-			polyfill: true
-		},
 		outDir: true,
 		rollupOptions: {
 			input: true,
@@ -64,7 +61,7 @@ const enforced_config = {
 
 /** @return {import('vite').Plugin[]} */
 export function sveltekit() {
-	return [...svelte({ prebundleSvelteLibraries: true }), kit()];
+	return [...svelte(), kit()];
 }
 
 /**
@@ -106,9 +103,6 @@ function kit() {
 
 	/** @type {import('types').BuildData} */
 	let build_data;
-
-	/** @type {string | undefined} */
-	let deferred_warning;
 
 	/** @type {{ public: Record<string, string>; private: Record<string, string> }} */
 	let env;
@@ -280,11 +274,19 @@ function kit() {
 					external: ['@sveltejs/kit']
 				},
 				optimizeDeps: {
-					exclude: ['@sveltejs/kit']
+					exclude: [
+						'@sveltejs/kit',
+						// exclude kit features so that libraries using them work even when they are prebundled
+						// this does not affect app code, just handling of imported libraries that use $app or $env
+						'$app',
+						'$env'
+					]
 				}
 			};
 
-			deferred_warning = warn_overridden_config(config, result);
+			const warning = warn_overridden_config(config, result);
+			if (warning) console.error(warning);
+
 			return result;
 		},
 
@@ -334,6 +336,10 @@ function kit() {
 		 */
 		configResolved(config) {
 			vite_config = config;
+
+			// This is a hack to prevent Vite from nuking useful logs,
+			// pending https://github.com/vitejs/vite/issues/9378
+			config.logger.warn('');
 		},
 
 		/**
@@ -540,14 +546,6 @@ function kit() {
 		 * @see https://vitejs.dev/guide/api-plugin.html#configureserver
 		 */
 		async configureServer(vite) {
-			// This method is called by Vite after clearing the screen.
-			// This patch ensures we can log any important messages afterwards for the user to see.
-			const print_urls = vite.printUrls;
-			vite.printUrls = function () {
-				print_urls.apply(this);
-				if (deferred_warning) console.error('\n' + deferred_warning);
-			};
-
 			return await dev(vite, vite_config, svelte_config);
 		},
 

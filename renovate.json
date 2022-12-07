@@ -1,13 +1,26 @@
 {
 	"extends": [
+		"github>whitesource/merge-confidence:beta",
 		"config:base",
 		":preserveSemverRanges",
-    "group:allNonMajor"
+		"group:allNonMajor"
 	],
-	"pin": false,
-   "ignoreDeps": [
-     "esbuild",
-		 "typescript"
-  ],
-  "ignorePaths": ["**/create-svelte/shared/**", "**/create-svelte/templates/**"]
+	"pin": {
+		"enabled": false
+	},
+	"ignoreDeps": [
+		"esbuild",
+		"rollup",
+		"typescript"
+	],
+	"ignorePaths": [
+		"**/create-svelte/shared/**",
+		"**/create-svelte/templates/**"
+	],
+	"packageRules": [
+		{
+			"matchPackageNames": ["@types/node", "vite"],
+			"matchUpdateTypes": ["minor", "patch", "pin", "digest"]
+		}
+	]
 }

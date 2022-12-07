@@ -2,7 +2,7 @@
 title: Asset handling
 ---
 
-### Caching and inlining
+## Caching and inlining
 
 [Vite will automatically process imported assets](https://vitejs.dev/guide/assets.html) for improved performance. Hashes will be added to the filenames so that they can be cached and assets smaller than `assetsInlineLimit` will be inlined.
 
@@ -29,6 +29,6 @@ export default {
 };
 ```
 
-### Transforming
+## Transforming
 
 You may wish to transform your images to output compressed image formats such as `.webp` or `.avif`, responsive images with different sizes for different devices, or images with the EXIF data stripped for privacy. For images that are included statically, you may use a Vite plugin such as [vite-imagetools](https://github.com/JonasKruckenberg/imagetools). You may also consider a CDN, which can serve the appropriate transformed image based on the `Accept` HTTP header and query string parameters.

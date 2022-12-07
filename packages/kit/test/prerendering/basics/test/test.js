@@ -230,4 +230,16 @@ test('define service worker variables', () => {
 	assert.ok(content.includes(`MY_ENV DEFINED`));
 });
 
+test('prerendered.paths omits trailing slashes for endpoints', () => {
+	const content = read('service-worker.js');
+
+	for (const path of [
+		'/trailing-slash/page/',
+		'/trailing-slash/page/__data.json',
+		'/trailing-slash/standalone-endpoint.json'
+	]) {
+		assert.ok(content.includes(`"${path}"`), `Missing ${path}`);
+	}
+});
+
 test.run();

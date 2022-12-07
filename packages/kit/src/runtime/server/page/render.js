@@ -195,7 +195,9 @@ export async function render_response({
 					if (server_data.uses.route) uses.push(`route:1`);
 					if (server_data.uses.url) uses.push(`url:1`);
 
-					return `{type:"data",data:${data},uses:{${uses.join(',')}}}`;
+					return `{type:"data",data:${data},uses:{${uses.join(',')}}${
+						server_data.slash ? `,slash:${s(server_data.slash)}` : ''
+					}}`;
 				}
 
 				return s(server_data);
@@ -281,7 +283,6 @@ export async function render_response({
 				}` : 'null'},
 				paths: ${s(options.paths)},
 				target: document.querySelector('[data-sveltekit-hydrate="${target}"]').parentNode,
-				trailing_slash: ${s(options.trailing_slash)},
 				version: ${s(options.version)}
 			});
 		`;

@@ -12,12 +12,11 @@ import { set_version } from '../env.js';
  *     assets: string;
  *     base: string;
  *   },
- *   target: Element;
- *   trailing_slash: import('types').TrailingSlash;
+ *   target: HTMLElement;
  *   version: string;
  * }} opts
  */
-export async function start({ env, hydrate, paths, target, trailing_slash, version }) {
+export async function start({ env, hydrate, paths, target, version }) {
 	set_public_env(env);
 	set_paths(paths);
 	set_version(version);
@@ -30,8 +29,7 @@ export async function start({ env, hydrate, paths, target, trailing_slash, versi
 
 	const client = create_client({
 		target,
-		base: paths.base,
-		trailing_slash
+		base: paths.base
 	});
 
 	init({ client });

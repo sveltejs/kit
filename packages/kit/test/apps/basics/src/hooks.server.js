@@ -1,7 +1,7 @@
 import fs from 'fs';
 import { sequence } from '@sveltejs/kit/hooks';
 import { HttpError } from '../../../../src/runtime/control';
-import { error } from '@sveltejs/kit';
+import { error, redirect } from '@sveltejs/kit';
 
 /**
  * Transform an error into a POJO, by copying its `name`, `message`
@@ -80,6 +80,17 @@ export const handle = sequence(
 		} catch {}
 
 		return response;
+	},
+	async ({ event, resolve }) => {
+		if (event.url.pathname.includes('/redirect/in-handle')) {
+			if (event.url.search === '?throw') {
+				throw redirect(307, event.url.origin + '/redirect/c');
+			} else {
+				return new Response(undefined, { status: 307, headers: { location: '/redirect/c' } });
+			}
+		}
+
+		return resolve(event);
 	}
 );
 

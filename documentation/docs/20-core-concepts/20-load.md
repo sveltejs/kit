@@ -4,7 +4,7 @@ title: Loading data
 
 Before a [`+page.svelte`](/docs/routing#page-page-svelte) component (and its containing [`+layout.svelte`](/docs/routing#layout-layout-svelte) components) can be rendered, we often need to get some data. This is done by defining `load` functions.
 
-### Page data
+## Page data
 
 A `+page.svelte` file can have a sibling `+page.js` (or `+page.ts`) that exports a `load` function, the return value of which is available to the page via the `data` prop:
 
@@ -59,7 +59,7 @@ export async function load({ params }) {
 
 Notice that the type changed from `PageLoad` to `PageServerLoad`, because server-only `load` functions can access additional arguments. To understand when to use `+page.js` and when to use `+page.server.js`, see [Shared vs server](/docs/load#shared-vs-server).
 
-### Layout data
+## Layout data
 
 Your `+layout.svelte` files can also load data, via `+layout.js` or `+layout.server.js`.
 
@@ -134,7 +134,7 @@ Data returned from layout `load` functions is available to child `+layout.svelte
 
 > If multiple `load` functions return data with the same key, the last one 'wins' — the result of a layout `load` returning `{ a: 1, b: 2 }` and a page `load` returning `{ b: 3, c: 4 }` would be `{ a: 1, b: 3, c: 4 }`.
 
-### $page.data
+## $page.data
 
 The `+page.svelte` component, and each `+layout.svelte` component above it, has access to its own data plus all the data from its parents.
 
@@ -153,7 +153,7 @@ In some cases, we might need the opposite — a parent layout might need to acce
 
 Type information for `$page.data` is provided by `App.PageData`.
 
-### Shared vs server
+## Shared vs server
 
 As we've seen, there are two types of `load` function:
 
@@ -162,7 +162,7 @@ As we've seen, there are two types of `load` function:
 
 Conceptually, they're the same thing, but there are some important differences to be aware of.
 
-#### Input
+### Input
 
 Both shared and server-only `load` functions have access to properties describing the request (`params`, `route` and `url`) and various functions (`depends`, `fetch` and `parent`). These are described in the following sections.
 
@@ -170,13 +170,13 @@ Server-only `load` functions are called with a `ServerLoadEvent`, which inherits
 
 Shared `load` functions are called with a `LoadEvent`, which has a `data` property. If you have `load` functions in both `+page.js` and `+page.server.js` (or `+layout.js` and `+layout.server.js`), the return value of the server-only `load` function is the `data` property of the shared `load` function's argument.
 
-#### Output
+### Output
 
 A shared `load` function can return an object containing any values, including things like custom classes and component constructors.
 
 A server-only `load` function must return data that can be serialized with [devalue](https://github.com/rich-harris/devalue) — anything that can be represented as JSON plus things like `BigInt`, `Date`, `Map`, `Set` and `RegExp`, or repeated/cyclical references — so that it can be transported over the network.
 
-#### When to use which
+### When to use which
 
 Server-only `load` functions are convenient when you need to access data directly from a database or filesystem, or need to use private environment variables.
 
@@ -184,17 +184,17 @@ Shared `load` functions are useful when you need to `fetch` data from an externa
 
 In rare cases, you might need to use both together — for example, you might need to return an instance of a custom class that was initialised with data from your server.
 
-### Using URL data
+## Using URL data
 
 Often the `load` function depends on the URL in one way or another. For this, the `load` function provides you with `url`, `route` and `params`.
 
-#### url
+### url
 
 An instance of [`URL`](https://developer.mozilla.org/en-US/docs/Web/API/URL), containing properties like the `origin`, `hostname`, `pathname` and `searchParams` (which contains the parsed query string as a [`URLSearchParams`](https://developer.mozilla.org/en-US/docs/Web/API/URLSearchParams) object). `url.hash` cannot be accessed during `load`, since it is unavailable on the server.
 
 > In some environments this is derived from request headers during server-side rendering. If you're using [adapter-node](/docs/adapters#supported-environments-node-js), for example, you may need to configure the adapter in order for the URL to be correct.
 
-#### route
+### route
 
 Contains the name of the current route directory, relative to `src/routes`:
 
@@ -206,7 +206,7 @@ export function load({ route }) {
 }
 ```
 
-#### params
+### params
 
 `params` is derived from `url.pathname` and `route.id`.
 
@@ -219,7 +219,7 @@ Given a `route.id` of `/a/[b]/[...c]` and a `url.pathname` of `/a/x/y/z`, the `p
 }
 ```
 
-### Making fetch requests
+## Making fetch requests
 
 To get data from an external API or a `+server.js` handler, you can use the provided `fetch` function, which behaves identically to the [native `fetch` web API](https://developer.mozilla.org/en-US/docs/Web/API/fetch) with a few additional features:
 
@@ -241,9 +241,9 @@ export async function load({ fetch, params }) {
 
 > Cookies will only be passed through if the target host is the same as the SvelteKit application or a more specific subdomain of it.
 
-### Cookies and headers
+## Cookies and headers
 
-A server-only `load` function can get and set [`cookies`](/docs/types#sveltejs-kit-cookies).
+A server-only `load` function can get and set [`cookies`](/docs/types#public-types-cookies).
 
 ```js
 /// file: src/routes/+layout.server.js
@@ -291,7 +291,7 @@ export async function load({ fetch, setHeaders }) {
 
 Setting the same header multiple times (even in separate `load` functions) is an error — you can only set a given header once. You cannot add a `set-cookie` header with `setHeaders` — use `cookies.set(name, value, options)` instead.
 
-### Using parent data
+## Using parent data
 
 Occasionally it's useful for a `load` function to access data from a parent `load` function, which can be done with `await parent()`:
 
@@ -354,7 +354,7 @@ export async function load({ params, parent }) {
 }
 ```
 
-### Errors
+## Errors
 
 If an error is thrown during `load`, the nearest [`+error.svelte`](/docs/routing#error) will be rendered. For _expected_ errors, use the `error` helper from `@sveltejs/kit` to specify the HTTP status code and an optional message:
 
@@ -388,7 +388,7 @@ export function load({ locals }) {
 
 If an _unexpected_ error is thrown, SvelteKit will invoke [`handleError`](/docs/hooks#shared-hooks-handleerror) and treat it as a 500 Internal Error.
 
-### Redirects
+## Redirects
 
 To redirect users, use the `redirect` helper from `@sveltejs/kit` to specify the location to which they should be redirected alongside a `3xx` status code.
 
@@ -415,7 +415,7 @@ export function load({ locals }) {
 }
 ```
 
-### Promise unwrapping
+## Promise unwrapping
 
 Top-level promises will be awaited, which makes it easy to return multiple promises without creating a waterfall:
 
@@ -444,11 +444,11 @@ export function load() {
 </script>
 ```
 
-### Parallel loading
+## Parallel loading
 
 When rendering (or navigating to) a page, SvelteKit runs all `load` functions concurrently, avoiding a waterfall of requests. During client-side navigation, the result of calling multiple server-only `load` functions are grouped into a single response. Once all `load` functions have returned, the page is rendered.
 
-### Invalidation
+## Invalidation
 
 SvelteKit tracks the dependencies of each `load` function to avoid re-running it unnecessarily during navigation.
 
@@ -496,7 +496,7 @@ export async function load() {
 
 A `load` function that calls `await parent()` will also re-run if a parent `load` function is re-run.
 
-#### Manual invalidation
+### Manual invalidation
 
 You can also re-run `load` functions that apply to the current page using [`invalidate(url)`](/docs/modules#$app-navigation-invalidate), which re-runs all `load` functions that depend on `url`, and [`invalidateAll()`](/docs/modules#$app-navigation-invalidateall), which re-runs every `load` function.
 
@@ -544,11 +544,11 @@ To summarize, a `load` function will re-run in the following situations:
 - It references a property of `params` whose value has changed
 - It references a property of `url` (such as `url.pathname` or `url.search`) whose value has changed
 - It calls `await parent()` and a parent `load` function re-ran
-- It declared a dependency on a specific URL via [`fetch`](#making-fetch-requests) or [`depends`](/docs/types#sveltejs-kit-loadevent), and that URL was marked invalid with [`invalidate(url)`](/docs/modules#$app-navigation-invalidate)
+- It declared a dependency on a specific URL via [`fetch`](#making-fetch-requests) or [`depends`](/docs/types#public-types-loadevent), and that URL was marked invalid with [`invalidate(url)`](/docs/modules#$app-navigation-invalidate)
 - All active `load` functions were forcibly re-run with [`invalidateAll()`](/docs/modules#$app-navigation-invalidateall)
 
 Note that re-running a `load` function will update the `data` prop inside the corresponding `+layout.svelte` or `+page.svelte`; it does _not_ cause the component to be recreated. As a result, internal state is preserved. If this isn't what you want, you can reset whatever you need to reset inside an [`afterNavigate`](/docs/modules#$app-navigation-afternavigate) callback, and/or wrap your component in a [`{#key ...}`](https://svelte.dev/docs#template-syntax-key) block.
 
-### Shared state
+## Shared state
 
 In many server environments, a single instance of your app will serve multiple users. For that reason, per-request or per-user state must not be stored in shared variables outside your `load` functions, but should instead be stored in `event.locals`.

@@ -110,6 +110,14 @@ async function main() {
 					initial: false,
 					active: 'Yes',
 					inactive: 'No'
+				},
+				{
+					type: 'toggle',
+					name: 'vitest',
+					message: 'Add Vitest for unit testing?',
+					initial: false,
+					active: 'Yes',
+					inactive: 'No'
 				}
 			],
 			{
@@ -148,6 +156,11 @@ async function main() {
 	if (options.playwright) {
 		console.log(bold('✔ Playwright'));
 		console.log(cyan('  https://playwright.dev'));
+	}
+
+	if (options.vitest) {
+		console.log(bold('✔ Vitest'));
+		console.log(cyan('  https://vitest.dev'));
 	}
 
 	console.log('\nInstall community-maintained integrations:');

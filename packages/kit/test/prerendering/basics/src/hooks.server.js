@@ -1,15 +1,15 @@
-import { prerendering } from '$app/environment';
+import { building } from '$app/environment';
 
-const initial_prerendering = prerendering;
+const initial_building = building;
 
 /** @type {import('@sveltejs/kit').Handle} */
 export const handle = async ({ event, resolve }) => {
-	if (event.url.pathname === '/prerendering-true' && prerendering) {
+	if (event.url.pathname === '/prerendering-true' && building) {
 		return await resolve(event, {
 			transformPageChunk: ({ html }) =>
 				html
-					.replace('__INITIAL_PRERENDERING__', String(initial_prerendering))
-					.replace('__PRERENDERING__', String(prerendering))
+					.replace('__INITIAL_PRERENDERING__', String(initial_building))
+					.replace('__PRERENDERING__', String(building))
 		});
 	}
 	return await resolve(event, {
