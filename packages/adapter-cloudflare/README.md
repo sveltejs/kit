@@ -32,7 +32,12 @@ import adapter from '@sveltejs/adapter-cloudflare';
 
 export default {
   kit: {
-    adapter: adapter()
+    adapter: adapter({
+      // bypass worker these paths (static assets, prerendered pages, etc.)
+      // in order to reduce worker calls
+      // https://developers.cloudflare.com/pages/platform/functions/routing/#creating-a-_routesjson-file
+      exclude: []
+    })
   }
 };
 ```
