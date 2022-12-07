@@ -80,6 +80,8 @@
 				src="/edge.svg"
 				alt="Dynamically rendered map of the world, centered on the user's location"
 			/>
+
+			<span> rendered on the edge, just for you </span>
 		</div>
 	</div>
 </Section>
@@ -92,12 +94,30 @@
 	.globe {
 		width: 100%;
 		max-height: 40rem;
+		text-align: center;
 	}
 
 	.globe img {
 		width: 100%;
 		height: 100%;
 		object-fit: contain;
+	}
+
+	.globe span {
+		position: relative;
+		color: var(--sk-text-3);
+		font-size: var(--sk-text-xs);
+	}
+
+	.globe span::before {
+		--size: 2rem;
+		content: '';
+		position: absolute;
+		width: var(--size);
+		height: var(--size);
+		background: url($lib/icons/up-small.svg) no-repeat center;
+		left: calc(50% - 0.5 * var(--size));
+		top: -3rem;
 	}
 
 	.platforms {
