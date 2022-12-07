@@ -124,7 +124,7 @@ export async function handle_fatal_error(event, options, error) {
 		'text/html'
 	]);
 
-	if (has_data_suffix(event.url.pathname) || type === 'application/json') {
+	if (has_data_suffix(new URL(event.request.url).pathname) || type === 'application/json') {
 		return new Response(JSON.stringify(body), {
 			status,
 			headers: { 'content-type': 'application/json; charset=utf-8' }

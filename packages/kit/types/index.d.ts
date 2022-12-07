@@ -900,9 +900,14 @@ export interface RequestEvent<
 	 */
 	setHeaders(headers: Record<string, string>): void;
 	/**
-	 * The URL of the current page or endpoint
+	 * The URL of the current page or endpoint.
 	 */
 	url: URL;
+	/**
+	 * `true` if the request comes from the client asking for `+page/layout.server.js` data. The `url` property will be stripped of the internal information
+	 * related to the data request in this case. Use this property instead if the distinction is important to you.
+	 */
+	isDataRequest: boolean;
 }
 
 /**

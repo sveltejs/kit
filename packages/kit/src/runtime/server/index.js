@@ -13,7 +13,7 @@ import {
 	strip_data_suffix
 } from '../../utils/url.js';
 import { exec } from '../../utils/routing.js';
-import { redirect_json_response, render_data } from './data/index.js';
+import { INVALIDATED_PARAM, redirect_json_response, render_data } from './data/index.js';
 import { add_cookies_to_headers, get_cookies } from './cookie.js';
 import { create_fetch } from './fetch.js';
 import { Redirect } from '../control.js';
@@ -32,6 +32,7 @@ const default_preload = ({ type }) => type === 'js' || type === 'css';
 
 /** @type {import('types').Respond} */
 export async function respond(request, options, state) {
+	/** URL but stripped from the potential `/__data.json` suffix and its search param  */
 	let url = new URL(request.url);
 
 	if (options.csrf.check_origin) {
@@ -70,7 +71,14 @@ export async function respond(request, options, state) {
 	}
 
 	const is_data_request = has_data_suffix(decoded);
-	if (is_data_request) decoded = strip_data_suffix(decoded) || '/';
+	/** @type {boolean[] | undefined} */
+	let invalidated_data_nodes;
+	if (is_data_request) {
+		decoded = strip_data_suffix(decoded) || '/';
+		url.pathname = strip_data_suffix(url.pathname) || '/';
+		invalidated_data_nodes = url.searchParams.get(INVALIDATED_PARAM)?.split('_').map(Boolean);
+		url.searchParams.delete(INVALIDATED_PARAM);
+	}
 
 	if (!state.prerendering?.fallback) {
 		// TODO this could theoretically break — should probably be inside a try-catch
@@ -133,7 +141,8 @@ export async function respond(request, options, state) {
 				}
 			}
 		},
-		url
+		url,
+		isDataRequest: is_data_request
 	};
 
 	// TODO remove this for 1.0
@@ -350,7 +359,14 @@ export async function respond(request, options, state) {
 				let response;
 
 				if (is_data_request) {
-					response = await render_data(event, route, options, state, trailing_slash ?? 'never');
+					response = await render_data(
+						event,
+						route,
+						options,
+						state,
+						invalidated_data_nodes,
+						trailing_slash ?? 'never'
+					);
 				} else if (route.endpoint && (!route.page || is_endpoint_request(event))) {
 					response = await render_endpoint(event, await route.endpoint(), state);
 				} else if (route.page) {
