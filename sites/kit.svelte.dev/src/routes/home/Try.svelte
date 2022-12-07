@@ -2,38 +2,42 @@
 	import Section from '@sveltejs/site-kit/components/Section.svelte';
 </script>
 
-<Section --background="radial-gradient(circle at 40% 30%, rgb(110, 113, 118), rgb(81, 93, 106))">
-	<div class="try">
-		<pre><code
-				>npm create <span class="orange-highlight">svelte</span>@latest my-app
+<Section --background="var(--sk-theme-2)">
+	<div class="grid" style="--columns: 2">
+		<h2>see for yourself</h2>
+		<div class="try">
+			<pre><code
+					>npm create <span class="orange-highlight">svelte</span>@latest my-app
 cd my-app
 npm install
 npm run dev -- --open</code
-			></pre>
+				></pre>
 
-		<p>or <a href="https://sveltekit.new">create an app on StackBlitz</a></p>
+			<p>or <a href="https://sveltekit.new">create an app on StackBlitz</a></p>
+		</div>
 	</div>
 </Section>
 
 <style>
+	.grid *::selection {
+		background: hsl(15, 100%, 65%);
+		color: white;
+	}
+
 	.try {
-		width: 30ch;
+		width: 100%;
 		margin: 0 auto;
 		font-size: var(--sk-text-m);
 		color: white;
 	}
 
-	.try *::selection {
-		background: hsl(15, 100%, 65%);
+	h2 {
 		color: white;
+		font-size: var(--sk-text-xl);
 	}
 
 	pre {
-		height: 100%;
-		display: flex;
-		flex-direction: column;
-		margin: 0 0 2rem 0;
-		filter: drop-shadow(0 0 2rem rgba(255, 255, 255, 0.8));
+		margin: 1em 0 2em 0;
 	}
 
 	pre code {
@@ -44,5 +48,14 @@ npm run dev -- --open</code
 	.orange-highlight,
 	a {
 		color: hsl(15, 100%, 65%);
+	}
+
+	@media (min-width: 900px) {
+		h2 {
+			order: 2;
+			font-size: var(--sk-text-xxl);
+			display: flex;
+			align-items: center;
+		}
 	}
 </style>

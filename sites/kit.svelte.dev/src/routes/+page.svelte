@@ -58,12 +58,21 @@
 	<Section
 		--background="radial-gradient(circle at top right, rgb(230, 233, 236), rgb(244, 245, 247))"
 	>
-		<!-- <h2>svelte</h2> -->
 		<p class="definition">
-			<span>adjective</span> <em>/svelt/</em> attractively thin, graceful and stylish
+			<em>/svelt/</em> <span class="adjective">adjective</span>
+			<span class="description">attractively thin, graceful and stylish</span>
 		</p>
 
 		<div class="grid" style="--columns: 3">
+			<div class="video-container">
+				<Video />
+
+				<p>
+					Watch <a href="https://www.youtube.com/watch?v=kMlkCYL9qo0">Svelte Origins</a>
+					on YouTube.
+				</p>
+			</div>
+
 			<div>
 				<p>
 					SvelteKit is built on Svelte, a different kind of UI framework. It uses a compiler to let
@@ -86,15 +95,6 @@
 					> <a href="https://2021.stateofjs.com/en-US/libraries/front-end-frameworks/">about</a>
 					<a href="https://twitter.com/Rich_Harris/status/1589675637195042817">using</a>.
 				</p>
-
-				<p>
-					Watch <a href="https://www.youtube.com/watch?v=kMlkCYL9qo0">Svelte Origins</a>
-					on YouTube.
-				</p>
-			</div>
-
-			<div class="video-container">
-				<Video />
 			</div>
 		</div>
 	</Section>
@@ -109,28 +109,43 @@
 		font-size: var(--sk-text-l);
 	}
 
-	.definition span {
-		text-transform: uppercase;
-		font-size: var(--sk-text-s);
-		color: var(--sk-text-3);
-	}
-
 	.definition em {
-		font-style: italic;
-		font-weight: 600;
+		font-style: normal;
+		font-size: var(--sk-text-xl);
 		color: var(--sk-theme-1);
 	}
 
-	.home .video-container {
-		grid-column: 2 / 4;
+	.definition .adjective {
+		position: relative;
+		top: -0.2em;
+		background: var(--sk-theme-3);
+		padding: 0.2em 0.5em;
+		margin: 0 1em;
+		text-transform: uppercase;
+		font-size: var(--sk-text-s);
+		color: white;
 	}
+
+	.definition .description {
+		display: block;
+	}
+
 	h2 {
-		font-size: 2.8rem;
+		font-size: var(--sk-text-xl);
 	}
 
 	@media (min-width: 900px) {
 		h2 {
-			font-size: 4rem;
+			font-size: var(--sk-text-xxl);
+		}
+
+		.definition .description {
+			display: inline;
+		}
+
+		.home .video-container {
+			order: 2;
+			grid-column: 2 / 4;
 		}
 	}
 </style>
