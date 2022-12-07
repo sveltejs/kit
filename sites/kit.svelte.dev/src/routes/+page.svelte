@@ -10,7 +10,7 @@
 </script>
 
 <svelte:head>
-	<title>SvelteKit • The fastest way to build Svelte apps</title>
+	<title>SvelteKit • Web development, streamlined</title>
 
 	<meta name="twitter:title" content="SvelteKit" />
 	<meta name="twitter:description" content="Web development, streamlined" />
