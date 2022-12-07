@@ -45,7 +45,11 @@
 			</div>
 		</div>
 	</div>
-	<p><a href="https://sveltekit.new">...or create an app on StackBlitz</a></p>
+	<p>
+		<a target="_blank" rel="noreferrer" href="https://sveltekit.new">
+			...or create an app on StackBlitz
+		</a>
+	</p>
 </Section>
 
 <style>

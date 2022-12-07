@@ -67,7 +67,13 @@
 				<Video />
 
 				<p>
-					Watch <a href="https://www.youtube.com/watch?v=kMlkCYL9qo0">Svelte Origins</a>
+					Watch <a
+						target="_blank"
+						rel="noreferrer"
+						href="https://www.youtube.com/watch?v=kMlkCYL9qo0"
+					>
+						Svelte Origins
+					</a>
 					on YouTube.
 				</p>
 			</div>
@@ -85,14 +91,34 @@
 					But don't take our word for it. Developers consistently rank Svelte as the framework
 					they're
 					<a
+						target="_blank"
+						rel="noreferrer"
 						href="https://insights.stackoverflow.com/survey/2021#section-most-loved-dreaded-and-wanted-web-frameworks"
-						>most</a
 					>
+						most
+					</a>
 					<a
+						target="_blank"
+						rel="noreferrer"
 						href="https://tsh.io/state-of-frontend/#which-of-the-following-frameworks-would-you-like-to-learn-in-the-future"
-						>excited</a
-					> <a href="https://2021.stateofjs.com/en-US/libraries/front-end-frameworks/">about</a>
-					<a href="https://twitter.com/Rich_Harris/status/1589675637195042817">using</a>.
+					>
+						excited
+					</a>
+					<a
+						target="_blank"
+						rel="noreferrer"
+						href="https://2021.stateofjs.com/en-US/libraries/front-end-frameworks/"
+					>
+						about
+					</a>
+
+					<a
+						target="_blank"
+						rel="noreferrer"
+						href="https://twitter.com/Rich_Harris/status/1589675637195042817"
+					>
+						using</a
+					>.
 				</p>
 			</div>
 		</div>
