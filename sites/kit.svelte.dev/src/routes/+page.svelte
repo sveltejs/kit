@@ -67,14 +67,13 @@
 				<Video />
 
 				<p>
-					Watch <a
+					<a
 						target="_blank"
 						rel="noreferrer"
-						href="https://www.youtube.com/watch?v=kMlkCYL9qo0"
+						href="https://www.offerzen.com/community/svelte-origins-documentary"
 					>
-						Svelte Origins
+						Watch the full Svelte Origins documentary
 					</a>
-					on YouTube.
 				</p>
 			</div>
 
