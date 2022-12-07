@@ -18,22 +18,31 @@ export function is_action_json_request(event) {
 /**
  * @param {import('types').RequestEvent} event
  * @param {import('types').SSROptions} options
- * @param {import('types').SSRNode['server']} server
+ * @param {import('types').SSRNode['server'] | undefined} server
  */
 export async function handle_action_json_request(event, options, server) {
-	const actions = server.actions;
+	const actions = server?.actions;
 
 	if (!actions) {
-		maybe_throw_migration_error(server);
+		if (server) {
+			maybe_throw_migration_error(server);
+		}
 		// TODO should this be a different error altogether?
-		return new Response('POST method not allowed. No actions exist for this page', {
-			status: 405,
-			headers: {
-				// https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/405
-				// "The server must generate an Allow header field in a 405 status code response"
-				allow: 'GET'
+		const no_actions_error = error(405, 'POST method not allowed. No actions exist for this page');
+		return action_json(
+			{
+				type: 'error',
+				error: await handle_error_and_jsonify(event, options, no_actions_error)
+			},
+			{
+				status: no_actions_error.status,
+				headers: {
+					// https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/405
+					// "The server must generate an Allow header field in a 405 status code response"
+					allow: 'GET'
+				}
 			}
-		});
+		);
 	}
 
 	check_named_default_separate(actions);

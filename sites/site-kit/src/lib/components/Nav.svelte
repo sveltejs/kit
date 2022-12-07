@@ -49,7 +49,7 @@
 	<div class="modal-background hide-if-desktop" on:click={() => (open = false)} />
 {/if}
 
-<nav class:visible={visible || open} class:open bind:this={nav}>
+<nav class:visible={visible || open} class:open bind:this={nav} aria-label="Primary">
 	<a href="/" class="nav-spot home" title={home_title} style="background-image: url({logo})">
 		{home}
 	</a>
@@ -80,7 +80,8 @@
 		height: 100%;
 		top: 0;
 		left: 0;
-		background: rgba(255, 255, 255, 0.8);
+		background: var(--back);
+		opacity: 0.8;
 		z-index: 2;
 		backdrop-filter: grayscale(0.5) blur(2px);
 	}
@@ -154,7 +155,7 @@
 			position: relative;
 			display: none;
 			width: 100%;
-			background: white;
+			background: var(--back);
 			padding: 1rem var(--sk-page-padding-side);
 		}
 

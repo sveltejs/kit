@@ -8,7 +8,7 @@ importers:
       '@rollup/plugin-commonjs': ^23.0.3
       '@rollup/plugin-json': ^5.0.2
       '@rollup/plugin-node-resolve': ^15.0.1
-      '@svitejs/changesets-changelog-github-compact': ^0.1.1
+      '@svitejs/changesets-changelog-github-compact': ^1.0.0
       playwright: ^1.28.1
       prettier: ^2.8.0
       rollup: ^2.79.1
@@ -21,7 +21,7 @@ importers:
       '@rollup/plugin-commonjs': 23.0.3_rollup@2.79.1
       '@rollup/plugin-json': 5.0.2_rollup@2.79.1
       '@rollup/plugin-node-resolve': 15.0.1_rollup@2.79.1
-      '@svitejs/changesets-changelog-github-compact': 0.1.1
+      '@svitejs/changesets-changelog-github-compact': 1.0.0
       playwright: 1.28.1
       prettier: 2.8.0
       rollup: 2.79.1
@@ -33,20 +33,20 @@ importers:
   packages/adapter-auto:
     specifiers:
       '@sveltejs/kit': workspace:*
-      '@types/node': ^16.18.3
+      '@types/node': ^16.18.6
       import-meta-resolve: ^2.2.0
       typescript: ^4.9.3
     dependencies:
       import-meta-resolve: 2.2.0
     devDependencies:
       '@sveltejs/kit': link:../kit
-      '@types/node': 16.18.3
+      '@types/node': 16.18.6
       typescript: 4.9.3
 
   packages/adapter-cloudflare:
     specifiers:
       '@cloudflare/workers-types': ^4.20221111.1
-      '@types/node': ^16.18.3
+      '@types/node': ^16.18.6
       '@types/ws': ^8.5.3
       esbuild: ^0.15.12
       typescript: ^4.9.3
@@ -56,7 +56,7 @@ importers:
       esbuild: 0.15.13
       worktop: 0.8.0-next.14
     devDependencies:
-      '@types/node': 16.18.3
+      '@types/node': 16.18.6
       '@types/ws': 8.5.3
       typescript: 4.9.3
 
@@ -65,7 +65,7 @@ importers:
       '@cloudflare/kv-asset-handler': ^0.2.0
       '@cloudflare/workers-types': ^4.20221111.1
       '@iarna/toml': ^2.2.5
-      '@types/node': ^16.18.3
+      '@types/node': ^16.18.6
       esbuild: ^0.15.12
       typescript: ^4.9.3
     dependencies:
@@ -74,7 +74,7 @@ importers:
       esbuild: 0.15.13
     devDependencies:
       '@cloudflare/kv-asset-handler': 0.2.0
-      '@types/node': 16.18.3
+      '@types/node': 16.18.6
       typescript: 4.9.3
 
   packages/adapter-netlify:
@@ -85,7 +85,7 @@ importers:
       '@rollup/plugin-json': ^5.0.2
       '@rollup/plugin-node-resolve': ^15.0.1
       '@sveltejs/kit': workspace:*
-      '@types/node': ^16.18.3
+      '@types/node': ^16.18.6
       '@types/set-cookie-parser': ^2.4.2
       esbuild: ^0.15.12
       rimraf: ^3.0.2
@@ -103,7 +103,7 @@ importers:
       '@rollup/plugin-json': 5.0.2_rollup@2.79.1
       '@rollup/plugin-node-resolve': 15.0.1_rollup@2.79.1
       '@sveltejs/kit': link:../kit
-      '@types/node': 16.18.3
+      '@types/node': 16.18.6
       '@types/set-cookie-parser': 2.4.2
       rimraf: 3.0.2
       rollup: 2.79.1
@@ -116,7 +116,7 @@ importers:
       '@rollup/plugin-json': ^5.0.1
       '@rollup/plugin-node-resolve': ^15.0.1
       '@sveltejs/kit': workspace:*
-      '@types/node': ^16.18.3
+      '@types/node': ^16.18.6
       c8: ^7.12.0
       polka: ^1.0.0-next.22
       rimraf: ^3.0.2
@@ -131,7 +131,7 @@ importers:
       rollup: 2.79.1
     devDependencies:
       '@sveltejs/kit': link:../kit
-      '@types/node': 16.18.3
+      '@types/node': 16.18.6
       c8: 7.12.0
       polka: 1.0.0-next.22
       rimraf: 3.0.2
@@ -142,7 +142,7 @@ importers:
   packages/adapter-static:
     specifiers:
       '@sveltejs/kit': workspace:*
-      '@types/node': ^16.18.3
+      '@types/node': ^16.18.6
       sirv: ^2.0.2
       svelte: ^3.53.1
       typescript: ^4.9.3
@@ -150,12 +150,12 @@ importers:
       vite: ^3.2.4
     devDependencies:
       '@sveltejs/kit': link:../kit
-      '@types/node': 16.18.3
+      '@types/node': 16.18.6
       sirv: 2.0.2
       svelte: 3.53.1
       typescript: 4.9.3
       uvu: 0.5.6
-      vite: 3.2.4_@types+node@16.18.3
+      vite: 3.2.4_@types+node@16.18.6
 
   packages/adapter-static/test/apps/prerendered:
     specifiers:
@@ -184,7 +184,7 @@ importers:
   packages/adapter-vercel:
     specifiers:
       '@sveltejs/kit': workspace:*
-      '@types/node': ^16.18.3
+      '@types/node': ^16.18.6
       '@vercel/nft': ^0.22.1
       esbuild: ^0.15.12
       typescript: ^4.9.3
@@ -193,7 +193,7 @@ importers:
       esbuild: 0.15.13
     devDependencies:
       '@sveltejs/kit': link:../kit
-      '@types/node': 16.18.3
+      '@types/node': 16.18.6
       typescript: 4.9.3
 
   packages/amp:
@@ -269,13 +269,13 @@ importers:
       '@types/cookie': ^0.5.1
       '@types/marked': ^4.0.7
       '@types/mime': ^3.0.1
-      '@types/node': ^16.18.3
+      '@types/node': ^16.18.6
       '@types/sade': ^1.7.4
       '@types/set-cookie-parser': ^2.4.2
       cookie: ^0.5.0
       devalue: ^4.2.0
       kleur: ^4.1.5
-      magic-string: ^0.26.7
+      magic-string: ^0.27.0
       marked: ^4.2.3
       mime: ^3.0.0
       rollup: ^2.79.1
@@ -295,7 +295,7 @@ importers:
       cookie: 0.5.0
       devalue: 4.2.0
       kleur: 4.1.5
-      magic-string: 0.26.7
+      magic-string: 0.27.0
       mime: 3.0.0
       sade: 1.8.1
       set-cookie-parser: 2.5.1
@@ -307,7 +307,7 @@ importers:
       '@types/connect': 3.4.35
       '@types/marked': 4.0.7
       '@types/mime': 3.0.1
-      '@types/node': 16.18.3
+      '@types/node': 16.18.6
       '@types/sade': 1.7.4
       '@types/set-cookie-parser': 2.4.2
       marked: 4.2.3
@@ -316,7 +316,7 @@ importers:
       svelte-preprocess: 4.10.7_7dvewpees4iyn2tkw2qzal77a4
       typescript: 4.9.3
       uvu: 0.5.6
-      vite: 3.2.4_@types+node@16.18.3
+      vite: 3.2.4_@types+node@16.18.6
 
   packages/kit/test/apps/amp:
     specifiers:
@@ -630,7 +630,7 @@ importers:
     specifiers:
       '@types/prompts': ^2.4.1
       kleur: ^4.1.5
-      magic-string: ^0.26.7
+      magic-string: ^0.27.0
       prettier: ^2.8.0
       prompts: ^2.4.2
       tiny-glob: ^0.2.9
@@ -638,7 +638,7 @@ importers:
       uvu: ^0.5.6
     dependencies:
       kleur: 4.1.5
-      magic-string: 0.26.7
+      magic-string: 0.27.0
       prompts: 2.4.2
       tiny-glob: 0.2.9
       typescript: 4.9.3
@@ -649,7 +649,7 @@ importers:
 
   packages/package:
     specifiers:
-      '@types/node': ^16.18.3
+      '@types/node': ^16.18.6
       chokidar: ^3.5.3
       kleur: ^4.1.5
       sade: ^1.8.1
@@ -664,7 +664,7 @@ importers:
       sade: 1.8.1
       svelte2tsx: 0.5.20_7dvewpees4iyn2tkw2qzal77a4
     devDependencies:
-      '@types/node': 16.18.3
+      '@types/node': 16.18.6
       svelte: 3.53.1
       svelte-preprocess: 4.10.7_7dvewpees4iyn2tkw2qzal77a4
       typescript: 4.9.3
@@ -678,12 +678,12 @@ importers:
       '@sveltejs/kit': workspace:*
       '@sveltejs/site-kit': ^2.1.4
       '@types/d3-geo': ^3.0.2
-      '@types/node': ^16.18.3
+      '@types/node': ^16.18.6
       '@vercel/edge': ^0.1.2
       d3-geo: ^3.0.1
       d3-geo-projection: ^4.0.0
       flexsearch: ^0.7.31
-      magic-string: ^0.26.7
+      magic-string: ^0.27.0
       marked: ^4.2.3
       prism-svelte: ^0.5.0
       prismjs: ^1.29.0
@@ -707,9 +707,9 @@ importers:
       '@sveltejs/kit': link:../../packages/kit
       '@sveltejs/site-kit': link:../site-kit
       '@types/d3-geo': 3.0.2
-      '@types/node': 16.18.3
+      '@types/node': 16.18.6
       flexsearch: 0.7.31
-      magic-string: 0.26.7
+      magic-string: 0.27.0
       marked: 4.2.3
       prism-svelte: 0.5.0
       prismjs: 1.29.0
@@ -718,7 +718,7 @@ importers:
       tiny-glob: 0.2.9
       typescript: 4.9.3
       uvu: 0.5.6
-      vite: 3.2.4_@types+node@16.18.3
+      vite: 3.2.4_@types+node@16.18.6
       vite-imagetools: 4.0.11
 
   sites/site-kit:
@@ -1028,7 +1028,6 @@ packages:
 
   /@jridgewell/sourcemap-codec/1.4.14:
     resolution: {integrity: sha512-XPSJHWmi394fuUuzDnGz1wiKqWfo1yXecHQMRf2l6hztTO+nPru658AyDngaBe7isIxEkRsPR3FZh+s7iVa4Uw==}
-    dev: true
 
   /@jridgewell/trace-mapping/0.3.17:
     resolution: {integrity: sha512-MCNzAp77qzKca9+W/+I0+sEpaUnZoeasnghNeVc41VZCEKaCH73Vq3BZZ/SzWIgrqE4H4ceI+p+b6C0mHf9T4g==}
@@ -1112,7 +1111,7 @@ packages:
     engines: {node: '>=14'}
     hasBin: true
     dependencies:
-      '@types/node': 18.11.9
+      '@types/node': 18.11.11
       playwright-core: 1.28.1
     dev: true
 
@@ -1243,15 +1242,15 @@ packages:
       magic-string: 0.26.7
       svelte: 3.53.1
       svelte-hmr: 0.15.1_svelte@3.53.1
-      vite: 3.2.4_@types+node@16.18.3
+      vite: 3.2.4_@types+node@16.18.6
       vitefu: 0.2.2_vite@3.2.4
     transitivePeerDependencies:
       - supports-color
     dev: false
 
-  /@svitejs/changesets-changelog-github-compact/0.1.1:
-    resolution: {integrity: sha512-eBi211CfmKtkxB6tINicaDPBMbolswPbaAy7kCx+uUFL/LxztLm9cB+7jP54TgCrv+mMz8vSJWIs/baH63PjsA==}
-    engines: {node: ^12.20 || ^14.13.1 || >= 16}
+  /@svitejs/changesets-changelog-github-compact/1.0.0:
+    resolution: {integrity: sha512-h9pvZ3Bkk1K9bVr707OlWMtjreBPmXnh/GsxbiIp3ukNu9RjmkxlLmyD+h/DCkr8e0l3UpOlDDAUvbUHYNfGnA==}
+    engines: {node: ^14.13.1 || ^16.0.0 || >=18}
     dependencies:
       '@changesets/get-github-info': 0.5.1
       dotenv: 16.0.3
@@ -1262,7 +1261,7 @@ packages:
   /@types/connect/3.4.35:
     resolution: {integrity: sha512-cdeYyv4KWoEgpBISTxWvqYsVy444DOqehiF3fM3ne10AmJ62RSyNkUnxMJXHQWRQQX2eR94m5y1IZyDwBjV9FQ==}
     dependencies:
-      '@types/node': 16.18.3
+      '@types/node': 16.18.6
     dev: true
 
   /@types/cookie/0.5.1:
@@ -1316,11 +1315,11 @@ packages:
     resolution: {integrity: sha512-J8xLz7q2OFulZ2cyGTLE1TbbZcjpno7FaN6zdJNrgAdrJ+DZzh/uFR6YrTb4C+nXakvud8Q4+rbhoIWlYQbUFQ==}
     dev: true
 
-  /@types/node/16.18.3:
-    resolution: {integrity: sha512-jh6m0QUhIRcZpNv7Z/rpN+ZWXOicUUQbSoWks7Htkbb9IjFQj4kzcX/xFCkjstCj5flMsN8FiSvt+q+Tcs4Llg==}
+  /@types/node/16.18.6:
+    resolution: {integrity: sha512-vmYJF0REqDyyU0gviezF/KHq/fYaUbFhkcNbQCuPGFQj6VTbXuHZoxs/Y7mutWe73C8AC6l9fFu8mSYiBAqkGA==}
 
-  /@types/node/18.11.9:
-    resolution: {integrity: sha512-CRpX21/kGdzjOpFsZSkcrXMGIBWMGNIHXXBVFSH+ggkftxg+XYP20TESbh+zFvFj3EQOl5byk0HTRn1IL6hbqg==}
+  /@types/node/18.11.11:
+    resolution: {integrity: sha512-KJ021B1nlQUBLopzZmPBVuGU9un7WJd/W4ya7Ih02B4Uwky5Nja0yGYav2EfYIk0RR2Q9oVhf60S2XR1BCWJ2g==}
     dev: true
 
   /@types/normalize-package-data/2.4.1:
@@ -1334,7 +1333,7 @@ packages:
   /@types/prompts/2.4.1:
     resolution: {integrity: sha512-1Mqzhzi9W5KlooNE4o0JwSXGUDeQXKldbGn9NO4tpxwZbHXYd+WcKpCksG2lbhH7U9I9LigfsdVsP2QAY0lNPA==}
     dependencies:
-      '@types/node': 18.11.9
+      '@types/node': 18.11.11
     dev: true
 
   /@types/pug/2.0.6:
@@ -1353,7 +1352,7 @@ packages:
   /@types/sass/1.43.1:
     resolution: {integrity: sha512-BPdoIt1lfJ6B7rw35ncdwBZrAssjcwzI5LByIrYs+tpXlj/CAkuVdRsgZDdP4lq5EjyWzwxZCqAoFyHKFwp32g==}
     dependencies:
-      '@types/node': 18.11.9
+      '@types/node': 18.11.11
     dev: true
 
   /@types/semver/6.2.3:
@@ -1363,13 +1362,13 @@ packages:
   /@types/set-cookie-parser/2.4.2:
     resolution: {integrity: sha512-fBZgytwhYAUkj/jC/FAV4RQ5EerRup1YQsXQCh8rZfiHkc4UahC192oH0smGwsXol3cL3A5oETuAHeQHmhXM4w==}
     dependencies:
-      '@types/node': 16.18.3
+      '@types/node': 16.18.6
     dev: true
 
   /@types/ws/8.5.3:
     resolution: {integrity: sha512-6YOoWjruKj1uLf3INHH7D3qTXwFfEsg1kf3c0uDdSBJwfa/llkwIjrAGV7j7mVgGNbzTQ3HiHKKDXl6bJPD97w==}
     dependencies:
-      '@types/node': 16.18.3
+      '@types/node': 16.18.6
     dev: true
 
   /@typescript/twoslash/3.1.0:
@@ -3275,6 +3274,12 @@ packages:
     dependencies:
       sourcemap-codec: 1.4.8
 
+  /magic-string/0.27.0:
+    resolution: {integrity: sha512-8UnnX2PeRAPZuN12svgR9j7M1uWMovg/CEnIwIG0LFkXSJJe4PdfUGiTGl8V9bsBHFUtfVINcSyYxd7q+kx9fA==}
+    engines: {node: '>=12'}
+    dependencies:
+      '@jridgewell/sourcemap-codec': 1.4.14
+
   /make-dir/3.1.0:
     resolution: {integrity: sha512-g3FeP20LNwhALb/6Cz6Dd4F2ngze0jz7tbzrD2wAV+o9FeNHe4rL+yK2md0J/fiSf1sa1ADhXqi5+oVwOM/eGw==}
     engines: {node: '>=8'}
@@ -4904,7 +4909,7 @@ packages:
       fsevents: 2.3.2
     dev: true
 
-  /vite/3.2.4_@types+node@16.18.3:
+  /vite/3.2.4_@types+node@16.18.6:
     resolution: {integrity: sha512-Z2X6SRAffOUYTa+sLy3NQ7nlHFU100xwanq1WDwqaiFiCe+25zdxP1TfCS5ojPV2oDDcXudHIoPnI1Z/66B7Yw==}
     engines: {node: ^14.18.0 || >=16.0.0}
     hasBin: true
@@ -4929,7 +4934,7 @@ packages:
       terser:
         optional: true
     dependencies:
-      '@types/node': 16.18.3
+      '@types/node': 16.18.6
       esbuild: 0.15.16
       postcss: 8.4.19
       resolve: 1.22.1
@@ -4945,7 +4950,7 @@ packages:
       vite:
         optional: true
     dependencies:
-      vite: 3.2.4_@types+node@16.18.3
+      vite: 3.2.4_@types+node@16.18.6
     dev: false
 
   /vscode-oniguruma/1.6.2:
