@@ -6,7 +6,7 @@
 	<div class="container">
 		<div class="features">
 			<h2><span>features? we got 'em.</span></h2>
-			<p>
+			<p class="wall">
 				Mix and match <strong>prerendered</strong> pages for maximum performance with dynamic
 				<strong>server-side rendering</strong> for maximum flexibility. Turn your app into a
 				client-rendered
@@ -23,13 +23,12 @@
 				and connect your back end to your front end with <strong>type-safe</strong> data loading and
 				built-in <strong>form actions</strong>
 				that work with or without JavaScript. <strong>Co-exist</strong> with other client-side
-				routing frameworks on the same page. Add <strong>service workers</strong> for offline
-				support and <strong>progressive web apps</strong>. Generate <strong>AMP-compliant</strong>
+				routing frameworks on the same page. Add service workers for <strong>offline</strong>
+				support. Generate <strong>AMP-compliant</strong>
 				pages if you really have to. Build complex UIs with unusually powerful
 				<strong>filesystem-based routes</strong>. Nested layouts? Duh. Learn
 				<strong>web standards</strong>
-				that work across environments. Integrate with <strong>Tailwind</strong> and
-				<strong>GraphQL</strong>
+				that work across environments. Integrate with <strong>Tailwind</strong>
 				and <strong>Playwright</strong> and <strong>Vitest</strong> and <strong>Storybook</strong>
 				and, well, whatever you want. Build <strong>libraries</strong> as well as apps.
 				<strong>Deploy anywhere</strong> with adapters.
@@ -51,25 +50,47 @@
 
 	.features {
 		order: 1;
+		text-align: justify;
 	}
 
 	h2 {
-		float: left;
-		margin-top: 7rem;
+		float: right;
+		/* margin-top: 7rem; */
 		width: 5.5em;
 		shape-outside: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" preserveAspectRatio="none"><rect x="0" y="0" width="100" height="100"></rect></svg>');
 	}
 
 	h2 span {
 		display: block;
+		text-align: right;
 		width: 5em;
+		margin: 0 0 0 auto;
 	}
 
+	.wall {
+		margin: 0;
+		font-size: var(--sk-text-xs);
+	}
+
+	p + p {
+		margin-top: 1em;
+	}
+
+	p,
 	strong {
 		color: var(--sk-theme-2);
 	}
 
 	@media (min-width: 600px) {
+		h2 {
+			margin-top: 0.5em;
+			width: 10em;
+		}
+
+		h2 span {
+			width: auto;
+		}
+
 		/* TODO remove the 62.5% hack so we can use rems in media queries */
 		.container {
 			--size: 40rem;
@@ -77,7 +98,6 @@
 		}
 
 		.features {
-			text-align: justify;
 			padding: 2rem 0 2rem calc(0 * var(--size));
 		}
 	}
@@ -85,6 +105,14 @@
 	@media (min-width: 900px) {
 		.container {
 			--size: 45rem;
+		}
+
+		h2 {
+			margin-top: 0.1em;
+		}
+
+		p {
+			font-size: var(--sk-text-s);
 		}
 
 		.features {

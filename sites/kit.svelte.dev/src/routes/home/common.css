@@ -4,6 +4,7 @@
 
 .home h2 {
 	font-size: var(--sk-text-xl);
+	line-height: 1.2;
 }
 
 .home .grid {
