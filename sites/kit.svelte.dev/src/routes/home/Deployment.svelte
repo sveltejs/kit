@@ -91,6 +91,7 @@
 		max-height: 40rem;
 		text-align: center;
 		background: url(/edge.svg) no-repeat center;
+		aspect-ratio: 1;
 	}
 
 	.globe span {
