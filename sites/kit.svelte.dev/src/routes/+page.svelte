@@ -28,27 +28,24 @@
 				<h2>fast</h2>
 				<p>
 					Powered by <a href="https://svelte.dev">Svelte</a> and
-					<a href="https://vitejs.dev">Vite</a>, speed is baked into every aspect of SvelteKit's
-					design: fast installation, fast development, fast builds, fast page loads, fast
-					navigations. Did we mention it's fast?
+					<a href="https://vitejs.dev">Vite</a>, speed is baked into every crevice: fast setup, fast
+					dev, fast builds, fast page loads, fast navigation. Did we mention it's fast?
 				</p>
 			</div>
 
 			<div>
 				<h2>fun</h2>
 				<p>
-					No more wasted days figuring out bundler configuration and routing and server-side
-					rendering and progressive enhancement and CSP and environment variables and all the other
-					boring stuff. Code with joy.
+					No more wasted days figuring out bundler configuration, routing, SSR, CSP, TypeScript,
+					deployment settings and all the other boring stuff. Code with joy.
 				</p>
 			</div>
 
 			<div>
 				<h2>flexible</h2>
 				<p>
-					SPA? MPA? SSR? SSG? WTF. SvelteKit doesn't force its opinions on you, but instead gives
-					you the tools to succeed whatever it is you're building. And it runs wherever JavaScript
-					does.
+					SPA? MPA? SSR? SSG? Check. SvelteKit gives you the tools to succeed whatever it is you're
+					building. And it runs wherever JavaScript does.
 				</p>
 			</div>
 		</div>
