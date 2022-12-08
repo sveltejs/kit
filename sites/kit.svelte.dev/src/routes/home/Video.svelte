@@ -17,11 +17,15 @@
 		// has a duration by the time hydration occurs. TODO investigate
 		d = video.duration;
 
+		if (matchMedia('(prefers-reduced-motion)').matches) {
+			return;
+		}
+
 		const observer = new IntersectionObserver(
 			(entries) => {
 				for (const entry of entries) {
 					if (entry.isIntersecting) {
-						video.play();
+						// video.play();
 						observer.disconnect();
 					}
 				}
