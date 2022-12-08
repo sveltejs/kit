@@ -561,7 +561,7 @@ function kit() {
 
 function check_vite_version() {
 	// TODO parse from kit peer deps and maybe do a full semver compare if we ever require feature releases a min
-	const min_required_vite_major = 3;
+	const min_required_vite_major = 4;
 	const vite_version = vite.version ?? '2.x'; // vite started exporting it's version in 3.0
 	const current_vite_major = parseInt(vite_version.split('.')[0], 10);
 
