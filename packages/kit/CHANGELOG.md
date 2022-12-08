@@ -1,5 +1,17 @@
 # @sveltejs/kit
 
+## 1.0.0-next.573
+
+### Patch Changes
+
+- [fix] adjust ActionData type ([#7962](https://github.com/sveltejs/kit/pull/7962))
+
+- [breaking] disallow unknown exports (except when starting with an underscore) from `+(layout|page)(.server)?.js` and `+server.js` files ([#7878](https://github.com/sveltejs/kit/pull/7878))
+
+- [fix] continuous optionals should not throw conflict error ([#7939](https://github.com/sveltejs/kit/pull/7939))
+
+- fix `enhance` error message when form action doesn't exist or csrf is enabled ([#7958](https://github.com/sveltejs/kit/pull/7958))
+
 ## 1.0.0-next.572
 
 ### Minor Changes
