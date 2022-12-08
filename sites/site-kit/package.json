@@ -24,7 +24,7 @@
 		"@sveltejs/package": "workspace:*",
 		"svelte": "^3.53.1",
 		"typescript": "^4.9.3",
-		"vite": "^4.0.0-beta.4"
+		"vite": "^4.0.0-beta.5"
 	},
 	"dependencies": {
 		"golden-fleece": "^1.0.9"
