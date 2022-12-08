@@ -59,6 +59,7 @@ export async function load_server_data({ event, state, node, parent }) {
 	});
 
 	const data = result ? await unwrap_promises(result) : null;
+	validate_load_response(data, /** @type {string} */ (event.route.id));
 
 	return {
 		type: 'data',
@@ -236,9 +237,10 @@ export async function load_data({
 		}
 	});
 
-	const data = await node.shared.load.call(null, load_event);
-
-	return data ? unwrap_promises(data) : null;
+	const result = await node.shared.load.call(null, load_event);
+	const data = result ? unwrap_promises(result) : null;
+	validate_load_response(data, /** @type {string} */ (event.route.id));
+	return data;
 }
 
 /**
@@ -256,4 +258,23 @@ async function stream_to_string(stream) {
 		result += decoder.decode(value);
 	}
 	return result;
+}
+
+/**
+ * @param {any} data
+ * @param {string} [routeId]
+ */
+function validate_load_response(data, routeId) {
+	const not_object = typeof data !== 'object' && data != null;
+	if (not_object || Array.isArray(data) || data instanceof Response) {
+		throw new Error(
+			`a load function related to route '${routeId}' returned ${
+				not_object
+					? `a ${typeof data}`
+					: data instanceof Response
+					? 'a Response object'
+					: 'an array'
+			}, but must return a plain object (e.g '{ data: ...}')`
+		);
+	}
 }
