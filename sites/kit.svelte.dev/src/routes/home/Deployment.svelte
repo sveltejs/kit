@@ -186,13 +186,15 @@
 		height: var(--size);
 		object-fit: contain;
 		filter: invert(var(--invert)) opacity(0.5) grayscale(100%);
+		transition: filter 0.2s;
 	}
 
-	.platforms div:hover img {
+	.platforms a:hover img {
 		filter: invert(var(--invert-hover));
+		transition: none;
 	}
 
-	.platforms div:hover span {
+	.platforms a:hover span {
 		color: var(--sk-text-1);
 	}
 
