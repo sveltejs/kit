@@ -1,5 +1,11 @@
 # @sveltejs/kit
 
+## 1.0.0-next.574
+
+### Patch Changes
+
+- [feat] split Vite plugin in two ([#7990](https://github.com/sveltejs/kit/pull/7990))
+
 ## 1.0.0-next.573
 
 ### Patch Changes
