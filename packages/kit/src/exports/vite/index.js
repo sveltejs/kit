@@ -74,7 +74,7 @@ export function sveltekit() {
  * - https://rollupjs.org/guide/en/#build-hooks
  * - https://rollupjs.org/guide/en/#output-generation-hooks
  *
- * @return {Array<import('vite').Plugin>}
+ * @return {import('vite').Plugin[]}
  */
 function kit() {
 	/** @type {import('types').ValidatedConfig} */
