@@ -30,7 +30,7 @@
 		"@svitejs/changesets-changelog-github-compact": "^1.0.0",
 		"playwright": "^1.28.1",
 		"prettier": "^2.8.0",
-		"rollup": "^3.6.0",
+		"rollup": "^3.7.0",
 		"svelte": "^3.53.1",
 		"tiny-glob": "^0.2.9",
 		"turbo": "^1.6.3",

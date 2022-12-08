@@ -11,7 +11,7 @@ importers:
       '@svitejs/changesets-changelog-github-compact': ^1.0.0
       playwright: ^1.28.1
       prettier: ^2.8.0
-      rollup: ^3.6.0
+      rollup: ^3.7.0
       svelte: ^3.53.1
       tiny-glob: ^0.2.9
       turbo: ^1.6.3
@@ -89,7 +89,7 @@ importers:
       '@types/set-cookie-parser': ^2.4.2
       esbuild: ^0.16.3
       rimraf: ^3.0.2
-      rollup: ^3.6.0
+      rollup: ^3.7.0
       set-cookie-parser: ^2.5.1
       typescript: ^4.9.3
       uvu: ^0.5.6
@@ -120,7 +120,7 @@ importers:
       c8: ^7.12.0
       polka: ^1.0.0-next.22
       rimraf: ^3.0.2
-      rollup: ^3.6.0
+      rollup: ^3.7.0
       sirv: ^2.0.2
       typescript: ^4.9.3
       uvu: ^0.5.6
@@ -278,7 +278,7 @@ importers:
       magic-string: ^0.27.0
       marked: ^4.2.3
       mime: ^3.0.0
-      rollup: ^3.6.0
+      rollup: ^3.7.0
       sade: ^1.8.1
       set-cookie-parser: ^2.5.1
       sirv: ^2.0.2
