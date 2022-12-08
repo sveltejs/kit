@@ -59,9 +59,27 @@ const enforced_config = {
 	root: true
 };
 
-/** @return {import('vite').Plugin[]} */
-export function sveltekit() {
-	return [...svelte(), kit()];
+/** @return {Promise<import('vite').Plugin[]>} */
+export async function sveltekit() {
+	const svelte_config = await load_config();
+	/** @type {import('@sveltejs/vite-plugin-svelte').Options} */
+	const vite_plugin_svelte_options = svelte_config.vitePlugin || {};
+
+	// Default hydratable to true
+	if (vite_plugin_svelte_options.compilerOptions?.hydratable == null) {
+		vite_plugin_svelte_options.compilerOptions = {
+			...vite_plugin_svelte_options.compilerOptions,
+			hydratable: true
+		};
+	}
+
+	return [
+		...svelte({
+			configFile: false,
+			...vite_plugin_svelte_options
+		}),
+		kit({ svelte_config })
+	];
 }
 
 /**
@@ -74,12 +92,11 @@ export function sveltekit() {
  * - https://rollupjs.org/guide/en/#build-hooks
  * - https://rollupjs.org/guide/en/#output-generation-hooks
  *
+ * @param {{ svelte_config: import('types').ValidatedConfig }} options
+ *
  * @return {import('vite').Plugin}
  */
-function kit() {
-	/** @type {import('types').ValidatedConfig} */
-	let svelte_config;
-
+function kit({ svelte_config }) {
 	/** @type {import('vite').ResolvedConfig} */
 	let vite_config;
 
@@ -192,7 +209,6 @@ function kit() {
 		 */
 		async config(config, config_env) {
 			vite_config_env = config_env;
-			svelte_config = await load_config();
 
 			env = get_env(svelte_config.kit.env, vite_config_env.mode);
 
