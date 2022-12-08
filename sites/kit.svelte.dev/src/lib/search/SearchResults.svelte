@@ -23,5 +23,6 @@
 		background-color: var(--sk-back-2);
 		border-radius: 0 0 var(--sk-border-radius) var(--sk-border-radius);
 		pointer-events: all;
+		margin: 0;
 	}
 </style>
