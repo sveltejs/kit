@@ -13,7 +13,7 @@ const config = {
 	plugins: [
 		imagetools({
 			defaultDirectives: (url) => {
-				const extension = url.pathname.substring(url.pathname.lastIndexOf('.') + 1);
+				const extension = path.extname(url.pathname);
 				if (supportedExtensions.includes(extension)) {
 					return new URLSearchParams({
 						format: 'avif;webp;' + extension,
