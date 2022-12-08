@@ -93,7 +93,6 @@ export async function sveltekit() {
  * - https://rollupjs.org/guide/en/#output-generation-hooks
  *
  * @param {{ svelte_config: import('types').ValidatedConfig }} options
- *
  * @return {import('vite').Plugin}
  */
 function kit({ svelte_config }) {
