@@ -7,9 +7,10 @@
 		<div>
 			<h2>fast</h2>
 			<p>
-				Powered by <a href="https://svelte.dev">Svelte</a> and
-				<a href="https://vitejs.dev">Vite</a>, speed is baked into every crevice: fast setup, fast
-				dev, fast builds, fast page loads, fast navigation. Did we mention it's fast?
+				Powered by <a target="_blank" rel="noreferrer" href="https://svelte.dev">Svelte</a> and
+				<a target="_blank" rel="noreferrer" href="https://vitejs.dev">Vite</a>, speed is baked into
+				every crevice: fast setup, fast dev, fast builds, fast page loads, fast navigation. Did we
+				mention it's fast?
 			</p>
 		</div>
 

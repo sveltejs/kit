@@ -31,7 +31,11 @@
 	<Showcase />
 
 	<footer>
-		<p>SvelteKit is free and open source software released under the MIT license.</p>
+		<p>
+			SvelteKit is <a target="_blank" rel="noreferrer" href="https://github.com/sveltejs/kit"
+				>free and open source software</a
+			> released under the MIT license.
+		</p>
 	</footer>
 </div>
 
