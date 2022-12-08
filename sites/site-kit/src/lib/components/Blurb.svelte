@@ -140,6 +140,11 @@
 		color: white;
 	}
 
+	.blurb .box :global(p) :global(a) {
+		color: white;
+		text-decoration: underline;
+	}
+
 	.one {
 		background: var(--sk-theme-1-variant);
 		grid-area: one;
