@@ -1,13 +1,17 @@
 <script>
 	import volume_off from './volume-off.svg';
 	import volume_high from './volume-high.svg';
+	import play from '$lib/icons/play.svg';
+	import pause from '$lib/icons/pause.svg';
 	import vtt from './subtitles.vtt';
 	import { onMount } from 'svelte';
 
 	/** @type {HTMLVideoElement} */
 	let video;
+
+	let paused = false;
 	let muted = true;
-	let unused = true;
+	let has_used_mute_button = false;
 
 	let d = 0;
 	let t = 0;
@@ -16,6 +20,7 @@
 		// I think this binding is broken in SSR because the video already
 		// has a duration by the time hydration occurs. TODO investigate
 		d = video.duration;
+		paused = video.paused;
 
 		if (matchMedia('(prefers-reduced-motion)').matches) {
 			return;
@@ -49,11 +54,16 @@
 		loop
 		bind:this={video}
 		bind:muted
+		bind:paused
 		bind:currentTime={t}
 		bind:duration={d}
 		on:click={() => {
 			if (video.paused) {
 				video.play();
+
+				if (!has_used_mute_button) {
+					muted = false;
+				}
 			} else {
 				video.pause();
 			}
@@ -66,16 +76,34 @@
 		<div class="progress-bar" style={`width: ${(t / d) * 100}%`} />
 	{/if}
 
-	<label class:unused>
+	<label class="mute" class:unused={!has_used_mute_button}>
 		<input
 			class="visually-hidden"
 			type="checkbox"
 			bind:checked={muted}
-			on:change={() => (unused = false)}
+			on:change={() => (has_used_mute_button = true)}
 		/>
 
+		<span class="focus-ring" />
 		<img style:display={muted ? 'block' : 'none'} src={volume_off} alt="unmute" />
 		<img style:display={muted ? 'none' : 'block'} src={volume_high} alt="mute" />
+	</label>
+
+	<label class="play-pause">
+		<input
+			class="visually-hidden"
+			type="checkbox"
+			bind:checked={paused}
+			on:change={() => {
+				if (!has_used_mute_button) {
+					muted = false;
+				}
+			}}
+		/>
+
+		<span class="focus-ring" />
+		<img style:display={paused ? 'block' : 'none'} src={play} alt="play" />
+		<img style:display={paused ? 'none' : 'block'} src={pause} alt="pause" />
 	</label>
 </div>
 
@@ -108,10 +136,18 @@
 
 	label {
 		position: absolute;
-		top: 1rem;
-		right: 1rem;
 		opacity: 0.2;
 		transition: opacity 0.2s;
+	}
+
+	.mute {
+		top: 1rem;
+		right: 1rem;
+	}
+
+	.play-pause {
+		left: 1rem;
+		bottom: 2rem;
 	}
 
 	label.unused {
@@ -131,7 +167,17 @@
 	} */
 
 	.video-player:hover label,
-	.video-player:focus-within label {
+	.video-player label:focus-within {
 		opacity: 1;
+	}
+
+	.video-player input:focus-visible + .focus-ring {
+		display: block;
+		position: absolute;
+		pointer-events: none;
+		outline: 2px solid var(--sk-theme-1);
+		width: 100%;
+		height: 100%;
+		border-radius: var(--sk-border-radius);
 	}
 </style>
