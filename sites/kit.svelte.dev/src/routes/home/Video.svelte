@@ -25,7 +25,7 @@
 			(entries) => {
 				for (const entry of entries) {
 					if (entry.isIntersecting) {
-						// video.play();
+						video.play();
 						observer.disconnect();
 					}
 				}
