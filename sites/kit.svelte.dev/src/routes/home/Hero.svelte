@@ -103,7 +103,7 @@
 
 	@media (min-width: 768px) {
 		.hero {
-			padding: calc(16rem + var(--sk-nav-height)) var(--sk-page-padding-side) 16rem;
+			padding: calc(10rem + var(--sk-nav-height)) var(--sk-page-padding-side) 16rem;
 		}
 		.hero-contents {
 			max-width: calc(120rem - 2 * var(--side-nav));
@@ -115,7 +115,7 @@
 		}
 
 		.hero-image {
-			--size: min(100vw, 120rem);
+			--size: min(100vw, 108rem);
 			left: auto;
 			right: -20rem;
 			bottom: calc(-5rem - 0.38 * var(--size));
