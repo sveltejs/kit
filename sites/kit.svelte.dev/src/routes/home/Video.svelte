@@ -89,6 +89,10 @@
 		display: block;
 	}
 
+	video:focus {
+		outline: 1px solid var(--sk-theme-1);
+	}
+
 	.progress-bar {
 		position: absolute;
 		left: 0;
@@ -122,7 +126,8 @@
 		border-radius: 0 var(--sk-border-radius) var(--sk-border-radius) var(--sk-border-radius);
 	} */
 
-	.video-player:hover label {
+	.video-player:hover label,
+	.video-player:focus-within label {
 		opacity: 1;
 	}
 </style>
