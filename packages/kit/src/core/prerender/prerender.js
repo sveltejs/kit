@@ -11,6 +11,11 @@ import { logger } from '../utils.js';
 import { load_config } from '../config/index.js';
 import { get_route_segments } from '../../utils/routing.js';
 import { get_option } from '../../runtime/server/utils.js';
+import {
+	validate_common_exports,
+	validate_page_server_exports,
+	validate_server_exports
+} from '../../utils/exports.js';
 
 const [, , client_out_dir, manifest_path, results_path, verbose, env] = process.argv;
 
@@ -357,34 +362,46 @@ export async function prerender() {
 	}
 
 	for (const route of manifest._.routes) {
-		try {
-			if (route.endpoint) {
-				const mod = await route.endpoint();
-				if (mod.prerender !== undefined) {
-					if (mod.prerender && (mod.POST || mod.PATCH || mod.PUT || mod.DELETE)) {
-						throw new Error(
-							`Cannot prerender a +server file with POST, PATCH, PUT, or DELETE (${route.id})`
-						);
-					}
+		if (route.endpoint) {
+			const mod = await route.endpoint();
+			if (mod.prerender !== undefined) {
+				validate_server_exports(mod, route.id);
 
-					prerender_map.set(route.id, mod.prerender);
+				if (mod.prerender && (mod.POST || mod.PATCH || mod.PUT || mod.DELETE)) {
+					throw new Error(
+						`Cannot prerender a +server file with POST, PATCH, PUT, or DELETE (${route.id})`
+					);
+				}
+
+				prerender_map.set(route.id, mod.prerender);
+			}
+		}
+
+		if (route.page) {
+			const nodes = await Promise.all(
+				[...route.page.layouts, route.page.leaf].map((n) => {
+					if (n !== undefined) return manifest._.nodes[n]();
+				})
+			);
+
+			const layouts = nodes.slice(0, -1);
+			const page = nodes.at(-1);
+
+			for (const layout of layouts) {
+				if (layout) {
+					validate_common_exports(layout.server, route.id);
+					validate_common_exports(layout.shared, route.id);
 				}
 			}
 
-			if (route.page) {
-				const nodes = await Promise.all(
-					[...route.page.layouts, route.page.leaf].map((n) => {
-						if (n !== undefined) return manifest._.nodes[n]();
-					})
-				);
-				const prerender = get_option(nodes, 'prerender') ?? false;
-
-				prerender_map.set(route.id, prerender);
+			if (page) {
+				validate_page_server_exports(page.server, route.id);
+				validate_common_exports(page.shared, route.id);
 			}
-		} catch (e) {
-			// We failed to import the module, which indicates it can't be prerendered
-			// TODO should we catch these? It's almost certainly a bug in the app
-			console.error(e);
+
+			const prerender = get_option(nodes, 'prerender') ?? false;
+
+			prerender_map.set(route.id, prerender);
 		}
 	}
 
