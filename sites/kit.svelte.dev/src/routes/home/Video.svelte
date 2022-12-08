@@ -63,7 +63,12 @@
 	{/if}
 
 	<label class:unused>
-		<input type="checkbox" bind:checked={muted} on:change={() => (unused = false)} />
+		<input
+			class="visually-hidden"
+			type="checkbox"
+			bind:checked={muted}
+			on:change={() => (unused = false)}
+		/>
 
 		<img style:display={muted ? 'block' : 'none'} src={volume_off} alt="unmute" />
 		<img style:display={muted ? 'none' : 'block'} src={volume_high} alt="mute" />
@@ -103,10 +108,6 @@
 
 	label.unused {
 		opacity: 0.8;
-	}
-
-	input {
-		display: none;
 	}
 
 	label img {
