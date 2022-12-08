@@ -263,6 +263,10 @@
 		color: var(--sk-back-1);
 	}
 
+	ul {
+		margin: 0;
+	}
+
 	.modal-background,
 	.modal {
 		position: fixed;
@@ -319,7 +323,6 @@
 		font-weight: normal;
 		text-transform: uppercase;
 		background-color: var(--sk-back-2);
-		border-radius: 0 0 var(--sk-border-radius) var(--sk-border-radius);
 		pointer-events: all;
 	}
 
