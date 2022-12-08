@@ -288,6 +288,7 @@ export interface SSRNode {
 
 	// store this in dev so we can print serialization errors
 	server_id?: string;
+	shared_id?: string;
 }
 
 export type SSRNodeLoader = () => Promise<SSRNode>;
@@ -346,6 +347,7 @@ export interface SSRRoute {
 	params: RouteParam[];
 	page: PageNodeIndexes | null;
 	endpoint: (() => Promise<SSREndpoint>) | null;
+	endpoint_id?: string;
 }
 
 export interface SSRState {

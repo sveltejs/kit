@@ -17,6 +17,11 @@ import { redirect_json_response, render_data } from './data/index.js';
 import { add_cookies_to_headers, get_cookies } from './cookie.js';
 import { create_fetch } from './fetch.js';
 import { Redirect } from '../control.js';
+import {
+	validate_common_exports,
+	validate_page_server_exports,
+	validate_server_exports
+} from '../../utils/exports.js';
 import { error, json } from '../../exports/index.js';
 
 /* global __SVELTEKIT_ADAPTER_NAME__ */
@@ -188,10 +193,31 @@ export async function respond(request, options, state) {
 					options.manifest._.nodes[route.page.leaf]()
 				]);
 
+				if (__SVELTEKIT_DEV__) {
+					const layouts = nodes.slice(0, -1);
+					const page = nodes.at(-1);
+
+					for (const layout of layouts) {
+						if (layout) {
+							validate_common_exports(layout.server, /** @type {string} */ (layout.server_id));
+							validate_common_exports(layout.shared, /** @type {string} */ (layout.shared_id));
+						}
+					}
+
+					if (page) {
+						validate_page_server_exports(page.server, /** @type {string} */ (page.server_id));
+						validate_common_exports(page.shared, /** @type {string} */ (page.shared_id));
+					}
+				}
+
 				trailing_slash = get_option(nodes, 'trailingSlash');
 			} else if (route.endpoint) {
 				const node = await route.endpoint();
 				trailing_slash = node.trailingSlash;
+
+				if (__SVELTEKIT_DEV__) {
+					validate_server_exports(node, /** @type {string} */ (route.endpoint_id));
+				}
 			}
 
 			const normalized = normalize_path(url.pathname, trailing_slash ?? 'never');

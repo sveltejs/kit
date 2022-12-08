@@ -4,6 +4,8 @@ import { imagetools } from 'vite-imagetools';
 
 /** @type {import('vite').UserConfig} */
 const config = {
+	assetsInclude: ['**/*.vtt'],
+
 	logLevel: 'info',
 
 	plugins: [imagetools(), sveltekit()],
