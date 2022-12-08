@@ -21,7 +21,8 @@ await create('my-new-app', {
   types: 'checkjs', // or 'typescript' or null;
   prettier: false,
   eslint: false,
-  playwright: false
+  playwright: false,
+  vitest: false
 });
 ```
 

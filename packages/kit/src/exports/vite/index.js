@@ -77,7 +77,7 @@ export async function sveltekit() {
 		...svelte_config.vitePlugin
 	};
 
-	return [...svelte(vite_plugin_svelte_options), kit({ svelte_config })];
+	return [...svelte(vite_plugin_svelte_options), ...kit({ svelte_config })];
 }
 
 /**
@@ -91,7 +91,7 @@ export async function sveltekit() {
  * - https://rollupjs.org/guide/en/#output-generation-hooks
  *
  * @param {{ svelte_config: import('types').ValidatedConfig }} options
- * @return {import('vite').Plugin}
+ * @return {import('vite').Plugin[]}
  */
 function kit({ svelte_config }) {
 	/** @type {import('vite').ResolvedConfig} */
@@ -197,8 +197,9 @@ function kit({ svelte_config }) {
 	// TODO remove this for 1.0
 	check_vite_version();
 
-	return {
-		name: 'vite-plugin-svelte-kit',
+	/** @type {import('vite').Plugin} */
+	const plugin_build = {
+		name: 'vite-plugin-sveltekit-build',
 
 		/**
 		 * Build the SvelteKit-provided Vite config to be merged with the user's vite.config.js file.
@@ -552,7 +553,12 @@ function kit({ svelte_config }) {
 				fs.unlinkSync(`${paths.output_dir}/client/${vite_config.build.manifest}`);
 				fs.unlinkSync(`${paths.output_dir}/server/${vite_config.build.manifest}`);
 			}
-		},
+		}
+	};
+
+	/** @type {import('vite').Plugin} */
+	const plugin_middleware = {
+		name: 'vite-plugin-sveltekit-middleware',
 
 		/**
 		 * Adds the SvelteKit middleware to do SSR in dev mode.
@@ -570,6 +576,8 @@ function kit({ svelte_config }) {
 			return preview(vite, vite_config, svelte_config);
 		}
 	};
+
+	return [plugin_build, plugin_middleware];
 }
 
 function check_vite_version() {

@@ -27,6 +27,12 @@ body {
 	-webkit-overflow-scrolling: touch;
 }
 
+p,
+ul,
+ol {
+	margin: 1em 0;
+}
+
 a {
 	position: relative;
 	text-decoration: none;
@@ -54,7 +60,7 @@ h2 {
 	font-size: var(--sk-text-l);
 }
 h1 {
-	font-size: var(--sk-text-xl);
+	font-size: var(--sk-text-xxl);
 }
 
 h1,
