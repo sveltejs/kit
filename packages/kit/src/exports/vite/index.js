@@ -62,24 +62,22 @@ const enforced_config = {
 /** @return {Promise<import('vite').Plugin[]>} */
 export async function sveltekit() {
 	const svelte_config = await load_config();
+
 	/** @type {import('@sveltejs/vite-plugin-svelte').Options} */
-	const vite_plugin_svelte_options = svelte_config.vitePlugin || {};
+	const vite_plugin_svelte_options = {
+		configFile: false,
+		extensions: svelte_config.extensions,
+		preprocess: svelte_config.preprocess,
+		onwarn: svelte_config.onwarn,
+		compilerOptions: {
+			// @ts-expect-error SvelteKit requires hydratable true by default
+			hydratable: true,
+			...svelte_config.compilerOptions
+		},
+		...svelte_config.vitePlugin
+	};
 
-	// Default hydratable to true
-	if (vite_plugin_svelte_options.compilerOptions?.hydratable == null) {
-		vite_plugin_svelte_options.compilerOptions = {
-			...vite_plugin_svelte_options.compilerOptions,
-			hydratable: true
-		};
-	}
-
-	return [
-		...svelte({
-			configFile: false,
-			...vite_plugin_svelte_options
-		}),
-		kit({ svelte_config })
-	];
+	return [...svelte(vite_plugin_svelte_options), kit({ svelte_config })];
 }
 
 /**
