@@ -1,5 +1,13 @@
 # @sveltejs/kit
 
+## 1.0.0-next.575
+
+### Patch Changes
+
+- [fix] throw error when using enhance on GET forms ([#7948](https://github.com/sveltejs/kit/pull/7948))
+
+- [breaking] strip `__data.json` from url ([#7979](https://github.com/sveltejs/kit/pull/7979))
+
 ## 1.0.0-next.574
 
 ### Patch Changes
