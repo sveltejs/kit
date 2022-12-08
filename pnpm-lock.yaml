@@ -689,7 +689,6 @@ importers:
       prismjs: ^1.29.0
       shiki-twoslash: ^3.1.0
       svelte: ^3.53.1
-      svelte-preprocess-import-assets: ^0.2.4
       tiny-glob: ^0.2.9
       topojson-client: ^3.1.0
       typescript: ^4.9.3
@@ -716,7 +715,6 @@ importers:
       prismjs: 1.29.0
       shiki-twoslash: 3.1.0
       svelte: 3.53.1
-      svelte-preprocess-import-assets: 0.2.4_svelte@3.53.1
       tiny-glob: 0.2.9
       typescript: 4.9.3
       uvu: 0.5.6
@@ -4471,24 +4469,6 @@ packages:
     dependencies:
       svelte: 3.53.1
     dev: false
-
-  /svelte-parse-markup/0.1.1_svelte@3.53.1:
-    resolution: {integrity: sha512-xCBSldaZdwi0u0ANASVCUFynCaV8z5D6sQOnzPcYSEoD9dd40MLzOKMBVmuTf/LUuPvc+cUvF132MnwdG7mDig==}
-    peerDependencies:
-      svelte: ^3.0.0
-    dependencies:
-      svelte: 3.53.1
-    dev: true
-
-  /svelte-preprocess-import-assets/0.2.4_svelte@3.53.1:
-    resolution: {integrity: sha512-/vBKeUOFLUTnRgSjS8OnKKdFR7tHGa6LtA4DHcksobzl8KzzDYVn3EfgU7UWqF67KsLqBv6SrpXi/hMZCKcZYQ==}
-    peerDependencies:
-      svelte: ^3.37.0
-    dependencies:
-      magic-string: 0.25.9
-      svelte: 3.53.1
-      svelte-parse-markup: 0.1.1_svelte@3.53.1
-    dev: true
 
   /svelte-preprocess/4.10.7_7dvewpees4iyn2tkw2qzal77a4:
     resolution: {integrity: sha512-sNPBnqYD6FnmdBrUmBCaqS00RyCsCpj2BG58A1JBswNF7b0OKviwxqVrOL/CKyJrLSClrSeqQv5BXNg2RUbPOw==}
