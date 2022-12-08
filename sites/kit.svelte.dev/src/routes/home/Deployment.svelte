@@ -8,7 +8,7 @@
 	import firebase from './logos/firebase.svg';
 	import deno from './logos/deno.svg';
 	import lambda from './logos/lambda.svg';
-	import appengine from './logos/appengine.svg';
+	import azure from './logos/azure.svg';
 	import plus from '$lib/icons/plus.svg';
 </script>
 
@@ -28,49 +28,85 @@
 
 	<div class="grid" style="--columns: 3">
 		<div class="platforms left">
-			<div class="invert">
+			<a
+				target="_blank"
+				rel="noreferrer"
+				href="https://github.com/sveltejs/kit/tree/master/packages/adapter-static"
+				class="invert"
+			>
 				<img src={html5} alt="HTML5 logo" />
 				<span><span class="large">Static</span> HTML</span>
-			</div>
-			<div class="invert">
+			</a>
+			<a
+				target="_blank"
+				rel="noreferrer"
+				href="https://github.com/sveltejs/kit/tree/master/packages/adapter-node"
+				class="invert"
+			>
 				<img src={node} alt="Node logo" />
 				<span>Node.js</span>
-			</div>
-			<div class="invert invert-hover">
+			</a>
+			<a
+				target="_blank"
+				rel="noreferrer"
+				href="https://github.com/sveltejs/kit/tree/master/packages/adapter-vercel"
+				class="invert invert-hover"
+			>
 				<img src={vercel} alt="Vercel logo" style="transform: translate(0,-0.2rem)" />
 				<span>Vercel</span>
-			</div>
-			<div>
+			</a>
+			<a
+				target="_blank"
+				rel="noreferrer"
+				href="https://github.com/sveltejs/kit/tree/master/packages/adapter-netlify"
+			>
 				<img src={netlify} alt="Netlify logo" />
 				<span>Netlify</span>
-			</div>
-			<div>
+			</a>
+			<a
+				target="_blank"
+				rel="noreferrer"
+				href="https://github.com/sveltejs/kit/tree/master/packages/adapter-cloudflare"
+			>
 				<img src={cloudflare} alt="Cloudflare logo" />
 				<span>Cloudflare</span>
-			</div>
+			</a>
 		</div>
 
 		<div class="platforms right">
-			<div>
+			<a
+				target="_blank"
+				rel="noreferrer"
+				href="https://github.com/jthegedus/svelte-adapter-firebase"
+			>
 				<img src={firebase} alt="Firebase logo" />
 				<span>Firebase</span>
-			</div>
-			<div class="invert invert-hover">
+			</a>
+			<a
+				target="_blank"
+				rel="noreferrer"
+				href="https://github.com/pluvial/svelte-adapter-deno"
+				class="invert invert-hover"
+			>
 				<img src={deno} alt="Deno logo" />
 				<span>Deno</span>
-			</div>
-			<div>
+			</a>
+			<a target="_blank" rel="noreferrer" href="https://github.com/MikeBild/sveltekit-adapter-aws">
 				<img src={lambda} alt="AWS Lambda logo" />
 				<span>AWS</span>
-			</div>
-			<div>
-				<img src={appengine} alt="AppEngine logo" />
-				<span>AppEngine</span>
-			</div>
-			<div>
+			</a>
+			<a
+				target="_blank"
+				rel="noreferrer"
+				href="https://github.com/geoffrich/svelte-adapter-azure-swa"
+			>
+				<img src={azure} alt="Azure logo" />
+				<span>Azure</span>
+			</a>
+			<a target="_blank" rel="noreferrer" href="https://kit.svelte.dev/docs/adapters">
 				<img src={plus} alt="Plus sign" />
 				<span>More...</span>
-			</div>
+			</a>
 		</div>
 
 		<div
@@ -120,11 +156,12 @@
 		align-items: center;
 	}
 
-	.platforms div {
+	.platforms a {
 		display: flex;
 		flex-direction: column;
 		gap: 1rem;
 		align-items: center;
+		color: inherit;
 	}
 
 	.platforms.left {
@@ -182,7 +219,7 @@
 			align-items: center;
 		}
 
-		.platforms div {
+		.platforms a {
 			--direction: -1;
 			flex-direction: row;
 			align-items: center;
@@ -202,16 +239,16 @@
 			order: 3;
 		}
 
-		.platforms div:first-child,
-		.platforms div:last-child {
+		.platforms a:first-child,
+		.platforms a:last-child {
 			transform: translate(calc(var(--direction) * 5rem), 0);
 		}
 
-		.platforms div:nth-child(2) {
+		.platforms a:nth-child(2) {
 			transform: translate(calc(var(--direction) * 1rem), -0.2rem);
 		}
 
-		.platforms div:nth-child(4) {
+		.platforms a:nth-child(4) {
 			transform: translate(calc(var(--direction) * 1rem), 0.2rem);
 		}
 
@@ -220,7 +257,7 @@
 			flex-direction: row-reverse;
 		}
 
-		.platforms.left div {
+		.platforms.left a {
 			--direction: 1;
 			flex-direction: row-reverse;
 		}
