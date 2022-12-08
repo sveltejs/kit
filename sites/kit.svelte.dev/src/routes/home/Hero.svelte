@@ -11,9 +11,10 @@
 			<a class="cta" href="/docs/introduction">read the docs</a>
 		</div>
 
-		<picture class="hero-image" sizes="(min-width: 480px) 800px, (min-width: 1024px) 480px, 600px">
+		<picture class="hero-image">
 			{#each Object.entries(background.sources) as [format, images]}
 				<source
+					sizes="(min-width: 480px) 800px, (min-width: 1024px) 480px, 600px"
 					srcset={images.map((i) => `${i.src} ${i.w}w`).join(', ')}
 					type={'image/' + format}
 				/>
