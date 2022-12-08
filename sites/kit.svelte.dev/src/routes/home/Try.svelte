@@ -114,6 +114,7 @@
 
 	.terminal pre {
 		padding: 1em;
+		font-size: var(--sk-text-xs);
 	}
 
 	.line::before {
@@ -140,6 +141,18 @@
 	.orange-highlight,
 	a {
 		color: hsl(15, 100%, 65%);
+	}
+
+	@media (min-width: 440px) {
+		.terminal pre {
+			font-size: var(--sk-text-s);
+		}
+	}
+
+	@media (min-width: 1080px) {
+		.terminal pre {
+			font-size: var(--sk-text-m);
+		}
 	}
 
 	@media (min-width: 900px) {
