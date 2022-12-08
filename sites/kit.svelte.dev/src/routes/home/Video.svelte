@@ -52,6 +52,7 @@
 	<video
 		src="https://sveltejs.github.io/assets/svelte-origins-preview.mp4"
 		loop
+		playsinline
 		bind:this={video}
 		bind:muted
 		bind:paused
