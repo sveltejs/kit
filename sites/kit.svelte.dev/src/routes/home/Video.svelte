@@ -1,6 +1,7 @@
 <script>
 	import volume_off from './volume-off.svg';
 	import volume_high from './volume-high.svg';
+	import vtt from './subtitles.vtt';
 	import { onMount } from 'svelte';
 
 	/** @type {HTMLVideoElement} */
@@ -54,8 +55,7 @@
 			}
 		}}
 	>
-		<!-- TODO-->
-		<track kind="captions" />
+		<track kind="captions" srclang="en" src={vtt} />
 	</video>
 
 	{#if d}
