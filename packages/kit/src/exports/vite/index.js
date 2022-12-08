@@ -61,7 +61,7 @@ const enforced_config = {
 
 /** @return {import('vite').Plugin[]} */
 export function sveltekit() {
-	return [...svelte(), kit()];
+	return [...svelte(), ...kit()];
 }
 
 /**
@@ -74,7 +74,7 @@ export function sveltekit() {
  * - https://rollupjs.org/guide/en/#build-hooks
  * - https://rollupjs.org/guide/en/#output-generation-hooks
  *
- * @return {import('vite').Plugin}
+ * @return {Array<import('vite').Plugin>}
  */
 function kit() {
 	/** @type {import('types').ValidatedConfig} */
@@ -183,8 +183,8 @@ function kit() {
 	// TODO remove this for 1.0
 	check_vite_version();
 
-	return {
-		name: 'vite-plugin-svelte-kit',
+	return [{
+		name: 'vite-plugin-sveltekit-build',
 
 		/**
 		 * Build the SvelteKit-provided Vite config to be merged with the user's vite.config.js file.
@@ -539,7 +539,10 @@ function kit() {
 				fs.unlinkSync(`${paths.output_dir}/client/${vite_config.build.manifest}`);
 				fs.unlinkSync(`${paths.output_dir}/server/${vite_config.build.manifest}`);
 			}
-		},
+		}
+	},
+	{
+		name: 'vite-plugin-sveltekit-middleware',
 
 		/**
 		 * Adds the SvelteKit middleware to do SSR in dev mode.
@@ -556,7 +559,7 @@ function kit() {
 		configurePreviewServer(vite) {
 			return preview(vite, vite_config, svelte_config);
 		}
-	};
+	}];
 }
 
 function check_vite_version() {
