@@ -73,12 +73,11 @@
 			</div>
 		</div>
 
-		<div class="globe">
-			<!-- <img
-				src="/edge.svg"
-				alt="Dynamically rendered map of the world, centered on the user's location"
-			/> -->
-
+		<div
+			class="globe"
+			role="img"
+			aria-label="Dynamically rendered map of the world, centered on the user's location"
+		>
 			<span> rendered on the edge, just for you </span>
 		</div>
 	</div>
