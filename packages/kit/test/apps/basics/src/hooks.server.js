@@ -45,6 +45,17 @@ export const handle = sequence(
 		return resolve(event);
 	},
 	({ event, resolve }) => {
+		if (
+			event.request.url.includes('__data.json') &&
+			(event.url.pathname.endsWith('__data.json') || !event.isDataRequest)
+		) {
+			throw new Error(
+				'__data.json requests should have the suffix stripped from the URL and isDataRequest set to true'
+			);
+		}
+		return resolve(event);
+	},
+	({ event, resolve }) => {
 		if (event.url.pathname.includes('fetch-credentialed')) {
 			// Only get the cookie at the test where we know it's set to avoid polluting our logs with (correct) warnings
 			event.locals.name = /** @type {string} */ (event.cookies.get('name'));

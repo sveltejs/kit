@@ -3,19 +3,27 @@ import { normalize_error } from '../../../utils/error.js';
 import { once } from '../../../utils/functions.js';
 import { load_server_data } from '../page/load_data.js';
 import { clarify_devalue_error, handle_error_and_jsonify, serialize_data_node } from '../utils.js';
-import { normalize_path, strip_data_suffix } from '../../../utils/url.js';
+import { normalize_path } from '../../../utils/url.js';
 
-export const INVALIDATED_HEADER = 'x-sveltekit-invalidated';
+export const INVALIDATED_PARAM = 'x-sveltekit-invalidated';
 
 /**
  * @param {import('types').RequestEvent} event
  * @param {import('types').SSRRoute} route
  * @param {import('types').SSROptions} options
  * @param {import('types').SSRState} state
+ * @param {boolean[] | undefined} invalidated_data_nodes
  * @param {import('types').TrailingSlash} trailing_slash
  * @returns {Promise<Response>}
  */
-export async function render_data(event, route, options, state, trailing_slash) {
+export async function render_data(
+	event,
+	route,
+	options,
+	state,
+	invalidated_data_nodes,
+	trailing_slash
+) {
 	if (!route.page) {
 		// requesting /__data.json should fail for a +server.js
 		return new Response(undefined, {
@@ -25,16 +33,12 @@ export async function render_data(event, route, options, state, trailing_slash) 
 
 	try {
 		const node_ids = [...route.page.layouts, route.page.leaf];
-
-		const invalidated =
-			event.url.searchParams.get(INVALIDATED_HEADER)?.split('_').map(Boolean) ??
-			node_ids.map(() => true);
-		event.url.searchParams.delete(INVALIDATED_HEADER);
+		const invalidated = invalidated_data_nodes ?? node_ids.map(() => true);
 
 		let aborted = false;
 
 		const url = new URL(event.url);
-		url.pathname = normalize_path(strip_data_suffix(url.pathname), trailing_slash);
+		url.pathname = normalize_path(url.pathname, trailing_slash);
 
 		const new_event = { ...event, url };
 
