@@ -12,7 +12,7 @@
 	const showcase = [
 		{ url: 'pudding.cool', image: pudding },
 		{ url: 'pronauns.com', image: pronauns },
-		{ url: 'dropzone', image: dropzone },
+		{ url: 'dropzone.dev', image: dropzone },
 		{ url: 'asm-editor.specy.app', image: asmeditor },
 		{ url: 'raster.app', image: raster },
 		{ url: 'pocketbase.io', image: pocketbase },
