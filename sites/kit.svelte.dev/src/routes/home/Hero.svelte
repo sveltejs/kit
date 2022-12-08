@@ -58,7 +58,7 @@
 		font-size: var(--sk-text-l);
 		font-weight: 200;
 		line-height: 1.2;
-		color: var(--sk-text);
+		color: var(--sk-text-2);
 		font-family: var(--sk-font);
 		max-width: 12em;
 		margin: 0 auto;

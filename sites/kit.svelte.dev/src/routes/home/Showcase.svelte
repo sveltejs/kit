@@ -50,7 +50,7 @@
 
 	a {
 		overflow: hidden;
-		color: var(--sk-text);
+		color: var(--sk-text-1);
 		display: flex;
 		border-radius: var(--sk-border-radius);
 		overflow: hidden;
