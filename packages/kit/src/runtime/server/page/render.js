@@ -266,24 +266,41 @@ export async function render_response({
 	}
 
 	if (page_config.csr) {
+		const opts = [
+			`env: ${s(options.public_env)}`,
+			`paths: ${s(options.paths)}`,
+			`target: document.querySelector('[data-sveltekit-hydrate="${target}"]').parentNode`,
+			`version: ${s(options.version)}`
+		];
+
+		if (page_config.ssr) {
+			const hydrate = [
+				`node_ids: [${branch.map(({ node }) => node.index).join(', ')}]`,
+				`data: ${serialized.data}`,
+				`form: ${serialized.form}`
+			];
+
+			if (status !== 200) {
+				hydrate.push(`status: ${status}`);
+			}
+
+			if (error) {
+				hydrate.push(`error: ${devalue.uneval(error)}`);
+			}
+
+			if (options.embedded) {
+				hydrate.push(`params: ${devalue.uneval(event.params)}`, `route: ${s(event.route)}`);
+			}
+
+			opts.push(`hydrate: {\n\t\t\t\t\t${hydrate.join(',\n\t\t\t\t\t')}\n\t\t\t\t}`);
+		}
+
 		// prettier-ignore
 		const init_app = `
 			import { start } from ${s(prefixed(entry.file))};
 
 			start({
-				env: ${s(options.public_env)},
-				hydrate: ${page_config.ssr ? `{
-					status: ${status},
-					error: ${devalue.uneval(error)},
-					node_ids: [${branch.map(({ node }) => node.index).join(', ')}],
-					params: ${devalue.uneval(event.params)},
-					route: ${s(event.route)},
-					data: ${serialized.data},
-					form: ${serialized.form}
-				}` : 'null'},
-				paths: ${s(options.paths)},
-				target: document.querySelector('[data-sveltekit-hydrate="${target}"]').parentNode,
-				version: ${s(options.version)}
+				${opts.join(',\n\t\t\t\t')}
 			});
 		`;
 

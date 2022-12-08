@@ -1635,7 +1635,15 @@ export function create_client({ target, base }) {
 			});
 		},
 
-		_hydrate: async ({ status, error, node_ids, params, route, data: server_data_nodes, form }) => {
+		_hydrate: async ({
+			status = 200,
+			error,
+			node_ids,
+			params,
+			route,
+			data: server_data_nodes,
+			form
+		}) => {
 			hydrated = true;
 
 			const url = new URL(location.href);
@@ -1643,7 +1651,7 @@ export function create_client({ target, base }) {
 			if (!__SVELTEKIT_EMBEDDED__) {
 				// See https://github.com/sveltejs/kit/pull/4935#issuecomment-1328093358 for one motivation
 				// of determining the params on the client side.
-				params = get_navigation_intent(url, false)?.params || {};
+				({ params = {}, route = { id: null } } = get_navigation_intent(url, false) || {});
 			}
 
 			/** @type {import('./types').NavigationFinished | undefined} */
