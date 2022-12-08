@@ -45,10 +45,10 @@
 			</div>
 		</div>
 	</div>
-	<p>
-		<a target="_blank" rel="noreferrer" href="https://sveltekit.new">
-			...or create an app on StackBlitz
-		</a>
+	<p class="create-an-app">
+		...or
+		<a target="_blank" rel="noreferrer" href="https://sveltekit.new"> create an app </a>
+		on StackBlitz.
 	</p>
 </Section>
 
@@ -138,9 +138,17 @@
 		font-size: 1em;
 	}
 
-	.orange-highlight,
-	a {
+	.orange-highlight {
 		color: hsl(15, 100%, 65%);
+	}
+
+	.create-an-app {
+		color: white;
+	}
+
+	a {
+		color: inherit;
+		text-decoration: underline;
 	}
 
 	@media (min-width: 440px) {
