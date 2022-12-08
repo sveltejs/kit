@@ -12,12 +12,10 @@ Preprocessors transform your `.svelte` files before passing them to the compiler
 
 ```js
 // svelte.config.js
+import { vitePreprocess } from '@sveltejs/vite-plugin-svelte';
+
 export default {
-  vitePlugin: {
-    experimental: {
-      useVitePreprocess: true
-    }
-  }
+  preprocess: [vitePreprocess()]
 };
 ```
 
