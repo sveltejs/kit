@@ -110,6 +110,7 @@
 		</div>
 
 		<div class="globe">
+			<!-- svelte-preprocess-import-assets-ignore -->
 			<img
 				src="/edge.svg"
 				alt="Dynamically rendered map of the world, centered on the user's location"

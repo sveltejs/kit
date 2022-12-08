@@ -689,6 +689,7 @@ importers:
       prismjs: ^1.29.0
       shiki-twoslash: ^3.1.0
       svelte: ^3.53.1
+      svelte-preprocess-import-assets: ^0.2.4
       tiny-glob: ^0.2.9
       topojson-client: ^3.1.0
       typescript: ^4.9.3
@@ -715,6 +716,7 @@ importers:
       prismjs: 1.29.0
       shiki-twoslash: 3.1.0
       svelte: 3.53.1
+      svelte-preprocess-import-assets: 0.2.4_svelte@3.53.1
       tiny-glob: 0.2.9
       typescript: 4.9.3
       uvu: 0.5.6
@@ -4268,6 +4270,7 @@ packages:
 
   /sourcemap-codec/1.4.8:
     resolution: {integrity: sha512-9NykojV5Uih4lgo5So5dtw+f0JgJX30KCNI8gwhz2J9A15wD0Ml6tjHKwf6fTSa6fAdVBdZeNOs9eJ71qCk8vA==}
+    deprecated: Please use @jridgewell/sourcemap-codec instead
 
   /spawndamnit/2.0.0:
     resolution: {integrity: sha512-j4JKEcncSjFlqIwU5L/rp2N5SIPsdxaRsIv678+TZxZ0SRDJTm8JrxJMjE/XuiEZNEir3S8l0Fa3Ke339WI4qA==}
@@ -4468,6 +4471,24 @@ packages:
     dependencies:
       svelte: 3.53.1
     dev: false
+
+  /svelte-parse-markup/0.1.1_svelte@3.53.1:
+    resolution: {integrity: sha512-xCBSldaZdwi0u0ANASVCUFynCaV8z5D6sQOnzPcYSEoD9dd40MLzOKMBVmuTf/LUuPvc+cUvF132MnwdG7mDig==}
+    peerDependencies:
+      svelte: ^3.0.0
+    dependencies:
+      svelte: 3.53.1
+    dev: true
+
+  /svelte-preprocess-import-assets/0.2.4_svelte@3.53.1:
+    resolution: {integrity: sha512-/vBKeUOFLUTnRgSjS8OnKKdFR7tHGa6LtA4DHcksobzl8KzzDYVn3EfgU7UWqF67KsLqBv6SrpXi/hMZCKcZYQ==}
+    peerDependencies:
+      svelte: ^3.37.0
+    dependencies:
+      magic-string: 0.25.9
+      svelte: 3.53.1
+      svelte-parse-markup: 0.1.1_svelte@3.53.1
+    dev: true
 
   /svelte-preprocess/4.10.7_7dvewpees4iyn2tkw2qzal77a4:
     resolution: {integrity: sha512-sNPBnqYD6FnmdBrUmBCaqS00RyCsCpj2BG58A1JBswNF7b0OKviwxqVrOL/CKyJrLSClrSeqQv5BXNg2RUbPOw==}

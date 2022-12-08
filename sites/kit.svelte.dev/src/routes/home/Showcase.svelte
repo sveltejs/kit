@@ -1,4 +1,5 @@
 <script>
+	import Image from '$lib/Image.svelte';
 	import Section from '@sveltejs/site-kit/components/Section.svelte';
 	import pudding from './showcase/pudding.jpg';
 	import pocketbase from './showcase/pocketbase.jpg';
@@ -27,7 +28,7 @@
 	<div class="showcase">
 		{#each showcase as { url, image }}
 			<a href="https://{url}" target="_blank" rel="noreferrer">
-				<img src={image} alt="Screenshot of {url}" />
+				<Image src={image} alt="Screenshot of {url}" />
 				<span>{url}</span>
 			</a>
 		{/each}
