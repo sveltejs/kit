@@ -1,23 +1,23 @@
 <script>
 	import Section from '@sveltejs/site-kit/components/Section.svelte';
 	import pudding from './showcase/pudding.jpg';
-	import evidence from './showcase/evidence.jpg';
-	import fieuzal from './showcase/fieuzal.jpg';
-	import gitbook from './showcase/gitbook.jpg';
+	import pocketbase from './showcase/pocketbase.jpg';
+	import pronauns from './showcase/pronauns.jpg';
+	import dropzone from './showcase/dropzone.jpg';
+	import asmeditor from './showcase/asmeditor.jpg';
 	import monogram from './showcase/monogram.jpg';
 	import raster from './showcase/raster.jpg';
 	import trading_strategy from './showcase/trading-strategy.jpg';
-	import senja from './showcase/senja.jpg';
 
 	const showcase = [
 		{ url: 'pudding.cool', image: pudding },
-		{ url: 'fieuzal.com', image: fieuzal },
-		{ url: 'evidence.dev', image: evidence },
-		{ url: 'gitbook.com', image: gitbook },
+		{ url: 'pronauns.com', image: pronauns },
+		{ url: 'dropzone', image: dropzone },
+		{ url: 'asm-editor.specy.app', image: asmeditor },
 		{ url: 'raster.app', image: raster },
+		{ url: 'pocketbase.io', image: pocketbase },
 		{ url: 'monogram.io', image: monogram },
-		{ url: 'tradingstrategy.ai', image: trading_strategy },
-		{ url: 'senja.io', image: senja }
+		{ url: 'tradingstrategy.ai', image: trading_strategy }
 	];
 </script>
 
@@ -80,7 +80,7 @@
 		backdrop-filter: blur(3px);
 		opacity: 0;
 		transition: opacity 0.2s;
-		font-size: var(--sk-text-m);
+		font-size: var(--sk-text-s);
 		filter: drop-shadow(0 0 0.5rem rgba(0, 0, 0, 0.5));
 	}
 
@@ -98,7 +98,7 @@
 		}
 	}
 
-	@media (min-width: 720px) {
+	@media (min-width: 800px) {
 		.showcase {
 			grid-template-columns: repeat(4, 1fr);
 		}
