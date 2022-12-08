@@ -1,10 +1,9 @@
-import { geoPath, geoGraticule10 } from 'd3-geo';
+import { geoPath } from 'd3-geo';
 import { geoSatellite } from 'd3-geo-projection';
 import * as topojson from 'topojson-client';
 import topology from './land-110m.json';
 
 const land = topojson.feature(topology, topology.objects.land);
-const graticule = geoGraticule10();
 
 const font_size = 36;
 
@@ -33,9 +32,8 @@ const path = geoPath(projection);
  * @param {number} lon
  * @param {string} city
  * @param {string} country
- * @param {boolean} dark
  */
-function render(lat, lon, city, country, dark) {
+function render(lat, lon, city, country) {
 	projection.rotate([-lon - 10, -lat + 20, 0]);
 
 	const [x, y] = projection([lon, lat]);
@@ -43,18 +41,53 @@ function render(lat, lon, city, country, dark) {
 	const sphere = path({ type: 'Sphere' });
 	const label = `${city}, ${country}`;
 
-	const ocean_colour_scene = dark ? 'rgb(120,120,120)' : 'rgb(185,183,172)';
-	const landfill = dark ? '#222' : 'white';
-
 	return `<?xml version="1.0" encoding="UTF-8"?>
 		<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${w} ${h}">
-			<path d="${sphere}" stroke="none" fill="${ocean_colour_scene}"/>
-			<path d="${path(land)}" stroke="none" fill="${landfill}"/>
+			<style>
+				path {
+					stroke: none;
+				}
+
+				.ocean {
+					fill: rgb(185,183,172);
+				}
+
+				.land {
+					fill: white;
+				}
+
+				.highlight {
+					fill: #ff3e00;
+				}
+
+				.dot {
+					fill: #ff3e00;
+					stroke: white;
+					stroke-width: 5;
+				}
+
+				@media (prefers-color-scheme: dark) {
+					.ocean {
+						fill: rgb(120,120,120);
+					}
+
+					.land {
+						fill: #222;
+					}
+
+					.dot {
+						stroke: #222;
+					}
+				}
+			</style>
+
+			<path d="${sphere}" class="ocean"/>
+			<path d="${path(land)}" class="land"/>
 
 			<g transform="translate(${x},${y})">
-				<circle r="20" fill="#ff3e00" stroke="white" stroke-width="5"/>
-				<rect x="50" y="-30" width="${font_size * 0.6 * label.length + 40}" height="60" fill="#ff3e00"/>
-				<polygon points="35,0 50,-10 50,10" fill="#ff3e00" />
+				<circle r="20" class="dot"/>
+				<rect x="50" y="-30" width="${font_size * 0.6 * label.length + 40}" height="60" class="highlight"/>
+				<polygon points="35,0 50,-10 50,10" class="highlight" />
 				<text
 					x="70"
 					fill="white"
@@ -77,14 +110,12 @@ export function GET({ request, url }) {
 	const longitude = q.get('lon') ?? h.get('x-vercel-ip-longitude') ?? '-74';
 	const city = q.get('city') ?? h.get('x-vercel-ip-city') ?? 'New York City';
 	const country = q.get('country') ?? h.get('x-vercel-ip-country') ?? 'USA';
-	const dark = q.has('dark');
 
 	const svg = render(
 		+latitude,
 		+longitude,
 		decodeURIComponent(city),
-		decodeURIComponent(country),
-		dark
+		decodeURIComponent(country)
 	).replace(/\d\.\d+/g, (match) => match.slice(0, 4));
 
 	return new Response(svg, {

@@ -109,11 +109,11 @@
 			</a>
 		</div>
 
-		<div
-			class="globe"
-			role="img"
-			aria-label="Dynamically rendered map of the world, centered on the user's location"
-		>
+		<div class="globe">
+			<img
+				src="/edge.svg"
+				alt="Dynamically rendered map of the world, centered on the user's location"
+			/>
 			<span> rendered on the edge, just for you </span>
 		</div>
 	</div>
@@ -125,8 +125,11 @@
 		width: 100%;
 		max-height: 40rem;
 		text-align: center;
-		background: url(/edge.svg) no-repeat center;
 		aspect-ratio: 1;
+	}
+
+	.globe img {
+		max-width: 40rem;
 	}
 
 	.globe span {
@@ -264,10 +267,6 @@
 	}
 
 	@media (prefers-color-scheme: dark) {
-		.globe {
-			background-image: url(/edge.svg?dark);
-		}
-
 		.invert img {
 			--invert: 1;
 		}
