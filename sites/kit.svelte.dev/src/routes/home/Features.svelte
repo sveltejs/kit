@@ -57,7 +57,7 @@
 		float: right;
 		/* margin-top: 7rem; */
 		width: 5.5em;
-		shape-outside: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" preserveAspectRatio="none"><rect x="0" y="0" width="100" height="100"></rect></svg>');
+		shape-outside: url('data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%20100%20100%22%20preserveAspectRatio%3D%22none%22%3E%3Crect%20x%3D%220%22%20y%3D%220%22%20width%3D%22100%22%20height%3D%22100%22%3E%3C%2Frect%3E%3C%2Fsvg%3E');
 	}
 
 	h2 span {
