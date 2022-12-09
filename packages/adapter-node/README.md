@@ -154,7 +154,7 @@ You will need the output directory (`build` by default), the project's `package.
 node build
 ```
 
-Development dependencies will be bundled into your app using `esbuild`. To control whether a given package is bundled or externalised, place it in `devDependencies` or `dependencies` respectively in your `package.json`.
+Development dependencies will be bundled into your app using `rollup`. To control whether a given package is bundled or externalised, place it in `devDependencies` or `dependencies` respectively in your `package.json`.
 
 ## Changelog
 
