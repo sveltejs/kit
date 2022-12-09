@@ -12,11 +12,13 @@ test.describe('base path', () => {
 		if (process.env.DEV) {
 			// Vite's message
 			expect(await html.text()).toBe(
-				'The server is configured with a public base URL of /path-base - did you mean to visit <a href=\"/path-base/slash/\">/path-base/slash/</a> instead?'
+				'The server is configured with a public base URL of /path-base - did you mean to visit <a href="/path-base/slash/">/path-base/slash/</a> instead?'
 			);
 		} else {
 			// SvelteKit's message
-			expect(await html.text()).toBe('Not found (did you mean <a href=\"/path-base/slash/\">/path-base/slash/</a>?)');
+			expect(await html.text()).toBe(
+				'Not found (did you mean <a href="/path-base/slash/">/path-base/slash/</a>?)'
+			);
 		}
 
 		const plain = await request.get('/slash/');
