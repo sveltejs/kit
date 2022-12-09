@@ -95,6 +95,7 @@
 			transparent 100%
 		);
 		position: fixed;
+		top: 4rem;
 		width: 100vw;
 		height: var(--sk-nav-height);
 		margin: 0 auto;
@@ -117,7 +118,10 @@
 
 	@media (max-width: 800px) {
 		nav:not(.visible):not(:focus-within) {
-			transform: translate(0, calc(-100% - 1rem));
+			transform: translate(
+				0,
+				calc(-100% - 5rem)
+			); /* TODO revert 5rem to 1rem after we remove the banner */
 		}
 	}
 
