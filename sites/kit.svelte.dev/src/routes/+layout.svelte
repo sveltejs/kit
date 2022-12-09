@@ -49,11 +49,11 @@
 
 <main id="main">
 	<slot />
-
-	{#if browser}
-		<SearchBox />
-	{/if}
 </main>
+
+{#if browser}
+	<SearchBox />
+{/if}
 
 <style>
 	main {
