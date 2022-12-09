@@ -67,7 +67,7 @@ const cache = new Map();
 /**
  * Should be called on the initial run of load functions that hydrate the page.
  * Saves any requests with cache-control max-age to the cache.
- * @param {RequestInfo | URL} resource
+ * @param {URL | string} resource
  * @param {RequestInit} [opts]
  */
 export function initial_fetch(resource, opts) {
@@ -88,7 +88,7 @@ export function initial_fetch(resource, opts) {
 
 /**
  * Tries to get the response from the cache, if max-age allows it, else does a fetch.
- * @param {RequestInfo | URL} resource
+ * @param {URL | string} resource
  * @param {string} resolved
  * @param {RequestInit} [opts]
  */
@@ -97,7 +97,11 @@ export function subsequent_fetch(resource, resolved, opts) {
 		const selector = build_selector(resource, opts);
 		const cached = cache.get(selector);
 		if (cached) {
-			if (performance.now() < cached.ttl) {
+			// https://developer.mozilla.org/en-US/docs/Web/API/Request/cache#value
+			if (
+				performance.now() < cached.ttl &&
+				['default', 'force-cache', 'only-if-cached', undefined].includes(opts?.cache)
+			) {
 				return new Response(cached.body, cached.init);
 			}
 
@@ -110,11 +114,11 @@ export function subsequent_fetch(resource, resolved, opts) {
 
 /**
  * Build the cache key for a given request
- * @param {RequestInfo | URL} resource
+ * @param {URL | string} resource
  * @param {RequestInit} [opts]
  */
 function build_selector(resource, opts) {
-	const url = JSON.stringify(resource instanceof Request ? resource.url : resource);
+	const url = JSON.stringify(resource);
 
 	let selector = `script[data-sveltekit-fetched][data-url=${url}]`;
 
