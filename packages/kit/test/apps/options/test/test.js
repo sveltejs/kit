@@ -7,11 +7,15 @@ test.describe.configure({ mode: 'parallel' });
 
 test.describe('base path', () => {
 	test('serves a useful 404 when visiting unprefixed path', async ({ request }) => {
-		const response = await request.get('/slash/', { headers: { Accept: 'text/html' } });
-		expect(response.status()).toBe(404);
-		expect(await response.text()).toBe(
+		const html = await request.get('/slash/', { headers: { Accept: 'text/html' } });
+		expect(html.status()).toBe(404);
+		expect(await html.text()).toBe(
 			'Not found (did you mean <a href="/path-base/slash/">/path-base/slash/</a>?)'
 		);
+
+		const plain = await request.get('/slash/');
+		expect(plain.status()).toBe(404);
+		expect(await plain.text()).toBe('Not found (did you mean /path-base/slash/?)');
 	});
 
 	test('serves /', async ({ page, javaScriptEnabled }) => {
