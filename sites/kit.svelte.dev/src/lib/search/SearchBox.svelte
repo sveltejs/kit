@@ -170,7 +170,9 @@
 						/>
 					</div>
 				{:else}
-					<h2 class="info">{recent_searches.length ? 'Recent searches' : 'No recent searches'}</h2>
+					<h2 class="info" class:empty={recent_searches.length === 0}>
+						{recent_searches.length ? 'Recent searches' : 'No recent searches'}
+					</h2>
 					{#if recent_searches.length}
 						<div class="results-container">
 							<ul>
@@ -320,8 +322,11 @@
 		font-weight: normal;
 		text-transform: uppercase;
 		background-color: var(--sk-back-2);
-		border-radius: 0 0 var(--sk-border-radius) var(--sk-border-radius);
 		pointer-events: all;
+	}
+
+	.info.empty {
+		border-radius: 0 0 var(--sk-border-radius) var(--sk-border-radius);
 	}
 
 	a {
