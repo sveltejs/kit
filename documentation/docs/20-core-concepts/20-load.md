@@ -271,7 +271,7 @@ export async function load({ cookies }) {
 Both server-only and shared `load` functions have access to a `setHeaders` function that, when running on the server, can set headers for the response. (When running in the browser, `setHeaders` has no effect.) This is useful if you want the page to be cached, for example:
 
 ```js
-// @errors: 2322
+// @errors: 2322 1360
 /// file: src/routes/products/+page.js
 /** @type {import('./$types').PageLoad} */
 export async function load({ fetch, setHeaders }) {
