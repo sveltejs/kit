@@ -68,7 +68,7 @@ export async function render_page(event, route, page, options, state, resolve_op
 				const error = action_result.error;
 				status = error instanceof HttpError ? error.status : 500;
 			}
-			if (action_result?.type === 'invalid') {
+			if (action_result?.type === 'failure') {
 				status = action_result.status;
 			}
 		}

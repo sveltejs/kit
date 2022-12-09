@@ -1,8 +1,8 @@
-import { invalid } from '@sveltejs/kit';
+import { fail } from '@sveltejs/kit';
 
 /** @type {import('./$types').Actions} */
 export const actions = {
 	default: async () => {
-		return invalid(400, { errors: { message: 'an error occurred' } });
+		return fail(400, { errors: { message: 'an error occurred' } });
 	}
 };
