@@ -10,7 +10,7 @@ test.describe('base path', () => {
 		const response = await request.get('/slash/', { headers: { Accept: 'text/html' } });
 		expect(response.status()).toBe(404);
 		expect(await response.text()).toBe(
-			'The server is configured with a public base URL of /path-base - did you mean to visit <a href="/path-base/slash/">/path-base/slash/</a> instead?'
+			'Not found (did you mean <a href="/path-base/slash/">/path-base/slash/</a>?)'
 		);
 	});
 
