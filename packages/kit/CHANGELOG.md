@@ -1,5 +1,11 @@
 # @sveltejs/kit
 
+## 1.0.0-next.581
+
+### Patch Changes
+
+- [feat] vitePreprocess ([#8036](https://github.com/sveltejs/kit/pull/8036))
+
 ## 1.0.0-next.580
 
 ### Patch Changes
