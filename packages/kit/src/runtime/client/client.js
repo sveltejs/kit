@@ -592,6 +592,7 @@ export function create_client({ target, base }) {
 					uses.url = true;
 				}),
 				async fetch(resource, init) {
+					/** @type {URL | string} */
 					let requested;
 
 					if (resource instanceof Request) {
