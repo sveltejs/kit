@@ -339,7 +339,7 @@
 	}
 
 	a:hover {
-		background: var(--sk-back-4);
+		background: rgba(0, 0, 0, 0.05);
 	}
 
 	a:focus {
