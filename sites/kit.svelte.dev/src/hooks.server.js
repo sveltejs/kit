@@ -17,6 +17,6 @@ export function handle({ event, resolve }) {
 	}
 
 	return resolve(event, {
-		preload: ({type}) => preload_types.includes(type)
+		preload: ({ type }) => preload_types.includes(type)
 	});
 }
