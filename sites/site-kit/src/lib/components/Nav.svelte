@@ -121,7 +121,7 @@
 			transform: translate(
 				0,
 				calc(-100% - 5rem)
-			); /* TODO revert to 1rem after we remove the banner */
+			); /* TODO revert 5rem to 1rem after we remove the banner */
 		}
 	}
 
