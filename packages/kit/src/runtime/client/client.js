@@ -561,7 +561,7 @@ export function create_client({ target, base }) {
 
 		const node = await loader();
 
-		if (__SVELTEKIT_DEV__) {
+		if (DEV) {
 			validate_common_exports(node.shared);
 		}
 
