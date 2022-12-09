@@ -13,11 +13,7 @@
 
 		<picture class="hero-image">
 			{#each Object.entries(background.sources) as [format, images]}
-				<source
-					sizes="(min-width: 768) 1440px, 960px"
-					srcset={images.map((i) => `${i.src} ${i.w}w`).join(', ')}
-					type="image/{format}"
-				/>
+				<source srcset={images.map((i) => `${i.src} ${i.w}w`).join(', ')} type="image/{format}" />
 			{/each}
 			<img src={background.fallback.src} alt="SvelteKit illustration" />
 		</picture>
