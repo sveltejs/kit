@@ -432,7 +432,7 @@ test.describe('Errors', () => {
 
 			expect(await page.textContent('footer')).toBe('Custom layout');
 			expect(await page.textContent('#message')).toBe(
-				"This is your custom error page saying: \"a load function related to route '/errors/invalid-load-response' returned an array, but must return a plain object at the top level (e.g '{ something: ...}')\""
+				"This is your custom error page saying: \"a load function related to route '/errors/invalid-load-response' returned an array, but must return a plain object at the top level (i.e. `return {...}`)\""
 			);
 		});
 
@@ -450,7 +450,7 @@ test.describe('Errors', () => {
 
 			expect(await page.textContent('footer')).toBe('Custom layout');
 			expect(await page.textContent('#message')).toBe(
-				"This is your custom error page saying: \"a load function related to route '/errors/invalid-server-load-response' returned an array, but must return a plain object at the top level (e.g '{ something: ...}')\""
+				"This is your custom error page saying: \"a load function related to route '/errors/invalid-server-load-response' returned an array, but must return a plain object at the top level (i.e. `return {...}`)\""
 			);
 		});
 	}
