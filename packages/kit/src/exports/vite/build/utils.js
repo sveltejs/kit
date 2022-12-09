@@ -108,39 +108,22 @@ export function resolve_symlinks(manifest, file) {
 }
 
 /**
- * The Vite configuration that we use by default.
+ * Partial Vite configuration that we use by default for setting up the build.
+ * Can be used in a non-SvelteKit Vite server and build process such as Storybook.
  * @param {{
  *   config: import('types').ValidatedConfig;
- *   input: Record<string, string>;
  *   ssr: boolean;
- *   outDir: string;
  * }} options
  * @return {import('vite').UserConfig}
  */
-export function get_default_build_config({ config, input, ssr, outDir }) {
+export function get_setup_build_config({ config, ssr }) {
 	const prefix = `${config.kit.appDir}/immutable`;
 
 	return {
-		appType: 'custom',
-		base: ssr ? assets_base(config.kit) : './',
 		build: {
-			cssCodeSplit: true,
 			// don't use the default name to avoid collisions with 'static/manifest.json'
 			manifest: 'vite-manifest.json',
-			outDir,
-			rollupOptions: {
-				input,
-				output: {
-					format: 'esm',
-					entryFileNames: ssr ? '[name].js' : `${prefix}/[name]-[hash].js`,
-					chunkFileNames: ssr ? 'chunks/[name].js' : `${prefix}/chunks/[name]-[hash].js`,
-					assetFileNames: `${prefix}/assets/[name]-[hash][extname]`,
-					hoistTransitiveImports: false
-				},
-				preserveEntrySignatures: 'strict'
-			},
-			ssr,
-			target: ssr ? 'node14.8' : undefined
+			ssr
 		},
 		define: {
 			__SVELTEKIT_ADAPTER_NAME__: JSON.stringify(config.kit.adapter?.name),
@@ -148,7 +131,6 @@ export function get_default_build_config({ config, input, ssr, outDir }) {
 			__SVELTEKIT_APP_VERSION_POLL_INTERVAL__: JSON.stringify(config.kit.version.pollInterval),
 			__SVELTEKIT_EMBEDDED__: config.kit.embedded ? 'true' : 'false'
 		},
-		publicDir: ssr ? false : config.kit.files.assets,
 		resolve: {
 			alias: [...get_app_aliases(config.kit), ...get_config_aliases(config.kit)]
 		},
@@ -168,6 +150,57 @@ export function get_default_build_config({ config, input, ssr, outDir }) {
 			}
 		}
 	};
+}
+
+/**
+ * Partial Vite configuration that we use by default for setting up the build.
+ * Cannot be used in a non-SvelteKit Vite server and build process such as Storybook.
+ * @param {{
+ *   config: import('types').ValidatedConfig;
+ *   input: Record<string, string>;
+ *   ssr: boolean;
+ *   outDir: string;
+ * }} options
+ * @return {import('vite').UserConfig}
+ */
+export function get_bundle_build_config({ config, input, ssr, outDir }) {
+	const prefix = `${config.kit.appDir}/immutable`;
+
+	return {
+		appType: 'custom',
+		base: ssr ? assets_base(config.kit) : './',
+		build: {
+			cssCodeSplit: true,
+			outDir,
+			rollupOptions: {
+				input,
+				output: {
+					format: 'esm',
+					entryFileNames: ssr ? '[name].js' : `${prefix}/[name]-[hash].js`,
+					chunkFileNames: ssr ? 'chunks/[name].js' : `${prefix}/chunks/[name]-[hash].js`,
+					assetFileNames: `${prefix}/assets/[name]-[hash][extname]`,
+					hoistTransitiveImports: false
+				},
+				preserveEntrySignatures: 'strict'
+			},
+			target: ssr ? 'node14.8' : undefined
+		},
+		publicDir: ssr ? false : config.kit.files.assets
+	};
+}
+
+/**
+ * The Vite configuration that we use by default for building.
+ * @param {{
+ *   config: import('types').ValidatedConfig;
+ *   input: Record<string, string>;
+ *   ssr: boolean;
+ *   outDir: string;
+ * }} options
+ * @return {import('vite').UserConfig}
+ */
+export function get_default_build_config(options) {
+	return vite.mergeConfig(get_setup_build_config(options), get_bundle_build_config(options));
 }
 
 /**
