@@ -170,7 +170,9 @@
 						/>
 					</div>
 				{:else}
-					<h2 class="info">{recent_searches.length ? 'Recent searches' : 'No recent searches'}</h2>
+					<h2 class="info" class:empty={recent_searches.length === 0}>
+						{recent_searches.length ? 'Recent searches' : 'No recent searches'}
+					</h2>
 					{#if recent_searches.length}
 						<div class="results-container">
 							<ul>
@@ -228,14 +230,15 @@
 		background-color: var(--sk-back-translucent);
 	}
 
+	input::placeholder {
+		color: var(--sk-text-3);
+		opacity: 0.3;
+	}
+
 	input:focus-visible {
 		background: var(--sk-theme-2);
 		color: white;
 		outline: none;
-	}
-
-	input::placeholder {
-		color: rgba(255, 255, 255, 0.5);
 	}
 
 	input:focus-visible::placeholder {
@@ -326,6 +329,10 @@
 		pointer-events: all;
 	}
 
+	.info.empty {
+		border-radius: 0 0 var(--sk-border-radius) var(--sk-border-radius);
+	}
+
 	a {
 		display: block;
 		text-decoration: none;
@@ -334,7 +341,7 @@
 	}
 
 	a:hover {
-		background: var(--sk-theme-2);
+		background: rgba(0, 0, 0, 0.05);
 	}
 
 	a:focus {
@@ -366,11 +373,12 @@
 	}
 
 	a:focus small {
-		color: var(--sk-text-2);
+		color: white;
+		opacity: 0.6;
 	}
 
 	a:focus strong {
-		color: var(--sk-text-1);
+		color: white;
 	}
 
 	a strong :global(mark) {
