@@ -134,16 +134,9 @@ const options = object(
 
 			inlineStyleThreshold: number(0),
 
-			methodOverride: error(
-				() =>
-					'Method overrides have been removed in favor of actions. See the PR for more information: https://github.com/sveltejs/kit/pull/6469'
-			),
-
 			moduleExtensions: string_array(['.js', '.ts']),
 
 			outDir: string('.svelte-kit'),
-
-			package: error((keypath) => `${keypath} has been removed — use @sveltejs/package instead`),
 
 			paths: object({
 				base: validate('', (input, keypath) => {
@@ -181,18 +174,6 @@ const options = object(
 			prerender: object({
 				concurrency: number(1),
 				crawl: boolean(true),
-				createIndexFiles: error(
-					(keypath) =>
-						`${keypath} has been removed — it is now controlled by the trailingSlash option. See https://kit.svelte.dev/docs/page-options#trailingslash`
-				),
-				default: error(
-					(keypath) =>
-						`${keypath} has been removed. You can set it inside the top level +layout.js instead. See the PR for more information: https://github.com/sveltejs/kit/pull/6197`
-				),
-				enabled: error(
-					(keypath) =>
-						`${keypath} has been removed. You can wrap any code that should not be executed during build in a \`if (!building) {...}\` block. See the discussion for more information: https://github.com/sveltejs/kit/discussions/7716`
-				),
 				entries: validate(['*'], (input, keypath) => {
 					if (!Array.isArray(input) || !input.every((page) => typeof page === 'string')) {
 						throw new Error(`${keypath} must be an array of strings`);
@@ -244,11 +225,6 @@ const options = object(
 				register: boolean(true),
 				files: fun((filename) => !/\.DS_Store/.test(filename))
 			}),
-
-			trailingSlash: error(
-				(keypath, input) =>
-					`${keypath} has been removed. You can set \`export const trailingSlash = '${input}'\` inside a top level +layout.js (or +layout.server.js) instead. See the PR for more information: https://github.com/sveltejs/kit/pull/7719`
-			),
 
 			version: object({
 				name: string(Date.now().toString()),
@@ -406,13 +382,6 @@ function assert_string(input, keypath) {
 	if (typeof input !== 'string') {
 		throw new Error(`${keypath} should be a string, if specified`);
 	}
-}
-
-/** @param {(keypath?: string, input?: any) => string} fn */
-function error(fn) {
-	return validate(undefined, (input, keypath) => {
-		throw new Error(fn(keypath, input));
-	});
 }
 
 export default options;
