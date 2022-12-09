@@ -61,7 +61,7 @@ type OptionalUnion<
 	A extends keyof U = U extends U ? keyof U : never
 > = U extends unknown ? { [P in Exclude<A, keyof U>]?: never } & U : never;
 
-type UnpackValidationError<T> = T extends ValidationError<infer X>
+type UnpackValidationError<T> = T extends ActionFailure<infer X>
 	? X
 	: T extends void
 	? undefined // needs to be undefined, because void will corrupt union type
@@ -1074,7 +1074,7 @@ export type ActionResult<
 	Invalid extends Record<string, unknown> | undefined = Record<string, any>
 > =
 	| { type: 'success'; status: number; data?: Success }
-	| { type: 'invalid'; status: number; data?: Invalid }
+	| { type: 'failure'; status: number; data?: Invalid }
 	| { type: 'redirect'; status: number; location: string }
 	| { type: 'error'; error: any };
 
@@ -1129,17 +1129,17 @@ export interface Redirect {
 export function json(data: any, init?: ResponseInit): Response;
 
 /**
- * Create a `ValidationError` object.
+ * Create an `ActionFailure` object.
  */
-export function invalid<T extends Record<string, unknown> | undefined>(
+export function fail<T extends Record<string, unknown> | undefined>(
 	status: number,
 	data?: T
-): ValidationError<T>;
+): ActionFailure<T>;
 
 /**
- * The object returned by the [`invalid`](https://kit.svelte.dev/docs/modules#sveltejs-kit-invalid) function
+ * The object returned by the [`fail`](https://kit.svelte.dev/docs/modules#sveltejs-kit-fail) function
  */
-export interface ValidationError<T extends Record<string, unknown> | undefined = undefined>
+export interface ActionFailure<T extends Record<string, unknown> | undefined = undefined>
 	extends UniqueInterface {
 	status: number;
 	data: T;
