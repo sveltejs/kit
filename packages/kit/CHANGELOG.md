@@ -1,5 +1,13 @@
 # @sveltejs/kit
 
+## 1.0.0-next.580
+
+### Patch Changes
+
+- [breaking] throw an error on invalid load response ([#8003](https://github.com/sveltejs/kit/pull/8003))
+
+- [fix] allow SvelteKit to be used without bundling ([#7950](https://github.com/sveltejs/kit/pull/7950))
+
 ## 1.0.0-next.579
 
 ### Patch Changes
