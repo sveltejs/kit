@@ -453,18 +453,6 @@ export async function prerender() {
 		);
 	}
 
-	const rendered = await server.respond(new Request(config.prerender.origin + '/[fallback]'), {
-		getClientAddress,
-		prerendering: {
-			fallback: true,
-			dependencies: new Map()
-		}
-	});
-
-	const file = `${config.outDir}/output/prerendered/fallback.html`;
-	mkdirp(dirname(file));
-	writeFileSync(file, await rendered.text());
-
 	output_and_exit({ prerendered, prerender_map });
 }
 
