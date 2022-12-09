@@ -86,13 +86,15 @@
 
 	.definition .adjective {
 		position: relative;
-		top: -0.2em;
-		background: var(--sk-theme-3);
-		padding: 0.2em 0.5em;
+		top: -0.15em;
+		padding: 0.25em 0.5em 0.1em;
+		line-height: 1;
 		margin: 0 1em;
 		text-transform: uppercase;
 		font-size: var(--sk-text-s);
-		color: white;
+		background: var(--sk-text-2);
+		border-radius: var(--sk-border-radius);
+		color: var(--sk-back-2);
 	}
 
 	.definition .description {
