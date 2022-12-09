@@ -89,19 +89,6 @@ export async function prerender() {
 
 	installPolyfills();
 
-	// TODO remove this for 1.0
-	const { fetch } = globalThis;
-	globalThis.fetch = async (info, init) => {
-		const url = info instanceof Request ? info.url : info.toString();
-
-		if (url.startsWith(config.prerender.origin + '/')) {
-			const sliced = url.slice(config.prerender.origin.length);
-			throw new Error(`Use \`event.fetch('${sliced}')\` instead of the global \`fetch('${url}')\``);
-		}
-
-		return fetch(info, init);
-	};
-
 	const server_root = join(config.outDir, 'output');
 
 	/** @type {import('types').ServerModule} */

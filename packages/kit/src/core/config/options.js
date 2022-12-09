@@ -85,12 +85,6 @@ const options = object(
 				return input;
 			}),
 
-			// TODO: remove this for the 1.0 release
-			amp: error(
-				(keypath) =>
-					`${keypath} has been removed. See https://kit.svelte.dev/docs/seo#manual-setup-amp for details on how to support AMP`
-			),
-
 			appDir: validate('_app', (input, keypath) => {
 				assert_string(input, keypath);
 
@@ -107,18 +101,6 @@ const options = object(
 				return input;
 			}),
 
-			// TODO: remove this for the 1.0 release
-			browser: object({
-				hydrate: error(
-					(keypath) =>
-						`${keypath} has been removed. You can set \`export const csr = false\` inside the top level +layout.js instead. See the PR for more information: https://github.com/sveltejs/kit/pull/6197`
-				),
-				router: error(
-					(keypath) =>
-						`${keypath} has been removed. You can set \`export const csr = false\` inside the top level +layout.js instead. See the PR for more information: https://github.com/sveltejs/kit/pull/6197`
-				)
-			}),
-
 			csp: object({
 				mode: list(['auto', 'hash', 'nonce']),
 				directives,
@@ -131,11 +113,6 @@ const options = object(
 
 			embedded: boolean(false),
 
-			// TODO: remove this for the 1.0 release
-			endpointExtensions: error(
-				(keypath) => `${keypath} has been renamed to config.kit.moduleExtensions`
-			),
-
 			env: object({
 				dir: string(process.cwd()),
 				publicPrefix: string('PUBLIC_')
@@ -143,45 +120,17 @@ const options = object(
 
 			files: object({
 				assets: string('static'),
-				hooks: (input, keypath) => {
-					// TODO remove this for the 1.0 release
-					if (typeof input === 'string') {
-						throw new Error(
-							`${keypath} is an object with { server: string, client: string } now. See the PR for more information: https://github.com/sveltejs/kit/pull/6586`
-						);
-					}
-
-					return object({
-						client: string(join('src', 'hooks.client')),
-						server: string(join('src', 'hooks.server'))
-					})(input, keypath);
-				},
+				hooks: object({
+					client: string(join('src', 'hooks.client')),
+					server: string(join('src', 'hooks.server'))
+				}),
 				lib: string(join('src', 'lib')),
 				params: string(join('src', 'params')),
 				routes: string(join('src', 'routes')),
 				serviceWorker: string(join('src', 'service-worker')),
 				appTemplate: string(join('src', 'app.html')),
-				errorTemplate: string(join('src', 'error.html')),
-				// TODO: remove this for the 1.0 release
-				template: error(
-					() => 'config.kit.files.template has been renamed to config.kit.files.appTemplate'
-				)
+				errorTemplate: string(join('src', 'error.html'))
 			}),
-
-			// TODO: remove this for the 1.0 release
-			headers: error(
-				(keypath) =>
-					`${keypath} has been removed. See https://github.com/sveltejs/kit/pull/3384 for details`
-			),
-
-			// TODO: remove this for the 1.0 release
-			host: error(
-				(keypath) =>
-					`${keypath} has been removed. See https://github.com/sveltejs/kit/pull/3384 for details`
-			),
-
-			// TODO remove for 1.0
-			hydrate: error((keypath) => `${keypath} has been moved to config.kit.browser.hydrate`),
 
 			inlineStyleThreshold: number(0),
 
@@ -260,17 +209,6 @@ const options = object(
 					return input;
 				}),
 
-				// TODO: remove this for the 1.0 release
-				force: validate(undefined, (input, keypath) => {
-					const new_input = input ? 'warn' : 'fail';
-					const needs_option = new_input === 'warn';
-					throw new Error(
-						`${keypath} has been removed in favor of \`handleHttpError\`. In your case, set \`handleHttpError\` to "${new_input}"${
-							needs_option ? '' : ' (or leave it undefined)'
-						} to get the same behavior as you would with \`force: ${JSON.stringify(input)}\``
-					);
-				}),
-
 				handleHttpError: validate('fail', (input, keypath) => {
 					if (typeof input === 'function') return input;
 					if (['fail', 'warn', 'ignore'].includes(input)) return input;
@@ -281,17 +219,6 @@ const options = object(
 					if (typeof input === 'function') return input;
 					if (['fail', 'warn', 'ignore'].includes(input)) return input;
 					throw new Error(`${keypath} should be "fail", "warn", "ignore" or a custom function`);
-				}),
-
-				// TODO: remove this for the 1.0 release
-				onError: validate(undefined, (input, keypath) => {
-					let message = `${keypath} has been renamed to \`handleHttpError\``;
-
-					if (input === 'continue') {
-						message += ', and "continue" has been renamed to "warn"';
-					}
-
-					throw new Error(message);
 				}),
 
 				origin: validate('http://sveltekit-prerender', (input, keypath) => {
@@ -310,43 +237,13 @@ const options = object(
 					}
 
 					return origin;
-				}),
-
-				// TODO: remove this for the 1.0 release
-				pages: error((keypath) => `${keypath} has been renamed to \`entries\`.`)
+				})
 			}),
-
-			// TODO: remove this for the 1.0 release
-			protocol: error(
-				(keypath) =>
-					`${keypath} has been removed. See https://github.com/sveltejs/kit/pull/3384 for details`
-			),
-
-			// TODO remove for 1.0
-			router: error(
-				(keypath) =>
-					`${keypath} has been removed. You can set \`export const csr = false\` inside the top level +layout.js (or +layout.server.js) instead. See the PR for more information: https://github.com/sveltejs/kit/pull/6197`
-			),
-
-			// TODO remove for 1.0
-			routes: error(
-				(keypath) =>
-					`${keypath} has been removed. See https://github.com/sveltejs/kit/discussions/5774 for details`
-			),
 
 			serviceWorker: object({
 				register: boolean(true),
 				files: fun((filename) => !/\.DS_Store/.test(filename))
 			}),
-
-			// TODO remove this for 1.0
-			ssr: error(
-				(keypath) =>
-					`${keypath} has been removed — use the handle hook instead: https://kit.svelte.dev/docs/hooks#server-hooks-handle`
-			),
-
-			// TODO remove this for 1.0
-			target: error((keypath) => `${keypath} is no longer required, and should be removed`),
 
 			trailingSlash: error(
 				(keypath, input) =>
@@ -356,10 +253,7 @@ const options = object(
 			version: object({
 				name: string(Date.now().toString()),
 				pollInterval: number(0)
-			}),
-
-			// TODO remove this for 1.0
-			vite: error((keypath) => `${keypath} has been removed — use vite.config.js instead`)
+			})
 		})
 	},
 	true

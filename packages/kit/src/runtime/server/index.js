@@ -150,41 +150,6 @@ export async function respond(request, options, state) {
 		isDataRequest: is_data_request
 	};
 
-	// TODO remove this for 1.0
-	/**
-	 * @param {string} property
-	 * @param {string} replacement
-	 * @param {string} suffix
-	 */
-	const removed = (property, replacement, suffix = '') => ({
-		get: () => {
-			throw new Error(`event.${property} has been replaced by event.${replacement}` + suffix);
-		}
-	});
-
-	const details = '. See https://github.com/sveltejs/kit/pull/3384 for details';
-
-	const body_getter = {
-		get: () => {
-			throw new Error(
-				'To access the request body use the text/json/arrayBuffer/formData methods, e.g. `body = await request.json()`' +
-					details
-			);
-		}
-	};
-
-	Object.defineProperties(event, {
-		clientAddress: removed('clientAddress', 'getClientAddress'),
-		method: removed('method', 'request.method', details),
-		headers: removed('headers', 'request.headers', details),
-		origin: removed('origin', 'url.origin'),
-		path: removed('path', 'url.pathname'),
-		query: removed('query', 'url.searchParams'),
-		body: body_getter,
-		rawBody: body_getter,
-		routeId: removed('routeId', 'route.id')
-	});
-
 	/** @type {import('types').RequiredResolveOptions} */
 	let resolve_opts = {
 		transformPageChunk: default_transform,
@@ -275,12 +240,7 @@ export async function respond(request, options, state) {
 					}
 
 					return response;
-				}),
-			// TODO remove for 1.0
-			// @ts-expect-error
-			get request() {
-				throw new Error('request in handle has been replaced with event' + details);
-			}
+				})
 		});
 
 		// respond with 304 if etag matches
@@ -346,13 +306,6 @@ export async function respond(request, options, state) {
 	async function resolve(event, opts) {
 		try {
 			if (opts) {
-				// TODO remove for 1.0
-				if ('transformPage' in opts) {
-					throw new Error(
-						'transformPage has been replaced by transformPageChunk — see https://github.com/sveltejs/kit/pull/5657 for more information'
-					);
-				}
-
 				if ('ssr' in opts) {
 					throw new Error(
 						'ssr has been removed, set it in the appropriate +layout.js instead. See the PR for more information: https://github.com/sveltejs/kit/pull/6197'

@@ -102,23 +102,6 @@ export async function render_response({
 			form: form_value
 		};
 
-		// TODO remove this for 1.0
-		/**
-		 * @param {string} property
-		 * @param {string} replacement
-		 */
-		const print_error = (property, replacement) => {
-			Object.defineProperty(props.page, property, {
-				get: () => {
-					throw new Error(`$page.${property} has been replaced by $page.url.${replacement}`);
-				}
-			});
-		};
-
-		print_error('origin', 'origin');
-		print_error('path', 'pathname');
-		print_error('query', 'searchParams');
-
 		rendered = options.root.render(props);
 
 		for (const { node } of branch) {

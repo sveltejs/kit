@@ -98,8 +98,7 @@ export async function load_data({
 		return server_data_node?.data ?? null;
 	}
 
-	/** @type {import('types').LoadEvent} */
-	const load_event = {
+	const data = await node.shared.load.call(null, {
 		url: event.url,
 		params: event.params,
 		data: server_data_node?.data ?? null,
@@ -222,21 +221,7 @@ export async function load_data({
 		setHeaders: event.setHeaders,
 		depends: () => {},
 		parent
-	};
-
-	// TODO remove this for 1.0
-	Object.defineProperties(load_event, {
-		session: {
-			get() {
-				throw new Error(
-					'session is no longer available. See https://github.com/sveltejs/kit/discussions/5883'
-				);
-			},
-			enumerable: false
-		}
 	});
-
-	const data = await node.shared.load.call(null, load_event);
 
 	return data ? unwrap_promises(data) : null;
 }

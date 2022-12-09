@@ -5,13 +5,6 @@ import * as esbuild from 'esbuild';
 
 /** @type {import('.').default} */
 export default function () {
-	// TODO remove for 1.0
-	if (arguments.length > 0) {
-		throw new Error(
-			'esbuild options can no longer be passed to adapter-cloudflare — see https://github.com/sveltejs/kit/pull/4639'
-		);
-	}
-
 	return {
 		name: '@sveltejs/adapter-cloudflare',
 		async adapt(builder) {

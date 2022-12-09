@@ -30,6 +30,23 @@ export function create_builder({ config, build_data, routes, prerendered, log })
 		config,
 		prerendered,
 
+		async compress(directory) {
+			if (!existsSync(directory)) {
+				return;
+			}
+
+			const files = await glob('**/*.{html,js,json,css,svg,xml,wasm}', {
+				cwd: directory,
+				dot: true,
+				absolute: true,
+				filesOnly: true
+			});
+
+			await Promise.all(
+				files.map((file) => Promise.all([compress_file(file, 'gz'), compress_file(file, 'br')]))
+			);
+		},
+
 		async createEntries(fn) {
 			/** @type {import('types').RouteDefinition[]} */
 			const facades = routes.map((route) => {
@@ -146,39 +163,6 @@ export function create_builder({ config, build_data, routes, prerendered, log })
 
 		writeServer(dest) {
 			return copy(`${config.kit.outDir}/output/server`, dest);
-		},
-
-		// TODO remove these methods for 1.0
-		// @ts-expect-error
-		writeStatic() {
-			throw new Error(
-				`writeStatic has been removed. Please ensure you are using the latest version of ${
-					config.kit.adapter.name || 'your adapter'
-				}`
-			);
-		},
-
-		async compress(directory) {
-			if (!existsSync(directory)) {
-				return;
-			}
-
-			const files = await glob('**/*.{html,js,json,css,svg,xml,wasm}', {
-				cwd: directory,
-				dot: true,
-				absolute: true,
-				filesOnly: true
-			});
-
-			await Promise.all(
-				files.map((file) => Promise.all([compress_file(file, 'gz'), compress_file(file, 'br')]))
-			);
-		},
-
-		async prerender() {
-			throw new Error(
-				'builder.prerender() has been removed. Prerendering now takes place in the build phase — see builder.prerender and builder.writePrerendered'
-			);
 		}
 	};
 }

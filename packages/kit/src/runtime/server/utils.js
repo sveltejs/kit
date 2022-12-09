@@ -11,28 +11,9 @@ export function is_pojo(body) {
 	if (body) {
 		if (body instanceof Uint8Array) return false;
 		if (body instanceof ReadableStream) return false;
-
-		// if body is a node Readable, throw an error
-		// TODO remove this for 1.0
-		if (body._readableState && typeof body.pipe === 'function') {
-			throw new Error('Node streams are no longer supported — use a ReadableStream instead');
-		}
 	}
 
 	return true;
-}
-
-// TODO: Remove for 1.0
-/** @param {Record<string, any>} mod */
-export function check_method_names(mod) {
-	['get', 'post', 'put', 'patch', 'del'].forEach((m) => {
-		if (m in mod) {
-			const replacement = m === 'del' ? 'DELETE' : m.toUpperCase();
-			throw Error(
-				`Endpoint method "${m}" has changed to "${replacement}". See https://github.com/sveltejs/kit/discussions/5359 for more information.`
-			);
-		}
-	});
 }
 
 /** @type {import('types').SSRErrorPage} */
@@ -79,15 +60,6 @@ export function allowed_methods(mod) {
  */
 export function get_option(nodes, option) {
 	return nodes.reduce((value, node) => {
-		// TODO remove for 1.0
-		for (const thing of [node?.server, node?.shared]) {
-			if (thing && ('router' in thing || 'hydrate' in thing)) {
-				throw new Error(
-					'`export const hydrate` and `export const router` have been replaced with `export const csr`. See https://github.com/sveltejs/kit/pull/6446'
-				);
-			}
-		}
-
 		return /** @type {any} TypeScript's too dumb to understand this */ (
 			node?.shared?.[option] ?? node?.server?.[option] ?? value
 		);

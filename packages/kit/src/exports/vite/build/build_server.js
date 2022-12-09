@@ -68,16 +68,9 @@ export class Server {
 			dev: false,
 			embedded: ${config.kit.embedded},
 			handle_error: (error, event) => {
-				return this.options.hooks.handleError({
-					error,
-					event,
-
-					// TODO remove for 1.0
-					// @ts-expect-error
-					get request() {
-						throw new Error('request in handleError has been replaced with event. See https://github.com/sveltejs/kit/pull/3384 for details');
-					}
-				}) ?? { message: event.route.id != null ? 'Internal Error' : 'Not Found' };
+				return this.options.hooks.handleError({ error, event }) ?? {
+					message: event.route.id != null ? 'Internal Error' : 'Not Found'
+				};
 			},
 			hooks: null,
 			manifest,
@@ -116,11 +109,6 @@ export class Server {
 
 		if (!this.options.hooks) {
 			const module = await import(${s(hooks)});
-
-			// TODO remove this for 1.0
-			if (module.externalFetch) {
-				throw new Error('externalFetch has been removed — use handleFetch instead. See https://github.com/sveltejs/kit/pull/6565 for details');
-			}
 
 			this.options.hooks = {
 				handle: module.handle || (({ event, resolve }) => resolve(event)),
@@ -166,22 +154,6 @@ export async function build_server(options, client) {
 	} = options;
 
 	let hooks_file = resolve_entry(config.kit.files.hooks.server);
-
-	// TODO remove for 1.0
-	if (!hooks_file) {
-		const old_file = resolve_entry(path.join(process.cwd(), 'src', 'hooks'));
-		if (old_file && fs.existsSync(old_file)) {
-			throw new Error(
-				`Rename your server hook file from ${posixify(
-					path.relative(process.cwd(), old_file)
-				)} to ${posixify(
-					path.relative(process.cwd(), config.kit.files.hooks.server)
-				)}${path.extname(
-					old_file
-				)} (because there's also client hooks now). See the PR for more information: https://github.com/sveltejs/kit/pull/6586`
-			);
-		}
-	}
 
 	if (!hooks_file || !fs.existsSync(hooks_file)) {
 		hooks_file = path.join(config.kit.outDir, 'build/hooks.js');

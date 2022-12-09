@@ -751,12 +751,4 @@ test('prevents route conflicts between groups', () => {
 	);
 });
 
-// TODO remove for 1.0
-test('errors on encountering a declared layout', () => {
-	assert.throws(
-		() => create('samples/declared-layout'),
-		/samples\/declared-layout\/\+layout-foo.svelte should be reimplemented with layout groups: https:\/\/kit\.svelte\.dev\/docs\/advanced-routing#advanced-layouts/
-	);
-});
-
 test.run();
