@@ -1,4 +1,4 @@
-import { vitePreprocess } from '@sveltejs/kit/vite';
+import { vitePreprocess } from '../../../../kit/src/exports/vite/index.js';
 import { fileURLToPath } from 'url';
 import path from 'path';
 
