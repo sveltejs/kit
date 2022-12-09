@@ -88,6 +88,16 @@ test.describe('base path', () => {
 	});
 });
 
+test.describe('assets path', () => {
+	test('serves static assets with correct prefix', async ({ page, request }) => {
+		await page.goto('/path-base/');
+		const href = await page.locator('link[rel="icon"]').getAttribute('href');
+
+		const response = await request.get(href);
+		expect(response.status()).toBe(200);
+	});
+});
+
 test.describe('CSP', () => {
 	test('blocks script from external site', async ({ page }) => {
 		const { port, close } = await start_server((req, res) => {
