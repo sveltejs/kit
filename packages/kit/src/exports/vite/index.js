@@ -237,7 +237,7 @@ function kit() {
 			/** @type {import('vite').UserConfig} */
 			const result = {
 				appType: 'custom',
-				base: svelte_config.kit.paths.base,
+				base: './',
 				build: {
 					rollupOptions: {
 						// Vite dependency crawler needs an explicit JS entry point

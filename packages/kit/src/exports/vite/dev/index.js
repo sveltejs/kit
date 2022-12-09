@@ -13,6 +13,7 @@ import { SVELTE_KIT_ASSETS } from '../../../constants.js';
 import * as sync from '../../../core/sync/sync.js';
 import { get_mime_lookup, runtime_base, runtime_prefix } from '../../../core/utils.js';
 import { compact } from '../../../utils/array.js';
+import { not_found } from '../utils.js';
 
 const cwd = process.cwd();
 
@@ -316,6 +317,10 @@ export async function dev(vite, vite_config, svelte_config) {
 					// @ts-expect-error
 					serve_static_middleware.handle(req, res);
 					return;
+				}
+
+				if (!decoded.startsWith(svelte_config.kit.paths.base)) {
+					return not_found(req, res, svelte_config.kit.paths.base);
 				}
 
 				if (decoded === svelte_config.kit.paths.base + '/service-worker.js') {
