@@ -41,9 +41,7 @@ if (import.meta.env.DEV) {
 		const method = input instanceof Request ? input.method : init?.method || 'GET';
 
 		if (method !== 'GET') {
-			const url = new URL(input instanceof Request ? input.url : input.toString(), document.baseURI)
-				.href;
-			cache.delete(url);
+			cache.delete(build_selector(input));
 		}
 
 		return native_fetch(input, init);
@@ -53,9 +51,7 @@ if (import.meta.env.DEV) {
 		const method = input instanceof Request ? input.method : init?.method || 'GET';
 
 		if (method !== 'GET') {
-			const url = new URL(input instanceof Request ? input.url : input.toString(), document.baseURI)
-				.href;
-			cache.delete(url);
+			cache.delete(build_selector(input));
 		}
 
 		return native_fetch(input, init);
@@ -114,11 +110,11 @@ export function subsequent_fetch(resource, resolved, opts) {
 
 /**
  * Build the cache key for a given request
- * @param {URL | string} resource
+ * @param {URL | RequestInfo} resource
  * @param {RequestInit} [opts]
  */
 function build_selector(resource, opts) {
-	const url = JSON.stringify(resource);
+	const url = JSON.stringify(resource instanceof Request ? resource.url : resource);
 
 	let selector = `script[data-sveltekit-fetched][data-url=${url}]`;
 

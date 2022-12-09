@@ -583,6 +583,17 @@ test.describe('Load', () => {
 			await page.waitForTimeout(500);
 			expect(await page.textContent('p')).toBe('Count is 1');
 		});
+
+		test('load busts cache if non-GET request to resource is made', async ({ page, request }) => {
+			await request.get('/load/cache-control/reset');
+
+			await page.goto('/load/cache-control');
+			expect(await page.textContent('p')).toBe('Count is 0');
+			await page.waitForTimeout(500);
+			await page.click('button.bust');
+			await page.waitForTimeout(500);
+			expect(await page.textContent('p')).toBe('Count is 1');
+		});
 	});
 
 	test('__data.json has cache-control: private, no-store', async ({ page, clicknav }) => {
