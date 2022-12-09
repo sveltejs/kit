@@ -60,7 +60,7 @@ export function load() {
 <p>This staging environment was deployed from {data.deploymentGitBranch}.</p>
 ```
 
-Since all of these variables are available at buildtime on Vercel, we recommend using their `$env/static/private` varients for static replacement -- and you'll _have_ to if you're deploying to edge functions, as Vercel currenly will not include them dynamically at runtime.
+Since all of these variables are unchanged between build time and run time when building on Vercel, we recommend using `$env/static/private` — which will statically replace the variables, enabling optimisations like dead code elimination — rather than `$env/dynamic/private`. If you're deploying with `edge: true` you _must_ use `$env/static/private`, as `$env/dynamic/private` and `$env/dynamic/public` are not currently populated in edge functions on Vercel.
 
 ## Notes
 
