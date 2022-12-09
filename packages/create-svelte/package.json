@@ -25,7 +25,6 @@
 		"prettier-plugin-svelte": "^2.8.1",
 		"sucrase": "^3.29.0",
 		"svelte": "^3.54.0",
-		"svelte-preprocess": "^4.10.7",
 		"tiny-glob": "^0.2.9",
 		"uvu": "^0.5.6"
 	},

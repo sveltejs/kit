@@ -20,6 +20,8 @@ import { create_static_module, create_dynamic_module } from '../../core/env.js';
 import { is_illegal, module_guard, normalize_id } from './graph_analysis/index.js';
 import { create_assets } from '../../core/sync/create_manifest_data/index.js';
 
+export { vitePreprocess } from '@sveltejs/vite-plugin-svelte';
+
 const cwd = process.cwd();
 
 /** @type {import('./types').EnforcedConfig} */
