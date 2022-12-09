@@ -1,14 +1,12 @@
 <script>
-	import Section from '@sveltejs/site-kit/components/Section.svelte';
 	import Features from './home/Features.svelte';
 	import Hero from './home/Hero.svelte';
 	import Showcase from './home/Showcase.svelte';
 	import Try from './home/Try.svelte';
-	import Video from './home/Video.svelte';
-	import './home/common.css';
 	import Deployment from './home/Deployment.svelte';
 	import Svelte from './home/Svelte.svelte';
 	import Intro from './home/Intro.svelte';
+	import './home/common.css';
 </script>
 
 <svelte:head>
@@ -43,11 +41,17 @@
 	footer {
 		padding: 1em var(--sk-page-padding-side);
 		text-align: center;
+		background: var(--sk-back-2);
 	}
 
 	footer p {
 		max-width: 20em;
 		margin: 0 auto;
+	}
+
+	footer p a {
+		color: inherit;
+		text-decoration: underline;
 	}
 
 	@media (min-width: 680px) {
