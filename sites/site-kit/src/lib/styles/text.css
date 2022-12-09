@@ -32,11 +32,8 @@
 	background: var(--sk-back-4);
 }
 
-.text pre code {
-	padding: 0;
-	margin: 0;
-	top: 0;
-	background: transparent;
+.text .code-block {
+	position: relative;
 }
 
 .text pre {
@@ -45,21 +42,21 @@
 	padding: 1rem;
 	box-shadow: inset 1px 1px 6px hsla(205.7, 63.6%, 30.8%, 0.06);
 	box-sizing: border-box;
-}
-
-/** hacky overrides to allow filenames inside code blocks —
-    TODO change the CSS in site-kit so we can get rid of this */
-.text pre {
 	background-color: var(--code-bg);
 	color: var(--code-base);
-	border-radius: 0.5rem;
-	font-size: 14px;
-	/* max-width: var(--sk-line-max-width); */
-	box-shadow: inset 1px 1px 6px hsla(205.7, 63.6%, 30.8%, 0.06);
-	overflow: hidden;
+	border-radius: var(--sk-border-radius);
+	font-size: var(--sk-text-s);
+	overflow-x: auto;
 }
 
-.text pre[data-file]::before {
+.text pre code {
+	padding: 0;
+	margin: 0;
+	top: 0;
+	background: transparent;
+}
+
+.text .code-block .filename {
 	content: attr(data-file);
 	display: block;
 	width: 100%;
@@ -67,11 +64,15 @@
 	font-size: 1.2rem;
 	font-weight: 400;
 	padding: 1rem 1rem 0.8rem 1rem;
-	margin: -1rem 0 1rem -1rem;
 	color: var(--sk-text-2);
 	background: var(--sk-back-4);
 	border-radius: var(--sk-border-radius) var(--sk-border-radius) 0 0;
-	box-shadow: 0 1px 6px hsla(205.7, 63.6%, 30.8%, 0.06);
+	box-sizing: border-box;
+}
+
+.text .code-block pre {
+	margin-top: 0;
+	border-radius: 0 0 var(--sk-border-radius) var(--sk-border-radius);
 }
 
 .text pre a {

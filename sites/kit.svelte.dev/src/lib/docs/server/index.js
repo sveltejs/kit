@@ -223,7 +223,7 @@ export async function read_file(file) {
 			}
 
 			if (options.file) {
-				html = html.replace('<pre', `<pre data-file="${options.file}"`);
+				html = `<div class="code-block"><span class="filename">${options.file}</span>${html}</div>`;
 			}
 
 			if (version_class) {
