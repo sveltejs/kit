@@ -3,6 +3,8 @@ const redirects = {
 	'/docs/amp': '/docs/seo#manual-setup-amp'
 };
 
+const preload_types = ['js', 'css', 'font'];
+
 /** @type {import('@sveltejs/kit').Handle} */
 export function handle({ event, resolve }) {
 	if (event.url.pathname in redirects) {
@@ -14,5 +16,7 @@ export function handle({ event, resolve }) {
 		});
 	}
 
-	return resolve(event);
+	return resolve(event, {
+		preload: ({ type }) => preload_types.includes(type)
+	});
 }
