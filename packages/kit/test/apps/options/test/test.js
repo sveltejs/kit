@@ -7,9 +7,15 @@ test.describe.configure({ mode: 'parallel' });
 
 test.describe('base path', () => {
 	test('serves a useful 404 when visiting unprefixed path', async ({ request }) => {
-		const response = await request.get('/');
-		expect(response.status()).toBe(404);
-		expect(await response.text()).toBe('Not found (did you mean /path-base/?)');
+		const html = await request.get('/slash/', { headers: { Accept: 'text/html' } });
+		expect(html.status()).toBe(404);
+		expect(await html.text()).toBe(
+			'Not found (did you mean <a href="/path-base/slash/">/path-base/slash/</a>?)'
+		);
+
+		const plain = await request.get('/slash/');
+		expect(plain.status()).toBe(404);
+		expect(await plain.text()).toBe('Not found (did you mean /path-base/slash/?)');
 	});
 
 	test('serves /', async ({ page, javaScriptEnabled }) => {
@@ -83,6 +89,16 @@ test.describe('base path', () => {
 
 		await clicknav('[href="/path-base/base/two"]');
 		expect(await page.textContent('h2')).toBe('two');
+	});
+});
+
+test.describe('assets path', () => {
+	test('serves static assets with correct prefix', async ({ page, request }) => {
+		await page.goto('/path-base/');
+		const href = await page.locator('link[rel="icon"]').getAttribute('href');
+
+		const response = await request.get(href);
+		expect(response.status()).toBe(200);
 	});
 });
 

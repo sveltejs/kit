@@ -10,8 +10,8 @@
 	"devDependencies": {
 		"@sveltejs/adapter-auto": "workspace:*",
 		"@sveltejs/kit": "workspace:*",
-		"svelte": "^3.53.1",
-		"vite": "^3.2.4"
+		"svelte": "^3.54.0",
+		"vite": "^4.0.0"
 	},
 	"type": "module"
 }
