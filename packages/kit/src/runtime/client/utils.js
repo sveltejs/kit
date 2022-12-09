@@ -1,3 +1,4 @@
+import { BROWSER, DEV } from 'esm-env';
 import { writable } from 'svelte/store';
 import { assets } from '../paths.js';
 import { version } from '../env.js';
@@ -50,7 +51,9 @@ function link_option(element, name) {
 		element.getAttribute(`data-sveltekit-${name}`)
 	);
 
-	if (__SVELTEKIT_DEV__) validate_link_option(element, name, value);
+	if (DEV) {
+		validate_link_option(element, name, value);
+	}
 
 	return value;
 }
@@ -209,7 +212,7 @@ export function create_updated_store() {
 	let timeout;
 
 	async function check() {
-		if (import.meta.env.DEV || import.meta.env.SSR) return false;
+		if (DEV || !BROWSER) return false;
 
 		clearTimeout(timeout);
 

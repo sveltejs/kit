@@ -1,3 +1,4 @@
+import { BROWSER } from 'esm-env';
 import { client } from '../client/singletons.js';
 
 /**
@@ -9,18 +10,16 @@ function guard(name) {
 	};
 }
 
-const ssr = import.meta.env.SSR;
-
-export const disableScrollHandling = ssr
-	? guard('disableScrollHandling')
-	: client.disable_scroll_handling;
-export const goto = ssr ? guard('goto') : client.goto;
-export const invalidate = ssr ? guard('invalidate') : client.invalidate;
-export const invalidateAll = ssr ? guard('invalidateAll') : client.invalidateAll;
-export const preloadData = ssr ? guard('preloadData') : client.preload_data;
-export const preloadCode = ssr ? guard('preloadCode') : client.preload_code;
-export const beforeNavigate = ssr ? () => {} : client.before_navigate;
-export const afterNavigate = ssr ? () => {} : client.after_navigate;
+export const disableScrollHandling = BROWSER
+	? client.disable_scroll_handling
+	: guard('disableScrollHandling');
+export const goto = BROWSER ? client.goto : guard('goto');
+export const invalidate = BROWSER ? client.invalidate : guard('invalidate');
+export const invalidateAll = BROWSER ? client.invalidateAll : guard('invalidateAll');
+export const preloadData = BROWSER ? client.preload_data : guard('preloadData');
+export const preloadCode = BROWSER ? client.preload_code : guard('preloadCode');
+export const beforeNavigate = BROWSER ? client.before_navigate : () => {};
+export const afterNavigate = BROWSER ? client.after_navigate : () => {};
 
 // TODO remove for 1.0 release
 /** @param {any} _args */
