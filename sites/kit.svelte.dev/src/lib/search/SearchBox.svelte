@@ -229,7 +229,8 @@
 	}
 
 	input::placeholder {
-		color: rgba(0, 0, 0, 0.3);
+		color: var(--sk-text-3);
+		opacity: 0.3;
 	}
 
 	input:focus-visible {
@@ -330,18 +331,6 @@
 		padding: 1rem;
 	}
 
-	:root {
-		--sk-search-small-focus: hsla(0, 0%, 100%, 0.6);
-		--sk-search-strong-focus: hsl(0, 0%, 100%);
-	}
-
-	@media (prefers-color-scheme: dark) {
-		:root {
-			--sk-search-small-focus: var(--sk-text-2);
-			--sk-search-strong-focus: var(--sk-text-1);
-		}
-	}
-
 	a:hover {
 		background: rgba(0, 0, 0, 0.05);
 	}
@@ -375,11 +364,12 @@
 	}
 
 	a:focus small {
-		color: var(--sk-search-small-focus);
+		color: white;
+		opacity: 0.6;
 	}
 
 	a:focus strong {
-		color: var(--sk-search-strong-focus);
+		color: white;
 	}
 
 	a strong :global(mark) {
