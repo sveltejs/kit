@@ -1,5 +1,11 @@
 # @sveltejs/kit
 
+## 1.0.0-next.577
+
+### Patch Changes
+
+- [breaking] add embedded option, turned off by default ([#7969](https://github.com/sveltejs/kit/pull/7969))
+
 ## 1.0.0-next.576
 
 ### Patch Changes
