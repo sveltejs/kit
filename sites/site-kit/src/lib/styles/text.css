@@ -212,6 +212,12 @@
 	bottom: 0.25em;
 }
 
+@media (prefers-color-scheme: dark) {
+	.text a.permalink {
+		background: url(@sveltejs/site-kit/icons/link-white.svg) 0 50% no-repeat;
+	}
+}
+
 @media (min-width: 768px) {
 	.text a.permalink:focus,
 	.text h2:hover a.permalink,
