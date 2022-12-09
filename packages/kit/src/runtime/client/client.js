@@ -680,6 +680,19 @@ export function create_client({ target, base }) {
 				try {
 					lock_fetch();
 					data = (await node.shared.load.call(null, load_input)) ?? null;
+					if (data != null && Object.getPrototypeOf(data) !== Object.prototype) {
+						throw new Error(
+							`a load function related to route '${route.id}' returned ${
+								typeof data !== 'object'
+									? `a ${typeof data}`
+									: data instanceof Response
+									? 'a Response object'
+									: Array.isArray(data)
+									? 'an array'
+									: 'a non-plain object'
+							}, but must return a plain object at the top level (i.e. \`return {...}\`)`
+						);
+					}
 				} finally {
 					unlock_fetch();
 				}
