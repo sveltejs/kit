@@ -390,13 +390,13 @@ export async function prerender() {
 			for (const layout of layouts) {
 				if (layout) {
 					validate_common_exports(layout.server, route.id);
-					validate_common_exports(layout.shared, route.id);
+					validate_common_exports(layout.universal, route.id);
 				}
 			}
 
 			if (page) {
 				validate_page_server_exports(page.server, route.id);
-				validate_common_exports(page.shared, route.id);
+				validate_common_exports(page.universal, route.id);
 			}
 
 			const prerender = get_option(nodes, 'prerender') ?? false;

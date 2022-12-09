@@ -80,7 +80,7 @@ export function allowed_methods(mod) {
 export function get_option(nodes, option) {
 	return nodes.reduce((value, node) => {
 		// TODO remove for 1.0
-		for (const thing of [node?.server, node?.shared]) {
+		for (const thing of [node?.server, node?.universal]) {
 			if (thing && ('router' in thing || 'hydrate' in thing)) {
 				throw new Error(
 					'`export const hydrate` and `export const router` have been replaced with `export const csr`. See https://github.com/sveltejs/kit/pull/6446'
@@ -89,7 +89,7 @@ export function get_option(nodes, option) {
 		}
 
 		return /** @type {any} TypeScript's too dumb to understand this */ (
-			node?.shared?.[option] ?? node?.server?.[option] ?? value
+			node?.universal?.[option] ?? node?.server?.[option] ?? value
 		);
 	}, /** @type {Value | undefined} */ (undefined));
 }

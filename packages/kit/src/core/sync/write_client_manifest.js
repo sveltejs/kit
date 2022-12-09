@@ -17,10 +17,10 @@ export function write_client_manifest(config, manifest_data, output) {
 	function generate_node(node) {
 		const declarations = [];
 
-		if (node.shared) {
+		if (node.universal) {
 			declarations.push(
-				`import * as shared from ${s(relative_path(`${output}/nodes`, node.shared))};`,
-				`export { shared };`
+				`import * as universal from ${s(relative_path(`${output}/nodes`, node.universal))};`,
+				`export { universal };`
 			);
 		}
 
