@@ -33,7 +33,7 @@ export class Redirect {
 /**
  * @template {Record<string, unknown> | undefined} [T=undefined]
  */
-export class ValidationError {
+export class ActionFailure {
 	/**
 	 * @param {number} status
 	 * @param {T} [data]

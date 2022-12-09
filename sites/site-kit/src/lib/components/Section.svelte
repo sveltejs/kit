@@ -1,16 +1,28 @@
 <section>
-	<slot />
+	<div class="inner"><slot /></div>
 </section>
 
 <style>
 	section {
-		position: relative;
-		margin: 0 auto 0 auto;
-		padding: 10rem var(--sk-page-padding-side);
-		max-width: 120rem;
+		padding: 6rem 0;
+		background: var(--background, white);
 	}
 
-	section :global(h3) {
-		color: var(--sk-text-2);
+	section::after {
+		content: '';
+		display: table;
+		clear: both;
+	}
+
+	.inner {
+		max-width: 120rem;
+		padding: 0 var(--side-nav);
+		margin: 0 auto;
+	}
+
+	@media (min-width: 900px) {
+		section {
+			padding: 10rem 0;
+		}
 	}
 </style>

@@ -17,7 +17,32 @@ export default {
 };
 ```
 
+## Deploying
+
+You will need the output directory (`build` by default), the project's `package.json`, and the production dependencies in `node_modules` to run the application. Production dependencies can be generated with `npm ci --prod` (you can skip this step if your app doesn't have any dependencies). You can then start your app with
+
+```bash
+node build
+```
+
+Development dependencies will be bundled into your app using `rollup`. To control whether a given package is bundled or externalised, place it in `devDependencies` or `dependencies` respectively in your `package.json`.
+
 ## Environment variables
+
+In `dev` and `preview`, SvelteKit will read environent variables from your `.env` file (or `.env.local`, or `.env.[mode]`, [as determined by Vite](https://vitejs.dev/guide/env-and-mode.html#env-files).)
+
+In production, `.env` files are _not_ automatically loaded. To do so, install `dotenv` in your project...
+
+```bash
+npm install dotenv
+```
+
+...and invoke it before running the built app:
+
+```diff
+-node build
++node -r dotenv/config build
+```
 
 ### `PORT` and `HOST`
 
@@ -145,16 +170,6 @@ app.listen(3000, () => {
   console.log('listening on port 3000');
 });
 ```
-
-## Deploying
-
-You will need the output directory (`build` by default), the project's `package.json`, and the production dependencies in `node_modules` to run the application. Production dependencies can be generated with `npm ci --prod` (you can skip this step if your app doesn't have any dependencies). You can then start your app with
-
-```bash
-node build
-```
-
-Development dependencies will be bundled into your app using `esbuild`. To control whether a given package is bundled or externalised, place it in `devDependencies` or `dependencies` respectively in your `package.json`.
 
 ## Changelog
 

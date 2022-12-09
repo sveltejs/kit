@@ -140,12 +140,12 @@ export const actions = {
 
 ### Validation errors
 
-If the request couldn't be processed because of invalid data, you can return validation errors — along with the previously submitted form values — back to the user so that they can try again. The `invalid` function lets you return an HTTP status code (typically 400 or 422, in the case of validation errors) along with the data. The status code is available through `$page.status` and the data through `form`:
+If the request couldn't be processed because of invalid data, you can return validation errors — along with the previously submitted form values — back to the user so that they can try again. The `fail` function lets you return an HTTP status code (typically 400 or 422, in the case of validation errors) along with the data. The status code is available through `$page.status` and the data through `form`:
 
 ```diff
 // @errors: 2339 2304
 /// file: src/routes/login/+page.server.js
-+import { invalid } from '@sveltejs/kit';
++import { fail } from '@sveltejs/kit';
 
 /** @type {import('./$types').Actions} */
 export const actions = {
@@ -155,13 +155,13 @@ export const actions = {
 		const password = data.get('password');
 
 +		if (!email) {
-+			return invalid(400, { email, missing: true });
++			return fail(400, { email, missing: true });
 +		}
 
 		const user = await db.getUser(email);
 
 +		if (!user || user.password !== hash(password)) {
-+			return invalid(400, { email, incorrect: true });
++			return fail(400, { email, incorrect: true });
 +		}
 
 		cookies.set('sessionid', await db.createSession(user));
@@ -199,7 +199,7 @@ Redirects (and errors) work exactly the same as in [`load`](/docs/load#redirects
 ```diff
 // @errors: 2339 2304
 /// file: src/routes/login/+page.server.js
-+import { invalid, redirect } from '@sveltejs/kit';
++import { fail, redirect } from '@sveltejs/kit';
 
 /** @type {import('./$types').Actions} */
 export const actions = {
@@ -210,11 +210,11 @@ export const actions = {
 
 		const user = await db.getUser(email);
 		if (!user) {
-			return invalid(400, { email, missing: true });
+			return fail(400, { email, missing: true });
 		}
 
 		if (user.password !== hash(password)) {
-			return invalid(400, { email, incorrect: true });
+			return fail(400, { email, incorrect: true });
 		}
 
 		cookies.set('sessionid', await db.createSession(user));
@@ -324,7 +324,7 @@ Without an argument, `use:enhance` will emulate the browser-native behaviour, ju
 - call `goto` on a redirect response
 - render the nearest `+error` boundary if an error occurs
 
-To customise the behaviour, you can provide a function that runs immediately before the form is submitted, and (optionally) returns a callback that runs with the `ActionResult`. Note that if you return a callback, the default behavior mentioned above is not triggered. To get it back, call `update`.
+To customise the behaviour, you can provide a `SubmitFunction` that runs immediately before the form is submitted, and (optionally) returns a callback that runs with the `ActionResult`. Note that if you return a callback, the default behavior mentioned above is not triggered. To get it back, call `update`.
 
 ```svelte
 <form
@@ -377,7 +377,7 @@ If you provide your own callbacks, you may need to reproduce part of the default
 
 The behaviour of `applyAction(result)` depends on `result.type`:
 
-- `success`, `invalid` — sets `$page.status` to `result.status` and updates `form` and `$page.form` to `result.data` (regardless of where you are submitting from, in contrast to `update` from `enhance`)
+- `success`, `failure` — sets `$page.status` to `result.status` and updates `form` and `$page.form` to `result.data` (regardless of where you are submitting from, in contrast to `update` from `enhance`)
 - `redirect` — calls `goto(result.location)`
 - `error` — renders the nearest `+error` boundary with `result.error`
 

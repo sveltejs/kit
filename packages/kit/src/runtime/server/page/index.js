@@ -40,9 +40,7 @@ export async function render_page(event, route, page, options, state, resolve_op
 
 	if (is_action_json_request(event)) {
 		const node = await options.manifest._.nodes[page.leaf]();
-		if (node.server) {
-			return handle_action_json_request(event, options, node.server);
-		}
+		return handle_action_json_request(event, options, node?.server);
 	}
 
 	try {
@@ -70,7 +68,7 @@ export async function render_page(event, route, page, options, state, resolve_op
 				const error = action_result.error;
 				status = error instanceof HttpError ? error.status : 500;
 			}
-			if (action_result?.type === 'invalid') {
+			if (action_result?.type === 'failure') {
 				status = action_result.status;
 			}
 		}

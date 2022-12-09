@@ -1,5 +1,53 @@
 # @sveltejs/kit
 
+## 1.0.0-next.578
+
+### Patch Changes
+
+- [fix] respect fetch cache option ([#8024](https://github.com/sveltejs/kit/pull/8024))
+
+- [breaking] rename invalid() to fail() and ValidationError to ActionFailure ([#8012](https://github.com/sveltejs/kit/pull/8012))
+
+- [breaking] replace automatic fallback generation with `builder.generateFallback(fallback)` ([#8013](https://github.com/sveltejs/kit/pull/8013))
+
+## 1.0.0-next.577
+
+### Patch Changes
+
+- [breaking] add embedded option, turned off by default ([#7969](https://github.com/sveltejs/kit/pull/7969))
+
+## 1.0.0-next.576
+
+### Patch Changes
+
+- [breaking] make `sveltekit()` return a promise of array of Vite plugins ([#7994](https://github.com/sveltejs/kit/pull/7994))
+
+## 1.0.0-next.575
+
+### Patch Changes
+
+- [fix] throw error when using enhance on GET forms ([#7948](https://github.com/sveltejs/kit/pull/7948))
+
+- [breaking] strip `__data.json` from url ([#7979](https://github.com/sveltejs/kit/pull/7979))
+
+## 1.0.0-next.574
+
+### Patch Changes
+
+- [feat] split Vite plugin in two ([#7990](https://github.com/sveltejs/kit/pull/7990))
+
+## 1.0.0-next.573
+
+### Patch Changes
+
+- [fix] adjust ActionData type ([#7962](https://github.com/sveltejs/kit/pull/7962))
+
+- [breaking] disallow unknown exports (except when starting with an underscore) from `+(layout|page)(.server)?.js` and `+server.js` files ([#7878](https://github.com/sveltejs/kit/pull/7878))
+
+- [fix] continuous optionals should not throw conflict error ([#7939](https://github.com/sveltejs/kit/pull/7939))
+
+- fix `enhance` error message when form action doesn't exist or csrf is enabled ([#7958](https://github.com/sveltejs/kit/pull/7958))
+
 ## 1.0.0-next.572
 
 ### Minor Changes

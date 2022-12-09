@@ -13,10 +13,16 @@ import {
 	strip_data_suffix
 } from '../../utils/url.js';
 import { exec } from '../../utils/routing.js';
-import { redirect_json_response, render_data } from './data/index.js';
+import { INVALIDATED_PARAM, redirect_json_response, render_data } from './data/index.js';
 import { add_cookies_to_headers, get_cookies } from './cookie.js';
 import { create_fetch } from './fetch.js';
 import { Redirect } from '../control.js';
+import {
+	validate_common_exports,
+	validate_page_server_exports,
+	validate_server_exports
+} from '../../utils/exports.js';
+import { error, json } from '../../exports/index.js';
 
 /* global __SVELTEKIT_ADAPTER_NAME__ */
 
@@ -31,6 +37,7 @@ const default_preload = ({ type }) => type === 'js' || type === 'css';
 
 /** @type {import('types').Respond} */
 export async function respond(request, options, state) {
+	/** URL but stripped from the potential `/__data.json` suffix and its search param  */
 	let url = new URL(request.url);
 
 	if (options.csrf.check_origin) {
@@ -40,9 +47,11 @@ export async function respond(request, options, state) {
 			is_form_content_type(request);
 
 		if (forbidden) {
-			return new Response(`Cross-site ${request.method} form submissions are forbidden`, {
-				status: 403
-			});
+			const csrf_error = error(403, `Cross-site ${request.method} form submissions are forbidden`);
+			if (request.headers.get('accept') === 'application/json') {
+				return json(csrf_error.body, { status: csrf_error.status });
+			}
+			return new Response(csrf_error.body.message, { status: csrf_error.status });
 		}
 	}
 
@@ -67,7 +76,14 @@ export async function respond(request, options, state) {
 	}
 
 	const is_data_request = has_data_suffix(decoded);
-	if (is_data_request) decoded = strip_data_suffix(decoded) || '/';
+	/** @type {boolean[] | undefined} */
+	let invalidated_data_nodes;
+	if (is_data_request) {
+		decoded = strip_data_suffix(decoded) || '/';
+		url.pathname = strip_data_suffix(url.pathname) || '/';
+		invalidated_data_nodes = url.searchParams.get(INVALIDATED_PARAM)?.split('_').map(Boolean);
+		url.searchParams.delete(INVALIDATED_PARAM);
+	}
 
 	if (!state.prerendering?.fallback) {
 		// TODO this could theoretically break — should probably be inside a try-catch
@@ -130,7 +146,8 @@ export async function respond(request, options, state) {
 				}
 			}
 		},
-		url
+		url,
+		isDataRequest: is_data_request
 	};
 
 	// TODO remove this for 1.0
@@ -185,10 +202,31 @@ export async function respond(request, options, state) {
 					options.manifest._.nodes[route.page.leaf]()
 				]);
 
+				if (__SVELTEKIT_DEV__) {
+					const layouts = nodes.slice(0, -1);
+					const page = nodes.at(-1);
+
+					for (const layout of layouts) {
+						if (layout) {
+							validate_common_exports(layout.server, /** @type {string} */ (layout.server_id));
+							validate_common_exports(layout.shared, /** @type {string} */ (layout.shared_id));
+						}
+					}
+
+					if (page) {
+						validate_page_server_exports(page.server, /** @type {string} */ (page.server_id));
+						validate_common_exports(page.shared, /** @type {string} */ (page.shared_id));
+					}
+				}
+
 				trailing_slash = get_option(nodes, 'trailingSlash');
 			} else if (route.endpoint) {
 				const node = await route.endpoint();
 				trailing_slash = node.trailingSlash;
+
+				if (__SVELTEKIT_DEV__) {
+					validate_server_exports(node, /** @type {string} */ (route.endpoint_id));
+				}
 			}
 
 			const normalized = normalize_path(url.pathname, trailing_slash ?? 'never');
@@ -347,7 +385,14 @@ export async function respond(request, options, state) {
 				let response;
 
 				if (is_data_request) {
-					response = await render_data(event, route, options, state, trailing_slash ?? 'never');
+					response = await render_data(
+						event,
+						route,
+						options,
+						state,
+						invalidated_data_nodes,
+						trailing_slash ?? 'never'
+					);
 				} else if (route.endpoint && (!route.page || is_endpoint_request(event))) {
 					response = await render_endpoint(event, await route.endpoint(), state);
 				} else if (route.page) {

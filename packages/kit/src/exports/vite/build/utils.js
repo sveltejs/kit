@@ -145,7 +145,8 @@ export function get_default_build_config({ config, input, ssr, outDir }) {
 		define: {
 			__SVELTEKIT_ADAPTER_NAME__: JSON.stringify(config.kit.adapter?.name),
 			__SVELTEKIT_APP_VERSION_FILE__: JSON.stringify(`${config.kit.appDir}/version.json`),
-			__SVELTEKIT_APP_VERSION_POLL_INTERVAL__: JSON.stringify(config.kit.version.pollInterval)
+			__SVELTEKIT_APP_VERSION_POLL_INTERVAL__: JSON.stringify(config.kit.version.pollInterval),
+			__SVELTEKIT_EMBEDDED__: config.kit.embedded ? 'true' : 'false'
 		},
 		publicDir: ssr ? false : config.kit.files.assets,
 		resolve: {

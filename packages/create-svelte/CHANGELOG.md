@@ -1,5 +1,17 @@
 # create-svelte
 
+## 2.0.0-next.200
+
+### Patch Changes
+
+- Use `satisfies` operator ([#7861](https://github.com/sveltejs/kit/pull/7861))
+
+## 2.0.0-next.199
+
+### Patch Changes
+
+- fix: improve Sverdle a11y ([#7960](https://github.com/sveltejs/kit/pull/7960))
+
 ## 2.0.0-next.198
 
 ### Patch Changes

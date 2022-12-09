@@ -31,6 +31,7 @@ import { stores } from './singletons.js';
 import { unwrap_promises } from '../../utils/promises.js';
 import * as devalue from 'devalue';
 import { INDEX_KEY, PRELOAD_PRIORITIES, SCROLL_KEY } from './constants.js';
+import { validate_common_exports } from '../../utils/exports.js';
 
 const routes = parse(nodes, server_loads, dictionary, matchers);
 
@@ -89,6 +90,7 @@ function check_for_removed_attributes() {
  * @returns {import('./types').Client}
  */
 export function create_client({ target, base }) {
+	const container = __SVELTEKIT_EMBEDDED__ ? target : document.documentElement;
 	/** @type {Array<((url: URL) => boolean)>} */
 	const invalidated = [];
 
@@ -498,7 +500,7 @@ export function create_client({ target, base }) {
 				route,
 				status,
 				url: new URL(url),
-				form,
+				form: form ?? null,
 				// The whole page store is updated, but this way the object reference stays the same
 				data: data_changed ? data : page.data
 			};
@@ -559,6 +561,10 @@ export function create_client({ target, base }) {
 
 		const node = await loader();
 
+		if (__SVELTEKIT_DEV__) {
+			validate_common_exports(node.shared);
+		}
+
 		if (node.shared?.load) {
 			/** @param {string[]} deps */
 			function depends(...deps) {
@@ -587,6 +593,7 @@ export function create_client({ target, base }) {
 					uses.url = true;
 				}),
 				async fetch(resource, init) {
+					/** @type {URL | string} */
 					let requested;
 
 					if (resource instanceof Request) {
@@ -1195,7 +1202,7 @@ export function create_client({ target, base }) {
 		/** @type {NodeJS.Timeout} */
 		let mousemove_timeout;
 
-		target.addEventListener('mousemove', (event) => {
+		container.addEventListener('mousemove', (event) => {
 			const target = /** @type {Element} */ (event.target);
 
 			clearTimeout(mousemove_timeout);
@@ -1209,8 +1216,8 @@ export function create_client({ target, base }) {
 			preload(/** @type {Element} */ (event.composedPath()[0]), 1);
 		}
 
-		target.addEventListener('mousedown', tap);
-		target.addEventListener('touchstart', tap, { passive: true });
+		container.addEventListener('mousedown', tap);
+		container.addEventListener('touchstart', tap, { passive: true });
 
 		const observer = new IntersectionObserver(
 			(entries) => {
@@ -1229,7 +1236,7 @@ export function create_client({ target, base }) {
 		 * @param {number} priority
 		 */
 		function preload(element, priority) {
-			const a = find_anchor(element, target);
+			const a = find_anchor(element, container);
 			if (!a) return;
 
 			const { url, external } = get_link_info(a, base);
@@ -1249,7 +1256,7 @@ export function create_client({ target, base }) {
 		function after_navigate() {
 			observer.disconnect();
 
-			for (const a of target.querySelectorAll('a')) {
+			for (const a of container.querySelectorAll('a')) {
 				const { url, external } = get_link_info(a, base);
 				if (external) continue;
 
@@ -1453,14 +1460,14 @@ export function create_client({ target, base }) {
 			}
 
 			/** @param {MouseEvent} event */
-			target.addEventListener('click', (event) => {
+			container.addEventListener('click', (event) => {
 				// Adapted from https://github.com/visionmedia/page.js
 				// MIT license https://github.com/visionmedia/page.js#license
 				if (event.button || event.which !== 1) return;
 				if (event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
 				if (event.defaultPrevented) return;
 
-				const a = find_anchor(/** @type {Element} */ (event.composedPath()[0]), target);
+				const a = find_anchor(/** @type {Element} */ (event.composedPath()[0]), container);
 				if (!a) return;
 
 				const { url, external, has } = get_link_info(a, base);
@@ -1530,7 +1537,7 @@ export function create_client({ target, base }) {
 				});
 			});
 
-			target.addEventListener('submit', (event) => {
+			container.addEventListener('submit', (event) => {
 				if (event.defaultPrevented) return;
 
 				const form = /** @type {HTMLFormElement} */ (
@@ -1635,10 +1642,24 @@ export function create_client({ target, base }) {
 			});
 		},
 
-		_hydrate: async ({ status, error, node_ids, params, route, data: server_data_nodes, form }) => {
+		_hydrate: async ({
+			status = 200,
+			error,
+			node_ids,
+			params,
+			route,
+			data: server_data_nodes,
+			form
+		}) => {
 			hydrated = true;
 
 			const url = new URL(location.href);
+
+			if (!__SVELTEKIT_EMBEDDED__) {
+				// See https://github.com/sveltejs/kit/pull/4935#issuecomment-1328093358 for one motivation
+				// of determining the params on the client side.
+				({ params = {}, route = { id: null } } = get_navigation_intent(url, false) || {});
+			}
 
 			/** @type {import('./types').NavigationFinished | undefined} */
 			let result;

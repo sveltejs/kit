@@ -486,10 +486,11 @@ function prevent_conflicts(routes) {
 			const matcher = split[i];
 			const next = split[i + 1];
 
-			permutations = [
-				...permutations.map((x) => x + next),
-				...permutations.map((x) => x + `<${matcher}>${next}`)
-			];
+			permutations = permutations.reduce((a, b) => {
+				a.push(b + next);
+				if (!(matcher === '*' && b.endsWith('//'))) a.push(b + `<${matcher}>${next}`);
+				return a;
+			}, /** @type {string[]} */ ([]));
 		}
 
 		for (const permutation of permutations) {

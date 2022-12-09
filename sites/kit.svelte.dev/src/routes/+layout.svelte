@@ -5,7 +5,7 @@
 	import { Icon, Icons, Nav, NavItem, PreloadingIndicator, SkipLink } from '@sveltejs/site-kit';
 	import Search from '$lib/search/Search.svelte';
 	import SearchBox from '$lib/search/SearchBox.svelte';
-	import Logo from './svelte-logo.svg';
+	import Logo from './home/svelte-logo.svg';
 </script>
 
 <Icons />
@@ -49,19 +49,18 @@
 
 <main id="main">
 	<slot />
-
-	{#if browser}
-		<SearchBox />
-	{/if}
 </main>
+
+{#if browser}
+	<SearchBox />
+{/if}
 
 <style>
 	main {
 		position: relative;
 		margin: 0 auto;
 		padding-top: var(--sk-nav-height);
-		overflow: auto;
-		overflow-x: hidden;
+		overflow: hidden;
 	}
 
 	.small {

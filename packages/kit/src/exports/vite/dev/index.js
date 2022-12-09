@@ -3,6 +3,7 @@ import colors from 'kleur';
 import path from 'path';
 import sirv from 'sirv';
 import { URL } from 'url';
+import { isCSSRequest } from 'vite';
 import { getRequest, setResponse } from '../../../exports/node/index.js';
 import { installPolyfills } from '../../../exports/node/polyfills.js';
 import { coalesce_to_error } from '../../../utils/error.js';
@@ -12,10 +13,7 @@ import { SVELTE_KIT_ASSETS } from '../../../constants.js';
 import * as sync from '../../../core/sync/sync.js';
 import { get_mime_lookup, runtime_base, runtime_prefix } from '../../../core/utils.js';
 import { compact } from '../../../utils/array.js';
-
-// Vite doesn't expose this so we just copy the list for now
-// https://github.com/vitejs/vite/blob/3edd1af56e980aef56641a5a51cf2932bb580d41/packages/vite/src/node/plugins/css.ts#L96
-const style_pattern = /\.(css|less|sass|scss|styl|stylus|pcss|postcss)$/;
+import { not_found } from '../utils.js';
 
 const cwd = process.cwd();
 
@@ -99,6 +97,7 @@ export async function dev(vite, vite_config, svelte_config) {
 							module_nodes.push(module_node);
 
 							result.shared = module;
+							result.shared_id = node.shared;
 						}
 
 						if (node.server) {
@@ -124,7 +123,7 @@ export async function dev(vite, vite_config, svelte_config) {
 								const query = parsed.searchParams;
 
 								if (
-									style_pattern.test(dep.file) ||
+									isCSSRequest(dep.file) ||
 									(query.has('svelte') && query.get('type') === 'style')
 								) {
 									try {
@@ -160,7 +159,8 @@ export async function dev(vite, vite_config, svelte_config) {
 										const url = path.resolve(cwd, endpoint.file);
 										return await vite.ssrLoadModule(url);
 								  }
-								: null
+								: null,
+							endpoint_id: endpoint?.file
 						};
 					})
 				),
@@ -319,10 +319,7 @@ export async function dev(vite, vite_config, svelte_config) {
 				}
 
 				if (!decoded.startsWith(svelte_config.kit.paths.base)) {
-					return not_found(
-						res,
-						`Not found (did you mean ${svelte_config.kit.paths.base + req.url}?)`
-					);
+					return not_found(req, res, svelte_config.kit.paths.base);
 				}
 
 				if (decoded === svelte_config.kit.paths.base + '/service-worker.js') {
@@ -441,6 +438,7 @@ export async function dev(vite, vite_config, svelte_config) {
 							check_origin: svelte_config.kit.csrf.checkOrigin
 						},
 						dev: true,
+						embedded: svelte_config.kit.embedded,
 						handle_error: async (error, event) => {
 							const error_object = await hooks.handleError({
 								error: new Proxy(error, {
@@ -522,21 +520,11 @@ export async function dev(vite, vite_config, svelte_config) {
 	};
 }
 
-/** @param {import('http').ServerResponse} res */
-function not_found(res, message = 'Not found') {
-	res.statusCode = 404;
-	res.end(message);
-}
-
 /**
  * @param {import('connect').Server} server
  */
 function remove_static_middlewares(server) {
-	// We don't use viteServePublicMiddleware because of the following issues:
-	// https://github.com/vitejs/vite/issues/9260
-	// https://github.com/vitejs/vite/issues/9236
-	// https://github.com/vitejs/vite/issues/9234
-	const static_middlewares = ['viteServePublicMiddleware', 'viteServeStaticMiddleware'];
+	const static_middlewares = ['viteServeStaticMiddleware'];
 	for (let i = server.stack.length - 1; i > 0; i--) {
 		// @ts-expect-error using internals
 		if (static_middlewares.includes(server.stack[i].handle.name)) {

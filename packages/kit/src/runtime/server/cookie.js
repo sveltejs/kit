@@ -1,5 +1,5 @@
 import { parse, serialize } from 'cookie';
-import { has_data_suffix, normalize_path, strip_data_suffix } from '../../utils/url.js';
+import { normalize_path } from '../../utils/url.js';
 
 /**
  * Tracks all cookies set during dev mode so we can emit warnings
@@ -22,12 +22,7 @@ export function get_cookies(request, url, dev, trailing_slash) {
 	const header = request.headers.get('cookie') ?? '';
 	const initial_cookies = parse(header, { decode });
 
-	const normalized_url = normalize_path(
-		// Remove suffix: 'foo/__data.json' would mean the cookie path is '/foo',
-		// whereas a direct hit of /foo would mean the cookie path is '/'
-		has_data_suffix(url.pathname) ? strip_data_suffix(url.pathname) : url.pathname,
-		trailing_slash
-	);
+	const normalized_url = normalize_path(url.pathname, trailing_slash);
 	// Emulate browser-behavior: if the cookie is set at '/foo/bar', its path is '/foo'
 	const default_path = normalized_url.split('/').slice(0, -1).join('/') || '/';
 

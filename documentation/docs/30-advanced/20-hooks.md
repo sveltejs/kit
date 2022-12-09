@@ -121,6 +121,7 @@ For cross-origin requests, `cookie` will be included if the request URL belongs 
 If your app and your API are on sibling subdomains — `www.my-domain.com` and `api.my-domain.com` for example — then a cookie belonging to a common parent domain like `my-domain.com` will _not_ be included, because SvelteKit has no way to know which domain the cookie belongs to. In these cases you will need to manually include the cookie using `handleFetch`:
 
 ```js
+/// file: src/hooks.server.js
 // @errors: 2345
 /** @type {import('@sveltejs/kit').HandleFetch} */
 export async function handleFetch({ event, request, fetch }) {
@@ -157,7 +158,7 @@ declare namespace App {
 
 ```js
 /// file: src/hooks.server.js
-// @errors: 2322 2571 2339
+// @errors: 2322 1360 2571 2339
 // @filename: ambient.d.ts
 const Sentry: any;
 
@@ -177,7 +178,7 @@ export function handleError({ error, event }) {
 
 ```js
 /// file: src/hooks.client.js
-// @errors: 2322 2571 2339
+// @errors: 2322 1360 2571 2339
 // @filename: ambient.d.ts
 const Sentry: any;
 

@@ -20,7 +20,7 @@ The `RequestHandler` and `Load` types both accept a `Params` argument allowing y
 
 ```js
 /// file: src/routes/[foo]/[bar]/[baz]/+page.server.js
-// @errors: 2355 2322
+// @errors: 2355 2322 1360
 /** @type {import('@sveltejs/kit').RequestHandler<{
  *   foo: string;
  *   bar: string;

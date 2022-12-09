@@ -66,6 +66,7 @@ export class Server {
 				check_origin: ${s(config.kit.csrf.checkOrigin)},
 			},
 			dev: false,
+			embedded: ${config.kit.embedded},
 			handle_error: (error, event) => {
 				return this.options.hooks.handleError({
 					error,
