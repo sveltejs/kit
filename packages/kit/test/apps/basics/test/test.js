@@ -421,6 +421,38 @@ test.describe('Errors', () => {
 				'This is your custom error page saying: "Crashing now"'
 			);
 		});
+
+		test('errors on invalid load function response', async ({ page, app, javaScriptEnabled }) => {
+			if (javaScriptEnabled) {
+				await page.goto('/');
+				await app.goto('/errors/invalid-load-response');
+			} else {
+				await page.goto('/errors/invalid-load-response');
+			}
+
+			expect(await page.textContent('footer')).toBe('Custom layout');
+			expect(await page.textContent('#message')).toBe(
+				"This is your custom error page saying: \"a load function related to route '/errors/invalid-load-response' returned an array, but must return a plain object at the top level (e.g '{ something: ...}')\""
+			);
+		});
+
+		test('errors on invalid server load function response', async ({
+			page,
+			app,
+			javaScriptEnabled
+		}) => {
+			if (javaScriptEnabled) {
+				await page.goto('/');
+				await app.goto('/errors/invalid-server-load-response');
+			} else {
+				await page.goto('/errors/invalid-server-load-response');
+			}
+
+			expect(await page.textContent('footer')).toBe('Custom layout');
+			expect(await page.textContent('#message')).toBe(
+				"This is your custom error page saying: \"a load function related to route '/errors/invalid-server-load-response' returned an array, but must return a plain object at the top level (e.g '{ something: ...}')\""
+			);
+		});
 	}
 
 	test('server-side load errors', async ({ page }) => {
