@@ -1,6 +1,5 @@
 <script>
 	import { page } from '$app/stores';
-	import TSToggle from './TSToggle.svelte';
 
 	export let contents = [];
 </script>
@@ -31,10 +30,6 @@
 		{/each}
 	</ul>
 </nav>
-
-<div class="ts-toggle">
-	<TSToggle />
-</div>
 
 <style>
 	nav {
@@ -98,12 +93,6 @@
 		margin: 0;
 	}
 
-	.ts-toggle {
-		width: calc(100% - 1px);
-		border-top: 1px solid var(--sk-back-4);
-		background-color: var(--sk-back-3);
-	}
-
 	@media (min-width: 600px) {
 		.sidebar {
 			columns: 2;
@@ -162,14 +151,6 @@
 			border-bottom: 1px solid var(--sk-back-5);
 			transform: translateY(0.2rem) rotate(45deg);
 			z-index: 2;
-		}
-
-		.ts-toggle {
-			position: fixed;
-			width: calc(var(--sidebar-width) - 1px);
-			bottom: 0;
-			z-index: 1;
-			margin-right: 0;
 		}
 	}
 </style>
