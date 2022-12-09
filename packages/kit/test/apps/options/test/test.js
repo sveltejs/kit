@@ -9,21 +9,15 @@ test.describe('base path', () => {
 	test('serves a useful 404 when visiting unprefixed path', async ({ request }) => {
 		const html = await request.get('/slash/', { headers: { Accept: 'text/html' } });
 		expect(html.status()).toBe(404);
-		if (process.env.DEV) {
-			// Vite's message
-			expect(await html.text()).toBe(
-				'The server is configured with a public base URL of /path-base - did you mean to visit <a href="/path-base/slash/">/path-base/slash/</a> instead?'
-			);
-		} else {
-			// SvelteKit's message
-			expect(await html.text()).toBe(
-				'Not found (did you mean <a href="/path-base/slash/">/path-base/slash/</a>?)'
-			);
-		}
+		expect(await html.text()).toBe(
+			'The server is configured with a public base URL of /path-base - did you mean to visit <a href="/path-base/slash/">/path-base/slash/</a> instead?'
+		);
 
 		const plain = await request.get('/slash/');
 		expect(plain.status()).toBe(404);
-		expect(await plain.text()).toBe('Not found (did you mean /path-base/slash/?)');
+		expect(await plain.text()).toBe(
+			'The server is configured with a public base URL of /path-base - did you mean to visit /path-base/slash/ instead?'
+		);
 	});
 
 	test('serves /', async ({ page, javaScriptEnabled }) => {
