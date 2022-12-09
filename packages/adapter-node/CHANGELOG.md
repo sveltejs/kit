@@ -1,5 +1,11 @@
 # @sveltejs/adapter-node
 
+## 1.0.0-next.104
+
+### Patch Changes
+
+- update rollup to ^3.7.0 ([#7543](https://github.com/sveltejs/kit/pull/7543))
+
 ## 1.0.0-next.103
 
 ### Patch Changes
