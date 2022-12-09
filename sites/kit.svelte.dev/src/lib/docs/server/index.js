@@ -463,12 +463,12 @@ function convert_to_ts(js_code, indent = '', offset = '') {
 							code.overwrite(
 								node.getStart(),
 								node.name.getEnd(),
-								`${is_export ? 'export ' : ''}const ${node.name.getText()} = ${
+								`${is_export ? 'export ' : ''}const ${node.name.getText()} = (${
 									is_async ? 'async ' : ''
 								}`
 							);
 							code.appendLeft(node.body.getStart(), '=> ');
-							code.appendLeft(node.body.getEnd(), ` satisfies ${name};`);
+							code.appendLeft(node.body.getEnd(), `) satisfies ${name};`);
 
 							modified = true;
 						} else if (

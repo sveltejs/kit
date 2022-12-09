@@ -62,7 +62,7 @@ export function GET(event) {
 import { json } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
 
-export const GET = (event) => {
+export const GET = ((event) => {
 	// log all headers
 	console.log(...event.request.headers);
 
@@ -70,7 +70,7 @@ export const GET = (event) => {
 		// retrieve a specific header
 		userAgent: event.request.headers.get('user-agent')
 	});
-} satisfies RequestHandler;
+}) satisfies RequestHandler;
 \`\`\`
 
 etc etc
