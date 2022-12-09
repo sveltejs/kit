@@ -91,6 +91,11 @@ export interface Builder {
 	createEntries(fn: (route: RouteDefinition) => AdapterEntry): Promise<void>;
 
 	/**
+	 * Generate a fallback page for a static webserver to use when no route is matched. Useful for single-page apps.
+	 */
+	generateFallback(dest: string): Promise<void>;
+
+	/**
 	 * Generate a server-side manifest to initialise the SvelteKit [server](https://kit.svelte.dev/docs/types#public-types-server) with.
 	 * @param opts a relative path to the base directory of the app and optionally in which format (esm or cjs) the manifest should be generated
 	 */
@@ -117,15 +122,9 @@ export interface Builder {
 	/**
 	 * Write prerendered files to `dest`.
 	 * @param dest the destination folder
-	 * @param opts.fallback the name of a file for fallback responses, like `200.html` or `404.html` depending on where the app is deployed
 	 * @returns an array of files written to `dest`
 	 */
-	writePrerendered(
-		dest: string,
-		opts?: {
-			fallback?: string;
-		}
-	): string[];
+	writePrerendered(dest: string): string[];
 	/**
 	 * Write server-side code to `dest`.
 	 * @param dest the destination folder
