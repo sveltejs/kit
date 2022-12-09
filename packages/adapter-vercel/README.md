@@ -36,7 +36,7 @@ export default {
 
 ## Environment Variables
 
-Vercel makes a set of [non-prefixed deployment-specific environment variables](https://vercel.com/docs/concepts/projects/environment-variables#system-environment-variables) available. This makes them private environment variables, accessible from `$env/static/private` and `$env/dynamic/private` (sometimes -- more on that later), and inaccessible from their public counterparts. To access one of these variables from the client:
+Vercel makes a set of [deployment-specific environment variables](https://vercel.com/docs/concepts/projects/environment-variables#system-environment-variables) available. Like other environment variables, these are accessible from `$env/static/private` and `$env/dynamic/private` (sometimes — more on that later), and inaccessible from their public counterparts. To access one of these variables from the client:
 
 ```js
 // +layout.server.js
