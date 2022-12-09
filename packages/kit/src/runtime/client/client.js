@@ -673,20 +673,21 @@ export function create_client({ target, base }) {
 				}
 			});
 
-			if (import.meta.env.DEV) {
+			if (__SVELTEKIT_DEV__) {
 				try {
 					lock_fetch();
 					data = (await node.shared.load.call(null, load_input)) ?? null;
-					const not_object = typeof data !== 'object' && data != null;
-					if (not_object || Array.isArray(data) || data instanceof Response) {
+					if (data != null && Object.getPrototypeOf(data) !== Object.prototype) {
 						throw new Error(
 							`a load function related to route '${route.id}' returned ${
-								not_object
+								typeof data !== 'object'
 									? `a ${typeof data}`
 									: data instanceof Response
 									? 'a Response object'
-									: 'an array'
-							}, but must return a plain object (e.g '{ data: ...}')`
+									: Array.isArray(data)
+									? 'an array'
+									: 'a non-plain object'
+							}, but must return a plain object at the top level (e.g '{ something: ...}')`
 						);
 					}
 				} finally {
@@ -1310,7 +1311,7 @@ export function create_client({ target, base }) {
 		},
 
 		disable_scroll_handling: () => {
-			if (import.meta.env.DEV && started && !updating) {
+			if (__SVELTEKIT_DEV__ && started && !updating) {
 				throw new Error('Can only disable scroll handling during navigation');
 			}
 

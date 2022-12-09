@@ -5,13 +5,14 @@ import { unwrap_promises } from '../../../utils/promises.js';
  * Calls the user's server `load` function.
  * @param {{
  *   event: import('types').RequestEvent;
+ *   options: import('types').SSROptions;
  *   state: import('types').SSRState;
  *   node: import('types').SSRNode | undefined;
  *   parent: () => Promise<Record<string, any>>;
  * }} opts
  * @returns {Promise<import('types').ServerDataNode | null>}
  */
-export async function load_server_data({ event, state, node, parent }) {
+export async function load_server_data({ event, options, state, node, parent }) {
 	if (!node?.server) return null;
 
 	const uses = {
@@ -59,7 +60,9 @@ export async function load_server_data({ event, state, node, parent }) {
 	});
 
 	const data = result ? await unwrap_promises(result) : null;
-	validate_load_response(data, /** @type {string} */ (event.route.id));
+	if (options.dev) {
+		validate_load_response(data, /** @type {string} */ (event.route.id));
+	}
 
 	return {
 		type: 'data',
@@ -238,7 +241,7 @@ export async function load_data({
 	});
 
 	const result = await node.shared.load.call(null, load_event);
-	const data = result ? unwrap_promises(result) : null;
+	const data = result ? await unwrap_promises(result) : null;
 	validate_load_response(data, /** @type {string} */ (event.route.id));
 	return data;
 }
@@ -265,16 +268,17 @@ async function stream_to_string(stream) {
  * @param {string} [routeId]
  */
 function validate_load_response(data, routeId) {
-	const not_object = typeof data !== 'object' && data != null;
-	if (not_object || Array.isArray(data) || data instanceof Response) {
+	if (data != null && Object.getPrototypeOf(data) !== Object.prototype) {
 		throw new Error(
 			`a load function related to route '${routeId}' returned ${
-				not_object
+				typeof data !== 'object'
 					? `a ${typeof data}`
 					: data instanceof Response
 					? 'a Response object'
-					: 'an array'
-			}, but must return a plain object (e.g '{ data: ...}')`
+					: Array.isArray(data)
+					? 'an array'
+					: 'a non-plain object'
+			}, but must return a plain object at the top level (e.g '{ something: ...}')`
 		);
 	}
 }
