@@ -1,5 +1,11 @@
 # create-svelte
 
+## 2.0.0-next.202
+
+### Patch Changes
+
+- [feat] vitePreprocess ([#8036](https://github.com/sveltejs/kit/pull/8036))
+
 ## 2.0.0-next.201
 
 ### Patch Changes
