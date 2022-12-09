@@ -1,5 +1,11 @@
 # @sveltejs/kit
 
+## 1.0.0-next.576
+
+### Patch Changes
+
+- [breaking] make `sveltekit()` return a promise of array of Vite plugins ([#7994](https://github.com/sveltejs/kit/pull/7994))
+
 ## 1.0.0-next.575
 
 ### Patch Changes
