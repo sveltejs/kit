@@ -158,7 +158,7 @@ declare namespace App {
 
 ```js
 /// file: src/hooks.server.js
-// @errors: 2322 2571 2339
+// @errors: 2322 1360 2571 2339
 // @filename: ambient.d.ts
 const Sentry: any;
 
@@ -178,7 +178,7 @@ export function handleError({ error, event }) {
 
 ```js
 /// file: src/hooks.client.js
-// @errors: 2322 2571 2339
+// @errors: 2322 1360 2571 2339
 // @filename: ambient.d.ts
 const Sentry: any;
 
