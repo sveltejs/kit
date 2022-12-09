@@ -112,6 +112,8 @@
 		<div class="globe">
 			<img
 				src="/edge.svg"
+				width="1000"
+				height="1000"
 				alt="Dynamically rendered map of the world, centered on the user's location"
 			/>
 			<span> rendered on the edge, just for you </span>
@@ -121,15 +123,17 @@
 
 <style>
 	.globe {
+		--max-size: 40rem;
 		position: relative;
 		width: 100%;
-		max-height: 40rem;
+		max-height: var(--max-size);
 		text-align: center;
 		aspect-ratio: 1;
 	}
 
 	.globe img {
-		max-width: 40rem;
+		max-width: var(--max-size);
+		max-height: var(--max-size);
 	}
 
 	.globe span {
