@@ -1,5 +1,11 @@
 # @sveltejs/adapter-node
 
+## 1.0.0-next.103
+
+### Patch Changes
+
+- Update docs with example of loading environment variables ([#8020](https://github.com/sveltejs/kit/pull/8020))
+
 ## 1.0.0-next.102
 
 ### Patch Changes

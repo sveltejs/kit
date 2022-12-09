@@ -1,5 +1,11 @@
 # create-svelte
 
+## 2.0.0-next.200
+
+### Patch Changes
+
+- Use `satisfies` operator ([#7861](https://github.com/sveltejs/kit/pull/7861))
+
 ## 2.0.0-next.199
 
 ### Patch Changes

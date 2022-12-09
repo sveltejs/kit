@@ -1,5 +1,15 @@
 # @sveltejs/kit
 
+## 1.0.0-next.578
+
+### Patch Changes
+
+- [fix] respect fetch cache option ([#8024](https://github.com/sveltejs/kit/pull/8024))
+
+- [breaking] rename invalid() to fail() and ValidationError to ActionFailure ([#8012](https://github.com/sveltejs/kit/pull/8012))
+
+- [breaking] replace automatic fallback generation with `builder.generateFallback(fallback)` ([#8013](https://github.com/sveltejs/kit/pull/8013))
+
 ## 1.0.0-next.577
 
 ### Patch Changes
