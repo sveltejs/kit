@@ -1,6 +1,6 @@
 {
 	"name": "create-svelte",
-	"version": "2.0.0-next.200",
+	"version": "2.0.0-next.201",
 	"repository": {
 		"type": "git",
 		"url": "https://github.com/sveltejs/kit",
@@ -24,7 +24,7 @@
 		"prettier": "^2.8.0",
 		"prettier-plugin-svelte": "^2.8.1",
 		"sucrase": "^3.29.0",
-		"svelte": "^3.53.1",
+		"svelte": "^3.54.0",
 		"svelte-preprocess": "^4.10.7",
 		"tiny-glob": "^0.2.9",
 		"uvu": "^0.5.6"

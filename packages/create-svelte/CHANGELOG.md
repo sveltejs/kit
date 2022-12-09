@@ -1,5 +1,11 @@
 # create-svelte
 
+## 2.0.0-next.201
+
+### Patch Changes
+
+- [breaking] upgrade to Vite 4 ([#7543](https://github.com/sveltejs/kit/pull/7543))
+
 ## 2.0.0-next.200
 
 ### Patch Changes

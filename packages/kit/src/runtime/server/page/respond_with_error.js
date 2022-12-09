@@ -40,6 +40,7 @@ export async function respond_with_error({ event, options, state, status, error,
 
 			const server_data_promise = load_server_data({
 				event,
+				options,
 				state,
 				node: default_layout,
 				parent: async () => ({})
