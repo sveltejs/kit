@@ -118,7 +118,10 @@
 
 	@media (max-width: 800px) {
 		nav:not(.visible):not(:focus-within) {
-			transform: translate(0, calc(-100% - 1rem));
+			transform: translate(
+				0,
+				calc(-100% - 5rem)
+			); /* TODO revert to 1rem after we remove the banner */
 		}
 	}
 

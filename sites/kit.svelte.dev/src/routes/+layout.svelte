@@ -6,6 +6,7 @@
 	import Search from '$lib/search/Search.svelte';
 	import SearchBox from '$lib/search/SearchBox.svelte';
 	import Logo from './home/svelte-logo.svg';
+	import Banner from './Banner.svelte';
 </script>
 
 <Icons />
@@ -15,13 +16,9 @@
 {/if}
 
 <SkipLink href="#main" />
-<div class="banner">
-	<p>
-		<a href="https://www.youtube.com/watch?v=N4BRVkQVoMc">
-			<strong>Dec 14:</strong> tune into Svelte Radio Live 👀
-		</a>
-	</p>
-</div>
+
+<Banner />
+
 <Nav {page} logo={Logo}>
 	<svelte:fragment slot="nav-center">
 		{#if $page.url.pathname !== '/search'}
@@ -63,28 +60,6 @@
 {/if}
 
 <style>
-	.banner {
-		position: fixed;
-		top: 0;
-		left: 0;
-		width: 100%;
-		height: 4rem;
-		display: flex;
-		background: var(--sk-theme-1);
-		color: white;
-		z-index: 999;
-	}
-
-	.banner p {
-		flex: 1;
-		text-align: center;
-		margin: 1rem;
-	}
-
-	.banner a {
-		color: inherit;
-	}
-
 	main {
 		position: relative;
 		margin: 0 auto;
