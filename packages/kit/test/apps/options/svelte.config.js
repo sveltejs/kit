@@ -2,6 +2,7 @@
 const config = {
 	extensions: ['.jesuslivesineveryone', '.whokilledthemuffinman', '.svelte.md', '.svelte'],
 	kit: {
+		embedded: true,
 		csp: {
 			directives: {
 				'script-src': ['self']

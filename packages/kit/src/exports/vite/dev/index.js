@@ -449,6 +449,7 @@ export async function dev(vite, vite_config, svelte_config) {
 							check_origin: svelte_config.kit.csrf.checkOrigin
 						},
 						dev: true,
+						embedded: svelte_config.kit.embedded,
 						handle_error: async (error, event) => {
 							const error_object = await hooks.handleError({
 								error: new Proxy(error, {

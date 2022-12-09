@@ -76,6 +76,7 @@ const get_defaults = (prefix = '') => ({
 			checkOrigin: true
 		},
 		endpointExtensions: undefined,
+		embedded: false,
 		env: {
 			dir: process.cwd(),
 			publicPrefix: 'PUBLIC_'

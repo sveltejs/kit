@@ -299,6 +299,7 @@ export interface SSROptions {
 		check_origin: boolean;
 	};
 	dev: boolean;
+	embedded: boolean;
 	handle_error(error: Error & { frame?: string }, event: RequestEvent): MaybePromise<App.Error>;
 	hooks: ServerHooks;
 	manifest: SSRManifest;
@@ -387,4 +388,5 @@ declare global {
 	const __SVELTEKIT_APP_VERSION_POLL_INTERVAL__: number;
 	const __SVELTEKIT_BROWSER__: boolean;
 	const __SVELTEKIT_DEV__: boolean;
+	const __SVELTEKIT_EMBEDDED__: boolean;
 }

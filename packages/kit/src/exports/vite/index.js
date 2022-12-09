@@ -262,7 +262,8 @@ function kit({ svelte_config }) {
 				define: {
 					__SVELTEKIT_APP_VERSION_POLL_INTERVAL__: '0',
 					__SVELTEKIT_BROWSER__: config_env.ssrBuild ? 'false' : 'true',
-					__SVELTEKIT_DEV__: 'true'
+					__SVELTEKIT_DEV__: 'true',
+					__SVELTEKIT_EMBEDDED__: svelte_config.kit.embedded ? 'true' : 'false'
 				},
 				publicDir: svelte_config.kit.files.assets,
 				resolve: {

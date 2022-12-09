@@ -809,11 +809,11 @@ test.describe('Routing', () => {
 		expect(await page.textContent('h1')).toBe('hello');
 	});
 
-	test('ignores clicks outside the app target', async ({ page }) => {
+	test('recognizes clicks outside the app target', async ({ page }) => {
 		await page.goto('/routing/link-outside-app-target/source');
 
 		await page.click('[href="/routing/link-outside-app-target/target"]');
-		expect(await page.textContent('h1')).toBe('target: 0');
+		await expect(page.locator('h1')).toHaveText('target: 1');
 	});
 
 	test('responds to <form method="GET"> submission without reload', async ({ page }) => {

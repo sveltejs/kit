@@ -129,6 +129,8 @@ const options = object(
 				checkOrigin: boolean(true)
 			}),
 
+			embedded: boolean(false),
+
 			// TODO: remove this for the 1.0 release
 			endpointExtensions: error(
 				(keypath) => `${keypath} has been renamed to config.kit.moduleExtensions`
