@@ -95,6 +95,7 @@
 			transparent 100%
 		);
 		position: fixed;
+		top: 4rem;
 		width: 100vw;
 		height: var(--sk-nav-height);
 		margin: 0 auto;

@@ -45,6 +45,7 @@
 		bottom: auto;
 		width: 100%;
 		columns: 2;
+		margin: 0;
 	}
 
 	li {
