@@ -1,5 +1,11 @@
 # @sveltejs/adapter-static
 
+## 1.0.0-next.49
+
+### Patch Changes
+
+- [breaking] replace automatic fallback generation with `builder.generateFallback(fallback)` ([#8013](https://github.com/sveltejs/kit/pull/8013))
+
 ## 1.0.0-next.48
 
 ### Patch Changes
