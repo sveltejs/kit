@@ -228,6 +228,10 @@
 		background-color: var(--sk-back-translucent);
 	}
 
+	input::placeholder {
+		color: rgba(0, 0, 0, 0.3);
+	}
+
 	input:focus-visible {
 		background: var(--sk-theme-2);
 		color: white;
