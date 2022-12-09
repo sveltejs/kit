@@ -1,14 +1,14 @@
 <script>
 	import Image from '$lib/Image.svelte';
 	import Section from '@sveltejs/site-kit/components/Section.svelte';
-	import pudding from './showcase/pudding.jpg';
-	import pocketbase from './showcase/pocketbase.jpg';
-	import pronauns from './showcase/pronauns.jpg';
-	import dropzone from './showcase/dropzone.jpg';
-	import asmeditor from './showcase/asmeditor.jpg';
-	import monogram from './showcase/monogram.jpg';
-	import raster from './showcase/raster.jpg';
-	import trading_strategy from './showcase/trading-strategy.jpg';
+	import pudding from './showcase/pudding.png';
+	import pocketbase from './showcase/pocketbase.png';
+	import pronauns from './showcase/pronauns.png';
+	import dropzone from './showcase/dropzone.png';
+	import asmeditor from './showcase/asmeditor.png';
+	import monogram from './showcase/monogram.png';
+	import raster from './showcase/raster.png';
+	import tradingstrategy from './showcase/tradingstrategy.png';
 
 	const showcase = [
 		{ url: 'pudding.cool', image: pudding },
@@ -18,7 +18,7 @@
 		{ url: 'raster.app', image: raster },
 		{ url: 'pocketbase.io', image: pocketbase },
 		{ url: 'monogram.io', image: monogram },
-		{ url: 'tradingstrategy.ai', image: trading_strategy }
+		{ url: 'tradingstrategy.ai', image: tradingstrategy }
 	];
 </script>
 
@@ -58,7 +58,7 @@
 		aspect-ratio: 16 / 9;
 	}
 
-	img {
+	a :global(img) {
 		width: 100%;
 		height: 100%;
 		margin: 0 0 0.5em 0;
@@ -89,7 +89,7 @@
 		opacity: 1;
 	}
 
-	a:hover img {
+	a:hover :global(img) {
 		transform: scale(1.05);
 	}
 
