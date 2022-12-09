@@ -15,10 +15,10 @@
 		"@sveltejs/adapter-node": "workspace:*",
 		"@sveltejs/kit": "workspace:*",
 		"cross-env": "^7.0.3",
-		"svelte": "^3.53.1",
+		"svelte": "^3.54.0",
 		"svelte-check": "^2.9.2",
 		"typescript": "^4.9.3",
-		"vite": "^4.0.0-beta.6"
+		"vite": "^4.0.0"
 	},
 	"type": "module"
 }
