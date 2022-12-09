@@ -112,8 +112,8 @@
 		<div class="globe">
 			<img
 				src="/edge.svg"
-				width="1000"
-				height="1000"
+				width="100%"
+				height="100%"
 				alt="Dynamically rendered map of the world, centered on the user's location"
 			/>
 			<span> rendered on the edge, just for you </span>
@@ -176,7 +176,7 @@
 		flex-direction: column-reverse;
 	}
 
-	.platforms div span {
+	.platforms a span {
 		font-size: var(--sk-text-xs);
 		color: var(--sk-text-3);
 		text-align: center;
