@@ -42,7 +42,7 @@ function render(lat, lon, city, country) {
 	const dot = lon && lat ? projection([lon, lat]) : null;
 
 	const sphere = path({ type: 'Sphere' });
-	const label = [city, country].join(', ') || 'Your location';
+	const label = [city, country].filter(Boolean).join(', ') || 'Your location';
 
 	return `<?xml version="1.0" encoding="UTF-8"?>
 		<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${w} ${h}">
