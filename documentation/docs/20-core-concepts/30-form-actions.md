@@ -25,8 +25,14 @@ To invoke this action from the `/login` page, just add a `<form>` — no JavaScr
 ```svelte
 /// file: src/routes/login/+page.svelte
 <form method="POST">
-	<input name="email" type="email">
-	<input name="password" type="password">
+	<label>
+		Email
+		<input name="email" type="email">
+	</label>
+	<label>
+		Password
+		<input name="password" type="password">
+	</label>
 	<button>Log in</button>
 </form>
 ```
@@ -81,8 +87,14 @@ As well as the `action` attribute, we can use the `formaction` attribute on a bu
 /// file: src/routes/login/+page.svelte
 -<form method="POST">
 +<form method="POST" action="?/login">
-	<input name="email" type="email">
-	<input name="password" type="password">
+	<label>
+		Email
+		<input name="email" type="email">
+	</label>
+	<label>
+		Password
+		<input name="password" type="password">
+	</label>
 	<button>Log in</button>
 +	<button formaction="?/register">Register</button>
 </form>
@@ -179,12 +191,17 @@ export const actions = {
 ```diff
 /// file: src/routes/login/+page.svelte
 <form method="POST" action="?/login">
--	<input name="email" type="email">
 +	{#if form?.missing}<p class="error">The email field is required</p>{/if}
 +	{#if form?.incorrect}<p class="error">Invalid credentials!</p>{/if}
-+	<input name="email" type="email" value={form?.email ?? ''}>
-
-	<input name="password" type="password">
+	<label>
+		Email
+-		<input name="email" type="email">
++		<input name="email" type="email" value={form?.email ?? ''}>
+	</label>
+	<label>
+		Password
+		<input name="password" type="password">
+	</label>
 	<button>Log in</button>
 	<button formaction="?/register">Register</button>
 </form>
@@ -323,6 +340,7 @@ Without an argument, `use:enhance` will emulate the browser-native behaviour, ju
 - reset the `<form>` element and invalidate all data using `invalidateAll` on a successful response
 - call `goto` on a redirect response
 - render the nearest `+error` boundary if an error occurs
+- [reset focus](/docs/accessibility#focus-management) to the appropriate element
 
 To customise the behaviour, you can provide a `SubmitFunction` that runs immediately before the form is submitted, and (optionally) returns a callback that runs with the `ActionResult`. Note that if you return a callback, the default behavior mentioned above is not triggered. To get it back, call `update`.
 
@@ -380,6 +398,8 @@ The behaviour of `applyAction(result)` depends on `result.type`:
 - `success`, `failure` — sets `$page.status` to `result.status` and updates `form` and `$page.form` to `result.data` (regardless of where you are submitting from, in contrast to `update` from `enhance`)
 - `redirect` — calls `goto(result.location)`
 - `error` — renders the nearest `+error` boundary with `result.error`
+
+In all cases, [focus will be reset](/docs/accessibility#focus-management).
 
 ### Custom event listener
 
@@ -448,7 +468,10 @@ Some forms don't need to `POST` data to the server — search inputs, for exampl
 
 ```html
 <form action="/search">
-	<input name="q">
+	<label>
+		Search
+		<input name="q">
+	</label>
 </form>
 ```
 
