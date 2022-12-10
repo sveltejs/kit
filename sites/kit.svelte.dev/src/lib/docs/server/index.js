@@ -161,8 +161,8 @@ export async function read_file(file) {
 
 					// special case — we need to make allowances for code snippets coming
 					// from e.g. ambient.d.ts
-					if (file.endsWith('-modules.md')) {
-						injected.push('// @errors: 7006, 7031');
+					if (file.endsWith('30-modules.md')) {
+						injected.push('// @errors: 7006 7031');
 					}
 
 					// another special case
