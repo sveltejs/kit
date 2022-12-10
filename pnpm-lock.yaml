@@ -213,7 +213,6 @@ importers:
       prompts: ^2.4.2
       sucrase: ^3.29.0
       svelte: ^3.54.0
-      svelte-preprocess: ^4.10.7
       tiny-glob: ^0.2.9
       uvu: ^0.5.6
     dependencies:
@@ -230,7 +229,6 @@ importers:
       prettier-plugin-svelte: 2.8.1_kaioqtfwjumrsfopsgfoca65re
       sucrase: 3.29.0
       svelte: 3.54.0
-      svelte-preprocess: 4.10.7_svelte@3.54.0
       tiny-glob: 0.2.9
       uvu: 0.5.6
 
@@ -241,7 +239,6 @@ importers:
       '@sveltejs/adapter-auto': workspace:*
       '@sveltejs/kit': workspace:*
       svelte: ^3.54.0
-      svelte-preprocess: ^4.10.7
       typescript: ^4.9.3
       vite: ^4.0.0
     dependencies:
@@ -251,7 +248,6 @@ importers:
       '@sveltejs/adapter-auto': link:../../../adapter-auto
       '@sveltejs/kit': link:../../../kit
       svelte: 3.54.0
-      svelte-preprocess: 4.10.7_gf4dcx76vtk2o62ixxeqx7chra
       typescript: 4.9.3
       vite: 4.0.0
 
@@ -274,6 +270,7 @@ importers:
       '@types/set-cookie-parser': ^2.4.2
       cookie: ^0.5.0
       devalue: ^4.2.0
+      esm-env: ^1.0.0
       kleur: ^4.1.5
       magic-string: ^0.27.0
       marked: ^4.2.3
@@ -294,6 +291,7 @@ importers:
       '@types/cookie': 0.5.1
       cookie: 0.5.0
       devalue: 4.2.0
+      esm-env: 1.0.0
       kleur: 4.1.5
       magic-string: 0.27.0
       mime: 3.0.0
@@ -2274,6 +2272,10 @@ packages:
     resolution: {integrity: sha512-vbRorB5FUQWvla16U8R/qgaFIya2qGzwDrNmCZuYKrbdSUMG6I1ZCGQRefkRVhuOkIGVne7BQ35DSfo1qvJqFg==}
     engines: {node: '>=0.8.0'}
     dev: true
+
+  /esm-env/1.0.0:
+    resolution: {integrity: sha512-Cf6VksWPsTuW01vU9Mk/3vRue91Zevka5SjyNf3nEpokFRuqt/KjUQoGAwq9qMmhpLTHmXzSIrFRw8zxWzmFBA==}
+    dev: false
 
   /esprima/4.0.1:
     resolution: {integrity: sha512-eGuFFw7Upda+g4p+QHvnW0RyTX/SVeJBDM/gCtMARO0cLuT2HcEKnTPvhjV6aGeqrCB/sbNop0Kszm0jsaWU4A==}
@@ -4287,56 +4289,6 @@ packages:
       strip-indent: 3.0.0
       svelte: 3.54.0
       typescript: 4.9.3
-    dev: true
-
-  /svelte-preprocess/4.10.7_svelte@3.54.0:
-    resolution: {integrity: sha512-sNPBnqYD6FnmdBrUmBCaqS00RyCsCpj2BG58A1JBswNF7b0OKviwxqVrOL/CKyJrLSClrSeqQv5BXNg2RUbPOw==}
-    engines: {node: '>= 9.11.2'}
-    requiresBuild: true
-    peerDependencies:
-      '@babel/core': ^7.10.2
-      coffeescript: ^2.5.1
-      less: ^3.11.3 || ^4.0.0
-      node-sass: '*'
-      postcss: ^7 || ^8
-      postcss-load-config: ^2.1.0 || ^3.0.0 || ^4.0.0
-      pug: ^3.0.0
-      sass: ^1.26.8
-      stylus: ^0.55.0
-      sugarss: ^2.0.0
-      svelte: ^3.23.0
-      typescript: ^3.9.5 || ^4.0.0
-    peerDependenciesMeta:
-      '@babel/core':
-        optional: true
-      coffeescript:
-        optional: true
-      less:
-        optional: true
-      node-sass:
-        optional: true
-      postcss:
-        optional: true
-      postcss-load-config:
-        optional: true
-      pug:
-        optional: true
-      sass:
-        optional: true
-      stylus:
-        optional: true
-      sugarss:
-        optional: true
-      typescript:
-        optional: true
-    dependencies:
-      '@types/pug': 2.0.6
-      '@types/sass': 1.43.1
-      detect-indent: 6.1.0
-      magic-string: 0.25.9
-      sorcery: 0.10.0
-      strip-indent: 3.0.0
-      svelte: 3.54.0
     dev: true
 
   /svelte/3.54.0:

@@ -20,6 +20,8 @@ import { create_static_module, create_dynamic_module } from '../../core/env.js';
 import { is_illegal, module_guard, normalize_id } from './graph_analysis/index.js';
 import { create_assets } from '../../core/sync/create_manifest_data/index.js';
 
+export { vitePreprocess } from '@sveltejs/vite-plugin-svelte';
+
 const cwd = process.cwd();
 
 /** @type {import('./types').EnforcedConfig} */
@@ -261,8 +263,6 @@ function kit({ svelte_config }) {
 				},
 				define: {
 					__SVELTEKIT_APP_VERSION_POLL_INTERVAL__: '0',
-					__SVELTEKIT_BROWSER__: config_env.ssrBuild ? 'false' : 'true',
-					__SVELTEKIT_DEV__: 'true',
 					__SVELTEKIT_EMBEDDED__: svelte_config.kit.embedded ? 'true' : 'false'
 				},
 				publicDir: svelte_config.kit.files.assets,

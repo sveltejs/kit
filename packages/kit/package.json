@@ -1,6 +1,6 @@
 {
 	"name": "@sveltejs/kit",
-	"version": "1.0.0-next.579",
+	"version": "1.0.0-next.581",
 	"repository": {
 		"type": "git",
 		"url": "https://github.com/sveltejs/kit",
@@ -14,6 +14,7 @@
 		"@types/cookie": "^0.5.1",
 		"cookie": "^0.5.0",
 		"devalue": "^4.2.0",
+		"esm-env": "^1.0.0",
 		"kleur": "^4.1.5",
 		"magic-string": "^0.27.0",
 		"mime": "^3.0.0",
