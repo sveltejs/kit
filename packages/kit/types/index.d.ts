@@ -464,8 +464,7 @@ export interface KitConfig {
 		 *         }
 		 *
 		 *         // otherwise fail the build
-		 *           throw new Error(message);
-		 *         }
+		 *         throw new Error(message);
 		 *       }
 		 *     }
 		 *   }
