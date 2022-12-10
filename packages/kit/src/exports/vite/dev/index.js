@@ -11,7 +11,7 @@ import { posixify, resolve_entry, to_fs } from '../../../utils/filesystem.js';
 import { load_error_page, load_template } from '../../../core/config/index.js';
 import { SVELTE_KIT_ASSETS } from '../../../constants.js';
 import * as sync from '../../../core/sync/sync.js';
-import { get_mime_lookup, runtime_base, runtime_prefix } from '../../../core/utils.js';
+import { get_mime_lookup, runtime_prefix } from '../../../core/utils.js';
 import { compact } from '../../../utils/array.js';
 import { not_found } from '../utils.js';
 
@@ -284,11 +284,6 @@ export async function dev(vite, vite_config, svelte_config) {
 		}
 	});
 
-	// set `import { version } from '$app/environment'`
-	(await vite.ssrLoadModule(`${runtime_prefix}/env.js`)).set_version(
-		svelte_config.kit.version.name
-	);
-
 	return () => {
 		const serve_static_middleware = vite.middlewares.stack.find(
 			(middleware) =>
@@ -407,13 +402,6 @@ export async function dev(vite, vite_config, svelte_config) {
 				const { default: root } = await vite.ssrLoadModule(
 					`/${posixify(path.relative(cwd, `${svelte_config.kit.outDir}/generated/root.svelte`))}`
 				);
-
-				const paths = await vite.ssrLoadModule(`${runtime_base}/paths.js`);
-
-				paths.set_paths({
-					base: svelte_config.kit.paths.base,
-					assets
-				});
 
 				let request;
 

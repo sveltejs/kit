@@ -1,24 +1,27 @@
 import { fork } from 'node:child_process';
 import fs from 'node:fs';
 import path from 'node:path';
-import colors from 'kleur';
+import { fileURLToPath } from 'node:url';
+
 import { svelte } from '@sveltejs/vite-plugin-svelte';
+import colors from 'kleur';
 import * as vite from 'vite';
+
 import { mkdirp, posixify, resolve_entry, rimraf } from '../../utils/filesystem.js';
+import { SVELTE_KIT_ASSETS } from '../../constants.js';
+import { create_static_module, create_dynamic_module } from '../../core/env.js';
 import * as sync from '../../core/sync/sync.js';
+import { create_assets } from '../../core/sync/create_manifest_data/index.js';
+import { runtime_base, runtime_directory, runtime_prefix, logger } from '../../core/utils.js';
+import { load_config } from '../../core/config/index.js';
+import { generate_manifest } from '../../core/generate_manifest/index.js';
 import { build_server } from './build/build_server.js';
 import { build_service_worker } from './build/build_service_worker.js';
-import { load_config } from '../../core/config/index.js';
+import { find_deps, get_build_setup_config, get_build_compile_config } from './build/utils.js';
 import { dev } from './dev/index.js';
-import { generate_manifest } from '../../core/generate_manifest/index.js';
-import { runtime_directory, logger } from '../../core/utils.js';
-import { find_deps, get_default_build_config } from './build/utils.js';
+import { is_illegal, module_guard, normalize_id } from './graph_analysis/index.js';
 import { preview } from './preview/index.js';
 import { get_config_aliases, get_app_aliases, get_env } from './utils.js';
-import { fileURLToPath } from 'node:url';
-import { create_static_module, create_dynamic_module } from '../../core/env.js';
-import { is_illegal, module_guard, normalize_id } from './graph_analysis/index.js';
-import { create_assets } from '../../core/sync/create_manifest_data/index.js';
 
 export { vitePreprocess } from '@sveltejs/vite-plugin-svelte';
 
@@ -168,7 +171,7 @@ function kit({ svelte_config }) {
 			}
 		});
 
-		return get_default_build_config({
+		return get_build_compile_config({
 			config: svelte_config,
 			input,
 			ssr: false,
@@ -200,8 +203,8 @@ function kit({ svelte_config }) {
 	check_vite_version();
 
 	/** @type {import('vite').Plugin} */
-	const plugin_build = {
-		name: 'vite-plugin-sveltekit-build',
+	const plugin_setup = {
+		name: 'vite-plugin-sveltekit-setup',
 
 		/**
 		 * Build the SvelteKit-provided Vite config to be merged with the user's vite.config.js file.
@@ -226,7 +229,7 @@ function kit({ svelte_config }) {
 			if (is_build) {
 				manifest_data = (await sync.all(svelte_config, config_env.mode)).manifest_data;
 
-				const new_config = vite_client_build_config();
+				const new_config = get_build_setup_config({ config: svelte_config, ssr: false });
 
 				const warning = warn_overridden_config(config, new_config);
 				if (warning) console.error(warning + '\n');
@@ -252,20 +255,10 @@ function kit({ svelte_config }) {
 			// dev and preview config can be shared
 			/** @type {import('vite').UserConfig} */
 			const result = {
-				appType: 'custom',
-				base: svelte_config.kit.paths.base,
-				build: {
-					rollupOptions: {
-						// Vite dependency crawler needs an explicit JS entry point
-						// eventhough server otherwise works without it
-						input: `${runtime_directory}/client/start.js`
-					}
-				},
 				define: {
 					__SVELTEKIT_APP_VERSION_POLL_INTERVAL__: '0',
 					__SVELTEKIT_EMBEDDED__: svelte_config.kit.embedded ? 'true' : 'false'
 				},
-				publicDir: svelte_config.kit.files.assets,
 				resolve: {
 					alias: [...get_app_aliases(svelte_config.kit), ...get_config_aliases(svelte_config.kit)]
 				},
@@ -554,12 +547,68 @@ function kit({ svelte_config }) {
 				fs.unlinkSync(`${paths.output_dir}/client/${vite_config.build.manifest}`);
 				fs.unlinkSync(`${paths.output_dir}/server/${vite_config.build.manifest}`);
 			}
+		},
+
+		/**
+		 * @see https://vitejs.dev/guide/api-plugin.html#configureserver
+		 */
+		async configureServer(vite) {
+			// set `import { version } from '$app/environment'`
+			(await vite.ssrLoadModule(`${runtime_prefix}/env.js`)).set_version(
+				svelte_config.kit.version.name
+			);
+
+			// set `import { base, assets } from '$app/paths'`
+			const { base, assets } = svelte_config.kit.paths;
+
+			(await vite.ssrLoadModule(`${runtime_base}/paths.js`)).set_paths({
+				base,
+				assets: assets ? SVELTE_KIT_ASSETS : base
+			});
 		}
 	};
 
 	/** @type {import('vite').Plugin} */
-	const plugin_middleware = {
-		name: 'vite-plugin-sveltekit-middleware',
+	const plugin_compile = {
+		name: 'vite-plugin-sveltekit-compile',
+
+		/**
+		 * Build the SvelteKit-provided Vite config to be merged with the user's vite.config.js file.
+		 * @see https://vitejs.dev/guide/api-plugin.html#config
+		 */
+		async config(config, config_env) {
+			// The config is created in build_server for SSR mode and passed inline
+			if (config.build?.ssr) return;
+
+			if (config_env.command === 'build') {
+				const new_config = vite_client_build_config();
+
+				const warning = warn_overridden_config(config, new_config);
+				if (warning) console.error(warning + '\n');
+
+				return new_config;
+			}
+
+			// dev and preview config can be shared
+			/** @type {import('vite').UserConfig} */
+			const result = {
+				appType: 'custom',
+				base: svelte_config.kit.paths.base,
+				build: {
+					rollupOptions: {
+						// Vite dependency crawler needs an explicit JS entry point
+						// eventhough server otherwise works without it
+						input: `${runtime_directory}/client/start.js`
+					}
+				},
+				publicDir: svelte_config.kit.files.assets
+			};
+
+			const warning = warn_overridden_config(config, result);
+			if (warning) console.error(warning);
+
+			return result;
+		},
 
 		/**
 		 * Adds the SvelteKit middleware to do SSR in dev mode.
@@ -578,7 +627,7 @@ function kit({ svelte_config }) {
 		}
 	};
 
-	return [plugin_build, plugin_middleware];
+	return [plugin_setup, plugin_compile];
 }
 
 function check_vite_version() {
@@ -634,8 +683,12 @@ function warn_overridden_config(config, resolved_config) {
  * @param {string[]} out used locally to compute the return value
  */
 function find_overridden_config(config, resolved_config, enforced_config, path, out) {
+	if (config == null || resolved_config == null) {
+		return out;
+	}
+
 	for (const key in enforced_config) {
-		if (typeof config === 'object' && config !== null && key in config) {
+		if (typeof config === 'object' && key in config && key in resolved_config) {
 			const enforced = enforced_config[key];
 
 			if (enforced === true) {
@@ -647,7 +700,6 @@ function find_overridden_config(config, resolved_config, enforced_config, path, 
 			}
 		}
 	}
-
 	return out;
 }
 
