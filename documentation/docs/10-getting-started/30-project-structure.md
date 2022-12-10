@@ -59,7 +59,11 @@ Any static assets that should be served as-is, like `robots.txt` or `favicon.png
 
 ### tests
 
-If you chose to add tests to your project during `npm create svelte@latest`, they will live in this directory.
+If you chose to add [Playwright](https://playwright.dev/) for browser testing to your project during `npm create svelte@latest`, they will live in this directory.
+
+### unit tests
+
+If you chose to add [Vitest](https://vitest.dev/) for unit testing to your project during `npm create svelte@latest`, the unit-tests will reside in your src folder as defined in vite.config.js.
 
 ### package.json
 
