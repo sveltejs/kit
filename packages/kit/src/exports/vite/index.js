@@ -17,7 +17,7 @@ import { load_config } from '../../core/config/index.js';
 import { generate_manifest } from '../../core/generate_manifest/index.js';
 import { build_server } from './build/build_server.js';
 import { build_service_worker } from './build/build_service_worker.js';
-import { find_deps, get_setup_build_config, get_bundle_build_config } from './build/utils.js';
+import { find_deps, get_build_setup_config, get_build_compile_config } from './build/utils.js';
 import { dev } from './dev/index.js';
 import { is_illegal, module_guard, normalize_id } from './graph_analysis/index.js';
 import { preview } from './preview/index.js';
@@ -171,7 +171,7 @@ function kit({ svelte_config }) {
 			}
 		});
 
-		return get_bundle_build_config({
+		return get_build_compile_config({
 			config: svelte_config,
 			input,
 			ssr: false,
@@ -229,7 +229,7 @@ function kit({ svelte_config }) {
 			if (is_build) {
 				manifest_data = (await sync.all(svelte_config, config_env.mode)).manifest_data;
 
-				const new_config = get_setup_build_config({ config: svelte_config, ssr: false });
+				const new_config = get_build_setup_config({ config: svelte_config, ssr: false });
 
 				const warning = warn_overridden_config(config, new_config);
 				if (warning) console.error(warning + '\n');
@@ -570,8 +570,8 @@ function kit({ svelte_config }) {
 	};
 
 	/** @type {import('vite').Plugin} */
-	const plugin_bundle = {
-		name: 'vite-plugin-sveltekit-bundle',
+	const plugin_compile = {
+		name: 'vite-plugin-sveltekit-compile',
 
 		/**
 		 * Build the SvelteKit-provided Vite config to be merged with the user's vite.config.js file.
@@ -628,7 +628,7 @@ function kit({ svelte_config }) {
 		}
 	};
 
-	return [plugin_setup, plugin_bundle];
+	return [plugin_setup, plugin_compile];
 }
 
 function check_vite_version() {

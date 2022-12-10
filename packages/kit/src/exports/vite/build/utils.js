@@ -116,7 +116,7 @@ export function resolve_symlinks(manifest, file) {
  * }} options
  * @return {import('vite').UserConfig}
  */
-export function get_setup_build_config({ config, ssr }) {
+export function get_build_setup_config({ config, ssr }) {
 	const prefix = `${config.kit.appDir}/immutable`;
 
 	return {
@@ -163,7 +163,7 @@ export function get_setup_build_config({ config, ssr }) {
  * }} options
  * @return {import('vite').UserConfig}
  */
-export function get_bundle_build_config({ config, input, ssr, outDir }) {
+export function get_build_compile_config({ config, input, ssr, outDir }) {
 	const prefix = `${config.kit.appDir}/immutable`;
 
 	return {
@@ -200,7 +200,7 @@ export function get_bundle_build_config({ config, input, ssr, outDir }) {
  * @return {import('vite').UserConfig}
  */
 export function get_default_build_config(options) {
-	return vite.mergeConfig(get_setup_build_config(options), get_bundle_build_config(options));
+	return vite.mergeConfig(get_build_setup_config(options), get_build_compile_config(options));
 }
 
 /**
