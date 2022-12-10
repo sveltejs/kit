@@ -570,8 +570,8 @@ function kit({ svelte_config }) {
 	};
 
 	/** @type {import('vite').Plugin} */
-	const plugin_build = {
-		name: 'vite-plugin-sveltekit-build',
+	const plugin_bundle = {
+		name: 'vite-plugin-sveltekit-bundle',
 
 		/**
 		 * Build the SvelteKit-provided Vite config to be merged with the user's vite.config.js file.
@@ -628,7 +628,7 @@ function kit({ svelte_config }) {
 		}
 	};
 
-	return [plugin_setup, plugin_build];
+	return [plugin_setup, plugin_bundle];
 }
 
 function check_vite_version() {
