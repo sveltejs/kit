@@ -37,12 +37,19 @@ const path = geoPath(projection);
 function render(lat, lon, city, country) {
 	const coords = lat && lon ? [+lon, +lat] : [-74, 40.7];
 
-	projection.rotate([-coords[0] - 10, -coords[1] + 20, 0]);
+	// spin globe a little west of the user's location so that it isn't
+	// dead centre, and tilt them slightly towards the vertical center
+	projection.rotate([-coords[0] - 30, -coords[1] * (30 / 90), 0]);
 
 	const dot = lon && lat ? projection([lon, lat]) : null;
 
-	const sphere = path({ type: 'Sphere' });
-	const label = [city, country].filter(Boolean).join(', ') || 'Your location';
+	const MAX_LABEL_LENGTH = 27;
+	const DEFAULT_LABEL = 'Your location';
+
+	let label = [city, country].filter(Boolean).join(', ') || DEFAULT_LABEL;
+	if (label.length > MAX_LABEL_LENGTH) label = city ?? DEFAULT_LABEL;
+	if (label.length > MAX_LABEL_LENGTH) label = country ?? DEFAULT_LABEL;
+	if (label.length > MAX_LABEL_LENGTH) label = DEFAULT_LABEL;
 
 	return `<?xml version="1.0" encoding="UTF-8"?>
 		<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${w} ${h}">
@@ -84,12 +91,13 @@ function render(lat, lon, city, country) {
 				}
 			</style>
 
-			<path d="${sphere}" class="ocean"/>
+			<path d="${path({ type: 'Sphere' })}" class="ocean"/>
 			<path d="${path(land)}" class="land"/>
 
 			${
 				dot
-					? `<g transform="translate(${dot[0]},${dot[1]})">
+					? `
+			<g transform="translate(${dot[0]},${dot[1]})">
 				<circle r="20" class="dot"/>
 				<rect x="50" y="-30" width="${font_size * 0.6 * label.length + 40}" height="60" class="highlight"/>
 				<polygon points="35,0 50,-10 50,10" class="highlight" />
@@ -109,11 +117,11 @@ function render(lat, lon, city, country) {
 }
 
 /** @type {import('./$types').RequestHandler} */
-export function GET({ request, url }) {
+export function GET({ request }) {
 	const h = request.headers;
 
-	const latitude = h.get('x-vercel-ip-latitude');
-	const longitude = h.get('x-vercel-ip-longitude');
+	const latitude = h.get('x-vercel-ip-latitude') ?? '';
+	const longitude = h.get('x-vercel-ip-longitude') ?? '';
 	const city = h.get('x-vercel-ip-city') ?? '';
 	const country = countries[h.get('x-vercel-ip-country')];
 
