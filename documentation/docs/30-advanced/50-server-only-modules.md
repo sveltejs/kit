@@ -26,7 +26,7 @@ export const atlantisCoordinates = [/* redacted */];
 ```
 
 ```js
-// @errors: 2307 7006
+// @errors: 2307 7006 7005
 /// file: src/routes/utils.js
 export { atlantisCoordinates } from '$lib/server/secrets.js';
 

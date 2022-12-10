@@ -21,7 +21,7 @@ Inside the service worker you have access to the [`$service-worker` module](/doc
 The following example caches the built app and any files in `static` eagerly, and caches all other requests as they happen. This would make each page work offline once visited.
 
 ```js
-// @ts-nocheck Official TS Service Worker typings are still a work in progress.
+// @errors: 2339
 import { build, files, version } from '$service-worker';
 
 // Create a unique cache name for this deployment
