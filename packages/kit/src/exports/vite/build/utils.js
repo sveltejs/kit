@@ -183,7 +183,7 @@ export function get_bundle_build_config({ config, input, ssr, outDir }) {
 				},
 				preserveEntrySignatures: 'strict'
 			},
-			target: ssr ? 'node14.8' : undefined
+			target: ssr ? 'node16.14' : undefined
 		},
 		publicDir: ssr ? false : config.kit.files.assets
 	};
