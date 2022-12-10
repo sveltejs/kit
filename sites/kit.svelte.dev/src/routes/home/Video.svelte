@@ -57,13 +57,38 @@
 	/**
 	 * @param {HTMLTrackElement} node
 	 */
-	function set_cue_position(node) {
+	function handle_cues(node) {
 		const cues = node.track.cues;
-		if (!cues) return;
-		for (let i = 0; i < cues.length; i++) {
-			// https://developer.mozilla.org/en-US/docs/Web/API/WebVTT_API#cue_settings
-			cues[i].line = -2; // second line from the bottom
-			cues[i].size = 80; // width is 80% of the available space
+		if (node.track.cues) {
+			set_cue_positions(cues);
+		} else {
+			node.addEventListener('load', handle_load, { once: true });
+		}
+
+		return {
+			destroy: () => {
+				node.removeEventListener('load', handle_load);
+			}
+		};
+
+		/**
+		 * @param {Event} e
+		 */
+		function handle_load(e) {
+			/** @type {HTMLTrackElement} */
+			const track_el = e.target;
+			set_cue_positions(track_el.track.cues);
+		}
+
+		/**
+		 * @param {TextTrackCueList} cues
+		 */
+		function set_cue_positions(cues) {
+			for (let i = 0; i < cues.length; i++) {
+				// https://developer.mozilla.org/en-US/docs/Web/API/WebVTT_API#cue_settings
+				cues[i].line = -2; // second line from the bottom
+				cues[i].size = 80; // width is 80% of the available space
+			}
 		}
 	}
 </script>
@@ -90,7 +115,7 @@
 			}
 		}}
 	>
-		<track kind="captions" srclang="en" src={vtt} default use:set_cue_position />
+		<track kind="captions" srclang="en" src={vtt} default use:handle_cues />
 	</video>
 
 	{#if d}
