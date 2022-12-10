@@ -29,7 +29,9 @@ This will allow screen readers and other assistive technology to identify the ne
 
 In traditional server-rendered applications, every navigation will reset focus to the top of the page. This ensures that people browsing the web with a keyboard or screen reader will start interacting with the page from the beginning.
 
-To simulate this behavior during client-side routing, SvelteKit focuses the `<body>` element after each navigation. If you want to customize this behavior, you can implement custom focus management logic using the `afterNavigate` hook:
+To simulate this behavior during client-side routing, SvelteKit focuses the `<body>` element after each navigation and [enhanced form submission](https://kit.svelte.dev/docs/form-actions#progressive-enhancement). There is an exception - if an element with the [`autofocus`](https://developer.mozilla.org/en-US/docs/Web/HTML/Global_attributes/autofocus) attribute is present, SvelteKit will focus that element instead. Make sure to [consider the implications for assistive technology](https://developer.mozilla.org/en-US/docs/Web/HTML/Global_attributes/autofocus#accessibility_considerations) when using that attribute.
+
+If you want to customize SvelteKit's focus management, you can use the `afterNavigate` hook:
 
 ```js
 /// <reference types="@sveltejs/kit" />
