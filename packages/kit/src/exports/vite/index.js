@@ -558,13 +558,12 @@ function kit({ svelte_config }) {
 				svelte_config.kit.version.name
 			);
 
-			const paths = await vite.ssrLoadModule(`${runtime_base}/paths.js`);
-			const assets = svelte_config.kit.paths.assets
-				? SVELTE_KIT_ASSETS
-				: svelte_config.kit.paths.base;
-			paths.set_paths({
-				base: svelte_config.kit.paths.base,
-				assets
+			// set `import { base, assets } from '$app/paths'`
+			const { base, assets } = svelte_config.kit.paths;
+
+			(await vite.ssrLoadModule(`${runtime_base}/paths.js`)).set_paths({
+				base,
+				assets: assets ? SVELTE_KIT_ASSETS : base
 			});
 		}
 	};
