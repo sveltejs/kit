@@ -1,5 +1,15 @@
 # @sveltejs/kit
 
+## 1.0.0-next.582
+
+### Patch Changes
+
+- [fix] improve split between Vite plugins ([#8055](https://github.com/sveltejs/kit/pull/8055))
+
+- [fix] set Vite base URL ([#8046](https://github.com/sveltejs/kit/pull/8046))
+
+- add declaration for vitePreprocess reexport ([#8053](https://github.com/sveltejs/kit/pull/8053))
+
 ## 1.0.0-next.581
 
 ### Patch Changes
