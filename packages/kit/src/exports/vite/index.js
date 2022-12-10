@@ -684,12 +684,7 @@ function warn_overridden_config(config, resolved_config) {
  * @param {string[]} out used locally to compute the return value
  */
 function find_overridden_config(config, resolved_config, enforced_config, path, out) {
-	if (
-		typeof config === 'undefined' ||
-		config === null ||
-		typeof resolved_config === 'undefined' ||
-		resolved_config === null
-	) {
+	if (config == null || resolved_config == null) {
 		return out;
 	}
 
