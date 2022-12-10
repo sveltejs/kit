@@ -10,12 +10,14 @@ test.describe('base path', () => {
 		const html = await request.get('/slash/', { headers: { Accept: 'text/html' } });
 		expect(html.status()).toBe(404);
 		expect(await html.text()).toBe(
-			'Not found (did you mean <a href="/path-base/slash/">/path-base/slash/</a>?)'
+			'The server is configured with a public base URL of /path-base - did you mean to visit <a href="/path-base/slash/">/path-base/slash/</a> instead?'
 		);
 
 		const plain = await request.get('/slash/');
 		expect(plain.status()).toBe(404);
-		expect(await plain.text()).toBe('Not found (did you mean /path-base/slash/?)');
+		expect(await plain.text()).toBe(
+			'The server is configured with a public base URL of /path-base - did you mean to visit /path-base/slash/ instead?'
+		);
 	});
 
 	test('serves /', async ({ page, javaScriptEnabled }) => {
@@ -248,9 +250,9 @@ test.describe('Vite options', () => {
 
 test.describe('Routing', () => {
 	test('ignores clicks outside the app target', async ({ page }) => {
-		await page.goto('/path-base/routing/link-outside-app-target/source');
+		await page.goto('/path-base/routing/link-outside-app-target/source/');
 
-		await page.click('[href="/path-base/routing/link-outside-app-target/target"]');
+		await page.click('[href="/path-base/routing/link-outside-app-target/target/"]');
 		await expect(page.locator('h2')).toHaveText('target: 0');
 	});
 });

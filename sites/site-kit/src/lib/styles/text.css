@@ -56,6 +56,14 @@
 	background: transparent;
 }
 
+.text p code {
+	max-width: 100%;
+	display: inline-flex;
+	overflow-x: auto;
+	padding-top: 0;
+	padding-bottom: 0;
+}
+
 .text .code-block .filename {
 	content: attr(data-file);
 	display: block;
