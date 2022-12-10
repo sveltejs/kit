@@ -21,7 +21,9 @@ export default {
 
 ### `svelte-preprocess`
 
-[`svelte-preprocess`](https://github.com/sveltejs/svelte-preprocess) automatically transforms the code in your Svelte templates to provide support for TypeScript, PostCSS, scss/sass, Less, and many other technologies (except CoffeeScript which is [not supported](https://github.com/sveltejs/kit/issues/2920#issuecomment-996469815) by SvelteKit). `vitePreprocess` may be faster and require less configuration, so it is used by default. However, `svelte-preprocess` has some additional functionality not found in `vitePreprocess`. The first step of setting it up is to add `svelte-preprocess` to your [`svelte.config.js`](/docs/configuration). After that, you will often only need to install the corresponding library such as `npm install -D sass` or `npm install -D less`. See the [`svelte-preprocess`](https://github.com/sveltejs/svelte-preprocess) docs for more details.
+[`svelte-preprocess`](https://github.com/sveltejs/svelte-preprocess) automatically transforms the code in your Svelte templates to provide support for TypeScript, PostCSS, scss/sass, Less, and many other technologies (except CoffeeScript which is [not supported](https://github.com/sveltejs/kit/issues/2920#issuecomment-996469815) by SvelteKit). The first step of setting it up is to add `svelte-preprocess` to your [`svelte.config.js`](/docs/configuration). After that, you will often only need to install the corresponding library such as `npm install -D sass` or `npm install -D less`. See the [`svelte-preprocess`](https://github.com/sveltejs/svelte-preprocess) docs for more details.
+
+`vitePreprocess` can be faster and require less configuration, so it is used by default. However, `svelte-preprocess` does provide extra functionalities not available, such as [template tag](https://github.com/sveltejs/svelte-preprocess#template-tag), [external files](https://github.com/sveltejs/svelte-preprocess#external-files), and [global styles](https://github.com/sveltejs/svelte-preprocess#global-style). 
 
 ## Adders
 
