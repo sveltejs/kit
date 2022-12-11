@@ -411,7 +411,7 @@ export async function render_response({
 		` : `
 		import { start } from ${s(prefixed(entry.file))};
 		${startupContent}`;
-		
+
 		const attributes = ['type="module"', `data-sveltekit-hydrate="${target}"`];
 
 		csp.add_script(init_app);
