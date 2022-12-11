@@ -7,7 +7,6 @@
 
 <form class="search-container" action="/search">
 	<input
-		id="search"
 		value={q}
 		on:input={(e) => {
 			$searching = true;
@@ -19,13 +18,14 @@
 		type="search"
 		name="q"
 		placeholder="Search"
+		aria-label="Search"
 		spellcheck="false"
 	/>
 
 	{#if browser}
-		<label for="#search">
+		<div class="shortcut">
 			<kbd>{navigator.platform === 'MacIntel' ? '⌘' : 'Ctrl'}</kbd> <kbd>K</kbd>
-		</label>
+		</div>
 	{/if}
 </form>
 
@@ -62,7 +62,7 @@
 		color: var(--sk-text-3);
 	}
 
-	input:focus + label {
+	input:focus + .shortcut {
 		display: none;
 	}
 
@@ -71,7 +71,7 @@
 		text-transform: uppercase;
 	}
 
-	label {
+	.shortcut {
 		color: var(--sk-text-3);
 		position: absolute;
 		top: calc(50% - 0.9rem);
@@ -100,7 +100,7 @@
 			width: 11rem;
 		}
 
-		label {
+		.shortcut {
 			padding: 0 1.6rem 0 0;
 		}
 

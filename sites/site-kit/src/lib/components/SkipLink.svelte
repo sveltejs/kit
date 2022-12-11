@@ -14,7 +14,7 @@
 		inset-block-start: 0;
 		inset-inline-start: 0;
 		transform: translateY(-999px);
-		z-index: 101; /* 1 more than the nav z-index */
+		z-index: 1000; /* 1 more than the banner z-index */
 	}
 
 	a:focus {

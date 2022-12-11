@@ -13,13 +13,13 @@
 
 <svelte:window on:scroll={handle_scroll} />
 
-<div class="banner" class:visible>
+<header class="banner" class:visible>
 	<p>
 		<a href="https://www.youtube.com/watch?v=N4BRVkQVoMc">
 			<strong>Dec 14:</strong> a Svelte Radio live special 👀
 		</a>
 	</p>
-</div>
+</header>
 
 <style>
 	.banner {
