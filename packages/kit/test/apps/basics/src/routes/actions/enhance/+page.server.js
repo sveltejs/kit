@@ -1,3 +1,5 @@
+import { error } from '@sveltejs/kit';
+
 /** @type {import('./$types').PageServerLoad} */
 export function load() {
 	return {
@@ -27,5 +29,8 @@ export const actions = {
 		return {
 			result: 'submitter: ' + fields.get('submitter')
 		};
+	},
+	error: () => {
+		throw error(400, 'error');
 	}
 };
