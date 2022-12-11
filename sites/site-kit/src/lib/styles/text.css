@@ -56,7 +56,8 @@
 	background: transparent;
 }
 
-.text p code {
+.text p code,
+.text li code {
 	max-width: 100%;
 	display: inline-flex;
 	overflow-x: auto;
