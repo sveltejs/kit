@@ -2020,7 +2020,7 @@ test.describe('Actions', () => {
 		expect(page.url()).toContain('/actions/enhance');
 	});
 
-	test.only('$page.status reflects error status', async ({ page, app }) => {
+	test('$page.status reflects error status', async ({ page, app }) => {
 		await page.goto('/actions/enhance');
 
 		await Promise.all([
