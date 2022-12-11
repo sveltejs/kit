@@ -2019,6 +2019,17 @@ test.describe('Actions', () => {
 
 		expect(page.url()).toContain('/actions/enhance');
 	});
+
+	test.only('$page.status reflects error status', async ({ page, app }) => {
+		await page.goto('/actions/enhance');
+
+		await Promise.all([
+			page.waitForRequest((request) => request.url().includes('/actions/enhance')),
+			page.click('button.form1-error')
+		]);
+
+		await expect(page.locator('h1')).toHaveText('400');
+	});
 });
 
 // Run in serial to not pollute the log with (correct) cookie warnings
