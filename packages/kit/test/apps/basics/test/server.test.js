@@ -360,7 +360,7 @@ test.describe('Shadowed pages', () => {
 		});
 
 		expect(response.status()).toBe(200);
-		expect(await response.json()).toEqual({ type: 'success', status: 204 });
+		expect(await response.json()).toEqual({ data: '-1', type: 'success', status: 204 });
 	});
 });
 
@@ -371,6 +371,8 @@ test.describe('Static files', () => {
 
 		response = await request.get('/subdirectory/static.json');
 		expect(await response.json()).toBe('subdirectory file');
+
+		expect(response.headers()['access-control-allow-origin']).toBe('*');
 
 		response = await request.get('/favicon.ico');
 		expect(response.status()).toBe(200);

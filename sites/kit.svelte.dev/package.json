@@ -2,8 +2,9 @@
 	"name": "kit.svelte.dev",
 	"version": "0.0.1",
 	"scripts": {
-		"dev": "node ../../scripts/check-doc-links.js && vite dev",
-		"build": "node ../../scripts/check-doc-links.js && vite build",
+		"update": "node scripts/check-doc-links.js && node scripts/types",
+		"dev": "npm run update && vite dev",
+		"build": "npm run update && vite build",
 		"prebuild": "test \"$CI\" = true && npx pnpm install --store=node_modules/.pnpm-store || echo skipping pnpm install",
 		"preview": "vite preview",
 		"test": "uvu src \"(spec\\.js|test[\\\\/]index\\.js)\""
@@ -14,12 +15,13 @@
 		"@sveltejs/amp": "workspace:*",
 		"@sveltejs/kit": "workspace:*",
 		"@sveltejs/site-kit": "^2.1.4",
-		"@types/node": "^16.11.68",
-		"@vitejs/plugin-legacy": "^2.2.0",
+		"@types/d3-geo": "^3.0.2",
+		"@types/node": "^16.18.6",
+		"@vitejs/plugin-legacy": "^3.0.1",
 		"custom-event-polyfill": "^1.0.7",
 		"flexsearch": "^0.7.31",
-		"magic-string": "^0.26.7",
-		"marked": "^4.1.1",
+		"magic-string": "^0.27.0",
+		"marked": "^4.2.3",
 		"path-composedpath-polyfill": "^0.0.1",
 		"postcss": "^8.4.19",
 		"postcss-load-config": "^4.0.1",
@@ -29,16 +31,23 @@
 		"proxy-polyfill": "^0.3.2",
 		"regenerator-runtime": "^0.13.9",
 		"shiki-twoslash": "^3.1.0",
-		"svelte": "^3.52.0",
+		"svelte": "^3.54.0",
 		"svelte-preprocess": "^4.10.7",
 		"terser": ">=5.4.0 <6.0.0",
 		"tiny-glob": "^0.2.9",
-		"typescript": "^4.8.4",
+		"typescript": "^4.9.3",
 		"unorm": "^1.6.0",
 		"uvu": "^0.5.6",
-		"vite": "^3.2.1",
+		"vite": "^4.0.0",
 		"vite-imagetools": "^4.0.11",
 		"whatwg-fetch": "^3.6.2"
 	},
-	"type": "module"
+	"type": "module",
+	"dependencies": {
+		"@vercel/edge": "^0.1.2",
+		"d3-geo": "^3.0.1",
+		"d3-geo-projection": "^4.0.0",
+		"intersection-observer": "^0.12.2",
+		"topojson-client": "^3.1.0"
+	}
 }

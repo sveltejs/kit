@@ -1,5 +1,29 @@
 # @sveltejs/adapter-vercel
 
+## 1.0.0-next.85
+
+### Patch Changes
+
+- update esbuild to ^0.16.3 ([#7543](https://github.com/sveltejs/kit/pull/7543))
+
+## 1.0.0-next.84
+
+### Patch Changes
+
+- [fix] Write redirects for prerendered pages with trailing slashes ([#7747](https://github.com/sveltejs/kit/pull/7747))
+
+## 1.0.0-next.83
+
+### Patch Changes
+
+- [fix] handle root route for split config ([#7741](https://github.com/sveltejs/kit/pull/7741))
+
+## 1.0.0-next.82
+
+### Patch Changes
+
+- Handle redirects inside SvelteKit ([#7719](https://github.com/sveltejs/kit/pull/7719))
+
 ## 1.0.0-next.81
 
 ### Patch Changes

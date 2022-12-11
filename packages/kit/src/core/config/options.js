@@ -129,6 +129,8 @@ const options = object(
 				checkOrigin: boolean(true)
 			}),
 
+			embedded: boolean(false),
+
 			// TODO: remove this for the 1.0 release
 			endpointExtensions: error(
 				(keypath) => `${keypath} has been renamed to config.kit.moduleExtensions`
@@ -232,13 +234,16 @@ const options = object(
 				crawl: boolean(true),
 				createIndexFiles: error(
 					(keypath) =>
-						`${keypath} has been removed — it is now controlled by the trailingSlash option. See https://kit.svelte.dev/docs/configuration#trailingslash`
+						`${keypath} has been removed — it is now controlled by the trailingSlash option. See https://kit.svelte.dev/docs/page-options#trailingslash`
 				),
 				default: error(
 					(keypath) =>
 						`${keypath} has been removed. You can set it inside the top level +layout.js instead. See the PR for more information: https://github.com/sveltejs/kit/pull/6197`
 				),
-				enabled: boolean(true),
+				enabled: error(
+					(keypath) =>
+						`${keypath} has been removed. You can wrap any code that should not be executed during build in a \`if (!building) {...}\` block. See the discussion for more information: https://github.com/sveltejs/kit/discussions/7716`
+				),
 				entries: validate(['*'], (input, keypath) => {
 					if (!Array.isArray(input) || !input.every((page) => typeof page === 'string')) {
 						throw new Error(`${keypath} must be an array of strings`);
@@ -320,7 +325,7 @@ const options = object(
 			// TODO remove for 1.0
 			router: error(
 				(keypath) =>
-					`${keypath} has been removed. You can set \`export const csr = false\` inside the top level +layout.js instead. See the PR for more information: https://github.com/sveltejs/kit/pull/6197`
+					`${keypath} has been removed. You can set \`export const csr = false\` inside the top level +layout.js (or +layout.server.js) instead. See the PR for more information: https://github.com/sveltejs/kit/pull/6197`
 			),
 
 			// TODO remove for 1.0
@@ -343,7 +348,10 @@ const options = object(
 			// TODO remove this for 1.0
 			target: error((keypath) => `${keypath} is no longer required, and should be removed`),
 
-			trailingSlash: list(['never', 'always', 'ignore']),
+			trailingSlash: error(
+				(keypath, input) =>
+					`${keypath} has been removed. You can set \`export const trailingSlash = '${input}'\` inside a top level +layout.js (or +layout.server.js) instead. See the PR for more information: https://github.com/sveltejs/kit/pull/7719`
+			),
 
 			version: object({
 				name: string(Date.now().toString()),
@@ -506,10 +514,10 @@ function assert_string(input, keypath) {
 	}
 }
 
-/** @param {(keypath?: string) => string} fn */
+/** @param {(keypath?: string, input?: any) => string} fn */
 function error(fn) {
-	return validate(undefined, (_, keypath) => {
-		throw new Error(fn(keypath));
+	return validate(undefined, (input, keypath) => {
+		throw new Error(fn(keypath, input));
 	});
 }
 

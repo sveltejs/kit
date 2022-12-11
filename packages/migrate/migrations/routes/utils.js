@@ -183,7 +183,7 @@ export function guess_indent(content) {
 		return Math.min(count, previous);
 	}, Infinity);
 
-	return new Array(min + 1).join(' ');
+	return ' '.repeat(min);
 }
 
 /**

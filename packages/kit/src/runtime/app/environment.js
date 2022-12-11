@@ -1,11 +1,13 @@
+import { BROWSER, DEV } from 'esm-env';
+
 /**
  * @type {import('$app/environment').browser}
  */
-export const browser = !import.meta.env.SSR;
+export const browser = BROWSER;
 
 /**
  * @type {import('$app/environment').dev}
  */
-export const dev = __SVELTEKIT_DEV__;
+export const dev = DEV;
 
-export { prerendering } from '../env.js';
+export { building, version } from '../env.js';

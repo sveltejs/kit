@@ -18,12 +18,28 @@ const readBrowsersList = () => readFileSync("./.browserslistrc", { encoding: 'ut
 	.filter((query) => query !== undefined)
 	.join(', ');
 
+const supportedExtensions = ['.png', '.jpg', '.jpeg'];
+
 /** @type {import('vite').UserConfig} */
 const config = {
+	assetsInclude: ['**/*.vtt'],
+
 	logLevel: 'info',
 
 	plugins: [
-		imagetools(),
+		imagetools({
+			defaultDirectives: (url) => {
+				const extension = path.extname(url.pathname);
+				if (supportedExtensions.includes(extension)) {
+					return new URLSearchParams({
+						format: 'avif;webp;' + extension,
+						picture: true
+					});
+				}
+				return new URLSearchParams();
+			}
+		}),
+		sveltekit(),
 		legacy({
 			targets: readBrowsersList(),
 			additionalLegacyPolyfills: [
@@ -38,7 +54,6 @@ const config = {
 				'proxy-polyfill/proxy.min.js'
 			]
 		}),
-		sveltekit(),
 	],
 
 	server: {

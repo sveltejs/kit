@@ -31,7 +31,6 @@ jobs:
           node-version: '16.x'
           cache: pnpm
       - run: pnpm install --frozen-lockfile
-      - run: cd packages/kit && pnpm build
       - run: pnpm turbo run lint check
   Tests:
     runs-on: ${{ matrix.os }}

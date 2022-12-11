@@ -1,7 +1,8 @@
 import path from 'path';
-import { loadConfigFromFile, loadEnv } from 'vite';
+import { loadConfigFromFile, loadEnv, mergeConfig } from 'vite';
 import { runtime_directory } from '../../core/utils.js';
 import { posixify } from '../../utils/filesystem.js';
+import { negotiate } from '../../utils/http.js';
 
 /**
  * @param {import('vite').ResolvedConfig} config
@@ -19,23 +20,13 @@ export async function get_vite_config(config, config_env) {
 	if (!loaded) {
 		throw new Error('Could not load Vite config');
 	}
-	return { ...loaded.config, mode: config_env.mode };
-}
-
-/**
- * @param {...import('vite').UserConfig} configs
- * @returns {import('vite').UserConfig}
- */
-export function merge_vite_configs(...configs) {
-	return deep_merge(
-		...configs.map((config) => ({
-			...config,
-			resolve: {
-				...config.resolve,
-				alias: normalize_alias(config.resolve?.alias || {})
-			}
-		}))
-	);
+	return mergeConfig(loaded.config, {
+		// CLI opts
+		mode: config_env.mode,
+		logLevel: config.logLevel,
+		clearScreen: config.clearScreen,
+		optimizeDeps: { force: config.optimizeDeps.force }
+	});
 }
 
 /**
@@ -52,16 +43,6 @@ export function deep_merge(...objects) {
 	/** @type {string[]} */
 	objects.forEach((o) => merge_into(result, o));
 	return result;
-}
-
-/**
- * normalize kit.vite.resolve.alias as an array
- * @param {import('vite').AliasOptions} o
- * @returns {import('vite').Alias[]}
- */
-function normalize_alias(o) {
-	if (Array.isArray(o)) return o;
-	return Object.entries(o).map(([find, replacement]) => ({ find, replacement }));
 }
 
 /**
@@ -168,4 +149,36 @@ export function get_env(env_config, mode) {
 		public: Object.fromEntries(entries.filter(([k]) => k.startsWith(env_config.publicPrefix))),
 		private: Object.fromEntries(entries.filter(([k]) => !k.startsWith(env_config.publicPrefix)))
 	};
+}
+
+/**
+ * @param {import('http').IncomingMessage} req
+ * @param {import('http').ServerResponse} res
+ * @param {string} base
+ */
+export function not_found(req, res, base) {
+	const type = negotiate(req.headers.accept ?? '*', ['text/plain', 'text/html']);
+
+	// special case — handle `/` request automatically
+	if (req.url === '/' && type === 'text/html') {
+		res.statusCode = 307;
+		res.setHeader('location', base);
+		res.end();
+		return;
+	}
+
+	res.statusCode = 404;
+
+	const prefixed = base + req.url;
+
+	if (type === 'text/html') {
+		res.setHeader('Content-Type', 'text/html');
+		res.end(
+			`The server is configured with a public base URL of /path-base - did you mean to visit <a href="${prefixed}">${prefixed}</a> instead?`
+		);
+	} else {
+		res.end(
+			`The server is configured with a public base URL of /path-base - did you mean to visit ${prefixed} instead?`
+		);
+	}
 }

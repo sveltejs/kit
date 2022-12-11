@@ -52,7 +52,7 @@
 
 	input {
 		padding: 0.5em 0.5em 0.4em 2em;
-		border: 1px solid #ccc;
+		border: 1px solid var(--sk-back-translucent);
 		font-family: inherit;
 		font-size: 1.4rem;
 		/* text-align: center; */
@@ -60,8 +60,9 @@
 		-webkit-appearance: none;
 		width: 100%;
 		height: 3.2rem;
-		border-radius: var(--border-r);
+		border-radius: var(--sk-border-radius);
 		background: no-repeat 1rem 50% / 1em 1em url(../icons/search.svg);
+		color: var(--sk-text-3);
 	}
 
 	input:disabled {
@@ -78,7 +79,7 @@
 	}
 
 	label {
-		color: #666;
+		color: var(--sk-text-3);
 		position: absolute;
 		top: calc(50% - 0.9rem);
 		right: 0;
@@ -92,10 +93,10 @@
 
 	kbd {
 		display: none;
-		background: #eee;
-		border: 1px solid #ddd;
+		background: var(--sk-back-2);
+		border: 1px solid var(--sk-back-translucent);
 		padding: 0.2rem 0.2rem 0rem 0.2rem;
-		color: #666;
+		color: var(--sk-text-3);
 		font-size: inherit;
 		font-family: inherit;
 		border-radius: 2px;

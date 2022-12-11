@@ -1,5 +1,7 @@
-import { invalidateAll } from './navigation.js';
+import * as devalue from 'devalue';
 import { client } from '../client/singletons.js';
+import { invalidateAll } from './navigation.js';
+import { BROWSER, DEV } from 'esm-env';
 
 /**
  * @param {string} name
@@ -10,13 +12,24 @@ function guard(name) {
 	};
 }
 
-const ssr = import.meta.env.SSR;
-
 /** @type {import('$app/forms').applyAction} */
-export const applyAction = ssr ? guard('applyAction') : client.apply_action;
+export const applyAction = BROWSER ? client.apply_action : guard('applyAction');
+
+/** @type {import('$app/forms').deserialize} */
+export function deserialize(result) {
+	const parsed = JSON.parse(result);
+	if (parsed.data) {
+		parsed.data = devalue.parse(parsed.data);
+	}
+	return parsed;
+}
 
 /** @type {import('$app/forms').enhance} */
 export function enhance(form, submit = () => {}) {
+	if (DEV && form.method !== 'post') {
+		throw new Error('use:enhance can only be used on <form> fields with method="POST"');
+	}
+
 	/**
 	 * @param {{
 	 *   action: URL;
@@ -33,7 +46,7 @@ export function enhance(form, submit = () => {}) {
 			await invalidateAll();
 		}
 
-		// For success/invalid results, only apply action if it belongs to the
+		// For success/failure results, only apply action if it belongs to the
 		// current page, otherwise `form` will be updated erroneously
 		if (
 			location.origin + location.pathname === action.origin + action.pathname ||
@@ -97,7 +110,7 @@ export function enhance(form, submit = () => {}) {
 				credentials: 'same-origin'
 			});
 
-			result = await response.json();
+			result = deserialize(await response.text());
 		} catch (error) {
 			if (/** @type {any} */ (error)?.name === 'AbortError') return;
 			result = { type: 'error', error };

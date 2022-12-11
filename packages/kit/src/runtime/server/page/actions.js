@@ -1,7 +1,8 @@
+import * as devalue from 'devalue';
 import { error, json } from '../../../exports/index.js';
 import { normalize_error } from '../../../utils/error.js';
 import { is_form_content_type, negotiate } from '../../../utils/http.js';
-import { HttpError, Redirect, ValidationError } from '../../control.js';
+import { HttpError, Redirect, ActionFailure } from '../../control.js';
 import { handle_error_and_jsonify } from '../utils.js';
 
 /** @param {import('types').RequestEvent} event */
@@ -17,22 +18,31 @@ export function is_action_json_request(event) {
 /**
  * @param {import('types').RequestEvent} event
  * @param {import('types').SSROptions} options
- * @param {import('types').SSRNode['server']} server
+ * @param {import('types').SSRNode['server'] | undefined} server
  */
 export async function handle_action_json_request(event, options, server) {
-	const actions = server.actions;
+	const actions = server?.actions;
 
 	if (!actions) {
-		maybe_throw_migration_error(server);
+		if (server) {
+			maybe_throw_migration_error(server);
+		}
 		// TODO should this be a different error altogether?
-		return new Response('POST method not allowed. No actions exist for this page', {
-			status: 405,
-			headers: {
-				// https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/405
-				// "The server must generate an Allow header field in a 405 status code response"
-				allow: 'GET'
+		const no_actions_error = error(405, 'POST method not allowed. No actions exist for this page');
+		return action_json(
+			{
+				type: 'error',
+				error: await handle_error_and_jsonify(event, options, no_actions_error)
+			},
+			{
+				status: no_actions_error.status,
+				headers: {
+					// https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/405
+					// "The server must generate an Allow header field in a 405 status code response"
+					allow: 'GET'
+				}
 			}
-		});
+		);
 	}
 
 	check_named_default_separate(actions);
@@ -40,15 +50,21 @@ export async function handle_action_json_request(event, options, server) {
 	try {
 		const data = await call_action(event, actions);
 
-		if (data instanceof ValidationError) {
-			check_serializability(data.data, /** @type {string} */ (event.route.id), 'data');
-			return action_json({ type: 'invalid', status: data.status, data: data.data });
+		if (data instanceof ActionFailure) {
+			return action_json({
+				type: 'failure',
+				status: data.status,
+				// @ts-expect-error we assign a string to what is supposed to be an object. That's ok
+				// because we don't use the object outside, and this way we have better code navigation
+				// through knowing where the related interface is used.
+				data: stringify_action_response(data.data, /** @type {string} */ (event.route.id))
+			});
 		} else {
-			check_serializability(data, /** @type {string} */ (event.route.id), 'data');
 			return action_json({
 				type: 'success',
 				status: data ? 200 : 204,
-				data: /** @type {Record<string, any> | undefined} */ (data)
+				// @ts-expect-error see comment above
+				data: stringify_action_response(data, /** @type {string} */ (event.route.id))
 			});
 		}
 	} catch (e) {
@@ -65,7 +81,7 @@ export async function handle_action_json_request(event, options, server) {
 		return action_json(
 			{
 				type: 'error',
-				error: handle_error_and_jsonify(event, options, check_incorrect_invalid_use(error))
+				error: await handle_error_and_jsonify(event, options, check_incorrect_fail_use(error))
 			},
 			{
 				status: error instanceof HttpError ? error.status : 500
@@ -77,9 +93,9 @@ export async function handle_action_json_request(event, options, server) {
 /**
  * @param {HttpError | Error} error
  */
-function check_incorrect_invalid_use(error) {
-	return error instanceof ValidationError
-		? new Error(`Cannot "throw invalid()". Use "return invalid()"`)
+function check_incorrect_fail_use(error) {
+	return error instanceof ActionFailure
+		? new Error(`Cannot "throw fail()". Use "return fail()"`)
 		: error;
 }
 
@@ -126,8 +142,8 @@ export async function handle_action_request(event, server) {
 	try {
 		const data = await call_action(event, actions);
 
-		if (data instanceof ValidationError) {
-			return { type: 'invalid', status: data.status, data: data.data };
+		if (data instanceof ActionFailure) {
+			return { type: 'failure', status: data.status, data: data.data };
 		} else {
 			return {
 				type: 'success',
@@ -148,7 +164,7 @@ export async function handle_action_request(event, server) {
 
 		return {
 			type: 'error',
-			error: check_incorrect_invalid_use(error)
+			error: check_incorrect_fail_use(error)
 		};
 	}
 }
@@ -167,7 +183,7 @@ function check_named_default_separate(actions) {
 /**
  * @param {import('types').RequestEvent} event
  * @param {NonNullable<import('types').SSRNode['server']['actions']>} actions
- * @throws {Redirect | ValidationError | HttpError | Error}
+ * @throws {Redirect | ActionFailure | HttpError | Error}
  */
 export async function call_action(event, actions) {
 	const url = new URL(event.request.url);
@@ -211,46 +227,41 @@ function maybe_throw_migration_error(server) {
 }
 
 /**
- * Check that the data can safely be serialized to JSON
- * @param {any} value
- * @param {string} id
- * @param {string} path
+ * Try to `devalue.uneval` the data object, and if it fails, return a proper Error with context
+ * @param {any} data
+ * @param {string} route_id
  */
-function check_serializability(value, id, path) {
-	const type = typeof value;
+export function uneval_action_response(data, route_id) {
+	return try_deserialize(data, devalue.uneval, route_id);
+}
 
-	if (type === 'string' || type === 'boolean' || type === 'number' || type === 'undefined') {
-		// primitives are fine
-		return;
-	}
+/**
+ * Try to `devalue.stringify` the data object, and if it fails, return a proper Error with context
+ * @param {any} data
+ * @param {string} route_id
+ */
+function stringify_action_response(data, route_id) {
+	return try_deserialize(data, devalue.stringify, route_id);
+}
 
-	if (type === 'object') {
-		// nulls are fine...
-		if (!value) return;
+/**
+ * @param {any} data
+ * @param {(data: any) => string} fn
+ * @param {string} route_id
+ */
+function try_deserialize(data, fn, route_id) {
+	try {
+		return fn(data);
+	} catch (e) {
+		// If we're here, the data could not be serialized with devalue
+		const error = /** @type {any} */ (e);
 
-		// ...so are plain arrays...
-		if (Array.isArray(value)) {
-			value.forEach((child, i) => {
-				check_serializability(child, id, `${path}[${i}]`);
-			});
-			return;
+		if ('path' in error) {
+			let message = `Data returned from action inside ${route_id} is not serializable: ${error.message}`;
+			if (error.path !== '') message += ` (data.${error.path})`;
+			throw new Error(message);
 		}
 
-		// ...and objects
-		// This simple check might potentially run into some weird edge cases
-		// Refer to https://github.com/lodash/lodash/blob/2da024c3b4f9947a48517639de7560457cd4ec6c/isPlainObject.js?rgh-link-date=2022-07-20T12%3A48%3A07Z#L30
-		// if that ever happens
-		if (Object.getPrototypeOf(value) === Object.prototype) {
-			for (const key in value) {
-				check_serializability(value[key], id, `${path}.${key}`);
-			}
-			return;
-		}
+		throw error;
 	}
-
-	throw new Error(
-		`${path} returned from action in ${id} cannot be serialized as JSON without losing its original type` +
-			// probably the most common case, so let's give a hint
-			(value instanceof Date ? ' (Date objects are serialized as strings)' : '')
-	);
 }

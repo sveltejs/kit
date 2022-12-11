@@ -1,4 +1,5 @@
-import { HttpError, Redirect, ValidationError } from '../runtime/control.js';
+import { HttpError, Redirect, ActionFailure } from '../runtime/control.js';
+import { BROWSER, DEV } from 'esm-env';
 
 // For some reason we need to type the params as well here,
 // JSdoc doesn't seem to like @type with function overloads
@@ -8,12 +9,16 @@ import { HttpError, Redirect, ValidationError } from '../runtime/control.js';
  * @param {any} message
  */
 export function error(status, message) {
+	if ((!BROWSER || DEV) && (isNaN(status) || status < 400 || status > 599)) {
+		throw new Error(`HTTP error status codes must be between 400 and 599 — ${status} is invalid`);
+	}
+
 	return new HttpError(status, message);
 }
 
 /** @type {import('@sveltejs/kit').redirect} */
 export function redirect(status, location) {
-	if (isNaN(status) || status < 300 || status > 308) {
+	if ((!BROWSER || DEV) && (isNaN(status) || status < 300 || status > 308)) {
 		throw new Error('Invalid status code');
 	}
 
@@ -36,10 +41,15 @@ export function json(data, init) {
 }
 
 /**
- * Generates a `ValidationError` object.
+ * Generates an `ActionFailure` object.
  * @param {number} status
  * @param {Record<string, any> | undefined} [data]
  */
-export function invalid(status, data) {
-	return new ValidationError(status, data);
+export function fail(status, data) {
+	return new ActionFailure(status, data);
+}
+
+// TODO remove for 1.0
+export function invalid() {
+	throw new Error('invalid(...) is now fail(...)');
 }

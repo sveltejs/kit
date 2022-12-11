@@ -1,0 +1,167 @@
+:root {
+	/* colors */
+	--sk-back-h: 206;
+	--sk-back-3-hsl: 206, 64%, 98%;
+
+	--sk-back-1: hsl(0, 0%, 100%);
+	--sk-back-2: hsl(0, 0%, 100%); /* same as sk-back-1 in light mode, different in dark mode */
+	--sk-back-3: hsl(var(--sk-back-3-hsl));
+	--sk-back-4: hsl(206, 44%, 93%);
+	--sk-back-5: hsl(206, 20%, 80%);
+	--sk-theme-1: hsl(15, 100%, 50%);
+	--sk-theme-2: hsl(240, 8%, 44%);
+	--sk-theme-3: hsl(204, 100%, 63%);
+	--sk-text-1: hsl(0, 0%, 13%);
+	--sk-text-2: hsl(0, 0%, 27%);
+	--sk-text-3: var(--sk-theme-2);
+	--sk-scrollbar: rgba(0, 0, 0, 0.3);
+
+	/* same in light mode, different in dark mode */
+	--sk-theme-1-variant: hsl(15, 100%, 50%);
+	--sk-theme-2-variant: hsl(240, 8%, 44%);
+	--sk-theme-3-variant: hsl(204, 100%, 63%);
+
+	--sk-code-bg: var(--sk-back-3);
+	--sk-code-ts-bg: var(--sk-back-1);
+	--sk-code-base: hsl(45, 7%, 35%);
+	--sk-code-comment: hsl(0, 0%, 41%);
+	--sk-code-keyword: hsl(204, 88%, 35%);
+	--sk-code-function: hsl(19, 67%, 44%);
+	--sk-code-string: hsl(41, 37%, 38%);
+	--sk-code-number: hsl(120, 100%, 25%);
+	--sk-code-template-string: hsl(2, 80%, 47%);
+	--sk-code-tags: var(--code-function);
+	--sk-code-important: var(--code-string);
+	--sk-code-diff-base: hsla(0, 0%, 0%, 0.4);
+	--sk-code-diff-inserted: hsl(120, 100%, 25%);
+	--sk-code-diff-removed: hsl(2, 80%, 47%);
+
+	/* used for coloured backgrounds e.g. blockquotes */
+	--sk-back-translucent: hsla(0, 0%, 0%, 0.1);
+	--sk-text-translucent: hsla(0, 0%, 0%, 0.7);
+
+	/* dimensions */
+	--sk-nav-height: 6rem;
+	--sk-page-padding-top: 6rem;
+	--sk-page-padding-bottom: 6rem;
+	--sk-page-padding-side: 2.4rem;
+	--sk-thick-border-width: 0.3rem;
+	--sk-border-radius: 0.4rem;
+
+	/* typography */
+	--sk-font: 'Overpass', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu,
+		Cantarell, 'Fira Sans', 'Droid Sans', 'Helvetica Neue', sans-serif;
+	--sk-font-mono: 'Fira Mono', monospace;
+	--sk-text-xxl: 3.6rem;
+	--sk-text-xl: 3rem;
+	--sk-text-l: 2.4rem;
+	--sk-text-m: 2rem;
+	--sk-text-s: 1.6rem;
+	--sk-text-xs: 1.3rem;
+	--sk-line-max-width: 84rem;
+}
+
+@media screen and (min-width: 480px) {
+	:root {
+		--sk-page-padding-side: 3.2rem;
+	}
+}
+
+@media screen and (min-width: 768px) {
+	:root {
+		--sk-text-xxl: 5.4rem;
+		--sk-text-xl: 3.6rem;
+		--sk-page-padding-top: 8rem;
+		--sk-page-padding-side: 4.8rem;
+	}
+}
+
+@media (prefers-color-scheme: dark) {
+	:root {
+		/* TODO create tokens for all the ad-hoc styles used on the site, so we can offer dark mode */
+		--sk-back-1: hsl(0, 0%, 10%);
+		--sk-back-2: hsl(0, 0%, 18%);
+		/* --sk-back-3: hsl(0, 0%, 20%); */
+		--sk-back-4: hsl(0, 0%, 22%);
+		--sk-back-5: hsl(0, 0%, 40%);
+		--sk-back-translucent: hsla(0, 0%, 100%, 0.1);
+		--sk-theme-1: hsl(15, 100%, 55%);
+		--sk-theme-2: hsl(240, 8%, 44%);
+		--sk-theme-3: hsl(204, 100%, 63%);
+		--sk-text-1: hsl(0, 0%, 90%);
+		--sk-text-2: hsl(0, 0%, 80%);
+		--sk-text-3: hsl(0, 0%, 65%);
+		--sk-text-translucent: hsla(0, 0%, 100%, 0.9);
+		--sk-scrollbar: rgba(255, 255, 255, 0.3);
+
+		--sk-back-3-hsl: 0, 0%, 14%;
+		--sk-theme-1-variant: hsl(15, 100%, 40%);
+		--sk-theme-2-variant: hsl(240, 8%, 35%);
+		--sk-theme-3-variant: hsl(204, 100%, 50%);
+
+		--sk-code-ts-bg: var(--sk-back-2);
+		--sk-code-bg: var(--sk-back-3);
+		--sk-code-base: hsl(45, 7%, 75%);
+		--sk-code-comment: hsl(0, 0%, 51%);
+		--sk-code-keyword: hsl(204, 88%, 65%);
+		--sk-code-function: hsl(19, 67%, 75%);
+		--sk-code-string: hsl(41, 37%, 68%);
+		--sk-code-number: hsl(120, 100%, 25%);
+		--sk-code-template-string: hsl(2, 80%, 47%);
+		--sk-code-tags: var(--code-function);
+		--sk-code-important: var(--code-string);
+		--sk-code-diff-base: hsla(0, 0%, 100%, 0.4);
+		--sk-code-diff-inserted: hsl(120, 100%, 35%);
+		--sk-code-diff-removed: hsl(2, 80%, 47%);
+	}
+}
+
+/* legacy — existing site-kit uses these, and upgrading svelte.dev will be easier if we keep them around for now */
+:root {
+	/* colors */
+	--back: var(--sk-back-1);
+	--back-light: var(--sk-back-3);
+	--back-api: var(--sk-back-4);
+	--prime: var(--sk-theme-1);
+	--second: var(--sk-theme-2);
+	--flash: var(--sk-theme-3);
+	--heading: var(--sk-text-1);
+	--text: var(--sk-text-2);
+	--sidebar-text: rgba(255, 255, 255, 0.9);
+
+	--code-bg: var(--sk-code-bg);
+	--code-base: var(--sk-code-base);
+	--code-comment: var(--sk-code-comment);
+	--code-keyword: var(--sk-code-keyword);
+	--code-function: var(--sk-code-function);
+	--code-string: var(--sk-code-string);
+	--code-number: var(--sk-code-number);
+	--code-template-string: var(--sk-code-template-string);
+	--code-tags: var(--sk-code-tags);
+	--code-important: var(--sk-code-important);
+
+	/* dimensions */
+	--nav-h: var(--sk-nav-height);
+	--top-offset: var(--sk-page-padding-top);
+	--side-nav: var(--sk-page-padding-side);
+	--sidebar-w: var(--sidebar-width);
+	--border-w: var(--sk-thick-border-width);
+	--border-r: var(--sk-border-radius);
+
+	/* typography */
+	--font: var(--sk-font);
+	--font-mono: var(--sk-font-mono);
+	--h1: var(--sk-text-xxl);
+	--h2: var(--sk-text-l);
+	--h3: var(--sk-text-m);
+	--h4: var(--sk-text-s);
+	--h5: var(--sk-text-s);
+	--h6: var(--sk-text-xs);
+	--code-fs: var(--sk-text-xs);
+	--linemax: var(--sk-line-max-width);
+
+	/* unused in this project */
+	--main-width: 80rem;
+	--sidebar-mid-w: 36rem;
+	--sidebar-large-w: 48rem;
+}

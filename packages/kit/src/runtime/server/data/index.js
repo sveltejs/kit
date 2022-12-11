@@ -3,18 +3,27 @@ import { normalize_error } from '../../../utils/error.js';
 import { once } from '../../../utils/functions.js';
 import { load_server_data } from '../page/load_data.js';
 import { clarify_devalue_error, handle_error_and_jsonify, serialize_data_node } from '../utils.js';
-import { normalize_path, strip_data_suffix } from '../../../utils/url.js';
+import { normalize_path } from '../../../utils/url.js';
 
-export const INVALIDATED_HEADER = 'x-sveltekit-invalidated';
+export const INVALIDATED_PARAM = 'x-sveltekit-invalidated';
 
 /**
  * @param {import('types').RequestEvent} event
  * @param {import('types').SSRRoute} route
  * @param {import('types').SSROptions} options
  * @param {import('types').SSRState} state
+ * @param {boolean[] | undefined} invalidated_data_nodes
+ * @param {import('types').TrailingSlash} trailing_slash
  * @returns {Promise<Response>}
  */
-export async function render_data(event, route, options, state) {
+export async function render_data(
+	event,
+	route,
+	options,
+	state,
+	invalidated_data_nodes,
+	trailing_slash
+) {
 	if (!route.page) {
 		// requesting /__data.json should fail for a +server.js
 		return new Response(undefined, {
@@ -24,15 +33,12 @@ export async function render_data(event, route, options, state) {
 
 	try {
 		const node_ids = [...route.page.layouts, route.page.leaf];
-
-		const invalidated =
-			event.request.headers.get(INVALIDATED_HEADER)?.split(',').map(Boolean) ??
-			node_ids.map(() => true);
+		const invalidated = invalidated_data_nodes ?? node_ids.map(() => true);
 
 		let aborted = false;
 
 		const url = new URL(event.url);
-		url.pathname = normalize_path(strip_data_suffix(url.pathname), options.trailing_slash);
+		url.pathname = normalize_path(url.pathname, trailing_slash);
 
 		const new_event = { ...event, url };
 
@@ -49,6 +55,7 @@ export async function render_data(event, route, options, state) {
 					const node = n == undefined ? n : await options.manifest._.nodes[n]();
 					return load_server_data({
 						event: new_event,
+						options,
 						state,
 						node,
 						parent: async () => {
@@ -86,7 +93,7 @@ export async function render_data(event, route, options, state) {
 		let length = promises.length;
 		const nodes = await Promise.all(
 			promises.map((p, i) =>
-				p.catch((error) => {
+				p.catch(async (error) => {
 					if (error instanceof Redirect) {
 						throw error;
 					}
@@ -96,7 +103,7 @@ export async function render_data(event, route, options, state) {
 
 					return /** @type {import('types').ServerErrorNode} */ ({
 						type: 'error',
-						error: handle_error_and_jsonify(event, options, error),
+						error: await handle_error_and_jsonify(event, options, error),
 						status: error instanceof HttpError ? error.status : undefined
 					});
 				})
@@ -116,15 +123,10 @@ export async function render_data(event, route, options, state) {
 		const error = normalize_error(e);
 
 		if (error instanceof Redirect) {
-			return json_response(
-				JSON.stringify({
-					type: 'redirect',
-					location: error.location
-				})
-			);
+			return redirect_json_response(error);
 		} else {
 			// TODO make it clearer that this was an unexpected error
-			return json_response(JSON.stringify(handle_error_and_jsonify(event, options, error)));
+			return json_response(JSON.stringify(await handle_error_and_jsonify(event, options, error)));
 		}
 	}
 }
@@ -141,4 +143,16 @@ function json_response(json, status = 200) {
 			'cache-control': 'private, no-store'
 		}
 	});
+}
+
+/**
+ * @param {Redirect} redirect
+ */
+export function redirect_json_response(redirect) {
+	return json_response(
+		JSON.stringify({
+			type: 'redirect',
+			location: redirect.location
+		})
+	);
 }

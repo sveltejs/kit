@@ -3,6 +3,10 @@ const config = {
 	kit: {
 		prerender: {
 			handleHttpError: 'warn'
+		},
+
+		version: {
+			name: 'TEST_VERSION'
 		}
 	}
 };

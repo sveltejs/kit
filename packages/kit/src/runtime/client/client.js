@@ -1,3 +1,4 @@
+import { DEV } from 'esm-env';
 import { onMount, tick } from 'svelte';
 import {
 	make_trackable,
@@ -6,7 +7,14 @@ import {
 	normalize_path,
 	add_data_suffix
 } from '../../utils/url.js';
-import { find_anchor, get_base_uri, scroll_state } from './utils.js';
+import {
+	find_anchor,
+	get_base_uri,
+	get_link_info,
+	get_router_options,
+	is_external_url,
+	scroll_state
+} from './utils.js';
 import {
 	lock_fetch,
 	unlock_fetch,
@@ -22,9 +30,8 @@ import { HttpError, Redirect } from '../control.js';
 import { stores } from './singletons.js';
 import { unwrap_promises } from '../../utils/promises.js';
 import * as devalue from 'devalue';
-
-const SCROLL_KEY = 'sveltekit:scroll';
-const INDEX_KEY = 'sveltekit:index';
+import { INDEX_KEY, PRELOAD_PRIORITIES, SCROLL_KEY } from './constants.js';
+import { validate_common_exports } from '../../utils/exports.js';
 
 const routes = parse(nodes, server_loads, dictionary, matchers);
 
@@ -66,7 +73,9 @@ function check_for_removed_attributes() {
 			if (!warned_about_attributes[attr]) {
 				warned_about_attributes[attr] = true;
 				console.error(
-					`The sveltekit:${attr} attribute has been replaced with data-sveltekit-${attr}`
+					`The sveltekit:${attr} attribute has been replaced with data-sveltekit-${
+						attr === 'prefetch' ? 'preload-data' : attr
+					}`
 				);
 			}
 		}
@@ -75,13 +84,13 @@ function check_for_removed_attributes() {
 
 /**
  * @param {{
- *   target: Element;
+ *   target: HTMLElement;
  *   base: string;
- *   trailing_slash: import('types').TrailingSlash;
  * }} opts
  * @returns {import('./types').Client}
  */
-export function create_client({ target, base, trailing_slash }) {
+export function create_client({ target, base }) {
+	const container = __SVELTEKIT_EMBEDDED__ ? target : document.documentElement;
 	/** @type {Array<((url: URL) => boolean)>} */
 	const invalidated = [];
 
@@ -160,8 +169,8 @@ export function create_client({ target, base, trailing_slash }) {
 
 		const url = new URL(location.href);
 		const intent = get_navigation_intent(url, true);
-		// Clear prefetch, it might be affected by the invalidation.
-		// Also solves an edge case where a prefetch is triggered, the navigation for it
+		// Clear preload, it might be affected by the invalidation.
+		// Also solves an edge case where a preload is triggered, the navigation for it
 		// was then triggered and is still running while the invalidation kicks in,
 		// at which point the invalidation should take over and "win".
 		load_cache = null;
@@ -211,11 +220,11 @@ export function create_client({ target, base, trailing_slash }) {
 	}
 
 	/** @param {URL} url */
-	async function prefetch(url) {
+	async function preload_data(url) {
 		const intent = get_navigation_intent(url, false);
 
 		if (!intent) {
-			throw new Error(`Attempted to prefetch a URL that does not belong to this app: ${url}`);
+			throw new Error(`Attempted to preload a URL that does not belong to this app: ${url}`);
 		}
 
 		load_cache = {
@@ -230,6 +239,17 @@ export function create_client({ target, base, trailing_slash }) {
 		};
 
 		return load_cache.promise;
+	}
+
+	/** @param {...string} pathnames */
+	async function preload_code(...pathnames) {
+		const matching = routes.filter((route) => pathnames.some((pathname) => route.exec(pathname)));
+
+		const promises = matching.map((r) => {
+			return Promise.all([...r.layouts, r.leaf].map((load) => load?.[1]()));
+		});
+
+		await Promise.all(promises);
 	}
 
 	/**
@@ -249,7 +269,7 @@ export function create_client({ target, base, trailing_slash }) {
 			navigation_result = await server_fallback(
 				url,
 				{ id: null },
-				handle_error(new Error(`Not found: ${url.pathname}`), {
+				await handle_error(new Error(`Not found: ${url.pathname}`), {
 					url,
 					params: {},
 					route: { id: null }
@@ -269,7 +289,11 @@ export function create_client({ target, base, trailing_slash }) {
 			if (redirect_chain.length > 10 || redirect_chain.includes(url.pathname)) {
 				navigation_result = await load_root_error_page({
 					status: 500,
-					error: handle_error(new Error('Redirect loop'), { url, params: {}, route: { id: null } }),
+					error: await handle_error(new Error('Redirect loop'), {
+						url,
+						params: {},
+						route: { id: null }
+					}),
 					url,
 					route: { id: null }
 				});
@@ -303,7 +327,7 @@ export function create_client({ target, base, trailing_slash }) {
 			history[details.replaceState ? 'replaceState' : 'pushState'](details.state, '', url);
 		}
 
-		// reset prefetch synchronously after the history state has been set to avoid race conditions
+		// reset preload synchronously after the history state has been set to avoid race conditions
 		load_cache = null;
 
 		if (started) {
@@ -360,7 +384,7 @@ export function create_client({ target, base, trailing_slash }) {
 
 	/** @param {import('./types').NavigationFinished} result */
 	function initialize(result) {
-		if (__SVELTEKIT_DEV__ && document.querySelector('vite-error-overlay')) return;
+		if (DEV && document.querySelector('vite-error-overlay')) return;
 
 		current = result.state;
 
@@ -416,6 +440,14 @@ export function create_client({ target, base, trailing_slash }) {
 	}) {
 		const filtered = /** @type {import('./types').BranchNode[] } */ (branch.filter(Boolean));
 
+		/** @type {import('types').TrailingSlash} */
+		let slash = 'never';
+		for (const node of branch) {
+			if (node?.slash !== undefined) slash = node.slash;
+		}
+		url.pathname = normalize_path(url.pathname, slash);
+		url.search = url.search; // turn `/?` into `/`
+
 		/** @type {import('./types').NavigationFinished} */
 		const result = {
 			type: 'loaded',
@@ -467,8 +499,8 @@ export function create_client({ target, base, trailing_slash }) {
 				params,
 				route,
 				status,
-				url,
-				form,
+				url: new URL(url),
+				form: form ?? null,
 				// The whole page store is updated, but this way the object reference stays the same
 				data: data_changed ? data : page.data
 			};
@@ -529,6 +561,10 @@ export function create_client({ target, base, trailing_slash }) {
 
 		const node = await loader();
 
+		if (DEV) {
+			validate_common_exports(node.shared);
+		}
+
 		if (node.shared?.load) {
 			/** @param {string[]} deps */
 			function depends(...deps) {
@@ -557,6 +593,7 @@ export function create_client({ target, base, trailing_slash }) {
 					uses.url = true;
 				}),
 				async fetch(resource, init) {
+					/** @type {URL | string} */
 					let requested;
 
 					if (resource instanceof Request) {
@@ -639,10 +676,23 @@ export function create_client({ target, base, trailing_slash }) {
 				}
 			});
 
-			if (import.meta.env.DEV) {
+			if (DEV) {
 				try {
 					lock_fetch();
 					data = (await node.shared.load.call(null, load_input)) ?? null;
+					if (data != null && Object.getPrototypeOf(data) !== Object.prototype) {
+						throw new Error(
+							`a load function related to route '${route.id}' returned ${
+								typeof data !== 'object'
+									? `a ${typeof data}`
+									: data instanceof Response
+									? 'a Response object'
+									: Array.isArray(data)
+									? 'an array'
+									: 'a non-plain object'
+							}, but must return a plain object at the top level (i.e. \`return {...}\`)`
+						);
+					}
 				} finally {
 					unlock_fetch();
 				}
@@ -657,7 +707,8 @@ export function create_client({ target, base, trailing_slash }) {
 			loader,
 			server: server_data_node,
 			shared: node.shared?.load ? { type: 'data', data, uses } : null,
-			data: data ?? server_data_node?.data ?? null
+			data: data ?? server_data_node?.data ?? null,
+			slash: node.shared?.trailingSlash ?? server_data_node?.slash
 		};
 	}
 
@@ -704,7 +755,8 @@ export function create_client({ target, base, trailing_slash }) {
 					parent: !!node.uses.parent,
 					route: !!node.uses.route,
 					url: !!node.uses.url
-				}
+				},
+				slash: node.slash
 			};
 		} else if (node?.type === 'skip') {
 			return previous ?? null;
@@ -761,7 +813,7 @@ export function create_client({ target, base, trailing_slash }) {
 			} catch (error) {
 				return load_root_error_page({
 					status: 500,
-					error: handle_error(error, { url, params, route: { id: route.id } }),
+					error: await handle_error(error, { url, params, route: { id: route.id } }),
 					url,
 					route
 				});
@@ -850,7 +902,7 @@ export function create_client({ target, base, trailing_slash }) {
 						status = err.status;
 						error = err.body;
 					} else {
-						error = handle_error(err, { params, url, route: { id: route.id } });
+						error = await handle_error(err, { params, url, route: { id: route.id } });
 					}
 
 					const error_load = await load_nearest_error_page(i, branch, errors);
@@ -991,7 +1043,7 @@ export function create_client({ target, base, trailing_slash }) {
 	 * @param {boolean} invalidating
 	 */
 	function get_navigation_intent(url, invalidating) {
-		if (is_external_url(url)) return;
+		if (is_external_url(url, base)) return;
 
 		const path = decode_pathname(url.pathname.slice(base.length) || '/');
 
@@ -999,20 +1051,12 @@ export function create_client({ target, base, trailing_slash }) {
 			const params = route.exec(path);
 
 			if (params) {
-				const normalized = new URL(
-					url.origin + normalize_path(url.pathname, trailing_slash) + url.search + url.hash
-				);
-				const id = normalized.pathname + normalized.search;
+				const id = url.pathname + url.search;
 				/** @type {import('./types').NavigationIntent} */
-				const intent = { id, invalidating, route, params: decode_params(params), url: normalized };
+				const intent = { id, invalidating, route, params: decode_params(params), url };
 				return intent;
 			}
 		}
-	}
-
-	/** @param {URL} url */
-	function is_external_url(url) {
-		return url.origin !== location.origin || !url.pathname.startsWith(base);
 	}
 
 	/**
@@ -1167,6 +1211,85 @@ export function create_client({ target, base, trailing_slash }) {
 		});
 	}
 
+	function setup_preload() {
+		/** @type {NodeJS.Timeout} */
+		let mousemove_timeout;
+
+		container.addEventListener('mousemove', (event) => {
+			const target = /** @type {Element} */ (event.target);
+
+			clearTimeout(mousemove_timeout);
+			mousemove_timeout = setTimeout(() => {
+				preload(target, 2);
+			}, 20);
+		});
+
+		/** @param {Event} event */
+		function tap(event) {
+			preload(/** @type {Element} */ (event.composedPath()[0]), 1);
+		}
+
+		container.addEventListener('mousedown', tap);
+		container.addEventListener('touchstart', tap, { passive: true });
+
+		const observer = new IntersectionObserver(
+			(entries) => {
+				for (const entry of entries) {
+					if (entry.isIntersecting) {
+						preload_code(new URL(/** @type {HTMLAnchorElement} */ (entry.target).href).pathname);
+						observer.unobserve(entry.target);
+					}
+				}
+			},
+			{ threshold: 0 }
+		);
+
+		/**
+		 * @param {Element} element
+		 * @param {number} priority
+		 */
+		function preload(element, priority) {
+			const a = find_anchor(element, container);
+			if (!a) return;
+
+			const { url, external } = get_link_info(a, base);
+			if (external) return;
+
+			const options = get_router_options(a);
+
+			if (!options.reload) {
+				if (priority <= options.preload_data) {
+					preload_data(/** @type {URL} */ (url));
+				} else if (priority <= options.preload_code) {
+					preload_code(/** @type {URL} */ (url).pathname);
+				}
+			}
+		}
+
+		function after_navigate() {
+			observer.disconnect();
+
+			for (const a of container.querySelectorAll('a')) {
+				const { url, external } = get_link_info(a, base);
+				if (external) continue;
+
+				const options = get_router_options(a);
+				if (options.reload) continue;
+
+				if (options.preload_code === PRELOAD_PRIORITIES.viewport) {
+					observer.observe(a);
+				}
+
+				if (options.preload_code === PRELOAD_PRIORITIES.eager) {
+					preload_code(/** @type {URL} */ (url).pathname);
+				}
+			}
+		}
+
+		callbacks.after_navigate.push(after_navigate);
+		after_navigate();
+	}
+
 	return {
 		after_navigate: (fn) => {
 			onMount(() => {
@@ -1191,7 +1314,7 @@ export function create_client({ target, base, trailing_slash }) {
 		},
 
 		disable_scroll_handling: () => {
-			if (import.meta.env.DEV && started && !updating) {
+			if (DEV && started && !updating) {
 				throw new Error('Can only disable scroll handling during navigation');
 			}
 
@@ -1202,13 +1325,13 @@ export function create_client({ target, base, trailing_slash }) {
 
 		goto: (href, opts = {}) => {
 			// TODO remove for 1.0
-			if ('keepfocus' in opts) {
+			if ('keepfocus' in opts && !('keepFocus' in opts)) {
 				throw new Error(
 					'`keepfocus` has been renamed to `keepFocus` (note the difference in casing)'
 				);
 			}
 
-			if ('noscroll' in opts) {
+			if ('noscroll' in opts && !('noScroll' in opts)) {
 				throw new Error(
 					'`noscroll` has been renamed to `noScroll` (note the difference in casing)'
 				);
@@ -1240,23 +1363,12 @@ export function create_client({ target, base, trailing_slash }) {
 			return invalidate();
 		},
 
-		prefetch: async (href) => {
+		preload_data: async (href) => {
 			const url = new URL(href, get_base_uri(document));
-			await prefetch(url);
+			await preload_data(url);
 		},
 
-		// TODO rethink this API
-		prefetch_routes: async (pathnames) => {
-			const matching = pathnames
-				? routes.filter((route) => pathnames.some((pathname) => route.exec(pathname)))
-				: routes;
-
-			const promises = matching.map((r) => {
-				return Promise.all([...r.layouts, r.leaf].map((load) => load?.[1]()));
-			});
-
-			await Promise.all(promises);
-		},
+		preload_code,
 
 		apply_action: async (result) => {
 			if (result.type === 'error') {
@@ -1355,44 +1467,25 @@ export function create_client({ target, base, trailing_slash }) {
 				}
 			});
 
-			/** @param {Event} event */
-			const trigger_prefetch = (event) => {
-				const { url, options, has } = find_anchor(event);
-				if (url && options.prefetch && !is_external_url(url)) {
-					if (options.reload || has.rel_external || has.target || has.download) return;
-					prefetch(url);
-				}
-			};
-
-			/** @type {NodeJS.Timeout} */
-			let mousemove_timeout;
-
-			/** @param {MouseEvent|TouchEvent} event */
-			const handle_mousemove = (event) => {
-				clearTimeout(mousemove_timeout);
-				mousemove_timeout = setTimeout(() => {
-					// event.composedPath(), which is used in find_anchor, will be empty if the event is read in a timeout
-					// add a layer of indirection to address that
-					event.target?.dispatchEvent(
-						new CustomEvent('sveltekit:trigger_prefetch', { bubbles: true })
-					);
-				}, 20);
-			};
-
-			addEventListener('touchstart', trigger_prefetch);
-			addEventListener('mousemove', handle_mousemove);
-			addEventListener('sveltekit:trigger_prefetch', trigger_prefetch);
+			// @ts-expect-error this isn't supported everywhere yet
+			if (!navigator.connection?.saveData) {
+				setup_preload();
+			}
 
 			/** @param {MouseEvent} event */
-			addEventListener('click', (event) => {
+			container.addEventListener('click', (event) => {
 				// Adapted from https://github.com/visionmedia/page.js
 				// MIT license https://github.com/visionmedia/page.js#license
 				if (event.button || event.which !== 1) return;
 				if (event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
 				if (event.defaultPrevented) return;
 
-				const { a, url, options, has } = find_anchor(event);
-				if (!a || !url) return;
+				const a = find_anchor(/** @type {Element} */ (event.composedPath()[0]), container);
+				if (!a) return;
+
+				const { url, external, has } = get_link_info(a, base);
+				const options = get_router_options(a);
+				if (!url) return;
 
 				const is_svg_a_element = a instanceof SVGAElement;
 
@@ -1414,7 +1507,7 @@ export function create_client({ target, base, trailing_slash }) {
 				if (has.download) return;
 
 				// Ignore the following but fire beforeNavigate
-				if (options.reload || has.rel_external || has.target) {
+				if (external || options.reload) {
 					const navigation = before_navigate({ url, type: 'link' });
 					if (!navigation) {
 						event.preventDefault();
@@ -1426,8 +1519,8 @@ export function create_client({ target, base, trailing_slash }) {
 				// Check if new url only differs by hash and use the browser default behavior in that case
 				// This will ensure the `hashchange` event is fired
 				// Removing the hash does a full page navigation in the browser, so make sure a hash is present
-				const [base, hash] = url.href.split('#');
-				if (hash !== undefined && base === location.href.split('#')[0]) {
+				const [nonhash, hash] = url.href.split('#');
+				if (hash !== undefined && nonhash === location.href.split('#')[0]) {
 					// set this flag to distinguish between navigations triggered by
 					// clicking a hash link and those triggered by popstate
 					// TODO why not update history here directly?
@@ -1457,8 +1550,56 @@ export function create_client({ target, base, trailing_slash }) {
 				});
 			});
 
+			container.addEventListener('submit', (event) => {
+				if (event.defaultPrevented) return;
+
+				const form = /** @type {HTMLFormElement} */ (
+					HTMLFormElement.prototype.cloneNode.call(event.target)
+				);
+
+				const submitter = /** @type {HTMLButtonElement | HTMLInputElement | null} */ (
+					event.submitter
+				);
+
+				const method = submitter?.formMethod || form.method;
+
+				if (method !== 'get') return;
+
+				const url = new URL(
+					(event.submitter?.hasAttribute('formaction') && submitter?.formAction) || form.action
+				);
+
+				if (is_external_url(url, base)) return;
+
+				const { noscroll, reload } = get_router_options(
+					/** @type {HTMLFormElement} */ (event.target)
+				);
+				if (reload) return;
+
+				event.preventDefault();
+				event.stopPropagation();
+
+				// @ts-expect-error `URLSearchParams(fd)` is kosher, but typescript doesn't know that
+				url.search = new URLSearchParams(new FormData(event.target)).toString();
+
+				navigate({
+					url,
+					scroll: noscroll ? scroll_state() : null,
+					keepfocus: false,
+					redirect_chain: [],
+					details: {
+						state: {},
+						replaceState: false
+					},
+					nav_token: {},
+					accepted: () => {},
+					blocked: () => {},
+					type: 'form'
+				});
+			});
+
 			addEventListener('popstate', (event) => {
-				if (event.state) {
+				if (event.state?.[INDEX_KEY]) {
 					// if a popstate-driven navigation is cancelled, we need to counteract it
 					// with history.go, which means we end up back here, hence this check
 					if (event.state[INDEX_KEY] === current_history_index) return;
@@ -1514,10 +1655,24 @@ export function create_client({ target, base, trailing_slash }) {
 			});
 		},
 
-		_hydrate: async ({ status, error, node_ids, params, route, data: server_data_nodes, form }) => {
+		_hydrate: async ({
+			status = 200,
+			error,
+			node_ids,
+			params,
+			route,
+			data: server_data_nodes,
+			form
+		}) => {
 			hydrated = true;
 
 			const url = new URL(location.href);
+
+			if (!__SVELTEKIT_EMBEDDED__) {
+				// See https://github.com/sveltejs/kit/pull/4935#issuecomment-1328093358 for one motivation
+				// of determining the params on the client side.
+				({ params = {}, route = { id: null } } = get_navigation_intent(url, false) || {});
+			}
 
 			/** @type {import('./types').NavigationFinished | undefined} */
 			let result;
@@ -1561,7 +1716,7 @@ export function create_client({ target, base, trailing_slash }) {
 
 				result = await load_root_error_page({
 					status: error instanceof HttpError ? error.status : 500,
-					error: handle_error(error, { url, params, route }),
+					error: await handle_error(error, { url, params, route }),
 					url,
 					route
 				});
@@ -1580,12 +1735,15 @@ export function create_client({ target, base, trailing_slash }) {
 async function load_data(url, invalid) {
 	const data_url = new URL(url);
 	data_url.pathname = add_data_suffix(url.pathname);
+	if (DEV && url.searchParams.has('x-sveltekit-invalidated')) {
+		throw new Error('Cannot used reserved query parameter "x-sveltekit-invalidated"');
+	}
+	data_url.searchParams.append(
+		'x-sveltekit-invalidated',
+		invalid.map((x) => (x ? '1' : '')).join('_')
+	);
 
-	const res = await native_fetch(data_url.href, {
-		headers: {
-			'x-sveltekit-invalidated': invalid.map((x) => (x ? '1' : '')).join(',')
-		}
-	});
+	const res = await native_fetch(data_url.href);
 	const data = await res.json();
 
 	if (!res.ok) {
@@ -1613,7 +1771,7 @@ async function load_data(url, invalid) {
 /**
  * @param {unknown} error
  * @param {import('types').NavigationEvent} event
- * @returns {App.Error}
+ * @returns {import('../../../types/private.js').MaybePromise<App.Error>}
  */
 function handle_error(error, event) {
 	if (error instanceof HttpError) {
@@ -1670,7 +1828,7 @@ function add_url_properties(type, target) {
 }
 
 function pre_update() {
-	if (__SVELTEKIT_DEV__) {
+	if (DEV) {
 		return () => {
 			check_for_removed_attributes();
 		};
@@ -1709,10 +1867,10 @@ function reset_focus() {
 	}
 }
 
-if (__SVELTEKIT_DEV__) {
+if (DEV) {
 	// Nasty hack to silence harmless warnings the user can do nothing about
-	const warn = console.warn;
-	console.warn = (...args) => {
+	const console_warn = console.warn;
+	console.warn = function warn(...args) {
 		if (
 			args.length === 1 &&
 			/<(Layout|Page)(_[\w$]+)?> was created (with unknown|without expected) prop '(data|form)'/.test(
@@ -1721,6 +1879,6 @@ if (__SVELTEKIT_DEV__) {
 		) {
 			return;
 		}
-		warn(...args);
+		console_warn(...args);
 	};
 }

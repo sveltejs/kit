@@ -1,0 +1,205 @@
+/*	base reset ----------------------------- */
+html {
+	font-size: 62.5%;
+	-webkit-text-size-adjust: 100%;
+	-ms-overflow-style: -ms-autohiding-scrollbar;
+	box-sizing: border-box;
+	border-collapse: collapse;
+}
+
+body {
+	font-size: 1.6rem;
+	font-family: var(--sk-font);
+	line-height: 1.5;
+	color: var(--sk-text-2);
+	background-color: var(--back);
+	width: 100%;
+	tab-size: 2;
+	-moz-tab-size: 2;
+}
+
+* {
+	box-sizing: inherit;
+	margin: 0;
+	padding: 0;
+	scrollbar-width: thin;
+	scrollbar-color: var(--sk-scrollbar) transparent;
+	-webkit-overflow-scrolling: touch;
+}
+
+p,
+ul,
+ol {
+	margin: 1em 0;
+}
+
+a {
+	position: relative;
+	text-decoration: none;
+	cursor: pointer;
+	color: inherit;
+}
+
+a:hover {
+	text-decoration: underline;
+}
+
+h6 {
+	font-size: var(--sk-text-xs);
+}
+h5 {
+	font-size: var(--sk-text-s);
+}
+h4 {
+	font-size: var(--sk-text-s);
+}
+h3 {
+	font-size: var(--sk-text-m);
+}
+h2 {
+	font-size: var(--sk-text-l);
+}
+h1 {
+	font-size: var(--sk-text-xxl);
+}
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+	position: relative;
+	font-weight: 400;
+	line-height: 1.35;
+	color: var(--sk-text-1);
+}
+
+strong {
+	font-weight: 600;
+}
+
+code,
+kbd {
+	font-size: var(--sk-text-xs);
+	font-family: var(--sk-font-mono);
+	line-height: 1.7;
+}
+
+code {
+	position: relative;
+	border-radius: 0.3em;
+	white-space: nowrap;
+	color: var(--sk-text-2);
+	-webkit-font-smoothing: initial;
+	padding: 0.4rem;
+	margin: 0 0.2rem;
+	top: -0.1rem;
+	background: var(--sk-back-4);
+}
+
+pre {
+	overflow-x: auto;
+}
+
+pre code {
+	top: 0;
+	white-space: inherit;
+	background-color: transparent;
+	padding: 0;
+	margin: 0;
+	top: 0;
+	background: transparent;
+}
+
+::selection {
+	background: var(--sk-theme-3);
+	color: white;
+}
+
+/*	opinionated styles --------------------- */
+blockquote {
+	position: relative;
+	margin: 1.6rem 0 2.4rem;
+	padding: 2rem 2.4rem 1.8rem 2.4rem;
+	max-width: var(--sk-line-max-width);
+}
+
+blockquote p,
+blockquote ul {
+	font-size: var(--sk-text-s);
+}
+
+blockquote :last-child {
+	margin: 0;
+}
+
+/*  buttons -------------------------------- */
+button {
+	font-family: inherit;
+	font-size: inherit;
+	background-color: transparent;
+	border: none;
+	color: currentColor;
+	cursor: pointer;
+}
+
+button[disabled] {
+	opacity: 0.55;
+	pointer-events: none;
+}
+
+button > svg {
+	position: relative;
+	top: -0.1rem;
+	width: 2rem !important;
+	height: 2rem !important;
+	stroke: currentColor !important;
+}
+
+/*  links ------------------------------------- */
+a {
+	position: relative;
+	padding: 0 0 1px 0;
+	color: var(--sk-theme-1);
+}
+
+/*  tables --------------------------------- */
+table {
+	width: 100%;
+	font-size: var(--sk-text-s);
+}
+
+td,
+th {
+	text-align: left;
+	border-bottom: 1px solid #eee;
+	padding: 0.4rem 0.8rem 0.4rem 0;
+}
+
+table code,
+table span {
+	white-space: pre;
+}
+
+/*	helper styles -------------------------- */
+figcaption,
+.post aside {
+	max-width: none;
+	margin: 0 auto;
+	padding: 1.6rem 0 0 0.8rem;
+	font: 1.2rem/1.6 var(--sk-font-mono);
+}
+
+/* visually hidden, but accessible to assistive tech */
+.visually-hidden {
+	border: 0;
+	clip: rect(0 0 0 0);
+	height: auto;
+	margin: 0;
+	overflow: hidden;
+	padding: 0;
+	position: absolute;
+	width: 1px;
+	white-space: nowrap;
+}

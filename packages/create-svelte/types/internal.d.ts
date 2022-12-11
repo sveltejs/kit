@@ -5,6 +5,7 @@ export type Options = {
 	prettier: boolean;
 	eslint: boolean;
 	playwright: boolean;
+	vitest: boolean;
 };
 
 export type File = {
@@ -18,6 +19,7 @@ export type Condition =
 	| 'typescript'
 	| 'checkjs'
 	| 'playwright'
+	| 'vitest'
 	| 'skeleton'
 	| 'default'
 	| 'skeletonlib';

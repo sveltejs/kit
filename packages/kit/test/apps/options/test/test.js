@@ -7,9 +7,17 @@ test.describe.configure({ mode: 'parallel' });
 
 test.describe('base path', () => {
 	test('serves a useful 404 when visiting unprefixed path', async ({ request }) => {
-		const response = await request.get('/');
-		expect(response.status()).toBe(404);
-		expect(await response.text()).toBe('Not found (did you mean /path-base/?)');
+		const html = await request.get('/slash/', { headers: { Accept: 'text/html' } });
+		expect(html.status()).toBe(404);
+		expect(await html.text()).toBe(
+			'The server is configured with a public base URL of /path-base - did you mean to visit <a href="/path-base/slash/">/path-base/slash/</a> instead?'
+		);
+
+		const plain = await request.get('/slash/');
+		expect(plain.status()).toBe(404);
+		expect(await plain.text()).toBe(
+			'The server is configured with a public base URL of /path-base - did you mean to visit /path-base/slash/ instead?'
+		);
 	});
 
 	test('serves /', async ({ page, javaScriptEnabled }) => {
@@ -86,6 +94,16 @@ test.describe('base path', () => {
 	});
 });
 
+test.describe('assets path', () => {
+	test('serves static assets with correct prefix', async ({ page, request }) => {
+		await page.goto('/path-base/');
+		const href = await page.locator('link[rel="icon"]').getAttribute('href');
+
+		const response = await request.get(href);
+		expect(response.status()).toBe(200);
+	});
+});
+
 test.describe('CSP', () => {
 	test('blocks script from external site', async ({ page }) => {
 		const { port, close } = await start_server((req, res) => {
@@ -151,13 +169,23 @@ test.describe('trailingSlash', () => {
 		expect(await page.textContent('h2')).toBe('/slash/child/');
 	});
 
-	test('ignores trailing slash on endpoint', async ({ baseURL, request }) => {
+	test('removes trailing slash on endpoint', async ({ baseURL, request }) => {
 		const r1 = await request.get('/path-base/endpoint/');
-		expect(r1.url()).toBe(`${baseURL}/path-base/endpoint/`);
+		expect(r1.url()).toBe(`${baseURL}/path-base/endpoint`);
 		expect(await r1.text()).toBe('hi');
 
 		const r2 = await request.get('/path-base/endpoint');
 		expect(r2.url()).toBe(`${baseURL}/path-base/endpoint`);
+		expect(await r2.text()).toBe('hi');
+	});
+
+	test('adds trailing slash to endpoint', async ({ baseURL, request }) => {
+		const r1 = await request.get('/path-base/endpoint-with-slash');
+		expect(r1.url()).toBe(`${baseURL}/path-base/endpoint-with-slash/`);
+		expect(await r1.text()).toBe('hi');
+
+		const r2 = await request.get('/path-base/endpoint-with-slash/');
+		expect(r2.url()).toBe(`${baseURL}/path-base/endpoint-with-slash/`);
 		expect(await r2.text()).toBe('hi');
 	});
 
@@ -167,14 +195,17 @@ test.describe('trailingSlash', () => {
 
 		expect(data).toEqual({
 			type: 'data',
-			nodes: [null, { type: 'data', data: [{ message: 1 }, 'hi'], uses: {} }]
+			nodes: [
+				{ type: 'data', data: [null], uses: {}, slash: 'always' },
+				{ type: 'data', data: [{ message: 1 }, 'hi'], uses: {} }
+			]
 		});
 	});
 
-	test('accounts for trailingSlash when prefetching', async ({ app, page, javaScriptEnabled }) => {
+	test('accounts for trailingSlash when preloading', async ({ app, page, javaScriptEnabled }) => {
 		if (!javaScriptEnabled) return;
 
-		await page.goto('/path-base/prefetching');
+		await page.goto('/path-base/preloading');
 
 		/** @type {string[]} */
 		let requests = [];
@@ -182,7 +213,7 @@ test.describe('trailingSlash', () => {
 
 		// also wait for network processing to complete, see
 		// https://playwright.dev/docs/network#network-events
-		await app.prefetch('/path-base/prefetching/prefetched');
+		await app.preloadData('/path-base/preloading/preloaded');
 
 		// svelte request made is environment dependent
 		if (process.env.DEV) {
@@ -191,10 +222,10 @@ test.describe('trailingSlash', () => {
 			expect(requests.filter((req) => req.endsWith('.js')).length).toBeGreaterThan(0);
 		}
 
-		expect(requests.includes(`/path-base/prefetching/prefetched/__data.json`)).toBe(true);
+		expect(requests.includes(`/path-base/preloading/preloaded/__data.json`)).toBe(true);
 
 		requests = [];
-		await app.goto('/path-base/prefetching/prefetched');
+		await app.goto('/path-base/preloading/preloaded');
 		expect(requests).toEqual([]);
 	});
 });
@@ -214,5 +245,14 @@ test.describe('Vite options', () => {
 
 		const mode = process.env.DEV ? 'development' : 'custom';
 		expect(await page.textContent('h2')).toBe(`${mode} === ${mode} === ${mode}`);
+	});
+});
+
+test.describe('Routing', () => {
+	test('ignores clicks outside the app target', async ({ page }) => {
+		await page.goto('/path-base/routing/link-outside-app-target/source/');
+
+		await page.click('[href="/path-base/routing/link-outside-app-target/target/"]');
+		await expect(page.locator('h2')).toHaveText('target: 0');
 	});
 });

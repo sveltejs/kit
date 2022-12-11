@@ -157,6 +157,7 @@
 				value={$query}
 				placeholder="Search"
 				aria-describedby="search-description"
+				aria-label="Search"
 				spellcheck="false"
 			/>
 
@@ -178,7 +179,9 @@
 						/>
 					</div>
 				{:else}
-					<h2 class="info">{recent_searches.length ? 'Recent searches' : 'No recent searches'}</h2>
+					<h2 class="info" class:empty={recent_searches.length === 0}>
+						{recent_searches.length ? 'Recent searches' : 'No recent searches'}
+					</h2>
 					{#if recent_searches.length}
 						<div class="results-container">
 							<ul>
@@ -211,7 +214,7 @@
 	</div>
 {/if}
 
-<div aria-live="assertive">
+<div aria-live="assertive" class="visually-hidden">
 	{#if $searching && search?.results.length === 0}
 		<p>No results</p>
 	{/if}
@@ -225,17 +228,24 @@
 		padding: 1rem 6rem 0.5rem 1rem;
 		height: 5rem;
 		border: none;
-		border-bottom: 1px solid #eee;
+		border-bottom: 1px solid var(--sk-back-3);
 		font-weight: 600;
 		flex-shrink: 0;
+		background: var(--sk-back-2);
+		color: var(--sk-text-1);
 	}
 
 	input::selection {
-		background-color: rgba(255, 255, 255, 0.4);
+		background-color: var(--sk-back-translucent);
+	}
+
+	input::placeholder {
+		color: var(--sk-text-3);
+		opacity: 0.3;
 	}
 
 	input:focus-visible {
-		background: var(--second);
+		background: var(--sk-theme-2);
 		color: white;
 		outline: none;
 	}
@@ -252,17 +262,21 @@
 		width: 5rem;
 		height: 5rem;
 		background: none;
-		color: var(--text);
+		color: var(--sk-text-2);
 	}
 
 	button[aria-label='Close']:focus-visible {
-		background: var(--second);
-		color: white;
+		background: var(--sk-theme-2);
+		color: var(--sk-back-1);
 		outline: none;
 	}
 
 	input:focus-visible + button[aria-label='Close'] {
-		color: white;
+		color: var(--sk-back-1);
+	}
+
+	ul {
+		margin: 0;
 	}
 
 	.modal-background,
@@ -276,7 +290,8 @@
 	}
 
 	.modal-background {
-		background: rgba(255, 255, 255, 0.7);
+		background: var(--sk-back-1);
+		opacity: 0.7;
 	}
 
 	.modal {
@@ -293,7 +308,7 @@
 		max-width: 50rem;
 		max-height: 50rem;
 		filter: drop-shadow(2px 4px 16px rgba(0, 0, 0, 0.2));
-		border-radius: var(--border-r);
+		border-radius: var(--sk-border-radius);
 		display: flex;
 		flex-direction: column;
 		overflow: hidden;
@@ -309,8 +324,8 @@
 	}
 
 	.results-container {
-		background: white;
-		border-radius: 0 0 var(--border-r) var(--border-r);
+		background: var(--sk-back-2);
+		border-radius: 0 0 var(--sk-border-radius) var(--sk-border-radius);
 		pointer-events: all;
 	}
 
@@ -319,9 +334,12 @@
 		font-size: 1.2rem;
 		font-weight: normal;
 		text-transform: uppercase;
-		background-color: white;
-		border-radius: 0 0 var(--border-r) var(--border-r);
+		background-color: var(--sk-back-2);
 		pointer-events: all;
+	}
+
+	.info.empty {
+		border-radius: 0 0 var(--sk-border-radius) var(--sk-border-radius);
 	}
 
 	a {
@@ -332,12 +350,12 @@
 	}
 
 	a:hover {
-		background: #eee;
+		background: rgba(0, 0, 0, 0.05);
 	}
 
 	a:focus {
-		background: var(--second);
-		color: white;
+		background: var(--sk-theme-2);
+		color: var(--sk-back-1);
 		outline: none;
 	}
 
@@ -354,17 +372,18 @@
 		font-size: 1rem;
 		text-transform: uppercase;
 		font-weight: 600;
-		color: #999;
+		color: var(--sk-text-3);
 	}
 
 	a strong {
 		font-size: 1.6rem;
-		color: var(--text);
+		color: var(--sk-text-2);
 		margin: 0.4rem 0;
 	}
 
 	a:focus small {
-		color: rgba(255, 255, 255, 0.6);
+		color: white;
+		opacity: 0.6;
 	}
 
 	a:focus strong {
@@ -372,8 +391,8 @@
 	}
 
 	a strong :global(mark) {
-		background: var(--second);
-		color: white;
+		background: var(--sk-theme-2);
+		color: var(--sk-text-3);
 		text-decoration: none;
 		border-radius: 1px;
 	}
@@ -388,12 +407,12 @@
 		right: 0;
 		width: 5rem;
 		height: 100%;
-		color: var(--text);
+		color: var(--sk-text-2);
 		opacity: 0.1;
 	}
 
 	a:focus + [aria-label='Delete'] {
-		color: white;
+		color: var(--sk-back-1);
 	}
 
 	button[aria-label='Delete']:hover {
@@ -402,8 +421,8 @@
 	}
 
 	button[aria-label='Delete']:focus-visible {
-		background: var(--second);
-		color: white;
+		background: var(--sk-theme-2);
+		color: var(--sk-text-1);
 		opacity: 1;
 		outline: none;
 	}

@@ -21,9 +21,7 @@ export interface AdapterEntry {
 	 * A function that is invoked once the entry has been created. This is where you
 	 * should write the function to the filesystem and generate redirect manifests.
 	 */
-	complete(entry: {
-		generateManifest(opts: { relativePath: string; format?: 'esm' | 'cjs' }): string;
-	}): MaybePromise<void>;
+	complete(entry: { generateManifest(opts: { relativePath: string }): string }): MaybePromise<void>;
 }
 
 // Based on https://github.com/josh-hemphill/csp-typed-directives/blob/latest/src/csp.types.ts
@@ -154,6 +152,9 @@ export interface Logger {
 export type MaybePromise<T> = T | Promise<T>;
 
 export interface Prerendered {
+	/**
+	 * A map of `path` to `{ file }` objects, where a path like `/foo` corresponds to `foo.html` and a path like `/bar/` corresponds to `bar/index.html`.
+	 */
 	pages: Map<
 		string,
 		{
@@ -161,6 +162,9 @@ export interface Prerendered {
 			file: string;
 		}
 	>;
+	/**
+	 * A map of `path` to `{ type }` objects.
+	 */
 	assets: Map<
 		string,
 		{
@@ -168,6 +172,9 @@ export interface Prerendered {
 			type: string;
 		}
 	>;
+	/**
+	 * A map of redirects encountered during prerendering.
+	 */
 	redirects: Map<
 		string,
 		{
@@ -185,11 +192,12 @@ export interface PrerenderHttpErrorHandler {
 		path: string;
 		referrer: string | null;
 		referenceType: 'linked' | 'fetched';
+		message: string;
 	}): void;
 }
 
 export interface PrerenderMissingIdHandler {
-	(details: { path: string; id: string; referrers: string[] }): void;
+	(details: { path: string; id: string; referrers: string[]; message: string }): void;
 }
 
 export type PrerenderHttpErrorHandlerValue = 'fail' | 'warn' | 'ignore' | PrerenderHttpErrorHandler;

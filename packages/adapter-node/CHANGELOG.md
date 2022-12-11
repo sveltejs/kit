@@ -1,5 +1,29 @@
 # @sveltejs/adapter-node
 
+## 1.0.0-next.104
+
+### Patch Changes
+
+- update rollup to ^3.7.0 ([#7543](https://github.com/sveltejs/kit/pull/7543))
+
+## 1.0.0-next.103
+
+### Patch Changes
+
+- Update docs with example of loading environment variables ([#8020](https://github.com/sveltejs/kit/pull/8020))
+
+## 1.0.0-next.102
+
+### Patch Changes
+
+- [docs] update reference to `getClientAddress()` ([#7907](https://github.com/sveltejs/kit/pull/7907))
+
+## 1.0.0-next.101
+
+### Patch Changes
+
+- Update docs ([#7744](https://github.com/sveltejs/kit/pull/7744))
+
 ## 1.0.0-next.100
 
 ### Patch Changes

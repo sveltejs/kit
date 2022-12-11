@@ -1,4 +1,4 @@
-import { invalid } from '@sveltejs/kit';
+import { fail } from '@sveltejs/kit';
 
 export function load() {
 	return {
@@ -10,7 +10,7 @@ export function load() {
 export const actions = {
 	default: async ({ request }) => {
 		const fields = await request.formData();
-		return invalid(400, {
+		return fail(400, {
 			errors: { post_message: `echo: ${fields.get('message')}` }
 		});
 	}

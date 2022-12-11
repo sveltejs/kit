@@ -40,6 +40,7 @@ export async function respond_with_error({ event, options, state, status, error,
 
 			const server_data_promise = load_server_data({
 				event,
+				options,
 				state,
 				node: default_layout,
 				parent: async () => ({})
@@ -80,7 +81,7 @@ export async function respond_with_error({ event, options, state, status, error,
 				csr: get_option([default_layout], 'csr') ?? true
 			},
 			status,
-			error: handle_error_and_jsonify(event, options, error),
+			error: await handle_error_and_jsonify(event, options, error),
 			branch,
 			fetched,
 			event,
@@ -96,7 +97,7 @@ export async function respond_with_error({ event, options, state, status, error,
 		return static_error_page(
 			options,
 			error instanceof HttpError ? error.status : 500,
-			handle_error_and_jsonify(event, options, error).message
+			(await handle_error_and_jsonify(event, options, error)).message
 		);
 	}
 }

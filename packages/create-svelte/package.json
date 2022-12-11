@@ -1,6 +1,6 @@
 {
 	"name": "create-svelte",
-	"version": "2.0.0-next.190",
+	"version": "2.0.0-next.202",
 	"repository": {
 		"type": "git",
 		"url": "https://github.com/sveltejs/kit",
@@ -15,17 +15,16 @@
 		"prompts": "^2.4.2"
 	},
 	"devDependencies": {
-		"@playwright/test": "1.25.0",
+		"@playwright/test": "^1.28.1",
 		"@sveltejs/kit": "workspace:*",
 		"@types/gitignore-parser": "^0.0.0",
 		"@types/prettier": "^2.7.1",
 		"@types/prompts": "^2.4.1",
 		"gitignore-parser": "^0.0.2",
-		"prettier": "^2.7.1",
-		"prettier-plugin-svelte": "^2.8.0",
-		"sucrase": "^3.28.0",
-		"svelte": "^3.52.0",
-		"svelte-preprocess": "^4.10.7",
+		"prettier": "^2.8.0",
+		"prettier-plugin-svelte": "^2.8.1",
+		"sucrase": "^3.29.0",
+		"svelte": "^3.54.0",
 		"tiny-glob": "^0.2.9",
 		"uvu": "^0.5.6"
 	},

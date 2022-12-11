@@ -7,8 +7,8 @@ import 'prismjs/components/prism-diff.js';
 import 'prismjs/components/prism-typescript.js';
 import 'prism-svelte';
 import { escape, extract_frontmatter, transform } from './markdown.js';
-import { modules } from '../../../../../../packages/kit/docs/types.js';
-import { render_modules } from './modules.js';
+import { modules } from './type-info.js';
+import { render, replace_placeholders } from './render.js';
 import { parse_route_id } from '../../../../../../packages/kit/src/utils/routing.js';
 import ts from 'typescript';
 import MagicString from 'magic-string';
@@ -45,8 +45,12 @@ const type_regex = new RegExp(
 
 const type_links = new Map();
 
+const slugs = {
+	'@sveltejs/kit': 'public-types'
+};
+
 modules.forEach((module) => {
-	const slug = slugify(module.name);
+	const slug = slugs[module.name] || slugify(module.name);
 
 	module.types.forEach((type) => {
 		const link = `/docs/types#${slug}-${slugify(type.name)}`;
@@ -58,21 +62,18 @@ modules.forEach((module) => {
  * @param {string} file
  */
 export async function read_file(file) {
-	const match = /\d{2}-(.+)\.md/.exec(file.split(path.sep).pop());
+	const match = /\d{2}-(.+)\.md/.exec(path.basename(file));
 	if (!match) return null;
 
-	const markdown = fs
-		.readFileSync(`${base}/${file}`, 'utf-8')
-		.replace('**TYPES**', () => render_modules('types'))
-		.replace('**EXPORTS**', () => render_modules('exports'));
+	const markdown = replace_placeholders(fs.readFileSync(`${base}/${file}`, 'utf-8'));
 
 	const highlighter = await createShikiHighlighter({ theme: 'css-variables' });
 
 	const { metadata, body } = extract_frontmatter(markdown);
 
 	const { content, sections } = parse({
-		body: generate_ts_from_js(body),
 		file,
+		body: generate_ts_from_js(body),
 		code: (source, language, current) => {
 			const hash = createHash('sha256');
 			hash.update(source + language + current);
@@ -107,24 +108,42 @@ export async function read_file(file) {
 			let version_class = '';
 			if (language === 'generated-ts' || language === 'generated-svelte') {
 				language = language.replace('generated-', '');
-				version_class = ' ts-version';
+				version_class = 'ts-version';
 			} else if (language === 'original-js' || language === 'original-svelte') {
 				language = language.replace('original-', '');
-				version_class = ' js-version';
+				version_class = 'js-version';
 			}
 
-			if (language === 'js' || language === 'ts') {
+			if (language === 'dts') {
+				html = renderCodeToHTML(source, 'ts', { twoslash: false }, {}, highlighter);
+			} else if (language === 'js' || language === 'ts') {
 				try {
 					const injected = [];
-					if (source.includes('$app/')) {
+					if (
+						source.includes('$app/') ||
+						source.includes('$service-worker') ||
+						source.includes('@sveltejs/kit/')
+					) {
 						injected.push(
 							`// @filename: ambient-kit.d.ts`,
 							`/// <reference types="@sveltejs/kit" />`
 						);
 					}
+
+					if (source.includes('$env/')) {
+						// TODO we're hardcoding static env vars that are used in code examples
+						// in the types, which isn't... totally ideal, but will do for now
+						injected.push(
+							`declare module '$env/dynamic/private' { export const env: Record<string, string> }`,
+							`declare module '$env/dynamic/public' { export const env: Record<string, string> }`,
+							`declare module '$env/static/private' { export const API_KEY: string }`,
+							`declare module '$env/static/public' { export const PUBLIC_BASE_URL: string }`
+						);
+					}
+
 					if (source.includes('./$types') && !source.includes('@filename: $types.d.ts')) {
 						const params = parse_route_id(options.file || `+page.${language}`)
-							.names.map((name) => `${name}: string`)
+							.params.map((param) => `${param.name}: string`)
 							.join(', ');
 
 						injected.push(
@@ -139,11 +158,18 @@ export async function read_file(file) {
 							`export type Actions = Kit.Actions<{${params}}>;`
 						);
 					}
-					if (!options.file) {
-						// No named file -> assume that the code is not meant to be type checked
-						// If we don't do this, twoslash would throw errors for e.g. some snippets in `types/ambient.d.ts`
-						injected.push('// @noErrors');
+
+					// special case — we need to make allowances for code snippets coming
+					// from e.g. ambient.d.ts
+					if (file.endsWith('30-modules.md')) {
+						injected.push('// @errors: 7006 7031');
 					}
+
+					// another special case
+					if (source.includes('$lib/types')) {
+						injected.push(`declare module '$lib/types' { export interface User {} }`);
+					}
+
 					if (injected.length) {
 						const injected_str = injected.join('\n');
 						if (source.includes('// @filename:')) {
@@ -219,9 +245,13 @@ export async function read_file(file) {
 				html = `<pre class='language-${plang}'><code>${highlighted}</code></pre>`;
 			}
 
-			html = `<div class="code-block${version_class}">${
-				options.file ? `<h5>${options.file}</h5>` : ''
-			}${html}</div>`;
+			if (options.file) {
+				html = `<div class="code-block"><span class="filename">${options.file}</span>${html}</div>`;
+			}
+
+			if (version_class) {
+				html = html.replace(/class=('|")/, `class=$1${version_class} `);
+			}
 
 			type_regex.lastIndex = 0;
 
@@ -251,7 +281,8 @@ export async function read_file(file) {
 							})
 							.join('');
 					}
-				);
+				)
+				.replace(/\/\*…\*\//g, '…');
 
 			fs.writeFileSync(`${snippet_cache}/${digest}.html`, html);
 			return html;
@@ -279,13 +310,13 @@ export async function read_file(file) {
 
 /**
  * @param {{
- *   body: string;
  *   file: string;
+ *   body: string;
  *   code: (source: string, language: string, current: string) => string;
  *   codespan: (source: string) => string;
  * }} opts
  */
-function parse({ body, file, code, codespan }) {
+function parse({ file, body, code, codespan }) {
 	const headings = [];
 
 	/** @type {import('./types').Section[]} */
@@ -320,7 +351,7 @@ function parse({ body, file, code, codespan }) {
 
 			const slug = headings.filter(Boolean).join('-');
 
-			if (level === 3) {
+			if (level === 2) {
 				section = {
 					title,
 					slug,
@@ -328,8 +359,8 @@ function parse({ body, file, code, codespan }) {
 				};
 
 				sections.push(section);
-			} else if (level === 4) {
-				section.sections.push({
+			} else if (level === 3) {
+				(section?.sections ?? sections).push({
 					title,
 					slug
 				});
@@ -337,7 +368,7 @@ function parse({ body, file, code, codespan }) {
 				throw new Error(`Unexpected <h${level}> in ${file}`);
 			}
 
-			return `<h${level} id="${slug}">${html}<a href="#${slug}" class="anchor"><span class="visually-hidden">permalink</span></a></h${level}>`;
+			return `<h${level} id="${slug}">${html}<a href="#${slug}" class="permalink"><span class="visually-hidden">permalink</span></a></h${level}>`;
 		},
 		code: (source, language) => code(source, language, current),
 		codespan
@@ -371,6 +402,10 @@ export function generate_ts_from_js(markdown) {
 		.replaceAll(/```js\n([\s\S]+?)\n```/g, (match, code) => {
 			if (!code.includes('/// file:')) {
 				// No named file -> assume that the code is not meant to be shown in two versions
+				return match;
+			}
+			if (code.includes('/// file: svelte.config.js')) {
+				// svelte.config.js has no TS equivalent
 				return match;
 			}
 
@@ -457,11 +492,12 @@ function convert_to_ts(js_code, indent = '', offset = '') {
 							code.overwrite(
 								node.getStart(),
 								node.name.getEnd(),
-								`${is_export ? 'export ' : ''}const ${node.name.getText()}: ${name} = ${
+								`${is_export ? 'export ' : ''}const ${node.name.getText()} = (${
 									is_async ? 'async ' : ''
 								}`
 							);
 							code.appendLeft(node.body.getStart(), '=> ');
+							code.appendLeft(node.body.getEnd(), `) satisfies ${name};`);
 
 							modified = true;
 						} else if (

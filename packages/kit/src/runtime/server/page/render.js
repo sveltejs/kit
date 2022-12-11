@@ -4,6 +4,7 @@ import { hash } from '../../hash.js';
 import { serialize_data } from './serialize_data.js';
 import { s } from '../../../utils/misc.js';
 import { Csp } from './csp.js';
+import { uneval_action_response } from './actions.js';
 import { clarify_devalue_error } from '../utils.js';
 
 // TODO rename this function/module
@@ -55,6 +56,7 @@ export async function render_response({
 
 	const stylesheets = new Set(entry.stylesheets);
 	const modulepreloads = new Set(entry.imports);
+	const fonts = new Set(options.manifest._.entry.fonts);
 
 	/** @type {Set<string>} */
 	const link_header_preloads = new Set();
@@ -66,7 +68,7 @@ export async function render_response({
 	let rendered;
 
 	const form_value =
-		action_result?.type === 'success' || action_result?.type === 'invalid'
+		action_result?.type === 'success' || action_result?.type === 'failure'
 			? action_result.data ?? null
 			: null;
 
@@ -127,6 +129,10 @@ export async function render_response({
 
 			if (node.stylesheets) {
 				node.stylesheets.forEach((url) => stylesheets.add(url));
+			}
+
+			if (node.fonts) {
+				node.fonts.forEach((url) => fonts.add(url));
 			}
 
 			if (node.inline_styles) {
@@ -190,7 +196,9 @@ export async function render_response({
 					if (server_data.uses.route) uses.push(`route:1`);
 					if (server_data.uses.url) uses.push(`url:1`);
 
-					return `{type:"data",data:${data},uses:{${uses.join(',')}}}`;
+					return `{type:"data",data:${data},uses:{${uses.join(',')}}${
+						server_data.slash ? `,slash:${s(server_data.slash)}` : ''
+					}}`;
 				}
 
 				return s(server_data);
@@ -202,8 +210,7 @@ export async function render_response({
 	}
 
 	if (form_value) {
-		// no need to check it can be serialized, we already verified that it's JSON-friendly
-		serialized.form = devalue.uneval(form_value);
+		serialized.form = uneval_action_response(form_value, /** @type {string} */ (event.route.id));
 	}
 
 	if (inline_styles.size > 0) {
@@ -220,26 +227,82 @@ export async function render_response({
 
 	for (const dep of stylesheets) {
 		const path = prefixed(dep);
-		const attributes = [];
 
-		if (csp.style_needs_nonce) {
-			attributes.push(`nonce="${csp.nonce}"`);
+		if (resolve_opts.preload({ type: 'css', path })) {
+			const attributes = [];
+
+			if (csp.style_needs_nonce) {
+				attributes.push(`nonce="${csp.nonce}"`);
+			}
+
+			if (inline_styles.has(dep)) {
+				// don't load stylesheets that are already inlined
+				// include them in disabled state so that Vite can detect them and doesn't try to add them
+				attributes.push('disabled', 'media="(max-width: 0)"');
+			} else {
+				const preload_atts = ['rel="preload"', 'as="style"'].concat(attributes);
+				link_header_preloads.add(`<${encodeURI(path)}>; ${preload_atts.join(';')}; nopush`);
+			}
+
+			attributes.unshift('rel="stylesheet"');
+			head += `\n\t\t<link href="${path}" ${attributes.join(' ')}>`;
 		}
+	}
 
-		if (inline_styles.has(dep)) {
-			// don't load stylesheets that are already inlined
-			// include them in disabled state so that Vite can detect them and doesn't try to add them
-			attributes.push('disabled', 'media="(max-width: 0)"');
-		} else {
-			const preload_atts = ['rel="preload"', 'as="style"'].concat(attributes);
-			link_header_preloads.add(`<${encodeURI(path)}>; ${preload_atts.join(';')}; nopush`);
+	for (const dep of fonts) {
+		const path = prefixed(dep);
+
+		if (resolve_opts.preload({ type: 'font', path })) {
+			const ext = dep.slice(dep.lastIndexOf('.') + 1);
+			const attributes = [
+				'rel="preload"',
+				'as="font"',
+				`type="font/${ext}"`,
+				`href="${path}"`,
+				'crossorigin'
+			];
+
+			head += `\n\t\t<link ${attributes.join(' ')}>`;
 		}
-
-		attributes.unshift('rel="stylesheet"');
-		head += `\n\t\t<link href="${path}" ${attributes.join(' ')}>`;
 	}
 
 	if (page_config.csr) {
+		const opts = [
+			`env: ${s(options.public_env)}`,
+			`paths: ${s(options.paths)}`,
+			`target: document.querySelector('[data-sveltekit-hydrate="${target}"]').parentNode`,
+			`version: ${s(options.version)}`
+		];
+
+		if (page_config.ssr) {
+			const hydrate = [
+				`node_ids: [${branch.map(({ node }) => node.index).join(', ')}]`,
+				`data: ${serialized.data}`,
+				`form: ${serialized.form}`
+			];
+
+			if (status !== 200) {
+				hydrate.push(`status: ${status}`);
+			}
+
+			if (error) {
+				hydrate.push(`error: ${devalue.uneval(error)}`);
+			}
+
+			if (options.embedded) {
+				hydrate.push(`params: ${devalue.uneval(event.params)}`, `route: ${s(event.route)}`);
+			}
+
+			opts.push(`hydrate: {\n\t\t\t\t\t${hydrate.join(',\n\t\t\t\t\t')}\n\t\t\t\t}`);
+		}
+
+		// prettier-ignore
+		const startupContent = `
+			start({
+				${opts.join(',\n\t\t\t\t')}
+			});
+		`;
+
 		// Injecting (potentially) legacy script together with the modern script -
 		//  in a similar fashion to the script tags injection of @vitejs/plugin-legacy.
 		// Notice that unlike the script injection on @vitejs/plugin-legacy,
@@ -256,9 +319,12 @@ export async function render_response({
 
 		for (const dep of modulepreloads) {
 			const path = prefixed(dep);
-			link_header_preloads.add(`<${encodeURI(path)}>; rel="modulepreload"; nopush`);
-			if (state.prerendering) {
-				head += `\n\t\t<link rel="modulepreload" href="${path}">`;
+
+			if (resolve_opts.preload({ type: 'js', path })) {
+				link_header_preloads.add(`<${encodeURI(path)}>; rel="modulepreload"; nopush`);
+				if (state.prerendering) {
+					head += `\n\t\t<link rel="modulepreload" href="${path}">`;
+				}
 			}
 		}
 
@@ -304,25 +370,6 @@ export async function render_response({
 			add_nomodule_script('', `src=${s(prefixed(legacy_polyfills_file))}`);
 		}
 
-		// prettier-ignore
-		const startupContent = `
-			start({
-				env: ${s(options.public_env)},
-				hydrate: ${page_config.ssr ? `{
-					status: ${status},
-					error: ${devalue.uneval(error)},
-					node_ids: [${branch.map(({ node }) => node.index).join(', ')}],
-					params: ${devalue.uneval(event.params)},
-					route: ${s(event.route)},
-					data: ${serialized.data},
-					form: ${serialized.form}
-				}` : 'null'},
-				paths: ${s(options.paths)},
-				target: document.querySelector('[data-sveltekit-hydrate="${target}"]').parentNode,
-				trailing_slash: ${s(options.trailing_slash)}
-			});
-		`;
-
 		if (legacy_entry_file) {
 			const startup_script_js = `window.${startup_script_var_name} = function (m) { (function (start) {${startupContent}})(m.start) };`;
 			body += `\n\t\t<script${
@@ -364,6 +411,7 @@ export async function render_response({
 		` : `
 		import { start } from ${s(prefixed(entry.file))};
 		${startupContent}`;
+		
 		const attributes = ['type="module"', `data-sveltekit-hydrate="${target}"`];
 
 		csp.add_script(init_app);

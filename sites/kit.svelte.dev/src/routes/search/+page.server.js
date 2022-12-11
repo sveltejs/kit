@@ -9,7 +9,7 @@ export async function load({ url }) {
 
 	const query = url.searchParams.get('q');
 
-	const results = search(query);
+	const results = query ? search(query) : [];
 
 	return {
 		query,
