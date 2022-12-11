@@ -1387,7 +1387,7 @@ export function create_client({ target, base }) {
 						url,
 						params: current.params,
 						branch: branch.slice(0, error_load.idx).concat(error_load.node),
-						status: 500, // TODO might not be 500?
+						status: result.status || 500,
 						error: result.error,
 						route
 					});

@@ -1074,7 +1074,7 @@ export type ActionResult<
 	| { type: 'success'; status: number; data?: Success }
 	| { type: 'failure'; status: number; data?: Invalid }
 	| { type: 'redirect'; status: number; location: string }
-	| { type: 'error'; error: any };
+	| { type: 'error'; status?: number; error: any };
 
 /**
  * Creates an `HttpError` object with an HTTP status code and an optional message.
