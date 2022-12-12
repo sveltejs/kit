@@ -22,11 +22,12 @@ const [, , client_out_dir, manifest_path, results_path, verbose, env] = process.
 prerender();
 
 /**
- * @template T
+ * @template {{message: string}} T
+ * @template {Omit<T, 'message'>} K
  * @param {import('types').Logger} log
  * @param {'fail' | 'warn' | 'ignore' | ((details: T) => void)} input
- * @param {(details: T) => string} format
- * @returns {(details: T) => void}
+ * @param {(details: K) => string} format
+ * @returns {(details: K) => void}
  */
 function normalise_error_handler(log, input, format) {
 	switch (input) {
@@ -41,6 +42,7 @@ function normalise_error_handler(log, input, format) {
 		case 'ignore':
 			return () => {};
 		default:
+			// @ts-expect-error TS thinks T might be of a different kind, but it's not
 			return (details) => input({ ...details, message: format(details) });
 	}
 }
