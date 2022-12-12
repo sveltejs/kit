@@ -22,7 +22,6 @@
 			"env": ["VERCEL", "ENABLE_VC_BUILD"]
 		},
 		"check": {
-			"dependsOn": ["prepare"],
 			"inputs": [
 				"index.js",
 				"index.d.ts",
