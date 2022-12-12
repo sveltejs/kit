@@ -376,9 +376,6 @@ test('load default config (esm)', async () => {
 
 	const defaults = get_defaults(cwd + '/');
 	defaults.kit.version.name = config.kit.version.name;
-	defaults.kit.files.errorTemplate = fileURLToPath(
-		new URL('./default-error.html', import.meta.url)
-	);
 
 	assert.equal(config, defaults);
 });
