@@ -250,13 +250,13 @@ export async function dev(vite, vite_config, svelte_config) {
 	// changing the svelte config requires restarting the dev server
 	// the config is only read on start and passed on to vite-plugin-svelte
 	// which needs up-to-date values to operate correctly
-	vite.watcher.on('change',(file)=> {
-		if(path.basename(file) === 'svelte.config.js'){
+	vite.watcher.on('change', (file) => {
+		if (path.basename(file) === 'svelte.config.js') {
 			console.log(`svelte config changed, restarting vite dev-server. changed file: ${file}`);
 			restarting = true;
 			vite.restart();
 		}
-	})
+	});
 
 	const assets = svelte_config.kit.paths.assets ? SVELTE_KIT_ASSETS : svelte_config.kit.paths.base;
 	const asset_server = sirv(svelte_config.kit.files.assets, {
