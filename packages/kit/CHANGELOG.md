@@ -1,5 +1,17 @@
 # @sveltejs/kit
 
+## 1.0.0-next.583
+
+### Patch Changes
+
+- restart vite dev-server on svelte config change ([#8087](https://github.com/sveltejs/kit/pull/8087))
+
+- Set correct `$page.status` when using `enhance` and result is of type `'error'` ([#8073](https://github.com/sveltejs/kit/pull/8073))
+
+- [fix] ensure export conditions are resolve through Vite ([#8092](https://github.com/sveltejs/kit/pull/8092))
+
+- [fix] don't crash Vite dev server on manifest error ([#8093](https://github.com/sveltejs/kit/pull/8093))
+
 ## 1.0.0-next.582
 
 ### Patch Changes
