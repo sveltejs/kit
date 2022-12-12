@@ -138,7 +138,16 @@ export function get_build_setup_config({ config, ssr }) {
 			exclude: ['@sveltejs/kit']
 		},
 		ssr: {
-			noExternal: ['@sveltejs/kit']
+			noExternal: [
+				// TODO document why this is necessary
+				'@sveltejs/kit',
+				// This ensures that esm-env is inlined into the server output with the
+				// export conditions resolved correctly through Vite. This prevents adapters
+				// that bundle later on to resolve the export conditions incorrectly
+				// and for example include browser-only code in the server output
+				// because they for example use esbuild.build with `platform: 'browser'`
+				'esm-env'
+			]
 		},
 		worker: {
 			rollupOptions: {
