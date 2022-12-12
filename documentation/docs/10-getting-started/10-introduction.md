@@ -4,7 +4,9 @@ title: Introduction
 
 ## Before we begin
 
-> SvelteKit is in release candidate phase for 1.0 while we address reported issues and add polish. If you get stuck, reach out for help in the [Discord chatroom](https://svelte.dev/chat).
+> If you're new to SvelteKit, do the [interactive tutorial](https://learn.svelte.dev/tutorial/introducing-sveltekit).
+>
+> If you get stuck, reach out for help in the [Discord chatroom](https://svelte.dev/chat).
 >
 > See the [migration guides](/docs/migrating) for help upgrading from Sapper.
 

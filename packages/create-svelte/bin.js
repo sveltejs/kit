@@ -9,10 +9,6 @@ import { dist } from './utils.js';
 // prettier-ignore
 const disclaimer = `
 ${bold(cyan('Welcome to SvelteKit!'))}
-
-${bold(red('This is release candidate software; expect bugs and missing features.'))}
-
-Problems? Open an issue on ${cyan('https://github.com/sveltejs/kit/issues')} if none exists already.
 `;
 
 const { version } = JSON.parse(fs.readFileSync(new URL('package.json', import.meta.url), 'utf-8'));
@@ -180,7 +176,15 @@ async function main() {
 	console.log(`  ${i++}: ${bold(cyan('npm run dev -- --open'))}`);
 
 	console.log(`\nTo close the dev server, hit ${bold(cyan('Ctrl-C'))}`);
-	console.log(`\nStuck? Visit us at ${cyan('https://svelte.dev/chat')}\n`);
+	console.log(
+		`\nNew? Do the tutorial at ${cyan('https://learn.svelte.dev/tutorial/introducing-sveltekit')}\n`
+	);
+	console.log(`\nStuck? Visit us at ${cyan('https://svelte.dev/chat')}`);
+	console.log(
+		`\nProblems? Open an issue on ${cyan(
+			'https://github.com/sveltejs/kit/issues'
+		)} if none exists already.\n`
+	);
 }
 
 main();

@@ -1,16 +1,5 @@
 [![Chat](https://img.shields.io/discord/457912077277855764?label=chat&logo=discord)](https://svelte.dev/chat)
 
-# READ THIS FIRST!
-
-SvelteKit is in its release candidate phase:
-- :exclamation: expect bugs! 
-- :heavy_check_mark: no more planned breaking changes
-- :heavy_check_mark: countdown to a stable release
-- :x: feature-complete
-- :x: tutorials
-
-Watch [the announcement](https://www.youtube.com/watch?v=A8jkJTWacow&t=29628s) and track [progress towards 1.0](https://github.com/sveltejs/kit/issues?q=is%3Aopen+is%3Aissue+milestone%3A1.0) for more details.
-
 ## Overview
 
 The Fastest Way to Build Svelte Apps
