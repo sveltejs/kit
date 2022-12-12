@@ -49,7 +49,13 @@ export async function dev(vite, vite_config, svelte_config) {
 	}
 
 	async function update_manifest() {
-		({ manifest_data } = await sync.create(svelte_config));
+		try {
+			({ manifest_data } = await sync.create(svelte_config));
+		} catch (e) {
+			console.error(colors.bold().red('Failed to update manifest'));
+			console.error(coalesce_to_error(e));
+			return;
+		}
 
 		manifest = {
 			appDir: svelte_config.kit.appDir,
