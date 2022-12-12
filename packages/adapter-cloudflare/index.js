@@ -62,7 +62,6 @@ export default function () {
 				entryPoints: [`${tmp}/_worker.js`],
 				outfile: `${dest}/_worker.js`,
 				allowOverwrite: true,
-				format: 'esm',
 				bundle: true
 			});
 		}
