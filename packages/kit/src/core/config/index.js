@@ -43,7 +43,14 @@ export function load_template(cwd, config) {
  * @param {import('types').ValidatedConfig} config
  */
 export function load_error_page(config) {
-	const { errorTemplate } = config.kit.files;
+	let { errorTemplate } = config.kit.files;
+
+	// Don't do this inside resolving the config, because that would mean
+	// adding/removing error.html isn't detected and would require a restart.
+	if (!fs.existsSync(config.kit.files.errorTemplate)) {
+		errorTemplate = url.fileURLToPath(new URL('./default-error.html', import.meta.url));
+	}
+
 	return fs.readFileSync(errorTemplate, 'utf-8');
 }
 
@@ -84,12 +91,6 @@ function process_config(config, { cwd = process.cwd() } = {}) {
 			// @ts-expect-error
 			validated.kit.files[key] = path.resolve(cwd, validated.kit.files[key]);
 		}
-	}
-
-	if (!fs.existsSync(validated.kit.files.errorTemplate)) {
-		validated.kit.files.errorTemplate = url.fileURLToPath(
-			new URL('./default-error.html', import.meta.url)
-		);
 	}
 
 	return validated;
