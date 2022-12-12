@@ -107,6 +107,7 @@ export function enhance(form, submit = () => {}) {
 			});
 
 			result = deserialize(await response.text());
+			if (result.type === 'error') result.status = response.status;
 		} catch (error) {
 			if (/** @type {any} */ (error)?.name === 'AbortError') return;
 			result = { type: 'error', error };

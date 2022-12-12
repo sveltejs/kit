@@ -28,7 +28,7 @@
 	<div class="showcase">
 		{#each showcase as { url, image }}
 			<a href="https://{url}" target="_blank" rel="noreferrer">
-				<Image src={image} alt="Screenshot of {url}" />
+				<Image src={image} alt="" />
 				<span>{url}</span>
 			</a>
 		{/each}
