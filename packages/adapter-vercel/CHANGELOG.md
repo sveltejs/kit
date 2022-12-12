@@ -1,5 +1,11 @@
 # @sveltejs/adapter-vercel
 
+## 1.0.0-next.86
+
+### Patch Changes
+
+- [fix] set esbuild platform to neutral ([#8083](https://github.com/sveltejs/kit/pull/8083))
+
 ## 1.0.0-next.85
 
 ### Patch Changes

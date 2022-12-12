@@ -1,5 +1,13 @@
 # @sveltejs/kit
 
+## 1.0.0-next.584
+
+### Patch Changes
+
+- [fix] load errorTemplate from correct location ([#8096](https://github.com/sveltejs/kit/pull/8096))
+
+- More robust manifest error recovery ([#8095](https://github.com/sveltejs/kit/pull/8095))
+
 ## 1.0.0-next.583
 
 ### Patch Changes

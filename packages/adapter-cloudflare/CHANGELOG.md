@@ -1,5 +1,11 @@
 # @sveltejs/adapter-cloudflare
 
+## 1.0.0-next.42
+
+### Patch Changes
+
+- [fix] set esbuild platform to neutral ([#8083](https://github.com/sveltejs/kit/pull/8083))
+
 ## 1.0.0-next.41
 
 ### Patch Changes
