@@ -67,7 +67,7 @@ export async function dev(vite, vite_config, svelte_config) {
 			vite.ws.send({
 				type: 'error',
 				err: {
-					message: manifest_error?.message ?? 'Invalid routes',
+					message: manifest_error.message ?? 'Invalid routes',
 					stack: ''
 				}
 			});
