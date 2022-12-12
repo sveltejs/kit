@@ -470,7 +470,9 @@ export async function dev(vite, vite_config, svelte_config) {
 					res.writeHead(500, {
 						'Content-Type': 'text/html; charset=utf-8'
 					});
-					res.end(error_template({ status: 500, message: manifest_error.message ?? 'Invalid routes' }));
+					res.end(
+						error_template({ status: 500, message: manifest_error.message ?? 'Invalid routes' })
+					);
 
 					return;
 				}
