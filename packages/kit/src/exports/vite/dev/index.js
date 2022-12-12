@@ -221,13 +221,16 @@ export async function dev(vite, vite_config, svelte_config) {
 		}, 100);
 	};
 
+	// flag to skip watchers if server is already restarting
+	let restarting = false;
+
 	// Debounce add/unlink events because in case of folder deletion or moves
 	// they fire in rapid succession, causing needless invocations.
 	watch('add', () => debounce(update_manifest));
 	watch('unlink', () => debounce(update_manifest));
 	watch('change', (file) => {
 		// Don't run for a single file if the whole manifest is about to get updated
-		if (timeout) return;
+		if (timeout || restarting) return;
 
 		sync.update(svelte_config, manifest_data, file);
 	});
@@ -238,11 +241,22 @@ export async function dev(vite, vite_config, svelte_config) {
 	// send the vite client a full-reload event without path being set
 	if (appTemplate !== 'index.html') {
 		vite.watcher.on('change', (file) => {
-			if (file === appTemplate) {
+			if (file === appTemplate && !restarting) {
 				vite.ws.send({ type: 'full-reload' });
 			}
 		});
 	}
+
+	// changing the svelte config requires restarting the dev server
+	// the config is only read on start and passed on to vite-plugin-svelte
+	// which needs up-to-date values to operate correctly
+	vite.watcher.on('change', (file) => {
+		if (path.basename(file) === 'svelte.config.js') {
+			console.log(`svelte config changed, restarting vite dev-server. changed file: ${file}`);
+			restarting = true;
+			vite.restart();
+		}
+	});
 
 	const assets = svelte_config.kit.paths.assets ? SVELTE_KIT_ASSETS : svelte_config.kit.paths.base;
 	const asset_server = sirv(svelte_config.kit.files.assets, {
