@@ -117,8 +117,6 @@ export function resolve_symlinks(manifest, file) {
  * @return {import('vite').UserConfig}
  */
 export function get_build_setup_config({ config, ssr }) {
-	const prefix = `${config.kit.appDir}/immutable`;
-
 	return {
 		build: {
 			// don't use the default name to avoid collisions with 'static/manifest.json'
@@ -148,15 +146,6 @@ export function get_build_setup_config({ config, ssr }) {
 				// because they for example use esbuild.build with `platform: 'browser'`
 				'esm-env'
 			]
-		},
-		worker: {
-			rollupOptions: {
-				output: {
-					entryFileNames: `${prefix}/workers/[name]-[hash].js`,
-					chunkFileNames: `${prefix}/workers/chunks/[name]-[hash].js`,
-					hoistTransitiveImports: false
-				}
-			}
 		}
 	};
 }
@@ -194,7 +183,16 @@ export function get_build_compile_config({ config, input, ssr, outDir }) {
 			},
 			target: ssr ? 'node16.14' : undefined
 		},
-		publicDir: ssr ? false : config.kit.files.assets
+		publicDir: ssr ? false : config.kit.files.assets,
+		worker: {
+			rollupOptions: {
+				output: {
+					entryFileNames: `${prefix}/workers/[name]-[hash].js`,
+					chunkFileNames: `${prefix}/workers/chunks/[name]-[hash].js`,
+					hoistTransitiveImports: false
+				}
+			}
+		}
 	};
 }
 
