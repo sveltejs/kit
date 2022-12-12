@@ -292,8 +292,9 @@
 
 .text blockquote {
 	color: var(--sk-text-translucent);
-	background-color: rgba(255, 62, 0, 0.2);
-	border-left: 4px solid #ff3e00;
+	background-color: var(--sk-back-3);
+	border: 1px solid var(--sk-theme-3-variant);
+	border-radius: var(--sk-border-radius);
 	padding: 1rem;
 }
 
