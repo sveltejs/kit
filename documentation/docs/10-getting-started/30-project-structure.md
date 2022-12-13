@@ -53,13 +53,15 @@ The `src` directory contains the meat of your project.
 
 You can use `.ts` files instead of `.js` files, if using TypeScript.
 
+If you added [Vitest](https://vitest.dev) when you set up your project, your unit tests will live in the `src` directory with a `.test.js` (or `.test.ts`) extension.
+
 ### static
 
 Any static assets that should be served as-is, like `robots.txt` or `favicon.png`, go in here.
 
 ### tests
 
-If you chose to add tests to your project during `npm create svelte@latest`, they will live in this directory.
+If you added [Playwright](https://playwright.dev/) for browser testing when you set up your project, the tests will live in this directory.
 
 ### package.json
 

@@ -1,3 +1,4 @@
+import { DEV } from 'esm-env';
 import { is_endpoint_request, render_endpoint } from './endpoint.js';
 import { render_page } from './page/index.js';
 import { render_response } from './page/render.js';
@@ -167,20 +168,23 @@ export async function respond(request, options, state) {
 					options.manifest._.nodes[route.page.leaf]()
 				]);
 
-				if (__SVELTEKIT_DEV__) {
+				if (DEV) {
 					const layouts = nodes.slice(0, -1);
 					const page = nodes.at(-1);
 
 					for (const layout of layouts) {
 						if (layout) {
 							validate_common_exports(layout.server, /** @type {string} */ (layout.server_id));
-							validate_common_exports(layout.shared, /** @type {string} */ (layout.shared_id));
+							validate_common_exports(
+								layout.universal,
+								/** @type {string} */ (layout.universal_id)
+							);
 						}
 					}
 
 					if (page) {
 						validate_page_server_exports(page.server, /** @type {string} */ (page.server_id));
-						validate_common_exports(page.shared, /** @type {string} */ (page.shared_id));
+						validate_common_exports(page.universal, /** @type {string} */ (page.universal_id));
 					}
 				}
 
@@ -189,7 +193,7 @@ export async function respond(request, options, state) {
 				const node = await route.endpoint();
 				trailing_slash = node.trailingSlash;
 
-				if (__SVELTEKIT_DEV__) {
+				if (DEV) {
 					validate_server_exports(node, /** @type {string} */ (route.endpoint_id));
 				}
 			}

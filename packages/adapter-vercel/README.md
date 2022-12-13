@@ -34,6 +34,34 @@ export default {
 };
 ```
 
+## Environment Variables
+
+Vercel makes a set of [deployment-specific environment variables](https://vercel.com/docs/concepts/projects/environment-variables#system-environment-variables) available. Like other environment variables, these are accessible from `$env/static/private` and `$env/dynamic/private` (sometimes — more on that later), and inaccessible from their public counterparts. To access one of these variables from the client:
+
+```js
+// +layout.server.js
+import { VERCEL_COMMIT_REF } from '$env/static/private';
+
+/** @type {import('./$types').LayoutServerLoad} */
+export function load() {
+  return {
+    deploymentGitBranch: VERCEL_COMMIT_REF
+  };
+}
+```
+
+```svelte
+<!-- +layout.svelte -->
+<script>
+  /** @type {import('./$types').LayoutServerData} */
+	export let data;
+</script>
+
+<p>This staging environment was deployed from {data.deploymentGitBranch}.</p>
+```
+
+Since all of these variables are unchanged between build time and run time when building on Vercel, we recommend using `$env/static/private` — which will statically replace the variables, enabling optimisations like dead code elimination — rather than `$env/dynamic/private`. If you're deploying with `edge: true` you _must_ use `$env/static/private`, as `$env/dynamic/private` and `$env/dynamic/public` are not currently populated in edge functions on Vercel.
+
 ## Notes
 
 ### Vercel functions

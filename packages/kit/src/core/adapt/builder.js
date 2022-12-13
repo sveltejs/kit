@@ -1,11 +1,14 @@
+import { existsSync, statSync, createReadStream, createWriteStream } from 'node:fs';
+import { pipeline } from 'node:stream';
+import { promisify } from 'node:util';
+import { fork } from 'node:child_process';
+import { fileURLToPath } from 'node:url';
 import glob from 'tiny-glob';
 import zlib from 'zlib';
-import { existsSync, statSync, createReadStream, createWriteStream } from 'fs';
-import { pipeline } from 'stream';
-import { promisify } from 'util';
 import { copy, rimraf, mkdirp } from '../../utils/filesystem.js';
 import { generate_manifest } from '../generate_manifest/index.js';
 import { get_route_segments } from '../../utils/routing.js';
+import { get_env } from '../../exports/vite/utils.js';
 
 const pipe = promisify(pipeline);
 
@@ -121,6 +124,33 @@ export function create_builder({ config, build_data, routes, prerendered, log })
 			}
 		},
 
+		generateFallback(dest) {
+			// do prerendering in a subprocess so any dangling stuff gets killed upon completion
+			const script = fileURLToPath(new URL('../prerender/fallback.js', import.meta.url));
+
+			const manifest_path = `${config.kit.outDir}/output/server/manifest-full.js`;
+
+			const env = get_env(config.kit.env, 'production');
+
+			return new Promise((fulfil, reject) => {
+				const child = fork(
+					script,
+					[dest, manifest_path, JSON.stringify({ ...env.private, ...env.public })],
+					{
+						stdio: 'inherit'
+					}
+				);
+
+				child.on('exit', (code) => {
+					if (code) {
+						reject(new Error(`Could not create a fallback page — failed with code ${code}`));
+					} else {
+						fulfil(undefined);
+					}
+				});
+			});
+		},
+
 		generateManifest: ({ relativePath }) => {
 			return generate_manifest({
 				build_data,
@@ -149,16 +179,17 @@ export function create_builder({ config, build_data, routes, prerendered, log })
 			return [...copy(`${config.kit.outDir}/output/client`, dest)];
 		},
 
-		writePrerendered(dest, { fallback } = {}) {
-			const source = `${config.kit.outDir}/output/prerendered`;
-			const files = [...copy(`${source}/pages`, dest), ...copy(`${source}/dependencies`, dest)];
-
-			if (fallback) {
-				files.push(fallback);
-				copy(`${source}/fallback.html`, `${dest}/${fallback}`);
+		// @ts-expect-error
+		writePrerendered(dest, opts) {
+			// TODO remove for 1.0
+			if (opts?.fallback) {
+				throw new Error(
+					'The fallback option no longer exists — use builder.generateFallback(fallback) instead'
+				);
 			}
 
-			return files;
+			const source = `${config.kit.outDir}/output/prerendered`;
+			return [...copy(`${source}/pages`, dest), ...copy(`${source}/dependencies`, dest)];
 		},
 
 		writeServer(dest) {

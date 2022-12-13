@@ -411,7 +411,7 @@ function analyze(project_relative, file, component_extensions, module_extensions
 			);
 		}
 
-		const kind = !!(match[1] || match[4] || match[7]) ? 'server' : 'shared';
+		const kind = !!(match[1] || match[4] || match[7]) ? 'server' : 'universal';
 
 		return {
 			kind,

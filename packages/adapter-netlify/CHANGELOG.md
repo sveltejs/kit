@@ -1,5 +1,23 @@
 # @sveltejs/adapter-netlify
 
+## 1.0.0-next.87
+
+### Patch Changes
+
+- [fix] revert platform change from browser to neutral ([#8122](https://github.com/sveltejs/kit/pull/8122))
+
+## 1.0.0-next.86
+
+### Patch Changes
+
+- [fix] set esbuild platform to neutral ([#8083](https://github.com/sveltejs/kit/pull/8083))
+
+## 1.0.0-next.85
+
+### Patch Changes
+
+- update esbuild to ^0.16.3 ([#7543](https://github.com/sveltejs/kit/pull/7543))
+
 ## 1.0.0-next.84
 
 ### Patch Changes

@@ -2,6 +2,7 @@ import { geoPath } from 'd3-geo';
 import { geoSatellite } from 'd3-geo-projection';
 import * as topojson from 'topojson-client';
 import topology from './land-110m.json';
+import countries from './countries.json';
 
 const land = topojson.feature(topology, topology.objects.land);
 
@@ -28,18 +29,27 @@ const projection = geoSatellite()
 const path = geoPath(projection);
 
 /**
- * @param {number} lat
- * @param {number} lon
+ * @param {string | null} lat
+ * @param {string | null} lon
  * @param {string} city
  * @param {string} country
  */
 function render(lat, lon, city, country) {
-	projection.rotate([-lon - 10, -lat + 20, 0]);
+	const coords = lat && lon ? [+lon, +lat] : [-74, 40.7];
 
-	const [x, y] = projection([lon, lat]);
+	// spin globe a little west of the user's location so that it isn't
+	// dead centre, and tilt them slightly towards the vertical center
+	projection.rotate([-coords[0] - 30, -coords[1] * (30 / 90), 0]);
 
-	const sphere = path({ type: 'Sphere' });
-	const label = `${city}, ${country}`;
+	const dot = lon && lat ? projection([lon, lat]) : null;
+
+	const MAX_LABEL_LENGTH = 27;
+	const DEFAULT_LABEL = 'Your location';
+
+	let label = [city, country].filter(Boolean).join(', ') || DEFAULT_LABEL;
+	if (label.length > MAX_LABEL_LENGTH) label = city ?? DEFAULT_LABEL;
+	if (label.length > MAX_LABEL_LENGTH) label = country ?? DEFAULT_LABEL;
+	if (label.length > MAX_LABEL_LENGTH) label = DEFAULT_LABEL;
 
 	return `<?xml version="1.0" encoding="UTF-8"?>
 		<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${w} ${h}">
@@ -81,10 +91,13 @@ function render(lat, lon, city, country) {
 				}
 			</style>
 
-			<path d="${sphere}" class="ocean"/>
+			<path d="${path({ type: 'Sphere' })}" class="ocean"/>
 			<path d="${path(land)}" class="land"/>
 
-			<g transform="translate(${x},${y})">
+			${
+				dot
+					? `
+			<g transform="translate(${dot[0]},${dot[1]})">
 				<circle r="20" class="dot"/>
 				<rect x="50" y="-30" width="${font_size * 0.6 * label.length + 40}" height="60" class="highlight"/>
 				<polygon points="35,0 50,-10 50,10" class="highlight" />
@@ -96,27 +109,26 @@ function render(lat, lon, city, country) {
 					dominant-baseline="middle"
 					style="font-family: 'Courier', 'Courier New'; font-size: ${font_size}px; font-weight: bold"
 				>${label.toUpperCase()}</text>
-			</g>
+			</g>`
+					: ''
+			}
 		</svg>
 	`;
 }
 
 /** @type {import('./$types').RequestHandler} */
-export function GET({ request, url }) {
-	const q = url.searchParams;
+export function GET({ request }) {
 	const h = request.headers;
 
-	const latitude = q.get('lat') ?? h.get('x-vercel-ip-latitude') ?? '40.7';
-	const longitude = q.get('lon') ?? h.get('x-vercel-ip-longitude') ?? '-74';
-	const city = q.get('city') ?? h.get('x-vercel-ip-city') ?? 'New York City';
-	const country = q.get('country') ?? h.get('x-vercel-ip-country') ?? 'USA';
+	const latitude = h.get('x-vercel-ip-latitude') ?? '';
+	const longitude = h.get('x-vercel-ip-longitude') ?? '';
+	const city = h.get('x-vercel-ip-city') ?? '';
+	const country = countries[h.get('x-vercel-ip-country')];
 
-	const svg = render(
-		+latitude,
-		+longitude,
-		decodeURIComponent(city),
-		decodeURIComponent(country)
-	).replace(/\d\.\d+/g, (match) => match.slice(0, 4));
+	const svg = render(latitude, longitude, decodeURIComponent(city), country).replace(
+		/\d\.\d+/g,
+		(match) => match.slice(0, 4)
+	);
 
 	return new Response(svg, {
 		headers: {

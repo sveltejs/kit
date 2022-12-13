@@ -65,7 +65,7 @@ export type BranchNode = {
 	node: CSRPageNode;
 	loader: CSRPageNodeLoader;
 	server: DataNode | null;
-	shared: DataNode | null;
+	universal: DataNode | null;
 	data: Record<string, any> | null;
 	slash?: TrailingSlash;
 };

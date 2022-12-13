@@ -67,7 +67,7 @@ export async function render_response({
 	let rendered;
 
 	const form_value =
-		action_result?.type === 'success' || action_result?.type === 'invalid'
+		action_result?.type === 'success' || action_result?.type === 'failure'
 			? action_result.data ?? null
 			: null;
 

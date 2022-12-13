@@ -1,3 +1,4 @@
+import { DEV } from 'esm-env';
 import { onMount, tick } from 'svelte';
 import {
 	make_trackable,
@@ -361,7 +362,7 @@ export function create_client({ target, base }) {
 
 	/** @param {import('./types').NavigationFinished} result */
 	function initialize(result) {
-		if (__SVELTEKIT_DEV__ && document.querySelector('vite-error-overlay')) return;
+		if (DEV && document.querySelector('vite-error-overlay')) return;
 
 		current = result.state;
 
@@ -513,11 +514,11 @@ export function create_client({ target, base }) {
 
 		const node = await loader();
 
-		if (__SVELTEKIT_DEV__) {
-			validate_common_exports(node.shared);
+		if (DEV) {
+			validate_common_exports(node.universal);
 		}
 
-		if (node.shared?.load) {
+		if (node.universal?.load) {
 			/** @param {string[]} deps */
 			function depends(...deps) {
 				for (const dep of deps) {
@@ -545,6 +546,7 @@ export function create_client({ target, base }) {
 					uses.url = true;
 				}),
 				async fetch(resource, init) {
+					/** @type {URL | string} */
 					let requested;
 
 					if (resource instanceof Request) {
@@ -593,15 +595,28 @@ export function create_client({ target, base }) {
 				}
 			};
 
-			if (import.meta.env.DEV) {
+			if (DEV) {
 				try {
 					lock_fetch();
-					data = (await node.shared.load.call(null, load_input)) ?? null;
+					data = (await node.universal.load.call(null, load_input)) ?? null;
+					if (data != null && Object.getPrototypeOf(data) !== Object.prototype) {
+						throw new Error(
+							`a load function related to route '${route.id}' returned ${
+								typeof data !== 'object'
+									? `a ${typeof data}`
+									: data instanceof Response
+									? 'a Response object'
+									: Array.isArray(data)
+									? 'an array'
+									: 'a non-plain object'
+							}, but must return a plain object at the top level (i.e. \`return {...}\`)`
+						);
+					}
 				} finally {
 					unlock_fetch();
 				}
 			} else {
-				data = (await node.shared.load.call(null, load_input)) ?? null;
+				data = (await node.universal.load.call(null, load_input)) ?? null;
 			}
 			data = data ? await unwrap_promises(data) : null;
 		}
@@ -610,9 +625,9 @@ export function create_client({ target, base }) {
 			node,
 			loader,
 			server: server_data_node,
-			shared: node.shared?.load ? { type: 'data', data, uses } : null,
+			universal: node.universal?.load ? { type: 'data', data, uses } : null,
 			data: data ?? server_data_node?.data ?? null,
-			slash: node.shared?.trailingSlash ?? server_data_node?.slash
+			slash: node.universal?.trailingSlash ?? server_data_node?.slash
 		};
 	}
 
@@ -744,7 +759,7 @@ export function create_client({ target, base }) {
 			const valid =
 				(!server_data_node || server_data_node.type === 'skip') &&
 				loader[1] === previous?.loader &&
-				!has_changed(parent_changed, route_changed, url_changed, previous.shared?.uses, params);
+				!has_changed(parent_changed, route_changed, url_changed, previous.universal?.uses, params);
 			if (valid) return previous;
 
 			parent_changed = true;
@@ -863,7 +878,7 @@ export function create_client({ target, base }) {
 							loader: /** @type {import('types').CSRPageNodeLoader } */ (errors[i]),
 							data: {},
 							server: null,
-							shared: null
+							universal: null
 						}
 					};
 				} catch (e) {
@@ -927,7 +942,7 @@ export function create_client({ target, base }) {
 		const root_error = {
 			node: await default_error_loader(),
 			loader: default_error_loader,
-			shared: null,
+			universal: null,
 			server: null,
 			data: null
 		};
@@ -1218,7 +1233,7 @@ export function create_client({ target, base }) {
 		},
 
 		disable_scroll_handling: () => {
-			if (import.meta.env.DEV && started && !updating) {
+			if (DEV && started && !updating) {
 				throw new Error('Can only disable scroll handling during navigation');
 			}
 
@@ -1271,7 +1286,7 @@ export function create_client({ target, base }) {
 						url,
 						params: current.params,
 						branch: branch.slice(0, error_load.idx).concat(error_load.node),
-						status: 500, // TODO might not be 500?
+						status: result.status ?? 500,
 						error: result.error,
 						route
 					});
@@ -1615,7 +1630,7 @@ export function create_client({ target, base }) {
 async function load_data(url, invalid) {
 	const data_url = new URL(url);
 	data_url.pathname = add_data_suffix(url.pathname);
-	if (__SVELTEKIT_DEV__ && url.searchParams.has('x-sveltekit-invalidated')) {
+	if (DEV && url.searchParams.has('x-sveltekit-invalidated')) {
 		throw new Error('Cannot used reserved query parameter "x-sveltekit-invalidated"');
 	}
 	data_url.searchParams.append(
@@ -1663,6 +1678,63 @@ function handle_error(error, event) {
 	);
 }
 
+<<<<<<< HEAD
+=======
+// TODO remove for 1.0
+const properties = [
+	'hash',
+	'href',
+	'host',
+	'hostname',
+	'origin',
+	'pathname',
+	'port',
+	'protocol',
+	'search',
+	'searchParams',
+	'toString',
+	'toJSON'
+];
+
+/**
+ * @param {'from' | 'to'} type
+ * @param {import('types').NavigationTarget} target
+ */
+function add_url_properties(type, target) {
+	for (const prop of properties) {
+		Object.defineProperty(target, prop, {
+			get() {
+				throw new Error(
+					`The navigation shape changed - ${type}.${prop} should now be ${type}.url.${prop}`
+				);
+			},
+			enumerable: false
+		});
+	}
+
+	Object.defineProperty(target, 'routeId', {
+		get() {
+			throw new Error(
+				`The navigation shape changed - ${type}.routeId should now be ${type}.route.id`
+			);
+		},
+		enumerable: false
+	});
+
+	return target;
+}
+
+function pre_update() {
+	if (DEV) {
+		return () => {
+			check_for_removed_attributes();
+		};
+	}
+
+	return () => {};
+}
+
+>>>>>>> master
 function reset_focus() {
 	const autofocus = document.querySelector('[autofocus]');
 	if (autofocus) {
@@ -1693,7 +1765,7 @@ function reset_focus() {
 	}
 }
 
-if (__SVELTEKIT_DEV__) {
+if (DEV) {
 	// Nasty hack to silence harmless warnings the user can do nothing about
 	const console_warn = console.warn;
 	console.warn = function warn(...args) {

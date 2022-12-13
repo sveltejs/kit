@@ -34,7 +34,7 @@
 				href="https://github.com/sveltejs/kit/tree/master/packages/adapter-static"
 				class="invert"
 			>
-				<img src={html5} alt="HTML5 logo" />
+				<img src={html5} alt="" />
 				<span><span class="large">Static</span> HTML</span>
 			</a>
 			<a
@@ -43,16 +43,16 @@
 				href="https://github.com/sveltejs/kit/tree/master/packages/adapter-node"
 				class="invert"
 			>
-				<img src={node} alt="Node logo" />
+				<img src={node} alt="" />
 				<span>Node.js</span>
 			</a>
 			<a
 				target="_blank"
 				rel="noreferrer"
-				href="https://github.com/sveltejs/kit/tree/master/packages/adapter-vercel"
+				href="https://vercel.com/templates/svelte/sveltekit-boilerplate"
 				class="invert invert-hover"
 			>
-				<img src={vercel} alt="Vercel logo" style="transform: translate(0,-0.2rem)" />
+				<img src={vercel} alt="" style="transform: translate(0,-0.2rem)" />
 				<span>Vercel</span>
 			</a>
 			<a
@@ -60,7 +60,7 @@
 				rel="noreferrer"
 				href="https://github.com/sveltejs/kit/tree/master/packages/adapter-netlify"
 			>
-				<img src={netlify} alt="Netlify logo" />
+				<img src={netlify} alt="" />
 				<span>Netlify</span>
 			</a>
 			<a
@@ -68,7 +68,7 @@
 				rel="noreferrer"
 				href="https://github.com/sveltejs/kit/tree/master/packages/adapter-cloudflare"
 			>
-				<img src={cloudflare} alt="Cloudflare logo" />
+				<img src={cloudflare} alt="" />
 				<span>Cloudflare</span>
 			</a>
 		</div>
@@ -79,7 +79,7 @@
 				rel="noreferrer"
 				href="https://github.com/jthegedus/svelte-adapter-firebase"
 			>
-				<img src={firebase} alt="Firebase logo" />
+				<img src={firebase} alt="" />
 				<span>Firebase</span>
 			</a>
 			<a
@@ -88,11 +88,11 @@
 				href="https://github.com/pluvial/svelte-adapter-deno"
 				class="invert invert-hover"
 			>
-				<img src={deno} alt="Deno logo" />
+				<img src={deno} alt="" />
 				<span>Deno</span>
 			</a>
 			<a target="_blank" rel="noreferrer" href="https://github.com/MikeBild/sveltekit-adapter-aws">
-				<img src={lambda} alt="AWS Lambda logo" />
+				<img src={lambda} alt="" />
 				<span>AWS</span>
 			</a>
 			<a
@@ -100,11 +100,11 @@
 				rel="noreferrer"
 				href="https://github.com/geoffrich/svelte-adapter-azure-swa"
 			>
-				<img src={azure} alt="Azure logo" />
+				<img src={azure} alt="" />
 				<span>Azure</span>
 			</a>
 			<a target="_blank" rel="noreferrer" href="https://kit.svelte.dev/docs/adapters">
-				<img src={plus} alt="Plus sign" />
+				<img src={plus} alt="" />
 				<span>More...</span>
 			</a>
 		</div>
@@ -112,8 +112,8 @@
 		<div class="globe">
 			<img
 				src="/edge.svg"
-				width="1000"
-				height="1000"
+				width="100%"
+				height="100%"
 				alt="Dynamically rendered map of the world, centered on the user's location"
 			/>
 			<span> rendered on the edge, just for you </span>
@@ -176,7 +176,7 @@
 		flex-direction: column-reverse;
 	}
 
-	.platforms div span {
+	.platforms a span {
 		font-size: var(--sk-text-xs);
 		color: var(--sk-text-3);
 		text-align: center;
@@ -193,12 +193,14 @@
 		transition: filter 0.2s;
 	}
 
-	.platforms a:hover img {
+	.platforms a:hover img,
+	.platforms a:focus-visible img {
 		filter: invert(var(--invert-hover));
 		transition: none;
 	}
 
-	.platforms a:hover span {
+	.platforms a:hover span,
+	.platforms a:focus-visible span {
 		color: var(--sk-text-1);
 	}
 

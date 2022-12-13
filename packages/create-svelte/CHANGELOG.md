@@ -1,5 +1,23 @@
 # create-svelte
 
+## 2.0.0-next.202
+
+### Patch Changes
+
+- [feat] vitePreprocess ([#8036](https://github.com/sveltejs/kit/pull/8036))
+
+## 2.0.0-next.201
+
+### Patch Changes
+
+- [breaking] upgrade to Vite 4 ([#7543](https://github.com/sveltejs/kit/pull/7543))
+
+## 2.0.0-next.200
+
+### Patch Changes
+
+- Use `satisfies` operator ([#7861](https://github.com/sveltejs/kit/pull/7861))
+
 ## 2.0.0-next.199
 
 ### Patch Changes

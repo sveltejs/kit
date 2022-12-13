@@ -192,11 +192,12 @@ export interface PrerenderHttpErrorHandler {
 		path: string;
 		referrer: string | null;
 		referenceType: 'linked' | 'fetched';
+		message: string;
 	}): void;
 }
 
 export interface PrerenderMissingIdHandler {
-	(details: { path: string; id: string; referrers: string[] }): void;
+	(details: { path: string; id: string; referrers: string[]; message: string }): void;
 }
 
 export type PrerenderHttpErrorHandlerValue = 'fail' | 'warn' | 'ignore' | PrerenderHttpErrorHandler;

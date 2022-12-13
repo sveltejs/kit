@@ -2,6 +2,7 @@ import path from 'path';
 import { loadConfigFromFile, loadEnv, mergeConfig } from 'vite';
 import { runtime_directory } from '../../core/utils.js';
 import { posixify } from '../../utils/filesystem.js';
+import { negotiate } from '../../utils/http.js';
 
 /**
  * @param {import('vite').ResolvedConfig} config
@@ -148,4 +149,36 @@ export function get_env(env_config, mode) {
 		public: Object.fromEntries(entries.filter(([k]) => k.startsWith(env_config.publicPrefix))),
 		private: Object.fromEntries(entries.filter(([k]) => !k.startsWith(env_config.publicPrefix)))
 	};
+}
+
+/**
+ * @param {import('http').IncomingMessage} req
+ * @param {import('http').ServerResponse} res
+ * @param {string} base
+ */
+export function not_found(req, res, base) {
+	const type = negotiate(req.headers.accept ?? '*', ['text/plain', 'text/html']);
+
+	// special case — handle `/` request automatically
+	if (req.url === '/' && type === 'text/html') {
+		res.statusCode = 307;
+		res.setHeader('location', base);
+		res.end();
+		return;
+	}
+
+	res.statusCode = 404;
+
+	const prefixed = base + req.url;
+
+	if (type === 'text/html') {
+		res.setHeader('Content-Type', 'text/html');
+		res.end(
+			`The server is configured with a public base URL of /path-base - did you mean to visit <a href="${prefixed}">${prefixed}</a> instead?`
+		);
+	} else {
+		res.end(
+			`The server is configured with a public base URL of /path-base - did you mean to visit ${prefixed} instead?`
+		);
+	}
 }

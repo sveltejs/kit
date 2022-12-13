@@ -1,6 +1,6 @@
 {
 	"name": "@sveltejs/adapter-cloudflare",
-	"version": "1.0.0-next.40",
+	"version": "1.0.0-next.43",
 	"repository": {
 		"type": "git",
 		"url": "https://github.com/sveltejs/kit",
@@ -33,7 +33,7 @@
 	},
 	"dependencies": {
 		"@cloudflare/workers-types": "^4.20221111.1",
-		"esbuild": "^0.15.12",
+		"esbuild": "^0.16.3",
 		"worktop": "0.8.0-next.14"
 	},
 	"devDependencies": {

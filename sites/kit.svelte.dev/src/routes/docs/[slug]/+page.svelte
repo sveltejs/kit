@@ -1,6 +1,6 @@
 <script>
 	import { page } from '$app/stores';
-	import { Icon } from '@sveltejs/site-kit';
+	import Icon from '@sveltejs/site-kit/components/Icon.svelte';
 	import * as hovers from '$lib/docs/client/hovers.js';
 	import OnThisPage from './OnThisPage.svelte';
 
@@ -51,7 +51,7 @@
 	</div>
 </div>
 
-<OnThisPage details={data.page} sections={data.page.sections} />
+<OnThisPage details={data.page} />
 
 <style>
 	.content {

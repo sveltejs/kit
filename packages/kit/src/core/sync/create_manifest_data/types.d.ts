@@ -23,7 +23,7 @@ interface RouteComponent {
 }
 
 interface RouteSharedModule {
-	kind: 'shared';
+	kind: 'universal';
 	is_page: boolean;
 	is_layout: boolean;
 }

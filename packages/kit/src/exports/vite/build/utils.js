@@ -108,7 +108,51 @@ export function resolve_symlinks(manifest, file) {
 }
 
 /**
- * The Vite configuration that we use by default.
+ * Partial Vite configuration that we use by default for setting up the build.
+ * Can be used in a non-SvelteKit Vite server and build process such as Storybook.
+ * @param {{
+ *   config: import('types').ValidatedConfig;
+ *   ssr: boolean;
+ * }} options
+ * @return {import('vite').UserConfig}
+ */
+export function get_build_setup_config({ config, ssr }) {
+	return {
+		build: {
+			// don't use the default name to avoid collisions with 'static/manifest.json'
+			manifest: 'vite-manifest.json',
+			ssr
+		},
+		define: {
+			__SVELTEKIT_ADAPTER_NAME__: JSON.stringify(config.kit.adapter?.name),
+			__SVELTEKIT_APP_VERSION_FILE__: JSON.stringify(`${config.kit.appDir}/version.json`),
+			__SVELTEKIT_APP_VERSION_POLL_INTERVAL__: JSON.stringify(config.kit.version.pollInterval),
+			__SVELTEKIT_EMBEDDED__: config.kit.embedded ? 'true' : 'false'
+		},
+		resolve: {
+			alias: [...get_app_aliases(config.kit), ...get_config_aliases(config.kit)]
+		},
+		optimizeDeps: {
+			exclude: ['@sveltejs/kit']
+		},
+		ssr: {
+			noExternal: [
+				// TODO document why this is necessary
+				'@sveltejs/kit',
+				// This ensures that esm-env is inlined into the server output with the
+				// export conditions resolved correctly through Vite. This prevents adapters
+				// that bundle later on to resolve the export conditions incorrectly
+				// and for example include browser-only code in the server output
+				// because they for example use esbuild.build with `platform: 'browser'`
+				'esm-env'
+			]
+		}
+	};
+}
+
+/**
+ * Partial Vite configuration that we use by default for setting up the build.
+ * Cannot be used in a non-SvelteKit Vite server and build process such as Storybook.
  * @param {{
  *   config: import('types').ValidatedConfig;
  *   input: Record<string, string>;
@@ -117,7 +161,7 @@ export function resolve_symlinks(manifest, file) {
  * }} options
  * @return {import('vite').UserConfig}
  */
-export function get_default_build_config({ config, input, ssr, outDir }) {
+export function get_build_compile_config({ config, input, ssr, outDir }) {
 	const prefix = `${config.kit.appDir}/immutable`;
 
 	return {
@@ -125,8 +169,6 @@ export function get_default_build_config({ config, input, ssr, outDir }) {
 		base: ssr ? assets_base(config.kit) : './',
 		build: {
 			cssCodeSplit: true,
-			// don't use the default name to avoid collisions with 'static/manifest.json'
-			manifest: 'vite-manifest.json',
 			outDir,
 			rollupOptions: {
 				input,
@@ -139,27 +181,9 @@ export function get_default_build_config({ config, input, ssr, outDir }) {
 				},
 				preserveEntrySignatures: 'strict'
 			},
-			ssr,
-			target: ssr ? 'node14.8' : undefined
-		},
-		define: {
-			__SVELTEKIT_ADAPTER_NAME__: JSON.stringify(config.kit.adapter?.name),
-			__SVELTEKIT_APP_VERSION_FILE__: JSON.stringify(`${config.kit.appDir}/version.json`),
-			__SVELTEKIT_APP_VERSION_POLL_INTERVAL__: JSON.stringify(config.kit.version.pollInterval),
-			__SVELTEKIT_BROWSER__: ssr ? 'false' : 'true',
-			__SVELTEKIT_DEV__: 'false',
-			__SVELTEKIT_EMBEDDED__: config.kit.embedded ? 'true' : 'false'
+			target: ssr ? 'node16.14' : undefined
 		},
 		publicDir: ssr ? false : config.kit.files.assets,
-		resolve: {
-			alias: [...get_app_aliases(config.kit), ...get_config_aliases(config.kit)]
-		},
-		optimizeDeps: {
-			exclude: ['@sveltejs/kit']
-		},
-		ssr: {
-			noExternal: ['@sveltejs/kit']
-		},
 		worker: {
 			rollupOptions: {
 				output: {
@@ -170,6 +194,20 @@ export function get_default_build_config({ config, input, ssr, outDir }) {
 			}
 		}
 	};
+}
+
+/**
+ * The Vite configuration that we use by default for building.
+ * @param {{
+ *   config: import('types').ValidatedConfig;
+ *   input: Record<string, string>;
+ *   ssr: boolean;
+ *   outDir: string;
+ * }} options
+ * @return {import('vite').UserConfig}
+ */
+export function get_default_build_config(options) {
+	return vite.mergeConfig(get_build_setup_config(options), get_build_compile_config(options));
 }
 
 /**

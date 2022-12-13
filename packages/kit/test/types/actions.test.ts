@@ -3,7 +3,7 @@ import Kit from '@sveltejs/kit';
 // Test: Action types inferred correctly and transformed into a union
 type Actions = {
 	foo: () => Promise<void>;
-	bar: () => Promise<{ success: boolean } | Kit.ValidationError<{ message: string }>>;
+	bar: () => Promise<{ success: boolean } | Kit.ActionFailure<{ message: string }>>;
 };
 
 let form: Kit.AwaitedActions<Actions> = null as any;

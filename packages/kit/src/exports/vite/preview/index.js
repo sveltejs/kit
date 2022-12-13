@@ -6,6 +6,7 @@ import { getRequest, setResponse } from '../../../exports/node/index.js';
 import { installPolyfills } from '../../../exports/node/polyfills.js';
 import { SVELTE_KIT_ASSETS } from '../../../constants.js';
 import { loadEnv, normalizePath } from 'vite';
+import { not_found } from '../utils.js';
 
 /** @typedef {import('http').IncomingMessage} Req */
 /** @typedef {import('http').ServerResponse} Res */
@@ -73,7 +74,7 @@ export async function preview(vite, vite_config, svelte_config) {
 				next();
 			} else {
 				res.statusCode = 404;
-				res.end(`Not found (did you mean ${base + pathname}?)`);
+				not_found(req, res, base);
 			}
 		});
 

@@ -61,7 +61,7 @@ type OptionalUnion<
 	A extends keyof U = U extends U ? keyof U : never
 > = U extends unknown ? { [P in Exclude<A, keyof U>]?: never } & U : never;
 
-type UnpackValidationError<T> = T extends ValidationError<infer X>
+type UnpackValidationError<T> = T extends ActionFailure<infer X>
 	? X
 	: T extends void
 	? undefined // needs to be undefined, because void will corrupt union type
@@ -91,6 +91,11 @@ export interface Builder {
 	createEntries(fn: (route: RouteDefinition) => AdapterEntry): Promise<void>;
 
 	/**
+	 * Generate a fallback page for a static webserver to use when no route is matched. Useful for single-page apps.
+	 */
+	generateFallback(dest: string): Promise<void>;
+
+	/**
 	 * Generate a server-side manifest to initialise the SvelteKit [server](https://kit.svelte.dev/docs/types#public-types-server) with.
 	 * @param opts a relative path to the base directory of the app and optionally in which format (esm or cjs) the manifest should be generated
 	 */
@@ -117,15 +122,9 @@ export interface Builder {
 	/**
 	 * Write prerendered files to `dest`.
 	 * @param dest the destination folder
-	 * @param opts.fallback the name of a file for fallback responses, like `200.html` or `404.html` depending on where the app is deployed
 	 * @returns an array of files written to `dest`
 	 */
-	writePrerendered(
-		dest: string,
-		opts?: {
-			fallback?: string;
-		}
-	): string[];
+	writePrerendered(dest: string): string[];
 	/**
 	 * Write server-side code to `dest`.
 	 * @param dest the destination folder
@@ -465,8 +464,7 @@ export interface KitConfig {
 		 *         }
 		 *
 		 *         // otherwise fail the build
-		 *           throw new Error(message);
-		 *         }
+		 *         throw new Error(message);
 		 *       }
 		 *     }
 		 *   }
@@ -1074,9 +1072,9 @@ export type ActionResult<
 	Invalid extends Record<string, unknown> | undefined = Record<string, any>
 > =
 	| { type: 'success'; status: number; data?: Success }
-	| { type: 'invalid'; status: number; data?: Invalid }
+	| { type: 'failure'; status: number; data?: Invalid }
 	| { type: 'redirect'; status: number; location: string }
-	| { type: 'error'; error: any };
+	| { type: 'error'; status?: number; error: any };
 
 /**
  * Creates an `HttpError` object with an HTTP status code and an optional message.
@@ -1129,17 +1127,17 @@ export interface Redirect {
 export function json(data: any, init?: ResponseInit): Response;
 
 /**
- * Create a `ValidationError` object.
+ * Create an `ActionFailure` object.
  */
-export function invalid<T extends Record<string, unknown> | undefined>(
+export function fail<T extends Record<string, unknown> | undefined>(
 	status: number,
 	data?: T
-): ValidationError<T>;
+): ActionFailure<T>;
 
 /**
- * The object returned by the [`invalid`](https://kit.svelte.dev/docs/modules#sveltejs-kit-invalid) function
+ * The object returned by the [`fail`](https://kit.svelte.dev/docs/modules#sveltejs-kit-fail) function
  */
-export interface ValidationError<T extends Record<string, unknown> | undefined = undefined>
+export interface ActionFailure<T extends Record<string, unknown> | undefined = undefined>
 	extends UniqueInterface {
 	status: number;
 	data: T;

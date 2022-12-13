@@ -48,6 +48,7 @@ export default function () {
 
 			await esbuild.build({
 				platform: 'browser',
+				conditions: ['worker', 'browser'],
 				sourcemap: 'linked',
 				target: 'es2020',
 				entryPoints: [`${tmp}/_worker.js`],

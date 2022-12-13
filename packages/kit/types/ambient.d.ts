@@ -160,8 +160,17 @@ declare module '$app/forms' {
 	 * Usage:
 	 *
 	 * ```js
-	 * const response = await fetch('/form?/action', { method: 'POST', body: formData });
-	 * const result = deserialize(await response.text());
+	 * import { deserialize } from '$app/forms';
+	 *
+	 * async function handleSubmit(event) {
+	 *   const response = await fetch('/form?/action', {
+	 *     method: 'POST',
+	 *     body: new FormData(event.target)
+	 *   });
+	 *
+	 *   const result = deserialize(await response.text());
+	 *   // ...
+	 * }
 	 * ```
 	 */
 	export function deserialize<
@@ -220,6 +229,8 @@ declare module '$app/navigation' {
 	 *
 	 * ```ts
 	 * // Example: Match '/path' regardless of the query parameters
+	 * import { invalidate } from '$app/navigation';
+	 *
 	 * invalidate((url) => url.pathname === '/path');
 	 * ```
 	 * @param url The invalidated URL
@@ -356,6 +367,7 @@ declare module '@sveltejs/kit/hooks' {
 	 * /// file: src/hooks.server.js
 	 * import { sequence } from '@sveltejs/kit/hooks';
 	 *
+	 * /// type: import('@sveltejs/kit').Handle
 	 * async function first({ event, resolve }) {
 	 * 	console.log('first pre-processing');
 	 * 	const result = await resolve(event, {
@@ -369,6 +381,7 @@ declare module '@sveltejs/kit/hooks' {
 	 * 	return result;
 	 * }
 	 *
+	 * /// type: import('@sveltejs/kit').Handle
 	 * async function second({ event, resolve }) {
 	 * 	console.log('second pre-processing');
 	 * 	const result = await resolve(event, {
@@ -434,4 +447,5 @@ declare module '@sveltejs/kit/vite' {
 	 * Returns the SvelteKit Vite plugins.
 	 */
 	export function sveltekit(): Promise<Plugin[]>;
+	export { vitePreprocess } from '@sveltejs/vite-plugin-svelte';
 }

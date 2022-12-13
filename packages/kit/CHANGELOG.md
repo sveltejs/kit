@@ -1,5 +1,81 @@
 # @sveltejs/kit
 
+## 1.0.0-next.586
+
+### Patch Changes
+
+- [fix] don't de/encode initial and explicit string headers ([#8113](https://github.com/sveltejs/kit/pull/8113))
+
+## 1.0.0-next.585
+
+### Patch Changes
+
+- [fix] remove unused elements from default error component ([#8110](https://github.com/sveltejs/kit/pull/8110))
+
+## 1.0.0-next.584
+
+### Patch Changes
+
+- [fix] load errorTemplate from correct location ([#8096](https://github.com/sveltejs/kit/pull/8096))
+
+- More robust manifest error recovery ([#8095](https://github.com/sveltejs/kit/pull/8095))
+
+## 1.0.0-next.583
+
+### Patch Changes
+
+- restart vite dev-server on svelte config change ([#8087](https://github.com/sveltejs/kit/pull/8087))
+
+- Set correct `$page.status` when using `enhance` and result is of type `'error'` ([#8073](https://github.com/sveltejs/kit/pull/8073))
+
+- [fix] ensure export conditions are resolve through Vite ([#8092](https://github.com/sveltejs/kit/pull/8092))
+
+- [fix] don't crash Vite dev server on manifest error ([#8093](https://github.com/sveltejs/kit/pull/8093))
+
+## 1.0.0-next.582
+
+### Patch Changes
+
+- [fix] improve split between Vite plugins ([#8055](https://github.com/sveltejs/kit/pull/8055))
+
+- [fix] set Vite base URL ([#8046](https://github.com/sveltejs/kit/pull/8046))
+
+- add declaration for vitePreprocess reexport ([#8053](https://github.com/sveltejs/kit/pull/8053))
+
+## 1.0.0-next.581
+
+### Patch Changes
+
+- [feat] vitePreprocess ([#8036](https://github.com/sveltejs/kit/pull/8036))
+
+## 1.0.0-next.580
+
+### Patch Changes
+
+- [breaking] throw an error on invalid load response ([#8003](https://github.com/sveltejs/kit/pull/8003))
+
+- [fix] allow SvelteKit to be used without bundling ([#7950](https://github.com/sveltejs/kit/pull/7950))
+
+## 1.0.0-next.579
+
+### Patch Changes
+
+- [breaking] update svelte peerDependency to ^3.54.0 ([#7543](https://github.com/sveltejs/kit/pull/7543))
+
+- update esbuild to ^0.16.3 ([#7543](https://github.com/sveltejs/kit/pull/7543))
+
+- [breaking] upgrade to Vite 4 ([#7543](https://github.com/sveltejs/kit/pull/7543))
+
+## 1.0.0-next.578
+
+### Patch Changes
+
+- [fix] respect fetch cache option ([#8024](https://github.com/sveltejs/kit/pull/8024))
+
+- [breaking] rename invalid() to fail() and ValidationError to ActionFailure ([#8012](https://github.com/sveltejs/kit/pull/8012))
+
+- [breaking] replace automatic fallback generation with `builder.generateFallback(fallback)` ([#8013](https://github.com/sveltejs/kit/pull/8013))
+
 ## 1.0.0-next.577
 
 ### Patch Changes

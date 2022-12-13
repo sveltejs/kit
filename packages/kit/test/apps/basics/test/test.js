@@ -421,6 +421,38 @@ test.describe('Errors', () => {
 				'This is your custom error page saying: "Crashing now"'
 			);
 		});
+
+		test('errors on invalid load function response', async ({ page, app, javaScriptEnabled }) => {
+			if (javaScriptEnabled) {
+				await page.goto('/');
+				await app.goto('/errors/invalid-load-response');
+			} else {
+				await page.goto('/errors/invalid-load-response');
+			}
+
+			expect(await page.textContent('footer')).toBe('Custom layout');
+			expect(await page.textContent('#message')).toBe(
+				'This is your custom error page saying: "a load function related to route \'/errors/invalid-load-response\' returned an array, but must return a plain object at the top level (i.e. `return {...}`)"'
+			);
+		});
+
+		test('errors on invalid server load function response', async ({
+			page,
+			app,
+			javaScriptEnabled
+		}) => {
+			if (javaScriptEnabled) {
+				await page.goto('/');
+				await app.goto('/errors/invalid-server-load-response');
+			} else {
+				await page.goto('/errors/invalid-server-load-response');
+			}
+
+			expect(await page.textContent('footer')).toBe('Custom layout');
+			expect(await page.textContent('#message')).toBe(
+				'This is your custom error page saying: "a load function related to route \'/errors/invalid-server-load-response\' returned an array, but must return a plain object at the top level (i.e. `return {...}`)"'
+			);
+		});
 	}
 
 	test('server-side load errors', async ({ page }) => {
@@ -1986,6 +2018,17 @@ test.describe('Actions', () => {
 		await Promise.all([page.waitForResponse('/actions/redirect'), page.waitForNavigation()]);
 
 		expect(page.url()).toContain('/actions/enhance');
+	});
+
+	test('$page.status reflects error status', async ({ page, app }) => {
+		await page.goto('/actions/enhance');
+
+		await Promise.all([
+			page.waitForRequest((request) => request.url().includes('/actions/enhance')),
+			page.click('button.form1-error')
+		]);
+
+		await expect(page.locator('h1')).toHaveText('400');
 	});
 });
 

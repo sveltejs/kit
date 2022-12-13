@@ -55,9 +55,7 @@
 
 	h2 {
 		float: right;
-		/* margin-top: 7rem; */
 		width: 5.5em;
-		shape-outside: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" preserveAspectRatio="none"><rect x="0" y="0" width="100" height="100"></rect></svg>');
 	}
 
 	h2 span {

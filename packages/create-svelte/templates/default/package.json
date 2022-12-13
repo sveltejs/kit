@@ -11,10 +11,9 @@
 		"@neoconfetti/svelte": "^1.0.0",
 		"@sveltejs/adapter-auto": "workspace:*",
 		"@sveltejs/kit": "workspace:*",
-		"svelte": "^3.53.1",
-		"svelte-preprocess": "^4.10.7",
+		"svelte": "^3.54.0",
 		"typescript": "^4.9.3",
-		"vite": "^3.2.4"
+		"vite": "^4.0.0"
 	},
 	"type": "module",
 	"dependencies": {

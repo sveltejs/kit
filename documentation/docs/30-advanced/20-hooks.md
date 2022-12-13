@@ -36,7 +36,7 @@ export async function handle({ event, resolve }) {
 
 > Requests for static assets — which includes pages that were already prerendered — are _not_ handled by SvelteKit.
 
-If unimplemented, defaults to `({ event, resolve }) => resolve(event)`. To add custom data to the request, which is passed to handlers in `+server.js` and server-only `load` functions, populate the `event.locals` object, as shown below.
+If unimplemented, defaults to `({ event, resolve }) => resolve(event)`. To add custom data to the request, which is passed to handlers in `+server.js` and server `load` functions, populate the `event.locals` object, as shown below.
 
 ```js
 /// file: src/hooks.server.js
@@ -144,41 +144,44 @@ If an unexpected error is thrown during loading or rendering, this function will
 - you can log the error
 - you can generate a custom representation of the error that is safe to show to users, omitting sensitive details like messages and stack traces. The returned value becomes the value of `$page.error`. It defaults to `{ message: 'Not Found' }` in case of a 404 (you can detect them through `event.route.id` being `null`) and to `{ message: 'Internal Error' }` for everything else. To make this type-safe, you can customize the expected shape by declaring an `App.Error` interface (which must include `message: string`, to guarantee sensible fallback behavior).
 
-The following code shows an example of typing the error shape as `{ message: string; code: string }` and returning it accordingly from the `handleError` functions:
+The following code shows an example of typing the error shape as `{ message: string; errorId: string }` and returning it accordingly from the `handleError` functions:
 
 ```ts
 /// file: src/app.d.ts
 declare namespace App {
 	interface Error {
 		message: string;
-		code: string;
+		errorId: string;
 	}
 }
 ```
 
 ```js
 /// file: src/hooks.server.js
-// @errors: 2322 2571 2339
+// @errors: 2322
 // @filename: ambient.d.ts
 const Sentry: any;
 
 // @filename: index.js
 // ---cut---
+import crypto from 'crypto';
+
 /** @type {import('@sveltejs/kit').HandleServerError} */
 export function handleError({ error, event }) {
+	const errorId = crypto.randomUUID();
 	// example integration with https://sentry.io/
-	Sentry.captureException(error, { event });
+	Sentry.captureException(error, { event, errorId });
 
 	return {
 		message: 'Whoops!',
-		code: error?.code ?? 'UNKNOWN'
+		errorId
 	};
 }
 ```
 
 ```js
 /// file: src/hooks.client.js
-// @errors: 2322 2571 2339
+// @errors: 2322
 // @filename: ambient.d.ts
 const Sentry: any;
 
@@ -186,12 +189,13 @@ const Sentry: any;
 // ---cut---
 /** @type {import('@sveltejs/kit').HandleClientError} */
 export function handleError({ error, event }) {
+	const errorId = crypto.randomUUID();
 	// example integration with https://sentry.io/
-	Sentry.captureException(error, { event });
+	Sentry.captureException(error, { event, errorId });
 
 	return {
 		message: 'Whoops!',
-		code: error?.code ?? 'UNKNOWN'
+		errorId
 	};
 }
 ```

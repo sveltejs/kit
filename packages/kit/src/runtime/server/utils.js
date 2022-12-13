@@ -61,7 +61,7 @@ export function allowed_methods(mod) {
 export function get_option(nodes, option) {
 	return nodes.reduce((value, node) => {
 		return /** @type {any} TypeScript's too dumb to understand this */ (
-			node?.shared?.[option] ?? node?.server?.[option] ?? value
+			node?.universal?.[option] ?? node?.server?.[option] ?? value
 		);
 	}, /** @type {Value | undefined} */ (undefined));
 }

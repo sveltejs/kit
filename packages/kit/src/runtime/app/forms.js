@@ -1,6 +1,7 @@
 import * as devalue from 'devalue';
 import { client } from '../client/singletons.js';
 import { invalidateAll } from './navigation.js';
+import { BROWSER, DEV } from 'esm-env';
 
 /**
  * @param {string} name
@@ -11,10 +12,8 @@ function guard(name) {
 	};
 }
 
-const ssr = import.meta.env.SSR;
-
 /** @type {import('$app/forms').applyAction} */
-export const applyAction = ssr ? guard('applyAction') : client.apply_action;
+export const applyAction = BROWSER ? client.apply_action : guard('applyAction');
 
 /** @type {import('$app/forms').deserialize} */
 export function deserialize(result) {
@@ -27,7 +26,7 @@ export function deserialize(result) {
 
 /** @type {import('$app/forms').enhance} */
 export function enhance(form, submit = () => {}) {
-	if (__SVELTEKIT_DEV__ && form.method !== 'post') {
+	if (DEV && form.method !== 'post') {
 		throw new Error('use:enhance can only be used on <form> fields with method="POST"');
 	}
 
@@ -47,7 +46,7 @@ export function enhance(form, submit = () => {}) {
 			await invalidateAll();
 		}
 
-		// For success/invalid results, only apply action if it belongs to the
+		// For success/failure results, only apply action if it belongs to the
 		// current page, otherwise `form` will be updated erroneously
 		if (
 			location.origin + location.pathname === action.origin + action.pathname ||
@@ -108,6 +107,7 @@ export function enhance(form, submit = () => {}) {
 			});
 
 			result = deserialize(await response.text());
+			if (result.type === 'error') result.status = response.status;
 		} catch (error) {
 			if (/** @type {any} */ (error)?.name === 'AbortError') return;
 			result = { type: 'error', error };

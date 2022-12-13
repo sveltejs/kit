@@ -1,6 +1,6 @@
 <script>
 	import logotype from './svelte-kit-logotype.svg';
-	import background from './svelte-kit-machine.webp?w=1440;800;600;480&format=avif;webp;png&picture';
+	import background from './svelte-kit-machine.webp?w=1440;960&format=avif;webp;png&picture';
 </script>
 
 <section class="hero">
@@ -11,12 +11,9 @@
 			<a class="cta" href="/docs/introduction">read the docs</a>
 		</div>
 
-		<picture class="hero-image" sizes="(min-width: 480px) 800px, (min-width: 1024px) 480px, 600px">
+		<picture class="hero-image">
 			{#each Object.entries(background.sources) as [format, images]}
-				<source
-					srcset={images.map((i) => `${i.src} ${i.w}w`).join(', ')}
-					type={'image/' + format}
-				/>
+				<source srcset={images.map((i) => `${i.src} ${i.w}w`).join(', ')} type="image/{format}" />
 			{/each}
 			<img src={background.fallback.src} alt="SvelteKit illustration" />
 		</picture>
