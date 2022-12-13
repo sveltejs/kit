@@ -401,7 +401,14 @@ export async function prerender() {
 				validate_common_exports(page.shared, route.id);
 			}
 
-			const prerender = get_option(nodes, 'prerender') ?? false;
+			const should_prerender = get_option(nodes, 'prerender');
+			const prerender =
+				// Try prerendering if ssr is false and no server needed.
+				// People can opt out of this behavior by explicitly setting prerender to false
+				(should_prerender !== false &&
+					get_option(nodes, 'ssr') === false &&
+					!page?.server?.actions) ||
+				(should_prerender ?? false);
 
 			prerender_map.set(route.id, prerender);
 		}
