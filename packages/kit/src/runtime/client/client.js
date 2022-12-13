@@ -1678,63 +1678,6 @@ function handle_error(error, event) {
 	);
 }
 
-<<<<<<< HEAD
-=======
-// TODO remove for 1.0
-const properties = [
-	'hash',
-	'href',
-	'host',
-	'hostname',
-	'origin',
-	'pathname',
-	'port',
-	'protocol',
-	'search',
-	'searchParams',
-	'toString',
-	'toJSON'
-];
-
-/**
- * @param {'from' | 'to'} type
- * @param {import('types').NavigationTarget} target
- */
-function add_url_properties(type, target) {
-	for (const prop of properties) {
-		Object.defineProperty(target, prop, {
-			get() {
-				throw new Error(
-					`The navigation shape changed - ${type}.${prop} should now be ${type}.url.${prop}`
-				);
-			},
-			enumerable: false
-		});
-	}
-
-	Object.defineProperty(target, 'routeId', {
-		get() {
-			throw new Error(
-				`The navigation shape changed - ${type}.routeId should now be ${type}.route.id`
-			);
-		},
-		enumerable: false
-	});
-
-	return target;
-}
-
-function pre_update() {
-	if (DEV) {
-		return () => {
-			check_for_removed_attributes();
-		};
-	}
-
-	return () => {};
-}
-
->>>>>>> master
 function reset_focus() {
 	const autofocus = document.querySelector('[autofocus]');
 	if (autofocus) {
