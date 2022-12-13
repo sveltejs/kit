@@ -674,7 +674,7 @@ importers:
       '@sveltejs/adapter-static': workspace:*
       '@sveltejs/amp': workspace:*
       '@sveltejs/kit': workspace:*
-      '@sveltejs/site-kit': ^3.0.0
+      '@sveltejs/site-kit': ^3.0.3
       '@types/d3-geo': ^3.0.2
       '@types/node': ^16.18.6
       '@vercel/edge': ^0.1.2
@@ -703,7 +703,7 @@ importers:
       '@sveltejs/adapter-static': link:../../packages/adapter-static
       '@sveltejs/amp': link:../../packages/amp
       '@sveltejs/kit': link:../../packages/kit
-      '@sveltejs/site-kit': 3.0.0
+      '@sveltejs/site-kit': 3.0.3
       '@types/d3-geo': 3.0.2
       '@types/node': 16.18.6
       flexsearch: 0.7.31
@@ -1348,8 +1348,8 @@ packages:
       picomatch: 2.3.1
       rollup: 3.7.0
 
-  /@sveltejs/site-kit/3.0.0:
-    resolution: {integrity: sha512-Ibiy9NMWBXsZZdFFpbluwJJQlMva/ynaHo8Cd4HVosYz/yU8LM2u3HcaSVEom4UB9nTUD2UeGpujwQ/XWdUDTQ==}
+  /@sveltejs/site-kit/3.0.3:
+    resolution: {integrity: sha512-zetnU9jGOu+DYcwqpgK9uSUv3qrGrL7JagMN7M8B4bQRoBq1lAPnCvBXtlfQckvkQLtH453JJTIX6ULqL1xtpA==}
     dev: true
 
   /@sveltejs/vite-plugin-svelte/2.0.0_svelte@3.54.0+vite@4.0.0:
