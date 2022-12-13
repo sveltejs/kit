@@ -1,5 +1,11 @@
 # @sveltejs/kit
 
+## 1.0.0-next.586
+
+### Patch Changes
+
+- [fix] don't de/encode initial and explicit string headers ([#8113](https://github.com/sveltejs/kit/pull/8113))
+
 ## 1.0.0-next.585
 
 ### Patch Changes
