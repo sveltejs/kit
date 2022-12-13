@@ -98,7 +98,7 @@ export async function load_data({
 }) {
 	const server_data_node = await server_data_promise;
 
-	if (!node?.shared?.load) {
+	if (!node?.universal?.load) {
 		return server_data_node?.data ?? null;
 	}
 
@@ -240,7 +240,7 @@ export async function load_data({
 		}
 	});
 
-	const result = await node.shared.load.call(null, load_event);
+	const result = await node.universal.load.call(null, load_event);
 	const data = result ? await unwrap_promises(result) : null;
 	validate_load_response(data, /** @type {string} */ (event.route.id));
 	return data;

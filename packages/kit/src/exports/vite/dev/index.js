@@ -115,13 +115,13 @@ export async function dev(vite, vite_config, svelte_config) {
 							};
 						}
 
-						if (node.shared) {
-							const { module, module_node } = await resolve(node.shared);
+						if (node.universal) {
+							const { module, module_node } = await resolve(node.universal);
 
 							module_nodes.push(module_node);
 
-							result.shared = module;
-							result.shared_id = node.shared;
+							result.universal = module;
+							result.universal_id = node.universal;
 						}
 
 						if (node.server) {

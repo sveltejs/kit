@@ -14,7 +14,7 @@ import { compact } from '../../../utils/array.js';
  *
  *  @typedef {{
  *   server: Proxy,
- *   shared: Proxy
+ *   universal: Proxy
  *  }} Proxies
  *
  *  @typedef {Map<import('types').PageNode, {route: import('types').RouteData, proxies: Proxies}>} RoutesMap
@@ -75,7 +75,7 @@ export async function write_all_types(config, manifest_data) {
 		/** @type {import('types').PageNode | null} */
 		let node = route.leaf;
 		while (node) {
-			if (node.shared) input_files.push(node.shared);
+			if (node.universal) input_files.push(node.universal);
 			if (node.server) input_files.push(node.server);
 			node = node.parent ?? null;
 		}
@@ -83,7 +83,7 @@ export async function write_all_types(config, manifest_data) {
 		/** @type {import('types').PageNode | null} */
 		node = route.layout;
 		while (node) {
-			if (node.shared) input_files.push(node.shared);
+			if (node.universal) input_files.push(node.universal);
 			if (node.server) input_files.push(node.server);
 			node = node.parent ?? null;
 		}
@@ -165,7 +165,7 @@ function create_routes_map(manifest_data) {
 	const map = new Map();
 	for (const route of manifest_data.routes) {
 		if (route.leaf) {
-			map.set(route.leaf, { route, proxies: { server: null, shared: null } });
+			map.set(route.leaf, { route, proxies: { server: null, universal: null } });
 		}
 	}
 	return map;
@@ -228,7 +228,7 @@ function update_types(config, routes, route, to_delete = new Set()) {
 		let route_info = routes.get(route.leaf);
 		if (!route_info) {
 			// This should be defined, but belts and braces
-			route_info = { route, proxies: { server: null, shared: null } };
+			route_info = { route, proxies: { server: null, universal: null } };
 			routes.set(route.leaf, route_info);
 		}
 
@@ -245,9 +245,9 @@ function update_types(config, routes, route, to_delete = new Set()) {
 			route_info.proxies.server = proxies.server;
 			if (proxies.server?.modified) to_delete.delete(proxies.server.file_name);
 		}
-		if (proxies.shared) {
-			route_info.proxies.shared = proxies.shared;
-			if (proxies.shared?.modified) to_delete.delete(proxies.shared.file_name);
+		if (proxies.universal) {
+			route_info.proxies.universal = proxies.universal;
+			if (proxies.universal?.modified) to_delete.delete(proxies.universal.file_name);
 		}
 
 		if (route.leaf.server) {
@@ -280,12 +280,12 @@ function update_types(config, routes, route, to_delete = new Set()) {
 					// Be defensive - if a proxy doesn't exist (because it couldn't be created), assume a load function exists.
 					// If we didn't and it's a false negative, the user could wrongfully get a type error on layouts.
 					(leaf.proxies.server && !leaf.proxies.server.exports.includes('load')) ||
-					(leaf.proxies.shared && !leaf.proxies.shared.exports.includes('load'))
+					(leaf.proxies.universal && !leaf.proxies.universal.exports.includes('load'))
 				) {
 					all_pages_have_load = false;
 				}
 			}
-			if (!page.server && !page.shared) {
+			if (!page.server && !page.universal) {
 				all_pages_have_load = false;
 			}
 		});
@@ -311,7 +311,7 @@ function update_types(config, routes, route, to_delete = new Set()) {
 			route.layout,
 			outdir,
 			false,
-			{ server: null, shared: null },
+			{ server: null, universal: null },
 			all_pages_have_load
 		);
 
@@ -319,7 +319,7 @@ function update_types(config, routes, route, to_delete = new Set()) {
 		declarations.push(...d);
 
 		if (proxies.server?.modified) to_delete.delete(proxies.server.file_name);
-		if (proxies.shared?.modified) to_delete.delete(proxies.shared.file_name);
+		if (proxies.universal?.modified) to_delete.delete(proxies.universal.file_name);
 	}
 
 	if (route.endpoint) {
@@ -382,7 +382,7 @@ function process_node(node, outdir, is_page, proxies, all_pages_have_load = true
 
 		// +page.js load present -> server can return all-optional data
 		const output_data_shape =
-			node.shared || (!is_page && all_pages_have_load)
+			node.universal || (!is_page && all_pages_have_load)
 				? `Partial<App.PageData> & Record<string, any> | void`
 				: `OutputDataShape<${parent_type}>`;
 		exports.push(
@@ -414,14 +414,14 @@ function process_node(node, outdir, is_page, proxies, all_pages_have_load = true
 	const parent_type = `${prefix}ParentData`;
 	declarations.push(`type ${parent_type} = ${get_parent_type(node, 'LayoutData')};`);
 
-	if (node.shared) {
-		const proxy = proxies.shared;
+	if (node.universal) {
+		const proxy = proxies.universal;
 		if (proxy?.modified) {
-			fs.writeFileSync(`${outdir}/proxy${path.basename(node.shared)}`, proxy.code);
+			fs.writeFileSync(`${outdir}/proxy${path.basename(node.universal)}`, proxy.code);
 		}
 
 		const type = get_data_type(
-			node.shared,
+			node.universal,
 			`${parent_type} & EnsureDefined<${prefix}ServerData>`,
 			proxy
 		);
@@ -486,8 +486,8 @@ function ensureProxies(node, proxies) {
 		proxies.server = createProxy(node.server, true);
 	}
 
-	if (node.shared && !proxies.shared) {
-		proxies.shared = createProxy(node.shared, false);
+	if (node.universal && !proxies.universal) {
+		proxies.universal = createProxy(node.universal, false);
 	}
 }
 

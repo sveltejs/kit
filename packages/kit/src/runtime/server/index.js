@@ -210,13 +210,16 @@ export async function respond(request, options, state) {
 					for (const layout of layouts) {
 						if (layout) {
 							validate_common_exports(layout.server, /** @type {string} */ (layout.server_id));
-							validate_common_exports(layout.shared, /** @type {string} */ (layout.shared_id));
+							validate_common_exports(
+								layout.universal,
+								/** @type {string} */ (layout.universal_id)
+							);
 						}
 					}
 
 					if (page) {
 						validate_page_server_exports(page.server, /** @type {string} */ (page.server_id));
-						validate_common_exports(page.shared, /** @type {string} */ (page.shared_id));
+						validate_common_exports(page.universal, /** @type {string} */ (page.universal_id));
 					}
 				}
 

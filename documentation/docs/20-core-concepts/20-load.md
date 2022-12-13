@@ -57,7 +57,7 @@ export async function load({ params }) {
 }
 ```
 
-Notice that the type changed from `PageLoad` to `PageServerLoad`, because server-only `load` functions can access additional arguments. To understand when to use `+page.js` and when to use `+page.server.js`, see [Shared vs server](/docs/load#shared-vs-server).
+Notice that the type changed from `PageLoad` to `PageServerLoad`, because server `load` functions can access additional arguments. To understand when to use `+page.js` and when to use `+page.server.js`, see [Universal vs server](/docs/load#universal-vs-server).
 
 ## Layout data
 
@@ -153,34 +153,34 @@ In some cases, we might need the opposite — a parent layout might need to acce
 
 Type information for `$page.data` is provided by `App.PageData`.
 
-## Shared vs server
+## Universal vs server
 
 As we've seen, there are two types of `load` function:
 
-* `+page.js` and `+layout.js` files export `load` functions that are _shared_ between server and browser
-* `+page.server.js` and `+layout.server.js` files export `load` functions that are _server-only_
+* `+page.js` and `+layout.js` files export _universal_ `load` functions that run both on the server and in the browser
+* `+page.server.js` and `+layout.server.js` files export _server_ `load` functions that only run server-side
 
 Conceptually, they're the same thing, but there are some important differences to be aware of.
 
 ### Input
 
-Both shared and server-only `load` functions have access to properties describing the request (`params`, `route` and `url`) and various functions (`depends`, `fetch` and `parent`). These are described in the following sections.
+Both universal and server `load` functions have access to properties describing the request (`params`, `route` and `url`) and various functions (`depends`, `fetch` and `parent`). These are described in the following sections.
 
-Server-only `load` functions are called with a `ServerLoadEvent`, which inherits `clientAddress`, `cookies`, `locals`, `platform` and `request` from `RequestEvent`.
+Server `load` functions are called with a `ServerLoadEvent`, which inherits `clientAddress`, `cookies`, `locals`, `platform` and `request` from `RequestEvent`.
 
-Shared `load` functions are called with a `LoadEvent`, which has a `data` property. If you have `load` functions in both `+page.js` and `+page.server.js` (or `+layout.js` and `+layout.server.js`), the return value of the server-only `load` function is the `data` property of the shared `load` function's argument.
+Universal `load` functions are called with a `LoadEvent`, which has a `data` property. If you have `load` functions in both `+page.js` and `+page.server.js` (or `+layout.js` and `+layout.server.js`), the return value of the server `load` function is the `data` property of the universal `load` function's argument.
 
 ### Output
 
-A shared `load` function can return an object containing any values, including things like custom classes and component constructors.
+A universal `load` function can return an object containing any values, including things like custom classes and component constructors.
 
-A server-only `load` function must return data that can be serialized with [devalue](https://github.com/rich-harris/devalue) — anything that can be represented as JSON plus things like `BigInt`, `Date`, `Map`, `Set` and `RegExp`, or repeated/cyclical references — so that it can be transported over the network.
+A server `load` function must return data that can be serialized with [devalue](https://github.com/rich-harris/devalue) — anything that can be represented as JSON plus things like `BigInt`, `Date`, `Map`, `Set` and `RegExp`, or repeated/cyclical references — so that it can be transported over the network.
 
 ### When to use which
 
-Server-only `load` functions are convenient when you need to access data directly from a database or filesystem, or need to use private environment variables.
+Server `load` functions are convenient when you need to access data directly from a database or filesystem, or need to use private environment variables.
 
-Shared `load` functions are useful when you need to `fetch` data from an external API and don't need private credentials, since SvelteKit can get the data directly from the API rather than going via your server. They are also useful when you need to return something that can't be serialized, such as a Svelte component constructor.
+Universal `load` functions are useful when you need to `fetch` data from an external API and don't need private credentials, since SvelteKit can get the data directly from the API rather than going via your server. They are also useful when you need to return something that can't be serialized, such as a Svelte component constructor.
 
 In rare cases, you might need to use both together — for example, you might need to return an instance of a custom class that was initialised with data from your server.
 
@@ -243,7 +243,7 @@ export async function load({ fetch, params }) {
 
 ## Cookies and headers
 
-A server-only `load` function can get and set [`cookies`](/docs/types#public-types-cookies).
+A server `load` function can get and set [`cookies`](/docs/types#public-types-cookies).
 
 ```js
 /// file: src/routes/+layout.server.js
@@ -268,7 +268,7 @@ export async function load({ cookies }) {
 
 > When setting cookies, be aware of the `path` property. By default, the `path` of a cookie is the current pathname. If you for example set a cookie at page `admin/user`, the cookie will only be available within the `admin` pages by default. In most cases you likely want to set `path` to `'/'` to make the cookie available throughout your app.
 
-Both server-only and shared `load` functions have access to a `setHeaders` function that, when running on the server, can set headers for the response. (When running in the browser, `setHeaders` has no effect.) This is useful if you want the page to be cached, for example:
+Both server and universal `load` functions have access to a `setHeaders` function that, when running on the server, can set headers for the response. (When running in the browser, `setHeaders` has no effect.) This is useful if you want the page to be cached, for example:
 
 ```js
 // @errors: 2322 1360
@@ -446,7 +446,7 @@ export function load() {
 
 ## Parallel loading
 
-When rendering (or navigating to) a page, SvelteKit runs all `load` functions concurrently, avoiding a waterfall of requests. During client-side navigation, the result of calling multiple server-only `load` functions are grouped into a single response. Once all `load` functions have returned, the page is rendered.
+When rendering (or navigating to) a page, SvelteKit runs all `load` functions concurrently, avoiding a waterfall of requests. During client-side navigation, the result of calling multiple server `load` functions are grouped into a single response. Once all `load` functions have returned, the page is rendered.
 
 ## Invalidation
 

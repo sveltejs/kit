@@ -562,10 +562,10 @@ export function create_client({ target, base }) {
 		const node = await loader();
 
 		if (DEV) {
-			validate_common_exports(node.shared);
+			validate_common_exports(node.universal);
 		}
 
-		if (node.shared?.load) {
+		if (node.universal?.load) {
 			/** @param {string[]} deps */
 			function depends(...deps) {
 				for (const dep of deps) {
@@ -679,7 +679,7 @@ export function create_client({ target, base }) {
 			if (DEV) {
 				try {
 					lock_fetch();
-					data = (await node.shared.load.call(null, load_input)) ?? null;
+					data = (await node.universal.load.call(null, load_input)) ?? null;
 					if (data != null && Object.getPrototypeOf(data) !== Object.prototype) {
 						throw new Error(
 							`a load function related to route '${route.id}' returned ${
@@ -697,7 +697,7 @@ export function create_client({ target, base }) {
 					unlock_fetch();
 				}
 			} else {
-				data = (await node.shared.load.call(null, load_input)) ?? null;
+				data = (await node.universal.load.call(null, load_input)) ?? null;
 			}
 			data = data ? await unwrap_promises(data) : null;
 		}
@@ -706,9 +706,9 @@ export function create_client({ target, base }) {
 			node,
 			loader,
 			server: server_data_node,
-			shared: node.shared?.load ? { type: 'data', data, uses } : null,
+			universal: node.universal?.load ? { type: 'data', data, uses } : null,
 			data: data ?? server_data_node?.data ?? null,
-			slash: node.shared?.trailingSlash ?? server_data_node?.slash
+			slash: node.universal?.trailingSlash ?? server_data_node?.slash
 		};
 	}
 
@@ -840,7 +840,7 @@ export function create_client({ target, base }) {
 			const valid =
 				(!server_data_node || server_data_node.type === 'skip') &&
 				loader[1] === previous?.loader &&
-				!has_changed(parent_changed, route_changed, url_changed, previous.shared?.uses, params);
+				!has_changed(parent_changed, route_changed, url_changed, previous.universal?.uses, params);
 			if (valid) return previous;
 
 			parent_changed = true;
@@ -959,7 +959,7 @@ export function create_client({ target, base }) {
 							loader: /** @type {import('types').CSRPageNodeLoader } */ (errors[i]),
 							data: {},
 							server: null,
-							shared: null
+							universal: null
 						}
 					};
 				} catch (e) {
@@ -1023,7 +1023,7 @@ export function create_client({ target, base }) {
 		const root_error = {
 			node: await default_error_loader(),
 			loader: default_error_loader,
-			shared: null,
+			universal: null,
 			server: null,
 			data: null
 		};
