@@ -1,5 +1,11 @@
 # @sveltejs/kit
 
+## 1.0.0-next.585
+
+### Patch Changes
+
+- [fix] remove unused elements from default error component ([#8110](https://github.com/sveltejs/kit/pull/8110))
+
 ## 1.0.0-next.584
 
 ### Patch Changes
