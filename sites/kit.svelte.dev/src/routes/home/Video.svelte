@@ -1,6 +1,8 @@
 <script>
 	import volume_off from './volume-off.svg';
 	import volume_high from './volume-high.svg';
+	import cc_on from './cc-on.svg';
+	import cc_off from './cc-off.svg';
 	import play from '$lib/icons/play.svg';
 	import pause from '$lib/icons/pause.svg';
 	import vtt from './subtitles.vtt';
@@ -13,8 +15,7 @@
 	let paused = false;
 	let muted = true;
 	let captioned = true;
-	let has_used_mute_button = false;
-	let has_used_cc_button = false;
+	let has_used_controls = false;
 
 	$: if (browser && video) {
 		video.textTracks[0].mode = captioned ? 'showing' : 'hidden';
@@ -107,7 +108,7 @@
 			if (video.paused) {
 				video.play();
 
-				if (!has_used_mute_button) {
+				if (!has_used_controls) {
 					muted = false;
 				}
 			} else {
@@ -123,22 +124,24 @@
 	{/if}
 
 	<div class="top-controls">
-		<label class="captions" class:unused={!has_used_cc_button}>
+		<label class="captions" class:unused={!has_used_controls}>
 			<input
 				class="visually-hidden"
 				type="checkbox"
 				bind:checked={captioned}
-				on:change={() => (has_used_cc_button = true)}
+				on:change={() => (has_used_controls = true)}
 			/>
-			<span>CC</span>
+
+			<img style:display={captioned ? 'block' : 'none'} src={cc_on} alt="hide subtitles" />
+			<img style:display={captioned ? 'none' : 'block'} src={cc_off} alt="show subtitles" />
 		</label>
 
-		<label class="mute" class:unused={!has_used_mute_button}>
+		<label class="mute" class:unused={!has_used_controls}>
 			<input
 				class="visually-hidden"
 				type="checkbox"
 				bind:checked={muted}
-				on:change={() => (has_used_mute_button = true)}
+				on:change={() => (has_used_controls = true)}
 			/>
 
 			<img style:display={muted ? 'block' : 'none'} src={volume_off} alt="unmute" />
@@ -152,7 +155,7 @@
 			type="checkbox"
 			bind:checked={paused}
 			on:change={() => {
-				if (!has_used_mute_button) {
+				if (!has_used_controls) {
 					muted = false;
 				}
 			}}
@@ -252,8 +255,7 @@
 		border-radius: 0 var(--sk-border-radius) var(--sk-border-radius) var(--sk-border-radius);
 	} */
 
-	.video-player:hover label,
-	.video-player label:focus-within {
+	.video-player:hover label {
 		opacity: 1;
 	}
 
