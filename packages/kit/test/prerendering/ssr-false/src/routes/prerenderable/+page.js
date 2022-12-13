@@ -1,5 +1,3 @@
 export function load() {
-	return {
-		dynamic: Math.random()
-	};
+	throw new Error('I should not be called during prerendering');
 }
