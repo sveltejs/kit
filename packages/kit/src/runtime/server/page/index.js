@@ -87,8 +87,8 @@ export async function render_page(event, route, page, options, state, resolve_op
 				throw new Error('Cannot prerender pages with actions');
 			}
 		} else if (state.prerendering) {
-			// Try to render the shell when ssr is false.
-			// People can opt out of this behavior by explicitly setting prerender to false
+			// Try to render the shell when ssr is false and prerendering not explicitly disabled.
+			// People can opt out of this behavior by explicitly setting prerender to false.
 			if (
 				should_prerender !== false &&
 				get_option(nodes, 'ssr') === false &&

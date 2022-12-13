@@ -22,4 +22,13 @@ test('does not prerender non prerenderable things', () => {
 	assert.equal(fs.readdirSync(build).length, 2);
 });
 
+test('keeps not-explicitly-prerendered routes in the manifest', () => {
+	const manifest = fileURLToPath(
+		new URL('../.svelte-kit/output/server/manifest.js', import.meta.url)
+	);
+	const content = fs.readFileSync(manifest, 'utf-8');
+	assert.ok(content.includes('/prerenderable'));
+	assert.ok(content.includes('/prerenderable-2'));
+});
+
 test.run();
