@@ -122,12 +122,12 @@ const plugin = function ({ external = [], edge, split } = {}) {
 				);
 
 				await esbuild.build({
-					platform: 'neutral',
-					mainFields: ['module', 'main'],
 					entryPoints: [`${tmp}/edge.js`],
 					outfile: `${dirs.functions}/${name}.func/index.js`,
 					target: 'es2020', // TODO verify what the edge runtime supports
 					bundle: true,
+					platform: 'browser',
+					format: 'esm',
 					external,
 					sourcemap: 'linked',
 					banner: { js: 'globalThis.global = globalThis;' }
