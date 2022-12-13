@@ -63,6 +63,7 @@ export default function ({ config = 'wrangler.toml' } = {}) {
 
 			await esbuild.build({
 				platform: 'browser',
+				conditions: ['worker', 'browser'],
 				sourcemap: 'linked',
 				target: 'es2020',
 				entryPoints: [`${tmp}/entry.js`],
