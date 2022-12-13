@@ -1,5 +1,5 @@
 {
-	"name": "prerendering-test-basics",
+	"name": "prerendering-test-ssr-false",
 	"private": true,
 	"version": "0.0.2-next.0",
 	"scripts": {

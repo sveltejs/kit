@@ -81,7 +81,6 @@ export async function render_page(event, route, page, options, state, resolve_op
 		// causing functions to be omitted from the manifesst generated later
 		const should_prerender = get_option(nodes, 'prerender');
 
-		console.log('SHOULD', should_prerender, event.url.href);
 		if (should_prerender) {
 			const mod = leaf_node.server;
 			if (mod && mod.actions) {
