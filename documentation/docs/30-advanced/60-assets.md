@@ -16,7 +16,7 @@ title: Asset handling
 
 If you prefer to reference assets directly in the markup, you can use a preprocessor such as [svelte-preprocess-import-assets](https://github.com/bluwy/svelte-preprocess-import-assets).
 
-For assets included via the CSS `url()` function, you may find the [`vitePreprocess`]([https://github.com/sveltejs/vite-plugin-svelte/blob/main/docs/config.md#usevitepreprocess](https://kit.svelte.dev/docs/integrations#preprocessors-vitepreprocess)) useful.
+For assets included via the CSS `url()` function, you may find [`vitePreprocess`]([https://github.com/sveltejs/vite-plugin-svelte/blob/main/docs/config.md#usevitepreprocess](https://kit.svelte.dev/docs/integrations#preprocessors-vitepreprocess)) useful.
 
 ## Transforming
 
