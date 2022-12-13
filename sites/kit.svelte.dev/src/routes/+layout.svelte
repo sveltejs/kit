@@ -2,7 +2,12 @@
 	import '@sveltejs/site-kit/styles/index.css';
 	import { browser } from '$app/environment';
 	import { page, navigating } from '$app/stores';
-	import { Icon, Icons, Nav, NavItem, PreloadingIndicator, SkipLink } from '@sveltejs/site-kit';
+	import Icon from '@sveltejs/site-kit/components/Icon.svelte';
+	import Icons from '@sveltejs/site-kit/components/Icons.svelte';
+	import Nav from '@sveltejs/site-kit/components/Nav.svelte';
+	import NavItem from '@sveltejs/site-kit/components/NavItem.svelte';
+	import PreloadingIndicator from '@sveltejs/site-kit/components/PreloadingIndicator.svelte';
+	import SkipLink from '@sveltejs/site-kit/components/SkipLink.svelte';
 	import Search from '$lib/search/Search.svelte';
 	import SearchBox from '$lib/search/SearchBox.svelte';
 	import Logo from './home/svelte-logo.svg';

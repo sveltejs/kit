@@ -674,7 +674,7 @@ importers:
       '@sveltejs/adapter-static': workspace:*
       '@sveltejs/amp': workspace:*
       '@sveltejs/kit': workspace:*
-      '@sveltejs/site-kit': ^2.1.4
+      '@sveltejs/site-kit': ^3.0.0
       '@types/d3-geo': ^3.0.2
       '@types/node': ^16.18.6
       '@vercel/edge': ^0.1.2
@@ -703,7 +703,7 @@ importers:
       '@sveltejs/adapter-static': link:../../packages/adapter-static
       '@sveltejs/amp': link:../../packages/amp
       '@sveltejs/kit': link:../../packages/kit
-      '@sveltejs/site-kit': link:../site-kit
+      '@sveltejs/site-kit': 3.0.0
       '@types/d3-geo': 3.0.2
       '@types/node': 16.18.6
       flexsearch: 0.7.31
@@ -718,23 +718,6 @@ importers:
       uvu: 0.5.6
       vite: 4.0.0_@types+node@16.18.6
       vite-imagetools: 4.0.11
-
-  sites/site-kit:
-    specifiers:
-      '@sveltejs/kit': workspace:*
-      '@sveltejs/package': workspace:*
-      golden-fleece: ^1.0.9
-      svelte: ^3.54.0
-      typescript: ^4.9.3
-      vite: ^4.0.0
-    dependencies:
-      golden-fleece: 1.0.9
-    devDependencies:
-      '@sveltejs/kit': link:../../packages/kit
-      '@sveltejs/package': link:../../packages/package
-      svelte: 3.54.0
-      typescript: 4.9.3
-      vite: 4.0.0
 
 packages:
 
@@ -1364,6 +1347,10 @@ packages:
       estree-walker: 2.0.2
       picomatch: 2.3.1
       rollup: 3.7.0
+
+  /@sveltejs/site-kit/3.0.0:
+    resolution: {integrity: sha512-Ibiy9NMWBXsZZdFFpbluwJJQlMva/ynaHo8Cd4HVosYz/yU8LM2u3HcaSVEom4UB9nTUD2UeGpujwQ/XWdUDTQ==}
+    dev: true
 
   /@sveltejs/vite-plugin-svelte/2.0.0_svelte@3.54.0+vite@4.0.0:
     resolution: {integrity: sha512-oUFrYQarRv4fppmxdrv00qw3wX8Ycdj0uv33MfpRZyR8K67dyxiOcHnqkB0zSy5sDJA8RC/2aNtYhXJ8NINVHQ==}
@@ -2559,10 +2546,6 @@ packages:
 
   /globrex/0.1.2:
     resolution: {integrity: sha512-uHJgbwAMwNFf5mLst7IWLNg14x1CkeqglJb/K3doi4dw6q2IvAAmM/Y81kevy83wP+Sst+nutFTYOGg3d1lsxg==}
-
-  /golden-fleece/1.0.9:
-    resolution: {integrity: sha512-YSwLaGMOgSBx9roJlNLL12c+FRiw7VECphinc6mGucphc/ZxTHgdEz6gmJqH6NOzYEd/yr64hwjom5pZ+tJVpg==}
-    dev: false
 
   /graceful-fs/4.2.10:
     resolution: {integrity: sha512-9ByhssR2fPVsNZj478qUUbKfmL0+t5BDVyjShtyZZLiK7ZDAArFFfopyOTj0M05wE2tJPisA4iTnnXl2YoPvOA==}
