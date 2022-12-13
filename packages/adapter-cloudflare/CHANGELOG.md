@@ -1,5 +1,11 @@
 # @sveltejs/adapter-cloudflare
 
+## 1.0.0-next.43
+
+### Patch Changes
+
+- [fix] revert platform change from browser to neutral ([#8122](https://github.com/sveltejs/kit/pull/8122))
+
 ## 1.0.0-next.42
 
 ### Patch Changes
