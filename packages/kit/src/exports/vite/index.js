@@ -380,6 +380,83 @@ function kit({ svelte_config }) {
 		},
 
 		/**
+		 * @see https://vitejs.dev/guide/api-plugin.html#configureserver
+		 */
+		async configureServer(vite) {
+			// set `import { version } from '$app/environment'`
+			(await vite.ssrLoadModule(`${runtime_prefix}/env.js`)).set_version(
+				svelte_config.kit.version.name
+			);
+
+			// set `import { base, assets } from '$app/paths'`
+			const { base, assets } = svelte_config.kit.paths;
+
+			(await vite.ssrLoadModule(`${runtime_base}/paths.js`)).set_paths({
+				base,
+				assets: assets ? SVELTE_KIT_ASSETS : base
+			});
+		}
+	};
+
+	/** @type {import('vite').Plugin} */
+	const plugin_compile = {
+		name: 'vite-plugin-sveltekit-compile',
+
+		/**
+		 * Build the SvelteKit-provided Vite config to be merged with the user's vite.config.js file.
+		 * @see https://vitejs.dev/guide/api-plugin.html#config
+		 */
+		async config(config, config_env) {
+			// The config is created in build_server for SSR mode and passed inline
+			if (config.build?.ssr) return;
+
+			if (config_env.command === 'build') {
+				const new_config = vite_client_build_config();
+
+				const warning = warn_overridden_config(config, new_config);
+				if (warning) console.error(warning + '\n');
+
+				return new_config;
+			}
+
+			// dev and preview config can be shared
+			/** @type {import('vite').UserConfig} */
+			const result = {
+				appType: 'custom',
+				base: svelte_config.kit.paths.base,
+				build: {
+					rollupOptions: {
+						// Vite dependency crawler needs an explicit JS entry point
+						// eventhough server otherwise works without it
+						input: `${runtime_directory}/client/start.js`
+					}
+				},
+				publicDir: svelte_config.kit.files.assets
+			};
+
+			const warning = warn_overridden_config(config, result);
+			if (warning) console.error(warning);
+
+			return result;
+		},
+
+		/**
+		 * Adds the SvelteKit middleware to do SSR in dev mode.
+		 * @see https://vitejs.dev/guide/api-plugin.html#configureserver
+		 */
+		async configureServer(vite) {
+			return await dev(vite, vite_config, svelte_config);
+		},
+
+		/**
+		 * Adds the SvelteKit middleware to do SSR in preview mode.
+		 * @see https://vitejs.dev/guide/api-plugin.html#configurepreviewserver
+		 */
+		configurePreviewServer(vite) {
+			return preview(vite, vite_config, svelte_config);
+		},
+
+		/**
 		 * Vite builds a single bundle. We need three bundles: client, server, and service worker.
 		 * The user's package.json scripts will invoke the Vite CLI to execute the client build. We
 		 * then use this hook to kick off builds for the server and service worker.
@@ -548,83 +625,6 @@ function kit({ svelte_config }) {
 				fs.unlinkSync(`${paths.output_dir}/client/${vite_config.build.manifest}`);
 				fs.unlinkSync(`${paths.output_dir}/server/${vite_config.build.manifest}`);
 			}
-		},
-
-		/**
-		 * @see https://vitejs.dev/guide/api-plugin.html#configureserver
-		 */
-		async configureServer(vite) {
-			// set `import { version } from '$app/environment'`
-			(await vite.ssrLoadModule(`${runtime_prefix}/env.js`)).set_version(
-				svelte_config.kit.version.name
-			);
-
-			// set `import { base, assets } from '$app/paths'`
-			const { base, assets } = svelte_config.kit.paths;
-
-			(await vite.ssrLoadModule(`${runtime_base}/paths.js`)).set_paths({
-				base,
-				assets: assets ? SVELTE_KIT_ASSETS : base
-			});
-		}
-	};
-
-	/** @type {import('vite').Plugin} */
-	const plugin_compile = {
-		name: 'vite-plugin-sveltekit-compile',
-
-		/**
-		 * Build the SvelteKit-provided Vite config to be merged with the user's vite.config.js file.
-		 * @see https://vitejs.dev/guide/api-plugin.html#config
-		 */
-		async config(config, config_env) {
-			// The config is created in build_server for SSR mode and passed inline
-			if (config.build?.ssr) return;
-
-			if (config_env.command === 'build') {
-				const new_config = vite_client_build_config();
-
-				const warning = warn_overridden_config(config, new_config);
-				if (warning) console.error(warning + '\n');
-
-				return new_config;
-			}
-
-			// dev and preview config can be shared
-			/** @type {import('vite').UserConfig} */
-			const result = {
-				appType: 'custom',
-				base: svelte_config.kit.paths.base,
-				build: {
-					rollupOptions: {
-						// Vite dependency crawler needs an explicit JS entry point
-						// eventhough server otherwise works without it
-						input: `${runtime_directory}/client/start.js`
-					}
-				},
-				publicDir: svelte_config.kit.files.assets
-			};
-
-			const warning = warn_overridden_config(config, result);
-			if (warning) console.error(warning);
-
-			return result;
-		},
-
-		/**
-		 * Adds the SvelteKit middleware to do SSR in dev mode.
-		 * @see https://vitejs.dev/guide/api-plugin.html#configureserver
-		 */
-		async configureServer(vite) {
-			return await dev(vite, vite_config, svelte_config);
-		},
-
-		/**
-		 * Adds the SvelteKit middleware to do SSR in preview mode.
-		 * @see https://vitejs.dev/guide/api-plugin.html#configurepreviewserver
-		 */
-		configurePreviewServer(vite) {
-			return preview(vite, vite_config, svelte_config);
 		}
 	};
 
