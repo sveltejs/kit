@@ -42,7 +42,8 @@
     "server-only-module-dynamic-import": "0.0.1",
     "prerenderable-not-prerendered": "0.0.1",
     "prerenderable-incorrect-fragment": "0.0.1",
-    "@sveltejs/site-kit": "2.1.4"
+    "@sveltejs/site-kit": "2.1.4",
+    "prerendering-test-ssr-false": "0.0.2-next.0"
   },
   "changesets": [
     "afraid-eels-tease",
@@ -1591,6 +1592,7 @@
     "witty-carrots-notice",
     "witty-chicken-teach",
     "witty-eyes-relax",
+    "witty-falcons-begin",
     "witty-ligers-listen",
     "witty-maps-pull",
     "witty-meals-tie",

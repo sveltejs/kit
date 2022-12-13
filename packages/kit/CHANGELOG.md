@@ -1,5 +1,11 @@
 # @sveltejs/kit
 
+## 1.0.0-next.587
+
+### Patch Changes
+
+- [breaking] prerender shells when ssr false and prerender not false ([#8131](https://github.com/sveltejs/kit/pull/8131))
+
 ## 1.0.0-next.586
 
 ### Patch Changes
