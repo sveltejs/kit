@@ -354,9 +354,7 @@ function kit({ svelte_config }) {
 		 * Clears the output directories.
 		 */
 		buildStart() {
-			if (vite_config.build.ssr) {
-				return;
-			}
+			if (vite_config.build.ssr) return;
 
 			// Reset for new build. Goes here because `build --watch` calls buildStart but not config
 			completed_build = false;
@@ -371,6 +369,16 @@ function kit({ svelte_config }) {
 			}
 		},
 
+		generateBundle() {
+			if (vite_config.build.ssr) return;
+
+			this.emitFile({
+				type: 'asset',
+				fileName: `${svelte_config.kit.appDir}/version.json`,
+				source: JSON.stringify({ version: svelte_config.kit.version.name })
+			});
+		},
+
 		/**
 		 * Vite builds a single bundle. We need three bundles: client, server, and service worker.
 		 * The user's package.json scripts will invoke the Vite CLI to execute the client build. We
@@ -379,9 +387,7 @@ function kit({ svelte_config }) {
 		writeBundle: {
 			sequential: true,
 			async handler(_options, bundle) {
-				if (vite_config.build.ssr) {
-					return;
-				}
+				if (vite_config.build.ssr) return;
 
 				const guard = module_guard(this, {
 					cwd: vite.normalizePath(process.cwd()),
@@ -400,11 +406,6 @@ function kit({ svelte_config }) {
 				log = logger({
 					verbose
 				});
-
-				fs.writeFileSync(
-					`${paths.client_out_dir}/${svelte_config.kit.appDir}/version.json`,
-					JSON.stringify({ version: svelte_config.kit.version.name })
-				);
 
 				const { assets, chunks } = collect_output(bundle);
 				log.info(
