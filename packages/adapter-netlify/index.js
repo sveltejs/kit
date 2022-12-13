@@ -129,11 +129,11 @@ async function generate_edge_functions({ builder }) {
 	);
 
 	await esbuild.build({
-		platform: 'neutral',
-		mainFields: ['module', 'main'],
 		entryPoints: [`${tmp}/entry.js`],
 		outfile: '.netlify/edge-functions/render.js',
 		bundle: true,
+		format: 'esm',
+		platform: 'browser',
 		sourcemap: 'linked',
 		target: 'es2020'
 	});

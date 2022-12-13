@@ -54,14 +54,13 @@ export default function () {
 			});
 
 			await esbuild.build({
-				platform: 'neutral',
-				mainFields: ['module', 'main'],
-				conditions: ['worker'],
+				platform: 'browser',
 				sourcemap: 'linked',
 				target: 'es2020',
 				entryPoints: [`${tmp}/_worker.js`],
 				outfile: `${dest}/_worker.js`,
 				allowOverwrite: true,
+				format: 'esm',
 				bundle: true
 			});
 		}

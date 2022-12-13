@@ -62,15 +62,14 @@ export default function ({ config = 'wrangler.toml' } = {}) {
 			);
 
 			await esbuild.build({
-				platform: 'neutral',
-				mainFields: ['module', 'main'],
-				conditions: ['worker'],
+				platform: 'browser',
 				sourcemap: 'linked',
 				target: 'es2020',
 				entryPoints: [`${tmp}/entry.js`],
 				outfile: main,
 				bundle: true,
-				external: ['__STATIC_CONTENT_MANIFEST']
+				external: ['__STATIC_CONTENT_MANIFEST'],
+				format: 'esm'
 			});
 
 			builder.log.minor('Copying assets...');
