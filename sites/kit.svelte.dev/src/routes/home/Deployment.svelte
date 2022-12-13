@@ -49,7 +49,7 @@
 			<a
 				target="_blank"
 				rel="noreferrer"
-				href="https://github.com/sveltejs/kit/tree/master/packages/adapter-vercel"
+				href="https://vercel.com/templates/svelte/sveltekit-boilerplate"
 				class="invert invert-hover"
 			>
 				<img src={vercel} alt="" style="transform: translate(0,-0.2rem)" />
