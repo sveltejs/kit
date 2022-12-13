@@ -401,7 +401,15 @@ export async function prerender() {
 				validate_common_exports(page.universal, route.id);
 			}
 
-			const prerender = get_option(nodes, 'prerender') ?? false;
+			const should_prerender = get_option(nodes, 'prerender');
+			const prerender =
+				should_prerender === true ||
+				// Try prerendering if ssr is false and no server needed. Set it to 'auto' so that
+				// the route is not removed from the manifest, there could be a server load function.
+				// People can opt out of this behavior by explicitly setting prerender to false
+				(should_prerender !== false && get_option(nodes, 'ssr') === false && !page?.server?.actions
+					? 'auto'
+					: false);
 
 			prerender_map.set(route.id, prerender);
 		}
