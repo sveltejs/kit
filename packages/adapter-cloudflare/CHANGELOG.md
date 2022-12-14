@@ -1,5 +1,12 @@
 # @sveltejs/adapter-cloudflare
 
+## 1.0.0
+
+### Major Changes
+
+First major release, see below for the history of changes that lead up to this.
+Starting from now all releases follow semver and changes will be listed as Major/Minor/Patch
+
 ## 1.0.0-next.45
 
 ### Patch Changes
