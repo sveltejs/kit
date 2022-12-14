@@ -66,6 +66,10 @@ Accessing [`url.searchParams`](/docs/load#using-url-data-url) during prerenderin
 
 Pages with [actions](/docs/form-actions) cannot be prerendered, because a server must be able to handle the action `POST` requests.
 
+### Prerender and ssr
+
+If you set the [ssr option](#ssr) to `false`, each request will result in the same empty HTML shell. Since this would result in unnecessary work, SvelteKit defaults to prerendering any pages it finds where `prerender` is not explicitly set to `false`.
+
 ### Route conflicts
 
 Because prerendering writes to the filesystem, it isn't possible to have two endpoints that would cause a directory and a file to have the same name. For example, `src/routes/foo/+server.js` and `src/routes/foo/bar/+server.js` would try to create `foo` and `foo/bar`, which is impossible.
