@@ -46,19 +46,6 @@ jobs:
           NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
           UPDATE_TEMPLATE_SSH_KEY: ${{ secrets.UPDATE_TEMPLATE_SSH_KEY }}
 
-      - name: Update latest tag on published packages # only needed until we release 1.0.0 and exit pre-release mode
-        if: steps.changesets.outputs.published == 'true'
-        # wait a bit and then run "npm dist-tag add package@version latest" for all published packages
-        env:
-          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
-          published_packages: ${{steps.changesets.outputs.publishedPackages}}
-        run: |
-          sleep 20
-          cat << EOF > "$HOME/.npmrc"
-            //registry.npmjs.org/:_authToken=$NPM_TOKEN
-          EOF
-          echo $published_packages | jq -r 'map((.name + "@" + .version)) | .[]' | while read pkgver; do npm dist-tag add $pkgver latest || continue;done
-
       # TODO alert discord
       # - name: Send a Slack notification if a publish happens
       #   if: steps.changesets.outputs.published == 'true'
