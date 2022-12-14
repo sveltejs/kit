@@ -46,5 +46,8 @@
 		"@rollup/plugin-json": "^5.0.1",
 		"@rollup/plugin-node-resolve": "^15.0.1",
 		"rollup": "^3.7.0"
+	},
+	"peerDependencies": {
+		"@sveltejs/kit": "^1.0.0-next.587"
 	}
 }

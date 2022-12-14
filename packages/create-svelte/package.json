@@ -16,7 +16,6 @@
 	},
 	"devDependencies": {
 		"@playwright/test": "^1.28.1",
-		"@sveltejs/kit": "workspace:*",
 		"@types/gitignore-parser": "^0.0.0",
 		"@types/prettier": "^2.7.1",
 		"@types/prompts": "^2.4.1",
