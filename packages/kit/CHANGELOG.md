@@ -1,5 +1,11 @@
 # @sveltejs/kit
 
+## 1.0.0-next.589
+
+### Patch Changes
+
+- [breaking] remove warnings/errors about removed/changed APIs ([#8019](https://github.com/sveltejs/kit/pull/8019))
+
 ## 1.0.0-next.588
 
 ### Patch Changes

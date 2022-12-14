@@ -1,5 +1,11 @@
 # create-svelte
 
+## 2.0.0-next.204
+
+### Patch Changes
+
+- [feat] remove release candidate banner ([#8109](https://github.com/sveltejs/kit/pull/8109))
+
 ## 2.0.0-next.203
 
 ### Patch Changes

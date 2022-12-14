@@ -1,5 +1,14 @@
 # @sveltejs/adapter-cloudflare
 
+## 1.0.0-next.45
+
+### Patch Changes
+
+- [breaking] remove warnings/errors about removed/changed APIs ([#8019](https://github.com/sveltejs/kit/pull/8019))
+
+- Updated dependencies [[`f42604a2`](https://github.com/sveltejs/kit/commit/f42604a2b4c04026d3d8bad95807720b79529539)]:
+  - @sveltejs/kit@1.0.0-next.589
+
 ## 1.0.0-next.44
 
 ### Patch Changes
