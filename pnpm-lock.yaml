@@ -686,6 +686,7 @@ importers:
     specifiers:
       '@sveltejs/adapter-auto': workspace:^
       '@sveltejs/adapter-static': workspace:^
+      '@sveltejs/adapter-vercel': workspace:^1.0.0
       '@sveltejs/amp': workspace:^
       '@sveltejs/kit': workspace:^
       '@sveltejs/site-kit': ^3.0.3
@@ -715,6 +716,7 @@ importers:
     devDependencies:
       '@sveltejs/adapter-auto': link:../../packages/adapter-auto
       '@sveltejs/adapter-static': link:../../packages/adapter-static
+      '@sveltejs/adapter-vercel': link:../../packages/adapter-vercel
       '@sveltejs/amp': link:../../packages/amp
       '@sveltejs/kit': link:../../packages/kit
       '@sveltejs/site-kit': 3.0.3
