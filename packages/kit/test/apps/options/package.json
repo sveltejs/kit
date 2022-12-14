@@ -12,7 +12,7 @@
 		"test:build": "playwright test"
 	},
 	"devDependencies": {
-		"@sveltejs/kit": "workspace:*",
+		"@sveltejs/kit": "workspace:^",
 		"cross-env": "^7.0.3",
 		"svelte": "^3.54.0",
 		"svelte-check": "^2.9.2",
