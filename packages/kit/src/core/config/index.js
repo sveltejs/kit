@@ -16,14 +16,6 @@ export function load_template(cwd, config) {
 	if (fs.existsSync(appTemplate)) {
 		const contents = fs.readFileSync(appTemplate, 'utf8');
 
-		// TODO remove this for 1.0
-		const match = /%svelte\.([a-z]+)%/.exec(contents);
-		if (match) {
-			throw new Error(
-				`%svelte.${match[1]}% in ${relative} should be replaced with %sveltekit.${match[1]}%`
-			);
-		}
-
 		const expected_tags = ['%sveltekit.head%', '%sveltekit.body%'];
 		expected_tags.forEach((tag) => {
 			if (contents.indexOf(tag) === -1) {
@@ -81,9 +73,6 @@ function process_config(config, { cwd = process.cwd() } = {}) {
 	validated.kit.outDir = path.resolve(cwd, validated.kit.outDir);
 
 	for (const key in validated.kit.files) {
-		// TODO remove for 1.0
-		if (key === 'template') continue;
-
 		if (key === 'hooks') {
 			validated.kit.files.hooks.client = path.resolve(cwd, validated.kit.files.hooks.client);
 			validated.kit.files.hooks.server = path.resolve(cwd, validated.kit.files.hooks.server);

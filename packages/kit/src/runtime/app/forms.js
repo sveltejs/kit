@@ -119,17 +119,7 @@ export function enhance(form, submit = () => {}) {
 			form,
 			update: (opts) => fallback_callback({ action, result, reset: opts?.reset }),
 			// @ts-expect-error generic constraints stuff we don't care about
-			result,
-			// TODO remove for 1.0
-			get type() {
-				throw new Error('(result) => {...} has changed to ({ result }) => {...}');
-			},
-			get location() {
-				throw new Error('(result) => {...} has changed to ({ result }) => {...}');
-			},
-			get error() {
-				throw new Error('(result) => {...} has changed to ({ result }) => {...}');
-			}
+			result
 		});
 	}
 

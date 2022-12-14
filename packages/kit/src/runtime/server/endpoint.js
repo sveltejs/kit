@@ -1,6 +1,6 @@
 import { negotiate } from '../../utils/http.js';
 import { Redirect } from '../control.js';
-import { check_method_names, method_not_allowed } from './utils.js';
+import { method_not_allowed } from './utils.js';
 
 /**
  * @param {import('types').RequestEvent} event
@@ -10,9 +10,6 @@ import { check_method_names, method_not_allowed } from './utils.js';
  */
 export async function render_endpoint(event, mod, state) {
 	const method = /** @type {import('types').HttpMethod} */ (event.request.method);
-
-	// TODO: Remove for 1.0
-	check_method_names(mod);
 
 	let handler = mod[method];
 
