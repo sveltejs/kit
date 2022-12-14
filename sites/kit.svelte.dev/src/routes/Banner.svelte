@@ -18,7 +18,7 @@
 		<a href="https://svelte.dev/blog/announcing-sveltekit-1.0">
 			<strong>SvelteKit 1.0 is here!</strong>
 			<span class="small">Learn more</span>
-			<span class="large">Read the blog post</span>
+			<span class="large">Read the blog post to learn more</span>
 		</a>
 	</p>
 </header>
@@ -51,7 +51,7 @@
 		display: none;
 	}
 
-	@media (min-width: 320px) {
+	@media (min-width: 440px) {
 		.small {
 			display: none;
 		}
