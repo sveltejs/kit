@@ -233,12 +233,6 @@
 		filter: var(--control-filter);
 	}
 
-	.captions input:checked + span {
-		text-decoration: underline;
-		text-decoration-color: var(--sk-theme-1);
-		text-underline-offset: 4px;
-	}
-
 	label.unused {
 		opacity: 0.8;
 	}
@@ -259,8 +253,7 @@
 		opacity: 1;
 	}
 
-	.video-player input:focus-visible ~ img,
-	.video-player input:focus-visible ~ span {
+	.video-player input:focus-visible ~ img {
 		outline: 2px solid var(--sk-theme-1);
 		outline-offset: 2px;
 		border-radius: var(--sk-border-radius);
