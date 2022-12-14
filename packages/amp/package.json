@@ -24,5 +24,8 @@
 	"scripts": {
 		"lint": "prettier --check . --config ../../.prettierrc --ignore-path .gitignore",
 		"format": "pnpm lint --write"
+	},
+	"peerDependencies": {
+		"@sveltejs/kit": "^1.0.0-next"
 	}
 }
