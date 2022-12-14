@@ -176,11 +176,6 @@ async function main() {
 	console.log(`  ${i++}: ${bold(cyan('npm run dev -- --open'))}`);
 
 	console.log(`\nTo close the dev server, hit ${bold(cyan('Ctrl-C'))}`);
-	console.log(
-		`\nNew? Try the tutorial at ${cyan(
-			'https://learn.svelte.dev/tutorial/introducing-sveltekit'
-		)}\n`
-	);
 	console.log(`\nStuck? Visit us at ${cyan('https://svelte.dev/chat')}`);
 }
 
