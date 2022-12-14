@@ -2,7 +2,7 @@
 
 # SvelteKit
 
-Web development, simplified. Read the [documentation](https://kit.svelte.dev/docs) to get started.
+Web development, streamlined. Read the [documentation](https://kit.svelte.dev/docs) to get started.
 
 ### Packages
 
