@@ -16,7 +16,7 @@
 <header class="banner" class:visible>
 	<p>
 		<a href="https://www.youtube.com/watch?v=N4BRVkQVoMc">
-			<strong>LIVE NOW:</strong> announcing SvelteKit 1.0
+			<strong>LIVE NOW:</strong> announcing SvelteKit 1.0!
 		</a>
 	</p>
 </header>
