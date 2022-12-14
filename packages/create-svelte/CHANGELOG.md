@@ -1,5 +1,11 @@
 # create-svelte
 
+## 2.0.1
+
+### Patch Changes
+
+- no code change, rerelease as 2.0.1 for technical reasons ([#8161](https://github.com/sveltejs/kit/pull/8161))
+
 ## 2.0.0
 
 ### Major Changes
