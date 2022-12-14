@@ -36,7 +36,7 @@
 				</div>
 				<pre><code
 						><span class="line"
-							>npm create <span class="orange-highlight">svelte</span>@latest my-app</span
+							>npm create <span class="orange-highlight">svelte</span> my-app</span
 						>
 <span class="line">cd my-app</span>
 <span class="line">npm install</span>
