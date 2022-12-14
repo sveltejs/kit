@@ -177,14 +177,11 @@ async function main() {
 
 	console.log(`\nTo close the dev server, hit ${bold(cyan('Ctrl-C'))}`);
 	console.log(
-		`\nNew? Do the tutorial at ${cyan('https://learn.svelte.dev/tutorial/introducing-sveltekit')}\n`
+		`\nNew? Try the tutorial at ${cyan(
+			'https://learn.svelte.dev/tutorial/introducing-sveltekit'
+		)}\n`
 	);
 	console.log(`\nStuck? Visit us at ${cyan('https://svelte.dev/chat')}`);
-	console.log(
-		`\nProblems? Open an issue on ${cyan(
-			'https://github.com/sveltejs/kit/issues'
-		)} if none exists already.\n`
-	);
 }
 
 main();
