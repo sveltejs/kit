@@ -50,6 +50,6 @@
 		"uvu": "^0.5.6"
 	},
 	"peerDependencies": {
-		"@sveltejs/kit": "^1.0.0"
+		"@sveltejs/kit": "^1.0.0-next"
 	}
 }

@@ -26,6 +26,6 @@
 		"format": "pnpm lint --write"
 	},
 	"peerDependencies": {
-		"@sveltejs/kit": "^1.0.0"
+		"@sveltejs/kit": "^1.0.0-next"
 	}
 }
