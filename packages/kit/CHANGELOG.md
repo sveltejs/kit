@@ -1,5 +1,11 @@
 # @sveltejs/kit
 
+## 1.0.0-next.588
+
+### Patch Changes
+
+- [fix] remove obsolete generated types correctly ([#8149](https://github.com/sveltejs/kit/pull/8149))
+
 ## 1.0.0-next.587
 
 ### Patch Changes
