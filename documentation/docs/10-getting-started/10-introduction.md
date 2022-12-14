@@ -4,7 +4,7 @@ title: Introduction
 
 ## Before we begin
 
-> If you're new to SvelteKit, do the [interactive tutorial](https://learn.svelte.dev/tutorial/introducing-sveltekit).
+> If you're new to SvelteKit, try the [interactive tutorial](https://learn.svelte.dev/tutorial/introducing-sveltekit).
 >
 > If you get stuck, reach out for help in the [Discord chatroom](https://svelte.dev/chat).
 >
