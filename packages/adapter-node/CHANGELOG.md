@@ -1,5 +1,11 @@
 # @sveltejs/adapter-node
 
+## 1.0.0-next.105
+
+### Patch Changes
+
+- [chore] add peerDependencies, add more specific next version ([#8141](https://github.com/sveltejs/kit/pull/8141))
+
 ## 1.0.0-next.104
 
 ### Patch Changes
