@@ -12,8 +12,8 @@
 		"test:build": "playwright test"
 	},
 	"devDependencies": {
-		"@sveltejs/amp": "workspace:*",
-		"@sveltejs/kit": "workspace:*",
+		"@sveltejs/amp": "workspace:^",
+		"@sveltejs/kit": "workspace:^",
 		"cross-env": "^7.0.3",
 		"purify-css": "^1.2.5",
 		"svelte": "^3.54.0",

@@ -377,31 +377,7 @@ export async function dev(vite, vite_config, svelte_config) {
 					? await vite.ssrLoadModule(`/${hooks_file}`)
 					: {};
 
-				// TODO remove for 1.0
-				if (!resolve_entry(hooks_file)) {
-					const old_file = resolve_entry(path.join(process.cwd(), 'src', 'hooks'));
-					if (old_file && fs.existsSync(old_file)) {
-						throw new Error(
-							`Rename your server hook file from ${posixify(
-								path.relative(process.cwd(), old_file)
-							)} to ${posixify(
-								path.relative(process.cwd(), svelte_config.kit.files.hooks.server)
-							)}${path.extname(
-								old_file
-							)} (because there's also client hooks now). See the PR for more information: https://github.com/sveltejs/kit/pull/6586`
-						);
-					}
-				}
-
 				const handle = user_hooks.handle || (({ event, resolve }) => resolve(event));
-
-				// TODO remove for 1.0
-				// @ts-expect-error
-				if (user_hooks.externalFetch) {
-					throw new Error(
-						'externalFetch has been removed — use handleFetch instead. See https://github.com/sveltejs/kit/pull/6565 for details'
-					);
-				}
 
 				/** @type {import('types').ServerHooks} */
 				const hooks = {
@@ -420,18 +396,6 @@ export async function dev(vite, vite_config, svelte_config) {
 						}),
 					handleFetch: user_hooks.handleFetch || (({ request, fetch }) => fetch(request))
 				};
-
-				if (/** @type {any} */ (hooks).getContext) {
-					// TODO remove this for 1.0
-					throw new Error(
-						'The getContext hook has been removed. See https://kit.svelte.dev/docs/hooks'
-					);
-				}
-
-				if (/** @type {any} */ (hooks).serverFetch) {
-					// TODO remove this for 1.0
-					throw new Error('The serverFetch hook has been renamed to externalFetch.');
-				}
 
 				// TODO the / prefix will probably fail if outDir is outside the cwd (which
 				// could be the case in a monorepo setup), but without it these modules
@@ -497,15 +461,7 @@ export async function dev(vite, vite_config, svelte_config) {
 										return Reflect.get(target, property, target);
 									}
 								}),
-								event,
-
-								// TODO remove for 1.0
-								// @ts-expect-error
-								get request() {
-									throw new Error(
-										'request in handleError has been replaced with event. See https://github.com/sveltejs/kit/pull/3384 for details'
-									);
-								}
+								event
 							});
 							return (
 								error_object ?? { message: event.route.id != null ? 'Internal Error' : 'Not Found' }

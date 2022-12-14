@@ -83,6 +83,7 @@ export function copy(source, target, opts = {}) {
  * Get a list of all files in a directory
  * @param {string} cwd - the directory to walk
  * @param {boolean} [dirs] - whether to include directories in the result
+ * @returns {string[]} a list of all found files (and possibly directories) relative to `cwd`
  */
 export function walk(cwd, dirs = false) {
 	/** @type {string[]} */

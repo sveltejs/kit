@@ -1,5 +1,24 @@
 # create-svelte
 
+## 2.0.1
+
+### Patch Changes
+
+- no code change, rerelease as 2.0.1 for technical reasons ([#8161](https://github.com/sveltejs/kit/pull/8161))
+
+## 2.0.0
+
+### Major Changes
+
+First major release, see below for the history of changes that lead up to this.
+Starting from now all releases follow semver and changes will be listed as Major/Minor/Patch
+
+## 2.0.0-next.204
+
+### Patch Changes
+
+- [feat] remove release candidate banner ([#8109](https://github.com/sveltejs/kit/pull/8109))
+
 ## 2.0.0-next.203
 
 ### Patch Changes

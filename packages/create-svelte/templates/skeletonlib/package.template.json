@@ -7,9 +7,9 @@
 		"prepublishOnly": "echo 'Did you mean to publish `./package/`, instead of `./`?' && exit 1"
 	},
 	"devDependencies": {
-		"@sveltejs/adapter-auto": "^1.0.0-next.90",
-		"@sveltejs/kit": "^1.0.0-next.587",
-		"@sveltejs/package": "^1.0.0-next.6",
+		"@sveltejs/adapter-auto": "^1.0.0",
+		"@sveltejs/kit": "^1.0.0",
+		"@sveltejs/package": "^1.0.0",
 		"svelte": "^3.54.0",
 		"tslib": "^2.4.1",
 		"typescript": "^4.9.3",

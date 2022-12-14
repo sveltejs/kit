@@ -1,5 +1,21 @@
 # @sveltejs/adapter-cloudflare-workers
 
+## 1.0.0
+
+### Major Changes
+
+First major release, see below for the history of changes that lead up to this.
+Starting from now all releases follow semver and changes will be listed as Major/Minor/Patch
+
+## 1.0.0-next.65
+
+### Patch Changes
+
+- [breaking] remove warnings/errors about removed/changed APIs ([#8019](https://github.com/sveltejs/kit/pull/8019))
+
+- Updated dependencies [[`f42604a2`](https://github.com/sveltejs/kit/commit/f42604a2b4c04026d3d8bad95807720b79529539)]:
+  - @sveltejs/kit@1.0.0-next.589
+
 ## 1.0.0-next.64
 
 ### Patch Changes

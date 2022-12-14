@@ -32,7 +32,7 @@ importers:
 
   packages/adapter-auto:
     specifiers:
-      '@sveltejs/kit': workspace:*
+      '@sveltejs/kit': workspace:^
       '@types/node': ^16.18.6
       import-meta-resolve: ^2.2.0
       typescript: ^4.9.3
@@ -84,7 +84,7 @@ importers:
       '@rollup/plugin-commonjs': ^23.0.3
       '@rollup/plugin-json': ^5.0.2
       '@rollup/plugin-node-resolve': ^15.0.1
-      '@sveltejs/kit': workspace:*
+      '@sveltejs/kit': workspace:^
       '@types/node': ^16.18.6
       '@types/set-cookie-parser': ^2.4.2
       esbuild: ^0.16.3
@@ -115,7 +115,7 @@ importers:
       '@rollup/plugin-commonjs': ^23.0.2
       '@rollup/plugin-json': ^5.0.1
       '@rollup/plugin-node-resolve': ^15.0.1
-      '@sveltejs/kit': workspace:*
+      '@sveltejs/kit': workspace:^
       '@types/node': ^16.18.6
       c8: ^7.12.0
       polka: ^1.0.0-next.22
@@ -141,7 +141,7 @@ importers:
 
   packages/adapter-static:
     specifiers:
-      '@sveltejs/kit': workspace:*
+      '@sveltejs/kit': workspace:^
       '@types/node': ^16.18.6
       sirv: ^2.0.2
       svelte: ^3.54.0
@@ -159,7 +159,7 @@ importers:
 
   packages/adapter-static/test/apps/prerendered:
     specifiers:
-      '@sveltejs/kit': workspace:*
+      '@sveltejs/kit': workspace:^
       svelte: ^3.54.0
       vite: ^4.0.0
     devDependencies:
@@ -169,8 +169,8 @@ importers:
 
   packages/adapter-static/test/apps/spa:
     specifiers:
-      '@sveltejs/adapter-node': workspace:*
-      '@sveltejs/kit': workspace:*
+      '@sveltejs/adapter-node': workspace:^
+      '@sveltejs/kit': workspace:^
       sirv-cli: ^2.0.2
       svelte: ^3.54.0
       vite: ^4.0.0
@@ -183,7 +183,7 @@ importers:
 
   packages/adapter-vercel:
     specifiers:
-      '@sveltejs/kit': workspace:*
+      '@sveltejs/kit': workspace:^
       '@types/node': ^16.18.6
       '@vercel/nft': ^0.22.1
       esbuild: ^0.16.3
@@ -316,8 +316,8 @@ importers:
 
   packages/kit/test/apps/amp:
     specifiers:
-      '@sveltejs/amp': workspace:*
-      '@sveltejs/kit': workspace:*
+      '@sveltejs/amp': workspace:^
+      '@sveltejs/kit': workspace:^
       cross-env: ^7.0.3
       purify-css: ^1.2.5
       svelte: ^3.54.0
@@ -336,7 +336,7 @@ importers:
 
   packages/kit/test/apps/basics:
     specifiers:
-      '@sveltejs/kit': workspace:*
+      '@sveltejs/kit': workspace:^
       cross-env: ^7.0.3
       rimraf: ^3.0.2
       svelte: ^3.54.0
@@ -354,7 +354,7 @@ importers:
 
   packages/kit/test/apps/dev-only:
     specifiers:
-      '@sveltejs/kit': workspace:*
+      '@sveltejs/kit': workspace:^
       cross-env: ^7.0.3
       rimraf: ^3.0.2
       svelte: ^3.54.0
@@ -372,7 +372,7 @@ importers:
 
   packages/kit/test/apps/options:
     specifiers:
-      '@sveltejs/kit': workspace:*
+      '@sveltejs/kit': workspace:^
       cross-env: ^7.0.3
       svelte: ^3.54.0
       svelte-check: ^2.9.2
@@ -388,8 +388,8 @@ importers:
 
   packages/kit/test/apps/options-2:
     specifiers:
-      '@sveltejs/adapter-node': workspace:*
-      '@sveltejs/kit': workspace:*
+      '@sveltejs/adapter-node': workspace:^
+      '@sveltejs/kit': workspace:^
       cross-env: ^7.0.3
       svelte: ^3.54.0
       svelte-check: ^2.9.2
@@ -406,7 +406,7 @@ importers:
 
   packages/kit/test/apps/writes:
     specifiers:
-      '@sveltejs/kit': workspace:*
+      '@sveltejs/kit': workspace:^
       cross-env: ^7.0.3
       rimraf: ^3.0.2
       svelte: ^3.54.0
@@ -430,8 +430,8 @@ importers:
 
   packages/kit/test/build-errors/apps/prerenderable-incorrect-fragment:
     specifiers:
-      '@sveltejs/adapter-auto': workspace:*
-      '@sveltejs/kit': workspace:*
+      '@sveltejs/adapter-auto': workspace:^
+      '@sveltejs/kit': workspace:^
       svelte: ^3.54.0
       svelte-check: ^2.7.1
       typescript: ^4.9.3
@@ -446,8 +446,8 @@ importers:
 
   packages/kit/test/build-errors/apps/prerenderable-not-prerendered:
     specifiers:
-      '@sveltejs/adapter-auto': workspace:*
-      '@sveltejs/kit': workspace:*
+      '@sveltejs/adapter-auto': workspace:^
+      '@sveltejs/kit': workspace:^
       svelte: ^3.54.0
       svelte-check: ^2.9.2
       typescript: ^4.9.3
@@ -462,7 +462,7 @@ importers:
 
   packages/kit/test/build-errors/apps/private-dynamic-env:
     specifiers:
-      '@sveltejs/kit': workspace:*
+      '@sveltejs/kit': workspace:^
       svelte: ^3.54.0
       svelte-check: ^2.9.2
       typescript: ^4.9.3
@@ -476,7 +476,7 @@ importers:
 
   packages/kit/test/build-errors/apps/private-dynamic-env-dynamic-import:
     specifiers:
-      '@sveltejs/kit': workspace:*
+      '@sveltejs/kit': workspace:^
       svelte: ^3.54.0
       svelte-check: ^2.9.2
       typescript: ^4.9.3
@@ -490,7 +490,7 @@ importers:
 
   packages/kit/test/build-errors/apps/private-static-env:
     specifiers:
-      '@sveltejs/kit': workspace:*
+      '@sveltejs/kit': workspace:^
       cross-env: ^7.0.3
       svelte: ^3.54.0
       svelte-check: ^2.9.2
@@ -506,7 +506,7 @@ importers:
 
   packages/kit/test/build-errors/apps/private-static-env-dynamic-import:
     specifiers:
-      '@sveltejs/kit': workspace:*
+      '@sveltejs/kit': workspace:^
       svelte: ^3.54.0
       svelte-check: ^2.9.2
       typescript: ^4.9.3
@@ -520,7 +520,7 @@ importers:
 
   packages/kit/test/build-errors/apps/server-only-folder:
     specifiers:
-      '@sveltejs/kit': workspace:*
+      '@sveltejs/kit': workspace:^
       svelte: ^3.54.0
       svelte-check: ^2.9.2
       typescript: ^4.9.3
@@ -534,7 +534,7 @@ importers:
 
   packages/kit/test/build-errors/apps/server-only-folder-dynamic-import:
     specifiers:
-      '@sveltejs/kit': workspace:*
+      '@sveltejs/kit': workspace:^
       svelte: ^3.54.0
       svelte-check: ^2.9.2
       typescript: ^4.9.3
@@ -548,7 +548,7 @@ importers:
 
   packages/kit/test/build-errors/apps/server-only-module:
     specifiers:
-      '@sveltejs/kit': workspace:*
+      '@sveltejs/kit': workspace:^
       svelte: ^3.54.0
       svelte-check: ^2.9.2
       typescript: ^4.9.3
@@ -562,7 +562,7 @@ importers:
 
   packages/kit/test/build-errors/apps/server-only-module-dynamic-import:
     specifiers:
-      '@sveltejs/kit': workspace:*
+      '@sveltejs/kit': workspace:^
       svelte: ^3.54.0
       svelte-check: ^2.9.2
       typescript: ^4.9.3
@@ -576,7 +576,7 @@ importers:
 
   packages/kit/test/prerendering/basics:
     specifiers:
-      '@sveltejs/kit': workspace:*
+      '@sveltejs/kit': workspace:^
       svelte: ^3.54.0
       svelte-check: ^2.9.2
       typescript: ^4.9.3
@@ -592,7 +592,7 @@ importers:
 
   packages/kit/test/prerendering/options:
     specifiers:
-      '@sveltejs/kit': workspace:*
+      '@sveltejs/kit': workspace:^
       svelte: ^3.54.0
       svelte-check: ^2.9.2
       typescript: ^4.9.3
@@ -608,7 +608,7 @@ importers:
 
   packages/kit/test/prerendering/paths-base:
     specifiers:
-      '@sveltejs/kit': workspace:*
+      '@sveltejs/kit': workspace:^
       svelte: ^3.54.0
       svelte-check: ^2.9.2
       typescript: ^4.9.3
@@ -624,7 +624,7 @@ importers:
 
   packages/kit/test/prerendering/ssr-false:
     specifiers:
-      '@sveltejs/kit': workspace:*
+      '@sveltejs/kit': workspace:^
       svelte: ^3.54.0
       svelte-check: ^2.9.2
       typescript: ^4.9.3
@@ -684,10 +684,10 @@ importers:
 
   sites/kit.svelte.dev:
     specifiers:
-      '@sveltejs/adapter-auto': workspace:*
-      '@sveltejs/adapter-static': workspace:*
-      '@sveltejs/amp': workspace:*
-      '@sveltejs/kit': workspace:*
+      '@sveltejs/adapter-auto': workspace:^
+      '@sveltejs/adapter-static': workspace:^
+      '@sveltejs/amp': workspace:^
+      '@sveltejs/kit': workspace:^
       '@sveltejs/site-kit': ^3.0.3
       '@types/d3-geo': ^3.0.2
       '@types/node': ^16.18.6

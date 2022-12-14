@@ -1,5 +1,24 @@
 # @sveltejs/kit
 
+## 1.0.0
+
+### Major Changes
+
+First major release, see below for the history of changes that lead up to this.
+Starting from now all releases follow semver and changes will be listed as Major/Minor/Patch
+
+## 1.0.0-next.589
+
+### Patch Changes
+
+- [breaking] remove warnings/errors about removed/changed APIs ([#8019](https://github.com/sveltejs/kit/pull/8019))
+
+## 1.0.0-next.588
+
+### Patch Changes
+
+- [fix] remove obsolete generated types correctly ([#8149](https://github.com/sveltejs/kit/pull/8149))
+
 ## 1.0.0-next.587
 
 ### Patch Changes

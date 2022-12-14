@@ -20,13 +20,3 @@ export const preloadData = BROWSER ? client.preload_data : guard('preloadData');
 export const preloadCode = BROWSER ? client.preload_code : guard('preloadCode');
 export const beforeNavigate = BROWSER ? client.before_navigate : () => {};
 export const afterNavigate = BROWSER ? client.after_navigate : () => {};
-
-// TODO remove for 1.0 release
-/** @param {any} _args */
-export const prefetch = (..._args) => {
-	throw new Error('prefetch has been renamed to preloadData');
-};
-/** @param {any} _args */
-export const prefetchRoutes = (..._args) => {
-	throw new Error('prefetchRoutes has been renamed to preloadCode');
-};
