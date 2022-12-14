@@ -1,5 +1,11 @@
 # create-svelte
 
+## 2.0.0-next.203
+
+### Patch Changes
+
+- [chore] add peerDependencies, add more specific next version ([#8141](https://github.com/sveltejs/kit/pull/8141))
+
 ## 2.0.0-next.202
 
 ### Patch Changes
