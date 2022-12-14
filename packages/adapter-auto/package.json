@@ -1,6 +1,6 @@
 {
 	"name": "@sveltejs/adapter-auto",
-	"version": "1.0.0-next.90",
+	"version": "1.0.0-next.91",
 	"repository": {
 		"type": "git",
 		"url": "https://github.com/sveltejs/kit",
@@ -36,5 +36,8 @@
 	},
 	"dependencies": {
 		"import-meta-resolve": "^2.2.0"
+	},
+	"peerDependencies": {
+		"@sveltejs/kit": "^1.0.0-next.587"
 	}
 }
