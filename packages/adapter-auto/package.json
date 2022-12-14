@@ -38,6 +38,6 @@
 		"import-meta-resolve": "^2.2.0"
 	},
 	"peerDependencies": {
-		"@sveltejs/kit": "^1.0.0-next"
+		"@sveltejs/kit": "^1.0.0-next.587"
 	}
 }
