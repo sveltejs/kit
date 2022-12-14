@@ -3,7 +3,7 @@ import { render_page } from './page/index.js';
 import { render_response } from './page/render.js';
 import { respond_with_error } from './page/respond_with_error.js';
 import { is_form_content_type } from '../../utils/http.js';
-import { GENERIC_ERROR, handle_fatal_error, redirect_response } from './utils.js';
+import { GENERIC_ERROR, handle_fatal_error, redirect_response, static_error_page } from './utils.js';
 import {
 	decode_pathname,
 	decode_params,
@@ -16,7 +16,7 @@ import { exec } from '../../utils/routing.js';
 import { INVALIDATED_HEADER, render_data } from './data/index.js';
 import { add_cookies_to_headers, get_cookies } from './cookie.js';
 import { create_fetch } from './fetch.js';
-import { Redirect } from '../control.js';
+import { HttpError, Redirect } from '../control.js';
 
 /* global __SVELTEKIT_ADAPTER_NAME__ */
 
@@ -363,6 +363,9 @@ export async function respond(request, options, state) {
 	} catch (error) {
 		if (error instanceof Redirect) {
 			return redirect_response(error.status, error.location);
+		}
+		if (error instanceof HttpError) {
+			return static_error_page(options, error.status, error.body.message);
 		}
 		return handle_fatal_error(event, options, error);
 	}
