@@ -21,6 +21,8 @@ const body_size_limit = parseInt(env('BODY_SIZE_LIMIT', '524288'));
 
 const dir = path.dirname(fileURLToPath(import.meta.url));
 
+const preservedRequestKeys = JSON.parse('PRESERVED_REQUEST_KEYS');
+
 /**
  * @param {string} path
  * @param {boolean} client
@@ -54,6 +56,11 @@ const ssr = async (req, res) => {
 			request: req,
 			bodySizeLimit: body_size_limit
 		});
+
+		for (const key of preservedRequestKeys) {
+			// @ts-expect-error
+			request[key] = req[key];
+		}
 	} catch (err) {
 		res.statusCode = err.status || 400;
 		res.end('Invalid request body');

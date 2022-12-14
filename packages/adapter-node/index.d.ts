@@ -8,6 +8,7 @@ interface AdapterOptions {
 	out?: string;
 	precompress?: boolean;
 	envPrefix?: string;
+	preservedRequestKeys?: string[];
 }
 
 export default function plugin(options?: AdapterOptions): Adapter;
