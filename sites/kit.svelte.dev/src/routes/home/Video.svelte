@@ -1,17 +1,25 @@
 <script>
 	import volume_off from './volume-off.svg';
 	import volume_high from './volume-high.svg';
+	import cc_on from './cc-on.svg';
+	import cc_off from './cc-off.svg';
 	import play from '$lib/icons/play.svg';
 	import pause from '$lib/icons/pause.svg';
 	import vtt from './subtitles.vtt';
 	import { onMount } from 'svelte';
+	import { browser } from '$app/environment';
 
 	/** @type {HTMLVideoElement} */
 	let video;
 
 	let paused = false;
 	let muted = true;
-	let has_used_mute_button = false;
+	let captioned = true;
+	let has_used_controls = false;
+
+	$: if (browser && video) {
+		video.textTracks[0].mode = captioned ? 'showing' : 'hidden';
+	}
 
 	let d = 0;
 	let t = 0;
@@ -46,6 +54,44 @@
 			observer.disconnect();
 		};
 	});
+
+	/**
+	 * @param {HTMLTrackElement} node
+	 */
+	function handle_cues(node) {
+		const cues = node.track.cues;
+		if (node.track.cues) {
+			set_cue_positions(cues);
+		} else {
+			node.addEventListener('load', handle_load, { once: true });
+		}
+
+		return {
+			destroy: () => {
+				node.removeEventListener('load', handle_load);
+			}
+		};
+
+		/**
+		 * @param {Event} e
+		 */
+		function handle_load(e) {
+			/** @type {HTMLTrackElement} */
+			const track_el = e.target;
+			set_cue_positions(track_el.track.cues);
+		}
+
+		/**
+		 * @param {TextTrackCueList} cues
+		 */
+		function set_cue_positions(cues) {
+			for (let i = 0; i < cues.length; i++) {
+				// https://developer.mozilla.org/en-US/docs/Web/API/WebVTT_API#cue_settings
+				cues[i].line = -2; // second line from the bottom
+				cues[i].size = 80; // width is 80% of the available space
+			}
+		}
+	}
 </script>
 
 <div class="video-player">
@@ -62,7 +108,7 @@
 			if (video.paused) {
 				video.play();
 
-				if (!has_used_mute_button) {
+				if (!has_used_controls) {
 					muted = false;
 				}
 			} else {
@@ -70,25 +116,38 @@
 			}
 		}}
 	>
-		<track kind="captions" srclang="en" src={vtt} />
+		<track kind="captions" srclang="en" src={vtt} default use:handle_cues />
 	</video>
 
 	{#if d}
 		<div class="progress-bar" style={`width: ${(t / d) * 100}%`} />
 	{/if}
 
-	<label class="mute" class:unused={!has_used_mute_button}>
-		<input
-			class="visually-hidden"
-			type="checkbox"
-			bind:checked={muted}
-			on:change={() => (has_used_mute_button = true)}
-		/>
+	<div class="top-controls">
+		<label class="captions" class:unused={!has_used_controls}>
+			<input
+				class="visually-hidden"
+				type="checkbox"
+				bind:checked={captioned}
+				on:change={() => (has_used_controls = true)}
+			/>
 
-		<span class="focus-ring" />
-		<img style:display={muted ? 'block' : 'none'} src={volume_off} alt="unmute" />
-		<img style:display={muted ? 'none' : 'block'} src={volume_high} alt="mute" />
-	</label>
+			<img style:display={captioned ? 'block' : 'none'} src={cc_on} alt="hide subtitles" />
+			<img style:display={captioned ? 'none' : 'block'} src={cc_off} alt="show subtitles" />
+		</label>
+
+		<label class="mute" class:unused={!has_used_controls}>
+			<input
+				class="visually-hidden"
+				type="checkbox"
+				bind:checked={muted}
+				on:change={() => (has_used_controls = true)}
+			/>
+
+			<img style:display={muted ? 'block' : 'none'} src={volume_off} alt="unmute" />
+			<img style:display={muted ? 'none' : 'block'} src={volume_high} alt="mute" />
+		</label>
+	</div>
 
 	<label class="play-pause">
 		<input
@@ -96,13 +155,12 @@
 			type="checkbox"
 			bind:checked={paused}
 			on:change={() => {
-				if (!has_used_mute_button) {
+				if (!has_used_controls) {
 					muted = false;
 				}
 			}}
 		/>
 
-		<span class="focus-ring" />
 		<img style:display={paused ? 'block' : 'none'} src={play} alt="play" />
 		<img style:display={paused ? 'none' : 'block'} src={pause} alt="pause" />
 	</label>
@@ -120,10 +178,22 @@
 	video {
 		width: 100%;
 		display: block;
+		--control-filter: drop-shadow(0 0 3px rgba(0, 0, 0, 0.3));
 	}
 
 	video:focus {
 		outline: 1px solid var(--sk-theme-1);
+	}
+
+	video::cue {
+		font-size: 1.25rem;
+		line-height: 1.3;
+	}
+
+	@media (min-width: 600px) {
+		video::cue {
+			font-size: 1.75rem;
+		}
 	}
 
 	.progress-bar {
@@ -136,19 +206,31 @@
 	}
 
 	label {
-		position: absolute;
 		opacity: 0.2;
 		transition: opacity 0.2s;
 	}
 
-	.mute {
+	.top-controls {
+		position: absolute;
 		top: 1rem;
 		right: 1rem;
+		display: flex;
+		align-items: center;
+		gap: 1rem;
 	}
 
 	.play-pause {
 		left: 1rem;
 		bottom: 2rem;
+		position: absolute;
+	}
+
+	.captions {
+		line-height: 1;
+		color: white;
+		font-size: 2rem;
+		font-weight: 700;
+		filter: var(--control-filter);
 	}
 
 	label.unused {
@@ -158,7 +240,7 @@
 	label img {
 		width: 3rem;
 		height: 3rem;
-		filter: drop-shadow(0 0 3px rgba(0, 0, 0, 0.3));
+		filter: var(--control-filter);
 	}
 
 	/* TODO re-enable when we get drag-to-seek */
@@ -167,18 +249,13 @@
 		border-radius: 0 var(--sk-border-radius) var(--sk-border-radius) var(--sk-border-radius);
 	} */
 
-	.video-player:hover label,
-	.video-player label:focus-within {
+	.video-player:hover label {
 		opacity: 1;
 	}
 
-	.video-player input:focus-visible + .focus-ring {
-		display: block;
-		position: absolute;
-		pointer-events: none;
+	.video-player input:focus-visible ~ img {
 		outline: 2px solid var(--sk-theme-1);
-		width: 100%;
-		height: 100%;
+		outline-offset: 2px;
 		border-radius: var(--sk-border-radius);
 	}
 </style>
