@@ -54,10 +54,6 @@ export async function load({ fetch }) {
 
 ...then `src/routes/my-server-route.json/+server.js` will be treated as prerenderable if it doesn't contain its own `export const prerender = false`.
 
-### Prerender and ssr
-
-If you set the [ssr option](#ssr) to `false`, you'll get an empty shell rendered on the server which will be the same between responses. This is unnecessary work, which is why SvelteKit will prerender the page in this case when the prerender option is unset. You can turn off this behavior by explicitly setting `prerender` to `false`.
-
 ### When not to prerender
 
 The basic rule is this: for a page to be prerenderable, any two users hitting it directly must get the same content from the server.
@@ -69,6 +65,10 @@ Note that you can still prerender pages that load data based on the page's param
 Accessing [`url.searchParams`](/docs/load#using-url-data-url) during prerendering is forbidden. If you need to use it, ensure you are only doing so in the browser (for example in `onMount`).
 
 Pages with [actions](/docs/form-actions) cannot be prerendered, because a server must be able to handle the action `POST` requests.
+
+### Prerender and ssr
+
+If you set the [ssr option](#ssr) to `false`, each request will result in the same empty HTML shell. Since this would result in unnecessary work, SvelteKit defaults to prerendering any pages it finds where `prerender` is not explicitly set to `false`.
 
 ### Route conflicts
 
