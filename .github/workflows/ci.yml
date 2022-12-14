@@ -47,7 +47,7 @@ jobs:
             e2e-browser: 'firefox'
           - node-version: 16
             os: macOS-latest
-            e2e-browser: 'webkit'
+            e2e-browser: 'chromium'
           - node-version: 18
             os: ubuntu-latest
             e2e-browser: 'chromium'
