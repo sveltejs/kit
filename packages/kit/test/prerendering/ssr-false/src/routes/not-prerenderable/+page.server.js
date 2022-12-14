@@ -1,1 +1,3 @@
-export const actions = {};
+export const actions = {
+	default: () => {}
+};
