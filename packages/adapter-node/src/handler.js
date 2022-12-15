@@ -49,6 +49,7 @@ function serve(path, client = false) {
 /** @type {import('polka').Middleware} */
 const ssr = async (req, res) => {
 	let request;
+	const platform = {}
 
 	try {
 		request = await getRequest({
@@ -59,7 +60,7 @@ const ssr = async (req, res) => {
 
 		for (const key of preservedRequestKeys) {
 			// @ts-expect-error
-			request[key] = req[key];
+			platform[key] = req[key];
 		}
 	} catch (err) {
 		res.statusCode = err.status || 400;
@@ -78,6 +79,7 @@ const ssr = async (req, res) => {
 	setResponse(
 		res,
 		await server.respond(request, {
+			platform,
 			getClientAddress: () => {
 				if (address_header) {
 					const value = /** @type {string} */ (req.headers[address_header]) || '';
