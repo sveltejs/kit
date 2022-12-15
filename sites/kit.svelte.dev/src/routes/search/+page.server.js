@@ -1,7 +1,7 @@
 import { init, inited, search } from '$lib/search/search.js';
 
 /** @type {import('./$types').PageServerLoad} */
-export async function load({ url }) {
+export async function load({ url, fetch }) {
 	if (!inited) {
 		const res = await fetch('/content.json');
 		if (!res.ok) throw new Error("Couldn't fetch content");
