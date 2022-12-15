@@ -1,5 +1,62 @@
 # @sveltejs/kit
 
+## 1.0.0
+
+### Major Changes
+
+First major release, see below for the history of changes that lead up to this.
+Starting from now all releases follow semver and changes will be listed as Major/Minor/Patch
+
+## 1.0.0-next.589
+
+### Patch Changes
+
+- [breaking] remove warnings/errors about removed/changed APIs ([#8019](https://github.com/sveltejs/kit/pull/8019))
+
+## 1.0.0-next.588
+
+### Patch Changes
+
+- [fix] remove obsolete generated types correctly ([#8149](https://github.com/sveltejs/kit/pull/8149))
+
+## 1.0.0-next.587
+
+### Patch Changes
+
+- [breaking] prerender shells when ssr false and prerender not false ([#8131](https://github.com/sveltejs/kit/pull/8131))
+
+## 1.0.0-next.586
+
+### Patch Changes
+
+- [fix] don't de/encode initial and explicit string headers ([#8113](https://github.com/sveltejs/kit/pull/8113))
+
+## 1.0.0-next.585
+
+### Patch Changes
+
+- [fix] remove unused elements from default error component ([#8110](https://github.com/sveltejs/kit/pull/8110))
+
+## 1.0.0-next.584
+
+### Patch Changes
+
+- [fix] load errorTemplate from correct location ([#8096](https://github.com/sveltejs/kit/pull/8096))
+
+- More robust manifest error recovery ([#8095](https://github.com/sveltejs/kit/pull/8095))
+
+## 1.0.0-next.583
+
+### Patch Changes
+
+- restart vite dev-server on svelte config change ([#8087](https://github.com/sveltejs/kit/pull/8087))
+
+- Set correct `$page.status` when using `enhance` and result is of type `'error'` ([#8073](https://github.com/sveltejs/kit/pull/8073))
+
+- [fix] ensure export conditions are resolve through Vite ([#8092](https://github.com/sveltejs/kit/pull/8092))
+
+- [fix] don't crash Vite dev server on manifest error ([#8093](https://github.com/sveltejs/kit/pull/8093))
+
 ## 1.0.0-next.582
 
 ### Patch Changes

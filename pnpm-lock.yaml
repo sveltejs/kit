@@ -32,7 +32,7 @@ importers:
 
   packages/adapter-auto:
     specifiers:
-      '@sveltejs/kit': workspace:*
+      '@sveltejs/kit': workspace:^
       '@types/node': ^16.18.6
       import-meta-resolve: ^2.2.0
       typescript: ^4.9.3
@@ -84,7 +84,7 @@ importers:
       '@rollup/plugin-commonjs': ^23.0.3
       '@rollup/plugin-json': ^5.0.2
       '@rollup/plugin-node-resolve': ^15.0.1
-      '@sveltejs/kit': workspace:*
+      '@sveltejs/kit': workspace:^
       '@types/node': ^16.18.6
       '@types/set-cookie-parser': ^2.4.2
       esbuild: ^0.16.3
@@ -115,7 +115,7 @@ importers:
       '@rollup/plugin-commonjs': ^23.0.2
       '@rollup/plugin-json': ^5.0.1
       '@rollup/plugin-node-resolve': ^15.0.1
-      '@sveltejs/kit': workspace:*
+      '@sveltejs/kit': workspace:^
       '@types/node': ^16.18.6
       c8: ^7.12.0
       polka: ^1.0.0-next.22
@@ -141,7 +141,7 @@ importers:
 
   packages/adapter-static:
     specifiers:
-      '@sveltejs/kit': workspace:*
+      '@sveltejs/kit': workspace:^
       '@types/node': ^16.18.6
       sirv: ^2.0.2
       svelte: ^3.54.0
@@ -159,7 +159,7 @@ importers:
 
   packages/adapter-static/test/apps/prerendered:
     specifiers:
-      '@sveltejs/kit': workspace:*
+      '@sveltejs/kit': workspace:^
       svelte: ^3.54.0
       vite: ^4.0.0
     devDependencies:
@@ -169,8 +169,8 @@ importers:
 
   packages/adapter-static/test/apps/spa:
     specifiers:
-      '@sveltejs/adapter-node': workspace:*
-      '@sveltejs/kit': workspace:*
+      '@sveltejs/adapter-node': workspace:^
+      '@sveltejs/kit': workspace:^
       sirv-cli: ^2.0.2
       svelte: ^3.54.0
       vite: ^4.0.0
@@ -183,7 +183,7 @@ importers:
 
   packages/adapter-vercel:
     specifiers:
-      '@sveltejs/kit': workspace:*
+      '@sveltejs/kit': workspace:^
       '@types/node': ^16.18.6
       '@vercel/nft': ^0.22.1
       esbuild: ^0.16.3
@@ -202,7 +202,6 @@ importers:
   packages/create-svelte:
     specifiers:
       '@playwright/test': ^1.28.1
-      '@sveltejs/kit': workspace:*
       '@types/gitignore-parser': ^0.0.0
       '@types/prettier': ^2.7.1
       '@types/prompts': ^2.4.1
@@ -220,7 +219,6 @@ importers:
       prompts: 2.4.2
     devDependencies:
       '@playwright/test': 1.28.1
-      '@sveltejs/kit': link:../kit
       '@types/gitignore-parser': 0.0.0
       '@types/prettier': 2.7.1
       '@types/prompts': 2.4.1
@@ -287,7 +285,7 @@ importers:
       uvu: ^0.5.6
       vite: ^4.0.0
     dependencies:
-      '@sveltejs/vite-plugin-svelte': 2.0.1_svelte@3.54.0+vite@4.0.0
+      '@sveltejs/vite-plugin-svelte': 2.0.0_svelte@3.54.0+vite@4.0.0
       '@types/cookie': 0.5.1
       cookie: 0.5.0
       devalue: 4.2.0
@@ -318,8 +316,8 @@ importers:
 
   packages/kit/test/apps/amp:
     specifiers:
-      '@sveltejs/amp': workspace:*
-      '@sveltejs/kit': workspace:*
+      '@sveltejs/amp': workspace:^
+      '@sveltejs/kit': workspace:^
       cross-env: ^7.0.3
       purify-css: ^1.2.5
       svelte: ^3.54.0
@@ -338,7 +336,7 @@ importers:
 
   packages/kit/test/apps/basics:
     specifiers:
-      '@sveltejs/kit': workspace:*
+      '@sveltejs/kit': workspace:^
       cross-env: ^7.0.3
       rimraf: ^3.0.2
       svelte: ^3.54.0
@@ -356,7 +354,7 @@ importers:
 
   packages/kit/test/apps/dev-only:
     specifiers:
-      '@sveltejs/kit': workspace:*
+      '@sveltejs/kit': workspace:^
       cross-env: ^7.0.3
       rimraf: ^3.0.2
       svelte: ^3.54.0
@@ -374,7 +372,7 @@ importers:
 
   packages/kit/test/apps/options:
     specifiers:
-      '@sveltejs/kit': workspace:*
+      '@sveltejs/kit': workspace:^
       cross-env: ^7.0.3
       svelte: ^3.54.0
       svelte-check: ^2.9.2
@@ -390,8 +388,8 @@ importers:
 
   packages/kit/test/apps/options-2:
     specifiers:
-      '@sveltejs/adapter-node': workspace:*
-      '@sveltejs/kit': workspace:*
+      '@sveltejs/adapter-node': workspace:^
+      '@sveltejs/kit': workspace:^
       cross-env: ^7.0.3
       svelte: ^3.54.0
       svelte-check: ^2.9.2
@@ -408,7 +406,7 @@ importers:
 
   packages/kit/test/apps/writes:
     specifiers:
-      '@sveltejs/kit': workspace:*
+      '@sveltejs/kit': workspace:^
       cross-env: ^7.0.3
       rimraf: ^3.0.2
       svelte: ^3.54.0
@@ -432,8 +430,8 @@ importers:
 
   packages/kit/test/build-errors/apps/prerenderable-incorrect-fragment:
     specifiers:
-      '@sveltejs/adapter-auto': workspace:*
-      '@sveltejs/kit': workspace:*
+      '@sveltejs/adapter-auto': workspace:^
+      '@sveltejs/kit': workspace:^
       svelte: ^3.54.0
       svelte-check: ^2.7.1
       typescript: ^4.9.3
@@ -448,8 +446,8 @@ importers:
 
   packages/kit/test/build-errors/apps/prerenderable-not-prerendered:
     specifiers:
-      '@sveltejs/adapter-auto': workspace:*
-      '@sveltejs/kit': workspace:*
+      '@sveltejs/adapter-auto': workspace:^
+      '@sveltejs/kit': workspace:^
       svelte: ^3.54.0
       svelte-check: ^2.9.2
       typescript: ^4.9.3
@@ -464,7 +462,7 @@ importers:
 
   packages/kit/test/build-errors/apps/private-dynamic-env:
     specifiers:
-      '@sveltejs/kit': workspace:*
+      '@sveltejs/kit': workspace:^
       svelte: ^3.54.0
       svelte-check: ^2.9.2
       typescript: ^4.9.3
@@ -478,7 +476,7 @@ importers:
 
   packages/kit/test/build-errors/apps/private-dynamic-env-dynamic-import:
     specifiers:
-      '@sveltejs/kit': workspace:*
+      '@sveltejs/kit': workspace:^
       svelte: ^3.54.0
       svelte-check: ^2.9.2
       typescript: ^4.9.3
@@ -492,7 +490,7 @@ importers:
 
   packages/kit/test/build-errors/apps/private-static-env:
     specifiers:
-      '@sveltejs/kit': workspace:*
+      '@sveltejs/kit': workspace:^
       cross-env: ^7.0.3
       svelte: ^3.54.0
       svelte-check: ^2.9.2
@@ -508,7 +506,7 @@ importers:
 
   packages/kit/test/build-errors/apps/private-static-env-dynamic-import:
     specifiers:
-      '@sveltejs/kit': workspace:*
+      '@sveltejs/kit': workspace:^
       svelte: ^3.54.0
       svelte-check: ^2.9.2
       typescript: ^4.9.3
@@ -522,7 +520,7 @@ importers:
 
   packages/kit/test/build-errors/apps/server-only-folder:
     specifiers:
-      '@sveltejs/kit': workspace:*
+      '@sveltejs/kit': workspace:^
       svelte: ^3.54.0
       svelte-check: ^2.9.2
       typescript: ^4.9.3
@@ -536,7 +534,7 @@ importers:
 
   packages/kit/test/build-errors/apps/server-only-folder-dynamic-import:
     specifiers:
-      '@sveltejs/kit': workspace:*
+      '@sveltejs/kit': workspace:^
       svelte: ^3.54.0
       svelte-check: ^2.9.2
       typescript: ^4.9.3
@@ -550,7 +548,7 @@ importers:
 
   packages/kit/test/build-errors/apps/server-only-module:
     specifiers:
-      '@sveltejs/kit': workspace:*
+      '@sveltejs/kit': workspace:^
       svelte: ^3.54.0
       svelte-check: ^2.9.2
       typescript: ^4.9.3
@@ -564,7 +562,7 @@ importers:
 
   packages/kit/test/build-errors/apps/server-only-module-dynamic-import:
     specifiers:
-      '@sveltejs/kit': workspace:*
+      '@sveltejs/kit': workspace:^
       svelte: ^3.54.0
       svelte-check: ^2.9.2
       typescript: ^4.9.3
@@ -598,7 +596,7 @@ importers:
 
   packages/kit/test/prerendering/basics:
     specifiers:
-      '@sveltejs/kit': workspace:*
+      '@sveltejs/kit': workspace:^
       svelte: ^3.54.0
       svelte-check: ^2.9.2
       typescript: ^4.9.3
@@ -614,7 +612,7 @@ importers:
 
   packages/kit/test/prerendering/options:
     specifiers:
-      '@sveltejs/kit': workspace:*
+      '@sveltejs/kit': workspace:^
       svelte: ^3.54.0
       svelte-check: ^2.9.2
       typescript: ^4.9.3
@@ -630,7 +628,23 @@ importers:
 
   packages/kit/test/prerendering/paths-base:
     specifiers:
-      '@sveltejs/kit': workspace:*
+      '@sveltejs/kit': workspace:^
+      svelte: ^3.54.0
+      svelte-check: ^2.9.2
+      typescript: ^4.9.3
+      uvu: ^0.5.6
+      vite: ^4.0.0
+    devDependencies:
+      '@sveltejs/kit': link:../../..
+      svelte: 3.54.0
+      svelte-check: 2.9.2_svelte@3.54.0
+      typescript: 4.9.3
+      uvu: 0.5.6
+      vite: 4.0.0
+
+  packages/kit/test/prerendering/ssr-false:
+    specifiers:
+      '@sveltejs/kit': workspace:^
       svelte: ^3.54.0
       svelte-check: ^2.9.2
       typescript: ^4.9.3
@@ -690,11 +704,11 @@ importers:
 
   sites/kit.svelte.dev:
     specifiers:
-      '@sveltejs/adapter-auto': workspace:*
-      '@sveltejs/adapter-static': workspace:*
-      '@sveltejs/amp': workspace:*
-      '@sveltejs/kit': workspace:*
-      '@sveltejs/site-kit': ^2.1.4
+      '@sveltejs/adapter-auto': workspace:^
+      '@sveltejs/adapter-static': workspace:^
+      '@sveltejs/amp': workspace:^
+      '@sveltejs/kit': workspace:^
+      '@sveltejs/site-kit': ^3.0.3
       '@types/d3-geo': ^3.0.2
       '@types/node': ^16.18.6
       '@vercel/edge': ^0.1.2
@@ -737,7 +751,7 @@ importers:
       '@sveltejs/adapter-static': link:../../packages/adapter-static
       '@sveltejs/amp': link:../../packages/amp
       '@sveltejs/kit': link:../../packages/kit
-      '@sveltejs/site-kit': link:../site-kit
+      '@sveltejs/site-kit': 3.0.3
       '@types/d3-geo': 3.0.2
       '@types/node': 16.18.8
       '@vitejs/plugin-legacy': 3.0.1_terser@5.15.0+vite@4.0.0
@@ -764,23 +778,6 @@ importers:
       vite: 4.0.0_sbyrlsq3fh4ldqdt3oevkbww7a
       vite-imagetools: 4.0.11
       whatwg-fetch: 3.6.2
-
-  sites/site-kit:
-    specifiers:
-      '@sveltejs/kit': workspace:*
-      '@sveltejs/package': workspace:*
-      golden-fleece: ^1.0.9
-      svelte: ^3.54.0
-      typescript: ^4.9.3
-      vite: ^4.0.0
-    dependencies:
-      golden-fleece: 1.0.9
-    devDependencies:
-      '@sveltejs/kit': link:../../packages/kit
-      '@sveltejs/package': link:../../packages/package
-      svelte: 3.54.0
-      typescript: 4.9.3
-      vite: 4.0.0
 
 packages:
 
@@ -809,12 +806,7 @@ packages:
     resolution: {integrity: sha512-mrzLkl6U9YLF8qpqI7TB82PESyEGjm/0Ly91jG575eVxMMlb8fYfOXFZIJ8XfLrJZQbm7dlKry2bJmXBUEkdFg==}
     engines: {node: '>=6.9.0'}
     dependencies:
-      regenerator-runtime: 0.13.10
-    dev: true
-
-  /@babel/standalone/7.19.3:
-    resolution: {integrity: sha512-zSdDx28L6f27Y59OMrl8mBbtyB/cpIGlHm7wVOHlcmUTpD10AiUILkekZATkkpsuTagTWezdJmUaeY8P2SONUA==}
-    engines: {node: '>=6.9.0'}
+      regenerator-runtime: 0.13.11
     dev: true
 
   /@babel/standalone/7.20.6:
@@ -1615,8 +1607,12 @@ packages:
       picomatch: 2.3.1
       rollup: 3.7.0
 
-  /@sveltejs/vite-plugin-svelte/2.0.1_svelte@3.54.0+vite@4.0.0:
-    resolution: {integrity: sha512-NA0dPOmd/i8yb0xG4fWu++Y1NJR+j2pWFplQKDxTVEFZ8uipJpSsSX0ZwkkjwJQJ1jMyXgmxKKZJsCM7Chx/Yw==}
+  /@sveltejs/site-kit/3.0.3:
+    resolution: {integrity: sha512-zetnU9jGOu+DYcwqpgK9uSUv3qrGrL7JagMN7M8B4bQRoBq1lAPnCvBXtlfQckvkQLtH453JJTIX6ULqL1xtpA==}
+    dev: true
+
+  /@sveltejs/vite-plugin-svelte/2.0.0_svelte@3.54.0+vite@4.0.0:
+    resolution: {integrity: sha512-oUFrYQarRv4fppmxdrv00qw3wX8Ycdj0uv33MfpRZyR8K67dyxiOcHnqkB0zSy5sDJA8RC/2aNtYhXJ8NINVHQ==}
     engines: {node: ^14.18.0 || >= 16}
     peerDependencies:
       svelte: ^3.54.0
@@ -1814,11 +1810,11 @@ packages:
       terser: ^5.4.0
       vite: ^3.0.0
     dependencies:
-      '@babel/standalone': 7.19.3
-      core-js: 3.25.3
+      '@babel/standalone': 7.20.6
+      core-js: 3.26.1
       magic-string: 0.26.7
-      regenerator-runtime: 0.13.10
-      systemjs: 6.12.6
+      regenerator-runtime: 0.13.11
+      systemjs: 6.13.0
       terser: 5.15.0
       vite: 3.2.3_terser@5.15.0
     dev: true
@@ -2291,11 +2287,6 @@ packages:
     resolution: {integrity: sha512-YZ3GUyn/o8gfKJlnlX7g7xq4gyO6OSuhGPKaaGssGB2qgDUS0gPgtTvoyZLTt9Ab6dC4hfc9dV5arkvc/OCmrw==}
     engines: {node: '>= 0.6'}
     dev: false
-
-  /core-js/3.25.3:
-    resolution: {integrity: sha512-y1hvKXmPHvm5B7w4ln1S4uc9eV/O5+iFExSRUimnvIph11uaizFR8LFMdONN8hG3P2pipUfX4Y/fR8rAEtcHcQ==}
-    requiresBuild: true
-    dev: true
 
   /core-js/3.26.1:
     resolution: {integrity: sha512-21491RRQVzUn0GGM9Z1Jrpr6PNPxPi+Za8OM9q4tksTSnlbXXGKK1nXNg/QvwFYettXvSX6zWKCtHHfjN4puyA==}
@@ -3148,10 +3139,6 @@ packages:
 
   /globrex/0.1.2:
     resolution: {integrity: sha512-uHJgbwAMwNFf5mLst7IWLNg14x1CkeqglJb/K3doi4dw6q2IvAAmM/Y81kevy83wP+Sst+nutFTYOGg3d1lsxg==}
-
-  /golden-fleece/1.0.9:
-    resolution: {integrity: sha512-YSwLaGMOgSBx9roJlNLL12c+FRiw7VECphinc6mGucphc/ZxTHgdEz6gmJqH6NOzYEd/yr64hwjom5pZ+tJVpg==}
-    dev: false
 
   /graceful-fs/4.2.10:
     resolution: {integrity: sha512-9ByhssR2fPVsNZj478qUUbKfmL0+t5BDVyjShtyZZLiK7ZDAArFFfopyOTj0M05wE2tJPisA4iTnnXl2YoPvOA==}
@@ -5395,10 +5382,6 @@ packages:
       svelte: 3.54.0
       typescript: 4.9.3
     dev: false
-
-  /systemjs/6.12.6:
-    resolution: {integrity: sha512-SawLiWya8/uNR4p12OggSYZ35tP4U4QTpfV57DdZEOPr6+J6zlLSeeEpMmzYTEoBAsMhctdEE+SWJUDYX4EaKw==}
-    dev: true
 
   /systemjs/6.13.0:
     resolution: {integrity: sha512-P3cgh2bpaPvAO2NE3uRp/n6hmk4xPX4DQf+UzTlCAycssKdqhp6hjw+ENWe+aUS7TogKRFtptMosTSFeC6R55g==}

@@ -9,14 +9,6 @@ const files = fileURLToPath(new URL('./files', import.meta.url).href);
 
 /** @type {import('.').default} */
 export default function (opts = {}) {
-	// TODO remove for 1.0
-	// @ts-expect-error
-	if (opts.env) {
-		throw new Error(
-			'options.env has been removed in favour of options.envPrefix. Consult the adapter-node README: https://github.com/sveltejs/kit/tree/master/packages/adapter-node'
-		);
-	}
-
 	const { out = 'build', precompress, envPrefix = '' } = opts;
 
 	return {

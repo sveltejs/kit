@@ -1,5 +1,30 @@
 # @sveltejs/adapter-netlify
 
+## 1.0.0
+
+### Major Changes
+
+First major release, see below for the history of changes that lead up to this.
+Starting from now all releases follow semver and changes will be listed as Major/Minor/Patch
+
+## 1.0.0-next.88
+
+### Patch Changes
+
+- [chore] add peerDependencies, add more specific next version ([#8141](https://github.com/sveltejs/kit/pull/8141))
+
+## 1.0.0-next.87
+
+### Patch Changes
+
+- [fix] revert platform change from browser to neutral ([#8122](https://github.com/sveltejs/kit/pull/8122))
+
+## 1.0.0-next.86
+
+### Patch Changes
+
+- [fix] set esbuild platform to neutral ([#8083](https://github.com/sveltejs/kit/pull/8083))
+
 ## 1.0.0-next.85
 
 ### Patch Changes

@@ -41,7 +41,7 @@ function simplify_node(node) {
 	const simplified = {};
 
 	if (node.component) simplified.component = node.component;
-	if (node.shared) simplified.shared = node.shared;
+	if (node.universal) simplified.universal = node.universal;
 	if (node.server) simplified.server = node.server;
 	if (node.parent_id !== undefined) simplified.parent_id = node.parent_id;
 
@@ -581,7 +581,7 @@ test('creates routes with named layouts', () => {
 		default_error, // 1
 		{
 			component: 'samples/named-layouts/(special)/+layout.svelte',
-			shared: 'samples/named-layouts/(special)/+layout.js',
+			universal: 'samples/named-layouts/(special)/+layout.js',
 			server: 'samples/named-layouts/(special)/+layout.server.js'
 		}, // 2
 		{ component: 'samples/named-layouts/(special)/(alsospecial)/+layout.svelte' }, // 3
@@ -656,9 +656,9 @@ test('handles pages without .svelte file', () => {
 		default_error,
 		{ component: 'samples/page-without-svelte-file/error/+error.svelte' },
 		{ component: 'samples/page-without-svelte-file/layout/+layout.svelte' },
-		{ ...default_layout, shared: 'samples/page-without-svelte-file/layout/exists/+layout.js' },
+		{ ...default_layout, universal: 'samples/page-without-svelte-file/layout/exists/+layout.js' },
 		{ component: 'samples/page-without-svelte-file/+page.svelte' },
-		{ shared: 'samples/page-without-svelte-file/error/[...path]/+page.js' },
+		{ universal: 'samples/page-without-svelte-file/error/[...path]/+page.js' },
 		{ component: 'samples/page-without-svelte-file/layout/exists/+page.svelte' },
 		{ server: 'samples/page-without-svelte-file/layout/redirect/+page.server.js' }
 	]);
@@ -748,14 +748,6 @@ test('prevents route conflicts between groups', () => {
 	assert.throws(
 		() => create('samples/conflicting-groups'),
 		/The "\/\(x\)\/a" and "\/\(y\)\/a" routes conflict with each other/
-	);
-});
-
-// TODO remove for 1.0
-test('errors on encountering a declared layout', () => {
-	assert.throws(
-		() => create('samples/declared-layout'),
-		/samples\/declared-layout\/\+layout-foo.svelte should be reimplemented with layout groups: https:\/\/kit\.svelte\.dev\/docs\/advanced-routing#advanced-layouts/
 	);
 });
 

@@ -266,9 +266,7 @@ function create_routes_and_nodes(cwd, config, fallback) {
 			const root = routes[0];
 			if (!root.leaf && !root.error && !root.layout && !root.endpoint) {
 				throw new Error(
-					// TODO adjust this error message for 1.0
-					// 'No routes found. If you are using a custom src/routes directory, make sure it is specified in svelte.config.js'
-					'The filesystem router API has changed, see https://github.com/sveltejs/kit/discussions/5774 for details'
+					'No routes found. If you are using a custom src/routes directory, make sure it is specified in svelte.config.js'
 				);
 			}
 		}
@@ -386,13 +384,6 @@ function analyze(project_relative, file, component_extensions, module_extensions
 		const pattern = /^\+(?:(page(?:@(.*))?)|(layout(?:@(.*))?)|(error))$/;
 		const match = pattern.exec(name);
 		if (!match) {
-			// TODO remove for 1.0
-			if (/^\+layout-/.test(name)) {
-				throw new Error(
-					`${project_relative} should be reimplemented with layout groups: https://kit.svelte.dev/docs/advanced-routing#advanced-layouts`
-				);
-			}
-
 			throw new Error(`Files prefixed with + are reserved (saw ${project_relative})`);
 		}
 
@@ -420,7 +411,7 @@ function analyze(project_relative, file, component_extensions, module_extensions
 			);
 		}
 
-		const kind = !!(match[1] || match[4] || match[7]) ? 'server' : 'shared';
+		const kind = !!(match[1] || match[4] || match[7]) ? 'server' : 'universal';
 
 		return {
 			kind,

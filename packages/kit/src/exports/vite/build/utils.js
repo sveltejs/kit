@@ -117,8 +117,6 @@ export function resolve_symlinks(manifest, file) {
  * @return {import('vite').UserConfig}
  */
 export function get_build_setup_config({ config, ssr }) {
-	const prefix = `${config.kit.appDir}/immutable`;
-
 	return {
 		build: {
 			// don't use the default name to avoid collisions with 'static/manifest.json'
@@ -138,16 +136,16 @@ export function get_build_setup_config({ config, ssr }) {
 			exclude: ['@sveltejs/kit']
 		},
 		ssr: {
-			noExternal: ['@sveltejs/kit']
-		},
-		worker: {
-			rollupOptions: {
-				output: {
-					entryFileNames: `${prefix}/workers/[name]-[hash].js`,
-					chunkFileNames: `${prefix}/workers/chunks/[name]-[hash].js`,
-					hoistTransitiveImports: false
-				}
-			}
+			noExternal: [
+				// TODO document why this is necessary
+				'@sveltejs/kit',
+				// This ensures that esm-env is inlined into the server output with the
+				// export conditions resolved correctly through Vite. This prevents adapters
+				// that bundle later on to resolve the export conditions incorrectly
+				// and for example include browser-only code in the server output
+				// because they for example use esbuild.build with `platform: 'browser'`
+				'esm-env'
+			]
 		}
 	};
 }
@@ -185,7 +183,16 @@ export function get_build_compile_config({ config, input, ssr, outDir }) {
 			},
 			target: ssr ? 'node16.14' : undefined
 		},
-		publicDir: ssr ? false : config.kit.files.assets
+		publicDir: ssr ? false : config.kit.files.assets,
+		worker: {
+			rollupOptions: {
+				output: {
+					entryFileNames: `${prefix}/workers/[name]-[hash].js`,
+					chunkFileNames: `${prefix}/workers/chunks/[name]-[hash].js`,
+					hoistTransitiveImports: false
+				}
+			}
+		}
 	};
 }
 

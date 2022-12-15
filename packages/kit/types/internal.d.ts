@@ -75,7 +75,7 @@ export interface BuildData {
 
 export interface CSRPageNode {
 	component: typeof SvelteComponent;
-	shared: {
+	universal: {
 		load?: Load;
 		trailingSlash?: TrailingSlash;
 	};
@@ -128,7 +128,7 @@ export interface ManifestData {
 export interface PageNode {
 	depth: number;
 	component?: string; // TODO supply default component if it's missing (bit of an edge case)
-	shared?: string;
+	universal?: string;
 	server?: string;
 	parent_id?: string;
 	parent?: PageNode;
@@ -274,7 +274,7 @@ export interface SSRNode {
 	/** inlined styles */
 	inline_styles?(): MaybePromise<Record<string, string>>;
 
-	shared: {
+	universal: {
 		load?: Load;
 		prerender?: PrerenderOption;
 		ssr?: boolean;
@@ -292,8 +292,8 @@ export interface SSRNode {
 	};
 
 	// store this in dev so we can print serialization errors
+	universal_id?: string;
 	server_id?: string;
-	shared_id?: string;
 }
 
 export type SSRNodeLoader = () => Promise<SSRNode>;

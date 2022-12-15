@@ -62,26 +62,6 @@ function update_scroll_positions(index) {
 	scroll_positions[index] = scroll_state();
 }
 
-// TODO remove for 1.0
-/** @type {Record<string, true>} */
-let warned_about_attributes = {};
-
-function check_for_removed_attributes() {
-	const attrs = ['prefetch', 'noscroll', 'reload'];
-	for (const attr of attrs) {
-		if (document.querySelector(`[sveltekit\\:${attr}]`)) {
-			if (!warned_about_attributes[attr]) {
-				warned_about_attributes[attr] = true;
-				console.error(
-					`The sveltekit:${attr} attribute has been replaced with data-sveltekit-${
-						attr === 'prefetch' ? 'preload-data' : attr
-					}`
-				);
-			}
-		}
-	}
-}
-
 /**
  * @param {{
  *   target: HTMLElement;
@@ -337,9 +317,7 @@ export function create_client({ target, base }) {
 				navigation_result.props.page.url = url;
 			}
 
-			const post_update = pre_update();
 			root.$set(navigation_result.props);
-			post_update();
 		} else {
 			initialize(navigation_result);
 		}
@@ -393,22 +371,20 @@ export function create_client({ target, base }) {
 
 		page = result.props.page;
 
-		const post_update = pre_update();
 		root = new Root({
 			target,
 			props: { ...result.props, stores },
 			hydrate: true
 		});
-		post_update();
 
 		/** @type {import('types').AfterNavigate} */
 		const navigation = {
 			from: null,
-			to: add_url_properties('to', {
+			to: {
 				params: current.params,
 				route: { id: current.route?.id ?? null },
 				url: new URL(location.href)
-			}),
+			},
 			willUnload: false,
 			type: 'enter'
 		};
@@ -504,29 +480,6 @@ export function create_client({ target, base }) {
 				// The whole page store is updated, but this way the object reference stays the same
 				data: data_changed ? data : page.data
 			};
-
-			// TODO remove this for 1.0
-			Object.defineProperty(result.props.page, 'routeId', {
-				get() {
-					throw new Error('$page.routeId has been replaced by $page.route.id');
-				},
-				enumerable: false
-			});
-			/**
-			 * @param {string} property
-			 * @param {string} replacement
-			 */
-			const print_error = (property, replacement) => {
-				Object.defineProperty(result.props.page, property, {
-					get: () => {
-						throw new Error(`$page.${property} has been replaced by $page.url.${replacement}`);
-					}
-				});
-			};
-
-			print_error('origin', 'origin');
-			print_error('path', 'pathname');
-			print_error('query', 'searchParams');
 		}
 
 		return result;
@@ -562,10 +515,10 @@ export function create_client({ target, base }) {
 		const node = await loader();
 
 		if (DEV) {
-			validate_common_exports(node.shared);
+			validate_common_exports(node.universal);
 		}
 
-		if (node.shared?.load) {
+		if (node.universal?.load) {
 			/** @param {string[]} deps */
 			function depends(...deps) {
 				for (const dep of deps) {
@@ -642,44 +595,10 @@ export function create_client({ target, base }) {
 				}
 			};
 
-			// TODO remove this for 1.0
-			Object.defineProperties(load_input, {
-				props: {
-					get() {
-						throw new Error(
-							'@migration task: Replace `props` with `data` stuff https://github.com/sveltejs/kit/discussions/5774#discussioncomment-3292693'
-						);
-					},
-					enumerable: false
-				},
-				session: {
-					get() {
-						throw new Error(
-							'session is no longer available. See https://github.com/sveltejs/kit/discussions/5883'
-						);
-					},
-					enumerable: false
-				},
-				stuff: {
-					get() {
-						throw new Error(
-							'@migration task: Remove stuff https://github.com/sveltejs/kit/discussions/5774#discussioncomment-3292693'
-						);
-					},
-					enumerable: false
-				},
-				routeId: {
-					get() {
-						throw new Error('routeId has been replaced by route.id');
-					},
-					enumerable: false
-				}
-			});
-
 			if (DEV) {
 				try {
 					lock_fetch();
-					data = (await node.shared.load.call(null, load_input)) ?? null;
+					data = (await node.universal.load.call(null, load_input)) ?? null;
 					if (data != null && Object.getPrototypeOf(data) !== Object.prototype) {
 						throw new Error(
 							`a load function related to route '${route.id}' returned ${
@@ -697,7 +616,7 @@ export function create_client({ target, base }) {
 					unlock_fetch();
 				}
 			} else {
-				data = (await node.shared.load.call(null, load_input)) ?? null;
+				data = (await node.universal.load.call(null, load_input)) ?? null;
 			}
 			data = data ? await unwrap_promises(data) : null;
 		}
@@ -706,9 +625,9 @@ export function create_client({ target, base }) {
 			node,
 			loader,
 			server: server_data_node,
-			shared: node.shared?.load ? { type: 'data', data, uses } : null,
+			universal: node.universal?.load ? { type: 'data', data, uses } : null,
 			data: data ?? server_data_node?.data ?? null,
-			slash: node.shared?.trailingSlash ?? server_data_node?.slash
+			slash: node.universal?.trailingSlash ?? server_data_node?.slash
 		};
 	}
 
@@ -840,7 +759,7 @@ export function create_client({ target, base }) {
 			const valid =
 				(!server_data_node || server_data_node.type === 'skip') &&
 				loader[1] === previous?.loader &&
-				!has_changed(parent_changed, route_changed, url_changed, previous.shared?.uses, params);
+				!has_changed(parent_changed, route_changed, url_changed, previous.universal?.uses, params);
 			if (valid) return previous;
 
 			parent_changed = true;
@@ -959,7 +878,7 @@ export function create_client({ target, base }) {
 							loader: /** @type {import('types').CSRPageNodeLoader } */ (errors[i]),
 							data: {},
 							server: null,
-							shared: null
+							universal: null
 						}
 					};
 				} catch (e) {
@@ -1023,7 +942,7 @@ export function create_client({ target, base }) {
 		const root_error = {
 			node: await default_error_loader(),
 			loader: default_error_loader,
-			shared: null,
+			universal: null,
 			server: null,
 			data: null
 		};
@@ -1072,16 +991,16 @@ export function create_client({ target, base }) {
 
 		/** @type {import('types').Navigation} */
 		const navigation = {
-			from: add_url_properties('from', {
+			from: {
 				params: current.params,
 				route: { id: current.route?.id ?? null },
 				url: current.url
-			}),
-			to: add_url_properties('to', {
+			},
+			to: {
 				params: intent?.params ?? null,
 				route: { id: intent?.route?.id ?? null },
 				url
-			}),
+			},
 			willUnload: !intent,
 			type
 		};
@@ -1324,30 +1243,10 @@ export function create_client({ target, base }) {
 		},
 
 		goto: (href, opts = {}) => {
-			// TODO remove for 1.0
-			if ('keepfocus' in opts && !('keepFocus' in opts)) {
-				throw new Error(
-					'`keepfocus` has been renamed to `keepFocus` (note the difference in casing)'
-				);
-			}
-
-			if ('noscroll' in opts && !('noScroll' in opts)) {
-				throw new Error(
-					'`noscroll` has been renamed to `noScroll` (note the difference in casing)'
-				);
-			}
-
 			return goto(href, opts, []);
 		},
 
 		invalidate: (resource) => {
-			if (resource === undefined) {
-				// TODO remove for 1.0
-				throw new Error(
-					'`invalidate()` (with no arguments) has been replaced by `invalidateAll()`'
-				);
-			}
-
 			if (typeof resource === 'function') {
 				invalidated.push(resource);
 			} else {
@@ -1387,16 +1286,14 @@ export function create_client({ target, base }) {
 						url,
 						params: current.params,
 						branch: branch.slice(0, error_load.idx).concat(error_load.node),
-						status: 500, // TODO might not be 500?
+						status: result.status ?? 500,
 						error: result.error,
 						route
 					});
 
 					current = navigation_result.state;
 
-					const post_update = pre_update();
 					root.$set(navigation_result.props);
-					post_update();
 
 					tick().then(reset_focus);
 				}
@@ -1408,9 +1305,7 @@ export function create_client({ target, base }) {
 					form: result.data,
 					page: { ...page, form: result.data, status: result.status }
 				};
-				const post_update = pre_update();
 				root.$set(props);
-				post_update();
 
 				if (result.type === 'success') {
 					tick().then(reset_focus);
@@ -1433,11 +1328,11 @@ export function create_client({ target, base }) {
 					// it's due to an external or full-page-reload link, for which we don't want to call the hook again.
 					/** @type {import('types').BeforeNavigate} */
 					const navigation = {
-						from: add_url_properties('from', {
+						from: {
 							params: current.params,
 							route: { id: current.route?.id ?? null },
 							url: current.url
-						}),
+						},
 						to: null,
 						willUnload: true,
 						type: 'leave',
@@ -1781,60 +1676,6 @@ function handle_error(error, event) {
 		hooks.handleError({ error, event }) ??
 		/** @type {any} */ ({ message: event.route.id != null ? 'Internal Error' : 'Not Found' })
 	);
-}
-
-// TODO remove for 1.0
-const properties = [
-	'hash',
-	'href',
-	'host',
-	'hostname',
-	'origin',
-	'pathname',
-	'port',
-	'protocol',
-	'search',
-	'searchParams',
-	'toString',
-	'toJSON'
-];
-
-/**
- * @param {'from' | 'to'} type
- * @param {import('types').NavigationTarget} target
- */
-function add_url_properties(type, target) {
-	for (const prop of properties) {
-		Object.defineProperty(target, prop, {
-			get() {
-				throw new Error(
-					`The navigation shape changed - ${type}.${prop} should now be ${type}.url.${prop}`
-				);
-			},
-			enumerable: false
-		});
-	}
-
-	Object.defineProperty(target, 'routeId', {
-		get() {
-			throw new Error(
-				`The navigation shape changed - ${type}.routeId should now be ${type}.route.id`
-			);
-		},
-		enumerable: false
-	});
-
-	return target;
-}
-
-function pre_update() {
-	if (DEV) {
-		return () => {
-			check_for_removed_attributes();
-		};
-	}
-
-	return () => {};
 }
 
 function reset_focus() {

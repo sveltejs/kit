@@ -36,6 +36,9 @@ export async function dev(vite, vite_config, svelte_config) {
 	/** @type {import('types').SSRManifest} */
 	let manifest;
 
+	/** @type {Error | null} */
+	let manifest_error = null;
+
 	/** @param {string} id */
 	async function resolve(id) {
 		const url = id.startsWith('..') ? `/@fs${path.posix.resolve(id)}` : `/${id}`;
@@ -49,7 +52,28 @@ export async function dev(vite, vite_config, svelte_config) {
 	}
 
 	async function update_manifest() {
-		({ manifest_data } = await sync.create(svelte_config));
+		try {
+			({ manifest_data } = await sync.create(svelte_config));
+
+			if (manifest_error) {
+				manifest_error = null;
+				vite.ws.send({ type: 'full-reload' });
+			}
+		} catch (error) {
+			manifest_error = /** @type {Error} */ (error);
+
+			console.error(colors.bold().red('Invalid routes'));
+			console.error(error);
+			vite.ws.send({
+				type: 'error',
+				err: {
+					message: manifest_error.message ?? 'Invalid routes',
+					stack: ''
+				}
+			});
+
+			return;
+		}
 
 		manifest = {
 			appDir: svelte_config.kit.appDir,
@@ -97,13 +121,13 @@ export async function dev(vite, vite_config, svelte_config) {
 							};
 						}
 
-						if (node.shared) {
-							const { module, module_node } = await resolve(node.shared);
+						if (node.universal) {
+							const { module, module_node } = await resolve(node.universal);
 
 							module_nodes.push(module_node);
 
-							result.shared = module;
-							result.shared_id = node.shared;
+							result.universal = module;
+							result.universal_id = node.universal;
 						}
 
 						if (node.server) {
@@ -227,13 +251,16 @@ export async function dev(vite, vite_config, svelte_config) {
 		}, 100);
 	};
 
+	// flag to skip watchers if server is already restarting
+	let restarting = false;
+
 	// Debounce add/unlink events because in case of folder deletion or moves
 	// they fire in rapid succession, causing needless invocations.
 	watch('add', () => debounce(update_manifest));
 	watch('unlink', () => debounce(update_manifest));
 	watch('change', (file) => {
 		// Don't run for a single file if the whole manifest is about to get updated
-		if (timeout) return;
+		if (timeout || restarting) return;
 
 		sync.update(svelte_config, manifest_data, file);
 	});
@@ -244,11 +271,22 @@ export async function dev(vite, vite_config, svelte_config) {
 	// send the vite client a full-reload event without path being set
 	if (appTemplate !== 'index.html') {
 		vite.watcher.on('change', (file) => {
-			if (file === appTemplate) {
+			if (file === appTemplate && !restarting) {
 				vite.ws.send({ type: 'full-reload' });
 			}
 		});
 	}
+
+	// changing the svelte config requires restarting the dev server
+	// the config is only read on start and passed on to vite-plugin-svelte
+	// which needs up-to-date values to operate correctly
+	vite.watcher.on('change', (file) => {
+		if (path.basename(file) === 'svelte.config.js') {
+			console.log(`svelte config changed, restarting vite dev-server. changed file: ${file}`);
+			restarting = true;
+			vite.restart();
+		}
+	});
 
 	const assets = svelte_config.kit.paths.assets ? SVELTE_KIT_ASSETS : svelte_config.kit.paths.base;
 	const asset_server = sirv(svelte_config.kit.files.assets, {
@@ -345,31 +383,7 @@ export async function dev(vite, vite_config, svelte_config) {
 					? await vite.ssrLoadModule(`/${hooks_file}`)
 					: {};
 
-				// TODO remove for 1.0
-				if (!resolve_entry(hooks_file)) {
-					const old_file = resolve_entry(path.join(process.cwd(), 'src', 'hooks'));
-					if (old_file && fs.existsSync(old_file)) {
-						throw new Error(
-							`Rename your server hook file from ${posixify(
-								path.relative(process.cwd(), old_file)
-							)} to ${posixify(
-								path.relative(process.cwd(), svelte_config.kit.files.hooks.server)
-							)}${path.extname(
-								old_file
-							)} (because there's also client hooks now). See the PR for more information: https://github.com/sveltejs/kit/pull/6586`
-						);
-					}
-				}
-
 				const handle = user_hooks.handle || (({ event, resolve }) => resolve(event));
-
-				// TODO remove for 1.0
-				// @ts-expect-error
-				if (user_hooks.externalFetch) {
-					throw new Error(
-						'externalFetch has been removed — use handleFetch instead. See https://github.com/sveltejs/kit/pull/6565 for details'
-					);
-				}
 
 				/** @type {import('types').ServerHooks} */
 				const hooks = {
@@ -388,18 +402,6 @@ export async function dev(vite, vite_config, svelte_config) {
 						}),
 					handleFetch: user_hooks.handleFetch || (({ request, fetch }) => fetch(request))
 				};
-
-				if (/** @type {any} */ (hooks).getContext) {
-					// TODO remove this for 1.0
-					throw new Error(
-						'The getContext hook has been removed. See https://kit.svelte.dev/docs/hooks'
-					);
-				}
-
-				if (/** @type {any} */ (hooks).serverFetch) {
-					// TODO remove this for 1.0
-					throw new Error('The serverFetch hook has been renamed to externalFetch.');
-				}
 
 				// TODO the / prefix will probably fail if outDir is outside the cwd (which
 				// could be the case in a monorepo setup), but without it these modules
@@ -424,6 +426,27 @@ export async function dev(vite, vite_config, svelte_config) {
 				const template = load_template(cwd, svelte_config);
 				const error_page = load_error_page(svelte_config);
 
+				/** @param {{ status: number; message: string }} opts */
+				const error_template = ({ status, message }) => {
+					return error_page
+						.replace(/%sveltekit\.status%/g, String(status))
+						.replace(/%sveltekit\.error\.message%/g, message);
+				};
+
+				if (manifest_error) {
+					console.error(colors.bold().red('Invalid routes'));
+					console.error(manifest_error);
+
+					res.writeHead(500, {
+						'Content-Type': 'text/html; charset=utf-8'
+					});
+					res.end(
+						error_template({ status: 500, message: manifest_error.message ?? 'Invalid routes' })
+					);
+
+					return;
+				}
+
 				const rendered = await respond(
 					request,
 					{
@@ -444,15 +467,7 @@ export async function dev(vite, vite_config, svelte_config) {
 										return Reflect.get(target, property, target);
 									}
 								}),
-								event,
-
-								// TODO remove for 1.0
-								// @ts-expect-error
-								get request() {
-									throw new Error(
-										'request in handleError has been replaced with event. See https://github.com/sveltejs/kit/pull/3384 for details'
-									);
-								}
+								event
 							});
 							return (
 								error_object ?? { message: event.route.id != null ? 'Internal Error' : 'Not Found' }
@@ -478,11 +493,7 @@ export async function dev(vite, vite_config, svelte_config) {
 							);
 						},
 						app_template_contains_nonce: template.includes('%sveltekit.nonce%'),
-						error_template: ({ status, message }) => {
-							return error_page
-								.replace(/%sveltekit\.status%/g, String(status))
-								.replace(/%sveltekit\.error\.message%/g, message);
-						},
+						error_template,
 						service_worker:
 							svelte_config.kit.serviceWorker.register &&
 							!!resolve_entry(svelte_config.kit.files.serviceWorker),

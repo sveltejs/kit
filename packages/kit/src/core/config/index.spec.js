@@ -61,12 +61,7 @@ const get_defaults = (prefix = '') => ({
 	kit: {
 		adapter: null,
 		alias: {},
-		amp: undefined,
 		appDir: '_app',
-		browser: {
-			hydrate: undefined,
-			router: undefined
-		},
 		csp: {
 			mode: 'auto',
 			directives: directive_defaults,
@@ -75,7 +70,6 @@ const get_defaults = (prefix = '') => ({
 		csrf: {
 			checkOrigin: true
 		},
-		endpointExtensions: undefined,
 		embedded: false,
 		env: {
 			dir: process.cwd(),
@@ -92,14 +86,9 @@ const get_defaults = (prefix = '') => ({
 			routes: join(prefix, 'src/routes'),
 			serviceWorker: join(prefix, 'src/service-worker'),
 			appTemplate: join(prefix, 'src/app.html'),
-			errorTemplate: join(prefix, 'src/error.html'),
-			template: undefined
+			errorTemplate: join(prefix, 'src/error.html')
 		},
-		headers: undefined,
-		host: undefined,
-		hydrate: undefined,
 		inlineStyleThreshold: 0,
-		methodOverride: undefined,
 		moduleExtensions: ['.js', '.ts'],
 		outDir: join(prefix, '.svelte-kit'),
 		serviceWorker: {
@@ -112,30 +101,15 @@ const get_defaults = (prefix = '') => ({
 		prerender: {
 			concurrency: 1,
 			crawl: true,
-			createIndexFiles: undefined,
-			default: undefined,
-			enabled: undefined,
 			entries: ['*'],
-			force: undefined,
 			handleHttpError: 'fail',
 			handleMissingId: 'fail',
-			onError: undefined,
-			origin: 'http://sveltekit-prerender',
-			pages: undefined
+			origin: 'http://sveltekit-prerender'
 		},
-		protocol: undefined,
-		router: undefined,
-		routes: undefined,
-		ssr: undefined,
-		target: undefined,
-		trailingSlash: undefined,
 		version: {
 			name: Date.now().toString(),
 			pollInterval: 0
-		},
-		// TODO cleanup for 1.0
-		vite: undefined,
-		package: undefined
+		}
 	}
 });
 
@@ -376,9 +350,6 @@ test('load default config (esm)', async () => {
 
 	const defaults = get_defaults(cwd + '/');
 	defaults.kit.version.name = config.kit.version.name;
-	defaults.kit.files.errorTemplate = fileURLToPath(
-		new URL('./default-error.html', import.meta.url)
-	);
 
 	assert.equal(config, defaults);
 });

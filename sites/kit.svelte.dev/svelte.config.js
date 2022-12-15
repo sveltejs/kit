@@ -7,11 +7,7 @@ const config = {
 	preprocess: preprocess(),
 
 	kit: {
-		adapter: adapter(),
-
-		alias: {
-			'@sveltejs/site-kit': '../site-kit/src/lib'
-		}
+		adapter: adapter()
 	},
 
 	vitePlugin: {

@@ -152,13 +152,13 @@ test('serialized cookie header should be url-encoded', () => {
 	const { cookies, get_cookie_header } = cookies_setup({
 		href,
 		headers: {
-			cookie: 'a=f%C3%BC' // a=fü
+			cookie: 'a=f%C3%BC; b=foo+bar' // a=fü
 		}
 	});
-	cookies.set('b', 'fö'); // should use default encoding
-	cookies.set('c', 'fö', { encode: () => 'öf' }); // should respect `encode`
-	const header = get_cookie_header(new URL(href), 'd=f%C3%A4');
-	assert.equal(header, 'a=f%C3%BC; b=f%C3%B6; c=öf; d=f%C3%A4');
+	cookies.set('c', 'fö'); // should use default encoding
+	cookies.set('d', 'fö', { encode: () => 'öf' }); // should respect `encode`
+	const header = get_cookie_header(new URL(href), 'e=f%C3%A4; f=foo+bar');
+	assert.equal(header, 'a=f%C3%BC; b=foo+bar; c=f%C3%B6; d=öf; e=f%C3%A4; f=foo+bar');
 });
 
 test.run();

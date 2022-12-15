@@ -16,14 +16,6 @@ export function load_template(cwd, config) {
 	if (fs.existsSync(appTemplate)) {
 		const contents = fs.readFileSync(appTemplate, 'utf8');
 
-		// TODO remove this for 1.0
-		const match = /%svelte\.([a-z]+)%/.exec(contents);
-		if (match) {
-			throw new Error(
-				`%svelte.${match[1]}% in ${relative} should be replaced with %sveltekit.${match[1]}%`
-			);
-		}
-
 		const expected_tags = ['%sveltekit.head%', '%sveltekit.body%'];
 		expected_tags.forEach((tag) => {
 			if (contents.indexOf(tag) === -1) {
@@ -43,7 +35,14 @@ export function load_template(cwd, config) {
  * @param {import('types').ValidatedConfig} config
  */
 export function load_error_page(config) {
-	const { errorTemplate } = config.kit.files;
+	let { errorTemplate } = config.kit.files;
+
+	// Don't do this inside resolving the config, because that would mean
+	// adding/removing error.html isn't detected and would require a restart.
+	if (!fs.existsSync(config.kit.files.errorTemplate)) {
+		errorTemplate = url.fileURLToPath(new URL('./default-error.html', import.meta.url));
+	}
+
 	return fs.readFileSync(errorTemplate, 'utf-8');
 }
 
@@ -74,9 +73,6 @@ function process_config(config, { cwd = process.cwd() } = {}) {
 	validated.kit.outDir = path.resolve(cwd, validated.kit.outDir);
 
 	for (const key in validated.kit.files) {
-		// TODO remove for 1.0
-		if (key === 'template') continue;
-
 		if (key === 'hooks') {
 			validated.kit.files.hooks.client = path.resolve(cwd, validated.kit.files.hooks.client);
 			validated.kit.files.hooks.server = path.resolve(cwd, validated.kit.files.hooks.server);
@@ -84,12 +80,6 @@ function process_config(config, { cwd = process.cwd() } = {}) {
 			// @ts-expect-error
 			validated.kit.files[key] = path.resolve(cwd, validated.kit.files[key]);
 		}
-	}
-
-	if (!fs.existsSync(validated.kit.files.errorTemplate)) {
-		validated.kit.files.errorTemplate = url.fileURLToPath(
-			new URL('./default-error.html', import.meta.url)
-		);
 	}
 
 	return validated;

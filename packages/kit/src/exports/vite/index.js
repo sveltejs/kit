@@ -160,14 +160,14 @@ function kit({ svelte_config }) {
 				input[`components/${name}`] = resolved;
 			}
 
-			if (node.shared) {
-				const resolved = path.resolve(cwd, node.shared);
+			if (node.universal) {
+				const resolved = path.resolve(cwd, node.universal);
 				const relative = decodeURIComponent(
 					path.relative(svelte_config.kit.files.routes, resolved)
 				);
 
 				const name = relative.startsWith('..')
-					? path.basename(node.shared)
+					? path.basename(node.universal)
 					: posixify(path.join('pages', relative));
 				input[`modules/${name}`] = resolved;
 			}
@@ -220,9 +220,6 @@ function kit({ svelte_config }) {
 			vite_manifest
 		};
 	}
-
-	// TODO remove this for 1.0
-	check_vite_version();
 
 	/** @type {import('vite').Plugin} */
 	const plugin_setup = {
@@ -376,9 +373,7 @@ function kit({ svelte_config }) {
 		 * Clears the output directories.
 		 */
 		buildStart() {
-			if (vite_config.build.ssr) {
-				return;
-			}
+			if (vite_config.build.ssr) return;
 
 			// Reset for new build. Goes here because `build --watch` calls buildStart but not config
 			completed_build = false;
@@ -391,6 +386,93 @@ function kit({ svelte_config }) {
 				mkdirp(paths.build_dir);
 				mkdirp(paths.output_dir);
 			}
+		},
+
+		generateBundle() {
+			if (vite_config.build.ssr) return;
+
+			this.emitFile({
+				type: 'asset',
+				fileName: `${svelte_config.kit.appDir}/version.json`,
+				source: JSON.stringify({ version: svelte_config.kit.version.name })
+			});
+		},
+
+		/**
+		 * @see https://vitejs.dev/guide/api-plugin.html#configureserver
+		 */
+		async configureServer(vite) {
+			// set `import { version } from '$app/environment'`
+			(await vite.ssrLoadModule(`${runtime_prefix}/env.js`)).set_version(
+				svelte_config.kit.version.name
+			);
+
+			// set `import { base, assets } from '$app/paths'`
+			const { base, assets } = svelte_config.kit.paths;
+
+			(await vite.ssrLoadModule(`${runtime_base}/paths.js`)).set_paths({
+				base,
+				assets: assets ? SVELTE_KIT_ASSETS : base
+			});
+		}
+	};
+
+	/** @type {import('vite').Plugin} */
+	const plugin_compile = {
+		name: 'vite-plugin-sveltekit-compile',
+
+		/**
+		 * Build the SvelteKit-provided Vite config to be merged with the user's vite.config.js file.
+		 * @see https://vitejs.dev/guide/api-plugin.html#config
+		 */
+		async config(config, config_env) {
+			// The config is created in build_server for SSR mode and passed inline
+			if (config.build?.ssr) return;
+
+			if (config_env.command === 'build') {
+				const new_config = vite_client_build_config();
+
+				const warning = warn_overridden_config(config, new_config);
+				if (warning) console.error(warning + '\n');
+
+				return new_config;
+			}
+
+			// dev and preview config can be shared
+			/** @type {import('vite').UserConfig} */
+			const result = {
+				appType: 'custom',
+				base: svelte_config.kit.paths.base,
+				build: {
+					rollupOptions: {
+						// Vite dependency crawler needs an explicit JS entry point
+						// eventhough server otherwise works without it
+						input: `${runtime_directory}/client/start.js`
+					}
+				},
+				publicDir: svelte_config.kit.files.assets
+			};
+
+			const warning = warn_overridden_config(config, result);
+			if (warning) console.error(warning);
+
+			return result;
+		},
+
+		/**
+		 * Adds the SvelteKit middleware to do SSR in dev mode.
+		 * @see https://vitejs.dev/guide/api-plugin.html#configureserver
+		 */
+		async configureServer(vite) {
+			return await dev(vite, vite_config, svelte_config);
+		},
+
+		/**
+		 * Adds the SvelteKit middleware to do SSR in preview mode.
+		 * @see https://vitejs.dev/guide/api-plugin.html#configurepreviewserver
+		 */
+		configurePreviewServer(vite) {
+			return preview(vite, vite_config, svelte_config);
 		},
 
 		/**
@@ -408,9 +490,7 @@ function kit({ svelte_config }) {
 					return; // Wait untill all output will be done building, since we need the manifest
 				}
 
-				if (vite_config.build.ssr) {
-					return;
-				}
+				if (vite_config.build.ssr) return;
 
 				const guard = module_guard(this, {
 					cwd: vite.normalizePath(process.cwd()),
@@ -429,11 +509,6 @@ function kit({ svelte_config }) {
 				log = logger({
 					verbose
 				});
-
-				fs.writeFileSync(
-					`${paths.client_out_dir}/${svelte_config.kit.appDir}/version.json`,
-					JSON.stringify({ version: svelte_config.kit.version.name })
-				);
 
 				const { assets, chunks } = collect_output(bundle);
 				log.info(
@@ -576,100 +651,10 @@ function kit({ svelte_config }) {
 				fs.unlinkSync(`${paths.output_dir}/client/${vite_config.build.manifest}`);
 				fs.unlinkSync(`${paths.output_dir}/server/${vite_config.build.manifest}`);
 			}
-		},
-
-		/**
-		 * @see https://vitejs.dev/guide/api-plugin.html#configureserver
-		 */
-		async configureServer(vite) {
-			// set `import { version } from '$app/environment'`
-			(await vite.ssrLoadModule(`${runtime_prefix}/env.js`)).set_version(
-				svelte_config.kit.version.name
-			);
-
-			// set `import { base, assets } from '$app/paths'`
-			const { base, assets } = svelte_config.kit.paths;
-
-			(await vite.ssrLoadModule(`${runtime_base}/paths.js`)).set_paths({
-				base,
-				assets: assets ? SVELTE_KIT_ASSETS : base
-			});
-		}
-	};
-
-	/** @type {import('vite').Plugin} */
-	const plugin_compile = {
-		name: 'vite-plugin-sveltekit-compile',
-
-		/**
-		 * Build the SvelteKit-provided Vite config to be merged with the user's vite.config.js file.
-		 * @see https://vitejs.dev/guide/api-plugin.html#config
-		 */
-		async config(config, config_env) {
-			// The config is created in build_server for SSR mode and passed inline
-			if (config.build?.ssr) return;
-
-			if (config_env.command === 'build') {
-				const new_config = vite_client_build_config();
-
-				const warning = warn_overridden_config(config, new_config);
-				if (warning) console.error(warning + '\n');
-
-				return new_config;
-			}
-
-			// dev and preview config can be shared
-			/** @type {import('vite').UserConfig} */
-			const result = {
-				appType: 'custom',
-				base: svelte_config.kit.paths.base,
-				build: {
-					rollupOptions: {
-						// Vite dependency crawler needs an explicit JS entry point
-						// eventhough server otherwise works without it
-						input: `${runtime_directory}/client/start.js`
-					}
-				},
-				publicDir: svelte_config.kit.files.assets
-			};
-
-			const warning = warn_overridden_config(config, result);
-			if (warning) console.error(warning);
-
-			return result;
-		},
-
-		/**
-		 * Adds the SvelteKit middleware to do SSR in dev mode.
-		 * @see https://vitejs.dev/guide/api-plugin.html#configureserver
-		 */
-		async configureServer(vite) {
-			return await dev(vite, vite_config, svelte_config);
-		},
-
-		/**
-		 * Adds the SvelteKit middleware to do SSR in preview mode.
-		 * @see https://vitejs.dev/guide/api-plugin.html#configurepreviewserver
-		 */
-		configurePreviewServer(vite) {
-			return preview(vite, vite_config, svelte_config);
 		}
 	};
 
 	return [plugin_setup, plugin_compile];
-}
-
-function check_vite_version() {
-	// TODO parse from kit peer deps and maybe do a full semver compare if we ever require feature releases a min
-	const min_required_vite_major = 4;
-	const vite_version = vite.version ?? '2.x'; // vite started exporting it's version in 3.0
-	const current_vite_major = parseInt(vite_version.split('.')[0], 10);
-
-	if (current_vite_major < min_required_vite_major) {
-		throw new Error(
-			`Vite version ${current_vite_major} is no longer supported. Please upgrade to version ${min_required_vite_major}`
-		);
-	}
 }
 
 /** @param {import('rollup').OutputBundle} bundle */

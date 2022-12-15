@@ -1,5 +1,39 @@
 # @sveltejs/adapter-cloudflare
 
+## 1.0.0
+
+### Major Changes
+
+First major release, see below for the history of changes that lead up to this.
+Starting from now all releases follow semver and changes will be listed as Major/Minor/Patch
+
+## 1.0.0-next.45
+
+### Patch Changes
+
+- [breaking] remove warnings/errors about removed/changed APIs ([#8019](https://github.com/sveltejs/kit/pull/8019))
+
+- Updated dependencies [[`f42604a2`](https://github.com/sveltejs/kit/commit/f42604a2b4c04026d3d8bad95807720b79529539)]:
+  - @sveltejs/kit@1.0.0-next.589
+
+## 1.0.0-next.44
+
+### Patch Changes
+
+- [chore] add peerDependencies, add more specific next version ([#8141](https://github.com/sveltejs/kit/pull/8141))
+
+## 1.0.0-next.43
+
+### Patch Changes
+
+- [fix] revert platform change from browser to neutral ([#8122](https://github.com/sveltejs/kit/pull/8122))
+
+## 1.0.0-next.42
+
+### Patch Changes
+
+- [fix] set esbuild platform to neutral ([#8083](https://github.com/sveltejs/kit/pull/8083))
+
 ## 1.0.0-next.41
 
 ### Patch Changes

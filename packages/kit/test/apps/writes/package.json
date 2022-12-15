@@ -12,7 +12,7 @@
 		"test:build": "rimraf test/errors.json && playwright test"
 	},
 	"devDependencies": {
-		"@sveltejs/kit": "workspace:*",
+		"@sveltejs/kit": "workspace:^",
 		"cross-env": "^7.0.3",
 		"rimraf": "^3.0.2",
 		"svelte": "^3.54.0",

@@ -1,58 +1,31 @@
 [![Chat](https://img.shields.io/discord/457912077277855764?label=chat&logo=discord)](https://svelte.dev/chat)
 
-# READ THIS FIRST!
+# SvelteKit
 
-SvelteKit is in its release candidate phase:
-- :exclamation: expect bugs! 
-- :heavy_check_mark: no more planned breaking changes
-- :heavy_check_mark: countdown to a stable release
-- :x: feature-complete
-- :x: tutorials
-
-Watch [the announcement](https://www.youtube.com/watch?v=A8jkJTWacow&t=29628s) and track [progress towards 1.0](https://github.com/sveltejs/kit/issues?q=is%3Aopen+is%3Aissue+milestone%3A1.0) for more details.
-
-## Overview
-
-The Fastest Way to Build Svelte Apps
-
-- 💨 Blazing-Fast Production Sites
-- 🛠️ SSR, SPA, SSG, and In-Between
-- ⚡️ Instantly Visible Code Changes
-- 🔩 Existing Universe of Plugins
-- 🔑 Fully Typed APIs
-
-## Documentation
-
-Please see [the documentation](https://kit.svelte.dev/docs) for information about getting started and developing with SvelteKit.
+Web development, streamlined. Read the [documentation](https://kit.svelte.dev/docs) to get started.
 
 ### Packages
 
 | Package                                                                     | Changelog                                                     |
 | --------------------------------------------------------------------------- | ------------------------------------------------------------- |
 | [@sveltejs/kit](packages/kit)                                               | [Changelog](packages/kit/CHANGELOG.md)                        |
-| [create-svelte](packages/create-svelte)                                     | [Changelog](packages/create-svelte/CHANGELOG.md)              |
+| [@sveltejs/adapter-auto](packages/adapter-auto)                             | [Changelog](packages/adapter-auto/CHANGELOG.md)               |
+| [@sveltejs/adapter-cloudflare](packages/adapter-cloudflare)                 | [Changelog](packages/adapter-cloudflare/CHANGELOG.md)         |
+| [@sveltejs/adapter-cloudflare-workers](packages/adapter-cloudflare-workers) | [Changelog](packages/adapter-cloudflare-workers/CHANGELOG.md) |
+| [@sveltejs/adapter-netlify](packages/adapter-netlify)                       | [Changelog](packages/adapter-netlify/CHANGELOG.md)            |
 | [@sveltejs/adapter-node](packages/adapter-node)                             | [Changelog](packages/adapter-node/CHANGELOG.md)               |
 | [@sveltejs/adapter-static](packages/adapter-static)                         | [Changelog](packages/adapter-static/CHANGELOG.md)             |
-| [@sveltejs/adapter-cloudflare-workers](packages/adapter-cloudflare-workers) | [Changelog](packages/adapter-cloudflare-workers/CHANGELOG.md) |
-| [@sveltejs/adapter-cloudflare](packages/adapter-cloudflare)                 | [Changelog](packages/adapter-cloudflare/CHANGELOG.md)         |
-| [@sveltejs/adapter-netlify](packages/adapter-netlify)                       | [Changelog](packages/adapter-netlify/CHANGELOG.md)            |
 | [@sveltejs/adapter-vercel](packages/adapter-vercel)                         | [Changelog](packages/adapter-vercel/CHANGELOG.md)             |
+| [@sveltejs/amp](packages/amp)                                               | [Changelog](packages/amp/CHANGELOG.md)                        |
+| [@sveltejs/package](packages/package)                                       | [Changelog](packages/package/CHANGELOG.md)                    |
+| [create-svelte](packages/create-svelte)                                     | [Changelog](packages/create-svelte/CHANGELOG.md)              |
+| [svelte-migrate](packages/migrate)                                          | [Changelog](packages/migrate/CHANGELOG.md)                    |
 
-The SvelteKit community also makes additional [SvelteKit adapters available for use](https://sveltesociety.dev/components#adapters).
+[Additional adapters](<(https://sveltesociety.dev/components#adapters)>) are maintained by the community.
 
-### Migrating from Sapper
+## Contributing
 
-Check out the [Migration Guide](https://kit.svelte.dev/docs/migrating) if you are upgrading from Sapper.
-
-## Bug reporting
-
-Please make sure the issue you're reporting involves SvelteKit. Many issues related to how a project builds originate from [Vite](https://vitejs.dev/), which is used to build a SvelteKit project. It's important to note that new Vite projects don't use SSR by default, and so if you create a new Vite project from scratch, many issues won't reproduce. You should thus start with a project that utilizes SSR, such as `npm create vite-extra@latest -- --template ssr-svelte`.
-
-If an issue originates from Vite, please report it in the [Vite issue tracker](https://github.com/vitejs/vite/issues).
-
-## Changing SvelteKit locally
-
-See the [Contributing Guide](./CONTRIBUTING.md).
+See [CONTRIBUTING.md](./CONTRIBUTING.md) for information on how to develop SvelteKit locally.
 
 ## Supporting Svelte
 

@@ -34,13 +34,6 @@ export async function build_service_worker(
 	fs.writeFileSync(
 		service_worker,
 		`
-			// TODO remove for 1.0
-			export const timestamp = {
-				toString: () => {
-					throw new Error('\`timestamp\` has been removed from $service-worker. Use \`version\` instead');
-				}
-			};
-
 			export const build = [
 				${Array.from(build)
 					.map((file) => `${s(`${config.kit.paths.base}/${file}`)}`)
