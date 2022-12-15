@@ -9,7 +9,7 @@ const files = fileURLToPath(new URL('./files', import.meta.url).href);
 
 /** @type {import('.').default} */
 export default function (opts = {}) {
-	const { out = 'build', precompress, envPrefix = '', preservedRequestKeys = [] } = opts;
+	const { out = 'build', precompress, envPrefix = '' } = opts;
 
 	return {
 		name: '@sveltejs/adapter-node',
@@ -72,8 +72,7 @@ export default function (opts = {}) {
 					HANDLER: './handler.js',
 					MANIFEST: './server/manifest.js',
 					SERVER: `./server/index.js`,
-					ENV_PREFIX: JSON.stringify(envPrefix),
-					PRESERVED_REQUEST_KEYS: JSON.stringify(preservedRequestKeys)
+					ENV_PREFIX: JSON.stringify(envPrefix)
 				}
 			});
 		}

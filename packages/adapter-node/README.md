@@ -116,8 +116,7 @@ export default {
       // default options are shown
       out: 'build',
       precompress: false,
-      envPrefix: '',
-      preservedRequestKeys: []
+      envPrefix: ''
     })
   }
 };
@@ -144,16 +143,6 @@ MY_CUSTOM_HOST=127.0.0.1 \
 MY_CUSTOM_PORT=4000 \
 MY_CUSTOM_ORIGIN=https://my.site \
 node build
-```
-
-### preservedRequestKeys
-
-Allows preserving specific keys (such as custom keys set by Express middleware) from the original request object which was supplied to SvelteKit.
-
-This is will allow access to these keys within server hooks and handlers.
-
-```js
-preservedRequestKeys: ['sessionID'],
 ```
 
 ## Custom server

@@ -4,11 +4,16 @@ declare global {
 	const ENV_PREFIX: string;
 }
 
+declare namespace App {
+	export interface Platform {
+		originalReq: Request;
+	}
+}
+
 interface AdapterOptions {
 	out?: string;
 	precompress?: boolean;
 	envPrefix?: string;
-	preservedRequestKeys?: string[];
 }
 
 export default function plugin(options?: AdapterOptions): Adapter;

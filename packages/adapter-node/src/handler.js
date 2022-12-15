@@ -21,8 +21,6 @@ const body_size_limit = parseInt(env('BODY_SIZE_LIMIT', '524288'));
 
 const dir = path.dirname(fileURLToPath(import.meta.url));
 
-const preservedRequestKeys = JSON.parse('PRESERVED_REQUEST_KEYS');
-
 /**
  * @param {string} path
  * @param {boolean} client
@@ -49,7 +47,6 @@ function serve(path, client = false) {
 /** @type {import('polka').Middleware} */
 const ssr = async (req, res) => {
 	let request;
-	const platform = {}
 
 	try {
 		request = await getRequest({
@@ -57,11 +54,6 @@ const ssr = async (req, res) => {
 			request: req,
 			bodySizeLimit: body_size_limit
 		});
-
-		for (const key of preservedRequestKeys) {
-			// @ts-expect-error
-			platform[key] = req[key];
-		}
 	} catch (err) {
 		res.statusCode = err.status || 400;
 		res.end('Invalid request body');
@@ -79,7 +71,7 @@ const ssr = async (req, res) => {
 	setResponse(
 		res,
 		await server.respond(request, {
-			platform,
+			platform: { originalReq: req },
 			getClientAddress: () => {
 				if (address_header) {
 					const value = /** @type {string} */ (req.headers[address_header]) || '';
