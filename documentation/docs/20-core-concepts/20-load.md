@@ -90,8 +90,9 @@ export async function load() {
 </script>
 
 <main>
-	<!-- +page.svelte is rendered here -->
-	<slot />
+	<slot>
+		<!-- +page.svelte is rendered here -->
+	</slot>
 </main>
 
 <aside>
