@@ -421,7 +421,7 @@ export function load({ locals }) {
 Top-level promises will be awaited, which makes it easy to return multiple promises without creating a waterfall:
 
 ```js
-/// file: src/routes/+page.server.js
+/// file: src/routes/+page.js
 /** @type {import('./$types').PageServerLoad} */
 export function load() {
 	return {
