@@ -238,7 +238,7 @@ test.describe('Scrolling', () => {
 
 	test('scroll is restored after hitting the back button', async ({ baseURL, clicknav, page }) => {
 		await page.goto('/anchor');
-		await page.click('#scroll-anchor');
+		await page.locator('#scroll-anchor').click();
 		const originalScrollY = /** @type {number} */ (await page.evaluate(() => scrollY));
 		await clicknav('#routing-page');
 		await page.goBack();
@@ -266,7 +266,7 @@ test.describe('Scrolling', () => {
 		const target_scroll_y = rect.y + rect.height - height;
 		await page.evaluate((y) => scrollTo(0, y), target_scroll_y);
 
-		await page.click('[href="/scroll/cross-document/b"]');
+		await page.locator('[href="/scroll/cross-document/b"]').click();
 		expect(await page.textContent('h1')).toBe('b');
 		await page.waitForSelector('body.started');
 
@@ -394,7 +394,7 @@ test.describe('CSS', () => {
 test.describe('Endpoints', () => {
 	test('calls a delete handler', async ({ page }) => {
 		await page.goto('/delete-route');
-		await page.click('.del');
+		await page.locator('.del').click();
 		expect(await page.innerHTML('h1')).toBe('deleted 42');
 	});
 });
@@ -563,11 +563,11 @@ test.describe('Load', () => {
 
 			await page.goto('/load/cache-control');
 			await expect(page.getByText('Count is 0')).toBeVisible();
-			await page.click('button.default');
+			await page.locator('button.default').click();
 			await expect(page.getByText('Count is 0')).toBeVisible();
 
 			await page.evaluate(() => (window.now = 21000));
-			await page.click('button.default');
+			await page.locator('button.default').click();
 			await expect(page.getByText('Count is 2')).toBeVisible();
 		});
 
@@ -576,7 +576,7 @@ test.describe('Load', () => {
 
 			await page.goto('/load/cache-control');
 			await expect(page.getByText('Count is 0')).toBeVisible();
-			await page.click('button.force');
+			await page.locator('button.force').click();
 			await expect(page.getByText('Count is 1')).toBeVisible();
 		});
 
@@ -585,7 +585,7 @@ test.describe('Load', () => {
 
 			await page.goto('/load/cache-control');
 			await expect(page.getByText('Count is 0')).toBeVisible();
-			await page.click('button.bust');
+			await page.locator('button.bust').click();
 			await expect(page.getByText('Count is 1')).toBeVisible();
 		});
 	});
@@ -786,10 +786,10 @@ test.describe('Routing', () => {
 		await page.goto('/routing/hashes/pagestore');
 		expect(await page.textContent('#window-hash')).toBe('');
 		expect(await page.textContent('#page-url-hash')).toBe('');
-		await page.click('[href="#target"]');
+		await page.locator('[href="#target"]').click();
 		expect(await page.textContent('#window-hash')).toBe('#target');
 		expect(await page.textContent('#page-url-hash')).toBe('#target');
-		await page.click('[href="/routing/hashes/pagestore"]');
+		await page.locator('[href="/routing/hashes/pagestore"]').click();
 		await expect(page.locator('#window-hash')).toHaveText('#target'); // hashchange doesn't fire for these
 		await expect(page.locator('#page-url-hash')).toHaveText('');
 	});
@@ -805,7 +805,7 @@ test.describe('Routing', () => {
 
 		try {
 			await page.goto(`/routing/slashes?port=${port}`);
-			await page.click(`a[href="http://localhost:${port}/with-slash/"]`);
+			await page.locator(`a[href="http://localhost:${port}/with-slash/"]`).click();
 
 			expect(urls).toEqual(['/with-slash/']);
 		} finally {
@@ -817,7 +817,7 @@ test.describe('Routing', () => {
 		await page.goto('/routing/external-popstate');
 		expect(await page.textContent('h1')).toBe('hello');
 
-		await page.click('button');
+		await page.locator('button').click();
 		expect(await page.textContent('h1')).toBe('hello');
 
 		await page.goBack();
@@ -830,7 +830,7 @@ test.describe('Routing', () => {
 	test('recognizes clicks outside the app target', async ({ page }) => {
 		await page.goto('/routing/link-outside-app-target/source');
 
-		await page.click('[href="/routing/link-outside-app-target/target"]');
+		await page.locator('[href="/routing/link-outside-app-target/target"]').click();
 		await expect(page.locator('h1')).toHaveText('target: 1');
 	});
 
@@ -843,7 +843,7 @@ test.describe('Routing', () => {
 		page.on('request', (request) => requests.push(request.url()));
 
 		await page.locator('input').fill('updated');
-		await page.click('button');
+		await page.locator('button').click();
 
 		expect(requests).toEqual([]);
 		expect(await page.textContent('h1')).toBe('updated');
@@ -913,7 +913,7 @@ test.describe('$app/stores', () => {
 	test('can use $app/stores from anywhere on client', async ({ page }) => {
 		await page.goto('/store/client-access');
 		await expect(page.locator('h1')).toHaveText('undefined');
-		await page.click('button');
+		await page.locator('button').click();
 		await expect(page.locator('h1')).toHaveText('/store/client-access');
 	});
 
@@ -1008,19 +1008,19 @@ test.describe.serial('Invalidation', () => {
 		await page.goto('/load/invalidation/multiple');
 		expect(await page.textContent('p')).toBe('layout: 0, page: 0');
 
-		await page.click('button.layout');
-		await page.click('button.layout');
-		await page.click('button.page');
-		await page.click('button.page');
-		await page.click('button.layout');
-		await page.click('button.page');
-		await page.click('button.all');
+		await page.locator('button.layout').click();
+		await page.locator('button.layout').click();
+		await page.locator('button.page').click();
+		await page.locator('button.page').click();
+		await page.locator('button.layout').click();
+		await page.locator('button.page').click();
+		await page.locator('button.all').click();
 		await expect(page.locator('p')).toHaveText('layout: 4, page: 4');
 	});
 
 	test('invalidateAll persists through redirects', async ({ page }) => {
 		await page.goto('/load/invalidation/multiple/redirect');
-		await page.click('button.redirect');
+		await page.locator('button.redirect').click();
 		await expect(page.locator('p.redirect-state')).toHaveText('Redirect state: done');
 	});
 
@@ -1090,7 +1090,7 @@ test.describe.serial('Invalidation', () => {
 		await page.goto('/load/mutated-url?q=initial');
 		expect(await page.textContent('h1')).toBe('initial');
 
-		await page.click('button');
+		await page.locator('button').click();
 		expect(await page.textContent('h1')).toBe('updated');
 	});
 });
@@ -1138,12 +1138,12 @@ test.describe('data-sveltekit attributes', () => {
 		page.on('request', (r) => requests.push(r.url()));
 
 		await page.goto('/data-sveltekit/reload');
-		await page.click('#one');
+		await page.locator('#one').click();
 		expect(requests).toContain(`${baseURL}/data-sveltekit/reload/target`);
 
 		requests.length = 0;
 		await page.goto('/data-sveltekit/reload');
-		await page.click('#two');
+		await page.locator('#two').click();
 		expect(requests).toContain(`${baseURL}/data-sveltekit/reload/target`);
 
 		requests.length = 0;
@@ -1199,7 +1199,7 @@ test.describe('cookies', () => {
 	test('etag forwards cookies', async ({ page }) => {
 		await page.goto('/cookies/forwarded-in-etag');
 		await expect(page.locator('p')).toHaveText('foo=bar');
-		await Promise.all([page.waitForNavigation(), page.click('button')]);
+		await page.locator('button').click();
 		await expect(page.locator('p')).toHaveText('foo=bar');
 	});
 });
@@ -1216,11 +1216,11 @@ test.describe('Interactivity', () => {
 		await page.goto('/interactivity/toggle-element');
 		expect(await page.textContent('button')).toBe('remove');
 
-		await page.click('button');
+		await page.locator('button').click();
 		expect(await page.textContent('button')).toBe('add');
 		expect(await page.textContent('a')).toBe('add');
 
-		await page.click('a');
+		await page.locator('a').filter({ hasText: 'add' }).click();
 		expect(await page.textContent('a')).toBe('remove');
 
 		expect(errored).toBe(false);
