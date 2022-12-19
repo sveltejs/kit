@@ -1088,10 +1088,10 @@ test.describe.serial('Invalidation', () => {
 
 	test('$page.url can safely be mutated', async ({ page }) => {
 		await page.goto('/load/mutated-url?q=initial');
-		expect(await page.textContent('h1')).toBe('initial');
+		expect(page.getByText('initial')).toBeVisible();
 
 		await page.locator('button').click();
-		expect(await page.textContent('h1')).toBe('updated');
+		expect(page.getByText('updated')).toBeVisible();
 	});
 });
 
