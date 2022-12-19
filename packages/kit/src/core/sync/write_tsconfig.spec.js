@@ -25,3 +25,11 @@ test('Creates tsconfig path aliases from kit.alias', () => {
 		keyToFile: ['path/to/file.ts']
 	});
 });
+
+test('Extends tsconfig from kit.extends', () => {
+	const config = validate_config({
+		extends: 'path/to/tsconfig.json'
+	});
+
+	assert.equal(config.extends, 'path/to/tsconfig.json');
+});

@@ -138,6 +138,14 @@ const options = object(
 
 			outDir: string('.svelte-kit'),
 
+			extends: validate(undefined, (input, keypath) => {
+				if (input !== undefined) {
+					assert_string(input, keypath);
+				}
+
+				return input;
+			}),
+
 			paths: object({
 				base: validate('', (input, keypath) => {
 					assert_string(input, keypath);
