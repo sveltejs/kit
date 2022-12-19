@@ -566,7 +566,7 @@ test.describe('Load', () => {
 			await page.click('button.default');
 			expect(page.locator('p')).toHaveText('Count is 0');
 
-			await page.evaluate(() => (window.now = 2500));
+			await page.evaluate(() => (window.now = 21000));
 			await page.click('button.default');
 			expect(page.locator('p')).toHaveText('Count is 2');
 		});
