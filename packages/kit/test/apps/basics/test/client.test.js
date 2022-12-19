@@ -557,9 +557,9 @@ test.describe('Load', () => {
 			await request.get('/load/cache-control/reset');
 
 			page.addInitScript(`
-			window.now = 0;
-			window.performance.now = () => now;
-		`);
+				window.now = 0;
+				window.performance.now = () => now;
+			`);
 
 			await page.goto('/load/cache-control');
 			expect(page.locator('p')).toHaveText('Count is 0');
