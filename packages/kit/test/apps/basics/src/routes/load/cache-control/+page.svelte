@@ -14,7 +14,7 @@
 		} else if (type === 'bust') {
 			await fetch('/load/cache-control/count', {method: 'POST'});
 		}
-		invalidate('/load/cache-control/count');
+		await invalidate('/load/cache-control/count');
 	}
 </script>
 
