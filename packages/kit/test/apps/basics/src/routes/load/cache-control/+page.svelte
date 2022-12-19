@@ -7,7 +7,6 @@
 
 	/** @param {'default' | 'force' | 'bust'} type */
 	async function fetch_again(type) {
-		data = undefined;
 		await fetch('/load/cache-control/increment');
 		if (type === 'force') {
 			_force_next_fetch();
@@ -18,9 +17,7 @@
 	}
 </script>
 
-{#if data}
-	<p>Count is {data.count}</p>
-{/if}
+<p>Count is {data.count}</p>
 <button class="default" on:click={() => fetch_again('default')}>Fetch again</button>
 <button class="force" on:click={() => fetch_again('force')}>Fetch again (force reload)</button>
 <button class="bust" on:click={() => fetch_again('bust')}>Fetch again (prior POST request)</button>
