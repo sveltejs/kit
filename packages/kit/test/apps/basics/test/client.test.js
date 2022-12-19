@@ -562,37 +562,31 @@ test.describe('Load', () => {
 		`);
 
 			await page.goto('/load/cache-control');
-			expect(await page.textContent('p')).toBe('Count is 0');
-			await page.waitForTimeout(500);
+			expect(page.locator('p')).toHaveText('Count is 0');
 			await page.click('button.default');
-			await page.waitForTimeout(500);
-			expect(await page.textContent('p')).toBe('Count is 0');
+			expect(page.locator('p')).toHaveText('Count is 0');
 
 			await page.evaluate(() => (window.now = 2500));
 			await page.click('button.default');
-			await expect(page.locator('p')).toHaveText('Count is 2');
+			expect(page.locator('p')).toHaveText('Count is 2');
 		});
 
 		test('load does ignore ttl if fetch cache options says so', async ({ page, request }) => {
 			await request.get('/load/cache-control/reset');
 
 			await page.goto('/load/cache-control');
-			expect(await page.textContent('p')).toBe('Count is 0');
-			await page.waitForTimeout(500);
+			expect(page.locator('p')).toHaveText('Count is 0');
 			await page.click('button.force');
-			await page.waitForTimeout(500);
-			expect(await page.textContent('p')).toBe('Count is 1');
+			expect(page.locator('p')).toHaveText('Count is 1');
 		});
 
 		test('load busts cache if non-GET request to resource is made', async ({ page, request }) => {
 			await request.get('/load/cache-control/reset');
 
 			await page.goto('/load/cache-control');
-			expect(await page.textContent('p')).toBe('Count is 0');
-			await page.waitForTimeout(500);
+			expect(page.locator('p')).toHaveText('Count is 0');
 			await page.click('button.bust');
-			await page.waitForTimeout(500);
-			expect(await page.textContent('p')).toBe('Count is 1');
+			expect(page.locator('p')).toHaveText('Count is 1');
 		});
 	});
 
