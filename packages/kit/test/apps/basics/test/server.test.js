@@ -439,18 +439,3 @@ test.describe('Miscellaneous', () => {
 		expect(headers['cache-control'] || '').not.toContain('immutable');
 	});
 });
-
-test.describe('Proper redirect status code', () => {
-	test('Action redirect is correct when JS is disabled', async ({ page, baseURL, request }) => {
-		await page.goto('/actions/redirect/basic');
-		const respProm = page.waitForResponse((resp) =>
-			resp.url().includes('/actions/redirect/basic?redirected')
-		);
-		await page.locator('#submit').click();
-
-		const resp = await respProm;
-		const redirectedFrom = await resp.request().redirectedFrom().response();
-		expect(redirectedFrom.status()).toBe(302);
-		expect(redirectedFrom.headers()['location']).toEqual('/actions/redirect/basic?redirected');
-	});
-});
