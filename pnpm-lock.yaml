@@ -9,7 +9,7 @@ importers:
       '@rollup/plugin-json': ^6.0.0
       '@rollup/plugin-node-resolve': ^15.0.1
       '@svitejs/changesets-changelog-github-compact': ^1.0.0
-      playwright: ^1.29.0
+      playwright: ^1.28.1
       prettier: ^2.8.0
       rollup: ^3.7.0
       svelte: ^3.54.0
@@ -22,7 +22,7 @@ importers:
       '@rollup/plugin-json': 6.0.0_rollup@3.7.0
       '@rollup/plugin-node-resolve': 15.0.1_rollup@3.7.0
       '@svitejs/changesets-changelog-github-compact': 1.0.0
-      playwright: 1.29.0
+      playwright: 1.28.1
       prettier: 2.8.0
       rollup: 3.7.0
       svelte: 3.54.0
@@ -218,7 +218,7 @@ importers:
       kleur: 4.1.5
       prompts: 2.4.2
     devDependencies:
-      '@playwright/test': 1.29.0
+      '@playwright/test': 1.28.1
       '@types/gitignore-parser': 0.0.0
       '@types/prettier': 2.7.1
       '@types/prompts': 2.4.1
@@ -257,7 +257,7 @@ importers:
 
   packages/kit:
     specifiers:
-      '@playwright/test': ^1.29.0
+      '@playwright/test': ^1.28.1
       '@sveltejs/vite-plugin-svelte': ^2.0.0
       '@types/connect': ^3.4.35
       '@types/cookie': ^0.5.1
@@ -299,7 +299,7 @@ importers:
       tiny-glob: 0.2.9
       undici: 5.14.0
     devDependencies:
-      '@playwright/test': 1.29.0
+      '@playwright/test': 1.28.1
       '@types/connect': 3.4.35
       '@types/marked': 4.0.7
       '@types/mime': 3.0.1
@@ -1243,13 +1243,13 @@ packages:
       fastq: 1.13.0
     dev: true
 
-  /@playwright/test/1.29.0:
-    resolution: {integrity: sha512-gp5PVBenxTJsm2bATWDNc2CCnrL5OaA/MXQdJwwkGQtqTjmY+ZOqAdLqo49O9MLTDh2vYh+tHWDnmFsILnWaeA==}
+  /@playwright/test/1.28.1:
+    resolution: {integrity: sha512-xN6spdqrNlwSn9KabIhqfZR7IWjPpFK1835tFNgjrlysaSezuX8PYUwaz38V/yI8TJLG9PkAMEXoHRXYXlpTPQ==}
     engines: {node: '>=14'}
     hasBin: true
     dependencies:
       '@types/node': 18.11.11
-      playwright-core: 1.29.0
+      playwright-core: 1.28.1
     dev: true
 
   /@polka/url/1.0.0-next.21:
@@ -3490,19 +3490,19 @@ packages:
       find-up: 4.1.0
     dev: true
 
-  /playwright-core/1.29.0:
-    resolution: {integrity: sha512-pboOm1m0RD6z1GtwAbEH60PYRfF87vKdzOSRw2RyO0Y0a7utrMyWN2Au1ojGvQr4umuBMODkKTv607YIRypDSQ==}
+  /playwright-core/1.28.1:
+    resolution: {integrity: sha512-3PixLnGPno0E8rSBJjtwqTwJe3Yw72QwBBBxNoukIj3lEeBNXwbNiKrNuB1oyQgTBw5QHUhNO3SteEtHaMK6ag==}
     engines: {node: '>=14'}
     hasBin: true
     dev: true
 
-  /playwright/1.29.0:
-    resolution: {integrity: sha512-vtXgX3FPNcAJq1QoIVCvmiHHKOLVTZkSYEo60n+EnX5MrNznAJzGquxT8c2sv+BG3CDyLeKm351e491HnF7yjw==}
+  /playwright/1.28.1:
+    resolution: {integrity: sha512-92Sz6XBlfHlb9tK5UCDzIFAuIkHHpemA9zwUaqvo+w7sFMSmVMGmvKcbptof/eJObq63PGnMhM75x7qxhTR78Q==}
     engines: {node: '>=14'}
     hasBin: true
     requiresBuild: true
     dependencies:
-      playwright-core: 1.29.0
+      playwright-core: 1.28.1
     dev: true
 
   /polka/1.0.0-next.22:
