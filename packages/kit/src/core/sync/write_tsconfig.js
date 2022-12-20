@@ -64,7 +64,7 @@ export function write_tsconfig(config, cwd = process.cwd()) {
 		out,
 		JSON.stringify(
 			{
-				extends: config_relative(config.extends),
+				extends: config.extends && config_relative(config.extends),
 				compilerOptions: {
 					// generated options
 					baseUrl: config_relative('.'),
