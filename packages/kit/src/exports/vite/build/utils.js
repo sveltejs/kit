@@ -127,6 +127,7 @@ export function get_build_setup_config({ config, ssr }) {
 			__SVELTEKIT_ADAPTER_NAME__: JSON.stringify(config.kit.adapter?.name),
 			__SVELTEKIT_APP_VERSION_FILE__: JSON.stringify(`${config.kit.appDir}/version.json`),
 			__SVELTEKIT_APP_VERSION_POLL_INTERVAL__: JSON.stringify(config.kit.version.pollInterval),
+			__SVELTEKIT_DEBUG__: process.env.DEBUG ? 'true' : 'false',
 			__SVELTEKIT_EMBEDDED__: config.kit.embedded ? 'true' : 'false'
 		},
 		resolve: {
@@ -182,10 +183,6 @@ export function get_build_compile_config({ config, input, ssr, outDir }) {
 				preserveEntrySignatures: 'strict'
 			},
 			target: ssr ? 'node16.14' : undefined
-		},
-		esbuild: {
-			// drop from build unless running on CI
-			pure: process.env.CI ? [] : ['console.debug', 'console.trace']
 		},
 		publicDir: ssr ? false : config.kit.files.assets,
 		worker: {

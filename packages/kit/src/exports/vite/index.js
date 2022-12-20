@@ -254,6 +254,7 @@ function kit({ svelte_config }) {
 			const result = {
 				define: {
 					__SVELTEKIT_APP_VERSION_POLL_INTERVAL__: '0',
+					__SVELTEKIT_DEBUG__: process.env.DEBUG ? 'true' : 'false',
 					__SVELTEKIT_EMBEDDED__: svelte_config.kit.embedded ? 'true' : 'false'
 				},
 				resolve: {

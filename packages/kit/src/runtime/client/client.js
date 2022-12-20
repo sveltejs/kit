@@ -711,16 +711,28 @@ export function create_client({ target, base }) {
 		const invalid_server_nodes = loaders.reduce((acc, loader, i) => {
 			const previous = current.branch[i];
 
+			const has_server_load = !!loader?.[0];
+			const new_loader = has_server_load && previous?.loader !== loader[1];
 			const invalid =
-				!!loader?.[0] &&
-				(previous?.loader !== loader[1] ||
+				has_server_load &&
+				(new_loader ||
 					has_changed(
 						acc.some(Boolean),
 						route_changed,
 						url_changed,
-						previous.server?.uses,
+						previous?.server?.uses,
 						params
 					));
+
+			if (__SVELTEKIT_DEBUG__) {
+				console.debug(
+					`${url} ${i == loaders.length - 1 ? 'leaf' : 'layout ' + i} found ${
+						invalid ? '' : 'not '
+					}to be invalid (has_server_load: ${has_server_load}, new_loader: ${new_loader}, uses: ${JSON.stringify(
+						previous?.server?.uses
+					)})`
+				);
+			}
 
 			acc.push(invalid);
 			return acc;
@@ -760,7 +772,16 @@ export function create_client({ target, base }) {
 				(!server_data_node || server_data_node.type === 'skip') &&
 				loader[1] === previous?.loader &&
 				!has_changed(parent_changed, route_changed, url_changed, previous.universal?.uses, params);
-			if (valid) return previous;
+			if (valid) {
+				if (__SVELTEKIT_DEBUG__) {
+					console.debug(
+						`reusing data from previous load for ${url} ${
+							i == loaders.length - 1 ? 'leaf' : 'layout ' + i
+						}`
+					);
+				}
+				return previous;
+			}
 
 			parent_changed = true;
 

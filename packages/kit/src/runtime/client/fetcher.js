@@ -43,7 +43,9 @@ if (DEV) {
 
 		if (method !== 'GET') {
 			const selector = build_selector(input);
-			console.debug(`deleting ${selector} from fetch cache due to non-GET request`);
+			if (__SVELTEKIT_DEBUG__) {
+				console.debug(`deleting ${selector} from fetch cache due to non-GET request`);
+			}
 			cache.delete(selector);
 		}
 
@@ -55,7 +57,9 @@ if (DEV) {
 
 		if (method !== 'GET') {
 			const selector = build_selector(input);
-			console.debug(`deleting ${selector} from fetch cache due to non-GET request`);
+			if (__SVELTEKIT_DEBUG__) {
+				console.debug(`deleting ${selector} from fetch cache due to non-GET request`);
+			}
 			cache.delete(selector);
 		}
 
@@ -73,7 +77,7 @@ const cache = new Map();
  */
 export function initial_fetch(resource, opts) {
 	const selector = build_selector(resource, opts);
-	console.debug(`doing initial_fetch of ${selector} as part of hydration`);
+	if (__SVELTEKIT_DEBUG__) console.debug(`doing initial_fetch of ${selector} as part of hydration`);
 	const script = document.querySelector(selector);
 	if (script?.textContent) {
 		const { body, ...init } = JSON.parse(script.textContent);
@@ -103,16 +107,16 @@ export function subsequent_fetch(resource, resolved, opts) {
 				performance.now() < cached.ttl &&
 				['default', 'force-cache', 'only-if-cached', undefined].includes(opts?.cache)
 			) {
-				console.debug(`returning data from fetch cache for ${selector}`);
+				if (__SVELTEKIT_DEBUG__) console.debug(`returning data from fetch cache for ${selector}`);
 				return new Response(cached.body, cached.init);
 			}
 
-			console.debug(`removing ${selector} from fetch cache as expired`);
+			if (__SVELTEKIT_DEBUG__) console.debug(`removing ${selector} from fetch cache as expired`);
 			cache.delete(selector);
 		}
 	}
 
-	console.debug(`fetching ${resolved}`);
+	if (__SVELTEKIT_DEBUG__) console.debug(`fetching ${resolved}`);
 	return native_fetch(resolved, opts);
 }
 
