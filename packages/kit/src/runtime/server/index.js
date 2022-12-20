@@ -124,7 +124,7 @@ export async function respond(request, options, state) {
 			}),
 		locals: {},
 		params,
-		platform: state.platform,
+		platform: state.platform ?? {},
 		request,
 		route: { id: route?.id ?? null },
 		setHeaders: (new_headers) => {
