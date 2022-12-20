@@ -556,17 +556,15 @@ test.describe('Load', () => {
 		test('load does not call fetch if max-age allows it', async ({ page, request }) => {
 			await request.get('/load/cache-control/reset');
 
-			page.addInitScript(`
-				window.now = 0;
-				window.performance.now = () => now;
-			`);
-
 			await page.goto('/load/cache-control');
 			await expect(page.getByText('Count is 0')).toBeVisible();
 			await page.locator('button.default').click();
 			await expect(page.getByText('Count is 0')).toBeVisible();
 
-			await page.evaluate(() => (window.now = 21000));
+			// use a cache expiration value high enough that we're confident the earlier
+			// portions of the test will complete before the cache expires
+			await page.waitForTimeout(4000);
+
 			await page.locator('button.default').click();
 			await expect(page.getByText('Count is 2')).toBeVisible();
 		});

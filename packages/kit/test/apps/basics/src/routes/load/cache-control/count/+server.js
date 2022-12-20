@@ -2,7 +2,7 @@ import { json } from '@sveltejs/kit';
 import { count } from '../state.js';
 
 export function GET({ setHeaders }) {
-	setHeaders({ 'cache-control': 'public, max-age=30', age: '10' });
+	setHeaders({ 'cache-control': 'public, max-age=30', age: '26' });
 	return json({ count });
 }
 
