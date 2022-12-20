@@ -1004,7 +1004,7 @@ test.describe.serial('Invalidation', () => {
 
 	test('multiple invalidations run concurrently', async ({ page, request }) => {
 		await page.goto('/load/invalidation/multiple');
-		await expect(page.textContent('layout: 0, page: 0')).toBeVisible();
+		await expect(page.getByText('layout: 0, page: 0')).toBeVisible();
 
 		await page.locator('button.layout').click();
 		await page.locator('button.layout').click();
@@ -1013,7 +1013,7 @@ test.describe.serial('Invalidation', () => {
 		await page.locator('button.layout').click();
 		await page.locator('button.page').click();
 		await page.locator('button.all').click();
-		await expect(page.textContent('layout: 4, page: 4')).toBeVisible();
+		await expect(page.getByText('layout: 4, page: 4')).toBeVisible();
 	});
 
 	test('invalidateAll persists through redirects', async ({ page }) => {
