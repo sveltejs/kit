@@ -1621,7 +1621,11 @@ test.describe('Routing', () => {
 
 		try {
 			await page.goto(`/routing?port=${port}`);
-			await page.locator(`[href="http://localhost:${port}"]`).click();
+			await Promise.all([
+				page.click(`[href="http://localhost:${port}"]`),
+				// assert that the app can visit a URL not owned by the app without crashing
+				page.waitForURL(`http://localhost:${port}/`)
+			]);
 		} finally {
 			await close();
 		}
