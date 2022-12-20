@@ -11,7 +11,7 @@
 		if (type === 'force') {
 			_force_next_fetch();
 		} else if (type === 'bust') {
-			await fetch('/load/cache-control/count', {method: 'POST'});
+			await fetch('/load/cache-control/count', { method: 'POST' });
 		}
 		await invalidate('/load/cache-control/count');
 	}
