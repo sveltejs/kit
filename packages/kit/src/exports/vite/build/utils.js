@@ -185,7 +185,7 @@ export function get_build_compile_config({ config, input, ssr, outDir }) {
 		},
 		esbuild: {
 			// drop from build unless running on CI
-			pure: process.env.CI ? [] : ['console.debug', 'console.trace'],
+			pure: process.env.CI ? [] : ['console.debug', 'console.trace']
 		},
 		publicDir: ssr ? false : config.kit.files.assets,
 		worker: {
