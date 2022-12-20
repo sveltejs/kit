@@ -1006,13 +1006,13 @@ test.describe.serial('Invalidation', () => {
 		await page.goto('/load/invalidation/multiple');
 		await expect(page.getByText('layout: 0, page: 0')).toBeVisible();
 
-		await page.locator('button.layout').click();
-		await page.locator('button.layout').click();
-		await page.locator('button.page').click();
-		await page.locator('button.page').click();
-		await page.locator('button.layout').click();
-		await page.locator('button.page').click();
-		await page.locator('button.all').click();
+		await page.click('button.layout');
+		await page.click('button.layout');
+		await page.click('button.page');
+		await page.click('button.page');
+		await page.click('button.layout');
+		await page.click('button.page');
+		await page.click('button.all');
 		await expect(page.getByText('layout: 4, page: 4')).toBeVisible();
 	});
 
