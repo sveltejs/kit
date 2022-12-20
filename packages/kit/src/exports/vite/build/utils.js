@@ -183,6 +183,10 @@ export function get_build_compile_config({ config, input, ssr, outDir }) {
 			},
 			target: ssr ? 'node16.14' : undefined
 		},
+		esbuild: {
+			// drop from build unless running on CI
+			pure: process.env.CI ? [] : ['console.debug', 'console.trace'],
+		},
 		publicDir: ssr ? false : config.kit.files.assets,
 		worker: {
 			rollupOptions: {
