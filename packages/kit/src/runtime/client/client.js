@@ -689,6 +689,7 @@ export function create_client({ target, base }) {
 	 */
 	async function load_route({ id, invalidating, url, params, route }) {
 		if (load_cache?.id === id) {
+			if (__SVELTEKIT_DEBUG__) console.debug(`returning from load_cache when loading ${url}`);
 			return load_cache.promise;
 		}
 
@@ -1263,6 +1264,7 @@ export function create_client({ target, base }) {
 		},
 
 		invalidate: (resource) => {
+			if (__SVELTEKIT_DEBUG__) console.debug(`invalidating ${resource}`);
 			if (typeof resource === 'function') {
 				invalidated.push(resource);
 			} else {
@@ -1274,6 +1276,7 @@ export function create_client({ target, base }) {
 		},
 
 		invalidateAll: () => {
+			if (__SVELTEKIT_DEBUG__) console.debug(`invalidating all resources`);
 			force_invalidation = true;
 			return invalidate();
 		},
