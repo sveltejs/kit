@@ -141,6 +141,7 @@ export const config = {
 		command: process.env.DEV ? 'pnpm dev' : 'pnpm build && pnpm preview',
 		port: process.env.DEV ? 5173 : 4173
 	},
+	reporter: process.env.DEBUG ?? 'list',
 	retries: process.env.CI ? 2 : 0,
 	projects: [
 		{
