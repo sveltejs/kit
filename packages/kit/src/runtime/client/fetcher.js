@@ -51,7 +51,7 @@ if (DEV) {
 			cache.delete(selector);
 		}
 
-		if (__SVELTEKIT_DEBUG__) console.debug(`delegating to native fetch`);
+		if (__SVELTEKIT_DEBUG__) console.debug('delegating to native fetch');
 		return native_fetch(input, init);
 	};
 } else {
@@ -68,7 +68,7 @@ if (DEV) {
 			cache.delete(selector);
 		}
 
-		if (__SVELTEKIT_DEBUG__) console.debug(`delegating to native fetch`);
+		if (__SVELTEKIT_DEBUG__) console.debug('delegating to native fetch');
 		return native_fetch(input, init);
 	};
 }
