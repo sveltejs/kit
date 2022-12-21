@@ -713,22 +713,17 @@ export function create_client({ target, base }) {
 
 			const has_server_load = !!loader?.[0];
 			const new_loader = has_server_load && previous?.loader !== loader[1];
+			const parent_changed = acc.some(Boolean);
 			const invalid =
 				has_server_load &&
 				(new_loader ||
-					has_changed(
-						acc.some(Boolean),
-						route_changed,
-						url_changed,
-						previous?.server?.uses,
-						params
-					));
+					has_changed(parent_changed, route_changed, url_changed, previous?.server?.uses, params));
 
 			if (__SVELTEKIT_DEBUG__) {
 				console.debug(
 					`${url} ${i == loaders.length - 1 ? 'leaf' : 'layout ' + i} found ${
 						invalid ? '' : 'not '
-					}to be invalid (has_server_load: ${has_server_load}, new_loader: ${new_loader}, uses: ${JSON.stringify(
+					}to be invalid (has_server_load: ${has_server_load}, new_loader: ${new_loader}, parent_changed: ${parent_changed}, route_changed: ${route_changed}, url_changed: ${url_changed}, uses: ${JSON.stringify(
 						previous?.server?.uses
 					)})`
 				);
