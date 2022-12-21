@@ -1254,12 +1254,15 @@ export function create_client({ target, base }) {
 				throw new Error('Can only disable scroll handling during navigation');
 			}
 
+			if (__SVELTEKIT_DEBUG__) console.debug('disabling scroll handling');
+
 			if (updating || !started) {
 				autoscroll = false;
 			}
 		},
 
 		goto: (href, opts = {}) => {
+			if (__SVELTEKIT_DEBUG__) console.debug(`goto ${href}`);
 			return goto(href, opts, []);
 		},
 
@@ -1276,7 +1279,7 @@ export function create_client({ target, base }) {
 		},
 
 		invalidateAll: () => {
-			if (__SVELTEKIT_DEBUG__) console.debug(`invalidating all resources`);
+			if (__SVELTEKIT_DEBUG__) console.debug('invalidating all resources');
 			force_invalidation = true;
 			return invalidate();
 		},
