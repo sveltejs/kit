@@ -23,7 +23,7 @@ if (DEV) {
 
 	check_stack_trace();
 
-	window.fetch = (input, init) => {
+	window.fetch = async (input, init) => {
 		if (__SVELTEKIT_DEBUG__) console.debug(`fetching ${input} using global fetch`);
 
 		const url = input instanceof Request ? input.url : input.toString();
@@ -52,10 +52,12 @@ if (DEV) {
 		}
 
 		if (__SVELTEKIT_DEBUG__) console.debug('delegating to native fetch');
-		return native_fetch(input, init);
+		const response = await native_fetch(input, init);
+		if (__SVELTEKIT_DEBUG__) console.debug('native fetch done');
+		return response;
 	};
 } else {
-	window.fetch = (input, init) => {
+	window.fetch = async (input, init) => {
 		if (__SVELTEKIT_DEBUG__) console.debug(`fetching ${input} using global fetch`);
 
 		const method = input instanceof Request ? input.method : init?.method || 'GET';
@@ -69,7 +71,9 @@ if (DEV) {
 		}
 
 		if (__SVELTEKIT_DEBUG__) console.debug('delegating to native fetch');
-		return native_fetch(input, init);
+		const response = await native_fetch(input, init);
+		if (__SVELTEKIT_DEBUG__) console.debug('native fetch done');
+		return response;
 	};
 }
 
