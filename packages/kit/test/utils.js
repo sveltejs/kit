@@ -92,9 +92,6 @@ export const test = base.extend({
 				const res = await page_fn.call(page, ...args);
 				if (javaScriptEnabled && args[1]?.wait_for_started !== false) {
 					await page.waitForSelector('body.started', { timeout: 5000 });
-					if (process.env.DEBUG) {
-						await page.evaluate(`console.debug('body.started detected after ${fn}');`);
-					}
 				}
 				return res;
 			};
