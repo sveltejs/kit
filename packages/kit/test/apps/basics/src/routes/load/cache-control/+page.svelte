@@ -10,13 +10,13 @@
 		if (__SVELTEKIT_DEBUG__) console.debug(`fetch_again with type ${type}`);
 
 		const inc_response = await fetch('/load/cache-control/increment');
-		if (__SVELTEKIT_DEBUG__) console.debug(`got increment response of ${inc_response.status}`);
+		if (__SVELTEKIT_DEBUG__) console.debug(`got increment response with status code ${inc_response.status}`);
 
 		if (type === 'force') {
 			_force_next_fetch();
 		} else if (type === 'bust') {
 			const count_response = await fetch('/load/cache-control/count', { method: 'POST' });
-			if (__SVELTEKIT_DEBUG__) console.debug(`got count POST response of ${count_response.status}`);
+			if (__SVELTEKIT_DEBUG__) console.debug(`got count POST response with status code ${count_response.status}`);
 		}
 
 		if (__SVELTEKIT_DEBUG__) console.debug("calling invalidate('/load/cache-control/count')");
