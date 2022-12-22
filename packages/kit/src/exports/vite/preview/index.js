@@ -144,6 +144,9 @@ export async function preview(vite, vite_config, svelte_config) {
 					request: req
 				});
 			} catch (/** @type {any} */ err) {
+				if (process.env.DEBUG && req.url === '/load/cache-control/increment') {
+					console.warn('-! INVALID REQUEST BODY');
+				}
 				res.statusCode = err.status || 400;
 				return res.end('Invalid request body');
 			}
@@ -158,9 +161,9 @@ export async function preview(vite, vite_config, svelte_config) {
 							if (remoteAddress) return remoteAddress;
 							throw new Error('Could not determine clientAddress');
 						}
-					},
-					req
-				)
+					}
+				),
+				req
 			);
 			if (process.env.DEBUG && req.url === '/load/cache-control/increment') {
 				console.warn('-! returning from preview middleware');
