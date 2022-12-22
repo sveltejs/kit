@@ -70,7 +70,8 @@ if (DEV) {
 			cache.delete(selector);
 		}
 
-		if (__SVELTEKIT_DEBUG__) console.debug(`delegating to native fetch (${input}, ${JSON.stringify(init)})`);
+		if (__SVELTEKIT_DEBUG__)
+			console.debug(`delegating to native fetch (${input}, ${JSON.stringify(init)})`);
 		if (__SVELTEKIT_DEBUG__) console.debug(`${native_fetch}`);
 		const response = await native_fetch(input, init);
 		if (__SVELTEKIT_DEBUG__) console.debug('native fetch done');

@@ -71,7 +71,7 @@ export async function preview(vite, vite_config, svelte_config) {
 			const { pathname } = new URL(original_url, 'http://dummy');
 
 			if (process.env.DEBUG && pathname === '/load/cache-control/increment') {
-				console.log('\n\nPreview middleware got request to /load/cache-control/increment');
+				console.log('\n\nPreview server got request to /load/cache-control/increment');
 			}
 
 			if (pathname.startsWith(base)) {
@@ -130,6 +130,10 @@ export async function preview(vite, vite_config, svelte_config) {
 
 		// SSR
 		vite.middlewares.use(async (req, res) => {
+			if (process.env.DEBUG && req.url === '/load/cache-control/increment') {
+				console.log('Preview middleware got request to /load/cache-control/increment');
+			}
+
 			const host = req.headers['host'];
 
 			let request;
@@ -146,13 +150,17 @@ export async function preview(vite, vite_config, svelte_config) {
 
 			setResponse(
 				res,
-				await server.respond(request, {
-					getClientAddress: () => {
-						const { remoteAddress } = req.socket;
-						if (remoteAddress) return remoteAddress;
-						throw new Error('Could not determine clientAddress');
-					}
-				})
+				await server.respond(
+					request,
+					{
+						getClientAddress: () => {
+							const { remoteAddress } = req.socket;
+							if (remoteAddress) return remoteAddress;
+							throw new Error('Could not determine clientAddress');
+						}
+					},
+					req
+				)
 			);
 		});
 	};
