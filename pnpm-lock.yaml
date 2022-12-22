@@ -667,14 +667,14 @@ importers:
       sade: ^1.8.1
       svelte: ^3.54.0
       svelte-preprocess: ^5.0.0
-      svelte2tsx: ~0.5.20
+      svelte2tsx: ~0.6.0
       typescript: ^4.9.3
       uvu: ^0.5.6
     dependencies:
       chokidar: 3.5.3
       kleur: 4.1.5
       sade: 1.8.1
-      svelte2tsx: 0.5.20_gf4dcx76vtk2o62ixxeqx7chra
+      svelte2tsx: 0.6.0_gf4dcx76vtk2o62ixxeqx7chra
     devDependencies:
       '@types/node': 16.18.6
       svelte: 3.54.0
@@ -4296,11 +4296,11 @@ packages:
     resolution: {integrity: sha512-tdrgeJU0hob0ZWAMoKXkhcxXA7dpTg6lZGxUeko5YqvPdJBiyRspGsCwV27kIrbrqPP2WUoSV9ca0gnLlw8YzQ==}
     engines: {node: '>= 8'}
 
-  /svelte2tsx/0.5.20_gf4dcx76vtk2o62ixxeqx7chra:
-    resolution: {integrity: sha512-yNHmN/uoAnJ7d1XqVohiNA6TMFOxibHyEddUAHVt1PiLXtbwAJF3WaGYlg8QbOdoXzOVsVNCAlqRUIdULUm+OA==}
+  /svelte2tsx/0.6.0_gf4dcx76vtk2o62ixxeqx7chra:
+    resolution: {integrity: sha512-TrxfQkO7CKi8Pu2eC/FyteDCdk3OOeQV5u6z7OjYAsOhsd0ClzAKqxJdvp6xxNQLrbFzf/XvCi9Fy8MQ1MleFA==}
     peerDependencies:
-      svelte: ^3.24
-      typescript: ^4.1.2
+      svelte: ^3.55
+      typescript: ^4.9.4
     dependencies:
       dedent-js: 1.0.1
       pascal-case: 3.1.2
