@@ -1,6 +1,6 @@
 {
 	"name": "@sveltejs/package",
-	"version": "1.0.0",
+	"version": "1.0.1",
 	"repository": {
 		"type": "git",
 		"url": "https://github.com/sveltejs/kit",
@@ -47,6 +47,6 @@
 	},
 	"types": "types/index.d.ts",
 	"engines": {
-		"node": ">=16.14"
+		"node": "^16.14 || >=18"
 	}
 }

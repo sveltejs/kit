@@ -5,8 +5,8 @@ importers:
   .:
     specifiers:
       '@changesets/cli': ^2.25.2
-      '@rollup/plugin-commonjs': ^23.0.3
-      '@rollup/plugin-json': ^5.0.2
+      '@rollup/plugin-commonjs': ^24.0.0
+      '@rollup/plugin-json': ^6.0.0
       '@rollup/plugin-node-resolve': ^15.0.1
       '@svitejs/changesets-changelog-github-compact': ^1.0.0
       playwright: ^1.28.1
@@ -18,8 +18,8 @@ importers:
       typescript: ^4.9.3
     devDependencies:
       '@changesets/cli': 2.25.2
-      '@rollup/plugin-commonjs': 23.0.3_rollup@3.7.0
-      '@rollup/plugin-json': 5.0.2_rollup@3.7.0
+      '@rollup/plugin-commonjs': 24.0.0_rollup@3.7.0
+      '@rollup/plugin-json': 6.0.0_rollup@3.7.0
       '@rollup/plugin-node-resolve': 15.0.1_rollup@3.7.0
       '@svitejs/changesets-changelog-github-compact': 1.0.0
       playwright: 1.28.1
@@ -81,8 +81,8 @@ importers:
     specifiers:
       '@iarna/toml': ^2.2.5
       '@netlify/functions': ^1.3.0
-      '@rollup/plugin-commonjs': ^23.0.3
-      '@rollup/plugin-json': ^5.0.2
+      '@rollup/plugin-commonjs': ^24.0.0
+      '@rollup/plugin-json': ^6.0.0
       '@rollup/plugin-node-resolve': ^15.0.1
       '@sveltejs/kit': workspace:^
       '@types/node': ^16.18.6
@@ -99,8 +99,8 @@ importers:
       set-cookie-parser: 2.5.1
     devDependencies:
       '@netlify/functions': 1.3.0
-      '@rollup/plugin-commonjs': 23.0.3_rollup@3.7.0
-      '@rollup/plugin-json': 5.0.2_rollup@3.7.0
+      '@rollup/plugin-commonjs': 24.0.0_rollup@3.7.0
+      '@rollup/plugin-json': 6.0.0_rollup@3.7.0
       '@rollup/plugin-node-resolve': 15.0.1_rollup@3.7.0
       '@sveltejs/kit': link:../kit
       '@types/node': 16.18.8
@@ -112,8 +112,8 @@ importers:
 
   packages/adapter-node:
     specifiers:
-      '@rollup/plugin-commonjs': ^23.0.2
-      '@rollup/plugin-json': ^5.0.1
+      '@rollup/plugin-commonjs': ^24.0.0
+      '@rollup/plugin-json': ^6.0.0
       '@rollup/plugin-node-resolve': ^15.0.1
       '@sveltejs/kit': workspace:^
       '@types/node': ^16.18.6
@@ -125,8 +125,8 @@ importers:
       typescript: ^4.9.3
       uvu: ^0.5.6
     dependencies:
-      '@rollup/plugin-commonjs': 23.0.2_rollup@3.7.0
-      '@rollup/plugin-json': 5.0.1_rollup@3.7.0
+      '@rollup/plugin-commonjs': 24.0.0_rollup@3.7.0
+      '@rollup/plugin-json': 6.0.0_rollup@3.7.0
       '@rollup/plugin-node-resolve': 15.0.1_rollup@3.7.0
       rollup: 3.7.0
     devDependencies:
@@ -1500,8 +1500,8 @@ packages:
   /@polka/url/1.0.0-next.21:
     resolution: {integrity: sha512-a5Sab1C4/icpTZVzZc5Ghpz88yQtGOyNqYXcZgOssB2uuAr+wF/MvN6bgtW32q7HHrvBki+BsZ0OuNv6EV3K9g==}
 
-  /@rollup/plugin-commonjs/23.0.2_rollup@3.7.0:
-    resolution: {integrity: sha512-e9ThuiRf93YlVxc4qNIurvv+Hp9dnD+4PjOqQs5vAYfcZ3+AXSrcdzXnVjWxcGQOa6KGJFcRZyUI3ktWLavFjg==}
+  /@rollup/plugin-commonjs/24.0.0_rollup@3.7.0:
+    resolution: {integrity: sha512-0w0wyykzdyRRPHOb0cQt14mIBLujfAv6GgP6g8nvg/iBxEm112t3YPPq+Buqe2+imvElTka+bjNlJ/gB56TD8g==}
     engines: {node: '>=14.0.0'}
     peerDependencies:
       rollup: ^2.68.0||^3.0.0
@@ -1514,30 +1514,11 @@ packages:
       estree-walker: 2.0.2
       glob: 8.0.3
       is-reference: 1.2.1
-      magic-string: 0.26.7
+      magic-string: 0.27.0
       rollup: 3.7.0
-    dev: false
 
-  /@rollup/plugin-commonjs/23.0.3_rollup@3.7.0:
-    resolution: {integrity: sha512-31HxrT5emGfTyIfAs1lDQHj6EfYxTXcwtX5pIIhq+B/xZBNIqQ179d/CkYxlpYmFCxT78AeU4M8aL8Iv/IBxFA==}
-    engines: {node: '>=14.0.0'}
-    peerDependencies:
-      rollup: ^2.68.0||^3.0.0
-    peerDependenciesMeta:
-      rollup:
-        optional: true
-    dependencies:
-      '@rollup/pluginutils': 5.0.2_rollup@3.7.0
-      commondir: 1.0.1
-      estree-walker: 2.0.2
-      glob: 8.0.3
-      is-reference: 1.2.1
-      magic-string: 0.26.7
-      rollup: 3.7.0
-    dev: true
-
-  /@rollup/plugin-json/5.0.1_rollup@3.7.0:
-    resolution: {integrity: sha512-QCwhZZLvM8nRcTHyR1vOgyTMiAnjiNj1ebD/BMRvbO1oc/z14lZH6PfxXeegee2B6mky/u9fia4fxRM4TqrUaw==}
+  /@rollup/plugin-json/6.0.0_rollup@3.7.0:
+    resolution: {integrity: sha512-i/4C5Jrdr1XUarRhVu27EEwjt4GObltD7c+MkCIpO2QIbojw8MUs+CCTqOphQi3Qtg1FLmYt+l+6YeoIf51J7w==}
     engines: {node: '>=14.0.0'}
     peerDependencies:
       rollup: ^1.20.0||^2.0.0||^3.0.0
@@ -1547,20 +1528,6 @@ packages:
     dependencies:
       '@rollup/pluginutils': 5.0.2_rollup@3.7.0
       rollup: 3.7.0
-    dev: false
-
-  /@rollup/plugin-json/5.0.2_rollup@3.7.0:
-    resolution: {integrity: sha512-D1CoOT2wPvadWLhVcmpkDnesTzjhNIQRWLsc3fA49IFOP2Y84cFOOJ+nKGYedvXHKUsPeq07HR4hXpBBr+CHlA==}
-    engines: {node: '>=14.0.0'}
-    peerDependencies:
-      rollup: ^1.20.0||^2.0.0||^3.0.0
-    peerDependenciesMeta:
-      rollup:
-        optional: true
-    dependencies:
-      '@rollup/pluginutils': 5.0.2_rollup@3.7.0
-      rollup: 3.7.0
-    dev: true
 
   /@rollup/plugin-node-resolve/15.0.1_rollup@3.7.0:
     resolution: {integrity: sha512-ReY88T7JhJjeRVbfCyNj+NXAG3IIsVMsX9b5/9jC98dRP8/yxlZdz7mHZbHk5zHr24wZZICS5AcXsFZAXYUQEg==}
@@ -3623,12 +3590,6 @@ packages:
       sourcemap-codec: 1.4.8
     dev: true
 
-  /magic-string/0.26.7:
-    resolution: {integrity: sha512-hX9XH3ziStPoPhJxLq1syWuZMxbDvGNbVchfrdCtanC7D13888bMFow61x8axrx+GfHLtVeAx2kxL7tTGRl+Ow==}
-    engines: {node: '>=12'}
-    dependencies:
-      sourcemap-codec: 1.4.8
-
   /magic-string/0.27.0:
     resolution: {integrity: sha512-8UnnX2PeRAPZuN12svgR9j7M1uWMovg/CEnIwIG0LFkXSJJe4PdfUGiTGl8V9bsBHFUtfVINcSyYxd7q+kx9fA==}
     engines: {node: '>=12'}
@@ -5014,6 +4975,7 @@ packages:
   /sourcemap-codec/1.4.8:
     resolution: {integrity: sha512-9NykojV5Uih4lgo5So5dtw+f0JgJX30KCNI8gwhz2J9A15wD0Ml6tjHKwf6fTSa6fAdVBdZeNOs9eJ71qCk8vA==}
     deprecated: Please use @jridgewell/sourcemap-codec instead
+    dev: true
 
   /spawndamnit/2.0.0:
     resolution: {integrity: sha512-j4JKEcncSjFlqIwU5L/rp2N5SIPsdxaRsIv678+TZxZ0SRDJTm8JrxJMjE/XuiEZNEir3S8l0Fa3Ke339WI4qA==}

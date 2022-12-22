@@ -5,5 +5,6 @@
 	"linked": [],
 	"access": "public",
 	"baseBranch": "master",
-	"bumpVersionsWithWorkspaceProtocolOnly": true
+	"bumpVersionsWithWorkspaceProtocolOnly": true,
+	"ignore": ["!(@sveltejs/*|create-svelte|svelte-migrate)"]
 }

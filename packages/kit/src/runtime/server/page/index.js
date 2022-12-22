@@ -62,7 +62,7 @@ export async function render_page(event, route, page, options, state, resolve_op
 			// (this also determines status code)
 			action_result = await handle_action_request(event, leaf_node.server);
 			if (action_result?.type === 'redirect') {
-				return redirect_response(303, action_result.location);
+				return redirect_response(action_result.status, action_result.location);
 			}
 			if (action_result?.type === 'error') {
 				const error = action_result.error;
