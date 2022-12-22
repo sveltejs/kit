@@ -32,7 +32,6 @@
 	},
 	"type": "module",
 	"dependencies": {
-		"@vercel/edge": "^0.1.2",
 		"d3-geo": "^3.0.1",
 		"d3-geo-projection": "^4.0.0",
 		"topojson-client": "^3.1.0"
