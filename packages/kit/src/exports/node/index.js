@@ -121,12 +121,12 @@ export async function setResponse(res, response, opt_req) {
 
 	res.writeHead(response.status, headers);
 	if (process.env.DEBUG && opt_req?.url === '/load/cache-control/increment') {
-		console.debug('-! wrote headers');
+		console.warn('-! wrote headers');
 	}
 
 	if (!response.body) {
 		if (process.env.DEBUG && opt_req?.url === '/load/cache-control/increment') {
-			console.debug('-! NO BODY');
+			console.warn('-! NO BODY');
 		}
 
 		res.end();
@@ -135,7 +135,7 @@ export async function setResponse(res, response, opt_req) {
 
 	if (response.body.locked) {
 		if (process.env.DEBUG && opt_req?.url === '/load/cache-control/increment') {
-			console.debug('-! BODY LOCKED');
+			console.warn('-! BODY LOCKED');
 		}
 
 		res.write(
@@ -150,7 +150,7 @@ export async function setResponse(res, response, opt_req) {
 
 	if (res.destroyed) {
 		if (process.env.DEBUG && opt_req?.url === '/load/cache-control/increment') {
-			console.debug('-! RESPONSE DESTROYED');
+			console.warn('-! RESPONSE DESTROYED');
 		}
 		reader.cancel();
 		return;
@@ -170,17 +170,17 @@ export async function setResponse(res, response, opt_req) {
 	res.on('error', cancel);
 
 	if (process.env.DEBUG && opt_req?.url === '/load/cache-control/increment') {
-		console.debug('-! NO BODY');
+		console.warn('-! NO BODY');
 	}
 
 	if (process.env.DEBUG && opt_req?.url === '/load/cache-control/increment') {
-		console.debug('-! consuming response body');
+		console.warn('-! consuming response body');
 	}
 
 	next();
 
 	if (process.env.DEBUG && opt_req?.url === '/load/cache-control/increment') {
-		console.debug('-! returning from setResponse');
+		console.warn('-! returning from setResponse');
 	}
 
 	async function next() {
@@ -189,18 +189,18 @@ export async function setResponse(res, response, opt_req) {
 				const { done, value } = await reader.read();
 
 				if (process.env.DEBUG && opt_req?.url === '/load/cache-control/increment' && done) {
-					console.debug('-! done consuming response body');
+					console.warn('-! done consuming response body');
 				}
 
 				if (done) break;
 
 				if (process.env.DEBUG && opt_req?.url === '/load/cache-control/increment') {
-					console.debug(`-! writing ${value}`);
+					console.warn(`-! writing ${value}`);
 				}
 
 				if (!res.write(value)) {
 					if (process.env.DEBUG && opt_req?.url === '/load/cache-control/increment') {
-						console.debug(`-! stream remaining...`);
+						console.warn(`-! stream remaining...`);
 					}
 
 					res.once('drain', next);
