@@ -62,7 +62,7 @@ importers:
 
   packages/adapter-cloudflare-workers:
     specifiers:
-      '@cloudflare/kv-asset-handler': ^0.2.0
+      '@cloudflare/kv-asset-handler': ^0.3.0
       '@cloudflare/workers-types': ^4.20221111.1
       '@iarna/toml': ^2.2.5
       '@types/node': ^16.18.6
@@ -73,7 +73,7 @@ importers:
       '@iarna/toml': 2.2.5
       esbuild: 0.16.3
     devDependencies:
-      '@cloudflare/kv-asset-handler': 0.2.0
+      '@cloudflare/kv-asset-handler': 0.3.0
       '@types/node': 16.18.6
       typescript: 4.9.3
 
@@ -957,8 +957,8 @@ packages:
       prettier: 2.8.0
     dev: true
 
-  /@cloudflare/kv-asset-handler/0.2.0:
-    resolution: {integrity: sha512-MVbXLbTcAotOPUj0pAMhVtJ+3/kFkwJqc5qNOleOZTv6QkZZABDMS21dSrSlVswEHwrpWC03e4fWytjqKvuE2A==}
+  /@cloudflare/kv-asset-handler/0.3.0:
+    resolution: {integrity: sha512-9CB/MKf/wdvbfkUdfrj+OkEwZ5b7rws0eogJ4293h+7b6KX5toPwym+VQKmILafNB9YiehqY0DlNrDcDhdWHSQ==}
     dependencies:
       mime: 3.0.0
     dev: true
