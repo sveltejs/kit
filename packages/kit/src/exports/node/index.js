@@ -121,7 +121,7 @@ export async function setResponse(res, response, opt_req) {
 
 	res.writeHead(response.status, headers);
 	if (process.env.DEBUG && opt_req?.url === '/load/cache-control/increment') {
-		console.warn('-! wrote headers');
+		console.warn(`-! wrote headers ${JSON.stringify(headers)}`);
 	}
 
 	if (!response.body) {
