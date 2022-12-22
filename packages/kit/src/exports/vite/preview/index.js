@@ -70,6 +70,10 @@ export async function preview(vite, vite_config, svelte_config) {
 			const original_url = /** @type {string} */ (req.url);
 			const { pathname } = new URL(original_url, 'http://dummy');
 
+			if (process.env.DEBUG && pathname === '/load/cache-control/increment') {
+				console.log('\n\nPreview middleware got request to /load/cache-control/increment');
+			}
+
 			if (pathname.startsWith(base)) {
 				next();
 			} else {
