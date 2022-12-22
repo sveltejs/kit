@@ -106,7 +106,7 @@ export async function getRequest({ request, base, bodySizeLimit }) {
 /** @type {import('@sveltejs/kit/node').setResponse} */
 export async function setResponse(res, response, opt_req) {
 	if (process.env.DEBUG && opt_req?.url === '/load/cache-control/increment') {
-		console.log('setting response');
+		console.log('-! setting response');
 	}
 
 	const headers = Object.fromEntries(response.headers);
@@ -121,12 +121,12 @@ export async function setResponse(res, response, opt_req) {
 
 	res.writeHead(response.status, headers);
 	if (process.env.DEBUG && opt_req?.url === '/load/cache-control/increment') {
-		console.log('wrote headers');
+		console.debug('-! wrote headers');
 	}
 
 	if (!response.body) {
 		if (process.env.DEBUG && opt_req?.url === '/load/cache-control/increment') {
-			console.log('NO BODY');
+			console.debug('-! NO BODY');
 		}
 
 		res.end();
@@ -135,7 +135,7 @@ export async function setResponse(res, response, opt_req) {
 
 	if (response.body.locked) {
 		if (process.env.DEBUG && opt_req?.url === '/load/cache-control/increment') {
-			console.log('BODY LOCKED');
+			console.debug('-! BODY LOCKED');
 		}
 
 		res.write(
@@ -150,7 +150,7 @@ export async function setResponse(res, response, opt_req) {
 
 	if (res.destroyed) {
 		if (process.env.DEBUG && opt_req?.url === '/load/cache-control/increment') {
-			console.log('RESPONSE DESTROYED');
+			console.debug('-! RESPONSE DESTROYED');
 		}
 		reader.cancel();
 		return;
@@ -170,17 +170,17 @@ export async function setResponse(res, response, opt_req) {
 	res.on('error', cancel);
 
 	if (process.env.DEBUG && opt_req?.url === '/load/cache-control/increment') {
-		console.log('NO BODY');
+		console.debug('-! NO BODY');
 	}
 
 	if (process.env.DEBUG && opt_req?.url === '/load/cache-control/increment') {
-		console.log('consuming response body');
+		console.debug('-! consuming response body');
 	}
 
 	next();
 
 	if (process.env.DEBUG && opt_req?.url === '/load/cache-control/increment') {
-		console.log('returning from setResponse');
+		console.debug('-! returning from setResponse');
 	}
 
 	async function next() {
@@ -189,18 +189,18 @@ export async function setResponse(res, response, opt_req) {
 				const { done, value } = await reader.read();
 
 				if (process.env.DEBUG && opt_req?.url === '/load/cache-control/increment' && done) {
-					console.log('done consuming response body');
+					console.debug('-! done consuming response body');
 				}
 
 				if (done) break;
 
 				if (process.env.DEBUG && opt_req?.url === '/load/cache-control/increment') {
-					console.log(`writing ${value}`);
+					console.debug(`-! writing ${value}`);
 				}
 
 				if (!res.write(value)) {
 					if (process.env.DEBUG && opt_req?.url === '/load/cache-control/increment') {
-						console.log(`stream remaining...`);
+						console.debug(`-! stream remaining...`);
 					}
 
 					res.once('drain', next);

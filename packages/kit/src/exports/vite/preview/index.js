@@ -71,7 +71,7 @@ export async function preview(vite, vite_config, svelte_config) {
 			const { pathname } = new URL(original_url, 'http://dummy');
 
 			if (process.env.DEBUG && pathname === '/load/cache-control/increment') {
-				console.log('\n\nPreview server got request to /load/cache-control/increment');
+				console.debug('\n\nPreview server got request to /load/cache-control/increment');
 			}
 
 			if (pathname.startsWith(base)) {
@@ -131,7 +131,7 @@ export async function preview(vite, vite_config, svelte_config) {
 		// SSR
 		vite.middlewares.use(async (req, res) => {
 			if (process.env.DEBUG && req.url === '/load/cache-control/increment') {
-				console.log('Preview middleware got request to /load/cache-control/increment');
+				console.debug('-! Preview middleware got request to /load/cache-control/increment');
 			}
 
 			const host = req.headers['host'];
@@ -162,6 +162,9 @@ export async function preview(vite, vite_config, svelte_config) {
 					req
 				)
 			);
+			if (process.env.DEBUG && req.url === '/load/cache-control/increment') {
+				console.debug('-! returning from preview middleware');
+			}
 		});
 	};
 }
