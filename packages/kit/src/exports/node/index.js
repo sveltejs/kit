@@ -158,7 +158,7 @@ export async function setResponse(res, response, opt_req) {
 
 	const cancel = (/** @type {Error|undefined} */ error) => {
 		if (process.env.DEBUG && opt_req?.url === '/load/cache-control/increment') {
-			console.warn('-! canceling reponse');
+			console.warn('-! canceling response');
 		}
 
 		res.off('close', cancel);
