@@ -105,7 +105,7 @@ export async function getRequest({ request, base, bodySizeLimit }) {
 
 /** @type {import('@sveltejs/kit/node').setResponse} */
 export async function setResponse(res, response, opt_req) {
-	if (process.env.DEBUG && opt_req.url === '/load/cache-control/increment') {
+	if (process.env.DEBUG && opt_req?.url === '/load/cache-control/increment') {
 		console.log('setting response');
 	}
 
@@ -120,12 +120,12 @@ export async function setResponse(res, response, opt_req) {
 	}
 
 	res.writeHead(response.status, headers);
-	if (process.env.DEBUG && opt_req.url === '/load/cache-control/increment') {
+	if (process.env.DEBUG && opt_req?.url === '/load/cache-control/increment') {
 		console.log('wrote headers');
 	}
 
 	if (!response.body) {
-		if (process.env.DEBUG && opt_req.url === '/load/cache-control/increment') {
+		if (process.env.DEBUG && opt_req?.url === '/load/cache-control/increment') {
 			console.log('NO BODY');
 		}
 
@@ -134,7 +134,7 @@ export async function setResponse(res, response, opt_req) {
 	}
 
 	if (response.body.locked) {
-		if (process.env.DEBUG && opt_req.url === '/load/cache-control/increment') {
+		if (process.env.DEBUG && opt_req?.url === '/load/cache-control/increment') {
 			console.log('BODY LOCKED');
 		}
 
@@ -149,7 +149,7 @@ export async function setResponse(res, response, opt_req) {
 	const reader = response.body.getReader();
 
 	if (res.destroyed) {
-		if (process.env.DEBUG && opt_req.url === '/load/cache-control/increment') {
+		if (process.env.DEBUG && opt_req?.url === '/load/cache-control/increment') {
 			console.log('RESPONSE DESTROYED');
 		}
 		reader.cancel();
@@ -169,17 +169,17 @@ export async function setResponse(res, response, opt_req) {
 	res.on('close', cancel);
 	res.on('error', cancel);
 
-	if (process.env.DEBUG && opt_req.url === '/load/cache-control/increment') {
+	if (process.env.DEBUG && opt_req?.url === '/load/cache-control/increment') {
 		console.log('NO BODY');
 	}
 
-	if (process.env.DEBUG && opt_req.url === '/load/cache-control/increment') {
+	if (process.env.DEBUG && opt_req?.url === '/load/cache-control/increment') {
 		console.log('consuming response body');
 	}
 
 	next();
 
-	if (process.env.DEBUG && opt_req.url === '/load/cache-control/increment') {
+	if (process.env.DEBUG && opt_req?.url === '/load/cache-control/increment') {
 		console.log('returning from setResponse');
 	}
 
@@ -188,18 +188,18 @@ export async function setResponse(res, response, opt_req) {
 			for (;;) {
 				const { done, value } = await reader.read();
 
-				if (process.env.DEBUG && opt_req.url === '/load/cache-control/increment' && done) {
+				if (process.env.DEBUG && opt_req?.url === '/load/cache-control/increment' && done) {
 					console.log('done consuming response body');
 				}
 
 				if (done) break;
 
-				if (process.env.DEBUG && opt_req.url === '/load/cache-control/increment') {
+				if (process.env.DEBUG && opt_req?.url === '/load/cache-control/increment') {
 					console.log(`writing ${value}`);
 				}
 
 				if (!res.write(value)) {
-					if (process.env.DEBUG && opt_req.url === '/load/cache-control/increment') {
+					if (process.env.DEBUG && opt_req?.url === '/load/cache-control/increment') {
 						console.log(`stream remaining...`);
 					}
 
