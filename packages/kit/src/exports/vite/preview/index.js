@@ -153,16 +153,13 @@ export async function preview(vite, vite_config, svelte_config) {
 
 			setResponse(
 				res,
-				await server.respond(
-					request,
-					{
-						getClientAddress: () => {
-							const { remoteAddress } = req.socket;
-							if (remoteAddress) return remoteAddress;
-							throw new Error('Could not determine clientAddress');
-						}
+				await server.respond(request, {
+					getClientAddress: () => {
+						const { remoteAddress } = req.socket;
+						if (remoteAddress) return remoteAddress;
+						throw new Error('Could not determine clientAddress');
 					}
-				),
+				}),
 				req
 			);
 			if (process.env.DEBUG && req.url === '/load/cache-control/increment') {
