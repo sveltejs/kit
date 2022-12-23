@@ -175,6 +175,7 @@ export interface Config {
 		emitTypes?: boolean;
 		exports?(filepath: string): boolean;
 		files?(filepath: string): boolean;
+		metadata?(filepath: string): boolean;
 	};
 	/** Preprocessor options, if any. Preprocessing can alternatively also be done through Vite's preprocessor capabilities. */
 	preprocess?: any;
