@@ -174,10 +174,6 @@ export async function setResponse(res, response, opt_req) {
 	res.on('error', cancel);
 
 	if (process.env.DEBUG && opt_req?.url === '/load/cache-control/increment') {
-		console.warn('-! NO BODY');
-	}
-
-	if (process.env.DEBUG && opt_req?.url === '/load/cache-control/increment') {
 		console.warn('-! consuming response body');
 	}
 
