@@ -130,8 +130,8 @@ export async function preview(vite, vite_config, svelte_config) {
 
 		// SSR
 		vite.middlewares.use(async (req, res) => {
-			if (process.env.DEBUG && req.url === '/load/cache-control/increment') {
-				console.warn('-! Preview middleware got request to /load/cache-control/increment');
+			if (process.env.DEBUG && (req.url === '/load/cache-control/count' || req.url === '/load/cache-control/increment')) {
+				console.warn(`-! Preview middleware got request to ${req.url}`);
 			}
 
 			const host = req.headers['host'];
@@ -144,7 +144,7 @@ export async function preview(vite, vite_config, svelte_config) {
 					request: req
 				});
 			} catch (/** @type {any} */ err) {
-				if (process.env.DEBUG && req.url === '/load/cache-control/increment') {
+				if (process.env.DEBUG && (req.url === '/load/cache-control/count' || req.url === '/load/cache-control/increment')) {
 					console.warn('-! INVALID REQUEST BODY');
 				}
 				res.statusCode = err.status || 400;
@@ -162,7 +162,7 @@ export async function preview(vite, vite_config, svelte_config) {
 				}),
 				req
 			);
-			if (process.env.DEBUG && req.url === '/load/cache-control/increment') {
+			if (process.env.DEBUG && (req.url === '/load/cache-control/count' || req.url === '/load/cache-control/increment')) {
 				console.warn('-! returning from preview middleware');
 			}
 		});
