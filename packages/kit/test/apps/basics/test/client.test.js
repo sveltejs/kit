@@ -844,6 +844,7 @@ test.describe('Routing', () => {
 		await page.goto('/routing/form-get');
 		expect(await page.textContent('h1')).toBe('...');
 		expect(await page.textContent('h2')).toBe('enter');
+		expect(await page.textContent('h3')).toBe('...');
 
 		const requests = [];
 		page.on('request', (request) => requests.push(request.url()));
@@ -854,6 +855,7 @@ test.describe('Routing', () => {
 		expect(requests).toEqual([]);
 		expect(await page.textContent('h1')).toBe('updated');
 		expect(await page.textContent('h2')).toBe('form');
+		expect(await page.textContent('h3')).toBe('bar');
 	});
 });
 
