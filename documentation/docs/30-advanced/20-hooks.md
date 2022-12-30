@@ -66,7 +66,7 @@ export async function handle({ event, resolve }) {
 }
 ```
 
-You can define multiple `handle` functions and execute them in a middleware-like pattern with [the `sequence` helper function](/docs/modules#sveltejs-kit-hooks).
+You can define multiple `handle` functions and execute them with [the `sequence` helper function](/docs/modules#sveltejs-kit-hooks).
 
 `resolve` also supports a second, optional parameter that gives you more control over how the response will be rendered. That parameter is an object that can have the following fields:
 
