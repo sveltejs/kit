@@ -201,7 +201,7 @@ We can create a layout that only applies to pages below `/settings` (while inher
 <slot></slot>
 ```
 
-By default, each layout inherits the next layout above it. Sometimes that isn't what you want - in this case, [advanced layouts](/docs/advanced-routing#advanced-layouts) can help you.
+By default, each layout inherits the layout above it. Sometimes that isn't what you want - in this case, [advanced layouts](/docs/advanced-routing#advanced-layouts) can help you.
 
 ### +layout.js
 
