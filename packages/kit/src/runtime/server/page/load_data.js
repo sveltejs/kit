@@ -137,69 +137,14 @@ export async function load_data({
 				}
 			}
 
-			const proxy = new Proxy(response, {
-				get(response, key, _receiver) {
-					async function text() {
-						const body = await response.text();
-
-						if (!body || typeof body === 'string') {
-							const status_number = Number(response.status);
-							if (isNaN(status_number)) {
-								throw new Error(
-									`response.status is not a number. value: "${
-										response.status
-									}" type: ${typeof response.status}`
-								);
-							}
-
-							fetched.push({
-								url: same_origin ? url.href.slice(event.url.origin.length) : url.href,
-								method: event.request.method,
-								request_body: /** @type {string | ArrayBufferView | undefined} */ (
-									input instanceof Request && cloned_body
-										? await stream_to_string(cloned_body)
-										: init?.body
-								),
-								response_body: body,
-								response: response
-							});
-						}
-
-						if (dependency) {
-							dependency.body = body;
-						}
-
-						return body;
-					}
-
-					if (key === 'arrayBuffer') {
-						return async () => {
-							const buffer = await response.arrayBuffer();
-
-							if (dependency) {
-								dependency.body = new Uint8Array(buffer);
-							}
-
-							// TODO should buffer be inlined into the page (albeit base64'd)?
-							// any conditions in which it shouldn't be?
-
-							return buffer;
-						};
-					}
-
-					if (key === 'text') {
-						return text;
-					}
-
-					if (key === 'json') {
-						return async () => {
-							return JSON.parse(await text());
-						};
-					}
-
-					return Reflect.get(response, key, response);
-				}
-			});
+			const status_number = Number(response.status);
+			if (isNaN(status_number)) {
+				throw new Error(
+					`response.status is not a number. value: "${
+						response.status
+					}" type: ${typeof response.status}`
+				);
+			}
 
 			if (csr) {
 				// ensure that excluded headers can't be read
@@ -220,7 +165,52 @@ export async function load_data({
 				};
 			}
 
-			return proxy;
+			const request_body = /** @type {string | ArrayBufferView | undefined} */ (
+				input instanceof Request && cloned_body ? await stream_to_string(cloned_body) : init?.body
+			);
+
+			const body =
+				response.body ||
+				new ReadableStream({
+					start(controller) {
+						controller.close();
+					}
+				});
+
+			/** @type {Uint8Array[]} */
+			const chunks = [];
+			const recorder = new TransformStream({
+				async transform(chunk, controller) {
+					const c = await chunk;
+					chunks.push(c);
+					return controller.enqueue(c);
+				},
+				flush() {
+					const response_body = Buffer.concat(chunks).toString('base64');
+
+					if (dependency) {
+						dependency.body = response_body;
+					}
+
+					fetched.push({
+						url: same_origin ? url.href.slice(event.url.origin.length) : url.href,
+						method: event.request.method,
+						request_body,
+						response_body,
+						response: response
+					});
+				}
+			});
+
+			// Return a newly constructed response with a recorder attached to the body.
+			// Any method on Response that reads that body to completion (json, text, etc)
+			// or manually reading from body for custom protocols will record the response
+			// and push the recording into fetched.
+			return new Response(body.pipeThrough(recorder), {
+				headers: response.headers,
+				status: response.status,
+				statusText: response.statusText
+			});
 		},
 		setHeaders: event.setHeaders,
 		depends: () => {},

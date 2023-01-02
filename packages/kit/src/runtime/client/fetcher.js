@@ -77,7 +77,7 @@ export function initial_fetch(resource, opts) {
 		const ttl = script.getAttribute('data-ttl');
 		if (ttl) cache.set(selector, { body, init, ttl: 1000 * Number(ttl) });
 
-		return Promise.resolve(new Response(body, init));
+		return Promise.resolve(new Response(atob(body), init));
 	}
 
 	return native_fetch(resource, opts);
