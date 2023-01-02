@@ -99,7 +99,7 @@ Or your `load` function might make a request to a public URL like `https://api.y
 ```js
 /// file: src/hooks.server.js
 /** @type {import('@sveltejs/kit').HandleFetch} */
-export async function handleFetch({ request, fetch }) {
+export function handleFetch({ request, fetch }) {
 	if (request.url.startsWith('https://api.yourapp.com/')) {
 		// clone the original request, but change the URL
 		request = new Request(
@@ -124,7 +124,7 @@ If your app and your API are on sibling subdomains — `www.my-domain.com` and `
 /// file: src/hooks.server.js
 // @errors: 2345
 /** @type {import('@sveltejs/kit').HandleFetch} */
-export async function handleFetch({ event, request, fetch }) {
+export function handleFetch({ event, request, fetch }) {
 	if (request.url.startsWith('https://api.my-domain.com/')) {
 		request.headers.set('cookie', event.request.headers.get('cookie'));
 	}
