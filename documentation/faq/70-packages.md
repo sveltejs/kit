@@ -2,7 +2,7 @@
 title: How do I fix the error I'm getting trying to include a package?
 ---
 
-Most issues related to including a library are due to incorrect packaging. You can check if a library has packaging issues by entering it into [the publint website](https://publint.bjornlu.com/).
+Most issues related to including a library are due to incorrect packaging. You can check if a library has packaging issues by entering it into [the publint website](https://publint.dev/).
 
 Here are a few things to keep in mind when checking if a library is packaged correctly:
 
