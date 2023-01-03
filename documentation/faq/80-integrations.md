@@ -8,39 +8,6 @@ Make sure you've read the [documentation section on integrations](/docs/integrat
 
 Put the code to query your database in a [server route](/docs/routing#server) - don't query the database in .svelte files. You can create a `db.js` or similar that sets up a connection immediately and makes the client accessible throughout the app as a singleton. You can execute any one-time setup code in `hooks.js` and import your database helpers into any endpoint that needs them.
 
-### How do I use middleware?
-
-`adapter-node` builds a middleware that you can use with your own server for production mode. In dev, you can add middleware to Vite by using a Vite plugin. For example:
-
-```js
-// @filename: ambient.d.ts
-declare module '@sveltejs/kit/vite'; // TODO this feels unnecessary, why can't it 'see' the declarations?
-
-// @filename: index.js
-// ---cut---
-import { sveltekit } from '@sveltejs/kit/vite';
-
-/** @type {import('vite').Plugin} */
-const myPlugin = {
-	name: 'log-request-middleware',
-	configureServer(server) {
-		server.middlewares.use((req, res, next) => {
-			console.log(`Got request ${req.url}`);
-			next();
-		});
-	}
-};
-
-/** @type {import('vite').UserConfig} */
-const config = {
-	plugins: [myPlugin, sveltekit()]
-};
-
-export default config;
-```
-
-See [Vite's `configureServer` docs](https://vitejs.dev/guide/api-plugin.html#configureserver) for more details including how to control ordering.
-
 ### How do I use a client-side only library that depends on `document` or `window`?
 
 If you need access to the `document` or `window` variables or otherwise need code to run only on the client-side you can wrap it in a `browser` check:
@@ -105,6 +72,47 @@ onMount(() => {
 	method('hello world');
 });
 ```
+
+### How do I use a backend on another server possibly written in another language?
+
+You must first devise a method of determining whether a request should be served by your website or API. Some possibilities include utilizing the subdomain, path, or `Accept` header.
+
+Utilizing the path is probably the easiest method. For this method, you may wish to utilize Vite's [`server.proxy`](https://vitejs.dev/config/server-options.html#server-proxy) option in order to proxy any requests under a certain path such as `/api` to your API server.
+
+If you would like to utilize the subdomain method, you may use [`handleFetch`](/docs/hooks#server-hooks-handlefetch) to rewrite the URL of any requests. E.g. if you had a site hosted on `www.mysite.com` and made a call to `fetch('/profile')` that would result in a request to `https://www.mysite.com/profile`, which you could change to `https://api.mysite.com/profile` with the `handleFetch` hook. However, be aware that you would need to deal with [CORS](https://developer.mozilla.org/en-US/docs/Web/HTTP/CORS), which will result in complications such as generally requiring requests to be preflighted resulting in higher latency. Requests to a separate subdomain may also increase latency due to an additional DNS lookup, TLS setup, etc.
+
+### How do I use middleware?
+
+`adapter-node` builds a middleware that you can use with your own server for production mode. In dev, you can add middleware to Vite by using a Vite plugin. For example:
+
+```js
+// @filename: ambient.d.ts
+declare module '@sveltejs/kit/vite'; // TODO this feels unnecessary, why can't it 'see' the declarations?
+
+// @filename: index.js
+// ---cut---
+import { sveltekit } from '@sveltejs/kit/vite';
+
+/** @type {import('vite').Plugin} */
+const myPlugin = {
+	name: 'log-request-middleware',
+	configureServer(server) {
+		server.middlewares.use((req, res, next) => {
+			console.log(`Got request ${req.url}`);
+			next();
+		});
+	}
+};
+
+/** @type {import('vite').UserConfig} */
+const config = {
+	plugins: [myPlugin, sveltekit()]
+};
+
+export default config;
+```
+
+See [Vite's `configureServer` docs](https://vitejs.dev/guide/api-plugin.html#configureserver) for more details including how to control ordering.
 
 ### Does it work with Yarn 2?
 
