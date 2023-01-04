@@ -54,6 +54,14 @@ const plugin = function ({ external = [], edge, split } = {}) {
 				}
 			}
 
+			// prerendered assets (data.json and other non-html pages)
+			for (const [src] of builder.prerendered.assets) {
+				prerendered_redirects.push({
+					src,
+					dest: `${builder.config.kit.appDir}/prerendered/${src}`
+				});
+			}
+
 			/** @type {any[]} */
 			const routes = [
 				...prerendered_redirects,

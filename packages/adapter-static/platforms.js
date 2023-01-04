@@ -40,6 +40,14 @@ function vercel_routes(builder) {
 		});
 	}
 
+	// prerendered assets (data.json and other non-html pages)
+	for (const [src] of builder.prerendered.assets) {
+		routes.push({
+			src,
+			dest: `${builder.config.kit.appDir}/prerendered/${src}`
+		});
+	}
+
 	// implicit redirects (trailing slashes)
 	for (const [src] of builder.prerendered.pages) {
 		if (src !== '/') {
