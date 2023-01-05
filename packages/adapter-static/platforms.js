@@ -4,7 +4,7 @@ import fs from 'fs';
  * @typedef {{
  *   name: string;
  *   test: () => boolean;
- *   defaults: (config: any) => import('./index').AdapterOptions; // TODO
+ *   defaults: import('./index').AdapterOptions;
  *   done: (builder: import('@sveltejs/kit').Builder) => void;
  * }}
  * Platform */
@@ -64,9 +64,9 @@ export const platforms = [
 	{
 		name: 'Vercel',
 		test: () => !!process.env.VERCEL,
-		defaults: () => ({
+		defaults: {
 			pages: '.vercel/output/static'
-		}),
+		},
 		done: (builder) => {
 			const config = static_vercel_config(builder);
 			fs.writeFileSync('.vercel/output/config.json', JSON.stringify(config, null, '  '));
