@@ -1,5 +1,11 @@
 # @sveltejs/kit
 
+## 1.0.5
+
+### Patch Changes
+
+- Update typings of `event.platform` to be possibly undefined ([#8232](https://github.com/sveltejs/kit/pull/8232))
+
 ## 1.0.4
 
 ### Patch Changes

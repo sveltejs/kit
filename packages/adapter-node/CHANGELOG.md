@@ -1,5 +1,16 @@
 # @sveltejs/adapter-node
 
+## 1.1.0
+
+### Minor Changes
+
+- Add original request object as `event.platform.req` ([#8171](https://github.com/sveltejs/kit/pull/8171))
+
+### Patch Changes
+
+- Updated dependencies [[`5426901a`](https://github.com/sveltejs/kit/commit/5426901a710f5e412bd8d3bf2c78bd9df283b2a2)]:
+  - @sveltejs/kit@1.0.5
+
 ## 1.0.1
 
 ### Patch Changes
