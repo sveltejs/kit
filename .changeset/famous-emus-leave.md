@@ -1,5 +1,5 @@
 ---
-'create-svelte': patch
+'create-svelte': minor
 ---
 
-For TypeScript project, generate a vite.config.ts file instead of vite.config.js
+Create vite.config.ts for TypeScript projects
