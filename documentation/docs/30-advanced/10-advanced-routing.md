@@ -98,7 +98,7 @@ It's possible for multiple routes to match a given path. For example each of the
 
 ```bash
 src/routes/[...catchall]/+page.svelte
-src/routes/[[a=string]]/+page.svelte
+src/routes/[[a=x]]/+page.svelte
 src/routes/[b]/+page.svelte
 src/routes/foo-[c]/+page.svelte
 src/routes/foo-abc/+page.svelte
@@ -116,7 +116,7 @@ SvelteKit needs to know which route is being requested. To do so, it sorts them 
 ```bash
 src/routes/foo-abc/+page.svelte
 src/routes/foo-[c]/+page.svelte
-src/routes/[[a=string]]/+page.svelte
+src/routes/[[a=x]]/+page.svelte
 src/routes/[b]/+page.svelte
 src/routes/[...catchall]/+page.svelte
 ```
