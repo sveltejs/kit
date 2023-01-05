@@ -421,7 +421,7 @@ Top-level promises will be awaited, which makes it easy to return multiple promi
 
 ```js
 /// file: src/routes/+page.js
-/** @type {import('./$types').PageServerLoad} */
+/** @type {import('./$types').PageLoad} */
 export function load() {
 	return {
 		a: Promise.resolve('a'),
