@@ -190,6 +190,8 @@ const Sentry: any;
 // ---cut---
 import * as Sentry from '@sentry/svelte';
 
+Sentry.init({...})
+
 /** @type {import('@sveltejs/kit').HandleClientError} */
 export function handleError({ error, event }) {
 	const errorId = crypto.randomUUID();
