@@ -82,7 +82,8 @@ Another approach is to set up a proxy to bypass CORS headaches. In production, y
 How to setup rewrites in production will depend on your deployment platform. If rewrites aren't an option, you could alternatively add an [API route](https://kit.svelte.dev/docs/routing#server):
 
 ```js
-// src/routes/api/[...path]/+server.js
+/// file: src/routes/api/[...path]/+server.js
+/** @type {import('./$types').RequestHandler} */
 export function GET({ params, url }) {
 	return fetch(`https://my-api-server.com/${params.path + url.search}`);
 }
