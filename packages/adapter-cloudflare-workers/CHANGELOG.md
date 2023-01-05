@@ -1,5 +1,14 @@
 # @sveltejs/adapter-cloudflare-workers
 
+## 1.0.1
+
+### Patch Changes
+
+- [chore] update @cloudflare/kv-asset-handler ([`30e1130e`](https://github.com/sveltejs/kit/commit/30e1130ef84e56a77be5cb1136d5c53edef6e5f9))
+
+- Updated dependencies [[`fab0de4f`](https://github.com/sveltejs/kit/commit/fab0de4f06ac5b1e9b049e106889b193975c1c29), [`89b8d94b`](https://github.com/sveltejs/kit/commit/89b8d94b1b20d586e1ca525c30d07587c3f2d8f2)]:
+  - @sveltejs/kit@1.0.2
+
 ## 1.0.0
 
 ### Major Changes

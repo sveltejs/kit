@@ -1,5 +1,11 @@
 # @sveltejs/package
 
+## 1.0.2
+
+### Patch Changes
+
+- [chore] update svelte2tsx ([`50a3c5a6`](https://github.com/sveltejs/kit/commit/50a3c5a6d1282c64422e80fe19b352c14e41c853))
+
 ## 1.0.1
 
 ### Patch Changes

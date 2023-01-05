@@ -1,5 +1,18 @@
 # @sveltejs/adapter-node
 
+## 1.0.1
+
+### Patch Changes
+
+- Update dependency @rollup/plugin-json to v6 ([#8204](https://github.com/sveltejs/kit/pull/8204))
+
+  Note: plugin-json v6 fails your build for parse errors that only logged a warning with v5. We consider this a bugfix as only healthy input should result in a successful build.
+
+- chore(deps): update dependency @rollup/plugin-commonjs to v24 ([#8216](https://github.com/sveltejs/kit/pull/8216))
+
+- Updated dependencies [[`fab0de4f`](https://github.com/sveltejs/kit/commit/fab0de4f06ac5b1e9b049e106889b193975c1c29), [`89b8d94b`](https://github.com/sveltejs/kit/commit/89b8d94b1b20d586e1ca525c30d07587c3f2d8f2)]:
+  - @sveltejs/kit@1.0.2
+
 ## 1.0.0
 
 ### Major Changes
