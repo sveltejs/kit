@@ -17,6 +17,6 @@ declare module 'SERVER' {
 
 declare namespace App {
 	export interface Platform {
-		originalReq: import('http').IncomingMessage;
+		req: import('http').IncomingMessage;
 	}
 }

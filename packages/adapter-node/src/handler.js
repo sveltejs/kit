@@ -71,7 +71,7 @@ const ssr = async (req, res) => {
 	setResponse(
 		res,
 		await server.respond(request, {
-			platform: { originalReq: req },
+			platform: { req },
 			getClientAddress: () => {
 				if (address_header) {
 					const value = /** @type {string} */ (req.headers[address_header]) || '';
