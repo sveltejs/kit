@@ -1,13 +1,8 @@
 import { Adapter } from '@sveltejs/kit';
+import './ambient.js';
 
 declare global {
 	const ENV_PREFIX: string;
-}
-
-declare namespace App {
-	export interface Platform {
-		originalReq: Request;
-	}
 }
 
 interface AdapterOptions {

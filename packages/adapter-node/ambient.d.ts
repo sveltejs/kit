@@ -14,3 +14,9 @@ declare module 'MANIFEST' {
 declare module 'SERVER' {
 	export { Server } from '@sveltejs/kit';
 }
+
+declare namespace App {
+	export interface Platform {
+		originalReq: import('http').IncomingMessage;
+	}
+}
