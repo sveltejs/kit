@@ -471,8 +471,7 @@ export function create_client({ target, base }) {
 			data_changed;
 
 		if (page_changed) {
-			/** @type {import('types').Page} */
-			const new_page = {
+			result.props.page = {
 				error,
 				params,
 				route: {
@@ -484,8 +483,6 @@ export function create_client({ target, base }) {
 				// The whole page store is updated, but this way the object reference stays the same
 				data: data_changed ? data : page.data
 			};
-
-			result.props.page = new_page;
 		}
 
 		return result;
