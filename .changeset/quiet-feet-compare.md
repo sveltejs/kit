@@ -2,4 +2,4 @@
 '@sveltejs/kit': patch
 ---
 
-Guarantee that $page.route has the correct shape
+Guarantee that `$page.route` has the correct shape
