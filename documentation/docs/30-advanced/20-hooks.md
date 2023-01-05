@@ -164,6 +164,7 @@ const Sentry: any;
 
 // @filename: index.js
 // ---cut---
+import * as Sentry from '@sentry/svelte';
 import crypto from 'crypto';
 
 /** @type {import('@sveltejs/kit').HandleServerError} */
@@ -187,6 +188,8 @@ const Sentry: any;
 
 // @filename: index.js
 // ---cut---
+import * as Sentry from '@sentry/svelte';
+
 /** @type {import('@sveltejs/kit').HandleClientError} */
 export function handleError({ error, event }) {
 	const errorId = crypto.randomUUID();

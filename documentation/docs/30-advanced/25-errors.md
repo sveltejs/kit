@@ -87,6 +87,8 @@ const Sentry: any;
 
 // @filename: index.js
 // ---cut---
+import * as Sentry from '@sentry/svelte';
+
 /** @type {import('@sveltejs/kit').HandleServerError} */
 export function handleError({ error, event }) {
 	// example integration with https://sentry.io/
