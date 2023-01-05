@@ -16,7 +16,7 @@
 		"svelte2tsx": "~0.6.0"
 	},
 	"devDependencies": {
-		"@types/node": "^16.18.6",
+		"@types/node": "^18.0.0",
 		"svelte": "^3.55.0",
 		"svelte-preprocess": "^5.0.0",
 		"typescript": "^4.9.4",
