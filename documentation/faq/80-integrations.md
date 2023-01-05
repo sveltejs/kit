@@ -75,11 +75,20 @@ onMount(() => {
 
 ### How do I use a different backend API server?
 
-You may either send requests directly to the API server or you may proxy them to the API server.
+You can use [`event.fetch`](/docs/load#making-fetch-requests) to request data from an external API server, but be aware that you would need to deal with [CORS](https://developer.mozilla.org/en-US/docs/Web/HTTP/CORS), which will result in complications such as generally requiring requests to be preflighted resulting in higher latency. Requests to a separate subdomain may also increase latency due to an additional DNS lookup, TLS setup, etc. If you wish to use this method, you may find [`handleFetch`](/docs/hooks#server-hooks-handlefetch) helpful.
 
-If you send requests directly to the API server, be aware that you would need to deal with [CORS](https://developer.mozilla.org/en-US/docs/Web/HTTP/CORS), which will result in complications such as generally requiring requests to be preflighted resulting in higher latency. Requests to a separate subdomain may also increase latency due to an additional DNS lookup, TLS setup, etc. If you wish to use this method, you may find [`handleFetch`](/docs/hooks#server-hooks-handlefetch) helpful.
+Another approach is to set up a proxy to bypass CORS headaches. In production, you would rewrite a path like `/api` to the API server; for local development, use Vite's [`server.proxy`](https://vitejs.dev/config/server-options.html#server-proxy) option.
 
-In order to avoid CORS complications, it is probably easiest to proxy requests to the API server. In production, you would configure a load balancer to route a path like `/api` to the API server. For local development, you can utilize Vite's [`server.proxy`](https://vitejs.dev/config/server-options.html#server-proxy) option.
+How to setup rewrites in production will depend on your deployment platform. If rewrites aren't an option, you could alternatively add an [API route](https://kit.svelte.dev/docs/routing#server):
+
+```js
+// src/routes/api/[...path]/+server.js
+export function GET({ params, url }) {
+	return fetch(`https://my-api-server.com/${params.path + url.search}`);
+}
+```
+
+(Note that you may also need to proxy `POST`/`PATCH` etc requests, and forward `request.headers`, depending on your needs.)
 
 ### How do I use middleware?
 
