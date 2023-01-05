@@ -165,9 +165,9 @@ const Sentry: any;
 // @filename: index.js
 // ---cut---
 import * as Sentry from '@sentry/node';
+import crypto from 'crypto';
 
 Sentry.init({...})
-import crypto from 'crypto';
 
 /** @type {import('@sveltejs/kit').HandleServerError} */
 export function handleError({ error, event }) {
