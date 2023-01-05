@@ -1,5 +1,6 @@
 <script>
 	import { invalidate } from '$app/navigation';
+	import { page } from '$app/stores';
 	import { _force_next_fetch } from './+page';
 
 	/** @type {import('./$types').PageData} */
@@ -9,7 +10,7 @@
 	async function fetch_again(type) {
 		if (__SVELTEKIT_DEBUG__) console.debug(`fetch_again with type ${type}`);
 
-		const inc_response = await fetch('/load/cache-control/increment');
+		const inc_response = await fetch('/load/cache-control/increment?test=' + $page.url.searchParams.get('test'));
 		if (__SVELTEKIT_DEBUG__) console.debug(`got increment response with status code ${inc_response.status}`);
 
 		if (type === 'force') {

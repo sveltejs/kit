@@ -1,8 +1,9 @@
 import { json } from '@sveltejs/kit';
 import { increment } from '../state.js';
 
-export function GET() {
-	if (process.env.DEBUG) console.warn('\n\nCALLED GET /load/cache-control/increment');
+/** @type {import('./$types').RequestHandler} */
+export function GET({ url }) {
+	if (process.env.DEBUG) console.warn(`\n\nCALLED GET /load/cache-control/increment from ${url.searchParams.get('test')}`);
 	const value = increment();
 	if (process.env.DEBUG) console.warn(`incremented to ${value}`);
 	const result = json({});

@@ -556,7 +556,7 @@ test.describe('Load', () => {
 		test('load does not call fetch if max-age allows it', async ({ page, request }) => {
 			await request.get('/load/cache-control/reset');
 
-			await page.goto('/load/cache-control');
+			await page.goto('/load/cache-control?test=test1');
 			await expect(page.getByText('Count is 0')).toBeVisible();
 			await page.locator('button.default').click();
 			await expect(page.getByText('Count is 0')).toBeVisible();
@@ -572,7 +572,7 @@ test.describe('Load', () => {
 		test('load does ignore ttl if fetch cache options says so', async ({ page, request }) => {
 			await request.get('/load/cache-control/reset');
 
-			await page.goto('/load/cache-control');
+			await page.goto('/load/cache-control?test=test2');
 			await expect(page.getByText('Count is 0')).toBeVisible();
 			await page.locator('button.force').click();
 			await expect(page.getByText('Count is 1')).toBeVisible();
@@ -581,7 +581,7 @@ test.describe('Load', () => {
 		test('load busts cache if non-GET request to resource is made', async ({ page, request }) => {
 			await request.get('/load/cache-control/reset');
 
-			await page.goto('/load/cache-control');
+			await page.goto('/load/cache-control?test=test3');
 			await expect(page.getByText('Count is 0')).toBeVisible();
 			await page.locator('button.bust').click();
 			await expect(page.getByText('Count is 1')).toBeVisible();
