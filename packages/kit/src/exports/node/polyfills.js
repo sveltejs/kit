@@ -28,7 +28,9 @@ export function installPolyfills() {
 	// multipart/form-data was added in Undici 5.11: https://github.com/nodejs/undici/releases/tag/v5.11.0
 	// Node 18.11 upgraded to Unidi 5.11: https://github.com/nodejs/node/blob/main/doc/changelogs/CHANGELOG_V18.md#2022-10-13-version-18110-current-danielleadams
 	// We don't need to polyfill if it's already available
-	if (parseInt(version[0]) > 18 || parseInt(version[1]) >= 11) {
+	const major = parseInt(version[0]);
+	const minor = parseInt(version[1]);
+	if (major > 18 || (major >= 16 && minor >= 11)) {
 		return;
 	}
 	for (const name in globals) {
