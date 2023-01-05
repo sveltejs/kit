@@ -286,7 +286,7 @@ export function create_client({ target, base }) {
 				);
 				return false;
 			}
-		} else if (navigation_result.props?.page?.status >= 400) {
+		} else if (/** @type {number} */ (navigation_result.props?.page?.status) >= 400) {
 			const updated = await stores.updated.check();
 			if (updated) {
 				await native_navigation(url);
@@ -369,7 +369,7 @@ export function create_client({ target, base }) {
 		const style = document.querySelector('style[data-sveltekit]');
 		if (style) style.remove();
 
-		page = result.props.page;
+		page = /** @type {import('types').Page} */ (result.props.page);
 
 		root = new Root({
 			target,
@@ -435,6 +435,7 @@ export function create_client({ target, base }) {
 				route
 			},
 			props: {
+				// @ts-ignore Somehow it's getting SvelteComponent and SvelteComponentDev mixed up
 				components: filtered.map((branch_node) => branch_node.node.component)
 			}
 		};
@@ -470,16 +471,21 @@ export function create_client({ target, base }) {
 			data_changed;
 
 		if (page_changed) {
-			result.props.page = {
+			/** @type {import('types').Page} */
+			const new_page = {
 				error,
 				params,
-				route,
+				route: {
+					id: route?.id ?? null
+				},
 				status,
 				url: new URL(url),
 				form: form ?? null,
 				// The whole page store is updated, but this way the object reference stays the same
 				data: data_changed ? data : page.data
 			};
+
+			result.props.page = new_page;
 		}
 
 		return result;
