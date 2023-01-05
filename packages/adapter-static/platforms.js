@@ -9,21 +9,17 @@ import fs from 'fs';
  * }}
  * Platform */
 
+// This function is duplicated in adapter-vercel
 /** @param {import('@sveltejs/kit').Builder} builder */
-function vercel_routes(builder) {
+function static_vercel_config(builder) {
 	/** @type {any[]} */
-	const routes = [
-		{
-			src: `/${builder.config.kit.appDir}/immutable/.+`,
-			headers: {
-				'cache-control': 'public, immutable, max-age=31536000'
-			}
-		}
-	];
+	const prerendered_redirects = [];
 
-	// explicit redirects
+	/** @type {Record<string, { path: string }>} */
+	const overrides = {};
+
 	for (const [src, redirect] of builder.prerendered.redirects) {
-		routes.push({
+		prerendered_redirects.push({
 			src,
 			headers: {
 				Location: redirect.location
@@ -32,40 +28,35 @@ function vercel_routes(builder) {
 		});
 	}
 
-	// prerendered pages
-	for (const [src, page] of builder.prerendered.pages) {
-		routes.push({
-			src,
-			dest: `${builder.config.kit.appDir}/prerendered/${page.file}`
-		});
-	}
+	for (const [path, page] of builder.prerendered.pages) {
+		if (path.endsWith('/') && path !== '/') {
+			prerendered_redirects.push(
+				{ src: path, dest: path.slice(0, -1) },
+				{ src: path.slice(0, -1), status: 308, headers: { Location: path } }
+			);
 
-	// prerendered assets (data.json and other non-html pages)
-	for (const [src] of builder.prerendered.assets) {
-		routes.push({
-			src,
-			dest: `${builder.config.kit.appDir}/prerendered/${src}`
-		});
-	}
-
-	// implicit redirects (trailing slashes)
-	for (const [src] of builder.prerendered.pages) {
-		if (src !== '/') {
-			routes.push({
-				src: src.endsWith('/') ? src.slice(0, -1) : src + '/',
-				headers: {
-					location: src
-				},
-				status: 308
-			});
+			overrides[page.file] = { path: path.slice(1, -1) };
+		} else {
+			overrides[page.file] = { path: path.slice(1) };
 		}
 	}
 
-	routes.push({
-		handle: 'filesystem'
-	});
-
-	return routes;
+	return {
+		version: 3,
+		routes: [
+			...prerendered_redirects,
+			{
+				src: `/${builder.getAppPath()}/immutable/.+`,
+				headers: {
+					'cache-control': 'public, immutable, max-age=31536000'
+				}
+			},
+			{
+				handle: 'filesystem'
+			}
+		],
+		overrides
+	};
 }
 
 /** @type {Platform[]} */
@@ -73,18 +64,12 @@ export const platforms = [
 	{
 		name: 'Vercel',
 		test: () => !!process.env.VERCEL,
-		defaults: (config) => ({
-			pages: `.vercel/output/static/${config.kit.appDir}/prerendered`,
-			assets: '.vercel/output/static'
+		defaults: () => ({
+			pages: '.vercel/output/static'
 		}),
 		done: (builder) => {
-			fs.writeFileSync(
-				'.vercel/output/config.json',
-				JSON.stringify({
-					version: 3,
-					routes: vercel_routes(builder)
-				})
-			);
+			const config = static_vercel_config(builder);
+			fs.writeFileSync('.vercel/output/config.json', JSON.stringify(config, null, '  '));
 		}
 	}
 ];

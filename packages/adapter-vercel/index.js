@@ -25,56 +25,7 @@ const plugin = function ({ external = [], edge, split } = {}) {
 				functions: `${dir}/functions`
 			};
 
-			/** @type {any[]} */
-			const prerendered_redirects = [];
-
-			/** @type {Record<string, { path: string }>} */
-			const overrides = {};
-
-			for (const [src, redirect] of builder.prerendered.redirects) {
-				prerendered_redirects.push({
-					src,
-					headers: {
-						Location: redirect.location
-					},
-					status: redirect.status
-				});
-			}
-
-			for (const [path, page] of builder.prerendered.pages) {
-				if (path.endsWith('/') && path !== '/') {
-					prerendered_redirects.push(
-						{ src: path, dest: path.slice(0, -1) },
-						{ src: path.slice(0, -1), status: 308, headers: { Location: path } }
-					);
-
-					overrides[page.file] = { path: path.slice(1, -1) };
-				} else {
-					overrides[page.file] = { path: path.slice(1) };
-				}
-			}
-
-			// prerendered assets (data.json and other non-html pages)
-			for (const [src] of builder.prerendered.assets) {
-				prerendered_redirects.push({
-					src,
-					dest: `${builder.config.kit.appDir}/prerendered/${src}`
-				});
-			}
-
-			/** @type {any[]} */
-			const routes = [
-				...prerendered_redirects,
-				{
-					src: `/${builder.getAppPath()}/.+`,
-					headers: {
-						'cache-control': 'public, immutable, max-age=31536000'
-					}
-				},
-				{
-					handle: 'filesystem'
-				}
-			];
+			const config = static_vercel_config(builder);
 
 			builder.log.minor('Generating serverless function...');
 
@@ -105,7 +56,7 @@ const plugin = function ({ external = [], edge, split } = {}) {
 					`nodejs${node_version.major}.x`
 				);
 
-				routes.push({ src: pattern, dest: `/${name}` });
+				config.routes.push({ src: pattern, dest: `/${name}` });
 			}
 
 			/**
@@ -150,7 +101,7 @@ const plugin = function ({ external = [], edge, split } = {}) {
 					})
 				);
 
-				routes.push({ src: pattern, dest: `/${name}` });
+				config.routes.push({ src: pattern, dest: `/${name}` });
 			}
 
 			const generate_function = edge ? generate_edge_function : generate_serverless_function;
@@ -190,18 +141,7 @@ const plugin = function ({ external = [], edge, split } = {}) {
 
 			builder.log.minor('Writing routes...');
 
-			write(
-				`${dir}/config.json`,
-				JSON.stringify(
-					{
-						version: 3,
-						routes,
-						overrides
-					},
-					null,
-					'  '
-				)
-			);
+			write(`${dir}/config.json`, JSON.stringify(config, null, '  '));
 		}
 	};
 };
@@ -231,6 +171,56 @@ function get_node_version() {
 	}
 
 	return { major, full };
+}
+
+// This function is duplicated in adapter-static
+/** @param {import('@sveltejs/kit').Builder} builder */
+function static_vercel_config(builder) {
+	/** @type {any[]} */
+	const prerendered_redirects = [];
+
+	/** @type {Record<string, { path: string }>} */
+	const overrides = {};
+
+	for (const [src, redirect] of builder.prerendered.redirects) {
+		prerendered_redirects.push({
+			src,
+			headers: {
+				Location: redirect.location
+			},
+			status: redirect.status
+		});
+	}
+
+	for (const [path, page] of builder.prerendered.pages) {
+		if (path.endsWith('/') && path !== '/') {
+			prerendered_redirects.push(
+				{ src: path, dest: path.slice(0, -1) },
+				{ src: path.slice(0, -1), status: 308, headers: { Location: path } }
+			);
+
+			overrides[page.file] = { path: path.slice(1, -1) };
+		} else {
+			overrides[page.file] = { path: path.slice(1) };
+		}
+	}
+
+	return {
+		version: 3,
+		routes: [
+			...prerendered_redirects,
+			{
+				src: `/${builder.getAppPath()}/immutable/.+`,
+				headers: {
+					'cache-control': 'public, immutable, max-age=31536000'
+				}
+			},
+			{
+				handle: 'filesystem'
+			}
+		],
+		overrides
+	};
 }
 
 /**
