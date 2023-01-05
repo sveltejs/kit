@@ -1,5 +1,11 @@
 # @sveltejs/kit
 
+## 1.0.3
+
+### Patch Changes
+
+- Include submitter's value when progressively enhancing `<form method="get">` ([#8273](https://github.com/sveltejs/kit/pull/8273))
+
 ## 1.0.2
 
 ### Patch Changes
