@@ -865,7 +865,7 @@ export interface RequestEvent<
 	/**
 	 * Additional data made available through the adapter.
 	 */
-	platform: Readonly<App.Platform> | undefined;
+	platform: Readonly<App.Platform> | void;
 	/**
 	 * The original request object
 	 */
