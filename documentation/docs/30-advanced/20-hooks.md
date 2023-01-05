@@ -160,14 +160,17 @@ declare namespace App {
 /// file: src/hooks.server.js
 // @errors: 2322
 // @filename: ambient.d.ts
-const Sentry: any;
+declare module '@sentry/node' {
+	export const init: (opts: any) => void;
+	export const captureException: (error: any, opts: any) => void;
+}
 
 // @filename: index.js
 // ---cut---
 import * as Sentry from '@sentry/node';
 import crypto from 'crypto';
 
-Sentry.init({...})
+Sentry.init({/*...*/})
 
 /** @type {import('@sveltejs/kit').HandleServerError} */
 export function handleError({ error, event }) {
@@ -186,13 +189,16 @@ export function handleError({ error, event }) {
 /// file: src/hooks.client.js
 // @errors: 2322
 // @filename: ambient.d.ts
-const Sentry: any;
+declare module '@sentry/svelte' {
+	export const init: (opts: any) => void;
+	export const captureException: (error: any, opts: any) => void;
+}
 
 // @filename: index.js
 // ---cut---
 import * as Sentry from '@sentry/svelte';
 
-Sentry.init({...})
+Sentry.init({/*...*/})
 
 /** @type {import('@sveltejs/kit').HandleClientError} */
 export function handleError({ error, event }) {
