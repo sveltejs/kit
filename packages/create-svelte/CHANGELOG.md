@@ -1,5 +1,11 @@
 # create-svelte
 
+## 2.0.2
+
+### Patch Changes
+
+- [fix] address flakiness in playwright test ([#8162](https://github.com/sveltejs/kit/pull/8162))
+
 ## 2.0.1
 
 ### Patch Changes
