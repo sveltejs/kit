@@ -2,4 +2,4 @@
 '@sveltejs/adapter-node': minor
 ---
 
-Include the original request within the Platform object.
+Add original request object as `event.platform.req`
