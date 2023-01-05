@@ -6,7 +6,7 @@ import { loadEnv, normalizePath } from 'vite';
 import { getRequest, setResponse } from '../../../exports/node/index.js';
 import { installPolyfills } from '../../../exports/node/polyfills.js';
 import { SVELTE_KIT_ASSETS } from '../../../constants.js';
-import { non_node_runtime } from '../../../utils/platform.js';
+import { should_polyfill } from '../../../utils/platform.js';
 import { not_found } from '../utils.js';
 
 /** @typedef {import('http').IncomingMessage} Req */
@@ -22,7 +22,7 @@ import { not_found } from '../utils.js';
  * @param {import('types').ValidatedConfig} svelte_config
  */
 export async function preview(vite, vite_config, svelte_config) {
-	if (!non_node_runtime()) {
+	if (should_polyfill) {
 		installPolyfills();
 	}
 

@@ -1,3 +1,1 @@
-export function non_node_runtime() {
-	return typeof globalThis.Deno !== 'undefined' || typeof globalThis.Bun !== 'undefined';
-}
+export const should_polyfill = typeof Deno === 'undefined' && typeof Bun === 'undefined';
