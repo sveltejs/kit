@@ -66,7 +66,7 @@ export async function handle({ event, resolve }) {
 }
 ```
 
-You can add call multiple `handle` functions with [the `sequence` helper function](/docs/modules#sveltejs-kit-hooks).
+You can define multiple `handle` functions and execute them with [the `sequence` helper function](/docs/modules#sveltejs-kit-hooks).
 
 `resolve` also supports a second, optional parameter that gives you more control over how the response will be rendered. That parameter is an object that can have the following fields:
 
@@ -99,7 +99,7 @@ Or your `load` function might make a request to a public URL like `https://api.y
 ```js
 /// file: src/hooks.server.js
 /** @type {import('@sveltejs/kit').HandleFetch} */
-export async function handleFetch({ request, fetch }) {
+export function handleFetch({ request, fetch }) {
 	if (request.url.startsWith('https://api.yourapp.com/')) {
 		// clone the original request, but change the URL
 		request = new Request(
@@ -124,7 +124,7 @@ If your app and your API are on sibling subdomains — `www.my-domain.com` and `
 /// file: src/hooks.server.js
 // @errors: 2345
 /** @type {import('@sveltejs/kit').HandleFetch} */
-export async function handleFetch({ event, request, fetch }) {
+export function handleFetch({ event, request, fetch }) {
 	if (request.url.startsWith('https://api.my-domain.com/')) {
 		request.headers.set('cookie', event.request.headers.get('cookie'));
 	}
@@ -160,11 +160,17 @@ declare namespace App {
 /// file: src/hooks.server.js
 // @errors: 2322
 // @filename: ambient.d.ts
-const Sentry: any;
+declare module '@sentry/node' {
+	export const init: (opts: any) => void;
+	export const captureException: (error: any, opts: any) => void;
+}
 
 // @filename: index.js
 // ---cut---
+import * as Sentry from '@sentry/node';
 import crypto from 'crypto';
+
+Sentry.init({/*...*/})
 
 /** @type {import('@sveltejs/kit').HandleServerError} */
 export function handleError({ error, event }) {
@@ -183,10 +189,17 @@ export function handleError({ error, event }) {
 /// file: src/hooks.client.js
 // @errors: 2322
 // @filename: ambient.d.ts
-const Sentry: any;
+declare module '@sentry/svelte' {
+	export const init: (opts: any) => void;
+	export const captureException: (error: any, opts: any) => void;
+}
 
 // @filename: index.js
 // ---cut---
+import * as Sentry from '@sentry/svelte';
+
+Sentry.init({/*...*/})
+
 /** @type {import('@sveltejs/kit').HandleClientError} */
 export function handleError({ error, event }) {
 	const errorId = crypto.randomUUID();

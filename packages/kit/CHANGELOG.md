@@ -1,5 +1,19 @@
 # @sveltejs/kit
 
+## 1.0.2
+
+### Patch Changes
+
+- Fix filterSerializedResponseHeaders error message ([#8348](https://github.com/sveltejs/kit/pull/8348))
+
+- Fix form action redirect status code ([#8210](https://github.com/sveltejs/kit/pull/8210))
+
+## 1.0.1
+
+### Patch Changes
+
+- Explicitly mark Node 17.x as not supported ([#8174](https://github.com/sveltejs/kit/pull/8174))
+
 ## 1.0.0
 
 ### Major Changes

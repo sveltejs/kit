@@ -112,5 +112,3 @@ Within the `adapt` method, there are a number of things that an adapter should d
 - Put the user's static files and the generated JS/CSS in the correct location for the target platform
 
 Where possible, we recommend putting the adapter output under the `build/` directory with any intermediate output placed under `.svelte-kit/[adapter-name]`.
-
-> The adapter API may change before 1.0.

@@ -2010,12 +2010,25 @@ test.describe('Actions', () => {
 		);
 	});
 
-	test('redirect', async ({ page }) => {
+	test('redirect', async ({ page, javaScriptEnabled }) => {
 		await page.goto('/actions/redirect');
 
 		page.click('button');
 
-		await Promise.all([page.waitForResponse('/actions/redirect'), page.waitForNavigation()]);
+		const [redirect] = await Promise.all([
+			page.waitForResponse('/actions/redirect'),
+			page.waitForNavigation()
+		]);
+		if (javaScriptEnabled) {
+			expect(await redirect.json()).toEqual({
+				type: 'redirect',
+				location: '/actions/enhance',
+				status: 303
+			});
+		} else {
+			expect(redirect.status()).toBe(303);
+			expect(redirect.headers()['location']).toBe('/actions/enhance');
+		}
 
 		expect(page.url()).toContain('/actions/enhance');
 	});

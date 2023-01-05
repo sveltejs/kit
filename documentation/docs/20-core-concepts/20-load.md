@@ -34,7 +34,7 @@ export function load({ params }) {
 
 Thanks to the generated `$types` module, we get full type safety.
 
-A `load` function in a `+page.js` file runs both on the server and in the browser. If your `load` function should _always_ run on the server (because it uses private environment variables, for example, or accesses a database) then you can put it in a `+page.server.js` instead.
+A `load` function in a `+page.js` file runs both on the server and in the browser. If your `load` function should _always_ run on the server (because it uses private environment variables, for example, or accesses a database) then it would go in a `+page.server.js` instead.
 
 A more realistic version of your blog post's `load` function, that only runs on the server and pulls data from a database, might look like this:
 
@@ -90,8 +90,9 @@ export async function load() {
 </script>
 
 <main>
-	<!-- +page.svelte is rendered here -->
-	<slot />
+	<slot>
+		<!-- +page.svelte is rendered here -->
+	</slot>
 </main>
 
 <aside>
@@ -420,7 +421,7 @@ export function load({ locals }) {
 Top-level promises will be awaited, which makes it easy to return multiple promises without creating a waterfall:
 
 ```js
-/// file: src/routes/+page.server.js
+/// file: src/routes/+page.js
 /** @type {import('./$types').PageServerLoad} */
 export function load() {
 	return {

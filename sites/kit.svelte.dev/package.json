@@ -22,16 +22,15 @@
 		"prism-svelte": "^0.5.0",
 		"prismjs": "^1.29.0",
 		"shiki-twoslash": "^3.1.0",
-		"svelte": "^3.54.0",
+		"svelte": "^3.55.0",
 		"tiny-glob": "^0.2.9",
-		"typescript": "^4.9.3",
+		"typescript": "^4.9.4",
 		"uvu": "^0.5.6",
-		"vite": "^4.0.0",
-		"vite-imagetools": "^4.0.11"
+		"vite": "^4.0.4",
+		"vite-imagetools": "^4.0.13"
 	},
 	"type": "module",
 	"dependencies": {
-		"@vercel/edge": "^0.1.2",
 		"d3-geo": "^3.0.1",
 		"d3-geo-projection": "^4.0.0",
 		"topojson-client": "^3.1.0"

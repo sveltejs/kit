@@ -1,6 +1,6 @@
 {
 	"name": "@sveltejs/kit",
-	"version": "1.0.0",
+	"version": "1.0.2",
 	"repository": {
 		"type": "git",
 		"url": "https://github.com/sveltejs/kit",
@@ -34,11 +34,11 @@
 		"@types/set-cookie-parser": "^2.4.2",
 		"marked": "^4.2.3",
 		"rollup": "^3.7.0",
-		"svelte": "^3.54.0",
+		"svelte": "^3.55.0",
 		"svelte-preprocess": "^5.0.0",
-		"typescript": "^4.9.3",
+		"typescript": "^4.9.4",
 		"uvu": "^0.5.6",
-		"vite": "^4.0.0"
+		"vite": "^4.0.4"
 	},
 	"peerDependencies": {
 		"svelte": "^3.54.0",
@@ -87,6 +87,6 @@
 	},
 	"types": "types/index.d.ts",
 	"engines": {
-		"node": ">=16.14"
+		"node": "^16.14 || >=18"
 	}
 }
