@@ -73,13 +73,13 @@ onMount(() => {
 });
 ```
 
-### How do I use a backend on another server possibly written in another language?
+### How do I use a different backend API server?
 
-You must first devise a method of determining whether a request should be served by your website or API. Some possibilities include utilizing the subdomain, path, or `Accept` header.
+You may either send requests directly to the API server or you may proxy them to the API server.
 
-Utilizing the path is probably the easiest method. For this method, you may wish to utilize Vite's [`server.proxy`](https://vitejs.dev/config/server-options.html#server-proxy) option in order to proxy any requests under a certain path such as `/api` to your API server.
+If you send requests directly to the API server, be aware that you would need to deal with [CORS](https://developer.mozilla.org/en-US/docs/Web/HTTP/CORS), which will result in complications such as generally requiring requests to be preflighted resulting in higher latency. Requests to a separate subdomain may also increase latency due to an additional DNS lookup, TLS setup, etc. If you wish to use this method, you may find [`handleFetch`](/docs/hooks#server-hooks-handlefetch) helpful.
 
-If you would like to utilize the subdomain method, you may use [`handleFetch`](/docs/hooks#server-hooks-handlefetch) to rewrite the URL of any requests. E.g. if you had a site hosted on `www.mysite.com` and made a call to `fetch('/profile')` that would result in a request to `https://www.mysite.com/profile`, which you could change to `https://api.mysite.com/profile` with the `handleFetch` hook. However, be aware that you would need to deal with [CORS](https://developer.mozilla.org/en-US/docs/Web/HTTP/CORS), which will result in complications such as generally requiring requests to be preflighted resulting in higher latency. Requests to a separate subdomain may also increase latency due to an additional DNS lookup, TLS setup, etc.
+In order to avoid CORS complications, it is probably easiest to proxy requests to the API server. In production, you would configure a load balancer to route a path like `/api` to the API server. For local development, you can utilize Vite's [`server.proxy`](https://vitejs.dev/config/server-options.html#server-proxy) option.
 
 ### How do I use middleware?
 
