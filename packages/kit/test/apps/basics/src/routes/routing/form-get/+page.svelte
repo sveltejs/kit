@@ -11,8 +11,9 @@
 
 <h1>{$page.url.searchParams.get('q') ?? '...'}</h1>
 <h2>{type}</h2>
+<h3>{$page.url.searchParams.get('foo') ?? '...'}</h3>
 
 <form>
 	<input name="q" />
-	<button>submit</button>
+	<button type="submit" name="foo" value="bar">Submit</button>
 </form>

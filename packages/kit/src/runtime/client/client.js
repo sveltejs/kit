@@ -1461,21 +1461,28 @@ export function create_client({ target, base }) {
 				if (method !== 'get') return;
 
 				const url = new URL(
-					(event.submitter?.hasAttribute('formaction') && submitter?.formAction) || form.action
+					(submitter?.hasAttribute('formaction') && submitter?.formAction) || form.action
 				);
 
 				if (is_external_url(url, base)) return;
 
-				const { noscroll, reload } = get_router_options(
-					/** @type {HTMLFormElement} */ (event.target)
-				);
+				const event_form = /** @type {HTMLFormElement} */ (event.target);
+
+				const { noscroll, reload } = get_router_options(event_form);
 				if (reload) return;
 
 				event.preventDefault();
 				event.stopPropagation();
 
+				const data = new FormData(event_form);
+
+				const submitter_name = submitter?.getAttribute('name');
+				if (submitter_name) {
+					data.append(submitter_name, submitter?.getAttribute('value') ?? '');
+				}
+
 				// @ts-expect-error `URLSearchParams(fd)` is kosher, but typescript doesn't know that
-				url.search = new URLSearchParams(new FormData(event.target)).toString();
+				url.search = new URLSearchParams(data).toString();
 
 				navigate({
 					url,
