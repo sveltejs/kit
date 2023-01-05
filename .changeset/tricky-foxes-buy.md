@@ -2,4 +2,4 @@
 '@sveltejs/kit': patch
 ---
 
-fix enhanced GET form omitting submit value
+Include submitter's value when progressively enhancing `<form method="get">`
