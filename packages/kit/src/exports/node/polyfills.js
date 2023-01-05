@@ -17,10 +17,8 @@ const globals = {
 
 // exported for dev/preview and node environments
 export function installPolyfills() {
-	const version_string = globalThis.process?.versions?.node;
-
 	// don't polyfill on non-Node platforms like Deno
-	if (!version_string) {
+	if (!globalThis.process?.versions?.node) {
 		return;
 	}
 
