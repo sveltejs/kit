@@ -2,10 +2,11 @@ import fs from 'fs';
 import { join } from 'path';
 import sirv from 'sirv';
 import { pathToFileURL } from 'url';
+import { loadEnv, normalizePath } from 'vite';
 import { getRequest, setResponse } from '../../../exports/node/index.js';
 import { installPolyfills } from '../../../exports/node/polyfills.js';
 import { SVELTE_KIT_ASSETS } from '../../../constants.js';
-import { loadEnv, normalizePath } from 'vite';
+import { non_node_runtime } from '../../../utils/platform.js';
 import { not_found } from '../utils.js';
 
 /** @typedef {import('http').IncomingMessage} Req */
@@ -21,7 +22,9 @@ import { not_found } from '../utils.js';
  * @param {import('types').ValidatedConfig} svelte_config
  */
 export async function preview(vite, vite_config, svelte_config) {
-	installPolyfills();
+	if (!non_node_runtime()) {
+		installPolyfills();
+	}
 
 	const { paths } = svelte_config.kit;
 	const base = paths.base;

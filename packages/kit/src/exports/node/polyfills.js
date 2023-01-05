@@ -18,11 +18,6 @@ const globals = {
 // exported for dev/preview and node environments
 // TODO: remove this once we only support Node 18.11+ (the version multipart/form-data was added)
 export function installPolyfills() {
-	// don't polyfill on non-Node platforms like Deno
-	if (!globalThis.process?.versions?.node) {
-		return;
-	}
-
 	for (const name in globals) {
 		Object.defineProperty(globalThis, name, {
 			enumerable: true,

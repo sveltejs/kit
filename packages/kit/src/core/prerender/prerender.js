@@ -1,8 +1,9 @@
 import { readFileSync, writeFileSync } from 'fs';
 import { dirname, join } from 'path';
 import { pathToFileURL, URL } from 'url';
-import { mkdirp, posixify, walk } from '../../utils/filesystem.js';
 import { installPolyfills } from '../../exports/node/polyfills.js';
+import { mkdirp, posixify, walk } from '../../utils/filesystem.js';
+import { non_node_runtime } from '../../utils/platform.js';
 import { is_root_relative, resolve } from '../../utils/url.js';
 import { queue } from './queue.js';
 import { crawl } from './crawl.js';
@@ -89,7 +90,9 @@ export async function prerender() {
 		verbose: verbose === 'true'
 	});
 
-	installPolyfills();
+	if (!non_node_runtime()) {
+		installPolyfills();
+	}
 
 	const server_root = join(config.outDir, 'output');
 
