@@ -1,5 +1,11 @@
 # @sveltejs/kit
 
+## 1.0.4
+
+### Patch Changes
+
+- [fix] don't polyfill undici if using Deno or Bun ([#8338](https://github.com/sveltejs/kit/pull/8338))
+
 ## 1.0.3
 
 ### Patch Changes
