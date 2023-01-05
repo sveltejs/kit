@@ -30,7 +30,7 @@ export function installPolyfills() {
 	// We don't need to polyfill if it's already available
 	const major = parseInt(version[0]);
 	const minor = parseInt(version[1]);
-	if (major > 18 || (major >= 16 && minor >= 11)) {
+	if (major > 18 || (major === 18 && minor >= 11)) {
 		return;
 	}
 	for (const name in globals) {
