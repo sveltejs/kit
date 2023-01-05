@@ -2,4 +2,4 @@
 '@sveltejs/kit': patch
 ---
 
-[fix] conditionally polyfill but better to support Deno
+[fix] don't polyfill undici if using Deno or Bun
