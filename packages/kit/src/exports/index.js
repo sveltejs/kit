@@ -29,12 +29,23 @@ export function redirect(status, location) {
 export function json(data, init) {
 	// TODO deprecate this in favour of `Response.json` when it's
 	// more widely supported
-	const headers = new Headers(init?.headers);
-	if (!headers.has('content-type')) {
-		headers.set('content-type', 'application/json');
+	const response = text(JSON.stringify(data), init);
+
+	if (!response.headers.has('content-type')) {
+		response.headers.set('content-type', 'application/json');
 	}
 
-	return new Response(JSON.stringify(data), {
+	return response;
+}
+
+/** @type {import('@sveltejs/kit').text} */
+export function text(body, init) {
+	const headers = new Headers(init?.headers);
+	if (!headers.has('content-length')) {
+		headers.set('content-length', String(body.length));
+	}
+
+	return new Response(body, {
 		...init,
 		headers
 	});

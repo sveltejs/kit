@@ -1,3 +1,4 @@
+import { text } from '../../../exports/index.js';
 import { compact } from '../../../utils/array.js';
 import { normalize_error } from '../../../utils/error.js';
 import { add_data_suffix } from '../../../utils/url.js';
@@ -31,7 +32,7 @@ import { respond_with_error } from './respond_with_error.js';
 export async function render_page(event, route, page, options, state, resolve_opts) {
 	if (state.initiator === route) {
 		// infinite request cycle detected
-		return new Response(`Not found: ${event.url.pathname}`, {
+		return text(`Not found: ${event.url.pathname}`, {
 			status: 404
 		});
 	}
@@ -237,7 +238,7 @@ export async function render_page(event, route, page, options, state, resolve_op
 							});
 
 							state.prerendering.dependencies.set(data_pathname, {
-								response: new Response(body),
+								response: text(body),
 								body
 							});
 						}
@@ -291,7 +292,7 @@ export async function render_page(event, route, page, options, state, resolve_op
 				.join(',')}]}`;
 
 			state.prerendering.dependencies.set(data_pathname, {
-				response: new Response(body),
+				response: text(body),
 				body
 			});
 		}

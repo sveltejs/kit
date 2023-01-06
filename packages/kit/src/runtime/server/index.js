@@ -23,7 +23,7 @@ import {
 	validate_page_server_exports,
 	validate_server_exports
 } from '../../utils/exports.js';
-import { error, json } from '../../exports/index.js';
+import { error, json, text } from '../../exports/index.js';
 
 /* global __SVELTEKIT_ADAPTER_NAME__ */
 
@@ -52,7 +52,7 @@ export async function respond(request, options, state) {
 			if (request.headers.get('accept') === 'application/json') {
 				return json(csrf_error.body, { status: csrf_error.status });
 			}
-			return new Response(csrf_error.body.message, { status: csrf_error.status });
+			return text(csrf_error.body.message, { status: csrf_error.status });
 		}
 	}
 
@@ -60,7 +60,7 @@ export async function respond(request, options, state) {
 	try {
 		decoded = decode_pathname(url.pathname);
 	} catch {
-		return new Response('Malformed URI', { status: 400 });
+		return text('Malformed URI', { status: 400 });
 	}
 
 	/** @type {import('types').SSRRoute | null} */
@@ -71,7 +71,7 @@ export async function respond(request, options, state) {
 
 	if (options.paths.base && !state.prerendering?.fallback) {
 		if (!decoded.startsWith(options.paths.base)) {
-			return new Response('Not found', { status: 404 });
+			return text('Not found', { status: 404 });
 		}
 		decoded = decoded.slice(options.paths.base.length) || '/';
 	}
@@ -364,7 +364,7 @@ export async function respond(request, options, state) {
 			}
 
 			if (state.initiator === GENERIC_ERROR) {
-				return new Response('Internal Server Error', {
+				return text('Internal Server Error', {
 					status: 500
 				});
 			}
@@ -383,7 +383,7 @@ export async function respond(request, options, state) {
 			}
 
 			if (state.prerendering) {
-				return new Response('not found', { status: 404 });
+				return text('not found', { status: 404 });
 			}
 
 			// we can't load the endpoint from our own manifest,

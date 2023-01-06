@@ -23,6 +23,18 @@ test.describe('Content-Type', () => {
 	});
 });
 
+test.describe('Content-Length', () => {
+	test('sets Content-Length on page', async ({ request }) => {
+		const response = await request.get('/content-length-header');
+
+		// TODO this would ideally be a unit test of `Server`,
+		// as would most of the tests in this file
+		if (!response.headers()['content-encoding']) {
+			expect(+response.headers()['content-length']).toBeGreaterThan(1000);
+		}
+	});
+});
+
 test.describe('Cookies', () => {
 	test('does not forward cookies from external domains', async ({ request }) => {
 		const { close, port } = await start_server(async (req, res) => {
