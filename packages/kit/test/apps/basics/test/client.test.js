@@ -552,7 +552,7 @@ test.describe('Load', () => {
 		expect(await page.textContent('p')).toBe('This text comes from the server load function');
 	});
 
-	test('load does not call fetch if max-age allows it', async ({ page, request }) => {
+	test('load does not call fetch if max-age allows it', async ({ page }) => {
 		await page.goto('/load/cache-control/default');
 		await expect(page.getByText('Count is 0')).toBeVisible();
 		await page.locator('button').click();
@@ -566,14 +566,14 @@ test.describe('Load', () => {
 		await expect(page.getByText('Count is 2')).toBeVisible();
 	});
 
-	test('load does ignore ttl if fetch cache options says so', async ({ page, request }) => {
+	test('load does ignore ttl if fetch cache options says so', async ({ page }) => {
 		await page.goto('/load/cache-control/force');
 		await expect(page.getByText('Count is 0')).toBeVisible();
 		await page.locator('button').click();
 		await expect(page.getByText('Count is 1')).toBeVisible();
 	});
 
-	test('load busts cache if non-GET request to resource is made', async ({ page, request }) => {
+	test('load busts cache if non-GET request to resource is made', async ({ page }) => {
 		await page.goto('/load/cache-control/bust');
 		await expect(page.getByText('Count is 0')).toBeVisible();
 		await page.locator('button').click();
