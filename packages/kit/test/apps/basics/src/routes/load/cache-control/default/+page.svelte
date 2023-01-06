@@ -4,11 +4,11 @@
 	/** @type {import('./$types').PageData} */
 	export let data;
 
-	async function fetch_again() {
+	async function update() {
 		await fetch('/load/cache-control/default/increment');
 		invalidate('/load/cache-control/default/count');
 	}
 </script>
 
 <p>Count is {data.count}</p>
-<button class="default" on:click={() => fetch_again()}>Fetch again</button>
+<button on:click={update}>update</button>
