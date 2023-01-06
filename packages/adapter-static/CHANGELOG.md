@@ -1,5 +1,11 @@
 # @sveltejs/adapter-static
 
+## 1.0.1
+
+### Patch Changes
+
+- [fix] match `adapter-vercel` logic for serving prerendered content ([#8332](https://github.com/sveltejs/kit/pull/8332))
+
 ## 1.0.0
 
 ### Major Changes

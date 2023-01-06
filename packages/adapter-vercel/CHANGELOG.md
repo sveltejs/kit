@@ -1,5 +1,11 @@
 # @sveltejs/adapter-vercel
 
+## 1.0.1
+
+### Patch Changes
+
+- [fix] only apply immutable cache-control headers to immutable assets ([#8332](https://github.com/sveltejs/kit/pull/8332))
+
 ## 1.0.0
 
 ### Major Changes
