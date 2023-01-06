@@ -90,6 +90,8 @@ export function match(param) {
 
 If the pathname doesn't match, SvelteKit will try to match other routes (using the sort order specified below), before eventually returning a 404.
 
+Each module in the `params` directory corresponds to a matcher, with the exception of `*.test.js` and `*.spec.js` files which may be used to unit test your matchers.
+
 > Matchers run both on the server and in the browser.
 
 ## Sorting
