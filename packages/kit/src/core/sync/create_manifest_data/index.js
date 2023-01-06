@@ -76,6 +76,9 @@ function create_matchers(config, cwd) {
 					matchers[type] = matcher_file;
 				}
 			} else {
+				// Allow for matcher test collocation
+				if (type.endsWith('.test') || type.endsWith('.spec')) continue;
+
 				throw new Error(
 					`Matcher names can only have underscores and alphanumeric characters — "${file}" is invalid`
 				);

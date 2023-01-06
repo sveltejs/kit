@@ -1,5 +1,17 @@
 # @sveltejs/kit
 
+## 1.0.7
+
+### Patch Changes
+
+- Ignore `*.test.js` and `*.spec.js` files in `params` directory ([#8250](https://github.com/sveltejs/kit/pull/8250))
+
+## 1.0.6
+
+### Patch Changes
+
+- Guarantee that `$page.route` has the correct shape ([#8359](https://github.com/sveltejs/kit/pull/8359))
+
 ## 1.0.5
 
 ### Patch Changes
