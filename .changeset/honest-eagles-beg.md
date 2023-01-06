@@ -2,4 +2,4 @@
 'create-svelte': major
 ---
 
-Make `build` script build the app, and add a new `package` script
+[breaking] Make `build` script build the app, and add a new `package` script
