@@ -124,6 +124,13 @@ test.describe('CSP', () => {
 
 		await close();
 	});
+
+	test("quotes 'script'", async ({ page }) => {
+		const response = await page.goto(`/path-base`);
+		expect(response.headers()['content-security-policy']).toMatch(
+			/require-trusted-types-for 'script'/
+		);
+	});
 });
 
 test.describe('Custom extensions', () => {

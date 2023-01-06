@@ -16,7 +16,8 @@ const quoted = new Set([
 	'none',
 	'strict-dynamic',
 	'report-sample',
-	'wasm-unsafe-eval'
+	'wasm-unsafe-eval',
+	'script'
 ]);
 
 const crypto_pattern = /^(nonce|sha\d\d\d)-/;
