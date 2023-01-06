@@ -102,10 +102,20 @@ export async function prerender() {
 	/** @type {import('types').SSRManifest} */
 	const manifest = (await import(pathToFileURL(manifest_path).href)).manifest;
 
+	/** @type {Map<string, string>} */
+	const saved = new Map();
+
 	override({
 		building: true,
 		paths: config.paths,
-		read: (file) => readFileSync(join(config.files.assets, file))
+		read: (file) => {
+			// stuff we just wrote
+			const filepath = saved.get(file);
+			if (filepath) return readFileSync(filepath);
+
+			// stuff in `static`
+			return readFileSync(join(config.files.assets, file));
+		}
 	});
 
 	const server = new Server(manifest);
@@ -222,6 +232,7 @@ export async function prerender() {
 			}
 
 			const body = result.body ?? new Uint8Array(await result.response.arrayBuffer());
+
 			save(
 				'dependencies',
 				result.response,
@@ -351,6 +362,9 @@ export async function prerender() {
 		} else if (response_type !== OK) {
 			handle_http_error({ status: response.status, path: decoded, referrer, referenceType });
 		}
+
+		manifest.assets.add(file);
+		saved.set(file, dest);
 	}
 
 	for (const route of manifest._.routes) {
