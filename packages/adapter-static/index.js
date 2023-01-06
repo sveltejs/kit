@@ -71,9 +71,7 @@ See https://kit.svelte.dev/docs/page-options#prerender for more details`
 				assets = pages,
 				fallback,
 				precompress
-			} = options ??
-			platform?.defaults(builder.config) ??
-			/** @type {import('./index').AdapterOptions} */ ({});
+			} = options ?? platform?.defaults ?? /** @type {import('./index').AdapterOptions} */ ({});
 
 			builder.rimraf(assets);
 			builder.rimraf(pages);
