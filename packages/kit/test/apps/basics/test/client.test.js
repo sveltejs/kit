@@ -554,36 +554,30 @@ test.describe('Load', () => {
 
 	test.describe.serial('', () => {
 		test('load does not call fetch if max-age allows it', async ({ page, request }) => {
-			await request.get('/load/cache-control/reset');
-
-			await page.goto('/load/cache-control');
+			await page.goto('/load/cache-control/default');
 			await expect(page.getByText('Count is 0')).toBeVisible();
-			await page.locator('button.default').click();
+			await page.locator('button').click();
 			await expect(page.getByText('Count is 0')).toBeVisible();
 
 			// use a cache expiration value high enough that we're confident the earlier
 			// portions of the test will complete before the cache expires
 			await page.waitForTimeout(4000);
 
-			await page.locator('button.default').click();
+			await page.locator('button').click();
 			await expect(page.getByText('Count is 2')).toBeVisible();
 		});
 
 		test('load does ignore ttl if fetch cache options says so', async ({ page, request }) => {
-			await request.get('/load/cache-control/reset');
-
-			await page.goto('/load/cache-control');
+			await page.goto('/load/cache-control/force');
 			await expect(page.getByText('Count is 0')).toBeVisible();
-			await page.locator('button.force').click();
+			await page.locator('button').click();
 			await expect(page.getByText('Count is 1')).toBeVisible();
 		});
 
 		test('load busts cache if non-GET request to resource is made', async ({ page, request }) => {
-			await request.get('/load/cache-control/reset');
-
-			await page.goto('/load/cache-control');
+			await page.goto('/load/cache-control/bust');
 			await expect(page.getByText('Count is 0')).toBeVisible();
-			await page.locator('button.bust').click();
+			await page.locator('button').click();
 			await expect(page.getByText('Count is 1')).toBeVisible();
 		});
 	});
