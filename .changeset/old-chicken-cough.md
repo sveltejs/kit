@@ -1,6 +1,5 @@
 ---
 '@sveltejs/adapter-static': patch
-'@sveltejs/adapter-vercel': patch
 ---
 
-Add prerendered assets to Vercel config
+Match `adapter-vercel` logic for serving prerendered content
