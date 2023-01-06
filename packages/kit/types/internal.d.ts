@@ -389,4 +389,6 @@ declare global {
 	const __SVELTEKIT_BROWSER__: boolean;
 	const __SVELTEKIT_DEV__: boolean;
 	const __SVELTEKIT_EMBEDDED__: boolean;
+	var Bun: object;
+	var Deno: object;
 }
