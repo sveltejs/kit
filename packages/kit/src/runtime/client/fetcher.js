@@ -51,7 +51,7 @@ if (DEV) {
 			cache.delete(selector);
 		}
 
-		if (__SVELTEKIT_DEBUG__) console.debug('delegating to native fetch');
+		if (__SVELTEKIT_DEBUG__) console.debug("delegating to browser's native fetch in dev mode");
 		const response = await native_fetch(input, init);
 		if (__SVELTEKIT_DEBUG__) console.debug('native fetch done');
 		return response;
@@ -71,8 +71,7 @@ if (DEV) {
 		}
 
 		if (__SVELTEKIT_DEBUG__)
-			console.debug(`delegating to native fetch (${input}, ${JSON.stringify(init)})`);
-		if (__SVELTEKIT_DEBUG__) console.debug(`${native_fetch}`);
+			console.debug(`delegating to browser's native fetch in build mode (${input}, ${JSON.stringify(init)})`);
 		const response = await native_fetch(input, init);
 		if (__SVELTEKIT_DEBUG__) console.debug('native fetch done');
 		return response;
