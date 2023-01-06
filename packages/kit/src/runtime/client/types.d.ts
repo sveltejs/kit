@@ -8,7 +8,8 @@ import {
 	preloadCode,
 	preloadData
 } from '$app/navigation';
-import { CSRPageNode, CSRPageNodeLoader, CSRRoute, TrailingSlash, Uses } from 'types';
+import { SvelteComponent } from 'svelte';
+import { CSRPageNode, CSRPageNodeLoader, CSRRoute, Page, TrailingSlash, Uses } from 'types';
 
 export interface Client {
 	// public API, exposed via $app/navigation
@@ -58,7 +59,12 @@ export type NavigationRedirect = {
 export type NavigationFinished = {
 	type: 'loaded';
 	state: NavigationState;
-	props: Record<string, any>;
+	props: {
+		components: Array<typeof SvelteComponent>;
+		page?: Page;
+		form?: Record<string, any> | null;
+		[key: `data_${number}`]: Record<string, any>;
+	};
 };
 
 export type BranchNode = {

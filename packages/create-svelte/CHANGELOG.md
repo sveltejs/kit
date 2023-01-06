@@ -1,5 +1,17 @@
 # create-svelte
 
+## 2.1.0
+
+### Minor Changes
+
+- Create vite.config.ts for TypeScript projects ([#8258](https://github.com/sveltejs/kit/pull/8258))
+
+## 2.0.2
+
+### Patch Changes
+
+- [fix] address flakiness in playwright test ([#8162](https://github.com/sveltejs/kit/pull/8162))
+
 ## 2.0.1
 
 ### Patch Changes

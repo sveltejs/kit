@@ -1,6 +1,6 @@
 {
 	"name": "@sveltejs/adapter-static",
-	"version": "1.0.0",
+	"version": "1.0.1",
 	"repository": {
 		"type": "git",
 		"url": "https://github.com/sveltejs/kit",
@@ -28,10 +28,10 @@
 		"@sveltejs/kit": "workspace:^",
 		"@types/node": "^16.18.6",
 		"sirv": "^2.0.2",
-		"svelte": "^3.54.0",
-		"typescript": "^4.9.3",
+		"svelte": "^3.55.0",
+		"typescript": "^4.9.4",
 		"uvu": "^0.5.6",
-		"vite": "^4.0.0"
+		"vite": "^4.0.4"
 	},
 	"peerDependencies": {
 		"@sveltejs/kit": "^1.0.0"

@@ -187,7 +187,7 @@ export async function handle({ event, resolve }) {
 
 	return resolve(event, {
 		transformPageChunk: ({ html, done }) => {
-			html += page;
+			page += html;
 			if (done) {
 				return building ? minify(page, minification_options) : page;
 			}

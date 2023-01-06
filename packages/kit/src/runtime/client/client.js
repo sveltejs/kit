@@ -286,7 +286,7 @@ export function create_client({ target, base }) {
 				);
 				return false;
 			}
-		} else if (navigation_result.props?.page?.status >= 400) {
+		} else if (/** @type {number} */ (navigation_result.props?.page?.status) >= 400) {
 			const updated = await stores.updated.check();
 			if (updated) {
 				await native_navigation(url);
@@ -369,7 +369,7 @@ export function create_client({ target, base }) {
 		const style = document.querySelector('style[data-sveltekit]');
 		if (style) style.remove();
 
-		page = result.props.page;
+		page = /** @type {import('types').Page} */ (result.props.page);
 
 		root = new Root({
 			target,
@@ -435,6 +435,7 @@ export function create_client({ target, base }) {
 				route
 			},
 			props: {
+				// @ts-ignore Somehow it's getting SvelteComponent and SvelteComponentDev mixed up
 				components: filtered.map((branch_node) => branch_node.node.component)
 			}
 		};
@@ -473,7 +474,9 @@ export function create_client({ target, base }) {
 			result.props.page = {
 				error,
 				params,
-				route,
+				route: {
+					id: route?.id ?? null
+				},
 				status,
 				url: new URL(url),
 				form: form ?? null,
@@ -1483,21 +1486,28 @@ export function create_client({ target, base }) {
 				if (method !== 'get') return;
 
 				const url = new URL(
-					(event.submitter?.hasAttribute('formaction') && submitter?.formAction) || form.action
+					(submitter?.hasAttribute('formaction') && submitter?.formAction) || form.action
 				);
 
 				if (is_external_url(url, base)) return;
 
-				const { noscroll, reload } = get_router_options(
-					/** @type {HTMLFormElement} */ (event.target)
-				);
+				const event_form = /** @type {HTMLFormElement} */ (event.target);
+
+				const { noscroll, reload } = get_router_options(event_form);
 				if (reload) return;
 
 				event.preventDefault();
 				event.stopPropagation();
 
+				const data = new FormData(event_form);
+
+				const submitter_name = submitter?.getAttribute('name');
+				if (submitter_name) {
+					data.append(submitter_name, submitter?.getAttribute('value') ?? '');
+				}
+
 				// @ts-expect-error `URLSearchParams(fd)` is kosher, but typescript doesn't know that
-				url.search = new URLSearchParams(new FormData(event.target)).toString();
+				url.search = new URLSearchParams(data).toString();
 
 				navigate({
 					url,

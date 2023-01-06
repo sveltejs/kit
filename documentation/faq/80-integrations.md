@@ -8,39 +8,6 @@ Make sure you've read the [documentation section on integrations](/docs/integrat
 
 Put the code to query your database in a [server route](/docs/routing#server) - don't query the database in .svelte files. You can create a `db.js` or similar that sets up a connection immediately and makes the client accessible throughout the app as a singleton. You can execute any one-time setup code in `hooks.js` and import your database helpers into any endpoint that needs them.
 
-### How do I use middleware?
-
-`adapter-node` builds a middleware that you can use with your own server for production mode. In dev, you can add middleware to Vite by using a Vite plugin. For example:
-
-```js
-// @filename: ambient.d.ts
-declare module '@sveltejs/kit/vite'; // TODO this feels unnecessary, why can't it 'see' the declarations?
-
-// @filename: index.js
-// ---cut---
-import { sveltekit } from '@sveltejs/kit/vite';
-
-/** @type {import('vite').Plugin} */
-const myPlugin = {
-	name: 'log-request-middleware',
-	configureServer(server) {
-		server.middlewares.use((req, res, next) => {
-			console.log(`Got request ${req.url}`);
-			next();
-		});
-	}
-};
-
-/** @type {import('vite').UserConfig} */
-const config = {
-	plugins: [myPlugin, sveltekit()]
-};
-
-export default config;
-```
-
-See [Vite's `configureServer` docs](https://vitejs.dev/guide/api-plugin.html#configureserver) for more details including how to control ordering.
-
 ### How do I use a client-side only library that depends on `document` or `window`?
 
 If you need access to the `document` or `window` variables or otherwise need code to run only on the client-side you can wrap it in a `browser` check:
@@ -105,6 +72,57 @@ onMount(() => {
 	method('hello world');
 });
 ```
+
+### How do I use a different backend API server?
+
+You can use [`event.fetch`](/docs/load#making-fetch-requests) to request data from an external API server, but be aware that you would need to deal with [CORS](https://developer.mozilla.org/en-US/docs/Web/HTTP/CORS), which will result in complications such as generally requiring requests to be preflighted resulting in higher latency. Requests to a separate subdomain may also increase latency due to an additional DNS lookup, TLS setup, etc. If you wish to use this method, you may find [`handleFetch`](/docs/hooks#server-hooks-handlefetch) helpful.
+
+Another approach is to set up a proxy to bypass CORS headaches. In production, you would rewrite a path like `/api` to the API server; for local development, use Vite's [`server.proxy`](https://vitejs.dev/config/server-options.html#server-proxy) option.
+
+How to setup rewrites in production will depend on your deployment platform. If rewrites aren't an option, you could alternatively add an [API route](https://kit.svelte.dev/docs/routing#server):
+
+```js
+/// file: src/routes/api/[...path]/+server.js
+/** @type {import('./$types').RequestHandler} */
+export function GET({ params, url }) {
+	return fetch(`https://my-api-server.com/${params.path + url.search}`);
+}
+```
+
+(Note that you may also need to proxy `POST`/`PATCH` etc requests, and forward `request.headers`, depending on your needs.)
+
+### How do I use middleware?
+
+`adapter-node` builds a middleware that you can use with your own server for production mode. In dev, you can add middleware to Vite by using a Vite plugin. For example:
+
+```js
+// @filename: ambient.d.ts
+declare module '@sveltejs/kit/vite'; // TODO this feels unnecessary, why can't it 'see' the declarations?
+
+// @filename: index.js
+// ---cut---
+import { sveltekit } from '@sveltejs/kit/vite';
+
+/** @type {import('vite').Plugin} */
+const myPlugin = {
+	name: 'log-request-middleware',
+	configureServer(server) {
+		server.middlewares.use((req, res, next) => {
+			console.log(`Got request ${req.url}`);
+			next();
+		});
+	}
+};
+
+/** @type {import('vite').UserConfig} */
+const config = {
+	plugins: [myPlugin, sveltekit()]
+};
+
+export default config;
+```
+
+See [Vite's `configureServer` docs](https://vitejs.dev/guide/api-plugin.html#configureserver) for more details including how to control ordering.
 
 ### Does it work with Yarn 2?
 

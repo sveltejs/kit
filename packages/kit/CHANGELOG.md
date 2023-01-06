@@ -1,5 +1,43 @@
 # @sveltejs/kit
 
+## 1.0.7
+
+### Patch Changes
+
+- Ignore `*.test.js` and `*.spec.js` files in `params` directory ([#8250](https://github.com/sveltejs/kit/pull/8250))
+
+## 1.0.6
+
+### Patch Changes
+
+- Guarantee that `$page.route` has the correct shape ([#8359](https://github.com/sveltejs/kit/pull/8359))
+
+## 1.0.5
+
+### Patch Changes
+
+- Update typings of `event.platform` to be possibly undefined ([#8232](https://github.com/sveltejs/kit/pull/8232))
+
+## 1.0.4
+
+### Patch Changes
+
+- [fix] don't polyfill undici if using Deno or Bun ([#8338](https://github.com/sveltejs/kit/pull/8338))
+
+## 1.0.3
+
+### Patch Changes
+
+- Include submitter's value when progressively enhancing `<form method="get">` ([#8273](https://github.com/sveltejs/kit/pull/8273))
+
+## 1.0.2
+
+### Patch Changes
+
+- Fix filterSerializedResponseHeaders error message ([#8348](https://github.com/sveltejs/kit/pull/8348))
+
+- Fix form action redirect status code ([#8210](https://github.com/sveltejs/kit/pull/8210))
+
 ## 1.0.1
 
 ### Patch Changes

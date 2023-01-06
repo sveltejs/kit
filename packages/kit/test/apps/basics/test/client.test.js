@@ -836,7 +836,9 @@ test.describe('Routing', () => {
 		await page.goto('/routing/form-get');
 		expect(await page.textContent('h1')).toBe('...');
 		expect(await page.textContent('h2')).toBe('enter');
+		expect(await page.textContent('h3')).toBe('...');
 
+		/** @type {string[]} */
 		const requests = [];
 		page.on('request', (request) => requests.push(request.url()));
 
@@ -846,6 +848,7 @@ test.describe('Routing', () => {
 		expect(requests).toEqual([]);
 		expect(await page.textContent('h1')).toBe('updated');
 		expect(await page.textContent('h2')).toBe('form');
+		expect(await page.textContent('h3')).toBe('bar');
 	});
 });
 
@@ -1086,10 +1089,10 @@ test.describe.serial('Invalidation', () => {
 
 	test('$page.url can safely be mutated', async ({ page }) => {
 		await page.goto('/load/mutated-url?q=initial');
-		expect(page.getByText('initial')).toBeVisible();
+		await expect(page.getByText('initial')).toBeVisible();
 
 		await page.locator('button').click();
-		expect(page.getByText('updated')).toBeVisible();
+		await expect(page.getByText('updated')).toBeVisible();
 	});
 });
 

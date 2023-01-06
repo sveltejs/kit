@@ -8,7 +8,7 @@ Errors are an inevitable fact of software development. SvelteKit handles errors 
 
 SvelteKit distinguishes between expected and unexpected errors, both of which are represented as simple `{ message: string }` objects by default.
 
-You can add additional properties, like a `code` or a tracking `id`, as shown below.
+You can add additional properties, like a `code` or a tracking `id`, as shown in the examples below. (When using TypeScript this requires you to redefine the `Error` type as described in  [type safety](/docs/errors#type-safety)).
 
 ## Expected errors
 
@@ -83,10 +83,17 @@ Unexpected errors will go through the [`handleError`](/docs/hooks#shared-hooks-h
 /// file: src/hooks.server.js
 // @errors: 2322 1360 2571 2339
 // @filename: ambient.d.ts
-const Sentry: any;
+declare module '@sentry/node' {
+	export const init: (opts: any) => void;
+	export const captureException: (error: any, opts: any) => void;
+}
 
 // @filename: index.js
 // ---cut---
+import * as Sentry from '@sentry/node';
+
+Sentry.init({/*...*/})
+
 /** @type {import('@sveltejs/kit').HandleServerError} */
 export function handleError({ error, event }) {
 	// example integration with https://sentry.io/
