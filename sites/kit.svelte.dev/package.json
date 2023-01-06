@@ -10,8 +10,7 @@
 		"test": "uvu src \"(spec\\.js|test[\\\\/]index\\.js)\""
 	},
 	"devDependencies": {
-		"@sveltejs/adapter-auto": "workspace:^",
-		"@sveltejs/adapter-static": "workspace:^",
+		"@sveltejs/adapter-vercel": "workspace:^1.0.0",
 		"@sveltejs/amp": "workspace:^",
 		"@sveltejs/kit": "workspace:^",
 		"@sveltejs/site-kit": "^3.0.3",
