@@ -10,5 +10,6 @@ export function GET({ setHeaders }) {
 }
 
 export function POST() {
+	if (process.env.DEBUG) console.warn(`POST /load/cache-control/count`);
 	return new Response();
 }
