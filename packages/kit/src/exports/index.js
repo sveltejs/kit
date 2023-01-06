@@ -29,13 +29,24 @@ export function redirect(status, location) {
 export function json(data, init) {
 	// TODO deprecate this in favour of `Response.json` when it's
 	// more widely supported
-	const response = text(JSON.stringify(data), init);
+	const body = JSON.stringify(data);
 
-	if (!response.headers.has('content-type')) {
-		response.headers.set('content-type', 'application/json');
+	// we can't just do `text(JSON.stringify(data), init)` because
+	// it will set a default `content-type` header. duplicated code
+	// means less duplicated work
+	const headers = new Headers(init?.headers);
+	if (!headers.has('content-length')) {
+		headers.set('content-length', encoder.encode(body).byteLength.toString());
 	}
 
-	return response;
+	if (!headers.has('content-type')) {
+		headers.set('content-type', 'application/json');
+	}
+
+	return new Response(body, {
+		...init,
+		headers
+	});
 }
 
 const encoder = new TextEncoder();
