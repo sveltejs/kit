@@ -38,11 +38,13 @@ export function json(data, init) {
 	return response;
 }
 
+const encoder = new TextEncoder();
+
 /** @type {import('@sveltejs/kit').text} */
 export function text(body, init) {
 	const headers = new Headers(init?.headers);
 	if (!headers.has('content-length')) {
-		headers.set('content-length', String(body.length));
+		headers.set('content-length', encoder.encode(body).byteLength.toString());
 	}
 
 	return new Response(body, {
