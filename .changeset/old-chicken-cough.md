@@ -2,4 +2,4 @@
 '@sveltejs/adapter-static': patch
 ---
 
-Match `adapter-vercel` logic for serving prerendered content
+[fix] match `adapter-vercel` logic for serving prerendered content
