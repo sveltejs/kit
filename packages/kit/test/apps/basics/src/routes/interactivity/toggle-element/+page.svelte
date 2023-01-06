@@ -8,8 +8,12 @@
 
 {#if visible}
 	<button on:click={toggle}>remove</button>
-	<a href="." on:click={toggle}>remove</a>
+
+	<!-- svelte-ignore a11y-missing-attribute a11y-click-events-have-key-events -->
+	<a on:click={toggle}>remove</a>
 {:else}
 	<button on:click={toggle}>add</button>
-	<a href="." on:click={toggle}>add</a>
+
+	<!-- svelte-ignore a11y-missing-attribute a11y-click-events-have-key-events -->
+	<a on:click={toggle}>add</a>
 {/if}
