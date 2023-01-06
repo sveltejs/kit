@@ -301,7 +301,7 @@ function kit({ svelte_config }) {
 		},
 
 		async load(id, options) {
-			if (options?.ssr === false && !process.env.TEST) {
+			if (options?.ssr === false && process.env.TEST !== 'true') {
 				const normalized_cwd = vite.normalizePath(cwd);
 				const normalized_lib = vite.normalizePath(svelte_config.kit.files.lib);
 				if (
