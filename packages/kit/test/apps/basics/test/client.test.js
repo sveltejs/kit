@@ -834,6 +834,7 @@ test.describe('Routing', () => {
 		expect(await page.textContent('h2')).toBe('enter');
 		expect(await page.textContent('h3')).toBe('...');
 
+		/** @type {string[]} */
 		const requests = [];
 		page.on('request', (request) => requests.push(request.url()));
 
