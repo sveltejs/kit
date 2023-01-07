@@ -92,7 +92,7 @@ Note that `resolve(...)` will never throw an error, it will always return a `Pro
 
 ### handleFetch
 
-This function allows you to modify (or replace) a `fetch` request that happens inside a `load` or `actions` function that runs on the server (or during pre-rendering).
+This function allows you to modify (or replace) a `fetch` request that happens inside a `load` or `action` function that runs on the server (or during pre-rendering).
 
 For example, your `load` function might make a request to a public URL like `https://api.yourapp.com` when the user performs a client-side navigation to the respective page, but during SSR it might make sense to hit the API directly (bypassing whatever proxies and load balancers sit between it and the public internet).
 
