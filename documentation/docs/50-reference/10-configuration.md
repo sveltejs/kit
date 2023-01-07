@@ -6,6 +6,14 @@ Your project's configuration lives in a `svelte.config.js` file at the root of y
 
 ```js
 /// file: svelte.config.js
+// @filename: ambient.d.ts
+declare module '@sveltejs/adapter-auto' {
+	const plugin: () => import('@sveltejs/kit').Adapter;
+	export default plugin;
+}
+
+// @filename: index.js
+// ---cut---
 import adapter from '@sveltejs/adapter-auto';
 
 /** @type {import('@sveltejs/kit').Config} */
