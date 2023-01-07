@@ -924,7 +924,6 @@ test.describe('$app/stores', () => {
 test.describe('Invalidation', () => {
 	test('+layout.server.js does not re-run when downstream load functions are invalidated', async ({
 		page,
-		request,
 		clicknav
 	}) => {
 		await page.goto('/load/unchanged/isolated/a');
@@ -938,7 +937,6 @@ test.describe('Invalidation', () => {
 
 	test('+layout.server.js re-runs when await parent() is called from downstream load function', async ({
 		page,
-		request,
 		clicknav
 	}) => {
 		await page.goto('/load/unchanged-parent/uses-parent/a');
@@ -966,8 +964,7 @@ test.describe('Invalidation', () => {
 	});
 
 	test('server-only load functions are re-run following forced invalidation', async ({
-		page,
-		request
+		page
 	}) => {
 		await page.goto('/load/invalidation/forced');
 		expect(await page.textContent('h1')).toBe('a: 0, b: 1');
@@ -982,8 +979,7 @@ test.describe('Invalidation', () => {
 	});
 
 	test('server-only load functions are re-run following goto with forced invalidation', async ({
-		page,
-		request
+		page
 	}) => {
 		await page.goto('/load/invalidation/forced-goto');
 		expect(await page.textContent('h1')).toBe('a: 0, b: 1');
@@ -993,7 +989,7 @@ test.describe('Invalidation', () => {
 		expect(await page.textContent('h1')).toBe('a: 2, b: 3');
 	});
 
-	test('multiple invalidations run concurrently', async ({ page, request }) => {
+	test('multiple invalidations run concurrently', async ({ page }) => {
 		await page.goto('/load/invalidation/multiple');
 		await expect(page.getByText('layout: 0, page: 0')).toBeVisible();
 
@@ -1028,7 +1024,7 @@ test.describe('Invalidation', () => {
 		expect(shared).not.toBe(next_shared);
 	});
 
-	test('+layout.js is re-run when shared dep is invalidated', async ({ page, clicknav }) => {
+	test('+layout.js is re-run when shared dep is invalidated', async ({ page }) => {
 		await page.goto('/load/invalidation/depends');
 		const server = await page.textContent('p.server');
 		const shared = await page.textContent('p.shared');
