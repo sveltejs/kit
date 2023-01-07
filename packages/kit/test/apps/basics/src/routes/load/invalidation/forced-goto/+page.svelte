@@ -17,6 +17,6 @@
 <button
 	class="goto"
 	on:click={() => {
-		window.promise = goto('/load/invalidation/forced?test', { invalidateAll: true });
+		window.promise = goto('/load/invalidation/forced-goto?test', { invalidateAll: true });
 	}}>goto</button
 >
