@@ -2,9 +2,8 @@
 <slot />
 
 <ul>
-	<li><a href="/load/unchanged/reset">/load/unchanged/reset</a></li>
-	<li><a href="/load/unchanged/isolated/a">/load/unchanged/isolated/a</a></li>
-	<li><a href="/load/unchanged/isolated/b">/load/unchanged/isolated/b</a></li>
-	<li><a href="/load/unchanged/uses-parent/a">/load/unchanged/uses-parent/a</a></li>
-	<li><a href="/load/unchanged/uses-parent/b">/load/unchanged/uses-parent/b</a></li>
+	<li><a href="/load/unchanged-parent/isolated/a">/load/unchanged-parent/isolated/a</a></li>
+	<li><a href="/load/unchanged-parent/isolated/b">/load/unchanged-parent/isolated/b</a></li>
+	<li><a href="/load/unchanged-parent/uses-parent/a">/load/unchanged-parent/uses-parent/a</a></li>
+	<li><a href="/load/unchanged-parent/uses-parent/b">/load/unchanged-parent/uses-parent/b</a></li>
 </ul>
