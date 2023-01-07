@@ -1,2 +1,2 @@
-<a href="/load/unchanged/uses-parent/a">uses parent</a>
-<a href="/load/unchanged/isolated/a">isolated</a>
+<a href="/load/unchanged-parent/uses-parent/a">uses parent</a>
+<a href="/load/unchanged-parent/isolated/a">isolated</a>
