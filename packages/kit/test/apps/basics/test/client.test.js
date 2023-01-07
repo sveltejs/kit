@@ -920,14 +920,12 @@ test.describe('$app/stores', () => {
 	});
 });
 
-test.describe.serial('Invalidation', () => {
+test.describe('Invalidation', () => {
 	test('+layout.server.js does not re-run when downstream load functions are invalidated', async ({
 		page,
 		request,
 		clicknav
 	}) => {
-		await request.get('/load/unchanged/reset');
-
 		await page.goto('/load/unchanged/isolated/a');
 		expect(await page.textContent('h1')).toBe('slug: a');
 		expect(await page.textContent('h2')).toBe('count: 0');
@@ -942,14 +940,12 @@ test.describe.serial('Invalidation', () => {
 		request,
 		clicknav
 	}) => {
-		await request.get('/load/unchanged/reset');
-
-		await page.goto('/load/unchanged/uses-parent/a');
+		await page.goto('/load/unchanged-parent/uses-parent/a');
 		expect(await page.textContent('h1')).toBe('slug: a');
 		expect(await page.textContent('h2')).toBe('count: 0');
 		expect(await page.textContent('h3')).toBe('doubled: 0');
 
-		await clicknav('[href="/load/unchanged/uses-parent/b"]');
+		await clicknav('[href="/load/unchanged-parent/uses-parent/b"]');
 		expect(await page.textContent('h1')).toBe('slug: b');
 		expect(await page.textContent('h2')).toBe('count: 0');
 
@@ -972,8 +968,6 @@ test.describe.serial('Invalidation', () => {
 		page,
 		request
 	}) => {
-		await request.get('/load/invalidation/forced/reset');
-
 		await page.goto('/load/invalidation/forced');
 		expect(await page.textContent('h1')).toBe('a: 0, b: 1');
 
@@ -990,9 +984,7 @@ test.describe.serial('Invalidation', () => {
 		page,
 		request
 	}) => {
-		await request.get('/load/invalidation/forced/reset');
-
-		await page.goto('/load/invalidation/forced');
+		await page.goto('/load/invalidation/forced-goto');
 		expect(await page.textContent('h1')).toBe('a: 0, b: 1');
 
 		await page.click('button.goto');
