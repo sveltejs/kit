@@ -1,7 +1,7 @@
 import { json } from '@sveltejs/kit';
-import { reset } from '../state.js';
+import { increment } from '../state.js';
 
 export function GET() {
-	reset();
+	increment();
 	return json({});
 }
