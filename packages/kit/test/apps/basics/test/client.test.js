@@ -552,40 +552,36 @@ test.describe('Load', () => {
 		expect(await page.textContent('p')).toBe('This text comes from the server load function');
 	});
 
-	test.describe.serial('', () => {
-		test('load does not call fetch if max-age allows it', async ({ page, request }) => {
-			await request.get('/load/cache-control/reset');
+	test('load does not call fetch if max-age allows it', async ({ page }) => {
+		page.addInitScript(`
+			window.now = 0;
+			window.performance.now = () => now;
+		`);
 
-			await page.goto('/load/cache-control');
-			await expect(page.getByText('Count is 0')).toBeVisible();
-			await page.locator('button.default').click();
-			await expect(page.getByText('Count is 0')).toBeVisible();
+		await page.goto('/load/cache-control/default');
+		await expect(page.getByText('Count is 0')).toBeVisible();
+		await page.locator('button').click();
+		await page.waitForLoadState('networkidle');
+		await expect(page.getByText('Count is 0')).toBeVisible();
 
-			// use a cache expiration value high enough that we're confident the earlier
-			// portions of the test will complete before the cache expires
-			await page.waitForTimeout(4000);
+		await page.evaluate(() => (window.now = 2500));
 
-			await page.locator('button.default').click();
-			await expect(page.getByText('Count is 2')).toBeVisible();
-		});
+		await page.locator('button').click();
+		await expect(page.getByText('Count is 2')).toBeVisible();
+	});
 
-		test('load does ignore ttl if fetch cache options says so', async ({ page, request }) => {
-			await request.get('/load/cache-control/reset');
+	test('load does ignore ttl if fetch cache options says so', async ({ page }) => {
+		await page.goto('/load/cache-control/force');
+		await expect(page.getByText('Count is 0')).toBeVisible();
+		await page.locator('button').click();
+		await expect(page.getByText('Count is 1')).toBeVisible();
+	});
 
-			await page.goto('/load/cache-control');
-			await expect(page.getByText('Count is 0')).toBeVisible();
-			await page.locator('button.force').click();
-			await expect(page.getByText('Count is 1')).toBeVisible();
-		});
-
-		test('load busts cache if non-GET request to resource is made', async ({ page, request }) => {
-			await request.get('/load/cache-control/reset');
-
-			await page.goto('/load/cache-control');
-			await expect(page.getByText('Count is 0')).toBeVisible();
-			await page.locator('button.bust').click();
-			await expect(page.getByText('Count is 1')).toBeVisible();
-		});
+	test('load busts cache if non-GET request to resource is made', async ({ page }) => {
+		await page.goto('/load/cache-control/bust');
+		await expect(page.getByText('Count is 0')).toBeVisible();
+		await page.locator('button').click();
+		await expect(page.getByText('Count is 1')).toBeVisible();
 	});
 
 	test('__data.json has cache-control: private, no-store', async ({ page, clicknav }) => {
