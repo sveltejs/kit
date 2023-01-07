@@ -963,9 +963,7 @@ test.describe('Invalidation', () => {
 		expect(await page.textContent('h1')).toBe('3');
 	});
 
-	test('server-only load functions are re-run following forced invalidation', async ({
-		page
-	}) => {
+	test('server-only load functions are re-run following forced invalidation', async ({ page }) => {
 		await page.goto('/load/invalidation/forced');
 		expect(await page.textContent('h1')).toBe('a: 0, b: 1');
 
