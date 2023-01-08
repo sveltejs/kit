@@ -708,8 +708,8 @@ export function create_client({ target, base }) {
 		/** @type {import('types').ServerData | null} */
 		let server_data = null;
 
-		const url_changed = current.url ? id !== current.url.pathname + current.url.search : false;
-		const route_changed = current.route ? id !== current.route.id : false;
+		const url_changed = current.url ? url.pathname + url.search !== current.url.pathname + current.url.search : false;
+		const route_changed = current.route ? route.id !== current.route.id : false;
 
 		const invalid_server_nodes = loaders.reduce((acc, loader, i) => {
 			const previous = current.branch[i];
