@@ -31,12 +31,10 @@ export async function dev(vite, vite_config, svelte_config) {
 
 	const fetch = globalThis.fetch;
 	globalThis.fetch = (info, init) => {
-		if (typeof info === 'string') {
-			if (new URL(info, 'fake://fake').protocol === 'fake:') {
-				throw new Error(
-					`Cannot use relative URL (${info}) with global fetch — use \`event.fetch\` instead: https://kit.svelte.dev/docs/web-standards#fetch-apis`
-				);
-			}
+		if (typeof info === 'string' && !/^\w+:\/\//.test(info)) {
+			throw new Error(
+				`Cannot use relative URL (${info}) with global fetch — use \`event.fetch\` instead: https://kit.svelte.dev/docs/web-standards#fetch-apis`
+			);
 		}
 
 		return fetch(info, init);
