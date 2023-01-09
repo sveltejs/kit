@@ -371,7 +371,7 @@ export async function render_response({
 	if (DEV) {
 		if (transformed.split('<!--').length < html.split('<!--').length) {
 			console.warn(
-				'\u001B[1m\u001B[31mRemoving comments in transformPageChunk can have undesirable effects\u001B[39m\u001B[22m'
+				'\u001B[1m\u001B[31mRemoving comments in transformPageChunk can break Svelte\'s hydration\u001B[39m\u001B[22m'
 			);
 		}
 	}
