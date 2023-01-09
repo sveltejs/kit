@@ -521,7 +521,7 @@ export async function load({ fetch, depends }) {
 ```svelte
 /// file: src/routes/random-number/+page.svelte
 <script>
-	import { invalidateAll } from '$app/navigation';
+	import { invalidate, invalidateAll } from '$app/navigation';
 
 	/** @type {import('./$types').PageData} */
 	export let data;
