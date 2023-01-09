@@ -838,8 +838,7 @@ test.describe('Load', () => {
 		baseURL,
 		page,
 		clicknav,
-		javaScriptEnabled,
-		browserName
+		javaScriptEnabled
 	}) => {
 		await page.goto('/load');
 		await clicknav('[href="/load/fetch-request-headers"]');
@@ -856,8 +855,8 @@ test.describe('Load', () => {
 				referer: `${baseURL}/load`,
 				// these headers aren't particularly useful, but they allow us to verify
 				// that page headers are being forwarded
-				'sec-fetch-dest': browserName === 'webkit' ? undefined : 'empty',
-				'sec-fetch-mode': browserName === 'webkit' ? undefined : 'cors',
+				'sec-fetch-dest': 'empty',
+				'sec-fetch-mode': 'cors',
 				connection: 'keep-alive'
 			});
 		} else {
