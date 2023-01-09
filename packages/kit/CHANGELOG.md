@@ -1,5 +1,11 @@
 # @sveltejs/kit
 
+## 1.0.10
+
+### Patch Changes
+
+- Skip inline cache when vary header is present ([#8406](https://github.com/sveltejs/kit/pull/8406))
+
 ## 1.0.9
 
 ### Patch Changes
