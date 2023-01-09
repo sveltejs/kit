@@ -1069,6 +1069,16 @@ test.describe('Invalidation', () => {
 		expect(await page.textContent('h1')).toBe('route.id: /load/invalidation/route/shared/b');
 	});
 
+	test('route.id does not rerun layout if unchanged', async ({ page, clicknav }) => {
+		await page.goto('/load/invalidation/route/shared/unchanged-x');
+		expect(await page.textContent('h1')).toBe('route.id: /load/invalidation/route/shared/[x]');
+		const id = await page.textContent('h2');
+
+		await clicknav('[href="/load/invalidation/route/shared/unchanged-y"]');
+		expect(await page.textContent('h1')).toBe('route.id: /load/invalidation/route/shared/[x]');
+		expect(await page.textContent('h2')).toBe(id);
+	});
+
 	test('$page.url can safely be mutated', async ({ page }) => {
 		await page.goto('/load/mutated-url?q=initial');
 		await expect(page.getByText('initial')).toBeVisible();
