@@ -99,7 +99,7 @@ function get_routes_json(builder, assets) {
 	}
 
 	if (excess) {
-		const message = `Static file count exceeds _routes.json limits (see https://developers.cloudflare.com/pages/platform/functions/routing/#limits). Accessing some files ${excess} will cause function invocations.`;
+		const message = `Static file count exceeds _routes.json limits (see https://developers.cloudflare.com/pages/platform/functions/routing/#limits). Accessing some ${excess} will cause function invocations.`;
 		builder.log.warn(message);
 		exclude.length = 99;
 	}
