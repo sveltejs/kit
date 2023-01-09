@@ -1297,7 +1297,7 @@ test.describe('Redirects', () => {
 	test('prevents redirect loops', async ({ baseURL, page, javaScriptEnabled, browserName }) => {
 		await page.goto('/redirect');
 
-		await page.click('[href="/redirect/loopy/a"]');
+		await page.locator('[href="/redirect/loopy/a"]').click();
 
 		if (javaScriptEnabled) {
 			await page.waitForSelector('#message');
@@ -1490,8 +1490,7 @@ test.describe('Routing', () => {
 
 	test('does not attempt client-side navigation to server routes', async ({ page }) => {
 		await page.goto('/routing');
-		await page.click('[href="/routing/ambiguous/ok.json"]');
-		await page.waitForLoadState('networkidle');
+		await page.locator('[href="/routing/ambiguous/ok.json"]').click();
 		expect(await page.textContent('body')).toBe('ok');
 	});
 
@@ -1560,7 +1559,7 @@ test.describe('Routing', () => {
 	}) => {
 		await page.goto('/routing/hashes/a');
 
-		await page.click('[href="#hash-target"]');
+		await page.locator('[href="#hash-target"]').click();
 		await clicknav('[href="/routing/hashes/b"]');
 
 		await page.goBack();
@@ -1624,6 +1623,7 @@ test.describe('Routing', () => {
 			await page.goto(`/routing?port=${port}`);
 			await Promise.all([
 				page.click(`[href="http://localhost:${port}"]`),
+				// assert that the app can visit a URL not owned by the app without crashing
 				page.waitForURL(`http://localhost:${port}/`)
 			]);
 		} finally {
@@ -1656,7 +1656,7 @@ test.describe('Routing', () => {
 		expect(await page.textContent('h1')).toBe('xyz/abc');
 		expect(await page.textContent('h2')).toBe('xyz/abc');
 
-		await page.click('[href="/routing/rest/xyz/abc/qwe/deep.json"]');
+		await page.locator('[href="/routing/rest/xyz/abc/qwe/deep.json"]').click();
 		expect(await page.textContent('body')).toBe('xyz/abc/qwe');
 	});
 
@@ -1711,7 +1711,7 @@ test.describe('Routing', () => {
 		clicknav
 	}) => {
 		await page.goto('/routing/cancellation');
-		await page.click('[href="/routing/cancellation/a"]');
+		await page.locator('[href="/routing/cancellation/a"]').click();
 		await clicknav('[href="/routing/cancellation/b"]');
 
 		expect(await page.url()).toBe(`${baseURL}/routing/cancellation/b`);
@@ -1892,10 +1892,10 @@ test.describe('Actions', () => {
 		expect(await page.textContent('pre')).toBe(JSON.stringify(null));
 
 		if (javaScriptEnabled) {
-			await page.click('button.increment-success');
+			await page.locator('button.increment-success').click();
 			await expect(page.locator('pre')).toHaveText(JSON.stringify({ count: 0 }));
 
-			await page.click('button.increment-invalid');
+			await page.locator('button.increment-invalid').click();
 			await expect(page.locator('pre')).toHaveText(JSON.stringify({ count: 1 }));
 		}
 	});
@@ -1909,10 +1909,10 @@ test.describe('Actions', () => {
 		expect(await page.textContent('pre')).toBe(JSON.stringify(null));
 
 		if (javaScriptEnabled) {
-			await page.click('button.increment-success');
+			await page.locator('button.increment-success').click();
 			await expect(page.locator('pre')).toHaveText(JSON.stringify({ count: 0 }));
 
-			await page.click('button.invalidateAll');
+			await page.locator('button.invalidateAll').click();
 			await page.waitForTimeout(500);
 			await expect(page.locator('pre')).toHaveText(JSON.stringify({ count: 0 }));
 			await app.goto('/actions/enhance');
@@ -1928,7 +1928,7 @@ test.describe('Actions', () => {
 		expect(await page.textContent('pre')).toBe(JSON.stringify(null));
 
 		if (javaScriptEnabled) {
-			await page.click('button.redirect');
+			await page.locator('button.redirect').click();
 			await expect(page.locator('footer')).toHaveText('Custom layout');
 		}
 	});
@@ -1938,7 +1938,7 @@ test.describe('Actions', () => {
 		expect(await page.textContent('pre')).toBe(JSON.stringify(null));
 
 		if (javaScriptEnabled) {
-			await page.click('button.error');
+			await page.locator('button.error').click();
 			await expect(page.locator('p')).toHaveText(
 				'This is your custom error page saying: "Unexpected Form Error"'
 			);
@@ -2103,11 +2103,11 @@ test.describe.serial('Cookies API', () => {
 		let span = page.locator('#cookie-value');
 		expect(await span.innerText()).toContain('undefined');
 
-		await page.click('button#teapot');
+		await page.locator('button#teapot').click();
 		await expect(page.locator('#cookie-value')).toHaveText('teapot');
 
 		// setting a different value...
-		await page.click('button#janeAusten');
+		await page.locator('button#janeAusten').click();
 		await expect(page.locator('#cookie-value')).toHaveText('Jane Austen');
 	});
 
