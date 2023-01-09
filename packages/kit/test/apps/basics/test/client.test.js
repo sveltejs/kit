@@ -797,6 +797,7 @@ test.describe('Routing', () => {
 			await page.goto(`/routing/slashes?port=${port}`);
 			await page.locator(`a[href="http://localhost:${port}/with-slash/"]`).click();
 			expect(await page.content()).toBe('<html><head></head><body>ok</body></html>');
+			expect(page.url()).toBe(`http://localhost:${port}/with-slash/`);
 		} finally {
 			await close();
 		}
