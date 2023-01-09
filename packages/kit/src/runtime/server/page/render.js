@@ -353,17 +353,32 @@ export async function render_response({
 	// add the content after the script/css links so the link elements are parsed first
 	head += rendered.head;
 
+	const html = options.app_template({
+		head,
+		body,
+		assets,
+		nonce: /** @type {string} */ (csp.nonce)
+	});
+
 	// TODO flush chunks as early as we can
-	const html =
+	const transformed =
 		(await resolve_opts.transformPageChunk({
-			html: options.app_template({ head, body, assets, nonce: /** @type {string} */ (csp.nonce) }),
+			html,
 			done: true
 		})) || '';
+
+	if (__SVELTEKIT_DEV__) {
+		if (transformed.split('<!--').length < html.split('<!--').length) {
+			console.warn(
+				'\u001B[1m\u001B[31mRemoving comments in transformPageChunk can have undesirable effects\u001B[39m\u001B[22m'
+			);
+		}
+	}
 
 	const headers = new Headers({
 		'x-sveltekit-page': 'true',
 		'content-type': 'text/html',
-		etag: `"${hash(html)}"`
+		etag: `"${hash(transformed)}"`
 	});
 
 	if (!state.prerendering) {
@@ -381,7 +396,7 @@ export async function render_response({
 		}
 	}
 
-	return new Response(html, {
+	return new Response(transformed, {
 		status,
 		headers
 	});

@@ -25,6 +25,9 @@ const cwd = process.cwd();
  * @return {Promise<Promise<() => void>>}
  */
 export async function dev(vite, vite_config, svelte_config) {
+	// @ts-expect-error
+	globalThis.__SVELTEKIT_DEV__ = true;
+
 	if (should_polyfill) {
 		installPolyfills();
 	}
