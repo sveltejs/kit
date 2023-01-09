@@ -106,6 +106,8 @@ export function handleError({ error, event }) {
 }
 ```
 
+> Make sure that `handleError` _never_ throws an error
+
 ## Responses
 
 If an error occurs inside `handle` or inside a [`+server.js`](/docs/routing#server) request handler, SvelteKit will respond with either a fallback error page or a JSON representation of the error object, depending on the request's `Accept` headers.
