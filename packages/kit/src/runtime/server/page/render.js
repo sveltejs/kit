@@ -211,22 +211,17 @@ export async function render_response({
 		const path = prefixed(dep);
 
 		if (resolve_opts.preload({ type: 'css', path })) {
-			const attributes = [];
-
-			if (csp.style_needs_nonce) {
-				attributes.push(`nonce="${csp.nonce}"`);
-			}
+			const attributes = ['rel="stylesheet"'];
 
 			if (inline_styles.has(dep)) {
 				// don't load stylesheets that are already inlined
 				// include them in disabled state so that Vite can detect them and doesn't try to add them
 				attributes.push('disabled', 'media="(max-width: 0)"');
 			} else {
-				const preload_atts = ['rel="preload"', 'as="style"'].concat(attributes);
+				const preload_atts = ['rel="preload"', 'as="style"'];
 				link_header_preloads.add(`<${encodeURI(path)}>; ${preload_atts.join(';')}; nopush`);
 			}
 
-			attributes.unshift('rel="stylesheet"');
 			head += `\n\t\t<link href="${path}" ${attributes.join(' ')}>`;
 		}
 	}
