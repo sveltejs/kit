@@ -1,5 +1,11 @@
 # @sveltejs/kit
 
+## 1.0.9
+
+### Patch Changes
+
+- Add `assetFileNames` to worker rollup options ([#8384](https://github.com/sveltejs/kit/pull/8384))
+
 ## 1.0.8
 
 ### Patch Changes
