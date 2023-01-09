@@ -1128,7 +1128,7 @@ export function json(data: any, init?: ResponseInit): Response;
 
 /**
  * Create a `Response` object from the supplied body.
- * @param body The value that will be serialized as JSON.
+ * @param body The value that will be used as-is.
  * @param init Options such as `status` and `headers` that will be added to the response. A `Content-Length` header will be added automatically.
  */
 export function text(body: string, init?: ResponseInit): Response;
