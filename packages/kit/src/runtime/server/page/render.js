@@ -373,7 +373,7 @@ export async function render_response({
 			// the \u001B stuff is ANSI codes, so that we don't need to add a library to the runtime
 			// https://svelte.dev/repl/1b3f49696f0c44c881c34587f2537aa2
 			console.warn(
-				'\u001B[1m\u001B[31mRemoving comments in transformPageChunk can have undesirable effects\u001B[39m\u001B[22m'
+				'\u001B[1m\u001B[31mRemoving comments in transformPageChunk can break Svelte\'s hydration\u001B[39m\u001B[22m'
 			);
 		}
 	}
