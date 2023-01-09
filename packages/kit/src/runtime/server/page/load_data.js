@@ -33,6 +33,12 @@ export async function load_server_data({ event, options, state, node, parent }) 
 
 	const result = await node.server.load?.call(null, {
 		...event,
+		fetch: (info, init) => {
+			const url = new URL(info instanceof Request ? info.url : info, event.url);
+			uses.dependencies.add(url.href);
+
+			return event.fetch(info, init);
+		},
 		/** @param {string[]} deps */
 		depends: (...deps) => {
 			for (const dep of deps) {

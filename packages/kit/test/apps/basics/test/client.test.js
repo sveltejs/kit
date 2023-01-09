@@ -1022,6 +1022,16 @@ test.describe('Invalidation', () => {
 		expect(shared).not.toBe(next_shared);
 	});
 
+	test('fetch in server load can be invalidated', async ({ page, app, request }) => {
+		await request.get('/load/invalidation/server-fetch/count.json?reset');
+		await page.goto('/load/invalidation/server-fetch');
+		const selector = '[data-testid="count"]';
+
+		expect(await page.textContent(selector)).toBe('1');
+		await app.invalidate('/load/invalidation/server-fetch/count.json');
+		expect(await page.textContent(selector)).toBe('2');
+	});
+
 	test('+layout.js is re-run when shared dep is invalidated', async ({ page }) => {
 		await page.goto('/load/invalidation/depends');
 		const server = await page.textContent('p.server');
