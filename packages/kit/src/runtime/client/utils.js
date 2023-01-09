@@ -211,6 +211,7 @@ export function create_updated_store() {
 	/** @type {NodeJS.Timeout} */
 	let timeout;
 
+	/** @type {() => Promise<boolean>} */
 	async function check() {
 		if (DEV || !BROWSER) return false;
 
