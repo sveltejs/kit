@@ -1,5 +1,25 @@
 # @sveltejs/kit
 
+## 1.0.8
+
+### Patch Changes
+
+- Disable illegal import detection when running unit tests ([#8365](https://github.com/sveltejs/kit/pull/8365))
+
+- only prerender a given dependency once ([#8376](https://github.com/sveltejs/kit/pull/8376))
+
+- Error in dev mode if global `fetch` is used with relative URL ([#8370](https://github.com/sveltejs/kit/pull/8370))
+
+- `updated.check()` type changed to Promise<boolean> ([#8400](https://github.com/sveltejs/kit/pull/8400))
+
+- Don't strip body in no-cors mode on the server ([#8412](https://github.com/sveltejs/kit/pull/8412))
+
+- [fix] quote 'script' in CSP directives ([#8372](https://github.com/sveltejs/kit/pull/8372))
+
+- fix route id comparison for load change detection ([#8399](https://github.com/sveltejs/kit/pull/8399))
+
+- [fix] don't add nonce attribute to `<link>` elements ([#8369](https://github.com/sveltejs/kit/pull/8369))
+
 ## 1.0.7
 
 ### Patch Changes
