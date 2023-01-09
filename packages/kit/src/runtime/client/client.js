@@ -465,13 +465,6 @@ export function create_client({ target, base }) {
 			p += 1;
 		}
 
-		if (!data_changed) {
-			// If nothing was added, and the object entries are the same length, this means
-			// that nothing was removed either and therefore the data is the same as the previous one.
-			// This would be more readable with a separate boolean but that would cost us some bytes.
-			data_changed = Object.keys(page.data).length !== Object.keys(data).length;
-		}
-
 		const page_changed =
 			!current.url ||
 			url.href !== current.url.href ||
