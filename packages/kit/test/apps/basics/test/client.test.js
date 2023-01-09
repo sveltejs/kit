@@ -846,6 +846,16 @@ test.describe('Routing', () => {
 		expect(await page.textContent('h2')).toBe('form');
 		expect(await page.textContent('h3')).toBe('bar');
 	});
+
+	test('ignores links with no href', async ({ page }) => {
+		await page.goto('/routing/missing-href');
+		const selector = '[data-testid="count"]';
+
+		expect(await page.textContent(selector)).toBe('count: 1');
+
+		await page.locator(selector).click();
+		expect(await page.textContent(selector)).toBe('count: 1');
+	});
 });
 
 test.describe('Shadow DOM', () => {
