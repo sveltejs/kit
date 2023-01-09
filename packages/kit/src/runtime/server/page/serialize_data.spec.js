@@ -61,4 +61,46 @@ test('escapes the attribute values', () => {
 	);
 });
 
+test('computes ttl using cache-control and age headers', () => {
+	const raw = 'an "attr" & a \ud800';
+	const escaped = 'an &quot;attr&quot; &amp; a &#55296;';
+	const response_body = '';
+	assert.equal(
+		serialize_data(
+			{
+				url: raw,
+				method: 'GET',
+				request_body: null,
+				response_body,
+				response: new Response(response_body, {
+					headers: { 'cache-control': 'max-age=10', age: '1' }
+				})
+			},
+			() => false
+		),
+		`<script type="application/json" data-sveltekit-fetched data-url="${escaped}" data-ttl="9">{"status":200,"statusText":"","headers":{},"body":\"\"}</script>`
+	);
+});
+
+test('doesnt compute ttl when vary header is present', () => {
+	const raw = 'an "attr" & a \ud800';
+	const escaped = 'an &quot;attr&quot; &amp; a &#55296;';
+	const response_body = '';
+	assert.equal(
+		serialize_data(
+			{
+				url: raw,
+				method: 'GET',
+				request_body: null,
+				response_body,
+				response: new Response(response_body, {
+					headers: { 'cache-control': 'max-age=10', vary: 'accept-encoding' }
+				})
+			},
+			() => false
+		),
+		`<script type="application/json" data-sveltekit-fetched data-url="${escaped}">{"status":200,"statusText":"","headers":{},"body":\"\"}</script>`
+	);
+});
+
 test.run();
