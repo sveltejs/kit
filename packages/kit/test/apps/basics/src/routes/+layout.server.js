@@ -2,7 +2,7 @@ import { error, redirect } from '@sveltejs/kit';
 
 /** @type {import('./$types').LayoutServerLoad} */
 export async function load({ cookies }) {
-	const should_fail = cookies.get('fail-type');
+	const should_fail = cookies.get('fail-type', { path: '/' });
 	if (should_fail) {
 		cookies.delete('fail-type', { path: '/' });
 		if (should_fail === 'expected') {
