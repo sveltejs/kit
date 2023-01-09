@@ -109,7 +109,7 @@ export async function load_data({
 		route: event.route,
 		fetch: async (input, init) => {
 			const cloned_body = input instanceof Request && input.body ? input.clone().body : null;
-			const response = await event.fetch(input, init);
+			let response = await event.fetch(input, init);
 
 			const url = new URL(input instanceof Request ? input.url : input, event.url);
 			const same_origin = url.origin === event.url.origin;
@@ -123,9 +123,15 @@ export async function load_data({
 					state.prerendering.dependencies.set(url.pathname, dependency);
 				}
 			} else {
-				// simulate CORS errors server-side for consistency with client-side behaviour
+				// simulate CORS errors and "no access to body in no-cors mode" server-side for consistency with client-side behaviour
 				const mode = input instanceof Request ? input.mode : init?.mode ?? 'cors';
-				if (mode !== 'no-cors') {
+				if (mode === 'no-cors') {
+					response = new Response('', {
+						status: response.status,
+						statusText: response.statusText,
+						headers: response.headers
+					});
+				} else {
 					const acao = response.headers.get('access-control-allow-origin');
 					if (!acao || (acao !== event.url.origin && acao !== '*')) {
 						throw new Error(
