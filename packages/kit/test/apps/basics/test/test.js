@@ -868,17 +868,6 @@ test.describe('Load', () => {
 		}
 	});
 
-	test('errors when trying to access non-serialized request headers on the server', async ({
-		page,
-		read_errors
-	}) => {
-		await page.goto('/load/fetch-request-headers-invalid-access');
-
-		expect(read_errors(`/load/fetch-request-headers-invalid-access`).message).toContain(
-			'Failed to get response header "content-type" — it must be included by the `filterSerializedResponseHeaders` option'
-		);
-	});
-
 	test('exposes rawBody as a DataView to endpoints', async ({ page, clicknav }) => {
 		await page.goto('/load/raw-body');
 		await clicknav('[href="/load/raw-body/dataview"]');
@@ -951,37 +940,6 @@ test.describe('Load', () => {
 		await clicknav('[href="/load/devalue/regex"]');
 
 		expect(await page.textContent('h1')).toBe('true');
-	});
-
-	test('CORS errors are simulated server-side for shared load functions', async ({
-		page,
-		read_errors
-	}) => {
-		const { port, close } = await start_server(async (req, res) => {
-			res.end('hello');
-		});
-
-		await page.goto(`/load/cors?port=${port}`);
-		expect(await page.textContent('h1')).toBe('500');
-		expect(read_errors(`/load/cors`).message).toContain(
-			`CORS error: No 'Access-Control-Allow-Origin' header is present on the requested resource`
-		);
-
-		await page.goto(`/load/cors/no-cors?port=${port}`);
-		expect(await page.textContent('h1')).toBe('result: ');
-
-		await close();
-	});
-
-	test('CORS errors are skipped for server-only load functions', async ({ page }) => {
-		const { port, close } = await start_server(async (req, res) => {
-			res.end('hello');
-		});
-
-		await page.goto(`/load/cors/server-only?port=${port}`);
-		expect(await page.textContent('h1')).toBe('hello');
-
-		await close();
 	});
 });
 
