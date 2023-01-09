@@ -6,6 +6,7 @@ import { s } from '../../../utils/misc.js';
 import { Csp } from './csp.js';
 import { uneval_action_response } from './actions.js';
 import { clarify_devalue_error } from '../utils.js';
+import { DEV } from 'esm-env';
 
 // TODO rename this function/module
 
@@ -367,7 +368,7 @@ export async function render_response({
 			done: true
 		})) || '';
 
-	if (__SVELTEKIT_DEV__) {
+	if (DEV) {
 		if (transformed.split('<!--').length < html.split('<!--').length) {
 			console.warn(
 				'\u001B[1m\u001B[31mRemoving comments in transformPageChunk can have undesirable effects\u001B[39m\u001B[22m'
