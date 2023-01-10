@@ -311,7 +311,7 @@ export async function render_page(event, route, page, options, state, resolve_op
 			action_result,
 			fetched
 		});
-	} catch (error) {
+	} catch (e) {
 		// if we end up here, it means the data loaded successfull
 		// but the page failed to render, or that a prerendering error occurred
 		return await respond_with_error({
@@ -319,7 +319,7 @@ export async function render_page(event, route, page, options, state, resolve_op
 			options,
 			state,
 			status: 500,
-			error,
+			error: e,
 			resolve_opts
 		});
 	}

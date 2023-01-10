@@ -87,17 +87,17 @@ export async function respond_with_error({ event, options, state, status, error,
 			event,
 			resolve_opts
 		});
-	} catch (error) {
+	} catch (e) {
 		// Edge case: If route is a 404 and the user redirects to somewhere from the root layout,
 		// we end up here.
-		if (error instanceof Redirect) {
-			return redirect_response(error.status, error.location);
+		if (e instanceof Redirect) {
+			return redirect_response(e.status, e.location);
 		}
 
 		return static_error_page(
 			options,
-			error instanceof HttpError ? error.status : 500,
-			(await handle_error_and_jsonify(event, options, error)).message
+			e instanceof HttpError ? e.status : 500,
+			(await handle_error_and_jsonify(event, options, e)).message
 		);
 	}
 }

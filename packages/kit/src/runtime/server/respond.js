@@ -292,15 +292,15 @@ export async function respond(request, options, state) {
 		}
 
 		return response;
-	} catch (error) {
-		if (error instanceof Redirect) {
+	} catch (e) {
+		if (e instanceof Redirect) {
 			if (is_data_request) {
-				return redirect_json_response(error);
+				return redirect_json_response(e);
 			} else {
-				return redirect_response(error.status, error.location);
+				return redirect_response(e.status, e.location);
 			}
 		}
-		return await handle_fatal_error(event, options, error);
+		return await handle_fatal_error(event, options, e);
 	}
 
 	/**
