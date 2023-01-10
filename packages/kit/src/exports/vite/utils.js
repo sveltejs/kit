@@ -95,7 +95,7 @@ export function get_config_aliases(config) {
 	// TypeScript (its auto completion also suggests it). However, Vite doesn't know about this,
 	// so we do a best-effort attempt to make it work by adding a Vite alias assuming the default
 	// SvelteKit project structure.
-	// For SvelteKit 2.0 we could think about getting rid of the baseUrl which would make this unnecessary
+	// TODO(v2): we could think about getting rid of the baseUrl which would make this unnecessary
 	// https://github.com/sveltejs/kit/issues/5351
 	if (fs.existsSync('src')) {
 		alias.push({ find: 'src', replacement: path.resolve('src') });
