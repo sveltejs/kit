@@ -80,7 +80,7 @@ function get_routes_json(builder, assets) {
 		excess = 'static assets';
 
 		if (builder.prerendered.paths.length > 0) {
-			excess = 'or prerendered routes';
+			excess += ' or prerendered routes';
 		}
 	} else if (assets.length + builder.prerendered.paths.length > MAX_EXCLUSIONS) {
 		excess = 'prerendered routes';
