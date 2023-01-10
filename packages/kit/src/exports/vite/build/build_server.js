@@ -4,7 +4,6 @@ import { mergeConfig } from 'vite';
 import { mkdirp, posixify, resolve_entry } from '../../../utils/filesystem.js';
 import { get_vite_config } from '../utils.js';
 import { load_error_page, load_template } from '../../../core/config/index.js';
-import { runtime_directory } from '../../../core/utils.js';
 import {
 	create_build,
 	find_deps,
@@ -13,118 +12,66 @@ import {
 	resolve_symlinks
 } from './utils.js';
 import { s } from '../../../utils/misc.js';
+import { runtime_directory } from '../../../core/utils.js';
 
 /**
  * @param {{
- *   hooks: string;
+ *   hooks: string | null;
  *   config: import('types').ValidatedConfig;
  *   has_service_worker: boolean;
- *   runtime: string;
  *   template: string;
  *   error_page: string;
  * }} opts
  */
-const server_template = ({ config, hooks, has_service_worker, runtime, template, error_page }) => `
-import root from '__GENERATED__/root.svelte';
-import { respond } from '${runtime}/server/respond.js';
-import { set_paths, assets, base } from '${runtime}/paths.js';
-import { set_building, set_version } from '${runtime}/env.js';
-import { set_private_env } from '${runtime}/env-private.js';
-import { set_public_env } from '${runtime}/env-public.js';
+const server_template = ({ config, hooks, has_service_worker, template, error_page }) => `
+import root from './root.svelte';
 
-const app_template = ({ head, body, assets, nonce }) => ${s(template)
-	.replace('%sveltekit.head%', '" + head + "')
-	.replace('%sveltekit.body%', '" + body + "')
-	.replace(/%sveltekit\.assets%/g, '" + assets + "')
-	.replace(/%sveltekit\.nonce%/g, '" + nonce + "')};
+export const paths = ${s(config.kit.paths)};
 
-const error_template = ({ status, message }) => ${s(error_page)
-	.replace(/%sveltekit\.status%/g, '" + status + "')
-	.replace(/%sveltekit\.error\.message%/g, '" + message + "')};
+export const version = ${s(config.kit.version.name)};
 
-let read = null;
+export const options = {
+	app_template: ({ head, body, assets, nonce }) => ${s(template)
+		.replace('%sveltekit.head%', '" + head + "')
+		.replace('%sveltekit.body%', '" + body + "')
+		.replace(/%sveltekit\.assets%/g, '" + assets + "')
+		.replace(/%sveltekit\.nonce%/g, '" + nonce + "')},
+	app_template_contains_nonce: ${template.includes('%sveltekit.nonce%')},
+	csp: ${s(config.kit.csp)},
+	csrf: {
+		check_origin: ${s(config.kit.csrf.checkOrigin)},
+	},
+	dev: false,
+	embedded: ${config.kit.embedded},
+	error_template: ({ status, message }) => ${s(error_page)
+		.replace(/%sveltekit\.status%/g, '" + status + "')
+		.replace(/%sveltekit\.error\.message%/g, '" + message + "')},
+	handle_error: (error, event) => {
+		return this.options.hooks.handleError({ error, event }) ?? {
+			message: event.route.id != null ? 'Internal Error' : 'Not Found'
+		};
+	},
+	hooks: null,
+	paths,
+	public_env: {},
+	read: null,
+	root,
+	service_worker: ${has_service_worker},
+	version: ${s(config.kit.version.name)}
+};
 
-set_paths(${s(config.kit.paths)});
-set_version(${s(config.kit.version.name)});
-
-let default_protocol = 'https';
+export const public_prefix = '${config.kit.env.publicPrefix}';
 
 // allow paths to be globally overridden
 // in svelte-kit preview and in prerendering
 export function override(settings) {
-	default_protocol = settings.protocol || default_protocol;
 	set_paths(settings.paths);
 	set_building(settings.building);
-	read = settings.read;
+	options.read = settings.read;
 }
 
-export class Server {
-	constructor(manifest) {
-		this.options = {
-			csp: ${s(config.kit.csp)},
-			csrf: {
-				check_origin: ${s(config.kit.csrf.checkOrigin)},
-			},
-			dev: false,
-			embedded: ${config.kit.embedded},
-			handle_error: (error, event) => {
-				return this.options.hooks.handleError({ error, event }) ?? {
-					message: event.route.id != null ? 'Internal Error' : 'Not Found'
-				};
-			},
-			hooks: null,
-			manifest,
-			paths: { base, assets },
-			public_env: {},
-			read,
-			root,
-			service_worker: ${has_service_worker},
-			app_template,
-			app_template_contains_nonce: ${template.includes('%sveltekit.nonce%')},
-			error_template,
-			version: ${s(config.kit.version.name)}
-		};
-	}
-
-	/**
-	 * Take care: Some adapters may have to call \`Server.init\` per-request to set env vars,
-	 * so anything that shouldn't be rerun should be wrapped in an \`if\` block to make sure it hasn't
-	 * been done already.
-	 */
-	async init({ env }) {
-		const entries = Object.entries(env);
-
-		const prv = Object.fromEntries(entries.filter(([k]) => !k.startsWith('${
-			config.kit.env.publicPrefix
-		}')));
-
-		const pub = Object.fromEntries(entries.filter(([k]) => k.startsWith('${
-			config.kit.env.publicPrefix
-		}')));
-
-		set_private_env(prv);
-		set_public_env(pub);
-
-		this.options.public_env = pub;
-
-		if (!this.options.hooks) {
-			const module = await import(${s(hooks)});
-
-			this.options.hooks = {
-				handle: module.handle || (({ event, resolve }) => resolve(event)),
-				handleError: module.handleError || (({ error }) => console.error(error.stack)),
-				handleFetch: module.handleFetch || (({ request, fetch }) => fetch(request))
-			};
-		}
-	}
-
-	async respond(request, options = {}) {
-		if (!(request instanceof Request)) {
-			throw new Error('The first argument to server.respond must be a Request object. See https://github.com/sveltejs/kit/pull/3384 for details');
-		}
-
-		return respond(request, this.options, options);
-	}
+export function get_hooks() {
+	return ${hooks ? `import(${s(hooks)})` : '{}'};
 }
 `;
 
@@ -135,7 +82,6 @@ export class Server {
  *   vite_config: import('vite').ResolvedConfig;
  *   vite_config_env: import('vite').ConfigEnv;
  *   manifest_data: import('types').ManifestData;
- *   build_dir: string;
  *   output_dir: string;
  *   service_worker_entry_file: string | null;
  * }} options
@@ -148,21 +94,17 @@ export async function build_server(options, client) {
 		vite_config,
 		vite_config_env,
 		manifest_data,
-		build_dir,
 		output_dir,
 		service_worker_entry_file
 	} = options;
 
-	let hooks_file = resolve_entry(config.kit.files.hooks.server);
-
-	if (!hooks_file || !fs.existsSync(hooks_file)) {
-		hooks_file = path.join(config.kit.outDir, 'build/hooks.js');
-		fs.writeFileSync(hooks_file, '');
-	}
+	// TODO the casting shouldn't be necessary — investigate
+	const hooks_file = /** @type {string} */ (resolve_entry(config.kit.files.hooks.server));
 
 	/** @type {Record<string, string>} */
 	const input = {
-		index: `${build_dir}/index.js`
+		index: `${runtime_directory}/server/index.js`,
+		internal: `${config.kit.outDir}/generated/server-internal.js`
 	};
 
 	// add entry points for every endpoint...
@@ -196,19 +138,14 @@ export async function build_server(options, client) {
 		input[name] = path.resolve(cwd, file);
 	});
 
-	/** @type {(file: string) => string} */
-	const app_relative = (file) => {
-		const relative_file = path.relative(build_dir, path.resolve(cwd, file));
-		return relative_file[0] === '.' ? relative_file : `./${relative_file}`;
-	};
-
 	fs.writeFileSync(
-		input.index,
+		input.internal,
 		server_template({
 			config,
-			hooks: app_relative(hooks_file),
+			hooks: fs.existsSync(hooks_file)
+				? path.relative(path.dirname(input.internal), hooks_file)
+				: null,
 			has_service_worker: config.kit.serviceWorker.register && !!service_worker_entry_file,
-			runtime: posixify(path.relative(build_dir, runtime_directory)),
 			template: load_template(cwd, config),
 			error_page: load_error_page(config)
 		})

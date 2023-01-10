@@ -27,14 +27,15 @@ import {
 
 export interface ServerModule {
 	Server: typeof InternalServer;
+}
 
+export interface ServerInternalModule {
 	override(options: {
 		building: boolean;
 		paths: {
 			base: string;
 			assets: string;
 		};
-		protocol?: 'http' | 'https';
 		read(file: string): Buffer;
 	}): void;
 }

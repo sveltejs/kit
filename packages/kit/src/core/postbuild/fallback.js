@@ -14,8 +14,11 @@ installPolyfills();
 
 const server_root = join(config.outDir, 'output');
 
+/** @type {import('types').ServerInternalModule} */
+const { override } = await import(pathToFileURL(`${server_root}/server/internal.js`).href);
+
 /** @type {import('types').ServerModule} */
-const { Server, override } = await import(pathToFileURL(`${server_root}/server/index.js`).href);
+const { Server } = await import(pathToFileURL(`${server_root}/server/index.js`).href);
 
 /** @type {import('types').SSRManifest} */
 const manifest = (await import(pathToFileURL(manifest_path).href)).manifest;

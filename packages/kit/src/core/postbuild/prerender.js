@@ -78,8 +78,11 @@ export async function prerender({ manifest, prerender_map, client_out_dir, verbo
 
 	const server_root = join(config.outDir, 'output');
 
+	/** @type {import('types').ServerInternalModule} */
+	const { override } = await import(pathToFileURL(`${server_root}/server/index.js`).href);
+
 	/** @type {import('types').ServerModule} */
-	const { Server, override } = await import(pathToFileURL(`${server_root}/server/index.js`).href);
+	const { Server } = await import(pathToFileURL(`${server_root}/server/index.js`).href);
 
 	/** @type {Map<string, string>} */
 	const saved = new Map();

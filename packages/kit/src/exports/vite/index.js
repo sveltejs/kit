@@ -128,7 +128,6 @@ function kit({ svelte_config }) {
 
 	/**
 	 * @type {{
-	 *   build_dir: string;
 	 *   output_dir: string;
 	 *   client_out_dir: string;
 	 * }}
@@ -218,7 +217,6 @@ function kit({ svelte_config }) {
 			is_build = config_env.command === 'build';
 
 			paths = {
-				build_dir: `${svelte_config.kit.outDir}/build`,
 				output_dir: `${svelte_config.kit.outDir}/output`,
 				client_out_dir: `${svelte_config.kit.outDir}/output/client`
 			};
@@ -358,10 +356,8 @@ function kit({ svelte_config }) {
 
 			if (is_build) {
 				if (!vite_config.build.watch) {
-					rimraf(paths.build_dir);
 					rimraf(paths.output_dir);
 				}
-				mkdirp(paths.build_dir);
 				mkdirp(paths.output_dir);
 			}
 		},
@@ -493,7 +489,6 @@ function kit({ svelte_config }) {
 					config: svelte_config,
 					vite_config,
 					vite_config_env,
-					build_dir: paths.build_dir, // TODO just pass `paths`
 					manifest_data,
 					output_dir: paths.output_dir,
 					service_worker_entry_file: resolve_entry(svelte_config.kit.files.serviceWorker)
