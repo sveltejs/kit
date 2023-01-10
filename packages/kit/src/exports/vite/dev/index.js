@@ -43,7 +43,7 @@ export async function dev(vite, vite_config, svelte_config) {
 	sync.init(svelte_config, vite_config.mode);
 
 	/** @type {import('types').Respond} */
-	const respond = (await import(`${runtime_prefix}/server/index.js`)).respond;
+	const respond = (await import(`${runtime_prefix}/server/respond.js`)).respond;
 
 	/** @type {import('types').ManifestData} */
 	let manifest_data;

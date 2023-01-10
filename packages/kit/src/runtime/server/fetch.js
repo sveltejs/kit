@@ -1,5 +1,5 @@
 import * as set_cookie_parser from 'set-cookie-parser';
-import { respond } from './index.js';
+import { respond } from './respond.js';
 
 /**
  * @param {{

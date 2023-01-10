@@ -26,7 +26,7 @@ import { s } from '../../../utils/misc.js';
  */
 const server_template = ({ config, hooks, has_service_worker, runtime, template, error_page }) => `
 import root from '__GENERATED__/root.svelte';
-import { respond } from '${runtime}/server/index.js';
+import { respond } from '${runtime}/server/respond.js';
 import { set_paths, assets, base } from '${runtime}/paths.js';
 import { set_building, set_version } from '${runtime}/env.js';
 import { set_private_env } from '${runtime}/env-private.js';
