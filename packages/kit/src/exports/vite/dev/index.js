@@ -492,7 +492,6 @@ export async function dev(vite, vite_config, svelte_config) {
 						},
 						hooks,
 						manifest,
-						public_env: {},
 						root,
 						app_template: ({ head, body, assets, nonce }) => {
 							return (

@@ -27,8 +27,6 @@ export class Server {
 		set_private_env(prv);
 		set_public_env(pub);
 
-		this.options.public_env = pub;
-
 		if (!this.options.hooks) {
 			const module = await get_hooks();
 

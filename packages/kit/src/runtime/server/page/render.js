@@ -8,6 +8,7 @@ import { uneval_action_response } from './actions.js';
 import { clarify_devalue_error } from '../utils.js';
 import * as paths from '../../paths.js';
 import { version } from '../../env.js';
+import { env } from '../../env-public.js';
 
 // TODO rename this function/module
 
@@ -247,7 +248,7 @@ export async function render_response({
 
 	if (page_config.csr) {
 		const opts = [
-			`env: ${s(options.public_env)}`,
+			`env: ${s(env)}`,
 			`paths: ${s(paths)}`,
 			`target: document.querySelector('[data-sveltekit-hydrate="${target}"]').parentNode`,
 			`version: ${s(version)}`

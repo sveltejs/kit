@@ -55,7 +55,6 @@ export const options = {
 	error_template: ({ status, message }) => ${s(error_page)
 		.replace(/%sveltekit\.status%/g, '" + status + "')
 		.replace(/%sveltekit\.error\.message%/g, '" + message + "')},
-	public_env: {},
 	root,
 	service_worker: ${has_service_worker}
 };

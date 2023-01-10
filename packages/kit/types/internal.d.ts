@@ -312,7 +312,6 @@ export interface SSROptions {
 	handle_error(error: Error & { frame?: string }, event: RequestEvent): MaybePromise<App.Error>;
 	hooks: ServerHooks;
 	manifest: SSRManifest;
-	public_env: Record<string, string>;
 	root: SSRComponent['default'];
 	service_worker: boolean;
 }
