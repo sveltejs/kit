@@ -799,6 +799,7 @@ test.describe('Routing', () => {
 			expect(await page.content()).toBe('<html><head></head><body>ok</body></html>');
 			expect(page.url()).toBe(`http://localhost:${port}/with-slash/`);
 		} finally {
+			await page.close();
 			await close();
 		}
 	});

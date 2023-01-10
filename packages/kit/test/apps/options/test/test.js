@@ -118,11 +118,13 @@ test.describe('CSP', () => {
 			}
 		});
 
-		await page.goto(`/path-base/csp?port=${port}`);
-
-		expect(await page.evaluate('window.pwned')).toBe(undefined);
-
-		await close();
+		try {
+			await page.goto(`/path-base/csp?port=${port}`);
+			expect(await page.evaluate('window.pwned')).toBe(undefined);
+		} finally {
+			await page.close();
+			await close();
+		}
 	});
 
 	test("quotes 'script'", async ({ page }) => {

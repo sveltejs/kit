@@ -39,10 +39,12 @@ test.describe('Cookies', () => {
 			}
 		});
 
-		const response = await request.get(`/load/fetch-external-no-cookies?port=${port}`);
-		expect(response.headers()['set-cookie']).not.toContain('external=true');
-
-		close();
+		try {
+			const response = await request.get(`/load/fetch-external-no-cookies?port=${port}`);
+			expect(response.headers()['set-cookie']).not.toContain('external=true');
+		} finally {
+			close();
+		}
 	});
 });
 
@@ -324,10 +326,13 @@ test.describe('Load', () => {
 			}
 		});
 
-		await page.goto(`/load/fetch-origin-external?port=${port}`);
-		expect(await page.textContent('h1')).toBe(`origin: ${new URL(baseURL).origin}`);
-
-		close();
+		try {
+			await page.goto(`/load/fetch-origin-external?port=${port}`);
+			expect(await page.textContent('h1')).toBe(`origin: ${new URL(baseURL).origin}`);
+		} finally {
+			await page.close();
+			close();
+		}
 	});
 });
 

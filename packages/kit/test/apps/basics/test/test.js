@@ -819,6 +819,7 @@ test.describe('Load', () => {
 			expect(requested_urls).toEqual(['/server-fetch-request-modified.json']);
 			expect(await page.textContent('h1')).toBe('the answer is 42');
 		} finally {
+			await page.close();
 			await close();
 		}
 	});
@@ -1584,6 +1585,7 @@ test.describe('Routing', () => {
 				page.waitForURL(`http://localhost:${port}/`)
 			]);
 		} finally {
+			await page.close();
 			await close();
 		}
 	});
