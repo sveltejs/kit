@@ -311,7 +311,7 @@ test.describe('Load', () => {
 		expect(await page.textContent('h1')).toBe(`origin: ${new URL(baseURL).origin}`);
 	});
 
-	test('includes origin header on external request', async ({ page, baseURL }) => {
+	test('includes origin header on external request', async ({ page, baseURL, context }) => {
 		const { port, close } = await start_server((req, res) => {
 			if (req.url === '/') {
 				res.writeHead(200, {
@@ -330,7 +330,7 @@ test.describe('Load', () => {
 			await page.goto(`/load/fetch-origin-external?port=${port}`);
 			expect(await page.textContent('h1')).toBe(`origin: ${new URL(baseURL).origin}`);
 		} finally {
-			await page.close();
+			await context.close();
 			close();
 		}
 	});

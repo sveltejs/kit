@@ -793,7 +793,7 @@ test.describe('Load', () => {
 		expect(await page.textContent('h1')).toBe('text.length is 5000000');
 	});
 
-	test('handles external api', async ({ page }) => {
+	test('handles external api', async ({ page, context }) => {
 		/** @type {string[]} */
 		const requested_urls = [];
 
@@ -819,7 +819,7 @@ test.describe('Load', () => {
 			expect(requested_urls).toEqual(['/server-fetch-request-modified.json']);
 			expect(await page.textContent('h1')).toBe('the answer is 42');
 		} finally {
-			await page.close();
+			await context.close();
 			await close();
 		}
 	});
@@ -1574,7 +1574,7 @@ test.describe('Routing', () => {
 		expect(await page.textContent('h2')).toBe('y-z');
 	});
 
-	test('ignores navigation to URLs the app does not own', async ({ page }) => {
+	test('ignores navigation to URLs the app does not own', async ({ page, context }) => {
 		const { port, close } = await start_server((req, res) => res.end('ok'));
 
 		try {
@@ -1585,7 +1585,7 @@ test.describe('Routing', () => {
 				page.waitForURL(`http://localhost:${port}/`)
 			]);
 		} finally {
-			await page.close();
+			await context.close();
 			await close();
 		}
 	});

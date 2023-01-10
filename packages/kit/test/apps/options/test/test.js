@@ -105,7 +105,7 @@ test.describe('assets path', () => {
 });
 
 test.describe('CSP', () => {
-	test('blocks script from external site', async ({ page }) => {
+	test('blocks script from external site', async ({ page, context }) => {
 		const { port, close } = await start_server((req, res) => {
 			if (req.url === '/blocked.js') {
 				res.writeHead(200, {
@@ -122,7 +122,7 @@ test.describe('CSP', () => {
 			await page.goto(`/path-base/csp?port=${port}`);
 			expect(await page.evaluate('window.pwned')).toBe(undefined);
 		} finally {
-			await page.close();
+			await context.close();
 			await close();
 		}
 	});
