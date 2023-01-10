@@ -11,9 +11,8 @@ import { assets_base } from './utils.js';
  *   vite_config_env: import('vite').ConfigEnv;
  *   manifest_data: import('types').ManifestData;
  *   output_dir: string;
- *   service_worker_entry_file: string | null;
  * }} options
- * @param {boolean} service_worker_entry_file
+ * @param {string} service_worker_entry_file
  * @param {import('types').Prerendered} prerendered
  * @param {import('vite').Manifest} client_manifest
  */

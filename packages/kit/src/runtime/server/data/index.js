@@ -55,7 +55,6 @@ export async function render_data(
 					const node = n == undefined ? n : await options.manifest._.nodes[n]();
 					return load_server_data({
 						event: new_event,
-						options,
 						state,
 						node,
 						parent: async () => {

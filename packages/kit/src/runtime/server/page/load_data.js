@@ -5,14 +5,13 @@ import { unwrap_promises } from '../../../utils/promises.js';
  * Calls the user's server `load` function.
  * @param {{
  *   event: import('types').RequestEvent;
- *   options: import('types').SSROptions;
  *   state: import('types').SSRState;
  *   node: import('types').SSRNode | undefined;
  *   parent: () => Promise<Record<string, any>>;
  * }} opts
  * @returns {Promise<import('types').ServerDataNode | null>}
  */
-export async function load_server_data({ event, options, state, node, parent }) {
+export async function load_server_data({ event, state, node, parent }) {
 	if (!node?.server) return null;
 
 	const uses = {

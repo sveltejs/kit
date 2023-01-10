@@ -2,7 +2,7 @@ import fs from 'fs';
 import colors from 'kleur';
 import path from 'path';
 import sirv from 'sirv';
-import { fileURLToPath, URL } from 'url';
+import { URL } from 'url';
 import { isCSSRequest, loadEnv } from 'vite';
 import { getRequest, setResponse } from '../../../exports/node/index.js';
 import { installPolyfills } from '../../../exports/node/polyfills.js';
@@ -468,7 +468,6 @@ export async function dev(vite, vite_config, svelte_config) {
 				};
 
 				const rendered = await server.respond(request, {
-					dev: true,
 					getClientAddress: () => {
 						const { remoteAddress } = req.socket;
 						if (remoteAddress) return remoteAddress;
