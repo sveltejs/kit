@@ -146,7 +146,7 @@ function kit({ svelte_config }) {
 
 		manifest_data.nodes.forEach((node) => {
 			if (node.component) {
-				const resolved = path.resolve(cwd, node.component);
+				const resolved = path.resolve(node.component);
 				const relative = decodeURIComponent(
 					path.relative(svelte_config.kit.files.routes, resolved)
 				);
@@ -158,7 +158,7 @@ function kit({ svelte_config }) {
 			}
 
 			if (node.universal) {
-				const resolved = path.resolve(cwd, node.universal);
+				const resolved = path.resolve(node.universal);
 				const relative = decodeURIComponent(
 					path.relative(svelte_config.kit.files.routes, resolved)
 				);
@@ -188,7 +188,7 @@ function kit({ svelte_config }) {
 			fs.readFileSync(`${paths.client_out_dir}/${vite_config.build.manifest}`, 'utf-8')
 		);
 
-		const entry_id = posixify(path.relative(cwd, `${runtime_directory}/client/start.js`));
+		const entry_id = posixify(path.relative('.', `${runtime_directory}/client/start.js`));
 
 		return {
 			assets,
@@ -236,8 +236,8 @@ function kit({ svelte_config }) {
 				svelte_config.kit.files.lib,
 				svelte_config.kit.files.routes,
 				svelte_config.kit.outDir,
-				path.resolve(cwd, 'src'), // TODO this isn't correct if user changed all his files to sth else than src (like in test/options)
-				path.resolve(cwd, 'node_modules'),
+				path.resolve('src'), // TODO this isn't correct if user changed all his files to sth else than src (like in test/options)
+				path.resolve('node_modules'),
 				path.resolve(vite.searchForWorkspaceRoot(cwd), 'node_modules')
 			]);
 			// We can only add directories to the allow list, so we find out
@@ -305,7 +305,7 @@ function kit({ svelte_config }) {
 				if (
 					is_illegal(id, {
 						cwd: normalized_cwd,
-						node_modules: vite.normalizePath(path.join(cwd, 'node_modules')),
+						node_modules: vite.normalizePath(path.resolve('node_modules')),
 						server: vite.normalizePath(path.join(normalized_lib, 'server'))
 					})
 				) {
@@ -485,16 +485,16 @@ function kit({ svelte_config }) {
 				log.info('Building server');
 
 				const options = {
-					cwd,
 					config: svelte_config,
 					vite_config,
 					vite_config_env,
 					manifest_data,
-					output_dir: paths.output_dir,
-					service_worker_entry_file: resolve_entry(svelte_config.kit.files.serviceWorker)
+					output_dir: paths.output_dir
 				};
 				const client = client_build_info(assets, chunks);
 				const server = await build_server(options, client);
+
+				const service_worker_entry_file = resolve_entry(svelte_config.kit.files.serviceWorker);
 
 				/** @type {import('types').BuildData} */
 				build_data = {
@@ -503,7 +503,7 @@ function kit({ svelte_config }) {
 						svelte_config.kit.paths.base ? '/' : ''
 					}${svelte_config.kit.appDir}`,
 					manifest_data,
-					service_worker: options.service_worker_entry_file ? 'service-worker.js' : null, // TODO make file configurable?
+					service_worker: !!service_worker_entry_file ? 'service-worker.js' : null, // TODO make file configurable?
 					client,
 					server
 				};
@@ -568,14 +568,19 @@ function kit({ svelte_config }) {
 					})};\n`
 				);
 
-				if (options.service_worker_entry_file) {
+				if (service_worker_entry_file) {
 					if (svelte_config.kit.paths.assets) {
 						throw new Error('Cannot use service worker alongside config.kit.paths.assets');
 					}
 
 					log.info('Building service worker');
 
-					await build_service_worker(options, prerendered, client.vite_manifest);
+					await build_service_worker(
+						options,
+						service_worker_entry_file,
+						prerendered,
+						client.vite_manifest
+					);
 				}
 
 				console.log(

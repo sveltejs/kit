@@ -13,11 +13,13 @@ import { assets_base } from './utils.js';
  *   output_dir: string;
  *   service_worker_entry_file: string | null;
  * }} options
+ * @param {boolean} service_worker_entry_file
  * @param {import('types').Prerendered} prerendered
  * @param {import('vite').Manifest} client_manifest
  */
 export async function build_service_worker(
-	{ config, vite_config, manifest_data, output_dir, service_worker_entry_file },
+	{ config, vite_config, manifest_data, output_dir },
+	service_worker_entry_file,
 	prerendered,
 	client_manifest
 ) {

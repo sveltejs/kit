@@ -6,6 +6,7 @@ import { write_root } from './write_root.js';
 import { write_tsconfig } from './write_tsconfig.js';
 import { write_types, write_all_types } from './write_types/index.js';
 import { write_ambient } from './write_ambient.js';
+import { write_server } from './write_server.js';
 
 /**
  * Initialize SvelteKit's generated files.
@@ -27,6 +28,7 @@ export async function create(config) {
 	const output = path.join(config.kit.outDir, 'generated');
 
 	write_client_manifest(config, manifest_data, output);
+	write_server(config, output);
 	write_root(manifest_data, output);
 	write_matchers(manifest_data, output);
 	await write_all_types(config, manifest_data);
