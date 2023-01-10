@@ -16,6 +16,7 @@ import { get_mime_lookup, runtime_prefix } from '../../../core/utils.js';
 import { compact } from '../../../utils/array.js';
 import { not_found } from '../utils.js';
 import { set_paths } from '../../../runtime/paths.js';
+import { set_version } from '../../../runtime/env.js';
 
 const cwd = process.cwd();
 
@@ -313,6 +314,8 @@ export async function dev(vite, vite_config, svelte_config) {
 		assets
 	});
 
+	set_version(svelte_config.kit.version.name);
+
 	vite.middlewares.use(async (req, res, next) => {
 		try {
 			const base = `${vite.config.server.https ? 'https' : 'http'}://${
@@ -505,8 +508,7 @@ export async function dev(vite, vite_config, svelte_config) {
 						error_template,
 						service_worker:
 							svelte_config.kit.serviceWorker.register &&
-							!!resolve_entry(svelte_config.kit.files.serviceWorker),
-						version: svelte_config.kit.version.name
+							!!resolve_entry(svelte_config.kit.files.serviceWorker)
 					},
 					{
 						getClientAddress: () => {

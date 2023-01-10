@@ -7,6 +7,7 @@ import { Csp } from './csp.js';
 import { uneval_action_response } from './actions.js';
 import { clarify_devalue_error } from '../utils.js';
 import * as paths from '../../paths.js';
+import { version } from '../../env.js';
 
 // TODO rename this function/module
 
@@ -249,7 +250,7 @@ export async function render_response({
 			`env: ${s(options.public_env)}`,
 			`paths: ${s(paths)}`,
 			`target: document.querySelector('[data-sveltekit-hydrate="${target}"]').parentNode`,
-			`version: ${s(options.version)}`
+			`version: ${s(version)}`
 		];
 
 		if (page_config.ssr) {

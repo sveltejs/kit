@@ -290,18 +290,6 @@ export interface SSRNode {
 export type SSRNodeLoader = () => Promise<SSRNode>;
 
 export interface SSROptions {
-	csp: ValidatedConfig['kit']['csp'];
-	csrf: {
-		check_origin: boolean;
-	};
-	dev: boolean;
-	embedded: boolean;
-	handle_error(error: Error & { frame?: string }, event: RequestEvent): MaybePromise<App.Error>;
-	hooks: ServerHooks;
-	manifest: SSRManifest;
-	public_env: Record<string, string>;
-	root: SSRComponent['default'];
-	service_worker: boolean;
 	app_template({
 		head,
 		body,
@@ -314,8 +302,19 @@ export interface SSROptions {
 		nonce: string;
 	}): string;
 	app_template_contains_nonce: boolean;
+	csp: ValidatedConfig['kit']['csp'];
+	csrf: {
+		check_origin: boolean;
+	};
+	dev: boolean;
+	embedded: boolean;
 	error_template({ message, status }: { message: string; status: number }): string;
-	version: string;
+	handle_error(error: Error & { frame?: string }, event: RequestEvent): MaybePromise<App.Error>;
+	hooks: ServerHooks;
+	manifest: SSRManifest;
+	public_env: Record<string, string>;
+	root: SSRComponent['default'];
+	service_worker: boolean;
 }
 
 export interface SSRErrorPage {
