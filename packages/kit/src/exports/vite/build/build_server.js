@@ -36,11 +36,8 @@ import root from './root.svelte';
 import { set_paths } from '${runtime_directory}/paths.js'; // TODO probably just expose this directly?
 import { set_building, set_version } from '${runtime_directory}/env.js';
 
-const paths = ${s(config.kit.paths)};
-const version = ${s(config.kit.version.name)};
-
-set_paths(paths);
-set_version(version);
+set_paths(${s(config.kit.paths)});
+set_version(${s(config.kit.version.name)});
 
 export const options = {
 	app_template: ({ head, body, assets, nonce }) => ${s(template)
@@ -59,10 +56,8 @@ export const options = {
 		.replace(/%sveltekit\.status%/g, '" + status + "')
 		.replace(/%sveltekit\.error\.message%/g, '" + message + "')},
 	public_env: {},
-	read: null,
 	root,
-	service_worker: ${has_service_worker},
-	version
+	service_worker: ${has_service_worker}
 };
 
 export const public_prefix = '${config.kit.env.publicPrefix}';

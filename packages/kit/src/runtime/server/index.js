@@ -43,9 +43,9 @@ export class Server {
 				handleFetch: module.handleFetch || (({ request, fetch }) => fetch(request))
 			};
 
-			this.options.handle_error = (error, event) => {
+			this.options.handle_error = async (error, event) => {
 				return (
-					this.options.hooks.handleError({ error, event }) ?? {
+					(await this.options.hooks.handleError({ error, event })) ?? {
 						message: event.route.id != null ? 'Internal Error' : 'Not Found'
 					}
 				);
