@@ -218,7 +218,6 @@ export async function respond(request, options, state) {
 		const { cookies, new_cookies, get_cookie_header } = get_cookies(
 			request,
 			url,
-			state.dev ?? false,
 			trailing_slash ?? 'never'
 		);
 

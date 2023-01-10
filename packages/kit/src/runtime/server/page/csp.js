@@ -50,15 +50,14 @@ class BaseProvider {
 	 * @param {boolean} use_hashes
 	 * @param {import('types').CspDirectives} directives
 	 * @param {string} nonce
-	 * @param {boolean} dev
 	 */
-	constructor(use_hashes, directives, nonce, dev) {
+	constructor(use_hashes, directives, nonce) {
 		this.#use_hashes = use_hashes;
-		this.#directives = dev ? { ...directives } : directives; // clone in dev so we can safely mutate
+		this.#directives = __SVELTEKIT_DEV__ ? { ...directives } : directives; // clone in dev so we can safely mutate
 
 		const d = this.#directives;
 
-		if (dev) {
+		if (__SVELTEKIT_DEV__) {
 			// remove strict-dynamic in dev...
 			// TODO reinstate this if we can figure out how to make strict-dynamic work
 			// if (d['default-src']) {
@@ -90,7 +89,7 @@ class BaseProvider {
 			effective_script_src.filter((value) => value !== 'unsafe-inline').length > 0;
 
 		this.#style_needs_csp =
-			!dev &&
+			!__SVELTEKIT_DEV__ &&
 			!!effective_style_src &&
 			effective_style_src.filter((value) => value !== 'unsafe-inline').length > 0;
 
@@ -189,10 +188,9 @@ class CspReportOnlyProvider extends BaseProvider {
 	 * @param {boolean} use_hashes
 	 * @param {import('types').CspDirectives} directives
 	 * @param {string} nonce
-	 * @param {boolean} dev
 	 */
-	constructor(use_hashes, directives, nonce, dev) {
-		super(use_hashes, directives, nonce, dev);
+	constructor(use_hashes, directives, nonce) {
+		super(use_hashes, directives, nonce);
 
 		if (Object.values(directives).filter((v) => !!v).length > 0) {
 			// If we're generating content-security-policy-report-only,
@@ -223,10 +221,10 @@ export class Csp {
 	 * @param {import('./types').CspConfig} config
 	 * @param {import('./types').CspOpts} opts
 	 */
-	constructor({ mode, directives, reportOnly }, { prerender, dev }) {
+	constructor({ mode, directives, reportOnly }, { prerender }) {
 		const use_hashes = mode === 'hash' || (mode === 'auto' && prerender);
-		this.csp_provider = new CspProvider(use_hashes, directives, this.nonce, dev);
-		this.report_only_provider = new CspReportOnlyProvider(use_hashes, reportOnly, this.nonce, dev);
+		this.csp_provider = new CspProvider(use_hashes, directives, this.nonce);
+		this.report_only_provider = new CspReportOnlyProvider(use_hashes, reportOnly, this.nonce);
 	}
 
 	get script_needs_nonce() {
