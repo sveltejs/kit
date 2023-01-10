@@ -368,7 +368,7 @@ export async function render_response({
 			done: true
 		})) || '';
 
-	if (DEV) {
+	if (DEV && page_config.csr) {
 		if (transformed.split('<!--').length < html.split('<!--').length) {
 			// the \u001B stuff is ANSI codes, so that we don't need to add a library to the runtime
 			// https://svelte.dev/repl/1b3f49696f0c44c881c34587f2537aa2
