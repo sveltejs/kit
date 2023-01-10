@@ -5,6 +5,9 @@ import { installPolyfills } from '../../exports/node/polyfills.js';
 
 installPolyfills();
 
+// @ts-expect-error
+globalThis.__SVELTEKIT_DEV__ = false;
+
 const domains = {
 	positive: [
 		['localhost'],
