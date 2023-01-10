@@ -1671,10 +1671,10 @@ test.describe('Routing', () => {
 		await page.locator('[href="/routing/cancellation/a"]').click();
 		await clicknav('[href="/routing/cancellation/b"]');
 
-		expect(await page.url()).toBe(`${baseURL}/routing/cancellation/b`);
+		expect(page.url()).toBe(`${baseURL}/routing/cancellation/b`);
 
 		await page.evaluate('window.fulfil_navigation && window.fulfil_navigation()');
-		expect(await page.url()).toBe(`${baseURL}/routing/cancellation/b`);
+		expect(page.url()).toBe(`${baseURL}/routing/cancellation/b`);
 	});
 
 	test('Relative paths are relative to the current URL', async ({ page, clicknav }) => {
@@ -1822,10 +1822,7 @@ test.describe('Actions', () => {
 		expect(await page.textContent('pre')).toBe(JSON.stringify(null));
 
 		await page.type('input[name="username"]', 'foo');
-		await Promise.all([
-			page.waitForRequest((request) => request.url().includes('/actions/success-data')),
-			page.click('button[formenctype="multipart/form-data"]')
-		]);
+		await page.locator('button[formenctype="multipart/form-data"]').click();
 
 		await expect(page.locator('pre')).toHaveText(JSON.stringify({ result: 'foo' }));
 	});
@@ -1836,10 +1833,7 @@ test.describe('Actions', () => {
 		expect(await page.textContent('pre')).toBe(JSON.stringify(null));
 
 		await page.type('input[name="username"]', 'bar');
-		await Promise.all([
-			page.waitForRequest((request) => request.url().includes('/actions/success-data')),
-			page.click('button[formenctype="application/x-www-form-urlencoded"]')
-		]);
+		await page.locator('button[formenctype="application/x-www-form-urlencoded"]').click();
 
 		await expect(page.locator('pre')).toHaveText(JSON.stringify({ result: 'bar' }));
 	});
@@ -1909,10 +1903,7 @@ test.describe('Actions', () => {
 		expect(await page.textContent('pre.formdata2')).toBe(JSON.stringify(null));
 
 		await page.type('input[name="username"]', 'foo');
-		await Promise.all([
-			page.waitForRequest((request) => request.url().includes('/actions/enhance')),
-			page.click('button.form1')
-		]);
+		await page.locator('button.form1').click();
 
 		await expect(page.locator('pre.formdata1')).toHaveText(JSON.stringify({ result: 'foo' }));
 		await expect(page.locator('pre.formdata2')).toHaveText(JSON.stringify({ result: 'foo' }));
