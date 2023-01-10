@@ -15,6 +15,7 @@ import * as sync from '../../../core/sync/sync.js';
 import { get_mime_lookup, runtime_prefix } from '../../../core/utils.js';
 import { compact } from '../../../utils/array.js';
 import { not_found } from '../utils.js';
+import { set_paths } from '../../../runtime/paths.js';
 
 const cwd = process.cwd();
 
@@ -307,6 +308,11 @@ export async function dev(vite, vite_config, svelte_config) {
 		}
 	});
 
+	set_paths({
+		base: svelte_config.kit.paths.base,
+		assets
+	});
+
 	vite.middlewares.use(async (req, res, next) => {
 		try {
 			const base = `${vite.config.server.https ? 'https' : 'http'}://${
@@ -483,10 +489,6 @@ export async function dev(vite, vite_config, svelte_config) {
 						},
 						hooks,
 						manifest,
-						paths: {
-							base: svelte_config.kit.paths.base,
-							assets
-						},
 						public_env: {},
 						read: (file) => fs.readFileSync(path.join(svelte_config.kit.files.assets, file)),
 						root,

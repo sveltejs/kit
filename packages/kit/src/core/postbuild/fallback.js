@@ -15,7 +15,7 @@ installPolyfills();
 const server_root = join(config.outDir, 'output');
 
 /** @type {import('types').ServerInternalModule} */
-const { override, set_building } = await import(
+const { override, set_building, set_paths } = await import(
 	pathToFileURL(`${server_root}/server/internal.js`).href
 );
 
@@ -26,9 +26,9 @@ const { Server } = await import(pathToFileURL(`${server_root}/server/index.js`).
 const manifest = (await import(pathToFileURL(manifest_path).href)).manifest;
 
 set_building(true);
+set_paths(config.paths);
 
 override({
-	paths: config.paths,
 	read: (file) => readFileSync(join(config.files.assets, file))
 });
 

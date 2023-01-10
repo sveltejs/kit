@@ -89,8 +89,9 @@ export async function prerender({
 	/** @type {Map<string, string>} */
 	const saved = new Map();
 
+	internal.set_paths(config.paths);
+
 	internal.override({
-		paths: config.paths,
 		read: (file) => {
 			// stuff we just wrote
 			const filepath = saved.get(file);

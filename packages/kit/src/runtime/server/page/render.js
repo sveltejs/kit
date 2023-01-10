@@ -6,6 +6,7 @@ import { s } from '../../../utils/misc.js';
 import { Csp } from './csp.js';
 import { uneval_action_response } from './actions.js';
 import { clarify_devalue_error } from '../utils.js';
+import * as paths from '../../paths.js';
 
 // TODO rename this function/module
 
@@ -141,16 +142,16 @@ export async function render_response({
 	 */
 	let assets;
 
-	if (options.paths.assets) {
+	if (paths.assets) {
 		// if an asset path is specified, use it
-		assets = options.paths.assets;
+		assets = paths.assets;
 	} else if (state.prerendering?.fallback) {
 		// if we're creating a fallback page, asset paths need to be root-relative
-		assets = options.paths.base;
+		assets = paths.base;
 	} else {
 		// otherwise we want asset paths to be relative to the page, so that they
 		// will work in odd contexts like IPFS, the internet archive, and so on
-		const segments = event.url.pathname.slice(options.paths.base.length).split('/').slice(2);
+		const segments = event.url.pathname.slice(paths.base.length).split('/').slice(2);
 		assets = segments.length > 0 ? segments.map(() => '..').join('/') : '.';
 	}
 
@@ -246,7 +247,7 @@ export async function render_response({
 	if (page_config.csr) {
 		const opts = [
 			`env: ${s(options.public_env)}`,
-			`paths: ${s(options.paths)}`,
+			`paths: ${s(paths)}`,
 			`target: document.querySelector('[data-sveltekit-hydrate="${target}"]').parentNode`,
 			`version: ${s(options.version)}`
 		];

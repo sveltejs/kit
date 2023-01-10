@@ -30,15 +30,10 @@ export interface ServerModule {
 }
 
 export interface ServerInternalModule {
-	override(options: {
-		paths: {
-			base: string;
-			assets: string;
-		};
-		read(file: string): Buffer;
-	}): void;
+	override(options: { read(file: string): Buffer }): void;
 
 	set_building(building: boolean): void;
+	set_paths(paths: { base: string; assets: string }): void;
 }
 
 export interface Asset {
@@ -305,10 +300,6 @@ export interface SSROptions {
 	handle_error(error: Error & { frame?: string }, event: RequestEvent): MaybePromise<App.Error>;
 	hooks: ServerHooks;
 	manifest: SSRManifest;
-	paths: {
-		base: string;
-		assets: string;
-	};
 	public_env: Record<string, string>;
 	read(file: string): Buffer;
 	root: SSRComponent['default'];

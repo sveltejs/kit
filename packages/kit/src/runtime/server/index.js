@@ -1,18 +1,7 @@
 import { respond } from './respond.js';
-import { set_paths } from '../paths.js';
-import { set_version } from '../env.js';
 import { set_private_env } from '../env-private.js';
 import { set_public_env } from '../env-public.js';
-import {
-	paths,
-	version,
-	options,
-	public_prefix,
-	get_hooks
-} from '__GENERATED__/server-internal.js';
-
-set_paths(paths);
-set_version(version);
+import { options, public_prefix, get_hooks } from '__GENERATED__/server-internal.js';
 
 export class Server {
 	/** @param {import('types').SSRManifest} manifest */

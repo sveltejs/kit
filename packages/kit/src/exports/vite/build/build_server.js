@@ -34,11 +34,13 @@ const server_template = ({
 }) => `
 import root from './root.svelte';
 import { set_paths } from '${runtime_directory}/paths.js'; // TODO probably just expose this directly?
-export { set_building } from '${runtime_directory}/env.js';
+import { set_building, set_version } from '${runtime_directory}/env.js';
 
-export const paths = ${s(config.kit.paths)};
+const paths = ${s(config.kit.paths)};
+const version = ${s(config.kit.version.name)};
 
-export const version = ${s(config.kit.version.name)};
+set_paths(paths);
+set_version(version);
 
 export const options = {
 	app_template: ({ head, body, assets, nonce }) => ${s(template)
@@ -56,12 +58,11 @@ export const options = {
 	error_template: ({ status, message }) => ${s(error_page)
 		.replace(/%sveltekit\.status%/g, '" + status + "')
 		.replace(/%sveltekit\.error\.message%/g, '" + message + "')},
-	paths,
 	public_env: {},
 	read: null,
 	root,
 	service_worker: ${has_service_worker},
-	version: ${s(config.kit.version.name)}
+	version
 };
 
 export const public_prefix = '${config.kit.env.publicPrefix}';
@@ -69,14 +70,14 @@ export const public_prefix = '${config.kit.env.publicPrefix}';
 // allow paths to be globally overridden
 // in svelte-kit preview and in prerendering
 export function override(settings) {
-	set_paths(settings.paths);
-	options.paths = settings.paths;
 	options.read = settings.read;
 }
 
 export function get_hooks() {
 	return ${hooks ? `import(${s(hooks)})` : '{}'};
 }
+
+export { set_building, set_paths };
 `;
 
 /**

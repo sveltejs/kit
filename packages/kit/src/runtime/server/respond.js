@@ -24,6 +24,7 @@ import {
 	validate_server_exports
 } from '../../utils/exports.js';
 import { error, json } from '../../exports/index.js';
+import * as paths from '../paths.js';
 
 /* global __SVELTEKIT_ADAPTER_NAME__ */
 
@@ -69,11 +70,11 @@ export async function respond(request, options, state) {
 	/** @type {Record<string, string>} */
 	let params = {};
 
-	if (options.paths.base && !state.prerendering?.fallback) {
-		if (!decoded.startsWith(options.paths.base)) {
+	if (paths.base && !state.prerendering?.fallback) {
+		if (!decoded.startsWith(paths.base)) {
 			return new Response('Not found', { status: 404 });
 		}
-		decoded = decoded.slice(options.paths.base.length) || '/';
+		decoded = decoded.slice(paths.base.length) || '/';
 	}
 
 	const is_data_request = has_data_suffix(decoded);
