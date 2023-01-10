@@ -16,8 +16,8 @@ export class Server {
 	 * }} opts
 	 */
 	async init({ env }) {
-		// Take care: Some adapters may have to call \`Server.init\` per-request to set env vars,
-		// so anything that shouldn't be rerun should be wrapped in an \`if\` block to make sure it hasn't
+		// Take care: Some adapters may have to call `Server.init` per-request to set env vars,
+		// so anything that shouldn't be rerun should be wrapped in an `if` block to make sure it hasn't
 		// been done already.
 		const entries = Object.entries(env);
 
