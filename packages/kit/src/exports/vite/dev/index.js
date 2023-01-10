@@ -2,7 +2,7 @@ import fs from 'fs';
 import colors from 'kleur';
 import path from 'path';
 import sirv from 'sirv';
-import { URL } from 'url';
+import { fileURLToPath, URL } from 'url';
 import { isCSSRequest, loadEnv } from 'vite';
 import { getRequest, setResponse } from '../../../exports/node/index.js';
 import { installPolyfills } from '../../../exports/node/polyfills.js';
@@ -312,6 +312,17 @@ export async function dev(vite, vite_config, svelte_config) {
 	});
 
 	set_version(svelte_config.kit.version.name);
+
+	// This shameful hack allows us to load runtime server code via Vite
+	// while apps load `HttpError` and `Redirect` in Node, without
+	// causing `instanceof` checks to fail
+	const control_module_node = await import(`${runtime_prefix}/control.js`);
+	const control_module_vite = await vite.ssrLoadModule(`${runtime_prefix}/control.js`);
+
+	control_module_node.replace_implementations({
+		HttpError: control_module_vite.HttpError,
+		Redirect: control_module_vite.Redirect
+	});
 
 	vite.middlewares.use(async (req, res, next) => {
 		try {
