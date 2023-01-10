@@ -74,7 +74,7 @@ export interface CSRPageNode {
 		load?: Load;
 		trailingSlash?: TrailingSlash;
 	};
-	server: boolean;
+	has_server_load: boolean;
 }
 
 export type CSRPageNodeLoader = () => Promise<CSRPageNode>;
