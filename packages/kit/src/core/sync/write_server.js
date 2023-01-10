@@ -59,6 +59,10 @@ export function get_hooks() {
 export { set_building, set_paths };
 `;
 
+// TODO need to re-run this whenever src/app.html or src/error.html are
+// created or changed, or src/service-worker.js is created or deleted.
+// Also, need to check that updating hooks.server.js works
+
 /**
  * Write server configuration to disk
  * @param {import('types').ValidatedConfig} config
