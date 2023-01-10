@@ -1,6 +1,6 @@
 import { respond } from './respond.js';
 import { set_paths } from '../paths.js';
-import { set_building, set_version } from '../env.js';
+import { set_version } from '../env.js';
 import { set_private_env } from '../env-private.js';
 import { set_public_env } from '../env-public.js';
 import {
@@ -11,18 +11,8 @@ import {
 	get_hooks
 } from '__GENERATED__/server-internal.js';
 
-let read = null;
-
 set_paths(paths);
 set_version(version);
-
-// allow paths to be globally overridden
-// in svelte-kit preview and in prerendering
-export function override(settings) {
-	set_paths(settings.paths);
-	set_building(settings.building);
-	read = settings.read;
-}
 
 export class Server {
 	/** @param {import('types').SSRManifest} manifest */
@@ -62,6 +52,14 @@ export class Server {
 						console.error(error?.stack);
 					}),
 				handleFetch: module.handleFetch || (({ request, fetch }) => fetch(request))
+			};
+
+			this.options.handle_error = (error, event) => {
+				return (
+					this.options.hooks.handleError({ error, event }) ?? {
+						message: event.route.id != null ? 'Internal Error' : 'Not Found'
+					}
+				);
 			};
 		}
 	}

@@ -1,6 +1,6 @@
 import { readFileSync, writeFileSync } from 'fs';
 import { dirname, join } from 'path';
-import { pathToFileURL, URL } from 'url';
+import { URL } from 'url';
 import { installPolyfills } from '../../exports/node/polyfills.js';
 import { mkdirp, posixify, walk } from '../../utils/filesystem.js';
 import { should_polyfill } from '../../utils/platform.js';
@@ -44,6 +44,8 @@ const REDIRECT = 3;
 /**
  *
  * @param {{
+ *   Server: typeof import('types').InternalServer;
+ *   internal: import('types').ServerInternalModule;
  *   manifest: import('types').SSRManifest;
  *   prerender_map: import('types').PrerenderMap;
  *   client_out_dir: string;
@@ -52,7 +54,15 @@ const REDIRECT = 3;
  * }} opts
  * @returns
  */
-export async function prerender({ manifest, prerender_map, client_out_dir, verbose, env }) {
+export async function prerender({
+	Server,
+	internal,
+	manifest,
+	prerender_map,
+	client_out_dir,
+	verbose,
+	env
+}) {
 	/** @type {import('types').Prerendered} */
 	const prerendered = {
 		pages: new Map(),
@@ -76,19 +86,10 @@ export async function prerender({ manifest, prerender_map, client_out_dir, verbo
 		installPolyfills();
 	}
 
-	const server_root = join(config.outDir, 'output');
-
-	/** @type {import('types').ServerInternalModule} */
-	const { override } = await import(pathToFileURL(`${server_root}/server/index.js`).href);
-
-	/** @type {import('types').ServerModule} */
-	const { Server } = await import(pathToFileURL(`${server_root}/server/index.js`).href);
-
 	/** @type {Map<string, string>} */
 	const saved = new Map();
 
-	override({
-		building: true,
+	internal.override({
 		paths: config.paths,
 		read: (file) => {
 			// stuff we just wrote

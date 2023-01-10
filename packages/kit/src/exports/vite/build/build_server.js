@@ -19,12 +19,22 @@ import { runtime_directory } from '../../../core/utils.js';
  *   hooks: string | null;
  *   config: import('types').ValidatedConfig;
  *   has_service_worker: boolean;
+ *   runtime_directory: string;
  *   template: string;
  *   error_page: string;
  * }} opts
  */
-const server_template = ({ config, hooks, has_service_worker, template, error_page }) => `
+const server_template = ({
+	config,
+	hooks,
+	has_service_worker,
+	runtime_directory,
+	template,
+	error_page
+}) => `
 import root from './root.svelte';
+import { set_paths } from '${runtime_directory}/paths.js'; // TODO probably just expose this directly?
+export { set_building } from '${runtime_directory}/env.js';
 
 export const paths = ${s(config.kit.paths)};
 
@@ -46,12 +56,6 @@ export const options = {
 	error_template: ({ status, message }) => ${s(error_page)
 		.replace(/%sveltekit\.status%/g, '" + status + "')
 		.replace(/%sveltekit\.error\.message%/g, '" + message + "')},
-	handle_error: (error, event) => {
-		return this.options.hooks.handleError({ error, event }) ?? {
-			message: event.route.id != null ? 'Internal Error' : 'Not Found'
-		};
-	},
-	hooks: null,
 	paths,
 	public_env: {},
 	read: null,
@@ -66,7 +70,7 @@ export const public_prefix = '${config.kit.env.publicPrefix}';
 // in svelte-kit preview and in prerendering
 export function override(settings) {
 	set_paths(settings.paths);
-	set_building(settings.building);
+	options.paths = settings.paths;
 	options.read = settings.read;
 }
 
@@ -138,14 +142,18 @@ export async function build_server(options, client) {
 		input[name] = path.resolve(cwd, file);
 	});
 
+	/** @param {string} file */
+	function relative(file) {
+		return path.relative(path.dirname(input.internal), file);
+	}
+
 	fs.writeFileSync(
 		input.internal,
 		server_template({
 			config,
-			hooks: fs.existsSync(hooks_file)
-				? path.relative(path.dirname(input.internal), hooks_file)
-				: null,
+			hooks: fs.existsSync(hooks_file) ? relative(hooks_file) : null,
 			has_service_worker: config.kit.serviceWorker.register && !!service_worker_entry_file,
+			runtime_directory: relative(runtime_directory),
 			template: load_template(cwd, config),
 			error_page: load_error_page(config)
 		})

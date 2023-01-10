@@ -31,13 +31,14 @@ export interface ServerModule {
 
 export interface ServerInternalModule {
 	override(options: {
-		building: boolean;
 		paths: {
 			base: string;
 			assets: string;
 		};
 		read(file: string): Buffer;
 	}): void;
+
+	set_building(building: boolean): void;
 }
 
 export interface Asset {

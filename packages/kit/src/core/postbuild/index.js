@@ -1,4 +1,5 @@
 import { writeFileSync } from 'fs';
+import { join } from 'path';
 import { pathToFileURL } from 'url';
 import { get_option } from '../../runtime/server/utils.js';
 import {
@@ -6,6 +7,7 @@ import {
 	validate_page_server_exports,
 	validate_server_exports
 } from '../../utils/exports.js';
+import { load_config } from '../config/index.js';
 import { prerender } from './prerender.js';
 
 const [, , client_out_dir, manifest_path, results_path, verbose, env] = process.argv;
@@ -15,6 +17,21 @@ const manifest = (await import(pathToFileURL(manifest_path).href)).manifest;
 
 /** @type {import('types').PrerenderMap} */
 const prerender_map = new Map();
+
+/** @type {import('types').ValidatedKitConfig} */
+const config = (await load_config()).kit;
+
+const server_root = join(config.outDir, 'output');
+
+/** @type {import('types').ServerInternalModule} */
+const internal = await import(pathToFileURL(`${server_root}/server/internal.js`).href);
+
+/** @type {import('types').ServerModule} */
+const { Server } = await import(pathToFileURL(`${server_root}/server/index.js`).href);
+
+// configure `import { building } from '$app/environment'` —
+// essential we do this before analysing the code
+internal.set_building(true);
 
 // analyse routes
 for (const route of manifest._.routes) {
@@ -70,6 +87,8 @@ for (const route of manifest._.routes) {
 }
 
 const { prerendered } = await prerender({
+	Server,
+	internal,
 	manifest,
 	prerender_map,
 	client_out_dir,
