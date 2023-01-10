@@ -1232,3 +1232,15 @@ test.describe('Interactivity', () => {
 		expect(errored).toBe(false);
 	});
 });
+
+test.describe('env in app.html', () => {
+	test('can access public env', async ({ page }) => {
+		await page.goto('/');
+		expect(await page.textContent('#public-env-replace')).toBeTruthy();
+	});
+
+	test('cannot access private env', async ({ page }) => {
+		await page.goto('/');
+		expect(await page.textContent('#private-env-replace')).toBeFalsy();
+	});
+});
