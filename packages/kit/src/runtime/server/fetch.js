@@ -85,12 +85,12 @@ export function create_fetch({ event, options, state, get_cookie_header }) {
 				if (is_asset || is_asset_html) {
 					const file = is_asset ? filename : filename_html;
 
-					if (options.read) {
+					if (state.read) {
 						const type = is_asset
 							? options.manifest.mimeTypes[filename.slice(filename.lastIndexOf('.'))]
 							: 'text/html';
 
-						return new Response(options.read(file), {
+						return new Response(state.read(file), {
 							headers: type ? { 'content-type': type } : {}
 						});
 					}

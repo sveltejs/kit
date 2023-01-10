@@ -490,7 +490,6 @@ export async function dev(vite, vite_config, svelte_config) {
 						hooks,
 						manifest,
 						public_env: {},
-						read: (file) => fs.readFileSync(path.join(svelte_config.kit.files.assets, file)),
 						root,
 						app_template: ({ head, body, assets, nonce }) => {
 							return (
@@ -514,7 +513,8 @@ export async function dev(vite, vite_config, svelte_config) {
 							const { remoteAddress } = req.socket;
 							if (remoteAddress) return remoteAddress;
 							throw new Error('Could not determine clientAddress');
-						}
+						},
+						read: (file) => fs.readFileSync(path.join(svelte_config.kit.files.assets, file))
 					}
 				);
 

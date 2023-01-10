@@ -67,12 +67,6 @@ export const options = {
 
 export const public_prefix = '${config.kit.env.publicPrefix}';
 
-// allow paths to be globally overridden
-// in svelte-kit preview and in prerendering
-export function override(settings) {
-	options.read = settings.read;
-}
-
 export function get_hooks() {
 	return ${hooks ? `import(${s(hooks)})` : '{}'};
 }

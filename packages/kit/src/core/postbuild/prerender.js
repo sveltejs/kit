@@ -91,17 +91,6 @@ export async function prerender({
 
 	internal.set_paths(config.paths);
 
-	internal.override({
-		read: (file) => {
-			// stuff we just wrote
-			const filepath = saved.get(file);
-			if (filepath) return readFileSync(filepath);
-
-			// stuff in `static`
-			return readFileSync(join(config.files.assets, file));
-		}
-	});
-
 	const server = new Server(manifest);
 	await server.init({ env: JSON.parse(env) });
 
@@ -190,6 +179,14 @@ export async function prerender({
 			},
 			prerendering: {
 				dependencies
+			},
+			read: (file) => {
+				// stuff we just wrote
+				const filepath = saved.get(file);
+				if (filepath) return readFileSync(filepath);
+
+				// stuff in `static`
+				return readFileSync(join(config.files.assets, file));
 			}
 		});
 

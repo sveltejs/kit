@@ -37,7 +37,7 @@ export async function preview(vite, vite_config, svelte_config) {
 	const dir = join(svelte_config.kit.outDir, 'output/server');
 
 	/** @type {import('types').ServerInternalModule} */
-	const { override, set_paths } = await import(pathToFileURL(join(dir, 'internal.js')).href);
+	const { set_paths } = await import(pathToFileURL(join(dir, 'internal.js')).href);
 
 	/** @type {import('types').ServerModule} */
 	const { Server } = await import(pathToFileURL(join(dir, 'index.js')).href);
@@ -45,9 +45,6 @@ export async function preview(vite, vite_config, svelte_config) {
 	const { manifest } = await import(pathToFileURL(join(dir, 'manifest.js')).href);
 
 	set_paths({ base, assets });
-	override({
-		read: (file) => fs.readFileSync(join(svelte_config.kit.files.assets, file))
-	});
 
 	const server = new Server(manifest);
 	await server.init({
@@ -151,7 +148,8 @@ export async function preview(vite, vite_config, svelte_config) {
 						const { remoteAddress } = req.socket;
 						if (remoteAddress) return remoteAddress;
 						throw new Error('Could not determine clientAddress');
-					}
+					},
+					read: (file) => fs.readFileSync(join(svelte_config.kit.files.assets, file))
 				})
 			);
 		});

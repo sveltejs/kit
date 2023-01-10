@@ -30,8 +30,6 @@ export interface ServerModule {
 }
 
 export interface ServerInternalModule {
-	override(options: { read(file: string): Buffer }): void;
-
 	set_building(building: boolean): void;
 	set_paths(paths: { base: string; assets: string }): void;
 }
@@ -106,6 +104,7 @@ export class InternalServer extends Server {
 		request: Request,
 		options: RequestOptions & {
 			prerendering?: PrerenderOptions;
+			read: (file: string) => Buffer;
 		}
 	): Promise<Response>;
 }
@@ -301,7 +300,6 @@ export interface SSROptions {
 	hooks: ServerHooks;
 	manifest: SSRManifest;
 	public_env: Record<string, string>;
-	read(file: string): Buffer;
 	root: SSRComponent['default'];
 	service_worker: boolean;
 	app_template({
@@ -355,6 +353,7 @@ export interface SSRState {
 	 * prerender option is inherited by the endpoint, unless overridden
 	 */
 	prerender_default?: PrerenderOption;
+	read?: (file: string) => Buffer;
 }
 
 export type StrictBody = string | ArrayBufferView;
