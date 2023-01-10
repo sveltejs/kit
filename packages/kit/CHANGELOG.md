@@ -1,5 +1,15 @@
 # @sveltejs/kit
 
+## 1.0.11
+
+### Patch Changes
+
+- Warn if comments are removed from HTML ([#8423](https://github.com/sveltejs/kit/pull/8423))
+
+- [fix] ignore `<a>` elements with no `href` attribute ([#8418](https://github.com/sveltejs/kit/pull/8418))
+
+- [fix] invalidate implicit dependencies in server load functions ([#8420](https://github.com/sveltejs/kit/pull/8420))
+
 ## 1.0.10
 
 ### Patch Changes

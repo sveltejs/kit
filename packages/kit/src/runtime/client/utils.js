@@ -105,7 +105,7 @@ function parent_element(element) {
  */
 export function find_anchor(element, target) {
 	while (element && element !== target) {
-		if (element.nodeName.toUpperCase() === 'A') {
+		if (element.nodeName.toUpperCase() === 'A' && element.hasAttribute('href')) {
 			return /** @type {HTMLAnchorElement | SVGAElement} */ (element);
 		}
 
