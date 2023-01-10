@@ -390,9 +390,12 @@ export async function respond(request, options, state) {
 			// we can't load the endpoint from our own manifest,
 			// so we need to make an actual HTTP request
 			return await fetch(request);
-		} catch (error) {
+		} catch (e) {
+			// TODO if `e` is instead named `error`, some fucked up Vite transformation happens
+			// and I don't even know how to describe it. need to investigate at some point
+
 			// HttpError from endpoint can end up here - TODO should it be handled there instead?
-			return await handle_fatal_error(event, options, error);
+			return await handle_fatal_error(event, options, e);
 		} finally {
 			event.cookies.set = () => {
 				throw new Error('Cannot use `cookies.set(...)` after the response has been generated');
