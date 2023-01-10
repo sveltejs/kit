@@ -43,7 +43,7 @@ test.describe('Cookies', () => {
 			const response = await request.get(`/load/fetch-external-no-cookies?port=${port}`);
 			expect(response.headers()['set-cookie']).not.toContain('external=true');
 		} finally {
-			close();
+			await close();
 		}
 	});
 });
@@ -331,7 +331,7 @@ test.describe('Load', () => {
 			expect(await page.textContent('h1')).toBe(`origin: ${new URL(baseURL).origin}`);
 		} finally {
 			await context.close();
-			close();
+			await close();
 		}
 	});
 });
