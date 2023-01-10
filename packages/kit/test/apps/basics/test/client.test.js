@@ -788,7 +788,7 @@ test.describe('Routing', () => {
 		await expect(page.locator('#page-url-hash')).toHaveText('');
 	});
 
-	test('does not normalize external path', async ({ page }) => {
+	test('does not normalize external path', async ({ page, context }) => {
 		const { port, close } = await start_server((_req, res) => {
 			res.end('<html><head></head><body>ok</body></html>');
 		});
@@ -799,6 +799,7 @@ test.describe('Routing', () => {
 			expect(await page.content()).toBe('<html><head></head><body>ok</body></html>');
 			expect(page.url()).toBe(`http://localhost:${port}/with-slash/`);
 		} finally {
+			await context.close();
 			await close();
 		}
 	});
