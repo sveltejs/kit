@@ -789,19 +789,15 @@ test.describe('Routing', () => {
 	});
 
 	test('does not normalize external path', async ({ page }) => {
-		/** @type {Array<string|undefined>} */
-		const urls = [];
-
-		const { port, close } = await start_server((req, res) => {
-			if (req.url !== '/favicon.ico') urls.push(req.url);
-			res.end('ok');
+		const { port, close } = await start_server((_req, res) => {
+			res.end('<html><head></head><body>ok</body></html>');
 		});
 
 		try {
 			await page.goto(`/routing/slashes?port=${port}`);
 			await page.locator(`a[href="http://localhost:${port}/with-slash/"]`).click();
-
-			expect(urls).toEqual(['/with-slash/']);
+			expect(await page.content()).toBe('<html><head></head><body>ok</body></html>');
+			expect(page.url()).toBe(`http://localhost:${port}/with-slash/`);
 		} finally {
 			await close();
 		}
