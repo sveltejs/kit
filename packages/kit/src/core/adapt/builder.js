@@ -126,7 +126,7 @@ export function create_builder({ config, build_data, routes, prerendered, log })
 
 		generateFallback(dest) {
 			// do prerendering in a subprocess so any dangling stuff gets killed upon completion
-			const script = fileURLToPath(new URL('../prerender/fallback.js', import.meta.url));
+			const script = fileURLToPath(new URL('../postbuild/fallback.js', import.meta.url));
 
 			const manifest_path = `${config.kit.outDir}/output/server/manifest-full.js`;
 
