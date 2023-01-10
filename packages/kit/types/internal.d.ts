@@ -306,7 +306,6 @@ export interface SSROptions {
 	csrf: {
 		check_origin: boolean;
 	};
-	dev: boolean;
 	embedded: boolean;
 	error_template({ message, status }: { message: string; status: number }): string;
 	handle_error(error: Error & { frame?: string }, event: RequestEvent): MaybePromise<App.Error>;
@@ -341,6 +340,7 @@ export interface SSRRoute {
 }
 
 export interface SSRState {
+	dev?: boolean; // TODO use `define` instead, so code can be DCE'd
 	fallback?: string;
 	getClientAddress(): string;
 	initiator?: SSRRoute | SSRErrorPage;

@@ -53,3 +53,5 @@ export function fail(status, data) {
 export function invalid() {
 	throw new Error('invalid(...) is now fail(...)');
 }
+
+export { HttpError, Redirect };

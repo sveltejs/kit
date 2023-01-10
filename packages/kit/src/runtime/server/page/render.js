@@ -133,7 +133,7 @@ export async function render_response({
 	let body = rendered.html;
 
 	const csp = new Csp(options.csp, {
-		dev: options.dev,
+		dev: state.dev ?? false,
 		prerender: !!state.prerendering
 	});
 
@@ -203,7 +203,7 @@ export async function render_response({
 		const content = Array.from(inline_styles.values()).join('\n');
 
 		const attributes = [];
-		if (options.dev) attributes.push(' data-sveltekit');
+		if (state.dev) attributes.push(' data-sveltekit');
 		if (csp.style_needs_nonce) attributes.push(` nonce="${csp.nonce}"`);
 
 		csp.add_style(content);
@@ -317,7 +317,7 @@ export async function render_response({
 	}
 
 	if (options.service_worker) {
-		const opts = options.dev ? `, { type: 'module' }` : '';
+		const opts = state.dev ? `, { type: 'module' }` : '';
 
 		// we use an anonymous function instead of an arrow function to support
 		// older browsers (https://github.com/sveltejs/kit/pull/5417)

@@ -66,7 +66,7 @@ export async function load_server_data({ event, options, state, node, parent }) 
 	});
 
 	const data = result ? await unwrap_promises(result) : null;
-	if (options.dev) {
+	if (state.dev) {
 		validate_load_response(data, /** @type {string} */ (event.route.id));
 	}
 

@@ -41,7 +41,6 @@ export const options = {
 	csrf: {
 		check_origin: ${s(config.kit.csrf.checkOrigin)},
 	},
-	dev: false,
 	embedded: ${config.kit.embedded},
 	error_template: ({ status, message }) => ${s(error_page)
 		.replace(/%sveltekit\.status%/g, '" + status + "')
