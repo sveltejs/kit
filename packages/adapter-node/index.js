@@ -75,6 +75,11 @@ export default function (opts = {}) {
 					ENV_PREFIX: JSON.stringify(envPrefix)
 				}
 			});
+
+			writeFileSync(
+				`${out}/package.json`,
+				JSON.stringify({type: 'module'})
+			);
 		}
 	};
 }
