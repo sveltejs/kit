@@ -320,6 +320,7 @@ export async function dev(vite, vite_config, svelte_config) {
 	const control_module_vite = await vite.ssrLoadModule(`${runtime_prefix}/control.js`);
 
 	control_module_node.replace_implementations({
+		ActionFailure: control_module_vite.ActionFailure,
 		HttpError: control_module_vite.HttpError,
 		Redirect: control_module_vite.Redirect
 	});
@@ -448,6 +449,7 @@ export async function dev(vite, vite_config, svelte_config) {
 				}
 
 				const rendered = await server.respond(request, {
+					dev: true,
 					getClientAddress: () => {
 						const { remoteAddress } = req.socket;
 						if (remoteAddress) return remoteAddress;
