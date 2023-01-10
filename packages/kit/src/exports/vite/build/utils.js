@@ -189,6 +189,7 @@ export function get_build_compile_config({ config, input, ssr, outDir }) {
 				output: {
 					entryFileNames: `${prefix}/workers/[name]-[hash].js`,
 					chunkFileNames: `${prefix}/workers/chunks/[name]-[hash].js`,
+					assetFileNames: `${prefix}/workers/assets/[name]-[hash][extname]`,
 					hoistTransitiveImports: false
 				}
 			}

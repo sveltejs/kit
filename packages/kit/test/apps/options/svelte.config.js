@@ -5,7 +5,8 @@ const config = {
 		embedded: true,
 		csp: {
 			directives: {
-				'script-src': ['self']
+				'script-src': ['self'],
+				'require-trusted-types-for': ['script']
 			}
 		},
 		files: {

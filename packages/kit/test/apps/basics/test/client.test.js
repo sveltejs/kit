@@ -552,40 +552,36 @@ test.describe('Load', () => {
 		expect(await page.textContent('p')).toBe('This text comes from the server load function');
 	});
 
-	test.describe.serial('', () => {
-		test('load does not call fetch if max-age allows it', async ({ page, request }) => {
-			await request.get('/load/cache-control/reset');
+	test('load does not call fetch if max-age allows it', async ({ page }) => {
+		page.addInitScript(`
+			window.now = 0;
+			window.performance.now = () => now;
+		`);
 
-			await page.goto('/load/cache-control');
-			await expect(page.getByText('Count is 0')).toBeVisible();
-			await page.locator('button.default').click();
-			await expect(page.getByText('Count is 0')).toBeVisible();
+		await page.goto('/load/cache-control/default');
+		await expect(page.getByText('Count is 0')).toBeVisible();
+		await page.locator('button').click();
+		await page.waitForLoadState('networkidle');
+		await expect(page.getByText('Count is 0')).toBeVisible();
 
-			// use a cache expiration value high enough that we're confident the earlier
-			// portions of the test will complete before the cache expires
-			await page.waitForTimeout(4000);
+		await page.evaluate(() => (window.now = 2500));
 
-			await page.locator('button.default').click();
-			await expect(page.getByText('Count is 2')).toBeVisible();
-		});
+		await page.locator('button').click();
+		await expect(page.getByText('Count is 2')).toBeVisible();
+	});
 
-		test('load does ignore ttl if fetch cache options says so', async ({ page, request }) => {
-			await request.get('/load/cache-control/reset');
+	test('load does ignore ttl if fetch cache options says so', async ({ page }) => {
+		await page.goto('/load/cache-control/force');
+		await expect(page.getByText('Count is 0')).toBeVisible();
+		await page.locator('button').click();
+		await expect(page.getByText('Count is 1')).toBeVisible();
+	});
 
-			await page.goto('/load/cache-control');
-			await expect(page.getByText('Count is 0')).toBeVisible();
-			await page.locator('button.force').click();
-			await expect(page.getByText('Count is 1')).toBeVisible();
-		});
-
-		test('load busts cache if non-GET request to resource is made', async ({ page, request }) => {
-			await request.get('/load/cache-control/reset');
-
-			await page.goto('/load/cache-control');
-			await expect(page.getByText('Count is 0')).toBeVisible();
-			await page.locator('button.bust').click();
-			await expect(page.getByText('Count is 1')).toBeVisible();
-		});
+	test('load busts cache if non-GET request to resource is made', async ({ page }) => {
+		await page.goto('/load/cache-control/bust');
+		await expect(page.getByText('Count is 0')).toBeVisible();
+		await page.locator('button').click();
+		await expect(page.getByText('Count is 1')).toBeVisible();
 	});
 
 	test('__data.json has cache-control: private, no-store', async ({ page, clicknav }) => {
@@ -792,21 +788,18 @@ test.describe('Routing', () => {
 		await expect(page.locator('#page-url-hash')).toHaveText('');
 	});
 
-	test('does not normalize external path', async ({ page }) => {
-		/** @type {Array<string|undefined>} */
-		const urls = [];
-
-		const { port, close } = await start_server((req, res) => {
-			if (req.url !== '/favicon.ico') urls.push(req.url);
-			res.end('ok');
+	test('does not normalize external path', async ({ page, context }) => {
+		const { port, close } = await start_server((_req, res) => {
+			res.end('<html><head></head><body>ok</body></html>');
 		});
 
 		try {
 			await page.goto(`/routing/slashes?port=${port}`);
 			await page.locator(`a[href="http://localhost:${port}/with-slash/"]`).click();
-
-			expect(urls).toEqual(['/with-slash/']);
+			expect(await page.content()).toBe('<html><head></head><body>ok</body></html>');
+			expect(page.url()).toBe(`http://localhost:${port}/with-slash/`);
 		} finally {
+			await context.close();
 			await close();
 		}
 	});
@@ -838,6 +831,7 @@ test.describe('Routing', () => {
 		expect(await page.textContent('h2')).toBe('enter');
 		expect(await page.textContent('h3')).toBe('...');
 
+		/** @type {string[]} */
 		const requests = [];
 		page.on('request', (request) => requests.push(request.url()));
 
@@ -848,6 +842,16 @@ test.describe('Routing', () => {
 		expect(await page.textContent('h1')).toBe('updated');
 		expect(await page.textContent('h2')).toBe('form');
 		expect(await page.textContent('h3')).toBe('bar');
+	});
+
+	test('ignores links with no href', async ({ page }) => {
+		await page.goto('/routing/missing-href');
+		const selector = '[data-testid="count"]';
+
+		expect(await page.textContent(selector)).toBe('count: 1');
+
+		await page.locator(selector).click();
+		expect(await page.textContent(selector)).toBe('count: 1');
 	});
 });
 
@@ -924,14 +928,11 @@ test.describe('$app/stores', () => {
 	});
 });
 
-test.describe.serial('Invalidation', () => {
+test.describe('Invalidation', () => {
 	test('+layout.server.js does not re-run when downstream load functions are invalidated', async ({
 		page,
-		request,
 		clicknav
 	}) => {
-		await request.get('/load/unchanged/reset');
-
 		await page.goto('/load/unchanged/isolated/a');
 		expect(await page.textContent('h1')).toBe('slug: a');
 		expect(await page.textContent('h2')).toBe('count: 0');
@@ -943,17 +944,14 @@ test.describe.serial('Invalidation', () => {
 
 	test('+layout.server.js re-runs when await parent() is called from downstream load function', async ({
 		page,
-		request,
 		clicknav
 	}) => {
-		await request.get('/load/unchanged/reset');
-
-		await page.goto('/load/unchanged/uses-parent/a');
+		await page.goto('/load/unchanged-parent/uses-parent/a');
 		expect(await page.textContent('h1')).toBe('slug: a');
 		expect(await page.textContent('h2')).toBe('count: 0');
 		expect(await page.textContent('h3')).toBe('doubled: 0');
 
-		await clicknav('[href="/load/unchanged/uses-parent/b"]');
+		await clicknav('[href="/load/unchanged-parent/uses-parent/b"]');
 		expect(await page.textContent('h1')).toBe('slug: b');
 		expect(await page.textContent('h2')).toBe('count: 0');
 
@@ -972,12 +970,7 @@ test.describe.serial('Invalidation', () => {
 		expect(await page.textContent('h1')).toBe('3');
 	});
 
-	test('server-only load functions are re-run following forced invalidation', async ({
-		page,
-		request
-	}) => {
-		await request.get('/load/invalidation/forced/reset');
-
+	test('server-only load functions are re-run following forced invalidation', async ({ page }) => {
 		await page.goto('/load/invalidation/forced');
 		expect(await page.textContent('h1')).toBe('a: 0, b: 1');
 
@@ -991,12 +984,9 @@ test.describe.serial('Invalidation', () => {
 	});
 
 	test('server-only load functions are re-run following goto with forced invalidation', async ({
-		page,
-		request
+		page
 	}) => {
-		await request.get('/load/invalidation/forced/reset');
-
-		await page.goto('/load/invalidation/forced');
+		await page.goto('/load/invalidation/forced-goto');
 		expect(await page.textContent('h1')).toBe('a: 0, b: 1');
 
 		await page.click('button.goto');
@@ -1004,7 +994,7 @@ test.describe.serial('Invalidation', () => {
 		expect(await page.textContent('h1')).toBe('a: 2, b: 3');
 	});
 
-	test('multiple invalidations run concurrently', async ({ page, request }) => {
+	test('multiple invalidations run concurrently', async ({ page }) => {
 		await page.goto('/load/invalidation/multiple');
 		await expect(page.getByText('layout: 0, page: 0')).toBeVisible();
 
@@ -1039,7 +1029,17 @@ test.describe.serial('Invalidation', () => {
 		expect(shared).not.toBe(next_shared);
 	});
 
-	test('+layout.js is re-run when shared dep is invalidated', async ({ page, clicknav }) => {
+	test('fetch in server load can be invalidated', async ({ page, app, request }) => {
+		await request.get('/load/invalidation/server-fetch/count.json?reset');
+		await page.goto('/load/invalidation/server-fetch');
+		const selector = '[data-testid="count"]';
+
+		expect(await page.textContent(selector)).toBe('1');
+		await app.invalidate('/load/invalidation/server-fetch/count.json');
+		expect(await page.textContent(selector)).toBe('2');
+	});
+
+	test('+layout.js is re-run when shared dep is invalidated', async ({ page }) => {
 		await page.goto('/load/invalidation/depends');
 		const server = await page.textContent('p.server');
 		const shared = await page.textContent('p.shared');
@@ -1084,6 +1084,16 @@ test.describe.serial('Invalidation', () => {
 
 		await clicknav('[href="/load/invalidation/route/shared/b"]');
 		expect(await page.textContent('h1')).toBe('route.id: /load/invalidation/route/shared/b');
+	});
+
+	test('route.id does not rerun layout if unchanged', async ({ page, clicknav }) => {
+		await page.goto('/load/invalidation/route/shared/unchanged-x');
+		expect(await page.textContent('h1')).toBe('route.id: /load/invalidation/route/shared/[x]');
+		const id = await page.textContent('h2');
+
+		await clicknav('[href="/load/invalidation/route/shared/unchanged-y"]');
+		expect(await page.textContent('h1')).toBe('route.id: /load/invalidation/route/shared/[x]');
+		expect(await page.textContent('h2')).toBe(id);
 	});
 
 	test('$page.url can safely be mutated', async ({ page }) => {

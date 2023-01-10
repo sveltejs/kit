@@ -63,17 +63,7 @@ export function create_fetch({ event, options, state, get_cookie_header }) {
 						if (cookie) request.headers.set('cookie', cookie);
 					}
 
-					let response = await fetch(request);
-
-					if (mode === 'no-cors') {
-						response = new Response('', {
-							status: response.status,
-							statusText: response.statusText,
-							headers: response.headers
-						});
-					}
-
-					return response;
+					return fetch(request);
 				}
 
 				/** @type {Response} */

@@ -6,6 +6,7 @@ import { s } from '../../../utils/misc.js';
 import { Csp } from './csp.js';
 import { uneval_action_response } from './actions.js';
 import { clarify_devalue_error } from '../utils.js';
+import { DEV } from 'esm-env';
 
 // TODO rename this function/module
 
@@ -211,22 +212,17 @@ export async function render_response({
 		const path = prefixed(dep);
 
 		if (resolve_opts.preload({ type: 'css', path })) {
-			const attributes = [];
-
-			if (csp.style_needs_nonce) {
-				attributes.push(`nonce="${csp.nonce}"`);
-			}
+			const attributes = ['rel="stylesheet"'];
 
 			if (inline_styles.has(dep)) {
 				// don't load stylesheets that are already inlined
 				// include them in disabled state so that Vite can detect them and doesn't try to add them
 				attributes.push('disabled', 'media="(max-width: 0)"');
 			} else {
-				const preload_atts = ['rel="preload"', 'as="style"'].concat(attributes);
+				const preload_atts = ['rel="preload"', 'as="style"'];
 				link_header_preloads.add(`<${encodeURI(path)}>; ${preload_atts.join(';')}; nopush`);
 			}
 
-			attributes.unshift('rel="stylesheet"');
 			head += `\n\t\t<link href="${path}" ${attributes.join(' ')}>`;
 		}
 	}
@@ -358,17 +354,34 @@ export async function render_response({
 	// add the content after the script/css links so the link elements are parsed first
 	head += rendered.head;
 
+	const html = options.app_template({
+		head,
+		body,
+		assets,
+		nonce: /** @type {string} */ (csp.nonce)
+	});
+
 	// TODO flush chunks as early as we can
-	const html =
+	const transformed =
 		(await resolve_opts.transformPageChunk({
-			html: options.app_template({ head, body, assets, nonce: /** @type {string} */ (csp.nonce) }),
+			html,
 			done: true
 		})) || '';
+
+	if (DEV && page_config.csr) {
+		if (transformed.split('<!--').length < html.split('<!--').length) {
+			// the \u001B stuff is ANSI codes, so that we don't need to add a library to the runtime
+			// https://svelte.dev/repl/1b3f49696f0c44c881c34587f2537aa2
+			console.warn(
+				"\u001B[1m\u001B[31mRemoving comments in transformPageChunk can break Svelte's hydration\u001B[39m\u001B[22m"
+			);
+		}
+	}
 
 	const headers = new Headers({
 		'x-sveltekit-page': 'true',
 		'content-type': 'text/html',
-		etag: `"${hash(html)}"`
+		etag: `"${hash(transformed)}"`
 	});
 
 	if (!state.prerendering) {
@@ -386,7 +399,7 @@ export async function render_response({
 		}
 	}
 
-	return new Response(html, {
+	return new Response(transformed, {
 		status,
 		headers
 	});
