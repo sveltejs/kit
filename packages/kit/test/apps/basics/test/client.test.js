@@ -788,7 +788,7 @@ test.describe('Routing', () => {
 		await expect(page.locator('#page-url-hash')).toHaveText('');
 	});
 
-	test('does not normalize external path', async ({ page }) => {
+	test('does not normalize external path', async ({ page, context }) => {
 		const { port, close } = await start_server((_req, res) => {
 			res.end('<html><head></head><body>ok</body></html>');
 		});
@@ -799,6 +799,7 @@ test.describe('Routing', () => {
 			expect(await page.content()).toBe('<html><head></head><body>ok</body></html>');
 			expect(page.url()).toBe(`http://localhost:${port}/with-slash/`);
 		} finally {
+			await context.close();
 			await close();
 		}
 	});
@@ -841,6 +842,16 @@ test.describe('Routing', () => {
 		expect(await page.textContent('h1')).toBe('updated');
 		expect(await page.textContent('h2')).toBe('form');
 		expect(await page.textContent('h3')).toBe('bar');
+	});
+
+	test('ignores links with no href', async ({ page }) => {
+		await page.goto('/routing/missing-href');
+		const selector = '[data-testid="count"]';
+
+		expect(await page.textContent(selector)).toBe('count: 1');
+
+		await page.locator(selector).click();
+		expect(await page.textContent(selector)).toBe('count: 1');
 	});
 });
 
