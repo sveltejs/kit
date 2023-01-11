@@ -270,7 +270,8 @@ export async function dev(vite, vite_config, svelte_config) {
 		sync.update(svelte_config, manifest_data, file);
 	});
 
-	const { appTemplate } = svelte_config.kit.files;
+	const { appTemplate, errorTemplate, serviceWorker, hooks } = svelte_config.kit.files;
+
 	// vite client only executes a full reload if the triggering html file path is index.html
 	// kit defaults to src/app.html, so unless user changed that to index.html
 	// send the vite client a full-reload event without path being set
@@ -281,6 +282,17 @@ export async function dev(vite, vite_config, svelte_config) {
 			}
 		});
 	}
+
+	vite.watcher.on('all', (_, file) => {
+		if (
+			file === appTemplate ||
+			file === errorTemplate ||
+			file.startsWith(serviceWorker) ||
+			file.startsWith(hooks.server)
+		) {
+			sync.server(svelte_config);
+		}
+	});
 
 	// changing the svelte config requires restarting the dev server
 	// the config is only read on start and passed on to vite-plugin-svelte

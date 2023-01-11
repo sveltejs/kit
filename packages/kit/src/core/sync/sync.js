@@ -59,3 +59,11 @@ export async function all(config, mode) {
 	init(config, mode);
 	return await create(config);
 }
+
+/**
+ * Regenerate server-internal.js in response to src/{app.html,error.html,service-worker.js} changing
+ * @param {import('types').ValidatedConfig} config
+ */
+export function server(config) {
+	write_server(config, path.join(config.kit.outDir, 'generated'));
+}
