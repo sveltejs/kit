@@ -5,7 +5,7 @@ import { nodeFileTrace } from '@vercel/nft';
 import esbuild from 'esbuild';
 
 /** @type {import('.').default} **/
-const plugin = function ({ external = [], edge, split } = {}) {
+const plugin = function ({ external = [], edge, split, serverlessFunctionConfig } = {}) {
 	return {
 		name: '@sveltejs/adapter-vercel',
 
@@ -53,7 +53,8 @@ const plugin = function ({ external = [], edge, split } = {}) {
 					builder,
 					`${tmp}/index.js`,
 					`${dirs.functions}/${name}.func`,
-					`nodejs${node_version.major}.x`
+					`nodejs${node_version.major}.x`,
+					serverlessFunctionConfig
 				);
 
 				config.routes.push({ src: pattern, dest: `/${name}` });
@@ -228,8 +229,9 @@ function static_vercel_config(builder) {
  * @param {string} entry
  * @param {string} dir
  * @param {string} runtime
+ * @param {import('.').ServerlessFunctionConfig} serverlessFunctionConfig
  */
-async function create_function_bundle(builder, entry, dir, runtime) {
+async function create_function_bundle(builder, entry, dir, runtime, serverlessFunctionConfig) {
 	fs.rmSync(dir, { force: true, recursive: true });
 
 	let base = entry;
@@ -323,6 +325,7 @@ async function create_function_bundle(builder, entry, dir, runtime) {
 	write(
 		`${dir}/.vc-config.json`,
 		JSON.stringify({
+			...serverlessFunctionConfig,
 			runtime,
 			handler: path.relative(base + ancestor, entry),
 			launcherType: 'Nodejs'
