@@ -11,19 +11,19 @@ Starting from now all releases follow semver and changes will be listed as Major
 
 ### Patch Changes
 
-- [fix] more robust uppercase migration ([#7033](https://github.com/sveltejs/kit/pull/7033))
+- fix: more robust uppercase migration ([#7033](https://github.com/sveltejs/kit/pull/7033))
 
 ## 1.0.0-next.12
 
 ### Patch Changes
 
-- [feat] do uppercase http verbs migration on the fly ([#6371](https://github.com/sveltejs/kit/pull/6371))
+- feat: do uppercase http verbs migration on the fly ([#6371](https://github.com/sveltejs/kit/pull/6371))
 
 ## 1.0.0-next.11
 
 ### Patch Changes
 
-- [fix] git mv files correctly when they contain \$ characters ([#6129](https://github.com/sveltejs/kit/pull/6129))
+- fix: git mv files correctly when they contain \$ characters ([#6129](https://github.com/sveltejs/kit/pull/6129))
 
 ## 1.0.0-next.10
 

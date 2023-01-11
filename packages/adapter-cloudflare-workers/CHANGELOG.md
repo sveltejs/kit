@@ -4,7 +4,7 @@
 
 ### Patch Changes
 
-- [chore] update @cloudflare/kv-asset-handler ([`30e1130e`](https://github.com/sveltejs/kit/commit/30e1130ef84e56a77be5cb1136d5c53edef6e5f9))
+- chore: update @cloudflare/kv-asset-handler ([`30e1130e`](https://github.com/sveltejs/kit/commit/30e1130ef84e56a77be5cb1136d5c53edef6e5f9))
 
 - Updated dependencies [[`fab0de4f`](https://github.com/sveltejs/kit/commit/fab0de4f06ac5b1e9b049e106889b193975c1c29), [`89b8d94b`](https://github.com/sveltejs/kit/commit/89b8d94b1b20d586e1ca525c30d07587c3f2d8f2)]:
   - @sveltejs/kit@1.0.2
@@ -20,7 +20,7 @@ Starting from now all releases follow semver and changes will be listed as Major
 
 ### Patch Changes
 
-- [breaking] remove warnings/errors about removed/changed APIs ([#8019](https://github.com/sveltejs/kit/pull/8019))
+- breaking: remove warnings/errors about removed/changed APIs ([#8019](https://github.com/sveltejs/kit/pull/8019))
 
 - Updated dependencies [[`f42604a2`](https://github.com/sveltejs/kit/commit/f42604a2b4c04026d3d8bad95807720b79529539)]:
   - @sveltejs/kit@1.0.0-next.589
@@ -29,19 +29,19 @@ Starting from now all releases follow semver and changes will be listed as Major
 
 ### Patch Changes
 
-- [chore] add peerDependencies, add more specific next version ([#8141](https://github.com/sveltejs/kit/pull/8141))
+- chore: add peerDependencies, add more specific next version ([#8141](https://github.com/sveltejs/kit/pull/8141))
 
 ## 1.0.0-next.63
 
 ### Patch Changes
 
-- [fix] revert platform change from browser to neutral ([#8122](https://github.com/sveltejs/kit/pull/8122))
+- fix: revert platform change from browser to neutral ([#8122](https://github.com/sveltejs/kit/pull/8122))
 
 ## 1.0.0-next.62
 
 ### Patch Changes
 
-- [fix] set esbuild platform to neutral ([#8083](https://github.com/sveltejs/kit/pull/8083))
+- fix: set esbuild platform to neutral ([#8083](https://github.com/sveltejs/kit/pull/8083))
 
 ## 1.0.0-next.61
 
@@ -77,7 +77,7 @@ Starting from now all releases follow semver and changes will be listed as Major
 
 ### Patch Changes
 
-- [chore] bump esbuild ([#6829](https://github.com/sveltejs/kit/pull/6829))
+- chore: bump esbuild ([#6829](https://github.com/sveltejs/kit/pull/6829))
 
 ## 1.0.0-next.55
 
@@ -89,7 +89,7 @@ Starting from now all releases follow semver and changes will be listed as Major
 
 ### Patch Changes
 
-- [feat] Moved hooks.js initialization from Server.respond into Server.init ([#6179](https://github.com/sveltejs/kit/pull/6179))
+- feat: Moved hooks.js initialization from Server.respond into Server.init ([#6179](https://github.com/sveltejs/kit/pull/6179))
 
 ## 1.0.0-next.53
 
@@ -107,7 +107,7 @@ Starting from now all releases follow semver and changes will be listed as Major
 
 ### Patch Changes
 
-- [breaking] remove writeStatic to align with Vite ([#5618](https://github.com/sveltejs/kit/pull/5618))
+- breaking: remove writeStatic to align with Vite ([#5618](https://github.com/sveltejs/kit/pull/5618))
 
 ## 1.0.0-next.50
 
@@ -119,7 +119,7 @@ Starting from now all releases follow semver and changes will be listed as Major
 
 ### Patch Changes
 
-- [breaking] Don't pass arbitrary options to esbuild ([#4639](https://github.com/sveltejs/kit/pull/4639))
+- breaking: Don't pass arbitrary options to esbuild ([#4639](https://github.com/sveltejs/kit/pull/4639))
 
 ## 1.0.0-next.48
 
@@ -131,7 +131,7 @@ Starting from now all releases follow semver and changes will be listed as Major
 
 ### Patch Changes
 
-- [chore] upgrade TypeScript to 4.7.4 ([#5414](https://github.com/sveltejs/kit/pull/5414))
+- chore: upgrade TypeScript to 4.7.4 ([#5414](https://github.com/sveltejs/kit/pull/5414))
 
 ## 1.0.0-next.46
 
@@ -173,13 +173,13 @@ Starting from now all releases follow semver and changes will be listed as Major
 
 ### Patch Changes
 
-- [breaking] support Wrangler 2, drop Wrangler 1 ([#4887](https://github.com/sveltejs/kit/pull/4887))
+- breaking: support Wrangler 2, drop Wrangler 1 ([#4887](https://github.com/sveltejs/kit/pull/4887))
 
 ## 1.0.0-next.39
 
 ### Patch Changes
 
-- [breaking] Remove try-catch around server.respond ([#4738](https://github.com/sveltejs/kit/pull/4738))
+- breaking: Remove try-catch around server.respond ([#4738](https://github.com/sveltejs/kit/pull/4738))
 
 ## 1.0.0-next.38
 
@@ -191,7 +191,7 @@ Starting from now all releases follow semver and changes will be listed as Major
 
 ### Patch Changes
 
-- [Breaking] refactor implementation from "Service Worker" pattern to "Module Worker" used in adapter-cloudflare ([#4276](https://github.com/sveltejs/kit/pull/4276))
+- Breaking: refactor implementation from "Service Worker" pattern to "Module Worker" used in adapter-cloudflare ([#4276](https://github.com/sveltejs/kit/pull/4276))
 
   #### add the following to your wrangler.toml
 
@@ -211,13 +211,13 @@ Starting from now all releases follow semver and changes will be listed as Major
 
 ### Patch Changes
 
-- [breaking] replace builder.prerender() with builder.writePrerendered() and builder.prerendered ([#4192](https://github.com/sveltejs/kit/pull/4192)) ([#4229](https://github.com/sveltejs/kit/pull/4229))
+- breaking: replace builder.prerender() with builder.writePrerendered() and builder.prerendered ([#4192](https://github.com/sveltejs/kit/pull/4192)) ([#4229](https://github.com/sveltejs/kit/pull/4229))
 
 ## 1.0.0-next.34
 
 ### Patch Changes
 
-- [breaking] rename `app.render` to `server.respond` ([#4034](https://github.com/sveltejs/kit/pull/4034))
+- breaking: rename `app.render` to `server.respond` ([#4034](https://github.com/sveltejs/kit/pull/4034))
 
 ## 1.0.0-next.33
 
@@ -275,7 +275,7 @@ Starting from now all releases follow semver and changes will be listed as Major
 
 ### Patch Changes
 
-- [chore] upgrade `@cloudflare/kv-asset-handler` ([#2650](https://github.com/sveltejs/kit/pull/2650))
+- chore: upgrade `@cloudflare/kv-asset-handler` ([#2650](https://github.com/sveltejs/kit/pull/2650))
 
 ## 1.0.0-next.24
 
@@ -293,13 +293,13 @@ Starting from now all releases follow semver and changes will be listed as Major
 
 ### Patch Changes
 
-- [chore] add links to repository and homepage to package.json ([#2425](https://github.com/sveltejs/kit/pull/2425))
+- chore: add links to repository and homepage to package.json ([#2425](https://github.com/sveltejs/kit/pull/2425))
 
 ## 1.0.0-next.21
 
 ### Patch Changes
 
-- [chore] export package.json from adapters ([#2351](https://github.com/sveltejs/kit/pull/2351))
+- chore: export package.json from adapters ([#2351](https://github.com/sveltejs/kit/pull/2351))
 
 ## 1.0.0-next.20
 

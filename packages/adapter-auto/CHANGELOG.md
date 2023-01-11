@@ -11,7 +11,7 @@ Starting from now all releases follow semver and changes will be listed as Major
 
 ### Patch Changes
 
-- [chore] add peerDependencies, add more specific next version ([#8141](https://github.com/sveltejs/kit/pull/8141))
+- chore: add peerDependencies, add more specific next version ([#8141](https://github.com/sveltejs/kit/pull/8141))
 
 ## 1.0.0-next.90
 
@@ -29,7 +29,7 @@ Starting from now all releases follow semver and changes will be listed as Major
 
 ### Patch Changes
 
-- [feat] install adapters on demand ([#7462](https://github.com/sveltejs/kit/pull/7462))
+- feat: install adapters on demand ([#7462](https://github.com/sveltejs/kit/pull/7462))
 
 ## 1.0.0-next.87
 
@@ -142,7 +142,7 @@ Starting from now all releases follow semver and changes will be listed as Major
 
 ### Patch Changes
 
-- [feat] support Azure SWA ([#6761](https://github.com/sveltejs/kit/pull/6761))
+- feat: support Azure SWA ([#6761](https://github.com/sveltejs/kit/pull/6761))
 
 - Updated dependencies [[`2040baee`](https://github.com/sveltejs/kit/commit/2040baee98cf85fe542e1e38a9fb60ede3f95f1d)]:
   - @sveltejs/adapter-vercel@1.0.0-next.75
@@ -296,7 +296,7 @@ Starting from now all releases follow semver and changes will be listed as Major
 
 ### Patch Changes
 
-- [chore] upgrade TypeScript to 4.7.4 ([#5414](https://github.com/sveltejs/kit/pull/5414))
+- chore: upgrade TypeScript to 4.7.4 ([#5414](https://github.com/sveltejs/kit/pull/5414))
 
 - Updated dependencies [[`3799a89e`](https://github.com/sveltejs/kit/commit/3799a89e7913b71da4dab749ec1423215c4a20a1)]:
   - @sveltejs/adapter-cloudflare@1.0.0-next.26
