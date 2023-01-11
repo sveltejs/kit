@@ -154,6 +154,19 @@ export const test = base.extend({
 				});
 			});
 		}
+	},
+
+	// make sure context fixture depends on start server, so setup/teardown order is
+	// setup start_server
+	// setup context
+	// teardown context
+	// teardown start_server
+	context: function ({ context, start_server }, use) {
+		// just here make sure start_server is referenced, don't call
+		if (!start_server) {
+			throw new Error('start_server fixture not present');
+		}
+		use(context);
 	}
 });
 
