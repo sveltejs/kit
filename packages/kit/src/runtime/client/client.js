@@ -467,7 +467,7 @@ export function create_client({ target, base }) {
 			!current.url ||
 			url.href !== current.url.href ||
 			current.error !== error ||
-			form !== undefined ||
+			(form !== undefined && form !== page.form) ||
 			data_changed;
 
 		if (page_changed) {

@@ -26,7 +26,7 @@ export interface Client {
 	// private API
 	_hydrate(opts: {
 		status: number;
-		error: App.Error;
+		error: App.Error | null;
 		node_ids: number[];
 		params: Record<string, string>;
 		route: { id: string | null };

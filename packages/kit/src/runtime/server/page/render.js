@@ -158,7 +158,7 @@ export async function render_response({
 	/** @param {string} path */
 	const prefixed = (path) => (path.startsWith('/') ? path : `${assets}/${path}`);
 
-	const serialized = { data: '', form: 'null' };
+	const serialized = { data: '', form: 'null', error: 'null' };
 
 	try {
 		serialized.data = `[${branch
@@ -194,6 +194,10 @@ export async function render_response({
 
 	if (form_value) {
 		serialized.form = uneval_action_response(form_value, /** @type {string} */ (event.route.id));
+	}
+
+	if (error) {
+		serialized.error = devalue.uneval(error);
 	}
 
 	if (inline_styles.size > 0) {
@@ -256,15 +260,12 @@ export async function render_response({
 			const hydrate = [
 				`node_ids: [${branch.map(({ node }) => node.index).join(', ')}]`,
 				`data: ${serialized.data}`,
-				`form: ${serialized.form}`
+				`form: ${serialized.form}`,
+				`error: ${serialized.error}`
 			];
 
 			if (status !== 200) {
 				hydrate.push(`status: ${status}`);
-			}
-
-			if (error) {
-				hydrate.push(`error: ${devalue.uneval(error)}`);
 			}
 
 			if (options.embedded) {
