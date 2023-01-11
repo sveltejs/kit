@@ -940,6 +940,23 @@ test.describe('Load', () => {
 
 		expect(await page.textContent('h1')).toBe('true');
 	});
+
+	test('Prerendered +server.js called from a non-prerendered +page.server.js works', async ({
+		page,
+		app,
+		javaScriptEnabled
+	}) => {
+		if (javaScriptEnabled) {
+			await page.goto('/');
+			await app.goto('/prerendering/prerendered-endpoint/page');
+		} else {
+			await page.goto('/prerendering/prerendered-endpoint/page');
+		}
+
+		expect(await page.textContent('h1')).toBe(
+			'Im prerendered and called from a non-prerendered +page.server.js'
+		);
+	});
 });
 
 test.describe('Nested layouts', () => {
