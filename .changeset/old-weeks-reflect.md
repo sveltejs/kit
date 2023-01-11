@@ -2,4 +2,4 @@
 '@sveltejs/kit': minor
 ---
 
-Add `text(...)` helper for generating text responses
+feat: add `text(...)` helper for generating text responses
