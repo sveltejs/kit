@@ -40,10 +40,6 @@ export class Server {
 					}),
 				handleFetch: module.handleFetch || (({ request, fetch }) => fetch(request))
 			};
-
-			this.options.handle_error = (error, event) => {
-				return this.options.hooks.handleError({ error, event });
-			};
 		}
 	}
 

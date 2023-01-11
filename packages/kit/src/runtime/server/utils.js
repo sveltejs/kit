@@ -3,6 +3,7 @@ import { coalesce_to_error } from '../../utils/error.js';
 import { negotiate } from '../../utils/http.js';
 import { has_data_suffix } from '../../utils/url.js';
 import { HttpError } from '../control.js';
+import { fix_stack_trace } from '../shared.js';
 
 /** @param {any} body */
 export function is_pojo(body) {
@@ -116,9 +117,23 @@ export async function handle_error_and_jsonify(event, options, error) {
 	if (error instanceof HttpError) {
 		return error.body;
 	} else {
-		return (await options.handle_error(error, event)) ?? {
-			message: event.route.id != null ? 'Internal Error' : 'Not Found'
-		};
+		if (__SVELTEKIT_DEV__) {
+			error = new Proxy(error, {
+				get: (target, property) => {
+					if (property === 'stack') {
+						return fix_stack_trace(target.stack);
+					}
+
+					return Reflect.get(target, property, target);
+				}
+			});
+		}
+
+		return (
+			(await options.hooks.handleError({ error, event })) ?? {
+				message: event.route.id != null ? 'Internal Error' : 'Not Found'
+			}
+		);
 	}
 }
 

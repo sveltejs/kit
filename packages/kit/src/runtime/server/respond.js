@@ -24,7 +24,7 @@ import {
 	validate_server_exports
 } from '../../utils/exports.js';
 import { error, json } from '../../exports/index.js';
-import * as paths from '../paths.js';
+import * as paths from '../shared.js';
 
 /* global __SVELTEKIT_ADAPTER_NAME__ */
 

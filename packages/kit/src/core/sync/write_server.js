@@ -24,8 +24,7 @@ const server_template = ({
 	error_page
 }) => `
 import root from './root.svelte';
-import { set_paths } from '${runtime_directory}/paths.js';
-import { set_building, set_version } from '${runtime_directory}/env.js';
+import { set_building, set_paths, set_version } from '${runtime_directory}/shared.js';
 
 set_paths(${s(config.kit.paths)});
 set_version(${s(config.kit.version.name)});

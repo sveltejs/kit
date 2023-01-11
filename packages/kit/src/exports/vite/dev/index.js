@@ -15,7 +15,6 @@ import * as sync from '../../../core/sync/sync.js';
 import { get_mime_lookup, runtime_prefix } from '../../../core/utils.js';
 import { compact } from '../../../utils/array.js';
 import { not_found } from '../utils.js';
-import { set_version } from '../../../runtime/env.js';
 
 const cwd = process.cwd();
 
@@ -222,9 +221,9 @@ export async function dev(vite, vite_config, svelte_config) {
 		};
 	}
 
-	/** @param {Error} error */
-	function fix_stack_trace(error) {
-		return error.stack ? vite.ssrRewriteStacktrace(error.stack) : error.stack;
+	/** @param {string} stack */
+	function fix_stack_trace(stack) {
+		return stack ? vite.ssrRewriteStacktrace(stack) : stack;
 	}
 
 	await update_manifest();
@@ -305,8 +304,6 @@ export async function dev(vite, vite_config, svelte_config) {
 		}
 	});
 
-	set_version(svelte_config.kit.version.name);
-
 	// This shameful hack allows us to load runtime server code via Vite
 	// while apps load `HttpError` and `Redirect` in Node, without
 	// causing `instanceof` checks to fail
@@ -344,7 +341,7 @@ export async function dev(vite, vite_config, svelte_config) {
 		} catch (e) {
 			const error = coalesce_to_error(e);
 			res.statusCode = 500;
-			res.end(fix_stack_trace(error));
+			res.end(fix_stack_trace(/** @type {string} */ (error.stack)));
 		}
 	});
 
@@ -399,9 +396,10 @@ export async function dev(vite, vite_config, svelte_config) {
 					return;
 				}
 
-				const { set_paths } = /** @type {import('types').ServerInternalModule} */ (
-					await vite.ssrLoadModule(`${runtime_prefix}/paths.js`)
-				);
+				const { set_paths, set_version, set_fix_stack_trace } =
+					/** @type {import('types').ServerInternalModule} */ (
+						await vite.ssrLoadModule(`${runtime_prefix}/shared.js`)
+					);
 
 				const { Server } = /** @type {import('types').ServerModule} */ (
 					await vite.ssrLoadModule(`${runtime_prefix}/server/index.js`)
@@ -411,6 +409,10 @@ export async function dev(vite, vite_config, svelte_config) {
 					base: svelte_config.kit.paths.base,
 					assets
 				});
+
+				set_version(svelte_config.kit.version.name);
+
+				set_fix_stack_trace(fix_stack_trace);
 
 				const server = new Server(manifest);
 
@@ -451,22 +453,6 @@ export async function dev(vite, vite_config, svelte_config) {
 					return;
 				}
 
-				// TODO tidy this up
-				server.options.handle_error = (error, event) => {
-					return server.options.hooks.handleError({
-						error: new Proxy(error, {
-							get: (target, property) => {
-								if (property === 'stack') {
-									return fix_stack_trace(error);
-								}
-
-								return Reflect.get(target, property, target);
-							}
-						}),
-						event
-					});
-				};
-
 				const rendered = await server.respond(request, {
 					getClientAddress: () => {
 						const { remoteAddress } = req.socket;
@@ -487,7 +473,7 @@ export async function dev(vite, vite_config, svelte_config) {
 			} catch (e) {
 				const error = coalesce_to_error(e);
 				res.statusCode = 500;
-				res.end(fix_stack_trace(error));
+				res.end(fix_stack_trace(/** @type {string} */ (error.stack)));
 			}
 		});
 	};

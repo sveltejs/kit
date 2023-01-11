@@ -7,8 +7,7 @@ import { s } from '../../../utils/misc.js';
 import { Csp } from './csp.js';
 import { uneval_action_response } from './actions.js';
 import { clarify_devalue_error } from '../utils.js';
-import * as paths from '../../paths.js';
-import { version } from '../../env.js';
+import { assets, base, version } from '../../shared.js';
 import { env } from '../../env-public.js';
 
 // TODO rename this function/module
@@ -142,23 +141,23 @@ export async function render_response({
 	 * The prefix to use for static assets. Replaces `%sveltekit.assets%` in the template
 	 * @type {string}
 	 */
-	let assets;
+	let resolved_assets;
 
-	if (paths.assets) {
+	if (assets) {
 		// if an asset path is specified, use it
-		assets = paths.assets;
+		resolved_assets = assets;
 	} else if (state.prerendering?.fallback) {
 		// if we're creating a fallback page, asset paths need to be root-relative
-		assets = paths.base;
+		resolved_assets = base;
 	} else {
 		// otherwise we want asset paths to be relative to the page, so that they
 		// will work in odd contexts like IPFS, the internet archive, and so on
-		const segments = event.url.pathname.slice(paths.base.length).split('/').slice(2);
-		assets = segments.length > 0 ? segments.map(() => '..').join('/') : '.';
+		const segments = event.url.pathname.slice(base.length).split('/').slice(2);
+		resolved_assets = segments.length > 0 ? segments.map(() => '..').join('/') : '.';
 	}
 
 	/** @param {string} path */
-	const prefixed = (path) => (path.startsWith('/') ? path : `${assets}/${path}`);
+	const prefixed = (path) => (path.startsWith('/') ? path : `${resolved_assets}/${path}`);
 
 	const serialized = { data: '', form: 'null' };
 
@@ -248,7 +247,7 @@ export async function render_response({
 	if (page_config.csr) {
 		const opts = [
 			`env: ${s(env)}`,
-			`paths: ${s(paths)}`,
+			`paths: ${s({ assets, base })}`,
 			`target: document.querySelector('[data-sveltekit-hydrate="${target}"]').parentNode`,
 			`version: ${s(version)}`
 		];
@@ -358,7 +357,7 @@ export async function render_response({
 	const html = options.app_template({
 		head,
 		body,
-		assets,
+		assets: resolved_assets,
 		nonce: /** @type {string} */ (csp.nonce)
 	});
 
