@@ -1,5 +1,5 @@
 ---
-'@sveltejs/kit': patch
+'@sveltejs/kit': minor
 ---
 
-Allow sveltekit tsconfig to be extended by adding extends option to svelte config
+feat: allow SvelteKit tsconfig to be extended by adding extends option to svelte config
