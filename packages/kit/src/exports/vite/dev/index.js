@@ -320,7 +320,7 @@ export async function dev(vite, vite_config, svelte_config) {
 	// while apps load `HttpError` and `Redirect` in Node, without
 	// causing `instanceof` checks to fail
 	const control_module_node = await import(`${runtime_prefix}/control.js`);
-	const control_module_vite = await vite.ssrLoadModule(`${runtime_prefix}/control.js`);
+	const control_module_vite = await vite.ssrLoadModule(`/@fs${runtime_prefix}/control.js`);
 
 	control_module_node.replace_implementations({
 		ActionFailure: control_module_vite.ActionFailure,
@@ -410,11 +410,11 @@ export async function dev(vite, vite_config, svelte_config) {
 
 				const { set_paths, set_version, set_fix_stack_trace } =
 					/** @type {import('types').ServerInternalModule} */ (
-						await vite.ssrLoadModule(`${runtime_prefix}/shared.js`)
+						await vite.ssrLoadModule(`/@fs${runtime_prefix}/shared.js`)
 					);
 
 				const { Server } = /** @type {import('types').ServerModule} */ (
-					await vite.ssrLoadModule(`${runtime_prefix}/server/index.js`)
+					await vite.ssrLoadModule(`/@fs${runtime_prefix}/server/index.js`)
 				);
 
 				set_paths({

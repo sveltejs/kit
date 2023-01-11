@@ -378,7 +378,7 @@ function kit({ svelte_config }) {
 		 */
 		async configureServer(vite) {
 			// set `import { version } from '$app/environment'`
-			(await vite.ssrLoadModule(`${runtime_prefix}/shared.js`)).set_version(
+			(await vite.ssrLoadModule(`/@fs${runtime_prefix}/shared.js`)).set_version(
 				svelte_config.kit.version.name
 			);
 
