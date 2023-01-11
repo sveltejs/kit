@@ -5,7 +5,13 @@ import { nodeFileTrace } from '@vercel/nft';
 import esbuild from 'esbuild';
 
 /** @type {import('.').default} **/
-const plugin = function ({ external = [], edge, split, serverlessFunctionConfig } = {}) {
+const plugin = function ({
+	external = [],
+	edge,
+	split,
+	serverlessFunctionConfig,
+	edgeFunctionConfig
+} = {}) {
 	return {
 		name: '@sveltejs/adapter-vercel',
 
@@ -96,9 +102,9 @@ const plugin = function ({ external = [], edge, split, serverlessFunctionConfig 
 				write(
 					`${dirs.functions}/${name}.func/.vc-config.json`,
 					JSON.stringify({
+						...edgeFunctionConfig,
 						runtime: 'edge',
 						entrypoint: 'index.js'
-						// TODO expose envVarsInUse
 					})
 				);
 
