@@ -98,6 +98,29 @@ test.describe('a11y', () => {
 			})
 		).toBe(0);
 	});
+
+	test('keepfocus works', async ({ page }) => {
+		await page.goto('/keepfocus');
+
+		await Promise.all([
+			page.type('#input', 'bar'),
+			page.waitForFunction(() => window.location.search === '?foo=bar')
+		]);
+		await expect(page.locator('#input')).toBeFocused();
+	});
+
+	test('autofocus from previous page is ignored', async ({ page, clicknav }) => {
+		page.addInitScript(`
+			window.active = null;
+			window.addEventListener('focusin', () => window.active = document.activeElement);
+		`);
+
+		await page.goto('/accessibility/autofocus/a');
+		await clicknav('[href="/"]');
+
+		expect(await page.evaluate(() => (window.active || {}).nodeName)).toBe('BODY');
+		expect(await page.evaluate(() => (document.activeElement || {}).nodeName)).toBe('BODY');
+	});
 });
 
 test.describe('Caching', () => {
@@ -362,18 +385,6 @@ test.describe('afterNavigate', () => {
 
 		await clicknav('[href="/after-navigate/b"]');
 		expect(await page.textContent('h1')).toBe('/after-navigate/a -> /after-navigate/b');
-	});
-});
-
-test.describe('a11y', () => {
-	test('keepfocus works', async ({ page }) => {
-		await page.goto('/keepfocus');
-
-		await Promise.all([
-			page.type('#input', 'bar'),
-			page.waitForFunction(() => window.location.search === '?foo=bar')
-		]);
-		await expect(page.locator('#input')).toBeFocused();
 	});
 });
 

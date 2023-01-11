@@ -325,12 +325,22 @@ export function create_client({ target, base }) {
 		// opts must be passed if we're navigating
 		if (opts) {
 			const { scroll, keepfocus } = opts;
+			const previousActiveElement = document.activeElement;
 
-			// reset focus first, so that manual focus management can override it
-			if (!keepfocus) reset_focus();
-
-			// need to render the DOM before we can scroll to the rendered elements
+			// need to render the DOM before we can scroll to the rendered elements and do focus management
 			await tick();
+
+			const activeElement = document.activeElement;
+			if (
+				!keepfocus &&
+				// reset focus only if any manual focus management didn't override it
+				(previousActiveElement === document.activeElement ||
+					// also refocus when activeElement is body already because the focus event might
+					// not have been fired on it yet
+					activeElement === document.body)
+			) {
+				await reset_focus();
+			}
 
 			if (autoscroll) {
 				const deep_linked = url.hash && document.getElementById(url.hash.slice(1));
@@ -1705,16 +1715,19 @@ function reset_focus() {
 		root.tabIndex = -1;
 		root.focus({ preventScroll: true });
 
-		setTimeout(() => {
-			getSelection()?.removeAllRanges();
-		});
-
 		// restore `tabindex` as to prevent `root` from stealing input from elements
 		if (tabindex !== null) {
 			root.setAttribute('tabindex', tabindex);
 		} else {
 			root.removeAttribute('tabindex');
 		}
+
+		return new Promise((resolve) => {
+			setTimeout(() => {
+				// fixes https://github.com/sveltejs/kit/issues/8439
+				resolve(getSelection()?.removeAllRanges());
+			});
+		});
 	}
 }
 
