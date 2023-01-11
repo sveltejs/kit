@@ -2,4 +2,4 @@
 '@sveltejs/kit': patch
 ---
 
-[fix] correctly detect changed data
+fix: correctly detect changed data
