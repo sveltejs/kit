@@ -452,8 +452,8 @@ export async function dev(vite, vite_config, svelte_config) {
 				}
 
 				// TODO tidy this up
-				server.options.handle_error = async (error, event) => {
-					const error_object = await server.options.hooks.handleError({
+				server.options.handle_error = (error, event) => {
+					return server.options.hooks.handleError({
 						error: new Proxy(error, {
 							get: (target, property) => {
 								if (property === 'stack') {
@@ -465,9 +465,6 @@ export async function dev(vite, vite_config, svelte_config) {
 						}),
 						event
 					});
-					return (
-						error_object ?? { message: event.route.id != null ? 'Internal Error' : 'Not Found' }
-					);
 				};
 
 				const rendered = await server.respond(request, {
