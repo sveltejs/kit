@@ -1,5 +1,5 @@
 import { expect } from '@playwright/test';
-import { start_server, test } from '../../../utils.js';
+import { test } from '../../../utils.js';
 import { fetch } from 'undici';
 import { createHash, randomBytes } from 'node:crypto';
 
@@ -24,8 +24,8 @@ test.describe('Content-Type', () => {
 });
 
 test.describe('Cookies', () => {
-	test('does not forward cookies from external domains', async ({ request }) => {
-		const { close, port } = await start_server(async (req, res) => {
+	test('does not forward cookies from external domains', async ({ request, start_server }) => {
+		const { port } = await start_server(async (req, res) => {
 			if (req.url === '/') {
 				res.writeHead(200, {
 					'set-cookie': 'external=true',
@@ -39,12 +39,8 @@ test.describe('Cookies', () => {
 			}
 		});
 
-		try {
-			const response = await request.get(`/load/fetch-external-no-cookies?port=${port}`);
-			expect(response.headers()['set-cookie']).not.toContain('external=true');
-		} finally {
-			close();
-		}
+		const response = await request.get(`/load/fetch-external-no-cookies?port=${port}`);
+		expect(response.headers()['set-cookie']).not.toContain('external=true');
 	});
 });
 
@@ -311,8 +307,8 @@ test.describe('Load', () => {
 		expect(await page.textContent('h1')).toBe(`origin: ${new URL(baseURL).origin}`);
 	});
 
-	test('includes origin header on external request', async ({ page, baseURL, context }) => {
-		const { port, close } = await start_server((req, res) => {
+	test('includes origin header on external request', async ({ page, baseURL, start_server }) => {
+		const { port } = await start_server((req, res) => {
 			if (req.url === '/') {
 				res.writeHead(200, {
 					'content-type': 'application/json',
@@ -326,13 +322,8 @@ test.describe('Load', () => {
 			}
 		});
 
-		try {
-			await page.goto(`/load/fetch-origin-external?port=${port}`);
-			expect(await page.textContent('h1')).toBe(`origin: ${new URL(baseURL).origin}`);
-		} finally {
-			await context.close();
-			close();
-		}
+		await page.goto(`/load/fetch-origin-external?port=${port}`);
+		expect(await page.textContent('h1')).toBe(`origin: ${new URL(baseURL).origin}`);
 	});
 });
 
