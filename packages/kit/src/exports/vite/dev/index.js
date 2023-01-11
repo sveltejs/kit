@@ -15,7 +15,6 @@ import * as sync from '../../../core/sync/sync.js';
 import { get_mime_lookup, runtime_prefix } from '../../../core/utils.js';
 import { compact } from '../../../utils/array.js';
 import { not_found } from '../utils.js';
-import { set_paths } from '../../../runtime/paths.js';
 import { set_version } from '../../../runtime/env.js';
 
 const cwd = process.cwd();
