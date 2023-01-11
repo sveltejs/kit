@@ -84,7 +84,6 @@ Starting from now all releases follow semver and changes will be listed as Major
 ### Patch Changes
 
 - breaking: Replace `data-sveltekit-prefetch` with `-preload-code` and `-preload-data` ([#7776](https://github.com/sveltejs/kit/pull/7776))
-
 - Upgrade to Playwright 1.28.1 ([#7696](https://github.com/sveltejs/kit/pull/7696))
 
 ## 2.0.0-next.194
@@ -134,8 +133,7 @@ Starting from now all releases follow semver and changes will be listed as Major
 ### Patch Changes
 
 - Add missing titles and descriptions to the Sverdle pages ([#7351](https://github.com/sveltejs/kit/pull/7351))
-
-* Use `justify-content: flex-start;` on Sverdle CSS to avoid compatibility issues ([#7352](https://github.com/sveltejs/kit/pull/7352))
+- Use `justify-content: flex-start;` on Sverdle CSS to avoid compatibility issues ([#7352](https://github.com/sveltejs/kit/pull/7352))
 
 ## 2.0.0-next.186
 
@@ -208,8 +206,7 @@ Starting from now all releases follow semver and changes will be listed as Major
 ### Patch Changes
 
 - breaking: update use:enhance usage ([#6697](https://github.com/sveltejs/kit/pull/6697))
-
-* [breaking] hooks file rename ([#6697](https://github.com/sveltejs/kit/pull/6697))
+- breaking: hooks file rename ([#6697](https://github.com/sveltejs/kit/pull/6697))
 
 ## 2.0.0-next.174
 
@@ -276,8 +273,7 @@ Starting from now all releases follow semver and changes will be listed as Major
 ### Patch Changes
 
 - breaking: rename `$app/env` to `$app/environment`, to disambiguate with `$env/...` ([#6334](https://github.com/sveltejs/kit/pull/6334))
-
-* Add svelte-kit sync to check scripts in checkjs templates ([#6339](https://github.com/sveltejs/kit/pull/6339))
+- Add svelte-kit sync to check scripts in checkjs templates ([#6339](https://github.com/sveltejs/kit/pull/6339))
 
 ## 2.0.0-next.163
 
@@ -302,9 +298,7 @@ Starting from now all releases follow semver and changes will be listed as Major
 ### Patch Changes
 
 - Create TypeScript/JSDoc/vanilla versions of shared template .ts files ([#6253](https://github.com/sveltejs/kit/pull/6253))
-
-* Create vite.config.ts when creating TypeScript project ([#6253](https://github.com/sveltejs/kit/pull/6253))
-
+- Create vite.config.ts when creating TypeScript project ([#6253](https://github.com/sveltejs/kit/pull/6253))
 - Invalidate data after form submission ([#6254](https://github.com/sveltejs/kit/pull/6254))
 
 ## 2.0.0-next.159
@@ -318,8 +312,7 @@ Starting from now all releases follow semver and changes will be listed as Major
 ### Patch Changes
 
 - Add notes about includes/excludes and path aliases ([#6085](https://github.com/sveltejs/kit/pull/6085))
-
-* setup prettier plugin-search-dirs to enable use with pnpm ([#6101](https://github.com/sveltejs/kit/pull/6101))
+- setup prettier plugin-search-dirs to enable use with pnpm ([#6101](https://github.com/sveltejs/kit/pull/6101))
 
 ## 2.0.0-next.157
 
@@ -344,8 +337,7 @@ Starting from now all releases follow semver and changes will be listed as Major
 ### Patch Changes
 
 - remove session remnants ([#5966](https://github.com/sveltejs/kit/pull/5966))
-
-* remove outdated notes in `api.ts` ([#5964](https://github.com/sveltejs/kit/pull/5964))
+- remove outdated notes in `api.ts` ([#5964](https://github.com/sveltejs/kit/pull/5964))
 
 ## 2.0.0-next.153
 
@@ -394,8 +386,7 @@ Starting from now all releases follow semver and changes will be listed as Major
 ### Patch Changes
 
 - Add vite.config.js to the create-svelte templates ([#5332](https://github.com/sveltejs/kit/pull/5332))
-
-* [breaking] switch to vite CLI for dev, build, and preview commands ([#5332](https://github.com/sveltejs/kit/pull/5332))
+- breaking: switch to vite CLI for dev, build, and preview commands ([#5332](https://github.com/sveltejs/kit/pull/5332))
 
 ## 2.0.0-next.145
 
@@ -414,9 +405,7 @@ Starting from now all releases follow semver and changes will be listed as Major
 ### Patch Changes
 
 - Enhance docs on importing types in app.d.ts ([#5280](https://github.com/sveltejs/kit/pull/5280))
-
-* Use ESM eslint config files ([#5263](https://github.com/sveltejs/kit/pull/5263))
-
+- Use ESM eslint config files ([#5263](https://github.com/sveltejs/kit/pull/5263))
 - fix formatting for initial package.json ([#5271](https://github.com/sveltejs/kit/pull/5271))
 
 ## 2.0.0-next.142
@@ -442,8 +431,7 @@ Starting from now all releases follow semver and changes will be listed as Major
 ### Patch Changes
 
 - correct default package.json format ([#5013](https://github.com/sveltejs/kit/pull/5013))
-
-* [breaking] Replace `%svelte.body%` with `%sveltekit.body%`, etc. ([#5016](https://github.com/sveltejs/kit/pull/5016))
+- breaking: Replace `%svelte.body%` with `%sveltekit.body%`, etc. ([#5016](https://github.com/sveltejs/kit/pull/5016))
 
 ## 2.0.0-next.138
 
@@ -498,9 +486,7 @@ Starting from now all releases follow semver and changes will be listed as Major
 ### Patch Changes
 
 - Ignore .turbo directory when building templates ([#4638](https://github.com/sveltejs/kit/pull/4638))
-
-* Disable type checking by default for non-typescript projects. ([#4621](https://github.com/sveltejs/kit/pull/4621))
-
+- Disable type checking by default for non-typescript projects. ([#4621](https://github.com/sveltejs/kit/pull/4621))
 - breaking: move non-essential TypeScript compilerOptions into user-editable config ([#4633](https://github.com/sveltejs/kit/pull/4633))
 
 ## 2.0.0-next.129
@@ -508,8 +494,7 @@ Starting from now all releases follow semver and changes will be listed as Major
 ### Patch Changes
 
 - type check exception handling on form action ([#4532](https://github.com/sveltejs/kit/pull/4532))
-
-* Update broken documentation links for `App` namespaces ([#4627](https://github.com/sveltejs/kit/pull/4627))
+- Update broken documentation links for `App` namespaces ([#4627](https://github.com/sveltejs/kit/pull/4627))
 
 ## 2.0.0-next.128
 
@@ -540,8 +525,7 @@ Starting from now all releases follow semver and changes will be listed as Major
 ### Patch Changes
 
 - Add sync CLI command ([#4182](https://github.com/sveltejs/kit/pull/4182))
-
-* Upgrade to TypeScript 4.6 ([#4190](https://github.com/sveltejs/kit/pull/4190))
+- Upgrade to TypeScript 4.6 ([#4190](https://github.com/sveltejs/kit/pull/4190))
 
 ## 2.0.0-next.123
 
@@ -596,16 +580,14 @@ Starting from now all releases follow semver and changes will be listed as Major
 ### Patch Changes
 
 - fix links pointing to multi-page docs ([#3815](https://github.com/sveltejs/kit/pull/3815))
-
-* upgrade to TypeScript 4.5 ([#3809](https://github.com/sveltejs/kit/pull/3809))
+- upgrade to TypeScript 4.5 ([#3809](https://github.com/sveltejs/kit/pull/3809))
 
 ## 2.0.0-next.114
 
 ### Patch Changes
 
 - Add App namespace for app-level types ([#3670](https://github.com/sveltejs/kit/pull/3670))
-
-* Remove target option ([#3674](https://github.com/sveltejs/kit/pull/3674))
+- Remove target option ([#3674](https://github.com/sveltejs/kit/pull/3674))
 
 ## 2.0.0-next.113
 
@@ -690,9 +672,7 @@ Starting from now all releases follow semver and changes will be listed as Major
 ### Patch Changes
 
 - Respect Ctrl-C when running create-svelte ([#3472](https://github.com/sveltejs/kit/pull/3472))
-
-* Make project name an explicit option' ([#3472](https://github.com/sveltejs/kit/pull/3472))
-
+- Make project name an explicit option' ([#3472](https://github.com/sveltejs/kit/pull/3472))
 - Prompt for directory when running create-svelte without argument ([#3472](https://github.com/sveltejs/kit/pull/3472))
 
 ## 2.0.0-next.98
@@ -711,7 +691,7 @@ Starting from now all releases follow semver and changes will be listed as Major
 
 ### Patch Changes
 
-- Breaking: change app.render signature to (request: Request) => Promise (#3384) ([#3430](https://github.com/sveltejs/kit/pull/3430))
+- breaking: change app.render signature to (request: Request) => Promise (#3384) ([#3430](https://github.com/sveltejs/kit/pull/3430))
 
 ## 2.0.0-next.95
 
@@ -748,12 +728,9 @@ Starting from now all releases follow semver and changes will be listed as Major
 ### Patch Changes
 
 - bump eslint ecmaVersion to 2020 ([#2985](https://github.com/sveltejs/kit/pull/2985))
-
-* include missing .npmrc in templates ([#2990](https://github.com/sveltejs/kit/pull/2990))
-
+- include missing .npmrc in templates ([#2990](https://github.com/sveltejs/kit/pull/2990))
 - Do not gitignore `.env.example` ([#2926](https://github.com/sveltejs/kit/pull/2926))
-
-* update to esbuild 0.13.15 and other dependency updates ([#2957](https://github.com/sveltejs/kit/pull/2957))
+- update to esbuild 0.13.15 and other dependency updates ([#2957](https://github.com/sveltejs/kit/pull/2957))
 
 ## 2.0.0-next.89
 
@@ -778,8 +755,7 @@ Starting from now all releases follow semver and changes will be listed as Major
 ### Patch Changes
 
 - Add adapter-auto ([#2867](https://github.com/sveltejs/kit/pull/2867))
-
-* Add an npm run package command to templates ([#2882](https://github.com/sveltejs/kit/pull/2882))
+- Add an npm run package command to templates ([#2882](https://github.com/sveltejs/kit/pull/2882))
 
 ## 2.0.0-next.85
 
@@ -810,8 +786,7 @@ Starting from now all releases follow semver and changes will be listed as Major
 ### Patch Changes
 
 - fix: provide valid value for `letter-spacing` CSS property ([#2437](https://github.com/sveltejs/kit/pull/2437))
-
-* update dependencies ([#2447](https://github.com/sveltejs/kit/pull/2447))
+- update dependencies ([#2447](https://github.com/sveltejs/kit/pull/2447))
 
 ## 2.0.0-next.80
 
@@ -1168,7 +1143,7 @@ Starting from now all releases follow semver and changes will be listed as Major
 
 ### Patch Changes
 
-- 00cbaf6: Rename _.config.js to _.config.cjs ([#356](https://github.com/sveltejs/kit/pull/356))
+- 00cbaf6: Rename `_.config.js` to `_.config.cjs` ([#356](https://github.com/sveltejs/kit/pull/356))
 
 ## 2.0.0-next.25
 

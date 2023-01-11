@@ -12,7 +12,6 @@ Starting from now all releases follow semver and changes will be listed as Major
 ### Patch Changes
 
 - breaking: remove warnings/errors about removed/changed APIs ([#8019](https://github.com/sveltejs/kit/pull/8019))
-
 - Updated dependencies [[`f42604a2`](https://github.com/sveltejs/kit/commit/f42604a2b4c04026d3d8bad95807720b79529539)]:
   - @sveltejs/kit@1.0.0-next.589
 
@@ -176,15 +175,14 @@ Starting from now all releases follow semver and changes will be listed as Major
 
 ### Patch Changes
 
-- chore(cloudflare): more restrictive cache lookup & save conditions ([#4669](https://github.com/sveltejs/kit/pull/4669))
+- chore: more restrictive cache lookup & save conditions ([#4669](https://github.com/sveltejs/kit/pull/4669))
 
 ## 1.0.0-next.17
 
 ### Patch Changes
 
 - Check for Cache match sooner; use `worktop` for types & Cache operations ([#4453](https://github.com/sveltejs/kit/pull/4453))
-
-* Add cloudflare cache to store responses with a cache header. ([#4412](https://github.com/sveltejs/kit/pull/4412))
+- Add cloudflare cache to store responses with a cache header. ([#4412](https://github.com/sveltejs/kit/pull/4412))
 
 ## 1.0.0-next.16
 
@@ -257,9 +255,7 @@ Starting from now all releases follow semver and changes will be listed as Major
 ### Patch Changes
 
 - Overhaul adapter API ([#2931](https://github.com/sveltejs/kit/pull/2931))
-
-* Remove esbuild options ([#2931](https://github.com/sveltejs/kit/pull/2931))
-
+- Remove esbuild options ([#2931](https://github.com/sveltejs/kit/pull/2931))
 - Update adapters to provide app.render with a url ([#3133](https://github.com/sveltejs/kit/pull/3133))
 
 ## 1.0.0-next.4
@@ -278,14 +274,13 @@ Starting from now all releases follow semver and changes will be listed as Major
 
 ### Patch Changes
 
-- - Allow `npm publish` to succeed via `publishConfig.access` config ([#2834](https://github.com/sveltejs/kit/pull/2834))
-  - Add instructions to README for configuring a new/existing Pages project
+- Allow `npm publish` to succeed via `publishConfig.access` config ([#2834](https://github.com/sveltejs/kit/pull/2834))
 
 ## 1.0.0-next.1
 
 ### Patch Changes
 
-- Add new "adapter-cloudflare" package for Cloudflare Pages with Workers integration ([#2815](https://github.com/sveltejs/kit/pull/2815))
+- Add new `adapter-cloudflare` package for Cloudflare Pages with Workers integration ([#2815](https://github.com/sveltejs/kit/pull/2815))
 
 ## 1.0.0-next.0
 

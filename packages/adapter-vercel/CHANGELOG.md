@@ -244,8 +244,7 @@ Starting from now all releases follow semver and changes will be listed as Major
 ### Patch Changes
 
 - Support for Node.js 16 ([#4904](https://github.com/sveltejs/kit/pull/4904))
-
-* The output of serverless now is ESM instead of CJS ([#4904](https://github.com/sveltejs/kit/pull/4904))
+- The output of serverless now is ESM instead of CJS ([#4904](https://github.com/sveltejs/kit/pull/4904))
 
 ## 1.0.0-next.50
 
@@ -354,9 +353,7 @@ Starting from now all releases follow semver and changes will be listed as Major
 ### Patch Changes
 
 - Overhaul adapter API ([#2931](https://github.com/sveltejs/kit/pull/2931))
-
-* Remove esbuild options ([#2931](https://github.com/sveltejs/kit/pull/2931))
-
+- Remove esbuild options ([#2931](https://github.com/sveltejs/kit/pull/2931))
 - Update adapters to provide app.render with a url ([#3133](https://github.com/sveltejs/kit/pull/3133))
 
 ## 1.0.0-next.32

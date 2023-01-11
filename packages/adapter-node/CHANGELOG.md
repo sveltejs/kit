@@ -16,11 +16,8 @@
 ### Patch Changes
 
 - chore: update dependency @rollup/plugin-json to v6 ([#8204](https://github.com/sveltejs/kit/pull/8204))
-
-  Note: plugin-json v6 fails your build for parse errors that only logged a warning with v5. We consider this a bugfix as only healthy input should result in a successful build.
-
+  - Note: plugin-json v6 fails your build for parse errors that only logged a warning with v5. We consider this a bugfix as only healthy input should result in a successful build.
 - chore(deps): update dependency @rollup/plugin-commonjs to v24 ([#8216](https://github.com/sveltejs/kit/pull/8216))
-
 - Updated dependencies [[`fab0de4f`](https://github.com/sveltejs/kit/commit/fab0de4f06ac5b1e9b049e106889b193975c1c29), [`89b8d94b`](https://github.com/sveltejs/kit/commit/89b8d94b1b20d586e1ca525c30d07587c3f2d8f2)]:
   - @sveltejs/kit@1.0.2
 
@@ -36,7 +33,6 @@ Starting from now all releases follow semver and changes will be listed as Major
 ### Patch Changes
 
 - breaking: remove warnings/errors about removed/changed APIs ([#8019](https://github.com/sveltejs/kit/pull/8019))
-
 - Updated dependencies [[`f42604a2`](https://github.com/sveltejs/kit/commit/f42604a2b4c04026d3d8bad95807720b79529539)]:
   - @sveltejs/kit@1.0.0-next.589
 
@@ -135,15 +131,13 @@ Starting from now all releases follow semver and changes will be listed as Major
 ### Patch Changes
 
 - Update to esbuild 0.15 ([#6740](https://github.com/sveltejs/kit/pull/6740))
-
-* Improve performance by compressing in parallel ([#6710](https://github.com/sveltejs/kit/pull/6710))
+- Improve performance by compressing in parallel ([#6710](https://github.com/sveltejs/kit/pull/6710))
 
 ## 1.0.0-next.89
 
 ### Patch Changes
 
 - breaking: request creation cleanup ([#6681](https://github.com/sveltejs/kit/pull/6681))
-
 - breaking: limit adapter-node request size ([#6684](https://github.com/sveltejs/kit/pull/6684))
 
 ## 1.0.0-next.88
@@ -241,8 +235,7 @@ Starting from now all releases follow semver and changes will be listed as Major
 ### Patch Changes
 
 - breaking: rename `xForwardedForIndex` to `XFF_DEPTH` and make it an environment variable ([#4332](https://github.com/sveltejs/kit/pull/4332))
-
-* [breaking] Replace `options.env` with `options.envPrefix` ([#4360](https://github.com/sveltejs/kit/pull/4360))
+- breaking: Replace `options.env` with `options.envPrefix` ([#4360](https://github.com/sveltejs/kit/pull/4360))
 
 ## 1.0.0-next.72
 
@@ -296,9 +289,8 @@ Starting from now all releases follow semver and changes will be listed as Major
 
 ### Patch Changes
 
-- Breaking: change app.render signature to (request: Request) => Promise<Response> ([#3384](https://github.com/sveltejs/kit/pull/3384))
-
-* Breaking: Remove protocol/host configuration options from Kit to adapter-node ([#3384](https://github.com/sveltejs/kit/pull/3384))
+- breaking: change app.render signature to (request: Request) => Promise<Response> ([#3384](https://github.com/sveltejs/kit/pull/3384))
+- breaking: Remove protocol/host configuration options from Kit to adapter-node ([#3384](https://github.com/sveltejs/kit/pull/3384))
 
 ## 1.0.0-next.63
 
@@ -323,16 +315,14 @@ Starting from now all releases follow semver and changes will be listed as Major
 ### Patch Changes
 
 - Don't cache non-hashed static assets in adapter-node ([#3193](https://github.com/sveltejs/kit/pull/3193))
-
-* Only set cache-control: immutable when appropriate ([#3196](https://github.com/sveltejs/kit/pull/3196))
+- Only set cache-control: immutable when appropriate ([#3196](https://github.com/sveltejs/kit/pull/3196))
 
 ## 1.0.0-next.59
 
 ### Patch Changes
 
 - Fix types ([#3181](https://github.com/sveltejs/kit/pull/3181))
-
-* Check if directory exists, before compressing ([#3179](https://github.com/sveltejs/kit/pull/3179))
+- Check if directory exists, before compressing ([#3179](https://github.com/sveltejs/kit/pull/3179))
 
 ## 1.0.0-next.58
 
@@ -345,9 +335,7 @@ Starting from now all releases follow semver and changes will be listed as Major
 ### Patch Changes
 
 - Overhaul adapter API ([#2931](https://github.com/sveltejs/kit/pull/2931))
-
-* Update adapters to provide app.render with a url ([#3133](https://github.com/sveltejs/kit/pull/3133))
-
+- Update adapters to provide app.render with a url ([#3133](https://github.com/sveltejs/kit/pull/3133))
 - Don't bundle final output ([#2931](https://github.com/sveltejs/kit/pull/2931))
 
 ## 1.0.0-next.56

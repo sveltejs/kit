@@ -5,7 +5,6 @@
 ### Patch Changes
 
 - chore: update @cloudflare/kv-asset-handler ([`30e1130e`](https://github.com/sveltejs/kit/commit/30e1130ef84e56a77be5cb1136d5c53edef6e5f9))
-
 - Updated dependencies [[`fab0de4f`](https://github.com/sveltejs/kit/commit/fab0de4f06ac5b1e9b049e106889b193975c1c29), [`89b8d94b`](https://github.com/sveltejs/kit/commit/89b8d94b1b20d586e1ca525c30d07587c3f2d8f2)]:
   - @sveltejs/kit@1.0.2
 
@@ -21,7 +20,6 @@ Starting from now all releases follow semver and changes will be listed as Major
 ### Patch Changes
 
 - breaking: remove warnings/errors about removed/changed APIs ([#8019](https://github.com/sveltejs/kit/pull/8019))
-
 - Updated dependencies [[`f42604a2`](https://github.com/sveltejs/kit/commit/f42604a2b4c04026d3d8bad95807720b79529539)]:
   - @sveltejs/kit@1.0.0-next.589
 
@@ -260,9 +258,7 @@ Starting from now all releases follow semver and changes will be listed as Major
 ### Patch Changes
 
 - Overhaul adapter API ([#2931](https://github.com/sveltejs/kit/pull/2931))
-
-* Remove esbuild options ([#2931](https://github.com/sveltejs/kit/pull/2931))
-
+- Remove esbuild options ([#2931](https://github.com/sveltejs/kit/pull/2931))
 - Update adapters to provide app.render with a url ([#3133](https://github.com/sveltejs/kit/pull/3133))
 
 ## 1.0.0-next.26

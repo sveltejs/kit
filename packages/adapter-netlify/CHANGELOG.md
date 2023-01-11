@@ -78,8 +78,7 @@ Starting from now all releases follow semver and changes will be listed as Major
 ### Patch Changes
 
 - Update to esbuild 0.15 ([#6740](https://github.com/sveltejs/kit/pull/6740))
-
-* [feat] only generate ESM functions ([#6760](https://github.com/sveltejs/kit/pull/6760))
+- feat: only generate ESM functions ([#6760](https://github.com/sveltejs/kit/pull/6760))
 
 ## 1.0.0-next.76
 
@@ -320,12 +319,9 @@ Starting from now all releases follow semver and changes will be listed as Major
 ### Patch Changes
 
 - Overhaul adapter API ([#2931](https://github.com/sveltejs/kit/pull/2931))
-
-* Update adapters to provide app.render with a url ([#3133](https://github.com/sveltejs/kit/pull/3133))
-
+- Update adapters to provide app.render with a url ([#3133](https://github.com/sveltejs/kit/pull/3133))
 - Add experimental function splitting ([#2931](https://github.com/sveltejs/kit/pull/2931))
-
-* Don't bundle final output ([#2931](https://github.com/sveltejs/kit/pull/2931))
+- Don't bundle final output ([#2931](https://github.com/sveltejs/kit/pull/2931))
 
 ## 1.0.0-next.36
 

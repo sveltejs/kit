@@ -42,16 +42,14 @@ Starting from now all releases follow semver and changes will be listed as Major
 ### Patch Changes
 
 - Suggest props destructuring if possible ([#6069](https://github.com/sveltejs/kit/pull/6069))
-
-* Fix typo in migration task ([#6070](https://github.com/sveltejs/kit/pull/6070))
+- Fix typo in migration task ([#6070](https://github.com/sveltejs/kit/pull/6070))
 
 ## 1.0.0-next.7
 
 ### Patch Changes
 
 - Migrate type comments on arrow functions ([#5933](https://github.com/sveltejs/kit/pull/5933))
-
-* Use LayoutLoad inside +layout.js files ([#5931](https://github.com/sveltejs/kit/pull/5931))
+- Use LayoutLoad inside +layout.js files ([#5931](https://github.com/sveltejs/kit/pull/5931))
 
 ## 1.0.0-next.6
 
@@ -70,16 +68,14 @@ Starting from now all releases follow semver and changes will be listed as Major
 ### Patch Changes
 
 - handle lone return statements ([#5831](https://github.com/sveltejs/kit/pull/5831))
-
-* Fix error placement on (arrow) function when checking load input ([#5840](https://github.com/sveltejs/kit/pull/5840))
+- Fix error placement on (arrow) function when checking load input ([#5840](https://github.com/sveltejs/kit/pull/5840))
 
 ## 1.0.0-next.3
 
 ### Patch Changes
 
 - handle more import cases ([#5828](https://github.com/sveltejs/kit/pull/5828))
-
-* check load function input ([#5838](https://github.com/sveltejs/kit/pull/5838))
+- check load function input ([#5838](https://github.com/sveltejs/kit/pull/5838))
 
 ## 1.0.0-next.2
 
