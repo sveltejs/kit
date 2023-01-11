@@ -1459,7 +1459,7 @@ export function create_client({ target, base }) {
 					event.submitter
 				);
 
-				const method = submitter?.formMethod || form.method;
+				const method = submitter?.formMethod || form.getAttribute('method');
 
 				if (method !== 'get') return;
 

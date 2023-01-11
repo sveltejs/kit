@@ -26,7 +26,7 @@ export function deserialize(result) {
 
 /** @type {import('$app/forms').enhance} */
 export function enhance(form, submit = () => {}) {
-	if (DEV && form.method !== 'post') {
+	if (DEV && form.getAttribute('method') !== 'post') {
 		throw new Error('use:enhance can only be used on <form> fields with method="POST"');
 	}
 
