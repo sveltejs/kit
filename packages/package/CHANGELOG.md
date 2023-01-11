@@ -10,7 +10,7 @@
 
 ### Patch Changes
 
-- Explicitly mark Node 17.x as not supported ([#8174](https://github.com/sveltejs/kit/pull/8174))
+- [fix] explicitly mark Node 17.x as not supported ([#8174](https://github.com/sveltejs/kit/pull/8174))
 
 ## 1.0.0
 

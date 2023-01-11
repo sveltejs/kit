@@ -4,41 +4,41 @@
 
 ### Patch Changes
 
-- Warn if comments are removed from HTML ([#8423](https://github.com/sveltejs/kit/pull/8423))
+- [feat] warn that hydration may break if comments are removed from HTML ([#8423](https://github.com/sveltejs/kit/pull/8423))
 
-- [fix] ignore `<a>` elements with no `href` attribute ([#8418](https://github.com/sveltejs/kit/pull/8418))
+- [fix] ignore `<a>` elements with no `href` attribute when refocusing after navigation ([#8418](https://github.com/sveltejs/kit/pull/8418))
 
-- [fix] invalidate implicit dependencies in server load functions ([#8420](https://github.com/sveltejs/kit/pull/8420))
+- [fix] invalidate dependencies implicitly added by `fetch` in server load functions ([#8420](https://github.com/sveltejs/kit/pull/8420))
 
 ## 1.0.10
 
 ### Patch Changes
 
-- Skip inline cache when vary header is present ([#8406](https://github.com/sveltejs/kit/pull/8406))
+- [fix] skip inline cache when vary header is present ([#8406](https://github.com/sveltejs/kit/pull/8406))
 
 ## 1.0.9
 
 ### Patch Changes
 
-- Add `assetFileNames` to worker rollup options ([#8384](https://github.com/sveltejs/kit/pull/8384))
+- [fix] add `assetFileNames` to worker rollup options ([#8384](https://github.com/sveltejs/kit/pull/8384))
 
 ## 1.0.8
 
 ### Patch Changes
 
-- Disable illegal import detection when running unit tests ([#8365](https://github.com/sveltejs/kit/pull/8365))
+- [feat] error in dev mode if global `fetch` is used with relative URL ([#8370](https://github.com/sveltejs/kit/pull/8370))
 
-- only prerender a given dependency once ([#8376](https://github.com/sveltejs/kit/pull/8376))
+- [fix] disable illegal import detection when running unit tests ([#8365](https://github.com/sveltejs/kit/pull/8365))
 
-- Error in dev mode if global `fetch` is used with relative URL ([#8370](https://github.com/sveltejs/kit/pull/8370))
+- [fix] only prerender a given dependency once ([#8376](https://github.com/sveltejs/kit/pull/8376))
 
-- `updated.check()` type changed to Promise<boolean> ([#8400](https://github.com/sveltejs/kit/pull/8400))
+- [fix] `updated.check()` type changed to `Promise<boolean>` ([#8400](https://github.com/sveltejs/kit/pull/8400))
 
-- Don't strip body in no-cors mode on the server ([#8412](https://github.com/sveltejs/kit/pull/8412))
+- [fix] don't strip body in no-cors mode on the server ([#8412](https://github.com/sveltejs/kit/pull/8412))
 
 - [fix] quote 'script' in CSP directives ([#8372](https://github.com/sveltejs/kit/pull/8372))
 
-- fix route id comparison for load change detection ([#8399](https://github.com/sveltejs/kit/pull/8399))
+- [fix] correctly compare route ids for load change detection ([#8399](https://github.com/sveltejs/kit/pull/8399))
 
 - [fix] don't add nonce attribute to `<link>` elements ([#8369](https://github.com/sveltejs/kit/pull/8369))
 
@@ -46,19 +46,19 @@
 
 ### Patch Changes
 
-- Ignore `*.test.js` and `*.spec.js` files in `params` directory ([#8250](https://github.com/sveltejs/kit/pull/8250))
+- [fix] ignore `*.test.js` and `*.spec.js` files in `params` directory ([#8250](https://github.com/sveltejs/kit/pull/8250))
 
 ## 1.0.6
 
 ### Patch Changes
 
-- Guarantee that `$page.route` has the correct shape ([#8359](https://github.com/sveltejs/kit/pull/8359))
+- [fix] guarantee that `$page.route` has the correct shape ([#8359](https://github.com/sveltejs/kit/pull/8359))
 
 ## 1.0.5
 
 ### Patch Changes
 
-- Update typings of `event.platform` to be possibly undefined ([#8232](https://github.com/sveltejs/kit/pull/8232))
+- [fix] update typings of `event.platform` to be possibly undefined ([#8232](https://github.com/sveltejs/kit/pull/8232))
 
 ## 1.0.4
 
@@ -70,21 +70,21 @@
 
 ### Patch Changes
 
-- Include submitter's value when progressively enhancing `<form method="get">` ([#8273](https://github.com/sveltejs/kit/pull/8273))
+- [feat] include submitter's value when progressively enhancing `<form method="get">` ([#8273](https://github.com/sveltejs/kit/pull/8273))
 
 ## 1.0.2
 
 ### Patch Changes
 
-- Fix filterSerializedResponseHeaders error message ([#8348](https://github.com/sveltejs/kit/pull/8348))
+- [fix] correct `filterSerializedResponseHeaders` error message ([#8348](https://github.com/sveltejs/kit/pull/8348))
 
-- Fix form action redirect status code ([#8210](https://github.com/sveltejs/kit/pull/8210))
+- [fix] correct form action redirect status code ([#8210](https://github.com/sveltejs/kit/pull/8210))
 
 ## 1.0.1
 
 ### Patch Changes
 
-- Explicitly mark Node 17.x as not supported ([#8174](https://github.com/sveltejs/kit/pull/8174))
+- [fix] explicitly mark Node 17.x as not supported ([#8174](https://github.com/sveltejs/kit/pull/8174))
 
 ## 1.0.0
 

@@ -4,7 +4,7 @@
 
 ### Minor Changes
 
-- Create vite.config.ts for TypeScript projects ([#8258](https://github.com/sveltejs/kit/pull/8258))
+- [feat] create vite.config.ts for TypeScript projects ([#8258](https://github.com/sveltejs/kit/pull/8258))
 
 ## 2.0.2
 
@@ -16,7 +16,7 @@
 
 ### Patch Changes
 
-- no code change, rerelease as 2.0.1 for technical reasons ([#8161](https://github.com/sveltejs/kit/pull/8161))
+- [chore] no code change, rerelease as 2.0.1 for technical reasons ([#8161](https://github.com/sveltejs/kit/pull/8161))
 
 ## 2.0.0
 
