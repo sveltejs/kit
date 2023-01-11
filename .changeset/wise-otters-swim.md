@@ -2,4 +2,4 @@
 '@sveltejs/kit': patch
 ---
 
-[fix] avoid unnecessary $page store updates
+fix: avoid unnecessary $page store updates

@@ -5,4 +5,4 @@
 '@sveltejs/adapter-vercel': patch
 ---
 
-[docs] add note about inability to access file system at runtime
+docs: add note about inability to access file system at runtime
