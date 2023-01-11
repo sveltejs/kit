@@ -2,4 +2,4 @@
 '@sveltejs/kit': patch
 ---
 
-enable access to private env within app.html
+feat: enable access to public env within app.html
