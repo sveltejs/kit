@@ -32,7 +32,6 @@ import { unwrap_promises } from '../../utils/promises.js';
 import * as devalue from 'devalue';
 import { INDEX_KEY, PRELOAD_PRIORITIES, SCROLL_KEY } from './constants.js';
 import { validate_common_exports } from '../../utils/exports.js';
-import { getFormMethod } from '../../utils/forms.js';
 
 const routes = parse(nodes, server_loads, dictionary, matchers);
 
@@ -1460,7 +1459,9 @@ export function create_client({ target, base }) {
 					event.submitter
 				);
 
-				const method = submitter?.formMethod || getFormMethod(form);
+				const method =
+					submitter?.formMethod ||
+					/** @type {HTMLFormElement} */ (HTMLFormElement.prototype.cloneNode.call(form)).method;
 
 				if (method !== 'get') return;
 

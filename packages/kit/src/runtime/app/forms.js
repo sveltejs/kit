@@ -2,7 +2,6 @@ import * as devalue from 'devalue';
 import { client } from '../client/singletons.js';
 import { invalidateAll } from './navigation.js';
 import { BROWSER, DEV } from 'esm-env';
-import { getFormMethod } from '../../utils/forms.js';
 
 /**
  * @param {string} name
@@ -27,7 +26,11 @@ export function deserialize(result) {
 
 /** @type {import('$app/forms').enhance} */
 export function enhance(form, submit = () => {}) {
-	if (DEV && getFormMethod(form) !== 'post') {
+	if (
+		DEV &&
+		/** @type {HTMLFormElement} */ (HTMLFormElement.prototype.cloneNode.call(form)).method !==
+			'post'
+	) {
 		throw new Error('use:enhance can only be used on <form> fields with method="POST"');
 	}
 
