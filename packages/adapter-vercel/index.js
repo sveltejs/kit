@@ -10,7 +10,7 @@ const plugin = function ({
 	edge,
 	split,
 	serverlessFunctionConfig,
-	edgeFunctionConfig
+	edgeFunctionConfig: { envVarsInUse, regions }
 } = {}) {
 	return {
 		name: '@sveltejs/adapter-vercel',
@@ -102,9 +102,10 @@ const plugin = function ({
 				write(
 					`${dirs.functions}/${name}.func/.vc-config.json`,
 					JSON.stringify({
-						...edgeFunctionConfig,
 						runtime: 'edge',
-						entrypoint: 'index.js'
+						entrypoint: 'index.js',
+						envVarsInUse,
+						regions
 					})
 				);
 
@@ -237,7 +238,13 @@ function static_vercel_config(builder) {
  * @param {string} runtime
  * @param {import('.').ServerlessFunctionConfig} serverlessFunctionConfig
  */
-async function create_function_bundle(builder, entry, dir, runtime, serverlessFunctionConfig) {
+async function create_function_bundle(
+	builder,
+	entry,
+	dir,
+	runtime,
+	{ memory, maxDuration, regions }
+) {
 	fs.rmSync(dir, { force: true, recursive: true });
 
 	let base = entry;
@@ -331,10 +338,12 @@ async function create_function_bundle(builder, entry, dir, runtime, serverlessFu
 	write(
 		`${dir}/.vc-config.json`,
 		JSON.stringify({
-			...serverlessFunctionConfig,
 			runtime,
 			handler: path.relative(base + ancestor, entry),
-			launcherType: 'Nodejs'
+			launcherType: 'Nodejs',
+			memory,
+			maxDuration,
+			regions
 		})
 	);
 
