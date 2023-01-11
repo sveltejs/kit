@@ -3,4 +3,4 @@
 	export let data;
 </script>
 
-<h1>{@html data.text}</h1>
+<h1>content-type: {data.headers.get('content-type')}</h1>

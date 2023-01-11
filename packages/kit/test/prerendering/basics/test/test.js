@@ -188,7 +188,9 @@ test('fetches data from local endpoint', () => {
 			{
 				type: 'data',
 				data: [{ message: 1 }, 'hello'],
-				uses: {}
+				uses: {
+					dependencies: ['http://example.com/origin/message.json']
+				}
 			}
 		]
 	});

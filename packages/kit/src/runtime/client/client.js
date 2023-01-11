@@ -709,7 +709,7 @@ export function create_client({ target, base }) {
 		let server_data = null;
 
 		const url_changed = current.url ? id !== current.url.pathname + current.url.search : false;
-		const route_changed = current.route ? id !== current.route.id : false;
+		const route_changed = current.route ? route.id !== current.route.id : false;
 
 		const invalid_server_nodes = loaders.reduce((acc, loader, i) => {
 			const previous = current.branch[i];

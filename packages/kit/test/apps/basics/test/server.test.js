@@ -51,10 +51,12 @@ test.describe('Cookies', () => {
 			}
 		});
 
-		const response = await request.get(`/load/fetch-external-no-cookies?port=${port}`);
-		expect(response.headers()['set-cookie']).not.toContain('external=true');
-
-		close();
+		try {
+			const response = await request.get(`/load/fetch-external-no-cookies?port=${port}`);
+			expect(response.headers()['set-cookie']).not.toContain('external=true');
+		} finally {
+			await close();
+		}
 	});
 });
 
@@ -321,7 +323,7 @@ test.describe('Load', () => {
 		expect(await page.textContent('h1')).toBe(`origin: ${new URL(baseURL).origin}`);
 	});
 
-	test('includes origin header on external request', async ({ page, baseURL }) => {
+	test('includes origin header on external request', async ({ page, baseURL, context }) => {
 		const { port, close } = await start_server((req, res) => {
 			if (req.url === '/') {
 				res.writeHead(200, {
@@ -336,10 +338,13 @@ test.describe('Load', () => {
 			}
 		});
 
-		await page.goto(`/load/fetch-origin-external?port=${port}`);
-		expect(await page.textContent('h1')).toBe(`origin: ${new URL(baseURL).origin}`);
-
-		close();
+		try {
+			await page.goto(`/load/fetch-origin-external?port=${port}`);
+			expect(await page.textContent('h1')).toBe(`origin: ${new URL(baseURL).origin}`);
+		} finally {
+			await context.close();
+			await close();
+		}
 	});
 });
 
