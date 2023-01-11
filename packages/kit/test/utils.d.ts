@@ -6,7 +6,7 @@ import {
 	PlaywrightWorkerOptions,
 	TestType
 } from '@playwright/test';
-import http, { IncomingMessage, ServerResponse } from 'http';
+import { IncomingMessage, ServerResponse } from 'http';
 import { Plugin } from 'vite';
 
 export const test: TestType<
@@ -27,7 +27,7 @@ export const test: TestType<
 			 */
 			read_errors(href: string): Record<string, any>;
 			start_server(
-				handler: (req: http.IncomingMessage, res: http.ServerResponse) => void
+				handler: (req: IncomingMessage, res: ServerResponse) => void
 			): Promise<{ port: number }>;
 			page: PlaywrightTestArgs['page'] & {
 				goto: (

@@ -100,7 +100,7 @@ export const test = base.extend({
 		await use(page);
 	},
 
-	read_errors: async ({}, use) => {
+	read_errors: ({}, use) => {
 		/** @param {string} path */
 		function read_errors(path) {
 			const errors =
