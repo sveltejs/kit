@@ -1,7 +1,7 @@
 import { respond } from './respond.js';
 import { set_private_env } from '../env-private.js';
 import { set_public_env } from '../env-public.js';
-import { options, public_prefix, get_hooks } from '__GENERATED__/server-internal.js';
+import { options, get_hooks } from '__GENERATED__/server-internal.js';
 
 export class Server {
 	/** @type {import('types').SSROptions} */
@@ -28,8 +28,9 @@ export class Server {
 		// been done already.
 		const entries = Object.entries(env);
 
-		const prv = Object.fromEntries(entries.filter(([k]) => !k.startsWith(public_prefix)));
-		const pub = Object.fromEntries(entries.filter(([k]) => k.startsWith(public_prefix)));
+		const prefix = this.#options.env_public_prefix;
+		const prv = Object.fromEntries(entries.filter(([k]) => !k.startsWith(prefix)));
+		const pub = Object.fromEntries(entries.filter(([k]) => k.startsWith(prefix)));
 
 		set_private_env(prv);
 		set_public_env(pub);

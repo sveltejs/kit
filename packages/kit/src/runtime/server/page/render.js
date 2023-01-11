@@ -356,7 +356,7 @@ export async function render_response({
 	// add the content after the script/css links so the link elements are parsed first
 	head += rendered.head;
 
-	const html = options.app_template({
+	const html = options.templates.app({
 		head,
 		body,
 		assets: resolved_assets,

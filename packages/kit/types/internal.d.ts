@@ -297,27 +297,18 @@ export interface SSRNode {
 export type SSRNodeLoader = () => Promise<SSRNode>;
 
 export interface SSROptions {
-	app_template({
-		head,
-		body,
-		assets,
-		nonce
-	}: {
-		head: string;
-		body: string;
-		assets: string;
-		nonce: string;
-	}): string;
 	app_template_contains_nonce: boolean;
 	csp: ValidatedConfig['kit']['csp'];
-	csrf: {
-		check_origin: boolean;
-	};
+	csrf_check_origin: boolean;
 	embedded: boolean;
-	error_template({ message, status }: { message: string; status: number }): string;
+	env_public_prefix: string;
 	hooks: ServerHooks;
 	root: SSRComponent['default'];
 	service_worker: boolean;
+	templates: {
+		app(values: { head: string; body: string; assets: string; nonce: string }): string;
+		error(values: { message: string; status: number }): string;
+	};
 }
 
 export interface SSRErrorPage {

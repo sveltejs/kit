@@ -30,25 +30,24 @@ set_paths(${s(config.kit.paths)});
 set_version(${s(config.kit.version.name)});
 
 export const options = {
-	app_template: ({ head, body, assets, nonce }) => ${s(template)
-		.replace('%sveltekit.head%', '" + head + "')
-		.replace('%sveltekit.body%', '" + body + "')
-		.replace(/%sveltekit\.assets%/g, '" + assets + "')
-		.replace(/%sveltekit\.nonce%/g, '" + nonce + "')},
-	app_template_contains_nonce: ${template.includes('%sveltekit.nonce%')},
 	csp: ${s(config.kit.csp)},
-	csrf: {
-		check_origin: ${s(config.kit.csrf.checkOrigin)},
-	},
+	csrf_check_origin: ${s(config.kit.csrf.checkOrigin)},
 	embedded: ${config.kit.embedded},
-	error_template: ({ status, message }) => ${s(error_page)
-		.replace(/%sveltekit\.status%/g, '" + status + "')
-		.replace(/%sveltekit\.error\.message%/g, '" + message + "')},
+	env_public_prefix: '${config.kit.env.publicPrefix}',
+	hooks: null, // added lazily, via \`get_hooks\`
 	root,
-	service_worker: ${has_service_worker}
+	service_worker: ${has_service_worker},
+	templates: {
+		app: ({ head, body, assets, nonce }) => ${s(template)
+			.replace('%sveltekit.head%', '" + head + "')
+			.replace('%sveltekit.body%', '" + body + "')
+			.replace(/%sveltekit\.assets%/g, '" + assets + "')
+			.replace(/%sveltekit\.nonce%/g, '" + nonce + "')},
+		error: ({ status, message }) => ${s(error_page)
+			.replace(/%sveltekit\.status%/g, '" + status + "')
+			.replace(/%sveltekit\.error\.message%/g, '" + message + "')}
+	}
 };
-
-export const public_prefix = '${config.kit.env.publicPrefix}';
 
 export function get_hooks() {
 	return ${hooks ? `import(${s(hooks)})` : '{}'};

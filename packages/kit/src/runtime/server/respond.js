@@ -42,7 +42,7 @@ export async function respond(request, options, manifest, state) {
 	/** URL but stripped from the potential `/__data.json` suffix and its search param  */
 	let url = new URL(request.url);
 
-	if (options.csrf.check_origin) {
+	if (options.csrf_check_origin) {
 		const forbidden =
 			request.method === 'POST' &&
 			request.headers.get('origin') !== url.origin &&
