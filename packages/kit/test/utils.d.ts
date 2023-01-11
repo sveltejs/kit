@@ -6,7 +6,7 @@ import {
 	PlaywrightWorkerOptions,
 	TestType
 } from '@playwright/test';
-import { IncomingMessage, ServerResponse } from 'http';
+import http, { IncomingMessage, ServerResponse } from 'http';
 import { Plugin } from 'vite';
 
 export const test: TestType<
@@ -26,6 +26,9 @@ export const test: TestType<
 			 * `handleError` defines the shape
 			 */
 			read_errors(href: string): Record<string, any>;
+			start_server(
+				handler: (req: http.IncomingMessage, res: http.ServerResponse) => void
+			): Promise<{ port: number }>;
 			page: PlaywrightTestArgs['page'] & {
 				goto: (
 					url: string,
@@ -37,13 +40,5 @@ export const test: TestType<
 >;
 
 export const config: PlaywrightTestConfig;
-
-export const start_server: (
-	handler: (req: IncomingMessage, res: ServerResponse) => void,
-	start?: number
-) => Promise<{
-	port: number;
-	close(): Promise<void>;
-}>;
 
 export const plugin: () => Plugin;

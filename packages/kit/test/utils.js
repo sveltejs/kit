@@ -100,7 +100,7 @@ export const test = base.extend({
 		await use(page);
 	},
 
-	read_errors: ({}, use) => {
+	read_errors: async ({}, use) => {
 		/** @param {string} path */
 		function read_errors(path) {
 			const errors =
@@ -110,6 +110,50 @@ export const test = base.extend({
 		}
 
 		use(read_errors);
+	},
+
+	start_server: async ({}, use) => {
+		/**
+		 * @type {http.Server}
+		 */
+		let server;
+		/**
+		 * @param {(req: http.IncomingMessage, res: http.ServerResponse) => void} handler
+		 */
+		async function start_server(handler) {
+			if (server) {
+				throw new Error('server already started');
+			}
+			server = http.createServer(handler);
+
+			await new Promise((fulfil) => {
+				server.listen(0, 'localhost', () => {
+					fulfil(undefined);
+				});
+			});
+
+			const { port } = /** @type {import('net').AddressInfo} */ (server.address());
+			if (!port) {
+				throw new Error(`Could not find port from server ${JSON.stringify(server.address())}`);
+			}
+			return {
+				port
+			};
+		}
+		await use(start_server);
+
+		// @ts-expect-error use before set
+		if (server) {
+			await new Promise((fulfil, reject) => {
+				server.close((err) => {
+					if (err) {
+						reject(err);
+					} else {
+						fulfil(undefined);
+					}
+				});
+			});
+		}
 	}
 });
 
@@ -163,36 +207,3 @@ export const config = {
 	},
 	workers: process.env.CI ? 2 : undefined
 };
-
-/**
- * @param {(req: http.IncomingMessage, res: http.ServerResponse) => void} handler
- */
-export async function start_server(handler) {
-	const server = http.createServer(handler);
-
-	await new Promise((fulfil) => {
-		server.listen(0, 'localhost', () => {
-			fulfil(undefined);
-		});
-	});
-
-	const { port } = /** @type {import('net').AddressInfo} */ (server.address());
-	if (!port) {
-		throw new Error(`Could not find port from server ${JSON.stringify(server.address())}`);
-	}
-
-	return {
-		port,
-		close: () => {
-			return new Promise((fulfil, reject) => {
-				server.close((err) => {
-					if (err) {
-						reject(err);
-					} else {
-						fulfil(undefined);
-					}
-				});
-			});
-		}
-	};
-}
