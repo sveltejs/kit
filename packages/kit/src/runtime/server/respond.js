@@ -38,7 +38,7 @@ const default_filter = () => false;
 const default_preload = ({ type }) => type === 'js' || type === 'css';
 
 /** @type {import('types').Respond} */
-export async function respond(request, options, state) {
+export async function respond(request, options, manifest, state) {
 	/** URL but stripped from the potential `/__data.json` suffix and its search param  */
 	let url = new URL(request.url);
 
@@ -89,9 +89,9 @@ export async function respond(request, options, state) {
 
 	if (!state.prerendering?.fallback) {
 		// TODO this could theoretically break — should probably be inside a try-catch
-		const matchers = await options.manifest._.matchers();
+		const matchers = await manifest._.matchers();
 
-		for (const candidate of options.manifest._.routes) {
+		for (const candidate of manifest._.routes) {
 			const match = candidate.pattern.exec(decoded);
 			if (!match) continue;
 
@@ -165,8 +165,8 @@ export async function respond(request, options, state) {
 			if (route.page) {
 				const nodes = await Promise.all([
 					// we use == here rather than === because [undefined] serializes as "[null]"
-					...route.page.layouts.map((n) => (n == undefined ? n : options.manifest._.nodes[n]())),
-					options.manifest._.nodes[route.page.leaf]()
+					...route.page.layouts.map((n) => (n == undefined ? n : manifest._.nodes[n]())),
+					manifest._.nodes[route.page.leaf]()
 				]);
 
 				if (DEV) {
@@ -222,7 +222,7 @@ export async function respond(request, options, state) {
 		);
 
 		event.cookies = cookies;
-		event.fetch = create_fetch({ event, options, state, get_cookie_header });
+		event.fetch = create_fetch({ event, options, manifest, state, get_cookie_header });
 
 		if (state.prerendering && !state.prerendering.fallback) disable_search(url);
 
@@ -327,6 +327,7 @@ export async function respond(request, options, state) {
 				return await render_response({
 					event,
 					options,
+					manifest,
 					state,
 					page_config: { ssr: false, csr: true },
 					status: 200,
@@ -346,6 +347,7 @@ export async function respond(request, options, state) {
 						event,
 						route,
 						options,
+						manifest,
 						state,
 						invalidated_data_nodes,
 						trailing_slash ?? 'never'
@@ -353,7 +355,15 @@ export async function respond(request, options, state) {
 				} else if (route.endpoint && (!route.page || is_endpoint_request(event))) {
 					response = await render_endpoint(event, await route.endpoint(), state);
 				} else if (route.page) {
-					response = await render_page(event, route, route.page, options, state, resolve_opts);
+					response = await render_page(
+						event,
+						route,
+						route.page,
+						options,
+						manifest,
+						state,
+						resolve_opts
+					);
 				} else {
 					// a route will always have a page or an endpoint, but TypeScript
 					// doesn't know that
@@ -375,6 +385,7 @@ export async function respond(request, options, state) {
 				return await respond_with_error({
 					event,
 					options,
+					manifest,
 					state,
 					status: 404,
 					error: new Error(`Not found: ${event.url.pathname}`),

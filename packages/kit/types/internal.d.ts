@@ -153,7 +153,12 @@ export type RecursiveRequired<T> = {
 export type RequiredResolveOptions = Required<ResolveOptions>;
 
 export interface Respond {
-	(request: Request, options: SSROptions, state: SSRState): Promise<Response>;
+	(
+		request: Request,
+		options: SSROptions,
+		manifest: SSRManifest,
+		state: SSRState
+	): Promise<Response>;
 }
 
 export interface RouteParam {
@@ -311,7 +316,6 @@ export interface SSROptions {
 	embedded: boolean;
 	error_template({ message, status }: { message: string; status: number }): string;
 	hooks: ServerHooks;
-	manifest: SSRManifest;
 	root: SSRComponent['default'];
 	service_worker: boolean;
 }

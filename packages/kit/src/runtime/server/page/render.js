@@ -23,6 +23,7 @@ const updated = {
  *   branch: Array<import('./types').Loaded>;
  *   fetched: Array<import('./types').Fetched>;
  *   options: import('types').SSROptions;
+ *   manifest: import('types').SSRManifest;
  *   state: import('types').SSRState;
  *   page_config: { ssr: boolean; csr: boolean };
  *   status: number;
@@ -36,6 +37,7 @@ export async function render_response({
 	branch,
 	fetched,
 	options,
+	manifest,
 	state,
 	page_config,
 	status,
@@ -54,11 +56,11 @@ export async function render_response({
 		}
 	}
 
-	const { entry } = options.manifest._;
+	const { entry } = manifest._;
 
 	const stylesheets = new Set(entry.stylesheets);
 	const modulepreloads = new Set(entry.imports);
-	const fonts = new Set(options.manifest._.entry.fonts);
+	const fonts = new Set(manifest._.entry.fonts);
 
 	/** @type {Set<string>} */
 	const link_header_preloads = new Set();

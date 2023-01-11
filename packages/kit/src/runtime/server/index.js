@@ -62,6 +62,6 @@ export class Server {
 			);
 		}
 
-		return respond(request, { ...this.#options, manifest: this.#manifest }, options);
+		return respond(request, this.#options, this.#manifest, options);
 	}
 }

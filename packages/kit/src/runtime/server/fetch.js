@@ -6,12 +6,13 @@ import * as paths from '../shared.js';
  * @param {{
  *   event: import('types').RequestEvent;
  *   options: import('types').SSROptions;
+ *   manifest: import('types').SSRManifest;
  *   state: import('types').SSRState;
  *   get_cookie_header: (url: URL, header: string | null) => string;
  * }} opts
  * @returns {typeof fetch}
  */
-export function create_fetch({ event, options, state, get_cookie_header }) {
+export function create_fetch({ event, options, manifest, state, get_cookie_header }) {
 	return async (info, init) => {
 		const original_request = normalize_fetch_input(info, init, event.url);
 
@@ -79,15 +80,15 @@ export function create_fetch({ event, options, state, get_cookie_header }) {
 				).slice(1);
 				const filename_html = `${filename}/index.html`; // path may also match path/index.html
 
-				const is_asset = options.manifest.assets.has(filename);
-				const is_asset_html = options.manifest.assets.has(filename_html);
+				const is_asset = manifest.assets.has(filename);
+				const is_asset_html = manifest.assets.has(filename_html);
 
 				if (is_asset || is_asset_html) {
 					const file = is_asset ? filename : filename_html;
 
 					if (state.read) {
 						const type = is_asset
-							? options.manifest.mimeTypes[filename.slice(filename.lastIndexOf('.'))]
+							? manifest.mimeTypes[filename.slice(filename.lastIndexOf('.'))]
 							: 'text/html';
 
 						return new Response(state.read(file), {
@@ -130,7 +131,7 @@ export function create_fetch({ event, options, state, get_cookie_header }) {
 					);
 				}
 
-				response = await respond(request, options, state);
+				response = await respond(request, options, manifest, state);
 
 				const set_cookie = response.headers.get('set-cookie');
 				if (set_cookie) {
