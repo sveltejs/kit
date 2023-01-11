@@ -2,4 +2,4 @@
 '@sveltejs/kit': patch
 ---
 
-Add `Content-Length` header to SvelteKit-generated responses
+fix: add `Content-Length` header to SvelteKit-generated responses
