@@ -310,7 +310,6 @@ export interface SSROptions {
 	};
 	embedded: boolean;
 	error_template({ message, status }: { message: string; status: number }): string;
-	handle_error(error: Error & { frame?: string }, event: RequestEvent): MaybePromise<App.Error>;
 	hooks: ServerHooks;
 	manifest: SSRManifest;
 	root: SSRComponent['default'];

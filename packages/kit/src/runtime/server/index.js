@@ -4,10 +4,17 @@ import { set_public_env } from '../env-public.js';
 import { options, public_prefix, get_hooks } from '__GENERATED__/server-internal.js';
 
 export class Server {
+	/** @type {import('types').SSROptions} */
+	#options;
+
+	/** @type {import('types').SSRManifest} */
+	#manifest;
+
 	/** @param {import('types').SSRManifest} manifest */
 	constructor(manifest) {
 		/** @type {import('types').SSROptions} */
-		this.options = { manifest, ...options };
+		this.#options = options;
+		this.#manifest = manifest;
 	}
 
 	/**
@@ -27,10 +34,10 @@ export class Server {
 		set_private_env(prv);
 		set_public_env(pub);
 
-		if (!this.options.hooks) {
+		if (!this.#options.hooks) {
 			const module = await get_hooks();
 
-			this.options.hooks = {
+			this.#options.hooks = {
 				handle: module.handle || (({ event, resolve }) => resolve(event)),
 				handleError:
 					module.handleError ||
@@ -55,6 +62,6 @@ export class Server {
 			);
 		}
 
-		return respond(request, this.options, options);
+		return respond(request, { ...this.#options, manifest: this.#manifest }, options);
 	}
 }
