@@ -1466,7 +1466,8 @@ export function create_client({ target, base }) {
 				if (method !== 'get') return;
 
 				const url = new URL(
-					(submitter?.hasAttribute('formaction') && submitter?.formAction) || form.action
+					(submitter?.hasAttribute('formaction') && submitter?.formAction) ||
+						/** @type {HTMLFormElement} */ (HTMLFormElement.prototype.cloneNode.call(form)).action
 				);
 
 				if (is_external_url(url, base)) return;
