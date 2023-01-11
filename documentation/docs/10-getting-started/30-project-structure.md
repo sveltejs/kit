@@ -39,7 +39,7 @@ The `src` directory contains the meat of your project.
 - `lib` contains your library code (utilities and components), which can be imported via the [`$lib`](/docs/modules#$lib) alias, or packaged up for distribution using [`svelte-package`](/docs/packaging)
   - `server` contains your server-only library code. It can be imported by using the [`$lib/server`](/docs/server-only-modules) alias. SvelteKit will prevent you from importing these in client code.
 - `params` contains any [param matchers](/docs/advanced-routing#matching) your app needs
-- `routes` contains the [routes](/docs/routing) of your application
+- `routes` contains the [routes](/docs/routing) of your application. You can also colocate other components that are only used within a single route here
 - `app.html` is your page template — an HTML document containing the following placeholders:
   - `%sveltekit.head%` — `<link>` and `<script>` elements needed by the app, plus any `<svelte:head>` content
   - `%sveltekit.body%` — the markup for a rendered page. This should live inside a `<div>` or other element, rather than directly inside `<body>`, to prevent bugs caused by browser extensions injecting elements that are then destroyed by the hydration process. SvelteKit will warn you in development if this is not the case
