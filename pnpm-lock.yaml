@@ -8,7 +8,7 @@ importers:
       '@rollup/plugin-commonjs': ^24.0.0
       '@rollup/plugin-json': ^6.0.0
       '@rollup/plugin-node-resolve': ^15.0.1
-      '@svitejs/changesets-changelog-github-compact': ^1.0.0
+      '@svitejs/changesets-changelog-github-compact': ^1.1.0
       playwright: ^1.29.2
       prettier: ^2.8.0
       rollup: ^3.7.0
@@ -21,7 +21,7 @@ importers:
       '@rollup/plugin-commonjs': 24.0.0_rollup@3.7.0
       '@rollup/plugin-json': 6.0.0_rollup@3.7.0
       '@rollup/plugin-node-resolve': 15.0.1_rollup@3.7.0
-      '@svitejs/changesets-changelog-github-compact': 1.0.0
+      '@svitejs/changesets-changelog-github-compact': 1.1.0
       playwright: 1.29.2
       prettier: 2.8.0
       rollup: 3.7.0
@@ -865,8 +865,8 @@ packages:
       semver: 5.7.1
     dev: true
 
-  /@changesets/get-github-info/0.5.1:
-    resolution: {integrity: sha512-w2yl3AuG+hFuEEmT6j1zDlg7GQLM/J2UxTmk0uJBMdRqHni4zXGe/vUlPfLom5KfX3cRfHc0hzGvloDPjWFNZw==}
+  /@changesets/get-github-info/0.5.2:
+    resolution: {integrity: sha512-JppheLu7S114aEs157fOZDjFqUDpm7eHdq5E8SSR0gUBTEK0cNSHsrSR5a66xs0z3RWuo46QvA3vawp8BxDHvg==}
     dependencies:
       dataloader: 1.4.0
       node-fetch: 2.6.7
@@ -1348,11 +1348,11 @@ packages:
       - supports-color
     dev: false
 
-  /@svitejs/changesets-changelog-github-compact/1.0.0:
-    resolution: {integrity: sha512-h9pvZ3Bkk1K9bVr707OlWMtjreBPmXnh/GsxbiIp3ukNu9RjmkxlLmyD+h/DCkr8e0l3UpOlDDAUvbUHYNfGnA==}
+  /@svitejs/changesets-changelog-github-compact/1.1.0:
+    resolution: {integrity: sha512-qhUGGDHcpbY2zpjW3SwqchuW8J/5EzlPFud7xNntHKA7f3a/mx5+g+ruJKFHSAiVZYo30PALt+AyhmPUNKH/Og==}
     engines: {node: ^14.13.1 || ^16.0.0 || >=18}
     dependencies:
-      '@changesets/get-github-info': 0.5.1
+      '@changesets/get-github-info': 0.5.2
       dotenv: 16.0.3
     transitivePeerDependencies:
       - encoding

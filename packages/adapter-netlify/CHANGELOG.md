@@ -11,19 +11,19 @@ Starting from now all releases follow semver and changes will be listed as Major
 
 ### Patch Changes
 
-- [chore] add peerDependencies, add more specific next version ([#8141](https://github.com/sveltejs/kit/pull/8141))
+- chore: add peerDependencies, add more specific next version ([#8141](https://github.com/sveltejs/kit/pull/8141))
 
 ## 1.0.0-next.87
 
 ### Patch Changes
 
-- [fix] revert platform change from browser to neutral ([#8122](https://github.com/sveltejs/kit/pull/8122))
+- fix: revert platform change from browser to neutral ([#8122](https://github.com/sveltejs/kit/pull/8122))
 
 ## 1.0.0-next.86
 
 ### Patch Changes
 
-- [fix] set esbuild platform to neutral ([#8083](https://github.com/sveltejs/kit/pull/8083))
+- fix: set esbuild platform to neutral ([#8083](https://github.com/sveltejs/kit/pull/8083))
 
 ## 1.0.0-next.85
 
@@ -65,21 +65,20 @@ Starting from now all releases follow semver and changes will be listed as Major
 
 ### Patch Changes
 
-- [fix] clear out build directory when running `adapter-netlify` ([#7159](https://github.com/sveltejs/kit/pull/7159))
+- fix: clear out build directory when running `adapter-netlify` ([#7159](https://github.com/sveltejs/kit/pull/7159))
 
 ## 1.0.0-next.78
 
 ### Patch Changes
 
-- [chore] bump esbuild ([#6829](https://github.com/sveltejs/kit/pull/6829))
+- chore: bump esbuild ([#6829](https://github.com/sveltejs/kit/pull/6829))
 
 ## 1.0.0-next.77
 
 ### Patch Changes
 
 - Update to esbuild 0.15 ([#6740](https://github.com/sveltejs/kit/pull/6740))
-
-* [feat] only generate ESM functions ([#6760](https://github.com/sveltejs/kit/pull/6760))
+- feat: only generate ESM functions ([#6760](https://github.com/sveltejs/kit/pull/6760))
 
 ## 1.0.0-next.76
 
@@ -109,7 +108,7 @@ Starting from now all releases follow semver and changes will be listed as Major
 
 ### Patch Changes
 
-- [feat] Moved hooks.js initialization from Server.respond into Server.init ([#6179](https://github.com/sveltejs/kit/pull/6179))
+- feat: Moved hooks.js initialization from Server.respond into Server.init ([#6179](https://github.com/sveltejs/kit/pull/6179))
 
 ## 1.0.0-next.71
 
@@ -121,7 +120,7 @@ Starting from now all releases follow semver and changes will be listed as Major
 
 ### Patch Changes
 
-- [breaking] remove writeStatic to align with Vite ([#5618](https://github.com/sveltejs/kit/pull/5618))
+- breaking: remove writeStatic to align with Vite ([#5618](https://github.com/sveltejs/kit/pull/5618))
 
 ## 1.0.0-next.69
 
@@ -139,7 +138,7 @@ Starting from now all releases follow semver and changes will be listed as Major
 
 ### Patch Changes
 
-- [chore] upgrade TypeScript to 4.7.4 ([#5414](https://github.com/sveltejs/kit/pull/5414))
+- chore: upgrade TypeScript to 4.7.4 ([#5414](https://github.com/sveltejs/kit/pull/5414))
 
 ## 1.0.0-next.66
 
@@ -187,13 +186,13 @@ Starting from now all releases follow semver and changes will be listed as Major
 
 ### Patch Changes
 
-- [breaking] replace @sveltejs/kit/install-fetch with @sveltejs/kit/node/polyfills ([#4934](https://github.com/sveltejs/kit/pull/4934))
+- breaking: replace @sveltejs/kit/install-fetch with @sveltejs/kit/node/polyfills ([#4934](https://github.com/sveltejs/kit/pull/4934))
 
 ## 1.0.0-next.58
 
 ### Patch Changes
 
-- [docs] explain how to change node version ([#4921](https://github.com/sveltejs/kit/pull/4921))
+- docs: explain how to change node version ([#4921](https://github.com/sveltejs/kit/pull/4921))
 
 ## 1.0.0-next.57
 
@@ -205,7 +204,7 @@ Starting from now all releases follow semver and changes will be listed as Major
 
 ### Patch Changes
 
-- [breaking] Remove try-catch around server.respond ([#4738](https://github.com/sveltejs/kit/pull/4738))
+- breaking: Remove try-catch around server.respond ([#4738](https://github.com/sveltejs/kit/pull/4738))
 
 ## 1.0.0-next.55
 
@@ -241,7 +240,7 @@ Starting from now all releases follow semver and changes will be listed as Major
 
 ### Patch Changes
 
-- [breaking] replace builder.prerender() with builder.writePrerendered() and builder.prerendered ([#4192](https://github.com/sveltejs/kit/pull/4192)) ([#4229](https://github.com/sveltejs/kit/pull/4229))
+- breaking: replace builder.prerender() with builder.writePrerendered() and builder.prerendered ([#4192](https://github.com/sveltejs/kit/pull/4192)) ([#4229](https://github.com/sveltejs/kit/pull/4229))
 
 ## 1.0.0-next.49
 
@@ -265,7 +264,7 @@ Starting from now all releases follow semver and changes will be listed as Major
 
 ### Patch Changes
 
-- [breaking] rename `app.render` to `server.respond` ([#4034](https://github.com/sveltejs/kit/pull/4034))
+- breaking: rename `app.render` to `server.respond` ([#4034](https://github.com/sveltejs/kit/pull/4034))
 
 ## 1.0.0-next.45
 
@@ -320,12 +319,9 @@ Starting from now all releases follow semver and changes will be listed as Major
 ### Patch Changes
 
 - Overhaul adapter API ([#2931](https://github.com/sveltejs/kit/pull/2931))
-
-* Update adapters to provide app.render with a url ([#3133](https://github.com/sveltejs/kit/pull/3133))
-
+- Update adapters to provide app.render with a url ([#3133](https://github.com/sveltejs/kit/pull/3133))
 - Add experimental function splitting ([#2931](https://github.com/sveltejs/kit/pull/2931))
-
-* Don't bundle final output ([#2931](https://github.com/sveltejs/kit/pull/2931))
+- Don't bundle final output ([#2931](https://github.com/sveltejs/kit/pull/2931))
 
 ## 1.0.0-next.36
 
@@ -337,13 +333,13 @@ Starting from now all releases follow semver and changes will be listed as Major
 
 ### Patch Changes
 
-- [fix] adapter-netlify: handle undefined body ([#2682](https://github.com/sveltejs/kit/pull/2682))
+- fix: adapter-netlify: handle undefined body ([#2682](https://github.com/sveltejs/kit/pull/2682))
 
 ## 1.0.0-next.34
 
 ### Patch Changes
 
-- [fix] encode UInt8Array response bodies as base64 ([#2630](https://github.com/sveltejs/kit/pull/2630))
+- fix: encode UInt8Array response bodies as base64 ([#2630](https://github.com/sveltejs/kit/pull/2630))
 
 ## 1.0.0-next.33
 
@@ -361,13 +357,13 @@ Starting from now all releases follow semver and changes will be listed as Major
 
 ### Patch Changes
 
-- [chore] add links to repository and homepage to package.json ([#2425](https://github.com/sveltejs/kit/pull/2425))
+- chore: add links to repository and homepage to package.json ([#2425](https://github.com/sveltejs/kit/pull/2425))
 
 ## 1.0.0-next.30
 
 ### Patch Changes
 
-- [chore] export package.json from adapters ([#2351](https://github.com/sveltejs/kit/pull/2351))
+- chore: export package.json from adapters ([#2351](https://github.com/sveltejs/kit/pull/2351))
 
 ## 1.0.0-next.29
 
