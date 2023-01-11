@@ -306,11 +306,6 @@ export async function dev(vite, vite_config, svelte_config) {
 		}
 	});
 
-	set_paths({
-		base: svelte_config.kit.paths.base,
-		assets
-	});
-
 	set_version(svelte_config.kit.version.name);
 
 	// This shameful hack allows us to load runtime server code via Vite
@@ -405,9 +400,18 @@ export async function dev(vite, vite_config, svelte_config) {
 					return;
 				}
 
+				const { set_paths } = /** @type {import('types').ServerInternalModule} */ (
+					await vite.ssrLoadModule(`${runtime_prefix}/paths.js`)
+				);
+
 				const { Server } = /** @type {import('types').ServerModule} */ (
 					await vite.ssrLoadModule(`${runtime_prefix}/server/index.js`)
 				);
+
+				set_paths({
+					base: svelte_config.kit.paths.base,
+					assets
+				});
 
 				const server = new Server(manifest);
 
