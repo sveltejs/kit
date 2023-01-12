@@ -64,15 +64,50 @@ const enforced_config = {
 	root: true
 };
 
+const options_regex = /(export\s+const\s+(prerender|csr|ssr|trailingSlash)\s*=)/s;
+/** @type {import('@sveltejs/vite-plugin-svelte').PreprocessorGroup} */
+const warning_preprocessor = {
+	script: ({ content, filename }) => {
+		if (!filename) {
+			return;
+		}
+		const basename = path.basename(filename);
+		if (basename.startsWith('+page.') || basename.startsWith('+layout.')) {
+			const match = content.match(options_regex);
+			if (match) {
+				console.log(
+					colors.yellow(
+						`You have defined ${colors.bold(match[1] + ' ..')} in ${colors.bold(
+							filename
+						)}, but it will be ignored. Put inside a ${colors.bold(
+							basename.replace('.svelte', '(.server).js/ts')
+						)} file instead. See https://kit.svelte.dev/docs/page-options for more information.`
+					)
+				);
+			}
+		}
+	}
+};
+
 /** @return {Promise<import('vite').Plugin[]>} */
 export async function sveltekit() {
 	const svelte_config = await load_config();
+
+	/** @type {import('@sveltejs/vite-plugin-svelte').Options['preprocess']} */
+	let preprocess = svelte_config.preprocess;
+	if (Array.isArray(preprocess)) {
+		preprocess = [...preprocess, warning_preprocessor];
+	} else if (preprocess) {
+		preprocess = [preprocess, warning_preprocessor];
+	} else {
+		preprocess = warning_preprocessor;
+	}
 
 	/** @type {import('@sveltejs/vite-plugin-svelte').Options} */
 	const vite_plugin_svelte_options = {
 		configFile: false,
 		extensions: svelte_config.extensions,
-		preprocess: svelte_config.preprocess,
+		preprocess,
 		onwarn: svelte_config.onwarn,
 		compilerOptions: {
 			// @ts-expect-error SvelteKit requires hydratable true by default
