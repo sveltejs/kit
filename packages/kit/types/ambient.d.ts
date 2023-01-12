@@ -355,6 +355,13 @@ declare module '$service-worker' {
 	 * See [`config.kit.version`](https://kit.svelte.dev/docs/configuration#version). It's useful for generating unique cache names inside your service worker, so that a later deployment of your app can invalidate old caches.
 	 */
 	export const version: string;
+	/**
+	 * See [`config.kit.paths`](https://kit.svelte.dev/docs/configuration#paths). It's useful if you need access to the base or assets path inside your service worker. 
+	 */
+	export const paths: {
+		assets: string;
+		base: string;
+	} 
 }
 
 declare module '@sveltejs/kit/hooks' {
