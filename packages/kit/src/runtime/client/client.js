@@ -1459,15 +1459,11 @@ export function create_client({ target, base }) {
 					event.submitter
 				);
 
-				const method =
-					submitter?.formMethod ||
-					/** @type {HTMLFormElement} */ (HTMLFormElement.prototype.cloneNode.call(form)).method;
-
+				const method = submitter?.formMethod || form.method;
 				if (method !== 'get') return;
 
 				const url = new URL(
-					(submitter?.hasAttribute('formaction') && submitter?.formAction) ||
-						/** @type {HTMLFormElement} */ (HTMLFormElement.prototype.cloneNode.call(form)).action
+					(submitter?.hasAttribute('formaction') && submitter?.formAction) || form.action
 				);
 
 				if (is_external_url(url, base)) return;
