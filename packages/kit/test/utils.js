@@ -117,6 +117,12 @@ export const test = base.extend({
 		 * @type {http.Server}
 		 */
 		let server;
+
+		/**
+		 * @type {Set<import('net').Socket>}
+		 */
+		let sockets;
+
 		/**
 		 * @param {(req: http.IncomingMessage, res: http.ServerResponse) => void} handler
 		 */
@@ -136,6 +142,13 @@ export const test = base.extend({
 			if (!port) {
 				throw new Error(`Could not find port from server ${JSON.stringify(server.address())}`);
 			}
+			sockets = new Set();
+			server.on('connection', (socket) => {
+				sockets.add(socket);
+				socket.on('close', () => {
+					sockets.delete(socket);
+				});
+			});
 			return {
 				port
 			};
@@ -144,6 +157,15 @@ export const test = base.extend({
 
 		// @ts-expect-error use before set
 		if (server) {
+			// @ts-expect-error use before set
+			if (sockets) {
+				sockets.forEach((socket) => {
+					if (!socket.destroyed) {
+						socket.destroy();
+					}
+				});
+			}
+
 			await new Promise((fulfil, reject) => {
 				server.close((err) => {
 					if (err) {
@@ -161,12 +183,17 @@ export const test = base.extend({
 	// setup context
 	// teardown context
 	// teardown start_server
-	context: function ({ context, start_server }, use) {
+	context: async function ({ context, start_server }, use) {
 		// just here make sure start_server is referenced, don't call
 		if (!start_server) {
 			throw new Error('start_server fixture not present');
 		}
-		use(context);
+		await use(context);
+		try {
+			await context.close();
+		} catch (e) {
+			console.error('failed to close context fixture', e);
+		}
 	}
 });
 
