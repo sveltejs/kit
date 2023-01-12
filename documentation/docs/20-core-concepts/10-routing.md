@@ -252,7 +252,7 @@ For example we could create an `/api/random-number` route with a `GET` handler:
 /// file: src/routes/api/random-number/+server.js
 import { error } from '@sveltejs/kit';
 
-/** @type {import('./$types').RequestHandler} */
+/** @type {import('./$types').RequestEvent} */
 export function GET({ url }) {
 	const min = Number(url.searchParams.get('min') ?? '0');
 	const max = Number(url.searchParams.get('max') ?? '1');
@@ -310,7 +310,7 @@ By exporting `POST`/`PUT`/`PATCH`/`DELETE` handlers, `+server.js` files can be u
 /// file: src/routes/api/add/+server.js
 import { json } from '@sveltejs/kit';
 
-/** @type {import('./$types').RequestHandler} */
+/** @type {import('./$types').RequestEvent} */
 export async function POST({ request }) {
 	const { a, b } = await request.json();
 	return json(a + b);
