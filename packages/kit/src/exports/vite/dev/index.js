@@ -359,6 +359,20 @@ export async function dev(vite, vite_config, svelte_config) {
 
 	const env = loadEnv(vite_config.mode, svelte_config.kit.env.dir, '');
 
+	const { set_paths, set_version, set_fix_stack_trace } =
+		/** @type {import('types').ServerInternalModule} */ (
+			await vite.ssrLoadModule(`${runtime_base}/shared.js`)
+		);
+
+	set_paths({
+		base: svelte_config.kit.paths.base,
+		assets
+	});
+
+	set_version(svelte_config.kit.version.name);
+
+	set_fix_stack_trace(fix_stack_trace);
+
 	return () => {
 		const serve_static_middleware = vite.middlewares.stack.find(
 			(middleware) =>
@@ -408,23 +422,9 @@ export async function dev(vite, vite_config, svelte_config) {
 					return;
 				}
 
-				const { set_paths, set_version, set_fix_stack_trace } =
-					/** @type {import('types').ServerInternalModule} */ (
-						await vite.ssrLoadModule(`${runtime_base}/shared.js`)
-					);
-
 				const { Server } = /** @type {import('types').ServerModule} */ (
 					await vite.ssrLoadModule(`${runtime_base}/server/index.js`)
 				);
-
-				set_paths({
-					base: svelte_config.kit.paths.base,
-					assets
-				});
-
-				set_version(svelte_config.kit.version.name);
-
-				set_fix_stack_trace(fix_stack_trace);
 
 				const server = new Server(manifest);
 

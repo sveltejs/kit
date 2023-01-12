@@ -99,10 +99,7 @@ export async function sveltekit() {
  * @return {import('vite').Plugin[]}
  */
 function kit({ svelte_config }) {
-	const paths = {
-		output_dir: `${svelte_config.kit.outDir}/output`,
-		client_out_dir: `${svelte_config.kit.outDir}/output/client`
-	};
+	const out = `${svelte_config.kit.outDir}/output`;
 
 	/** @type {import('vite').ResolvedConfig} */
 	let vite_config;
@@ -143,13 +140,12 @@ function kit({ svelte_config }) {
 		 */
 		async config(config, config_env) {
 			vite_config_env = config_env;
+			is_build = config_env.command === 'build';
 
 			env = get_env(svelte_config.kit.env, vite_config_env.mode);
 
 			// The config is created in build_server for SSR mode and passed inline
-			if (config.build?.ssr) return;
-
-			if (config_env.command === 'build') return;
+			if (config.build?.ssr || is_build) return;
 
 			const allow = new Set([
 				svelte_config.kit.files.lib,
@@ -162,9 +158,7 @@ function kit({ svelte_config }) {
 			// We can only add directories to the allow list, so we find out
 			// if there's a client hooks file and pass its directory
 			const client_hooks = resolve_entry(svelte_config.kit.files.hooks.client);
-			if (client_hooks) {
-				allow.add(path.dirname(client_hooks));
-			}
+			if (client_hooks) allow.add(path.dirname(client_hooks));
 
 			// dev and preview config can be shared
 			/** @type {import('vite').UserConfig} */
@@ -222,24 +216,6 @@ function kit({ svelte_config }) {
 			// This is a hack to prevent Vite from nuking useful logs,
 			// pending https://github.com/vitejs/vite/issues/9378
 			config.logger.warn('');
-		},
-
-		/**
-		 * @see https://vitejs.dev/guide/api-plugin.html#configureserver
-		 */
-		async configureServer(vite) {
-			const { set_paths, set_version } = await vite.ssrLoadModule(`${runtime_base}/shared.js`);
-
-			// set `import { base, assets } from '$app/paths'`
-			const { base, assets } = svelte_config.kit.paths;
-
-			set_paths({
-				base,
-				assets: assets ? SVELTE_KIT_ASSETS : base
-			});
-
-			// set `import { version } from '$app/environment'`
-			set_version(svelte_config.kit.version.name);
 		}
 	};
 
@@ -334,13 +310,14 @@ function kit({ svelte_config }) {
 				}
 			});
 
+			// TODO tidy this up
 			const new_config = vite.mergeConfig(
 				get_build_setup_config({ config: svelte_config, ssr: false }),
 				get_build_compile_config({
 					config: svelte_config,
 					input,
 					ssr: false,
-					outDir: `${paths.client_out_dir}`
+					outDir: `${out}/client`
 				})
 			);
 
@@ -361,9 +338,9 @@ function kit({ svelte_config }) {
 
 			if (is_build) {
 				if (!vite_config.build.watch) {
-					rimraf(paths.output_dir);
+					rimraf(out);
 				}
-				mkdirp(paths.output_dir);
+				mkdirp(out);
 			}
 		},
 
@@ -417,12 +394,12 @@ function kit({ svelte_config }) {
 					vite_config,
 					vite_config_env,
 					manifest_data,
-					output_dir: paths.output_dir
+					output_dir: out
 				};
 
 				/** @type {import('vite').Manifest} */
 				const vite_manifest = JSON.parse(
-					fs.readFileSync(`${paths.client_out_dir}/${vite_config.build.manifest}`, 'utf-8')
+					fs.readFileSync(`${out}/client/${vite_config.build.manifest}`, 'utf-8')
 				);
 
 				const client = {
@@ -452,7 +429,7 @@ function kit({ svelte_config }) {
 					server
 				};
 
-				const manifest_path = `${paths.output_dir}/server/manifest-full.js`;
+				const manifest_path = `${out}/server/manifest-full.js`;
 				fs.writeFileSync(
 					manifest_path,
 					`export const manifest = ${generate_manifest({
@@ -504,7 +481,7 @@ function kit({ svelte_config }) {
 
 				// generate a new manifest that doesn't include prerendered pages
 				fs.writeFileSync(
-					`${paths.output_dir}/server/manifest.js`,
+					`${out}/server/manifest.js`,
 					`export const manifest = ${generate_manifest({
 						build_data,
 						relative_path: '.',
@@ -561,27 +538,25 @@ function kit({ svelte_config }) {
 				}
 
 				// avoid making the manifest available to users
-				fs.unlinkSync(`${paths.output_dir}/client/${vite_config.build.manifest}`);
-				fs.unlinkSync(`${paths.output_dir}/server/${vite_config.build.manifest}`);
+				fs.unlinkSync(`${out}/client/${vite_config.build.manifest}`);
+				fs.unlinkSync(`${out}/server/${vite_config.build.manifest}`);
 			}
 		}
 	};
 
 	/** @type {import('vite').Plugin} */
 	const plugin_compile = {
+		// TODO this should really be called `vite-plugin-sveltekit-serve`
+		// or something — 'compile' is just wrong — but that would
+		// need to happen in coordination with storybook
 		name: 'vite-plugin-sveltekit-compile',
 
 		/**
 		 * Build the SvelteKit-provided Vite config to be merged with the user's vite.config.js file.
 		 * @see https://vitejs.dev/guide/api-plugin.html#config
 		 */
-		async config(config, config_env) {
-			// The config is created in build_server for SSR mode and passed inline
-			if (config.build?.ssr) return;
-
-			if (config_env.command === 'build') {
-				return;
-			}
+		async config(config) {
+			if (config.build?.ssr || is_build) return;
 
 			// dev and preview config can be shared
 			/** @type {import('vite').UserConfig} */
