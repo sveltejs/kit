@@ -86,6 +86,21 @@ const warning_preprocessor = {
 				);
 			}
 		}
+	},
+	markup: ({ content, filename }) => {
+		if (!filename) {
+			return;
+		}
+		const basename = path.basename(filename);
+		if (basename.startsWith('+layout.') && !content.includes('<slot')) {
+			console.log(
+				colors.yellow(
+					`${colors.bold('<slot />')} element is missing in ${colors.bold(
+						filename
+					)}, inner content will not be rendered.`
+				)
+			);
+		}
 	}
 };
 
