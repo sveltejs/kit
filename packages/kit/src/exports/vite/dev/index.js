@@ -12,7 +12,7 @@ import { should_polyfill } from '../../../utils/platform.js';
 import { load_error_page } from '../../../core/config/index.js';
 import { SVELTE_KIT_ASSETS } from '../../../constants.js';
 import * as sync from '../../../core/sync/sync.js';
-import { get_mime_lookup, runtime_base, runtime_prefix } from '../../../core/utils.js';
+import { get_mime_lookup, runtime_base } from '../../../core/utils.js';
 import { compact } from '../../../utils/array.js';
 import { not_found } from '../utils.js';
 
@@ -319,7 +319,7 @@ export async function dev(vite, vite_config, svelte_config) {
 	// This shameful hack allows us to load runtime server code via Vite
 	// while apps load `HttpError` and `Redirect` in Node, without
 	// causing `instanceof` checks to fail
-	const control_module_node = await import(`${runtime_prefix}/control.js`);
+	const control_module_node = await import(`../../../runtime/control.js`);
 	const control_module_vite = await vite.ssrLoadModule(`${runtime_base}/control.js`);
 
 	control_module_node.replace_implementations({
