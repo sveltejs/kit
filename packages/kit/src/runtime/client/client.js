@@ -76,6 +76,8 @@ export function create_client({ target, base }) {
 
 	/** @type {{id: string, promise: Promise<import('./types').NavigationResult>} | null} */
 	let load_cache = null;
+	/** @type {Set<string>} ids of preload_data calls that failed and should not be retried */
+	let failed_preloads = new Set();
 
 	const callbacks = {
 		/** @type {Array<(navigation: import('types').BeforeNavigate) => void>} */
@@ -199,12 +201,19 @@ export function create_client({ target, base }) {
 		});
 	}
 
-	/** @param {URL} url */
-	async function preload_data(url) {
+	/**
+	 * @param {URL} url
+	 * @param {boolean} force
+	 */
+	async function preload_data(url, force) {
 		const intent = get_navigation_intent(url, false);
 
 		if (!intent) {
 			throw new Error(`Attempted to preload a URL that does not belong to this app: ${url}`);
+		}
+
+		if (failed_preloads.has(intent.id) && !force) {
+			return;
 		}
 
 		load_cache = {
@@ -213,6 +222,9 @@ export function create_client({ target, base }) {
 				if (result.type === 'loaded' && result.state.error) {
 					// Don't cache errors, because they might be transient
 					load_cache = null;
+					failed_preloads.add(intent.id);
+				} else {
+					failed_preloads.delete(intent.id);
 				}
 				return result;
 			})
@@ -243,9 +255,14 @@ export function create_client({ target, base }) {
 	 */
 	async function update(intent, url, redirect_chain, opts, nav_token = {}, callback) {
 		token = nav_token;
-		let navigation_result = intent && (await load_route(intent));
 
-		if (!navigation_result) {
+		/** @type {import('./types').NavigationResult} */
+		let navigation_result;
+
+		if (intent) {
+			navigation_result = await load_route(intent);
+			failed_preloads.delete(intent.id);
+		} else {
 			navigation_result = await server_fallback(
 				url,
 				{ id: null },
@@ -1181,7 +1198,7 @@ export function create_client({ target, base }) {
 
 			if (!options.reload) {
 				if (priority <= options.preload_data) {
-					preload_data(/** @type {URL} */ (url));
+					preload_data(/** @type {URL} */ (url), false);
 				} else if (priority <= options.preload_code) {
 					preload_code(/** @type {URL} */ (url).pathname);
 				}
@@ -1267,7 +1284,7 @@ export function create_client({ target, base }) {
 
 		preload_data: async (href) => {
 			const url = new URL(href, get_base_uri(document));
-			await preload_data(url);
+			await preload_data(url, true);
 		},
 
 		preload_code,
