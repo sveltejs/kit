@@ -149,18 +149,7 @@ function kit({ svelte_config }) {
 			// The config is created in build_server for SSR mode and passed inline
 			if (config.build?.ssr) return;
 
-			is_build = config_env.command === 'build';
-
-			if (is_build) {
-				manifest_data = (await sync.all(svelte_config, config_env.mode)).manifest_data;
-
-				const new_config = get_build_setup_config({ config: svelte_config, ssr: false });
-
-				const warning = warn_overridden_config(config, new_config);
-				if (warning) console.error(warning + '\n');
-
-				return new_config;
-			}
+			if (config_env.command === 'build') return;
 
 			const allow = new Set([
 				svelte_config.kit.files.lib,
@@ -236,33 +225,6 @@ function kit({ svelte_config }) {
 		},
 
 		/**
-		 * Clears the output directories.
-		 */
-		buildStart() {
-			if (vite_config.build.ssr) return;
-
-			// Reset for new build. Goes here because `build --watch` calls buildStart but not config
-			completed_build = false;
-
-			if (is_build) {
-				if (!vite_config.build.watch) {
-					rimraf(paths.output_dir);
-				}
-				mkdirp(paths.output_dir);
-			}
-		},
-
-		generateBundle() {
-			if (vite_config.build.ssr) return;
-
-			this.emitFile({
-				type: 'asset',
-				fileName: `${svelte_config.kit.appDir}/version.json`,
-				source: JSON.stringify({ version: svelte_config.kit.version.name })
-			});
-		},
-
-		/**
 		 * @see https://vitejs.dev/guide/api-plugin.html#configureserver
 		 */
 		async configureServer(vite) {
@@ -328,99 +290,91 @@ function kit({ svelte_config }) {
 	};
 
 	/** @type {import('vite').Plugin} */
-	const plugin_compile = {
-		name: 'vite-plugin-sveltekit-compile',
+	const plugin_build = {
+		name: 'vite-plugin-sveltekit-build',
 
-		/**
-		 * Build the SvelteKit-provided Vite config to be merged with the user's vite.config.js file.
-		 * @see https://vitejs.dev/guide/api-plugin.html#config
-		 */
 		async config(config, config_env) {
 			// The config is created in build_server for SSR mode and passed inline
 			if (config.build?.ssr) return;
 
-			if (config_env.command === 'build') {
-				/** @type {Record<string, string>} */
-				const input = {
-					// Put unchanging assets in immutable directory. We don't set that in the
-					// outDir so that other plugins can add mutable assets to the bundle
-					start: `${runtime_directory}/client/start.js`
-				};
+			if (config_env.command !== 'build') return;
 
-				manifest_data.nodes.forEach((node) => {
-					if (node.component) {
-						const resolved = path.resolve(node.component);
-						const relative = decodeURIComponent(
-							path.relative(svelte_config.kit.files.routes, resolved)
-						);
+			manifest_data = (await sync.all(svelte_config, config_env.mode)).manifest_data;
 
-						const name = relative.startsWith('..')
-							? path.basename(node.component)
-							: posixify(path.join('pages', relative));
-						input[`components/${name}`] = resolved;
-					}
+			/** @type {Record<string, string>} */
+			const input = {
+				// Put unchanging assets in immutable directory. We don't set that in the
+				// outDir so that other plugins can add mutable assets to the bundle
+				start: `${runtime_directory}/client/start.js`
+			};
 
-					if (node.universal) {
-						const resolved = path.resolve(node.universal);
-						const relative = decodeURIComponent(
-							path.relative(svelte_config.kit.files.routes, resolved)
-						);
+			manifest_data.nodes.forEach((node) => {
+				if (node.component) {
+					const resolved = path.resolve(node.component);
+					const relative = decodeURIComponent(
+						path.relative(svelte_config.kit.files.routes, resolved)
+					);
 
-						const name = relative.startsWith('..')
-							? path.basename(node.universal)
-							: posixify(path.join('pages', relative));
-						input[`modules/${name}`] = resolved;
-					}
-				});
+					const name = relative.startsWith('..')
+						? path.basename(node.component)
+						: posixify(path.join('pages', relative));
+					input[`components/${name}`] = resolved;
+				}
 
-				const new_config = get_build_compile_config({
+				if (node.universal) {
+					const resolved = path.resolve(node.universal);
+					const relative = decodeURIComponent(
+						path.relative(svelte_config.kit.files.routes, resolved)
+					);
+
+					const name = relative.startsWith('..')
+						? path.basename(node.universal)
+						: posixify(path.join('pages', relative));
+					input[`modules/${name}`] = resolved;
+				}
+			});
+
+			const new_config = vite.mergeConfig(
+				get_build_setup_config({ config: svelte_config, ssr: false }),
+				get_build_compile_config({
 					config: svelte_config,
 					input,
 					ssr: false,
 					outDir: `${paths.client_out_dir}`
-				});
+				})
+			);
 
-				const warning = warn_overridden_config(config, new_config);
-				if (warning) console.error(warning + '\n');
+			const warning = warn_overridden_config(config, new_config);
+			if (warning) console.error(warning + '\n');
 
-				return new_config;
+			return new_config;
+		},
+
+		/**
+		 * Clears the output directories.
+		 */
+		buildStart() {
+			if (vite_config.build.ssr) return;
+
+			// Reset for new build. Goes here because `build --watch` calls buildStart but not config
+			completed_build = false;
+
+			if (is_build) {
+				if (!vite_config.build.watch) {
+					rimraf(paths.output_dir);
+				}
+				mkdirp(paths.output_dir);
 			}
-
-			// dev and preview config can be shared
-			/** @type {import('vite').UserConfig} */
-			const result = {
-				appType: 'custom',
-				base: svelte_config.kit.paths.base,
-				build: {
-					rollupOptions: {
-						// Vite dependency crawler needs an explicit JS entry point
-						// eventhough server otherwise works without it
-						input: `${runtime_directory}/client/start.js`
-					}
-				},
-				publicDir: svelte_config.kit.files.assets
-			};
-
-			const warning = warn_overridden_config(config, result);
-			if (warning) console.error(warning);
-
-			return result;
 		},
 
-		/**
-		 * Adds the SvelteKit middleware to do SSR in dev mode.
-		 * @see https://vitejs.dev/guide/api-plugin.html#configureserver
-		 */
-		async configureServer(vite) {
-			return await dev(vite, vite_config, svelte_config);
-		},
+		generateBundle() {
+			if (vite_config.build.ssr) return;
 
-		/**
-		 * Adds the SvelteKit middleware to do SSR in preview mode.
-		 * @see https://vitejs.dev/guide/api-plugin.html#configurepreviewserver
-		 */
-		configurePreviewServer(vite) {
-			return preview(vite, vite_config, svelte_config);
+			this.emitFile({
+				type: 'asset',
+				fileName: `${svelte_config.kit.appDir}/version.json`,
+				source: JSON.stringify({ version: svelte_config.kit.version.name })
+			});
 		},
 
 		/**
@@ -613,7 +567,61 @@ function kit({ svelte_config }) {
 		}
 	};
 
-	return [plugin_setup, plugin_virtual_modules, plugin_compile];
+	/** @type {import('vite').Plugin} */
+	const plugin_compile = {
+		name: 'vite-plugin-sveltekit-compile',
+
+		/**
+		 * Build the SvelteKit-provided Vite config to be merged with the user's vite.config.js file.
+		 * @see https://vitejs.dev/guide/api-plugin.html#config
+		 */
+		async config(config, config_env) {
+			// The config is created in build_server for SSR mode and passed inline
+			if (config.build?.ssr) return;
+
+			if (config_env.command === 'build') {
+				return;
+			}
+
+			// dev and preview config can be shared
+			/** @type {import('vite').UserConfig} */
+			const result = {
+				appType: 'custom',
+				base: svelte_config.kit.paths.base,
+				build: {
+					rollupOptions: {
+						// Vite dependency crawler needs an explicit JS entry point
+						// eventhough server otherwise works without it
+						input: `${runtime_directory}/client/start.js`
+					}
+				},
+				publicDir: svelte_config.kit.files.assets
+			};
+
+			const warning = warn_overridden_config(config, result);
+			if (warning) console.error(warning);
+
+			return result;
+		},
+
+		/**
+		 * Adds the SvelteKit middleware to do SSR in dev mode.
+		 * @see https://vitejs.dev/guide/api-plugin.html#configureserver
+		 */
+		async configureServer(vite) {
+			return await dev(vite, vite_config, svelte_config);
+		},
+
+		/**
+		 * Adds the SvelteKit middleware to do SSR in preview mode.
+		 * @see https://vitejs.dev/guide/api-plugin.html#configurepreviewserver
+		 */
+		configurePreviewServer(vite) {
+			return preview(vite, vite_config, svelte_config);
+		}
+	};
+
+	return [plugin_setup, plugin_virtual_modules, plugin_build, plugin_compile];
 }
 
 /** @param {import('rollup').OutputBundle} bundle */
