@@ -12,7 +12,7 @@ import { SVELTE_KIT_ASSETS } from '../../constants.js';
 import { create_static_module, create_dynamic_module } from '../../core/env.js';
 import * as sync from '../../core/sync/sync.js';
 import { create_assets } from '../../core/sync/create_manifest_data/index.js';
-import { runtime_base, runtime_directory, runtime_prefix, logger } from '../../core/utils.js';
+import { runtime_base, runtime_directory, logger } from '../../core/utils.js';
 import { load_config } from '../../core/config/index.js';
 import { generate_manifest } from '../../core/generate_manifest/index.js';
 import { build_server } from './build/build_server.js';
@@ -377,18 +377,18 @@ function kit({ svelte_config }) {
 		 * @see https://vitejs.dev/guide/api-plugin.html#configureserver
 		 */
 		async configureServer(vite) {
-			// set `import { version } from '$app/environment'`
-			(await vite.ssrLoadModule(`/@fs${runtime_prefix}/shared.js`)).set_version(
-				svelte_config.kit.version.name
-			);
+			const { set_paths, set_version } = await vite.ssrLoadModule(`${runtime_base}/shared.js`);
 
 			// set `import { base, assets } from '$app/paths'`
 			const { base, assets } = svelte_config.kit.paths;
 
-			(await vite.ssrLoadModule(`${runtime_base}/shared.js`)).set_paths({
+			set_paths({
 				base,
 				assets: assets ? SVELTE_KIT_ASSETS : base
 			});
+
+			// set `import { version } from '$app/environment'`
+			set_version(svelte_config.kit.version.name);
 		}
 	};
 

@@ -12,7 +12,7 @@ import { should_polyfill } from '../../../utils/platform.js';
 import { load_error_page } from '../../../core/config/index.js';
 import { SVELTE_KIT_ASSETS } from '../../../constants.js';
 import * as sync from '../../../core/sync/sync.js';
-import { get_mime_lookup, runtime_prefix } from '../../../core/utils.js';
+import { get_mime_lookup, runtime_base, runtime_prefix } from '../../../core/utils.js';
 import { compact } from '../../../utils/array.js';
 import { not_found } from '../utils.js';
 
@@ -93,7 +93,7 @@ export async function dev(vite, vite_config, svelte_config) {
 			mimeTypes: get_mime_lookup(manifest_data),
 			_: {
 				entry: {
-					file: `/@fs${runtime_prefix}/client/start.js`,
+					file: `${runtime_base}/client/start.js`,
 					imports: [],
 					stylesheets: [],
 					fonts: []
@@ -320,7 +320,7 @@ export async function dev(vite, vite_config, svelte_config) {
 	// while apps load `HttpError` and `Redirect` in Node, without
 	// causing `instanceof` checks to fail
 	const control_module_node = await import(`${runtime_prefix}/control.js`);
-	const control_module_vite = await vite.ssrLoadModule(`/@fs${runtime_prefix}/control.js`);
+	const control_module_vite = await vite.ssrLoadModule(`${runtime_base}/control.js`);
 
 	control_module_node.replace_implementations({
 		ActionFailure: control_module_vite.ActionFailure,
@@ -410,11 +410,11 @@ export async function dev(vite, vite_config, svelte_config) {
 
 				const { set_paths, set_version, set_fix_stack_trace } =
 					/** @type {import('types').ServerInternalModule} */ (
-						await vite.ssrLoadModule(`/@fs${runtime_prefix}/shared.js`)
+						await vite.ssrLoadModule(`${runtime_base}/shared.js`)
 					);
 
 				const { Server } = /** @type {import('types').ServerModule} */ (
-					await vite.ssrLoadModule(`/@fs${runtime_prefix}/server/index.js`)
+					await vite.ssrLoadModule(`${runtime_base}/server/index.js`)
 				);
 
 				set_paths({
