@@ -294,47 +294,6 @@ function kit({ svelte_config }) {
 			return result;
 		},
 
-		async resolveId(id) {
-			// treat $env/static/[public|private] as virtual
-			if (id.startsWith('$env/') || id === '$service-worker') return `\0${id}`;
-		},
-
-		async load(id, options) {
-			if (options?.ssr === false && process.env.TEST !== 'true') {
-				const normalized_cwd = vite.normalizePath(cwd);
-				const normalized_lib = vite.normalizePath(svelte_config.kit.files.lib);
-				if (
-					is_illegal(id, {
-						cwd: normalized_cwd,
-						node_modules: vite.normalizePath(path.resolve('node_modules')),
-						server: vite.normalizePath(path.join(normalized_lib, 'server'))
-					})
-				) {
-					const relative = normalize_id(id, normalized_lib, normalized_cwd);
-					throw new Error(`Cannot import ${relative} into client-side code`);
-				}
-			}
-
-			switch (id) {
-				case '\0$env/static/private':
-					return create_static_module('$env/static/private', env.private);
-				case '\0$env/static/public':
-					return create_static_module('$env/static/public', env.public);
-				case '\0$env/dynamic/private':
-					return create_dynamic_module(
-						'private',
-						vite_config_env.command === 'serve' ? env.private : undefined
-					);
-				case '\0$env/dynamic/public':
-					return create_dynamic_module(
-						'public',
-						vite_config_env.command === 'serve' ? env.public : undefined
-					);
-				case '\0$service-worker':
-					return create_service_worker_module(svelte_config);
-			}
-		},
-
 		/**
 		 * Stores the final config.
 		 */
@@ -389,6 +348,52 @@ function kit({ svelte_config }) {
 
 			// set `import { version } from '$app/environment'`
 			set_version(svelte_config.kit.version.name);
+		}
+	};
+
+	/** @type {import('vite').Plugin} */
+	const plugin_virtual_modules = {
+		name: 'vite-plugin-sveltekit-virtual-modules',
+
+		async resolveId(id) {
+			// treat $env/static/[public|private] as virtual
+			if (id.startsWith('$env/') || id === '$service-worker') return `\0${id}`;
+		},
+
+		async load(id, options) {
+			if (options?.ssr === false && process.env.TEST !== 'true') {
+				const normalized_cwd = vite.normalizePath(cwd);
+				const normalized_lib = vite.normalizePath(svelte_config.kit.files.lib);
+				if (
+					is_illegal(id, {
+						cwd: normalized_cwd,
+						node_modules: vite.normalizePath(path.resolve('node_modules')),
+						server: vite.normalizePath(path.join(normalized_lib, 'server'))
+					})
+				) {
+					const relative = normalize_id(id, normalized_lib, normalized_cwd);
+					throw new Error(`Cannot import ${relative} into client-side code`);
+				}
+			}
+
+			switch (id) {
+				case '\0$env/static/private':
+					return create_static_module('$env/static/private', env.private);
+				case '\0$env/static/public':
+					return create_static_module('$env/static/public', env.public);
+				case '\0$env/dynamic/private':
+					return create_dynamic_module(
+						'private',
+						vite_config_env.command === 'serve' ? env.private : undefined
+					);
+				case '\0$env/dynamic/public':
+					return create_dynamic_module(
+						'public',
+						vite_config_env.command === 'serve' ? env.public : undefined
+					);
+				case '\0$service-worker':
+					return create_service_worker_module(svelte_config);
+			}
 		}
 	};
 
@@ -624,7 +629,7 @@ function kit({ svelte_config }) {
 		}
 	};
 
-	return [plugin_setup, plugin_compile];
+	return [plugin_setup, plugin_virtual_modules, plugin_compile];
 }
 
 /** @param {import('rollup').OutputBundle} bundle */
