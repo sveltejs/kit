@@ -1,6 +1,6 @@
 import fs from 'node:fs';
 import path from 'node:path';
-import { resolve_entry } from '../../utils/filesystem.js';
+import { posixify, resolve_entry } from '../../utils/filesystem.js';
 import { s } from '../../utils/misc.js';
 import { load_error_page, load_template } from '../config/index.js';
 import { runtime_directory } from '../utils.js';
@@ -71,7 +71,7 @@ export function write_server(config, output) {
 
 	/** @param {string} file */
 	function relative(file) {
-		return path.relative(output, file);
+		return posixify(path.relative(output, file));
 	}
 
 	fs.writeFileSync(
