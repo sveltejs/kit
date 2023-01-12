@@ -145,7 +145,7 @@ function kit({ svelte_config }) {
 			env = get_env(svelte_config.kit.env, vite_config_env.mode);
 
 			// The config is created in build_server for SSR mode and passed inline
-			if (config.build?.ssr || is_build) return;
+			if (is_build) return;
 
 			const allow = new Set([
 				svelte_config.kit.files.lib,
@@ -273,7 +273,7 @@ function kit({ svelte_config }) {
 			// The config is created in build_server for SSR mode and passed inline
 			if (config.build?.ssr) return;
 
-			if (config_env.command !== 'build') return;
+			if (!is_build) return;
 
 			manifest_data = (await sync.all(svelte_config, config_env.mode)).manifest_data;
 
@@ -545,7 +545,7 @@ function kit({ svelte_config }) {
 	};
 
 	/** @type {import('vite').Plugin} */
-	const plugin_compile = {
+	const plugin_serve = {
 		// TODO this should really be called `vite-plugin-sveltekit-serve`
 		// or something — 'compile' is just wrong — but that would
 		// need to happen in coordination with storybook
@@ -556,7 +556,7 @@ function kit({ svelte_config }) {
 		 * @see https://vitejs.dev/guide/api-plugin.html#config
 		 */
 		async config(config) {
-			if (config.build?.ssr || is_build) return;
+			if (is_build) return;
 
 			// dev and preview config can be shared
 			/** @type {import('vite').UserConfig} */
@@ -596,7 +596,7 @@ function kit({ svelte_config }) {
 		}
 	};
 
-	return [plugin_setup, plugin_virtual_modules, plugin_build, plugin_compile];
+	return [plugin_setup, plugin_virtual_modules, plugin_build, plugin_serve];
 }
 
 /** @param {import('rollup').OutputBundle} bundle */
