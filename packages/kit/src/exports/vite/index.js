@@ -99,6 +99,11 @@ export async function sveltekit() {
  * @return {import('vite').Plugin[]}
  */
 function kit({ svelte_config }) {
+	const paths = {
+		output_dir: `${svelte_config.kit.outDir}/output`,
+		client_out_dir: `${svelte_config.kit.outDir}/output/client`
+	};
+
 	/** @type {import('vite').ResolvedConfig} */
 	let vite_config;
 
@@ -126,77 +131,7 @@ function kit({ svelte_config }) {
 	/** @type {{ public: Record<string, string>; private: Record<string, string> }} */
 	let env;
 
-	/**
-	 * @type {{
-	 *   output_dir: string;
-	 *   client_out_dir: string;
-	 * }}
-	 */
-	let paths;
-
 	let completed_build = false;
-
-	function vite_client_build_config() {
-		/** @type {Record<string, string>} */
-		const input = {
-			// Put unchanging assets in immutable directory. We don't set that in the
-			// outDir so that other plugins can add mutable assets to the bundle
-			start: `${runtime_directory}/client/start.js`
-		};
-
-		manifest_data.nodes.forEach((node) => {
-			if (node.component) {
-				const resolved = path.resolve(node.component);
-				const relative = decodeURIComponent(
-					path.relative(svelte_config.kit.files.routes, resolved)
-				);
-
-				const name = relative.startsWith('..')
-					? path.basename(node.component)
-					: posixify(path.join('pages', relative));
-				input[`components/${name}`] = resolved;
-			}
-
-			if (node.universal) {
-				const resolved = path.resolve(node.universal);
-				const relative = decodeURIComponent(
-					path.relative(svelte_config.kit.files.routes, resolved)
-				);
-
-				const name = relative.startsWith('..')
-					? path.basename(node.universal)
-					: posixify(path.join('pages', relative));
-				input[`modules/${name}`] = resolved;
-			}
-		});
-
-		return get_build_compile_config({
-			config: svelte_config,
-			input,
-			ssr: false,
-			outDir: `${paths.client_out_dir}`
-		});
-	}
-
-	/**
-	 * @param {import('rollup').OutputAsset[]} assets
-	 * @param {import('rollup').OutputChunk[]} chunks
-	 */
-	function client_build_info(assets, chunks) {
-		/** @type {import('vite').Manifest} */
-		const vite_manifest = JSON.parse(
-			fs.readFileSync(`${paths.client_out_dir}/${vite_config.build.manifest}`, 'utf-8')
-		);
-
-		const entry_id = posixify(path.relative('.', `${runtime_directory}/client/start.js`));
-
-		return {
-			assets,
-			chunks,
-			entry: find_deps(vite_manifest, entry_id, false),
-			vite_manifest
-		};
-	}
 
 	/** @type {import('vite').Plugin} */
 	const plugin_setup = {
@@ -215,11 +150,6 @@ function kit({ svelte_config }) {
 			if (config.build?.ssr) return;
 
 			is_build = config_env.command === 'build';
-
-			paths = {
-				output_dir: `${svelte_config.kit.outDir}/output`,
-				client_out_dir: `${svelte_config.kit.outDir}/output/client`
-			};
 
 			if (is_build) {
 				manifest_data = (await sync.all(svelte_config, config_env.mode)).manifest_data;
@@ -410,7 +340,45 @@ function kit({ svelte_config }) {
 			if (config.build?.ssr) return;
 
 			if (config_env.command === 'build') {
-				const new_config = vite_client_build_config();
+				/** @type {Record<string, string>} */
+				const input = {
+					// Put unchanging assets in immutable directory. We don't set that in the
+					// outDir so that other plugins can add mutable assets to the bundle
+					start: `${runtime_directory}/client/start.js`
+				};
+
+				manifest_data.nodes.forEach((node) => {
+					if (node.component) {
+						const resolved = path.resolve(node.component);
+						const relative = decodeURIComponent(
+							path.relative(svelte_config.kit.files.routes, resolved)
+						);
+
+						const name = relative.startsWith('..')
+							? path.basename(node.component)
+							: posixify(path.join('pages', relative));
+						input[`components/${name}`] = resolved;
+					}
+
+					if (node.universal) {
+						const resolved = path.resolve(node.universal);
+						const relative = decodeURIComponent(
+							path.relative(svelte_config.kit.files.routes, resolved)
+						);
+
+						const name = relative.startsWith('..')
+							? path.basename(node.universal)
+							: posixify(path.join('pages', relative));
+						input[`modules/${name}`] = resolved;
+					}
+				});
+
+				const new_config = get_build_compile_config({
+					config: svelte_config,
+					input,
+					ssr: false,
+					outDir: `${paths.client_out_dir}`
+				});
 
 				const warning = warn_overridden_config(config, new_config);
 				if (warning) console.error(warning + '\n');
@@ -497,7 +465,23 @@ function kit({ svelte_config }) {
 					manifest_data,
 					output_dir: paths.output_dir
 				};
-				const client = client_build_info(assets, chunks);
+
+				/** @type {import('vite').Manifest} */
+				const vite_manifest = JSON.parse(
+					fs.readFileSync(`${paths.client_out_dir}/${vite_config.build.manifest}`, 'utf-8')
+				);
+
+				const client = {
+					assets,
+					chunks,
+					entry: find_deps(
+						vite_manifest,
+						posixify(path.relative('.', `${runtime_directory}/client/start.js`)),
+						false
+					),
+					vite_manifest
+				};
+
 				const server = await build_server(options, client);
 
 				const service_worker_entry_file = resolve_entry(svelte_config.kit.files.serviceWorker);
