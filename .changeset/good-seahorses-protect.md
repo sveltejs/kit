@@ -1,5 +1,5 @@
 ---
-'@sveltejs/kit': patch
+'@sveltejs/kit': minor
 ---
 
-service workers expose paths object from svelte config
+feat: expose paths to service workers
