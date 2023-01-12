@@ -73,6 +73,15 @@ export async function render_response({
 			: null;
 
 	if (page_config.ssr) {
+		if (!branch.at(-1)?.node.component) {
+			// Can only be the leaf, layouts have a fallback component generated
+			throw new Error(
+				`+page.svelte component for route ${event.route.id} is missing. ` +
+					`It is required because route is rendered in response to ${
+						action_result ? 'a form action' : 'a navigation'
+					}.`
+			);
+		}
 		/** @type {Record<string, any>} */
 		const props = {
 			stores: {
