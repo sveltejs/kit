@@ -703,6 +703,7 @@ export const files = [
 		.map((asset) => `${JSON.stringify(`${config.kit.paths.base}/${asset.file}`)}`)
 		.join(',\n\t\t\t\t')}
 ];
+export const paths = ${JSON.stringify(config.kit.paths)};
 export const prerendered = [];
 export const version = ${JSON.stringify(config.kit.version.name)};
 `;
