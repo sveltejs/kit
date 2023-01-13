@@ -143,7 +143,7 @@ function kit({ svelte_config }) {
 
 			env = get_env(svelte_config.kit.env, vite_config_env.mode);
 
-			// The config is created in build_server for SSR mode and passed inline
+			// Build config is created in the `vite-plugin-sveltekit-build` plugin, below
 			if (is_build) return;
 
 			const allow = new Set([
