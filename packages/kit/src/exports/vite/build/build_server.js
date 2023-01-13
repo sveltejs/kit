@@ -2,9 +2,8 @@ import fs from 'node:fs';
 import path from 'node:path';
 import * as vite from 'vite';
 import { mkdirp, posixify } from '../../../utils/filesystem.js';
-import { find_deps, get_build_config, is_http_method, resolve_symlinks } from './utils.js';
+import { find_deps, is_http_method, resolve_symlinks } from './utils.js';
 import { s } from '../../../utils/misc.js';
-import { runtime_directory } from '../../../core/utils.js';
 
 /**
  * @param {{
@@ -19,43 +18,6 @@ import { runtime_directory } from '../../../core/utils.js';
 export async function build_server(options, client) {
 	const { config, vite_config, vite_config_env, manifest_data, output_dir } = options;
 
-	/** @type {Record<string, string>} */
-	const input = {
-		index: `${runtime_directory}/server/index.js`,
-		internal: `${config.kit.outDir}/generated/server-internal.js`
-	};
-
-	// add entry points for every endpoint...
-	manifest_data.routes.forEach((route) => {
-		if (route.endpoint) {
-			const resolved = path.resolve(route.endpoint.file);
-			const relative = decodeURIComponent(path.relative(config.kit.files.routes, resolved));
-			const name = posixify(path.join('entries/endpoints', relative.replace(/\.js$/, '')));
-			input[name] = resolved;
-		}
-	});
-
-	// ...and every component used by pages...
-	manifest_data.nodes.forEach((node) => {
-		for (const file of [node.component, node.universal, node.server]) {
-			if (file) {
-				const resolved = path.resolve(file);
-				const relative = decodeURIComponent(path.relative(config.kit.files.routes, resolved));
-
-				const name = relative.startsWith('..')
-					? posixify(path.join('entries/fallbacks', path.basename(file)))
-					: posixify(path.join('entries/pages', relative.replace(/\.js$/, '')));
-				input[name] = resolved;
-			}
-		}
-	});
-
-	// ...and every matcher
-	Object.entries(manifest_data.matchers).forEach(([key, file]) => {
-		const name = posixify(path.join('entries/matchers', key));
-		input[name] = path.resolve(file);
-	});
-
 	const { output } = /** @type {import('rollup').RollupOutput} */ (
 		await vite.build({
 			// CLI args
@@ -63,7 +25,9 @@ export async function build_server(options, client) {
 			mode: vite_config_env.mode,
 			logLevel: config.logLevel,
 			clearScreen: config.clearScreen,
-			...get_build_config({ config, input, ssr: true, outDir: `${output_dir}/server` })
+			build: {
+				ssr: true
+			}
 		})
 	);
 

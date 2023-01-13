@@ -16,7 +16,7 @@ import { load_config } from '../../core/config/index.js';
 import { generate_manifest } from '../../core/generate_manifest/index.js';
 import { build_server } from './build/build_server.js';
 import { build_service_worker } from './build/build_service_worker.js';
-import { find_deps, get_build_config } from './build/utils.js';
+import { assets_base, find_deps } from './build/utils.js';
 import { dev } from './dev/index.js';
 import { is_illegal, module_guard, normalize_id } from './graph_analysis/index.js';
 import { preview } from './preview/index.js';
@@ -269,52 +269,140 @@ function kit({ svelte_config }) {
 		name: 'vite-plugin-sveltekit-build',
 
 		async config(config, config_env) {
-			// The config is created in build_server for SSR mode and passed inline
-			if (config.build?.ssr) return;
-
 			if (!is_build) return;
 
 			manifest_data = (await sync.all(svelte_config, config_env.mode)).manifest_data;
 
+			const ssr = config.build?.ssr ?? false;
+			const kit = svelte_config.kit;
+			const prefix = `${kit.appDir}/immutable`;
+
 			/** @type {Record<string, string>} */
-			const input = {
-				// Put unchanging assets in immutable directory. We don't set that in the
-				// outDir so that other plugins can add mutable assets to the bundle
-				start: `${runtime_directory}/client/start.js`
+			const input = {};
+
+			if (ssr) {
+				input.index = `${runtime_directory}/server/index.js`;
+				input.internal = `${kit.outDir}/generated/server-internal.js`;
+
+				// add entry points for every endpoint...
+				manifest_data.routes.forEach((route) => {
+					if (route.endpoint) {
+						const resolved = path.resolve(route.endpoint.file);
+						const relative = decodeURIComponent(path.relative(kit.files.routes, resolved));
+						const name = posixify(path.join('entries/endpoints', relative.replace(/\.js$/, '')));
+						input[name] = resolved;
+					}
+				});
+
+				// ...and every component used by pages...
+				manifest_data.nodes.forEach((node) => {
+					for (const file of [node.component, node.universal, node.server]) {
+						if (file) {
+							const resolved = path.resolve(file);
+							const relative = decodeURIComponent(path.relative(kit.files.routes, resolved));
+
+							const name = relative.startsWith('..')
+								? posixify(path.join('entries/fallbacks', path.basename(file)))
+								: posixify(path.join('entries/pages', relative.replace(/\.js$/, '')));
+							input[name] = resolved;
+						}
+					}
+				});
+
+				// ...and every matcher
+				Object.entries(manifest_data.matchers).forEach(([key, file]) => {
+					const name = posixify(path.join('entries/matchers', key));
+					input[name] = path.resolve(file);
+				});
+			} else {
+				/** @type {Record<string, string>} */
+				input.start = `${runtime_directory}/client/start.js`;
+
+				manifest_data.nodes.forEach((node) => {
+					if (node.component) {
+						const resolved = path.resolve(node.component);
+						const relative = decodeURIComponent(
+							path.relative(svelte_config.kit.files.routes, resolved)
+						);
+
+						const name = relative.startsWith('..')
+							? path.basename(node.component)
+							: posixify(path.join('pages', relative));
+						input[`components/${name}`] = resolved;
+					}
+
+					if (node.universal) {
+						const resolved = path.resolve(node.universal);
+						const relative = decodeURIComponent(
+							path.relative(svelte_config.kit.files.routes, resolved)
+						);
+
+						const name = relative.startsWith('..')
+							? path.basename(node.universal)
+							: posixify(path.join('pages', relative));
+						input[`modules/${name}`] = resolved;
+					}
+				});
+			}
+
+			/** @type {import('vite').UserConfig} */
+			const new_config = {
+				base: ssr ? assets_base(kit) : './',
+				build: {
+					cssCodeSplit: true,
+					outDir: `${out}/${ssr ? 'server' : 'client'}`,
+					rollupOptions: {
+						input,
+						output: {
+							format: 'esm',
+							entryFileNames: ssr ? '[name].js' : `${prefix}/[name]-[hash].js`,
+							chunkFileNames: ssr ? 'chunks/[name].js' : `${prefix}/chunks/[name]-[hash].js`,
+							assetFileNames: `${prefix}/assets/[name]-[hash][extname]`,
+							hoistTransitiveImports: false
+						},
+						preserveEntrySignatures: 'strict'
+					},
+					target: ssr ? 'node16.14' : undefined,
+					// don't use the default name to avoid collisions with 'static/manifest.json'
+					manifest: 'vite-manifest.json'
+				},
+				define: {
+					__SVELTEKIT_ADAPTER_NAME__: JSON.stringify(kit.adapter?.name),
+					__SVELTEKIT_APP_VERSION_FILE__: JSON.stringify(`${kit.appDir}/version.json`),
+					__SVELTEKIT_APP_VERSION_POLL_INTERVAL__: JSON.stringify(kit.version.pollInterval),
+					__SVELTEKIT_DEV__: 'false',
+					__SVELTEKIT_EMBEDDED__: kit.embedded ? 'true' : 'false'
+				},
+				optimizeDeps: {
+					exclude: ['@sveltejs/kit']
+				},
+				publicDir: ssr ? false : kit.files.assets,
+				resolve: {
+					alias: [...get_app_aliases(kit), ...get_config_aliases(kit)]
+				},
+				ssr: {
+					noExternal: [
+						// TODO document why this is necessary
+						'@sveltejs/kit',
+						// This ensures that esm-env is inlined into the server output with the
+						// export conditions resolved correctly through Vite. This prevents adapters
+						// that bundle later on to resolve the export conditions incorrectly
+						// and for example include browser-only code in the server output
+						// because they for example use esbuild.build with `platform: 'browser'`
+						'esm-env'
+					]
+				},
+				worker: {
+					rollupOptions: {
+						output: {
+							entryFileNames: `${prefix}/workers/[name]-[hash].js`,
+							chunkFileNames: `${prefix}/workers/chunks/[name]-[hash].js`,
+							assetFileNames: `${prefix}/workers/assets/[name]-[hash][extname]`,
+							hoistTransitiveImports: false
+						}
+					}
+				}
 			};
-
-			manifest_data.nodes.forEach((node) => {
-				if (node.component) {
-					const resolved = path.resolve(node.component);
-					const relative = decodeURIComponent(
-						path.relative(svelte_config.kit.files.routes, resolved)
-					);
-
-					const name = relative.startsWith('..')
-						? path.basename(node.component)
-						: posixify(path.join('pages', relative));
-					input[`components/${name}`] = resolved;
-				}
-
-				if (node.universal) {
-					const resolved = path.resolve(node.universal);
-					const relative = decodeURIComponent(
-						path.relative(svelte_config.kit.files.routes, resolved)
-					);
-
-					const name = relative.startsWith('..')
-						? path.basename(node.universal)
-						: posixify(path.join('pages', relative));
-					input[`modules/${name}`] = resolved;
-				}
-			});
-
-			const new_config = get_build_config({
-				config: svelte_config,
-				input,
-				ssr: false,
-				outDir: `${out}/client`
-			});
 
 			warn_overridden_config(config, new_config);
 

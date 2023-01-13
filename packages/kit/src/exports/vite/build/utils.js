@@ -1,6 +1,5 @@
-import fs from 'fs';
-import path from 'path';
-import { get_config_aliases, get_app_aliases } from '../utils.js';
+import fs from 'node:fs';
+import path from 'node:path';
 
 /**
  * Adds transitive JS and CSS dependencies to the js and css inputs.
@@ -78,79 +77,6 @@ export function resolve_symlinks(manifest, file) {
 	const chunk = manifest[file];
 
 	return { chunk, file };
-}
-
-/**
- * The Vite configuration that we use by default for building.
- * @param {{
- *   config: import('types').ValidatedConfig;
- *   input: Record<string, string>;
- *   ssr: boolean;
- *   outDir: string;
- * }} options
- * @return {import('vite').UserConfig}
- */
-export function get_build_config({ config, input, ssr, outDir }) {
-	const prefix = `${config.kit.appDir}/immutable`;
-
-	return {
-		base: ssr ? assets_base(config.kit) : './',
-		build: {
-			cssCodeSplit: true,
-			outDir,
-			rollupOptions: {
-				input,
-				output: {
-					format: 'esm',
-					entryFileNames: ssr ? '[name].js' : `${prefix}/[name]-[hash].js`,
-					chunkFileNames: ssr ? 'chunks/[name].js' : `${prefix}/chunks/[name]-[hash].js`,
-					assetFileNames: `${prefix}/assets/[name]-[hash][extname]`,
-					hoistTransitiveImports: false
-				},
-				preserveEntrySignatures: 'strict'
-			},
-			target: ssr ? 'node16.14' : undefined,
-			// don't use the default name to avoid collisions with 'static/manifest.json'
-			manifest: 'vite-manifest.json',
-			ssr
-		},
-		define: {
-			__SVELTEKIT_ADAPTER_NAME__: JSON.stringify(config.kit.adapter?.name),
-			__SVELTEKIT_APP_VERSION_FILE__: JSON.stringify(`${config.kit.appDir}/version.json`),
-			__SVELTEKIT_APP_VERSION_POLL_INTERVAL__: JSON.stringify(config.kit.version.pollInterval),
-			__SVELTEKIT_DEV__: 'false',
-			__SVELTEKIT_EMBEDDED__: config.kit.embedded ? 'true' : 'false'
-		},
-		optimizeDeps: {
-			exclude: ['@sveltejs/kit']
-		},
-		publicDir: ssr ? false : config.kit.files.assets,
-		resolve: {
-			alias: [...get_app_aliases(config.kit), ...get_config_aliases(config.kit)]
-		},
-		ssr: {
-			noExternal: [
-				// TODO document why this is necessary
-				'@sveltejs/kit',
-				// This ensures that esm-env is inlined into the server output with the
-				// export conditions resolved correctly through Vite. This prevents adapters
-				// that bundle later on to resolve the export conditions incorrectly
-				// and for example include browser-only code in the server output
-				// because they for example use esbuild.build with `platform: 'browser'`
-				'esm-env'
-			]
-		},
-		worker: {
-			rollupOptions: {
-				output: {
-					entryFileNames: `${prefix}/workers/[name]-[hash].js`,
-					chunkFileNames: `${prefix}/workers/chunks/[name]-[hash].js`,
-					assetFileNames: `${prefix}/workers/assets/[name]-[hash][extname]`,
-					hoistTransitiveImports: false
-				}
-			}
-		}
-	};
 }
 
 /**
