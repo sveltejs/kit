@@ -112,17 +112,17 @@ Setting up proper types for service workers requires some manual setup. Inside y
 /// <reference lib="esnext" />
 /// <reference lib="webworker" />
 
-const ws = /** @type {ServiceWorkerGlobalScope} */ (/** @type {unknown} */ (self));
+const sw = /** @type {ServiceWorkerGlobalScope} */ (/** @type {unknown} */ (self));
 ```
 ```generated-ts
 /// <reference no-default-lib="true"/>
 /// <reference lib="esnext" />
 /// <reference lib="webworker" />
 
-const ws = self as unknown as ServiceWorkerGlobalScope;
+const sw = self as unknown as ServiceWorkerGlobalScope;
 ```
 
-This disables access to DOM typings like `HTMLElement` which are not available inside a service worker and instantiates the correct globals. The reassignment of `self` to `ws` allows you to type cast it in the process (there are a couple of ways to do this, but the easiest that requires no additional files). Use `ws` instead of `self` in the rest of the file.
+This disables access to DOM typings like `HTMLElement` which are not available inside a service worker and instantiates the correct globals. The reassignment of `self` to `sw` allows you to type cast it in the process (there are a couple of ways to do this, but the easiest that requires no additional files). Use `sw` instead of `self` in the rest of the file.
 
 ## Other solutions
 
