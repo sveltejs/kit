@@ -16,3 +16,8 @@ export const handle = async ({ event, resolve }) => {
 		filterSerializedResponseHeaders: (name) => name === 'content-type'
 	});
 };
+
+// this code is here to make sure that we kill the process
+setInterval(() => {
+	console.log('process is still alive');
+}, 5000);
