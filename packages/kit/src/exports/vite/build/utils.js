@@ -121,7 +121,6 @@ export function get_build_config({ config, input, ssr, outDir }) {
 	const prefix = `${config.kit.appDir}/immutable`;
 
 	return {
-		appType: 'custom',
 		base: ssr ? assets_base(config.kit) : './',
 		build: {
 			cssCodeSplit: true,
@@ -149,11 +148,12 @@ export function get_build_config({ config, input, ssr, outDir }) {
 			__SVELTEKIT_DEV__: 'false',
 			__SVELTEKIT_EMBEDDED__: config.kit.embedded ? 'true' : 'false'
 		},
-		resolve: {
-			alias: [...get_app_aliases(config.kit), ...get_config_aliases(config.kit)]
-		},
 		optimizeDeps: {
 			exclude: ['@sveltejs/kit']
+		},
+		publicDir: ssr ? false : config.kit.files.assets,
+		resolve: {
+			alias: [...get_app_aliases(config.kit), ...get_config_aliases(config.kit)]
 		},
 		ssr: {
 			noExternal: [
@@ -167,7 +167,6 @@ export function get_build_config({ config, input, ssr, outDir }) {
 				'esm-env'
 			]
 		},
-		publicDir: ssr ? false : config.kit.files.assets,
 		worker: {
 			rollupOptions: {
 				output: {
