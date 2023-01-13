@@ -1,33 +1,8 @@
 import path from 'path';
-import { loadConfigFromFile, loadEnv, mergeConfig } from 'vite';
+import { loadEnv } from 'vite';
 import { runtime_directory } from '../../core/utils.js';
 import { posixify } from '../../utils/filesystem.js';
 import { negotiate } from '../../utils/http.js';
-
-/**
- * @param {import('vite').ResolvedConfig} config
- * @param {import('vite').ConfigEnv} config_env
- * @return {Promise<import('vite').UserConfig>}
- */
-export async function get_vite_config(config, config_env) {
-	const loaded = await loadConfigFromFile(
-		config_env,
-		config.configFile,
-		undefined,
-		config.logLevel
-	);
-
-	if (!loaded) {
-		throw new Error('Could not load Vite config');
-	}
-	return mergeConfig(loaded.config, {
-		// CLI opts
-		mode: config_env.mode,
-		logLevel: config.logLevel,
-		clearScreen: config.clearScreen,
-		optimizeDeps: { force: config.optimizeDeps.force }
-	});
-}
 
 /**
  * Takes zero or more objects and returns a new object that has all the values

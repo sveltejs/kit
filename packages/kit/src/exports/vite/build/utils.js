@@ -14,9 +14,7 @@ import { get_config_aliases, get_app_aliases } from '../utils.js';
  * @param {import('vite').UserConfig} config
  */
 export async function create_build(config) {
-	const { output } = /** @type {RollupOutput} */ (
-		await vite.build({ ...config, configFile: false })
-	);
+	const { output } = /** @type {RollupOutput} */ (await vite.build(config));
 
 	const chunks = output.filter(
 		/** @returns {output is OutputChunk} */ (output) => output.type === 'chunk'
