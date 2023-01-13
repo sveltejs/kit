@@ -24,7 +24,7 @@ if (!building) {
 	setupMyDatabase();
 }
 
-export const load() {
+export function load() {
 	// ...
 }
 ```
