@@ -2,41 +2,19 @@
  * It's possible to tell SvelteKit how to type objects inside your app by declaring the `App` namespace. By default, a new project will have a file called `src/app.d.ts` containing the following:
  *
  * ```ts
- * /// <reference types="@sveltejs/kit" />
- *
- * declare namespace App {
- * 	interface Error {}
- * 	interface Locals {}
- * 	interface PageData {}
- * 	interface Platform {}
+ * declare global {
+ * 	namespace App {
+ * 		// interface Error {}
+ * 		// interface Locals {}
+ * 		// interface PageData {}
+ * 		// interface Platform {}
+ * 	}
  * }
+ *
+ * export default undefined;
  * ```
  *
  * By populating these interfaces, you will gain type safety when using `event.locals`, `event.platform`, and `data` from `load` functions.
- *
- * Note that since it's an ambient declaration file, you have to be careful when using `import` statements. Once you add an `import`
- * at the top level, the declaration file is no longer considered ambient and you lose access to these typings in other files.
- * To avoid this, either use the `import(...)` function:
- *
- * ```ts
- * interface Locals {
- * 	user: import('$lib/types').User;
- * }
- * ```
- * Or wrap the namespace with `declare global`:
- * ```ts
- * import { User } from '$lib/types';
- *
- * declare global {
- * 	namespace App {
- * 		interface Locals {
- * 			user: User;
- * 		}
- * 		// ...
- * 	}
- * }
- * ```
- *
  */
 declare namespace App {
 	/**
