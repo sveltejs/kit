@@ -1,5 +1,21 @@
 # @sveltejs/kit
 
+## 1.0.12
+
+### Patch Changes
+
+- fix: prerendered endpoint callable from non-prerendered server load ([#8453](https://github.com/sveltejs/kit/pull/8453))
+
+- docs: links to http status codes ([#8480](https://github.com/sveltejs/kit/pull/8480))
+
+- fix: prerender page when prerender set to 'auto' and ssr set to true ([#8481](https://github.com/sveltejs/kit/pull/8481))
+
+- fix: no false positive warnings for fetch uses in firefox ([#8456](https://github.com/sveltejs/kit/pull/8456))
+
+- fix: check version on node fetch fail ([#8487](https://github.com/sveltejs/kit/pull/8487))
+
+- fix: avoid unnecessary $page store updates ([#8457](https://github.com/sveltejs/kit/pull/8457))
+
 ## 1.0.11
 
 ### Patch Changes

@@ -1,5 +1,14 @@
 # @sveltejs/adapter-cloudflare
 
+## 1.0.1
+
+### Patch Changes
+
+- docs: add note about inability to access file system at runtime ([#8441](https://github.com/sveltejs/kit/pull/8441))
+
+- Updated dependencies [[`9c01c32e`](https://github.com/sveltejs/kit/commit/9c01c32ef72bbed630fadcb8283f8f8533ced5e1), [`b6ca02a6`](https://github.com/sveltejs/kit/commit/b6ca02a684dbf13a3138b552e2d2be64697f2254), [`130abe43`](https://github.com/sveltejs/kit/commit/130abe43cef2cfbaf922aa16b20cbd4332a07c15), [`c4137536`](https://github.com/sveltejs/kit/commit/c4137536f2c6572eaeec1a82ccea0852f5be6b98), [`40464efa`](https://github.com/sveltejs/kit/commit/40464efab172a17f0b637d7dadea30d77ef1ed10), [`ce028470`](https://github.com/sveltejs/kit/commit/ce0284708184198efdd30f3ff72fd579cef830b4)]:
+  - @sveltejs/kit@1.0.12
+
 ## 1.0.0
 
 ### Major Changes
