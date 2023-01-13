@@ -915,9 +915,21 @@ test.describe('$app/stores', () => {
 	});
 
 	test('$page.data does not update if data is unchanged', async ({ page, app }) => {
-		await page.goto('/store/data/unchanged/a');
-		await app.goto('/store/data/unchanged/b');
+		await page.goto('/store/data/store-update/a');
+		await app.goto('/store/data/store-update/b');
 		await expect(page.locator('p')).toHaveText('$page.data was updated 0 time(s)');
+	});
+
+	test('$page.data does update if keys did not change but data did', async ({ page, app }) => {
+		await page.goto('/store/data/store-update/same-keys/same');
+		await app.goto('/store/data/store-update/same-keys');
+		await expect(page.locator('p')).toHaveText('$page.data was updated 1 time(s)');
+	});
+
+	test('$page.data does update if keys did not change but data did (2)', async ({ page, app }) => {
+		await page.goto('/store/data/store-update/same-keys/same-deep/nested');
+		await app.goto('/store/data/store-update/same-keys');
+		await expect(page.locator('p')).toHaveText('$page.data was updated 1 time(s)');
 	});
 });
 

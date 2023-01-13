@@ -448,7 +448,7 @@ export function create_client({ target, base }) {
 
 		let p = 0;
 
-		for (let i = 0; i < branch.length; i += 1) {
+		for (let i = 0; i < Math.max(branch.length, current.branch.length); i += 1) {
 			const node = branch[i];
 			const prev = current.branch[i];
 
