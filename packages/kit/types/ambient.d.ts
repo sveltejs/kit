@@ -356,7 +356,7 @@ declare module '$service-worker' {
 	 */
 	export const version: string;
 	/**
-	 * See [`config.kit.paths`](https://kit.svelte.dev/docs/configuration#paths). It's useful if you need access to the base or assets path inside your service worker.
+	 * See [`config.kit.paths`](https://kit.svelte.dev/docs/configuration#paths).
 	 */
 	export const paths: {
 		assets: string;
