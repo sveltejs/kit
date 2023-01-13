@@ -1,5 +1,11 @@
 # create-svelte
 
+## 2.2.0
+
+### Minor Changes
+
+- feat: use svelte-check v3 ([#8468](https://github.com/sveltejs/kit/pull/8468))
+
 ## 2.1.0
 
 ### Minor Changes
