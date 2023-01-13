@@ -8,11 +8,10 @@ import colors from 'kleur';
 import * as vite from 'vite';
 
 import { mkdirp, posixify, resolve_entry, rimraf } from '../../utils/filesystem.js';
-import { SVELTE_KIT_ASSETS } from '../../constants.js';
 import { create_static_module, create_dynamic_module } from '../../core/env.js';
 import * as sync from '../../core/sync/sync.js';
 import { create_assets } from '../../core/sync/create_manifest_data/index.js';
-import { runtime_base, runtime_directory, logger } from '../../core/utils.js';
+import { runtime_directory, logger } from '../../core/utils.js';
 import { load_config } from '../../core/config/index.js';
 import { generate_manifest } from '../../core/generate_manifest/index.js';
 import { build_server } from './build/build_server.js';
