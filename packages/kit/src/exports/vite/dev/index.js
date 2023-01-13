@@ -408,6 +408,11 @@ export async function dev(vite, vite_config, svelte_config) {
 					return;
 				}
 
+				// we have to import `Server` before calling `set_paths`
+				const { Server } = /** @type {import('types').ServerModule} */ (
+					await vite.ssrLoadModule(`${runtime_base}/server/index.js`)
+				);
+
 				const { set_paths, set_version, set_fix_stack_trace } =
 					/** @type {import('types').ServerInternalModule} */ (
 						await vite.ssrLoadModule(`${runtime_base}/shared.js`)
@@ -421,10 +426,6 @@ export async function dev(vite, vite_config, svelte_config) {
 				set_version(svelte_config.kit.version.name);
 
 				set_fix_stack_trace(fix_stack_trace);
-
-				const { Server } = /** @type {import('types').ServerModule} */ (
-					await vite.ssrLoadModule(`${runtime_base}/server/index.js`)
-				);
 
 				const server = new Server(manifest);
 
