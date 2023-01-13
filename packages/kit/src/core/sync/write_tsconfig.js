@@ -60,6 +60,15 @@ export function write_tsconfig(config, cwd = process.cwd()) {
 	include.push(config_relative(`${test_folder}/**/*.ts`));
 	include.push(config_relative(`${test_folder}/**/*.svelte`));
 
+	const exclude = [config_relative('node_modules/**'), './[!ambient.d.ts]**'];
+	if (path.extname(config.files.serviceWorker)) {
+		exclude.push(config_relative(config.files.serviceWorker));
+	} else {
+		exclude.push(config_relative(`${config.files.serviceWorker}.js`));
+		exclude.push(config_relative(`${config.files.serviceWorker}.ts`));
+		exclude.push(config_relative(`${config.files.serviceWorker}.d.ts`));
+	}
+
 	write_if_changed(
 		out,
 		JSON.stringify(
@@ -88,7 +97,7 @@ export function write_tsconfig(config, cwd = process.cwd()) {
 					target: 'esnext'
 				},
 				include,
-				exclude: [config_relative('node_modules/**'), './[!ambient.d.ts]**']
+				exclude
 			},
 			null,
 			'\t'
