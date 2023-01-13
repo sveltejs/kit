@@ -80,7 +80,7 @@ for (const route of manifest._.routes) {
 			// People can opt out of this behavior by explicitly setting prerender to false
 			(should_prerender !== false && get_option(nodes, 'ssr') === false && !page?.server?.actions
 				? 'auto'
-				: false);
+				: should_prerender ?? false);
 
 		prerender_map.set(route.id, prerender);
 	}

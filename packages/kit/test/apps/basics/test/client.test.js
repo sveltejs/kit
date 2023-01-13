@@ -1,5 +1,5 @@
 import { expect } from '@playwright/test';
-import { start_server, test } from '../../../utils.js';
+import { test } from '../../../utils.js';
 
 /** @typedef {import('@playwright/test').Response} Response */
 
@@ -788,19 +788,16 @@ test.describe('Routing', () => {
 		await expect(page.locator('#page-url-hash')).toHaveText('');
 	});
 
-	test('does not normalize external path', async ({ page }) => {
-		const { port, close } = await start_server((_req, res) => {
-			res.end('<html><head></head><body>ok</body></html>');
+	test('does not normalize external path', async ({ page, start_server }) => {
+		const html_ok = '<html><head></head><body>ok</body></html>';
+		const { port } = await start_server((_req, res) => {
+			res.end(html_ok);
 		});
 
-		try {
-			await page.goto(`/routing/slashes?port=${port}`);
-			await page.locator(`a[href="http://localhost:${port}/with-slash/"]`).click();
-			expect(await page.content()).toBe('<html><head></head><body>ok</body></html>');
-			expect(page.url()).toBe(`http://localhost:${port}/with-slash/`);
-		} finally {
-			await close();
-		}
+		await page.goto(`/routing/slashes?port=${port}`);
+		await page.locator(`a[href="http://localhost:${port}/with-slash/"]`).click();
+		expect(await page.content()).toBe(html_ok);
+		expect(page.url()).toBe(`http://localhost:${port}/with-slash/`);
 	});
 
 	test('ignores popstate events from outside the router', async ({ page }) => {
