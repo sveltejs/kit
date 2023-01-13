@@ -1,5 +1,11 @@
 # @sveltejs/adapter-cloudflare
 
+## 1.0.2
+
+### Patch Changes
+
+- fix: don't load ambient worker types ([#8483](https://github.com/sveltejs/kit/pull/8483))
+
 ## 1.0.1
 
 ### Patch Changes
