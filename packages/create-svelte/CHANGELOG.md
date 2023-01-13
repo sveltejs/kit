@@ -1,5 +1,11 @@
 # create-svelte
 
+## 2.2.1
+
+### Patch Changes
+
+- fix: note why TypeScript is always installed for library projects and add jsconfig ([#8484](https://github.com/sveltejs/kit/pull/8484))
+
 ## 2.2.0
 
 ### Minor Changes
