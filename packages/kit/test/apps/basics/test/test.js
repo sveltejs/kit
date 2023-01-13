@@ -1,5 +1,5 @@
 import { expect } from '@playwright/test';
-import { start_server, test } from '../../../utils.js';
+import { test } from '../../../utils.js';
 
 /** @typedef {import('@playwright/test').Response} Response */
 
@@ -793,11 +793,11 @@ test.describe('Load', () => {
 		expect(await page.textContent('h1')).toBe('text.length is 5000000');
 	});
 
-	test('handles external api', async ({ page, context }) => {
+	test('handles external api', async ({ page, start_server }) => {
 		/** @type {string[]} */
 		const requested_urls = [];
 
-		const { port, close } = await start_server(async (req, res) => {
+		const { port } = await start_server(async (req, res) => {
 			requested_urls.push(req.url);
 
 			if (req.url === '/server-fetch-request-modified.json') {
@@ -813,15 +813,10 @@ test.describe('Load', () => {
 			}
 		});
 
-		try {
-			await page.goto(`/load/server-fetch-request?port=${port}`);
+		await page.goto(`/load/server-fetch-request?port=${port}`);
 
-			expect(requested_urls).toEqual(['/server-fetch-request-modified.json']);
-			expect(await page.textContent('h1')).toBe('the answer is 42');
-		} finally {
-			await context.close();
-			await close();
-		}
+		expect(requested_urls).toEqual(['/server-fetch-request-modified.json']);
+		expect(await page.textContent('h1')).toBe('the answer is 42');
 	});
 
 	test('makes credentialed fetches to endpoints by default', async ({
@@ -1591,20 +1586,15 @@ test.describe('Routing', () => {
 		expect(await page.textContent('h2')).toBe('y-z');
 	});
 
-	test('ignores navigation to URLs the app does not own', async ({ page, context }) => {
-		const { port, close } = await start_server((req, res) => res.end('ok'));
+	test('ignores navigation to URLs the app does not own', async ({ page, start_server }) => {
+		const { port } = await start_server((req, res) => res.end('ok'));
 
-		try {
-			await page.goto(`/routing?port=${port}`);
-			await Promise.all([
-				page.click(`[href="http://localhost:${port}"]`),
-				// assert that the app can visit a URL not owned by the app without crashing
-				page.waitForURL(`http://localhost:${port}/`)
-			]);
-		} finally {
-			await context.close();
-			await close();
-		}
+		await page.goto(`/routing?port=${port}`);
+		await Promise.all([
+			page.click(`[href="http://localhost:${port}"]`),
+			// assert that the app can visit a URL not owned by the app without crashing
+			page.waitForURL(`http://localhost:${port}/`)
+		]);
 	});
 
 	test('navigates to ...rest', async ({ page, clicknav }) => {
