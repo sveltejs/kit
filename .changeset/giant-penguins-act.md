@@ -1,5 +1,5 @@
 ---
-'@sveltejs/adapter-cloudflare': patch
+'@sveltejs/adapter-cloudflare': minor
 ---
 
-Include as many static assets as possible in exclude list
+feat: include as many static assets as possible in exclude list
