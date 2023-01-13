@@ -64,15 +64,69 @@ const enforced_config = {
 	root: true
 };
 
+const options_regex = /(export\s+const\s+(prerender|csr|ssr|trailingSlash))\s*=/s;
+
+/** @type {Set<string>} */
+const warned = new Set();
+
+/** @type {import('@sveltejs/vite-plugin-svelte').PreprocessorGroup} */
+const warning_preprocessor = {
+	script: ({ content, filename }) => {
+		if (!filename) return;
+
+		const basename = path.basename(filename);
+		if (basename.startsWith('+page.') || basename.startsWith('+layout.')) {
+			const match = content.match(options_regex);
+			if (match) {
+				const fixed = basename.replace('.svelte', '(.server).js/ts');
+
+				const message =
+					`\n${colors.bold().red(path.relative('.', filename))}\n` +
+					`\`${match[1]}\` will be ignored — move it to ${fixed} instead. See https://kit.svelte.dev/docs/page-options for more information.`;
+
+				if (!warned.has(message)) {
+					console.log(message);
+					warned.add(message);
+				}
+			}
+		}
+	},
+	markup: ({ content, filename }) => {
+		if (!filename) return;
+
+		const basename = path.basename(filename);
+		if (basename.startsWith('+layout.') && !content.includes('<slot')) {
+			const message =
+				`\n${colors.bold().red(path.relative('.', filename))}\n` +
+				`\`<slot />\` missing — inner content will not be rendered`;
+
+			if (!warned.has(message)) {
+				console.log(message);
+				warned.add(message);
+			}
+		}
+	}
+};
+
 /** @return {Promise<import('vite').Plugin[]>} */
 export async function sveltekit() {
 	const svelte_config = await load_config();
+
+	/** @type {import('@sveltejs/vite-plugin-svelte').Options['preprocess']} */
+	let preprocess = svelte_config.preprocess;
+	if (Array.isArray(preprocess)) {
+		preprocess = [...preprocess, warning_preprocessor];
+	} else if (preprocess) {
+		preprocess = [preprocess, warning_preprocessor];
+	} else {
+		preprocess = warning_preprocessor;
+	}
 
 	/** @type {import('@sveltejs/vite-plugin-svelte').Options} */
 	const vite_plugin_svelte_options = {
 		configFile: false,
 		extensions: svelte_config.extensions,
-		preprocess: svelte_config.preprocess,
+		preprocess,
 		onwarn: svelte_config.onwarn,
 		compilerOptions: {
 			// @ts-expect-error SvelteKit requires hydratable true by default
