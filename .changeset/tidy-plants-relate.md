@@ -2,4 +2,4 @@
 '@sveltejs/kit': patch
 ---
 
-fix: avoid input name overriding form action and method checks
+fix: avoid input name clobbering form method check

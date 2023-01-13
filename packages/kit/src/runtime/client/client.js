@@ -1460,6 +1460,7 @@ export function create_client({ target, base }) {
 				);
 
 				const method = submitter?.formMethod || form.method;
+
 				if (method !== 'get') return;
 
 				const url = new URL(
