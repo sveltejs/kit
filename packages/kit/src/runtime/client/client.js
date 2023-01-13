@@ -824,6 +824,12 @@ export function create_client({ target, base }) {
 						status = err.status;
 						error = err.body;
 					} else {
+						// Referenced node could have been removed due to redeploy, check
+						const updated = await stores.updated.check();
+						if (updated) {
+							return await native_navigation(url);
+						}
+
 						error = await handle_error(err, { params, url, route: { id: route.id } });
 					}
 
