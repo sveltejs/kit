@@ -15,13 +15,6 @@
  * ```
  *
  * By populating these interfaces, you will gain type safety when using `event.locals`, `event.platform`, and `data` from `load` functions.
- *
- * Note that since it's a declaration file, you have to be careful when using `import` statements. Once you add an `import`
- * at the top level, the declaration file is no longer considered ambient, at which point you need to wrap `App` inside `declare global`
- * to still be available throughout the app. Opposite to that is the behavior when there's no `import`, at which point having `declare global`
- * _prevents_ the `App` types from being available.
- * To safe you the headache of converting between the two this we provide a dummy `export` to force the file being a module.
- * Do not remove it unless you have an `import` statement at the top level.
  */
 declare namespace App {
 	/**
