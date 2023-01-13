@@ -102,3 +102,5 @@ writeFileSync(
 		value instanceof Map ? Array.from(value.entries()) : value
 	)
 );
+
+process.exit(0);
