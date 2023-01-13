@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 import fs from 'fs';
 import path from 'path';
-import { bold, cyan, gray, green, red } from 'kleur/colors';
+import { bold, cyan, gray, green, yellow } from 'kleur/colors';
 import prompts from 'prompts';
 import { create } from './index.js';
 import { dist } from './utils.js';
@@ -136,6 +136,11 @@ async function main() {
 	} else if (options.types === 'checkjs') {
 		console.log(bold('✔ Type-checked JavaScript'));
 		console.log('  https://www.typescriptlang.org/tsconfig#checkJs');
+	} else if (options.template === 'skeletonlib') {
+		const warning = yellow('▲');
+		console.log(
+			`${warning} You chose to not add type checking, but TypeScript will still be installed in order to generate type definitions when building the library`
+		);
 	}
 
 	if (options.eslint) {
