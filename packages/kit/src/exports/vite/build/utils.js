@@ -1,33 +1,6 @@
 import fs from 'fs';
 import path from 'path';
-import * as vite from 'vite';
 import { get_config_aliases, get_app_aliases } from '../utils.js';
-
-/**
- * @typedef {import('rollup').RollupOutput} RollupOutput
- * @typedef {import('rollup').OutputChunk} OutputChunk
- * @typedef {import('rollup').OutputAsset} OutputAsset
- */
-
-/**
- * Invokes Vite.
- * @param {import('vite').UserConfig} config
- */
-export async function create_build(config) {
-	const { output } = /** @type {RollupOutput} */ (
-		await vite.build({ ...config, configFile: false })
-	);
-
-	const chunks = output.filter(
-		/** @returns {output is OutputChunk} */ (output) => output.type === 'chunk'
-	);
-
-	const assets = output.filter(
-		/** @returns {output is OutputAsset} */ (output) => output.type === 'asset'
-	);
-
-	return { chunks, assets };
-}
 
 /**
  * Adds transitive JS and CSS dependencies to the js and css inputs.

@@ -1,15 +1,8 @@
-import fs from 'fs';
-import path from 'path';
-import { mergeConfig } from 'vite';
+import fs from 'node:fs';
+import path from 'node:path';
+import * as vite from 'vite';
 import { mkdirp, posixify } from '../../../utils/filesystem.js';
-import { get_vite_config } from '../utils.js';
-import {
-	create_build,
-	find_deps,
-	get_build_config,
-	is_http_method,
-	resolve_symlinks
-} from './utils.js';
+import { find_deps, get_build_config, is_http_method, resolve_symlinks } from './utils.js';
 import { s } from '../../../utils/misc.js';
 import { runtime_directory } from '../../../core/utils.js';
 
@@ -63,12 +56,20 @@ export async function build_server(options, client) {
 		input[name] = path.resolve(file);
 	});
 
-	const merged_config = mergeConfig(
-		get_build_config({ config, input, ssr: true, outDir: `${output_dir}/server` }),
-		await get_vite_config(vite_config, vite_config_env)
+	const { output } = /** @type {import('rollup').RollupOutput} */ (
+		await vite.build({
+			// CLI args
+			configFile: vite_config.configFile,
+			mode: vite_config_env.mode,
+			logLevel: config.logLevel,
+			clearScreen: config.clearScreen,
+			...get_build_config({ config, input, ssr: true, outDir: `${output_dir}/server` })
+		})
 	);
 
-	const { chunks } = await create_build(merged_config);
+	const chunks = output.filter(
+		/** @returns {output is import('rollup').OutputChunk} */ (output) => output.type === 'chunk'
+	);
 
 	/** @type {import('vite').Manifest} */
 	const vite_manifest = JSON.parse(
