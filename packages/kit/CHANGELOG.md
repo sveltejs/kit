@@ -1,5 +1,11 @@
 # @sveltejs/kit
 
+## 1.0.13
+
+### Patch Changes
+
+- chore: separate generated from non-generated server code ([#8429](https://github.com/sveltejs/kit/pull/8429))
+
 ## 1.0.12
 
 ### Patch Changes
