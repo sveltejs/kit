@@ -1,5 +1,11 @@
 # @sveltejs/adapter-static
 
+## 1.0.2
+
+### Patch Changes
+
+- docs: clarify that you can build SPAs with adapter-static ([#8502](https://github.com/sveltejs/kit/pull/8502))
+
 ## 1.0.1
 
 ### Patch Changes
