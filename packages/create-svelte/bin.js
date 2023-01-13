@@ -138,7 +138,7 @@ async function main() {
 		console.log('  https://www.typescriptlang.org/tsconfig#checkJs');
 	} else if (options.template === 'skeletonlib') {
 		console.log(
-			'🛈 You chose to not add type checking, but TypeScript will still be installed in order to generate type definitions when building the library'
+			'⚠ You chose to not add type checking, but TypeScript will still be installed in order to generate type definitions when building the library'
 		);
 	}
 
