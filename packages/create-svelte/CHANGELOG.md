@@ -1,5 +1,11 @@
 # create-svelte
 
+## 2.3.0
+
+### Minor Changes
+
+- fix: adjust `app.d.ts` to diminish confusion about imports ([#8477](https://github.com/sveltejs/kit/pull/8477))
+
 ## 2.2.1
 
 ### Patch Changes
