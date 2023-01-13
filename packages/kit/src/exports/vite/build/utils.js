@@ -117,7 +117,7 @@ export function resolve_symlinks(manifest, file) {
  * }} options
  * @return {import('vite').UserConfig}
  */
-export function get_default_build_config({ config, input, ssr, outDir }) {
+export function get_build_config({ config, input, ssr, outDir }) {
 	const prefix = `${config.kit.appDir}/immutable`;
 
 	return {

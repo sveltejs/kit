@@ -16,7 +16,7 @@ import { load_config } from '../../core/config/index.js';
 import { generate_manifest } from '../../core/generate_manifest/index.js';
 import { build_server } from './build/build_server.js';
 import { build_service_worker } from './build/build_service_worker.js';
-import { find_deps, get_default_build_config } from './build/utils.js';
+import { find_deps, get_build_config } from './build/utils.js';
 import { dev } from './dev/index.js';
 import { is_illegal, module_guard, normalize_id } from './graph_analysis/index.js';
 import { preview } from './preview/index.js';
@@ -200,8 +200,7 @@ function kit({ svelte_config }) {
 				}
 			};
 
-			const warning = warn_overridden_config(config, result);
-			if (warning) console.error(warning);
+			warn_overridden_config(config, result);
 
 			return result;
 		},
@@ -309,15 +308,14 @@ function kit({ svelte_config }) {
 				}
 			});
 
-			const new_config = get_default_build_config({
+			const new_config = get_build_config({
 				config: svelte_config,
 				input,
 				ssr: false,
 				outDir: `${out}/client`
 			});
 
-			const warning = warn_overridden_config(config, new_config);
-			if (warning) console.error(warning + '\n');
+			warn_overridden_config(config, new_config);
 
 			return new_config;
 		},
@@ -568,8 +566,7 @@ function kit({ svelte_config }) {
 				publicDir: svelte_config.kit.files.assets
 			};
 
-			const warning = warn_overridden_config(config, result);
-			if (warning) console.error(warning);
+			warn_overridden_config(config, result);
 
 			return result;
 		},
@@ -619,9 +616,9 @@ function warn_overridden_config(config, resolved_config) {
 	const overridden = find_overridden_config(config, resolved_config, enforced_config, '', []);
 
 	if (overridden.length > 0) {
-		return (
+		console.error(
 			colors.bold().red('The following Vite config options will be overridden by SvelteKit:') +
-			overridden.map((key) => `\n  - ${key}`).join('')
+				overridden.map((key) => `\n  - ${key}`).join('')
 		);
 	}
 }

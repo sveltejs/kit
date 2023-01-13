@@ -6,7 +6,7 @@ import { get_vite_config } from '../utils.js';
 import {
 	create_build,
 	find_deps,
-	get_default_build_config,
+	get_build_config,
 	is_http_method,
 	resolve_symlinks
 } from './utils.js';
@@ -64,7 +64,7 @@ export async function build_server(options, client) {
 	});
 
 	const merged_config = mergeConfig(
-		get_default_build_config({ config, input, ssr: true, outDir: `${output_dir}/server` }),
+		get_build_config({ config, input, ssr: true, outDir: `${output_dir}/server` }),
 		await get_vite_config(vite_config, vite_config_env)
 	);
 
