@@ -356,7 +356,6 @@ importers:
     specifiers:
       '@sveltejs/kit': workspace:^
       cross-env: ^7.0.3
-      rimraf: ^4.0.0
       svelte: ^3.55.1
       svelte-check: ^3.0.2
       typescript: ^4.9.4
@@ -364,7 +363,6 @@ importers:
     devDependencies:
       '@sveltejs/kit': link:../../..
       cross-env: 7.0.3
-      rimraf: 4.0.1
       svelte: 3.55.1
       svelte-check: 3.0.2_svelte@3.55.1
       typescript: 4.9.4
