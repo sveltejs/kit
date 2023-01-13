@@ -1,5 +1,23 @@
 # @sveltejs/kit
 
+## 1.1.0
+
+### Minor Changes
+
+- feat: warn when usage of page options in `.svelte` files or missing `<slot />` in layout is detected ([#8475](https://github.com/sveltejs/kit/pull/8475))
+
+### Patch Changes
+
+- fix: exit postbuild step with code 0 ([#8514](https://github.com/sveltejs/kit/pull/8514))
+
+- fix: only run missing page check in dev mode ([#8515](https://github.com/sveltejs/kit/pull/8515))
+
+- fix: avoid input name clobbering form method check ([#8471](https://github.com/sveltejs/kit/pull/8471))
+
+- fix: exclude service worker from tsconfig ([#8508](https://github.com/sveltejs/kit/pull/8508))
+
+- fix: provide better error message in case of missing `+page.svelte` ([#8478](https://github.com/sveltejs/kit/pull/8478))
+
 ## 1.0.13
 
 ### Patch Changes
