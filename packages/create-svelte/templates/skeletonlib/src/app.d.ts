@@ -10,6 +10,4 @@ declare global {
 	}
 }
 
-// This line ensures this file is treated as a module.
-// It can be removed if you add an import to this file.
-export default undefined;
+export {};
