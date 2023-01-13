@@ -1,6 +1,8 @@
 import fs from 'fs';
 import path from 'path';
+import { mergeConfig } from 'vite';
 import { mkdirp, posixify } from '../../../utils/filesystem.js';
+import { get_vite_config } from '../utils.js';
 import {
 	create_build,
 	find_deps,
@@ -15,13 +17,14 @@ import { runtime_directory } from '../../../core/utils.js';
  * @param {{
  *   config: import('types').ValidatedConfig;
  *   vite_config: import('vite').ResolvedConfig;
+ *   vite_config_env: import('vite').ConfigEnv;
  *   manifest_data: import('types').ManifestData;
  *   output_dir: string;
  * }} options
  * @param {{ vite_manifest: import('vite').Manifest, assets: import('rollup').OutputAsset[] }} client
  */
 export async function build_server(options, client) {
-	const { config, vite_config, manifest_data, output_dir } = options;
+	const { config, vite_config, vite_config_env, manifest_data, output_dir } = options;
 
 	/** @type {Record<string, string>} */
 	const input = {
@@ -60,14 +63,12 @@ export async function build_server(options, client) {
 		input[name] = path.resolve(file);
 	});
 
-	const { chunks } = await create_build(
-		get_build_config({
-			config,
-			input,
-			ssr: true,
-			outDir: `${output_dir}/server`
-		})
+	const merged_config = mergeConfig(
+		get_build_config({ config, input, ssr: true, outDir: `${output_dir}/server` }),
+		await get_vite_config(vite_config, vite_config_env)
 	);
+
+	const { chunks } = await create_build(merged_config);
 
 	/** @type {import('vite').Manifest} */
 	const vite_manifest = JSON.parse(
