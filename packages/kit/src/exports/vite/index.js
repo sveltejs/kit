@@ -154,6 +154,7 @@ function kit({ svelte_config }) {
 				path.resolve('node_modules'),
 				path.resolve(vite.searchForWorkspaceRoot(cwd), 'node_modules')
 			]);
+
 			// We can only add directories to the allow list, so we find out
 			// if there's a client hooks file and pass its directory
 			const client_hooks = resolve_entry(svelte_config.kit.files.hooks.client);
@@ -161,7 +162,7 @@ function kit({ svelte_config }) {
 
 			// dev and preview config can be shared
 			/** @type {import('vite').UserConfig} */
-			const result = {
+			const new_config = {
 				define: {
 					__SVELTEKIT_APP_VERSION_POLL_INTERVAL__: '0',
 					__SVELTEKIT_DEV__: config_env.command === 'serve',
@@ -200,9 +201,9 @@ function kit({ svelte_config }) {
 				}
 			};
 
-			warn_overridden_config(config, result);
+			warn_overridden_config(config, new_config);
 
-			return result;
+			return new_config;
 		},
 
 		/**
@@ -553,7 +554,7 @@ function kit({ svelte_config }) {
 
 			// dev and preview config can be shared
 			/** @type {import('vite').UserConfig} */
-			const result = {
+			const new_config = {
 				appType: 'custom',
 				base: svelte_config.kit.paths.base,
 				build: {
@@ -566,9 +567,9 @@ function kit({ svelte_config }) {
 				publicDir: svelte_config.kit.files.assets
 			};
 
-			warn_overridden_config(config, result);
+			warn_overridden_config(config, new_config);
 
-			return result;
+			return new_config;
 		},
 
 		/**
