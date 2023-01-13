@@ -34,19 +34,17 @@ export async function preview(vite, vite_config, svelte_config) {
 
 	const etag = `"${Date.now()}"`;
 
-	const index_file = join(svelte_config.kit.outDir, 'output/server/index.js');
-	const manifest_file = join(svelte_config.kit.outDir, 'output/server/manifest.js');
+	const dir = join(svelte_config.kit.outDir, 'output/server');
+
+	/** @type {import('types').ServerInternalModule} */
+	const { set_paths } = await import(pathToFileURL(join(dir, 'internal.js')).href);
 
 	/** @type {import('types').ServerModule} */
-	const { Server, override } = await import(pathToFileURL(index_file).href);
-	const { manifest } = await import(pathToFileURL(manifest_file).href);
+	const { Server } = await import(pathToFileURL(join(dir, 'index.js')).href);
 
-	override({
-		paths: { base, assets },
-		building: false,
-		protocol,
-		read: (file) => fs.readFileSync(join(svelte_config.kit.files.assets, file))
-	});
+	const { manifest } = await import(pathToFileURL(join(dir, 'manifest.js')).href);
+
+	set_paths({ base, assets });
 
 	const server = new Server(manifest);
 	await server.init({
@@ -150,7 +148,8 @@ export async function preview(vite, vite_config, svelte_config) {
 						const { remoteAddress } = req.socket;
 						if (remoteAddress) return remoteAddress;
 						throw new Error('Could not determine clientAddress');
-					}
+					},
+					read: (file) => fs.readFileSync(join(svelte_config.kit.files.assets, file))
 				})
 			);
 		});

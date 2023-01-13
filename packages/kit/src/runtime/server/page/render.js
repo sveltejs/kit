@@ -1,12 +1,14 @@
 import * as devalue from 'devalue';
 import { readable, writable } from 'svelte/store';
+import { DEV } from 'esm-env';
 import { hash } from '../../hash.js';
 import { serialize_data } from './serialize_data.js';
 import { s } from '../../../utils/misc.js';
 import { Csp } from './csp.js';
 import { uneval_action_response } from './actions.js';
 import { clarify_devalue_error } from '../utils.js';
-import { DEV } from 'esm-env';
+import { assets, base, version } from '../../shared.js';
+import { env } from '../../env-public.js';
 
 // TODO rename this function/module
 
@@ -21,6 +23,7 @@ const updated = {
  *   branch: Array<import('./types').Loaded>;
  *   fetched: Array<import('./types').Fetched>;
  *   options: import('types').SSROptions;
+ *   manifest: import('types').SSRManifest;
  *   state: import('types').SSRState;
  *   page_config: { ssr: boolean; csr: boolean };
  *   status: number;
@@ -34,6 +37,7 @@ export async function render_response({
 	branch,
 	fetched,
 	options,
+	manifest,
 	state,
 	page_config,
 	status,
@@ -52,11 +56,11 @@ export async function render_response({
 		}
 	}
 
-	const { entry } = options.manifest._;
+	const { entry } = manifest._;
 
 	const stylesheets = new Set(entry.stylesheets);
 	const modulepreloads = new Set(entry.imports);
-	const fonts = new Set(options.manifest._.entry.fonts);
+	const fonts = new Set(manifest._.entry.fonts);
 
 	/** @type {Set<string>} */
 	const link_header_preloads = new Set();
@@ -130,7 +134,6 @@ export async function render_response({
 	let body = rendered.html;
 
 	const csp = new Csp(options.csp, {
-		dev: options.dev,
 		prerender: !!state.prerendering
 	});
 
@@ -140,23 +143,23 @@ export async function render_response({
 	 * The prefix to use for static assets. Replaces `%sveltekit.assets%` in the template
 	 * @type {string}
 	 */
-	let assets;
+	let resolved_assets;
 
-	if (options.paths.assets) {
+	if (assets) {
 		// if an asset path is specified, use it
-		assets = options.paths.assets;
+		resolved_assets = assets;
 	} else if (state.prerendering?.fallback) {
 		// if we're creating a fallback page, asset paths need to be root-relative
-		assets = options.paths.base;
+		resolved_assets = base;
 	} else {
 		// otherwise we want asset paths to be relative to the page, so that they
 		// will work in odd contexts like IPFS, the internet archive, and so on
-		const segments = event.url.pathname.slice(options.paths.base.length).split('/').slice(2);
-		assets = segments.length > 0 ? segments.map(() => '..').join('/') : '.';
+		const segments = event.url.pathname.slice(base.length).split('/').slice(2);
+		resolved_assets = segments.length > 0 ? segments.map(() => '..').join('/') : '.';
 	}
 
 	/** @param {string} path */
-	const prefixed = (path) => (path.startsWith('/') ? path : `${assets}/${path}`);
+	const prefixed = (path) => (path.startsWith('/') ? path : `${resolved_assets}/${path}`);
 
 	const serialized = { data: '', form: 'null', error: 'null' };
 
@@ -203,8 +206,7 @@ export async function render_response({
 	if (inline_styles.size > 0) {
 		const content = Array.from(inline_styles.values()).join('\n');
 
-		const attributes = [];
-		if (options.dev) attributes.push(' data-sveltekit');
+		const attributes = __SVELTEKIT_DEV__ ? [' data-sveltekit'] : [];
 		if (csp.style_needs_nonce) attributes.push(` nonce="${csp.nonce}"`);
 
 		csp.add_style(content);
@@ -250,10 +252,10 @@ export async function render_response({
 
 	if (page_config.csr) {
 		const opts = [
-			`env: ${s(options.public_env)}`,
-			`paths: ${s(options.paths)}`,
+			`env: ${s(env)}`,
+			`paths: ${s({ assets, base })}`,
 			`target: document.querySelector('[data-sveltekit-hydrate="${target}"]').parentNode`,
-			`version: ${s(options.version)}`
+			`version: ${s(version)}`
 		];
 
 		if (page_config.ssr) {
@@ -315,7 +317,7 @@ export async function render_response({
 	}
 
 	if (options.service_worker) {
-		const opts = options.dev ? `, { type: 'module' }` : '';
+		const opts = __SVELTEKIT_DEV__ ? `, { type: 'module' }` : '';
 
 		// we use an anonymous function instead of an arrow function to support
 		// older browsers (https://github.com/sveltejs/kit/pull/5417)
@@ -355,10 +357,10 @@ export async function render_response({
 	// add the content after the script/css links so the link elements are parsed first
 	head += rendered.head;
 
-	const html = options.app_template({
+	const html = options.templates.app({
 		head,
 		body,
-		assets,
+		assets: resolved_assets,
 		nonce: /** @type {string} */ (csp.nonce)
 	});
 

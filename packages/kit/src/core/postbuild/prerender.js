@@ -1,6 +1,6 @@
 import { readFileSync, writeFileSync } from 'fs';
 import { dirname, join } from 'path';
-import { pathToFileURL, URL } from 'url';
+import { URL } from 'url';
 import { installPolyfills } from '../../exports/node/polyfills.js';
 import { mkdirp, posixify, walk } from '../../utils/filesystem.js';
 import { should_polyfill } from '../../utils/platform.js';
@@ -11,16 +11,6 @@ import { escape_html_attr } from '../../utils/escape.js';
 import { logger } from '../utils.js';
 import { load_config } from '../config/index.js';
 import { get_route_segments } from '../../utils/routing.js';
-import { get_option } from '../../runtime/server/utils.js';
-import {
-	validate_common_exports,
-	validate_page_server_exports,
-	validate_server_exports
-} from '../../utils/exports.js';
-
-const [, , client_out_dir, manifest_path, results_path, verbose, env] = process.argv;
-
-prerender();
 
 /**
  * @template {{message: string}} T
@@ -52,22 +42,27 @@ const OK = 2;
 const REDIRECT = 3;
 
 /**
+ *
  * @param {{
- *   prerendered: import('types').Prerendered;
+ *   Server: typeof import('types').InternalServer;
+ *   internal: import('types').ServerInternalModule;
+ *   manifest: import('types').SSRManifest;
  *   prerender_map: import('types').PrerenderMap;
- * }} data
+ *   client_out_dir: string;
+ *   verbose: string;
+ *   env: string;
+ * }} opts
+ * @returns
  */
-const output_and_exit = (data) => {
-	writeFileSync(
-		results_path,
-		JSON.stringify(data, (_key, value) =>
-			value instanceof Map ? Array.from(value.entries()) : value
-		)
-	);
-	process.exit(0);
-};
-
-export async function prerender() {
+export async function prerender({
+	Server,
+	internal,
+	manifest,
+	prerender_map,
+	client_out_dir,
+	verbose,
+	env
+}) {
 	/** @type {import('types').Prerendered} */
 	const prerendered = {
 		pages: new Map(),
@@ -75,9 +70,6 @@ export async function prerender() {
 		redirects: new Map(),
 		paths: []
 	};
-
-	/** @type {import('types').PrerenderMap} */
-	const prerender_map = new Map();
 
 	/** @type {Set<string>} */
 	const prerendered_routes = new Set();
@@ -94,29 +86,10 @@ export async function prerender() {
 		installPolyfills();
 	}
 
-	const server_root = join(config.outDir, 'output');
-
-	/** @type {import('types').ServerModule} */
-	const { Server, override } = await import(pathToFileURL(`${server_root}/server/index.js`).href);
-
-	/** @type {import('types').SSRManifest} */
-	const manifest = (await import(pathToFileURL(manifest_path).href)).manifest;
-
 	/** @type {Map<string, string>} */
 	const saved = new Map();
 
-	override({
-		building: true,
-		paths: config.paths,
-		read: (file) => {
-			// stuff we just wrote
-			const filepath = saved.get(file);
-			if (filepath) return readFileSync(filepath);
-
-			// stuff in `static`
-			return readFileSync(join(config.files.assets, file));
-		}
-	});
+	internal.set_paths(config.paths);
 
 	const server = new Server(manifest);
 	await server.init({ env: JSON.parse(env) });
@@ -201,9 +174,19 @@ export async function prerender() {
 		const dependencies = new Map();
 
 		const response = await server.respond(new Request(config.prerender.origin + encoded), {
-			getClientAddress,
+			getClientAddress() {
+				throw new Error('Cannot read clientAddress during prerendering');
+			},
 			prerendering: {
 				dependencies
+			},
+			read: (file) => {
+				// stuff we just wrote
+				const filepath = saved.get(file);
+				if (filepath) return readFileSync(filepath);
+
+				// stuff in `static`
+				return readFileSync(join(config.files.assets, file));
 			}
 		});
 
@@ -367,58 +350,6 @@ export async function prerender() {
 		saved.set(file, dest);
 	}
 
-	for (const route of manifest._.routes) {
-		if (route.endpoint) {
-			const mod = await route.endpoint();
-			if (mod.prerender !== undefined) {
-				validate_server_exports(mod, route.id);
-
-				if (mod.prerender && (mod.POST || mod.PATCH || mod.PUT || mod.DELETE)) {
-					throw new Error(
-						`Cannot prerender a +server file with POST, PATCH, PUT, or DELETE (${route.id})`
-					);
-				}
-
-				prerender_map.set(route.id, mod.prerender);
-			}
-		}
-
-		if (route.page) {
-			const nodes = await Promise.all(
-				[...route.page.layouts, route.page.leaf].map((n) => {
-					if (n !== undefined) return manifest._.nodes[n]();
-				})
-			);
-
-			const layouts = nodes.slice(0, -1);
-			const page = nodes.at(-1);
-
-			for (const layout of layouts) {
-				if (layout) {
-					validate_common_exports(layout.server, route.id);
-					validate_common_exports(layout.universal, route.id);
-				}
-			}
-
-			if (page) {
-				validate_page_server_exports(page.server, route.id);
-				validate_common_exports(page.universal, route.id);
-			}
-
-			const should_prerender = get_option(nodes, 'prerender');
-			const prerender =
-				should_prerender === true ||
-				// Try prerendering if ssr is false and no server needed. Set it to 'auto' so that
-				// the route is not removed from the manifest, there could be a server load function.
-				// People can opt out of this behavior by explicitly setting prerender to false
-				(should_prerender !== false && get_option(nodes, 'ssr') === false && !page?.server?.actions
-					? 'auto'
-					: should_prerender ?? false);
-
-			prerender_map.set(route.id, prerender);
-		}
-	}
-
 	for (const entry of config.prerender.entries) {
 		if (entry === '*') {
 			for (const [id, prerender] of prerender_map) {
@@ -467,10 +398,5 @@ export async function prerender() {
 		);
 	}
 
-	output_and_exit({ prerendered, prerender_map });
-}
-
-/** @return {string} */
-function getClientAddress() {
-	throw new Error('Cannot read clientAddress during prerendering');
+	return { prerendered, prerender_map };
 }

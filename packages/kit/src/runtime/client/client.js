@@ -915,7 +915,7 @@ export function create_client({ target, base }) {
 		/** @type {import('types').ServerDataNode | null} */
 		let server_data_node = null;
 
-		if (node.server) {
+		if (node.has_server_load) {
 			// TODO post-https://github.com/sveltejs/kit/discussions/6124 we can use
 			// existing root layout data
 			try {

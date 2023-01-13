@@ -54,15 +54,15 @@ export async function render_endpoint(event, mod, state) {
 		}
 
 		return response;
-	} catch (error) {
-		if (error instanceof Redirect) {
+	} catch (e) {
+		if (e instanceof Redirect) {
 			return new Response(undefined, {
-				status: error.status,
-				headers: { location: error.location }
+				status: e.status,
+				headers: { location: e.location }
 			});
 		}
 
-		throw error;
+		throw e;
 	}
 }
 
