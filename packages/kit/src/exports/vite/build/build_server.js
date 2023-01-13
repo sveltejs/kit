@@ -67,8 +67,8 @@ export async function build_server(options, client) {
 		})
 	);
 
-	const chunks = output.filter(
-		/** @returns {output is import('rollup').OutputChunk} */ (output) => output.type === 'chunk'
+	const chunks = /** @type {import('rollup').OutputChunk[]} */ (
+		output.filter((chunk) => chunk.type === 'chunk')
 	);
 
 	/** @type {import('vite').Manifest} */
