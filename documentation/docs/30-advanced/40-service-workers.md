@@ -16,6 +16,8 @@ if ('serviceWorker' in navigator) {
 }
 ```
 
+## Inside the service worker
+
 Inside the service worker you have access to the [`$service-worker` module](/docs/modules#$service-worker), which provides you with the paths to all static assets, build files and prerendered pages. You're also provided with an app version string which you can use for creating a unique cache name. If your Vite config specifies `define` (used for global variable replacements), this will be applied to service workers as well as your server/client builds.
 
 The following example caches the built app and any files in `static` eagerly, and caches all other requests as they happen. This would make each page work offline once visited.
@@ -87,6 +89,8 @@ self.addEventListener('fetch', (event) => {
 
 > Be careful when caching! In some cases, stale data might be worse than data that's unavailable while offline. Since browsers will empty caches if they get too full, you should also be careful about caching large assets like video files.
 
+## During development
+
 The service worker is bundled for production, but not during development. For that reason, only browsers that support [modules in service workers](https://web.dev/es-modules-in-sw) will be able to use them at dev time. If you are manually registering your service worker, you will need to pass the `{ type: 'module' }` option in development:
 
 ```js
@@ -98,5 +102,28 @@ navigator.serviceWorker.register('/service-worker.js', {
 ```
 
 > `build` and `prerendered` are empty arrays during development
+
+## Type safety
+
+Setting up proper types for service workers requires some manual setup. Inside your `service-worker.js`, add the following to the top of your file:
+
+```original-js
+/// <reference no-default-lib="true"/>
+/// <reference lib="esnext" />
+/// <reference lib="webworker" />
+
+const ws = /** @type {ServiceWorkerGlobalScope} */ (/** @type {unknown} */ (self));
+```
+```generated-ts
+/// <reference no-default-lib="true"/>
+/// <reference lib="esnext" />
+/// <reference lib="webworker" />
+
+const ws = self as unknown as ServiceWorkerGlobalScope;
+```
+
+This disables access to DOM typings like `HTMLElement` which are not available inside a service worker and instantiates the correct globals. The reassignment of `self` to `ws` allows you to type cast it in the process (there are a couple of ways to do this, but the easiest that requires no additional files). Use `ws` instead of `self` in the rest of the file.
+
+## Other solutions
 
 SvelteKit's service worker implementation is deliberately low-level. If you need a more full-flegded but also more opinionated solution, we recommend looking at solutions like [Vite PWA plugin](https://vite-pwa-org.netlify.app/frameworks/sveltekit.html), which uses [Workbox](https://web.dev/learn/pwa/workbox). For more general information on service workers, we recommend [the MDN web docs](https://developer.mozilla.org/en-US/docs/Web/API/Service_Worker_API/Using_Service_Workers).
