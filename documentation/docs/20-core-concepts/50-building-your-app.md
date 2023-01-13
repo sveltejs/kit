@@ -1,10 +1,43 @@
 ---
-title: Adapters
+title: Building Your App
 ---
+
+Building a SvelteKit consists of two stages. First the production build is run. This will create a client and a server build which are later consumed by the corresponding environments. [Prerendering](/docs/page-options#prerender) is executed at this stage, if enabled. The second step is to _adapt_ the output to your deployment target using adapters (more on that in the later sections).
+
+## During the build
+
+SvelteKit will load your `+page/layout(.server).js` files (and all files they import) for analysis during the build. This could lead to code eagerly running which you want to avoid at that stage. Wrap the code in question with `building` from `$app/environment`:
+
+```js
+/// file: +layout.server.js
+// @filename: ambient.d.ts
+declare module '$lib/server/database' {
+	export function setupMyDatabase(): void;
+}
+
+// @filename: index.js
+// ---cut---
+import { building } from '$app/environment';
+import { setupMyDatabase } from '$lib/server/database';
+
+if (!building) {
+	setupMyDatabase();
+}
+
+export const load() {
+	// ...
+}
+```
+
+## Preview your app
+
+Run the `preview` script to look at your app locally after the production build is done. Note that this does not yet include adapter-specific adjustments like the [`platform` object](#supported-environments-platform-specific-context).
+
+## Adapters
 
 Before you can deploy your SvelteKit app, you need to _adapt_ it for your deployment target. Adapters are small plugins that take the built app as input and generate output for deployment.
 
-By default, projects are configured to use `@sveltejs/adapter-auto`, which detects your production environment and selects the appropriate adapter where possible. If your platform isn't (yet) supported, you may need to [install a custom adapter](/docs/adapters#community-adapters) or [write one](/docs/adapters#writing-custom-adapters).
+By default, projects are configured to use `@sveltejs/adapter-auto`, which detects your production environment and selects the appropriate adapter where possible. If your platform isn't (yet) supported, you may need to [install a custom adapter](#community-adapters) or [write one](#writing-custom-adapters).
 
 > See the [adapter-auto README](https://github.com/sveltejs/kit/tree/master/packages/adapter-auto) for information on adding support for new environments.
 

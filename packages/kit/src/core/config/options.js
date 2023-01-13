@@ -67,7 +67,7 @@ const options = object(
 						message += ', rather than the name of an adapter';
 					}
 
-					throw new Error(`${message}. See https://kit.svelte.dev/docs/adapters`);
+					throw new Error(`${message}. See https://kit.svelte.dev/docs/building-your-app`);
 				}
 
 				return input;

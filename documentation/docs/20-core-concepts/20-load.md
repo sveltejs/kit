@@ -192,7 +192,7 @@ Often the `load` function depends on the URL in one way or another. For this, th
 
 An instance of [`URL`](https://developer.mozilla.org/en-US/docs/Web/API/URL), containing properties like the `origin`, `hostname`, `pathname` and `searchParams` (which contains the parsed query string as a [`URLSearchParams`](https://developer.mozilla.org/en-US/docs/Web/API/URLSearchParams) object). `url.hash` cannot be accessed during `load`, since it is unavailable on the server.
 
-> In some environments this is derived from request headers during server-side rendering. If you're using [adapter-node](/docs/adapters#supported-environments-node-js), for example, you may need to configure the adapter in order for the URL to be correct.
+> In some environments this is derived from request headers during server-side rendering. If you're using [adapter-node](/docs/building-your-app#supported-environments-node-js), for example, you may need to configure the adapter in order for the URL to be correct.
 
 ### route
 
