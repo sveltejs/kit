@@ -108,17 +108,36 @@ export function resolve_symlinks(manifest, file) {
 }
 
 /**
- * Partial Vite configuration that we use by default for setting up the build.
- * Can be used in a non-SvelteKit Vite server and build process such as Storybook.
+ * The Vite configuration that we use by default for building.
  * @param {{
  *   config: import('types').ValidatedConfig;
+ *   input: Record<string, string>;
  *   ssr: boolean;
+ *   outDir: string;
  * }} options
  * @return {import('vite').UserConfig}
  */
-export function get_build_setup_config({ config, ssr }) {
+export function get_default_build_config({ config, input, ssr, outDir }) {
+	const prefix = `${config.kit.appDir}/immutable`;
+
 	return {
+		appType: 'custom',
+		base: ssr ? assets_base(config.kit) : './',
 		build: {
+			cssCodeSplit: true,
+			outDir,
+			rollupOptions: {
+				input,
+				output: {
+					format: 'esm',
+					entryFileNames: ssr ? '[name].js' : `${prefix}/[name]-[hash].js`,
+					chunkFileNames: ssr ? 'chunks/[name].js' : `${prefix}/chunks/[name]-[hash].js`,
+					assetFileNames: `${prefix}/assets/[name]-[hash][extname]`,
+					hoistTransitiveImports: false
+				},
+				preserveEntrySignatures: 'strict'
+			},
+			target: ssr ? 'node16.14' : undefined,
 			// don't use the default name to avoid collisions with 'static/manifest.json'
 			manifest: 'vite-manifest.json',
 			ssr
@@ -147,42 +166,6 @@ export function get_build_setup_config({ config, ssr }) {
 				// because they for example use esbuild.build with `platform: 'browser'`
 				'esm-env'
 			]
-		}
-	};
-}
-
-/**
- * Partial Vite configuration that we use by default for setting up the build.
- * Cannot be used in a non-SvelteKit Vite server and build process such as Storybook.
- * @param {{
- *   config: import('types').ValidatedConfig;
- *   input: Record<string, string>;
- *   ssr: boolean;
- *   outDir: string;
- * }} options
- * @return {import('vite').UserConfig}
- */
-export function get_build_compile_config({ config, input, ssr, outDir }) {
-	const prefix = `${config.kit.appDir}/immutable`;
-
-	return {
-		appType: 'custom',
-		base: ssr ? assets_base(config.kit) : './',
-		build: {
-			cssCodeSplit: true,
-			outDir,
-			rollupOptions: {
-				input,
-				output: {
-					format: 'esm',
-					entryFileNames: ssr ? '[name].js' : `${prefix}/[name]-[hash].js`,
-					chunkFileNames: ssr ? 'chunks/[name].js' : `${prefix}/chunks/[name]-[hash].js`,
-					assetFileNames: `${prefix}/assets/[name]-[hash][extname]`,
-					hoistTransitiveImports: false
-				},
-				preserveEntrySignatures: 'strict'
-			},
-			target: ssr ? 'node16.14' : undefined
 		},
 		publicDir: ssr ? false : config.kit.files.assets,
 		worker: {
@@ -196,20 +179,6 @@ export function get_build_compile_config({ config, input, ssr, outDir }) {
 			}
 		}
 	};
-}
-
-/**
- * The Vite configuration that we use by default for building.
- * @param {{
- *   config: import('types').ValidatedConfig;
- *   input: Record<string, string>;
- *   ssr: boolean;
- *   outDir: string;
- * }} options
- * @return {import('vite').UserConfig}
- */
-export function get_default_build_config(options) {
-	return vite.mergeConfig(get_build_setup_config(options), get_build_compile_config(options));
 }
 
 /**

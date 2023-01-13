@@ -16,7 +16,7 @@ import { load_config } from '../../core/config/index.js';
 import { generate_manifest } from '../../core/generate_manifest/index.js';
 import { build_server } from './build/build_server.js';
 import { build_service_worker } from './build/build_service_worker.js';
-import { find_deps, get_build_setup_config, get_build_compile_config } from './build/utils.js';
+import { find_deps, get_default_build_config } from './build/utils.js';
 import { dev } from './dev/index.js';
 import { is_illegal, module_guard, normalize_id } from './graph_analysis/index.js';
 import { preview } from './preview/index.js';
@@ -309,16 +309,12 @@ function kit({ svelte_config }) {
 				}
 			});
 
-			// TODO tidy this up
-			const new_config = vite.mergeConfig(
-				get_build_setup_config({ config: svelte_config, ssr: false }),
-				get_build_compile_config({
-					config: svelte_config,
-					input,
-					ssr: false,
-					outDir: `${out}/client`
-				})
-			);
+			const new_config = get_default_build_config({
+				config: svelte_config,
+				input,
+				ssr: false,
+				outDir: `${out}/client`
+			});
 
 			const warning = warn_overridden_config(config, new_config);
 			if (warning) console.error(warning + '\n');
