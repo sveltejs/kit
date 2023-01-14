@@ -1,5 +1,5 @@
 ---
-title: adapter-node
+title: Node
 ---
 
 [Adapter](https://kit.svelte.dev/docs/building-your-app) for SvelteKit apps that generates a standalone Node server.

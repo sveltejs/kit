@@ -1,5 +1,5 @@
 ---
-title: adapter-netlify
+title: Netlify
 ---
 
 A SvelteKit adapter that creates a Netlify app.

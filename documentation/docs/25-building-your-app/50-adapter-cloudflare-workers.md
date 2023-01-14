@@ -1,5 +1,5 @@
 ---
-title: adapter-cloudflare-workers
+title: Cloudflare Workers
 ---
 
 SvelteKit adapter that creates a Cloudflare Workers site using a function for dynamic server rendering.

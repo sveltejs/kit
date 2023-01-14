@@ -1,5 +1,5 @@
 ---
-title: adapter-vercel
+title: Vercel
 ---
 
 A SvelteKit adapter that creates a Vercel app.
