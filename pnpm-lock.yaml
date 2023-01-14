@@ -682,7 +682,7 @@ importers:
 
   sites/kit.svelte.dev:
     specifiers:
-      '@sveltejs/adapter-vercel': workspace:^1.0.2
+      '@sveltejs/adapter-vercel': workspace:^1.0.3
       '@sveltejs/amp': workspace:^
       '@sveltejs/kit': workspace:^
       '@sveltejs/site-kit': ^3.0.3
