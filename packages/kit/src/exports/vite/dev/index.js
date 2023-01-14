@@ -14,7 +14,7 @@ import { SVELTE_KIT_ASSETS } from '../../../constants.js';
 import * as sync from '../../../core/sync/sync.js';
 import { get_mime_lookup, runtime_base } from '../../../core/utils.js';
 import { compact } from '../../../utils/array.js';
-import { get_env, not_found } from '../utils.js';
+import { not_found } from '../utils.js';
 
 const cwd = process.cwd();
 
@@ -40,9 +40,8 @@ export async function dev(vite, vite_config, svelte_config) {
 		return fetch(info, init);
 	};
 
-	sync.init(svelte_config, vite_config.mode);
-
-	const publicEnv = get_env(svelte_config.kit.env, vite_config.mode).public;
+	const mode = vite_config.mode;
+	sync.init(svelte_config, mode);
 
 	/** @type {import('types').ManifestData} */
 	let manifest_data;
@@ -66,7 +65,7 @@ export async function dev(vite, vite_config, svelte_config) {
 
 	async function update_manifest() {
 		try {
-			({ manifest_data } = await sync.create(svelte_config));
+			({ manifest_data } = await sync.create(svelte_config, mode));
 
 			if (manifest_error) {
 				manifest_error = null;
@@ -292,7 +291,7 @@ export async function dev(vite, vite_config, svelte_config) {
 			file.startsWith(serviceWorker) ||
 			file.startsWith(hooks.server)
 		) {
-			sync.server(svelte_config);
+			sync.server(svelte_config, mode);
 		}
 	});
 
@@ -466,11 +465,6 @@ export async function dev(vite, vite_config, svelte_config) {
 
 					return;
 				}
-
-				// .replace(
-				// 	/%sveltekit\.env\.([^%]+)%/g,
-				// 	(_match, capture) => publicEnv[capture] || ''
-				// )
 
 				const rendered = await server.respond(request, {
 					getClientAddress: () => {

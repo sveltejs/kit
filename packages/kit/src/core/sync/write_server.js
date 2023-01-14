@@ -1,5 +1,6 @@
 import fs from 'node:fs';
 import path from 'node:path';
+import { get_env } from '../../exports/vite/utils.js';
 import { posixify, resolve_entry } from '../../utils/filesystem.js';
 import { s } from '../../utils/misc.js';
 import { load_error_page, load_template } from '../config/index.js';
@@ -13,6 +14,7 @@ import { runtime_directory } from '../utils.js';
  *   runtime_directory: string;
  *   template: string;
  *   error_page: string;
+ *   public_env: Record<string, string>;
  * }} opts
  */
 const server_template = ({
@@ -21,7 +23,8 @@ const server_template = ({
 	has_service_worker,
 	runtime_directory,
 	template,
-	error_page
+	error_page,
+	public_env
 }) => `
 import root from './root.svelte';
 import { set_building, set_paths, set_version } from '${runtime_directory}/shared.js';
@@ -39,10 +42,11 @@ export const options = {
 	service_worker: ${has_service_worker},
 	templates: {
 		app: ({ head, body, assets, nonce }) => ${s(template)
-			.replace('%sveltekit.head%', '" + head + "')
-			.replace('%sveltekit.body%', '" + body + "')
+			.replace(/%sveltekit\.env\.([^%]+)%/g, (_match, capture) => public_env[capture] || '')
 			.replace(/%sveltekit\.assets%/g, '" + assets + "')
-			.replace(/%sveltekit\.nonce%/g, '" + nonce + "')},
+			.replace(/%sveltekit\.nonce%/g, '" + nonce + "')
+			.replace('%sveltekit.head%', '" + head + "')
+			.replace('%sveltekit.body%', '" + body + "')},
 		error: ({ status, message }) => ${s(error_page)
 			.replace(/%sveltekit\.status%/g, '" + status + "')
 			.replace(/%sveltekit\.error\.message%/g, '" + message + "')}
@@ -64,8 +68,9 @@ export { set_building, set_paths };
  * Write server configuration to disk
  * @param {import('types').ValidatedConfig} config
  * @param {string} output
+ * @param {string} mode
  */
-export function write_server(config, output) {
+export function write_server(config, output, mode) {
 	// TODO the casting shouldn't be necessary — investigate
 	const hooks_file = /** @type {string} */ (resolve_entry(config.kit.files.hooks.server));
 
@@ -83,7 +88,8 @@ export function write_server(config, output) {
 				config.kit.serviceWorker.register && !!resolve_entry(config.kit.files.serviceWorker),
 			runtime_directory: relative(runtime_directory),
 			template: load_template(process.cwd(), config),
-			error_page: load_error_page(config)
+			error_page: load_error_page(config),
+			public_env: get_env(config.kit.env, mode).public
 		})
 	);
 }
