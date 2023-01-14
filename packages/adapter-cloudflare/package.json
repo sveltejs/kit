@@ -23,7 +23,6 @@
 		"index.d.ts",
 		"ambient.d.ts"
 	],
-	"main": "index.js",
 	"scripts": {
 		"build": "esbuild src/worker.js --bundle --outfile=files/worker.js --external:SERVER --external:MANIFEST --format=esm",
 		"lint": "prettier --check . --config ../../.prettierrc --ignore-path .gitignore",
