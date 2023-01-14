@@ -1,5 +1,14 @@
 # @sveltejs/adapter-cloudflare
 
+## 1.0.3
+
+### Patch Changes
+
+- chore: remove superfluous main field from package.json ([#8519](https://github.com/sveltejs/kit/pull/8519))
+
+- Updated dependencies [[`7e2d3405`](https://github.com/sveltejs/kit/commit/7e2d34056e99f371e22406d941b764df365a2649)]:
+  - @sveltejs/kit@1.1.1
+
 ## 1.0.2
 
 ### Patch Changes
