@@ -1,5 +1,11 @@
 # @sveltejs/kit
 
+## 1.1.1
+
+### Patch Changes
+
+- chore: upgrade devalue ([#8520](https://github.com/sveltejs/kit/pull/8520))
+
 ## 1.1.0
 
 ### Minor Changes
