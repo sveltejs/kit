@@ -9,4 +9,4 @@
 '@sveltejs/amp': patch
 ---
 
-"chore: remove superfluous fields from package.json"
+chore: remove superfluous main field from package.json
