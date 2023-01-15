@@ -20,6 +20,7 @@
 	"files": [
 		"ambient.d.ts",
 		"files",
+		"index.js",
 		"index.d.ts"
 	],
 	"scripts": {
