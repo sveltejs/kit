@@ -1,5 +1,11 @@
 # @sveltejs/adapter-static
 
+## 1.0.4
+
+### Patch Changes
+
+- fix: publish missing files ([#8532](https://github.com/sveltejs/kit/pull/8532))
+
 ## 1.0.3
 
 ### Patch Changes

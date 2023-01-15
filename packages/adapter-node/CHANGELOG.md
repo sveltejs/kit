@@ -1,5 +1,11 @@
 # @sveltejs/adapter-node
 
+## 1.1.3
+
+### Patch Changes
+
+- fix: publish missing files ([#8532](https://github.com/sveltejs/kit/pull/8532))
+
 ## 1.1.2
 
 ### Patch Changes
