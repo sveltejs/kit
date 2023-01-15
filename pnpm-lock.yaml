@@ -739,7 +739,6 @@ importers:
     dependencies:
       d3-geo: 3.0.1
       d3-geo-projection: 4.0.0
-      intersection-observer: 0.12.2
       topojson-client: 3.1.0
     devDependencies:
       '@sveltejs/adapter-vercel': link:../../packages/adapter-vercel
@@ -751,6 +750,7 @@ importers:
       '@vitejs/plugin-legacy': 3.0.1_terser@5.15.0+vite@4.0.4
       custom-event-polyfill: 1.0.7
       flexsearch: 0.7.31
+      intersection-observer: 0.12.2
       magic-string: 0.27.0
       marked: 4.2.3
       path-composedpath-polyfill: 0.0.1
@@ -3242,7 +3242,7 @@ packages:
 
   /intersection-observer/0.12.2:
     resolution: {integrity: sha512-7m1vEcPCxXYI8HqnL8CKI6siDyD+eIWSwgB3DZA+ZTogxk9I4CDnj4wilt9x/+/QbHI4YG5YZNmC6458/e9Ktg==}
-    dev: false
+    dev: true
 
   /invert-kv/1.0.0:
     resolution: {integrity: sha512-xgs2NH9AE66ucSq4cNG1nhSFghr5l6tdL15Pk+jl46bmmBapgoaY/AacXyaDznAqmGL99TiLSQgO/XazFSKYeQ==}

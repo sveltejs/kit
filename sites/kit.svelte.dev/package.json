@@ -19,6 +19,7 @@
 		"@vitejs/plugin-legacy": "^3.0.1",
 		"custom-event-polyfill": "^1.0.7",
 		"flexsearch": "^0.7.31",
+		"intersection-observer": "^0.12.2",
 		"magic-string": "^0.27.0",
 		"marked": "^4.2.3",
 		"path-composedpath-polyfill": "^0.0.1",
@@ -45,7 +46,6 @@
 	"dependencies": {
 		"d3-geo": "^3.0.1",
 		"d3-geo-projection": "^4.0.0",
-		"intersection-observer": "^0.12.2",
 		"topojson-client": "^3.1.0"
 	}
 }
