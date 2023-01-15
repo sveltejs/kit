@@ -1324,7 +1324,8 @@ export function create_client({ target, base }) {
 		},
 
 		_start_router: () => {
-			if (history.scrollRestoration) {// If the browser supports `history.scrollRestoration`
+			// If the browser supports `history.scrollRestoration`
+			if (history.scrollRestoration) {
 				history.scrollRestoration = 'manual';
 			}
 
