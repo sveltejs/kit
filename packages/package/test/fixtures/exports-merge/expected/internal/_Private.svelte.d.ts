@@ -1,7 +1,10 @@
 /** @typedef {typeof __propDef.props}  PrivateProps */
 /** @typedef {typeof __propDef.events}  PrivateEvents */
 /** @typedef {typeof __propDef.slots}  PrivateSlots */
-export default class Private extends SvelteComponentTyped<{}, {
+export default class Private extends SvelteComponentTyped<
+{
+	[x:string]: never;
+}, {
 	[evt: string]: CustomEvent<any>;
 },
 {}
@@ -12,7 +15,9 @@ export type PrivateEvents = typeof __propDef.events;
 export type PrivateSlots = typeof __propDef.slots;
 import { SvelteComponentTyped } from "svelte";
 declare const __propDef: {
-	props: {};
+	props: {
+		[x:string]: never;
+	};
 	events: {
 		[evt: string]: CustomEvent<any>;
 	};

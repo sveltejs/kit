@@ -32,7 +32,7 @@ const config = {
 				const extension = path.extname(url.pathname);
 				if (supportedExtensions.includes(extension)) {
 					return new URLSearchParams({
-						format: 'avif;webp;' + extension,
+						format: 'avif;webp;' + extension.slice(1),
 						picture: true
 					});
 				}

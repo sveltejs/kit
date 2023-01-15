@@ -171,6 +171,22 @@ app.listen(3000, () => {
 });
 ```
 
+## Troubleshooting
+
+### Is there a hook for cleaning up before the server exits?
+
+There's nothing built-in to SvelteKit for this, because such a cleanup hook depends highly on the execution environment you're on. For Node, you can use its built-in `process.on(..)` to implement a callback that runs before the server exits:
+
+```js
+function shutdownGracefully() {
+  // anything you need to clean up manually goes in here
+  db.shutdown();
+}
+
+process.on('SIGINT', shutdownGracefully);
+process.on('SIGTERM', shutdownGracefully);
+```
+
 ## Changelog
 
 [The Changelog for this package is available on GitHub](https://github.com/sveltejs/kit/blob/master/packages/adapter-node/CHANGELOG.md).

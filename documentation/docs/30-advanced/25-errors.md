@@ -8,7 +8,7 @@ Errors are an inevitable fact of software development. SvelteKit handles errors 
 
 SvelteKit distinguishes between expected and unexpected errors, both of which are represented as simple `{ message: string }` objects by default.
 
-You can add additional properties, like a `code` or a tracking `id`, as shown below.
+You can add additional properties, like a `code` or a tracking `id`, as shown in the examples below. (When using TypeScript this requires you to redefine the `Error` type as described in  [type safety](/docs/errors#type-safety)).
 
 ## Expected errors
 
@@ -83,10 +83,17 @@ Unexpected errors will go through the [`handleError`](/docs/hooks#shared-hooks-h
 /// file: src/hooks.server.js
 // @errors: 2322 1360 2571 2339
 // @filename: ambient.d.ts
-const Sentry: any;
+declare module '@sentry/node' {
+	export const init: (opts: any) => void;
+	export const captureException: (error: any, opts: any) => void;
+}
 
 // @filename: index.js
 // ---cut---
+import * as Sentry from '@sentry/node';
+
+Sentry.init({/*...*/})
+
 /** @type {import('@sveltejs/kit').HandleServerError} */
 export function handleError({ error, event }) {
 	// example integration with https://sentry.io/
@@ -98,6 +105,8 @@ export function handleError({ error, event }) {
 	};
 }
 ```
+
+> Make sure that `handleError` _never_ throws an error
 
 ## Responses
 
@@ -122,7 +131,7 @@ You can customise the fallback error page by adding a `src/error.html` file:
 
 SvelteKit will replace `%sveltekit.status%` and `%sveltekit.error.message%` with their corresponding values.
 
-If the error instead occurs inside a `load` function while rendering a page, SvelteKit will render the [`+error.svelte`](/docs/routing#error) component nearest to where the error occurred.
+If the error instead occurs inside a `load` function while rendering a page, SvelteKit will render the [`+error.svelte`](/docs/routing#error) component nearest to where the error occurred. If the error occurs inside a `load` function in `+layout(.server).js`, the closest error boundary in the tree is an `+error.svelte` file _above_ that layout (not next to it).
 
 The exception is when the error occurs inside the root `+layout.js` or `+layout.server.js`, since the root layout would ordinarily _contain_ the `+error.svelte` component. In this case, SvelteKit uses the fallback error page.
 

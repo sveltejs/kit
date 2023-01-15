@@ -1,7 +1,6 @@
 import { BROWSER, DEV } from 'esm-env';
 import { writable } from 'svelte/store';
-import { assets } from '../paths.js';
-import { version } from '../env.js';
+import { assets, version } from '../shared.js';
 import { PRELOAD_PRIORITIES } from './constants.js';
 
 /* global __SVELTEKIT_APP_VERSION_FILE__, __SVELTEKIT_APP_VERSION_POLL_INTERVAL__ */
@@ -105,7 +104,7 @@ function parent_element(element) {
  */
 export function find_anchor(element, target) {
 	while (element && element !== target) {
-		if (element.nodeName.toUpperCase() === 'A') {
+		if (element.nodeName.toUpperCase() === 'A' && element.hasAttribute('href')) {
 			return /** @type {HTMLAnchorElement | SVGAElement} */ (element);
 		}
 
@@ -211,6 +210,7 @@ export function create_updated_store() {
 	/** @type {NodeJS.Timeout} */
 	let timeout;
 
+	/** @type {() => Promise<boolean>} */
 	async function check() {
 		if (DEV || !BROWSER) return false;
 

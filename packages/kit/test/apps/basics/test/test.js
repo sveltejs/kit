@@ -1,5 +1,5 @@
 import { expect } from '@playwright/test';
-import { start_server, test } from '../../../utils.js';
+import { test } from '../../../utils.js';
 
 /** @typedef {import('@playwright/test').Response} Response */
 
@@ -793,11 +793,11 @@ test.describe('Load', () => {
 		expect(await page.textContent('h1')).toBe('text.length is 5000000');
 	});
 
-	test('handles external api', async ({ page }) => {
+	test('handles external api', async ({ page, start_server }) => {
 		/** @type {string[]} */
 		const requested_urls = [];
 
-		const { port, close } = await start_server(async (req, res) => {
+		const { port } = await start_server(async (req, res) => {
 			requested_urls.push(req.url);
 
 			if (req.url === '/server-fetch-request-modified.json') {
@@ -813,14 +813,10 @@ test.describe('Load', () => {
 			}
 		});
 
-		try {
-			await page.goto(`/load/server-fetch-request?port=${port}`);
+		await page.goto(`/load/server-fetch-request?port=${port}`);
 
-			expect(requested_urls).toEqual(['/server-fetch-request-modified.json']);
-			expect(await page.textContent('h1')).toBe('the answer is 42');
-		} finally {
-			await close();
-		}
+		expect(requested_urls).toEqual(['/server-fetch-request-modified.json']);
+		expect(await page.textContent('h1')).toBe('the answer is 42');
 	});
 
 	test('makes credentialed fetches to endpoints by default', async ({
@@ -838,8 +834,7 @@ test.describe('Load', () => {
 		baseURL,
 		page,
 		clicknav,
-		javaScriptEnabled,
-		browserName
+		javaScriptEnabled
 	}) => {
 		await page.goto('/load');
 		await clicknav('[href="/load/fetch-request-headers"]');
@@ -856,8 +851,8 @@ test.describe('Load', () => {
 				referer: `${baseURL}/load`,
 				// these headers aren't particularly useful, but they allow us to verify
 				// that page headers are being forwarded
-				'sec-fetch-dest': browserName === 'webkit' ? undefined : 'empty',
-				'sec-fetch-mode': browserName === 'webkit' ? undefined : 'cors',
+				'sec-fetch-dest': 'empty',
+				'sec-fetch-mode': 'cors',
 				connection: 'keep-alive'
 			});
 		} else {
@@ -866,17 +861,6 @@ test.describe('Load', () => {
 				'accept-language': 'en-US'
 			});
 		}
-	});
-
-	test('errors when trying to access non-serialized request headers on the server', async ({
-		page,
-		read_errors
-	}) => {
-		await page.goto('/load/fetch-request-headers-invalid-access');
-
-		expect(read_errors(`/load/fetch-request-headers-invalid-access`).message).toContain(
-			'Failed to get response header "content-type" — it must be included by the `filterSerializedResponseHeaders` option'
-		);
 	});
 
 	test('exposes rawBody as a DataView to endpoints', async ({ page, clicknav }) => {
@@ -953,35 +937,21 @@ test.describe('Load', () => {
 		expect(await page.textContent('h1')).toBe('true');
 	});
 
-	test('CORS errors are simulated server-side for shared load functions', async ({
+	test('Prerendered +server.js called from a non-prerendered +page.server.js works', async ({
 		page,
-		read_errors
+		app,
+		javaScriptEnabled
 	}) => {
-		const { port, close } = await start_server(async (req, res) => {
-			res.end('hello');
-		});
+		if (javaScriptEnabled) {
+			await page.goto('/');
+			await app.goto('/prerendering/prerendered-endpoint/page');
+		} else {
+			await page.goto('/prerendering/prerendered-endpoint/page');
+		}
 
-		await page.goto(`/load/cors?port=${port}`);
-		expect(await page.textContent('h1')).toBe('500');
-		expect(read_errors(`/load/cors`).message).toContain(
-			`CORS error: No 'Access-Control-Allow-Origin' header is present on the requested resource`
+		expect(await page.textContent('h1')).toBe(
+			'Im prerendered and called from a non-prerendered +page.server.js'
 		);
-
-		await page.goto(`/load/cors/no-cors?port=${port}`);
-		expect(await page.textContent('h1')).toBe('result: ');
-
-		await close();
-	});
-
-	test('CORS errors are skipped for server-only load functions', async ({ page }) => {
-		const { port, close } = await start_server(async (req, res) => {
-			res.end('hello');
-		});
-
-		await page.goto(`/load/cors/server-only?port=${port}`);
-		expect(await page.textContent('h1')).toBe('hello');
-
-		await close();
 	});
 });
 
@@ -1297,7 +1267,7 @@ test.describe('Redirects', () => {
 	test('prevents redirect loops', async ({ baseURL, page, javaScriptEnabled, browserName }) => {
 		await page.goto('/redirect');
 
-		await page.click('[href="/redirect/loopy/a"]');
+		await page.locator('[href="/redirect/loopy/a"]').click();
 
 		if (javaScriptEnabled) {
 			await page.waitForSelector('#message');
@@ -1490,8 +1460,7 @@ test.describe('Routing', () => {
 
 	test('does not attempt client-side navigation to server routes', async ({ page }) => {
 		await page.goto('/routing');
-		await page.click('[href="/routing/ambiguous/ok.json"]');
-		await page.waitForLoadState('networkidle');
+		await page.locator('[href="/routing/ambiguous/ok.json"]').click();
 		expect(await page.textContent('body')).toBe('ok');
 	});
 
@@ -1560,7 +1529,7 @@ test.describe('Routing', () => {
 	}) => {
 		await page.goto('/routing/hashes/a');
 
-		await page.click('[href="#hash-target"]');
+		await page.locator('[href="#hash-target"]').click();
 		await clicknav('[href="/routing/hashes/b"]');
 
 		await page.goBack();
@@ -1617,18 +1586,15 @@ test.describe('Routing', () => {
 		expect(await page.textContent('h2')).toBe('y-z');
 	});
 
-	test('ignores navigation to URLs the app does not own', async ({ page }) => {
-		const { port, close } = await start_server((req, res) => res.end('ok'));
+	test('ignores navigation to URLs the app does not own', async ({ page, start_server }) => {
+		const { port } = await start_server((req, res) => res.end('ok'));
 
-		try {
-			await page.goto(`/routing?port=${port}`);
-			await Promise.all([
-				page.click(`[href="http://localhost:${port}"]`),
-				page.waitForURL(`http://localhost:${port}/`)
-			]);
-		} finally {
-			await close();
-		}
+		await page.goto(`/routing?port=${port}`);
+		await Promise.all([
+			page.click(`[href="http://localhost:${port}"]`),
+			// assert that the app can visit a URL not owned by the app without crashing
+			page.waitForURL(`http://localhost:${port}/`)
+		]);
 	});
 
 	test('navigates to ...rest', async ({ page, clicknav }) => {
@@ -1656,7 +1622,7 @@ test.describe('Routing', () => {
 		expect(await page.textContent('h1')).toBe('xyz/abc');
 		expect(await page.textContent('h2')).toBe('xyz/abc');
 
-		await page.click('[href="/routing/rest/xyz/abc/qwe/deep.json"]');
+		await page.locator('[href="/routing/rest/xyz/abc/qwe/deep.json"]').click();
 		expect(await page.textContent('body')).toBe('xyz/abc/qwe');
 	});
 
@@ -1711,7 +1677,7 @@ test.describe('Routing', () => {
 		clicknav
 	}) => {
 		await page.goto('/routing/cancellation');
-		await page.click('[href="/routing/cancellation/a"]');
+		await page.locator('[href="/routing/cancellation/a"]').click();
 		await clicknav('[href="/routing/cancellation/b"]');
 
 		expect(await page.url()).toBe(`${baseURL}/routing/cancellation/b`);
@@ -1892,10 +1858,10 @@ test.describe('Actions', () => {
 		expect(await page.textContent('pre')).toBe(JSON.stringify(null));
 
 		if (javaScriptEnabled) {
-			await page.click('button.increment-success');
+			await page.locator('button.increment-success').click();
 			await expect(page.locator('pre')).toHaveText(JSON.stringify({ count: 0 }));
 
-			await page.click('button.increment-invalid');
+			await page.locator('button.increment-invalid').click();
 			await expect(page.locator('pre')).toHaveText(JSON.stringify({ count: 1 }));
 		}
 	});
@@ -1909,10 +1875,10 @@ test.describe('Actions', () => {
 		expect(await page.textContent('pre')).toBe(JSON.stringify(null));
 
 		if (javaScriptEnabled) {
-			await page.click('button.increment-success');
+			await page.locator('button.increment-success').click();
 			await expect(page.locator('pre')).toHaveText(JSON.stringify({ count: 0 }));
 
-			await page.click('button.invalidateAll');
+			await page.locator('button.invalidateAll').click();
 			await page.waitForTimeout(500);
 			await expect(page.locator('pre')).toHaveText(JSON.stringify({ count: 0 }));
 			await app.goto('/actions/enhance');
@@ -1928,7 +1894,7 @@ test.describe('Actions', () => {
 		expect(await page.textContent('pre')).toBe(JSON.stringify(null));
 
 		if (javaScriptEnabled) {
-			await page.click('button.redirect');
+			await page.locator('button.redirect').click();
 			await expect(page.locator('footer')).toHaveText('Custom layout');
 		}
 	});
@@ -1938,7 +1904,7 @@ test.describe('Actions', () => {
 		expect(await page.textContent('pre')).toBe(JSON.stringify(null));
 
 		if (javaScriptEnabled) {
-			await page.click('button.error');
+			await page.locator('button.error').click();
 			await expect(page.locator('p')).toHaveText(
 				'This is your custom error page saying: "Unexpected Form Error"'
 			);
@@ -2103,11 +2069,11 @@ test.describe.serial('Cookies API', () => {
 		let span = page.locator('#cookie-value');
 		expect(await span.innerText()).toContain('undefined');
 
-		await page.click('button#teapot');
+		await page.locator('button#teapot').click();
 		await expect(page.locator('#cookie-value')).toHaveText('teapot');
 
 		// setting a different value...
-		await page.click('button#janeAusten');
+		await page.locator('button#janeAusten').click();
 		await expect(page.locator('#cookie-value')).toHaveText('Jane Austen');
 	});
 
