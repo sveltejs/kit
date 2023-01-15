@@ -9,7 +9,8 @@ title: adapter-static
 Install with `npm i -D @sveltejs/adapter-static`, then add the adapter to your `svelte.config.js`...
 
 ```js
-// svelte.config.js
+// @errors: 2307
+/// file: svelte.config.js
 import adapter from '@sveltejs/adapter-static';
 
 export default {
@@ -87,7 +88,8 @@ You can use `adapter-static` to create a single-page app or SPA by specifying a 
 If you want to create a simple SPA with no prerendered routes, the necessary config looks like this:
 
 ```js
-// svelte.config.js
+// @errors: 2307
+/// file: svelte.config.js
 import adapter from '@sveltejs/adapter-static';
 
 export default {
@@ -114,7 +116,8 @@ Let's go through these options one by one:
 The fallback page is an HTML page created by SvelteKit that loads your app and navigates to the correct route. For example [Surge](https://surge.sh/help/adding-a-200-page-for-client-side-routing), a static web host, lets you add a `200.html` file that will handle any requests that don't correspond to static assets or prerendered pages. We can create that file like so:
 
 ```js
-// svelte.config.js
+// @errors: 2307
+/// file: svelte.config.js
 import adapter from '@sveltejs/adapter-static';
 
 export default {
@@ -164,13 +167,12 @@ You will have to prevent GitHub's provided Jekyll from managing your site by put
 A config for GitHub Pages might look like the following:
 
 ```js
+/// file: svelte.config.js
 const dev = process.argv.includes('dev');
 
 /** @type {import('@sveltejs/kit').Config} */
 const config = {
-	...
 	kit: {
-		...
 		paths: {
 			base: dev ? '' : '/your-repo-name',
 		},

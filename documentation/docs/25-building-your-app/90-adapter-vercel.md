@@ -13,6 +13,8 @@ Add `"@sveltejs/adapter-vercel": "next"` to the `devDependencies` in your `packa
 Then in your `svelte.config.js`:
 
 ```js
+// @errors: 2307
+/// file: svelte.config.js
 import vercel from '@sveltejs/adapter-vercel';
 
 export default {
@@ -41,7 +43,8 @@ export default {
 Vercel makes a set of [deployment-specific environment variables](https://vercel.com/docs/concepts/projects/environment-variables#system-environment-variables) available. Like other environment variables, these are accessible from `$env/static/private` and `$env/dynamic/private` (sometimes — more on that later), and inaccessible from their public counterparts. To access one of these variables from the client:
 
 ```js
-// +layout.server.js
+// @errors: 2305
+/// file: +layout.server.js
 import { VERCEL_COMMIT_REF } from '$env/static/private';
 
 /** @type {import('./$types').LayoutServerLoad} */

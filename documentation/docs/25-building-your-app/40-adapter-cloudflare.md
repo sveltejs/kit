@@ -30,6 +30,8 @@ $ npm i --save-dev @sveltejs/adapter-cloudflare
 You can include these changes in your `svelte.config.js` configuration file:
 
 ```js
+// @errors: 2307
+/// file: svelte.config.js
 import adapter from '@sveltejs/adapter-cloudflare';
 
 export default {
@@ -58,6 +60,7 @@ When configuring your project settings, you must use the following settings:
 The [`env`](https://developers.cloudflare.com/workers/runtime-apis/fetch-event#parameters) object, containing KV/DO namespaces etc, is passed to SvelteKit via the `platform` property along with `context` and `caches`, meaning you can access it in hooks and endpoints:
 
 ```js
+// @errors: 7031
 export async function POST({ request, platform }) {
   const x = platform.env.YOUR_DURABLE_OBJECT_NAMESPACE.idFromName('x');
 }

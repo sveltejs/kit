@@ -24,6 +24,8 @@ _**Comparisons**_
 Install with `npm i -D @sveltejs/adapter-cloudflare-workers`, then add the adapter to your `svelte.config.js`:
 
 ```js
+// @errors: 2307
+/// file: svelte.config.js
 import adapter from '@sveltejs/adapter-cloudflare-workers';
 
 export default {
@@ -76,6 +78,8 @@ wrangler publish
 If you would like to use a config file other than `wrangler.toml`, you can do like so:
 
 ```js
+// @errors: 2307
+/// file: svelte.config.js
 import adapter from '@sveltejs/adapter-cloudflare-workers';
 
 export default {
@@ -90,6 +94,7 @@ export default {
 The [`env`](https://developers.cloudflare.com/workers/runtime-apis/fetch-event#parameters) object, containing KV/DO namespaces etc, is passed to SvelteKit via the `platform` property along with `context` and `caches`, meaning you can access it in hooks and endpoints:
 
 ```js
+// @errors: 7031
 export async function POST({ request, platform }) {
   const x = platform.env.YOUR_DURABLE_OBJECT_NAMESPACE.idFromName('x');
 }

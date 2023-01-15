@@ -9,7 +9,8 @@ title: Node
 Install with `npm i -D @sveltejs/adapter-node`, then add the adapter to your `svelte.config.js`:
 
 ```js
-// svelte.config.js
+// @errors: 2307
+/// file: svelte.config.js
 import adapter from '@sveltejs/adapter-node';
 
 export default {
@@ -109,7 +110,8 @@ The maximum request body size to accept in bytes including while streaming. Defa
 The adapter can be configured with various options:
 
 ```js
-// svelte.config.js
+// @errors: 2307
+/// file: svelte.config.js
 import adapter from '@sveltejs/adapter-node';
 
 export default {
@@ -154,7 +156,8 @@ The adapter creates two files in your build directory — `index.js` and `handle
 Alternatively, you can import the `handler.js` file, which exports a handler suitable for use with [Express](https://github.com/expressjs/expressjs.com), [Connect](https://github.com/senchalabs/connect) or [Polka](https://github.com/lukeed/polka) (or even just the built-in [`http.createServer`](https://nodejs.org/dist/latest/docs/api/http.html#httpcreateserveroptions-requestlistener)) and set up your own server:
 
 ```js
-// my-server.js
+// @errors: 2307 7006
+/// file: my-server.js
 import { handler } from './build/handler.js';
 import express from 'express';
 
@@ -180,6 +183,7 @@ app.listen(3000, () => {
 There's nothing built-in to SvelteKit for this, because such a cleanup hook depends highly on the execution environment you're on. For Node, you can use its built-in `process.on(..)` to implement a callback that runs before the server exits:
 
 ```js
+// @errors: 2304 2580
 function shutdownGracefully() {
   // anything you need to clean up manually goes in here
   db.shutdown();

@@ -15,6 +15,8 @@ npm i -D @sveltejs/adapter-netlify
 You can then configure it inside of `svelte.config.js`:
 
 ```js
+// @errors: 2307
+/// file: svelte.config.js
 import adapter from '@sveltejs/adapter-netlify';
 
 export default {
@@ -53,6 +55,8 @@ New projects will use Node 16 by default. However, if you're upgrading a project
 SvelteKit supports the beta release of [Netlify Edge Functions](https://docs.netlify.com/netlify-labs/experimental-features/edge-functions/). If you pass the option `edge: true` to the `adapter` function, server-side rendering will happen in a Deno-based edge function that's deployed close to the site visitor. If set to `false` (the default), the site will deploy to standard Node-based Netlify Functions.
 
 ```js
+// @errors: 2307
+/// file: svelte.config.js
 import adapter from '@sveltejs/adapter-netlify';
 
 export default {
@@ -88,7 +92,8 @@ During compilation, redirect rules are automatically appended to your `_redirect
 With this adapter, SvelteKit endpoints are hosted as [Netlify Functions](https://docs.netlify.com/functions/overview/). Netlify function handlers have additional context, including [Netlify Identity](https://docs.netlify.com/visitor-access/identity/) information. You can access this context via the `event.platform.context` field inside your hooks and `+page.server` or `+layout.server` endpoints. These are [serverless functions](https://docs.netlify.com/functions/overview/) when the `edge` property is `false` in the adapter config or [edge functions](https://docs.netlify.com/edge-functions/overview/#app) when it is `true`.
 
 ```js
-// +page.server.js
+// @errors: 2705 7006
+/// file: +page.server.js
 export const load = async (event) => {
   const context = event.platform.context;
   console.log(context); // shows up in your functions log in the Netlify app
