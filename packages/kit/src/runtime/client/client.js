@@ -107,6 +107,7 @@ export function create_client({ target, base }) {
 	let root;
 
 	// keeping track of the history index in order to prevent popstate navigation events if needed
+	// eslint-disable-next-line compat/compat -- if the browser doesn't support `history.state` then this will be just undefined
 	let current_history_index = history.state?.[INDEX_KEY];
 
 	if (!current_history_index) {
@@ -1323,7 +1324,9 @@ export function create_client({ target, base }) {
 		},
 
 		_start_router: () => {
-			history.scrollRestoration = 'manual';
+			if (history.scrollRestoration) {// If the browser supports `history.scrollRestoration`
+				history.scrollRestoration = 'manual';
+			}
 
 			// Adopted from Nuxt.js
 			// Reset scrollRestoration to auto when leaving page, allowing page reload
