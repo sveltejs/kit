@@ -20,14 +20,14 @@ Remove `polka` or `express`, if you're using one of those, and any middleware su
 
 ### devDependencies
 
-Remove `sapper` from your `devDependencies` and replace it with `@sveltejs/kit` and whichever [adapter](/docs/building-your-app) you plan to use (see [next section](/docs/migrating#project-files-configuration)).
+Remove `sapper` from your `devDependencies` and replace it with `@sveltejs/kit` and whichever [adapter](/docs/adapters) you plan to use (see [next section](/docs/migrating#project-files-configuration)).
 
 ### scripts
 
 Any scripts that reference `sapper` should be updated:
 
-- `sapper build` should become `vite build` using the Node [adapter](/docs/building-your-app)
-- `sapper export` should become `vite build` using the static [adapter](/docs/building-your-app)
+- `sapper build` should become `vite build` using the Node [adapter](/docs/adapters)
+- `sapper export` should become `vite build` using the static [adapter](/docs/adapters)
 - `sapper dev` should become `vite dev`
 - `node __sapper__/build` should become `node build`
 
@@ -39,7 +39,7 @@ The bulk of your app, in `src/routes`, can be left where it is, but several proj
 
 Your `webpack.config.js` or `rollup.config.js` should be replaced with a `svelte.config.js`, as documented [here](/docs/configuration). Svelte preprocessor options should be moved to `config.preprocess`.
 
-You will need to add an [adapter](/docs/building-your-app). `sapper build` is roughly equivalent to [adapter-node](https://github.com/sveltejs/kit/tree/master/packages/adapter-node) while `sapper export` is roughly equivalent to [adapter-static](https://github.com/sveltejs/kit/tree/master/packages/adapter-static), though you might prefer to use an adapter designed for the platform you're deploying to.
+You will need to add an [adapter](/docs/adapters). `sapper build` is roughly equivalent to [adapter-node](https://github.com/sveltejs/kit/tree/master/packages/adapter-node) while `sapper export` is roughly equivalent to [adapter-static](https://github.com/sveltejs/kit/tree/master/packages/adapter-static), though you might prefer to use an adapter designed for the platform you're deploying to.
 
 If you were using plugins for filetypes that are not automatically handled by [Vite](https://vitejs.dev), you will need to find Vite equivalents and add them to the [Vite config](/docs/project-structure#project-files-vite-config-js).
 
