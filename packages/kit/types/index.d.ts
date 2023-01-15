@@ -21,7 +21,7 @@ import { SSRNodeLoader, SSRRoute, ValidatedConfig } from './internal.js';
 export { PrerenderOption } from './private.js';
 
 /**
- * [Adapters](https://kit.svelte.dev/docs/building-your-app) are responsible for taking the production build and turning it into something that can be deployed to a platform of your choosing.
+ * [Adapters](https://kit.svelte.dev/docs/adapters) are responsible for taking the production build and turning it into something that can be deployed to a platform of your choosing.
  */
 export interface Adapter {
 	/**
@@ -227,7 +227,7 @@ export interface Cookies {
 
 export interface KitConfig {
 	/**
-	 * Your [adapter](https://kit.svelte.dev/docs/building-your-app) is run when executing `vite build`. It determines how the output is converted for different platforms.
+	 * Your [adapter](https://kit.svelte.dev/docs/adapters) is run when executing `vite build`. It determines how the output is converted for different platforms.
 	 * @default undefined
 	 */
 	adapter?: Adapter;

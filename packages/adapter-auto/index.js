@@ -114,7 +114,7 @@ export default () => ({
 		if (adapter) return adapter.adapt(builder);
 
 		builder.log.warn(
-			'Could not detect a supported production environment. See https://kit.svelte.dev/docs/building-your-app to learn how to configure your app to run on the platform of your choosing'
+			'Could not detect a supported production environment. See https://kit.svelte.dev/docs/adapters to learn how to configure your app to run on the platform of your choosing'
 		);
 	}
 });

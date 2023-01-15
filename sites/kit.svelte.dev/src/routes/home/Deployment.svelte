@@ -103,7 +103,7 @@
 				<img src={azure} alt="" />
 				<span>Azure</span>
 			</a>
-			<a target="_blank" rel="noreferrer" href="https://kit.svelte.dev/docs/building-your-app">
+			<a target="_blank" rel="noreferrer" href="https://kit.svelte.dev/docs/adapters">
 				<img src={plus} alt="" />
 				<span>More...</span>
 			</a>
