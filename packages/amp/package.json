@@ -18,7 +18,8 @@
 	},
 	"types": "index.d.ts",
 	"files": [
-		"index.js"
+		"index.js",
+		"index.d.ts"
 	],
 	"scripts": {
 		"lint": "prettier --check . --config ../../.prettierrc --ignore-path .gitignore",

@@ -17,6 +17,11 @@
 		"./package.json": "./package.json"
 	},
 	"types": "index.d.ts",
+	"files": [
+		"index.js",
+		"index.d.ts",
+		"platforms.js"
+	],
 	"scripts": {
 		"lint": "prettier --check . --config ../../.prettierrc --ignore-path .gitignore",
 		"check": "tsc",

@@ -19,6 +19,7 @@
 	"types": "index.d.ts",
 	"files": [
 		"files",
+		"index.js",
 		"index.d.ts"
 	],
 	"scripts": {
