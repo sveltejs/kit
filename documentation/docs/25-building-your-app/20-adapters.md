@@ -4,9 +4,9 @@ title: Adapters
 
 Before you can deploy your SvelteKit app, you need to _adapt_ it for your deployment target. Adapters are small plugins that take the built app as input and generate output for deployment.
 
-By default, projects are configured to use `@sveltejs/adapter-auto`, which detects your production environment and selects the appropriate adapter where possible. If your platform isn't (yet) supported, you may need to [install a custom adapter](#community-adapters) or [write one](#writing-custom-adapters).
+By default, projects are configured to use `@sveltejs/adapter-auto`, which detects your production environment and selects the appropriate adapter where possible. If your platform isn't (yet) supported, you may need to [install a platform-specific adapter](#community-adapters) or in rarer cases [write your own](#writing-custom-adapters).
 
-> See the [adapter-auto README](https://github.com/sveltejs/kit/tree/master/packages/adapter-auto) for information on adding support for new environments.
+> See the [adapter-auto README](adapter-auto) for information on adding support for new environments.
 
 ## Supported environments
 
@@ -14,13 +14,13 @@ SvelteKit offers a number of officially supported adapters.
 
 You can deploy to the following platforms with the default adapter, `adapter-auto`:
 
-- [Cloudflare Pages](https://developers.cloudflare.com/pages/) via [`adapter-cloudflare`](https://github.com/sveltejs/kit/tree/master/packages/adapter-cloudflare)
-- [Netlify](https://netlify.com) via [`adapter-netlify`](https://github.com/sveltejs/kit/tree/master/packages/adapter-netlify)
-- [Vercel](https://vercel.com) via [`adapter-vercel`](https://github.com/sveltejs/kit/tree/master/packages/adapter-vercel)
+- [Cloudflare Pages](https://developers.cloudflare.com/pages/) via [`adapter-cloudflare`](adapter-cloudflare)
+- [Netlify](https://netlify.com) via [`adapter-netlify`](adapter-netlify)
+- [Vercel](https://vercel.com) via [`adapter-vercel`](adapter-vercel)
 
 ### Node.js
 
-To create a simple Node server, install the [`@sveltejs/adapter-node`](https://github.com/sveltejs/kit/tree/master/packages/adapter-node) package and update your `svelte.config.js`:
+To create a simple Node server, install the [`@sveltejs/adapter-node`](adapter-node) package and update your `svelte.config.js`:
 
 ```diff
 /// file: svelte.config.js
@@ -44,7 +44,7 @@ export default {
 
 ### Static sites
 
-Most adapters will generate static HTML for any [prerenderable](/docs/page-options#prerender) pages of your site. In some cases, your entire app might be prerenderable, in which case you can use [`@sveltejs/adapter-static`](https://github.com/sveltejs/kit/tree/master/packages/adapter-static) to generate static HTML for _all_ your pages. A fully static site can be hosted on a wide variety of platforms, including static hosts like [GitHub Pages](https://pages.github.com/).
+Most adapters will generate static HTML for any [prerenderable](/docs/page-options#prerender) pages of your site. In some cases, your entire app might be prerenderable, in which case you can use [`@sveltejs/adapter-static`](adapter-static) to generate static HTML for _all_ your pages. A fully static site can be hosted on a wide variety of platforms, including static hosts like [GitHub Pages](https://pages.github.com/).
 
 ```diff
 /// file: svelte.config.js
@@ -52,7 +52,7 @@ Most adapters will generate static HTML for any [prerenderable](/docs/page-optio
 +import adapter from '@sveltejs/adapter-static';
 ```
 
-You can also use `adapter-static` to generate single-page apps (SPAs) by specifying a [fallback page and disabling SSR](https://github.com/sveltejs/kit/tree/master/packages/adapter-static#spa-mode).
+You can also use `adapter-static` to generate single-page apps (SPAs) by specifying a [fallback page and disabling SSR](adapter-static#spa-mode).
 
 > You must ensure [`trailingSlash`](/docs/page-options#trailingslash) is set appropriately for your environment. If your host does not render `/a.html` upon receiving a request for `/a` then you will need to set `trailingSlash: 'always'` to create `/a/index.html` instead.
 
