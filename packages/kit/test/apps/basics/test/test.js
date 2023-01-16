@@ -1799,7 +1799,7 @@ test.describe('XSS', () => {
 test.describe.only('Actions', () => {
 	test.beforeEach(({ page }) => {
 		page.on('console', (msg) => {
-			console.log('From browser: ' + msg);
+			console.log('From browser: ', msg);
 		});
 	});
 
