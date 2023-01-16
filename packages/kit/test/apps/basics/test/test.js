@@ -1831,10 +1831,7 @@ test.describe('Actions', () => {
 		expect(await page.textContent('pre')).toBe(JSON.stringify(null));
 
 		await page.locator('input[name="username"]').fill('foo');
-		await Promise.all([
-			page.waitForRequest((request) => request.url().includes('/actions/success-data')),
-			page.click('button[formenctype="multipart/form-data"]')
-		]);
+		await page.locator('button[formenctype="multipart/form-data"]').click();
 
 		await expect(page.locator('pre')).toHaveText(JSON.stringify({ result: 'foo' }));
 	});
@@ -1845,10 +1842,7 @@ test.describe('Actions', () => {
 		expect(await page.textContent('pre')).toBe(JSON.stringify(null));
 
 		await page.locator('input[name="username"]').fill('bar');
-		await Promise.all([
-			page.waitForRequest((request) => request.url().includes('/actions/success-data')),
-			page.click('button[formenctype="application/x-www-form-urlencoded"]')
-		]);
+		await page.locator('button[formenctype="application/x-www-form-urlencoded"]').click();
 
 		await expect(page.locator('pre')).toHaveText(JSON.stringify({ result: 'bar' }));
 	});
@@ -1918,10 +1912,7 @@ test.describe('Actions', () => {
 		expect(await page.textContent('pre.formdata2')).toBe(JSON.stringify(null));
 
 		await page.locator('input[name="username"]').fill('foo');
-		await Promise.all([
-			page.waitForRequest((request) => request.url().includes('/actions/enhance')),
-			page.click('button.form1')
-		]);
+		await page.locator('button.form1').click();
 
 		await expect(page.locator('pre.formdata1')).toHaveText(JSON.stringify({ result: 'foo' }));
 		await expect(page.locator('pre.formdata2')).toHaveText(JSON.stringify({ result: 'foo' }));
