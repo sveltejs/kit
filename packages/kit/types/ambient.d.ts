@@ -11,8 +11,11 @@
  * 	}
  * }
  *
- * export default undefined;
+ * export {};
  * ```
+ *
+ * The `export {}` line ensure that this file is treated as a module so you can import other types into it. It means that you can't declare other ambient modules in it however.
+ * For this it's best to create another file next to it called `ambient.d.ts` and add your `declare module` statements there.
  *
  * By populating these interfaces, you will gain type safety when using `event.locals`, `event.platform`, and `data` from `load` functions.
  */
