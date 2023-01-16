@@ -1808,8 +1808,8 @@ test.describe('Actions', () => {
 
 	test('Form fields are persisted', async ({ page, javaScriptEnabled }) => {
 		await page.goto('/actions/form-errors-persist-fields');
-		await page.type('input[name="username"]', 'foo');
-		await page.type('input[name="password"]', 'bar');
+		await page.locator('input[name="username"]').fill('foo');
+		await page.locator('input[name="password"]').fill('bar');
 		await Promise.all([
 			page.waitForRequest((request) =>
 				request.url().includes('/actions/form-errors-persist-fields')
@@ -1830,7 +1830,7 @@ test.describe('Actions', () => {
 
 		expect(await page.textContent('pre')).toBe(JSON.stringify(null));
 
-		await page.type('input[name="username"]', 'foo');
+		await page.locator('input[name="username"]').fill('foo');
 		await Promise.all([
 			page.waitForRequest((request) => request.url().includes('/actions/success-data')),
 			page.click('button[formenctype="multipart/form-data"]')
@@ -1844,7 +1844,7 @@ test.describe('Actions', () => {
 
 		expect(await page.textContent('pre')).toBe(JSON.stringify(null));
 
-		await page.type('input[name="username"]', 'bar');
+		await page.locator('input[name="username"]').fill('bar');
 		await Promise.all([
 			page.waitForRequest((request) => request.url().includes('/actions/success-data')),
 			page.click('button[formenctype="application/x-www-form-urlencoded"]')
@@ -1917,7 +1917,7 @@ test.describe('Actions', () => {
 		expect(await page.textContent('pre.formdata1')).toBe(JSON.stringify(null));
 		expect(await page.textContent('pre.formdata2')).toBe(JSON.stringify(null));
 
-		await page.type('input[name="username"]', 'foo');
+		await page.locator('input[name="username"]').fill('foo');
 		await Promise.all([
 			page.waitForRequest((request) => request.url().includes('/actions/enhance')),
 			page.click('button.form1')
@@ -1950,7 +1950,7 @@ test.describe('Actions', () => {
 
 		expect(await page.textContent('pre.formdata1')).toBe(JSON.stringify(null));
 
-		await page.type('input[name="username"]', 'foo');
+		await page.locator('input[name="username"]').fill('foo');
 		await Promise.all([
 			page.waitForRequest((request) => request.url().includes('/actions/enhance')),
 			page.click('button.form1-register')
