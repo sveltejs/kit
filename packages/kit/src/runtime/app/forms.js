@@ -85,7 +85,10 @@ export function enhance(form, submit = () => {}) {
 		const controller = new AbortController();
 
 		let cancelled = false;
-		const cancel = () => (cancelled = true);
+		const cancel = () => {
+			console.trace('called cancel');
+			cancelled = true;
+		};
 
 		const callback =
 			(await submit({
@@ -95,10 +98,13 @@ export function enhance(form, submit = () => {}) {
 				data,
 				form
 			})) ?? fallback_callback;
+		console.log('cancelled', cancelled);
 		if (cancelled) return;
 
 		/** @type {import('types').ActionResult} */
 		let result;
+
+		console.log('try fetch');
 
 		try {
 			const response = await fetch(action, {
@@ -115,6 +121,7 @@ export function enhance(form, submit = () => {}) {
 			result = deserialize(await response.text());
 			if (result.type === 'error') result.status = response.status;
 		} catch (error) {
+			console.log('error', error);
 			if (/** @type {any} */ (error)?.name === 'AbortError') return;
 			result = { type: 'error', error };
 		}
@@ -127,6 +134,8 @@ export function enhance(form, submit = () => {}) {
 			// @ts-expect-error generic constraints stuff we don't care about
 			result
 		});
+
+		console.log('called callback');
 	}
 
 	// @ts-expect-error
