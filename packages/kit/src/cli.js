@@ -24,7 +24,7 @@ const prog = sade('svelte-kit').version(pkg.version);
 
 prog
 	.command('sync')
-	.describe('Synchronise generated typing files')
+	.describe('Synchronise generated type definitions')
 	.option('--mode', 'Specify a mode for loading environment variables', 'development')
 	.action(async ({ mode }) => {
 		if (!fs.existsSync('svelte.config.js')) {

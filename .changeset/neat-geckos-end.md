@@ -2,4 +2,4 @@
 '@sveltejs/kit': patch
 ---
 
-fix: only generate typing files with sync command
+fix: only generate type definitions with `sync` command
