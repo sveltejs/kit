@@ -1,6 +1,7 @@
 <script>
 	import { enhance } from '$app/forms';
 	import { page } from '$app/stores';
+	import { onMount } from 'svelte';
 
 	/** @type {import('./$types').ActionData} */
 	export let form;
@@ -8,6 +9,9 @@
 	/** @type {AbortController | undefined} */
 	let previous;
 	let count = 0;
+	onMount(() => {
+		console.log('i was mounted');
+	});
 </script>
 
 <pre class="formdata1">{JSON.stringify(form)}</pre>

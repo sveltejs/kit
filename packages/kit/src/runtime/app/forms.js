@@ -26,6 +26,7 @@ export function deserialize(result) {
 
 /** @type {import('$app/forms').enhance} */
 export function enhance(form, submit = () => {}) {
+	console.log('inside enhance setup');
 	if (
 		DEV &&
 		/** @type {HTMLFormElement} */ (HTMLFormElement.prototype.cloneNode.call(form)).method !==
@@ -63,6 +64,7 @@ export function enhance(form, submit = () => {}) {
 
 	/** @param {SubmitEvent} event */
 	async function handle_submit(event) {
+		console.log('handling submit');
 		event.preventDefault();
 
 		const action = new URL(
@@ -132,6 +134,7 @@ export function enhance(form, submit = () => {}) {
 
 	return {
 		destroy() {
+			console.log('destroying enhance');
 			// @ts-expect-error
 			HTMLFormElement.prototype.removeEventListener.call(form, 'submit', handle_submit);
 		}
