@@ -31,7 +31,7 @@ Consider the following example where the user is set from inside a `load` functi
 /// file: +page.js
 // @filename: ambient.d.ts
 declare module '$lib/user' {
-	export const user = { set: (value: any) => void };
+	export const user: { set: (value: any) => void };
 }
 
 // @filename: index.js
