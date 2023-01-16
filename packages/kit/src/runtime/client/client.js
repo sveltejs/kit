@@ -223,9 +223,10 @@ export function create_client({ target, base }) {
 
 	/** @param {...string} pathnames */
 	async function preload_code(...pathnames) {
-		const matching = routes.filter(
-			(route) => !pathnames.length || pathnames.some((pathname) => route.exec(pathname))
-		);
+		const matching =
+			pathnames[0] === '*'
+				? routes
+				: routes.filter((route) => pathnames.some((pathname) => route.exec(pathname)));
 
 		const promises = matching.map((r) => {
 			return Promise.all([...r.layouts, r.leaf].map((load) => load?.[1]()));
