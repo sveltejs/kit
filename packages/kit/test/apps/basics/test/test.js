@@ -1942,10 +1942,7 @@ test.describe('Actions', () => {
 		expect(await page.textContent('pre.formdata1')).toBe(JSON.stringify(null));
 
 		await page.locator('input[name="username"]').fill('foo');
-		await Promise.all([
-			page.waitForRequest((request) => request.url().includes('/actions/enhance')),
-			page.click('button.form1-register')
-		]);
+		await page.locator('button.form1-register').click();
 
 		await expect(page.locator('pre.formdata1')).toHaveText(
 			JSON.stringify({ result: 'register: foo' })
