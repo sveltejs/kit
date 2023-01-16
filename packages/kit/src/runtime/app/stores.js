@@ -23,7 +23,7 @@ export const getStores = () => {
 export const page = {
 	/** @param {(value: any) => void} fn */
 	subscribe(fn) {
-		const store = getStores().page;
+		const store = __SVELTEKIT_DEV__ ? get_store('page') : getStores().page;
 		return store.subscribe(fn);
 	}
 };
@@ -31,7 +31,7 @@ export const page = {
 /** @type {typeof import('$app/stores').navigating} */
 export const navigating = {
 	subscribe(fn) {
-		const store = getStores().navigating;
+		const store = __SVELTEKIT_DEV__ ? get_store('navigating') : getStores().navigating;
 		return store.subscribe(fn);
 	}
 };
@@ -39,7 +39,7 @@ export const navigating = {
 /** @type {typeof import('$app/stores').updated} */
 export const updated = {
 	subscribe(fn) {
-		const store = getStores().updated;
+		const store = __SVELTEKIT_DEV__ ? get_store('updated') : getStores().updated;
 
 		if (browser) {
 			updated.check = store.check;
@@ -55,3 +55,19 @@ export const updated = {
 		);
 	}
 };
+
+/**
+ * @template {keyof ReturnType<typeof getStores>} Name
+ * @param {Name} name
+ * @returns {ReturnType<typeof getStores>[Name]}
+ */
+function get_store(name) {
+	try {
+		return getStores()[name];
+	} catch (e) {
+		throw new Error(
+			`Store '${name}' is not available outside of a Svelte component on the server, as its bound to component context there. ` +
+				'For more information, see https://kit.svelte.dev/docs/state-management#careful-with-global-state'
+		);
+	}
+}
