@@ -86,7 +86,7 @@ export function enhance(form, submit = () => {}) {
 
 		let cancelled = false;
 		const cancel = () => {
-			console.trace('called cancel');
+			console.trace('called cancel ');
 			cancelled = true;
 		};
 
