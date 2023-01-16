@@ -27,8 +27,15 @@ If you are creating an [SPA](/docs/glossary#csr-and-spa) with SvelteKit, you can
 
 Consider the following example where the user is set from inside a `load` function:
 
-```js
+```js 
 /// file: +page.js
+// @filename: ambient.d.ts
+declare module '$lib/user' {
+	export const user = { set: (value: any) => void };
+}
+
+// @filename: index.js
+// ---cut---
 // DON'T DO THIS!
 import { user } from '$lib/user';
 
