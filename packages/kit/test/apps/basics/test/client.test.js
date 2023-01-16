@@ -1156,12 +1156,12 @@ test.describe('data-sveltekit attributes', () => {
 		page.on('request', (r) => requests.push(r.url()));
 
 		await page.goto('/data-sveltekit/reload');
-		await page.locator('#one').click();
+		await clicknav('#one');
 		expect(requests).toContain(`${baseURL}/data-sveltekit/reload/target`);
 
 		requests.length = 0;
 		await page.goto('/data-sveltekit/reload');
-		await page.locator('#two').click();
+		await clicknav('#two');
 		expect(requests).toContain(`${baseURL}/data-sveltekit/reload/target`);
 
 		requests.length = 0;
