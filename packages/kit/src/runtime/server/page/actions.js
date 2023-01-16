@@ -24,9 +24,6 @@ export async function handle_action_json_request(event, options, server) {
 	const actions = server?.actions;
 
 	if (!actions) {
-		if (server) {
-			maybe_throw_migration_error(server);
-		}
 		// TODO should this be a different error altogether?
 		const no_actions_error = error(405, 'POST method not allowed. No actions exist for this page');
 		return action_json(
@@ -64,7 +61,10 @@ export async function handle_action_json_request(event, options, server) {
 				type: 'success',
 				status: data ? 200 : 204,
 				// @ts-expect-error see comment above
-				data: stringify_action_response(data, /** @type {string} */ (event.route.id))
+				data: stringify_action_response(
+					check_no_wrong_return(data),
+					/** @type {string} */ (event.route.id)
+				)
 			});
 		}
 	} catch (e) {
@@ -124,7 +124,6 @@ export async function handle_action_request(event, server) {
 	const actions = server.actions;
 
 	if (!actions) {
-		maybe_throw_migration_error(server);
 		// TODO should this be a different error altogether?
 		event.setHeaders({
 			// https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/405
@@ -148,7 +147,7 @@ export async function handle_action_request(event, server) {
 			return {
 				type: 'success',
 				status: 200,
-				data: /** @type {Record<string, any> | undefined} */ (data)
+				data: check_no_wrong_return(data)
 			};
 		}
 	} catch (e) {
@@ -213,17 +212,16 @@ export async function call_action(event, actions) {
 	return action(event);
 }
 
-/**
- * @param {import('types').SSRNode['server']} server
- */
-function maybe_throw_migration_error(server) {
-	for (const method of ['POST', 'PUT', 'PATCH', 'DELETE']) {
-		if (/** @type {any} */ (server)[method]) {
-			throw new Error(
-				`${method} method no longer allowed in +page.server, use actions instead. See the PR for more info: https://github.com/sveltejs/kit/pull/6469`
-			);
-		}
+/** @param {any} data */
+export function check_no_wrong_return(data) {
+	if (data instanceof Redirect) {
+		throw new Error(`Cannot "return redirect(..)". Use "throw redirect(..)" instead`);
+	} else if (data instanceof HttpError) {
+		throw new Error(
+			`Cannot "return error(..)". Use "throw error(..)" or "return fail(..)" instead`
+		);
 	}
+	return data;
 }
 
 /**
