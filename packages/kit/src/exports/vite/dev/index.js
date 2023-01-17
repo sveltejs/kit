@@ -30,8 +30,9 @@ export async function dev(vite, vite_config, svelte_config) {
 	}
 
 	const fetch = globalThis.fetch;
-	globalThis.fetch = (info, init) => {
+	globalThis.fetch = async (info, init) => {
 		if (typeof info === 'string' && !/^\w+:\/\//.test(info)) {
+			await Promise.resolve(); // allows people to use malformed fetch urls in `{#await ..}` (native fetch error is swallowed by those)
 			throw new Error(
 				`Cannot use relative URL (${info}) with global fetch on the server. If this is called inside a \`load\` function, use \`event.fetch\` instead: https://kit.svelte.dev/docs/web-standards#fetch-apis`
 			);
