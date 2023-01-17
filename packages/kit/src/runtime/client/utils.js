@@ -124,16 +124,16 @@ export function get_link_info(a, base) {
 		url = new URL(a instanceof SVGAElement ? a.href.baseVal : a.href, document.baseURI);
 	} catch {}
 
-	const has = {
-		rel_external: (a.getAttribute('rel') || '').split(/\s+/).includes('external'),
-		download: a.hasAttribute('download'),
-		target: a instanceof SVGAElement ? a.target.baseVal : a.target
-	};
+	const target = a instanceof SVGAElement ? a.target.baseVal : a.target;
 
 	const external =
-		!url || is_external_url(url, base) || has.rel_external || !!has.target || has.download;
+		!url ||
+		!!target ||
+		is_external_url(url, base) ||
+		(a.getAttribute('rel') || '').split(/\s+/).includes('external') ||
+		a.hasAttribute('download');
 
-	return { url, has, external };
+	return { url, external, target };
 }
 
 /**

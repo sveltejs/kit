@@ -1389,13 +1389,13 @@ export function create_client({ target, base }) {
 				const a = find_anchor(/** @type {Element} */ (event.composedPath()[0]), container);
 				if (!a) return;
 
-				const { url, external, has } = get_link_info(a, base);
-				if (
-					!url ||
-					// https://developer.mozilla.org/en-US/docs/Web/HTML/Element/a#attr-target
-					has.target === '_blank' ||
-					((has.target === '_parent' || has.target === '_top') && window.parent !== window)
-				) {
+				const { url, external, target } = get_link_info(a, base);
+				if (!url) return;
+
+				// bail out before `beforeNavigate` if link opens in a different tab
+				if (target === '_parent' || target === '_top') {
+					if (window.parent !== window) return;
+				} else if (target === '_blank' || target?.startsWith('_')) {
 					return;
 				}
 
@@ -1416,8 +1416,6 @@ export function create_client({ target, base }) {
 					!(url.protocol === 'https:' || url.protocol === 'http:')
 				)
 					return;
-
-				if (has.download) return;
 
 				// Ignore the following but fire beforeNavigate
 				if (external || options.reload) {
