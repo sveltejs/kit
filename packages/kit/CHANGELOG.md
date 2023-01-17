@@ -1,5 +1,13 @@
 # @sveltejs/kit
 
+## 1.1.3
+
+### Patch Changes
+
+- docs: explain how to add ambient typings ([#8558](https://github.com/sveltejs/kit/pull/8558))
+
+- fix: ignore `target="_blank"` links ([#8563](https://github.com/sveltejs/kit/pull/8563))
+
 ## 1.1.2
 
 ### Patch Changes
