@@ -265,148 +265,183 @@ function kit({ svelte_config }) {
 	};
 
 	/** @type {import('vite').Plugin} */
-	const plugin_build = {
-		name: 'vite-plugin-sveltekit-build',
+	const plugin_compile = {
+		name: 'vite-plugin-sveltekit-compile',
 
+		/**
+		 * Build the SvelteKit-provided Vite config to be merged with the user's vite.config.js file.
+		 * @see https://vitejs.dev/guide/api-plugin.html#config
+		 */
 		async config(config, config_env) {
-			if (!is_build) return;
+			/** @type {import('vite').UserConfig} */
+			let new_config;
 
-			manifest_data = (await sync.all(svelte_config, config_env.mode)).manifest_data;
+			if (is_build) {
+				manifest_data = (await sync.all(svelte_config, config_env.mode)).manifest_data;
 
-			const ssr = config.build?.ssr ?? false;
-			const kit = svelte_config.kit;
-			const prefix = `${kit.appDir}/immutable`;
+				const ssr = config.build?.ssr ?? false;
+				const kit = svelte_config.kit;
+				const prefix = `${kit.appDir}/immutable`;
 
-			/** @type {Record<string, string>} */
-			const input = {};
+				/** @type {Record<string, string>} */
+				const input = {};
 
-			if (ssr) {
-				input.index = `${runtime_directory}/server/index.js`;
-				input.internal = `${kit.outDir}/generated/server-internal.js`;
+				if (ssr) {
+					input.index = `${runtime_directory}/server/index.js`;
+					input.internal = `${kit.outDir}/generated/server-internal.js`;
 
-				// add entry points for every endpoint...
-				manifest_data.routes.forEach((route) => {
-					if (route.endpoint) {
-						const resolved = path.resolve(route.endpoint.file);
-						const relative = decodeURIComponent(path.relative(kit.files.routes, resolved));
-						const name = posixify(path.join('entries/endpoints', relative.replace(/\.js$/, '')));
-						input[name] = resolved;
-					}
-				});
-
-				// ...and every component used by pages...
-				manifest_data.nodes.forEach((node) => {
-					for (const file of [node.component, node.universal, node.server]) {
-						if (file) {
-							const resolved = path.resolve(file);
+					// add entry points for every endpoint...
+					manifest_data.routes.forEach((route) => {
+						if (route.endpoint) {
+							const resolved = path.resolve(route.endpoint.file);
 							const relative = decodeURIComponent(path.relative(kit.files.routes, resolved));
-
-							const name = relative.startsWith('..')
-								? posixify(path.join('entries/fallbacks', path.basename(file)))
-								: posixify(path.join('entries/pages', relative.replace(/\.js$/, '')));
+							const name = posixify(path.join('entries/endpoints', relative.replace(/\.js$/, '')));
 							input[name] = resolved;
 						}
-					}
-				});
+					});
 
-				// ...and every matcher
-				Object.entries(manifest_data.matchers).forEach(([key, file]) => {
-					const name = posixify(path.join('entries/matchers', key));
-					input[name] = path.resolve(file);
-				});
-			} else {
-				/** @type {Record<string, string>} */
-				input.start = `${runtime_directory}/client/start.js`;
+					// ...and every component used by pages...
+					manifest_data.nodes.forEach((node) => {
+						for (const file of [node.component, node.universal, node.server]) {
+							if (file) {
+								const resolved = path.resolve(file);
+								const relative = decodeURIComponent(path.relative(kit.files.routes, resolved));
 
-				manifest_data.nodes.forEach((node) => {
-					if (node.component) {
-						const resolved = path.resolve(node.component);
-						const relative = decodeURIComponent(
-							path.relative(svelte_config.kit.files.routes, resolved)
-						);
+								const name = relative.startsWith('..')
+									? posixify(path.join('entries/fallbacks', path.basename(file)))
+									: posixify(path.join('entries/pages', relative.replace(/\.js$/, '')));
+								input[name] = resolved;
+							}
+						}
+					});
 
-						const name = relative.startsWith('..')
-							? path.basename(node.component)
-							: posixify(path.join('pages', relative));
-						input[`components/${name}`] = resolved;
-					}
+					// ...and every matcher
+					Object.entries(manifest_data.matchers).forEach(([key, file]) => {
+						const name = posixify(path.join('entries/matchers', key));
+						input[name] = path.resolve(file);
+					});
+				} else {
+					/** @type {Record<string, string>} */
+					input.start = `${runtime_directory}/client/start.js`;
 
-					if (node.universal) {
-						const resolved = path.resolve(node.universal);
-						const relative = decodeURIComponent(
-							path.relative(svelte_config.kit.files.routes, resolved)
-						);
+					manifest_data.nodes.forEach((node) => {
+						if (node.component) {
+							const resolved = path.resolve(node.component);
+							const relative = decodeURIComponent(
+								path.relative(svelte_config.kit.files.routes, resolved)
+							);
 
-						const name = relative.startsWith('..')
-							? path.basename(node.universal)
-							: posixify(path.join('pages', relative));
-						input[`modules/${name}`] = resolved;
-					}
-				});
-			}
+							const name = relative.startsWith('..')
+								? path.basename(node.component)
+								: posixify(path.join('pages', relative));
+							input[`components/${name}`] = resolved;
+						}
 
-			/** @type {import('vite').UserConfig} */
-			const new_config = {
-				base: ssr ? assets_base(kit) : './',
-				build: {
-					cssCodeSplit: true,
-					outDir: `${out}/${ssr ? 'server' : 'client'}`,
-					rollupOptions: {
-						input,
-						output: {
-							format: 'esm',
-							entryFileNames: ssr ? '[name].js' : `${prefix}/[name]-[hash].js`,
-							chunkFileNames: ssr ? 'chunks/[name].js' : `${prefix}/chunks/[name]-[hash].js`,
-							assetFileNames: `${prefix}/assets/[name]-[hash][extname]`,
-							hoistTransitiveImports: false
+						if (node.universal) {
+							const resolved = path.resolve(node.universal);
+							const relative = decodeURIComponent(
+								path.relative(svelte_config.kit.files.routes, resolved)
+							);
+
+							const name = relative.startsWith('..')
+								? path.basename(node.universal)
+								: posixify(path.join('pages', relative));
+							input[`modules/${name}`] = resolved;
+						}
+					});
+				}
+
+				new_config = {
+					base: ssr ? assets_base(kit) : './',
+					build: {
+						cssCodeSplit: true,
+						outDir: `${out}/${ssr ? 'server' : 'client'}`,
+						rollupOptions: {
+							input,
+							output: {
+								format: 'esm',
+								entryFileNames: ssr ? '[name].js' : `${prefix}/[name]-[hash].js`,
+								chunkFileNames: ssr ? 'chunks/[name].js' : `${prefix}/chunks/[name]-[hash].js`,
+								assetFileNames: `${prefix}/assets/[name]-[hash][extname]`,
+								hoistTransitiveImports: false
+							},
+							preserveEntrySignatures: 'strict'
 						},
-						preserveEntrySignatures: 'strict'
+						target: ssr ? 'node16.14' : undefined,
+						// don't use the default name to avoid collisions with 'static/manifest.json'
+						manifest: 'vite-manifest.json'
 					},
-					target: ssr ? 'node16.14' : undefined,
-					// don't use the default name to avoid collisions with 'static/manifest.json'
-					manifest: 'vite-manifest.json'
-				},
-				define: {
-					__SVELTEKIT_ADAPTER_NAME__: JSON.stringify(kit.adapter?.name),
-					__SVELTEKIT_APP_VERSION_FILE__: JSON.stringify(`${kit.appDir}/version.json`),
-					__SVELTEKIT_APP_VERSION_POLL_INTERVAL__: JSON.stringify(kit.version.pollInterval),
-					__SVELTEKIT_DEV__: 'false',
-					__SVELTEKIT_EMBEDDED__: kit.embedded ? 'true' : 'false'
-				},
-				optimizeDeps: {
-					exclude: ['@sveltejs/kit']
-				},
-				publicDir: ssr ? false : kit.files.assets,
-				resolve: {
-					alias: [...get_app_aliases(kit), ...get_config_aliases(kit)]
-				},
-				ssr: {
-					noExternal: [
-						// TODO document why this is necessary
-						'@sveltejs/kit',
-						// This ensures that esm-env is inlined into the server output with the
-						// export conditions resolved correctly through Vite. This prevents adapters
-						// that bundle later on to resolve the export conditions incorrectly
-						// and for example include browser-only code in the server output
-						// because they for example use esbuild.build with `platform: 'browser'`
-						'esm-env'
-					]
-				},
-				worker: {
-					rollupOptions: {
-						output: {
-							entryFileNames: `${prefix}/workers/[name]-[hash].js`,
-							chunkFileNames: `${prefix}/workers/chunks/[name]-[hash].js`,
-							assetFileNames: `${prefix}/workers/assets/[name]-[hash][extname]`,
-							hoistTransitiveImports: false
+					define: {
+						__SVELTEKIT_ADAPTER_NAME__: JSON.stringify(kit.adapter?.name),
+						__SVELTEKIT_APP_VERSION_FILE__: JSON.stringify(`${kit.appDir}/version.json`),
+						__SVELTEKIT_APP_VERSION_POLL_INTERVAL__: JSON.stringify(kit.version.pollInterval),
+						__SVELTEKIT_DEV__: 'false',
+						__SVELTEKIT_EMBEDDED__: kit.embedded ? 'true' : 'false'
+					},
+					optimizeDeps: {
+						exclude: ['@sveltejs/kit']
+					},
+					publicDir: ssr ? false : kit.files.assets,
+					resolve: {
+						alias: [...get_app_aliases(kit), ...get_config_aliases(kit)]
+					},
+					ssr: {
+						noExternal: [
+							// TODO document why this is necessary
+							'@sveltejs/kit',
+							// This ensures that esm-env is inlined into the server output with the
+							// export conditions resolved correctly through Vite. This prevents adapters
+							// that bundle later on to resolve the export conditions incorrectly
+							// and for example include browser-only code in the server output
+							// because they for example use esbuild.build with `platform: 'browser'`
+							'esm-env'
+						]
+					},
+					worker: {
+						rollupOptions: {
+							output: {
+								entryFileNames: `${prefix}/workers/[name]-[hash].js`,
+								chunkFileNames: `${prefix}/workers/chunks/[name]-[hash].js`,
+								assetFileNames: `${prefix}/workers/assets/[name]-[hash][extname]`,
+								hoistTransitiveImports: false
+							}
 						}
 					}
-				}
-			};
+				};
+			} else {
+				new_config = {
+					appType: 'custom',
+					base: svelte_config.kit.paths.base,
+					build: {
+						rollupOptions: {
+							// Vite dependency crawler needs an explicit JS entry point
+							// eventhough server otherwise works without it
+							input: `${runtime_directory}/client/start.js`
+						}
+					},
+					publicDir: svelte_config.kit.files.assets
+				};
+			}
 
 			warn_overridden_config(config, new_config);
 
 			return new_config;
+		},
+
+		/**
+		 * Adds the SvelteKit middleware to do SSR in dev mode.
+		 * @see https://vitejs.dev/guide/api-plugin.html#configureserver
+		 */
+		async configureServer(vite) {
+			return await dev(vite, vite_config, svelte_config);
+		},
+
+		/**
+		 * Adds the SvelteKit middleware to do SSR in preview mode.
+		 * @see https://vitejs.dev/guide/api-plugin.html#configurepreviewserver
+		 */
+		configurePreviewServer(vite) {
+			return preview(vite, vite_config, svelte_config);
 		},
 
 		/**
@@ -626,58 +661,7 @@ function kit({ svelte_config }) {
 		}
 	};
 
-	/** @type {import('vite').Plugin} */
-	const plugin_serve = {
-		// TODO this should really be called `vite-plugin-sveltekit-serve`
-		// or something — 'compile' is just wrong — but that would
-		// need to happen in coordination with storybook
-		name: 'vite-plugin-sveltekit-compile',
-
-		/**
-		 * Build the SvelteKit-provided Vite config to be merged with the user's vite.config.js file.
-		 * @see https://vitejs.dev/guide/api-plugin.html#config
-		 */
-		async config(config) {
-			if (is_build) return;
-
-			// dev and preview config can be shared
-			/** @type {import('vite').UserConfig} */
-			const new_config = {
-				appType: 'custom',
-				base: svelte_config.kit.paths.base,
-				build: {
-					rollupOptions: {
-						// Vite dependency crawler needs an explicit JS entry point
-						// eventhough server otherwise works without it
-						input: `${runtime_directory}/client/start.js`
-					}
-				},
-				publicDir: svelte_config.kit.files.assets
-			};
-
-			warn_overridden_config(config, new_config);
-
-			return new_config;
-		},
-
-		/**
-		 * Adds the SvelteKit middleware to do SSR in dev mode.
-		 * @see https://vitejs.dev/guide/api-plugin.html#configureserver
-		 */
-		async configureServer(vite) {
-			return await dev(vite, vite_config, svelte_config);
-		},
-
-		/**
-		 * Adds the SvelteKit middleware to do SSR in preview mode.
-		 * @see https://vitejs.dev/guide/api-plugin.html#configurepreviewserver
-		 */
-		configurePreviewServer(vite) {
-			return preview(vite, vite_config, svelte_config);
-		}
-	};
-
-	return [plugin_setup, plugin_virtual_modules, plugin_build, plugin_serve];
+	return [plugin_setup, plugin_virtual_modules, plugin_compile];
 }
 
 /** @param {import('rollup').OutputBundle} bundle */
