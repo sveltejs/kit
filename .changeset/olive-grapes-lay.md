@@ -2,4 +2,4 @@
 '@sveltejs/kit': patch
 ---
 
-[fix] add Vite path alias for src
+fix: remove baseUrl to prevent wrong TypeScript auto imports if possible

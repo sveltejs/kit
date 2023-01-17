@@ -202,7 +202,6 @@ test('transform kit.alias to resolve.alias', () => {
 		{ find: '__GENERATED__', replacement: '.svelte-kit/generated' },
 		{ find: '$app', replacement: 'src/runtime/app' },
 		{ find: '$lib', replacement: 'src/lib' },
-		{ find: 'src', replacement: 'src' },
 		{ find: 'simpleKey', replacement: 'simple/value' },
 		{ find: /^key$/.toString(), replacement: 'value' },
 		{ find: /^key\/(.+)$/.toString(), replacement: 'value/$1' },

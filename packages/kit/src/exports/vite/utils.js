@@ -1,4 +1,3 @@
-import fs from 'fs';
 import path from 'path';
 import { loadConfigFromFile, loadEnv, mergeConfig } from 'vite';
 import { runtime_directory } from '../../core/utils.js';
@@ -90,16 +89,6 @@ export function get_config_aliases(config) {
 		// `config.kit.alias` since it has special meaning for packaging, etc.
 		{ find: '$lib', replacement: config.files.lib }
 	];
-
-	// Our generated tsconfig.json sets a path alias. This causes imports like src/utils to be valid for
-	// TypeScript (its auto completion also suggests it). However, Vite doesn't know about this,
-	// so we do a best-effort attempt to make it work by adding a Vite alias assuming the default
-	// SvelteKit project structure.
-	// TODO(v2): we could think about getting rid of the baseUrl which would make this unnecessary
-	// https://github.com/sveltejs/kit/issues/5351
-	if (fs.existsSync('src')) {
-		alias.push({ find: 'src', replacement: path.resolve('src') });
-	}
 
 	for (let [key, value] of Object.entries(config.alias)) {
 		value = posixify(value);
