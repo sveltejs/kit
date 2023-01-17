@@ -20,7 +20,7 @@ import { assets_base, find_deps } from './build/utils.js';
 import { dev } from './dev/index.js';
 import { is_illegal, module_guard, normalize_id } from './graph_analysis/index.js';
 import { preview } from './preview/index.js';
-import { get_config_aliases, get_app_aliases, get_env } from './utils.js';
+import { get_config_aliases, get_env } from './utils.js';
 
 export { vitePreprocess } from '@sveltejs/vite-plugin-svelte';
 
@@ -162,7 +162,11 @@ function kit({ svelte_config }) {
 			/** @type {import('vite').UserConfig} */
 			const new_config = {
 				resolve: {
-					alias: [...get_app_aliases(kit), ...get_config_aliases(kit)]
+					alias: [
+						{ find: '__GENERATED__', replacement: path.posix.join(kit.outDir, 'generated') },
+						{ find: '$app', replacement: `${runtime_directory}/app` },
+						...get_config_aliases(kit)
+					]
 				},
 				root: cwd,
 				server: {

@@ -1,6 +1,5 @@
 import path from 'path';
 import { loadEnv } from 'vite';
-import { runtime_directory } from '../../core/utils.js';
 import { posixify } from '../../utils/filesystem.js';
 import { negotiate } from '../../utils/http.js';
 
@@ -86,21 +85,6 @@ export function get_config_aliases(config) {
 			alias.push({ find: key, replacement: path.resolve(value) });
 		}
 	}
-
-	return alias;
-}
-
-/**
- * Returns Vite aliases for generated and runtime files.
- *
- * @param {import('types').ValidatedKitConfig} config
- * */
-export function get_app_aliases(config) {
-	/** @type {import('vite').Alias[]} */
-	const alias = [
-		{ find: '__GENERATED__', replacement: path.posix.join(config.outDir, 'generated') },
-		{ find: '$app', replacement: `${runtime_directory}/app` }
-	];
 
 	return alias;
 }
