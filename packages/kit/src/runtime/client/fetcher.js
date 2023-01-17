@@ -53,6 +53,8 @@ if (DEV) {
 			cache.delete(build_selector(input));
 		}
 
+		console.log('Im calling native fetch now (dev mode)', typeof native_fetch, native_fetch);
+
 		return native_fetch(input, init);
 	};
 } else {
@@ -62,6 +64,8 @@ if (DEV) {
 		if (method !== 'GET') {
 			cache.delete(build_selector(input));
 		}
+
+		console.log('Im calling native fetch now', typeof native_fetch, native_fetch);
 
 		return native_fetch(input, init);
 	};
