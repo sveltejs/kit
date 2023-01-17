@@ -14,8 +14,8 @@
  * export {};
  * ```
  *
- * The `export {}` line ensure that this file is treated as a module so you can import other types into it. It means that you can't declare other ambient modules in it however.
- * For this it's best to create another file next to it called `ambient.d.ts` and add your `declare module` statements there.
+ * The `export {}` line exists because without it, the file would be treated as an _ambient module_ which prevents you from adding `import` declarations.
+ * If you need to add ambient `declare module` declarations, do so in a separate file like `src/ambient.d.ts`.
  *
  * By populating these interfaces, you will gain type safety when using `event.locals`, `event.platform`, and `data` from `load` functions.
  */
