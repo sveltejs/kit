@@ -552,36 +552,39 @@ test.describe('Load', () => {
 		expect(await page.textContent('p')).toBe('This text comes from the server load function');
 	});
 
-	test('load does not call fetch if max-age allows it', async ({ page }) => {
+	test('load does not call fetch if max-age allows it', async ({ page }, testInfo) => {
 		page.addInitScript(`
 			window.now = 0;
 			window.performance.now = () => now;
 		`);
 
 		await page.goto('/load/cache-control/default');
-		await expect(page.getByText('Count is 0')).toBeVisible();
+		// we do not have a reset function, so if this is retried, it would never pass
+		await expect(page.getByText('Count is ' + testInfo.retry)).toBeVisible();
 		await page.locator('button').click();
 		await page.waitForLoadState('networkidle');
-		await expect(page.getByText('Count is 0')).toBeVisible();
+		await expect(page.getByText('Count is ' + testInfo.retry)).toBeVisible();
 
 		await page.evaluate(() => (window.now = 2500));
 
 		await page.locator('button').click();
-		await expect(page.getByText('Count is 2')).toBeVisible();
+		await expect(page.getByText('Count is ' + (testInfo.retry + 2))).toBeVisible();
 	});
 
-	test('load does ignore ttl if fetch cache options says so', async ({ page }) => {
+	test('load does ignore ttl if fetch cache options says so', async ({ page }, testInfo) => {
 		await page.goto('/load/cache-control/force');
-		await expect(page.getByText('Count is 0')).toBeVisible();
+		// we do not have a reset function, so if this is retried, it would never pass
+		await expect(page.getByText('Count is ' + testInfo.retry)).toBeVisible();
 		await page.locator('button').click();
-		await expect(page.getByText('Count is 1')).toBeVisible();
+		await expect(page.getByText('Count is ' + (testInfo.retry + 1))).toBeVisible();
 	});
 
-	test('load busts cache if non-GET request to resource is made', async ({ page }) => {
+	test('load busts cache if non-GET request to resource is made', async ({ page }, testInfo) => {
 		await page.goto('/load/cache-control/bust');
-		await expect(page.getByText('Count is 0')).toBeVisible();
+		// we do not have a reset function, so if this is retried, it would never pass
+		await expect(page.getByText('Count is ' + testInfo.retry)).toBeVisible();
 		await page.locator('button').click();
-		await expect(page.getByText('Count is 1')).toBeVisible();
+		await expect(page.getByText('Count is ' + (testInfo.retry + 1))).toBeVisible();
 	});
 
 	test('__data.json has cache-control: private, no-store', async ({ page, clicknav }) => {
