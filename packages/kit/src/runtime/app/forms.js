@@ -26,7 +26,7 @@ export function deserialize(result) {
 
 /** @type {import('$app/forms').enhance} */
 export function enhance(form, submit = () => {}) {
-	console.log('inside enhance setup');
+	console.log('inside enhance setup ');
 	if (
 		DEV &&
 		/** @type {HTMLFormElement} */ (HTMLFormElement.prototype.cloneNode.call(form)).method !==
