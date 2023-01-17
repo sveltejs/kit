@@ -98,7 +98,8 @@ export async function sveltekit() {
  * @return {import('vite').Plugin[]}
  */
 function kit({ svelte_config }) {
-	const out = `${svelte_config.kit.outDir}/output`;
+	const { kit } = svelte_config;
+	const out = `${kit.outDir}/output`;
 
 	/** @type {import('vite').ResolvedConfig} */
 	let vite_config;
@@ -143,9 +144,6 @@ function kit({ svelte_config }) {
 
 			env = get_env(svelte_config.kit.env, vite_config_env.mode);
 
-			// Build config is created in the `vite-plugin-sveltekit-build` plugin, below
-			if (is_build) return;
-
 			const allow = new Set([
 				svelte_config.kit.files.lib,
 				svelte_config.kit.files.routes,
@@ -163,11 +161,6 @@ function kit({ svelte_config }) {
 			// dev and preview config can be shared
 			/** @type {import('vite').UserConfig} */
 			const new_config = {
-				define: {
-					__SVELTEKIT_APP_VERSION_POLL_INTERVAL__: '0',
-					__SVELTEKIT_DEV__: config_env.command === 'serve',
-					__SVELTEKIT_EMBEDDED__: svelte_config.kit.embedded ? 'true' : 'false'
-				},
 				resolve: {
 					alias: [...get_app_aliases(svelte_config.kit), ...get_config_aliases(svelte_config.kit)]
 				},
@@ -183,13 +176,6 @@ function kit({ svelte_config }) {
 						]
 					}
 				},
-				ssr: {
-					// Without this, Vite will treat `@sveltejs/kit` as noExternal if it's
-					// a linked dependency, and that causes modules to be imported twice
-					// under different IDs, which breaks a bunch of stuff
-					// https://github.com/vitejs/vite/pull/9296
-					external: ['@sveltejs/kit', 'cookie', 'set-cookie-parser']
-				},
 				optimizeDeps: {
 					exclude: [
 						'@sveltejs/kit',
@@ -200,6 +186,43 @@ function kit({ svelte_config }) {
 					]
 				}
 			};
+
+			if (is_build) {
+				new_config.define = {
+					__SVELTEKIT_ADAPTER_NAME__: JSON.stringify(kit.adapter?.name),
+					__SVELTEKIT_APP_VERSION_FILE__: JSON.stringify(`${kit.appDir}/version.json`),
+					__SVELTEKIT_APP_VERSION_POLL_INTERVAL__: JSON.stringify(kit.version.pollInterval),
+					__SVELTEKIT_DEV__: 'false',
+					__SVELTEKIT_EMBEDDED__: kit.embedded ? 'true' : 'false'
+				};
+
+				new_config.ssr = {
+					noExternal: [
+						// TODO document why this is necessary
+						'@sveltejs/kit',
+						// This ensures that esm-env is inlined into the server output with the
+						// export conditions resolved correctly through Vite. This prevents adapters
+						// that bundle later on to resolve the export conditions incorrectly
+						// and for example include browser-only code in the server output
+						// because they for example use esbuild.build with `platform: 'browser'`
+						'esm-env'
+					]
+				};
+			} else {
+				new_config.define = {
+					__SVELTEKIT_APP_VERSION_POLL_INTERVAL__: '0',
+					__SVELTEKIT_DEV__: 'true',
+					__SVELTEKIT_EMBEDDED__: kit.embedded ? 'true' : 'false'
+				};
+
+				new_config.ssr = {
+					// Without this, Vite will treat `@sveltejs/kit` as noExternal if it's
+					// a linked dependency, and that causes modules to be imported twice
+					// under different IDs, which breaks a bunch of stuff
+					// https://github.com/vitejs/vite/pull/9296
+					external: ['@sveltejs/kit', 'cookie', 'set-cookie-parser']
+				};
+			}
 
 			warn_overridden_config(config, new_config);
 
@@ -371,32 +394,7 @@ function kit({ svelte_config }) {
 						// don't use the default name to avoid collisions with 'static/manifest.json'
 						manifest: 'vite-manifest.json'
 					},
-					define: {
-						__SVELTEKIT_ADAPTER_NAME__: JSON.stringify(kit.adapter?.name),
-						__SVELTEKIT_APP_VERSION_FILE__: JSON.stringify(`${kit.appDir}/version.json`),
-						__SVELTEKIT_APP_VERSION_POLL_INTERVAL__: JSON.stringify(kit.version.pollInterval),
-						__SVELTEKIT_DEV__: 'false',
-						__SVELTEKIT_EMBEDDED__: kit.embedded ? 'true' : 'false'
-					},
-					optimizeDeps: {
-						exclude: ['@sveltejs/kit']
-					},
 					publicDir: ssr ? false : kit.files.assets,
-					resolve: {
-						alias: [...get_app_aliases(kit), ...get_config_aliases(kit)]
-					},
-					ssr: {
-						noExternal: [
-							// TODO document why this is necessary
-							'@sveltejs/kit',
-							// This ensures that esm-env is inlined into the server output with the
-							// export conditions resolved correctly through Vite. This prevents adapters
-							// that bundle later on to resolve the export conditions incorrectly
-							// and for example include browser-only code in the server output
-							// because they for example use esbuild.build with `platform: 'browser'`
-							'esm-env'
-						]
-					},
 					worker: {
 						rollupOptions: {
 							output: {
