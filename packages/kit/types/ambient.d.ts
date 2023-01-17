@@ -11,8 +11,11 @@
  * 	}
  * }
  *
- * export default undefined;
+ * export {};
  * ```
+ *
+ * The `export {}` line exists because without it, the file would be treated as an _ambient module_ which prevents you from adding `import` declarations.
+ * If you need to add ambient `declare module` declarations, do so in a separate file like `src/ambient.d.ts`.
  *
  * By populating these interfaces, you will gain type safety when using `event.locals`, `event.platform`, and `data` from `load` functions.
  */
