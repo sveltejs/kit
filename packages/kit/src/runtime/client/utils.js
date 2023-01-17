@@ -127,11 +127,11 @@ export function get_link_info(a, base) {
 	const has = {
 		rel_external: (a.getAttribute('rel') || '').split(/\s+/).includes('external'),
 		download: a.hasAttribute('download'),
-		target: !!(a instanceof SVGAElement ? a.target.baseVal : a.target)
+		target: a instanceof SVGAElement ? a.target.baseVal : a.target
 	};
 
 	const external =
-		!url || is_external_url(url, base) || has.rel_external || has.target || has.download;
+		!url || is_external_url(url, base) || has.rel_external || !!has.target || has.download;
 
 	return { url, has, external };
 }

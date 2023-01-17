@@ -1390,9 +1390,9 @@ export function create_client({ target, base }) {
 				if (!a) return;
 
 				const { url, external, has } = get_link_info(a, base);
-				const options = get_router_options(a);
-				if (!url) return;
+				if (!url || has.target === '_blank') return;
 
+				const options = get_router_options(a);
 				const is_svg_a_element = a instanceof SVGAElement;
 
 				// Ignore URL protocols that differ to the current one and are not http(s) (e.g. `mailto:`, `tel:`, `myapp:`, etc.)
