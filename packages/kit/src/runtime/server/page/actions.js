@@ -47,6 +47,10 @@ export async function handle_action_json_request(event, options, server) {
 	try {
 		const data = await call_action(event, actions);
 
+		if (__SVELTEKIT_DEV__) {
+			validate_action_return(data);
+		}
+
 		if (data instanceof ActionFailure) {
 			return action_json({
 				type: 'failure',
@@ -61,10 +65,7 @@ export async function handle_action_json_request(event, options, server) {
 				type: 'success',
 				status: data ? 200 : 204,
 				// @ts-expect-error see comment above
-				data: stringify_action_response(
-					check_no_wrong_return(data),
-					/** @type {string} */ (event.route.id)
-				)
+				data: stringify_action_response(data, /** @type {string} */ (event.route.id))
 			});
 		}
 	} catch (e) {
@@ -141,13 +142,17 @@ export async function handle_action_request(event, server) {
 	try {
 		const data = await call_action(event, actions);
 
+		if (__SVELTEKIT_DEV__) {
+			validate_action_return(data);
+		}
+
 		if (data instanceof ActionFailure) {
 			return { type: 'failure', status: data.status, data: data.data };
 		} else {
 			return {
 				type: 'success',
 				status: 200,
-				data: check_no_wrong_return(data)
+				data
 			};
 		}
 	} catch (e) {
@@ -213,15 +218,16 @@ export async function call_action(event, actions) {
 }
 
 /** @param {any} data */
-export function check_no_wrong_return(data) {
+export function validate_action_return(data) {
 	if (data instanceof Redirect) {
 		throw new Error(`Cannot \`return redirect(...)\` — use \`throw redirect(...)\` instead`);
-	} else if (data instanceof HttpError) {
+	}
+
+	if (data instanceof HttpError) {
 		throw new Error(
 			`Cannot \`return error(...)\` — use \`throw error(...)\` or \`return fail(...)\` instead`
 		);
 	}
-	return data;
 }
 
 /**
