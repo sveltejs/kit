@@ -1389,10 +1389,17 @@ export function create_client({ target, base }) {
 				const a = find_anchor(/** @type {Element} */ (event.composedPath()[0]), container);
 				if (!a) return;
 
-				const { url, external, has } = get_link_info(a, base);
-				const options = get_router_options(a);
+				const { url, external, target } = get_link_info(a, base);
 				if (!url) return;
 
+				// bail out before `beforeNavigate` if link opens in a different tab
+				if (target === '_parent' || target === '_top') {
+					if (window.parent !== window) return;
+				} else if (target && target !== '_self') {
+					return;
+				}
+
+				const options = get_router_options(a);
 				const is_svg_a_element = a instanceof SVGAElement;
 
 				// Ignore URL protocols that differ to the current one and are not http(s) (e.g. `mailto:`, `tel:`, `myapp:`, etc.)
@@ -1409,8 +1416,6 @@ export function create_client({ target, base }) {
 					!(url.protocol === 'https:' || url.protocol === 'http:')
 				)
 					return;
-
-				if (has.download) return;
 
 				// Ignore the following but fire beforeNavigate
 				if (external || options.reload) {

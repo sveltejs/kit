@@ -184,6 +184,16 @@ test.describe('beforeNavigate', () => {
 		expect(page.url()).toBe(baseURL + '/before-navigate/prevent-navigation');
 		expect(await page.innerHTML('pre')).toBe('1 false link');
 	});
+
+	test('is not triggered on target=_blank', async ({ page, baseURL }) => {
+		await page.goto('/before-navigate/prevent-navigation');
+
+		await page.click('a[href="https://google.com"]');
+		await page.waitForTimeout(500);
+
+		expect(page.url()).toBe(baseURL + '/before-navigate/prevent-navigation');
+		expect(await page.innerHTML('pre')).toBe('0 false undefined');
+	});
 });
 
 test.describe('Scrolling', () => {

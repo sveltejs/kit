@@ -246,7 +246,8 @@ declare module '$app/navigation' {
 
 	/**
 	 * A navigation interceptor that triggers before we navigate to a new URL, whether by clicking a link, calling `goto(...)`, or using the browser back/forward controls.
-	 * Calling `cancel()` will prevent the navigation from completing.
+	 * Calling `cancel()` will prevent the navigation from completing. If the navigation would have directly unloaded the current page, calling `cancel` will trigger the native
+	 * browser unload confirmation dialog. In these cases, `navigation.willUnload` is `true`.
 	 *
 	 * When a navigation isn't client side, `navigation.to.route.id` will be `null`.
 	 *
