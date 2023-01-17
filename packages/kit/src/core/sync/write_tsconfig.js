@@ -90,12 +90,12 @@ export function write_tsconfig(kit, cwd = process.cwd()) {
 	include.push(config_relative(`${test_folder}/**/*.svelte`));
 
 	const exclude = [config_relative('node_modules/**'), './[!ambient.d.ts]**'];
-	if (path.extname(config.files.serviceWorker)) {
-		exclude.push(config_relative(config.files.serviceWorker));
+	if (path.extname(kit.files.serviceWorker)) {
+		exclude.push(config_relative(kit.files.serviceWorker));
 	} else {
-		exclude.push(config_relative(`${config.files.serviceWorker}.js`));
-		exclude.push(config_relative(`${config.files.serviceWorker}.ts`));
-		exclude.push(config_relative(`${config.files.serviceWorker}.d.ts`));
+		exclude.push(config_relative(`${kit.files.serviceWorker}.js`));
+		exclude.push(config_relative(`${kit.files.serviceWorker}.ts`));
+		exclude.push(config_relative(`${kit.files.serviceWorker}.d.ts`));
 	}
 
 	write_if_changed(
