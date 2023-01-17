@@ -164,7 +164,7 @@ Conceptually, they're the same thing, but there are some important differences t
 
 ### Input
 
-Both universal and server `load` functions have access to properties describing the request (`params`, `route` and `url`) and various functions (`depends`, `fetch` and `parent`). These are described in the following sections.
+Both universal and server `load` functions have access to properties describing the request (`params`, `route` and `url`) and various functions (`fetch`, `setHeaders`, `parent` and `depends`). These are described in the following sections.
 
 Server `load` functions are called with a `ServerLoadEvent`, which inherits `clientAddress`, `cookies`, `locals`, `platform` and `request` from `RequestEvent`.
 
