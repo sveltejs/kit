@@ -86,7 +86,7 @@ export function enhance(form, submit = () => {}) {
 
 		let cancelled = false;
 		const cancel = () => {
-			console.trace('called cancel ');
+			console.trace(action, ':called cancel ');
 			cancelled = true;
 		};
 
@@ -98,15 +98,16 @@ export function enhance(form, submit = () => {}) {
 				data,
 				form
 			})) ?? fallback_callback;
-		console.log('cancelled', cancelled);
+		console.log(action, ':cancelled', cancelled);
 		if (cancelled) return;
 
 		/** @type {import('types').ActionResult} */
 		let result;
 
-		console.log('try fetch');
+		console.log(action, ':try fetch');
 
 		try {
+			console.log(action, ':try fetch2');
 			const response = await fetch(action, {
 				method: 'POST',
 				headers: {
@@ -117,16 +118,17 @@ export function enhance(form, submit = () => {}) {
 				body: data,
 				signal: controller.signal
 			});
+			console.log(action, ':got response');
 
 			result = deserialize(await response.text());
 			if (result.type === 'error') result.status = response.status;
 		} catch (error) {
-			console.log('error', error);
+			console.log(action, ':error', error);
 			if (/** @type {any} */ (error)?.name === 'AbortError') return;
 			result = { type: 'error', error };
 		}
 
-		console.log('calling callback', result);
+		console.log(action, ':calling callback', result);
 
 		callback({
 			action,
@@ -137,7 +139,7 @@ export function enhance(form, submit = () => {}) {
 			result
 		});
 
-		console.log('called callback');
+		console.log(action, ':called callback');
 	}
 
 	// @ts-expect-error
