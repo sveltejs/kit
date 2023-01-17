@@ -142,12 +142,12 @@ function kit({ svelte_config }) {
 			vite_config_env = config_env;
 			is_build = config_env.command === 'build';
 
-			env = get_env(svelte_config.kit.env, vite_config_env.mode);
+			env = get_env(kit.env, vite_config_env.mode);
 
 			const allow = new Set([
-				svelte_config.kit.files.lib,
-				svelte_config.kit.files.routes,
-				svelte_config.kit.outDir,
+				kit.files.lib,
+				kit.files.routes,
+				kit.outDir,
 				path.resolve('src'), // TODO this isn't correct if user changed all his files to sth else than src (like in test/options)
 				path.resolve('node_modules'),
 				path.resolve(vite.searchForWorkspaceRoot(cwd), 'node_modules')
@@ -155,14 +155,14 @@ function kit({ svelte_config }) {
 
 			// We can only add directories to the allow list, so we find out
 			// if there's a client hooks file and pass its directory
-			const client_hooks = resolve_entry(svelte_config.kit.files.hooks.client);
+			const client_hooks = resolve_entry(kit.files.hooks.client);
 			if (client_hooks) allow.add(path.dirname(client_hooks));
 
 			// dev and preview config can be shared
 			/** @type {import('vite').UserConfig} */
 			const new_config = {
 				resolve: {
-					alias: [...get_app_aliases(svelte_config.kit), ...get_config_aliases(svelte_config.kit)]
+					alias: [...get_app_aliases(kit), ...get_config_aliases(kit)]
 				},
 				root: cwd,
 				server: {
@@ -172,7 +172,7 @@ function kit({ svelte_config }) {
 					watch: {
 						ignored: [
 							// Ignore all siblings of config.kit.outDir/generated
-							`${posixify(svelte_config.kit.outDir)}/!(generated)`
+							`${posixify(kit.outDir)}/!(generated)`
 						]
 					}
 				},
@@ -253,7 +253,7 @@ function kit({ svelte_config }) {
 		async load(id, options) {
 			if (options?.ssr === false && process.env.TEST !== 'true') {
 				const normalized_cwd = vite.normalizePath(cwd);
-				const normalized_lib = vite.normalizePath(svelte_config.kit.files.lib);
+				const normalized_lib = vite.normalizePath(kit.files.lib);
 				if (
 					is_illegal(id, {
 						cwd: normalized_cwd,
@@ -303,7 +303,6 @@ function kit({ svelte_config }) {
 				manifest_data = (await sync.all(svelte_config, config_env.mode)).manifest_data;
 
 				const ssr = config.build?.ssr ?? false;
-				const kit = svelte_config.kit;
 				const prefix = `${kit.appDir}/immutable`;
 
 				/** @type {Record<string, string>} */
@@ -350,9 +349,7 @@ function kit({ svelte_config }) {
 					manifest_data.nodes.forEach((node) => {
 						if (node.component) {
 							const resolved = path.resolve(node.component);
-							const relative = decodeURIComponent(
-								path.relative(svelte_config.kit.files.routes, resolved)
-							);
+							const relative = decodeURIComponent(path.relative(kit.files.routes, resolved));
 
 							const name = relative.startsWith('..')
 								? path.basename(node.component)
@@ -362,9 +359,7 @@ function kit({ svelte_config }) {
 
 						if (node.universal) {
 							const resolved = path.resolve(node.universal);
-							const relative = decodeURIComponent(
-								path.relative(svelte_config.kit.files.routes, resolved)
-							);
+							const relative = decodeURIComponent(path.relative(kit.files.routes, resolved));
 
 							const name = relative.startsWith('..')
 								? path.basename(node.universal)
@@ -409,7 +404,7 @@ function kit({ svelte_config }) {
 			} else {
 				new_config = {
 					appType: 'custom',
-					base: svelte_config.kit.paths.base,
+					base: kit.paths.base,
 					build: {
 						rollupOptions: {
 							// Vite dependency crawler needs an explicit JS entry point
@@ -417,7 +412,7 @@ function kit({ svelte_config }) {
 							input: `${runtime_directory}/client/start.js`
 						}
 					},
-					publicDir: svelte_config.kit.files.assets
+					publicDir: kit.files.assets
 				};
 			}
 
@@ -464,8 +459,8 @@ function kit({ svelte_config }) {
 
 			this.emitFile({
 				type: 'asset',
-				fileName: `${svelte_config.kit.appDir}/version.json`,
-				source: JSON.stringify({ version: svelte_config.kit.version.name })
+				fileName: `${kit.appDir}/version.json`,
+				source: JSON.stringify({ version: kit.version.name })
 			});
 		},
 
@@ -481,13 +476,11 @@ function kit({ svelte_config }) {
 
 				const guard = module_guard(this, {
 					cwd: vite.normalizePath(process.cwd()),
-					lib: vite.normalizePath(svelte_config.kit.files.lib)
+					lib: vite.normalizePath(kit.files.lib)
 				});
 
 				manifest_data.nodes.forEach((_node, i) => {
-					const id = vite.normalizePath(
-						path.resolve(svelte_config.kit.outDir, `generated/nodes/${i}.js`)
-					);
+					const id = vite.normalizePath(path.resolve(kit.outDir, `generated/nodes/${i}.js`));
 
 					guard.check(id);
 				});
@@ -530,14 +523,12 @@ function kit({ svelte_config }) {
 
 				const server = await build_server(options, client);
 
-				const service_worker_entry_file = resolve_entry(svelte_config.kit.files.serviceWorker);
+				const service_worker_entry_file = resolve_entry(kit.files.serviceWorker);
 
 				/** @type {import('types').BuildData} */
 				build_data = {
-					app_dir: svelte_config.kit.appDir,
-					app_path: `${svelte_config.kit.paths.base.slice(1)}${
-						svelte_config.kit.paths.base ? '/' : ''
-					}${svelte_config.kit.appDir}`,
+					app_dir: kit.appDir,
+					app_path: `${kit.paths.base.slice(1)}${kit.paths.base ? '/' : ''}${kit.appDir}`,
 					manifest_data,
 					service_worker: !!service_worker_entry_file ? 'service-worker.js' : null, // TODO make file configurable?
 					client,
@@ -556,7 +547,7 @@ function kit({ svelte_config }) {
 
 				log.info('Prerendering');
 				await new Promise((fulfil, reject) => {
-					const results_path = `${svelte_config.kit.outDir}/generated/prerendered.json`;
+					const results_path = `${kit.outDir}/generated/prerendered.json`;
 
 					// do prerendering in a subprocess so any dangling stuff gets killed upon completion
 					const script = fileURLToPath(new URL('../../core/postbuild/index.js', import.meta.url));
@@ -605,7 +596,7 @@ function kit({ svelte_config }) {
 				);
 
 				if (service_worker_entry_file) {
-					if (svelte_config.kit.paths.assets) {
+					if (kit.paths.assets) {
 						throw new Error('Cannot use service worker alongside config.kit.paths.assets');
 					}
 
@@ -640,7 +631,7 @@ function kit({ svelte_config }) {
 					return;
 				}
 
-				if (svelte_config.kit.adapter) {
+				if (kit.adapter) {
 					const { adapt } = await import('../../core/adapt/index.js');
 					await adapt(svelte_config, build_data, prerendered, prerender_map, { log });
 				} else {
