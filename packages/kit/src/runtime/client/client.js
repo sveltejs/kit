@@ -1395,7 +1395,7 @@ export function create_client({ target, base }) {
 				// bail out before `beforeNavigate` if link opens in a different tab
 				if (target === '_parent' || target === '_top') {
 					if (window.parent !== window) return;
-				} else if (target === '_blank' || target?.startsWith('_')) {
+				} else if (target && target !== '_self') {
 					return;
 				}
 
