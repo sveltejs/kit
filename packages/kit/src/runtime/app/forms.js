@@ -104,7 +104,7 @@ export function enhance(form, submit = () => {}) {
 		/** @type {import('types').ActionResult} */
 		let result;
 
-		console.log(action, ':try fetch');
+		console.log(action, ':try fetch ');
 
 		try {
 			console.log(action, ':try fetch2');
