@@ -1390,7 +1390,14 @@ export function create_client({ target, base }) {
 				if (!a) return;
 
 				const { url, external, has } = get_link_info(a, base);
-				if (!url || has.target === '_blank') return;
+				if (
+					!url ||
+					// https://developer.mozilla.org/en-US/docs/Web/HTML/Element/a#attr-target
+					has.target === '_blank' ||
+					((has.target === '_parent' || has.target === '_top') && window.parent !== window)
+				) {
+					return;
+				}
 
 				const options = get_router_options(a);
 				const is_svg_a_element = a instanceof SVGAElement;
