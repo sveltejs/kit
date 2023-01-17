@@ -215,10 +215,10 @@ export async function call_action(event, actions) {
 /** @param {any} data */
 export function check_no_wrong_return(data) {
 	if (data instanceof Redirect) {
-		throw new Error(`Cannot "return redirect(..)". Use "throw redirect(..)" instead`);
+		throw new Error(`Cannot \`return redirect(...)\` — use \`throw redirect(...)\` instead`);
 	} else if (data instanceof HttpError) {
 		throw new Error(
-			`Cannot "return error(..)". Use "throw error(..)" or "return fail(..)" instead`
+			`Cannot \`return error(...)\` — use \`throw error(...)\` or \`return fail(...)\` instead`
 		);
 	}
 	return data;
