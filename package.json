@@ -4,7 +4,7 @@
 	"description": "monorepo for @sveltejs/kit and friends",
 	"private": true,
 	"scripts": {
-		"test": "turbo run test --filter=./packages/*",
+		"test": "turbo run test --force --filter=./packages/*",
 		"test:vite-ecosystem-ci": "pnpm test --dir packages/kit",
 		"check": "turbo run check",
 		"lint": "turbo run lint",
