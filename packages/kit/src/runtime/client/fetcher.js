@@ -13,6 +13,11 @@ export function unlock_fetch() {
 	loading -= 1;
 }
 
+// webkit tests hang on fetching so don't touch fetch
+const should_cache = navigator.userAgent.indexOf('AppleWebKit') < 0;
+
+const cache = new Map();
+
 if (DEV) {
 	let can_inspect_stack_trace = false;
 
@@ -55,7 +60,7 @@ if (DEV) {
 
 		return native_fetch(input, init);
 	};
-} else {
+} else if (should_cache) {
 	window.fetch = (input, init) => {
 		const method = input instanceof Request ? input.method : init?.method || 'GET';
 
@@ -66,8 +71,6 @@ if (DEV) {
 		return native_fetch(input, init);
 	};
 }
-
-const cache = new Map();
 
 /**
  * Should be called on the initial run of load functions that hydrate the page.
@@ -83,7 +86,7 @@ export function initial_fetch(resource, opts) {
 		const { body, ...init } = JSON.parse(script.textContent);
 
 		const ttl = script.getAttribute('data-ttl');
-		if (ttl) cache.set(selector, { body, init, ttl: 1000 * Number(ttl) });
+		if (ttl && should_cache) cache.set(selector, { body, init, ttl: 1000 * Number(ttl) });
 
 		return Promise.resolve(new Response(body, init));
 	}
