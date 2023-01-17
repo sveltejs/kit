@@ -126,6 +126,8 @@ export function enhance(form, submit = () => {}) {
 			result = { type: 'error', error };
 		}
 
+		console.log('calling callback', result);
+
 		callback({
 			action,
 			data,
