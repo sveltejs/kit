@@ -1,7 +1,9 @@
-/// <reference types="@sveltejs/kit" />
+declare global {
+	namespace App {
+		interface Locals {}
 
-declare namespace App {
-	interface Locals {}
-
-	interface Platform {}
+		interface Platform {}
+	}
 }
+
+export {};

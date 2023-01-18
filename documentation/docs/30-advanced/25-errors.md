@@ -141,12 +141,16 @@ If you're using TypeScript and need to customize the shape of errors, you can do
 
 ```ts
 /// file: src/app.d.ts
-declare namespace App {
-	interface Error {
-		code: string;
-		id: string;
+declare global {
+	namespace App {
+		interface Error {
++			code: string;
++			id: string;
+		}
 	}
 }
+
+export {};
 ```
 
 This interface always includes a `message: string` property.
