@@ -1,8 +1,10 @@
 ---
-title: adapter-static
+title: Static site generation
 ---
 
-[Adapter](https://kit.svelte.dev/docs/building-your-app) for SvelteKit apps that prerenders your entire site as a collection of static files. If you'd like to prerender only some pages, you will need to use a different adapter together with [the `prerender` option](https://kit.svelte.dev/docs/page-options#prerender).
+To use SvelteKit as a static site generator (SSG), use [`adapter-static`](https://github.com/sveltejs/kit/tree/master/packages/adapter-static).
+
+This will prerender your entire site as a collection of static files. If you'd like to prerender only some pages, you will need to use a different adapter together with [the `prerender` option](/docs/page-options#prerender).
 
 ## Usage
 
@@ -14,21 +16,21 @@ Install with `npm i -D @sveltejs/adapter-static`, then add the adapter to your `
 import adapter from '@sveltejs/adapter-static';
 
 export default {
-  kit: {
-    adapter: adapter({
-      // default options are shown. On some platforms
-      // these options are set automatically — see below
-      pages: 'build',
-      assets: 'build',
-      fallback: null,
-      precompress: false,
-      strict: true
-    })
-  }
+	kit: {
+		adapter: adapter({
+			// default options are shown. On some platforms
+			// these options are set automatically — see below
+			pages: 'build',
+			assets: 'build',
+			fallback: null,
+			precompress: false,
+			strict: true
+		})
+	}
 };
 ```
 
-...and add the [`prerender`](https://kit.svelte.dev/docs/page-options#prerender) option to your root layout:
+...and add the [`prerender`](/docs/page-options#prerender) option to your root layout:
 
 ```js
 // src/routes/+layout.js
@@ -37,7 +39,7 @@ export default {
 export const prerender = true;
 ```
 
-> ⚠️ You must ensure SvelteKit's [`trailingSlash`](https://kit.svelte.dev/docs/page-options#trailingslash) option is set appropriately for your environment. If your host does not render `/a.html` upon receiving a request for `/a` then you will need to set `trailingSlash: 'always'` to create `/a/index.html` instead.
+> You must ensure SvelteKit's [`trailingSlash`](/docs/page-options#trailingslash) option is set appropriately for your environment. If your host does not render `/a.html` upon receiving a request for `/a` then you will need to set `trailingSlash: 'always'` to create `/a/index.html` instead.
 
 ## Zero-config support
 
@@ -49,11 +51,11 @@ On these platforms, you should omit the adapter options so that `adapter-static`
 
 ```diff
 export default {
-  kit: {
--    adapter: adapter({...}),
-+    adapter: adapter(),
-    }
-  }
+	kit: {
+-		adapter: adapter({...}),
++		adapter: adapter(),
+		}
+	}
 };
 ```
 
@@ -93,12 +95,12 @@ If you want to create a simple SPA with no prerendered routes, the necessary con
 import adapter from '@sveltejs/adapter-static';
 
 export default {
-  kit: {
-    adapter: adapter({
-      fallback: '200.html'
-    }),
-    prerender: { entries: [] }
-  }
+	kit: {
+		adapter: adapter({
+			fallback: '200.html'
+		}),
+		prerender: { entries: [] }
+	}
 };
 ```
 
@@ -121,11 +123,11 @@ The fallback page is an HTML page created by SvelteKit that loads your app and n
 import adapter from '@sveltejs/adapter-static';
 
 export default {
-  kit: {
-    adapter: adapter({
-      fallback: '200.html'
-    })
-  }
+	kit: {
+		adapter: adapter({
+			fallback: '200.html'
+		})
+	}
 };
 ```
 
@@ -133,7 +135,7 @@ export default {
 
 ### Turn off prerendering
 
-When operating in SPA mode, you can omit the [`prerender`](https://kit.svelte.dev/docs/page-options#prerender) option from your root layout (or set it to `false`, its default value), and only pages that have the `prerender` option set will be prerendered at build time.
+When operating in SPA mode, you can omit the [`prerender`](/docs/page-options#prerender) option from your root layout (or set it to `false`, its default value), and only pages that have the `prerender` option set will be prerendered at build time.
 
 SvelteKit will still crawl your app's entry points looking for prerenderable pages. If `svelte-kit build` fails because of pages that can't be loaded outside the browser, you can set `config.kit.prerender.entries` to `[]` to prevent this from happening. (Setting `config.kit.prerender.enabled` to `false` also has this effect, but would prevent the fallback page from being generated.)
 
@@ -141,7 +143,7 @@ You can also add turn off prerendering only to parts of your app, if you want ot
 
 ### Turn off ssr
 
-During development, SvelteKit will still attempt to server-side render your routes. This means accessing things that are only available in the browser (such as the `window` object) will result in errors, even though this would be valid in the output app. To align the behavior of SvelteKit's dev mode with your SPA, you can [add `export const ssr = false` to your root `+layout`](https://kit.svelte.dev/docs/page-options#ssr). You can also add this option only to parts of your app, if you want other parts to be prerendered.
+During development, SvelteKit will still attempt to server-side render your routes. This means accessing things that are only available in the browser (such as the `window` object) will result in errors, even though this would be valid in the output app. To align the behavior of SvelteKit's dev mode with your SPA, you can [add `export const ssr = false` to your root `+layout`](/docs/page-options#ssr). You can also add this option only to parts of your app, if you want other parts to be prerendered.
 
 ### Apache
 
@@ -149,18 +151,18 @@ To run an SPA on [Apache](https://httpd.apache.org/), you should add a `static/.
 
 ```
 <IfModule mod_rewrite.c>
-  RewriteEngine On
-  RewriteBase /
-  RewriteRule ^200\.html$ - [L]
-  RewriteCond %{REQUEST_FILENAME} !-f
-  RewriteCond %{REQUEST_FILENAME} !-d
-  RewriteRule . /200.html [L]
+	RewriteEngine On
+	RewriteBase /
+	RewriteRule ^200\.html$ - [L]
+	RewriteCond %{REQUEST_FILENAME} !-f
+	RewriteCond %{REQUEST_FILENAME} !-d
+	RewriteRule . /200.html [L]
 </IfModule>
 ```
 
 ## GitHub Pages
 
-When building for GitHub Pages, make sure to update [`paths.base`](https://kit.svelte.dev/docs/configuration#paths) to match your repo name, since the site will be served from <https://your-username.github.io/your-repo-name> rather than from the root.
+When building for GitHub Pages, make sure to update [`paths.base`](/docs/configuration#paths) to match your repo name, since the site will be served from <https://your-username.github.io/your-repo-name> rather than from the root.
 
 You will have to prevent GitHub's provided Jekyll from managing your site by putting an empty `.nojekyll` file in your static folder. If you do not want to disable Jekyll, change the kit's `appDir` configuration option to `'app_'` or anything not starting with an underscore. For more information, see GitHub's [Jekyll documentation](https://docs.github.com/en/pages/setting-up-a-github-pages-site-with-jekyll/about-github-pages-and-jekyll#configuring-jekyll-in-your-github-pages-site).
 
@@ -182,7 +184,3 @@ const config = {
 	}
 };
 ```
-
-## Changelog
-
-[The Changelog for this package is available on GitHub](https://github.com/sveltejs/kit/blob/master/packages/adapter-static/CHANGELOG.md).

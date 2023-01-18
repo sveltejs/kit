@@ -1,22 +1,20 @@
 ---
-title: adapter-auto
+title: Zero-config deployments
 ---
 
-Automatically chooses the adapter for your current environment, if possible.
+When you create a new SvelteKit project with `npm create svelte@latest`, it installs [`adapter-auto`](https://github.com/sveltejs/kit/tree/master/packages/adapter-auto) by default. This adapter automatically installs and uses the correct adapter for supported environments when you deploy:
 
-## Supported environments
+- [`@sveltejs/adapter-cloudflare`](adapter-cloudflare) for [Cloudflare Pages](https://developers.cloudflare.com/pages/)
+- [`@sveltejs/adapter-netlify`](adapter-netlify) for [Netlify](https://netlify.com/)
+- [`@sveltejs/adapter-vercel`](adapter-vercel) for [Vercel](https://vercel.com/)
+- [`svelte-adapter-azure-swa`](https://github.com/geoffrich/svelte-adapter-azure-swa) for [Azure Static Web Apps](https://docs.microsoft.com/en-us/azure/static-web-apps/)
 
-The following environments are supported out-of-the-box, meaning a newly created project can be deployed on one of these platforms without any additional configuration:
+It's recommended to install the appropriate adapter to your `devDependencies` once you've settled on a target environment, since this will add the adapter to your lockfile and slightly improve install times on CI.
 
-- [Cloudflare Pages](https://developers.cloudflare.com/pages/) via [adapter-cloudflare](adapter-cloudflare)
-- [Netlify](https://netlify.com/) via [adapter-netlify](adapter-netlify)
-- [Vercel](https://vercel.com/) via [adapter-vercel](adapter-vercel)
-- [Azure Static Web Apps](https://docs.microsoft.com/en-us/azure/static-web-apps/) via [svelte-adapter-azure-swa](https://github.com/geoffrich/svelte-adapter-azure-swa)
+## Environment-specific configuration
 
-## Community adapters
+To add configuration options, such as `{ edge: true }` in [`adapter-vercel`](adapter-vercel) and [`adapter-netlify`](adapter-netlify), you must install the underlying adapter — `adapter-auto` does not take any options.
 
-Support for additional environments can be added in [adapters.js](https://github.com/sveltejs/kit/blob/master/packages/adapter-auto/adapters.js). To avoid this package ballooning in size, community-supported adapters should not be added as dependencies — adapter-auto will instead prompt users to install missing packages as needed.
+## Adding community adapters
 
-## Changelog
-
-[The Changelog for this package is available on GitHub](https://github.com/sveltejs/kit/blob/master/packages/adapter-auto/CHANGELOG.md).
+You can add zero-config support for additional adapters by editing [adapters.js](https://github.com/sveltejs/kit/blob/master/packages/adapter-auto/adapters.js) and opening a pull request.

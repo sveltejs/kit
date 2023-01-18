@@ -8,12 +8,9 @@ If you're using [adapter-auto](adapter-auto), you don't need to install this —
 
 _**Comparisons**_
 
-- `adapter-cloudflare` – supports all SvelteKit features; builds for
-  [Cloudflare Pages](https://blog.cloudflare.com/cloudflare-pages-goes-full-stack/)
-- `adapter-cloudflare-workers` – supports all SvelteKit features; builds for
-  Cloudflare Workers
-- `adapter-static` – only produces client-side static assets; compatible with
-  Cloudflare Pages
+- `adapter-cloudflare` – supports all SvelteKit features; builds for [Cloudflare Pages](https://blog.cloudflare.com/cloudflare-pages-goes-full-stack/)
+- `adapter-cloudflare-workers` – supports all SvelteKit features; builds for Cloudflare Workers
+- `adapter-static` – only produces client-side static assets; compatible with Cloudflare Pages
 
 > **Note:** Cloudflare Pages' new Workers integration is currently in beta.<br/>
 > Compared to `adapter-cloudflare-workers`, this adapter will be the preferred approach for most users since building on top of Pages unlocks automatic builds and deploys, preview deployments, instant rollbacks, etc.<br/>
