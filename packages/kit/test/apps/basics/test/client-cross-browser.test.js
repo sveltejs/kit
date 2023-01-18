@@ -374,7 +374,6 @@ test.describe('CSS', () => {
 	});
 });
 
-
 test.describe.serial('Errors', () => {
 	test('client-side load errors', async ({ page }) => {
 		await page.goto('/errors/load-client');

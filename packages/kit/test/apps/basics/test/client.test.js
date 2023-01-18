@@ -3,22 +3,21 @@ import { test } from '../../../utils.js';
 
 /** @typedef {import('@playwright/test').Response} Response */
 
-test.skip(({ javaScriptEnabled }) => !javaScriptEnabled || process.env.KIT_E2E_BROWSER === 'webkit');
+test.skip(
+	({ javaScriptEnabled }) => !javaScriptEnabled || process.env.KIT_E2E_BROWSER === 'webkit'
+);
 
 test.describe.configure({ mode: 'parallel' });
 
 test.describe('a11y', () => {
-	test(
-		'applies autofocus after an enhanced form submit',
-		async ({ page }) => {
-			await page.goto('/accessibility/autofocus/b');
+	test('applies autofocus after an enhanced form submit', async ({ page }) => {
+		await page.goto('/accessibility/autofocus/b');
 
-			await page.click('#submit');
-			await page.waitForFunction(() => document.activeElement?.nodeName === 'INPUT', null, {
-				timeout: 1000
-			});
-		}
-	);
+		await page.click('#submit');
+		await page.waitForFunction(() => document.activeElement?.nodeName === 'INPUT', null, {
+			timeout: 1000
+		});
+	});
 });
 
 test.describe('Caching', () => {

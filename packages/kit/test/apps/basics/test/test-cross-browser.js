@@ -47,7 +47,6 @@ test.describe('CSS', () => {
 	});
 });
 
-
 test.describe('Shadowed pages', () => {
 	test('Loads props from an endpoint', async ({ page, clicknav }) => {
 		await page.goto('/shadowed');
@@ -214,7 +213,6 @@ test.describe('Shadowed pages', () => {
 		});
 	}
 });
-
 
 test.describe('Errors', () => {
 	if (process.env.DEV) {
@@ -467,7 +465,6 @@ test.describe('Headers', () => {
 		expect(await page.innerHTML('p')).toBe('bar');
 	});
 });
-
 
 test.describe('Redirects', () => {
 	test('redirect', async ({ baseURL, page, clicknav }) => {
