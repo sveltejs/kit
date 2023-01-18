@@ -2,27 +2,23 @@
 title: Building your app
 ---
 
-Building a SvelteKit consists of two stages. First the production build is run. This will create a client and a server build which are later consumed by the corresponding environments. [Prerendering](/docs/page-options#prerender) is executed at this stage, if enabled. The second step is to _adapt_ the output to your deployment target using adapters (more on that in the later sections).
+Building a SvelteKit app happens in two stages, which both happen when you run `vite build` (usually via `npm run build`).
+
+Firstly, Vite creates an optimized production build of your server code, your browser code, and your service worker (if you have one). [Prerendering](/docs/page-options#prerender) is executed at this stage, if appropriate.
+
+Secondly, an _adapter_ takes this production build and tunes it for your target environment — more on this on the following pages.
 
 ## During the build
 
-SvelteKit will load your `+page/layout(.server).js` files (and all files they import) for analysis during the build. This could lead to code eagerly running which you want to avoid at that stage. Wrap the code in question with `building` from `$app/environment`:
+SvelteKit will load your `+page/layout(.server).js` files (and all files they import) for analysis during the build. Any code that should _not_ be executed at this stage must check that `building` from [`$app/environment`](/docs/modules#$app-environment) is `false`:
 
-```js
-/// file: +layout.server.js
-// @filename: ambient.d.ts
-declare module '$lib/server/database' {
-	export function setupMyDatabase(): void;
-}
-
-// @filename: index.js
-// ---cut---
-import { building } from '$app/environment';
+```diff
++import { building } from '$app/environment';
 import { setupMyDatabase } from '$lib/server/database';
 
-if (!building) {
++if (!building) {
 	setupMyDatabase();
-}
++}
 
 export function load() {
 	// ...
@@ -31,4 +27,4 @@ export function load() {
 
 ## Preview your app
 
-Run the `preview` script to look at your app locally after the production build is done. Note that this does not yet include adapter-specific adjustments like the [`platform` object](adapters#supported-environments-platform-specific-context).
+After building, you can view your production build locally with `vite preview` (via `npm run preview`). Note that this will run the app in Node, and so is not a perfect reproduction of your deployed app — adapter-specific adjustments like the [`platform` object](adapters#supported-environments-platform-specific-context) do not apply to previews.
