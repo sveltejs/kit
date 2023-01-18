@@ -54,7 +54,7 @@ export function load() {
 ```
 
 ```svelte
-<!-- +layout.svelte -->
+/// file: +layout.svelte
 <script>
 	/** @type {import('./$types').LayoutServerData} */
 	export let data;

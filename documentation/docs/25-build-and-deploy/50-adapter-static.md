@@ -33,8 +33,7 @@ export default {
 ...and add the [`prerender`](/docs/page-options#prerender) option to your root layout:
 
 ```js
-// src/routes/+layout.js
-
+/// file: src/routes/+layout.js
 // This can be false if you're using a fallback (i.e. SPA mode)
 export const prerender = true;
 ```
@@ -50,6 +49,7 @@ Some platforms have zero-config support (more to come in future):
 On these platforms, you should omit the adapter options so that `adapter-static` can provide the optimal configuration:
 
 ```diff
+/// file: svelte.config.js
 export default {
 	kit: {
 -		adapter: adapter({...}),
@@ -105,7 +105,7 @@ export default {
 ```
 
 ```js
-// src/routes/+layout.js
+/// file: src/routes/+layout.js
 export const ssr = false;
 ```
 

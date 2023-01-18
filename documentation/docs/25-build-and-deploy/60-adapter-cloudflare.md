@@ -58,6 +58,7 @@ export async function POST({ request, platform }) {
 To make these types available to your app, reference them in your `src/app.d.ts`:
 
 ```diff
+/// file: src/app.d.ts
 declare namespace App {
 	interface Platform {
 +		env?: {
