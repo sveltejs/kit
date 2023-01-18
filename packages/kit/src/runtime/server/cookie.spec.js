@@ -164,4 +164,29 @@ test('serialized cookie header should be url-encoded', () => {
 	assert.equal(header, 'a=f%C3%BC; b=foo+bar; c=f%C3%B6; d=öf; e=f%C3%A4; f=foo+bar');
 });
 
+test('warns if cookie exceeds 4,096 bytes', () => {
+	const { warn } = console;
+
+	/** @type {string[]} */
+	const warnings = [];
+	console.warn = (warning) => {
+		warnings.push(warning);
+	};
+
+	// @ts-expect-error
+	globalThis.__SVELTEKIT_DEV__ = true;
+
+	const { cookies } = cookies_setup();
+	cookies.set('a', 'a'.repeat(4097));
+
+	assert.equal(warnings, [
+		`Cookie "a" is larger than 4,096 bytes, and may be discarded by the browser.`
+	]);
+
+	console.warn = warn;
+
+	// @ts-expect-error
+	globalThis.__SVELTEKIT_DEV__ = false;
+});
+
 test.run();
