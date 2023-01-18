@@ -10,9 +10,10 @@ import { exec, parse_route_id } from '../../utils/routing.js';
 export function parse(nodes, server_loads, dictionary, matchers) {
 	const layouts_with_server_load = new Set(server_loads);
 
-	return Object.entries(dictionary).map(([id, [leaf, layouts, errors]]) => {
+	return Object.entries(dictionary).map(([id, [leaf, layouts, errors, loading]]) => {
 		const { pattern, params } = parse_route_id(id);
 
+		/** @type {import('types').CSRRoute} */
 		const route = {
 			id,
 			/** @param {string} path */
@@ -22,6 +23,7 @@ export function parse(nodes, server_loads, dictionary, matchers) {
 			},
 			errors: [1, ...(errors || [])].map((n) => nodes[n]),
 			layouts: [0, ...(layouts || [])].map(create_layout_loader),
+			loading: (loading || []).map((n) => nodes[n]),
 			leaf: create_leaf_loader(leaf)
 		};
 

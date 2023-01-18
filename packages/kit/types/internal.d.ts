@@ -84,6 +84,7 @@ export type CSRRoute = {
 	id: string;
 	exec(path: string): undefined | Record<string, string>;
 	errors: Array<CSRPageNodeLoader | undefined>;
+	loading: Array<CSRPageNodeLoader | undefined>;
 	layouts: Array<[boolean, CSRPageNodeLoader] | undefined>;
 	leaf: [boolean, CSRPageNodeLoader];
 };
