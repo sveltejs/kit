@@ -2,4 +2,4 @@
 '@sveltejs/kit': patch
 ---
 
-feat: warn if cookie size exceeds 4,096 bytes
+feat: throw error if cookie exceeds size limit
