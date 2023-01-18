@@ -183,11 +183,16 @@ export interface RouteData {
 	params: RouteParam[];
 
 	layout: PageNode | null;
+	loading: {
+		depth: number;
+		component: string;
+	} | null;
 	error: PageNode | null;
 	leaf: PageNode | null;
 
 	page: {
 		layouts: Array<number | undefined>;
+		loading: Array<number | undefined>;
 		errors: Array<number | undefined>;
 		leaf: number;
 	} | null;

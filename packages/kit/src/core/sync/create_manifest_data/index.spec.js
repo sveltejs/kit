@@ -648,6 +648,52 @@ test('creates routes with named layouts', () => {
 	]);
 });
 
+test('creates routes with loading pages', () => {
+	const { nodes, routes } = create('samples/loading');
+
+	assert.equal(nodes.map(simplify_node), [
+		// layouts
+		{ component: 'samples/loading/+layout.svelte' }, // 0
+		default_error, // 1
+		{
+			component: 'samples/loading/page/+loading.svelte'
+		}, // 2
+		{
+			component: 'samples/loading/sub/+layout.svelte'
+		}, // 3
+		{
+			component: 'samples/loading/sub/+loading.svelte'
+		}, // 4
+		{
+			component: 'samples/loading/sub/nested/+loading.svelte'
+		}, // 5
+		{
+			component: 'samples/loading/page/+page.svelte'
+		}, // 6
+		{
+			component: 'samples/loading/sub/nested/+page.svelte'
+		} // 7
+	]);
+
+	assert.equal(routes.filter((route) => route.page).map(simplify_route), [
+		{
+			id: '/page',
+			pattern: '/^/page/?$/',
+			page: { layouts: [0, undefined], loading: [undefined, 2], errors: [1, undefined], leaf: 6 }
+		},
+		{
+			id: '/sub/nested',
+			pattern: '/^/sub/nested/?$/',
+			page: {
+				layouts: [0, 3, undefined],
+				loading: [undefined, 4, 5],
+				errors: [1, undefined, undefined],
+				leaf: 7
+			}
+		}
+	]);
+});
+
 test('handles pages without .svelte file', () => {
 	const { nodes, routes } = create('samples/page-without-svelte-file');
 

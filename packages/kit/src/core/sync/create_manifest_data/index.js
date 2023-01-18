@@ -176,6 +176,7 @@ function create_routes_and_nodes(cwd, config, fallback) {
 				params,
 
 				layout: null,
+				loading: null,
 				error: null,
 				leaf: null,
 				page: null,
@@ -210,7 +211,7 @@ function create_routes_and_nodes(cwd, config, fallback) {
 					if (ext) name = name.slice(0, -ext.length);
 
 					const valid =
-						/^\+(?:(page(?:@(.*))?)|(layout(?:@(.*))?)|(error))$/.test(name) ||
+						/^\+(?:(page(?:@(.*))?)|(layout(?:@(.*))?)|(error)|(loading))$/.test(name) ||
 						/^\+(?:(server)|(page(?:(@[a-zA-Z0-9_-]*))?(\.server)?)|(layout(?:(@[a-zA-Z0-9_-]*))?(\.server)?))$/.test(
 							name
 						);
@@ -228,24 +229,29 @@ function create_routes_and_nodes(cwd, config, fallback) {
 				);
 
 				if (item.kind === 'component') {
-					if (item.is_error) {
+					if (item.type === 'error') {
 						route.error = {
 							depth,
 							component: project_relative
 						};
-					} else if (item.is_layout) {
+					} else if (item.type === 'layout') {
 						if (!route.layout) route.layout = { depth, child_pages: [] };
 						route.layout.component = project_relative;
 						if (item.uses_layout !== undefined) route.layout.parent_id = item.uses_layout;
+					} else if (item.type === 'loading') {
+						route.loading = {
+							depth,
+							component: project_relative
+						};
 					} else {
 						if (!route.leaf) route.leaf = { depth };
 						route.leaf.component = project_relative;
 						if (item.uses_layout !== undefined) route.leaf.parent_id = item.uses_layout;
 					}
-				} else if (item.is_layout) {
+				} else if (item.type === 'layout') {
 					if (!route.layout) route.layout = { depth, child_pages: [] };
 					route.layout[item.kind] = project_relative;
-				} else if (item.is_page) {
+				} else if (item.type === 'page') {
 					if (!route.leaf) route.leaf = { depth };
 					route.leaf[item.kind] = project_relative;
 				} else {
@@ -283,6 +289,7 @@ function create_routes_and_nodes(cwd, config, fallback) {
 			params: [],
 			parent: null,
 			layout: null,
+			loading: null,
 			error: null,
 			leaf: null,
 			page: null,
@@ -304,7 +311,7 @@ function create_routes_and_nodes(cwd, config, fallback) {
 		root.error.component = posixify(path.relative(cwd, `${fallback}/error.svelte`));
 	}
 
-	// we do layouts/errors first as they are more likely to be reused,
+	// we do layouts/errors/loading first as they are more likely to be reused,
 	// and smaller indexes take fewer bytes. also, this guarantees that
 	// the default error/layout are 0/1
 	for (const route of routes) {
@@ -315,6 +322,7 @@ function create_routes_and_nodes(cwd, config, fallback) {
 			nodes.push(route.layout);
 		}
 		if (route.error) nodes.push(route.error);
+		if (route.loading) nodes.push(route.loading);
 	}
 
 	for (const route of routes) {
@@ -328,6 +336,7 @@ function create_routes_and_nodes(cwd, config, fallback) {
 
 		route.page = {
 			layouts: [],
+			loading: [],
 			errors: [],
 			leaf: /** @type {number} */ (indexes.get(route.leaf))
 		};
@@ -339,12 +348,15 @@ function create_routes_and_nodes(cwd, config, fallback) {
 
 		while (current_route) {
 			if (parent_id === undefined || current_route.segment === parent_id) {
-				if (current_route.layout || current_route.error) {
+				if (current_route.layout || current_route.error || current_route.loading) {
 					route.page.layouts.unshift(
 						current_route.layout ? indexes.get(current_route.layout) : undefined
 					);
 					route.page.errors.unshift(
 						current_route.error ? indexes.get(current_route.error) : undefined
+					);
+					route.page.loading.unshift(
+						current_route.loading ? indexes.get(current_route.loading) : undefined
 					);
 				}
 
@@ -384,7 +396,7 @@ function analyze(project_relative, file, component_extensions, module_extensions
 	const component_extension = component_extensions.find((ext) => file.endsWith(ext));
 	if (component_extension) {
 		const name = file.slice(0, -component_extension.length);
-		const pattern = /^\+(?:(page(?:@(.*))?)|(layout(?:@(.*))?)|(error))$/;
+		const pattern = /^\+(?:(page(?:@(.*))?)|(layout(?:@(.*))?)|(error)|(loading))$/;
 		const match = pattern.exec(name);
 		if (!match) {
 			throw new Error(`Files prefixed with + are reserved (saw ${project_relative})`);
@@ -392,9 +404,7 @@ function analyze(project_relative, file, component_extensions, module_extensions
 
 		return {
 			kind: 'component',
-			is_page: !!match[1],
-			is_layout: !!match[3],
-			is_error: !!match[5],
+			type: match[1] ? 'page' : match[3] ? 'layout' : match[5] ? 'error' : 'loading',
 			uses_layout: match[2] ?? match[4]
 		};
 	}
@@ -416,11 +426,17 @@ function analyze(project_relative, file, component_extensions, module_extensions
 
 		const kind = !!(match[1] || match[4] || match[7]) ? 'server' : 'universal';
 
-		return {
-			kind,
-			is_page: !!match[2],
-			is_layout: !!match[5]
-		};
+		if (kind === 'server') {
+			return {
+				kind,
+				type: match[2] ? 'page' : match[5] ? 'layout' : 'endpoint'
+			};
+		} else {
+			return {
+				kind,
+				type: match[2] ? 'page' : 'layout'
+			};
+		}
 	}
 
 	throw new Error(`Files and directories prefixed with + are reserved (saw ${project_relative})`);

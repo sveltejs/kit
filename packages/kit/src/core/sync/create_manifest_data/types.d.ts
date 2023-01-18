@@ -16,22 +16,18 @@ export type RouteTree = Map<string, RouteTreeNode>;
 
 interface RouteComponent {
 	kind: 'component';
-	is_page: boolean;
-	is_layout: boolean;
-	is_error: boolean;
+	type: 'page' | 'layout' | 'loading' | 'error';
 	uses_layout: string | undefined;
 }
 
 interface RouteSharedModule {
 	kind: 'universal';
-	is_page: boolean;
-	is_layout: boolean;
+	type: 'page' | 'layout';
 }
 
 interface RouteServerModule {
 	kind: 'server';
-	is_page: boolean;
-	is_layout: boolean;
+	type: 'page' | 'layout' | 'endpoint';
 }
 
 export type RouteFile = RouteComponent | RouteSharedModule | RouteServerModule;
