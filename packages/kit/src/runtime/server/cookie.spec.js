@@ -164,7 +164,7 @@ test('serialized cookie header should be url-encoded', () => {
 	assert.equal(header, 'a=f%C3%BC; b=foo+bar; c=f%C3%B6; d=öf; e=f%C3%A4; f=foo+bar');
 });
 
-test('warns if cookie exceeds 4,096 bytes', () => {
+test('warns if cookie exceeds 4,129 bytes', () => {
 	// @ts-expect-error
 	globalThis.__SVELTEKIT_DEV__ = true;
 
