@@ -661,6 +661,21 @@ test.describe('Load', () => {
 			);
 		});
 	}
+
+	if (!process.env.DEV) {
+		test.skip('does not fetch __data.json if no server load function exists', async ({
+			page,
+			clicknav
+		}) => {
+			await page.goto('/load/no-server-load/a');
+
+			const pathnames = [];
+			page.on('request', (r) => pathnames.push(new URL(r.url()).pathname));
+			await clicknav('[href="/load/no-server-load/b"]');
+
+			expect(pathnames).not.toContain(`/load/no-server-load/b/__data.json`);
+		});
+	}
 });
 
 test.describe('Page options', () => {
