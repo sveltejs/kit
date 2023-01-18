@@ -1,5 +1,11 @@
 # @sveltejs/adapter-node
 
+## 1.1.4
+
+### Patch Changes
+
+- docs: move adapter docs to site ([#8531](https://github.com/sveltejs/kit/pull/8531))
+
 ## 1.1.3
 
 ### Patch Changes
