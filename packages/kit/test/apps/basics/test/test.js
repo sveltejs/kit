@@ -1,5 +1,5 @@
 import { expect } from '@playwright/test';
-import { start_server, test } from '../../../utils.js';
+import { test } from '../../../utils.js';
 
 /** @typedef {import('@playwright/test').Response} Response */
 
@@ -793,11 +793,11 @@ test.describe('Load', () => {
 		expect(await page.textContent('h1')).toBe('text.length is 5000000');
 	});
 
-	test('handles external api', async ({ page, context }) => {
+	test('handles external api', async ({ page, start_server }) => {
 		/** @type {string[]} */
 		const requested_urls = [];
 
-		const { port, close } = await start_server(async (req, res) => {
+		const { port } = await start_server(async (req, res) => {
 			requested_urls.push(req.url);
 
 			if (req.url === '/server-fetch-request-modified.json') {
@@ -813,15 +813,10 @@ test.describe('Load', () => {
 			}
 		});
 
-		try {
-			await page.goto(`/load/server-fetch-request?port=${port}`);
+		await page.goto(`/load/server-fetch-request?port=${port}`);
 
-			expect(requested_urls).toEqual(['/server-fetch-request-modified.json']);
-			expect(await page.textContent('h1')).toBe('the answer is 42');
-		} finally {
-			await context.close();
-			await close();
-		}
+		expect(requested_urls).toEqual(['/server-fetch-request-modified.json']);
+		expect(await page.textContent('h1')).toBe('the answer is 42');
 	});
 
 	test('makes credentialed fetches to endpoints by default', async ({
@@ -1591,20 +1586,15 @@ test.describe('Routing', () => {
 		expect(await page.textContent('h2')).toBe('y-z');
 	});
 
-	test('ignores navigation to URLs the app does not own', async ({ page, context }) => {
-		const { port, close } = await start_server((req, res) => res.end('ok'));
+	test('ignores navigation to URLs the app does not own', async ({ page, start_server }) => {
+		const { port } = await start_server((req, res) => res.end('ok'));
 
-		try {
-			await page.goto(`/routing?port=${port}`);
-			await Promise.all([
-				page.click(`[href="http://localhost:${port}"]`),
-				// assert that the app can visit a URL not owned by the app without crashing
-				page.waitForURL(`http://localhost:${port}/`)
-			]);
-		} finally {
-			await context.close();
-			await close();
-		}
+		await page.goto(`/routing?port=${port}`);
+		await Promise.all([
+			page.click(`[href="http://localhost:${port}"]`),
+			// assert that the app can visit a URL not owned by the app without crashing
+			page.waitForURL(`http://localhost:${port}/`)
+		]);
 	});
 
 	test('navigates to ...rest', async ({ page, clicknav }) => {
@@ -1818,8 +1808,8 @@ test.describe('Actions', () => {
 
 	test('Form fields are persisted', async ({ page, javaScriptEnabled }) => {
 		await page.goto('/actions/form-errors-persist-fields');
-		await page.type('input[name="username"]', 'foo');
-		await page.type('input[name="password"]', 'bar');
+		await page.locator('input[name="username"]').fill('foo');
+		await page.locator('input[name="password"]').fill('bar');
 		await Promise.all([
 			page.waitForRequest((request) =>
 				request.url().includes('/actions/form-errors-persist-fields')
@@ -1840,11 +1830,8 @@ test.describe('Actions', () => {
 
 		expect(await page.textContent('pre')).toBe(JSON.stringify(null));
 
-		await page.type('input[name="username"]', 'foo');
-		await Promise.all([
-			page.waitForRequest((request) => request.url().includes('/actions/success-data')),
-			page.click('button[formenctype="multipart/form-data"]')
-		]);
+		await page.locator('input[name="username"]').fill('foo');
+		await page.locator('button[formenctype="multipart/form-data"]').click();
 
 		await expect(page.locator('pre')).toHaveText(JSON.stringify({ result: 'foo' }));
 	});
@@ -1854,11 +1841,8 @@ test.describe('Actions', () => {
 
 		expect(await page.textContent('pre')).toBe(JSON.stringify(null));
 
-		await page.type('input[name="username"]', 'bar');
-		await Promise.all([
-			page.waitForRequest((request) => request.url().includes('/actions/success-data')),
-			page.click('button[formenctype="application/x-www-form-urlencoded"]')
-		]);
+		await page.locator('input[name="username"]').fill('bar');
+		await page.locator('button[formenctype="application/x-www-form-urlencoded"]').click();
 
 		await expect(page.locator('pre')).toHaveText(JSON.stringify({ result: 'bar' }));
 	});
@@ -1927,11 +1911,8 @@ test.describe('Actions', () => {
 		expect(await page.textContent('pre.formdata1')).toBe(JSON.stringify(null));
 		expect(await page.textContent('pre.formdata2')).toBe(JSON.stringify(null));
 
-		await page.type('input[name="username"]', 'foo');
-		await Promise.all([
-			page.waitForRequest((request) => request.url().includes('/actions/enhance')),
-			page.click('button.form1')
-		]);
+		await page.locator('input[name="username"]').fill('foo');
+		await page.locator('button.form1').click();
 
 		await expect(page.locator('pre.formdata1')).toHaveText(JSON.stringify({ result: 'foo' }));
 		await expect(page.locator('pre.formdata2')).toHaveText(JSON.stringify({ result: 'foo' }));
@@ -1960,11 +1941,8 @@ test.describe('Actions', () => {
 
 		expect(await page.textContent('pre.formdata1')).toBe(JSON.stringify(null));
 
-		await page.type('input[name="username"]', 'foo');
-		await Promise.all([
-			page.waitForRequest((request) => request.url().includes('/actions/enhance')),
-			page.click('button.form1-register')
-		]);
+		await page.locator('input[name="username"]').fill('foo');
+		await page.locator('button.form1-register').click();
 
 		await expect(page.locator('pre.formdata1')).toHaveText(
 			JSON.stringify({ result: 'register: foo' })

@@ -1,5 +1,5 @@
 import { expect } from '@playwright/test';
-import { start_server, test } from '../../../utils.js';
+import { test } from '../../../utils.js';
 
 /** @typedef {import('@playwright/test').Response} Response */
 
@@ -183,6 +183,16 @@ test.describe('beforeNavigate', () => {
 
 		expect(page.url()).toBe(baseURL + '/before-navigate/prevent-navigation');
 		expect(await page.innerHTML('pre')).toBe('1 false link');
+	});
+
+	test('is not triggered on target=_blank', async ({ page, baseURL }) => {
+		await page.goto('/before-navigate/prevent-navigation');
+
+		await page.click('a[href="https://google.com"]');
+		await page.waitForTimeout(500);
+
+		expect(page.url()).toBe(baseURL + '/before-navigate/prevent-navigation');
+		expect(await page.innerHTML('pre')).toBe('0 false undefined');
 	});
 });
 
@@ -370,7 +380,7 @@ test.describe('a11y', () => {
 		await page.goto('/keepfocus');
 
 		await Promise.all([
-			page.type('#input', 'bar'),
+			page.locator('#input').fill('bar'),
 			page.waitForFunction(() => window.location.search === '?foo=bar')
 		]);
 		await expect(page.locator('#input')).toBeFocused();
@@ -788,20 +798,16 @@ test.describe('Routing', () => {
 		await expect(page.locator('#page-url-hash')).toHaveText('');
 	});
 
-	test('does not normalize external path', async ({ page, context }) => {
-		const { port, close } = await start_server((_req, res) => {
-			res.end('<html><head></head><body>ok</body></html>');
+	test('does not normalize external path', async ({ page, start_server }) => {
+		const html_ok = '<html><head></head><body>ok</body></html>';
+		const { port } = await start_server((_req, res) => {
+			res.end(html_ok);
 		});
 
-		try {
-			await page.goto(`/routing/slashes?port=${port}`);
-			await page.locator(`a[href="http://localhost:${port}/with-slash/"]`).click();
-			expect(await page.content()).toBe('<html><head></head><body>ok</body></html>');
-			expect(page.url()).toBe(`http://localhost:${port}/with-slash/`);
-		} finally {
-			await context.close();
-			await close();
-		}
+		await page.goto(`/routing/slashes?port=${port}`);
+		await page.locator(`a[href="http://localhost:${port}/with-slash/"]`).click();
+		expect(await page.content()).toBe(html_ok);
+		expect(page.url()).toBe(`http://localhost:${port}/with-slash/`);
 	});
 
 	test('ignores popstate events from outside the router', async ({ page }) => {
@@ -922,9 +928,21 @@ test.describe('$app/stores', () => {
 	});
 
 	test('$page.data does not update if data is unchanged', async ({ page, app }) => {
-		await page.goto('/store/data/unchanged/a');
-		await app.goto('/store/data/unchanged/b');
+		await page.goto('/store/data/store-update/a');
+		await app.goto('/store/data/store-update/b');
 		await expect(page.locator('p')).toHaveText('$page.data was updated 0 time(s)');
+	});
+
+	test('$page.data does update if keys did not change but data did', async ({ page, app }) => {
+		await page.goto('/store/data/store-update/same-keys/same');
+		await app.goto('/store/data/store-update/same-keys');
+		await expect(page.locator('p')).toHaveText('$page.data was updated 1 time(s)');
+	});
+
+	test('$page.data does update if keys did not change but data did (2)', async ({ page, app }) => {
+		await page.goto('/store/data/store-update/same-keys/same-deep/nested');
+		await app.goto('/store/data/store-update/same-keys');
+		await expect(page.locator('p')).toHaveText('$page.data was updated 1 time(s)');
 	});
 });
 
@@ -1148,12 +1166,12 @@ test.describe('data-sveltekit attributes', () => {
 		page.on('request', (r) => requests.push(r.url()));
 
 		await page.goto('/data-sveltekit/reload');
-		await page.locator('#one').click();
+		await clicknav('#one');
 		expect(requests).toContain(`${baseURL}/data-sveltekit/reload/target`);
 
 		requests.length = 0;
 		await page.goto('/data-sveltekit/reload');
-		await page.locator('#two').click();
+		await clicknav('#two');
 		expect(requests).toContain(`${baseURL}/data-sveltekit/reload/target`);
 
 		requests.length = 0;

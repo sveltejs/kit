@@ -88,7 +88,7 @@ importers:
       '@types/node': ^16.18.6
       '@types/set-cookie-parser': ^2.4.2
       esbuild: ^0.16.3
-      rimraf: ^3.0.2
+      rimraf: ^4.0.0
       rollup: ^3.7.0
       set-cookie-parser: ^2.5.1
       typescript: ^4.9.4
@@ -105,7 +105,7 @@ importers:
       '@sveltejs/kit': link:../kit
       '@types/node': 16.18.6
       '@types/set-cookie-parser': 2.4.2
-      rimraf: 3.0.2
+      rimraf: 4.0.1
       rollup: 3.7.0
       typescript: 4.9.4
       uvu: 0.5.6
@@ -119,7 +119,7 @@ importers:
       '@types/node': ^16.18.6
       c8: ^7.12.0
       polka: ^1.0.0-next.22
-      rimraf: ^3.0.2
+      rimraf: ^4.0.0
       rollup: ^3.7.0
       sirv: ^2.0.2
       typescript: ^4.9.4
@@ -134,7 +134,7 @@ importers:
       '@types/node': 16.18.6
       c8: 7.12.0
       polka: 1.0.0-next.22
-      rimraf: 3.0.2
+      rimraf: 4.0.1
       sirv: 2.0.2
       typescript: 4.9.4
       uvu: 0.5.6
@@ -267,7 +267,7 @@ importers:
       '@types/sade': ^1.7.4
       '@types/set-cookie-parser': ^2.4.2
       cookie: ^0.5.0
-      devalue: ^4.2.0
+      devalue: ^4.2.2
       esm-env: ^1.0.0
       kleur: ^4.1.5
       magic-string: ^0.27.0
@@ -288,7 +288,7 @@ importers:
       '@sveltejs/vite-plugin-svelte': 2.0.0_svelte@3.55.1+vite@4.0.4
       '@types/cookie': 0.5.1
       cookie: 0.5.0
-      devalue: 4.2.0
+      devalue: 4.2.2
       esm-env: 1.0.0
       kleur: 4.1.5
       magic-string: 0.27.0
@@ -338,7 +338,7 @@ importers:
     specifiers:
       '@sveltejs/kit': workspace:^
       cross-env: ^7.0.3
-      rimraf: ^3.0.2
+      rimraf: ^4.0.0
       svelte: ^3.55.1
       svelte-check: ^3.0.2
       typescript: ^4.9.4
@@ -346,7 +346,7 @@ importers:
     devDependencies:
       '@sveltejs/kit': link:../../..
       cross-env: 7.0.3
-      rimraf: 3.0.2
+      rimraf: 4.0.1
       svelte: 3.55.1
       svelte-check: 3.0.2_svelte@3.55.1
       typescript: 4.9.4
@@ -356,7 +356,6 @@ importers:
     specifiers:
       '@sveltejs/kit': workspace:^
       cross-env: ^7.0.3
-      rimraf: ^3.0.2
       svelte: ^3.55.1
       svelte-check: ^3.0.2
       typescript: ^4.9.4
@@ -364,7 +363,6 @@ importers:
     devDependencies:
       '@sveltejs/kit': link:../../..
       cross-env: 7.0.3
-      rimraf: 3.0.2
       svelte: 3.55.1
       svelte-check: 3.0.2_svelte@3.55.1
       typescript: 4.9.4
@@ -408,7 +406,7 @@ importers:
     specifiers:
       '@sveltejs/kit': workspace:^
       cross-env: ^7.0.3
-      rimraf: ^3.0.2
+      rimraf: ^4.0.0
       svelte: ^3.55.1
       svelte-check: ^3.0.2
       typescript: ^4.9.4
@@ -416,7 +414,7 @@ importers:
     devDependencies:
       '@sveltejs/kit': link:../../..
       cross-env: 7.0.3
-      rimraf: 3.0.2
+      rimraf: 4.0.1
       svelte: 3.55.1
       svelte-check: 3.0.2_svelte@3.55.1
       typescript: 4.9.4
@@ -684,10 +682,10 @@ importers:
 
   sites/kit.svelte.dev:
     specifiers:
-      '@sveltejs/adapter-vercel': workspace:^1.0.0
+      '@sveltejs/adapter-vercel': workspace:^1.0.4
       '@sveltejs/amp': workspace:^
       '@sveltejs/kit': workspace:^
-      '@sveltejs/site-kit': ^3.0.3
+      '@sveltejs/site-kit': ^3.1.0
       '@types/d3-geo': ^3.0.2
       '@types/node': ^16.18.6
       d3-geo: ^3.0.1
@@ -713,7 +711,7 @@ importers:
       '@sveltejs/adapter-vercel': link:../../packages/adapter-vercel
       '@sveltejs/amp': link:../../packages/amp
       '@sveltejs/kit': link:../../packages/kit
-      '@sveltejs/site-kit': 3.0.3
+      '@sveltejs/site-kit': 3.1.0
       '@types/d3-geo': 3.0.2
       '@types/node': 16.18.6
       flexsearch: 0.7.31
@@ -1325,8 +1323,8 @@ packages:
       picomatch: 2.3.1
       rollup: 3.7.0
 
-  /@sveltejs/site-kit/3.0.3:
-    resolution: {integrity: sha512-zetnU9jGOu+DYcwqpgK9uSUv3qrGrL7JagMN7M8B4bQRoBq1lAPnCvBXtlfQckvkQLtH453JJTIX6ULqL1xtpA==}
+  /@sveltejs/site-kit/3.1.0:
+    resolution: {integrity: sha512-Vv9Efzax+NMRZUfZ9TdUqQYicj2Z3kynLkUUdGPfahjlFEwQ3EGyj1vVCg5jxyqvNUgOsVVUb35nXI5CPsmCfA==}
     dev: true
 
   /@sveltejs/vite-plugin-svelte/2.0.0_svelte@3.55.1+vite@4.0.4:
@@ -2102,8 +2100,8 @@ packages:
     resolution: {integrity: sha512-463v3ZeIrcWtdgIg6vI6XUncguvr2TnGl4SzDXinkt9mSLpBJKXT3mW6xT3VQdDN11+WVs29pgvivTc4Lp8v+w==}
     engines: {node: '>=8'}
 
-  /devalue/4.2.0:
-    resolution: {integrity: sha512-mbjoAaCL2qogBKgeFxFPOXAUsZchircF+B/79LD4sHH0+NHfYm8gZpQrskKDn5gENGt35+5OI1GUF7hLVnkPDw==}
+  /devalue/4.2.2:
+    resolution: {integrity: sha512-Pkwd8qrI9O20VJ14fBNHu+on99toTNZFbgWRpZbC0zbDXpnE2WHYcrC1fHhMsF/3Ee+2yaW7vEujAT7fCYgqrA==}
     dev: false
 
   /diff/5.1.0:
@@ -3735,6 +3733,12 @@ packages:
     hasBin: true
     dependencies:
       glob: 7.2.3
+
+  /rimraf/4.0.1:
+    resolution: {integrity: sha512-qwvb/Wzf8XJxdv8InnDtmijfbIk6gk576swPeogHbUh7AT4ezF42lvhXUdbIzMYrO4HbaXi1rYGhKTDyPF1AJw==}
+    engines: {node: '>=14'}
+    hasBin: true
+    dev: true
 
   /rollup-pluginutils/2.8.2:
     resolution: {integrity: sha512-EEp9NhnUkwY8aif6bxgovPHMoMoNr2FulJziTndpt5H9RdwC47GSGuII9XxpSdzVGM0GWrNPHV6ie1LTNJPaLQ==}

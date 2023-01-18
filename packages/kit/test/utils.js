@@ -110,6 +110,90 @@ export const test = base.extend({
 		}
 
 		use(read_errors);
+	},
+
+	start_server: async ({}, use) => {
+		/**
+		 * @type {http.Server}
+		 */
+		let server;
+
+		/**
+		 * @type {Set<import('net').Socket>}
+		 */
+		let sockets;
+
+		/**
+		 * @param {(req: http.IncomingMessage, res: http.ServerResponse) => void} handler
+		 */
+		async function start_server(handler) {
+			if (server) {
+				throw new Error('server already started');
+			}
+			server = http.createServer(handler);
+
+			await new Promise((fulfil) => {
+				server.listen(0, 'localhost', () => {
+					fulfil(undefined);
+				});
+			});
+
+			const { port } = /** @type {import('net').AddressInfo} */ (server.address());
+			if (!port) {
+				throw new Error(`Could not find port from server ${JSON.stringify(server.address())}`);
+			}
+			sockets = new Set();
+			server.on('connection', (socket) => {
+				sockets.add(socket);
+				socket.on('close', () => {
+					sockets.delete(socket);
+				});
+			});
+			return {
+				port
+			};
+		}
+		await use(start_server);
+
+		// @ts-expect-error use before set
+		if (server) {
+			// @ts-expect-error use before set
+			if (sockets) {
+				sockets.forEach((socket) => {
+					if (!socket.destroyed) {
+						socket.destroy();
+					}
+				});
+			}
+
+			await new Promise((fulfil, reject) => {
+				server.close((err) => {
+					if (err) {
+						reject(err);
+					} else {
+						fulfil(undefined);
+					}
+				});
+			});
+		}
+	},
+
+	// make sure context fixture depends on start server, so setup/teardown order is
+	// setup start_server
+	// setup context
+	// teardown context
+	// teardown start_server
+	context: async function ({ context, start_server }, use) {
+		// just here make sure start_server is referenced, don't call
+		if (!start_server) {
+			throw new Error('start_server fixture not present');
+		}
+		await use(context);
+		try {
+			await context.close();
+		} catch (e) {
+			console.error('failed to close context fixture', e);
+		}
 	}
 });
 
@@ -163,36 +247,3 @@ export const config = {
 	},
 	workers: process.env.CI ? 2 : undefined
 };
-
-/**
- * @param {(req: http.IncomingMessage, res: http.ServerResponse) => void} handler
- */
-export async function start_server(handler) {
-	const server = http.createServer(handler);
-
-	await new Promise((fulfil) => {
-		server.listen(0, 'localhost', () => {
-			fulfil(undefined);
-		});
-	});
-
-	const { port } = /** @type {import('net').AddressInfo} */ (server.address());
-	if (!port) {
-		throw new Error(`Could not find port from server ${JSON.stringify(server.address())}`);
-	}
-
-	return {
-		port,
-		close: () => {
-			return new Promise((fulfil, reject) => {
-				server.close((err) => {
-					if (err) {
-						reject(err);
-					} else {
-						fulfil(undefined);
-					}
-				});
-			});
-		}
-	};
-}

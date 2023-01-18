@@ -2,41 +2,22 @@
  * It's possible to tell SvelteKit how to type objects inside your app by declaring the `App` namespace. By default, a new project will have a file called `src/app.d.ts` containing the following:
  *
  * ```ts
- * /// <reference types="@sveltejs/kit" />
- *
- * declare namespace App {
- * 	interface Error {}
- * 	interface Locals {}
- * 	interface PageData {}
- * 	interface Platform {}
- * }
- * ```
- *
- * By populating these interfaces, you will gain type safety when using `event.locals`, `event.platform`, and `data` from `load` functions.
- *
- * Note that since it's an ambient declaration file, you have to be careful when using `import` statements. Once you add an `import`
- * at the top level, the declaration file is no longer considered ambient and you lose access to these typings in other files.
- * To avoid this, either use the `import(...)` function:
- *
- * ```ts
- * interface Locals {
- * 	user: import('$lib/types').User;
- * }
- * ```
- * Or wrap the namespace with `declare global`:
- * ```ts
- * import { User } from '$lib/types';
- *
  * declare global {
  * 	namespace App {
- * 		interface Locals {
- * 			user: User;
- * 		}
- * 		// ...
+ * 		// interface Error {}
+ * 		// interface Locals {}
+ * 		// interface PageData {}
+ * 		// interface Platform {}
  * 	}
  * }
+ *
+ * export {};
  * ```
  *
+ * The `export {}` line exists because without it, the file would be treated as an _ambient module_ which prevents you from adding `import` declarations.
+ * If you need to add ambient `declare module` declarations, do so in a separate file like `src/ambient.d.ts`.
+ *
+ * By populating these interfaces, you will gain type safety when using `event.locals`, `event.platform`, and `data` from `load` functions.
  */
 declare namespace App {
 	/**
@@ -265,7 +246,8 @@ declare module '$app/navigation' {
 
 	/**
 	 * A navigation interceptor that triggers before we navigate to a new URL, whether by clicking a link, calling `goto(...)`, or using the browser back/forward controls.
-	 * Calling `cancel()` will prevent the navigation from completing.
+	 * Calling `cancel()` will prevent the navigation from completing. If the navigation would have directly unloaded the current page, calling `cancel` will trigger the native
+	 * browser unload confirmation dialog. In these cases, `navigation.willUnload` is `true`.
 	 *
 	 * When a navigation isn't client side, `navigation.to.route.id` will be `null`.
 	 *

@@ -11,6 +11,7 @@ export const INVALIDATED_PARAM = 'x-sveltekit-invalidated';
  * @param {import('types').RequestEvent} event
  * @param {import('types').SSRRoute} route
  * @param {import('types').SSROptions} options
+ * @param {import('types').SSRManifest} manifest
  * @param {import('types').SSRState} state
  * @param {boolean[] | undefined} invalidated_data_nodes
  * @param {import('types').TrailingSlash} trailing_slash
@@ -20,6 +21,7 @@ export async function render_data(
 	event,
 	route,
 	options,
+	manifest,
 	state,
 	invalidated_data_nodes,
 	trailing_slash
@@ -54,10 +56,9 @@ export async function render_data(
 					}
 
 					// == because it could be undefined (in dev) or null (in build, because of JSON.stringify)
-					const node = n == undefined ? n : await options.manifest._.nodes[n]();
+					const node = n == undefined ? n : await manifest._.nodes[n]();
 					return load_server_data({
 						event: new_event,
-						options,
 						state,
 						node,
 						parent: async () => {
