@@ -1,5 +1,5 @@
 ---
-title: Building Your App
+title: Building your app
 ---
 
 Building a SvelteKit consists of two stages. First the production build is run. This will create a client and a server build which are later consumed by the corresponding environments. [Prerendering](/docs/page-options#prerender) is executed at this stage, if enabled. The second step is to _adapt_ the output to your deployment target using adapters (more on that in the later sections).
