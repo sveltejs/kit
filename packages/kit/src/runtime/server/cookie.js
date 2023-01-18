@@ -9,6 +9,12 @@ import { normalize_path } from '../../utils/url.js';
 const cookie_paths = {};
 
 /**
+ * Cookies that are larger than this size (including the name and other
+ * attributes) are discarded by browsers
+ */
+const MAX_COOKIE_SIZE = 4129;
+
+/**
  * @param {Request} request
  * @param {URL} url
  * @param {import('types').TrailingSlash} trailing_slash
@@ -112,7 +118,7 @@ export function get_cookies(request, url, trailing_slash) {
 
 			if (__SVELTEKIT_DEV__) {
 				const serialized = serialize(name, value, new_cookies[name].options);
-				if (new TextEncoder().encode(serialized).byteLength > 4129) {
+				if (new TextEncoder().encode(serialized).byteLength > MAX_COOKIE_SIZE) {
 					throw new Error(`Cookie "${name}" is too large, and will be discarded by the browser`);
 				}
 
