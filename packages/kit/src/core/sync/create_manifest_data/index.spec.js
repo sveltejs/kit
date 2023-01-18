@@ -78,12 +78,12 @@ test('creates routes', () => {
 		{
 			id: '/',
 			pattern: '/^/$/',
-			page: { layouts: [0], errors: [1], leaf: 2 }
+			page: { layouts: [0], errors: [1], loading: [undefined], leaf: 2 }
 		},
 		{
 			id: '/about',
 			pattern: '/^/about/?$/',
-			page: { layouts: [0], errors: [1], leaf: 3 }
+			page: { layouts: [0], errors: [1], loading: [undefined], leaf: 3 }
 		},
 		{
 			id: '/blog.json',
@@ -93,7 +93,7 @@ test('creates routes', () => {
 		{
 			id: '/blog',
 			pattern: '/^/blog/?$/',
-			page: { layouts: [0], errors: [1], leaf: 4 }
+			page: { layouts: [0], errors: [1], loading: [undefined], leaf: 4 }
 		},
 		{
 			id: '/blog/[slug].json',
@@ -105,7 +105,7 @@ test('creates routes', () => {
 		{
 			id: '/blog/[slug]',
 			pattern: '/^/blog/([^/]+?)/?$/',
-			page: { layouts: [0], errors: [1], leaf: 5 }
+			page: { layouts: [0], errors: [1], loading: [undefined], leaf: 5 }
 		}
 	]);
 });
@@ -130,13 +130,13 @@ test_symlinks('creates symlinked routes', () => {
 		{
 			id: '/',
 			pattern: '/^/$/',
-			page: { layouts: [0], errors: [1], leaf: 1 }
+			page: { layouts: [0], errors: [1], loading: [undefined], leaf: 1 }
 		},
 
 		{
 			id: '/foo',
 			pattern: '/^/foo/?$/',
-			page: { layouts: [0], errors: [1], leaf: 2 }
+			page: { layouts: [0], errors: [1], loading: [undefined], leaf: 2 }
 		}
 	]);
 });
@@ -156,13 +156,13 @@ test('creates routes with layout', () => {
 		{
 			id: '/',
 			pattern: '/^/$/',
-			page: { layouts: [0], errors: [1], leaf: 3 }
+			page: { layouts: [0], errors: [1], loading: [undefined], leaf: 3 }
 		},
 
 		{
 			id: '/foo',
 			pattern: '/^/foo/?$/',
-			page: { layouts: [0, 2], errors: [1, undefined], leaf: 4 }
+			page: { layouts: [0, 2], errors: [1, undefined], loading: [undefined, undefined], leaf: 4 }
 		}
 	]);
 });
@@ -271,7 +271,7 @@ test('sorts routes with rest correctly', () => {
 		{
 			id: '/a/[...rest]',
 			pattern: '/^/a(?:/(.*))?/?$/',
-			page: { layouts: [0], errors: [1], leaf: 2 }
+			page: { layouts: [0], errors: [1], loading: [undefined], leaf: 2 }
 		},
 		{
 			id: '/b',
@@ -280,7 +280,7 @@ test('sorts routes with rest correctly', () => {
 		{
 			id: '/b/[...rest]',
 			pattern: '/^/b(?:/(.*))?/?$/',
-			page: { layouts: [0], errors: [1], leaf: 3 }
+			page: { layouts: [0], errors: [1], loading: [undefined], leaf: 3 }
 		}
 	]);
 });
@@ -304,7 +304,7 @@ test('allows rest parameters inside segments', () => {
 		{
 			id: '/prefix-[...rest]',
 			pattern: '/^/prefix-(.*?)/?$/',
-			page: { layouts: [0], errors: [1], leaf: 2 }
+			page: { layouts: [0], errors: [1], loading: [undefined], leaf: 2 }
 		},
 		{
 			id: '/[...rest].json',
@@ -358,6 +358,7 @@ test('optional parameters', () => {
 			page: {
 				layouts: [0],
 				errors: [1],
+				loading: [undefined],
 				// see above, linux/windows difference -> find the index dynamically
 				leaf: nodes.findIndex((node) => node.component?.includes('nested/[[optional]]'))
 			}
@@ -369,6 +370,7 @@ test('optional parameters', () => {
 			page: {
 				layouts: [0],
 				errors: [1],
+				loading: [undefined],
 				// see above, linux/windows difference -> find the index dynamically
 				leaf: nodes.findIndex((node) => node.component?.includes('prefix[[suffix]]'))
 			}
@@ -379,6 +381,7 @@ test('optional parameters', () => {
 			page: {
 				layouts: [0],
 				errors: [1],
+				loading: [undefined],
 				// see above, linux/windows difference -> find the index dynamically
 				leaf: nodes.findIndex((node) => node.component?.includes('optional/[[optional]]'))
 			}
@@ -405,6 +408,7 @@ test('nested optionals', () => {
 			page: {
 				layouts: [0],
 				errors: [1],
+				loading: [undefined],
 				leaf: nodes.findIndex((node) => node.component?.includes('/[[a]]/[[b]]'))
 			}
 		},
@@ -487,12 +491,12 @@ test('works with custom extensions', () => {
 		{
 			id: '/',
 			pattern: '/^/$/',
-			page: { layouts: [0], errors: [1], leaf: 2 }
+			page: { layouts: [0], errors: [1], loading: [undefined], leaf: 2 }
 		},
 		{
 			id: '/about',
 			pattern: '/^/about/?$/',
-			page: { layouts: [0], errors: [1], leaf: 3 }
+			page: { layouts: [0], errors: [1], loading: [undefined], leaf: 3 }
 		},
 		{
 			id: '/blog.json',
@@ -504,7 +508,7 @@ test('works with custom extensions', () => {
 		{
 			id: '/blog',
 			pattern: '/^/blog/?$/',
-			page: { layouts: [0], errors: [1], leaf: 4 }
+			page: { layouts: [0], errors: [1], loading: [undefined], leaf: 4 }
 		},
 		{
 			id: '/blog/[slug].json',
@@ -516,7 +520,7 @@ test('works with custom extensions', () => {
 		{
 			id: '/blog/[slug]',
 			pattern: '/^/blog/([^/]+?)/?$/',
-			page: { layouts: [0], errors: [1], leaf: 5 }
+			page: { layouts: [0], errors: [1], loading: [undefined], leaf: 5 }
 		}
 	]);
 });
@@ -567,7 +571,12 @@ test('includes nested error components', () => {
 		{
 			id: '/foo/bar/baz',
 			pattern: '/^/foo/bar/baz/?$/',
-			page: { layouts: [0, 2, undefined, 4], errors: [1, undefined, 3, 5], leaf: 6 }
+			page: {
+				layouts: [0, 2, undefined, 4],
+				errors: [1, undefined, 3, 5],
+				loading: [undefined, undefined, undefined, undefined],
+				leaf: 6
+			}
 		}
 	]);
 });
@@ -608,42 +617,52 @@ test('creates routes with named layouts', () => {
 		{
 			id: '/a/a1',
 			pattern: '/^/a/a1/?$/',
-			page: { layouts: [0, 4], errors: [1, undefined], leaf: 10 }
+			page: { layouts: [0, 4], errors: [1, undefined], loading: [undefined, undefined], leaf: 10 }
 		},
 		{
 			id: '/(special)/a/a2',
 			pattern: '/^/a/a2/?$/',
-			page: { layouts: [0, 2], errors: [1, undefined], leaf: 9 }
+			page: { layouts: [0, 2], errors: [1, undefined], loading: [undefined, undefined], leaf: 9 }
 		},
 		{
 			id: '/(special)/(alsospecial)/b/c/c1',
 			pattern: '/^/b/c/c1/?$/',
-			page: { layouts: [0, 2, 3], errors: [1, undefined, undefined], leaf: 8 }
+			page: {
+				layouts: [0, 2, 3],
+				errors: [1, undefined, undefined],
+				loading: [undefined, undefined, undefined],
+				leaf: 8
+			}
 		},
 		{
 			id: '/b/c/c2',
 			pattern: '/^/b/c/c2/?$/',
-			page: { layouts: [0], errors: [1], leaf: 11 }
+			page: { layouts: [0], errors: [1], loading: [undefined], leaf: 11 }
 		},
 		{
 			id: '/b/d/(special)',
 			pattern: '/^/b/d/?$/',
-			page: { layouts: [0, 6], errors: [1, undefined], leaf: 12 }
+			page: { layouts: [0, 6], errors: [1, undefined], loading: [undefined, undefined], leaf: 12 }
 		},
 		{
 			id: '/b/d/d1',
 			pattern: '/^/b/d/d1/?$/',
-			page: { layouts: [0], errors: [1], leaf: 15 }
+			page: { layouts: [0], errors: [1], loading: [undefined], leaf: 15 }
 		},
 		{
 			id: '/b/d/(special)/(extraspecial)/d2',
 			pattern: '/^/b/d/d2/?$/',
-			page: { layouts: [0, 6, 7], errors: [1, undefined, undefined], leaf: 13 }
+			page: {
+				layouts: [0, 6, 7],
+				errors: [1, undefined, undefined],
+				loading: [undefined, undefined, undefined],
+				leaf: 13
+			}
 		},
 		{
 			id: '/b/d/(special)/(extraspecial)/d3',
 			pattern: '/^/b/d/d3/?$/',
-			page: { layouts: [0, 6], errors: [1, undefined], leaf: 14 }
+			page: { layouts: [0, 6], errors: [1, undefined], loading: [undefined, undefined], leaf: 14 }
 		}
 	]);
 });
@@ -713,7 +732,7 @@ test('handles pages without .svelte file', () => {
 		{
 			id: '/',
 			pattern: '/^/$/',
-			page: { layouts: [0], errors: [1], leaf: 5 }
+			page: { layouts: [0], errors: [1], loading: [undefined], leaf: 5 }
 		},
 		{
 			id: '/error',
@@ -722,7 +741,7 @@ test('handles pages without .svelte file', () => {
 		{
 			id: '/error/[...path]',
 			pattern: '/^/error(?:/(.*))?/?$/',
-			page: { layouts: [0, undefined], errors: [1, 2], leaf: 6 }
+			page: { layouts: [0, undefined], errors: [1, 2], loading: [undefined, undefined], leaf: 6 }
 		},
 		{
 			id: '/layout',
@@ -731,12 +750,17 @@ test('handles pages without .svelte file', () => {
 		{
 			id: '/layout/exists',
 			pattern: '/^/layout/exists/?$/',
-			page: { layouts: [0, 3, 4], errors: [1, undefined, undefined], leaf: 7 }
+			page: {
+				layouts: [0, 3, 4],
+				errors: [1, undefined, undefined],
+				loading: [undefined, undefined, undefined],
+				leaf: 7
+			}
 		},
 		{
 			id: '/layout/redirect',
 			pattern: '/^/layout/redirect/?$/',
-			page: { layouts: [0, 3], errors: [1, undefined], leaf: 8 }
+			page: { layouts: [0, 3], errors: [1, undefined], loading: [undefined, undefined], leaf: 8 }
 		}
 	]);
 });
