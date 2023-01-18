@@ -67,7 +67,12 @@ export default {
 
 		// dynamically-generated pages
 		return await server.respond(req, {
-			platform: { env, context, caches },
+			platform: {
+				env,
+				context,
+				// @ts-expect-error lib.dom is interfering with workers-types
+				caches
+			},
 			getClientAddress() {
 				return req.headers.get('cf-connecting-ip');
 			}
