@@ -8,4 +8,4 @@
 '@sveltejs/adapter-vercel': patch
 ---
 
-docs: add more indepth docs on building your app
+docs: move adapter docs to site
