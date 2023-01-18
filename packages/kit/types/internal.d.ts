@@ -213,8 +213,10 @@ export type ServerData =
 			/**
 			 * If `null`, then there was no load function
 			 */
-			nodes: Array<ServerDataNode | ServerDataSkippedNode | ServerErrorNode | null>;
+			nodes: Array<ServerNode | null>;
 	  };
+
+export type ServerNode = ServerDataNode | ServerDataSkippedNode | ServerErrorNode;
 
 /**
  * Signals a successful response of the server `load` function.

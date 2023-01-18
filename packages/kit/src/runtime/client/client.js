@@ -244,7 +244,7 @@ export function create_client({ target, base }) {
 	 */
 	async function update(intent, url, redirect_chain, opts, nav_token = {}, callback) {
 		token = nav_token;
-		let navigation_result = intent && (await load_route(intent));
+		let navigation_result = intent && (await load_route(intent, opts));
 
 		if (!navigation_result) {
 			navigation_result = await server_fallback(
@@ -406,15 +406,7 @@ export function create_client({ target, base }) {
 	 *   form?: Record<string, any> | null;
 	 * }} opts
 	 */
-	async function get_navigation_result_from_branch({
-		url,
-		params,
-		branch,
-		status,
-		error,
-		route,
-		form
-	}) {
+	function get_navigation_result_from_branch({ url, params, branch, status, error, route, form }) {
 		/** @type {import('types').TrailingSlash} */
 		let slash = 'never';
 		for (const node of branch) {
@@ -690,14 +682,15 @@ export function create_client({ target, base }) {
 
 	/**
 	 * @param {import('./types').NavigationIntent} intent
+	 * @param {{hash?: string, scroll: { x: number, y: number } | null, keepfocus: boolean, details: { replaceState: boolean, state: any } | null}} [opts]
 	 * @returns {Promise<import('./types').NavigationResult>}
 	 */
-	async function load_route({ id, invalidating, url, params, route }) {
+	async function load_route({ id, invalidating, url, params, route }, opts) {
 		if (load_cache?.id === id) {
 			return load_cache.promise;
 		}
 
-		const { errors, layouts, leaf } = route;
+		const { errors, layouts, loading, leaf } = route;
 
 		const loaders = [...layouts, leaf];
 
@@ -705,8 +698,15 @@ export function create_client({ target, base }) {
 		// so they don't get reported to Sentry et al (we don't need
 		// to act on the failures at this point)
 		errors.forEach((loader) => loader?.().catch(() => {}));
+		// +layout wraps +loading, so offset it if +page not wrapped by immediate +layout
+		// TODO move this into generate_manifest?
+		const loading_nodes = (loading.length > layouts.length ? loading : [undefined, ...loading]).map(
+			(loader) => loader?.().catch(() => undefined)
+		);
 		loaders.forEach((loader) => loader?.[1]().catch(() => {}));
 
+		/** @type {Promise<import('types').ServerData> | null} */
+		let server_data_promise = null;
 		/** @type {import('types').ServerData | null} */
 		let server_data = null;
 
@@ -731,7 +731,14 @@ export function create_client({ target, base }) {
 			return acc;
 		}, /** @type {boolean[]} */ ([]));
 
-		if (invalid_server_nodes.some(Boolean)) {
+		// If there's a loading node before the first invalid server node and no universal load that needs rerunning
+		// we can show the loading screen already.
+		// TODO rework this in such a way that we can actually do this
+		const first_invalid_server_node = invalid_server_nodes.findIndex(Boolean);
+		server_data_promise =
+			first_invalid_server_node === -1 ? null : load_data(url, invalid_server_nodes);
+
+		if (first_invalid_server_node !== -1) {
 			try {
 				server_data = await load_data(url, invalid_server_nodes);
 			} catch (error) {
@@ -758,21 +765,27 @@ export function create_client({ target, base }) {
 			/** @type {import('./types').BranchNode | undefined} */
 			const previous = current.branch[i];
 
-			const server_data_node = server_data_nodes?.[i];
-
 			// re-use data from previous load if it's still valid
-			const valid =
-				(!server_data_node || server_data_node.type === 'skip') &&
+			let valid =
 				loader[1] === previous?.loader &&
 				!has_changed(parent_changed, route_changed, url_changed, previous.universal?.uses, params);
+			/** @type {import('types').ServerNode | null | undefined} */
+			let server_data_node = undefined;
+
+			if (first_invalid_server_node <= i) {
+				server_data_node = server_data_nodes?.[i];
+
+				if (server_data_node?.type === 'error') {
+					// rethrow and catch below
+					throw server_data_node;
+				}
+
+				valid = valid && (!server_data_node || server_data_node.type === 'skip');
+			}
+
 			if (valid) return previous;
 
 			parent_changed = true;
-
-			if (server_data_node?.type === 'error') {
-				// rethrow and catch below
-				throw server_data_node;
-			}
 
 			return load_node({
 				loader: loader[1],
@@ -801,7 +814,36 @@ export function create_client({ target, base }) {
 		/** @type {Array<import('./types').BranchNode | undefined>} */
 		const branch = [];
 
+		let current_loading = {};
 		for (let i = 0; i < loaders.length; i += 1) {
+			if (loading_nodes[i]) {
+				const current = { t: {}, i };
+				current_loading = current.t;
+
+				// TODO incorporate timeout, which can only be read from +page/layout.js (not server) files
+				loading_nodes[i]?.then((node) => {
+					console.log(!node, current_loading !== current.t, current.i < i);
+					if (!node || current_loading !== current.t || current.i < i) return;
+					// TODO we're only interested in the components, preliminary data and url (for which we need trailingSlash) here
+					const intermediate_result = get_navigation_result_from_branch({
+						url,
+						params,
+						branch: branch.concat({ node: { component: node.component } }),
+						status: 200,
+						error: null,
+						route
+					});
+					root.$set(intermediate_result.props);
+					// TODO this needs to not happen again after finished navigation / another +loading
+					if (opts && opts.details) {
+						const { details } = opts;
+						const change = details.replaceState ? 0 : 1;
+						details.state[INDEX_KEY] = current_history_index += change;
+						history[details.replaceState ? 'replaceState' : 'pushState'](details.state, '', url);
+					}
+				});
+			}
+
 			if (loaders[i]) {
 				try {
 					branch.push(await branch_promises[i]);
