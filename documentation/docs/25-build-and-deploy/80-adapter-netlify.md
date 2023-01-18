@@ -20,19 +20,19 @@ You can then configure it inside of `svelte.config.js`:
 import adapter from '@sveltejs/adapter-netlify';
 
 export default {
-  kit: {
-    // default options are shown
-    adapter: adapter({
-      // if true, will create a Netlify Edge Function rather
-      // than using standard Node-based functions
-      edge: false,
+	kit: {
+		// default options are shown
+		adapter: adapter({
+			// if true, will create a Netlify Edge Function rather
+			// than using standard Node-based functions
+			edge: false,
 
-      // if true, will split your app into multiple functions
-      // instead of creating a single one for the entire app.
-      // if `edge` is true, this option cannot be used
-      split: false
-    })
-  }
+			// if true, will split your app into multiple functions
+			// instead of creating a single one for the entire app.
+			// if `edge` is true, this option cannot be used
+			split: false
+		})
+	}
 };
 ```
 
@@ -40,8 +40,8 @@ Then, make sure you have a [netlify.toml](https://docs.netlify.com/configure-bui
 
 ```toml
 [build]
-  command = "npm run build"
-  publish = "build"
+	command = "npm run build"
+	publish = "build"
 ```
 
 If the `netlify.toml` file or the `build.publish` value is missing, a default value of `"build"` will be used. Note that if you have set the publish directory in the Netlify UI to something else then you will need to set it in `netlify.toml` too, or use the default value of `"build"`.
@@ -60,13 +60,13 @@ SvelteKit supports the beta release of [Netlify Edge Functions](https://docs.net
 import adapter from '@sveltejs/adapter-netlify';
 
 export default {
-  kit: {
-    adapter: adapter({
-      // will create a Netlify Edge Function using Deno-based
-      // rather than using standard Node-based functions
-      edge: true
-    })
-  }
+	kit: {
+		adapter: adapter({
+			// will create a Netlify Edge Function using Deno-based
+			// rather than using standard Node-based functions
+			edge: true
+		})
+	}
 };
 ```
 
@@ -95,8 +95,8 @@ With this adapter, SvelteKit endpoints are hosted as [Netlify Functions](https:/
 // @errors: 2705 7006
 /// file: +page.server.js
 export const load = async (event) => {
-  const context = event.platform.context;
-  console.log(context); // shows up in your functions log in the Netlify app
+	const context = event.platform.context;
+	console.log(context); // shows up in your functions log in the Netlify app
 };
 ```
 
@@ -104,11 +104,11 @@ Additionally, you can add your own Netlify functions by creating a directory for
 
 ```toml
 [build]
-  command = "npm run build"
-  publish = "build"
+	command = "npm run build"
+	publish = "build"
 
 [functions]
-  directory = "functions"
+	directory = "functions"
 ```
 
 ## Troubleshooting

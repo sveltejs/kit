@@ -9,11 +9,11 @@ SvelteKit adapter that creates a Cloudflare Workers site using a function for dy
 _**Comparisons**_
 
 - `adapter-cloudflare` – supports all SvelteKit features; builds for
-  [Cloudflare Pages](https://blog.cloudflare.com/cloudflare-pages-goes-full-stack/)
+	[Cloudflare Pages](https://blog.cloudflare.com/cloudflare-pages-goes-full-stack/)
 - `adapter-cloudflare-workers` – supports all SvelteKit features; builds for
-  Cloudflare Workers
+	Cloudflare Workers
 - `adapter-static` – only produces client-side static assets; compatible with
-  Cloudflare Pages
+	Cloudflare Pages
 
 > **Note:** Cloudflare Pages' new Workers integration is currently in beta.<br/>
 > Compared to `adapter-cloudflare-workers`, `adapter-cloudflare` is the preferred approach for most users since building on top of Pages unlocks automatic builds and deploys, preview deployments, instant rollbacks, etc.<br/>
@@ -29,9 +29,9 @@ Install with `npm i -D @sveltejs/adapter-cloudflare-workers`, then add the adapt
 import adapter from '@sveltejs/adapter-cloudflare-workers';
 
 export default {
-  kit: {
-    adapter: adapter()
-  }
+	kit: {
+		adapter: adapter()
+	}
 };
 ```
 
@@ -83,9 +83,9 @@ If you would like to use a config file other than `wrangler.toml`, you can do li
 import adapter from '@sveltejs/adapter-cloudflare-workers';
 
 export default {
-  kit: {
-    adapter: adapter({ config: '<your-wrangler-name>.toml' })
-  }
+	kit: {
+		adapter: adapter({ config: '<your-wrangler-name>.toml' })
+	}
 };
 ```
 
@@ -96,7 +96,7 @@ The [`env`](https://developers.cloudflare.com/workers/runtime-apis/fetch-event#p
 ```js
 // @errors: 7031
 export async function POST({ request, platform }) {
-  const x = platform.env.YOUR_DURABLE_OBJECT_NAMESPACE.idFromName('x');
+	const x = platform.env.YOUR_DURABLE_OBJECT_NAMESPACE.idFromName('x');
 }
 ```
 

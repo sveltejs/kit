@@ -32,9 +32,9 @@ You can include these changes in your `svelte.config.js` configuration file:
 import adapter from '@sveltejs/adapter-cloudflare';
 
 export default {
-  kit: {
-    adapter: adapter()
-  }
+	kit: {
+		adapter: adapter()
+	}
 };
 ```
 
@@ -48,7 +48,7 @@ When configuring your project settings, you must use the following settings:
 - **Build command** – `npm run build` or `svelte-kit build`
 - **Build output directory** – `.svelte-kit/cloudflare`
 - **Environment variables**
-  - `NODE_VERSION`: `16`
+	- `NODE_VERSION`: `16`
 
 > **Important:** You need to add a `NODE_VERSION` environment variable to both the "production" and "preview" environments. You can add this during project setup or later in the Pages project settings. SvelteKit requires Node `16.14` or later, so you should use `16` as the `NODE_VERSION` value.
 
@@ -59,7 +59,7 @@ The [`env`](https://developers.cloudflare.com/workers/runtime-apis/fetch-event#p
 ```js
 // @errors: 7031
 export async function POST({ request, platform }) {
-  const x = platform.env.YOUR_DURABLE_OBJECT_NAMESPACE.idFromName('x');
+	const x = platform.env.YOUR_DURABLE_OBJECT_NAMESPACE.idFromName('x');
 }
 ```
 
