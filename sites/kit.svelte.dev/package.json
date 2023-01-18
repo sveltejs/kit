@@ -3,7 +3,7 @@
 	"version": "0.0.1",
 	"scripts": {
 		"update": "node scripts/check-doc-links.js && node scripts/types",
-		"dev": "npm run update && vite dev",
+		"dev": "vite dev",
 		"build": "npm run update && vite build",
 		"prebuild": "test \"$CI\" = true && npx pnpm install --store=node_modules/.pnpm-store || echo skipping pnpm install",
 		"preview": "vite preview",
