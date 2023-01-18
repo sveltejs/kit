@@ -1,30 +1,22 @@
 ---
-title: Cloudflare
+title: Cloudflare Pages
 ---
 
-[Adapter](https://kit.svelte.dev/docs/building-your-app) for building SvelteKit applications on [Cloudflare Pages](https://developers.cloudflare.com/pages/) with [Workers integration](https://developers.cloudflare.com/pages/platform/functions).
+To deploy to [Cloudflare Pages](https://developers.cloudflare.com/pages/), use [`adapter-cloudflare`](https://github.com/sveltejs/kit/tree/master/packages/adapter-cloudflare).
 
-If you're using [adapter-auto](adapter-auto), you don't need to install this — it's already included.
+This adapter will be installed by default when you use [`adapter-auto`](/docs/adapter-auto), but adding it to your project is recommended so that `event.platform` is automatically typed.
 
-_**Comparisons**_
+## Comparisons
 
 - `adapter-cloudflare` – supports all SvelteKit features; builds for [Cloudflare Pages](https://blog.cloudflare.com/cloudflare-pages-goes-full-stack/)
 - `adapter-cloudflare-workers` – supports all SvelteKit features; builds for Cloudflare Workers
 - `adapter-static` – only produces client-side static assets; compatible with Cloudflare Pages
 
-> **Note:** Cloudflare Pages' new Workers integration is currently in beta.<br/>
-> Compared to `adapter-cloudflare-workers`, this adapter will be the preferred approach for most users since building on top of Pages unlocks automatic builds and deploys, preview deployments, instant rollbacks, etc.<br/>
-> From SvelteKit's perspective, there is no difference and no functionality loss when migrating to/from the Workers and the Pages adapters.
-
-## Installation
-
-```sh
-$ npm i --save-dev @sveltejs/adapter-cloudflare
-```
+> Unless you have a specific reason to use `adapter-cloudflare-workers`, it's recommended that you use this adapter instead. Both adapters have equivalent functionality, but Cloudflare Pages offers features like GitHub integration with automatic builds and deploys, preview deployments, instant rollback and so on.
 
 ## Usage
 
-You can include these changes in your `svelte.config.js` configuration file:
+Install with `npm i -D @sveltejs/adapter-cloudflare`, then add the adapter to your `svelte.config.js`:
 
 ```js
 // @errors: 2307
@@ -50,7 +42,7 @@ When configuring your project settings, you must use the following settings:
 - **Environment variables**
 	- `NODE_VERSION`: `16`
 
-> **Important:** You need to add a `NODE_VERSION` environment variable to both the "production" and "preview" environments. You can add this during project setup or later in the Pages project settings. SvelteKit requires Node `16.14` or later, so you should use `16` as the `NODE_VERSION` value.
+> You need to add a `NODE_VERSION` environment variable to both the "production" and "preview" environments. You can add this during project setup or later in the Pages project settings. SvelteKit requires Node `16.14` or later, so you should use `16` as the `NODE_VERSION` value.
 
 ## Environment variables
 
@@ -66,9 +58,6 @@ export async function POST({ request, platform }) {
 To make these types available to your app, reference them in your `src/app.d.ts`:
 
 ```diff
-/// <reference types="@sveltejs/kit" />
-+/// <reference types="@sveltejs/adapter-cloudflare" />
-
 declare namespace App {
 	interface Platform {
 +		env?: {
@@ -94,7 +83,3 @@ However, they will have no effect on responses dynamically rendered by SvelteKit
 ### Accessing the file system
 
 You can't access the file system through methods like `fs.readFileSync` in Serverless/Edge environments. If you need to access files that way, do that during building the app through [prerendering](https://kit.svelte.dev/docs/page-options#prerender). If you have a blog for example and don't want to manage your content through a CMS, then you need to prerender the content (or prerender the endpoint from which you get it) and redeploy your blog everytime you add new content.
-
-## Changelog
-
-[The Changelog for this package is available on GitHub](https://github.com/sveltejs/kit/blob/master/packages/adapter-cloudflare/CHANGELOG.md).

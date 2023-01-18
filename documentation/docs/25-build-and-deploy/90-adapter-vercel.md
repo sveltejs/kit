@@ -2,25 +2,23 @@
 title: Vercel
 ---
 
-A SvelteKit adapter that creates a Vercel app.
+To deploy to Vercel, use [`adapter-vercel`](https://github.com/sveltejs/kit/tree/master/packages/adapter-vercel).
 
-If you're using [adapter-auto](adapter-auto), you don't need to install this unless you need to specify Vercel-specific options, since it's already included.
+This adapter will be installed by default when you use [`adapter-auto`](/docs/adapter-auto), but adding it to your project allows you to specify Vercel-specific options.
 
 ## Usage
 
-Add `"@sveltejs/adapter-vercel": "next"` to the `devDependencies` in your `package.json` and run `npm install`.
-
-Then in your `svelte.config.js`:
+Install with `npm i -D @sveltejs/adapter-vercel`, then add the adapter to your `svelte.config.js`:
 
 ```js
 // @errors: 2307
 /// file: svelte.config.js
-import vercel from '@sveltejs/adapter-vercel';
+import adapter from '@sveltejs/adapter-vercel';
 
 export default {
 	kit: {
 		// default options are shown
-		adapter: vercel({
+		adapter: adapter({
 			// if true, will deploy the app using edge functions
 			// (https://vercel.com/docs/concepts/functions/edge-functions)
 			// rather than serverless functions
@@ -84,7 +82,3 @@ Projects created before a certain date will default to using Node 14, while Svel
 ### Accessing the file system
 
 You can't access the file system through methods like `fs.readFileSync` in Serverless/Edge environments. If you need to access files that way, do that during building the app through [prerendering](https://kit.svelte.dev/docs/page-options#prerender). If you have a blog for example and don't want to manage your content through a CMS, then you need to prerender the content (or prerender the endpoint from which you get it) and redeploy your blog everytime you add new content.
-
-## Changelog
-
-[The Changelog for this package is available on GitHub](https://github.com/sveltejs/kit/blob/master/packages/adapter-vercel/CHANGELOG.md).

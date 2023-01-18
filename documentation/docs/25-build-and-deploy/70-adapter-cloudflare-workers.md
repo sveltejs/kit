@@ -2,22 +2,11 @@
 title: Cloudflare Workers
 ---
 
-SvelteKit adapter that creates a Cloudflare Workers site using a function for dynamic server rendering.
+To deploy to [Cloudflare Workers](https://workers.cloudflare.com/), use [`adapter-cloudflare-workers`](https://github.com/sveltejs/kit/tree/master/packages/adapter-cloudflare-workers).
 
-**Requires [Wrangler v2](https://developers.cloudflare.com/workers/wrangler/get-started/).** Wrangler v1 is no longer supported.
+Unless you have a specific reason to use this adapter, we recommend using [`adapter-cloudflare`](adapter-cloudflare) instead.
 
-_**Comparisons**_
-
-- `adapter-cloudflare` – supports all SvelteKit features; builds for
-	[Cloudflare Pages](https://blog.cloudflare.com/cloudflare-pages-goes-full-stack/)
-- `adapter-cloudflare-workers` – supports all SvelteKit features; builds for
-	Cloudflare Workers
-- `adapter-static` – only produces client-side static assets; compatible with
-	Cloudflare Pages
-
-> **Note:** Cloudflare Pages' new Workers integration is currently in beta.<br/>
-> Compared to `adapter-cloudflare-workers`, `adapter-cloudflare` is the preferred approach for most users since building on top of Pages unlocks automatic builds and deploys, preview deployments, instant rollbacks, etc.<br/>
-> From SvelteKit's perspective, there is no difference and no functionality loss when migrating to/from the Workers and the Pages adapters.
+> Requires [Wrangler v2](https://developers.cloudflare.com/workers/wrangler/get-started/).
 
 ## Usage
 
@@ -58,7 +47,7 @@ workers_dev = true
 https://dash.cloudflare.com/<your-account-id>
 ```
 
-> It's recommended that you add the `.cloudflare` directory (or whichever directories you specified for `main` and `site.bucket`) to your `.gitignore`.
+> You should add the `.cloudflare` directory (or whichever directories you specified for `main` and `site.bucket`) to your `.gitignore`.
 
 You will need to install [wrangler](https://developers.cloudflare.com/workers/wrangler/get-started/) and log in, if you haven't already:
 
@@ -103,9 +92,6 @@ export async function POST({ request, platform }) {
 To make these types available to your app, reference them in your `src/app.d.ts`:
 
 ```diff
-/// <reference types="@sveltejs/kit" />
-+/// <reference types="@sveltejs/adapter-cloudflare-workers" />
-
 declare namespace App {
 	interface Platform {
 +		env?: {
@@ -123,7 +109,3 @@ declare namespace App {
 ### Accessing the file system
 
 You can't access the file system through methods like `fs.readFileSync` in Serverless/Edge environments. If you need to access files that way, do that during building the app through [prerendering](https://kit.svelte.dev/docs/page-options#prerender). If you have a blog for example and don't want to manage your content through a CMS, then you need to prerender the content (or prerender the endpoint from which you get it) and redeploy your blog everytime you add new content.
-
-## Changelog
-
-[The Changelog for this package is available on GitHub](https://github.com/sveltejs/kit/blob/master/packages/adapter-cloudflare-workers/CHANGELOG.md).
