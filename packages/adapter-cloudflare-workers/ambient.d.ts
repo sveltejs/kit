@@ -1,4 +1,4 @@
-import { Cache, CacheStorage } from '@cloudflare/workers-types';
+import { CacheStorage } from '@cloudflare/workers-types';
 
 declare global {
 	namespace App {
