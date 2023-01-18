@@ -112,10 +112,8 @@ export function get_cookies(request, url, trailing_slash) {
 
 			if (__SVELTEKIT_DEV__) {
 				const serialized = serialize(name, value, new_cookies[name].options);
-				if (new TextEncoder().encode(serialized).byteLength > 4096) {
-					console.warn(
-						`Cookie "${name}" is larger than 4,096 bytes, and may be discarded by the browser.`
-					);
+				if (new TextEncoder().encode(serialized).byteLength > 4129) {
+					throw new Error(`Cookie "${name}" is too large, and will be discarded by the browser`);
 				}
 
 				cookie_paths[name] = cookie_paths[name] ?? new Set();
