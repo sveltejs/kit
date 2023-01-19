@@ -33,7 +33,7 @@ export function write_client_manifest(config, manifest_data, output) {
 		}
 
 		if (node.server) {
-			declarations.push(`export const server = true;`);
+			declarations.push(`export const has_server_load = true;`);
 		}
 
 		return declarations.join('\n');

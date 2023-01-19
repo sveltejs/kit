@@ -25,11 +25,12 @@ import { respond_with_error } from './respond_with_error.js';
  * @param {import('types').SSRRoute} route
  * @param {import('types').PageNodeIndexes} page
  * @param {import('types').SSROptions} options
+ * @param {import('types').SSRManifest} manifest
  * @param {import('types').SSRState} state
  * @param {import('types').RequiredResolveOptions} resolve_opts
  * @returns {Promise<Response>}
  */
-export async function render_page(event, route, page, options, state, resolve_opts) {
+export async function render_page(event, route, page, options, manifest, state, resolve_opts) {
 	if (state.initiator === route) {
 		// infinite request cycle detected
 		return text(`Not found: ${event.url.pathname}`, {
@@ -40,15 +41,15 @@ export async function render_page(event, route, page, options, state, resolve_op
 	state.initiator = route;
 
 	if (is_action_json_request(event)) {
-		const node = await options.manifest._.nodes[page.leaf]();
+		const node = await manifest._.nodes[page.leaf]();
 		return handle_action_json_request(event, options, node?.server);
 	}
 
 	try {
 		const nodes = await Promise.all([
 			// we use == here rather than === because [undefined] serializes as "[null]"
-			...page.layouts.map((n) => (n == undefined ? n : options.manifest._.nodes[n]())),
-			options.manifest._.nodes[page.leaf]()
+			...page.layouts.map((n) => (n == undefined ? n : manifest._.nodes[n]())),
+			manifest._.nodes[page.leaf]()
 		]);
 
 		const leaf_node = /** @type {import('types').SSRNode} */ (nodes.at(-1));
@@ -106,6 +107,7 @@ export async function render_page(event, route, page, options, state, resolve_op
 					error: null,
 					event,
 					options,
+					manifest,
 					state,
 					resolve_opts
 				});
@@ -136,6 +138,7 @@ export async function render_page(event, route, page, options, state, resolve_op
 				error: null,
 				event,
 				options,
+				manifest,
 				state,
 				resolve_opts
 			});
@@ -164,7 +167,6 @@ export async function render_page(event, route, page, options, state, resolve_op
 
 					return await load_server_data({
 						event,
-						options,
 						state,
 						node,
 						parent: async () => {
@@ -252,7 +254,7 @@ export async function render_page(event, route, page, options, state, resolve_op
 					while (i--) {
 						if (page.errors[i]) {
 							const index = /** @type {number} */ (page.errors[i]);
-							const node = await options.manifest._.nodes[index]();
+							const node = await manifest._.nodes[index]();
 
 							let j = i;
 							while (!branch[j]) j -= 1;
@@ -260,6 +262,7 @@ export async function render_page(event, route, page, options, state, resolve_op
 							return await render_response({
 								event,
 								options,
+								manifest,
 								state,
 								resolve_opts,
 								page_config: { ssr: true, csr: true },
@@ -300,6 +303,7 @@ export async function render_page(event, route, page, options, state, resolve_op
 		return await render_response({
 			event,
 			options,
+			manifest,
 			state,
 			resolve_opts,
 			page_config: {
@@ -312,15 +316,16 @@ export async function render_page(event, route, page, options, state, resolve_op
 			action_result,
 			fetched
 		});
-	} catch (error) {
+	} catch (e) {
 		// if we end up here, it means the data loaded successfull
 		// but the page failed to render, or that a prerendering error occurred
 		return await respond_with_error({
 			event,
 			options,
+			manifest,
 			state,
 			status: 500,
-			error,
+			error: e,
 			resolve_opts
 		});
 	}

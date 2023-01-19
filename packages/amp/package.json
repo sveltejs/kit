@@ -1,6 +1,6 @@
 {
 	"name": "@sveltejs/amp",
-	"version": "1.0.0",
+	"version": "1.0.2",
 	"repository": {
 		"type": "git",
 		"url": "https://github.com/sveltejs/kit",
@@ -16,10 +16,10 @@
 		},
 		"./package.json": "./package.json"
 	},
-	"main": "index.js",
 	"types": "index.d.ts",
 	"files": [
-		"index.js"
+		"index.js",
+		"index.d.ts"
 	],
 	"scripts": {
 		"lint": "prettier --check . --config ../../.prettierrc --ignore-path .gitignore",

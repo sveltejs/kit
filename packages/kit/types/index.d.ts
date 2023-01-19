@@ -1044,7 +1044,7 @@ export interface ServerLoadEvent<
 
 /**
  * Shape of a form action method that is part of `export const actions = {..}` in `+page.server.js`.
- * See [form actions](https://kit-svelte-d4b3r0pff-svelte.vercel.app/docs/form-actions) for more information.
+ * See [form actions](https://kit.svelte.dev/docs/form-actions) for more information.
  */
 export interface Action<
 	Params extends Partial<Record<string, string>> = Partial<Record<string, string>>,
@@ -1056,7 +1056,7 @@ export interface Action<
 
 /**
  * Shape of the `export const actions = {..}` object in `+page.server.js`.
- * See [form actions](https://kit-svelte-d4b3r0pff-svelte.vercel.app/docs/form-actions) for more information.
+ * See [form actions](https://kit.svelte.dev/docs/form-actions) for more information.
  */
 export type Actions<
 	Params extends Partial<Record<string, string>> = Partial<Record<string, string>>,
@@ -1080,7 +1080,7 @@ export type ActionResult<
  * Creates an `HttpError` object with an HTTP status code and an optional message.
  * This object, if thrown during request handling, will cause SvelteKit to
  * return an error response without invoking `handleError`
- * @param status The HTTP status code
+ * @param status The [HTTP status code](https://developer.mozilla.org/en-US/docs/Web/HTTP/Status#client_error_responses). Must be in the range 400-599.
  * @param body An object that conforms to the App.Error type. If a string is passed, it will be used as the message property.
  */
 export function error(status: number, body: App.Error): HttpError;
@@ -1094,15 +1094,16 @@ export function error(
  * The object returned by the [`error`](https://kit.svelte.dev/docs/modules#sveltejs-kit-error) function.
  */
 export interface HttpError {
-	/** The [HTTP status code](https://httpstatusdogs.com), in the range 400-599 */
+	/** The [HTTP status code](https://developer.mozilla.org/en-US/docs/Web/HTTP/Status#client_error_responses), in the range 400-599. */
 	status: number;
 	/** The content of the error. */
 	body: App.Error;
 }
 
 /**
- * Create a `Redirect` object. If thrown during request handling, SvelteKit will
- * return a redirect response.
+ * Create a `Redirect` object. If thrown during request handling, SvelteKit will return a redirect response.
+ * @param status The [HTTP status code](https://developer.mozilla.org/en-US/docs/Web/HTTP/Status#redirection_messages). Must be in the range 300-308.
+ * @param location The location to redirect to.
  */
 export function redirect(
 	status: 300 | 301 | 302 | 303 | 304 | 305 | 306 | 307 | 308,
@@ -1113,7 +1114,7 @@ export function redirect(
  * The object returned by the [`redirect`](https://kit.svelte.dev/docs/modules#sveltejs-kit-redirect) function
  */
 export interface Redirect {
-	/** The [HTTP status code](https://httpstatusdogs.com), in the range 300-308. */
+	/** The [HTTP status code](https://developer.mozilla.org/en-US/docs/Web/HTTP/Status#redirection_messages), in the range 300-308. */
 	status: 300 | 301 | 302 | 303 | 304 | 305 | 306 | 307 | 308;
 	/** The location to redirect to. */
 	location: string;
@@ -1135,6 +1136,8 @@ export function text(body: string, init?: ResponseInit): Response;
 
 /**
  * Create an `ActionFailure` object.
+ * @param status The [HTTP status code](https://developer.mozilla.org/en-US/docs/Web/HTTP/Status#client_error_responses). Must be in the range 400-599.
+ * @param data Data associated with the failure (e.g. validation errors)
  */
 export function fail<T extends Record<string, unknown> | undefined>(
 	status: number,
@@ -1146,7 +1149,9 @@ export function fail<T extends Record<string, unknown> | undefined>(
  */
 export interface ActionFailure<T extends Record<string, unknown> | undefined = undefined>
 	extends UniqueInterface {
+	/** The [HTTP status code](https://developer.mozilla.org/en-US/docs/Web/HTTP/Status#client_error_responses), in the range 400-599. */
 	status: number;
+	/** Data associated with the failure (e.g. validation errors) */
 	data: T;
 }
 
