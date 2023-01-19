@@ -147,7 +147,11 @@ export async function handle_action_request(event, server) {
 		}
 
 		if (data instanceof ActionFailure) {
-			return { type: 'failure', status: data.status, data: data.data };
+			return {
+				type: 'failure',
+				status: data.status,
+				data: data.data
+			};
 		} else {
 			return {
 				type: 'success',

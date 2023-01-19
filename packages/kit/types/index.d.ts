@@ -1072,7 +1072,7 @@ export type ActionResult<
 	Invalid extends Record<string, unknown> | undefined = Record<string, any>
 > =
 	| { type: 'success'; status: number; data: Success | void }
-	| { type: 'failure'; status: number; data?: Invalid }
+	| { type: 'failure'; status: number; data: Invalid | void }
 	| { type: 'redirect'; status: number; location: string }
 	| { type: 'error'; status?: number; error: any };
 
