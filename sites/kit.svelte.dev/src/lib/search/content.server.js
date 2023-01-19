@@ -88,7 +88,7 @@ function plaintext(markdown) {
 	const inline = (text) => text;
 
 	return transform(markdown, {
-		code: block,
+		code: (source) => source.split('// ---cut---\n').pop(),
 		blockquote: block,
 		html: (html) => {
 			return html;

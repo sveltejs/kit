@@ -35,19 +35,48 @@ function remove_trailing_slashstar(file) {
 
 /**
  * Writes the tsconfig that the user's tsconfig inherits from.
- * @param {import('types').ValidatedKitConfig} config
+ * @param {import('types').ValidatedKitConfig} kit
  */
-export function write_tsconfig(config, cwd = process.cwd()) {
-	const out = path.join(config.outDir, 'tsconfig.json');
-	const user_file = maybe_file(cwd, 'tsconfig.json') || maybe_file(cwd, 'jsconfig.json');
+export function write_tsconfig(kit, cwd = process.cwd()) {
+	const out = path.join(kit.outDir, 'tsconfig.json');
 
-	if (user_file) validate(config, cwd, out, user_file);
+	const user_config = load_user_tsconfig(cwd);
+	if (user_config) validate_user_config(kit, cwd, out, user_config);
+
+	// only specify baseUrl if a) the user doesn't specify their own baseUrl
+	// and b) they have non-relative paths. this causes problems with auto-imports,
+	// so we print a suggestion that they use relative paths instead
+	// TODO(v2): never include base URL, and skip the check below
+	let include_base_url = false;
+
+	if (user_config && !user_config.options.compilerOptions?.baseUrl) {
+		const non_relative_paths = new Set();
+		for (const paths of Object.values(user_config?.options.compilerOptions?.paths || {})) {
+			for (const path of paths) {
+				if (!path.startsWith('.')) non_relative_paths.add(path);
+			}
+		}
+
+		if (non_relative_paths.size) {
+			include_base_url = true;
+
+			console.log(colors.bold().yellow('Please replace non-relative compilerOptions.paths:\n'));
+
+			for (const path of non_relative_paths) {
+				console.log(`  - "${path}" -> "./${path}"`);
+			}
+
+			console.log(
+				'\nDoing so allows us to omit "baseUrl" — which causes problems with imports — from the generated tsconfig.json. See https://github.com/sveltejs/kit/pull/8437 for more information.'
+			);
+		}
+	}
 
 	/** @param {string} file */
-	const config_relative = (file) => posixify(path.relative(config.outDir, file));
+	const config_relative = (file) => posixify(path.relative(kit.outDir, file));
 
 	const include = ['ambient.d.ts', './types/**/$types.d.ts', config_relative('vite.config.ts')];
-	for (const dir of [config.files.routes, config.files.lib]) {
+	for (const dir of [kit.files.routes, kit.files.lib]) {
 		const relative = project_relative(path.dirname(dir));
 		include.push(config_relative(`${relative}/**/*.js`));
 		include.push(config_relative(`${relative}/**/*.ts`));
@@ -61,12 +90,12 @@ export function write_tsconfig(config, cwd = process.cwd()) {
 	include.push(config_relative(`${test_folder}/**/*.svelte`));
 
 	const exclude = [config_relative('node_modules/**'), './[!ambient.d.ts]**'];
-	if (path.extname(config.files.serviceWorker)) {
-		exclude.push(config_relative(config.files.serviceWorker));
+	if (path.extname(kit.files.serviceWorker)) {
+		exclude.push(config_relative(kit.files.serviceWorker));
 	} else {
-		exclude.push(config_relative(`${config.files.serviceWorker}.js`));
-		exclude.push(config_relative(`${config.files.serviceWorker}.ts`));
-		exclude.push(config_relative(`${config.files.serviceWorker}.d.ts`));
+		exclude.push(config_relative(`${kit.files.serviceWorker}.js`));
+		exclude.push(config_relative(`${kit.files.serviceWorker}.ts`));
+		exclude.push(config_relative(`${kit.files.serviceWorker}.d.ts`));
 	}
 
 	write_if_changed(
@@ -75,8 +104,8 @@ export function write_tsconfig(config, cwd = process.cwd()) {
 			{
 				compilerOptions: {
 					// generated options
-					baseUrl: config_relative('.'),
-					paths: get_tsconfig_paths(config),
+					baseUrl: include_base_url ? config_relative('.') : undefined,
+					paths: get_tsconfig_paths(kit, include_base_url),
 					rootDirs: [config_relative('.'), './types'],
 
 					// essential options
@@ -105,43 +134,56 @@ export function write_tsconfig(config, cwd = process.cwd()) {
 	);
 }
 
+/** @param {string} cwd */
+function load_user_tsconfig(cwd) {
+	const file = maybe_file(cwd, 'tsconfig.json') || maybe_file(cwd, 'jsconfig.json');
+
+	if (!file) return;
+
+	// we have to eval the file, since it's not parseable as JSON (contains comments)
+	const json = fs.readFileSync(file, 'utf-8');
+
+	return {
+		kind: path.basename(file),
+		options: (0, eval)(`(${json})`)
+	};
+}
+
 /**
- * @param {import('types').ValidatedKitConfig} config
+ * @param {import('types').ValidatedKitConfig} kit
  * @param {string} cwd
  * @param {string} out
- * @param {string} user_file
+ * @param {{ kind: string, options: any }} config
  */
-function validate(config, cwd, out, user_file) {
-	// we have to eval the file, since it's not parseable as JSON (contains comments)
-	const user_tsconfig_json = fs.readFileSync(user_file, 'utf-8');
-	const user_tsconfig = (0, eval)(`(${user_tsconfig_json})`);
-
+function validate_user_config(kit, cwd, out, config) {
 	// we need to check that the user's tsconfig extends the framework config
-	const extend = user_tsconfig.extends;
+	const extend = config.options.extends;
 	const extends_framework_config = extend && path.resolve(cwd, extend) === out;
 
-	const kind = path.basename(user_file);
+	const options = config.options.compilerOptions || {};
 
 	if (extends_framework_config) {
-		const { paths: user_paths } = user_tsconfig.compilerOptions || {};
+		const { paths: user_paths } = options;
 
-		if (user_paths && fs.existsSync(config.files.lib)) {
+		if (user_paths && fs.existsSync(kit.files.lib)) {
 			/** @type {string[]} */
 			const lib = user_paths['$lib'] || [];
 			/** @type {string[]} */
 			const lib_ = user_paths['$lib/*'] || [];
 
+			// TODO(v2): check needs to be adjusted when we remove the base path
 			const missing_lib_paths =
-				!lib.some((relative) => path.resolve(cwd, relative) === config.files.lib) ||
-				!lib_.some((relative) => path.resolve(cwd, relative) === path.join(config.files.lib, '/*'));
+				!lib.some((relative) => path.resolve(cwd, relative) === kit.files.lib) ||
+				!lib_.some((relative) => path.resolve(cwd, relative) === path.join(kit.files.lib, '/*'));
 
 			if (missing_lib_paths) {
 				console.warn(
 					colors
 						.bold()
-						.yellow(`Your compilerOptions.paths in ${kind} should include the following:`)
+						.yellow(`Your compilerOptions.paths in ${config.kind} should include the following:`)
 				);
-				const relative = posixify(path.relative('.', config.files.lib));
+				let relative = posixify(path.relative('.', kit.files.lib));
+				if (!relative.startsWith('.')) relative = `./${relative}`;
 				console.warn(`{\n  "$lib":["${relative}"],\n  "$lib/*":["${relative}/*"]\n}`);
 			}
 		}
@@ -150,7 +192,9 @@ function validate(config, cwd, out, user_file) {
 		if (!relative.startsWith('./')) relative = './' + relative;
 
 		console.warn(
-			colors.bold().yellow(`Your ${kind} should extend the configuration generated by SvelteKit:`)
+			colors
+				.bold()
+				.yellow(`Your ${config.kind} should extend the configuration generated by SvelteKit:`)
 		);
 		console.warn(`{\n  "extends": "${relative}"\n}`);
 	}
@@ -166,11 +210,13 @@ const value_regex = /^(.*?)((\/\*)|(\.\w+))?$/;
  * Related to vite alias creation.
  *
  * @param {import('types').ValidatedKitConfig} config
+ * @param {boolean} include_base_url
  */
-export function get_tsconfig_paths(config) {
-	const alias = {
-		...config.alias
-	};
+export function get_tsconfig_paths(config, include_base_url) {
+	/** @param {string} file */
+	const config_relative = (file) => posixify(path.relative(config.outDir, file));
+
+	const alias = { ...config.alias };
 	if (fs.existsSync(project_relative(config.files.lib))) {
 		alias['$lib'] = project_relative(config.files.lib);
 	}
@@ -185,7 +231,9 @@ export function get_tsconfig_paths(config) {
 		const value_match = value_regex.exec(value);
 		if (!value_match) throw new Error(`Invalid alias value: ${value}`);
 
-		const rel_path = project_relative(remove_trailing_slashstar(value));
+		const rel_path = (include_base_url ? project_relative : config_relative)(
+			remove_trailing_slashstar(value)
+		);
 		const slashstar = key_match[2];
 
 		if (slashstar) {

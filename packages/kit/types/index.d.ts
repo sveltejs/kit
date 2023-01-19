@@ -1044,7 +1044,7 @@ export interface ServerLoadEvent<
 
 /**
  * Shape of a form action method that is part of `export const actions = {..}` in `+page.server.js`.
- * See [form actions](https://kit-svelte-d4b3r0pff-svelte.vercel.app/docs/form-actions) for more information.
+ * See [form actions](https://kit.svelte.dev/docs/form-actions) for more information.
  */
 export interface Action<
 	Params extends Partial<Record<string, string>> = Partial<Record<string, string>>,
@@ -1056,7 +1056,7 @@ export interface Action<
 
 /**
  * Shape of the `export const actions = {..}` object in `+page.server.js`.
- * See [form actions](https://kit-svelte-d4b3r0pff-svelte.vercel.app/docs/form-actions) for more information.
+ * See [form actions](https://kit.svelte.dev/docs/form-actions) for more information.
  */
 export type Actions<
 	Params extends Partial<Record<string, string>> = Partial<Record<string, string>>,

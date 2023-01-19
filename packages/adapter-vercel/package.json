@@ -1,6 +1,6 @@
 {
 	"name": "@sveltejs/adapter-vercel",
-	"version": "1.0.2",
+	"version": "1.0.5",
 	"repository": {
 		"type": "git",
 		"url": "https://github.com/sveltejs/kit",
@@ -16,10 +16,10 @@
 		},
 		"./package.json": "./package.json"
 	},
-	"main": "index.js",
 	"types": "index.d.ts",
 	"files": [
 		"files",
+		"index.js",
 		"index.d.ts"
 	],
 	"scripts": {

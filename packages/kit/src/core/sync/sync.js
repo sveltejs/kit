@@ -52,13 +52,24 @@ export async function update(config, manifest_data, file) {
 }
 
 /**
- * Run sync.init and sync.update in series, returning the result from sync.update.
+ * Run sync.init and sync.create in series, returning the result from sync.create.
  * @param {import('types').ValidatedConfig} config
  * @param {string} mode The Vite mode
  */
 export async function all(config, mode) {
 	init(config, mode);
 	return await create(config, mode);
+}
+
+/**
+ * Run sync.init and then generate all type files.
+ * @param {import('types').ValidatedConfig} config
+ * @param {string} mode The Vite mode
+ */
+export async function all_types(config, mode) {
+	init(config, mode);
+	const manifest_data = create_manifest_data({ config });
+	await write_all_types(config, manifest_data);
 }
 
 /**

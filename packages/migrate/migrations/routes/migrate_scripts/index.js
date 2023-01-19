@@ -87,7 +87,7 @@ export function migrate_scripts(content, is_error, moved) {
 				return '';
 			}
 
-			if (!is_error && /export/.test(contents)) {
+			if (!is_error && /export let [\w]+[^"`'\w\s]/.test(contents)) {
 				contents = `\n${indent}${error('Add data prop', TASKS.PAGE_DATA_PROP)}\n${contents}`;
 				// Possible TODO: migrate props to data.prop, or suggest $: ({propX, propY, ...} = data);
 			}

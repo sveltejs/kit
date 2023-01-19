@@ -48,8 +48,3 @@ export function json(data, init) {
 export function fail(status, data) {
 	return new ActionFailure(status, data);
 }
-
-// TODO remove for 1.0
-export function invalid() {
-	throw new Error('invalid(...) is now fail(...)');
-}

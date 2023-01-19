@@ -16,7 +16,7 @@ Each route directory contains one or more _route files_, which can be identified
 
 ### +page.svelte
 
-A `+page.svelte` component defines a page of your app. By default, pages are rendered both on the server ([SSR](/docs/glossary#ssr)) for the initial request and in the browser ([CSR](/docs/glossary#csr-and-spa)) for subsequent navigation.
+A `+page.svelte` component defines a page of your app. By default, pages are rendered both on the server ([SSR](/docs/glossary#ssr)) for the initial request and in the browser ([CSR](/docs/glossary#csr)) for subsequent navigation.
 
 ```svelte
 /// file: src/routes/+page.svelte
