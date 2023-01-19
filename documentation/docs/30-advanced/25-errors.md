@@ -139,14 +139,18 @@ The exception is when the error occurs inside the root `+layout.js` or `+layout.
 
 If you're using TypeScript and need to customize the shape of errors, you can do so by declaring an `App.Error` interface in your app (by convention, in `src/app.d.ts`, though it can live anywhere that TypeScript can 'see'):
 
-```ts
+```diff
 /// file: src/app.d.ts
-declare namespace App {
-	interface Error {
-		code: string;
-		id: string;
+declare global {
+	namespace App {
+		interface Error {
++			code: string;
++			id: string;
+		}
 	}
 }
+
+export {};
 ```
 
 This interface always includes a `message: string` property.

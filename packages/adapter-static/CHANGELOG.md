@@ -1,5 +1,11 @@
 # @sveltejs/adapter-static
 
+## 1.0.5
+
+### Patch Changes
+
+- docs: move adapter docs to site ([#8531](https://github.com/sveltejs/kit/pull/8531))
+
 ## 1.0.4
 
 ### Patch Changes

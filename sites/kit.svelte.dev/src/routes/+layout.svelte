@@ -11,7 +11,6 @@
 	import Search from '$lib/search/Search.svelte';
 	import SearchBox from '$lib/search/SearchBox.svelte';
 	import Logo from './home/svelte-logo.svg';
-	import Banner from './Banner.svelte';
 </script>
 
 <Icons />
@@ -21,8 +20,6 @@
 {/if}
 
 <SkipLink href="#main" />
-
-<Banner />
 
 <Nav {page} logo={Logo}>
 	<svelte:fragment slot="nav-center">

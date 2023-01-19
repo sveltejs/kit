@@ -148,12 +148,16 @@ The following code shows an example of typing the error shape as `{ message: str
 
 ```ts
 /// file: src/app.d.ts
-declare namespace App {
-	interface Error {
-		message: string;
-		errorId: string;
+declare global {
+	namespace App {
+		interface Error {
+			message: string;
+			errorId: string;
+		}
 	}
 }
+
+export {};
 ```
 
 ```js

@@ -281,7 +281,7 @@ importers:
       svelte-preprocess: ^5.0.0
       tiny-glob: ^0.2.9
       typescript: ^4.9.4
-      undici: 5.15.0
+      undici: 5.15.1
       uvu: ^0.5.6
       vite: ^4.0.4
     dependencies:
@@ -297,7 +297,7 @@ importers:
       set-cookie-parser: 2.5.1
       sirv: 2.0.2
       tiny-glob: 0.2.9
-      undici: 5.15.0
+      undici: 5.15.1
     devDependencies:
       '@playwright/test': 1.29.2
       '@types/connect': 3.4.35
@@ -682,10 +682,10 @@ importers:
 
   sites/kit.svelte.dev:
     specifiers:
-      '@sveltejs/adapter-vercel': workspace:^1.0.4
+      '@sveltejs/adapter-vercel': workspace:^
       '@sveltejs/amp': workspace:^
       '@sveltejs/kit': workspace:^
-      '@sveltejs/site-kit': ^3.0.3
+      '@sveltejs/site-kit': ^3.1.0
       '@types/d3-geo': ^3.0.2
       '@types/node': ^16.18.6
       d3-geo: ^3.0.1
@@ -711,7 +711,7 @@ importers:
       '@sveltejs/adapter-vercel': link:../../packages/adapter-vercel
       '@sveltejs/amp': link:../../packages/amp
       '@sveltejs/kit': link:../../packages/kit
-      '@sveltejs/site-kit': 3.0.3
+      '@sveltejs/site-kit': 3.1.0
       '@types/d3-geo': 3.0.2
       '@types/node': 16.18.6
       flexsearch: 0.7.31
@@ -1323,8 +1323,8 @@ packages:
       picomatch: 2.3.1
       rollup: 3.7.0
 
-  /@sveltejs/site-kit/3.0.3:
-    resolution: {integrity: sha512-zetnU9jGOu+DYcwqpgK9uSUv3qrGrL7JagMN7M8B4bQRoBq1lAPnCvBXtlfQckvkQLtH453JJTIX6ULqL1xtpA==}
+  /@sveltejs/site-kit/3.1.0:
+    resolution: {integrity: sha512-Vv9Efzax+NMRZUfZ9TdUqQYicj2Z3kynLkUUdGPfahjlFEwQ3EGyj1vVCg5jxyqvNUgOsVVUb35nXI5CPsmCfA==}
     dev: true
 
   /@sveltejs/vite-plugin-svelte/2.0.0_svelte@3.55.1+vite@4.0.4:
@@ -4485,8 +4485,8 @@ packages:
       which-boxed-primitive: 1.0.2
     dev: true
 
-  /undici/5.15.0:
-    resolution: {integrity: sha512-wCAZJDyjw9Myv+Ay62LAoB+hZLPW9SmKbQkbHIhMw/acKSlpn7WohdMUc/Vd4j1iSMBO0hWwU8mjB7a5p5bl8g==}
+  /undici/5.15.1:
+    resolution: {integrity: sha512-XLk8g0WAngdvFqTI+VKfBtM4YWXgdxkf1WezC771Es0Dd+Pm1KmNx8t93WTC+Hh9tnghmVxkclU1HN+j+CvIUA==}
     engines: {node: '>=12.18'}
     dependencies:
       busboy: 1.6.0

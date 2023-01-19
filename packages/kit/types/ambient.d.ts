@@ -11,8 +11,11 @@
  * 	}
  * }
  *
- * export default undefined;
+ * export {};
  * ```
+ *
+ * The `export {}` line exists because without it, the file would be treated as an _ambient module_ which prevents you from adding `import` declarations.
+ * If you need to add ambient `declare module` declarations, do so in a separate file like `src/ambient.d.ts`.
  *
  * By populating these interfaces, you will gain type safety when using `event.locals`, `event.platform`, and `data` from `load` functions.
  */
@@ -37,7 +40,7 @@ declare namespace App {
 	export interface PageData {}
 
 	/**
-	 * If your adapter provides [platform-specific context](https://kit.svelte.dev/docs/adapters#supported-environments-platform-specific-context) via `event.platform`, you can specify it here.
+	 * If your adapter provides [platform-specific context](https://kit.svelte.dev/docs/adapters#platform-specific-context) via `event.platform`, you can specify it here.
 	 */
 	export interface Platform {}
 }
@@ -243,7 +246,8 @@ declare module '$app/navigation' {
 
 	/**
 	 * A navigation interceptor that triggers before we navigate to a new URL, whether by clicking a link, calling `goto(...)`, or using the browser back/forward controls.
-	 * Calling `cancel()` will prevent the navigation from completing.
+	 * Calling `cancel()` will prevent the navigation from completing. If the navigation would have directly unloaded the current page, calling `cancel` will trigger the native
+	 * browser unload confirmation dialog. In these cases, `navigation.willUnload` is `true`.
 	 *
 	 * When a navigation isn't client side, `navigation.to.route.id` will be `null`.
 	 *

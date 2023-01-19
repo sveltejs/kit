@@ -1,5 +1,11 @@
 # @sveltejs/adapter-auto
 
+## 1.0.2
+
+### Patch Changes
+
+- docs: move adapter docs to site ([#8531](https://github.com/sveltejs/kit/pull/8531))
+
 ## 1.0.1
 
 ### Patch Changes

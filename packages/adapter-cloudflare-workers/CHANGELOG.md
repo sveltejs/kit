@@ -1,5 +1,15 @@
 # @sveltejs/adapter-cloudflare-workers
 
+## 1.0.6
+
+### Patch Changes
+
+- feat: expose `App.Platform` interface automatically ([#8531](https://github.com/sveltejs/kit/pull/8531))
+
+- docs: move adapter docs to site ([#8531](https://github.com/sveltejs/kit/pull/8531))
+
+- fix: amend `App.Platform` ([#8531](https://github.com/sveltejs/kit/pull/8531))
+
 ## 1.0.5
 
 ### Patch Changes
