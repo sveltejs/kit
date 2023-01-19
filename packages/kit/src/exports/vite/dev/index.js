@@ -65,7 +65,7 @@ export async function dev(vite, vite_config, svelte_config) {
 
 	async function update_manifest() {
 		try {
-			({ manifest_data } = await sync.create(svelte_config, mode));
+			({ manifest_data } = await sync.create(svelte_config));
 
 			if (manifest_error) {
 				manifest_error = null;
@@ -290,7 +290,7 @@ export async function dev(vite, vite_config, svelte_config) {
 			file.startsWith(serviceWorker) ||
 			file.startsWith(hooks.server)
 		) {
-			sync.server(svelte_config, mode);
+			sync.server(svelte_config);
 		}
 	});
 
