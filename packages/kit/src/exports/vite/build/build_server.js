@@ -1,225 +1,39 @@
-import fs from 'fs';
-import path from 'path';
-import { mergeConfig } from 'vite';
-import { mkdirp, posixify, resolve_entry } from '../../../utils/filesystem.js';
-import { get_vite_config } from '../utils.js';
-import { load_error_page, load_template } from '../../../core/config/index.js';
-import { runtime_directory } from '../../../core/utils.js';
-import {
-	create_build,
-	find_deps,
-	get_default_build_config,
-	is_http_method,
-	resolve_symlinks
-} from './utils.js';
+import fs from 'node:fs';
+import path from 'node:path';
+import * as vite from 'vite';
+import { mkdirp, posixify } from '../../../utils/filesystem.js';
+import { find_deps, is_http_method, resolve_symlinks } from './utils.js';
 import { s } from '../../../utils/misc.js';
 
 /**
  * @param {{
- *   hooks: string;
- *   config: import('types').ValidatedConfig;
- *   has_service_worker: boolean;
- *   runtime: string;
- *   template: string;
- *   error_page: string;
- * }} opts
- */
-const server_template = ({ config, hooks, has_service_worker, runtime, template, error_page }) => `
-import root from '__GENERATED__/root.svelte';
-import { respond } from '${runtime}/server/index.js';
-import { set_paths, assets, base } from '${runtime}/paths.js';
-import { set_building, set_version } from '${runtime}/env.js';
-import { set_private_env } from '${runtime}/env-private.js';
-import { set_public_env } from '${runtime}/env-public.js';
-
-const app_template = ({ head, body, assets, nonce }) => ${s(template)
-	.replace('%sveltekit.head%', '" + head + "')
-	.replace('%sveltekit.body%', '" + body + "')
-	.replace(/%sveltekit\.assets%/g, '" + assets + "')
-	.replace(/%sveltekit\.nonce%/g, '" + nonce + "')};
-
-const error_template = ({ status, message }) => ${s(error_page)
-	.replace(/%sveltekit\.status%/g, '" + status + "')
-	.replace(/%sveltekit\.error\.message%/g, '" + message + "')};
-
-let read = null;
-
-set_paths(${s(config.kit.paths)});
-set_version(${s(config.kit.version.name)});
-
-let default_protocol = 'https';
-
-// allow paths to be globally overridden
-// in svelte-kit preview and in prerendering
-export function override(settings) {
-	default_protocol = settings.protocol || default_protocol;
-	set_paths(settings.paths);
-	set_building(settings.building);
-	read = settings.read;
-}
-
-export class Server {
-	constructor(manifest) {
-		this.options = {
-			csp: ${s(config.kit.csp)},
-			csrf: {
-				check_origin: ${s(config.kit.csrf.checkOrigin)},
-			},
-			dev: false,
-			embedded: ${config.kit.embedded},
-			handle_error: (error, event) => {
-				return this.options.hooks.handleError({ error, event }) ?? {
-					message: event.route.id != null ? 'Internal Error' : 'Not Found'
-				};
-			},
-			hooks: null,
-			manifest,
-			paths: { base, assets },
-			public_env: {},
-			read,
-			root,
-			service_worker: ${has_service_worker},
-			app_template,
-			app_template_contains_nonce: ${template.includes('%sveltekit.nonce%')},
-			error_template,
-			version: ${s(config.kit.version.name)}
-		};
-	}
-
-	/**
-	 * Take care: Some adapters may have to call \`Server.init\` per-request to set env vars,
-	 * so anything that shouldn't be rerun should be wrapped in an \`if\` block to make sure it hasn't
-	 * been done already.
-	 */
-	async init({ env }) {
-		const entries = Object.entries(env);
-
-		const prv = Object.fromEntries(entries.filter(([k]) => !k.startsWith('${
-			config.kit.env.publicPrefix
-		}')));
-
-		const pub = Object.fromEntries(entries.filter(([k]) => k.startsWith('${
-			config.kit.env.publicPrefix
-		}')));
-
-		set_private_env(prv);
-		set_public_env(pub);
-
-		this.options.public_env = pub;
-
-		if (!this.options.hooks) {
-			const module = await import(${s(hooks)});
-
-			this.options.hooks = {
-				handle: module.handle || (({ event, resolve }) => resolve(event)),
-				handleError: module.handleError || (({ error }) => console.error(error.stack)),
-				handleFetch: module.handleFetch || (({ request, fetch }) => fetch(request))
-			};
-		}
-	}
-
-	async respond(request, options = {}) {
-		if (!(request instanceof Request)) {
-			throw new Error('The first argument to server.respond must be a Request object. See https://github.com/sveltejs/kit/pull/3384 for details');
-		}
-
-		return respond(request, this.options, options);
-	}
-}
-`;
-
-/**
- * @param {{
- *   cwd: string;
  *   config: import('types').ValidatedConfig;
  *   vite_config: import('vite').ResolvedConfig;
  *   vite_config_env: import('vite').ConfigEnv;
  *   manifest_data: import('types').ManifestData;
- *   build_dir: string;
  *   output_dir: string;
- *   service_worker_entry_file: string | null;
  * }} options
  * @param {{ vite_manifest: import('vite').Manifest, assets: import('rollup').OutputAsset[] }} client
  */
 export async function build_server(options, client) {
-	const {
-		cwd,
-		config,
-		vite_config,
-		vite_config_env,
-		manifest_data,
-		build_dir,
-		output_dir,
-		service_worker_entry_file
-	} = options;
+	const { config, vite_config, vite_config_env, manifest_data, output_dir } = options;
 
-	let hooks_file = resolve_entry(config.kit.files.hooks.server);
-
-	if (!hooks_file || !fs.existsSync(hooks_file)) {
-		hooks_file = path.join(config.kit.outDir, 'build/hooks.js');
-		fs.writeFileSync(hooks_file, '');
-	}
-
-	/** @type {Record<string, string>} */
-	const input = {
-		index: `${build_dir}/index.js`
-	};
-
-	// add entry points for every endpoint...
-	manifest_data.routes.forEach((route) => {
-		if (route.endpoint) {
-			const resolved = path.resolve(cwd, route.endpoint.file);
-			const relative = decodeURIComponent(path.relative(config.kit.files.routes, resolved));
-			const name = posixify(path.join('entries/endpoints', relative.replace(/\.js$/, '')));
-			input[name] = resolved;
-		}
-	});
-
-	// ...and every component used by pages...
-	manifest_data.nodes.forEach((node) => {
-		for (const file of [node.component, node.universal, node.server]) {
-			if (file) {
-				const resolved = path.resolve(cwd, file);
-				const relative = decodeURIComponent(path.relative(config.kit.files.routes, resolved));
-
-				const name = relative.startsWith('..')
-					? posixify(path.join('entries/fallbacks', path.basename(file)))
-					: posixify(path.join('entries/pages', relative.replace(/\.js$/, '')));
-				input[name] = resolved;
+	const { output } = /** @type {import('rollup').RollupOutput} */ (
+		await vite.build({
+			// CLI args
+			configFile: vite_config.configFile,
+			mode: vite_config_env.mode,
+			logLevel: config.logLevel,
+			clearScreen: config.clearScreen,
+			build: {
+				ssr: true
 			}
-		}
-	});
-
-	// ...and every matcher
-	Object.entries(manifest_data.matchers).forEach(([key, file]) => {
-		const name = posixify(path.join('entries/matchers', key));
-		input[name] = path.resolve(cwd, file);
-	});
-
-	/** @type {(file: string) => string} */
-	const app_relative = (file) => {
-		const relative_file = path.relative(build_dir, path.resolve(cwd, file));
-		return relative_file[0] === '.' ? relative_file : `./${relative_file}`;
-	};
-
-	fs.writeFileSync(
-		input.index,
-		server_template({
-			config,
-			hooks: app_relative(hooks_file),
-			has_service_worker: config.kit.serviceWorker.register && !!service_worker_entry_file,
-			runtime: posixify(path.relative(build_dir, runtime_directory)),
-			template: load_template(cwd, config),
-			error_page: load_error_page(config)
 		})
 	);
 
-	const merged_config = mergeConfig(
-		get_default_build_config({ config, input, ssr: true, outDir: `${output_dir}/server` }),
-		await get_vite_config(vite_config, vite_config_env)
+	const chunks = /** @type {import('rollup').OutputChunk[]} */ (
+		output.filter((chunk) => chunk.type === 'chunk')
 	);
-
-	const { chunks } = await create_build(merged_config);
 
 	/** @type {import('vite').Manifest} */
 	const vite_manifest = JSON.parse(
@@ -321,21 +135,20 @@ export async function build_server(options, client) {
 	return {
 		chunks,
 		vite_manifest,
-		methods: get_methods(cwd, chunks, manifest_data)
+		methods: get_methods(chunks, manifest_data)
 	};
 }
 
 /**
- * @param {string} cwd
  * @param {import('rollup').OutputChunk[]} output
  * @param {import('types').ManifestData} manifest_data
  */
-function get_methods(cwd, output, manifest_data) {
+function get_methods(output, manifest_data) {
 	/** @type {Record<string, string[]>} */
 	const lookup = {};
 	output.forEach((chunk) => {
 		if (!chunk.facadeModuleId) return;
-		const id = posixify(path.relative(cwd, chunk.facadeModuleId));
+		const id = posixify(path.relative('.', chunk.facadeModuleId));
 		lookup[id] = chunk.exports;
 	});
 

@@ -1,5 +1,5 @@
 import { expect } from '@playwright/test';
-import { start_server, test } from '../../../utils.js';
+import { test } from '../../../utils.js';
 
 /** @typedef {import('@playwright/test').Response} Response */
 
@@ -105,8 +105,8 @@ test.describe('assets path', () => {
 });
 
 test.describe('CSP', () => {
-	test('blocks script from external site', async ({ page, context }) => {
-		const { port, close } = await start_server((req, res) => {
+	test('blocks script from external site', async ({ page, start_server }) => {
+		const { port } = await start_server((req, res) => {
 			if (req.url === '/blocked.js') {
 				res.writeHead(200, {
 					'content-type': 'text/javascript'
@@ -118,13 +118,8 @@ test.describe('CSP', () => {
 			}
 		});
 
-		try {
-			await page.goto(`/path-base/csp?port=${port}`);
-			expect(await page.evaluate('window.pwned')).toBe(undefined);
-		} finally {
-			await context.close();
-			await close();
-		}
+		await page.goto(`/path-base/csp?port=${port}`);
+		expect(await page.evaluate('window.pwned')).toBe(undefined);
 	});
 
 	test("quotes 'script'", async ({ page }) => {

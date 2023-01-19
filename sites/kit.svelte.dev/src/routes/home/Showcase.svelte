@@ -4,7 +4,7 @@
 	import pudding from './showcase/pudding.png';
 	import pocketbase from './showcase/pocketbase.png';
 	import pronauns from './showcase/pronauns.png';
-	import dropzone from './showcase/dropzone.png';
+	import pausly from './showcase/pausly.png';
 	import asmeditor from './showcase/asmeditor.png';
 	import monogram from './showcase/monogram.png';
 	import raster from './showcase/raster.png';
@@ -13,7 +13,7 @@
 	const showcase = [
 		{ url: 'pudding.cool', image: pudding },
 		{ url: 'www.pronauns.com', image: pronauns },
-		{ url: 'dropzone.dev', image: dropzone },
+		{ url: 'www.pausly.app', image: pausly },
 		{ url: 'asm-editor.specy.app', image: asmeditor },
 		{ url: 'raster.app', image: raster },
 		{ url: 'pocketbase.io', image: pocketbase },

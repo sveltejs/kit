@@ -1,6 +1,6 @@
 {
 	"name": "@sveltejs/adapter-netlify",
-	"version": "1.0.0",
+	"version": "1.0.4",
 	"repository": {
 		"type": "git",
 		"url": "https://github.com/sveltejs/kit",
@@ -16,10 +16,10 @@
 		},
 		"./package.json": "./package.json"
 	},
-	"main": "index.js",
 	"types": "index.d.ts",
 	"files": [
 		"files",
+		"index.js",
 		"index.d.ts"
 	],
 	"scripts": {
@@ -44,7 +44,7 @@
 		"@sveltejs/kit": "workspace:^",
 		"@types/node": "^16.18.6",
 		"@types/set-cookie-parser": "^2.4.2",
-		"rimraf": "^3.0.2",
+		"rimraf": "^4.0.0",
 		"rollup": "^3.7.0",
 		"typescript": "^4.9.4",
 		"uvu": "^0.5.6"

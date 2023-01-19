@@ -3,17 +3,17 @@
 	"version": "0.0.1",
 	"scripts": {
 		"update": "node scripts/check-doc-links.js && node scripts/types",
-		"dev": "npm run update && vite dev",
+		"dev": "vite dev",
 		"build": "npm run update && vite build",
 		"prebuild": "test \"$CI\" = true && npx pnpm install --store=node_modules/.pnpm-store || echo skipping pnpm install",
 		"preview": "vite preview",
 		"test": "uvu src \"(spec\\.js|test[\\\\/]index\\.js)\""
 	},
 	"devDependencies": {
-		"@sveltejs/adapter-vercel": "workspace:^1.0.0",
+		"@sveltejs/adapter-vercel": "workspace:^",
 		"@sveltejs/amp": "workspace:^",
 		"@sveltejs/kit": "workspace:^",
-		"@sveltejs/site-kit": "^3.0.3",
+		"@sveltejs/site-kit": "^3.1.0",
 		"@types/d3-geo": "^3.0.2",
 		"@types/node": "^16.18.6",
 		"flexsearch": "^0.7.31",

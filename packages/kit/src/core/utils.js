@@ -13,9 +13,6 @@ import { posixify, to_fs } from '../utils/filesystem.js';
  */
 export const runtime_directory = posixify(fileURLToPath(new URL('../runtime', import.meta.url)));
 
-/** Prefix for the `runtime` directory, for use with import declarations */
-export const runtime_prefix = posixify_path(runtime_directory);
-
 /**
  * This allows us to import SvelteKit internals that aren't exposed via `pkg.exports` in a
  * way that works whether `@sveltejs/kit` is installed inside the project's `node_modules`
@@ -24,12 +21,6 @@ export const runtime_prefix = posixify_path(runtime_directory);
 export const runtime_base = runtime_directory.startsWith(process.cwd())
 	? `/${path.relative('.', runtime_directory)}`
 	: to_fs(runtime_directory);
-
-/** @param {string} str */
-function posixify_path(str) {
-	const parsed = path.parse(str);
-	return `/${parsed.dir.slice(parsed.root.length).split(path.sep).join('/')}/${parsed.base}`;
-}
 
 function noop() {}
 

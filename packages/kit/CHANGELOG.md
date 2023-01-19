@@ -1,5 +1,77 @@
 # @sveltejs/kit
 
+## 1.1.4
+
+### Patch Changes
+
+- fix: squelch unknown prop warning for `+error.svelte` components ([#8593](https://github.com/sveltejs/kit/pull/8593))
+
+## 1.1.3
+
+### Patch Changes
+
+- docs: explain how to add ambient typings ([#8558](https://github.com/sveltejs/kit/pull/8558))
+
+- fix: ignore `target="_blank"` links ([#8563](https://github.com/sveltejs/kit/pull/8563))
+
+## 1.1.2
+
+### Patch Changes
+
+- fix: correct link in types documentation ([#8557](https://github.com/sveltejs/kit/pull/8557))
+
+- fix: correctly detect changed data ([#8377](https://github.com/sveltejs/kit/pull/8377))
+
+- fix: only generate type definitions with `sync` command ([#8552](https://github.com/sveltejs/kit/pull/8552))
+
+- fix: remove baseUrl to prevent wrong TypeScript auto imports if possible ([#8568](https://github.com/sveltejs/kit/pull/8568))
+
+## 1.1.1
+
+### Patch Changes
+
+- chore: upgrade devalue ([#8520](https://github.com/sveltejs/kit/pull/8520))
+
+## 1.1.0
+
+### Minor Changes
+
+- feat: warn when usage of page options in `.svelte` files or missing `<slot />` in layout is detected ([#8475](https://github.com/sveltejs/kit/pull/8475))
+
+### Patch Changes
+
+- fix: exit postbuild step with code 0 ([#8514](https://github.com/sveltejs/kit/pull/8514))
+
+- fix: only run missing page check in dev mode ([#8515](https://github.com/sveltejs/kit/pull/8515))
+
+- fix: avoid input name clobbering form method check ([#8471](https://github.com/sveltejs/kit/pull/8471))
+
+- fix: exclude service worker from tsconfig ([#8508](https://github.com/sveltejs/kit/pull/8508))
+
+- fix: provide better error message in case of missing `+page.svelte` ([#8478](https://github.com/sveltejs/kit/pull/8478))
+
+## 1.0.13
+
+### Patch Changes
+
+- chore: separate generated from non-generated server code ([#8429](https://github.com/sveltejs/kit/pull/8429))
+
+## 1.0.12
+
+### Patch Changes
+
+- fix: make prerendered endpoint callable from non-prerendered server load ([#8453](https://github.com/sveltejs/kit/pull/8453))
+
+- docs: add links to http status codes ([#8480](https://github.com/sveltejs/kit/pull/8480))
+
+- fix: prerender page when prerender set to 'auto' and ssr set to true ([#8481](https://github.com/sveltejs/kit/pull/8481))
+
+- fix: prevent false positive warnings for fetch uses in firefox ([#8456](https://github.com/sveltejs/kit/pull/8456))
+
+- fix: check version on node fetch fail ([#8487](https://github.com/sveltejs/kit/pull/8487))
+
+- fix: avoid unnecessary $page store updates ([#8457](https://github.com/sveltejs/kit/pull/8457))
+
 ## 1.0.11
 
 ### Patch Changes

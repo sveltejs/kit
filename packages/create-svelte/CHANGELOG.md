@@ -1,5 +1,23 @@
 # create-svelte
 
+## 2.3.0
+
+### Minor Changes
+
+- fix: adjust `app.d.ts` to diminish confusion about imports ([#8477](https://github.com/sveltejs/kit/pull/8477))
+
+## 2.2.1
+
+### Patch Changes
+
+- fix: note why TypeScript is always installed for library projects and add jsconfig ([#8484](https://github.com/sveltejs/kit/pull/8484))
+
+## 2.2.0
+
+### Minor Changes
+
+- feat: use svelte-check v3 ([#8468](https://github.com/sveltejs/kit/pull/8468))
+
 ## 2.1.0
 
 ### Minor Changes

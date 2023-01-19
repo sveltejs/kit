@@ -25,7 +25,7 @@
 				"packages/package/test/fixtures/**/expected/**/*",
 				"packages/package/test/watch/expected/**/*",
 				"packages/package/test/watch/package/**/*",
-				"packages/kit/src/core/prerender/fixtures/**/*",
+				"packages/kit/src/core/postbuild/fixtures/**/*",
 				"packages/migrate/migrations/routes/*/samples.md"
 			],
 			"options": {

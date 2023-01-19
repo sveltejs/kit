@@ -1,4 +1,4 @@
-export class HttpError {
+export let HttpError = class HttpError {
 	/**
 	 * @param {number} status
 	 * @param {{message: string} extends App.Error ? (App.Error | string | undefined) : App.Error} body
@@ -17,9 +17,9 @@ export class HttpError {
 	toString() {
 		return JSON.stringify(this.body);
 	}
-}
+};
 
-export class Redirect {
+export let Redirect = class Redirect {
 	/**
 	 * @param {300 | 301 | 302 | 303 | 304 | 305 | 306 | 307 | 308} status
 	 * @param {string} location
@@ -28,12 +28,12 @@ export class Redirect {
 		this.status = status;
 		this.location = location;
 	}
-}
+};
 
 /**
  * @template {Record<string, unknown> | undefined} [T=undefined]
  */
-export class ActionFailure {
+export let ActionFailure = class ActionFailure {
 	/**
 	 * @param {number} status
 	 * @param {T} [data]
@@ -42,4 +42,22 @@ export class ActionFailure {
 		this.status = status;
 		this.data = data;
 	}
+};
+
+/**
+ * This is a grotesque hack that, in dev, allows us to replace the implementations
+ * of these classes that you'd get by importing them from `@sveltejs/kit` with the
+ * ones that are imported via Vite and loaded internally, so that instanceof
+ * checks work even though SvelteKit imports this module via Vite and consumers
+ * import it via Node
+ * @param {{
+ *   ActionFailure: typeof ActionFailure;
+ *   HttpError: typeof HttpError;
+ *   Redirect: typeof Redirect;
+ * }} implementations
+ */
+export function replace_implementations(implementations) {
+	ActionFailure = implementations.ActionFailure;
+	HttpError = implementations.HttpError;
+	Redirect = implementations.Redirect;
 }

@@ -11,10 +11,9 @@ const cookie_paths = {};
 /**
  * @param {Request} request
  * @param {URL} url
- * @param {boolean} dev
  * @param {import('types').TrailingSlash} trailing_slash
  */
-export function get_cookies(request, url, dev, trailing_slash) {
+export function get_cookies(request, url, trailing_slash) {
 	const header = request.headers.get('cookie') ?? '';
 	const initial_cookies = parse(header, { decode: (value) => value });
 
@@ -22,7 +21,7 @@ export function get_cookies(request, url, dev, trailing_slash) {
 	// Emulate browser-behavior: if the cookie is set at '/foo/bar', its path is '/foo'
 	const default_path = normalized_url.split('/').slice(0, -1).join('/') || '/';
 
-	if (dev) {
+	if (__SVELTEKIT_DEV__) {
 		// TODO this could theoretically be wrong if the cookie was set unencoded?
 		const initial_decoded_cookies = parse(header, { decode: decodeURIComponent });
 		// Remove all cookies that no longer exist according to the request
@@ -77,7 +76,7 @@ export function get_cookies(request, url, dev, trailing_slash) {
 			const req_cookies = parse(header, { decode: decoder });
 			const cookie = req_cookies[name]; // the decoded string or undefined
 
-			if (!dev || cookie) {
+			if (!__SVELTEKIT_DEV__ || cookie) {
 				return cookie;
 			}
 
@@ -111,7 +110,7 @@ export function get_cookies(request, url, dev, trailing_slash) {
 				}
 			};
 
-			if (dev) {
+			if (__SVELTEKIT_DEV__) {
 				cookie_paths[name] = cookie_paths[name] ?? new Set();
 				if (!value) {
 					if (!cookie_paths[name].has(path) && cookie_paths[name].size > 0) {
