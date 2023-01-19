@@ -6,7 +6,7 @@ If you're using [adapter-auto](https://kit.svelte.dev/docs/adapter-auto), you do
 
 ## Docs
 
-[Docs](https://kit.svelte.dev/docs/adapter-cloudflare)
+[Docs](https://kit.svelte.dev/docs/adapter-vercel)
 
 ## Changelog
 
