@@ -184,6 +184,16 @@ test.describe('beforeNavigate', () => {
 		expect(page.url()).toBe(baseURL + '/before-navigate/prevent-navigation');
 		expect(await page.innerHTML('pre')).toBe('1 false link');
 	});
+
+	test('is not triggered on target=_blank', async ({ page, baseURL }) => {
+		await page.goto('/before-navigate/prevent-navigation');
+
+		await page.click('a[href="https://google.com"]');
+		await page.waitForTimeout(500);
+
+		expect(page.url()).toBe(baseURL + '/before-navigate/prevent-navigation');
+		expect(await page.innerHTML('pre')).toBe('0 false undefined');
+	});
 });
 
 test.describe('Scrolling', () => {
@@ -370,7 +380,7 @@ test.describe('a11y', () => {
 		await page.goto('/keepfocus');
 
 		await Promise.all([
-			page.type('#input', 'bar'),
+			page.locator('#input').fill('bar'),
 			page.waitForFunction(() => window.location.search === '?foo=bar')
 		]);
 		await expect(page.locator('#input')).toBeFocused();
@@ -651,6 +661,21 @@ test.describe('Load', () => {
 			);
 		});
 	}
+
+	if (!process.env.DEV) {
+		test.skip('does not fetch __data.json if no server load function exists', async ({
+			page,
+			clicknav
+		}) => {
+			await page.goto('/load/no-server-load/a');
+
+			const pathnames = [];
+			page.on('request', (r) => pathnames.push(new URL(r.url()).pathname));
+			await clicknav('[href="/load/no-server-load/b"]');
+
+			expect(pathnames).not.toContain(`/load/no-server-load/b/__data.json`);
+		});
+	}
 });
 
 test.describe('Page options', () => {
@@ -918,9 +943,21 @@ test.describe('$app/stores', () => {
 	});
 
 	test('$page.data does not update if data is unchanged', async ({ page, app }) => {
-		await page.goto('/store/data/unchanged/a');
-		await app.goto('/store/data/unchanged/b');
+		await page.goto('/store/data/store-update/a');
+		await app.goto('/store/data/store-update/b');
 		await expect(page.locator('p')).toHaveText('$page.data was updated 0 time(s)');
+	});
+
+	test('$page.data does update if keys did not change but data did', async ({ page, app }) => {
+		await page.goto('/store/data/store-update/same-keys/same');
+		await app.goto('/store/data/store-update/same-keys');
+		await expect(page.locator('p')).toHaveText('$page.data was updated 1 time(s)');
+	});
+
+	test('$page.data does update if keys did not change but data did (2)', async ({ page, app }) => {
+		await page.goto('/store/data/store-update/same-keys/same-deep/nested');
+		await app.goto('/store/data/store-update/same-keys');
+		await expect(page.locator('p')).toHaveText('$page.data was updated 1 time(s)');
 	});
 });
 
@@ -1144,12 +1181,12 @@ test.describe('data-sveltekit attributes', () => {
 		page.on('request', (r) => requests.push(r.url()));
 
 		await page.goto('/data-sveltekit/reload');
-		await page.locator('#one').click();
+		await clicknav('#one');
 		expect(requests).toContain(`${baseURL}/data-sveltekit/reload/target`);
 
 		requests.length = 0;
 		await page.goto('/data-sveltekit/reload');
-		await page.locator('#two').click();
+		await clicknav('#two');
 		expect(requests).toContain(`${baseURL}/data-sveltekit/reload/target`);
 
 		requests.length = 0;

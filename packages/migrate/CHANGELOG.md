@@ -1,5 +1,11 @@
 # svelte-migrate
 
+## 1.0.1
+
+### Patch Changes
+
+- fix: correctly check for old load props ([#8537](https://github.com/sveltejs/kit/pull/8537))
+
 ## 1.0.0
 
 ### Major Changes

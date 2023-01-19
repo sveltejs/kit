@@ -46,7 +46,7 @@
 			return heading.getBoundingClientRect().top - parseFloat(style.scrollMarginTop) - top;
 		});
 
-		height = window.innerHeight - 50 /* bottom banner height */;
+		height = window.innerHeight;
 	}
 
 	function highlight() {
