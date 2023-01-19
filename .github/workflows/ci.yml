@@ -100,11 +100,11 @@ jobs:
       - name: Archive test results
         if: failure()
         shell: bash
-        run: find packages -type d -name test-results -not -empty | tar -czf test-results.tar.gz --files-from=-
+        run: find packages -type d -name test-results -not -empty | tar -czf test-results-cross-browser.tar.gz --files-from=-
       - name: Upload test results
         if: failure()
         uses: actions/upload-artifact@v3
         with:
           retention-days: 3
-          name: test-failure-${{ github.run_id }}-${{ matrix.os }}-${{ matrix.node-version }}-${{ matrix.e2e-browser }}
-          path: test-results.tar.gz
+          name: test-failure-cross-browser-${{ github.run_id }}-${{ matrix.os }}-${{ matrix.node-version }}-${{ matrix.e2e-browser }}
+          path: test-results-cross-browser.tar.gz
