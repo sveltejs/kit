@@ -27,16 +27,13 @@ import {
 
 export interface ServerModule {
 	Server: typeof InternalServer;
+}
 
-	override(options: {
-		building: boolean;
-		paths: {
-			base: string;
-			assets: string;
-		};
-		protocol?: 'http' | 'https';
-		read(file: string): Buffer;
-	}): void;
+export interface ServerInternalModule {
+	set_building(building: boolean): void;
+	set_paths(paths: { base: string; assets: string }): void;
+	set_version(version: string): void;
+	set_fix_stack_trace(fix_stack_trace: (stack: string) => string): void;
 }
 
 export interface Asset {
@@ -74,7 +71,7 @@ export interface CSRPageNode {
 		load?: Load;
 		trailingSlash?: TrailingSlash;
 	};
-	server: boolean;
+	has_server_load: boolean;
 }
 
 export type CSRPageNodeLoader = () => Promise<CSRPageNode>;
@@ -109,6 +106,7 @@ export class InternalServer extends Server {
 		request: Request,
 		options: RequestOptions & {
 			prerendering?: PrerenderOptions;
+			read: (file: string) => Buffer;
 		}
 	): Promise<Response>;
 }
@@ -155,7 +153,12 @@ export type RecursiveRequired<T> = {
 export type RequiredResolveOptions = Required<ResolveOptions>;
 
 export interface Respond {
-	(request: Request, options: SSROptions, state: SSRState): Promise<Response>;
+	(
+		request: Request,
+		options: SSROptions,
+		manifest: SSRManifest,
+		state: SSRState
+	): Promise<Response>;
 }
 
 export interface RouteParam {
@@ -294,37 +297,18 @@ export interface SSRNode {
 export type SSRNodeLoader = () => Promise<SSRNode>;
 
 export interface SSROptions {
+	app_template_contains_nonce: boolean;
 	csp: ValidatedConfig['kit']['csp'];
-	csrf: {
-		check_origin: boolean;
-	};
-	dev: boolean;
+	csrf_check_origin: boolean;
 	embedded: boolean;
-	handle_error(error: Error & { frame?: string }, event: RequestEvent): MaybePromise<App.Error>;
+	env_public_prefix: string;
 	hooks: ServerHooks;
-	manifest: SSRManifest;
-	paths: {
-		base: string;
-		assets: string;
-	};
-	public_env: Record<string, string>;
-	read(file: string): Buffer;
 	root: SSRComponent['default'];
 	service_worker: boolean;
-	app_template({
-		head,
-		body,
-		assets,
-		nonce
-	}: {
-		head: string;
-		body: string;
-		assets: string;
-		nonce: string;
-	}): string;
-	app_template_contains_nonce: boolean;
-	error_template({ message, status }: { message: string; status: number }): string;
-	version: string;
+	templates: {
+		app(values: { head: string; body: string; assets: string; nonce: string }): string;
+		error(values: { message: string; status: number }): string;
+	};
 }
 
 export interface SSRErrorPage {
@@ -362,6 +346,7 @@ export interface SSRState {
 	 * prerender option is inherited by the endpoint, unless overridden
 	 */
 	prerender_default?: PrerenderOption;
+	read?: (file: string) => Buffer;
 }
 
 export type StrictBody = string | ArrayBufferView;
@@ -383,10 +368,8 @@ export * from './private';
 
 declare global {
 	const __SVELTEKIT_ADAPTER_NAME__: string;
-	const __SVELTEKIT_APP_VERSION__: string;
 	const __SVELTEKIT_APP_VERSION_FILE__: string;
 	const __SVELTEKIT_APP_VERSION_POLL_INTERVAL__: number;
-	const __SVELTEKIT_BROWSER__: boolean;
 	const __SVELTEKIT_DEV__: boolean;
 	const __SVELTEKIT_EMBEDDED__: boolean;
 	var Bun: object;

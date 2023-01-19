@@ -2,7 +2,7 @@
 title: Page options
 ---
 
-By default, SvelteKit will render (or [prerender](/docs/glossary#prerendering)) any component first on the server and send it to the client as HTML. It will then render the component again in the browser to make it interactive in a process called **hydration**. For this reason, you need to ensure that components can run in both places. SvelteKit will then initialize a [**router**](/docs/routing) that takes over subsequent navigations.
+By default, SvelteKit will render (or [prerender](/docs/glossary#prerendering)) any component first on the server and send it to the client as HTML. It will then render the component again in the browser to make it interactive in a process called [**hydration**](/docs/glossary#hydration). For this reason, you need to ensure that components can run in both places. SvelteKit will then initialize a [**router**](/docs/routing) that takes over subsequent navigations.
 
 You can control each of these on a page-by-page basis by exporting options from [`+page.js`](/docs/routing#page-page-js) or [`+page.server.js`](/docs/routing#page-page-server-js), or for groups of pages using a shared [`+layout.js`](/docs/routing#layout-layout-js) or [`+layout.server.js`](/docs/routing#layout-layout-server-js). To define an option for the whole app, export it from the root layout. Child layouts and pages override values set in parent layouts, so — for example — you can enable prerendering for your entire app then disable it for pages that need to be dynamically rendered.
 
@@ -91,7 +91,7 @@ Since these routes cannot be dynamically server-rendered, this will cause errors
 
 ## ssr
 
-Normally, SvelteKit renders your page on the server first and sends that HTML to the client where it's hydrated. If you set `ssr` to `false`, it renders an empty 'shell' page instead. This is useful if your page is unable to be rendered on the server (because you use browser-only globals like `document` for example), but in most situations it's not recommended ([see appendix](/docs/glossary#ssr)).
+Normally, SvelteKit renders your page on the server first and sends that HTML to the client where it's [hydrated](/docs/glossary#hydration). If you set `ssr` to `false`, it renders an empty 'shell' page instead. This is useful if your page is unable to be rendered on the server (because you use browser-only globals like `document` for example), but in most situations it's not recommended ([see appendix](/docs/glossary#ssr)).
 
 ```js
 /// file: +page.js

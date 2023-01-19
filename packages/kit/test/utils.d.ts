@@ -26,6 +26,9 @@ export const test: TestType<
 			 * `handleError` defines the shape
 			 */
 			read_errors(href: string): Record<string, any>;
+			start_server(
+				handler: (req: IncomingMessage, res: ServerResponse) => void
+			): Promise<{ port: number }>;
 			page: PlaywrightTestArgs['page'] & {
 				goto: (
 					url: string,
@@ -37,13 +40,5 @@ export const test: TestType<
 >;
 
 export const config: PlaywrightTestConfig;
-
-export const start_server: (
-	handler: (req: IncomingMessage, res: ServerResponse) => void,
-	start?: number
-) => Promise<{
-	port: number;
-	close(): Promise<void>;
-}>;
 
 export const plugin: () => Plugin;

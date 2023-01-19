@@ -16,7 +16,7 @@ Each route directory contains one or more _route files_, which can be identified
 
 ### +page.svelte
 
-A `+page.svelte` component defines a page of your app. By default, pages are rendered both on the server ([SSR](/docs/glossary#ssr)) for the initial request and in the browser ([CSR](/docs/glossary#csr-and-spa)) for subsequent navigation.
+A `+page.svelte` component defines a page of your app. By default, pages are rendered both on the server ([SSR](/docs/glossary#ssr)) for the initial request and in the browser ([CSR](/docs/glossary#csr)) for subsequent navigation.
 
 ```svelte
 /// file: src/routes/+page.svelte
@@ -128,6 +128,10 @@ If an error occurs during `load`, SvelteKit will render a default error page. Yo
 ```
 
 SvelteKit will 'walk up the tree' looking for the closest error boundary — if the file above didn't exist it would try `src/routes/blog/+error.svelte` and then `src/routes/+error.svelte` before rendering the default error page. If _that_ fails (or if the error was thrown from the `load` function of the root `+layout`, which sits 'above' the root `+error`), SvelteKit will bail out and render a static fallback error page, which you can customise by creating a `src/error.html` file.
+
+If the error occurs inside a `load` function in `+layout(.server).js`, the closest error boundary in the tree is an `+error.svelte` file _above_ that layout (not next to it).
+
+If no route can be found (404), `src/routes/+error.svelte` (or the default error page, if that file does not exist) will be used.
 
 > `+error.svelte` is _not_ used when an error occurs inside [`handle`](/docs/hooks#server-hooks-handle) or a [+server.js](#server) request handler.
 

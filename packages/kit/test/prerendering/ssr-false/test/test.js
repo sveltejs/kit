@@ -18,8 +18,13 @@ test('prerenders /prerenderable-2 shell', () => {
 	assert.ok(!content.includes('prerenderable shell'));
 });
 
+test('prerenders /prerenderable-3 shell with ssr=true and prerender=auto', () => {
+	const content = read('prerenderable-3.html');
+	assert.ok(content.includes('prerenderable shell'));
+});
+
 test('does not prerender non prerenderable things', () => {
-	assert.equal(fs.readdirSync(build).length, 2);
+	assert.equal(fs.readdirSync(build).length, 3);
 });
 
 test('keeps not-explicitly-prerendered routes in the manifest', () => {

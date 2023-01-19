@@ -15,8 +15,8 @@
 		"@sveltejs/adapter-node": "workspace:^",
 		"@sveltejs/kit": "workspace:^",
 		"cross-env": "^7.0.3",
-		"svelte": "^3.55.0",
-		"svelte-check": "^2.9.2",
+		"svelte": "^3.55.1",
+		"svelte-check": "^3.0.2",
 		"typescript": "^4.9.4",
 		"vite": "^4.0.4"
 	},

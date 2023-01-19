@@ -4,22 +4,23 @@
 		"kit.svelte.dev#build": {
 			"dependsOn": ["^build"],
 			"inputs": ["src/**", "../../packages/kit/docs/**", "../../documentation/**"],
-			"outputs": [".vercel_build_output/**", ".vercel/output/**"],
+			"outputs": [".vercel/output/**"],
 			"outputMode": "new-only",
-			"env": ["VERCEL", "ENABLE_VC_BUILD"]
+			"env": ["VERCEL"]
+		},
+		"create-svelte#build": {
+			"dependsOn": ["^build"],
+			"inputs": ["src/**", "scripts/**", "shared/**", "templates/**"],
+			"outputs": ["dist/**"],
+			"outputMode": "new-only",
+			"env": ["VERCEL"]
 		},
 		"build": {
 			"dependsOn": ["^build"],
-			"inputs": ["src/**", "scripts/**", "shared/**", "templates/**"],
-			"outputs": [
-				"files/**",
-				"dist/**",
-				".svelte-kit/**",
-				".vercel_build_output/**",
-				".vercel/output/**"
-			],
+			"inputs": ["src/**"],
+			"outputs": ["files/**", "dist/**", ".svelte-kit/**", ".vercel/output/**"],
 			"outputMode": "new-only",
-			"env": ["VERCEL", "ENABLE_VC_BUILD"]
+			"env": ["VERCEL"]
 		},
 		"check": {
 			"inputs": [
@@ -43,6 +44,13 @@
 		},
 		"test": {
 			"dependsOn": ["^build"],
+			"inputs": ["test/**"],
+			"outputs": ["coverage/", "test-results/**"],
+			"outputMode": "new-only",
+			"env": ["CI", "TURBO_CACHE_KEY"]
+		},
+		"test:cross-browser": {
+			"inputs": ["src/**", "scripts/**", "shared/**", "templates/**", "test/**"],
 			"outputs": ["coverage/", "test-results/**"],
 			"outputMode": "new-only",
 			"env": ["CI", "TURBO_CACHE_KEY"]
