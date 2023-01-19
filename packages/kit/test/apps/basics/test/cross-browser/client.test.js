@@ -1,5 +1,5 @@
 import { expect } from '@playwright/test';
-import { test } from '../../../utils.js';
+import { test } from '../../../../utils.js';
 
 /** @typedef {import('@playwright/test').Response} Response */
 

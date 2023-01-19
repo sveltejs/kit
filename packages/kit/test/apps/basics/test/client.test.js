@@ -3,9 +3,7 @@ import { test } from '../../../utils.js';
 
 /** @typedef {import('@playwright/test').Response} Response */
 
-test.skip(
-	({ javaScriptEnabled }) => !javaScriptEnabled || process.env.KIT_E2E_BROWSER === 'webkit'
-);
+test.skip(({ javaScriptEnabled }) => !javaScriptEnabled);
 
 test.describe.configure({ mode: 'parallel' });
 
