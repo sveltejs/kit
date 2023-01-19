@@ -44,12 +44,13 @@
 		},
 		"test": {
 			"dependsOn": ["^build"],
+			"inputs": ["test/**"],
 			"outputs": ["coverage/", "test-results/**"],
 			"outputMode": "new-only",
 			"env": ["CI", "TURBO_CACHE_KEY"]
 		},
 		"test:cross-browser": {
-			"inputs": ["src/**", "scripts/**", "shared/**", "templates/**"],
+			"inputs": ["src/**", "scripts/**", "shared/**", "templates/**", "test/**"],
 			"outputs": ["coverage/", "test-results/**"],
 			"outputMode": "new-only",
 			"env": ["CI", "TURBO_CACHE_KEY"]
