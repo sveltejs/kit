@@ -38,9 +38,13 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        node-version: [16]
-        os: [ubuntu-latest, windows-latest]
-        e2e-browser: ['chromium']
+        include:
+          - node-version: 16
+            os: [ubuntu-latest, windows-latest]
+            e2e-browser: 'chromium'
+          - node-version: 18
+            os: ubuntu-latest
+            e2e-browser: 'chromium'
     env:
       TURBO_CACHE_KEY: ${{ matrix.os }}-${{ matrix.node-version }}
       KIT_E2E_BROWSER: ${{matrix.e2e-browser}}
