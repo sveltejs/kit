@@ -76,7 +76,7 @@ jobs:
           retention-days: 3
           name: test-failure-${{ github.run_id }}-${{ matrix.os }}-${{ matrix.node-version }}-${{ matrix.e2e-browser }}
           path: test-results.tar.gz
-  Cross-browser tests:
+  Cross-browser-test:
     runs-on: ${{ matrix.os }}
     timeout-minutes: 30
     strategy:
