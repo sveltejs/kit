@@ -1737,7 +1737,7 @@ if (DEV) {
 	console.warn = function warn(...args) {
 		if (
 			args.length === 1 &&
-			/<(Layout|Page)(_[\w$]+)?> was created (with unknown|without expected) prop '(data|form)'/.test(
+			/<(Layout|Page|Error)(_[\w$]+)?> was created (with unknown|without expected) prop '(data|form)'/.test(
 				args[0]
 			)
 		) {
