@@ -193,7 +193,7 @@ function check_named_default_separate(actions) {
  * @param {NonNullable<import('types').SSRNode['server']['actions']>} actions
  * @throws {Redirect | ActionFailure | HttpError | Error}
  */
-export async function call_action(event, actions) {
+async function call_action(event, actions) {
 	const url = new URL(event.request.url);
 
 	let name = 'default';
@@ -222,7 +222,7 @@ export async function call_action(event, actions) {
 }
 
 /** @param {any} data */
-export function validate_action_return(data) {
+function validate_action_return(data) {
 	if (data instanceof Redirect) {
 		throw new Error(`Cannot \`return redirect(...)\` — use \`throw redirect(...)\` instead`);
 	}
