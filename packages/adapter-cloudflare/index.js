@@ -71,25 +71,22 @@ function get_routes_json(builder, assets) {
 	 * The list of routes that will _not_ invoke functions (which cost money).
 	 * This is done on a best-effort basis, as there is a limit of 100 rules
 	 */
-	const exclude = [`/${builder.config.kit.appDir}/*`];
+	const exclude = [
+		`/${builder.config.kit.appDir}/*`,
+		...assets.filter((file) => !file.startsWith(`${builder.config.kit.appDir}/`))
+	];
 
-	const MAX_EXCLUSIONS = 98; // 100 minus existing include/exclude rules
+	const MAX_EXCLUSIONS = 99; // 100 minus existing `include` rules
 	let excess;
 
-	if (assets.length > MAX_EXCLUSIONS) {
+	if (exclude.length > MAX_EXCLUSIONS) {
 		excess = 'static assets';
 
 		if (builder.prerendered.paths.length > 0) {
 			excess += ' or prerendered routes';
 		}
-	} else if (assets.length + builder.prerendered.paths.length > MAX_EXCLUSIONS) {
+	} else if (exclude.length + builder.prerendered.paths.length > MAX_EXCLUSIONS) {
 		excess = 'prerendered routes';
-	}
-
-	for (const file of assets) {
-		if (!file.startsWith(`${builder.config.kit.appDir}/`)) {
-			exclude.push(`/${file}`);
-		}
 	}
 
 	for (const path of builder.prerendered.paths) {
