@@ -503,6 +503,14 @@ export interface KitConfig {
 		 */
 		files?(filepath: string): boolean;
 	};
+	typescript?: {
+		/**
+		 * A function that allows you to edit the generated `tsconfig.json`. You can mutate the config (recommended) or return a new one.
+		 * This is useful for — to example — extend a shared `tsconfig.json` in a monorepo root
+		 * @default (config) => config
+		 */
+		config?: (config: any) => any;
+	};
 	/**
 	 * Client-side navigation can be buggy if you deploy a new version of your app while people are using it. If the code for the new page is already loaded, it may have stale content; if it isn't, the app's route manifest may point to a JavaScript file that no longer exists. SvelteKit solves this problem by falling back to traditional full-page navigation if it detects that a new version has been deployed, using the `name` specified here (which defaults to a timestamp of the build).
 	 *

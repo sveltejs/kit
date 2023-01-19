@@ -1,7 +1,7 @@
 import { test } from 'uvu';
 import * as assert from 'uvu/assert';
 import { validate_config } from '../config/index.js';
-import { get_tsconfig_paths } from './write_tsconfig.js';
+import { get_tsconfig } from './write_tsconfig.js';
 
 test('Creates tsconfig path aliases from kit.alias', () => {
 	const { kit } = validate_config({
@@ -15,11 +15,11 @@ test('Creates tsconfig path aliases from kit.alias', () => {
 		}
 	});
 
-	const paths = get_tsconfig_paths(kit, false);
+	const { compilerOptions } = get_tsconfig(kit, false);
 
 	// $lib isn't part of the outcome because there's a "path exists"
 	// check in the implementation
-	assert.equal(paths, {
+	assert.equal(compilerOptions.paths, {
 		simpleKey: ['../simple/value'],
 		'simpleKey/*': ['../simple/value/*'],
 		key: ['../value'],
@@ -40,17 +40,50 @@ test('Creates tsconfig path aliases from kit.alias with existing baseUrl', () =>
 		}
 	});
 
-	const paths = get_tsconfig_paths(kit, true);
+	const { compilerOptions } = get_tsconfig(kit, true);
 
 	// $lib isn't part of the outcome because there's a "path exists"
 	// check in the implementation
-	assert.equal(paths, {
+	assert.equal(compilerOptions.paths, {
 		simpleKey: ['simple/value'],
 		'simpleKey/*': ['simple/value/*'],
 		key: ['value'],
 		'key/*': ['some/other/value/*'],
 		keyToFile: ['path/to/file.ts']
 	});
+});
+
+test('Allows generated tsconfig to be mutated', () => {
+	const { kit } = validate_config({
+		kit: {
+			typescript: {
+				config: (config) => {
+					config.extends = 'some/other/tsconfig.json';
+				}
+			}
+		}
+	});
+
+	const config = get_tsconfig(kit, false);
+
+	assert.equal(config.extends, 'some/other/tsconfig.json');
+});
+
+test('Allows generated tsconfig to be replaced', () => {
+	const { kit } = validate_config({
+		kit: {
+			typescript: {
+				config: (config) => ({
+					...config,
+					extends: 'some/other/tsconfig.json'
+				})
+			}
+		}
+	});
+
+	const config = get_tsconfig(kit, false);
+
+	assert.equal(config.extends, 'some/other/tsconfig.json');
 });
 
 test.run();

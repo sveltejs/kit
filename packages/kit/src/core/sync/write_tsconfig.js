@@ -40,16 +40,6 @@ function remove_trailing_slashstar(file) {
 export function write_tsconfig(kit, cwd = process.cwd()) {
 	const out = path.join(kit.outDir, 'tsconfig.json');
 
-	write_if_changed(out, JSON.stringify(get_tsconfig(kit, cwd, out), null, '\t'));
-}
-
-/**
- * Generates the tsconfig that the user's tsconfig inherits from.
- * @param {import('types').ValidatedKitConfig} kit
- * @param {string} cwd
- * @param {string} out
- */
-export function get_tsconfig(kit, cwd, out) {
 	const user_config = load_user_tsconfig(cwd);
 	if (user_config) validate_user_config(kit, cwd, out, user_config);
 
@@ -82,6 +72,15 @@ export function get_tsconfig(kit, cwd, out) {
 		}
 	}
 
+	write_if_changed(out, JSON.stringify(get_tsconfig(kit, include_base_url), null, '\t'));
+}
+
+/**
+ * Generates the tsconfig that the user's tsconfig inherits from.
+ * @param {import('types').ValidatedKitConfig} kit
+ * @param {boolean} include_base_url
+ */
+export function get_tsconfig(kit, include_base_url) {
 	/** @param {string} file */
 	const config_relative = (file) => posixify(path.relative(kit.outDir, file));
 
@@ -108,7 +107,7 @@ export function get_tsconfig(kit, cwd, out) {
 		exclude.push(config_relative(`${kit.files.serviceWorker}.d.ts`));
 	}
 
-	return {
+	const config = {
 		compilerOptions: {
 			// generated options
 			baseUrl: include_base_url ? config_relative('.') : undefined,
@@ -135,6 +134,8 @@ export function get_tsconfig(kit, cwd, out) {
 		include,
 		exclude
 	};
+
+	return kit.typescript.config(config) ?? config;
 }
 
 /** @param {string} cwd */
@@ -215,7 +216,7 @@ const value_regex = /^(.*?)((\/\*)|(\.\w+))?$/;
  * @param {import('types').ValidatedKitConfig} config
  * @param {boolean} include_base_url
  */
-export function get_tsconfig_paths(config, include_base_url) {
+function get_tsconfig_paths(config, include_base_url) {
 	/** @param {string} file */
 	const config_relative = (file) => posixify(path.relative(config.outDir, file));
 
