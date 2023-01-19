@@ -366,7 +366,8 @@ export async function render_response({
 		head,
 		body,
 		assets: resolved_assets,
-		nonce: /** @type {string} */ (csp.nonce)
+		nonce: /** @type {string} */ (csp.nonce),
+		env
 	});
 
 	// TODO flush chunks as early as we can

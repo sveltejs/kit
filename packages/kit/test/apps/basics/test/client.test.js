@@ -600,3 +600,10 @@ test.describe('Content negotiation', () => {
 		await expect(page.locator('[data-testid="form-result"]')).toHaveText('form.submitted: true');
 	});
 });
+
+test.describe('env in app.html', () => {
+	test('can access public env', async ({ page }) => {
+		await page.goto('/');
+		expect(await page.locator('body').getAttribute('class')).toContain('groovy');
+	});
+});

@@ -1,3 +1,4 @@
+/** @type {Record<string, string>} */
 export let env = {};
 
 /** @type {(environment: Record<string, string>) => void} */

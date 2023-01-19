@@ -73,8 +73,7 @@ export async function dev(vite, vite_config, svelte_config) {
 		} catch (error) {
 			manifest_error = /** @type {Error} */ (error);
 
-			console.error(colors.bold().red('Invalid routes'));
-			console.error(error);
+			console.error(colors.bold().red(manifest_error.message));
 			vite.ws.send({
 				type: 'error',
 				err: {
@@ -444,8 +443,7 @@ export async function dev(vite, vite_config, svelte_config) {
 				}
 
 				if (manifest_error) {
-					console.error(colors.bold().red('Invalid routes'));
-					console.error(manifest_error);
+					console.error(colors.bold().red(manifest_error.message));
 
 					const error_page = load_error_page(svelte_config);
 

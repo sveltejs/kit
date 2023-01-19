@@ -306,7 +306,13 @@ export interface SSROptions {
 	root: SSRComponent['default'];
 	service_worker: boolean;
 	templates: {
-		app(values: { head: string; body: string; assets: string; nonce: string }): string;
+		app(values: {
+			head: string;
+			body: string;
+			assets: string;
+			nonce: string;
+			env: Record<string, string>;
+		}): string;
 		error(values: { message: string; status: number }): string;
 	};
 }

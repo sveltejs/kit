@@ -38,11 +38,15 @@ export const options = {
 	root,
 	service_worker: ${has_service_worker},
 	templates: {
-		app: ({ head, body, assets, nonce }) => ${s(template)
+		app: ({ head, body, assets, nonce, env }) => ${s(template)
 			.replace('%sveltekit.head%', '" + head + "')
 			.replace('%sveltekit.body%', '" + body + "')
 			.replace(/%sveltekit\.assets%/g, '" + assets + "')
-			.replace(/%sveltekit\.nonce%/g, '" + nonce + "')},
+			.replace(/%sveltekit\.nonce%/g, '" + nonce + "')
+			.replace(
+				/%sveltekit\.env\.([^%]+)%/g,
+				(_match, capture) => `" + (env[${s(capture)}] ?? "") + "`
+			)},
 		error: ({ status, message }) => ${s(error_page)
 			.replace(/%sveltekit\.status%/g, '" + status + "')
 			.replace(/%sveltekit\.error\.message%/g, '" + message + "')}
