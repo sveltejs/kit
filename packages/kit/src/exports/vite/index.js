@@ -525,33 +525,6 @@ function kit({ svelte_config }) {
 		},
 
 		/**
-		 * Clears the output directories.
-		 */
-		buildStart() {
-			if (vite_config.build.ssr) return;
-
-			// Reset for new build. Goes here because `build --watch` calls buildStart but not config
-			completed_build = false;
-
-			if (is_build) {
-				if (!vite_config.build.watch) {
-					rimraf(out);
-				}
-				mkdirp(out);
-			}
-		},
-
-		generateBundle() {
-			if (vite_config.build.ssr) return;
-
-			this.emitFile({
-				type: 'asset',
-				fileName: `${kit.appDir}/version.json`,
-				source: JSON.stringify({ version: kit.version.name })
-			});
-		},
-
-		/**
 		 * Vite builds a single bundle(or two on legacy). We need three bundles: client, server, and service worker.
 		 * The user's package.json scripts will invoke the Vite CLI to execute the client build. We
 		 * then use this hook to kick off builds for the server and service worker.
