@@ -705,11 +705,6 @@ export function create_client({ target, base }) {
 		);
 		loaders.forEach((loader) => loader?.[1]().catch(() => {}));
 
-		/** @type {Promise<import('types').ServerData> | null} */
-		let server_data_promise = null;
-		/** @type {import('types').ServerData | null} */
-		let server_data = null;
-
 		const url_changed = current.url ? id !== current.url.pathname + current.url.search : false;
 		const route_changed = current.route ? route.id !== current.route.id : false;
 
@@ -731,57 +726,44 @@ export function create_client({ target, base }) {
 			return acc;
 		}, /** @type {boolean[]} */ ([]));
 
-		// If there's a loading node before the first invalid server node and no universal load that needs rerunning
-		// we can show the loading screen already.
-		// TODO rework this in such a way that we can actually do this
 		const first_invalid_server_node = invalid_server_nodes.findIndex(Boolean);
-		server_data_promise =
-			first_invalid_server_node === -1 ? null : load_data(url, invalid_server_nodes);
-
-		if (first_invalid_server_node !== -1) {
-			try {
-				server_data = await load_data(url, invalid_server_nodes);
-			} catch (error) {
-				return load_root_error_page({
-					status: 500,
-					error: await handle_error(error, { url, params, route: { id: route.id } }),
-					url,
-					route
-				});
-			}
-
-			if (server_data.type === 'redirect') {
-				return server_data;
-			}
-		}
-
-		const server_data_nodes = server_data?.nodes;
+		const server_data =
+			first_invalid_server_node === -1
+				? invalid_server_nodes.map(() => undefined)
+				: load_data(url, invalid_server_nodes);
 
 		let parent_changed = false;
 
 		const branch_promises = loaders.map(async (loader, i) => {
+			/** @type {Awaited<ReturnType<typeof load_data>[0]> | undefined} */
+			let server_data_node = undefined;
+			let valid = true;
+
+			if (first_invalid_server_node <= i) {
+				server_data_node = await server_data[i];
+
+				if (
+					server_data_node instanceof HttpError ||
+					server_data_node instanceof Redirect ||
+					server_data_node instanceof Error
+				) {
+					// rethrow and catch below
+					throw server_data_node;
+				}
+
+				valid = !server_data_node || server_data_node.type === 'skip';
+			}
+
 			if (!loader) return;
 
 			/** @type {import('./types').BranchNode | undefined} */
 			const previous = current.branch[i];
 
 			// re-use data from previous load if it's still valid
-			let valid =
+			valid =
+				valid &&
 				loader[1] === previous?.loader &&
 				!has_changed(parent_changed, route_changed, url_changed, previous.universal?.uses, params);
-			/** @type {import('types').ServerNode | null | undefined} */
-			let server_data_node = undefined;
-
-			if (first_invalid_server_node <= i) {
-				server_data_node = server_data_nodes?.[i];
-
-				if (server_data_node?.type === 'error') {
-					// rethrow and catch below
-					throw server_data_node;
-				}
-
-				valid = valid && (!server_data_node || server_data_node.type === 'skip');
-			}
 
 			if (valid) return previous;
 
@@ -859,12 +841,7 @@ export function create_client({ target, base }) {
 					/** @type {App.Error} */
 					let error;
 
-					if (server_data_nodes?.includes(/** @type {import('types').ServerErrorNode} */ (err))) {
-						// this is the server error rethrown above, reconstruct but don't invoke
-						// the client error handler; it should've already been handled on the server
-						status = /** @type {import('types').ServerErrorNode} */ (err).status ?? status;
-						error = /** @type {import('types').ServerErrorNode} */ (err).error;
-					} else if (err instanceof HttpError) {
+					if (err instanceof HttpError) {
 						status = err.status;
 						error = err.body;
 					} else {
@@ -879,7 +856,7 @@ export function create_client({ target, base }) {
 
 					const error_load = await load_nearest_error_page(i, branch, errors);
 					if (error_load) {
-						return await get_navigation_result_from_branch({
+						return get_navigation_result_from_branch({
 							url,
 							params,
 							branch: branch.slice(0, error_load.idx).concat(error_load.node),
@@ -900,7 +877,7 @@ export function create_client({ target, base }) {
 			}
 		}
 
-		return await get_navigation_result_from_branch({
+		return get_navigation_result_from_branch({
 			url,
 			params,
 			branch,
@@ -963,16 +940,17 @@ export function create_client({ target, base }) {
 			// TODO post-https://github.com/sveltejs/kit/discussions/6124 we can use
 			// existing root layout data
 			try {
-				const server_data = await load_data(url, [true]);
+				const server_data = await load_data(url, [true])[0];
 
 				if (
-					server_data.type !== 'data' ||
-					(server_data.nodes[0] && server_data.nodes[0].type !== 'data')
+					server_data instanceof Error ||
+					server_data instanceof Redirect ||
+					server_data instanceof HttpError
 				) {
 					throw 0;
 				}
 
-				server_data_node = server_data.nodes[0] ?? null;
+				server_data_node = /** @type {any} cannot be of type skipped */ (server_data);
 			} catch {
 				// at this point we have no choice but to fall back to the server, if it wouldn't
 				// bring us right back here, turning this into an endless loop
@@ -1000,7 +978,7 @@ export function create_client({ target, base }) {
 			data: null
 		};
 
-		return await get_navigation_result_from_branch({
+		return get_navigation_result_from_branch({
 			url,
 			params,
 			branch: [root_layout, root_error],
@@ -1335,7 +1313,7 @@ export function create_client({ target, base }) {
 					route.errors
 				);
 				if (error_load) {
-					const navigation_result = await get_navigation_result_from_branch({
+					const navigation_result = get_navigation_result_from_branch({
 						url,
 						params: current.params,
 						branch: branch.slice(0, error_load.idx).concat(error_load.node),
@@ -1657,7 +1635,7 @@ export function create_client({ target, base }) {
 					});
 				});
 
-				result = await get_navigation_result_from_branch({
+				result = get_navigation_result_from_branch({
 					url,
 					params,
 					branch: await Promise.all(branch_promises),
@@ -1690,9 +1668,9 @@ export function create_client({ target, base }) {
 /**
  * @param {URL} url
  * @param {boolean[]} invalid
- * @returns {Promise<import('types').ServerData>}
+ * @returns {Array<Promise<Error | HttpError | Redirect | null | import('types').ServerDataSkippedNode | import('types').ServerDataNode>>}
  */
-async function load_data(url, invalid) {
+function load_data(url, invalid) {
 	const data_url = new URL(url);
 	data_url.pathname = add_data_suffix(url.pathname);
 	if (DEV && url.searchParams.has('x-sveltekit-invalidated')) {
@@ -1703,29 +1681,46 @@ async function load_data(url, invalid) {
 		invalid.map((x) => (x ? '1' : '')).join('_')
 	);
 
-	const res = await native_fetch(data_url.href);
-	const data = await res.json();
-
-	if (!res.ok) {
-		// error message is a JSON-stringified string which devalue can't handle at the top level
-		throw new Error(data);
-	}
-
-	// revive devalue-flattened data
-	data.nodes?.forEach((/** @type {any} */ node) => {
-		if (node?.type === 'data') {
-			node.data = devalue.unflatten(node.data);
-			node.uses = {
-				dependencies: new Set(node.uses.dependencies ?? []),
-				params: new Set(node.uses.params ?? []),
-				parent: !!node.uses.parent,
-				route: !!node.uses.route,
-				url: !!node.uses.url
-			};
+	/** @type {Array<(val: any) => void>} */
+	const resolves = [];
+	// If we support streaming responses later on they can be resolved one by one through this
+	const response = invalid.map(() => new Promise((resolve) => resolves.push(resolve)));
+	native_fetch(data_url.href).then(async (res) => {
+		/** @type {import('types').ServerData} */
+		const data = await res.json();
+		if (res.ok) {
+			if (data.type === 'redirect') {
+				resolves.forEach((resolve) => resolve(new Redirect(307, data.location)));
+			} else {
+				// revive devalue-flattened data
+				const nodes = data.nodes.map((node) => {
+					if (node?.type === 'data') {
+						node.data = devalue.unflatten(/** @type {any} */ (node.data)); // TODO type wrong?
+						node.uses = {
+							dependencies: new Set(node.uses.dependencies ?? []),
+							params: new Set(node.uses.params ?? []),
+							parent: !!node.uses.parent,
+							route: !!node.uses.route,
+							url: !!node.uses.url
+						};
+						return node;
+					} else if (node?.type === 'error') {
+						// If it was an unexpected error, it's already been handled on the server,
+						// therefore treat it as an expected error in the client to not invoke handleError again.
+						return new HttpError(node.status ?? 500, node.error);
+					} else {
+						return node;
+					}
+				});
+				resolves.forEach((resolve, i) => resolve(nodes[i]));
+			}
+		} else {
+			// error message is a JSON-stringified string which devalue can't handle at the top level
+			resolves.forEach((resolve) => resolve(new Error(/** @type {any} */ (data))));
 		}
 	});
 
-	return data;
+	return response;
 }
 
 /**
