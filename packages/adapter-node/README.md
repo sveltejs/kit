@@ -4,7 +4,7 @@
 
 ## Docs
 
-[Docs](https://kit.svelte.dev/docs/adapter-cloudflare)
+[Docs](https://kit.svelte.dev/docs/adapter-node)
 
 ## Changelog
 
