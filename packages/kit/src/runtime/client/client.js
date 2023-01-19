@@ -75,7 +75,7 @@ export function create_client({ target, base }) {
 	/** @type {Array<((url: URL) => boolean)>} */
 	const invalidated = [];
 
-	/** @type {{id: string, promise: Promise<import('./types').NavigationResult>} | null} */
+	/** @type {{id: string, promise: Promise<import('./types').NavigationResult>; loading?: () => void} | null} */
 	let load_cache = null;
 
 	const callbacks = {
@@ -208,6 +208,11 @@ export function create_client({ target, base }) {
 			throw new Error(`Attempted to preload a URL that does not belong to this app: ${url}`);
 		}
 
+		if (load_cache?.id === intent.id) {
+			// Return early to not delete potential loading function
+			return load_cache.promise;
+		}
+
 		load_cache = {
 			id: intent.id,
 			promise: load_route(intent).then((result) => {
@@ -238,7 +243,7 @@ export function create_client({ target, base }) {
 	 * @param {import('./types').NavigationIntent | undefined} intent
 	 * @param {URL} url
 	 * @param {string[]} redirect_chain
-	 * @param {{hash?: string, scroll: { x: number, y: number } | null, keepfocus: boolean, details: { replaceState: boolean, state: any } | null}} [opts]
+	 * @param {import('./types').NavigationOptions} [opts]
 	 * @param {{}} [nav_token] To distinguish between different navigation events and determine the latest. Needed for example for redirects to keep the original token
 	 * @param {() => void} [callback]
 	 */
@@ -301,14 +306,10 @@ export function create_client({ target, base }) {
 
 		updating = true;
 
-		if (opts && opts.details) {
-			const { details } = opts;
-			const change = details.replaceState ? 0 : 1;
-			details.state[INDEX_KEY] = current_history_index += change;
-			history[details.replaceState ? 'replaceState' : 'pushState'](details.state, '', url);
-		}
+		update_history(opts, url);
 
 		// reset preload synchronously after the history state has been set to avoid race conditions
+		const had_loading_ui = load_cache?.loading;
 		load_cache = null;
 
 		if (started) {
@@ -323,7 +324,38 @@ export function create_client({ target, base }) {
 			initialize(navigation_result);
 		}
 
-		// opts must be passed if we're navigating
+		if (!had_loading_ui) {
+			// opts must be passed if we're navigating
+			await focus_and_scroll(opts, url);
+		}
+
+		if (navigation_result.props.page) {
+			page = navigation_result.props.page;
+		}
+
+		if (callback) callback();
+
+		updating = false;
+	}
+
+	/**
+	 * @param {import('./types').NavigationOptions | undefined} opts
+	 * @param {URL} url
+	 */
+	function update_history(opts, url) {
+		if (opts && opts.details) {
+			const { details } = opts;
+			const change = details.replaceState ? 0 : 1;
+			details.state[INDEX_KEY] = current_history_index += change;
+			history[details.replaceState ? 'replaceState' : 'pushState'](details.state, '', url);
+		}
+	}
+
+	/**
+	 * @param {import('./types').NavigationOptions | undefined} opts
+	 * @param {URL} url
+	 */
+	async function focus_and_scroll(opts, url) {
 		if (opts) {
 			const { scroll, keepfocus } = opts;
 
@@ -351,14 +383,6 @@ export function create_client({ target, base }) {
 		}
 
 		autoscroll = true;
-
-		if (navigation_result.props.page) {
-			page = navigation_result.props.page;
-		}
-
-		if (callback) callback();
-
-		updating = false;
 	}
 
 	/** @param {import('./types').NavigationFinished} result */
@@ -407,13 +431,9 @@ export function create_client({ target, base }) {
 	 * }} opts
 	 */
 	function get_navigation_result_from_branch({ url, params, branch, status, error, route, form }) {
-		/** @type {import('types').TrailingSlash} */
-		let slash = 'never';
-		for (const node of branch) {
-			if (node?.slash !== undefined) slash = node.slash;
-		}
-		url.pathname = normalize_path(url.pathname, slash);
-		url.search = url.search; // turn `/?` into `/`
+		normalize_url(branch, url);
+
+		const { data_changed, data, props } = merge_data(branch, current.branch);
 
 		/** @type {import('./types').NavigationFinished} */
 		const result = {
@@ -427,34 +447,13 @@ export function create_client({ target, base }) {
 			},
 			props: {
 				// @ts-ignore Somehow it's getting SvelteComponent and SvelteComponentDev mixed up
-				components: compact(branch).map((branch_node) => branch_node.node.component)
+				components: compact(branch).map((branch_node) => branch_node.node.component),
+				...props
 			}
 		};
 
 		if (form !== undefined) {
 			result.props.form = form;
-		}
-
-		let data = {};
-		let data_changed = !page;
-
-		let p = 0;
-
-		for (let i = 0; i < Math.max(branch.length, current.branch.length); i += 1) {
-			const node = branch[i];
-			const prev = current.branch[i];
-
-			if (node?.data !== prev?.data) data_changed = true;
-			if (!node) continue;
-
-			data = { ...data, ...node.data };
-
-			// Only set props if the node actually updated. This prevents needless rerenders.
-			if (data_changed) {
-				result.props[`data_${p}`] = data;
-			}
-
-			p += 1;
 		}
 
 		const page_changed =
@@ -480,6 +479,53 @@ export function create_client({ target, base }) {
 		}
 
 		return result;
+	}
+
+	/**
+	 * @param {Array<Pick<import('./types').BranchNode, 'slash'> | undefined>} branch
+	 * @param {URL} url
+	 */
+	function normalize_url(branch, url) {
+		/** @type {import('types').TrailingSlash} */
+		let slash = 'never';
+		for (const node of branch) {
+			if (node?.slash !== undefined) slash = node.slash;
+		}
+		// TODO we manipulate the incoming URL here, check what implications this has
+		url.pathname = normalize_path(url.pathname, slash);
+		url.search = url.search; // turn `/?` into `/`
+		return url;
+	}
+
+	/**
+	 * @param {Array<import('./types').BranchNode | undefined>} branch
+	 * @param {Array<import('./types').BranchNode | undefined>} current_branch
+	 */
+	function merge_data(branch, current_branch) {
+		let data = {};
+		let data_changed = !page;
+		/** @type {Record<string, any>} */
+		const props = {};
+
+		let p = 0;
+
+		for (let i = 0; i < Math.max(branch.length, current_branch.length); i += 1) {
+			const node = branch[i];
+			const prev = current_branch[i];
+
+			if (node?.data !== prev?.data) data_changed = true;
+			if (!node) continue;
+
+			data = { ...data, ...node.data };
+
+			// Only set props if the node actually updated. This prevents needless rerenders.
+			if (data_changed) {
+				props[`data_${p}`] = data;
+			}
+
+			p += 1;
+		}
+		return { data_changed, data, props };
 	}
 
 	/**
@@ -682,11 +728,14 @@ export function create_client({ target, base }) {
 
 	/**
 	 * @param {import('./types').NavigationIntent} intent
-	 * @param {{hash?: string, scroll: { x: number, y: number } | null, keepfocus: boolean, details: { replaceState: boolean, state: any } | null}} [opts]
+	 * @param {import('./types').NavigationOptions} [opts]
 	 * @returns {Promise<import('./types').NavigationResult>}
 	 */
 	async function load_route({ id, invalidating, url, params, route }, opts) {
 		if (load_cache?.id === id) {
+			if (opts) {
+				load_cache.loading?.();
+			}
 			return load_cache.promise;
 		}
 
@@ -797,32 +846,64 @@ export function create_client({ target, base }) {
 		const branch = [];
 
 		let current_loading = {};
+		let last_loading_idx = 0;
 		for (let i = 0; i < loaders.length; i += 1) {
+			// Since +loading is wrapped by +layout, this can only start being true for i>=1
 			if (loading_nodes[i]) {
-				const current = { t: {}, i };
-				current_loading = current.t;
+				const current_l = { t: {}, i };
+				current_loading = current_l.t;
 
-				// TODO incorporate timeout, which can only be read from +page/layout.js (not server) files
 				loading_nodes[i]?.then((node) => {
-					console.log(!node, current_loading !== current.t, current.i < i);
-					if (!node || current_loading !== current.t || current.i < i) return;
-					// TODO we're only interested in the components, preliminary data and url (for which we need trailingSlash) here
-					const intermediate_result = get_navigation_result_from_branch({
-						url,
-						params,
-						branch: branch.concat({ node: { component: node.component } }),
-						status: 200,
-						error: null,
-						route
-					});
-					root.$set(intermediate_result.props);
-					// TODO this needs to not happen again after finished navigation / another +loading
-					if (opts && opts.details) {
-						const { details } = opts;
-						const change = details.replaceState ? 0 : 1;
-						details.state[INDEX_KEY] = current_history_index += change;
-						history[details.replaceState ? 'replaceState' : 'pushState'](details.state, '', url);
+					if (!node) return;
+
+					const { data, data_changed, props } = merge_data(
+						branch,
+						// ensure that already updated data is not updated again
+						branch.slice(0, last_loading_idx).concat(current.branch.slice(last_loading_idx))
+					);
+					/** @type {import('./types').NavigationFinished['props']} */
+					const root_props = {
+						// @ts-ignore Somehow it's getting SvelteComponent and SvelteComponentDev mixed up
+						components: compact(branch)
+							.map((branch_node) => branch_node.node.component)
+							.concat(node.component),
+						page:
+							data_changed || last_loading_idx === 0
+								? {
+										error: null,
+										params,
+										route: {
+											id: route?.id ?? null
+										},
+										status: 200,
+										// TODO trailingSlash could be set in later layout/page nodes or server nodes
+										url: new URL(normalize_url(branch, url)),
+										form: null,
+										// The whole page store is updated, but this way the object reference stays the same
+										data: data_changed ? data : page.data
+								  }
+								: undefined,
+						...props
+					};
+
+					// Put loading the loading component in a function that could be called if user navigates
+					// after preloading has started. Invoke directly if this is a proper navigation.
+					const loading_ui = () => {
+						if (current_loading !== current_l.t || current_l.i < branch.length) return;
+
+						root.$set(root_props);
+
+						if (last_loading_idx === 0) {
+							update_history(opts, url);
+							focus_and_scroll(opts, url);
+						}
+					};
+					if (opts) {
+						loading_ui();
+					} else if (load_cache) {
+						load_cache.loading = loading_ui;
 					}
+					last_loading_idx = i;
 				});
 			}
 

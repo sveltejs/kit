@@ -1254,3 +1254,45 @@ test.describe('Interactivity', () => {
 		expect(errored).toBe(false);
 	});
 });
+
+test.describe('+loading.svelte', () => {
+	test('shows loading ui', async ({ page, clicknav }) => {
+		await page.goto('/loading-ui');
+		clicknav('.client-load-1'); // do not await!
+		await page.waitForTimeout(100); // give time to rerender
+		expect(await page.textContent('h3')).toBe('Loading');
+		await page.waitForTimeout(1200);
+		expect(await page.textContent('h3')).toBe('Result');
+	});
+
+	test('shows nested loading ui', async ({ page, clicknav }) => {
+		await page.goto('/loading-ui');
+		clicknav('a[href="/loading-ui/client-load/nested"]'); // do not await!
+		await page.waitForTimeout(100); // give time to rerender
+		expect(await page.textContent('h3')).toBe('Loading');
+		await page.waitForTimeout(1200);
+		expect(await page.textContent('h3')).toBe('Nested Loading');
+		await page.waitForTimeout(1000);
+		expect(await page.textContent('h3')).toBe('Nested Result');
+	});
+
+	test('shows loading ui (data-sveltekit-preload-data)', async ({ page, clicknav }) => {
+		await page.goto('/loading-ui');
+		await page.hover('.client-load-2');
+		await page.waitForTimeout(300);
+		clicknav('.client-load-2'); // do not await!
+		await page.waitForTimeout(100); // give time to rerender
+		expect(await page.textContent('h3')).toBe('Loading');
+		await page.waitForTimeout(700);
+		expect(await page.textContent('h3')).toBe('Result');
+	});
+
+	test('skips loading ui (data-sveltekit-preload-data)', async ({ page, clicknav }) => {
+		await page.goto('/loading-ui');
+		await page.hover('.client-load-2');
+		await page.waitForTimeout(1500);
+		clicknav('.client-load-2'); // do not await!
+		await page.waitForTimeout(100); // give time to rerender
+		expect(await page.textContent('h3')).toBe('Result');
+	});
+});

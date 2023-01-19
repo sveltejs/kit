@@ -90,3 +90,10 @@ export interface NavigationState {
 	route: CSRRoute | null;
 	url: URL;
 }
+
+export interface NavigationOptions {
+	hash?: string;
+	scroll: { x: number; y: number } | null;
+	keepfocus: boolean;
+	details: { replaceState: boolean; state: any } | null;
+}
