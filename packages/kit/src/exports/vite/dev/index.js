@@ -40,8 +40,7 @@ export async function dev(vite, vite_config, svelte_config) {
 		return fetch(info, init);
 	};
 
-	const mode = vite_config.mode;
-	sync.init(svelte_config, mode);
+	sync.init(svelte_config, vite_config.mode);
 
 	/** @type {import('types').ManifestData} */
 	let manifest_data;
