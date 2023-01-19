@@ -9,7 +9,10 @@
 		"check": "svelte-kit sync && tsc && svelte-check",
 		"test": "node test/setup.js && pnpm test:dev && pnpm test:build",
 		"test:dev": "rimraf test/errors.json && cross-env DEV=true playwright test",
-		"test:build": "rimraf test/errors.json && playwright test"
+		"test:build": "rimraf test/errors.json && playwright test",
+		"test:cross-browser": "npm run test:cross-browser:dev && npm run test:cross-browser:build",
+		"test:cross-browser:dev": "node test/setup.js && rimraf test/errors.json && cross-env DEV=true playwright test test/cross-browser/",
+		"test:cross-browser:build": "node test/setup.js && rimraf test/errors.json && playwright test test/cross-browser/"
 	},
 	"devDependencies": {
 		"@sveltejs/kit": "workspace:^",
