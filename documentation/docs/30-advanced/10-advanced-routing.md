@@ -2,6 +2,38 @@
 title: Advanced routing
 ---
 
+## +loading.svelte
+
+Not all data is available fast enough to provide a pleasant navigation experience. `+loading.svelte` helps you showing meaningfull fallback UI while data for a page is still loading. Consider the following folder structure:
+
+```
+src/routes/
+├ slow/
+│ └ +loading.svelte
+│ └ +page.js
+│ └ +page.svelte
+└ +layout.svelte
+```
+
+If you navigate from `/` to `/slow`, `slow/+loading.svelte` will be shown immediately, while the data for `slow/+page.svelte` is still loaded. The URL will be updated eagerly and scroll handling and focus management run right away. Once the data is loaded, `+page.svelte` will be swapped in.
+
+A `+layout.svelte` next to a `+loading.svelte` wraps the loading UI.
+
+```
+src/routes/
+├ slow/
+│ └ +layout.js // if this is slow, +loading.svelte will appear later
+│ └ +layout.svelte // +loading.svelte appears inside this layout
+│ └ +loading.svelte
+│ └ +page.js
+│ └ +page.svelte
+└ +layout.svelte
+```
+
+You can nest `+loading.svelte`, but don't overdo it, as too many nested loading screens may cause flickering.
+
+> `+loading.svelte` only applies to client-side navigations. If you want to server-render the response faster, too, use `onMount` inside `+page.svelte` and load the data from there. 
+
 ## Rest parameters
 
 If the number of route segments is unknown, you can use rest syntax — for example you might implement GitHub's file viewer like so...
