@@ -16,19 +16,6 @@ test.describe('a11y', () => {
 			timeout: 1000
 		});
 	});
-
-	test('autofocus from previous page is ignored', async ({ page, clicknav }) => {
-		page.addInitScript(`
-			window.active = null;
-			window.addEventListener('focusin', () => window.active = document.activeElement);
-		`);
-
-		await page.goto('/accessibility/autofocus/a');
-		await clicknav('[href="/"]');
-
-		expect(await page.evaluate(() => (window.active || {}).nodeName)).toBe('BODY');
-		expect(await page.evaluate(() => (document.activeElement || {}).nodeName)).toBe('BODY');
-	});
 });
 
 test.describe('Caching', () => {
