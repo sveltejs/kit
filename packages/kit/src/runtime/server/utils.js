@@ -3,6 +3,7 @@ import { coalesce_to_error } from '../../utils/error.js';
 import { negotiate } from '../../utils/http.js';
 import { has_data_suffix } from '../../utils/url.js';
 import { HttpError } from '../control.js';
+import { fix_stack_trace } from '../shared.js';
 
 /** @param {any} body */
 export function is_pojo(body) {
@@ -74,7 +75,7 @@ export function get_option(nodes, option) {
  * @param {string} message
  */
 export function static_error_page(options, status, message) {
-	return new Response(options.error_template({ status, message }), {
+	return new Response(options.templates.error({ status, message }), {
 		headers: { 'content-type': 'text/html; charset=utf-8' },
 		status
 	});
@@ -110,13 +111,29 @@ export async function handle_fatal_error(event, options, error) {
  * @param {import('types').RequestEvent} event
  * @param {import('types').SSROptions} options
  * @param {any} error
- * @returns {import('types').MaybePromise<App.Error>}
+ * @returns {Promise<App.Error>}
  */
-export function handle_error_and_jsonify(event, options, error) {
+export async function handle_error_and_jsonify(event, options, error) {
 	if (error instanceof HttpError) {
 		return error.body;
 	} else {
-		return options.handle_error(error, event);
+		if (__SVELTEKIT_DEV__) {
+			error = new Proxy(error, {
+				get: (target, property) => {
+					if (property === 'stack') {
+						return fix_stack_trace(target.stack);
+					}
+
+					return Reflect.get(target, property, target);
+				}
+			});
+		}
+
+		return (
+			(await options.hooks.handleError({ error, event })) ?? {
+				message: event.route.id != null ? 'Internal Error' : 'Not Found'
+			}
+		);
 	}
 }
 

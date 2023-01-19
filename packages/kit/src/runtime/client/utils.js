@@ -1,7 +1,6 @@
 import { BROWSER, DEV } from 'esm-env';
 import { writable } from 'svelte/store';
-import { assets } from '../paths.js';
-import { version } from '../env.js';
+import { assets, version } from '../shared.js';
 import { PRELOAD_PRIORITIES } from './constants.js';
 
 /* global __SVELTEKIT_APP_VERSION_FILE__, __SVELTEKIT_APP_VERSION_POLL_INTERVAL__ */
@@ -105,7 +104,7 @@ function parent_element(element) {
  */
 export function find_anchor(element, target) {
 	while (element && element !== target) {
-		if (element.nodeName.toUpperCase() === 'A') {
+		if (element.nodeName.toUpperCase() === 'A' && element.hasAttribute('href')) {
 			return /** @type {HTMLAnchorElement | SVGAElement} */ (element);
 		}
 
@@ -125,16 +124,16 @@ export function get_link_info(a, base) {
 		url = new URL(a instanceof SVGAElement ? a.href.baseVal : a.href, document.baseURI);
 	} catch {}
 
-	const has = {
-		rel_external: (a.getAttribute('rel') || '').split(/\s+/).includes('external'),
-		download: a.hasAttribute('download'),
-		target: !!(a instanceof SVGAElement ? a.target.baseVal : a.target)
-	};
+	const target = a instanceof SVGAElement ? a.target.baseVal : a.target;
 
 	const external =
-		!url || is_external_url(url, base) || has.rel_external || has.target || has.download;
+		!url ||
+		!!target ||
+		is_external_url(url, base) ||
+		(a.getAttribute('rel') || '').split(/\s+/).includes('external') ||
+		a.hasAttribute('download');
 
-	return { url, has, external };
+	return { url, external, target };
 }
 
 /**
@@ -211,6 +210,7 @@ export function create_updated_store() {
 	/** @type {NodeJS.Timeout} */
 	let timeout;
 
+	/** @type {() => Promise<boolean>} */
 	async function check() {
 		if (DEV || !BROWSER) return false;
 

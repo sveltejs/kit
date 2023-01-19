@@ -34,7 +34,7 @@ export function load({ params }) {
 
 Thanks to the generated `$types` module, we get full type safety.
 
-A `load` function in a `+page.js` file runs both on the server and in the browser. If your `load` function should _always_ run on the server (because it uses private environment variables, for example, or accesses a database) then you can put it in a `+page.server.js` instead.
+A `load` function in a `+page.js` file runs both on the server and in the browser. If your `load` function should _always_ run on the server (because it uses private environment variables, for example, or accesses a database) then it would go in a `+page.server.js` instead.
 
 A more realistic version of your blog post's `load` function, that only runs on the server and pulls data from a database, might look like this:
 
@@ -90,9 +90,8 @@ export async function load() {
 </script>
 
 <main>
-	<slot>
-		<!-- +page.svelte is rendered here -->
-	</slot>
+	<!-- +page.svelte is rendered in this <slot> -->
+	<slot />
 </main>
 
 <aside>
@@ -165,7 +164,7 @@ Conceptually, they're the same thing, but there are some important differences t
 
 ### Input
 
-Both universal and server `load` functions have access to properties describing the request (`params`, `route` and `url`) and various functions (`depends`, `fetch` and `parent`). These are described in the following sections.
+Both universal and server `load` functions have access to properties describing the request (`params`, `route` and `url`) and various functions (`fetch`, `setHeaders`, `parent` and `depends`). These are described in the following sections.
 
 Server `load` functions are called with a `ServerLoadEvent`, which inherits `clientAddress`, `cookies`, `locals`, `platform` and `request` from `RequestEvent`.
 
@@ -193,7 +192,7 @@ Often the `load` function depends on the URL in one way or another. For this, th
 
 An instance of [`URL`](https://developer.mozilla.org/en-US/docs/Web/API/URL), containing properties like the `origin`, `hostname`, `pathname` and `searchParams` (which contains the parsed query string as a [`URLSearchParams`](https://developer.mozilla.org/en-US/docs/Web/API/URLSearchParams) object). `url.hash` cannot be accessed during `load`, since it is unavailable on the server.
 
-> In some environments this is derived from request headers during server-side rendering. If you're using [adapter-node](/docs/adapters#supported-environments-node-js), for example, you may need to configure the adapter in order for the URL to be correct.
+> In some environments this is derived from request headers during server-side rendering. If you're using [adapter-node](/docs/adapter-node), for example, you may need to configure the adapter in order for the URL to be correct.
 
 ### route
 
@@ -422,7 +421,7 @@ Top-level promises will be awaited, which makes it easy to return multiple promi
 
 ```js
 /// file: src/routes/+page.js
-/** @type {import('./$types').PageServerLoad} */
+/** @type {import('./$types').PageLoad} */
 export function load() {
 	return {
 		a: Promise.resolve('a'),
@@ -522,7 +521,7 @@ export async function load({ fetch, depends }) {
 ```svelte
 /// file: src/routes/random-number/+page.svelte
 <script>
-	import { invalidateAll } from '$app/navigation';
+	import { invalidate, invalidateAll } from '$app/navigation';
 
 	/** @type {import('./$types').PageData} */
 	export let data;

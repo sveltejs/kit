@@ -32,6 +32,7 @@ import { unwrap_promises } from '../../utils/promises.js';
 import * as devalue from 'devalue';
 import { INDEX_KEY, PRELOAD_PRIORITIES, SCROLL_KEY } from './constants.js';
 import { validate_common_exports } from '../../utils/exports.js';
+import { compact } from '../../utils/array.js';
 
 const routes = parse(nodes, server_loads, dictionary, matchers);
 
@@ -286,7 +287,7 @@ export function create_client({ target, base }) {
 				);
 				return false;
 			}
-		} else if (navigation_result.props?.page?.status >= 400) {
+		} else if (/** @type {number} */ (navigation_result.props?.page?.status) >= 400) {
 			const updated = await stores.updated.check();
 			if (updated) {
 				await native_navigation(url);
@@ -369,7 +370,7 @@ export function create_client({ target, base }) {
 		const style = document.querySelector('style[data-sveltekit]');
 		if (style) style.remove();
 
-		page = result.props.page;
+		page = /** @type {import('types').Page} */ (result.props.page);
 
 		root = new Root({
 			target,
@@ -414,8 +415,6 @@ export function create_client({ target, base }) {
 		route,
 		form
 	}) {
-		const filtered = /** @type {import('./types').BranchNode[] } */ (branch.filter(Boolean));
-
 		/** @type {import('types').TrailingSlash} */
 		let slash = 'never';
 		for (const node of branch) {
@@ -435,7 +434,8 @@ export function create_client({ target, base }) {
 				route
 			},
 			props: {
-				components: filtered.map((branch_node) => branch_node.node.component)
+				// @ts-ignore Somehow it's getting SvelteComponent and SvelteComponentDev mixed up
+				components: compact(branch).map((branch_node) => branch_node.node.component)
 			}
 		};
 
@@ -445,35 +445,40 @@ export function create_client({ target, base }) {
 
 		let data = {};
 		let data_changed = !page;
-		for (let i = 0; i < filtered.length; i += 1) {
-			const node = filtered[i];
+
+		let p = 0;
+
+		for (let i = 0; i < Math.max(branch.length, current.branch.length); i += 1) {
+			const node = branch[i];
+			const prev = current.branch[i];
+
+			if (node?.data !== prev?.data) data_changed = true;
+			if (!node) continue;
+
 			data = { ...data, ...node.data };
 
 			// Only set props if the node actually updated. This prevents needless rerenders.
-			if (data_changed || !current.branch.some((previous) => previous === node)) {
-				result.props[`data_${i}`] = data;
-				data_changed = data_changed || Object.keys(node.data ?? {}).length > 0;
+			if (data_changed) {
+				result.props[`data_${p}`] = data;
 			}
-		}
-		if (!data_changed) {
-			// If nothing was added, and the object entries are the same length, this means
-			// that nothing was removed either and therefore the data is the same as the previous one.
-			// This would be more readable with a separate boolean but that would cost us some bytes.
-			data_changed = Object.keys(page.data).length !== Object.keys(data).length;
+
+			p += 1;
 		}
 
 		const page_changed =
 			!current.url ||
 			url.href !== current.url.href ||
 			current.error !== error ||
-			form !== undefined ||
+			(form !== undefined && form !== page.form) ||
 			data_changed;
 
 		if (page_changed) {
 			result.props.page = {
 				error,
 				params,
-				route,
+				route: {
+					id: route?.id ?? null
+				},
 				status,
 				url: new URL(url),
 				form: form ?? null,
@@ -706,7 +711,7 @@ export function create_client({ target, base }) {
 		let server_data = null;
 
 		const url_changed = current.url ? id !== current.url.pathname + current.url.search : false;
-		const route_changed = current.route ? id !== current.route.id : false;
+		const route_changed = current.route ? route.id !== current.route.id : false;
 
 		const invalid_server_nodes = loaders.reduce((acc, loader, i) => {
 			const previous = current.branch[i];
@@ -821,6 +826,12 @@ export function create_client({ target, base }) {
 						status = err.status;
 						error = err.body;
 					} else {
+						// Referenced node could have been removed due to redeploy, check
+						const updated = await stores.updated.check();
+						if (updated) {
+							return await native_navigation(url);
+						}
+
 						error = await handle_error(err, { params, url, route: { id: route.id } });
 					}
 
@@ -906,7 +917,7 @@ export function create_client({ target, base }) {
 		/** @type {import('types').ServerDataNode | null} */
 		let server_data_node = null;
 
-		if (node.server) {
+		if (node.has_server_load) {
 			// TODO post-https://github.com/sveltejs/kit/discussions/6124 we can use
 			// existing root layout data
 			try {
@@ -1378,10 +1389,17 @@ export function create_client({ target, base }) {
 				const a = find_anchor(/** @type {Element} */ (event.composedPath()[0]), container);
 				if (!a) return;
 
-				const { url, external, has } = get_link_info(a, base);
-				const options = get_router_options(a);
+				const { url, external, target } = get_link_info(a, base);
 				if (!url) return;
 
+				// bail out before `beforeNavigate` if link opens in a different tab
+				if (target === '_parent' || target === '_top') {
+					if (window.parent !== window) return;
+				} else if (target && target !== '_self') {
+					return;
+				}
+
+				const options = get_router_options(a);
 				const is_svg_a_element = a instanceof SVGAElement;
 
 				// Ignore URL protocols that differ to the current one and are not http(s) (e.g. `mailto:`, `tel:`, `myapp:`, etc.)
@@ -1398,8 +1416,6 @@ export function create_client({ target, base }) {
 					!(url.protocol === 'https:' || url.protocol === 'http:')
 				)
 					return;
-
-				if (has.download) return;
 
 				// Ignore the following but fire beforeNavigate
 				if (external || options.reload) {
@@ -1461,21 +1477,28 @@ export function create_client({ target, base }) {
 				if (method !== 'get') return;
 
 				const url = new URL(
-					(event.submitter?.hasAttribute('formaction') && submitter?.formAction) || form.action
+					(submitter?.hasAttribute('formaction') && submitter?.formAction) || form.action
 				);
 
 				if (is_external_url(url, base)) return;
 
-				const { noscroll, reload } = get_router_options(
-					/** @type {HTMLFormElement} */ (event.target)
-				);
+				const event_form = /** @type {HTMLFormElement} */ (event.target);
+
+				const { noscroll, reload } = get_router_options(event_form);
 				if (reload) return;
 
 				event.preventDefault();
 				event.stopPropagation();
 
+				const data = new FormData(event_form);
+
+				const submitter_name = submitter?.getAttribute('name');
+				if (submitter_name) {
+					data.append(submitter_name, submitter?.getAttribute('value') ?? '');
+				}
+
 				// @ts-expect-error `URLSearchParams(fd)` is kosher, but typescript doesn't know that
-				url.search = new URLSearchParams(new FormData(event.target)).toString();
+				url.search = new URLSearchParams(data).toString();
 
 				navigate({
 					url,
@@ -1714,7 +1737,7 @@ if (DEV) {
 	console.warn = function warn(...args) {
 		if (
 			args.length === 1 &&
-			/<(Layout|Page)(_[\w$]+)?> was created (with unknown|without expected) prop '(data|form)'/.test(
+			/<(Layout|Page|Error)(_[\w$]+)?> was created (with unknown|without expected) prop '(data|form)'/.test(
 				args[0]
 			)
 		) {

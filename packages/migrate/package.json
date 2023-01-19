@@ -1,6 +1,6 @@
 {
 	"name": "svelte-migrate",
-	"version": "1.0.0",
+	"version": "1.0.1",
 	"repository": {
 		"type": "git",
 		"url": "https://github.com/sveltejs/kit",
@@ -24,7 +24,7 @@
 		"magic-string": "^0.27.0",
 		"prompts": "^2.4.2",
 		"tiny-glob": "^0.2.9",
-		"typescript": "^4.9.3"
+		"typescript": "^4.9.4"
 	},
 	"devDependencies": {
 		"@types/prompts": "^2.4.1",

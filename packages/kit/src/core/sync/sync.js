@@ -6,6 +6,7 @@ import { write_root } from './write_root.js';
 import { write_tsconfig } from './write_tsconfig.js';
 import { write_types, write_all_types } from './write_types/index.js';
 import { write_ambient } from './write_ambient.js';
+import { write_server } from './write_server.js';
 
 /**
  * Initialize SvelteKit's generated files.
@@ -27,6 +28,7 @@ export async function create(config) {
 	const output = path.join(config.kit.outDir, 'generated');
 
 	write_client_manifest(config, manifest_data, output);
+	write_server(config, output);
 	write_root(manifest_data, output);
 	write_matchers(manifest_data, output);
 	await write_all_types(config, manifest_data);
@@ -49,11 +51,30 @@ export async function update(config, manifest_data, file) {
 }
 
 /**
- * Run sync.init and sync.update in series, returning the result from sync.update.
+ * Run sync.init and sync.create in series, returning the result from sync.create.
  * @param {import('types').ValidatedConfig} config
  * @param {string} mode The Vite mode
  */
 export async function all(config, mode) {
 	init(config, mode);
 	return await create(config);
+}
+
+/**
+ * Run sync.init and then generate all type files.
+ * @param {import('types').ValidatedConfig} config
+ * @param {string} mode The Vite mode
+ */
+export async function all_types(config, mode) {
+	init(config, mode);
+	const manifest_data = create_manifest_data({ config });
+	await write_all_types(config, manifest_data);
+}
+
+/**
+ * Regenerate server-internal.js in response to src/{app.html,error.html,service-worker.js} changing
+ * @param {import('types').ValidatedConfig} config
+ */
+export function server(config) {
+	write_server(config, path.join(config.kit.outDir, 'generated'));
 }

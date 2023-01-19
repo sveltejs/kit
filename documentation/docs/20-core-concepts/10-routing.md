@@ -127,7 +127,11 @@ If an error occurs during `load`, SvelteKit will render a default error page. Yo
 <h1>{$page.status}: {$page.error.message}</h1>
 ```
 
-SvelteKit will 'walk up the tree' looking for the closest error boundary — if the file above didn't exist it would try `src/routes/blog/+error.svelte` and `src/routes/+error.svelte` before rendering the default error page. If _that_ fails (or if the error was thrown from the `load` function of the root `+layout`, which sits 'above' the root `+error`), SvelteKit will bail out and render a static fallback error page, which you can customise by creating a `src/error.html` file.
+SvelteKit will 'walk up the tree' looking for the closest error boundary — if the file above didn't exist it would try `src/routes/blog/+error.svelte` and then `src/routes/+error.svelte` before rendering the default error page. If _that_ fails (or if the error was thrown from the `load` function of the root `+layout`, which sits 'above' the root `+error`), SvelteKit will bail out and render a static fallback error page, which you can customise by creating a `src/error.html` file.
+
+If the error occurs inside a `load` function in `+layout(.server).js`, the closest error boundary in the tree is an `+error.svelte` file _above_ that layout (not next to it).
+
+If no route can be found (404), `src/routes/+error.svelte` (or the default error page, if that file does not exist) will be used.
 
 > `+error.svelte` is _not_ used when an error occurs inside [`handle`](/docs/hooks#server-hooks-handle) or a [+server.js](#server) request handler.
 
@@ -201,7 +205,7 @@ We can create a layout that only applies to pages below `/settings` (while inher
 <slot></slot>
 ```
 
-By default, each layout inherits the next layout above it. Sometimes that isn't what you want - in this case, [advanced layouts](/docs/advanced-routing#advanced-layouts) can help you.
+By default, each layout inherits the layout above it. Sometimes that isn't what you want - in this case, [advanced layouts](/docs/advanced-routing#advanced-layouts) can help you.
 
 ### +layout.js
 
