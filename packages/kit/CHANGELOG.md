@@ -1,5 +1,11 @@
 # @sveltejs/kit
 
+## 1.1.4
+
+### Patch Changes
+
+- fix: squelch unknown prop warning for `+error.svelte` components ([#8593](https://github.com/sveltejs/kit/pull/8593))
+
 ## 1.1.3
 
 ### Patch Changes
