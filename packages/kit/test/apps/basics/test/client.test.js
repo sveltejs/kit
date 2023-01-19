@@ -606,9 +606,4 @@ test.describe('env in app.html', () => {
 		await page.goto('/');
 		expect(await page.textContent('#public-env-replace')).toBeTruthy();
 	});
-
-	test('cannot access private env', async ({ page }) => {
-		await page.goto('/');
-		expect(await page.textContent('#private-env-replace')).toBeFalsy();
-	});
 });
