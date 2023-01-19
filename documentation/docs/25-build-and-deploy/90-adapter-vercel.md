@@ -75,7 +75,7 @@ Vercel functions contained in the `/api` directory at the project's root will _n
 
 Projects created before a certain date will default to using Node 14, while SvelteKit requires Node 16 or later. You can change that in your project settings:
 
-![Vercel project settings](https://github.com/sveltejs/kit/blob/master/packages/adapter-vercel/settings.png)
+![Vercel project settings](/vercel-settings.png)
 
 ## Troubleshooting
 
