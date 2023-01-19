@@ -47,6 +47,11 @@
 			"outputMode": "new-only",
 			"env": ["CI", "TURBO_CACHE_KEY"]
 		},
+		"test:cross-browser": {
+			"outputs": ["coverage/", "test-results/**"],
+			"outputMode": "new-only",
+			"env": ["CI", "TURBO_CACHE_KEY"]
+		},
 		"lint": {
 			"outputs": [],
 			"outputMode": "new-only"

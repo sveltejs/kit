@@ -41,16 +41,6 @@ jobs:
         node-version: [16]
         os: [ubuntu-latest, windows-latest]
         e2e-browser: ['chromium']
-        include:
-          - node-version: 16
-            os: ubuntu-latest
-            e2e-browser: 'firefox'
-          - node-version: 16
-            os: macOS-latest
-            e2e-browser: 'webkit'
-          - node-version: 18
-            os: ubuntu-latest
-            e2e-browser: 'chromium'
     env:
       TURBO_CACHE_KEY: ${{ matrix.os }}-${{ matrix.node-version }}
       KIT_E2E_BROWSER: ${{matrix.e2e-browser}}
