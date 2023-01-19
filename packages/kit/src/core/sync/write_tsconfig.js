@@ -34,12 +34,22 @@ function remove_trailing_slashstar(file) {
 }
 
 /**
- * Writes the tsconfig that the user's tsconfig inherits from.
+ * Generates the tsconfig that the user's tsconfig inherits from.
  * @param {import('types').ValidatedKitConfig} kit
  */
 export function write_tsconfig(kit, cwd = process.cwd()) {
 	const out = path.join(kit.outDir, 'tsconfig.json');
 
+	write_if_changed(out, JSON.stringify(get_tsconfig(kit, cwd, out), null, '\t'));
+}
+
+/**
+ * Generates the tsconfig that the user's tsconfig inherits from.
+ * @param {import('types').ValidatedKitConfig} kit
+ * @param {string} cwd
+ * @param {string} out
+ */
+export function get_tsconfig(kit, cwd, out) {
 	const user_config = load_user_tsconfig(cwd);
 	if (user_config) validate_user_config(kit, cwd, out, user_config);
 
@@ -98,40 +108,33 @@ export function write_tsconfig(kit, cwd = process.cwd()) {
 		exclude.push(config_relative(`${kit.files.serviceWorker}.d.ts`));
 	}
 
-	write_if_changed(
-		out,
-		JSON.stringify(
-			{
-				compilerOptions: {
-					// generated options
-					baseUrl: include_base_url ? config_relative('.') : undefined,
-					paths: get_tsconfig_paths(kit, include_base_url),
-					rootDirs: [config_relative('.'), './types'],
+	return {
+		compilerOptions: {
+			// generated options
+			baseUrl: include_base_url ? config_relative('.') : undefined,
+			paths: get_tsconfig_paths(kit, include_base_url),
+			rootDirs: [config_relative('.'), './types'],
 
-					// essential options
-					// svelte-preprocess cannot figure out whether you have a value or a type, so tell TypeScript
-					// to enforce using \`import type\` instead of \`import\` for Types.
-					importsNotUsedAsValues: 'error',
-					// Vite compiles modules one at a time
-					isolatedModules: true,
-					// TypeScript doesn't know about import usages in the template because it only sees the
-					// script of a Svelte file. Therefore preserve all value imports. Requires TS 4.5 or higher.
-					preserveValueImports: true,
+			// essential options
+			// svelte-preprocess cannot figure out whether you have a value or a type, so tell TypeScript
+			// to enforce using \`import type\` instead of \`import\` for Types.
+			importsNotUsedAsValues: 'error',
+			// Vite compiles modules one at a time
+			isolatedModules: true,
+			// TypeScript doesn't know about import usages in the template because it only sees the
+			// script of a Svelte file. Therefore preserve all value imports. Requires TS 4.5 or higher.
+			preserveValueImports: true,
 
-					// This is required for svelte-package to work as expected
-					// Can be overwritten
-					lib: ['esnext', 'DOM', 'DOM.Iterable'],
-					moduleResolution: 'node',
-					module: 'esnext',
-					target: 'esnext'
-				},
-				include,
-				exclude
-			},
-			null,
-			'\t'
-		)
-	);
+			// This is required for svelte-package to work as expected
+			// Can be overwritten
+			lib: ['esnext', 'DOM', 'DOM.Iterable'],
+			moduleResolution: 'node',
+			module: 'esnext',
+			target: 'esnext'
+		},
+		include,
+		exclude
+	};
 }
 
 /** @param {string} cwd */
