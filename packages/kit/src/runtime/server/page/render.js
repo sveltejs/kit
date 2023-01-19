@@ -9,6 +9,7 @@ import { uneval_action_response } from './actions.js';
 import { clarify_devalue_error } from '../utils.js';
 import { assets, base, version } from '../../shared.js';
 import { env } from '../../env-public.js';
+import { text } from '../../../exports/index.js';
 
 // TODO rename this function/module
 
@@ -408,7 +409,7 @@ export async function render_response({
 		}
 	}
 
-	return new Response(transformed, {
+	return text(transformed, {
 		status,
 		headers
 	});
