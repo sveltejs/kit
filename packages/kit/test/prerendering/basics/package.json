@@ -8,7 +8,7 @@
 		"preview": "vite preview",
 		"check": "svelte-kit sync && tsc && svelte-check",
 		"test": "svelte-kit sync && pnpm build && uvu test",
-		"test:cross-browser": "pnpm test"
+		"test:cross-platform": "pnpm test"
 	},
 	"devDependencies": {
 		"@sveltejs/kit": "workspace:^",
