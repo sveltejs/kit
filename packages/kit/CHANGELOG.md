@@ -1,5 +1,17 @@
 # @sveltejs/kit
 
+## 1.2.0
+
+### Minor Changes
+
+- feat: add `text(...)` helper for generating text responses ([#8371](https://github.com/sveltejs/kit/pull/8371))
+
+- feat: enable access to public env within app.html ([#8449](https://github.com/sveltejs/kit/pull/8449))
+
+### Patch Changes
+
+- fix: add `Content-Length` header to SvelteKit-generated responses ([#8371](https://github.com/sveltejs/kit/pull/8371))
+
 ## 1.1.4
 
 ### Patch Changes
