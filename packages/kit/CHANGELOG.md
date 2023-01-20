@@ -1,5 +1,11 @@
 # @sveltejs/kit
 
+## 1.2.1
+
+### Patch Changes
+
+- feat: throw error if cookie exceeds size limit ([#8591](https://github.com/sveltejs/kit/pull/8591))
+
 ## 1.2.0
 
 ### Minor Changes
