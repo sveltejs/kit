@@ -6,24 +6,19 @@ import { find_deps, is_http_method, resolve_symlinks } from './utils.js';
 import { s } from '../../../utils/misc.js';
 
 /**
- * @param {{
- *   config: import('types').ValidatedConfig;
- *   vite_config: import('vite').ResolvedConfig;
- *   vite_config_env: import('vite').ConfigEnv;
- *   manifest_data: import('types').ManifestData;
- *   output_dir: string;
- * }} options
+ * @param {string} out
+ * @param {import('vite').ResolvedConfig} vite_config
+ * @param {import('vite').ConfigEnv} vite_config_env
+ * @param {import('types').ManifestData} manifest_data
  */
-export async function build_server(options) {
-	const { config, vite_config, vite_config_env, manifest_data, output_dir } = options;
-
+export async function build_server(out, vite_config, vite_config_env, manifest_data) {
 	const { output } = /** @type {import('rollup').RollupOutput} */ (
 		await vite.build({
 			// CLI args
 			configFile: vite_config.configFile,
 			mode: vite_config_env.mode,
-			logLevel: config.logLevel,
-			clearScreen: config.clearScreen
+			logLevel: vite_config.logLevel,
+			clearScreen: vite_config.clearScreen
 		})
 	);
 
@@ -33,7 +28,7 @@ export async function build_server(options) {
 
 	/** @type {import('vite').Manifest} */
 	const vite_manifest = JSON.parse(
-		fs.readFileSync(`${output_dir}/server/${vite_config.build.manifest}`, 'utf-8')
+		fs.readFileSync(`${out}/server/${vite_config.build.manifest}`, 'utf-8')
 	);
 
 	return {
@@ -44,28 +39,31 @@ export async function build_server(options) {
 }
 
 /**
- * @param {{
- *   config: import('types').ValidatedConfig;
- *   manifest_data: import('types').ManifestData;
- *   output_dir: string;
- * }} options
+ * @param {string} out
+ * @param {import('types').ValidatedKitConfig} kit
+ * @param {import('types').ManifestData} manifest_data
  * @param {import('vite').Manifest} server_manifest
  * @param {import('vite').Manifest} client_manifest
  * @param {import('rollup').OutputAsset[]} assets
  */
-export function build_server_nodes(options, server_manifest, client_manifest, assets) {
-	const { config, manifest_data, output_dir } = options;
-
-	mkdirp(`${output_dir}/server/nodes`);
-	mkdirp(`${output_dir}/server/stylesheets`);
+export function build_server_nodes(
+	out,
+	kit,
+	manifest_data,
+	server_manifest,
+	client_manifest,
+	assets
+) {
+	mkdirp(`${out}/server/nodes`);
+	mkdirp(`${out}/server/stylesheets`);
 
 	const stylesheet_lookup = new Map();
 
 	assets.forEach((asset) => {
 		if (asset.fileName.endsWith('.css')) {
-			if (asset.source.length < config.kit.inlineStyleThreshold) {
+			if (asset.source.length < kit.inlineStyleThreshold) {
 				const index = stylesheet_lookup.size;
-				const file = `${output_dir}/server/stylesheets/${index}.js`;
+				const file = `${out}/server/stylesheets/${index}.js`;
 
 				fs.writeFileSync(file, `// ${asset.fileName}\nexport default ${s(asset.source)};`);
 				stylesheet_lookup.set(asset.fileName, index);
@@ -144,8 +142,10 @@ export function build_server_nodes(options, server_manifest, client_manifest, as
 			exports.push(`export const inline_styles = () => ({\n${styles.join(',\n')}\n});`);
 		}
 
-		const out = `${output_dir}/server/nodes/${i}.js`;
-		fs.writeFileSync(out, `${imports.join('\n')}\n\n${exports.join('\n')}\n`);
+		fs.writeFileSync(
+			`${out}/server/nodes/${i}.js`,
+			`${imports.join('\n')}\n\n${exports.join('\n')}\n`
+		);
 	});
 }
 

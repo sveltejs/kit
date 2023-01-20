@@ -588,12 +588,12 @@ function kit({ svelte_config }) {
 
 				secondary_build = true;
 
-				const server = await build_server(options);
-				build_server_nodes(options, server.vite_manifest, client_manifest, assets);
+				const server = await build_server(out, vite_config, vite_config_env, manifest_data);
+
+				build_server_nodes(out, kit, manifest_data, server.vite_manifest, client_manifest, assets);
 
 				const service_worker_entry_file = resolve_entry(kit.files.serviceWorker);
 
-				/** @type {import('types').BuildData} */
 				build_data = {
 					app_dir: kit.appDir,
 					app_path: `${kit.paths.base.slice(1)}${kit.paths.base ? '/' : ''}${kit.appDir}`,
@@ -675,7 +675,10 @@ function kit({ svelte_config }) {
 					log.info('Building service worker');
 
 					await build_service_worker(
-						options,
+						out,
+						kit,
+						vite_config,
+						manifest_data,
 						service_worker_entry_file,
 						prerendered,
 						client_manifest
