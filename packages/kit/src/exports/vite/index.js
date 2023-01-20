@@ -573,14 +573,6 @@ function kit({ svelte_config }) {
 
 				log.info('Building server');
 
-				const options = {
-					config: svelte_config,
-					vite_config,
-					vite_config_env,
-					manifest_data,
-					output_dir: out
-				};
-
 				/** @type {import('vite').Manifest} */
 				const client_manifest = JSON.parse(
 					fs.readFileSync(`${out}/client/${vite_config.build.manifest}`, 'utf-8')
