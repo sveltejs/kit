@@ -43,7 +43,7 @@ jobs:
             os: ubuntu-latest
             e2e-browser: 'chromium'
           - node-version: 16
-            os: windows-latest
+            os: windows-2019 # newer versions are slow: https://github.com/actions/runner-images/issues/5166
             e2e-browser: 'chromium'
           - node-version: 18
             os: ubuntu-latest
