@@ -73,7 +73,9 @@ function get_routes_json(builder, assets) {
 	 */
 	const exclude = [
 		`/${builder.config.kit.appDir}/*`,
-		...assets.filter((file) => !file.startsWith(`${builder.config.kit.appDir}/`))
+		...assets
+			.filter((file) => !file.startsWith(`${builder.config.kit.appDir}/`))
+			.map((file) => `/${file}`)
 	];
 
 	const MAX_EXCLUSIONS = 99; // 100 minus existing `include` rules
