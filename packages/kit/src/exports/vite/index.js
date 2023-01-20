@@ -566,12 +566,10 @@ function kit({ svelte_config }) {
 				const verbose = vite_config.logLevel === 'info';
 				log = logger({ verbose });
 
-				const { assets, chunks } = collect_output(bundle);
-				log.info(
-					`Client build completed. Wrote ${chunks.length} chunks and ${assets.length} assets`
+				const css = Object.values(bundle).filter(
+					/** @type {(value: any) => value is import('rollup').OutputAsset} */
+					(value) => value.type === 'asset' && value.fileName.endsWith('.css')
 				);
-
-				log.info('Building server');
 
 				/** @type {import('vite').Manifest} */
 				const client_manifest = JSON.parse(
@@ -582,7 +580,7 @@ function kit({ svelte_config }) {
 
 				const server = await build_server(out, vite_config, vite_config_env, manifest_data);
 
-				build_server_nodes(out, kit, manifest_data, server.vite_manifest, client_manifest, assets);
+				build_server_nodes(out, kit, manifest_data, server.vite_manifest, client_manifest, css);
 
 				const service_worker_entry_file = resolve_entry(kit.files.serviceWorker);
 
@@ -718,23 +716,6 @@ function kit({ svelte_config }) {
 	};
 
 	return [plugin_setup, plugin_virtual_modules, plugin_guard, plugin_compile];
-}
-
-/** @param {import('rollup').OutputBundle} bundle */
-function collect_output(bundle) {
-	/** @type {import('rollup').OutputChunk[]} */
-	const chunks = [];
-	/** @type {import('rollup').OutputAsset[]} */
-	const assets = [];
-	for (const value of Object.values(bundle)) {
-		// collect asset and output chunks
-		if (value.type === 'asset') {
-			assets.push(value);
-		} else {
-			chunks.push(value);
-		}
-	}
-	return { assets, chunks };
 }
 
 /**

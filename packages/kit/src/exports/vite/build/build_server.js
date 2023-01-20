@@ -44,30 +44,21 @@ export async function build_server(out, vite_config, vite_config_env, manifest_d
  * @param {import('types').ManifestData} manifest_data
  * @param {import('vite').Manifest} server_manifest
  * @param {import('vite').Manifest} client_manifest
- * @param {import('rollup').OutputAsset[]} assets
+ * @param {import('rollup').OutputAsset[]} css
  */
-export function build_server_nodes(
-	out,
-	kit,
-	manifest_data,
-	server_manifest,
-	client_manifest,
-	assets
-) {
+export function build_server_nodes(out, kit, manifest_data, server_manifest, client_manifest, css) {
 	mkdirp(`${out}/server/nodes`);
 	mkdirp(`${out}/server/stylesheets`);
 
 	const stylesheet_lookup = new Map();
 
-	assets.forEach((asset) => {
-		if (asset.fileName.endsWith('.css')) {
-			if (asset.source.length < kit.inlineStyleThreshold) {
-				const index = stylesheet_lookup.size;
-				const file = `${out}/server/stylesheets/${index}.js`;
+	css.forEach((asset) => {
+		if (asset.source.length < kit.inlineStyleThreshold) {
+			const index = stylesheet_lookup.size;
+			const file = `${out}/server/stylesheets/${index}.js`;
 
-				fs.writeFileSync(file, `// ${asset.fileName}\nexport default ${s(asset.source)};`);
-				stylesheet_lookup.set(asset.fileName, index);
-			}
+			fs.writeFileSync(file, `// ${asset.fileName}\nexport default ${s(asset.source)};`);
+			stylesheet_lookup.set(asset.fileName, index);
 		}
 	});
 
