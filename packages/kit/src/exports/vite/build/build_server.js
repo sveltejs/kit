@@ -50,9 +50,10 @@ export async function build_server(options) {
  *   output_dir: string;
  * }} options
  * @param {import('vite').Manifest} server_manifest
- * @param {{ vite_manifest: import('vite').Manifest, assets: import('rollup').OutputAsset[] }} client
+ * @param {import('vite').Manifest} client_manifest
+ * @param {import('rollup').OutputAsset[]} assets
  */
-export function build_server_nodes(options, server_manifest, client) {
+export function build_server_nodes(options, server_manifest, client_manifest, assets) {
 	const { config, manifest_data, output_dir } = options;
 
 	mkdirp(`${output_dir}/server/nodes`);
@@ -60,7 +61,7 @@ export function build_server_nodes(options, server_manifest, client) {
 
 	const stylesheet_lookup = new Map();
 
-	client.assets.forEach((asset) => {
+	assets.forEach((asset) => {
 		if (asset.fileName.endsWith('.css')) {
 			if (asset.source.length < config.kit.inlineStyleThreshold) {
 				const index = stylesheet_lookup.size;
@@ -91,7 +92,7 @@ export function build_server_nodes(options, server_manifest, client) {
 		const fonts = [];
 
 		if (node.component) {
-			const entry = find_deps(client.vite_manifest, node.component, true);
+			const entry = find_deps(client_manifest, node.component, true);
 
 			imported.push(...entry.imports);
 			stylesheets.push(...entry.stylesheets);
@@ -106,7 +107,7 @@ export function build_server_nodes(options, server_manifest, client) {
 		}
 
 		if (node.universal) {
-			const entry = find_deps(client.vite_manifest, node.universal, true);
+			const entry = find_deps(client_manifest, node.universal, true);
 
 			imported.push(...entry.imports);
 			stylesheets.push(...entry.stylesheets);

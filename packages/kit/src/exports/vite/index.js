@@ -564,9 +564,7 @@ function kit({ svelte_config }) {
 				if (secondary_build) return;
 
 				const verbose = vite_config.logLevel === 'info';
-				log = logger({
-					verbose
-				});
+				log = logger({ verbose });
 
 				const { assets, chunks } = collect_output(bundle);
 				log.info(
@@ -584,25 +582,14 @@ function kit({ svelte_config }) {
 				};
 
 				/** @type {import('vite').Manifest} */
-				const vite_manifest = JSON.parse(
+				const client_manifest = JSON.parse(
 					fs.readFileSync(`${out}/client/${vite_config.build.manifest}`, 'utf-8')
 				);
-
-				const client = {
-					assets,
-					chunks,
-					entry: find_deps(
-						vite_manifest,
-						posixify(path.relative('.', `${runtime_directory}/client/start.js`)),
-						false
-					),
-					vite_manifest
-				};
 
 				secondary_build = true;
 
 				const server = await build_server(options);
-				build_server_nodes(options, server.vite_manifest, client);
+				build_server_nodes(options, server.vite_manifest, client_manifest, assets);
 
 				const service_worker_entry_file = resolve_entry(kit.files.serviceWorker);
 
@@ -612,7 +599,11 @@ function kit({ svelte_config }) {
 					app_path: `${kit.paths.base.slice(1)}${kit.paths.base ? '/' : ''}${kit.appDir}`,
 					manifest_data,
 					service_worker: !!service_worker_entry_file ? 'service-worker.js' : null, // TODO make file configurable?
-					client,
+					client_entry: find_deps(
+						client_manifest,
+						posixify(path.relative('.', `${runtime_directory}/client/start.js`)),
+						false
+					),
 					server
 				};
 
@@ -687,7 +678,7 @@ function kit({ svelte_config }) {
 						options,
 						service_worker_entry_file,
 						prerendered,
-						client.vite_manifest
+						client_manifest
 					);
 				}
 

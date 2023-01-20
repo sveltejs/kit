@@ -1,4 +1,4 @@
-import { OutputAsset, OutputChunk } from 'rollup';
+import { OutputChunk } from 'rollup';
 import { SvelteComponent } from 'svelte/internal';
 import {
 	Config,
@@ -7,7 +7,6 @@ import {
 	HandleServerError,
 	KitConfig,
 	Load,
-	RequestEvent,
 	RequestHandler,
 	ResolveOptions,
 	Server,
@@ -47,16 +46,11 @@ export interface BuildData {
 	app_path: string;
 	manifest_data: ManifestData;
 	service_worker: string | null;
-	client: {
-		assets: OutputAsset[];
-		chunks: OutputChunk[];
-		entry: {
-			file: string;
-			imports: string[];
-			stylesheets: string[];
-			fonts: string[];
-		};
-		vite_manifest: import('vite').Manifest;
+	client_entry: {
+		file: string;
+		imports: string[];
+		stylesheets: string[];
+		fonts: string[];
 	};
 	server: {
 		chunks: OutputChunk[];
