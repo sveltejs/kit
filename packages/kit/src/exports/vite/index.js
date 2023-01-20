@@ -14,7 +14,7 @@ import { create_assets } from '../../core/sync/create_manifest_data/index.js';
 import { runtime_directory, logger } from '../../core/utils.js';
 import { load_config } from '../../core/config/index.js';
 import { generate_manifest } from '../../core/generate_manifest/index.js';
-import { build_server } from './build/build_server.js';
+import { build_server, build_server_nodes } from './build/build_server.js';
 import { build_service_worker } from './build/build_service_worker.js';
 import { assets_base, find_deps } from './build/utils.js';
 import { dev } from './dev/index.js';
@@ -589,7 +589,8 @@ function kit({ svelte_config }) {
 
 				secondary_build = true;
 
-				const server = await build_server(options, client);
+				const server = await build_server(options);
+				build_server_nodes(options, server.vite_manifest, client);
 
 				const service_worker_entry_file = resolve_entry(kit.files.serviceWorker);
 

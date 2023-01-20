@@ -13,9 +13,8 @@ import { s } from '../../../utils/misc.js';
  *   manifest_data: import('types').ManifestData;
  *   output_dir: string;
  * }} options
- * @param {{ vite_manifest: import('vite').Manifest, assets: import('rollup').OutputAsset[] }} client
  */
-export async function build_server(options, client) {
+export async function build_server(options) {
 	const { config, vite_config, vite_config_env, manifest_data, output_dir } = options;
 
 	const { output } = /** @type {import('rollup').RollupOutput} */ (
@@ -36,6 +35,25 @@ export async function build_server(options, client) {
 	const vite_manifest = JSON.parse(
 		fs.readFileSync(`${output_dir}/server/${vite_config.build.manifest}`, 'utf-8')
 	);
+
+	return {
+		chunks,
+		vite_manifest,
+		methods: get_methods(chunks, manifest_data)
+	};
+}
+
+/**
+ * @param {{
+ *   config: import('types').ValidatedConfig;
+ *   manifest_data: import('types').ManifestData;
+ *   output_dir: string;
+ * }} options
+ * @param {import('vite').Manifest} server_manifest
+ * @param {{ vite_manifest: import('vite').Manifest, assets: import('rollup').OutputAsset[] }} client
+ */
+export function build_server_nodes(options, server_manifest, client) {
+	const { config, manifest_data, output_dir } = options;
 
 	mkdirp(`${output_dir}/server/nodes`);
 	mkdirp(`${output_dir}/server/stylesheets`);
@@ -81,7 +99,7 @@ export async function build_server(options, client) {
 
 			exports.push(
 				`export const component = async () => (await import('../${
-					resolve_symlinks(vite_manifest, node.component).chunk.file
+					resolve_symlinks(server_manifest, node.component).chunk.file
 				}')).default;`,
 				`export const file = '${entry.file}';` // TODO what is this?
 			);
@@ -94,12 +112,12 @@ export async function build_server(options, client) {
 			stylesheets.push(...entry.stylesheets);
 			fonts.push(...entry.fonts);
 
-			imports.push(`import * as universal from '../${vite_manifest[node.universal].file}';`);
+			imports.push(`import * as universal from '../${server_manifest[node.universal].file}';`);
 			exports.push(`export { universal };`);
 		}
 
 		if (node.server) {
-			imports.push(`import * as server from '../${vite_manifest[node.server].file}';`);
+			imports.push(`import * as server from '../${server_manifest[node.server].file}';`);
 			exports.push(`export { server };`);
 		}
 
@@ -128,12 +146,6 @@ export async function build_server(options, client) {
 		const out = `${output_dir}/server/nodes/${i}.js`;
 		fs.writeFileSync(out, `${imports.join('\n')}\n\n${exports.join('\n')}\n`);
 	});
-
-	return {
-		chunks,
-		vite_manifest,
-		methods: get_methods(chunks, manifest_data)
-	};
 }
 
 /**
