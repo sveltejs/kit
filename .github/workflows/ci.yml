@@ -78,7 +78,7 @@ jobs:
       matrix:
         include:
           - node-version: 16
-            os: windows-2019
+            os: windows-2019 # slowness reported on newer versions https://github.com/actions/runner-images/issues/5166
             e2e-browser: 'firefox'
           - node-version: 16
             os: macOS-latest
