@@ -8,8 +8,6 @@
 
 - feat: enable access to public env within app.html ([#8449](https://github.com/sveltejs/kit/pull/8449))
 
-### Patch Changes
-
 - fix: add `Content-Length` header to SvelteKit-generated responses ([#8371](https://github.com/sveltejs/kit/pull/8371))
 
 ## 1.1.4
