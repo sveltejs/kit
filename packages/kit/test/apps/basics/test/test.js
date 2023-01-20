@@ -1016,7 +1016,7 @@ test.describe('Actions', () => {
 test.describe.serial('Cookies API', () => {
 	// there's a problem running these tests in the CI with webkit,
 	// since AFAICT the browser is using http://localhost and webkit won't
-	// set a `Secure` cookie on that. So we don't run these cross-browser
+	// set a `Secure` cookie on that. So we don't run these cross-platform
 
 	test('sanity check for cookies', async ({ page }) => {
 		await page.goto('/cookies');

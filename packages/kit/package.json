@@ -1,6 +1,6 @@
 {
 	"name": "@sveltejs/kit",
-	"version": "1.2.1",
+	"version": "1.2.2",
 	"repository": {
 		"type": "git",
 		"url": "https://github.com/sveltejs/kit",
@@ -63,7 +63,7 @@
 		"format": "pnpm lint --write",
 		"test": "pnpm test:unit && pnpm test:integration",
 		"test:integration": "pnpm -r --workspace-concurrency 1 --filter=\"./test/**\" test",
-		"test:cross-browser": "pnpm -r --workspace-concurrency 1 --filter=\"./test/**\" test:cross-browser",
+		"test:cross-platform": "pnpm test:unit && pnpm -r --workspace-concurrency 1 --filter=\"./test/**\" test:cross-platform",
 		"test:unit": "uvu src \"(spec\\.js|test[\\\\/]index\\.js)\"",
 		"postinstall": "node postinstall.js"
 	},
