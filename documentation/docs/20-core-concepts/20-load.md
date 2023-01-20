@@ -6,7 +6,7 @@ Before a [`+page.svelte`](/docs/routing#page-page-svelte) component (and its con
 
 ## Page data
 
-A `+page.svelte` file can have a sibling `+page.js` (or `+page.ts`) that exports a `load` function, the return value of which is available to the page via the `data` prop:
+A `+page.svelte` file can have a sibling `+page.js` (or `+page.ts`) file that exports a `load` function, the return value of which is available to the page via the `data` prop:
 
 ```js
 /// file: src/routes/blog/[slug]/+page.js
@@ -34,7 +34,7 @@ export function load({ params }) {
 
 Thanks to the generated `$types` module, we get full type safety.
 
-A `load` function in a `+page.js` file runs both on the server and in the browser. If your `load` function should _always_ run on the server (because it uses private environment variables, for example, or accesses a database) then it would go in a `+page.server.js` instead.
+The `load` function in a `+page.js` file runs either on the server or in the browser. If your `load` function should _always_ run on the server (because it uses private environment variables, for example, or accesses a database) then it should go in a `+page.server.js` file instead.
 
 A more realistic version of your blog post's `load` function, that only runs on the server and pulls data from a database, might look like this:
 
@@ -57,11 +57,11 @@ export async function load({ params }) {
 }
 ```
 
-Notice that the type changed from `PageLoad` to `PageServerLoad`, because server `load` functions can access additional arguments. To understand when to use `+page.js` and when to use `+page.server.js`, see [Universal vs server](/docs/load#universal-vs-server).
+Notice that the type changed from `PageLoad` to `PageServerLoad`, because server `load` functions can access additional arguments. To understand when to use a `+page.js` or a `+page.server.js` file, see [Universal vs server](/docs/load#universal-vs-server).
 
 ## Layout data
 
-Your `+layout.svelte` files can also load data, via `+layout.js` or `+layout.server.js`.
+Your `+layout.svelte` files can also load data, via a `+layout.js` or a `+layout.server.js` file.
 
 ```js
 /// file: src/routes/blog/[slug]/+layout.server.js
@@ -136,9 +136,9 @@ Data returned from layout `load` functions is available to child `+layout.svelte
 
 ## $page.data
 
-The `+page.svelte` component, and each `+layout.svelte` component above it, has access to its own data plus all the data from its parents.
+The `+page.svelte` component and each `+layout.svelte` component above it have access to its own data plus all the data from its parents.
 
-In some cases, we might need the opposite — a parent layout might need to access page data or data from a child layout. For example, the root layout might want to access a `title` property returned from a `load` function in `+page.js` or `+page.server.js`. This can be done with `$page.data`:
+In some cases, we might need the opposite — a parent layout might need to access page data or data from a child layout. For example, the root layout might want to access a `title` property returned from a `load` function in a `+page.js` or a `+page.server.js` file. This can be done with `$page.data`:
 
 ```svelte
 /// file: src/routes/+layout.svelte
@@ -157,8 +157,8 @@ Type information for `$page.data` is provided by `App.PageData`.
 
 As we've seen, there are two types of `load` function:
 
-* `+page.js` and `+layout.js` files export _universal_ `load` functions that run both on the server and in the browser
-* `+page.server.js` and `+layout.server.js` files export _server_ `load` functions that only run server-side
+- `+page.js` and `+layout.js` files export _universal_ `load` functions that run either on the server or in the browser
+- `+page.server.js` and `+layout.server.js` files export _server_ `load` functions that only run on the server
 
 Conceptually, they're the same thing, but there are some important differences to be aware of.
 
@@ -168,7 +168,7 @@ Both universal and server `load` functions have access to properties describing 
 
 Server `load` functions are called with a `ServerLoadEvent`, which inherits `clientAddress`, `cookies`, `locals`, `platform` and `request` from `RequestEvent`.
 
-Universal `load` functions are called with a `LoadEvent`, which has a `data` property. If you have `load` functions in both `+page.js` and `+page.server.js` (or `+layout.js` and `+layout.server.js`), the return value of the server `load` function is the `data` property of the universal `load` function's argument.
+Universal `load` functions are called with a `LoadEvent`, which has a `data` property. If you have `load` functions in both `+page.js` and `+page.server.js` (or `+layout.js` and `+layout.server.js`) files, the return value of the server `load` function is the `data` property of the universal `load` function's argument.
 
 ### Output
 
@@ -178,9 +178,9 @@ A server `load` function must return data that can be serialized with [devalue](
 
 ### When to use which
 
-Server `load` functions are convenient when you need to access data directly from a database or filesystem, or need to use private environment variables.
+Server `load` functions are useful when you need to access data directly from a database or a filesystem, or need to use private environment variables.
 
-Universal `load` functions are useful when you need to `fetch` data from an external API and don't need private credentials, since SvelteKit can get the data directly from the API rather than going via your server. They are also useful when you need to return something that can't be serialized, such as a Svelte component constructor.
+Universal `load` functions are useful when you need to `fetch` data from an external API and don't need private credentials, since SvelteKit can get the data directly from the API rather than going to your server. They are also useful when you need to return something that can't be serialized, such as a Svelte component constructor.
 
 In rare cases, you might need to use both together — for example, you might need to return an instance of a custom class that was initialised with data from your server.
 
@@ -331,11 +331,11 @@ export async function load({ parent }) {
 <p>{data.a} + {data.b} = {data.c}</p>
 ```
 
-> Notice that the `load` function in `+page.js` receives the merged data from both layout `load` functions, not just the immediate parent.
+> Notice that the `load` function in the `+page.js` file receives the merged data from both layout `load` functions, not just the immediate parent.
 
-Inside `+page.server.js` and `+layout.server.js`, `parent` returns data from parent `+layout.server.js` files.
+In the `load` functions of `+page.server.js` and `+layout.server.js` files, `parent` returns data from parent `+layout.server.js` files.
 
-In `+page.js` or `+layout.js` it will return data from parent `+layout.js` files. However, a missing `+layout.js` is treated as a `({ data }) => data` function, meaning that it will also return data from parent `+layout.server.js` files that are not 'shadowed' by a `+layout.js` file
+In the `load` functions of `+page.js` and `+layout.js` files, `parent` returns data from parent `+layout.js` files. However, a missing `load` function in a `+layout.js` file is treated as a `({ data }) => data` function, meaning that it will also return data from parent `+layout.server.js` files that are not 'shadowed' by a `+layout.js` file
 
 Take care not to introduce waterfalls when using `await parent()`. Here, for example, `getData(params)` does not depend on the result of calling `parent()`, so we should call it first to avoid a delayed render.
 
@@ -492,13 +492,13 @@ export async function load() {
 }
 ```
 
-...the one in `+page.server.js` will re-run if we navigate from `/blog/trying-the-raw-meat-diet` to `/blog/i-regret-my-choices` because `params.slug` has changed. The one in `+layout.server.js` will not, because the data is still valid. In other words, we won't call `db.getPostSummaries()` a second time.
+...the one in the `+page.server.js` file will re-run if we navigate from `/blog/trying-the-raw-meat-diet` to `/blog/i-regret-my-choices` because `params.slug` has changed. The one in the `+layout.server.js` file will not, because the data is still valid. In other words, we won't call `db.getPostSummaries()` again.
 
-A `load` function that calls `await parent()` will also re-run if a parent `load` function is re-run.
+A `load` function that calls `await parent()` will also re-run if a parent `load` function re-ran.
 
 ### Manual invalidation
 
-You can also re-run `load` functions that apply to the current page using [`invalidate(url)`](/docs/modules#$app-navigation-invalidate), which re-runs all `load` functions that depend on `url`, and [`invalidateAll()`](/docs/modules#$app-navigation-invalidateall), which re-runs every `load` function.
+You can also re-run `load` functions that apply to the current page using [`invalidate(url)`](/docs/modules#$app-navigation-invalidate), which re-runs all `load` functions that depend on the `url`, and [`invalidateAll()`](/docs/modules#$app-navigation-invalidateall), which re-runs every `load` function.
 
 A `load` function depends on `url` if it calls `fetch(url)` or `depends(url)`. Note that `url` can be a custom identifier that starts with `[a-z]:`:
 
@@ -547,8 +547,8 @@ To summarize, a `load` function will re-run in the following situations:
 - It declared a dependency on a specific URL via [`fetch`](#making-fetch-requests) or [`depends`](/docs/types#public-types-loadevent), and that URL was marked invalid with [`invalidate(url)`](/docs/modules#$app-navigation-invalidate)
 - All active `load` functions were forcibly re-run with [`invalidateAll()`](/docs/modules#$app-navigation-invalidateall)
 
-Note that re-running a `load` function will update the `data` prop inside the corresponding `+layout.svelte` or `+page.svelte`; it does _not_ cause the component to be recreated. As a result, internal state is preserved. If this isn't what you want, you can reset whatever you need to reset inside an [`afterNavigate`](/docs/modules#$app-navigation-afternavigate) callback, and/or wrap your component in a [`{#key ...}`](https://svelte.dev/docs#template-syntax-key) block.
+Note that re-running a `load` function will update the `data` prop inside the corresponding `+layout.svelte` or `+page.svelte` component; it does _not_ cause the component to be recreated. As a result, internal state is preserved. If this isn't what you want, you can reset whatever you need to reset inside an [`afterNavigate`](/docs/modules#$app-navigation-afternavigate) callback, and/or wrap your component in a [`{#key ...}`](https://svelte.dev/docs#template-syntax-key) block.
 
 ## Shared state
 
-In many server environments, a single instance of your app will serve multiple users. For that reason, per-request or per-user state must not be stored in shared variables outside your `load` functions, but should instead be stored in `event.locals`.
+In many server environments, a single instance of your app will serve multiple users. For that reason, per-request or per-user state must not be stored in shared variables outside your `load` functions, and should instead be stored in `event.locals`.
