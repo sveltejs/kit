@@ -354,6 +354,29 @@ function kit({ svelte_config }) {
 	};
 
 	/** @type {import('vite').Plugin} */
+	const plugin_guard = {
+		name: 'vite-plugin-sveltekit-guard',
+
+		writeBundle: {
+			sequential: true,
+			async handler(_options) {
+				if (secondary_build) return;
+
+				const guard = module_guard(this, {
+					cwd: vite.normalizePath(process.cwd()),
+					lib: vite.normalizePath(kit.files.lib)
+				});
+
+				manifest_data.nodes.forEach((_node, i) => {
+					const id = vite.normalizePath(path.resolve(kit.outDir, `generated/nodes/${i}.js`));
+
+					guard.check(id);
+				});
+			}
+		}
+	};
+
+	/** @type {import('vite').Plugin} */
 	const plugin_compile = {
 		name: 'vite-plugin-sveltekit-compile',
 
@@ -540,17 +563,6 @@ function kit({ svelte_config }) {
 			async handler(_options, bundle) {
 				if (secondary_build) return;
 
-				const guard = module_guard(this, {
-					cwd: vite.normalizePath(process.cwd()),
-					lib: vite.normalizePath(kit.files.lib)
-				});
-
-				manifest_data.nodes.forEach((_node, i) => {
-					const id = vite.normalizePath(path.resolve(kit.outDir, `generated/nodes/${i}.js`));
-
-					guard.check(id);
-				});
-
 				const verbose = vite_config.logLevel === 'info';
 				log = logger({
 					verbose
@@ -719,7 +731,7 @@ function kit({ svelte_config }) {
 		}
 	};
 
-	return [plugin_setup, plugin_virtual_modules, plugin_compile];
+	return [plugin_setup, plugin_virtual_modules, plugin_guard, plugin_compile];
 }
 
 /** @param {import('rollup').OutputBundle} bundle */
