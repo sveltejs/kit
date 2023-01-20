@@ -692,7 +692,7 @@ function kit({ svelte_config }) {
 				// vite calls closeBundle when dev-server restarts, ignore that,
 				// and only adapt when build successfully completes.
 				const is_restart = !completed_build;
-				if (secondary_build || is_restart) {
+				if (!secondary_build || is_restart) {
 					return;
 				}
 
