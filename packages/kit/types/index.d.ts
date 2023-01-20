@@ -841,6 +841,23 @@ export interface RequestEvent<
 	 */
 	cookies: Cookies;
 	/**
+	 * If you need to delete headers for the response, you can do so using the this method. For example:
+	 *
+	 *	```js
+	 *	/// file: src/hooks.server.js
+	 *  export function handle({ event, resolve }) {
+	 *    event.deleteHeaders(['x-custom-header-1', 'x-custom-header-2']);
+	 *
+	 *    event.deleteHeaders('x-powered-by');
+	 *
+	 *    return resolve(event);
+	 *  }
+	 *	```
+	 *
+	 * You cannot add a `set-cookie` header with `deleteHeaders` — use the [`cookies`](https://kit.svelte.dev/docs/types#public-types-cookies) API instead.
+	 */
+	deleteHeaders(names: string | Iterable<string>): void;
+	/**
 	 * `fetch` is equivalent to the [native `fetch` web API](https://developer.mozilla.org/en-US/docs/Web/API/fetch), with a few additional features:
 	 *
 	 * - it can be used to make credentialed requests on the server, as it inherits the `cookie` and `authorization` headers for the page request

@@ -426,6 +426,34 @@ test.describe('setHeaders', () => {
 	});
 });
 
+test.describe('deleteHeaders', () => {
+	test('allows deleting headers on requests', async ({ request }) => {
+		const response = await request.get('/headers/delete');
+
+		const headers = response.headers();
+
+		expect(headers['x-foo']).toBeUndefined();
+
+		expect(headers['x-bar']).toEqual('baz');
+
+		expect(headers['x-baz']).toEqual('foo');
+
+		expect(headers['x-custom-a']).toBeUndefined();
+
+		expect(headers['x-custom-b']).toBeUndefined();
+
+		const body = await response.json();
+
+		expect(body['foo']).toBeNull();
+
+		expect(body['bar']).toBeNull();
+
+		expect(body['custom-a']).toBeNull();
+
+		expect(body['custom-b']).toBeNull();
+	});
+});
+
 test.describe('cookies', () => {
 	test('cookie.serialize created correct cookie header string', async ({ page }) => {
 		const response = await page.goto('/cookies/serialize');

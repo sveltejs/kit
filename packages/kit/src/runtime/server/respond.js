@@ -108,12 +108,32 @@ export async function respond(request, options, manifest, state) {
 	let trailing_slash = undefined;
 
 	/** @type {Record<string, string>} */
-	const headers = {};
+	const headers_to_set = {};
+
+	/** @type {Set<string>} */
+	const headers_to_delete = new Set();
 
 	/** @type {import('types').RequestEvent} */
 	const event = {
 		// @ts-expect-error `cookies` and `fetch` need to be created after the `event` itself
 		cookies: null,
+		deleteHeaders: (names) => {
+			if (typeof names === 'string') {
+				names = [names];
+			}
+
+			for (let name of names) {
+				name = name.toLowerCase();
+
+				if (name === 'set-cookie') {
+					throw new Error(
+						`Use \`event.cookies.delete(name, options)\` instead of \`event.deleteHeaders\` to delete cookies`
+					);
+				} else {
+					headers_to_delete.add(name);
+				}
+			}
+		},
 		// @ts-expect-error
 		fetch: null,
 		getClientAddress:
@@ -137,10 +157,10 @@ export async function respond(request, options, manifest, state) {
 					throw new Error(
 						`Use \`event.cookies.set(name, value, options)\` instead of \`event.setHeaders\` to set cookies`
 					);
-				} else if (lower in headers) {
+				} else if (lower in headers_to_set) {
 					throw new Error(`"${key}" header is already set`);
 				} else {
-					headers[lower] = value;
+					headers_to_set[lower] = value;
 
 					if (state.prerendering && lower === 'cache-control') {
 						state.prerendering.cache = /** @type {string} */ (value);
@@ -232,10 +252,14 @@ export async function respond(request, options, manifest, state) {
 				resolve(event, opts).then((response) => {
 					// add headers/cookies here, rather than inside `resolve`, so that we
 					// can do it once for all responses instead of once per `return`
-					for (const key in headers) {
-						const value = headers[key];
+					for (const key in headers_to_set) {
+						const value = headers_to_set[key];
 						response.headers.set(key, /** @type {string} */ (value));
 					}
+
+					headers_to_delete.forEach((name) => {
+						response.headers.delete(name);
+					});
 
 					add_cookies_to_headers(response.headers, Object.values(new_cookies));
 

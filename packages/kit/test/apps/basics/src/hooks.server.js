@@ -102,6 +102,31 @@ export const handle = sequence(
 		}
 
 		return resolve(event);
+	},
+	({ event, resolve }) => {
+		if (event.url.pathname !== '/headers/delete') {
+			return resolve(event);
+		}
+
+		event.setHeaders({
+			'x-foo': 'bar',
+			'x-bar': 'baz',
+			'x-custom-a': 'a',
+			'x-custom-b': 'b'
+		});
+
+		return resolve(event);
+	},
+	({ event, resolve }) => {
+		if (event.url.pathname !== '/headers/delete') {
+			return resolve(event);
+		}
+
+		event.deleteHeaders('x-foo');
+
+		event.deleteHeaders(['x-custom-a', 'x-custom-b']);
+
+		return resolve(event);
 	}
 );
 
