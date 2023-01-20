@@ -42,9 +42,6 @@ jobs:
           - node-version: 16
             os: ubuntu-latest
             e2e-browser: 'chromium'
-          - node-version: 16
-            os: windows-latest
-            e2e-browser: 'chromium'
           - node-version: 18
             os: ubuntu-latest
             e2e-browser: 'chromium'
@@ -81,7 +78,7 @@ jobs:
       matrix:
         include:
           - node-version: 16
-            os: ubuntu-latest
+            os: windows-2019
             e2e-browser: 'firefox'
           - node-version: 16
             os: macOS-latest
