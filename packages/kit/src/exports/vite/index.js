@@ -139,6 +139,11 @@ export async function sveltekit() {
 }
 
 /**
+ * If `true`, the server build has been completed and we're creating the client build
+ */
+let secondary_build = false;
+
+/**
  * Returns the SvelteKit Vite plugin. Vite executes Rollup hooks as well as some of its own.
  * Background reading is available at:
  * - https://vitejs.dev/guide/api-plugin.html
@@ -246,6 +251,9 @@ function kit({ svelte_config }) {
 			};
 
 			if (is_build) {
+				if (!new_config.build) new_config.build = {};
+				new_config.build.ssr = secondary_build;
+
 				new_config.define = {
 					__SVELTEKIT_ADAPTER_NAME__: JSON.stringify(kit.adapter?.name),
 					__SVELTEKIT_APP_VERSION_FILE__: JSON.stringify(`${kit.appDir}/version.json`),
@@ -499,7 +507,7 @@ function kit({ svelte_config }) {
 		 * Clears the output directories.
 		 */
 		buildStart() {
-			if (vite_config.build.ssr) return;
+			if (secondary_build) return;
 
 			// Reset for new build. Goes here because `build --watch` calls buildStart but not config
 			completed_build = false;
@@ -513,7 +521,7 @@ function kit({ svelte_config }) {
 		},
 
 		generateBundle() {
-			if (vite_config.build.ssr) return;
+			if (secondary_build) return;
 
 			this.emitFile({
 				type: 'asset',
@@ -530,7 +538,7 @@ function kit({ svelte_config }) {
 		writeBundle: {
 			sequential: true,
 			async handler(_options, bundle) {
-				if (vite_config.build.ssr) return;
+				if (secondary_build) return;
 
 				const guard = module_guard(this, {
 					cwd: vite.normalizePath(process.cwd()),
@@ -578,6 +586,8 @@ function kit({ svelte_config }) {
 					),
 					vite_manifest
 				};
+
+				secondary_build = true;
 
 				const server = await build_server(options, client);
 
@@ -685,7 +695,7 @@ function kit({ svelte_config }) {
 				// vite calls closeBundle when dev-server restarts, ignore that,
 				// and only adapt when build successfully completes.
 				const is_restart = !completed_build;
-				if (vite_config.build.ssr || is_restart) {
+				if (secondary_build || is_restart) {
 					return;
 				}
 

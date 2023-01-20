@@ -24,10 +24,7 @@ export async function build_server(options, client) {
 			configFile: vite_config.configFile,
 			mode: vite_config_env.mode,
 			logLevel: config.logLevel,
-			clearScreen: config.clearScreen,
-			build: {
-				ssr: true
-			}
+			clearScreen: config.clearScreen
 		})
 	);
 
