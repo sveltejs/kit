@@ -581,6 +581,15 @@ test.describe('Redirects', () => {
 		await page.goBack();
 		expect(page.url()).toBe(`${baseURL}/redirect`);
 	});
+
+	test('redirect thrown in handle sets headers', async ({ page }) => {
+		await page.goto('/cookies/set');
+		let span = page.locator('#cookie-value');
+		expect(await span.innerText()).toContain('teapot');
+		await page.goto('/redirect/in-handle?throw&headers');
+		span = page.locator('#cookie-value');
+		expect(await span.innerText()).toContain('undefined');
+	});
 });
 
 test.describe('Routing', () => {

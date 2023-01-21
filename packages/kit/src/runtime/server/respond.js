@@ -4,7 +4,7 @@ import { render_page } from './page/index.js';
 import { render_response } from './page/render.js';
 import { respond_with_error } from './page/respond_with_error.js';
 import { is_form_content_type } from '../../utils/http.js';
-import { GENERIC_ERROR, get_option, handle_fatal_error, redirect_response } from './utils.js';
+import { GENERIC_ERROR, get_option, handle_fatal_error } from './utils.js';
 import {
 	decode_pathname,
 	decode_params,
@@ -109,6 +109,9 @@ export async function respond(request, options, manifest, state) {
 
 	/** @type {Record<string, string>} */
 	const headers = {};
+
+	/** @type {Record<string, import('./page/types').Cookie>} */
+	let new_cookies = {};
 
 	/** @type {import('types').RequestEvent} */
 	const event = {
@@ -221,6 +224,7 @@ export async function respond(request, options, manifest, state) {
 			trailing_slash ?? 'never'
 		);
 
+		this.new_cookies = new_cookies;
 		event.cookies = cookies;
 		event.fetch = create_fetch({ event, options, manifest, state, get_cookie_header });
 
@@ -296,7 +300,15 @@ export async function respond(request, options, manifest, state) {
 			if (is_data_request) {
 				return redirect_json_response(e);
 			} else {
-				return redirect_response(e.status, e.location);
+				const response = new Response(undefined, {
+					status: e.status,
+					headers
+				});
+				response.headers.set('location', e.location);
+
+				add_cookies_to_headers(response.headers, Object.values(new_cookies));
+
+				return response;
 			}
 		}
 		return await handle_fatal_error(event, options, e);
