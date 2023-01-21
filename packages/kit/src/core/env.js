@@ -44,7 +44,7 @@ export function create_dynamic_module(type, dev_values) {
 		);
 		return `export const env = {\n${keys.join(',\n')}\n}`;
 	}
-	return `export { env } from '${runtime_base}/env-${type}.js';`;
+	return `export { ${type}_env as env } from '${runtime_base}/shared.js';`;
 }
 
 /**

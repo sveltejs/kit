@@ -24,7 +24,7 @@ const server_template = ({
 	error_page
 }) => `
 import root from './root.svelte';
-import { set_building, set_paths, set_version } from '${runtime_directory}/shared.js';
+import { set_building, set_paths, set_private_env, set_public_env, set_version } from '${runtime_directory}/shared.js';
 
 set_paths(${s(config.kit.paths)});
 set_version(${s(config.kit.version.name)});
@@ -57,7 +57,7 @@ export function get_hooks() {
 	return ${hooks ? `import(${s(hooks)})` : '{}'};
 }
 
-export { set_building, set_paths };
+export { set_building, set_paths, set_private_env, set_public_env };
 `;
 
 // TODO need to re-run this whenever src/app.html or src/error.html are
