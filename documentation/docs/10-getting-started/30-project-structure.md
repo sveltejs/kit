@@ -2,30 +2,18 @@
 title: Project structure
 ---
 
-A typical SvelteKit project looks like this:
-
-> Directories surrounded in brackets `[]` indicate they are optional and can be
-> added after starting a project.
+A SvelteKit project requires the following files and directories at minimum in order to build a site:
 
 ```bash
 my-project/
 ├ src/
 │ ├ lib/
-│ │ ├ [server]/
-│ │ │ └ [your server-only lib files]
 │ │ └ [your lib files]
-│ ├ [params]/
-│ │ └ [your param matchers]
 │ ├ routes/
 │ │ └ [your routes]
 │ ├ app.html
-│ ├ [error.html]
-│ └ [hooks.client.js]
-│ └ [hooks.server.js]
 ├ static/
 │ └ [your static assets]
-├ [tests]/
-│ └ [your tests]
 ├ package.json
 ├ svelte.config.js
 ├ tsconfig.json [or jsconfig.json]
@@ -38,11 +26,11 @@ You'll also find common files like `.gitignore` and `.npmrc` (and `.prettierrc` 
 
 ### src
 
-The `src` directory contains the meat of your project.
+The `src` directory contains your project files. All necessary and optional files and directories include:
 
 - `lib` contains your library code (utilities and components), which can be imported via the [`$lib`](/docs/modules#$lib) alias, or packaged up for distribution using [`svelte-package`](/docs/packaging)
-  - `server` contains your server-only library code. It can be imported by using the [`$lib/server`](/docs/server-only-modules) alias. SvelteKit will prevent you from importing these in client code.
-- `params` contains any [param matchers](/docs/advanced-routing#matching) your app needs
+  - `server` (optional) contains your server-only library code. Files in this directory can be imported by using the [`$lib/server`](/docs/server-only-modules) alias. SvelteKit will prevent you from importing these in client code.
+- `params` (optional) contains any [param matchers](/docs/advanced-routing#matching) your app needs
 - `routes` contains the [routes](/docs/routing) of your application. You can also colocate other components that are only used within a single route here
 - `app.html` is your page template — an HTML document containing the following placeholders:
   - `%sveltekit.head%` — `<link>` and `<script>` elements needed by the app, plus any `<svelte:head>` content
@@ -53,7 +41,7 @@ The `src` directory contains the meat of your project.
 - `error.html` (optional) is the page that is rendered when everything else fails. It can contain the following placeholders:
   - `%sveltekit.status%` — the HTTP status
   - `%sveltekit.error.message%` — the error message
-- `hooks.server.js` (or `hooks.client.js`) contains your application's [hooks](/docs/hooks)
+- `hooks.server.js` or `hooks.client.js` (optional) contains your application's [hooks](/docs/hooks)
 - `service-worker.js` (optional) contains your [service worker](/docs/service-workers)
 
 You can use `.ts` files instead of `.js` files, if using TypeScript.
