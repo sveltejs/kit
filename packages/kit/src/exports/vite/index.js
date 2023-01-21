@@ -172,22 +172,11 @@ function kit({ svelte_config }) {
 	/** @type {boolean} */
 	let is_build;
 
-	/** @type {import('types').Logger} */
-	let log;
-
-	/** @type {import('types').Prerendered} */
-	let prerendered;
-
-	/** @type {import('types').PrerenderMap} */
-	let prerender_map;
-
-	/** @type {import('types').BuildData} */
-	let build_data;
-
 	/** @type {{ public: Record<string, string>; private: Record<string, string> }} */
 	let env;
 
-	let completed_build = false;
+	/** @type {(() => Promise<void>) | null} */
+	let finalise = null;
 
 	const service_worker_entry_file = resolve_entry(kit.files.serviceWorker);
 
@@ -362,7 +351,7 @@ function kit({ svelte_config }) {
 		writeBundle: {
 			sequential: true,
 			async handler(_options) {
-				if (secondary_build) return;
+				if (!secondary_build) return;
 
 				const guard = module_guard(this, {
 					cwd: vite.normalizePath(process.cwd()),
@@ -534,8 +523,8 @@ function kit({ svelte_config }) {
 		buildStart() {
 			if (secondary_build) return;
 
-			// Reset for new build. Goes here because `build --watch` calls buildStart but not config
-			completed_build = false;
+			// reset (here, not in `config`, because `build --watch` skips `config`)
+			finalise = null;
 
 			if (is_build) {
 				if (!vite_config.build.watch) {
@@ -546,7 +535,7 @@ function kit({ svelte_config }) {
 		},
 
 		generateBundle() {
-			if (secondary_build) return;
+			if (!secondary_build) return;
 
 			this.emitFile({
 				type: 'asset',
@@ -567,7 +556,7 @@ function kit({ svelte_config }) {
 				secondary_build = true;
 
 				const verbose = vite_config.logLevel === 'info';
-				log = logger({ verbose });
+				const log = logger({ verbose });
 
 				/** @type {import('vite').Manifest} */
 				const server_manifest = JSON.parse(
@@ -605,7 +594,8 @@ function kit({ svelte_config }) {
 				build_server_nodes(out, kit, manifest_data, server_manifest, client_manifest, css);
 
 				// ...and prerender
-				build_data = {
+				/** @type {import('types').BuildData} */
+				const build_data = {
 					app_dir: kit.appDir,
 					app_path: `${kit.paths.base.slice(1)}${kit.paths.base ? '/' : ''}${kit.appDir}`,
 					manifest_data,
@@ -652,8 +642,11 @@ function kit({ svelte_config }) {
 					return value;
 				});
 
-				prerendered = results.prerendered;
-				prerender_map = new Map(results.prerender_map);
+				/** @type {import('types').Prerendered} */
+				const prerendered = results.prerendered;
+
+				/** @type {import('types').PrerenderMap} */
+				const prerender_map = new Map(results.prerender_map);
 
 				// generate a new manifest that doesn't include prerendered pages
 				fs.writeFileSync(
@@ -683,7 +676,31 @@ function kit({ svelte_config }) {
 					);
 				}
 
-				completed_build = true;
+				// we need to defer this to closeBundle, so that adapters copy files
+				// created by other Vite plugins
+				finalise = async () => {
+					console.log(
+						`\nRun ${colors
+							.bold()
+							.cyan('npm run preview')} to preview your production build locally.`
+					);
+
+					if (kit.adapter) {
+						const { adapt } = await import('../../core/adapt/index.js');
+						await adapt(svelte_config, build_data, prerendered, prerender_map, { log });
+					} else {
+						console.log(colors.bold().yellow('\nNo adapter specified'));
+
+						const link = colors.bold().cyan('https://kit.svelte.dev/docs/adapters');
+						console.log(
+							`See ${link} to learn how to configure your app to run on the platform of your choosing`
+						);
+					}
+
+					// avoid making the manifest available to users
+					fs.unlinkSync(`${out}/client/${vite_config.build.manifest}`);
+					fs.unlinkSync(`${out}/server/${vite_config.build.manifest}`);
+				};
 			}
 		},
 
@@ -693,27 +710,7 @@ function kit({ svelte_config }) {
 		closeBundle: {
 			sequential: true,
 			async handler() {
-				if (!completed_build) return;
-
-				console.log(
-					`\nRun ${colors.bold().cyan('npm run preview')} to preview your production build locally.`
-				);
-
-				if (kit.adapter) {
-					const { adapt } = await import('../../core/adapt/index.js');
-					await adapt(svelte_config, build_data, prerendered, prerender_map, { log });
-				} else {
-					console.log(colors.bold().yellow('\nNo adapter specified'));
-
-					const link = colors.bold().cyan('https://kit.svelte.dev/docs/adapters');
-					console.log(
-						`See ${link} to learn how to configure your app to run on the platform of your choosing`
-					);
-				}
-
-				// avoid making the manifest available to users
-				fs.unlinkSync(`${out}/client/${vite_config.build.manifest}`);
-				fs.unlinkSync(`${out}/server/${vite_config.build.manifest}`);
+				finalise?.();
 			}
 		}
 	};
