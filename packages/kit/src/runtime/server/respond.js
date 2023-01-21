@@ -111,7 +111,7 @@ export async function respond(request, options, manifest, state) {
 	const headers = {};
 
 	/** @type {Record<string, import('./page/types').Cookie>} */
-	let new_cookies = {};
+	let cookies_to_add = {};
 
 	/** @type {import('types').RequestEvent} */
 	const event = {
@@ -224,7 +224,7 @@ export async function respond(request, options, manifest, state) {
 			trailing_slash ?? 'never'
 		);
 
-		this.new_cookies = new_cookies;
+		cookies_to_add = new_cookies;
 		event.cookies = cookies;
 		event.fetch = create_fetch({ event, options, manifest, state, get_cookie_header });
 
@@ -241,7 +241,7 @@ export async function respond(request, options, manifest, state) {
 						response.headers.set(key, /** @type {string} */ (value));
 					}
 
-					add_cookies_to_headers(response.headers, Object.values(new_cookies));
+					add_cookies_to_headers(response.headers, Object.values(cookies_to_add));
 
 					if (state.prerendering && event.route.id !== null) {
 						response.headers.set('x-sveltekit-routeid', encodeURI(event.route.id));
@@ -306,7 +306,7 @@ export async function respond(request, options, manifest, state) {
 				});
 				response.headers.set('location', e.location);
 
-				add_cookies_to_headers(response.headers, Object.values(new_cookies));
+				add_cookies_to_headers(response.headers, Object.values(cookies_to_add));
 
 				return response;
 			}

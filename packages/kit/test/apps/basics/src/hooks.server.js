@@ -98,7 +98,7 @@ export const handle = sequence(
 			if (event.url.search === '?throw') {
 				throw redirect(307, event.url.origin + '/redirect/c');
 			} else if (event.url.search === '?throw&headers') {
-				event.cookies.delete(COOKIE_NAME);
+				event.cookies.delete(COOKIE_NAME, { path: '/cookies' });
 				throw redirect(307, event.url.origin + '/cookies');
 			} else {
 				return new Response(undefined, { status: 307, headers: { location: '/redirect/c' } });
