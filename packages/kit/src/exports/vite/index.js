@@ -1,4 +1,4 @@
-import { fork } from 'node:child_process';
+import * as child_process from 'node:child_process';
 import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -7,7 +7,7 @@ import { svelte } from '@sveltejs/vite-plugin-svelte';
 import colors from 'kleur';
 import * as vite from 'vite';
 
-import { mkdirp, posixify, resolve_entry, rimraf, walk } from '../../utils/filesystem.js';
+import { mkdirp, posixify, resolve_entry, rimraf } from '../../utils/filesystem.js';
 import { create_static_module, create_dynamic_module } from '../../core/env.js';
 import * as sync from '../../core/sync/sync.js';
 import { create_assets } from '../../core/sync/create_manifest_data/index.js';
@@ -634,44 +634,26 @@ function kit({ svelte_config }) {
 				);
 
 				log.info('Prerendering');
-				await new Promise((fulfil, reject) => {
-					const results_path = `${kit.outDir}/generated/prerendered.json`;
 
-					// do prerendering in a subprocess so any dangling stuff gets killed upon completion
-					const script = fileURLToPath(new URL('../../core/postbuild/index.js', import.meta.url));
+				const results_path = `${kit.outDir}/generated/prerendered.json`;
 
-					const child = fork(
-						script,
-						[
-							`${out}/client`,
-							manifest_path,
-							results_path,
-							'' + verbose,
-							JSON.stringify({ ...env.private, ...env.public })
-						],
-						{
-							stdio: 'inherit'
-						}
-					);
+				await fork('../../core/postbuild/index.js', [
+					`${out}/client`,
+					manifest_path,
+					results_path,
+					'' + verbose,
+					JSON.stringify({ ...env.private, ...env.public })
+				]);
 
-					child.on('exit', (code) => {
-						if (code) {
-							reject(new Error(`Prerendering failed with code ${code}`));
-						} else {
-							const results = JSON.parse(fs.readFileSync(results_path, 'utf8'), (key, value) => {
-								if (key === 'pages' || key === 'assets' || key === 'redirects') {
-									return new Map(value);
-								}
-								return value;
-							});
-
-							prerendered = results.prerendered;
-							prerender_map = new Map(results.prerender_map);
-
-							fulfil(undefined);
-						}
-					});
+				const results = JSON.parse(fs.readFileSync(results_path, 'utf8'), (key, value) => {
+					if (key === 'pages' || key === 'assets' || key === 'redirects') {
+						return new Map(value);
+					}
+					return value;
 				});
+
+				prerendered = results.prerendered;
+				prerender_map = new Map(results.prerender_map);
 
 				// generate a new manifest that doesn't include prerendered pages
 				fs.writeFileSync(
@@ -737,6 +719,29 @@ function kit({ svelte_config }) {
 	};
 
 	return [plugin_setup, plugin_virtual_modules, plugin_guard, plugin_compile];
+}
+
+/**
+ * @param {string} module
+ * @param {string[]} args
+ */
+async function fork(module, args) {
+	return new Promise((fulfil, reject) => {
+		// do prerendering in a subprocess so any dangling stuff gets killed upon completion
+		const script = fileURLToPath(new URL(module, import.meta.url));
+
+		const child = child_process.fork(script, args, {
+			stdio: 'inherit'
+		});
+
+		child.on('exit', (code) => {
+			if (code) {
+				reject(new Error(`Failed with code ${code}`));
+			} else {
+				fulfil(undefined);
+			}
+		});
+	});
 }
 
 /**
