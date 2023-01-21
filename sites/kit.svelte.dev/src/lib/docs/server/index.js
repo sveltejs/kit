@@ -504,7 +504,27 @@ function convert_to_ts(js_code, indent = '', offset = '') {
 							ts.isVariableStatement(node) &&
 							node.declarationList.declarations.length === 1
 						) {
-							code.appendLeft(node.declarationList.declarations[0].name.getEnd(), `: ${name}`);
+							const variable_statement = node.declarationList.declarations[0];
+							
+							if (variable_statement.name.getText() === 'actions') {
+								const is_export = node.modifiers?.some(
+									(modifier) => modifier.kind === ts.SyntaxKind.ExportKeyword
+								)
+									? 'export '
+									: '';
+								const is_async = node.modifiers?.some(
+									(modifier) => modifier.kind === ts.SyntaxKind.AsyncKeyword
+								);
+								code.overwrite(
+									node.getStart(),
+									variable_statement.name.getEnd(),
+									`${is_export ? 'export ' : ''}const ${variable_statement.name.getText()}`
+								);
+								code.appendLeft(variable_statement.initializer.getStart(), '(');
+								code.appendLeft(variable_statement.getEnd(), `) satisfies ${name}`);
+							} else {
+								code.appendLeft(variable_statement.name.getEnd(), `: ${name}`);
+							}
 
 							modified = true;
 						} else {
