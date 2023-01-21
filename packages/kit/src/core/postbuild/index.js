@@ -1,6 +1,7 @@
 import { writeFileSync } from 'fs';
 import { join } from 'path';
 import { pathToFileURL } from 'url';
+import * as devalue from 'devalue';
 import { get_option } from '../../runtime/server/utils.js';
 import {
 	validate_common_exports,
@@ -103,11 +104,6 @@ const { prerendered } = await prerender({
 	env
 });
 
-writeFileSync(
-	results_path,
-	JSON.stringify({ prerendered, prerender_map }, (_key, value) =>
-		value instanceof Map ? Array.from(value.entries()) : value
-	)
-);
+writeFileSync(results_path, devalue.stringify({ prerendered, prerender_map }));
 
 process.exit(0);

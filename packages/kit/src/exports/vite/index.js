@@ -3,6 +3,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
+import * as devalue from 'devalue';
 import { svelte } from '@sveltejs/vite-plugin-svelte';
 import colors from 'kleur';
 import * as vite from 'vite';
@@ -635,12 +636,7 @@ function kit({ svelte_config }) {
 					JSON.stringify({ ...env.private, ...env.public })
 				]);
 
-				const results = JSON.parse(fs.readFileSync(results_path, 'utf8'), (key, value) => {
-					if (key === 'pages' || key === 'assets' || key === 'redirects') {
-						return new Map(value);
-					}
-					return value;
-				});
+				const results = devalue.parse(fs.readFileSync(results_path, 'utf8'));
 
 				/** @type {import('types').Prerendered} */
 				const prerendered = results.prerendered;
