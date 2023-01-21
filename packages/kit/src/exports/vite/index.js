@@ -189,6 +189,8 @@ function kit({ svelte_config }) {
 
 	let completed_build = false;
 
+	const service_worker_entry_file = resolve_entry(kit.files.serviceWorker);
+
 	/** @type {import('vite').Plugin} */
 	const plugin_setup = {
 		name: 'vite-plugin-sveltekit-setup',
@@ -252,7 +254,7 @@ function kit({ svelte_config }) {
 
 			if (is_build) {
 				if (!new_config.build) new_config.build = {};
-				new_config.build.ssr = secondary_build;
+				new_config.build.ssr = !secondary_build;
 
 				new_config.define = {
 					__SVELTEKIT_ADAPTER_NAME__: JSON.stringify(kit.adapter?.name),
@@ -391,7 +393,7 @@ function kit({ svelte_config }) {
 			if (is_build) {
 				manifest_data = (await sync.all(svelte_config, config_env.mode)).manifest_data;
 
-				const ssr = config.build?.ssr ?? false;
+				const ssr = /** @type {boolean} */ (config.build?.ssr);
 				const prefix = `${kit.appDir}/immutable`;
 
 				/** @type {Record<string, string>} */
@@ -561,26 +563,32 @@ function kit({ svelte_config }) {
 		writeBundle: {
 			sequential: true,
 			async handler(_options, bundle) {
-				if (!secondary_build) {
-					secondary_build = true;
+				if (secondary_build) return; // only run this once
+				secondary_build = true;
 
+				const verbose = vite_config.logLevel === 'info';
+				log = logger({ verbose });
+
+				/** @type {import('vite').Manifest} */
+				const server_manifest = JSON.parse(
+					fs.readFileSync(`${out}/server/${vite_config.build.manifest}`, 'utf-8')
+				);
+
+				// TODO first, build server nodes without the client manifest so we can analyse it
+				// build_server_nodes(out, kit, manifest_data, server_manifest, client_manifest, css);
+
+				const chunks = /** @type {import('rollup').OutputChunk[]} */ (
+					Object.values(bundle).filter((chunk) => chunk.type === 'chunk')
+				);
+
+				const { output } = /** @type {import('rollup').RollupOutput} */ (
 					await vite.build({
 						configFile: vite_config.configFile,
 						// CLI args
 						mode: vite_config_env.mode,
 						logLevel: vite_config.logLevel,
 						clearScreen: vite_config.clearScreen
-					});
-
-					return;
-				}
-
-				const verbose = vite_config.logLevel === 'info';
-				log = logger({ verbose });
-
-				const css = Object.values(bundle).filter(
-					/** @type {(value: any) => value is import('rollup').OutputAsset} */
-					(value) => value.type === 'asset' && value.fileName.endsWith('.css')
+					})
 				);
 
 				/** @type {import('vite').Manifest} */
@@ -588,19 +596,15 @@ function kit({ svelte_config }) {
 					fs.readFileSync(`${out}/client/${vite_config.build.manifest}`, 'utf-8')
 				);
 
-				/** @type {import('vite').Manifest} */
-				const server_manifest = JSON.parse(
-					fs.readFileSync(`${out}/server/${vite_config.build.manifest}`, 'utf-8')
+				const css = output.filter(
+					/** @type {(value: any) => value is import('rollup').OutputAsset} */
+					(value) => value.type === 'asset' && value.fileName.endsWith('.css')
 				);
 
-				const chunks = /** @type {import('rollup').OutputChunk[]} */ (
-					Object.values(bundle).filter((chunk) => chunk.type === 'chunk')
-				);
-
+				// now, regenerate nodes with the client manifest...
 				build_server_nodes(out, kit, manifest_data, server_manifest, client_manifest, css);
 
-				const service_worker_entry_file = resolve_entry(kit.files.serviceWorker);
-
+				// ...and prerender
 				build_data = {
 					app_dir: kit.appDir,
 					app_path: `${kit.paths.base.slice(1)}${kit.paths.base ? '/' : ''}${kit.appDir}`,
@@ -697,10 +701,6 @@ function kit({ svelte_config }) {
 					);
 				}
 
-				console.log(
-					`\nRun ${colors.bold().cyan('npm run preview')} to preview your production build locally.`
-				);
-
 				completed_build = true;
 			}
 		},
@@ -712,6 +712,10 @@ function kit({ svelte_config }) {
 			sequential: true,
 			async handler() {
 				if (!completed_build) return;
+
+				console.log(
+					`\nRun ${colors.bold().cyan('npm run preview')} to preview your production build locally.`
+				);
 
 				if (kit.adapter) {
 					const { adapt } = await import('../../core/adapt/index.js');
