@@ -162,6 +162,10 @@ export async function respond(request, options, manifest, state) {
 				} else {
 					headers_to_set[lower] = value;
 
+					if (headers_to_delete.has(lower)) {
+						headers_to_delete.delete(lower);
+					}
+
 					if (state.prerendering && lower === 'cache-control') {
 						state.prerendering.cache = /** @type {string} */ (value);
 					}
