@@ -560,9 +560,7 @@ function kit({ svelte_config }) {
 				const log = logger({ verbose });
 
 				/** @type {import('vite').Manifest} */
-				const server_manifest = JSON.parse(
-					fs.readFileSync(`${out}/server/${vite_config.build.manifest}`, 'utf-8')
-				);
+				const server_manifest = JSON.parse(read(`${out}/server/${vite_config.build.manifest}`));
 
 				// TODO first, build server nodes without the client manifest so we can analyse it
 				// build_server_nodes(out, kit, manifest_data, server_manifest, client_manifest, css);
@@ -582,9 +580,7 @@ function kit({ svelte_config }) {
 				);
 
 				/** @type {import('vite').Manifest} */
-				const client_manifest = JSON.parse(
-					fs.readFileSync(`${out}/client/${vite_config.build.manifest}`, 'utf-8')
-				);
+				const client_manifest = JSON.parse(read(`${out}/client/${vite_config.build.manifest}`));
 
 				const css = output.filter(
 					/** @type {(value: any) => value is import('rollup').OutputAsset} */
@@ -607,9 +603,7 @@ function kit({ svelte_config }) {
 						false
 					),
 					server: {
-						vite_manifest: JSON.parse(
-							fs.readFileSync(`${out}/server/${vite_config.build.manifest}`, 'utf-8')
-						),
+						vite_manifest: server_manifest,
 						methods: get_methods(chunks, manifest_data)
 					}
 				};
@@ -636,7 +630,7 @@ function kit({ svelte_config }) {
 					JSON.stringify({ ...env.private, ...env.public })
 				]);
 
-				const results = devalue.parse(fs.readFileSync(results_path, 'utf8'));
+				const results = devalue.parse(read(results_path));
 
 				/** @type {import('types').Prerendered} */
 				const prerendered = results.prerendered;
@@ -798,3 +792,8 @@ export const files = [
 export const prerendered = [];
 export const version = ${JSON.stringify(config.kit.version.name)};
 `;
+
+/** @param {string} file */
+function read(file) {
+	return fs.readFileSync(file, 'utf-8');
+}
