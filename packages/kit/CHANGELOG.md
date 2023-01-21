@@ -1,5 +1,11 @@
 # @sveltejs/kit
 
+## 1.2.2
+
+### Patch Changes
+
+- fix: focus management after navigation ([#8466](https://github.com/sveltejs/kit/pull/8466))
+
 ## 1.2.1
 
 ### Patch Changes

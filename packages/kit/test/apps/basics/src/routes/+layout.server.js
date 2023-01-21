@@ -1,4 +1,15 @@
 import { error, redirect } from '@sveltejs/kit';
+import { env } from '$env/dynamic/private';
+import { SOME_JSON } from '$env/static/private';
+
+// https://github.com/sveltejs/kit/issues/8646
+if (JSON.parse(SOME_JSON).answer !== 42) {
+	throw new Error('failed to parse env var');
+}
+
+if (JSON.parse(env.SOME_JSON).answer !== 42) {
+	throw new Error('failed to parse env var');
+}
 
 /** @type {import('./$types').LayoutServerLoad} */
 export async function load({ cookies }) {

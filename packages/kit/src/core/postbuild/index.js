@@ -10,7 +10,8 @@ import {
 import { load_config } from '../config/index.js';
 import { prerender } from './prerender.js';
 
-const [, , client_out_dir, manifest_path, results_path, verbose, env] = process.argv;
+const [, , client_out_dir, manifest_path, results_path, verbose, env_json] = process.argv;
+const env = JSON.parse(env_json);
 
 /** @type {import('types').SSRManifest} */
 const manifest = (await import(pathToFileURL(manifest_path).href)).manifest;
@@ -32,6 +33,12 @@ const { Server } = await import(pathToFileURL(`${server_root}/server/index.js`).
 // configure `import { building } from '$app/environment'` —
 // essential we do this before analysing the code
 internal.set_building(true);
+
+// set env, in case it's used in initialisation
+const entries = Object.entries(env);
+const prefix = config.env.publicPrefix;
+internal.set_private_env(Object.fromEntries(entries.filter(([k]) => !k.startsWith(prefix))));
+internal.set_public_env(Object.fromEntries(entries.filter(([k]) => k.startsWith(prefix))));
 
 // analyse routes
 for (const route of manifest._.routes) {
