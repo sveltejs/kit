@@ -32,7 +32,6 @@ export async function build_server(out, vite_config, vite_config_env, manifest_d
 	);
 
 	return {
-		chunks,
 		vite_manifest,
 		methods: get_methods(chunks, manifest_data)
 	};

@@ -53,7 +53,6 @@ export interface BuildData {
 		fonts: string[];
 	};
 	server: {
-		chunks: OutputChunk[];
 		methods: Record<string, HttpMethod[]>;
 		vite_manifest: import('vite').Manifest;
 	};
