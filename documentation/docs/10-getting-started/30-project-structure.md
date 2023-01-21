@@ -4,27 +4,31 @@ title: Project structure
 
 A typical SvelteKit project looks like this:
 
+> Directories surrounded in brackets `[]` indicate they are optional and can be
+> added after starting a project.
+
 ```bash
 my-project/
 ├ src/
 │ ├ lib/
-│ │ ├ server/
+│ │ ├ [server]/
 │ │ │ └ [your server-only lib files]
 │ │ └ [your lib files]
-│ ├ params/
+│ ├ [params]/
 │ │ └ [your param matchers]
 │ ├ routes/
 │ │ └ [your routes]
 │ ├ app.html
-│ ├ error.html
-│ └ hooks.js
+│ ├ [error.html]
+│ └ [hooks.client.js]
+│ └ [hooks.server.js]
 ├ static/
 │ └ [your static assets]
-├ tests/
+├ [tests]/
 │ └ [your tests]
 ├ package.json
 ├ svelte.config.js
-├ tsconfig.json
+├ tsconfig.json [or jsconfig.json]
 └ vite.config.js
 ```
 
@@ -49,7 +53,7 @@ The `src` directory contains the meat of your project.
 - `error.html` (optional) is the page that is rendered when everything else fails. It can contain the following placeholders:
   - `%sveltekit.status%` — the HTTP status
   - `%sveltekit.error.message%` — the error message
-- `hooks.js` (optional) contains your application's [hooks](/docs/hooks)
+- `hooks.server.js` (or `hooks.client.js`) contains your application's [hooks](/docs/hooks)
 - `service-worker.js` (optional) contains your [service worker](/docs/service-workers)
 
 You can use `.ts` files instead of `.js` files, if using TypeScript.
