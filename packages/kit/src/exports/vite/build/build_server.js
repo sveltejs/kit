@@ -1,41 +1,8 @@
 import fs from 'node:fs';
 import path from 'node:path';
-import * as vite from 'vite';
 import { mkdirp, posixify } from '../../../utils/filesystem.js';
 import { find_deps, is_http_method, resolve_symlinks } from './utils.js';
 import { s } from '../../../utils/misc.js';
-
-/**
- * @param {string} out
- * @param {import('vite').ResolvedConfig} vite_config
- * @param {import('vite').ConfigEnv} vite_config_env
- * @param {import('types').ManifestData} manifest_data
- */
-export async function build_server(out, vite_config, vite_config_env, manifest_data) {
-	const { output } = /** @type {import('rollup').RollupOutput} */ (
-		await vite.build({
-			// CLI args
-			configFile: vite_config.configFile,
-			mode: vite_config_env.mode,
-			logLevel: vite_config.logLevel,
-			clearScreen: vite_config.clearScreen
-		})
-	);
-
-	const chunks = /** @type {import('rollup').OutputChunk[]} */ (
-		output.filter((chunk) => chunk.type === 'chunk')
-	);
-
-	/** @type {import('vite').Manifest} */
-	const vite_manifest = JSON.parse(
-		fs.readFileSync(`${out}/server/${vite_config.build.manifest}`, 'utf-8')
-	);
-
-	return {
-		vite_manifest,
-		methods: get_methods(chunks, manifest_data)
-	};
-}
 
 /**
  * @param {string} out
@@ -143,7 +110,7 @@ export function build_server_nodes(out, kit, manifest_data, server_manifest, cli
  * @param {import('rollup').OutputChunk[]} output
  * @param {import('types').ManifestData} manifest_data
  */
-function get_methods(output, manifest_data) {
+export function get_methods(output, manifest_data) {
 	/** @type {Record<string, string[]>} */
 	const lookup = {};
 	output.forEach((chunk) => {

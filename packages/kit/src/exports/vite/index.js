@@ -7,14 +7,14 @@ import { svelte } from '@sveltejs/vite-plugin-svelte';
 import colors from 'kleur';
 import * as vite from 'vite';
 
-import { mkdirp, posixify, resolve_entry, rimraf } from '../../utils/filesystem.js';
+import { mkdirp, posixify, resolve_entry, rimraf, walk } from '../../utils/filesystem.js';
 import { create_static_module, create_dynamic_module } from '../../core/env.js';
 import * as sync from '../../core/sync/sync.js';
 import { create_assets } from '../../core/sync/create_manifest_data/index.js';
 import { runtime_directory, logger } from '../../core/utils.js';
 import { load_config } from '../../core/config/index.js';
 import { generate_manifest } from '../../core/generate_manifest/index.js';
-import { build_server, build_server_nodes } from './build/build_server.js';
+import { build_server_nodes, get_methods } from './build/build_server.js';
 import { build_service_worker } from './build/build_service_worker.js';
 import { assets_base, find_deps } from './build/utils.js';
 import { dev } from './dev/index.js';
@@ -561,7 +561,19 @@ function kit({ svelte_config }) {
 		writeBundle: {
 			sequential: true,
 			async handler(_options, bundle) {
-				if (secondary_build) return;
+				if (!secondary_build) {
+					secondary_build = true;
+
+					await vite.build({
+						configFile: vite_config.configFile,
+						// CLI args
+						mode: vite_config_env.mode,
+						logLevel: vite_config.logLevel,
+						clearScreen: vite_config.clearScreen
+					});
+
+					return;
+				}
 
 				const verbose = vite_config.logLevel === 'info';
 				log = logger({ verbose });
@@ -576,11 +588,16 @@ function kit({ svelte_config }) {
 					fs.readFileSync(`${out}/client/${vite_config.build.manifest}`, 'utf-8')
 				);
 
-				secondary_build = true;
+				/** @type {import('vite').Manifest} */
+				const server_manifest = JSON.parse(
+					fs.readFileSync(`${out}/server/${vite_config.build.manifest}`, 'utf-8')
+				);
 
-				const server = await build_server(out, vite_config, vite_config_env, manifest_data);
+				const chunks = /** @type {import('rollup').OutputChunk[]} */ (
+					Object.values(bundle).filter((chunk) => chunk.type === 'chunk')
+				);
 
-				build_server_nodes(out, kit, manifest_data, server.vite_manifest, client_manifest, css);
+				build_server_nodes(out, kit, manifest_data, server_manifest, client_manifest, css);
 
 				const service_worker_entry_file = resolve_entry(kit.files.serviceWorker);
 
@@ -594,7 +611,12 @@ function kit({ svelte_config }) {
 						posixify(path.relative('.', `${runtime_directory}/client/start.js`)),
 						false
 					),
-					server
+					server: {
+						vite_manifest: JSON.parse(
+							fs.readFileSync(`${out}/server/${vite_config.build.manifest}`, 'utf-8')
+						),
+						methods: get_methods(chunks, manifest_data)
+					}
 				};
 
 				const manifest_path = `${out}/server/manifest-full.js`;
@@ -617,7 +639,7 @@ function kit({ svelte_config }) {
 					const child = fork(
 						script,
 						[
-							vite_config.build.outDir,
+							`${out}/client`,
 							manifest_path,
 							results_path,
 							'' + verbose,
