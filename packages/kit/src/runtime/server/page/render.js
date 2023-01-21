@@ -165,7 +165,7 @@ export async function render_response({
 	}
 
 	/** @param {string} path */
-	const prefixed = (path) => (path.startsWith('/') ? path : `${resolved_assets}/${path}`);
+	const prefixed = (path) => (path.startsWith('/') ? base + path : `${resolved_assets}/${path}`);
 
 	const serialized = { data: '', form: 'null', error: 'null' };
 
