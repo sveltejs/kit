@@ -96,6 +96,10 @@ export function write_client_manifest(kit, manifest_data, output, metadata) {
 						} else if (manifest_data.nodes[layout].server) {
 							layout_has_server_load = true;
 						}
+
+						if (layout_has_server_load) {
+							layouts_with_server_load.add(layout);
+						}
 					});
 
 					// only include non-root layout/error nodes if they exist
