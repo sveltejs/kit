@@ -609,14 +609,14 @@ function kit({ svelte_config }) {
 				]);
 
 				/** @type {import('./types').Analysis} */
-				const { nodes, prerender_map } = devalue.parse(read(`${out}/analysis.json`));
+				const analysis = devalue.parse(read(`${out}/analysis.json`));
 
 				// create client build
 				write_client_manifest(
 					kit,
 					manifest_data,
 					`${kit.outDir}/generated/client-optimized`,
-					nodes
+					analysis.nodes
 				);
 
 				const { output } = /** @type {import('rollup').RollupOutput} */ (
@@ -670,6 +670,7 @@ function kit({ svelte_config }) {
 
 				/** @type {import('types').Prerendered} */
 				const prerendered = results.prerendered;
+				const prerender_map = results.prerender_map;
 
 				// generate a new manifest that doesn't include prerendered pages
 				fs.writeFileSync(

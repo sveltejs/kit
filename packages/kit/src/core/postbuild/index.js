@@ -32,6 +32,7 @@ const { prerendered } = await prerender({
 	env
 });
 
-fs.writeFileSync(`${out}/prerendered.json`, devalue.stringify({ prerendered }));
+// prerender_map is updated during prerendering, so we need to write it back
+fs.writeFileSync(`${out}/prerendered.json`, devalue.stringify({ prerendered, prerender_map }));
 
 process.exit(0);
