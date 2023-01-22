@@ -9,8 +9,8 @@ import { s } from '../../../utils/misc.js';
  * @param {import('types').ValidatedKitConfig} kit
  * @param {import('types').ManifestData} manifest_data
  * @param {import('vite').Manifest} server_manifest
- * @param {import('vite').Manifest} client_manifest
- * @param {import('rollup').OutputAsset[]} css
+ * @param {import('vite').Manifest | null} client_manifest
+ * @param {import('rollup').OutputAsset[] | null} css
  */
 export function build_server_nodes(out, kit, manifest_data, server_manifest, client_manifest, css) {
 	mkdirp(`${out}/server/nodes`);
@@ -18,15 +18,17 @@ export function build_server_nodes(out, kit, manifest_data, server_manifest, cli
 
 	const stylesheet_lookup = new Map();
 
-	css.forEach((asset) => {
-		if (asset.source.length < kit.inlineStyleThreshold) {
-			const index = stylesheet_lookup.size;
-			const file = `${out}/server/stylesheets/${index}.js`;
+	if (css) {
+		css.forEach((asset) => {
+			if (asset.source.length < kit.inlineStyleThreshold) {
+				const index = stylesheet_lookup.size;
+				const file = `${out}/server/stylesheets/${index}.js`;
 
-			fs.writeFileSync(file, `// ${asset.fileName}\nexport default ${s(asset.source)};`);
-			stylesheet_lookup.set(asset.fileName, index);
-		}
-	});
+				fs.writeFileSync(file, `// ${asset.fileName}\nexport default ${s(asset.source)};`);
+				stylesheet_lookup.set(asset.fileName, index);
+			}
+		});
+	}
 
 	manifest_data.nodes.forEach((node, i) => {
 		/** @type {string[]} */
@@ -46,7 +48,7 @@ export function build_server_nodes(out, kit, manifest_data, server_manifest, cli
 		/** @type {string[]} */
 		const fonts = [];
 
-		if (node.component) {
+		if (node.component && client_manifest) {
 			const entry = find_deps(client_manifest, node.component, true);
 
 			imported.push(...entry.imports);
@@ -62,11 +64,13 @@ export function build_server_nodes(out, kit, manifest_data, server_manifest, cli
 		}
 
 		if (node.universal) {
-			const entry = find_deps(client_manifest, node.universal, true);
+			if (client_manifest) {
+				const entry = find_deps(client_manifest, node.universal, true);
 
-			imported.push(...entry.imports);
-			stylesheets.push(...entry.stylesheets);
-			fonts.push(...entry.fonts);
+				imported.push(...entry.imports);
+				stylesheets.push(...entry.stylesheets);
+				fonts.push(...entry.fonts);
+			}
 
 			imports.push(`import * as universal from '../${server_manifest[node.universal].file}';`);
 			exports.push(`export { universal };`);

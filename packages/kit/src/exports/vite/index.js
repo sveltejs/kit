@@ -562,46 +562,17 @@ function kit({ svelte_config }) {
 				/** @type {import('vite').Manifest} */
 				const server_manifest = JSON.parse(read(`${out}/server/${vite_config.build.manifest}`));
 
-				// TODO first, build server nodes without the client manifest so we can analyse it
-				// build_server_nodes(out, kit, manifest_data, server_manifest, client_manifest, css);
-
 				const chunks = /** @type {import('rollup').OutputChunk[]} */ (
 					Object.values(bundle).filter((chunk) => chunk.type === 'chunk')
 				);
 
-				const { output } = /** @type {import('rollup').RollupOutput} */ (
-					await vite.build({
-						configFile: vite_config.configFile,
-						// CLI args
-						mode: vite_config_env.mode,
-						logLevel: vite_config.logLevel,
-						clearScreen: vite_config.clearScreen
-					})
-				);
-
-				/** @type {import('vite').Manifest} */
-				const client_manifest = JSON.parse(read(`${out}/client/${vite_config.build.manifest}`));
-
-				const css = output.filter(
-					/** @type {(value: any) => value is import('rollup').OutputAsset} */
-					(value) => value.type === 'asset' && value.fileName.endsWith('.css')
-				);
-
-				// now, regenerate nodes with the client manifest...
-				build_server_nodes(out, kit, manifest_data, server_manifest, client_manifest, css);
-
-				// ...and prerender
 				/** @type {import('types').BuildData} */
 				const build_data = {
 					app_dir: kit.appDir,
 					app_path: `${kit.paths.base.slice(1)}${kit.paths.base ? '/' : ''}${kit.appDir}`,
 					manifest_data,
 					service_worker: !!service_worker_entry_file ? 'service-worker.js' : null, // TODO make file configurable?
-					client_entry: find_deps(
-						client_manifest,
-						posixify(path.relative('.', `${runtime_directory}/client/start.js`)),
-						false
-					),
+					client_entry: null,
 					server: {
 						vite_manifest: server_manifest,
 						methods: get_methods(chunks, manifest_data)
@@ -618,25 +589,72 @@ function kit({ svelte_config }) {
 					})};\n`
 				);
 
+				// first, build server nodes without the client manifest so we can analyse it
+				build_server_nodes(out, kit, manifest_data, server_manifest, null, null);
+
+				await fork('../../core/postbuild/analyse.js', [
+					out,
+					manifest_path,
+					JSON.stringify({ ...env.private, ...env.public })
+				]);
+
+				const analysis = devalue.parse(read(`${out}/analysis.json`));
+
+				/** @type {import('types').PrerenderMap} */
+				const prerender_map = new Map(analysis.prerender_map);
+
+				// create client build
+				const { output } = /** @type {import('rollup').RollupOutput} */ (
+					await vite.build({
+						configFile: vite_config.configFile,
+						// CLI args
+						mode: vite_config_env.mode,
+						logLevel: vite_config.logLevel,
+						clearScreen: vite_config.clearScreen
+					})
+				);
+
+				/** @type {import('vite').Manifest} */
+				const client_manifest = JSON.parse(read(`${out}/client/${vite_config.build.manifest}`));
+
+				build_data.client_entry = find_deps(
+					client_manifest,
+					posixify(path.relative('.', `${runtime_directory}/client/start.js`)),
+					false
+				);
+
+				const css = output.filter(
+					/** @type {(value: any) => value is import('rollup').OutputAsset} */
+					(value) => value.type === 'asset' && value.fileName.endsWith('.css')
+				);
+
+				// regenerate manifest now that we have client entry...
+				fs.writeFileSync(
+					manifest_path,
+					`export const manifest = ${generate_manifest({
+						build_data,
+						relative_path: '.',
+						routes: manifest_data.routes
+					})};\n`
+				);
+
+				// regenerate nodes with the client manifest...
+				build_server_nodes(out, kit, manifest_data, server_manifest, client_manifest, css);
+
+				// ...and prerender
 				log.info('Prerendering');
 
-				const results_path = `${kit.outDir}/generated/prerendered.json`;
-
 				await fork('../../core/postbuild/index.js', [
-					`${out}/client`,
+					out,
 					manifest_path,
-					results_path,
 					'' + verbose,
 					JSON.stringify({ ...env.private, ...env.public })
 				]);
 
-				const results = devalue.parse(read(results_path));
+				const results = devalue.parse(read(`${out}/prerendered.json`));
 
 				/** @type {import('types').Prerendered} */
 				const prerendered = results.prerendered;
-
-				/** @type {import('types').PrerenderMap} */
-				const prerender_map = new Map(results.prerender_map);
 
 				// generate a new manifest that doesn't include prerendered pages
 				fs.writeFileSync(

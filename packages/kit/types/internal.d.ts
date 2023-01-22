@@ -53,7 +53,7 @@ export interface BuildData {
 		imports: string[];
 		stylesheets: string[];
 		fonts: string[];
-	};
+	} | null;
 	server: {
 		methods: Record<string, HttpMethod[]>;
 		vite_manifest: import('vite').Manifest;

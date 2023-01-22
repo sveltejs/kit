@@ -10,7 +10,7 @@ import {
 } from '../../utils/exports.js';
 import { load_config } from '../config/index.js';
 
-const [, , manifest_path, results_path, env_json] = process.argv;
+const [, , out, manifest_path, env_json] = process.argv;
 const env = JSON.parse(env_json);
 
 /** @type {import('types').SSRManifest} */
@@ -36,6 +36,8 @@ const entries = Object.entries(env);
 const prefix = config.env.publicPrefix;
 internal.set_private_env(Object.fromEntries(entries.filter(([k]) => !k.startsWith(prefix))));
 internal.set_public_env(Object.fromEntries(entries.filter(([k]) => k.startsWith(prefix))));
+
+// TODO analyse nodes
 
 // analyse routes
 for (const route of manifest._.routes) {
@@ -90,6 +92,6 @@ for (const route of manifest._.routes) {
 	}
 }
 
-writeFileSync(results_path, devalue.stringify({ prerender_map }));
+writeFileSync(`${out}/analysis.json`, devalue.stringify({ prerender_map }));
 
 process.exit(0);
