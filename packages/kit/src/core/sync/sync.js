@@ -1,7 +1,6 @@
 import path from 'path';
 import create_manifest_data from './create_manifest_data/index.js';
 import { write_client_manifest } from './write_client_manifest.js';
-import { write_matchers } from './write_matchers.js';
 import { write_root } from './write_root.js';
 import { write_tsconfig } from './write_tsconfig.js';
 import { write_types, write_all_types } from './write_types/index.js';
@@ -27,10 +26,9 @@ export async function create(config) {
 
 	const output = path.join(config.kit.outDir, 'generated');
 
-	write_client_manifest(config, manifest_data, output);
+	write_client_manifest(config.kit, manifest_data, `${output}/client`);
 	write_server(config, output);
 	write_root(manifest_data, output);
-	write_matchers(manifest_data, output);
 	await write_all_types(config, manifest_data);
 
 	return { manifest_data };
@@ -72,7 +70,7 @@ export async function all_types(config, mode) {
 }
 
 /**
- * Regenerate server-internal.js in response to src/{app.html,error.html,service-worker.js} changing
+ * Regenerate server/internal.js in response to src/{app.html,error.html,service-worker.js} changing
  * @param {import('types').ValidatedConfig} config
  */
 export function server(config) {

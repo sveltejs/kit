@@ -22,6 +22,7 @@ import { dev } from './dev/index.js';
 import { is_illegal, module_guard, normalize_id } from './graph_analysis/index.js';
 import { preview } from './preview/index.js';
 import { get_config_aliases, get_env } from './utils.js';
+import { write_client_manifest } from '../../core/sync/write_client_manifest.js';
 
 export { vitePreprocess } from '@sveltejs/vite-plugin-svelte';
 
@@ -209,12 +210,19 @@ function kit({ svelte_config }) {
 			const client_hooks = resolve_entry(kit.files.hooks.client);
 			if (client_hooks) allow.add(path.dirname(client_hooks));
 
+			const generated = path.posix.join(kit.outDir, 'generated');
+
 			// dev and preview config can be shared
 			/** @type {import('vite').UserConfig} */
 			const new_config = {
 				resolve: {
 					alias: [
-						{ find: '__GENERATED__', replacement: path.posix.join(kit.outDir, 'generated') },
+						{
+							find: '__CLIENT__',
+							replacement: `${generated}/${is_build ? 'client-optimized' : 'client'}`
+						},
+						{ find: '__SERVER__', replacement: `${generated}/server` },
+						{ find: '__GENERATED__', replacement: generated },
 						{ find: '$app', replacement: `${runtime_directory}/app` },
 						...get_config_aliases(kit)
 					]
@@ -391,7 +399,7 @@ function kit({ svelte_config }) {
 
 				if (ssr) {
 					input.index = `${runtime_directory}/server/index.js`;
-					input.internal = `${kit.outDir}/generated/server-internal.js`;
+					input.internal = `${kit.outDir}/generated/server/internal.js`;
 
 					// add entry points for every endpoint...
 					manifest_data.routes.forEach((route) => {
@@ -598,12 +606,17 @@ function kit({ svelte_config }) {
 					JSON.stringify({ ...env.private, ...env.public })
 				]);
 
-				const analysis = devalue.parse(read(`${out}/analysis.json`));
-
-				/** @type {import('types').PrerenderMap} */
-				const prerender_map = new Map(analysis.prerender_map);
+				/** @type {import('./types').Analysis} */
+				const { nodes, prerender_map } = devalue.parse(read(`${out}/analysis.json`));
 
 				// create client build
+				write_client_manifest(
+					kit,
+					manifest_data,
+					`${kit.outDir}/generated/client-optimized`,
+					nodes
+				);
+
 				const { output } = /** @type {import('rollup').RollupOutput} */ (
 					await vite.build({
 						configFile: vite_config.configFile,

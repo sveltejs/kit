@@ -1,4 +1,4 @@
-declare module '__GENERATED__/server-internal.js' {
+declare module '__SERVER__/internal.js' {
 	export const options: import('types').SSROptions;
 	export const get_hooks: () => Promise<{
 		handle?: import('types').Handle;

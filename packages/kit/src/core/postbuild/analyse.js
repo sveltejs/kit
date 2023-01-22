@@ -37,7 +37,16 @@ const prefix = config.env.publicPrefix;
 internal.set_private_env(Object.fromEntries(entries.filter(([k]) => !k.startsWith(prefix))));
 internal.set_public_env(Object.fromEntries(entries.filter(([k]) => k.startsWith(prefix))));
 
-// TODO analyse nodes
+const nodes = [];
+
+// analyse nodes
+for (const loader of manifest._.nodes) {
+	const node = await loader();
+
+	nodes.push({
+		has_server_load: node.server?.load !== undefined
+	});
+}
 
 // analyse routes
 for (const route of manifest._.routes) {
@@ -92,6 +101,6 @@ for (const route of manifest._.routes) {
 	}
 }
 
-writeFileSync(`${out}/analysis.json`, devalue.stringify({ prerender_map }));
+writeFileSync(`${out}/analysis.json`, devalue.stringify({ nodes, prerender_map }));
 
 process.exit(0);

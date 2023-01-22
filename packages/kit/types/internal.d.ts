@@ -254,7 +254,7 @@ export type SSRComponentLoader = () => Promise<SSRComponent>;
 
 export interface SSRNode {
 	component: SSRComponentLoader;
-	/** index into the `components` array in client-manifest.js */
+	/** index into the `components` array in client/manifest.js */
 	index: number;
 	/** client-side module URL for this component */
 	file: string;
