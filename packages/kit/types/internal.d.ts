@@ -54,10 +54,7 @@ export interface BuildData {
 		stylesheets: string[];
 		fonts: string[];
 	} | null;
-	server: {
-		methods: Record<string, HttpMethod[]>;
-		vite_manifest: import('vite').Manifest;
-	};
+	server_manifest: import('vite').Manifest;
 }
 
 export interface CSRPageNode {
@@ -234,6 +231,17 @@ export interface ServerErrorNode {
 	 * Only set for HttpErrors
 	 */
 	status?: number;
+}
+
+export interface ServerMetadata {
+	nodes: Array<{ has_server_load: boolean }>;
+	routes: Map<
+		string,
+		{
+			prerender: PrerenderOption | undefined;
+			methods: HttpMethod[];
+		}
+	>;
 }
 
 export interface SSRComponent {

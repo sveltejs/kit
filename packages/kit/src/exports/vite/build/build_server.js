@@ -1,7 +1,6 @@
 import fs from 'node:fs';
-import path from 'node:path';
-import { mkdirp, posixify } from '../../../utils/filesystem.js';
-import { find_deps, is_http_method, resolve_symlinks } from './utils.js';
+import { mkdirp } from '../../../utils/filesystem.js';
+import { find_deps, resolve_symlinks } from './utils.js';
 import { s } from '../../../utils/misc.js';
 
 /**
@@ -108,36 +107,4 @@ export function build_server_nodes(out, kit, manifest_data, server_manifest, cli
 			`${imports.join('\n')}\n\n${exports.join('\n')}\n`
 		);
 	});
-}
-
-/**
- * @param {import('rollup').OutputChunk[]} output
- * @param {import('types').ManifestData} manifest_data
- */
-export function get_methods(output, manifest_data) {
-	/** @type {Record<string, string[]>} */
-	const lookup = {};
-	output.forEach((chunk) => {
-		if (!chunk.facadeModuleId) return;
-		const id = posixify(path.relative('.', chunk.facadeModuleId));
-		lookup[id] = chunk.exports;
-	});
-
-	/** @type {Record<string, import('types').HttpMethod[]>} */
-	const methods = {};
-	manifest_data.routes.forEach((route) => {
-		if (route.endpoint) {
-			if (lookup[route.endpoint.file]) {
-				methods[route.endpoint.file] = lookup[route.endpoint.file].filter(is_http_method);
-			}
-		}
-
-		if (route.leaf?.server) {
-			if (lookup[route.leaf.server]) {
-				methods[route.leaf.server] = lookup[route.leaf.server].filter(is_http_method);
-			}
-		}
-	});
-
-	return methods;
 }

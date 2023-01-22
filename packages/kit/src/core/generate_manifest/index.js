@@ -103,7 +103,7 @@ export function generate_manifest({ build_data, relative_path, routes }) {
 					pattern: ${route.pattern},
 					params: ${s(route.params)},
 					page: ${route.page ? `{ layouts: ${get_nodes(route.page.layouts)}, errors: ${get_nodes(route.page.errors)}, leaf: ${reindexed.get(route.page.leaf)} }` : 'null'},
-					endpoint: ${route.endpoint ? loader(join_relative(relative_path, resolve_symlinks(build_data.server.vite_manifest, route.endpoint.file).chunk.file)) : 'null'}
+					endpoint: ${route.endpoint ? loader(join_relative(relative_path, resolve_symlinks(build_data.server_manifest, route.endpoint.file).chunk.file)) : 'null'}
 				}`;
 				}).filter(Boolean).join(',\n\t\t\t\t')}
 			],

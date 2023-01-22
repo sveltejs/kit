@@ -47,7 +47,7 @@ const REDIRECT = 3;
  *   Server: typeof import('types').InternalServer;
  *   internal: import('types').ServerInternalModule;
  *   manifest: import('types').SSRManifest;
- *   prerender_map: import('types').PrerenderMap;
+ *   metadata: import('types').ServerMetadata;
  *   client_out_dir: string;
  *   verbose: string;
  *   env: Record<string, string>;
@@ -58,7 +58,7 @@ export async function prerender({
 	Server,
 	internal,
 	manifest,
-	prerender_map,
+	metadata,
 	client_out_dir,
 	verbose,
 	env
@@ -70,6 +70,15 @@ export async function prerender({
 		redirects: new Map(),
 		paths: []
 	};
+
+	/** @type {import('types').PrerenderMap} */
+	const prerender_map = new Map();
+
+	for (const [id, { prerender }] of metadata.routes) {
+		if (prerender !== undefined) {
+			prerender_map.set(id, prerender);
+		}
+	}
 
 	/** @type {Set<string>} */
 	const prerendered_routes = new Set();

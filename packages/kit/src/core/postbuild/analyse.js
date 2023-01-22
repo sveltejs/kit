@@ -16,9 +16,6 @@ const env = JSON.parse(env_json);
 /** @type {import('types').SSRManifest} */
 const manifest = (await import(pathToFileURL(manifest_path).href)).manifest;
 
-/** @type {import('types').PrerenderMap} */
-const prerender_map = new Map();
-
 /** @type {import('types').ValidatedKitConfig} */
 const config = (await load_config()).kit;
 
@@ -37,19 +34,29 @@ const prefix = config.env.publicPrefix;
 internal.set_private_env(Object.fromEntries(entries.filter(([k]) => !k.startsWith(prefix))));
 internal.set_public_env(Object.fromEntries(entries.filter(([k]) => k.startsWith(prefix))));
 
-const nodes = [];
+/** @type {import('types').ServerMetadata} */
+const metadata = {
+	nodes: [],
+	routes: new Map()
+};
 
 // analyse nodes
 for (const loader of manifest._.nodes) {
 	const node = await loader();
 
-	nodes.push({
+	metadata.nodes.push({
 		has_server_load: node.server?.load !== undefined
 	});
 }
 
 // analyse routes
 for (const route of manifest._.routes) {
+	/** @type {Set<import('types').HttpMethod>} */
+	const methods = new Set();
+
+	/** @type {import('types').PrerenderOption | undefined} */
+	let prerender = undefined;
+
 	if (route.endpoint) {
 		const mod = await route.endpoint();
 		if (mod.prerender !== undefined) {
@@ -61,8 +68,14 @@ for (const route of manifest._.routes) {
 				);
 			}
 
-			prerender_map.set(route.id, mod.prerender);
+			prerender = mod.prerender;
 		}
+
+		if (mod.GET) methods.add('GET');
+		if (mod.POST) methods.add('POST');
+		if (mod.PUT) methods.add('PUT');
+		if (mod.PATCH) methods.add('PATCH');
+		if (mod.DELETE) methods.add('DELETE');
 	}
 
 	if (route.page) {
@@ -83,12 +96,15 @@ for (const route of manifest._.routes) {
 		}
 
 		if (page) {
+			methods.add('GET');
+			if (page.server?.actions) methods.add('POST');
+
 			validate_page_server_exports(page.server, route.id);
 			validate_common_exports(page.universal, route.id);
 		}
 
 		const should_prerender = get_option(nodes, 'prerender');
-		const prerender =
+		prerender =
 			should_prerender === true ||
 			// Try prerendering if ssr is false and no server needed. Set it to 'auto' so that
 			// the route is not removed from the manifest, there could be a server load function.
@@ -96,11 +112,14 @@ for (const route of manifest._.routes) {
 			(should_prerender !== false && get_option(nodes, 'ssr') === false && !page?.server?.actions
 				? 'auto'
 				: should_prerender ?? false);
-
-		prerender_map.set(route.id, prerender);
 	}
+
+	metadata.routes.set(route.id, {
+		prerender,
+		methods: Array.from(methods)
+	});
 }
 
-writeFileSync(`${out}/analysis.json`, devalue.stringify({ nodes, prerender_map }));
+writeFileSync(`${out}/metadata.json`, devalue.stringify(metadata));
 
 process.exit(0);

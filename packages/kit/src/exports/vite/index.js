@@ -15,7 +15,7 @@ import { create_assets } from '../../core/sync/create_manifest_data/index.js';
 import { runtime_directory, logger } from '../../core/utils.js';
 import { load_config } from '../../core/config/index.js';
 import { generate_manifest } from '../../core/generate_manifest/index.js';
-import { build_server_nodes, get_methods } from './build/build_server.js';
+import { build_server_nodes } from './build/build_server.js';
 import { build_service_worker } from './build/build_service_worker.js';
 import { assets_base, find_deps } from './build/utils.js';
 import { dev } from './dev/index.js';
@@ -562,7 +562,7 @@ function kit({ svelte_config }) {
 		 */
 		writeBundle: {
 			sequential: true,
-			async handler(_options, bundle) {
+			async handler(_options) {
 				if (secondary_build) return; // only run this once
 				secondary_build = true;
 
@@ -572,10 +572,6 @@ function kit({ svelte_config }) {
 				/** @type {import('vite').Manifest} */
 				const server_manifest = JSON.parse(read(`${out}/server/${vite_config.build.manifest}`));
 
-				const chunks = /** @type {import('rollup').OutputChunk[]} */ (
-					Object.values(bundle).filter((chunk) => chunk.type === 'chunk')
-				);
-
 				/** @type {import('types').BuildData} */
 				const build_data = {
 					app_dir: kit.appDir,
@@ -583,10 +579,7 @@ function kit({ svelte_config }) {
 					manifest_data,
 					service_worker: !!service_worker_entry_file ? 'service-worker.js' : null, // TODO make file configurable?
 					client_entry: null,
-					server: {
-						vite_manifest: server_manifest,
-						methods: get_methods(chunks, manifest_data)
-					}
+					server_manifest
 				};
 
 				const manifest_path = `${out}/server/manifest-full.js`;
@@ -608,15 +601,15 @@ function kit({ svelte_config }) {
 					JSON.stringify({ ...env.private, ...env.public })
 				]);
 
-				/** @type {import('./types').Analysis} */
-				const analysis = devalue.parse(read(`${out}/analysis.json`));
+				/** @type {import('types').ServerMetadata} */
+				const server_metadata = devalue.parse(read(`${out}/metadata.json`));
 
 				// create client build
 				write_client_manifest(
 					kit,
 					manifest_data,
 					`${kit.outDir}/generated/client-optimized`,
-					analysis.nodes
+					server_metadata.nodes
 				);
 
 				const { output } = /** @type {import('rollup').RollupOutput} */ (
@@ -711,7 +704,14 @@ function kit({ svelte_config }) {
 
 					if (kit.adapter) {
 						const { adapt } = await import('../../core/adapt/index.js');
-						await adapt(svelte_config, build_data, prerendered, prerender_map, { log });
+						await adapt(
+							svelte_config,
+							build_data,
+							server_metadata,
+							prerendered,
+							prerender_map,
+							log
+						);
 					} else {
 						console.log(colors.bold().yellow('\nNo adapter specified'));
 

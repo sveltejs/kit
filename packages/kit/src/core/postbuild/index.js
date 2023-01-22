@@ -9,8 +9,8 @@ const env = JSON.parse(env_json);
 /** @type {import('types').SSRManifest} */
 const manifest = (await import(pathToFileURL(manifest_path).href)).manifest;
 
-/** @type {import('types').PrerenderMap} */
-const prerender_map = devalue.parse(fs.readFileSync(`${out}/analysis.json`, 'utf-8')).prerender_map;
+/** @type {import('types').ServerMetadata} */
+const metadata = devalue.parse(fs.readFileSync(`${out}/metadata.json`, 'utf-8'));
 
 /** @type {import('types').ServerInternalModule} */
 const internal = await import(pathToFileURL(`${out}/server/internal.js`).href);
@@ -22,11 +22,11 @@ const { Server } = await import(pathToFileURL(`${out}/server/index.js`).href);
 // essential we do this before analysing the code
 internal.set_building(true);
 
-const { prerendered } = await prerender({
+const { prerendered, prerender_map } = await prerender({
 	Server,
 	internal,
 	manifest,
-	prerender_map,
+	metadata,
 	client_out_dir: `${out}/client`,
 	verbose,
 	env
