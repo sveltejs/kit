@@ -11,7 +11,6 @@
 	"type": "module",
 	"dependencies": {
 		"@sveltejs/vite-plugin-svelte": "^2.0.0",
-		"@types/cookie": "^0.5.1",
 		"cookie": "^0.5.0",
 		"devalue": "^4.2.2",
 		"esm-env": "^1.0.0",
@@ -27,6 +26,7 @@
 	"devDependencies": {
 		"@playwright/test": "^1.29.2",
 		"@types/connect": "^3.4.35",
+		"@types/cookie": "^0.5.1",
 		"@types/marked": "^4.0.7",
 		"@types/mime": "^3.0.1",
 		"@types/node": "^16.18.6",
