@@ -14,9 +14,8 @@ export function write_client_manifest(kit, manifest_data, output, metadata) {
 	/**
 	 * Creates a module that exports a `CSRPageNode`
 	 * @param {import('types').PageNode} node
-	 * @param {number} index
 	 */
-	function generate_node(node, index) {
+	function generate_node(node) {
 		const declarations = [];
 
 		if (node.universal) {
@@ -34,14 +33,6 @@ export function write_client_manifest(kit, manifest_data, output, metadata) {
 			);
 		}
 
-		// TODO this shouldn't actually be necessary, this is
-		// encoded directly in the manifest via the ones' complement
-		if (node.server) {
-			declarations.push(
-				`export const has_server_load = ${metadata?.[index].has_server_load ?? true};`
-			);
-		}
-
 		return declarations.join('\n');
 	}
 
@@ -52,7 +43,7 @@ export function write_client_manifest(kit, manifest_data, output, metadata) {
 		.map((node, i) => {
 			indices.set(node, i);
 
-			write_if_changed(`${output}/nodes/${i}.js`, generate_node(node, i));
+			write_if_changed(`${output}/nodes/${i}.js`, generate_node(node));
 			return `() => import('./nodes/${i}')`;
 		})
 		.join(',\n\t');
