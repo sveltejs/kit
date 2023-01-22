@@ -2,7 +2,7 @@
 title: Project structure
 ---
 
-A SvelteKit project requires the following files and directories at minimum in order to build a site:
+A typical SvelteKit project contains the following files and directories:
 
 ```bash
 my-project/
@@ -28,7 +28,7 @@ You'll also find common files like `.gitignore` and `.npmrc` (and `.prettierrc` 
 
 The `src` directory contains your project files. All necessary and optional files and directories include:
 
-- `lib` contains your library code (utilities and components), which can be imported via the [`$lib`](/docs/modules#$lib) alias, or packaged up for distribution using [`svelte-package`](/docs/packaging)
+- `lib` (optional) contains your library code (utilities and components), which can be imported via the [`$lib`](/docs/modules#$lib) alias, or packaged up for distribution using [`svelte-package`](/docs/packaging)
   - `server` (optional) contains your server-only library code. Files in this directory can be imported by using the [`$lib/server`](/docs/server-only-modules) alias. SvelteKit will prevent you from importing these in client code.
 - `params` (optional) contains any [param matchers](/docs/advanced-routing#matching) your app needs
 - `routes` contains the [routes](/docs/routing) of your application. You can also colocate other components that are only used within a single route here
@@ -50,7 +50,7 @@ If you added [Vitest](https://vitest.dev) when you set up your project, your uni
 
 ### static
 
-Any static assets that should be served as-is, like `robots.txt` or `favicon.png`, go in here.
+Any static assets that should be served as-is, like `robots.txt` or `favicon.png`, go in here. This directory is optional.
 
 ### tests
 
