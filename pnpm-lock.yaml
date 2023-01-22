@@ -286,7 +286,6 @@ importers:
       vite: ^4.0.4
     dependencies:
       '@sveltejs/vite-plugin-svelte': 2.0.0_svelte@3.55.1+vite@4.0.4
-      '@types/cookie': 0.5.1
       cookie: 0.5.0
       devalue: 4.2.2
       esm-env: 1.0.0
@@ -301,6 +300,7 @@ importers:
     devDependencies:
       '@playwright/test': 1.29.2
       '@types/connect': 3.4.35
+      '@types/cookie': 0.5.1
       '@types/marked': 4.0.7
       '@types/mime': 3.0.1
       '@types/node': 16.18.6
@@ -1364,7 +1364,7 @@ packages:
 
   /@types/cookie/0.5.1:
     resolution: {integrity: sha512-COUnqfB2+ckwXXSFInsFdOAWQzCCx+a5hq2ruyj+Vjund94RJQd4LG2u9hnvJrTgunKAaax7ancBYlDrNYxA0g==}
-    dev: false
+    dev: true
 
   /@types/d3-geo/3.0.2:
     resolution: {integrity: sha512-DbqK7MLYA8LpyHQfv6Klz0426bQEf7bRTvhMy44sNGVyZoWn//B0c+Qbeg8Osi2Obdc9BLLXYAKpyWege2/7LQ==}
