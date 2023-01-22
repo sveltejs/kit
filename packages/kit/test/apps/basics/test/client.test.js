@@ -227,7 +227,7 @@ test.describe('Load', () => {
 	}
 
 	if (!process.env.DEV) {
-		test.only('does not fetch __data.json if no server load function exists', async ({
+		test('does not fetch __data.json if no server load function exists', async ({
 			page,
 			clicknav
 		}) => {
