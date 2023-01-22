@@ -368,7 +368,9 @@ function kit({ svelte_config }) {
 				});
 
 				manifest_data.nodes.forEach((_node, i) => {
-					const id = vite.normalizePath(path.resolve(kit.outDir, `generated/nodes/${i}.js`));
+					const id = vite.normalizePath(
+						path.resolve(kit.outDir, `generated/client-optimized/nodes/${i}.js`)
+					);
 
 					guard.check(id);
 				});
