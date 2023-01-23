@@ -5,7 +5,7 @@ import { nodeFileTrace } from '@vercel/nft';
 import esbuild from 'esbuild';
 
 /** @type {import('.').default} **/
-const plugin = function ({ external = [], edge, split, platform } = {}) {
+const plugin = function ({ external = [], edge, split, platform = {} } = {}) {
 	return {
 		name: '@sveltejs/adapter-vercel',
 
@@ -186,6 +186,9 @@ function static_vercel_config(builder) {
 	/** @type {Record<string, { path: string }>} */
 	const overrides = {};
 
+	/** @type {import('./index').ImagesConfig} */
+	const images = undefined;
+
 	for (const [src, redirect] of builder.prerendered.redirects) {
 		prerendered_redirects.push({
 			src,
@@ -224,7 +227,7 @@ function static_vercel_config(builder) {
 			}
 		],
 		overrides,
-		images: {},
+		images
 	};
 }
 
