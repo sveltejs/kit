@@ -582,7 +582,11 @@ test.describe('Redirects', () => {
 		expect(page.url()).toBe(`${baseURL}/redirect`);
 	});
 
-	test('sets cookies when throw redirect in handle hook', async ({ page, app, javaScriptEnabled }) => {
+	test('sets cookies when throw redirect in handle hook', async ({
+		page,
+		app,
+		javaScriptEnabled
+	}) => {
 		await page.goto('/cookies/set');
 		let span = page.locator('#cookie-value');
 		expect(await span.innerText()).toContain('teapot');
