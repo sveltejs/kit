@@ -1,5 +1,11 @@
 # @sveltejs/kit
 
+## 1.2.4
+
+### Patch Changes
+
+- chore: update undici to v5.16.0 ([#8668](https://github.com/sveltejs/kit/pull/8668))
+
 ## 1.2.3
 
 ### Patch Changes

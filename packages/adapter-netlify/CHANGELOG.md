@@ -1,5 +1,14 @@
 # @sveltejs/adapter-netlify
 
+## 1.0.5
+
+### Patch Changes
+
+- chore: update link to docs for missing netlify.toml warning ([#8673](https://github.com/sveltejs/kit/pull/8673))
+
+- Updated dependencies [[`24d2efe4`](https://github.com/sveltejs/kit/commit/24d2efe4e5b641b9caacf21ba77a42f812b3b120)]:
+  - @sveltejs/kit@1.2.4
+
 ## 1.0.4
 
 ### Patch Changes
