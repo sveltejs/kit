@@ -505,16 +505,14 @@ function convert_to_ts(js_code, indent = '', offset = '') {
 							node.declarationList.declarations.length === 1
 						) {
 							const variable_statement = node.declarationList.declarations[0];
-							
+
 							if (variable_statement.name.getText() === 'actions') {
 								const is_export = node.modifiers?.some(
 									(modifier) => modifier.kind === ts.SyntaxKind.ExportKeyword
 								)
 									? 'export '
 									: '';
-								const is_async = node.modifiers?.some(
-									(modifier) => modifier.kind === ts.SyntaxKind.AsyncKeyword
-								);
+
 								code.overwrite(
 									node.getStart(),
 									variable_statement.name.getEnd(),
