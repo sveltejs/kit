@@ -56,7 +56,6 @@ Instead of one `default` action, a page can have as many named actions as it nee
 
 ```diff
 /// file: src/routes/login/+page.server.js
-
 /** @type {import('./$types').Actions} */
 export const actions = {
 -	default: async (event) => {
@@ -107,7 +106,7 @@ As well as the `action` attribute, we can use the `formaction` attribute on a bu
 Each action receives a `RequestEvent` object, allowing you to read the data with `request.formData()`. After processing the request (for example, logging the user in by setting a cookie), the action can respond with data that will be available through the `form` property on the corresponding page and through `$page.form` app-wide until the next update.
 
 ```js
-// @errors: 2339 2304
+// @errors: 2304
 /// file: src/routes/login/+page.server.js
 /** @type {import('./$types').PageServerLoad} */
 export async function load({ cookies }) {
@@ -155,7 +154,6 @@ export const actions = {
 If the request couldn't be processed because of invalid data, you can return validation errors — along with the previously submitted form values — back to the user so that they can try again. The `fail` function lets you return an HTTP status code (typically 400 or 422, in the case of validation errors) along with the data. The status code is available through `$page.status` and the data through `form`:
 
 ```diff
-// @errors: 2339 2304
 /// file: src/routes/login/+page.server.js
 +import { fail } from '@sveltejs/kit';
 
@@ -214,7 +212,6 @@ The returned data must be serializable as JSON. Beyond that, the structure is en
 Redirects (and errors) work exactly the same as in [`load`](/docs/load#redirects):
 
 ```diff
-// @errors: 2339 2304
 /// file: src/routes/login/+page.server.js
 +import { fail, redirect } from '@sveltejs/kit';
 

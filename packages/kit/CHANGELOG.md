@@ -1,5 +1,11 @@
 # @sveltejs/kit
 
+## 1.2.3
+
+### Patch Changes
+
+- fix: set environment variables before postbuild analysis ([#8647](https://github.com/sveltejs/kit/pull/8647))
+
 ## 1.2.2
 
 ### Patch Changes

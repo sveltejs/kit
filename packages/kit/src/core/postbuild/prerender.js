@@ -50,7 +50,7 @@ const REDIRECT = 3;
  *   prerender_map: import('types').PrerenderMap;
  *   client_out_dir: string;
  *   verbose: string;
- *   env: string;
+ *   env: Record<string, string>;
  * }} opts
  * @returns
  */
@@ -92,7 +92,7 @@ export async function prerender({
 	internal.set_paths(config.paths);
 
 	const server = new Server(manifest);
-	await server.init({ env: JSON.parse(env) });
+	await server.init({ env });
 
 	const handle_http_error = normalise_error_handler(
 		log,
