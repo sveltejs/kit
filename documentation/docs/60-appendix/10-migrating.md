@@ -146,7 +146,7 @@ To support this environment-agnostic behavior, `fetch` is now available in the g
 
 ## Integrations
 
-See [the FAQ](../faq#integrations) for detailed information about integrations.
+See [the FAQ](/faq#integrations) for detailed information about integrations.
 
 ### HTML minifier
 
