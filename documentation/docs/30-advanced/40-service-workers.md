@@ -4,9 +4,9 @@ title: Service workers
 
 Service workers act as proxy servers that handle network requests inside your app. This makes it possible to make your app work offline, but even if you don't need offline support (or can't realistically implement it because of the type of app you're building), it's often worth using service workers to speed up navigation by precaching your built JS and CSS.
 
-In SvelteKit, if you have a `src/service-worker.js` file (or `src/service-worker.ts`, `src/service-worker/index.js`, etc) it will be bundled and automatically registered. You can change the [location of your service worker](/docs/configuration#files) if you need to.
+In SvelteKit, if you have a `src/service-worker.js` file (or `src/service-worker.ts`, `src/service-worker/index.js`, etc) it will be bundled and automatically registered. You can change the [location of your service worker](configuration#files) if you need to.
 
-You can [disable automatic registration](/docs/configuration#serviceworker) if you need to register the service worker with your own logic or use another solution. The default registration looks something like this:
+You can [disable automatic registration](configuration#serviceworker) if you need to register the service worker with your own logic or use another solution. The default registration looks something like this:
 
 ```js
 if ('serviceWorker' in navigator) {
@@ -18,7 +18,7 @@ if ('serviceWorker' in navigator) {
 
 ## Inside the service worker
 
-Inside the service worker you have access to the [`$service-worker` module](/docs/modules#$service-worker), which provides you with the paths to all static assets, build files and prerendered pages. You're also provided with an app version string which you can use for creating a unique cache name. If your Vite config specifies `define` (used for global variable replacements), this will be applied to service workers as well as your server/client builds.
+Inside the service worker you have access to the [`$service-worker` module](modules#$service-worker), which provides you with the paths to all static assets, build files and prerendered pages. You're also provided with an app version string which you can use for creating a unique cache name. If your Vite config specifies `define` (used for global variable replacements), this will be applied to service workers as well as your server/client builds.
 
 The following example caches the built app and any files in `static` eagerly, and caches all other requests as they happen. This would make each page work offline once visited.
 
