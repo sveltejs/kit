@@ -33,10 +33,10 @@
 	</svelte:fragment>
 
 	<svelte:fragment slot="nav-right">
-		<NavItem selected={$page.url.pathname.startsWith(`${base}/docs`) || undefined} href={`${base}/docs`}
+		<NavItem selected={$page.url.pathname.startsWith(`${base}/docs`) || undefined} href="{base}/docs"
 			>Docs</NavItem
 		>
-		<NavItem selected={$page.url.pathname.startsWith(`${base}/faq`) || undefined} href={`${base}/faq`}>FAQ</NavItem>
+		<NavItem selected={$page.url.pathname.startsWith(`${base}/faq`) || undefined} href="{base}/faq">FAQ</NavItem>
 
 		<li aria-hidden="true"><span class="separator" /></li>
 
