@@ -32,6 +32,16 @@ test.describe('base path', () => {
 		);
 	});
 
+	if (process.env.DEV) {
+		test('serves files in source directory', async ({ request, javaScriptEnabled }) => {
+			if (!javaScriptEnabled) return;
+
+			const response = await request.get('/path-base/source/pages/test.txt');
+			expect(response.ok()).toBe(true);
+			expect(await response.text()).toBe('hello there world\n');
+		});
+	}
+
 	test('sets_paths', async ({ page }) => {
 		await page.goto('/path-base/base/');
 		expect(await page.textContent('[data-source="base"]')).toBe('/path-base');
@@ -234,14 +244,14 @@ test.describe('trailingSlash', () => {
 	});
 });
 
-test.describe('serviceWorker', () => {
-	if (process.env.DEV) return;
-
-	test('does not register service worker if none created', async ({ page }) => {
-		await page.goto('/path-base/');
-		expect(await page.content()).not.toMatch('navigator.serviceWorker');
+if (!process.env.DEV) {
+	test.describe('serviceWorker', () => {
+		test('does not register service worker if none created', async ({ page }) => {
+			await page.goto('/path-base/');
+			expect(await page.content()).not.toMatch('navigator.serviceWorker');
+		});
 	});
-});
+}
 
 test.describe('Vite options', () => {
 	test('Respects --mode', async ({ page }) => {
