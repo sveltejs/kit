@@ -1,5 +1,11 @@
 # @sveltejs/kit
 
+## 1.2.5
+
+### Patch Changes
+
+- fix: check for wrong return values from form actions ([#8553](https://github.com/sveltejs/kit/pull/8553))
+
 ## 1.2.4
 
 ### Patch Changes
