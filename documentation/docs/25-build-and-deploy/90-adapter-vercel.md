@@ -30,7 +30,12 @@ export default {
 
 			// if true, will split your app into multiple functions
 			// instead of creating a single one for the entire app
-			split: false
+			split: false,
+
+			// vercel build output config. At this time only the images
+			// property is supported.
+			// (https://vercel.com/docs/build-output-api/v3#build-output-configuration)
+			platform: {}
 		})
 	}
 };
