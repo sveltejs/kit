@@ -211,7 +211,7 @@ The returned data must be serializable as JSON. Beyond that, the structure is en
 
 ### Redirects
 
-Redirects (and errors) work exactly the same as in [`load`](/docs/load#redirects):
+Redirects (and errors) work exactly the same as in [`load`](load#redirects):
 
 ```diff
 // @errors: 2339 2304
@@ -340,7 +340,7 @@ Without an argument, `use:enhance` will emulate the browser-native behaviour, ju
 - reset the `<form>` element and invalidate all data using `invalidateAll` on a successful response
 - call `goto` on a redirect response
 - render the nearest `+error` boundary if an error occurs
-- [reset focus](/docs/accessibility#focus-management) to the appropriate element
+- [reset focus](accessibility#focus-management) to the appropriate element
 
 To customise the behaviour, you can provide a `SubmitFunction` that runs immediately before the form is submitted, and (optionally) returns a callback that runs with the `ActionResult`. Note that if you return a callback, the default behavior mentioned above is not triggered. To get it back, call `update`.
 
@@ -399,7 +399,7 @@ The behaviour of `applyAction(result)` depends on `result.type`:
 - `redirect` — calls `goto(result.location)`
 - `error` — renders the nearest `+error` boundary with `result.error`
 
-In all cases, [focus will be reset](/docs/accessibility#focus-management).
+In all cases, [focus will be reset](accessibility#focus-management).
 
 ### Custom event listener
 
@@ -458,7 +458,7 @@ const response = await fetch(this.action, {
 
 ## Alternatives
 
-Form actions are the preferred way to send data to the server, since they can be progressively enhanced, but you can also use [`+server.js`](/docs/routing#server) files to expose (for example) a JSON API.
+Form actions are the preferred way to send data to the server, since they can be progressively enhanced, but you can also use [`+server.js`](routing#server) files to expose (for example) a JSON API.
 
 ## GET vs POST
 
@@ -475,4 +475,4 @@ Some forms don't need to `POST` data to the server — search inputs, for exampl
 </form>
 ```
 
-As with `<a>` elements, you can set the [`data-sveltekit-reload`](/docs/link-options#data-sveltekit-reload) and [`data-sveltekit-noscroll`](/docs/link-options#data-sveltekit-noscroll) attributes on the `<form>` to control the router's behaviour.
+As with `<a>` elements, you can set the [`data-sveltekit-reload`](link-options#data-sveltekit-reload) and [`data-sveltekit-noscroll`](link-options#data-sveltekit-noscroll) attributes on the `<form>` to control the router's behaviour.

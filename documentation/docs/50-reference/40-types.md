@@ -96,7 +96,7 @@ export async function load({ params, fetch }) {
 }
 ```
 
-> For this to work, your own `tsconfig.json` or `jsconfig.json` should extend from the generated `.svelte-kit/tsconfig.json` (where `.svelte-kit` is your [`outDir`](/docs/configuration#outdir)):
+> For this to work, your own `tsconfig.json` or `jsconfig.json` should extend from the generated `.svelte-kit/tsconfig.json` (where `.svelte-kit` is your [`outDir`](configuration#outdir)):
 >
 >     { "extends": "./.svelte-kit/tsconfig.json" }
 

@@ -2,15 +2,15 @@
 title: Page options
 ---
 
-By default, SvelteKit will render (or [prerender](/docs/glossary#prerendering)) any component first on the server and send it to the client as HTML. It will then render the component again in the browser to make it interactive in a process called [**hydration**](/docs/glossary#hydration). For this reason, you need to ensure that components can run in both places. SvelteKit will then initialize a [**router**](/docs/routing) that takes over subsequent navigations.
+By default, SvelteKit will render (or [prerender](glossary#prerendering)) any component first on the server and send it to the client as HTML. It will then render the component again in the browser to make it interactive in a process called [**hydration**](glossary#hydration). For this reason, you need to ensure that components can run in both places. SvelteKit will then initialize a [**router**](routing) that takes over subsequent navigations.
 
-You can control each of these on a page-by-page basis by exporting options from [`+page.js`](/docs/routing#page-page-js) or [`+page.server.js`](/docs/routing#page-page-server-js), or for groups of pages using a shared [`+layout.js`](/docs/routing#layout-layout-js) or [`+layout.server.js`](/docs/routing#layout-layout-server-js). To define an option for the whole app, export it from the root layout. Child layouts and pages override values set in parent layouts, so — for example — you can enable prerendering for your entire app then disable it for pages that need to be dynamically rendered.
+You can control each of these on a page-by-page basis by exporting options from [`+page.js`](routing#page-page-js) or [`+page.server.js`](routing#page-page-server-js), or for groups of pages using a shared [`+layout.js`](routing#layout-layout-js) or [`+layout.server.js`](routing#layout-layout-server-js). To define an option for the whole app, export it from the root layout. Child layouts and pages override values set in parent layouts, so — for example — you can enable prerendering for your entire app then disable it for pages that need to be dynamically rendered.
 
 You can mix and match these options in different areas of your app. For example you could prerender your marketing page for maximum speed, server-render your dynamic pages for SEO and accessibility and turn your admin section into an SPA by rendering it on the client only. This makes SvelteKit very versatile.
 
 ## prerender
 
-It's likely that at least some routes of your app can be represented as a simple HTML file generated at build time. These routes can be [_prerendered_](/docs/glossary#prerendering).
+It's likely that at least some routes of your app can be represented as a simple HTML file generated at build time. These routes can be [_prerendered_](glossary#prerendering).
 
 ```js
 /// file: +page.js/+page.server.js/+server.js
@@ -33,9 +33,9 @@ export const prerender = 'auto';
 
 > If your entire app is suitable for prerendering, you can use [`adapter-static`](https://github.com/sveltejs/kit/tree/master/packages/adapter-static), which will output files suitable for use with any static webserver.
 
-The prerenderer will start at the root of your app and generate files for any prerenderable pages or `+server.js` routes it finds. Each page is scanned for `<a>` elements that point to other pages that are candidates for prerendering — because of this, you generally don't need to specify which pages should be accessed. If you _do_ need to specify which pages should be accessed by the prerenderer, you can do so with the `entries` option in the [prerender configuration](/docs/configuration#prerender).
+The prerenderer will start at the root of your app and generate files for any prerenderable pages or `+server.js` routes it finds. Each page is scanned for `<a>` elements that point to other pages that are candidates for prerendering — because of this, you generally don't need to specify which pages should be accessed. If you _do_ need to specify which pages should be accessed by the prerenderer, you can do so with the `entries` option in the [prerender configuration](configuration#prerender).
 
-While prerendering, the value of `building` imported from [`$app/environment`](/docs/modules#$app-environment) will be `true`.
+While prerendering, the value of `building` imported from [`$app/environment`](modules#$app-environment) will be `true`.
 
 ### Prerendering server routes
 
@@ -62,9 +62,9 @@ The basic rule is this: for a page to be prerenderable, any two users hitting it
 
 Note that you can still prerender pages that load data based on the page's parameters, such as a `src/routes/blog/[slug]/+page.svelte` route.
 
-Accessing [`url.searchParams`](/docs/load#using-url-data-url) during prerendering is forbidden. If you need to use it, ensure you are only doing so in the browser (for example in `onMount`).
+Accessing [`url.searchParams`](load#using-url-data-url) during prerendering is forbidden. If you need to use it, ensure you are only doing so in the browser (for example in `onMount`).
 
-Pages with [actions](/docs/form-actions) cannot be prerendered, because a server must be able to handle the action `POST` requests.
+Pages with [actions](form-actions) cannot be prerendered, because a server must be able to handle the action `POST` requests.
 
 ### Prerender and ssr
 
@@ -86,12 +86,12 @@ If you encounter an error like 'The following routes were marked as prerenderabl
 
 Since these routes cannot be dynamically server-rendered, this will cause errors when people try to access the route in question. There are two ways to fix it:
 
-* Ensure that SvelteKit can find the route by following links from [`config.kit.prerender.entries`](/docs/configuration#prerender). Add links to dynamic routes (i.e. pages with `[parameters]` ) to this option if they are not found through crawling the other entry points, else they are not prerendered because SvelteKit doesn't know what value the parameters should have. Pages not marked as prerenderable will be ignored and their links to other pages will not be crawled, even if some of them would be prerenderable.
+* Ensure that SvelteKit can find the route by following links from [`config.kit.prerender.entries`](configuration#prerender). Add links to dynamic routes (i.e. pages with `[parameters]` ) to this option if they are not found through crawling the other entry points, else they are not prerendered because SvelteKit doesn't know what value the parameters should have. Pages not marked as prerenderable will be ignored and their links to other pages will not be crawled, even if some of them would be prerenderable.
 * Change `export const prerender = true` to `export const prerender = 'auto'`. Routes with `'auto'` can be dynamically server rendered
 
 ## ssr
 
-Normally, SvelteKit renders your page on the server first and sends that HTML to the client where it's [hydrated](/docs/glossary#hydration). If you set `ssr` to `false`, it renders an empty 'shell' page instead. This is useful if your page is unable to be rendered on the server (because you use browser-only globals like `document` for example), but in most situations it's not recommended ([see appendix](/docs/glossary#ssr)).
+Normally, SvelteKit renders your page on the server first and sends that HTML to the client where it's [hydrated](glossary#hydration). If you set `ssr` to `false`, it renders an empty 'shell' page instead. This is useful if your page is unable to be rendered on the server (because you use browser-only globals like `document` for example), but in most situations it's not recommended ([see appendix](glossary#ssr)).
 
 ```js
 /// file: +page.js
@@ -102,7 +102,7 @@ If you add `export const ssr = false` to your root `+layout.js`, your entire app
 
 ## csr
 
-Ordinarily, SvelteKit [hydrates](/docs/glossary#hydration) your server-rendered HTML into an interactive client-side-rendered (CSR) page. Some pages don't require JavaScript at all — many blog posts and 'about' pages fall into this category. In these cases you can disable CSR:
+Ordinarily, SvelteKit [hydrates](glossary#hydration) your server-rendered HTML into an interactive client-side-rendered (CSR) page. Some pages don't require JavaScript at all — many blog posts and 'about' pages fall into this category. In these cases you can disable CSR:
 
 ```js
 /// file: +page.js

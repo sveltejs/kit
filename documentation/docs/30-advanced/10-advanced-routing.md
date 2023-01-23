@@ -61,7 +61,7 @@ export function load(event) {
 }
 ```
 
-> If you don't handle 404 cases, they will appear in [`handleError`](/docs/hooks#shared-hooks-handleerror)
+> If you don't handle 404 cases, they will appear in [`handleError`](hooks#shared-hooks-handleerror)
 
 ## Optional parameters
 
@@ -71,7 +71,7 @@ Note that an optional route parameter cannot follow a rest parameter (`[...rest]
 
 ## Matching
 
-A route like `src/routes/archive/[page]` would match `/archive/3`, but it would also match `/archive/potato`. We don't want that. You can ensure that route parameters are well-formed by adding a _matcher_ — which takes the parameter string (`"3"` or `"potato"`) and returns `true` if it is valid — to your [`params`](/docs/configuration#files) directory...
+A route like `src/routes/archive/[page]` would match `/archive/3`, but it would also match `/archive/potato`. We don't want that. You can ensure that route parameters are well-formed by adding a _matcher_ — which takes the parameter string (`"3"` or `"potato"`) and returns `true` if it is valid — to your [`params`](configuration#files) directory...
 
 ```js
 /// file: src/params/integer.js

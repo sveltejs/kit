@@ -1,6 +1,7 @@
 <script>
 	import '@sveltejs/site-kit/styles/index.css';
 	import { browser } from '$app/environment';
+	import { base } from '$app/paths';
 	import { page, navigating } from '$app/stores';
 	import Icon from '@sveltejs/site-kit/components/Icon.svelte';
 	import Icons from '@sveltejs/site-kit/components/Icons.svelte';
@@ -32,10 +33,10 @@
 	</svelte:fragment>
 
 	<svelte:fragment slot="nav-right">
-		<NavItem selected={$page.url.pathname.startsWith('/docs') || undefined} href="/docs"
+		<NavItem selected={$page.url.pathname.startsWith(`${base}/docs`) || undefined} href={`${base}/docs`}
 			>Docs</NavItem
 		>
-		<NavItem selected={$page.url.pathname.startsWith('/faq') || undefined} href="/faq">FAQ</NavItem>
+		<NavItem selected={$page.url.pathname.startsWith(`${base}/faq`) || undefined} href={`${base}/faq`}>FAQ</NavItem>
 
 		<li aria-hidden="true"><span class="separator" /></li>
 

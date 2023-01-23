@@ -4,7 +4,7 @@ title: Static site generation
 
 To use SvelteKit as a static site generator (SSG), use [`adapter-static`](https://github.com/sveltejs/kit/tree/master/packages/adapter-static).
 
-This will prerender your entire site as a collection of static files. If you'd like to prerender only some pages, you will need to use a different adapter together with [the `prerender` option](/docs/page-options#prerender).
+This will prerender your entire site as a collection of static files. If you'd like to prerender only some pages, you will need to use a different adapter together with [the `prerender` option](page-options#prerender).
 
 ## Usage
 
@@ -30,7 +30,7 @@ export default {
 };
 ```
 
-...and add the [`prerender`](/docs/page-options#prerender) option to your root layout:
+...and add the [`prerender`](page-options#prerender) option to your root layout:
 
 ```js
 /// file: src/routes/+layout.js
@@ -38,7 +38,7 @@ export default {
 export const prerender = true;
 ```
 
-> You must ensure SvelteKit's [`trailingSlash`](/docs/page-options#trailingslash) option is set appropriately for your environment. If your host does not render `/a.html` upon receiving a request for `/a` then you will need to set `trailingSlash: 'always'` to create `/a/index.html` instead.
+> You must ensure SvelteKit's [`trailingSlash`](page-options#trailingslash) option is set appropriately for your environment. If your host does not render `/a.html` upon receiving a request for `/a` then you will need to set `trailingSlash: 'always'` to create `/a/index.html` instead.
 
 ## Zero-config support
 
@@ -135,7 +135,7 @@ export default {
 
 ### Turn off prerendering
 
-When operating in SPA mode, you can omit the [`prerender`](/docs/page-options#prerender) option from your root layout (or set it to `false`, its default value), and only pages that have the `prerender` option set will be prerendered at build time.
+When operating in SPA mode, you can omit the [`prerender`](page-options#prerender) option from your root layout (or set it to `false`, its default value), and only pages that have the `prerender` option set will be prerendered at build time.
 
 SvelteKit will still crawl your app's entry points looking for prerenderable pages. If `svelte-kit build` fails because of pages that can't be loaded outside the browser, you can set `config.kit.prerender.entries` to `[]` to prevent this from happening. (Setting `config.kit.prerender.enabled` to `false` also has this effect, but would prevent the fallback page from being generated.)
 
@@ -143,7 +143,7 @@ You can also add turn off prerendering only to parts of your app, if you want ot
 
 ### Turn off ssr
 
-During development, SvelteKit will still attempt to server-side render your routes. This means accessing things that are only available in the browser (such as the `window` object) will result in errors, even though this would be valid in the output app. To align the behavior of SvelteKit's dev mode with your SPA, you can [add `export const ssr = false` to your root `+layout`](/docs/page-options#ssr). You can also add this option only to parts of your app, if you want other parts to be prerendered.
+During development, SvelteKit will still attempt to server-side render your routes. This means accessing things that are only available in the browser (such as the `window` object) will result in errors, even though this would be valid in the output app. To align the behavior of SvelteKit's dev mode with your SPA, you can [add `export const ssr = false` to your root `+layout`](page-options#ssr). You can also add this option only to parts of your app, if you want other parts to be prerendered.
 
 ### Apache
 
@@ -162,7 +162,7 @@ To run an SPA on [Apache](https://httpd.apache.org/), you should add a `static/.
 
 ## GitHub Pages
 
-When building for GitHub Pages, make sure to update [`paths.base`](/docs/configuration#paths) to match your repo name, since the site will be served from <https://your-username.github.io/your-repo-name> rather than from the root.
+When building for GitHub Pages, make sure to update [`paths.base`](configuration#paths) to match your repo name, since the site will be served from <https://your-username.github.io/your-repo-name> rather than from the root.
 
 You will have to prevent GitHub's provided Jekyll from managing your site by putting an empty `.nojekyll` file in your static folder. If you do not want to disable Jekyll, change the kit's `appDir` configuration option to `'app_'` or anything not starting with an underscore. For more information, see GitHub's [Jekyll documentation](https://docs.github.com/en/pages/setting-up-a-github-pages-site-with-jekyll/about-github-pages-and-jekyll#configuring-jekyll-in-your-github-pages-site).
 
