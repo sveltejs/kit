@@ -368,6 +368,7 @@ export async function dev(vite, vite_config, svelte_config) {
 
 		vite.middlewares.use(async (req, res) => {
 			// Vite's base middleware strips out the base path. Restore it
+			const original_url = req.url;
 			req.url = req.originalUrl;
 			try {
 				const base = `${vite.config.server.https ? 'https' : 'http'}://${
@@ -375,13 +376,14 @@ export async function dev(vite, vite_config, svelte_config) {
 				}`;
 
 				const decoded = decodeURI(new URL(base + req.url).pathname);
-				const file = posixify(path.resolve(decoded.slice(1)));
+				const file = posixify(path.resolve(decoded.slice(svelte_config.kit.paths.base.length + 1)));
 				const is_file = fs.existsSync(file) && !fs.statSync(file).isDirectory();
 				const allowed =
 					!vite_config.server.fs.strict ||
 					vite_config.server.fs.allow.some((dir) => file.startsWith(dir));
 
 				if (is_file && allowed) {
+					req.url = original_url;
 					// @ts-expect-error
 					serve_static_middleware.handle(req, res);
 					return;
