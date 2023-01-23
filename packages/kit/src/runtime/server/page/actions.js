@@ -156,6 +156,7 @@ export async function handle_action_request(event, server) {
 			return {
 				type: 'success',
 				status: 200,
+				// @ts-expect-error this will be removed upon serialization, so `undefined` is the same as omission
 				data
 			};
 		}
