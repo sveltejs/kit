@@ -4,7 +4,7 @@ import { render_page } from './page/index.js';
 import { render_response } from './page/render.js';
 import { respond_with_error } from './page/respond_with_error.js';
 import { is_form_content_type } from '../../utils/http.js';
-import { GENERIC_ERROR, get_option, handle_fatal_error } from './utils.js';
+import { GENERIC_ERROR, get_option, handle_fatal_error, redirect_response } from './utils.js';
 import {
 	decode_pathname,
 	decode_params,
@@ -297,19 +297,11 @@ export async function respond(request, options, manifest, state) {
 		return response;
 	} catch (e) {
 		if (e instanceof Redirect) {
-			if (is_data_request) {
-				return redirect_json_response(e);
-			} else {
-				const response = new Response(undefined, {
-					status: e.status,
-					headers
-				});
-				response.headers.set('location', e.location);
-
-				add_cookies_to_headers(response.headers, Object.values(cookies_to_add));
-
-				return response;
-			}
+			const response = is_data_request
+				? redirect_json_response(e)
+				: redirect_response(e.status, e.location);
+			add_cookies_to_headers(response.headers, Object.values(cookies_to_add));
+			return response;
 		}
 		return await handle_fatal_error(event, options, e);
 	}

@@ -582,11 +582,22 @@ test.describe('Redirects', () => {
 		expect(page.url()).toBe(`${baseURL}/redirect`);
 	});
 
-	test('redirect thrown in handle sets headers', async ({ page }) => {
+	test('sets cookies when throw redirect in handle hook', async ({ page, app, javaScriptEnabled }) => {
 		await page.goto('/cookies/set');
 		let span = page.locator('#cookie-value');
 		expect(await span.innerText()).toContain('teapot');
-		await page.goto('/redirect/in-handle?throw&headers');
+
+		if (javaScriptEnabled) {
+			const [, response] = await Promise.all([
+				app.goto('/redirect/in-handle?throw&cookies'),
+				page.waitForResponse((request) =>
+					request.url().endsWith('in-handle/__data.json?throw=&cookies=&x-sveltekit-invalidated=_1')
+				)
+			]);
+			expect((await response.allHeaders())['set-cookie']).toBeDefined();
+		}
+
+		await page.goto('/redirect/in-handle?throw&cookies');
 		span = page.locator('#cookie-value');
 		expect(await span.innerText()).toContain('undefined');
 	});

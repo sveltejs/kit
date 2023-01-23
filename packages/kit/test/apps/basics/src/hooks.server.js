@@ -97,7 +97,7 @@ export const handle = sequence(
 		if (event.url.pathname.includes('/redirect/in-handle')) {
 			if (event.url.search === '?throw') {
 				throw redirect(307, event.url.origin + '/redirect/c');
-			} else if (event.url.search === '?throw&headers') {
+			} else if (event.url.search.includes('cookies')) {
 				event.cookies.delete(COOKIE_NAME, { path: '/cookies' });
 				throw redirect(307, event.url.origin + '/cookies');
 			} else {
