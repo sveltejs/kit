@@ -54,7 +54,7 @@ Any static assets that should be served as-is, like `robots.txt` or `favicon.png
 
 ### tests
 
-If you added [Playwright](https://playwright.dev/) for browser testing when you set up your project, the tests will live in this directory.
+If you added [Playwright](https://playwright.dev/) for browser testing when you set up your project, the tests will live in this directory. This directory is optional.
 
 ### package.json
 
@@ -69,6 +69,8 @@ This file contains your Svelte and SvelteKit [configuration](/docs/configuration
 ### tsconfig.json
 
 This file (or `jsconfig.json`, if you prefer type-checked `.js` files over `.ts` files) configures TypeScript, if you added typechecking during `npm create svelte@latest`. Since SvelteKit relies on certain configuration being set a specific way, it generates its own `.svelte-kit/tsconfig.json` file which your own config `extends`.
+
+Although optional, it's highly recommended to keep this in your project in order for [generated types](/docs/types#generated-types) to provide helpful type inferences for data passed between pages and back-end code as well as path alias autocomplete for `$lib` and [custom path aliases](/docs/configuration#alias) defined in `svelte.config.js`.
 
 ### vite.config.js
 
