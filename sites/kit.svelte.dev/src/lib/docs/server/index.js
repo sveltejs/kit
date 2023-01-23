@@ -518,8 +518,8 @@ function convert_to_ts(js_code, indent = '', offset = '') {
 									variable_statement.name.getEnd(),
 									`${is_export ? 'export ' : ''}const ${variable_statement.name.getText()}`
 								);
-								code.appendLeft(variable_statement.initializer.getStart(), '(');
-								code.appendLeft(variable_statement.getEnd(), `) satisfies ${name}`);
+
+								code.appendLeft(variable_statement.getEnd(), ` satisfies ${name}`);
 							} else {
 								code.appendLeft(variable_statement.name.getEnd(), `: ${name}`);
 							}
