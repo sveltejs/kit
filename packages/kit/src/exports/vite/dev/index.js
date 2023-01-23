@@ -364,8 +364,8 @@ export async function dev(vite, vite_config, svelte_config) {
 				/** @type {function} */ (middleware.handle).name === 'viteServeStaticMiddleware'
 		);
 
-		// Vite will error on URLs like /static and /package.json instead of passing through so we can
-		// serve routes with those names
+		// Vite will give a 403 on URLs like /test, /static, and /package.json preventing us from
+		// serving routes with those names. See https://github.com/vitejs/vite/issues/7363
 		remove_static_middlewares(vite.middlewares);
 
 		vite.middlewares.use(async (req, res) => {
