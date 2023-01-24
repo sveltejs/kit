@@ -1,5 +1,11 @@
 # @sveltejs/kit
 
+## 1.2.7
+
+### Patch Changes
+
+- fix: set headers when throwing redirect in handle ([#8648](https://github.com/sveltejs/kit/pull/8648))
+
 ## 1.2.6
 
 ### Patch Changes
