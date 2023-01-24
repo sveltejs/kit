@@ -1,5 +1,77 @@
 # @sveltejs/kit
 
+## 1.2.6
+
+### Patch Changes
+
+- fix: allow importing assets while using base path ([#8683](https://github.com/sveltejs/kit/pull/8683))
+
+## 1.2.5
+
+### Patch Changes
+
+- fix: check for wrong return values from form actions ([#8553](https://github.com/sveltejs/kit/pull/8553))
+
+## 1.2.4
+
+### Patch Changes
+
+- chore: update undici to v5.16.0 ([#8668](https://github.com/sveltejs/kit/pull/8668))
+
+## 1.2.3
+
+### Patch Changes
+
+- fix: set environment variables before postbuild analysis ([#8647](https://github.com/sveltejs/kit/pull/8647))
+
+## 1.2.2
+
+### Patch Changes
+
+- fix: focus management after navigation ([#8466](https://github.com/sveltejs/kit/pull/8466))
+
+## 1.2.1
+
+### Patch Changes
+
+- feat: throw error if cookie exceeds size limit ([#8591](https://github.com/sveltejs/kit/pull/8591))
+
+## 1.2.0
+
+### Minor Changes
+
+- feat: add `text(...)` helper for generating text responses ([#8371](https://github.com/sveltejs/kit/pull/8371))
+
+- feat: enable access to public env within app.html ([#8449](https://github.com/sveltejs/kit/pull/8449))
+
+- fix: add `Content-Length` header to SvelteKit-generated responses ([#8371](https://github.com/sveltejs/kit/pull/8371))
+
+## 1.1.4
+
+### Patch Changes
+
+- fix: squelch unknown prop warning for `+error.svelte` components ([#8593](https://github.com/sveltejs/kit/pull/8593))
+
+## 1.1.3
+
+### Patch Changes
+
+- docs: explain how to add ambient typings ([#8558](https://github.com/sveltejs/kit/pull/8558))
+
+- fix: ignore `target="_blank"` links ([#8563](https://github.com/sveltejs/kit/pull/8563))
+
+## 1.1.2
+
+### Patch Changes
+
+- fix: correct link in types documentation ([#8557](https://github.com/sveltejs/kit/pull/8557))
+
+- fix: correctly detect changed data ([#8377](https://github.com/sveltejs/kit/pull/8377))
+
+- fix: only generate type definitions with `sync` command ([#8552](https://github.com/sveltejs/kit/pull/8552))
+
+- fix: remove baseUrl to prevent wrong TypeScript auto imports if possible ([#8568](https://github.com/sveltejs/kit/pull/8568))
+
 ## 1.1.1
 
 ### Patch Changes

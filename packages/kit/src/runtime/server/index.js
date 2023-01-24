@@ -1,6 +1,5 @@
 import { respond } from './respond.js';
-import { set_private_env } from '../env-private.js';
-import { set_public_env } from '../env-public.js';
+import { set_private_env, set_public_env } from '../shared.js';
 import { options, get_hooks } from '__GENERATED__/server-internal.js';
 
 export class Server {

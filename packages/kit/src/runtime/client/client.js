@@ -326,12 +326,21 @@ export function create_client({ target, base }) {
 		// opts must be passed if we're navigating
 		if (opts) {
 			const { scroll, keepfocus } = opts;
+			const { activeElement } = document;
 
-			// reset focus first, so that manual focus management can override it
-			if (!keepfocus) reset_focus();
-
-			// need to render the DOM before we can scroll to the rendered elements
+			// need to render the DOM before we can scroll to the rendered elements and do focus management
 			await tick();
+
+			const changed_focus =
+				// reset focus only if any manual focus management didn't override it
+				document.activeElement !== activeElement &&
+				// also refocus when activeElement is body already because the
+				// focus event might not have been fired on it yet
+				document.activeElement !== document.body;
+
+			if (!keepfocus && !changed_focus) {
+				await reset_focus();
+			}
 
 			if (autoscroll) {
 				const deep_linked = url.hash && document.getElementById(url.hash.slice(1));
@@ -1389,10 +1398,17 @@ export function create_client({ target, base }) {
 				const a = find_anchor(/** @type {Element} */ (event.composedPath()[0]), container);
 				if (!a) return;
 
-				const { url, external, has } = get_link_info(a, base);
-				const options = get_router_options(a);
+				const { url, external, target } = get_link_info(a, base);
 				if (!url) return;
 
+				// bail out before `beforeNavigate` if link opens in a different tab
+				if (target === '_parent' || target === '_top') {
+					if (window.parent !== window) return;
+				} else if (target && target !== '_self') {
+					return;
+				}
+
+				const options = get_router_options(a);
 				const is_svg_a_element = a instanceof SVGAElement;
 
 				// Ignore URL protocols that differ to the current one and are not http(s) (e.g. `mailto:`, `tel:`, `myapp:`, etc.)
@@ -1409,8 +1425,6 @@ export function create_client({ target, base }) {
 					!(url.protocol === 'https:' || url.protocol === 'http:')
 				)
 					return;
-
-				if (has.download) return;
 
 				// Ignore the following but fire beforeNavigate
 				if (external || options.reload) {
@@ -1713,16 +1727,19 @@ function reset_focus() {
 		root.tabIndex = -1;
 		root.focus({ preventScroll: true });
 
-		setTimeout(() => {
-			getSelection()?.removeAllRanges();
-		});
-
 		// restore `tabindex` as to prevent `root` from stealing input from elements
 		if (tabindex !== null) {
 			root.setAttribute('tabindex', tabindex);
 		} else {
 			root.removeAttribute('tabindex');
 		}
+
+		return new Promise((resolve) => {
+			setTimeout(() => {
+				// fixes https://github.com/sveltejs/kit/issues/8439
+				resolve(getSelection()?.removeAllRanges());
+			});
+		});
 	}
 }
 
@@ -1732,7 +1749,7 @@ if (DEV) {
 	console.warn = function warn(...args) {
 		if (
 			args.length === 1 &&
-			/<(Layout|Page)(_[\w$]+)?> was created (with unknown|without expected) prop '(data|form)'/.test(
+			/<(Layout|Page|Error)(_[\w$]+)?> was created (with unknown|without expected) prop '(data|form)'/.test(
 				args[0]
 			)
 		) {

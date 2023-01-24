@@ -1,6 +1,7 @@
 <script>
 	import { onMount } from 'svelte';
 	import { afterNavigate } from '$app/navigation';
+	import { base } from '$app/paths';
 	import { page } from '$app/stores';
 
 	/** @type {import('./$types').PageData['page']} */
@@ -44,7 +45,7 @@
 			return heading.getBoundingClientRect().top - parseFloat(style.scrollMarginTop) - top;
 		});
 
-		height = window.innerHeight - 50 /* bottom banner height */;
+		height = window.innerHeight;
 	}
 
 	function highlight() {
@@ -86,7 +87,7 @@
 	<h2>On this page</h2>
 	<nav>
 		<ul>
-			<li><a href="/docs/{details.slug}" class:active={hash === ''}>{details.title}</a></li>
+			<li><a href="{base}/docs/{details.slug}" class:active={hash === ''}>{details.title}</a></li>
 			{#each details.sections as { title, slug }}
 				<li><a href={`#${slug}`} class:active={`#${slug}` === hash}>{title}</a></li>
 			{/each}

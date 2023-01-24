@@ -7,8 +7,8 @@ import { s } from '../../../utils/misc.js';
 import { Csp } from './csp.js';
 import { uneval_action_response } from './actions.js';
 import { clarify_devalue_error } from '../utils.js';
-import { assets, base, version } from '../../shared.js';
-import { env } from '../../env-public.js';
+import { assets, base, version, public_env } from '../../shared.js';
+import { text } from '../../../exports/index.js';
 
 // TODO rename this function/module
 
@@ -257,7 +257,7 @@ export async function render_response({
 
 	if (page_config.csr) {
 		const opts = [
-			`env: ${s(env)}`,
+			`env: ${s(public_env)}`,
 			`paths: ${s({ assets, base })}`,
 			`target: document.querySelector('[data-sveltekit-hydrate="${target}"]').parentNode`,
 			`version: ${s(version)}`
@@ -366,7 +366,8 @@ export async function render_response({
 		head,
 		body,
 		assets: resolved_assets,
-		nonce: /** @type {string} */ (csp.nonce)
+		nonce: /** @type {string} */ (csp.nonce),
+		env: public_env
 	});
 
 	// TODO flush chunks as early as we can
@@ -407,7 +408,7 @@ export async function render_response({
 		}
 	}
 
-	return new Response(transformed, {
+	return text(transformed, {
 		status,
 		headers
 	});

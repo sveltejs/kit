@@ -1044,7 +1044,7 @@ export interface ServerLoadEvent<
 
 /**
  * Shape of a form action method that is part of `export const actions = {..}` in `+page.server.js`.
- * See [form actions](https://kit-svelte-d4b3r0pff-svelte.vercel.app/docs/form-actions) for more information.
+ * See [form actions](https://kit.svelte.dev/docs/form-actions) for more information.
  */
 export interface Action<
 	Params extends Partial<Record<string, string>> = Partial<Record<string, string>>,
@@ -1056,7 +1056,7 @@ export interface Action<
 
 /**
  * Shape of the `export const actions = {..}` object in `+page.server.js`.
- * See [form actions](https://kit-svelte-d4b3r0pff-svelte.vercel.app/docs/form-actions) for more information.
+ * See [form actions](https://kit.svelte.dev/docs/form-actions) for more information.
  */
 export type Actions<
 	Params extends Partial<Record<string, string>> = Partial<Record<string, string>>,
@@ -1123,9 +1123,16 @@ export interface Redirect {
 /**
  * Create a JSON `Response` object from the supplied data.
  * @param data The value that will be serialized as JSON.
- * @param init Options such as `status` and `headers` that will be added to the response. A `Content-Type: application/json` header will be added automatically.
+ * @param init Options such as `status` and `headers` that will be added to the response. `Content-Type: application/json` and `Content-Length` headers will be added automatically.
  */
 export function json(data: any, init?: ResponseInit): Response;
+
+/**
+ * Create a `Response` object from the supplied body.
+ * @param body The value that will be used as-is.
+ * @param init Options such as `status` and `headers` that will be added to the response. A `Content-Length` header will be added automatically.
+ */
+export function text(body: string, init?: ResponseInit): Response;
 
 /**
  * Create an `ActionFailure` object.
