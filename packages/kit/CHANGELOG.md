@@ -1,5 +1,11 @@
 # @sveltejs/kit
 
+## 1.2.8
+
+### Patch Changes
+
+- fix: include base path in path to start script ([#8651](https://github.com/sveltejs/kit/pull/8651))
+
 ## 1.2.7
 
 ### Patch Changes
