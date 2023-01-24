@@ -3,7 +3,7 @@
 
 	export const snapshot = {
 		capture: () => message,
-		apply: (snapshot) => (message = snapshot)
+		restore: (snapshot) => (message = snapshot)
 	};
 </script>
 

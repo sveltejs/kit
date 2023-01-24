@@ -54,7 +54,7 @@ default_error_loader();
 /** @type {Record<number, ScrollPosition>} */
 const scroll_positions = storage.get(SCROLL_KEY) ?? {};
 
-/** @type {Record<string, any>} */
+/** @type {Record<string, any[]>} */
 const snapshots = storage.get(SNAPSHOT_KEY) ?? {};
 
 /** @param {number} index */
@@ -124,6 +124,8 @@ export function create_client({ target, base }) {
 			location.href
 		);
 	}
+
+	const initial_history_index = current_history_index;
 
 	// if we reload the page, or Cmd-Shift-T back to it,
 	// recover scroll position
@@ -198,7 +200,8 @@ export function create_client({ target, base }) {
 				}
 			},
 			blocked: () => {},
-			type: 'goto'
+			type: 'goto',
+			previous_history_index: current_history_index
 		});
 	}
 
@@ -240,11 +243,20 @@ export function create_client({ target, base }) {
 	 * @param {import('./types').NavigationIntent | undefined} intent
 	 * @param {URL} url
 	 * @param {string[]} redirect_chain
+	 * @param {number} [previous_history_index]
 	 * @param {{hash?: string, scroll: { x: number, y: number } | null, keepfocus: boolean, details: { replaceState: boolean, state: any } | null}} [opts]
 	 * @param {{}} [nav_token] To distinguish between different navigation events and determine the latest. Needed for example for redirects to keep the original token
 	 * @param {() => void} [callback]
 	 */
-	async function update(intent, url, redirect_chain, opts, nav_token = {}, callback) {
+	async function update(
+		intent,
+		url,
+		redirect_chain,
+		previous_history_index,
+		opts,
+		nav_token = {},
+		callback
+	) {
 		token = nav_token;
 		let navigation_result = intent && (await load_route(intent));
 
@@ -302,6 +314,11 @@ export function create_client({ target, base }) {
 		force_invalidation = false;
 
 		updating = true;
+
+		// `previous_history_index` will be undefined for invalidation
+		if (previous_history_index) {
+			snapshots[previous_history_index] = components.map((c) => c.snapshot?.capture());
+		}
 
 		if (opts && opts.details) {
 			const { details } = opts;
@@ -387,6 +404,10 @@ export function create_client({ target, base }) {
 			target,
 			props: { ...result.props, stores, components },
 			hydrate: true
+		});
+
+		snapshots[current_history_index]?.forEach((value, i) => {
+			components[i].snapshot?.restore(value);
 		});
 
 		/** @type {import('types').AfterNavigate} */
@@ -1059,6 +1080,7 @@ export function create_client({ target, base }) {
 	 *   type: import('types').NavigationType;
 	 *   delta?: number;
 	 *   nav_token?: {};
+	 *   previous_history_index: number;
 	 *   accepted: () => void;
 	 *   blocked: () => void;
 	 * }} opts
@@ -1072,6 +1094,7 @@ export function create_client({ target, base }) {
 		type,
 		delta,
 		nav_token,
+		previous_history_index,
 		accepted,
 		blocked
 	}) {
@@ -1097,6 +1120,7 @@ export function create_client({ target, base }) {
 			intent,
 			url,
 			redirect_chain,
+			previous_history_index,
 			{
 				scroll,
 				keepfocus,
@@ -1376,6 +1400,9 @@ export function create_client({ target, base }) {
 				if (document.visibilityState === 'hidden') {
 					update_scroll_positions(current_history_index);
 					storage.set(SCROLL_KEY, scroll_positions);
+
+					snapshots[current_history_index] = components.map((c) => c.snapshot?.capture());
+					storage.set(SNAPSHOT_KEY, snapshots);
 				}
 			});
 
@@ -1463,7 +1490,8 @@ export function create_client({ target, base }) {
 					},
 					accepted: () => event.preventDefault(),
 					blocked: () => event.preventDefault(),
-					type: 'link'
+					type: 'link',
+					previous_history_index: current_history_index
 				});
 			});
 
@@ -1518,11 +1546,12 @@ export function create_client({ target, base }) {
 					nav_token: {},
 					accepted: () => {},
 					blocked: () => {},
-					type: 'form'
+					type: 'form',
+					previous_history_index: current_history_index
 				});
 			});
 
-			addEventListener('popstate', (event) => {
+			addEventListener('popstate', async (event) => {
 				if (event.state?.[INDEX_KEY]) {
 					// if a popstate-driven navigation is cancelled, we need to counteract it
 					// with history.go, which means we end up back here, hence this check
@@ -1530,7 +1559,7 @@ export function create_client({ target, base }) {
 
 					const delta = event.state[INDEX_KEY] - current_history_index;
 
-					navigate({
+					await navigate({
 						url: new URL(location.href),
 						scroll: scroll_positions[event.state[INDEX_KEY]],
 						keepfocus: false,
@@ -1543,7 +1572,12 @@ export function create_client({ target, base }) {
 							history.go(-delta);
 						},
 						type: 'popstate',
-						delta
+						delta,
+						previous_history_index: current_history_index
+					});
+
+					snapshots[current_history_index].forEach((value, i) => {
+						components[i].snapshot?.restore(value);
 					});
 				}
 			});
