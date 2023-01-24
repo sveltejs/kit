@@ -75,6 +75,9 @@ export function create_client({ target, base }) {
 	/** @type {Array<((url: URL) => boolean)>} */
 	const invalidated = [];
 
+	/** @type {import('svelte').SvelteComponent[]} */
+	const components = [];
+
 	/** @type {{id: string, promise: Promise<import('./types').NavigationResult>} | null} */
 	let load_cache = null;
 
@@ -383,7 +386,7 @@ export function create_client({ target, base }) {
 
 		root = new Root({
 			target,
-			props: { ...result.props, stores },
+			props: { ...result.props, stores, components },
 			hydrate: true
 		});
 
@@ -444,7 +447,7 @@ export function create_client({ target, base }) {
 			},
 			props: {
 				// @ts-ignore Somehow it's getting SvelteComponent and SvelteComponentDev mixed up
-				components: compact(branch).map((branch_node) => branch_node.node.component)
+				constructors: compact(branch).map((branch_node) => branch_node.node.component)
 			}
 		};
 

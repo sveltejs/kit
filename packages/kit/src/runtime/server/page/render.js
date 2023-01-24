@@ -89,7 +89,7 @@ export async function render_response({
 				navigating: writable(null),
 				updated
 			},
-			components: await Promise.all(branch.map(({ node }) => node.component())),
+			constructors: await Promise.all(branch.map(({ node }) => node.component())),
 			form: form_value
 		};
 

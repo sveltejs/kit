@@ -132,6 +132,23 @@ export async function sveltekit() {
 			hydratable: true,
 			...svelte_config.compilerOptions
 		},
+		experimental: {
+			dynamicCompileOptions: ({ filename, code, compileOptions }) => {
+				const options =
+					svelte_config.vitePlugin?.experimental?.dynamicCompileOptions?.({
+						filename,
+						code,
+						compileOptions
+					}) ?? {};
+
+				const basename = path.basename(filename);
+				if (basename.startsWith('+layout') || basename.startsWith('+page')) {
+					options.accessors = true;
+				}
+
+				return options;
+			}
+		},
 		...svelte_config.vitePlugin
 	};
 
