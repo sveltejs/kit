@@ -611,16 +611,28 @@ test.describe('env in app.html', () => {
 test.describe('Snapshots', () => {
 	test.only('recovers snapshotted data', async ({ page, clicknav }) => {
 		await page.goto('/snapshot/a');
-		await page.locator('input').type('hello');
+
+		let input = page.locator('input');
+		await input.type('hello');
 
 		await clicknav('[href="/snapshot/b"]');
 		await page.goBack();
-		expect(await page.locator('input').inputValue()).toBe('hello');
 
-		await page.locator('input').type('works for cross-document navigations');
+		input = page.locator('input');
+		expect(await input.inputValue()).toBe('hello');
+
+		await input.clear();
+		await input.type('works for cross-document navigations');
 
 		await clicknav('[href="/snapshot/c"]');
 		await page.goBack();
 		expect(await page.locator('input').inputValue()).toBe('works for cross-document navigations');
+
+		input = page.locator('input');
+		await input.clear();
+		await input.type('works for reloads');
+
+		await page.reload();
+		expect(await page.locator('input').inputValue()).toBe('works for reloads');
 	});
 });
