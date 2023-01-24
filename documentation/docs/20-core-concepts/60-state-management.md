@@ -6,7 +6,7 @@ Managing state is one of the hardest parts in application development. This sect
 
 ## Careful with global state
 
-If you are creating an [SPA](/docs/glossary#csr-and-spa) with SvelteKit, you can create global state freely, as you can be sure that it's only initialized inside the user's browser. If you use [SSR](/docs/glossary#ssr) however, you have to watch out for a couple of things when managing state. In many server environments, a single instance of your app will serve multiple users (this is not specific to SvelteKit - it's one of the gotchas of working with such environments). For that reason, per-request or per-user state must not be stored in global variables.
+If you are creating an [SPA](/docs/glossary#csr) with SvelteKit, you can create global state freely, as you can be sure that it's only initialized inside the user's browser. If you use [SSR](/docs/glossary#ssr) however, you have to watch out for a couple of things when managing state. In many server environments, a single instance of your app will serve multiple users (this is not specific to SvelteKit - it's one of the gotchas of working with such environments). For that reason, per-request or per-user state must not be stored in global variables.
 
 Consider the following example where the user is set from inside a `load` function:
 
