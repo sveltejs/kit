@@ -165,7 +165,15 @@ export async function render_response({
 	}
 
 	/** @param {string} path */
-	const prefixed = (path) => (path.startsWith('/') ? base + path : `${resolved_assets}/${path}`);
+	const prefixed = (path) => {
+		if (path.startsWith('/')) {
+			// Vite makes the start script available through the base path and without it.
+			// We load it via the base path in order to support remote IDE environments which proxy
+			// all URLs under the base path during development.
+			return base + path;
+		}
+		return `${resolved_assets}/${path}`;
+	}
 
 	const serialized = { data: '', form: 'null', error: 'null' };
 
