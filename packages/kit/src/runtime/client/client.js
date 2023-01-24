@@ -15,6 +15,7 @@ import {
 	is_external_url,
 	scroll_state
 } from './utils.js';
+import * as storage from './session-storage.js';
 import {
 	lock_fetch,
 	unlock_fetch,
@@ -51,12 +52,7 @@ default_error_loader();
 
 /** @typedef {{ x: number, y: number }} ScrollPosition */
 /** @type {Record<number, ScrollPosition>} */
-let scroll_positions = {};
-try {
-	scroll_positions = JSON.parse(sessionStorage[SCROLL_KEY]);
-} catch {
-	// do nothing
-}
+const scroll_positions = storage.get(SCROLL_KEY);
 
 /** @param {number} index */
 function update_scroll_positions(index) {
@@ -1376,12 +1372,7 @@ export function create_client({ target, base }) {
 			addEventListener('visibilitychange', () => {
 				if (document.visibilityState === 'hidden') {
 					update_scroll_positions(current_history_index);
-
-					try {
-						sessionStorage[SCROLL_KEY] = JSON.stringify(scroll_positions);
-					} catch {
-						// do nothing
-					}
+					storage.set(SCROLL_KEY, scroll_positions);
 				}
 			});
 
