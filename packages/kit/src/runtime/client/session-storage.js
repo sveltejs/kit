@@ -12,6 +12,7 @@ export function get(key) {
 
 /**
  * Write a value to `sessionStorage`
+ * @param {string} key
  * @param {any} value
  */
 export function set(key, value) {
