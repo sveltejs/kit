@@ -173,7 +173,7 @@ export async function render_response({
 			return base + path;
 		}
 		return `${resolved_assets}/${path}`;
-	}
+	};
 
 	const serialized = { data: '', form: 'null', error: 'null' };
 
