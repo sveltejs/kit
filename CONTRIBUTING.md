@@ -44,7 +44,7 @@ You can run the test server with `cd packages/kit/test/apps/basics; pnpm run dev
 
 You may need to install some dependencies first, e.g. with `npx playwright install-deps` (which only works on Ubuntu).
 
-If there are tests that fail on the CI, you can retrieve the failed screenshots by going to the summary page of the CI run. You can usually find this by clicking on "Details" of the check results, click "Summary" at the top-left corner, and then scroll to the bottom "Artifacts" section to download the archive.
+If there are tests that fail on the CI, you can retrieve the failed screenshots by going to the summary page of the CI run. You can usually find this by clicking on "Details" of the check results, clicking "Summary" at the top-left corner, and then scrolling to the bottom "Artifacts" section to download the archive.
 
 It is very easy to introduce flakiness in a browser test. If you try to fix the flakiness in a test, you can run it until failure to gain some confidence you've fixed the test with a command like:
 
@@ -85,7 +85,7 @@ There are a few guidelines we follow:
 - Avoid creating new test projects under `packages/kit/test/apps` but reuse an existing one when possible
 - Ensure `pnpm lint` and `pnpm check` pass. You can run `pnpm format` to format the code
 
-To use the git hooks in the repo, which will save you waiting for CI to tell you that you forgot to lint, run this:
+To use the git hooks in the repo, which will save you from waiting for CI to tell you that you forgot to lint, run this:
 
 ```bash
 git config core.hookspath .githooks
