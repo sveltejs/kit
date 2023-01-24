@@ -652,7 +652,7 @@ function kit({ svelte_config }) {
 				// ...and prerender
 				log.info('Prerendering');
 
-				await fork('../../core/postbuild/index.js', [
+				await fork('../../core/postbuild/prerender.js', [
 					out,
 					manifest_path,
 					'' + verbose,
