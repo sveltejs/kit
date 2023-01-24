@@ -44,7 +44,7 @@
 		},
 		"test": {
 			"dependsOn": ["^build"],
-			"inputs": ["test/**"],
+			"inputs": ["src/**", "scripts/**", "shared/**", "templates/**", "test/**"],
 			"outputs": ["coverage/", "test-results/**"],
 			"outputMode": "new-only",
 			"env": ["CI", "TURBO_CACHE_KEY"]
