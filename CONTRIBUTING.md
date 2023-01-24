@@ -93,7 +93,7 @@ git config core.hookspath .githooks
 
 ### Generating changelogs
 
-For changes to be reflected in package changelogs, run `pnpm changeset` and follow the prompts. All changesets should be `patch` until SvelteKit 1.0
+For changes to be reflected in package changelogs, run `pnpm changeset` and follow the prompts.
 
 ## Releases
 
