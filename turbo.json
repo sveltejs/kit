@@ -43,7 +43,6 @@
 			"outputMode": "new-only"
 		},
 		"test": {
-			"dependsOn": ["^build"],
 			"inputs": ["src/**", "scripts/**", "shared/**", "templates/**", "test/**"],
 			"outputs": ["coverage/", "test-results/**"],
 			"outputMode": "new-only",
