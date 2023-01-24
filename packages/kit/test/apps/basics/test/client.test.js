@@ -609,7 +609,7 @@ test.describe('env in app.html', () => {
 });
 
 test.describe('Snapshots', () => {
-	test.only('recovers snapshotted data', async ({ page, clicknav }) => {
+	test('recovers snapshotted data', async ({ page, clicknav }) => {
 		await page.goto('/snapshot/a');
 
 		let input = page.locator('input');
