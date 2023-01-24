@@ -1,5 +1,11 @@
 # @sveltejs/kit
 
+## 1.2.9
+
+### Patch Changes
+
+- fix: reapply exports alignment after Vite dependency optimizations ([#8690](https://github.com/sveltejs/kit/pull/8690))
+
 ## 1.2.8
 
 ### Patch Changes
