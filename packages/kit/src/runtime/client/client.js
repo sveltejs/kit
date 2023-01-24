@@ -200,8 +200,7 @@ export function create_client({ target, base }) {
 				}
 			},
 			blocked: () => {},
-			type: 'goto',
-			previous_history_index: current_history_index
+			type: 'goto'
 		});
 	}
 
@@ -1080,7 +1079,6 @@ export function create_client({ target, base }) {
 	 *   type: import('types').NavigationType;
 	 *   delta?: number;
 	 *   nav_token?: {};
-	 *   previous_history_index: number;
 	 *   accepted: () => void;
 	 *   blocked: () => void;
 	 * }} opts
@@ -1094,7 +1092,6 @@ export function create_client({ target, base }) {
 		type,
 		delta,
 		nav_token,
-		previous_history_index,
 		accepted,
 		blocked
 	}) {
@@ -1106,7 +1103,10 @@ export function create_client({ target, base }) {
 			return;
 		}
 
+		// TODO update scroll positions at same time as snapshot?
 		update_scroll_positions(current_history_index);
+
+		const previous_history_index = current_history_index;
 
 		accepted();
 
@@ -1490,8 +1490,7 @@ export function create_client({ target, base }) {
 					},
 					accepted: () => event.preventDefault(),
 					blocked: () => event.preventDefault(),
-					type: 'link',
-					previous_history_index: current_history_index
+					type: 'link'
 				});
 			});
 
@@ -1546,8 +1545,7 @@ export function create_client({ target, base }) {
 					nav_token: {},
 					accepted: () => {},
 					blocked: () => {},
-					type: 'form',
-					previous_history_index: current_history_index
+					type: 'form'
 				});
 			});
 
@@ -1572,8 +1570,7 @@ export function create_client({ target, base }) {
 							history.go(-delta);
 						},
 						type: 'popstate',
-						delta,
-						previous_history_index: current_history_index
+						delta
 					});
 
 					snapshots[current_history_index].forEach((value, i) => {
