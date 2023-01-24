@@ -332,7 +332,6 @@ export async function dev(vite, vite_config, svelte_config) {
 	const ws_send = vite.ws.send;
 	/** @param {any} args */
 	vite.ws.send = function (...args) {
-		console.log('ws.send', args);
 		// We need to reapply the patch after Vite did dependency optimizations
 		// because that clears the module resolutions
 		if (args[0]?.type === 'full-reload' && args[0].path === '*') {
