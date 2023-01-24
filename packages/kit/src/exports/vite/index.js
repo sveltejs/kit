@@ -353,7 +353,11 @@ function kit({ svelte_config }) {
 		}
 	};
 
-	/** @type {import('vite').Plugin} */
+	/**
+	 * Ensures that client-side code can't accidentally import server-side code,
+	 * whether in `*.server.js` files, `$lib/server`, or `$env/[static|dynamic]/private`
+	 * @type {import('vite').Plugin}
+	 */
 	const plugin_guard = {
 		name: 'vite-plugin-sveltekit-guard',
 
