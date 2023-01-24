@@ -2,6 +2,7 @@ import fs from 'fs';
 import { sequence } from '@sveltejs/kit/hooks';
 import { HttpError } from '../../../../src/runtime/control';
 import { error, redirect } from '@sveltejs/kit';
+import { COOKIE_NAME } from './routes/cookies/shared';
 
 /**
  * Transform an error into a POJO, by copying its `name`, `message`
@@ -96,6 +97,9 @@ export const handle = sequence(
 		if (event.url.pathname.includes('/redirect/in-handle')) {
 			if (event.url.search === '?throw') {
 				throw redirect(307, event.url.origin + '/redirect/c');
+			} else if (event.url.search.includes('cookies')) {
+				event.cookies.delete(COOKIE_NAME, { path: '/cookies' });
+				throw redirect(307, event.url.origin + '/cookies');
 			} else {
 				return new Response(undefined, { status: 307, headers: { location: '/redirect/c' } });
 			}

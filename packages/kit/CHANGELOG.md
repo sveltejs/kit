@@ -1,5 +1,11 @@
 # @sveltejs/kit
 
+## 1.2.6
+
+### Patch Changes
+
+- fix: allow importing assets while using base path ([#8683](https://github.com/sveltejs/kit/pull/8683))
+
 ## 1.2.5
 
 ### Patch Changes
