@@ -31,7 +31,7 @@ import { HttpError, Redirect } from '../control.js';
 import { stores } from './singletons.js';
 import { unwrap_promises } from '../../utils/promises.js';
 import * as devalue from 'devalue';
-import { INDEX_KEY, PRELOAD_PRIORITIES, SCROLL_KEY } from './constants.js';
+import { INDEX_KEY, PRELOAD_PRIORITIES, SCROLL_KEY, SNAPSHOT_KEY } from './constants.js';
 import { validate_common_exports } from '../../utils/exports.js';
 import { compact } from '../../utils/array.js';
 
@@ -52,7 +52,10 @@ default_error_loader();
 
 /** @typedef {{ x: number, y: number }} ScrollPosition */
 /** @type {Record<number, ScrollPosition>} */
-const scroll_positions = storage.get(SCROLL_KEY);
+const scroll_positions = storage.get(SCROLL_KEY) ?? {};
+
+/** @type {Record<string, any>} */
+const snapshots = storage.get(SNAPSHOT_KEY) ?? {};
 
 /** @param {number} index */
 function update_scroll_positions(index) {
