@@ -315,17 +315,31 @@ export async function dev(vite, vite_config, svelte_config) {
 		}
 	});
 
-	// This shameful hack allows us to load runtime server code via Vite
-	// while apps load `HttpError` and `Redirect` in Node, without
-	// causing `instanceof` checks to fail
-	const control_module_node = await import(`../../../runtime/control.js`);
-	const control_module_vite = await vite.ssrLoadModule(`${runtime_base}/control.js`);
+	async function align_exports() {
+		// This shameful hack allows us to load runtime server code via Vite
+		// while apps load `HttpError` and `Redirect` in Node, without
+		// causing `instanceof` checks to fail
+		const control_module_node = await import(`../../../runtime/control.js`);
+		const control_module_vite = await vite.ssrLoadModule(`${runtime_base}/control.js`);
 
-	control_module_node.replace_implementations({
-		ActionFailure: control_module_vite.ActionFailure,
-		HttpError: control_module_vite.HttpError,
-		Redirect: control_module_vite.Redirect
-	});
+		control_module_node.replace_implementations({
+			ActionFailure: control_module_vite.ActionFailure,
+			HttpError: control_module_vite.HttpError,
+			Redirect: control_module_vite.Redirect
+		});
+	}
+	align_exports();
+	const ws_send = vite.ws.send;
+	/** @param {any} args */
+	vite.ws.send = function (...args) {
+		console.log('ws.send', args);
+		// We need to reapply the patch after Vite did dependency optimizations
+		// because that clears the module resolutions
+		if (args[0]?.type === 'full-reload' && args[0].path === '*') {
+			align_exports();
+		}
+		return ws_send.apply(vite.ws, args);
+	};
 
 	vite.middlewares.use(async (req, res, next) => {
 		try {
