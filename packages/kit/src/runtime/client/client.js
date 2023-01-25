@@ -1554,6 +1554,7 @@ export function create_client({ target, base }) {
 					if (event.state[INDEX_KEY] === current_history_index) return;
 
 					const delta = event.state[INDEX_KEY] - current_history_index;
+					let blocked = false;
 
 					await navigate({
 						url: new URL(location.href),
@@ -1566,14 +1567,17 @@ export function create_client({ target, base }) {
 						},
 						blocked: () => {
 							history.go(-delta);
+							blocked = true;
 						},
 						type: 'popstate',
 						delta
 					});
 
-					snapshots[current_history_index].forEach((value, i) => {
-						components[i]?.snapshot?.restore(value);
-					});
+					if (!blocked) {
+						snapshots[current_history_index].forEach((value, i) => {
+							components[i]?.snapshot?.restore(value);
+						});
+					}
 				}
 			});
 
