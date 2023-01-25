@@ -76,39 +76,40 @@ function is_scrollable(element) {
 const SCROLLABLE_AREA_ATTRIBUTE = 'data-sveltekit-main-scrollable';
 
 function get_scrollable_area() {
-	const html_is_scrollable = getComputedStyle(document.documentElement).overflowY !== 'hidden';
-	const scrollable_area = html_is_scrollable
+	const is_default_scrollable = getComputedStyle(document.documentElement).overflowY !== 'hidden';
+	const scrollable_area = is_default_scrollable
 		? document.documentElement
 		: is_scrollable(document.body);
 
-	const custom_scrollable_areas = document.querySelectorAll(`*[${SCROLLABLE_AREA_ATTRIBUTE}]`);
+	const custom_scrollable_area = document.querySelector(`*[${SCROLLABLE_AREA_ATTRIBUTE}]`);
 
 	if (DEV) {
-		if (scrollable_area && custom_scrollable_areas.length > 0) {
+		if (scrollable_area && custom_scrollable_area) {
 			console.warn(
 				`<${scrollable_area.tagName.toLowerCase()}> is already scrollable but '${SCROLLABLE_AREA_ATTRIBUTE}' was found on an element. Only use '${SCROLLABLE_AREA_ATTRIBUTE}' if <html> or <body> are not the main scrollable areas`,
-				custom_scrollable_areas
+				custom_scrollable_area
 			);
-		} else if (custom_scrollable_areas?.[0] && !is_scrollable(custom_scrollable_areas[0])) {
+		} else if (custom_scrollable_area && !is_scrollable(custom_scrollable_area)) {
 			console.error(
 				`Invalid main scrollable area. Ensure that the overflow style is set to 'auto' or 'scroll', and the element height is less than its content`,
-				custom_scrollable_areas[0]
+				custom_scrollable_area
 			);
-		} else if (!scrollable_area && !custom_scrollable_areas[0]) {
+		} else if (!scrollable_area && !custom_scrollable_area) {
 			throw new Error(
-				`No scrollable area found. Please identify the main scrolling area with '${SCROLLABLE_AREA_ATTRIBUTE}' to ensure navigation functions correctly`
+				`No scrollable area found. Identify the main scrolling area with '${SCROLLABLE_AREA_ATTRIBUTE}' to ensure navigation functions correctly`
 			);
 		}
 
+		const custom_scrollable_areas = document.querySelectorAll(`*[${SCROLLABLE_AREA_ATTRIBUTE}]`);
 		if (custom_scrollable_areas.length > 1) {
 			console.warn(
-				`More than one '${SCROLLABLE_AREA_ATTRIBUTE}' found. Please only specify a single main scrolling area`,
+				`More than one '${SCROLLABLE_AREA_ATTRIBUTE}' found. Only one main scrolling area is allowed`,
 				custom_scrollable_areas
 			);
 		}
 	}
 
-	return scrollable_area ?? custom_scrollable_areas[0];
+	return scrollable_area ?? custom_scrollable_area;
 }
 
 /***
@@ -116,7 +117,7 @@ function get_scrollable_area() {
  * @param {number} y
  */
 function scroll_to(x, y) {
-	get_scrollable_area().scrollTo(x, y);
+	get_scrollable_area()?.scrollTo(x, y);
 }
 
 /**
