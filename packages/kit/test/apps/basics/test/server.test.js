@@ -238,7 +238,7 @@ test.describe('Errors', () => {
 		expect(await page.textContent('h1')).toBe('the answer is 42');
 	});
 
-	test('POST to a page endpoint without actions', async ({ request }) => {
+	test('POST to missing page endpoint', async ({ request }) => {
 		const res = await request.post('/errors/missing-actions', {
 			headers: {
 				accept: 'text/html'
