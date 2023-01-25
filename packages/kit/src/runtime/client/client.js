@@ -314,6 +314,7 @@ export function create_client({ target, base }) {
 
 		// `previous_history_index` will be undefined for invalidation
 		if (previous_history_index) {
+			update_scroll_positions(previous_history_index);
 			snapshots[previous_history_index] = components.map((c) => c?.snapshot?.capture());
 		}
 
@@ -1101,9 +1102,7 @@ export function create_client({ target, base }) {
 			return;
 		}
 
-		// TODO update scroll positions at same time as snapshot?
-		update_scroll_positions(current_history_index);
-
+		// store this before calling `accepted()`, which may change the index
 		const previous_history_index = current_history_index;
 
 		accepted();
