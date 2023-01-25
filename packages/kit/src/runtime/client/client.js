@@ -63,6 +63,62 @@ function update_scroll_positions(index) {
 	scroll_positions[index] = scroll_state();
 }
 
+/** @param {Element} element */
+function is_scrollable(element) {
+	const style = getComputedStyle(element);
+	return style.display !== 'contents' &&
+		(style.overflowY === 'auto' || style.overflowY === 'scroll') &&
+		element.scrollHeight > element.clientHeight
+		? element
+		: null;
+}
+
+const SCROLLABLE_AREA_ATTRIBUTE = 'data-sveltekit-main-scrollable';
+
+function get_scrollable_area() {
+	const html_is_scrollable = getComputedStyle(document.documentElement).overflowY !== 'hidden';
+	const scrollable_area = html_is_scrollable
+		? document.documentElement
+		: is_scrollable(document.body);
+
+	const custom_scrollable_areas = document.querySelectorAll(`*[${SCROLLABLE_AREA_ATTRIBUTE}]`);
+
+	if (DEV) {
+		if (scrollable_area && custom_scrollable_areas.length > 0) {
+			console.warn(
+				`<${scrollable_area.tagName.toLowerCase()}> is already scrollable but '${SCROLLABLE_AREA_ATTRIBUTE}' was found on an element. Only use '${SCROLLABLE_AREA_ATTRIBUTE}' if <html> or <body> are not the main scrollable areas`,
+				custom_scrollable_areas
+			);
+		} else if (custom_scrollable_areas?.[0] && !is_scrollable(custom_scrollable_areas[0])) {
+			console.error(
+				`Invalid main scrollable area. Ensure that the overflow style is set to 'auto' or 'scroll', and the element height is less than its content`,
+				custom_scrollable_areas[0]
+			);
+		} else if (!scrollable_area && !custom_scrollable_areas[0]) {
+			throw new Error(
+				`No scrollable area found. Please identify the main scrolling area with '${SCROLLABLE_AREA_ATTRIBUTE}' to ensure navigation functions correctly`
+			);
+		}
+
+		if (custom_scrollable_areas.length > 1) {
+			console.warn(
+				`More than one '${SCROLLABLE_AREA_ATTRIBUTE}' found. Please only specify a single main scrolling area`,
+				custom_scrollable_areas
+			);
+		}
+	}
+
+	return scrollable_area ?? custom_scrollable_areas[0];
+}
+
+/***
+ * @param {number} x
+ * @param {number} y
+ */
+function scroll_to(x, y) {
+	get_scrollable_area().scrollTo(x, y);
+}
+
 /**
  * @param {{
  *   target: HTMLElement;
@@ -128,7 +184,7 @@ export function create_client({ target, base }) {
 	const scroll = scroll_positions[current_history_index];
 	if (scroll) {
 		history.scrollRestoration = 'manual';
-		scrollTo(scroll.x, scroll.y);
+		scroll_to(scroll.x, scroll.y);
 	}
 
 	/** @type {import('types').Page} */
@@ -238,7 +294,7 @@ export function create_client({ target, base }) {
 	 * @param {import('./types').NavigationIntent | undefined} intent
 	 * @param {URL} url
 	 * @param {string[]} redirect_chain
-	 * @param {{hash?: string, scroll: { x: number, y: number } | null, keepfocus: boolean, details: { replaceState: boolean, state: any } | null}} [opts]
+	 * @param {{scroll: { x: number, y: number } | null, keepfocus: boolean, details: { replaceState: boolean, state: any } | null}} [opts]
 	 * @param {{}} [nav_token] To distinguish between different navigation events and determine the latest. Needed for example for redirects to keep the original token
 	 * @param {() => void} [callback]
 	 */
@@ -345,14 +401,14 @@ export function create_client({ target, base }) {
 			if (autoscroll) {
 				const deep_linked = url.hash && document.getElementById(url.hash.slice(1));
 				if (scroll) {
-					scrollTo(scroll.x, scroll.y);
+					scroll_to(scroll.x, scroll.y);
 				} else if (deep_linked) {
 					// Here we use `scrollIntoView` on the element instead of `scrollTo`
 					// because it natively supports the `scroll-margin` and `scroll-behavior`
 					// CSS properties.
 					deep_linked.scrollIntoView();
 				} else {
-					scrollTo(0, 0);
+					scroll_to(0, 0);
 				}
 			}
 		} else {
