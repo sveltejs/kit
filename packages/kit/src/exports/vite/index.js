@@ -8,7 +8,7 @@ import { svelte } from '@sveltejs/vite-plugin-svelte';
 import colors from 'kleur';
 import * as vite from 'vite';
 
-import { mkdirp, posixify, resolve_entry, rimraf } from '../../utils/filesystem.js';
+import { mkdirp, posixify, read, resolve_entry, rimraf } from '../../utils/filesystem.js';
 import { create_static_module, create_dynamic_module } from '../../core/env.js';
 import * as sync from '../../core/sync/sync.js';
 import { create_assets } from '../../core/sync/create_manifest_data/index.js';
@@ -830,8 +830,3 @@ export const files = [
 export const prerendered = [];
 export const version = ${JSON.stringify(config.kit.version.name)};
 `;
-
-/** @param {string} file */
-function read(file) {
-	return fs.readFileSync(file, 'utf-8');
-}
