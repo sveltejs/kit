@@ -141,7 +141,7 @@ export function create_client({ target, base }) {
 	let pending_invalidate;
 
 /***
- * Ensure navigation is unaffected by scroll-behaviour style
+ * Override user scroll-behavior style
  * @param {number} x
  * @param {number} y
  */
