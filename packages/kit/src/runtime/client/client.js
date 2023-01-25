@@ -1531,11 +1531,22 @@ export function create_client({ target, base }) {
 					// with history.go, which means we end up back here, hence this check
 					if (event.state[INDEX_KEY] === current_history_index) return;
 
+					const scroll = scroll_positions[event.state[INDEX_KEY]];
+
+					// if the only change is the hash, we don't need to do anything...
+					if (current.url.href.split('#')[0] === location.href.split('#')[0]) {
+						// ...except handle scroll
+						scroll_positions[current_history_index] = scroll_state();
+						current_history_index = event.state[INDEX_KEY];
+						scrollTo(scroll.x, scroll.y);
+						return;
+					}
+
 					const delta = event.state[INDEX_KEY] - current_history_index;
 
 					navigate({
 						url: new URL(location.href),
-						scroll: scroll_positions[event.state[INDEX_KEY]],
+						scroll,
 						keepfocus: false,
 						redirect_chain: [],
 						details: null,
