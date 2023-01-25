@@ -12,7 +12,7 @@ export let inited = false;
 /** @type {import('flexsearch').Index[]} */
 let indexes;
 
-/** @type {Map<string, StoredBlock>} */
+/** @type {Map<number, StoredBlock>} */
 const map = new Map();
 
 /** @type {Map<string, string>} */
@@ -27,17 +27,15 @@ export function init(blocks) {
 
 	indexes = Array.from({ length: max_rank + 1 }, () => new Index({ tokenize: 'forward' }));
 
-	for (const block of blocks) {
+	for (const [i, block] of blocks.entries()) {
 		const title = block.breadcrumbs[block.breadcrumbs.length - 1];
-		map.set(block.href, {
+		map.set(i, {
 			title,
 			href: block.href,
 			breadcrumbs: block.breadcrumbs,
 			content: block.content
 		});
-		// TODO: fix the type by updating flexsearch after
-		// https://github.com/nextapps-de/flexsearch/pull/364 is merged and released
-		indexes[block.rank ?? 0].add(block.href, `${title} ${block.content}`);
+		indexes[block.rank ?? 0].add(i, `${title} ${block.content}`);
 
 		hrefs.set(block.breadcrumbs.join('::'), block.href);
 	}
@@ -77,9 +75,9 @@ export function search(query) {
 	return results;
 }
 
-/** @param {string} href */
-export function lookup(href) {
-	return map.get(href);
+/** @param {number} i */
+export function lookup(i) {
+	return map.get(i);
 }
 
 /**
