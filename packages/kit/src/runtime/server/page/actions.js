@@ -112,8 +112,7 @@ function action_json(data, init) {
  * @param {import('types').RequestEvent} event
  */
 export function is_action_request(event) {
-	const { method } = event.request;
-	return method !== 'GET' && method !== 'HEAD';
+	return event.request.method === 'POST';
 }
 
 /**
