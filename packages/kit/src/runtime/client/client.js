@@ -314,7 +314,7 @@ export function create_client({ target, base }) {
 
 		// `previous_history_index` will be undefined for invalidation
 		if (previous_history_index) {
-			snapshots[previous_history_index] = components.map((c) => c.snapshot?.capture());
+			snapshots[previous_history_index] = components.map((c) => c?.snapshot?.capture());
 		}
 
 		if (opts && opts.details) {
@@ -404,7 +404,7 @@ export function create_client({ target, base }) {
 		});
 
 		snapshots[current_history_index]?.forEach((value, i) => {
-			components[i].snapshot?.restore(value);
+			components[i]?.snapshot?.restore(value);
 		});
 
 		/** @type {import('types').AfterNavigate} */
@@ -1399,7 +1399,7 @@ export function create_client({ target, base }) {
 					update_scroll_positions(current_history_index);
 					storage.set(SCROLL_KEY, scroll_positions);
 
-					snapshots[current_history_index] = components.map((c) => c.snapshot?.capture());
+					snapshots[current_history_index] = components.map((c) => c?.snapshot?.capture());
 					storage.set(SNAPSHOT_KEY, snapshots);
 				}
 			});
@@ -1572,7 +1572,7 @@ export function create_client({ target, base }) {
 					});
 
 					snapshots[current_history_index].forEach((value, i) => {
-						components[i].snapshot?.restore(value);
+						components[i]?.snapshot?.restore(value);
 					});
 				}
 			});
