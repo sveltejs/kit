@@ -1,9 +1,6 @@
-import * as child_process from 'node:child_process';
 import fs from 'node:fs';
 import path from 'node:path';
-import { fileURLToPath } from 'node:url';
 
-import * as devalue from 'devalue';
 import { svelte } from '@sveltejs/vite-plugin-svelte';
 import colors from 'kleur';
 import * as vite from 'vite';
@@ -23,6 +20,8 @@ import { is_illegal, module_guard, normalize_id } from './graph_analysis/index.j
 import { preview } from './preview/index.js';
 import { get_config_aliases, get_env } from './utils.js';
 import { write_client_manifest } from '../../core/sync/write_client_manifest.js';
+import prerender from '../../core/postbuild/prerender.js';
+import analyse from '../../core/postbuild/analyse.js';
 
 export { vitePreprocess } from '@sveltejs/vite-plugin-svelte';
 
@@ -599,21 +598,17 @@ function kit({ svelte_config }) {
 				// first, build server nodes without the client manifest so we can analyse it
 				build_server_nodes(out, kit, manifest_data, server_manifest, null, null);
 
-				await fork('../../core/postbuild/analyse.js', [
-					out,
+				const metadata = await analyse({
 					manifest_path,
-					JSON.stringify({ ...env.private, ...env.public })
-				]);
-
-				/** @type {import('types').ServerMetadata} */
-				const server_metadata = devalue.parse(read(`${out}/metadata.json`));
+					env: { ...env.private, ...env.public }
+				});
 
 				// create client build
 				write_client_manifest(
 					kit,
 					manifest_data,
 					`${kit.outDir}/generated/client-optimized`,
-					server_metadata.nodes
+					metadata.nodes
 				);
 
 				const { output } = /** @type {import('rollup').RollupOutput} */ (
@@ -656,18 +651,13 @@ function kit({ svelte_config }) {
 				// ...and prerender
 				log.info('Prerendering');
 
-				await fork('../../core/postbuild/prerender.js', [
+				const { prerendered, prerender_map } = await prerender({
 					out,
 					manifest_path,
-					'' + verbose,
-					JSON.stringify({ ...env.private, ...env.public })
-				]);
-
-				const results = devalue.parse(read(`${out}/prerendered.json`));
-
-				/** @type {import('types').Prerendered} */
-				const prerendered = results.prerendered;
-				const prerender_map = results.prerender_map;
+					metadata,
+					verbose,
+					env: { ...env.private, ...env.public }
+				});
 
 				// generate a new manifest that doesn't include prerendered pages
 				fs.writeFileSync(
@@ -708,14 +698,7 @@ function kit({ svelte_config }) {
 
 					if (kit.adapter) {
 						const { adapt } = await import('../../core/adapt/index.js');
-						await adapt(
-							svelte_config,
-							build_data,
-							server_metadata,
-							prerendered,
-							prerender_map,
-							log
-						);
+						await adapt(svelte_config, build_data, metadata, prerendered, prerender_map, log);
 					} else {
 						console.log(colors.bold().yellow('\nNo adapter specified'));
 
@@ -744,29 +727,6 @@ function kit({ svelte_config }) {
 	};
 
 	return [plugin_setup, plugin_virtual_modules, plugin_guard, plugin_compile];
-}
-
-/**
- * @param {string} module
- * @param {string[]} args
- */
-async function fork(module, args) {
-	return new Promise((fulfil, reject) => {
-		// do prerendering in a subprocess so any dangling stuff gets killed upon completion
-		const script = fileURLToPath(new URL(module, import.meta.url));
-
-		const child = child_process.fork(script, args, {
-			stdio: 'inherit'
-		});
-
-		child.on('exit', (code) => {
-			if (code) {
-				reject(new Error(`Failed with code ${code}`));
-			} else {
-				fulfil(undefined);
-			}
-		});
-	});
 }
 
 /**
