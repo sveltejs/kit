@@ -281,7 +281,7 @@ If an error is thrown (either `throw error(...)` or an unexpected error), the re
 
 ### Receiving data
 
-By exporting `POST`/`PUT`/`PATCH`/`DELETE` handlers, `+server.js` files can be used to create a complete API:
+By exporting `POST`/`PUT`/`PATCH`/`DELETE`/`OPTIONS` handlers, `+server.js` files can be used to create a complete API:
 
 ```svelte
 /// file: src/routes/add/+page.svelte
@@ -327,7 +327,7 @@ export async function POST({ request }) {
 
 `+server.js` files can be placed in the same directory as `+page` files, allowing the same route to be either a page or an API endpoint. To determine which, SvelteKit applies the following rules:
 
-- `PUT`/`PATCH`/`DELETE` requests are always handled by `+server.js` since they do not apply to pages
+- `PUT`/`PATCH`/`DELETE`/`OPTIONS` requests are always handled by `+server.js` since they do not apply to pages
 - `GET`/`POST` requests are treated as page requests if the `accept` header prioritises `text/html` (in other words, it's a browser page request), else they are handled by `+server.js`
 
 ## $types
