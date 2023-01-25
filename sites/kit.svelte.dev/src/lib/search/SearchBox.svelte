@@ -17,7 +17,6 @@
 
 	let uid = 1;
 	const pending = new Set();
-	let has_pending = false;
 
 	onMount(async () => {
 		worker = new SearchWorker();
@@ -76,7 +75,6 @@
 	$: if (ready) {
 		const id = uid++;
 		pending.add(id);
-		has_pending = true;
 
 		worker.postMessage({ type: 'query', id, payload: $query });
 	}
