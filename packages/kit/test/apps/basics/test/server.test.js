@@ -238,6 +238,28 @@ test.describe('Errors', () => {
 		expect(await page.textContent('h1')).toBe('the answer is 42');
 	});
 
+	test('POST to a page endpoint without actions', async ({ request }) => {
+		const res = await request.post('/errors/missing-actions', {
+			headers: {
+				accept: 'text/html'
+			}
+		});
+		expect(res?.status()).toBe(405);
+
+		const res_json = await request.post('/errors/missing-actions', {
+			headers: {
+				accept: 'application/json'
+			}
+		});
+		expect(res_json?.status()).toBe(405);
+		expect(await res_json.json()).toEqual({
+			type: 'error',
+			error: {
+				message: 'POST method not allowed. No actions exist for this page'
+			}
+		});
+	});
+
 	test('error thrown in handle results in a rendered error page or JSON response', async ({
 		request
 	}) => {
