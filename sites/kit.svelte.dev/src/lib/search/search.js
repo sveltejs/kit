@@ -3,17 +3,22 @@ import flexsearch from 'flexsearch';
 // @ts-expect-error
 const Index = /** @type {import('flexsearch').Index} */ (flexsearch.Index) ?? flexsearch;
 
+/**
+ * @typedef {{title:string, href:string, breadcrumbs:string[], content: string}} StoredBlock
+ */
+
 export let inited = false;
 
 /** @type {import('flexsearch').Index[]} */
 let indexes;
 
-/** @type {Map<string, import('./types').Block>} */
+/** @type {Map<string, StoredBlock>} */
 const map = new Map();
 
 /** @type {Map<string, string>} */
 const hrefs = new Map();
 
+/** @param {import('./types').Block[]} blocks */
 export function init(blocks) {
 	if (inited) return;
 
@@ -30,6 +35,8 @@ export function init(blocks) {
 			breadcrumbs: block.breadcrumbs,
 			content: block.content
 		});
+		// TODO: fix the type by updating flexsearch after
+		// https://github.com/nextapps-de/flexsearch/pull/364 is merged and released
 		indexes[block.rank ?? 0].add(block.href, `${title} ${block.content}`);
 
 		hrefs.set(block.breadcrumbs.join('::'), block.href);
@@ -75,6 +82,10 @@ export function lookup(href) {
 	return map.get(href);
 }
 
+/**
+ * @param {string[]} breadcrumbs
+ * @param {StoredBlock[]} blocks
+ */
 function tree(breadcrumbs, blocks) {
 	const depth = breadcrumbs.length;
 
