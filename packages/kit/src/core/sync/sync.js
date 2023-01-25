@@ -70,7 +70,7 @@ export async function all_types(config, mode) {
 }
 
 /**
- * Regenerate server/internal.js in response to src/{app.html,error.html,service-worker.js} changing
+ * Regenerate __SERVER__/internal.js in response to src/{app.html,error.html,service-worker.js} changing
  * @param {import('types').ValidatedConfig} config
  */
 export function server(config) {
