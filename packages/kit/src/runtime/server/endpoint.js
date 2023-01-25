@@ -22,7 +22,7 @@ export async function render_endpoint(event, mod, state) {
 	}
 
 	const prerender = mod.prerender ?? state.prerender_default;
-
+	
 	if (prerender && (mod.POST || mod.PATCH || mod.PUT || mod.DELETE)) {
 		throw new Error('Cannot prerender endpoints that have mutative methods');
 	}
@@ -72,7 +72,7 @@ export async function render_endpoint(event, mod, state) {
 export function is_endpoint_request(event) {
 	const { method, headers } = event.request;
 
-	if (method === 'PUT' || method === 'PATCH' || method === 'DELETE') {
+	if (method === 'PUT' || method === 'PATCH' || method === 'DELETE' || method === 'OPTIONS') {
 		// These methods exist exclusively for endpoints
 		return true;
 	}

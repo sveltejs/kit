@@ -232,7 +232,8 @@ function kit({ svelte_config }) {
 							// Ignore all siblings of config.kit.outDir/generated
 							`${posixify(kit.outDir)}/!(generated)`
 						]
-					}
+					},
+					cors: false
 				},
 				optimizeDeps: {
 					exclude: [
@@ -242,7 +243,7 @@ function kit({ svelte_config }) {
 						'$app',
 						'$env'
 					]
-				}
+				},
 			};
 
 			if (is_build) {

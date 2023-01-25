@@ -49,6 +49,7 @@ export const validate_server_exports = validator([
 	'PATCH',
 	'PUT',
 	'DELETE',
+	'OPTIONS',
 	'prerender',
 	'trailingSlash'
 ]);
