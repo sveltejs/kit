@@ -3,16 +3,12 @@ import flexsearch from 'flexsearch';
 // @ts-expect-error
 const Index = /** @type {import('flexsearch').Index} */ (flexsearch.Index) ?? flexsearch;
 
-/**
- * @typedef {{title:string, href:string, breadcrumbs:string[], content: string}} StoredBlock
- */
-
 export let inited = false;
 
 /** @type {import('flexsearch').Index[]} */
 let indexes;
 
-/** @type {Map<string, StoredBlock>} */
+/** @type {Map<string, import('./types').Block>} */
 const map = new Map();
 
 /** @type {Map<string, string>} */
@@ -28,13 +24,8 @@ export function init(blocks) {
 	indexes = Array.from({ length: max_rank + 1 }, () => new Index({ tokenize: 'forward' }));
 
 	for (const block of blocks) {
-		const title = block.breadcrumbs[block.breadcrumbs.length - 1];
-		map.set(block.href, {
-			title,
-			href: block.href,
-			breadcrumbs: block.breadcrumbs,
-			content: block.content
-		});
+		const title = block.breadcrumbs.at(-1);
+		map.set(block.href, block);
 		// NOTE: we're not using a number as the ID here, but it is recommended:
 		// https://github.com/nextapps-de/flexsearch#use-numeric-ids
 		// If we were to switch to a number we would need a second map from ID to block
@@ -65,8 +56,8 @@ export function search(query) {
 		.map(lookup)
 		.map((block, rank) => ({ block, rank }))
 		.sort((a, b) => {
-			const a_title_matches = regex.test(a.block.title);
-			const b_title_matches = regex.test(b.block.title);
+			const a_title_matches = regex.test(a.block.breadcrumbs.at(-1));
+			const b_title_matches = regex.test(b.block.breadcrumbs.at(-1));
 
 			// massage the order a bit, so that title matches
 			// are given higher priority
@@ -90,7 +81,7 @@ export function lookup(href) {
 
 /**
  * @param {string[]} breadcrumbs
- * @param {StoredBlock[]} blocks
+ * @param {import('./types').Block[]} blocks
  */
 function tree(breadcrumbs, blocks) {
 	const depth = breadcrumbs.length;
