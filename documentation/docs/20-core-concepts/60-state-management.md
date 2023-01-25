@@ -39,7 +39,7 @@ If you have global data whose initial state is not dependent on a request (in ot
 
 ## Managing forms
 
-If you are coming from regular Svelte, you may be used to do something like this when creating a form to react to user input:
+If you are coming from regular Svelte, you may be used to doing something like this when creating a form to react to user input:
 
 ```svelte
 /// file: send-message/+page.svelte
