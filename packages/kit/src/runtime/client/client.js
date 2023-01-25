@@ -128,7 +128,7 @@ export function create_client({ target, base }) {
 	const scroll = scroll_positions[current_history_index];
 	if (scroll) {
 		history.scrollRestoration = 'manual';
-		scrollTo(scroll.x, scroll.y);
+		scroll_to(scroll.x, scroll.y);
 	}
 
 	/** @type {import('types').Page} */
@@ -139,6 +139,17 @@ export function create_client({ target, base }) {
 
 	/** @type {Promise<void> | null} */
 	let pending_invalidate;
+
+/***
+ * Ensure navigation is unaffected by scroll-behaviour style
+ * @param {number} x
+ * @param {number} y
+ */
+function scroll_to(x, y) {
+	container.style.scrollBehavior = 'auto';
+	scrollTo(x, y);
+	container.style.scrollBehavior = '';
+}
 
 	async function invalidate() {
 		// Accept all invalidations as they come, don't swallow any while another invalidation
@@ -345,14 +356,14 @@ export function create_client({ target, base }) {
 			if (autoscroll) {
 				const deep_linked = url.hash && document.getElementById(url.hash.slice(1));
 				if (scroll) {
-					scrollTo(scroll.x, scroll.y);
+					scroll_to(scroll.x, scroll.y);
 				} else if (deep_linked) {
 					// Here we use `scrollIntoView` on the element instead of `scrollTo`
 					// because it natively supports the `scroll-margin` and `scroll-behavior`
 					// CSS properties.
-					deep_linked.scrollIntoView();
+					deep_linked.scrollIntoView({ behavior: 'auto' });
 				} else {
-					scrollTo(0, 0);
+					scroll_to(0, 0);
 				}
 			}
 		} else {
