@@ -110,19 +110,19 @@ function action_json(data, init) {
 
 /**
  * @param {import('types').RequestEvent} event
- * @param {import('types').SSRNode} leaf_node
  */
-export function is_action_request(event, leaf_node) {
-	return leaf_node.server && event.request.method !== 'GET' && event.request.method !== 'HEAD';
+export function is_action_request(event) {
+	const { method } = event.request;
+	return method !== 'GET' && method !== 'HEAD';
 }
 
 /**
  * @param {import('types').RequestEvent} event
- * @param {import('types').SSRNode['server']} server
+ * @param {import('types').SSRNode['server'] | undefined} server
  * @returns {Promise<import('types').ActionResult>}
  */
 export async function handle_action_request(event, server) {
-	const actions = server.actions;
+	const actions = server?.actions;
 
 	if (!actions) {
 		// TODO should this be a different error altogether?
