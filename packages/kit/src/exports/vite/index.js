@@ -235,6 +235,9 @@ function kit({ svelte_config }) {
 					},
 					cors: false
 				},
+				preview: {
+					cors: false
+				},
 				optimizeDeps: {
 					exclude: [
 						'@sveltejs/kit',
@@ -243,7 +246,7 @@ function kit({ svelte_config }) {
 						'$app',
 						'$env'
 					]
-				},
+				}
 			};
 
 			if (is_build) {
