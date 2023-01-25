@@ -109,7 +109,7 @@ export default {
 export const ssr = false;
 ```
 
-You can also turn only part of your app into an SPA by [disabling prerendendering](#spa-mode-turn-off-prerendering) only for those pages.
+You can also turn only part of your app into an SPA by [disabling prerendering](#spa-mode-turn-off-prerendering) only for those pages.
 
 Let's go through these options one by one:
 
