@@ -145,6 +145,17 @@ test.describe('Endpoints', () => {
 		const response = await request.put('/endpoint-input/sha256', { data });
 		expect(await response.text()).toEqual(digest);
 	});
+
+	test('OPTIONS handler', async ({ request }) => {
+		const url = '/endpoint-output/options';
+
+		var response = await request.fetch(url, {
+			method: 'OPTIONS'
+		});
+
+		expect(response.status()).toBe(200);
+		expect(response.text()).toBe('ok');
+	});
 });
 
 test.describe('Errors', () => {
