@@ -63,6 +63,28 @@ function update_scroll_positions(index) {
 	scroll_positions[index] = scroll_state();
 }
 
+/***
+ * Avoid scrolling issues with the scroll-behavior: smooth style
+ * @param {number} x
+ * @param {number} y
+ */
+function scroll_to(x, y) {
+	const scrollable_area = document.documentElement;
+
+	scrollable_area.style.scrollBehavior = 'auto';
+
+	scrollTo(x, y);
+
+	// event listener prevents Chrome from ignoring our scroll behavior settings
+	const reset_scroll_behavior = () => {
+		if (scrollable_area.scrollTop === 0) {
+			scrollable_area.style.scrollBehavior = '';
+			scrollable_area.removeEventListener('scroll', reset_scroll_behavior);
+		}
+	};
+	scrollable_area.addEventListener('scroll', reset_scroll_behavior);
+}
+
 /**
  * @param {{
  *   target: HTMLElement;
@@ -139,17 +161,6 @@ export function create_client({ target, base }) {
 
 	/** @type {Promise<void> | null} */
 	let pending_invalidate;
-
-/***
- * Override user scroll-behavior style
- * @param {number} x
- * @param {number} y
- */
-function scroll_to(x, y) {
-	container.style.scrollBehavior = 'auto';
-	scrollTo(x, y);
-	container.style.scrollBehavior = '';
-}
 
 	async function invalidate() {
 		// Accept all invalidations as they come, don't swallow any while another invalidation
