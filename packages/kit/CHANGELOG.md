@@ -1,5 +1,13 @@
 # @sveltejs/kit
 
+## 1.2.10
+
+### Patch Changes
+
+- chore: restrict methods allowed for POST ([#8721](https://github.com/sveltejs/kit/pull/8721))
+
+- fix: provide proper error when POSTing to a missing page endpoint ([#8714](https://github.com/sveltejs/kit/pull/8714))
+
 ## 1.2.9
 
 ### Patch Changes
