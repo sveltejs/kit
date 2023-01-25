@@ -4,6 +4,13 @@ import colors from 'kleur';
 import { posixify } from '../../utils/filesystem.js';
 import { write_if_changed } from './utils.js';
 
+/** @type {import('typescript')} */
+// @ts-ignore
+let ts = undefined;
+try {
+	ts = (await import('typescript')).default;
+} catch {}
+
 /**
  * @param {string} cwd
  * @param {string} file
@@ -123,7 +130,10 @@ export function write_tsconfig(kit, cwd = process.cwd()) {
 					lib: ['esnext', 'DOM', 'DOM.Iterable'],
 					moduleResolution: 'node',
 					module: 'esnext',
-					target: 'esnext'
+					target: 'esnext',
+
+					// TODO(v2): use the new flag verbatimModuleSyntax instead (requires support by Vite/Esbuild)
+					ignoreDeprecations: Number(ts.version.split('.')[0]) >= 5 ? '5.0' : undefined
 				},
 				include,
 				exclude
