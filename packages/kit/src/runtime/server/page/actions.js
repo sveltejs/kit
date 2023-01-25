@@ -69,23 +69,23 @@ export async function handle_action_json_request(event, options, server) {
 			});
 		}
 	} catch (e) {
-		const error = normalize_error(e);
+		const err = normalize_error(e);
 
-		if (error instanceof Redirect) {
+		if (err instanceof Redirect) {
 			return action_json({
 				type: 'redirect',
-				status: error.status,
-				location: error.location
+				status: err.status,
+				location: err.location
 			});
 		}
 
 		return action_json(
 			{
 				type: 'error',
-				error: await handle_error_and_jsonify(event, options, check_incorrect_fail_use(error))
+				error: await handle_error_and_jsonify(event, options, check_incorrect_fail_use(err))
 			},
 			{
-				status: error instanceof HttpError ? error.status : 500
+				status: err instanceof HttpError ? err.status : 500
 			}
 		);
 	}
@@ -161,19 +161,19 @@ export async function handle_action_request(event, server) {
 			};
 		}
 	} catch (e) {
-		const error = normalize_error(e);
+		const err = normalize_error(e);
 
-		if (error instanceof Redirect) {
+		if (err instanceof Redirect) {
 			return {
 				type: 'redirect',
-				status: error.status,
-				location: error.location
+				status: err.status,
+				location: err.location
 			};
 		}
 
 		return {
 			type: 'error',
-			error: check_incorrect_fail_use(error)
+			error: check_incorrect_fail_use(err)
 		};
 	}
 }
