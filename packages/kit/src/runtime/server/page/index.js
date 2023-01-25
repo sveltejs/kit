@@ -59,7 +59,7 @@ export async function render_page(event, route, page, options, manifest, state, 
 		/** @type {import('types').ActionResult | undefined} */
 		let action_result = undefined;
 
-		if (is_action_request(event, leaf_node)) {
+		if (is_action_request(event)) {
 			// for action requests, first call handler in +page.server.js
 			// (this also determines status code)
 			action_result = await handle_action_request(event, leaf_node.server);
@@ -85,7 +85,7 @@ export async function render_page(event, route, page, options, manifest, state, 
 
 		if (should_prerender) {
 			const mod = leaf_node.server;
-			if (mod && mod.actions) {
+			if (mod?.actions) {
 				throw new Error('Cannot prerender pages with actions');
 			}
 		} else if (state.prerendering) {

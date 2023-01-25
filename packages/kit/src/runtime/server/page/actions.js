@@ -69,23 +69,23 @@ export async function handle_action_json_request(event, options, server) {
 			});
 		}
 	} catch (e) {
-		const error = normalize_error(e);
+		const err = normalize_error(e);
 
-		if (error instanceof Redirect) {
+		if (err instanceof Redirect) {
 			return action_json({
 				type: 'redirect',
-				status: error.status,
-				location: error.location
+				status: err.status,
+				location: err.location
 			});
 		}
 
 		return action_json(
 			{
 				type: 'error',
-				error: await handle_error_and_jsonify(event, options, check_incorrect_fail_use(error))
+				error: await handle_error_and_jsonify(event, options, check_incorrect_fail_use(err))
 			},
 			{
-				status: error instanceof HttpError ? error.status : 500
+				status: err instanceof HttpError ? err.status : 500
 			}
 		);
 	}
@@ -110,19 +110,19 @@ function action_json(data, init) {
 
 /**
  * @param {import('types').RequestEvent} event
- * @param {import('types').SSRNode} leaf_node
  */
-export function is_action_request(event, leaf_node) {
-	return leaf_node.server && event.request.method !== 'GET' && event.request.method !== 'HEAD';
+export function is_action_request(event) {
+	const { method } = event.request;
+	return method !== 'GET' && method !== 'HEAD';
 }
 
 /**
  * @param {import('types').RequestEvent} event
- * @param {import('types').SSRNode['server']} server
+ * @param {import('types').SSRNode['server'] | undefined} server
  * @returns {Promise<import('types').ActionResult>}
  */
 export async function handle_action_request(event, server) {
-	const actions = server.actions;
+	const actions = server?.actions;
 
 	if (!actions) {
 		// TODO should this be a different error altogether?
@@ -161,19 +161,19 @@ export async function handle_action_request(event, server) {
 			};
 		}
 	} catch (e) {
-		const error = normalize_error(e);
+		const err = normalize_error(e);
 
-		if (error instanceof Redirect) {
+		if (err instanceof Redirect) {
 			return {
 				type: 'redirect',
-				status: error.status,
-				location: error.location
+				status: err.status,
+				location: err.location
 			};
 		}
 
 		return {
 			type: 'error',
-			error: check_incorrect_fail_use(error)
+			error: check_incorrect_fail_use(err)
 		};
 	}
 }
