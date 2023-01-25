@@ -160,7 +160,7 @@ export function create_client({ target, base }) {
 
 	/**
 	 * @param {string | URL} url
-	 * @param {{ noScroll?: boolean; replaceState?: boolean; keepFocus?: boolean; state?: any; invalidateAll?: boolean }} opts
+	 * @param {{ noScroll?: boolean; replaceState?: boolean; keepFocus?: boolean; state?: any; invalidateAll?: boolean; skipLoad?: boolean }} opts
 	 * @param {string[]} redirect_chain
 	 * @param {{}} [nav_token]
 	 */
@@ -171,7 +171,8 @@ export function create_client({ target, base }) {
 			replaceState = false,
 			keepFocus = false,
 			state = {},
-			invalidateAll = false
+			invalidateAll = false,
+			skipLoad = false
 		},
 		redirect_chain,
 		nav_token
@@ -184,6 +185,7 @@ export function create_client({ target, base }) {
 			url,
 			scroll: noScroll ? scroll_state() : null,
 			keepfocus: keepFocus,
+			skip_load: skipLoad,
 			redirect_chain,
 			details: {
 				state,
@@ -238,13 +240,13 @@ export function create_client({ target, base }) {
 	 * @param {import('./types').NavigationIntent | undefined} intent
 	 * @param {URL} url
 	 * @param {string[]} redirect_chain
-	 * @param {{hash?: string, scroll: { x: number, y: number } | null, keepfocus: boolean, details: { replaceState: boolean, state: any } | null}} [opts]
+	 * @param {{hash?: string, scroll: { x: number, y: number } | null, keepfocus: boolean, skip_load: boolean; details: { replaceState: boolean, state: any } | null}} [opts]
 	 * @param {{}} [nav_token] To distinguish between different navigation events and determine the latest. Needed for example for redirects to keep the original token
 	 * @param {() => void} [callback]
 	 */
 	async function update(intent, url, redirect_chain, opts, nav_token = {}, callback) {
 		token = nav_token;
-		let navigation_result = intent && (await load_route(intent));
+		let navigation_result = intent && (await load_route(intent, opts?.skip_load));
 
 		if (!navigation_result) {
 			navigation_result = await server_fallback(
@@ -474,6 +476,9 @@ export function create_client({ target, base }) {
 			p += 1;
 		}
 
+		// data_changed could be true if more nodes were added, but the data stayed the same
+		data_changed = Object.keys(result.props).some((key) => key.startsWith('data_'));
+
 		const page_changed =
 			!current.url ||
 			url.href !== current.url.href ||
@@ -510,10 +515,11 @@ export function create_client({ target, base }) {
 	 *   params: Record<string, string>;
 	 *   route: { id: string | null };
 	 * 	 server_data_node: import('./types').DataNode | null;
+	 *   skip_load?: boolean;
 	 * }} options
 	 * @returns {Promise<import('./types').BranchNode>}
 	 */
-	async function load_node({ loader, parent, url, params, route, server_data_node }) {
+	async function load_node({ loader, parent, url, params, route, server_data_node, skip_load }) {
 		/** @type {Record<string, any> | null} */
 		let data = null;
 
@@ -533,6 +539,11 @@ export function create_client({ target, base }) {
 		}
 
 		if (node.universal?.load) {
+			if (DEV && skip_load) {
+				// TODO warning instead?
+				throw new Error('Cannot skip load when some data needs to be loaded');
+			}
+
 			/** @param {string[]} deps */
 			function depends(...deps) {
 				for (const dep of deps) {
@@ -699,9 +710,10 @@ export function create_client({ target, base }) {
 
 	/**
 	 * @param {import('./types').NavigationIntent} intent
+	 * @param {boolean} [skip_load]
 	 * @returns {Promise<import('./types').NavigationResult>}
 	 */
-	async function load_route({ id, invalidating, url, params, route }) {
+	async function load_route({ id, invalidating, url, params, route }, skip_load) {
 		if (load_cache?.id === id) {
 			return load_cache.promise;
 		}
@@ -728,19 +740,24 @@ export function create_client({ target, base }) {
 			const invalid =
 				!!loader?.[0] &&
 				(previous?.loader !== loader[1] ||
-					has_changed(
-						acc.some(Boolean),
-						route_changed,
-						url_changed,
-						previous.server?.uses,
-						params
-					));
+					(!skip_load &&
+						has_changed(
+							acc.some(Boolean),
+							route_changed,
+							url_changed,
+							previous.server?.uses,
+							params
+						)));
 
 			acc.push(invalid);
 			return acc;
 		}, /** @type {boolean[]} */ ([]));
 
 		if (invalid_server_nodes.some(Boolean)) {
+			if (DEV && skip_load) {
+				// TODO warning instead?
+				throw new Error('Cannot skip load when some data needs to be loaded');
+			}
 			try {
 				server_data = await load_data(url, invalid_server_nodes);
 			} catch (error) {
@@ -773,7 +790,14 @@ export function create_client({ target, base }) {
 			const valid =
 				(!server_data_node || server_data_node.type === 'skip') &&
 				loader[1] === previous?.loader &&
-				!has_changed(parent_changed, route_changed, url_changed, previous.universal?.uses, params);
+				(skip_load ||
+					!has_changed(
+						parent_changed,
+						route_changed,
+						url_changed,
+						previous.universal?.uses,
+						params
+					));
 			if (valid) return previous;
 
 			parent_changed = true;
@@ -800,7 +824,8 @@ export function create_client({ target, base }) {
 					// and if current loader uses server data, we want to reuse previous data.
 					server_data_node === undefined && loader[0] ? { type: 'skip' } : server_data_node ?? null,
 					previous?.server
-				)
+				),
+				skip_load
 			});
 		});
 
@@ -1049,6 +1074,7 @@ export function create_client({ target, base }) {
 	 *   url: URL;
 	 *   scroll: { x: number, y: number } | null;
 	 *   keepfocus: boolean;
+	 *   skip_load: boolean;
 	 *   redirect_chain: string[];
 	 *   details: {
 	 *     replaceState: boolean;
@@ -1065,6 +1091,7 @@ export function create_client({ target, base }) {
 		url,
 		scroll,
 		keepfocus,
+		skip_load,
 		redirect_chain,
 		details,
 		type,
@@ -1097,6 +1124,7 @@ export function create_client({ target, base }) {
 			redirect_chain,
 			{
 				scroll,
+				skip_load,
 				keepfocus,
 				details
 			},
@@ -1459,6 +1487,7 @@ export function create_client({ target, base }) {
 					url,
 					scroll: options.noscroll ? scroll_state() : null,
 					keepfocus: false,
+					skip_load: false, // TODO data-sveltekit-skipload?
 					redirect_chain: [],
 					details: {
 						state: {},
@@ -1513,6 +1542,7 @@ export function create_client({ target, base }) {
 					url,
 					scroll: noscroll ? scroll_state() : null,
 					keepfocus: false,
+					skip_load: false,
 					redirect_chain: [],
 					details: {
 						state: {},
@@ -1537,6 +1567,7 @@ export function create_client({ target, base }) {
 						url: new URL(location.href),
 						scroll: scroll_positions[event.state[INDEX_KEY]],
 						keepfocus: false,
+						skip_load: false, // TODO should popstate skip load if navigation to it was with skipLoad?
 						redirect_chain: [],
 						details: null,
 						accepted: () => {

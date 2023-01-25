@@ -193,6 +193,32 @@ test.describe('Load', () => {
 		expect(did_request_data).toBe(false);
 	});
 
+	test('skipLoad skips loading data', async ({ page, app }) => {
+		await page.goto('/load/skip-load');
+
+		const page_content = await page.textContent('p.skip-page');
+		const layout_content = await page.textContent('p.skip-layout');
+		const store_content = await page.textContent('pre');
+
+		expect(page_content).toMatch(/Skip load: 0\.\d+/);
+		expect(layout_content).toMatch(/0\.\d+/);
+		expect(store_content).toMatch(
+			/{"foo":{"bar":"Custom layout"},"random":0\.\d+,"pageRandom":0\.\d+}/
+		);
+
+		await app.goto('/load/skip-load?foo', { skipLoad: true });
+		expect(await page.textContent('p.skip-page')).toBe(page_content);
+		expect(await page.textContent('p.skip-layout')).toBe(layout_content);
+		expect(await page.textContent('pre')).toBe(store_content);
+
+		await app.goto('/load/skip-load/inner', { skipLoad: true });
+		expect(await page.textContent('p.skip-page')).toBe('Skip load inner');
+		expect(await page.textContent('p.skip-layout')).toBe(layout_content);
+		expect(await page.textContent('pre')).toBe(
+			store_content.slice(0, store_content.indexOf(',"pageRandom"')) + '}'
+		);
+	});
+
 	if (process.env.DEV) {
 		test('using window.fetch causes a warning', async ({ page, baseURL }) => {
 			await Promise.all([

@@ -197,6 +197,10 @@ declare module '$app/navigation' {
 			 * If `true`, all `load` functions of the page will be rerun. See https://kit.svelte.dev/docs/load#invalidation for more info on invalidation.
 			 */
 			invalidateAll?: boolean;
+			/**
+			 * If `true`, will not run any `load` functions of the page. This only makes sense if you're navigating to a page where all `load` function results are already available.
+			 */
+			skipLoad?: boolean;
 		}
 	): Promise<void>;
 	/**
