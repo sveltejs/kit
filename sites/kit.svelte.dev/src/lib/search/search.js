@@ -3,16 +3,12 @@ import flexsearch from 'flexsearch';
 // @ts-expect-error
 const Index = /** @type {import('flexsearch').Index} */ (flexsearch.Index) ?? flexsearch;
 
-/**
- * @typedef {{title:string, href:string, breadcrumbs:string[], content: string}} StoredBlock
- */
-
 export let inited = false;
 
 /** @type {import('flexsearch').Index[]} */
 let indexes;
 
-/** @type {Map<number, StoredBlock>} */
+/** @type {Map<string, import('./types').Block>} */
 const map = new Map();
 
 /** @type {Map<string, string>} */
@@ -27,15 +23,10 @@ export function init(blocks) {
 
 	indexes = Array.from({ length: max_rank + 1 }, () => new Index({ tokenize: 'forward' }));
 
-	for (const [i, block] of blocks.entries()) {
-		const title = block.breadcrumbs[block.breadcrumbs.length - 1];
-		map.set(i, {
-			title,
-			href: block.href,
-			breadcrumbs: block.breadcrumbs,
-			content: block.content
-		});
-		indexes[block.rank ?? 0].add(i, `${title} ${block.content}`);
+	for (const block of blocks) {
+		const title = block.breadcrumbs.at(-1);
+		map.set(block.href, block);
+		indexes[block.rank ?? 0].add(block.href, `${title} ${block.content}`);
 
 		hrefs.set(block.breadcrumbs.join('::'), block.href);
 	}
@@ -57,8 +48,8 @@ export function search(query) {
 		.map(lookup)
 		.map((block, rank) => ({ block, rank }))
 		.sort((a, b) => {
-			const a_title_matches = regex.test(a.block.title);
-			const b_title_matches = regex.test(b.block.title);
+			const a_title_matches = regex.test(a.block.breadcrumbs.at(-1));
+			const b_title_matches = regex.test(b.block.breadcrumbs.at(-1));
 
 			// massage the order a bit, so that title matches
 			// are given higher priority
@@ -75,14 +66,14 @@ export function search(query) {
 	return results;
 }
 
-/** @param {number} i */
-export function lookup(i) {
-	return map.get(i);
+/** @param {string} href */
+export function lookup(href) {
+	return map.get(href);
 }
 
 /**
  * @param {string[]} breadcrumbs
- * @param {StoredBlock[]} blocks
+ * @param {import('./types').Block[]} blocks
  */
 function tree(breadcrumbs, blocks) {
 	const depth = breadcrumbs.length;
