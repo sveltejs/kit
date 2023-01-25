@@ -405,7 +405,6 @@ if (not_prerendered.length > 0) {
 	);
 }
 
-// prerender_map is updated during prerendering, so we need to write it back
 writeFileSync(`${out}/prerendered.json`, devalue.stringify({ prerendered, prerender_map }));
 
 process.exit(0);
