@@ -23,6 +23,18 @@ test.describe('Content-Type', () => {
 	});
 });
 
+test.describe('Content-Length', () => {
+	test('sets Content-Length on page', async ({ request }) => {
+		const response = await request.get('/content-length-header');
+
+		// TODO this would ideally be a unit test of `Server`,
+		// as would most of the tests in this file
+		if (!response.headers()['content-encoding']) {
+			expect(+response.headers()['content-length']).toBeGreaterThan(1000);
+		}
+	});
+});
+
 test.describe('Cookies', () => {
 	test('does not forward cookies from external domains', async ({ request, start_server }) => {
 		const { port } = await start_server(async (req, res) => {
@@ -224,6 +236,28 @@ test.describe('Errors', () => {
 		expect(error).toBe(undefined);
 
 		expect(await page.textContent('h1')).toBe('the answer is 42');
+	});
+
+	test('POST to missing page endpoint', async ({ request }) => {
+		const res = await request.post('/errors/missing-actions', {
+			headers: {
+				accept: 'text/html'
+			}
+		});
+		expect(res?.status()).toBe(405);
+
+		const res_json = await request.post('/errors/missing-actions', {
+			headers: {
+				accept: 'application/json'
+			}
+		});
+		expect(res_json?.status()).toBe(405);
+		expect(await res_json.json()).toEqual({
+			type: 'error',
+			error: {
+				message: 'POST method not allowed. No actions exist for this page'
+			}
+		});
 	});
 
 	test('error thrown in handle results in a rendered error page or JSON response', async ({

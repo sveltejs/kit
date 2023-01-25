@@ -8,11 +8,11 @@ Errors are an inevitable fact of software development. SvelteKit handles errors 
 
 SvelteKit distinguishes between expected and unexpected errors, both of which are represented as simple `{ message: string }` objects by default.
 
-You can add additional properties, like a `code` or a tracking `id`, as shown in the examples below. (When using TypeScript this requires you to redefine the `Error` type as described in  [type safety](/docs/errors#type-safety)).
+You can add additional properties, like a `code` or a tracking `id`, as shown in the examples below. (When using TypeScript this requires you to redefine the `Error` type as described in  [type safety](errors#type-safety)).
 
 ## Expected errors
 
-An _expected_ error is one created with the [`error`](/docs/modules#sveltejs-kit-error) helper imported from `@sveltejs/kit`:
+An _expected_ error is one created with the [`error`](modules#sveltejs-kit-error) helper imported from `@sveltejs/kit`:
 
 ```js
 /// file: src/routes/blog/[slug]/+page.server.js
@@ -40,7 +40,7 @@ export async function load({ params }) {
 }
 ```
 
-This tells SvelteKit to set the response status code to 404 and render an [`+error.svelte`](/docs/routing#error) component, where `$page.error` is the object provided as the second argument to `error(...)`.
+This tells SvelteKit to set the response status code to 404 and render an [`+error.svelte`](routing#error) component, where `$page.error` is the object provided as the second argument to `error(...)`.
 
 ```svelte
 /// file: src/routes/+error.svelte
@@ -77,7 +77,7 @@ By default, unexpected errors are printed to the console (or, in production, you
 { "message": "Internal Error" }
 ```
 
-Unexpected errors will go through the [`handleError`](/docs/hooks#shared-hooks-handleerror) hook, where you can add your own error handling — for example, sending errors to a reporting service, or returning a custom error object.
+Unexpected errors will go through the [`handleError`](hooks#shared-hooks-handleerror) hook, where you can add your own error handling — for example, sending errors to a reporting service, or returning a custom error object.
 
 ```js
 /// file: src/hooks.server.js
@@ -110,7 +110,7 @@ export function handleError({ error, event }) {
 
 ## Responses
 
-If an error occurs inside `handle` or inside a [`+server.js`](/docs/routing#server) request handler, SvelteKit will respond with either a fallback error page or a JSON representation of the error object, depending on the request's `Accept` headers.
+If an error occurs inside `handle` or inside a [`+server.js`](routing#server) request handler, SvelteKit will respond with either a fallback error page or a JSON representation of the error object, depending on the request's `Accept` headers.
 
 You can customise the fallback error page by adding a `src/error.html` file:
 
@@ -131,7 +131,7 @@ You can customise the fallback error page by adding a `src/error.html` file:
 
 SvelteKit will replace `%sveltekit.status%` and `%sveltekit.error.message%` with their corresponding values.
 
-If the error instead occurs inside a `load` function while rendering a page, SvelteKit will render the [`+error.svelte`](/docs/routing#error) component nearest to where the error occurred. If the error occurs inside a `load` function in `+layout(.server).js`, the closest error boundary in the tree is an `+error.svelte` file _above_ that layout (not next to it).
+If the error instead occurs inside a `load` function while rendering a page, SvelteKit will render the [`+error.svelte`](routing#error) component nearest to where the error occurred. If the error occurs inside a `load` function in `+layout(.server).js`, the closest error boundary in the tree is an `+error.svelte` file _above_ that layout (not next to it).
 
 The exception is when the error occurs inside the root `+layout.js` or `+layout.server.js`, since the root layout would ordinarily _contain_ the `+error.svelte` component. In this case, SvelteKit uses the fallback error page.
 
@@ -139,14 +139,18 @@ The exception is when the error occurs inside the root `+layout.js` or `+layout.
 
 If you're using TypeScript and need to customize the shape of errors, you can do so by declaring an `App.Error` interface in your app (by convention, in `src/app.d.ts`, though it can live anywhere that TypeScript can 'see'):
 
-```ts
+```diff
 /// file: src/app.d.ts
-declare namespace App {
-	interface Error {
-		code: string;
-		id: string;
+declare global {
+	namespace App {
+		interface Error {
++			code: string;
++			id: string;
+		}
 	}
 }
+
+export {};
 ```
 
 This interface always includes a `message: string` property.

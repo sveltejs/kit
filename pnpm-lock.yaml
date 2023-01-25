@@ -281,7 +281,7 @@ importers:
       svelte-preprocess: ^5.0.0
       tiny-glob: ^0.2.9
       typescript: ^4.9.4
-      undici: 5.15.0
+      undici: 5.16.0
       uvu: ^0.5.6
       vite: ^4.0.4
     dependencies:
@@ -297,7 +297,7 @@ importers:
       set-cookie-parser: 2.5.1
       sirv: 2.0.2
       tiny-glob: 0.2.9
-      undici: 5.15.0
+      undici: 5.16.0
     devDependencies:
       '@playwright/test': 1.29.2
       '@types/connect': 3.4.35
@@ -702,7 +702,7 @@ importers:
       typescript: ^4.9.4
       uvu: ^0.5.6
       vite: ^4.0.4
-      vite-imagetools: ^4.0.13
+      vite-imagetools: ^4.0.16
     dependencies:
       d3-geo: 3.0.1
       d3-geo-projection: 4.0.0
@@ -725,7 +725,7 @@ importers:
       typescript: 4.9.4
       uvu: 0.5.6
       vite: 4.0.4_@types+node@16.18.6
-      vite-imagetools: 4.0.13
+      vite-imagetools: 4.0.16
 
 packages:
 
@@ -2610,8 +2610,8 @@ packages:
     engines: {node: '>= 4'}
     dev: true
 
-  /imagetools-core/3.2.3:
-    resolution: {integrity: sha512-YbZhedg/zja34yV6iRDhfo4cmAYSwxaErkuzc/RpMMAELgszpDKf3MLH6VlsR+QkenPUEGkGAVpJAM2GbUls9Q==}
+  /imagetools-core/3.3.1:
+    resolution: {integrity: sha512-xllF2GDRg0SXCQQRxBAtE6N9dPAttc+ro+QDLnRmVSE5lH5clQxD2Al4XluirXj0T7lIH5VbetFmBLowW6ps+w==}
     engines: {node: '>=12.0.0'}
     dependencies:
       sharp: 0.31.3
@@ -4485,8 +4485,8 @@ packages:
       which-boxed-primitive: 1.0.2
     dev: true
 
-  /undici/5.15.0:
-    resolution: {integrity: sha512-wCAZJDyjw9Myv+Ay62LAoB+hZLPW9SmKbQkbHIhMw/acKSlpn7WohdMUc/Vd4j1iSMBO0hWwU8mjB7a5p5bl8g==}
+  /undici/5.16.0:
+    resolution: {integrity: sha512-KWBOXNv6VX+oJQhchXieUznEmnJMqgXMbs0xxH2t8q/FUAWSJvOSr/rMaZKnX5RIVq7JDn0JbP4BOnKG2SGXLQ==}
     engines: {node: '>=12.18'}
     dependencies:
       busboy: 1.6.0
@@ -4532,12 +4532,12 @@ packages:
       spdx-expression-parse: 3.0.1
     dev: true
 
-  /vite-imagetools/4.0.13:
-    resolution: {integrity: sha512-DeMAhDwvWATzBa5Qu9Fv6rtOuHZFONrv5Z5a95jd/oBDDCdyTKYVqxIurS5ox9A/sH8bhVF7r++Yww0DKpjKFQ==}
+  /vite-imagetools/4.0.16:
+    resolution: {integrity: sha512-kjTIcscDYEXLxTeCRVZVArygEOgFBoG6pno6H6wBpq6R07Lov/zRDG7UX/yw3DgMFzeVPWJW8YuItT7M0puSDw==}
     engines: {node: '>=12.0.0'}
     dependencies:
       '@rollup/pluginutils': 5.0.2
-      imagetools-core: 3.2.3
+      imagetools-core: 3.3.1
     transitivePeerDependencies:
       - rollup
     dev: true

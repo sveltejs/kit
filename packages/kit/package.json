@@ -1,6 +1,6 @@
 {
 	"name": "@sveltejs/kit",
-	"version": "1.1.4",
+	"version": "1.2.10",
 	"repository": {
 		"type": "git",
 		"url": "https://github.com/sveltejs/kit",
@@ -22,7 +22,7 @@
 		"set-cookie-parser": "^2.5.1",
 		"sirv": "^2.0.2",
 		"tiny-glob": "^0.2.9",
-		"undici": "5.15.0"
+		"undici": "5.16.0"
 	},
 	"devDependencies": {
 		"@playwright/test": "^1.29.2",
@@ -63,6 +63,7 @@
 		"format": "pnpm lint --write",
 		"test": "pnpm test:unit && pnpm test:integration",
 		"test:integration": "pnpm -r --workspace-concurrency 1 --filter=\"./test/**\" test",
+		"test:cross-platform": "pnpm test:unit && pnpm -r --workspace-concurrency 1 --filter=\"./test/**\" test:cross-platform",
 		"test:unit": "uvu src \"(spec\\.js|test[\\\\/]index\\.js)\"",
 		"postinstall": "node postinstall.js"
 	},

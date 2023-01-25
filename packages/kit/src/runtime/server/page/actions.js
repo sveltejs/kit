@@ -24,9 +24,6 @@ export async function handle_action_json_request(event, options, server) {
 	const actions = server?.actions;
 
 	if (!actions) {
-		if (server) {
-			maybe_throw_migration_error(server);
-		}
 		// TODO should this be a different error altogether?
 		const no_actions_error = error(405, 'POST method not allowed. No actions exist for this page');
 		return action_json(
@@ -50,6 +47,10 @@ export async function handle_action_json_request(event, options, server) {
 	try {
 		const data = await call_action(event, actions);
 
+		if (__SVELTEKIT_DEV__) {
+			validate_action_return(data);
+		}
+
 		if (data instanceof ActionFailure) {
 			return action_json({
 				type: 'failure',
@@ -68,23 +69,23 @@ export async function handle_action_json_request(event, options, server) {
 			});
 		}
 	} catch (e) {
-		const error = normalize_error(e);
+		const err = normalize_error(e);
 
-		if (error instanceof Redirect) {
+		if (err instanceof Redirect) {
 			return action_json({
 				type: 'redirect',
-				status: error.status,
-				location: error.location
+				status: err.status,
+				location: err.location
 			});
 		}
 
 		return action_json(
 			{
 				type: 'error',
-				error: await handle_error_and_jsonify(event, options, check_incorrect_fail_use(error))
+				error: await handle_error_and_jsonify(event, options, check_incorrect_fail_use(err))
 			},
 			{
-				status: error instanceof HttpError ? error.status : 500
+				status: err instanceof HttpError ? err.status : 500
 			}
 		);
 	}
@@ -109,22 +110,20 @@ function action_json(data, init) {
 
 /**
  * @param {import('types').RequestEvent} event
- * @param {import('types').SSRNode} leaf_node
  */
-export function is_action_request(event, leaf_node) {
-	return leaf_node.server && event.request.method !== 'GET' && event.request.method !== 'HEAD';
+export function is_action_request(event) {
+	return event.request.method === 'POST';
 }
 
 /**
  * @param {import('types').RequestEvent} event
- * @param {import('types').SSRNode['server']} server
+ * @param {import('types').SSRNode['server'] | undefined} server
  * @returns {Promise<import('types').ActionResult>}
  */
 export async function handle_action_request(event, server) {
-	const actions = server.actions;
+	const actions = server?.actions;
 
 	if (!actions) {
-		maybe_throw_migration_error(server);
 		// TODO should this be a different error altogether?
 		event.setHeaders({
 			// https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/405
@@ -142,29 +141,38 @@ export async function handle_action_request(event, server) {
 	try {
 		const data = await call_action(event, actions);
 
+		if (__SVELTEKIT_DEV__) {
+			validate_action_return(data);
+		}
+
 		if (data instanceof ActionFailure) {
-			return { type: 'failure', status: data.status, data: data.data };
+			return {
+				type: 'failure',
+				status: data.status,
+				data: data.data
+			};
 		} else {
 			return {
 				type: 'success',
 				status: 200,
-				data: /** @type {Record<string, any> | undefined} */ (data)
+				// @ts-expect-error this will be removed upon serialization, so `undefined` is the same as omission
+				data
 			};
 		}
 	} catch (e) {
-		const error = normalize_error(e);
+		const err = normalize_error(e);
 
-		if (error instanceof Redirect) {
+		if (err instanceof Redirect) {
 			return {
 				type: 'redirect',
-				status: error.status,
-				location: error.location
+				status: err.status,
+				location: err.location
 			};
 		}
 
 		return {
 			type: 'error',
-			error: check_incorrect_fail_use(error)
+			error: check_incorrect_fail_use(err)
 		};
 	}
 }
@@ -185,7 +193,7 @@ function check_named_default_separate(actions) {
  * @param {NonNullable<import('types').SSRNode['server']['actions']>} actions
  * @throws {Redirect | ActionFailure | HttpError | Error}
  */
-export async function call_action(event, actions) {
+async function call_action(event, actions) {
 	const url = new URL(event.request.url);
 
 	let name = 'default';
@@ -213,16 +221,16 @@ export async function call_action(event, actions) {
 	return action(event);
 }
 
-/**
- * @param {import('types').SSRNode['server']} server
- */
-function maybe_throw_migration_error(server) {
-	for (const method of ['POST', 'PUT', 'PATCH', 'DELETE']) {
-		if (/** @type {any} */ (server)[method]) {
-			throw new Error(
-				`${method} method no longer allowed in +page.server, use actions instead. See the PR for more info: https://github.com/sveltejs/kit/pull/6469`
-			);
-		}
+/** @param {any} data */
+function validate_action_return(data) {
+	if (data instanceof Redirect) {
+		throw new Error(`Cannot \`return redirect(...)\` — use \`throw redirect(...)\` instead`);
+	}
+
+	if (data instanceof HttpError) {
+		throw new Error(
+			`Cannot \`return error(...)\` — use \`throw error(...)\` or \`return fail(...)\` instead`
+		);
 	}
 }
 

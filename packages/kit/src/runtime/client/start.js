@@ -1,8 +1,7 @@
 import { DEV } from 'esm-env';
 import { create_client } from './client.js';
 import { init } from './singletons.js';
-import { set_paths, set_version } from '../shared.js';
-import { set_public_env } from '../env-public.js';
+import { set_paths, set_version, set_public_env } from '../shared.js';
 
 /**
  * @param {{

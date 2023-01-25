@@ -1,5 +1,77 @@
 # @sveltejs/kit
 
+## 1.2.10
+
+### Patch Changes
+
+- chore: restrict methods allowed for POST ([#8721](https://github.com/sveltejs/kit/pull/8721))
+
+- fix: provide proper error when POSTing to a missing page endpoint ([#8714](https://github.com/sveltejs/kit/pull/8714))
+
+## 1.2.9
+
+### Patch Changes
+
+- fix: reapply exports alignment after Vite dependency optimizations ([#8690](https://github.com/sveltejs/kit/pull/8690))
+
+## 1.2.8
+
+### Patch Changes
+
+- fix: include base path in path to start script ([#8651](https://github.com/sveltejs/kit/pull/8651))
+
+## 1.2.7
+
+### Patch Changes
+
+- fix: set headers when throwing redirect in handle ([#8648](https://github.com/sveltejs/kit/pull/8648))
+
+## 1.2.6
+
+### Patch Changes
+
+- fix: allow importing assets while using base path ([#8683](https://github.com/sveltejs/kit/pull/8683))
+
+## 1.2.5
+
+### Patch Changes
+
+- fix: check for wrong return values from form actions ([#8553](https://github.com/sveltejs/kit/pull/8553))
+
+## 1.2.4
+
+### Patch Changes
+
+- chore: update undici to v5.16.0 ([#8668](https://github.com/sveltejs/kit/pull/8668))
+
+## 1.2.3
+
+### Patch Changes
+
+- fix: set environment variables before postbuild analysis ([#8647](https://github.com/sveltejs/kit/pull/8647))
+
+## 1.2.2
+
+### Patch Changes
+
+- fix: focus management after navigation ([#8466](https://github.com/sveltejs/kit/pull/8466))
+
+## 1.2.1
+
+### Patch Changes
+
+- feat: throw error if cookie exceeds size limit ([#8591](https://github.com/sveltejs/kit/pull/8591))
+
+## 1.2.0
+
+### Minor Changes
+
+- feat: add `text(...)` helper for generating text responses ([#8371](https://github.com/sveltejs/kit/pull/8371))
+
+- feat: enable access to public env within app.html ([#8449](https://github.com/sveltejs/kit/pull/8449))
+
+- fix: add `Content-Length` header to SvelteKit-generated responses ([#8371](https://github.com/sveltejs/kit/pull/8371))
+
 ## 1.1.4
 
 ### Patch Changes

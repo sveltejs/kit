@@ -5,6 +5,7 @@
 	"private": true,
 	"scripts": {
 		"test": "turbo run test --filter=./packages/*",
+		"test:cross-platform": "turbo run test:cross-platform --filter=./packages/*",
 		"test:vite-ecosystem-ci": "pnpm test --dir packages/kit",
 		"check": "turbo run check",
 		"lint": "turbo run lint",
@@ -36,7 +37,7 @@
 		"turbo": "^1.6.3",
 		"typescript": "^4.9.4"
 	},
-	"packageManager": "pnpm@7.25.0",
+	"packageManager": "pnpm@7.26.0",
 	"engines": {
 		"pnpm": "^7.0.0"
 	},

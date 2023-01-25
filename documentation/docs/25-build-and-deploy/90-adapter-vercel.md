@@ -4,7 +4,7 @@ title: Vercel
 
 To deploy to Vercel, use [`adapter-vercel`](https://github.com/sveltejs/kit/tree/master/packages/adapter-vercel).
 
-This adapter will be installed by default when you use [`adapter-auto`](/docs/adapter-auto), but adding it to your project allows you to specify Vercel-specific options.
+This adapter will be installed by default when you use [`adapter-auto`](adapter-auto), but adding it to your project allows you to specify Vercel-specific options.
 
 ## Usage
 
@@ -73,9 +73,7 @@ Vercel functions contained in the `/api` directory at the project's root will _n
 
 ### Node version
 
-Projects created before a certain date will default to using Node 14, while SvelteKit requires Node 16 or later. You can change that in your project settings:
-
-![Vercel project settings](https://github.com/sveltejs/kit/blob/master/packages/adapter-vercel/settings.png)
+Projects created before a certain date will default to using Node 14, while SvelteKit requires Node 16 or later. You can [change the Node version in your project settings](https://vercel.com/docs/concepts/functions/serverless-functions/runtimes/node-js#node.js-version).
 
 ## Troubleshooting
 
