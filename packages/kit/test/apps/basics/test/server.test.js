@@ -154,7 +154,7 @@ test.describe('Endpoints', () => {
 		});
 
 		expect(response.status()).toBe(200);
-		expect(response.text()).toBe('ok');
+		expect(await response.text()).toBe('ok');
 	});
 });
 

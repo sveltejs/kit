@@ -233,10 +233,10 @@ function kit({ svelte_config }) {
 							`${posixify(kit.outDir)}/!(generated)`
 						]
 					},
-					cors: false
+					cors: { preflightContinue: true }
 				},
 				preview: {
-					cors: false
+					cors: { preflightContinue: true }
 				},
 				optimizeDeps: {
 					exclude: [
