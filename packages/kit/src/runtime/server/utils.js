@@ -52,8 +52,10 @@ export function allowed_methods(mod) {
 }
 
 /**
- * @template {'prerender' | 'ssr' | 'csr' | 'trailingSlash'} Option
- * @template {Option extends 'prerender' ? import('types').PrerenderOption : Option extends 'trailingSlash' ? import('types').TrailingSlash : boolean} Value
+ * @template {'prerender' | 'ssr' | 'csr' | 'trailingSlash' | 'config'} Option
+ * @template {Option extends 'prerender' ? import('types').PrerenderOption :
+ * 	Option extends 'trailingSlash' ? import('types').TrailingSlash :
+ * 		Option extends 'config' ? any : boolean } Value
  *
  * @param {Array<import('types').SSRNode | undefined>} nodes
  * @param {Option} option

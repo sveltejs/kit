@@ -83,6 +83,8 @@ export interface Builder {
 	config: ValidatedConfig;
 	/** Information about prerendered pages and assets, if any. */
 	prerendered: Prerendered;
+	/** `true` if one or more routes have `export const config = ..` in it */
+	hasRouteLevelConfig: boolean;
 
 	/**
 	 * Create separate functions that map to one or more routes of your app.

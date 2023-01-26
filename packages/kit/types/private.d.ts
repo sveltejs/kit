@@ -212,11 +212,12 @@ export interface RequestOptions {
 	platform?: App.Platform;
 }
 
-export interface RouteDefinition {
+export interface RouteDefinition<Config = any> {
 	id: string;
 	pattern: RegExp;
 	segments: RouteSegment[];
 	methods: HttpMethod[];
+	config: Config;
 }
 
 export interface RouteSegment {

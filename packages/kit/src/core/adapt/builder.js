@@ -33,6 +33,9 @@ export function create_builder({ config, build_data, server_metadata, routes, pr
 
 		config,
 		prerendered,
+		hasRouteLevelConfig:
+			!!server_metadata.routes &&
+			!![...server_metadata.routes.values()].some((route) => route.config),
 
 		async compress(directory) {
 			if (!existsSync(directory)) {
@@ -57,6 +60,7 @@ export function create_builder({ config, build_data, server_metadata, routes, pr
 				const methods =
 					/** @type {import('types').HttpMethod[]} */
 					(server_metadata.routes.get(route.id)?.methods);
+				const config = server_metadata.routes.get(route.id)?.config;
 
 				return {
 					id: route.id,
@@ -66,7 +70,8 @@ export function create_builder({ config, build_data, server_metadata, routes, pr
 						content: segment
 					})),
 					pattern: route.pattern,
-					methods
+					methods,
+					config
 				};
 			});
 

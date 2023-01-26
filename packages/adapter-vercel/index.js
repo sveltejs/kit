@@ -104,9 +104,7 @@ const plugin = function ({ external = [], edge, split } = {}) {
 				config.routes.push({ src: pattern, dest: `/${name}` });
 			}
 
-			const generate_function = edge ? generate_edge_function : generate_serverless_function;
-
-			if (split) {
+			if (split || builder.hasRouteLevelConfig) {
 				await builder.createEntries((route) => {
 					return {
 						id: route.pattern.toString(), // TODO is `id` necessary?
@@ -126,11 +124,14 @@ const plugin = function ({ external = [], edge, split } = {}) {
 
 							const src = `${sliced_pattern}(?:/__data.json)?$`; // TODO adding /__data.json is a temporary workaround — those endpoints should be treated as distinct routes
 
+							const generate_function =
+								route.config?.edge ?? edge ? generate_edge_function : generate_serverless_function;
 							await generate_function(route.id.slice(1) || 'index', src, entry.generateManifest);
 						}
 					};
 				});
 			} else {
+				const generate_function = edge ? generate_edge_function : generate_serverless_function;
 				await generate_function('render', '/.*', builder.generateManifest);
 			}
 

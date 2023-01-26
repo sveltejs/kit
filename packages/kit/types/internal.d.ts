@@ -240,6 +240,7 @@ export interface ServerMetadata {
 		{
 			prerender: PrerenderOption | undefined;
 			methods: HttpMethod[];
+			config: any;
 		}
 	>;
 }
@@ -280,6 +281,7 @@ export interface SSRNode {
 		ssr?: boolean;
 		csr?: boolean;
 		trailingSlash?: TrailingSlash;
+		config?: any;
 	};
 
 	server: {
@@ -289,6 +291,7 @@ export interface SSRNode {
 		csr?: boolean;
 		trailingSlash?: TrailingSlash;
 		actions?: Actions;
+		config?: any;
 	};
 
 	// store this in dev so we can print serialization errors
