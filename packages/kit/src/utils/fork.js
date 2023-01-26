@@ -11,7 +11,9 @@ import child_process from 'node:child_process';
  * @returns {(opts: T) => Promise<U>} A function that when called starts the subprocess
  */
 export function forked(module, callback) {
-	if (process.env.SVELTEKIT_FORK) {
+	if (process.env.SVELTEKIT_FORK && process.send) {
+		process.send({ type: 'ready' });
+
 		process.on(
 			'message',
 			/** @param {any} data */ async (data) => {
@@ -22,8 +24,6 @@ export function forked(module, callback) {
 							module,
 							payload: await callback(data.payload)
 						});
-
-						process.exit(0);
 					}
 				}
 			}
@@ -49,7 +49,16 @@ export function forked(module, callback) {
 			child.on(
 				'message',
 				/** @param {any} data */ (data) => {
+					if (data?.type === 'ready') {
+						child.send({
+							type: 'args',
+							module,
+							payload: opts
+						});
+					}
+
 					if (data?.type === 'result' && data.module === module) {
+						child.kill();
 						fulfil(data.payload);
 					}
 				}
@@ -59,12 +68,6 @@ export function forked(module, callback) {
 				if (code) {
 					reject(new Error(`Failed with code ${code}`));
 				}
-			});
-
-			child.send({
-				type: 'args',
-				module,
-				payload: opts
 			});
 		});
 	};
