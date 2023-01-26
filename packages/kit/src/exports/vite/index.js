@@ -595,8 +595,12 @@ function kit({ svelte_config }) {
 					})};\n`
 				);
 
+				console.warn('build server nodes without client manifest');
+
 				// first, build server nodes without the client manifest so we can analyse it
 				build_server_nodes(out, kit, manifest_data, server_manifest, null, null);
+
+				console.warn('analyse server nodes');
 
 				const metadata = await analyse({
 					manifest_path,
@@ -610,6 +614,8 @@ function kit({ svelte_config }) {
 					`${kit.outDir}/generated/client-optimized`,
 					metadata.nodes
 				);
+
+				console.warn('vite build');
 
 				const { output } = /** @type {import('rollup').RollupOutput} */ (
 					await vite.build({
@@ -645,11 +651,15 @@ function kit({ svelte_config }) {
 					})};\n`
 				);
 
+				console.log('build server nodes with client manifest');
+
 				// regenerate nodes with the client manifest...
 				build_server_nodes(out, kit, manifest_data, server_manifest, client_manifest, css);
 
 				// ...and prerender
 				log.info('Prerendering');
+
+				console.warn('prerender');
 
 				const { prerendered, prerender_map } = await prerender({
 					out,
@@ -687,6 +697,8 @@ function kit({ svelte_config }) {
 					);
 				}
 
+				console.warn('finalise');
+
 				// we need to defer this to closeBundle, so that adapters copy files
 				// created by other Vite plugins
 				finalise = async () => {
@@ -712,6 +724,8 @@ function kit({ svelte_config }) {
 					fs.unlinkSync(`${out}/client/${vite_config.build.manifest}`);
 					fs.unlinkSync(`${out}/server/${vite_config.build.manifest}`);
 				};
+
+				console.warn('done');
 			}
 		},
 
