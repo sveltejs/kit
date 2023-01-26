@@ -26,7 +26,7 @@ import {
 import { parse } from './parse.js';
 
 import Root from '__GENERATED__/root.svelte';
-import { nodes, server_loads, dictionary, matchers, hooks } from '__GENERATED__/client-manifest.js';
+import { nodes, server_loads, dictionary, matchers, hooks } from '__CLIENT__/manifest.js';
 import { HttpError, Redirect } from '../control.js';
 import { stores } from './singletons.js';
 import { unwrap_promises } from '../../utils/promises.js';
@@ -942,12 +942,12 @@ export function create_client({ target, base }) {
 		/** @type {Record<string, string>} */
 		const params = {}; // error page does not have params
 
-		const node = await default_layout_loader();
-
 		/** @type {import('types').ServerDataNode | null} */
 		let server_data_node = null;
 
-		if (node.has_server_load) {
+		const default_layout_has_server_load = server_loads[0] === 0;
+
+		if (default_layout_has_server_load) {
 			// TODO post-https://github.com/sveltejs/kit/discussions/6124 we can use
 			// existing root layout data
 			try {
@@ -1552,12 +1552,23 @@ export function create_client({ target, base }) {
 					// with history.go, which means we end up back here, hence this check
 					if (event.state[INDEX_KEY] === current_history_index) return;
 
+					const scroll = scroll_positions[event.state[INDEX_KEY]];
+
+					// if the only change is the hash, we don't need to do anything...
+					if (current.url.href.split('#')[0] === location.href.split('#')[0]) {
+						// ...except handle scroll
+						scroll_positions[current_history_index] = scroll_state();
+						current_history_index = event.state[INDEX_KEY];
+						scrollTo(scroll.x, scroll.y);
+						return;
+					}
+
 					const delta = event.state[INDEX_KEY] - current_history_index;
 					let blocked = false;
 
 					await navigate({
 						url: new URL(location.href),
-						scroll: scroll_positions[event.state[INDEX_KEY]],
+						scroll,
 						keepfocus: false,
 						redirect_chain: [],
 						details: null,

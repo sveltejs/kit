@@ -192,6 +192,14 @@ test.describe('beforeNavigate', () => {
 		expect(page.url()).toBe(baseURL + '/before-navigate/prevent-navigation');
 		expect(await page.innerHTML('pre')).toBe('0 false undefined');
 	});
+
+	test('is not triggered on click or popstate for hash links', async ({ page }) => {
+		await page.goto('/before-navigate/hash-links');
+
+		await page.click('a[href="#x"]');
+		await page.goBack();
+		expect(await page.textContent('h1')).toBe('before_navigate_ran: false');
+	});
 });
 
 test.describe('Scrolling', () => {

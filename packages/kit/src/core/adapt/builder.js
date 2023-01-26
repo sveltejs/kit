@@ -17,13 +17,14 @@ const pipe = promisify(pipeline);
  * @param {{
  *   config: import('types').ValidatedConfig;
  *   build_data: import('types').BuildData;
+ *   server_metadata: import('types').ServerMetadata;
  *   routes: import('types').RouteData[];
  *   prerendered: import('types').Prerendered;
  *   log: import('types').Logger;
  * }} opts
  * @returns {import('types').Builder}
  */
-export function create_builder({ config, build_data, routes, prerendered, log }) {
+export function create_builder({ config, build_data, server_metadata, routes, prerendered, log }) {
 	return {
 		log,
 		rimraf,
@@ -53,18 +54,9 @@ export function create_builder({ config, build_data, routes, prerendered, log })
 		async createEntries(fn) {
 			/** @type {import('types').RouteDefinition[]} */
 			const facades = routes.map((route) => {
-				/** @type {Set<import('types').HttpMethod>} */
-				const methods = new Set();
-
-				if (route.page) {
-					methods.add('GET');
-				}
-
-				if (route.endpoint) {
-					for (const method of build_data.server.methods[route.endpoint.file]) {
-						methods.add(method);
-					}
-				}
+				const methods =
+					/** @type {import('types').HttpMethod[]} */
+					(server_metadata.routes.get(route.id)?.methods);
 
 				return {
 					id: route.id,
@@ -74,7 +66,7 @@ export function create_builder({ config, build_data, routes, prerendered, log })
 						content: segment
 					})),
 					pattern: route.pattern,
-					methods: Array.from(methods)
+					methods
 				};
 			});
 

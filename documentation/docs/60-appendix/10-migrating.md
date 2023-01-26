@@ -49,7 +49,7 @@ This file has no equivalent in SvelteKit. Any custom logic (beyond `sapper.start
 
 ### src/server.js
 
-When using `adapter-node` the equivalent is a [custom server](https://github.com/sveltejs/kit/tree/master/packages/adapter-node#custom-server). Otherwise, this file has no direct equivalent, since SvelteKit apps can run in serverless environments.
+When using `adapter-node` the equivalent is a [custom server](/docs/adapter-node#custom-server). Otherwise, this file has no direct equivalent, since SvelteKit apps can run in serverless environments.
 
 ### src/service-worker.js
 

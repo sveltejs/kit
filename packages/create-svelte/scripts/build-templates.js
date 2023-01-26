@@ -31,7 +31,7 @@ function convert_typescript(content) {
 /** @param {string} content */
 function strip_jsdoc(content) {
 	return content
-		.replace(/\/\*\*\*\//g, '')
+		.replace(/ \/\*\*\*\//g, '')
 		.replace(
 			/\/\*\*([\s\S]+?)(@[\s\S]+?)?\*\/([\s\n]+)/g,
 			(match, description, tags, whitespace) => {
