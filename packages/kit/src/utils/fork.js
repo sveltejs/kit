@@ -24,8 +24,6 @@ export function forked(module, callback) {
 							module,
 							payload: await callback(data.payload)
 						});
-
-						process.exit(0);
 					}
 				}
 			}
@@ -60,6 +58,7 @@ export function forked(module, callback) {
 					}
 
 					if (data?.type === 'result' && data.module === module) {
+						child.kill();
 						fulfil(data.payload);
 					}
 				}
