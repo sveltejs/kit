@@ -1,5 +1,15 @@
 # @sveltejs/kit
 
+## 1.3.1
+
+### Patch Changes
+
+- fix: only fetch `__data.json` files for routes with a server `load` function ([#8636](https://github.com/sveltejs/kit/pull/8636))
+
+- fix: add `ignoreDeprecations` flag for TS 5.x ([#8718](https://github.com/sveltejs/kit/pull/8718))
+
+- fix: install polyfills when analysing code ([#8636](https://github.com/sveltejs/kit/pull/8636))
+
 ## 1.3.0
 
 ### Minor Changes
