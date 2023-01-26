@@ -11,7 +11,7 @@ import { load_config } from '../config/index.js';
 import { get_route_segments } from '../../utils/routing.js';
 import { queue } from './queue.js';
 import { crawl } from './crawl.js';
-import { forked } from './fork.js';
+import { forked } from '../../utils/fork.js';
 
 export default forked(import.meta.url, prerender);
 

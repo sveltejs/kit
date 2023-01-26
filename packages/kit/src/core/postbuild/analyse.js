@@ -7,7 +7,7 @@ import {
 	validate_server_exports
 } from '../../utils/exports.js';
 import { load_config } from '../config/index.js';
-import { forked } from './fork.js';
+import { forked } from '../../utils/fork.js';
 
 export default forked(import.meta.url, analyse);
 
