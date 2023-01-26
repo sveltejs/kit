@@ -4,8 +4,7 @@ import colors from 'kleur';
 import { posixify } from '../../utils/filesystem.js';
 import { write_if_changed } from './utils.js';
 
-/** @type {import('typescript')} */
-// @ts-ignore
+/** @type {import('typescript') | undefined} */
 let ts = undefined;
 try {
 	ts = (await import('typescript')).default;
@@ -133,7 +132,7 @@ export function write_tsconfig(kit, cwd = process.cwd()) {
 					target: 'esnext',
 
 					// TODO(v2): use the new flag verbatimModuleSyntax instead (requires support by Vite/Esbuild)
-					ignoreDeprecations: Number(ts.version.split('.')[0]) >= 5 ? '5.0' : undefined
+					ignoreDeprecations: ts && Number(ts.version.split('.')[0]) >= 5 ? '5.0' : undefined
 				},
 				include,
 				exclude
