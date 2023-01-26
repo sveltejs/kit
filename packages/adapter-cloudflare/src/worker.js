@@ -36,11 +36,11 @@ const worker = {
 				}
 			});
 		} else {
-			// prerendered pages and index.html files
-			pathname = pathname.replace(/\/$/, '') || '/';
+			// prerendered pages and assets
 
-			let file = pathname.substring(1);
+			const stripped_pathname = pathname.replace(/\/$/, '') || '/';
 
+			let file = stripped_pathname.substring(1);
 			try {
 				file = decodeURIComponent(file);
 			} catch (err) {
@@ -50,7 +50,8 @@ const worker = {
 			if (
 				manifest.assets.has(file) ||
 				manifest.assets.has(file + '/index.html') ||
-				prerendered.has(pathname)
+				prerendered.has(pathname) ||
+				prerendered.has(stripped_pathname)
 			) {
 				res = await env.ASSETS.fetch(req);
 			} else {
