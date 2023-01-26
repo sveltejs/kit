@@ -4,6 +4,7 @@ import { posixify, resolve_entry } from '../../utils/filesystem.js';
 import { s } from '../../utils/misc.js';
 import { load_error_page, load_template } from '../config/index.js';
 import { runtime_directory } from '../utils.js';
+import { write_if_changed } from './utils.js';
 
 /**
  * @param {{
@@ -23,7 +24,7 @@ const server_template = ({
 	template,
 	error_page
 }) => `
-import root from './root.svelte';
+import root from '../root.svelte';
 import { set_building, set_paths, set_private_env, set_public_env, set_version } from '${runtime_directory}/shared.js';
 
 set_paths(${s(config.kit.paths)});
@@ -75,11 +76,11 @@ export function write_server(config, output) {
 
 	/** @param {string} file */
 	function relative(file) {
-		return posixify(path.relative(output, file));
+		return posixify(path.relative(`${output}/server`, file));
 	}
 
-	fs.writeFileSync(
-		`${output}/server-internal.js`,
+	write_if_changed(
+		`${output}/server/internal.js`,
 		server_template({
 			config,
 			hooks: fs.existsSync(hooks_file) ? relative(hooks_file) : null,

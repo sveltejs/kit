@@ -176,3 +176,8 @@ export function resolve_entry(entry) {
 
 	return null;
 }
+
+/** @param {string} file */
+export function read(file) {
+	return fs.readFileSync(file, 'utf-8');
+}
