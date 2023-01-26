@@ -2,4 +2,4 @@
 '@sveltejs/adapter-cloudflare': patch
 ---
 
-fix: check prerendered pages for trailing slash
+fix: correctly check prerendered page pathname for Cloudflare adapter
