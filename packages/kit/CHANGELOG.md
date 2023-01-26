@@ -1,5 +1,15 @@
 # @sveltejs/kit
 
+## 1.3.0
+
+### Minor Changes
+
+- feat: allow generated tsconfig to be modified ([#8606](https://github.com/sveltejs/kit/pull/8606))
+
+### Patch Changes
+
+- fix: skip navigation hooks on popstate events when only hash changed ([#8730](https://github.com/sveltejs/kit/pull/8730))
+
 ## 1.2.10
 
 ### Patch Changes
