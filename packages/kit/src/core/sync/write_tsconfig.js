@@ -40,7 +40,7 @@ function remove_trailing_slashstar(file) {
 }
 
 /**
- * Writes the tsconfig that the user's tsconfig inherits from.
+ * Generates the tsconfig that the user's tsconfig inherits from.
  * @param {import('types').ValidatedKitConfig} kit
  */
 export function write_tsconfig(kit, cwd = process.cwd()) {
@@ -78,6 +78,15 @@ export function write_tsconfig(kit, cwd = process.cwd()) {
 		}
 	}
 
+	write_if_changed(out, JSON.stringify(get_tsconfig(kit, include_base_url), null, '\t'));
+}
+
+/**
+ * Generates the tsconfig that the user's tsconfig inherits from.
+ * @param {import('types').ValidatedKitConfig} kit
+ * @param {boolean} include_base_url
+ */
+export function get_tsconfig(kit, include_base_url) {
 	/** @param {string} file */
 	const config_relative = (file) => posixify(path.relative(kit.outDir, file));
 
@@ -104,43 +113,38 @@ export function write_tsconfig(kit, cwd = process.cwd()) {
 		exclude.push(config_relative(`${kit.files.serviceWorker}.d.ts`));
 	}
 
-	write_if_changed(
-		out,
-		JSON.stringify(
-			{
-				compilerOptions: {
-					// generated options
-					baseUrl: include_base_url ? config_relative('.') : undefined,
-					paths: get_tsconfig_paths(kit, include_base_url),
-					rootDirs: [config_relative('.'), './types'],
+	const config = {
+		compilerOptions: {
+			// generated options
+			baseUrl: include_base_url ? config_relative('.') : undefined,
+			paths: get_tsconfig_paths(kit, include_base_url),
+			rootDirs: [config_relative('.'), './types'],
 
-					// essential options
-					// svelte-preprocess cannot figure out whether you have a value or a type, so tell TypeScript
-					// to enforce using \`import type\` instead of \`import\` for Types.
-					importsNotUsedAsValues: 'error',
-					// Vite compiles modules one at a time
-					isolatedModules: true,
-					// TypeScript doesn't know about import usages in the template because it only sees the
-					// script of a Svelte file. Therefore preserve all value imports. Requires TS 4.5 or higher.
-					preserveValueImports: true,
+			// essential options
+			// svelte-preprocess cannot figure out whether you have a value or a type, so tell TypeScript
+			// to enforce using \`import type\` instead of \`import\` for Types.
+			importsNotUsedAsValues: 'error',
+			// Vite compiles modules one at a time
+			isolatedModules: true,
+			// TypeScript doesn't know about import usages in the template because it only sees the
+			// script of a Svelte file. Therefore preserve all value imports. Requires TS 4.5 or higher.
+			preserveValueImports: true,
 
-					// This is required for svelte-package to work as expected
-					// Can be overwritten
-					lib: ['esnext', 'DOM', 'DOM.Iterable'],
-					moduleResolution: 'node',
-					module: 'esnext',
-					target: 'esnext',
+			// This is required for svelte-package to work as expected
+			// Can be overwritten
+			lib: ['esnext', 'DOM', 'DOM.Iterable'],
+			moduleResolution: 'node',
+			module: 'esnext',
+			target: 'esnext',
 
-					// TODO(v2): use the new flag verbatimModuleSyntax instead (requires support by Vite/Esbuild)
-					ignoreDeprecations: ts && Number(ts.version.split('.')[0]) >= 5 ? '5.0' : undefined
-				},
-				include,
-				exclude
-			},
-			null,
-			'\t'
-		)
-	);
+			// TODO(v2): use the new flag verbatimModuleSyntax instead (requires support by Vite/Esbuild)
+			ignoreDeprecations: ts && Number(ts.version.split('.')[0]) >= 5 ? '5.0' : undefined
+		},
+		include,
+		exclude
+	};
+
+	return kit.typescript.config(config) ?? config;
 }
 
 /** @param {string} cwd */
@@ -221,7 +225,7 @@ const value_regex = /^(.*?)((\/\*)|(\.\w+))?$/;
  * @param {import('types').ValidatedKitConfig} config
  * @param {boolean} include_base_url
  */
-export function get_tsconfig_paths(config, include_base_url) {
+function get_tsconfig_paths(config, include_base_url) {
 	/** @param {string} file */
 	const config_relative = (file) => posixify(path.relative(config.outDir, file));
 

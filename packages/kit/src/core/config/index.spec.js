@@ -94,6 +94,7 @@ const get_defaults = (prefix = '') => ({
 		serviceWorker: {
 			register: true
 		},
+		typescript: {},
 		paths: {
 			base: '',
 			assets: ''
