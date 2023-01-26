@@ -110,6 +110,9 @@ export async function respond(request, options, manifest, state) {
 	/** @type {Record<string, string>} */
 	const headers = {};
 
+	/** @type {Record<string, import('./page/types').Cookie>} */
+	let cookies_to_add = {};
+
 	/** @type {import('types').RequestEvent} */
 	const event = {
 		// @ts-expect-error `cookies` and `fetch` need to be created after the `event` itself
@@ -221,6 +224,7 @@ export async function respond(request, options, manifest, state) {
 			trailing_slash ?? 'never'
 		);
 
+		cookies_to_add = new_cookies;
 		event.cookies = cookies;
 		event.fetch = create_fetch({ event, options, manifest, state, get_cookie_header });
 
@@ -237,7 +241,7 @@ export async function respond(request, options, manifest, state) {
 						response.headers.set(key, /** @type {string} */ (value));
 					}
 
-					add_cookies_to_headers(response.headers, Object.values(new_cookies));
+					add_cookies_to_headers(response.headers, Object.values(cookies_to_add));
 
 					if (state.prerendering && event.route.id !== null) {
 						response.headers.set('x-sveltekit-routeid', encodeURI(event.route.id));
@@ -293,11 +297,11 @@ export async function respond(request, options, manifest, state) {
 		return response;
 	} catch (e) {
 		if (e instanceof Redirect) {
-			if (is_data_request) {
-				return redirect_json_response(e);
-			} else {
-				return redirect_response(e.status, e.location);
-			}
+			const response = is_data_request
+				? redirect_json_response(e)
+				: redirect_response(e.status, e.location);
+			add_cookies_to_headers(response.headers, Object.values(cookies_to_add));
+			return response;
 		}
 		return await handle_fatal_error(event, options, e);
 	}

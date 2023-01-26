@@ -56,7 +56,6 @@ Instead of one `default` action, a page can have as many named actions as it nee
 
 ```diff
 /// file: src/routes/login/+page.server.js
-
 /** @type {import('./$types').Actions} */
 export const actions = {
 -	default: async (event) => {
@@ -107,7 +106,7 @@ As well as the `action` attribute, we can use the `formaction` attribute on a bu
 Each action receives a `RequestEvent` object, allowing you to read the data with `request.formData()`. After processing the request (for example, logging the user in by setting a cookie), the action can respond with data that will be available through the `form` property on the corresponding page and through `$page.form` app-wide until the next update.
 
 ```js
-// @errors: 2339 2304
+// @errors: 2304
 /// file: src/routes/login/+page.server.js
 /** @type {import('./$types').PageServerLoad} */
 export async function load({ cookies }) {
@@ -155,7 +154,6 @@ export const actions = {
 If the request couldn't be processed because of invalid data, you can return validation errors — along with the previously submitted form values — back to the user so that they can try again. The `fail` function lets you return an HTTP status code (typically 400 or 422, in the case of validation errors) along with the data. The status code is available through `$page.status` and the data through `form`:
 
 ```diff
-// @errors: 2339 2304
 /// file: src/routes/login/+page.server.js
 +import { fail } from '@sveltejs/kit';
 
@@ -211,10 +209,9 @@ The returned data must be serializable as JSON. Beyond that, the structure is en
 
 ### Redirects
 
-Redirects (and errors) work exactly the same as in [`load`](/docs/load#redirects):
+Redirects (and errors) work exactly the same as in [`load`](load#redirects):
 
 ```diff
-// @errors: 2339 2304
 /// file: src/routes/login/+page.server.js
 +import { fail, redirect } from '@sveltejs/kit';
 
@@ -340,7 +337,7 @@ Without an argument, `use:enhance` will emulate the browser-native behaviour, ju
 - reset the `<form>` element and invalidate all data using `invalidateAll` on a successful response
 - call `goto` on a redirect response
 - render the nearest `+error` boundary if an error occurs
-- [reset focus](/docs/accessibility#focus-management) to the appropriate element
+- [reset focus](accessibility#focus-management) to the appropriate element
 
 To customise the behaviour, you can provide a `SubmitFunction` that runs immediately before the form is submitted, and (optionally) returns a callback that runs with the `ActionResult`. Note that if you return a callback, the default behavior mentioned above is not triggered. To get it back, call `update`.
 
@@ -399,7 +396,7 @@ The behaviour of `applyAction(result)` depends on `result.type`:
 - `redirect` — calls `goto(result.location)`
 - `error` — renders the nearest `+error` boundary with `result.error`
 
-In all cases, [focus will be reset](/docs/accessibility#focus-management).
+In all cases, [focus will be reset](accessibility#focus-management).
 
 ### Custom event listener
 
@@ -458,7 +455,7 @@ const response = await fetch(this.action, {
 
 ## Alternatives
 
-Form actions are the preferred way to send data to the server, since they can be progressively enhanced, but you can also use [`+server.js`](/docs/routing#server) files to expose (for example) a JSON API.
+Form actions are the preferred way to send data to the server, since they can be progressively enhanced, but you can also use [`+server.js`](routing#server) files to expose (for example) a JSON API.
 
 ## GET vs POST
 
@@ -475,4 +472,4 @@ Some forms don't need to `POST` data to the server — search inputs, for exampl
 </form>
 ```
 
-As with `<a>` elements, you can set the [`data-sveltekit-reload`](/docs/link-options#data-sveltekit-reload) and [`data-sveltekit-noscroll`](/docs/link-options#data-sveltekit-noscroll) attributes on the `<form>` to control the router's behaviour.
+As with `<a>` elements, you can set the [`data-sveltekit-reload`](link-options#data-sveltekit-reload) and [`data-sveltekit-noscroll`](link-options#data-sveltekit-noscroll) attributes on the `<form>` to control the router's behaviour.

@@ -315,17 +315,30 @@ export async function dev(vite, vite_config, svelte_config) {
 		}
 	});
 
-	// This shameful hack allows us to load runtime server code via Vite
-	// while apps load `HttpError` and `Redirect` in Node, without
-	// causing `instanceof` checks to fail
-	const control_module_node = await import(`../../../runtime/control.js`);
-	const control_module_vite = await vite.ssrLoadModule(`${runtime_base}/control.js`);
+	async function align_exports() {
+		// This shameful hack allows us to load runtime server code via Vite
+		// while apps load `HttpError` and `Redirect` in Node, without
+		// causing `instanceof` checks to fail
+		const control_module_node = await import(`../../../runtime/control.js`);
+		const control_module_vite = await vite.ssrLoadModule(`${runtime_base}/control.js`);
 
-	control_module_node.replace_implementations({
-		ActionFailure: control_module_vite.ActionFailure,
-		HttpError: control_module_vite.HttpError,
-		Redirect: control_module_vite.Redirect
-	});
+		control_module_node.replace_implementations({
+			ActionFailure: control_module_vite.ActionFailure,
+			HttpError: control_module_vite.HttpError,
+			Redirect: control_module_vite.Redirect
+		});
+	}
+	align_exports();
+	const ws_send = vite.ws.send;
+	/** @param {any} args */
+	vite.ws.send = function (...args) {
+		// We need to reapply the patch after Vite did dependency optimizations
+		// because that clears the module resolutions
+		if (args[0]?.type === 'full-reload' && args[0].path === '*') {
+			align_exports();
+		}
+		return ws_send.apply(vite.ws, args);
+	};
 
 	vite.middlewares.use(async (req, res, next) => {
 		try {
@@ -364,10 +377,13 @@ export async function dev(vite, vite_config, svelte_config) {
 				/** @type {function} */ (middleware.handle).name === 'viteServeStaticMiddleware'
 		);
 
+		// Vite will give a 403 on URLs like /test, /static, and /package.json preventing us from
+		// serving routes with those names. See https://github.com/vitejs/vite/issues/7363
 		remove_static_middlewares(vite.middlewares);
 
 		vite.middlewares.use(async (req, res) => {
 			// Vite's base middleware strips out the base path. Restore it
+			const original_url = req.url;
 			req.url = req.originalUrl;
 			try {
 				const base = `${vite.config.server.https ? 'https' : 'http'}://${
@@ -375,13 +391,14 @@ export async function dev(vite, vite_config, svelte_config) {
 				}`;
 
 				const decoded = decodeURI(new URL(base + req.url).pathname);
-				const file = posixify(path.resolve(decoded.slice(1)));
+				const file = posixify(path.resolve(decoded.slice(svelte_config.kit.paths.base.length + 1)));
 				const is_file = fs.existsSync(file) && !fs.statSync(file).isDirectory();
 				const allowed =
 					!vite_config.server.fs.strict ||
 					vite_config.server.fs.allow.some((dir) => file.startsWith(dir));
 
 				if (is_file && allowed) {
+					req.url = original_url;
 					// @ts-expect-error
 					serve_static_middleware.handle(req, res);
 					return;

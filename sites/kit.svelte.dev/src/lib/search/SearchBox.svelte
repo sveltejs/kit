@@ -17,7 +17,6 @@
 
 	let uid = 1;
 	const pending = new Set();
-	let has_pending = false;
 
 	onMount(async () => {
 		worker = new SearchWorker();
@@ -76,7 +75,6 @@
 	$: if (ready) {
 		const id = uid++;
 		pending.add(id);
-		has_pending = true;
 
 		worker.postMessage({ type: 'query', id, payload: $query });
 	}
@@ -181,7 +179,7 @@
 									<li class="recent">
 										<a on:click={() => navigate(search.href)} href={search.href}>
 											<small>{search.breadcrumbs.join('/')}</small>
-											<strong>{search.title}</strong>
+											<strong>{search.breadcrumbs.at(-1)}</strong>
 										</a>
 
 										<button
