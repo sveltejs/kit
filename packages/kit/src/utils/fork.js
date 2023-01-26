@@ -12,7 +12,7 @@ import child_process from 'node:child_process';
  */
 export function forked(module, callback) {
 	if (process.env.SVELTEKIT_FORK && process.send) {
-		process.send({ type: 'ready' });
+		process.send({ type: 'ready', module });
 
 		process.on(
 			'message',
@@ -49,7 +49,7 @@ export function forked(module, callback) {
 			child.on(
 				'message',
 				/** @param {any} data */ (data) => {
-					if (data?.type === 'ready') {
+					if (data?.type === 'ready' && data.module === module) {
 						child.send({
 							type: 'args',
 							module,
