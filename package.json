@@ -4,11 +4,11 @@
 	"description": "monorepo for @sveltejs/kit and friends",
 	"private": true,
 	"scripts": {
-		"test": "turbo run test --filter=./packages/*",
-		"test:cross-platform": "turbo run test:cross-platform --filter=./packages/*",
+		"test": "turbo run test --filter=./packages/* --force",
+		"test:cross-platform": "turbo run test:cross-platform --filter=./packages/* --force",
 		"test:vite-ecosystem-ci": "pnpm test --dir packages/kit",
-		"check": "turbo run check",
-		"lint": "turbo run lint",
+		"check": "turbo run check --force",
+		"lint": "turbo run lint --force",
 		"format": "turbo run format",
 		"precommit": "turbo run precommit",
 		"release": "changeset publish"
