@@ -2,11 +2,13 @@ import { fileURLToPath } from 'node:url';
 import child_process from 'node:child_process';
 
 /**
+ * Runs a task in a subprocess so any dangling stuff gets killed upon completion.
+ * The subprocess needs to be the file `forked` is called in, and `forked` needs to be called eagerly at the top level.
  * @template T
  * @template U
- * @param {string} module
- * @param {(opts: T) => U} callback
- * @returns {(opts: T) => Promise<U>}
+ * @param {string} module `import.meta.url` of the file
+ * @param {(opts: T) => U} callback The function that is invoked in the subprocess
+ * @returns {(opts: T) => Promise<U>} A function that when called starts the subprocess
  */
 export function forked(module, callback) {
 	if (process.env.SVELTEKIT_FORK) {
@@ -34,7 +36,6 @@ export function forked(module, callback) {
 	 */
 	const fn = function (opts) {
 		return new Promise((fulfil, reject) => {
-			// do prerendering in a subprocess so any dangling stuff gets killed upon completion
 			const script = fileURLToPath(new URL(module, import.meta.url));
 
 			const child = child_process.fork(script, {
@@ -48,7 +49,7 @@ export function forked(module, callback) {
 			child.on(
 				'message',
 				/** @param {any} data */ (data) => {
-					if (data.type === 'result' && data.module === module) {
+					if (data?.type === 'result' && data.module === module) {
 						fulfil(data.payload);
 					}
 				}
