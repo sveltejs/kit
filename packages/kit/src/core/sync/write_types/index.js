@@ -3,6 +3,7 @@ import path from 'path';
 import MagicString from 'magic-string';
 import { posixify, rimraf, walk } from '../../../utils/filesystem.js';
 import { compact } from '../../../utils/array.js';
+import { ts } from '../ts.js';
 
 /**
  *  @typedef {{
@@ -19,13 +20,6 @@ import { compact } from '../../../utils/array.js';
  *
  *  @typedef {Map<import('types').PageNode, {route: import('types').RouteData, proxies: Proxies}>} RoutesMap
  */
-
-/** @type {import('typescript')} */
-// @ts-ignore
-let ts = undefined;
-try {
-	ts = (await import('typescript')).default;
-} catch {}
 
 const cwd = process.cwd();
 

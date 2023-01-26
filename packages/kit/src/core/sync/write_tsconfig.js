@@ -3,6 +3,7 @@ import path from 'path';
 import colors from 'kleur';
 import { posixify } from '../../utils/filesystem.js';
 import { write_if_changed } from './utils.js';
+import { ts } from './ts.js';
 
 /**
  * @param {string} cwd
@@ -129,7 +130,10 @@ export function get_tsconfig(kit, include_base_url) {
 			lib: ['esnext', 'DOM', 'DOM.Iterable'],
 			moduleResolution: 'node',
 			module: 'esnext',
-			target: 'esnext'
+			target: 'esnext',
+
+			// TODO(v2): use the new flag verbatimModuleSyntax instead (requires support by Vite/Esbuild)
+			ignoreDeprecations: ts && Number(ts.version.split('.')[0]) >= 5 ? '5.0' : undefined
 		},
 		include,
 		exclude
