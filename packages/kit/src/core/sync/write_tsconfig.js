@@ -3,12 +3,7 @@ import path from 'path';
 import colors from 'kleur';
 import { posixify } from '../../utils/filesystem.js';
 import { write_if_changed } from './utils.js';
-
-/** @type {import('typescript') | undefined} */
-let ts = undefined;
-try {
-	ts = (await import('typescript')).default;
-} catch {}
+import { ts } from './ts.js';
 
 /**
  * @param {string} cwd
