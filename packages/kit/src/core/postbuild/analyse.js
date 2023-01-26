@@ -8,6 +8,8 @@ import {
 } from '../../utils/exports.js';
 import { load_config } from '../config/index.js';
 import { forked } from '../../utils/fork.js';
+import { should_polyfill } from '../../utils/platform.js';
+import { installPolyfills } from '../../exports/node/polyfills.js';
 
 export default forked(import.meta.url, analyse);
 
@@ -28,6 +30,10 @@ async function analyse({ manifest_path, env }) {
 
 	/** @type {import('types').ServerInternalModule} */
 	const internal = await import(pathToFileURL(`${server_root}/server/internal.js`).href);
+
+	if (should_polyfill) {
+		installPolyfills();
+	}
 
 	// configure `import { building } from '$app/environment'` —
 	// essential we do this before analysing the code
