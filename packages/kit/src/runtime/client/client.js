@@ -160,6 +160,18 @@ export function create_client({ target, base }) {
 		await update(intent, url, []);
 	}
 
+	/** @param {number} index */
+	function capture_snapshot(index) {
+		snapshots[index] = components.map((c) => c?.snapshot?.capture());
+	}
+
+	/** @param {number} index */
+	function restore_snapshot(index) {
+		snapshots[index]?.forEach((value, i) => {
+			components[i]?.snapshot?.restore(value);
+		});
+	}
+
 	/**
 	 * @param {string | URL} url
 	 * @param {{ noScroll?: boolean; replaceState?: boolean; keepFocus?: boolean; state?: any; invalidateAll?: boolean }} opts
@@ -315,7 +327,7 @@ export function create_client({ target, base }) {
 		// `previous_history_index` will be undefined for invalidation
 		if (previous_history_index) {
 			update_scroll_positions(previous_history_index);
-			snapshots[previous_history_index] = components.map((c) => c?.snapshot?.capture());
+			capture_snapshot(previous_history_index);
 		}
 
 		if (opts && opts.details) {
@@ -404,9 +416,7 @@ export function create_client({ target, base }) {
 			hydrate: true
 		});
 
-		snapshots[current_history_index]?.forEach((value, i) => {
-			components[i]?.snapshot?.restore(value);
-		});
+		restore_snapshot(current_history_index);
 
 		/** @type {import('types').AfterNavigate} */
 		const navigation = {
@@ -1398,7 +1408,7 @@ export function create_client({ target, base }) {
 					update_scroll_positions(current_history_index);
 					storage.set(SCROLL_KEY, scroll_positions);
 
-					snapshots[current_history_index] = components.map((c) => c?.snapshot?.capture());
+					capture_snapshot(current_history_index);
 					storage.set(SNAPSHOT_KEY, snapshots);
 				}
 			});
@@ -1584,9 +1594,7 @@ export function create_client({ target, base }) {
 					});
 
 					if (!blocked) {
-						snapshots[current_history_index].forEach((value, i) => {
-							components[i]?.snapshot?.restore(value);
-						});
+						restore_snapshot(current_history_index);
 					}
 				}
 			});
