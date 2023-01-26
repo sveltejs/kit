@@ -226,6 +226,10 @@ const options = object(
 				files: fun((filename) => !/\.DS_Store/.test(filename))
 			}),
 
+			typescript: object({
+				config: fun((config) => config)
+			}),
+
 			version: object({
 				name: string(Date.now().toString()),
 				pollInterval: number(0)
@@ -362,7 +366,7 @@ function list(options, fallback = options[0]) {
 }
 
 /**
- * @param {(filename: string) => boolean} fallback
+ * @param {(...args: any) => any} fallback
  * @returns {Validator}
  */
 function fun(fallback) {
