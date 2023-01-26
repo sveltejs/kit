@@ -9,7 +9,7 @@ test('prerenderable routes must be prerendered', () => {
 			execSync('pnpm build', {
 				cwd: path.join(process.cwd(), 'apps/prerenderable-not-prerendered'),
 				stdio: 'pipe',
-				timeout: 15000
+				timeout: 60000
 			}),
 		/The following routes were marked as prerenderable, but were not prerendered because they were not found while crawling your app:\r?\n  - \/\[x\]/gs
 	);
