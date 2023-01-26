@@ -13,7 +13,7 @@ export function forked(module, callback) {
 		process.on(
 			'message',
 			/** @param {any} data */ async (data) => {
-				if (data.type === 'args' && data.module === module) {
+				if (data?.type === 'args' && data.module === module) {
 					if (process.send) {
 						process.send({
 							type: 'result',
