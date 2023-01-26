@@ -17,7 +17,7 @@ const worker = {
 
 		let { pathname } = new URL(req.url);
 
-		// static assets
+		// immutable app assets
 		if (pathname.startsWith(app_path)) {
 			res = await env.ASSETS.fetch(req);
 			if (!res.ok) return res;
@@ -36,23 +36,26 @@ const worker = {
 				}
 			});
 		} else {
-			// prerendered pages and assets
+			// prerendered pages and /static files
 
-			const stripped_pathname = pathname.replace(/\/$/, '') || '/';
-
-			let file = stripped_pathname.substring(1);
+			/** @type {string | undefined} */
 			try {
-				file = decodeURIComponent(file);
-			} catch (err) {
-				// ignore
+				pathname = decodeURIComponent(pathname);
+			} catch {
+				// ignore invalid URI
 			}
 
-			if (
-				manifest.assets.has(file) ||
-				manifest.assets.has(file + '/index.html') ||
-				prerendered.has(pathname) ||
-				prerendered.has(stripped_pathname)
-			) {
+			const stripped_pathname = pathname.replace(/\/$/, '') || '';
+
+			const filename = stripped_pathname.substring(1);
+			let is_asset = false;
+			if (filename) {
+				is_asset = manifest.assets.has(filename) || manifest.assets.has(filename + '/index.html');
+			}
+
+			const is_prerendered = prerendered.has(pathname) || prerendered.has(stripped_pathname);
+
+			if (is_asset || is_prerendered) {
 				res = await env.ASSETS.fetch(req);
 			} else {
 				// dynamically-generated pages
