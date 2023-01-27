@@ -1112,7 +1112,6 @@ export interface HttpError {
 /**
  * Create a `Redirect` object. If thrown during request handling, SvelteKit will return a redirect response.
  * Make sure you're not catching the thrown redirect, which results in a noop.
- *
  * @param status The [HTTP status code](https://developer.mozilla.org/en-US/docs/Web/HTTP/Status#redirection_messages). Must be in the range 300-308.
  * @param location The location to redirect to.
  */
