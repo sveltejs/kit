@@ -6,6 +6,7 @@ import esbuild from 'esbuild';
 
 /** @type {import('.').default} **/
 const plugin = function (opts = {}) {
+	// @ts-expect-error
 	if (opts.external) {
 		throw new Error(
 			`options.external has been removed. See https://github.com/sveltejs/kit/discussions/8756 for more information.`
