@@ -166,7 +166,9 @@ export function create_client({ target, base }) {
 
 	/** @param {number} index */
 	function capture_snapshot(index) {
-		snapshots[index] = components.map((c) => c?.snapshot?.capture());
+		if (components.some((c) => c?.snapshot)) {
+			snapshots[index] = components.map((c) => c?.snapshot?.capture());
+		}
 	}
 
 	/** @param {number} index */
