@@ -3,7 +3,7 @@ import { exec, parse_route_id } from '../../utils/routing.js';
 /**
  * @param {import('types').CSRPageNodeLoader[]} nodes
  * @param {number[]} server_loads
- * @param {typeof import('__GENERATED__/client-manifest.js').dictionary} dictionary
+ * @param {typeof import('__CLIENT__/manifest.js').dictionary} dictionary
  * @param {Record<string, (param: string) => boolean>} matchers
  * @returns {import('types').CSRRoute[]}
  */
