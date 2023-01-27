@@ -127,8 +127,13 @@ function build_selector(resource, opts) {
 
 	let selector = `script[data-sveltekit-fetched][data-url=${url}]`;
 
+	if (opts?.headers) {
+		const headers = JSON.stringify(opts.headers);
+		selector += `[data-headers-hash="${hash(headers)}"]`;
+	}
+
 	if (opts?.body && (typeof opts.body === 'string' || ArrayBuffer.isView(opts.body))) {
-		selector += `[data-hash="${hash(opts.body)}"]`;
+		selector += `[data-body-hash="${hash(opts.body)}"]`;
 	}
 
 	return selector;
