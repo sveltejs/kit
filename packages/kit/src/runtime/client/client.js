@@ -984,7 +984,7 @@ export function create_client({ target, base }) {
 	function get_navigation_intent(url, invalidating) {
 		if (is_external_url(url, base)) return;
 
-		const path = decode_pathname(url.pathname.slice(base.length) || '/');
+		const path = get_url_path(url);
 
 		for (const route of routes) {
 			const params = route.exec(path);
@@ -996,6 +996,11 @@ export function create_client({ target, base }) {
 				return intent;
 			}
 		}
+	}
+
+	/** @param {URL} url */
+	function get_url_path(url) {
+		return decode_pathname(url.pathname.slice(base.length) || '/');
 	}
 
 	/**
@@ -1175,7 +1180,9 @@ export function create_client({ target, base }) {
 			(entries) => {
 				for (const entry of entries) {
 					if (entry.isIntersecting) {
-						preload_code(new URL(/** @type {HTMLAnchorElement} */ (entry.target).href).pathname);
+						preload_code(
+							get_url_path(new URL(/** @type {HTMLAnchorElement} */ (entry.target).href))
+						);
 						observer.unobserve(entry.target);
 					}
 				}
@@ -1200,7 +1207,7 @@ export function create_client({ target, base }) {
 				if (priority <= options.preload_data) {
 					preload_data(/** @type {URL} */ (url));
 				} else if (priority <= options.preload_code) {
-					preload_code(/** @type {URL} */ (url).pathname);
+					preload_code(get_url_path(/** @type {URL} */ (url)));
 				}
 			}
 		}
@@ -1220,7 +1227,7 @@ export function create_client({ target, base }) {
 				}
 
 				if (options.preload_code === PRELOAD_PRIORITIES.eager) {
-					preload_code(/** @type {URL} */ (url).pathname);
+					preload_code(get_url_path(/** @type {URL} */ (url)));
 				}
 			}
 		}
