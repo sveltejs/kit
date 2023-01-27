@@ -242,6 +242,33 @@ test.describe('trailingSlash', () => {
 		await app.goto('/path-base/preloading/preloaded');
 		expect(requests).toEqual([]);
 	});
+
+	test('accounts for base path when running data-sveltekit-preload-code', async ({
+		page,
+		javaScriptEnabled
+	}) => {
+		if (!javaScriptEnabled) return;
+
+		await page.goto('/path-base/preloading');
+
+		/** @type {string[]} */
+		let requests = [];
+		page.on('request', (r) => requests.push(new URL(r.url()).pathname));
+
+		await page.hover('a[href="/path-base/preloading/code"]');
+		await page.waitForTimeout(100);
+
+		// svelte request made is environment dependent
+		if (process.env.DEV) {
+			expect(requests.filter((req) => req.endsWith('.svelte')).length).toBe(1);
+		} else {
+			expect(requests.filter((req) => req.endsWith('.js')).length).toBeGreaterThan(0);
+		}
+
+		requests = [];
+		await page.click('a[href="/path-base/preloading/code"]');
+		expect(requests).toEqual([]);
+	});
 });
 
 if (!process.env.DEV) {
