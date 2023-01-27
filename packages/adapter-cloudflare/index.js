@@ -55,7 +55,8 @@ export default function () {
 				outfile: `${dest}/_worker.js`,
 				allowOverwrite: true,
 				format: 'esm',
-				bundle: true
+				bundle: true,
+				minify: true
 			});
 		}
 	};
