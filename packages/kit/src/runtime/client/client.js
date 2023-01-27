@@ -76,7 +76,8 @@ export function create_client({ target, base }) {
 
 	/**
 	 * An array of the `+layout.svelte` and `+page.svelte` component instances
-	 * that currently live on the page — used for capturing and restoring snapshots
+	 * that currently live on the page — used for capturing and restoring snapshots.
+	 * It's updated/manipulated through `bind:this` in `Root.svelte`.
 	 * @type {import('svelte').SvelteComponent[]}
 	 */
 	const components = [];
