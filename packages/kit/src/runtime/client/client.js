@@ -74,7 +74,11 @@ export function create_client({ target, base }) {
 	/** @type {Array<((url: URL) => boolean)>} */
 	const invalidated = [];
 
-	/** @type {import('svelte').SvelteComponent[]} */
+	/**
+	 * An array of the `+layout.svelte` and `+page.svelte` component instances
+	 * that currently live on the page — used for capturing and restoring snapshots
+	 * @type {import('svelte').SvelteComponent[]}
+	 */
 	const components = [];
 
 	/** @type {{id: string, promise: Promise<import('./types').NavigationResult>} | null} */
