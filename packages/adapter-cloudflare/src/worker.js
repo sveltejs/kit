@@ -39,7 +39,6 @@ const worker = {
 		} else {
 			// prerendered pages and /static files
 
-			/** @type {string | undefined} */
 			try {
 				pathname = decodeURIComponent(pathname);
 			} catch {
@@ -48,8 +47,8 @@ const worker = {
 
 			const stripped_pathname = pathname.replace(/\/$/, '') || '';
 
-			const filename = stripped_pathname.substring(1);
 			let is_asset = false;
+			const filename = stripped_pathname.substring(1);
 			if (filename) {
 				is_asset = manifest.assets.has(filename) || manifest.assets.has(filename + '/index.html');
 			}
