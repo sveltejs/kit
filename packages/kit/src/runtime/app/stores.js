@@ -66,7 +66,7 @@ function get_store(name) {
 		return getStores()[name];
 	} catch (e) {
 		throw new Error(
-			`Store '${name}' is not available outside of a Svelte component on the server, as its bound to component context there. ` +
+			`Store '${name}' is not available outside of a Svelte component on the server, as it's bound to component context there. ` +
 				'For more information, see https://kit.svelte.dev/docs/state-management#careful-with-global-state'
 		);
 	}
