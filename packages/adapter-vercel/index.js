@@ -5,7 +5,13 @@ import { nodeFileTrace } from '@vercel/nft';
 import esbuild from 'esbuild';
 
 /** @type {import('.').default} **/
-const plugin = function ({ external = [], edge, split } = {}) {
+const plugin = function (opts = {}) {
+	if (opts.external) {
+		throw new Error(
+			`options.external has been removed. See https://github.com/sveltejs/kit/discussions/8756 for more information.`
+		);
+	}
+
 	return {
 		name: '@sveltejs/adapter-vercel',
 
@@ -87,7 +93,6 @@ const plugin = function ({ external = [], edge, split } = {}) {
 					bundle: true,
 					platform: 'browser',
 					format: 'esm',
-					external,
 					sourcemap: 'linked',
 					banner: { js: 'globalThis.global = globalThis;' }
 				});
@@ -104,9 +109,9 @@ const plugin = function ({ external = [], edge, split } = {}) {
 				config.routes.push({ src: pattern, dest: `/${name}` });
 			}
 
-			const generate_function = edge ? generate_edge_function : generate_serverless_function;
+			const generate_function = opts.edge ? generate_edge_function : generate_serverless_function;
 
-			if (split) {
+			if (opts.split) {
 				await builder.createEntries((route) => {
 					return {
 						id: route.pattern.toString(), // TODO is `id` necessary?
