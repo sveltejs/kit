@@ -1,5 +1,11 @@
 # @sveltejs/kit
 
+## 1.3.2
+
+### Patch Changes
+
+- fix: take base path into account when preloading code ([#8748](https://github.com/sveltejs/kit/pull/8748))
+
 ## 1.3.1
 
 ### Patch Changes
