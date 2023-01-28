@@ -131,15 +131,15 @@ export function exec(match, params, matchers) {
 
 	for (let i = 0; i < params.length; i += 1) {
 		const param = params[i];
-		let value = values[i];
+		const value = values[i - buffered];
 
 		if (param.chained && param.rest && buffered) {
-			// in the `[[lang=lang]]/[...rest]` case, if `lang` didn't
-			// match, we roll it over into the rest value
-			const bufferedValues = values.slice(i, i + buffered + 1);
-			value = bufferedValues.filter((s) => s).join('/');
-			values.splice(i, buffered);
+			// in the `[[a=b]]/.../[...rest]` case, if one or more optional parameters
+			// weren't matched, roll the skipped values into the rest
+			const bufferedValues = values.slice(i - buffered, i + 1);
+			result[param.name] = bufferedValues.filter((s) => s).join('/');
 			buffered = 0;
+			continue;
 		}
 
 		if (value === undefined) {
@@ -153,10 +153,9 @@ export function exec(match, params, matchers) {
 			continue;
 		}
 
-		// in the `/[[a=b]]/[[c=d]]` case, if the value didn't satisfy the `b` matcher,
-		// try again with the next segment by shifting values rightwards
+		// in the `/[[a=b]]/...` case, if the value didn't satisfy the matcher,
+		// keep track of the number of skipped optional parameters and continue
 		if (param.optional && param.chained) {
-			values.splice(i, 0, undefined);
 			buffered++;
 			continue;
 		}
