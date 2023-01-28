@@ -214,6 +214,16 @@ test.describe('Scrolling', () => {
 		expect(await in_view('#go-to-element')).toBe(true);
 	});
 
+	test('url-supplied non-ascii anchor works on navigation to page', async ({
+		page,
+		in_view,
+		clicknav
+	}) => {
+		await page.goto('/anchor');
+		await clicknav('#non-ascii-anchor');
+		expect(await in_view('#go-to-encöded')).toBe(true);
+	});
+
 	test('url-supplied anchor works when navigated from scrolled page', async ({
 		page,
 		clicknav,
