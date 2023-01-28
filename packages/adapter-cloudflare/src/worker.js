@@ -58,7 +58,7 @@ const worker = {
 
 			if (is_static_asset || prerendered.has(pathname)) {
 				res = await env.ASSETS.fetch(req);
-			} else if (prerendered.has(counterpart_route)) {
+			} else if (counterpart_route && prerendered.has(counterpart_route)) {
 				res = new Response('', {
 					status: 301,
 					headers: {
