@@ -136,7 +136,9 @@ function build_selector(resource, opts) {
 		requestData.body = opts.body;
 	}
 
-	selector += `[data-hash=${hash(JSON.stringify(requestData))}]`;
+	if (Object.keys(requestData).length > 0) {
+		selector += `[data-hash=${hash(JSON.stringify(requestData))}]`;
+	}
 
 	return selector;
 }

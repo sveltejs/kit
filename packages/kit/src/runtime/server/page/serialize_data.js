@@ -80,8 +80,10 @@ export function serialize_data(fetched, filter, prerendering = false) {
 	if (fetched.request_body) {
 		requestData.body = fetched.request_body;
 	}
-	const hashValue = hash(JSON.stringify(requestData));
-	attrs.push(`data-hash="${hashValue}"`);
+   	if (Object.keys(requestData).length > 0) {	
+		const hashValue = hash(JSON.stringify(requestData));
+		attrs.push(`data-hash="${hashValue}"`);
+	}
 
 	// Compute the time the response should be cached, taking into account max-age and age.
 	// Do not cache at all if a vary header is present, as this indicates that the cache is
