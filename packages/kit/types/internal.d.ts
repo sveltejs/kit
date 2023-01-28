@@ -1,4 +1,4 @@
-import { OutputAsset, OutputChunk } from 'rollup';
+import { OutputChunk } from 'rollup';
 import { SvelteComponent } from 'svelte/internal';
 import {
 	Config,
@@ -7,7 +7,6 @@ import {
 	HandleServerError,
 	KitConfig,
 	Load,
-	RequestEvent,
 	RequestHandler,
 	ResolveOptions,
 	Server,
@@ -49,22 +48,13 @@ export interface BuildData {
 	app_path: string;
 	manifest_data: ManifestData;
 	service_worker: string | null;
-	client: {
-		assets: OutputAsset[];
-		chunks: OutputChunk[];
-		entry: {
-			file: string;
-			imports: string[];
-			stylesheets: string[];
-			fonts: string[];
-		};
-		vite_manifest: import('vite').Manifest;
-	};
-	server: {
-		chunks: OutputChunk[];
-		methods: Record<string, HttpMethod[]>;
-		vite_manifest: import('vite').Manifest;
-	};
+	client_entry: {
+		file: string;
+		imports: string[];
+		stylesheets: string[];
+		fonts: string[];
+	} | null;
+	server_manifest: import('vite').Manifest;
 }
 
 export interface CSRPageNode {
@@ -73,7 +63,6 @@ export interface CSRPageNode {
 		load?: Load;
 		trailingSlash?: TrailingSlash;
 	};
-	has_server_load: boolean;
 }
 
 export type CSRPageNodeLoader = () => Promise<CSRPageNode>;
@@ -244,6 +233,17 @@ export interface ServerErrorNode {
 	status?: number;
 }
 
+export interface ServerMetadata {
+	nodes: Array<{ has_server_load: boolean }>;
+	routes: Map<
+		string,
+		{
+			prerender: PrerenderOption | undefined;
+			methods: HttpMethod[];
+		}
+	>;
+}
+
 export interface SSRComponent {
 	default: {
 		render(props: Record<string, any>): {
@@ -261,7 +261,7 @@ export type SSRComponentLoader = () => Promise<SSRComponent>;
 
 export interface SSRNode {
 	component: SSRComponentLoader;
-	/** index into the `components` array in client-manifest.js */
+	/** index into the `components` array in client/manifest.js */
 	index: number;
 	/** client-side module URL for this component */
 	file: string;

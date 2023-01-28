@@ -1,5 +1,11 @@
 # @sveltejs/adapter-cloudflare
 
+## 2.0.0
+
+### Major Changes
+
+- breaking: append `_headers` instead of overwriting ([#8693](https://github.com/sveltejs/kit/pull/8693))
+
 ## 1.1.0
 
 ### Minor Changes

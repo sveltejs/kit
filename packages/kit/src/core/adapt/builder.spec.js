@@ -29,6 +29,8 @@ test('copy files', () => {
 		config: /** @type {import('types').ValidatedConfig} */ (mocked),
 		// @ts-expect-error
 		build_data: {},
+		// @ts-expect-error
+		server_metadata: {},
 		routes: [],
 		// @ts-expect-error
 		prerendered: {

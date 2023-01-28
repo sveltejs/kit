@@ -1,4 +1,4 @@
-declare module '__GENERATED__/client-manifest.js' {
+declare module '__CLIENT__/manifest.js' {
 	import { CSRPageNodeLoader, ClientHooks, ParamMatcher } from 'types';
 
 	/**

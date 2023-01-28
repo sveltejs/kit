@@ -1,5 +1,39 @@
 # @sveltejs/kit
 
+## 1.3.2
+
+### Patch Changes
+
+- fix: take base path into account when preloading code ([#8748](https://github.com/sveltejs/kit/pull/8748))
+
+## 1.3.1
+
+### Patch Changes
+
+- fix: only fetch `__data.json` files for routes with a server `load` function ([#8636](https://github.com/sveltejs/kit/pull/8636))
+
+- fix: add `ignoreDeprecations` flag for TS 5.x ([#8718](https://github.com/sveltejs/kit/pull/8718))
+
+- fix: install polyfills when analysing code ([#8636](https://github.com/sveltejs/kit/pull/8636))
+
+## 1.3.0
+
+### Minor Changes
+
+- feat: allow generated tsconfig to be modified ([#8606](https://github.com/sveltejs/kit/pull/8606))
+
+### Patch Changes
+
+- fix: skip navigation hooks on popstate events when only hash changed ([#8730](https://github.com/sveltejs/kit/pull/8730))
+
+## 1.2.10
+
+### Patch Changes
+
+- chore: restrict methods allowed for POST ([#8721](https://github.com/sveltejs/kit/pull/8721))
+
+- fix: provide proper error when POSTing to a missing page endpoint ([#8714](https://github.com/sveltejs/kit/pull/8714))
+
 ## 1.2.9
 
 ### Patch Changes
