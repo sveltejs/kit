@@ -124,9 +124,10 @@ export function exec(match, params, matchers) {
 	/** @type {Record<string, string>} */
 	const result = {};
 
+	/** @type {Array<string | undefined>} cause it is */
 	const values = match.slice(1);
 
-	let buffered = '';
+	let buffered = 0;
 
 	for (let i = 0; i < params.length; i += 1) {
 		const param = params[i];
@@ -135,48 +136,33 @@ export function exec(match, params, matchers) {
 		if (param.chained && param.rest && buffered) {
 			// in the `[[lang=lang]]/[...rest]` case, if `lang` didn't
 			// match, we roll it over into the rest value
-			value = value ? buffered + '/' + value : buffered;
+			const bufferedValues = values.slice(i, i + buffered + 1);
+			value = bufferedValues.filter((s) => s).join('/');
+			values.splice(i, buffered);
+			buffered = 0;
 		}
-
-		buffered = '';
 
 		if (value === undefined) {
-			// if `value` is undefined, it means this is
-			// an optional or rest parameter
+			// if `value` is undefined, it means this is an optional or rest parameter
 			if (param.rest) result[param.name] = '';
-		} else {
-			if (param.matcher && !matchers[param.matcher](value)) {
-				// in the `/[[a=b]]/[[c=d]]` case, if the value didn't satisfy the `b` matcher,
-				// try again with the next segment by shifting values rightwards
-				if (param.optional && param.chained) {
-					// @ts-expect-error TypeScript is... wrong
-					let j = values.indexOf(undefined, i);
-
-					if (j === -1) {
-						// we can't shift values any further, so hang on to this value
-						// so it can be rolled into a subsequent `[...rest]` param
-						const next = params[i + 1];
-						if (next?.rest && next.chained) {
-							buffered = value;
-						} else {
-							return;
-						}
-					}
-
-					while (j >= i) {
-						values[j] = values[j - 1];
-						j -= 1;
-					}
-
-					continue;
-				}
-
-				// otherwise, if the matcher returns `false`, the route did not match
-				return;
-			}
-
-			result[param.name] = value;
+			continue;
 		}
+
+		if (!param.matcher || matchers[param.matcher](value)) {
+			result[param.name] = value;
+			continue;
+		}
+
+		// in the `/[[a=b]]/[[c=d]]` case, if the value didn't satisfy the `b` matcher,
+		// try again with the next segment by shifting values rightwards
+		if (param.optional && param.chained) {
+			values.splice(i, 0, undefined);
+			buffered++;
+			continue;
+		}
+
+		// otherwise, if the matcher returns `false`, the route did not match
+		return;
 	}
 
 	if (buffered) return;

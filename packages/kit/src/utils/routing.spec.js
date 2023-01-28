@@ -154,6 +154,31 @@ const exec_tests = [
 		expected: { rest: 'foo' }
 	},
 	{
+		route: '/[[slug1=doesntmatch]]/[slug2]/[...rest]',
+		path: '/foo/bar/baz',
+		expected: { slug2: 'foo', rest: 'bar/baz' }
+	},
+	{
+		route: '/[[slug1=doesntmatch]]/[slug2]/[...rest]/baz',
+		path: '/foo/bar/baz',
+		expected: { slug2: 'foo', rest: 'bar' }
+	},
+	{
+		route: '/[[a=doesntmatch]]/[[b=doesntmatch]]/[[c=doesntmatch]]/[...d]',
+		path: '/a/b/c/d',
+		expected: { d: 'a/b/c/d' }
+	},
+	{
+		route: '/[[a=doesntmatch]]/[b]/[...c]/[d]/e',
+		path: '/foo/bar/baz/qux/e',
+		expected: { b: 'foo', c: 'bar/baz', d: 'qux' }
+	},
+	{
+		route: '/[[slug1=doesntmatch]]/[[slug2=doesntmatch]]/[...rest]',
+		path: '/foo/bar/baz',
+		expected: { rest: 'foo/bar/baz' }
+	},
+	{
 		route: '/[[slug1=doesntmatch]]/[[slug2=matches]]/[[slug3=doesntmatch]]/[...rest].json',
 		path: '/foo/bar/baz.json',
 		expected: { slug2: 'foo', rest: 'bar/baz' }
