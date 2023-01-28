@@ -45,18 +45,26 @@ const worker = {
 				// ignore invalid URI
 			}
 
-			const stripped_pathname = pathname.replace(/\/$/, '') || '';
+			const stripped_pathname = pathname.replace(/\/$/, '');
 
-			let is_asset = false;
+			let is_static_asset = false;
 			const filename = stripped_pathname.substring(1);
 			if (filename) {
-				is_asset = manifest.assets.has(filename) || manifest.assets.has(filename + '/index.html');
+				is_static_asset =
+					manifest.assets.has(filename) || manifest.assets.has(filename + '/index.html');
 			}
 
-			const is_prerendered = prerendered.has(pathname) || prerendered.has(stripped_pathname);
+			const counterpart_route = pathname.at(-1) === '/' ? stripped_pathname : pathname + '/';
 
-			if (is_asset || is_prerendered) {
+			if (is_static_asset || prerendered.has(pathname)) {
 				res = await env.ASSETS.fetch(req);
+			} else if (prerendered.has(counterpart_route)) {
+				res = new Response('', {
+					status: 301,
+					headers: {
+						location: counterpart_route
+					}
+				});
 			} else {
 				// dynamically-generated pages
 				res = await server.respond(req, {
