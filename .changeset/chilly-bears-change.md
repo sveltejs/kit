@@ -2,4 +2,4 @@
 '@sveltejs/adapter-cloudflare': patch
 ---
 
-fix: correctly check prerendered page pathname for Cloudflare adapter
+fix: correctly check URL pathname with Cloudflare adapter
