@@ -18,7 +18,7 @@ const worker = {
 
 		let { pathname } = new URL(req.url);
 
-		// immutable app assets
+		// generated files
 		if (pathname.startsWith(app_path)) {
 			res = await env.ASSETS.fetch(req);
 			if (!res.ok) return res;
