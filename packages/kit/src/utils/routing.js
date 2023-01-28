@@ -124,7 +124,6 @@ export function exec(match, params, matchers) {
 	/** @type {Record<string, string>} */
 	const result = {};
 
-	/** @type {Array<string | undefined>} cause it is */
 	const values = match.slice(1);
 
 	let buffered = 0;
@@ -133,17 +132,17 @@ export function exec(match, params, matchers) {
 		const param = params[i];
 		const value = values[i - buffered];
 
+		// in the `[[a=b]]/.../[...rest]` case, if one or more optional parameters
+		// weren't matched, roll the skipped values into the rest
 		if (param.chained && param.rest && buffered) {
-			// in the `[[a=b]]/.../[...rest]` case, if one or more optional parameters
-			// weren't matched, roll the skipped values into the rest
 			const bufferedValues = values.slice(i - buffered, i + 1);
 			result[param.name] = bufferedValues.filter((s) => s).join('/');
 			buffered = 0;
 			continue;
 		}
 
+		// if `value` is undefined, it means this is an optional or rest parameter
 		if (value === undefined) {
-			// if `value` is undefined, it means this is an optional or rest parameter
 			if (param.rest) result[param.name] = '';
 			continue;
 		}
