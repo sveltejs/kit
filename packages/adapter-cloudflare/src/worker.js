@@ -60,7 +60,7 @@ const worker = {
 				res = await env.ASSETS.fetch(req);
 			} else if (counterpart_route && prerendered.has(counterpart_route)) {
 				res = new Response('', {
-					status: 301,
+					status: 308,
 					headers: {
 						location: counterpart_route
 					}
