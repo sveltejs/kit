@@ -194,6 +194,7 @@ export function create_universal_fetch(event, state, fetched, csr, resolve_opts)
 									? await stream_to_string(cloned_body)
 									: init?.body
 							),
+							request_headers: init?.headers,
 							response_body: body,
 							response: response
 						});
