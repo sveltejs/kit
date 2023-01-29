@@ -9,7 +9,7 @@ export function hash(...values) {
 		throw new TypeError('value must be a string or TypedArray');
 	}
 
-	values.forEach(value => {
+	values.forEach((value) => {
 		if (typeof value === 'string') {
 			let i = value.length;
 			while (i) hash = (hash * 33) ^ value.charCodeAt(--i);
@@ -20,7 +20,7 @@ export function hash(...values) {
 		} else {
 			throw new TypeError('value must be a string or TypedArray');
 		}
-	})
+	});
 
 	return (hash >>> 0).toString(36);
 }

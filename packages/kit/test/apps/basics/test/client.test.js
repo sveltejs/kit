@@ -199,10 +199,10 @@ test.describe('Load', () => {
 		// 1. We expect the right data
 		expect(await page.textContent('div#error')).toBe('No Authorized');
 		expect(await page.textContent('div#amount')).toBe('100');
-		
+
 		// 2. Change to another route (client side)
 		await clicknav('[href="/load/fetch-cache-control"]');
-		
+
 		// 3. Come back to the original page (client side)
 		let did_request_data = false;
 		page.on('request', (request) => {
@@ -211,7 +211,7 @@ test.describe('Load', () => {
 			}
 		});
 		await clicknav('[href="/load/fetch-cache-control/headers-diff"]');
-		
+
 		// 4. We expect the same data and no new request because it was cached.
 		expect(await page.textContent('div#error')).toBe('No Authorized');
 		expect(await page.textContent('div#amount')).toBe('100');

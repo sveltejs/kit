@@ -136,7 +136,7 @@ function build_selector(resource, opts) {
 		requestData.body = opts.body;
 	}
 
-	const valuesToHash = Object.values(requestData).filter(v => v !== undefined);
+	const valuesToHash = Object.values(requestData).filter((v) => v !== undefined);
 	if (valuesToHash.length > 0) {
 		const hashValue = hash(...valuesToHash);
 		selector += `[data-hash="${hashValue}"]`;
