@@ -1,5 +1,11 @@
 # @sveltejs/kit
 
+## 1.3.3
+
+### Patch Changes
+
+- fix: forward `process.env` to child process ([#8777](https://github.com/sveltejs/kit/pull/8777))
+
 ## 1.3.2
 
 ### Patch Changes
