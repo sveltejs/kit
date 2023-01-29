@@ -39,6 +39,7 @@ export function forked(module, callback) {
 			const child = child_process.fork(fileURLToPath(module), {
 				stdio: 'inherit',
 				env: {
+					...process.env,
 					SVELTEKIT_FORK: 'true'
 				},
 				serialization: 'advanced'
