@@ -80,8 +80,9 @@ export function serialize_data(fetched, filter, prerendering = false) {
 	if (fetched.request_body) {
 		requestData.body = fetched.request_body;
 	}
-	if (Object.keys(requestData).length > 0) {
-		const hashValue = hash(requestData.headers + requestData.body);
+	const valuesToHash = Object.values(requestData).filter(v => v !== undefined);
+	if (valuesToHash.length > 0) {
+		const hashValue = hash(...valuesToHash);
 		attrs.push(`data-hash="${hashValue}"`);
 	}
 
