@@ -1,6 +1,6 @@
+import { webcrypto } from 'node:crypto';
 import { test } from 'uvu';
 import * as assert from 'uvu/assert';
-import { webcrypto } from 'crypto';
 import { sha256 } from './crypto.js';
 
 const inputs = [

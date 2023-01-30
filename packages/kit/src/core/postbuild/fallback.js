@@ -1,6 +1,6 @@
-import { readFileSync, writeFileSync } from 'fs';
-import { dirname, join } from 'path';
-import { pathToFileURL } from 'url';
+import { readFileSync, writeFileSync } from 'node:fs';
+import { dirname, join } from 'node:path';
+import { pathToFileURL } from 'node:url';
 import { mkdirp } from '../../utils/filesystem.js';
 import { installPolyfills } from '../../exports/node/polyfills.js';
 import { load_config } from '../config/index.js';

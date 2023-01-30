@@ -1,4 +1,4 @@
-import path from 'path';
+import path from 'node:path';
 import { posixify } from '../../../utils/filesystem.js';
 
 const ILLEGAL_IMPORTS = new Set(['\0$env/dynamic/private', '\0$env/static/private']);

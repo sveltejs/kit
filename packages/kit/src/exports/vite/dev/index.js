@@ -1,8 +1,8 @@
-import fs from 'fs';
+import fs from 'node:fs';
+import path from 'node:path';
+import { URL } from 'node:url';
 import colors from 'kleur';
-import path from 'path';
 import sirv from 'sirv';
-import { URL } from 'url';
 import { isCSSRequest, loadEnv } from 'vite';
 import { getRequest, setResponse } from '../../../exports/node/index.js';
 import { installPolyfills } from '../../../exports/node/polyfills.js';
