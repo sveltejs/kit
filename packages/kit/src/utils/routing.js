@@ -135,8 +135,11 @@ export function exec(match, params, matchers) {
 		// in the `[[a=b]]/.../[...rest]` case, if one or more optional parameters
 		// weren't matched, roll the skipped values into the rest
 		if (param.chained && param.rest && buffered) {
-			const bufferedValues = values.slice(i - buffered, i + 1);
-			result[param.name] = bufferedValues.filter((s) => s).join('/');
+			result[param.name] = values
+				.slice(i - buffered, i + 1)
+				.filter((s) => s)
+				.join('/');
+
 			buffered = 0;
 			continue;
 		}
