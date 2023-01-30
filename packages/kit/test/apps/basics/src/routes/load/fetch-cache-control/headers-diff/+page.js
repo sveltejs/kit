@@ -1,19 +1,18 @@
-export async function load(event) {
-	const url = '/load/fetch-cache-control/headers-diff';
-
-	const res_error = await event.fetch(url, {
-		method: 'GET'
-	});
-	const error = await res_error.json();
-
-	const res_authorized = await event.fetch(url, {
-		method: 'GET',
+export async function load({ fetch, url }) {
+	const r1 = await fetch(url.pathname, {
 		headers: {
-			Authorization: 'Bearer 31415'
+			'x-foo': 'a'
 		}
 	});
 
-	const account = await res_authorized.json();
+	const r2 = await fetch(url.pathname, {
+		headers: {
+			'x-foo': 'b'
+		}
+	});
 
-	return { error, account };
+	return {
+		a: r1.json(),
+		b: r2.json()
+	};
 }

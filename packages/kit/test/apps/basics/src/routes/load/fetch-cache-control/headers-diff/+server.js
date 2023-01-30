@@ -6,10 +6,7 @@ export async function GET({ request, setHeaders }) {
 		'cache-control': 'public, max-age=7'
 	});
 
-	const authHeader = request.headers.get('Authorization');
-	const token = authHeader ? authHeader.split(' ')[1] : null;
-
-	if (token === '31415') return json({ amount: 100 });
-
-	return json({ message: 'No Authorized' });
+	return json({
+		foo: request.headers.get('x-foo')
+	});
 }
