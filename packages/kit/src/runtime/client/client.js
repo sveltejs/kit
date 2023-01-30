@@ -342,6 +342,17 @@ export function create_client({ target, base }) {
 			const change = details.replaceState ? 0 : 1;
 			details.state[INDEX_KEY] = current_history_index += change;
 			history[details.replaceState ? 'replaceState' : 'pushState'](details.state, '', url);
+
+			if (!details.replaceState) {
+				// if we navigated back, then pushed a new state, we can
+				// release memory by pruning the scroll/snapshot lookup
+				let i = current_history_index + 1;
+				while (snapshots[i] || scroll_positions[i]) {
+					delete snapshots[i];
+					delete scroll_positions[i];
+					i += 1;
+				}
+			}
 		}
 
 		// reset preload synchronously after the history state has been set to avoid race conditions
