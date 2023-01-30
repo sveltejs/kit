@@ -1,5 +1,13 @@
 # @sveltejs/kit
 
+## 1.3.6
+
+### Patch Changes
+
+- fix: allow rest parameters to follow multiple optional - or not - parameters ([#8761](https://github.com/sveltejs/kit/pull/8761))
+
+- fix: consider headers when constructing request hash ([#8754](https://github.com/sveltejs/kit/pull/8754))
+
 ## 1.3.5
 
 ### Patch Changes
