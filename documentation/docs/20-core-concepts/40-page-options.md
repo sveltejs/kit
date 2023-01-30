@@ -141,8 +141,7 @@ declare module 'some-adapter' {
 // @filename: index.js
 ---cut---
 /// file: src/routes/+page.js
-import type { Config } from 'some-adapter';
-
+/** @type {import('some-adapter').Config} */
 export const config: Config = {
 	runtime: 'edge';
 };
