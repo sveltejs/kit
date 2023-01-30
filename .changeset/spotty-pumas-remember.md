@@ -2,4 +2,4 @@
 "@sveltejs/kit": patch
 ---
 
-bump devalue
+chore: bump devalue
