@@ -36,11 +36,10 @@ export function forked(module, callback) {
 	 */
 	const fn = function (opts) {
 		return new Promise((fulfil, reject) => {
-			const script = fileURLToPath(new URL(module, import.meta.url));
-
-			const child = child_process.fork(script, {
+			const child = child_process.fork(fileURLToPath(module), {
 				stdio: 'inherit',
 				env: {
+					...process.env,
 					SVELTEKIT_FORK: 'true'
 				},
 				serialization: 'advanced'
