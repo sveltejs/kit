@@ -1,5 +1,5 @@
 declare module '__CLIENT__/manifest.js' {
-	import { CSRPageNodeLoader, ClientHooks, ParamMatcher } from 'types';
+	import { CSRPageNodeLoader, ParamMatcher } from 'types';
 
 	/**
 	 * A list of all the error/layout/page nodes used in the app
@@ -21,6 +21,10 @@ declare module '__CLIENT__/manifest.js' {
 	export const dictionary: Record<string, [leaf: number, layouts: number[], errors?: number[]]>;
 
 	export const matchers: Record<string, ParamMatcher>;
+}
+
+declare module '__CLIENT__/hooks.js' {
+	import { ClientHooks } from 'types';
 
 	export const hooks: ClientHooks;
 }

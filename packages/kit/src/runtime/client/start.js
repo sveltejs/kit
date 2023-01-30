@@ -1,5 +1,5 @@
 import { DEV } from 'esm-env';
-import { create_client } from './client.js';
+import { create_client, set_hooks } from './client.js';
 import { init } from './singletons.js';
 import { set_paths, set_version, set_public_env } from '../shared.js';
 
@@ -25,6 +25,8 @@ export async function start({ env, hydrate, paths, target, version }) {
 			`Placing %sveltekit.body% directly inside <body> is not recommended, as your app may break for users who have certain browser extensions installed.\n\nConsider wrapping it in an element:\n\n<div style="display: contents">\n  %sveltekit.body%\n</div>`
 		);
 	}
+
+	set_hooks((await import('__CLIENT__/hooks.js')).hooks);
 
 	const client = create_client({
 		target,

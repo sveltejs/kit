@@ -25,7 +25,7 @@ import {
 import { parse } from './parse.js';
 
 import Root from '__GENERATED__/root.svelte';
-import { nodes, server_loads, dictionary, matchers, hooks } from '__CLIENT__/manifest.js';
+import { nodes, server_loads, dictionary, matchers } from '__CLIENT__/manifest.js';
 import { HttpError, Redirect } from '../control.js';
 import { stores } from './singletons.js';
 import { unwrap_promises } from '../../utils/promises.js';
@@ -35,6 +35,14 @@ import { validate_common_exports } from '../../utils/exports.js';
 import { compact } from '../../utils/array.js';
 
 const routes = parse(nodes, server_loads, dictionary, matchers);
+
+/** @type {import('types').ClientHooks} */
+let hooks;
+/** @param {typeof hooks} _hooks */
+export function set_hooks(_hooks) {
+	console.log(_hooks);
+	hooks = _hooks;
+}
 
 const default_layout_loader = nodes[0];
 const default_error_loader = nodes[1];

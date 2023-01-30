@@ -110,8 +110,6 @@ export function write_client_manifest(kit, manifest_data, output, metadata) {
 	write_if_changed(
 		`${output}/manifest.js`,
 		trim(`
-			${hooks_file ? `import * as client_hooks from '${relative_path(output, hooks_file)}';` : ''}
-
 			export { matchers } from './matchers.js';
 
 			export const nodes = [${nodes}];
@@ -119,7 +117,13 @@ export function write_client_manifest(kit, manifest_data, output, metadata) {
 			export const server_loads = [${[...layouts_with_server_load].join(',')}];
 
 			export const dictionary = ${dictionary};
+		`)
+	);
 
+	write_if_changed(
+		`${output}/hooks.js`,
+		trim(`
+			${hooks_file ? `import * as client_hooks from '${relative_path(output, hooks_file)}';` : ''}
 			export const hooks = {
 				handleError: ${
 					hooks_file ? 'client_hooks.handleError || ' : ''
