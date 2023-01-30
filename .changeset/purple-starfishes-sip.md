@@ -2,4 +2,4 @@
 '@sveltejs/adapter-vercel': patch
 ---
 
-fix: prerendered trailing slash redirect for Vercel adapter
+fix: add trailing slash -> no trailing slash redirect for prerendered pages
