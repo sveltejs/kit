@@ -1,5 +1,11 @@
 # @sveltejs/kit
 
+## 1.3.4
+
+### Patch Changes
+
+- chore: bump devalue ([#8789](https://github.com/sveltejs/kit/pull/8789))
+
 ## 1.3.3
 
 ### Patch Changes
