@@ -1,5 +1,15 @@
 # @sveltejs/kit
 
+## 1.3.5
+
+### Patch Changes
+
+- docs: fix typo ([#8790](https://github.com/sveltejs/kit/pull/8790))
+
+- fix: build error on layout with missing leaves ([#8792](https://github.com/sveltejs/kit/pull/8792))
+
+- fix: handle hash links with non-ASCII characters when navigating ([#8767](https://github.com/sveltejs/kit/pull/8767))
+
 ## 1.3.4
 
 ### Patch Changes
