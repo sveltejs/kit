@@ -25,16 +25,17 @@ const plugin = function ({ external = [], edge, split } = {}) {
 				functions: `${dir}/functions`
 			};
 
-			const config = static_vercel_config(builder);
+			const static_config = static_vercel_config(builder);
 
 			builder.log.minor('Generating serverless function...');
 
 			/**
 			 * @param {string} name
 			 * @param {string} pattern
+			 * @param {import('.').Config | undefined} config
 			 * @param {(options: { relativePath: string }) => string} generate_manifest
 			 */
-			async function generate_serverless_function(name, pattern, generate_manifest) {
+			async function generate_serverless_function(name, pattern, config, generate_manifest) {
 				const relativePath = path.posix.relative(tmp, builder.getServerDirectory());
 
 				builder.copy(`${files}/serverless.js`, `${tmp}/index.js`, {
@@ -53,18 +54,20 @@ const plugin = function ({ external = [], edge, split } = {}) {
 					builder,
 					`${tmp}/index.js`,
 					`${dirs.functions}/${name}.func`,
-					`nodejs${node_version.major}.x`
+					`nodejs${node_version.major}.x`,
+					config
 				);
 
-				config.routes.push({ src: pattern, dest: `/${name}` });
+				static_config.routes.push({ src: pattern, dest: `/${name}` });
 			}
 
 			/**
 			 * @param {string} name
 			 * @param {string} pattern
+			 * @param {import('.').Config | undefined} config
 			 * @param {(options: { relativePath: string }) => string} generate_manifest
 			 */
-			async function generate_edge_function(name, pattern, generate_manifest) {
+			async function generate_edge_function(name, pattern, config, generate_manifest) {
 				const tmp = builder.getBuildDirectory(`vercel-tmp/${name}`);
 				const relativePath = path.posix.relative(tmp, builder.getServerDirectory());
 
@@ -95,13 +98,13 @@ const plugin = function ({ external = [], edge, split } = {}) {
 				write(
 					`${dirs.functions}/${name}.func/.vc-config.json`,
 					JSON.stringify({
+						...config,
 						runtime: 'edge',
 						entrypoint: 'index.js'
-						// TODO expose envVarsInUse
 					})
 				);
 
-				config.routes.push({ src: pattern, dest: `/${name}` });
+				static_config.routes.push({ src: pattern, dest: `/${name}` });
 			}
 
 			if (split || builder.hasRouteLevelConfig) {
@@ -128,14 +131,21 @@ const plugin = function ({ external = [], edge, split } = {}) {
 							const src = `${sliced_pattern}(?:/__data.json)?$`; // TODO adding /__data.json is a temporary workaround — those endpoints should be treated as distinct routes
 
 							const generate_function =
-								route.config?.edge ?? edge ? generate_edge_function : generate_serverless_function;
-							await generate_function(route.id.slice(1) || 'index', src, entry.generateManifest);
+								edge && (!route.config || route.config.runtime === 'edge')
+									? generate_edge_function
+									: generate_serverless_function;
+							await generate_function(
+								route.id.slice(1) || 'index',
+								src,
+								route.config,
+								entry.generateManifest
+							);
 						}
 					};
 				});
 			} else {
 				const generate_function = edge ? generate_edge_function : generate_serverless_function;
-				await generate_function('render', '/.*', builder.generateManifest);
+				await generate_function('render', '/.*', undefined, builder.generateManifest);
 			}
 
 			builder.log.minor('Copying assets...');
@@ -145,7 +155,7 @@ const plugin = function ({ external = [], edge, split } = {}) {
 
 			builder.log.minor('Writing routes...');
 
-			write(`${dir}/config.json`, JSON.stringify(config, null, '  '));
+			write(`${dir}/config.json`, JSON.stringify(static_config, null, '  '));
 		}
 	};
 };
@@ -161,21 +171,26 @@ function can_group(config_a, config_b) {
 	if (config_a.runtime !== config_b.runtime) return false;
 	if (config_a.maxDuration !== config_b.maxDuration) return false;
 	if (config_a.memory !== config_b.memory) return false;
+	if (arrays_different(config_a.envVarsInUse, config_b.envVarsInUse)) return false;
 
 	const regions_a = config_a.regions === 'all' ? ['all'] : config_a.regions;
 	const regions_b = config_b.regions === 'all' ? ['all'] : config_b.regions;
-	if (
-		(!regions_a && regions_b) ||
-		(regions_a && !regions_b) ||
-		(regions_a &&
-			regions_b &&
-			(!regions_a.every((region) => regions_b.includes(region)) ||
-				!regions_b.every((region) => regions_a.includes(region))))
-	) {
-		return false;
-	}
+	if (arrays_different(regions_a, regions_b)) return false;
 
 	return true;
+}
+
+/**
+ *
+ * @param {any[] | undefined} a
+ * @param {any[] | undefined} b
+ * @returns
+ */
+function arrays_different(a, b) {
+	if (a === b) return false;
+	if (!a || !b) return true;
+	if (a.length !== b.length) return true;
+	return a.every((e) => b.includes(e));
 }
 
 /**
@@ -260,8 +275,9 @@ function static_vercel_config(builder) {
  * @param {string} entry
  * @param {string} dir
  * @param {string} runtime
+ * @param {import('.').Config | undefined} config
  */
-async function create_function_bundle(builder, entry, dir, runtime) {
+async function create_function_bundle(builder, entry, dir, runtime, config) {
 	fs.rmSync(dir, { force: true, recursive: true });
 
 	let base = entry;
@@ -357,6 +373,7 @@ async function create_function_bundle(builder, entry, dir, runtime) {
 		`${dir}/.vc-config.json`,
 		JSON.stringify({
 			runtime,
+			...config,
 			handler: path.relative(base + ancestor, entry),
 			launcherType: 'Nodejs'
 		})
