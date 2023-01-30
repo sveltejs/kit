@@ -1,5 +1,5 @@
 import { DEV } from 'esm-env';
-import { create_client, set_hooks } from './client.js';
+import { create_client, load_client_hooks } from './client.js';
 import { init } from './singletons.js';
 import { set_paths, set_version, set_public_env } from '../shared.js';
 
@@ -26,7 +26,7 @@ export async function start({ env, hydrate, paths, target, version }) {
 		);
 	}
 
-	set_hooks((await import('__CLIENT__/hooks.js')).hooks);
+	await load_client_hooks();
 
 	const client = create_client({
 		target,

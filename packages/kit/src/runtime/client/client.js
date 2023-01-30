@@ -38,10 +38,8 @@ const routes = parse(nodes, server_loads, dictionary, matchers);
 
 /** @type {import('types').ClientHooks} */
 let hooks;
-/** @param {typeof hooks} _hooks */
-export function set_hooks(_hooks) {
-	console.log(_hooks);
-	hooks = _hooks;
+export async function load_client_hooks() {
+	({ hooks } = await import('__CLIENT__/hooks.js'));
 }
 
 const default_layout_loader = nodes[0];
