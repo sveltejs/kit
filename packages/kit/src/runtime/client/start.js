@@ -26,14 +26,14 @@ export async function start({ env, hydrate, paths, target, version }) {
 		);
 	}
 
-	await load_client_hooks();
-
 	const client = create_client({
 		target,
 		base: paths.base
 	});
 
 	init({ client });
+
+	await load_client_hooks();
 
 	if (hydrate) {
 		await client._hydrate(hydrate);
