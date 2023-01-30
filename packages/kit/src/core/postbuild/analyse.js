@@ -126,7 +126,7 @@ async function analyse({ manifest_path, env }) {
 					? 'auto'
 					: should_prerender ?? false);
 
-			config = get_option(nodes, 'config');
+			config = get_config(nodes);
 		}
 
 		metadata.routes.set(route.id, {
@@ -137,4 +137,23 @@ async function analyse({ manifest_path, env }) {
 	}
 
 	return metadata;
+}
+
+/**
+ * Do a shallow merge (first level) of the config object
+ * @param {Array<import('types').SSRNode | undefined>} nodes
+ */
+function get_config(nodes) {
+	let current = {};
+	for (const node of nodes) {
+		const config = node?.universal?.config ?? node?.server?.config;
+		if (config) {
+			current = {
+				...current,
+				...config
+			};
+		}
+	}
+
+	return Object.keys(current).length ? current : undefined;
 }
