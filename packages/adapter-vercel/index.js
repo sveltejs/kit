@@ -111,7 +111,7 @@ const plugin = function ({ external = [], edge, split } = {}) {
 						filter: (other) =>
 							split
 								? route.pattern.toString() === other.pattern.toString()
-								: !!other.config?.edge === !!route.config?.edge,
+								: can_group(route.config, other.config),
 						complete: async (entry) => {
 							let sliced_pattern = route.pattern
 								.toString()
@@ -149,6 +149,34 @@ const plugin = function ({ external = [], edge, split } = {}) {
 		}
 	};
 };
+
+/**
+ * @param {import('.').Config | undefined} config_a
+ * @param {import('.').Config | undefined} config_b
+ */
+function can_group(config_a, config_b) {
+	if (config_a === config_b) return true;
+	if (!config_a || !config_b) return false;
+
+	if (config_a.runtime !== config_b.runtime) return false;
+	if (config_a.maxDuration !== config_b.maxDuration) return false;
+	if (config_a.memory !== config_b.memory) return false;
+
+	const regions_a = config_a.regions === 'all' ? ['all'] : config_a.regions;
+	const regions_b = config_b.regions === 'all' ? ['all'] : config_b.regions;
+	if (
+		(!regions_a && regions_b) ||
+		(regions_a && !regions_b) ||
+		(regions_a &&
+			regions_b &&
+			(!regions_a.every((region) => regions_b.includes(region)) ||
+				!regions_b.every((region) => regions_a.includes(region))))
+	) {
+		return false;
+	}
+
+	return true;
+}
 
 /**
  * @param {string} file
@@ -261,7 +289,7 @@ async function create_function_bundle(builder, entry, dir, runtime) {
 				resolution_failures.set(importer, []);
 			}
 
-			resolution_failures.get(importer).push(module);
+			/** @type {string[]} */ (resolution_failures.get(importer)).push(module);
 		} else {
 			throw error;
 		}
@@ -282,7 +310,8 @@ async function create_function_bundle(builder, entry, dir, runtime) {
 	}
 
 	// find common ancestor directory
-	let common_parts;
+	/** @type {string[]} */
+	let common_parts = [];
 
 	for (const file of traced.fileList) {
 		if (common_parts) {

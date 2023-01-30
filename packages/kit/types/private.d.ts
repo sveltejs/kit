@@ -12,8 +12,11 @@ export interface AdapterEntry {
 
 	/**
 	 * A function that compares the candidate route with the current route to determine
-	 * if it should be treated as a fallback for the current route. For example, `/foo/[c]`
-	 * is a fallback for `/foo/a-[b]`, and `/[...catchall]` is a fallback for all routes
+	 * if it should be grouped with the current route.
+	 *
+	 * Use cases:
+	 * - Fallback pages: `/foo/[c]` is a fallback for `/foo/a-[b]`, and `/[...catchall]` is a fallback for all routes
+	 * - Grouping routes that share a common `config`: `/foo` should be deployed to the edge, `/bar` and `/baz` should be deployed to a serverless function
 	 */
 	filter(route: RouteDefinition): boolean;
 
