@@ -55,9 +55,9 @@ async function analyse({ manifest_path, env }) {
 	for (const loader of manifest._.nodes) {
 		const node = await loader();
 
-		metadata.nodes.push({
+		metadata.nodes[node.index] = {
 			has_server_load: node.server?.load !== undefined
-		});
+		};
 	}
 
 	// analyse routes
