@@ -108,7 +108,10 @@ const plugin = function ({ external = [], edge, split } = {}) {
 				await builder.createEntries((route) => {
 					return {
 						id: route.pattern.toString(), // TODO is `id` necessary?
-						filter: (other) => route.pattern.toString() === other.pattern.toString(),
+						filter: (other) =>
+							split
+								? route.pattern.toString() === other.pattern.toString()
+								: !!other.config?.edge === !!route.config?.edge,
 						complete: async (entry) => {
 							let sliced_pattern = route.pattern
 								.toString()
