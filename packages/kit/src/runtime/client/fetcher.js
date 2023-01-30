@@ -127,19 +127,18 @@ function build_selector(resource, opts) {
 
 	let selector = `script[data-sveltekit-fetched][data-url=${url}]`;
 
-	const requestData = {};
-	if (opts?.headers) {
-		requestData.headers = [...new Headers(opts.headers)].join(',');
-	}
+	if (opts?.headers || opts?.body) {
+		const values = [];
 
-	if (opts?.body && (typeof opts.body === 'string' || ArrayBuffer.isView(opts.body))) {
-		requestData.body = opts.body;
-	}
+		if (opts.headers) {
+			values.push([...new Headers(opts.headers)].join(','));
+		}
 
-	const valuesToHash = Object.values(requestData).filter((v) => v !== undefined);
-	if (valuesToHash.length > 0) {
-		const hashValue = hash(...valuesToHash);
-		selector += `[data-hash="${hashValue}"]`;
+		if (opts.body && (typeof opts.body === 'string' || ArrayBuffer.isView(opts.body))) {
+			values.push(opts.body);
+		}
+
+		selector += `[data-hash="${hash(...values)}"]`;
 	}
 
 	return selector;
