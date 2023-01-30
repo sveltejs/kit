@@ -5,11 +5,7 @@
 export function hash(...values) {
 	let hash = 5381;
 
-	if (values.length === 0) {
-		throw new TypeError('value must be a string or TypedArray');
-	}
-
-	values.forEach((value) => {
+	for (const value of values) {
 		if (typeof value === 'string') {
 			let i = value.length;
 			while (i) hash = (hash * 33) ^ value.charCodeAt(--i);
@@ -20,7 +16,7 @@ export function hash(...values) {
 		} else {
 			throw new TypeError('value must be a string or TypedArray');
 		}
-	});
+	}
 
 	return (hash >>> 0).toString(36);
 }
