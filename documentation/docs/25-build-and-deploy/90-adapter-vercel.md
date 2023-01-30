@@ -36,6 +36,10 @@ export default {
 };
 ```
 
+## Config options
+
+Besides the config options shown above, the Vercel adapter also supports the [`runtime`](https://vercel.com/docs/build-output-api/v3#vercel-primitives/serverless-functions/configuration), [`regions`](https://vercel.com/docs/concepts/edge-network/regions), [`maxDuration`](https://vercel.com/docs/build-output-api/v3#vercel-primitives/serverless-functions/configuration) and [`memory`](https://vercel.com/docs/build-output-api/v3#vercel-primitives/serverless-functions/configuration) options for serverless functions and the [`regions`](https://vercel.com/docs/concepts/edge-network/regions) and [`envVarsInUse`](https://vercel.com/docs/build-output-api/v3#vercel-primitives/edge-functions/configuration) options for edge functions. You can set defaults through the adapter options and override them inside `+page/layout(.server).js` files using the [config](/docs/page-options#config) export.
+
 ## Environment Variables
 
 Vercel makes a set of [deployment-specific environment variables](https://vercel.com/docs/concepts/projects/environment-variables#system-environment-variables) available. Like other environment variables, these are accessible from `$env/static/private` and `$env/dynamic/private` (sometimes — more on that later), and inaccessible from their public counterparts. To access one of these variables from the client:
