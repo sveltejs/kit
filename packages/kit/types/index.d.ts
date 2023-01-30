@@ -506,7 +506,7 @@ export interface KitConfig {
 	typescript?: {
 		/**
 		 * A function that allows you to edit the generated `tsconfig.json`. You can mutate the config (recommended) or return a new one.
-		 * This is useful to — fo example — extend a shared `tsconfig.json` in a monorepo root.
+		 * This is useful for extending a shared `tsconfig.json` in a monorepo root, for example.
 		 * @default (config) => config
 		 */
 		config?: (config: Record<string, any>) => Record<string, any> | void;
