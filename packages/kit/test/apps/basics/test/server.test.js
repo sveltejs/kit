@@ -164,8 +164,7 @@ test.describe('Errors', () => {
 		expect(await response.text()).toMatch('PUT method not allowed');
 	});
 
-	// TODO re-enable this if https://github.com/vitejs/vite/issues/7046 is implemented
-	test.skip('error evaluating module', async ({ request }) => {
+	test('error evaluating module', async ({ request }) => {
 		const response = await request.get('/errors/init-error-endpoint');
 
 		expect(response.status()).toBe(500);
