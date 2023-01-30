@@ -5,7 +5,7 @@ import { nodeFileTrace } from '@vercel/nft';
 import esbuild from 'esbuild';
 
 /** @type {import('.').default} **/
-const plugin = function ({ external = [], edge, split } = {}) {
+const plugin = function ({ external = [], edge, split, ...default_config } = {}) {
 	return {
 		name: '@sveltejs/adapter-vercel',
 
@@ -109,12 +109,13 @@ const plugin = function ({ external = [], edge, split } = {}) {
 
 			if (split || builder.hasRouteLevelConfig) {
 				await builder.createEntries((route) => {
+					const route_config = { ...default_config, ...route.config };
 					return {
 						id: route.pattern.toString(), // TODO is `id` necessary?
 						filter: (other) =>
 							split
 								? route.pattern.toString() === other.pattern.toString()
-								: can_group(route.config, other.config),
+								: can_group(route_config, { ...default_config, ...other.config }),
 						complete: async (entry) => {
 							let sliced_pattern = route.pattern
 								.toString()
@@ -131,13 +132,13 @@ const plugin = function ({ external = [], edge, split } = {}) {
 							const src = `${sliced_pattern}(?:/__data.json)?$`; // TODO adding /__data.json is a temporary workaround — those endpoints should be treated as distinct routes
 
 							const generate_function =
-								edge && (!route.config || route.config.runtime === 'edge')
+								edge && (!route_config.runtime || route_config.runtime === 'edge')
 									? generate_edge_function
 									: generate_serverless_function;
 							await generate_function(
 								route.id.slice(1) || 'index',
 								src,
-								route.config,
+								route_config,
 								entry.generateManifest
 							);
 						}
@@ -145,7 +146,7 @@ const plugin = function ({ external = [], edge, split } = {}) {
 				});
 			} else {
 				const generate_function = edge ? generate_edge_function : generate_serverless_function;
-				await generate_function('render', '/.*', undefined, builder.generateManifest);
+				await generate_function('render', '/.*', default_config, builder.generateManifest);
 			}
 
 			builder.log.minor('Copying assets...');
