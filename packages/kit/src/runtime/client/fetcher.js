@@ -128,6 +128,7 @@ function build_selector(resource, opts) {
 	let selector = `script[data-sveltekit-fetched][data-url=${url}]`;
 
 	if (opts?.headers || opts?.body) {
+		/** @type {import('types').StrictBody[]} */
 		const values = [];
 
 		if (opts.headers) {
