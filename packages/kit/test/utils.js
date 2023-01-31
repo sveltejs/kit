@@ -219,8 +219,7 @@ if (!test_browser_device) {
 /** @type {import('@playwright/test').PlaywrightTestConfig} */
 export const config = {
 	forbidOnly: !!process.env.CI,
-	// generous timeouts on CI
-	timeout: process.env.CI ? 45000 : 15000,
+	timeout: 5000,
 	webServer: {
 		command: process.env.DEV ? 'pnpm dev' : 'pnpm build && pnpm preview',
 		port: process.env.DEV ? 5173 : 4173
