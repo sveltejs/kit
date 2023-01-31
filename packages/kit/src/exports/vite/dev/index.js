@@ -72,14 +72,10 @@ export async function dev(vite, vite_config, svelte_config) {
 	async function resolve(id) {
 		const url = id.startsWith('..') ? `/@fs${path.posix.resolve(id)}` : `/${id}`;
 
-		/** @type {Record<string, any>} */
-		let module;
-		try {
-			module = await vite.ssrLoadModule(url);
-		} catch (e) {
-			outputModuleLoadError(e);
-			throw e;
-		}
+		let module = await vite.ssrLoadModule(url).catch((error) => {
+			outputModuleLoadError(error);
+			throw error;
+		});
 
 		const module_node = await vite.moduleGraph.getModuleByUrl(url);
 		if (!module_node) throw new Error(`Could not find node for ${url}`);
