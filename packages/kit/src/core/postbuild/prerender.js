@@ -361,6 +361,15 @@ async function prerender({ out, manifest_path, metadata, verbose, env }) {
 		saved.set(file, dest);
 	}
 
+	if (
+		config.prerender.entries.length > 1 ||
+		config.prerender.entries[0] !== '*' ||
+		prerender_map.size > 0
+	) {
+		// Only log if we're actually going to do something to not confuse users
+		log.info('Prerendering');
+	}
+
 	for (const entry of config.prerender.entries) {
 		if (entry === '*') {
 			for (const [id, prerender] of prerender_map) {
