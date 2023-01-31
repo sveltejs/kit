@@ -5,7 +5,8 @@
 	"private": true,
 	"scripts": {
 		"test": "pnpm test -r --filter=./packages/*",
-		"test:cross-platform": "pnpm -r test:cross-platform --filter=./packages/*",
+		"test:cross-platform:dev": "pnpm -r test:cross-platform:dev --filter=./packages/*",
+		"test:cross-platform:build": "pnpm -r test:cross-platform:build --filter=./packages/*",
 		"test:vite-ecosystem-ci": "pnpm test --dir packages/kit",
 		"check": "pnpm -r check",
 		"lint": "pnpm -r lint",
