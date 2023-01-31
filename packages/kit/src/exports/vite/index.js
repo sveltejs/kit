@@ -176,8 +176,8 @@ function kit({ svelte_config }) {
 	/** @type {{ public: Record<string, string>; private: Record<string, string> }} */
 	let env;
 
-	/** @type {(() => Promise<void>) | null} */
-	let finalise = null;
+	/** @type {() => Promise<void>} */
+	let finalise;
 
 	const service_worker_entry_file = resolve_entry(kit.files.serviceWorker);
 
@@ -537,9 +537,6 @@ function kit({ svelte_config }) {
 		buildStart() {
 			if (secondary_build) return;
 
-			// reset (here, not in `config`, because `build --watch` skips `config`)
-			finalise = null;
-
 			if (is_build) {
 				if (!vite_config.build.watch) {
 					rimraf(out);
@@ -723,7 +720,8 @@ function kit({ svelte_config }) {
 		closeBundle: {
 			sequential: true,
 			async handler() {
-				finalise?.();
+				if (secondary_build) return;
+				await finalise();
 			}
 		}
 	};
