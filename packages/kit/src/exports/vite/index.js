@@ -698,6 +698,10 @@ function kit({ svelte_config }) {
 							.cyan('npm run preview')} to preview your production build locally.`
 					);
 
+					// avoid making the manifest available to users
+					fs.unlinkSync(`${out}/client/${vite_config.build.manifest}`);
+					fs.unlinkSync(`${out}/server/${vite_config.build.manifest}`);
+
 					if (kit.adapter) {
 						const { adapt } = await import('../../core/adapt/index.js');
 						await adapt(svelte_config, build_data, metadata, prerendered, prerender_map, log);
@@ -709,10 +713,6 @@ function kit({ svelte_config }) {
 							`See ${link} to learn how to configure your app to run on the platform of your choosing`
 						);
 					}
-
-					// avoid making the manifest available to users
-					fs.unlinkSync(`${out}/client/${vite_config.build.manifest}`);
-					fs.unlinkSync(`${out}/server/${vite_config.build.manifest}`);
 				};
 			}
 		},
