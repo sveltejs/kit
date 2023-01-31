@@ -25,7 +25,9 @@ export default {
 			edge: false,
 
 			// an array of dependencies that esbuild should treat
-			// as external when bundling functions
+			// as external when bundling functions. this only applies
+			// to edge functions, and should only be used to exclude
+			// optional dependencies that will not run outside Node
 			external: [],
 
 			// if true, will split your app into multiple functions
