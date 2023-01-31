@@ -596,12 +596,16 @@ function kit({ svelte_config }) {
 				);
 
 				// first, build server nodes without the client manifest so we can analyse it
+				log.info('Analysing routes');
+
 				build_server_nodes(out, kit, manifest_data, server_manifest, null, null);
 
 				const metadata = await analyse({
 					manifest_path,
 					env: { ...env.private, ...env.public }
 				});
+
+				log.info('Building app');
 
 				// create client build
 				write_client_manifest(
@@ -649,8 +653,6 @@ function kit({ svelte_config }) {
 				build_server_nodes(out, kit, manifest_data, server_manifest, client_manifest, css);
 
 				// ...and prerender
-				log.info('Prerendering');
-
 				const { prerendered, prerender_map } = await prerender({
 					out,
 					manifest_path,
