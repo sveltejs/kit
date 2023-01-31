@@ -1,4 +1,4 @@
-import path from 'path';
+import path from 'node:path';
 import { test } from 'uvu';
 import * as assert from 'uvu/assert';
 import { validate_config } from '../../core/config/index.js';

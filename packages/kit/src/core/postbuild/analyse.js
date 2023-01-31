@@ -1,5 +1,5 @@
-import { join } from 'path';
-import { pathToFileURL } from 'url';
+import { join } from 'node:path';
+import { pathToFileURL } from 'node:url';
 import { get_option } from '../../runtime/server/utils.js';
 import {
 	validate_common_exports,

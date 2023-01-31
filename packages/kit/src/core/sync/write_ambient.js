@@ -1,10 +1,10 @@
-import fs from 'fs';
-import path from 'path';
+import fs from 'node:fs';
+import path from 'node:path';
+import { fileURLToPath } from 'node:url';
 import { get_env } from '../../exports/vite/utils.js';
 import { GENERATED_COMMENT } from '../../constants.js';
 import { create_dynamic_types, create_static_types } from '../env.js';
 import { write_if_changed } from './utils.js';
-import { fileURLToPath } from 'url';
 
 // TODO these types should be described in a neutral place, rather than
 // inside either `packages/kit` or `kit.svelte.dev`

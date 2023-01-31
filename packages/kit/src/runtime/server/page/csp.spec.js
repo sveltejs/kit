@@ -1,6 +1,6 @@
+import { webcrypto } from 'node:crypto';
 import { test } from 'uvu';
 import * as assert from 'uvu/assert';
-import { webcrypto } from 'crypto';
 import { Csp } from './csp.js';
 
 // @ts-expect-error
