@@ -50,11 +50,36 @@ export async function dev(vite, vite_config, svelte_config) {
 	/** @type {Error | null} */
 	let manifest_error = null;
 
+	/**
+	 * @param {any} e
+	 */
+	const outputModuleLoadError = (e) => {
+		let msg = colors.red((e.plugin ? `[${e.plugin}] ` : '') + e.message);
+		if (e.id) {
+			msg += `\nfile: ${colors.cyan(e.id + (e.loc ? `:${e.loc.line}:${e.loc.column}` : ''))}`;
+		}
+		if (e.frame) {
+			msg += `\n` + colors.yellow(e.frame);
+		}
+		vite.ws.send({
+			type: 'error',
+			err: e
+		});
+		vite.config.logger.error(msg, { error: e });
+	};
+
 	/** @param {string} id */
 	async function resolve(id) {
 		const url = id.startsWith('..') ? `/@fs${path.posix.resolve(id)}` : `/${id}`;
 
-		const module = await vite.ssrLoadModule(url);
+		/** @type {Record<string, any>} */
+		let module;
+		try {
+			module = await vite.ssrLoadModule(url);
+		} catch (e) {
+			outputModuleLoadError(e);
+			throw e;
+		}
 
 		const module_node = await vite.moduleGraph.getModuleByUrl(url);
 		if (!module_node) throw new Error(`Could not find node for ${url}`);
