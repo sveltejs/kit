@@ -1,5 +1,15 @@
 # @sveltejs/kit
 
+## 1.3.7
+
+### Patch Changes
+
+- fix: only show prerendering message when actually prerendering ([#8809](https://github.com/sveltejs/kit/pull/8809))
+
+- fix: handle anchors with special chars when navigating ([#8806](https://github.com/sveltejs/kit/pull/8806))
+
+- fix: await finalise hook and run it only once ([#8817](https://github.com/sveltejs/kit/pull/8817))
+
 ## 1.3.6
 
 ### Patch Changes
