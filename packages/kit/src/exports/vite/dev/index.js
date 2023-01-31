@@ -3,7 +3,7 @@ import path from 'node:path';
 import { URL } from 'node:url';
 import colors from 'kleur';
 import sirv from 'sirv';
-import { isCSSRequest, loadEnv } from 'vite';
+import { isCSSRequest, loadEnv, buildErrorMessage } from 'vite';
 import { getRequest, setResponse } from '../../../exports/node/index.js';
 import { installPolyfills } from '../../../exports/node/polyfills.js';
 import { coalesce_to_error } from '../../../utils/error.js';
@@ -50,23 +50,18 @@ export async function dev(vite, vite_config, svelte_config) {
 	/** @type {Error | null} */
 	let manifest_error = null;
 
-	/**
-	 * @param {any} e
-	 */
-	const outputModuleLoadError = (e) => {
-		let msg = colors.red((e.plugin ? `[${e.plugin}] ` : '') + e.message);
-		if (e.id) {
-			msg += `\nfile: ${colors.cyan(e.id + (e.loc ? `:${e.loc.line}:${e.loc.column}` : ''))}`;
-		}
-		if (e.frame) {
-			msg += `\n` + colors.yellow(e.frame);
-		}
+	/** @param {any} err */
+	function outputModuleLoadError(err) {
+		const msg = buildErrorMessage(err, [colors.red(`Internal server error: ${err.message}`)]);
+
+		vite.config.logger.error(msg, {
+			error: err
+		});
 		vite.ws.send({
 			type: 'error',
-			err: e
+			err: err
 		});
-		vite.config.logger.error(msg, { error: e });
-	};
+	}
 
 	/** @param {string} id */
 	async function resolve(id) {
