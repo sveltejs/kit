@@ -343,7 +343,8 @@ export function create_client({ target, base }) {
 			}
 
 			if (autoscroll) {
-				const deep_linked = url.hash && document.querySelector(decodeURIComponent(url.hash));
+				const deep_linked =
+					url.hash && document.getElementById(decodeURIComponent(url.hash.slice(1)));
 				if (scroll) {
 					scrollTo(scroll.x, scroll.y);
 				} else if (deep_linked) {
