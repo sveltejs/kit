@@ -139,10 +139,7 @@ export async function sveltekit() {
 	return [...svelte(vite_plugin_svelte_options), ...kit({ svelte_config })];
 }
 
-/**
- * If `true`, the server build has been completed and we're creating the client build
- */
-let secondary_build = false;
+let secondary_build_started = false;
 
 /**
  * Returns the SvelteKit Vite plugin. Vite executes Rollup hooks as well as some of its own.
@@ -251,7 +248,7 @@ function kit({ svelte_config }) {
 
 			if (is_build) {
 				if (!new_config.build) new_config.build = {};
-				new_config.build.ssr = !secondary_build;
+				new_config.build.ssr = !secondary_build_started;
 
 				new_config.define = {
 					__SVELTEKIT_ADAPTER_NAME__: JSON.stringify(kit.adapter?.name),
@@ -363,7 +360,7 @@ function kit({ svelte_config }) {
 		writeBundle: {
 			sequential: true,
 			async handler(_options) {
-				if (!secondary_build) return;
+				if (vite_config.build.ssr) return;
 
 				const guard = module_guard(this, {
 					cwd: vite.normalizePath(process.cwd()),
@@ -535,7 +532,7 @@ function kit({ svelte_config }) {
 		 * Clears the output directories.
 		 */
 		buildStart() {
-			if (secondary_build) return;
+			if (secondary_build_started) return;
 
 			if (is_build) {
 				if (!vite_config.build.watch) {
@@ -546,7 +543,7 @@ function kit({ svelte_config }) {
 		},
 
 		generateBundle() {
-			if (!secondary_build) return;
+			if (vite_config.build.ssr) return;
 
 			this.emitFile({
 				type: 'asset',
@@ -563,8 +560,7 @@ function kit({ svelte_config }) {
 		writeBundle: {
 			sequential: true,
 			async handler(_options) {
-				if (secondary_build) return; // only run this once
-				secondary_build = true;
+				if (secondary_build_started) return; // only run this once
 
 				const verbose = vite_config.logLevel === 'info';
 				const log = logger({ verbose });
@@ -611,6 +607,8 @@ function kit({ svelte_config }) {
 					`${kit.outDir}/generated/client-optimized`,
 					metadata.nodes
 				);
+
+				secondary_build_started = true;
 
 				const { output } = /** @type {import('rollup').RollupOutput} */ (
 					await vite.build({
@@ -720,7 +718,7 @@ function kit({ svelte_config }) {
 		closeBundle: {
 			sequential: true,
 			async handler() {
-				if (secondary_build) return;
+				if (!vite_config.build.ssr) return;
 				await finalise();
 			}
 		}
