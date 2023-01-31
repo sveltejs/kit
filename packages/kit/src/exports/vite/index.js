@@ -554,8 +554,8 @@ function kit({ svelte_config }) {
 
 		/**
 		 * Vite builds a single bundle. We need three bundles: client, server, and service worker.
-		 * The user's package.json scripts will invoke the Vite CLI to execute the client build. We
-		 * then use this hook to kick off builds for the server and service worker.
+		 * The user's package.json scripts will invoke the Vite CLI to execute the server build. We
+		 * then use this hook to kick off builds for the client and service worker.
 		 */
 		writeBundle: {
 			sequential: true,
