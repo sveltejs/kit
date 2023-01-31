@@ -478,7 +478,7 @@ function convert_to_ts(js_code, indent = '', offset = '') {
 
 				for (const tag of comment.tags ?? []) {
 					if (ts.isJSDocTypeTag(tag)) {
-						const name = get_type_name(tag);
+						const [name, generics] = get_type_info(tag);
 
 						if (ts.isFunctionDeclaration(node)) {
 							const is_export = node.modifiers?.some(
@@ -497,7 +497,8 @@ function convert_to_ts(js_code, indent = '', offset = '') {
 								}`
 							);
 							code.appendLeft(node.body.getStart(), '=> ');
-							code.appendLeft(node.body.getEnd(), `) satisfies ${name};`);
+							const type = generics !== undefined ? `${name}${generics}` : name;
+							code.appendLeft(node.body.getEnd(), `) satisfies ${type};`);
 
 							modified = true;
 						} else if (
@@ -522,7 +523,7 @@ function convert_to_ts(js_code, indent = '', offset = '') {
 								'Unhandled @type JsDoc->TS conversion; needs more params logic: ' + node.getText()
 							);
 						}
-						const name = get_type_name(tag);
+						const [name] = get_type_info(tag);
 						code.appendLeft(node.parameters[0].getEnd(), `: ${name}`);
 
 						modified = true;
@@ -565,13 +566,13 @@ function convert_to_ts(js_code, indent = '', offset = '') {
 	return transformed === js_code ? undefined : transformed.replace(/\n\s*\n\s*\n/g, '\n\n');
 
 	/** @param {ts.JSDocTypeTag | ts.JSDocParameterTag} tag */
-	function get_type_name(tag) {
+	function get_type_info(tag) {
 		const type_text = tag.typeExpression.getText();
 		let name = type_text.slice(1, -1); // remove { }
 
-		const import_match = /import\('(.+?)'\)\.(\w+)/.exec(type_text);
+		const import_match = /import\('(.+?)'\)\.(\w+)(<{[\n\* \w:;]+}>)?/.exec(type_text);
 		if (import_match) {
-			const [, from, _name] = import_match;
+			const [, from, _name, generics] = import_match;
 			name = _name;
 			const existing = imports.get(from);
 			if (existing) {
@@ -579,7 +580,13 @@ function convert_to_ts(js_code, indent = '', offset = '') {
 			} else {
 				imports.set(from, new Set([name]));
 			}
+			if (generics !== undefined) {
+				return [name, generics
+					.replaceAll("*", "") // get rid of JSDoc asterisks
+					.replace("  }>", "}>") // unindent closing brace
+				];
+			}
 		}
-		return name;
+		return [name];
 	}
 }
