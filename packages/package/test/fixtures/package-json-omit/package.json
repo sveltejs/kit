@@ -1,0 +1,7 @@
+{
+	"name": "package-json-omit",
+	"private": true,
+	"version": "1.0.0",
+	"description": "omits package json",
+	"type": "module"
+}

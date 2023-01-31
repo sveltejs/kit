@@ -150,6 +150,14 @@ test('SvelteKit interop', async () => {
 	await test_make_package('svelte-kit');
 });
 
+test('packageJson option (use original package.json)', async () => {
+	await test_make_package('package-json');
+});
+
+test('packageJson option (omit package.json)', async () => {
+	await test_make_package('package-json-omit');
+});
+
 // chokidar doesn't fire events in github actions :shrug:
 if (!process.env.CI) {
 	test('watches for changes', async () => {

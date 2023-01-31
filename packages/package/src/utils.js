@@ -66,6 +66,21 @@ export function write(file, contents) {
 	fs.writeFileSync(file, contents);
 }
 
+/** @type {Map<string, string>} */
+let current = new Map();
+/**
+ * @param {string} file
+ * @param {string} contents
+ */
+export function write_if_changed(file, contents) {
+	if (current.get(file) !== contents) {
+		write(file, contents);
+		current.set(file, contents);
+		return true;
+	}
+	return false;
+}
+
 /**
  * @param {import('./types').ValidatedConfig} config
  * @returns {import('./types').File[]}
@@ -106,10 +121,12 @@ export function analyze(config, file) {
 
 /**
  * @param {string} cwd
+ * @param {NonNullable<import('types').PackageConfig['packageJson']>} packageJson
  * @param {import('./types').File[]} files
  */
-export function generate_pkg(cwd, files) {
+export function generate_pkg(cwd, packageJson, files) {
 	const pkg = JSON.parse(fs.readFileSync(path.join(cwd, 'package.json'), 'utf8'));
+	const original = JSON.parse(JSON.stringify(pkg));
 
 	// Remove fields that are specific to the original package.json
 	// See: https://pnpm.io/package_json#publishconfigdirectory
@@ -147,5 +164,37 @@ export function generate_pkg(cwd, files) {
 		}
 	}
 
-	return pkg;
+	if (!pkg.dependencies?.svelte && !pkg.peerDependencies?.svelte) {
+		console.warn(
+			'Svelte libraries should include "svelte" in either "dependencies" or "peerDependencies".'
+		);
+	}
+
+	if (!pkg.svelte && files.some((file) => file.is_svelte)) {
+		// Several heuristics in Kit/vite-plugin-svelte to tell Vite to mark Svelte packages
+		// rely on the "svelte" property. Vite/Rollup/Webpack plugin can all deal with it.
+		// See https://github.com/sveltejs/kit/issues/1959 for more info and related threads.
+		if (pkg.exports['.']) {
+			const svelte_export =
+				typeof pkg.exports['.'] === 'string'
+					? pkg.exports['.']
+					: pkg.exports['.'].svelte || pkg.exports['.'].import || pkg.exports['.'].default;
+			if (svelte_export) {
+				pkg.svelte = svelte_export;
+			} else {
+				console.warn(
+					'Cannot generate a "svelte" entry point because the "." entry in "exports" is not a string. If you set it by hand, please also set one of the options as a "svelte" entry point in your package.json\n' +
+						'Example: { ..., "svelte": "./index.svelte" } }\n'
+				);
+			}
+		} else {
+			console.warn(
+				'Cannot generate a "svelte" entry point because the "." entry in "exports" is missing. Please specify one or set a "svelte" entry point yourself in your package.json\n' +
+					'Example: { ..., "svelte": "./index.svelte" } }\n'
+			);
+		}
+	}
+
+	const final = packageJson(original, pkg);
+	return { pkg: packageJson(original, pkg), pkg_name: final?.name ?? original.name };
 }

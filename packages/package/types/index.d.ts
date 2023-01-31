@@ -17,12 +17,21 @@ export interface PackageConfig {
 	/**
 	 * Function that determines if the given filepath will be included in the `exports` field
 	 * of the `package.json`.
+	 * @deprecated use `packageJson` instead
 	 */
 	exports?(filepath: string): boolean;
 	/**
 	 * Function that determines if the given file is part of the output.
 	 */
 	files?(filepath: string): boolean;
+	/**
+	 * Is passed the original `package.json` and the generated one, and should return the final `package.json`.
+	 * If `undefined` is returned, no `package.json` will be written to the output directory.
+	 */
+	packageJson?(
+		original: Record<string, any>,
+		generated: Record<string, any>
+	): Record<string, any> | undefined;
 }
 
 export interface Config {

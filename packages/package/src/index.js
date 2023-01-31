@@ -4,7 +4,15 @@ import colors from 'kleur';
 import chokidar from 'chokidar';
 import { preprocess } from 'svelte/compiler';
 import { copy, mkdirp, rimraf } from './filesystem.js';
-import { analyze, generate_pkg, resolve_lib_alias, scan, strip_lang_tags, write } from './utils.js';
+import {
+	analyze,
+	generate_pkg,
+	resolve_lib_alias,
+	scan,
+	strip_lang_tags,
+	write,
+	write_if_changed
+} from './utils.js';
 import { emit_dts, transpile_ts } from './typescript.js';
 
 const essential_files = ['README', 'LICENSE', 'CHANGELOG', '.gitignore', '.npmignore'];
@@ -30,38 +38,11 @@ export async function build(config, cwd = process.cwd()) {
 		await emit_dts(config, cwd, files);
 	}
 
-	const pkg = generate_pkg(cwd, files);
+	const { pkg, pkg_name } = generate_pkg(cwd, config.package.packageJson, files);
 
-	if (!pkg.dependencies?.svelte && !pkg.peerDependencies?.svelte) {
-		console.warn(
-			'Svelte libraries should include "svelte" in either "dependencies" or "peerDependencies".'
-		);
+	if (pkg) {
+		write_if_changed(join(dir, 'package.json'), JSON.stringify(pkg, null, 2));
 	}
-
-	if (!pkg.svelte && files.some((file) => file.is_svelte)) {
-		// Several heuristics in Kit/vite-plugin-svelte to tell Vite to mark Svelte packages
-		// rely on the "svelte" property. Vite/Rollup/Webpack plugin can all deal with it.
-		// See https://github.com/sveltejs/kit/issues/1959 for more info and related threads.
-		if (pkg.exports['.']) {
-			const svelte_export =
-				typeof pkg.exports['.'] === 'string'
-					? pkg.exports['.']
-					: pkg.exports['.'].import || pkg.exports['.'].default;
-			if (svelte_export) {
-				pkg.svelte = svelte_export;
-			} else {
-				console.warn(
-					'Cannot generate a "svelte" entry point because the "." entry in "exports" is not a string. If you set it by hand, please also set one of the options as a "svelte" entry point\n'
-				);
-			}
-		} else {
-			console.warn(
-				'Cannot generate a "svelte" entry point because the "." entry in "exports" is missing. Please specify one or set a "svelte" entry point yourself\n'
-			);
-		}
-	}
-
-	write(join(dir, 'package.json'), JSON.stringify(pkg, null, 2));
 
 	for (const file of files) {
 		await process_file(config, file);
@@ -83,8 +64,10 @@ export async function build(config, cwd = process.cwd()) {
 	const from = relative(cwd, lib);
 	const to = relative(cwd, dir);
 	console.log(colors.bold().green(`${from} -> ${to}`));
-	console.log(`Successfully built '${pkg.name}' package. To publish it to npm:`);
-	console.log(colors.bold().cyan(`  cd ${to}`));
+	console.log(`Successfully built '${pkg_name}' package. To publish it to npm:`);
+	if (pkg) {
+		console.log(colors.bold().cyan(`  cd ${to}`));
+	}
 	console.log(colors.bold().cyan('  npm publish\n'));
 }
 
@@ -98,8 +81,7 @@ export async function watch(config, cwd = process.cwd()) {
 
 	console.log(message);
 
-	const { source: lib } = config.package;
-	const { dir } = config.package;
+	const { dir, source: lib } = config.package;
 
 	/** @type {Array<{ file: import('./types').File, type: string }>} */
 	const pending = [];
@@ -129,7 +111,7 @@ export async function watch(config, cwd = process.cwd()) {
 			pending.length = 0;
 
 			for (const { file, type } of events) {
-				if ((type === 'unlink' || type === 'add') && file.is_exported) {
+				if (type === 'unlink' || type === 'add') {
 					should_update_pkg = true;
 				}
 
@@ -161,9 +143,11 @@ export async function watch(config, cwd = process.cwd()) {
 			}
 
 			if (should_update_pkg) {
-				const pkg = generate_pkg(cwd, files);
-				write(join(dir, 'package.json'), JSON.stringify(pkg, null, 2));
-				console.log('Updated package.json');
+				const pkg = generate_pkg(cwd, config.package.packageJson, files);
+				const changed = write_if_changed(join(dir, 'package.json'), JSON.stringify(pkg, null, 2));
+				if (changed) {
+					console.log('Updated package.json');
+				}
 			}
 
 			if (config.package.emitTypes) {

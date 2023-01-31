@@ -24,13 +24,26 @@ export async function load_config({ cwd = process.cwd() } = {}) {
  * @returns {import('./types').ValidatedConfig}
  */
 function process_config(config, { cwd = process.cwd() } = {}) {
+	let warned = false;
+
 	return {
 		extensions: config.extensions ?? ['.svelte'],
 		kit: config.kit,
 		package: {
 			source: path.resolve(cwd, config.kit?.files?.lib ?? config.package?.source ?? 'src/lib'),
 			dir: config.package?.dir ?? 'package',
-			exports: config.package?.exports ?? ((filepath) => !/^_|\/_|\.d\.ts$/.test(filepath)),
+			exports: config.package?.exports
+				? (filepath) => {
+						if (!warned) {
+							console.warn(
+								'The `package.exports` option is deprecated. Use `package.packageJson` instead.'
+							);
+							warned = true;
+						}
+						return /** @type {any} */ (config.package).exports(filepath);
+				  }
+				: (filepath) => !/^_|\/_|\.d\.ts$/.test(filepath),
+			packageJson: config.package?.packageJson ?? ((_, pkg) => pkg),
 			files: config.package?.files ?? (() => true),
 			emitTypes: config.package?.emitTypes ?? true
 		},

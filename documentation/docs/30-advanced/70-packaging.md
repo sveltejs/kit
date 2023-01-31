@@ -2,8 +2,6 @@
 title: Packaging
 ---
 
-> `svelte-package` is currently experimental. Non-backward compatible changes may occur in any future release.
-
 You can use SvelteKit to build apps as well as component libraries, using the `@sveltejs/package` package (`npm create svelte` has an option to set this up for you).
 
 When you're creating an app, the contents of `src/routes` is the public-facing stuff; [`src/lib`](modules#$lib) contains your app's internal library.
@@ -12,11 +10,11 @@ A component library has the exact same structure as a SvelteKit app, except that
 
 Running the `svelte-package` command from `@sveltejs/package` will take the contents of `src/lib` and generate a `package` directory (which can be [configured](configuration)) containing the following:
 
-- All the files in `src/lib`, unless you [configure](configuration) custom `include`/`exclude` options. Svelte components will be preprocessed, TypeScript files will be transpiled to JavaScript.
-- Type definitions (`d.ts` files) which are generated for Svelte, JavaScript and TypeScript files. You need to install `typescript >= 4.0.0` for this. Type definitions are placed next to their implementation, hand-written `d.ts` files are copied over as is. You can [disable generation](configuration), but we strongly recommend against it — people using your library might use TypeScript, for which they require these type definition files.
-- A `package.json` copied from the project root with all fields except `"scripts"`, `"publishConfig.directory"` and `"publishConfig.linkDirectory"`. The `"dependencies"` field is included, which means you should add packages that you only need for your documentation or demo site to `"devDependencies"`. A `"type": "module"` and an `"exports"` field will be added if it's not defined in the original file.
+- All the files in `src/lib`, unless you [configure](configuration) the custom `files` option. Svelte components will be preprocessed, TypeScript files will be transpiled to JavaScript.
+- Type definitions (`d.ts` files) which are generated for Svelte, JavaScript and TypeScript files. You need to install `typescript >= 4.0.0` for this. Type definitions are placed next to their implementation, hand-written `d.ts` files are copied over as is. You can [disable generation](configuration) by setting `emitTypes: false`, but we strongly recommend against it — people using your library might use TypeScript, for which they require these type definition files.
+- A `package.json` copied from the project root with all fields except `"scripts"`, `"publishConfig.directory"` and `"publishConfig.linkDirectory"`. The `"dependencies"` field is included, which means you should add packages that you only need for your documentation or demo site to `"devDependencies"`. A `"type": "module"` and an `"exports"` field will be added if it's not defined in the original file. You can customize the final `package.json` contents through the `packageJson` option, which is passed the original and generated `package.json`. If you return `undefined`, the `package.json` will not be written to the output directory.
 
-The `"exports"` field contains the package's entry points. By default, all files in `src/lib` will be treated as an entry point unless they start with (or live in a directory that starts with) an underscore, but you can [configure](configuration) this behaviour. If you have a `src/lib/index.js` or `src/lib/index.svelte` file, it will be treated as the package root.
+The `"exports"` field contains the package's entry points. By default, all files in `src/lib` will be treated as an entry point unless they start with (or live in a directory that starts with) an underscore, but you can [configure](configuration) this behaviour through the `packageJson` option. If you have a `src/lib/index.js` or `src/lib/index.svelte` file, it will be treated as the package root.
 
 For example, if you had a `src/lib/Foo.svelte` component and a `src/lib/index.js` module that re-exported it, a consumer of your library could do either of the following:
 

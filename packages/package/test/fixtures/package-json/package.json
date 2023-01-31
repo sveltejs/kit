@@ -1,0 +1,13 @@
+{
+	"name": "package-json",
+	"private": true,
+	"version": "1.0.0",
+	"description": "uses package.json as is",
+	"type": "module",
+	"exports": {
+		".": {
+			"import": "./index.js"
+		}
+	},
+	"svelte": "./Test.svelte"
+}
