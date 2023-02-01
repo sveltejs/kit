@@ -723,23 +723,22 @@ export function create_client({ target, base }) {
 		const url_changed = current.url ? id !== current.url.pathname + current.url.search : false;
 		const route_changed = current.route ? route.id !== current.route.id : false;
 
-		const invalid_server_nodes = loaders.reduce((acc, loader, i) => {
+		let parent_invalid = false;
+		const invalid_server_nodes = loaders.map((loader, i) => {
 			const previous = current.branch[i];
 
 			const invalid =
 				!!loader?.[0] &&
 				(previous?.loader !== loader[1] ||
-					has_changed(
-						acc.some(Boolean),
-						route_changed,
-						url_changed,
-						previous.server?.uses,
-						params
-					));
+					has_changed(parent_invalid, route_changed, url_changed, previous.server?.uses, params));
 
-			acc.push(invalid);
-			return acc;
-		}, /** @type {boolean[]} */ ([]));
+			if (invalid) {
+				// For the next one
+				parent_invalid = true;
+			}
+
+			return invalid;
+		});
 
 		if (invalid_server_nodes.some(Boolean)) {
 			try {
