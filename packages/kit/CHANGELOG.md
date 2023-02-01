@@ -1,5 +1,11 @@
 # @sveltejs/kit
 
+## 1.3.9
+
+### Patch Changes
+
+- fix: output errors properly if pages fail to compile ([#8813](https://github.com/sveltejs/kit/pull/8813))
+
 ## 1.3.8
 
 ### Patch Changes
