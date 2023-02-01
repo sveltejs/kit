@@ -139,7 +139,12 @@ export async function sveltekit() {
 	return [...svelte(vite_plugin_svelte_options), ...kit({ svelte_config })];
 }
 
+// These variables live outside the `kit()` function because it is re-invoked by each Vite build
+
 let secondary_build_started = false;
+
+/** @type {import('types').ManifestData} */
+let manifest_data;
 
 /**
  * Returns the SvelteKit Vite plugin. Vite executes Rollup hooks as well as some of its own.
@@ -163,9 +168,6 @@ function kit({ svelte_config }) {
 
 	/** @type {import('vite').ConfigEnv} */
 	let vite_config_env;
-
-	/** @type {import('types').ManifestData} */
-	let manifest_data;
 
 	/** @type {boolean} */
 	let is_build;
@@ -270,6 +272,10 @@ function kit({ svelte_config }) {
 						'esm-env'
 					]
 				};
+
+				if (!secondary_build_started) {
+					manifest_data = (await sync.all(svelte_config, config_env.mode)).manifest_data;
+				}
 			} else {
 				new_config.define = {
 					__SVELTEKIT_APP_VERSION_POLL_INTERVAL__: '0',
@@ -386,13 +392,11 @@ function kit({ svelte_config }) {
 		 * Build the SvelteKit-provided Vite config to be merged with the user's vite.config.js file.
 		 * @see https://vitejs.dev/guide/api-plugin.html#config
 		 */
-		async config(config, config_env) {
+		async config(config) {
 			/** @type {import('vite').UserConfig} */
 			let new_config;
 
 			if (is_build) {
-				manifest_data = (await sync.all(svelte_config, config_env.mode)).manifest_data;
-
 				const ssr = /** @type {boolean} */ (config.build?.ssr);
 				const prefix = `${kit.appDir}/immutable`;
 
@@ -708,6 +712,8 @@ function kit({ svelte_config }) {
 							`See ${link} to learn how to configure your app to run on the platform of your choosing`
 						);
 					}
+
+					secondary_build_started = false;
 				};
 			}
 		},
