@@ -3,7 +3,7 @@ import path from 'node:path';
 import { URL } from 'node:url';
 import colors from 'kleur';
 import sirv from 'sirv';
-import { isCSSRequest, loadEnv } from 'vite';
+import { isCSSRequest, loadEnv, buildErrorMessage } from 'vite';
 import { getRequest, setResponse } from '../../../exports/node/index.js';
 import { installPolyfills } from '../../../exports/node/polyfills.js';
 import { coalesce_to_error } from '../../../utils/error.js';
@@ -50,11 +50,25 @@ export async function dev(vite, vite_config, svelte_config) {
 	/** @type {Error | null} */
 	let manifest_error = null;
 
+	/** @param {string} url */
+	async function loud_ssr_load_module(url) {
+		try {
+			return await vite.ssrLoadModule(url);
+		} catch (/** @type {any} */ err) {
+			const msg = buildErrorMessage(err, [colors.red(`Internal server error: ${err.message}`)]);
+
+			vite.config.logger.error(msg, { error: err });
+			vite.ws.send({ type: 'error', err: err });
+
+			throw err;
+		}
+	}
+
 	/** @param {string} id */
 	async function resolve(id) {
 		const url = id.startsWith('..') ? `/@fs${path.posix.resolve(id)}` : `/${id}`;
 
-		const module = await vite.ssrLoadModule(url);
+		const module = await loud_ssr_load_module(url);
 
 		const module_node = await vite.moduleGraph.getModuleByUrl(url);
 		if (!module_node) throw new Error(`Could not find node for ${url}`);
@@ -161,7 +175,7 @@ export async function dev(vite, vite_config, svelte_config) {
 									(query.has('svelte') && query.get('type') === 'style')
 								) {
 									try {
-										const mod = await vite.ssrLoadModule(dep.url);
+										const mod = await loud_ssr_load_module(dep.url);
 										styles[dep.url] = mod.default;
 									} catch {
 										// this can happen with dynamically imported modules, I think
@@ -191,7 +205,7 @@ export async function dev(vite, vite_config, svelte_config) {
 							endpoint: endpoint
 								? async () => {
 										const url = path.resolve(cwd, endpoint.file);
-										return await vite.ssrLoadModule(url);
+										return await loud_ssr_load_module(url);
 								  }
 								: null,
 							endpoint_id: endpoint?.file
