@@ -362,7 +362,7 @@ function kit({ svelte_config }) {
 					return create_service_worker_module(svelte_config);
 				case '\0$app/paths':
 					const { assets, base } = svelte_config.kit.paths;
-					return `export const base = ${s(base)}; export const assets = ${s(assets)} || base;`
+					return `export const base = ${s(base)}; export const assets = ${s(assets)} || base;`;
 			}
 		}
 	};
