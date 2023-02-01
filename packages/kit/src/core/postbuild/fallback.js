@@ -15,7 +15,7 @@ installPolyfills();
 const server_root = join(config.outDir, 'output');
 
 /** @type {import('types').ServerInternalModule} */
-const { set_building, set_paths } = await import(
+const { set_building } = await import(
 	pathToFileURL(`${server_root}/server/internal.js`).href
 );
 
@@ -26,7 +26,6 @@ const { Server } = await import(pathToFileURL(`${server_root}/server/index.js`).
 const manifest = (await import(pathToFileURL(manifest_path).href)).manifest;
 
 set_building(true);
-set_paths(config.paths);
 
 const server = new Server(manifest);
 await server.init({ env: JSON.parse(env) });

@@ -22,6 +22,7 @@ import { get_config_aliases, get_env } from './utils.js';
 import { write_client_manifest } from '../../core/sync/write_client_manifest.js';
 import prerender from '../../core/postbuild/prerender.js';
 import analyse from '../../core/postbuild/analyse.js';
+import { s } from '../../utils/misc.js';
 
 export { vitePreprocess } from '@sveltejs/vite-plugin-svelte';
 
@@ -56,7 +57,10 @@ const enforced_config = {
 	publicDir: true,
 	resolve: {
 		alias: {
-			$app: true,
+			'$app/environment': true,
+			'$app/forms': true,
+			'$app/navigation': true,
+			'$app/stores': true,
 			$lib: true,
 			'$service-worker': true
 		}
@@ -221,7 +225,10 @@ function kit({ svelte_config }) {
 						},
 						{ find: '__SERVER__', replacement: `${generated}/server` },
 						{ find: '__GENERATED__', replacement: generated },
-						{ find: '$app', replacement: `${runtime_directory}/app` },
+						{ find: '$app/environment', replacement: `${runtime_directory}/app/environment` },
+						{ find: '$app/forms', replacement: `${runtime_directory}/app/forms` },
+						{ find: '$app/navigation', replacement: `${runtime_directory}/app/navigation` },
+						{ find: '$app/stores', replacement: `${runtime_directory}/app/stores` },
 						...get_config_aliases(kit)
 					]
 				},
@@ -253,9 +260,9 @@ function kit({ svelte_config }) {
 				new_config.build.ssr = !secondary_build_started;
 
 				new_config.define = {
-					__SVELTEKIT_ADAPTER_NAME__: JSON.stringify(kit.adapter?.name),
-					__SVELTEKIT_APP_VERSION_FILE__: JSON.stringify(`${kit.appDir}/version.json`),
-					__SVELTEKIT_APP_VERSION_POLL_INTERVAL__: JSON.stringify(kit.version.pollInterval),
+					__SVELTEKIT_ADAPTER_NAME__: s(kit.adapter?.name),
+					__SVELTEKIT_APP_VERSION_FILE__: s(`${kit.appDir}/version.json`),
+					__SVELTEKIT_APP_VERSION_POLL_INTERVAL__: s(kit.version.pollInterval),
 					__SVELTEKIT_DEV__: 'false',
 					__SVELTEKIT_EMBEDDED__: kit.embedded ? 'true' : 'false'
 				};
@@ -315,7 +322,9 @@ function kit({ svelte_config }) {
 
 		async resolveId(id) {
 			// treat $env/static/[public|private] as virtual
-			if (id.startsWith('$env/') || id === '$service-worker') return `\0${id}`;
+			if (id.startsWith('$env/') || id === '$app/paths' || id === '$service-worker') {
+				return `\0${id}`;
+			}
 		},
 
 		async load(id, options) {
@@ -351,6 +360,9 @@ function kit({ svelte_config }) {
 					);
 				case '\0$service-worker':
 					return create_service_worker_module(svelte_config);
+				case '\0$app/paths':
+					const { assets, base } = svelte_config.kit.paths;
+					return `export const base = ${s(base)}; export const assets = ${s(assets)} || base;`
 			}
 		}
 	};
@@ -552,7 +564,7 @@ function kit({ svelte_config }) {
 			this.emitFile({
 				type: 'asset',
 				fileName: `${kit.appDir}/version.json`,
-				source: JSON.stringify({ version: kit.version.name })
+				source: s({ version: kit.version.name })
 			});
 		},
 
@@ -788,9 +800,9 @@ export const build = [];
 export const files = [
 	${create_assets(config)
 		.filter((asset) => config.kit.serviceWorker.files(asset.file))
-		.map((asset) => `${JSON.stringify(`${config.kit.paths.base}/${asset.file}`)}`)
+		.map((asset) => `${s(`${config.kit.paths.base}/${asset.file}`)}`)
 		.join(',\n\t\t\t\t')}
 ];
 export const prerendered = [];
-export const version = ${JSON.stringify(config.kit.version.name)};
+export const version = ${s(config.kit.version.name)};
 `;

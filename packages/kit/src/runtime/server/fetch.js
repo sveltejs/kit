@@ -1,6 +1,6 @@
 import * as set_cookie_parser from 'set-cookie-parser';
 import { respond } from './respond.js';
-import * as paths from '../shared.js';
+import { assets, base } from '$app/paths';
 
 /**
  * @param {{
@@ -73,7 +73,7 @@ export function create_fetch({ event, options, manifest, state, get_cookie_heade
 
 				// handle fetch requests for static assets. e.g. prebaked data, etc.
 				// we need to support everything the browser's fetch supports
-				const prefix = paths.assets || paths.base;
+				const prefix = assets || base;
 				const decoded = decodeURIComponent(url.pathname);
 				const filename = (
 					decoded.startsWith(prefix) ? decoded.slice(prefix.length) : decoded

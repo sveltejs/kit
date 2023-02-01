@@ -1,7 +1,7 @@
 import { DEV } from 'esm-env';
 import { create_client } from './client.js';
 import { init } from './singletons.js';
-import { set_paths, set_version, set_public_env } from '../shared.js';
+import { set_version, set_public_env } from '../shared.js';
 
 /**
  * @param {{
@@ -15,9 +15,8 @@ import { set_paths, set_version, set_public_env } from '../shared.js';
  *   version: string;
  * }} opts
  */
-export async function start({ env, hydrate, paths, target, version }) {
+export async function start({ env, hydrate, target, version }) {
 	set_public_env(env);
-	set_paths(paths);
 	set_version(version);
 
 	if (DEV && target === document.body) {
@@ -27,8 +26,7 @@ export async function start({ env, hydrate, paths, target, version }) {
 	}
 
 	const client = create_client({
-		target,
-		base: paths.base
+		target
 	});
 
 	init({ client });

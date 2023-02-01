@@ -1,4 +1,5 @@
 import { DEV } from 'esm-env';
+import { base } from '$app/paths';
 import { is_endpoint_request, render_endpoint } from './endpoint.js';
 import { render_page } from './page/index.js';
 import { render_response } from './page/render.js';
@@ -24,7 +25,6 @@ import {
 	validate_server_exports
 } from '../../utils/exports.js';
 import { error, json, text } from '../../exports/index.js';
-import * as paths from '../shared.js';
 
 /* global __SVELTEKIT_ADAPTER_NAME__ */
 
@@ -70,11 +70,11 @@ export async function respond(request, options, manifest, state) {
 	/** @type {Record<string, string>} */
 	let params = {};
 
-	if (paths.base && !state.prerendering?.fallback) {
-		if (!decoded.startsWith(paths.base)) {
+	if (base && !state.prerendering?.fallback) {
+		if (!decoded.startsWith(base)) {
 			return text('Not found', { status: 404 });
 		}
-		decoded = decoded.slice(paths.base.length) || '/';
+		decoded = decoded.slice(base.length) || '/';
 	}
 
 	const is_data_request = has_data_suffix(decoded);
