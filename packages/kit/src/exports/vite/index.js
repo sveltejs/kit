@@ -139,8 +139,6 @@ export async function sveltekit() {
 	return [...svelte(vite_plugin_svelte_options), ...kit({ svelte_config })];
 }
 
-let secondary_build_started = false;
-
 /**
  * Returns the SvelteKit Vite plugin. Vite executes Rollup hooks as well as some of its own.
  * Background reading is available at:
@@ -175,6 +173,8 @@ function kit({ svelte_config }) {
 
 	/** @type {() => Promise<void>} */
 	let finalise;
+
+	let secondary_build_started = false;
 
 	const service_worker_entry_file = resolve_entry(kit.files.serviceWorker);
 
