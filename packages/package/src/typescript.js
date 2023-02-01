@@ -53,8 +53,14 @@ export async function emit_dts(config, cwd, files) {
 		// don't overwrite hand-written .d.ts files
 		if (excluded.has(normalized)) continue;
 
-		const source = fs.readFileSync(path.join(tmp, normalized), 'utf8');
-		write(path.join(config.package.dir, normalized), resolve_lib_alias(normalized, source, config));
+		let source = fs.readFileSync(path.join(tmp, normalized), 'utf8');
+		if (file.endsWith('.d.ts.map')) {
+			// Because we put the .d.ts files in a temporary directory, the path upwards is one level too much
+			source = source.replace(/"sources":\["\.\.\//, '"sources":["');
+		} else {
+			source = resolve_lib_alias(normalized, source, config);
+		}
+		write(path.join(config.package.dir, normalized), source);
 	}
 
 	rimraf(tmp);

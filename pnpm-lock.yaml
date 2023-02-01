@@ -667,14 +667,14 @@ importers:
       sade: ^1.8.1
       svelte: ^3.55.1
       svelte-preprocess: ^5.0.0
-      svelte2tsx: ~0.6.0
+      svelte2tsx: ~0.6.1
       typescript: ^4.9.4
       uvu: ^0.5.6
     dependencies:
       chokidar: 3.5.3
       kleur: 4.1.5
       sade: 1.8.1
-      svelte2tsx: 0.6.0_atrrhq7vg4ekua4nnyrpuardle
+      svelte2tsx: 0.6.1_atrrhq7vg4ekua4nnyrpuardle
     devDependencies:
       '@types/node': 16.18.6
       svelte: 3.55.1
@@ -4626,8 +4626,8 @@ packages:
     resolution: {integrity: sha512-S+87/P0Ve67HxKkEV23iCdAh/SX1xiSfjF1HOglno/YTbSTW7RniICMCofWGdJJbdjw3S+0PfFb1JtGfTXE0oQ==}
     engines: {node: '>= 8'}
 
-  /svelte2tsx/0.6.0_atrrhq7vg4ekua4nnyrpuardle:
-    resolution: {integrity: sha512-TrxfQkO7CKi8Pu2eC/FyteDCdk3OOeQV5u6z7OjYAsOhsd0ClzAKqxJdvp6xxNQLrbFzf/XvCi9Fy8MQ1MleFA==}
+  /svelte2tsx/0.6.1_atrrhq7vg4ekua4nnyrpuardle:
+    resolution: {integrity: sha512-O/1+5UyChfmhp1/GUv8b8iveTrn6eZwHxEXc+rw7LMKRidr9KHk5w/EiliLjDUwHa2VA6CoEty+CQylROVU4Sw==}
     peerDependencies:
       svelte: ^3.55
       typescript: ^4.9.4

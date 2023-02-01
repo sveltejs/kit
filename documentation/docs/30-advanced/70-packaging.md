@@ -40,6 +40,10 @@ import Foo from 'your-library/Foo.svelte';
 
 > You should avoid using [SvelteKit-specific modules](modules) like `$app` in your packages unless you intend for them to only be consumable by other SvelteKit projects. E.g. rather than using `import { browser } from '$app/environment'` you could use [`import.meta.env.SSR`](https://vitejs.dev/guide/env-and-mode.html#env-variables) to make the library available to all Vite-based projects or better yet use [Node conditional exports](https://nodejs.org/api/packages.html#conditional-exports) to make it work for all bundlers. You may also wish to pass in things like the current URL or a navigation action as a prop rather than relying directly on `$app/stores`, `$app/navigation`, etc. Writing your app in this more generic fashion will also make it easier to setup tools for testing, UI demos and so on.
 
+## Source maps
+
+You can create so-called declaration maps (`d.ts.map` files) by setting `"declarationMap": true` in your `tsconfig.json`. This will allow editors such as VS Code to go to the original `.ts` or `.svelte` file when using features like _Go to Definition_. This means you also need to publish your source files alongside your dist folder in a way that the relative path inside the declaration files leads to a file on disk.
+
 ## Options
 
 `svelte-package` accepts the following options:

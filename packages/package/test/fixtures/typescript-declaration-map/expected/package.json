@@ -1,0 +1,13 @@
+{
+	"name": "typescript-declaration-map",
+	"private": true,
+	"version": "1.0.0",
+	"description": "standard typescript package with declarationMap:true",
+	"type": "module",
+	"exports": {
+		"./package.json": "./package.json",
+		"./Test.svelte": "./Test.svelte",
+		".": "./index.js"
+	},
+	"svelte": "./index.js"
+}
