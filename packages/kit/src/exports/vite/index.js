@@ -270,6 +270,10 @@ function kit({ svelte_config }) {
 						'esm-env'
 					]
 				};
+
+				if (!secondary_build_started) {
+					manifest_data = (await sync.all(svelte_config, config_env.mode)).manifest_data;
+				}
 			} else {
 				new_config.define = {
 					__SVELTEKIT_APP_VERSION_POLL_INTERVAL__: '0',
@@ -386,13 +390,11 @@ function kit({ svelte_config }) {
 		 * Build the SvelteKit-provided Vite config to be merged with the user's vite.config.js file.
 		 * @see https://vitejs.dev/guide/api-plugin.html#config
 		 */
-		async config(config, config_env) {
+		async config(config) {
 			/** @type {import('vite').UserConfig} */
 			let new_config;
 
 			if (is_build) {
-				manifest_data = (await sync.all(svelte_config, config_env.mode)).manifest_data;
-
 				const ssr = /** @type {boolean} */ (config.build?.ssr);
 				const prefix = `${kit.appDir}/immutable`;
 
