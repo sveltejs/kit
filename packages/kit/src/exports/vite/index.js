@@ -139,6 +139,13 @@ export async function sveltekit() {
 	return [...svelte(vite_plugin_svelte_options), ...kit({ svelte_config })];
 }
 
+// These variables live outside the `kit()` function because it is re-invoked by each Vite build
+
+let secondary_build_started = false;
+
+/** @type {import('types').ManifestData} */
+let manifest_data;
+
 /**
  * Returns the SvelteKit Vite plugin. Vite executes Rollup hooks as well as some of its own.
  * Background reading is available at:
@@ -162,9 +169,6 @@ function kit({ svelte_config }) {
 	/** @type {import('vite').ConfigEnv} */
 	let vite_config_env;
 
-	/** @type {import('types').ManifestData} */
-	let manifest_data;
-
 	/** @type {boolean} */
 	let is_build;
 
@@ -173,8 +177,6 @@ function kit({ svelte_config }) {
 
 	/** @type {() => Promise<void>} */
 	let finalise;
-
-	let secondary_build_started = false;
 
 	const service_worker_entry_file = resolve_entry(kit.files.serviceWorker);
 
@@ -710,6 +712,8 @@ function kit({ svelte_config }) {
 							`See ${link} to learn how to configure your app to run on the platform of your choosing`
 						);
 					}
+
+					secondary_build_started = false;
 				};
 			}
 		},
