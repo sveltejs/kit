@@ -30,7 +30,7 @@ export interface ServerModule {
 
 export interface ServerInternalModule {
 	set_building(building: boolean): void;
-	set_paths(paths: { base: string; assets: string }): void;
+	set_assets(path: string): void;
 	set_private_env(environment: Record<string, string>): void;
 	set_public_env(environment: Record<string, string>): void;
 	set_version(version: string): void;

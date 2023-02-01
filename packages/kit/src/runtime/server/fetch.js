@@ -1,6 +1,6 @@
 import * as set_cookie_parser from 'set-cookie-parser';
 import { respond } from './respond.js';
-import { assets, base } from '$app/paths';
+import { assets, base } from '$internal/paths';
 
 /**
  * @param {{

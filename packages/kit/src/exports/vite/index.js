@@ -57,10 +57,7 @@ const enforced_config = {
 	publicDir: true,
 	resolve: {
 		alias: {
-			'$app/environment': true,
-			'$app/forms': true,
-			'$app/navigation': true,
-			'$app/stores': true,
+			'$app': true,
 			$lib: true,
 			'$service-worker': true
 		}
@@ -225,10 +222,7 @@ function kit({ svelte_config }) {
 						},
 						{ find: '__SERVER__', replacement: `${generated}/server` },
 						{ find: '__GENERATED__', replacement: generated },
-						{ find: '$app/environment', replacement: `${runtime_directory}/app/environment` },
-						{ find: '$app/forms', replacement: `${runtime_directory}/app/forms` },
-						{ find: '$app/navigation', replacement: `${runtime_directory}/app/navigation` },
-						{ find: '$app/stores', replacement: `${runtime_directory}/app/stores` },
+						{ find: '$app', replacement: `${runtime_directory}/app` },
 						...get_config_aliases(kit)
 					]
 				},
@@ -322,7 +316,7 @@ function kit({ svelte_config }) {
 
 		async resolveId(id) {
 			// treat $env/static/[public|private] as virtual
-			if (id.startsWith('$env/') || id === '$app/paths' || id === '$service-worker') {
+			if (id.startsWith('$env/') || id === '$internal/paths' || id === '$service-worker') {
 				return `\0${id}`;
 			}
 		},
@@ -360,9 +354,15 @@ function kit({ svelte_config }) {
 					);
 				case '\0$service-worker':
 					return create_service_worker_module(svelte_config);
-				case '\0$app/paths':
+				case '\0$internal/paths':
 					const { assets, base } = svelte_config.kit.paths;
-					return `export const base = ${s(base)}; export const assets = ${s(assets)} || base;`;
+					return `export const base = ${s(base)};
+export let assets = ${s(assets)};
+
+/** @param {string} path */
+export function set_assets(path) {
+	assets = path;
+}`;
 			}
 		}
 	};

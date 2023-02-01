@@ -1,6 +1,6 @@
 import { join } from 'node:path';
 import { pathToFileURL } from 'node:url';
-import { get_option } from '../../runtime/server/utils.js';
+import { get_option } from '../../utils/options.js';
 import {
 	validate_common_exports,
 	validate_page_server_exports,

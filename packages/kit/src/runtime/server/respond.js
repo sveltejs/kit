@@ -1,11 +1,11 @@
 import { DEV } from 'esm-env';
-import { base } from '$app/paths';
+import { base } from '$internal/paths';
 import { is_endpoint_request, render_endpoint } from './endpoint.js';
 import { render_page } from './page/index.js';
 import { render_response } from './page/render.js';
 import { respond_with_error } from './page/respond_with_error.js';
 import { is_form_content_type } from '../../utils/http.js';
-import { GENERIC_ERROR, get_option, handle_fatal_error, redirect_response } from './utils.js';
+import { GENERIC_ERROR, handle_fatal_error, redirect_response } from './utils.js';
 import {
 	decode_pathname,
 	decode_params,
@@ -24,6 +24,7 @@ import {
 	validate_page_server_exports,
 	validate_server_exports
 } from '../../utils/exports.js';
+import { get_option } from '../../utils/options.js';
 import { error, json, text } from '../../exports/index.js';
 
 /* global __SVELTEKIT_ADAPTER_NAME__ */

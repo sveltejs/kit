@@ -1,3 +1,5 @@
+export { set_assets } from '$internal/paths';
+
 export let building = false;
 export let version = '';
 
