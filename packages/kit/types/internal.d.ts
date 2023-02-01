@@ -75,8 +75,8 @@ export type CSRRoute = {
 	id: string;
 	exec(path: string): undefined | Record<string, string>;
 	errors: Array<CSRPageNodeLoader | undefined>;
-	layouts: Array<[boolean, CSRPageNodeLoader] | undefined>;
-	leaf: [boolean, CSRPageNodeLoader];
+	layouts: Array<[has_server_load: boolean, node_loader: CSRPageNodeLoader] | undefined>;
+	leaf: [has_server_load: boolean, node_loader: CSRPageNodeLoader];
 };
 
 export type GetParams = (match: RegExpExecArray) => Record<string, string>;
