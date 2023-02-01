@@ -1,5 +1,11 @@
 # @sveltejs/kit
 
+## 1.3.8
+
+### Patch Changes
+
+- fix: remove Vite manifest before running adapter ([#8815](https://github.com/sveltejs/kit/pull/8815))
+
 ## 1.3.7
 
 ### Patch Changes
