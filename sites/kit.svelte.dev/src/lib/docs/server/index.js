@@ -570,7 +570,7 @@ function convert_to_ts(js_code, indent = '', offset = '') {
 		const type_text = tag.typeExpression.getText();
 		let name = type_text.slice(1, -1); // remove { }
 
-		const import_match = /import\('(.+?)'\)\.(\w+)(<{[\n\* \w:;]+}>)?/.exec(type_text);
+		const import_match = /import\('(.+?)'\)\.(\w+)(<{?[\n\* \w:;,]+}?>)?/.exec(type_text);
 		if (import_match) {
 			const [, from, _name, generics] = import_match;
 			name = _name;
