@@ -65,7 +65,8 @@ function serve_prerendered() {
 		// redirect to counterpart
 		const counterpart_route = pathname.at(-1) === '/' ? pathname.slice(0, -1) : pathname + '/';
 		if (counterpart_route && prerendered.has(counterpart_route)) {
-			const location = `${counterpart_route}?${new URLSearchParams(req.query)}`;
+			const search = req.url.split('?')[1];
+			const location = `${counterpart_route}${search ? `?${search}` : ''}`;
 			res.writeHead(308, { location }).end();
 		} else {
 			next();
