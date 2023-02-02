@@ -322,6 +322,7 @@ export async function load({ parent }) {
 ```
 
 ```svelte
+/// file: src/routes/abc/+page.svelte
 <script>
 	/** @type {import('./$types').PageData} */
 	export let data;
@@ -438,6 +439,7 @@ export function load() {
 ```
 
 ```svelte
+/// file: src/routes/+page.svelte
 <script>
 	/** @type {import('./$types').PageData} */
 	export let data;

@@ -1,5 +1,14 @@
 # @sveltejs/adapter-static
 
+## 1.0.6
+
+### Patch Changes
+
+- docs: fix link in README ([#8854](https://github.com/sveltejs/kit/pull/8854))
+
+- Updated dependencies [[`7cdb7a65`](https://github.com/sveltejs/kit/commit/7cdb7a65819342c6d334c79defc697d531d5cbf4)]:
+  - @sveltejs/kit@1.3.10
+
 ## 1.0.5
 
 ### Patch Changes

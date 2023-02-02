@@ -574,6 +574,20 @@ importers:
       typescript: 4.9.4
       vite: 4.0.4
 
+  packages/kit/test/build-errors/apps/syntax-error:
+    specifiers:
+      '@sveltejs/kit': workspace:^
+      svelte: ^3.55.1
+      svelte-check: ^3.0.2
+      typescript: ^4.9.4
+      vite: ^4.0.4
+    devDependencies:
+      '@sveltejs/kit': link:../../../..
+      svelte: 3.55.1
+      svelte-check: 3.0.2_svelte@3.55.1
+      typescript: 4.9.4
+      vite: 4.0.4
+
   packages/kit/test/prerendering/basics:
     specifiers:
       '@sveltejs/kit': workspace:^

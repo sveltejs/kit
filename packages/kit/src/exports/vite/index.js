@@ -737,7 +737,7 @@ export function set_assets(path) {
 			sequential: true,
 			async handler() {
 				if (!vite_config.build.ssr) return;
-				await finalise();
+				await finalise?.();
 			}
 		}
 	};
