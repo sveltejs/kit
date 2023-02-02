@@ -1,0 +1,6 @@
+---
+'@sveltejs/adapter-static': major
+'@sveltejs/adapter-vercel': major
+---
+
+breaking: bump `@sveltejs/kit` peer dependency
