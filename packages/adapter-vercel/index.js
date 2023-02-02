@@ -31,11 +31,11 @@ const plugin = function ({ external = [], edge, split, ...default_config } = {})
 
 			/**
 			 * @param {string} name
-			 * @param {string} pattern
+			 * @param {string[]} patterns
 			 * @param {import('.').Config | undefined} config
 			 * @param {(options: { relativePath: string }) => string} generate_manifest
 			 */
-			async function generate_serverless_function(name, pattern, config, generate_manifest) {
+			async function generate_serverless_function(name, patterns, config, generate_manifest) {
 				const relativePath = path.posix.relative(tmp, builder.getServerDirectory());
 
 				builder.copy(`${files}/serverless.js`, `${tmp}/index.js`, {
@@ -58,16 +58,18 @@ const plugin = function ({ external = [], edge, split, ...default_config } = {})
 					config
 				);
 
-				static_config.routes.push({ src: pattern, dest: `/${name}` });
+				for (const pattern of patterns) {
+					static_config.routes.push({ src: pattern, dest: `/${name}` });
+				}
 			}
 
 			/**
 			 * @param {string} name
-			 * @param {string} pattern
+			 * @param {string[]} patterns
 			 * @param {import('.').Config | undefined} config
 			 * @param {(options: { relativePath: string }) => string} generate_manifest
 			 */
-			async function generate_edge_function(name, pattern, config, generate_manifest) {
+			async function generate_edge_function(name, patterns, config, generate_manifest) {
 				const tmp = builder.getBuildDirectory(`vercel-tmp/${name}`);
 				const relativePath = path.posix.relative(tmp, builder.getServerDirectory());
 
@@ -104,7 +106,9 @@ const plugin = function ({ external = [], edge, split, ...default_config } = {})
 					})
 				);
 
-				static_config.routes.push({ src: pattern, dest: `/${name}` });
+				for (const pattern of patterns) {
+					static_config.routes.push({ src: pattern, dest: `/${name}` });
+				}
 			}
 
 			if (split || builder.hasRouteLevelConfig) {
@@ -113,31 +117,34 @@ const plugin = function ({ external = [], edge, split, ...default_config } = {})
 					return {
 						id: route.pattern.toString(), // TODO is `id` necessary?
 						filter: (other) =>
-							split
-								? route.pattern.toString() === other.pattern.toString()
-								: can_group(route_config, { ...default_config, ...other.config }),
+							(!split && !builder.hasRouteLevelConfig) ||
+							route.pattern.toString() === other.pattern.toString(),
+						group: (other) => can_group(route_config, { ...default_config, ...other.config }),
 						complete: async (entry) => {
-							let sliced_pattern = route.pattern
-								.toString()
-								// remove leading / and trailing $/
-								.slice(1, -2)
-								// replace escaped \/ with /
-								.replace(/\\\//g, '/');
+							const patterns = entry.routes.map((route) => {
+								let sliced_pattern = route.pattern
+									.toString()
+									// remove leading / and trailing $/
+									.slice(1, -2)
+									// replace escaped \/ with /
+									.replace(/\\\//g, '/');
 
-							// replace the root route "^/" with "^/?"
-							if (sliced_pattern === '^/') {
-								sliced_pattern = '^/?';
-							}
+								// replace the root route "^/" with "^/?"
+								if (sliced_pattern === '^/') {
+									sliced_pattern = '^/?';
+								}
 
-							const src = `${sliced_pattern}(?:/__data.json)?$`; // TODO adding /__data.json is a temporary workaround — those endpoints should be treated as distinct routes
+								return `${sliced_pattern}(?:/__data.json)?$`;
+							});
 
 							const generate_function =
-								edge && (!route_config.runtime || route_config.runtime === 'edge')
+								(edge && !route_config.runtime) || route_config.runtime === 'edge'
 									? generate_edge_function
 									: generate_serverless_function;
+
 							await generate_function(
 								route.id.slice(1) || 'index',
-								src,
+								patterns,
 								route_config,
 								entry.generateManifest
 							);
@@ -146,7 +153,7 @@ const plugin = function ({ external = [], edge, split, ...default_config } = {})
 				});
 			} else {
 				const generate_function = edge ? generate_edge_function : generate_serverless_function;
-				await generate_function('render', '/.*', default_config, builder.generateManifest);
+				await generate_function('render', ['/.*'], default_config, builder.generateManifest);
 			}
 
 			builder.log.minor('Copying assets...');
@@ -373,8 +380,8 @@ async function create_function_bundle(builder, entry, dir, runtime, config) {
 	write(
 		`${dir}/.vc-config.json`,
 		JSON.stringify({
-			runtime,
 			...config,
+			runtime: config?.runtime === 'serverless' || !config?.runtime ? runtime : config.runtime,
 			handler: path.relative(base + ancestor, entry),
 			launcherType: 'Nodejs'
 		})
