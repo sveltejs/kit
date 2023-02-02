@@ -203,6 +203,8 @@ const plugin = function ({ external = [], edge, split, ...default_config } = {})
 					src = '^/?';
 				}
 
+				src += '(?:/__data.json)?$';
+
 				const name = functions.get(pattern);
 				if (name) {
 					static_config.routes.push({ src, dest: `/${name}` });
