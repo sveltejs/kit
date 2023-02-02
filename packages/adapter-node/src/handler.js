@@ -1,11 +1,11 @@
 import './shims';
-import fs from 'fs';
-import path from 'path';
+import fs from 'node:fs';
+import path from 'node:path';
 import sirv from 'sirv';
-import { fileURLToPath } from 'url';
+import { fileURLToPath } from 'node:url';
 import { getRequest, setResponse } from '@sveltejs/kit/node';
 import { Server } from 'SERVER';
-import { manifest } from 'MANIFEST';
+import { manifest, prerendered } from 'MANIFEST';
 import { env } from 'ENV';
 
 /* global ENV_PREFIX */
@@ -44,8 +44,35 @@ function serve(path, client = false) {
 	);
 }
 
+// required because the static file server ignores trailing slashes
+/** @type {import('polka').Middleware} */
+async function trailing_slash_redirect(req, res, next) {
+	let pathname = req.path;
+
+	try {
+		pathname = decodeURIComponent(pathname);
+	} catch {
+		// ignore invalid URI
+	}
+
+	if (pathname === '/' || prerendered.has(pathname)) {
+		return next();
+	}
+
+	// redirect to counterpart
+	const counterpart_route = pathname.at(-1) === '/' ? pathname.slice(0, -1) : pathname + '/';
+	if (counterpart_route && prerendered.has(counterpart_route)) {
+		const location = `${counterpart_route}?${new URLSearchParams(req.query)}`;
+		res.writeHead(308, { location }).end();
+	} else {
+		// continue to next middleware ... or skip to ssr?
+		next();
+	}
+}
+
 /** @type {import('polka').Middleware} */
 const ssr = async (req, res) => {
+	/** @type {Request | undefined} */
 	let request;
 
 	try {
@@ -139,6 +166,7 @@ export const handler = sequence(
 	[
 		serve(path.join(dir, 'client'), true),
 		serve(path.join(dir, 'static')),
+		trailing_slash_redirect,
 		serve(path.join(dir, 'prerendered')),
 		ssr
 	].filter(Boolean)
