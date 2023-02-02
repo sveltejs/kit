@@ -453,6 +453,7 @@ export interface KitConfig {
 		 * - `(details) => void` — a custom error handler that takes a `details` object with `status`, `path`, `referrer`, `referenceType` and `message` properties. If you `throw` from this function, the build will fail
 		 *
 		 * ```js
+		 * /// file: svelte.config.js
 		 * /// type: import('@sveltejs/kit').Config
 		 * const config = {
 		 *   kit: {
