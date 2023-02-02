@@ -15,7 +15,7 @@ const DEFAULTS = {
 };
 
 /** @type {import('.').default} **/
-const plugin = function ({ external = [], edge, split, ...default_config } = {}) {
+const plugin = function ({ external = [], edge, split, defaultConfig } = {}) {
 	return {
 		name: '@sveltejs/adapter-vercel',
 
@@ -131,7 +131,7 @@ const plugin = function ({ external = [], edge, split, ...default_config } = {})
 			for (const route of builder.routes) {
 				const pattern = route.pattern.toString();
 
-				const runtime = route.config?.runtime ?? default_config?.runtime ?? DEFAULT_RUNTIME;
+				const runtime = route.config?.runtime ?? defaultConfig?.runtime ?? DEFAULT_RUNTIME;
 				if (!VALID_RUNTIMES.includes(runtime)) {
 					throw new Error(
 						`Invalid runtime '${runtime}' for route ${
@@ -142,7 +142,7 @@ const plugin = function ({ external = [], edge, split, ...default_config } = {})
 
 				const regions = runtime === 'edge' ? 'all' : [DEFAULT_REGION];
 
-				const config = { runtime, regions, ...DEFAULTS, ...default_config, ...route.config };
+				const config = { runtime, regions, ...DEFAULTS, ...defaultConfig, ...route.config };
 
 				const hash = hash_config(config);
 

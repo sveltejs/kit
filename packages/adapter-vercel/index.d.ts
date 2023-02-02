@@ -4,7 +4,8 @@ type Options = {
 	edge?: boolean;
 	external?: string[];
 	split?: boolean;
-} & Config;
+	defaultConfig: Config;
+};
 
 export default function plugin(options?: Options): Adapter;
 
