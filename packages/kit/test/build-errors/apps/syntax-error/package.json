@@ -5,9 +5,7 @@
 	"scripts": {
 		"dev": "vite dev",
 		"build": "vite build",
-		"preview": "vite preview",
-		"check": "svelte-kit sync && tsc && svelte-check --tsconfig ./jsconfig.json",
-		"check:watch": "svelte-check --tsconfig ./jsconfig.json --watch"
+		"preview": "vite preview"
 	},
 	"devDependencies": {
 		"@sveltejs/kit": "workspace:^",
