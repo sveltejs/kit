@@ -45,29 +45,32 @@ function serve(path, client = false) {
 }
 
 // required because the static file server ignores trailing slashes
-/** @type {import('polka').Middleware} */
-async function trailing_slash_redirect(req, res, next) {
-	let pathname = req.path;
+/** @returns {import('polka').Middleware} */
+function serve_prerendered() {
+	const handler = serve(path.join(dir, 'prerendered'));
 
-	try {
-		pathname = decodeURIComponent(pathname);
-	} catch {
-		// ignore invalid URI
-	}
+	return (req, res, next) => {
+		let pathname = req.path;
 
-	if (pathname === '/' || prerendered.has(pathname)) {
-		return next();
-	}
+		try {
+			pathname = decodeURIComponent(pathname);
+		} catch {
+			// ignore invalid URI
+		}
 
-	// redirect to counterpart
-	const counterpart_route = pathname.at(-1) === '/' ? pathname.slice(0, -1) : pathname + '/';
-	if (counterpart_route && prerendered.has(counterpart_route)) {
-		const location = `${counterpart_route}?${new URLSearchParams(req.query)}`;
-		res.writeHead(308, { location }).end();
-	} else {
-		// continue to next middleware ... or skip to ssr?
-		next();
-	}
+		if (prerendered.has(pathname)) {
+			return handler(req, res, next);
+		}
+
+		// redirect to counterpart
+		const counterpart_route = pathname.at(-1) === '/' ? pathname.slice(0, -1) : pathname + '/';
+		if (counterpart_route && prerendered.has(counterpart_route)) {
+			const location = `${counterpart_route}?${new URLSearchParams(req.query)}`;
+			res.writeHead(308, { location }).end();
+		} else {
+			next();
+		}
+	};
 }
 
 /** @type {import('polka').Middleware} */
@@ -166,8 +169,7 @@ export const handler = sequence(
 	[
 		serve(path.join(dir, 'client'), true),
 		serve(path.join(dir, 'static')),
-		trailing_slash_redirect,
-		serve(path.join(dir, 'prerendered')),
+		serve_prerendered(),
 		ssr
 	].filter(Boolean)
 );
