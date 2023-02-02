@@ -38,7 +38,33 @@ export default {
 
 ## Config options
 
-Besides the config options shown above, the Vercel adapter also supports the [`runtime`](https://vercel.com/docs/build-output-api/v3#vercel-primitives/serverless-functions/configuration), [`regions`](https://vercel.com/docs/concepts/edge-network/regions), [`maxDuration`](https://vercel.com/docs/build-output-api/v3#vercel-primitives/serverless-functions/configuration) and [`memory`](https://vercel.com/docs/build-output-api/v3#vercel-primitives/serverless-functions/configuration) options for serverless functions and the [`regions`](https://vercel.com/docs/concepts/edge-network/regions) and [`envVarsInUse`](https://vercel.com/docs/build-output-api/v3#vercel-primitives/edge-functions/configuration) options for edge functions. You can set defaults through the adapter options and override them inside `+page/layout(.server).js` files using the [config](/docs/page-options#config) export.
+Besides the config options shown above, the Vercel adapter also supports [route level config](/docs/page-options#config) through `export let config`. You can deploy parts of your app to the edge and others to serverless functions.
+
+```js
+/// file: about/+page.js
+// Deploy the about page to the edge ...
+/** @type {import('@sveltejs/adapter-vercel').Config} */
+export const config = {
+	runtime: 'edge'
+};
+```
+
+```js
+/// file: admin/+layout.js
+// ... and all admin pages to serverless 
+/** @type {import('@sveltejs/adapter-vercel').Config} */
+export const config = {
+	runtime: 'serverless'
+};
+```
+
+Besides that, the following options are supported:
+- [`runtime`](https://vercel.com/docs/build-output-api/v3#vercel-primitives/serverless-functions/configuration), [`regions`](https://vercel.com/docs/concepts/edge-network/regions), [`maxDuration`](https://vercel.com/docs/build-output-api/v3#vercel-primitives/serverless-functions/configuration) and [`memory`](https://vercel.com/docs/build-output-api/v3#vercel-primitives/serverless-functions/configuration) options for serverless functions
+- [`regions`](https://vercel.com/docs/concepts/edge-network/regions) and [`envVarsInUse`](https://vercel.com/docs/build-output-api/v3#vercel-primitives/edge-functions/configuration) options for edge functions
+
+You can set defaults through the adapter options and override them inside `+page/layout(.server).js` files using the [config](/docs/page-options#config) export.
+
+Routes with the same config are bundled into one function, unless `split: true` is set.
 
 ## Environment Variables
 
