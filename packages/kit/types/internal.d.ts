@@ -1,4 +1,3 @@
-import { OutputChunk } from 'rollup';
 import { SvelteComponent } from 'svelte/internal';
 import {
 	Config,
