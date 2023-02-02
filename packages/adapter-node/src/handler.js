@@ -62,11 +62,11 @@ function serve_prerendered() {
 			return handler(req, res, next);
 		}
 
-		// redirect to counterpart
-		const counterpart_route = pathname.at(-1) === '/' ? pathname.slice(0, -1) : pathname + '/';
-		if (counterpart_route && prerendered.has(counterpart_route)) {
+		// remove or add trailing slash as appropriate
+		let location = pathname.at(-1) === '/' ? pathname.slice(0, -1) : pathname + '/';
+		if (prerendered.has(location)) {
 			const search = req.url.split('?')[1];
-			const location = `${counterpart_route}${search ? `?${search}` : ''}`;
+			if (search) location += `?${search}`;
 			res.writeHead(308, { location }).end();
 		} else {
 			next();
