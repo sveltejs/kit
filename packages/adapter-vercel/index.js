@@ -230,39 +230,6 @@ function hash_config(config) {
 }
 
 /**
- * @param {import('.').Config | undefined} config_a
- * @param {import('.').Config | undefined} config_b
- */
-function can_group(config_a, config_b) {
-	if (config_a === config_b) return true;
-	if (!config_a || !config_b) return false;
-
-	if (config_a.runtime !== config_b.runtime) return false;
-	if (config_a.maxDuration !== config_b.maxDuration) return false;
-	if (config_a.memory !== config_b.memory) return false;
-	if (arrays_different(config_a.envVarsInUse, config_b.envVarsInUse)) return false;
-
-	const regions_a = config_a.regions === 'all' ? ['all'] : config_a.regions;
-	const regions_b = config_b.regions === 'all' ? ['all'] : config_b.regions;
-	if (arrays_different(regions_a, regions_b)) return false;
-
-	return true;
-}
-
-/**
- *
- * @param {any[] | undefined} a
- * @param {any[] | undefined} b
- * @returns
- */
-function arrays_different(a, b) {
-	if (a === b) return false;
-	if (!a || !b) return true;
-	if (a.length !== b.length) return true;
-	return a.every((e) => b.includes(e));
-}
-
-/**
  * @param {string} file
  * @param {string} data
  */
