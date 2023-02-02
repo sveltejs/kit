@@ -1,6 +1,6 @@
-import { join } from 'path';
-import { pathToFileURL } from 'url';
-import { get_option } from '../../runtime/server/utils.js';
+import { join } from 'node:path';
+import { pathToFileURL } from 'node:url';
+import { get_option } from '../../utils/options.js';
 import {
 	validate_common_exports,
 	validate_page_server_exports,
@@ -55,9 +55,9 @@ async function analyse({ manifest_path, env }) {
 	for (const loader of manifest._.nodes) {
 		const node = await loader();
 
-		metadata.nodes.push({
+		metadata.nodes[node.index] = {
 			has_server_load: node.server?.load !== undefined
-		});
+		};
 	}
 
 	// analyse routes

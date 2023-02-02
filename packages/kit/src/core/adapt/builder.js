@@ -1,10 +1,10 @@
+import { fork } from 'node:child_process';
 import { existsSync, statSync, createReadStream, createWriteStream } from 'node:fs';
 import { pipeline } from 'node:stream';
-import { promisify } from 'node:util';
-import { fork } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
+import { promisify } from 'node:util';
+import zlib from 'node:zlib';
 import glob from 'tiny-glob';
-import zlib from 'zlib';
 import { copy, rimraf, mkdirp } from '../../utils/filesystem.js';
 import { generate_manifest } from '../generate_manifest/index.js';
 import { get_route_segments } from '../../utils/routing.js';

@@ -1,5 +1,7 @@
 <h1>Welcome to a test project</h1>
 <a id="scroll-anchor" href="#last-anchor-2">Bottom of this page</a>
+<a id="non-ascii-anchor" href="/anchor/anchor#go-to-encöded">Anchor demo (non-ASCII)</a>
+<a id="special-char-anchor" href="/anchor/anchor#go-to-.=">Anchor demo (special characters)</a>
 <a id="first-anchor" href="/anchor/anchor#go-to-element">Anchor demo (first)</a>
 <div>Spacing</div>
 <a id="second-anchor" href="/anchor/anchor#go-to-element">Anchor demo (second)</a>

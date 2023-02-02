@@ -42,7 +42,7 @@ test.describe('base path', () => {
 		});
 	}
 
-	test('sets_paths', async ({ page }) => {
+	test('paths available on server side', async ({ page }) => {
 		await page.goto('/path-base/base/');
 		expect(await page.textContent('[data-source="base"]')).toBe('/path-base');
 		expect(await page.textContent('[data-source="assets"]')).toBe('/_svelte_kit_assets');

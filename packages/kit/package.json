@@ -1,6 +1,6 @@
 {
 	"name": "@sveltejs/kit",
-	"version": "1.3.3",
+	"version": "1.3.10",
 	"repository": {
 		"type": "git",
 		"url": "https://github.com/sveltejs/kit",
@@ -13,7 +13,7 @@
 		"@sveltejs/vite-plugin-svelte": "^2.0.0",
 		"@types/cookie": "^0.5.1",
 		"cookie": "^0.5.0",
-		"devalue": "^4.2.2",
+		"devalue": "^4.2.3",
 		"esm-env": "^1.0.0",
 		"kleur": "^4.1.5",
 		"magic-string": "^0.27.0",
@@ -57,13 +57,14 @@
 		"postinstall.js"
 	],
 	"scripts": {
-		"lint": "prettier --check . --config ../../.prettierrc --ignore-path .gitignore",
+		"lint": "prettier --check . --config ../../.prettierrc --ignore-path .gitignore && eslint src/**",
 		"check": "tsc",
 		"check:all": "tsc && pnpm -r --filter=\"./**\" check",
-		"format": "pnpm lint --write",
+		"format": "prettier --write . --config ../../.prettierrc --ignore-path .gitignore",
 		"test": "pnpm test:unit && pnpm test:integration",
 		"test:integration": "pnpm -r --workspace-concurrency 1 --filter=\"./test/**\" test",
-		"test:cross-platform": "pnpm test:unit && pnpm -r --workspace-concurrency 1 --filter=\"./test/**\" test:cross-platform",
+		"test:cross-platform:dev": "pnpm -r --workspace-concurrency 1 --filter=\"./test/**\" test:cross-platform:dev",
+		"test:cross-platform:build": "pnpm test:unit && pnpm -r --workspace-concurrency 1 --filter=\"./test/**\" test:cross-platform:build",
 		"test:unit": "uvu src \"(spec\\.js|test[\\\\/]index\\.js)\"",
 		"postinstall": "node postinstall.js"
 	},

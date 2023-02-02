@@ -1,5 +1,5 @@
-import { readFileSync, writeFileSync } from 'fs';
-import { fileURLToPath } from 'url';
+import { readFileSync, writeFileSync } from 'node:fs';
+import { fileURLToPath } from 'node:url';
 import { rollup } from 'rollup';
 import { nodeResolve } from '@rollup/plugin-node-resolve';
 import commonjs from '@rollup/plugin-commonjs';
@@ -39,7 +39,8 @@ export default function (opts = {}) {
 
 			writeFileSync(
 				`${tmp}/manifest.js`,
-				`export const manifest = ${builder.generateManifest({ relativePath: './' })};`
+				`export const manifest = ${builder.generateManifest({ relativePath: './' })};\n\n` +
+					`export const prerendered = new Set(${JSON.stringify(builder.prerendered.paths)});\n`
 			);
 
 			const pkg = JSON.parse(readFileSync('package.json', 'utf8'));

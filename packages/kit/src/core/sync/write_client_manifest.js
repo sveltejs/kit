@@ -38,7 +38,6 @@ export function write_client_manifest(kit, manifest_data, output, metadata) {
 
 	/** @type {Map<import('types').PageNode, number>} */
 	const indices = new Map();
-
 	const nodes = manifest_data.nodes
 		.map((node, i) => {
 			indices.set(node, i);
@@ -64,6 +63,7 @@ export function write_client_manifest(kit, manifest_data, output, metadata) {
 					if (route.leaf) {
 						if (metadata) {
 							const i = /** @type {number} */ (indices.get(route.leaf));
+
 							leaf_has_server_load = metadata[i].has_server_load;
 						} else if (route.leaf.server) {
 							leaf_has_server_load = true;

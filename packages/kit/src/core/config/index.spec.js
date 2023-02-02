@@ -1,5 +1,5 @@
-import { join } from 'path';
-import { fileURLToPath } from 'url';
+import { join } from 'node:path';
+import { fileURLToPath } from 'node:url';
 import { test } from 'uvu';
 import * as assert from 'uvu/assert';
 import { validate_config, load_config } from './index.js';

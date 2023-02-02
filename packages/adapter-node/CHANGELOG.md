@@ -1,5 +1,20 @@
 # @sveltejs/adapter-node
 
+## 1.1.6
+
+### Patch Changes
+
+- fix: correctly redirect trailing slashes for `adapter-node` ([#8857](https://github.com/sveltejs/kit/pull/8857))
+
+## 1.1.5
+
+### Patch Changes
+
+- docs: fix link in README ([#8854](https://github.com/sveltejs/kit/pull/8854))
+
+- Updated dependencies [[`7cdb7a65`](https://github.com/sveltejs/kit/commit/7cdb7a65819342c6d334c79defc697d531d5cbf4)]:
+  - @sveltejs/kit@1.3.10
+
 ## 1.1.4
 
 ### Patch Changes

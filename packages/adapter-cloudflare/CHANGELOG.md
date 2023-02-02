@@ -1,5 +1,14 @@
 # @sveltejs/adapter-cloudflare
 
+## 2.0.1
+
+### Patch Changes
+
+- fix: correctly check URL pathname with Cloudflare adapter ([#8733](https://github.com/sveltejs/kit/pull/8733))
+
+- Updated dependencies [[`eba8fb09`](https://github.com/sveltejs/kit/commit/eba8fb0929b35edea1ca7867b816abd184d8f8f7), [`c14f3aeb`](https://github.com/sveltejs/kit/commit/c14f3aeb32f3e78c8454e9b89f85a0650b7683c4)]:
+  - @sveltejs/kit@1.3.6
+
 ## 2.0.0
 
 ### Major Changes

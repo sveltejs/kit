@@ -1,10 +1,11 @@
 import { DEV } from 'esm-env';
+import { base } from '$internal/paths';
 import { is_endpoint_request, render_endpoint } from './endpoint.js';
 import { render_page } from './page/index.js';
 import { render_response } from './page/render.js';
 import { respond_with_error } from './page/respond_with_error.js';
 import { is_form_content_type } from '../../utils/http.js';
-import { GENERIC_ERROR, get_option, handle_fatal_error, redirect_response } from './utils.js';
+import { GENERIC_ERROR, handle_fatal_error, redirect_response } from './utils.js';
 import {
 	decode_pathname,
 	decode_params,
@@ -23,8 +24,8 @@ import {
 	validate_page_server_exports,
 	validate_server_exports
 } from '../../utils/exports.js';
+import { get_option } from '../../utils/options.js';
 import { error, json, text } from '../../exports/index.js';
-import * as paths from '../shared.js';
 
 /* global __SVELTEKIT_ADAPTER_NAME__ */
 
@@ -70,11 +71,11 @@ export async function respond(request, options, manifest, state) {
 	/** @type {Record<string, string>} */
 	let params = {};
 
-	if (paths.base && !state.prerendering?.fallback) {
-		if (!decoded.startsWith(paths.base)) {
+	if (base && !state.prerendering?.fallback) {
+		if (!decoded.startsWith(base)) {
 			return text('Not found', { status: 404 });
 		}
-		decoded = decoded.slice(paths.base.length) || '/';
+		decoded = decoded.slice(base.length) || '/';
 	}
 
 	const is_data_request = has_data_suffix(decoded);

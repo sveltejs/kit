@@ -193,6 +193,25 @@ test.describe('Load', () => {
 		expect(did_request_data).toBe(false);
 	});
 
+	test('do not use cache if headers are different', async ({ page, clicknav }) => {
+		await page.goto('/load/fetch-cache-control/headers-diff');
+
+		// 1. We expect the right data
+		expect(await page.textContent('h2')).toBe('a / b');
+
+		// 2. Change to another route (client side)
+		await clicknav('[href="/load/fetch-cache-control"]');
+
+		// 3. Come back to the original page (client side)
+		const requests = [];
+		page.on('request', (request) => requests.push(request));
+		await clicknav('[href="/load/fetch-cache-control/headers-diff"]');
+
+		// 4. We expect the same data and no new request because it was cached.
+		expect(await page.textContent('h2')).toBe('a / b');
+		expect(requests).toEqual([]);
+	});
+
 	if (process.env.DEV) {
 		test('using window.fetch causes a warning', async ({ page, baseURL }) => {
 			await Promise.all([

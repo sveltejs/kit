@@ -1,23 +1,20 @@
 import { DEV } from 'esm-env';
 import { create_client } from './client.js';
 import { init } from './singletons.js';
-import { set_paths, set_version, set_public_env } from '../shared.js';
+import { set_assets, set_version, set_public_env } from '../shared.js';
 
 /**
  * @param {{
+ *   assets: string;
  *   env: Record<string, string>;
  *   hydrate: Parameters<import('./types').Client['_hydrate']>[0];
- *   paths: {
- *     assets: string;
- *     base: string;
- *   },
  *   target: HTMLElement;
  *   version: string;
  * }} opts
  */
-export async function start({ env, hydrate, paths, target, version }) {
+export async function start({ assets, env, hydrate, target, version }) {
 	set_public_env(env);
-	set_paths(paths);
+	set_assets(assets);
 	set_version(version);
 
 	if (DEV && target === document.body) {
@@ -27,8 +24,7 @@ export async function start({ env, hydrate, paths, target, version }) {
 	}
 
 	const client = create_client({
-		target,
-		base: paths.base
+		target
 	});
 
 	init({ client });

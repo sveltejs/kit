@@ -1,6 +1,6 @@
-import { readFileSync, writeFileSync } from 'fs';
-import { dirname, join } from 'path';
-import { pathToFileURL } from 'url';
+import { readFileSync, writeFileSync } from 'node:fs';
+import { dirname, join } from 'node:path';
+import { pathToFileURL } from 'node:url';
 import { mkdirp } from '../../utils/filesystem.js';
 import { installPolyfills } from '../../exports/node/polyfills.js';
 import { load_config } from '../config/index.js';
@@ -15,9 +15,7 @@ installPolyfills();
 const server_root = join(config.outDir, 'output');
 
 /** @type {import('types').ServerInternalModule} */
-const { set_building, set_paths } = await import(
-	pathToFileURL(`${server_root}/server/internal.js`).href
-);
+const { set_building } = await import(pathToFileURL(`${server_root}/server/internal.js`).href);
 
 /** @type {import('types').ServerModule} */
 const { Server } = await import(pathToFileURL(`${server_root}/server/index.js`).href);
@@ -26,7 +24,6 @@ const { Server } = await import(pathToFileURL(`${server_root}/server/index.js`).
 const manifest = (await import(pathToFileURL(manifest_path).href)).manifest;
 
 set_building(true);
-set_paths(config.paths);
 
 const server = new Server(manifest);
 await server.init({ env: JSON.parse(env) });

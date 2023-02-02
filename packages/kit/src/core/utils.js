@@ -1,6 +1,6 @@
-import path from 'path';
+import path from 'node:path';
+import { fileURLToPath } from 'node:url';
 import colors from 'kleur';
-import { fileURLToPath } from 'url';
 import { posixify, to_fs } from '../utils/filesystem.js';
 
 /**
