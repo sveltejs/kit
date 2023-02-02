@@ -140,7 +140,7 @@ const plugin = function ({ external = [], edge, split, ...default_config } = {})
 					);
 				}
 
-				const regions = runtime === 'edge' ? ['all'] : [DEFAULT_REGION];
+				const regions = runtime === 'edge' ? 'all' : [DEFAULT_REGION];
 
 				const config = { runtime, regions, ...DEFAULTS, ...default_config, ...route.config };
 
