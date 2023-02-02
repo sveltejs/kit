@@ -86,9 +86,6 @@ export interface Builder {
 	/** An array of dynamic (not prerendered) routes */
 	routes: RouteDefinition[];
 
-	/** `true` if one or more routes have `export const config = ..` in it */
-	hasRouteLevelConfig: boolean;
-
 	/**
 	 * Create separate functions that map to one or more routes of your app.
 	 * @param fn A function that groups a set of routes into an entry point

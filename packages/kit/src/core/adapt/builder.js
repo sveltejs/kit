@@ -73,10 +73,6 @@ export function create_builder({
 		prerendered,
 		routes,
 
-		hasRouteLevelConfig:
-			!!server_metadata.routes &&
-			!![...server_metadata.routes.values()].some((route) => route.config),
-
 		async compress(directory) {
 			if (!existsSync(directory)) {
 				return;
