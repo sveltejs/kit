@@ -1,5 +1,11 @@
 # @sveltejs/kit
 
+## 1.3.10
+
+### Patch Changes
+
+- fix: preserve build error messages ([#8846](https://github.com/sveltejs/kit/pull/8846))
+
 ## 1.3.9
 
 ### Patch Changes
