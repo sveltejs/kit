@@ -8,10 +8,6 @@ import { set_assets, set_version, set_public_env } from '../shared.js';
  *   assets: string;
  *   env: Record<string, string>;
  *   hydrate: Parameters<import('./types').Client['_hydrate']>[0];
- *   paths: {
- *     assets: string;
- *     base: string;
- *   },
  *   target: HTMLElement;
  *   version: string;
  * }} opts
