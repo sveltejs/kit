@@ -40,7 +40,7 @@ export default {
 
 ## Config options
 
-Besides the config options shown above, the Vercel adapter also supports [route level config](/docs/page-options#config) through `export let config`. You can deploy parts of your app to the edge and others to serverless functions.
+Besides the config options shown above, the Vercel adapter also supports [route level config](/docs/page-options#config) through `export const config`. You can deploy parts of your app to the edge and others as serverless functions.
 
 ```js
 /// file: about/+page.js
