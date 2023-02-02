@@ -18,13 +18,51 @@ const pipe = promisify(pipeline);
  *   config: import('types').ValidatedConfig;
  *   build_data: import('types').BuildData;
  *   server_metadata: import('types').ServerMetadata;
- *   routes: import('types').RouteData[];
+ *   route_data: import('types').RouteData[];
  *   prerendered: import('types').Prerendered;
  *   log: import('types').Logger;
  * }} opts
  * @returns {import('types').Builder}
  */
-export function create_builder({ config, build_data, server_metadata, routes, prerendered, log }) {
+export function create_builder({
+	config,
+	build_data,
+	server_metadata,
+	route_data,
+	prerendered,
+	log
+}) {
+	/** @type {Map<import('types').RouteDefinition, import('types').RouteData>} */
+	const lookup = new Map();
+
+	/**
+	 * Rather than exposing the internal `RouteData` type, which is subject to change,
+	 * we expose a stable type that adapters can use to group/filter routes
+	 */
+	const routes = route_data.map((route) => {
+		const methods =
+			/** @type {import('types').HttpMethod[]} */
+			(server_metadata.routes.get(route.id)?.methods);
+		const config = server_metadata.routes.get(route.id)?.config;
+
+		/** @type {import('types').RouteDefinition} */
+		const facade = {
+			id: route.id,
+			segments: get_route_segments(route.id).map((segment) => ({
+				dynamic: segment.includes('['),
+				rest: segment.includes('[...'),
+				content: segment
+			})),
+			pattern: route.pattern,
+			methods,
+			config
+		};
+
+		lookup.set(facade, route);
+
+		return facade;
+	});
+
 	return {
 		log,
 		rimraf,
@@ -33,9 +71,7 @@ export function create_builder({ config, build_data, server_metadata, routes, pr
 
 		config,
 		prerendered,
-		hasRouteLevelConfig:
-			!!server_metadata.routes &&
-			!![...server_metadata.routes.values()].some((route) => route.config),
+		routes,
 
 		async compress(directory) {
 			if (!existsSync(directory)) {
@@ -55,78 +91,41 @@ export function create_builder({ config, build_data, server_metadata, routes, pr
 		},
 
 		async createEntries(fn) {
-			/** @type {import('types').RouteDefinition[]} */
-			const facades = routes.map((route) => {
-				const methods =
-					/** @type {import('types').HttpMethod[]} */
-					(server_metadata.routes.get(route.id)?.methods);
-				const config = server_metadata.routes.get(route.id)?.config;
-
-				return {
-					id: route.id,
-					segments: get_route_segments(route.id).map((segment) => ({
-						dynamic: segment.includes('['),
-						rest: segment.includes('[...'),
-						content: segment
-					})),
-					pattern: route.pattern,
-					methods,
-					config
-				};
-			});
-
 			const seen = new Set();
-			const grouped = new Set();
-			let ungrouped = facades.map((f, i) => ({ r: routes[i], f }));
 
-			for (let i = 0; i < routes.length; i += 1) {
-				const route = routes[i];
-				const { id, filter, complete, group } = fn(facades[i]);
+			for (let i = 0; i < route_data.length; i += 1) {
+				const route = route_data[i];
+				const { id, filter, complete } = fn(routes[i]);
 
-				if (seen.has(id) || grouped.has(route)) continue;
+				if (seen.has(id)) continue;
 				seen.add(id);
 
-				const filtered = new Set([route]);
-				const route_definitions = new Set([facades[i]]);
-
-				if (group) {
-					ungrouped = ungrouped.filter((candidate) => {
-						if (group(candidate.f)) {
-							filtered.add(candidate.r);
-							route_definitions.add(candidate.f);
-							grouped.add(candidate.r);
-							return false;
-						}
-						return true;
-					});
-				}
+				const group = [route];
 
 				// figure out which lower priority routes should be considered fallbacks
-				for (let j = i + 1; j < routes.length; j += 1) {
-					if (!group && filter(facades[j])) {
-						filtered.add(routes[j]);
-						route_definitions.add(facades[j]);
+				for (let j = i + 1; j < route_data.length; j += 1) {
+					if (filter(routes[j])) {
+						group.push(route_data[j]);
 					}
 				}
+
+				const filtered = new Set(group);
 
 				// heuristic: if /foo/[bar] is included, /foo/[bar].json should
 				// also be included, since the page likely needs the endpoint
 				// TODO is this still necessary, given the new way of doing things?
 				filtered.forEach((route) => {
 					if (route.page) {
-						const idx = routes.findIndex((candidate) => candidate.id === route.id + '.json');
-						const endpoint = routes[idx];
+						const endpoint = route_data.find((candidate) => candidate.id === route.id + '.json');
 
 						if (endpoint) {
 							filtered.add(endpoint);
-							route_definitions.add(facades[idx]);
 						}
 					}
 				});
 
 				if (filtered.size > 0) {
 					await complete({
-						routes: Array.from(route_definitions),
 						generateManifest: ({ relativePath }) =>
 							generate_manifest({
 								build_data,
@@ -165,11 +164,13 @@ export function create_builder({ config, build_data, server_metadata, routes, pr
 			});
 		},
 
-		generateManifest: ({ relativePath }) => {
+		generateManifest: ({ relativePath, routes: subset }) => {
 			return generate_manifest({
 				build_data,
 				relative_path: relativePath,
-				routes
+				routes: subset
+					? subset.map((route) => /** @type {import('types').RouteData} */ (lookup.get(route)))
+					: route_data
 			});
 		},
 

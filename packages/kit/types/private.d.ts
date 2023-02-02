@@ -2,6 +2,8 @@
 // but which cannot be imported from `@sveltejs/kit`. Care should
 // be taken to avoid breaking changes when editing this file
 
+import { RouteDefinition } from './index.js';
+
 export interface AdapterEntry {
 	/**
 	 * A string that uniquely identifies an HTTP service (e.g. serverless function) and is used for deduplication.
@@ -11,32 +13,20 @@ export interface AdapterEntry {
 	id: string;
 
 	/**
-	 * A function that compares the lower candidate route with the current route to determine
-	 * if it should be grouped with the current route. Has no effect when `group` is set.
+	 * A function that compares the candidate route with the current route to determine
+	 * if it should be grouped with the current route.
 	 *
 	 * Use cases:
 	 * - Fallback pages: `/foo/[c]` is a fallback for `/foo/a-[b]`, and `/[...catchall]` is a fallback for all routes
-	 */
-	filter(route: RouteDefinition): boolean;
-
-	/**
-	 * A function that compares the candidate route with the current route to determine
-	 * if it should be grouped with the current route. In contrast to `filter`, this
-	 * results in the other route not being invoked by `createEntries` again, if grouped.
-	 *
-	 * Use cases:
 	 * - Grouping routes that share a common `config`: `/foo` should be deployed to the edge, `/bar` and `/baz` should be deployed to a serverless function
 	 */
-	group?(route: RouteDefinition): boolean;
+	filter(route: RouteDefinition): boolean;
 
 	/**
 	 * A function that is invoked once the entry has been created. This is where you
 	 * should write the function to the filesystem and generate redirect manifests.
 	 */
-	complete(entry: {
-		routes: RouteDefinition[];
-		generateManifest(opts: { relativePath: string }): string;
-	}): MaybePromise<void>;
+	complete(entry: { generateManifest(opts: { relativePath: string }): string }): MaybePromise<void>;
 }
 
 // Based on https://github.com/josh-hemphill/csp-typed-directives/blob/latest/src/csp.types.ts
@@ -225,14 +215,6 @@ export type PrerenderMap = Map<string, PrerenderOption>;
 export interface RequestOptions {
 	getClientAddress(): string;
 	platform?: App.Platform;
-}
-
-export interface RouteDefinition<Config = any> {
-	id: string;
-	pattern: RegExp;
-	segments: RouteSegment[];
-	methods: HttpMethod[];
-	config: Config;
 }
 
 export interface RouteSegment {

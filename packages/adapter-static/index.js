@@ -8,25 +8,9 @@ export default function (options) {
 
 		async adapt(builder) {
 			if (!options?.fallback) {
-				/** @type {string[]} */
-				const dynamic_routes = [];
-
-				// this is a bit of a hack — it allows us to know whether there are dynamic
-				// (i.e. prerender = false/'auto') routes without having dedicated API
-				// surface area for it
-				builder.createEntries((route) => {
-					dynamic_routes.push(route.id);
-
-					return {
-						id: '',
-						filter: () => false,
-						complete: () => {}
-					};
-				});
-
-				if (dynamic_routes.length > 0 && options?.strict !== false) {
+				if (builder.routes.length > 0 && options?.strict !== false) {
 					const prefix = path.relative('.', builder.config.kit.files.routes);
-					const has_param_routes = dynamic_routes.some((route) => route.includes('['));
+					const has_param_routes = builder.routes.some((route) => route.id.includes('['));
 					const config_option =
 						has_param_routes || JSON.stringify(builder.config.kit.prerender.entries) !== '["*"]'
 							? `  - adjust the \`prerender.entries\` config option ${
@@ -38,7 +22,7 @@ export default function (options) {
 
 					builder.log.error(
 						`@sveltejs/adapter-static: all routes must be fully prerenderable, but found the following routes that are dynamic:
-${dynamic_routes.map((id) => `  - ${path.posix.join(prefix, id)}`).join('\n')}
+${builder.routes.map((route) => `  - ${path.posix.join(prefix, route.id)}`).join('\n')}
 
 You have the following options:
   - set the \`fallback\` option — see https://github.com/sveltejs/kit/tree/master/packages/adapter-static#spa-mode for more info.
