@@ -1,5 +1,5 @@
 /**
- * a fake asset path used in `vite dev` and `vite preview`, so that we can
+ * A fake asset path used in `vite dev` and `vite preview`, so that we can
  * serve local assets while verifying that requests are correctly prefixed
  */
 export const SVELTE_KIT_ASSETS = '/_svelte_kit_assets';
