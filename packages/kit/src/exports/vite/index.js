@@ -57,7 +57,7 @@ const enforced_config = {
 	publicDir: true,
 	resolve: {
 		alias: {
-			'$app': true,
+			$app: true,
 			$lib: true,
 			'$service-worker': true
 		}
