@@ -26,6 +26,7 @@ import { parse } from './parse.js';
 
 import Root from '__GENERATED__/root.svelte';
 import { nodes, server_loads, dictionary, matchers, hooks } from '__CLIENT__/manifest.js';
+import { base } from '$internal/paths';
 import { HttpError, Redirect } from '../control.js';
 import { stores } from './singletons.js';
 import { unwrap_promises } from '../../utils/promises.js';
@@ -66,11 +67,10 @@ function update_scroll_positions(index) {
 /**
  * @param {{
  *   target: HTMLElement;
- *   base: string;
  * }} opts
  * @returns {import('./types').Client}
  */
-export function create_client({ target, base }) {
+export function create_client({ target }) {
 	const container = __SVELTEKIT_EMBEDDED__ ? target : document.documentElement;
 	/** @type {Array<((url: URL) => boolean)>} */
 	const invalidated = [];

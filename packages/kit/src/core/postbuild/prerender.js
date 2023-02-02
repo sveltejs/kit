@@ -100,8 +100,6 @@ async function prerender({ out, manifest_path, metadata, verbose, env }) {
 	/** @type {Map<string, string>} */
 	const saved = new Map();
 
-	internal.set_paths(config.paths);
-
 	const server = new Server(manifest);
 	await server.init({ env });
 

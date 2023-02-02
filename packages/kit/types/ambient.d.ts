@@ -431,3 +431,10 @@ declare module '@sveltejs/kit/vite' {
 	export function sveltekit(): Promise<Plugin[]>;
 	export { vitePreprocess } from '@sveltejs/vite-plugin-svelte';
 }
+
+/** Internal version of $app/paths */
+declare module '$internal/paths' {
+	export const base: `/${string}`;
+	export let assets: `https://${string}` | `http://${string}`;
+	export function set_assets(path: string): void;
+}
