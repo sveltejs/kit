@@ -7,13 +7,14 @@ import { CompileOptions } from 'svelte/types/compiler/interfaces';
 import {
 	AdapterEntry,
 	CspDirectives,
+	HttpMethod,
 	Logger,
 	MaybePromise,
 	Prerendered,
 	PrerenderHttpErrorHandlerValue,
 	PrerenderMissingIdHandlerValue,
 	RequestOptions,
-	RouteDefinition,
+	RouteSegment,
 	UniqueInterface
 } from './private.js';
 import { SSRNodeLoader, SSRRoute, ValidatedConfig } from './internal.js';
@@ -957,6 +958,14 @@ export interface ResolveOptions {
 	 * @param input the type of the file and its path
 	 */
 	preload?(input: { type: 'font' | 'css' | 'js' | 'asset'; path: string }): boolean;
+}
+
+export interface RouteDefinition<Config = any> {
+	id: string;
+	pattern: RegExp;
+	segments: RouteSegment[];
+	methods: HttpMethod[];
+	config: Config;
 }
 
 export class Server {

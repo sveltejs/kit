@@ -39,7 +39,7 @@ const plugin = function ({ external = [], edge, split, ...default_config } = {})
 			/**
 			 * @param {string} name
 			 * @param {import('.').Config} config
-			 * @param {typeof builder.routes} routes
+			 * @param {import('@sveltejs/kit').RouteDefinition<import('.').Config>[]} routes
 			 */
 			async function generate_serverless_function(name, config, routes) {
 				const relativePath = path.posix.relative(tmp, builder.getServerDirectory());
@@ -68,7 +68,7 @@ const plugin = function ({ external = [], edge, split, ...default_config } = {})
 			/**
 			 * @param {string} name
 			 * @param {import('.').Config} config
-			 * @param {typeof builder.routes} routes
+			 * @param {import('@sveltejs/kit').RouteDefinition<import('.').Config>[]} routes
 			 */
 			async function generate_edge_function(name, config, routes) {
 				const tmp = builder.getBuildDirectory(`vercel-tmp/${name}`);
@@ -115,7 +115,7 @@ const plugin = function ({ external = [], edge, split, ...default_config } = {})
 				);
 			}
 
-			/** @type {Map<string, { i: number, config: import('.').Config, routes: typeof builder.routes }>} */
+			/** @type {Map<string, { i: number, config: import('.').Config, routes: import('@sveltejs/kit').RouteDefinition<import('.').Config>[] }>} */
 			const groups = new Map();
 
 			/** @type {Map<string, { hash: string, route_id: string }>} */
@@ -158,7 +158,7 @@ const plugin = function ({ external = [], edge, split, ...default_config } = {})
 
 				if (split) {
 					// generate individual functions
-					/** @type {Map<string, typeof builder.routes>} */
+					/** @type {Map<string, import('@sveltejs/kit').RouteDefinition<import('.').Config>[]>} */
 					const merged = new Map();
 
 					for (const route of group.routes) {
