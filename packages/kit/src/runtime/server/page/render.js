@@ -266,6 +266,7 @@ export async function render_response({
 
 	if (page_config.csr) {
 		const opts = [
+			`assets: ${s(assets)}`,
 			`env: ${s(public_env)}`,
 			`target: document.querySelector('[data-sveltekit-hydrate="${target}"]').parentNode`,
 			`version: ${s(version)}`
