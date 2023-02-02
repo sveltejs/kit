@@ -2,4 +2,4 @@
 '@sveltejs/kit': patch
 ---
 
-fix: add optional chaining back to `finalise` hook
+fix: preserve build error messages
