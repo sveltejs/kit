@@ -37,4 +37,8 @@ export interface Config {
 	 * Serverless only.
 	 */
 	memory?: number;
+	/**
+	 * If `true`, this route will always be deployed as its own separate function
+	 */
+	split?: boolean;
 }

@@ -63,7 +63,6 @@ const plugin = function ({ external = [], edge, split, defaultConfig } = {}) {
 					builder,
 					`${tmp}/index.js`,
 					`${dirs.functions}/${name}.func`,
-					`nodejs${node_version.major}.x`, // TODO use function config
 					config
 				);
 			}
@@ -111,7 +110,8 @@ const plugin = function ({ external = [], edge, split, defaultConfig } = {}) {
 				write(
 					`${dirs.functions}/${name}.func/.vc-config.json`,
 					JSON.stringify({
-						...config,
+						runtime: config.runtime,
+						regions: config.regions,
 						envVarsInUse: [...envVarsInUse],
 						entrypoint: 'index.js'
 					})
@@ -159,10 +159,11 @@ const plugin = function ({ external = [], edge, split, defaultConfig } = {}) {
 				}
 
 				// then, create a group for each config
-				let group = groups.get(hash);
+				const id = config.split ? `${hash}-${groups.size}` : hash;
+				let group = groups.get(id);
 				if (!group) {
 					group = { i: groups.size, config, routes: [] };
-					groups.set(hash, group);
+					groups.set(id, group);
 				}
 
 				group.routes.push(route);
@@ -334,10 +335,9 @@ function static_vercel_config(builder) {
  * @param {import('@sveltejs/kit').Builder} builder
  * @param {string} entry
  * @param {string} dir
- * @param {string} runtime
- * @param {import('.').Config | undefined} config
+ * @param {import('.').Config} config
  */
-async function create_function_bundle(builder, entry, dir, runtime, config) {
+async function create_function_bundle(builder, entry, dir, config) {
 	fs.rmSync(dir, { force: true, recursive: true });
 
 	let base = entry;
@@ -432,8 +432,10 @@ async function create_function_bundle(builder, entry, dir, runtime, config) {
 	write(
 		`${dir}/.vc-config.json`,
 		JSON.stringify({
-			runtime,
-			...config,
+			runtime: config.runtime,
+			regions: config.regions,
+			memory: config.memory,
+			maxDuration: config.maxDuration,
 			handler: path.relative(base + ancestor, entry),
 			launcherType: 'Nodejs'
 		})
