@@ -4,9 +4,12 @@ import { fileURLToPath } from 'url';
 import { nodeFileTrace } from '@vercel/nft';
 import esbuild from 'esbuild';
 
+const VALID_RUNTIMES = ['edge', 'nodejs16.x', 'nodejs18.x'];
+
+const DEFAULT_RUNTIME = 'nodejs18.x';
+const DEFAULT_REGION = 'iad1';
+
 const DEFAULTS = {
-	runtime: 'nodejs18.x',
-	regions: ['iad1'],
 	memory: 128,
 	maxDuration: 30 // TODO check what the defaults actually are
 };
@@ -127,7 +130,20 @@ const plugin = function ({ external = [], edge, split, ...default_config } = {})
 			// group routes by config
 			for (const route of builder.routes) {
 				const pattern = route.pattern.toString();
-				const config = { ...DEFAULTS, ...default_config, ...route.config };
+
+				const runtime = route.config?.runtime ?? default_config?.runtime ?? DEFAULT_RUNTIME;
+				if (!VALID_RUNTIMES.includes(runtime)) {
+					throw new Error(
+						`Invalid runtime '${runtime}' for route ${
+							route.id
+						}. Valid runtimes are ${VALID_RUNTIMES.join(', ')}`
+					);
+				}
+
+				const regions = runtime === 'edge' ? ['all'] : [DEFAULT_REGION];
+
+				const config = { runtime, regions, ...DEFAULTS, ...default_config, ...route.config };
+
 				const hash = hash_config(config);
 
 				// first, check there are no routes with incompatible configs that will be merged
