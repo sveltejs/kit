@@ -18,7 +18,7 @@ export async function adapt(config, build_data, server_metadata, prerendered, pr
 		config,
 		build_data,
 		server_metadata,
-		routes: build_data.manifest_data.routes.filter((route) => {
+		route_data: build_data.manifest_data.routes.filter((route) => {
 			if (!route.page && !route.endpoint) return false;
 
 			const prerender = prerender_map.get(route.id);

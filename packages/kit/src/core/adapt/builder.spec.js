@@ -31,7 +31,7 @@ test('copy files', () => {
 		build_data: {},
 		// @ts-expect-error
 		server_metadata: {},
-		routes: [],
+		route_data: [],
 		// @ts-expect-error
 		prerendered: {
 			paths: []

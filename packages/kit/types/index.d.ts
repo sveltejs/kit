@@ -83,12 +83,16 @@ export interface Builder {
 	config: ValidatedConfig;
 	/** Information about prerendered pages and assets, if any. */
 	prerendered: Prerendered;
+	/** An array of dynamic (not prerendered) routes */
+	routes: RouteDefinition[];
+
 	/** `true` if one or more routes have `export const config = ..` in it */
 	hasRouteLevelConfig: boolean;
 
 	/**
 	 * Create separate functions that map to one or more routes of your app.
 	 * @param fn A function that groups a set of routes into an entry point
+	 * @deprecated Use `builder.routes` instead
 	 */
 	createEntries(fn: (route: RouteDefinition) => AdapterEntry): Promise<void>;
 
@@ -101,7 +105,7 @@ export interface Builder {
 	 * Generate a server-side manifest to initialise the SvelteKit [server](https://kit.svelte.dev/docs/types#public-types-server) with.
 	 * @param opts a relative path to the base directory of the app and optionally in which format (esm or cjs) the manifest should be generated
 	 */
-	generateManifest(opts: { relativePath: string }): string;
+	generateManifest(opts: { relativePath: string; routes?: RouteDefinition[] }): string;
 
 	/**
 	 * Resolve a path to the `name` directory inside `outDir`, e.g. `/path/to/.svelte-kit/my-adapter`.
