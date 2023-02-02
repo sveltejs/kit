@@ -5,7 +5,7 @@ import { nodeFileTrace } from '@vercel/nft';
 import esbuild from 'esbuild';
 
 const DEFAULTS = {
-	runtime: 'node18.x',
+	runtime: 'nodejs18.x',
 	regions: ['iad1'],
 	memory: 128,
 	maxDuration: 30 // TODO check what the defaults actually are
