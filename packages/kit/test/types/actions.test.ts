@@ -12,7 +12,7 @@ form.success = true;
 // @ts-expect-error - cannot both be present at the same time
 form = { message: '', success: true };
 
-// Test: Actions with different return types are transformed into a union thas has all types accessible
+// Test: Actions with different return types are transformed into a union that has all types accessible
 type Actions2 = {
 	foo: () => Promise<{ message: string }>;
 	bar: () => Promise<{ success: boolean }>;
