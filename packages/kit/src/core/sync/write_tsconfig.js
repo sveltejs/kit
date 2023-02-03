@@ -96,10 +96,9 @@ export function get_tsconfig(kit, include_base_url) {
 		kit.files.lib,
 		path.resolve('src') // TODO(v2): remove src and only scope it to what's necessary
 	]) {
-		const relative = project_relative(dir);
-		include.add(config_relative(`${relative}/**/*.js`));
-		include.add(config_relative(`${relative}/**/*.ts`));
-		include.add(config_relative(`${relative}/**/*.svelte`));
+		include.add(config_relative(`${dir}/**/*.js`));
+		include.add(config_relative(`${dir}/**/*.ts`));
+		include.add(config_relative(`${dir}/**/*.svelte`));
 	}
 
 	// Test folder is a special case - we advocate putting tests in a top-level test folder
