@@ -69,6 +69,22 @@ const plugin = function (defaults = {}) {
 					`${dirs.functions}/${name}.func`,
 					config
 				);
+
+				if (config.isr) {
+					write(
+						`${dirs.functions}/${name}.prerender-config.json`,
+						JSON.stringify(
+							{
+								expiration: config.isr.expiration,
+								group: config.isr.group,
+								bypassToken: config.isr.bypassToken,
+								allowQuery: config.isr.allowQuery
+							},
+							null,
+							'\t'
+						)
+					);
+				}
 			}
 
 			/**
