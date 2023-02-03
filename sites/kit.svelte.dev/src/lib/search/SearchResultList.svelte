@@ -9,14 +9,19 @@
 
 	const dispatch = createEventDispatcher();
 
+	/** @param {string} text */
 	function escape(text) {
 		return text.replace(/</g, '&lt;').replace(/>/g, '&gt;');
 	}
 
+	/**
+	 * @param {string} content
+	 * @param {string} query
+	 */
 	function excerpt(content, query) {
 		const index = content.toLowerCase().indexOf(query.toLowerCase());
 		if (index === -1) {
-			return content.slice(0, 100);
+			return escape(content.slice(0, 100));
 		}
 
 		const prefix = index > 20 ? `…${content.slice(index - 15, index)}` : content.slice(0, index);
@@ -34,7 +39,7 @@
 </script>
 
 <ul>
-	{#each results as result, i}
+	{#each results as result (result.href)}
 		<li>
 			<a
 				data-sveltekit-preload-data
