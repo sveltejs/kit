@@ -8,7 +8,7 @@ export default function (options) {
 
 		async adapt(builder) {
 			if (!options?.fallback) {
-				if (builder.routes.length > 0 && options?.strict !== false) {
+				if (builder.routes.some((route) => route.prerender !== true) && options?.strict !== false) {
 					const prefix = path.relative('.', builder.config.kit.files.routes);
 					const has_param_routes = builder.routes.some((route) => route.id.includes('['));
 					const config_option =

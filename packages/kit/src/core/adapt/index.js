@@ -18,13 +18,9 @@ export async function adapt(config, build_data, server_metadata, prerendered, pr
 		config,
 		build_data,
 		server_metadata,
-		route_data: build_data.manifest_data.routes.filter((route) => {
-			if (!route.page && !route.endpoint) return false;
-
-			const prerender = prerender_map.get(route.id);
-			return prerender === false || prerender === undefined || prerender === 'auto';
-		}),
+		route_data: build_data.manifest_data.routes.filter((route) => route.page || route.endpoint),
 		prerendered,
+		prerender_map,
 		log
 	});
 	await adapt(builder);

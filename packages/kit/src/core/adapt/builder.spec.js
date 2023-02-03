@@ -37,6 +37,8 @@ test('copy files', () => {
 			paths: []
 		},
 		// @ts-expect-error
+		prerender_map: {},
+		// @ts-expect-error
 		log: {}
 	});
 

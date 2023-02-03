@@ -13,6 +13,7 @@ import {
 	Prerendered,
 	PrerenderHttpErrorHandlerValue,
 	PrerenderMissingIdHandlerValue,
+	PrerenderOption,
 	RequestOptions,
 	RouteSegment,
 	UniqueInterface
@@ -964,6 +965,7 @@ export interface ResolveOptions {
 export interface RouteDefinition<Config = any> {
 	id: string;
 	pattern: RegExp;
+	prerender: PrerenderOption;
 	segments: RouteSegment[];
 	methods: HttpMethod[];
 	config: Config;

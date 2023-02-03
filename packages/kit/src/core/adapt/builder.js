@@ -20,6 +20,7 @@ const pipe = promisify(pipeline);
  *   server_metadata: import('types').ServerMetadata;
  *   route_data: import('types').RouteData[];
  *   prerendered: import('types').Prerendered;
+ *   prerender_map: import('types').PrerenderMap;
  *   log: import('types').Logger;
  * }} opts
  * @returns {import('types').Builder}
@@ -30,6 +31,7 @@ export function create_builder({
 	server_metadata,
 	route_data,
 	prerendered,
+	prerender_map,
 	log
 }) {
 	/** @type {Map<import('types').RouteDefinition, import('types').RouteData>} */
@@ -54,6 +56,7 @@ export function create_builder({
 				content: segment
 			})),
 			pattern: route.pattern,
+			prerender: prerender_map.get(route.id) ?? false,
 			methods,
 			config
 		};
@@ -95,6 +98,7 @@ export function create_builder({
 
 			for (let i = 0; i < route_data.length; i += 1) {
 				const route = route_data[i];
+				if (prerender_map.get(route.id) === true) continue;
 				const { id, filter, complete } = fn(routes[i]);
 
 				if (seen.has(id)) continue;
@@ -104,6 +108,7 @@ export function create_builder({
 
 				// figure out which lower priority routes should be considered fallbacks
 				for (let j = i + 1; j < route_data.length; j += 1) {
+					if (prerender_map.get(routes[j].id) === true) continue;
 					if (filter(routes[j])) {
 						group.push(route_data[j]);
 					}

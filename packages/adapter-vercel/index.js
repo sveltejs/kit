@@ -137,6 +137,8 @@ const plugin = function (defaults = {}) {
 
 			// group routes by config
 			for (const route of builder.routes) {
+				if (route.prerender === true) continue;
+
 				const pattern = route.pattern.toString();
 
 				const runtime = route.config?.runtime ?? defaults?.runtime ?? get_default_runtime();
@@ -198,6 +200,8 @@ const plugin = function (defaults = {}) {
 			}
 
 			for (const route of builder.routes) {
+				if (route.prerender === true) continue;
+
 				const pattern = route.pattern.toString();
 
 				let src = pattern
