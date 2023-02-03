@@ -2,4 +2,4 @@
 '@sveltejs/kit': patch
 ---
 
-fix: correctly check serialized data when fetching from absolute URL
+fix: correctly serialize request url when using load `fetch`
