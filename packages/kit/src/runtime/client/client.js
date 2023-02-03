@@ -597,7 +597,7 @@ export function create_client({ target }) {
 					const resolved = new URL(requested, url);
 					depends(resolved.href);
 
-					// match ssr serialized data url
+					// match ssr serialized data url, which is important to find cached responses
 					if (resolved.origin === url.origin) {
 						requested = resolved.href.slice(url.origin.length);
 					}
