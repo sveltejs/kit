@@ -358,7 +358,7 @@ export async function respond(request, options, manifest, state) {
 						trailing_slash ?? 'never'
 					);
 				} else if (route.endpoint && (!route.page || is_endpoint_request(event))) {
-					response = await render_endpoint(event, await route.endpoint(), state);
+					response = await render_endpoint(event, route, await route.endpoint(), state);
 				} else if (route.page) {
 					response = await render_page(
 						event,
