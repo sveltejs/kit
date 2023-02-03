@@ -193,8 +193,13 @@ const plugin = function (options = {}) {
 					/** @type {import('@sveltejs/kit').RouteDefinition<any>[]} */ (group.routes)
 				);
 
-				for (const route of group.routes) {
-					functions.set(route.pattern.toString(), name);
+				if (groups.size === 1) {
+					// Special case: One function for all routes
+					static_config.routes.push({ src: '/.*', dest: `/${name}` });
+				} else {
+					for (const route of group.routes) {
+						functions.set(route.pattern.toString(), name);
+					}
 				}
 			}
 
