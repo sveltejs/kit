@@ -211,7 +211,9 @@ test.describe('Load', () => {
 
 		if (!javaScriptEnabled) {
 			// by the time JS has run, hydration will have nuked these scripts
-			const script_contents = await page.innerHTML('script[data-sveltekit-fetched]');
+			const script_contents = await page.innerHTML(
+				'script[data-sveltekit-fetched][data-url="/load/serialization/fetched-from-shared.json"]'
+			);
 
 			const payload = '{"status":200,"statusText":"","headers":{},"body":"{\\"b\\":2}"}';
 
