@@ -11,7 +11,7 @@ This adapter will be installed by default when you use [`adapter-auto`](adapter-
 Install with `npm i -D @sveltejs/adapter-vercel`, then add the adapter to your `svelte.config.js`:
 
 ```js
-// @errors: 2307
+// @errors: 2307 2345
 /// file: svelte.config.js
 import adapter from '@sveltejs/adapter-vercel';
 
