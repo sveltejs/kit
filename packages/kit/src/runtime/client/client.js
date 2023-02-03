@@ -594,12 +594,17 @@ export function create_client({ target }) {
 					}
 
 					// we must fixup relative urls so they are resolved from the target page
-					const resolved = new URL(requested, url).href;
-					depends(resolved);
+					const resolved = new URL(requested, url);
+					depends(resolved.href);
+
+					// match ssr serialized data url
+					if (resolved.origin === url.origin) {
+						requested = resolved.href.slice(url.origin.length);
+					}
 
 					// prerendered pages may be served from any origin, so `initial_fetch` urls shouldn't be resolved
 					return started
-						? subsequent_fetch(requested, resolved, init)
+						? subsequent_fetch(requested, resolved.href, init)
 						: initial_fetch(requested, init);
 				},
 				setHeaders: () => {}, // noop
