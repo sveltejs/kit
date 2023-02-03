@@ -1694,6 +1694,7 @@ async function load_data(url, invalid) {
 
 	if (!res.ok) {
 		// error message is a JSON-stringified string which devalue can't handle at the top level
+		// turn it into a HttpError to not call handleError on the client again (was already handled on the server)
 		throw new HttpError(res.status, data);
 	}
 
