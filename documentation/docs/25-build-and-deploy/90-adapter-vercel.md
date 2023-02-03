@@ -32,7 +32,7 @@ export default {
 
 ## Deployment configuration
 
-To control how your routes are deployed to Vercel as functions, you can specify deployment configuration, either through the `defaultConfig` option shown above or with [`export const config`](/docs/page-options#config) inside `+server.js`, `+page(.server).js` and `+layout(.server).js` files.
+To control how your routes are deployed to Vercel as functions, you can specify deployment configuration, either through the option shown above or with [`export const config`](/docs/page-options#config) inside `+server.js`, `+page(.server).js` and `+layout(.server).js` files.
 
 For example you could deploy some parts of your app as [Edge Functions](https://vercel.com/docs/concepts/functions/edge-functions)...
 
@@ -56,7 +56,7 @@ export const config = {
 
 The following options apply to all functions:
 
-- `runtime`: `'edge'`, `'nodejs16.x'` or `'nodejs18.x'` (the default)
+- `runtime`: `'edge'`, `'nodejs16.x'` or `'nodejs18.x'`. By default, the adapter will select `'nodejs16.x'` or `'nodejs18.x'` depending on the Node version your project is configured to use on the Vercel dashboard
 - `regions`: an array of [edge network regions](https://vercel.com/docs/concepts/edge-network/regions) (defaulting to `["iad1"]` for serverless functions) or `'all'` if `runtime` is `edge` (its default)
 - `split`: if `true`, causes a route to be deployed as an individual function. If `split` is set to `true` at the adapter level, all routes will be deployed as individual functions
 
@@ -66,9 +66,14 @@ Additionally, the following options apply to edge functions:
 
 And the following option apply to serverless functions:
 - `memory`: the amount of memory available to the function. Defaults to `1024` Mb, and can be [increased](https://vercel.com/docs/concepts/limits/overview#serverless-function-memory) up to `3008` on Pro or Enterprise accounts
-- `maxDuration`: maximum execution duration of the function. Defaults to `5` seconds for Hobby accounts, `15` for Pro and `30` for Enterprise
+- `maxDuration`: maximum execution duration of the function. Defaults to `10` seconds for Hobby accounts, `60` for Pro and `900` for Enterprise
+- `isr`: configuration Incremental Static Regeneration, described below
 
 If your functions need to access data in a specific region, it's recommended that they be deployed in the same region (or close to it) for optimal performance.
+
+## Incremental Static Regeneration
+
+TODO
 
 ## Environment Variables
 
