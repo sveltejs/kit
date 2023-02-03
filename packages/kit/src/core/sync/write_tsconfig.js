@@ -85,19 +85,29 @@ export function get_tsconfig(kit, include_base_url) {
 	/** @param {string} file */
 	const config_relative = (file) => posixify(path.relative(kit.outDir, file));
 
-	const include = ['ambient.d.ts', './types/**/$types.d.ts', config_relative('vite.config.ts')];
-	for (const dir of [kit.files.routes, kit.files.lib]) {
-		const relative = project_relative(path.dirname(dir));
-		include.push(config_relative(`${relative}/**/*.js`));
-		include.push(config_relative(`${relative}/**/*.ts`));
-		include.push(config_relative(`${relative}/**/*.svelte`));
+	const include = new Set([
+		'ambient.d.ts',
+		'./types/**/$types.d.ts',
+		config_relative('vite.config.ts')
+	]);
+
+	for (const dir of [
+		kit.files.routes,
+		kit.files.lib,
+		path.resolve('src') // TODO(v2): remove src and only scope it to what's necessary
+	]) {
+		const relative = project_relative(dir);
+		include.add(config_relative(`${relative}/**/*.js`));
+		include.add(config_relative(`${relative}/**/*.ts`));
+		include.add(config_relative(`${relative}/**/*.svelte`));
 	}
+
 	// Test folder is a special case - we advocate putting tests in a top-level test folder
 	// and it's not configurable (should we make it?)
 	const test_folder = project_relative('tests');
-	include.push(config_relative(`${test_folder}/**/*.js`));
-	include.push(config_relative(`${test_folder}/**/*.ts`));
-	include.push(config_relative(`${test_folder}/**/*.svelte`));
+	include.add(config_relative(`${test_folder}/**/*.js`));
+	include.add(config_relative(`${test_folder}/**/*.ts`));
+	include.add(config_relative(`${test_folder}/**/*.svelte`));
 
 	const exclude = [config_relative('node_modules/**'), './[!ambient.d.ts]**'];
 	if (path.extname(kit.files.serviceWorker)) {
@@ -135,7 +145,7 @@ export function get_tsconfig(kit, include_base_url) {
 			// TODO(v2): use the new flag verbatimModuleSyntax instead (requires support by Vite/Esbuild)
 			ignoreDeprecations: ts && Number(ts.version.split('.')[0]) >= 5 ? '5.0' : undefined
 		},
-		include,
+		include: [...include],
 		exclude
 	};
 
