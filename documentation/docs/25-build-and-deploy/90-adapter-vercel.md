@@ -45,7 +45,7 @@ export default {
 
 ## Config options
 
-Besides the config options shown above, the Vercel adapter also supports [route level config](/docs/page-options#config) through `export const config`. You can deploy parts of your app to the edge and others as serverless functions.
+Besides the default configuration shown above, the Vercel adapter also supports [route level config](/docs/page-options#config) through `export const config`. You can deploy parts of your app to the edge and others as serverless functions.
 
 ```js
 /// file: about/+page.js
@@ -61,13 +61,24 @@ export const config = {
 // ...and all admin pages to serverless
 /** @type {import('@sveltejs/adapter-vercel').Config} */
 export const config = {
-	runtime: 'serverless'
+	runtime: 'nodejs18.x'
 };
 ```
 
-Besides that, the following options are supported:
-- [`runtime`](https://vercel.com/docs/build-output-api/v3#vercel-primitives/serverless-functions/configuration), [`regions`](https://vercel.com/docs/concepts/edge-network/regions), [`maxDuration`](https://vercel.com/docs/build-output-api/v3#vercel-primitives/serverless-functions/configuration) and [`memory`](https://vercel.com/docs/build-output-api/v3#vercel-primitives/serverless-functions/configuration) options for serverless functions
-- [`regions`](https://vercel.com/docs/concepts/edge-network/regions) and [`envVarsInUse`](https://vercel.com/docs/build-output-api/v3#vercel-primitives/edge-functions/configuration) options for edge functions
+The following options are supported for edge functions...
+
+- `runtime` must be `'edge'`
+- `regions` defaults to `'all'`, or can be an array of [edge network regions](https://vercel.com/docs/concepts/edge-network/regions)
+- `envVarsInUse` is an array of environment variables that should be accessible inside the edge function
+
+...while the following apply to serverless functions:
+
+- `runtime` can be `'nodejs16.x'` or `'nodejs18.x'`
+- `regions` defaults to `["iad1"]`, and can contain any of the [edge network regions](https://vercel.com/docs/concepts/edge-network/regions)
+- `memory` defaults to `1024` (in Mb). On Pro plans it can be [increased](https://vercel.com/docs/concepts/limits/overview#serverless-function-memory) up to `3008`
+- `maxDuration` defaults to `5` seconds for Hobby plans, `15` for Pro, and `30` for Enterprise
+
+If your functions need to access data in a specific region, it's recommended that they be deployed in the same region (or close to it) for optimal performance.
 
 You can set defaults through the adapter options and override them inside `+page/layout(.server).js` files using the [config](/docs/page-options#config) export.
 

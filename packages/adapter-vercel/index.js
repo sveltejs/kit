@@ -113,12 +113,16 @@ const plugin = function (options = {}) {
 
 				write(
 					`${dirs.functions}/${name}.func/.vc-config.json`,
-					JSON.stringify({
-						runtime: config.runtime,
-						regions: config.regions,
-						envVarsInUse: [...envVarsInUse],
-						entrypoint: 'index.js'
-					})
+					JSON.stringify(
+						{
+							runtime: config.runtime,
+							regions: config.regions,
+							envVarsInUse: [...envVarsInUse],
+							entrypoint: 'index.js'
+						},
+						null,
+						'\t'
+					)
 				);
 			}
 
@@ -240,7 +244,7 @@ const plugin = function (options = {}) {
 
 			builder.log.minor('Writing routes...');
 
-			write(`${dir}/config.json`, JSON.stringify(static_config, null, '  '));
+			write(`${dir}/config.json`, JSON.stringify(static_config, null, '\t'));
 		}
 	};
 };
@@ -422,14 +426,18 @@ async function create_function_bundle(builder, entry, dir, config) {
 
 	write(
 		`${dir}/.vc-config.json`,
-		JSON.stringify({
-			runtime: config.runtime,
-			regions: config.regions,
-			memory: config.memory,
-			maxDuration: config.maxDuration,
-			handler: path.relative(base + ancestor, entry),
-			launcherType: 'Nodejs'
-		})
+		JSON.stringify(
+			{
+				runtime: config.runtime,
+				regions: config.regions,
+				memory: config.memory,
+				maxDuration: config.maxDuration,
+				handler: path.relative(base + ancestor, entry),
+				launcherType: 'Nodejs'
+			},
+			null,
+			'\t'
+		)
 	);
 
 	write(`${dir}/package.json`, JSON.stringify({ type: 'module' }));
