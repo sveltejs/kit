@@ -49,7 +49,7 @@ const plugin = function (options = {}) {
 
 			/**
 			 * @param {string} name
-			 * @param {import('.').Config} config
+			 * @param {import('.').ServerlessConfig} config
 			 * @param {import('@sveltejs/kit').RouteDefinition<import('.').Config>[]} routes
 			 */
 			async function generate_serverless_function(name, config, routes) {
@@ -77,8 +77,8 @@ const plugin = function (options = {}) {
 
 			/**
 			 * @param {string} name
-			 * @param {import('.').Config} config
-			 * @param {import('@sveltejs/kit').RouteDefinition<import('.').Config>[]} routes
+			 * @param {import('.').EdgeConfig} config
+			 * @param {import('@sveltejs/kit').RouteDefinition<import('.').EdgeConfig>[]} routes
 			 */
 			async function generate_edge_function(name, config, routes) {
 				const tmp = builder.getBuildDirectory(`vercel-tmp/${name}`);
@@ -187,7 +187,11 @@ const plugin = function (options = {}) {
 
 				// generate one function for the group
 				const name = `fn-${group.i}`;
-				await generate_function(name, group.config, group.routes);
+				await generate_function(
+					name,
+					/** @type {any} */ (group.config),
+					/** @type {import('@sveltejs/kit').RouteDefinition<any>[]} */ (group.routes)
+				);
 
 				for (const route of group.routes) {
 					functions.set(route.pattern.toString(), name);
@@ -229,7 +233,7 @@ const plugin = function (options = {}) {
 	};
 };
 
-/** @param {import('.').Config} config */
+/** @param {import('.').EdgeConfig & import('.').ServerlessConfig} config */
 function hash_config(config) {
 	return [config.runtime, config.regions, config.memory, config.maxDuration].join('/');
 }
@@ -310,7 +314,7 @@ function static_vercel_config(builder) {
  * @param {import('@sveltejs/kit').Builder} builder
  * @param {string} entry
  * @param {string} dir
- * @param {import('.').Config} config
+ * @param {import('.').ServerlessConfig} config
  */
 async function create_function_bundle(builder, entry, dir, config) {
 	fs.rmSync(dir, { force: true, recursive: true });
