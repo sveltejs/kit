@@ -2,7 +2,6 @@ import * as devalue from 'devalue';
 import { json, text } from '../../exports/index.js';
 import { coalesce_to_error } from '../../utils/error.js';
 import { negotiate } from '../../utils/http.js';
-import { has_data_suffix } from '../../utils/url.js';
 import { HttpError } from '../control.js';
 import { fix_stack_trace } from '../shared.js';
 
@@ -98,7 +97,7 @@ export async function handle_fatal_error(event, options, error) {
 		'text/html'
 	]);
 
-	if (has_data_suffix(event.url.pathname) || type === 'application/json') {
+	if (event.isDataRequest || type === 'application/json') {
 		return json(body, {
 			status
 		});
