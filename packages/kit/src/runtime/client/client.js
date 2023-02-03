@@ -745,7 +745,7 @@ export function create_client({ target }) {
 				server_data = await load_data(url, invalid_server_nodes);
 			} catch (error) {
 				return load_root_error_page({
-					status: 500,
+					status: error instanceof HttpError ? error.status : 500,
 					error: await handle_error(error, { url, params, route: { id: route.id } }),
 					url,
 					route
@@ -1693,7 +1693,8 @@ async function load_data(url, invalid) {
 
 	if (!res.ok) {
 		// error message is a JSON-stringified string which devalue can't handle at the top level
-		throw new Error(data);
+		// turn it into a HttpError to not call handleError on the client again (was already handled on the server)
+		throw new HttpError(res.status, data);
 	}
 
 	// revive devalue-flattened data
