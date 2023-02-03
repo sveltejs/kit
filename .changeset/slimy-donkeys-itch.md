@@ -2,4 +2,4 @@
 '@sveltejs/kit': patch
 ---
 
-fix: prerendered endpoint callable from non-prerendered endpoint
+fix: ensure endpoints can fetch endpoints on the same host but not part of the application
