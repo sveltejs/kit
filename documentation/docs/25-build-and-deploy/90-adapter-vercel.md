@@ -17,72 +17,59 @@ import adapter from '@sveltejs/adapter-vercel';
 
 export default {
 	kit: {
-		// default options are shown
 		adapter: adapter({
-			// default function config values. these can be overridden on a
-			// per-route basis with `export const config` — see below
+			// see the section on deployment configuration below
 			defaultConfig: {
 				runtime: 'nodejs18.x',
 				regions: ['iad1'], // if runtime is `edge`, this defaults to `all`
 				memory: 1024,
-				maxDuration: undefined // 5s for Hobby plans, 15s for Pro, 30s for Enterprise
+				maxDuration: undefined, // 5s for Hobby plans, 15s for Pro, 30s for Enterprise
+				split: false
 			},
 
 			// an array of dependencies that esbuild should treat
 			// as external when bundling functions. this only applies
 			// to edge functions, and should only be used to exclude
 			// optional dependencies that will not run outside Node
-			external: [],
-
-			// if true, will split your app into multiple functions
-			// instead of creating a single one for each group of
-			// routes that share the same configuration
-			split: false
+			external: []
 		})
 	}
 };
 ```
 
-## Config options
+## Deployment configuration
 
-Besides the default configuration shown above, the Vercel adapter also supports [route level config](/docs/page-options#config) through `export const config`. You can deploy parts of your app to the edge and others as serverless functions.
+To control how your routes are deployed to Vercel as functions, you can specify deployment configuration, either through the `defaultConfig` option shown above or with [`export const config`](/docs/page-options#config) inside `+server.js`, `+page(.server).js` and `+layout(.server).js` files.
+
+For example you could deploy some parts of your app as [Edge Functions](https://vercel.com/docs/concepts/functions/edge-functions)...
 
 ```js
 /// file: about/+page.js
-// Deploy the about page to the edge...
 /** @type {import('@sveltejs/adapter-vercel').Config} */
 export const config = {
 	runtime: 'edge'
 };
 ```
 
+...and others as [Serverless Functions](https://vercel.com/docs/concepts/functions/serverless-functions)  (note that by specifying `config` inside a layout, it applies to all child pages):
+
 ```js
 /// file: admin/+layout.js
-// ...and all admin pages to serverless
 /** @type {import('@sveltejs/adapter-vercel').Config} */
 export const config = {
 	runtime: 'nodejs18.x'
 };
 ```
 
-The following options are supported for edge functions...
+The following options apply to all functions:
 
-- `runtime` must be `'edge'`
-- `regions` defaults to `'all'`, or can be an array of [edge network regions](https://vercel.com/docs/concepts/edge-network/regions)
-- `envVarsInUse` is an array of environment variables that should be accessible inside the edge function
+- `runtime` can be `'edge'`, `'nodejs16.x'` or `'nodejs18.x'` (the default)
+- `regions` can be `'all'` (the default if `runtime` is `'edge'`) or an array of [edge network regions](https://vercel.com/docs/concepts/edge-network/regions) (defaulting to `["iad1"]` for serverless functions)
+- `split` will, if `true`, cause a route to be deployed as an individual function. If `defaultConfig.split` is `true`, all routes will be deployed as individual functions
 
-...while the following apply to serverless functions:
-
-- `runtime` can be `'nodejs16.x'` or `'nodejs18.x'`
-- `regions` defaults to `["iad1"]`, and can contain any of the [edge network regions](https://vercel.com/docs/concepts/edge-network/regions)
-- `memory` defaults to `1024` (in Mb). On Pro plans it can be [increased](https://vercel.com/docs/concepts/limits/overview#serverless-function-memory) up to `3008`
-- `maxDuration` defaults to `5` seconds for Hobby plans, `15` for Pro, and `30` for Enterprise
+In addition, edge functions can specify an `envVarsInUse` array of environment variables that should be accessible inside the edge function. Serverless functions can specify `memory` (defaults to `1024` Mb, and can be [increased](https://vercel.com/docs/concepts/limits/overview#serverless-function-memory) up to `3008` on Pro or Enterprise accounts) and `maxDuration` which defaults to `5` seconds for Hobby accounts, `15` for Pro and `30` for Enterprise.
 
 If your functions need to access data in a specific region, it's recommended that they be deployed in the same region (or close to it) for optimal performance.
-
-You can set defaults through the adapter options and override them inside `+page/layout(.server).js` files using the [config](/docs/page-options#config) export.
-
-Routes with the same config are bundled into one function, unless `split: true` is set.
 
 ## Environment Variables
 

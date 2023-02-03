@@ -20,7 +20,11 @@ const plugin = function (options = {}) {
 		throw new Error('options.edge has been removed in favour of options.defaultConfig.runtime');
 	}
 
-	const { defaultConfig = {}, external = [], split } = options;
+	if ('split' in options) {
+		throw new Error('options.split has been removed in favour of options.defaultConfig.split');
+	}
+
+	const { defaultConfig = {}, external = [] } = options;
 
 	return {
 		name: '@sveltejs/adapter-vercel',
@@ -181,36 +185,12 @@ const plugin = function (options = {}) {
 				const generate_function =
 					group.config.runtime === 'edge' ? generate_edge_function : generate_serverless_function;
 
-				if (split) {
-					// generate individual functions
-					/** @type {Map<string, import('@sveltejs/kit').RouteDefinition<import('.').Config>[]>} */
-					const merged = new Map();
+				// generate one function for the group
+				const name = `fn-${group.i}`;
+				await generate_function(name, group.config, group.routes);
 
-					for (const route of group.routes) {
-						const pattern = route.pattern.toString();
-						const existing = merged.get(pattern);
-						if (existing) {
-							existing.push(route);
-						} else {
-							merged.set(pattern, [route]);
-						}
-					}
-
-					let i = 0;
-
-					for (const [pattern, routes] of merged) {
-						const name = `fn-${group.i}-${i++}`;
-						functions.set(pattern, name);
-						await generate_function(name, group.config, routes);
-					}
-				} else {
-					// generate one function for the group
-					const name = `fn-${group.i}`;
-					await generate_function(name, group.config, group.routes);
-
-					for (const route of group.routes) {
-						functions.set(route.pattern.toString(), name);
-					}
+				for (const route of group.routes) {
+					functions.set(route.pattern.toString(), name);
 				}
 			}
 
