@@ -6,17 +6,19 @@ import esbuild from 'esbuild';
 
 const VALID_RUNTIMES = ['edge', 'nodejs16.x', 'nodejs18.x'];
 
-const DEFAULT_RUNTIME = 'nodejs18.x';
-const DEFAULT_REGION = 'iad1';
+const get_default_runtime = () => {
+	const major = process.version.slice(1).split('.')[0];
+	if (major === '16') return 'nodejs16.x';
+	if (major === '18') return 'nodejs18.x';
 
-const DEFAULTS = {
-	memory: 128,
-	maxDuration: 30 // TODO check what the defaults actually are
+	throw new Error(
+		`Unsupported Node.js version: ${process.version}. Please use Node 16 or Node 18 to build your project, or explicitly specify a runtime in your adapter configuration.`
+	);
 };
 
 /** @type {import('.').default} **/
-const plugin = function (defaultConfig = {}) {
-	if ('edge' in defaultConfig) {
+const plugin = function (defaults = {}) {
+	if ('edge' in defaults) {
 		throw new Error("{ edge: true } has been removed in favour of { runtime: 'edge' }");
 	}
 
@@ -137,8 +139,8 @@ const plugin = function (defaultConfig = {}) {
 			for (const route of builder.routes) {
 				const pattern = route.pattern.toString();
 
-				const runtime = route.config?.runtime ?? defaultConfig?.runtime ?? DEFAULT_RUNTIME;
-				if (!VALID_RUNTIMES.includes(runtime)) {
+				const runtime = route.config?.runtime ?? defaults?.runtime ?? get_default_runtime();
+				if (runtime && !VALID_RUNTIMES.includes(runtime)) {
 					throw new Error(
 						`Invalid runtime '${runtime}' for route ${
 							route.id
@@ -146,9 +148,7 @@ const plugin = function (defaultConfig = {}) {
 					);
 				}
 
-				const regions = runtime === 'edge' ? 'all' : [DEFAULT_REGION];
-
-				const config = { runtime, regions, ...DEFAULTS, ...defaultConfig, ...route.config };
+				const config = { runtime, ...defaults, ...route.config };
 
 				const hash = hash_config(config);
 
@@ -234,9 +234,13 @@ const plugin = function (defaultConfig = {}) {
 
 /** @param {import('.').EdgeConfig & import('.').ServerlessConfig} config */
 function hash_config(config) {
-	return [config.runtime, config.external, config.regions, config.memory, config.maxDuration].join(
-		'/'
-	);
+	return [
+		config.runtime ?? '',
+		config.external ?? '',
+		config.regions ?? '',
+		config.memory ?? '',
+		config.maxDuration ?? ''
+	].join('/');
 }
 
 /**
