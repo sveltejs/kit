@@ -10,12 +10,10 @@ export default function plugin(options?: Options): Adapter;
 
 export interface Config {
 	/**
-	 * To which runtime to deploy the app. Can be one of:
-	 * - `edge`: https://vercel.com/docs/concepts/functions/edge-functions
-	 * - `serverless` or a string specifying the serverless runtime (like `node16`): https://vercel.com/docs/concepts/functions/serverless-functions
-	 * @default 'serverless'
+	 * Whether to use [Edge Functions](https://vercel.com/docs/concepts/functions/edge-functions) or [Serverless Functions](https://vercel.com/docs/concepts/functions/serverless-functions)
+	 * @default 'nodejs18.x'
 	 */
-	runtime?: 'serverless' | 'edge' | (string & {});
+	runtime?: 'edge' | 'nodejs16.x' | 'nodejs18.x';
 	/**
 	 * To which regions to deploy the app. A list of regions or `'all'` for edge functions.
 	 * More info: https://vercel.com/docs/concepts/edge-network/regions
