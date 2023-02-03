@@ -19,10 +19,14 @@ export default {
 	kit: {
 		// default options are shown
 		adapter: adapter({
-			// if true, will deploy the app using edge functions
-			// (https://vercel.com/docs/concepts/functions/edge-functions)
-			// rather than serverless functions
-			edge: false,
+			// default function config values. these can be overridden on a
+			// per-route basis with `export const config` — see below
+			defaultConfig: {
+				runtime: 'nodejs18.x',
+				regions: ['iad1'], // if runtime is `edge`, this defaults to `all`
+				memory: 1024,
+				maxDuration: undefined // 5s for Hobby plans, 15s for Pro, 30s for Enterprise
+			},
 
 			// an array of dependencies that esbuild should treat
 			// as external when bundling functions. this only applies
@@ -31,7 +35,8 @@ export default {
 			external: [],
 
 			// if true, will split your app into multiple functions
-			// instead of creating a single one for the entire app
+			// instead of creating a single one for each group of
+			// routes that share the same configuration
 			split: false
 		})
 	}
@@ -44,7 +49,7 @@ Besides the config options shown above, the Vercel adapter also supports [route 
 
 ```js
 /// file: about/+page.js
-// Deploy the about page to the edge ...
+// Deploy the about page to the edge...
 /** @type {import('@sveltejs/adapter-vercel').Config} */
 export const config = {
 	runtime: 'edge'
@@ -53,7 +58,7 @@ export const config = {
 
 ```js
 /// file: admin/+layout.js
-// ... and all admin pages to serverless 
+// ...and all admin pages to serverless
 /** @type {import('@sveltejs/adapter-vercel').Config} */
 export const config = {
 	runtime: 'serverless'

@@ -15,7 +15,13 @@ const DEFAULTS = {
 };
 
 /** @type {import('.').default} **/
-const plugin = function ({ defaultConfig = {}, external = [], split } = {}) {
+const plugin = function (options = {}) {
+	if ('edge' in options) {
+		throw new Error('options.edge has been removed in favour of options.defaultConfig.runtime');
+	}
+
+	const { defaultConfig = {}, external = [], split } = options;
+
 	return {
 		name: '@sveltejs/adapter-vercel',
 
