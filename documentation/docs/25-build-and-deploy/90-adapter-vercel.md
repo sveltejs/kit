@@ -18,13 +18,7 @@ import adapter from '@sveltejs/adapter-vercel';
 export default {
 	kit: {
 		adapter: adapter({
-			// see the section on deployment configuration below
-			runtime: 'nodejs18.x',
-			regions: ['iad1'], // if runtime is `edge`, this defaults to `all`
-			memory: 1024,
-			maxDuration: undefined, // 5s for Hobby plans, 15s for Pro, 30s for Enterprise
-			split: false,
-			external: []
+			// see the 'Deployment configuration' section below
 		})
 	}
 };
@@ -106,7 +100,7 @@ export const config = {
 
 The `expiration` property is required; all others are optional.
 
-## Environment Variables
+## Environment variables
 
 Vercel makes a set of [deployment-specific environment variables](https://vercel.com/docs/concepts/projects/environment-variables#system-environment-variables) available. Like other environment variables, these are accessible from `$env/static/private` and `$env/dynamic/private` (sometimes — more on that later), and inaccessible from their public counterparts. To access one of these variables from the client:
 
@@ -133,7 +127,7 @@ export function load() {
 <p>This staging environment was deployed from {data.deploymentGitBranch}.</p>
 ```
 
-Since all of these variables are unchanged between build time and run time when building on Vercel, we recommend using `$env/static/private` — which will statically replace the variables, enabling optimisations like dead code elimination — rather than `$env/dynamic/private`. If you're deploying with `edge: true` you _must_ use `$env/static/private`, as `$env/dynamic/private` and `$env/dynamic/public` are not currently populated in edge functions on Vercel.
+Since all of these variables are unchanged between build time and run time when building on Vercel, we recommend using `$env/static/private` — which will statically replace the variables, enabling optimisations like dead code elimination — rather than `$env/dynamic/private`. If you're deploying with `edge: true` you must either use `$env/static/private` or populate the `envVarsInUse` configuration.
 
 ## Notes
 
