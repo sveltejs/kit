@@ -51,7 +51,7 @@ export const config = {
 };
 ```
 
-...and others as [Serverless Functions](https://vercel.com/docs/concepts/functions/serverless-functions)  (note that by specifying `config` inside a layout, it applies to all child pages):
+...and others as [Serverless Functions](https://vercel.com/docs/concepts/functions/serverless-functions) (note that by specifying `config` inside a layout, it applies to all child pages):
 
 ```js
 /// file: admin/+layout.js
@@ -63,9 +63,9 @@ export const config = {
 
 The following options apply to all functions:
 
-- `runtime` can be `'edge'`, `'nodejs16.x'` or `'nodejs18.x'` (the default)
-- `regions` can be `'all'` (the default if `runtime` is `'edge'`) or an array of [edge network regions](https://vercel.com/docs/concepts/edge-network/regions) (defaulting to `["iad1"]` for serverless functions)
-- `split` will, if `true`, cause a route to be deployed as an individual function. If `defaultConfig.split` is `true`, all routes will be deployed as individual functions
+- `runtime`: `'edge'`, `'nodejs16.x'` or `'nodejs18.x'` (the default)
+- `regions`: an array of [edge network regions](https://vercel.com/docs/concepts/edge-network/regions) (defaulting to `["iad1"]` for serverless functions) or `'all'` if `runtime` is `edge` (its default)
+- `split`: if `true`, causes a route to be deployed as an individual function. If `defaultConfig.split` is `true`, all routes will be deployed as individual functions
 
 In addition, edge functions can specify an `envVarsInUse` array of environment variables that should be accessible inside the edge function. Serverless functions can specify `memory` (defaults to `1024` Mb, and can be [increased](https://vercel.com/docs/concepts/limits/overview#serverless-function-memory) up to `3008` on Pro or Enterprise accounts) and `maxDuration` which defaults to `5` seconds for Hobby accounts, `15` for Pro and `30` for Enterprise.
 
