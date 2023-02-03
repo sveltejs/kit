@@ -19,18 +19,11 @@ export default {
 	kit: {
 		adapter: adapter({
 			// see the section on deployment configuration below
-			defaultConfig: {
-				runtime: 'nodejs18.x',
-				regions: ['iad1'], // if runtime is `edge`, this defaults to `all`
-				memory: 1024,
-				maxDuration: undefined, // 5s for Hobby plans, 15s for Pro, 30s for Enterprise
-				split: false
-			},
-
-			// an array of dependencies that esbuild should treat
-			// as external when bundling functions. this only applies
-			// to edge functions, and should only be used to exclude
-			// optional dependencies that will not run outside Node
+			runtime: 'nodejs18.x',
+			regions: ['iad1'], // if runtime is `edge`, this defaults to `all`
+			memory: 1024,
+			maxDuration: undefined, // 5s for Hobby plans, 15s for Pro, 30s for Enterprise
+			split: false,
 			external: []
 		})
 	}
@@ -65,9 +58,15 @@ The following options apply to all functions:
 
 - `runtime`: `'edge'`, `'nodejs16.x'` or `'nodejs18.x'` (the default)
 - `regions`: an array of [edge network regions](https://vercel.com/docs/concepts/edge-network/regions) (defaulting to `["iad1"]` for serverless functions) or `'all'` if `runtime` is `edge` (its default)
-- `split`: if `true`, causes a route to be deployed as an individual function. If `defaultConfig.split` is `true`, all routes will be deployed as individual functions
+- `split`: if `true`, causes a route to be deployed as an individual function. If `split` is set to `true` at the adapter level, all routes will be deployed as individual functions
 
-In addition, edge functions can specify an `envVarsInUse` array of environment variables that should be accessible inside the edge function. Serverless functions can specify `memory` (defaults to `1024` Mb, and can be [increased](https://vercel.com/docs/concepts/limits/overview#serverless-function-memory) up to `3008` on Pro or Enterprise accounts) and `maxDuration` which defaults to `5` seconds for Hobby accounts, `15` for Pro and `30` for Enterprise.
+Additionally, the following options apply to edge functions:
+- `envVarsInUse`: an array of environment variables that should be accessible inside the edge function
+- `external`: an array of dependencies that esbuild should treat as external when bundling functions. This should only be used to exclude optional dependencies that will not run outside Node
+
+And the following option apply to serverless functions:
+- `memory`: the amount of memory available to the function. Defaults to `1024` Mb, and can be [increased](https://vercel.com/docs/concepts/limits/overview#serverless-function-memory) up to `3008` on Pro or Enterprise accounts
+- `maxDuration`: maximum execution duration of the function. Defaults to `5` seconds for Hobby accounts, `15` for Pro and `30` for Enterprise
 
 If your functions need to access data in a specific region, it's recommended that they be deployed in the same region (or close to it) for optimal performance.
 

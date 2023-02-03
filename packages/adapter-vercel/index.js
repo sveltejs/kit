@@ -15,16 +15,10 @@ const DEFAULTS = {
 };
 
 /** @type {import('.').default} **/
-const plugin = function (options = {}) {
-	if ('edge' in options) {
-		throw new Error('options.edge has been removed in favour of options.defaultConfig.runtime');
+const plugin = function (defaultConfig = {}) {
+	if ('edge' in defaultConfig) {
+		throw new Error("{ edge: true } has been removed in favour of { runtime: 'edge' }");
 	}
-
-	if ('split' in options) {
-		throw new Error('options.split has been removed in favour of options.defaultConfig.split');
-	}
-
-	const { defaultConfig = {}, external = [] } = options;
 
 	return {
 		name: '@sveltejs/adapter-vercel',
@@ -110,7 +104,7 @@ const plugin = function (options = {}) {
 					bundle: true,
 					platform: 'browser',
 					format: 'esm',
-					external,
+					external: config.external,
 					sourcemap: 'linked',
 					banner: { js: 'globalThis.global = globalThis;' }
 				});
@@ -240,7 +234,9 @@ const plugin = function (options = {}) {
 
 /** @param {import('.').EdgeConfig & import('.').ServerlessConfig} config */
 function hash_config(config) {
-	return [config.runtime, config.regions, config.memory, config.maxDuration].join('/');
+	return [config.runtime, config.external, config.regions, config.memory, config.maxDuration].join(
+		'/'
+	);
 }
 
 /**

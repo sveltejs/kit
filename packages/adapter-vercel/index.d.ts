@@ -1,12 +1,6 @@
 import { Adapter } from '@sveltejs/kit';
 
-type Options = {
-	defaultConfig?: Config;
-	external?: string[];
-	split?: boolean;
-};
-
-export default function plugin(options?: Options): Adapter;
+export default function plugin(config?: Config): Adapter;
 
 export interface ServerlessConfig {
 	/**
@@ -50,6 +44,11 @@ export interface EdgeConfig {
 	 * Edge only.
 	 */
 	envVarsInUse?: string[];
+	/**
+	 * List of packages that should not be bundled into the Edge Function.
+	 * Edge only.
+	 */
+	external?: string[];
 	/**
 	 * If `true`, this route will always be deployed as its own separate function
 	 */
