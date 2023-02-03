@@ -1,6 +1,6 @@
-import fs from 'fs';
-import path from 'path';
-import { fileURLToPath } from 'url';
+import fs from 'node:fs';
+import path from 'node:path';
+import { fileURLToPath } from 'node:url';
 import { nodeFileTrace } from '@vercel/nft';
 import esbuild from 'esbuild';
 
@@ -15,13 +15,11 @@ const DEFAULTS = {
 };
 
 /** @type {import('.').default} **/
-const plugin = function ({ external = [], edge, split, defaultConfig } = {}) {
+const plugin = function ({ defaultConfig = {}, external = [], split } = {}) {
 	return {
 		name: '@sveltejs/adapter-vercel',
 
 		async adapt(builder) {
-			const node_version = get_node_version();
-
 			const dir = '.vercel/output';
 			const tmp = builder.getBuildDirectory('vercel-tmp');
 
@@ -258,19 +256,6 @@ function write(file, data) {
 	}
 
 	fs.writeFileSync(file, data);
-}
-
-function get_node_version() {
-	const full = process.version.slice(1); // 'v16.5.0' --> '16.5.0'
-	const major = parseInt(full.split('.')[0]); // '16.5.0' --> 16
-
-	if (major < 16) {
-		throw new Error(
-			`SvelteKit only supports Node.js version 16 or greater (currently using v${full}). Consult the documentation: https://vercel.com/docs/runtimes#official-runtimes/node-js/node-js-version`
-		);
-	}
-
-	return { major, full };
 }
 
 // This function is duplicated in adapter-static

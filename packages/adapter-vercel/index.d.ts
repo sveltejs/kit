@@ -1,10 +1,9 @@
 import { Adapter } from '@sveltejs/kit';
 
 type Options = {
-	edge?: boolean;
+	defaultConfig?: Config;
 	external?: string[];
 	split?: boolean;
-	defaultConfig: Config;
 };
 
 export default function plugin(options?: Options): Adapter;
