@@ -19,6 +19,16 @@ export default {
 	}
 };
 ```
+## Building
+
+In order to create a build of your project, run
+
+```bash
+npm run build
+```
+
+This will create a `build` directory that can be used in the following deployment step.
+
 
 ## Deploying
 
