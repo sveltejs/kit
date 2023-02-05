@@ -3,6 +3,10 @@ import fs from 'node:fs';
 import path from 'node:path';
 import sirv from 'sirv';
 import { fileURLToPath } from 'node:url';
+
+// @ts-expect-error typedefs not available for @polka/url
+import { default as polka_url_parser } from '@polka/url';
+
 import { getRequest, setResponse } from '@sveltejs/kit/node';
 import { Server } from 'SERVER';
 import { manifest, prerendered } from 'MANIFEST';
@@ -50,7 +54,8 @@ function serve_prerendered() {
 	const handler = serve(path.join(dir, 'prerendered'));
 
 	return (req, res, next) => {
-		let pathname = req.path;
+		let parsed_url = polka_url_parser(req);
+		let { pathname } = parsed_url;
 
 		try {
 			pathname = decodeURIComponent(pathname);
@@ -65,8 +70,8 @@ function serve_prerendered() {
 		// remove or add trailing slash as appropriate
 		let location = pathname.at(-1) === '/' ? pathname.slice(0, -1) : pathname + '/';
 		if (prerendered.has(location)) {
-			const search = req.url.split('?')[1];
-			if (search) location += `?${search}`;
+			const { query, search } = parsed_url;
+			if (query) location += search; // search is `?${query}`
 			res.writeHead(308, { location }).end();
 		} else {
 			next();
