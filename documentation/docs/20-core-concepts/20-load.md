@@ -555,6 +555,44 @@ To summarize, a `load` function will re-run in the following situations:
 
 Note that re-running a `load` function will update the `data` prop inside the corresponding `+layout.svelte` or `+page.svelte`; it does _not_ cause the component to be recreated. As a result, internal state is preserved. If this isn't what you want, you can reset whatever you need to reset inside an [`afterNavigate`](modules#$app-navigation-afternavigate) callback, and/or wrap your component in a [`{#key ...}`](https://svelte.dev/docs#template-syntax-key) block.
 
+## Defer loading slow data
+
+Some data in your app might be slow to load. In such situations, it's useful to only wait until the fast data is available and start rendering while the slow data is still loading. You can do so by wrapping your returned data with the `defer` function:
+
+```js
+/// file: +page.js
+import { defer } from '@sveltejs/kit';
+
+/** @type {import('./$types').PageLoad} */
+export function load({ fetch }) {
+	const fast = fetch('/api/responds/quickly');
+	const slow = fetch('/api/takes/a/while');
+	return defer({
+		fast: await fast,
+		slow
+	});
+}
+```
+
+`defer` will not wait for promises passed to it. In the above example, the UI will be rendered as soon as `fast` has resolved. Use Svelte's `{#await}` to show meaningful fallback UI while the slow data is still loading:
+
+```svelte
+/// file: +page.svelte
+<script>
+	/** @type {import('./$types').PageData} */
+	export let data;
+</script>
+
+<p>{data.fast}</p>
+{#await data.slow}
+	<p>Loading ...</p>
+{:then result}
+	<p>{result}</p>
+{:catch error}
+	<p>An error occurred: {error}</p>
+{/catch}
+```
+
 ## Shared state
 
 In many server environments, a single instance of your app will serve multiple users. For that reason, per-request or per-user state must not be stored in shared variables outside your `load` functions, but should instead be stored in `event.locals`.

@@ -1195,6 +1195,26 @@ export interface SubmitFunction<
 	>;
 }
 
+/**
+ * Enables defering parts of the data loading and showing the next page quicker. Promises will not be awaited, allowing you to show
+ * meaningful fallback UI using Svelte's `{#await}` syntax while the rest of the data is loading.
+ *
+ * ```js
+ * /// file: +page.js
+ * import { defer } from '@sveltejs/kit';
+ *
+ * /// type: import('./$types').PageLoad
+ * export function load({ fetch }) {
+ * 	const fast = fetch('/api/responds/quickly');
+ * 	const slow = fetch('/api/takes/a/while');
+ * 	return defer({
+ * 		fast: await fast,
+ * 		slow
+ * 	});
+ * }
+ * ```
+ * @param data A regular JavaScript object. Top-level promises will be not be awaited.
+ */
 export function defer<T extends Record<string, unknown>>(data: T): Deferred<T>;
 
 export interface Deferred<T extends Record<string, unknown>> extends UniqueInterface {
