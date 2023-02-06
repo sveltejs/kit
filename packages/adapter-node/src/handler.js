@@ -3,6 +3,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import sirv from 'sirv';
 import { fileURLToPath } from 'node:url';
+import { parse as polka_url_parser } from '@polka/url';
 import { getRequest, setResponse } from '@sveltejs/kit/node';
 import { Server } from 'SERVER';
 import { manifest, prerendered } from 'MANIFEST';
@@ -50,7 +51,7 @@ function serve_prerendered() {
 	const handler = serve(path.join(dir, 'prerendered'));
 
 	return (req, res, next) => {
-		let pathname = req.path;
+		let { pathname, search, query } = polka_url_parser(req);
 
 		try {
 			pathname = decodeURIComponent(pathname);
@@ -65,8 +66,7 @@ function serve_prerendered() {
 		// remove or add trailing slash as appropriate
 		let location = pathname.at(-1) === '/' ? pathname.slice(0, -1) : pathname + '/';
 		if (prerendered.has(location)) {
-			const search = req.url.split('?')[1];
-			if (search) location += `?${search}`;
+			if (query) location += search;
 			res.writeHead(308, { location }).end();
 		} else {
 			next();
