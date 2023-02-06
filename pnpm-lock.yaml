@@ -283,7 +283,7 @@ importers:
       svelte-preprocess: ^5.0.0
       tiny-glob: ^0.2.9
       typescript: ^4.9.4
-      undici: 5.16.0
+      undici: 5.18.0
       uvu: ^0.5.6
       vite: ^4.0.4
     dependencies:
@@ -299,7 +299,7 @@ importers:
       set-cookie-parser: 2.5.1
       sirv: 2.0.2
       tiny-glob: 0.2.9
-      undici: 5.16.0
+      undici: 5.18.0
     devDependencies:
       '@playwright/test': 1.29.2
       '@types/connect': 3.4.35
@@ -4840,8 +4840,8 @@ packages:
       which-boxed-primitive: 1.0.2
     dev: true
 
-  /undici/5.16.0:
-    resolution: {integrity: sha512-KWBOXNv6VX+oJQhchXieUznEmnJMqgXMbs0xxH2t8q/FUAWSJvOSr/rMaZKnX5RIVq7JDn0JbP4BOnKG2SGXLQ==}
+  /undici/5.18.0:
+    resolution: {integrity: sha512-1iVwbhonhFytNdg0P4PqyIAXbdlVZVebtPDvuM36m66mRw4OGrCm2MYynJv/UENFLdP13J1nPVQzVE2zTs1OeA==}
     engines: {node: '>=12.18'}
     dependencies:
       busboy: 1.6.0
