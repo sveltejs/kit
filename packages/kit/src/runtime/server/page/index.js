@@ -290,9 +290,8 @@ export async function render_page(event, route, page, options, manifest, state, 
 		}
 
 		if (state.prerendering && should_prerender_data) {
-			const body = `{"type":"data","nodes":[${branch
-				.map((node) => serialize_data_node(node?.server_data))
-				.join(',')}]}`;
+			// ndjson format
+			const body = branch.map((node) => serialize_data_node(node?.server_data)).join('\n') + '\n';
 
 			state.prerendering.dependencies.set(data_pathname, {
 				response: text(body),

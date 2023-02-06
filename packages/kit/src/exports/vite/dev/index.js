@@ -339,7 +339,8 @@ export async function dev(vite, vite_config, svelte_config) {
 		control_module_node.replace_implementations({
 			ActionFailure: control_module_vite.ActionFailure,
 			HttpError: control_module_vite.HttpError,
-			Redirect: control_module_vite.Redirect
+			Redirect: control_module_vite.Redirect,
+			Deferred: control_module_vite.Deferred
 		});
 	}
 	align_exports();

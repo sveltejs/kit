@@ -27,7 +27,7 @@ import { parse } from './parse.js';
 import Root from '__GENERATED__/root.svelte';
 import { nodes, server_loads, dictionary, matchers, hooks } from '__CLIENT__/manifest.js';
 import { base } from '$internal/paths';
-import { HttpError, Redirect } from '../control.js';
+import { Deferred, HttpError, Redirect } from '../control.js';
 import { stores } from './singletons.js';
 import { unwrap_promises } from '../../utils/promises.js';
 import * as devalue from 'devalue';
@@ -619,14 +619,15 @@ export function create_client({ target }) {
 				try {
 					lock_fetch();
 					data = (await node.universal.load.call(null, load_input)) ?? null;
-					if (data != null && Object.getPrototypeOf(data) !== Object.prototype) {
+					const to_check = data instanceof Deferred ? data.data : data;
+					if (to_check != null && Object.getPrototypeOf(to_check) !== Object.prototype) {
 						throw new Error(
 							`a load function related to route '${route.id}' returned ${
-								typeof data !== 'object'
-									? `a ${typeof data}`
-									: data instanceof Response
+								typeof to_check !== 'object'
+									? `a ${typeof to_check}`
+									: to_check instanceof Response
 									? 'a Response object'
-									: Array.isArray(data)
+									: Array.isArray(to_check)
 									? 'an array'
 									: 'a non-plain object'
 							}, but must return a plain object at the top level (i.e. \`return {...}\`)`
@@ -685,18 +686,16 @@ export function create_client({ target }) {
 	 */
 	function create_data_node(node, previous) {
 		if (node?.type === 'data') {
-			return {
+			/** @type {import('./types').DataNode} */
+			const data_node = {
 				type: 'data',
 				data: node.data,
-				uses: {
-					dependencies: new Set(node.uses.dependencies ?? []),
-					params: new Set(node.uses.params ?? []),
-					parent: !!node.uses.parent,
-					route: !!node.uses.route,
-					url: !!node.uses.url
-				},
+				// It's important that we use the existing `uses` object here, so that
+				// potentially deferred data can manipulate the object later
+				uses: node.uses,
 				slash: node.slash
 			};
+			return data_node;
 		} else if (node?.type === 'skip') {
 			return previous ?? null;
 		}
@@ -722,7 +721,7 @@ export function create_client({ target }) {
 		errors.forEach((loader) => loader?.().catch(() => {}));
 		loaders.forEach((loader) => loader?.[1]().catch(() => {}));
 
-		/** @type {import('types').ServerData | null} */
+		/** @type {import('types').ServerNodesResponse | import('types').ServerRedirectNode | null} */
 		let server_data = null;
 
 		const url_changed = current.url ? id !== current.url.pathname + current.url.search : false;
@@ -1630,6 +1629,10 @@ export function create_client({ target }) {
 			try {
 				const branch_promises = node_ids.map(async (n, i) => {
 					const server_data_node = server_data_nodes[i];
+					// Type isn't completely accurate, we still need to deserialize uses
+					if (server_data_node?.uses) {
+						server_data_node.uses = deserialize_uses(server_data_node.uses);
+					}
 
 					return load_node({
 						loader: nodes[n],
@@ -1680,7 +1683,7 @@ export function create_client({ target }) {
 /**
  * @param {URL} url
  * @param {boolean[]} invalid
- * @returns {Promise<import('types').ServerData>}
+ * @returns {Promise<import('types').ServerNodesResponse |import('types').ServerRedirectNode>}
  */
 async function load_data(url, invalid) {
 	const data_url = new URL(url);
@@ -1694,29 +1697,118 @@ async function load_data(url, invalid) {
 	);
 
 	const res = await native_fetch(data_url.href);
-	const data = await res.json();
 
 	if (!res.ok) {
 		// error message is a JSON-stringified string which devalue can't handle at the top level
 		// turn it into a HttpError to not call handleError on the client again (was already handled on the server)
-		throw new HttpError(res.status, data);
+		throw new HttpError(res.status, await res.json());
 	}
 
-	// revive devalue-flattened data
-	data.nodes?.forEach((/** @type {any} */ node) => {
-		if (node?.type === 'data') {
-			node.data = devalue.unflatten(node.data);
-			node.uses = {
-				dependencies: new Set(node.uses.dependencies ?? []),
-				params: new Set(node.uses.params ?? []),
-				parent: !!node.uses.parent,
-				route: !!node.uses.route,
-				url: !!node.uses.url
-			};
+	return new Promise(async (resolve) => {
+		/**
+		 * @type {Map<string, { resolve: (v: any) => void; reject: (v: any) => void; uses: import('types').Uses }>}
+		 * Map of deferred promises that will be resolved by a subsequent chunk of data
+		 */
+		const pending = new Map();
+		const reader = /** @type {ReadableStream<Uint8Array>} */ (res.body).getReader();
+		const decoder = new TextDecoder();
+
+		let text = '';
+
+		while (true) {
+			// Format follows ndjson (each line is a JSON object) or regular JSON spec
+			const { done, value } = await reader.read();
+			if (done && !text && !value) break;
+
+			text += !value && text ? '\n' : decoder.decode(value); // no value -> final chunk -> add a new line to trigger the last parse
+
+			while (true) {
+				const split = text.indexOf('\n');
+				if (split === -1) {
+					break;
+				}
+
+				const node = JSON.parse(text.slice(0, split));
+				text = text.slice(split + 1);
+
+				if (node.type === 'redirect') {
+					return resolve(node);
+				}
+
+				if (node.type === 'data') {
+					// This is the first (and possibly only, if no `defer` used) chunk
+					node.nodes?.forEach((/** @type {any} */ node) => {
+						if (node?.type === 'data') {
+							node.uses = deserialize_uses(node.uses);
+							node.data = devalue.unflatten(node.data);
+
+							for (const key in node.data) {
+								const entry = node.data[key];
+								// Revive promise, to be resolved in a later chunk
+								if (typeof entry === 'string' && entry.startsWith('_deferred_')) {
+									/** @type {(v: any) => void} */
+									let resolve;
+									/** @type {(v: any) => void} */
+									let reject;
+									node.data[key] = new Promise((f, r) => {
+										resolve = f;
+										reject = r;
+									});
+									pending.set(entry, {
+										// @ts-expect-error TS doesnt know this is set
+										resolve,
+										// @ts-expect-error TS doesnt know this is set
+										reject,
+										uses: node.uses
+									});
+								}
+							}
+						}
+					});
+
+					resolve(node);
+				} else if (node.type === 'chunk') {
+					// This is a subsequent chunk containing deferred data
+					let { id, data, error, uses } = node;
+					const entry = pending.get(id);
+					// Shouldn't ever be undefined, but just in case
+					if (entry) {
+						if (error) {
+							entry.reject(error);
+						} else {
+							entry.resolve(devalue.unflatten(data));
+						}
+						if (uses) {
+							uses = deserialize_uses(uses);
+							// Merge into existing uses
+							entry.uses.dependencies = new Set([...entry.uses.dependencies, ...uses.dependencies]);
+							entry.uses.params = new Set([...entry.uses.params, ...uses.params]);
+							entry.uses.parent = entry.uses.parent || uses.parent;
+							entry.uses.route = entry.uses.route || uses.route;
+							entry.uses.url = entry.uses.url || uses.url;
+						}
+					}
+					pending.delete(id);
+				}
+			}
 		}
 	});
 
-	return data;
+	// TODO edge case handling necessary? stream() read fails?
+}
+
+/**
+ * @param {any} uses
+ * @return {import('types').Uses}
+ */
+function deserialize_uses(uses) {
+	return {
+		dependencies: new Set(uses?.dependencies ?? []),
+		params: new Set(uses?.params ?? []),
+		parent: !!uses?.parent,
+		route: !!uses?.route,
+		url: !!uses?.url
+	};
 }
 
 /**

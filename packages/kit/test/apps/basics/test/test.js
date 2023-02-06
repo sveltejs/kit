@@ -1091,3 +1091,41 @@ test.describe.serial('Cookies API', () => {
 		expect(await span.innerText()).toContain('undefined');
 	});
 });
+
+test.describe('defer', () => {
+	test('Works for universal load functions', async ({ page, javaScriptEnabled }) => {
+		if (javaScriptEnabled) {
+			await page.goto('/defer');
+			page.click('[href="/defer/universal"]', { noWaitAfter: true });
+		} else {
+			await page.goto('/defer/universal');
+		}
+
+		await expect(page.locator('p.eager')).toHaveText('eager');
+		expect(page.locator('p.loadingsuccess')).toBeVisible();
+		expect(page.locator('p.loadingfail')).toBeVisible();
+
+		await expect(page.locator('p.success')).toHaveText('success');
+		await expect(page.locator('p.fail')).toHaveText('fail');
+		expect(page.locator('p.loadingsuccess')).toBeHidden();
+		expect(page.locator('p.loadingfail')).toBeHidden();
+	});
+
+	test('Works for server load functions', async ({ page, javaScriptEnabled }) => {
+		if (javaScriptEnabled) {
+			await page.goto('/defer');
+			page.click('[href="/defer/server"]', { noWaitAfter: true });
+		} else {
+			await page.goto('/defer/server');
+		}
+
+		await expect(page.locator('p.eager')).toHaveText('eager');
+		expect(page.locator('p.loadingsuccess')).toBeVisible();
+		expect(page.locator('p.loadingfail')).toBeVisible();
+
+		await expect(page.locator('p.success')).toHaveText('success');
+		await expect(page.locator('p.fail')).toHaveText('fail');
+		expect(page.locator('p.loadingsuccess')).toBeHidden();
+		expect(page.locator('p.loadingfail')).toBeHidden();
+	});
+});

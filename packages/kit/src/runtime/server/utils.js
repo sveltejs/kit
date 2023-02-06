@@ -148,31 +148,40 @@ export function clarify_devalue_error(event, error) {
 	return error.message;
 }
 
-/** @param {import('types').ServerDataNode | import('types').ServerDataSkippedNode | import('types').ServerErrorNode | null} node */
+/** @param {import('types').ServerDataNodePreSerialization | import('types').ServerDataSkippedNode | import('types').ServerErrorNode | import('types').ServerDataChunkNode | null | undefined} node */
 export function serialize_data_node(node) {
 	if (!node) return 'null';
 
 	if (node.type === 'error' || node.type === 'skip') {
 		return JSON.stringify(node);
 	}
-
-	const stringified = devalue.stringify(node.data);
-
 	const uses = [];
 
-	if (node.uses.dependencies.size > 0) {
+	if (node.uses && node.uses.dependencies.size > 0) {
 		uses.push(`"dependencies":${JSON.stringify(Array.from(node.uses.dependencies))}`);
 	}
 
-	if (node.uses.params.size > 0) {
+	if (node.uses && node.uses.params.size > 0) {
 		uses.push(`"params":${JSON.stringify(Array.from(node.uses.params))}`);
 	}
 
-	if (node.uses.parent) uses.push(`"parent":1`);
-	if (node.uses.route) uses.push(`"route":1`);
-	if (node.uses.url) uses.push(`"url":1`);
+	if (node.uses?.parent) uses.push(`"parent":1`);
+	if (node.uses?.route) uses.push(`"route":1`);
+	if (node.uses?.url) uses.push(`"url":1`);
 
-	return `{"type":"data","data":${stringified},"uses":{${uses.join(',')}}${
-		node.slash ? `,"slash":${JSON.stringify(node.slash)}` : ''
-	}}`;
+	const uses_str = node.uses ? `,"uses":{${uses.join(',')}}` : '';
+
+	if (node.type === 'data') {
+		return `{"type":"data","data":${devalue.stringify(node.data)}${uses_str}${
+			node.slash ? `,"slash":${JSON.stringify(node.slash)}` : ''
+		}}`;
+	} else {
+		if (node.error) {
+			return `{"type":"chunk","id":"${node.id}","error":${devalue.stringify(
+				node.error
+			)}${uses_str}}`;
+		} else {
+			return `{"type":"chunk","id":"${node.id}","data":${devalue.stringify(node.data)}${uses_str}}`;
+		}
+	}
 }

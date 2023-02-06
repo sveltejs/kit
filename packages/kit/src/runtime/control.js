@@ -45,6 +45,18 @@ export let ActionFailure = class ActionFailure {
 };
 
 /**
+ * @template {Record<string, unknown>} T
+ */
+export let Deferred = class Deferred {
+	/**
+	 * @param {T} data
+	 */
+	constructor(data) {
+		this.data = data;
+	}
+};
+
+/**
  * This is a grotesque hack that, in dev, allows us to replace the implementations
  * of these classes that you'd get by importing them from `@sveltejs/kit` with the
  * ones that are imported via Vite and loaded internally, so that instanceof
@@ -54,10 +66,12 @@ export let ActionFailure = class ActionFailure {
  *   ActionFailure: typeof ActionFailure;
  *   HttpError: typeof HttpError;
  *   Redirect: typeof Redirect;
+ *   Deferred: typeof Deferred;
  * }} implementations
  */
 export function replace_implementations(implementations) {
 	ActionFailure = implementations.ActionFailure;
 	HttpError = implementations.HttpError;
 	Redirect = implementations.Redirect;
+	Deferred = implementations.Deferred;
 }

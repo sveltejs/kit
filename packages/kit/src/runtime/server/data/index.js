@@ -58,6 +58,7 @@ export async function render_data(
 
 					// == because it could be undefined (in dev) or null (in build, because of JSON.stringify)
 					const node = n == undefined ? n : await manifest._.nodes[n]();
+					// load this. for the child, return as is. for the final result, stream things
 					return load_server_data({
 						event: new_event,
 						state,
@@ -115,13 +116,124 @@ export async function render_data(
 		);
 
 		try {
-			const stubs = nodes.slice(0, length).map(serialize_data_node);
+			/**
+			 * @type {Array<import('types').ServerDataSkippedNode | import('types').ServerErrorNode | import('types').ServerDataNodePreSerialization | null>}
+			 * The first (and possibly only, if no `defer` used) chunk sent out
+			 */
+			const result = [];
+			/**
+			 * @type {Array<{id: string; node_idx: number; promise: Promise<{id: string; node_idx: number; uses: import('types').Uses; result?: any; error?: any}>}>}
+			 * List of deferred promises, to be resolved after the first chunk is sent
+			 */
+			let deferred = [];
 
-			const json = `{"type":"data","nodes":[${stubs.join(',')}]}`;
-			return json_response(json);
+			// First process all results in order, and possibly collect and setup deferred promises
+			for (let node_idx = 0; node_idx < nodes.length; node_idx++) {
+				const node = nodes[node_idx];
+				if (!node || node.type === 'skip' || node.type === 'error' || !node.data) {
+					result.push(node);
+					continue;
+				}
+
+				/** @type {Record<string, any>} */
+				let start = {};
+				let node_uses_defer = false;
+
+				for (const key in node.data ?? []) {
+					const entry = node.data[key];
+					if (typeof entry === 'object' && typeof entry?.then === 'function') {
+						node_uses_defer = true;
+						start[key] = `_deferred_${key}`;
+						deferred.push({
+							id: key,
+							node_idx,
+							promise: entry
+								.then(
+									/** @param {any} result */ (result) => ({
+										id: key,
+										result,
+										node_idx,
+										uses: node.uses
+									})
+								)
+								.catch(/** @param {any} error */ (error) => ({ id: key, error, uses: node.uses }))
+						});
+					} else {
+						start[key] = entry;
+					}
+				}
+
+				result.push({
+					type: 'data',
+					data: start,
+					uses: node_uses_defer ? undefined : node.uses,
+					slash: node.slash
+				});
+			}
+
+			// Now send the first chunk. If there are no deferred promises, we're done
+			let json = '';
+
+			try {
+				json = `{"type":"data","nodes":[${result.map(serialize_data_node).join(',')}]}`;
+				if (!deferred.length) {
+					return json_response(json);
+				}
+			} catch (e) {
+				const error = /** @type {any} */ (e);
+				return json_response(
+					await handle_error_and_jsonify(
+						event,
+						options,
+						new Error(clarify_devalue_error(event, error))
+					),
+					500
+				);
+			}
+
+			return new Response(
+				new ReadableStream({
+					async start(controller) {
+						controller.enqueue(`${json}\n`);
+
+						// Await all deferred promises and send out the rest of the chunks
+						while (deferred.length) {
+							const next = await Promise.race(deferred.map((d) => d.promise));
+							deferred = deferred.filter((d) => d.id !== next.id);
+							controller.enqueue(
+								serialize_data_node(
+									/** @type {import('types').ServerDataChunkNode} */ ({
+										type: 'chunk',
+										id: `_deferred_${next.id}`,
+										data: next.result,
+										error: next.error,
+										// only send uses when it's the last chunk of the data node
+										// so we can be sure all uses are accounted for
+										uses: deferred.some((d) => d.node_idx === next.node_idx) ? undefined : next.uses
+									})
+								) + '\n'
+							);
+						}
+
+						controller.close();
+					}
+				}),
+				{
+					headers: {
+						'content-type': 'application/octet-stream'
+					}
+				}
+			);
 		} catch (e) {
 			const error = /** @type {any} */ (e);
-			return json_response(JSON.stringify(clarify_devalue_error(event, error)), 500);
+			return json_response(
+				await handle_error_and_jsonify(
+					event,
+					options,
+					new Error(clarify_devalue_error(event, error))
+				),
+				500
+			);
 		}
 	} catch (e) {
 		const error = normalize_error(e);
@@ -129,18 +241,17 @@ export async function render_data(
 		if (error instanceof Redirect) {
 			return redirect_json_response(error);
 		} else {
-			// TODO make it clearer that this was an unexpected error
-			return json_response(JSON.stringify(await handle_error_and_jsonify(event, options, error)));
+			return json_response(await handle_error_and_jsonify(event, options, error), 500);
 		}
 	}
 }
 
 /**
- * @param {string} json
+ * @param {Record<string, any> | string} json
  * @param {number} [status]
  */
 function json_response(json, status = 200) {
-	return text(json, {
+	return text(typeof json === 'string' ? json : JSON.stringify(json), {
 		status,
 		headers: {
 			'content-type': 'application/json',
@@ -153,10 +264,8 @@ function json_response(json, status = 200) {
  * @param {Redirect} redirect
  */
 export function redirect_json_response(redirect) {
-	return json_response(
-		JSON.stringify({
-			type: 'redirect',
-			location: redirect.location
-		})
-	);
+	return json_response({
+		type: 'redirect',
+		location: redirect.location
+	});
 }

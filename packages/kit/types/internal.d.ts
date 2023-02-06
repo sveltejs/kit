@@ -187,29 +187,61 @@ export interface RouteData {
 	} | null;
 }
 
-export type ServerData =
-	| {
-			type: 'redirect';
-			location: string;
-	  }
-	| {
-			type: 'data';
-			/**
-			 * If `null`, then there was no load function
-			 */
-			nodes: Array<ServerDataNode | ServerDataSkippedNode | ServerErrorNode | null>;
-	  };
+export type ServerRedirectNode = {
+	type: 'redirect';
+	location: string;
+};
+
+export type ServerNodesResponse = {
+	type: 'data';
+	/**
+	 * If `null`, then there was no load function <- TODO is this outdated now with the recent changes?
+	 */
+	nodes: Array<ServerDataNode | ServerDataSkippedNode | ServerErrorNode | null>;
+};
+
+export type ServerDataResponse = ServerRedirectNode | ServerNodesResponse;
+
+/**
+ * Pre-serialized server version of successful response of the server `load` function.
+ */
+export interface ServerDataNodePreSerialization {
+	type: 'data';
+	/**
+	 * The serialized version of this contains a `_deferred_${someId}` for any deferred promises,
+	 * which will be resolved later through chunk nodes.
+	 */
+	data: Record<string, any> | null;
+	/**
+	 * Defined if the `load` function didn't return a `defer`red result.
+	 */
+	uses?: Uses;
+	slash?: TrailingSlash;
+}
 
 /**
  * Signals a successful response of the server `load` function.
  * The `uses` property tells the client when it's possible to reuse this data
  * in a subsequent request.
  */
-export interface ServerDataNode {
-	type: 'data';
-	data: Record<string, any> | null;
+export interface ServerDataNode extends ServerDataNodePreSerialization {
+	/**
+	 * Defined in the serialized version if the `load` function didn't return a `defer`red result.
+	 * Make sure to pass this property by reference and not copy it somehow, as it might be updated
+	 * by a deferred promise.
+	 */
 	uses: Uses;
-	slash?: TrailingSlash;
+}
+
+export interface ServerDataChunkNode {
+	type: 'chunk';
+	id: string;
+	data?: Record<string, any>;
+	error?: any;
+	/**
+	 * Defined for the final chunk of the corresponding `load` function
+	 */
+	uses?: Uses;
 }
 
 /**

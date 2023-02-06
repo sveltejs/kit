@@ -1,4 +1,4 @@
-import { HttpError, Redirect, ActionFailure } from '../runtime/control.js';
+import { HttpError, Redirect, ActionFailure, Deferred } from '../runtime/control.js';
 import { BROWSER, DEV } from 'esm-env';
 
 // For some reason we need to type the params as well here,
@@ -71,4 +71,12 @@ export function text(body, init) {
  */
 export function fail(status, data) {
 	return new ActionFailure(status, data);
+}
+
+/**
+ * @template {Record<string, unknown>} T
+ * @param {T} data
+ */
+export function defer(data) {
+	return new Deferred(data);
 }
