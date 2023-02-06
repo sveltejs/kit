@@ -2,4 +2,4 @@
 '@sveltejs/kit': patch
 ---
 
-Prevent crawling empty urls <img src="">
+fix: prevent crawling empty urls (`<img src="">`)
