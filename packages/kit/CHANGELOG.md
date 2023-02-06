@@ -1,5 +1,17 @@
 # @sveltejs/kit
 
+## 1.5.0
+
+### Minor Changes
+
+- feat: support route-level configuration ([#8740](https://github.com/sveltejs/kit/pull/8740))
+
+- feat: add snapshot mechanism for preserving ephemeral DOM state ([#8710](https://github.com/sveltejs/kit/pull/8710))
+
+### Patch Changes
+
+- chore(deps): update dependency undici to v5.18.0 ([#8884](https://github.com/sveltejs/kit/pull/8884))
+
 ## 1.4.0
 
 ### Minor Changes
