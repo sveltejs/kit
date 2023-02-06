@@ -19,20 +19,12 @@ export default {
 	}
 };
 ```
-## Building
-
-In order to create a build of your project, run
-
-```bash
-npm run build
-```
-
-This will create a `build` directory that can be used in the following deployment step.
-
 
 ## Deploying
 
-You will need the output directory (`build` by default), the project's `package.json`, and the production dependencies in `node_modules` to run the application. Production dependencies can be generated with `npm ci --prod` (you can skip this step if your app doesn't have any dependencies). You can then start your app with this command:
+First, build your app with `npm run build`. This will create the production server in the output directory specified in the adapter options, defaulting to `build`.
+
+You will need the output directory, the project's `package.json`, and the production dependencies in `node_modules` to run the application. Production dependencies can be generated with `npm ci --prod` (you can skip this step if your app doesn't have any dependencies). You can then start your app with this command:
 
 ```bash
 node build
