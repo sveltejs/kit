@@ -1,4 +1,11 @@
-import { appendFileSync, existsSync, readFileSync, writeFileSync } from 'fs';
+import {
+	appendFileSync,
+	existsSync,
+	readFileSync,
+	writeFileSync,
+	readdirSync,
+	unlinkSync
+} from 'fs';
 import { dirname, join, resolve, posix } from 'path';
 import { fileURLToPath } from 'url';
 import esbuild from 'esbuild';
@@ -47,10 +54,19 @@ export default function ({ split = false, edge = edge_set_in_env_var } = {}) {
 			// empty out existing build directories
 			builder.rimraf(publish);
 			builder.rimraf('.netlify/edge-functions');
-			builder.rimraf('.netlify/functions-internal');
 			builder.rimraf('.netlify/server');
 			builder.rimraf('.netlify/package.json');
 			builder.rimraf('.netlify/serverless.js');
+
+			const functions_internal = join('.netlify', 'functions-internal');
+			if (existsSync(functions_internal)) {
+				const files = readdirSync(functions_internal);
+				for (const file of files) {
+					if (file.startsWith('render.')) {
+						unlinkSync(join(functions_internal, file));
+					}
+				}
+			}
 
 			builder.log.minor(`Publishing to "${publish}"`);
 
