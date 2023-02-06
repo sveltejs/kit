@@ -102,6 +102,22 @@ test.describe('Load', () => {
 		);
 		await app.goto('/load/server-data-reuse/no-load');
 		expect(await page.textContent('pre')).toBe(JSON.stringify({ foo: { bar: 'Custom layout' } }));
+
+		await page.goto('/load/server-data-reuse/with-changing-parent/with-server-load');
+		expect(await page.textContent('pre')).toBe(
+			JSON.stringify({
+				foo: { bar: 'Custom layout' },
+				title: '/load/server-data-reuse/with-changing-parent/with-server-load',
+				server: true
+			})
+		);
+		await app.goto('/load/server-data-reuse/with-changing-parent/no-load');
+		expect(await page.textContent('pre')).toBe(
+			JSON.stringify({
+				foo: { bar: 'Custom layout' },
+				title: '/load/server-data-reuse/with-changing-parent/no-load'
+			})
+		);
 	});
 
 	test('keeps server data when valid while not reusing client load data', async ({
