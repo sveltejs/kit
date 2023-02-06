@@ -1,5 +1,25 @@
 # @sveltejs/kit
 
+## 1.4.0
+
+### Minor Changes
+
+- feat: allow $app/paths to be used without an app ([#8838](https://github.com/sveltejs/kit/pull/8838))
+
+### Patch Changes
+
+- fix: ensure types of all form actions are accessible even if differing ([#8877](https://github.com/sveltejs/kit/pull/8877))
+
+- fix: correctly handle HttpErrors on the client side ([#8829](https://github.com/sveltejs/kit/pull/8829))
+
+- docs: discourage use of `goto` with external URLs ([#8837](https://github.com/sveltejs/kit/pull/8837))
+
+- fix: prevent crawling empty urls (`<img src="">`) ([#8883](https://github.com/sveltejs/kit/pull/8883))
+
+- fix: correctly serialize request url when using load `fetch` ([#8876](https://github.com/sveltejs/kit/pull/8876))
+
+- fix: ensure endpoints can fetch endpoints on the same host but not part of the application ([#8869](https://github.com/sveltejs/kit/pull/8869))
+
 ## 1.3.10
 
 ### Patch Changes
