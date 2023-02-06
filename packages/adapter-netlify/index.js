@@ -39,6 +39,13 @@ export default function ({ split = false, edge = edge_set_in_env_var } = {}) {
 		name: '@sveltejs/adapter-netlify',
 
 		async adapt(builder) {
+			if (!builder.routes) {
+				throw new Error(
+					'@sveltejs/adapter-netlify >=2.x (possibly installed through @sveltejs/adapter-auto) requires @sveltejs/kit version 1.5 or higher. ' +
+						'Either downgrade the adapter or upgrade @sveltejs/kit'
+				);
+			}
+
 			const netlify_config = get_netlify_config();
 
 			// "build" is the default publish directory when Netlify detects SvelteKit

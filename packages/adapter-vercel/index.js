@@ -26,6 +26,13 @@ const plugin = function (defaults = {}) {
 		name: '@sveltejs/adapter-vercel',
 
 		async adapt(builder) {
+			if (!builder.routes) {
+				throw new Error(
+					'@sveltejs/adapter-vercel >=2.x (possibly installed through @sveltejs/adapter-auto) requires @sveltejs/kit version 1.5 or higher. ' +
+						'Either downgrade the adapter or upgrade @sveltejs/kit'
+				);
+			}
+
 			const dir = '.vercel/output';
 			const tmp = builder.getBuildDirectory('vercel-tmp');
 
