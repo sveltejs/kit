@@ -1,5 +1,11 @@
 # @sveltejs/adapter-vercel
 
+## 2.0.1
+
+### Patch Changes
+
+- chore: throw helpful migration error ([#8915](https://github.com/sveltejs/kit/pull/8915))
+
 ## 2.0.0
 
 ### Major Changes
