@@ -2,4 +2,4 @@
 '@sveltejs/kit': patch
 ---
 
-fix: duplicated paths in tsconfig
+fix: deduplicate paths in tsconfig

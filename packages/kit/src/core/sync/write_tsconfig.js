@@ -91,11 +91,12 @@ export function get_tsconfig(kit, include_base_url) {
 		config_relative('vite.config.ts')
 	]);
 
-	for (const dir of [
+	const src_includes = [
 		kit.files.routes,
 		kit.files.lib,
-		path.resolve('src') // TODO(v2): remove src and only scope it to what's necessary
-	]) {
+		path.resolve('src') // TODO(v2): find a better way to include all src files
+	].filter((dir) => !path.relative(dir, path.resolve('src')).startsWith('..'));
+	for (const dir of src_includes) {
 		include.add(config_relative(`${dir}/**/*.js`));
 		include.add(config_relative(`${dir}/**/*.ts`));
 		include.add(config_relative(`${dir}/**/*.svelte`));
