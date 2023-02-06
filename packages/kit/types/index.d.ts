@@ -1192,3 +1192,11 @@ export interface SubmitFunction<
 		  }) => void)
 	>;
 }
+
+/**
+ * The type of `export const snapshot` exported from a page or layout component.
+ */
+export interface Snapshot<T = any> {
+	capture: () => T;
+	restore: (snapshot: T) => void;
+}

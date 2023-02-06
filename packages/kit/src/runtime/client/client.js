@@ -15,6 +15,7 @@ import {
 	is_external_url,
 	scroll_state
 } from './utils.js';
+import * as storage from './session-storage.js';
 import {
 	lock_fetch,
 	unlock_fetch,
@@ -31,7 +32,7 @@ import { HttpError, Redirect } from '../control.js';
 import { stores } from './singletons.js';
 import { unwrap_promises } from '../../utils/promises.js';
 import * as devalue from 'devalue';
-import { INDEX_KEY, PRELOAD_PRIORITIES, SCROLL_KEY } from './constants.js';
+import { INDEX_KEY, PRELOAD_PRIORITIES, SCROLL_KEY, SNAPSHOT_KEY } from './constants.js';
 import { validate_common_exports } from '../../utils/exports.js';
 import { compact } from '../../utils/array.js';
 
@@ -52,12 +53,10 @@ default_error_loader();
 
 /** @typedef {{ x: number, y: number }} ScrollPosition */
 /** @type {Record<number, ScrollPosition>} */
-let scroll_positions = {};
-try {
-	scroll_positions = JSON.parse(sessionStorage[SCROLL_KEY]);
-} catch {
-	// do nothing
-}
+const scroll_positions = storage.get(SCROLL_KEY) ?? {};
+
+/** @type {Record<string, any[]>} */
+const snapshots = storage.get(SNAPSHOT_KEY) ?? {};
 
 /** @param {number} index */
 function update_scroll_positions(index) {
@@ -74,6 +73,14 @@ export function create_client({ target }) {
 	const container = __SVELTEKIT_EMBEDDED__ ? target : document.documentElement;
 	/** @type {Array<((url: URL) => boolean)>} */
 	const invalidated = [];
+
+	/**
+	 * An array of the `+layout.svelte` and `+page.svelte` component instances
+	 * that currently live on the page — used for capturing and restoring snapshots.
+	 * It's updated/manipulated through `bind:this` in `Root.svelte`.
+	 * @type {import('svelte').SvelteComponent[]}
+	 */
+	const components = [];
 
 	/** @type {{id: string, promise: Promise<import('./types').NavigationResult>} | null} */
 	let load_cache = null;
@@ -158,6 +165,20 @@ export function create_client({ target }) {
 		await update(intent, url, []);
 	}
 
+	/** @param {number} index */
+	function capture_snapshot(index) {
+		if (components.some((c) => c?.snapshot)) {
+			snapshots[index] = components.map((c) => c?.snapshot?.capture());
+		}
+	}
+
+	/** @param {number} index */
+	function restore_snapshot(index) {
+		snapshots[index]?.forEach((value, i) => {
+			components[i]?.snapshot?.restore(value);
+		});
+	}
+
 	/**
 	 * @param {string | URL} url
 	 * @param {{ noScroll?: boolean; replaceState?: boolean; keepFocus?: boolean; state?: any; invalidateAll?: boolean }} opts
@@ -238,11 +259,20 @@ export function create_client({ target }) {
 	 * @param {import('./types').NavigationIntent | undefined} intent
 	 * @param {URL} url
 	 * @param {string[]} redirect_chain
+	 * @param {number} [previous_history_index]
 	 * @param {{hash?: string, scroll: { x: number, y: number } | null, keepfocus: boolean, details: { replaceState: boolean, state: any } | null}} [opts]
 	 * @param {{}} [nav_token] To distinguish between different navigation events and determine the latest. Needed for example for redirects to keep the original token
 	 * @param {() => void} [callback]
 	 */
-	async function update(intent, url, redirect_chain, opts, nav_token = {}, callback) {
+	async function update(
+		intent,
+		url,
+		redirect_chain,
+		previous_history_index,
+		opts,
+		nav_token = {},
+		callback
+	) {
 		token = nav_token;
 		let navigation_result = intent && (await load_route(intent));
 
@@ -301,11 +331,28 @@ export function create_client({ target }) {
 
 		updating = true;
 
+		// `previous_history_index` will be undefined for invalidation
+		if (previous_history_index) {
+			update_scroll_positions(previous_history_index);
+			capture_snapshot(previous_history_index);
+		}
+
 		if (opts && opts.details) {
 			const { details } = opts;
 			const change = details.replaceState ? 0 : 1;
 			details.state[INDEX_KEY] = current_history_index += change;
 			history[details.replaceState ? 'replaceState' : 'pushState'](details.state, '', url);
+
+			if (!details.replaceState) {
+				// if we navigated back, then pushed a new state, we can
+				// release memory by pruning the scroll/snapshot lookup
+				let i = current_history_index + 1;
+				while (snapshots[i] || scroll_positions[i]) {
+					delete snapshots[i];
+					delete scroll_positions[i];
+					i += 1;
+				}
+			}
 		}
 
 		// reset preload synchronously after the history state has been set to avoid race conditions
@@ -384,9 +431,11 @@ export function create_client({ target }) {
 
 		root = new Root({
 			target,
-			props: { ...result.props, stores },
+			props: { ...result.props, stores, components },
 			hydrate: true
 		});
+
+		restore_snapshot(current_history_index);
 
 		/** @type {import('types').AfterNavigate} */
 		const navigation = {
@@ -445,7 +494,7 @@ export function create_client({ target }) {
 			},
 			props: {
 				// @ts-ignore Somehow it's getting SvelteComponent and SvelteComponentDev mixed up
-				components: compact(branch).map((branch_node) => branch_node.node.component)
+				constructors: compact(branch).map((branch_node) => branch_node.node.component)
 			}
 		};
 
@@ -1091,7 +1140,8 @@ export function create_client({ target }) {
 			return;
 		}
 
-		update_scroll_positions(current_history_index);
+		// store this before calling `accepted()`, which may change the index
+		const previous_history_index = current_history_index;
 
 		accepted();
 
@@ -1105,6 +1155,7 @@ export function create_client({ target }) {
 			intent,
 			url,
 			redirect_chain,
+			previous_history_index,
 			{
 				scroll,
 				keepfocus,
@@ -1385,12 +1436,10 @@ export function create_client({ target }) {
 			addEventListener('visibilitychange', () => {
 				if (document.visibilityState === 'hidden') {
 					update_scroll_positions(current_history_index);
+					storage.set(SCROLL_KEY, scroll_positions);
 
-					try {
-						sessionStorage[SCROLL_KEY] = JSON.stringify(scroll_positions);
-					} catch {
-						// do nothing
-					}
+					capture_snapshot(current_history_index);
+					storage.set(SNAPSHOT_KEY, snapshots);
 				}
 			});
 
@@ -1537,7 +1586,7 @@ export function create_client({ target }) {
 				});
 			});
 
-			addEventListener('popstate', (event) => {
+			addEventListener('popstate', async (event) => {
 				if (event.state?.[INDEX_KEY]) {
 					// if a popstate-driven navigation is cancelled, we need to counteract it
 					// with history.go, which means we end up back here, hence this check
@@ -1555,8 +1604,9 @@ export function create_client({ target }) {
 					}
 
 					const delta = event.state[INDEX_KEY] - current_history_index;
+					let blocked = false;
 
-					navigate({
+					await navigate({
 						url: new URL(location.href),
 						scroll,
 						keepfocus: false,
@@ -1567,10 +1617,15 @@ export function create_client({ target }) {
 						},
 						blocked: () => {
 							history.go(-delta);
+							blocked = true;
 						},
 						type: 'popstate',
 						delta
 					});
+
+					if (!blocked) {
+						restore_snapshot(current_history_index);
+					}
 				}
 			});
 

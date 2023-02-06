@@ -626,3 +626,32 @@ test.describe('env in app.html', () => {
 		expect(await page.locator('body').getAttribute('class')).toContain('groovy');
 	});
 });
+
+test.describe('Snapshots', () => {
+	test('recovers snapshotted data', async ({ page, clicknav }) => {
+		await page.goto('/snapshot/a');
+
+		let input = page.locator('input');
+		await input.type('hello');
+
+		await clicknav('[href="/snapshot/b"]');
+		await page.goBack();
+
+		input = page.locator('input');
+		expect(await input.inputValue()).toBe('hello');
+
+		await input.clear();
+		await input.type('works for cross-document navigations');
+
+		await clicknav('[href="/snapshot/c"]');
+		await page.goBack();
+		expect(await page.locator('input').inputValue()).toBe('works for cross-document navigations');
+
+		input = page.locator('input');
+		await input.clear();
+		await input.type('works for reloads');
+
+		await page.reload();
+		expect(await page.locator('input').inputValue()).toBe('works for reloads');
+	});
+});
