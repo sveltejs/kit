@@ -1,4 +1,5 @@
 ---
+'@sveltejs/adapter-auto': major
 '@sveltejs/adapter-netlify': major
 '@sveltejs/adapter-static': major
 '@sveltejs/adapter-vercel': major
