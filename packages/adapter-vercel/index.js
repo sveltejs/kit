@@ -259,7 +259,11 @@ function hash_config(config) {
 		config.external ?? '',
 		config.regions ?? '',
 		config.memory ?? '',
-		config.maxDuration ?? ''
+		config.maxDuration ?? '',
+		config.isr?.expiration ?? '',
+		config.isr?.group ?? '',
+		config.isr?.bypassToken ?? '',
+		config.isr?.allowQuery ?? ''
 	].join('/');
 }
 
