@@ -8,6 +8,9 @@ test('Updates package.json', () => {
 		{
 			name: 'foo',
 			version: '1.0.0',
+			scripts: {
+				packages: 'svelte-package'
+			},
 			exports: {
 				'./ignored': './something.js'
 			}
@@ -47,6 +50,10 @@ test('Updates package.json', () => {
 		name: 'foo',
 		version: '1.0.0',
 		type: 'module',
+		files: ['package'],
+		scripts: {
+			packages: 'svelte-package -o package'
+		},
 		exports: {
 			'./package.json': './package.json',
 			'.': './package/index.js',

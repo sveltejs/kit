@@ -54,9 +54,11 @@ function analyze(config, file) {
  * @param {ReturnType<typeof analyze>[]} files
  */
 export function update_pkg_json(config, pkg, files) {
+	const out_dir = path.relative('.', config.package.dir);
+
 	// See: https://pnpm.io/package_json#publishconfigdirectory
 	if (pkg.publishConfig?.directory || pkg.linkDirectory?.directory) {
-		console.warn(
+		console.log(
 			colors.yellow(
 				`Detected "publishConfig.directory" or "linkDirectory.directory" fields in your package.json. ` +
 					`This migration removes them, which may or may not be what you want. Please review closely.`
@@ -66,11 +68,23 @@ export function update_pkg_json(config, pkg, files) {
 		delete pkg.linkDirectory?.directory;
 	}
 
+	for (const key in pkg.scripts || []) {
+		const script = pkg.scripts[key];
+		if (script.includes('svelte-package')) {
+			pkg.scripts[key] = script.replace('svelte-package', `svelte-package -o ${out_dir}`);
+		}
+	}
+
 	pkg.type = 'module';
 	pkg.exports = {
 		'./package.json': './package.json',
 		...pkg.exports
 	};
+
+	pkg.files = pkg.files || [];
+	if (!pkg.files.includes(out_dir)) {
+		pkg.files.push(out_dir);
+	}
 
 	/** @type {Record<string, string>} */
 	const clashes = {};
@@ -81,13 +95,15 @@ export function update_pkg_json(config, pkg, files) {
 			const key = `./${file.dest}`.replace(/\/index\.js$|(\/[^/]+)\.js$/, '$1');
 
 			if (clashes[key]) {
-				throw new Error(
-					`Duplicate "${key}" export. Please remove or rename either ${clashes[key]} or ${original}`
+				console.log(
+					colors.yellow(
+						`Duplicate "${key}" export. Closelfy review your "exports" field in package.json after the migration.`
+					)
 				);
 			}
 
 			if (!pkg.exports[key]) {
-				pkg.exports[key] = `./${path.relative('.', config.package.dir)}/${file.dest}`;
+				pkg.exports[key] = `./${out_dir}/${file.dest}`;
 			}
 
 			clashes[key] = original;
@@ -108,14 +124,14 @@ export function update_pkg_json(config, pkg, files) {
 			} else {
 				console.log(
 					colors.yellow(
-						'Cannot generate a "svelte" entry point because the "." entry in "exports" is not a string. If you set it by hand, please also set one of the options as a "svelte" entry point\n'
+						'Cannot generate a "svelte" entry point because the "." entry in "exports" is not a string. Please specify a "svelte" entry point yourself\n'
 					)
 				);
 			}
 		} else {
 			console.log(
 				colors.yellow(
-					'Cannot generate a "svelte" entry point because the "." entry in "exports" is missing. Please specify one or set a "svelte" entry point yourself\n'
+					'Cannot generate a "svelte" entry point because the "." entry in "exports" is missing. Please specify a "svelte" entry point yourself\n'
 				)
 			);
 		}
