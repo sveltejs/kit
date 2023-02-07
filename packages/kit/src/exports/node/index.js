@@ -161,7 +161,7 @@ export async function setResponse(res, response) {
 
 				if (!res.write(value)) {
 					res.once('drain', next);
-					return;
+					break;
 				}
 			}
 			res.end();
