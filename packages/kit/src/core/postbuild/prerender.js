@@ -239,6 +239,11 @@ async function prerender({ out, manifest_path, metadata, verbose, env }) {
 		// avoid triggering `filterSerializeResponseHeaders` guard
 		const headers = Object.fromEntries(response.headers);
 
+		// Don't resolve paths above the base.
+		if (config.paths.base && encoded === encodeURI(config.paths.base)) {
+			encoded += '/';
+		}
+
 		if (config.prerender.crawl && headers['content-type'] === 'text/html') {
 			const { ids, hrefs } = crawl(body.toString());
 
