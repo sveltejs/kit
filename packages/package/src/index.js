@@ -11,8 +11,7 @@ import { emit_dts, transpile_ts } from './typescript.js';
  * @param {import('./types').Options} options
  */
 export async function build(options) {
-	const input = path.resolve(options.cwd, options.input);
-	const output = path.resolve(options.cwd, options.output);
+	const { input, output, extensions, alias } = normalize_options(options);
 
 	if (!fs.existsSync(input)) {
 		throw new Error(`${path.relative('.', input)} does not exist`);
@@ -21,17 +20,21 @@ export async function build(options) {
 	rimraf(output);
 	mkdirp(output);
 
-	const files = scan(input, options.extensions);
+	const files = scan(input, extensions);
 
 	if (options.types) {
-		await emit_dts(input, output, options.cwd, options.aliases, files);
+		await emit_dts(input, output, options.cwd, alias, files);
 	}
 
 	for (const file of files) {
-		await process_file(input, output, file, options.preprocessor, options.aliases);
+		await process_file(input, output, file, options.config.preprocess, alias);
 	}
 
-	console.log(colors.bold().green(`${options.input} -> ${options.output}`));
+	console.log(
+		colors
+			.bold()
+			.green(`${path.relative(options.cwd, input)} -> ${path.relative(options.cwd, output)}`)
+	);
 }
 
 /**
@@ -40,8 +43,7 @@ export async function build(options) {
 export async function watch(options) {
 	await build(options);
 
-	const input = path.resolve(options.cwd, options.input);
-	const output = path.resolve(options.cwd, options.output);
+	const { input, output, extensions, alias } = normalize_options(options);
 
 	const message = `\nWatching ${path.relative(options.cwd, input)} for changes...\n`;
 
@@ -60,13 +62,13 @@ export async function watch(options) {
 	const ready = new Promise((resolve) => watcher.on('ready', resolve));
 
 	watcher.on('all', async (type, filepath) => {
-		const file = analyze(path.relative(input, filepath), options.extensions);
+		const file = analyze(path.relative(input, filepath), extensions);
 
 		pending.push({ file, type });
 
 		clearTimeout(timeout);
 		timeout = setTimeout(async () => {
-			const files = scan(input, options.extensions);
+			const files = scan(input, extensions);
 
 			const events = pending.slice();
 			pending.length = 0;
@@ -94,13 +96,13 @@ export async function watch(options) {
 				}
 
 				if (type === 'add' || type === 'change') {
-					await process_file(input, output, file, options.preprocessor, options.aliases);
+					await process_file(input, output, file, options.config.preprocess, alias);
 					console.log(`Processing ${file.name}`);
 				}
 			}
 
 			if (options.types) {
-				await emit_dts(input, output, options.cwd, options.aliases, files);
+				await emit_dts(input, output, options.cwd, alias, files);
 				console.log('Updated .d.ts files');
 			}
 
@@ -118,6 +120,27 @@ export async function watch(options) {
 				fulfillers.push(fulfil);
 				setTimeout(() => reject(new Error('Timed out')), 1000);
 			})
+	};
+}
+
+/**
+ * @param {import('./types').Options} options
+ */
+function normalize_options(options) {
+	const input = path.resolve(options.cwd, options.input);
+	const output = path.resolve(options.cwd, options.output);
+	const extensions = options.config.extensions ?? ['.svelte'];
+
+	const alias = {
+		$lib: options.config.kit?.files?.lib ?? 'src/lib',
+		...(options.config.kit?.alias ?? {})
+	};
+
+	return {
+		input,
+		output,
+		extensions,
+		alias
 	};
 }
 

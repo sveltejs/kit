@@ -32,21 +32,15 @@ prog
 				);
 			}
 
-			const $lib = config.kit?.files?.lib ?? 'src/lib';
-			const input = args.input ?? $lib;
-			const output = args.output;
-
 			const packaging = await import('./index.js');
 
 			/** @type {import('./types').Options} */
 			const options = {
-				input,
-				output,
-				extensions: config.extensions ?? ['.svelte'],
-				aliases: { $lib, ...(config.kit?.alias ?? {}) },
-				preprocessor: config.preprocess,
+				cwd: process.cwd(),
+				input: args.input ?? config.kit?.files?.lib ?? 'src/lib',
+				output: args.output,
 				types: args.types,
-				cwd: process.cwd()
+				config
 			};
 
 			await (args.watch ? packaging.watch(options) : packaging.build(options));

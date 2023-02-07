@@ -1,13 +1,20 @@
 import { PreprocessorGroup } from 'svelte/types/compiler/preprocess';
 
 export interface Options {
+	cwd: string;
 	input: string;
 	output: string;
 	types: boolean;
-	extensions: string[];
-	aliases: Record<string, string>;
-	preprocessor: PreprocessorGroup;
-	cwd: string;
+	config: {
+		extensions?: string[];
+		kit?: {
+			alias?: Record<string, string>;
+			files?: {
+				lib?: string;
+			};
+		};
+		preprocess?: PreprocessorGroup;
+	};
 }
 
 export interface File {

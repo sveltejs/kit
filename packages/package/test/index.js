@@ -19,38 +19,42 @@ const __dirname = join(__filename, '..');
 async function test_make_package(path) {
 	const cwd = join(__dirname, 'fixtures', path);
 	const ewd = join(cwd, 'expected');
-	const pwd = join(cwd, 'package');
+	const output = join(cwd, 'dist');
 
-	try {
-		const config = await load_config({ cwd });
-		config.package.dir = resolve(cwd, config.package.dir);
+	const config = await load_config({ cwd });
 
-		await build(config, cwd);
-		const expected_files = walk(ewd, true);
-		const actual_files = walk(pwd, true);
+	const input = resolve(cwd, config.kit?.files?.lib ?? 'src/lib');
 
-		assert.equal(actual_files, expected_files);
+	await build({
+		cwd,
+		input,
+		output,
+		types: true,
+		config
+	});
 
-		const extensions = ['.json', '.svelte', '.ts', 'js'];
-		for (const file of actual_files) {
-			const pathname = join(pwd, file);
-			if (fs.statSync(pathname).isDirectory()) continue;
-			assert.ok(expected_files.includes(file), `Did not expect ${file} in ${path}`);
+	const expected_files = walk(ewd, true);
+	const actual_files = walk(output, true);
 
-			const expected = fs.readFileSync(join(ewd, file));
-			const actual = fs.readFileSync(join(pwd, file));
-			const err_msg = `Expected equal file contents for ${file} in ${path}`;
+	assert.equal(actual_files, expected_files);
 
-			if (extensions.some((ext) => pathname.endsWith(ext))) {
-				const expected_content = format(file, expected.toString('utf-8'));
-				const actual_content = format(file, actual.toString('utf-8'));
-				assert.fixture(actual_content, expected_content, err_msg);
-			} else {
-				assert.ok(expected.equals(actual), err_msg);
-			}
+	const extensions = ['.json', '.svelte', '.ts', 'js'];
+	for (const file of actual_files) {
+		const pathname = join(output, file);
+		if (fs.statSync(pathname).isDirectory()) continue;
+		assert.ok(expected_files.includes(file), `Did not expect ${file} in ${path}`);
+
+		const expected = fs.readFileSync(join(ewd, file));
+		const actual = fs.readFileSync(join(output, file));
+		const err_msg = `Expected equal file contents for ${file} in ${path}`;
+
+		if (extensions.some((ext) => pathname.endsWith(ext))) {
+			const expected_content = format(file, expected.toString('utf-8'));
+			const actual_content = format(file, actual.toString('utf-8'));
+			assert.fixture(actual_content, expected_content, err_msg);
+		} else {
+			assert.ok(expected.equals(actual), err_msg);
 		}
-	} finally {
-		rimraf(pwd);
 	}
 }
 
@@ -75,13 +79,14 @@ function format(file, content) {
 for (const dir of fs.readdirSync(join(__dirname, 'errors'))) {
 	test(`package error [${dir}]`, async () => {
 		const cwd = join(__dirname, 'errors', dir);
-		const pwd = join(cwd, 'package');
+		const output = join(cwd, 'dist');
 
 		const config = await load_config({ cwd });
-		config.package.dir = resolve(cwd, config.package.dir);
+
+		const input = resolve(cwd, config.kit?.files?.lib ?? 'src/lib');
 
 		try {
-			await build(config, cwd);
+			await build({ cwd, input, output, types: true, config });
 			assert.unreachable('Must not pass build');
 		} catch (/** @type {any} */ error) {
 			assert.instance(error, Error);
@@ -93,7 +98,7 @@ for (const dir of fs.readdirSync(join(__dirname, 'errors'))) {
 					);
 					break;
 				case 'no-lib-folder':
-					assert.match(error.message, `${join(cwd, 'src', 'lib')} does not exist`);
+					assert.match(error.message, `test/errors/no-lib-folder/src/lib does not exist`);
 					break;
 				// TODO: non-existent tsconfig passes without error
 				// 	it detects tsconfig in packages/kit instead and creates package folder
@@ -107,7 +112,7 @@ for (const dir of fs.readdirSync(join(__dirname, 'errors'))) {
 					break;
 			}
 		} finally {
-			rimraf(pwd);
+			rimraf(output);
 		}
 	});
 }
