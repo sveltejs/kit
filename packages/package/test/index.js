@@ -15,8 +15,9 @@ const __dirname = join(__filename, '..');
 
 /**
  * @param {string} path
+ * @param {Partial<import('../src/types').Options>} [options]
  */
-async function test_make_package(path) {
+async function test_make_package(path, options) {
 	const cwd = join(__dirname, 'fixtures', path);
 	const ewd = join(cwd, 'expected');
 	const output = join(cwd, 'dist');
@@ -30,7 +31,8 @@ async function test_make_package(path) {
 		input,
 		output,
 		types: true,
-		config
+		config,
+		...options
 	});
 
 	const expected_files = walk(ewd, true);
@@ -91,14 +93,11 @@ for (const dir of fs.readdirSync(join(__dirname, 'errors'))) {
 		} catch (/** @type {any} */ error) {
 			assert.instance(error, Error);
 			switch (dir) {
-				case 'duplicate-export':
-					assert.match(
-						error.message,
-						'Duplicate "./utils" export. Please remove or rename either $lib/utils/index.js or $lib/utils.ts'
-					);
-					break;
 				case 'no-lib-folder':
-					assert.match(error.message, `test/errors/no-lib-folder/src/lib does not exist`);
+					assert.match(
+						error.message.replace(/\\/g, '/'),
+						`test/errors/no-lib-folder/src/lib does not exist`
+					);
 					break;
 				// TODO: non-existent tsconfig passes without error
 				// 	it detects tsconfig in packages/kit instead and creates package folder
@@ -132,15 +131,7 @@ test('create package and assets are not tampered', async () => {
 });
 
 test('create package with emitTypes settings disabled', async () => {
-	await test_make_package('emitTypes-false');
-});
-
-test('create package and properly merge exports map', async () => {
-	await test_make_package('exports-merge');
-});
-
-test('create package and properly exclude all exports', async () => {
-	await test_make_package('exports-replace');
+	await test_make_package('emitTypes-false', { types: false });
 });
 
 test('create package with files.exclude settings', async () => {
@@ -161,9 +152,14 @@ if (!process.env.CI) {
 		const cwd = join(__dirname, 'watch');
 
 		const config = await load_config({ cwd });
-		config.package.dir = resolve(cwd, config.package.dir);
 
-		const { watcher, ready, settled } = await watch(config, cwd);
+		const { watcher, ready, settled } = await watch({
+			cwd,
+			input: 'src/lib',
+			output: 'package',
+			types: true,
+			config
+		});
 
 		/** @param {string} file */
 		function compare(file) {
