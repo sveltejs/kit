@@ -12,7 +12,8 @@ const globals = {
 	ReadableStream,
 	TransformStream,
 	WritableStream,
-	FormData
+	FormData,
+	File
 };
 
 // exported for dev/preview and node environments
