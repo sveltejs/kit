@@ -1,4 +1,5 @@
 import { ReadableStream, TransformStream, WritableStream } from 'node:stream/web';
+import { File } from 'node:buffer';
 import { webcrypto as crypto } from 'node:crypto';
 import { fetch, Response, Request, Headers, FormData } from 'undici';
 
