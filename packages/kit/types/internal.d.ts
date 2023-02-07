@@ -334,6 +334,7 @@ export interface PageNodeIndexes {
 export type SSREndpoint = Partial<Record<HttpMethod, RequestHandler>> & {
 	prerender?: PrerenderOption;
 	trailingSlash?: TrailingSlash;
+	config?: any;
 };
 
 export interface SSRRoute {
