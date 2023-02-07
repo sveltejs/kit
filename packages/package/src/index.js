@@ -1,105 +1,51 @@
-import * as fs from 'fs';
-import { dirname, join, relative } from 'path';
+import * as fs from 'node:fs';
+import * as path from 'node:path';
 import colors from 'kleur';
 import chokidar from 'chokidar';
 import { preprocess } from 'svelte/compiler';
 import { copy, mkdirp, rimraf } from './filesystem.js';
-import { analyze, generate_pkg, resolve_lib_alias, scan, strip_lang_tags, write } from './utils.js';
+import { analyze, resolve_aliases, scan, strip_lang_tags, write } from './utils.js';
 import { emit_dts, transpile_ts } from './typescript.js';
 
-const essential_files = ['README', 'LICENSE', 'CHANGELOG', '.gitignore', '.npmignore'];
-
 /**
- * @param {import('./types').ValidatedConfig} config
- * @param {string} cwd
+ * @param {import('./types').Options} options
  */
-export async function build(config, cwd = process.cwd()) {
-	const { source: lib } = config.package;
-	const { dir } = config.package;
+export async function build(options) {
+	const input = path.resolve(options.cwd, options.input);
+	const output = path.resolve(options.cwd, options.output);
 
-	if (!fs.existsSync(lib)) {
-		throw new Error(`${lib} does not exist`);
+	if (!fs.existsSync(input)) {
+		throw new Error(`${path.relative('.', input)} does not exist`);
 	}
 
-	rimraf(dir);
-	mkdirp(dir);
+	rimraf(output);
+	mkdirp(output);
 
-	const files = scan(config);
+	const files = scan(input, options.extensions);
 
-	if (config.package.emitTypes) {
-		await emit_dts(config, cwd, files);
+	if (options.types) {
+		await emit_dts(input, output, options.cwd, options.aliases, files);
 	}
-
-	const pkg = generate_pkg(cwd, files);
-
-	if (!pkg.dependencies?.svelte && !pkg.peerDependencies?.svelte) {
-		console.warn(
-			'Svelte libraries should include "svelte" in either "dependencies" or "peerDependencies".'
-		);
-	}
-
-	if (!pkg.svelte && files.some((file) => file.is_svelte)) {
-		// Several heuristics in Kit/vite-plugin-svelte to tell Vite to mark Svelte packages
-		// rely on the "svelte" property. Vite/Rollup/Webpack plugin can all deal with it.
-		// See https://github.com/sveltejs/kit/issues/1959 for more info and related threads.
-		if (pkg.exports['.']) {
-			const svelte_export =
-				typeof pkg.exports['.'] === 'string'
-					? pkg.exports['.']
-					: pkg.exports['.'].import || pkg.exports['.'].default;
-			if (svelte_export) {
-				pkg.svelte = svelte_export;
-			} else {
-				console.warn(
-					'Cannot generate a "svelte" entry point because the "." entry in "exports" is not a string. If you set it by hand, please also set one of the options as a "svelte" entry point\n'
-				);
-			}
-		} else {
-			console.warn(
-				'Cannot generate a "svelte" entry point because the "." entry in "exports" is missing. Please specify one or set a "svelte" entry point yourself\n'
-			);
-		}
-	}
-
-	write(join(dir, 'package.json'), JSON.stringify(pkg, null, 2));
 
 	for (const file of files) {
-		await process_file(config, file);
+		await process_file(input, output, file, options.preprocessor, options.aliases);
 	}
 
-	const whitelist = fs.readdirSync(cwd).filter((file) => {
-		const lowercased = file.toLowerCase();
-		return essential_files.some((name) => lowercased.startsWith(name.toLowerCase()));
-	});
-
-	for (const pathname of whitelist) {
-		const full_path = join(cwd, pathname);
-		if (fs.lstatSync(full_path).isDirectory()) continue; // just to be sure
-
-		const package_path = join(dir, pathname);
-		if (!fs.existsSync(package_path)) fs.copyFileSync(full_path, package_path);
-	}
-
-	const from = relative(cwd, lib);
-	const to = relative(cwd, dir);
-	console.log(colors.bold().green(`${from} -> ${to}`));
-	console.log(`Successfully built '${pkg.name}' package. To publish it to npm:`);
-	console.log(colors.bold().cyan(`  cd ${to}`));
-	console.log(colors.bold().cyan('  npm publish\n'));
+	console.log(colors.bold().green(`${options.input} -> ${options.output}`));
 }
 
 /**
- * @param {import('./types').ValidatedConfig} config
+ * @param {import('./types').Options} options
  */
-export async function watch(config, cwd = process.cwd()) {
-	await build(config, cwd);
+export async function watch(options) {
+	await build(options);
 
-	const message = `\nWatching ${relative(cwd, config.package.source)} for changes...\n`;
+	const input = path.resolve(options.cwd, options.input);
+	const output = path.resolve(options.cwd, options.output);
+
+	const message = `\nWatching ${path.relative(options.cwd, input)} for changes...\n`;
 
 	console.log(message);
-
-	const { source: lib } = config.package;
-	const { dir } = config.package;
 
 	/** @type {Array<{ file: import('./types').File, type: string }>} */
 	const pending = [];
@@ -110,29 +56,22 @@ export async function watch(config, cwd = process.cwd()) {
 	/** @type {NodeJS.Timeout} */
 	let timeout;
 
-	const watcher = chokidar.watch(lib, { ignoreInitial: true });
+	const watcher = chokidar.watch(input, { ignoreInitial: true });
 	const ready = new Promise((resolve) => watcher.on('ready', resolve));
 
-	watcher.on('all', async (type, path) => {
-		const file = analyze(config, relative(lib, path));
-		if (!file.is_included) return;
+	watcher.on('all', async (type, filepath) => {
+		const file = analyze(path.relative(input, filepath), options.extensions);
 
 		pending.push({ file, type });
 
 		clearTimeout(timeout);
 		timeout = setTimeout(async () => {
-			const files = scan(config);
-
-			let should_update_pkg = false;
+			const files = scan(input, options.extensions);
 
 			const events = pending.slice();
 			pending.length = 0;
 
 			for (const { file, type } of events) {
-				if ((type === 'unlink' || type === 'add') && file.is_exported) {
-					should_update_pkg = true;
-				}
-
 				if (type === 'unlink') {
 					for (const candidate of [
 						file.name,
@@ -140,13 +79,13 @@ export async function watch(config, cwd = process.cwd()) {
 						`${file.base}.d.mts`,
 						`${file.base}.d.cts`
 					]) {
-						const resolved = join(dir, candidate);
+						const resolved = path.join(output, candidate);
 
 						if (fs.existsSync(resolved)) {
 							fs.unlinkSync(resolved);
 
-							const parent = dirname(resolved);
-							if (parent !== dir && fs.readdirSync(parent).length === 0) {
+							const parent = path.dirname(resolved);
+							if (parent !== output && fs.readdirSync(parent).length === 0) {
 								fs.rmdirSync(parent);
 							}
 						}
@@ -155,19 +94,13 @@ export async function watch(config, cwd = process.cwd()) {
 				}
 
 				if (type === 'add' || type === 'change') {
-					await process_file(config, file);
+					await process_file(input, output, file, options.preprocessor, options.aliases);
 					console.log(`Processing ${file.name}`);
 				}
 			}
 
-			if (should_update_pkg) {
-				const pkg = generate_pkg(cwd, files);
-				write(join(dir, 'package.json'), JSON.stringify(pkg, null, 2));
-				console.log('Updated package.json');
-			}
-
-			if (config.package.emitTypes) {
-				await emit_dts(config, cwd, scan(config));
+			if (options.types) {
+				await emit_dts(input, output, options.cwd, options.aliases, files);
 				console.log('Updated .d.ts files');
 			}
 
@@ -189,21 +122,22 @@ export async function watch(config, cwd = process.cwd()) {
 }
 
 /**
- * @param {import('./types').ValidatedConfig} config
+ * @param {string} input
+ * @param {string} output
  * @param {import('./types').File} file
+ * @param {import('svelte/types/compiler/preprocess').PreprocessorGroup} preprocessor
+ * @param {Record<string, string>} aliases
  */
-async function process_file(config, file) {
-	if (!file.is_included) return;
-
-	const filename = join(config.package.source, file.name);
-	const dest = join(config.package.dir, file.dest);
+async function process_file(input, output, file, preprocessor, aliases) {
+	const filename = path.join(input, file.name);
+	const dest = path.join(output, file.dest);
 
 	if (file.is_svelte || file.name.endsWith('.ts')) {
 		let contents = fs.readFileSync(filename, 'utf-8');
 
 		if (file.is_svelte) {
-			if (config.preprocess) {
-				const preprocessed = (await preprocess(contents, config.preprocess, { filename })).code;
+			if (preprocessor) {
+				const preprocessed = (await preprocess(contents, preprocessor, { filename })).code;
 				contents = strip_lang_tags(preprocessed);
 			}
 		}
@@ -212,7 +146,7 @@ async function process_file(config, file) {
 			contents = await transpile_ts(filename, contents);
 		}
 
-		contents = resolve_lib_alias(file.name, contents, config);
+		contents = resolve_aliases(input, file.name, contents, aliases);
 		write(dest, contents);
 	} else {
 		copy(filename, dest);

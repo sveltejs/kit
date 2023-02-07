@@ -1,11 +1,19 @@
-import type { PackageConfig } from 'types';
+import { PreprocessorGroup } from 'svelte/types/compiler/preprocess';
+
+export interface Options {
+	input: string;
+	output: string;
+	types: boolean;
+	extensions: string[];
+	aliases: Record<string, string>;
+	preprocessor: PreprocessorGroup;
+	cwd: string;
+}
 
 export interface File {
 	name: string;
 	dest: string;
 	base: string;
-	is_included: boolean;
-	is_exported: boolean;
 	is_svelte: boolean;
 }
 
@@ -20,7 +28,6 @@ export type RecursiveRequired<T> = {
 export interface ValidatedConfig {
 	extensions: string[];
 	kit?: any;
-	package: RecursiveRequired<PackageConfig>;
 	preprocess?: any;
 }
 
