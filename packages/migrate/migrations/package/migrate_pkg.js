@@ -97,7 +97,7 @@ export function update_pkg_json(config, pkg, files) {
 			if (clashes[key]) {
 				console.log(
 					colors.yellow(
-						`Duplicate "${key}" export. Closelfy review your "exports" field in package.json after the migration.`
+						`Duplicate "${key}" export. Closely review your "exports" field in package.json after the migration.`
 					)
 				);
 			}
