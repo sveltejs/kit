@@ -132,7 +132,7 @@ function normalize_options(options) {
 	const extensions = options.config.extensions ?? ['.svelte'];
 
 	const alias = {
-		$lib: options.config.kit?.files?.lib ?? 'src/lib',
+		$lib: path.resolve(options.cwd, options.config.kit?.files?.lib ?? 'src/lib'),
 		...(options.config.kit?.alias ?? {})
 	};
 
