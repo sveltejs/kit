@@ -41,7 +41,7 @@ Every package should have a license field so people know how they are allowed to
 }
 ```
 
-Read more about it [here](https://docs.npmjs.com/cli/v9/configuring-npm/package-json#license).
+Read more about it [here](https://docs.npmjs.com/cli/v9/configuring-npm/package-json#license). Note that you should also include a `LICENSE` file in your package.
 
 ### files
 
