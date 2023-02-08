@@ -1,5 +1,5 @@
 ---
-'@sveltejs/adapter-netlify': minor
+'@sveltejs/adapter-netlify': patch
 ---
 
-Preserve functions-internal folder so that auto-generated functions are not removed when ntl build is run
+fix: preserve functions-internal folder so that auto-generated functions are not removed when ntl build is run
