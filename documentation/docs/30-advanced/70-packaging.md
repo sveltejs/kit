@@ -45,7 +45,7 @@ Read more about it [here](https://docs.npmjs.com/cli/v9/configuring-npm/package-
 
 ### files
 
-This tells npm which files it will pack up and upload to npm. It should contain your output folder (`dist` by default). Your `package.json` and `README` and `LICENSE/LICENCE` will always be part of it, so you don't need to specify them.
+This tells npm which files it will pack up and upload to npm. It should contain your output folder (`dist` by default). Your `package.json` and `README` and `LICENSE` will always be included, so you don't need to specify them.
 
 ```json
 {
