@@ -5,15 +5,14 @@ import { set_assets, set_version, set_public_env } from '../shared.js';
 
 /**
  * @param {{
+ *   app: Promise<import('./types').SvelteKitApp>;
  *   assets: string;
- *   env: Record<string, string>;
  *   hydrate: Parameters<import('./types').Client['_hydrate']>[0];
  *   target: HTMLElement;
  *   version: string;
  * }} opts
  */
-export async function start({ assets, env, hydrate, target, version }) {
-	set_public_env(env);
+export async function start({ app, assets, hydrate, target, version }) {
 	set_assets(assets);
 	set_version(version);
 
@@ -23,9 +22,7 @@ export async function start({ assets, env, hydrate, target, version }) {
 		);
 	}
 
-	const client = create_client({
-		target
-	});
+	const client = create_client({ app: await app, target });
 
 	init({ client });
 
@@ -37,3 +34,5 @@ export async function start({ assets, env, hydrate, target, version }) {
 
 	client._start_router();
 }
+
+export { set_public_env as env };

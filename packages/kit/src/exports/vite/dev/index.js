@@ -105,11 +105,19 @@ export async function dev(vite, vite_config, svelte_config) {
 			assets: new Set(manifest_data.assets.map((asset) => asset.file)),
 			mimeTypes: get_mime_lookup(manifest_data),
 			_: {
-				entry: {
-					file: `${runtime_base}/client/start.js`,
-					imports: [],
-					stylesheets: [],
-					fonts: []
+				client: {
+					start: {
+						file: `${runtime_base}/client/start.js`,
+						imports: [],
+						stylesheets: [],
+						fonts: []
+					},
+					app: {
+						file: `${svelte_config.kit.outDir}/generated/client/app.js`,
+						imports: [],
+						stylesheets: [],
+						fonts: []
+					}
 				},
 				nodes: manifest_data.nodes.map((node, index) => {
 					return async () => {

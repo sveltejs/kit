@@ -1007,11 +1007,19 @@ export interface SSRManifest {
 
 	/** private fields */
 	_: {
-		entry: {
-			file: string;
-			imports: string[];
-			stylesheets: string[];
-			fonts: string[];
+		client: {
+			start: {
+				file: string;
+				imports: string[];
+				stylesheets: string[];
+				fonts: string[];
+			};
+			app: {
+				file: string;
+				imports: string[];
+				stylesheets: string[];
+				fonts: string[];
+			};
 		};
 		nodes: SSRNodeLoader[];
 		routes: SSRRoute[];

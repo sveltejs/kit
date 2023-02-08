@@ -636,10 +636,17 @@ test.describe('Content negotiation', () => {
 	});
 });
 
-test.describe('env in app.html', () => {
-	test('can access public env', async ({ page }) => {
+test.describe('env', () => {
+	test('can access public env in app.html', async ({ page }) => {
 		await page.goto('/');
 		expect(await page.locator('body').getAttribute('class')).toContain('groovy');
+	});
+
+	test('can access public env in hooks.client.js', async ({ page }) => {
+		await page.goto('/');
+		expect(await page.evaluate(() => window.PUBLIC_DYNAMIC)).toBe(
+			'accessible anywhere/evaluated at run time'
+		);
 	});
 });
 

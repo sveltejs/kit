@@ -57,11 +57,11 @@ export async function render_response({
 		}
 	}
 
-	const { entry } = manifest._;
+	const { client } = manifest._;
 
-	const stylesheets = new Set(entry.stylesheets);
-	const modulepreloads = new Set(entry.imports);
-	const fonts = new Set(manifest._.entry.fonts);
+	const modulepreloads = new Set([...client.start.imports, ...client.app.imports]);
+	const stylesheets = new Set(client.app.stylesheets);
+	const fonts = new Set(client.app.fonts);
 
 	/** @type {Set<string>} */
 	const link_header_preloads = new Set();
@@ -266,8 +266,8 @@ export async function render_response({
 
 	if (page_config.csr) {
 		const opts = [
+			`app: import(${s(prefixed(client.app.file))})`,
 			`assets: ${s(assets)}`,
-			`env: ${s(public_env)}`,
 			`target: document.querySelector('[data-sveltekit-hydrate="${target}"]').parentNode`,
 			`version: ${s(version)}`
 		];
@@ -293,7 +293,9 @@ export async function render_response({
 
 		// prettier-ignore
 		const init_app = `
-			import { start } from ${s(prefixed(entry.file))};
+			import { env, start } from ${s(prefixed(client.start.file))};
+
+			env(${s(public_env)});
 
 			start({
 				${opts.join(',\n\t\t\t\t')}

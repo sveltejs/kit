@@ -452,6 +452,7 @@ export function set_assets(path) {
 				} else {
 					/** @type {Record<string, string>} */
 					input.start = `${runtime_directory}/client/start.js`;
+					input.app = `${kit.outDir}/generated/client/app.js`;
 
 					manifest_data.nodes.forEach((node) => {
 						if (node.component) {
@@ -590,7 +591,7 @@ export function set_assets(path) {
 					app_path: `${kit.paths.base.slice(1)}${kit.paths.base ? '/' : ''}${kit.appDir}`,
 					manifest_data,
 					service_worker: !!service_worker_entry_file ? 'service-worker.js' : null, // TODO make file configurable?
-					client_entry: null,
+					client: null,
 					server_manifest
 				};
 
@@ -639,11 +640,18 @@ export function set_assets(path) {
 				/** @type {import('vite').Manifest} */
 				const client_manifest = JSON.parse(read(`${out}/client/${vite_config.build.manifest}`));
 
-				build_data.client_entry = find_deps(
-					client_manifest,
-					posixify(path.relative('.', `${runtime_directory}/client/start.js`)),
-					false
-				);
+				build_data.client = {
+					start: find_deps(
+						client_manifest,
+						posixify(path.relative('.', `${runtime_directory}/client/start.js`)),
+						false
+					),
+					app: find_deps(
+						client_manifest,
+						posixify(path.relative('.', `${kit.outDir}/generated/client/app.js`)),
+						false
+					)
+				};
 
 				const css = output.filter(
 					/** @type {(value: any) => value is import('rollup').OutputAsset} */

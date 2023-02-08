@@ -47,11 +47,19 @@ export interface BuildData {
 	app_path: string;
 	manifest_data: ManifestData;
 	service_worker: string | null;
-	client_entry: {
-		file: string;
-		imports: string[];
-		stylesheets: string[];
-		fonts: string[];
+	client: {
+		start: {
+			file: string;
+			imports: string[];
+			stylesheets: string[];
+			fonts: string[];
+		};
+		app: {
+			file: string;
+			imports: string[];
+			stylesheets: string[];
+			fonts: string[];
+		};
 	} | null;
 	server_manifest: import('vite').Manifest;
 }
