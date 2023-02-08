@@ -454,7 +454,7 @@ export function load() {
 
 When rendering (or navigating to) a page, SvelteKit runs all `load` functions concurrently, avoiding a waterfall of requests. During client-side navigation, the result of calling multiple server `load` functions are grouped into a single response. Once all `load` functions have returned, the page is rendered.
 
-## Invalidation
+## Rerunning load functions
 
 SvelteKit tracks the dependencies of each `load` function to avoid re-running it unnecessarily during navigation.
 
@@ -553,8 +553,6 @@ To summarize, a `load` function will re-run in the following situations:
 - It declared a dependency on a specific URL via [`fetch`](#making-fetch-requests) or [`depends`](types#public-types-loadevent), and that URL was marked invalid with [`invalidate(url)`](modules#$app-navigation-invalidate)
 - All active `load` functions were forcibly re-run with [`invalidateAll()`](modules#$app-navigation-invalidateall)
 
+`params` and `url` can change in response to a `<a href="..">` link click, a [`<form>` interaction](form-actions#get-vs-post), a [`goto`](modules#$app-navigation-goto) invocation, or a [`redirect`](modules#sveltejs-kit-redirect).
+
 Note that re-running a `load` function will update the `data` prop inside the corresponding `+layout.svelte` or `+page.svelte`; it does _not_ cause the component to be recreated. As a result, internal state is preserved. If this isn't what you want, you can reset whatever you need to reset inside an [`afterNavigate`](modules#$app-navigation-afternavigate) callback, and/or wrap your component in a [`{#key ...}`](https://svelte.dev/docs#template-syntax-key) block.
-
-## Shared state
-
-In many server environments, a single instance of your app will serve multiple users. For that reason, per-request or per-user state must not be stored in shared variables outside your `load` functions, but should instead be stored in `event.locals`.
