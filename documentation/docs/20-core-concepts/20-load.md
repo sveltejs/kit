@@ -162,6 +162,14 @@ As we've seen, there are two types of `load` function:
 
 Conceptually, they're the same thing, but there are some important differences to be aware of.
 
+### When does which load function run
+
+Server `load` functions _always_ run on the server.
+
+By default universal `load` functions run on the server during SSR when the user first visits your page. They will then run again during hydration, reusing any responses from [fetch requests](#making-fetch-requests). All subsequent invocations of universal `load` functions happen in the browser. You can customize the behavior through [page options](page-options). If you disable [server side rendering](page-options#ssr), you'll get an SPA and universal `load` functions _always_ run on the client.
+
+A `load` function is invoked at runtime, unless you [prerender](page-options#prerender) the page — in that case, it's invoked at build time.
+
 ### Input
 
 Both universal and server `load` functions have access to properties describing the request (`params`, `route` and `url`) and various functions (`fetch`, `setHeaders`, `parent` and `depends`). These are described in the following sections.
