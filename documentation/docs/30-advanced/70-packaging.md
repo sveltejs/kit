@@ -53,6 +53,8 @@ This tells npm which files it will pack up and upload to npm. It should contain 
 }
 ```
 
+To exclude unnecessary files (such as unit tests, or modules that are only imported from `src/routes` etc) you can add them to an `.npmignore` file. This will result in smaller packages that are faster to install.
+
 Read more about it [here](https://docs.npmjs.com/cli/v9/configuring-npm/package-json#files).
 
 ### exports
