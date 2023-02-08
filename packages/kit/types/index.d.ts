@@ -1091,6 +1091,13 @@ export type Actions<
 
 /**
  * When calling a form action via fetch, the response will be one of these shapes.
+ * ```svelte
+ * <form method="post" use:enhance={() => {
+ *   return ({ result }) => {
+ * 		// result is of type ActionResult
+ *   };
+ * }}
+ * ```
  */
 export type ActionResult<
 	Success extends Record<string, unknown> | undefined = Record<string, any>,
