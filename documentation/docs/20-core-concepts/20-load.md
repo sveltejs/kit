@@ -322,6 +322,7 @@ export async function load({ parent }) {
 ```
 
 ```svelte
+/// file: src/routes/abc/+page.svelte
 <script>
 	/** @type {import('./$types').PageData} */
 	export let data;
@@ -415,6 +416,10 @@ export function load({ locals }) {
 }
 ```
 
+> Make sure you're not catching the thrown redirect, which results in a noop.
+
+In the browser, you can also navigate programmatically outside of a `load` function using [`goto`](modules#$app-navigation-goto) from [`$app.navigation`](modules#$app-navigation).
+
 ## Promise unwrapping
 
 Top-level promises will be awaited, which makes it easy to return multiple promises without creating a waterfall:
@@ -434,6 +439,7 @@ export function load() {
 ```
 
 ```svelte
+/// file: src/routes/+page.svelte
 <script>
 	/** @type {import('./$types').PageData} */
 	export let data;

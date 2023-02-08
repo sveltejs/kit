@@ -1,11 +1,12 @@
 import './shims';
-import fs from 'fs';
-import path from 'path';
+import fs from 'node:fs';
+import path from 'node:path';
 import sirv from 'sirv';
-import { fileURLToPath } from 'url';
+import { fileURLToPath } from 'node:url';
+import { parse as polka_url_parser } from '@polka/url';
 import { getRequest, setResponse } from '@sveltejs/kit/node';
 import { Server } from 'SERVER';
-import { manifest } from 'MANIFEST';
+import { manifest, prerendered } from 'MANIFEST';
 import { env } from 'ENV';
 
 /* global ENV_PREFIX */
@@ -44,8 +45,38 @@ function serve(path, client = false) {
 	);
 }
 
+// required because the static file server ignores trailing slashes
+/** @returns {import('polka').Middleware} */
+function serve_prerendered() {
+	const handler = serve(path.join(dir, 'prerendered'));
+
+	return (req, res, next) => {
+		let { pathname, search, query } = polka_url_parser(req);
+
+		try {
+			pathname = decodeURIComponent(pathname);
+		} catch {
+			// ignore invalid URI
+		}
+
+		if (prerendered.has(pathname)) {
+			return handler(req, res, next);
+		}
+
+		// remove or add trailing slash as appropriate
+		let location = pathname.at(-1) === '/' ? pathname.slice(0, -1) : pathname + '/';
+		if (prerendered.has(location)) {
+			if (query) location += search;
+			res.writeHead(308, { location }).end();
+		} else {
+			next();
+		}
+	};
+}
+
 /** @type {import('polka').Middleware} */
 const ssr = async (req, res) => {
+	/** @type {Request | undefined} */
 	let request;
 
 	try {
@@ -139,7 +170,7 @@ export const handler = sequence(
 	[
 		serve(path.join(dir, 'client'), true),
 		serve(path.join(dir, 'static')),
-		serve(path.join(dir, 'prerendered')),
+		serve_prerendered(),
 		ssr
 	].filter(Boolean)
 );

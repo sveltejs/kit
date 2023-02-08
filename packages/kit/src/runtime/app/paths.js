@@ -1,1 +1,1 @@
-export { base, assets } from '../shared.js';
+export { base, assets } from '$internal/paths';

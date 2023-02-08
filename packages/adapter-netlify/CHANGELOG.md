@@ -1,5 +1,22 @@
 # @sveltejs/adapter-netlify
 
+## 2.0.1
+
+### Patch Changes
+
+- chore: throw helpful migration error ([#8915](https://github.com/sveltejs/kit/pull/8915))
+
+## 2.0.0
+
+### Major Changes
+
+- breaking: bump `@sveltejs/kit` peer dependency ([#8740](https://github.com/sveltejs/kit/pull/8740))
+
+### Patch Changes
+
+- Updated dependencies [[`c7648f66`](https://github.com/sveltejs/kit/commit/c7648f6608a413e2654625cbd30f890d2148cf13), [`63613bf1`](https://github.com/sveltejs/kit/commit/63613bf194c18ce50e111585ad770fc93f9e43c7), [`d1f7655e`](https://github.com/sveltejs/kit/commit/d1f7655efdff70d91f94fe0cb0de50ed2511b5e5)]:
+  - @sveltejs/kit@1.5.0
+
 ## 1.0.5
 
 ### Patch Changes

@@ -1,9 +1,9 @@
-import fs from 'fs';
+import fs from 'node:fs';
+import path from 'node:path';
+import { URL } from 'node:url';
 import colors from 'kleur';
-import path from 'path';
 import sirv from 'sirv';
-import { URL } from 'url';
-import { isCSSRequest, loadEnv } from 'vite';
+import { isCSSRequest, loadEnv, buildErrorMessage } from 'vite';
 import { getRequest, setResponse } from '../../../exports/node/index.js';
 import { installPolyfills } from '../../../exports/node/polyfills.js';
 import { coalesce_to_error } from '../../../utils/error.js';
@@ -50,11 +50,25 @@ export async function dev(vite, vite_config, svelte_config) {
 	/** @type {Error | null} */
 	let manifest_error = null;
 
+	/** @param {string} url */
+	async function loud_ssr_load_module(url) {
+		try {
+			return await vite.ssrLoadModule(url);
+		} catch (/** @type {any} */ err) {
+			const msg = buildErrorMessage(err, [colors.red(`Internal server error: ${err.message}`)]);
+
+			vite.config.logger.error(msg, { error: err });
+			vite.ws.send({ type: 'error', err: err });
+
+			throw err;
+		}
+	}
+
 	/** @param {string} id */
 	async function resolve(id) {
 		const url = id.startsWith('..') ? `/@fs${path.posix.resolve(id)}` : `/${id}`;
 
-		const module = await vite.ssrLoadModule(url);
+		const module = await loud_ssr_load_module(url);
 
 		const module_node = await vite.moduleGraph.getModuleByUrl(url);
 		if (!module_node) throw new Error(`Could not find node for ${url}`);
@@ -161,7 +175,7 @@ export async function dev(vite, vite_config, svelte_config) {
 									(query.has('svelte') && query.get('type') === 'style')
 								) {
 									try {
-										const mod = await vite.ssrLoadModule(dep.url);
+										const mod = await loud_ssr_load_module(dep.url);
 										styles[dep.url] = mod.default;
 									} catch {
 										// this can happen with dynamically imported modules, I think
@@ -191,7 +205,7 @@ export async function dev(vite, vite_config, svelte_config) {
 							endpoint: endpoint
 								? async () => {
 										const url = path.resolve(cwd, endpoint.file);
-										return await vite.ssrLoadModule(url);
+										return await loud_ssr_load_module(url);
 								  }
 								: null,
 							endpoint_id: endpoint?.file
@@ -315,17 +329,30 @@ export async function dev(vite, vite_config, svelte_config) {
 		}
 	});
 
-	// This shameful hack allows us to load runtime server code via Vite
-	// while apps load `HttpError` and `Redirect` in Node, without
-	// causing `instanceof` checks to fail
-	const control_module_node = await import(`../../../runtime/control.js`);
-	const control_module_vite = await vite.ssrLoadModule(`${runtime_base}/control.js`);
+	async function align_exports() {
+		// This shameful hack allows us to load runtime server code via Vite
+		// while apps load `HttpError` and `Redirect` in Node, without
+		// causing `instanceof` checks to fail
+		const control_module_node = await import(`../../../runtime/control.js`);
+		const control_module_vite = await vite.ssrLoadModule(`${runtime_base}/control.js`);
 
-	control_module_node.replace_implementations({
-		ActionFailure: control_module_vite.ActionFailure,
-		HttpError: control_module_vite.HttpError,
-		Redirect: control_module_vite.Redirect
-	});
+		control_module_node.replace_implementations({
+			ActionFailure: control_module_vite.ActionFailure,
+			HttpError: control_module_vite.HttpError,
+			Redirect: control_module_vite.Redirect
+		});
+	}
+	align_exports();
+	const ws_send = vite.ws.send;
+	/** @param {any} args */
+	vite.ws.send = function (...args) {
+		// We need to reapply the patch after Vite did dependency optimizations
+		// because that clears the module resolutions
+		if (args[0]?.type === 'full-reload' && args[0].path === '*') {
+			align_exports();
+		}
+		return ws_send.apply(vite.ws, args);
+	};
 
 	vite.middlewares.use(async (req, res, next) => {
 		try {
@@ -411,20 +438,17 @@ export async function dev(vite, vite_config, svelte_config) {
 					return;
 				}
 
-				// we have to import `Server` before calling `set_paths`
+				// we have to import `Server` before calling `set_assets`
 				const { Server } = /** @type {import('types').ServerModule} */ (
 					await vite.ssrLoadModule(`${runtime_base}/server/index.js`)
 				);
 
-				const { set_paths, set_version, set_fix_stack_trace } =
+				const { set_assets, set_version, set_fix_stack_trace } =
 					/** @type {import('types').ServerInternalModule} */ (
 						await vite.ssrLoadModule(`${runtime_base}/shared.js`)
 					);
 
-				set_paths({
-					base: svelte_config.kit.paths.base,
-					assets
-				});
+				set_assets(assets);
 
 				set_version(svelte_config.kit.version.name);
 

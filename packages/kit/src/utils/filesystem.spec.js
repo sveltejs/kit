@@ -1,6 +1,6 @@
-import { mkdtempSync, writeFileSync, readdirSync, mkdirSync, readFileSync } from 'fs';
-import { tmpdir } from 'os';
-import { dirname, join } from 'path';
+import { mkdtempSync, writeFileSync, readdirSync, mkdirSync, readFileSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import { dirname, join } from 'node:path';
 import { suite } from 'uvu';
 import * as assert from 'uvu/assert';
 import { copy, mkdirp } from './filesystem.js';

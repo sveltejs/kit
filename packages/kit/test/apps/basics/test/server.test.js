@@ -97,6 +97,17 @@ test.describe('Endpoints', () => {
 		expect(headers.head).toEqual(headers.get);
 	});
 
+	test('Prerendered +server.js called from a non-prerendered +server.js works', async ({
+		baseURL
+	}) => {
+		const res = await fetch(`${baseURL}/prerendering/prerendered-endpoint/proxy`);
+
+		expect(res.status).toBe(200);
+		expect(await res.json()).toStrictEqual({
+			message: 'Im prerendered and called from a non-prerendered +page.server.js'
+		});
+	});
+
 	// TODO all the remaining tests in this section are really only testing
 	// setResponse, since we're not otherwise changing anything on the response.
 	// might be worth making these unit tests instead
@@ -164,8 +175,7 @@ test.describe('Errors', () => {
 		expect(await response.text()).toMatch('PUT method not allowed');
 	});
 
-	// TODO re-enable this if https://github.com/vitejs/vite/issues/7046 is implemented
-	test.skip('error evaluating module', async ({ request }) => {
+	test('error evaluating module', async ({ request }) => {
 		const response = await request.get('/errors/init-error-endpoint');
 
 		expect(response.status()).toBe(500);
@@ -236,6 +246,28 @@ test.describe('Errors', () => {
 		expect(error).toBe(undefined);
 
 		expect(await page.textContent('h1')).toBe('the answer is 42');
+	});
+
+	test('POST to missing page endpoint', async ({ request }) => {
+		const res = await request.post('/errors/missing-actions', {
+			headers: {
+				accept: 'text/html'
+			}
+		});
+		expect(res?.status()).toBe(405);
+
+		const res_json = await request.post('/errors/missing-actions', {
+			headers: {
+				accept: 'application/json'
+			}
+		});
+		expect(res_json?.status()).toBe(405);
+		expect(await res_json.json()).toEqual({
+			type: 'error',
+			error: {
+				message: 'POST method not allowed. No actions exist for this page'
+			}
+		});
 	});
 
 	test('error thrown in handle results in a rendered error page or JSON response', async ({

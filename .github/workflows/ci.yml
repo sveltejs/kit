@@ -7,8 +7,6 @@ on:
   pull_request:
 
 env:
-  TURBO_TOKEN: ${{ secrets.TURBO_TOKEN }}
-  TURBO_TEAM: svelte
   # we call `pnpm playwright install` instead
   PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD: '1'
 
@@ -31,7 +29,8 @@ jobs:
           node-version: '16.x'
           cache: pnpm
       - run: pnpm install --frozen-lockfile
-      - run: pnpm turbo run lint check
+      - run: pnpm run lint
+      - run: pnpm run check
   Tests:
     runs-on: ${{ matrix.os }}
     timeout-minutes: 30
@@ -46,7 +45,6 @@ jobs:
             os: ubuntu-latest
             e2e-browser: 'chromium'
     env:
-      TURBO_CACHE_KEY: ${{ matrix.os }}-${{ matrix.node-version }}
       KIT_E2E_BROWSER: ${{matrix.e2e-browser}}
     steps:
       - run: git config --global core.autocrlf false
@@ -79,12 +77,29 @@ jobs:
         include:
           - node-version: 16
             os: windows-2019 # slowness reported on newer versions https://github.com/actions/runner-images/issues/5166
+            e2e-browser: 'chromium'
+            mode: 'dev'
+          - node-version: 16
+            os: ubuntu-latest
             e2e-browser: 'firefox'
+            mode: 'dev'
           - node-version: 16
             os: macOS-latest
             e2e-browser: 'webkit'
+            mode: 'dev'
+          - node-version: 16
+            os: windows-2019 # slowness reported on newer versions https://github.com/actions/runner-images/issues/5166
+            e2e-browser: 'chromium'
+            mode: 'build'
+          - node-version: 16
+            os: ubuntu-latest
+            e2e-browser: 'firefox'
+            mode: 'build'
+          - node-version: 16
+            os: macOS-latest
+            e2e-browser: 'webkit'
+            mode: 'build'
     env:
-      TURBO_CACHE_KEY: ${{ matrix.os }}-${{ matrix.node-version }}
       KIT_E2E_BROWSER: ${{matrix.e2e-browser}}
     steps:
       - run: git config --global core.autocrlf false
@@ -96,15 +111,15 @@ jobs:
           cache: pnpm
       - run: pnpm install --frozen-lockfile
       - run: pnpm playwright install ${{ matrix.e2e-browser }}
-      - run: pnpm test:cross-platform
+      - run: pnpm test:cross-platform:${{ matrix.mode }}
       - name: Archive test results
         if: failure()
         shell: bash
-        run: find packages -type d -name test-results -not -empty | tar -czf test-results-cross-platform.tar.gz --files-from=-
+        run: find packages -type d -name test-results -not -empty | tar -czf test-results-cross-platform-${{ matrix.mode }}.tar.gz --files-from=-
       - name: Upload test results
         if: failure()
         uses: actions/upload-artifact@v3
         with:
           retention-days: 3
-          name: test-failure-cross-platform-${{ github.run_id }}-${{ matrix.os }}-${{ matrix.node-version }}-${{ matrix.e2e-browser }}
-          path: test-results-cross-platform.tar.gz
+          name: test-failure-cross-platform-${{ matrix.mode }}-${{ github.run_id }}-${{ matrix.os }}-${{ matrix.node-version }}-${{ matrix.e2e-browser }}
+          path: test-results-cross-platform-${{ matrix.mode }}.tar.gz

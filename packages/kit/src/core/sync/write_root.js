@@ -21,16 +21,16 @@ export function write_root(manifest_data, output) {
 
 	let l = max_depth;
 
-	let pyramid = `<svelte:component this={components[${l}]} data={data_${l}} {form} />`;
+	let pyramid = `<svelte:component this={constructors[${l}]} bind:this={components[${l}]} data={data_${l}} {form} />`;
 
 	while (l--) {
 		pyramid = `
-			{#if components[${l + 1}]}
-				<svelte:component this={components[${l}]} data={data_${l}}>
+			{#if constructors[${l + 1}]}
+				<svelte:component this={constructors[${l}]} bind:this={components[${l}]} data={data_${l}}>
 					${pyramid.replace(/\n/g, '\n\t\t\t\t\t')}
 				</svelte:component>
 			{:else}
-				<svelte:component this={components[${l}]} data={data_${l}} {form} />
+				<svelte:component this={constructors[${l}]} bind:this={components[${l}]} data={data_${l}} {form} />
 			{/if}
 		`
 			.replace(/^\t\t\t/gm, '')
@@ -49,7 +49,8 @@ export function write_root(manifest_data, output) {
 				export let stores;
 				export let page;
 
-				export let components;
+				export let constructors;
+				export let components = [];
 				export let form;
 				${levels.map((l) => `export let data_${l} = null;`).join('\n\t\t\t\t')}
 

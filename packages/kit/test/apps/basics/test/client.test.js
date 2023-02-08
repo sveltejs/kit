@@ -102,6 +102,22 @@ test.describe('Load', () => {
 		);
 		await app.goto('/load/server-data-reuse/no-load');
 		expect(await page.textContent('pre')).toBe(JSON.stringify({ foo: { bar: 'Custom layout' } }));
+
+		await page.goto('/load/server-data-reuse/with-changing-parent/with-server-load');
+		expect(await page.textContent('pre')).toBe(
+			JSON.stringify({
+				foo: { bar: 'Custom layout' },
+				title: '/load/server-data-reuse/with-changing-parent/with-server-load',
+				server: true
+			})
+		);
+		await app.goto('/load/server-data-reuse/with-changing-parent/no-load');
+		expect(await page.textContent('pre')).toBe(
+			JSON.stringify({
+				foo: { bar: 'Custom layout' },
+				title: '/load/server-data-reuse/with-changing-parent/no-load'
+			})
+		);
 	});
 
 	test('keeps server data when valid while not reusing client load data', async ({
@@ -193,6 +209,25 @@ test.describe('Load', () => {
 		expect(did_request_data).toBe(false);
 	});
 
+	test('do not use cache if headers are different', async ({ page, clicknav }) => {
+		await page.goto('/load/fetch-cache-control/headers-diff');
+
+		// 1. We expect the right data
+		expect(await page.textContent('h2')).toBe('a / b');
+
+		// 2. Change to another route (client side)
+		await clicknav('[href="/load/fetch-cache-control"]');
+
+		// 3. Come back to the original page (client side)
+		const requests = [];
+		page.on('request', (request) => requests.push(request));
+		await clicknav('[href="/load/fetch-cache-control/headers-diff"]');
+
+		// 4. We expect the same data and no new request because it was cached.
+		expect(await page.textContent('h2')).toBe('a / b');
+		expect(requests).toEqual([]);
+	});
+
 	if (process.env.DEV) {
 		test('using window.fetch causes a warning', async ({ page, baseURL }) => {
 			await Promise.all([
@@ -227,7 +262,7 @@ test.describe('Load', () => {
 	}
 
 	if (!process.env.DEV) {
-		test.skip('does not fetch __data.json if no server load function exists', async ({
+		test('does not fetch __data.json if no server load function exists', async ({
 			page,
 			clicknav
 		}) => {
@@ -605,5 +640,34 @@ test.describe('env in app.html', () => {
 	test('can access public env', async ({ page }) => {
 		await page.goto('/');
 		expect(await page.locator('body').getAttribute('class')).toContain('groovy');
+	});
+});
+
+test.describe('Snapshots', () => {
+	test('recovers snapshotted data', async ({ page, clicknav }) => {
+		await page.goto('/snapshot/a');
+
+		let input = page.locator('input');
+		await input.type('hello');
+
+		await clicknav('[href="/snapshot/b"]');
+		await page.goBack();
+
+		input = page.locator('input');
+		expect(await input.inputValue()).toBe('hello');
+
+		await input.clear();
+		await input.type('works for cross-document navigations');
+
+		await clicknav('[href="/snapshot/c"]');
+		await page.goBack();
+		expect(await page.locator('input').inputValue()).toBe('works for cross-document navigations');
+
+		input = page.locator('input');
+		await input.clear();
+		await input.type('works for reloads');
+
+		await page.reload();
+		expect(await page.locator('input').inputValue()).toBe('works for reloads');
 	});
 });

@@ -1,5 +1,147 @@
 # @sveltejs/kit
 
+## 1.5.0
+
+### Minor Changes
+
+- feat: support route-level configuration ([#8740](https://github.com/sveltejs/kit/pull/8740))
+
+- feat: add snapshot mechanism for preserving ephemeral DOM state ([#8710](https://github.com/sveltejs/kit/pull/8710))
+
+### Patch Changes
+
+- chore(deps): update dependency undici to v5.18.0 ([#8884](https://github.com/sveltejs/kit/pull/8884))
+
+## 1.4.0
+
+### Minor Changes
+
+- feat: allow $app/paths to be used without an app ([#8838](https://github.com/sveltejs/kit/pull/8838))
+
+### Patch Changes
+
+- fix: ensure types of all form actions are accessible even if differing ([#8877](https://github.com/sveltejs/kit/pull/8877))
+
+- fix: correctly handle HttpErrors on the client side ([#8829](https://github.com/sveltejs/kit/pull/8829))
+
+- docs: discourage use of `goto` with external URLs ([#8837](https://github.com/sveltejs/kit/pull/8837))
+
+- fix: prevent crawling empty urls (`<img src="">`) ([#8883](https://github.com/sveltejs/kit/pull/8883))
+
+- fix: correctly serialize request url when using load `fetch` ([#8876](https://github.com/sveltejs/kit/pull/8876))
+
+- fix: ensure endpoints can fetch endpoints on the same host but not part of the application ([#8869](https://github.com/sveltejs/kit/pull/8869))
+
+## 1.3.10
+
+### Patch Changes
+
+- fix: preserve build error messages ([#8846](https://github.com/sveltejs/kit/pull/8846))
+
+## 1.3.9
+
+### Patch Changes
+
+- fix: output errors properly if pages fail to compile ([#8813](https://github.com/sveltejs/kit/pull/8813))
+
+## 1.3.8
+
+### Patch Changes
+
+- fix: remove Vite manifest before running adapter ([#8815](https://github.com/sveltejs/kit/pull/8815))
+
+## 1.3.7
+
+### Patch Changes
+
+- fix: only show prerendering message when actually prerendering ([#8809](https://github.com/sveltejs/kit/pull/8809))
+
+- fix: handle anchors with special chars when navigating ([#8806](https://github.com/sveltejs/kit/pull/8806))
+
+- fix: await finalise hook and run it only once ([#8817](https://github.com/sveltejs/kit/pull/8817))
+
+## 1.3.6
+
+### Patch Changes
+
+- fix: allow rest parameters to follow multiple optional - or not - parameters ([#8761](https://github.com/sveltejs/kit/pull/8761))
+
+- fix: consider headers when constructing request hash ([#8754](https://github.com/sveltejs/kit/pull/8754))
+
+## 1.3.5
+
+### Patch Changes
+
+- docs: fix typo ([#8790](https://github.com/sveltejs/kit/pull/8790))
+
+- fix: build error on layout with missing leaves ([#8792](https://github.com/sveltejs/kit/pull/8792))
+
+- fix: handle hash links with non-ASCII characters when navigating ([#8767](https://github.com/sveltejs/kit/pull/8767))
+
+## 1.3.4
+
+### Patch Changes
+
+- chore: bump devalue ([#8789](https://github.com/sveltejs/kit/pull/8789))
+
+## 1.3.3
+
+### Patch Changes
+
+- fix: forward `process.env` to child process ([#8777](https://github.com/sveltejs/kit/pull/8777))
+
+## 1.3.2
+
+### Patch Changes
+
+- fix: take base path into account when preloading code ([#8748](https://github.com/sveltejs/kit/pull/8748))
+
+## 1.3.1
+
+### Patch Changes
+
+- fix: only fetch `__data.json` files for routes with a server `load` function ([#8636](https://github.com/sveltejs/kit/pull/8636))
+
+- fix: add `ignoreDeprecations` flag for TS 5.x ([#8718](https://github.com/sveltejs/kit/pull/8718))
+
+- fix: install polyfills when analysing code ([#8636](https://github.com/sveltejs/kit/pull/8636))
+
+## 1.3.0
+
+### Minor Changes
+
+- feat: allow generated tsconfig to be modified ([#8606](https://github.com/sveltejs/kit/pull/8606))
+
+### Patch Changes
+
+- fix: skip navigation hooks on popstate events when only hash changed ([#8730](https://github.com/sveltejs/kit/pull/8730))
+
+## 1.2.10
+
+### Patch Changes
+
+- chore: restrict methods allowed for POST ([#8721](https://github.com/sveltejs/kit/pull/8721))
+
+- fix: provide proper error when POSTing to a missing page endpoint ([#8714](https://github.com/sveltejs/kit/pull/8714))
+
+## 1.2.9
+
+### Patch Changes
+
+- fix: reapply exports alignment after Vite dependency optimizations ([#8690](https://github.com/sveltejs/kit/pull/8690))
+
+## 1.2.8
+
+### Patch Changes
+
+- fix: include base path in path to start script ([#8651](https://github.com/sveltejs/kit/pull/8651))
+
+## 1.2.7
+
+### Patch Changes
+
+- fix: set headers when throwing redirect in handle ([#8648](https://github.com/sveltejs/kit/pull/8648))
+
 ## 1.2.6
 
 ### Patch Changes

@@ -1,4 +1,3 @@
-import { OutputAsset, OutputChunk } from 'rollup';
 import { SvelteComponent } from 'svelte/internal';
 import {
 	Config,
@@ -7,7 +6,6 @@ import {
 	HandleServerError,
 	KitConfig,
 	Load,
-	RequestEvent,
 	RequestHandler,
 	ResolveOptions,
 	Server,
@@ -31,7 +29,7 @@ export interface ServerModule {
 
 export interface ServerInternalModule {
 	set_building(building: boolean): void;
-	set_paths(paths: { base: string; assets: string }): void;
+	set_assets(path: string): void;
 	set_private_env(environment: Record<string, string>): void;
 	set_public_env(environment: Record<string, string>): void;
 	set_version(version: string): void;
@@ -49,22 +47,13 @@ export interface BuildData {
 	app_path: string;
 	manifest_data: ManifestData;
 	service_worker: string | null;
-	client: {
-		assets: OutputAsset[];
-		chunks: OutputChunk[];
-		entry: {
-			file: string;
-			imports: string[];
-			stylesheets: string[];
-			fonts: string[];
-		};
-		vite_manifest: import('vite').Manifest;
-	};
-	server: {
-		chunks: OutputChunk[];
-		methods: Record<string, HttpMethod[]>;
-		vite_manifest: import('vite').Manifest;
-	};
+	client_entry: {
+		file: string;
+		imports: string[];
+		stylesheets: string[];
+		fonts: string[];
+	} | null;
+	server_manifest: import('vite').Manifest;
 }
 
 export interface CSRPageNode {
@@ -73,7 +62,6 @@ export interface CSRPageNode {
 		load?: Load;
 		trailingSlash?: TrailingSlash;
 	};
-	has_server_load: boolean;
 }
 
 export type CSRPageNodeLoader = () => Promise<CSRPageNode>;
@@ -86,8 +74,8 @@ export type CSRRoute = {
 	id: string;
 	exec(path: string): undefined | Record<string, string>;
 	errors: Array<CSRPageNodeLoader | undefined>;
-	layouts: Array<[boolean, CSRPageNodeLoader] | undefined>;
-	leaf: [boolean, CSRPageNodeLoader];
+	layouts: Array<[has_server_load: boolean, node_loader: CSRPageNodeLoader] | undefined>;
+	leaf: [has_server_load: boolean, node_loader: CSRPageNodeLoader];
 };
 
 export type GetParams = (match: RegExpExecArray) => Record<string, string>;
@@ -244,6 +232,18 @@ export interface ServerErrorNode {
 	status?: number;
 }
 
+export interface ServerMetadata {
+	nodes: Array<{ has_server_load: boolean }>;
+	routes: Map<
+		string,
+		{
+			prerender: PrerenderOption | undefined;
+			methods: HttpMethod[];
+			config: any;
+		}
+	>;
+}
+
 export interface SSRComponent {
 	default: {
 		render(props: Record<string, any>): {
@@ -261,7 +261,7 @@ export type SSRComponentLoader = () => Promise<SSRComponent>;
 
 export interface SSRNode {
 	component: SSRComponentLoader;
-	/** index into the `components` array in client-manifest.js */
+	/** index into the `components` array in client/manifest.js */
 	index: number;
 	/** client-side module URL for this component */
 	file: string;
@@ -280,6 +280,7 @@ export interface SSRNode {
 		ssr?: boolean;
 		csr?: boolean;
 		trailingSlash?: TrailingSlash;
+		config?: any;
 	};
 
 	server: {
@@ -289,6 +290,7 @@ export interface SSRNode {
 		csr?: boolean;
 		trailingSlash?: TrailingSlash;
 		actions?: Actions;
+		config?: any;
 	};
 
 	// store this in dev so we can print serialization errors

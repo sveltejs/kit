@@ -2,11 +2,11 @@ import { render_response } from './render.js';
 import { load_data, load_server_data } from './load_data.js';
 import {
 	handle_error_and_jsonify,
-	get_option,
 	static_error_page,
 	redirect_response,
 	GENERIC_ERROR
 } from '../utils.js';
+import { get_option } from '../../../utils/options.js';
 import { HttpError, Redirect } from '../../control.js';
 
 /**

@@ -9,6 +9,7 @@ const app_path = `/${manifest.appPath}/`;
 /** @type {import('worktop/cfw').Module.Worker<{ ASSETS: import('worktop/cfw.durable').Durable.Object }>} */
 const worker = {
 	async fetch(req, env, context) {
+		// @ts-ignore
 		await server.init({ env });
 		// skip cache if "cache-control: no-cache" in request
 		let pragma = req.headers.get('cache-control') || '';
@@ -17,7 +18,7 @@ const worker = {
 
 		let { pathname } = new URL(req.url);
 
-		// static assets
+		// generated files
 		if (pathname.startsWith(app_path)) {
 			res = await env.ASSETS.fetch(req);
 			if (!res.ok) return res;
@@ -36,26 +37,38 @@ const worker = {
 				}
 			});
 		} else {
-			// prerendered pages and index.html files
-			pathname = pathname.replace(/\/$/, '') || '/';
-
-			let file = pathname.substring(1);
+			// prerendered pages and /static files
 
 			try {
-				file = decodeURIComponent(file);
-			} catch (err) {
-				// ignore
+				pathname = decodeURIComponent(pathname);
+			} catch {
+				// ignore invalid URI
 			}
 
-			if (
-				manifest.assets.has(file) ||
-				manifest.assets.has(file + '/index.html') ||
-				prerendered.has(pathname)
-			) {
+			const stripped_pathname = pathname.replace(/\/$/, '');
+
+			let is_static_asset = false;
+			const filename = stripped_pathname.substring(1);
+			if (filename) {
+				is_static_asset =
+					manifest.assets.has(filename) || manifest.assets.has(filename + '/index.html');
+			}
+
+			const counterpart_route = pathname.at(-1) === '/' ? stripped_pathname : pathname + '/';
+
+			if (is_static_asset || prerendered.has(pathname)) {
 				res = await env.ASSETS.fetch(req);
+			} else if (counterpart_route && prerendered.has(counterpart_route)) {
+				res = new Response('', {
+					status: 308,
+					headers: {
+						location: counterpart_route
+					}
+				});
 			} else {
 				// dynamically-generated pages
 				res = await server.respond(req, {
+					// @ts-ignore
 					platform: { env, context, caches },
 					getClientAddress() {
 						return req.headers.get('cf-connecting-ip');

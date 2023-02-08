@@ -71,7 +71,7 @@ The directory to write static assets (the contents of `static`, plus client-side
 
 ### fallback
 
-Specify a fallback page for SPA mode, e.g. `index.html` or `200.html` or `404.html`.
+Specify a [fallback page](#spa-mode-add-fallback-page) for SPA mode, e.g. `index.html` or `200.html` or `404.html`.
 
 ### precompress
 
@@ -109,13 +109,13 @@ export default {
 export const ssr = false;
 ```
 
-You can also turn only part of your app into an SPA.
+You can also turn only part of your app into an SPA by [disabling prerendering](#spa-mode-turn-off-prerendering) only for those pages.
 
 Let's go through these options one by one:
 
 ### Add fallback page
 
-The fallback page is an HTML page created by SvelteKit that loads your app and navigates to the correct route. For example [Surge](https://surge.sh/help/adding-a-200-page-for-client-side-routing), a static web host, lets you add a `200.html` file that will handle any requests that don't correspond to static assets or prerendered pages. We can create that file like so:
+The fallback page is an HTML page created by SvelteKit from your page template (e.g. `app.html`) that loads your app and navigates to the correct route. For example [Surge](https://surge.sh/help/adding-a-200-page-for-client-side-routing), a static web host, lets you add a `200.html` file that will handle any requests that don't correspond to static assets or prerendered pages. We can create that file like so:
 
 ```js
 // @errors: 2307
@@ -137,13 +137,13 @@ export default {
 
 When operating in SPA mode, you can omit the [`prerender`](page-options#prerender) option from your root layout (or set it to `false`, its default value), and only pages that have the `prerender` option set will be prerendered at build time.
 
-SvelteKit will still crawl your app's entry points looking for prerenderable pages. If `svelte-kit build` fails because of pages that can't be loaded outside the browser, you can set `config.kit.prerender.entries` to `[]` to prevent this from happening. (Setting `config.kit.prerender.enabled` to `false` also has this effect, but would prevent the fallback page from being generated.)
+SvelteKit will still crawl your app's entry points looking for prerenderable pages. If `svelte-kit build` fails because of pages that can't be loaded outside the browser, you can set `config.kit.prerender.entries` to `[]` to prevent this from happening.
 
 You can also add turn off prerendering only to parts of your app, if you want other parts to be prerendered.
 
 ### Turn off ssr
 
-During development, SvelteKit will still attempt to server-side render your routes. This means accessing things that are only available in the browser (such as the `window` object) will result in errors, even though this would be valid in the output app. To align the behavior of SvelteKit's dev mode with your SPA, you can [add `export const ssr = false` to your root `+layout`](page-options#ssr). You can also add this option only to parts of your app, if you want other parts to be prerendered.
+During development, SvelteKit will still attempt to server-side render your routes. This means accessing things that are only available in the browser (such as the `window` object) will result in errors, even though this would be valid in the output app. To align the behavior of SvelteKit's dev mode with your SPA, you can add [`export const ssr = false`](page-options#ssr) to your root `+layout`. You can also add this option only to parts of your app, if you want other parts to be prerendered.
 
 ### Apache
 

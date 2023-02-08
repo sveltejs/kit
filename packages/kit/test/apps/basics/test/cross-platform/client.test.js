@@ -192,6 +192,14 @@ test.describe('beforeNavigate', () => {
 		expect(page.url()).toBe(baseURL + '/before-navigate/prevent-navigation');
 		expect(await page.innerHTML('pre')).toBe('0 false undefined');
 	});
+
+	test('is not triggered on click or popstate for hash links', async ({ page }) => {
+		await page.goto('/before-navigate/hash-links');
+
+		await page.click('a[href="#x"]');
+		await page.goBack();
+		expect(await page.textContent('h1')).toBe('before_navigate_ran: false');
+	});
 });
 
 test.describe('Scrolling', () => {
@@ -204,6 +212,26 @@ test.describe('Scrolling', () => {
 		await page.goto('/anchor');
 		await clicknav('#first-anchor');
 		expect(await in_view('#go-to-element')).toBe(true);
+	});
+
+	test('url-supplied non-ascii anchor works on navigation to page', async ({
+		page,
+		in_view,
+		clicknav
+	}) => {
+		await page.goto('/anchor');
+		await clicknav('#non-ascii-anchor');
+		expect(await in_view('#go-to-encöded')).toBe(true);
+	});
+
+	test('url-supplied anchor with special characters works on navigation to page', async ({
+		page,
+		in_view,
+		clicknav
+	}) => {
+		await page.goto('/anchor');
+		await clicknav('#special-char-anchor');
+		expect(await in_view('.special-char-id')).toBe(true);
 	});
 
 	test('url-supplied anchor works when navigated from scrolled page', async ({

@@ -170,6 +170,7 @@ declare module '$app/navigation' {
 	export function disableScrollHandling(): void;
 	/**
 	 * Returns a Promise that resolves when SvelteKit navigates (or fails to navigate, in which case the promise rejects) to the specified `url`.
+	 * For external URLs, use `window.location = url` instead of calling `goto(url)`.
 	 *
 	 * @param url Where to navigate to. Note that if you've set [`config.kit.paths.base`](https://kit.svelte.dev/docs/configuration#paths) and the URL is root-relative, you need to prepend the base path if you want to navigate within the app.
 	 * @param opts Options related to the navigation
@@ -237,7 +238,7 @@ declare module '$app/navigation' {
 	 * Programmatically imports the code for routes that haven't yet been fetched.
 	 * Typically, you might call this to speed up subsequent navigation.
 	 *
-	 * You can specify routes by any matching pathname such as `/about` (to match `src/routes/about.svelte`) or `/blog/*` (to match `src/routes/blog/[slug].svelte`).
+	 * You can specify routes by any matching pathname such as `/about` (to match `src/routes/about/+page.svelte`) or `/blog/*` (to match `src/routes/blog/[slug]/+page.svelte`).
 	 *
 	 * Unlike `preloadData`, this won't call `load` functions.
 	 * Returns a Promise that resolves when the modules have been imported.
@@ -436,4 +437,11 @@ declare module '@sveltejs/kit/vite' {
 	 */
 	export function sveltekit(): Promise<Plugin[]>;
 	export { vitePreprocess } from '@sveltejs/vite-plugin-svelte';
+}
+
+/** Internal version of $app/paths */
+declare module '$internal/paths' {
+	export const base: `/${string}`;
+	export let assets: `https://${string}` | `http://${string}`;
+	export function set_assets(path: string): void;
 }

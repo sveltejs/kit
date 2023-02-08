@@ -73,8 +73,19 @@ export function serialize_data(fetched, filter, prerendering = false) {
 		`data-url=${escape_html_attr(fetched.url)}`
 	];
 
-	if (fetched.request_body) {
-		attrs.push(`data-hash=${escape_html_attr(hash(fetched.request_body))}`);
+	if (fetched.request_headers || fetched.request_body) {
+		/** @type {import('types').StrictBody[]} */
+		const values = [];
+
+		if (fetched.request_headers) {
+			values.push([...new Headers(fetched.request_headers)].join(','));
+		}
+
+		if (fetched.request_body) {
+			values.push(fetched.request_body);
+		}
+
+		attrs.push(`data-hash="${hash(...values)}"`);
 	}
 
 	// Compute the time the response should be cached, taking into account max-age and age.
