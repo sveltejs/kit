@@ -150,6 +150,10 @@ export async function setResponse(res, response) {
 
 	res.on('close', cancel);
 	res.on('error', cancel);
+	
+	// If the body is intended to be a readable stream then leave the 
+	// connection open, else end the response after all bytes sent
+  const isReadableStream = headers['content-type'] === 'application/octet-stream';
 
 	next();
 	async function next() {
@@ -161,7 +165,8 @@ export async function setResponse(res, response) {
 
 				if (!res.write(value)) {
 					res.once('drain', next);
-					return;
+					if(isReadableStream){ return; }
+					break; 
 				}
 			}
 			res.end();
