@@ -195,7 +195,7 @@ declare module '$app/navigation' {
 			 */
 			state?: any;
 			/**
-			 * If `true`, all `load` functions of the page will be rerun. See https://kit.svelte.dev/docs/load#invalidation for more info on invalidation.
+			 * If `true`, all `load` functions of the page will be rerun. See https://kit.svelte.dev/docs/load#rerunning-load-functions for more info on invalidation.
 			 */
 			invalidateAll?: boolean;
 		}
