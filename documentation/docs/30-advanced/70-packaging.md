@@ -17,7 +17,7 @@ Running the `svelte-package` command from `@sveltejs/package` will take the cont
 
 ## Anatomy of a package.json
 
-Since your now building a library for public use, the contents of your `package.json` will become more important. Through it, you configure the entry points of your package, which files are published to npm, and which dependencies your library has. Let's go through the most important fields one by one.
+Since you're now building a library for public use, the contents of your `package.json` will become more important. Through it, you configure the entry points of your package, which files are published to npm, and which dependencies your library has. Let's go through the most important fields one by one.
 
 ### name
 
