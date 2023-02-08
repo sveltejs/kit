@@ -357,7 +357,7 @@ function kit({ svelte_config }) {
 				case '\0$internal/paths':
 					const { assets, base } = svelte_config.kit.paths;
 					return `export const base = ${s(base)};
-export let assets = ${s(assets)};
+export let assets = ${assets ? s(assets) : 'base'};
 
 /** @param {string} path */
 export function set_assets(path) {
