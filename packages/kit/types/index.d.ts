@@ -520,7 +520,23 @@ export interface KitConfig {
 		config?: (config: Record<string, any>) => Record<string, any> | void;
 	};
 	/**
-	 * Client-side navigation can be buggy if you deploy a new version of your app while people are using it. If the code for the new page is already loaded, it may have stale content; if it isn't, the app's route manifest may point to a JavaScript file that no longer exists. SvelteKit solves this problem by falling back to traditional full-page navigation if it detects that a new version has been deployed, using the `name` specified here (which defaults to a timestamp of the build).
+	 * Client-side navigation can be buggy if you deploy a new version of your app while people are using it. If the code for the new page is already loaded, it may have stale content; if it isn't, the app's route manifest may point to a JavaScript file that no longer exists.
+	 * SvelteKit helps you solve this problem through version management.
+	 * If SvelteKit encounters an error while loading the page and detects that a new version has been deployed (using the `name` specified here, which defaults to a timestamp of the build) it will fall back to traditional full-page navigation.
+	 * Not all navigations will result in an error though, for example if the JavaScript for the next page is already loaded. If you still want to force a full-page navigation in these cases, use techniques such as setting the `pollInverval` and then using `beforeNavigate`:
+	 * ```html
+	 * /// +layout.svelte
+	 * <script>
+	 * import { beforeNavigate } from '$app/navigation';
+	 * import { updated } from '$app/stores';
+	 *
+	 * beforeNavigate(({ willUnload, to }) => {
+	 *   if ($updated && !willUnload && to?.url) {
+	 *     location.href = to.route.url.href;
+	 *   }
+	 * });
+	 * </script>
+	 * ```
 	 *
 	 * If you set `pollInterval` to a non-zero value, SvelteKit will poll for new versions in the background and set the value of the [`updated`](/docs/modules#$app-stores-updated) store to `true` when it detects one.
 	 */
