@@ -542,8 +542,8 @@ export interface KitConfig {
 	 */
 	version?: {
 		/**
-		 * The current app version string.
-		 * @default Date.now().toString()
+		 * The current app version string. Make sure it's consistent across multiple evaluations.
+		 * @default Date.now().toString() - injected once at build time
 		 */
 		name?: string;
 		/**
