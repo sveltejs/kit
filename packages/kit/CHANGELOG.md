@@ -1,5 +1,11 @@
 # @sveltejs/kit
 
+## 1.5.2
+
+### Patch Changes
+
+- fix: always default `paths.assets` to `paths.base` ([#8928](https://github.com/sveltejs/kit/pull/8928))
+
 ## 1.5.1
 
 ### Patch Changes
