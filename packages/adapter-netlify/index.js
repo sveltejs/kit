@@ -54,7 +54,7 @@ export default function ({ split = false, edge = edge_set_in_env_var } = {}) {
 			// empty out existing build directories
 			builder.rimraf(publish);
 			builder.rimraf('.netlify/edge-functions');
-			builder.rimraf('.netlify/functions-internal');
+			builder.rimraf('.netlify/functions-internal/.svelte-kit');
 			builder.rimraf('.netlify/server');
 			builder.rimraf('.netlify/package.json');
 			builder.rimraf('.netlify/serverless.js');
@@ -154,7 +154,7 @@ async function generate_edge_functions({ builder }) {
  * @param { boolean } params.split
  */
 async function generate_lambda_functions({ builder, publish, split }) {
-	builder.mkdirp('.netlify/functions-internal');
+	builder.mkdirp('.netlify/functions-internal/.svelte-kit');
 
 	/** @type {string[]} */
 	const redirects = [];
@@ -217,8 +217,8 @@ async function generate_lambda_functions({ builder, publish, split }) {
 
 			const fn = `import { init } from '../serverless.js';\n\nexport const handler = init(${manifest});\n`;
 
-			writeFileSync(`.netlify/functions-internal/${name}.mjs`, fn);
-			writeFileSync(`.netlify/functions-internal/${name}.json`, fn_config);
+			writeFileSync(`.netlify/functions-internal/.svelte-kit/${name}.mjs`, fn);
+			writeFileSync(`.netlify/functions-internal/.svelte-kit/${name}.json`, fn_config);
 
 			redirects.push(`${pattern} /.netlify/functions/${name} 200`);
 			redirects.push(`${pattern}/__data.json /.netlify/functions/${name} 200`);
@@ -230,9 +230,9 @@ async function generate_lambda_functions({ builder, publish, split }) {
 
 		const fn = `import { init } from '../serverless.js';\n\nexport const handler = init(${manifest});\n`;
 
-		writeFileSync(`.netlify/functions-internal/render.json`, fn_config);
-		writeFileSync('.netlify/functions-internal/render.mjs', fn);
-		redirects.push('* /.netlify/functions/render 200');
+		writeFileSync(`.netlify/functions-internal/.svelte-kit/render.json`, fn_config);
+		writeFileSync('.netlify/functions-internal/.svelte-kit/render.mjs', fn);
+		redirects.push('* /.netlify/functions/.svelte-kit/render 200');
 	}
 
 	// this should happen at the end, after builder.writeClient(...),
