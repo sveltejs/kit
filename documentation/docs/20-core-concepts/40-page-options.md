@@ -173,3 +173,7 @@ export const config = {
 ```
 
 ...which results in the config value `{ runtime: 'edge', regions: ['us1', 'us2'], foo: { baz: true } }` for that page.
+
+## Further reading
+
+- [Tutorial: Page options](https://learn.svelte.dev/tutorial/page-options)

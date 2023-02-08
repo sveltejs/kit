@@ -558,3 +558,9 @@ Note that re-running a `load` function will update the `data` prop inside the co
 ## Shared state
 
 In many server environments, a single instance of your app will serve multiple users. For that reason, per-request or per-user state must not be stored in shared variables outside your `load` functions, but should instead be stored in `event.locals`.
+
+## Further reading
+
+- [Tutorial: Loading data](https://learn.svelte.dev/tutorial/page-data)
+- [Tutorial: Errors and redirects](https://learn.svelte.dev/tutorial/error-basics)
+- [Tutorial: Advanced loading](https://learn.svelte.dev/tutorial/await-parent)
