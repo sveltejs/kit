@@ -31,8 +31,8 @@ export async function load({ fetch }) {
 
 If you are using SSR, the `load` function will run on the server initially, which means that the whole server instance which serves _all_ requests from _all_ users has its `user` state set to the one just requested from the API. To scope this to a single user, you have a couple of options:
 
-- if you need to access the user state only inside server `load` functions, use `locals`
-- if you need to persist the user state across reloads, but only need to access it inside `load` functions, use `cookies` in server `load` functions
+- if you need to access the user state only inside server `load` functions, use [`locals`](hooks#server-hooks-handle)
+- if you need to persist the user state across reloads, but only need to access it inside `load` functions, use [`cookies` in server `load` functions](load#cookies-and-headers)
 - if you need to access and update the state inside components, use Svelte's [context feature](https://svelte.dev/docs#run-time-svelte-setcontext). That way, the state is scoped to components, which means they are not shared across different requests on the server. The drawback is that you can only set and subscribe to the store at component initialization. SvelteKit's stores from `$app/stores` for example are setup like this (which is why you may have encountered a related error message)
 
 If you have global data whose initial state is not dependent on a request (in other words, it's always the same), then you can keep storing that data globally, as long as you make sure you don't update it during the initial rendering on the server (during load or component render).
