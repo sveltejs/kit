@@ -1,5 +1,14 @@
 # @sveltejs/adapter-vercel
 
+## 2.0.2
+
+### Patch Changes
+
+- fix: mark `expiration` as required ([#8943](https://github.com/sveltejs/kit/pull/8943))
+
+- Updated dependencies [[`1960296d`](https://github.com/sveltejs/kit/commit/1960296da62fdd4ad8e8bb7286940b98fbe8db0f), [`1beb19cb`](https://github.com/sveltejs/kit/commit/1beb19cb487bd6d719048f0feedcb2fbee91a005), [`b915dfe9`](https://github.com/sveltejs/kit/commit/b915dfe9d16a930246a469c9aea8c1a84e5157ba), [`a402d50b`](https://github.com/sveltejs/kit/commit/a402d50b33eba2a937d09e635275c319061ce678)]:
+  - @sveltejs/kit@1.5.1
+
 ## 2.0.1
 
 ### Patch Changes
