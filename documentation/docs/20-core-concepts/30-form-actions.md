@@ -456,7 +456,37 @@ const response = await fetch(this.action, {
 
 ## Alternatives
 
-Form actions are the preferred way to send data to the server, since they can be progressively enhanced, but you can also use [`+server.js`](routing#server) files to expose (for example) a JSON API.
+Form actions are the preferred way to send data to the server, since they can be progressively enhanced, but you can also use [`+server.js`](routing#server) files to expose (for example) a JSON API. If you are coming from regular Svelte, you may be used to doing something like this when creating a form to react to user input:
+
+```svelte
+/// file: send-message/+page.svelte
+<script>
+	let message;
+
+	function send() {
+		fetch('/api/message', {
+			method: 'POST',
+			body: JSON.stringify({ message })
+		});
+		message = '';
+	}
+</script>
+
+<form on:submit|preventDefault={send}>
+	<input bind:value={message} />
+</form>
+```
+
+```js
+/// file: api/message/+server.js
+
+/** @type {import('./$types').RequestHandler} */
+export function POST() {
+	// store data somewhere
+}
+```
+
+Try to use form actions where possible instead.
 
 ## GET vs POST
 
