@@ -42,24 +42,21 @@ export interface Asset {
 	type: string | null;
 }
 
+export interface AssetDependencies {
+	file: string;
+	imports: string[];
+	stylesheets: string[];
+	fonts: string[];
+}
+
 export interface BuildData {
 	app_dir: string;
 	app_path: string;
 	manifest_data: ManifestData;
 	service_worker: string | null;
 	client: {
-		start: {
-			file: string;
-			imports: string[];
-			stylesheets: string[];
-			fonts: string[];
-		};
-		app: {
-			file: string;
-			imports: string[];
-			stylesheets: string[];
-			fonts: string[];
-		};
+		start: AssetDependencies;
+		app: AssetDependencies;
 	} | null;
 	server_manifest: import('vite').Manifest;
 }

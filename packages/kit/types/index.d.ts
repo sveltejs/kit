@@ -18,7 +18,7 @@ import {
 	RouteSegment,
 	UniqueInterface
 } from './private.js';
-import { SSRNodeLoader, SSRRoute, ValidatedConfig } from './internal.js';
+import { AssetDependencies, SSRNodeLoader, SSRRoute, ValidatedConfig } from './internal.js';
 
 export { PrerenderOption } from './private.js';
 
@@ -1008,18 +1008,8 @@ export interface SSRManifest {
 	/** private fields */
 	_: {
 		client: {
-			start: {
-				file: string;
-				imports: string[];
-				stylesheets: string[];
-				fonts: string[];
-			};
-			app: {
-				file: string;
-				imports: string[];
-				stylesheets: string[];
-				fonts: string[];
-			};
+			start: AssetDependencies;
+			app: AssetDependencies;
 		};
 		nodes: SSRNodeLoader[];
 		routes: SSRRoute[];
