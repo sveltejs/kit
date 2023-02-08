@@ -216,12 +216,7 @@ function kit({ svelte_config }) {
 			const new_config = {
 				resolve: {
 					alias: [
-						{
-							find: '__CLIENT__',
-							replacement: `${generated}/${is_build ? 'client-optimized' : 'client'}`
-						},
 						{ find: '__SERVER__', replacement: `${generated}/server` },
-						{ find: '__GENERATED__', replacement: generated },
 						{ find: '$app', replacement: `${runtime_directory}/app` },
 						...get_config_aliases(kit)
 					]
@@ -452,7 +447,7 @@ export function set_assets(path) {
 				} else {
 					/** @type {Record<string, string>} */
 					input.start = `${runtime_directory}/client/start.js`;
-					input.app = `${kit.outDir}/generated/client/app.js`;
+					input.app = `${kit.outDir}/generated/client-optimized/app.js`;
 
 					manifest_data.nodes.forEach((node) => {
 						if (node.component) {
@@ -648,7 +643,7 @@ export function set_assets(path) {
 					),
 					app: find_deps(
 						client_manifest,
-						posixify(path.relative('.', `${kit.outDir}/generated/client/app.js`)),
+						posixify(path.relative('.', `${kit.outDir}/generated/client-optimized/app.js`)),
 						false
 					)
 				};
