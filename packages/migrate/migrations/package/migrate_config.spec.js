@@ -43,8 +43,7 @@ test('Removes package config #2', () => {
 	assert.equal(
 		result,
 		`
-    export default {
-        }`
+    export default {}`
 	);
 });
 
@@ -61,8 +60,7 @@ test('Removes package config #3', () => {
 	assert.equal(
 		result,
 		`
-    const config = {
-        };
+    const config = {};
     export default config;`
 	);
 });

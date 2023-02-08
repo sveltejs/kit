@@ -65,11 +65,15 @@ export function remove_package_from_config(content) {
 				property.name.text === 'package' &&
 				ts.isObjectLiteralExpression(property.initializer)
 			) {
-				const next_property = expression.properties[i + 1];
-				if (next_property) {
-					code.remove(property.getStart(), next_property.getStart());
+				if (expression.properties.length === 1) {
+					code.overwrite(expression.getStart(), expression.getEnd(), '{}');
 				} else {
-					code.remove(property.getStart(), content.lastIndexOf('}', expression.getEnd()));
+					const next_property = expression.properties[i + 1];
+					if (next_property) {
+						code.remove(property.getStart(), next_property.getStart());
+					} else {
+						code.remove(property.getStart(), content.lastIndexOf('}', expression.getEnd()));
+					}
 				}
 			}
 		}
