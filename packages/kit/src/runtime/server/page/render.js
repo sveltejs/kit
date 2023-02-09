@@ -266,7 +266,7 @@ export async function render_response({
 
 	if (page_config.csr) {
 		const opts = [
-			`app: () => import(${s(prefixed(client.app.file))})`,
+			`app: import(${s(prefixed(client.app.file))})`,
 			`assets: ${s(assets)}`,
 			`target: document.querySelector('[data-sveltekit-hydrate="${target}"]').parentNode`,
 			`version: ${s(version)}`
