@@ -211,7 +211,9 @@ test.describe('Load', () => {
 
 		if (!javaScriptEnabled) {
 			// by the time JS has run, hydration will have nuked these scripts
-			const script_contents = await page.innerHTML('script[data-sveltekit-fetched]');
+			const script_contents = await page.innerHTML(
+				'script[data-sveltekit-fetched][data-url="/load/serialization/fetched-from-shared.json"]'
+			);
 
 			const payload = '{"status":200,"statusText":"","headers":{},"body":"{\\"b\\":2}"}';
 
@@ -238,10 +240,10 @@ test.describe('Load', () => {
 			const payload_b = '{"status":200,"statusText":"","headers":{},"body":"Y"}';
 			// by the time JS has run, hydration will have nuked these scripts
 			const script_contents_a = await page.innerHTML(
-				'script[data-sveltekit-fetched][data-url="/load/serialization-post.json"][data-hash="3t25"]'
+				'script[data-sveltekit-fetched][data-url="/load/serialization-post.json"][data-hash="1vn6nlx"]'
 			);
 			const script_contents_b = await page.innerHTML(
-				'script[data-sveltekit-fetched][data-url="/load/serialization-post.json"][data-hash="3t24"]'
+				'script[data-sveltekit-fetched][data-url="/load/serialization-post.json"][data-hash="1vn6nlw"]'
 			);
 
 			expect(script_contents_a).toBe(payload_a);

@@ -1,5 +1,25 @@
 # @sveltejs/adapter-auto
 
+## 2.0.0
+
+### Major Changes
+
+- breaking: bump `@sveltejs/kit` peer dependency ([#8740](https://github.com/sveltejs/kit/pull/8740))
+
+### Patch Changes
+
+- Updated dependencies [[`c7648f66`](https://github.com/sveltejs/kit/commit/c7648f6608a413e2654625cbd30f890d2148cf13), [`63613bf1`](https://github.com/sveltejs/kit/commit/63613bf194c18ce50e111585ad770fc93f9e43c7), [`d1f7655e`](https://github.com/sveltejs/kit/commit/d1f7655efdff70d91f94fe0cb0de50ed2511b5e5)]:
+  - @sveltejs/kit@1.5.0
+
+## 1.0.3
+
+### Patch Changes
+
+- fix: pin adapter versions ([#8874](https://github.com/sveltejs/kit/pull/8874))
+
+- Updated dependencies [[`f8dd7754`](https://github.com/sveltejs/kit/commit/f8dd7754ea21b11063613aac7d0d6cd98fc28b8e), [`fafe7d5f`](https://github.com/sveltejs/kit/commit/fafe7d5f033b249d554879b5ab7bc641f0ace362), [`e56a13c6`](https://github.com/sveltejs/kit/commit/e56a13c68a7d885f83f519c43f3510f10fee4ca5), [`02bd767d`](https://github.com/sveltejs/kit/commit/02bd767d3277a840b480fe94444cd1c886ef519b), [`97d68b13`](https://github.com/sveltejs/kit/commit/97d68b1381c1e0d052a0978824e96b9f50d248a9), [`2ef9b7d1`](https://github.com/sveltejs/kit/commit/2ef9b7d124809ce6a9804abbeaa4647a99fac97c), [`64a279f7`](https://github.com/sveltejs/kit/commit/64a279f7f92dcd4855af83fcbb09ea5ba1521ee8)]:
+  - @sveltejs/kit@1.4.0
+
 ## 1.0.2
 
 ### Patch Changes

@@ -365,6 +365,7 @@ You can use these functions to show and hide loading UI, and so on.
 If you provide your own callbacks, you may need to reproduce part of the default `use:enhance` behaviour, such as showing the nearest `+error` boundary. Most of the time, calling `update` passed to the callback is enough. If you need more customization you can do so with `applyAction`:
 
 ```diff
+/// file: src/routes/login/+page.svelte
 <script>
 +	import { enhance, applyAction } from '$app/forms';
 

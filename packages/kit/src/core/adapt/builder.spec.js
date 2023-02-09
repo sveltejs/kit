@@ -1,10 +1,10 @@
-import { rmSync } from 'fs';
-import { join } from 'path';
+import { rmSync } from 'node:fs';
+import { join } from 'node:path';
+import { fileURLToPath } from 'node:url';
 import { test } from 'uvu';
 import * as assert from 'uvu/assert';
 import glob from 'tiny-glob/sync.js';
 import { create_builder } from './builder.js';
-import { fileURLToPath } from 'url';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = join(__filename, '..');
@@ -31,11 +31,13 @@ test('copy files', () => {
 		build_data: {},
 		// @ts-expect-error
 		server_metadata: {},
-		routes: [],
+		route_data: [],
 		// @ts-expect-error
 		prerendered: {
 			paths: []
 		},
+		// @ts-expect-error
+		prerender_map: {},
 		// @ts-expect-error
 		log: {}
 	});

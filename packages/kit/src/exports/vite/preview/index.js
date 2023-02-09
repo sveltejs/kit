@@ -1,7 +1,7 @@
-import fs from 'fs';
-import { join } from 'path';
+import fs from 'node:fs';
+import { join } from 'node:path';
+import { pathToFileURL } from 'node:url';
 import sirv from 'sirv';
-import { pathToFileURL } from 'url';
 import { loadEnv, normalizePath } from 'vite';
 import { getRequest, setResponse } from '../../../exports/node/index.js';
 import { installPolyfills } from '../../../exports/node/polyfills.js';
@@ -37,14 +37,14 @@ export async function preview(vite, vite_config, svelte_config) {
 	const dir = join(svelte_config.kit.outDir, 'output/server');
 
 	/** @type {import('types').ServerInternalModule} */
-	const { set_paths } = await import(pathToFileURL(join(dir, 'internal.js')).href);
+	const { set_assets } = await import(pathToFileURL(join(dir, 'internal.js')).href);
 
 	/** @type {import('types').ServerModule} */
 	const { Server } = await import(pathToFileURL(join(dir, 'index.js')).href);
 
 	const { manifest } = await import(pathToFileURL(join(dir, 'manifest.js')).href);
 
-	set_paths({ base, assets });
+	set_assets(assets);
 
 	const server = new Server(manifest);
 	await server.init({

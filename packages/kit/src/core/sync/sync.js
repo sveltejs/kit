@@ -1,4 +1,4 @@
-import path from 'path';
+import path from 'node:path';
 import create_manifest_data from './create_manifest_data/index.js';
 import { write_client_manifest } from './write_client_manifest.js';
 import { write_root } from './write_root.js';

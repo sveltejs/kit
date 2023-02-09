@@ -19,7 +19,7 @@ test('validates +layout.server.js, +layout.js, +page.js', () => {
 		validate_common_exports({
 			actions: {}
 		});
-	}, /Invalid export 'actions' \(valid exports are load, prerender, csr, ssr, trailingSlash, or anything with a '_' prefix\)/);
+	}, /Invalid export 'actions' \(valid exports are load, prerender, csr, ssr, trailingSlash, config, or anything with a '_' prefix\)/);
 });
 
 test('validates +page.server.js', () => {
@@ -36,7 +36,7 @@ test('validates +page.server.js', () => {
 		validate_page_server_exports({
 			answer: 42
 		});
-	}, /Invalid export 'answer' \(valid exports are load, prerender, csr, ssr, actions, trailingSlash, or anything with a '_' prefix\)/);
+	}, /Invalid export 'answer' \(valid exports are load, prerender, csr, ssr, actions, trailingSlash, config, or anything with a '_' prefix\)/);
 });
 
 test('validates +server.js', () => {
@@ -52,7 +52,7 @@ test('validates +server.js', () => {
 		validate_server_exports({
 			answer: 42
 		});
-	}, /Invalid export 'answer' \(valid exports are GET, POST, PATCH, PUT, DELETE, OPTIONS, prerender, trailingSlash, or anything with a '_' prefix\)/);
+	}, /Invalid export 'answer' \(valid exports are GET, POST, PATCH, PUT, DELETE, OPTIONS, prerender, trailingSlash, config, or anything with a '_' prefix\)/);
 });
 
 test.run();

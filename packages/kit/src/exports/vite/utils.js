@@ -1,4 +1,4 @@
-import path from 'path';
+import path from 'node:path';
 import { loadEnv } from 'vite';
 import { posixify } from '../../utils/filesystem.js';
 import { negotiate } from '../../utils/http.js';

@@ -1,4 +1,3 @@
-import { OutputChunk } from 'rollup';
 import { SvelteComponent } from 'svelte/internal';
 import {
 	Config,
@@ -30,7 +29,7 @@ export interface ServerModule {
 
 export interface ServerInternalModule {
 	set_building(building: boolean): void;
-	set_paths(paths: { base: string; assets: string }): void;
+	set_assets(path: string): void;
 	set_private_env(environment: Record<string, string>): void;
 	set_public_env(environment: Record<string, string>): void;
 	set_version(version: string): void;
@@ -75,8 +74,8 @@ export type CSRRoute = {
 	id: string;
 	exec(path: string): undefined | Record<string, string>;
 	errors: Array<CSRPageNodeLoader | undefined>;
-	layouts: Array<[boolean, CSRPageNodeLoader] | undefined>;
-	leaf: [boolean, CSRPageNodeLoader];
+	layouts: Array<[has_server_load: boolean, node_loader: CSRPageNodeLoader] | undefined>;
+	leaf: [has_server_load: boolean, node_loader: CSRPageNodeLoader];
 };
 
 export type GetParams = (match: RegExpExecArray) => Record<string, string>;
@@ -240,6 +239,7 @@ export interface ServerMetadata {
 		{
 			prerender: PrerenderOption | undefined;
 			methods: HttpMethod[];
+			config: any;
 		}
 	>;
 }
@@ -280,6 +280,7 @@ export interface SSRNode {
 		ssr?: boolean;
 		csr?: boolean;
 		trailingSlash?: TrailingSlash;
+		config?: any;
 	};
 
 	server: {
@@ -289,6 +290,7 @@ export interface SSRNode {
 		csr?: boolean;
 		trailingSlash?: TrailingSlash;
 		actions?: Actions;
+		config?: any;
 	};
 
 	// store this in dev so we can print serialization errors
@@ -332,6 +334,7 @@ export interface PageNodeIndexes {
 export type SSREndpoint = Partial<Record<HttpMethod, RequestHandler>> & {
 	prerender?: PrerenderOption;
 	trailingSlash?: TrailingSlash;
+	config?: any;
 };
 
 export interface SSRRoute {

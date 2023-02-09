@@ -1,6 +1,6 @@
-import { join } from 'path';
-import { pathToFileURL } from 'url';
-import { get_option } from '../../runtime/server/utils.js';
+import { join } from 'node:path';
+import { pathToFileURL } from 'node:url';
+import { get_option } from '../../utils/options.js';
 import {
 	validate_common_exports,
 	validate_page_server_exports,
@@ -55,9 +55,9 @@ async function analyse({ manifest_path, env }) {
 	for (const loader of manifest._.nodes) {
 		const node = await loader();
 
-		metadata.nodes.push({
+		metadata.nodes[node.index] = {
 			has_server_load: node.server?.load !== undefined
-		});
+		};
 	}
 
 	// analyse routes
@@ -67,6 +67,8 @@ async function analyse({ manifest_path, env }) {
 
 		/** @type {import('types').PrerenderOption | undefined} */
 		let prerender = undefined;
+		/** @type {any} */
+		let config = undefined;
 
 		if (route.endpoint) {
 			const mod = await route.endpoint();
@@ -88,6 +90,8 @@ async function analyse({ manifest_path, env }) {
 			if (mod.PATCH) methods.add('PATCH');
 			if (mod.DELETE) methods.add('DELETE');
 			if (mod.OPTIONS) methods.add('OPTIONS');
+
+			config = mod.config;
 		}
 
 		if (route.page) {
@@ -124,13 +128,35 @@ async function analyse({ manifest_path, env }) {
 				(should_prerender !== false && get_option(nodes, 'ssr') === false && !page?.server?.actions
 					? 'auto'
 					: should_prerender ?? false);
+
+			config = get_config(nodes);
 		}
 
 		metadata.routes.set(route.id, {
 			prerender,
+			config,
 			methods: Array.from(methods)
 		});
 	}
 
 	return metadata;
+}
+
+/**
+ * Do a shallow merge (first level) of the config object
+ * @param {Array<import('types').SSRNode | undefined>} nodes
+ */
+function get_config(nodes) {
+	let current = {};
+	for (const node of nodes) {
+		const config = node?.universal?.config ?? node?.server?.config;
+		if (config) {
+			current = {
+				...current,
+				...config
+			};
+		}
+	}
+
+	return Object.keys(current).length ? current : undefined;
 }

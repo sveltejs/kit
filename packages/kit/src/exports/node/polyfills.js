@@ -1,6 +1,6 @@
+import { ReadableStream, TransformStream, WritableStream } from 'node:stream/web';
+import { webcrypto as crypto } from 'node:crypto';
 import { fetch, Response, Request, Headers, FormData } from 'undici';
-import { ReadableStream, TransformStream, WritableStream } from 'stream/web';
-import { webcrypto as crypto } from 'crypto';
 
 /** @type {Record<string, any>} */
 const globals = {

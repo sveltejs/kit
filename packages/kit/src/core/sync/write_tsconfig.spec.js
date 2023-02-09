@@ -86,4 +86,31 @@ test('Allows generated tsconfig to be replaced', () => {
 	assert.equal(config.extends, 'some/other/tsconfig.json');
 });
 
+test('Creates tsconfig include from kit.files', () => {
+	const { kit } = validate_config({
+		kit: {
+			files: {
+				lib: 'app'
+			}
+		}
+	});
+
+	const { include } = get_tsconfig(kit, false);
+
+	assert.equal(include, [
+		'ambient.d.ts',
+		'./types/**/$types.d.ts',
+		'../vite.config.ts',
+		'../app/**/*.js',
+		'../app/**/*.ts',
+		'../app/**/*.svelte',
+		'../src/**/*.js',
+		'../src/**/*.ts',
+		'../src/**/*.svelte',
+		'../tests/**/*.js',
+		'../tests/**/*.ts',
+		'../tests/**/*.svelte'
+	]);
+});
+
 test.run();

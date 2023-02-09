@@ -22,6 +22,7 @@ import { get_config_aliases, get_env } from './utils.js';
 import { write_client_manifest } from '../../core/sync/write_client_manifest.js';
 import prerender from '../../core/postbuild/prerender.js';
 import analyse from '../../core/postbuild/analyse.js';
+import { s } from '../../utils/misc.js';
 
 export { vitePreprocess } from '@sveltejs/vite-plugin-svelte';
 
@@ -139,10 +140,12 @@ export async function sveltekit() {
 	return [...svelte(vite_plugin_svelte_options), ...kit({ svelte_config })];
 }
 
-/**
- * If `true`, the server build has been completed and we're creating the client build
- */
-let secondary_build = false;
+// These variables live outside the `kit()` function because it is re-invoked by each Vite build
+
+let secondary_build_started = false;
+
+/** @type {import('types').ManifestData} */
+let manifest_data;
 
 /**
  * Returns the SvelteKit Vite plugin. Vite executes Rollup hooks as well as some of its own.
@@ -167,17 +170,14 @@ function kit({ svelte_config }) {
 	/** @type {import('vite').ConfigEnv} */
 	let vite_config_env;
 
-	/** @type {import('types').ManifestData} */
-	let manifest_data;
-
 	/** @type {boolean} */
 	let is_build;
 
 	/** @type {{ public: Record<string, string>; private: Record<string, string> }} */
 	let env;
 
-	/** @type {(() => Promise<void>) | null} */
-	let finalise = null;
+	/** @type {() => Promise<void>} */
+	let finalise;
 
 	const service_worker_entry_file = resolve_entry(kit.files.serviceWorker);
 
@@ -255,12 +255,12 @@ function kit({ svelte_config }) {
 
 			if (is_build) {
 				if (!new_config.build) new_config.build = {};
-				new_config.build.ssr = !secondary_build;
+				new_config.build.ssr = !secondary_build_started;
 
 				new_config.define = {
-					__SVELTEKIT_ADAPTER_NAME__: JSON.stringify(kit.adapter?.name),
-					__SVELTEKIT_APP_VERSION_FILE__: JSON.stringify(`${kit.appDir}/version.json`),
-					__SVELTEKIT_APP_VERSION_POLL_INTERVAL__: JSON.stringify(kit.version.pollInterval),
+					__SVELTEKIT_ADAPTER_NAME__: s(kit.adapter?.name),
+					__SVELTEKIT_APP_VERSION_FILE__: s(`${kit.appDir}/version.json`),
+					__SVELTEKIT_APP_VERSION_POLL_INTERVAL__: s(kit.version.pollInterval),
 					__SVELTEKIT_DEV__: 'false',
 					__SVELTEKIT_EMBEDDED__: kit.embedded ? 'true' : 'false'
 				};
@@ -277,6 +277,10 @@ function kit({ svelte_config }) {
 						'esm-env'
 					]
 				};
+
+				if (!secondary_build_started) {
+					manifest_data = (await sync.all(svelte_config, config_env.mode)).manifest_data;
+				}
 			} else {
 				new_config.define = {
 					__SVELTEKIT_APP_VERSION_POLL_INTERVAL__: '0',
@@ -316,7 +320,9 @@ function kit({ svelte_config }) {
 
 		async resolveId(id) {
 			// treat $env/static/[public|private] as virtual
-			if (id.startsWith('$env/') || id === '$service-worker') return `\0${id}`;
+			if (id.startsWith('$env/') || id === '$internal/paths' || id === '$service-worker') {
+				return `\0${id}`;
+			}
 		},
 
 		async load(id, options) {
@@ -352,6 +358,15 @@ function kit({ svelte_config }) {
 					);
 				case '\0$service-worker':
 					return create_service_worker_module(svelte_config);
+				case '\0$internal/paths':
+					const { assets, base } = svelte_config.kit.paths;
+					return `export const base = ${s(base)};
+export let assets = ${assets ? s(assets) : 'base'};
+
+/** @param {string} path */
+export function set_assets(path) {
+	assets = path;
+}`;
 			}
 		}
 	};
@@ -367,7 +382,7 @@ function kit({ svelte_config }) {
 		writeBundle: {
 			sequential: true,
 			async handler(_options) {
-				if (!secondary_build) return;
+				if (vite_config.build.ssr) return;
 
 				const guard = module_guard(this, {
 					cwd: vite.normalizePath(process.cwd()),
@@ -393,13 +408,11 @@ function kit({ svelte_config }) {
 		 * Build the SvelteKit-provided Vite config to be merged with the user's vite.config.js file.
 		 * @see https://vitejs.dev/guide/api-plugin.html#config
 		 */
-		async config(config, config_env) {
+		async config(config) {
 			/** @type {import('vite').UserConfig} */
 			let new_config;
 
 			if (is_build) {
-				manifest_data = (await sync.all(svelte_config, config_env.mode)).manifest_data;
-
 				const ssr = /** @type {boolean} */ (config.build?.ssr);
 				const prefix = `${kit.appDir}/immutable`;
 
@@ -539,10 +552,7 @@ function kit({ svelte_config }) {
 		 * Clears the output directories.
 		 */
 		buildStart() {
-			if (secondary_build) return;
-
-			// reset (here, not in `config`, because `build --watch` skips `config`)
-			finalise = null;
+			if (secondary_build_started) return;
 
 			if (is_build) {
 				if (!vite_config.build.watch) {
@@ -553,25 +563,24 @@ function kit({ svelte_config }) {
 		},
 
 		generateBundle() {
-			if (!secondary_build) return;
+			if (vite_config.build.ssr) return;
 
 			this.emitFile({
 				type: 'asset',
 				fileName: `${kit.appDir}/version.json`,
-				source: JSON.stringify({ version: kit.version.name })
+				source: s({ version: kit.version.name })
 			});
 		},
 
 		/**
 		 * Vite builds a single bundle. We need three bundles: client, server, and service worker.
-		 * The user's package.json scripts will invoke the Vite CLI to execute the client build. We
-		 * then use this hook to kick off builds for the server and service worker.
+		 * The user's package.json scripts will invoke the Vite CLI to execute the server build. We
+		 * then use this hook to kick off builds for the client and service worker.
 		 */
 		writeBundle: {
 			sequential: true,
 			async handler(_options) {
-				if (secondary_build) return; // only run this once
-				secondary_build = true;
+				if (secondary_build_started) return; // only run this once
 
 				const verbose = vite_config.logLevel === 'info';
 				const log = logger({ verbose });
@@ -600,12 +609,16 @@ function kit({ svelte_config }) {
 				);
 
 				// first, build server nodes without the client manifest so we can analyse it
+				log.info('Analysing routes');
+
 				build_server_nodes(out, kit, manifest_data, server_manifest, null, null);
 
 				const metadata = await analyse({
 					manifest_path,
 					env: { ...env.private, ...env.public }
 				});
+
+				log.info('Building app');
 
 				// create client build
 				write_client_manifest(
@@ -614,6 +627,8 @@ function kit({ svelte_config }) {
 					`${kit.outDir}/generated/client-optimized`,
 					metadata.nodes
 				);
+
+				secondary_build_started = true;
 
 				const { output } = /** @type {import('rollup').RollupOutput} */ (
 					await vite.build({
@@ -653,8 +668,6 @@ function kit({ svelte_config }) {
 				build_server_nodes(out, kit, manifest_data, server_manifest, client_manifest, css);
 
 				// ...and prerender
-				log.info('Prerendering');
-
 				const { prerendered, prerender_map } = await prerender({
 					out,
 					manifest_path,
@@ -700,6 +713,10 @@ function kit({ svelte_config }) {
 							.cyan('npm run preview')} to preview your production build locally.`
 					);
 
+					// avoid making the manifest available to users
+					fs.unlinkSync(`${out}/client/${vite_config.build.manifest}`);
+					fs.unlinkSync(`${out}/server/${vite_config.build.manifest}`);
+
 					if (kit.adapter) {
 						const { adapt } = await import('../../core/adapt/index.js');
 						await adapt(svelte_config, build_data, metadata, prerendered, prerender_map, log);
@@ -712,9 +729,7 @@ function kit({ svelte_config }) {
 						);
 					}
 
-					// avoid making the manifest available to users
-					fs.unlinkSync(`${out}/client/${vite_config.build.manifest}`);
-					fs.unlinkSync(`${out}/server/${vite_config.build.manifest}`);
+					secondary_build_started = false;
 				};
 			}
 		},
@@ -725,7 +740,8 @@ function kit({ svelte_config }) {
 		closeBundle: {
 			sequential: true,
 			async handler() {
-				finalise?.();
+				if (!vite_config.build.ssr) return;
+				await finalise?.();
 			}
 		}
 	};
@@ -788,9 +804,9 @@ export const build = [];
 export const files = [
 	${create_assets(config)
 		.filter((asset) => config.kit.serviceWorker.files(asset.file))
-		.map((asset) => `${JSON.stringify(`${config.kit.paths.base}/${asset.file}`)}`)
+		.map((asset) => `${s(`${config.kit.paths.base}/${asset.file}`)}`)
 		.join(',\n\t\t\t\t')}
 ];
 export const prerendered = [];
-export const version = ${JSON.stringify(config.kit.version.name)};
+export const version = ${s(config.kit.version.name)};
 `;

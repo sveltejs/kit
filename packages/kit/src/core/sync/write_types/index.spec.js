@@ -1,12 +1,12 @@
-import path from 'path';
-import { fileURLToPath } from 'url';
+import { execSync } from 'node:child_process';
+import path from 'node:path';
+import { fileURLToPath } from 'node:url';
 import { test } from 'uvu';
 import * as assert from 'uvu/assert';
 import { rimraf } from '../../../utils/filesystem.js';
 import options from '../../config/options.js';
 import create_manifest_data from '../create_manifest_data/index.js';
 import { tweak_types, write_all_types } from './index.js';
-import { execSync } from 'child_process';
 
 const cwd = fileURLToPath(new URL('./test', import.meta.url));
 

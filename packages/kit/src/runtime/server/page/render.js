@@ -1,13 +1,14 @@
 import * as devalue from 'devalue';
 import { readable, writable } from 'svelte/store';
 import { DEV } from 'esm-env';
+import { assets, base } from '$internal/paths';
 import { hash } from '../../hash.js';
 import { serialize_data } from './serialize_data.js';
 import { s } from '../../../utils/misc.js';
 import { Csp } from './csp.js';
 import { uneval_action_response } from './actions.js';
 import { clarify_devalue_error } from '../utils.js';
-import { assets, base, version, public_env } from '../../shared.js';
+import { version, public_env } from '../../shared.js';
 import { text } from '../../../exports/index.js';
 
 // TODO rename this function/module
@@ -89,7 +90,7 @@ export async function render_response({
 				navigating: writable(null),
 				updated
 			},
-			components: await Promise.all(branch.map(({ node }) => node.component())),
+			constructors: await Promise.all(branch.map(({ node }) => node.component())),
 			form: form_value
 		};
 
@@ -265,8 +266,8 @@ export async function render_response({
 
 	if (page_config.csr) {
 		const opts = [
+			`assets: ${s(assets)}`,
 			`env: ${s(public_env)}`,
-			`paths: ${s({ assets, base })}`,
 			`target: document.querySelector('[data-sveltekit-hydrate="${target}"]').parentNode`,
 			`version: ${s(version)}`
 		];

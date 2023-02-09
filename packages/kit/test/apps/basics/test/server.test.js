@@ -97,6 +97,17 @@ test.describe('Endpoints', () => {
 		expect(headers.head).toEqual(headers.get);
 	});
 
+	test('Prerendered +server.js called from a non-prerendered +server.js works', async ({
+		baseURL
+	}) => {
+		const res = await fetch(`${baseURL}/prerendering/prerendered-endpoint/proxy`);
+
+		expect(res.status).toBe(200);
+		expect(await res.json()).toStrictEqual({
+			message: 'Im prerendered and called from a non-prerendered +page.server.js'
+		});
+	});
+
 	// TODO all the remaining tests in this section are really only testing
 	// setResponse, since we're not otherwise changing anything on the response.
 	// might be worth making these unit tests instead
@@ -175,8 +186,7 @@ test.describe('Errors', () => {
 		expect(await response.text()).toMatch('PUT method not allowed');
 	});
 
-	// TODO re-enable this if https://github.com/vitejs/vite/issues/7046 is implemented
-	test.skip('error evaluating module', async ({ request }) => {
+	test('error evaluating module', async ({ request }) => {
 		const response = await request.get('/errors/init-error-endpoint');
 
 		expect(response.status()).toBe(500);

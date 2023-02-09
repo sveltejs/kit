@@ -1,5 +1,5 @@
-import fs from 'fs';
-import path from 'path';
+import fs from 'node:fs';
+import path from 'node:path';
 import colors from 'kleur';
 import { posixify } from '../../utils/filesystem.js';
 import { write_if_changed } from './utils.js';
@@ -85,19 +85,29 @@ export function get_tsconfig(kit, include_base_url) {
 	/** @param {string} file */
 	const config_relative = (file) => posixify(path.relative(kit.outDir, file));
 
-	const include = ['ambient.d.ts', './types/**/$types.d.ts', config_relative('vite.config.ts')];
-	for (const dir of [kit.files.routes, kit.files.lib]) {
-		const relative = project_relative(path.dirname(dir));
-		include.push(config_relative(`${relative}/**/*.js`));
-		include.push(config_relative(`${relative}/**/*.ts`));
-		include.push(config_relative(`${relative}/**/*.svelte`));
+	const include = new Set([
+		'ambient.d.ts',
+		'./types/**/$types.d.ts',
+		config_relative('vite.config.ts')
+	]);
+	// TODO(v2): find a better way to include all src files. We can't just use routes/lib only because
+	// people might have other folders/files in src that they want included.
+	const src_includes = [kit.files.routes, kit.files.lib, path.resolve('src')].filter((dir) => {
+		const relative = path.relative(path.resolve('src'), dir);
+		return !relative || relative.startsWith('..');
+	});
+	for (const dir of src_includes) {
+		include.add(config_relative(`${dir}/**/*.js`));
+		include.add(config_relative(`${dir}/**/*.ts`));
+		include.add(config_relative(`${dir}/**/*.svelte`));
 	}
+
 	// Test folder is a special case - we advocate putting tests in a top-level test folder
 	// and it's not configurable (should we make it?)
 	const test_folder = project_relative('tests');
-	include.push(config_relative(`${test_folder}/**/*.js`));
-	include.push(config_relative(`${test_folder}/**/*.ts`));
-	include.push(config_relative(`${test_folder}/**/*.svelte`));
+	include.add(config_relative(`${test_folder}/**/*.js`));
+	include.add(config_relative(`${test_folder}/**/*.ts`));
+	include.add(config_relative(`${test_folder}/**/*.svelte`));
 
 	const exclude = [config_relative('node_modules/**'), './[!ambient.d.ts]**'];
 	if (path.extname(kit.files.serviceWorker)) {
@@ -135,7 +145,7 @@ export function get_tsconfig(kit, include_base_url) {
 			// TODO(v2): use the new flag verbatimModuleSyntax instead (requires support by Vite/Esbuild)
 			ignoreDeprecations: ts && Number(ts.version.split('.')[0]) >= 5 ? '5.0' : undefined
 		},
-		include,
+		include: [...include],
 		exclude
 	};
 

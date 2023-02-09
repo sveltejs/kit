@@ -2,6 +2,8 @@
 // but which cannot be imported from `@sveltejs/kit`. Care should
 // be taken to avoid breaking changes when editing this file
 
+import { RouteDefinition } from './index.js';
+
 export interface AdapterEntry {
 	/**
 	 * A string that uniquely identifies an HTTP service (e.g. serverless function) and is used for deduplication.
@@ -12,8 +14,11 @@ export interface AdapterEntry {
 
 	/**
 	 * A function that compares the candidate route with the current route to determine
-	 * if it should be treated as a fallback for the current route. For example, `/foo/[c]`
-	 * is a fallback for `/foo/a-[b]`, and `/[...catchall]` is a fallback for all routes
+	 * if it should be grouped with the current route.
+	 *
+	 * Use cases:
+	 * - Fallback pages: `/foo/[c]` is a fallback for `/foo/a-[b]`, and `/[...catchall]` is a fallback for all routes
+	 * - Grouping routes that share a common `config`: `/foo` should be deployed to the edge, `/bar` and `/baz` should be deployed to a serverless function
 	 */
 	filter(route: RouteDefinition): boolean;
 
@@ -210,13 +215,6 @@ export type PrerenderMap = Map<string, PrerenderOption>;
 export interface RequestOptions {
 	getClientAddress(): string;
 	platform?: App.Platform;
-}
-
-export interface RouteDefinition {
-	id: string;
-	pattern: RegExp;
-	segments: RouteSegment[];
-	methods: HttpMethod[];
 }
 
 export interface RouteSegment {
