@@ -205,7 +205,7 @@ async function generate_lambda_functions({ builder, publish, split }) {
 
 			const pattern = `/${parts.join('/')}`;
 			const name =
-				FUNCTION_PREFIX + parts.join('-').replace(/[:.]/g, '_').replace('*', '__rest') || 'index';
+				FUNCTION_PREFIX + (parts.join('-').replace(/[:.]/g, '_').replace('*', '__rest') || 'index');
 
 			// skip routes with identical patterns, they were already folded into another function
 			if (seen.has(pattern)) continue;
