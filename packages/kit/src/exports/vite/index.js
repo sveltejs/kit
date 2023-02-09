@@ -636,11 +636,11 @@ export function set_assets(path) {
 						build: {
 							minify: vite_config.build.minify,
 							assetsInlineLimit: vite_config.build.assetsInlineLimit,
-							sourcemap: vite_config.build.sourcemap,
+							sourcemap: vite_config.build.sourcemap
 						},
 						optimizeDeps: {
 							force: vite_config.optimizeDeps.force
-						},
+						}
 					})
 				);
 
