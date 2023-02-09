@@ -59,7 +59,7 @@ function update_scroll_positions(index) {
  * @returns {import('./types').Client}
  */
 export function create_client({ app, target }) {
-	const routes = parse(app.nodes, app.server_loads, app.dictionary, app.matchers);
+	const routes = parse(app);
 
 	const default_layout_loader = app.nodes[0];
 	const default_error_loader = app.nodes[1];
