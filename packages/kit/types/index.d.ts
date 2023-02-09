@@ -542,8 +542,7 @@ export interface KitConfig {
 	 */
 	version?: {
 		/**
-		 * The current app version string. Make sure it's consistent across multiple evaluations (which may occur during build).
-		 * @default Date.now().toString() - statically set at build time (i.e., don't use Date.now().toString() in your own config file)
+		 * The current app version string. If specified, this must be deterministic (e.g. a commit ref rather than `Math.random()` or Date.now().toString()`), otherwise defaults to a timestamp of the build
 		 */
 		name?: string;
 		/**
