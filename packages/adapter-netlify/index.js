@@ -213,10 +213,11 @@ async function generate_lambda_functions({ builder, publish, split }) {
 
 			// figure out which lower priority routes should be considered fallbacks
 			for (let j = i + 1; j < builder.routes.length; j += 1) {
-				if (routes[j].prerender === true) continue;
+				const other = builder.routes[j];
+				if (other.prerender === true) continue;
 
-				if (matches(route.segments, routes[j].segments)) {
-					routes.push(builder.routes[j]);
+				if (matches(route.segments, other.segments)) {
+					routes.push(other);
 				}
 			}
 
