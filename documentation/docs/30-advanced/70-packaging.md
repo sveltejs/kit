@@ -115,7 +115,7 @@ Read more about `exports` [here](https://nodejs.org/docs/latest-v18.x/api/packag
 
 ### svelte
 
-This is a legacy field that was used to signal tooling that it is dealing with a Svelte component library. It's no longer necessary when using the [Svelte export condition](#exports), but for backwards compatibility with outdated tooling that doesn't know about export conditions yet it's good to keep it around. It should point towards your root entry point.
+This is a legacy field that was used to signal tooling that it is dealing with a Svelte component library. It's no longer necessary when using the [Svelte export condition](#anatomy-of-a-package-json-exports), but for backwards compatibility with outdated tooling that doesn't know about export conditions yet it's good to keep it around. It should point towards your root entry point.
 
 ```json
 {
