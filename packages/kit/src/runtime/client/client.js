@@ -221,14 +221,8 @@ export function create_client({ target }) {
 		});
 	}
 
-	/** @param {URL} url */
-	async function preload_data(url) {
-		const intent = get_navigation_intent(url, false);
-
-		if (!intent) {
-			throw new Error(`Attempted to preload a URL that does not belong to this app: ${url}`);
-		}
-
+	/** @param {import('./types').NavigationIntent} intent */
+	async function preload_data(intent) {
 		load_cache = {
 			id: intent.id,
 			promise: load_route(intent).then((result) => {
@@ -1261,7 +1255,8 @@ export function create_client({ target }) {
 
 			if (!options.reload) {
 				if (priority <= options.preload_data) {
-					preload_data(/** @type {URL} */ (url));
+					const intent = get_navigation_intent(/** @type {URL} */ (url), false);
+					if (intent) preload_data(intent);
 				} else if (priority <= options.preload_code) {
 					preload_code(get_url_path(/** @type {URL} */ (url)));
 				}
@@ -1347,7 +1342,13 @@ export function create_client({ target }) {
 
 		preload_data: async (href) => {
 			const url = new URL(href, get_base_uri(document));
-			await preload_data(url);
+			const intent = get_navigation_intent(url, false);
+
+			if (!intent) {
+				throw new Error(`Attempted to preload a URL that does not belong to this app: ${url}`);
+			}
+
+			await preload_data(intent);
 		},
 
 		preload_code,
