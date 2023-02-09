@@ -80,7 +80,7 @@ This tells bundlers and tooling that your package only has one entry point, the 
 import { Something } from 'your-library';
 ```
 
-The `types`/`svelte`/`default` keys are so-called export conditions. They tell tooling what file to import when they look up the `your-library` import:
+The `types`/`svelte`/`default` keys are [export conditions](https://nodejs.org/api/packages.html#conditional-exports). They tell tooling what file to import when they look up the `your-library` import:
 - TypeScript sees the `types` condition and looks up the type definition file
 - Svelte-aware tooling knows this is a Svelte component library. `vite-plugin-svelte` then knows it needs to ensure that Vite does not attempt to prebundle the library (which causes errors)
 - other tooling falls back to the `default` export.
