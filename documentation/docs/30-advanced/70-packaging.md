@@ -76,6 +76,7 @@ The `"exports"` field contains the package's entry points. If you set up a new l
 This tells bundlers and tooling that your package only has one entry point, the root, and everything should be imported through that, like this:
 
 ```js
+// @errors: 2307
 import { Something } from 'your-library';
 ```
 
