@@ -295,10 +295,8 @@ export async function render_response({
 		const init_app = `
 			import { env, start } from ${s(prefixed(client.start.file))};
 
-			console.log('setting env');
 			env(${s(public_env)});
 
-			console.log('starting app');
 			start({
 				${opts.join(',\n\t\t\t\t')}
 			});
