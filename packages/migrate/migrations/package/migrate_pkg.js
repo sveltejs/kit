@@ -103,7 +103,22 @@ export function update_pkg_json(config, pkg, files) {
 			}
 
 			if (!pkg.exports[key]) {
-				pkg.exports[key] = `./${out_dir}/${file.dest}`;
+				const has_type = config.package.emitTypes && (file.is_svelte || file.dest.endsWith('.js'));
+				const needs_svelte_condition = file.is_svelte || path.basename(file.dest) === 'index.js';
+				// JSON.stringify will remove the undefined entries
+				pkg.exports[key] = {
+					types: has_type
+						? `./${out_dir}/${
+								file.is_svelte ? `${file.dest}.d.ts` : file.dest.slice(0, -'.js'.length) + '.d.ts'
+						  }`
+						: undefined,
+					svelte: needs_svelte_condition ? `./${out_dir}/${file.dest}` : undefined,
+					default: `./${out_dir}/${file.dest}`
+				};
+
+				if (Object.values(pkg.exports[key]).filter(Boolean).length === 1) {
+					pkg.exports[key] = pkg.exports[key].default;
+				}
 			}
 
 			clashes[key] = original;

@@ -4,7 +4,7 @@ import { update_pkg_json } from './migrate_pkg.js';
 
 test('Updates package.json', () => {
 	const result = update_pkg_json(
-		{ package: { dir: 'package' } },
+		{ package: { dir: 'package', emitTypes: true } },
 		{
 			name: 'foo',
 			version: '1.0.0',
@@ -31,6 +31,13 @@ test('Updates package.json', () => {
 				is_svelte: true
 			},
 			{
+				name: 'baz.js',
+				dest: 'baz.js',
+				is_exported: true,
+				is_included: true,
+				is_svelte: false
+			},
+			{
 				name: 'index.js',
 				dest: 'index.js',
 				is_exported: true,
@@ -46,7 +53,7 @@ test('Updates package.json', () => {
 			}
 		]
 	);
-	assert.equal(result, {
+	assert.equal(JSON.parse(JSON.stringify(result)), {
 		name: 'foo',
 		version: '1.0.0',
 		type: 'module',
@@ -56,11 +63,75 @@ test('Updates package.json', () => {
 		},
 		exports: {
 			'./package.json': './package.json',
-			'.': './package/index.js',
-			'./foo/Bar.svelte': './package/foo/Bar.svelte',
+			'.': {
+				types: './package/index.d.ts',
+				svelte: './package/index.js',
+				default: './package/index.js'
+			},
+			'./foo/Bar.svelte': {
+				types: './package/foo/Bar.svelte.d.ts',
+				svelte: './package/foo/Bar.svelte',
+				default: './package/foo/Bar.svelte'
+			},
+			'./baz': {
+				types: './package/baz.d.ts',
+				default: './package/baz.js'
+			},
 			'./ignored': './something.js'
 		},
 		svelte: './package/index.js'
+	});
+});
+
+test('Updates package.json #2', () => {
+	const result = update_pkg_json(
+		{ package: { dir: 'dist', emitTypes: false } },
+		{
+			name: 'foo',
+			version: '1.0.0'
+		},
+		[
+			{
+				name: 'foo/Bar.svelte',
+				dest: 'foo/Bar.svelte',
+				is_exported: true,
+				is_included: true,
+				is_svelte: true
+			},
+			{
+				name: 'baz.js',
+				dest: 'baz.js',
+				is_exported: true,
+				is_included: true,
+				is_svelte: false
+			},
+			{
+				name: 'index.js',
+				dest: 'index.js',
+				is_exported: true,
+				is_included: true,
+				is_svelte: false
+			}
+		]
+	);
+	assert.equal(JSON.parse(JSON.stringify(result)), {
+		name: 'foo',
+		version: '1.0.0',
+		type: 'module',
+		files: ['dist'],
+		exports: {
+			'./package.json': './package.json',
+			'.': {
+				svelte: './dist/index.js',
+				default: './dist/index.js'
+			},
+			'./foo/Bar.svelte': {
+				svelte: './dist/foo/Bar.svelte',
+				default: './dist/foo/Bar.svelte'
+			},
+			'./baz': './dist/baz.js'
+		},
+		svelte: './dist/index.js'
 	});
 });
 
