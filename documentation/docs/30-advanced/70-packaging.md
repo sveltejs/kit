@@ -25,7 +25,7 @@ This is the name of your package. It will be available for others to install usi
 
 ```json
 {
-    "name": "my-great-component-library"
+    "name": "your-library"
 }
 ```
 
@@ -64,7 +64,11 @@ The `"exports"` field contains the package's entry points. If you set up a new l
 ```json
 {
     "exports": {
-        ".": "./dist/index.js"
+        ".": {
+            "types": "./dist/index.d.ts",
+            "svelte": "./dist/index.js",
+            "default": "./dist/index.js"
+        }
     }
 }
 ```
@@ -72,30 +76,29 @@ The `"exports"` field contains the package's entry points. If you set up a new l
 This tells bundlers and tooling that your package only has one entry point, the root, and everything should be imported through that, like this:
 
 ```js
-import { Something } from 'your-package';
+import { Something } from 'your-library';
 ```
 
-You can adjust this to your liking and provide more entry points. For example, if you had a `src/lib/Foo.svelte` component and a `src/lib/index.js` module that re-exported it, and a `package.json` with the follwing exports...
+The `types`/`svelte`/`default` keys are so-called export conditions. They tell tooling what file to import when they look up the `your-library` import:
+- TypeScript sees the `types` condition and looks up the type definition file
+- Svelte-aware tooling knows this is a Svelte component library. `vite-plugin-svelte` then knows it needs to ensure that Vite does not attempt to prebundle the library (which causes errors)
+- other tooling falls back to the `default` export.
+
+You can adjust `exports` to your liking and provide more entry points. For example, if instead of a `src/lib/index.js` file that re-exported components you wanted to expose a `src/lib/Foo.svelte` component directly, you could create the following export map...
 
 ```json
 {
     "exports": {
-        ".": "./dist/index.js",
-        "./Foo.svelte": "./dist/Foo.svelte"
+        "./Foo.svelte": {
+            "types": "./dist/Foo.svelte.d.ts",
+            "svelte": "./dist/Foo.svelte",
+            "default": "./dist/Foo.svelte"
+        }
     }
 }
 ```
 
-...then a consumer of your library could do either of the following:
-
-```js
-// @filename: ambient.d.ts
-declare module 'your-library';
-
-// @filename: index.js
-// ---cut---
-import { Foo } from 'your-library';
-```
+...and a consumer of your library could import the component like so:
 
 ```js
 // @filename: ambient.d.ts
@@ -106,24 +109,19 @@ declare module 'your-library/Foo.svelte';
 import Foo from 'your-library/Foo.svelte';
 ```
 
-In general, each key of the exports map is the path the user will have to use to import something from your package, and the value is the path to the file that will be imported.
+In general, each key of the exports map is the path the user will have to use to import something from your package, and the value is the path to the file that will be imported or an export conditions map which in turn contain these file paths.
 
-`exports` also supports so-called export conditions. These tell bundlers and tooling what to import depending on some condition. You could use that to provide both a compiled and uncompiled version of your components which can be imported through the same path.
+Read more about `exports` [here](https://nodejs.org/docs/latest-v18.x/api/packages.html#package-entry-points).
+
+### svelte
+
+This is a legacy field that was used to signal tooling that it is dealing with a Svelte component library. It's no longer necessary when using the [Svelte export condition](#exports), but for backwards compatibility with outdated tooling that doesn't know about export conditions yet it's good to keep it around. It should point towards your root entry point.
 
 ```json
 {
-    "exports": {
-        ".": {
-            "svelte": "./Raw.svelte",
-            "default": "./compiled.js"
-        }
-    }
+    "svelte": "./dist/index.js"
 }
 ```
-
-The above exports map tells bundler to use `Raw.svelte` when they are running inside a Svelte application and `compiled.js` when they are used outside one and need a self-contained bundle.
-
-Read more about `exports` [here](https://nodejs.org/docs/latest-v18.x/api/packages.html#package-entry-points).
 
 ## Best practices
 
