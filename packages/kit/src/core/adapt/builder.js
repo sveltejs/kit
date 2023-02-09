@@ -1,7 +1,5 @@
-import { fork } from 'node:child_process';
 import { existsSync, statSync, createReadStream, createWriteStream } from 'node:fs';
 import { pipeline } from 'node:stream';
-import { fileURLToPath } from 'node:url';
 import { promisify } from 'node:util';
 import zlib from 'node:zlib';
 import glob from 'tiny-glob';
