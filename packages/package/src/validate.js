@@ -88,7 +88,7 @@ export function create_validator(options) {
 
 		if (!pkg.exports) {
 			warn(
-				'No `exports` field found in `package.json`, please provide one.' +
+				'No `exports` field found in `package.json`, please provide one. ' +
 					'See https://kit.svelte.dev/docs/packaging#anatomy-of-a-package-json-exports for more info'
 			);
 		}
