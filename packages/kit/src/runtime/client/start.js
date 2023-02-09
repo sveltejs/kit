@@ -22,10 +22,22 @@ export async function start({ app, assets, hydrate, target, version }) {
 		);
 	}
 
-	const client = create_client({ app: await app, target });
+	let resolved;
+	console.log('awaiting app');
+	try {
+		resolved = await app;
+	} catch (e) {
+		console.error('something went wrong while awaiting app');
+		console.error(e);
+		throw e;
+	}
+	console.log('awaited app, create client');
+	const client = create_client({ app: resolved, target });
 
+	console.log('init client');
 	init({ client });
 
+	console.log('hydrating');
 	if (hydrate) {
 		await client._hydrate(hydrate);
 	} else {
@@ -33,6 +45,7 @@ export async function start({ app, assets, hydrate, target, version }) {
 	}
 
 	client._start_router();
+	console.log('finished');
 }
 
 export { set_public_env as env };
