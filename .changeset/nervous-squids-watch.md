@@ -2,4 +2,4 @@
 '@sveltejs/kit': patch
 ---
 
-support all relevant vite cli flags
+fix: support all relevant vite cli flags
