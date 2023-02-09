@@ -35,6 +35,23 @@ export const prerender = 'auto';
 
 The prerenderer will start at the root of your app and generate files for any prerenderable pages or `+server.js` routes it finds. Each page is scanned for `<a>` elements that point to other pages that are candidates for prerendering — because of this, you generally don't need to specify which pages should be accessed. If you _do_ need to specify which pages should be accessed by the prerenderer, you can do so with the `entries` option in the [prerender configuration](configuration#prerender).
 
+You could also specify pages based on an external data source. This is useful if you don't have any anchor elements referencing certain pages. This may be also useful for those who are building blogs with headless CMS. 
+
+```js
+// svelte.config.js
+const getEntries = async () => await fetch(...).then(response => response.json()); // ["*", "/", "/user/123", ...]
+
+const config = {
+  kit: {
+    prerender: {
+      entries: await getEntries(),
+    }
+  }
+}
+
+export default config;
+```
+
 While prerendering, the value of `building` imported from [`$app/environment`](modules#$app-environment) will be `true`.
 
 ### Prerendering server routes
