@@ -86,6 +86,10 @@ export function update_pkg_json(config, pkg, files) {
 		pkg.files.push(out_dir);
 	}
 
+	if (pkg.devDependencies?.['@sveltejs/package']) {
+		pkg.devDependencies['@sveltejs/package'] = '^2.0.0';
+	}
+
 	/** @type {Record<string, string>} */
 	const clashes = {};
 
