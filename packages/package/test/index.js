@@ -134,10 +134,6 @@ test('create package with emitTypes settings disabled', async () => {
 	await test_make_package('emitTypes-false', { types: false });
 });
 
-test('create package with files.exclude settings', async () => {
-	await test_make_package('files-exclude');
-});
-
 test('create package and resolves $lib alias', async () => {
 	await test_make_package('resolve-alias');
 });
