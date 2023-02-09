@@ -74,19 +74,15 @@ export function create_validator(options) {
 			);
 		}
 
-		if (
-			has_svelte_files &&
-			!pkg.svelte &&
-			!Object.values(pkg.exports || {}).some((e) => e.svelte)
-		) {
-			warn(
-				'You are using Svelte files, but did not declare a `svelte` condition in one of your `exports` in your `package.json`. ' +
-					'Add a `svelte` condition to your `exports` to ensure that your package is recognized as Svelte package by tooling. ' +
-					'See https://kit.svelte.dev/docs/packaging#anatomy-of-a-package-json-exports for more info'
-			);
-		}
-
-		if (!pkg.exports) {
+		if (pkg.exports) {
+			if (has_svelte_files && !pkg.svelte && !Object.values(pkg.exports).some((e) => e.svelte)) {
+				warn(
+					'You are using Svelte files, but did not declare a `svelte` condition in one of your `exports` in your `package.json`. ' +
+						'Add a `svelte` condition to your `exports` to ensure that your package is recognized as Svelte package by tooling. ' +
+						'See https://kit.svelte.dev/docs/packaging#anatomy-of-a-package-json-exports for more info'
+				);
+			}
+		} else {
 			warn(
 				'No `exports` field found in `package.json`, please provide one. ' +
 					'See https://kit.svelte.dev/docs/packaging#anatomy-of-a-package-json-exports for more info'
