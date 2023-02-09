@@ -6,11 +6,22 @@ import { preprocess } from 'svelte/compiler';
 import { copy, mkdirp, rimraf } from './filesystem.js';
 import { analyze, resolve_aliases, scan, strip_lang_tags, write } from './utils.js';
 import { emit_dts, transpile_ts } from './typescript.js';
+import { create_validator } from './validate.js';
 
 /**
  * @param {import('./types').Options} options
  */
 export async function build(options) {
+	const { analyse_code, validate } = create_validator(options);
+	await do_build(options, analyse_code);
+	validate();
+}
+
+/**
+ * @param {import('./types').Options} options
+ * @param {(name: string, code: string) => void} analyse_code
+ */
+async function do_build(options, analyse_code) {
 	const { input, output, extensions, alias } = normalize_options(options);
 
 	if (!fs.existsSync(input)) {
@@ -27,7 +38,7 @@ export async function build(options) {
 	}
 
 	for (const file of files) {
-		await process_file(input, output, file, options.config.preprocess, alias);
+		await process_file(input, output, file, options.config.preprocess, alias, analyse_code);
 	}
 
 	console.log(
@@ -41,7 +52,11 @@ export async function build(options) {
  * @param {import('./types').Options} options
  */
 export async function watch(options) {
-	await build(options);
+	const { analyse_code, validate } = create_validator(options);
+
+	await do_build(options, analyse_code);
+
+	validate();
 
 	const { input, output, extensions, alias } = normalize_options(options);
 
@@ -96,8 +111,9 @@ export async function watch(options) {
 				}
 
 				if (type === 'add' || type === 'change') {
-					await process_file(input, output, file, options.config.preprocess, alias);
 					console.log(`Processing ${file.name}`);
+					await process_file(input, output, file, options.config.preprocess, alias, analyse_code);
+					validate();
 				}
 			}
 
@@ -150,12 +166,13 @@ function normalize_options(options) {
  * @param {import('./types').File} file
  * @param {import('svelte/types/compiler/preprocess').PreprocessorGroup | undefined} preprocessor
  * @param {Record<string, string>} aliases
+ * @param {(name: string, code: string) => void} analyse_code
  */
-async function process_file(input, output, file, preprocessor, aliases) {
+async function process_file(input, output, file, preprocessor, aliases, analyse_code) {
 	const filename = path.join(input, file.name);
 	const dest = path.join(output, file.dest);
 
-	if (file.is_svelte || file.name.endsWith('.ts')) {
+	if (file.is_svelte || file.name.endsWith('.ts') || file.name.endsWith('.js')) {
 		let contents = fs.readFileSync(filename, 'utf-8');
 
 		if (file.is_svelte) {
@@ -170,6 +187,7 @@ async function process_file(input, output, file, preprocessor, aliases) {
 		}
 
 		contents = resolve_aliases(input, file.name, contents, aliases);
+		analyse_code(file.name, contents);
 		write(dest, contents);
 	} else {
 		copy(filename, dest);
