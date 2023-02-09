@@ -15,6 +15,14 @@ export async function migrate() {
 		bail('Please re-run this script in a directory with a package.json');
 	}
 
+	console.log(
+		colors
+			.bold()
+			.yellow(
+				'\nThis will update your svelte.config.js and package.json in the current directory\n'
+			)
+	);
+
 	const use_git = check_git();
 
 	const response = await prompts({
@@ -37,7 +45,8 @@ export async function migrate() {
 		exports:
 			config.package?.exports ??
 			((/** @type {string} */ filepath) => !/^_|\/_|\.d\.ts$/.test(filepath)),
-		files: config.package?.files ?? (() => true)
+		files: config.package?.files ?? (() => true),
+		emitTypes: config.package?.emitTypes ?? true
 	};
 	config.extensions = config.extensions ?? ['.svelte'];
 
