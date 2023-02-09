@@ -148,7 +148,7 @@ function normalize_options(options) {
  * @param {string} input
  * @param {string} output
  * @param {import('./types').File} file
- * @param {import('svelte/types/compiler/preprocess').PreprocessorGroup} preprocessor
+ * @param {import('svelte/types/compiler/preprocess').PreprocessorGroup | undefined} preprocessor
  * @param {Record<string, string>} aliases
  */
 async function process_file(input, output, file, preprocessor, aliases) {
