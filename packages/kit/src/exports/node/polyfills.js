@@ -1,7 +1,10 @@
 import { ReadableStream, TransformStream, WritableStream } from 'node:stream/web';
-import { File } from 'node:buffer';
+import buffer from 'node:buffer';
 import { webcrypto as crypto } from 'node:crypto';
-import { fetch, Response, Request, Headers, FormData } from 'undici';
+import { fetch, Response, Request, Headers, FormData, File as UndiciFile } from 'undici';
+
+// @ts-expect-error
+const File = buffer.File ?? UndiciFile;
 
 /** @type {Record<string, any>} */
 const globals = {
