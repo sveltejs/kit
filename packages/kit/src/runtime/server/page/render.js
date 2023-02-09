@@ -130,9 +130,11 @@ export async function render_response({
 				return fetch(info, init);
 			};
 
-			rendered = options.root.render(props);
-
-			globalThis.fetch = fetch;
+			try {
+				rendered = options.root.render(props);
+			} finally {
+				globalThis.fetch = fetch;
+			}
 		} else {
 			rendered = options.root.render(props);
 		}
