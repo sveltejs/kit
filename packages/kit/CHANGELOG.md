@@ -1,5 +1,23 @@
 # @sveltejs/kit
 
+## 1.5.2
+
+### Patch Changes
+
+- fix: always default `paths.assets` to `paths.base` ([#8928](https://github.com/sveltejs/kit/pull/8928))
+
+## 1.5.1
+
+### Patch Changes
+
+- fix: pick up config from endpoints ([#8933](https://github.com/sveltejs/kit/pull/8933))
+
+- fix: don't reuse previous server load cache when there's no server load function ([#8893](https://github.com/sveltejs/kit/pull/8893))
+
+- fix: deduplicate paths in tsconfig ([#8880](https://github.com/sveltejs/kit/pull/8880))
+
+- docs: clarify version management feature ([#8941](https://github.com/sveltejs/kit/pull/8941))
+
 ## 1.5.0
 
 ### Minor Changes

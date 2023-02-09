@@ -89,6 +89,8 @@ async function analyse({ manifest_path, env }) {
 			if (mod.PUT) methods.add('PUT');
 			if (mod.PATCH) methods.add('PATCH');
 			if (mod.DELETE) methods.add('DELETE');
+
+			config = mod.config;
 		}
 
 		if (route.page) {
