@@ -9,6 +9,8 @@ import { copy, rimraf, mkdirp } from '../../utils/filesystem.js';
 import { generate_manifest } from '../generate_manifest/index.js';
 import { get_route_segments } from '../../utils/routing.js';
 import { get_env } from '../../exports/vite/utils.js';
+import generate_fallback from '../postbuild/fallback.js';
+import { write } from '../sync/utils.js';
 
 const pipe = promisify(pipeline);
 
@@ -142,31 +144,16 @@ export function create_builder({
 			}
 		},
 
-		generateFallback(dest) {
-			// do prerendering in a subprocess so any dangling stuff gets killed upon completion
-			const script = fileURLToPath(new URL('../postbuild/fallback.js', import.meta.url));
-
+		async generateFallback(dest) {
 			const manifest_path = `${config.kit.outDir}/output/server/manifest-full.js`;
-
 			const env = get_env(config.kit.env, 'production');
 
-			return new Promise((fulfil, reject) => {
-				const child = fork(
-					script,
-					[dest, manifest_path, JSON.stringify({ ...env.private, ...env.public })],
-					{
-						stdio: 'inherit'
-					}
-				);
-
-				child.on('exit', (code) => {
-					if (code) {
-						reject(new Error(`Could not create a fallback page — failed with code ${code}`));
-					} else {
-						fulfil(undefined);
-					}
-				});
+			const fallback = await generate_fallback({
+				manifest_path,
+				env: { ...env.private, ...env.public }
 			});
+
+			write(dest, fallback);
 		},
 
 		generateManifest: ({ relativePath, routes: subset }) => {
@@ -223,6 +210,8 @@ export function create_builder({
  * @param {'gz' | 'br'} format
  */
 async function compress_file(file, format = 'gz') {
+	console.log(`compress ${file} ${format}`);
+
 	const compress =
 		format == 'br'
 			? zlib.createBrotliCompress({
