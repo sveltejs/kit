@@ -632,7 +632,15 @@ export function set_assets(path) {
 						// CLI args
 						mode: vite_config_env.mode,
 						logLevel: vite_config.logLevel,
-						clearScreen: vite_config.clearScreen
+						clearScreen: vite_config.clearScreen,
+						build: {
+							minify: vite_config.build.minify,
+							assetsInlineLimit: vite_config.build.assetsInlineLimit,
+							sourcemap: vite_config.build.sourcemap,
+						},
+						optimizeDeps: {
+							force: vite_config.optimizeDeps.force
+						},
 					})
 				);
 
