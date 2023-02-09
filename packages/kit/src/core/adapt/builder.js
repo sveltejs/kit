@@ -210,8 +210,6 @@ export function create_builder({
  * @param {'gz' | 'br'} format
  */
 async function compress_file(file, format = 'gz') {
-	console.log(`compress ${file} ${format}`);
-
 	const compress =
 		format == 'br'
 			? zlib.createBrotliCompress({
