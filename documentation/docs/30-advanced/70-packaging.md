@@ -25,7 +25,7 @@ This is the name of your package. It will be available for others to install usi
 
 ```json
 {
-    "name": "your-library"
+	"name": "your-library"
 }
 ```
 
@@ -37,7 +37,7 @@ Every package should have a license field so people know how they are allowed to
 
 ```json
 {
-    "license": "MIT"
+	"license": "MIT"
 }
 ```
 
@@ -49,7 +49,7 @@ This tells npm which files it will pack up and upload to npm. It should contain 
 
 ```json
 {
-    "files": ["dist"]
+	"files": ["dist"]
 }
 ```
 
@@ -63,13 +63,13 @@ The `"exports"` field contains the package's entry points. If you set up a new l
 
 ```json
 {
-    "exports": {
-        ".": {
-            "types": "./dist/index.d.ts",
-            "svelte": "./dist/index.js",
-            "default": "./dist/index.js"
-        }
-    }
+	"exports": {
+		".": {
+			"types": "./dist/index.d.ts",
+			"svelte": "./dist/index.js",
+			"default": "./dist/index.js"
+		}
+	}
 }
 ```
 
@@ -88,13 +88,13 @@ You can adjust `exports` to your liking and provide more entry points. For examp
 
 ```json
 {
-    "exports": {
-        "./Foo.svelte": {
-            "types": "./dist/Foo.svelte.d.ts",
-            "svelte": "./dist/Foo.svelte",
-            "default": "./dist/Foo.svelte"
-        }
-    }
+	"exports": {
+		"./Foo.svelte": {
+			"types": "./dist/Foo.svelte.d.ts",
+			"svelte": "./dist/Foo.svelte",
+			"default": "./dist/Foo.svelte"
+		}
+	}
 }
 ```
 
@@ -119,7 +119,7 @@ This is a legacy field that was used to signal tooling that it is dealing with a
 
 ```json
 {
-    "svelte": "./dist/index.js"
+	"svelte": "./dist/index.js"
 }
 ```
 
