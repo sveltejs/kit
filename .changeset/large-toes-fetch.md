@@ -2,4 +2,4 @@
 '@sveltejs/kit': patch
 ---
 
-fix: better error message when accessing built-in stores on the server
+fix: print useful error when subscribing to SvelteKit's stores at the wrong time during SSR
