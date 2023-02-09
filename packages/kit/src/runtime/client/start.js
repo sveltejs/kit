@@ -5,7 +5,7 @@ import { set_assets, set_version, set_public_env } from '../shared.js';
 
 /**
  * @param {{
- *   app: Promise<import('./types').SvelteKitApp>;
+ *   app: () => Promise<import('./types').SvelteKitApp>;
  *   assets: string;
  *   hydrate: Parameters<import('./types').Client['_hydrate']>[0];
  *   target: HTMLElement;
@@ -22,7 +22,7 @@ export async function start({ app, assets, hydrate, target, version }) {
 		);
 	}
 
-	const client = create_client({ app: await app, target });
+	const client = create_client({ app: await app(), target });
 
 	init({ client });
 
