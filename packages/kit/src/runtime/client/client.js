@@ -311,7 +311,7 @@ export function create_client({ target }) {
 				);
 				return false;
 			}
-		} else if (/** @type {number} */ (navigation_result.props?.page?.status) >= 400) {
+		} else if (/** @type {number} */ (navigation_result.props.page?.status) >= 400) {
 			const updated = await stores.updated.check();
 			if (updated) {
 				await native_navigation(url);
@@ -329,6 +329,14 @@ export function create_client({ target }) {
 		if (previous_history_index) {
 			update_scroll_positions(previous_history_index);
 			capture_snapshot(previous_history_index);
+		}
+
+		// uses correct trailing slash option when using preloaded data
+		if (
+			navigation_result.props.page?.url &&
+			navigation_result.props.page.url.pathname !== url.pathname
+		) {
+			url.pathname = navigation_result.props.page?.url.pathname;
 		}
 
 		if (opts && opts.details) {
