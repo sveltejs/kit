@@ -660,6 +660,22 @@ test.describe('Routing', () => {
 		await page.locator(selector).click();
 		expect(await page.textContent(selector)).toBe('count: 1');
 	});
+
+	test('trailing slash redirect', async ({ page, clicknav }) => {
+		await page.goto('/routing/trailing-slash');
+
+		await clicknav('a[href="/routing/trailing-slash/always"]');
+		expect(new URL(page.url()).pathname).toBe('/routing/trailing-slash/always/');
+		await expect(page.locator('p')).toHaveText('/routing/trailing-slash/always/');
+
+		await clicknav('a[href="/routing/trailing-slash/never/"]');
+		expect(new URL(page.url()).pathname).toBe('/routing/trailing-slash/never');
+		await expect(page.locator('p')).toHaveText('/routing/trailing-slash/never');
+
+		await clicknav('a[href="/routing/trailing-slash/ignore/"]');
+		expect(new URL(page.url()).pathname).toBe('/routing/trailing-slash/ignore/');
+		await expect(page.locator('p')).toHaveText('/routing/trailing-slash/ignore/');
+	});
 });
 
 test.describe('Shadow DOM', () => {
