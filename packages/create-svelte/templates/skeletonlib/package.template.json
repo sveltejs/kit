@@ -4,7 +4,8 @@
 	"scripts": {
 		"dev": "vite dev",
 		"build": "vite build && npm run package",
-		"package": "svelte-kit sync && svelte-package"
+		"package": "svelte-kit sync && svelte-package",
+		"prepublishOnly": "npm run package"
 	},
 	"exports": {
 		".": {
