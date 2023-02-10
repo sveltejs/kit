@@ -1,5 +1,11 @@
 # @sveltejs/kit
 
+## 1.5.5
+
+### Patch Changes
+
+- fix: warn after failed data preloads in dev ([#8985](https://github.com/sveltejs/kit/pull/8985))
+
 ## 1.5.4
 
 ### Patch Changes
