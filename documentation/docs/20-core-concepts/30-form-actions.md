@@ -58,7 +58,8 @@ Instead of one `default` action, a page can have as many named actions as it nee
 /// file: src/routes/login/+page.server.js
 /** @type {import('./$types').Actions} */
 export const actions = {
--	default: async (event) => {
++	default: async (event) => {
+	},
 +	login: async (event) => {
 		// TODO log the user in
 	},
