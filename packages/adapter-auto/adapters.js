@@ -24,5 +24,11 @@ export const adapters = [
 		test: () => process.env.GITHUB_ACTION_REPOSITORY === 'Azure/static-web-apps-deploy',
 		module: 'svelte-adapter-azure-swa',
 		version: '0.13'
+	},
+	{
+		name: 'Deta',
+		test: () => !!process.env.DETA_PROJECT_KEY,
+		module: 'svelte-adapter-node',
+		version: '1.1.8'
 	}
 ];
