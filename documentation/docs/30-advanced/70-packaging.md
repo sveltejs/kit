@@ -110,7 +110,7 @@ declare module 'your-library/Foo.svelte';
 import Foo from 'your-library/Foo.svelte';
 ```
 
-In general, each key of the exports map is the path the user will have to use to import something from your package, and the value is the path to the file that will be imported or an export conditions map which in turn contain these file paths.
+In general, each key of the exports map is the path the user will have to use to import something from your package, and the value is the path to the file that will be imported or a map of export conditions which in turn contains these file paths.
 
 Read more about `exports` [here](https://nodejs.org/docs/latest-v18.x/api/packages.html#package-entry-points).
 
