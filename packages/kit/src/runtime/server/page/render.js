@@ -90,7 +90,7 @@ export async function render_response({
 				navigating: writable(null),
 				updated
 			},
-			components: await Promise.all(branch.map(({ node }) => node.component())),
+			constructors: await Promise.all(branch.map(({ node }) => node.component())),
 			form: form_value
 		};
 
@@ -113,7 +113,32 @@ export async function render_response({
 			form: form_value
 		};
 
-		rendered = options.root.render(props);
+		if (__SVELTEKIT_DEV__) {
+			const fetch = globalThis.fetch;
+			let warned = false;
+			globalThis.fetch = (info, init) => {
+				if (typeof info === 'string' && !/^\w+:\/\//.test(info)) {
+					throw new Error(
+						`Cannot call \`fetch\` eagerly during server side rendering with relative URL (${info}) — put your \`fetch\` calls inside \`onMount\` or a \`load\` function instead`
+					);
+				} else if (!warned) {
+					console.warn(
+						`Avoid calling \`fetch\` eagerly during server side rendering — put your \`fetch\` calls inside \`onMount\` or a \`load\` function instead`
+					);
+					warned = true;
+				}
+
+				return fetch(info, init);
+			};
+
+			try {
+				rendered = options.root.render(props);
+			} finally {
+				globalThis.fetch = fetch;
+			}
+		} else {
+			rendered = options.root.render(props);
+		}
 
 		for (const { node } of branch) {
 			if (node.imports) {

@@ -1,7 +1,5 @@
-import { fork } from 'node:child_process';
 import { existsSync, statSync, createReadStream, createWriteStream } from 'node:fs';
 import { pipeline } from 'node:stream';
-import { fileURLToPath } from 'node:url';
 import { promisify } from 'node:util';
 import zlib from 'node:zlib';
 import glob from 'tiny-glob';
@@ -9,6 +7,8 @@ import { copy, rimraf, mkdirp } from '../../utils/filesystem.js';
 import { generate_manifest } from '../generate_manifest/index.js';
 import { get_route_segments } from '../../utils/routing.js';
 import { get_env } from '../../exports/vite/utils.js';
+import generate_fallback from '../postbuild/fallback.js';
+import { write } from '../sync/utils.js';
 
 const pipe = promisify(pipeline);
 
@@ -18,13 +18,54 @@ const pipe = promisify(pipeline);
  *   config: import('types').ValidatedConfig;
  *   build_data: import('types').BuildData;
  *   server_metadata: import('types').ServerMetadata;
- *   routes: import('types').RouteData[];
+ *   route_data: import('types').RouteData[];
  *   prerendered: import('types').Prerendered;
+ *   prerender_map: import('types').PrerenderMap;
  *   log: import('types').Logger;
  * }} opts
  * @returns {import('types').Builder}
  */
-export function create_builder({ config, build_data, server_metadata, routes, prerendered, log }) {
+export function create_builder({
+	config,
+	build_data,
+	server_metadata,
+	route_data,
+	prerendered,
+	prerender_map,
+	log
+}) {
+	/** @type {Map<import('types').RouteDefinition, import('types').RouteData>} */
+	const lookup = new Map();
+
+	/**
+	 * Rather than exposing the internal `RouteData` type, which is subject to change,
+	 * we expose a stable type that adapters can use to group/filter routes
+	 */
+	const routes = route_data.map((route) => {
+		const methods =
+			/** @type {import('types').HttpMethod[]} */
+			(server_metadata.routes.get(route.id)?.methods);
+		const config = server_metadata.routes.get(route.id)?.config;
+
+		/** @type {import('types').RouteDefinition} */
+		const facade = {
+			id: route.id,
+			segments: get_route_segments(route.id).map((segment) => ({
+				dynamic: segment.includes('['),
+				rest: segment.includes('[...'),
+				content: segment
+			})),
+			pattern: route.pattern,
+			prerender: prerender_map.get(route.id) ?? false,
+			methods,
+			config
+		};
+
+		lookup.set(facade, route);
+
+		return facade;
+	});
+
 	return {
 		log,
 		rimraf,
@@ -33,6 +74,7 @@ export function create_builder({ config, build_data, server_metadata, routes, pr
 
 		config,
 		prerendered,
+		routes,
 
 		async compress(directory) {
 			if (!existsSync(directory)) {
@@ -52,29 +94,12 @@ export function create_builder({ config, build_data, server_metadata, routes, pr
 		},
 
 		async createEntries(fn) {
-			/** @type {import('types').RouteDefinition[]} */
-			const facades = routes.map((route) => {
-				const methods =
-					/** @type {import('types').HttpMethod[]} */
-					(server_metadata.routes.get(route.id)?.methods);
-
-				return {
-					id: route.id,
-					segments: get_route_segments(route.id).map((segment) => ({
-						dynamic: segment.includes('['),
-						rest: segment.includes('[...'),
-						content: segment
-					})),
-					pattern: route.pattern,
-					methods
-				};
-			});
-
 			const seen = new Set();
 
-			for (let i = 0; i < routes.length; i += 1) {
-				const route = routes[i];
-				const { id, filter, complete } = fn(facades[i]);
+			for (let i = 0; i < route_data.length; i += 1) {
+				const route = route_data[i];
+				if (prerender_map.get(route.id) === true) continue;
+				const { id, filter, complete } = fn(routes[i]);
 
 				if (seen.has(id)) continue;
 				seen.add(id);
@@ -82,9 +107,10 @@ export function create_builder({ config, build_data, server_metadata, routes, pr
 				const group = [route];
 
 				// figure out which lower priority routes should be considered fallbacks
-				for (let j = i + 1; j < routes.length; j += 1) {
-					if (filter(facades[j])) {
-						group.push(routes[j]);
+				for (let j = i + 1; j < route_data.length; j += 1) {
+					if (prerender_map.get(routes[j].id) === true) continue;
+					if (filter(routes[j])) {
+						group.push(route_data[j]);
 					}
 				}
 
@@ -95,7 +121,7 @@ export function create_builder({ config, build_data, server_metadata, routes, pr
 				// TODO is this still necessary, given the new way of doing things?
 				filtered.forEach((route) => {
 					if (route.page) {
-						const endpoint = routes.find((candidate) => candidate.id === route.id + '.json');
+						const endpoint = route_data.find((candidate) => candidate.id === route.id + '.json');
 
 						if (endpoint) {
 							filtered.add(endpoint);
@@ -116,38 +142,25 @@ export function create_builder({ config, build_data, server_metadata, routes, pr
 			}
 		},
 
-		generateFallback(dest) {
-			// do prerendering in a subprocess so any dangling stuff gets killed upon completion
-			const script = fileURLToPath(new URL('../postbuild/fallback.js', import.meta.url));
-
+		async generateFallback(dest) {
 			const manifest_path = `${config.kit.outDir}/output/server/manifest-full.js`;
-
 			const env = get_env(config.kit.env, 'production');
 
-			return new Promise((fulfil, reject) => {
-				const child = fork(
-					script,
-					[dest, manifest_path, JSON.stringify({ ...env.private, ...env.public })],
-					{
-						stdio: 'inherit'
-					}
-				);
-
-				child.on('exit', (code) => {
-					if (code) {
-						reject(new Error(`Could not create a fallback page — failed with code ${code}`));
-					} else {
-						fulfil(undefined);
-					}
-				});
+			const fallback = await generate_fallback({
+				manifest_path,
+				env: { ...env.private, ...env.public }
 			});
+
+			write(dest, fallback);
 		},
 
-		generateManifest: ({ relativePath }) => {
+		generateManifest: ({ relativePath, routes: subset }) => {
 			return generate_manifest({
 				build_data,
 				relative_path: relativePath,
-				routes
+				routes: subset
+					? subset.map((route) => /** @type {import('types').RouteData} */ (lookup.get(route)))
+					: route_data
 			});
 		},
 

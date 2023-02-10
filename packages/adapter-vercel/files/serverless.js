@@ -8,7 +8,7 @@ installPolyfills();
 const server = new Server(manifest);
 
 await server.init({
-	env: process.env
+	env: /** @type {Record<string, string>} */ (process.env)
 });
 
 /**
@@ -22,7 +22,7 @@ export default async (req, res) => {
 	try {
 		request = await getRequest({ base: `https://${req.headers.host}`, request: req });
 	} catch (err) {
-		res.statusCode = err.status || 400;
+		res.statusCode = /** @type {any} */ (err).status || 400;
 		return res.end('Invalid request body');
 	}
 
@@ -30,7 +30,7 @@ export default async (req, res) => {
 		res,
 		await server.respond(request, {
 			getClientAddress() {
-				return request.headers.get('x-forwarded-for');
+				return /** @type {string} */ (request.headers.get('x-forwarded-for'));
 			}
 		})
 	);

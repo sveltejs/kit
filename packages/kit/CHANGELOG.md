@@ -1,5 +1,73 @@
 # @sveltejs/kit
 
+## 1.5.3
+
+### Patch Changes
+
+- docs: clarify that `version.name` should be deterministic ([#8956](https://github.com/sveltejs/kit/pull/8956))
+
+- fix: correctly include exported http methods in allow header ([#8968](https://github.com/sveltejs/kit/pull/8968))
+
+- chore: polyfill File from node:buffer ([#8925](https://github.com/sveltejs/kit/pull/8925))
+
+- fix: provide helpful error/warning when calling `fetch` during render ([#8551](https://github.com/sveltejs/kit/pull/8551))
+
+- fix: print useful error when subscribing to SvelteKit's stores at the wrong time during SSR ([#8960](https://github.com/sveltejs/kit/pull/8960))
+
+- fix: ignore external links when automatically preloading ([#8961](https://github.com/sveltejs/kit/pull/8961))
+
+- chore: refactor fallback generation ([#8972](https://github.com/sveltejs/kit/pull/8972))
+
+## 1.5.2
+
+### Patch Changes
+
+- fix: always default `paths.assets` to `paths.base` ([#8928](https://github.com/sveltejs/kit/pull/8928))
+
+## 1.5.1
+
+### Patch Changes
+
+- fix: pick up config from endpoints ([#8933](https://github.com/sveltejs/kit/pull/8933))
+
+- fix: don't reuse previous server load cache when there's no server load function ([#8893](https://github.com/sveltejs/kit/pull/8893))
+
+- fix: deduplicate paths in tsconfig ([#8880](https://github.com/sveltejs/kit/pull/8880))
+
+- docs: clarify version management feature ([#8941](https://github.com/sveltejs/kit/pull/8941))
+
+## 1.5.0
+
+### Minor Changes
+
+- feat: support route-level configuration ([#8740](https://github.com/sveltejs/kit/pull/8740))
+
+- feat: add snapshot mechanism for preserving ephemeral DOM state ([#8710](https://github.com/sveltejs/kit/pull/8710))
+
+### Patch Changes
+
+- chore(deps): update dependency undici to v5.18.0 ([#8884](https://github.com/sveltejs/kit/pull/8884))
+
+## 1.4.0
+
+### Minor Changes
+
+- feat: allow $app/paths to be used without an app ([#8838](https://github.com/sveltejs/kit/pull/8838))
+
+### Patch Changes
+
+- fix: ensure types of all form actions are accessible even if differing ([#8877](https://github.com/sveltejs/kit/pull/8877))
+
+- fix: correctly handle HttpErrors on the client side ([#8829](https://github.com/sveltejs/kit/pull/8829))
+
+- docs: discourage use of `goto` with external URLs ([#8837](https://github.com/sveltejs/kit/pull/8837))
+
+- fix: prevent crawling empty urls (`<img src="">`) ([#8883](https://github.com/sveltejs/kit/pull/8883))
+
+- fix: correctly serialize request url when using load `fetch` ([#8876](https://github.com/sveltejs/kit/pull/8876))
+
+- fix: ensure endpoints can fetch endpoints on the same host but not part of the application ([#8869](https://github.com/sveltejs/kit/pull/8869))
+
 ## 1.3.10
 
 ### Patch Changes

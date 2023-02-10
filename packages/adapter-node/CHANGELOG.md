@@ -1,5 +1,23 @@
 # @sveltejs/adapter-node
 
+## 1.1.8
+
+### Patch Changes
+
+- fix: use `strictRequires: true` when bundling output ([#8958](https://github.com/sveltejs/kit/pull/8958))
+
+- Updated dependencies [[`0abb8ebf`](https://github.com/sveltejs/kit/commit/0abb8ebffc6121f81c2bbfa0a0f68866d4cc1627), [`bef54f63`](https://github.com/sveltejs/kit/commit/bef54f63d2315066d30e8f1bcf471ddf2bd72c35), [`51cd6e64`](https://github.com/sveltejs/kit/commit/51cd6e643178e3a113fc2c3e8a63755bcbfe902d), [`930c8e4e`](https://github.com/sveltejs/kit/commit/930c8e4ee2e3046ed1b622777dafa23029a19fe5), [`ee8066fc`](https://github.com/sveltejs/kit/commit/ee8066fcb29ed1e7e3ab513cabb7997e38c984f2), [`49d2ec62`](https://github.com/sveltejs/kit/commit/49d2ec62e6385694f11701bf2fa411d07449344c), [`eb943565`](https://github.com/sveltejs/kit/commit/eb943565a4324dbed3da5a581924ca91a24366de)]:
+  - @sveltejs/kit@1.5.3
+
+## 1.1.7
+
+### Patch Changes
+
+- fix: make serve_prerendered middleware work with node http server ([#8890](https://github.com/sveltejs/kit/pull/8890))
+
+- Updated dependencies [[`c7648f66`](https://github.com/sveltejs/kit/commit/c7648f6608a413e2654625cbd30f890d2148cf13), [`63613bf1`](https://github.com/sveltejs/kit/commit/63613bf194c18ce50e111585ad770fc93f9e43c7), [`d1f7655e`](https://github.com/sveltejs/kit/commit/d1f7655efdff70d91f94fe0cb0de50ed2511b5e5)]:
+  - @sveltejs/kit@1.5.0
+
 ## 1.1.6
 
 ### Patch Changes

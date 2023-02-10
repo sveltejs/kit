@@ -1,4 +1,4 @@
-import { appendFileSync, existsSync, readFileSync, writeFileSync } from 'fs';
+import { appendFileSync, existsSync, readdirSync, readFileSync, writeFileSync } from 'fs';
 import { dirname, join, resolve, posix } from 'path';
 import { fileURLToPath } from 'url';
 import esbuild from 'esbuild';
@@ -33,12 +33,21 @@ const edge_set_in_env_var =
 	process.env.NETLIFY_SVELTEKIT_USE_EDGE === 'true' ||
 	process.env.NETLIFY_SVELTEKIT_USE_EDGE === '1';
 
+const FUNCTION_PREFIX = 'sveltekit-';
+
 /** @type {import('.').default} */
 export default function ({ split = false, edge = edge_set_in_env_var } = {}) {
 	return {
 		name: '@sveltejs/adapter-netlify',
 
 		async adapt(builder) {
+			if (!builder.routes) {
+				throw new Error(
+					'@sveltejs/adapter-netlify >=2.x (possibly installed through @sveltejs/adapter-auto) requires @sveltejs/kit version 1.5 or higher. ' +
+						'Either downgrade the adapter or upgrade @sveltejs/kit'
+				);
+			}
+
 			const netlify_config = get_netlify_config();
 
 			// "build" is the default publish directory when Netlify detects SvelteKit
@@ -47,10 +56,17 @@ export default function ({ split = false, edge = edge_set_in_env_var } = {}) {
 			// empty out existing build directories
 			builder.rimraf(publish);
 			builder.rimraf('.netlify/edge-functions');
-			builder.rimraf('.netlify/functions-internal');
 			builder.rimraf('.netlify/server');
 			builder.rimraf('.netlify/package.json');
 			builder.rimraf('.netlify/serverless.js');
+
+			if (existsSync('.netlify/functions-internal')) {
+				for (const file of readdirSync('.netlify/functions-internal')) {
+					if (file.startsWith(FUNCTION_PREFIX)) {
+						builder.rimraf(join('.netlify/functions-internal', file));
+					}
+				}
+			}
 
 			builder.log.minor(`Publishing to "${publish}"`);
 
@@ -147,7 +163,7 @@ async function generate_edge_functions({ builder }) {
  * @param { boolean } params.split
  */
 async function generate_lambda_functions({ builder, publish, split }) {
-	builder.mkdirp('.netlify/functions-internal');
+	builder.mkdirp('.netlify/functions-internal/.svelte-kit');
 
 	/** @type {string[]} */
 	const redirects = [];
@@ -162,10 +178,17 @@ async function generate_lambda_functions({ builder, publish, split }) {
 	// Configuring the function to use ESM as the output format.
 	const fn_config = JSON.stringify({ config: { nodeModuleFormat: 'esm' }, version: 1 });
 
-	if (split) {
-		builder.log.minor('Generating serverless functions...');
+	builder.log.minor('Generating serverless functions...');
 
-		await builder.createEntries((route) => {
+	if (split) {
+		const seen = new Set();
+
+		for (let i = 0; i < builder.routes.length; i++) {
+			const route = builder.routes[i];
+			if (route.prerender === true) continue;
+
+			const routes = [route];
+
 			const parts = [];
 			// Netlify's syntax uses '*' and ':param' as "splats" and "placeholders"
 			// https://docs.netlify.com/routing/redirects/redirect-options/#splats
@@ -181,38 +204,46 @@ async function generate_lambda_functions({ builder, publish, split }) {
 			}
 
 			const pattern = `/${parts.join('/')}`;
-			const name = parts.join('-').replace(/[:.]/g, '_').replace('*', '__rest') || 'index';
+			const name =
+				FUNCTION_PREFIX + (parts.join('-').replace(/[:.]/g, '_').replace('*', '__rest') || 'index');
 
-			return {
-				id: pattern,
-				filter: (other) => matches(route.segments, other.segments),
-				complete: (entry) => {
-					const manifest = entry.generateManifest({
-						relativePath: '../server'
-					});
+			// skip routes with identical patterns, they were already folded into another function
+			if (seen.has(pattern)) continue;
+			seen.add(pattern);
 
-					const fn = `import { init } from '../serverless.js';\n\nexport const handler = init(${manifest});\n`;
+			// figure out which lower priority routes should be considered fallbacks
+			for (let j = i + 1; j < builder.routes.length; j += 1) {
+				const other = builder.routes[j];
+				if (other.prerender === true) continue;
 
-					writeFileSync(`.netlify/functions-internal/${name}.mjs`, fn);
-					writeFileSync(`.netlify/functions-internal/${name}.json`, fn_config);
-
-					redirects.push(`${pattern} /.netlify/functions/${name} 200`);
-					redirects.push(`${pattern}/__data.json /.netlify/functions/${name} 200`);
+				if (matches(route.segments, other.segments)) {
+					routes.push(other);
 				}
-			};
-		});
-	} else {
-		builder.log.minor('Generating serverless functions...');
+			}
 
+			const manifest = builder.generateManifest({
+				relativePath: '../server',
+				routes
+			});
+
+			const fn = `import { init } from '../serverless.js';\n\nexport const handler = init(${manifest});\n`;
+
+			writeFileSync(`.netlify/functions-internal/${name}.mjs`, fn);
+			writeFileSync(`.netlify/functions-internal/${name}.json`, fn_config);
+
+			redirects.push(`${pattern} /.netlify/functions/${name} 200`);
+			redirects.push(`${pattern}/__data.json /.netlify/functions/${name} 200`);
+		}
+	} else {
 		const manifest = builder.generateManifest({
 			relativePath: '../server'
 		});
 
 		const fn = `import { init } from '../serverless.js';\n\nexport const handler = init(${manifest});\n`;
 
-		writeFileSync(`.netlify/functions-internal/render.json`, fn_config);
-		writeFileSync('.netlify/functions-internal/render.mjs', fn);
-		redirects.push('* /.netlify/functions/render 200');
+		writeFileSync(`.netlify/functions-internal/${FUNCTION_PREFIX}render.json`, fn_config);
+		writeFileSync(`.netlify/functions-internal/${FUNCTION_PREFIX}render.mjs`, fn);
+		redirects.push(`* /.netlify/functions/${FUNCTION_PREFIX}render 200`);
 	}
 
 	// this should happen at the end, after builder.writeClient(...),

@@ -67,6 +67,8 @@ async function analyse({ manifest_path, env }) {
 
 		/** @type {import('types').PrerenderOption | undefined} */
 		let prerender = undefined;
+		/** @type {any} */
+		let config = undefined;
 
 		if (route.endpoint) {
 			const mod = await route.endpoint();
@@ -87,6 +89,8 @@ async function analyse({ manifest_path, env }) {
 			if (mod.PUT) methods.add('PUT');
 			if (mod.PATCH) methods.add('PATCH');
 			if (mod.DELETE) methods.add('DELETE');
+
+			config = mod.config;
 		}
 
 		if (route.page) {
@@ -123,13 +127,35 @@ async function analyse({ manifest_path, env }) {
 				(should_prerender !== false && get_option(nodes, 'ssr') === false && !page?.server?.actions
 					? 'auto'
 					: should_prerender ?? false);
+
+			config = get_config(nodes);
 		}
 
 		metadata.routes.set(route.id, {
 			prerender,
+			config,
 			methods: Array.from(methods)
 		});
 	}
 
 	return metadata;
+}
+
+/**
+ * Do a shallow merge (first level) of the config object
+ * @param {Array<import('types').SSRNode | undefined>} nodes
+ */
+function get_config(nodes) {
+	let current = {};
+	for (const node of nodes) {
+		const config = node?.universal?.config ?? node?.server?.config;
+		if (config) {
+			current = {
+				...current,
+				...config
+			};
+		}
+	}
+
+	return Object.keys(current).length ? current : undefined;
 }

@@ -357,7 +357,7 @@ function kit({ svelte_config }) {
 				case '\0$internal/paths':
 					const { assets, base } = svelte_config.kit.paths;
 					return `export const base = ${s(base)};
-export let assets = ${s(assets)};
+export let assets = ${assets ? s(assets) : 'base'};
 
 /** @param {string} path */
 export function set_assets(path) {
@@ -632,7 +632,15 @@ export function set_assets(path) {
 						// CLI args
 						mode: vite_config_env.mode,
 						logLevel: vite_config.logLevel,
-						clearScreen: vite_config.clearScreen
+						clearScreen: vite_config.clearScreen,
+						build: {
+							minify: vite_config.build.minify,
+							assetsInlineLimit: vite_config.build.assetsInlineLimit,
+							sourcemap: vite_config.build.sourcemap
+						},
+						optimizeDeps: {
+							force: vite_config.optimizeDeps.force
+						}
 					})
 				);
 

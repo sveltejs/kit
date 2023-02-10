@@ -102,6 +102,22 @@ test.describe('Load', () => {
 		);
 		await app.goto('/load/server-data-reuse/no-load');
 		expect(await page.textContent('pre')).toBe(JSON.stringify({ foo: { bar: 'Custom layout' } }));
+
+		await page.goto('/load/server-data-reuse/with-changing-parent/with-server-load');
+		expect(await page.textContent('pre')).toBe(
+			JSON.stringify({
+				foo: { bar: 'Custom layout' },
+				title: '/load/server-data-reuse/with-changing-parent/with-server-load',
+				server: true
+			})
+		);
+		await app.goto('/load/server-data-reuse/with-changing-parent/no-load');
+		expect(await page.textContent('pre')).toBe(
+			JSON.stringify({
+				foo: { bar: 'Custom layout' },
+				title: '/load/server-data-reuse/with-changing-parent/no-load'
+			})
+		);
 	});
 
 	test('keeps server data when valid while not reusing client load data', async ({
@@ -624,5 +640,34 @@ test.describe('env in app.html', () => {
 	test('can access public env', async ({ page }) => {
 		await page.goto('/');
 		expect(await page.locator('body').getAttribute('class')).toContain('groovy');
+	});
+});
+
+test.describe('Snapshots', () => {
+	test('recovers snapshotted data', async ({ page, clicknav }) => {
+		await page.goto('/snapshot/a');
+
+		let input = page.locator('input');
+		await input.type('hello');
+
+		await clicknav('[href="/snapshot/b"]');
+		await page.goBack();
+
+		input = page.locator('input');
+		expect(await input.inputValue()).toBe('hello');
+
+		await input.clear();
+		await input.type('works for cross-document navigations');
+
+		await clicknav('[href="/snapshot/c"]');
+		await page.goBack();
+		expect(await page.locator('input').inputValue()).toBe('works for cross-document navigations');
+
+		input = page.locator('input');
+		await input.clear();
+		await input.type('works for reloads');
+
+		await page.reload();
+		expect(await page.locator('input').inputValue()).toBe('works for reloads');
 	});
 });

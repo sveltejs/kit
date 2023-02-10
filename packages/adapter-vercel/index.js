@@ -1,16 +1,37 @@
-import fs from 'fs';
-import path from 'path';
-import { fileURLToPath } from 'url';
+import fs from 'node:fs';
+import path from 'node:path';
+import { fileURLToPath } from 'node:url';
 import { nodeFileTrace } from '@vercel/nft';
 import esbuild from 'esbuild';
 
+const VALID_RUNTIMES = ['edge', 'nodejs16.x', 'nodejs18.x'];
+
+const get_default_runtime = () => {
+	const major = process.version.slice(1).split('.')[0];
+	if (major === '16') return 'nodejs16.x';
+	if (major === '18') return 'nodejs18.x';
+
+	throw new Error(
+		`Unsupported Node.js version: ${process.version}. Please use Node 16 or Node 18 to build your project, or explicitly specify a runtime in your adapter configuration.`
+	);
+};
+
 /** @type {import('.').default} **/
-const plugin = function ({ external = [], edge, split } = {}) {
+const plugin = function (defaults = {}) {
+	if ('edge' in defaults) {
+		throw new Error("{ edge: true } has been removed in favour of { runtime: 'edge' }");
+	}
+
 	return {
 		name: '@sveltejs/adapter-vercel',
 
 		async adapt(builder) {
-			const node_version = get_node_version();
+			if (!builder.routes) {
+				throw new Error(
+					'@sveltejs/adapter-vercel >=2.x (possibly installed through @sveltejs/adapter-auto) requires @sveltejs/kit version 1.5 or higher. ' +
+						'Either downgrade the adapter or upgrade @sveltejs/kit'
+				);
+			}
 
 			const dir = '.vercel/output';
 			const tmp = builder.getBuildDirectory('vercel-tmp');
@@ -25,16 +46,16 @@ const plugin = function ({ external = [], edge, split } = {}) {
 				functions: `${dir}/functions`
 			};
 
-			const config = static_vercel_config(builder);
+			const static_config = static_vercel_config(builder);
 
 			builder.log.minor('Generating serverless function...');
 
 			/**
 			 * @param {string} name
-			 * @param {string} pattern
-			 * @param {(options: { relativePath: string }) => string} generate_manifest
+			 * @param {import('.').ServerlessConfig} config
+			 * @param {import('@sveltejs/kit').RouteDefinition<import('.').Config>[]} routes
 			 */
-			async function generate_serverless_function(name, pattern, generate_manifest) {
+			async function generate_serverless_function(name, config, routes) {
 				const relativePath = path.posix.relative(tmp, builder.getServerDirectory());
 
 				builder.copy(`${files}/serverless.js`, `${tmp}/index.js`, {
@@ -46,27 +67,48 @@ const plugin = function ({ external = [], edge, split } = {}) {
 
 				write(
 					`${tmp}/manifest.js`,
-					`export const manifest = ${generate_manifest({ relativePath })};\n`
+					`export const manifest = ${builder.generateManifest({ relativePath, routes })};\n`
 				);
 
 				await create_function_bundle(
 					builder,
 					`${tmp}/index.js`,
 					`${dirs.functions}/${name}.func`,
-					`nodejs${node_version.major}.x`
+					config
 				);
 
-				config.routes.push({ src: pattern, dest: `/${name}` });
+				if (config.isr) {
+					write(
+						`${dirs.functions}/${name}.prerender-config.json`,
+						JSON.stringify(
+							{
+								expiration: config.isr.expiration,
+								group: config.isr.group,
+								bypassToken: config.isr.bypassToken,
+								allowQuery: config.isr.allowQuery
+							},
+							null,
+							'\t'
+						)
+					);
+				}
 			}
 
 			/**
 			 * @param {string} name
-			 * @param {string} pattern
-			 * @param {(options: { relativePath: string }) => string} generate_manifest
+			 * @param {import('.').EdgeConfig} config
+			 * @param {import('@sveltejs/kit').RouteDefinition<import('.').EdgeConfig>[]} routes
 			 */
-			async function generate_edge_function(name, pattern, generate_manifest) {
+			async function generate_edge_function(name, config, routes) {
 				const tmp = builder.getBuildDirectory(`vercel-tmp/${name}`);
 				const relativePath = path.posix.relative(tmp, builder.getServerDirectory());
+
+				const envVarsInUse = new Set();
+				routes.forEach((route) => {
+					route.config?.envVarsInUse?.forEach((x) => {
+						envVarsInUse.add(x);
+					});
+				});
 
 				builder.copy(`${files}/edge.js`, `${tmp}/edge.js`, {
 					replace: {
@@ -77,7 +119,7 @@ const plugin = function ({ external = [], edge, split } = {}) {
 
 				write(
 					`${tmp}/manifest.js`,
-					`export const manifest = ${generate_manifest({ relativePath })};\n`
+					`export const manifest = ${builder.generateManifest({ relativePath, routes })};\n`
 				);
 
 				await esbuild.build({
@@ -87,51 +129,122 @@ const plugin = function ({ external = [], edge, split } = {}) {
 					bundle: true,
 					platform: 'browser',
 					format: 'esm',
-					external,
+					external: config.external,
 					sourcemap: 'linked',
 					banner: { js: 'globalThis.global = globalThis;' }
 				});
 
 				write(
 					`${dirs.functions}/${name}.func/.vc-config.json`,
-					JSON.stringify({
-						runtime: 'edge',
-						entrypoint: 'index.js'
-						// TODO expose envVarsInUse
-					})
+					JSON.stringify(
+						{
+							runtime: config.runtime,
+							regions: config.regions,
+							envVarsInUse: [...envVarsInUse],
+							entrypoint: 'index.js'
+						},
+						null,
+						'\t'
+					)
 				);
-
-				config.routes.push({ src: pattern, dest: `/${name}` });
 			}
 
-			const generate_function = edge ? generate_edge_function : generate_serverless_function;
+			/** @type {Map<string, { i: number, config: import('.').Config, routes: import('@sveltejs/kit').RouteDefinition<import('.').Config>[] }>} */
+			const groups = new Map();
 
-			if (split) {
-				await builder.createEntries((route) => {
-					return {
-						id: route.pattern.toString(), // TODO is `id` necessary?
-						filter: (other) => route.pattern.toString() === other.pattern.toString(),
-						complete: async (entry) => {
-							let sliced_pattern = route.pattern
-								.toString()
-								// remove leading / and trailing $/
-								.slice(1, -2)
-								// replace escaped \/ with /
-								.replace(/\\\//g, '/');
+			/** @type {Map<string, { hash: string, route_id: string }>} */
+			const conflicts = new Map();
 
-							// replace the root route "^/" with "^/?"
-							if (sliced_pattern === '^/') {
-								sliced_pattern = '^/?';
-							}
+			/** @type {Map<string, string>} */
+			const functions = new Map();
 
-							const src = `${sliced_pattern}(?:/__data.json)?$`; // TODO adding /__data.json is a temporary workaround — those endpoints should be treated as distinct routes
+			// group routes by config
+			for (const route of builder.routes) {
+				if (route.prerender === true) continue;
 
-							await generate_function(route.id.slice(1) || 'index', src, entry.generateManifest);
-						}
-					};
-				});
-			} else {
-				await generate_function('render', '/.*', builder.generateManifest);
+				const pattern = route.pattern.toString();
+
+				const runtime = route.config?.runtime ?? defaults?.runtime ?? get_default_runtime();
+				if (runtime && !VALID_RUNTIMES.includes(runtime)) {
+					throw new Error(
+						`Invalid runtime '${runtime}' for route ${
+							route.id
+						}. Valid runtimes are ${VALID_RUNTIMES.join(', ')}`
+					);
+				}
+
+				const config = { runtime, ...defaults, ...route.config };
+
+				const hash = hash_config(config);
+
+				// first, check there are no routes with incompatible configs that will be merged
+				const existing = conflicts.get(pattern);
+				if (existing) {
+					if (existing.hash !== hash) {
+						throw new Error(
+							`The ${route.id} and ${existing.route_id} routes must be merged into a single function that matches the ${route.pattern} regex, but they have incompatible configs. You must either rename one of the routes, or make their configs match.`
+						);
+					}
+				} else {
+					conflicts.set(pattern, { hash, route_id: route.id });
+				}
+
+				// then, create a group for each config
+				const id = config.split ? `${hash}-${groups.size}` : hash;
+				let group = groups.get(id);
+				if (!group) {
+					group = { i: groups.size, config, routes: [] };
+					groups.set(id, group);
+				}
+
+				group.routes.push(route);
+			}
+
+			for (const group of groups.values()) {
+				const generate_function =
+					group.config.runtime === 'edge' ? generate_edge_function : generate_serverless_function;
+
+				// generate one function for the group
+				const name = `fn-${group.i}`;
+				await generate_function(
+					name,
+					/** @type {any} */ (group.config),
+					/** @type {import('@sveltejs/kit').RouteDefinition<any>[]} */ (group.routes)
+				);
+
+				if (groups.size === 1) {
+					// Special case: One function for all routes
+					static_config.routes.push({ src: '/.*', dest: `/${name}` });
+				} else {
+					for (const route of group.routes) {
+						functions.set(route.pattern.toString(), name);
+					}
+				}
+			}
+
+			for (const route of builder.routes) {
+				if (route.prerender === true) continue;
+
+				const pattern = route.pattern.toString();
+
+				let src = pattern
+					// remove leading / and trailing $/
+					.slice(1, -2)
+					// replace escaped \/ with /
+					.replace(/\\\//g, '/');
+
+				// replace the root route "^/" with "^/?"
+				if (src === '^/') {
+					src = '^/?';
+				}
+
+				src += '(?:/__data.json)?$';
+
+				const name = functions.get(pattern);
+				if (name) {
+					static_config.routes.push({ src, dest: `/${name}` });
+					functions.delete(pattern);
+				}
 			}
 
 			builder.log.minor('Copying assets...');
@@ -141,10 +254,25 @@ const plugin = function ({ external = [], edge, split } = {}) {
 
 			builder.log.minor('Writing routes...');
 
-			write(`${dir}/config.json`, JSON.stringify(config, null, '  '));
+			write(`${dir}/config.json`, JSON.stringify(static_config, null, '\t'));
 		}
 	};
 };
+
+/** @param {import('.').EdgeConfig & import('.').ServerlessConfig} config */
+function hash_config(config) {
+	return [
+		config.runtime ?? '',
+		config.external ?? '',
+		config.regions ?? '',
+		config.memory ?? '',
+		config.maxDuration ?? '',
+		config.isr?.expiration ?? '',
+		config.isr?.group ?? '',
+		config.isr?.bypassToken ?? '',
+		config.isr?.allowQuery ?? ''
+	].join('/');
+}
 
 /**
  * @param {string} file
@@ -158,19 +286,6 @@ function write(file, data) {
 	}
 
 	fs.writeFileSync(file, data);
-}
-
-function get_node_version() {
-	const full = process.version.slice(1); // 'v16.5.0' --> '16.5.0'
-	const major = parseInt(full.split('.')[0]); // '16.5.0' --> 16
-
-	if (major < 16) {
-		throw new Error(
-			`SvelteKit only supports Node.js version 16 or greater (currently using v${full}). Consult the documentation: https://vercel.com/docs/runtimes#official-runtimes/node-js/node-js-version`
-		);
-	}
-
-	return { major, full };
 }
 
 // This function is duplicated in adapter-static
@@ -235,9 +350,9 @@ function static_vercel_config(builder) {
  * @param {import('@sveltejs/kit').Builder} builder
  * @param {string} entry
  * @param {string} dir
- * @param {string} runtime
+ * @param {import('.').ServerlessConfig} config
  */
-async function create_function_bundle(builder, entry, dir, runtime) {
+async function create_function_bundle(builder, entry, dir, config) {
 	fs.rmSync(dir, { force: true, recursive: true });
 
 	let base = entry;
@@ -265,7 +380,7 @@ async function create_function_bundle(builder, entry, dir, runtime) {
 				resolution_failures.set(importer, []);
 			}
 
-			resolution_failures.get(importer).push(module);
+			/** @type {string[]} */ (resolution_failures.get(importer)).push(module);
 		} else {
 			throw error;
 		}
@@ -286,7 +401,8 @@ async function create_function_bundle(builder, entry, dir, runtime) {
 	}
 
 	// find common ancestor directory
-	let common_parts;
+	/** @type {string[]} */
+	let common_parts = [];
 
 	for (const file of traced.fileList) {
 		if (common_parts) {
@@ -330,11 +446,18 @@ async function create_function_bundle(builder, entry, dir, runtime) {
 
 	write(
 		`${dir}/.vc-config.json`,
-		JSON.stringify({
-			runtime,
-			handler: path.relative(base + ancestor, entry),
-			launcherType: 'Nodejs'
-		})
+		JSON.stringify(
+			{
+				runtime: config.runtime,
+				regions: config.regions,
+				memory: config.memory,
+				maxDuration: config.maxDuration,
+				handler: path.relative(base + ancestor, entry),
+				launcherType: 'Nodejs'
+			},
+			null,
+			'\t'
+		)
 	);
 
 	write(`${dir}/package.json`, JSON.stringify({ type: 'module' }));

@@ -31,11 +31,13 @@ test('copy files', () => {
 		build_data: {},
 		// @ts-expect-error
 		server_metadata: {},
-		routes: [],
+		route_data: [],
 		// @ts-expect-error
 		prerendered: {
 			paths: []
 		},
+		// @ts-expect-error
+		prerender_map: {},
 		// @ts-expect-error
 		log: {}
 	});
