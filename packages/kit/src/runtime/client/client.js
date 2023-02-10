@@ -331,7 +331,7 @@ export function create_client({ target }) {
 			capture_snapshot(previous_history_index);
 		}
 
-		// ensures url matches route trailing slash option
+		// ensure the url pathname matches the page's trailing slash option
 		if (
 			navigation_result.props.page?.url &&
 			navigation_result.props.page.url.pathname !== url.pathname
@@ -363,6 +363,7 @@ export function create_client({ target }) {
 		if (started) {
 			current = navigation_result.state;
 
+			// reset url before updating page store
 			if (navigation_result.props.page) {
 				navigation_result.props.page.url = url;
 			}
