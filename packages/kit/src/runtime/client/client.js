@@ -331,7 +331,7 @@ export function create_client({ target }) {
 			capture_snapshot(previous_history_index);
 		}
 
-		// uses correct trailing slash option when using preloaded data
+		// ensures url matches route trailing slash option
 		if (
 			navigation_result.props.page?.url &&
 			navigation_result.props.page.url.pathname !== url.pathname
