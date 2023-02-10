@@ -82,7 +82,7 @@ import { Something } from 'your-library';
 
 The `types`/`svelte`/`default` keys are [export conditions](https://nodejs.org/api/packages.html#conditional-exports). They tell tooling what file to import when they look up the `your-library` import:
 - TypeScript sees the `types` condition and looks up the type definition file
-- Svelte-aware tooling knows this is a Svelte component library. `vite-plugin-svelte` then knows it needs to ensure that Vite does not attempt to prebundle the library (which causes errors)
+- Svelte-aware tooling sees the `svelte` condition and knows this is a Svelte component library
 - other tooling falls back to the `default` export.
 
 You can adjust `exports` to your liking and provide more entry points. For example, if instead of a `src/lib/index.js` file that re-exported components you wanted to expose a `src/lib/Foo.svelte` component directly, you could create the following export map...
