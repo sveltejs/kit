@@ -33,25 +33,23 @@ export function create_validator(options) {
 	}
 
 	function validate() {
-		// Everything below is just warnings, not errors, because
-		// - would be annoying in watch mode (would have to restart the server)
-		// - maybe there's a custom post-build script that fixes some of these
-
 		/** @type {Record<string, any>} */
 		const pkg = JSON.parse(readFileSync('package.json', 'utf-8'));
+		/** @type {string[]} */
+		const warnings = [];
 
 		if (
 			imports.has('$app/environment') &&
 			[...imports].filter((i) => i.startsWith('$app/')).length === 1
 		) {
-			warn(
+			warnings.push(
 				'Avoid usage of `$app/environment` in your code, if you want to library to work for people not using SvelteKit (only regular Svelte, for example). ' +
 					'Consider using packages like `esm-env` instead which provide cross-bundler-compatible environment variables.'
 			);
 		}
 
 		if (uses_import_meta) {
-			warn(
+			warnings.push(
 				'Avoid usage of `import.meta.env` in your code. It requires a bundler to work. ' +
 					'Consider using packages like `esm-env` instead which provide cross-bundler-compatible environment variables.'
 			);
@@ -61,7 +59,7 @@ export function create_validator(options) {
 			!(pkg.dependencies?.['@sveltejs/kit'] || pkg.peerDependencies?.['@sveltejs/kit']) &&
 			([...imports].some((i) => i.startsWith('$app/')) || imports.has('@sveltejs/kit'))
 		) {
-			warn(
+			warnings.push(
 				'You are using SvelteKit-specific imports in your code, but you have not declared a dependency on `@sveltejs/kit` in your `package.json`. ' +
 					'Add it to your `dependencies` or `peerDependencies`.'
 			);
@@ -72,38 +70,57 @@ export function create_validator(options) {
 			(has_svelte_files ||
 				[...imports].some((i) => i.startsWith('svelte/') || imports.has('svelte')))
 		) {
-			warn(
+			warnings.push(
 				'You are using Svelte components or Svelte-specific imports in your code, but you have not declared a dependency on `svelte` in your `package.json`. ' +
 					'Add it to your `dependencies` or `peerDependencies`.'
 			);
 		}
 
-		const { not_found, conditions } = traverse_exports(pkg.exports);
-
 		if (pkg.exports) {
+			const { conditions } = traverse_exports(pkg.exports);
 			if (has_svelte_files && !pkg.svelte && !conditions.has('svelte')) {
-				warn(
+				warnings.push(
 					'You are using Svelte files, but did not declare a `svelte` condition in one of your `exports` in your `package.json`. ' +
 						'Add a `svelte` condition to your `exports` to ensure that your package is recognized as Svelte package by tooling. ' +
 						'See https://kit.svelte.dev/docs/packaging#anatomy-of-a-package-json-exports for more info'
 				);
 			}
+
+			if (pkg.svelte) {
+				const root_export = pkg.exports['.'];
+				if (!root_export) {
+					warnings.push(
+						'You have a `svelte` field in your `package.json`, but no root export in your `exports`. Please align them so that bundlers will resolve consistently to the same file.'
+					);
+				} else {
+					const { exports } = traverse_exports({ '.': root_export });
+					if (![...exports].map(export_to_regex).some((_export) => _export.test(pkg.svelte))) {
+						warnings.push(
+							'The `svelte` field in your `package.json` does not match any export in your root `exports`. Please align them so that bundlers will resolve consistently to the same file.'
+						);
+						Object.keys(pkg.exports).map(export_to_regex);
+					}
+				}
+			}
 		} else {
-			warn(
+			warnings.push(
 				'No `exports` field found in `package.json`, please provide one. ' +
 					'See https://kit.svelte.dev/docs/packaging#anatomy-of-a-package-json-exports for more info'
 			);
 		}
 
-		if (not_found.size) {
-			let message = 'The following files are referenced in your `exports` but do not exist:';
-			for (const [path, key] of not_found) {
-				message += `\n  - ${path} (from export "${key}")`;
+		// Just warnings, not errors, because
+		// - would be annoying in watch mode (would have to restart the server)
+		// - maybe there's a custom post-build script that fixes some of these
+		if (warnings.length) {
+			console.log(
+				colors
+					.bold()
+					.yellow('@sveltejs/package found the following issues while packaging your library:')
+			);
+			for (const warning of warnings) {
+				console.log(colors.yellow(`${warning}\n`));
 			}
-			message +=
-				'\n\nEnsure all files are properly built and copied across or adjust the exports. ' +
-				'See https://kit.svelte.dev/docs/packaging#anatomy-of-a-package-json-exports for more info';
-			warn(message);
 		}
 	}
 
@@ -114,46 +131,43 @@ export function create_validator(options) {
 }
 
 /**
- * @param {Record<string, any>} exports
- * @returns {{ not_found: Map<string, string[]>; conditions: Set<string> }}
+ * @param {Record<string, any>} exports_map
+ * @returns {{ exports: Set<string>; conditions: Set<string> }}
  */
-function traverse_exports(exports) {
-	/** @type {Map<string, string[]>} */
-	const not_found = new Map();
+function traverse_exports(exports_map) {
+	/** @type {Set<string>} */
+	const exports = new Set();
 	/** @type {Set<string>} */
 	const conditions = new Set();
 
 	/**
-	 * @param {Record<string, any>} exports
-	 * @param {string} [import_path]
+	 * @param {Record<string, any>} exports_map
+	 * @param {boolean} is_first_level
 	 */
-	function traverse(exports, import_path) {
-		for (const key of Object.keys(exports ?? {})) {
-			if (import_path) {
+	function traverse(exports_map, is_first_level) {
+		for (const key of Object.keys(exports_map ?? {})) {
+			if (is_first_level) {
 				conditions.add(key);
 			}
 
-			import_path = import_path || key;
-			const _export = exports[key];
+			const _export = exports_map[key];
 
 			if (typeof _export === 'string') {
-				if (!existsSync(_export)) {
-					const nope = not_found.get(import_path) ?? [];
-					nope.push(_export);
-					not_found.set(import_path, nope);
-				}
+				exports.add(_export);
 			} else {
-				traverse(_export, import_path);
+				traverse(_export, false);
 			}
 		}
 	}
 
-	traverse(exports);
+	traverse(exports_map, true);
 
-	return { not_found, conditions };
+	return { exports, conditions };
 }
 
-/** @param {string} message */
-function warn(message) {
-	console.log(colors.yellow(message + '\n'));
+/** @param {string} _export */
+function export_to_regex(_export) {
+	// $& means the whole matched string
+	const regex_str = _export.replace(/[.+?^${}()|[\]\\]/g, '\\$&').replace(/\*/g, '.*');
+	return new RegExp(`^${regex_str}$`);
 }
