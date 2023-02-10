@@ -1256,7 +1256,22 @@ export function create_client({ target }) {
 			if (!options.reload) {
 				if (priority <= options.preload_data) {
 					const intent = get_navigation_intent(/** @type {URL} */ (url), false);
-					if (intent) preload_data(intent);
+					if (intent) {
+						if (__SVELTEKIT_DEV__) {
+							preload_data(intent).then((result) => {
+								if (result.type === 'loaded' && result.state.error) {
+									console.warn(
+										`Prefetching data for ${intent.url.pathname} failed with the following error: ${result.state.error.message}\n` +
+											'If this error is transient, you can ignore it. Otherwise, consider disabling prefetching for this route. ' +
+											'This route was prefetched due to a data-sveltekit-data attribute. ' +
+											'See https://kit.svelte.dev/docs/link-options for more info'
+									);
+								}
+							});
+						} else {
+							preload_data(intent);
+						}
+					}
 				} else if (priority <= options.preload_code) {
 					preload_code(get_url_path(/** @type {URL} */ (url)));
 				}
