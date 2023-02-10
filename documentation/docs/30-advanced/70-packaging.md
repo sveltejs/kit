@@ -13,7 +13,7 @@ Running the `svelte-package` command from `@sveltejs/package` will take the cont
 - All the files in `src/lib`. Svelte components will be preprocessed, TypeScript files will be transpiled to JavaScript.
 - Type definitions (`d.ts` files) which are generated for Svelte, JavaScript and TypeScript files. You need to install `typescript >= 4.0.0` for this. Type definitions are placed next to their implementation, hand-written `d.ts` files are copied over as is. You can [disable generation](#options), but we strongly recommend against it — people using your library might use TypeScript, for which they require these type definition files.
 
-> `@sveltejs/package` version 1 also copied over a generated `package.json`. This is no longer the case. If you're still on version 1, see [this PR](https://github.com/sveltejs/kit/pull/8922) for migration instructions.
+> `@sveltejs/package` version 1 generated a `package.json`. This is no longer the case and it will now use the `package.json` from your project and validate that it is correct instead. If you're still on version 1, see [this PR](https://github.com/sveltejs/kit/pull/8922) for migration instructions.
 
 ## Anatomy of a package.json
 
