@@ -1261,9 +1261,9 @@ export function create_client({ target }) {
 							preload_data(intent).then((result) => {
 								if (result.type === 'loaded' && result.state.error) {
 									console.warn(
-										`Prefetching data for ${intent.url.pathname} failed with the following error: ${result.state.error.message}\n` +
-											'If this error is transient, you can ignore it. Otherwise, consider disabling prefetching for this route. ' +
-											'This route was prefetched due to a data-sveltekit-data attribute. ' +
+										`Preloading data for ${intent.url.pathname} failed with the following error: ${result.state.error.message}\n` +
+											'If this error is transient, you can ignore it. Otherwise, consider disabling preloading for this route. ' +
+											'This route was preloaded due to a data-sveltekit-preload-data attribute. ' +
 											'See https://kit.svelte.dev/docs/link-options for more info'
 									);
 								}

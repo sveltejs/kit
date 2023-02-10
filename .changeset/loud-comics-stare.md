@@ -2,4 +2,4 @@
 '@sveltejs/kit': patch
 ---
 
-fix: warn after failed prefetches in dev
+fix: warn after failed data preloads in dev
