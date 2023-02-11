@@ -2,4 +2,4 @@
 '@sveltejs/adapter-auto': patch
 ---
 
-support deta in adapter-auto using adapter-node
+chore: add zero-config support for deta
