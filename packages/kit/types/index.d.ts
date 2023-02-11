@@ -1129,7 +1129,7 @@ export type ActionResult<
  * Creates an `HttpError` object with an HTTP status code and an optional message.
  * This object, if thrown during request handling, will cause SvelteKit to
  * return an error response without invoking `handleError`.
- * Make sure you're not catching the thrown error, which results in a noop.
+ * Make sure you're not catching the thrown error, which would prevent SvelteKit from handling it.
  * @param status The [HTTP status code](https://developer.mozilla.org/en-US/docs/Web/HTTP/Status#client_error_responses). Must be in the range 400-599.
  * @param body An object that conforms to the App.Error type. If a string is passed, it will be used as the message property.
  */
@@ -1152,7 +1152,7 @@ export interface HttpError {
 
 /**
  * Create a `Redirect` object. If thrown during request handling, SvelteKit will return a redirect response.
- * Make sure you're not catching the thrown redirect, which results in a noop.
+ * Make sure you're not catching the thrown redirect, which would prevent SvelteKit from handling it.
  * @param status The [HTTP status code](https://developer.mozilla.org/en-US/docs/Web/HTTP/Status#redirection_messages). Must be in the range 300-308.
  * @param location The location to redirect to.
  */
