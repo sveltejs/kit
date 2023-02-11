@@ -28,7 +28,7 @@ export const adapters = [
 	{
 		name: 'Deta',
 		test: () => !!process.env.DETA_PROJECT_KEY,
-		module: 'svelte-adapter-node',
-		version: '1.1.8'
+		module: '@sveltejs/adapter-node',
+		version: '1'
 	}
 ];
