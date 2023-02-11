@@ -123,7 +123,7 @@ export default {
 			out: 'build',
 			precompress: false,
 			envPrefix: '',
-			polyfill: false
+			polyfill: true
 		})
 	}
 };
