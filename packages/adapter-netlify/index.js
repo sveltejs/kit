@@ -231,14 +231,9 @@ async function generate_lambda_functions({ builder, publish, split }) {
 			writeFileSync(`.netlify/functions-internal/${name}.mjs`, fn);
 			writeFileSync(`.netlify/functions-internal/${name}.json`, fn_config);
 
-			redirects.push(`${pattern} /.netlify/functions/${name} 200`);
-
-			// no leading slash for root route's data endpoint
-			if (pattern === '/') {
-				redirects.push(`/__data.json /.netlify/functions/${name} 200`);
-			} else {
-				redirects.push(`${pattern}/__data.json /.netlify/functions/${name} 200`);
-			}
+			const redirect = `/.netlify/functions/${name} 200`;
+			redirects.push(`${pattern} ${redirect}`);
+			redirects.push(`${pattern === '/' ? '' : pattern}/__data.json ${redirect}`);
 		}
 	} else {
 		const manifest = builder.generateManifest({
