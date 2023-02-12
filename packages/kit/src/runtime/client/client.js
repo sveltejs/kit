@@ -1768,6 +1768,29 @@ async function load_data(url, invalid) {
 		const reader = /** @type {ReadableStream<Uint8Array>} */ (res.body).getReader();
 		const decoder = new TextDecoder();
 
+		/**
+		 * @param {any} data
+		 * @param {import('types').Uses} uses
+		 */
+		function deserialize(data, uses) {
+			return devalue.unflatten(data, {
+				Promise: (id) => {
+					/** @type {any} */
+					const obj = {
+						id,
+						resolve: undefined,
+						reject: undefined,
+						uses
+					};
+					pending.set(id, obj);
+					return new Promise((f, r) => {
+						obj.resolve = f;
+						obj.reject = r;
+					});
+				}
+			});
+		}
+
 		let text = '';
 
 		while (true) {
@@ -1795,22 +1818,7 @@ async function load_data(url, invalid) {
 					node.nodes?.forEach((/** @type {any} */ node) => {
 						if (node?.type === 'data') {
 							node.uses = deserialize_uses(node.uses);
-							node.data = devalue.unflatten(node.data, {
-								Promise: (id) => {
-									/** @type {any} */
-									const obj = {
-										id,
-										resolve: undefined,
-										reject: undefined,
-										uses: node.uses
-									};
-									pending.set(id, obj);
-									return new Promise((f, r) => {
-										obj.resolve = f;
-										obj.reject = r;
-									});
-								}
-							});
+							node.data = deserialize(node.data, node.uses);
 						}
 					});
 
@@ -1822,46 +1830,9 @@ async function load_data(url, invalid) {
 					// Shouldn't ever be undefined, but just in case
 					if (entry) {
 						if (error) {
-							entry.reject(
-								devalue.unflatten(error, {
-									Promise: (id) => {
-										/** @type {any} */
-										const obj = {
-											id,
-											resolve: undefined,
-											reject: undefined,
-											uses: entry.uses
-										};
-										pending.set(id, obj);
-										return new Promise((f, r) => {
-											obj.resolve = f;
-											obj.reject = r;
-										});
-									}
-								})
-							);
+							entry.reject(deserialize(error, entry.uses));
 						} else {
-							entry.resolve(
-								devalue.unflatten(data, {
-									Promise: (id) => {
-										/** @type {(v: any) => void} */
-										let resolve;
-										/** @type {(v: any) => void} */
-										let reject;
-										pending.set(id, {
-											// @ts-expect-error TS doesnt know this is set
-											resolve,
-											// @ts-expect-error TS doesnt know this is set
-											reject,
-											uses: entry.uses
-										});
-										return new Promise((f, r) => {
-											resolve = f;
-											reject = r;
-										});
-									}
-								})
-							);
+							entry.resolve(deserialize(data, entry.uses));
 						}
 						if (uses) {
 							uses = deserialize_uses(uses);
