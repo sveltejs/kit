@@ -1,5 +1,13 @@
 # @sveltejs/kit
 
+## 1.5.6
+
+### Patch Changes
+
+- fix: ssr defaults preventing minification for client build ([#9012](https://github.com/sveltejs/kit/pull/9012))
+
+- fix: client-side trailing slash redirect when preloading data ([#8982](https://github.com/sveltejs/kit/pull/8982))
+
 ## 1.5.5
 
 ### Patch Changes
