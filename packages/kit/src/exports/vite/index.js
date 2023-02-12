@@ -309,6 +309,25 @@ function kit({ svelte_config }) {
 	const plugin_virtual_modules = {
 		name: 'vite-plugin-sveltekit-virtual-modules',
 
+		config(config, { command }) {
+			// allow `$env/dynamic/public` to be generated on-demand
+			// unless `_app` is hosted externally
+			if (!kit.paths.assets && command === 'build' && !config.build?.ssr) {
+				return {
+					build: {
+						rollupOptions: {
+							external: ['$env/dynamic/public'],
+							output: {
+								paths: {
+									'$env/dynamic/public': '../../env.js'
+								}
+							}
+						}
+					}
+				};
+			}
+		},
+
 		async resolveId(id) {
 			// treat $env/static/[public|private] as virtual
 			if (id.startsWith('$env/') || id === '$internal/paths' || id === '$service-worker') {
@@ -343,6 +362,13 @@ function kit({ svelte_config }) {
 						vite_config_env.command === 'serve' ? env.private : undefined
 					);
 				case '\0$env/dynamic/public':
+					// populate `$env/dynamic/public` from `window` in the case where
+					// modules are externally hosted
+					if (kit.paths.assets && is_build && !options?.ssr) {
+						// TODO use a hash of the version name to avoid conflicts
+						return `export const env = window.__env;`;
+					}
+
 					return create_dynamic_module(
 						'public',
 						vite_config_env.command === 'serve' ? env.public : undefined
@@ -446,30 +472,34 @@ export function set_assets(path) {
 					});
 				} else {
 					/** @type {Record<string, string>} */
-					input.start = `${runtime_directory}/client/start.js`;
-					input.app = `${kit.outDir}/generated/client-optimized/app.js`;
+					input['entry/start'] = `${runtime_directory}/client/start.js`;
+					input['entry/app'] = `${kit.outDir}/generated/client-optimized/app.js`;
 
-					manifest_data.nodes.forEach((node) => {
-						if (node.component) {
-							const resolved = path.resolve(node.component);
-							const relative = decodeURIComponent(path.relative(kit.files.routes, resolved));
+					/**
+					 * @param {string | undefined} file
+					 */
+					function add_input(file) {
+						if (!file) return;
 
-							const name = relative.startsWith('..')
-								? path.basename(node.component)
-								: posixify(path.join('pages', relative));
-							input[`components/${name}`] = resolved;
-						}
+						const resolved = path.resolve(file);
+						const relative = decodeURIComponent(path.relative(kit.files.routes, resolved));
 
-						if (node.universal) {
-							const resolved = path.resolve(node.universal);
-							const relative = decodeURIComponent(path.relative(kit.files.routes, resolved));
+						console.log(relative, path.basename(relative));
 
-							const name = relative.startsWith('..')
-								? path.basename(node.universal)
-								: posixify(path.join('pages', relative));
-							input[`modules/${name}`] = resolved;
-						}
-					});
+						const name = relative.startsWith('..')
+							? path.basename(file).replace(/^\+/, '')
+							: relative
+									.replace(/^\+/, '')
+									.replace(/(\\|\/)\+/g, '-')
+									.replace(/[\\/]/g, '-');
+
+						input[`entry/${name}`] = resolved;
+					}
+
+					for (const node of manifest_data.nodes) {
+						add_input(node.component);
+						add_input(node.universal);
+					}
 				}
 
 				new_config = {
@@ -481,9 +511,9 @@ export function set_assets(path) {
 							input,
 							output: {
 								format: 'esm',
-								entryFileNames: ssr ? '[name].js' : `${prefix}/[name]-[hash].js`,
-								chunkFileNames: ssr ? 'chunks/[name].js' : `${prefix}/chunks/[name]-[hash].js`,
-								assetFileNames: `${prefix}/assets/[name]-[hash][extname]`,
+								entryFileNames: ssr ? '[name].js' : `${prefix}/[name].[hash].js`,
+								chunkFileNames: ssr ? 'chunks/[name].js' : `${prefix}/chunks/[name].[hash].js`,
+								assetFileNames: `${prefix}/assets/[name].[hash][extname]`,
 								hoistTransitiveImports: false
 							},
 							preserveEntrySignatures: 'strict'

@@ -154,6 +154,9 @@ export async function render_response({
 	if (assets) {
 		// if an asset path is specified, use it
 		resolved_assets = assets;
+
+		// TODO use a hash of the version name to avoid conflicts
+		head += `<script>window.__env=${s(public_env)}</script>`;
 	} else if (state.prerendering?.fallback) {
 		// if we're creating a fallback page, asset paths need to be root-relative
 		resolved_assets = base;
@@ -266,7 +269,7 @@ export async function render_response({
 
 	if (page_config.csr) {
 		const opts = [
-			`app: import(${s(prefixed(client.app.file))})`,
+			`app`,
 			`assets: ${s(assets)}`,
 			`target: document.querySelector('[data-sveltekit-hydrate="${target}"]').parentNode`,
 			`version: ${s(version)}`
@@ -293,9 +296,8 @@ export async function render_response({
 
 		// prettier-ignore
 		const init_app = `
-			import { env, start } from ${s(prefixed(client.start.file))};
-
-			env(${s(public_env)});
+			import { start } from ${s(prefixed(client.start.file))};
+			import * as app from ${s(prefixed(client.app.file))};
 
 			start({
 				${opts.join(',\n\t\t\t\t')}
