@@ -1792,33 +1792,26 @@ async function load_data(url, invalid) {
 				}
 
 				if (node.type === 'data') {
-					// This is the first (and possibly only, if no `defer` used) chunk
+					// This is the first (and possibly only, if no pending promises) chunk
 					node.nodes?.forEach((/** @type {any} */ node) => {
 						if (node?.type === 'data') {
 							node.uses = deserialize_uses(node.uses);
-							node.data = devalue.unflatten(node.data);
-
-							for (const key in node.data) {
-								const entry = node.data[key];
-								// Revive promise, to be resolved in a later chunk
-								if (typeof entry === 'string' && entry.startsWith('_deferred_')) {
-									/** @type {(v: any) => void} */
-									let resolve;
-									/** @type {(v: any) => void} */
-									let reject;
-									node.data[key] = new Promise((f, r) => {
-										resolve = f;
-										reject = r;
-									});
-									pending.set(entry, {
-										// @ts-expect-error TS doesnt know this is set
-										resolve,
-										// @ts-expect-error TS doesnt know this is set
-										reject,
+							node.data = devalue.unflatten(node.data, {
+								Promise: (id) => {
+									/** @type {any} */
+									const obj = {
+										id,
+										resolve: undefined,
+										reject: undefined,
 										uses: node.uses
+									};
+									pending.set(id, obj);
+									return new Promise((f, r) => {
+										obj.resolve = f;
+										obj.reject = r;
 									});
 								}
-							}
+							});
 						}
 					});
 
@@ -1830,9 +1823,46 @@ async function load_data(url, invalid) {
 					// Shouldn't ever be undefined, but just in case
 					if (entry) {
 						if (error) {
-							entry.reject(error);
+							entry.reject(
+								devalue.unflatten(error, {
+									Promise: (id) => {
+										/** @type {any} */
+										const obj = {
+											id,
+											resolve: undefined,
+											reject: undefined,
+											uses: entry.uses
+										};
+										pending.set(id, obj);
+										return new Promise((f, r) => {
+											obj.resolve = f;
+											obj.reject = r;
+										});
+									}
+								})
+							);
 						} else {
-							entry.resolve(devalue.unflatten(data));
+							entry.resolve(
+								devalue.unflatten(data, {
+									Promise: (id) => {
+										/** @type {(v: any) => void} */
+										let resolve;
+										/** @type {(v: any) => void} */
+										let reject;
+										pending.set(id, {
+											// @ts-expect-error TS doesnt know this is set
+											resolve,
+											// @ts-expect-error TS doesnt know this is set
+											reject,
+											uses: entry.uses
+										});
+										return new Promise((f, r) => {
+											resolve = f;
+											reject = r;
+										});
+									}
+								})
+							);
 						}
 						if (uses) {
 							uses = deserialize_uses(uses);

@@ -5,6 +5,7 @@ import { load_server_data } from '../page/load_data.js';
 import { clarify_devalue_error, handle_error_and_jsonify, serialize_data_node } from '../utils.js';
 import { normalize_path } from '../../../utils/url.js';
 import { text } from '../../../exports/index.js';
+import * as devalue from 'devalue';
 
 export const INVALIDATED_PARAM = 'x-sveltekit-invalidated';
 
@@ -115,126 +116,121 @@ export async function render_data(
 			)
 		);
 
-		try {
-			/**
-			 * @type {Array<import('types').ServerDataSkippedNode | import('types').ServerErrorNode | import('types').ServerDataNodePreSerialization | null>}
-			 * The first (and possibly only, if no `defer` used) chunk sent out
-			 */
-			const result = [];
-			/**
-			 * @type {Array<{id: string; node_idx: number; promise: Promise<{id: string; node_idx: number; uses: import('types').Uses; result?: any; error?: any}>}>}
-			 * List of deferred promises, to be resolved after the first chunk is sent
-			 */
-			let deferred = [];
+		return new Response(
+			new ReadableStream({
+				async start(controller) {
+					let promise_id = 1;
+					let count = 0;
+					let strings = [];
 
-			// First process all results in order, and possibly collect and setup deferred promises
-			for (let node_idx = 0; node_idx < nodes.length; node_idx++) {
-				const node = nodes[node_idx];
-				if (!node || node.type === 'skip' || node.type === 'error' || !node.data) {
-					result.push(node);
-					continue;
-				}
+					try {
+						for (const node of nodes) {
+							console.log('node', count);
+							let node_count = 0;
+							let uses_str = '';
 
-				/** @type {Record<string, any>} */
-				let start = {};
-				let node_uses_defer = false;
+							const revivers = {
+								/** @param {any} thing */
+								Promise: (thing) => {
+									if (typeof thing?.then === 'function') {
+										const id = promise_id++;
+										count += 1;
+										node_count += 1;
 
-				for (const key in node.data ?? []) {
-					const entry = node.data[key];
-					if (typeof entry === 'object' && typeof entry?.then === 'function') {
-						node_uses_defer = true;
-						start[key] = `_deferred_${key}`;
-						deferred.push({
-							id: key,
-							node_idx,
-							promise: entry
-								.then(
-									/** @param {any} result */ (result) => ({
-										id: key,
-										result,
-										node_idx,
-										uses: node.uses
-									})
-								)
-								.catch(/** @param {any} error */ (error) => ({ id: key, error, uses: node.uses }))
-						});
-					} else {
-						start[key] = entry;
-					}
-				}
+										thing
+											.then((d) => ({ d }))
+											.catch((e) => ({ e }))
+											.then(
+												/**
+												 * @param {{d: any; e: any}} result
+												 */
+												async ({ d: d, e }) => {
+													let data;
+													let error;
+													try {
+														data = !e ? devalue.stringify(d, revivers) : undefined;
+														error = e ? devalue.stringify(e, revivers) : undefined;
+													} catch (e) {
+														error = await handle_error_and_jsonify(
+															event,
+															options,
+															new Error(clarify_devalue_error(event, /** @type {any} */ (e)))
+														);
+													}
 
-				result.push({
-					type: 'data',
-					data: start,
-					uses: node_uses_defer ? undefined : node.uses,
-					slash: node.slash
-				});
-			}
+													node_count -= 1;
+													// only send uses when it's the last chunk of the data node
+													// so we can be sure all uses are accounted for
+													let uses =
+														node_count === 0
+															? undefined
+															: stringify_uses(
+																	/** @type {import('types').ServerDataNodePreSerialization} */ (
+																		node
+																	)
+															  );
+													if (uses === uses_str) {
+														// No change - no need to send it
+														uses = undefined;
+													}
 
-			// Now send the first chunk. If there are no deferred promises, we're done
-			let json = '';
+													controller.enqueue(
+														`{"type":"chunk","id":${id}${data ? `,"data":${data}` : ''}${
+															error ? `,"error":${error}` : ''
+														}${uses ? `,"uses":${uses}` : ''}}\n`
+													);
 
-			try {
-				json = `{"type":"data","nodes":[${result.map(serialize_data_node).join(',')}]}`;
-				if (!deferred.length) {
-					return json_response(json);
-				}
-			} catch (e) {
-				const error = /** @type {any} */ (e);
-				return json_response(
-					await handle_error_and_jsonify(
-						event,
-						options,
-						new Error(clarify_devalue_error(event, error))
-					),
-					500
-				);
-			}
+													count -= 1;
+													if (count === 0) {
+														controller.close();
+													}
+												}
+											);
 
-			return new Response(
-				new ReadableStream({
-					async start(controller) {
-						controller.enqueue(`${json}\n`);
+										return id;
+									}
+								}
+							};
 
-						// Await all deferred promises and send out the rest of the chunks
-						while (deferred.length) {
-							const next = await Promise.race(deferred.map((d) => d.promise));
-							deferred = deferred.filter((d) => d.id !== next.id);
-							controller.enqueue(
-								serialize_data_node(
-									/** @type {import('types').ServerDataChunkNode} */ ({
-										type: 'chunk',
-										id: `_deferred_${next.id}`,
-										data: next.result,
-										error: next.error,
-										// only send uses when it's the last chunk of the data node
-										// so we can be sure all uses are accounted for
-										uses: deferred.some((d) => d.node_idx === next.node_idx) ? undefined : next.uses
-									})
-								) + '\n'
-							);
+							let str = '';
+
+							if (!node) {
+								str = 'null';
+							} else if (node.type === 'error' || node.type === 'skip') {
+								str = JSON.stringify(node);
+							} else {
+								uses_str = stringify_uses(node);
+
+								str = `{"type":"data","data":${devalue.stringify(node.data, revivers)}${uses_str}${
+									node.slash ? `,"slash":${JSON.stringify(node.slash)}` : ''
+								}}`;
+							}
+
+							strings.push(str);
 						}
 
+						controller.enqueue(`{"type":"data","nodes":[${strings.join(',')}]}\n`);
+
+						if (count === 0) {
+							controller.close();
+						}
+					} catch (e) {
+						const error = await handle_error_and_jsonify(
+							event,
+							options,
+							new Error(clarify_devalue_error(event, /** @type {any} */ (e)))
+						);
+						controller.enqueue(error); // TODO should this be .error(..) ? how does frontend know this failed right away? status is 200
 						controller.close();
 					}
-				}),
-				{
-					headers: {
-						'content-type': 'application/octet-stream'
-					}
 				}
-			);
-		} catch (e) {
-			const error = /** @type {any} */ (e);
-			return json_response(
-				await handle_error_and_jsonify(
-					event,
-					options,
-					new Error(clarify_devalue_error(event, error))
-				),
-				500
-			);
-		}
+			}),
+			{
+				headers: {
+					'content-type': 'application/x-ndjson'
+				}
+			}
+		);
 	} catch (e) {
 		const error = normalize_error(e);
 
@@ -244,6 +240,27 @@ export async function render_data(
 			return json_response(await handle_error_and_jsonify(event, options, error), 500);
 		}
 	}
+}
+
+/**
+ * @param {import('types').ServerDataNodePreSerialization} node
+ */
+function stringify_uses(node) {
+	const uses = [];
+
+	if (node.uses && node.uses.dependencies.size > 0) {
+		uses.push(`"dependencies":${JSON.stringify(Array.from(node.uses.dependencies))}`);
+	}
+
+	if (node.uses && node.uses.params.size > 0) {
+		uses.push(`"params":${JSON.stringify(Array.from(node.uses.params))}`);
+	}
+
+	if (node.uses?.parent) uses.push(`"parent":1`);
+	if (node.uses?.route) uses.push(`"route":1`);
+	if (node.uses?.url) uses.push(`"url":1`);
+
+	return node.uses ? `,"uses":{${uses.join(',')}}` : '';
 }
 
 /**

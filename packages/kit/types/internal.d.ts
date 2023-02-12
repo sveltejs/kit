@@ -208,12 +208,12 @@ export type ServerDataResponse = ServerRedirectNode | ServerNodesResponse;
 export interface ServerDataNodePreSerialization {
 	type: 'data';
 	/**
-	 * The serialized version of this contains a `_deferred_${someId}` for any deferred promises,
+	 * The serialized version of this contains a serialized representation of any deferred promises,
 	 * which will be resolved later through chunk nodes.
 	 */
 	data: Record<string, any> | null;
 	/**
-	 * Defined if the `load` function didn't return a `defer`red result.
+	 * Defined if the `load` function didn't return a result containing promises.
 	 */
 	uses?: Uses;
 	slash?: TrailingSlash;
@@ -235,7 +235,7 @@ export interface ServerDataNode extends ServerDataNodePreSerialization {
 
 export interface ServerDataChunkNode {
 	type: 'chunk';
-	id: string;
+	id: number;
 	data?: Record<string, any>;
 	error?: any;
 	/**
