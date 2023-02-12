@@ -1,6 +1,6 @@
-import { appendFileSync, existsSync, readdirSync, readFileSync, writeFileSync } from 'fs';
-import { dirname, join, resolve, posix } from 'path';
-import { fileURLToPath } from 'url';
+import { appendFileSync, existsSync, readdirSync, readFileSync, writeFileSync } from 'node:fs';
+import { dirname, join, resolve, posix } from 'node:path';
+import { fileURLToPath } from 'node:url';
 import esbuild from 'esbuild';
 import toml from '@iarna/toml';
 
@@ -231,8 +231,9 @@ async function generate_lambda_functions({ builder, publish, split }) {
 			writeFileSync(`.netlify/functions-internal/${name}.mjs`, fn);
 			writeFileSync(`.netlify/functions-internal/${name}.json`, fn_config);
 
-			redirects.push(`${pattern} /.netlify/functions/${name} 200`);
-			redirects.push(`${pattern}/__data.json /.netlify/functions/${name} 200`);
+			const redirect = `/.netlify/functions/${name} 200`;
+			redirects.push(`${pattern} ${redirect}`);
+			redirects.push(`${pattern === '/' ? '' : pattern}/__data.json ${redirect}`);
 		}
 	} else {
 		const manifest = builder.generateManifest({
