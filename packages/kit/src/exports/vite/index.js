@@ -164,7 +164,11 @@ function kit({ svelte_config }) {
 	const { kit } = svelte_config;
 	const out = `${kit.outDir}/output`;
 
-	/** @type {import('vite').ResolvedConfig} */
+	/**
+	 * @typedef {import('vite').ResolvedConfig} ResolvedConfig
+	 */
+
+	/** @type {ResolvedConfig} */
 	let vite_config;
 
 	/** @type {import('vite').ConfigEnv} */
@@ -179,6 +183,15 @@ function kit({ svelte_config }) {
 	/** @type {() => Promise<void>} */
 	let finalise;
 
+	/**
+	 * Store parts of the config that may have different defaults based on config.build.ssr
+	 * so that we don't get overridden values later for the client build.
+	 * @type {{
+	 * 		minify?: ResolvedConfig['build']['minify'];
+	 * }}
+	 */
+	let cli_opts = {};
+
 	const service_worker_entry_file = resolve_entry(kit.files.serviceWorker);
 
 	/** @type {import('vite').Plugin} */
@@ -192,6 +205,8 @@ function kit({ svelte_config }) {
 		async config(config, config_env) {
 			vite_config_env = config_env;
 			is_build = config_env.command === 'build';
+
+			cli_opts.minify = config.build?.minify;
 
 			env = get_env(kit.env, vite_config_env.mode);
 
@@ -634,7 +649,7 @@ export function set_assets(path) {
 						logLevel: vite_config.logLevel,
 						clearScreen: vite_config.clearScreen,
 						build: {
-							minify: vite_config.build.minify,
+							minify: cli_opts.minify,
 							assetsInlineLimit: vite_config.build.assetsInlineLimit,
 							sourcemap: vite_config.build.sourcemap
 						},
