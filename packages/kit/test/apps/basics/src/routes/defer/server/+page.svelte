@@ -5,13 +5,13 @@
 
 <p class="eager">{data.eager}</p>
 
-{#await data.success}
+{#await data.lazy.success}
 	<p class="loadingsuccess">Loading success</p>
 {:then result}
 	<p class="success">{result}</p>
 {/await}
 
-{#await data.fail}
+{#await data.lazy.fail}
 	<p class="loadingfail">Loading fail</p>
 {:catch result}
 	<p class="fail">{result}</p>

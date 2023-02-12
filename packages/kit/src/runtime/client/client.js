@@ -28,7 +28,7 @@ import { parse } from './parse.js';
 import Root from '__GENERATED__/root.svelte';
 import { nodes, server_loads, dictionary, matchers, hooks } from '__CLIENT__/manifest.js';
 import { base } from '$internal/paths';
-import { Deferred, HttpError, Redirect } from '../control.js';
+import { HttpError, Redirect } from '../control.js';
 import { stores } from './singletons.js';
 import { unwrap_promises } from '../../utils/promises.js';
 import * as devalue from 'devalue';
@@ -662,15 +662,14 @@ export function create_client({ target }) {
 				try {
 					lock_fetch();
 					data = (await node.universal.load.call(null, load_input)) ?? null;
-					const to_check = data instanceof Deferred ? data.data : data;
-					if (to_check != null && Object.getPrototypeOf(to_check) !== Object.prototype) {
+					if (data != null && Object.getPrototypeOf(data) !== Object.prototype) {
 						throw new Error(
 							`a load function related to route '${route.id}' returned ${
-								typeof to_check !== 'object'
-									? `a ${typeof to_check}`
-									: to_check instanceof Response
+								typeof data !== 'object'
+									? `a ${typeof data}`
+									: data instanceof Response
 									? 'a Response object'
-									: Array.isArray(to_check)
+									: Array.isArray(data)
 									? 'an array'
 									: 'a non-plain object'
 							}, but must return a plain object at the top level (i.e. \`return {...}\`)`

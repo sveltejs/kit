@@ -1,6 +1,5 @@
 import { disable_search, make_trackable } from '../../../utils/url.js';
 import { unwrap_promises } from '../../../utils/promises.js';
-import { Deferred } from '../../control.js';
 
 /**
  * Calls the user's server `load` function.
@@ -65,19 +64,14 @@ export async function load_server_data({ event, state, node, parent }) {
 		url
 	});
 
-	const data = result
-		? await unwrap_promises(
-				// Don't defer if we're prerendering
-				state.prerendering && result instanceof Deferred ? result.data : result
-		  )
-		: null;
+	const data = result ? await unwrap_promises(result) : null;
 	if (__SVELTEKIT_DEV__) {
 		validate_load_response(data, /** @type {string} */ (event.route.id));
 	}
 
 	return {
 		type: 'data',
-		data: data instanceof Deferred ? data.data : data,
+		data,
 		uses,
 		slash: node.server.trailingSlash
 	};
@@ -124,17 +118,12 @@ export async function load_data({
 		parent
 	});
 
-	const data = result
-		? await unwrap_promises(
-				// Don't defer if we're prerendering
-				state.prerendering && result instanceof Deferred ? result.data : result
-		  )
-		: null;
+	const data = result ? await unwrap_promises(result) : null;
 	if (__SVELTEKIT_DEV__) {
 		validate_load_response(data, /** @type {string} */ (event.route.id));
 	}
 
-	return data instanceof Deferred ? data.data : data;
+	return data;
 }
 
 /**
