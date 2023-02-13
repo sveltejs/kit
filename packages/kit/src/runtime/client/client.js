@@ -1548,7 +1548,7 @@ export function create_client({ target }) {
 					redirect_chain: [],
 					details: {
 						state: {},
-						replaceState: options.replace_state || url.href === location.href
+						replaceState: options.replace_state ?? url.href === location.href
 					},
 					accepted: () => event.preventDefault(),
 					blocked: () => event.preventDefault(),
