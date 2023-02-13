@@ -3,12 +3,7 @@ import { compact } from '../../../utils/array.js';
 import { normalize_error } from '../../../utils/error.js';
 import { add_data_suffix } from '../../../utils/url.js';
 import { HttpError, Redirect } from '../../control.js';
-import {
-	redirect_response,
-	static_error_page,
-	handle_error_and_jsonify,
-	serialize_data_node
-} from '../utils.js';
+import { redirect_response, static_error_page, handle_error_and_jsonify } from '../utils.js';
 import {
 	handle_action_json_request,
 	handle_action_request,
@@ -19,6 +14,7 @@ import { load_data, load_server_data } from './load_data.js';
 import { render_response } from './render.js';
 import { respond_with_error } from './respond_with_error.js';
 import { get_option } from '../../../utils/options.js';
+import { get_data_json } from '../data/index.js';
 
 /**
  * @param {import('types').RequestEvent} event
@@ -291,7 +287,14 @@ export async function render_page(event, route, page, options, manifest, state, 
 
 		if (state.prerendering && should_prerender_data) {
 			// ndjson format
-			const body = branch.map((node) => serialize_data_node(node?.server_data)).join('\n') + '\n';
+			let body = '';
+			for await (const node of get_data_json(
+				event,
+				options,
+				branch.map((node) => node?.server_data)
+			)) {
+				body += node.data;
+			}
 
 			state.prerendering.dependencies.set(data_pathname, {
 				response: text(body),

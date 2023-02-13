@@ -2,7 +2,7 @@ import { HttpError, Redirect } from '../../control.js';
 import { normalize_error } from '../../../utils/error.js';
 import { once } from '../../../utils/functions.js';
 import { load_server_data } from '../page/load_data.js';
-import { clarify_devalue_error, handle_error_and_jsonify, serialize_data_node } from '../utils.js';
+import { clarify_devalue_error, handle_error_and_jsonify } from '../utils.js';
 import { normalize_path } from '../../../utils/url.js';
 import { text } from '../../../exports/index.js';
 import * as devalue from 'devalue';
@@ -116,118 +116,26 @@ export async function render_data(
 			)
 		);
 
+		const chunks = get_data_json(event, options, nodes);
+		const { value: first } = await chunks.next();
+		if (first?.type === 'error') {
+			return json_response(first.data, 500);
+		}
+
 		return new Response(
 			new ReadableStream({
 				async start(controller) {
-					let promise_id = 1;
-					let count = 0;
-					let strings = [];
-
-					try {
-						for (const node of nodes) {
-							console.log('node', count);
-							let node_count = 0;
-							let uses_str = '';
-
-							const revivers = {
-								/** @param {any} thing */
-								Promise: (thing) => {
-									if (typeof thing?.then === 'function') {
-										const id = promise_id++;
-										count += 1;
-										node_count += 1;
-
-										thing
-											.then((d) => ({ d }))
-											.catch((e) => ({ e }))
-											.then(
-												/**
-												 * @param {{d: any; e: any}} result
-												 */
-												async ({ d: d, e }) => {
-													let data;
-													let error;
-													try {
-														data = !e ? devalue.stringify(d, revivers) : undefined;
-														error = e ? devalue.stringify(e, revivers) : undefined;
-													} catch (e) {
-														error = await handle_error_and_jsonify(
-															event,
-															options,
-															new Error(clarify_devalue_error(event, /** @type {any} */ (e)))
-														);
-													}
-
-													node_count -= 1;
-													// only send uses when it's the last chunk of the data node
-													// so we can be sure all uses are accounted for
-													let uses =
-														node_count === 0
-															? undefined
-															: stringify_uses(
-																	/** @type {import('types').ServerDataNodePreSerialization} */ (
-																		node
-																	)
-															  );
-													if (uses === uses_str) {
-														// No change - no need to send it
-														uses = undefined;
-													}
-
-													controller.enqueue(
-														`{"type":"chunk","id":${id}${data ? `,"data":${data}` : ''}${
-															error ? `,"error":${error}` : ''
-														}${uses ? `,"uses":${uses}` : ''}}\n`
-													);
-
-													count -= 1;
-													if (count === 0) {
-														controller.close();
-													}
-												}
-											);
-
-										return id;
-									}
-								}
-							};
-
-							let str = '';
-
-							if (!node) {
-								str = 'null';
-							} else if (node.type === 'error' || node.type === 'skip') {
-								str = JSON.stringify(node);
-							} else {
-								uses_str = stringify_uses(node);
-
-								str = `{"type":"data","data":${devalue.stringify(node.data, revivers)}${uses_str}${
-									node.slash ? `,"slash":${JSON.stringify(node.slash)}` : ''
-								}}`;
-							}
-
-							strings.push(str);
-						}
-
-						controller.enqueue(`{"type":"data","nodes":[${strings.join(',')}]}\n`);
-
-						if (count === 0) {
-							controller.close();
-						}
-					} catch (e) {
-						const error = await handle_error_and_jsonify(
-							event,
-							options,
-							new Error(clarify_devalue_error(event, /** @type {any} */ (e)))
-						);
-						controller.enqueue(error); // TODO should this be .error(..) ? how does frontend know this failed right away? status is 200
-						controller.close();
+					controller.enqueue(/** @type {NonNullable<typeof first>} */ (first).data);
+					for await (const next of chunks) {
+						controller.enqueue(next.data);
 					}
+					controller.close();
 				}
 			}),
 			{
 				headers: {
-					'content-type': 'application/x-ndjson'
+					'content-type': 'application/x-ndjson',
+					'cache-control': 'private, no-store'
 				}
 			}
 		);
@@ -285,4 +193,148 @@ export function redirect_json_response(redirect) {
 		type: 'redirect',
 		location: redirect.location
 	});
+}
+
+/**
+ * @param {import('types').RequestEvent} event
+ * @param {import('types').SSROptions} options
+ * @param {Array<import('types').ServerDataSkippedNode | import('types').ServerDataNode | import('types').ServerErrorNode | null | undefined>} nodes
+ */
+export async function* get_data_json(event, options, nodes) {
+	// This method is necessary because we can't yield from inside a callback,
+	// so we smooth other the internal less ergonomic callback API
+	/** @type {(v: any) => void} */
+	let resolve;
+	let promise =
+		/** @type {Promise<{ result: {type: 'chunk' | 'error'; data: any}; done: boolean }>} */ (
+			new Promise((r) => {
+				resolve = r;
+			})
+		);
+	// Ensure it runs after we enter the loop to not swallow the first eager result
+	Promise.resolve().then(() =>
+		_get_data_json(event, options, nodes, (result, done) => {
+			resolve({ result, done });
+			if (!done) {
+				promise = new Promise((r) => {
+					resolve = r;
+				});
+			}
+		})
+	);
+
+	while (true) {
+		const { result, done } = await promise;
+		yield result;
+		if (done) return undefined;
+	}
+}
+
+/**
+ * @param {import('types').RequestEvent} event
+ * @param {import('types').SSROptions} options
+ * @param {Array<import('types').ServerDataSkippedNode | import('types').ServerDataNode | import('types').ServerErrorNode | null | undefined>} nodes
+ * @param {(result: {type: 'chunk' | 'error'; data: any}, done: boolean) => void} next
+ */
+async function _get_data_json(event, options, nodes, next) {
+	let promise_id = 1;
+	let count = 0;
+	let strings = [];
+
+	try {
+		for (const node of nodes) {
+			let node_count = 0;
+			let uses_str = '';
+
+			const revivers = {
+				/** @param {any} thing */
+				Promise: (thing) => {
+					if (typeof thing?.then === 'function') {
+						const id = promise_id++;
+						count += 1;
+						node_count += 1;
+
+						thing
+							.then(/** @param {any} d */ (d) => ({ d }))
+							.catch(/** @param {any} e */ (e) => ({ e }))
+							.then(
+								/**
+								 * @param {{d: any; e: any}} result
+								 */
+								async ({ d: d, e }) => {
+									let data;
+									let error;
+									try {
+										if (e) {
+											error = devalue.stringify(e, revivers);
+										} else {
+											data = devalue.stringify(d, revivers);
+										}
+									} catch (e) {
+										error = await handle_error_and_jsonify(
+											event,
+											options,
+											new Error(clarify_devalue_error(event, /** @type {any} */ (e)))
+										);
+									}
+
+									node_count -= 1;
+									// only send uses when it's the last chunk of the data node
+									// so we can be sure all uses are accounted for
+									let uses =
+										node_count === 0
+											? undefined
+											: stringify_uses(
+													/** @type {import('types').ServerDataNodePreSerialization} */ (node)
+											  );
+									if (uses === uses_str) {
+										// No change - no need to send it
+										uses = undefined;
+									}
+
+									count -= 1;
+
+									next(
+										{
+											type: 'chunk',
+											data: `{"type":"chunk","id":${id}${data ? `,"data":${data}` : ''}${
+												error ? `,"error":${error}` : ''
+											}${uses ? `,"uses":${uses}` : ''}}\n`
+										},
+										count === 0
+									);
+								}
+							);
+
+						return id;
+					}
+				}
+			};
+
+			let str = '';
+
+			if (!node) {
+				str = 'null';
+			} else if (node.type === 'error' || node.type === 'skip') {
+				str = JSON.stringify(node);
+			} else {
+				uses_str = stringify_uses(node);
+
+				str = `{"type":"data","data":${devalue.stringify(node.data, revivers)}${uses_str}${
+					node.slash ? `,"slash":${JSON.stringify(node.slash)}` : ''
+				}}`;
+			}
+
+			strings.push(str);
+		}
+
+		next({ type: 'chunk', data: `{"type":"data","nodes":[${strings.join(',')}]}\n` }, count === 0);
+	} catch (e) {
+		const error = await handle_error_and_jsonify(
+			event,
+			options,
+			new Error(clarify_devalue_error(event, /** @type {any} */ (e)))
+		);
+		next({ type: 'error', data: error }, true); // TODO should this be .error(..) ? how does frontend know this failed right away? status is 200
+	}
 }
