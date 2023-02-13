@@ -471,7 +471,6 @@ export function set_assets(path) {
 						input[name] = path.resolve(file);
 					});
 				} else {
-					/** @type {Record<string, string>} */
 					input['entry/start'] = `${runtime_directory}/client/start.js`;
 					input['entry/app'] = `${kit.outDir}/generated/client-optimized/app.js`;
 
@@ -484,14 +483,9 @@ export function set_assets(path) {
 						const resolved = path.resolve(file);
 						const relative = decodeURIComponent(path.relative(kit.files.routes, resolved));
 
-						console.log(relative, path.basename(relative));
-
 						const name = relative.startsWith('..')
 							? path.basename(file).replace(/^\+/, '')
-							: relative
-									.replace(/^\+/, '')
-									.replace(/(\\|\/)\+/g, '-')
-									.replace(/[\\/]/g, '-');
+							: relative.replace(/(\\|\/)\+/g, '-').replace(/[\\/]/g, '-');
 
 						input[`entry/${name}`] = resolved;
 					}
