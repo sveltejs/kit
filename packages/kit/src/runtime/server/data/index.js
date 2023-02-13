@@ -2,10 +2,11 @@ import { HttpError, Redirect } from '../../control.js';
 import { normalize_error } from '../../../utils/error.js';
 import { once } from '../../../utils/functions.js';
 import { load_server_data } from '../page/load_data.js';
-import { clarify_devalue_error, handle_error_and_jsonify } from '../utils.js';
+import { clarify_devalue_error, handle_error_and_jsonify, stringify_uses } from '../utils.js';
 import { normalize_path } from '../../../utils/url.js';
 import { text } from '../../../exports/index.js';
 import * as devalue from 'devalue';
+import { to_generator } from '../../../utils/generators.js';
 
 export const INVALIDATED_PARAM = 'x-sveltekit-invalidated';
 
@@ -118,8 +119,9 @@ export async function render_data(
 
 		const chunks = get_data_json(event, options, nodes);
 		const { value: first } = await chunks.next();
-		if (first?.type === 'error') {
-			return json_response(first.data, 500);
+
+		if (!first?.has_more) {
+			return json_response(/** @type {NonNullable<typeof first>} */ (first).data);
 		}
 
 		return new Response(
@@ -151,27 +153,6 @@ export async function render_data(
 }
 
 /**
- * @param {import('types').ServerDataNodePreSerialization} node
- */
-function stringify_uses(node) {
-	const uses = [];
-
-	if (node.uses && node.uses.dependencies.size > 0) {
-		uses.push(`"dependencies":${JSON.stringify(Array.from(node.uses.dependencies))}`);
-	}
-
-	if (node.uses && node.uses.params.size > 0) {
-		uses.push(`"params":${JSON.stringify(Array.from(node.uses.params))}`);
-	}
-
-	if (node.uses?.parent) uses.push(`"parent":1`);
-	if (node.uses?.route) uses.push(`"route":1`);
-	if (node.uses?.url) uses.push(`"url":1`);
-
-	return node.uses ? `,"uses":{${uses.join(',')}}` : '';
-}
-
-/**
  * @param {Record<string, any> | string} json
  * @param {number} [status]
  */
@@ -195,46 +176,15 @@ export function redirect_json_response(redirect) {
 	});
 }
 
+export const get_data_json = to_generator(_get_data_json);
+
 /**
+ * The first chunk returns the devalue'd nodes with potentially pending promises.
+ * Subsequent chunks (if any) return the resolved promises.
  * @param {import('types').RequestEvent} event
  * @param {import('types').SSROptions} options
  * @param {Array<import('types').ServerDataSkippedNode | import('types').ServerDataNode | import('types').ServerErrorNode | null | undefined>} nodes
- */
-export async function* get_data_json(event, options, nodes) {
-	// This method is necessary because we can't yield from inside a callback,
-	// so we smooth other the internal less ergonomic callback API
-	/** @type {(v: any) => void} */
-	let resolve;
-	let promise =
-		/** @type {Promise<{ result: {type: 'chunk' | 'error'; data: any}; done: boolean }>} */ (
-			new Promise((r) => {
-				resolve = r;
-			})
-		);
-	// Ensure it runs after we enter the loop to not swallow the first eager result
-	Promise.resolve().then(() =>
-		_get_data_json(event, options, nodes, (result, done) => {
-			resolve({ result, done });
-			if (!done) {
-				promise = new Promise((r) => {
-					resolve = r;
-				});
-			}
-		})
-	);
-
-	while (true) {
-		const { result, done } = await promise;
-		yield result;
-		if (done) return undefined;
-	}
-}
-
-/**
- * @param {import('types').RequestEvent} event
- * @param {import('types').SSROptions} options
- * @param {Array<import('types').ServerDataSkippedNode | import('types').ServerDataNode | import('types').ServerErrorNode | null | undefined>} nodes
- * @param {(result: {type: 'chunk' | 'error'; data: any}, done: boolean) => void} next
+ * @param {(result: {has_more: boolean; data: any}, done: boolean) => void} next
  */
 async function _get_data_json(event, options, nodes, next) {
 	let promise_id = 1;
@@ -296,10 +246,10 @@ async function _get_data_json(event, options, nodes, next) {
 
 									next(
 										{
-											type: 'chunk',
+											has_more: count !== 0,
 											data: `{"type":"chunk","id":${id}${data ? `,"data":${data}` : ''}${
 												error ? `,"error":${error}` : ''
-											}${uses ? `,"uses":${uses}` : ''}}\n`
+											}${uses ? `,${uses}` : ''}}\n`
 										},
 										count === 0
 									);
@@ -320,7 +270,7 @@ async function _get_data_json(event, options, nodes, next) {
 			} else {
 				uses_str = stringify_uses(node);
 
-				str = `{"type":"data","data":${devalue.stringify(node.data, revivers)}${uses_str}${
+				str = `{"type":"data","data":${devalue.stringify(node.data, revivers)},${uses_str}${
 					node.slash ? `,"slash":${JSON.stringify(node.slash)}` : ''
 				}}`;
 			}
@@ -328,13 +278,11 @@ async function _get_data_json(event, options, nodes, next) {
 			strings.push(str);
 		}
 
-		next({ type: 'chunk', data: `{"type":"data","nodes":[${strings.join(',')}]}\n` }, count === 0);
-	} catch (e) {
-		const error = await handle_error_and_jsonify(
-			event,
-			options,
-			new Error(clarify_devalue_error(event, /** @type {any} */ (e)))
+		next(
+			{ has_more: count !== 0, data: `{"type":"data","nodes":[${strings.join(',')}]}\n` },
+			count === 0
 		);
-		next({ type: 'error', data: error }, true); // TODO should this be .error(..) ? how does frontend know this failed right away? status is 200
+	} catch (e) {
+		throw new Error(clarify_devalue_error(event, /** @type {any} */ (e)));
 	}
 }

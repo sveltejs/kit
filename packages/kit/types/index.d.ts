@@ -39,10 +39,6 @@ export interface Adapter {
 
 type AwaitedPropertiesUnion<input extends Record<string, any> | void> = input extends void
 	? undefined // needs to be undefined, because void will break intellisense
-	: input extends Deferred<infer Data>
-	? {
-			[key in keyof Data]: Data[key];
-	  }
 	: input extends Record<string, any>
 	? {
 			[key in keyof input]: Awaited<input[key]>;

@@ -147,3 +147,24 @@ export function clarify_devalue_error(event, error) {
 	// belt and braces — this should never happen
 	return error.message;
 }
+
+/**
+ * @param {import('types').ServerDataNodePreSerialization} node
+ */
+export function stringify_uses(node) {
+	const uses = [];
+
+	if (node.uses && node.uses.dependencies.size > 0) {
+		uses.push(`"dependencies":${JSON.stringify(Array.from(node.uses.dependencies))}`);
+	}
+
+	if (node.uses && node.uses.params.size > 0) {
+		uses.push(`"params":${JSON.stringify(Array.from(node.uses.params))}`);
+	}
+
+	if (node.uses?.parent) uses.push(`"parent":1`);
+	if (node.uses?.route) uses.push(`"route":1`);
+	if (node.uses?.url) uses.push(`"url":1`);
+
+	return `"uses":{${uses.join(',')}}`;
+}

@@ -7,9 +7,10 @@ import { serialize_data } from './serialize_data.js';
 import { s } from '../../../utils/misc.js';
 import { Csp } from './csp.js';
 import { uneval_action_response } from './actions.js';
-import { clarify_devalue_error } from '../utils.js';
+import { clarify_devalue_error, stringify_uses } from '../utils.js';
 import { version, public_env } from '../../shared.js';
 import { text } from '../../../exports/index.js';
+import { to_generator } from '../../../utils/generators.js';
 
 // TODO rename this function/module
 
@@ -200,39 +201,13 @@ export async function render_response({
 		return `${resolved_assets}/${path}`;
 	};
 
-	const serialized = { data: '', form: 'null', error: 'null' };
-
-	try {
-		serialized.data = `[${branch
-			.map(({ server_data }) => {
-				if (server_data?.type === 'data') {
-					const data = devalue.uneval(server_data.data);
-
-					const uses = [];
-					if (server_data.uses.dependencies.size > 0) {
-						uses.push(`dependencies:${s(Array.from(server_data.uses.dependencies))}`);
-					}
-
-					if (server_data.uses.params.size > 0) {
-						uses.push(`params:${s(Array.from(server_data.uses.params))}`);
-					}
-
-					if (server_data.uses.parent) uses.push(`parent:1`);
-					if (server_data.uses.route) uses.push(`route:1`);
-					if (server_data.uses.url) uses.push(`url:1`);
-
-					return `{type:"data",data:${data},uses:{${uses.join(',')}}${
-						server_data.slash ? `,slash:${s(server_data.slash)}` : ''
-					}}`;
-				}
-
-				return s(server_data);
-			})
-			.join(',')}]`;
-	} catch (e) {
-		const error = /** @type {any} */ (e);
-		throw new Error(clarify_devalue_error(event, error));
-	}
+	const data_chunks = get_data(
+		event,
+		branch.map((b) => b.server_data)
+	);
+	const { value } = await data_chunks.next();
+	const { data, has_more: needs_streaming } = /** @type {NonNullable<typeof value>} */ (value);
+	const serialized = { data, form: 'null', error: 'null' };
 
 	if (form_value) {
 		serialized.form = uneval_action_response(form_value, /** @type {string} */ (event.route.id));
@@ -316,10 +291,31 @@ export async function render_response({
 			opts.push(`hydrate: {\n\t\t\t\t\t${hydrate.join(',\n\t\t\t\t\t')}\n\t\t\t\t}`);
 		}
 
-		// prettier-ignore
+		const streaming = needs_streaming
+			? `window.$__sveltekit__ = window.$__sveltekit__ || {};
+
+		const deferred = new Map();
+
+		$__sveltekit__.defer = (id) => new Promise((fulfil, reject) => {
+		  deferred.set(id, { fulfil, reject });
+		});
+
+		$__sveltekit__.resolve = ({ id, data, error, uses }) => {
+		  const { fulfil, reject } = deferred.get(id);
+		  deferred.delete(id);
+
+		  if (error) reject(error);
+		  else fulfil(data);
+
+		  if (uses) {
+			// TODO
+		  }
+		};`
+			: '';
+
 		const init_app = `
 			import { start } from ${s(prefixed(entry.file))};
-
+			${streaming}
 			start({
 				${opts.join(',\n\t\t\t\t')}
 			});
@@ -442,8 +438,120 @@ export async function render_response({
 		}
 	}
 
-	return text(transformed, {
-		status,
-		headers
-	});
+	return !needs_streaming
+		? text(transformed, {
+				status,
+				headers
+		  })
+		: new Response(
+				new ReadableStream({
+					async start(controller) {
+						controller.enqueue(transformed);
+						for await (const next of data_chunks) {
+							controller.enqueue(next.data);
+						}
+						controller.close();
+					}
+				}),
+				{
+					headers: {
+						'content-type': 'text/html'
+					}
+				}
+		  );
+}
+
+const get_data = to_generator(_get_data);
+
+/**
+ * The first chunk returns the unevaluated data nodes, potentially with promise placeholders.
+ * Subsequent chunks (if any) return script tags that resolve those promises.
+ * @param {import('types').RequestEvent} event
+ * @param {Array<import('types').ServerDataNode | null>} nodes
+ * @param {(result: {has_more: boolean; data: string}, done: boolean) => void} next
+ */
+async function _get_data(event, nodes, next) {
+	let promise_id = 1;
+	let count = 0;
+	let strings = [];
+
+	try {
+		for (const node of nodes) {
+			let node_count = 0;
+			let uses_str = '';
+
+			const replacer =
+				/** @param {any} thing */
+				(thing) => {
+					if (typeof thing?.then === 'function') {
+						const id = promise_id++;
+						count += 1;
+						node_count += 1;
+
+						thing
+							.then(/** @param {any} data */ (data) => ({ data }))
+							.catch(/** @param {any} error */ (error) => ({ error }))
+							.then(
+								/**
+								 * @param {{data: any; error: any}} result
+								 */
+								async ({ data, error }) => {
+									node_count -= 1;
+									// only send uses when it's the last chunk of the data node
+									// so we can be sure all uses are accounted for
+									const uses =
+										node_count === 0
+											? undefined
+											: stringify_uses(
+													/** @type {import('types').ServerDataNodePreSerialization} */ (node)
+											  ) === uses_str
+											? // No change - no need to send it
+											  undefined
+											: node?.uses;
+
+									count -= 1;
+
+									let str;
+									try {
+										str = devalue.uneval({ id, data, error, uses }, replacer);
+									} catch (e) {
+										error = `new Error(${clarify_devalue_error(event, /** @type {any} */ (e))});`;
+										data = undefined;
+										str = devalue.uneval({ id, data, error, uses }, replacer);
+									}
+
+									next(
+										{
+											has_more: count !== 0,
+											// Needs to be a module script tag or else it's executed before the start script
+											data: `<script type="module">$__sveltekit__.resolve(${str})</script>`
+										},
+										count === 0
+									);
+								}
+							);
+
+						return `$__sveltekit__.defer(${id})`;
+					}
+				};
+
+			let str = '';
+
+			if (!node) {
+				str = 'null';
+			} else {
+				uses_str = stringify_uses(node);
+
+				str = `{"type":"data","data":${devalue.uneval(node.data, replacer)},${uses_str}${
+					node.slash ? `,"slash":${JSON.stringify(node.slash)}` : ''
+				}}`;
+			}
+
+			strings.push(str);
+		}
+
+		next({ has_more: count !== 0, data: `[${strings.join(',')}]` }, count === 0);
+	} catch (e) {
+		throw new Error(clarify_devalue_error(event, /** @type {any} */ (e)));
+	}
 }

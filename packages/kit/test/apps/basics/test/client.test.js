@@ -671,3 +671,59 @@ test.describe('Snapshots', () => {
 		expect(await page.locator('input').inputValue()).toBe('works for reloads');
 	});
 });
+
+test.describe('defer', () => {
+	test('Works for universal load functions (direct hit)', async ({ page }) => {
+		page.goto('/defer/universal');
+
+		await expect(page.locator('p.eager')).toHaveText('eager');
+		expect(page.locator('p.loadingsuccess')).toBeVisible();
+		expect(page.locator('p.loadingfail')).toBeVisible();
+
+		await expect(page.locator('p.success')).toHaveText('success');
+		await expect(page.locator('p.fail')).toHaveText('fail');
+		expect(page.locator('p.loadingsuccess')).toBeHidden();
+		expect(page.locator('p.loadingfail')).toBeHidden();
+	});
+
+	test('Works for universal load functions (client nav)', async ({ page }) => {
+		await page.goto('/defer');
+		page.click('[href="/defer/universal"]');
+
+		await expect(page.locator('p.eager')).toHaveText('eager');
+		expect(page.locator('p.loadingsuccess')).toBeVisible();
+		expect(page.locator('p.loadingfail')).toBeVisible();
+
+		await expect(page.locator('p.success')).toHaveText('success');
+		await expect(page.locator('p.fail')).toHaveText('fail');
+		expect(page.locator('p.loadingsuccess')).toBeHidden();
+		expect(page.locator('p.loadingfail')).toBeHidden();
+	});
+
+	test('Works for server load functions (direkt hit)', async ({ page }) => {
+		page.goto('/defer/server');
+
+		await expect(page.locator('p.eager')).toHaveText('eager');
+		expect(page.locator('p.loadingsuccess')).toBeVisible();
+		expect(page.locator('p.loadingfail')).toBeVisible();
+
+		await expect(page.locator('p.success')).toHaveText('success');
+		await expect(page.locator('p.fail')).toHaveText('fail');
+		expect(page.locator('p.loadingsuccess')).toBeHidden();
+		expect(page.locator('p.loadingfail')).toBeHidden();
+	});
+
+	test('Works for server load functions (client nav)', async ({ page }) => {
+		await page.goto('/defer');
+		page.click('[href="/defer/server"]');
+
+		await expect(page.locator('p.eager')).toHaveText('eager');
+		expect(page.locator('p.loadingsuccess')).toBeVisible();
+		expect(page.locator('p.loadingfail')).toBeVisible();
+
+		await expect(page.locator('p.success')).toHaveText('success');
+		await expect(page.locator('p.fail')).toHaveText('fail');
+		expect(page.locator('p.loadingsuccess')).toBeHidden();
+		expect(page.locator('p.loadingfail')).toBeHidden();
+	});
+});
