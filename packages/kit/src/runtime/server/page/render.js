@@ -116,17 +116,9 @@ export async function render_response({
 		rendered = options.root.render(props);
 
 		for (const { node } of branch) {
-			if (node.imports) {
-				node.imports.forEach((url) => modulepreloads.add(url));
-			}
-
-			if (node.stylesheets) {
-				node.stylesheets.forEach((url) => stylesheets.add(url));
-			}
-
-			if (node.fonts) {
-				node.fonts.forEach((url) => fonts.add(url));
-			}
+			for (const url of node.imports) modulepreloads.add(url);
+			for (const url of node.stylesheets) stylesheets.add(url);
+			for (const url of node.fonts) fonts.add(url);
 
 			if (node.inline_styles) {
 				Object.entries(await node.inline_styles()).forEach(([k, v]) => inline_styles.set(k, v));
@@ -268,6 +260,11 @@ export async function render_response({
 	}
 
 	if (page_config.csr) {
+		head += `
+		<script type="module">
+			${Array.from(modulepreloads, (url) => `import ${s(prefixed(url))};`).join('\n\t\t\t')}
+		</script>`;
+
 		const opts = [
 			`app`,
 			`assets: ${s(assets)}`,
@@ -309,9 +306,6 @@ export async function render_response({
 
 			if (resolve_opts.preload({ type: 'js', path })) {
 				link_header_preloads.add(`<${encodeURI(path)}>; rel="modulepreload"; nopush`);
-				if (state.prerendering) {
-					head += `\n\t\t<link rel="modulepreload" href="${path}">`;
-				}
 			}
 		}
 
