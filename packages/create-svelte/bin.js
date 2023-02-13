@@ -165,7 +165,7 @@ async function main() {
 	}
 
 	console.log('\nInstall community-maintained integrations:');
-	console.log(cyan('  https://github.com/svelte-add/svelte-adders'));
+	console.log(cyan('  https://github.com/svelte-add/svelte-add'));
 
 	console.log('\nNext steps:');
 	let i = 1;
