@@ -1,7 +1,7 @@
 {
 	"scripts": {
-		"check": "svelte-kit sync && svelte-check --tsconfig ./jsconfig.json",
-		"check:watch": "svelte-kit sync && svelte-check --tsconfig ./jsconfig.json --watch"
+		"check": "svelte-kit sync && svelte-check",
+		"check:watch": "svelte-kit sync && svelte-check --watch"
 	},
 	"devDependencies": {
 		"typescript": "^4.9.3",
