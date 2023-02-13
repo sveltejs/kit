@@ -85,6 +85,8 @@ The `types`/`svelte`/`default` keys are [export conditions](https://nodejs.org/a
 - Svelte-aware tooling sees the `svelte` condition and knows this is a Svelte component library
 - other tooling falls back to the `default` export.
 
+> Previous versions of `@sveltejs/package` also added a `package.json` export. This is no longer part of the template because all tooling can now deal with a `package.json` not being explicitly exported.
+
 You can adjust `exports` to your liking and provide more entry points. For example, if instead of a `src/lib/index.js` file that re-exported components you wanted to expose a `src/lib/Foo.svelte` component directly, you could create the following export map...
 
 ```json
