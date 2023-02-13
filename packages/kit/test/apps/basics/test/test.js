@@ -29,7 +29,7 @@ test.describe('Imports', () => {
 			]);
 		} else {
 			expect(sources[0].startsWith('data:image/png;base64,')).toBeTruthy();
-			expect(sources[1]).toBe(`${baseURL}/_app/immutable/assets/large-3183867c.jpg`);
+			expect(sources[1]).toBe(`${baseURL}/_app/immutable/assets/large.3183867c.jpg`);
 		}
 	});
 });
