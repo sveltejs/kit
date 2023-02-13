@@ -608,6 +608,26 @@ test.describe('data-sveltekit attributes', () => {
 		await clicknav('#three');
 		expect(await page.evaluate(() => window.scrollY)).toBe(0);
 	});
+
+	test('data-sveltekit-replacestate', async ({ page, clicknav }) => {
+		await page.goto('/');
+		await page.goto('/data-sveltekit/replacestate');
+		await clicknav('#one');
+		await page.goBack();
+		await expect(page).not.toHaveURL(/replacestate/);
+
+		await page.goto('/');
+		await page.goto('/data-sveltekit/replacestate');
+		await clicknav('#two');
+		await page.goBack();
+		await expect(page).not.toHaveURL(/replacestate/);
+
+		await page.goto('/');
+		await page.goto('/data-sveltekit/replacestate');
+		await clicknav('#three');
+		await page.goBack();
+		await expect(page).toHaveURL(/replacestate$/);
+	});
 });
 
 test.describe('Content negotiation', () => {
