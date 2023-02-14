@@ -240,7 +240,11 @@ function kit({ svelte_config }) {
 							// Ignore all siblings of config.kit.outDir/generated
 							`${posixify(kit.outDir)}/!(generated)`
 						]
-					}
+					},
+					cors: { preflightContinue: true }
+				},
+				preview: {
+					cors: { preflightContinue: true }
 				},
 				optimizeDeps: {
 					exclude: [

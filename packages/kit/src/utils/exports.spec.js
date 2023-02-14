@@ -52,7 +52,7 @@ test('validates +server.js', () => {
 		validate_server_exports({
 			answer: 42
 		});
-	}, /Invalid export 'answer' \(valid exports are GET, POST, PATCH, PUT, DELETE, prerender, trailingSlash, config, or anything with a '_' prefix\)/);
+	}, /Invalid export 'answer' \(valid exports are GET, POST, PATCH, PUT, DELETE, OPTIONS, prerender, trailingSlash, config, or anything with a '_' prefix\)/);
 });
 
 test.run();
