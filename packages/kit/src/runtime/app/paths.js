@@ -1,1 +1,1 @@
-export { base, assets } from '@sveltejs/kit/paths';
+export { base, assets } from '@sveltejs/virtual/paths';

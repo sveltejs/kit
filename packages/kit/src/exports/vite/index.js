@@ -324,7 +324,7 @@ function kit({ svelte_config }) {
 
 		async resolveId(id) {
 			// treat $env/static/[public|private] as virtual
-			if (id.startsWith('$env/') || id === '@sveltejs/kit/paths' || id === '$service-worker') {
+			if (id.startsWith('$env/') || id === '@sveltejs/virtual/paths' || id === '$service-worker') {
 				return `\0${id}`;
 			}
 		},
@@ -364,7 +364,7 @@ function kit({ svelte_config }) {
 					return create_service_worker_module(svelte_config);
 				// for internal use only. it's published as $app/paths externally
 				// we use this alias so that we won't collide with user aliases
-				case '\0@sveltejs/kit/paths':
+				case '\0@sveltejs/virtual/paths':
 					const { assets, base } = svelte_config.kit.paths;
 					return `export const base = ${s(base)};
 export let assets = ${assets ? s(assets) : 'base'};
