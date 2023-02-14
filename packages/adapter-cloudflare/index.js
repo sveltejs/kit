@@ -1,6 +1,6 @@
-import { writeFileSync } from 'fs';
-import { posix } from 'path';
-import { fileURLToPath } from 'url';
+import { writeFileSync } from 'node:fs';
+import { posix } from 'node:path';
+import { fileURLToPath } from 'node:url';
 import * as esbuild from 'esbuild';
 
 /** @type {import('.').default} */
@@ -70,7 +70,14 @@ function get_routes_json(builder, assets) {
 	const exclude = [
 		`/${builder.config.kit.appDir}/*`,
 		...assets
-			.filter((file) => !file.startsWith(`${builder.config.kit.appDir}/`))
+			.filter(
+				(file) =>
+					!(
+						file.startsWith(`${builder.config.kit.appDir}/`) ||
+						file === '_headers' ||
+						file === '_redirects'
+					)
+			)
 			.map((file) => `/${file}`)
 	];
 
