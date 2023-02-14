@@ -1,4 +1,4 @@
-export { set_assets } from '@sveltejs/virtual/paths';
+export { set_assets } from '__sveltekit/paths';
 
 export let building = false;
 export let version = '';

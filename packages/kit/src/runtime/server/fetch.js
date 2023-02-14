@@ -1,6 +1,6 @@
 import * as set_cookie_parser from 'set-cookie-parser';
 import { respond } from './respond.js';
-import * as paths from '@sveltejs/virtual/paths';
+import * as paths from '__sveltekit/paths';
 
 /**
  * @param {{

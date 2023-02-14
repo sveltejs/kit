@@ -27,7 +27,7 @@ import { parse } from './parse.js';
 
 import Root from '__GENERATED__/root.svelte';
 import { nodes, server_loads, dictionary, matchers, hooks } from '__CLIENT__/manifest.js';
-import { base } from '@sveltejs/virtual/paths';
+import { base } from '__sveltekit/paths';
 import { HttpError, Redirect } from '../control.js';
 import { stores } from './singletons.js';
 import { unwrap_promises } from '../../utils/promises.js';
