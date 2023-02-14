@@ -1,5 +1,11 @@
 # create-svelte
 
+## 2.3.4
+
+### Patch Changes
+
+- fix: use new locator API to improve demo test ([#8988](https://github.com/sveltejs/kit/pull/8988))
+
 ## 2.3.3
 
 ### Patch Changes

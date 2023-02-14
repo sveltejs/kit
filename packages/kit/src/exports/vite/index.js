@@ -179,6 +179,9 @@ function kit({ svelte_config }) {
 	/** @type {() => Promise<void>} */
 	let finalise;
 
+	/** @type {import('vite').UserConfig} */
+	let initial_config;
+
 	const service_worker_entry_file = resolve_entry(kit.files.serviceWorker);
 
 	/** @type {import('vite').Plugin} */
@@ -190,6 +193,7 @@ function kit({ svelte_config }) {
 		 * @see https://vitejs.dev/guide/api-plugin.html#config
 		 */
 		async config(config, config_env) {
+			initial_config = config;
 			vite_config_env = config_env;
 			is_build = config_env.command === 'build';
 
@@ -320,7 +324,7 @@ function kit({ svelte_config }) {
 
 		async resolveId(id) {
 			// treat $env/static/[public|private] as virtual
-			if (id.startsWith('$env/') || id === '$internal/paths' || id === '$service-worker') {
+			if (id.startsWith('$env/') || id === '@sveltejs/kit/paths' || id === '$service-worker') {
 				return `\0${id}`;
 			}
 		},
@@ -358,7 +362,9 @@ function kit({ svelte_config }) {
 					);
 				case '\0$service-worker':
 					return create_service_worker_module(svelte_config);
-				case '\0$internal/paths':
+				// for internal use only. it's published as $app/paths externally
+				// we use this alias so that we won't collide with user aliases
+				case '\0@sveltejs/kit/paths':
 					const { assets, base } = svelte_config.kit.paths;
 					return `export const base = ${s(base)};
 export let assets = ${assets ? s(assets) : 'base'};
@@ -636,7 +642,15 @@ export function set_assets(path) {
 						// CLI args
 						mode: vite_config_env.mode,
 						logLevel: vite_config.logLevel,
-						clearScreen: vite_config.clearScreen
+						clearScreen: vite_config.clearScreen,
+						build: {
+							minify: initial_config.build?.minify,
+							assetsInlineLimit: vite_config.build.assetsInlineLimit,
+							sourcemap: vite_config.build.sourcemap
+						},
+						optimizeDeps: {
+							force: vite_config.optimizeDeps.force
+						}
 					})
 				);
 

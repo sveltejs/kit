@@ -1,5 +1,5 @@
 import { DEV } from 'esm-env';
-import { base } from '$internal/paths';
+import { base } from '@sveltejs/kit/paths';
 import { is_endpoint_request, render_endpoint } from './endpoint.js';
 import { render_page } from './page/index.js';
 import { render_response } from './page/render.js';

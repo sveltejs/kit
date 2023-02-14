@@ -1,1 +1,1 @@
-export { base, assets } from '$internal/paths';
+export { base, assets } from '@sveltejs/kit/paths';

@@ -108,6 +108,13 @@ test.describe('Endpoints', () => {
 		});
 	});
 
+	test('invalid request method returns allow header', async ({ request }) => {
+		const response = await request.post('/endpoint-output/body');
+
+		expect(response.status()).toBe(405);
+		expect(response.headers()['allow'].includes('GET'));
+	});
+
 	// TODO all the remaining tests in this section are really only testing
 	// setResponse, since we're not otherwise changing anything on the response.
 	// might be worth making these unit tests instead

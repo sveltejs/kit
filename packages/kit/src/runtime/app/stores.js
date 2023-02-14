@@ -23,7 +23,7 @@ export const getStores = () => {
 export const page = {
 	/** @param {(value: any) => void} fn */
 	subscribe(fn) {
-		const store = getStores().page;
+		const store = __SVELTEKIT_DEV__ ? get_store('page') : getStores().page;
 		return store.subscribe(fn);
 	}
 };
@@ -31,7 +31,7 @@ export const page = {
 /** @type {typeof import('$app/stores').navigating} */
 export const navigating = {
 	subscribe(fn) {
-		const store = getStores().navigating;
+		const store = __SVELTEKIT_DEV__ ? get_store('navigating') : getStores().navigating;
 		return store.subscribe(fn);
 	}
 };
@@ -39,7 +39,7 @@ export const navigating = {
 /** @type {typeof import('$app/stores').updated} */
 export const updated = {
 	subscribe(fn) {
-		const store = getStores().updated;
+		const store = __SVELTEKIT_DEV__ ? get_store('updated') : getStores().updated;
 
 		if (browser) {
 			updated.check = store.check;
@@ -55,3 +55,18 @@ export const updated = {
 		);
 	}
 };
+
+/**
+ * @template {keyof ReturnType<typeof getStores>} Name
+ * @param {Name} name
+ * @returns {ReturnType<typeof getStores>[Name]}
+ */
+function get_store(name) {
+	try {
+		return getStores()[name];
+	} catch (e) {
+		throw new Error(
+			`Cannot subscribe to '${name}' store on the server outside of a Svelte component, as it is bound to the current request via component context. This prevents state from leaking between users.`
+		);
+	}
+}
