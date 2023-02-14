@@ -1,5 +1,6 @@
 {
 	"name": "kit.svelte.dev",
+	"private": true,
 	"version": "0.0.1",
 	"scripts": {
 		"update": "node scripts/check-doc-links.js && node scripts/types",
