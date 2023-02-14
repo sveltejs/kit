@@ -2,4 +2,4 @@
 '@sveltejs/kit': patch
 ---
 
-fix: use non-existent package name for virtual module
+fix: solve `missing "./paths" specifier in "@sveltejs/kit" package` error occurring in all projects
