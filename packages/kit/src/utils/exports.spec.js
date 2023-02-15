@@ -19,7 +19,14 @@ test('validates +layout.server.js, +layout.js, +page.js', () => {
 		validate_common_exports({
 			actions: {}
 		});
-	}, /Invalid export 'actions' \(valid exports are load, prerender, csr, ssr, trailingSlash, config, or anything with a '_' prefix\)/);
+	}, /Invalid export 'actions' \('actions' is available in '\+page\.server\.js'\)/);
+	
+	assert.throws(() => {
+		validate_common_exports({
+			GET: {}
+		});
+	}, /Invalid export 'GET' \('GET' is available in '\+server\.js'\)/);
+
 });
 
 test('validates +page.server.js', () => {
