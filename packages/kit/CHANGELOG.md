@@ -1,5 +1,15 @@
 # @sveltejs/kit
 
+## 1.7.0
+
+### Minor Changes
+
+- feat: richer error message for invalid exports ([#9055](https://github.com/sveltejs/kit/pull/9055))
+
+### Patch Changes
+
+- chore: throw more helpful error when encoding uri fails during prerendering ([#9053](https://github.com/sveltejs/kit/pull/9053))
+
 ## 1.6.0
 
 ### Minor Changes
