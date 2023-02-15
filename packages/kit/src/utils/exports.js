@@ -15,7 +15,7 @@ function validator(expected) {
 			if (key[0] === '_' || set.has(key)) continue; // key is valid in this module
 
 			const hint =
-				hint_for_supported_files(key, file?.slice(file.lastIndexOf('.'))) ||
+				hint_for_supported_files(key, file?.slice(file.lastIndexOf('.'))) ??
 				`valid exports are ${expected.join(', ')}, or anything with a '_' prefix`;
 
 			throw new Error(`Invalid export '${key}'${file ? ` in ${file}` : ''} (${hint})`);
@@ -28,7 +28,7 @@ function validator(expected) {
 /**
  * @param {string} key
  * @param {string} ext
- * @returns {string | undefined} undefined, if no supported file is found
+ * @returns {string | void}
  */
 function hint_for_supported_files(key, ext = '.js') {
 	let supported_files = [];
@@ -48,8 +48,6 @@ function hint_for_supported_files(key, ext = '.js') {
 	if (supported_files.length > 0) {
 		return `'${key}' is a valid export in ${supported_files.join(` or `)}`;
 	}
-
-	return undefined;
 }
 
 const valid_common_exports = ['load', 'prerender', 'csr', 'ssr', 'trailingSlash', 'config'];
