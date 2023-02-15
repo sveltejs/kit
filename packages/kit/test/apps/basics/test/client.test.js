@@ -673,68 +673,57 @@ test.describe('Snapshots', () => {
 });
 
 test.describe('defer', () => {
-	/**
-	 * @param {import('@playwright/test').Page} page
-	 * @param {string} str
-	 */
-	function locator(page, str) {
-		return page.locator(str, {
-			// @ts-expect-error don't wait for the started event as streaming happens before that
-			wait_for_started: false
-		});
-	}
-
 	test('Works for universal load functions (direct hit)', async ({ page }) => {
-		page.goto('/defer/universal');
+		await page.goto('/defer/universal');
 
-		await expect(locator(page, 'p.eager')).toHaveText('eager', {});
-		expect(locator(page, 'p.loadingsuccess')).toBeVisible();
-		expect(locator(page, 'p.loadingfail')).toBeVisible();
+		await expect(page.locator('p.eager')).toHaveText('eager');
+		expect(page.locator('p.loadingsuccess')).toBeVisible();
+		expect(page.locator('p.loadingfail')).toBeVisible();
 
-		await expect(locator(page, 'p.success')).toHaveText('success');
-		await expect(locator(page, 'p.fail')).toHaveText('fail');
-		expect(locator(page, 'p.loadingsuccess')).toBeHidden();
-		expect(locator(page, 'p.loadingfail')).toBeHidden();
+		await expect(page.locator('p.success')).toHaveText('success');
+		await expect(page.locator('p.fail')).toHaveText('fail');
+		expect(page.locator('p.loadingsuccess')).toBeHidden();
+		expect(page.locator('p.loadingfail')).toBeHidden();
 	});
 
 	test('Works for universal load functions (client nav)', async ({ page }) => {
 		await page.goto('/defer');
 		page.click('[href="/defer/universal"]');
 
-		await expect(locator(page, 'p.eager')).toHaveText('eager');
-		expect(locator(page, 'p.loadingsuccess')).toBeVisible();
-		expect(locator(page, 'p.loadingfail')).toBeVisible();
+		await expect(page.locator('p.eager')).toHaveText('eager');
+		expect(page.locator('p.loadingsuccess')).toBeVisible();
+		expect(page.locator('p.loadingfail')).toBeVisible();
 
-		await expect(locator(page, 'p.success')).toHaveText('success');
-		await expect(locator(page, 'p.fail')).toHaveText('fail');
-		expect(locator(page, 'p.loadingsuccess')).toBeHidden();
-		expect(locator(page, 'p.loadingfail')).toBeHidden();
+		await expect(page.locator('p.success')).toHaveText('success');
+		await expect(page.locator('p.fail')).toHaveText('fail');
+		expect(page.locator('p.loadingsuccess')).toBeHidden();
+		expect(page.locator('p.loadingfail')).toBeHidden();
 	});
 
 	test('Works for server load functions (direkt hit)', async ({ page }) => {
-		page.goto('/defer/server');
+		await page.goto('/defer/server');
 
-		await expect(locator(page, 'p.eager')).toHaveText('eager');
-		expect(locator(page, 'p.loadingsuccess')).toBeVisible();
-		expect(locator(page, 'p.loadingfail')).toBeVisible();
+		await expect(page.locator('p.eager')).toHaveText('eager');
+		expect(page.locator('p.loadingsuccess')).toBeVisible();
+		expect(page.locator('p.loadingfail')).toBeVisible();
 
-		await expect(locator(page, 'p.success')).toHaveText('success');
-		await expect(locator(page, 'p.fail')).toHaveText('fail');
-		expect(locator(page, 'p.loadingsuccess')).toBeHidden();
-		expect(locator(page, 'p.loadingfail')).toBeHidden();
+		await expect(page.locator('p.success')).toHaveText('success');
+		await expect(page.locator('p.fail')).toHaveText('fail');
+		expect(page.locator('p.loadingsuccess')).toBeHidden();
+		expect(page.locator('p.loadingfail')).toBeHidden();
 	});
 
 	test('Works for server load functions (client nav)', async ({ page }) => {
 		await page.goto('/defer');
 		page.click('[href="/defer/server"]');
 
-		await expect(locator(page, 'p.eager')).toHaveText('eager');
-		expect(locator(page, 'p.loadingsuccess')).toBeVisible();
-		expect(locator(page, 'p.loadingfail')).toBeVisible();
+		await expect(page.locator('p.eager')).toHaveText('eager');
+		expect(page.locator('p.loadingsuccess')).toBeVisible();
+		expect(page.locator('p.loadingfail')).toBeVisible();
 
-		await expect(locator(page, 'p.success')).toHaveText('success');
-		await expect(locator(page, 'p.fail')).toHaveText('fail');
-		expect(locator(page, 'p.loadingsuccess')).toBeHidden();
-		expect(locator(page, 'p.loadingfail')).toBeHidden();
+		await expect(page.locator('p.success')).toHaveText('success');
+		await expect(page.locator('p.fail')).toHaveText('fail');
+		expect(page.locator('p.loadingsuccess')).toBeHidden();
+		expect(page.locator('p.loadingfail')).toBeHidden();
 	});
 });
