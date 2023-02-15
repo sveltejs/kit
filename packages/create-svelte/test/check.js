@@ -21,6 +21,7 @@ const overrides = { ...existing_workspace_overrides };
 	await glob(fileURLToPath(new URL('../../../packages', import.meta.url)) + '/*/package.json')
 ).forEach((pkgPath) => {
 	const name = JSON.parse(fs.readFileSync(pkgPath, 'utf-8')).name;
+	// use `file:` protocol for opting into stricter resolve logic which catches more bugs
 	overrides[name] = `file:${path.dirname(path.resolve(pkgPath))}`;
 });
 
