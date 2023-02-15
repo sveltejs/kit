@@ -25,13 +25,13 @@ test('validates +layout.server.js, +layout.js, +page.js', () => {
 		validate_common_exports({
 			actions: {}
 		});
-	}, /Invalid export 'actions' \('actions' is available in '\+page\.server\.js'\)/);
+	}, /Invalid export 'actions' \('actions' is a valid export in '\+page\.server\.js'\)/);
 
 	assert.throws(() => {
 		validate_common_exports({
 			GET: {}
 		});
-	}, /Invalid export 'GET' \('GET' is available in '\+server\.js'\)/);
+	}, /Invalid export 'GET' \('GET' is a valid export in '\+server\.js'\)/);
 });
 
 test('validates +page.server.js', () => {
@@ -49,6 +49,12 @@ test('validates +page.server.js', () => {
 			answer: 42
 		});
 	}, /Invalid export 'answer' \(valid exports are load, prerender, csr, ssr, actions, trailingSlash, config, or anything with a '_' prefix\)/);
+
+	assert.throws(() => {
+		validate_page_server_exports({
+			POST: {}
+		});
+	}, /Invalid export 'POST' \('POST' is a valid export in '\+server\.js'\)/);
 });
 
 test('validates +server.js', () => {
@@ -65,6 +71,12 @@ test('validates +server.js', () => {
 			answer: 42
 		});
 	}, /Invalid export 'answer' \(valid exports are GET, POST, PATCH, PUT, DELETE, OPTIONS, prerender, trailingSlash, config, or anything with a '_' prefix\)/);
+
+	assert.throws(() => {
+		validate_server_exports({
+			csr: false
+		});
+	}, /Invalid export 'csr' \('csr' is a valid export in '\+page\.js' or '\+page\.server\.js'\)/);
 });
 
 test.run();
