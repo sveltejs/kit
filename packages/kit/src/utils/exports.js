@@ -6,19 +6,19 @@ function validator(expected) {
 
 	/**
 	 * @param {any} module
-	 * @param {string} [route_id]
+	 * @param {string} [file]
 	 */
-	function validate(module, route_id) {
+	function validate(module, file) {
 		if (!module) return;
 
 		for (const key in module) {
 			if (key[0] === '_' || set.has(key)) continue; // key is valid in this module
 
 			const hint =
-				hint_for_supported_files(key) ||
+				hint_for_supported_files(key, file?.slice(file.lastIndexOf('.'))) ||
 				`valid exports are ${expected.join(', ')}, or anything with a '_' prefix`;
 
-			throw new Error(`Invalid export '${key}'${route_id ? ` in ${route_id}` : ''} (${hint})`);
+			throw new Error(`Invalid export '${key}'${file ? ` in ${file}` : ''} (${hint})`);
 		}
 	}
 
@@ -27,25 +27,26 @@ function validator(expected) {
 
 /**
  * @param {string} key
+ * @param {string} ext
  * @returns {string | undefined} undefined, if no supported file is found
  */
-function hint_for_supported_files(key) {
+function hint_for_supported_files(key, ext = '.js') {
 	let supported_files = [];
 
 	if (valid_common_exports.includes(key)) {
-		supported_files.push('+page.js');
+		supported_files.push(`+page${ext}`);
 	}
 
 	if (valid_page_server_exports.includes(key)) {
-		supported_files.push('+page.server.js');
+		supported_files.push(`+page.server${ext}`);
 	}
 
 	if (valid_server_exports.includes(key)) {
-		supported_files.push('+server.js');
+		supported_files.push(`+server${ext}`);
 	}
 
 	if (supported_files.length > 0) {
-		return `'${key}' is a valid export in '${supported_files.join(`' or '`)}'`;
+		return `'${key}' is a valid export in ${supported_files.join(` or `)}`;
 	}
 
 	return undefined;
