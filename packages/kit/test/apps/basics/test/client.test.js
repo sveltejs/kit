@@ -674,9 +674,16 @@ test.describe('Snapshots', () => {
 
 test.describe('defer', () => {
 	test('Works for universal load functions (direct hit)', async ({ page }) => {
-		await page.goto('/defer/universal', { wait_for_started: false });
+		page.goto('/defer/universal');
 
-		await expect(page.locator('p.eager')).toHaveText('eager');
+		// Write first assertion like this to control the retry interval. Else it might happen that
+		// the test fails because the next retry is too late (probably uses a back-off strategy)
+		await expect(async () => {
+			expect(await page.locator('p.eager').textContent()).toBe('eager');
+		}).toPass({
+			intervals: [100]
+		});
+
 		expect(page.locator('p.loadingsuccess')).toBeVisible();
 		expect(page.locator('p.loadingfail')).toBeVisible();
 
@@ -703,7 +710,14 @@ test.describe('defer', () => {
 	test('Works for server load functions (direkt hit)', async ({ page }) => {
 		await page.goto('/defer/server', { wait_for_started: false });
 
-		await expect(page.locator('p.eager')).toHaveText('eager');
+		// Write first assertion like this to control the retry interval. Else it might happen that
+		// the test fails because the next retry is too late (probably uses a back-off strategy)
+		await expect(async () => {
+			expect(await page.locator('p.eager').textContent()).toBe('eager');
+		}).toPass({
+			intervals: [100]
+		});
+
 		expect(page.locator('p.loadingsuccess')).toBeVisible();
 		expect(page.locator('p.loadingfail')).toBeVisible();
 
