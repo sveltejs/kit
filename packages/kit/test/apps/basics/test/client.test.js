@@ -674,7 +674,7 @@ test.describe('Snapshots', () => {
 
 test.describe('defer', () => {
 	test('Works for universal load functions (direct hit)', async ({ page }) => {
-		await page.goto('/defer/universal');
+		await page.goto('/defer/universal', { wait_for_started: false });
 
 		await expect(page.locator('p.eager')).toHaveText('eager');
 		expect(page.locator('p.loadingsuccess')).toBeVisible();
@@ -701,7 +701,7 @@ test.describe('defer', () => {
 	});
 
 	test('Works for server load functions (direkt hit)', async ({ page }) => {
-		await page.goto('/defer/server');
+		await page.goto('/defer/server', { wait_for_started: false });
 
 		await expect(page.locator('p.eager')).toHaveText('eager');
 		expect(page.locator('p.loadingsuccess')).toBeVisible();
