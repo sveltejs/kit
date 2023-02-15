@@ -81,9 +81,9 @@ import { Something } from 'your-library';
 ```
 
 The `types`/`svelte`/`default` keys are [export conditions](https://nodejs.org/api/packages.html#conditional-exports). They tell tooling what file to import when they look up the `your-library` import:
-- TypeScript sees the `types` condition and looks up the type definition file
-- Svelte-aware tooling sees the `svelte` condition and knows this is a Svelte component library
-- other tooling falls back to the `default` export.
+- TypeScript sees the `types` condition and looks up the type definition file. If you don't publish type definitions, omit this condition.
+- Svelte-aware tooling sees the `svelte` condition and knows this is a Svelte component library. If you publish a library that does not export any Svelte components and that could also work in non-Svelte projects (for example a Svelte store library), you can omit this condition.
+- other tooling falls back to the `default` export. If you publish a library containing Svelte components and you don't provide a precompiled version (i.e. a JavaScript bundle) of them, you can omit this condition (though misconfigured projects might fail then).
 
 > Previous versions of `@sveltejs/package` also added a `package.json` export. This is no longer part of the template because all tooling can now deal with a `package.json` not being explicitly exported.
 
@@ -131,6 +131,33 @@ This is a legacy field that enabled tooling to recognise Svelte component librar
 You should avoid using [SvelteKit-specific modules](modules) like `$app` in your packages unless you intend for them to only be consumable by other SvelteKit projects. E.g. rather than using `import { browser } from '$app/environment'` you could use `import { BROWSER } from 'esm-env'` ([see esm-env docs](https://github.com/benmccann/esm-env)). You may also wish to pass in things like the current URL or a navigation action as a prop rather than relying directly on `$app/stores`, `$app/navigation`, etc. Writing your app in this more generic fashion will also make it easier to setup tools for testing, UI demos and so on.
 
 Ensure that you add [aliases](/docs/configuration#alias) via `svelte.config.js` (not `vite.config.js` or `tsconfig.json`), so that they are processed by `svelte-package`.
+
+You should think carefully about whether or not the changes you make to your package are a bug fix, a new feature, or a breaking change, and update the package version accordingly. Note that if you remove any paths from `exports` or any `export` conditions inside them from your existing library, that should be regarded as a breaking change.
+
+```diff
+{
+	"exports": {
+		".": {
+			"types": "./dist/index.d.ts",
+			"svelte": "./dist/index.js",
+// removing this is a breaking change:
+-			"default": "./dist/index.js"
+		},
+// removing this is a breaking change:
+-		"./foo": {
+-			"types": "./dist/foo.d.ts",
+-			"svelte": "./dist/foo.js",
+-			"default": "./dist/foo.js"
+-		},
+// adding this is ok:
++		"./bar": {
++			"types": "./dist/bar.d.ts",
++			"svelte": "./dist/bar.js",
++			"default": "./dist/bar.js"
++		}
+	}
+}
+```
 
 ## Options
 
