@@ -1,4 +1,3 @@
-import * as devalue from 'devalue';
 import { json, text } from '../../exports/index.js';
 import { coalesce_to_error } from '../../utils/error.js';
 import { negotiate } from '../../utils/http.js';
