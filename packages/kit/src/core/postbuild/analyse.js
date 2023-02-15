@@ -106,8 +106,8 @@ async function analyse({ manifest_path, env }) {
 
 			for (const layout of layouts) {
 				if (layout) {
-					validate_common_exports(layout.server, route.id);
-					validate_common_exports(layout.universal, route.id);
+					validate_common_exports(layout.server, layout.server_id);
+					validate_common_exports(layout.universal, layout.universal_id);
 				}
 			}
 
@@ -115,8 +115,8 @@ async function analyse({ manifest_path, env }) {
 				methods.add('GET');
 				if (page.server?.actions) methods.add('POST');
 
-				validate_page_server_exports(page.server, route.id);
-				validate_common_exports(page.universal, route.id);
+				validate_page_server_exports(page.server, page.server_id);
+				validate_common_exports(page.universal, page.universal_id);
 			}
 
 			const should_prerender = get_option(nodes, 'prerender');
