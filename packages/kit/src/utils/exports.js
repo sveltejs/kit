@@ -34,26 +34,26 @@ function validator(expected) {
 	return validate;
 }
 
-const valid_common_exports = ['trailingSlash', 'config', 'prerender', 'csr', 'ssr', 'load'];
+const valid_common_exports = ['load', 'prerender', 'csr', 'ssr', 'trailingSlash', 'config'];
 const valid_page_server_exports = [
-	'trailingSlash',
-	'config',
+	'load',
 	'prerender',
 	'csr',
 	'ssr',
-	'load',
-	'actions'
+	'actions',
+	'trailingSlash',
+	'config'
 ];
 const valid_server_exports = [
-	'trailingSlash',
-	'config',
-	'prerender',
 	'GET',
 	'POST',
 	'PATCH',
 	'PUT',
 	'DELETE',
-	'OPTIONS'
+	'OPTIONS',
+	'prerender',
+	'trailingSlash',
+	'config'
 ];
 
 export const validate_common_exports = validator(valid_common_exports);
