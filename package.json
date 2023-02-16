@@ -12,7 +12,8 @@
 		"lint": "pnpm -r lint",
 		"format": "pnpm -r format",
 		"precommit": "pnpm format && pnpm lint",
-		"release": "changeset publish"
+		"release": "changeset publish",
+		"start": "cd sites/kit.svelte.dev && npm run dev"
 	},
 	"repository": {
 		"type": "git",
