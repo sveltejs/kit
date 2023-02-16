@@ -172,6 +172,9 @@ export async function render_response({
 		// if an asset path is specified, use it
 		resolved_assets = assets;
 
+		// normally, `$env/dynamic/private` resolves to /_app/env.js which is dynamically generated,
+		// but if `assets` is specified, we don't have the ability to generate the module dynamically.
+		// instead, we populate `env` when the page is rendered
 		head += `<script>window.__sveltekit_${options.version_hash}={env:${s(public_env)}}</script>`;
 	} else if (state.prerendering?.fallback) {
 		// if we're creating a fallback page, asset paths need to be root-relative
