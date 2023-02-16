@@ -274,7 +274,7 @@ importers:
       devalue: ^4.2.3
       esm-env: ^1.0.0
       kleur: ^4.1.5
-      magic-string: ^0.27.0
+      magic-string: ^0.29.0
       marked: ^4.2.3
       mime: ^3.0.0
       rollup: ^3.7.0
@@ -285,7 +285,7 @@ importers:
       svelte-preprocess: ^5.0.0
       tiny-glob: ^0.2.9
       typescript: ^4.9.4
-      undici: 5.18.0
+      undici: 5.19.1
       uvu: ^0.5.6
       vite: ^4.0.4
     dependencies:
@@ -295,13 +295,13 @@ importers:
       devalue: 4.2.3
       esm-env: 1.0.0
       kleur: 4.1.5
-      magic-string: 0.27.0
+      magic-string: 0.29.0
       mime: 3.0.0
       sade: 1.8.1
       set-cookie-parser: 2.5.1
       sirv: 2.0.2
       tiny-glob: 0.2.9
-      undici: 5.18.0
+      undici: 5.19.1
     devDependencies:
       '@playwright/test': 1.29.2
       '@types/connect': 3.4.35
@@ -658,7 +658,7 @@ importers:
     specifiers:
       '@types/prompts': ^2.4.1
       kleur: ^4.1.5
-      magic-string: ^0.27.0
+      magic-string: ^0.29.0
       prettier: ^2.8.0
       prompts: ^2.4.2
       tiny-glob: ^0.2.9
@@ -666,7 +666,7 @@ importers:
       uvu: ^0.5.6
     dependencies:
       kleur: 4.1.5
-      magic-string: 0.27.0
+      magic-string: 0.29.0
       prompts: 2.4.2
       tiny-glob: 0.2.9
       typescript: 4.9.4
@@ -709,7 +709,7 @@ importers:
       d3-geo: ^3.0.1
       d3-geo-projection: ^4.0.0
       flexsearch: ^0.7.31
-      magic-string: ^0.27.0
+      magic-string: ^0.29.0
       marked: ^4.2.3
       prism-svelte: ^0.5.0
       prismjs: ^1.29.0
@@ -733,7 +733,7 @@ importers:
       '@types/d3-geo': 3.0.2
       '@types/node': 16.18.6
       flexsearch: 0.7.31
-      magic-string: 0.27.0
+      magic-string: 0.29.0
       marked: 4.2.3
       prism-svelte: 0.5.0
       prismjs: 1.29.0
@@ -3335,6 +3335,12 @@ packages:
     dependencies:
       '@jridgewell/sourcemap-codec': 1.4.14
 
+  /magic-string/0.29.0:
+    resolution: {integrity: sha512-WcfidHrDjMY+eLjlU+8OvwREqHwpgCeKVBUpQ3OhYYuvfaYCUgcbuBzappNzZvg/v8onU3oQj+BYpkOJe9Iw4Q==}
+    engines: {node: '>=12'}
+    dependencies:
+      '@jridgewell/sourcemap-codec': 1.4.14
+
   /make-dir/3.1.0:
     resolution: {integrity: sha512-g3FeP20LNwhALb/6Cz6Dd4F2ngze0jz7tbzrD2wAV+o9FeNHe4rL+yK2md0J/fiSf1sa1ADhXqi5+oVwOM/eGw==}
     engines: {node: '>=8'}
@@ -4842,8 +4848,8 @@ packages:
       which-boxed-primitive: 1.0.2
     dev: true
 
-  /undici/5.18.0:
-    resolution: {integrity: sha512-1iVwbhonhFytNdg0P4PqyIAXbdlVZVebtPDvuM36m66mRw4OGrCm2MYynJv/UENFLdP13J1nPVQzVE2zTs1OeA==}
+  /undici/5.19.1:
+    resolution: {integrity: sha512-YiZ61LPIgY73E7syxCDxxa3LV2yl3sN8spnIuTct60boiiRaE1J8mNWHO8Im2Zi/sFrPusjLlmRPrsyraSqX6A==}
     engines: {node: '>=12.18'}
     dependencies:
       busboy: 1.6.0
