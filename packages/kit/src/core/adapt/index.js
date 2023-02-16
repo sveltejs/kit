@@ -7,9 +7,18 @@ import { create_builder } from './builder.js';
  * @param {import('types').ServerMetadata} server_metadata
  * @param {import('types').Prerendered} prerendered
  * @param {import('types').PrerenderMap} prerender_map
+ * @param {import('types').Env} env
  * @param {import('types').Logger} log
  */
-export async function adapt(config, build_data, server_metadata, prerendered, prerender_map, log) {
+export async function adapt(
+	config,
+	build_data,
+	server_metadata,
+	prerendered,
+	prerender_map,
+	env,
+	log
+) {
 	const { name, adapt } = config.kit.adapter;
 
 	console.log(colors.bold().cyan(`\n> Using ${name}`));
@@ -21,6 +30,7 @@ export async function adapt(config, build_data, server_metadata, prerendered, pr
 		route_data: build_data.manifest_data.routes.filter((route) => route.page || route.endpoint),
 		prerendered,
 		prerender_map,
+		env,
 		log
 	});
 	await adapt(builder);

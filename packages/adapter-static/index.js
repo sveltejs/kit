@@ -62,6 +62,7 @@ See https://kit.svelte.dev/docs/page-options#prerender for more details`
 
 			builder.writeClient(assets);
 			builder.writePrerendered(pages);
+			builder.generatePublicEnv(assets);
 
 			if (fallback) {
 				await builder.generateFallback(path.join(pages, fallback));

@@ -95,6 +95,11 @@ export interface ClientHooks {
 	handleError: HandleClientError;
 }
 
+export interface Env {
+	private: Record<string, string>;
+	public: Record<string, string>;
+}
+
 export class InternalServer extends Server {
 	init(options: ServerInitOptions): Promise<void>;
 	respond(

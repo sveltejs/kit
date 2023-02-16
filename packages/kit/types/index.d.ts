@@ -109,6 +109,12 @@ export interface Builder {
 	generateManifest(opts: { relativePath: string; routes?: RouteDefinition[] }): string;
 
 	/**
+	 * Generate a static `_app/env` module that corresponds to `$env/dynamic/public` in cases
+	 * such as `adapter-static` where there is no server to generate it dynamically
+	 */
+	generatePublicEnv(dest: string): void;
+
+	/**
 	 * Resolve a path to the `name` directory inside `outDir`, e.g. `/path/to/.svelte-kit/my-adapter`.
 	 * @param name path to the file, relative to the build directory
 	 */

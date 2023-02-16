@@ -21,6 +21,7 @@ const pipe = promisify(pipeline);
  *   route_data: import('types').RouteData[];
  *   prerendered: import('types').Prerendered;
  *   prerender_map: import('types').PrerenderMap;
+ *   env: import('types').Env;
  *   log: import('types').Logger;
  * }} opts
  * @returns {import('types').Builder}
@@ -32,6 +33,7 @@ export function create_builder({
 	route_data,
 	prerendered,
 	prerender_map,
+	env,
 	log
 }) {
 	/** @type {Map<import('types').RouteDefinition, import('types').RouteData>} */
@@ -162,6 +164,13 @@ export function create_builder({
 					? subset.map((route) => /** @type {import('types').RouteData} */ (lookup.get(route)))
 					: route_data
 			});
+		},
+
+		generatePublicEnv: (dest) => {
+			write(
+				`${dest}/${config.kit.appDir}/env.js`,
+				`export const env = ${JSON.stringify(env.public)};`
+			);
 		},
 
 		getBuildDirectory(name) {
