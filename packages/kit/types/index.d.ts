@@ -304,6 +304,8 @@ export interface KitConfig {
 	 * > When `mode` is `'auto'`, SvelteKit will use nonces for dynamically rendered pages and hashes for prerendered pages. Using nonces with prerendered pages is insecure and therefore forbidden.
 	 *
 	 * > Note that most [Svelte transitions](https://svelte.dev/tutorial/transition) work by creating an inline `<style>` element. If you use these in your app, you must either leave the `style-src` directive unspecified or add `unsafe-inline`.
+	 *
+	 * If this level of configuration is insufficient and you have more dynamic requirements, you can use the [`handle` hook](https://kit.svelte.dev/docs/hooks#server-hooks-handle) to roll your own CSP.
 	 */
 	csp?: {
 		/**
@@ -542,8 +544,7 @@ export interface KitConfig {
 	 */
 	version?: {
 		/**
-		 * The current app version string.
-		 * @default Date.now().toString()
+		 * The current app version string. If specified, this must be deterministic (e.g. a commit ref rather than `Math.random()` or Date.now().toString()`), otherwise defaults to a timestamp of the build
 		 */
 		name?: string;
 		/**
@@ -1126,7 +1127,7 @@ export type ActionResult<
  * Creates an `HttpError` object with an HTTP status code and an optional message.
  * This object, if thrown during request handling, will cause SvelteKit to
  * return an error response without invoking `handleError`.
- * Make sure you're not catching the thrown error, which results in a noop.
+ * Make sure you're not catching the thrown error, which would prevent SvelteKit from handling it.
  * @param status The [HTTP status code](https://developer.mozilla.org/en-US/docs/Web/HTTP/Status#client_error_responses). Must be in the range 400-599.
  * @param body An object that conforms to the App.Error type. If a string is passed, it will be used as the message property.
  */
@@ -1149,7 +1150,7 @@ export interface HttpError {
 
 /**
  * Create a `Redirect` object. If thrown during request handling, SvelteKit will return a redirect response.
- * Make sure you're not catching the thrown redirect, which results in a noop.
+ * Make sure you're not catching the thrown redirect, which would prevent SvelteKit from handling it.
  * @param status The [HTTP status code](https://developer.mozilla.org/en-US/docs/Web/HTTP/Status#redirection_messages). Must be in the range 300-308.
  * @param location The location to redirect to.
  */

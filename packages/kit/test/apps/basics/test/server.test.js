@@ -108,6 +108,13 @@ test.describe('Endpoints', () => {
 		});
 	});
 
+	test('invalid request method returns allow header', async ({ request }) => {
+		const response = await request.post('/endpoint-output/body');
+
+		expect(response.status()).toBe(405);
+		expect(response.headers()['allow'].includes('GET'));
+	});
+
 	// TODO all the remaining tests in this section are really only testing
 	// setResponse, since we're not otherwise changing anything on the response.
 	// might be worth making these unit tests instead
@@ -155,6 +162,17 @@ test.describe('Endpoints', () => {
 		const digest = createHash('sha256').update(data).digest('base64url');
 		const response = await request.put('/endpoint-input/sha256', { data });
 		expect(await response.text()).toEqual(digest);
+	});
+
+	test('OPTIONS handler', async ({ request }) => {
+		const url = '/endpoint-output/options';
+
+		var response = await request.fetch(url, {
+			method: 'OPTIONS'
+		});
+
+		expect(response.status()).toBe(200);
+		expect(await response.text()).toBe('ok');
 	});
 });
 

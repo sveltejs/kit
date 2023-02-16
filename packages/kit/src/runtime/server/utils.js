@@ -41,7 +41,7 @@ export function method_not_allowed(mod, method) {
 export function allowed_methods(mod) {
 	const allowed = [];
 
-	for (const method in ['GET', 'POST', 'PUT', 'PATCH', 'DELETE']) {
+	for (const method in ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS']) {
 		if (method in mod) allowed.push(method);
 	}
 

@@ -1,5 +1,65 @@
 # @sveltejs/kit
 
+## 1.6.0
+
+### Minor Changes
+
+- feat: add `OPTIONS` server method ([#8731](https://github.com/sveltejs/kit/pull/8731))
+
+### Patch Changes
+
+- fix: solve `missing "./paths" specifier in "@sveltejs/kit" package` error occurring in all projects ([#9050](https://github.com/sveltejs/kit/pull/9050))
+
+## 1.5.7
+
+### Patch Changes
+
+- fix: use internal alias that won't collide with user aliases ([#9022](https://github.com/sveltejs/kit/pull/9022))
+
+## 1.5.6
+
+### Patch Changes
+
+- fix: ssr defaults preventing minification for client build ([#9012](https://github.com/sveltejs/kit/pull/9012))
+
+- fix: client-side trailing slash redirect when preloading data ([#8982](https://github.com/sveltejs/kit/pull/8982))
+
+## 1.5.5
+
+### Patch Changes
+
+- fix: warn after failed data preloads in dev ([#8985](https://github.com/sveltejs/kit/pull/8985))
+
+## 1.5.4
+
+### Patch Changes
+
+- fix: support all relevant vite cli flags ([#8977](https://github.com/sveltejs/kit/pull/8977))
+
+## 1.5.3
+
+### Patch Changes
+
+- docs: clarify that `version.name` should be deterministic ([#8956](https://github.com/sveltejs/kit/pull/8956))
+
+- fix: correctly include exported http methods in allow header ([#8968](https://github.com/sveltejs/kit/pull/8968))
+
+- chore: polyfill File from node:buffer ([#8925](https://github.com/sveltejs/kit/pull/8925))
+
+- fix: provide helpful error/warning when calling `fetch` during render ([#8551](https://github.com/sveltejs/kit/pull/8551))
+
+- fix: print useful error when subscribing to SvelteKit's stores at the wrong time during SSR ([#8960](https://github.com/sveltejs/kit/pull/8960))
+
+- fix: ignore external links when automatically preloading ([#8961](https://github.com/sveltejs/kit/pull/8961))
+
+- chore: refactor fallback generation ([#8972](https://github.com/sveltejs/kit/pull/8972))
+
+## 1.5.2
+
+### Patch Changes
+
+- fix: always default `paths.assets` to `paths.base` ([#8928](https://github.com/sveltejs/kit/pull/8928))
+
 ## 1.5.1
 
 ### Patch Changes
