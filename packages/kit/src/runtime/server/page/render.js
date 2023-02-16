@@ -260,13 +260,8 @@ export async function render_response({
 	}
 
 	if (page_config.csr) {
-		head += `
-		<script type="module">
-			${Array.from(modulepreloads, (url) => `import ${s(prefixed(url))};`).join('\n\t\t\t')}
-		</script>`;
-
 		const opts = [
-			`app`,
+			`app: import(${s(prefixed(client.app.file))})`,
 			`assets: ${s(assets)}`,
 			`target: document.querySelector('[data-sveltekit-hydrate="${target}"]').parentNode`,
 			`version: ${s(version)}`
@@ -294,19 +289,37 @@ export async function render_response({
 		// prettier-ignore
 		const init_app = `
 			import { start } from ${s(prefixed(client.start.file))};
-			import * as app from ${s(prefixed(client.app.file))};
 
 			start({
 				${opts.join(',\n\t\t\t\t')}
 			});
 		`;
 
-		for (const dep of modulepreloads) {
-			const path = prefixed(dep);
+		const filtered_modulepreloads = Array.from(modulepreloads, dep => prefixed(dep)).filter(path => resolve_opts.preload({ type: 'js', path }));
 
-			if (resolve_opts.preload({ type: 'js', path })) {
-				link_header_preloads.add(`<${encodeURI(path)}>; rel="modulepreload"; nopush`);
+		for (const path of filtered_modulepreloads) {
+			link_header_preloads.add(`<${encodeURI(path)}>; rel="modulepreload"; nopush`);
+			if (state.prerendering) {
+				head += `\n\t\t<link rel="modulepreload" href="${path}">`;
 			}
+		}
+
+		if (filtered_modulepreloads.length > 0) {
+			head += `
+		<script>
+			const { relList } = document.createElement('link');
+			if (!relList?.supports('modulepreload')) {
+				for (const src of ${s(filtered_modulepreloads)}) {
+					const link = document.createElement('link');
+					link.rel = 'preload';
+					link.as = 'script';
+					link.href = src;
+					link.crossOrigin = 'anonymous';
+					document.head.appendChild(link);
+				}
+			}
+		</script>
+		`;
 		}
 
 		const attributes = ['type="module"', `data-sveltekit-hydrate="${target}"`];
