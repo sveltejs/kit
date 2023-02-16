@@ -1,5 +1,14 @@
 # @sveltejs/adapter-netlify
 
+## 2.0.5
+
+### Patch Changes
+
+- chore: support newest version of undici ([#9005](https://github.com/sveltejs/kit/pull/9005))
+
+- Updated dependencies [[`6cdf54d1`](https://github.com/sveltejs/kit/commit/6cdf54d1f3561348d87f35ddc8330081919eb839)]:
+  - @sveltejs/kit@1.7.1
+
 ## 2.0.4
 
 ### Patch Changes

@@ -1,5 +1,11 @@
 # @sveltejs/kit
 
+## 1.7.1
+
+### Patch Changes
+
+- fix: deploy server assets. Only works with Vite 4.1+ ([#9073](https://github.com/sveltejs/kit/pull/9073))
+
 ## 1.7.0
 
 ### Minor Changes
