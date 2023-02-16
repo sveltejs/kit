@@ -1,14 +1,7 @@
 import ts from 'typescript';
-import {
-	adjust_imports,
-	guess_indent,
-	comment,
-	error,
-	dedent,
-	parse,
-	except_str
-} from '../utils.js';
+import { adjust_imports, error, parse } from '../utils.js';
 import * as TASKS from '../tasks.js';
+import { comment, dedent, except_str, guess_indent } from '../../../utils.js';
 
 /**
  * @param {string} content

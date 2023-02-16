@@ -1,4 +1,3 @@
-import { execSync } from 'child_process';
 import fs from 'fs';
 import colors from 'kleur';
 import path from 'path';
@@ -9,7 +8,8 @@ import { migrate_scripts } from './migrate_scripts/index.js';
 import { migrate_page } from './migrate_page_js/index.js';
 import { migrate_page_server } from './migrate_page_server/index.js';
 import { migrate_server } from './migrate_server/index.js';
-import { adjust_imports, bail, move_file, relative, task } from './utils.js';
+import { adjust_imports, task } from './utils.js';
+import { bail, relative, move_file, check_git } from '../../utils.js';
 
 export async function migrate() {
 	if (!fs.existsSync('svelte.config.js')) {
@@ -57,34 +57,7 @@ export async function migrate() {
 
 	console.log(colors.bold().yellow('\nThis will overwrite files in the current directory!\n'));
 
-	let use_git = false;
-
-	let dir = process.cwd();
-	do {
-		if (fs.existsSync(path.join(dir, '.git'))) {
-			use_git = true;
-			break;
-		}
-	} while (dir !== (dir = path.dirname(dir)));
-
-	if (use_git) {
-		try {
-			const status = execSync('git status --porcelain', { stdio: 'pipe' }).toString();
-
-			if (status) {
-				const message =
-					'Your git working directory is dirty — we recommend committing your changes before running this migration.\n';
-				console.log(colors.bold().red(message));
-			}
-		} catch {
-			// would be weird to have a .git folder if git is not installed,
-			// but always expect the unexpected
-			const message =
-				'Could not detect a git installation. If this is unexpected, please raise an issue: https://github.com/sveltejs/kit.\n';
-			console.log(colors.bold().red(message));
-			use_git = false;
-		}
-	}
+	const use_git = check_git();
 
 	const response = await prompts({
 		type: 'confirm',
