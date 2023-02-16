@@ -747,7 +747,7 @@ export function set_assets(path) {
 
 					if (kit.adapter) {
 						const { adapt } = await import('../../core/adapt/index.js');
-						await adapt(svelte_config, build_data, metadata, prerendered, prerender_map, env, log);
+						await adapt(svelte_config, build_data, metadata, prerendered, prerender_map, log);
 					} else {
 						console.log(colors.bold().yellow('\nNo adapter specified'));
 
