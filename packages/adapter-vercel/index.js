@@ -251,7 +251,7 @@ const plugin = function (defaults = {}) {
 					const isr = isr_config.get(route);
 					if (isr) {
 						if (isr.allowQuery?.includes('__pathname')) {
-							throw new Error('__pathname is a reserved query parameter');
+							throw new Error('__pathname is a reserved query parameter for isr.allowQuery');
 						}
 
 						const base = `${dirs.functions}/${route.id.slice(1)}`;
