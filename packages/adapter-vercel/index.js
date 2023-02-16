@@ -76,22 +76,6 @@ const plugin = function (defaults = {}) {
 					`${dirs.functions}/${name}.func`,
 					config
 				);
-
-				if (config.isr) {
-					write(
-						`${dirs.functions}/${name}.prerender-config.json`,
-						JSON.stringify(
-							{
-								expiration: config.isr.expiration,
-								group: config.isr.group,
-								bypassToken: config.isr.bypassToken,
-								allowQuery: config.isr.allowQuery
-							},
-							null,
-							'\t'
-						)
-					);
-				}
 			}
 
 			/**
@@ -158,6 +142,22 @@ const plugin = function (defaults = {}) {
 			/** @type {Map<string, string>} */
 			const functions = new Map();
 
+			// every route needs a `group`, so that a page and its __data.json are invalidated
+			// as a pair. automatically assign group ids to routes that don't have one
+			let group_id = 0;
+
+			// ensure automatically assigned group ids are unique
+			for (const route of builder.routes) {
+				if (route.prerender === true) continue;
+
+				if (route.config?.isr?.group !== undefined) {
+					group_id = route.config.isr.group;
+				}
+			}
+
+			/** @type {Map<import('@sveltejs/kit').RouteDefinition<import('.').Config>, import('.').ServerlessConfig['isr']>} */
+			const isr_config = new Map();
+
 			// group routes by config
 			for (const route of builder.routes) {
 				if (route.prerender === true) continue;
@@ -174,6 +174,14 @@ const plugin = function (defaults = {}) {
 				}
 
 				const config = { runtime, ...defaults, ...route.config };
+
+				if (config.isr) {
+					if (config.isr.group === undefined) {
+						config.isr.group = ++group_id;
+					}
+
+					isr_config.set(route, config.isr);
+				}
 
 				const hash = hash_config(config);
 
@@ -238,12 +246,61 @@ const plugin = function (defaults = {}) {
 					src = '^/?';
 				}
 
-				src += '(?:/__data.json)?$';
-
 				const name = functions.get(pattern);
 				if (name) {
-					static_config.routes.push({ src, dest: `/${name}` });
-					functions.delete(pattern);
+					const isr = isr_config.get(route);
+					if (isr) {
+						if (isr.allowQuery?.includes('__pathname')) {
+							throw new Error('__pathname is a reserved query parameter');
+						}
+
+						const base = `${dirs.functions}/${route.id.slice(1)}`;
+						builder.mkdirp(base);
+
+						const target = `${dirs.functions}/${name}.func`;
+						const relative = path.relative(path.dirname(base), target);
+
+						// create a symlink to the actual function, but use the
+						// route name so that we can derive the correct URL
+						fs.symlinkSync(relative, `${base}.func`);
+						fs.symlinkSync(`../${relative}`, `${base}/__data.json.func`);
+
+						let i = 1;
+						const pathname = route.segments
+							.map((segment) => {
+								return segment.dynamic ? `$${i++}` : segment.content;
+							})
+							.join('/');
+
+						const json = JSON.stringify(
+							{
+								expiration: isr.expiration,
+								group: isr.group,
+								bypassToken: isr.bypassToken,
+								allowQuery: ['__pathname', ...(isr.allowQuery ?? [])],
+								passQuery: true
+							},
+							null,
+							'\t'
+						);
+
+						write(`${base}.prerender-config.json`, json);
+						write(`${base}/__data.json.prerender-config.json`, json);
+
+						const q = `?__pathname=/${pathname}`;
+
+						static_config.routes.push({
+							src: src + '$',
+							dest: `${route.id}${q}`
+						});
+
+						static_config.routes.push({
+							src: src + '/__data.json$',
+							dest: `${route.id}/__data.json${q}`
+						});
+					} else {
+						static_config.routes.push({ src: src + '(?:/__data.json)?$', dest: `/${name}` });
+					}
 				}
 			}
 
