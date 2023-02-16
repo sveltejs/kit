@@ -66,8 +66,7 @@ The `"exports"` field contains the package's entry points. If you set up a new l
 	"exports": {
 		".": {
 			"types": "./dist/index.d.ts",
-			"svelte": "./dist/index.js",
-			"default": "./dist/index.js"
+			"svelte": "./dist/index.js"
 		}
 	}
 }
@@ -80,10 +79,10 @@ This tells bundlers and tooling that your package only has one entry point, the 
 import { Something } from 'your-library';
 ```
 
-The `types`/`svelte`/`default` keys are [export conditions](https://nodejs.org/api/packages.html#conditional-exports). They tell tooling what file to import when they look up the `your-library` import:
+The `types` and `svelte` keys are [export conditions](https://nodejs.org/api/packages.html#conditional-exports). They tell tooling what file to import when they look up the `your-library` import:
+
 - TypeScript sees the `types` condition and looks up the type definition file. If you don't publish type definitions, omit this condition.
-- Svelte-aware tooling sees the `svelte` condition and knows this is a Svelte component library. If you publish a library that does not export any Svelte components and that could also work in non-Svelte projects (for example a Svelte store library), you can omit this condition.
-- other tooling falls back to the `default` export. If you publish a library containing Svelte components and you don't provide a precompiled version (i.e. a JavaScript bundle) of them, you can omit this condition (though misconfigured projects might fail then).
+- Svelte-aware tooling sees the `svelte` condition and knows this is a Svelte component library. If you publish a library that does not export any Svelte components and that could also work in non-Svelte projects (for example a Svelte store library), you can replace this condition with `default`.
 
 > Previous versions of `@sveltejs/package` also added a `package.json` export. This is no longer part of the template because all tooling can now deal with a `package.json` not being explicitly exported.
 
@@ -94,8 +93,7 @@ You can adjust `exports` to your liking and provide more entry points. For examp
 	"exports": {
 		"./Foo.svelte": {
 			"types": "./dist/Foo.svelte.d.ts",
-			"svelte": "./dist/Foo.svelte",
-			"default": "./dist/Foo.svelte"
+			"svelte": "./dist/Foo.svelte"
 		}
 	}
 }
@@ -139,9 +137,9 @@ You should think carefully about whether or not the changes you make to your pac
 	"exports": {
 		".": {
 			"types": "./dist/index.d.ts",
-			"svelte": "./dist/index.js",
-// removing this is a breaking change:
--			"default": "./dist/index.js"
+// changing `svelte` to `default` is a breaking change:
+-			"svelte": "./dist/index.js"
++			"default": "./dist/index.js"
 		},
 // removing this is a breaking change:
 -		"./foo": {
@@ -178,6 +176,12 @@ npm publish
 
 ## Caveats
 
-All relative file imports need to be fully specified, adhering to Node's ESM algorithm. This means you cannot import the file `src/lib/something/index.js` like `import { something } from './something`, instead you need to import it like this: `import { something } from './something/index.js`. If you are using TypeScript, you need to import `.ts` files the same way, but using a `.js` file ending, _not_ a `.ts` file ending (this isn't under our control, the TypeScript team has made that decision). Setting `"moduleResolution": "NodeNext"` in your `tsconfig.json` or `jsconfig.json` will help you with this.
+All relative file imports need to be fully specified, adhering to Node's ESM algorithm. This means that for a file like `src/lib/something/index.js`, you must include the filename with the extension:
 
-This is a relatively experimental feature and is not yet fully implemented. All files except Svelte files (preprocessed) and TypeScript files (transpiled to JavaScript) are copied across as-is.
+```diff
+-import { something } from './something';
++import { something } from './something/index.js';
+
+If you are using TypeScript, you need to import `.ts` files the same way, but using a `.js` file ending, _not_ a `.ts` file ending. (This is a TypeScript design decision outside our control.) Setting `"moduleResolution": "NodeNext"` in your `tsconfig.json` or `jsconfig.json` will help you with this.
+
+All files except Svelte files (preprocessed) and TypeScript files (transpiled to JavaScript) are copied across as-is.
