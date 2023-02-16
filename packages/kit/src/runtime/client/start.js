@@ -1,7 +1,7 @@
 import { DEV } from 'esm-env';
 import { create_client } from './client.js';
 import { init } from './singletons.js';
-import { set_assets, set_version, set_public_env } from '../shared.js';
+import { set_assets, set_version } from '../shared.js';
 
 /**
  * @param {{
@@ -34,5 +34,3 @@ export async function start({ app, assets, hydrate, target, version }) {
 
 	client._start_router();
 }
-
-export { set_public_env as env };
