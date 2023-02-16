@@ -354,9 +354,8 @@ function kit({ svelte_config }) {
 						vite_config_env.command === 'serve' ? env.private : undefined
 					);
 				case '\0$env/dynamic/public':
-					// populate `$env/dynamic/public` from `window` in the case where
-					// modules are externally hosted
-					if (is_build && !options?.ssr) {
+					// populate `$env/dynamic/public` from `window`
+					if (!options?.ssr) {
 						return `export const env = window.__sveltekit_${version_hash}.env;`;
 					}
 
