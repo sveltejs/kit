@@ -518,8 +518,8 @@ export function set_assets(path) {
 							input,
 							output: {
 								format: 'esm',
-								entryFileNames: ssr ? '[name].js' : `${prefix}/[name].[hash].js`,
-								chunkFileNames: ssr ? 'chunks/[name].js' : `${prefix}/chunks/[name].[hash].js`,
+								entryFileNames: ssr ? '[name].js' : `${prefix}/[name].[hash].mjs`,
+								chunkFileNames: ssr ? 'chunks/[name].js' : `${prefix}/chunks/[name].[hash].mjs`,
 								assetFileNames: `${prefix}/assets/[name].[hash][extname]`,
 								hoistTransitiveImports: false
 							},

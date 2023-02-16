@@ -320,21 +320,25 @@ export async function render_response({
 			});
 		`;
 
-		const filtered_modulepreloads = Array.from(modulepreloads, dep => prefixed(dep)).filter(path => resolve_opts.preload({ type: 'js', path }));
+		const included_modulepreloads = Array.from(modulepreloads, (dep) => prefixed(dep)).filter(
+			(path) => resolve_opts.preload({ type: 'js', path })
+		);
 
-		for (const path of filtered_modulepreloads) {
+		for (const path of included_modulepreloads) {
+			// we use modulepreload with the Link header for Chrome, along with
+			// <link rel="preload"> for Safari. This results in the fastest loading in
+			// the most used browsers, with no double-loading. Note that we need to use
+			// .mjs extensions for `preload` to behave like `modulepreload` in Chrome
 			link_header_preloads.add(`<${encodeURI(path)}>; rel="modulepreload"; nopush`);
-			if (state.prerendering) {
-				head += `\n\t\t<link rel="modulepreload" href="${path}">`;
-			}
+			head += `\n\t\t<link rel="preload" as="script" crossorigin="anonymous" href="${path}">`;
 		}
 
-		if (filtered_modulepreloads.length > 0) {
+		if (included_modulepreloads.length > 0) {
 			head += `
 		<script>
 			const { relList } = document.createElement('link');
 			if (!relList?.supports('modulepreload')) {
-				for (const src of ${s(filtered_modulepreloads)}) {
+				for (const src of ${s(included_modulepreloads)}) {
 					const link = document.createElement('link');
 					link.rel = 'preload';
 					link.as = 'script';
