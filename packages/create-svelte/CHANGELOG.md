@@ -1,5 +1,11 @@
 # create-svelte
 
+## 3.0.0
+
+### Major Changes
+
+- breaking: update library scaffolding for `@sveltejs/package` version 2 ([#8922](https://github.com/sveltejs/kit/pull/8922))
+
 ## 2.3.4
 
 ### Patch Changes

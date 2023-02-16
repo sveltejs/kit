@@ -1,5 +1,11 @@
 # svelte-migrate
 
+## 1.1.0
+
+### Minor Changes
+
+- feat: add `@sveltejs/package` migration (v1->v2) ([#8922](https://github.com/sveltejs/kit/pull/8922))
+
 ## 1.0.1
 
 ### Patch Changes
