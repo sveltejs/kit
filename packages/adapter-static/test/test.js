@@ -21,7 +21,7 @@ run('prerendered', (test) => {
 		assert.ok(fs.existsSync(`${cwd}/build/endpoint/implicit.json`));
 	});
 
-	test('exposes public env vars to the lient', async ({ cwd, base, page }) => {
+	test('exposes public env vars to the client', async ({ cwd, base, page }) => {
 		await page.goto(`${base}/public-env`);
 		assert.equal(await page.textContent('h1'), 'The answer is 42');
 	});
