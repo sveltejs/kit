@@ -23,6 +23,7 @@ import { write_client_manifest } from '../../core/sync/write_client_manifest.js'
 import prerender from '../../core/postbuild/prerender.js';
 import analyse from '../../core/postbuild/analyse.js';
 import { s } from '../../utils/misc.js';
+import { hash } from '../../runtime/hash.js';
 
 export { vitePreprocess } from '@sveltejs/vite-plugin-svelte';
 
@@ -163,6 +164,8 @@ let manifest_data;
 function kit({ svelte_config }) {
 	const { kit } = svelte_config;
 	const out = `${kit.outDir}/output`;
+
+	const version_hash = hash(kit.version.name);
 
 	/** @type {import('vite').ResolvedConfig} */
 	let vite_config;
@@ -351,6 +354,12 @@ function kit({ svelte_config }) {
 						vite_config_env.command === 'serve' ? env.private : undefined
 					);
 				case '\0$env/dynamic/public':
+					// populate `$env/dynamic/public` from `window` in the case where
+					// modules are externally hosted
+					if (is_build && !options?.ssr) {
+						return `export const env = window.__sveltekit_${version_hash}.env;`;
+					}
+
 					return create_dynamic_module(
 						'public',
 						vite_config_env.command === 'serve' ? env.public : undefined
@@ -455,31 +464,29 @@ export function set_assets(path) {
 						input[name] = path.resolve(file);
 					});
 				} else {
-					/** @type {Record<string, string>} */
-					input.start = `${runtime_directory}/client/start.js`;
-					input.app = `${kit.outDir}/generated/client-optimized/app.js`;
+					input['entry/start'] = `${runtime_directory}/client/start.js`;
+					input['entry/app'] = `${kit.outDir}/generated/client-optimized/app.js`;
 
-					manifest_data.nodes.forEach((node) => {
-						if (node.component) {
-							const resolved = path.resolve(node.component);
-							const relative = decodeURIComponent(path.relative(kit.files.routes, resolved));
+					/**
+					 * @param {string | undefined} file
+					 */
+					function add_input(file) {
+						if (!file) return;
 
-							const name = relative.startsWith('..')
-								? path.basename(node.component)
-								: posixify(path.join('pages', relative));
-							input[`components/${name}`] = resolved;
-						}
+						const resolved = path.resolve(file);
+						const relative = decodeURIComponent(path.relative(kit.files.routes, resolved));
 
-						if (node.universal) {
-							const resolved = path.resolve(node.universal);
-							const relative = decodeURIComponent(path.relative(kit.files.routes, resolved));
+						const name = relative.startsWith('..')
+							? path.basename(file).replace(/^\+/, '')
+							: relative.replace(/(\\|\/)\+/g, '-').replace(/[\\/]/g, '-');
 
-							const name = relative.startsWith('..')
-								? path.basename(node.universal)
-								: posixify(path.join('pages', relative));
-							input[`modules/${name}`] = resolved;
-						}
-					});
+						input[`entry/${name}`] = resolved;
+					}
+
+					for (const node of manifest_data.nodes) {
+						add_input(node.component);
+						add_input(node.universal);
+					}
 				}
 
 				new_config = {
@@ -491,9 +498,13 @@ export function set_assets(path) {
 							input,
 							output: {
 								format: 'esm',
-								entryFileNames: ssr ? '[name].js' : `${prefix}/[name]-[hash].js`,
-								chunkFileNames: ssr ? 'chunks/[name].js' : `${prefix}/chunks/[name]-[hash].js`,
-								assetFileNames: `${prefix}/assets/[name]-[hash][extname]`,
+								// we use .mjs for client-side modules, because this signals to Chrome (when it
+								// reads the <link rel="preload">) that it should parse the file as a module
+								// rather than as a script, preventing a double parse. Ideally we'd just use
+								// modulepreload, but Safari prevents that
+								entryFileNames: ssr ? '[name].js' : `${prefix}/[name].[hash].mjs`,
+								chunkFileNames: ssr ? 'chunks/[name].js' : `${prefix}/chunks/[name].[hash].mjs`,
+								assetFileNames: `${prefix}/assets/[name].[hash][extname]`,
 								hoistTransitiveImports: false
 							},
 							preserveEntrySignatures: 'strict'

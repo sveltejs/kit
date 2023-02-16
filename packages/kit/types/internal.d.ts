@@ -95,6 +95,11 @@ export interface ClientHooks {
 	handleError: HandleClientError;
 }
 
+export interface Env {
+	private: Record<string, string>;
+	public: Record<string, string>;
+}
+
 export class InternalServer extends Server {
 	init(options: ServerInitOptions): Promise<void>;
 	respond(
@@ -323,6 +328,7 @@ export interface SSROptions {
 		}): string;
 		error(values: { message: string; status: number }): string;
 	};
+	version_hash: string;
 }
 
 export interface SSRErrorPage {

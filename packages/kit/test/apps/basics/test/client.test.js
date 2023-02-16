@@ -544,7 +544,7 @@ test.describe('data-sveltekit attributes', () => {
 
 		const module = process.env.DEV
 			? `${baseURL}/src/routes/data-sveltekit/preload-data/target/+page.svelte`
-			: `${baseURL}/_app/immutable/components/pages/data-sveltekit/preload-data/target/_page`;
+			: `${baseURL}/_app/immutable/entry/data-sveltekit-preload-data-target-page`;
 
 		await page.goto('/data-sveltekit/preload-data');
 		await page.locator('#one').dispatchEvent('mousemove');

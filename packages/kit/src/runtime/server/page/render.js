@@ -141,17 +141,9 @@ export async function render_response({
 		}
 
 		for (const { node } of branch) {
-			if (node.imports) {
-				node.imports.forEach((url) => modulepreloads.add(url));
-			}
-
-			if (node.stylesheets) {
-				node.stylesheets.forEach((url) => stylesheets.add(url));
-			}
-
-			if (node.fonts) {
-				node.fonts.forEach((url) => fonts.add(url));
-			}
+			for (const url of node.imports) modulepreloads.add(url);
+			for (const url of node.stylesheets) stylesheets.add(url);
+			for (const url of node.fonts) fonts.add(url);
 
 			if (node.inline_styles) {
 				Object.entries(await node.inline_styles()).forEach(([k, v]) => inline_styles.set(k, v));
@@ -161,7 +153,8 @@ export async function render_response({
 		rendered = { head: '', html: '', css: { code: '', map: null } };
 	}
 
-	let head = '';
+	let head = `
+		<script>window.__sveltekit_${options.version_hash}={env:${s(public_env)}}</script>`;
 	let body = rendered.html;
 
 	const csp = new Csp(options.csp, {
@@ -318,24 +311,24 @@ export async function render_response({
 
 		// prettier-ignore
 		const init_app = `
-			import { env, start } from ${s(prefixed(client.start.file))};
-
-			env(${s(public_env)});
+			import { start } from ${s(prefixed(client.start.file))};
 
 			start({
 				${opts.join(',\n\t\t\t\t')}
 			});
 		`;
 
-		for (const dep of modulepreloads) {
-			const path = prefixed(dep);
+		const included_modulepreloads = Array.from(modulepreloads, (dep) => prefixed(dep)).filter(
+			(path) => resolve_opts.preload({ type: 'js', path })
+		);
 
-			if (resolve_opts.preload({ type: 'js', path })) {
-				link_header_preloads.add(`<${encodeURI(path)}>; rel="modulepreload"; nopush`);
-				if (state.prerendering) {
-					head += `\n\t\t<link rel="modulepreload" href="${path}">`;
-				}
-			}
+		for (const path of included_modulepreloads) {
+			// we use modulepreload with the Link header for Chrome, along with
+			// <link rel="preload"> for Safari. This results in the fastest loading in
+			// the most used browsers, with no double-loading. Note that we need to use
+			// .mjs extensions for `preload` to behave like `modulepreload` in Chrome
+			link_header_preloads.add(`<${encodeURI(path)}>; rel="modulepreload"; nopush`);
+			head += `\n\t\t<link rel="preload" as="script" crossorigin="anonymous" href="${path}">`;
 		}
 
 		const attributes = ['type="module"', `data-sveltekit-hydrate="${target}"`];
