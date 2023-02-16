@@ -1,8 +1,7 @@
 import { sveltekit } from '@sveltejs/kit/vite';
-import * as path from 'path';
+import * as path from 'node:path';
 import { imagetools } from 'vite-imagetools';
 import legacy from '@vitejs/plugin-legacy';
-import packageConfig from './package.json';
 
 const supportedExtensions = ['.png', '.jpg', '.jpeg'];
 
@@ -27,7 +26,6 @@ const config = {
 		}),
 		sveltekit(),
 		legacy({
-			targets: packageConfig.browserslist,
 			additionalLegacyPolyfills: [
 				'custom-event-polyfill',
 				'core-js/modules/es.promise.js',
