@@ -153,7 +153,8 @@ export async function render_response({
 		rendered = { head: '', html: '', css: { code: '', map: null } };
 	}
 
-	let head = `<script>window.__sveltekit_${options.version_hash}={env:${s(public_env)}}</script>`;
+	let head = `
+		<script>window.__sveltekit_${options.version_hash}={env:${s(public_env)}}</script>`;
 	let body = rendered.html;
 
 	const csp = new Csp(options.csp, {
