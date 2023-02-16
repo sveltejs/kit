@@ -242,7 +242,11 @@ function kit({ svelte_config }) {
 							// Ignore all siblings of config.kit.outDir/generated
 							`${posixify(kit.outDir)}/!(generated)`
 						]
-					}
+					},
+					cors: { preflightContinue: true }
+				},
+				preview: {
+					cors: { preflightContinue: true }
 				},
 				optimizeDeps: {
 					exclude: [
@@ -322,7 +326,7 @@ function kit({ svelte_config }) {
 
 		async resolveId(id) {
 			// treat $env/static/[public|private] as virtual
-			if (id.startsWith('$env/') || id === '$internal/paths' || id === '$service-worker') {
+			if (id.startsWith('$env/') || id === '__sveltekit/paths' || id === '$service-worker') {
 				return `\0${id}`;
 			}
 		},
@@ -360,7 +364,9 @@ function kit({ svelte_config }) {
 					);
 				case '\0$service-worker':
 					return create_service_worker_module(svelte_config);
-				case '\0$internal/paths':
+				// for internal use only. it's published as $app/paths externally
+				// we use this alias so that we won't collide with user aliases
+				case '\0__sveltekit/paths':
 					const { assets, base } = svelte_config.kit.paths;
 					return `export const base = ${s(base)};
 export let assets = ${assets ? s(assets) : 'base'};
@@ -498,6 +504,7 @@ export function set_assets(path) {
 							},
 							preserveEntrySignatures: 'strict'
 						},
+						ssrEmitAssets: true,
 						target: ssr ? 'node16.14' : undefined,
 						// don't use the default name to avoid collisions with 'static/manifest.json'
 						manifest: 'vite-manifest.json'

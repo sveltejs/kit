@@ -1,6 +1,6 @@
 {
 	"name": "@sveltejs/kit",
-	"version": "1.5.6",
+	"version": "1.7.0",
 	"repository": {
 		"type": "git",
 		"url": "https://github.com/sveltejs/kit",
@@ -16,13 +16,13 @@
 		"devalue": "^4.2.3",
 		"esm-env": "^1.0.0",
 		"kleur": "^4.1.5",
-		"magic-string": "^0.27.0",
+		"magic-string": "^0.29.0",
 		"mime": "^3.0.0",
 		"sade": "^1.8.1",
 		"set-cookie-parser": "^2.5.1",
 		"sirv": "^2.0.2",
 		"tiny-glob": "^0.2.9",
-		"undici": "5.18.0"
+		"undici": "5.19.1"
 	},
 	"devDependencies": {
 		"@playwright/test": "^1.29.2",
@@ -40,7 +40,7 @@
 		"svelte-preprocess": "^5.0.0",
 		"typescript": "^4.9.4",
 		"uvu": "^0.5.6",
-		"vite": "^4.0.4"
+		"vite": "^4.1.1"
 	},
 	"peerDependencies": {
 		"svelte": "^3.54.0",
@@ -60,7 +60,7 @@
 	],
 	"scripts": {
 		"compat": "eslint -c compat.eslintrc.cjs src/runtime/app/*.js src/runtime/client/*.js",
-		"lint": "prettier --check . --config ../../.prettierrc --ignore-path .gitignore && eslint src/**",
+		"lint": "prettier --check . --config ../../.prettierrc --ignore-path .gitignore && eslint src/**/*.js",
 		"check": "tsc && pnpm compat",
 		"check:all": "pnpm check && pnpm -r --filter=\"./**\" check",
 		"format": "prettier --write . --config ../../.prettierrc --ignore-path .gitignore",

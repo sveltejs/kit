@@ -1,5 +1,6 @@
 {
 	"name": "kit.svelte.dev",
+	"private": true,
 	"version": "0.0.1",
 	"scripts": {
 		"update": "node scripts/check-doc-links.js && node scripts/types",
@@ -20,7 +21,7 @@
 		"custom-event-polyfill": "^1.0.7",
 		"flexsearch": "^0.7.31",
 		"intersection-observer": "^0.12.2",
-		"magic-string": "^0.27.0",
+		"magic-string": "^0.29.0",
 		"marked": "^4.2.3",
 		"path-composedpath-polyfill": "^0.0.1",
 		"postcss": "^8.4.19",
@@ -38,7 +39,7 @@
 		"typescript": "^4.9.4",
 		"unorm": "^1.6.0",
 		"uvu": "^0.5.6",
-		"vite": "^4.0.4",
+		"vite": "^4.1.1",
 		"vite-imagetools": "^4.0.16",
 		"whatwg-fetch": "^3.6.2"
 	},

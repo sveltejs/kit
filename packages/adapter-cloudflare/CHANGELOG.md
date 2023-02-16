@@ -1,5 +1,16 @@
 # @sveltejs/adapter-cloudflare
 
+## 2.0.2
+
+### Patch Changes
+
+- fix: exclude `_headers` and `_redirects` files from Cloudflare Pages static request list ([#9042](https://github.com/sveltejs/kit/pull/9042))
+
+- fix: remove redundant cloudflare worker static asset serving ([#9040](https://github.com/sveltejs/kit/pull/9040))
+
+- Updated dependencies [[`19c0e62a`](https://github.com/sveltejs/kit/commit/19c0e62a6bd281e656061b453973c35fa2dd9d3d)]:
+  - @sveltejs/kit@1.5.7
+
 ## 2.0.1
 
 ### Patch Changes

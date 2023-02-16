@@ -1,5 +1,31 @@
 # @sveltejs/kit
 
+## 1.7.0
+
+### Minor Changes
+
+- feat: richer error message for invalid exports ([#9055](https://github.com/sveltejs/kit/pull/9055))
+
+### Patch Changes
+
+- chore: throw more helpful error when encoding uri fails during prerendering ([#9053](https://github.com/sveltejs/kit/pull/9053))
+
+## 1.6.0
+
+### Minor Changes
+
+- feat: add `OPTIONS` server method ([#8731](https://github.com/sveltejs/kit/pull/8731))
+
+### Patch Changes
+
+- fix: solve `missing "./paths" specifier in "@sveltejs/kit" package` error occurring in all projects ([#9050](https://github.com/sveltejs/kit/pull/9050))
+
+## 1.5.7
+
+### Patch Changes
+
+- fix: use internal alias that won't collide with user aliases ([#9022](https://github.com/sveltejs/kit/pull/9022))
+
 ## 1.5.6
 
 ### Patch Changes

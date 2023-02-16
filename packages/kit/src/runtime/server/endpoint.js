@@ -75,7 +75,7 @@ export async function render_endpoint(event, route, mod, state) {
 export function is_endpoint_request(event) {
 	const { method, headers } = event.request;
 
-	if (method === 'PUT' || method === 'PATCH' || method === 'DELETE') {
+	if (method === 'PUT' || method === 'PATCH' || method === 'DELETE' || method === 'OPTIONS') {
 		// These methods exist exclusively for endpoints
 		return true;
 	}

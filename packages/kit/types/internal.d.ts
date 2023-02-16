@@ -298,9 +298,8 @@ export interface SSRNode {
 		config?: any;
 	};
 
-	// store this in dev so we can print serialization errors
-	universal_id?: string;
-	server_id?: string;
+	universal_id: string;
+	server_id: string;
 }
 
 export type SSRNodeLoader = () => Promise<SSRNode>;
