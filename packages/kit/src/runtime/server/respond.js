@@ -26,7 +26,6 @@ import {
 } from '../../utils/exports.js';
 import { get_option } from '../../utils/options.js';
 import { error, json, text } from '../../exports/index.js';
-import { public_env } from '../shared.js';
 
 /* global __SVELTEKIT_ADAPTER_NAME__ */
 
