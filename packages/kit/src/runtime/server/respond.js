@@ -44,15 +44,6 @@ export async function respond(request, options, manifest, state) {
 	/** URL but stripped from the potential `/__data.json` suffix and its search param  */
 	let url = new URL(request.url);
 
-	// dynamically generate $env/dynamic/public
-	if (url.pathname === `${base}/${manifest.appDir}/env.js`) {
-		return text(`export const env = ${JSON.stringify(public_env)};`, {
-			headers: {
-				'content-type': 'application/javascript'
-			}
-		});
-	}
-
 	if (options.csrf_check_origin) {
 		const forbidden =
 			request.method === 'POST' &&

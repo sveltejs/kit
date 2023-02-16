@@ -166,13 +166,6 @@ export function create_builder({
 			});
 		},
 
-		generatePublicEnv: (dest) => {
-			write(
-				`${dest}/${config.kit.appDir}/env.js`,
-				`export const env = ${JSON.stringify(env.public)};`
-			);
-		},
-
 		getBuildDirectory(name) {
 			return `${config.kit.outDir}/${name}`;
 		},

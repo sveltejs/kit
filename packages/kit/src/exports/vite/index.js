@@ -320,25 +320,6 @@ function kit({ svelte_config }) {
 	const plugin_virtual_modules = {
 		name: 'vite-plugin-sveltekit-virtual-modules',
 
-		config(config, { command }) {
-			// allow `$env/dynamic/public` to be generated on-demand
-			// unless `_app` is hosted externally
-			if (!kit.paths.assets && command === 'build' && !config.build?.ssr) {
-				return {
-					build: {
-						rollupOptions: {
-							external: ['$env/dynamic/public'],
-							output: {
-								paths: {
-									'$env/dynamic/public': '../../env.js'
-								}
-							}
-						}
-					}
-				};
-			}
-		},
-
 		async resolveId(id) {
 			// treat $env/static/[public|private] as virtual
 			if (id.startsWith('$env/') || id === '__sveltekit/paths' || id === '$service-worker') {
