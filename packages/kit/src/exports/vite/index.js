@@ -376,7 +376,6 @@ function kit({ svelte_config }) {
 					// populate `$env/dynamic/public` from `window` in the case where
 					// modules are externally hosted
 					if (kit.paths.assets && is_build && !options?.ssr) {
-						// TODO use a hash of the version name to avoid conflicts
 						return `export const env = window.__sveltekit_${version_hash}.env;`;
 					}
 
