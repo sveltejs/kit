@@ -1,4 +1,5 @@
 import { existsSync, statSync, createReadStream, createWriteStream } from 'node:fs';
+import { join } from 'node:path/posix';
 import { pipeline } from 'node:stream';
 import { promisify } from 'node:util';
 import zlib from 'node:zlib';
@@ -181,7 +182,12 @@ export function create_builder({
 		},
 
 		writeClient(dest) {
-			return [...copy(`${config.kit.outDir}/output/client`, dest)];
+			const server_assets = copy(
+				`${config.kit.outDir}/output/server/${config.kit.appDir}/immutable/assets`,
+				join(dest, config.kit.appDir, 'immutable/assets')
+			);
+			const client_assets = copy(`${config.kit.outDir}/output/client`, dest);
+			return Array.from(new Set(...server_assets, ...client_assets));
 		},
 
 		// @ts-expect-error

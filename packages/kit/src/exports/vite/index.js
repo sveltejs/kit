@@ -502,6 +502,7 @@ export function set_assets(path) {
 							},
 							preserveEntrySignatures: 'strict'
 						},
+						ssrEmitAssets: true,
 						target: ssr ? 'node16.14' : undefined,
 						// don't use the default name to avoid collisions with 'static/manifest.json'
 						manifest: 'vite-manifest.json'
