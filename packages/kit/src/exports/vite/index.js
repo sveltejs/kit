@@ -590,7 +590,7 @@ export function set_assets(path) {
 			sequential: true,
 			async handler(_options) {
 				if (secondary_build_started) return; // only run this once
-				
+
 				++output_count;
 				const config_output = vite_config.build.rollupOptions.output;
 				const config_output_length = Array.isArray(config_output) ? config_output.length : 1;
@@ -647,24 +647,27 @@ export function set_assets(path) {
 
 				secondary_build_started = true;
 
-				const getLastFlat = (/** @type {unknown} */ arrOrObj) => Array.isArray(arrOrObj) ? arrOrObj[arrOrObj.length - 1] : arrOrObj;
+				const getLastFlat = (/** @type {unknown} */ arrOrObj) =>
+					Array.isArray(arrOrObj) ? arrOrObj[arrOrObj.length - 1] : arrOrObj;
 
 				const { output } = /** @type {import('rollup').RollupOutput} */ (
-					getLastFlat(await vite.build({
-						configFile: vite_config.configFile,
-						// CLI args
-						mode: vite_config_env.mode,
-						logLevel: vite_config.logLevel,
-						clearScreen: vite_config.clearScreen,
-						build: {
-							minify: initial_config.build?.minify,
-							assetsInlineLimit: vite_config.build.assetsInlineLimit,
-							sourcemap: vite_config.build.sourcemap
-						},
-						optimizeDeps: {
-							force: vite_config.optimizeDeps.force
-						}
-					}))
+					getLastFlat(
+						await vite.build({
+							configFile: vite_config.configFile,
+							// CLI args
+							mode: vite_config_env.mode,
+							logLevel: vite_config.logLevel,
+							clearScreen: vite_config.clearScreen,
+							build: {
+								minify: initial_config.build?.minify,
+								assetsInlineLimit: vite_config.build.assetsInlineLimit,
+								sourcemap: vite_config.build.sourcemap
+							},
+							optimizeDeps: {
+								force: vite_config.optimizeDeps.force
+							}
+						})
+					)
 				);
 
 				/** @type {import('vite').Manifest} */
