@@ -3,10 +3,7 @@ import legacy from '@vitejs/plugin-legacy';
 
 /** @type {import('vite').UserConfig} */
 const config = {
-	plugins: [
-		sveltekit(),
-		legacy()
-	],
+	plugins: [sveltekit(), legacy()],
 	server: {
 		fs: {
 			strict: false
