@@ -323,6 +323,7 @@ export interface SSROptions {
 		}): string;
 		error(values: { message: string; status: number }): string;
 	};
+	version_hash: string;
 }
 
 export interface SSRErrorPage {

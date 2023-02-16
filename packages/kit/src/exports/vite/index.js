@@ -23,6 +23,7 @@ import { write_client_manifest } from '../../core/sync/write_client_manifest.js'
 import prerender from '../../core/postbuild/prerender.js';
 import analyse from '../../core/postbuild/analyse.js';
 import { s } from '../../utils/misc.js';
+import { hash } from '../../runtime/hash.js';
 
 export { vitePreprocess } from '@sveltejs/vite-plugin-svelte';
 
@@ -163,6 +164,8 @@ let manifest_data;
 function kit({ svelte_config }) {
 	const { kit } = svelte_config;
 	const out = `${kit.outDir}/output`;
+
+	const version_hash = hash(kit.version.name);
 
 	/** @type {import('vite').ResolvedConfig} */
 	let vite_config;
@@ -374,7 +377,7 @@ function kit({ svelte_config }) {
 					// modules are externally hosted
 					if (kit.paths.assets && is_build && !options?.ssr) {
 						// TODO use a hash of the version name to avoid conflicts
-						return `export const env = window.__env;`;
+						return `export const env = window.__sveltekit_${version_hash}.env;`;
 					}
 
 					return create_dynamic_module(

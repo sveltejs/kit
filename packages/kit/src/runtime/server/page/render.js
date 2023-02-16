@@ -173,7 +173,7 @@ export async function render_response({
 		resolved_assets = assets;
 
 		// TODO use a hash of the version name to avoid conflicts
-		head += `<script>window.__env=${s(public_env)}</script>`;
+		head += `<script>window.__sveltekit_${options.version_hash}={env:${s(public_env)}}</script>`;
 	} else if (state.prerendering?.fallback) {
 		// if we're creating a fallback page, asset paths need to be root-relative
 		resolved_assets = base;
