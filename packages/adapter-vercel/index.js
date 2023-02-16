@@ -400,22 +400,21 @@ async function create_function_bundle(builder, entry, dir, config) {
 		}
 	}
 
+	const files = Array.from(traced.fileList);
+
 	// find common ancestor directory
 	/** @type {string[]} */
-	let common_parts = [];
+	let common_parts = files[0]?.split(path.sep) ?? [];
 
-	for (const file of traced.fileList) {
-		if (common_parts) {
-			const parts = file.split(path.sep);
+	for (let i = 1; i < files.length; i += 1) {
+		const file = files[i];
+		const parts = file.split(path.sep);
 
-			for (let i = 0; i < common_parts.length; i += 1) {
-				if (parts[i] !== common_parts[i]) {
-					common_parts = common_parts.slice(0, i);
-					break;
-				}
+		for (let i = 0; i < common_parts.length; i += 1) {
+			if (parts[i] !== common_parts[i]) {
+				common_parts = common_parts.slice(0, i);
+				break;
 			}
-		} else {
-			common_parts = path.dirname(file).split(path.sep);
 		}
 	}
 
