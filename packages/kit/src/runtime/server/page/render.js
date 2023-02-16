@@ -333,24 +333,6 @@ export async function render_response({
 			head += `\n\t\t<link rel="preload" as="script" crossorigin="anonymous" href="${path}">`;
 		}
 
-		if (included_modulepreloads.length > 0) {
-			head += `
-		<script>
-			const { relList } = document.createElement('link');
-			if (!relList?.supports('modulepreload')) {
-				for (const src of ${s(included_modulepreloads)}) {
-					const link = document.createElement('link');
-					link.rel = 'preload';
-					link.as = 'script';
-					link.href = src;
-					link.crossOrigin = 'anonymous';
-					document.head.appendChild(link);
-				}
-			}
-		</script>
-		`;
-		}
-
 		const attributes = ['type="module"', `data-sveltekit-hydrate="${target}"`];
 
 		csp.add_script(init_app);
