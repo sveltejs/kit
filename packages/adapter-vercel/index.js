@@ -147,11 +147,13 @@ const plugin = function (defaults = {}) {
 			let group_id = 0;
 
 			// ensure automatically assigned group ids are unique
+			// by first seeing which ids were explicitly assigned
+			// and therefore shouldn't be used
 			for (const route of builder.routes) {
 				if (route.prerender === true) continue;
 
 				if (route.config?.isr?.group !== undefined) {
-					group_id = route.config.isr.group;
+					group_id = Math.max(group_id, route.config.isr.group);
 				}
 			}
 
