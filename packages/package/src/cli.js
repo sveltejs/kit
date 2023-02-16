@@ -1,3 +1,4 @@
+import fs from 'node:fs';
 import colors from 'kleur';
 import sade from 'sade';
 import { load_config } from './config.js';
@@ -14,7 +15,8 @@ function handle_error(error) {
 	process.exit(1);
 }
 
-const prog = sade('svelte-package', true).version('__VERSION__');
+const pkg = JSON.parse(fs.readFileSync(new URL('../package.json', import.meta.url), 'utf-8'));
+const prog = sade('svelte-package', true).version(pkg.version);
 
 prog
 	.describe('Create a package')
