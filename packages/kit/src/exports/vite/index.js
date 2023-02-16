@@ -518,6 +518,10 @@ export function set_assets(path) {
 							input,
 							output: {
 								format: 'esm',
+								// we use .mjs for client-side modules, because this signals to Chrome (when it
+								// reads the <link rel="preload">) that it should parse the file as a module
+								// rather than as a script, preventing a double parse. Ideally we'd just use
+								// modulepreload, but Safari prevents that
 								entryFileNames: ssr ? '[name].js' : `${prefix}/[name].[hash].mjs`,
 								chunkFileNames: ssr ? 'chunks/[name].js' : `${prefix}/chunks/[name].[hash].mjs`,
 								assetFileNames: `${prefix}/assets/[name].[hash][extname]`,
