@@ -4,6 +4,7 @@ import { once } from '../../../utils/functions.js';
 import { load_server_data } from '../page/load_data.js';
 import { clarify_devalue_error, handle_error_and_jsonify, serialize_data_node } from '../utils.js';
 import { normalize_path } from '../../../utils/url.js';
+import { text } from '../../../exports/index.js';
 
 export const INVALIDATED_PARAM = 'x-sveltekit-invalidated';
 
@@ -139,7 +140,7 @@ export async function render_data(
  * @param {number} [status]
  */
 function json_response(json, status = 200) {
-	return new Response(json, {
+	return text(json, {
 		status,
 		headers: {
 			'content-type': 'application/json',

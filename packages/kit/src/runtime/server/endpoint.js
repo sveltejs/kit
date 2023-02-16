@@ -4,11 +4,12 @@ import { method_not_allowed } from './utils.js';
 
 /**
  * @param {import('types').RequestEvent} event
+ * @param {import('types').SSRRoute} route
  * @param {import('types').SSREndpoint} mod
  * @param {import('types').SSRState} state
  * @returns {Promise<Response>}
  */
-export async function render_endpoint(event, mod, state) {
+export async function render_endpoint(event, route, mod, state) {
 	const method = /** @type {import('types').HttpMethod} */ (event.request.method);
 
 	let handler = mod[method];
@@ -37,6 +38,8 @@ export async function render_endpoint(event, mod, state) {
 			return new Response(undefined, { status: 204 });
 		}
 	}
+
+	state.initiator = route;
 
 	try {
 		const response = await handler(

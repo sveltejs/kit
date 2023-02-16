@@ -4,9 +4,9 @@ title: Service workers
 
 Service workers act as proxy servers that handle network requests inside your app. This makes it possible to make your app work offline, but even if you don't need offline support (or can't realistically implement it because of the type of app you're building), it's often worth using service workers to speed up navigation by precaching your built JS and CSS.
 
-In SvelteKit, if you have a `src/service-worker.js` file (or `src/service-worker.ts`, `src/service-worker/index.js`, etc) it will be bundled and automatically registered. You can change the [location of your service worker](/docs/configuration#files) if you need to.
+In SvelteKit, if you have a `src/service-worker.js` file (or `src/service-worker.ts`, `src/service-worker/index.js`, etc) it will be bundled and automatically registered. You can change the [location of your service worker](configuration#files) if you need to.
 
-You can [disable automatic registration](/docs/configuration#serviceworker) if you need to register the service worker with your own logic or use another solution. The default registration looks something like this:
+You can [disable automatic registration](configuration#serviceworker) if you need to register the service worker with your own logic or use another solution. The default registration looks something like this:
 
 ```js
 if ('serviceWorker' in navigator) {
@@ -18,12 +18,13 @@ if ('serviceWorker' in navigator) {
 
 ## Inside the service worker
 
-Inside the service worker you have access to the [`$service-worker` module](/docs/modules#$service-worker), which provides you with the paths to all static assets, build files and prerendered pages. You're also provided with an app version string which you can use for creating a unique cache name. If your Vite config specifies `define` (used for global variable replacements), this will be applied to service workers as well as your server/client builds.
+Inside the service worker you have access to the [`$service-worker` module](modules#$service-worker), which provides you with the paths to all static assets, build files and prerendered pages. You're also provided with an app version string which you can use for creating a unique cache name. If your Vite config specifies `define` (used for global variable replacements), this will be applied to service workers as well as your server/client builds.
 
 The following example caches the built app and any files in `static` eagerly, and caches all other requests as they happen. This would make each page work offline once visited.
 
 ```js
 // @errors: 2339
+/// <reference types="@sveltejs/kit" />
 import { build, files, version } from '$service-worker';
 
 // Create a unique cache name for this deployment
@@ -108,6 +109,7 @@ navigator.serviceWorker.register('/service-worker.js', {
 Setting up proper types for service workers requires some manual setup. Inside your `service-worker.js`, add the following to the top of your file:
 
 ```original-js
+/// <reference types="@sveltejs/kit" />
 /// <reference no-default-lib="true"/>
 /// <reference lib="esnext" />
 /// <reference lib="webworker" />
@@ -115,6 +117,7 @@ Setting up proper types for service workers requires some manual setup. Inside y
 const sw = /** @type {ServiceWorkerGlobalScope} */ (/** @type {unknown} */ (self));
 ```
 ```generated-ts
+/// <reference types="@sveltejs/kit" />
 /// <reference no-default-lib="true"/>
 /// <reference lib="esnext" />
 /// <reference lib="webworker" />
@@ -122,7 +125,7 @@ const sw = /** @type {ServiceWorkerGlobalScope} */ (/** @type {unknown} */ (self
 const sw = self as unknown as ServiceWorkerGlobalScope;
 ```
 
-This disables access to DOM typings like `HTMLElement` which are not available inside a service worker and instantiates the correct globals. The reassignment of `self` to `sw` allows you to type cast it in the process (there are a couple of ways to do this, but the easiest that requires no additional files). Use `sw` instead of `self` in the rest of the file.
+This disables access to DOM typings like `HTMLElement` which are not available inside a service worker and instantiates the correct globals. The reassignment of `self` to `sw` allows you to type cast it in the process (there are a couple of ways to do this, but the easiest that requires no additional files). Use `sw` instead of `self` in the rest of the file. The reference to the SvelteKit types ensures that the `$service-worker` import has proper type definitions.
 
 ## Other solutions
 

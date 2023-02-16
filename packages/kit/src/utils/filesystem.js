@@ -1,5 +1,5 @@
-import fs from 'fs';
-import path from 'path';
+import fs from 'node:fs';
+import path from 'node:path';
 
 /** @param {string} dir */
 export function mkdirp(dir) {
@@ -175,4 +175,9 @@ export function resolve_entry(entry) {
 	}
 
 	return null;
+}
+
+/** @param {string} file */
+export function read(file) {
+	return fs.readFileSync(file, 'utf-8');
 }

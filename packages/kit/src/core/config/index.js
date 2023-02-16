@@ -1,6 +1,6 @@
-import fs from 'fs';
-import path from 'path';
-import * as url from 'url';
+import fs from 'node:fs';
+import path from 'node:path';
+import * as url from 'node:url';
 import options from './options.js';
 
 /**
@@ -9,24 +9,33 @@ import options from './options.js';
  * @param {string} cwd
  * @param {import('types').ValidatedConfig} config
  */
-export function load_template(cwd, config) {
-	const { appTemplate } = config.kit.files;
-	const relative = path.relative(cwd, appTemplate);
+export function load_template(cwd, { kit }) {
+	const { env, files } = kit;
 
-	if (fs.existsSync(appTemplate)) {
-		const contents = fs.readFileSync(appTemplate, 'utf8');
+	const relative = path.relative(cwd, files.appTemplate);
 
-		const expected_tags = ['%sveltekit.head%', '%sveltekit.body%'];
-		expected_tags.forEach((tag) => {
-			if (contents.indexOf(tag) === -1) {
-				throw new Error(`${relative} is missing ${tag}`);
-			}
-		});
-	} else {
+	if (!fs.existsSync(files.appTemplate)) {
 		throw new Error(`${relative} does not exist`);
 	}
 
-	return fs.readFileSync(appTemplate, 'utf-8');
+	const contents = fs.readFileSync(files.appTemplate, 'utf8');
+
+	const expected_tags = ['%sveltekit.head%', '%sveltekit.body%'];
+	expected_tags.forEach((tag) => {
+		if (contents.indexOf(tag) === -1) {
+			throw new Error(`${relative} is missing ${tag}`);
+		}
+	});
+
+	for (const match of contents.matchAll(/%sveltekit\.env\.([^%]+)%/g)) {
+		if (!match[1].startsWith(env.publicPrefix)) {
+			throw new Error(
+				`Environment variables in ${relative} must start with ${env.publicPrefix} (saw %sveltekit.env.${match[1]}%)`
+			);
+		}
+	}
+
+	return contents;
 }
 
 /**

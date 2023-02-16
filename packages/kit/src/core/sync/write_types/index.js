@@ -1,8 +1,9 @@
-import fs from 'fs';
-import path from 'path';
+import fs from 'node:fs';
+import path from 'node:path';
 import MagicString from 'magic-string';
 import { posixify, rimraf, walk } from '../../../utils/filesystem.js';
 import { compact } from '../../../utils/array.js';
+import { ts } from '../ts.js';
 
 /**
  *  @typedef {{
@@ -19,13 +20,6 @@ import { compact } from '../../../utils/array.js';
  *
  *  @typedef {Map<import('types').PageNode, {route: import('types').RouteData, proxies: Proxies}>} RoutesMap
  */
-
-/** @type {import('typescript')} */
-// @ts-ignore
-let ts = undefined;
-try {
-	ts = (await import('typescript')).default;
-} catch {}
 
 const cwd = process.cwd();
 
@@ -204,23 +198,26 @@ function update_types(config, routes, route, to_delete = new Set()) {
 
 	// These could also be placed in our public types, but it would bloat them unnecessarily and we may want to change these in the future
 	if (route.layout || route.leaf) {
-		// If T extends the empty object, void is also allowed as a return type
-		declarations.push(`type MaybeWithVoid<T> = {} extends T ? T | void : T;`);
-		// Returns the key of the object whose values are required.
 		declarations.push(
-			`export type RequiredKeys<T> = { [K in keyof T]-?: {} extends { [P in K]: T[K] } ? never : K; }[keyof T];`
-		);
-		// Helper type to get the correct output type for load functions. It should be passed the parent type to check what types from App.PageData are still required.
-		// If none, void is also allowed as a return type.
-		declarations.push(
-			`type OutputDataShape<T> = MaybeWithVoid<Omit<App.PageData, RequiredKeys<T>> & Partial<Pick<App.PageData, keyof T & keyof App.PageData>> & Record<string, any>>`
-		);
-		// null & {} == null, we need to prevent that in some situations
-		declarations.push(`type EnsureDefined<T> = T extends null | undefined ? {} : T;`);
-		// Takes a union type and returns a union type where each type also has all properties
-		// of all possible types (typed as undefined), making accessing them more ergonomic
-		declarations.push(
-			`type OptionalUnion<U extends Record<string, any>, A extends keyof U = U extends U ? keyof U : never> = U extends unknown ? { [P in Exclude<A, keyof U>]?: never } & U : never;`
+			// If T extends the empty object, void is also allowed as a return type
+			`type MaybeWithVoid<T> = {} extends T ? T | void : T;`,
+
+			// Returns the key of the object whose values are required.
+			`export type RequiredKeys<T> = { [K in keyof T]-?: {} extends { [P in K]: T[K] } ? never : K; }[keyof T];`,
+
+			// Helper type to get the correct output type for load functions. It should be passed the parent type to check what types from App.PageData are still required.
+			// If none, void is also allowed as a return type.
+			`type OutputDataShape<T> = MaybeWithVoid<Omit<App.PageData, RequiredKeys<T>> & Partial<Pick<App.PageData, keyof T & keyof App.PageData>> & Record<string, any>>`,
+
+			// null & {} == null, we need to prevent that in some situations
+			`type EnsureDefined<T> = T extends null | undefined ? {} : T;`,
+
+			// Takes a union type and returns a union type where each type also has all properties
+			// of all possible types (typed as undefined), making accessing them more ergonomic
+			`type OptionalUnion<U extends Record<string, any>, A extends keyof U = U extends U ? keyof U : never> = U extends unknown ? { [P in Exclude<A, keyof U>]?: never } & U : never;`,
+
+			// Re-export `Snapshot` from @sveltejs/kit — in future we could use this to infer <T> from the return type of `snapshot.capture`
+			`export type Snapshot<T = any> = Kit.Snapshot<T>;`
 		);
 	}
 

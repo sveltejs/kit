@@ -69,7 +69,7 @@ export function replace_placeholders(content) {
 
 					let import_block = '';
 
-					if (module.exports.length > 0) {
+					if (module.exports.length > 0 && !module.name.startsWith('$internal')) {
 						// deduplication is necessary for now, because of `error()` overload
 						const exports = Array.from(new Set(module.exports.map((x) => x.name)));
 

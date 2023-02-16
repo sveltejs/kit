@@ -1,14 +1,15 @@
 import * as devalue from 'devalue';
 import { readable, writable } from 'svelte/store';
 import { DEV } from 'esm-env';
+import { assets, base } from '$internal/paths';
 import { hash } from '../../hash.js';
 import { serialize_data } from './serialize_data.js';
 import { s } from '../../../utils/misc.js';
 import { Csp } from './csp.js';
 import { uneval_action_response } from './actions.js';
 import { clarify_devalue_error } from '../utils.js';
-import { assets, base, version } from '../../shared.js';
-import { env } from '../../env-public.js';
+import { version, public_env } from '../../shared.js';
+import { text } from '../../../exports/index.js';
 
 // TODO rename this function/module
 
@@ -90,7 +91,7 @@ export async function render_response({
 				navigating: writable(null),
 				updated
 			},
-			components: await Promise.all(branch.map(({ node }) => node.component())),
+			constructors: await Promise.all(branch.map(({ node }) => node.component())),
 			form: form_value
 		};
 
@@ -113,7 +114,32 @@ export async function render_response({
 			form: form_value
 		};
 
-		rendered = options.root.render(props);
+		if (__SVELTEKIT_DEV__) {
+			const fetch = globalThis.fetch;
+			let warned = false;
+			globalThis.fetch = (info, init) => {
+				if (typeof info === 'string' && !/^\w+:\/\//.test(info)) {
+					throw new Error(
+						`Cannot call \`fetch\` eagerly during server side rendering with relative URL (${info}) — put your \`fetch\` calls inside \`onMount\` or a \`load\` function instead`
+					);
+				} else if (!warned) {
+					console.warn(
+						`Avoid calling \`fetch\` eagerly during server side rendering — put your \`fetch\` calls inside \`onMount\` or a \`load\` function instead`
+					);
+					warned = true;
+				}
+
+				return fetch(info, init);
+			};
+
+			try {
+				rendered = options.root.render(props);
+			} finally {
+				globalThis.fetch = fetch;
+			}
+		} else {
+			rendered = options.root.render(props);
+		}
 
 		for (const { node } of branch) {
 			if (node.imports) {
@@ -165,7 +191,15 @@ export async function render_response({
 	}
 
 	/** @param {string} path */
-	const prefixed = (path) => (path.startsWith('/') ? path : `${resolved_assets}/${path}`);
+	const prefixed = (path) => {
+		if (path.startsWith('/')) {
+			// Vite makes the start script available through the base path and without it.
+			// We load it via the base path in order to support remote IDE environments which proxy
+			// all URLs under the base path during development.
+			return base + path;
+		}
+		return `${resolved_assets}/${path}`;
+	};
 
 	const serialized = { data: '', form: 'null', error: 'null' };
 
@@ -258,8 +292,8 @@ export async function render_response({
 
 	if (page_config.csr) {
 		const opts = [
-			`env: ${s(env)}`,
-			`paths: ${s({ assets, base })}`,
+			`assets: ${s(assets)}`,
+			`env: ${s(public_env)}`,
 			`target: document.querySelector('[data-sveltekit-hydrate="${target}"]').parentNode`,
 			`version: ${s(version)}`
 		];
@@ -463,7 +497,8 @@ export async function render_response({
 		head,
 		body,
 		assets: resolved_assets,
-		nonce: /** @type {string} */ (csp.nonce)
+		nonce: /** @type {string} */ (csp.nonce),
+		env: public_env
 	});
 
 	// TODO flush chunks as early as we can
@@ -504,7 +539,7 @@ export async function render_response({
 		}
 	}
 
-	return new Response(transformed, {
+	return text(transformed, {
 		status,
 		headers
 	});

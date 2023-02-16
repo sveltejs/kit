@@ -1,68 +1,72 @@
-import { readFileSync, writeFileSync } from 'fs';
-import { dirname, join } from 'path';
-import { URL } from 'url';
+import { readFileSync, writeFileSync } from 'node:fs';
+import { dirname, join } from 'node:path';
+import { pathToFileURL } from 'node:url';
 import { installPolyfills } from '../../exports/node/polyfills.js';
 import { mkdirp, posixify, walk } from '../../utils/filesystem.js';
 import { should_polyfill } from '../../utils/platform.js';
 import { is_root_relative, resolve } from '../../utils/url.js';
-import { queue } from './queue.js';
-import { crawl } from './crawl.js';
 import { escape_html_attr } from '../../utils/escape.js';
 import { logger } from '../utils.js';
 import { load_config } from '../config/index.js';
 import { get_route_segments } from '../../utils/routing.js';
+import { queue } from './queue.js';
+import { crawl } from './crawl.js';
+import { forked } from '../../utils/fork.js';
+
+export default forked(import.meta.url, prerender);
 
 /**
- * @template {{message: string}} T
- * @template {Omit<T, 'message'>} K
- * @param {import('types').Logger} log
- * @param {'fail' | 'warn' | 'ignore' | ((details: T) => void)} input
- * @param {(details: K) => string} format
- * @returns {(details: K) => void}
- */
-function normalise_error_handler(log, input, format) {
-	switch (input) {
-		case 'fail':
-			return (details) => {
-				throw new Error(format(details));
-			};
-		case 'warn':
-			return (details) => {
-				log.error(format(details));
-			};
-		case 'ignore':
-			return () => {};
-		default:
-			// @ts-expect-error TS thinks T might be of a different kind, but it's not
-			return (details) => input({ ...details, message: format(details) });
-	}
-}
-
-const OK = 2;
-const REDIRECT = 3;
-
-/**
- *
  * @param {{
- *   Server: typeof import('types').InternalServer;
- *   internal: import('types').ServerInternalModule;
- *   manifest: import('types').SSRManifest;
- *   prerender_map: import('types').PrerenderMap;
- *   client_out_dir: string;
- *   verbose: string;
- *   env: string;
+ *   out: string;
+ *   manifest_path: string;
+ *   metadata: import('types').ServerMetadata;
+ *   verbose: boolean;
+ *   env: Record<string, string>
  * }} opts
- * @returns
  */
-export async function prerender({
-	Server,
-	internal,
-	manifest,
-	prerender_map,
-	client_out_dir,
-	verbose,
-	env
-}) {
+async function prerender({ out, manifest_path, metadata, verbose, env }) {
+	/** @type {import('types').SSRManifest} */
+	const manifest = (await import(pathToFileURL(manifest_path).href)).manifest;
+
+	/** @type {import('types').ServerInternalModule} */
+	const internal = await import(pathToFileURL(`${out}/server/internal.js`).href);
+
+	/** @type {import('types').ServerModule} */
+	const { Server } = await import(pathToFileURL(`${out}/server/index.js`).href);
+
+	// configure `import { building } from '$app/environment'` —
+	// essential we do this before analysing the code
+	internal.set_building(true);
+
+	/**
+	 * @template {{message: string}} T
+	 * @template {Omit<T, 'message'>} K
+	 * @param {import('types').Logger} log
+	 * @param {'fail' | 'warn' | 'ignore' | ((details: T) => void)} input
+	 * @param {(details: K) => string} format
+	 * @returns {(details: K) => void}
+	 */
+	function normalise_error_handler(log, input, format) {
+		switch (input) {
+			case 'fail':
+				return (details) => {
+					throw new Error(format(details));
+				};
+			case 'warn':
+				return (details) => {
+					log.error(format(details));
+				};
+			case 'ignore':
+				return () => {};
+			default:
+				// @ts-expect-error TS thinks T might be of a different kind, but it's not
+				return (details) => input({ ...details, message: format(details) });
+		}
+	}
+
+	const OK = 2;
+	const REDIRECT = 3;
+
 	/** @type {import('types').Prerendered} */
 	const prerendered = {
 		pages: new Map(),
@@ -71,6 +75,15 @@ export async function prerender({
 		paths: []
 	};
 
+	/** @type {import('types').PrerenderMap} */
+	const prerender_map = new Map();
+
+	for (const [id, { prerender }] of metadata.routes) {
+		if (prerender !== undefined) {
+			prerender_map.set(id, prerender);
+		}
+	}
+
 	/** @type {Set<string>} */
 	const prerendered_routes = new Set();
 
@@ -78,9 +91,7 @@ export async function prerender({
 	const config = (await load_config()).kit;
 
 	/** @type {import('types').Logger} */
-	const log = logger({
-		verbose: verbose === 'true'
-	});
+	const log = logger({ verbose });
 
 	if (should_polyfill) {
 		installPolyfills();
@@ -89,10 +100,8 @@ export async function prerender({
 	/** @type {Map<string, string>} */
 	const saved = new Map();
 
-	internal.set_paths(config.paths);
-
 	const server = new Server(manifest);
-	await server.init({ env: JSON.parse(env) });
+	await server.init({ env });
 
 	const handle_http_error = normalise_error_handler(
 		log,
@@ -134,7 +143,7 @@ export async function prerender({
 		return file;
 	}
 
-	const files = new Set(walk(client_out_dir).map(posixify));
+	const files = new Set(walk(`${out}/client`).map(posixify));
 	const seen = new Set();
 	const written = new Set();
 
@@ -348,6 +357,15 @@ export async function prerender({
 
 		manifest.assets.add(file);
 		saved.set(file, dest);
+	}
+
+	if (
+		config.prerender.entries.length > 1 ||
+		config.prerender.entries[0] !== '*' ||
+		prerender_map.size > 0
+	) {
+		// Only log if we're actually going to do something to not confuse users
+		log.info('Prerendering');
 	}
 
 	for (const entry of config.prerender.entries) {

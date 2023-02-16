@@ -3,7 +3,7 @@ import { manifest } from 'MANIFEST';
 
 const server = new Server(manifest);
 const initialized = server.init({
-	env: process.env
+	env: /** @type {Record<string, string>} */ (process.env)
 });
 
 /**
@@ -13,7 +13,7 @@ export default async (request) => {
 	await initialized;
 	return server.respond(request, {
 		getClientAddress() {
-			return request.headers.get('x-forwarded-for');
+			return /** @type {string} */ (request.headers.get('x-forwarded-for'));
 		}
 	});
 };

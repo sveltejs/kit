@@ -1,5 +1,49 @@
 # @sveltejs/adapter-node
 
+## 1.2.0
+
+### Minor Changes
+
+- add polyfill option ([#8991](https://github.com/sveltejs/kit/pull/8991))
+
+### Patch Changes
+
+- Updated dependencies [[`74cfa8d5`](https://github.com/sveltejs/kit/commit/74cfa8d5f1f13f81759e20e90f4ff86a4f96040d), [`bfa2b6ec`](https://github.com/sveltejs/kit/commit/bfa2b6ec88a6d522d87c924d7c466c01e142e66e)]:
+  - @sveltejs/kit@1.5.6
+
+## 1.1.8
+
+### Patch Changes
+
+- fix: use `strictRequires: true` when bundling output ([#8958](https://github.com/sveltejs/kit/pull/8958))
+
+- Updated dependencies [[`0abb8ebf`](https://github.com/sveltejs/kit/commit/0abb8ebffc6121f81c2bbfa0a0f68866d4cc1627), [`bef54f63`](https://github.com/sveltejs/kit/commit/bef54f63d2315066d30e8f1bcf471ddf2bd72c35), [`51cd6e64`](https://github.com/sveltejs/kit/commit/51cd6e643178e3a113fc2c3e8a63755bcbfe902d), [`930c8e4e`](https://github.com/sveltejs/kit/commit/930c8e4ee2e3046ed1b622777dafa23029a19fe5), [`ee8066fc`](https://github.com/sveltejs/kit/commit/ee8066fcb29ed1e7e3ab513cabb7997e38c984f2), [`49d2ec62`](https://github.com/sveltejs/kit/commit/49d2ec62e6385694f11701bf2fa411d07449344c), [`eb943565`](https://github.com/sveltejs/kit/commit/eb943565a4324dbed3da5a581924ca91a24366de)]:
+  - @sveltejs/kit@1.5.3
+
+## 1.1.7
+
+### Patch Changes
+
+- fix: make serve_prerendered middleware work with node http server ([#8890](https://github.com/sveltejs/kit/pull/8890))
+
+- Updated dependencies [[`c7648f66`](https://github.com/sveltejs/kit/commit/c7648f6608a413e2654625cbd30f890d2148cf13), [`63613bf1`](https://github.com/sveltejs/kit/commit/63613bf194c18ce50e111585ad770fc93f9e43c7), [`d1f7655e`](https://github.com/sveltejs/kit/commit/d1f7655efdff70d91f94fe0cb0de50ed2511b5e5)]:
+  - @sveltejs/kit@1.5.0
+
+## 1.1.6
+
+### Patch Changes
+
+- fix: correctly redirect trailing slashes for `adapter-node` ([#8857](https://github.com/sveltejs/kit/pull/8857))
+
+## 1.1.5
+
+### Patch Changes
+
+- docs: fix link in README ([#8854](https://github.com/sveltejs/kit/pull/8854))
+
+- Updated dependencies [[`7cdb7a65`](https://github.com/sveltejs/kit/commit/7cdb7a65819342c6d334c79defc697d531d5cbf4)]:
+  - @sveltejs/kit@1.3.10
+
 ## 1.1.4
 
 ### Patch Changes

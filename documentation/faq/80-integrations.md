@@ -2,11 +2,11 @@
 title: How do I use X with SvelteKit?
 ---
 
-Make sure you've read the [documentation section on integrations](/docs/integrations). If you're still having trouble, solutions to common issues are listed below.
+Make sure you've read the [documentation section on integrations](docs/integrations). If you're still having trouble, solutions to common issues are listed below.
 
 ### How do I setup a database?
 
-Put the code to query your database in a [server route](/docs/routing#server) - don't query the database in .svelte files. You can create a `db.js` or similar that sets up a connection immediately and makes the client accessible throughout the app as a singleton. You can execute any one-time setup code in `hooks.js` and import your database helpers into any endpoint that needs them.
+Put the code to query your database in a [server route](docs/routing#server) - don't query the database in .svelte files. You can create a `db.js` or similar that sets up a connection immediately and makes the client accessible throughout the app as a singleton. You can execute any one-time setup code in `hooks.js` and import your database helpers into any endpoint that needs them.
 
 ### How do I use a client-side only library that depends on `document` or `window`?
 
@@ -75,7 +75,7 @@ onMount(() => {
 
 ### How do I use a different backend API server?
 
-You can use [`event.fetch`](/docs/load#making-fetch-requests) to request data from an external API server, but be aware that you would need to deal with [CORS](https://developer.mozilla.org/en-US/docs/Web/HTTP/CORS), which will result in complications such as generally requiring requests to be preflighted resulting in higher latency. Requests to a separate subdomain may also increase latency due to an additional DNS lookup, TLS setup, etc. If you wish to use this method, you may find [`handleFetch`](/docs/hooks#server-hooks-handlefetch) helpful.
+You can use [`event.fetch`](docs/load#making-fetch-requests) to request data from an external API server, but be aware that you would need to deal with [CORS](https://developer.mozilla.org/en-US/docs/Web/HTTP/CORS), which will result in complications such as generally requiring requests to be preflighted resulting in higher latency. Requests to a separate subdomain may also increase latency due to an additional DNS lookup, TLS setup, etc. If you wish to use this method, you may find [`handleFetch`](docs/hooks#server-hooks-handlefetch) helpful.
 
 Another approach is to set up a proxy to bypass CORS headaches. In production, you would rewrite a path like `/api` to the API server; for local development, use Vite's [`server.proxy`](https://vitejs.dev/config/server-options.html#server-proxy) option.
 

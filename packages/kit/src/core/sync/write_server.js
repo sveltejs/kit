@@ -4,6 +4,7 @@ import { posixify, resolve_entry } from '../../utils/filesystem.js';
 import { s } from '../../utils/misc.js';
 import { load_error_page, load_template } from '../config/index.js';
 import { runtime_directory } from '../utils.js';
+import { write_if_changed } from './utils.js';
 
 /**
  * @param {{
@@ -23,10 +24,9 @@ const server_template = ({
 	template,
 	error_page
 }) => `
-import root from './root.svelte';
-import { set_building, set_paths, set_version } from '${runtime_directory}/shared.js';
+import root from '../root.svelte';
+import { set_assets, set_building, set_private_env, set_public_env, set_version } from '${runtime_directory}/shared.js';
 
-set_paths(${s(config.kit.paths)});
 set_version(${s(config.kit.version.name)});
 
 export const options = {
@@ -38,11 +38,15 @@ export const options = {
 	root,
 	service_worker: ${has_service_worker},
 	templates: {
-		app: ({ head, body, assets, nonce }) => ${s(template)
+		app: ({ head, body, assets, nonce, env }) => ${s(template)
 			.replace('%sveltekit.head%', '" + head + "')
 			.replace('%sveltekit.body%', '" + body + "')
 			.replace(/%sveltekit\.assets%/g, '" + assets + "')
-			.replace(/%sveltekit\.nonce%/g, '" + nonce + "')},
+			.replace(/%sveltekit\.nonce%/g, '" + nonce + "')
+			.replace(
+				/%sveltekit\.env\.([^%]+)%/g,
+				(_match, capture) => `" + (env[${s(capture)}] ?? "") + "`
+			)},
 		error: ({ status, message }) => ${s(error_page)
 			.replace(/%sveltekit\.status%/g, '" + status + "')
 			.replace(/%sveltekit\.error\.message%/g, '" + message + "')}
@@ -53,7 +57,7 @@ export function get_hooks() {
 	return ${hooks ? `import(${s(hooks)})` : '{}'};
 }
 
-export { set_building, set_paths };
+export { set_assets, set_building, set_private_env, set_public_env };
 `;
 
 // TODO need to re-run this whenever src/app.html or src/error.html are
@@ -71,11 +75,11 @@ export function write_server(config, output) {
 
 	/** @param {string} file */
 	function relative(file) {
-		return posixify(path.relative(output, file));
+		return posixify(path.relative(`${output}/server`, file));
 	}
 
-	fs.writeFileSync(
-		`${output}/server-internal.js`,
+	write_if_changed(
+		`${output}/server/internal.js`,
 		server_template({
 			config,
 			hooks: fs.existsSync(hooks_file) ? relative(hooks_file) : null,

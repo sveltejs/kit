@@ -1,5 +1,31 @@
 # @sveltejs/adapter-cloudflare
 
+## 2.0.1
+
+### Patch Changes
+
+- fix: correctly check URL pathname with Cloudflare adapter ([#8733](https://github.com/sveltejs/kit/pull/8733))
+
+- Updated dependencies [[`eba8fb09`](https://github.com/sveltejs/kit/commit/eba8fb0929b35edea1ca7867b816abd184d8f8f7), [`c14f3aeb`](https://github.com/sveltejs/kit/commit/c14f3aeb32f3e78c8454e9b89f85a0650b7683c4)]:
+  - @sveltejs/kit@1.3.6
+
+## 2.0.0
+
+### Major Changes
+
+- breaking: append `_headers` instead of overwriting ([#8693](https://github.com/sveltejs/kit/pull/8693))
+
+## 1.1.0
+
+### Minor Changes
+
+- feat: include as many static assets as possible in exclude list ([#8422](https://github.com/sveltejs/kit/pull/8422))
+
+### Patch Changes
+
+- Updated dependencies [[`06a56ae5`](https://github.com/sveltejs/kit/commit/06a56ae587795113b17fec559ab49c93f40861e8), [`06a56ae5`](https://github.com/sveltejs/kit/commit/06a56ae587795113b17fec559ab49c93f40861e8), [`2726e7c2`](https://github.com/sveltejs/kit/commit/2726e7c2d6d086e6200f9edecbeecf0d38eef873)]:
+  - @sveltejs/kit@1.2.0
+
 ## 1.0.4
 
 ### Patch Changes

@@ -1,7 +1,7 @@
 import { nodeResolve } from '@rollup/plugin-node-resolve';
 import commonjs from '@rollup/plugin-commonjs';
 import json from '@rollup/plugin-json';
-import { builtinModules } from 'module';
+import { builtinModules } from 'node:module';
 
 export default [
 	{
@@ -30,6 +30,15 @@ export default [
 			inlineDynamicImports: true
 		},
 		plugins: [nodeResolve(), commonjs(), json()],
-		external: ['ENV', 'MANIFEST', 'SERVER', ...builtinModules]
+		external: ['ENV', 'MANIFEST', 'SERVER', 'SHIMS', ...builtinModules]
+	},
+	{
+		input: 'src/shims.js',
+		output: {
+			file: 'files/shims.js',
+			format: 'esm'
+		},
+		plugins: [nodeResolve(), commonjs()],
+		external: builtinModules
 	}
 ];

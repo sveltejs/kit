@@ -4,7 +4,7 @@ title: Cloudflare Pages
 
 To deploy to [Cloudflare Pages](https://developers.cloudflare.com/pages/), use [`adapter-cloudflare`](https://github.com/sveltejs/kit/tree/master/packages/adapter-cloudflare).
 
-This adapter will be installed by default when you use [`adapter-auto`](/docs/adapter-auto), but adding it to your project is recommended so that `event.platform` is automatically typed.
+This adapter will be installed by default when you use [`adapter-auto`](adapter-auto), but adding it to your project is recommended so that `event.platform` is automatically typed.
 
 ## Comparisons
 
@@ -59,14 +59,18 @@ To make these types available to your app, reference them in your `src/app.d.ts`
 
 ```diff
 /// file: src/app.d.ts
-declare namespace App {
-	interface Platform {
-+		env?: {
-+			YOUR_KV_NAMESPACE: KVNamespace;
-+			YOUR_DURABLE_OBJECT_NAMESPACE: DurableObjectNamespace;
-+		};
+declare global {
+	namespace App {
+		interface Platform {
++			env?: {
++				YOUR_KV_NAMESPACE: KVNamespace;
++				YOUR_DURABLE_OBJECT_NAMESPACE: DurableObjectNamespace;
++			};
+		}
 	}
 }
+
+export {};
 ```
 
 > `platform.env` is only available in the production build. Use [wrangler](https://developers.cloudflare.com/workers/cli-wrangler) to test it locally

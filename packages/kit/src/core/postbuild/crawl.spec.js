@@ -1,5 +1,5 @@
-import fs from 'fs';
-import { fileURLToPath } from 'url';
+import fs from 'node:fs';
+import { fileURLToPath } from 'node:url';
 import { test } from 'uvu';
 import * as assert from 'uvu/assert';
 import { crawl } from './crawl.js';

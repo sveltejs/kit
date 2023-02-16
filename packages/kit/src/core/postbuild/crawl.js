@@ -165,7 +165,7 @@ export function crawl(html) {
 							} else if (name === 'rel') {
 								rel = value;
 							} else if (name === 'src') {
-								hrefs.push(value);
+								if (value) hrefs.push(value);
 							} else if (name === 'srcset') {
 								const candidates = [];
 								let insideURL = true;
@@ -183,7 +183,7 @@ export function crawl(html) {
 								candidates.push(value);
 								for (const candidate of candidates) {
 									const src = candidate.split(WHITESPACE)[0];
-									hrefs.push(src);
+									if (src) hrefs.push(src);
 								}
 							}
 						} else {

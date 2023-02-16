@@ -31,7 +31,8 @@ export const validate_common_exports = validator([
 	'prerender',
 	'csr',
 	'ssr',
-	'trailingSlash'
+	'trailingSlash',
+	'config'
 ]);
 
 export const validate_page_server_exports = validator([
@@ -40,7 +41,8 @@ export const validate_page_server_exports = validator([
 	'csr',
 	'ssr',
 	'actions',
-	'trailingSlash'
+	'trailingSlash',
+	'config'
 ]);
 
 export const validate_server_exports = validator([
@@ -50,5 +52,6 @@ export const validate_server_exports = validator([
 	'PUT',
 	'DELETE',
 	'prerender',
-	'trailingSlash'
+	'trailingSlash',
+	'config'
 ]);

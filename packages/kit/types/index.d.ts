@@ -7,13 +7,15 @@ import { CompileOptions } from 'svelte/types/compiler/interfaces';
 import {
 	AdapterEntry,
 	CspDirectives,
+	HttpMethod,
 	Logger,
 	MaybePromise,
 	Prerendered,
 	PrerenderHttpErrorHandlerValue,
 	PrerenderMissingIdHandlerValue,
+	PrerenderOption,
 	RequestOptions,
-	RouteDefinition,
+	RouteSegment,
 	UniqueInterface
 } from './private.js';
 import { SSRNodeLoader, SSRRoute, ValidatedConfig } from './internal.js';
@@ -50,9 +52,11 @@ export type AwaitedProperties<input extends Record<string, any> | void> =
 		? OptionalUnion<AwaitedPropertiesUnion<input>>
 		: AwaitedPropertiesUnion<input>;
 
-export type AwaitedActions<T extends Record<string, (...args: any) => any>> = {
-	[Key in keyof T]: OptionalUnion<UnpackValidationError<Awaited<ReturnType<T[Key]>>>>;
-}[keyof T];
+export type AwaitedActions<T extends Record<string, (...args: any) => any>> = OptionalUnion<
+	{
+		[Key in keyof T]: UnpackValidationError<Awaited<ReturnType<T[Key]>>>;
+	}[keyof T]
+>;
 
 // Takes a union type and returns a union type where each type also has all properties
 // of all possible types (typed as undefined), making accessing them more ergonomic
@@ -83,10 +87,13 @@ export interface Builder {
 	config: ValidatedConfig;
 	/** Information about prerendered pages and assets, if any. */
 	prerendered: Prerendered;
+	/** An array of dynamic (not prerendered) routes */
+	routes: RouteDefinition[];
 
 	/**
 	 * Create separate functions that map to one or more routes of your app.
 	 * @param fn A function that groups a set of routes into an entry point
+	 * @deprecated Use `builder.routes` instead
 	 */
 	createEntries(fn: (route: RouteDefinition) => AdapterEntry): Promise<void>;
 
@@ -99,7 +106,7 @@ export interface Builder {
 	 * Generate a server-side manifest to initialise the SvelteKit [server](https://kit.svelte.dev/docs/types#public-types-server) with.
 	 * @param opts a relative path to the base directory of the app and optionally in which format (esm or cjs) the manifest should be generated
 	 */
-	generateManifest(opts: { relativePath: string }): string;
+	generateManifest(opts: { relativePath: string; routes?: RouteDefinition[] }): string;
 
 	/**
 	 * Resolve a path to the `name` directory inside `outDir`, e.g. `/path/to/.svelte-kit/my-adapter`.
@@ -297,6 +304,8 @@ export interface KitConfig {
 	 * > When `mode` is `'auto'`, SvelteKit will use nonces for dynamically rendered pages and hashes for prerendered pages. Using nonces with prerendered pages is insecure and therefore forbidden.
 	 *
 	 * > Note that most [Svelte transitions](https://svelte.dev/tutorial/transition) work by creating an inline `<style>` element. If you use these in your app, you must either leave the `style-src` directive unspecified or add `unsafe-inline`.
+	 *
+	 * If this level of configuration is insufficient and you have more dynamic requirements, you can use the [`handle` hook](https://kit.svelte.dev/docs/hooks#server-hooks-handle) to roll your own CSP.
 	 */
 	csp?: {
 		/**
@@ -453,6 +462,7 @@ export interface KitConfig {
 		 * - `(details) => void` — a custom error handler that takes a `details` object with `status`, `path`, `referrer`, `referenceType` and `message` properties. If you `throw` from this function, the build will fail
 		 *
 		 * ```js
+		 * /// file: svelte.config.js
 		 * /// type: import('@sveltejs/kit').Config
 		 * const config = {
 		 *   kit: {
@@ -503,15 +513,38 @@ export interface KitConfig {
 		 */
 		files?(filepath: string): boolean;
 	};
+	typescript?: {
+		/**
+		 * A function that allows you to edit the generated `tsconfig.json`. You can mutate the config (recommended) or return a new one.
+		 * This is useful for extending a shared `tsconfig.json` in a monorepo root, for example.
+		 * @default (config) => config
+		 */
+		config?: (config: Record<string, any>) => Record<string, any> | void;
+	};
 	/**
-	 * Client-side navigation can be buggy if you deploy a new version of your app while people are using it. If the code for the new page is already loaded, it may have stale content; if it isn't, the app's route manifest may point to a JavaScript file that no longer exists. SvelteKit solves this problem by falling back to traditional full-page navigation if it detects that a new version has been deployed, using the `name` specified here (which defaults to a timestamp of the build).
+	 * Client-side navigation can be buggy if you deploy a new version of your app while people are using it. If the code for the new page is already loaded, it may have stale content; if it isn't, the app's route manifest may point to a JavaScript file that no longer exists.
+	 * SvelteKit helps you solve this problem through version management.
+	 * If SvelteKit encounters an error while loading the page and detects that a new version has been deployed (using the `name` specified here, which defaults to a timestamp of the build) it will fall back to traditional full-page navigation.
+	 * Not all navigations will result in an error though, for example if the JavaScript for the next page is already loaded. If you still want to force a full-page navigation in these cases, use techniques such as setting the `pollInverval` and then using `beforeNavigate`:
+	 * ```html
+	 * /// +layout.svelte
+	 * <script>
+	 * import { beforeNavigate } from '$app/navigation';
+	 * import { updated } from '$app/stores';
+	 *
+	 * beforeNavigate(({ willUnload, to }) => {
+	 *   if ($updated && !willUnload && to?.url) {
+	 *     location.href = to.route.url.href;
+	 *   }
+	 * });
+	 * </script>
+	 * ```
 	 *
 	 * If you set `pollInterval` to a non-zero value, SvelteKit will poll for new versions in the background and set the value of the [`updated`](/docs/modules#$app-stores-updated) store to `true` when it detects one.
 	 */
 	version?: {
 		/**
-		 * The current app version string.
-		 * @default Date.now().toString()
+		 * The current app version string. If specified, this must be deterministic (e.g. a commit ref rather than `Math.random()` or Date.now().toString()`), otherwise defaults to a timestamp of the build
 		 */
 		name?: string;
 		/**
@@ -948,6 +981,15 @@ export interface ResolveOptions {
 	preload?(input: { type: 'font' | 'css' | 'js' | 'asset'; path: string }): boolean;
 }
 
+export interface RouteDefinition<Config = any> {
+	id: string;
+	pattern: RegExp;
+	prerender: PrerenderOption;
+	segments: RouteSegment[];
+	methods: HttpMethod[];
+	config: Config;
+}
+
 export class Server {
 	constructor(manifest: SSRManifest);
 	init(options: ServerInitOptions): Promise<void>;
@@ -1071,6 +1113,13 @@ export type Actions<
 
 /**
  * When calling a form action via fetch, the response will be one of these shapes.
+ * ```svelte
+ * <form method="post" use:enhance={() => {
+ *   return ({ result }) => {
+ * 		// result is of type ActionResult
+ *   };
+ * }}
+ * ```
  */
 export type ActionResult<
 	Success extends Record<string, unknown> | undefined = Record<string, any>,
@@ -1084,7 +1133,8 @@ export type ActionResult<
 /**
  * Creates an `HttpError` object with an HTTP status code and an optional message.
  * This object, if thrown during request handling, will cause SvelteKit to
- * return an error response without invoking `handleError`
+ * return an error response without invoking `handleError`.
+ * Make sure you're not catching the thrown error, which would prevent SvelteKit from handling it.
  * @param status The [HTTP status code](https://developer.mozilla.org/en-US/docs/Web/HTTP/Status#client_error_responses). Must be in the range 400-599.
  * @param body An object that conforms to the App.Error type. If a string is passed, it will be used as the message property.
  */
@@ -1107,6 +1157,7 @@ export interface HttpError {
 
 /**
  * Create a `Redirect` object. If thrown during request handling, SvelteKit will return a redirect response.
+ * Make sure you're not catching the thrown redirect, which would prevent SvelteKit from handling it.
  * @param status The [HTTP status code](https://developer.mozilla.org/en-US/docs/Web/HTTP/Status#redirection_messages). Must be in the range 300-308.
  * @param location The location to redirect to.
  */
@@ -1128,9 +1179,16 @@ export interface Redirect {
 /**
  * Create a JSON `Response` object from the supplied data.
  * @param data The value that will be serialized as JSON.
- * @param init Options such as `status` and `headers` that will be added to the response. A `Content-Type: application/json` header will be added automatically.
+ * @param init Options such as `status` and `headers` that will be added to the response. `Content-Type: application/json` and `Content-Length` headers will be added automatically.
  */
 export function json(data: any, init?: ResponseInit): Response;
+
+/**
+ * Create a `Response` object from the supplied body.
+ * @param body The value that will be used as-is.
+ * @param init Options such as `status` and `headers` that will be added to the response. A `Content-Length` header will be added automatically.
+ */
+export function text(body: string, init?: ResponseInit): Response;
 
 /**
  * Create an `ActionFailure` object.
@@ -1176,4 +1234,12 @@ export interface SubmitFunction<
 				update(options?: { reset: boolean }): Promise<void>;
 		  }) => void)
 	>;
+}
+
+/**
+ * The type of `export const snapshot` exported from a page or layout component.
+ */
+export interface Snapshot<T = any> {
+	capture: () => T;
+	restore: (snapshot: T) => void;
 }

@@ -1,4 +1,5 @@
 <script>
+	import { base } from '$app/paths';
 	import logotype from './svelte-kit-logotype.svg';
 	import background from './svelte-kit-machine.webp?w=1440;960&format=avif;webp;png&picture';
 </script>
@@ -8,7 +9,7 @@
 		<div class="hero-text">
 			<img alt="SvelteKit logotype" width="400" height="50" class="logotype" src={logotype} />
 			<div class="tagline">web development, streamlined</div>
-			<a class="cta" href="/docs/introduction">read the docs</a>
+			<a class="cta" href="{base}/docs/introduction">read the docs</a>
 		</div>
 
 		<picture class="hero-image">

@@ -30,6 +30,14 @@ Entry points to be aware of are:
 - [`packages/kit/src/exports/vite`](https://github.com/sveltejs/kit/tree/master/packages/kit/src/exports/vite) - for all the Vite plugin related stuff
 - [`packages/adapter-[platform]`](https://github.com/sveltejs/kit/tree/master/packages) - for the various SvelteKit-provided adapters
 
+## Good first issues
+
+If you're looking for an issue to tackle to get familiar with the codebase and test suite, the [**low hanging fruit**](https://github.com/sveltejs/kit/issues?q=is%3Aissue+is%3Aopen+label%3A%22low+hanging+fruit%22) label contains issues that ought to be relatively straightforward to fix. Check to see if a PR already exists for an issue before working on it!
+
+Issues that have a clear solution but which _may_ be slightly more involved have the [**ready to implement**](https://github.com/sveltejs/kit/issues?q=is%3Aissue+is%3Aopen+label%3A%22ready+to+implement%22) label.
+
+Issues with the [**soon**](https://github.com/sveltejs/kit/issues?q=is%3Aissue+is%3Aopen+milestone%3Asoon) milestone are higher priority than issues with the [**later**](https://github.com/sveltejs/kit/issues?q=is%3Aissue+is%3Aopen+milestone%3Alater+) label (though PRs for 'later' issues are still welcome, especially if you're affected by them).
+
 ## Testing
 
 Run `pnpm test` to run the tests from all subpackages. Browser tests live in subdirectories of `packages/kit/test` such as `packages/kit/test/apps/basics`.
@@ -44,7 +52,7 @@ You can run the test server with `cd packages/kit/test/apps/basics; pnpm run dev
 
 You may need to install some dependencies first, e.g. with `npx playwright install-deps` (which only works on Ubuntu).
 
-If there are tests that fail on the CI, you can retrieve the failed screenshots by going to the summary page of the CI run. You can usually find this by clicking on "Details" of the check results, click "Summary" at the top-left corner, and then scroll to the bottom "Artifacts" section to download the archive.
+If there are tests that fail on the CI, you can retrieve the failed screenshots by going to the summary page of the CI run. You can usually find this by clicking on "Details" of the check results, clicking "Summary" at the top-left corner, and then scrolling to the bottom "Artifacts" section to download the archive.
 
 It is very easy to introduce flakiness in a browser test. If you try to fix the flakiness in a test, you can run it until failure to gain some confidence you've fixed the test with a command like:
 
@@ -58,15 +66,15 @@ If you would like to test local changes to Vite or another dependency, you can b
 
 ```jsonc
 {
-	// ...
-	"dependencies": {
-		"vite": "^3.1.0"
-	},
-	"pnpm": {
-		"overrides": {
-			"vite": "link:../path/to/vite/packages/vite"
-		}
-	}
+  // ...
+  "dependencies": {
+    "vite": "^4.0.0"
+  },
+  "pnpm": {
+    "overrides": {
+      "vite": "link:../path/to/vite/packages/vite"
+    }
+  }
 }
 ```
 
@@ -85,7 +93,7 @@ There are a few guidelines we follow:
 - Avoid creating new test projects under `packages/kit/test/apps` but reuse an existing one when possible
 - Ensure `pnpm lint` and `pnpm check` pass. You can run `pnpm format` to format the code
 
-To use the git hooks in the repo, which will save you waiting for CI to tell you that you forgot to lint, run this:
+To use the git hooks in the repo, which will save you from waiting for CI to tell you that you forgot to lint, run this:
 
 ```bash
 git config core.hookspath .githooks
@@ -93,7 +101,7 @@ git config core.hookspath .githooks
 
 ### Generating changelogs
 
-For changes to be reflected in package changelogs, run `pnpm changeset` and follow the prompts. All changesets should be `patch` until SvelteKit 1.0
+For changes to be reflected in package changelogs, run `pnpm changeset` and follow the prompts.
 
 ## Releases
 

@@ -15,6 +15,7 @@ import {
 	is_external_url,
 	scroll_state
 } from './utils.js';
+import * as storage from './session-storage.js';
 import {
 	lock_fetch,
 	unlock_fetch,
@@ -25,12 +26,13 @@ import {
 import { parse } from './parse.js';
 
 import Root from '__GENERATED__/root.svelte';
-import { nodes, server_loads, dictionary, matchers, hooks } from '__GENERATED__/client-manifest.js';
+import { nodes, server_loads, dictionary, matchers, hooks } from '__CLIENT__/manifest.js';
+import { base } from '$internal/paths';
 import { HttpError, Redirect } from '../control.js';
 import { stores } from './singletons.js';
 import { unwrap_promises } from '../../utils/promises.js';
 import * as devalue from 'devalue';
-import { INDEX_KEY, PRELOAD_PRIORITIES, SCROLL_KEY } from './constants.js';
+import { INDEX_KEY, PRELOAD_PRIORITIES, SCROLL_KEY, SNAPSHOT_KEY } from './constants.js';
 import { validate_common_exports } from '../../utils/exports.js';
 import { compact } from '../../utils/array.js';
 
@@ -51,12 +53,10 @@ default_error_loader();
 
 /** @typedef {{ x: number, y: number }} ScrollPosition */
 /** @type {Record<number, ScrollPosition>} */
-let scroll_positions = {};
-try {
-	scroll_positions = JSON.parse(sessionStorage[SCROLL_KEY]);
-} catch {
-	// do nothing
-}
+const scroll_positions = storage.get(SCROLL_KEY) ?? {};
+
+/** @type {Record<string, any[]>} */
+const snapshots = storage.get(SNAPSHOT_KEY) ?? {};
 
 /** @param {number} index */
 function update_scroll_positions(index) {
@@ -66,14 +66,21 @@ function update_scroll_positions(index) {
 /**
  * @param {{
  *   target: HTMLElement;
- *   base: string;
  * }} opts
  * @returns {import('./types').Client}
  */
-export function create_client({ target, base }) {
+export function create_client({ target }) {
 	const container = __SVELTEKIT_EMBEDDED__ ? target : document.documentElement;
 	/** @type {Array<((url: URL) => boolean)>} */
 	const invalidated = [];
+
+	/**
+	 * An array of the `+layout.svelte` and `+page.svelte` component instances
+	 * that currently live on the page — used for capturing and restoring snapshots.
+	 * It's updated/manipulated through `bind:this` in `Root.svelte`.
+	 * @type {import('svelte').SvelteComponent[]}
+	 */
+	const components = [];
 
 	/** @type {{id: string, promise: Promise<import('./types').NavigationResult>} | null} */
 	let load_cache = null;
@@ -159,6 +166,20 @@ export function create_client({ target, base }) {
 		await update(intent, url, []);
 	}
 
+	/** @param {number} index */
+	function capture_snapshot(index) {
+		if (components.some((c) => c?.snapshot)) {
+			snapshots[index] = components.map((c) => c?.snapshot?.capture());
+		}
+	}
+
+	/** @param {number} index */
+	function restore_snapshot(index) {
+		snapshots[index]?.forEach((value, i) => {
+			components[i]?.snapshot?.restore(value);
+		});
+	}
+
 	/**
 	 * @param {string | URL} url
 	 * @param {{ noScroll?: boolean; replaceState?: boolean; keepFocus?: boolean; state?: any; invalidateAll?: boolean }} opts
@@ -201,14 +222,8 @@ export function create_client({ target, base }) {
 		});
 	}
 
-	/** @param {URL} url */
-	async function preload_data(url) {
-		const intent = get_navigation_intent(url, false);
-
-		if (!intent) {
-			throw new Error(`Attempted to preload a URL that does not belong to this app: ${url}`);
-		}
-
+	/** @param {import('./types').NavigationIntent} intent */
+	async function preload_data(intent) {
 		load_cache = {
 			id: intent.id,
 			promise: load_route(intent).then((result) => {
@@ -239,11 +254,20 @@ export function create_client({ target, base }) {
 	 * @param {import('./types').NavigationIntent | undefined} intent
 	 * @param {URL} url
 	 * @param {string[]} redirect_chain
+	 * @param {number} [previous_history_index]
 	 * @param {{hash?: string, scroll: { x: number, y: number } | null, keepfocus: boolean, details: { replaceState: boolean, state: any } | null}} [opts]
 	 * @param {{}} [nav_token] To distinguish between different navigation events and determine the latest. Needed for example for redirects to keep the original token
 	 * @param {() => void} [callback]
 	 */
-	async function update(intent, url, redirect_chain, opts, nav_token = {}, callback) {
+	async function update(
+		intent,
+		url,
+		redirect_chain,
+		previous_history_index,
+		opts,
+		nav_token = {},
+		callback
+	) {
 		token = nav_token;
 		let navigation_result = intent && (await load_route(intent));
 
@@ -288,7 +312,7 @@ export function create_client({ target, base }) {
 				);
 				return false;
 			}
-		} else if (/** @type {number} */ (navigation_result.props?.page?.status) >= 400) {
+		} else if (/** @type {number} */ (navigation_result.props.page?.status) >= 400) {
 			const updated = await stores.updated.check();
 			if (updated) {
 				await native_navigation(url);
@@ -302,11 +326,36 @@ export function create_client({ target, base }) {
 
 		updating = true;
 
+		// `previous_history_index` will be undefined for invalidation
+		if (previous_history_index) {
+			update_scroll_positions(previous_history_index);
+			capture_snapshot(previous_history_index);
+		}
+
+		// ensure the url pathname matches the page's trailing slash option
+		if (
+			navigation_result.props.page?.url &&
+			navigation_result.props.page.url.pathname !== url.pathname
+		) {
+			url.pathname = navigation_result.props.page?.url.pathname;
+		}
+
 		if (opts && opts.details) {
 			const { details } = opts;
 			const change = details.replaceState ? 0 : 1;
 			details.state[INDEX_KEY] = current_history_index += change;
 			history[details.replaceState ? 'replaceState' : 'pushState'](details.state, '', url);
+
+			if (!details.replaceState) {
+				// if we navigated back, then pushed a new state, we can
+				// release memory by pruning the scroll/snapshot lookup
+				let i = current_history_index + 1;
+				while (snapshots[i] || scroll_positions[i]) {
+					delete snapshots[i];
+					delete scroll_positions[i];
+					i += 1;
+				}
+			}
 		}
 
 		// reset preload synchronously after the history state has been set to avoid race conditions
@@ -315,6 +364,7 @@ export function create_client({ target, base }) {
 		if (started) {
 			current = navigation_result.state;
 
+			// reset url before updating page store
 			if (navigation_result.props.page) {
 				navigation_result.props.page.url = url;
 			}
@@ -327,15 +377,25 @@ export function create_client({ target, base }) {
 		// opts must be passed if we're navigating
 		if (opts) {
 			const { scroll, keepfocus } = opts;
+			const { activeElement } = document;
 
-			// reset focus first, so that manual focus management can override it
-			if (!keepfocus) reset_focus();
-
-			// need to render the DOM before we can scroll to the rendered elements
+			// need to render the DOM before we can scroll to the rendered elements and do focus management
 			await tick();
 
+			const changed_focus =
+				// reset focus only if any manual focus management didn't override it
+				document.activeElement !== activeElement &&
+				// also refocus when activeElement is body already because the
+				// focus event might not have been fired on it yet
+				document.activeElement !== document.body;
+
+			if (!keepfocus && !changed_focus) {
+				await reset_focus();
+			}
+
 			if (autoscroll) {
-				const deep_linked = url.hash && document.getElementById(url.hash.slice(1));
+				const deep_linked =
+					url.hash && document.getElementById(decodeURIComponent(url.hash.slice(1)));
 				if (scroll) {
 					scrollTo(scroll.x, scroll.y);
 				} else if (deep_linked) {
@@ -375,9 +435,11 @@ export function create_client({ target, base }) {
 
 		root = new Root({
 			target,
-			props: { ...result.props, stores },
+			props: { ...result.props, stores, components },
 			hydrate: true
 		});
+
+		restore_snapshot(current_history_index);
 
 		/** @type {import('types').AfterNavigate} */
 		const navigation = {
@@ -436,7 +498,7 @@ export function create_client({ target, base }) {
 			},
 			props: {
 				// @ts-ignore Somehow it's getting SvelteComponent and SvelteComponentDev mixed up
-				components: compact(branch).map((branch_node) => branch_node.node.component)
+				constructors: compact(branch).map((branch_node) => branch_node.node.component)
 			}
 		};
 
@@ -585,12 +647,17 @@ export function create_client({ target, base }) {
 					}
 
 					// we must fixup relative urls so they are resolved from the target page
-					const resolved = new URL(requested, url).href;
-					depends(resolved);
+					const resolved = new URL(requested, url);
+					depends(resolved.href);
+
+					// match ssr serialized data url, which is important to find cached responses
+					if (resolved.origin === url.origin) {
+						requested = resolved.href.slice(url.origin.length);
+					}
 
 					// prerendered pages may be served from any origin, so `initial_fetch` urls shouldn't be resolved
 					return started
-						? subsequent_fetch(requested, resolved, init)
+						? subsequent_fetch(requested, resolved.href, init)
 						: initial_fetch(requested, init);
 				},
 				setHeaders: () => {}, // noop
@@ -714,30 +781,29 @@ export function create_client({ target, base }) {
 		const url_changed = current.url ? id !== current.url.pathname + current.url.search : false;
 		const route_changed = current.route ? route.id !== current.route.id : false;
 
-		const invalid_server_nodes = loaders.reduce((acc, loader, i) => {
+		let parent_invalid = false;
+		const invalid_server_nodes = loaders.map((loader, i) => {
 			const previous = current.branch[i];
 
 			const invalid =
 				!!loader?.[0] &&
 				(previous?.loader !== loader[1] ||
-					has_changed(
-						acc.some(Boolean),
-						route_changed,
-						url_changed,
-						previous.server?.uses,
-						params
-					));
+					has_changed(parent_invalid, route_changed, url_changed, previous.server?.uses, params));
 
-			acc.push(invalid);
-			return acc;
-		}, /** @type {boolean[]} */ ([]));
+			if (invalid) {
+				// For the next one
+				parent_invalid = true;
+			}
+
+			return invalid;
+		});
 
 		if (invalid_server_nodes.some(Boolean)) {
 			try {
 				server_data = await load_data(url, invalid_server_nodes);
 			} catch (error) {
 				return load_root_error_page({
-					status: 500,
+					status: error instanceof HttpError ? error.status : 500,
 					error: await handle_error(error, { url, params, route: { id: route.id } }),
 					url,
 					route
@@ -791,7 +857,7 @@ export function create_client({ target, base }) {
 					// server_data_node is undefined if it wasn't reloaded from the server;
 					// and if current loader uses server data, we want to reuse previous data.
 					server_data_node === undefined && loader[0] ? { type: 'skip' } : server_data_node ?? null,
-					previous?.server
+					loader[0] ? previous?.server : undefined
 				)
 			});
 		});
@@ -913,12 +979,12 @@ export function create_client({ target, base }) {
 		/** @type {Record<string, string>} */
 		const params = {}; // error page does not have params
 
-		const node = await default_layout_loader();
-
 		/** @type {import('types').ServerDataNode | null} */
 		let server_data_node = null;
 
-		if (node.has_server_load) {
+		const default_layout_has_server_load = server_loads[0] === 0;
+
+		if (default_layout_has_server_load) {
 			// TODO post-https://github.com/sveltejs/kit/discussions/6124 we can use
 			// existing root layout data
 			try {
@@ -976,7 +1042,7 @@ export function create_client({ target, base }) {
 	function get_navigation_intent(url, invalidating) {
 		if (is_external_url(url, base)) return;
 
-		const path = decode_pathname(url.pathname.slice(base.length) || '/');
+		const path = get_url_path(url);
 
 		for (const route of routes) {
 			const params = route.exec(path);
@@ -988,6 +1054,11 @@ export function create_client({ target, base }) {
 				return intent;
 			}
 		}
+	}
+
+	/** @param {URL} url */
+	function get_url_path(url) {
+		return decode_pathname(url.pathname.slice(base.length) || '/');
 	}
 
 	/**
@@ -1073,7 +1144,8 @@ export function create_client({ target, base }) {
 			return;
 		}
 
-		update_scroll_positions(current_history_index);
+		// store this before calling `accepted()`, which may change the index
+		const previous_history_index = current_history_index;
 
 		accepted();
 
@@ -1087,6 +1159,7 @@ export function create_client({ target, base }) {
 			intent,
 			url,
 			redirect_chain,
+			previous_history_index,
 			{
 				scroll,
 				keepfocus,
@@ -1167,7 +1240,9 @@ export function create_client({ target, base }) {
 			(entries) => {
 				for (const entry of entries) {
 					if (entry.isIntersecting) {
-						preload_code(new URL(/** @type {HTMLAnchorElement} */ (entry.target).href).pathname);
+						preload_code(
+							get_url_path(new URL(/** @type {HTMLAnchorElement} */ (entry.target).href))
+						);
 						observer.unobserve(entry.target);
 					}
 				}
@@ -1190,9 +1265,25 @@ export function create_client({ target, base }) {
 
 			if (!options.reload) {
 				if (priority <= options.preload_data) {
-					preload_data(/** @type {URL} */ (url));
+					const intent = get_navigation_intent(/** @type {URL} */ (url), false);
+					if (intent) {
+						if (__SVELTEKIT_DEV__) {
+							preload_data(intent).then((result) => {
+								if (result.type === 'loaded' && result.state.error) {
+									console.warn(
+										`Preloading data for ${intent.url.pathname} failed with the following error: ${result.state.error.message}\n` +
+											'If this error is transient, you can ignore it. Otherwise, consider disabling preloading for this route. ' +
+											'This route was preloaded due to a data-sveltekit-preload-data attribute. ' +
+											'See https://kit.svelte.dev/docs/link-options for more info'
+									);
+								}
+							});
+						} else {
+							preload_data(intent);
+						}
+					}
 				} else if (priority <= options.preload_code) {
-					preload_code(/** @type {URL} */ (url).pathname);
+					preload_code(get_url_path(/** @type {URL} */ (url)));
 				}
 			}
 		}
@@ -1212,7 +1303,7 @@ export function create_client({ target, base }) {
 				}
 
 				if (options.preload_code === PRELOAD_PRIORITIES.eager) {
-					preload_code(/** @type {URL} */ (url).pathname);
+					preload_code(get_url_path(/** @type {URL} */ (url)));
 				}
 			}
 		}
@@ -1276,7 +1367,13 @@ export function create_client({ target, base }) {
 
 		preload_data: async (href) => {
 			const url = new URL(href, get_base_uri(document));
-			await preload_data(url);
+			const intent = get_navigation_intent(url, false);
+
+			if (!intent) {
+				throw new Error(`Attempted to preload a URL that does not belong to this app: ${url}`);
+			}
+
+			await preload_data(intent);
 		},
 
 		preload_code,
@@ -1368,12 +1465,10 @@ export function create_client({ target, base }) {
 			addEventListener('visibilitychange', () => {
 				if (document.visibilityState === 'hidden') {
 					update_scroll_positions(current_history_index);
+					storage.set(SCROLL_KEY, scroll_positions);
 
-					try {
-						sessionStorage[SCROLL_KEY] = JSON.stringify(scroll_positions);
-					} catch {
-						// do nothing
-					}
+					capture_snapshot(current_history_index);
+					storage.set(SNAPSHOT_KEY, snapshots);
 				}
 			});
 
@@ -1520,17 +1615,29 @@ export function create_client({ target, base }) {
 				});
 			});
 
-			addEventListener('popstate', (event) => {
+			addEventListener('popstate', async (event) => {
 				if (event.state?.[INDEX_KEY]) {
 					// if a popstate-driven navigation is cancelled, we need to counteract it
 					// with history.go, which means we end up back here, hence this check
 					if (event.state[INDEX_KEY] === current_history_index) return;
 
-					const delta = event.state[INDEX_KEY] - current_history_index;
+					const scroll = scroll_positions[event.state[INDEX_KEY]];
 
-					navigate({
+					// if the only change is the hash, we don't need to do anything...
+					if (current.url.href.split('#')[0] === location.href.split('#')[0]) {
+						// ...except handle scroll
+						scroll_positions[current_history_index] = scroll_state();
+						current_history_index = event.state[INDEX_KEY];
+						scrollTo(scroll.x, scroll.y);
+						return;
+					}
+
+					const delta = event.state[INDEX_KEY] - current_history_index;
+					let blocked = false;
+
+					await navigate({
 						url: new URL(location.href),
-						scroll: scroll_positions[event.state[INDEX_KEY]],
+						scroll,
 						keepfocus: false,
 						redirect_chain: [],
 						details: null,
@@ -1539,10 +1646,15 @@ export function create_client({ target, base }) {
 						},
 						blocked: () => {
 							history.go(-delta);
+							blocked = true;
 						},
 						type: 'popstate',
 						delta
 					});
+
+					if (!blocked) {
+						restore_snapshot(current_history_index);
+					}
 				}
 			});
 
@@ -1670,7 +1782,8 @@ async function load_data(url, invalid) {
 
 	if (!res.ok) {
 		// error message is a JSON-stringified string which devalue can't handle at the top level
-		throw new Error(data);
+		// turn it into a HttpError to not call handleError on the client again (was already handled on the server)
+		throw new HttpError(res.status, data);
 	}
 
 	// revive devalue-flattened data
@@ -1722,16 +1835,19 @@ function reset_focus() {
 		root.tabIndex = -1;
 		root.focus({ preventScroll: true });
 
-		setTimeout(() => {
-			getSelection()?.removeAllRanges();
-		});
-
 		// restore `tabindex` as to prevent `root` from stealing input from elements
 		if (tabindex !== null) {
 			root.setAttribute('tabindex', tabindex);
 		} else {
 			root.removeAttribute('tabindex');
 		}
+
+		return new Promise((resolve) => {
+			setTimeout(() => {
+				// fixes https://github.com/sveltejs/kit/issues/8439
+				resolve(getSelection()?.removeAllRanges());
+			});
+		});
 	}
 }
 

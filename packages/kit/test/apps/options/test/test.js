@@ -32,7 +32,17 @@ test.describe('base path', () => {
 		);
 	});
 
-	test('sets_paths', async ({ page }) => {
+	if (process.env.DEV) {
+		test('serves files in source directory', async ({ request, javaScriptEnabled }) => {
+			if (!javaScriptEnabled) return;
+
+			const response = await request.get('/path-base/source/pages/test.txt');
+			expect(response.ok()).toBe(true);
+			expect(await response.text()).toBe('hello there world\n');
+		});
+	}
+
+	test('paths available on server side', async ({ page }) => {
 		await page.goto('/path-base/base/');
 		expect(await page.textContent('[data-source="base"]')).toBe('/path-base');
 		expect(await page.textContent('[data-source="assets"]')).toBe('/_svelte_kit_assets');
@@ -232,16 +242,43 @@ test.describe('trailingSlash', () => {
 		await app.goto('/path-base/preloading/preloaded');
 		expect(requests).toEqual([]);
 	});
-});
 
-test.describe('serviceWorker', () => {
-	if (process.env.DEV) return;
+	test('accounts for base path when running data-sveltekit-preload-code', async ({
+		page,
+		javaScriptEnabled
+	}) => {
+		if (!javaScriptEnabled) return;
 
-	test('does not register service worker if none created', async ({ page }) => {
-		await page.goto('/path-base/');
-		expect(await page.content()).not.toMatch('navigator.serviceWorker');
+		await page.goto('/path-base/preloading');
+
+		/** @type {string[]} */
+		let requests = [];
+		page.on('request', (r) => requests.push(new URL(r.url()).pathname));
+
+		await page.hover('a[href="/path-base/preloading/code"]');
+		await page.waitForTimeout(100);
+
+		// svelte request made is environment dependent
+		if (process.env.DEV) {
+			expect(requests.filter((req) => req.endsWith('.svelte')).length).toBe(1);
+		} else {
+			expect(requests.filter((req) => req.endsWith('.js')).length).toBeGreaterThan(0);
+		}
+
+		requests = [];
+		await page.click('a[href="/path-base/preloading/code"]');
+		expect(requests).toEqual([]);
 	});
 });
+
+if (!process.env.DEV) {
+	test.describe('serviceWorker', () => {
+		test('does not register service worker if none created', async ({ page }) => {
+			await page.goto('/path-base/');
+			expect(await page.content()).not.toMatch('navigator.serviceWorker');
+		});
+	});
+}
 
 test.describe('Vite options', () => {
 	test('Respects --mode', async ({ page }) => {

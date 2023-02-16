@@ -1,10 +1,11 @@
 import { DEV } from 'esm-env';
+import { base } from '$internal/paths';
 import { is_endpoint_request, render_endpoint } from './endpoint.js';
 import { render_page } from './page/index.js';
 import { render_response } from './page/render.js';
 import { respond_with_error } from './page/respond_with_error.js';
 import { is_form_content_type } from '../../utils/http.js';
-import { GENERIC_ERROR, get_option, handle_fatal_error, redirect_response } from './utils.js';
+import { GENERIC_ERROR, handle_fatal_error, redirect_response } from './utils.js';
 import {
 	decode_pathname,
 	decode_params,
@@ -23,8 +24,8 @@ import {
 	validate_page_server_exports,
 	validate_server_exports
 } from '../../utils/exports.js';
-import { error, json } from '../../exports/index.js';
-import * as paths from '../shared.js';
+import { get_option } from '../../utils/options.js';
+import { error, json, text } from '../../exports/index.js';
 
 /* global __SVELTEKIT_ADAPTER_NAME__ */
 
@@ -72,7 +73,7 @@ export async function respond(request, options, manifest, state) {
 			if (request.headers.get('accept') === 'application/json') {
 				return json(csrf_error.body, { status: csrf_error.status });
 			}
-			return new Response(csrf_error.body.message, { status: csrf_error.status });
+			return text(csrf_error.body.message, { status: csrf_error.status });
 		}
 	}
 
@@ -80,7 +81,7 @@ export async function respond(request, options, manifest, state) {
 	try {
 		decoded = decode_pathname(url.pathname);
 	} catch {
-		return new Response('Malformed URI', { status: 400 });
+		return text('Malformed URI', { status: 400 });
 	}
 
 	/** @type {import('types').SSRRoute | null} */
@@ -89,11 +90,11 @@ export async function respond(request, options, manifest, state) {
 	/** @type {Record<string, string>} */
 	let params = {};
 
-	if (paths.base && !state.prerendering?.fallback) {
-		if (!decoded.startsWith(paths.base)) {
-			return new Response('Not found', { status: 404 });
+	if (base && !state.prerendering?.fallback) {
+		if (!decoded.startsWith(base)) {
+			return text('Not found', { status: 404 });
 		}
-		decoded = decoded.slice(paths.base.length) || '/';
+		decoded = decoded.slice(base.length) || '/';
 	}
 
 	const is_data_request = has_data_suffix(decoded);
@@ -128,6 +129,9 @@ export async function respond(request, options, manifest, state) {
 
 	/** @type {Record<string, string>} */
 	const headers = {};
+
+	/** @type {Record<string, import('./page/types').Cookie>} */
+	let cookies_to_add = {};
 
 	/** @type {import('types').RequestEvent} */
 	const event = {
@@ -240,6 +244,7 @@ export async function respond(request, options, manifest, state) {
 			trailing_slash ?? 'never'
 		);
 
+		cookies_to_add = new_cookies;
 		event.cookies = cookies;
 		event.fetch = create_fetch({ event, options, manifest, state, get_cookie_header });
 
@@ -256,7 +261,7 @@ export async function respond(request, options, manifest, state) {
 						response.headers.set(key, /** @type {string} */ (value));
 					}
 
-					add_cookies_to_headers(response.headers, Object.values(new_cookies));
+					add_cookies_to_headers(response.headers, Object.values(cookies_to_add));
 
 					if (state.prerendering && event.route.id !== null) {
 						response.headers.set('x-sveltekit-routeid', encodeURI(event.route.id));
@@ -312,11 +317,11 @@ export async function respond(request, options, manifest, state) {
 		return response;
 	} catch (e) {
 		if (e instanceof Redirect) {
-			if (is_data_request) {
-				return redirect_json_response(e);
-			} else {
-				return redirect_response(e.status, e.location);
-			}
+			const response = is_data_request
+				? redirect_json_response(e)
+				: redirect_response(e.status, e.location);
+			add_cookies_to_headers(response.headers, Object.values(cookies_to_add));
+			return response;
 		}
 		return await handle_fatal_error(event, options, e);
 	}
@@ -372,7 +377,7 @@ export async function respond(request, options, manifest, state) {
 						trailing_slash ?? 'never'
 					);
 				} else if (route.endpoint && (!route.page || is_endpoint_request(event))) {
-					response = await render_endpoint(event, await route.endpoint(), state);
+					response = await render_endpoint(event, route, await route.endpoint(), state);
 				} else if (route.page) {
 					response = await render_page(
 						event,
@@ -393,7 +398,7 @@ export async function respond(request, options, manifest, state) {
 			}
 
 			if (state.initiator === GENERIC_ERROR) {
-				return new Response('Internal Server Error', {
+				return text('Internal Server Error', {
 					status: 500
 				});
 			}
@@ -413,7 +418,7 @@ export async function respond(request, options, manifest, state) {
 			}
 
 			if (state.prerendering) {
-				return new Response('not found', { status: 404 });
+				return text('not found', { status: 404 });
 			}
 
 			// we can't load the endpoint from our own manifest,

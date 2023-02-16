@@ -1,5 +1,31 @@
 # create-svelte
 
+## 2.3.4
+
+### Patch Changes
+
+- fix: use new locator API to improve demo test ([#8988](https://github.com/sveltejs/kit/pull/8988))
+
+## 2.3.3
+
+### Patch Changes
+
+- chore: bump `@sveltejs/kit` and `@sveltejs/adapter-auto` versions ([#8740](https://github.com/sveltejs/kit/pull/8740))
+
+- fix: adjust vite config type to work with vitest options ([#8871](https://github.com/sveltejs/kit/pull/8871))
+
+## 2.3.2
+
+### Patch Changes
+
+- fix: remove duplicate space around JSDoc comments removed for TypeScript demo app ([#8684](https://github.com/sveltejs/kit/pull/8684))
+
+## 2.3.1
+
+### Patch Changes
+
+- chore: remove obsolete comment from templates ([#8620](https://github.com/sveltejs/kit/pull/8620))
+
 ## 2.3.0
 
 ### Minor Changes

@@ -22,7 +22,9 @@ export default {
 
 ## Deploying
 
-You will need the output directory (`build` by default), the project's `package.json`, and the production dependencies in `node_modules` to run the application. Production dependencies can be generated with `npm ci --prod` (you can skip this step if your app doesn't have any dependencies). You can then start your app with this command:
+First, build your app with `npm run build`. This will create the production server in the output directory specified in the adapter options, defaulting to `build`.
+
+You will need the output directory, the project's `package.json`, and the production dependencies in `node_modules` to run the application. Production dependencies can be generated with `npm ci --prod` (you can skip this step if your app doesn't have any dependencies). You can then start your app with this command:
 
 ```bash
 node build
@@ -71,13 +73,13 @@ PROTOCOL_HEADER=x-forwarded-proto HOST_HEADER=x-forwarded-host node build
 
 > [`x-forwarded-proto`](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/X-Forwarded-Proto) and [`x-forwarded-host`](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/X-Forwarded-Host) are de facto standard headers that forward the original protocol and host if you're using a reverse proxy (think load balancers and CDNs). You should only set these variables if your server is behind a trusted reverse proxy; otherwise, it'd be possible for clients to spoof these headers.
 
-If `adapter-node` can't correctly determine the URL of your deployment, you may experience this error when using [form actions](/docs/form-actions):
+If `adapter-node` can't correctly determine the URL of your deployment, you may experience this error when using [form actions](form-actions):
 
 > Cross-site POST form submissions are forbidden
 
 ### `ADDRESS_HEADER` and `XFF_DEPTH`
 
-The [RequestEvent](/docs/types#public-types-requestevent) object passed to hooks and endpoints includes an `event.getClientAddress()` function that returns the client's IP address. By default this is the connecting `remoteAddress`. If your server is behind one or more proxies (such as a load balancer), this value will contain the innermost proxy's IP address rather than the client's, so we need to specify an `ADDRESS_HEADER` to read the address from:
+The [RequestEvent](types#public-types-requestevent) object passed to hooks and endpoints includes an `event.getClientAddress()` function that returns the client's IP address. By default this is the connecting `remoteAddress`. If your server is behind one or more proxies (such as a load balancer), this value will contain the innermost proxy's IP address rather than the client's, so we need to specify an `ADDRESS_HEADER` to read the address from:
 
 ```
 ADDRESS_HEADER=True-Client-IP node build
@@ -103,7 +105,7 @@ We instead read from the _right_, accounting for the number of trusted proxies. 
 
 ### `BODY_SIZE_LIMIT`
 
-The maximum request body size to accept in bytes including while streaming. Defaults to 512kb. You can disable this option with a value of 0 and implement a custom check in [`handle`](/docs/hooks#server-hooks-handle) if you need something more advanced.
+The maximum request body size to accept in bytes including while streaming. Defaults to 512kb. You can disable this option with a value of 0 and implement a custom check in [`handle`](hooks#server-hooks-handle) if you need something more advanced.
 
 ## Options
 
@@ -120,7 +122,8 @@ export default {
 			// default options are shown
 			out: 'build',
 			precompress: false,
-			envPrefix: ''
+			envPrefix: '',
+			polyfill: true
 		})
 	}
 };
@@ -137,6 +140,10 @@ Enables precompressing using gzip and brotli for assets and prerendered pages. I
 ### envPrefix
 
 If you need to change the name of the environment variables used to configure the deployment (for example, to deconflict with environment variables you don't control), you can specify a prefix:
+
+### polyfill
+
+Controlls whether your build will load polyfills for missing modules. It defaults to `true`, and should only be disabled when using Node 18.11 or greater.
 
 ```js
 envPrefix: 'MY_CUSTOM_';
