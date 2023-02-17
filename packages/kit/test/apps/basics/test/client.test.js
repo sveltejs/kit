@@ -287,7 +287,7 @@ test.describe('Page options', () => {
 
 		expect(
 			await page.evaluate(() => {
-				const el = document.querySelector('#svelte-announcer');
+				const el = document.querySelector('svelte-announcer');
 				return el && getComputedStyle(el).position;
 			})
 		).toBe('absolute');
