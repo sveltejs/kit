@@ -142,22 +142,7 @@ const plugin = function (defaults = {}) {
 			/** @type {Map<string, string>} */
 			const functions = new Map();
 
-			// every route needs a `group`, so that a page and its __data.json are invalidated
-			// as a pair. automatically assign group ids to routes that don't have one
-			let group_id = 0;
-
-			// ensure automatically assigned group ids are unique
-			// by first seeing which ids were explicitly assigned
-			// and therefore shouldn't be used
-			for (const route of builder.routes) {
-				if (route.prerender === true) continue;
-
-				if (route.config?.isr?.group !== undefined) {
-					group_id = Math.max(group_id, route.config.isr.group);
-				}
-			}
-
-			/** @type {Map<import('@sveltejs/kit').RouteDefinition<import('.').Config>, import('.').ServerlessConfig['isr']>} */
+			/** @type {Map<import('@sveltejs/kit').RouteDefinition<import('.').Config>, { expiration: number | false, bypassToken: string | undefined, allowQuery: string[], group: number, passQuery: true }>} */
 			const isr_config = new Map();
 
 			// group routes by config
@@ -178,11 +163,17 @@ const plugin = function (defaults = {}) {
 				const config = { runtime, ...defaults, ...route.config };
 
 				if (config.isr) {
-					if (config.isr.group === undefined) {
-						config.isr.group = ++group_id;
+					if (config.isr.allowQuery?.includes('__pathname')) {
+						throw new Error('__pathname is a reserved query parameter for isr.allowQuery');
 					}
 
-					isr_config.set(route, config.isr);
+					isr_config.set(route, {
+						expiration: config.isr.expiration,
+						bypassToken: config.isr.bypassToken,
+						allowQuery: ['__pathname', ...(config.isr.allowQuery ?? [])],
+						group: isr_config.size + 1,
+						passQuery: true
+					});
 				}
 
 				const hash = hash_config(config);
@@ -252,10 +243,6 @@ const plugin = function (defaults = {}) {
 				if (name) {
 					const isr = isr_config.get(route);
 					if (isr) {
-						if (isr.allowQuery?.includes('__pathname')) {
-							throw new Error('__pathname is a reserved query parameter for isr.allowQuery');
-						}
-
 						const base = `${dirs.functions}/${route.id.slice(1)}`;
 						builder.mkdirp(base);
 
@@ -274,17 +261,7 @@ const plugin = function (defaults = {}) {
 							})
 							.join('/');
 
-						const json = JSON.stringify(
-							{
-								expiration: isr.expiration,
-								group: isr.group,
-								bypassToken: isr.bypassToken,
-								allowQuery: ['__pathname', ...(isr.allowQuery ?? [])],
-								passQuery: true
-							},
-							null,
-							'\t'
-						);
+						const json = JSON.stringify(isr, null, '\t');
 
 						write(`${base}.prerender-config.json`, json);
 						write(`${base}/__data.json.prerender-config.json`, json);
