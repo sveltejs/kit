@@ -43,18 +43,18 @@ test.describe('a11y', () => {
 	test('announces client-side navigation', async ({ page, clicknav, javaScriptEnabled }) => {
 		await page.goto('/accessibility/a');
 
-		const has_live_region = (await page.innerHTML('body')).includes('aria-live');
+		const has_announcer = (await page.innerHTML('body')).includes('svelte-announcer');
 
 		if (javaScriptEnabled) {
-			expect(has_live_region).toBeTruthy();
+			expect(has_announcer).toBeTruthy();
 
 			// live region should exist, but be empty
-			expect(await page.innerHTML('[aria-live]')).toBe('');
+			expect(await page.innerHTML('[svelte-announcer]')).toBe('');
 
 			await clicknav('[href="/accessibility/b"]');
-			expect(await page.innerHTML('[aria-live]')).toBe('b'); // TODO i18n
+			expect(await page.innerHTML('[svelte-announcer]')).toBe('b'); // TODO i18n
 		} else {
-			expect(has_live_region).toBeFalsy();
+			expect(has_announcer).toBeFalsy();
 		}
 	});
 
