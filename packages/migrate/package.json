@@ -19,7 +19,8 @@
 		"bin.js",
 		"migrations",
 		"utils.js",
-		"!migrations/**/*.spec.js"
+		"!migrations/**/*.spec.js",
+		"!migrations/**/samples.md"
 	],
 	"dependencies": {
 		"kleur": "^4.1.5",
