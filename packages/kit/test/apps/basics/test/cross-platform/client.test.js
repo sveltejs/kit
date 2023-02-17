@@ -49,10 +49,10 @@ test.describe('a11y', () => {
 			expect(has_announcer).toBeTruthy();
 
 			// live region should exist, but be empty
-			expect(await page.innerHTML('[svelte-announcer]')).toBe('');
+			expect(await page.innerHTML('svelte-announcer')).toBe('');
 
 			await clicknav('[href="/accessibility/b"]');
-			expect(await page.innerHTML('[svelte-announcer]')).toBe('b'); // TODO i18n
+			expect(await page.innerHTML('svelte-announcer')).toBe('b'); // TODO i18n
 		} else {
 			expect(has_announcer).toBeFalsy();
 		}
