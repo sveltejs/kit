@@ -77,27 +77,29 @@ export function write_root(manifest_data, output) {
 					return unsubscribe;
 				});
 
-				customElements.define('svelte-announcer', class extends HTMLElement {
-					constructor() {
-						super();
-						const shadow = this.attachShadow({ mode: "open" });
-						shadow.innerHTML = \`
-				 			<style>
-				 				:host {
-  								position: absolute;
-				   				clip-path: inset(50%);
-  								height: 1px;
-  								width: 1px;
-  								overflow: hidden;
-  								white-space: nowrap; 
-				 				}		
-				 			</style>
-				 			<slot></slot>
-				 		\`;
-						this.setAttribute('aria-live', 'assertive');
-						this.setAttribute('aria-atomic', 'true');
-					}
-				});
+				if (browser) {
+					customElements.define('svelte-announcer', class extends HTMLElement {
+						constructor() {
+							super();
+							const shadow = this.attachShadow({ mode: "open" });
+							shadow.innerHTML = \`
+								<style>
+									:host {
+										position: absolute;
+										clip-path: inset(50%);
+										height: 1px;
+										width: 1px;
+										overflow: hidden;
+										white-space: nowrap; 
+									}		
+								</style>
+								<slot></slot>
+							\`;
+							this.setAttribute('aria-live', 'assertive');
+							this.setAttribute('aria-atomic', 'true');
+						}
+					});
+				}
 			</script>
 
 			${pyramid.replace(/\n/g, '\n\t\t\t')}
