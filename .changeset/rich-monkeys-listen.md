@@ -2,4 +2,4 @@
 '@sveltejs/kit': minor
 ---
 
-feat: Moved the styles of svelte router announcer into shadow DOM.
+feat: Moved the styles of svelte route announcer into shadow DOM.
