@@ -18,7 +18,8 @@
 	"files": [
 		"bin.js",
 		"migrations",
-		"utils.js"
+		"utils.js",
+		"!migrations/**/*.spec.js"
 	],
 	"dependencies": {
 		"kleur": "^4.1.5",
