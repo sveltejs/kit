@@ -1,5 +1,11 @@
 # create-svelte
 
+## 3.0.1
+
+### Patch Changes
+
+- fix: update dependency @sveltejs/package to v2.0.0 ([#9087](https://github.com/sveltejs/kit/pull/9087))
+
 ## 3.0.0
 
 ### Major Changes
