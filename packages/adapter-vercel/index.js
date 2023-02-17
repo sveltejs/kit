@@ -246,7 +246,8 @@ const plugin = function (defaults = {}) {
 
 				const isr = isr_config.get(route);
 				if (isr) {
-					const base = `${dirs.functions}/${route.id.slice(1)}`;
+					const isr_name = route.id.slice(1) || '__root__'; // should we check that __root__ isn't a route?
+					const base = `${dirs.functions}/${isr_name}`;
 					builder.mkdirp(base);
 
 					const target = `${dirs.functions}/${name}.func`;
@@ -273,12 +274,12 @@ const plugin = function (defaults = {}) {
 
 					static_config.routes.push({
 						src: src + '$',
-						dest: `${route.id}${q}`
+						dest: `${isr_name}${q}`
 					});
 
 					static_config.routes.push({
 						src: src + '/__data.json$',
-						dest: `${route.id}/__data.json${q}`
+						dest: `${isr_name}/__data.json${q}`
 					});
 				} else if (!singular) {
 					static_config.routes.push({ src: src + '(?:/__data.json)?$', dest: `/${name}` });
