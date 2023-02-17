@@ -76,12 +76,12 @@ export function write_root(manifest_data, output) {
 					mounted = true;
 					return unsubscribe;
 				});
-				
+
 				customElements.define('svelte-announcer', class extends HTMLElement {
 					constructor() {
 						super();
 						const shadow = this.attachShadow({ mode: "open" });
-						shadow.innerHTML = /*html*/ `
+						shadow.innerHTML = \`
 				 			<style>
 				 				:host {
   								position: absolute;
@@ -93,7 +93,7 @@ export function write_root(manifest_data, output) {
 				 				}		
 				 			</style>
 				 			<slot></slot>
-				 		`;
+				 		\`;
 						this.setAttribute('aria-live', 'assertive');
 						this.setAttribute('aria-atomic', 'true');
 					}
