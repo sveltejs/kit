@@ -154,16 +154,6 @@ export async function render_response({
 		rendered = { head: '', html: '', css: { code: '', map: null } };
 	}
 
-	let head = `
-		<script>window.__sveltekit_${options.version_hash}={env:${s(public_env)}}</script>`;
-	let body = rendered.html;
-
-	const csp = new Csp(options.csp, {
-		prerender: !!state.prerendering
-	});
-
-	const target = hash(body);
-
 	/**
 	 * The prefix to use for static assets. Replaces `%sveltekit.assets%` in the template
 	 * @type {string}
@@ -182,6 +172,23 @@ export async function render_response({
 		const segments = event.url.pathname.slice(base.length).split('/').slice(2);
 		resolved_assets = segments.length > 0 ? segments.map(() => '..').join('/') : '.';
 	}
+
+	let head = '';
+	let body = rendered.html;
+
+	const csp = new Csp(options.csp, {
+		prerender: !!state.prerendering
+	});
+
+	const init = `__sveltekit_${options.version_hash}={env:${s(public_env)},assets:${s(
+		resolved_assets
+	)}}`;
+
+	csp.add_script(init);
+
+	head += `<script${csp.script_needs_nonce ? ` nonce="${csp.nonce}"` : ''}>${init}</script>`;
+
+	const target = hash(body);
 
 	/** @param {string} path */
 	const prefixed = (path) => {
@@ -286,9 +293,7 @@ export async function render_response({
 	if (page_config.csr) {
 		const opts = [
 			`app: import(${s(prefixed(client.app.file))})`,
-			`assets: ${s(assets)}`,
-			`target: document.querySelector('[data-sveltekit-hydrate="${target}"]').parentNode`,
-			`version: ${s(version)}`
+			`target: document.querySelector('[data-sveltekit-hydrate="${target}"]').parentNode`
 		];
 
 		if (page_config.ssr) {

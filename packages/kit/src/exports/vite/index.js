@@ -328,7 +328,10 @@ function kit({ svelte_config }) {
 		},
 
 		async load(id, options) {
-			if (options?.ssr === false && process.env.TEST !== 'true') {
+			const browser = !options?.ssr;
+			const global = `__sveltekit_${version_hash}`;
+
+			if (browser && process.env.TEST !== 'true') {
 				const normalized_cwd = vite.normalizePath(cwd);
 				const normalized_lib = vite.normalizePath(kit.files.lib);
 				if (
@@ -355,8 +358,8 @@ function kit({ svelte_config }) {
 					);
 				case '\0$env/dynamic/public':
 					// populate `$env/dynamic/public` from `window`
-					if (!options?.ssr) {
-						return `export const env = window.__sveltekit_${version_hash}.env;`;
+					if (browser) {
+						return `export const env = ${global}.env;`;
 					}
 
 					return create_dynamic_module(
@@ -370,6 +373,13 @@ function kit({ svelte_config }) {
 				// we use this alias so that we won't collide with user aliases
 				case '\0__sveltekit/paths':
 					const { assets, base } = svelte_config.kit.paths;
+
+					if (browser) {
+						return `export const base = ${s(base)};
+const url = new URL(${global}.assets, location);
+export const assets = url.origin === location.origin ? url.pathname.replace(/^\\\/$/, '') : url.href;`;
+					}
+
 					return `export const base = ${s(base)};
 export let assets = ${assets ? s(assets) : 'base'};
 
