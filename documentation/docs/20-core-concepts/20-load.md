@@ -471,7 +471,7 @@ export function load({ fetch }) {
 }
 ```
 
-SvelteKit will not wait for these nested promises. In the above example, the UI will be rendered as soon as `fast` has resolved. Use Svelte's `{#await}` to show meaningful fallback UI while the slow data is still loading:
+In the above example, the UI will be rendered as soon as `fast` has resolved. Use Svelte's `{#await}` to show meaningful fallback UI while the `slow` data is still loading:
 
 ```svelte
 /// file: +page.svelte
@@ -481,13 +481,13 @@ SvelteKit will not wait for these nested promises. In the above example, the UI 
 </script>
 
 <p>{data.fast}</p>
-{#await data.deferred}
+{#await data.deferred.slow}
 	<p>Loading ...</p>
 {:then result}
 	<p>{result}</p>
 {:catch error}
 	<p>An error occurred: {error}</p>
-{/catch}
+{/await}
 ```
 
 ## Parallel loading
