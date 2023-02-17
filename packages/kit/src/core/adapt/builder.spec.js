@@ -48,8 +48,8 @@ test('copy files', () => {
 	rmSync(dest, { recursive: true, force: true });
 
 	assert.equal(
-		builder.writeClient(dest).map(posixify),
-		glob('**', { cwd: dest, dot: true, filesOnly: true })
+		builder.writeClient(dest),
+		glob('**', { cwd: dest, dot: true, filesOnly: true }).map(posixify)
 	);
 
 	assert.equal(
@@ -60,8 +60,8 @@ test('copy files', () => {
 	rmSync(dest, { recursive: true, force: true });
 
 	assert.equal(
-		builder.writeServer(dest).map(posixify),
-		glob('**', { cwd: dest, dot: true, filesOnly: true })
+		builder.writeServer(dest),
+		glob('**', { cwd: dest, dot: true, filesOnly: true }).map(posixify)
 	);
 
 	assert.equal(
