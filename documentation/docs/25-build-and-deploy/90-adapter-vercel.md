@@ -88,18 +88,14 @@ export const config = {
 		// Setting the value to `false` means it will never expire.
 		expiration: 60,
 
-		// Option group number of the asset. Assets with the same group number will all be re-validated at the same time.
-		group: 1,
-
 		// Random token that can be provided in the URL to bypass the cached version of the asset, by requesting the asset
 		// with a __prerender_bypass=<token> cookie.
 		//
 		// Making a `GET` or `HEAD` request with `x-prerender-revalidate: <token>` will force the asset to be re-validated.
 		bypassToken: BYPASS_TOKEN,
 
-		// List of query string parameter names that will be cached independently.
-		// If an empty array, query values are not considered for caching.
-		// If `undefined` each unique query value is cached independently
+		// List of valid query parameters. Other parameters (such as utm tracking codes) will be ignored,
+		// ensuring that they do not result in content being regenerated unnecessarily
 		allowQuery: ['search']
 	}
 };

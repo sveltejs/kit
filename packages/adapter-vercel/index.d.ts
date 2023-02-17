@@ -37,10 +37,6 @@ export interface ServerlessConfig {
 		 */
 		expiration: number | false;
 		/**
-		 * Option group number of the asset. Assets with the same group number will all be re-validated at the same time.
-		 */
-		group?: number;
-		/**
 		 * Random token that can be provided in the URL to bypass the cached version of the asset, by requesting the asset
 		 * with a __prerender_bypass=<token> cookie.
 		 *
