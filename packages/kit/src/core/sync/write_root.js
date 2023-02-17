@@ -81,7 +81,7 @@ export function write_root(manifest_data, output) {
 					customElements.define('svelte-announcer', class extends HTMLElement {
 						constructor() {
 							super();
-							const shadow = this.attachShadow({ mode: "open" });
+							const shadow = this.attachShadow({ mode: 'open' });
 							shadow.innerHTML = \`
 								<style>
 									:host {
@@ -93,13 +93,10 @@ export function write_root(manifest_data, output) {
 										white-space: nowrap; 
 									}		
 								</style>
-								<span>
+								<span aria-live="assertive" aria-atomic="true">
 									<slot></slot>
 								</span>
 							\`;
-							const span = shadow.querySelector("span");
-							span.setAttribute("aria-live", "assertive");
-							span.setAttribute("aria-atomic", "true");
 						}
 					});
 				}
