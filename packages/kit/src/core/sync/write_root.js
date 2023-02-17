@@ -84,13 +84,13 @@ export function write_root(manifest_data, output) {
 							const shadow = this.attachShadow({ mode: 'open' });
 							shadow.innerHTML = \`
 								<style>
-									:host {
-										position: absolute;
-										clip-path: inset(50%);
-										height: 1px;
-										width: 1px;
-										overflow: hidden;
-										white-space: nowrap; 
+									:host, span {
+										position: absolute !important;
+										clip-path: inset(50%) !important;
+										height: 1px !important;
+										width: 1px !important;
+										overflow: hidden !important;
+										white-space: nowrap !important; 
 									}		
 								</style>
 								<span aria-live="assertive" aria-atomic="true">
