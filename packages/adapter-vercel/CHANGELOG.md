@@ -1,5 +1,11 @@
 # @sveltejs/adapter-vercel
 
+## 2.0.4
+
+### Patch Changes
+
+- fix: add leading / to isr routes ([#9100](https://github.com/sveltejs/kit/pull/9100))
+
 ## 2.0.3
 
 ### Patch Changes
