@@ -243,7 +243,7 @@ async function _get_data_json(event, options, nodes, next) {
 											has_more: count !== 0,
 											data: `{"type":"chunk","id":${id}${data ? `,"data":${data}` : ''}${
 												error ? `,"error":${error}` : ''
-											}\n`
+											}}\n`
 										},
 										count === 0
 									);
