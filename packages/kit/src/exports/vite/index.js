@@ -376,8 +376,7 @@ function kit({ svelte_config }) {
 
 					if (browser) {
 						return `export const base = ${s(base)};
-const url = new URL(${global}.assets, location);
-export const assets = url.origin === location.origin ? url.pathname.replace(/^\\\/$/, '') : url.href;`;
+export const assets = ${global}.assets;`;
 					}
 
 					return `export const base = ${s(base)};

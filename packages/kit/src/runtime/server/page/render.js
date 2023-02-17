@@ -159,17 +159,27 @@ export async function render_response({
 	 */
 	let resolved_assets;
 
+	/**
+	 * An expression that will evaluate in the client to determine the resolved asset path
+	 */
+	let asset_expression;
+
 	if (assets) {
 		// if an asset path is specified, use it
 		resolved_assets = assets;
+		asset_expression = s(assets);
 	} else if (state.prerendering?.fallback) {
 		// if we're creating a fallback page, asset paths need to be root-relative
 		resolved_assets = base;
+		asset_expression = s(base);
 	} else {
 		// otherwise we want asset paths to be relative to the page, so that they
 		// will work in odd contexts like IPFS, the internet archive, and so on
 		const segments = event.url.pathname.slice(base.length).split('/').slice(2);
 		resolved_assets = segments.length > 0 ? segments.map(() => '..').join('/') : '.';
+		asset_expression = `new URL(${s(
+			resolved_assets
+		)}, location.href).pathname.replace(/^\\\/$/, '')`;
 	}
 
 	let head = '';
@@ -179,9 +189,9 @@ export async function render_response({
 		prerender: !!state.prerendering
 	});
 
-	const init = `__sveltekit_${options.version_hash}={env:${s(public_env)},assets:${s(
-		resolved_assets
-	)}}`;
+	const init = `__sveltekit_${options.version_hash}={env:${s(
+		public_env
+	)},assets:${asset_expression}}`;
 
 	csp.add_script(init);
 
