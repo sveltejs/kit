@@ -542,6 +542,8 @@ export async function load() {
 
 A `load` function that calls `await parent()` will also re-run if a parent `load` function is re-run.
 
+Tracking happens until the load function returns its value. If you have nested promises that resolve later and which then use dependencies, then these usages will not be tracked.
+
 ### Manual invalidation
 
 You can also re-run `load` functions that apply to the current page using [`invalidate(url)`](modules#$app-navigation-invalidate), which re-runs all `load` functions that depend on `url`, and [`invalidateAll()`](modules#$app-navigation-invalidateall), which re-runs every `load` function.

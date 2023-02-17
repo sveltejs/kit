@@ -300,16 +300,12 @@ export async function render_response({
 		  deferred.set(id, { fulfil, reject });
 		});
 
-		$__sveltekit__.resolve = ({ id, data, error, uses }) => {
+		$__sveltekit__.resolve = ({ id, data, error }) => {
 		  const { fulfil, reject } = deferred.get(id);
 		  deferred.delete(id);
 
 		  if (error) reject(error);
 		  else fulfil(data);
-
-		  if (uses) {
-			// TODO
-		  }
 		};`
 			: '';
 
@@ -477,7 +473,6 @@ async function _get_data(event, nodes, next) {
 
 	try {
 		for (const node of nodes) {
-			let node_count = 0;
 			let uses_str = '';
 
 			const replacer =
@@ -486,7 +481,6 @@ async function _get_data(event, nodes, next) {
 					if (typeof thing?.then === 'function') {
 						const id = promise_id++;
 						count += 1;
-						node_count += 1;
 
 						thing
 							.then(/** @param {any} data */ (data) => ({ data }))
@@ -496,28 +490,25 @@ async function _get_data(event, nodes, next) {
 								 * @param {{data: any; error: any}} result
 								 */
 								async ({ data, error }) => {
-									node_count -= 1;
-									// only send uses when it's the last chunk of the data node
-									// so we can be sure all uses are accounted for
-									const uses =
-										node_count === 0
-											? undefined
-											: stringify_uses(
-													/** @type {import('types').ServerDataNodePreSerialization} */ (node)
-											  ) === uses_str
-											? // No change - no need to send it
-											  undefined
-											: node?.uses;
+									if (
+										__SVELTEKIT_DEV__ &&
+										stringify_uses(/** @type {import('types').ServerDataNode} */ (node)) !==
+											uses_str
+									) {
+										console.warn(
+											'Accessed dependencies after load function returned. These usages will not be tracked.'
+										);
+									}
 
 									count -= 1;
 
 									let str;
 									try {
-										str = devalue.uneval({ id, data, error, uses }, replacer);
+										str = devalue.uneval({ id, data, error }, replacer);
 									} catch (e) {
 										error = `new Error(${clarify_devalue_error(event, /** @type {any} */ (e))});`;
 										data = undefined;
-										str = devalue.uneval({ id, data, error, uses }, replacer);
+										str = devalue.uneval({ id, data, error }, replacer);
 									}
 
 									next(

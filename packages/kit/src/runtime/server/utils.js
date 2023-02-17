@@ -148,7 +148,7 @@ export function clarify_devalue_error(event, error) {
 }
 
 /**
- * @param {import('types').ServerDataNodePreSerialization} node
+ * @param {import('types').ServerDataNode} node
  */
 export function stringify_uses(node) {
 	const uses = [];

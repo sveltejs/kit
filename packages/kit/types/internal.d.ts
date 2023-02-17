@@ -203,9 +203,11 @@ export type ServerNodesResponse = {
 export type ServerDataResponse = ServerRedirectNode | ServerNodesResponse;
 
 /**
- * Pre-serialized server version of successful response of the server `load` function.
+ * Signals a successful response of the server `load` function.
+ * The `uses` property tells the client when it's possible to reuse this data
+ * in a subsequent request.
  */
-export interface ServerDataNodePreSerialization {
+export interface ServerDataNode {
 	type: 'data';
 	/**
 	 * The serialized version of this contains a serialized representation of any deferred promises,
@@ -215,33 +217,18 @@ export interface ServerDataNodePreSerialization {
 	/**
 	 * Defined if the `load` function didn't return a result containing promises.
 	 */
-	uses?: Uses;
+	uses: Uses;
 	slash?: TrailingSlash;
 }
 
 /**
- * Signals a successful response of the server `load` function.
- * The `uses` property tells the client when it's possible to reuse this data
- * in a subsequent request.
+ * Resolved data/error of a deferred promise.
  */
-export interface ServerDataNode extends ServerDataNodePreSerialization {
-	/**
-	 * Defined in the serialized version if the `load` function didn't return a `defer`red result.
-	 * Make sure to pass this property by reference and not copy it somehow, as it might be updated
-	 * by a deferred promise.
-	 */
-	uses: Uses;
-}
-
 export interface ServerDataChunkNode {
 	type: 'chunk';
 	id: number;
 	data?: Record<string, any>;
 	error?: any;
-	/**
-	 * Defined for the final chunk of the corresponding `load` function
-	 */
-	uses?: Uses;
 }
 
 /**

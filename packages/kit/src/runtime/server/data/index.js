@@ -193,7 +193,6 @@ async function _get_data_json(event, options, nodes, next) {
 
 	try {
 		for (const node of nodes) {
-			let node_count = 0;
 			let uses_str = '';
 
 			const revivers = {
@@ -202,7 +201,6 @@ async function _get_data_json(event, options, nodes, next) {
 					if (typeof thing?.then === 'function') {
 						const id = promise_id++;
 						count += 1;
-						node_count += 1;
 
 						thing
 							.then(/** @param {any} d */ (d) => ({ d }))
@@ -211,7 +209,7 @@ async function _get_data_json(event, options, nodes, next) {
 								/**
 								 * @param {{d: any; e: any}} result
 								 */
-								async ({ d: d, e }) => {
+								async ({ d, e }) => {
 									let data;
 									let error;
 									try {
@@ -228,18 +226,14 @@ async function _get_data_json(event, options, nodes, next) {
 										);
 									}
 
-									node_count -= 1;
-									// only send uses when it's the last chunk of the data node
-									// so we can be sure all uses are accounted for
-									let uses =
-										node_count === 0
-											? undefined
-											: stringify_uses(
-													/** @type {import('types').ServerDataNodePreSerialization} */ (node)
-											  );
-									if (uses === uses_str) {
-										// No change - no need to send it
-										uses = undefined;
+									if (
+										__SVELTEKIT_DEV__ &&
+										stringify_uses(/** @type {import('types').ServerDataNode} */ (node)) !==
+											uses_str
+									) {
+										console.warn(
+											'Accessed dependencies after load function returned. These usages will not be tracked.'
+										);
 									}
 
 									count -= 1;
@@ -249,7 +243,7 @@ async function _get_data_json(event, options, nodes, next) {
 											has_more: count !== 0,
 											data: `{"type":"chunk","id":${id}${data ? `,"data":${data}` : ''}${
 												error ? `,"error":${error}` : ''
-											}${uses ? `,${uses}` : ''}}\n`
+											}\n`
 										},
 										count === 0
 									);

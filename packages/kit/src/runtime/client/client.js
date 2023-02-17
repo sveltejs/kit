@@ -1825,7 +1825,7 @@ async function load_data(url, invalid) {
 					resolve(node);
 				} else if (node.type === 'chunk') {
 					// This is a subsequent chunk containing deferred data
-					let { id, data, error, uses } = node;
+					let { id, data, error } = node;
 					const entry = pending.get(id);
 					// Shouldn't ever be undefined, but just in case
 					if (entry) {
@@ -1833,15 +1833,6 @@ async function load_data(url, invalid) {
 							entry.reject(deserialize(error, entry.uses));
 						} else {
 							entry.resolve(deserialize(data, entry.uses));
-						}
-						if (uses) {
-							uses = deserialize_uses(uses);
-							// Merge into existing uses
-							entry.uses.dependencies = new Set([...entry.uses.dependencies, ...uses.dependencies]);
-							entry.uses.params = new Set([...entry.uses.params, ...uses.params]);
-							entry.uses.parent = entry.uses.parent || uses.parent;
-							entry.uses.route = entry.uses.route || uses.route;
-							entry.uses.url = entry.uses.url || uses.url;
 						}
 					}
 					pending.delete(id);
