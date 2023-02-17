@@ -2,4 +2,4 @@
 '@sveltejs/kit': patch
 ---
 
-fix: correctly return asset paths when building
+fix: return correct asset list from `builder.writeClient()`
