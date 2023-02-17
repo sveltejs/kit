@@ -1544,7 +1544,7 @@ export function create_client({ target }) {
 				navigate({
 					url,
 					scroll: options.noscroll ? scroll_state() : null,
-					keepfocus: false,
+					keepfocus: options.keep_focus ?? false,
 					redirect_chain: [],
 					details: {
 						state: {},
@@ -1579,7 +1579,7 @@ export function create_client({ target }) {
 
 				const event_form = /** @type {HTMLFormElement} */ (event.target);
 
-				const { noscroll, reload } = get_router_options(event_form);
+				const { keep_focus, noscroll, reload, replace_state } = get_router_options(event_form);
 				if (reload) return;
 
 				event.preventDefault();
@@ -1598,11 +1598,11 @@ export function create_client({ target }) {
 				navigate({
 					url,
 					scroll: noscroll ? scroll_state() : null,
-					keepfocus: false,
+					keepfocus: keep_focus ?? false,
 					redirect_chain: [],
 					details: {
 						state: {},
-						replaceState: false
+						replaceState: replace_state ?? url.href === location.href
 					},
 					nav_token: {},
 					accepted: () => {},

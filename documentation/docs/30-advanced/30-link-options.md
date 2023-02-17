@@ -76,6 +76,16 @@ Sometimes you don't want navigation to create a new entry in the browser's sessi
 
 ...will replace the current `history` entry rather than creating a new one with `pushState` when the link is clicked.
 
+## data-sveltekit-keepfocus
+
+Sometimes you don't want an element to lose focus after navigation. Adding a `data-sveltekit-keepfocus` attribute to a link...
+
+```html
+<a data-sveltekit-keepfocus href="/path">Path</a>
+```
+
+...will cause the currently focused element to retain focus after navigation. Otherwise, focus will be reset to the body.
+
 ## data-sveltekit-noscroll
 
 When navigating to internal links, SvelteKit mirrors the browser's default navigation behaviour: it will change the scroll position to 0,0 so that the user is at the very top left of the page (unless the link includes a `#hash`, in which case it will scroll to the element with a matching ID).

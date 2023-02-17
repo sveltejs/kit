@@ -32,6 +32,7 @@ const warned = new WeakSet();
 const valid_link_options = /** @type {const} */ ({
 	'preload-code': ['', 'off', 'tap', 'hover', 'viewport', 'eager'],
 	'preload-data': ['', 'off', 'tap', 'hover'],
+	keepfocus: ['', 'off'],
 	noscroll: ['', 'off'],
 	reload: ['', 'off'],
 	replacestate: ['', 'off']
@@ -142,6 +143,9 @@ export function get_link_info(a, base) {
  * @param {HTMLFormElement | HTMLAnchorElement | SVGAElement} element
  */
 export function get_router_options(element) {
+	/** @type {ValidLinkOptions<'keepfocus'> | null} */
+	let keep_focus = null;
+
 	/** @type {ValidLinkOptions<'noscroll'> | null} */
 	let noscroll = null;
 
@@ -163,6 +167,7 @@ export function get_router_options(element) {
 	while (el && el !== document.documentElement) {
 		if (preload_code === null) preload_code = link_option(el, 'preload-code');
 		if (preload_data === null) preload_data = link_option(el, 'preload-data');
+		if (keep_focus === null) keep_focus = link_option(el, 'keepfocus');
 		if (noscroll === null) noscroll = link_option(el, 'noscroll');
 		if (reload === null) reload = link_option(el, 'reload');
 		if (replace_state === null) replace_state = link_option(el, 'replacestate');
@@ -173,6 +178,7 @@ export function get_router_options(element) {
 	return {
 		preload_code: levels[preload_code ?? 'off'],
 		preload_data: levels[preload_data ?? 'off'],
+		keep_focus: keep_focus === 'off' ? false : keep_focus === '' ? true : null,
 		noscroll: noscroll === 'off' ? false : noscroll === '' ? true : null,
 		reload: reload === 'off' ? false : reload === '' ? true : null,
 		replace_state: replace_state === 'off' ? false : replace_state === '' ? true : null
