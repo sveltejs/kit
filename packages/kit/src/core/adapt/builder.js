@@ -185,9 +185,9 @@ export function create_builder({
 			const server_assets = copy(
 				`${config.kit.outDir}/output/server/${config.kit.appDir}/immutable/assets`,
 				join(dest, config.kit.appDir, 'immutable/assets')
-			);
+			).map((filename) => join(config.kit.appDir, 'immutable/assets', filename));
 			const client_assets = copy(`${config.kit.outDir}/output/client`, dest);
-			return Array.from(new Set(...server_assets, ...client_assets));
+			return Array.from(new Set([...server_assets, ...client_assets]));
 		},
 
 		// @ts-expect-error
