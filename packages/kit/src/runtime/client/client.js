@@ -1313,7 +1313,7 @@ export function create_client({ app, target }) {
 	/**
 	 * @param {unknown} error
 	 * @param {import('types').NavigationEvent} event
-	 * @returns {import('../../../types/private.js').MaybePromise<App.Error>}
+	 * @returns {import('types').MaybePromise<App.Error>}
 	 */
 	function handle_error(error, event) {
 		if (error instanceof HttpError) {
