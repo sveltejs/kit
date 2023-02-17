@@ -5,6 +5,7 @@ import { test } from 'uvu';
 import * as assert from 'uvu/assert';
 import glob from 'tiny-glob/sync.js';
 import { create_builder } from './builder.js';
+import { posixify } from '../../utils/filesystem.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = join(__filename, '..');
@@ -46,7 +47,10 @@ test('copy files', () => {
 
 	rmSync(dest, { recursive: true, force: true });
 
-	assert.equal(builder.writeClient(dest), glob('**', { cwd: dest, dot: true, filesOnly: true }));
+	assert.equal(
+		builder.writeClient(dest).map(posixify),
+		glob('**', { cwd: dest, dot: true, filesOnly: true })
+	);
 
 	assert.equal(
 		glob('**', { cwd: `${outDir}/output/client`, dot: true }),
@@ -55,7 +59,10 @@ test('copy files', () => {
 
 	rmSync(dest, { recursive: true, force: true });
 
-	assert.equal(builder.writeServer(dest), glob('**', { cwd: dest, dot: true, filesOnly: true }));
+	assert.equal(
+		builder.writeServer(dest).map(posixify),
+		glob('**', { cwd: dest, dot: true, filesOnly: true })
+	);
 
 	assert.equal(
 		glob('**', { cwd: `${outDir}/output/server`, dot: true }),
