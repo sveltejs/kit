@@ -1,5 +1,11 @@
 # @sveltejs/package
 
+## 2.0.1
+
+### Patch Changes
+
+- fix: print version when running `svelte-package --version` ([#9078](https://github.com/sveltejs/kit/pull/9078))
+
 ## 2.0.0
 
 ### Major Changes
