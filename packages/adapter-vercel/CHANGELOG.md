@@ -1,5 +1,11 @@
 # @sveltejs/adapter-vercel
 
+## 2.0.3
+
+### Patch Changes
+
+- fix: get ISR working on Vercel ([#9063](https://github.com/sveltejs/kit/pull/9063))
+
 ## 2.0.2
 
 ### Patch Changes
