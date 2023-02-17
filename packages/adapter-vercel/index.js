@@ -442,9 +442,9 @@ async function create_function_bundle(builder, entry, dir, config) {
 		const file = files[i];
 		const parts = file.split(path.sep);
 
-		for (let i = 0; i < common_parts.length; i += 1) {
-			if (parts[i] !== common_parts[i]) {
-				common_parts = common_parts.slice(0, i);
+		for (let j = 0; j < common_parts.length; j += 1) {
+			if (parts[j] !== common_parts[j]) {
+				common_parts = common_parts.slice(0, j);
 				break;
 			}
 		}
