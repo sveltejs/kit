@@ -79,6 +79,7 @@ export function write_root(manifest_data, output) {
 				
 				customElements.define('svelte-announcer', class extends HTMLElement {
 					constructor() {
+						super();
 						const shadow = this.attachShadow({ mode: "open" });
 						shadow.innerHTML = /*html*/ `
 				 			<style>
