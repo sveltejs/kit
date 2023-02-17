@@ -708,7 +708,7 @@ test.describe('defer', () => {
 	});
 
 	test('Works for server load functions (direkt hit)', async ({ page }) => {
-		await page.goto('/defer/server', { wait_for_started: false });
+		page.goto('/defer/server');
 
 		// Write first assertion like this to control the retry interval. Else it might happen that
 		// the test fails because the next retry is too late (probably uses a back-off strategy)
