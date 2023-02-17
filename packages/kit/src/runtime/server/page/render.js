@@ -2,13 +2,14 @@ import * as devalue from 'devalue';
 import { readable, writable } from 'svelte/store';
 import { DEV } from 'esm-env';
 import { assets, base } from '__sveltekit/paths';
+import { version } from '__sveltekit/environment';
 import { hash } from '../../hash.js';
 import { serialize_data } from './serialize_data.js';
 import { s } from '../../../utils/misc.js';
 import { Csp } from './csp.js';
 import { uneval_action_response } from './actions.js';
 import { clarify_devalue_error } from '../utils.js';
-import { version, public_env } from '../../shared.js';
+import { public_env } from '../../shared-server.js';
 import { text } from '../../../exports/index.js';
 
 // TODO rename this function/module

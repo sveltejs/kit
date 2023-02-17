@@ -26,9 +26,8 @@ const server_template = ({
 	error_page
 }) => `
 import root from '../root.svelte';
-import { set_assets, set_building, set_private_env, set_public_env, set_version } from '${runtime_directory}/shared.js';
-
-set_version(${s(config.kit.version.name)});
+import { set_building } from '__sveltekit/environment';
+import { set_assets, set_private_env, set_public_env } from '${runtime_directory}/shared-server.js';
 
 export const options = {
 	app_template_contains_nonce: ${template.includes('%sveltekit.nonce%')},

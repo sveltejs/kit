@@ -1,7 +1,7 @@
 import { BROWSER, DEV } from 'esm-env';
 import { writable } from 'svelte/store';
 import { assets } from '__sveltekit/paths';
-import { version } from '../shared.js';
+import { version } from '__sveltekit/environment';
 import { PRELOAD_PRIORITIES } from './constants.js';
 
 /* global __SVELTEKIT_APP_VERSION_FILE__, __SVELTEKIT_APP_VERSION_POLL_INTERVAL__ */

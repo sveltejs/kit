@@ -322,7 +322,7 @@ function kit({ svelte_config }) {
 
 		async resolveId(id) {
 			// treat $env/static/[public|private] as virtual
-			if (id.startsWith('$env/') || id === '__sveltekit/paths' || id === '$service-worker') {
+			if (id.startsWith('$env/') || id.startsWith('__sveltekit/') || id === '$service-worker') {
 				return `\0${id}`;
 			}
 		},
@@ -365,6 +365,7 @@ function kit({ svelte_config }) {
 					);
 				case '\0$service-worker':
 					return create_service_worker_module(svelte_config);
+
 				// for internal use only. it's published as $app/paths externally
 				// we use this alias so that we won't collide with user aliases
 				case '\0__sveltekit/paths':
@@ -375,6 +376,15 @@ export let assets = ${assets ? s(assets) : 'base'};
 /** @param {string} path */
 export function set_assets(path) {
 	assets = path;
+}`;
+
+				case '\0__sveltekit/environment':
+					const { version } = svelte_config.kit;
+					return `export const version = ${s(version.name)};
+export let building = false;
+
+export function set_building() {
+	building = true;
 }`;
 			}
 		}

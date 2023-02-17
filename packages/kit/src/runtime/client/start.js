@@ -1,7 +1,7 @@
 import { DEV } from 'esm-env';
 import { create_client } from './client.js';
 import { init } from './singletons.js';
-import { set_assets, set_version } from '../shared.js';
+import { set_assets } from '../shared.js';
 
 /**
  * @param {{
@@ -12,9 +12,8 @@ import { set_assets, set_version } from '../shared.js';
  *   version: string;
  * }} opts
  */
-export async function start({ app, assets, hydrate, target, version }) {
+export async function start({ app, assets, hydrate, target }) {
 	set_assets(assets);
-	set_version(version);
 
 	if (DEV && target === document.body) {
 		console.warn(

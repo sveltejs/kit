@@ -451,14 +451,12 @@ export async function dev(vite, vite_config, svelte_config) {
 					await vite.ssrLoadModule(`${runtime_base}/server/index.js`)
 				);
 
-				const { set_assets, set_version, set_fix_stack_trace } =
+				const { set_assets, set_fix_stack_trace } =
 					/** @type {import('types').ServerInternalModule} */ (
-						await vite.ssrLoadModule(`${runtime_base}/shared.js`)
+						await vite.ssrLoadModule(`${runtime_base}/shared-server.js`)
 					);
 
 				set_assets(assets);
-
-				set_version(svelte_config.kit.version.name);
 
 				set_fix_stack_trace(fix_stack_trace);
 
