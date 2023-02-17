@@ -45,7 +45,9 @@ test('copy files', () => {
 	const dest = join(__dirname, 'output');
 
 	rmSync(dest, { recursive: true, force: true });
-	builder.writeClient(dest);
+	const clientPaths = builder.writeClient(dest);
+
+	assert.equal(clientPaths, glob('**', { cwd: dest, dot: true, filesOnly: true }));
 
 	assert.equal(
 		glob('**', { cwd: `${outDir}/output/client`, dot: true }),
@@ -53,7 +55,9 @@ test('copy files', () => {
 	);
 
 	rmSync(dest, { recursive: true, force: true });
-	builder.writeServer(dest);
+	const serverPaths = builder.writeServer(dest);
+
+	assert.equal(serverPaths, glob('**', { cwd: dest, dot: true, filesOnly: true }));
 
 	assert.equal(
 		glob('**', { cwd: `${outDir}/output/server`, dot: true }),
