@@ -76,16 +76,37 @@ export function write_root(manifest_data, output) {
 					mounted = true;
 					return unsubscribe;
 				});
+				
+				customElements.define('svelte-announcer', class extends HTMLElement {
+					constructor() {
+						const shadow = this.attachShadow({ mode: "open" });
+						shadow.innerHTML = /*html*/ `
+				 			<style>
+				 				:host {
+  								position: absolute;
+				   				clip-path: inset(50%);
+  								height: 1px;
+  								width: 1px;
+  								overflow: hidden;
+  								white-space: nowrap; 
+				 				}		
+				 			</style>
+				 			<slot></slot>
+				 		`;
+						this.setAttribute('aria-live', 'assertive');
+						this.setAttribute('aria-atomic', 'true');
+					}
+				});
 			</script>
 
 			${pyramid.replace(/\n/g, '\n\t\t\t')}
 
 			{#if mounted}
-				<div id="svelte-announcer" aria-live="assertive" aria-atomic="true" style="position: absolute; left: 0; top: 0; clip: rect(0 0 0 0); clip-path: inset(50%); overflow: hidden; white-space: nowrap; width: 1px; height: 1px">
+				<svelte-announcer>
 					{#if navigated}
 						{title}
 					{/if}
-				</div>
+				</svelte-announcer>
 			{/if}
 		`)
 	);
