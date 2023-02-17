@@ -274,12 +274,12 @@ const plugin = function (defaults = {}) {
 
 					static_config.routes.push({
 						src: src + '$',
-						dest: `${isr_name}${q}`
+						dest: `/${isr_name}${q}`
 					});
 
 					static_config.routes.push({
 						src: src + '/__data.json$',
-						dest: `${isr_name}/__data.json${q}`
+						dest: `/${isr_name}/__data.json${q}`
 					});
 				} else if (!singular) {
 					static_config.routes.push({ src: src + '(?:/__data.json)?$', dest: `/${name}` });
