@@ -201,25 +201,28 @@ const plugin = function (defaults = {}) {
 				group.routes.push(route);
 			}
 
+			const singular = groups.size === 1;
+
 			for (const group of groups.values()) {
 				const generate_function =
 					group.config.runtime === 'edge' ? generate_edge_function : generate_serverless_function;
 
 				// generate one function for the group
-				const name = `fn-${group.i}`;
+				const name = singular ? 'fn' : `fn-${group.i}`;
+
 				await generate_function(
 					name,
 					/** @type {any} */ (group.config),
 					/** @type {import('@sveltejs/kit').RouteDefinition<any>[]} */ (group.routes)
 				);
 
-				if (groups.size === 1) {
+				if (singular) {
 					// Special case: One function for all routes
 					static_config.routes.push({ src: '/.*', dest: `/${name}` });
-				} else {
-					for (const route of group.routes) {
-						functions.set(route.pattern.toString(), name);
-					}
+				}
+
+				for (const route of group.routes) {
+					functions.set(route.pattern.toString(), name);
 				}
 			}
 
@@ -239,47 +242,46 @@ const plugin = function (defaults = {}) {
 					src = '^/?';
 				}
 
-				const name = functions.get(pattern);
-				if (name) {
-					const isr = isr_config.get(route);
-					if (isr) {
-						const base = `${dirs.functions}/${route.id.slice(1)}`;
-						builder.mkdirp(base);
+				const name = functions.get(pattern) ?? 'fn-0';
 
-						const target = `${dirs.functions}/${name}.func`;
-						const relative = path.relative(path.dirname(base), target);
+				const isr = isr_config.get(route);
+				if (isr) {
+					const base = `${dirs.functions}/${route.id.slice(1)}`;
+					builder.mkdirp(base);
 
-						// create a symlink to the actual function, but use the
-						// route name so that we can derive the correct URL
-						fs.symlinkSync(relative, `${base}.func`);
-						fs.symlinkSync(`../${relative}`, `${base}/__data.json.func`);
+					const target = `${dirs.functions}/${name}.func`;
+					const relative = path.relative(path.dirname(base), target);
 
-						let i = 1;
-						const pathname = route.segments
-							.map((segment) => {
-								return segment.dynamic ? `$${i++}` : segment.content;
-							})
-							.join('/');
+					// create a symlink to the actual function, but use the
+					// route name so that we can derive the correct URL
+					fs.symlinkSync(relative, `${base}.func`);
+					fs.symlinkSync(`../${relative}`, `${base}/__data.json.func`);
 
-						const json = JSON.stringify(isr, null, '\t');
+					let i = 1;
+					const pathname = route.segments
+						.map((segment) => {
+							return segment.dynamic ? `$${i++}` : segment.content;
+						})
+						.join('/');
 
-						write(`${base}.prerender-config.json`, json);
-						write(`${base}/__data.json.prerender-config.json`, json);
+					const json = JSON.stringify(isr, null, '\t');
 
-						const q = `?__pathname=/${pathname}`;
+					write(`${base}.prerender-config.json`, json);
+					write(`${base}/__data.json.prerender-config.json`, json);
 
-						static_config.routes.push({
-							src: src + '$',
-							dest: `${route.id}${q}`
-						});
+					const q = `?__pathname=/${pathname}`;
 
-						static_config.routes.push({
-							src: src + '/__data.json$',
-							dest: `${route.id}/__data.json${q}`
-						});
-					} else {
-						static_config.routes.push({ src: src + '(?:/__data.json)?$', dest: `/${name}` });
-					}
+					static_config.routes.push({
+						src: src + '$',
+						dest: `${route.id}${q}`
+					});
+
+					static_config.routes.push({
+						src: src + '/__data.json$',
+						dest: `${route.id}/__data.json${q}`
+					});
+				} else if (!singular) {
+					static_config.routes.push({ src: src + '(?:/__data.json)?$', dest: `/${name}` });
 				}
 			}
 
