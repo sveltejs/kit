@@ -2,7 +2,6 @@ import * as devalue from 'devalue';
 import { readable, writable } from 'svelte/store';
 import { DEV } from 'esm-env';
 import { assets, base } from '__sveltekit/paths';
-import { version } from '__sveltekit/environment';
 import { hash } from '../../hash.js';
 import { serialize_data } from './serialize_data.js';
 import { s } from '../../../utils/misc.js';
@@ -291,10 +290,7 @@ export async function render_response({
 	}
 
 	if (page_config.csr) {
-		const opts = [
-			`app: import(${s(prefixed(client.app.file))})`,
-			`target: document.querySelector('[data-sveltekit-hydrate="${target}"]').parentNode`
-		];
+		const args = [`app`, `"${target}"`];
 
 		if (page_config.ssr) {
 			const hydrate = [
@@ -312,16 +308,15 @@ export async function render_response({
 				hydrate.push(`params: ${devalue.uneval(event.params)}`, `route: ${s(event.route)}`);
 			}
 
-			opts.push(`hydrate: {\n\t\t\t\t\t${hydrate.join(',\n\t\t\t\t\t')}\n\t\t\t\t}`);
+			args.push(`{\n\t\t\t\t${hydrate.join(',\n\t\t\t\t')}\n\t\t\t}`);
 		}
 
 		// prettier-ignore
 		const init_app = `
 			import { start } from ${s(prefixed(client.start.file))};
+			import * as app from ${s(prefixed(client.app.file))};
 
-			start({
-				${opts.join(',\n\t\t\t\t')}
-			});
+			start(${args.join(', ')});
 		`;
 
 		const included_modulepreloads = Array.from(modulepreloads, (dep) => prefixed(dep)).filter(
