@@ -93,10 +93,13 @@ export function write_root(manifest_data, output) {
 										white-space: nowrap; 
 									}		
 								</style>
-								<slot></slot>
+								<span>
+									<slot></slot>
+								</span>
 							\`;
-							this.setAttribute('aria-live', 'assertive');
-							this.setAttribute('aria-atomic', 'true');
+							const span = shadow.querySelector("span");
+							span.setAttribute("aria-live", "assertive");
+							span.setAttribute("aria-atomic", "true");
 						}
 					});
 				}
