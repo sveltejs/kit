@@ -331,7 +331,7 @@ function kit({ svelte_config }) {
 			const browser = !options?.ssr;
 			const global = `__sveltekit_${version_hash}`;
 
-			if (browser && process.env.TEST !== 'true') {
+			if (options?.ssr === false && process.env.TEST !== 'true') {
 				const normalized_cwd = vite.normalizePath(cwd);
 				const normalized_lib = vite.normalizePath(kit.files.lib);
 				if (
