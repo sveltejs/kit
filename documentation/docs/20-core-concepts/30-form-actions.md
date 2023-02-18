@@ -473,4 +473,4 @@ Some forms don't need to `POST` data to the server — search inputs, for exampl
 </form>
 ```
 
-Note that in this case you don't need to export any actions at all from `+page.server.js` -- "submitting" this form will navigate to `/search?q=` instead of invoking an action named `search` on the server. As with `<a>` elements, you can set the [`data-sveltekit-reload`](link-options#data-sveltekit-reload) and [`data-sveltekit-noscroll`](link-options#data-sveltekit-noscroll) attributes on the `<form>` to control the router's behaviour.
+Submitting this form will navigate to `/search?q=...` and invoke your load function instead of an action. As with `<a>` elements, you can set the [`data-sveltekit-reload`](link-options#data-sveltekit-reload) and [`data-sveltekit-noscroll`](link-options#data-sveltekit-noscroll) attributes on the `<form>` to control the router's behaviour.
