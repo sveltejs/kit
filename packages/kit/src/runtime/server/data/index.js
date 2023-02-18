@@ -136,7 +136,9 @@ export async function render_data(
 			}),
 			{
 				headers: {
-					'content-type': 'application/x-ndjson',
+					// text/plain isn't strictly correct, but it makes it easier to inspect
+					// the data, and doesn't affect how it is consumed by the client
+					'content-type': 'text/plain',
 					'cache-control': 'private, no-store'
 				}
 			}
