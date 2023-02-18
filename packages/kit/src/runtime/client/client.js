@@ -1761,7 +1761,7 @@ async function load_data(url, invalid) {
 
 	return new Promise(async (resolve) => {
 		/**
-		 * @type {Map<string, { resolve: (v: any) => void; reject: (v: any) => void; uses: import('types').Uses }>}
+		 * @type {Map<string, { resolve: (v: any) => void; reject: (v: any) => void; }>}
 		 * Map of deferred promises that will be resolved by a subsequent chunk of data
 		 */
 		const pending = new Map();
@@ -1770,22 +1770,12 @@ async function load_data(url, invalid) {
 
 		/**
 		 * @param {any} data
-		 * @param {import('types').Uses} uses
 		 */
-		function deserialize(data, uses) {
+		function deserialize(data) {
 			return devalue.unflatten(data, {
 				Promise: (id) => {
-					/** @type {any} */
-					const obj = {
-						id,
-						resolve: undefined,
-						reject: undefined,
-						uses
-					};
-					pending.set(id, obj);
-					return new Promise((f, r) => {
-						obj.resolve = f;
-						obj.reject = r;
+					return new Promise((fulfil, reject) => {
+						pending.set(id, { resolve: fulfil, reject });
 					});
 				}
 			});
@@ -1818,7 +1808,7 @@ async function load_data(url, invalid) {
 					node.nodes?.forEach((/** @type {any} */ node) => {
 						if (node?.type === 'data') {
 							node.uses = deserialize_uses(node.uses);
-							node.data = deserialize(node.data, node.uses);
+							node.data = deserialize(node.data);
 						}
 					});
 
@@ -1830,9 +1820,9 @@ async function load_data(url, invalid) {
 					// Shouldn't ever be undefined, but just in case
 					if (entry) {
 						if (error) {
-							entry.reject(deserialize(error, entry.uses));
+							entry.reject(deserialize(error));
 						} else {
-							entry.resolve(deserialize(data, entry.uses));
+							entry.resolve(deserialize(data));
 						}
 					}
 					pending.delete(id);
