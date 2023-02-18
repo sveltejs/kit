@@ -57,29 +57,28 @@ test('Updates package.json', () => {
 		name: 'foo',
 		version: '1.0.0',
 		type: 'module',
-		files: ['package'],
 		scripts: {
-			packages: 'svelte-package -o package'
+			packages: 'svelte-package -o package -c'
 		},
 		exports: {
 			'./package.json': './package.json',
 			'.': {
-				types: './package/index.d.ts',
-				svelte: './package/index.js',
-				default: './package/index.js'
+				types: './index.d.ts',
+				svelte: './index.js',
+				default: './index.js'
 			},
 			'./foo/Bar.svelte': {
-				types: './package/foo/Bar.svelte.d.ts',
-				svelte: './package/foo/Bar.svelte',
-				default: './package/foo/Bar.svelte'
+				types: './foo/Bar.svelte.d.ts',
+				svelte: './foo/Bar.svelte',
+				default: './foo/Bar.svelte'
 			},
 			'./baz': {
-				types: './package/baz.d.ts',
-				default: './package/baz.js'
+				types: './baz.d.ts',
+				default: './baz.js'
 			},
 			'./ignored': './something.js'
 		},
-		svelte: './package/index.js'
+		svelte: './index.js'
 	});
 });
 
@@ -118,20 +117,19 @@ test('Updates package.json #2', () => {
 		name: 'foo',
 		version: '1.0.0',
 		type: 'module',
-		files: ['dist'],
 		exports: {
 			'./package.json': './package.json',
 			'.': {
-				svelte: './dist/index.js',
-				default: './dist/index.js'
+				svelte: './index.js',
+				default: './index.js'
 			},
 			'./foo/Bar.svelte': {
-				svelte: './dist/foo/Bar.svelte',
-				default: './dist/foo/Bar.svelte'
+				svelte: './foo/Bar.svelte',
+				default: './foo/Bar.svelte'
 			},
-			'./baz': './dist/baz.js'
+			'./baz': './baz.js'
 		},
-		svelte: './dist/index.js'
+		svelte: './index.js'
 	});
 });
 
