@@ -287,18 +287,21 @@ export async function render_page(event, route, page, options, manifest, state, 
 
 		if (state.prerendering && should_prerender_data) {
 			// ndjson format
-			let body = '';
-			for await (const node of get_data_json(
+			let { data, chunks } = get_data_json(
 				event,
 				options,
 				branch.map((node) => node?.server_data)
-			)) {
-				body += node.data;
+			);
+
+			if (chunks) {
+				for await (const chunk of chunks) {
+					data += chunk;
+				}
 			}
 
 			state.prerendering.dependencies.set(data_pathname, {
-				response: text(body),
-				body
+				response: text(data),
+				body: data
 			});
 		}
 

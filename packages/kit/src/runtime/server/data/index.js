@@ -6,7 +6,7 @@ import { clarify_devalue_error, handle_error_and_jsonify, stringify_uses } from 
 import { normalize_path } from '../../../utils/url.js';
 import { text } from '../../../exports/index.js';
 import * as devalue from 'devalue';
-import { to_generator } from '../../../utils/generators.js';
+import { create_async_iterator, to_generator } from '../../../utils/generators.js';
 
 export const INVALIDATED_PARAM = 'x-sveltekit-invalidated';
 
@@ -117,21 +117,20 @@ export async function render_data(
 			)
 		);
 
-		const chunks = get_data_json(event, options, nodes);
-		const { value: first } = await chunks.next();
+		const { data, chunks } = get_data_json(event, options, nodes);
 
-		if (!first?.has_more) {
+		if (!chunks) {
 			// use a normal JSON response where possible, so we get `content-length`
 			// and can use browser JSON devtools for easier inspecting
-			return json_response(/** @type {NonNullable<typeof first>} */ (first).data);
+			return json_response(data);
 		}
 
 		return new Response(
 			new ReadableStream({
 				async start(controller) {
-					controller.enqueue(/** @type {NonNullable<typeof first>} */ (first).data);
-					for await (const next of chunks) {
-						controller.enqueue(next.data);
+					controller.enqueue(data);
+					for await (const chunk of chunks) {
+						controller.enqueue(chunk);
 					}
 					controller.close();
 				}
@@ -180,20 +179,20 @@ export function redirect_json_response(redirect) {
 	});
 }
 
-export const get_data_json = to_generator(_get_data_json);
-
 /**
- * The first chunk returns the devalue'd nodes with potentially pending promises.
- * Subsequent chunks (if any) return the resolved promises.
+ * If the serialized data contains promises, `chunks` will be an
+ * async iterable containing their resolutions
  * @param {import('types').RequestEvent} event
  * @param {import('types').SSROptions} options
  * @param {Array<import('types').ServerDataSkippedNode | import('types').ServerDataNode | import('types').ServerErrorNode | null | undefined>} nodes
- * @param {(result: {has_more: boolean; data: any}, done: boolean) => void} next
+ *  @returns {{ data: string, chunks: AsyncIterable<string> | null }}
  */
-async function _get_data_json(event, options, nodes, next) {
+export function get_data_json(event, options, nodes) {
 	let promise_id = 1;
 	let count = 0;
 	let strings = [];
+
+	const { iterator, push, done } = create_async_iterator();
 
 	const revivers = {
 		/** @param {any} thing */
@@ -228,15 +227,12 @@ async function _get_data_json(event, options, nodes, next) {
 
 							count -= 1;
 
-							next(
-								{
-									has_more: count !== 0,
-									data: `{"type":"chunk","id":${id}${data ? `,"data":${data}` : ''}${
-										error ? `,"error":${error}` : ''
-									}}\n`
-								},
-								count === 0
+							push(
+								`{"type":"chunk","id":${id}${data ? `,"data":${data}` : ''}${
+									error ? `,"error":${error}` : ''
+								}}\n`
 							);
+							if (count === 0) done();
 						}
 					);
 
@@ -264,10 +260,10 @@ async function _get_data_json(event, options, nodes, next) {
 			strings.push(str);
 		}
 
-		next(
-			{ has_more: count !== 0, data: `{"type":"data","nodes":[${strings.join(',')}]}\n` },
-			count === 0
-		);
+		return {
+			data: `{"type":"data","nodes":[${strings.join(',')}]}\n`,
+			chunks: count > 0 ? iterator : null
+		};
 	} catch (e) {
 		throw new Error(clarify_devalue_error(event, /** @type {any} */ (e)));
 	}

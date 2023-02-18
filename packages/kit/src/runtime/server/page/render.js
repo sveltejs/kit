@@ -10,7 +10,7 @@ import { uneval_action_response } from './actions.js';
 import { clarify_devalue_error, stringify_uses } from '../utils.js';
 import { version, public_env } from '../../shared.js';
 import { text } from '../../../exports/index.js';
-import { to_generator } from '../../../utils/generators.js';
+import { create_async_iterator, to_generator } from '../../../utils/generators.js';
 
 // TODO rename this function/module
 
@@ -201,12 +201,11 @@ export async function render_response({
 		return `${resolved_assets}/${path}`;
 	};
 
-	const data_chunks = get_data(
+	const { data, chunks } = get_data(
 		event,
 		branch.map((b) => b.server_data)
 	);
-	const { value } = await data_chunks.next();
-	const { data, has_more: needs_streaming } = /** @type {NonNullable<typeof value>} */ (value);
+
 	const serialized = { data, form: 'null', error: 'null' };
 
 	if (form_value) {
@@ -291,7 +290,7 @@ export async function render_response({
 			opts.push(`hydrate: {\n\t\t\t\t\t${hydrate.join(',\n\t\t\t\t\t')}\n\t\t\t\t}`);
 		}
 
-		const streaming = needs_streaming
+		const streaming = chunks
 			? `window.$__sveltekit__ = window.$__sveltekit__ || {};
 
 		const deferred = new Map();
@@ -434,7 +433,7 @@ export async function render_response({
 		}
 	}
 
-	return !needs_streaming
+	return !chunks
 		? text(transformed, {
 				status,
 				headers
@@ -443,9 +442,11 @@ export async function render_response({
 				new ReadableStream({
 					async start(controller) {
 						controller.enqueue(transformed);
-						for await (const next of data_chunks) {
-							controller.enqueue(next.data);
+						for await (const chunk of chunks) {
+							console.log(`enqueueing ${chunk}`);
+							controller.enqueue(chunk);
 						}
+						console.log('done');
 						controller.close();
 					}
 				}),
@@ -457,19 +458,19 @@ export async function render_response({
 		  );
 }
 
-const get_data = to_generator(_get_data);
-
 /**
- * The first chunk returns the unevaluated data nodes, potentially with promise placeholders.
- * Subsequent chunks (if any) return script tags that resolve those promises.
+ * If the serialized data contains promises, `chunks` will be an
+ * async iterable containing their resolutions
  * @param {import('types').RequestEvent} event
  * @param {Array<import('types').ServerDataNode | null>} nodes
- * @param {(result: {has_more: boolean; data: string}, done: boolean) => void} next
+ * @returns {{ data: string, chunks: AsyncIterable<string> | null }}
  */
-async function _get_data(event, nodes, next) {
+function get_data(event, nodes) {
 	let promise_id = 1;
 	let count = 0;
 	let strings = [];
+
+	const { iterator, push, done } = create_async_iterator();
 
 	const replacer =
 		/** @param {any} thing */
@@ -497,14 +498,8 @@ async function _get_data(event, nodes, next) {
 								str = devalue.uneval({ id, data, error }, replacer);
 							}
 
-							next(
-								{
-									has_more: count !== 0,
-									// Needs to be a module script tag or else it's executed before the start script
-									data: `<script type="module">$__sveltekit__.resolve(${str})</script>`
-								},
-								count === 0
-							);
+							push(`<script type="module">$__sveltekit__.resolve(${str})</script>`);
+							if (count === 0) done();
 						}
 					);
 
@@ -529,7 +524,10 @@ async function _get_data(event, nodes, next) {
 			strings.push(str);
 		}
 
-		next({ has_more: count !== 0, data: `[${strings.join(',')}]` }, count === 0);
+		return {
+			data: `[${strings.join(',')}]`,
+			chunks: count > 0 ? iterator : null
+		};
 	} catch (e) {
 		throw new Error(clarify_devalue_error(event, /** @type {any} */ (e)));
 	}

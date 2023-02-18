@@ -1,50 +1,44 @@
 /**
- * This method is necessary because we can't yield from inside a callback,
- * so we smooth over an internal less ergonomic callback API
- * @template {(...args: any) => void} Fn
- * @param {Fn} fn
- * @returns {Parameters<Fn> extends [...infer InitPs, (value: infer Value, done: boolean) => void] ? (...args: InitPs) => AsyncGenerator<Value, undefined, undefined> : never}
+ * @returns {import("types").Deferred & { promise: Promise<any> }}}
  */
-export function to_generator(fn) {
-	// @ts-ignore yeah TS this return type is fucked up, I know
-	return async function* (...args) {
-		/** @type {(v: any) => void} */
-		let fulfil;
+function defer() {
+	let fulfil;
+	let reject;
 
-		/** @type {(v: any) => void} */
-		let reject;
+	const promise = new Promise((f, r) => {
+		fulfil = f;
+		reject = r;
+	});
 
-		let promise = new Promise((f, r) => {
-			fulfil = f;
-			reject = r;
-		});
+	// @ts-expect-error
+	return { promise, fulfil, reject };
+}
 
-		// Ensure it runs after we enter the loop to not swallow the first eager result
-		Promise.resolve()
-			.then(() =>
-				fn(
-					...args,
-					/**
-					 *@param {any} result
-					 * @param {boolean} done
-					 */
-					(result, done) => {
-						fulfil({ result, done });
-						if (!done) {
-							promise = new Promise((r) => {
-								fulfil = r;
-							});
-						}
-					}
-				)
-			)
-			// catch and rethrow to avoid unhandled promise rejection
-			.catch((e) => reject(e));
+/**
+ * Create an async iterator and a function to push values into it
+ * @returns {{
+ *   iterator: AsyncIterable<any>;
+ *   push: (value: any) => void;
+ *   done: () => void;
+ * }}
+ */
+export function create_async_iterator() {
+	let deferred = defer();
 
-		while (true) {
-			const { result, done } = await promise;
-			yield result;
-			if (done) return undefined;
+	return {
+		iterator: {
+			[Symbol.asyncIterator]() {
+				return {
+					next: () => deferred.promise
+				};
+			}
+		},
+		push: (value) => {
+			deferred.fulfil({ value, done: false });
+			deferred = defer();
+		},
+		done: () => {
+			deferred.fulfil({ done: true });
 		}
 	};
 }
