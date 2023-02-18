@@ -174,7 +174,7 @@ Universal `load` functions are called with a `LoadEvent`, which has a `data` pro
 
 A universal `load` function can return an object containing any values, including things like custom classes and component constructors.
 
-A server `load` function must return data that can be serialized with [devalue](https://github.com/rich-harris/devalue) — anything that can be represented as JSON plus things like `BigInt`, `Date`, `Map`, `Set` and `RegExp`, or repeated/cyclical references — so that it can be transported over the network.
+A server `load` function must return data that can be serialized with [devalue](https://github.com/rich-harris/devalue) — anything that can be represented as JSON plus things like `BigInt`, `Date`, `Map`, `Set` and `RegExp`, or repeated/cyclical references — so that it can be transported over the network. Your data can include [promises](#promises), in which case it will be streamed to the browsers.
 
 ### When to use which
 
@@ -420,19 +420,23 @@ export function load({ locals }) {
 
 In the browser, you can also navigate programmatically outside of a `load` function using [`goto`](modules#$app-navigation-goto) from [`$app.navigation`](modules#$app-navigation).
 
-## Promise unwrapping
+## Promises
 
-Top-level promises will be awaited, which makes it easy to return multiple promises without creating a waterfall:
+Promises at the _top level_ of the returned object will be awaited, making it easy to return multiple promises without creating a waterfall. When using a server `load`, _nested_ promises will be streamed to the browser as they resolve:
 
 ```js
-/// file: src/routes/+page.js
-/** @type {import('./$types').PageLoad} */
+/// file: src/routes/+page.server.js
+/** @type {import('./$types').PageServerLoad} */
 export function load() {
 	return {
-		a: Promise.resolve('a'),
-		b: Promise.resolve('b'),
-		c: {
-			value: Promise.resolve('c')
+		one: Promise.resolve(1),
+		two: Promise.resolve(2),
+		streamed: {
+			three: new Promise((fulfil) => {
+				setTimeout(() => {
+					fulfil(3)
+				}, 1000);
+			})
 		}
 	};
 }
@@ -443,52 +447,23 @@ export function load() {
 <script>
 	/** @type {import('./$types').PageData} */
 	export let data;
-
-	console.log(data.a); // 'a'
-	console.log(data.b); // 'b'
-	console.log(data.c.value); // `Promise {...}`
-</script>
-```
-
-## Defer loading slow data
-
-Top level promises will be awaited, but nested promises won't, allowing you to defer loading slow data.
-
-```js
-/// file: +page.server.js
-import { defer } from '@sveltejs/kit';
-
-/** @type {import('./$types').PageLoad} */
-export function load({ fetch }) {
-	const fast = fetch('/api/responds/quickly');
-	const slow = fetch('/api/takes/a/while');
-	return {
-		fast,
-		deferred: {
-			slow
-		}
-	};
-}
-```
-
-In the above example, the UI will be rendered as soon as `fast` has resolved. Use Svelte's `{#await}` to show meaningful fallback UI while the `slow` data is still loading:
-
-```svelte
-/// file: +page.svelte
-<script>
-	/** @type {import('./$types').PageData} */
-	export let data;
 </script>
 
-<p>{data.fast}</p>
-{#await data.deferred.slow}
-	<p>Loading ...</p>
-{:then result}
-	<p>{result}</p>
-{:catch error}
-	<p>An error occurred: {error}</p>
-{/await}
+<p>one: {data.one}</p>
+<p>two: {data.two}</p>
+<p>
+	three:
+	{#await data.streamed.three}
+		...
+	{:then value}
+		{value}
+	{:catch error}
+		{error.message}
+	{/await}
+</p>
 ```
+
+> Streaming data will only work when JavaScript is enabled. You should avoid returning nested promises from a universal `load` function as these are _not_ streamed — instead, the promise is recreated when the function re-runs in the browser.
 
 ## Parallel loading
 
