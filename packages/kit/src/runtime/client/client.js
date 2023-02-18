@@ -727,18 +727,8 @@ export function create_client({ target }) {
 	 * @returns {import('./types').DataNode | null}
 	 */
 	function create_data_node(node, previous) {
-		if (node?.type === 'data') {
-			/** @type {import('./types').DataNode} */
-			const data_node = {
-				type: 'data',
-				data: node.data,
-				uses: node.uses,
-				slash: node.slash
-			};
-			return data_node;
-		} else if (node?.type === 'skip') {
-			return previous ?? null;
-		}
+		if (node?.type === 'data') return node;
+		if (node?.type === 'skip') return previous ?? null;
 		return null;
 	}
 
