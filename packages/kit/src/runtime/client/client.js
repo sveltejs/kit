@@ -1761,10 +1761,10 @@ async function load_data(url, invalid) {
 
 	return new Promise(async (resolve) => {
 		/**
-		 * @type {Map<string, { resolve: (v: any) => void; reject: (v: any) => void; }>}
+		 * @type {Map<string, { fulfil: (v: any) => void; reject: (v: any) => void; }>}
 		 * Map of deferred promises that will be resolved by a subsequent chunk of data
 		 */
-		const pending = new Map();
+		const deferreds = new Map();
 		const reader = /** @type {ReadableStream<Uint8Array>} */ (res.body).getReader();
 		const decoder = new TextDecoder();
 
@@ -1775,7 +1775,7 @@ async function load_data(url, invalid) {
 			return devalue.unflatten(data, {
 				Promise: (id) => {
 					return new Promise((fulfil, reject) => {
-						pending.set(id, { resolve: fulfil, reject });
+						deferreds.set(id, { fulfil, reject });
 					});
 				}
 			});
@@ -1815,17 +1815,18 @@ async function load_data(url, invalid) {
 					resolve(node);
 				} else if (node.type === 'chunk') {
 					// This is a subsequent chunk containing deferred data
-					let { id, data, error } = node;
-					const entry = pending.get(id);
+					const { id, data, error } = node;
+					const deferred = deferreds.get(id);
+					deferreds.delete(id);
+
 					// Shouldn't ever be undefined, but just in case
-					if (entry) {
+					if (deferred) {
 						if (error) {
-							entry.reject(deserialize(error));
+							deferred.reject(deserialize(error));
 						} else {
-							entry.resolve(deserialize(data));
+							deferred.fulfil(deserialize(data));
 						}
 					}
-					pending.delete(id);
 				}
 			}
 		}
