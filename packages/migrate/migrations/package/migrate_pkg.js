@@ -71,7 +71,7 @@ export function update_pkg_json(config, pkg, files) {
 	for (const key in pkg.scripts || []) {
 		const script = pkg.scripts[key];
 		if (script.includes('svelte-package')) {
-			pkg.scripts[key] = script.replace('svelte-package', `svelte-package -o ${out_dir}`);
+			pkg.scripts[key] = script.replace('svelte-package', `svelte-package -o ${out_dir} -c`);
 		}
 	}
 
@@ -81,13 +81,8 @@ export function update_pkg_json(config, pkg, files) {
 		...pkg.exports
 	};
 
-	pkg.files = pkg.files || [];
-	if (!pkg.files.includes(out_dir)) {
-		pkg.files.push(out_dir);
-	}
-
 	if (pkg.devDependencies?.['@sveltejs/package']) {
-		pkg.devDependencies['@sveltejs/package'] = '^2.0.0';
+		pkg.devDependencies['@sveltejs/package'] = '^2.1.0';
 	}
 
 	/** @type {Record<string, string>} */
@@ -112,12 +107,12 @@ export function update_pkg_json(config, pkg, files) {
 				// JSON.stringify will remove the undefined entries
 				pkg.exports[key] = {
 					types: has_type
-						? `./${out_dir}/${
+						? `./${
 								file.is_svelte ? `${file.dest}.d.ts` : file.dest.slice(0, -'.js'.length) + '.d.ts'
 						  }`
 						: undefined,
-					svelte: needs_svelte_condition ? `./${out_dir}/${file.dest}` : undefined,
-					default: `./${out_dir}/${file.dest}`
+					svelte: needs_svelte_condition ? `./${file.dest}` : undefined,
+					default: `./${file.dest}`
 				};
 
 				if (Object.values(pkg.exports[key]).filter(Boolean).length === 1) {

@@ -1,0 +1,14 @@
+{
+	"name": "copy-pkg-json",
+	"private": true,
+	"version": "1.0.0",
+	"description": "test copy-pkg-json option",
+	"peerDependencies": {
+		"svelte": "^3.55.0"
+	},
+	"exports": {
+		".": {
+			"svelte": "./index.js"
+		}
+	}
+}

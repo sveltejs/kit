@@ -32,6 +32,7 @@ async function test_make_package(path, options) {
 		output,
 		types: true,
 		config,
+		copy_pkg: false,
 		...options
 	});
 
@@ -88,7 +89,7 @@ for (const dir of fs.readdirSync(join(__dirname, 'errors'))) {
 		const input = resolve(cwd, config.kit?.files?.lib ?? 'src/lib');
 
 		try {
-			await build({ cwd, input, output, types: true, config });
+			await build({ cwd, input, output, types: true, config, copy_pkg: false });
 			assert.unreachable('Must not pass build');
 		} catch (/** @type {any} */ error) {
 			assert.instance(error, Error);
@@ -138,6 +139,10 @@ test('create package and resolves $lib alias', async () => {
 	await test_make_package('resolve-alias');
 });
 
+test.only('create package and copy over package.json', async () => {
+	await test_make_package('copy-pkg-json', { copy_pkg: true });
+});
+
 test('SvelteKit interop', async () => {
 	await test_make_package('svelte-kit');
 });
@@ -154,7 +159,8 @@ if (!process.env.CI) {
 			input: 'src/lib',
 			output: 'package',
 			types: true,
-			config
+			config,
+			copy_pkg: false
 		});
 
 		/** @param {string} file */

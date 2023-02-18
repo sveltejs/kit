@@ -5,6 +5,7 @@ export interface Options {
 	input: string;
 	output: string;
 	types: boolean;
+	copy_pkg: boolean;
 	config: {
 		extensions?: string[];
 		kit?: {

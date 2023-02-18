@@ -41,6 +41,10 @@ async function do_build(options, analyse_code) {
 		await process_file(input, output, file, options.config.preprocess, alias, analyse_code);
 	}
 
+	if (options.copy_pkg) {
+		fs.copyFileSync(path.join(options.cwd, 'package.json'), path.join(output, 'package.json'));
+	}
+
 	console.log(
 		colors
 			.bold()
