@@ -6,7 +6,7 @@ import { clarify_devalue_error, handle_error_and_jsonify, stringify_uses } from 
 import { normalize_path } from '../../../utils/url.js';
 import { text } from '../../../exports/index.js';
 import * as devalue from 'devalue';
-import { create_async_iterator, to_generator } from '../../../utils/generators.js';
+import { create_async_iterator } from '../../../utils/generators.js';
 
 export const INVALIDATED_PARAM = 'x-sveltekit-invalidated';
 
@@ -190,7 +190,6 @@ export function redirect_json_response(redirect) {
 export function get_data_json(event, options, nodes) {
 	let promise_id = 1;
 	let count = 0;
-	let strings = [];
 
 	const { iterator, push, done } = create_async_iterator();
 

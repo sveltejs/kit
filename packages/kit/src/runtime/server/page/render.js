@@ -10,7 +10,7 @@ import { uneval_action_response } from './actions.js';
 import { clarify_devalue_error, stringify_uses } from '../utils.js';
 import { version, public_env } from '../../shared.js';
 import { text } from '../../../exports/index.js';
-import { create_async_iterator, to_generator } from '../../../utils/generators.js';
+import { create_async_iterator } from '../../../utils/generators.js';
 
 // TODO rename this function/module
 
@@ -466,44 +466,42 @@ export async function render_response({
 function get_data(event, nodes) {
 	let promise_id = 1;
 	let count = 0;
-	let strings = [];
 
 	const { iterator, push, done } = create_async_iterator();
 
-	const replacer =
-		/** @param {any} thing */
-		(thing) => {
-			if (typeof thing?.then === 'function') {
-				const id = promise_id++;
-				count += 1;
+	/** @param {any} thing */
+	function replacer(thing) {
+		if (typeof thing?.then === 'function') {
+			const id = promise_id++;
+			count += 1;
 
-				thing
-					.then(/** @param {any} data */ (data) => ({ data }))
-					.catch(/** @param {any} error */ (error) => ({ error }))
-					.then(
-						/**
-						 * @param {{data: any; error: any}} result
-						 */
-						async ({ data, error }) => {
-							count -= 1;
+			thing
+				.then(/** @param {any} data */ (data) => ({ data }))
+				.catch(/** @param {any} error */ (error) => ({ error }))
+				.then(
+					/**
+					 * @param {{data: any; error: any}} result
+					 */
+					async ({ data, error }) => {
+						count -= 1;
 
-							let str;
-							try {
-								str = devalue.uneval({ id, data, error }, replacer);
-							} catch (e) {
-								error = `new Error(${clarify_devalue_error(event, /** @type {any} */ (e))});`;
-								data = undefined;
-								str = devalue.uneval({ id, data, error }, replacer);
-							}
-
-							push(`<script type="module">$__sveltekit__.resolve(${str})</script>`);
-							if (count === 0) done();
+						let str;
+						try {
+							str = devalue.uneval({ id, data, error }, replacer);
+						} catch (e) {
+							error = `new Error(${clarify_devalue_error(event, /** @type {any} */ (e))});`;
+							data = undefined;
+							str = devalue.uneval({ id, data, error }, replacer);
 						}
-					);
 
-				return `$__sveltekit__.defer(${id})`;
-			}
-		};
+						push(`<script type="module">$__sveltekit__.resolve(${str})</script>`);
+						if (count === 0) done();
+					}
+				);
+
+			return `$__sveltekit__.defer(${id})`;
+		}
+	}
 
 	try {
 		const strings = nodes.map((node) => {
