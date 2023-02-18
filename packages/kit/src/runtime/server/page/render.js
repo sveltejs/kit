@@ -490,16 +490,6 @@ async function _get_data(event, nodes, next) {
 								 * @param {{data: any; error: any}} result
 								 */
 								async ({ data, error }) => {
-									if (
-										__SVELTEKIT_DEV__ &&
-										stringify_uses(/** @type {import('types').ServerDataNode} */ (node)) !==
-											uses_str
-									) {
-										console.warn(
-											'Accessed dependencies after load function returned. These usages will not be tracked.'
-										);
-									}
-
 									count -= 1;
 
 									let str;

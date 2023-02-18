@@ -226,16 +226,6 @@ async function _get_data_json(event, options, nodes, next) {
 										);
 									}
 
-									if (
-										__SVELTEKIT_DEV__ &&
-										stringify_uses(/** @type {import('types').ServerDataNode} */ (node)) !==
-											uses_str
-									) {
-										console.warn(
-											'Accessed dependencies after load function returned. These usages will not be tracked.'
-										);
-									}
-
 									count -= 1;
 
 									next(
