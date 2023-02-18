@@ -443,10 +443,8 @@ export async function render_response({
 					async start(controller) {
 						controller.enqueue(transformed);
 						for await (const chunk of chunks) {
-							console.log(`enqueueing ${chunk}`);
 							controller.enqueue(chunk);
 						}
-						console.log('done');
 						controller.close();
 					}
 				}),
