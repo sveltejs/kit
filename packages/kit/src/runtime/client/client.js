@@ -1761,8 +1761,8 @@ async function load_data(url, invalid) {
 
 	return new Promise(async (resolve) => {
 		/**
-		 * @type {Map<string, { fulfil: (v: any) => void; reject: (v: any) => void; }>}
 		 * Map of deferred promises that will be resolved by a subsequent chunk of data
+		 * @type {Map<string, import('types').Deferred>}
 		 */
 		const deferreds = new Map();
 		const reader = /** @type {ReadableStream<Uint8Array>} */ (res.body).getReader();
@@ -1816,16 +1816,13 @@ async function load_data(url, invalid) {
 				} else if (node.type === 'chunk') {
 					// This is a subsequent chunk containing deferred data
 					const { id, data, error } = node;
-					const deferred = deferreds.get(id);
+					const deferred = /** @type {import('types').Deferred} */ (deferreds.get(id));
 					deferreds.delete(id);
 
-					// Shouldn't ever be undefined, but just in case
-					if (deferred) {
-						if (error) {
-							deferred.reject(deserialize(error));
-						} else {
-							deferred.fulfil(deserialize(data));
-						}
+					if (error) {
+						deferred.reject(deserialize(error));
+					} else {
+						deferred.fulfil(deserialize(data));
 					}
 				}
 			}

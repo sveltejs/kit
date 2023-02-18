@@ -78,6 +78,11 @@ export type CSRRoute = {
 	leaf: [has_server_load: boolean, node_loader: CSRPageNodeLoader];
 };
 
+export interface Deferred {
+	fulfil: (value: any) => void;
+	reject: (error: Error) => void;
+}
+
 export type GetParams = (match: RegExpExecArray) => Record<string, string>;
 
 export interface ServerHooks {
