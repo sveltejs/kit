@@ -523,7 +523,7 @@ export async function load() {
 
 A `load` function that calls `await parent()` will also re-run if a parent `load` function is re-run.
 
-Tracking happens until the load function returns its value. If you have nested promises that resolve later and which then use dependencies, then these usages will not be tracked.
+Dependency tracking does not apply _after_ the `load` function has returned — for example, accessing `params.x` inside a nested [promise](#promises) will not cause the function to re-run when `params.x` changes. (Don't worry, you'll get a warning in development if you accidentally do this.) Instead, access the parameter in the main body of your `load` function.
 
 ### Manual invalidation
 
