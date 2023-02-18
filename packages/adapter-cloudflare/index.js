@@ -64,33 +64,30 @@ export default function (options) {
  * @returns {import('.').RoutesJSONSpec}
  */
 function get_routes_json(builder, assets, options) {
-
 	let {
 		autoGenerate = true,
 		include = [],
 		exclude = []
-	} = options?.routes ?? /** @type {import('./index').AdapterOptions} */ ({routes: {}}).routes;
-
+	} = options?.routes ?? /** @type {import('./index').AdapterOptions} */ ({ routes: {} }).routes;
 
 	/**
 	 * The list of routes that will _not_ invoke functions (which cost money).
 	 * This is done on a best-effort basis, as there is a limit of 100 rules
 	 */
-	exclude = [
-		`/${builder.config.kit.appDir}/*`,
-		...exclude,
-	];
-	if(autoGenerate) {
-		exclude.push(...assets
-			.filter(
-				(file) =>
-					!(
-						file.startsWith(`${builder.config.kit.appDir}/`) ||
-						file === '_headers' ||
-						file === '_redirects'
-					)
-			)
-			.map((file) => `/${file}`))
+	exclude = [`/${builder.config.kit.appDir}/*`, ...exclude];
+	if (autoGenerate) {
+		exclude.push(
+			...assets
+				.filter(
+					(file) =>
+						!(
+							file.startsWith(`${builder.config.kit.appDir}/`) ||
+							file === '_headers' ||
+							file === '_redirects'
+						)
+				)
+				.map((file) => `/${file}`)
+		);
 	}
 
 	const MAX_EXCLUSIONS = 99; // 100 minus existing `include` rules
@@ -106,7 +103,7 @@ function get_routes_json(builder, assets, options) {
 		excess = 'prerendered routes';
 	}
 
-	if(autoGenerate) {
+	if (autoGenerate) {
 		for (const path of builder.prerendered.paths) {
 			if (!builder.prerendered.redirects.has(path)) {
 				exclude.push(path);

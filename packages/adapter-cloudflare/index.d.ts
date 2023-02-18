@@ -14,7 +14,7 @@ export interface AdapterOptions {
 		 *
 		 * @default true
 		 */
-		autoGenerate?: boolean,
+		autoGenerate?: boolean;
 
 		/**
 		 * Routes that will be invoked by Functions. Accepts wildcard behavior.
@@ -22,7 +22,7 @@ export interface AdapterOptions {
 		 * If used with autoGenerate, these will be placed first.
 		 * If we reach the 100 limit, auto-generated includes will be removed first.
 		 */
-		include?: string[],
+		include?: string[];
 
 		/**
 		 * Defines routes that will not be invoked by Functions. Accepts wildcard behavior.
@@ -31,10 +31,9 @@ export interface AdapterOptions {
 		 * If used with autoGenerate, these will be placed first.
 		 * If we reach the 100 limit, auto-generated includes will be removed first.
 		 */
-		exclude?: string[]
-	}
+		exclude?: string[];
+	};
 }
-
 
 export interface RoutesJSONSpec {
 	version: 1;
