@@ -3,5 +3,13 @@
 	"private": true,
 	"version": "1.0.0",
 	"description": "emitTypes settings disabled",
-	"type": "module"
+	"type": "module",
+	"peerDependencies": {
+		"svelte": "^3.55.0"
+	},
+	"exports": {
+		".": {
+			"svelte": "./dist/index.js"
+		}
+	}
 }
