@@ -471,49 +471,49 @@ async function _get_data(event, nodes, next) {
 	let count = 0;
 	let strings = [];
 
+	const replacer =
+		/** @param {any} thing */
+		(thing) => {
+			if (typeof thing?.then === 'function') {
+				const id = promise_id++;
+				count += 1;
+
+				thing
+					.then(/** @param {any} data */ (data) => ({ data }))
+					.catch(/** @param {any} error */ (error) => ({ error }))
+					.then(
+						/**
+						 * @param {{data: any; error: any}} result
+						 */
+						async ({ data, error }) => {
+							count -= 1;
+
+							let str;
+							try {
+								str = devalue.uneval({ id, data, error }, replacer);
+							} catch (e) {
+								error = `new Error(${clarify_devalue_error(event, /** @type {any} */ (e))});`;
+								data = undefined;
+								str = devalue.uneval({ id, data, error }, replacer);
+							}
+
+							next(
+								{
+									has_more: count !== 0,
+									// Needs to be a module script tag or else it's executed before the start script
+									data: `<script type="module">$__sveltekit__.resolve(${str})</script>`
+								},
+								count === 0
+							);
+						}
+					);
+
+				return `$__sveltekit__.defer(${id})`;
+			}
+		};
+
 	try {
 		for (const node of nodes) {
-			const replacer =
-				/** @param {any} thing */
-				(thing) => {
-					if (typeof thing?.then === 'function') {
-						const id = promise_id++;
-						count += 1;
-
-						thing
-							.then(/** @param {any} data */ (data) => ({ data }))
-							.catch(/** @param {any} error */ (error) => ({ error }))
-							.then(
-								/**
-								 * @param {{data: any; error: any}} result
-								 */
-								async ({ data, error }) => {
-									count -= 1;
-
-									let str;
-									try {
-										str = devalue.uneval({ id, data, error }, replacer);
-									} catch (e) {
-										error = `new Error(${clarify_devalue_error(event, /** @type {any} */ (e))});`;
-										data = undefined;
-										str = devalue.uneval({ id, data, error }, replacer);
-									}
-
-									next(
-										{
-											has_more: count !== 0,
-											// Needs to be a module script tag or else it's executed before the start script
-											data: `<script type="module">$__sveltekit__.resolve(${str})</script>`
-										},
-										count === 0
-									);
-								}
-							);
-
-						return `$__sveltekit__.defer(${id})`;
-					}
-				};
-
 			let str = '';
 
 			if (!node) {
