@@ -1786,7 +1786,7 @@ async function load_data(url, invalid) {
 		while (true) {
 			// Format follows ndjson (each line is a JSON object) or regular JSON spec
 			const { done, value } = await reader.read();
-			if (done && !text && !value) break;
+			if (done && !text) break;
 
 			text += !value && text ? '\n' : decoder.decode(value); // no value -> final chunk -> add a new line to trigger the last parse
 
