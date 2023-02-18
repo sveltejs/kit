@@ -195,60 +195,58 @@ async function _get_data_json(event, options, nodes, next) {
 	let count = 0;
 	let strings = [];
 
+	const revivers = {
+		/** @param {any} thing */
+		Promise: (thing) => {
+			if (typeof thing?.then === 'function') {
+				const id = promise_id++;
+				count += 1;
+
+				thing
+					.then(/** @param {any} d */ (d) => ({ d }))
+					.catch(/** @param {any} e */ (e) => ({ e }))
+					.then(
+						/**
+						 * @param {{d: any; e: any}} result
+						 */
+						async ({ d, e }) => {
+							let data;
+							let error;
+							try {
+								if (e) {
+									error = devalue.stringify(e, revivers);
+								} else {
+									data = devalue.stringify(d, revivers);
+								}
+							} catch (e) {
+								error = await handle_error_and_jsonify(
+									event,
+									options,
+									new Error(clarify_devalue_error(event, /** @type {any} */ (e)))
+								);
+							}
+
+							count -= 1;
+
+							next(
+								{
+									has_more: count !== 0,
+									data: `{"type":"chunk","id":${id}${data ? `,"data":${data}` : ''}${
+										error ? `,"error":${error}` : ''
+									}}\n`
+								},
+								count === 0
+							);
+						}
+					);
+
+				return id;
+			}
+		}
+	};
+
 	try {
 		for (const node of nodes) {
-			let uses_str = '';
-
-			const revivers = {
-				/** @param {any} thing */
-				Promise: (thing) => {
-					if (typeof thing?.then === 'function') {
-						const id = promise_id++;
-						count += 1;
-
-						thing
-							.then(/** @param {any} d */ (d) => ({ d }))
-							.catch(/** @param {any} e */ (e) => ({ e }))
-							.then(
-								/**
-								 * @param {{d: any; e: any}} result
-								 */
-								async ({ d, e }) => {
-									let data;
-									let error;
-									try {
-										if (e) {
-											error = devalue.stringify(e, revivers);
-										} else {
-											data = devalue.stringify(d, revivers);
-										}
-									} catch (e) {
-										error = await handle_error_and_jsonify(
-											event,
-											options,
-											new Error(clarify_devalue_error(event, /** @type {any} */ (e)))
-										);
-									}
-
-									count -= 1;
-
-									next(
-										{
-											has_more: count !== 0,
-											data: `{"type":"chunk","id":${id}${data ? `,"data":${data}` : ''}${
-												error ? `,"error":${error}` : ''
-											}}\n`
-										},
-										count === 0
-									);
-								}
-							);
-
-						return id;
-					}
-				}
-			};
-
 			let str = '';
 
 			if (!node) {
@@ -256,7 +254,7 @@ async function _get_data_json(event, options, nodes, next) {
 			} else if (node.type === 'error' || node.type === 'skip') {
 				str = JSON.stringify(node);
 			} else {
-				uses_str = stringify_uses(node);
+				const uses_str = stringify_uses(node);
 
 				str = `{"type":"data","data":${devalue.stringify(node.data, revivers)},${uses_str}${
 					node.slash ? `,"slash":${JSON.stringify(node.slash)}` : ''
