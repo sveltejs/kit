@@ -473,8 +473,6 @@ async function _get_data(event, nodes, next) {
 
 	try {
 		for (const node of nodes) {
-			let uses_str = '';
-
 			const replacer =
 				/** @param {any} thing */
 				(thing) => {
@@ -521,7 +519,7 @@ async function _get_data(event, nodes, next) {
 			if (!node) {
 				str = 'null';
 			} else {
-				uses_str = stringify_uses(node);
+				const uses_str = stringify_uses(node);
 
 				str = `{"type":"data","data":${devalue.uneval(node.data, replacer)},${uses_str}${
 					node.slash ? `,"slash":${JSON.stringify(node.slash)}` : ''
