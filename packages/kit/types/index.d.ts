@@ -534,7 +534,7 @@ export interface KitConfig {
 	 *
 	 * beforeNavigate(({ willUnload, to }) => {
 	 *   if ($updated && !willUnload && to?.url) {
-	 *     location.href = to.route.url.href;
+	 *     location.href = to.url.href;
 	 *   }
 	 * });
 	 * </script>
