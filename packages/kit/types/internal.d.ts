@@ -219,9 +219,6 @@ export interface ServerDataNode {
 	 * which will be resolved later through chunk nodes.
 	 */
 	data: Record<string, any> | null;
-	/**
-	 * Defined if the `load` function didn't return a result containing promises.
-	 */
 	uses: Uses;
 	slash?: TrailingSlash;
 }

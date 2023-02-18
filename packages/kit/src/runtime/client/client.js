@@ -732,8 +732,6 @@ export function create_client({ target }) {
 			const data_node = {
 				type: 'data',
 				data: node.data,
-				// It's important that we use the existing `uses` object here, so that
-				// potentially deferred data can manipulate the object later
 				uses: node.uses,
 				slash: node.slash
 			};
