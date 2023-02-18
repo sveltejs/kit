@@ -121,6 +121,8 @@ export async function render_data(
 		const { value: first } = await chunks.next();
 
 		if (!first?.has_more) {
+			// use a normal JSON response where possible, so we get `content-length`
+			// and can use browser JSON devtools for easier inspecting
 			return json_response(/** @type {NonNullable<typeof first>} */ (first).data);
 		}
 
