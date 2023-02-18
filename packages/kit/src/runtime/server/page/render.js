@@ -506,21 +506,13 @@ function get_data(event, nodes) {
 		};
 
 	try {
-		for (const node of nodes) {
-			let str = '';
+		const strings = nodes.map((node) => {
+			if (!node) return 'null';
 
-			if (!node) {
-				str = 'null';
-			} else {
-				const uses_str = stringify_uses(node);
-
-				str = `{"type":"data","data":${devalue.uneval(node.data, replacer)},${uses_str}${
-					node.slash ? `,"slash":${JSON.stringify(node.slash)}` : ''
-				}}`;
-			}
-
-			strings.push(str);
-		}
+			return `{"type":"data","data":${devalue.uneval(node.data, replacer)},${stringify_uses(node)}${
+				node.slash ? `,"slash":${JSON.stringify(node.slash)}` : ''
+			}}`;
+		});
 
 		return {
 			data: `[${strings.join(',')}]`,

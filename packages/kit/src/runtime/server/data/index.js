@@ -242,23 +242,17 @@ export function get_data_json(event, options, nodes) {
 	};
 
 	try {
-		for (const node of nodes) {
-			let str = '';
+		const strings = nodes.map((node) => {
+			if (!node) return 'null';
 
-			if (!node) {
-				str = 'null';
-			} else if (node.type === 'error' || node.type === 'skip') {
-				str = JSON.stringify(node);
-			} else {
-				const uses_str = stringify_uses(node);
-
-				str = `{"type":"data","data":${devalue.stringify(node.data, revivers)},${uses_str}${
-					node.slash ? `,"slash":${JSON.stringify(node.slash)}` : ''
-				}}`;
+			if (node.type === 'error' || node.type === 'skip') {
+				return JSON.stringify(node);
 			}
 
-			strings.push(str);
-		}
+			return `{"type":"data","data":${devalue.stringify(node.data, revivers)},${stringify_uses(
+				node
+			)}${node.slash ? `,"slash":${JSON.stringify(node.slash)}` : ''}}`;
+		});
 
 		return {
 			data: `{"type":"data","nodes":[${strings.join(',')}]}\n`,
