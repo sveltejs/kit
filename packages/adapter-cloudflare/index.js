@@ -65,11 +65,7 @@ export default function (options) {
  */
 function get_routes_json(builder, assets, options) {
 	/** @type {import('./index').AdapterOptions['routes']} */
-	let {
-		autoGenerate = true,
-		include = [],
-		exclude = []
-	} = options?.routes ?? {};
+	let { autoGenerate = true, include = [], exclude = [] } = options?.routes ?? {};
 
 	/**
 	 * The list of routes that will _not_ invoke functions (which cost money).
