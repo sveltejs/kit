@@ -93,7 +93,7 @@ export const test = base.extend({
 			page[fn] = async function (...args) {
 				const res = await page_fn.call(page, ...args);
 				if (javaScriptEnabled && args[1]?.wait_for_started !== false) {
-					await page.waitForSelector('body.started', { timeout: 5000 });
+					await page.waitForSelector('body.started', { timeout: 15000 });
 				}
 				return res;
 			};

@@ -23,6 +23,7 @@ import { write_client_manifest } from '../../core/sync/write_client_manifest.js'
 import prerender from '../../core/postbuild/prerender.js';
 import analyse from '../../core/postbuild/analyse.js';
 import { s } from '../../utils/misc.js';
+import { hash } from '../../runtime/hash.js';
 
 export { vitePreprocess } from '@sveltejs/vite-plugin-svelte';
 
@@ -164,6 +165,8 @@ function kit({ svelte_config }) {
 	const { kit } = svelte_config;
 	const out = `${kit.outDir}/output`;
 
+	const version_hash = hash(kit.version.name);
+
 	/** @type {import('vite').ResolvedConfig} */
 	let vite_config;
 
@@ -220,12 +223,7 @@ function kit({ svelte_config }) {
 			const new_config = {
 				resolve: {
 					alias: [
-						{
-							find: '__CLIENT__',
-							replacement: `${generated}/${is_build ? 'client-optimized' : 'client'}`
-						},
 						{ find: '__SERVER__', replacement: `${generated}/server` },
-						{ find: '__GENERATED__', replacement: generated },
 						{ find: '$app', replacement: `${runtime_directory}/app` },
 						...get_config_aliases(kit)
 					]
@@ -324,12 +322,15 @@ function kit({ svelte_config }) {
 
 		async resolveId(id) {
 			// treat $env/static/[public|private] as virtual
-			if (id.startsWith('$env/') || id === '__sveltekit/paths' || id === '$service-worker') {
+			if (id.startsWith('$env/') || id.startsWith('__sveltekit/') || id === '$service-worker') {
 				return `\0${id}`;
 			}
 		},
 
 		async load(id, options) {
+			const browser = !options?.ssr;
+			const global = `__sveltekit_${version_hash}`;
+
 			if (options?.ssr === false && process.env.TEST !== 'true') {
 				const normalized_cwd = vite.normalizePath(cwd);
 				const normalized_lib = vite.normalizePath(kit.files.lib);
@@ -356,22 +357,43 @@ function kit({ svelte_config }) {
 						vite_config_env.command === 'serve' ? env.private : undefined
 					);
 				case '\0$env/dynamic/public':
+					// populate `$env/dynamic/public` from `window`
+					if (browser) {
+						return `export const env = ${global}.env;`;
+					}
+
 					return create_dynamic_module(
 						'public',
 						vite_config_env.command === 'serve' ? env.public : undefined
 					);
 				case '\0$service-worker':
 					return create_service_worker_module(svelte_config);
+
 				// for internal use only. it's published as $app/paths externally
 				// we use this alias so that we won't collide with user aliases
 				case '\0__sveltekit/paths':
 					const { assets, base } = svelte_config.kit.paths;
+
+					if (browser) {
+						return `export const base = ${s(base)};
+export const assets = ${global}.assets;`;
+					}
+
 					return `export const base = ${s(base)};
 export let assets = ${assets ? s(assets) : 'base'};
 
 /** @param {string} path */
 export function set_assets(path) {
 	assets = path;
+}`;
+
+				case '\0__sveltekit/environment':
+					const { version } = svelte_config.kit;
+					return `export const version = ${s(version.name)};
+export let building = false;
+
+export function set_building() {
+	building = true;
 }`;
 			}
 		}
@@ -460,30 +482,29 @@ export function set_assets(path) {
 						input[name] = path.resolve(file);
 					});
 				} else {
-					/** @type {Record<string, string>} */
-					input.start = `${runtime_directory}/client/start.js`;
+					input['entry/start'] = `${runtime_directory}/client/start.js`;
+					input['entry/app'] = `${kit.outDir}/generated/client-optimized/app.js`;
 
-					manifest_data.nodes.forEach((node) => {
-						if (node.component) {
-							const resolved = path.resolve(node.component);
-							const relative = decodeURIComponent(path.relative(kit.files.routes, resolved));
+					/**
+					 * @param {string | undefined} file
+					 */
+					function add_input(file) {
+						if (!file) return;
 
-							const name = relative.startsWith('..')
-								? path.basename(node.component)
-								: posixify(path.join('pages', relative));
-							input[`components/${name}`] = resolved;
-						}
+						const resolved = path.resolve(file);
+						const relative = decodeURIComponent(path.relative(kit.files.routes, resolved));
 
-						if (node.universal) {
-							const resolved = path.resolve(node.universal);
-							const relative = decodeURIComponent(path.relative(kit.files.routes, resolved));
+						const name = relative.startsWith('..')
+							? path.basename(file).replace(/^\+/, '')
+							: relative.replace(/(\\|\/)\+/g, '-').replace(/[\\/]/g, '-');
 
-							const name = relative.startsWith('..')
-								? path.basename(node.universal)
-								: posixify(path.join('pages', relative));
-							input[`modules/${name}`] = resolved;
-						}
-					});
+						input[`entry/${name}`] = resolved;
+					}
+
+					for (const node of manifest_data.nodes) {
+						add_input(node.component);
+						add_input(node.universal);
+					}
 				}
 
 				new_config = {
@@ -495,9 +516,13 @@ export function set_assets(path) {
 							input,
 							output: {
 								format: 'esm',
-								entryFileNames: ssr ? '[name].js' : `${prefix}/[name]-[hash].js`,
-								chunkFileNames: ssr ? 'chunks/[name].js' : `${prefix}/chunks/[name]-[hash].js`,
-								assetFileNames: `${prefix}/assets/[name]-[hash][extname]`,
+								// we use .mjs for client-side modules, because this signals to Chrome (when it
+								// reads the <link rel="preload">) that it should parse the file as a module
+								// rather than as a script, preventing a double parse. Ideally we'd just use
+								// modulepreload, but Safari prevents that
+								entryFileNames: ssr ? '[name].js' : `${prefix}/[name].[hash].mjs`,
+								chunkFileNames: ssr ? 'chunks/[name].js' : `${prefix}/chunks/[name].[hash].mjs`,
+								assetFileNames: `${prefix}/assets/[name].[hash][extname]`,
 								hoistTransitiveImports: false
 							},
 							preserveEntrySignatures: 'strict'
@@ -601,7 +626,7 @@ export function set_assets(path) {
 					app_path: `${kit.paths.base.slice(1)}${kit.paths.base ? '/' : ''}${kit.appDir}`,
 					manifest_data,
 					service_worker: !!service_worker_entry_file ? 'service-worker.js' : null, // TODO make file configurable?
-					client_entry: null,
+					client: null,
 					server_manifest
 				};
 
@@ -658,11 +683,18 @@ export function set_assets(path) {
 				/** @type {import('vite').Manifest} */
 				const client_manifest = JSON.parse(read(`${out}/client/${vite_config.build.manifest}`));
 
-				build_data.client_entry = find_deps(
-					client_manifest,
-					posixify(path.relative('.', `${runtime_directory}/client/start.js`)),
-					false
-				);
+				build_data.client = {
+					start: find_deps(
+						client_manifest,
+						posixify(path.relative('.', `${runtime_directory}/client/start.js`)),
+						false
+					),
+					app: find_deps(
+						client_manifest,
+						posixify(path.relative('.', `${kit.outDir}/generated/client-optimized/app.js`)),
+						false
+					)
+				};
 
 				const css = output.filter(
 					/** @type {(value: any) => value is import('rollup').OutputAsset} */

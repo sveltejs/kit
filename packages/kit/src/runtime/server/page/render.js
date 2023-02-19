@@ -8,7 +8,7 @@ import { s } from '../../../utils/misc.js';
 import { Csp } from './csp.js';
 import { uneval_action_response } from './actions.js';
 import { clarify_devalue_error } from '../utils.js';
-import { version, public_env } from '../../shared.js';
+import { public_env } from '../../shared-server.js';
 import { text } from '../../../exports/index.js';
 
 // TODO rename this function/module
@@ -57,11 +57,11 @@ export async function render_response({
 		}
 	}
 
-	const { entry } = manifest._;
+	const { client } = manifest._;
 
-	const stylesheets = new Set(entry.stylesheets);
-	const modulepreloads = new Set(entry.imports);
-	const fonts = new Set(manifest._.entry.fonts);
+	const modulepreloads = new Set([...client.start.imports, ...client.app.imports]);
+	const stylesheets = new Set(client.app.stylesheets);
+	const fonts = new Set(client.app.fonts);
 
 	/** @type {Set<string>} */
 	const link_header_preloads = new Set();
@@ -141,17 +141,9 @@ export async function render_response({
 		}
 
 		for (const { node } of branch) {
-			if (node.imports) {
-				node.imports.forEach((url) => modulepreloads.add(url));
-			}
-
-			if (node.stylesheets) {
-				node.stylesheets.forEach((url) => stylesheets.add(url));
-			}
-
-			if (node.fonts) {
-				node.fonts.forEach((url) => fonts.add(url));
-			}
+			for (const url of node.imports) modulepreloads.add(url);
+			for (const url of node.stylesheets) stylesheets.add(url);
+			for (const url of node.fonts) fonts.add(url);
 
 			if (node.inline_styles) {
 				Object.entries(await node.inline_styles()).forEach(([k, v]) => inline_styles.set(k, v));
@@ -161,6 +153,35 @@ export async function render_response({
 		rendered = { head: '', html: '', css: { code: '', map: null } };
 	}
 
+	/**
+	 * The prefix to use for static assets. Replaces `%sveltekit.assets%` in the template
+	 * @type {string}
+	 */
+	let resolved_assets;
+
+	/**
+	 * An expression that will evaluate in the client to determine the resolved asset path
+	 */
+	let asset_expression;
+
+	if (assets) {
+		// if an asset path is specified, use it
+		resolved_assets = assets;
+		asset_expression = s(assets);
+	} else if (state.prerendering?.fallback) {
+		// if we're creating a fallback page, asset paths need to be root-relative
+		resolved_assets = base;
+		asset_expression = s(base);
+	} else {
+		// otherwise we want asset paths to be relative to the page, so that they
+		// will work in odd contexts like IPFS, the internet archive, and so on
+		const segments = event.url.pathname.slice(base.length).split('/').slice(2);
+		resolved_assets = segments.length > 0 ? segments.map(() => '..').join('/') : '.';
+		asset_expression = `new URL(${s(
+			resolved_assets
+		)}, location.href).pathname.replace(/^\\\/$/, '')`;
+	}
+
 	let head = '';
 	let body = rendered.html;
 
@@ -168,26 +189,15 @@ export async function render_response({
 		prerender: !!state.prerendering
 	});
 
+	const init = `__sveltekit_${options.version_hash}={env:${s(
+		public_env
+	)},assets:${asset_expression}}`;
+
+	csp.add_script(init);
+
+	head += `<script${csp.script_needs_nonce ? ` nonce="${csp.nonce}"` : ''}>${init}</script>`;
+
 	const target = hash(body);
-
-	/**
-	 * The prefix to use for static assets. Replaces `%sveltekit.assets%` in the template
-	 * @type {string}
-	 */
-	let resolved_assets;
-
-	if (assets) {
-		// if an asset path is specified, use it
-		resolved_assets = assets;
-	} else if (state.prerendering?.fallback) {
-		// if we're creating a fallback page, asset paths need to be root-relative
-		resolved_assets = base;
-	} else {
-		// otherwise we want asset paths to be relative to the page, so that they
-		// will work in odd contexts like IPFS, the internet archive, and so on
-		const segments = event.url.pathname.slice(base.length).split('/').slice(2);
-		resolved_assets = segments.length > 0 ? segments.map(() => '..').join('/') : '.';
-	}
 
 	/** @param {string} path */
 	const prefixed = (path) => {
@@ -290,12 +300,7 @@ export async function render_response({
 	}
 
 	if (page_config.csr) {
-		const opts = [
-			`assets: ${s(assets)}`,
-			`env: ${s(public_env)}`,
-			`target: document.querySelector('[data-sveltekit-hydrate="${target}"]').parentNode`,
-			`version: ${s(version)}`
-		];
+		const args = [`app`, `"${target}"`];
 
 		if (page_config.ssr) {
 			const hydrate = [
@@ -313,27 +318,28 @@ export async function render_response({
 				hydrate.push(`params: ${devalue.uneval(event.params)}`, `route: ${s(event.route)}`);
 			}
 
-			opts.push(`hydrate: {\n\t\t\t\t\t${hydrate.join(',\n\t\t\t\t\t')}\n\t\t\t\t}`);
+			args.push(`{\n\t\t\t\t${hydrate.join(',\n\t\t\t\t')}\n\t\t\t}`);
 		}
 
 		// prettier-ignore
 		const init_app = `
-			import { start } from ${s(prefixed(entry.file))};
+			import { start } from ${s(prefixed(client.start.file))};
+			import * as app from ${s(prefixed(client.app.file))};
 
-			start({
-				${opts.join(',\n\t\t\t\t')}
-			});
+			start(${args.join(', ')});
 		`;
 
-		for (const dep of modulepreloads) {
-			const path = prefixed(dep);
+		const included_modulepreloads = Array.from(modulepreloads, (dep) => prefixed(dep)).filter(
+			(path) => resolve_opts.preload({ type: 'js', path })
+		);
 
-			if (resolve_opts.preload({ type: 'js', path })) {
-				link_header_preloads.add(`<${encodeURI(path)}>; rel="modulepreload"; nopush`);
-				if (state.prerendering) {
-					head += `\n\t\t<link rel="modulepreload" href="${path}">`;
-				}
-			}
+		for (const path of included_modulepreloads) {
+			// we use modulepreload with the Link header for Chrome, along with
+			// <link rel="preload"> for Safari. This results in the fastest loading in
+			// the most used browsers, with no double-loading. Note that we need to use
+			// .mjs extensions for `preload` to behave like `modulepreload` in Chrome
+			link_header_preloads.add(`<${encodeURI(path)}>; rel="modulepreload"; nopush`);
+			head += `\n\t\t<link rel="preload" as="script" crossorigin="anonymous" href="${path}">`;
 		}
 
 		const attributes = ['type="module"', `data-sveltekit-hydrate="${target}"`];

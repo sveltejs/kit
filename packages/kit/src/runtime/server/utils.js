@@ -3,7 +3,7 @@ import { json, text } from '../../exports/index.js';
 import { coalesce_to_error } from '../../utils/error.js';
 import { negotiate } from '../../utils/http.js';
 import { HttpError } from '../control.js';
-import { fix_stack_trace } from '../shared.js';
+import { fix_stack_trace } from '../shared-server.js';
 
 /** @param {any} body */
 export function is_pojo(body) {

@@ -1,13 +1,10 @@
 import { exec, parse_route_id } from '../../utils/routing.js';
 
 /**
- * @param {import('types').CSRPageNodeLoader[]} nodes
- * @param {number[]} server_loads
- * @param {typeof import('__CLIENT__/manifest.js').dictionary} dictionary
- * @param {Record<string, (param: string) => boolean>} matchers
+ * @param {import('./types').SvelteKitApp} app
  * @returns {import('types').CSRRoute[]}
  */
-export function parse(nodes, server_loads, dictionary, matchers) {
+export function parse({ nodes, server_loads, dictionary, matchers }) {
 	const layouts_with_server_load = new Set(server_loads);
 
 	return Object.entries(dictionary).map(([id, [leaf, layouts, errors]]) => {
