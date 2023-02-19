@@ -14,7 +14,7 @@ export async function start(app, target, hydrate) {
 		);
 	}
 
-	const client = create_client({ app, target });
+	const client = create_client(app, target);
 
 	init({ client });
 

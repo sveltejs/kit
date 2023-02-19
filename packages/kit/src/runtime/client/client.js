@@ -52,13 +52,11 @@ function update_scroll_positions(index) {
 }
 
 /**
- * @param {{
- *   app: import('./types').SvelteKitApp;
- *   target: HTMLElement;
- * }} opts
+ * @param {import('./types').SvelteKitApp} app
+ * @param {HTMLElement} target
  * @returns {import('./types').Client}
  */
-export function create_client({ app, target }) {
+export function create_client(app, target) {
 	const routes = parse(app);
 
 	const default_layout_loader = app.nodes[0];
