@@ -680,51 +680,11 @@ test.describe('Snapshots', () => {
 });
 
 test.describe.only('Streaming', () => {
-	test('Works for universal load functions (direct hit)', async ({ page }) => {
-		page.goto('/streaming/universal');
-
-		// Write first assertion like this to control the retry interval. Else it might happen that
-		// the test fails because the next retry is too late (probably uses a back-off strategy)
-		await expect(async () => {
-			expect(await page.locator('p.eager').textContent()).toBe('eager');
-		}).toPass({
-			intervals: [100]
-		});
-
-		expect(page.locator('p.loadingsuccess')).toBeVisible();
-		expect(page.locator('p.loadingfail')).toBeVisible();
-
-		await expect(page.locator('p.success')).toHaveText('success');
-		await expect(page.locator('p.fail')).toHaveText('fail');
-		expect(page.locator('p.loadingsuccess')).toBeHidden();
-		expect(page.locator('p.loadingfail')).toBeHidden();
-	});
-
 	test('Works for universal load functions (client nav)', async ({ page }) => {
 		await page.goto('/streaming');
 		page.click('[href="/streaming/universal"]');
 
 		await expect(page.locator('p.eager')).toHaveText('eager');
-		expect(page.locator('p.loadingsuccess')).toBeVisible();
-		expect(page.locator('p.loadingfail')).toBeVisible();
-
-		await expect(page.locator('p.success')).toHaveText('success');
-		await expect(page.locator('p.fail')).toHaveText('fail');
-		expect(page.locator('p.loadingsuccess')).toBeHidden();
-		expect(page.locator('p.loadingfail')).toBeHidden();
-	});
-
-	test('Works for server load functions (direct hit)', async ({ page }) => {
-		page.goto('/streaming/server');
-
-		// Write first assertion like this to control the retry interval. Else it might happen that
-		// the test fails because the next retry is too late (probably uses a back-off strategy)
-		await expect(async () => {
-			expect(await page.locator('p.eager').textContent()).toBe('eager');
-		}).toPass({
-			intervals: [100]
-		});
-
 		expect(page.locator('p.loadingsuccess')).toBeVisible();
 		expect(page.locator('p.loadingfail')).toBeVisible();
 
@@ -747,4 +707,47 @@ test.describe.only('Streaming', () => {
 		expect(page.locator('p.loadingsuccess')).toBeHidden();
 		expect(page.locator('p.loadingfail')).toBeHidden();
 	});
+
+	// TODO `vite preview` buffers responses, causing these tests to fail
+	if (process.env.DEV) {
+		test('Works for universal load functions (direct hit)', async ({ page }) => {
+			page.goto('/streaming/universal');
+
+			// Write first assertion like this to control the retry interval. Else it might happen that
+			// the test fails because the next retry is too late (probably uses a back-off strategy)
+			await expect(async () => {
+				expect(await page.locator('p.eager').textContent()).toBe('eager');
+			}).toPass({
+				intervals: [100]
+			});
+
+			expect(page.locator('p.loadingsuccess')).toBeVisible();
+			expect(page.locator('p.loadingfail')).toBeVisible();
+
+			await expect(page.locator('p.success')).toHaveText('success');
+			await expect(page.locator('p.fail')).toHaveText('fail');
+			expect(page.locator('p.loadingsuccess')).toBeHidden();
+			expect(page.locator('p.loadingfail')).toBeHidden();
+		});
+
+		test('Works for server load functions (direct hit)', async ({ page }) => {
+			page.goto('/streaming/server');
+
+			// Write first assertion like this to control the retry interval. Else it might happen that
+			// the test fails because the next retry is too late (probably uses a back-off strategy)
+			await expect(async () => {
+				expect(await page.locator('p.eager').textContent()).toBe('eager');
+			}).toPass({
+				intervals: [100]
+			});
+
+			expect(page.locator('p.loadingsuccess')).toBeVisible();
+			expect(page.locator('p.loadingfail')).toBeVisible();
+
+			await expect(page.locator('p.success')).toHaveText('success');
+			await expect(page.locator('p.fail')).toHaveText('fail');
+			expect(page.locator('p.loadingsuccess')).toBeHidden();
+			expect(page.locator('p.loadingfail')).toBeHidden();
+		});
+	}
 });
