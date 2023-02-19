@@ -373,6 +373,11 @@ export async function render_response({
 		}>${init_app}</script>\n\t\t`;
 	}
 
+	const headers = new Headers({
+		'x-sveltekit-page': 'true',
+		'content-type': 'text/html'
+	});
+
 	if (state.prerendering) {
 		// TODO read headers set with setHeaders and convert into http-equiv where possible
 		const http_equiv = [];
@@ -388,6 +393,19 @@ export async function render_response({
 
 		if (http_equiv.length > 0) {
 			head = http_equiv.join('\n') + head;
+		}
+	} else {
+		const csp_header = csp.csp_provider.get_header();
+		if (csp_header) {
+			headers.set('content-security-policy', csp_header);
+		}
+		const report_only_header = csp.report_only_provider.get_header();
+		if (report_only_header) {
+			headers.set('content-security-policy-report-only', report_only_header);
+		}
+
+		if (link_header_preloads.size) {
+			headers.set('link', Array.from(link_header_preloads).join(', '));
 		}
 	}
 
@@ -409,6 +427,10 @@ export async function render_response({
 			done: true
 		})) || '';
 
+	if (!chunks) {
+		headers.set('etag', `"${hash(transformed)}"`);
+	}
+
 	if (DEV && page_config.csr) {
 		if (transformed.split('<!--').length < html.split('<!--').length) {
 			// the \u001B stuff is ANSI codes, so that we don't need to add a library to the runtime
@@ -416,27 +438,6 @@ export async function render_response({
 			console.warn(
 				"\u001B[1m\u001B[31mRemoving comments in transformPageChunk can break Svelte's hydration\u001B[39m\u001B[22m"
 			);
-		}
-	}
-
-	const headers = new Headers({
-		'x-sveltekit-page': 'true',
-		'content-type': 'text/html',
-		etag: `"${hash(transformed)}"`
-	});
-
-	if (!state.prerendering) {
-		const csp_header = csp.csp_provider.get_header();
-		if (csp_header) {
-			headers.set('content-security-policy', csp_header);
-		}
-		const report_only_header = csp.report_only_provider.get_header();
-		if (report_only_header) {
-			headers.set('content-security-policy-report-only', report_only_header);
-		}
-
-		if (link_header_preloads.size) {
-			headers.set('link', Array.from(link_header_preloads).join(', '));
 		}
 	}
 
