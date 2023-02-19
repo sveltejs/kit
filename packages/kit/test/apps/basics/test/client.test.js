@@ -679,7 +679,7 @@ test.describe('Snapshots', () => {
 	});
 });
 
-test.describe.only('Streaming', () => {
+test.describe('Streaming', () => {
 	test('Works for universal load functions (client nav)', async ({ page }) => {
 		await page.goto('/streaming');
 		page.click('[href="/streaming/universal"]');
