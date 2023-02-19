@@ -190,8 +190,6 @@ export async function render_response({
 		prerender: !!state.prerendering
 	});
 
-	const target = hash(body);
-
 	/** @param {string} path */
 	const prefixed = (path) => {
 		if (path.startsWith('/')) {
