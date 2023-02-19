@@ -4,15 +4,10 @@ import { init } from './singletons.js';
 
 /**
  * @param {import('./types').SvelteKitApp} app
- * @param {string} hash
+ * @param {HTMLElement} target
  * @param {Parameters<import('./types').Client['_hydrate']>[0]} [hydrate]
  */
-export async function start(app, hash, hydrate) {
-	const target = /** @type {HTMLElement} */ (
-		/** @type {HTMLScriptElement} */ (document.querySelector(`[data-sveltekit-hydrate="${hash}"]`))
-			.parentNode
-	);
-
+export async function start(app, target, hydrate) {
 	if (DEV && target === document.body) {
 		console.warn(
 			`Placing %sveltekit.body% directly inside <body> is not recommended, as your app may break for users who have certain browser extensions installed.\n\nConsider wrapping it in an element:\n\n<div style="display: contents">\n  %sveltekit.body%\n</div>`

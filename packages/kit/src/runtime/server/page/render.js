@@ -190,14 +190,6 @@ export async function render_response({
 		prerender: !!state.prerendering
 	});
 
-	const init = `__sveltekit_${options.version_hash}={env:${s(
-		public_env
-	)},assets:${asset_expression}}`;
-
-	csp.add_script(init);
-
-	head += `<script${csp.script_needs_nonce ? ` nonce="${csp.nonce}"` : ''}>${init}</script>`;
-
 	const target = hash(body);
 
 	/** @param {string} path */
@@ -210,21 +202,6 @@ export async function render_response({
 		}
 		return `${resolved_assets}/${path}`;
 	};
-
-	const { data, chunks } = get_data(
-		event,
-		branch.map((b) => b.server_data)
-	);
-
-	const serialized = { data, form: 'null', error: 'null' };
-
-	if (form_value) {
-		serialized.form = uneval_action_response(form_value, /** @type {string} */ (event.route.id));
-	}
-
-	if (error) {
-		serialized.error = devalue.uneval(error);
-	}
 
 	if (inline_styles.size > 0) {
 		const content = Array.from(inline_styles.values()).join('\n');
@@ -273,53 +250,23 @@ export async function render_response({
 		}
 	}
 
+	const global = `__sveltekit_${options.version_hash}`;
+
+	const { data, chunks } = get_data(
+		event,
+		branch.map((b) => b.server_data),
+		global
+	);
+
+	if (page_config.ssr && page_config.csr) {
+		body += `\n\t\t\t${fetched
+			.map((item) =>
+				serialize_data(item, resolve_opts.filterSerializedResponseHeaders, !!state.prerendering)
+			)
+			.join('\n\t\t\t')}`;
+	}
+
 	if (page_config.csr) {
-		const args = [`app`, `"${target}"`];
-
-		if (page_config.ssr) {
-			const hydrate = [
-				`node_ids: [${branch.map(({ node }) => node.index).join(', ')}]`,
-				`data: ${serialized.data}`,
-				`form: ${serialized.form}`,
-				`error: ${serialized.error}`
-			];
-
-			if (status !== 200) {
-				hydrate.push(`status: ${status}`);
-			}
-
-			if (options.embedded) {
-				hydrate.push(`params: ${devalue.uneval(event.params)}`, `route: ${s(event.route)}`);
-			}
-
-			args.push(`{\n\t\t\t\t${hydrate.join(',\n\t\t\t\t')}\n\t\t\t}`);
-		}
-
-		const streaming = chunks
-			? `window.$__sveltekit__ = window.$__sveltekit__ || {};
-
-		const deferred = new Map();
-
-		$__sveltekit__.defer = (id) => new Promise((fulfil, reject) => {
-		  deferred.set(id, { fulfil, reject });
-		});
-
-		$__sveltekit__.resolve = ({ id, data, error }) => {
-		  const { fulfil, reject } = deferred.get(id);
-		  deferred.delete(id);
-
-		  if (error) reject(error);
-		  else fulfil(data);
-		};`
-			: '';
-
-		const init_app = `
-			import { start } from ${s(prefixed(client.start.file))};
-			import * as app from ${s(prefixed(client.app.file))};
-			${streaming}
-			start(${args.join(', ')});
-		`;
-
 		const included_modulepreloads = Array.from(modulepreloads, (dep) => prefixed(dep)).filter(
 			(path) => resolve_opts.preload({ type: 'js', path })
 		);
@@ -333,43 +280,99 @@ export async function render_response({
 			head += `\n\t\t<link rel="preload" as="script" crossorigin="anonymous" href="${path}">`;
 		}
 
-		const attributes = ['type="module"', `data-sveltekit-hydrate="${target}"`];
+		const blocks = [];
 
-		csp.add_script(init_app);
+		const properties = [
+			`env: ${s(public_env)}`,
+			`assets: ${asset_expression}`,
+			`element: document.currentScript.parentElement`
+		];
 
-		if (csp.script_needs_nonce) {
-			attributes.push(`nonce="${csp.nonce}"`);
+		if (chunks) {
+			blocks.push(`const deferred = new Map();`);
+
+			properties.push(`defer: (id) => new Promise((fulfil, reject) => {
+							deferred.set(id, { fulfil, reject });
+						})`);
+
+			properties.push(`resolve: ({ id, data, error }) => {
+							const { fulfil, reject } = deferred.get(id);
+							deferred.delete(id);
+
+							if (error) reject(error);
+							else fulfil(data);
+						}`);
 		}
 
-		body += `\n\t\t<script ${attributes.join(' ')}>${init_app}</script>`;
-	}
+		blocks.push(`${global} = {
+						${properties.join(',\n\t\t\t\t\t\t')}
+					};`);
 
-	if (page_config.ssr && page_config.csr) {
-		body += `\n\t${fetched
-			.map((item) =>
-				serialize_data(item, resolve_opts.filterSerializedResponseHeaders, !!state.prerendering)
-			)
-			.join('\n\t')}`;
-	}
+		const args = [`app`, `${global}.element`];
 
-	if (options.service_worker) {
-		const opts = __SVELTEKIT_DEV__ ? `, { type: 'module' }` : '';
+		if (page_config.ssr) {
+			const serialized = { form: 'null', error: 'null' };
 
-		// we use an anonymous function instead of an arrow function to support
-		// older browsers (https://github.com/sveltejs/kit/pull/5417)
-		const init_service_worker = `
-			if ('serviceWorker' in navigator) {
-				addEventListener('load', function () {
-					navigator.serviceWorker.register('${prefixed('service-worker.js')}'${opts});
-				});
+			blocks.push(`const data = ${data};`);
+
+			if (form_value) {
+				serialized.form = uneval_action_response(
+					form_value,
+					/** @type {string} */ (event.route.id)
+				);
 			}
-		`;
 
-		// always include service worker unless it's turned off explicitly
-		csp.add_script(init_service_worker);
+			if (error) {
+				serialized.error = devalue.uneval(error);
+			}
 
-		head += `
-		<script${csp.script_needs_nonce ? ` nonce="${csp.nonce}"` : ''}>${init_service_worker}</script>`;
+			const hydrate = [
+				`node_ids: [${branch.map(({ node }) => node.index).join(', ')}]`,
+				`data`,
+				`form: ${serialized.form}`,
+				`error: ${serialized.error}`
+			];
+
+			if (status !== 200) {
+				hydrate.push(`status: ${status}`);
+			}
+
+			if (options.embedded) {
+				hydrate.push(`params: ${devalue.uneval(event.params)}`, `route: ${s(event.route)}`);
+			}
+
+			args.push(`{\n\t\t\t\t\t\t\t${hydrate.join(',\n\t\t\t\t\t\t\t')}\n\t\t\t\t\t\t}`);
+		}
+
+		blocks.push(`Promise.all([
+						import(${s(prefixed(client.start.file))}),
+						import(${s(prefixed(client.app.file))})
+					]).then(([kit, app]) => {
+						kit.start(${args.join(', ')});
+					});`);
+
+		if (options.service_worker) {
+			const opts = __SVELTEKIT_DEV__ ? `, { type: 'module' }` : '';
+
+			// we use an anonymous function instead of an arrow function to support
+			// older browsers (https://github.com/sveltejs/kit/pull/5417)
+			blocks.push(`if ('serviceWorker' in navigator) {
+						addEventListener('load', function () {
+							navigator.serviceWorker.register('${prefixed('service-worker.js')}'${opts});
+						});
+					}`);
+		}
+
+		const init_app = `
+				{
+					${blocks.join('\n\n\t\t\t\t\t')}
+				}
+			`;
+		csp.add_script(init_app);
+
+		body += `\n\t\t\t<script${
+			csp.script_needs_nonce ? ` nonce="${csp.nonce}"` : ''
+		}>${init_app}</script>\n\t\t`;
 	}
 
 	if (state.prerendering) {
@@ -467,9 +470,10 @@ export async function render_response({
  * async iterable containing their resolutions
  * @param {import('types').RequestEvent} event
  * @param {Array<import('types').ServerDataNode | null>} nodes
+ * @param {string} global
  * @returns {{ data: string, chunks: AsyncIterable<string> | null }}
  */
-function get_data(event, nodes) {
+function get_data(event, nodes, global) {
 	let promise_id = 1;
 	let count = 0;
 
@@ -500,12 +504,12 @@ function get_data(event, nodes) {
 							str = devalue.uneval({ id, data, error }, replacer);
 						}
 
-						push(`<script type="module">$__sveltekit__.resolve(${str})</script>`);
+						push(`\n<script>${global}.resolve(${str})</script>`);
 						if (count === 0) done();
 					}
 				);
 
-			return `$__sveltekit__.defer(${id})`;
+			return `${global}.defer(${id})`;
 		}
 	}
 
