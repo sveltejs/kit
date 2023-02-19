@@ -679,9 +679,9 @@ test.describe('Snapshots', () => {
 	});
 });
 
-test.describe('defer', () => {
+test.describe('Streaming', () => {
 	test('Works for universal load functions (direct hit)', async ({ page }) => {
-		page.goto('/defer/universal');
+		page.goto('/streaming/universal');
 
 		// Write first assertion like this to control the retry interval. Else it might happen that
 		// the test fails because the next retry is too late (probably uses a back-off strategy)
@@ -701,8 +701,8 @@ test.describe('defer', () => {
 	});
 
 	test('Works for universal load functions (client nav)', async ({ page }) => {
-		await page.goto('/defer');
-		page.click('[href="/defer/universal"]');
+		await page.goto('/streaming');
+		page.click('[href="/streaming/universal"]');
 
 		await expect(page.locator('p.eager')).toHaveText('eager');
 		expect(page.locator('p.loadingsuccess')).toBeVisible();
@@ -714,8 +714,8 @@ test.describe('defer', () => {
 		expect(page.locator('p.loadingfail')).toBeHidden();
 	});
 
-	test('Works for server load functions (direkt hit)', async ({ page }) => {
-		page.goto('/defer/server');
+	test('Works for server load functions (direct hit)', async ({ page }) => {
+		page.goto('/streaming/server');
 
 		// Write first assertion like this to control the retry interval. Else it might happen that
 		// the test fails because the next retry is too late (probably uses a back-off strategy)
@@ -735,8 +735,8 @@ test.describe('defer', () => {
 	});
 
 	test('Works for server load functions (client nav)', async ({ page }) => {
-		await page.goto('/defer');
-		page.click('[href="/defer/server"]');
+		await page.goto('/streaming');
+		page.click('[href="/streaming/server"]');
 
 		await expect(page.locator('p.eager')).toHaveText('eager');
 		expect(page.locator('p.loadingsuccess')).toBeVisible();
