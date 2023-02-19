@@ -86,8 +86,7 @@ export function generate_manifest({ build_data, relative_path, routes }) {
 		assets: new Set(${s(assets)}),
 		mimeTypes: ${s(get_mime_lookup(build_data.manifest_data))},
 		_: {
-			entry: ${s(build_data.client_entry)},
-			legacy_assets: ${s(build_data.client_legacy_assets)},
+			client: ${s(build_data.client)},
 			nodes: [
 				${(node_paths).map(loader).join(',\n\t\t\t\t')}
 			],

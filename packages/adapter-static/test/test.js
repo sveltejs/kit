@@ -20,6 +20,11 @@ run('prerendered', (test) => {
 	test('prerenders a referenced endpoint with implicit `prerender` setting', async ({ cwd }) => {
 		assert.ok(fs.existsSync(`${cwd}/build/endpoint/implicit.json`));
 	});
+
+	test('exposes public env vars to the client', async ({ cwd, base, page }) => {
+		await page.goto(`${base}/public-env`);
+		assert.equal(await page.textContent('h1'), 'The answer is 42');
+	});
 });
 
 run('spa', (test) => {

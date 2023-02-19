@@ -6,6 +6,7 @@ import path from 'node:path';
  * @param {import('vite').Manifest} manifest
  * @param {string} entry
  * @param {boolean} add_dynamic_css
+ * @returns {import('types').AssetDependencies}
  */
 export function find_deps(manifest, entry, add_dynamic_css) {
 	/** @type {Set<string>} */

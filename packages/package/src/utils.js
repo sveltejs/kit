@@ -3,21 +3,15 @@ import * as path from 'path';
 import { posixify, mkdirp, walk } from './filesystem.js';
 
 /**
- * Resolves the `$lib` alias.
+ * Resolves aliases
  *
- * TODO: make this more generic to also handle other aliases the user could have defined via
- * `kit.alias`. Also investigate how to do this in a more robust way (right now regex string
- * replacement is used).
- * For more discussion see https://github.com/sveltejs/kit/pull/2453
- *
- * @param {string} file Relative to the lib root
+ * @param {string} input
+ * @param {string} file Relative to the input
  * @param {string} content
- * @param {import('./types').ValidatedConfig} config
+ * @param {Record<string, string>} aliases
  * @returns {string}
  */
-export function resolve_lib_alias(file, content, config) {
-	const aliases = { $lib: path.resolve(config.package.source), ...(config.kit?.alias ?? {}) };
-
+export function resolve_aliases(input, file, content, aliases) {
 	/**
 	 * @param {string} match
 	 * @param {string} _
@@ -27,7 +21,7 @@ export function resolve_lib_alias(file, content, config) {
 		for (const [alias, value] of Object.entries(aliases)) {
 			if (!import_path.startsWith(alias)) continue;
 
-			const full_path = path.join(config.package.source, file);
+			const full_path = path.join(input, file);
 			const full_import_path = path.join(value, import_path.slice(alias.length));
 			let resolved = posixify(path.relative(path.dirname(full_path), full_import_path));
 			resolved = resolved.startsWith('.') ? resolved : './' + resolved;
@@ -67,22 +61,23 @@ export function write(file, contents) {
 }
 
 /**
- * @param {import('./types').ValidatedConfig} config
+ * @param {string} input
+ * @param {string[]} extensions
  * @returns {import('./types').File[]}
  */
-export function scan(config) {
-	return walk(config.package.source).map((file) => analyze(config, file));
+export function scan(input, extensions) {
+	return walk(input).map((file) => analyze(file, extensions));
 }
 
 /**
- * @param {import('./types').ValidatedConfig} config
  * @param {string} file
+ * @param {string[]} extensions
  * @returns {import('./types').File}
  */
-export function analyze(config, file) {
+export function analyze(file, extensions) {
 	const name = posixify(file);
 
-	const svelte_extension = config.extensions.find((ext) => name.endsWith(ext));
+	const svelte_extension = extensions.find((ext) => name.endsWith(ext));
 
 	const base = svelte_extension ? name : name.slice(0, -path.extname(name).length);
 
@@ -98,54 +93,6 @@ export function analyze(config, file) {
 		name,
 		dest,
 		base,
-		is_included: config.package.files(name),
-		is_exported: config.package.exports(name),
 		is_svelte: !!svelte_extension
 	};
-}
-
-/**
- * @param {string} cwd
- * @param {import('./types').File[]} files
- */
-export function generate_pkg(cwd, files) {
-	const pkg = JSON.parse(fs.readFileSync(path.join(cwd, 'package.json'), 'utf8'));
-
-	// Remove fields that are specific to the original package.json
-	// See: https://pnpm.io/package_json#publishconfigdirectory
-	delete pkg.publishConfig?.directory;
-	delete pkg.linkDirectory?.directory;
-	delete pkg.scripts;
-
-	pkg.type = 'module';
-
-	pkg.exports = {
-		'./package.json': './package.json',
-		...pkg.exports
-	};
-
-	/** @type {Record<string, string>} */
-	const clashes = {};
-
-	for (const file of files) {
-		if (file.is_included && file.is_exported) {
-			const original = `$lib/${file.name}`;
-			const entry = `./${file.dest}`;
-			const key = entry.replace(/\/index\.js$|(\/[^/]+)\.js$/, '$1');
-
-			if (clashes[key]) {
-				throw new Error(
-					`Duplicate "${key}" export. Please remove or rename either ${clashes[key]} or ${original}`
-				);
-			}
-
-			if (!pkg.exports[key]) {
-				pkg.exports[key] = entry;
-			}
-
-			clashes[key] = original;
-		}
-	}
-
-	return pkg;
 }

@@ -1,6 +1,6 @@
 {
 	"name": "svelte-migrate",
-	"version": "1.0.1",
+	"version": "1.1.1",
 	"repository": {
 		"type": "git",
 		"url": "https://github.com/sveltejs/kit",
@@ -17,7 +17,10 @@
 	},
 	"files": [
 		"bin.js",
-		"migrations"
+		"migrations",
+		"utils.js",
+		"!migrations/**/*.spec.js",
+		"!migrations/**/samples.md"
 	],
 	"dependencies": {
 		"kleur": "^4.1.5",

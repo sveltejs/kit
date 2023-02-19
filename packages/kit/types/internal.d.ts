@@ -42,19 +42,25 @@ export interface Asset {
 	type: string | null;
 }
 
+export interface AssetDependencies {
+	file: string;
+	imports: string[];
+	stylesheets: string[];
+	fonts: string[];
+}
+
+export interface AssetDependenciesWithLegacy extends AssetDependencies {
+	legacy_file: string | null;
+}
+
 export interface BuildData {
 	app_dir: string;
 	app_path: string;
 	manifest_data: ManifestData;
 	service_worker: string | null;
-	client_entry: {
-		file: string;
-		imports: string[];
-		stylesheets: string[];
-		fonts: string[];
-	} | null;
-	client_legacy_assets: {
-		legacy_entry_file: string | null;
+	client: {
+		start: AssetDependenciesWithLegacy;
+		app: AssetDependenciesWithLegacy;
 		legacy_polyfills_file: string | null;
 		modern_polyfills_file: string | null;
 	} | null;
@@ -93,6 +99,11 @@ export interface ServerHooks {
 
 export interface ClientHooks {
 	handleError: HandleClientError;
+}
+
+export interface Env {
+	private: Record<string, string>;
+	public: Record<string, string>;
 }
 
 export class InternalServer extends Server {
@@ -323,6 +334,7 @@ export interface SSROptions {
 		}): string;
 		error(values: { message: string; status: number }): string;
 	};
+	version_hash: string;
 }
 
 export interface SSRErrorPage {

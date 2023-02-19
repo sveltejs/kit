@@ -8,7 +8,7 @@ import { s } from '../../../utils/misc.js';
 import { Csp } from './csp.js';
 import { uneval_action_response } from './actions.js';
 import { clarify_devalue_error } from '../utils.js';
-import { version, public_env } from '../../shared.js';
+import { public_env } from '../../shared-server.js';
 import { text } from '../../../exports/index.js';
 
 // TODO rename this function/module
@@ -57,12 +57,11 @@ export async function render_response({
 		}
 	}
 
-	const { entry, legacy_assets } = manifest._;
-	const { legacy_entry_file, legacy_polyfills_file, modern_polyfills_file } = legacy_assets;
+	const { client } = manifest._;
 
-	const stylesheets = new Set(entry.stylesheets);
-	const modulepreloads = new Set(entry.imports);
-	const fonts = new Set(manifest._.entry.fonts);
+	const modulepreloads = new Set([...client.start.imports, ...client.app.imports]);
+	const stylesheets = new Set(client.app.stylesheets);
+	const fonts = new Set(client.app.fonts);
 
 	/** @type {Set<string>} */
 	const link_header_preloads = new Set();
@@ -142,17 +141,9 @@ export async function render_response({
 		}
 
 		for (const { node } of branch) {
-			if (node.imports) {
-				node.imports.forEach((url) => modulepreloads.add(url));
-			}
-
-			if (node.stylesheets) {
-				node.stylesheets.forEach((url) => stylesheets.add(url));
-			}
-
-			if (node.fonts) {
-				node.fonts.forEach((url) => fonts.add(url));
-			}
+			for (const url of node.imports) modulepreloads.add(url);
+			for (const url of node.stylesheets) stylesheets.add(url);
+			for (const url of node.fonts) fonts.add(url);
 
 			if (node.inline_styles) {
 				Object.entries(await node.inline_styles()).forEach(([k, v]) => inline_styles.set(k, v));
@@ -160,6 +151,35 @@ export async function render_response({
 		}
 	} else {
 		rendered = { head: '', html: '', css: { code: '', map: null } };
+	}
+
+	/**
+	 * The prefix to use for static assets. Replaces `%sveltekit.assets%` in the template
+	 * @type {string}
+	 */
+	let resolved_assets;
+
+	/**
+	 * An expression that will evaluate in the client to determine the resolved asset path
+	 */
+	let asset_expression;
+
+	if (assets) {
+		// if an asset path is specified, use it
+		resolved_assets = assets;
+		asset_expression = s(assets);
+	} else if (state.prerendering?.fallback) {
+		// if we're creating a fallback page, asset paths need to be root-relative
+		resolved_assets = base;
+		asset_expression = s(base);
+	} else {
+		// otherwise we want asset paths to be relative to the page, so that they
+		// will work in odd contexts like IPFS, the internet archive, and so on
+		const segments = event.url.pathname.slice(base.length).split('/').slice(2);
+		resolved_assets = segments.length > 0 ? segments.map(() => '..').join('/') : '.';
+		asset_expression = `new URL(${s(
+			resolved_assets
+		)}, location.href).pathname.replace(/^\\\/$/, '')`;
 	}
 
 	let head = '';
@@ -170,25 +190,6 @@ export async function render_response({
 	});
 
 	const target = hash(body);
-
-	/**
-	 * The prefix to use for static assets. Replaces `%sveltekit.assets%` in the template
-	 * @type {string}
-	 */
-	let resolved_assets;
-
-	if (assets) {
-		// if an asset path is specified, use it
-		resolved_assets = assets;
-	} else if (state.prerendering?.fallback) {
-		// if we're creating a fallback page, asset paths need to be root-relative
-		resolved_assets = base;
-	} else {
-		// otherwise we want asset paths to be relative to the page, so that they
-		// will work in odd contexts like IPFS, the internet archive, and so on
-		const segments = event.url.pathname.slice(base.length).split('/').slice(2);
-		resolved_assets = segments.length > 0 ? segments.map(() => '..').join('/') : '.';
-	}
 
 	/** @param {string} path */
 	const prefixed = (path) => {
@@ -291,12 +292,7 @@ export async function render_response({
 	}
 
 	if (page_config.csr) {
-		const opts = [
-			`assets: ${s(assets)}`,
-			`env: ${s(public_env)}`,
-			`target: document.querySelector('[data-sveltekit-hydrate="${target}"]').parentNode`,
-			`version: ${s(version)}`
-		];
+		const args = [`app`, `"${target}"`];
 
 		if (page_config.ssr) {
 			const hydrate = [
@@ -314,15 +310,11 @@ export async function render_response({
 				hydrate.push(`params: ${devalue.uneval(event.params)}`, `route: ${s(event.route)}`);
 			}
 
-			opts.push(`hydrate: {\n\t\t\t\t\t${hydrate.join(',\n\t\t\t\t\t')}\n\t\t\t\t}`);
+			args.push(`{\n\t\t\t\t${hydrate.join(',\n\t\t\t\t')}\n\t\t\t}`);
 		}
 
 		// prettier-ignore
-		const startupContent = `
-			start({
-				${opts.join(',\n\t\t\t\t')}
-			});
-		`;
+		const startupContent = `start(${args.join(', ')});`;
 
 		// Injecting (potentially) legacy script together with the modern script -
 		//  in a similar fashion to the script tags injection of @vitejs/plugin-legacy.
@@ -332,21 +324,25 @@ export async function render_response({
 		const detectModernBrowserVarName = '__KIT_is_modern_browser';
 		const startup_script_var_name = '__KIT_startup_script';
 
-		if (modern_polyfills_file) {
-			const path = prefixed(modern_polyfills_file);
-			link_header_preloads.add(`<${encodeURI(path)}>; rel="modulepreload"; crossorigin; nopush`);
-			head += `\n\t\t<script type="module" crossorigin src=${s(path)}></script>`;
+		if (client.modern_polyfills_file) {
+			const path = prefixed(client.modern_polyfills_file);
+			link_header_preloads.add(
+				`<${encodeURI(path)}>; rel="modulepreload"; crossorigin="anonymous"; nopush`
+			);
+			head += `\n\t\t<script type="module" crossorigin="anonymous" src=${s(path)}></script>`;
 		}
 
-		for (const dep of modulepreloads) {
-			const path = prefixed(dep);
+		const included_modulepreloads = Array.from(modulepreloads, (dep) => prefixed(dep)).filter(
+			(path) => resolve_opts.preload({ type: 'js', path })
+		);
 
-			if (resolve_opts.preload({ type: 'js', path })) {
-				link_header_preloads.add(`<${encodeURI(path)}>; rel="modulepreload"; nopush`);
-				if (state.prerendering) {
-					head += `\n\t\t<link rel="modulepreload" href="${path}">`;
-				}
-			}
+		for (const path of included_modulepreloads) {
+			// we use modulepreload with the Link header for Chrome, along with
+			// <link rel="preload"> for Safari. This results in the fastest loading in
+			// the most used browsers, with no double-loading. Note that we need to use
+			// .mjs extensions for `preload` to behave like `modulepreload` in Chrome
+			link_header_preloads.add(`<${encodeURI(path)}>; rel="modulepreload"; nopush`);
+			head += `\n\t\t<link rel="preload" as="script" crossorigin="anonymous" href="${path}">`;
 		}
 
 		let had_emitted_nomodule_script = false;
@@ -387,20 +383,35 @@ export async function render_response({
 			internal_add(script, additionalAttrs);
 		}
 
-		if (legacy_polyfills_file) {
-			add_nomodule_script('', `src=${s(prefixed(legacy_polyfills_file))}`);
+		if (client.legacy_polyfills_file) {
+			add_nomodule_script('', `src=${s(prefixed(client.legacy_polyfills_file))}`);
 		}
 
-		if (legacy_entry_file) {
-			const startup_script_js = `window.${startup_script_var_name} = function (m) { (function (start) {${startupContent}})(m.start) };`;
+		// Init SvelteKit global variable only after the (possible) legacy polyfill loading (for the `new URL()` constructor support).
+		const init = `__sveltekit_${options.version_hash}={env:${s(
+			public_env
+		)},assets:${asset_expression}}`;
+		csp.add_script(init);
+		body += `\n\t\t<script${
+			csp.script_needs_nonce ? ` nonce="${csp.nonce}"` : ''
+		}>${init}</script>`;
+
+		let has_legacy_entry = false;
+
+		if (client.start.legacy_file && client.app.legacy_file) {
+			has_legacy_entry = true;
+
+			const startup_script_js = `window.${startup_script_var_name} = function (m) { (function (start, app) {${startupContent}})(m[0].start, m[1]) };`;
 			body += `\n\t\t<script${
 				csp.script_needs_nonce ? ` nonce="${csp.nonce}"` : ''
 			}>${startup_script_js}</script>`;
 			csp.add_script(startup_script_js);
 
-			const importAndStartCall = `System.import(${s(
-				prefixed(legacy_entry_file)
-			)}).then(window.${startup_script_var_name})`;
+			const importAndStartCall = `Promise.all([System.import(${s(
+				prefixed(client.start.legacy_file)
+			)}),System.import(${s(
+				prefixed(client.app.legacy_file)
+			)})]).then(window.${startup_script_var_name});`;
 
 			add_nomodule_script(importAndStartCall);
 
@@ -412,9 +423,9 @@ export async function render_response({
 
 			const dynamicFallbackInlineCode =
 				`!function(){if(window.${detectModernBrowserVarName})return;console.warn("kit: loading legacy build because dynamic import or import.meta.url is unsupported, syntax error above should be ignored");` +
-				(legacy_polyfills_file
+				(client.legacy_polyfills_file
 					? `var n=document.createElement("script");n.src=${s(
-							prefixed(legacy_polyfills_file)
+							prefixed(client.legacy_polyfills_file)
 					  )},n.onload=function(){${importAndStartCall}},document.body.appendChild(n)`
 					: importAndStartCall) +
 				`}();`;
@@ -425,12 +436,13 @@ export async function render_response({
 		}
 
 		// prettier-ignore
-		const init_app = legacy_entry_file ? `
+		const init_app = has_legacy_entry ? `
 		if(window.${detectModernBrowserVarName}) {
-			import(${s(prefixed(entry.file))}).then(window.${startup_script_var_name});
+			Promise.all([import(${s(prefixed(client.start.file))}), import(${s(prefixed(client.app.file))})]).then(window.${startup_script_var_name});
 		}
 		` : `
-		import { start } from ${s(prefixed(entry.file))};
+		import { start } from ${s(prefixed(client.start.file))};
+		import * as app from ${s(prefixed(client.app.file))};
 		${startupContent}`;
 
 		const attributes = ['type="module"', `data-sveltekit-hydrate="${target}"`];

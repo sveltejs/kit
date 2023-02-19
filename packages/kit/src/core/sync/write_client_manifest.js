@@ -106,9 +106,8 @@ export function write_client_manifest(kit, manifest_data, output, metadata) {
 
 	const hooks_file = resolve_entry(kit.files.hooks.client);
 
-	// String representation of __CLIENT__/manifest.js
 	write_if_changed(
-		`${output}/manifest.js`,
+		`${output}/app.js`,
 		trim(`
 			${hooks_file ? `import * as client_hooks from '${relative_path(output, hooks_file)}';` : ''}
 
@@ -125,6 +124,8 @@ export function write_client_manifest(kit, manifest_data, output, metadata) {
 					hooks_file ? 'client_hooks.handleError || ' : ''
 				}(({ error }) => { console.error(error) }),
 			};
+
+			export { default as root } from '../root.svelte';
 		`)
 	);
 
