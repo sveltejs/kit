@@ -189,7 +189,7 @@ export async function render_response({
 		prerender: !!state.prerendering
 	});
 
-	const init = `__sveltekit_${options.version_hash}={env:${s(
+	const init = `var __sveltekit_${options.version_hash}={env:${s(
 		public_env
 	)},assets:${asset_expression}}`;
 
