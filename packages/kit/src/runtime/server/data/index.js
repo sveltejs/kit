@@ -6,7 +6,7 @@ import { clarify_devalue_error, handle_error_and_jsonify, stringify_uses } from 
 import { normalize_path } from '../../../utils/url.js';
 import { text } from '../../../exports/index.js';
 import * as devalue from 'devalue';
-import { create_async_iterator } from '../../../utils/generators.js';
+import { create_async_iterator } from '../../../utils/streaming.js';
 
 export const INVALIDATED_PARAM = 'x-sveltekit-invalidated';
 

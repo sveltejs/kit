@@ -10,7 +10,7 @@ import { uneval_action_response } from './actions.js';
 import { clarify_devalue_error, stringify_uses } from '../utils.js';
 import { public_env } from '../../shared-server.js';
 import { text } from '../../../exports/index.js';
-import { create_async_iterator } from '../../../utils/generators.js';
+import { create_async_iterator } from '../../../utils/streaming.js';
 
 // TODO rename this function/module
 
