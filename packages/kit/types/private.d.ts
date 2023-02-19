@@ -143,7 +143,7 @@ export interface CspDirectives {
 	>;
 }
 
-export type HttpMethod = 'GET' | 'HEAD' | 'POST' | 'PUT' | 'DELETE' | 'PATCH';
+export type HttpMethod = 'GET' | 'HEAD' | 'POST' | 'PUT' | 'DELETE' | 'PATCH' | 'OPTIONS';
 
 export interface Logger {
 	(msg: string): void;

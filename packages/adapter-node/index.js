@@ -9,7 +9,7 @@ const files = fileURLToPath(new URL('./files', import.meta.url).href);
 
 /** @type {import('.').default} */
 export default function (opts = {}) {
-	const { out = 'build', precompress, envPrefix = '' } = opts;
+	const { out = 'build', precompress, envPrefix = '', polyfill = true } = opts;
 
 	return {
 		name: '@sveltejs/adapter-node',
@@ -72,10 +72,16 @@ export default function (opts = {}) {
 					ENV: './env.js',
 					HANDLER: './handler.js',
 					MANIFEST: './server/manifest.js',
-					SERVER: `./server/index.js`,
+					SERVER: './server/index.js',
+					SHIMS: './shims.js',
 					ENV_PREFIX: JSON.stringify(envPrefix)
 				}
 			});
+
+			// If polyfills aren't wanted then clear the file
+			if (!polyfill) {
+				writeFileSync(`${out}/shims.js`, '', 'utf-8');
+			}
 		}
 	};
 }

@@ -42,16 +42,21 @@ export interface Asset {
 	type: string | null;
 }
 
+export interface AssetDependencies {
+	file: string;
+	imports: string[];
+	stylesheets: string[];
+	fonts: string[];
+}
+
 export interface BuildData {
 	app_dir: string;
 	app_path: string;
 	manifest_data: ManifestData;
 	service_worker: string | null;
-	client_entry: {
-		file: string;
-		imports: string[];
-		stylesheets: string[];
-		fonts: string[];
+	client: {
+		start: AssetDependencies;
+		app: AssetDependencies;
 	} | null;
 	server_manifest: import('vite').Manifest;
 }
@@ -93,6 +98,11 @@ export interface ServerHooks {
 
 export interface ClientHooks {
 	handleError: HandleClientError;
+}
+
+export interface Env {
+	private: Record<string, string>;
+	public: Record<string, string>;
 }
 
 export class InternalServer extends Server {
@@ -314,9 +324,8 @@ export interface SSRNode {
 		config?: any;
 	};
 
-	// store this in dev so we can print serialization errors
-	universal_id?: string;
-	server_id?: string;
+	universal_id: string;
+	server_id: string;
 }
 
 export type SSRNodeLoader = () => Promise<SSRNode>;
@@ -340,6 +349,7 @@ export interface SSROptions {
 		}): string;
 		error(values: { message: string; status: number }): string;
 	};
+	version_hash: string;
 }
 
 export interface SSRErrorPage {

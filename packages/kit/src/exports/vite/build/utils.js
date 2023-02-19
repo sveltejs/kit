@@ -6,6 +6,7 @@ import path from 'node:path';
  * @param {import('vite').Manifest} manifest
  * @param {string} entry
  * @param {boolean} add_dynamic_css
+ * @returns {import('types').AssetDependencies}
  */
 export function find_deps(manifest, entry, add_dynamic_css) {
 	/** @type {Set<string>} */
@@ -87,7 +88,7 @@ export function assets_base(config) {
 	return (config.paths.assets || config.paths.base || '.') + '/';
 }
 
-const method_names = new Set(['GET', 'HEAD', 'PUT', 'POST', 'DELETE', 'PATCH']);
+const method_names = new Set(['GET', 'HEAD', 'PUT', 'POST', 'DELETE', 'PATCH', 'OPTIONS']);
 
 // If we'd written this in TypeScript, it could be easy...
 /**

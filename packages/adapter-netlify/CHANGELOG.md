@@ -1,5 +1,23 @@
 # @sveltejs/adapter-netlify
 
+## 2.0.5
+
+### Patch Changes
+
+- chore: support newest version of undici ([#9005](https://github.com/sveltejs/kit/pull/9005))
+
+- Updated dependencies [[`6cdf54d1`](https://github.com/sveltejs/kit/commit/6cdf54d1f3561348d87f35ddc8330081919eb839)]:
+  - @sveltejs/kit@1.7.1
+
+## 2.0.4
+
+### Patch Changes
+
+- fix: Root route data endpoint redirect when using split routes ([#9006](https://github.com/sveltejs/kit/pull/9006))
+
+- Updated dependencies [[`74cfa8d5`](https://github.com/sveltejs/kit/commit/74cfa8d5f1f13f81759e20e90f4ff86a4f96040d), [`bfa2b6ec`](https://github.com/sveltejs/kit/commit/bfa2b6ec88a6d522d87c924d7c466c01e142e66e)]:
+  - @sveltejs/kit@1.5.6
+
 ## 2.0.3
 
 ### Patch Changes

@@ -1,5 +1,6 @@
 import fs from 'node:fs';
 import path from 'node:path';
+import { hash } from '../../runtime/hash.js';
 import { posixify, resolve_entry } from '../../utils/filesystem.js';
 import { s } from '../../utils/misc.js';
 import { load_error_page, load_template } from '../config/index.js';
@@ -25,11 +26,11 @@ const server_template = ({
 	error_page
 }) => `
 import root from '../root.svelte';
-import { set_assets, set_building, set_private_env, set_public_env, set_version } from '${runtime_directory}/shared.js';
-
-set_version(${s(config.kit.version.name)});
+import { set_building } from '__sveltekit/environment';
+import { set_assets, set_private_env, set_public_env } from '${runtime_directory}/shared-server.js';
 
 export const options = {
+	app_template_contains_nonce: ${template.includes('%sveltekit.nonce%')},
 	csp: ${s(config.kit.csp)},
 	csrf_check_origin: ${s(config.kit.csrf.checkOrigin)},
 	embedded: ${config.kit.embedded},
@@ -50,7 +51,8 @@ export const options = {
 		error: ({ status, message }) => ${s(error_page)
 			.replace(/%sveltekit\.status%/g, '" + status + "')
 			.replace(/%sveltekit\.error\.message%/g, '" + message + "')}
-	}
+	},
+	version_hash: ${s(hash(config.kit.version.name))}
 };
 
 export function get_hooks() {

@@ -25,9 +25,7 @@ import {
 } from './fetcher.js';
 import { parse } from './parse.js';
 
-import Root from '__GENERATED__/root.svelte';
-import { nodes, server_loads, dictionary, matchers, hooks } from '__CLIENT__/manifest.js';
-import { base } from '$internal/paths';
+import { base } from '__sveltekit/paths';
 import { HttpError, Redirect } from '../control.js';
 import { stores } from './singletons.js';
 import { unwrap_promises } from '../../utils/promises.js';
@@ -35,16 +33,6 @@ import * as devalue from 'devalue';
 import { INDEX_KEY, PRELOAD_PRIORITIES, SCROLL_KEY, SNAPSHOT_KEY } from './constants.js';
 import { validate_common_exports } from '../../utils/exports.js';
 import { compact } from '../../utils/array.js';
-
-const routes = parse(nodes, server_loads, dictionary, matchers);
-
-const default_layout_loader = nodes[0];
-const default_error_loader = nodes[1];
-
-// we import the root layout/error nodes eagerly, so that
-// connectivity errors after initialisation don't nuke the app
-default_layout_loader();
-default_error_loader();
 
 // We track the scroll position associated with each history entry in sessionStorage,
 // rather than on history.state itself, because when navigation is driven by
@@ -65,11 +53,22 @@ function update_scroll_positions(index) {
 
 /**
  * @param {{
+ *   app: import('./types').SvelteKitApp;
  *   target: HTMLElement;
  * }} opts
  * @returns {import('./types').Client}
  */
-export function create_client({ target }) {
+export function create_client({ app, target }) {
+	const routes = parse(app);
+
+	const default_layout_loader = app.nodes[0];
+	const default_error_loader = app.nodes[1];
+
+	// we import the root layout/error nodes eagerly, so that
+	// connectivity errors after initialisation don't nuke the app
+	default_layout_loader();
+	default_error_loader();
+
 	const container = __SVELTEKIT_EMBEDDED__ ? target : document.documentElement;
 	/** @type {Array<((url: URL) => boolean)>} */
 	const invalidated = [];
@@ -311,7 +310,7 @@ export function create_client({ target }) {
 				);
 				return false;
 			}
-		} else if (/** @type {number} */ (navigation_result.props?.page?.status) >= 400) {
+		} else if (/** @type {number} */ (navigation_result.props.page?.status) >= 400) {
 			const updated = await stores.updated.check();
 			if (updated) {
 				await native_navigation(url);
@@ -329,6 +328,14 @@ export function create_client({ target }) {
 		if (previous_history_index) {
 			update_scroll_positions(previous_history_index);
 			capture_snapshot(previous_history_index);
+		}
+
+		// ensure the url pathname matches the page's trailing slash option
+		if (
+			navigation_result.props.page?.url &&
+			navigation_result.props.page.url.pathname !== url.pathname
+		) {
+			url.pathname = navigation_result.props.page?.url.pathname;
 		}
 
 		if (opts && opts.details) {
@@ -355,6 +362,7 @@ export function create_client({ target }) {
 		if (started) {
 			current = navigation_result.state;
 
+			// reset url before updating page store
 			if (navigation_result.props.page) {
 				navigation_result.props.page.url = url;
 			}
@@ -423,7 +431,7 @@ export function create_client({ target }) {
 
 		page = /** @type {import('types').Page} */ (result.props.page);
 
-		root = new Root({
+		root = new app.root({
 			target,
 			props: { ...result.props, stores, components },
 			hydrate: true
@@ -958,7 +966,7 @@ export function create_client({ target }) {
 		/** @type {import('types').ServerDataNode | null} */
 		let server_data_node = null;
 
-		const default_layout_has_server_load = server_loads[0] === 0;
+		const default_layout_has_server_load = app.server_loads[0] === 0;
 
 		if (default_layout_has_server_load) {
 			// TODO post-https://github.com/sveltejs/kit/discussions/6124 we can use
@@ -1242,7 +1250,22 @@ export function create_client({ target }) {
 			if (!options.reload) {
 				if (priority <= options.preload_data) {
 					const intent = get_navigation_intent(/** @type {URL} */ (url), false);
-					if (intent) preload_data(intent);
+					if (intent) {
+						if (__SVELTEKIT_DEV__) {
+							preload_data(intent).then((result) => {
+								if (result.type === 'loaded' && result.state.error) {
+									console.warn(
+										`Preloading data for ${intent.url.pathname} failed with the following error: ${result.state.error.message}\n` +
+											'If this error is transient, you can ignore it. Otherwise, consider disabling preloading for this route. ' +
+											'This route was preloaded due to a data-sveltekit-preload-data attribute. ' +
+											'See https://kit.svelte.dev/docs/link-options for more info'
+									);
+								}
+							});
+						} else {
+							preload_data(intent);
+						}
+					}
 				} else if (priority <= options.preload_code) {
 					preload_code(get_url_path(/** @type {URL} */ (url)));
 				}
@@ -1271,6 +1294,21 @@ export function create_client({ target }) {
 
 		callbacks.after_navigate.push(after_navigate);
 		after_navigate();
+	}
+
+	/**
+	 * @param {unknown} error
+	 * @param {import('types').NavigationEvent} event
+	 * @returns {import('types').MaybePromise<App.Error>}
+	 */
+	function handle_error(error, event) {
+		if (error instanceof HttpError) {
+			return error.body;
+		}
+		return (
+			app.hooks.handleError({ error, event }) ??
+			/** @type {any} */ ({ message: event.route.id != null ? 'Internal Error' : 'Not Found' })
+		);
 	}
 
 	return {
@@ -1678,7 +1716,7 @@ export function create_client({ target }) {
 					}
 
 					return load_node({
-						loader: nodes[n],
+						loader: app.nodes[n],
 						url,
 						params,
 						route,
@@ -1832,21 +1870,6 @@ function deserialize_uses(uses) {
 		route: !!uses?.route,
 		url: !!uses?.url
 	};
-}
-
-/**
- * @param {unknown} error
- * @param {import('types').NavigationEvent} event
- * @returns {import('../../../types/private.js').MaybePromise<App.Error>}
- */
-function handle_error(error, event) {
-	if (error instanceof HttpError) {
-		return error.body;
-	}
-	return (
-		hooks.handleError({ error, event }) ??
-		/** @type {any} */ ({ message: event.route.id != null ? 'Internal Error' : 'Not Found' })
-	);
 }
 
 function reset_focus() {

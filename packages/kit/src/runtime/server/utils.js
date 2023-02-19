@@ -2,7 +2,7 @@ import { json, text } from '../../exports/index.js';
 import { coalesce_to_error } from '../../utils/error.js';
 import { negotiate } from '../../utils/http.js';
 import { HttpError } from '../control.js';
-import { fix_stack_trace } from '../shared.js';
+import { fix_stack_trace } from '../shared-server.js';
 
 /** @param {any} body */
 export function is_pojo(body) {
@@ -40,7 +40,7 @@ export function method_not_allowed(mod, method) {
 export function allowed_methods(mod) {
 	const allowed = [];
 
-	for (const method of ['GET', 'POST', 'PUT', 'PATCH', 'DELETE']) {
+	for (const method in ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS']) {
 		if (method in mod) allowed.push(method);
 	}
 

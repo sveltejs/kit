@@ -1,5 +1,63 @@
 # @sveltejs/kit
 
+## 1.7.2
+
+### Patch Changes
+
+- fix: return correct asset list from `builder.writeClient()` ([#9095](https://github.com/sveltejs/kit/pull/9095))
+
+## 1.7.1
+
+### Patch Changes
+
+- fix: deploy server assets. Only works with Vite 4.1+ ([#9073](https://github.com/sveltejs/kit/pull/9073))
+
+## 1.7.0
+
+### Minor Changes
+
+- feat: richer error message for invalid exports ([#9055](https://github.com/sveltejs/kit/pull/9055))
+
+### Patch Changes
+
+- chore: throw more helpful error when encoding uri fails during prerendering ([#9053](https://github.com/sveltejs/kit/pull/9053))
+
+## 1.6.0
+
+### Minor Changes
+
+- feat: add `OPTIONS` server method ([#8731](https://github.com/sveltejs/kit/pull/8731))
+
+### Patch Changes
+
+- fix: solve `missing "./paths" specifier in "@sveltejs/kit" package` error occurring in all projects ([#9050](https://github.com/sveltejs/kit/pull/9050))
+
+## 1.5.7
+
+### Patch Changes
+
+- fix: use internal alias that won't collide with user aliases ([#9022](https://github.com/sveltejs/kit/pull/9022))
+
+## 1.5.6
+
+### Patch Changes
+
+- fix: ssr defaults preventing minification for client build ([#9012](https://github.com/sveltejs/kit/pull/9012))
+
+- fix: client-side trailing slash redirect when preloading data ([#8982](https://github.com/sveltejs/kit/pull/8982))
+
+## 1.5.5
+
+### Patch Changes
+
+- fix: warn after failed data preloads in dev ([#8985](https://github.com/sveltejs/kit/pull/8985))
+
+## 1.5.4
+
+### Patch Changes
+
+- fix: support all relevant vite cli flags ([#8977](https://github.com/sveltejs/kit/pull/8977))
+
 ## 1.5.3
 
 ### Patch Changes

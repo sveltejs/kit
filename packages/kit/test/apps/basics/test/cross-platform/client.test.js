@@ -502,7 +502,7 @@ test.describe('Prefetching', () => {
 		} else {
 			// the preload helper causes an additional request to be made in Firefox,
 			// so we use toBeGreaterThan rather than toBe
-			expect(requests.filter((req) => req.endsWith('.js')).length).toBeGreaterThan(0);
+			expect(requests.filter((req) => req.endsWith('.mjs')).length).toBeGreaterThan(0);
 		}
 
 		expect(requests.includes(`${baseURL}/routing/preloading/preloaded.json`)).toBe(true);
@@ -659,6 +659,22 @@ test.describe('Routing', () => {
 
 		await page.locator(selector).click();
 		expect(await page.textContent(selector)).toBe('count: 1');
+	});
+
+	test('trailing slash redirect', async ({ page, clicknav }) => {
+		await page.goto('/routing/trailing-slash');
+
+		await clicknav('a[href="/routing/trailing-slash/always"]');
+		expect(new URL(page.url()).pathname).toBe('/routing/trailing-slash/always/');
+		await expect(page.locator('p')).toHaveText('/routing/trailing-slash/always/');
+
+		await clicknav('a[href="/routing/trailing-slash/never/"]');
+		expect(new URL(page.url()).pathname).toBe('/routing/trailing-slash/never');
+		await expect(page.locator('p')).toHaveText('/routing/trailing-slash/never');
+
+		await clicknav('a[href="/routing/trailing-slash/ignore/"]');
+		expect(new URL(page.url()).pathname).toBe('/routing/trailing-slash/ignore/');
+		await expect(page.locator('p')).toHaveText('/routing/trailing-slash/ignore/');
 	});
 });
 

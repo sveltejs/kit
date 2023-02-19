@@ -32,7 +32,7 @@ test.describe('Service worker', () => {
 		const response = await request.get('/basepath/service-worker.js');
 		const content = await response.text();
 
-		expect(content).toMatch(/\/_app\/immutable\/start-[a-z0-9]+\.js/);
+		expect(content).toMatch(/\/_app\/immutable\/entry\/start\.[a-z0-9]+\.mjs/);
 	});
 
 	test('does not register /basepath/service-worker.js', async ({ page }) => {

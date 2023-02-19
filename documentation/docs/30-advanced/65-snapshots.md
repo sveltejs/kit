@@ -21,7 +21,8 @@ To do this, export a `snapshot` object with `capture` and `restore` methods from
 </script>
 
 <form method="POST">
-	<textarea bind:value={comment} />
+	<label for="comment">Comment</label>
+	<textarea id="comment" bind:value={comment} />
 	<button>Post comment</button>
 </form>
 ```

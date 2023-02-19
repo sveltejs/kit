@@ -166,11 +166,7 @@ test('targets the data-sveltekit-hydrate parent node', () => {
 
 	assert.equal(match[1].trim(), '<h1>hello</h1>');
 
-	assert.ok(
-		match[3].includes(
-			`target: document.querySelector('[data-sveltekit-hydrate="${match[2]}"]').parentNode`
-		)
-	);
+	assert.ok(match[3].includes(`app, "${match[2]}"`));
 });
 
 test('prerenders binary data', async () => {

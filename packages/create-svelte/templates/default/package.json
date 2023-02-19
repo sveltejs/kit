@@ -13,7 +13,7 @@
 		"@sveltejs/kit": "workspace:*",
 		"svelte": "^3.55.1",
 		"typescript": "^4.9.4",
-		"vite": "^4.0.0"
+		"vite": "^4.1.1"
 	},
 	"type": "module",
 	"dependencies": {

@@ -17,7 +17,8 @@ export function split_headers(headers) {
 
 	headers.forEach((value, key) => {
 		if (key === 'set-cookie') {
-			m[key] = set_cookie_parser.splitCookiesString(value);
+			if (!m[key]) m[key] = [];
+			m[key].push(...set_cookie_parser.splitCookiesString(value));
 		} else {
 			h[key] = value;
 		}
