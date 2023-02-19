@@ -70,7 +70,7 @@ export async function load_server_data({ event, state, node, parent }) {
 		},
 		params: new Proxy(event.params, {
 			get: (target, key) => {
-				if (DEV && done && !uses.params.has(key)) {
+				if (DEV && done && typeof key === 'string' && !uses.params.has(key)) {
 					console.warn(
 						`${node.server_id}: Accessing \`params.${String(
 							key
@@ -92,18 +92,20 @@ export async function load_server_data({ event, state, node, parent }) {
 			uses.parent = true;
 			return parent();
 		},
-		route: {
-			get id() {
-				if (DEV && done && !uses.route) {
+		route: new Proxy(event.route, {
+			get: (target, key) => {
+				if (DEV && done && typeof key === 'string' && !uses.route) {
 					console.warn(
-						`${node.server_id}: Accessing \`route.id\` in a promise handler after \`load(...)\` has returned will not cause the function to re-run when the route changes`
+						`${node.server_id}: Accessing \`route.${String(
+							key
+						)}\` in a promise handler after \`load(...)\` has returned will not cause the function to re-run when the route changes`
 					);
 				}
 
 				uses.route = true;
-				return event.route.id;
+				return target[/** @type {'id'} */ (key)];
 			}
-		},
+		}),
 		url
 	});
 
