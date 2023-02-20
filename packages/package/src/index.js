@@ -41,8 +41,31 @@ async function do_build(options, analyse_code) {
 		await process_file(input, output, file, options.config.preprocess, alias, analyse_code);
 	}
 
-	if (options.copy_pkg) {
-		fs.copyFileSync(path.join(options.cwd, 'package.json'), path.join(output, 'package.json'));
+	if (options.copy) {
+		const pkg = JSON.parse(fs.readFileSync(path.join(options.cwd, 'package.json'), 'utf-8'));
+		// See: https://pnpm.io/package_json#publishconfigdirectory
+		if (pkg.publishConfig?.directory || pkg.linkDirectory?.directory) {
+			delete pkg.publishConfig?.directory;
+			delete pkg.linkDirectory?.directory;
+		}
+		fs.writeFileSync(path.join(output, 'package.json'), JSON.stringify(pkg, null, 2));
+
+		for (const file of fs.readdirSync(options.cwd)) {
+			const lowercased = file.toLowerCase();
+			if (
+				!['README', 'LICENSE', '.npmignore'].some((name) =>
+					lowercased.startsWith(name.toLowerCase())
+				)
+			) {
+				continue;
+			}
+
+			const source = path.join(options.cwd, file);
+			if (fs.lstatSync(source).isDirectory()) continue;
+
+			const dest = path.join(options.output, file);
+			if (!fs.existsSync(dest)) fs.copyFileSync(source, dest);
+		}
 	}
 
 	console.log(

@@ -32,7 +32,7 @@ async function test_make_package(path, options) {
 		output,
 		types: true,
 		config,
-		copy_pkg: false,
+		copy: false,
 		...options
 	});
 
@@ -89,7 +89,7 @@ for (const dir of fs.readdirSync(join(__dirname, 'errors'))) {
 		const input = resolve(cwd, config.kit?.files?.lib ?? 'src/lib');
 
 		try {
-			await build({ cwd, input, output, types: true, config, copy_pkg: false });
+			await build({ cwd, input, output, types: true, config, copy: false });
 			assert.unreachable('Must not pass build');
 		} catch (/** @type {any} */ error) {
 			assert.instance(error, Error);
@@ -140,7 +140,7 @@ test('create package and resolves $lib alias', async () => {
 });
 
 test.only('create package and copy over package.json', async () => {
-	await test_make_package('copy-pkg-json', { copy_pkg: true });
+	await test_make_package('copy-pkg-json', { copy: true });
 });
 
 test('SvelteKit interop', async () => {
@@ -160,7 +160,7 @@ if (!process.env.CI) {
 			output: 'package',
 			types: true,
 			config,
-			copy_pkg: false
+			copy: false
 		});
 
 		/** @param {string} file */

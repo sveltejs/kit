@@ -23,7 +23,11 @@ prog
 	.option('-i, --input', 'Input directory')
 	.option('-o, --output', 'Output directory', 'dist')
 	.option('-t, --types', 'Emit type declarations', true)
-	.option('-c, --copy-pkg-json', 'Copy package.json as is into output folder', false)
+	.option(
+		'-c, --copy',
+		'Copy package.json, readme, .npmignore and license into output folder',
+		false
+	)
 	.option('-w, --watch', 'Rerun when files change', false)
 	.action(async (args) => {
 		try {
@@ -44,7 +48,7 @@ prog
 				input: args.input ?? config.kit?.files?.lib ?? 'src/lib',
 				output: args.output,
 				types: args.types,
-				copy_pkg: args.copyPkgJson,
+				copy: args.copy,
 				config
 			};
 
