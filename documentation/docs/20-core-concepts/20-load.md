@@ -467,7 +467,7 @@ export function load() {
 </p>
 ```
 
-On platforms that do not support streaming, such as AWS Lambda, responses will be buffered.
+On platforms that do not support streaming, such as AWS Lambda, responses will be buffered. This means the page will only render once all promises resolve.
 
 > Streaming data will only work when JavaScript is enabled. You should avoid returning nested promises from a universal `load` function as these are _not_ streamed — instead, the promise is recreated when the function re-runs in the browser.
 
