@@ -110,6 +110,8 @@ declare module 'your-library/Foo.svelte';
 import Foo from 'your-library/Foo.svelte';
 ```
 
+> Beware that doing this will need additional care if you provide type definitions. Read more about the caveat [here](#typescript)
+
 In general, each key of the exports map is the path the user will have to use to import something from your package, and the value is the path to the file that will be imported or a map of export conditions which in turn contains these file paths.
 
 Read more about `exports` [here](https://nodejs.org/docs/latest-v18.x/api/packages.html#package-entry-points).
@@ -123,6 +125,36 @@ This is a legacy field that enabled tooling to recognise Svelte component librar
 	"svelte": "./dist/index.js"
 }
 ```
+
+## TypeScript
+
+You should ship type definitions for your library even if you don't use TypeScript yourself so that people who do get proper intellisense when using your library. `@sveltejs/package` makes the process of generating types mostly opaque to you. By default, when packaging your library, type definitions are auto-generated for JavaScript, TypeScript and Svelte files. All you need to ensure is that the `types` condition in the [exports](#anatomy-of-a-package-json-exports) map points to the correct files. When initialising a library project through `npm create svelte@latest`, this is automatically setup for the root export.
+
+If you have something else than a root export however — for example providing a `your-library/foo` import — you need to take additional care for providing type definitions. Unfortunately, TypeScript by default will _not_ resolve the `types` condition for an export like `{ "./foo": { "types": "./dist/foo.d.ts", ... }}`. Instead, it will search for a `foo.d.ts` relative to the root of your library (i.e. `your-library/foo.d.ts` instead of `your-library/dist/foo.d.ts`). To fix this, you have two options:
+
+The first option is to require people using your library to set the `moduleResolution` option in their `tsconfig/jsconfig.json` to `bundler` (available since TypeScript 5, the best and recommended option in the future), `node16` or `nodenext`. This opts TypeScript into actually looking at the exports map and resolving the types correctly.
+
+The second option is to (ab)use the `typesVersions` feature from TypeScript to wire up the types. This is a field inside `package.json` TypeScript uses to check for different type definitions depending on the TypeScript version, and also contains a path mapping feature for that. We leverage that path mapping feature to get what we want. For the mentioned `foo` export above, the corresponding `typesVersions` looks like this:
+
+```json
+{
+	"exports": {
+		"./foo": {
+			"types": "./dist/foo.d.ts",
+			"svelte": "./dist/foo.js"
+		}
+	},
+	"typesVersions": {
+		">4.0": {
+			"foo": ["./dist/foo.d.ts"]
+		}
+	}
+}
+```
+
+`>4.0` tells TypeScript to check the inner map if the used TypeScript version is greater than 4 (which should in practice always be true). The inner map tells TypeScript that the typings for `your-library/foo` are found within `./dist/foo.d.ts`, which essentially replicates the `exports` condition. You also have `*` as a wildcard at your disposal to make many type definitions at once available without repeating yourself.
+
+You can read more about that feature [here](https://www.typescriptlang.org/docs/handbook/declaration-files/publishing.html#version-selection-with-typesversions).
 
 ## Best practices
 
