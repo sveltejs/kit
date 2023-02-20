@@ -7,7 +7,7 @@ import { serialize_data } from './serialize_data.js';
 import { s } from '../../../utils/misc.js';
 import { Csp } from './csp.js';
 import { uneval_action_response } from './actions.js';
-import { clarify_devalue_error, stringify_uses } from '../utils.js';
+import { clarify_devalue_error, stringify_uses, handle_error_and_jsonify } from '../utils.js';
 import { public_env } from '../../shared-server.js';
 import { text } from '../../../exports/index.js';
 import { create_async_iterator } from '../../../utils/streaming.js';
@@ -252,6 +252,7 @@ export async function render_response({
 
 	const { data, chunks } = get_data(
 		event,
+		options,
 		branch.map((b) => b.server_data),
 		global
 	);
@@ -476,11 +477,12 @@ export async function render_response({
  * If the serialized data contains promises, `chunks` will be an
  * async iterable containing their resolutions
  * @param {import('types').RequestEvent} event
+ * @param {import('types').SSROptions} options
  * @param {Array<import('types').ServerDataNode | null>} nodes
  * @param {string} global
  * @returns {{ data: string, chunks: AsyncIterable<string> | null }}
  */
-function get_data(event, nodes, global) {
+function get_data(event, options, nodes, global) {
 	let promise_id = 1;
 	let count = 0;
 
@@ -494,7 +496,11 @@ function get_data(event, nodes, global) {
 
 			thing
 				.then(/** @param {any} data */ (data) => ({ data }))
-				.catch(/** @param {any} error */ (error) => ({ error }))
+				.catch(
+					/** @param {any} error */ async (error) => ({
+						error: await handle_error_and_jsonify(event, options, error)
+					})
+				)
 				.then(
 					/**
 					 * @param {{data: any; error: any}} result
@@ -506,7 +512,11 @@ function get_data(event, nodes, global) {
 						try {
 							str = devalue.uneval({ id, data, error }, replacer);
 						} catch (e) {
-							error = `new Error(${clarify_devalue_error(event, /** @type {any} */ (e))});`;
+							error = await handle_error_and_jsonify(
+								event,
+								options,
+								new Error(`Failed to serialize promise while rendering ${event.route.id}`)
+							);
 							data = undefined;
 							str = devalue.uneval({ id, data, error }, replacer);
 						}

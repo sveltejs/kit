@@ -193,44 +193,43 @@ export function get_data_json(event, options, nodes) {
 
 	const { iterator, push, done } = create_async_iterator();
 
-	const revivers = {
+	const reducers = {
 		/** @param {any} thing */
 		Promise: (thing) => {
 			if (typeof thing?.then === 'function') {
 				const id = promise_id++;
 				count += 1;
 
+				/** @type {'data' | 'error'} */
+				let key = 'data';
+
 				thing
-					.then(/** @param {any} d */ (d) => ({ d }))
-					.catch(/** @param {any} e */ (e) => ({ e }))
+					.catch(
+						/** @param {any} e */ async (e) => {
+							key = 'error';
+							return handle_error_and_jsonify(event, options, /** @type {any} */ (e));
+						}
+					)
 					.then(
-						/**
-						 * @param {{d: any; e: any}} result
-						 */
-						async ({ d, e }) => {
-							let data;
-							let error;
+						/** @param {any} value */
+						async (value) => {
+							let str;
 							try {
-								if (e) {
-									error = devalue.stringify(e, revivers);
-								} else {
-									data = devalue.stringify(d, revivers);
-								}
+								str = devalue.stringify(value, reducers);
 							} catch (e) {
-								error = await handle_error_and_jsonify(
+								const error = await handle_error_and_jsonify(
 									event,
 									options,
-									new Error(clarify_devalue_error(event, /** @type {any} */ (e)))
+									new Error(`Failed to serialize promise while rendering ${event.route.id}`)
 								);
+
+								key = 'error';
+								str = devalue.stringify(error, reducers);
 							}
 
 							count -= 1;
 
-							push(
-								`{"type":"chunk","id":${id}${data ? `,"data":${data}` : ''}${
-									error ? `,"error":${error}` : ''
-								}}\n`
-							);
+							push(`{"type":"chunk","id":${id},"${key}":${str}}\n`);
 							if (count === 0) done();
 						}
 					);
@@ -248,7 +247,7 @@ export function get_data_json(event, options, nodes) {
 				return JSON.stringify(node);
 			}
 
-			return `{"type":"data","data":${devalue.stringify(node.data, revivers)},${stringify_uses(
+			return `{"type":"data","data":${devalue.stringify(node.data, reducers)},${stringify_uses(
 				node
 			)}${node.slash ? `,"slash":${JSON.stringify(node.slash)}` : ''}}`;
 		});
