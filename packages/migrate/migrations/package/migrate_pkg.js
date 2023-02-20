@@ -92,6 +92,8 @@ export function update_pkg_json(config, pkg, files) {
 
 	/** @type {Record<string, string>} */
 	const clashes = {};
+	/** @type {Record<string, [string]>} */
+	const types_versions = {};
 
 	for (const file of files) {
 		if (file.is_included && file.is_exported) {
@@ -106,16 +108,30 @@ export function update_pkg_json(config, pkg, files) {
 				);
 			}
 
+			const has_type = config.package.emitTypes && (file.is_svelte || file.dest.endsWith('.js'));
+			const out_dir_type_path = `./${out_dir}/${
+				file.is_svelte ? `${file.dest}.d.ts` : file.dest.slice(0, -'.js'.length) + '.d.ts'
+			}`;
+
+			if (has_type && key.slice(2) /* don't add root index type */) {
+				if (!pkg.exports[key]) {
+					types_versions[key.slice(2)] = [out_dir_type_path];
+				} else {
+					const path_without_ext = pkg.exports[key].slice(
+						0,
+						-path.extname(pkg.exports[key]).length
+					);
+					types_versions[key.slice(2)] = [
+						`./${out_dir}/${(pkg.exports[key].types ?? path_without_ext + '.d.ts').slice(2)}`
+					];
+				}
+			}
+
 			if (!pkg.exports[key]) {
-				const has_type = config.package.emitTypes && (file.is_svelte || file.dest.endsWith('.js'));
 				const needs_svelte_condition = file.is_svelte || path.basename(file.dest) === 'index.js';
 				// JSON.stringify will remove the undefined entries
 				pkg.exports[key] = {
-					types: has_type
-						? `./${out_dir}/${
-								file.is_svelte ? `${file.dest}.d.ts` : file.dest.slice(0, -'.js'.length) + '.d.ts'
-						  }`
-						: undefined,
+					types: has_type ? out_dir_type_path : undefined,
 					svelte: needs_svelte_condition ? `./${out_dir}/${file.dest}` : undefined,
 					default: `./${out_dir}/${file.dest}`
 				};
@@ -154,6 +170,12 @@ export function update_pkg_json(config, pkg, files) {
 				)
 			);
 		}
+	}
+
+	// https://www.typescriptlang.org/docs/handbook/declaration-files/publishing.html#version-selection-with-typesversions
+	// A hack to get around the limitation that TS doesn't support "exports" field  with moduleResolution: 'node'
+	if (Object.keys(types_versions).length > 0) {
+		pkg.typesVersions = { '>4.0': types_versions };
 	}
 
 	return pkg;

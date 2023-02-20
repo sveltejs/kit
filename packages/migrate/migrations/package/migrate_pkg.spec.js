@@ -38,6 +38,13 @@ test('Updates package.json', () => {
 				is_svelte: false
 			},
 			{
+				name: 'bar/index.js',
+				dest: 'bar/index.js',
+				is_exported: true,
+				is_included: true,
+				is_svelte: false
+			},
+			{
 				name: 'index.js',
 				dest: 'index.js',
 				is_exported: true,
@@ -77,9 +84,22 @@ test('Updates package.json', () => {
 				types: './package/baz.d.ts',
 				default: './package/baz.js'
 			},
+			'./bar': {
+				types: './package/bar/index.d.ts',
+				svelte: './package/bar/index.js',
+				default: './package/bar/index.js'
+			},
 			'./ignored': './something.js'
 		},
-		svelte: './package/index.js'
+		svelte: './package/index.js',
+		typesVersions: {
+			'>4.0': {
+				'foo/Bar.svelte': ['./package/foo/Bar.svelte.d.ts'],
+				baz: ['./package/baz.d.ts'],
+				bar: ['./package/bar/index.d.ts'],
+				ignored: ['./package/something.d.ts']
+			}
+		}
 	});
 });
 
