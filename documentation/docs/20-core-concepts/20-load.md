@@ -458,7 +458,7 @@ export function load() {
 <p>
 	three:
 	{#await data.streamed.three}
-		...
+		Loading...
 	{:then value}
 		{value}
 	{:catch error}
