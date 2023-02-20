@@ -1,5 +1,11 @@
 # @sveltejs/package
 
+## 2.0.2
+
+### Patch Changes
+
+- fix: don't emit false positive export condition warning ([#9109](https://github.com/sveltejs/kit/pull/9109))
+
 ## 2.0.1
 
 ### Patch Changes
