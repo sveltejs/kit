@@ -13,7 +13,8 @@ test('Updates package.json', () => {
 			},
 			exports: {
 				'./ignored': './something.js'
-			}
+			},
+			svelte: './index.js'
 		},
 		[
 			{
@@ -89,7 +90,7 @@ test('Updates package.json', () => {
 				svelte: './package/bar/index.js',
 				default: './package/bar/index.js'
 			},
-			'./ignored': './something.js'
+			'./ignored': './package/something.js'
 		},
 		svelte: './package/index.js',
 		typesVersions: {

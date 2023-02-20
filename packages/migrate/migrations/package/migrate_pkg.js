@@ -139,6 +139,17 @@ export function update_pkg_json(config, pkg, files) {
 				if (Object.values(pkg.exports[key]).filter(Boolean).length === 1) {
 					pkg.exports[key] = pkg.exports[key].default;
 				}
+			} else {
+				// Rewrite existing export to point to the new output directory
+				if (typeof pkg.exports[key] === 'string') {
+					pkg.exports[key] = prepend_out_dir(pkg.exports[key], out_dir);
+				} else {
+					for (const condition in pkg.exports[key]) {
+						if (typeof pkg.exports[key][condition] === 'string') {
+							pkg.exports[key][condition] = prepend_out_dir(pkg.exports[key][condition], out_dir);
+						}
+					}
+				}
 			}
 
 			clashes[key] = original;
@@ -170,6 +181,9 @@ export function update_pkg_json(config, pkg, files) {
 				)
 			);
 		}
+	} else if (pkg.svelte) {
+		// Rewrite existing "svelte" field to point to the new output directory
+		pkg.svelte = prepend_out_dir(pkg.svelte, out_dir);
 	}
 
 	// https://www.typescriptlang.org/docs/handbook/declaration-files/publishing.html#version-selection-with-typesversions
@@ -179,4 +193,15 @@ export function update_pkg_json(config, pkg, files) {
 	}
 
 	return pkg;
+}
+
+/**
+ * Rewrite existing path to point to the new output directory
+ * @param {string} path
+ * @param {string} out_dir
+ */
+function prepend_out_dir(path, out_dir) {
+	if (!path.startsWith(`./${out_dir}`) && path.startsWith('./')) {
+		return `./${out_dir}/${path.slice(2)}`;
+	}
 }
