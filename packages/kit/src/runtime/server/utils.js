@@ -98,7 +98,7 @@ export async function handle_error_and_jsonify(event, options, error) {
 	if (error instanceof HttpError) {
 		return error.body;
 	} else {
-		if (__SVELTEKIT_DEV__) {
+		if (__SVELTEKIT_DEV__ && typeof error == 'object') {
 			error = new Proxy(error, {
 				get: (target, property) => {
 					if (property === 'stack') {

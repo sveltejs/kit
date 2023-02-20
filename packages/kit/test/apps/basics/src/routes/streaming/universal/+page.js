@@ -9,7 +9,7 @@ export function load() {
 			}),
 			fail: new Promise((_, reject) => {
 				setTimeout(() => {
-					reject('fail');
+					reject(new Error('fail'));
 				}, 1000);
 			})
 		}

@@ -13,6 +13,6 @@
 
 {#await data.lazy.fail}
 	<p class="loadingfail">Loading fail</p>
-{:catch result}
-	<p class="fail">{result}</p>
+{:catch error}
+	<p class="fail">{error.message}</p>
 {/await}
