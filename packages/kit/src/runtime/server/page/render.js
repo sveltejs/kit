@@ -460,7 +460,7 @@ export async function render_response({
 		: new Response(
 				new ReadableStream({
 					async start(controller) {
-						controller.enqueue(encoder.encode(transformed));
+						controller.enqueue(encoder.encode(transformed + '\n'));
 						for await (const chunk of chunks) {
 							controller.enqueue(encoder.encode(chunk));
 						}
@@ -525,7 +525,7 @@ function get_data(event, options, nodes, global) {
 							str = devalue.uneval({ id, data, error }, replacer);
 						}
 
-						push(`\n<script>${global}.resolve(${str})</script>`);
+						push(`<script>${global}.resolve(${str})</script>\n`);
 						if (count === 0) done();
 					}
 				);
