@@ -10,6 +10,8 @@ import { create_async_iterator } from '../../../utils/streaming.js';
 
 export const INVALIDATED_PARAM = 'x-sveltekit-invalidated';
 
+const encoder = new TextEncoder();
+
 /**
  * @param {import('types').RequestEvent} event
  * @param {import('types').SSRRoute} route
@@ -128,12 +130,14 @@ export async function render_data(
 		return new Response(
 			new ReadableStream({
 				async start(controller) {
-					controller.enqueue(data);
+					controller.enqueue(encoder.encode(data));
 					for await (const chunk of chunks) {
-						controller.enqueue(chunk);
+						controller.enqueue(encoder.encode(chunk));
 					}
 					controller.close();
-				}
+				},
+
+				type: 'bytes'
 			}),
 			{
 				headers: {
