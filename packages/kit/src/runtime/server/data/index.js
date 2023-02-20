@@ -141,9 +141,9 @@ export async function render_data(
 			}),
 			{
 				headers: {
-					// text/plain isn't strictly correct, but it makes it easier to inspect
-					// the data, and doesn't affect how it is consumed by the client
-					'content-type': 'text/plain',
+					// we use a proprietary content type to prevent buffering.
+					// the `text` prefix makes it inspectable
+					'content-type': 'text/sveltekit-data',
 					'cache-control': 'private, no-store'
 				}
 			}
