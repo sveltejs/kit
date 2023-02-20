@@ -1,5 +1,13 @@
 # svelte-migrate
 
+## 1.1.2
+
+### Patch Changes
+
+- fix: update existing exports with prepended outdir ([#9133](https://github.com/sveltejs/kit/pull/9133))
+
+- fix: use typesVersions to wire up deep imports ([#9133](https://github.com/sveltejs/kit/pull/9133))
+
 ## 1.1.1
 
 ### Patch Changes
