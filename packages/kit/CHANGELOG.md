@@ -1,5 +1,11 @@
 # @sveltejs/kit
 
+## 1.8.2
+
+### Patch Changes
+
+- fix: append newline to trigger script evaluation ([#9139](https://github.com/sveltejs/kit/pull/9139))
+
 ## 1.8.1
 
 ### Patch Changes
