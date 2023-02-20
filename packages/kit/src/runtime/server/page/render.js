@@ -19,6 +19,8 @@ const updated = {
 	check: () => false
 };
 
+const encoder = new TextEncoder();
+
 /**
  * Creates the HTML response.
  * @param {{
@@ -458,12 +460,14 @@ export async function render_response({
 		: new Response(
 				new ReadableStream({
 					async start(controller) {
-						controller.enqueue(transformed);
+						controller.enqueue(encoder.encode(transformed));
 						for await (const chunk of chunks) {
-							controller.enqueue(chunk);
+							controller.enqueue(encoder.encode(chunk));
 						}
 						controller.close();
-					}
+					},
+
+					type: 'bytes'
 				}),
 				{
 					headers: {
