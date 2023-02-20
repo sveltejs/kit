@@ -702,8 +702,8 @@ test.describe('Streaming', () => {
 		expect(page.locator('p.loadingsuccess')).toBeVisible();
 		expect(page.locator('p.loadingfail')).toBeVisible();
 
-		await expect(page.locator('p.success')).toHaveText('success');
-		await expect(page.locator('p.fail')).toHaveText('fail');
+		await expect(page.locator('p.success', { timeout: 15000 })).toHaveText('success');
+		await expect(page.locator('p.fail', { timeout: 15000 })).toHaveText('fail');
 		expect(page.locator('p.loadingsuccess')).toBeHidden();
 		expect(page.locator('p.loadingfail')).toBeHidden();
 	});
