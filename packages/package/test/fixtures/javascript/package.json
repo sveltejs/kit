@@ -2,5 +2,14 @@
 	"name": "javascript",
 	"private": true,
 	"version": "1.0.0",
-	"description": "standard javascript package"
+	"description": "standard javascript package",
+	"peerDependencies": {
+		"svelte": "^3.55.0"
+	},
+	"exports": {
+		".": {
+			"types": "./dist/index.d.ts",
+			"svelte": "./dist/index.js"
+		}
+	}
 }

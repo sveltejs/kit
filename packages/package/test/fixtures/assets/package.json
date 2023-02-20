@@ -2,5 +2,14 @@
 	"name": "assets",
 	"private": true,
 	"version": "1.0.0",
-	"description": "no tampering assets"
+	"description": "no tampering assets",
+	"peerDependencies": {
+		"svelte": "^3.55.0"
+	},
+	"exports": {
+		".": {
+			"types": "./dist/index.d.ts",
+			"svelte": "./dist/index.js"
+		}
+	}
 }

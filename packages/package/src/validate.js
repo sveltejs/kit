@@ -1,10 +1,46 @@
-import { existsSync, readFileSync } from 'node:fs';
+import { readFileSync } from 'node:fs';
+import { join } from 'node:path';
 import colors from 'kleur';
 
 /**
  * @param {import("./types").Options} options
  */
 export function create_validator(options) {
+	const { analyse_code, validate } = _create_validator(options);
+
+	return {
+		/**
+		 * Checks a file content for problematic imports and things like `import.meta`
+		 * @param {string} name
+		 * @param {string} content
+		 */
+		analyse_code(name, content) {
+			analyse_code(name, content);
+		},
+		validate() {
+			/** @type {Record<string, any>} */
+			const pkg = JSON.parse(readFileSync(join(options.cwd, 'package.json'), 'utf-8'));
+			const warnings = validate(pkg);
+			// Just warnings, not errors, because
+			// - would be annoying in watch mode (would have to restart the server)
+			// - maybe there's a custom post-build script that fixes some of these
+			if (warnings.length) {
+				console.log(
+					colors
+						.bold()
+						.yellow('@sveltejs/package found the following issues while packaging your library:')
+				);
+				for (const warning of warnings) {
+					console.log(colors.yellow(`${warning}\n`));
+				}
+			}
+		}
+	};
+}
+/**
+ * @param {import("./types").Options} options
+ */
+export function _create_validator(options) {
 	/** @type {Set<string>} */
 	const imports = new Set();
 	let uses_import_meta = false;
@@ -32,9 +68,10 @@ export function create_validator(options) {
 		}
 	}
 
-	function validate() {
-		/** @type {Record<string, any>} */
-		const pkg = JSON.parse(readFileSync('package.json', 'utf-8'));
+	/**
+	 * @param {Record<string, any>} pkg
+	 */
+	function validate(pkg) {
 		/** @type {string[]} */
 		const warnings = [];
 
@@ -109,19 +146,7 @@ export function create_validator(options) {
 			);
 		}
 
-		// Just warnings, not errors, because
-		// - would be annoying in watch mode (would have to restart the server)
-		// - maybe there's a custom post-build script that fixes some of these
-		if (warnings.length) {
-			console.log(
-				colors
-					.bold()
-					.yellow('@sveltejs/package found the following issues while packaging your library:')
-			);
-			for (const warning of warnings) {
-				console.log(colors.yellow(`${warning}\n`));
-			}
-		}
+		return warnings;
 	}
 
 	return {
@@ -146,7 +171,7 @@ function traverse_exports(exports_map) {
 	 */
 	function traverse(exports_map, is_first_level) {
 		for (const key of Object.keys(exports_map ?? {})) {
-			if (is_first_level) {
+			if (!is_first_level) {
 				conditions.add(key);
 			}
 
