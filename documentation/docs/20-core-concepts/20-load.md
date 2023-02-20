@@ -442,6 +442,8 @@ export function load() {
 }
 ```
 
+This is useful for creating skeleton loading states, for example:
+
 ```svelte
 /// file: src/routes/+page.svelte
 <script>
