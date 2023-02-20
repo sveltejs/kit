@@ -110,6 +110,10 @@ declare module 'your-library/Foo.svelte';
 import Foo from 'your-library/Foo.svelte';
 ```
 
+> Note that TypeScript will not recognize typings of deep imports by default. You have two options to solve this:
+> - require people to set their `moduleResolution` `tsconfig.json` option to `bundler` (probably the best option for most apps but only available since TypeScript version 5), `node16` or `nodenext`. This is the more future proof option
+> - use the [`--copy` option](#options). This will move your `package.json` and other relevant top level files into the output folder so that you can publish your library from there. This means you should author your `exports` map and `svelte` field in your `package.json` not relative to the root of your project but relative to the output folder. If `publint` is part of your `package` script, also update its command to `publint run <output folder>`.
+
 In general, each key of the exports map is the path the user will have to use to import something from your package, and the value is the path to the file that will be imported or a map of export conditions which in turn contains these file paths.
 
 Read more about `exports` [here](https://nodejs.org/docs/latest-v18.x/api/packages.html#package-entry-points).
@@ -165,6 +169,7 @@ You should think carefully about whether or not the changes you make to your pac
 - `-i`/`--input` — the input directory which contains all the files of the package. Defaults to `src/lib`
 - `-o`/`--o` — the output directory where the processed files are written to. You `package.json`'s `exports` should point to files inside there, and the `files` array should include that folder. Defaults to `dist`
 - `-t`/`--types` — whether or not to create type definitions (`d.ts` files). We strongly recommend doing this as it fosters ecosystem library quality. Defaults to `true`
+- `-c`/`--copy` — if set, will copy over the `package.json`, `.npmignore`, `license.md` and `readme.md` into the output folder. This is benefitial if you have more than one entry point and want people to be able to consume your package with correct types without them having to set the `moduleResolution` `tsconfig.json` option to `node16`, `nodenext` or `bundler`. You would then run `npm publish` from within your output folder, not from the root. This means you should author your `exports` map and `svelte` field in your `package.json` not relative to the root of your project but relative to the output folder. If `publint` is part of your `package` script, also update its command to `publint run <output folder>`.
 
 ## Publishing
 
@@ -173,6 +178,8 @@ To publish the generated package:
 ```sh
 npm publish
 ```
+
+If you're using the [`--copy` option](#options), `cd` into the output directory first.
 
 ## Caveats
 
