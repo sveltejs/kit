@@ -422,7 +422,7 @@ In the browser, you can also navigate programmatically outside of a `load` funct
 
 ## Streaming with promises
 
-Promises at the _top level_ of the returned object will be awaited, making it easy to return multiple promises without creating a waterfall. When using a server `load`, _nested_ promises will be streamed to the browser as they resolve:
+Promises at the _top level_ of the returned object will be awaited, making it easy to return multiple promises without creating a waterfall. When using a server `load`, _nested_ promises will be streamed to the browser as they resolve. This is useful if you have slow, non-essential data, since you can start rendering the page before all the data is available:
 
 ```js
 /// file: src/routes/+page.server.js
