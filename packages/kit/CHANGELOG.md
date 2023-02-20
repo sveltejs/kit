@@ -1,5 +1,11 @@
 # @sveltejs/kit
 
+## 1.8.1
+
+### Patch Changes
+
+- fix: encode streamed chunks ([#9136](https://github.com/sveltejs/kit/pull/9136))
+
 ## 1.8.0
 
 ### Minor Changes
