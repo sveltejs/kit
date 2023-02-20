@@ -33,10 +33,13 @@
 	</svelte:fragment>
 
 	<svelte:fragment slot="nav-right">
-		<NavItem selected={$page.url.pathname.startsWith(`${base}/docs`) || undefined} href="{base}/docs"
-			>Docs</NavItem
+		<NavItem
+			selected={$page.url.pathname.startsWith(`${base}/docs`) || undefined}
+			href="{base}/docs">Docs</NavItem
 		>
-		<NavItem selected={$page.url.pathname.startsWith(`${base}/faq`) || undefined} href="{base}/faq">FAQ</NavItem>
+		<NavItem selected={$page.url.pathname.startsWith(`${base}/faq`) || undefined} href="{base}/faq"
+			>FAQ</NavItem
+		>
 
 		<li aria-hidden="true"><span class="separator" /></li>
 
@@ -58,15 +61,31 @@
 	<slot />
 </main>
 
+<a target="_blank" rel="noopener noreferrer" href="https://hack.sveltesociety.dev/">
+	<div class="banner">
+		<span class="small">
+			<strong>Announcing SvelteHack</strong> Participate →
+		</span>
+		<span class="large">
+			<strong>Announcing SvelteHack</strong> Participate in our first hackathon and win →
+		</span>
+	</div>
+</a>
+
 {#if browser}
 	<SearchBox />
 {/if}
 
 <style>
+	:root {
+		--banner-footer-height: 48px;
+	}
+
 	main {
 		position: relative;
 		margin: 0 auto;
 		padding-top: var(--sk-nav-height);
+		padding-bottom: var(--banner-footer-height);
 		overflow: hidden;
 	}
 
@@ -143,5 +162,27 @@
 		:global(aside) {
 			z-index: 9999 !important;
 		}
+	}
+
+	.banner {
+		--banner-bg: #ff4700;
+		--banner-color: white;
+		--banner-strong-color: white;
+
+		background-color: var(--banner-bg);
+		color: var(--banner-color);
+		position: fixed;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		bottom: 0;
+		width: 100vw;
+		height: var(--banner-footer-height);
+		z-index: 999;
+	}
+
+	.banner strong {
+		font-weight: bold;
+		color: var(--banner-strong-color);
 	}
 </style>
