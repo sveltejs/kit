@@ -169,6 +169,7 @@ You will have to prevent GitHub's provided Jekyll from managing your site by put
 A config for GitHub Pages might look like the following:
 
 ```js
+// @errors: 2307
 /// file: svelte.config.js
 import adapter from '@sveltejs/adapter-static';
 
