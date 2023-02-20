@@ -1,5 +1,13 @@
 # create-svelte
 
+## 3.0.2
+
+### Patch Changes
+
+- chore: avoid running publint twice in prepublish ([#9126](https://github.com/sveltejs/kit/pull/9126))
+
+- fix: add `dist` to `pkg.files` and `.gitignore` ([#9124](https://github.com/sveltejs/kit/pull/9124))
+
 ## 3.0.1
 
 ### Patch Changes
