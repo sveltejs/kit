@@ -1,5 +1,11 @@
 # @sveltejs/kit
 
+## 1.8.3
+
+### Patch Changes
+
+- fix: use a proprietary content-type to ensure response is not buffered ([#9142](https://github.com/sveltejs/kit/pull/9142))
+
 ## 1.8.2
 
 ### Patch Changes
