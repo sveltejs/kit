@@ -1,4 +1,13 @@
 {
 	"name": "watch",
-	"type": "module"
+	"type": "module",
+	"peerDependencies": {
+		"svelte": "^3.55.0"
+	},
+	"exports": {
+		".": {
+			"types": "./dist/index.d.ts",
+			"svelte": "./dist/index.js"
+		}
+	}
 }

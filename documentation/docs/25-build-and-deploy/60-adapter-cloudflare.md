@@ -37,7 +37,7 @@ Please follow the [Get Started Guide](https://developers.cloudflare.com/pages/ge
 When configuring your project settings, you must use the following settings:
 
 - **Framework preset** – None
-- **Build command** – `npm run build` or `svelte-kit build`
+- **Build command** – `npm run build` or `vite build`
 - **Build output directory** – `.svelte-kit/cloudflare`
 - **Environment variables**
 	- `NODE_VERSION`: `16`

@@ -6,7 +6,7 @@
 		"build": "vite build && npm run package",
 		"preview": "vite preview",
 		"package": "svelte-kit sync && svelte-package && publint",
-		"prepublishOnly": "npm run package && publint"
+		"prepublishOnly": "npm run package"
 	},
 	"exports": {
 		".": {
@@ -14,6 +14,7 @@
 			"svelte": "./dist/index.js"
 		}
 	},
+	"files": ["dist"],
 	"peerDependencies": {
 		"svelte": "^3.54.0"
 	},

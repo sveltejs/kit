@@ -1,5 +1,37 @@
 # @sveltejs/kit
 
+## 1.8.3
+
+### Patch Changes
+
+- fix: use a proprietary content-type to ensure response is not buffered ([#9142](https://github.com/sveltejs/kit/pull/9142))
+
+## 1.8.2
+
+### Patch Changes
+
+- fix: append newline to trigger script evaluation ([#9139](https://github.com/sveltejs/kit/pull/9139))
+
+## 1.8.1
+
+### Patch Changes
+
+- fix: encode streamed chunks ([#9136](https://github.com/sveltejs/kit/pull/9136))
+
+## 1.8.0
+
+### Minor Changes
+
+- feat: implement streaming promises for server load functions ([#8901](https://github.com/sveltejs/kit/pull/8901))
+
+### Patch Changes
+
+- fix: set public env before starting app ([#8957](https://github.com/sveltejs/kit/pull/8957))
+
+- fix: preload modules on Safari ([#8957](https://github.com/sveltejs/kit/pull/8957))
+
+- fix: make `assets` work in client when app is served from a subfolder ([#8957](https://github.com/sveltejs/kit/pull/8957))
+
 ## 1.7.2
 
 ### Patch Changes
