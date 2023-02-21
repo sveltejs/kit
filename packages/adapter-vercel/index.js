@@ -46,23 +46,29 @@ const plugin = function (defaults = {}) {
 					Array.isArray(vercel_config?.crons) ? vercel_config.crons : []
 				);
 				const GET_routes = builder.routes.filter((route) => route.methods.includes('GET'));
+				/** @type {Array<string>} */
+				const unmatched_paths = [];
 
-				crons.forEach((cron) => {
-					if (!(typeof cron === 'object' && cron !== null && 'path' in cron)) {
-						return;
+				for (const cron of crons) {
+					if (typeof cron !== 'object' || cron === null || !('path' in cron)) {
+						continue;
 					}
 
 					const { path } = cron;
 					if (typeof path !== 'string') {
-						return;
+						continue;
 					}
 
 					if (!GET_routes.some((route) => route.pattern.test(path))) {
-						builder.log.warn(
-							`Cron job path ${path} does not match any routes. If this path is handled in your \`handle\` hook, you can ignore this warning.`
-						);
+						unmatched_paths.push(path);
 					}
-				});
+				}
+
+				builder.log.warn(
+					`The following paths are not matched by any route:\n  - ${unmatched_paths.join(
+						'\n  - '
+					)}\nIf these paths are handled in your \`handle\` hook, you can safely ignore this warning.`
+				);
 			}
 
 			const files = fileURLToPath(new URL('./files', import.meta.url).href);
