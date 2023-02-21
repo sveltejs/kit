@@ -51,7 +51,8 @@ export function create_builder({
 		/** @type {import('types').RouteDefinition} */
 		const facade = {
 			id: route.id,
-			type: route.endpoint ? 'endpoint' : 'page',
+			hasEndpoint: !!route.endpoint,
+			hasPage: !!route.page,
 			segments: get_route_segments(route.id).map((segment) => ({
 				dynamic: segment.includes('['),
 				rest: segment.includes('[...'),

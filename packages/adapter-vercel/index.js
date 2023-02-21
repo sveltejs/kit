@@ -45,8 +45,9 @@ const plugin = function (defaults = {}) {
 				const crons = /** @type {Array<unknown>} */ (
 					Array.isArray(vercel_config?.crons) ? vercel_config.crons : []
 				);
+				// This will false-positive on pages that have endpoints other than `GET`
 				const GET_routes = builder.routes.filter(
-					(route) => route.type === 'endpoint' && route.methods.includes('GET')
+					(route) => route.hasEndpoint && route.methods.includes('GET')
 				);
 				/** @type {Array<string>} */
 				const unmatched_paths = [];
