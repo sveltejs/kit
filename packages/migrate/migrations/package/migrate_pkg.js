@@ -113,15 +113,16 @@ export function update_pkg_json(config, pkg, files) {
 				file.is_svelte ? `${file.dest}.d.ts` : file.dest.slice(0, -'.js'.length) + '.d.ts'
 			}`;
 
-			if (has_type && key.slice(2) /* don't add root index type */) {
+			if (has_type) {
+				const type_key = key.slice(2) || 'index';
 				if (!pkg.exports[key]) {
-					types_versions[key.slice(2)] = [out_dir_type_path];
+					types_versions[type_key] = [out_dir_type_path];
 				} else {
 					const path_without_ext = pkg.exports[key].slice(
 						0,
 						-path.extname(pkg.exports[key]).length
 					);
-					types_versions[key.slice(2)] = [
+					types_versions[type_key] = [
 						`./${out_dir}/${(pkg.exports[key].types ?? path_without_ext + '.d.ts').slice(2)}`
 					];
 				}
@@ -188,7 +189,10 @@ export function update_pkg_json(config, pkg, files) {
 
 	// https://www.typescriptlang.org/docs/handbook/declaration-files/publishing.html#version-selection-with-typesversions
 	// A hack to get around the limitation that TS doesn't support "exports" field  with moduleResolution: 'node'
-	if (Object.keys(types_versions).length > 0) {
+	if (
+		Object.keys(types_versions).length > 1 ||
+		(Object.keys(types_versions).length > 0 && !types_versions['index'])
+	) {
 		pkg.typesVersions = { '>4.0': types_versions };
 	}
 
