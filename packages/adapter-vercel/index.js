@@ -45,7 +45,9 @@ const plugin = function (defaults = {}) {
 				const crons = /** @type {Array<unknown>} */ (
 					Array.isArray(vercel_config?.crons) ? vercel_config.crons : []
 				);
-				const GET_routes = builder.routes.filter((route) => route.methods.includes('GET'));
+				const GET_routes = builder.routes.filter(
+					(route) => route.type === 'endpoint' && route.methods.includes('GET')
+				);
 				/** @type {Array<string>} */
 				const unmatched_paths = [];
 

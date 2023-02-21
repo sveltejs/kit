@@ -983,6 +983,7 @@ export interface ResolveOptions {
 
 export interface RouteDefinition<Config = any> {
 	id: string;
+	type: 'endpoint' | 'page';
 	pattern: RegExp;
 	prerender: PrerenderOption;
 	segments: RouteSegment[];
