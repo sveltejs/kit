@@ -487,7 +487,8 @@ async function create_function_bundle(builder, entry, dir, config) {
 				memory: config.memory,
 				maxDuration: config.maxDuration,
 				handler: path.relative(base + ancestor, entry),
-				launcherType: 'Nodejs'
+				launcherType: 'Nodejs',
+				experimentalResponseStreaming: true
 			},
 			null,
 			'\t'
