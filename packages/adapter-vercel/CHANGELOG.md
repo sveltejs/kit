@@ -1,5 +1,11 @@
 # @sveltejs/adapter-vercel
 
+## 2.1.0
+
+### Minor Changes
+
+- feat: enable experimental response streaming ([#9144](https://github.com/sveltejs/kit/pull/9144))
+
 ## 2.0.4
 
 ### Patch Changes
