@@ -156,6 +156,16 @@ export async function render_response({
 		rendered = { head: '', html: '', css: { code: '', map: null } };
 	}
 
+	const segments = event.url.pathname.slice(base.length).split('/').slice(2);
+	const resolved_base = segments.length > 0 ? segments.map(() => '..').join('/') : '.';
+
+	let base_expression = s(base);
+	if (base === '') {
+		// if base is relative we use resolved_base so that they
+		// will work in odd contexts like IPFS, the internet archive, and so on
+		base_expression = `new URL(${s(resolved_base)}, location.href).pathname.slice(0,-1)`;
+	}
+
 	/**
 	 * The prefix to use for static assets. Replaces `%sveltekit.assets%` in the template
 	 * @type {string}
@@ -178,8 +188,7 @@ export async function render_response({
 	} else {
 		// otherwise we want asset paths to be relative to the page, so that they
 		// will work in odd contexts like IPFS, the internet archive, and so on
-		const segments = event.url.pathname.slice(base.length).split('/').slice(2);
-		resolved_assets = segments.length > 0 ? segments.map(() => '..').join('/') : '.';
+		resolved_assets = resolved_base;
 		asset_expression = `new URL(${s(
 			resolved_assets
 		)}, location.href).pathname.replace(/^\\\/$/, '')`;
@@ -286,6 +295,7 @@ export async function render_response({
 		const properties = [
 			`env: ${s(public_env)}`,
 			`assets: ${asset_expression}`,
+			`base: ${base_expression}`,
 			`element: document.currentScript.parentElement`
 		];
 

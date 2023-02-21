@@ -375,7 +375,7 @@ function kit({ svelte_config }) {
 					const { assets, base } = svelte_config.kit.paths;
 
 					if (browser) {
-						return `export const base = ${s(base)};
+						return `export const base = ${global}.base;
 export const assets = ${global}.assets;`;
 					}
 
