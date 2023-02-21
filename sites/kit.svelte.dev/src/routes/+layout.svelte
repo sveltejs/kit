@@ -12,6 +12,7 @@
 	import Search from '$lib/search/Search.svelte';
 	import SearchBox from '$lib/search/SearchBox.svelte';
 	import Logo from './home/svelte-logo.svg';
+	let bannerToggle = false;
 </script>
 
 <Icons />
@@ -61,16 +62,19 @@
 	<slot />
 </main>
 
-<a target="_blank" rel="noopener noreferrer" href="https://hack.sveltesociety.dev/">
+{#if !bannerToggle}
 	<div class="banner">
-		<span class="small">
-			<strong>Announcing SvelteHack</strong> Participate →
-		</span>
-		<span class="large">
-			<strong>Announcing SvelteHack</strong> Participate in our first hackathon and win →
-		</span>
+		<a target="_blank" rel="noopener noreferrer" href="https://hack.sveltesociety.dev/">
+			<span class="small">
+				<strong>Announcing SvelteHack</strong> Participate →
+			</span>
+			<span class="large">
+				<strong>Announcing SvelteHack</strong> Participate in our first hackathon and win →
+			</span>
+		</a>
+		<button on:click={() => (bannerToggle = !bannerToggle)}> ✕ </button>
 	</div>
-</a>
+{/if}
 
 {#if browser}
 	<SearchBox />
@@ -183,6 +187,15 @@
 
 	.banner strong {
 		font-weight: bold;
-		color: var(--banner-strong-color);
+	}
+
+	.banner span {
+		color: var(--banner-color);
+	}
+
+	.banner button {
+		position: absolute;
+		right: 15px;
+		font-size: 18px;
 	}
 </style>
