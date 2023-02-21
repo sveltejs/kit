@@ -39,6 +39,32 @@ const plugin = function (defaults = {}) {
 			builder.rimraf(dir);
 			builder.rimraf(tmp);
 
+			if (fs.existsSync('./vercel.json')) {
+				const vercelFile = fs.readFileSync('./vercel.json', 'utf-8');
+				const vercelConfig = JSON.parse(vercelFile);
+				const crons = /** @type {Array<unknown>} */ (
+					Array.isArray(vercelConfig?.crons) ? vercelConfig.crons : []
+				);
+				crons.forEach((cron) => {
+					if (!(typeof cron === 'object' && cron !== null && 'path' in cron)) {
+						return;
+					}
+
+					const { path } = cron;
+					if (typeof path !== 'string') {
+						return;
+					}
+
+					if (!builder.routes.some((route) => route.pattern.test(path))) {
+						builder.log.warn(
+							`Cron job path ${path} does not match any routes. If this path is handled in your \`handle\` hook, you can ignore this warning.`
+						);
+					}
+				});
+			}
+
+			builder.routes.some((route) => route.pattern.test());
+
 			const files = fileURLToPath(new URL('./files', import.meta.url).href);
 
 			const dirs = {
