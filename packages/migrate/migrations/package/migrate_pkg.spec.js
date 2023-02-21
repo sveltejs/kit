@@ -95,6 +95,7 @@ test('Updates package.json', () => {
 		svelte: './package/index.js',
 		typesVersions: {
 			'>4.0': {
+				index: ['./package/index.d.ts'],
 				'foo/Bar.svelte': ['./package/foo/Bar.svelte.d.ts'],
 				baz: ['./package/baz.d.ts'],
 				bar: ['./package/bar/index.d.ts'],
