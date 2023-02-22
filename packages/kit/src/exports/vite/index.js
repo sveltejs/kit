@@ -252,7 +252,7 @@ function kit({ svelte_config }) {
 						'$app',
 						'$env'
 					]
-				},
+				}
 			};
 
 			// Vitest will only call resolveId for packages that are being bundled
