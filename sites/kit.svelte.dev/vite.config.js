@@ -30,8 +30,7 @@ const config = {
 				'custom-event-polyfill',
 				'core-js/modules/es.promise.js',
 				'whatwg-fetch',
-				// 'global-this' should be used so 'regenerator-runtime' wouldn't do CSP issues
-				'core-js/proposals/global-this',
+				'core-js/proposals/global-this',// so that 'regenerator-runtime' wouldn't do CSP issues
 				'regenerator-runtime/runtime',
 				'unorm',
 				'path-composedpath-polyfill',
