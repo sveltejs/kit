@@ -9,7 +9,7 @@
 		"test:cross-platform:build": "pnpm run --dir packages/kit test:cross-platform:build",
 		"test:vite-ecosystem-ci": "pnpm test --dir packages/kit",
 		"check": "pnpm -r check",
-		"lint": "pnpm -r lint && eslint packages/**/*.js",
+		"lint": "pnpm -r lint && eslint 'packages/**/*.js'",
 		"format": "pnpm -r format",
 		"precommit": "pnpm format && pnpm lint",
 		"release": "changeset publish",
