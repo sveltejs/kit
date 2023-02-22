@@ -22,7 +22,10 @@ export const routeLegacy = (page, path, options = {}) =>
 		}
 
 		if (options.partialESModule ?? false) {
-			body = body.replace(`window.${detectModernBrowserVarName}=true`, '');
+			body = body.replace(
+				new RegExp(`window.${detectModernBrowserVarName}=true.*<\/script>`),
+				'</script>'
+			);
 		}
 
 		route.fulfill({ response, body, headers: response.headers() });
