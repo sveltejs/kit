@@ -12,9 +12,7 @@ const config = {
 			additionalLegacyPolyfills: legacy_polyfill
 				? [path.resolve(__dirname, 'polyfills/legacy.js')]
 				: undefined,
-			modernPolyfills: modern_polyfill
-				? [path.resolve(__dirname, 'polyfills/legacy.js')]
-				: false
+			modernPolyfills: modern_polyfill ? [path.resolve(__dirname, 'polyfills/legacy.js')] : false
 		})
 	],
 	server: {
