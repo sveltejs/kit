@@ -12,6 +12,8 @@
 	import Search from '$lib/search/Search.svelte';
 	import SearchBox from '$lib/search/SearchBox.svelte';
 	import Logo from './home/svelte-logo.svg';
+
+	let banner_height = '48px';
 </script>
 
 <Icons />
@@ -57,20 +59,21 @@
 	</svelte:fragment>
 </Nav>
 
-<main id="main">
+<main id="main" style:--banner-footer-height={banner_height}>
 	<slot />
 </main>
 
-<a target="_blank" rel="noopener noreferrer" href="https://hack.sveltesociety.dev/">
-	<div class="banner">
+<div class="banner" style:--banner-footer-height={banner_height}>
+	<a target="_blank" rel="noopener noreferrer" href="https://hack.sveltesociety.dev/">
 		<span class="small">
 			<strong>Announcing SvelteHack</strong> Participate →
 		</span>
 		<span class="large">
 			<strong>Announcing SvelteHack</strong> Participate in our first hackathon and win →
 		</span>
-	</div>
-</a>
+	</a>
+	<button on:click={() => (banner_height = '0px')}> ✕ </button>
+</div>
 
 {#if browser}
 	<SearchBox />
@@ -183,6 +186,15 @@
 
 	.banner strong {
 		font-weight: bold;
-		color: var(--banner-strong-color);
+	}
+
+	.banner span {
+		color: var(--banner-color);
+	}
+
+	.banner button {
+		position: absolute;
+		right: 30px;
+		font-size: 18px;
 	}
 </style>
