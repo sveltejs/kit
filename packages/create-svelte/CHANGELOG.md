@@ -1,5 +1,11 @@
 # create-svelte
 
+## 3.0.3
+
+### Patch Changes
+
+- chore: enhance library skeleton readme with some library instructions ([#9128](https://github.com/sveltejs/kit/pull/9128))
+
 ## 3.0.2
 
 ### Patch Changes

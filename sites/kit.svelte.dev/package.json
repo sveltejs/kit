@@ -21,7 +21,7 @@
 		"custom-event-polyfill": "^1.0.7",
 		"flexsearch": "^0.7.31",
 		"intersection-observer": "^0.12.2",
-		"magic-string": "^0.29.0",
+		"magic-string": "^0.30.0",
 		"marked": "^4.2.3",
 		"path-composedpath-polyfill": "^0.0.1",
 		"postcss": "^8.4.19",

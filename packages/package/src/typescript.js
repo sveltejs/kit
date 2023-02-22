@@ -29,9 +29,8 @@ export async function emit_dts(input, output, cwd, alias, files) {
 	});
 
 	const handwritten = new Set();
-	const excluded = new Set();
 
-	// remove excluded files, and files that conflict with hand-written .d.ts
+	// skip files that conflict with hand-written .d.ts
 	for (const file of files) {
 		if (file.name.endsWith('.d.ts')) {
 			handwritten.add(file.name);
@@ -45,9 +44,6 @@ export async function emit_dts(input, output, cwd, alias, files) {
 		if (handwritten.has(normalized)) {
 			console.warn(`Using $lib/${normalized} instead of generated .d.ts file`);
 		}
-
-		// don't overwrite hand-written .d.ts files
-		if (excluded.has(normalized)) continue;
 
 		const source = fs.readFileSync(path.join(tmp, normalized), 'utf8');
 		write(path.join(output, normalized), resolve_aliases(input, normalized, source, alias));

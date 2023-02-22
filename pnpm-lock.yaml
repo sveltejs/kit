@@ -276,7 +276,7 @@ importers:
       eslint-plugin-compat: ^4.0.2
       esm-env: ^1.0.0
       kleur: ^4.1.5
-      magic-string: ^0.29.0
+      magic-string: ^0.30.0
       marked: ^4.2.3
       mime: ^3.0.0
       rollup: ^3.7.0
@@ -297,7 +297,7 @@ importers:
       devalue: 4.3.0
       esm-env: 1.0.0
       kleur: 4.1.5
-      magic-string: 0.29.0
+      magic-string: 0.30.0
       mime: 3.0.0
       sade: 1.8.1
       set-cookie-parser: 2.5.1
@@ -682,7 +682,7 @@ importers:
     specifiers:
       '@types/prompts': ^2.4.1
       kleur: ^4.1.5
-      magic-string: ^0.29.0
+      magic-string: ^0.30.0
       prettier: ^2.8.0
       prompts: ^2.4.2
       tiny-glob: ^0.2.9
@@ -690,7 +690,7 @@ importers:
       uvu: ^0.5.6
     dependencies:
       kleur: 4.1.5
-      magic-string: 0.29.0
+      magic-string: 0.30.0
       prompts: 2.4.2
       tiny-glob: 0.2.9
       typescript: 4.9.4
@@ -736,7 +736,7 @@ importers:
       d3-geo-projection: ^4.0.0
       flexsearch: ^0.7.31
       intersection-observer: ^0.12.2
-      magic-string: ^0.29.0
+      magic-string: ^0.30.0
       marked: ^4.2.3
       path-composedpath-polyfill: ^0.0.1
       postcss: ^8.4.19
@@ -773,7 +773,7 @@ importers:
       custom-event-polyfill: 1.0.7
       flexsearch: 0.7.31
       intersection-observer: 0.12.2
-      magic-string: 0.29.0
+      magic-string: 0.30.0
       marked: 4.2.3
       path-composedpath-polyfill: 0.0.1
       postcss: 8.4.19
@@ -5237,8 +5237,8 @@ packages:
     dependencies:
       '@jridgewell/sourcemap-codec': 1.4.14
 
-  /magic-string/0.29.0:
-    resolution: {integrity: sha512-WcfidHrDjMY+eLjlU+8OvwREqHwpgCeKVBUpQ3OhYYuvfaYCUgcbuBzappNzZvg/v8onU3oQj+BYpkOJe9Iw4Q==}
+  /magic-string/0.30.0:
+    resolution: {integrity: sha512-LA+31JYDJLs82r2ScLrlz1GjSgu66ZV518eyWT+S8VhyQn/JL0u9MeBOvQMGYiPk1DBiSN9DDMOcXvigJZaViQ==}
     engines: {node: '>=12'}
     dependencies:
       '@jridgewell/sourcemap-codec': 1.4.14
