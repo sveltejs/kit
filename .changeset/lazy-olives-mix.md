@@ -2,4 +2,4 @@
 '@sveltejs/kit': patch
 ---
 
-fix: don't force externalize SvelteKit
+fix: bundle SvelteKit for better Vitest support

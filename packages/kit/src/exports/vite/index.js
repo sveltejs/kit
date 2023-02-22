@@ -252,8 +252,12 @@ function kit({ svelte_config }) {
 						'$app',
 						'$env'
 					]
-				}
+				},
 			};
+
+			// Vitest will only call resolveId for packages that are being bundled
+			// Without this it will not be able to load our virtual modules
+			const noExternal = process.env.TEST ? ['@sveltejs/kit'] : [];
 
 			if (is_build) {
 				if (!new_config.build) new_config.build = {};
@@ -267,18 +271,12 @@ function kit({ svelte_config }) {
 					__SVELTEKIT_EMBEDDED__: kit.embedded ? 'true' : 'false'
 				};
 
-				new_config.ssr = {
-					noExternal: [
-						// TODO document why this is necessary
-						'@sveltejs/kit',
-						// This ensures that esm-env is inlined into the server output with the
-						// export conditions resolved correctly through Vite. This prevents adapters
-						// that bundle later on to resolve the export conditions incorrectly
-						// and for example include browser-only code in the server output
-						// because they for example use esbuild.build with `platform: 'browser'`
-						'esm-env'
-					]
-				};
+				// This ensures that esm-env is inlined into the server output with the
+				// export conditions resolved correctly through Vite. This prevents adapters
+				// that bundle later on to resolve the export conditions incorrectly
+				// and for example include browser-only code in the server output
+				// because they for example use esbuild.build with `platform: 'browser'`
+				noExternal.push('esm-env');
 
 				if (!secondary_build_started) {
 					manifest_data = (await sync.all(svelte_config, config_env.mode)).manifest_data;
@@ -290,6 +288,10 @@ function kit({ svelte_config }) {
 					__SVELTEKIT_EMBEDDED__: kit.embedded ? 'true' : 'false'
 				};
 			}
+
+			new_config.ssr = {
+				noExternal
+			};
 
 			warn_overridden_config(config, new_config);
 
