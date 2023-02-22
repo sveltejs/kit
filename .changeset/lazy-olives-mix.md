@@ -2,4 +2,4 @@
 '@sveltejs/kit': patch
 ---
 
-fix: bundle SvelteKit for better Vitest support
+fix: bundle SvelteKit when using Vitest
