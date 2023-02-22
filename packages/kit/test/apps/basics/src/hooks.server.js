@@ -1,4 +1,4 @@
-import fs from 'fs';
+import fs from 'node:fs';
 import { sequence } from '@sveltejs/kit/hooks';
 import { HttpError } from '../../../../src/runtime/control';
 import { error, redirect } from '@sveltejs/kit';

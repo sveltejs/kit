@@ -1,8 +1,8 @@
-import fs from 'fs';
+import fs from 'node:fs';
 import colors from 'kleur';
-import path from 'path';
+import path from 'node:path';
 import prompts from 'prompts';
-import { pathToFileURL } from 'url';
+import { pathToFileURL } from 'node:url';
 import { bail, check_git } from '../../utils.js';
 import { migrate_config } from './migrate_config.js';
 import { migrate_pkg } from './migrate_pkg.js';
