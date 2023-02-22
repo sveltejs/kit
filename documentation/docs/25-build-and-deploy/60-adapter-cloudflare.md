@@ -30,6 +30,49 @@ export default {
 };
 ```
 
+Optionally, provide options for the adapter:
+```js
+// @errors: 2307
+/// file: svelte.config.js
+import adapter from '@sveltejs/adapter-cloudflare';
+
+export default {
+	kit: {
+		adapter: adapter({
+
+			/**
+			 * Customize the automatically-generated _routes.json file.
+			 */
+			routes: {
+				/**
+				 * Should we automatically generate excludes for _routes.json
+				 * based on prerendered pages and static assets?
+				 */
+				autoGenerate: true,
+
+				/**
+				 * Routes that will be invoked by Functions. Accepts wildcard behavior.
+				 *
+				 * If used with autoGenerate, these will be placed first.
+				 * If we reach the 100 limit, auto-generated includes will be removed first.
+				 */
+				include: [],
+
+				/**
+				 * Defines routes that will not be invoked by Functions. Accepts wildcard behavior.
+				 * Exclude always take priority over include.
+				 *
+				 * If used with autoGenerate, these will be placed first.
+				 * If we reach the 100 limit, auto-generated includes will be removed first.
+				 */
+				exclude: []
+			}
+
+		})
+	}
+};
+```
+
 ## Deployment
 
 Please follow the [Get Started Guide](https://developers.cloudflare.com/pages/get-started) for Cloudflare Pages to begin.
