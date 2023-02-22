@@ -157,14 +157,13 @@ export async function render_response({
 	}
 
 	const segments = event.url.pathname.slice(base.length).split('/').slice(2);
-	const resolved_base = segments.length > 0 ? segments.map(() => '..').join('/') : '.';
+	const resolved_base = segments.map(() => '..').join('/') || '.';
 
-	let base_expression = s(base);
-	if (base === '') {
-		// if base is relative we use resolved_base so that they
-		// will work in odd contexts like IPFS, the internet archive, and so on
-		base_expression = `new URL(${s(resolved_base)}, location.href).pathname.slice(0,-1)`;
-	}
+	// we use a relative path when possible to support IPFS, the internet archive, etc.
+	const base_expression =
+		state.prerendering?.fallback || base !== ''
+			? s(base)
+			: `new URL(${s(resolved_base)}, location.href).pathname.slice(0,-1)`;
 
 	/**
 	 * The prefix to use for static assets. Replaces `%sveltekit.assets%` in the template
@@ -186,9 +185,8 @@ export async function render_response({
 		resolved_assets = base;
 		asset_expression = s(base);
 	} else {
-		// otherwise we want asset paths to be relative to the page, so that they
-		// will work in odd contexts like IPFS, the internet archive, and so on
 		resolved_assets = resolved_base;
+		// we use a relative path when possible to support IPFS, the internet archive, etc.
 		asset_expression = `new URL(${s(
 			resolved_assets
 		)}, location.href).pathname.replace(/^\\\/$/, '')`;
