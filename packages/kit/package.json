@@ -57,7 +57,7 @@
 		"postinstall.js"
 	],
 	"scripts": {
-		"lint": "prettier --check . --config ../../.prettierrc --ignore-path .gitignore && eslint src/**/*.js",
+		"lint": "prettier --check . --config ../../.prettierrc --ignore-path .gitignore",
 		"check": "tsc",
 		"check:all": "tsc && pnpm -r --filter=\"./**\" check",
 		"format": "prettier --write . --config ../../.prettierrc --ignore-path .gitignore",
