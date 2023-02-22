@@ -27,6 +27,7 @@ export const routeLegacy = (page, path, options = {}) =>
 
 		route.fulfill({ response, body, headers: response.headers() });
 	});
+
 /**
  * Make the legacy scripts be loaded, simulating legacy browsers that goes only to `<script nomodule>`
  * @param {import('@playwright/test').Page} page
