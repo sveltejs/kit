@@ -8,12 +8,13 @@ const config = {
 	plugins: [
 		sveltekit(),
 		legacy({
+			polyfills: legacy_polyfill,
 			additionalLegacyPolyfills: legacy_polyfill
 				? [path.resolve(__dirname, 'polyfills/legacy.js')]
 				: undefined,
 			modernPolyfills: modern_polyfill
 				? [path.resolve(__dirname, 'polyfills/legacy.js')]
-				: undefined
+				: false
 		})
 	],
 	server: {
