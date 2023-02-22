@@ -9,6 +9,7 @@ import * as assert from 'uvu/assert';
 import { build, watch } from '../src/index.js';
 import { load_config } from '../src/config.js';
 import { rimraf, walk } from '../src/filesystem.js';
+import { _create_validator } from '../src/validate.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = join(__filename, '..');
@@ -213,5 +214,90 @@ if (!process.env.CI) {
 		}
 	});
 }
+
+/**
+ * @param {string[]} actual
+ * @param {string[]} expected
+ */
+function has_warnings(actual, expected) {
+	assert.equal(actual.length, expected.length);
+	assert.equal(
+		actual.filter((warning) => expected.some((str) => warning.startsWith(str))).length,
+		expected.length
+	);
+}
+
+test('validates package (1)', () => {
+	const { analyse_code, validate } = _create_validator({
+		config: {},
+		cwd: '',
+		input: '',
+		output: '',
+		types: true
+	});
+	analyse_code('src/lib/index.js', 'export const a = 1;import.meta.env;');
+	analyse_code('src/lib/C.svelte', '');
+	const warnings = validate({});
+
+	has_warnings(warnings, [
+		'No `exports` field found in `package.json`, please provide one.',
+		'Avoid usage of `import.meta.env` in your code',
+		'You are using Svelte components or Svelte-specific imports in your code, but you have not declared a dependency on `svelte` in your `package.json`. '
+	]);
+});
+
+test('validates package (2)', () => {
+	const { analyse_code, validate } = _create_validator({
+		config: {},
+		cwd: '',
+		input: '',
+		output: '',
+		types: true
+	});
+	analyse_code('src/lib/C.svelte', '');
+	const warnings = validate({
+		exports: { '.': './dist/C.svelte' },
+		peerDependencies: { svelte: '^3.55.0' }
+	});
+
+	has_warnings(warnings, [
+		'You are using Svelte files, but did not declare a `svelte` condition in one of your `exports` in your `package.json`. '
+	]);
+});
+
+test('validates package (all ok 1)', () => {
+	const { analyse_code, validate } = _create_validator({
+		config: {},
+		cwd: '',
+		input: '',
+		output: '',
+		types: true
+	});
+	analyse_code('src/lib/C.svelte', '');
+	const warnings = validate({
+		exports: { '.': { svelte: './dist/C.svelte' } },
+		peerDependencies: { svelte: '^3.55.0' }
+	});
+
+	assert.equal(warnings.length, 0);
+});
+
+test('validates package (all ok 2)', () => {
+	const { analyse_code, validate } = _create_validator({
+		config: {},
+		cwd: '',
+		input: '',
+		output: '',
+		types: true
+	});
+	analyse_code('src/lib/C.svelte', '');
+	const warnings = validate({
+		exports: { '.': { svelte: './dist/C.svelte' } },
+		peerDependencies: { svelte: '^3.55.0' },
+		svelte: './dist/C.svelte'
+	});
+
+	assert.equal(warnings.length, 0);
+});
 
 test.run();

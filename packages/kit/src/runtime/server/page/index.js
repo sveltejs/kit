@@ -3,12 +3,7 @@ import { compact } from '../../../utils/array.js';
 import { normalize_error } from '../../../utils/error.js';
 import { add_data_suffix } from '../../../utils/url.js';
 import { HttpError, Redirect } from '../../control.js';
-import {
-	redirect_response,
-	static_error_page,
-	handle_error_and_jsonify,
-	serialize_data_node
-} from '../utils.js';
+import { redirect_response, static_error_page, handle_error_and_jsonify } from '../utils.js';
 import {
 	handle_action_json_request,
 	handle_action_request,
@@ -19,6 +14,7 @@ import { load_data, load_server_data } from './load_data.js';
 import { render_response } from './render.js';
 import { respond_with_error } from './respond_with_error.js';
 import { get_option } from '../../../utils/options.js';
+import { get_data_json } from '../data/index.js';
 
 /**
  * @param {import('types').RequestEvent} event
@@ -290,13 +286,22 @@ export async function render_page(event, route, page, options, manifest, state, 
 		}
 
 		if (state.prerendering && should_prerender_data) {
-			const body = `{"type":"data","nodes":[${branch
-				.map((node) => serialize_data_node(node?.server_data))
-				.join(',')}]}`;
+			// ndjson format
+			let { data, chunks } = get_data_json(
+				event,
+				options,
+				branch.map((node) => node?.server_data)
+			);
+
+			if (chunks) {
+				for await (const chunk of chunks) {
+					data += chunk;
+				}
+			}
 
 			state.prerendering.dependencies.set(data_pathname, {
-				response: text(body),
-				body
+				response: text(data),
+				body: data
 			});
 		}
 

@@ -7,9 +7,10 @@ import { serialize_data } from './serialize_data.js';
 import { s } from '../../../utils/misc.js';
 import { Csp } from './csp.js';
 import { uneval_action_response } from './actions.js';
-import { clarify_devalue_error } from '../utils.js';
+import { clarify_devalue_error, stringify_uses, handle_error_and_jsonify } from '../utils.js';
 import { public_env } from '../../shared-server.js';
 import { text } from '../../../exports/index.js';
+import { create_async_iterator } from '../../../utils/streaming.js';
 
 // TODO rename this function/module
 
@@ -17,6 +18,8 @@ const updated = {
 	...readable(false),
 	check: () => false
 };
+
+const encoder = new TextEncoder();
 
 /**
  * Creates the HTML response.
@@ -160,6 +163,7 @@ export async function render_response({
 	let resolved_assets;
 
 	/**
+	 * @type {string}
 	 * An expression that will evaluate in the client to determine the resolved asset path
 	 */
 	let asset_expression;
@@ -189,8 +193,6 @@ export async function render_response({
 		prerender: !!state.prerendering
 	});
 
-	const target = hash(body);
-
 	/** @param {string} path */
 	const prefixed = (path) => {
 		if (path.startsWith('/')) {
@@ -201,48 +203,6 @@ export async function render_response({
 		}
 		return `${resolved_assets}/${path}`;
 	};
-
-	const serialized = { data: '', form: 'null', error: 'null' };
-
-	try {
-		serialized.data = `[${branch
-			.map(({ server_data }) => {
-				if (server_data?.type === 'data') {
-					const data = devalue.uneval(server_data.data);
-
-					const uses = [];
-					if (server_data.uses.dependencies.size > 0) {
-						uses.push(`dependencies:${s(Array.from(server_data.uses.dependencies))}`);
-					}
-
-					if (server_data.uses.params.size > 0) {
-						uses.push(`params:${s(Array.from(server_data.uses.params))}`);
-					}
-
-					if (server_data.uses.parent) uses.push(`parent:1`);
-					if (server_data.uses.route) uses.push(`route:1`);
-					if (server_data.uses.url) uses.push(`url:1`);
-
-					return `{type:"data",data:${data},uses:{${uses.join(',')}}${
-						server_data.slash ? `,slash:${s(server_data.slash)}` : ''
-					}}`;
-				}
-
-				return s(server_data);
-			})
-			.join(',')}]`;
-	} catch (e) {
-		const error = /** @type {any} */ (e);
-		throw new Error(clarify_devalue_error(event, error));
-	}
-
-	if (form_value) {
-		serialized.form = uneval_action_response(form_value, /** @type {string} */ (event.route.id));
-	}
-
-	if (error) {
-		serialized.error = devalue.uneval(error);
-	}
 
 	if (inline_styles.size > 0) {
 		const content = Array.from(inline_styles.values()).join('\n');
@@ -291,38 +251,181 @@ export async function render_response({
 		}
 	}
 
-	if (page_config.csr) {
-		const args = [`app`, `"${target}"`];
+	const global = `__sveltekit_${options.version_hash}`;
 
-		if (page_config.ssr) {
-			const hydrate = [
-				`node_ids: [${branch.map(({ node }) => node.index).join(', ')}]`,
-				`data: ${serialized.data}`,
-				`form: ${serialized.form}`,
-				`error: ${serialized.error}`
+	const { data, chunks } = get_data(
+		event,
+		options,
+		branch.map((b) => b.server_data),
+		global
+	);
+
+	if (page_config.ssr && page_config.csr) {
+		body += `\n\t\t\t${fetched
+			.map((item) =>
+				serialize_data(item, resolve_opts.filterSerializedResponseHeaders, !!state.prerendering)
+			)
+			.join('\n\t\t\t')}`;
+	}
+
+	if (page_config.csr) {
+		const detectModernBrowserVarName = '__KIT_is_modern_browser';
+
+		/** A startup script var name for the init function, used when the user wants legacy support. */
+		const startup_script_var_name = '__KIT_startup_script';
+
+		const init_script_id = '__KIT_legacy_init_id';
+
+		const modern_import_func_var_name = '__KIT_modern_import_func';
+
+		/**
+		 * Generate JS init code for the HTML entry page
+		 * @param {boolean} legacy_support_and_export_init
+		 * @returns {string}
+		 */
+		const generate_init_script = (legacy_support_and_export_init) => {
+			/** @type {string[]} */
+			const blocks = [];
+
+			/** @type {Record<string, string>} */
+			const init_input = {};
+
+			const import_func = legacy_support_and_export_init ? 'import_func' : 'import';
+			if (legacy_support_and_export_init) {
+				init_input.import_func = `window.${modern_import_func_var_name} || (function (id) { return System.import(id); })`;
+			}
+
+			const properties = [
+				`env: ${s(public_env)}`,
+				`assets: ${asset_expression}`,
+				`element: ${
+					legacy_support_and_export_init
+						? `document.getElementById(${s(init_script_id)})`
+						: 'document.currentScript'
+				}.parentNode`
 			];
 
-			if (status !== 200) {
-				hydrate.push(`status: ${status}`);
+			if (chunks) {
+				init_input['deferred'] = 'new Map()';
+
+				properties.push(`defer: (id) => new Promise((fulfil, reject) => {
+							deferred.set(id, { fulfil, reject });
+						})`);
+
+				properties.push(`resolve: ({ id, data, error }) => {
+							const { fulfil, reject } = deferred.get(id);
+							deferred.delete(id);
+
+							if (error) reject(error);
+							else fulfil(data);
+						}`);
 			}
 
-			if (options.embedded) {
-				hydrate.push(`params: ${devalue.uneval(event.params)}`, `route: ${s(event.route)}`);
+			blocks.push(`${global} = {
+						${properties.join(',\n\t\t\t\t\t\t')}
+					};`);
+
+			const args = [`app`, `${global}.element`];
+
+			if (page_config.ssr) {
+				const serialized = { form: 'null', error: 'null' };
+
+				init_input['data'] = data;
+
+				if (form_value) {
+					serialized.form = uneval_action_response(
+						form_value,
+						/** @type {string} */ (event.route.id)
+					);
+				}
+
+				if (error) {
+					serialized.error = devalue.uneval(error);
+				}
+
+				const hydrate = [
+					`node_ids: [${branch.map(({ node }) => node.index).join(', ')}]`,
+					`data: data`,
+					`form: ${serialized.form}`,
+					`error: ${serialized.error}`
+				];
+
+				if (status !== 200) {
+					hydrate.push(`status: ${status}`);
+				}
+
+				if (options.embedded) {
+					hydrate.push(`params: ${devalue.uneval(event.params)}`, `route: ${s(event.route)}`);
+				}
+
+				args.push(`{\n\t\t\t\t\t\t\t${hydrate.join(',\n\t\t\t\t\t\t\t')}\n\t\t\t\t\t\t}`);
 			}
 
-			args.push(`{\n\t\t\t\t${hydrate.join(',\n\t\t\t\t')}\n\t\t\t}`);
-		}
+			/**
+			 *
+			 * @param {import('types').AssetDependenciesWithLegacy[]} assets
+			 * @param {(asset: import('types').AssetDependenciesWithLegacy) => string} getPathFunc
+			 * @returns {string}
+			 */
+			const get_import_arr = (assets, getPathFunc) =>
+				`[\n\t\t\t\t\t\t${assets
+					.map((asset) => `${import_func}(${s(prefixed(getPathFunc(asset)))})`)
+					.join(',\n\t\t\t\t\t\t')}\n\t\t\t\t\t]`;
 
-		// prettier-ignore
-		const startupContent = `start(${args.join(', ')});`;
+			const assets = [client.start, client.app];
+			const modern_import_arr = get_import_arr(assets, (asset) => asset.file);
+			const get_legacy_import_arr = () =>
+				get_import_arr(assets, (asset) => /** @type {string} */ (asset.legacy_file));
+
+			const import_arr_combined = legacy_support_and_export_init
+				? `window.${detectModernBrowserVarName} ? ${modern_import_arr} : ${get_legacy_import_arr()}`
+				: modern_import_arr;
+
+			blocks.push(
+				legacy_support_and_export_init
+					? `Promise.all(${import_arr_combined}).then(function (modules) {
+						(function (kit, app) { kit.start(${args.join(', ')}) })(modules[0], modules[1]);
+					});`
+					: `Promise.all(${import_arr_combined}).then(([kit, app]) => {
+						kit.start(${args.join(', ')});
+					});`
+			);
+
+			if (options.service_worker) {
+				const opts = __SVELTEKIT_DEV__ ? `, { type: 'module' }` : '';
+
+				// we use an anonymous function instead of an arrow function to support
+				// older browsers (https://github.com/sveltejs/kit/pull/5417)
+				blocks.push(`if ('serviceWorker' in navigator) {
+						addEventListener('load', function () {
+							navigator.serviceWorker.register('${prefixed('service-worker.js')}'${opts});
+						});
+					}`);
+			}
+
+			const init_input_list = Object.entries(init_input);
+
+			return legacy_support_and_export_init
+				? `
+				window.${startup_script_var_name} = function () { (function (${init_input_list
+						.map(([key]) => key)
+						.join(', ')}) {
+					${blocks.join('\n\n\t\t\t\t\t')}
+				})(${init_input_list.map(([, value]) => value).join(', ')}); };
+			`
+				: `
+				{
+					${[...init_input_list.map(([key, val]) => `const ${key} = ${val};`), '', ...blocks].join(
+						'\n\n\t\t\t\t\t'
+					)}
+				}
+			`;
+		};
 
 		// Injecting (potentially) legacy script together with the modern script -
 		//  in a similar fashion to the script tags injection of @vitejs/plugin-legacy.
 		// Notice that unlike the script injection on @vitejs/plugin-legacy,
 		//  we don't need to have a constant CSP since kit handles it.
-
-		const detectModernBrowserVarName = '__KIT_is_modern_browser';
-		const startup_script_var_name = '__KIT_startup_script';
 
 		if (client.modern_polyfills_file) {
 			const path = prefixed(client.modern_polyfills_file);
@@ -345,7 +448,46 @@ export async function render_response({
 			head += `\n\t\t<link rel="preload" as="script" crossorigin="anonymous" href="${path}">`;
 		}
 
-		let had_emitted_nomodule_script = false;
+		/**
+		 *
+		 * @param {string} script
+		 * @param {string | undefined} additionalAttrs
+		 */
+		function add_traditional_script(script, additionalAttrs = undefined) {
+			body +=
+				`\n\t\t\t<script` +
+				(additionalAttrs ? ` ${additionalAttrs}` : '') +
+				(script && csp.script_needs_nonce ? ` nonce="${csp.nonce}"` : '') +
+				`>${script}</script>`;
+
+			if (script) {
+				csp.add_script(script);
+			}
+		}
+
+		/**
+		 *
+		 * @param {string} script
+		 * @param {string | undefined} additionalAttrs
+		 */
+		const add_nomodule_script_unsafe = (script, additionalAttrs = undefined) =>
+			add_traditional_script(script, `nomodule${additionalAttrs ? ` ${additionalAttrs}` : ''}`);
+
+		let had_emitted_nomodule_fix = false;
+		function emit_nomodule_fix_if_needed() {
+			if (had_emitted_nomodule_fix) {
+				return;
+			}
+			// otherwise
+
+			had_emitted_nomodule_fix = true;
+
+			// Before adding nomodule scripts, we need to inject Safari 10 nomodule fix
+			// https://gist.github.com/samthor/64b114e4a4f539915a95b91ffd340acc
+			// DO NOT ALTER THIS CONTENT
+			const safari10NoModuleFix = `!function(){var e=document,t=e.createElement("script");if(!("noModule"in t)&&"onbeforeload"in t){var n=!1;e.addEventListener("beforeload",(function(e){if(e.target===t)n=!0;else if(!e.target.hasAttribute("nomodule")||!n)return;e.preventDefault()}),!0),t.type="module",t.src=".",e.head.appendChild(t),t.remove()}}();`;
+			add_nomodule_script_unsafe(safari10NoModuleFix);
+		}
 
 		/**
 		 *
@@ -353,136 +495,54 @@ export async function render_response({
 		 * @param {string | undefined} additionalAttrs
 		 */
 		function add_nomodule_script(script, additionalAttrs = undefined) {
-			/**
-			 *
-			 * @param {string} script
-			 * @param {string | undefined} additionalAttrs
-			 */
-			function internal_add(script, additionalAttrs = undefined) {
-				body +=
-					`\n\t\t<script nomodule` +
-					(additionalAttrs ? ` ${additionalAttrs}` : '') +
-					(script && csp.script_needs_nonce ? ` nonce="${csp.nonce}"` : '') +
-					`>${script}</script>`;
-
-				if (script) {
-					csp.add_script(script);
-				}
-			}
-
-			if (!had_emitted_nomodule_script) {
-				// Before adding nomodule scripts, we need to inject Safari 10 nomodule fix
-				// https://gist.github.com/samthor/64b114e4a4f539915a95b91ffd340acc
-				// DO NOT ALTER THIS CONTENT
-				const safari10NoModuleFix = `!function(){var e=document,t=e.createElement("script");if(!("noModule"in t)&&"onbeforeload"in t){var n=!1;e.addEventListener("beforeload",(function(e){if(e.target===t)n=!0;else if(!e.target.hasAttribute("nomodule")||!n)return;e.preventDefault()}),!0),t.type="module",t.src=".",e.head.appendChild(t),t.remove()}}();`;
-				internal_add(safari10NoModuleFix);
-
-				had_emitted_nomodule_script = true;
-			}
-
-			internal_add(script, additionalAttrs);
+			emit_nomodule_fix_if_needed();
+			add_nomodule_script_unsafe(script, additionalAttrs);
 		}
 
 		if (client.legacy_polyfills_file) {
 			add_nomodule_script('', `src=${s(prefixed(client.legacy_polyfills_file))}`);
 		}
 
-		// Init SvelteKit global variable only after the (possible) legacy polyfill loading (for the `new URL()` constructor support).
-		const init = `__sveltekit_${options.version_hash}={env:${s(
-			public_env
-		)},assets:${asset_expression}}`;
-		csp.add_script(init);
-		body += `\n\t\t<script${
-			csp.script_needs_nonce ? ` nonce="${csp.nonce}"` : ''
-		}>${init}</script>`;
-
-		let has_legacy_entry = false;
-
 		if (client.start.legacy_file && client.app.legacy_file) {
-			has_legacy_entry = true;
+			// Have legacy support
 
-			const startup_script_js = `window.${startup_script_var_name} = function (m) { (function (start, app) {${startupContent}})(m[0].start, m[1]) };`;
-			body += `\n\t\t<script${
-				csp.script_needs_nonce ? ` nonce="${csp.nonce}"` : ''
-			}>${startup_script_js}</script>`;
-			csp.add_script(startup_script_js);
-
-			const importAndStartCall = `Promise.all([System.import(${s(
-				prefixed(client.start.legacy_file)
-			)}),System.import(${s(
-				prefixed(client.app.legacy_file)
-			)})]).then(window.${startup_script_var_name});`;
-
-			add_nomodule_script(importAndStartCall);
-
-			const detectModernBrowserCode = `try{import.meta.url;import("_").catch(()=>1);}catch(e){}window.${detectModernBrowserVarName}=true;`;
+			const detectModernBrowserCode = `try{import.meta.url;import("_").catch(()=>1);}catch(e){}window.${detectModernBrowserVarName}=true;window.${modern_import_func_var_name}=(path)=>import(path);`;
 			head += `\n\t\t<script type="module"${
 				csp.script_needs_nonce ? ` nonce="${csp.nonce}"` : ''
 			}>${detectModernBrowserCode}</script>`;
 			csp.add_script(detectModernBrowserCode);
 
-			const dynamicFallbackInlineCode =
-				`!function(){if(window.${detectModernBrowserVarName})return;console.warn("kit: loading legacy build because dynamic import or import.meta.url is unsupported, syntax error above should be ignored");` +
+			emit_nomodule_fix_if_needed();
+
+			add_traditional_script(generate_init_script(true), `id=${s(init_script_id)}`);
+
+			add_nomodule_script(`window.${startup_script_var_name}();`);
+
+			const dynamicInitOrFallbackInlineCode =
+				`!function(){if(window.${detectModernBrowserVarName}){window.${startup_script_var_name}();}else{console.warn("kit: loading legacy build because dynamic import or import.meta.url is unsupported, syntax error above should be ignored");` +
 				(client.legacy_polyfills_file
 					? `var n=document.createElement("script");n.src=${s(
 							prefixed(client.legacy_polyfills_file)
-					  )},n.onload=function(){${importAndStartCall}},document.body.appendChild(n)`
-					: importAndStartCall) +
-				`}();`;
-			head += `\n\t\t<script type="module"${
+					  )},n.onload=window.${startup_script_var_name},document.body.appendChild(n)`
+					: `window.${startup_script_var_name}`) +
+				`}}();`;
+			body += `\n\t\t\t<script type="module"${
 				csp.script_needs_nonce ? ` nonce="${csp.nonce}"` : ''
-			}>${dynamicFallbackInlineCode}</script>`;
-			csp.add_script(dynamicFallbackInlineCode);
+			}>${dynamicInitOrFallbackInlineCode}</script>`;
+			csp.add_script(dynamicInitOrFallbackInlineCode);
+		} else {
+			// No legacy support
+
+			add_traditional_script(generate_init_script(false));
 		}
 
-		// prettier-ignore
-		const init_app = has_legacy_entry ? `
-		if(window.${detectModernBrowserVarName}) {
-			Promise.all([import(${s(prefixed(client.start.file))}), import(${s(prefixed(client.app.file))})]).then(window.${startup_script_var_name});
-		}
-		` : `
-		import { start } from ${s(prefixed(client.start.file))};
-		import * as app from ${s(prefixed(client.app.file))};
-		${startupContent}`;
-
-		const attributes = ['type="module"', `data-sveltekit-hydrate="${target}"`];
-
-		csp.add_script(init_app);
-
-		if (csp.script_needs_nonce) {
-			attributes.push(`nonce="${csp.nonce}"`);
-		}
-
-		body += `\n\t\t<script ${attributes.join(' ')}>${init_app}</script>`;
+		body += '\n\t\t';
 	}
 
-	if (page_config.ssr && page_config.csr) {
-		body += `\n\t${fetched
-			.map((item) =>
-				serialize_data(item, resolve_opts.filterSerializedResponseHeaders, !!state.prerendering)
-			)
-			.join('\n\t')}`;
-	}
-
-	if (options.service_worker) {
-		const opts = __SVELTEKIT_DEV__ ? `, { type: 'module' }` : '';
-
-		// we use an anonymous function instead of an arrow function to support
-		// older browsers (https://github.com/sveltejs/kit/pull/5417)
-		const init_service_worker = `
-			if ('serviceWorker' in navigator) {
-				addEventListener('load', function () {
-					navigator.serviceWorker.register('${prefixed('service-worker.js')}'${opts});
-				});
-			}
-		`;
-
-		// always include service worker unless it's turned off explicitly
-		csp.add_script(init_service_worker);
-
-		head += `
-		<script${csp.script_needs_nonce ? ` nonce="${csp.nonce}"` : ''}>${init_service_worker}</script>`;
-	}
+	const headers = new Headers({
+		'x-sveltekit-page': 'true',
+		'content-type': 'text/html'
+	});
 
 	if (state.prerendering) {
 		// TODO read headers set with setHeaders and convert into http-equiv where possible
@@ -499,6 +559,19 @@ export async function render_response({
 
 		if (http_equiv.length > 0) {
 			head = http_equiv.join('\n') + head;
+		}
+	} else {
+		const csp_header = csp.csp_provider.get_header();
+		if (csp_header) {
+			headers.set('content-security-policy', csp_header);
+		}
+		const report_only_header = csp.report_only_provider.get_header();
+		if (report_only_header) {
+			headers.set('content-security-policy-report-only', report_only_header);
+		}
+
+		if (link_header_preloads.size) {
+			headers.set('link', Array.from(link_header_preloads).join(', '));
 		}
 	}
 
@@ -520,39 +593,124 @@ export async function render_response({
 			done: true
 		})) || '';
 
-	if (DEV && page_config.csr) {
-		if (transformed.split('<!--').length < html.split('<!--').length) {
-			// the \u001B stuff is ANSI codes, so that we don't need to add a library to the runtime
-			// https://svelte.dev/repl/1b3f49696f0c44c881c34587f2537aa2
-			console.warn(
-				"\u001B[1m\u001B[31mRemoving comments in transformPageChunk can break Svelte's hydration\u001B[39m\u001B[22m"
-			);
+	if (!chunks) {
+		headers.set('etag', `"${hash(transformed)}"`);
+	}
+
+	if (DEV) {
+		if (page_config.csr) {
+			if (transformed.split('<!--').length < html.split('<!--').length) {
+				// the \u001B stuff is ANSI codes, so that we don't need to add a library to the runtime
+				// https://svelte.dev/repl/1b3f49696f0c44c881c34587f2537aa2
+				console.warn(
+					"\u001B[1m\u001B[31mRemoving comments in transformPageChunk can break Svelte's hydration\u001B[39m\u001B[22m"
+				);
+			}
+		} else {
+			if (chunks) {
+				console.warn(
+					'\u001B[1m\u001B[31mReturning promises from server `load` functions will only work if `csr === true`\u001B[39m\u001B[22m'
+				);
+			}
 		}
 	}
 
-	const headers = new Headers({
-		'x-sveltekit-page': 'true',
-		'content-type': 'text/html',
-		etag: `"${hash(transformed)}"`
-	});
+	return !chunks
+		? text(transformed, {
+				status,
+				headers
+		  })
+		: new Response(
+				new ReadableStream({
+					async start(controller) {
+						controller.enqueue(encoder.encode(transformed + '\n'));
+						for await (const chunk of chunks) {
+							controller.enqueue(encoder.encode(chunk));
+						}
+						controller.close();
+					},
 
-	if (!state.prerendering) {
-		const csp_header = csp.csp_provider.get_header();
-		if (csp_header) {
-			headers.set('content-security-policy', csp_header);
-		}
-		const report_only_header = csp.report_only_provider.get_header();
-		if (report_only_header) {
-			headers.set('content-security-policy-report-only', report_only_header);
-		}
+					type: 'bytes'
+				}),
+				{
+					headers: {
+						'content-type': 'text/html'
+					}
+				}
+		  );
+}
 
-		if (link_header_preloads.size) {
-			headers.set('link', Array.from(link_header_preloads).join(', '));
+/**
+ * If the serialized data contains promises, `chunks` will be an
+ * async iterable containing their resolutions
+ * @param {import('types').RequestEvent} event
+ * @param {import('types').SSROptions} options
+ * @param {Array<import('types').ServerDataNode | null>} nodes
+ * @param {string} global
+ * @returns {{ data: string, chunks: AsyncIterable<string> | null }}
+ */
+function get_data(event, options, nodes, global) {
+	let promise_id = 1;
+	let count = 0;
+
+	const { iterator, push, done } = create_async_iterator();
+
+	/** @param {any} thing */
+	function replacer(thing) {
+		if (typeof thing?.then === 'function') {
+			const id = promise_id++;
+			count += 1;
+
+			thing
+				.then(/** @param {any} data */ (data) => ({ data }))
+				.catch(
+					/** @param {any} error */ async (error) => ({
+						error: await handle_error_and_jsonify(event, options, error)
+					})
+				)
+				.then(
+					/**
+					 * @param {{data: any; error: any}} result
+					 */
+					async ({ data, error }) => {
+						count -= 1;
+
+						let str;
+						try {
+							str = devalue.uneval({ id, data, error }, replacer);
+						} catch (e) {
+							error = await handle_error_and_jsonify(
+								event,
+								options,
+								new Error(`Failed to serialize promise while rendering ${event.route.id}`)
+							);
+							data = undefined;
+							str = devalue.uneval({ id, data, error }, replacer);
+						}
+
+						push(`<script>${global}.resolve(${str})</script>\n`);
+						if (count === 0) done();
+					}
+				);
+
+			return `${global}.defer(${id})`;
 		}
 	}
 
-	return text(transformed, {
-		status,
-		headers
-	});
+	try {
+		const strings = nodes.map((node) => {
+			if (!node) return 'null';
+
+			return `{"type":"data","data":${devalue.uneval(node.data, replacer)},${stringify_uses(node)}${
+				node.slash ? `,"slash":${JSON.stringify(node.slash)}` : ''
+			}}`;
+		});
+
+		return {
+			data: `[${strings.join(',')}]`,
+			chunks: count > 0 ? iterator : null
+		};
+	} catch (e) {
+		throw new Error(clarify_devalue_error(event, /** @type {any} */ (e)));
+	}
 }

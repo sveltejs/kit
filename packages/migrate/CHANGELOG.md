@@ -1,5 +1,19 @@
 # svelte-migrate
 
+## 1.1.3
+
+### Patch Changes
+
+- fix: include index in typesVersions because it's always matched ([#9147](https://github.com/sveltejs/kit/pull/9147))
+
+## 1.1.2
+
+### Patch Changes
+
+- fix: update existing exports with prepended outdir ([#9133](https://github.com/sveltejs/kit/pull/9133))
+
+- fix: use typesVersions to wire up deep imports ([#9133](https://github.com/sveltejs/kit/pull/9133))
+
 ## 1.1.1
 
 ### Patch Changes

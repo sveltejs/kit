@@ -52,13 +52,11 @@ function update_scroll_positions(index) {
 }
 
 /**
- * @param {{
- *   app: import('./types').SvelteKitApp;
- *   target: HTMLElement;
- * }} opts
+ * @param {import('./types').SvelteKitApp} app
+ * @param {HTMLElement} target
  * @returns {import('./types').Client}
  */
-export function create_client({ app, target }) {
+export function create_client(app, target) {
 	const routes = parse(app);
 
 	const default_layout_loader = app.nodes[0];
@@ -736,22 +734,8 @@ export function create_client({ app, target }) {
 	 * @returns {import('./types').DataNode | null}
 	 */
 	function create_data_node(node, previous) {
-		if (node?.type === 'data') {
-			return {
-				type: 'data',
-				data: node.data,
-				uses: {
-					dependencies: new Set(node.uses.dependencies ?? []),
-					params: new Set(node.uses.params ?? []),
-					parent: !!node.uses.parent,
-					route: !!node.uses.route,
-					url: !!node.uses.url
-				},
-				slash: node.slash
-			};
-		} else if (node?.type === 'skip') {
-			return previous ?? null;
-		}
+		if (node?.type === 'data') return node;
+		if (node?.type === 'skip') return previous ?? null;
 		return null;
 	}
 
@@ -774,7 +758,7 @@ export function create_client({ app, target }) {
 		errors.forEach((loader) => loader?.().catch(() => {}));
 		loaders.forEach((loader) => loader?.[1]().catch(() => {}));
 
-		/** @type {import('types').ServerData | null} */
+		/** @type {import('types').ServerNodesResponse | import('types').ServerRedirectNode | null} */
 		let server_data = null;
 
 		const url_changed = current.url ? id !== current.url.pathname + current.url.search : false;
@@ -1728,6 +1712,10 @@ export function create_client({ app, target }) {
 			try {
 				const branch_promises = node_ids.map(async (n, i) => {
 					const server_data_node = server_data_nodes[i];
+					// Type isn't completely accurate, we still need to deserialize uses
+					if (server_data_node?.uses) {
+						server_data_node.uses = deserialize_uses(server_data_node.uses);
+					}
 
 					return load_node({
 						loader: app.nodes[n],
@@ -1778,7 +1766,7 @@ export function create_client({ app, target }) {
 /**
  * @param {URL} url
  * @param {boolean[]} invalid
- * @returns {Promise<import('types').ServerData>}
+ * @returns {Promise<import('types').ServerNodesResponse |import('types').ServerRedirectNode>}
  */
 async function load_data(url, invalid) {
 	const data_url = new URL(url);
@@ -1792,29 +1780,143 @@ async function load_data(url, invalid) {
 	);
 
 	const res = await native_fetch(data_url.href);
-	const data = await res.json();
 
 	if (!res.ok) {
 		// error message is a JSON-stringified string which devalue can't handle at the top level
 		// turn it into a HttpError to not call handleError on the client again (was already handled on the server)
-		throw new HttpError(res.status, data);
+		throw new HttpError(res.status, await res.json());
 	}
 
-	// revive devalue-flattened data
-	data.nodes?.forEach((/** @type {any} */ node) => {
-		if (node?.type === 'data') {
-			node.data = devalue.unflatten(node.data);
-			node.uses = {
-				dependencies: new Set(node.uses.dependencies ?? []),
-				params: new Set(node.uses.params ?? []),
-				parent: !!node.uses.parent,
-				route: !!node.uses.route,
-				url: !!node.uses.url
+	return new Promise(async (resolve) => {
+		/**
+		 * Kinda support somehow legacy environments that don't support the Stream API.
+		 * @param {Response} response
+		 */
+		const sloppy_legacy_friendly_reader_decoder = (response) => {
+			if ('body' in response && typeof TextDecoder !== 'undefined') {
+				return {
+					reader: /** @type {ReadableStream<Uint8Array>} */ (res.body).getReader(),
+					decoder: /** @type {{decode: (value: BufferSource | string | undefined) => string}} */ (
+						new TextDecoder()
+					)
+				};
+			}
+			// otherwise, we're in a legacy environment that doesn't support `Response.body`, so we shall simulate it
+
+			/** @type {string[] | undefined} */
+			let text_lines = undefined;
+			let current_line = 0;
+
+			return {
+				reader: {
+					read: async () => {
+						if (text_lines === undefined) {
+							const text = await res.text();
+
+							// Split the string on \n or \r characters
+							text_lines = text.split(/\r?\n|\r|\n/g);
+						}
+
+						if (current_line >= text_lines.length) {
+							return { done: true, value: undefined };
+						} else {
+							return { done: false, value: text_lines[current_line++] };
+						}
+					}
+				},
+				decoder: {
+					/**
+					 *
+					 * @param {BufferSource | string | undefined} value
+					 */
+					decode: (value) => /** @type {string} */ (value)
+				}
 			};
+		};
+
+		/**
+		 * Map of deferred promises that will be resolved by a subsequent chunk of data
+		 * @type {Map<string, import('types').Deferred>}
+		 */
+		const deferreds = new Map();
+		const { reader, decoder } = sloppy_legacy_friendly_reader_decoder(res);
+
+		/**
+		 * @param {any} data
+		 */
+		function deserialize(data) {
+			return devalue.unflatten(data, {
+				Promise: (id) => {
+					return new Promise((fulfil, reject) => {
+						deferreds.set(id, { fulfil, reject });
+					});
+				}
+			});
+		}
+
+		let text = '';
+
+		while (true) {
+			// Format follows ndjson (each line is a JSON object) or regular JSON spec
+			const { done, value } = await reader.read();
+			if (done && !text) break;
+
+			text += !value && text ? '\n' : decoder.decode(value); // no value -> final chunk -> add a new line to trigger the last parse
+
+			while (true) {
+				const split = text.indexOf('\n');
+				if (split === -1) {
+					break;
+				}
+
+				const node = JSON.parse(text.slice(0, split));
+				text = text.slice(split + 1);
+
+				if (node.type === 'redirect') {
+					return resolve(node);
+				}
+
+				if (node.type === 'data') {
+					// This is the first (and possibly only, if no pending promises) chunk
+					node.nodes?.forEach((/** @type {any} */ node) => {
+						if (node?.type === 'data') {
+							node.uses = deserialize_uses(node.uses);
+							node.data = deserialize(node.data);
+						}
+					});
+
+					resolve(node);
+				} else if (node.type === 'chunk') {
+					// This is a subsequent chunk containing deferred data
+					const { id, data, error } = node;
+					const deferred = /** @type {import('types').Deferred} */ (deferreds.get(id));
+					deferreds.delete(id);
+
+					if (error) {
+						deferred.reject(deserialize(error));
+					} else {
+						deferred.fulfil(deserialize(data));
+					}
+				}
+			}
 		}
 	});
 
-	return data;
+	// TODO edge case handling necessary? stream() read fails?
+}
+
+/**
+ * @param {any} uses
+ * @return {import('types').Uses}
+ */
+function deserialize_uses(uses) {
+	return {
+		dependencies: new Set(uses?.dependencies ?? []),
+		params: new Set(uses?.params ?? []),
+		parent: !!uses?.parent,
+		route: !!uses?.route,
+		url: !!uses?.url
+	};
 }
 
 function reset_focus() {

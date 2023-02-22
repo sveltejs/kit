@@ -89,6 +89,11 @@ export type CSRRoute = {
 	leaf: [has_server_load: boolean, node_loader: CSRPageNodeLoader];
 };
 
+export interface Deferred {
+	fulfil: (value: any) => void;
+	reject: (error: Error) => void;
+}
+
 export type GetParams = (match: RegExpExecArray) => Record<string, string>;
 
 export interface ServerHooks {
@@ -203,18 +208,20 @@ export interface RouteData {
 	} | null;
 }
 
-export type ServerData =
-	| {
-			type: 'redirect';
-			location: string;
-	  }
-	| {
-			type: 'data';
-			/**
-			 * If `null`, then there was no load function
-			 */
-			nodes: Array<ServerDataNode | ServerDataSkippedNode | ServerErrorNode | null>;
-	  };
+export type ServerRedirectNode = {
+	type: 'redirect';
+	location: string;
+};
+
+export type ServerNodesResponse = {
+	type: 'data';
+	/**
+	 * If `null`, then there was no load function <- TODO is this outdated now with the recent changes?
+	 */
+	nodes: Array<ServerDataNode | ServerDataSkippedNode | ServerErrorNode | null>;
+};
+
+export type ServerDataResponse = ServerRedirectNode | ServerNodesResponse;
 
 /**
  * Signals a successful response of the server `load` function.
@@ -223,9 +230,23 @@ export type ServerData =
  */
 export interface ServerDataNode {
 	type: 'data';
+	/**
+	 * The serialized version of this contains a serialized representation of any deferred promises,
+	 * which will be resolved later through chunk nodes.
+	 */
 	data: Record<string, any> | null;
 	uses: Uses;
 	slash?: TrailingSlash;
+}
+
+/**
+ * Resolved data/error of a deferred promise.
+ */
+export interface ServerDataChunkNode {
+	type: 'chunk';
+	id: number;
+	data?: Record<string, any>;
+	error?: any;
 }
 
 /**
