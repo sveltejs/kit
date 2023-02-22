@@ -12,7 +12,8 @@
 	import Search from '$lib/search/Search.svelte';
 	import SearchBox from '$lib/search/SearchBox.svelte';
 	import Logo from './home/svelte-logo.svg';
-	let bannerToggle = false;
+
+	let show_banner = false;
 </script>
 
 <Icons />
@@ -62,7 +63,7 @@
 	<slot />
 </main>
 
-{#if !bannerToggle}
+{#if !show_banner}
 	<div class="banner">
 		<a target="_blank" rel="noopener noreferrer" href="https://hack.sveltesociety.dev/">
 			<span class="small">
@@ -72,7 +73,7 @@
 				<strong>Announcing SvelteHack</strong> Participate in our first hackathon and win →
 			</span>
 		</a>
-		<button on:click={() => (bannerToggle = !bannerToggle)}> ✕ </button>
+		<button on:click={() => (show_banner = !show_banner)}> ✕ </button>
 	</div>
 {/if}
 
@@ -195,7 +196,7 @@
 
 	.banner button {
 		position: absolute;
-		right: 15px;
+		right: 30px;
 		font-size: 18px;
 	}
 </style>
