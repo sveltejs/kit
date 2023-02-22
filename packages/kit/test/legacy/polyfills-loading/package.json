@@ -1,0 +1,30 @@
+{
+	"name": "legacy-basic",
+	"version": "0.0.1",
+	"private": true,
+	"scripts": {
+		"dev": "vite dev",
+		"build": "vite build",
+		"preview": "vite preview",
+		"check": "svelte-kit sync && svelte-check --tsconfig ./jsconfig.json",
+		"check:watch": "svelte-kit sync && svelte-check --tsconfig ./jsconfig.json --watch",
+		"test": "pnpm test:dev && pnpm test:build",
+		"test:dev": "cross-env DEV=true playwright test",
+		"test:build": "pnpm test:build:no-polyfill && pnpm test:build:only-legacy-polyfill && pnpm test:build:only-modern-polyfill && pnpm test:build:both-polyfills",
+		"test:build:no-polyfill": "cross-env LEGACY_POLYFILL=false MODERN_POLYFILL=false playwright test",
+		"test:build:only-legacy-polyfill": "cross-env LEGACY_POLYFILL=true MODERN_POLYFILL=false playwright test",
+		"test:build:only-modern-polyfill": "cross-env LEGACY_POLYFILL=false MODERN_POLYFILL=true playwright test",
+		"test:build:both-polyfills": "cross-env LEGACY_POLYFILL=true MODERN_POLYFILL=true playwright test"
+	},
+	"devDependencies": {
+		"@sveltejs/kit": "workspace:*",
+		"@vitejs/plugin-legacy": "^4.0.0",
+		"cross-env": "^7.0.3",
+		"svelte": "^3.44.0",
+		"svelte-check": "^2.7.1",
+		"terser": ">=5.4.0 <6.0.0",
+		"typescript": "^4.7.4",
+		"vite": "^4.0.4"
+	},
+	"type": "module"
+}
