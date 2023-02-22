@@ -13,7 +13,7 @@
 	import SearchBox from '$lib/search/SearchBox.svelte';
 	import Logo from './home/svelte-logo.svg';
 
-	let show_banner = false;
+	let banner_height = '48px';
 </script>
 
 <Icons />
@@ -59,23 +59,21 @@
 	</svelte:fragment>
 </Nav>
 
-<main id="main">
+<main id="main" style:--banner-footer-height={banner_height}>
 	<slot />
 </main>
 
-{#if !show_banner}
-	<div class="banner">
-		<a target="_blank" rel="noopener noreferrer" href="https://hack.sveltesociety.dev/">
-			<span class="small">
-				<strong>Announcing SvelteHack</strong> Participate →
-			</span>
-			<span class="large">
-				<strong>Announcing SvelteHack</strong> Participate in our first hackathon and win →
-			</span>
-		</a>
-		<button on:click={() => (show_banner = !show_banner)}> ✕ </button>
-	</div>
-{/if}
+<div class="banner" style:--banner-footer-height={banner_height}>
+	<a target="_blank" rel="noopener noreferrer" href="https://hack.sveltesociety.dev/">
+		<span class="small">
+			<strong>Announcing SvelteHack</strong> Participate →
+		</span>
+		<span class="large">
+			<strong>Announcing SvelteHack</strong> Participate in our first hackathon and win →
+		</span>
+	</a>
+	<button on:click={() => (banner_height = '0px')}> ✕ </button>
+</div>
 
 {#if browser}
 	<SearchBox />
