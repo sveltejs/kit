@@ -524,7 +524,7 @@ export async function render_response({
 					? `var n=document.createElement("script");n.src=${s(
 							prefixed(client.legacy_polyfills_file)
 					  )},n.onload=window.${startup_script_var_name},document.body.appendChild(n)`
-					: `window.${startup_script_var_name}`) +
+					: `window.${startup_script_var_name}()`) +
 				`}}();`;
 			body += `\n\t\t\t<script type="module"${
 				csp.script_needs_nonce ? ` nonce="${csp.nonce}"` : ''
