@@ -289,14 +289,6 @@ function kit({ svelte_config }) {
 					__SVELTEKIT_DEV__: 'true',
 					__SVELTEKIT_EMBEDDED__: kit.embedded ? 'true' : 'false'
 				};
-
-				new_config.ssr = {
-					// Without this, Vite will treat `@sveltejs/kit` as noExternal if it's
-					// a linked dependency, and that causes modules to be imported twice
-					// under different IDs, which breaks a bunch of stuff
-					// https://github.com/vitejs/vite/pull/9296
-					external: ['@sveltejs/kit', 'cookie', 'set-cookie-parser']
-				};
 			}
 
 			warn_overridden_config(config, new_config);
