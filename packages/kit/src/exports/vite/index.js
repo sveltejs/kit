@@ -257,6 +257,7 @@ function kit({ svelte_config }) {
 
 			// Vitest will only call resolveId for packages that are being bundled
 			// Without this it will not be able to load our virtual modules
+			// See https://vitest.dev/config/#deps-registernodeloader
 			const noExternal = process.env.TEST ? ['@sveltejs/kit'] : [];
 
 			if (is_build) {
