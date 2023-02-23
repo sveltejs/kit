@@ -141,15 +141,15 @@ Enables precompressing using gzip and brotli for assets and prerendered pages. I
 
 If you need to change the name of the environment variables used to configure the deployment (for example, to deconflict with environment variables you don't control), you can specify a prefix:
 
-### polyfill
-
-Controls whether your build will load polyfills for missing modules. It defaults to `true`, and should only be disabled when using Node 18.11 or greater.
-
 ```js
 envPrefix: 'MY_CUSTOM_';
 ```
 
-```
+### polyfill
+
+Controls whether your build will load polyfills for missing modules. It defaults to `true`, and should only be disabled when using Node 18.11 or greater.
+
+```sh
 MY_CUSTOM_HOST=127.0.0.1 \
 MY_CUSTOM_PORT=4000 \
 MY_CUSTOM_ORIGIN=https://my.site \
