@@ -216,11 +216,6 @@ const plugin = function (defaults = {}) {
 					/** @type {import('@sveltejs/kit').RouteDefinition<any>[]} */ (group.routes)
 				);
 
-				if (singular) {
-					// Special case: One function for all routes
-					static_config.routes.push({ src: '/.*', dest: `/${name}` });
-				}
-
 				for (const route of group.routes) {
 					functions.set(route.pattern.toString(), name);
 				}
@@ -284,6 +279,12 @@ const plugin = function (defaults = {}) {
 				} else if (!singular) {
 					static_config.routes.push({ src: src + '(?:/__data.json)?$', dest: `/${name}` });
 				}
+			}
+
+			if (singular) {
+				// Common case: One function for all routes
+				// Needs to happen after ISR or else regex swallows all other matches
+				static_config.routes.push({ src: '/.*', dest: `/fn` });
 			}
 
 			builder.log.minor('Copying assets...');
