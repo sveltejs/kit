@@ -621,9 +621,12 @@ importers:
       cross-env: ^7.0.3
       svelte: ^3.44.0
       svelte-check: ^2.7.1
+      systemjs: ^6.13.0
       terser: '>=5.4.0 <6.0.0'
       typescript: ^4.7.4
       vite: ^4.0.4
+    dependencies:
+      systemjs: 6.13.0
     devDependencies:
       '@sveltejs/kit': link:../../..
       '@vitejs/plugin-legacy': 4.0.1_terser@5.15.0+vite@4.1.1
@@ -7155,7 +7158,6 @@ packages:
 
   /systemjs/6.13.0:
     resolution: {integrity: sha512-P3cgh2bpaPvAO2NE3uRp/n6hmk4xPX4DQf+UzTlCAycssKdqhp6hjw+ENWe+aUS7TogKRFtptMosTSFeC6R55g==}
-    dev: true
 
   /tar-fs/2.1.1:
     resolution: {integrity: sha512-V0r2Y9scmbDRLCNex/+hYzvp/zyYjvFbHPNgVTKfQvVrb6guiE/fxP+XblDNR011utopbkex2nM4dHNV6GDsng==}

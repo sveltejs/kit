@@ -1,10 +1,12 @@
 export const detectModernBrowserVarName = '__KIT_is_modern_browser';
 
+/** @typedef {{ removeScriptModule?: boolean; stripNoModule?: boolean; partialESModule?: boolean; manualSystemJSPath?: string; }} RouteOptions */
+
 /**
  * Make the legacy scripts be loaded, simulating legacy browsers that goes only to `<script nomodule>`
  * @param {import('@playwright/test').Page} page
  * @param {string} path
- * @param {{ removeScriptModule?: boolean; stripNoModule?: boolean; partialESModule?: boolean; }} options
+ * @param {RouteOptions} options
  * @returns
  */
 export const routeLegacy = (page, path, options = {}) =>
@@ -28,6 +30,14 @@ export const routeLegacy = (page, path, options = {}) =>
 			);
 		}
 
+		if (options.manualSystemJSPath) {
+			const scriptStart = '<script';
+			const scriptLoadSystemJS = `<script src=${JSON.stringify(
+				options.manualSystemJSPath
+			)}></script>`;
+			body = body.replace(scriptStart, `${scriptLoadSystemJS}\n${scriptStart}`);
+		}
+
 		route.fulfill({ response, body, headers: response.headers() });
 	});
 
@@ -36,19 +46,21 @@ export const routeLegacy = (page, path, options = {}) =>
  * @param {import('@playwright/test').Page} page
  * @param {string} path
  * @param {{ simulatePartialESModule: boolean; } | undefined} legacyState
+ * @param {string | undefined} manualSystemJSPath
  * @returns
  */
-export const routeLegacyCommon = (page, path, legacyState) => {
+export const routeLegacyCommon = (page, path, legacyState, manualSystemJSPath = undefined) => {
 	if (legacyState === undefined) {
 		return Promise.resolve();
 	}
 	// otherwise
 
-	return routeLegacy(
-		page,
-		path,
-		legacyState.simulatePartialESModule
-			? { removeScriptModule: false, stripNoModule: false, partialESModule: true }
-			: {}
-	);
+	/** @type {RouteOptions} */
+	const opts = legacyState.simulatePartialESModule
+		? { removeScriptModule: false, stripNoModule: false, partialESModule: true }
+		: {};
+
+	opts.manualSystemJSPath = manualSystemJSPath;
+
+	return routeLegacy(page, path, opts);
 };

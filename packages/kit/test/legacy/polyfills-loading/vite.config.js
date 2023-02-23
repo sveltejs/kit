@@ -9,6 +9,7 @@ const config = {
 		sveltekit(),
 		legacy({
 			polyfills: legacy_polyfill,
+			externalSystemJS: !legacy_polyfill,
 			additionalLegacyPolyfills: legacy_polyfill
 				? [path.resolve(__dirname, 'polyfills/legacy.js')]
 				: undefined,

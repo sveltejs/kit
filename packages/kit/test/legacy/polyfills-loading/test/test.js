@@ -39,12 +39,11 @@ legacyStates.forEach((legacyState) =>
 		() => {
 			test.skip(({ javaScriptEnabled }) => !(javaScriptEnabled ?? true));
 
-			// Since we must load SystemJS in legacy, and it's loaded in the legacy polyfill,
-			//  we cannot test the case that we're on legacy but not loading the legacy polyfill.
-			test.skip(() => !legacy_polyfill && !!legacyState);
+			// Load SystemJS manually if the legacy polyfill isn't loaded and we're on legacy
+			const systemJSIncludePath = !legacy_polyfill && !!legacyState ? '/systemjs' : undefined;
 
 			test('check global indicators variables', async ({ page }) => {
-				await routeLegacyCommon(page, '/', legacyState);
+				await routeLegacyCommon(page, '/', legacyState, systemJSIncludePath);
 
 				await page.goto('/');
 
