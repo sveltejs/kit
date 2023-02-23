@@ -306,6 +306,7 @@ export async function render_response({
 			];
 
 			if (chunks) {
+				// TODO: Fix this code to be legacy compatible
 				init_input['deferred'] = 'new Map()';
 
 				properties.push(`defer: (id) => new Promise((fulfil, reject) => {
@@ -321,9 +322,9 @@ export async function render_response({
 						}`);
 			}
 
-			blocks.push(`${global} = {
+			const global_kit_prop_init = `${global} = {
 						${properties.join(',\n\t\t\t\t\t\t')}
-					};`);
+					};`;
 
 			const args = [`app`, `${global}.element`];
 
@@ -407,14 +408,15 @@ export async function render_response({
 
 			return legacy_support_and_export_init
 				? `
-				window.${startup_script_var_name} = function () { (function (${init_input_list
-						.map(([key]) => key)
-						.join(', ')}) {
+				window.${startup_script_var_name} = function () {
+					${global_kit_prop_init}
+					(function (${init_input_list.map(([key]) => key).join(', ')}) {
 					${blocks.join('\n\n\t\t\t\t\t')}
 				})(${init_input_list.map(([, value]) => value).join(', ')}); };
 			`
 				: `
 				{
+					${global_kit_prop_init}
 					${[...init_input_list.map(([key, val]) => `const ${key} = ${val};`), '', ...blocks].join(
 						'\n\n\t\t\t\t\t'
 					)}
