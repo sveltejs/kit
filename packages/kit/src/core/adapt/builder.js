@@ -43,16 +43,23 @@ export function create_builder({
 	 * we expose a stable type that adapters can use to group/filter routes
 	 */
 	const routes = route_data.map((route) => {
-		const methods =
-			/** @type {import('types').HttpMethod[]} */
-			(server_metadata.routes.get(route.id)?.methods);
+		const { methods, pageMethods, endpointMethods } =
+			/** @type {NonNullable<ReturnType<typeof server_metadata['routes']['get']>>} */ (
+				server_metadata.routes.get(route.id)
+			);
 		const config = server_metadata.routes.get(route.id)?.config;
+
+		server_metadata.routes.get(route.id)?.methods;
 
 		/** @type {import('types').RouteDefinition} */
 		const facade = {
 			id: route.id,
-			hasEndpoint: !!route.endpoint,
-			hasPage: !!route.page,
+			endpoint: {
+				methods: endpointMethods
+			},
+			page: {
+				methods: pageMethods
+			},
 			segments: get_route_segments(route.id).map((segment) => ({
 				dynamic: segment.includes('['),
 				rest: segment.includes('[...'),

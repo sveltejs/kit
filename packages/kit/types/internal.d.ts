@@ -269,6 +269,8 @@ export interface ServerMetadata {
 		string,
 		{
 			prerender: PrerenderOption | undefined;
+			endpointMethods: HttpMethod[];
+			pageMethods: Extract<HttpMethod, 'GET' | 'POST'>[];
 			methods: HttpMethod[];
 			config: any;
 		}
