@@ -33,7 +33,6 @@
 		"@types/sade": "^1.7.4",
 		"@types/set-cookie-parser": "^2.4.2",
 		"eslint": "^8.32.0",
-		"eslint-plugin-compat": "^4.0.2",
 		"marked": "^4.2.3",
 		"rollup": "^3.7.0",
 		"svelte": "^3.55.1",
@@ -59,10 +58,9 @@
 		"postinstall.js"
 	],
 	"scripts": {
-		"compat": "eslint -c compat.eslintrc.cjs src/runtime/app/*.js src/runtime/client/*.js",
 		"lint": "prettier --check . --config ../../.prettierrc --ignore-path .gitignore && eslint src/**/*.js",
-		"check": "tsc && pnpm compat",
-		"check:all": "pnpm check && pnpm -r --filter=\"./**\" check",
+		"check": "tsc",
+		"check:all": "tsc && pnpm -r --filter=\"./**\" check",
 		"format": "prettier --write . --config ../../.prettierrc --ignore-path .gitignore",
 		"test": "pnpm test:unit && pnpm test:integration",
 		"test:integration": "pnpm -r --workspace-concurrency 1 --filter=\"./test/**\" test",

@@ -10,6 +10,7 @@ importers:
       '@rollup/plugin-node-resolve': ^15.0.1
       '@svitejs/changesets-changelog-github-compact': ^1.1.0
       eslint: ^8.33.0
+      eslint-plugin-compat: ^4.0.2
       eslint-plugin-unicorn: ^45.0.2
       playwright: ^1.29.2
       prettier: ^2.8.0
@@ -24,6 +25,7 @@ importers:
       '@rollup/plugin-node-resolve': 15.0.1_rollup@3.7.0
       '@svitejs/changesets-changelog-github-compact': 1.1.0
       eslint: 8.34.0
+      eslint-plugin-compat: 4.0.2_eslint@8.34.0
       eslint-plugin-unicorn: 45.0.2_eslint@8.34.0
       playwright: 1.29.2
       prettier: 2.8.0
@@ -273,7 +275,6 @@ importers:
       cookie: ^0.5.0
       devalue: ^4.3.0
       eslint: ^8.32.0
-      eslint-plugin-compat: ^4.0.2
       esm-env: ^1.0.0
       kleur: ^4.1.5
       magic-string: ^0.30.0
@@ -313,7 +314,6 @@ importers:
       '@types/sade': 1.7.4
       '@types/set-cookie-parser': 2.4.2
       eslint: 8.32.0
-      eslint-plugin-compat: 4.0.2_eslint@8.32.0
       marked: 4.2.3
       rollup: 3.7.0
       svelte: 3.55.1
@@ -3530,10 +3530,6 @@ packages:
     engines: {node: '>=6'}
     dev: true
 
-  /caniuse-lite/1.0.30001431:
-    resolution: {integrity: sha512-zBUoFU0ZcxpvSt9IU66dXVT/3ctO1cy4y9cscs1szkPlcWb6pasYM144GqrUygUbT+k7cmUCW61cvskjcv0enQ==}
-    dev: true
-
   /caniuse-lite/1.0.30001452:
     resolution: {integrity: sha512-Lkp0vFjMkBB3GTpLR8zk4NwW5EdRdnitwYJHDOOKIU85x4ckYCPQ+9WlVvSVClHxVReefkUMtWZH2l9KGlD51w==}
     dev: true
@@ -3730,11 +3726,6 @@ packages:
     resolution: {integrity: sha512-myzPgE7QodMg4nnd3K1TDoES/nADRStM8Gpz0D6nhkwbmwEnE0ZGJgoWsvQ722FR8D7xS0n0LV556RcEicjTyg==}
     dependencies:
       browserslist: 4.21.5
-    dev: true
-
-  /core-js/3.26.1:
-    resolution: {integrity: sha512-21491RRQVzUn0GGM9Z1Jrpr6PNPxPi+Za8OM9q4tksTSnlbXXGKK1nXNg/QvwFYettXvSX6zWKCtHHfjN4puyA==}
-    requiresBuild: true
     dev: true
 
   /core-js/3.28.0:
@@ -4134,7 +4125,7 @@ packages:
     engines: {node: '>=10'}
     dev: true
 
-  /eslint-plugin-compat/4.0.2_eslint@8.32.0:
+  /eslint-plugin-compat/4.0.2_eslint@8.34.0:
     resolution: {integrity: sha512-xqvoO54CLTVaEYGMzhu35Wzwk/As7rCvz/2dqwnFiWi0OJccEtGIn+5qq3zqIu9nboXlpdBN579fZcItC73Ycg==}
     engines: {node: '>=9.x'}
     peerDependencies:
@@ -4142,10 +4133,10 @@ packages:
     dependencies:
       '@mdn/browser-compat-data': 4.2.1
       ast-metadata-inferer: 0.7.0
-      browserslist: 4.21.4
-      caniuse-lite: 1.0.30001431
-      core-js: 3.26.1
-      eslint: 8.32.0
+      browserslist: 4.21.5
+      caniuse-lite: 1.0.30001452
+      core-js: 3.28.0
+      eslint: 8.34.0
       find-up: 5.0.0
       lodash.memoize: 4.1.2
       semver: 7.3.5
