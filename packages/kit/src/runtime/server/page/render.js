@@ -288,7 +288,34 @@ export async function render_response({
 			const blocks = [];
 
 			/** @type {Record<string, string>} */
+			const pre_init_input = {};
+
+			/** @type {Record<string, string>} */
 			const init_input = {};
+
+			/**
+			 *
+			 * @param {string[]} codeBlocks
+			 * @param {Record<string, string>} input
+			 * @param {string} separator
+			 */
+			const render_code_with_input = (codeBlocks, input, separator = '\n\t\t\t\t\t') => {
+				const input_list = Object.entries(input);
+				if (input_list.length === 0) {
+					return codeBlocks.join(separator);
+				}
+				// otherwise
+
+				return legacy_support_and_export_init
+					? `(function (${input_list.map(([key]) => key).join(', ')}) {
+					${blocks.join(separator)}
+				})(${input_list.map(([, value]) => value).join(', ')});`
+					: `${[
+							...input_list.map(([key, val]) => `const ${key} = ${val};`),
+							'',
+							...codeBlocks
+					  ].join(separator)}`;
+			};
 
 			const import_func = legacy_support_and_export_init ? 'import_func' : 'import';
 			if (legacy_support_and_export_init) {
@@ -306,19 +333,25 @@ export async function render_response({
 			];
 
 			if (chunks) {
-				// TODO: Fix this code to be legacy compatible
-				init_input['deferred'] = 'new Map()';
+				pre_init_input['deferred'] = 'new Map()';
 
-				properties.push(`defer: (id) => new Promise((fulfil, reject) => {
-							deferred.set(id, { fulfil, reject });
-						})`);
+				properties.push(`defer: function (id) { return new Promise(function (fulfil, reject) {
+							deferred.set(id, { fulfil: fulfil, reject: reject });
+						}) }`);
 
-				properties.push(`resolve: ({ id, data, error }) => {
-							const { fulfil, reject } = deferred.get(id);
+				properties.push(`resolve: function (result) {
+							${render_code_with_input(
+								[
+									`
 							deferred.delete(id);
 
-							if (error) reject(error);
-							else fulfil(data);
+							if (result.error) deferred_result.reject(result.error);
+							else deferred_result.fulfil(result.data);
+							`
+								],
+								{ deferred_result: 'deferred.get(result.id)' },
+								'\n\t\t\t\t\t\t\t'
+							)}
 						}`);
 			}
 
@@ -404,22 +437,20 @@ export async function render_response({
 					}`);
 			}
 
-			const init_input_list = Object.entries(init_input);
+			const setup_code = [
+				render_code_with_input([global_kit_prop_init], pre_init_input),
+				render_code_with_input(blocks, init_input)
+			].join('\n\n\t\t\t\t\t');
 
 			return legacy_support_and_export_init
 				? `
 				window.${startup_script_var_name} = function () {
-					${global_kit_prop_init}
-					(function (${init_input_list.map(([key]) => key).join(', ')}) {
-					${blocks.join('\n\n\t\t\t\t\t')}
-				})(${init_input_list.map(([, value]) => value).join(', ')}); };
+					${setup_code}
+				};
 			`
 				: `
 				{
-					${global_kit_prop_init}
-					${[...init_input_list.map(([key, val]) => `const ${key} = ${val};`), '', ...blocks].join(
-						'\n\n\t\t\t\t\t'
-					)}
+					${setup_code}
 				}
 			`;
 		};
