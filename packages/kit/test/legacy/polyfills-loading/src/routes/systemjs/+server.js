@@ -1,14 +1,10 @@
-/** @type {import('./$types').RequestHandler} */
-export function GET() {
-	const js = import.meta.glob('../../../node_modules/systemjs/dist/system.js', {
-		as: 'raw',
-		eager: true
-	})['../../../node_modules/systemjs/dist/system.js'];
+import systemJSCode from 'systemjs/dist/system.js?raw';
 
-	return new Response(js, {
+/** @type {import('./$types').RequestHandler} */
+export const GET = () =>
+	new Response(systemJSCode, {
 		status: 200,
 		headers: {
 			'Content-type': 'application/javascript'
 		}
 	});
-}
