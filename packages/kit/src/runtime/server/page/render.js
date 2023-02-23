@@ -343,7 +343,7 @@ export async function render_response({
 							${render_code_with_input(
 								[
 									`
-							deferred.delete(id);
+							deferred.delete(result.id);
 
 							if (result.error) deferred_result.reject(result.error);
 							else deferred_result.fulfil(result.data);
