@@ -145,16 +145,16 @@ If you need to change the name of the environment variables used to configure th
 envPrefix: 'MY_CUSTOM_';
 ```
 
-### polyfill
-
-Controls whether your build will load polyfills for missing modules. It defaults to `true`, and should only be disabled when using Node 18.11 or greater.
-
 ```sh
 MY_CUSTOM_HOST=127.0.0.1 \
 MY_CUSTOM_PORT=4000 \
 MY_CUSTOM_ORIGIN=https://my.site \
 node build
 ```
+
+### polyfill
+
+Controls whether your build will load polyfills for missing modules. It defaults to `true`, and should only be disabled when using Node 18.11 or greater.
 
 ## Custom server
 
