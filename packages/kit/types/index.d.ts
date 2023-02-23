@@ -422,6 +422,16 @@ export interface KitConfig {
 	 * @default ".svelte-kit"
 	 */
 	outDir?: string;
+	/**
+	 * Options related to the build output format
+	 */
+	output?: {
+		/**
+		 * Whether or not to use the `.mjs` extension for JavaScript files. This makes it possible to preload JavaScript files in Safari, too (else only works in Chromium-based browsers).
+		 * Check if your provider has the correct MIME type for `.mjs` files before turning this on.
+		 */
+		mjs?: boolean;
+	};
 	paths?: {
 		/**
 		 * An absolute path that your app's files are served from. This is useful if your files are served from a storage bucket of some kind.

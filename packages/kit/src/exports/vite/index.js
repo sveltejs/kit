@@ -519,9 +519,14 @@ export function set_building() {
 								// we use .mjs for client-side modules, because this signals to Chrome (when it
 								// reads the <link rel="preload">) that it should parse the file as a module
 								// rather than as a script, preventing a double parse. Ideally we'd just use
-								// modulepreload, but Safari prevents that
-								entryFileNames: ssr ? '[name].js' : `${prefix}/[name].[hash].mjs`,
-								chunkFileNames: ssr ? 'chunks/[name].js' : `${prefix}/chunks/[name].[hash].mjs`,
+								// modulepreload, but Safari prevents that. We hide it behind an option because
+								// many CDN's don't have the proper MIME type for mjs files yet.
+								entryFileNames: ssr
+									? '[name].js'
+									: `${prefix}/[name].[hash]${kit.output.mjs ? '.mjs' : '.js'}`,
+								chunkFileNames: ssr
+									? 'chunks/[name].js'
+									: `${prefix}/chunks/[name].[hash]${kit.output.mjs ? '.mjs' : '.js'}`,
 								assetFileNames: `${prefix}/assets/[name].[hash][extname]`,
 								hoistTransitiveImports: false
 							},

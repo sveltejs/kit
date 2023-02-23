@@ -138,6 +138,10 @@ const options = object(
 
 			outDir: string('.svelte-kit'),
 
+			output: object({
+				mjs: boolean(false)
+			}),
+
 			paths: object({
 				base: validate('', (input, keypath) => {
 					assert_string(input, keypath);
