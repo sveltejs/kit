@@ -104,7 +104,8 @@
 			"url": "https://goepel.it/",
 			"image": "https://avatars.githubusercontent.com/u/611613",
 			"sameAs": [
-				"https://github.com/dominikg"
+				"https://github.com/dominikg",
+				"https://m.webtoo.ls/@dominikg"
 			]	
 		}, {
 			"@type": "Person",
