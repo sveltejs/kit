@@ -390,16 +390,17 @@ function process_node(node, outdir, is_page, proxies, all_pages_have_load = true
 
 		if (is_page) {
 			let type = 'unknown';
-			if (proxy) {
-				if (proxy.exports.includes('actions')) {
-					// If the file wasn't tweaked, we can use the return type of the original file.
-					// The advantage is that type updates are reflected without saving.
-					const from = proxy.modified
-						? `./proxy${replace_ext_with_js(basename)}`
-						: path_to_original(outdir, node.server);
+			if (proxy && proxy.exports.includes('actions')) {
+				// If the file wasn't tweaked, we can use the return type of the original file.
+				// The advantage is that type updates are reflected without saving.
+				const from = proxy.modified
+					? `./proxy${replace_ext_with_js(basename)}`
+					: path_to_original(outdir, node.server);
+				
+				exports.push(`type AwaitedActions = Expand<Kit.AwaitedActions<typeof import('${from}').actions>>`);
+				exports.push(`export type SubmitFunction = Kit.SubmitFunction<AwaitedActions, AwaitedActions>`);
 
-					type = `Expand<Kit.AwaitedActions<typeof import('${from}').actions>> | null`;
-				}
+				type = `AwaitedActions | null`;
 			}
 			exports.push(`export type ActionData = ${type};`);
 		}
