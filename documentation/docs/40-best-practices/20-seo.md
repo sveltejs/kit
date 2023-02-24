@@ -12,8 +12,8 @@ While search engines have got better in recent years at indexing content that wa
 
 > SvelteKit's rendering is highly configurable and you can implement [dynamic rendering](https://developers.google.com/search/docs/advanced/javascript/dynamic-rendering) if necessary. It's not generally recommended, since SSR has other benefits beyond SEO.
 
-> Be cautious while throwing a custom [error](errors) for your critical/compelling pages, as client side error codes(4xx) can be a huge compromise for your SEO,  [read 
- further](https://developers.google.com/search/docs/crawling-indexing/http-network-errors#4xx-client-errors)
+> Be cautious while throwing a custom [error](errors) for your **critical/compelling pages**, as client side error codes(4xx) can be a huge compromise for your SEO,  [Read 
+ further.](https://developers.google.com/search/docs/crawling-indexing/http-network-errors#4xx-client-errors)
 
 ### Performance
 
