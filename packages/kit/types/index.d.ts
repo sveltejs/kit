@@ -428,9 +428,10 @@ export interface KitConfig {
 	output?: {
 		/**
 		 * What preload strategy to use for JavaScript files to avoid waterfalls:
-		 * - `modulepreload` (default) - uses `<link rel="modulepreload">` to preload JavaScript files. Works only in Chromium-based browsers currently, and soon in Safari, too.
+		 * - `modulepreload` - uses `<link rel="modulepreload">` to preload JavaScript files. Works only in Chromium-based browsers currently, and soon in Safari, too.
 		 * - `preload-js` - uses `<link rel="preload">` to preload JavaScript files. Works in all browsers but Firefox, and causes double-parsing of the script for Chromium-based browser.
 		 * - `preload-mjs` - uses `<link rel="preload">` to preload JavaScript files, but uses the `.mjs` extension. Works in Chromium-based browsers and Safari. Check of your provider/CDN has the correct MIME type for `.mjs` files before turning this on.
+		 * @default "modulepreload"
 		 */
 		preloadStrategy?: 'modulepreload' | 'preload-js' | 'preload-mjs';
 	};
