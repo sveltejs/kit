@@ -38,7 +38,13 @@ const default_filter = () => false;
 /** @type {import('types').RequiredResolveOptions['preload']} */
 const default_preload = ({ type }) => type === 'js' || type === 'css';
 
-/** @type {import('types').Respond} */
+/**
+ * @param {Request} request
+ * @param {import('types').SSROptions} options
+ * @param {import('types').SSRManifest} manifest
+ * @param {import('types').SSRState} state
+ * @returns {Promise<Response>}
+ */
 export async function respond(request, options, manifest, state) {
 	/** URL but stripped from the potential `/__data.json` suffix and its search param  */
 	let url = new URL(request.url);
@@ -360,15 +366,7 @@ export async function respond(request, options, manifest, state) {
 				} else if (route.endpoint && (!route.page || is_endpoint_request(event))) {
 					response = await render_endpoint(event, route, await route.endpoint(), state);
 				} else if (route.page) {
-					response = await render_page(
-						event,
-						route,
-						route.page,
-						options,
-						manifest,
-						state,
-						resolve_opts
-					);
+					response = await render_page(event, route.page, options, manifest, state, resolve_opts);
 				} else {
 					// a route will always have a page or an endpoint, but TypeScript
 					// doesn't know that
@@ -385,7 +383,7 @@ export async function respond(request, options, manifest, state) {
 			}
 
 			// if this request came direct from the user, rather than
-			// via a `fetch` in a `load`, render a 404 page
+			// via our own `fetch`, render a 404 page
 			if (!state.initiator) {
 				return await respond_with_error({
 					event,

@@ -16,10 +16,7 @@ export function is_pojo(body) {
 	return true;
 }
 
-/** @type {import('types').SSRErrorPage} */
-export const GENERIC_ERROR = {
-	id: '__error'
-};
+export const GENERIC_ERROR = 'GENERIC_ERROR';
 
 /**
  * @param {Partial<Record<import('types').HttpMethod, any>>} mod

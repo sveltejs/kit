@@ -157,15 +157,6 @@ export type RecursiveRequired<T> = {
 
 export type RequiredResolveOptions = Required<ResolveOptions>;
 
-export interface Respond {
-	(
-		request: Request,
-		options: SSROptions,
-		manifest: SSRManifest,
-		state: SSRState
-	): Promise<Response>;
-}
-
 export interface RouteParam {
 	name: string;
 	matcher: string;
@@ -352,10 +343,6 @@ export interface SSROptions {
 	version_hash: string;
 }
 
-export interface SSRErrorPage {
-	id: '__error';
-}
-
 export interface PageNodeIndexes {
 	errors: Array<number | undefined>;
 	layouts: Array<number | undefined>;
@@ -380,7 +367,7 @@ export interface SSRRoute {
 export interface SSRState {
 	fallback?: string;
 	getClientAddress(): string;
-	initiator?: SSRRoute | SSRErrorPage;
+	initiator?: 'GENERIC_ERROR' | (string & {});
 	platform?: any;
 	prerendering?: PrerenderOptions;
 	/**

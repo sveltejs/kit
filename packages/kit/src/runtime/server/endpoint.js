@@ -39,8 +39,6 @@ export async function render_endpoint(event, route, mod, state) {
 		}
 	}
 
-	state.initiator = route;
-
 	try {
 		const response = await handler(
 			/** @type {import('types').RequestEvent<Record<string, any>>} */ (event)
