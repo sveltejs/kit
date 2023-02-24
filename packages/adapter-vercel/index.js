@@ -489,7 +489,7 @@ async function create_function_bundle(builder, entry, dir, config) {
 				maxDuration: config.maxDuration,
 				handler: path.relative(base + ancestor, entry),
 				launcherType: 'Nodejs',
-				experimentalResponseStreaming: true
+				experimentalResponseStreaming: !config.isr
 			},
 			null,
 			'\t'
