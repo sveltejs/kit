@@ -35,7 +35,7 @@
 			"JavaScript",
 			"TypeScript"
 		],
-		"logo": "https://raw.githubusercontent.com/sveltejs/branding/master/svelte-logo.svg",
+		"image": "https://raw.githubusercontent.com/sveltejs/branding/master/svelte-logo.svg",
 		"sameAs": [
 			"https://github.com/sveltejs/kit",
 			"https://www.npmjs.com/package/@sveltejs/kit"
