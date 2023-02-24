@@ -507,6 +507,9 @@ export function set_building() {
 					}
 				}
 
+				// see the kit.output.preloadStrategy option for details on why we have multiple options here
+				const ext = kit.output.preloadStrategy === 'preload-mjs' ? 'mjs' : 'js';
+
 				new_config = {
 					base: ssr ? assets_base(kit) : './',
 					build: {
@@ -516,17 +519,8 @@ export function set_building() {
 							input,
 							output: {
 								format: 'esm',
-								// see the kit.output.preloadStrategy option for details on why we have multiple options here
-								entryFileNames: ssr
-									? '[name].js'
-									: `${prefix}/[name].[hash]${
-											kit.output.preloadStrategy === 'preload-mjs' ? '.mjs' : '.js'
-									  }`,
-								chunkFileNames: ssr
-									? 'chunks/[name].js'
-									: `${prefix}/chunks/[name].[hash]${
-											kit.output.preloadStrategy === 'preload-mjs' ? '.mjs' : '.js'
-									  }`,
+								entryFileNames: ssr ? '[name].js' : `${prefix}/[name].[hash].${ext}`,
+								chunkFileNames: ssr ? 'chunks/[name].js' : `${prefix}/chunks/[name].[hash].${ext}`,
 								assetFileNames: `${prefix}/assets/[name].[hash][extname]`,
 								hoistTransitiveImports: false
 							},
