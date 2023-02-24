@@ -2,4 +2,4 @@
 '@sveltejs/kit': patch
 ---
 
-fix: allow relative fetch to enpoint outside app from within handle
+fix: allow relative fetch to endpoint outside app from within `handle`
