@@ -53,7 +53,11 @@ legacyStates.forEach((legacyState) =>
 
 				checkGlobalIndicator(page, 'legacy_polyfill_indicator', legacy_polyfill && !!legacyState);
 
-				checkGlobalIndicator(page, 'modern_polyfill_indicator', modern_polyfill && !legacyState);
+				checkGlobalIndicator(
+					page,
+					'modern_polyfill_indicator',
+					modern_polyfill && (!legacyState || legacyState.simulatePartialESModule)
+				);
 			});
 		}
 	)

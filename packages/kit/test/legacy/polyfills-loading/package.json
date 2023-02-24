@@ -20,14 +20,13 @@
 		"@sveltejs/kit": "workspace:*",
 		"@vitejs/plugin-legacy": "^4.0.0",
 		"cross-env": "^7.0.3",
+		"import-meta-resolve": "^2.2.0",
 		"svelte": "^3.44.0",
 		"svelte-check": "^2.7.1",
+		"systemjs": "^6.13.0",
 		"terser": ">=5.4.0 <6.0.0",
 		"typescript": "^4.7.4",
 		"vite": "^4.0.4"
 	},
-	"type": "module",
-	"dependencies": {
-		"systemjs": "^6.13.0"
-	}
+	"type": "module"
 }
