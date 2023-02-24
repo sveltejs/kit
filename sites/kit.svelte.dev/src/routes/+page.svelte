@@ -9,6 +9,8 @@
 	import Intro from './home/Intro.svelte';
 	import './home/common.css';
 
+	// Google will not allow linking to a schema file. It must be in the DOM
+	// We load it and add it to the DOM to save bytes on page load vs inlining
 	let schema;
 	onMount(async () => {
 		const json = (await import('./schema.json?raw')).default;
