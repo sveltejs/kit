@@ -52,7 +52,7 @@
 		"contributor": [{
 			"@type": "Person",
 			"name": "Rich Harris",
-			"url": "https://www.benmccann.com",
+			"url": "https://www.rich-harris.co.uk",
 			"image": "https://avatars.githubusercontent.com/u/1162160",
 			"sameAs": [
 				"https://github.com/Rich-Harris",
