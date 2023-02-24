@@ -131,7 +131,7 @@ export function create_fetch({ event, options, manifest, state, get_cookie_heade
 					);
 				}
 
-				state.initiator = request.url;
+				state.initiator = event.request.url;
 				response = await respond(request, options, manifest, state);
 
 				const set_cookie = response.headers.get('set-cookie');
