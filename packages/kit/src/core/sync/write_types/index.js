@@ -396,9 +396,13 @@ function process_node(node, outdir, is_page, proxies, all_pages_have_load = true
 				const from = proxy.modified
 					? `./proxy${replace_ext_with_js(basename)}`
 					: path_to_original(outdir, node.server);
-				
-				exports.push(`type AwaitedActions = Expand<Kit.AwaitedActions<typeof import('${from}').actions>>`);
-				exports.push(`export type SubmitFunction = Kit.SubmitFunction<AwaitedActions, AwaitedActions>`);
+
+				exports.push(
+					`type AwaitedActions = Expand<Kit.AwaitedActions<typeof import('${from}').actions>>`
+				);
+				exports.push(
+					`export type SubmitFunction = Kit.SubmitFunction<AwaitedActions, AwaitedActions>`
+				);
 
 				type = `AwaitedActions | null`;
 			}
