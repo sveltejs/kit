@@ -337,7 +337,7 @@ export interface SSROptions {
 	embedded: boolean;
 	env_public_prefix: string;
 	hooks: ServerHooks;
-	mjs: boolean;
+	preload_strategy: ValidatedConfig['kit']['output']['preloadStrategy'];
 	root: SSRComponent['default'];
 	service_worker: boolean;
 	templates: {

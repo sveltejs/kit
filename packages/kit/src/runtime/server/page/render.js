@@ -273,13 +273,9 @@ export async function render_response({
 		);
 
 		for (const path of included_modulepreloads) {
-			// we use modulepreload with the Link header for Chrome, along with
-			// <link rel="preload"> for Safari. This results in the fastest loading in
-			// the most used browsers, with no double-loading. Note that we need to use
-			// .mjs extensions for `preload` to behave like `modulepreload` in Chrome.
-			// Because the .mjs MIME type is not correct on some CDNs, it's behind a flag.
+			// see the kit.output.preloadStrategy option for details on why we have multiple options here
 			link_header_preloads.add(`<${encodeURI(path)}>; rel="modulepreload"; nopush`);
-			if (options.mjs) {
+			if (options.preload_strategy !== 'modulepreload') {
 				head += `\n\t\t<link rel="preload" as="script" crossorigin="anonymous" href="${path}">`;
 			} else if (state.prerendering) {
 				head += `\n\t\t<link rel="modulepreload" href="${path}">`;

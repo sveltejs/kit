@@ -427,10 +427,12 @@ export interface KitConfig {
 	 */
 	output?: {
 		/**
-		 * Whether or not to use the `.mjs` extension for JavaScript files. This makes it possible to preload JavaScript files in Safari, too (else only works in Chromium-based browsers).
-		 * Check if your provider has the correct MIME type for `.mjs` files before turning this on.
+		 * What preload strategy to use for JavaScript files to avoid waterfalls:
+		 * - `modulepreload` (default) - uses `<link rel="modulepreload">` to preload JavaScript files. Works only in Chromium-based browsers currently, and soon in Safari, too.
+		 * - `preload-js` - uses `<link rel="preload">` to preload JavaScript files. Works in all browsers but Firefox, and causes double-parsing of the script for Chromium-based browser.
+		 * - `preload-mjs` - uses `<link rel="preload">` to preload JavaScript files, but uses the `.mjs` extension. Works in Chromium-based browsers and Safari. Check of your provider/CDN has the correct MIME type for `.mjs` files before turning this on.
 		 */
-		mjs?: boolean;
+		preloadStrategy?: 'modulepreload' | 'preload-js' | 'preload-mjs';
 	};
 	paths?: {
 		/**

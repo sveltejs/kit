@@ -36,7 +36,7 @@ export const options = {
 	embedded: ${config.kit.embedded},
 	env_public_prefix: '${config.kit.env.publicPrefix}',
 	hooks: null, // added lazily, via \`get_hooks\`
-	mjs: ${config.kit.output.mjs},
+	preload_strategy: ${config.kit.output.preloadStrategy},
 	root,
 	service_worker: ${has_service_worker},
 	templates: {

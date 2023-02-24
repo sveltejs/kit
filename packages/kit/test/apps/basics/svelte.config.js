@@ -2,7 +2,7 @@
 const config = {
 	kit: {
 		output: {
-			mjs: true
+			preloadStrategy: 'preload-mjs'
 		},
 
 		prerender: {
