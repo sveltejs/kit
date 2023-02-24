@@ -52,7 +52,7 @@
 		"contributor": [{
 			"@type": "Person",
 			"name": "Rich Harris",
-			"url": "https://www.benmccann.com",
+			"url": "https://www.rich-harris.co.uk",
 			"image": "https://avatars.githubusercontent.com/u/1162160",
 			"sameAs": [
 				"https://github.com/Rich-Harris",
@@ -104,7 +104,8 @@
 			"url": "https://goepel.it/",
 			"image": "https://avatars.githubusercontent.com/u/611613",
 			"sameAs": [
-				"https://github.com/dominikg"
+				"https://github.com/dominikg",
+				"https://m.webtoo.ls/@dominikg"
 			]	
 		}, {
 			"@type": "Person",
