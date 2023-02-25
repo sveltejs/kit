@@ -1,5 +1,11 @@
 # create-svelte
 
+## 3.0.4
+
+### Patch Changes
+
+- docs: inform about adapter-auto not supporting all environments ([#9196](https://github.com/sveltejs/kit/pull/9196))
+
 ## 3.0.3
 
 ### Patch Changes
