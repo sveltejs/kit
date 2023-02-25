@@ -320,7 +320,7 @@ export async function render_page(event, route, page, options, manifest, state, 
 			fetched
 		});
 	} catch (e) {
-		// if we end up here, it means the data loaded successfull
+		// if we end up here, it means the data loaded successfully
 		// but the page failed to render, or that a prerendering error occurred
 		return await respond_with_error({
 			event,
