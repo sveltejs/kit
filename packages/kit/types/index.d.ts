@@ -422,6 +422,20 @@ export interface KitConfig {
 	 * @default ".svelte-kit"
 	 */
 	outDir?: string;
+	/**
+	 * Options related to the build output format
+	 */
+	output?: {
+		/**
+		 * SvelteKit will preload the JavaScript modules needed for the initial page to avoid import 'waterfalls', resulting in faster application startup. There
+		 * are three strategies with different trade-offs:
+		 * - `modulepreload` - uses `<link rel="modulepreload">`. This delivers the best results in Chromium-based browsers, but is currently ignored by Firefox and Safari (though support is coming to Safari soon).
+		 * - `preload-js` - uses `<link rel="preload">`. Prevents waterfalls in Chromium and Safari, but Chromium will parse each module twice (once as a script, once as a module). Causes modules to be requested twice in Firefox. This is a good setting if you want to maximise performance for users on iOS devices at the cost of a very slight degradation for Chromium users.
+		 * - `preload-mjs` - uses `<link rel="preload">` but with the `.mjs` extension which prevents double-parsing in Chromium. Some static webservers will fail to serve .mjs files with a `Content-Type: application/javascript` header, which will cause your application to break. If that doesn't apply to you, this is the option that will deliver the best performance for the largest number of users, until `modulepreload` is more widely supported.
+		 * @default "modulepreload"
+		 */
+		preloadStrategy?: 'modulepreload' | 'preload-js' | 'preload-mjs';
+	};
 	paths?: {
 		/**
 		 * An absolute path that your app's files are served from. This is useful if your files are served from a storage bucket of some kind.

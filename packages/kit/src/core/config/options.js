@@ -138,6 +138,10 @@ const options = object(
 
 			outDir: string('.svelte-kit'),
 
+			output: object({
+				preloadStrategy: list(['modulepreload', 'preload-js', 'preload-mjs'], 'modulepreload')
+			}),
+
 			paths: object({
 				base: validate('', (input, keypath) => {
 					assert_string(input, keypath);

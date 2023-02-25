@@ -82,7 +82,7 @@ export function create_builder({
 				return;
 			}
 
-			const files = await glob('**/*.{html,js,json,css,svg,xml,wasm}', {
+			const files = await glob('**/*.{html,js,mjs,json,css,svg,xml,wasm}', {
 				cwd: directory,
 				dot: true,
 				absolute: true,
