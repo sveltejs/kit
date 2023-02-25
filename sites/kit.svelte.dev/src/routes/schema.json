@@ -54,5 +54,45 @@
 			"https://github.com/dummdidumm",
 			"https://twitter.com/dummdidumm_"
 		]	
+	}, {
+		"@type": "Person",
+		"name": "Ignatius Bagus",
+		"url": "https://mauss.dev/",
+		"image": "https://avatars.githubusercontent.com/u/8156777",
+		"sameAs": [
+			"https://twitter.com/alchemauss",
+			"https://github.com/ignatiusmb",
+			"https://gitlab.com/ignatiusmb",
+			"https://www.linkedin.com/in/ignatiusmb"
+		]	
+	}, {
+		"@type": "Person",
+		"name": "Conduitry",
+		"url": "https://conduitry.dev/",
+		"image": "https://avatars.githubusercontent.com/u/16696352",
+		"sameAs": [
+			"https://github.com/Conduitry"
+		]	
+	}, {
+		"@type": "Person",
+		"name": "Dominik Göpel",
+		"url": "https://goepel.it/",
+		"image": "https://avatars.githubusercontent.com/u/611613",
+		"sameAs": [
+			"https://github.com/dominikg",
+			"https://m.webtoo.ls/@dominikg"
+		]	
+	}, {
+		"@type": "Person",
+		"name": "Bjorn Lu",
+		"url": "https://bjornlu.com/",
+		"image": "https://avatars.githubusercontent.com/u/34116392",
+		"sameAs": [
+			"https://github.com/bluwy",
+			"https://twitter.com/bluwyoo",
+			"https://m.webtoo.ls/@bluwy",
+			"https://www.linkedin.com/in/bjorn-lu-3302a31b5",
+			"https://www.reddit.com/user/IamLUG"
+		]	
 	}]
 }
