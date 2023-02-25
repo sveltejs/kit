@@ -7,13 +7,14 @@
 	import Deployment from './home/Deployment.svelte';
 	import Svelte from './home/Svelte.svelte';
 	import Intro from './home/Intro.svelte';
+	import schema_url from './schema.json?url';
 	import './home/common.css';
 
-	// Google will not allow linking to a schema file. It must be in the DOM
-	// We load it and add it to the DOM to save bytes on page load vs inlining
 	let schema;
 	onMount(async () => {
-		const json = (await import('./schema.json?raw')).default;
+		// Google will not allow linking to a schema file. It must be in the DOM
+		// We load it and add it to the DOM to save bytes on page load vs inlining
+		const json = await fetch(schema_url).then((r) => r.text());
 		schema = `<script type="application/ld+json">${json}<\/script>`;
 	});
 </script>
@@ -27,9 +28,15 @@
 
 	<meta property="og:type" content="website" />
 	<meta property="og:title" content="SvelteKit • Web development, streamlined" />
-	<meta property="og:description" content="SvelteKit is the official Svelte application framework" />
+	<meta
+		property="og:description"
+		content="SvelteKit is the official Svelte application framework"
+	/>
 	<meta property="og:url" content="https://kit.svelte.dev/" />
-	<meta property="og:image" content="https://raw.githubusercontent.com/sveltejs/branding/master/svelte-logo.svg" />
+	<meta
+		property="og:image"
+		content="https://raw.githubusercontent.com/sveltejs/branding/master/svelte-logo.svg"
+	/>
 
 	{#if schema}
 		{@html schema}
