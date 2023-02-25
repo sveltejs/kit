@@ -124,7 +124,7 @@ export const trailingSlash = 'always';
 
 This option also affects [prerendering](#prerender). If `trailingSlash` is `always`, a route like `/about` will result in an `about/index.html` file, otherwise it will create `about.html`, mirroring static webserver conventions.
 
-> Ignoring trailing slashes is not recommended — the semantics of relative paths differ between the two cases (`./y` from `/x` is `/y`, but from `/x/` is `/x/y`), and `/x` and `/x/` are treated as separate URLs which is harmful to SEO.
+> Ignoring trailing slashes is not recommended — the semantics of relative paths differ between the two cases (`./y` from `/x` is `/y`, but from `/x/` is `/x/y`), and `/x` and `/x/` are treated as separate URLs which is harmful to SEO. The automatic redirects that SvelteKit provides removes the need for setting [canonical URLs](https://developer.mozilla.org/en-US/docs/Web/HTML/Attributes/rel#attr-canonical) explicitly, as search engines like Google take [redirects into account](https://developers.google.com/search/docs/crawling-indexing/consolidate-duplicate-urls) for deduplication during crawling.
 
 ## config
 
