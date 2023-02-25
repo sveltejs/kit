@@ -1,5 +1,15 @@
 # @sveltejs/kit
 
+## 1.8.4
+
+### Patch Changes
+
+- fix: include .mjs files in precompression ([#9179](https://github.com/sveltejs/kit/pull/9179))
+
+- fix: revert mjs extension usage by default, make it an option ([#9179](https://github.com/sveltejs/kit/pull/9179))
+
+- chore: dummy changeset to force a release ([#9207](https://github.com/sveltejs/kit/pull/9207))
+
 ## 1.8.3
 
 ### Patch Changes
