@@ -367,7 +367,7 @@ export interface SSRRoute {
 export interface SSRState {
 	fallback?: string;
 	getClientAddress(): string;
-	initiator?: 'GENERIC_ERROR' | (string & {});
+	initiator?: 'GENERIC_ERROR' | SSRRoute;
 	platform?: any;
 	prerendering?: PrerenderOptions;
 	/**

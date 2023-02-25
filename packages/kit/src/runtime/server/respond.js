@@ -233,7 +233,7 @@ export async function respond(request, options, manifest, state) {
 
 		cookies_to_add = new_cookies;
 		event.cookies = cookies;
-		event.fetch = create_fetch({ event, options, manifest, state, get_cookie_header });
+		event.fetch = create_fetch({ event, route, options, manifest, state, get_cookie_header });
 
 		if (state.prerendering && !state.prerendering.fallback) disable_search(url);
 
@@ -366,7 +366,15 @@ export async function respond(request, options, manifest, state) {
 				} else if (route.endpoint && (!route.page || is_endpoint_request(event))) {
 					response = await render_endpoint(event, await route.endpoint(), state);
 				} else if (route.page) {
-					response = await render_page(event, route.page, options, manifest, state, resolve_opts);
+					response = await render_page(
+						event,
+						route,
+						route.page,
+						options,
+						manifest,
+						state,
+						resolve_opts
+					);
 				} else {
 					// a route will always have a page or an endpoint, but TypeScript
 					// doesn't know that
