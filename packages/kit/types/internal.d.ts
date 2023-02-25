@@ -367,6 +367,11 @@ export interface SSRRoute {
 export interface SSRState {
 	fallback?: string;
 	getClientAddress(): string;
+	/**
+	 * Tracks which route was responsible for the request, in the case where it
+	 * originates from `event.fetch`. This prevents infinite loops from occuring
+	 * when, for example, a root layout fetches a non-existent route
+	 */
 	initiator?: 'GENERIC_ERROR' | SSRRoute;
 	platform?: any;
 	prerendering?: PrerenderOptions;
