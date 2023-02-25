@@ -106,6 +106,13 @@ export const handle = sequence(
 		}
 
 		return resolve(event);
+	},
+	async ({ event, resolve }) => {
+		if (event.url.pathname === '/prerendering/prerendered-endpoint/from-handle-hook') {
+			return event.fetch('/prerendering/prerendered-endpoint/api');
+		}
+
+		return resolve(event);
 	}
 );
 

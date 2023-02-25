@@ -157,15 +157,6 @@ export type RecursiveRequired<T> = {
 
 export type RequiredResolveOptions = Required<ResolveOptions>;
 
-export interface Respond {
-	(
-		request: Request,
-		options: SSROptions,
-		manifest: SSRManifest,
-		state: SSRState
-	): Promise<Response>;
-}
-
 export interface RouteParam {
 	name: string;
 	matcher: string;
@@ -353,10 +344,6 @@ export interface SSROptions {
 	version_hash: string;
 }
 
-export interface SSRErrorPage {
-	id: '__error';
-}
-
 export interface PageNodeIndexes {
 	errors: Array<number | undefined>;
 	layouts: Array<number | undefined>;
@@ -381,7 +368,14 @@ export interface SSRRoute {
 export interface SSRState {
 	fallback?: string;
 	getClientAddress(): string;
-	initiator?: SSRRoute | SSRErrorPage;
+	/**
+	 * True if we're currently attempting to render an error page
+	 */
+	error: boolean;
+	/**
+	 * Allows us to prevent `event.fetch` from making infinitely looping internal requests
+	 */
+	depth: number;
 	platform?: any;
 	prerendering?: PrerenderOptions;
 	/**

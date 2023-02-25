@@ -17,8 +17,12 @@ import { get_option } from '../../../utils/options.js';
 import { get_data_json } from '../data/index.js';
 
 /**
+ * The maximum request depth permitted before assuming we're stuck in an infinite loop
+ */
+const MAX_DEPTH = 10;
+
+/**
  * @param {import('types').RequestEvent} event
- * @param {import('types').SSRRoute} route
  * @param {import('types').PageNodeIndexes} page
  * @param {import('types').SSROptions} options
  * @param {import('types').SSRManifest} manifest
@@ -26,15 +30,13 @@ import { get_data_json } from '../data/index.js';
  * @param {import('types').RequiredResolveOptions} resolve_opts
  * @returns {Promise<Response>}
  */
-export async function render_page(event, route, page, options, manifest, state, resolve_opts) {
-	if (state.initiator === route) {
+export async function render_page(event, page, options, manifest, state, resolve_opts) {
+	if (state.depth > MAX_DEPTH) {
 		// infinite request cycle detected
 		return text(`Not found: ${event.url.pathname}`, {
-			status: 404
+			status: 404 // TODO in some cases this should be 500. not sure how to differentiate
 		});
 	}
-
-	state.initiator = route;
 
 	if (is_action_json_request(event)) {
 		const node = await manifest._.nodes[page.leaf]();
@@ -322,7 +324,7 @@ export async function render_page(event, route, page, options, manifest, state, 
 			fetched
 		});
 	} catch (e) {
-		// if we end up here, it means the data loaded successfull
+		// if we end up here, it means the data loaded successfully
 		// but the page failed to render, or that a prerendering error occurred
 		return await respond_with_error({
 			event,

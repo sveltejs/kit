@@ -131,7 +131,10 @@ export function create_fetch({ event, options, manifest, state, get_cookie_heade
 					);
 				}
 
-				response = await respond(request, options, manifest, state);
+				response = await respond(request, options, manifest, {
+					...state,
+					depth: state.depth + 1
+				});
 
 				const set_cookie = response.headers.get('set-cookie');
 				if (set_cookie) {
