@@ -28,7 +28,7 @@ export async function render_endpoint(event, mod, state) {
 	}
 
 	if (state.prerendering && !prerender) {
-		if (state.initiator) {
+		if (state.depth > 0) {
 			// if request came from a prerendered page, bail
 			throw new Error(`${event.route.id} is not prerenderable`);
 		} else {

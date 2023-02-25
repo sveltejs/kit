@@ -5,7 +5,6 @@ import * as paths from '__sveltekit/paths';
 /**
  * @param {{
  *   event: import('types').RequestEvent;
- *   route: import('types').SSRRoute | null;
  *   options: import('types').SSROptions;
  *   manifest: import('types').SSRManifest;
  *   state: import('types').SSRState;
@@ -13,7 +12,7 @@ import * as paths from '__sveltekit/paths';
  * }} opts
  * @returns {typeof fetch}
  */
-export function create_fetch({ event, route, options, manifest, state, get_cookie_header }) {
+export function create_fetch({ event, options, manifest, state, get_cookie_header }) {
 	return async (info, init) => {
 		const original_request = normalize_fetch_input(info, init, event.url);
 
@@ -132,11 +131,10 @@ export function create_fetch({ event, route, options, manifest, state, get_cooki
 					);
 				}
 
-				if (!state.initiator && route) {
-					state.initiator = route;
-				}
-
-				response = await respond(request, options, manifest, state);
+				response = await respond(request, options, manifest, {
+					...state,
+					depth: state.depth + 1
+				});
 
 				const set_cookie = response.headers.get('set-cookie');
 				if (set_cookie) {

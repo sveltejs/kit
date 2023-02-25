@@ -58,6 +58,10 @@ export class Server {
 			);
 		}
 
-		return respond(request, this.#options, this.#manifest, options);
+		return respond(request, this.#options, this.#manifest, {
+			...options,
+			error: false,
+			depth: 0
+		});
 	}
 }

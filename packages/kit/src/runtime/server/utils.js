@@ -16,8 +16,6 @@ export function is_pojo(body) {
 	return true;
 }
 
-export const GENERIC_ERROR = 'GENERIC_ERROR';
-
 /**
  * @param {Partial<Record<import('types').HttpMethod, any>>} mod
  * @param {import('types').HttpMethod} method
