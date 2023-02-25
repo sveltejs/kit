@@ -1,5 +1,5 @@
-import fs from 'fs';
-import path from 'path';
+import fs from 'node:fs';
+import path from 'node:path';
 import glob from 'tiny-glob/sync.js';
 import { load_config } from './src/core/config/index.js';
 import * as sync from './src/core/sync/sync.js';

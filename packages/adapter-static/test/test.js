@@ -1,4 +1,4 @@
-import fs from 'fs';
+import fs from 'node:fs';
 import * as assert from 'uvu/assert';
 import { run } from './utils.js';
 

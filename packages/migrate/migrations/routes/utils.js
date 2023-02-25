@@ -1,4 +1,4 @@
-import fs from 'fs';
+import fs from 'node:fs';
 import ts from 'typescript';
 import MagicString from 'magic-string';
 import { comment, indent_at_line } from '../../utils.js';

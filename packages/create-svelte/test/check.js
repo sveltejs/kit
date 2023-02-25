@@ -1,10 +1,10 @@
-import fs from 'fs';
-import { execSync } from 'child_process';
-import path from 'path';
+import fs from 'node:fs';
+import { execSync } from 'node:child_process';
+import path from 'node:path';
 import { test } from 'uvu';
 import * as assert from 'uvu/assert';
 import { create } from '../index.js';
-import { fileURLToPath } from 'url';
+import { fileURLToPath } from 'node:url';
 import glob from 'tiny-glob';
 // use a directory outside of packages to ensure it isn't added to the pnpm workspace
 const test_workspace_dir = fileURLToPath(

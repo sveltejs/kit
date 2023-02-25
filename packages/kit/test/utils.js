@@ -1,8 +1,8 @@
-import fs from 'fs';
-import path from 'path';
-import http from 'http';
+import fs from 'node:fs';
+import path from 'node:path';
+import http from 'node:http';
 import { test as base, devices } from '@playwright/test';
-import { fileURLToPath } from 'url';
+import { fileURLToPath } from 'node:url';
 
 export const test = base.extend({
 	app: async ({ page }, use) => {
