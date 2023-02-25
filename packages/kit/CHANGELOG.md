@@ -1,5 +1,11 @@
 # @sveltejs/kit
 
+## 1.8.5
+
+### Patch Changes
+
+- fix: allow relative fetch to endpoint outside app from within `handle` ([#9198](https://github.com/sveltejs/kit/pull/9198))
+
 ## 1.8.4
 
 ### Patch Changes
