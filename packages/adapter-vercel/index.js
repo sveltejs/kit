@@ -39,38 +39,10 @@ const plugin = function (defaults = {}) {
 			builder.rimraf(dir);
 			builder.rimraf(tmp);
 
-			if (fs.existsSync('./vercel.json')) {
-				const vercel_file = fs.readFileSync('./vercel.json', 'utf-8');
+			if (fs.existsSync('vercel.json')) {
+				const vercel_file = fs.readFileSync('vercel.json', 'utf-8');
 				const vercel_config = JSON.parse(vercel_file);
-				const crons = /** @type {Array<unknown>} */ (
-					Array.isArray(vercel_config?.crons) ? vercel_config.crons : []
-				);
-				const GET_endpoints = builder.routes.filter((route) =>
-					route?.endpoint?.methods?.includes('GET')
-				);
-				/** @type {Array<string>} */
-				const unmatched_paths = [];
-
-				for (const cron of crons) {
-					if (typeof cron !== 'object' || cron === null || !('path' in cron)) {
-						continue;
-					}
-
-					const { path } = cron;
-					if (typeof path !== 'string') {
-						continue;
-					}
-
-					if (!GET_endpoints.some((route) => route.pattern.test(path))) {
-						unmatched_paths.push(path);
-					}
-				}
-
-				builder.log.warn(
-					`The following paths are not matched by any route:\n  - ${unmatched_paths.join(
-						'\n  - '
-					)}\nIf these paths are handled in your \`handle\` hook, you can safely ignore this warning.`
-				);
+				validate_vercel_json(builder, vercel_config);
 			}
 
 			const files = fileURLToPath(new URL('./files', import.meta.url).href);
@@ -529,6 +501,55 @@ async function create_function_bundle(builder, entry, dir, config) {
 	);
 
 	write(`${dir}/package.json`, JSON.stringify({ type: 'module' }));
+}
+
+/**
+ *
+ * @param {import('@sveltejs/kit').Builder} builder
+ * @param {any} vercel_config
+ */
+function validate_vercel_json(builder, vercel_config) {
+	if (builder.routes.length > 0 && !builder.routes[0].endpoint) {
+		// bail — we're on an older SvelteKit version that doesn't
+		// populate `route.endpoint.methods`, so we can't check
+		// to see if cron paths are valid
+		return;
+	}
+
+	const crons = /** @type {Array<unknown>} */ (
+		Array.isArray(vercel_config?.crons) ? vercel_config.crons : []
+	);
+
+	/** For a route to be considered 'valid', it must be an API route with a GET handler */
+	const valid_routes = builder.routes.filter((route) => route.endpoint.methods.includes('GET'));
+
+	/** @type {Array<string>} */
+	const unmatched_paths = [];
+
+	for (const cron of crons) {
+		if (typeof cron !== 'object' || cron === null || !('path' in cron)) {
+			continue;
+		}
+
+		const { path } = cron;
+		if (typeof path !== 'string') {
+			continue;
+		}
+
+		for (const route of valid_routes) {
+			if (route.pattern.test(path)) {
+				continue;
+			}
+		}
+
+		unmatched_paths.push(path);
+	}
+
+	builder.log.warn(
+		`The following paths are not matched by any route:\n  - ${unmatched_paths.join(
+			'\n  - '
+		)}\nIf these paths are handled in your \`handle\` hook, you can safely ignore this warning.`
+	);
 }
 
 export default plugin;
