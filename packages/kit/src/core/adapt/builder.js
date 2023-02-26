@@ -44,9 +44,7 @@ export function create_builder({
 	 */
 	const routes = route_data.map((route) => {
 		const { methods, pageMethods, endpointMethods } =
-			/** @type {NonNullable<ReturnType<typeof server_metadata['routes']['get']>>} */ (
-				server_metadata.routes.get(route.id)
-			);
+			/** @type {import('types').ServerMetadataRoute} */ (server_metadata.routes.get(route.id));
 		const config = server_metadata.routes.get(route.id)?.config;
 
 		server_metadata.routes.get(route.id)?.methods;
