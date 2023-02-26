@@ -50,6 +50,23 @@ We can also invoke the action from other pages (for example if there's a login w
 </form>
 ```
 
+Here you need to use `applyAction` in the calling page to ensure `form` and `$page.form` are updated:
+
+```js
+	const login: SubmitFunction = () => {
+		return async ({ result }) => {
+			await applyAction(result);
+		};
+	};
+```
+
+and
+
+```html
+<form method="POST" use:enhance={login}>
+```
+See below for more information on `use:enhance` and Progressive Enhancement.
+
 ## Named actions
 
 Instead of one `default` action, a page can have as many named actions as it needs:
