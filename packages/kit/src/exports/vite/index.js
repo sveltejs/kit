@@ -255,7 +255,7 @@ function kit({ svelte_config }) {
 				},
 				ssr: {
 					// These packages must be bundled by Kit so that we can resolve using the proper aliases and conditions
-					noExternal: ['@sveltejs/kit', 'esm-env']
+					noExternal: ['esm-env']
 				}
 			};
 
