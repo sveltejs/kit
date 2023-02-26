@@ -14,7 +14,7 @@
 	onMount(async () => {
 		// Google will not allow linking to a schema file. It must be in the DOM
 		// We load it and add it to the DOM to save bytes on page load vs inlining
-		const json = await fetch(schema_url).then((r) => r.text());
+		const json = await (await fetch(schema_url)).text();
 		schema = `<script type="application/ld+json">${json}<\/script>`;
 	});
 </script>
