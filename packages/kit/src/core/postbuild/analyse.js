@@ -62,10 +62,11 @@ async function analyse({ manifest_path, env }) {
 
 	// analyse routes
 	for (const route of manifest._.routes) {
-		/** @type {Set<Extract<import('types').HttpMethod, 'GET' | 'POST'>>} */
-		const pageMethodsSet = new Set();
-		/** @type {Set<import('types').HttpMethod>} */
-		const endpointMethodsSet = new Set();
+		/** @type {Array<'GET' | 'POST'>} */
+		const page_methods = [];
+
+		/** @type {import('types').HttpMethod[]} */
+		const endpoint_methods = [];
 
 		/** @type {import('types').PrerenderOption | undefined} */
 		let prerender = undefined;
@@ -86,12 +87,12 @@ async function analyse({ manifest_path, env }) {
 				prerender = mod.prerender;
 			}
 
-			if (mod.GET) endpointMethodsSet.add('GET');
-			if (mod.POST) endpointMethodsSet.add('POST');
-			if (mod.PUT) endpointMethodsSet.add('PUT');
-			if (mod.PATCH) endpointMethodsSet.add('PATCH');
-			if (mod.DELETE) endpointMethodsSet.add('DELETE');
-			if (mod.OPTIONS) endpointMethodsSet.add('OPTIONS');
+			if (mod.GET) endpoint_methods.push('GET');
+			if (mod.POST) endpoint_methods.push('POST');
+			if (mod.PUT) endpoint_methods.push('PUT');
+			if (mod.PATCH) endpoint_methods.push('PATCH');
+			if (mod.DELETE) endpoint_methods.push('DELETE');
+			if (mod.OPTIONS) endpoint_methods.push('OPTIONS');
 
 			config = mod.config;
 		}
@@ -114,8 +115,8 @@ async function analyse({ manifest_path, env }) {
 			}
 
 			if (page) {
-				pageMethodsSet.add('GET');
-				if (page.server?.actions) pageMethodsSet.add('POST');
+				page_methods.push('GET');
+				if (page.server?.actions) page_methods.push('POST');
 
 				validate_page_server_exports(page.server, page.server_id);
 				validate_common_exports(page.universal, page.universal_id);
@@ -134,17 +135,14 @@ async function analyse({ manifest_path, env }) {
 			config = get_config(nodes);
 		}
 
-		const pageMethods = Array.from(pageMethodsSet);
-		const endpointMethods = Array.from(endpointMethodsSet);
-		const methods = [...pageMethods, ...endpointMethods];
 		metadata.routes.set(route.id, {
 			config,
-			methods,
+			methods: Array.from(new Set([...page_methods, ...endpoint_methods])),
 			page: {
-				methods: Array.from(pageMethodsSet)
+				methods: page_methods
 			},
 			endpoint: {
-				methods: Array.from(endpointMethodsSet)
+				methods: endpoint_methods
 			},
 			prerender
 		});
