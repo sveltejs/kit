@@ -51,8 +51,7 @@ export function search(query) {
 	const regex = new RegExp(`(^|\\b)${escaped}`, 'i');
 
 	const blocks = indexes
-		.map((index) => index.search(query))
-		.flat()
+		.flatMap((index) => index.search(query))
 		.map(lookup)
 		.map((block, rank) => ({ block, rank }))
 		.sort((a, b) => {

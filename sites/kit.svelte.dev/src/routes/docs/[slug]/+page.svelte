@@ -7,7 +7,7 @@
 	/** @type {import('./$types').PageData} */
 	export let data;
 
-	$: pages = data.sections.map((section) => section.pages).flat();
+	$: pages = data.sections.flatMap((section) => section.pages);
 	$: index = pages.findIndex(({ path }) => path === $page.url.pathname);
 	$: prev = pages[index - 1];
 	$: next = pages[index + 1];
