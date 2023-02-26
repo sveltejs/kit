@@ -252,13 +252,16 @@ function kit({ svelte_config }) {
 						'$app',
 						'$env'
 					]
+				},
+				ssr: {
+					// This ensures that esm-env is inlined into the server output with the
+					// export conditions resolved correctly through Vite. This prevents adapters
+					// that bundle later on from resolving the export conditions incorrectly
+					// and for example include browser-only code in the server output
+					// because they for example use esbuild.build with `platform: 'browser'`
+					noExternal: ['esm-env']
 				}
 			};
-
-			// Vitest will only call resolveId for packages that are being bundled
-			// Without this it will not be able to load our virtual modules
-			// See https://vitest.dev/config/#deps-registernodeloader
-			const noExternal = process.env.TEST ? ['@sveltejs/kit'] : [];
 
 			if (is_build) {
 				if (!new_config.build) new_config.build = {};
@@ -272,13 +275,6 @@ function kit({ svelte_config }) {
 					__SVELTEKIT_EMBEDDED__: kit.embedded ? 'true' : 'false'
 				};
 
-				// This ensures that esm-env is inlined into the server output with the
-				// export conditions resolved correctly through Vite. This prevents adapters
-				// that bundle later on to resolve the export conditions incorrectly
-				// and for example include browser-only code in the server output
-				// because they for example use esbuild.build with `platform: 'browser'`
-				noExternal.push('esm-env');
-
 				if (!secondary_build_started) {
 					manifest_data = (await sync.all(svelte_config, config_env.mode)).manifest_data;
 				}
@@ -288,11 +284,14 @@ function kit({ svelte_config }) {
 					__SVELTEKIT_DEV__: 'true',
 					__SVELTEKIT_EMBEDDED__: kit.embedded ? 'true' : 'false'
 				};
-			}
 
-			new_config.ssr = {
-				noExternal
-			};
+				// These Kit dependencies are packaged as CommonJS, which means they must always be externalized.
+				// Without this, the tests will still pass but `pnpm dev` will fail in projects that link `@sveltejs/kit`.
+				/** @type {NonNullable<import('vite').UserConfig['ssr']>} */ (new_config.ssr).external = [
+					'cookie',
+					'set-cookie-parser'
+				];
+			}
 
 			warn_overridden_config(config, new_config);
 
