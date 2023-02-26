@@ -254,7 +254,11 @@ function kit({ svelte_config }) {
 					]
 				},
 				ssr: {
-					// esm-env needs to be run through Vite to ensure the correct export conditions are used
+					// This ensures that esm-env is inlined into the server output with the
+					// export conditions resolved correctly through Vite. This prevents adapters
+					// that bundle later on from resolving the export conditions incorrectly
+					// and for example include browser-only code in the server output
+					// because they for example use esbuild.build with `platform: 'browser'`
 					noExternal: ['esm-env']
 				}
 			};
