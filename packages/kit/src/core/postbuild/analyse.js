@@ -138,11 +138,15 @@ async function analyse({ manifest_path, env }) {
 		const endpointMethods = Array.from(endpointMethodsSet);
 		const methods = [...pageMethods, ...endpointMethods];
 		metadata.routes.set(route.id, {
-			prerender,
 			config,
-			pageMethods,
-			endpointMethods,
-			methods
+			methods,
+			page: {
+				methods: Array.from(pageMethodsSet)
+			},
+			endpoint: {
+				methods: Array.from(endpointMethodsSet)
+			},
+			prerender
 		});
 	}
 

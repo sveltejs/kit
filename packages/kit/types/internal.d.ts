@@ -264,11 +264,15 @@ export interface ServerErrorNode {
 }
 
 export interface ServerMetadataRoute {
-	prerender: PrerenderOption | undefined;
-	endpointMethods: HttpMethod[];
-	pageMethods: Extract<HttpMethod, 'GET' | 'POST'>[];
-	methods: HttpMethod[];
 	config: any;
+	endpoint: {
+		methods: HttpMethod[];
+	};
+	page: {
+		methods: Array<'GET' | 'POST'>;
+	};
+	methods: HttpMethod[];
+	prerender: PrerenderOption | undefined;
 }
 
 export interface ServerMetadata {
