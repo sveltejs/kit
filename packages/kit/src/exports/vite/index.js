@@ -254,7 +254,7 @@ function kit({ svelte_config }) {
 					]
 				},
 				ssr: {
-					// These packages must be bundled by Kit so that we can resolve using the proper aliases and conditions
+					// esm-env needs to be run through Vite to ensure the correct export conditions are used
 					noExternal: ['esm-env']
 				}
 			};
