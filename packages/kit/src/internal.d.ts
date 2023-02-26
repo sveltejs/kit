@@ -9,5 +9,6 @@ declare module '__sveltekit/environment' {
 declare module '__sveltekit/paths' {
 	export const base: string;
 	export let assets: `https://${string}` | `http://${string}`;
+	export function set_base(path: string): void;
 	export function set_assets(path: string): void;
 }

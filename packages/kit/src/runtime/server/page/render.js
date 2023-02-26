@@ -80,6 +80,9 @@ export async function render_response({
 			? action_result.data ?? null
 			: null;
 
+	const segments = event.url.pathname.slice(paths.base.length).split('/').slice(2);
+	const base = segments.map(() => '..').join('/') || '.';
+
 	if (page_config.ssr) {
 		if (__SVELTEKIT_DEV__ && !branch.at(-1)?.node.component) {
 			// Can only be the leaf, layouts have a fallback component generated
@@ -116,6 +119,9 @@ export async function render_response({
 			form: form_value
 		};
 
+		const original_base = paths.base;
+		paths.set_base(base);
+
 		if (__SVELTEKIT_DEV__) {
 			const fetch = globalThis.fetch;
 			let warned = false;
@@ -138,9 +144,14 @@ export async function render_response({
 				rendered = options.root.render(props);
 			} finally {
 				globalThis.fetch = fetch;
+				paths.set_base(original_base);
 			}
 		} else {
-			rendered = options.root.render(props);
+			try {
+				rendered = options.root.render(props);
+			} finally {
+				paths.set_base(original_base);
+			}
 		}
 
 		for (const { node } of branch) {
@@ -155,9 +166,6 @@ export async function render_response({
 	} else {
 		rendered = { head: '', html: '', css: { code: '', map: null } };
 	}
-
-	const segments = event.url.pathname.slice(paths.base.length).split('/').slice(2);
-	const base = segments.map(() => '..').join('/') || '.';
 
 	/**
 	 * An expression that will evaluate in the client to determine the resolved base path.

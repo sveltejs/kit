@@ -382,8 +382,13 @@ function kit({ svelte_config }) {
 export const assets = ${global}?.assets ?? ${assets ? s(assets) : 'base'};`;
 					}
 
-					return `export const base = ${s(base)};
+					return `export let base = ${s(base)};
 export let assets = ${assets ? s(assets) : 'base'};
+
+/** @param {string} path */
+export function set_base(path) {
+	base = path;
+}
 
 /** @param {string} path */
 export function set_assets(path) {
