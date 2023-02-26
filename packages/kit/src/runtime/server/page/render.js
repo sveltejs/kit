@@ -180,7 +180,7 @@ export async function render_response({
 	 * need to be root-relative. Otherwise, use the base path relative to the current page.
 	 * @type {string}
 	 */
-	const assets = paths.assets || state.prerendering?.fallback ? paths.base : base;
+	const assets = paths.assets || (state.prerendering?.fallback ? paths.base : base);
 
 	let head = '';
 	let body = rendered.html;
