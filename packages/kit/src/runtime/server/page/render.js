@@ -1,7 +1,7 @@
 import * as devalue from 'devalue';
 import { readable, writable } from 'svelte/store';
 import { DEV } from 'esm-env';
-import { assets, base } from '__sveltekit/paths';
+import * as paths from '__sveltekit/paths';
 import { hash } from '../../hash.js';
 import { serialize_data } from './serialize_data.js';
 import { s } from '../../../utils/misc.js';
@@ -156,39 +156,31 @@ export async function render_response({
 		rendered = { head: '', html: '', css: { code: '', map: null } };
 	}
 
-	const segments = event.url.pathname.slice(base.length).split('/').slice(2);
-	const resolved_base = segments.map(() => '..').join('/') || '.';
+	const segments = event.url.pathname.slice(paths.base.length).split('/').slice(2);
+	const base = segments.map(() => '..').join('/') || '.';
 
 	/**
 	 * An expression that will evaluate in the client to determine the resolved base path.
 	 * We use a relative path when possible to support IPFS, the internet archive, etc.
 	 */
 	const base_expression =
-		state.prerendering?.fallback || base !== ''
-			? s(base)
-			: `new URL(${s(resolved_base)}, location.href).pathname.slice(0,-1)`;
+		state.prerendering?.fallback || paths.base !== ''
+			? s(paths.base)
+			: `new URL(${s(base)}, location.href).pathname.slice(0,-1)`;
 
 	/**
 	 * An expression that will evaluate in the client to determine the resolved asset path.
 	 * If `undefined`, falls back to `base`
 	 */
-	const asset_expression = assets ? s(assets) : undefined;
+	const asset_expression = paths.assets ? s(paths.assets) : undefined;
 
 	/**
-	 * The prefix to use for static assets. Replaces `%sveltekit.assets%` in the template
+	 * The prefix to use for static assets. Replaces `%sveltekit.assets%` in the template.
+	 * If an asset path is specified, use it. If we're creating a fallback page, asset paths
+	 * need to be root-relative. Otherwise, use the base path relative to the current page.
 	 * @type {string}
 	 */
-	let resolved_assets;
-
-	if (assets) {
-		// if an asset path is specified, use it
-		resolved_assets = assets;
-	} else if (state.prerendering?.fallback) {
-		// if we're creating a fallback page, asset paths need to be root-relative
-		resolved_assets = base;
-	} else {
-		resolved_assets = resolved_base;
-	}
+	const assets = paths.assets || state.prerendering?.fallback ? paths.base : base;
 
 	let head = '';
 	let body = rendered.html;
@@ -203,9 +195,9 @@ export async function render_response({
 			// Vite makes the start script available through the base path and without it.
 			// We load it via the base path in order to support remote IDE environments which proxy
 			// all URLs under the base path during development.
-			return base + path;
+			return paths.base + path;
 		}
-		return `${resolved_assets}/${path}`;
+		return `${assets}/${path}`;
 	};
 
 	if (inline_styles.size > 0) {
@@ -424,7 +416,7 @@ export async function render_response({
 	const html = options.templates.app({
 		head,
 		body,
-		assets: resolved_assets,
+		assets: assets,
 		nonce: /** @type {string} */ (csp.nonce),
 		env: public_env
 	});
