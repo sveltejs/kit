@@ -546,10 +546,14 @@ function validate_vercel_json(builder, vercel_config) {
 	}
 
 	builder.log.warn(
-		`The following paths are not matched by any route:\n  - ${unmatched_paths.join(
-			'\n  - '
-		)}\nIf these paths are handled in your \`handle\` hook, you can safely ignore this warning.`
+		`\nvercel.json defines cron tasks that use paths that do not correspond to an API route with a GET handler (ignore this if the request is handled in your \`handle\` hook):`
 	);
+
+	for (const path of unmatched_paths) {
+		console.log(`    - ${path}`);
+	}
+
+	console.log('');
 }
 
 export default plugin;
