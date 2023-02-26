@@ -416,7 +416,7 @@ export async function render_response({
 	const html = options.templates.app({
 		head,
 		body,
-		assets: assets,
+		assets,
 		nonce: /** @type {string} */ (csp.nonce),
 		env: public_env
 	});
