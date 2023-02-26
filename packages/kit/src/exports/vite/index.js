@@ -374,9 +374,12 @@ function kit({ svelte_config }) {
 				case '\0__sveltekit/paths':
 					const { assets, base } = svelte_config.kit.paths;
 
+					// use the values defined in `global`, but fall back to hard-coded values
+					// for the sake of things like Vitest which may import this module
+					// outside the context of a page
 					if (browser) {
-						return `export const base = ${global}.base;
-export const assets = ${global}.assets ?? base;`;
+						return `export const base = ${global}?.base ?? ${s(base)};
+export const assets = ${global}?.assets ?? ${assets ? s(assets) : 'base'};`;
 					}
 
 					return `export const base = ${s(base)};
