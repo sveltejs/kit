@@ -159,11 +159,20 @@ export async function render_response({
 	const segments = event.url.pathname.slice(base.length).split('/').slice(2);
 	const resolved_base = segments.map(() => '..').join('/') || '.';
 
-	// we use a relative path when possible to support IPFS, the internet archive, etc.
+	/**
+	 * An expression that will evaluate in the client to determine the resolved base path.
+	 * We use a relative path when possible to support IPFS, the internet archive, etc.
+	 */
 	const base_expression =
 		state.prerendering?.fallback || base !== ''
 			? s(base)
 			: `new URL(${s(resolved_base)}, location.href).pathname.slice(0,-1)`;
+
+	/**
+	 * An expression that will evaluate in the client to determine the resolved asset path.
+	 * If `undefined`, falls back to `base`
+	 */
+	const asset_expression = assets ? s(assets) : undefined;
 
 	/**
 	 * The prefix to use for static assets. Replaces `%sveltekit.assets%` in the template
@@ -171,25 +180,14 @@ export async function render_response({
 	 */
 	let resolved_assets;
 
-	/**
-	 * An expression that will evaluate in the client to determine the resolved asset path
-	 */
-	let asset_expression;
-
 	if (assets) {
 		// if an asset path is specified, use it
 		resolved_assets = assets;
-		asset_expression = s(assets);
 	} else if (state.prerendering?.fallback) {
 		// if we're creating a fallback page, asset paths need to be root-relative
 		resolved_assets = base;
-		asset_expression = s(base);
 	} else {
 		resolved_assets = resolved_base;
-		// we use a relative path when possible to support IPFS, the internet archive, etc.
-		asset_expression = `new URL(${s(
-			resolved_assets
-		)}, location.href).pathname.replace(/^\\\/$/, '')`;
 	}
 
 	let head = '';
@@ -292,10 +290,10 @@ export async function render_response({
 
 		const properties = [
 			`env: ${s(public_env)}`,
-			`assets: ${asset_expression}`,
+			asset_expression && `assets: ${asset_expression}`,
 			`base: ${base_expression}`,
 			`element: document.currentScript.parentElement`
-		];
+		].filter(Boolean);
 
 		if (chunks) {
 			blocks.push(`const deferred = new Map();`);
