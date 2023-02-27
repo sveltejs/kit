@@ -1,5 +1,11 @@
 # create-svelte
 
+## 3.1.0
+
+### Minor Changes
+
+- feat: use `@clack/prompts` ([#9219](https://github.com/sveltejs/kit/pull/9219))
+
 ## 3.0.4
 
 ### Patch Changes
