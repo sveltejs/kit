@@ -1,5 +1,5 @@
 ---
-'@sveltejs/kit': patch
+'@sveltejs/kit': minor
 ---
 
-expose stronger typed `SubmitFunction`
+feat: expose stronger typed `SubmitFunction` through `./$types`
