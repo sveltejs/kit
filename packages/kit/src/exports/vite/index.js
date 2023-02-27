@@ -218,6 +218,21 @@ function kit({ svelte_config }) {
 
 			const generated = path.posix.join(kit.outDir, 'generated');
 
+			// This ensures that esm-env is inlined into the server output with the
+			// export conditions resolved correctly through Vite. This prevents adapters
+			// that bundle later on from resolving the export conditions incorrectly
+			// and for example include browser-only code in the server output
+			// because they for example use esbuild.build with `platform: 'browser'`
+			const noExternal = ['esm-env'];
+
+			// Vitest bypasses Vite when loading external modules, so we bundle
+			// when it is detected to keep our virtual modules working.
+			// See https://github.com/sveltejs/kit/pull/9172
+			// and https://vitest.dev/config/#deps-registernodeloader
+			if (process.env.TEST) {
+				noExternal.push('@sveltejs/kit');
+			}
+
 			// dev and preview config can be shared
 			/** @type {import('vite').UserConfig} */
 			const new_config = {
@@ -252,6 +267,9 @@ function kit({ svelte_config }) {
 						'$app',
 						'$env'
 					]
+				},
+				ssr: {
+					noExternal
 				}
 			};
 
@@ -267,19 +285,6 @@ function kit({ svelte_config }) {
 					__SVELTEKIT_EMBEDDED__: kit.embedded ? 'true' : 'false'
 				};
 
-				new_config.ssr = {
-					noExternal: [
-						// TODO document why this is necessary
-						'@sveltejs/kit',
-						// This ensures that esm-env is inlined into the server output with the
-						// export conditions resolved correctly through Vite. This prevents adapters
-						// that bundle later on to resolve the export conditions incorrectly
-						// and for example include browser-only code in the server output
-						// because they for example use esbuild.build with `platform: 'browser'`
-						'esm-env'
-					]
-				};
-
 				if (!secondary_build_started) {
 					manifest_data = (await sync.all(svelte_config, config_env.mode)).manifest_data;
 				}
@@ -290,13 +295,12 @@ function kit({ svelte_config }) {
 					__SVELTEKIT_EMBEDDED__: kit.embedded ? 'true' : 'false'
 				};
 
-				new_config.ssr = {
-					// Without this, Vite will treat `@sveltejs/kit` as noExternal if it's
-					// a linked dependency, and that causes modules to be imported twice
-					// under different IDs, which breaks a bunch of stuff
-					// https://github.com/vitejs/vite/pull/9296
-					external: ['@sveltejs/kit', 'cookie', 'set-cookie-parser']
-				};
+				// These Kit dependencies are packaged as CommonJS, which means they must always be externalized.
+				// Without this, the tests will still pass but `pnpm dev` will fail in projects that link `@sveltejs/kit`.
+				/** @type {NonNullable<import('vite').UserConfig['ssr']>} */ (new_config.ssr).external = [
+					'cookie',
+					'set-cookie-parser'
+				];
 			}
 
 			warn_overridden_config(config, new_config);
