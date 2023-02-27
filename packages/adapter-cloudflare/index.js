@@ -116,7 +116,7 @@ function get_routes_json(builder, assets, options) {
 	// remove <all>
 	const allIndex = exclude.indexOf('all');
 	if (allIndex > -1) {
-		exclude.splice(allIndex);
+		exclude.splice(allIndex, 1);
 	}
 
 	if (include.length + exclude.length > 100) {
