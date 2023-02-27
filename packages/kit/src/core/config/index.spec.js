@@ -236,6 +236,7 @@ test('fails if paths.base is not root-relative', () => {
 		validate_config({
 			kit: {
 				paths: {
+					// @ts-expect-error
 					base: 'https://example.com/somewhere/else'
 				}
 			}
@@ -260,6 +261,7 @@ test('fails if paths.assets is relative', () => {
 		validate_config({
 			kit: {
 				paths: {
+					// @ts-expect-error
 					assets: 'foo'
 				}
 			}
