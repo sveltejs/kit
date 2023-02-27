@@ -225,9 +225,10 @@ function kit({ svelte_config }) {
 			// because they for example use esbuild.build with `platform: 'browser'`
 			const noExternal = ['esm-env'];
 
-			// Vitest bypasses Vite when loading external modules, so when it is
-			// detected we take a tiny performance hit to preserve correctness.
+			// Vitest bypasses Vite when loading external modules, so we bundle
+			// when it is detected to keep our virtual modules working.
 			// See https://github.com/sveltejs/kit/pull/9172
+			// and https://vitest.dev/config/#deps-registernodeloader
 			if (process.env.TEST) {
 				noExternal.push('@sveltejs/kit');
 			}
