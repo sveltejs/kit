@@ -892,7 +892,7 @@ export interface RequestEvent<
 	 */
 	locals: App.Locals;
 	/**
-	 * The parameters of the current page or endpoint - e.g. for a route like `/blog/[slug]`, a `{ slug: string }` object
+	 * The parameters of the current route - e.g. for a route like `/blog/[slug]`, a `{ slug: string }` object
 	 */
 	params: Params;
 	/**
@@ -936,7 +936,7 @@ export interface RequestEvent<
 	 */
 	setHeaders(headers: Record<string, string>): void;
 	/**
-	 * The URL of the current page or endpoint.
+	 * The requested URL.
 	 */
 	url: URL;
 	/**
@@ -983,7 +983,7 @@ export interface ResolveOptions {
 
 export interface RouteDefinition<Config = any> {
 	id: string;
-	endpoint: {
+	api: {
 		methods: HttpMethod[];
 	};
 	page: {

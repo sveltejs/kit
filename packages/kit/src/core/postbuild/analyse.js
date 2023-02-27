@@ -66,7 +66,7 @@ async function analyse({ manifest_path, env }) {
 		const page_methods = [];
 
 		/** @type {import('types').HttpMethod[]} */
-		const endpoint_methods = [];
+		const api_methods = [];
 
 		/** @type {import('types').PrerenderOption | undefined} */
 		let prerender = undefined;
@@ -87,12 +87,12 @@ async function analyse({ manifest_path, env }) {
 				prerender = mod.prerender;
 			}
 
-			if (mod.GET) endpoint_methods.push('GET');
-			if (mod.POST) endpoint_methods.push('POST');
-			if (mod.PUT) endpoint_methods.push('PUT');
-			if (mod.PATCH) endpoint_methods.push('PATCH');
-			if (mod.DELETE) endpoint_methods.push('DELETE');
-			if (mod.OPTIONS) endpoint_methods.push('OPTIONS');
+			if (mod.GET) api_methods.push('GET');
+			if (mod.POST) api_methods.push('POST');
+			if (mod.PUT) api_methods.push('PUT');
+			if (mod.PATCH) api_methods.push('PATCH');
+			if (mod.DELETE) api_methods.push('DELETE');
+			if (mod.OPTIONS) api_methods.push('OPTIONS');
 
 			config = mod.config;
 		}
@@ -137,12 +137,12 @@ async function analyse({ manifest_path, env }) {
 
 		metadata.routes.set(route.id, {
 			config,
-			methods: Array.from(new Set([...page_methods, ...endpoint_methods])),
+			methods: Array.from(new Set([...page_methods, ...api_methods])),
 			page: {
 				methods: page_methods
 			},
-			endpoint: {
-				methods: endpoint_methods
+			api: {
+				methods: api_methods
 			},
 			prerender
 		});

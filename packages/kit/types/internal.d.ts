@@ -265,7 +265,7 @@ export interface ServerErrorNode {
 
 export interface ServerMetadataRoute {
 	config: any;
-	endpoint: {
+	api: {
 		methods: HttpMethod[];
 	};
 	page: {

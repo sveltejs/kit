@@ -43,14 +43,14 @@ export function create_builder({
 	 * we expose a stable type that adapters can use to group/filter routes
 	 */
 	const routes = route_data.map((route) => {
-		const { config, methods, page, endpoint } = /** @type {import('types').ServerMetadataRoute} */ (
+		const { config, methods, page, api } = /** @type {import('types').ServerMetadataRoute} */ (
 			server_metadata.routes.get(route.id)
 		);
 
 		/** @type {import('types').RouteDefinition} */
 		const facade = {
 			id: route.id,
-			endpoint,
+			api,
 			page,
 			segments: get_route_segments(route.id).map((segment) => ({
 				dynamic: segment.includes('['),
