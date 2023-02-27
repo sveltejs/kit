@@ -103,7 +103,7 @@ export async function render_response({
 						.map(() => '..')
 						.join('/') || '.';
 
-		base_expression = `new URL(${s(base)}, location.href).pathname.slice(0,-1)`;
+		base_expression = `new URL(${s(base)}, location).pathname.slice(0, -1)`;
 
 		if (!paths.assets) {
 			assets = base;
