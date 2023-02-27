@@ -1,5 +1,11 @@
 # @sveltejs/kit
 
+## 1.8.7
+
+### Patch Changes
+
+- fix: correct not found message when setting `paths.base` ([#9232](https://github.com/sveltejs/kit/pull/9232))
+
 ## 1.8.6
 
 ### Patch Changes
