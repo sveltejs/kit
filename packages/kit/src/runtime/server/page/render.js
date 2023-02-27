@@ -92,12 +92,6 @@ export async function render_response({
 	 */
 	let base_expression = s(paths.base);
 
-	/**
-	 * An expression that will evaluate in the client to determine the resolved asset path.
-	 * If `undefined`, falls back to `base`
-	 */
-	const asset_expression = paths.assets ? s(paths.assets) : undefined;
-
 	// if appropriate, use relative paths for greater portability
 	if (paths.relative !== false && !state.prerendering?.fallback) {
 		const segments = event.url.pathname.slice(paths.base.length).split('/');
@@ -301,7 +295,7 @@ export async function render_response({
 
 		const properties = [
 			`env: ${s(public_env)}`,
-			asset_expression && `assets: ${asset_expression}`,
+			paths.assets && `assets: ${s(paths.assets)}`,
 			`base: ${base_expression}`,
 			`element: document.currentScript.parentElement`
 		].filter(Boolean);
