@@ -2,4 +2,4 @@
 '@sveltejs/kit': minor
 ---
 
-feat: use relative `base` path during server-rendering
+feat: add `paths.relative` option to control interpretation of `paths.assets` and `paths.base`
