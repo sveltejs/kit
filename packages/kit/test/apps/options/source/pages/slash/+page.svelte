@@ -1,8 +1,10 @@
 <script>
 	import { base } from '$app/paths';
 	import { page } from '$app/stores';
+
+	console.log({ base });
 </script>
 
-<h2>{$page.url.pathname.replace(base, '')}</h2>
+<h2>{$page.url.pathname}</h2>
 
-<a href="{base}/slash/child">/slash/child</a>
+<a data-testid="child" href="{base}/slash/child">/slash/child</a>

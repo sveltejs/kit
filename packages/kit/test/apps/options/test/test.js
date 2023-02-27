@@ -176,11 +176,11 @@ test.describe('trailingSlash', () => {
 		await page.goto('/path-base/slash');
 
 		expect(page.url()).toBe(`${baseURL}/path-base/slash/`);
-		expect(await page.textContent('h2')).toBe('/slash/');
+		expect(await page.textContent('h2')).toBe('/path-base/slash/');
 
-		await clicknav('[href="/path-base/slash/child"]');
+		await clicknav('[data-testid="child"]');
 		expect(page.url()).toBe(`${baseURL}/path-base/slash/child/`);
-		expect(await page.textContent('h2')).toBe('/slash/child/');
+		expect(await page.textContent('h2')).toBe('/path-base/slash/child/');
 	});
 
 	test('removes trailing slash on endpoint', async ({ baseURL, request }) => {

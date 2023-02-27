@@ -83,6 +83,14 @@ export async function render_response({
 	const segments = event.url.pathname.slice(paths.base.length).split('/').slice(2);
 	const base = segments.map(() => '..').join('/') || '.';
 
+	/**
+	 * The prefix to use for static assets. Replaces `%sveltekit.assets%` in the template.
+	 * If an asset path is specified, use it. If we're creating a fallback page, asset paths
+	 * need to be root-relative. Otherwise, use the base path relative to the current page.
+	 * @type {string}
+	 */
+	const assets = paths.assets || (state.prerendering?.fallback ? paths.base : base);
+
 	if (page_config.ssr) {
 		if (__SVELTEKIT_DEV__ && !branch.at(-1)?.node.component) {
 			// Can only be the leaf, layouts have a fallback component generated
@@ -119,8 +127,12 @@ export async function render_response({
 			form: form_value
 		};
 
+		// use relative paths during rendering, so that the resulting HTML is as
+		// portable as possible, but reset afterwards
 		const original_base = paths.base;
+		const original_assets = paths.assets;
 		paths.set_base(base);
+		paths.set_assets(assets);
 
 		if (__SVELTEKIT_DEV__) {
 			const fetch = globalThis.fetch;
@@ -145,12 +157,14 @@ export async function render_response({
 			} finally {
 				globalThis.fetch = fetch;
 				paths.set_base(original_base);
+				paths.set_assets(original_assets);
 			}
 		} else {
 			try {
 				rendered = options.root.render(props);
 			} finally {
 				paths.set_base(original_base);
+				paths.set_assets(original_assets);
 			}
 		}
 
@@ -181,14 +195,6 @@ export async function render_response({
 	 * If `undefined`, falls back to `base`
 	 */
 	const asset_expression = paths.assets ? s(paths.assets) : undefined;
-
-	/**
-	 * The prefix to use for static assets. Replaces `%sveltekit.assets%` in the template.
-	 * If an asset path is specified, use it. If we're creating a fallback page, asset paths
-	 * need to be root-relative. Otherwise, use the base path relative to the current page.
-	 * @type {string}
-	 */
-	const assets = paths.assets || (state.prerendering?.fallback ? paths.base : base);
 
 	let head = '';
 	let body = rendered.html;

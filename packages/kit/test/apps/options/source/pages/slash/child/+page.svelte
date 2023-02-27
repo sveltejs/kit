@@ -3,4 +3,4 @@
 	import { page } from '$app/stores';
 </script>
 
-<h2>{$page.url.pathname.replace(base, '')}</h2>
+<h2>{$page.url.pathname}</h2>

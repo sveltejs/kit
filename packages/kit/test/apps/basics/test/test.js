@@ -609,13 +609,22 @@ test.describe('$app/environment', () => {
 });
 
 test.describe('$app/paths', () => {
-	test('includes paths', async ({ page }) => {
+	test('includes paths', async ({ page, javaScriptEnabled }) => {
 		await page.goto('/paths');
 
 		expect(await page.innerHTML('pre')).toBe(
 			JSON.stringify({
-				base: '',
-				assets: ''
+				base: javaScriptEnabled ? '' : '.',
+				assets: javaScriptEnabled ? '' : '.'
+			})
+		);
+
+		await page.goto('/paths/deeply/nested');
+
+		expect(await page.innerHTML('pre')).toBe(
+			JSON.stringify({
+				base: javaScriptEnabled ? '' : '../..',
+				assets: javaScriptEnabled ? '' : '../..'
 			})
 		);
 	});
