@@ -135,8 +135,6 @@ export async function render_response({
 
 		// use relative paths during rendering, so that the resulting HTML is as
 		// portable as possible, but reset afterwards
-		const original_base = paths.base;
-		const original_assets = paths.assets;
 		paths.set_base(base);
 		paths.set_assets(assets);
 
@@ -162,15 +160,13 @@ export async function render_response({
 				rendered = options.root.render(props);
 			} finally {
 				globalThis.fetch = fetch;
-				paths.set_base(original_base);
-				paths.set_assets(original_assets);
+				paths.reset();
 			}
 		} else {
 			try {
 				rendered = options.root.render(props);
 			} finally {
-				paths.set_base(original_base);
-				paths.set_assets(original_assets);
+				paths.reset();
 			}
 		}
 

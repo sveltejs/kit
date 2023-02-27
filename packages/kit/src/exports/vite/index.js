@@ -385,6 +385,13 @@ export const assets = ${global}?.assets ?? ${assets ? s(assets) : 'base'};`;
 					return `export let base = ${s(base)};
 export let assets = ${assets ? s(assets) : 'base'};
 
+const initial = { base, assets };
+
+export function reset() {
+	base = initial.base;
+	assets = initial.assets;
+}
+
 /** @param {string} path */
 export function set_base(path) {
 	base = path;
