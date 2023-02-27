@@ -13,7 +13,7 @@ test.describe('env', () => {
 	});
 });
 
-test.describe('paths.base', () => {
+test.describe('paths', () => {
 	test('serves /basepath', async ({ page }) => {
 		await page.goto('/basepath');
 		expect(await page.textContent('h1')).toBe('Hello');
@@ -22,6 +22,20 @@ test.describe('paths.base', () => {
 	test('serves assets from /basepath', async ({ request }) => {
 		const response = await request.get('/basepath/answer.txt');
 		expect(await response.text()).toBe('42');
+	});
+
+	test('uses relative paths during SSR', async ({ page, javaScriptEnabled }) => {
+		await page.goto('/basepath');
+
+		let base = javaScriptEnabled ? '/basepath' : './basepath';
+		expect(await page.textContent('[data-testid="base"]')).toBe(`base: ${base}`);
+		expect(await page.textContent('[data-testid="assets"]')).toBe(`assets: ${base}`);
+
+		await page.goto('/basepath/deeply/nested/page');
+
+		base = javaScriptEnabled ? '/basepath' : '../..';
+		expect(await page.textContent('[data-testid="base"]')).toBe(`base: ${base}`);
+		expect(await page.textContent('[data-testid="assets"]')).toBe(`assets: ${base}`);
 	});
 });
 

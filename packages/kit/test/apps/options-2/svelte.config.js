@@ -2,7 +2,8 @@
 const config = {
 	kit: {
 		paths: {
-			base: '/basepath'
+			base: '/basepath',
+			relative: true
 		},
 		serviceWorker: {
 			register: false
