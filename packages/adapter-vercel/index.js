@@ -509,9 +509,9 @@ async function create_function_bundle(builder, entry, dir, config) {
  * @param {any} vercel_config
  */
 function validate_vercel_json(builder, vercel_config) {
-	if (builder.routes.length > 0 && !builder.routes[0].endpoint) {
+	if (builder.routes.length > 0 && !builder.routes[0].api) {
 		// bail — we're on an older SvelteKit version that doesn't
-		// populate `route.endpoint.methods`, so we can't check
+		// populate `route.api.methods`, so we can't check
 		// to see if cron paths are valid
 		return;
 	}
@@ -521,7 +521,7 @@ function validate_vercel_json(builder, vercel_config) {
 	);
 
 	/** For a route to be considered 'valid', it must be an API route with a GET handler */
-	const valid_routes = builder.routes.filter((route) => route.endpoint.methods.includes('GET'));
+	const valid_routes = builder.routes.filter((route) => route.api.methods.includes('GET'));
 
 	/** @type {Array<string>} */
 	const unmatched_paths = [];
