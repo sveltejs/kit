@@ -1,5 +1,11 @@
 # @sveltejs/kit
 
+## 1.8.6
+
+### Patch Changes
+
+- fix: bundle SvelteKit when using Vitest ([#9172](https://github.com/sveltejs/kit/pull/9172))
+
 ## 1.8.5
 
 ### Patch Changes
