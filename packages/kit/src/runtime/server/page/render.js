@@ -80,8 +80,14 @@ export async function render_response({
 			? action_result.data ?? null
 			: null;
 
-	const segments = event.url.pathname.slice(paths.base.length).split('/').slice(2);
-	const base = segments.map(() => '..').join('/') || '.';
+	const segments = event.url.pathname.slice(paths.base.length).split('/');
+	const base =
+		segments.length === 1 && paths.base !== ''
+			? `./${paths.base.split('/').at(-1)}` // if we're on `/my-base-path`, relative links need to start `./my-base-path` rather than `.`
+			: segments
+					.slice(2)
+					.map(() => '..')
+					.join('/') || '.';
 
 	/**
 	 * The prefix to use for static assets. Replaces `%sveltekit.assets%` in the template.
