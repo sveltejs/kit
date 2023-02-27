@@ -1,8 +1,6 @@
 <script>
 	import { base } from '$app/paths';
 	import { page } from '$app/stores';
-
-	console.log({ base });
 </script>
 
 <h2>{$page.url.pathname}</h2>
