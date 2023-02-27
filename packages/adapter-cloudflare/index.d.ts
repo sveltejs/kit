@@ -20,12 +20,12 @@ export interface AdapterOptions {
 		 * Exclude always take priority over include.
 		 *
 		 * To have the adapter automatically exclude certain things, you can use these placeholders:<br/>
-		 * 
+		 *
 		 * - \<build> to exclude the appDir (default is _app)
 		 * - \<files> for static files
 		 * - \<prerendered> for prerendered pages/paths
 		 * - \<all> to exclude all of the above
-		 * 
+		 *
 		 * @default ["<all>"]
 		 */
 		exclude?: string[];

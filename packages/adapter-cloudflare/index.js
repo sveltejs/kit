@@ -65,23 +65,23 @@ export default function (options) {
  */
 function get_routes_json(builder, assets, options) {
 	/** @type {import('./index').AdapterOptions['routes']} */
-	let { include = ["/*"], exclude = ["<all>"] } = options?.routes ?? {};
+	let { include = ['/*'], exclude = ['<all>'] } = options?.routes ?? {};
 
 	// _app
-	if(exclude.includes("<build>") || exclude.includes("<all>")) {
+	if (exclude.includes('<build>') || exclude.includes('<all>')) {
 		// splice is used to preserve the order that was specified
 		exclude.splice(
-			exclude.includes("<build>") ? exclude.indexOf("<build>") : exclude.indexOf("<all>"),
-			exclude.includes("<build>") ? 1 : 0,
+			exclude.includes('<build>') ? exclude.indexOf('<build>') : exclude.indexOf('<all>'),
+			exclude.includes('<build>') ? 1 : 0,
 			`/${builder.config.kit.appDir}/*`
-			);
+		);
 	}
 
 	// static files
-	if(exclude.includes("<files>") || exclude.includes("<all>")) {
+	if (exclude.includes('<files>') || exclude.includes('<all>')) {
 		exclude.splice(
-			exclude.includes("<files>") ? exclude.indexOf("<files>") : exclude.indexOf("<all>"),
-			exclude.includes("<files>") ? 1 : 0,
+			exclude.includes('<files>') ? exclude.indexOf('<files>') : exclude.indexOf('<all>'),
+			exclude.includes('<files>') ? 1 : 0,
 			...assets
 				.filter(
 					(file) =>
@@ -92,11 +92,11 @@ function get_routes_json(builder, assets, options) {
 						)
 				)
 				.map((file) => `/${file}`)
-			);
+		);
 	}
 
 	// prerendered pages/paths
-	if(exclude.includes("<prerendered>") || exclude.includes("<all>")) {
+	if (exclude.includes('<prerendered>') || exclude.includes('<all>')) {
 		const prerendered = [];
 		for (const path of builder.prerendered.paths) {
 			if (!builder.prerendered.redirects.has(path)) {
@@ -105,19 +105,19 @@ function get_routes_json(builder, assets, options) {
 		}
 
 		exclude.splice(
-			exclude.includes("<prerendered>") ? exclude.indexOf("<prerendered>") : exclude.indexOf("<all>"),
-			exclude.includes("<prerendered>") ? 1 : 0,
+			exclude.includes('<prerendered>')
+				? exclude.indexOf('<prerendered>')
+				: exclude.indexOf('<all>'),
+			exclude.includes('<prerendered>') ? 1 : 0,
 			...prerendered
-			);
+		);
 	}
-
 
 	// remove <all>
-	const allIndex = exclude.indexOf("all");
-	if(allIndex > -1) {
+	const allIndex = exclude.indexOf('all');
+	if (allIndex > -1) {
 		exclude.splice(allIndex);
 	}
-	
 
 	if (include.length + exclude.length > 100) {
 		const message = `Function includes/excludes exceeds _routes.json limits (see https://developers.cloudflare.com/pages/platform/functions/routing/#limits). Skipping the overflow (will cause function invocation)`;
