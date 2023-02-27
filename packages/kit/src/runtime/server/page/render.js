@@ -11,6 +11,7 @@ import { clarify_devalue_error, stringify_uses, handle_error_and_jsonify } from 
 import { public_env } from '../../shared-server.js';
 import { text } from '../../../exports/index.js';
 import { create_async_iterator } from '../../../utils/streaming.js';
+import { SVELTE_KIT_ASSETS } from '../../../constants.js';
 
 // TODO rename this function/module
 
@@ -111,7 +112,7 @@ export async function render_response({
 			base_expression = `new URL(${s(base)}, location).pathname.slice(0, -1)`;
 		}
 
-		if (!paths.assets || paths.assets[0] === '/') {
+		if (!paths.assets || (paths.assets[0] === '/' && paths.assets !== SVELTE_KIT_ASSETS)) {
 			assets = base;
 		}
 	}
