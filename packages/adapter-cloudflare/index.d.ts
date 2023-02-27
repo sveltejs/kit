@@ -9,18 +9,9 @@ export interface AdapterOptions {
 	 */
 	routes?: {
 		/**
-		 * Should we automatically generate excludes for _routes.json
-		 * based on prerendered pages and static assets?
-		 *
-		 * @default true
-		 */
-		autoGenerate?: boolean;
-
-		/**
 		 * Routes that will be invoked by Functions. Accepts wildcard behavior.
 		 *
-		 * If used with autoGenerate, these will be placed first.
-		 * If we reach the 100 limit, auto-generated includes will be removed first.
+		 * @default ["/*"]
 		 */
 		include?: string[];
 
@@ -28,8 +19,14 @@ export interface AdapterOptions {
 		 * Defines routes that will not be invoked by Functions. Accepts wildcard behavior.
 		 * Exclude always take priority over include.
 		 *
-		 * If used with autoGenerate, these will be placed first.
-		 * If we reach the 100 limit, auto-generated includes will be removed first.
+		 * To have the adapter automatically exclude certain things, you can use these placeholders:<br/>
+		 * 
+		 * - \<build> to exclude the appDir (default is _app)
+		 * - \<files> for static files
+		 * - \<prerendered> for prerendered pages/paths
+		 * - \<all> to exclude all of the above
+		 * 
+		 * @default ["<all>"]
 		 */
 		exclude?: string[];
 	};
