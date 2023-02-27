@@ -35,6 +35,7 @@ if (fs.existsSync(cwd)) {
 			initialValue: false
 		});
 
+		// bail if `force` is `false` or the user cancelled with Ctrl-C
 		if (force !== true) {
 			process.exit(1);
 		}
