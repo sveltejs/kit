@@ -207,6 +207,7 @@ importers:
 
   packages/create-svelte:
     specifiers:
+      '@clack/prompts': ^0.6.0
       '@playwright/test': ^1.28.1
       '@types/gitignore-parser': ^0.0.0
       '@types/prettier': ^2.7.1
@@ -215,14 +216,13 @@ importers:
       kleur: ^4.1.5
       prettier: ^2.8.0
       prettier-plugin-svelte: ^2.8.1
-      prompts: ^2.4.2
       sucrase: ^3.29.0
       svelte: ^3.55.1
       tiny-glob: ^0.2.9
       uvu: ^0.5.6
     dependencies:
+      '@clack/prompts': 0.6.0
       kleur: 4.1.5
-      prompts: 2.4.2
     devDependencies:
       '@playwright/test': 1.29.2
       '@types/gitignore-parser': 0.0.0
@@ -972,6 +972,23 @@ packages:
       human-id: 1.0.2
       prettier: 2.8.0
     dev: true
+
+  /@clack/core/0.3.0:
+    resolution: {integrity: sha512-ujw1888RciTArxUvwLOf24XSygRX7F4qiCPI7WLH3zCTZJuqKPMcTS7Wqjz0x/AuMpwGPlzhKln4+sCuQqYxzA==}
+    dependencies:
+      picocolors: 1.0.0
+      sisteransi: 1.0.5
+    dev: false
+
+  /@clack/prompts/0.6.0:
+    resolution: {integrity: sha512-lNg3MFPLA2rrMAZ6R2QFg+jGo2Pt3ACJERDbPgxjPU9QJwVFB3D2v3x7SzzVoS6schggcMN0tDJ4zSdcI+kqJg==}
+    dependencies:
+      '@clack/core': 0.3.0
+      picocolors: 1.0.0
+      sisteransi: 1.0.5
+    dev: false
+    bundledDependencies:
+      - is-unicode-supported
 
   /@cloudflare/kv-asset-handler/0.3.0:
     resolution: {integrity: sha512-9CB/MKf/wdvbfkUdfrj+OkEwZ5b7rws0eogJ4293h+7b6KX5toPwym+VQKmILafNB9YiehqY0DlNrDcDhdWHSQ==}
