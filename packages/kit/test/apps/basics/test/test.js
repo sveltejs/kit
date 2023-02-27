@@ -609,13 +609,13 @@ test.describe('$app/environment', () => {
 });
 
 test.describe('$app/paths', () => {
-	test('includes paths', async ({ page, javaScriptEnabled }) => {
+	test('includes paths', async ({ page }) => {
 		await page.goto('/paths');
 
 		expect(await page.innerHTML('pre')).toBe(
 			JSON.stringify({
-				base: javaScriptEnabled ? '' : '.',
-				assets: javaScriptEnabled ? '' : '.'
+				base: '',
+				assets: ''
 			})
 		);
 
@@ -623,8 +623,8 @@ test.describe('$app/paths', () => {
 
 		expect(await page.innerHTML('pre')).toBe(
 			JSON.stringify({
-				base: javaScriptEnabled ? '' : '../..',
-				assets: javaScriptEnabled ? '' : '../..'
+				base: '',
+				assets: ''
 			})
 		);
 	});

@@ -385,7 +385,14 @@ export const assets = ${global}?.assets ?? ${assets ? s(assets) : 'base'};`;
 					return `export let base = ${s(base)};
 export let assets = ${assets ? s(assets) : 'base'};
 
+export const relative = ${svelte_config.kit.paths.relative};
+
 const initial = { base, assets };
+
+export function override(paths) {
+	base = paths.base;
+	assets = paths.assets;
+}
 
 export function reset() {
 	base = initial.base;
@@ -393,13 +400,8 @@ export function reset() {
 }
 
 /** @param {string} path */
-export function set_base(path) {
-	base = path;
-}
-
-/** @param {string} path */
 export function set_assets(path) {
-	assets = path;
+	assets = initial.assets = path;
 }`;
 
 				case '\0__sveltekit/environment':

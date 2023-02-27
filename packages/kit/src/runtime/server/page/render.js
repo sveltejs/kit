@@ -80,22 +80,41 @@ export async function render_response({
 			? action_result.data ?? null
 			: null;
 
-	const segments = event.url.pathname.slice(paths.base.length).split('/');
-	const base =
-		segments.length === 1 && paths.base !== ''
-			? `./${paths.base.split('/').at(-1)}` // if we're on `/my-base-path`, relative links need to start `./my-base-path` rather than `.`
-			: segments
-					.slice(2)
-					.map(() => '..')
-					.join('/') || '.';
+	/** @type {string} */
+	let base = paths.base;
+
+	/** @type {string} */
+	let assets = paths.assets;
 
 	/**
-	 * The prefix to use for static assets. Replaces `%sveltekit.assets%` in the template.
-	 * If an asset path is specified, use it. If we're creating a fallback page, asset paths
-	 * need to be root-relative. Otherwise, use the base path relative to the current page.
-	 * @type {string}
+	 * An expression that will evaluate in the client to determine the resolved base path.
+	 * We use a relative path when possible to support IPFS, the internet archive, etc.
 	 */
-	const assets = paths.assets || (state.prerendering?.fallback ? paths.base : base);
+	let base_expression = s(paths.base);
+
+	/**
+	 * An expression that will evaluate in the client to determine the resolved asset path.
+	 * If `undefined`, falls back to `base`
+	 */
+	const asset_expression = paths.assets ? s(paths.assets) : undefined;
+
+	// if appropriate, use relative paths for greater portability
+	if (paths.relative !== false && !state.prerendering?.fallback) {
+		const segments = event.url.pathname.slice(paths.base.length).split('/');
+		base =
+			segments.length === 1 && paths.base !== ''
+				? `./${paths.base.split('/').at(-1)}` // if we're on `/my-base-path`, relative links need to start `./my-base-path` rather than `.`
+				: segments
+						.slice(2)
+						.map(() => '..')
+						.join('/') || '.';
+
+		base_expression = `new URL(${s(base)}, location.href).pathname.slice(0,-1)`;
+
+		if (!paths.assets) {
+			assets = base;
+		}
+	}
 
 	if (page_config.ssr) {
 		if (__SVELTEKIT_DEV__ && !branch.at(-1)?.node.component) {
@@ -135,8 +154,7 @@ export async function render_response({
 
 		// use relative paths during rendering, so that the resulting HTML is as
 		// portable as possible, but reset afterwards
-		paths.set_base(base);
-		paths.set_assets(assets);
+		if (paths.relative) paths.override({ base, assets });
 
 		if (__SVELTEKIT_DEV__) {
 			const fetch = globalThis.fetch;
@@ -182,21 +200,6 @@ export async function render_response({
 	} else {
 		rendered = { head: '', html: '', css: { code: '', map: null } };
 	}
-
-	/**
-	 * An expression that will evaluate in the client to determine the resolved base path.
-	 * We use a relative path when possible to support IPFS, the internet archive, etc.
-	 */
-	const base_expression =
-		state.prerendering?.fallback || paths.base !== ''
-			? s(paths.base)
-			: `new URL(${s(base)}, location.href).pathname.slice(0,-1)`;
-
-	/**
-	 * An expression that will evaluate in the client to determine the resolved asset path.
-	 * If `undefined`, falls back to `base`
-	 */
-	const asset_expression = paths.assets ? s(paths.assets) : undefined;
 
 	let head = '';
 	let body = rendered.html;

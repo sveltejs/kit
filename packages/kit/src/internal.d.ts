@@ -7,9 +7,10 @@ declare module '__sveltekit/environment' {
 
 /** Internal version of $app/paths */
 declare module '__sveltekit/paths' {
-	export const base: string;
-	export let assets: `https://${string}` | `http://${string}`;
+	export let base: '' | `/${string}`;
+	export let assets: '' | `https://${string}` | `http://${string}`;
+	export let relative: boolean | undefined; // TODO in 2.0, make this a `boolean` that defaults to `true`
 	export function reset(): void;
-	export function set_base(path: string): void;
+	export function override(paths: { base: string; assets: string }): void;
 	export function set_assets(path: string): void;
 }

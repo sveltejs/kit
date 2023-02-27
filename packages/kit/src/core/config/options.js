@@ -168,6 +168,13 @@ const options = object(
 					}
 
 					return input;
+				}),
+				relative: validate(undefined, (input, keypath) => {
+					if (typeof input !== 'boolean') {
+						throw new Error(`${keypath} option must be a boolean , if specified`);
+					}
+
+					return input;
 				})
 			}),
 

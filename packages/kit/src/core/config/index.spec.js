@@ -97,7 +97,8 @@ const get_defaults = (prefix = '') => ({
 		typescript: {},
 		paths: {
 			base: '',
-			assets: ''
+			assets: '',
+			relative: undefined
 		},
 		prerender: {
 			concurrency: 1,
@@ -293,8 +294,8 @@ test('fails if prerender.entries are invalid', () => {
 
 /**
  * @param {string} name
- * @param {{ base?: string, assets?: string }} input
- * @param {{ base?: string, assets?: string }} output
+ * @param {import('types').KitConfig['paths']} input
+ * @param {import('types').KitConfig['paths']} output
  */
 function validate_paths(name, input, output) {
 	test(name, () => {
@@ -316,7 +317,8 @@ validate_paths(
 	},
 	{
 		base: '/path/to/base',
-		assets: ''
+		assets: '',
+		relative: undefined
 	}
 );
 
@@ -327,7 +329,8 @@ validate_paths(
 	},
 	{
 		base: '',
-		assets: 'https://cdn.example.com'
+		assets: 'https://cdn.example.com',
+		relative: undefined
 	}
 );
 
@@ -339,7 +342,8 @@ validate_paths(
 	},
 	{
 		base: '/path/to/base',
-		assets: 'https://cdn.example.com'
+		assets: 'https://cdn.example.com',
+		relative: undefined
 	}
 );
 
