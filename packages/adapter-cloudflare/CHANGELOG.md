@@ -1,5 +1,11 @@
 # @sveltejs/adapter-cloudflare
 
+## 2.1.0
+
+### Minor Changes
+
+- feat: allow custom `include` and `exclude` rules in `_routes.json` ([#9111](https://github.com/sveltejs/kit/pull/9111))
+
 ## 2.0.2
 
 ### Patch Changes
