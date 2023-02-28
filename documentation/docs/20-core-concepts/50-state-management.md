@@ -82,7 +82,7 @@ export async function load({ fetch }) {
 You might wonder how we're able to use `$page.data` and other [app stores](/docs/modules#$app-stores) if we can't use our own stores. The answer is that app stores on the server use Svelte's [context API](https://learn.svelte.dev/tutorial/context-api) — the store is attached to the component tree with `setContext`, and when you subscribe you retrieve it with `getContext`. We can do the same thing with our own stores:
 
 ```svelte
-/// file: +layout.svelte
+/// file: src/routes/+layout.svelte
 <script>
 	import { setContext } from 'svelte';
 	import { writable } from 'svelte/store';
@@ -100,7 +100,7 @@ You might wonder how we're able to use `$page.data` and other [app stores](/docs
 ```
 
 ```svelte
-/// file: +src/user/+page.svelte
+/// file: src/routes/user/+page.svelte
 <script>
 	import { getContext } from 'svelte';
 
