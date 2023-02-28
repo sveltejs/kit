@@ -62,8 +62,11 @@ async function analyse({ manifest_path, env }) {
 
 	// analyse routes
 	for (const route of manifest._.routes) {
-		/** @type {Set<import('types').HttpMethod>} */
-		const methods = new Set();
+		/** @type {Array<'GET' | 'POST'>} */
+		const page_methods = [];
+
+		/** @type {import('types').HttpMethod[]} */
+		const api_methods = [];
 
 		/** @type {import('types').PrerenderOption | undefined} */
 		let prerender = undefined;
@@ -84,12 +87,12 @@ async function analyse({ manifest_path, env }) {
 				prerender = mod.prerender;
 			}
 
-			if (mod.GET) methods.add('GET');
-			if (mod.POST) methods.add('POST');
-			if (mod.PUT) methods.add('PUT');
-			if (mod.PATCH) methods.add('PATCH');
-			if (mod.DELETE) methods.add('DELETE');
-			if (mod.OPTIONS) methods.add('OPTIONS');
+			if (mod.GET) api_methods.push('GET');
+			if (mod.POST) api_methods.push('POST');
+			if (mod.PUT) api_methods.push('PUT');
+			if (mod.PATCH) api_methods.push('PATCH');
+			if (mod.DELETE) api_methods.push('DELETE');
+			if (mod.OPTIONS) api_methods.push('OPTIONS');
 
 			config = mod.config;
 		}
@@ -112,8 +115,8 @@ async function analyse({ manifest_path, env }) {
 			}
 
 			if (page) {
-				methods.add('GET');
-				if (page.server?.actions) methods.add('POST');
+				page_methods.push('GET');
+				if (page.server?.actions) page_methods.push('POST');
 
 				validate_page_server_exports(page.server, page.server_id);
 				validate_common_exports(page.universal, page.universal_id);
@@ -133,9 +136,15 @@ async function analyse({ manifest_path, env }) {
 		}
 
 		metadata.routes.set(route.id, {
-			prerender,
 			config,
-			methods: Array.from(methods)
+			methods: Array.from(new Set([...page_methods, ...api_methods])),
+			page: {
+				methods: page_methods
+			},
+			api: {
+				methods: api_methods
+			},
+			prerender
 		});
 	}
 

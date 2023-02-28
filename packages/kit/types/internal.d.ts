@@ -254,16 +254,21 @@ export interface ServerErrorNode {
 	status?: number;
 }
 
+export interface ServerMetadataRoute {
+	config: any;
+	api: {
+		methods: HttpMethod[];
+	};
+	page: {
+		methods: Array<'GET' | 'POST'>;
+	};
+	methods: HttpMethod[];
+	prerender: PrerenderOption | undefined;
+}
+
 export interface ServerMetadata {
 	nodes: Array<{ has_server_load: boolean }>;
-	routes: Map<
-		string,
-		{
-			prerender: PrerenderOption | undefined;
-			methods: HttpMethod[];
-			config: any;
-		}
-	>;
+	routes: Map<string, ServerMetadataRoute>;
 }
 
 export interface SSRComponent {
