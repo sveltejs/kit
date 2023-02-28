@@ -456,7 +456,30 @@ const response = await fetch(this.action, {
 
 ## Alternatives
 
-Form actions are the preferred way to send data to the server, since they can be progressively enhanced, but you can also use [`+server.js`](routing#server) files to expose (for example) a JSON API.
+Form actions are the preferred way to send data to the server, since they can be progressively enhanced, but you can also use [`+server.js`](routing#server) files to expose (for example) a JSON API. Here's how such an interaction could look like:
+
+```svelte
+/// file: send-message/+page.svelte
+<script>
+	function rerun() {
+		fetch('/api/ci', {
+			method: 'POST'
+		});
+	}
+</script>
+
+<button on:click={rerun}>Rerun CI</button>
+```
+
+```js
+// @errors: 2355 1360
+/// file: api/ci/+server.js
+
+/** @type {import('./$types').RequestHandler} */
+export function POST() {
+	// do something
+}
+```
 
 ## GET vs POST
 
