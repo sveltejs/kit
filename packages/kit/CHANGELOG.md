@@ -1,5 +1,11 @@
 # @sveltejs/kit
 
+## 1.9.1
+
+### Patch Changes
+
+- feat: warn when calling depends(...) with special URI scheme ([#9246](https://github.com/sveltejs/kit/pull/9246))
+
 ## 1.9.0
 
 ### Minor Changes
