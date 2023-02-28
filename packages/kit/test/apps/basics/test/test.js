@@ -634,6 +634,15 @@ test.describe('$app/paths', () => {
 				assets: ''
 			})
 		);
+
+		await page.goto('/paths/deeply/nested');
+
+		expect(await page.innerHTML('pre')).toBe(
+			JSON.stringify({
+				base: '',
+				assets: ''
+			})
+		);
 	});
 
 	// some browsers will re-request assets after a `pushState`

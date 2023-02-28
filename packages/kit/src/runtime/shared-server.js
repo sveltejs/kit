@@ -1,5 +1,3 @@
-export { set_assets } from '__sveltekit/paths';
-
 /** @type {Record<string, string>} */
 export let private_env = {};
 

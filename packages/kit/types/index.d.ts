@@ -441,12 +441,20 @@ export interface KitConfig {
 		 * An absolute path that your app's files are served from. This is useful if your files are served from a storage bucket of some kind.
 		 * @default ""
 		 */
-		assets?: string;
+		assets?: '' | `http://${string}` | `https://${string}`;
 		/**
 		 * A root-relative path that must start, but not end with `/` (e.g. `/base-path`), unless it is the empty string. This specifies where your app is served from and allows the app to live on a non-root path. Note that you need to prepend all your root-relative links with the base value or they will point to the root of your domain, not your `base` (this is how the browser works). You can use [`base` from `$app/paths`](/docs/modules#$app-paths-base) for that: `<a href="{base}/your-page">Link</a>`. If you find yourself writing this often, it may make sense to extract this into a reusable component.
 		 * @default ""
 		 */
-		base?: string;
+		base?: '' | `/${string}`;
+		/**
+		 * Whether to use relative asset paths. By default, if `paths.assets` is not external, SvelteKit will replace `%sveltekit.assets%` with a relative path and use relative paths to reference build artifacts, but `base` and `assets` imported from `$app/paths` will be as specified in your config.
+		 *
+		 * If `true`, `base` and `assets` imported from `$app/paths` will be replaced with relative asset paths during server-side rendering, resulting in portable HTML.
+		 * If `false`, `%sveltekit.assets%` and references to build artifacts will always be root-relative paths, unless `paths.assets` is an external URL
+		 * @default undefined
+		 */
+		relative?: boolean | undefined;
 	};
 	/**
 	 * See [Prerendering](https://kit.svelte.dev/docs/page-options#prerender).

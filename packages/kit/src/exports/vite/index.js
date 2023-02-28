@@ -379,17 +379,34 @@ function kit({ svelte_config }) {
 				case '\0__sveltekit/paths':
 					const { assets, base } = svelte_config.kit.paths;
 
+					// use the values defined in `global`, but fall back to hard-coded values
+					// for the sake of things like Vitest which may import this module
+					// outside the context of a page
 					if (browser) {
-						return `export const base = ${s(base)};
-export const assets = ${global}.assets;`;
+						return `export const base = ${global}?.base ?? ${s(base)};
+export const assets = ${global}?.assets ?? ${assets ? s(assets) : 'base'};`;
 					}
 
-					return `export const base = ${s(base)};
+					return `export let base = ${s(base)};
 export let assets = ${assets ? s(assets) : 'base'};
+
+export const relative = ${svelte_config.kit.paths.relative};
+
+const initial = { base, assets };
+
+export function override(paths) {
+	base = paths.base;
+	assets = paths.assets;
+}
+
+export function reset() {
+	base = initial.base;
+	assets = initial.assets;
+}
 
 /** @param {string} path */
 export function set_assets(path) {
-	assets = path;
+	assets = initial.assets = path;
 }`;
 
 				case '\0__sveltekit/environment':
