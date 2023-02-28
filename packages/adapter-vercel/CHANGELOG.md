@@ -1,5 +1,11 @@
 # @sveltejs/adapter-vercel
 
+## 2.2.0
+
+### Minor Changes
+
+- feat: validate that Vercel cron paths match an API path ([#9145](https://github.com/sveltejs/kit/pull/9145))
+
 ## 2.1.1
 
 ### Patch Changes
