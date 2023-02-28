@@ -1,5 +1,5 @@
 ---
-title: State Management
+title: State management
 ---
 
 Managing state is one of the hardest parts in application development. This section covers various use cases with regards to state management and what to watch out for.
