@@ -63,9 +63,7 @@ export default function (options = {}) {
  * @param {import('./index').AdapterOptions['routes']} routes
  * @returns {import('.').RoutesJSONSpec}
  */
-function get_routes_json(builder, assets, routes) {
-	let { include = ['/*'], exclude = ['<all>'] } = routes ?? {};
-
+function get_routes_json(builder, assets, { include = ['/*'], exclude = ['<all>'] }) {
 	if (!Array.isArray(include) || !Array.isArray(exclude)) {
 		throw new Error(`routes.include and routes.exclude must be arrays`);
 	}
