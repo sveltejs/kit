@@ -586,6 +586,13 @@ export function create_client(app, target) {
 			/** @param {string[]} deps */
 			function depends(...deps) {
 				for (const dep of deps) {
+					let match;
+					if (DEV && (match = /^(moz-icon|view-source|jar):/.exec(dep))) {
+						console.warn(
+							`${route.id}: Calling \`depends('${dep}')\` will throw an error in Firefox because \`${match[1]}\` is a special URI scheme`
+						);
+					}
+
 					const { href } = new URL(dep, url);
 					uses.dependencies.add(href);
 				}

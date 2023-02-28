@@ -59,6 +59,13 @@ export async function load_server_data({ event, state, node, parent }) {
 			for (const dep of deps) {
 				const { href } = new URL(dep, event.url);
 
+				let match;
+				if (DEV && (match = /^(moz-icon|view-source|jar):/.exec(dep))) {
+					console.warn(
+						`${node.server_id}: Calling \`depends('${dep}')\` will throw an error in Firefox because \`${match[1]}\` is a special URI scheme`
+					);
+				}
+
 				if (DEV && done && !uses.dependencies.has(href)) {
 					console.warn(
 						`${node.server_id}: Calling \`depends(...)\` in a promise handler after \`load(...)\` has returned will not cause the function to re-run when the dependency is invalidated`
