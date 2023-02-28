@@ -1,5 +1,11 @@
 # @sveltejs/kit
 
+## 1.8.8
+
+### Patch Changes
+
+- fix: always add `@sveltejs/kit` to `noExternal` for ssr build ([#9242](https://github.com/sveltejs/kit/pull/9242))
+
 ## 1.8.7
 
 ### Patch Changes
