@@ -4,7 +4,7 @@ import { fileURLToPath } from 'node:url';
 import * as esbuild from 'esbuild';
 
 /** @type {import('.').default} */
-export default function (options) {
+export default function (options = {}) {
 	return {
 		name: '@sveltejs/adapter-cloudflare',
 		async adapt(builder) {
@@ -30,7 +30,7 @@ export default function (options) {
 
 			writeFileSync(
 				`${dest}/_routes.json`,
-				JSON.stringify(get_routes_json(builder, written_files, options))
+				JSON.stringify(get_routes_json(builder, written_files, options.routes ?? {}), null, '\t')
 			);
 
 			writeFileSync(`${dest}/_headers`, generate_headers(builder.config.kit.appDir), { flag: 'a' });
@@ -60,85 +60,64 @@ export default function (options) {
 /**
  * @param {import('@sveltejs/kit').Builder} builder
  * @param {string[]} assets
- * @param {import('./index').AdapterOptions} options
+ * @param {import('./index').AdapterOptions['routes']} routes
  * @returns {import('.').RoutesJSONSpec}
  */
-function get_routes_json(builder, assets, options) {
-	/** @type {import('./index').AdapterOptions['routes']} */
-	let { include = ['/*'], exclude = ['<all>'] } = options?.routes ?? {};
+function get_routes_json(builder, assets, routes) {
+	let { include = ['/*'], exclude = ['<all>'] } = routes ?? {};
 
-	// _app
-	if (exclude.includes('<build>') || exclude.includes('<all>')) {
-		// splice is used to preserve the order that was specified
-		exclude.splice(
-			exclude.includes('<build>') ? exclude.indexOf('<build>') : exclude.indexOf('<all>'),
-			exclude.includes('<build>') ? 1 : 0,
-			`/${builder.config.kit.appDir}/*`
-		);
-	}
-
-	// static files
-	if (exclude.includes('<files>') || exclude.includes('<all>')) {
-		exclude.splice(
-			exclude.includes('<files>') ? exclude.indexOf('<files>') : exclude.indexOf('<all>'),
-			exclude.includes('<files>') ? 1 : 0,
-			...assets
-				.filter(
-					(file) =>
-						!(
-							file.startsWith(`${builder.config.kit.appDir}/`) ||
-							file === '_headers' ||
-							file === '_redirects'
-						)
-				)
-				.map((file) => `/${file}`)
-		);
-	}
-
-	// prerendered pages/paths
-	if (exclude.includes('<prerendered>') || exclude.includes('<all>')) {
-		const prerendered = [];
-		for (const path of builder.prerendered.paths) {
-			if (!builder.prerendered.redirects.has(path)) {
-				prerendered.push(path);
-			}
-		}
-
-		exclude.splice(
-			exclude.includes('<prerendered>')
-				? exclude.indexOf('<prerendered>')
-				: exclude.indexOf('<all>'),
-			exclude.includes('<prerendered>') ? 1 : 0,
-			...prerendered
-		);
-	}
-
-	// remove <all>
-	const allIndex = exclude.indexOf('<all>');
-	if (allIndex > -1) {
-		exclude.splice(allIndex, 1);
-	}
-
-	if (include.length + exclude.length > 100) {
-		const message = `Function includes/excludes exceeds _routes.json limits (see https://developers.cloudflare.com/pages/platform/functions/routing/#limits). Skipping the overflow (will cause function invocation)`;
-		builder.log.warn(message);
-
-		while (include.length + exclude.length > 100) {
-			if (include.length > exclude.length) {
-				// if there are more includes than excludes, trim includes
-				include.pop();
-			} else {
-				// if there are more excludes than includes, trim excludes
-				exclude.pop();
-			}
-		}
+	if (!Array.isArray(include) || !Array.isArray(exclude)) {
+		throw new Error(`routes.include and routes.exclude must be arrays`);
 	}
 
 	if (include.length === 0) {
-		builder.log.warn(
-			'Routes needs at least one include rule! Adding /* to includes (see https://developers.cloudflare.com/pages/platform/functions/routing/#limits)'
-		);
-		include.push('/*');
+		throw new Error(`routes.include must contain at least one route`);
+	}
+
+	if (include.length > 100) {
+		throw new Error(`routes.include must contain 100 or fewer routes`);
+	}
+
+	exclude = exclude
+		.flatMap((rule) => (rule === '<all>' ? ['<build>', '<files>', '<prerendered>'] : rule))
+		.flatMap((rule) => {
+			if (rule === '<build>') {
+				return `/${builder.config.kit.appDir}/*`;
+			}
+
+			if (rule === '<files>') {
+				return assets
+					.filter(
+						(file) =>
+							!(
+								file.startsWith(`${builder.config.kit.appDir}/`) ||
+								file === '_headers' ||
+								file === '_redirects'
+							)
+					)
+					.map((file) => `/${file}`);
+			}
+
+			if (rule === '<prerendered>') {
+				const prerendered = [];
+				for (const path of builder.prerendered.paths) {
+					if (!builder.prerendered.redirects.has(path)) {
+						prerendered.push(path);
+					}
+				}
+
+				return prerendered;
+			}
+
+			return rule;
+		});
+
+	const excess = include.length + exclude.length - 100;
+	if (excess > 0) {
+		const message = `Function includes/excludes exceeds _routes.json limits (see https://developers.cloudflare.com/pages/platform/functions/routing/#limits). Dropping ${excess} exclude rules — this will cause unnecessary function invocations.`;
+		builder.log.warn(message);
+
+		exclude.length -= excess;
 	}
 
 	return {
