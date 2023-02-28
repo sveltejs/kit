@@ -162,7 +162,7 @@ As we've seen, there are two types of `load` function:
 
 Conceptually, they're the same thing, but there are some important differences to be aware of.
 
-### When does which load function run
+### When does which load function run?
 
 Server `load` functions _always_ run on the server.
 
