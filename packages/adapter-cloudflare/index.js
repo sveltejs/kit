@@ -1,5 +1,5 @@
 import { writeFileSync } from 'node:fs';
-import { posix } from 'node:path';
+import { posix, join as path_join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import * as esbuild from 'esbuild';
 
@@ -19,6 +19,10 @@ export default function (options = {}) {
 			const dest_dir = `${dest}${builder.config.kit.paths.base}`;
 			const written_files = builder.writeClient(dest_dir);
 			builder.writePrerendered(dest_dir);
+
+			if (options.fallback) {
+				await builder.generateFallback(path_join(dest, options.fallback));
+			}
 
 			const relativePath = posix.relative(tmp, builder.getServerDirectory());
 
