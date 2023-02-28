@@ -1,6 +1,6 @@
 #!/usr/bin/env node
-import fs from 'fs';
-import { fileURLToPath } from 'url';
+import fs from 'node:fs';
+import { fileURLToPath } from 'node:url';
 import colors from 'kleur';
 
 const migration = process.argv[2];

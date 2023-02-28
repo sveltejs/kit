@@ -18,7 +18,7 @@ import {
 	RouteSegment,
 	UniqueInterface
 } from './private.js';
-import { SSRNodeLoader, SSRRoute, ValidatedConfig } from './internal.js';
+import { AssetDependencies, SSRNodeLoader, SSRRoute, ValidatedConfig } from './internal.js';
 
 export { PrerenderOption } from './private.js';
 
@@ -304,6 +304,8 @@ export interface KitConfig {
 	 * > When `mode` is `'auto'`, SvelteKit will use nonces for dynamically rendered pages and hashes for prerendered pages. Using nonces with prerendered pages is insecure and therefore forbidden.
 	 *
 	 * > Note that most [Svelte transitions](https://svelte.dev/tutorial/transition) work by creating an inline `<style>` element. If you use these in your app, you must either leave the `style-src` directive unspecified or add `unsafe-inline`.
+	 *
+	 * If this level of configuration is insufficient and you have more dynamic requirements, you can use the [`handle` hook](https://kit.svelte.dev/docs/hooks#server-hooks-handle) to roll your own CSP.
 	 */
 	csp?: {
 		/**
@@ -420,6 +422,20 @@ export interface KitConfig {
 	 * @default ".svelte-kit"
 	 */
 	outDir?: string;
+	/**
+	 * Options related to the build output format
+	 */
+	output?: {
+		/**
+		 * SvelteKit will preload the JavaScript modules needed for the initial page to avoid import 'waterfalls', resulting in faster application startup. There
+		 * are three strategies with different trade-offs:
+		 * - `modulepreload` - uses `<link rel="modulepreload">`. This delivers the best results in Chromium-based browsers, but is currently ignored by Firefox and Safari (though support is coming to Safari soon).
+		 * - `preload-js` - uses `<link rel="preload">`. Prevents waterfalls in Chromium and Safari, but Chromium will parse each module twice (once as a script, once as a module). Causes modules to be requested twice in Firefox. This is a good setting if you want to maximise performance for users on iOS devices at the cost of a very slight degradation for Chromium users.
+		 * - `preload-mjs` - uses `<link rel="preload">` but with the `.mjs` extension which prevents double-parsing in Chromium. Some static webservers will fail to serve .mjs files with a `Content-Type: application/javascript` header, which will cause your application to break. If that doesn't apply to you, this is the option that will deliver the best performance for the largest number of users, until `modulepreload` is more widely supported.
+		 * @default "modulepreload"
+		 */
+		preloadStrategy?: 'modulepreload' | 'preload-js' | 'preload-mjs';
+	};
 	paths?: {
 		/**
 		 * An absolute path that your app's files are served from. This is useful if your files are served from a storage bucket of some kind.
@@ -523,7 +539,7 @@ export interface KitConfig {
 	 * Client-side navigation can be buggy if you deploy a new version of your app while people are using it. If the code for the new page is already loaded, it may have stale content; if it isn't, the app's route manifest may point to a JavaScript file that no longer exists.
 	 * SvelteKit helps you solve this problem through version management.
 	 * If SvelteKit encounters an error while loading the page and detects that a new version has been deployed (using the `name` specified here, which defaults to a timestamp of the build) it will fall back to traditional full-page navigation.
-	 * Not all navigations will result in an error though, for example if the JavaScript for the next page is already loaded. If you still want to force a full-page navigation in these cases, use techniques such as setting the `pollInverval` and then using `beforeNavigate`:
+	 * Not all navigations will result in an error though, for example if the JavaScript for the next page is already loaded. If you still want to force a full-page navigation in these cases, use techniques such as setting the `pollInterval` and then using `beforeNavigate`:
 	 * ```html
 	 * /// +layout.svelte
 	 * <script>
@@ -532,7 +548,7 @@ export interface KitConfig {
 	 *
 	 * beforeNavigate(({ willUnload, to }) => {
 	 *   if ($updated && !willUnload && to?.url) {
-	 *     location.href = to.route.url.href;
+	 *     location.href = to.url.href;
 	 *   }
 	 * });
 	 * </script>
@@ -542,7 +558,7 @@ export interface KitConfig {
 	 */
 	version?: {
 		/**
-		 * The current app version string. If specified, this must be deterministic (e.g. a commit ref rather than `Math.random()` or Date.now().toString()`), otherwise defaults to a timestamp of the build
+		 * The current app version string. If specified, this must be deterministic (e.g. a commit ref rather than `Math.random()` or `Date.now().toString()`), otherwise defaults to a timestamp of the build
 		 */
 		name?: string;
 		/**
@@ -890,7 +906,7 @@ export interface RequestEvent<
 	 */
 	locals: App.Locals;
 	/**
-	 * The parameters of the current page or endpoint - e.g. for a route like `/blog/[slug]`, a `{ slug: string }` object
+	 * The parameters of the current route - e.g. for a route like `/blog/[slug]`, a `{ slug: string }` object
 	 */
 	params: Params;
 	/**
@@ -934,7 +950,7 @@ export interface RequestEvent<
 	 */
 	setHeaders(headers: Record<string, string>): void;
 	/**
-	 * The URL of the current page or endpoint.
+	 * The requested URL.
 	 */
 	url: URL;
 	/**
@@ -981,6 +997,12 @@ export interface ResolveOptions {
 
 export interface RouteDefinition<Config = any> {
 	id: string;
+	api: {
+		methods: HttpMethod[];
+	};
+	page: {
+		methods: Extract<HttpMethod, 'GET' | 'POST'>[];
+	};
 	pattern: RegExp;
 	prerender: PrerenderOption;
 	segments: RouteSegment[];
@@ -1006,11 +1028,9 @@ export interface SSRManifest {
 
 	/** private fields */
 	_: {
-		entry: {
-			file: string;
-			imports: string[];
-			stylesheets: string[];
-			fonts: string[];
+		client: {
+			start: AssetDependencies;
+			app: AssetDependencies;
 		};
 		nodes: SSRNodeLoader[];
 		routes: SSRRoute[];
@@ -1127,7 +1147,7 @@ export type ActionResult<
  * Creates an `HttpError` object with an HTTP status code and an optional message.
  * This object, if thrown during request handling, will cause SvelteKit to
  * return an error response without invoking `handleError`.
- * Make sure you're not catching the thrown error, which results in a noop.
+ * Make sure you're not catching the thrown error, which would prevent SvelteKit from handling it.
  * @param status The [HTTP status code](https://developer.mozilla.org/en-US/docs/Web/HTTP/Status#client_error_responses). Must be in the range 400-599.
  * @param body An object that conforms to the App.Error type. If a string is passed, it will be used as the message property.
  */
@@ -1150,7 +1170,7 @@ export interface HttpError {
 
 /**
  * Create a `Redirect` object. If thrown during request handling, SvelteKit will return a redirect response.
- * Make sure you're not catching the thrown redirect, which results in a noop.
+ * Make sure you're not catching the thrown redirect, which would prevent SvelteKit from handling it.
  * @param status The [HTTP status code](https://developer.mozilla.org/en-US/docs/Web/HTTP/Status#redirection_messages). Must be in the range 300-308.
  * @param location The location to redirect to.
  */

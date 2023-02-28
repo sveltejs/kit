@@ -21,9 +21,10 @@ function read_description(filename) {
 }
 
 /**
- * @param {import('../env.js').EnvData} env
+ * @param {import('types').Env} env
+ * @param {string} prefix
  */
-const template = (env) => `
+const template = (env, prefix) => `
 ${GENERATED_COMMENT}
 
 /// <reference types="@sveltejs/kit" />
@@ -35,10 +36,10 @@ ${read_description('$env+static+public.md')}
 ${create_static_types('public', env)}
 
 ${read_description('$env+dynamic+private.md')}
-${create_dynamic_types('private', env)}
+${create_dynamic_types('private', env, prefix)}
 
 ${read_description('$env+dynamic+public.md')}
-${create_dynamic_types('public', env)}
+${create_dynamic_types('public', env, prefix)}
 `;
 
 /**
@@ -53,6 +54,6 @@ export function write_ambient(config, mode) {
 
 	write_if_changed(
 		path.join(config.outDir, 'ambient.d.ts'),
-		template({ ...env, prefix: config.env.publicPrefix })
+		template(env, config.env.publicPrefix)
 	);
 }

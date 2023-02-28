@@ -1,0 +1,26 @@
+name: audit
+
+on:
+  schedule:
+    - cron: "0 5 * * *" # daily 5AM
+
+env:
+  # not needed for audit
+  PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD: '1'
+
+permissions:
+  contents: read # to fetch code (actions/checkout)
+
+jobs:
+  Audit:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: pnpm/action-setup@v2.2.4
+      - uses: actions/setup-node@v3
+        with:
+          node-version: '16.x'
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      # check prod dependencies as these would affect users
+      - run: pnpm audit --prod

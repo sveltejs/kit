@@ -182,7 +182,7 @@ Universal `load` functions are called with a `LoadEvent`, which has a `data` pro
 
 A universal `load` function can return an object containing any values, including things like custom classes and component constructors.
 
-A server `load` function must return data that can be serialized with [devalue](https://github.com/rich-harris/devalue) — anything that can be represented as JSON plus things like `BigInt`, `Date`, `Map`, `Set` and `RegExp`, or repeated/cyclical references — so that it can be transported over the network.
+A server `load` function must return data that can be serialized with [devalue](https://github.com/rich-harris/devalue) — anything that can be represented as JSON plus things like `BigInt`, `Date`, `Map`, `Set` and `RegExp`, or repeated/cyclical references — so that it can be transported over the network. Your data can include [promises](#streaming-with-promises), in which case it will be streamed to browsers.
 
 ### When to use which
 
@@ -424,39 +424,62 @@ export function load({ locals }) {
 }
 ```
 
-> Make sure you're not catching the thrown redirect, which results in a noop.
+> Make sure you're not catching the thrown redirect, which would prevent SvelteKit from handling it.
 
 In the browser, you can also navigate programmatically outside of a `load` function using [`goto`](modules#$app-navigation-goto) from [`$app.navigation`](modules#$app-navigation).
 
-## Promise unwrapping
+## Streaming with promises
 
-Top-level promises will be awaited, which makes it easy to return multiple promises without creating a waterfall:
+Promises at the _top level_ of the returned object will be awaited, making it easy to return multiple promises without creating a waterfall. When using a server `load`, _nested_ promises will be streamed to the browser as they resolve. This is useful if you have slow, non-essential data, since you can start rendering the page before all the data is available:
 
 ```js
-/// file: src/routes/+page.js
-/** @type {import('./$types').PageLoad} */
+/// file: src/routes/+page.server.js
+/** @type {import('./$types').PageServerLoad} */
 export function load() {
 	return {
-		a: Promise.resolve('a'),
-		b: Promise.resolve('b'),
-		c: {
-			value: Promise.resolve('c')
+		one: Promise.resolve(1),
+		two: Promise.resolve(2),
+		streamed: {
+			three: new Promise((fulfil) => {
+				setTimeout(() => {
+					fulfil(3)
+				}, 1000);
+			})
 		}
 	};
 }
 ```
+
+This is useful for creating skeleton loading states, for example:
 
 ```svelte
 /// file: src/routes/+page.svelte
 <script>
 	/** @type {import('./$types').PageData} */
 	export let data;
-
-	console.log(data.a); // 'a'
-	console.log(data.b); // 'b'
-	console.log(data.c.value); // `Promise {...}`
 </script>
+
+<p>
+	one: {data.one}
+</p>
+<p>
+	two: {data.two}
+</p>
+<p>
+	three:
+	{#await data.streamed.three}
+		Loading...
+	{:then value}
+		{value}
+	{:catch error}
+		{error.message}
+	{/await}
+</p>
 ```
+
+On platforms that do not support streaming, such as AWS Lambda, responses will be buffered. This means the page will only render once all promises resolve.
+
+> Streaming data will only work when JavaScript is enabled. You should avoid returning nested promises from a universal `load` function if the page is server rendered, as these are _not_ streamed — instead, the promise is recreated when the function re-runs in the browser.
 
 ## Parallel loading
 
@@ -509,6 +532,8 @@ export async function load() {
 ...the one in `+page.server.js` will re-run if we navigate from `/blog/trying-the-raw-meat-diet` to `/blog/i-regret-my-choices` because `params.slug` has changed. The one in `+layout.server.js` will not, because the data is still valid. In other words, we won't call `db.getPostSummaries()` a second time.
 
 A `load` function that calls `await parent()` will also re-run if a parent `load` function is re-run.
+
+Dependency tracking does not apply _after_ the `load` function has returned — for example, accessing `params.x` inside a nested [promise](#streaming-with-promises) will not cause the function to re-run when `params.x` changes. (Don't worry, you'll get a warning in development if you accidentally do this.) Instead, access the parameter in the main body of your `load` function.
 
 ### Manual invalidation
 
@@ -564,3 +589,9 @@ To summarize, a `load` function will re-run in the following situations:
 `params` and `url` can change in response to a `<a href="..">` link click, a [`<form>` interaction](form-actions#get-vs-post), a [`goto`](modules#$app-navigation-goto) invocation, or a [`redirect`](modules#sveltejs-kit-redirect).
 
 Note that re-running a `load` function will update the `data` prop inside the corresponding `+layout.svelte` or `+page.svelte`; it does _not_ cause the component to be recreated. As a result, internal state is preserved. If this isn't what you want, you can reset whatever you need to reset inside an [`afterNavigate`](modules#$app-navigation-afternavigate) callback, and/or wrap your component in a [`{#key ...}`](https://svelte.dev/docs#template-syntax-key) block.
+
+## Further reading
+
+- [Tutorial: Loading data](https://learn.svelte.dev/tutorial/page-data)
+- [Tutorial: Errors and redirects](https://learn.svelte.dev/tutorial/error-basics)
+- [Tutorial: Advanced loading](https://learn.svelte.dev/tutorial/await-parent)

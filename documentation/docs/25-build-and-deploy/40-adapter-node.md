@@ -34,7 +34,7 @@ Development dependencies will be bundled into your app using [Rollup](https://ro
 
 ## Environment variables
 
-In `dev` and `preview`, SvelteKit will read environent variables from your `.env` file (or `.env.local`, or `.env.[mode]`, [as determined by Vite](https://vitejs.dev/guide/env-and-mode.html#env-files).)
+In `dev` and `preview`, SvelteKit will read environment variables from your `.env` file (or `.env.local`, or `.env.[mode]`, [as determined by Vite](https://vitejs.dev/guide/env-and-mode.html#env-files).)
 
 In production, `.env` files are _not_ automatically loaded. To do so, install `dotenv` in your project...
 
@@ -122,7 +122,8 @@ export default {
 			// default options are shown
 			out: 'build',
 			precompress: false,
-			envPrefix: ''
+			envPrefix: '',
+			polyfill: true
 		})
 	}
 };
@@ -144,12 +145,16 @@ If you need to change the name of the environment variables used to configure th
 envPrefix: 'MY_CUSTOM_';
 ```
 
-```
+```sh
 MY_CUSTOM_HOST=127.0.0.1 \
 MY_CUSTOM_PORT=4000 \
 MY_CUSTOM_ORIGIN=https://my.site \
 node build
 ```
+
+### polyfill
+
+Controls whether your build will load polyfills for missing modules. It defaults to `true`, and should only be disabled when using Node 18.11 or greater.
 
 ## Custom server
 

@@ -281,3 +281,7 @@ export function load(event) {
 	return reusableLoad(event);
 }
 ```
+
+## Further reading
+
+- [Tutorial: Advanced Routing](https://learn.svelte.dev/tutorial/optional-params)

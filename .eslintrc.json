@@ -8,6 +8,7 @@
 	},
 	"plugins": ["unicorn"],
 	"root": true,
+	"ignorePatterns": ["packages/create-svelte/shared/"],
 	"rules": {
 		"unicorn/prefer-node-protocol": "error"
 	}

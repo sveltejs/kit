@@ -1,5 +1,37 @@
 # @sveltejs/adapter-vercel
 
+## 2.2.0
+
+### Minor Changes
+
+- feat: validate that Vercel cron paths match an API path ([#9145](https://github.com/sveltejs/kit/pull/9145))
+
+## 2.1.1
+
+### Patch Changes
+
+- fix: move catch-all-regex to the end ([#9185](https://github.com/sveltejs/kit/pull/9185))
+
+- fix: temporarily disable streaming when ISR is used ([#9197](https://github.com/sveltejs/kit/pull/9197))
+
+## 2.1.0
+
+### Minor Changes
+
+- feat: enable experimental response streaming ([#9144](https://github.com/sveltejs/kit/pull/9144))
+
+## 2.0.4
+
+### Patch Changes
+
+- fix: add leading / to isr routes ([#9100](https://github.com/sveltejs/kit/pull/9100))
+
+## 2.0.3
+
+### Patch Changes
+
+- fix: get ISR working on Vercel ([#9063](https://github.com/sveltejs/kit/pull/9063))
+
 ## 2.0.2
 
 ### Patch Changes

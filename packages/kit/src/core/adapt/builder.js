@@ -1,7 +1,6 @@
-import { fork } from 'node:child_process';
 import { existsSync, statSync, createReadStream, createWriteStream } from 'node:fs';
+import { join } from 'node:path/posix';
 import { pipeline } from 'node:stream';
-import { fileURLToPath } from 'node:url';
 import { promisify } from 'node:util';
 import zlib from 'node:zlib';
 import glob from 'tiny-glob';
@@ -9,6 +8,8 @@ import { copy, rimraf, mkdirp } from '../../utils/filesystem.js';
 import { generate_manifest } from '../generate_manifest/index.js';
 import { get_route_segments } from '../../utils/routing.js';
 import { get_env } from '../../exports/vite/utils.js';
+import generate_fallback from '../postbuild/fallback.js';
+import { write } from '../sync/utils.js';
 
 const pipe = promisify(pipeline);
 
@@ -42,14 +43,15 @@ export function create_builder({
 	 * we expose a stable type that adapters can use to group/filter routes
 	 */
 	const routes = route_data.map((route) => {
-		const methods =
-			/** @type {import('types').HttpMethod[]} */
-			(server_metadata.routes.get(route.id)?.methods);
-		const config = server_metadata.routes.get(route.id)?.config;
+		const { config, methods, page, api } = /** @type {import('types').ServerMetadataRoute} */ (
+			server_metadata.routes.get(route.id)
+		);
 
 		/** @type {import('types').RouteDefinition} */
 		const facade = {
 			id: route.id,
+			api,
+			page,
 			segments: get_route_segments(route.id).map((segment) => ({
 				dynamic: segment.includes('['),
 				rest: segment.includes('[...'),
@@ -81,7 +83,7 @@ export function create_builder({
 				return;
 			}
 
-			const files = await glob('**/*.{html,js,json,css,svg,xml,wasm}', {
+			const files = await glob('**/*.{html,js,mjs,json,css,svg,xml,wasm}', {
 				cwd: directory,
 				dot: true,
 				absolute: true,
@@ -142,31 +144,16 @@ export function create_builder({
 			}
 		},
 
-		generateFallback(dest) {
-			// do prerendering in a subprocess so any dangling stuff gets killed upon completion
-			const script = fileURLToPath(new URL('../postbuild/fallback.js', import.meta.url));
-
+		async generateFallback(dest) {
 			const manifest_path = `${config.kit.outDir}/output/server/manifest-full.js`;
-
 			const env = get_env(config.kit.env, 'production');
 
-			return new Promise((fulfil, reject) => {
-				const child = fork(
-					script,
-					[dest, manifest_path, JSON.stringify({ ...env.private, ...env.public })],
-					{
-						stdio: 'inherit'
-					}
-				);
-
-				child.on('exit', (code) => {
-					if (code) {
-						reject(new Error(`Could not create a fallback page — failed with code ${code}`));
-					} else {
-						fulfil(undefined);
-					}
-				});
+			const fallback = await generate_fallback({
+				manifest_path,
+				env: { ...env.private, ...env.public }
 			});
+
+			write(dest, fallback);
 		},
 
 		generateManifest: ({ relativePath, routes: subset }) => {
@@ -196,7 +183,12 @@ export function create_builder({
 		},
 
 		writeClient(dest) {
-			return [...copy(`${config.kit.outDir}/output/client`, dest)];
+			const server_assets = copy(
+				`${config.kit.outDir}/output/server/${config.kit.appDir}/immutable/assets`,
+				join(dest, config.kit.appDir, 'immutable/assets')
+			).map((filename) => join(config.kit.appDir, 'immutable/assets', filename));
+			const client_assets = copy(`${config.kit.outDir}/output/client`, dest);
+			return Array.from(new Set([...server_assets, ...client_assets]));
 		},
 
 		// @ts-expect-error

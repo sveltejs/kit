@@ -248,7 +248,7 @@ Like `+layout.js`, `+layout.server.js` can export [page options](page-options) �
 
 ## +server
 
-As well as pages, you can define routes with a `+server.js` file (sometimes referred to as an 'API route' or an 'endpoint'), which gives you full control over the response. Your `+server.js` file (or `+server.ts`) exports functions corresponding to HTTP verbs like `GET`, `POST`, `PATCH`, `PUT` and `DELETE` that take a `RequestEvent` argument and return a [`Response`](https://developer.mozilla.org/en-US/docs/Web/API/Response) object.
+As well as pages, you can define routes with a `+server.js` file (sometimes referred to as an 'API route' or an 'endpoint'), which gives you full control over the response. Your `+server.js` file (or `+server.ts`) exports functions corresponding to HTTP verbs like `GET`, `POST`, `PATCH`, `PUT`, `DELETE`, and `OPTIONS` that take a `RequestEvent` argument and return a [`Response`](https://developer.mozilla.org/en-US/docs/Web/API/Response) object.
 
 For example we could create an `/api/random-number` route with a `GET` handler:
 
@@ -279,9 +279,11 @@ You can use the [`error`](modules#sveltejs-kit-error), [`redirect`](modules#svel
 
 If an error is thrown (either `throw error(...)` or an unexpected error), the response will be a JSON representation of the error or a fallback error page — which can be customised via `src/error.html` — depending on the `Accept` header. The [`+error.svelte`](#error) component will _not_ be rendered in this case. You can read more about error handling [here](errors).
 
+> When creating an `OPTIONS` handler, note that Vite will inject `Access-Control-Allow-Origin` and `Access-Control-Allow-Methods` headers — these will not be present in production unless you add them.
+
 ### Receiving data
 
-By exporting `POST`/`PUT`/`PATCH`/`DELETE` handlers, `+server.js` files can be used to create a complete API:
+By exporting `POST`/`PUT`/`PATCH`/`DELETE`/`OPTIONS` handlers, `+server.js` files can be used to create a complete API:
 
 ```svelte
 /// file: src/routes/add/+page.svelte
@@ -327,7 +329,7 @@ export async function POST({ request }) {
 
 `+server.js` files can be placed in the same directory as `+page` files, allowing the same route to be either a page or an API endpoint. To determine which, SvelteKit applies the following rules:
 
-- `PUT`/`PATCH`/`DELETE` requests are always handled by `+server.js` since they do not apply to pages
+- `PUT`/`PATCH`/`DELETE`/`OPTIONS` requests are always handled by `+server.js` since they do not apply to pages
 - `GET`/`POST` requests are treated as page requests if the `accept` header prioritises `text/html` (in other words, it's a browser page request), else they are handled by `+server.js`
 
 ## $types
@@ -351,3 +353,9 @@ In turn, annotating the `load` function with `PageLoad`, `PageServerLoad`, `Layo
 Any other files inside a route directory are ignored by SvelteKit. This means you can colocate components and utility modules with the routes that need them.
 
 If components and modules are needed by multiple routes, it's a good idea to put them in [`$lib`](modules#$lib).
+
+## Further reading
+
+- [Tutorial: Routing](https://learn.svelte.dev/tutorial/pages)
+- [Tutorial: API routes](https://learn.svelte.dev/tutorial/get-handlers)
+- [Docs: Advanced routing](advanced-routing)

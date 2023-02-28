@@ -1,5 +1,23 @@
 # @sveltejs/package
 
+## 2.0.2
+
+### Patch Changes
+
+- fix: don't emit false positive export condition warning ([#9109](https://github.com/sveltejs/kit/pull/9109))
+
+## 2.0.1
+
+### Patch Changes
+
+- fix: print version when running `svelte-package --version` ([#9078](https://github.com/sveltejs/kit/pull/9078))
+
+## 2.0.0
+
+### Major Changes
+
+- breaking: remove `package.json` generation and package options from `svelte.config.js`. New default output directory is `dist`. Read the migration guide at https://github.com/sveltejs/kit/pull/8922 to learn how to update ([#8922](https://github.com/sveltejs/kit/pull/8922))
+
 ## 1.0.2
 
 ### Patch Changes

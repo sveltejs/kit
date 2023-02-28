@@ -36,8 +36,7 @@ const base = '../../documentation';
 
 const type_regex = new RegExp(
 	`(import\\(&apos;@sveltejs\\/kit&apos;\\)\\.)?\\b(${modules
-		.map((module) => module.types)
-		.flat()
+		.flatMap((module) => module.types)
 		.map((type) => type.name)
 		.join('|')})\\b`,
 	'g'
