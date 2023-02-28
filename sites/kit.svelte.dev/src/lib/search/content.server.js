@@ -1,9 +1,9 @@
-import fs from 'fs';
-import path from 'path';
+import fs from 'node:fs';
+import path from 'node:path';
 import glob from 'tiny-glob/sync.js';
-import { extract_frontmatter, transform } from '../docs/server/markdown.js';
-import { render, replace_placeholders } from '../docs/server/render.js';
 import { slugify } from '../docs/server';
+import { extract_frontmatter, transform } from '../docs/server/markdown.js';
+import { replace_placeholders } from '../docs/server/render.js';
 
 const categories = [
 	{
@@ -90,9 +90,8 @@ function plaintext(markdown) {
 	return transform(markdown, {
 		code: (source) => source.split('// ---cut---\n').pop(),
 		blockquote: block,
-		html: (html) => {
-			return html;
-		},
+		html: () => '\n',
+		heading: (text) => `${text}\n`,
 		hr: () => '',
 		list: block,
 		listitem: block,

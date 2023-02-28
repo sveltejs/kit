@@ -1,5 +1,5 @@
-import * as fs from 'fs';
-import { fileURLToPath } from 'url';
+import * as fs from 'node:fs';
+import { fileURLToPath } from 'node:url';
 import { test } from 'uvu';
 import * as assert from 'uvu/assert';
 
@@ -10,6 +10,11 @@ const read = (file) => fs.readFileSync(`${build}/${file}`, 'utf-8');
 
 test('prerenders /path-base', () => {
 	const content = read('index.html');
+	assert.ok(content.includes('/path-base/favicon.png') && content.includes('/path-base/nested'));
+});
+
+test('prerenders /path-base/redirect', () => {
+	const content = read('redirect.html');
 	assert.equal(content, '<meta http-equiv="refresh" content="0;url=/path-base/dynamic/foo">');
 });
 

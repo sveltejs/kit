@@ -12,6 +12,8 @@
 	import Search from '$lib/search/Search.svelte';
 	import SearchBox from '$lib/search/SearchBox.svelte';
 	import Logo from './home/svelte-logo.svg';
+
+	let banner_height = '48px';
 </script>
 
 <Icons />
@@ -33,10 +35,13 @@
 	</svelte:fragment>
 
 	<svelte:fragment slot="nav-right">
-		<NavItem selected={$page.url.pathname.startsWith(`${base}/docs`) || undefined} href="{base}/docs"
-			>Docs</NavItem
+		<NavItem
+			selected={$page.url.pathname.startsWith(`${base}/docs`) || undefined}
+			href="{base}/docs">Docs</NavItem
 		>
-		<NavItem selected={$page.url.pathname.startsWith(`${base}/faq`) || undefined} href="{base}/faq">FAQ</NavItem>
+		<NavItem selected={$page.url.pathname.startsWith(`${base}/faq`) || undefined} href="{base}/faq"
+			>FAQ</NavItem
+		>
 
 		<li aria-hidden="true"><span class="separator" /></li>
 
@@ -54,19 +59,38 @@
 	</svelte:fragment>
 </Nav>
 
-<main id="main">
+<main id="main" style:--banner-footer-height={banner_height}>
 	<slot />
 </main>
+
+{#if banner_height !== '0px'}
+	<div class="banner" style:--banner-footer-height={banner_height}>
+		<a target="_blank" rel="noopener noreferrer" href="https://hack.sveltesociety.dev/">
+			<span class="small">
+				<strong>Announcing SvelteHack</strong> Participate →
+			</span>
+			<span class="large">
+				<strong>Announcing SvelteHack</strong> Our first hackathon with over $12,000 in prizes →
+			</span>
+		</a>
+		<button on:click={() => (banner_height = '0px')}> ✕ </button>
+	</div>
+{/if}
 
 {#if browser}
 	<SearchBox />
 {/if}
 
 <style>
+	:root {
+		--banner-footer-height: 48px;
+	}
+
 	main {
 		position: relative;
 		margin: 0 auto;
 		padding-top: var(--sk-nav-height);
+		padding-bottom: var(--banner-footer-height);
 		overflow: hidden;
 	}
 
@@ -143,5 +167,36 @@
 		:global(aside) {
 			z-index: 9999 !important;
 		}
+	}
+
+	.banner {
+		--banner-bg: #ff4700;
+		--banner-color: white;
+		--banner-strong-color: white;
+
+		background-color: var(--banner-bg);
+		color: var(--banner-color);
+		position: fixed;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		bottom: 0;
+		width: 100vw;
+		height: var(--banner-footer-height);
+		z-index: 999;
+	}
+
+	.banner strong {
+		font-weight: bold;
+	}
+
+	.banner span {
+		color: var(--banner-color);
+	}
+
+	.banner button {
+		position: absolute;
+		right: 30px;
+		font-size: 18px;
 	}
 </style>

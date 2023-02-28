@@ -1,5 +1,40 @@
 # @sveltejs/adapter-vercel
 
+## 2.1.1
+
+### Patch Changes
+
+- fix: move catch-all-regex to the end ([#9185](https://github.com/sveltejs/kit/pull/9185))
+
+- fix: temporarily disable streaming when ISR is used ([#9197](https://github.com/sveltejs/kit/pull/9197))
+
+## 2.1.0
+
+### Minor Changes
+
+- feat: enable experimental response streaming ([#9144](https://github.com/sveltejs/kit/pull/9144))
+
+## 2.0.4
+
+### Patch Changes
+
+- fix: add leading / to isr routes ([#9100](https://github.com/sveltejs/kit/pull/9100))
+
+## 2.0.3
+
+### Patch Changes
+
+- fix: get ISR working on Vercel ([#9063](https://github.com/sveltejs/kit/pull/9063))
+
+## 2.0.2
+
+### Patch Changes
+
+- fix: mark `expiration` as required ([#8943](https://github.com/sveltejs/kit/pull/8943))
+
+- Updated dependencies [[`1960296d`](https://github.com/sveltejs/kit/commit/1960296da62fdd4ad8e8bb7286940b98fbe8db0f), [`1beb19cb`](https://github.com/sveltejs/kit/commit/1beb19cb487bd6d719048f0feedcb2fbee91a005), [`b915dfe9`](https://github.com/sveltejs/kit/commit/b915dfe9d16a930246a469c9aea8c1a84e5157ba), [`a402d50b`](https://github.com/sveltejs/kit/commit/a402d50b33eba2a937d09e635275c319061ce678)]:
+  - @sveltejs/kit@1.5.1
+
 ## 2.0.1
 
 ### Patch Changes

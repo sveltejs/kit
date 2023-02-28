@@ -1,5 +1,159 @@
 # @sveltejs/kit
 
+## 1.8.7
+
+### Patch Changes
+
+- fix: correct not found message when setting `paths.base` ([#9232](https://github.com/sveltejs/kit/pull/9232))
+
+## 1.8.6
+
+### Patch Changes
+
+- fix: bundle SvelteKit when using Vitest ([#9172](https://github.com/sveltejs/kit/pull/9172))
+
+## 1.8.5
+
+### Patch Changes
+
+- fix: allow relative fetch to endpoint outside app from within `handle` ([#9198](https://github.com/sveltejs/kit/pull/9198))
+
+## 1.8.4
+
+### Patch Changes
+
+- fix: include .mjs files in precompression ([#9179](https://github.com/sveltejs/kit/pull/9179))
+
+- fix: revert mjs extension usage by default, make it an option ([#9179](https://github.com/sveltejs/kit/pull/9179))
+
+- chore: dummy changeset to force a release ([#9207](https://github.com/sveltejs/kit/pull/9207))
+
+## 1.8.3
+
+### Patch Changes
+
+- fix: use a proprietary content-type to ensure response is not buffered ([#9142](https://github.com/sveltejs/kit/pull/9142))
+
+## 1.8.2
+
+### Patch Changes
+
+- fix: append newline to trigger script evaluation ([#9139](https://github.com/sveltejs/kit/pull/9139))
+
+## 1.8.1
+
+### Patch Changes
+
+- fix: encode streamed chunks ([#9136](https://github.com/sveltejs/kit/pull/9136))
+
+## 1.8.0
+
+### Minor Changes
+
+- feat: implement streaming promises for server load functions ([#8901](https://github.com/sveltejs/kit/pull/8901))
+
+### Patch Changes
+
+- fix: set public env before starting app ([#8957](https://github.com/sveltejs/kit/pull/8957))
+
+- fix: preload modules on Safari ([#8957](https://github.com/sveltejs/kit/pull/8957))
+
+- fix: make `assets` work in client when app is served from a subfolder ([#8957](https://github.com/sveltejs/kit/pull/8957))
+
+## 1.7.2
+
+### Patch Changes
+
+- fix: return correct asset list from `builder.writeClient()` ([#9095](https://github.com/sveltejs/kit/pull/9095))
+
+## 1.7.1
+
+### Patch Changes
+
+- fix: deploy server assets. Only works with Vite 4.1+ ([#9073](https://github.com/sveltejs/kit/pull/9073))
+
+## 1.7.0
+
+### Minor Changes
+
+- feat: richer error message for invalid exports ([#9055](https://github.com/sveltejs/kit/pull/9055))
+
+### Patch Changes
+
+- chore: throw more helpful error when encoding uri fails during prerendering ([#9053](https://github.com/sveltejs/kit/pull/9053))
+
+## 1.6.0
+
+### Minor Changes
+
+- feat: add `OPTIONS` server method ([#8731](https://github.com/sveltejs/kit/pull/8731))
+
+### Patch Changes
+
+- fix: solve `missing "./paths" specifier in "@sveltejs/kit" package` error occurring in all projects ([#9050](https://github.com/sveltejs/kit/pull/9050))
+
+## 1.5.7
+
+### Patch Changes
+
+- fix: use internal alias that won't collide with user aliases ([#9022](https://github.com/sveltejs/kit/pull/9022))
+
+## 1.5.6
+
+### Patch Changes
+
+- fix: ssr defaults preventing minification for client build ([#9012](https://github.com/sveltejs/kit/pull/9012))
+
+- fix: client-side trailing slash redirect when preloading data ([#8982](https://github.com/sveltejs/kit/pull/8982))
+
+## 1.5.5
+
+### Patch Changes
+
+- fix: warn after failed data preloads in dev ([#8985](https://github.com/sveltejs/kit/pull/8985))
+
+## 1.5.4
+
+### Patch Changes
+
+- fix: support all relevant vite cli flags ([#8977](https://github.com/sveltejs/kit/pull/8977))
+
+## 1.5.3
+
+### Patch Changes
+
+- docs: clarify that `version.name` should be deterministic ([#8956](https://github.com/sveltejs/kit/pull/8956))
+
+- fix: correctly include exported http methods in allow header ([#8968](https://github.com/sveltejs/kit/pull/8968))
+
+- chore: polyfill File from node:buffer ([#8925](https://github.com/sveltejs/kit/pull/8925))
+
+- fix: provide helpful error/warning when calling `fetch` during render ([#8551](https://github.com/sveltejs/kit/pull/8551))
+
+- fix: print useful error when subscribing to SvelteKit's stores at the wrong time during SSR ([#8960](https://github.com/sveltejs/kit/pull/8960))
+
+- fix: ignore external links when automatically preloading ([#8961](https://github.com/sveltejs/kit/pull/8961))
+
+- chore: refactor fallback generation ([#8972](https://github.com/sveltejs/kit/pull/8972))
+
+## 1.5.2
+
+### Patch Changes
+
+- fix: always default `paths.assets` to `paths.base` ([#8928](https://github.com/sveltejs/kit/pull/8928))
+
+## 1.5.1
+
+### Patch Changes
+
+- fix: pick up config from endpoints ([#8933](https://github.com/sveltejs/kit/pull/8933))
+
+- fix: don't reuse previous server load cache when there's no server load function ([#8893](https://github.com/sveltejs/kit/pull/8893))
+
+- fix: deduplicate paths in tsconfig ([#8880](https://github.com/sveltejs/kit/pull/8880))
+
+- docs: clarify version management feature ([#8941](https://github.com/sveltejs/kit/pull/8941))
+
 ## 1.5.0
 
 ### Minor Changes

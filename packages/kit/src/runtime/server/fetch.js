@@ -1,6 +1,6 @@
 import * as set_cookie_parser from 'set-cookie-parser';
 import { respond } from './respond.js';
-import * as paths from '$internal/paths';
+import * as paths from '__sveltekit/paths';
 
 /**
  * @param {{
@@ -131,7 +131,10 @@ export function create_fetch({ event, options, manifest, state, get_cookie_heade
 					);
 				}
 
-				response = await respond(request, options, manifest, state);
+				response = await respond(request, options, manifest, {
+					...state,
+					depth: state.depth + 1
+				});
 
 				const set_cookie = response.headers.get('set-cookie');
 				if (set_cookie) {

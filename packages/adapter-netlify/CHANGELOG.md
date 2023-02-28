@@ -1,5 +1,43 @@
 # @sveltejs/adapter-netlify
 
+## 2.0.5
+
+### Patch Changes
+
+- chore: support newest version of undici ([#9005](https://github.com/sveltejs/kit/pull/9005))
+
+- Updated dependencies [[`6cdf54d1`](https://github.com/sveltejs/kit/commit/6cdf54d1f3561348d87f35ddc8330081919eb839)]:
+  - @sveltejs/kit@1.7.1
+
+## 2.0.4
+
+### Patch Changes
+
+- fix: Root route data endpoint redirect when using split routes ([#9006](https://github.com/sveltejs/kit/pull/9006))
+
+- Updated dependencies [[`74cfa8d5`](https://github.com/sveltejs/kit/commit/74cfa8d5f1f13f81759e20e90f4ff86a4f96040d), [`bfa2b6ec`](https://github.com/sveltejs/kit/commit/bfa2b6ec88a6d522d87c924d7c466c01e142e66e)]:
+  - @sveltejs/kit@1.5.6
+
+## 2.0.3
+
+### Patch Changes
+
+- chore: simplify functions-internal cleanup ([#8953](https://github.com/sveltejs/kit/pull/8953))
+
+- fix: correctly compare routes when generating split functions ([#8952](https://github.com/sveltejs/kit/pull/8952))
+
+- Updated dependencies [[`0abb8ebf`](https://github.com/sveltejs/kit/commit/0abb8ebffc6121f81c2bbfa0a0f68866d4cc1627), [`bef54f63`](https://github.com/sveltejs/kit/commit/bef54f63d2315066d30e8f1bcf471ddf2bd72c35), [`51cd6e64`](https://github.com/sveltejs/kit/commit/51cd6e643178e3a113fc2c3e8a63755bcbfe902d), [`930c8e4e`](https://github.com/sveltejs/kit/commit/930c8e4ee2e3046ed1b622777dafa23029a19fe5), [`ee8066fc`](https://github.com/sveltejs/kit/commit/ee8066fcb29ed1e7e3ab513cabb7997e38c984f2), [`49d2ec62`](https://github.com/sveltejs/kit/commit/49d2ec62e6385694f11701bf2fa411d07449344c), [`eb943565`](https://github.com/sveltejs/kit/commit/eb943565a4324dbed3da5a581924ca91a24366de)]:
+  - @sveltejs/kit@1.5.3
+
+## 2.0.2
+
+### Patch Changes
+
+- fix: preserve functions-internal folder so that auto-generated functions are not removed when ntl build is run ([#8899](https://github.com/sveltejs/kit/pull/8899))
+
+- Updated dependencies [[`1960296d`](https://github.com/sveltejs/kit/commit/1960296da62fdd4ad8e8bb7286940b98fbe8db0f), [`1beb19cb`](https://github.com/sveltejs/kit/commit/1beb19cb487bd6d719048f0feedcb2fbee91a005), [`b915dfe9`](https://github.com/sveltejs/kit/commit/b915dfe9d16a930246a469c9aea8c1a84e5157ba), [`a402d50b`](https://github.com/sveltejs/kit/commit/a402d50b33eba2a937d09e635275c319061ce678)]:
+  - @sveltejs/kit@1.5.1
+
 ## 2.0.1
 
 ### Patch Changes

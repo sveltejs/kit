@@ -29,7 +29,7 @@ test.describe('Imports', () => {
 			]);
 		} else {
 			expect(sources[0].startsWith('data:image/png;base64,')).toBeTruthy();
-			expect(sources[1]).toBe(`${baseURL}/_app/immutable/assets/large-3183867c.jpg`);
+			expect(sources[1]).toBe(`${baseURL}/_app/immutable/assets/large.3183867c.jpg`);
 		}
 	});
 });
@@ -494,6 +494,22 @@ test.describe('Load', () => {
 
 		expect(await page.textContent('h1')).toBe(
 			'Im prerendered and called from a non-prerendered +page.server.js'
+		);
+	});
+
+	test('Prerendered +server.js called from a non-prerendered handle hook works', async ({
+		page,
+		javaScriptEnabled
+	}) => {
+		if (javaScriptEnabled) {
+			await page.goto('/prerendering/prerendered-endpoint');
+			await page.click('a', { noWaitAfter: true });
+		} else {
+			await page.goto('/prerendering/prerendered-endpoint/from-handle-hook');
+		}
+
+		expect(await page.textContent('html')).toBe(
+			'{"message":"Im prerendered and called from a non-prerendered +page.server.js"}'
 		);
 	});
 });

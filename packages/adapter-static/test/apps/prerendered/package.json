@@ -10,7 +10,7 @@
 	"devDependencies": {
 		"@sveltejs/kit": "workspace:^",
 		"svelte": "^3.55.1",
-		"vite": "^4.0.4"
+		"vite": "^4.1.1"
 	},
 	"type": "module"
 }

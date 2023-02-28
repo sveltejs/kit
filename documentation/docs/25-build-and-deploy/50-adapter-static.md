@@ -164,23 +164,24 @@ To run an SPA on [Apache](https://httpd.apache.org/), you should add a `static/.
 
 When building for GitHub Pages, make sure to update [`paths.base`](configuration#paths) to match your repo name, since the site will be served from <https://your-username.github.io/your-repo-name> rather than from the root.
 
-You will have to prevent GitHub's provided Jekyll from managing your site by putting an empty `.nojekyll` file in your static folder. If you do not want to disable Jekyll, change the kit's `appDir` configuration option to `'app_'` or anything not starting with an underscore. For more information, see GitHub's [Jekyll documentation](https://docs.github.com/en/pages/setting-up-a-github-pages-site-with-jekyll/about-github-pages-and-jekyll#configuring-jekyll-in-your-github-pages-site).
+You will have to prevent GitHub's provided Jekyll from managing your site by putting an empty `.nojekyll` file in your `static` folder.
 
 A config for GitHub Pages might look like the following:
 
 ```js
+// @errors: 2307
 /// file: svelte.config.js
+import adapter from '@sveltejs/adapter-static';
+
 const dev = process.argv.includes('dev');
 
 /** @type {import('@sveltejs/kit').Config} */
 const config = {
 	kit: {
+		adapter: adapter(),
 		paths: {
 			base: dev ? '' : '/your-repo-name',
-		},
-		// If you are not using a .nojekyll file, change your appDir to something not starting with an underscore.
-		// For example, instead of '_app', use 'app_', 'internal', etc.
-		appDir: 'internal',
+		}
 	}
 };
 ```

@@ -1,5 +1,5 @@
-import * as fs from 'fs';
-import { fileURLToPath } from 'url';
+import * as fs from 'node:fs';
+import { fileURLToPath } from 'node:url';
 import { test } from 'uvu';
 import * as assert from 'uvu/assert';
 
@@ -147,30 +147,6 @@ test('prerendering is set to true in root +layout.js', () => {
 test('fetching missing content results in a 404', () => {
 	const content = read('fetch-404.html');
 	assert.ok(content.includes('<h1>status: 404</h1>'), content);
-});
-
-test('targets the data-sveltekit-hydrate parent node', () => {
-	// this test ensures that we don't accidentally change the way
-	// the body is hydrated in a way that breaks apps that need
-	// to manipulate the markup in some way:
-	// https://github.com/sveltejs/kit/issues/4685
-	const content = read('index.html');
-
-	const pattern =
-		/<body>([^]+?)<script type="module" data-sveltekit-hydrate="(\w+)">([^]+?)<\/script>[^]+?<\/body>/;
-
-	const match = pattern.exec(content);
-	if (!match) {
-		throw new Error('Could not find data-sveltekit-hydrate');
-	}
-
-	assert.equal(match[1].trim(), '<h1>hello</h1>');
-
-	assert.ok(
-		match[3].includes(
-			`target: document.querySelector('[data-sveltekit-hydrate="${match[2]}"]').parentNode`
-		)
-	);
 });
 
 test('prerenders binary data', async () => {

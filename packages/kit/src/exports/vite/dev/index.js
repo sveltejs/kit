@@ -105,11 +105,19 @@ export async function dev(vite, vite_config, svelte_config) {
 			assets: new Set(manifest_data.assets.map((asset) => asset.file)),
 			mimeTypes: get_mime_lookup(manifest_data),
 			_: {
-				entry: {
-					file: `${runtime_base}/client/start.js`,
-					imports: [],
-					stylesheets: [],
-					fonts: []
+				client: {
+					start: {
+						file: `${runtime_base}/client/start.js`,
+						imports: [],
+						stylesheets: [],
+						fonts: []
+					},
+					app: {
+						file: `${svelte_config.kit.outDir}/generated/client/app.js`,
+						imports: [],
+						stylesheets: [],
+						fonts: []
+					}
 				},
 				nodes: manifest_data.nodes.map((node, index) => {
 					return async () => {
@@ -443,14 +451,12 @@ export async function dev(vite, vite_config, svelte_config) {
 					await vite.ssrLoadModule(`${runtime_base}/server/index.js`)
 				);
 
-				const { set_assets, set_version, set_fix_stack_trace } =
+				const { set_assets, set_fix_stack_trace } =
 					/** @type {import('types').ServerInternalModule} */ (
-						await vite.ssrLoadModule(`${runtime_base}/shared.js`)
+						await vite.ssrLoadModule(`${runtime_base}/shared-server.js`)
 					);
 
 				set_assets(assets);
-
-				set_version(svelte_config.kit.version.name);
 
 				set_fix_stack_trace(fix_stack_trace);
 

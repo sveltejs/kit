@@ -45,7 +45,7 @@
 	@media (min-width: 832px) {
 		.toc-container {
 			width: var(--sidebar-width);
-			height: calc(100vh - var(--sk-nav-height) - var(--ts-toggle-height));
+			height: calc(100vh - var(--sk-nav-height) - var(--ts-toggle-height) - var(--banner-footer-height));
 			position: fixed;
 			left: 0;
 			top: var(--sk-nav-height);
@@ -70,7 +70,7 @@
 		.ts-toggle {
 			position: fixed;
 			width: var(--sidebar-width);
-			bottom: 0;
+			bottom: var(--banner-footer-height);
 			z-index: 1;
 			margin-right: 0;
 			border-right: 1px solid var(--sk-back-5);

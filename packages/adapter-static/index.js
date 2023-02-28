@@ -1,4 +1,4 @@
-import path from 'path';
+import path from 'node:path';
 import { platforms } from './platforms.js';
 
 /** @type {import('.').default} */
@@ -64,7 +64,7 @@ See https://kit.svelte.dev/docs/page-options#prerender for more details`
 			builder.writePrerendered(pages);
 
 			if (fallback) {
-				builder.generateFallback(path.join(pages, fallback));
+				await builder.generateFallback(path.join(pages, fallback));
 			}
 
 			if (precompress) {

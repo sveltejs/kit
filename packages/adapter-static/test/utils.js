@@ -1,7 +1,7 @@
-import { execSync } from 'child_process';
-import fs from 'fs';
-import http from 'http';
-import { fileURLToPath } from 'url';
+import { execSync } from 'node:child_process';
+import fs from 'node:fs';
+import http from 'node:http';
+import { fileURLToPath } from 'node:url';
 import sirv from 'sirv';
 import { chromium, webkit, firefox } from 'playwright';
 import * as uvu from 'uvu';

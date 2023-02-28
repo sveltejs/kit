@@ -3,11 +3,6 @@ import { runtime_base } from './utils.js';
 
 /**
  * @typedef {'public' | 'private'} EnvType
- * @typedef {{
- * 	public: Record<string, string>;
- * 	private: Record<string, string>;
- * 	prefix: string;
- * }} EnvData
  */
 
 /**
@@ -44,12 +39,12 @@ export function create_dynamic_module(type, dev_values) {
 		);
 		return `export const env = {\n${keys.join(',\n')}\n}`;
 	}
-	return `export { ${type}_env as env } from '${runtime_base}/shared.js';`;
+	return `export { ${type}_env as env } from '${runtime_base}/shared-server.js';`;
 }
 
 /**
  * @param {EnvType} id
- * @param {EnvData} env
+ * @param {import('types').Env} env
  * @returns {string}
  */
 export function create_static_types(id, env) {
@@ -63,15 +58,16 @@ export function create_static_types(id, env) {
 
 /**
  * @param {EnvType} id
- * @param {EnvData} env
+ * @param {import('types').Env} env
+ * @param {string} prefix
  * @returns {string}
  */
-export function create_dynamic_types(id, env) {
+export function create_dynamic_types(id, env, prefix) {
 	const properties = Object.keys(env[id])
 		.filter((k) => valid_identifier.test(k))
 		.map((k) => `\t\t${k}: string;`);
 
-	const prefixed = `[key: \`${env.prefix}\${string}\`]`;
+	const prefixed = `[key: \`${prefix}\${string}\`]`;
 
 	if (id === 'private') {
 		properties.push(`\t\t${prefixed}: undefined;`);

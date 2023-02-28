@@ -23,6 +23,7 @@ import { write_client_manifest } from '../../core/sync/write_client_manifest.js'
 import prerender from '../../core/postbuild/prerender.js';
 import analyse from '../../core/postbuild/analyse.js';
 import { s } from '../../utils/misc.js';
+import { hash } from '../../runtime/hash.js';
 
 export { vitePreprocess } from '@sveltejs/vite-plugin-svelte';
 
@@ -164,6 +165,8 @@ function kit({ svelte_config }) {
 	const { kit } = svelte_config;
 	const out = `${kit.outDir}/output`;
 
+	const version_hash = hash(kit.version.name);
+
 	/** @type {import('vite').ResolvedConfig} */
 	let vite_config;
 
@@ -179,6 +182,9 @@ function kit({ svelte_config }) {
 	/** @type {() => Promise<void>} */
 	let finalise;
 
+	/** @type {import('vite').UserConfig} */
+	let initial_config;
+
 	const service_worker_entry_file = resolve_entry(kit.files.serviceWorker);
 
 	/** @type {import('vite').Plugin} */
@@ -190,6 +196,7 @@ function kit({ svelte_config }) {
 		 * @see https://vitejs.dev/guide/api-plugin.html#config
 		 */
 		async config(config, config_env) {
+			initial_config = config;
 			vite_config_env = config_env;
 			is_build = config_env.command === 'build';
 
@@ -211,17 +218,27 @@ function kit({ svelte_config }) {
 
 			const generated = path.posix.join(kit.outDir, 'generated');
 
+			// This ensures that esm-env is inlined into the server output with the
+			// export conditions resolved correctly through Vite. This prevents adapters
+			// that bundle later on from resolving the export conditions incorrectly
+			// and for example include browser-only code in the server output
+			// because they for example use esbuild.build with `platform: 'browser'`
+			const noExternal = ['esm-env'];
+
+			// Vitest bypasses Vite when loading external modules, so we bundle
+			// when it is detected to keep our virtual modules working.
+			// See https://github.com/sveltejs/kit/pull/9172
+			// and https://vitest.dev/config/#deps-registernodeloader
+			if (process.env.TEST) {
+				noExternal.push('@sveltejs/kit');
+			}
+
 			// dev and preview config can be shared
 			/** @type {import('vite').UserConfig} */
 			const new_config = {
 				resolve: {
 					alias: [
-						{
-							find: '__CLIENT__',
-							replacement: `${generated}/${is_build ? 'client-optimized' : 'client'}`
-						},
 						{ find: '__SERVER__', replacement: `${generated}/server` },
-						{ find: '__GENERATED__', replacement: generated },
 						{ find: '$app', replacement: `${runtime_directory}/app` },
 						...get_config_aliases(kit)
 					]
@@ -236,7 +253,11 @@ function kit({ svelte_config }) {
 							// Ignore all siblings of config.kit.outDir/generated
 							`${posixify(kit.outDir)}/!(generated)`
 						]
-					}
+					},
+					cors: { preflightContinue: true }
+				},
+				preview: {
+					cors: { preflightContinue: true }
 				},
 				optimizeDeps: {
 					exclude: [
@@ -246,6 +267,9 @@ function kit({ svelte_config }) {
 						'$app',
 						'$env'
 					]
+				},
+				ssr: {
+					noExternal
 				}
 			};
 
@@ -261,19 +285,6 @@ function kit({ svelte_config }) {
 					__SVELTEKIT_EMBEDDED__: kit.embedded ? 'true' : 'false'
 				};
 
-				new_config.ssr = {
-					noExternal: [
-						// TODO document why this is necessary
-						'@sveltejs/kit',
-						// This ensures that esm-env is inlined into the server output with the
-						// export conditions resolved correctly through Vite. This prevents adapters
-						// that bundle later on to resolve the export conditions incorrectly
-						// and for example include browser-only code in the server output
-						// because they for example use esbuild.build with `platform: 'browser'`
-						'esm-env'
-					]
-				};
-
 				if (!secondary_build_started) {
 					manifest_data = (await sync.all(svelte_config, config_env.mode)).manifest_data;
 				}
@@ -284,13 +295,12 @@ function kit({ svelte_config }) {
 					__SVELTEKIT_EMBEDDED__: kit.embedded ? 'true' : 'false'
 				};
 
-				new_config.ssr = {
-					// Without this, Vite will treat `@sveltejs/kit` as noExternal if it's
-					// a linked dependency, and that causes modules to be imported twice
-					// under different IDs, which breaks a bunch of stuff
-					// https://github.com/vitejs/vite/pull/9296
-					external: ['@sveltejs/kit', 'cookie', 'set-cookie-parser']
-				};
+				// These Kit dependencies are packaged as CommonJS, which means they must always be externalized.
+				// Without this, the tests will still pass but `pnpm dev` will fail in projects that link `@sveltejs/kit`.
+				/** @type {NonNullable<import('vite').UserConfig['ssr']>} */ (new_config.ssr).external = [
+					'cookie',
+					'set-cookie-parser'
+				];
 			}
 
 			warn_overridden_config(config, new_config);
@@ -316,12 +326,15 @@ function kit({ svelte_config }) {
 
 		async resolveId(id) {
 			// treat $env/static/[public|private] as virtual
-			if (id.startsWith('$env/') || id === '$internal/paths' || id === '$service-worker') {
+			if (id.startsWith('$env/') || id.startsWith('__sveltekit/') || id === '$service-worker') {
 				return `\0${id}`;
 			}
 		},
 
 		async load(id, options) {
+			const browser = !options?.ssr;
+			const global = `__sveltekit_${version_hash}`;
+
 			if (options?.ssr === false && process.env.TEST !== 'true') {
 				const normalized_cwd = vite.normalizePath(cwd);
 				const normalized_lib = vite.normalizePath(kit.files.lib);
@@ -348,20 +361,43 @@ function kit({ svelte_config }) {
 						vite_config_env.command === 'serve' ? env.private : undefined
 					);
 				case '\0$env/dynamic/public':
+					// populate `$env/dynamic/public` from `window`
+					if (browser) {
+						return `export const env = ${global}.env;`;
+					}
+
 					return create_dynamic_module(
 						'public',
 						vite_config_env.command === 'serve' ? env.public : undefined
 					);
 				case '\0$service-worker':
 					return create_service_worker_module(svelte_config);
-				case '\0$internal/paths':
+
+				// for internal use only. it's published as $app/paths externally
+				// we use this alias so that we won't collide with user aliases
+				case '\0__sveltekit/paths':
 					const { assets, base } = svelte_config.kit.paths;
+
+					if (browser) {
+						return `export const base = ${s(base)};
+export const assets = ${global}.assets;`;
+					}
+
 					return `export const base = ${s(base)};
-export let assets = ${s(assets)};
+export let assets = ${assets ? s(assets) : 'base'};
 
 /** @param {string} path */
 export function set_assets(path) {
 	assets = path;
+}`;
+
+				case '\0__sveltekit/environment':
+					const { version } = svelte_config.kit;
+					return `export const version = ${s(version.name)};
+export let building = false;
+
+export function set_building() {
+	building = true;
 }`;
 			}
 		}
@@ -450,31 +486,33 @@ export function set_assets(path) {
 						input[name] = path.resolve(file);
 					});
 				} else {
-					/** @type {Record<string, string>} */
-					input.start = `${runtime_directory}/client/start.js`;
+					input['entry/start'] = `${runtime_directory}/client/start.js`;
+					input['entry/app'] = `${kit.outDir}/generated/client-optimized/app.js`;
 
-					manifest_data.nodes.forEach((node) => {
-						if (node.component) {
-							const resolved = path.resolve(node.component);
-							const relative = decodeURIComponent(path.relative(kit.files.routes, resolved));
+					/**
+					 * @param {string | undefined} file
+					 */
+					function add_input(file) {
+						if (!file) return;
 
-							const name = relative.startsWith('..')
-								? path.basename(node.component)
-								: posixify(path.join('pages', relative));
-							input[`components/${name}`] = resolved;
-						}
+						const resolved = path.resolve(file);
+						const relative = decodeURIComponent(path.relative(kit.files.routes, resolved));
 
-						if (node.universal) {
-							const resolved = path.resolve(node.universal);
-							const relative = decodeURIComponent(path.relative(kit.files.routes, resolved));
+						const name = relative.startsWith('..')
+							? path.basename(file).replace(/^\+/, '')
+							: relative.replace(/(\\|\/)\+/g, '-').replace(/[\\/]/g, '-');
 
-							const name = relative.startsWith('..')
-								? path.basename(node.universal)
-								: posixify(path.join('pages', relative));
-							input[`modules/${name}`] = resolved;
-						}
-					});
+						input[`entry/${name}`] = resolved;
+					}
+
+					for (const node of manifest_data.nodes) {
+						add_input(node.component);
+						add_input(node.universal);
+					}
 				}
+
+				// see the kit.output.preloadStrategy option for details on why we have multiple options here
+				const ext = kit.output.preloadStrategy === 'preload-mjs' ? 'mjs' : 'js';
 
 				new_config = {
 					base: ssr ? assets_base(kit) : './',
@@ -485,13 +523,14 @@ export function set_assets(path) {
 							input,
 							output: {
 								format: 'esm',
-								entryFileNames: ssr ? '[name].js' : `${prefix}/[name]-[hash].js`,
-								chunkFileNames: ssr ? 'chunks/[name].js' : `${prefix}/chunks/[name]-[hash].js`,
-								assetFileNames: `${prefix}/assets/[name]-[hash][extname]`,
+								entryFileNames: ssr ? '[name].js' : `${prefix}/[name].[hash].${ext}`,
+								chunkFileNames: ssr ? 'chunks/[name].js' : `${prefix}/chunks/[name].[hash].${ext}`,
+								assetFileNames: `${prefix}/assets/[name].[hash][extname]`,
 								hoistTransitiveImports: false
 							},
 							preserveEntrySignatures: 'strict'
 						},
+						ssrEmitAssets: true,
 						target: ssr ? 'node16.14' : undefined,
 						// don't use the default name to avoid collisions with 'static/manifest.json'
 						manifest: 'vite-manifest.json'
@@ -590,7 +629,7 @@ export function set_assets(path) {
 					app_path: `${kit.paths.base.slice(1)}${kit.paths.base ? '/' : ''}${kit.appDir}`,
 					manifest_data,
 					service_worker: !!service_worker_entry_file ? 'service-worker.js' : null, // TODO make file configurable?
-					client_entry: null,
+					client: null,
 					server_manifest
 				};
 
@@ -632,18 +671,33 @@ export function set_assets(path) {
 						// CLI args
 						mode: vite_config_env.mode,
 						logLevel: vite_config.logLevel,
-						clearScreen: vite_config.clearScreen
+						clearScreen: vite_config.clearScreen,
+						build: {
+							minify: initial_config.build?.minify,
+							assetsInlineLimit: vite_config.build.assetsInlineLimit,
+							sourcemap: vite_config.build.sourcemap
+						},
+						optimizeDeps: {
+							force: vite_config.optimizeDeps.force
+						}
 					})
 				);
 
 				/** @type {import('vite').Manifest} */
 				const client_manifest = JSON.parse(read(`${out}/client/${vite_config.build.manifest}`));
 
-				build_data.client_entry = find_deps(
-					client_manifest,
-					posixify(path.relative('.', `${runtime_directory}/client/start.js`)),
-					false
-				);
+				build_data.client = {
+					start: find_deps(
+						client_manifest,
+						posixify(path.relative('.', `${runtime_directory}/client/start.js`)),
+						false
+					),
+					app: find_deps(
+						client_manifest,
+						posixify(path.relative('.', `${kit.outDir}/generated/client-optimized/app.js`)),
+						false
+					)
+				};
 
 				const css = output.filter(
 					/** @type {(value: any) => value is import('rollup').OutputAsset} */
