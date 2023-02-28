@@ -35,21 +35,25 @@ export async function build_service_worker(
 	fs.writeFileSync(
 		service_worker,
 		`
+			export const base = /*@__PURE__*/ location.pathname.split('/').slice(0, -1).join('/');
+
 			export const build = [
 				${Array.from(build)
-					.map((file) => `${s(`${kit.paths.base}/${file}`)}`)
+					.map((file) => `base + ${s(`/${file}`)}`)
 					.join(',\n\t\t\t\t')}
 			];
 
 			export const files = [
 				${manifest_data.assets
 					.filter((asset) => kit.serviceWorker.files(asset.file))
-					.map((asset) => `${s(`${kit.paths.base}/${asset.file}`)}`)
+					.map((asset) => `base + ${s(`/${asset.file}`)}`)
 					.join(',\n\t\t\t\t')}
 			];
 
 			export const prerendered = [
-				${prerendered.paths.map((path) => s(path)).join(',\n\t\t\t\t')}
+				${prerendered.paths
+					.map((path) => `base + ${s(path.replace(kit.paths.base, ''))}`)
+					.join(',\n\t\t\t\t')}
 			];
 
 			export const version = ${s(kit.version.name)};
