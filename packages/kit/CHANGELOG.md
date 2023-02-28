@@ -5,7 +5,6 @@
 ### Patch Changes
 
 - feat: warn when calling depends(...) with special URI scheme ([#9246](https://github.com/sveltejs/kit/pull/9246))
-- feat: add `api.methods` and `page.methods` to `builder.routes` ([#9145](https://github.com/sveltejs/kit/pull/9145))
 
 ## 1.9.0
 
@@ -18,6 +17,7 @@
 ### Patch Changes
 
 - fix: always add `@sveltejs/kit` to `noExternal` for ssr build ([#9242](https://github.com/sveltejs/kit/pull/9242))
+- feat: add `api.methods` and `page.methods` to `builder.routes` ([#9145](https://github.com/sveltejs/kit/pull/9145))
 
 ## 1.8.7
 
