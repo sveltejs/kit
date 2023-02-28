@@ -113,6 +113,8 @@ You might wonder how we're able to use `$page.data` and other [app stores](/docs
 <p>Welcome {$user.name}</p>
 ```
 
+If you're not using SSR (and can guarantee that you won't need to use SSR in future) then you can safely keep state in a shared module, without using the context API.
+
 ## Component state is preserved
 
 When you navigate around your application, SvelteKit reuses existing layout and page components. For example, if you have a route like this...
