@@ -163,7 +163,7 @@ Reusing components like this means that things like sidebar scroll state are pre
 
 ## Storing state in the URL
 
-If you have state that should survive a reload and/or affect SSR, such as filters or sorting rules on a table, URL search parameters (like `?sort=price&order=ascending`) are a good place to put them. These can be accessed inside `load` functions via the `url` parameter, and inside components via `$page.url.searchParams`.
+If you have state that should survive a reload and/or affect SSR, such as filters or sorting rules on a table, URL search parameters (like `?sort=price&order=ascending`) are a good place to put them. You can put them in `<a href="...">` or `<form action="...">` attributes, or set them programmatically via `goto('?key=value')`. They can be accessed inside `load` functions via the `url` parameter, and inside components via `$page.url.searchParams`.
 
 ## Storing ephemeral state in snapshots
 
