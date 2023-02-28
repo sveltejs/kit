@@ -33,6 +33,7 @@ import * as devalue from 'devalue';
 import { INDEX_KEY, PRELOAD_PRIORITIES, SCROLL_KEY, SNAPSHOT_KEY } from './constants.js';
 import { validate_common_exports } from '../../utils/exports.js';
 import { compact } from '../../utils/array.js';
+import { validate_depends } from '../shared.js';
 
 // We track the scroll position associated with each history entry in sessionStorage,
 // rather than on history.state itself, because when navigation is driven by
@@ -586,6 +587,8 @@ export function create_client(app, target) {
 			/** @param {string[]} deps */
 			function depends(...deps) {
 				for (const dep of deps) {
+					if (DEV) validate_depends(/** @type {string} */ (route.id), dep);
+
 					const { href } = new URL(dep, url);
 					uses.dependencies.add(href);
 				}
