@@ -67,7 +67,7 @@ function get_store(name) {
 	} catch (e) {
 		throw new Error(
 			`Cannot subscribe to '${name}' store on the server outside of a Svelte component, as it is bound to the current request via component context. This prevents state from leaking between users.` +
-				'For more information, see https://kit.svelte.dev/docs/state-management#avoid-global-state-in-ssr'
+				'For more information, see https://kit.svelte.dev/docs/state-management#avoid-shared-state-on-the-server'
 		);
 	}
 }
