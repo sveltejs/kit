@@ -109,6 +109,7 @@ export async function render_response({
 					.map(() => '..')
 					.join('/') || '.';
 
+			// resolve e.g. '../..' against current location, then remove trailing slash
 			base_expression = `new URL(${s(base)}, location).pathname.slice(0, -1)`;
 		}
 
