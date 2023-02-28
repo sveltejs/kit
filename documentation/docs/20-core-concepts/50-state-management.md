@@ -6,9 +6,9 @@ If you're used to building client-only apps, state management in an app that spa
 
 ## Avoid shared state on the server
 
-While browsers are _stateful_ (state is stored in memory as the user interacts with the application), servers are _stateless_ (the content of the response is determined entirely by the content of the request) — conceptually, at least.
+Browsers are _stateful_ — state is stored in memory as the user interacts with the application. Servers, on the other hand, are _stateless_ — the content of the response is determined entirely by the content of the request.
 
-In reality, servers are often long-lived and shared by multiple users. For that reason it's important not to store data in shared variables. For example, consider this code:
+Conceptually, that is. In reality, servers are often long-lived and shared by multiple users. For that reason it's important not to store data in shared variables. For example, consider this code:
 
 ```js
 // @errors: 7034 7005
