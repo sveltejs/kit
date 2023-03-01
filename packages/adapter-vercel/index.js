@@ -306,7 +306,7 @@ const plugin = function (defaults = {}) {
 
 			// Catch-all route must come at the end, otherwise it will swallow all other routes,
 			// including ISR aliases if there is only one function
-			static_config.routes.push({ src: '/.*', dest: `/fn` });
+			static_config.routes.push({ src: '/.*', dest: `/${DEFAULT_FUNCTION_NAME}` });
 
 			builder.log.minor('Copying assets...');
 
