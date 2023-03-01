@@ -976,7 +976,7 @@ test.describe('Actions', () => {
 		}
 	});
 
-	test('use:enhance button with formAction', async ({ page, app }) => {
+	test('use:enhance button with formAction', async ({ page }) => {
 		await page.goto('/actions/enhance');
 
 		expect(await page.textContent('pre.formdata1')).toBe(JSON.stringify(null));
@@ -989,7 +989,7 @@ test.describe('Actions', () => {
 		);
 	});
 
-	test('use:enhance button with name', async ({ page, app }) => {
+	test('use:enhance button with name', async ({ page }) => {
 		await page.goto('/actions/enhance');
 
 		expect(await page.textContent('pre.formdata1')).toBe(JSON.stringify(null));
@@ -1002,6 +1002,21 @@ test.describe('Actions', () => {
 		await expect(page.locator('pre.formdata1')).toHaveText(
 			JSON.stringify({ result: 'submitter: foo' })
 		);
+	});
+
+	test('use:enhance does not clear form on second submit', async ({ page }) => {
+		await page.goto('/actions/enhance');
+
+		await page.locator('input[name="message"]').fill('hello');
+
+		await page.locator('.form3').click();
+		await expect(page.locator('pre.formdata1')).toHaveText(JSON.stringify({ message: 'hello' }));
+		await expect(page.locator('pre.formdata2')).toHaveText(JSON.stringify({ message: 'hello' }));
+
+		await page.locator('.form3').click();
+		await page.waitForTimeout(0); // wait for next tick
+		await expect(page.locator('pre.formdata1')).toHaveText(JSON.stringify({ message: 'hello' }));
+		await expect(page.locator('pre.formdata2')).toHaveText(JSON.stringify({ message: 'hello' }));
 	});
 
 	test('redirect', async ({ page, javaScriptEnabled }) => {
