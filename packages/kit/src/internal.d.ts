@@ -14,3 +14,9 @@ declare module '__sveltekit/paths' {
 	export function override(paths: { base: string; assets: string }): void;
 	export function set_assets(path: string): void;
 }
+
+declare module '__sveltekit/store' {
+	export * from 'svelte/store';
+	export function start(): void;
+	export function stop(): void;
+}
