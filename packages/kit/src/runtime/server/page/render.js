@@ -235,20 +235,20 @@ export async function render_response({
 	for (const dep of stylesheets) {
 		const path = prefixed(dep);
 
-		if (resolve_opts.preload({ type: 'css', path })) {
-			const attributes = ['rel="stylesheet"'];
+		const attributes = ['rel="stylesheet"'];
 
-			if (inline_styles.has(dep)) {
-				// don't load stylesheets that are already inlined
-				// include them in disabled state so that Vite can detect them and doesn't try to add them
-				attributes.push('disabled', 'media="(max-width: 0)"');
-			} else {
+		if (inline_styles.has(dep)) {
+			// don't load stylesheets that are already inlined
+			// include them in disabled state so that Vite can detect them and doesn't try to add them
+			attributes.push('disabled', 'media="(max-width: 0)"');
+		} else {
+			if (resolve_opts.preload({ type: 'css', path })) {
 				const preload_atts = ['rel="preload"', 'as="style"'];
 				link_header_preloads.add(`<${encodeURI(path)}>; ${preload_atts.join(';')}; nopush`);
 			}
-
-			head += `\n\t\t<link href="${path}" ${attributes.join(' ')}>`;
 		}
+
+		head += `\n\t\t<link href="${path}" ${attributes.join(' ')}>`;
 	}
 
 	for (const dep of fonts) {
