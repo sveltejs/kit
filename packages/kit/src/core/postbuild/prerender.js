@@ -240,17 +240,14 @@ async function prerender({ out, manifest_path, metadata, verbose, env }) {
 		const headers = Object.fromEntries(response.headers);
 
 		if (config.prerender.crawl && headers['content-type'] === 'text/html') {
-			const { ids, hrefs } = crawl(body.toString());
+			const { ids, hrefs } = crawl(body.toString(), decoded);
 
 			actual_hashlinks.set(decoded, ids);
 
 			for (const href of hrefs) {
-				if (href.startsWith('data:')) continue;
+				if (!is_root_relative(href)) continue;
 
-				const resolved = resolve(encoded, href);
-				if (!is_root_relative(resolved)) continue;
-
-				const { pathname, search, hash } = new URL(resolved, 'http://localhost');
+				const { pathname, search, hash } = new URL(href, 'http://localhost');
 
 				if (search) {
 					// TODO warn that query strings have no effect on statically-exported pages
