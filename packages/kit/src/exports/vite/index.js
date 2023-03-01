@@ -1,9 +1,11 @@
 import fs from 'node:fs';
 import path from 'node:path';
+import { fileURLToPath, pathToFileURL } from 'node:url';
 
 import { svelte } from '@sveltejs/vite-plugin-svelte';
 import colors from 'kleur';
 import * as vite from 'vite';
+import { resolve } from 'import-meta-resolve';
 
 import { mkdirp, posixify, read, resolve_entry, rimraf } from '../../utils/filesystem.js';
 import { create_static_module, create_dynamic_module } from '../../core/env.js';
@@ -224,6 +226,7 @@ function kit({ svelte_config }) {
 				resolve: {
 					alias: [
 						{ find: '__SERVER__', replacement: `${generated}/server` },
+						{ find: 'svelte/store', replacement: '__sveltekit/store' },
 						{ find: '$app', replacement: `${runtime_directory}/app` },
 						...get_config_aliases(kit)
 					]
@@ -417,6 +420,53 @@ export let building = false;
 export function set_building() {
 	building = true;
 }`;
+
+				case '\0__sveltekit/store':
+					const actual = fileURLToPath(
+						await resolve('svelte/store', pathToFileURL(path.resolve('x')).href)
+					);
+
+					if (browser || is_build) {
+						return `export * from '${actual}';`;
+					}
+
+					if (is_build) {
+						return `export * from '${actual}';
+
+export function start() {
+	// noop
+}
+
+export function stop() {
+	// noop
+}`;
+					}
+
+					return `import { writable as original_writable, readable, readonly, derived, get } from '${actual}';
+
+let requesting = 0;
+
+export function start() {
+	requesting += 1;
+}
+
+export function stop() {
+	requesting -= 1;
+}
+
+export function writable(...args) {
+	const store = original_writable(...args);
+
+	if (requesting === 0) {
+		store.set = store.update = () => {
+			throw new Error('Cannot write to a store on the server unless it was created during render');
+		};
+	}
+
+	return store;
+}
+
+export { readable, readonly, derived, get };`;
 			}
 		}
 	};
