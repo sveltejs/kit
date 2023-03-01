@@ -25,7 +25,7 @@ export function write(file, code) {
 	fs.writeFileSync(file, code);
 }
 
-/** @type {WeakMap<TemplateStringsArray, { strings: string[] }} */
+/** @type {WeakMap<TemplateStringsArray, { strings: string[], indents: string[] }} */
 const dedent_map = new WeakMap();
 
 /**
@@ -40,22 +40,29 @@ export function dedent(strings, ...values) {
 		const pattern = new RegExp(`^${indentation}`, 'gm');
 
 		dedented = {
-			strings: strings.map((str) => str.replace(pattern, ''))
+			strings: strings.map((str) => str.replace(pattern, '')),
+			indents: []
 		};
+
+		let current = '\n';
+
+		for (let i = 0; i < values.length; i += 1) {
+			const string = dedented.strings[i];
+			const match = /\n([ \t]*)$/.exec(string);
+
+			if (match) current = match[0];
+			dedented.indents[i] = current;
+		}
 
 		dedent_map.set(strings, dedented);
 	}
 
 	let str = dedented.strings[0];
 	for (let i = 0; i < values.length; i += 1) {
-		str += values[i] + dedented.strings[i + 1];
+		str += String(values[i]).replace(/\n/g, dedented.indents[i]) + dedented.strings[i + 1];
 	}
 
 	str = str.trim();
 
-	const result = /** @type {string} */ ({
-		toString: () => str
-	});
-
-	return result;
+	return str;
 }
