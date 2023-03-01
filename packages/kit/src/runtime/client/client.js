@@ -1411,10 +1411,15 @@ export function create_client(app, target) {
 			} else {
 				/** @type {Record<string, any>} */
 				const props = {
-					form: result.data,
+					// this brings Svelte's view of the world in line with SvelteKit's
+					// after use:enhance reset the form....
+					form: null,
 					page: { ...page, form: result.data, status: result.status }
 				};
 				root.$set(props);
+
+				// ...so that setting the `form` prop takes effect and isn't ignored
+				root.$set({ form: result.data });
 
 				if (result.type === 'success') {
 					tick().then(reset_focus);
