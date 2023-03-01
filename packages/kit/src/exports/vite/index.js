@@ -432,6 +432,7 @@ export function set_building() {
 
 					if (is_build) {
 						return `export * from '${actual}';
+import { writable as original_writable } from '${actual}';
 
 export function start() {
 	// noop
@@ -439,7 +440,9 @@ export function start() {
 
 export function stop() {
 	// noop
-}`;
+}
+
+export { original_writable };`;
 					}
 
 					return `import { writable as original_writable, readable, readonly, derived, get } from '${actual}';
