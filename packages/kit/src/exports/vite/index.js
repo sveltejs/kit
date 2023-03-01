@@ -24,6 +24,7 @@ import prerender from '../../core/postbuild/prerender.js';
 import analyse from '../../core/postbuild/analyse.js';
 import { s } from '../../utils/misc.js';
 import { hash } from '../../runtime/hash.js';
+import { dedent } from '../../core/sync/utils.js';
 
 export { vitePreprocess } from '@sveltejs/vite-plugin-svelte';
 
@@ -863,18 +864,18 @@ function find_overridden_config(config, resolved_config, enforced_config, path, 
 /**
  * @param {import('types').ValidatedConfig} config
  */
-const create_service_worker_module = (config) => `
-if (typeof self === 'undefined' || self instanceof ServiceWorkerGlobalScope === false) {
-	throw new Error('This module can only be imported inside a service worker');
-}
+const create_service_worker_module = (config) => dedent`
+	if (typeof self === 'undefined' || self instanceof ServiceWorkerGlobalScope === false) {
+		throw new Error('This module can only be imported inside a service worker');
+	}
 
-export const build = [];
-export const files = [
-	${create_assets(config)
-		.filter((asset) => config.kit.serviceWorker.files(asset.file))
-		.map((asset) => `${s(`${config.kit.paths.base}/${asset.file}`)}`)
-		.join(',\n\t\t\t\t')}
-];
-export const prerendered = [];
-export const version = ${s(config.kit.version.name)};
+	export const build = [];
+	export const files = [
+		${create_assets(config)
+			.filter((asset) => config.kit.serviceWorker.files(asset.file))
+			.map((asset) => `${s(`${config.kit.paths.base}/${asset.file}`)}`)
+			.join(',\n')}
+	];
+	export const prerendered = [];
+	export const version = ${s(config.kit.version.name)};
 `;
