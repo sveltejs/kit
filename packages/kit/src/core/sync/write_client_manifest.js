@@ -1,6 +1,6 @@
 import { relative_path, resolve_entry } from '../../utils/filesystem.js';
 import { s } from '../../utils/misc.js';
-import { trim, write_if_changed } from './utils.js';
+import { dedent, write_if_changed } from './utils.js';
 
 /**
  * Writes the client manifest to disk. The manifest is used to power the router. It contains the
@@ -108,7 +108,7 @@ export function write_client_manifest(kit, manifest_data, output, metadata) {
 
 	write_if_changed(
 		`${output}/app.js`,
-		trim(`
+		dedent`
 			${hooks_file ? `import * as client_hooks from '${relative_path(output, hooks_file)}';` : ''}
 
 			export { matchers } from './matchers.js';
@@ -126,7 +126,7 @@ export function write_client_manifest(kit, manifest_data, output, metadata) {
 			};
 
 			export { default as root } from '../root.svelte';
-		`)
+		`
 	);
 
 	// write matchers to a separate module so that we don't
