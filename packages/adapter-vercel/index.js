@@ -6,6 +6,8 @@ import esbuild from 'esbuild';
 
 const VALID_RUNTIMES = ['edge', 'nodejs16.x', 'nodejs18.x'];
 
+const DEFAULT_FUNCTION_NAME = 'fn';
+
 const get_default_runtime = () => {
 	const major = process.version.slice(1).split('.')[0];
 	if (major === '16') return 'nodejs16.x';
@@ -214,7 +216,7 @@ const plugin = function (defaults = {}) {
 					group.config.runtime === 'edge' ? generate_edge_function : generate_serverless_function;
 
 				// generate one function for the group
-				const name = singular ? 'fn' : `fn-${group.i}`;
+				const name = singular ? DEFAULT_FUNCTION_NAME : `fn-${group.i}`;
 
 				await generate_function(
 					name,
@@ -287,11 +289,24 @@ const plugin = function (defaults = {}) {
 				}
 			}
 
-			if (singular) {
-				// Common case: One function for all routes
-				// Needs to happen after ISR or else regex swallows all other matches
-				static_config.routes.push({ src: '/.*', dest: `/fn` });
+			if (!singular) {
+				// we need to create a catch-all route so that 404s are handled
+				// by SvelteKit rather than Vercel
+
+				const runtime = defaults.runtime ?? get_default_runtime();
+				const generate_function =
+					runtime === 'edge' ? generate_edge_function : generate_serverless_function;
+
+				await generate_function(
+					DEFAULT_FUNCTION_NAME,
+					/** @type {any} */ ({ runtime, ...defaults }),
+					[]
+				);
 			}
+
+			// Catch-all route must come at the end, otherwise it will swallow all other routes,
+			// including ISR aliases if there is only one function
+			static_config.routes.push({ src: '/.*', dest: `/fn` });
 
 			builder.log.minor('Copying assets...');
 
