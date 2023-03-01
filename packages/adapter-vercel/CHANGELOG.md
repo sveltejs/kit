@@ -1,5 +1,11 @@
 # @sveltejs/adapter-vercel
 
+## 2.2.1
+
+### Patch Changes
+
+- fix: add catch-all route for 404s ([#9265](https://github.com/sveltejs/kit/pull/9265))
+
 ## 2.2.0
 
 ### Minor Changes
