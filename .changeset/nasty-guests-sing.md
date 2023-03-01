@@ -2,4 +2,4 @@
 '@sveltejs/kit': patch
 ---
 
-fix: Chained optional parameters can now be excluded
+fix: successive optional route parameters can now be empty
