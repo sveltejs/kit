@@ -17,6 +17,7 @@ declare module '__sveltekit/paths' {
 
 declare module '__sveltekit/store' {
 	export * from 'svelte/store';
+	export { writable as original_writable } from 'svelte/store';
 	export function start(): void;
 	export function stop(): void;
 }

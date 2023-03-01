@@ -466,7 +466,7 @@ export function writable(...args) {
 	return store;
 }
 
-export { readable, readonly, derived, get };`;
+export { readable, readonly, derived, get, original_writable };`;
 			}
 		}
 	};

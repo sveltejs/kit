@@ -1,5 +1,4 @@
 import * as devalue from 'devalue';
-import { readable, writable } from 'svelte/store';
 import { DEV } from 'esm-env';
 import * as paths from '__sveltekit/paths';
 import { hash } from '../../hash.js';
@@ -12,6 +11,7 @@ import { public_env } from '../../shared-server.js';
 import { text } from '../../../exports/index.js';
 import { create_async_iterator } from '../../../utils/streaming.js';
 import { SVELTE_KIT_ASSETS } from '../../../constants.js';
+import { start, stop, readable, original_writable as writable } from '__sveltekit/store';
 
 // TODO rename this function/module
 
@@ -177,10 +177,12 @@ export async function render_response({
 			};
 
 			try {
+				start();
 				rendered = options.root.render(props);
 			} finally {
 				globalThis.fetch = fetch;
 				paths.reset();
+				stop();
 			}
 		} else {
 			try {
