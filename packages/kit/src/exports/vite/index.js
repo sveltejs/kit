@@ -426,7 +426,7 @@ export function set_building() {
 						await resolve('svelte/store', pathToFileURL(path.resolve('x')).href)
 					);
 
-					if (browser || is_build) {
+					if (browser) {
 						return `export * from '${actual}';`;
 					}
 
