@@ -1,5 +1,11 @@
 # @sveltejs/kit
 
+## 1.9.2
+
+### Patch Changes
+
+- fix: correct undefined reference to global var with Vitest ([#9252](https://github.com/sveltejs/kit/pull/9252))
+
 ## 1.9.1
 
 ### Patch Changes
