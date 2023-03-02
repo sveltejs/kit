@@ -15,6 +15,7 @@ Install with `npm i -D @sveltejs/adapter-netlify`, then add the adapter to your 
 /// file: svelte.config.js
 import adapter from '@sveltejs/adapter-netlify';
 
+
 export default {
 	kit: {
 		// default options are shown
