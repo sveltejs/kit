@@ -29,7 +29,8 @@ export function write(file, code) {
 const dedent_map = new WeakMap();
 
 /**
- * Removes leading whitespace from each line of the input string
+ * Allows indenting template strings without the extra indentation ending up in the result.
+ * Still allows indentation of lines relative to one another in the template string.
  * @param {TemplateStringsArray} strings
  * @param {any[]} values
  */
