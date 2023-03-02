@@ -1,5 +1,14 @@
 # @sveltejs/adapter-node
 
+## 1.2.1
+
+### Patch Changes
+
+- fix: use `node` export condition when bundling ([#9276](https://github.com/sveltejs/kit/pull/9276))
+
+- Updated dependencies [[`1e2c8269`](https://github.com/sveltejs/kit/commit/1e2c82697d501c88c6027722ea9b106e09a0eb6d)]:
+  - @sveltejs/kit@1.9.3
+
 ## 1.2.0
 
 ### Minor Changes

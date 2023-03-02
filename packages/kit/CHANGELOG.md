@@ -1,5 +1,11 @@
 # @sveltejs/kit
 
+## 1.9.3
+
+### Patch Changes
+
+- fix: successive optional route parameters can now be empty ([#9266](https://github.com/sveltejs/kit/pull/9266))
+
 ## 1.9.2
 
 ### Patch Changes
