@@ -105,8 +105,13 @@ export function get_cookies(request, url, trailing_slash) {
 			const decoder = opts?.decode || decodeURIComponent;
 			const cookies = parse(header, { decode: decoder });
 
-			for (const { name, value } of Object.values(new_cookies)) {
-				cookies[name] = value;
+			for (const c of Object.values(new_cookies)) {
+				if (
+					domain_matches(url.hostname, c.options.domain) &&
+					path_matches(url.hostname, c.options.path)
+				) {
+					cookies[c.name] = c.value;
+				}
 			}
 
 			return Object.entries(cookies).map(([name, value]) => ({ name, value }));
