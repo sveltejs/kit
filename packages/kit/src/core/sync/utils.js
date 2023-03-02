@@ -29,6 +29,7 @@ export function write(file, code) {
 const dedent_map = new WeakMap();
 
 /**
+ * Removes leading whitespace from each line of the input string
  * @param {TemplateStringsArray} strings
  * @param {any[]} values
  */
