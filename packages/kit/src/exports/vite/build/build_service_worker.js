@@ -59,16 +59,14 @@ export async function build_service_worker(
 	);
 
 	await vite.build({
-		base: assets_base(kit),
 		build: {
-			lib: {
-				entry: /** @type {string} */ (service_worker_entry_file),
-				name: 'app',
-				formats: ['es']
-			},
 			rollupOptions: {
+				input: {
+					'service-worker': service_worker_entry_file
+				},
 				output: {
-					entryFileNames: 'service-worker.js'
+					entryFileNames: '[name].js',
+					assetFileNames: `${kit.appDir}/immutable/assets/[name].[hash][extname]`
 				}
 			},
 			outDir: `${out}/client`,
@@ -78,6 +76,13 @@ export async function build_service_worker(
 		configFile: false,
 		resolve: {
 			alias: [...get_config_aliases(kit), { find: '$service-worker', replacement: service_worker }]
+		},
+		experimental: {
+			renderBuiltUrl(filename) {
+				return {
+					runtime: `new URL(${JSON.stringify(filename)}, location.pathname).href`
+				};
+			}
 		}
 	});
 }
