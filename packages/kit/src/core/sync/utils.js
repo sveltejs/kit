@@ -25,7 +25,7 @@ export function write(file, code) {
 	fs.writeFileSync(file, code);
 }
 
-/** @type {WeakMap<TemplateStringsArray, { strings: string[], indents: string[] }} */
+/** @type {WeakMap<TemplateStringsArray, { strings: string[], indents: string[] }>} */
 const dedent_map = new WeakMap();
 
 /**
