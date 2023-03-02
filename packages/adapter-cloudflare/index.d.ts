@@ -30,12 +30,6 @@ export interface AdapterOptions {
 		 */
 		exclude?: string[];
 	};
-
-	/**
-	 * The fallback page to generate (e.g. 404.html, 200.html)
-	 * See https://kit.svelte.dev/docs/adapter-static#spa-mode-add-fallback-page
-	 */
-	fallback?: string;
 }
 
 export interface RoutesJSONSpec {

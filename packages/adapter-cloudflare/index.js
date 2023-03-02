@@ -1,5 +1,5 @@
 import { writeFileSync } from 'node:fs';
-import { posix, join as path_join } from 'node:path';
+import * as path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import * as esbuild from 'esbuild';
 
@@ -16,15 +16,13 @@ export default function (options = {}) {
 			builder.rimraf(tmp);
 			builder.mkdirp(tmp);
 
+			await builder.generateFallback(path.join(dest, '404.html'));
+
 			const dest_dir = `${dest}${builder.config.kit.paths.base}`;
 			const written_files = builder.writeClient(dest_dir);
 			builder.writePrerendered(dest_dir);
 
-			if (options.fallback) {
-				await builder.generateFallback(path_join(dest, options.fallback));
-			}
-
-			const relativePath = posix.relative(tmp, builder.getServerDirectory());
+			const relativePath = path.posix.relative(tmp, builder.getServerDirectory());
 
 			writeFileSync(
 				`${tmp}/manifest.js`,
