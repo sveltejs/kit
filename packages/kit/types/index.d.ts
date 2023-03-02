@@ -198,7 +198,13 @@ export interface Cookies {
 	get(name: string, opts?: import('cookie').CookieParseOptions): string | undefined;
 
 	/**
-	 * Sets a cookie. This will add a `set-cookie` header to the response, but also make the cookie available via `cookies.get` during the current request.
+	 * Gets all cookies that were previously set with `cookies.set`, or from the request headers.
+	 * @param opts the options, passed directily to `cookie.parse`. See documentation [here](https://github.com/jshttp/cookie#cookieparsestr-options)
+	 */
+	getAll(opts?: import('cookie').CookieParseOptions): Array<{ name: string; value: string }>;
+
+	/**
+	 * Sets a cookie. This will add a `set-cookie` header to the response, but also make the cookie available via `cookies.get` or `cookies.getAll` during the current request.
 	 *
 	 * The `httpOnly` and `secure` options are `true` by default (except on http://localhost, where `secure` is `false`), and must be explicitly disabled if you want cookies to be readable by client-side JavaScript and/or transmitted over HTTP. The `sameSite` option defaults to `lax`.
 	 *

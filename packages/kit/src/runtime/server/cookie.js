@@ -99,6 +99,20 @@ export function get_cookies(request, url, trailing_slash) {
 		},
 
 		/**
+		 * @param {import('cookie').CookieParseOptions} opts
+		 */
+		getAll(opts) {
+			const decoder = opts?.decode || decodeURIComponent;
+			const cookies = parse(header, { decode: decoder });
+
+			for (const { name, value } of Object.values(new_cookies)) {
+				cookies[name] = value;
+			}
+
+			return Object.entries(cookies).map(([name, value]) => ({ name, value }));
+		},
+
+		/**
 		 * @param {string} name
 		 * @param {string} value
 		 * @param {import('cookie').CookieSerializeOptions} opts
