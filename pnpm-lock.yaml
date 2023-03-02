@@ -191,10 +191,12 @@ importers:
     specifiers:
       '@sveltejs/kit': workspace:^
       '@types/node': ^16.18.6
+      '@vercel/edge': ^0.3.1
       '@vercel/nft': ^0.22.1
       esbuild: ^0.16.3
       typescript: ^4.9.4
     dependencies:
+      '@vercel/edge': 0.3.1
       '@vercel/nft': 0.22.1
       esbuild: 0.16.3
     devDependencies:
@@ -1893,6 +1895,10 @@ packages:
     transitivePeerDependencies:
       - supports-color
     dev: true
+
+  /@vercel/edge/0.3.1:
+    resolution: {integrity: sha512-NdJxoaUI/AMvSu9dBM5MA1mxzk+Xo1sMrjyNRtNGsH5iKYyMdMWNUEvHdkyn1kN6opM03rQHYOYgXhBwNyIfdQ==}
+    dev: false
 
   /@vercel/nft/0.22.1:
     resolution: {integrity: sha512-lYYZIoxRurqDOSoVIdBicGnpUIpfyaS5qVjdPq+EfI285WqtZK3NK/dyCkiyBul+X2U2OEhRyeMdXPCHGJbohw==}
