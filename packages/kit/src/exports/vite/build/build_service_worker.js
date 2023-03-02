@@ -1,5 +1,6 @@
 import fs from 'node:fs';
 import * as vite from 'vite';
+import { dedent } from '../../../core/sync/utils.js';
 import { s } from '../../../utils/misc.js';
 import { get_config_aliases } from '../utils.js';
 import { assets_base } from './utils.js';
@@ -34,28 +35,26 @@ export async function build_service_worker(
 
 	fs.writeFileSync(
 		service_worker,
-		`
+		dedent`
 			export const build = [
 				${Array.from(build)
 					.map((file) => `${s(`${kit.paths.base}/${file}`)}`)
-					.join(',\n\t\t\t\t')}
+					.join(',\n')}
 			];
 
 			export const files = [
 				${manifest_data.assets
 					.filter((asset) => kit.serviceWorker.files(asset.file))
 					.map((asset) => `${s(`${kit.paths.base}/${asset.file}`)}`)
-					.join(',\n\t\t\t\t')}
+					.join(',\n')}
 			];
 
 			export const prerendered = [
-				${prerendered.paths.map((path) => s(path)).join(',\n\t\t\t\t')}
+				${prerendered.paths.map((path) => s(path)).join(',\n')}
 			];
 
 			export const version = ${s(kit.version.name)};
 		`
-			.replace(/^\t{3}/gm, '')
-			.trim()
 	);
 
 	await vite.build({
