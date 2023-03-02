@@ -41,7 +41,7 @@ If you want certain pages to be prerendered, you can re-enable `ssr` alongside `
 
 ```js
 /// file: src/routes/my-prerendered-page/+page.js
-export const prerender = truel
+export const prerender = true;
 export const ssr = true;
 ```
 

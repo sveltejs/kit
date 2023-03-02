@@ -70,7 +70,7 @@ The directory to write static assets (the contents of `static`, plus client-side
 
 ### fallback
 
-Specify a [fallback page](#spa-mode-add-fallback-page) for [SPA mode](single-page-apps), e.g. `index.html` or `200.html` or `404.html`.
+Specify a fallback page for [SPA mode](single-page-apps), e.g. `index.html` or `200.html` or `404.html`.
 
 ### precompress
 
