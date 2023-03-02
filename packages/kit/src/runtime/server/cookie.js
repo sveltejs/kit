@@ -108,7 +108,7 @@ export function get_cookies(request, url, trailing_slash) {
 			for (const c of Object.values(new_cookies)) {
 				if (
 					domain_matches(url.hostname, c.options.domain) &&
-					path_matches(url.hostname, c.options.path)
+					path_matches(url.pathname, c.options.path)
 				) {
 					cookies[c.name] = c.value;
 				}
