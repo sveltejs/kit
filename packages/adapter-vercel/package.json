@@ -28,7 +28,6 @@
 		"check": "tsc"
 	},
 	"dependencies": {
-		"@vercel/edge": "^0.3.1",
 		"@vercel/nft": "^0.22.1",
 		"esbuild": "^0.16.3"
 	},

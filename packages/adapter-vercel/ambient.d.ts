@@ -1,4 +1,4 @@
-import { RequestContext } from '@vercel/edge';
+import { RequestContext } from './index.js';
 
 declare global {
 	namespace App {
