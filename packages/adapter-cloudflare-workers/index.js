@@ -58,7 +58,7 @@ export default function ({ config = 'wrangler.toml' } = {}) {
 				platform: 'browser',
 				conditions: ['worker', 'browser'],
 				sourcemap: 'linked',
-				target: 'es2020',
+				target: 'es2022',
 				entryPoints: [`${tmp}/entry.js`],
 				outfile: main,
 				bundle: true,
