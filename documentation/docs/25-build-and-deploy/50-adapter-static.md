@@ -52,9 +52,8 @@ On these platforms, you should omit the adapter options so that `adapter-static`
 /// file: svelte.config.js
 export default {
 	kit: {
--		adapter: adapter({...}),
-+		adapter: adapter(),
-		}
+-		adapter: adapter({...})
++		adapter: adapter()
 	}
 };
 ```
@@ -137,7 +136,7 @@ export default {
 
 When operating in SPA mode, you can omit the [`prerender`](page-options#prerender) option from your root layout (or set it to `false`, its default value), and only pages that have the `prerender` option set will be prerendered at build time.
 
-SvelteKit will still crawl your app's entry points looking for prerenderable pages. If `svelte-kit build` fails because of pages that can't be loaded outside the browser, you can set `config.kit.prerender.entries` to `[]` to prevent this from happening.
+SvelteKit will still crawl your app's entry points looking for prerenderable pages. If `vite build` fails because of pages that can't be loaded outside the browser, you can set `config.kit.prerender.entries` to `[]` to prevent this from happening.
 
 You can also add turn off prerendering only to parts of your app, if you want other parts to be prerendered.
 
