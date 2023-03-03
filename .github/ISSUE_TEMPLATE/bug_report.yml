@@ -9,7 +9,7 @@ body:
     id: bug-description
     attributes:
       label: Describe the bug
-      description: Please check if bugs related to building are caused by Vite and [file there](https://github.com/vitejs/vite/issues) if appropriate. If you intend to submit a PR for this issue, tell us in the description. Thanks!
+      description: Please [check if bugs related to building are caused by Vite](https://github.com/sveltejs/kit#bug-reporting) and [file there](https://github.com/vitejs/vite/issues) if appropriate. If you intend to submit a PR for this issue, tell us in the description. Thanks!
       placeholder: Bug description
     validations:
       required: true
