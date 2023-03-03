@@ -49,7 +49,7 @@ export default function (options = {}) {
 				platform: 'browser',
 				conditions: ['worker', 'browser'],
 				sourcemap: 'linked',
-				target: 'es2020',
+				target: 'es2022',
 				entryPoints: [`${tmp}/_worker.js`],
 				outfile: `${dest}/_worker.js`,
 				allowOverwrite: true,
