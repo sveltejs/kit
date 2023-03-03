@@ -33,7 +33,7 @@
 		"@svitejs/changesets-changelog-github-compact": "^1.1.0",
 		"@typescript-eslint/eslint-plugin": "^5.53.0",
 		"eslint": "^8.33.0",
-		"eslint-plugin-unicorn": "^45.0.2",
+		"eslint-plugin-unicorn": "^46.0.0",
 		"playwright": "^1.29.2",
 		"prettier": "^2.8.0",
 		"rollup": "^3.7.0",
