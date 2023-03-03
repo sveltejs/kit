@@ -572,7 +572,22 @@ export interface KitConfig {
 	 */
 	version?: {
 		/**
-		 * The current app version string. If specified, this must be deterministic (e.g. a commit ref rather than `Math.random()` or `Date.now().toString()`), otherwise defaults to a timestamp of the build
+		 * The current app version string. If specified, this must be deterministic (e.g. a commit ref rather than `Math.random()` or `Date.now().toString()`), otherwise defaults to a timestamp of the build.
+		 *
+		 * For example, to use the current commit hash, you could do use `git rev-parse HEAD`:
+		 *
+		 * ```js
+		 * /// file: svelte.config.js
+		 * import * as child_process from 'node:child_process';
+		 *
+		 * export default {
+		 *   kit: {
+		 *     version: {
+		 *       name: child_process.execSync('git rev-parse HEAD').toString().trim()
+		 *     }
+		 *   }
+		 * };
+		 * ```
 		 */
 		name?: string;
 		/**

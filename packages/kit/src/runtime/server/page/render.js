@@ -268,7 +268,7 @@ export async function render_response({
 		}
 	}
 
-	const global = `__sveltekit_${options.version_hash}`;
+	const global = __SVELTEKIT_DEV__ ? `__sveltekit_dev` : `__sveltekit_${options.version_hash}`;
 
 	const { data, chunks } = get_data(
 		event,

@@ -335,7 +335,10 @@ function kit({ svelte_config }) {
 
 		async load(id, options) {
 			const browser = !options?.ssr;
-			const global = `globalThis.__sveltekit_${version_hash}`;
+
+			const global = is_build
+				? `globalThis.__sveltekit_${version_hash}`
+				: `globalThis.__sveltekit_dev`;
 
 			if (options?.ssr === false && process.env.TEST !== 'true') {
 				const normalized_cwd = vite.normalizePath(cwd);
