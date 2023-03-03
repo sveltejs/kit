@@ -62,7 +62,10 @@ export function get_cookies(request, url, trailing_slash) {
 			const req_cookies = parse(header, { decode: decoder });
 			const cookie = req_cookies[name]; // the decoded string or undefined
 
-			if (__SVELTEKIT_DEV__ && !cookie) {
+			// in development, if the cookie was set during this session with `cookies.set`,
+			// but at a different path, warn the user. (ignore cookies from request headers,
+			// since we don't know which path they were set at)
+			if (__SVELTEKIT_DEV__ && !cookie && c) {
 				const paths = cookie_paths[name];
 				if (paths?.size > 0) {
 					console.warn(
