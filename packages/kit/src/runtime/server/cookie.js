@@ -65,9 +65,13 @@ export function get_cookies(request, url, trailing_slash) {
 			// in development, if the cookie was set during this session with `cookies.set`,
 			// but at a different path, warn the user. (ignore cookies from request headers,
 			// since we don't know which path they were set at)
-			if (__SVELTEKIT_DEV__ && !cookie && c) {
-				const paths = cookie_paths[name];
-				if (paths?.size > 0) {
+			if (__SVELTEKIT_DEV__ && !cookie) {
+				const paths = Array.from(cookie_paths[name] ?? []).filter((path) => {
+					// we only care about paths that are _more_ specific than the current path
+					return path_matches(path, url.pathname) && path !== url.pathname;
+				});
+
+				if (paths.length > 0) {
 					console.warn(
 						// prettier-ignore
 						`'${name}' cookie does not exist for ${url.pathname}, but was previously set at ${conjoin([...paths])}. Did you mean to set its 'path' to '/' instead?`
