@@ -1,5 +1,18 @@
 # @sveltejs/adapter-cloudflare
 
+## 2.2.0
+
+### Minor Changes
+
+- feat: generate `404.html` ([#9294](https://github.com/sveltejs/kit/pull/9294))
+
+- feat: use `es2022` target ([#9293](https://github.com/sveltejs/kit/pull/9293))
+
+### Patch Changes
+
+- Updated dependencies [[`2b647fd8`](https://github.com/sveltejs/kit/commit/2b647fd85be028bc5775894567ee8b13f91411a7), [`fbe4fe76`](https://github.com/sveltejs/kit/commit/fbe4fe768140abac09bd66edd12c77787cafc2c5), [`744dc81c`](https://github.com/sveltejs/kit/commit/744dc81c6b0d8cade087df733c6d3d3f1281e68c)]:
+  - @sveltejs/kit@1.10.0
+
 ## 2.1.0
 
 ### Minor Changes

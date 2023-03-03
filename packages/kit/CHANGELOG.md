@@ -1,5 +1,17 @@
 # @sveltejs/kit
 
+## 1.10.0
+
+### Minor Changes
+
+- feat: add `cookies.getAll` ([#9287](https://github.com/sveltejs/kit/pull/9287))
+
+### Patch Changes
+
+- fix: always include `<link rel="stylesheet">`, even for stylesheets excluded from Link headers ([#9255](https://github.com/sveltejs/kit/pull/9255))
+
+- fix: preserve form state when submitting a second time ([#9267](https://github.com/sveltejs/kit/pull/9267))
+
 ## 1.9.3
 
 ### Patch Changes
