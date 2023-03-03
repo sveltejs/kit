@@ -2,9 +2,16 @@
 title: Single-page apps
 ---
 
-You can use [`adapter-static`](adapter-static) to create a fully client-rendered single-page app or SPA.
+You can turn any SvelteKit app, using any adapter, into a fully client-rendered single-page app (SPA) by disabling SSR at the root layout:
+
+```js
+/// file: src/routes/+layout.js
+export const ssr = false;
+```
 
 > In most situations this is not recommended: it harms SEO, tends to slow down perceived performance, and makes your app inaccessible to users if JavaScript fails or is disabled (which happens [more often than you probably think](https://kryogenix.org/code/browser/everyonehasjs.html)).
+
+If you don't have any server-side logic (i.e. `+page.server.js`, `+layout.server.js` or `+server.js` files) you can use [`adapter-static`](adapter-static) to create your SPA by adding a _fallback page_.
 
 ## Usage
 
@@ -28,23 +35,6 @@ The `fallback` page is an HTML page created by SvelteKit from your page template
 
 On some hosts it may be `index.html` or something else entirely — consult your platform's documentation.
 
-## Disabling SSR during dev
-
-During development, SvelteKit will still attempt to server-side render your routes. This means accessing things that are only available in the browser (such as the `window` object) will result in errors, even though this would be valid in the output app. To align the behavior of SvelteKit's dev mode with your SPA, you can add [`export const ssr = false`](page-options#ssr) to your root `+layout`:
-
-```js
-/// file: src/routes/+layout.js
-export const ssr = false;
-```
-
-If you want certain pages to be prerendered, you can re-enable `ssr` alongside `prerender` for just those parts of your app:
-
-```js
-/// file: src/routes/my-prerendered-page/+page.js
-export const prerender = true;
-export const ssr = true;
-```
-
 ## Apache
 
 To run an SPA on [Apache](https://httpd.apache.org/), you should add a `static/.htaccess` file to route requests to the fallback page:
@@ -58,4 +48,14 @@ To run an SPA on [Apache](https://httpd.apache.org/), you should add a `static/.
 	RewriteCond %{REQUEST_FILENAME} !-d
 	RewriteRule . /200.html [L]
 </IfModule>
+```
+
+## Prerendering individual pages
+
+If you want certain pages to be prerendered, you can re-enable `ssr` alongside `prerender` for just those parts of your app:
+
+```js
+/// file: src/routes/my-prerendered-page/+page.js
+export const prerender = true;
+export const ssr = true;
 ```
