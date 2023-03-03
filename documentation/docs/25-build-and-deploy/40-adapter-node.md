@@ -24,7 +24,7 @@ export default {
 
 First, build your app with `npm run build`. This will create the production server in the output directory specified in the adapter options, defaulting to `build`.
 
-You will need the output directory, the project's `package.json`, and the production dependencies in `node_modules` to run the application. Production dependencies can be generated with `npm ci --prod` (you can skip this step if your app doesn't have any dependencies). You can then start your app with this command:
+You will need the output directory, the project's `package.json`, and the production dependencies in `node_modules` to run the application. Production dependencies can be generated (after package-lock.json copied here too) with `npm ci --omit dev` (you can skip this step if your app doesn't have any dependencies). You can then start your app with this command:
 
 ```bash
 node build
@@ -63,6 +63,8 @@ HTTP doesn't give SvelteKit a reliable way to know the URL that is currently bei
 
 ```
 ORIGIN=https://my.site node build
+ORIGIN=http://localhost:3000 node build
+ORIGIN=http://127.0.0.1:4000 node build
 ```
 
 With this, a request for the `/stuff` pathname will correctly resolve to `https://my.site/stuff`. Alternatively, you can specify headers that tell SvelteKit about the request protocol and host, from which it can construct the origin URL:
