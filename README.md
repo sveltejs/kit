@@ -25,7 +25,7 @@ Web development, streamlined. Read the [documentation](https://kit.svelte.dev/do
 
 ## Bug reporting
 
-Please make sure the issue you're reporting involves SvelteKit. Many issues related to how a project builds originate from [Vite](https://vitejs.dev/), which is used to build a SvelteKit project. It's important to note that new Vite projects don't use SSR by default, and so if you create a new Vite project from scratch, many issues won't reproduce. You should thus start with a project that utilizes SSR, such as `npm create vite-extra@latest -- --template ssr-svelte`.
+Please make sure the issue you're reporting involves SvelteKit. Many issues related to how a project builds originate from [Vite](https://vitejs.dev/), which is used to build a SvelteKit project. You can create a new Vite project with `npm create vite@latest` for client-side only repros and `npm create vite-extra@latest` for SSR or library repros.
 
 If an issue originates from Vite, please report it in the [Vite issue tracker](https://github.com/vitejs/vite/issues).
 
