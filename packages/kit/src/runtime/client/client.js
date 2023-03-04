@@ -379,17 +379,7 @@ export function create_client(app, target) {
 			// need to render the DOM before we can scroll to the rendered elements and do focus management
 			await tick();
 
-			const changed_focus =
-				// reset focus only if any manual focus management didn't override it
-				document.activeElement !== activeElement &&
-				// also refocus when activeElement is body already because the
-				// focus event might not have been fired on it yet
-				document.activeElement !== document.body;
-
-			if (!keepfocus && !changed_focus) {
-				await reset_focus();
-			}
-
+			// we reset scroll before dealing with focus, to avoid a flash of unscrolled content
 			if (autoscroll) {
 				const deep_linked =
 					url.hash && document.getElementById(decodeURIComponent(url.hash.slice(1)));
@@ -403,6 +393,17 @@ export function create_client(app, target) {
 				} else {
 					scrollTo(0, 0);
 				}
+			}
+
+			const changed_focus =
+				// reset focus only if any manual focus management didn't override it
+				document.activeElement !== activeElement &&
+				// also refocus when activeElement is body already because the
+				// focus event might not have been fired on it yet
+				document.activeElement !== document.body;
+
+			if (!keepfocus && !changed_focus) {
+				await reset_focus();
 			}
 		} else {
 			await tick();
