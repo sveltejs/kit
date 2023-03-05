@@ -95,29 +95,6 @@ export function replace_placeholders(content) {
 		});
 }
 
-/** @param {'types' | 'exports'} kind */
-export function render(kind) {
-	return modules
-		.map((module) => {
-			// special case — we want to include $lib etc in the modules page
-			const is_exempt = kind === 'exports' && module.exempt;
-			const skip = module[kind].length === 0 && !is_exempt;
-
-			if (skip) return '';
-
-			return `## ${module.name}\n\n${module.comment}\n\n${module[kind]
-				.map((type) => {
-					const markdown =
-						`<div class="ts-block">${fence(type.snippet)}` +
-						type.children.map(stringify).join('\n\n') +
-						`</div>`;
-					return `### ${type.name}\n\n${type.comment}\n\n${markdown}`;
-				})
-				.join('\n\n')}`;
-		})
-		.join('\n\n');
-}
-
 /**
  * @param {string} code
  * @param {string} lang
