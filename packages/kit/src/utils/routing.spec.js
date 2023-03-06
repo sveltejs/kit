@@ -197,6 +197,11 @@ const exec_tests = [
 		route: '/[[slug1=doesntmatch]]/[[slug2=matches]]/constant/[[slug3=matches]]',
 		path: '/b/constant/c',
 		expected: { slug2: 'b', slug3: 'c' }
+	},
+	{
+		route: '/[[slug1=doesntmatch]]/[slug2=matches]/[slug3]',
+		path: '/a/b/c',
+		expected: undefined
 	}
 ];
 
