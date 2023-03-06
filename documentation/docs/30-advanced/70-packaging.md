@@ -213,6 +213,7 @@ All relative file imports need to be fully specified, adhering to Node's ESM alg
 ```diff
 -import { something } from './something';
 +import { something } from './something/index.js';
+```
 
 If you are using TypeScript, you need to import `.ts` files the same way, but using a `.js` file ending, _not_ a `.ts` file ending. (This is a TypeScript design decision outside our control.) Setting `"moduleResolution": "NodeNext"` in your `tsconfig.json` or `jsconfig.json` will help you with this.
 

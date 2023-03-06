@@ -198,7 +198,13 @@ export interface Cookies {
 	get(name: string, opts?: import('cookie').CookieParseOptions): string | undefined;
 
 	/**
-	 * Sets a cookie. This will add a `set-cookie` header to the response, but also make the cookie available via `cookies.get` during the current request.
+	 * Gets all cookies that were previously set with `cookies.set`, or from the request headers.
+	 * @param opts the options, passed directily to `cookie.parse`. See documentation [here](https://github.com/jshttp/cookie#cookieparsestr-options)
+	 */
+	getAll(opts?: import('cookie').CookieParseOptions): Array<{ name: string; value: string }>;
+
+	/**
+	 * Sets a cookie. This will add a `set-cookie` header to the response, but also make the cookie available via `cookies.get` or `cookies.getAll` during the current request.
 	 *
 	 * The `httpOnly` and `secure` options are `true` by default (except on http://localhost, where `secure` is `false`), and must be explicitly disabled if you want cookies to be readable by client-side JavaScript and/or transmitted over HTTP. The `sameSite` option defaults to `lax`.
 	 *
@@ -452,6 +458,8 @@ export interface KitConfig {
 		 *
 		 * If `true`, `base` and `assets` imported from `$app/paths` will be replaced with relative asset paths during server-side rendering, resulting in portable HTML.
 		 * If `false`, `%sveltekit.assets%` and references to build artifacts will always be root-relative paths, unless `paths.assets` is an external URL
+		 *
+		 * If your app uses a `<base>` element, you should set this to `false`, otherwise asset URLs will incorrectly be resolved against the `<base>` URL rather than the current page.
 		 * @default undefined
 		 */
 		relative?: boolean | undefined;
@@ -566,7 +574,22 @@ export interface KitConfig {
 	 */
 	version?: {
 		/**
-		 * The current app version string. If specified, this must be deterministic (e.g. a commit ref rather than `Math.random()` or `Date.now().toString()`), otherwise defaults to a timestamp of the build
+		 * The current app version string. If specified, this must be deterministic (e.g. a commit ref rather than `Math.random()` or `Date.now().toString()`), otherwise defaults to a timestamp of the build.
+		 *
+		 * For example, to use the current commit hash, you could do use `git rev-parse HEAD`:
+		 *
+		 * ```js
+		 * /// file: svelte.config.js
+		 * import * as child_process from 'node:child_process';
+		 *
+		 * export default {
+		 *   kit: {
+		 *     version: {
+		 *       name: child_process.execSync('git rev-parse HEAD').toString().trim()
+		 *     }
+		 *   }
+		 * };
+		 * ```
 		 */
 		name?: string;
 		/**

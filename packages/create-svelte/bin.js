@@ -77,7 +77,7 @@ const options = await p.group(
 
 		features: () =>
 			p.multiselect({
-				message: 'Select additional options',
+				message: 'Select additional options (use arrow keys/space bar)',
 				required: false,
 				options: [
 					{

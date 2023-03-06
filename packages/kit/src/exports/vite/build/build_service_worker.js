@@ -1,5 +1,6 @@
 import fs from 'node:fs';
 import * as vite from 'vite';
+import { dedent } from '../../../core/sync/utils.js';
 import { s } from '../../../utils/misc.js';
 import { get_config_aliases } from '../utils.js';
 import { assets_base } from './utils.js';
@@ -34,32 +35,28 @@ export async function build_service_worker(
 
 	fs.writeFileSync(
 		service_worker,
-		`
+		dedent`
 			export const base = /*@__PURE__*/ location.pathname.split('/').slice(0, -1).join('/');
 
 			export const build = [
 				${Array.from(build)
 					.map((file) => `base + ${s(`/${file}`)}`)
-					.join(',\n\t\t\t\t')}
+					.join(',\n')}
 			];
 
 			export const files = [
 				${manifest_data.assets
 					.filter((asset) => kit.serviceWorker.files(asset.file))
 					.map((asset) => `base + ${s(`/${asset.file}`)}`)
-					.join(',\n\t\t\t\t')}
+					.join(',\n')}
 			];
 
 			export const prerendered = [
-				${prerendered.paths
-					.map((path) => `base + ${s(path.replace(kit.paths.base, ''))}`)
-					.join(',\n\t\t\t\t')}
+				${prerendered.paths.map((path) => `base + ${s(path.replace(kit.paths.base, ''))}`).join(',\n')}
 			];
 
 			export const version = ${s(kit.version.name)};
 		`
-			.replace(/^\t{3}/gm, '')
-			.trim()
 	);
 
 	await vite.build({

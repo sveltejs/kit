@@ -1,6 +1,6 @@
 {
 	"name": "@sveltejs/adapter-cloudflare",
-	"version": "2.1.0",
+	"version": "2.2.0",
 	"repository": {
 		"type": "git",
 		"url": "https://github.com/sveltejs/kit",

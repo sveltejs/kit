@@ -379,17 +379,7 @@ export function create_client(app, target) {
 			// need to render the DOM before we can scroll to the rendered elements and do focus management
 			await tick();
 
-			const changed_focus =
-				// reset focus only if any manual focus management didn't override it
-				document.activeElement !== activeElement &&
-				// also refocus when activeElement is body already because the
-				// focus event might not have been fired on it yet
-				document.activeElement !== document.body;
-
-			if (!keepfocus && !changed_focus) {
-				await reset_focus();
-			}
-
+			// we reset scroll before dealing with focus, to avoid a flash of unscrolled content
 			if (autoscroll) {
 				const deep_linked =
 					url.hash && document.getElementById(decodeURIComponent(url.hash.slice(1)));
@@ -403,6 +393,17 @@ export function create_client(app, target) {
 				} else {
 					scrollTo(0, 0);
 				}
+			}
+
+			const changed_focus =
+				// reset focus only if any manual focus management didn't override it
+				document.activeElement !== activeElement &&
+				// also refocus when activeElement is body already because the
+				// focus event might not have been fired on it yet
+				document.activeElement !== document.body;
+
+			if (!keepfocus && !changed_focus) {
+				await reset_focus();
 			}
 		} else {
 			await tick();
@@ -1410,14 +1411,19 @@ export function create_client(app, target) {
 				goto(result.location, { invalidateAll: true }, []);
 			} else {
 				/** @type {Record<string, any>} */
-				const props = {
-					form: result.data,
+				root.$set({
+					// this brings Svelte's view of the world in line with SvelteKit's
+					// after use:enhance reset the form....
+					form: null,
 					page: { ...page, form: result.data, status: result.status }
-				};
-				root.$set(props);
+				});
+
+				// ...so that setting the `form` prop takes effect and isn't ignored
+				await tick();
+				root.$set({ form: result.data });
 
 				if (result.type === 'success') {
-					tick().then(reset_focus);
+					reset_focus();
 				}
 			}
 		},

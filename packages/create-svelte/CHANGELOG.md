@@ -1,5 +1,11 @@
 # create-svelte
 
+## 3.1.1
+
+### Patch Changes
+
+- chore: Add hint for toggling additional options during scaffolding flow. ([#9318](https://github.com/sveltejs/kit/pull/9318))
+
 ## 3.1.0
 
 ### Minor Changes

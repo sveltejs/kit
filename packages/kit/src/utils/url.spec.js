@@ -54,6 +54,10 @@ describe('resolve', (test) => {
 	test('resolves a fragment link', () => {
 		assert.equal(resolve('/a/b/c', '#foo'), '/a/b/c#foo');
 	});
+
+	test('resolves data: urls', () => {
+		assert.equal(resolve('/a/b/c', 'data:text/plain,hello'), 'data:text/plain,hello');
+	});
 });
 
 describe('normalize_path', (test) => {

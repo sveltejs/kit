@@ -1,5 +1,45 @@
 # @sveltejs/kit
 
+## 1.10.1
+
+### Patch Changes
+
+- fix: respect `<base>` when crawling ([#9257](https://github.com/sveltejs/kit/pull/9257))
+
+- fix: scroll before resetting focus, to avoid flash of unscrolled content ([#9311](https://github.com/sveltejs/kit/pull/9311))
+
+- fix: omit hash from global during development ([#9310](https://github.com/sveltejs/kit/pull/9310))
+
+## 1.10.0
+
+### Minor Changes
+
+- feat: add `cookies.getAll` ([#9287](https://github.com/sveltejs/kit/pull/9287))
+
+### Patch Changes
+
+- fix: always include `<link rel="stylesheet">`, even for stylesheets excluded from Link headers ([#9255](https://github.com/sveltejs/kit/pull/9255))
+
+- fix: preserve form state when submitting a second time ([#9267](https://github.com/sveltejs/kit/pull/9267))
+
+## 1.9.3
+
+### Patch Changes
+
+- fix: successive optional route parameters can now be empty ([#9266](https://github.com/sveltejs/kit/pull/9266))
+
+## 1.9.2
+
+### Patch Changes
+
+- fix: correct undefined reference to global var with Vitest ([#9252](https://github.com/sveltejs/kit/pull/9252))
+
+## 1.9.1
+
+### Patch Changes
+
+- feat: warn when calling depends(...) with special URI scheme ([#9246](https://github.com/sveltejs/kit/pull/9246))
+
 ## 1.9.0
 
 ### Minor Changes
@@ -11,6 +51,7 @@
 ### Patch Changes
 
 - fix: always add `@sveltejs/kit` to `noExternal` for ssr build ([#9242](https://github.com/sveltejs/kit/pull/9242))
+- feat: add `api.methods` and `page.methods` to `builder.routes` ([#9145](https://github.com/sveltejs/kit/pull/9145))
 
 ## 1.8.7
 
