@@ -130,8 +130,6 @@ export function get_cookies(request, url, trailing_slash) {
 				if (!value) {
 					cookie_paths[name].delete(path);
 				} else {
-					// We could also emit a warning here if the cookie already exists at a different path,
-					// but that's more likely a false positive because it's valid to set the same name at different paths
 					cookie_paths[name].add(path);
 				}
 			}
