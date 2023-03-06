@@ -60,13 +60,15 @@ export async function build_service_worker(
 
 	await vite.build({
 		build: {
+			modulePreload: false,
 			rollupOptions: {
 				input: {
 					'service-worker': service_worker_entry_file
 				},
 				output: {
 					entryFileNames: '[name].js',
-					assetFileNames: `${kit.appDir}/immutable/assets/[name].[hash][extname]`
+					assetFileNames: `${kit.appDir}/immutable/assets/[name].[hash][extname]`,
+					inlineDynamicImports: true
 				}
 			},
 			outDir: `${out}/client`,
