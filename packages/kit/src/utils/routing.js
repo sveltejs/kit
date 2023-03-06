@@ -157,7 +157,7 @@ export function exec(match, params, matchers) {
 			// and the next value is defined, otherwise the buffer will cause us to skip values
 			const next_param = params[i + 1];
 			const next_value = values[i + 1];
-			if (next_param && !next_param.rest && next_value) {
+			if (next_param && !next_param.rest && next_param.optional && next_value) {
 				buffered = 0;
 			}
 			continue;
