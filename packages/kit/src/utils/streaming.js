@@ -1,3 +1,5 @@
+const DONE = { done: true };
+
 /**
  * @returns {import("types").Deferred & { promise: Promise<any> }}}
  */
@@ -29,23 +31,16 @@ export function create_async_iterator() {
 		iterator: {
 			[Symbol.asyncIterator]() {
 				return {
-					next: async () => {
-						const next = await deferred[0].promise;
-						if (!next.done) deferred.shift();
-						return next;
-					}
+					next: () => deferred.shift()?.promise ?? Promise.resolve(DONE)
 				};
 			}
 		},
 		push: (value) => {
-			deferred[deferred.length - 1].fulfil({
-				value,
-				done: false
-			});
+			deferred[deferred.length - 1].fulfil({ value, done: false });
 			deferred.push(defer());
 		},
 		done: () => {
-			deferred[deferred.length - 1].fulfil({ done: true });
+			deferred[deferred.length - 1].fulfil(DONE);
 		}
 	};
 }
