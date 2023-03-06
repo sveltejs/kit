@@ -2,7 +2,6 @@ import fs from 'node:fs';
 import * as vite from 'vite';
 import { s } from '../../../utils/misc.js';
 import { get_config_aliases } from '../utils.js';
-import { assets_base } from './utils.js';
 
 /**
  * @param {string} out

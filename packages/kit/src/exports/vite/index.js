@@ -14,7 +14,7 @@ import { load_config } from '../../core/config/index.js';
 import { generate_manifest } from '../../core/generate_manifest/index.js';
 import { build_server_nodes } from './build/build_server.js';
 import { build_service_worker } from './build/build_service_worker.js';
-import { assets_base, find_deps } from './build/utils.js';
+import { find_deps } from './build/utils.js';
 import { dev } from './dev/index.js';
 import { is_illegal, module_guard, normalize_id } from './graph_analysis/index.js';
 import { preview } from './preview/index.js';
@@ -533,7 +533,7 @@ export function set_building() {
 				const ext = kit.output.preloadStrategy === 'preload-mjs' ? 'mjs' : 'js';
 
 				new_config = {
-					base: ssr ? assets_base(kit) : './',
+					base: ssr ? `${kit.paths.assets || kit.paths.base || '.'}/` : './',
 					build: {
 						cssCodeSplit: true,
 						outDir: `${out}/${ssr ? 'server' : 'client'}`,
