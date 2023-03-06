@@ -27,26 +27,6 @@ export function get_cookies(request, url, trailing_slash) {
 	// Emulate browser-behavior: if the cookie is set at '/foo/bar', its path is '/foo'
 	const default_path = normalized_url.split('/').slice(0, -1).join('/') || '/';
 
-	if (__SVELTEKIT_DEV__) {
-		// TODO this could theoretically be wrong if the cookie was set unencoded?
-		const initial_decoded_cookies = parse(header, { decode: decodeURIComponent });
-		// Remove all cookies that no longer exist according to the request
-		for (const name of Object.keys(cookie_paths)) {
-			cookie_paths[name] = new Set(
-				[...cookie_paths[name]].filter(
-					(path) => !path_matches(normalized_url, path) || name in initial_decoded_cookies
-				)
-			);
-		}
-		// Add all new cookies we might not have seen before
-		for (const name in initial_decoded_cookies) {
-			cookie_paths[name] = cookie_paths[name] ?? new Set();
-			if (![...cookie_paths[name]].some((path) => path_matches(normalized_url, path))) {
-				cookie_paths[name].add(default_path);
-			}
-		}
-	}
-
 	/** @type {Record<string, import('./page/types').Cookie>} */
 	const new_cookies = {};
 
@@ -82,20 +62,24 @@ export function get_cookies(request, url, trailing_slash) {
 			const req_cookies = parse(header, { decode: decoder });
 			const cookie = req_cookies[name]; // the decoded string or undefined
 
-			if (!__SVELTEKIT_DEV__ || cookie) {
-				return cookie;
+			// in development, if the cookie was set during this session with `cookies.set`,
+			// but at a different path, warn the user. (ignore cookies from request headers,
+			// since we don't know which path they were set at)
+			if (__SVELTEKIT_DEV__ && !cookie) {
+				const paths = Array.from(cookie_paths[name] ?? []).filter((path) => {
+					// we only care about paths that are _more_ specific than the current path
+					return path_matches(path, url.pathname) && path !== url.pathname;
+				});
+
+				if (paths.length > 0) {
+					console.warn(
+						// prettier-ignore
+						`'${name}' cookie does not exist for ${url.pathname}, but was previously set at ${conjoin([...paths])}. Did you mean to set its 'path' to '/' instead?`
+					);
+				}
 			}
 
-			const paths = new Set([...(cookie_paths[name] ?? [])]);
-			if (c) {
-				paths.add(c.options.path ?? default_path);
-			}
-			if (paths.size > 0) {
-				console.warn(
-					// prettier-ignore
-					`Cookie with name '${name}' was not found at path '${url.pathname}', but a cookie with that name exists at these paths: '${[...paths].join("', '")}'. Did you mean to set its 'path' to '/' instead?`
-				);
-			}
+			return cookie;
 		},
 
 		/**
@@ -141,18 +125,11 @@ export function get_cookies(request, url, trailing_slash) {
 					throw new Error(`Cookie "${name}" is too large, and will be discarded by the browser`);
 				}
 
-				cookie_paths[name] = cookie_paths[name] ?? new Set();
+				cookie_paths[name] ??= new Set();
+
 				if (!value) {
-					if (!cookie_paths[name].has(path) && cookie_paths[name].size > 0) {
-						const paths = `'${Array.from(cookie_paths[name]).join("', '")}'`;
-						console.warn(
-							`Trying to delete cookie '${name}' at path '${path}', but a cookie with that name only exists at these paths: ${paths}.`
-						);
-					}
 					cookie_paths[name].delete(path);
 				} else {
-					// We could also emit a warning here if the cookie already exists at a different path,
-					// but that's more likely a false positive because it's valid to set the same name at different paths
 					cookie_paths[name].add(path);
 				}
 			}
@@ -254,4 +231,12 @@ export function add_cookies_to_headers(headers, cookies) {
 		const { name, value, options } = new_cookie;
 		headers.append('set-cookie', serialize(name, value, options));
 	}
+}
+
+/**
+ * @param {string[]} array
+ */
+function conjoin(array) {
+	if (array.length <= 2) return array.join(' and ');
+	return `${array.slice(0, -1).join(', ')} and ${array.at(-1)}`;
 }
