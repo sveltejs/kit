@@ -97,21 +97,14 @@ export async function render_response({
 	if (paths.relative !== false && !state.prerendering?.fallback) {
 		const segments = event.url.pathname.slice(paths.base.length).split('/');
 
-		if (segments.length === 1 && paths.base !== '') {
-			// if we're on `/my-base-path`, relative links need to start `./my-base-path` rather than `.`
-			base = `./${paths.base.split('/').at(-1)}`;
+		base =
+			segments
+				.slice(2)
+				.map(() => '..')
+				.join('/') || '.';
 
-			base_expression = `new URL(${s(base)}, location).pathname`;
-		} else {
-			base =
-				segments
-					.slice(2)
-					.map(() => '..')
-					.join('/') || '.';
-
-			// resolve e.g. '../..' against current location, then remove trailing slash
-			base_expression = `new URL(${s(base)}, location).pathname.slice(0, -1)`;
-		}
+		// resolve e.g. '../..' against current location, then remove trailing slash
+		base_expression = `new URL(${s(base)}, location).pathname.slice(0, -1)`;
 
 		if (!paths.assets || (paths.assets[0] === '/' && paths.assets !== SVELTE_KIT_ASSETS)) {
 			assets = base;

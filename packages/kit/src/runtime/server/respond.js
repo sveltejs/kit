@@ -172,7 +172,9 @@ export async function respond(request, options, manifest, state) {
 	try {
 		// determine whether we need to redirect to add/remove a trailing slash
 		if (route && !is_data_request) {
-			if (route.page) {
+			if (url.pathname === base || url.pathname === base + '/') {
+				trailing_slash = 'always';
+			} else if (route.page) {
 				const nodes = await Promise.all([
 					// we use == here rather than === because [undefined] serializes as "[null]"
 					...route.page.layouts.map((n) => (n == undefined ? n : manifest._.nodes[n]())),

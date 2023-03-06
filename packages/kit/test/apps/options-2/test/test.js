@@ -27,7 +27,7 @@ test.describe('paths', () => {
 	test('uses relative paths during SSR', async ({ page, javaScriptEnabled }) => {
 		await page.goto('/basepath');
 
-		let base = javaScriptEnabled ? '/basepath' : './basepath';
+		let base = javaScriptEnabled ? '/basepath' : '.';
 		expect(await page.textContent('[data-testid="base"]')).toBe(`base: ${base}`);
 		expect(await page.textContent('[data-testid="assets"]')).toBe(`assets: ${base}`);
 
