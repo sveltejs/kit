@@ -6,7 +6,8 @@ const config = {
 		adapter: adapter(),
 
 		paths: {
-			base: '/path-base'
+			base: '/path-base',
+			relative: false
 		}
 	}
 };
