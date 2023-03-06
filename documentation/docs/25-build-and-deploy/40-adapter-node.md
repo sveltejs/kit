@@ -63,8 +63,9 @@ HTTP doesn't give SvelteKit a reliable way to know the URL that is currently bei
 
 ```
 ORIGIN=https://my.site node build
+
+# or e.g. for local previewing and testing
 ORIGIN=http://localhost:3000 node build
-ORIGIN=http://127.0.0.1:4000 node build
 ```
 
 With this, a request for the `/stuff` pathname will correctly resolve to `https://my.site/stuff`. Alternatively, you can specify headers that tell SvelteKit about the request protocol and host, from which it can construct the origin URL:
