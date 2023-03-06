@@ -31,7 +31,7 @@ export function create_async_iterator() {
 				return {
 					next: async () => {
 						const next = await deferred[0].promise;
-						deferred.shift();
+						if (!next.done) deferred.shift();
 						return next;
 					}
 				};
