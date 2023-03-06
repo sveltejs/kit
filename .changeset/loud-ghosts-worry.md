@@ -2,4 +2,4 @@
 '@sveltejs/kit': fix
 ---
 
-fix: required parameters placed after missing optional parameters are no longer skipped
+fix: don't skip required parameters after missing optional parameters
