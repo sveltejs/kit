@@ -1,5 +1,15 @@
 # @sveltejs/kit
 
+## 1.10.1
+
+### Patch Changes
+
+- fix: respect `<base>` when crawling ([#9257](https://github.com/sveltejs/kit/pull/9257))
+
+- fix: scroll before resetting focus, to avoid flash of unscrolled content ([#9311](https://github.com/sveltejs/kit/pull/9311))
+
+- fix: omit hash from global during development ([#9310](https://github.com/sveltejs/kit/pull/9310))
+
 ## 1.10.0
 
 ### Minor Changes
