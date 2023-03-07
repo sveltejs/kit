@@ -108,8 +108,31 @@ export async function preview(vite, vite_config, svelte_config) {
 				let prerendered = is_file(filename);
 
 				if (!prerendered) {
-					filename += filename.endsWith('/') ? 'index.html' : '.html';
-					prerendered = is_file(filename);
+					const has_trailing_slash = pathname.endsWith('/');
+					const html_filename = `${filename}${has_trailing_slash ? 'index.html' : '.html'}`;
+
+					let redirect;
+
+					if (is_file(html_filename)) {
+						filename = html_filename;
+						prerendered = true;
+					} else if (has_trailing_slash) {
+						if (is_file(filename.slice(0, -1) + '.html')) {
+							redirect = pathname.slice(0, -1);
+						}
+					} else if (is_file(filename + '/index.html')) {
+						redirect = pathname + '/';
+					}
+
+					if (redirect) {
+						res.writeHead(308, {
+							location: redirect
+						});
+
+						res.end();
+
+						return;
+					}
 				}
 
 				if (prerendered) {
