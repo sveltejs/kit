@@ -1521,11 +1521,14 @@ export function create_client(app, target) {
 
 				// Ignore the following but fire beforeNavigate
 				if (external || options.reload) {
-					const navigation = before_navigate({ url, type: 'link' });
-					if (!navigation) {
+					if (before_navigate({ url, type: 'link' })) {
+						// set `navigating` to `true` to prevent `beforeNavigate` callbacks
+						// being called when the page unloads
+						navigating = true;
+					} else {
 						event.preventDefault();
 					}
-					navigating = true;
+
 					return;
 				}
 
