@@ -173,7 +173,7 @@ test.describe('env', () => {
 });
 
 test.describe('trailingSlash', () => {
-	test.only('adds trailing slash', async ({ baseURL, page, clicknav }) => {
+	test('adds trailing slash', async ({ baseURL, page, clicknav }) => {
 		// we can't use Playwright's `request` here, because it resolves redirects
 		const status = await new Promise((fulfil, reject) => {
 			const request = http.get(`${baseURL}/path-base/slash`);
