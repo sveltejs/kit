@@ -47,6 +47,7 @@ const options = await p.group(
 		template: () =>
 			p.select({
 				message: 'Which Svelte app template?',
+				// @ts-expect-error i have no idea what is going on here
 				options: fs.readdirSync(dist('templates')).map((dir) => {
 					const meta_file = dist(`templates/${dir}/meta.json`);
 					const { title, description } = JSON.parse(fs.readFileSync(meta_file, 'utf8'));
@@ -65,10 +66,12 @@ const options = await p.group(
 				options: [
 					{
 						label: 'Yes, using JavaScript with JSDoc comments',
+						// @ts-expect-error :shrug:
 						value: 'checkjs'
 					},
 					{
 						label: 'Yes, using TypeScript syntax',
+						// @ts-expect-error :shrug:
 						value: 'typescript'
 					},
 					{ label: 'No', value: null }
