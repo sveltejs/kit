@@ -213,7 +213,7 @@ export async function respond(request, options, manifest, state) {
 
 			if (normalized !== url.pathname && !state.prerendering?.fallback) {
 				return new Response(undefined, {
-					status: 301,
+					status: 308,
 					headers: {
 						'x-sveltekit-normalize': '1',
 						location:
