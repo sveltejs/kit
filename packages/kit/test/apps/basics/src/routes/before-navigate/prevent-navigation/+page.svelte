@@ -17,6 +17,7 @@
 <h1>prevent navigation</h1>
 <a href="/before-navigate/a">a</a>
 <a href="/before-navigate/redirect">redirect</a>
+<a href="/before-navigate/prevent-navigation?x=1">self</a>
 <a href="https://google.com" target="_blank" rel="noreferrer">_blank</a>
 <a href="https://google.de">external</a>
 <pre>{times_triggered} {unload} {navigation_type}</pre>
