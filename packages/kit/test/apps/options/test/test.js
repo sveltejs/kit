@@ -1,3 +1,4 @@
+import * as http from 'node:http';
 import { expect } from '@playwright/test';
 import { test } from '../../../utils.js';
 
@@ -173,6 +174,16 @@ test.describe('env', () => {
 
 test.describe('trailingSlash', () => {
 	test('adds trailing slash', async ({ baseURL, page, clicknav }) => {
+		// we can't use Playwright's `request` here, because it resolves redirects
+		const status = await new Promise((fulfil, reject) => {
+			const request = http.get(`${baseURL}/path-base/slash`);
+			request.on('error', reject);
+			request.on('response', (response) => {
+				fulfil(response.statusCode);
+			});
+		});
+		expect(status).toBe(308);
+
 		await page.goto('/path-base/slash');
 
 		expect(page.url()).toBe(`${baseURL}/path-base/slash/`);
