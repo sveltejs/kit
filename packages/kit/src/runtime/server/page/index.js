@@ -79,38 +79,13 @@ export async function render_page(event, page, options, manifest, state, resolve
 		// it's crucial that we do this before returning the non-SSR response, otherwise
 		// SvelteKit will erroneously believe that the path has been prerendered,
 		// causing functions to be omitted from the manifesst generated later
-		const should_prerender = get_option(nodes, 'prerender');
-
+		const should_prerender = get_option(nodes, 'prerender') ?? false;
 		if (should_prerender) {
 			const mod = leaf_node.server;
 			if (mod?.actions) {
 				throw new Error('Cannot prerender pages with actions');
 			}
 		} else if (state.prerendering) {
-			// Try to render the shell when ssr is false and prerendering not explicitly disabled.
-			// People can opt out of this behavior by explicitly setting prerender to false.
-			if (
-				should_prerender !== false &&
-				get_option(nodes, 'ssr') === false &&
-				!leaf_node.server?.actions
-			) {
-				return await render_response({
-					branch: [],
-					fetched: [],
-					page_config: {
-						ssr: false,
-						csr: get_option(nodes, 'csr') ?? true
-					},
-					status,
-					error: null,
-					event,
-					options,
-					manifest,
-					state,
-					resolve_opts
-				});
-			}
-
 			// if the page isn't marked as prerenderable, then bail out at this point
 			return new Response(undefined, {
 				status: 204

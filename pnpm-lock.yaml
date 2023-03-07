@@ -640,22 +640,6 @@ importers:
       uvu: 0.5.6
       vite: 4.1.1
 
-  packages/kit/test/prerendering/ssr-false:
-    specifiers:
-      '@sveltejs/kit': workspace:^
-      svelte: ^3.55.1
-      svelte-check: ^3.0.2
-      typescript: ^4.9.4
-      uvu: ^0.5.6
-      vite: ^4.1.1
-    devDependencies:
-      '@sveltejs/kit': link:../../..
-      svelte: 3.55.1
-      svelte-check: 3.0.2_svelte@3.55.1
-      typescript: 4.9.4
-      uvu: 0.5.6
-      vite: 4.1.1
-
   packages/migrate:
     specifiers:
       '@types/prompts': ^2.4.1
