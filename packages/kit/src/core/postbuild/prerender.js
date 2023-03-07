@@ -1,4 +1,4 @@
-import { readFileSync, writeFileSync } from 'node:fs';
+import { existsSync, readFileSync, writeFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { pathToFileURL } from 'node:url';
 import { installPolyfills } from '../../exports/node/polyfills.js';
@@ -144,6 +144,13 @@ async function prerender({ out, manifest_path, metadata, verbose, env }) {
 	}
 
 	const files = new Set(walk(`${out}/client`).map(posixify));
+
+	const immutable = `${config.appDir}/immutable`;
+	if (existsSync(`${out}/server/${immutable}`)) {
+		for (const file of walk(`${out}/server/${immutable}`)) {
+			files.add(posixify(`${config.appDir}/immutable/${file}`));
+		}
+	}
 	const seen = new Set();
 	const written = new Set();
 
