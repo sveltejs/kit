@@ -176,13 +176,13 @@ export function get_exports(node) {
 		} else if (
 			ts.isFunctionDeclaration(statement) &&
 			statement.name &&
-			statement.modifiers?.[0]?.kind === ts.SyntaxKind.ExportKeyword
+			ts.getModifiers(statement)?.[0]?.kind === ts.SyntaxKind.ExportKeyword
 		) {
 			// export function x ...
 			map.set(statement.name.text, statement.name.text);
 		} else if (
 			ts.isVariableStatement(statement) &&
-			statement.modifiers?.[0]?.kind === ts.SyntaxKind.ExportKeyword
+			ts.getModifiers(statement)?.[0]?.kind === ts.SyntaxKind.ExportKeyword
 		) {
 			// export const x = ..., y = ...
 			for (const declaration of statement.declarationList.declarations) {
