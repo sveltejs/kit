@@ -1,5 +1,11 @@
 # create-svelte
 
+## 3.1.2
+
+### Patch Changes
+
+- fix: prevent duplicated lines in project creation CLI ([#9346](https://github.com/sveltejs/kit/pull/9346))
+
 ## 3.1.1
 
 ### Patch Changes
