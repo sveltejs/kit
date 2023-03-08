@@ -125,7 +125,7 @@ export async function preview(vite, vite_config, svelte_config) {
 					}
 
 					if (redirect) {
-						res.writeHead(308, {
+						res.writeHead(307, {
 							location: redirect
 						});
 
