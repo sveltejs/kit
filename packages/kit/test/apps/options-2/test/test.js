@@ -46,7 +46,20 @@ test.describe('Service worker', () => {
 		const response = await request.get('/basepath/service-worker.js');
 		const content = await response.text();
 
-		expect(content).toMatch(/\/_app\/immutable\/entry\/start\.[a-z0-9]+\.js/);
+		const fn = new Function('self', 'location', content);
+
+		const self = {
+			addEventListener: () => {},
+			base: null,
+			build: null
+		};
+
+		fn(self, {
+			pathname: '/basepath/service-worker.js'
+		});
+
+		expect(self.base).toBe('/basepath');
+		expect(self.build[0]).toMatch(/\/basepath\/_app\/immutable\/entry\/start\.[a-z0-9]+\.js/);
 	});
 
 	test('does not register /basepath/service-worker.js', async ({ page }) => {

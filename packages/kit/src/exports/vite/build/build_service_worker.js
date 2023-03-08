@@ -33,24 +33,30 @@ export async function build_service_worker(
 
 	const service_worker = `${kit.outDir}/generated/service-worker.js`;
 
+	// in a service worker, `location` is the location of the service worker itself,
+	// which is guaranteed to be `<base>/service-worker.js`
+	const base = `location.pathname.split('/').slice(0, -1).join('/')`;
+
 	fs.writeFileSync(
 		service_worker,
 		dedent`
+			export const base = /*@__PURE__*/ ${base};
+
 			export const build = [
 				${Array.from(build)
-					.map((file) => `${s(`${kit.paths.base}/${file}`)}`)
+					.map((file) => `base + ${s(`/${file}`)}`)
 					.join(',\n')}
 			];
 
 			export const files = [
 				${manifest_data.assets
 					.filter((asset) => kit.serviceWorker.files(asset.file))
-					.map((asset) => `${s(`${kit.paths.base}/${asset.file}`)}`)
+					.map((asset) => `base + ${s(`/${asset.file}`)}`)
 					.join(',\n')}
 			];
 
 			export const prerendered = [
-				${prerendered.paths.map((path) => s(path)).join(',\n')}
+				${prerendered.paths.map((path) => `base + ${s(path.replace(kit.paths.base, ''))}`).join(',\n')}
 			];
 
 			export const version = ${s(kit.version.name)};
