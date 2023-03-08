@@ -398,13 +398,11 @@ function process_node(node, outdir, is_page, proxies, all_pages_have_load = true
 					: path_to_original(outdir, node.server);
 
 				exports.push(
-					`type AwaitedActions = Expand<Kit.AwaitedActions<typeof import('${from}').actions>>`
-				);
-				exports.push(
-					`export type SubmitFunction = Kit.SubmitFunction<AwaitedActions, AwaitedActions>`
+					`type ActionsExport = typeof import('${from}').actions`,
+					`export type SubmitFunction = Kit.SubmitFunction<Expand<Kit.ActionsSuccess<ActionsExport>>, Expand<Kit.ActionsInvalid<ActionsExport>>>`
 				);
 
-				type = `AwaitedActions | null`;
+				type = `Expand<Kit.AwaitedActions<ActionsExport>> | null`;
 			}
 			exports.push(`export type ActionData = ${type};`);
 		}

@@ -71,6 +71,22 @@ type UnpackValidationError<T> = T extends ActionFailure<infer X>
 	? undefined // needs to be undefined, because void will corrupt union type
 	: T;
 
+export type ActionsSuccess<T extends Record<string, (...args: any) => any>> = {
+	[Key in keyof T]: ExcludeValidationError<Awaited<ReturnType<T[Key]>>>;
+}[keyof T];
+
+type ExcludeValidationError<T> = T extends ActionFailure<any> ? never : T extends void ? never : T;
+
+export type ActionsInvalid<T extends Record<string, (...args: any) => any>> = {
+	[Key in keyof T]: Exclude<ExtractValidationError<Awaited<ReturnType<T[Key]>>>, void>;
+}[keyof T];
+
+type ExtractValidationError<T> = T extends ActionFailure<infer X>
+	? X extends void
+		? never
+		: X
+	: never;
+
 /**
  * This object is passed to the `adapt` function of adapters.
  * It contains various methods and properties that are useful for adapting the app.
@@ -1188,7 +1204,7 @@ export function text(body: string, init?: ResponseInit): Response;
  * @param status The [HTTP status code](https://developer.mozilla.org/en-US/docs/Web/HTTP/Status#client_error_responses). Must be in the range 400-599.
  * @param data Data associated with the failure (e.g. validation errors)
  */
-export function fail<T extends Record<string, unknown> | undefined>(
+export function fail<T extends Record<string, unknown> | undefined = undefined>(
 	status: number,
 	data?: T
 ): ActionFailure<T>;
