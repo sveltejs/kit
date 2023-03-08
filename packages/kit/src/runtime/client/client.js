@@ -177,6 +177,14 @@ export function create_client(app, target) {
 		});
 	}
 
+	function persist_state() {
+		update_scroll_positions(current_history_index);
+		storage.set(SCROLL_KEY, scroll_positions);
+
+		capture_snapshot(current_history_index);
+		storage.set(SNAPSHOT_KEY, snapshots);
+	}
+
 	/**
 	 * @param {string | URL} url
 	 * @param {{ noScroll?: boolean; replaceState?: boolean; keepFocus?: boolean; state?: any; invalidateAll?: boolean }} opts
@@ -1447,6 +1455,8 @@ export function create_client(app, target) {
 			addEventListener('beforeunload', (e) => {
 				let should_block = false;
 
+				persist_state();
+
 				if (!navigating) {
 					// If we're navigating, beforeNavigate was already called. If we end up in here during navigation,
 					// it's due to an external or full-page-reload link, for which we don't want to call the hook again.
@@ -1476,11 +1486,7 @@ export function create_client(app, target) {
 
 			addEventListener('visibilitychange', () => {
 				if (document.visibilityState === 'hidden') {
-					update_scroll_positions(current_history_index);
-					storage.set(SCROLL_KEY, scroll_positions);
-
-					capture_snapshot(current_history_index);
-					storage.set(SNAPSHOT_KEY, snapshots);
+					persist_state();
 				}
 			});
 
