@@ -1132,10 +1132,10 @@ export type Actions<
  */
 export type ActionResult<
 	Success extends Record<string, unknown> | undefined = Record<string, any>,
-	Invalid extends Record<string, unknown> | undefined = Record<string, any>
+	Failure extends Record<string, unknown> | undefined = Record<string, any>
 > =
 	| { type: 'success'; status: number; data?: Success }
-	| { type: 'failure'; status: number; data?: Invalid }
+	| { type: 'failure'; status: number; data?: Failure }
 	| { type: 'redirect'; status: number; location: string }
 	| { type: 'error'; status?: number; error: any };
 
@@ -1222,7 +1222,7 @@ export interface ActionFailure<T extends Record<string, unknown> | undefined = u
 
 export interface SubmitFunction<
 	Success extends Record<string, unknown> | undefined = Record<string, any>,
-	Invalid extends Record<string, unknown> | undefined = Record<string, any>
+	Failure extends Record<string, unknown> | undefined = Record<string, any>
 > {
 	(input: {
 		action: URL;
@@ -1235,8 +1235,8 @@ export interface SubmitFunction<
 		| ((opts: {
 				form: HTMLFormElement;
 				action: URL;
-				result: ActionResult<Success, Invalid>;
-				/**
+			result: ActionResult<Success, Failure>;
+				/**D
 				 * Call this to get the default behavior of a form submission response.
 				 * @param options Set `reset: false` if you don't want the `<form>` values to be reset after a successful submission.
 				 */
