@@ -566,7 +566,8 @@ function kit({ svelte_config }) {
 						ssrEmitAssets: true,
 						target: ssr ? 'node16.14' : undefined,
 						// don't use the default name to avoid collisions with 'static/manifest.json'
-						manifest: 'vite-manifest.json'
+						manifest: 'vite-manifest.json',
+						minify: 'esbuild'
 					},
 					publicDir: ssr ? false : kit.files.assets,
 					worker: {
