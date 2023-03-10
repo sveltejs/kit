@@ -5,7 +5,10 @@
 		"/header640.png",
 		"/header960.png",
 		"/header1024.png",
-		"/header.png"
+		"/header.png",
+		"/issue-9369.png",
+		"/issue-9369_newline-after-comma-is-bad.png",
+		"/issue-9369_800px.png"
 	],
 	"ids": []
 }
