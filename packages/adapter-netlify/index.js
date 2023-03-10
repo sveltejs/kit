@@ -1,7 +1,7 @@
 import { appendFileSync, existsSync, readdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { dirname, join, resolve, posix } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import esbuild from 'esbuild';
+import esbuild_bundler from 'esbuild';
 import toml from '@iarna/toml';
 
 /**
@@ -36,7 +36,7 @@ const edge_set_in_env_var =
 const FUNCTION_PREFIX = 'sveltekit-';
 
 /** @type {import('.').default} */
-export default function ({ split = false, edge = edge_set_in_env_var } = {}) {
+export default function ({ split = false, edge = edge_set_in_env_var, esbuild = null } = {}) {
 	return {
 		name: '@sveltejs/adapter-netlify',
 
@@ -88,7 +88,13 @@ export default function ({ split = false, edge = edge_set_in_env_var } = {}) {
 					throw new Error('Cannot use `split: true` alongside `edge: true`');
 				}
 
-				await generate_edge_functions({ builder });
+				if (esbuild && typeof esbuild !== 'function') {
+					throw new Error(
+						`Type of esbuild must be a function if defined. Type provided ${typeof esbuild}`
+					);
+				}
+
+				await generate_edge_functions({ builder, esbuild_props: esbuild });
 			} else {
 				await generate_lambda_functions({ builder, split, publish });
 			}
@@ -98,8 +104,9 @@ export default function ({ split = false, edge = edge_set_in_env_var } = {}) {
 /**
  * @param { object } params
  * @param {import('@sveltejs/kit').Builder} params.builder
+ * @param {import('.').esbuild} params.esbuild_props
  */
-async function generate_edge_functions({ builder }) {
+async function generate_edge_functions({ builder, esbuild_props }) {
 	const tmp = builder.getBuildDirectory('netlify-tmp');
 	builder.rimraf(tmp);
 	builder.mkdirp(tmp);
@@ -144,7 +151,8 @@ async function generate_edge_functions({ builder }) {
 		)});\n`
 	);
 
-	await esbuild.build({
+	/** @type { import('.').DefaultEsbuildOptions } */
+	const default_bundler_props = {
 		entryPoints: [`${tmp}/entry.js`],
 		outfile: '.netlify/edge-functions/render.js',
 		bundle: true,
@@ -152,7 +160,13 @@ async function generate_edge_functions({ builder }) {
 		platform: 'browser',
 		sourcemap: 'linked',
 		target: 'es2020'
-	});
+	};
+
+	const bundler_props = esbuild_props
+		? esbuild_props(default_bundler_props)
+		: default_bundler_props;
+
+	await esbuild_bundler.build(bundler_props);
 
 	writeFileSync('.netlify/edge-functions/manifest.json', JSON.stringify(edge_manifest));
 }

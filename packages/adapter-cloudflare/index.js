@@ -45,7 +45,8 @@ export default function (options = {}) {
 				}
 			});
 
-			await esbuild.build({
+			/** @type { import('.').DefaultEsbuildOptions } */
+			const default_bundler_props = {
 				platform: 'browser',
 				conditions: ['worker', 'browser'],
 				sourcemap: 'linked',
@@ -55,7 +56,13 @@ export default function (options = {}) {
 				allowOverwrite: true,
 				format: 'esm',
 				bundle: true
-			});
+			};
+
+			const bundler_props = options['esbuild']
+				? options['esbuild'](default_bundler_props)
+				: default_bundler_props;
+
+			await esbuild.build(bundler_props);
 		}
 	};
 }

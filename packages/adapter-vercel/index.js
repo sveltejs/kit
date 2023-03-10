@@ -114,7 +114,8 @@ const plugin = function (defaults = {}) {
 					`export const manifest = ${builder.generateManifest({ relativePath, routes })};\n`
 				);
 
-				await esbuild.build({
+				/** @type { import('.').DefaultEsbuildOptions } */
+				const default_bundler_props = {
 					entryPoints: [`${tmp}/edge.js`],
 					outfile: `${dirs.functions}/${name}.func/index.js`,
 					target: 'es2020', // TODO verify what the edge runtime supports
@@ -124,7 +125,22 @@ const plugin = function (defaults = {}) {
 					external: config.external,
 					sourcemap: 'linked',
 					banner: { js: 'globalThis.global = globalThis;' }
-				});
+				};
+
+				if (defaults['esbuild'] && typeof defaults['esbuild'] !== 'function') {
+					throw new Error(
+						`Type of esbuild must be a function if defined. Type provided ${typeof defaults[
+							'esbuild'
+						]}`
+					);
+				}
+
+				/** @type { import('.').DefaultEsbuildOptions } */
+				const bundler_props = defaults['esbuild']
+					? defaults['esbuild'](default_bundler_props)
+					: default_bundler_props;
+
+				await esbuild.build(bundler_props);
 
 				write(
 					`${dirs.functions}/${name}.func/.vc-config.json`,

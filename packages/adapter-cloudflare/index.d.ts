@@ -1,7 +1,24 @@
 import { Adapter } from '@sveltejs/kit';
+import { BuildOptions } from 'esbuild';
 import './ambient.js';
 
 export default function plugin(options?: AdapterOptions): Adapter;
+
+interface DefaultEsbuildOptions {
+	platform: 'browser';
+	conditions: ['worker', 'browser'];
+	sourcemap: 'linked';
+	target: 'es2022';
+	entryPoints: [string];
+	outfile: string;
+	allowOverwrite: true;
+	format: 'esm';
+	bundle: true;
+}
+
+type esbuild = (
+	defaultOptions: DefaultEsbuildOptions
+) => Required<Pick<BuildOptions, keyof DefaultEsbuildOptions>> & Partial<BuildOptions>;
 
 export interface AdapterOptions {
 	/**
@@ -30,6 +47,8 @@ export interface AdapterOptions {
 		 */
 		exclude?: string[];
 	};
+
+	esbuild?: esbuild;
 }
 
 export interface RoutesJSONSpec {

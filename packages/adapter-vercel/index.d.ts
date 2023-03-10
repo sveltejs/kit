@@ -1,4 +1,5 @@
 import { Adapter } from '@sveltejs/kit';
+import { BuildOptions } from 'esbuild';
 import './ambient.js';
 
 export default function plugin(config?: Config): Adapter;
@@ -51,6 +52,22 @@ export interface ServerlessConfig {
 	};
 }
 
+interface DefaultEsbuildOptions {
+	entryPoints: [string];
+	outfile: string;
+	target: 'es2020';
+	bundle: true;
+	platform: 'browser';
+	format: 'esm';
+	external?: string[];
+	sourcemap: 'linked';
+	banner: { js: 'globalThis.global = globalThis;' };
+}
+
+type esbuild = (
+	defaultOptions: DefaultEsbuildOptions
+) => Required<Pick<BuildOptions, keyof DefaultEsbuildOptions>> & Partial<BuildOptions>;
+
 export interface EdgeConfig {
 	/**
 	 * Whether to use [Edge Functions](https://vercel.com/docs/concepts/functions/edge-functions) or [Serverless Functions](https://vercel.com/docs/concepts/functions/serverless-functions)
@@ -75,6 +92,12 @@ export interface EdgeConfig {
 	 * If `true`, this route will always be deployed as its own separate function
 	 */
 	split?: boolean;
+
+	/**
+	 * Advanced. Modify the bundling step's config
+	 * @see https://esbuild.github.io/api/#build
+	 */
+	esbuild?: esbuild;
 }
 
 export type Config = EdgeConfig | ServerlessConfig;
