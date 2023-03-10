@@ -93,7 +93,8 @@ const ssr = async (req, res) => {
 
 	if (address_header && !(address_header in req.headers)) {
 		throw new Error(
-			`Address header was specified with ${ENV_PREFIX + 'ADDRESS_HEADER'
+			`Address header was specified with ${
+				ENV_PREFIX + 'ADDRESS_HEADER'
 			}=${address_header} but is absent from request`
 		);
 	}
@@ -115,7 +116,8 @@ const ssr = async (req, res) => {
 
 						if (xff_depth > addresses.length) {
 							throw new Error(
-								`${ENV_PREFIX + 'XFF_DEPTH'} is ${xff_depth}, but only found ${addresses.length
+								`${ENV_PREFIX + 'XFF_DEPTH'} is ${xff_depth}, but only found ${
+									addresses.length
 								} addresses`
 							);
 						}
