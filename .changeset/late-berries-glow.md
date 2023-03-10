@@ -2,4 +2,4 @@
 '@sveltejs/kit': patch
 ---
 
-fix: #9369 newline after comma in srcset attribute causes build failure
+fix: handle srcset attributes with newline after comma
