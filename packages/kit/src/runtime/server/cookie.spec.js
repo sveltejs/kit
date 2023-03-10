@@ -181,4 +181,18 @@ test('warns if cookie exceeds 4,129 bytes', () => {
 	globalThis.__SVELTEKIT_DEV__ = false;
 });
 
+test('get all cookies from header and set calls', () => {
+	const { cookies } = cookies_setup();
+	assert.equal(cookies.getAll(), [{ name: 'a', value: 'b' }]);
+
+	cookies.set('a', 'foo');
+	cookies.set('a', 'bar');
+	cookies.set('b', 'baz');
+
+	assert.equal(cookies.getAll(), [
+		{ name: 'a', value: 'bar' },
+		{ name: 'b', value: 'baz' }
+	]);
+});
+
 test.run();

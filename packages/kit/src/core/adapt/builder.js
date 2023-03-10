@@ -1,4 +1,5 @@
 import { existsSync, statSync, createReadStream, createWriteStream } from 'node:fs';
+import { join } from 'node:path/posix';
 import { pipeline } from 'node:stream';
 import { promisify } from 'node:util';
 import zlib from 'node:zlib';
@@ -42,14 +43,15 @@ export function create_builder({
 	 * we expose a stable type that adapters can use to group/filter routes
 	 */
 	const routes = route_data.map((route) => {
-		const methods =
-			/** @type {import('types').HttpMethod[]} */
-			(server_metadata.routes.get(route.id)?.methods);
-		const config = server_metadata.routes.get(route.id)?.config;
+		const { config, methods, page, api } = /** @type {import('types').ServerMetadataRoute} */ (
+			server_metadata.routes.get(route.id)
+		);
 
 		/** @type {import('types').RouteDefinition} */
 		const facade = {
 			id: route.id,
+			api,
+			page,
 			segments: get_route_segments(route.id).map((segment) => ({
 				dynamic: segment.includes('['),
 				rest: segment.includes('[...'),
@@ -81,7 +83,7 @@ export function create_builder({
 				return;
 			}
 
-			const files = await glob('**/*.{html,js,json,css,svg,xml,wasm}', {
+			const files = await glob('**/*.{html,js,mjs,json,css,svg,xml,wasm}', {
 				cwd: directory,
 				dot: true,
 				absolute: true,
@@ -181,7 +183,12 @@ export function create_builder({
 		},
 
 		writeClient(dest) {
-			return [...copy(`${config.kit.outDir}/output/client`, dest)];
+			const server_assets = copy(
+				`${config.kit.outDir}/output/server/${config.kit.appDir}/immutable/assets`,
+				join(dest, config.kit.appDir, 'immutable/assets')
+			).map((filename) => join(config.kit.appDir, 'immutable/assets', filename));
+			const client_assets = copy(`${config.kit.outDir}/output/client`, dest);
+			return Array.from(new Set([...server_assets, ...client_assets]));
 		},
 
 		// @ts-expect-error

@@ -11,11 +11,25 @@ await server.init({
 	env: /** @type {Record<string, string>} */ (process.env)
 });
 
+const DATA_SUFFIX = '/__data.json';
+
 /**
  * @param {import('http').IncomingMessage} req
  * @param {import('http').ServerResponse} res
  */
 export default async (req, res) => {
+	if (req.url) {
+		const [path, search] = req.url.split('?');
+
+		const params = new URLSearchParams(search);
+		const pathname = params.get('__pathname');
+
+		if (pathname) {
+			params.delete('__pathname');
+			req.url = `${pathname}${path.endsWith(DATA_SUFFIX) ? DATA_SUFFIX : ''}?${params}`;
+		}
+	}
+
 	/** @type {Request} */
 	let request;
 

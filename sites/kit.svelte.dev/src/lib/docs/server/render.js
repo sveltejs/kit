@@ -69,7 +69,7 @@ export function replace_placeholders(content) {
 
 					let import_block = '';
 
-					if (module.exports.length > 0 && !module.name.startsWith('$internal')) {
+					if (module.exports.length > 0) {
 						// deduplication is necessary for now, because of `error()` overload
 						const exports = Array.from(new Set(module.exports.map((x) => x.name)));
 
@@ -93,29 +93,6 @@ export function replace_placeholders(content) {
 				})
 				.join('\n\n');
 		});
-}
-
-/** @param {'types' | 'exports'} kind */
-export function render(kind) {
-	return modules
-		.map((module) => {
-			// special case — we want to include $lib etc in the modules page
-			const is_exempt = kind === 'exports' && module.exempt;
-			const skip = module[kind].length === 0 && !is_exempt;
-
-			if (skip) return '';
-
-			return `## ${module.name}\n\n${module.comment}\n\n${module[kind]
-				.map((type) => {
-					const markdown =
-						`<div class="ts-block">${fence(type.snippet)}` +
-						type.children.map(stringify).join('\n\n') +
-						`</div>`;
-					return `### ${type.name}\n\n${type.comment}\n\n${markdown}`;
-				})
-				.join('\n\n')}`;
-		})
-		.join('\n\n');
 }
 
 /**

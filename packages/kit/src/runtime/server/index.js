@@ -1,5 +1,5 @@
 import { respond } from './respond.js';
-import { set_private_env, set_public_env } from '../shared.js';
+import { set_private_env, set_public_env } from '../shared-server.js';
 import { options, get_hooks } from '__SERVER__/internal.js';
 
 export class Server {
@@ -58,6 +58,10 @@ export class Server {
 			);
 		}
 
-		return respond(request, this.#options, this.#manifest, options);
+		return respond(request, this.#options, this.#manifest, {
+			...options,
+			error: false,
+			depth: 0
+		});
 	}
 }

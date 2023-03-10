@@ -1,5 +1,188 @@
 # @sveltejs/kit
 
+## 1.11.0
+
+### Minor Changes
+
+- feat: pause on debugger when falling back to full page reload during development ([#9305](https://github.com/sveltejs/kit/pull/9305))
+
+- feat: expose `base` via `$service-worker`, make paths relative ([#9250](https://github.com/sveltejs/kit/pull/9250))
+
+### Patch Changes
+
+- fix: don't automatically prerender non-SSR'd pages ([#9352](https://github.com/sveltejs/kit/pull/9352))
+
+- fix: use 308 responses for trailing slash redirects, instead of 301s ([#9351](https://github.com/sveltejs/kit/pull/9351))
+
+- fix: remove buggy cookie path detection ([#9298](https://github.com/sveltejs/kit/pull/9298))
+
+- fix: don't prevent `beforeNavigate` callbacks from running following a cancelled unloading navigation ([#9347](https://github.com/sveltejs/kit/pull/9347))
+
+- fix: persist DOM state on beforeunload ([#9345](https://github.com/sveltejs/kit/pull/9345))
+
+- fix: redirect to path with/without trailing slash when previewing prerendered pages ([#9353](https://github.com/sveltejs/kit/pull/9353))
+
+- fix: avoid FOUC when using CSS modules in dev ([#9323](https://github.com/sveltejs/kit/pull/9323))
+
+- fix: don't skip required parameters after missing optional parameters ([#9331](https://github.com/sveltejs/kit/pull/9331))
+
+- fix: account for server-emitted assets when prerenering ([#9349](https://github.com/sveltejs/kit/pull/9349))
+
+- fix: deal with fast consecutive promise resolutions when streaming ([#9332](https://github.com/sveltejs/kit/pull/9332))
+
+- chore: replace deprecated property access in preparation for TS 5.0 ([#9361](https://github.com/sveltejs/kit/pull/9361))
+
+## 1.10.1
+
+### Patch Changes
+
+- fix: respect `<base>` when crawling ([#9257](https://github.com/sveltejs/kit/pull/9257))
+
+- fix: scroll before resetting focus, to avoid flash of unscrolled content ([#9311](https://github.com/sveltejs/kit/pull/9311))
+
+- fix: omit hash from global during development ([#9310](https://github.com/sveltejs/kit/pull/9310))
+
+## 1.10.0
+
+### Minor Changes
+
+- feat: add `cookies.getAll` ([#9287](https://github.com/sveltejs/kit/pull/9287))
+
+### Patch Changes
+
+- fix: always include `<link rel="stylesheet">`, even for stylesheets excluded from Link headers ([#9255](https://github.com/sveltejs/kit/pull/9255))
+
+- fix: preserve form state when submitting a second time ([#9267](https://github.com/sveltejs/kit/pull/9267))
+
+## 1.9.3
+
+### Patch Changes
+
+- fix: successive optional route parameters can now be empty ([#9266](https://github.com/sveltejs/kit/pull/9266))
+
+## 1.9.2
+
+### Patch Changes
+
+- fix: correct undefined reference to global var with Vitest ([#9252](https://github.com/sveltejs/kit/pull/9252))
+
+## 1.9.1
+
+### Patch Changes
+
+- feat: warn when calling depends(...) with special URI scheme ([#9246](https://github.com/sveltejs/kit/pull/9246))
+
+## 1.9.0
+
+### Minor Changes
+
+- feat: add `paths.relative` option to control interpretation of `paths.assets` and `paths.base` ([#9220](https://github.com/sveltejs/kit/pull/9220))
+
+## 1.8.8
+
+### Patch Changes
+
+- fix: always add `@sveltejs/kit` to `noExternal` for ssr build ([#9242](https://github.com/sveltejs/kit/pull/9242))
+- feat: add `api.methods` and `page.methods` to `builder.routes` ([#9145](https://github.com/sveltejs/kit/pull/9145))
+
+## 1.8.7
+
+### Patch Changes
+
+- fix: correct not found message when setting `paths.base` ([#9232](https://github.com/sveltejs/kit/pull/9232))
+
+## 1.8.6
+
+### Patch Changes
+
+- fix: bundle SvelteKit when using Vitest ([#9172](https://github.com/sveltejs/kit/pull/9172))
+
+## 1.8.5
+
+### Patch Changes
+
+- fix: allow relative fetch to endpoint outside app from within `handle` ([#9198](https://github.com/sveltejs/kit/pull/9198))
+
+## 1.8.4
+
+### Patch Changes
+
+- fix: include .mjs files in precompression ([#9179](https://github.com/sveltejs/kit/pull/9179))
+
+- fix: revert mjs extension usage by default, make it an option ([#9179](https://github.com/sveltejs/kit/pull/9179))
+
+- chore: dummy changeset to force a release ([#9207](https://github.com/sveltejs/kit/pull/9207))
+
+## 1.8.3
+
+### Patch Changes
+
+- fix: use a proprietary content-type to ensure response is not buffered ([#9142](https://github.com/sveltejs/kit/pull/9142))
+
+## 1.8.2
+
+### Patch Changes
+
+- fix: append newline to trigger script evaluation ([#9139](https://github.com/sveltejs/kit/pull/9139))
+
+## 1.8.1
+
+### Patch Changes
+
+- fix: encode streamed chunks ([#9136](https://github.com/sveltejs/kit/pull/9136))
+
+## 1.8.0
+
+### Minor Changes
+
+- feat: implement streaming promises for server load functions ([#8901](https://github.com/sveltejs/kit/pull/8901))
+
+### Patch Changes
+
+- fix: set public env before starting app ([#8957](https://github.com/sveltejs/kit/pull/8957))
+
+- fix: preload modules on Safari ([#8957](https://github.com/sveltejs/kit/pull/8957))
+
+- fix: make `assets` work in client when app is served from a subfolder ([#8957](https://github.com/sveltejs/kit/pull/8957))
+
+## 1.7.2
+
+### Patch Changes
+
+- fix: return correct asset list from `builder.writeClient()` ([#9095](https://github.com/sveltejs/kit/pull/9095))
+
+## 1.7.1
+
+### Patch Changes
+
+- fix: deploy server assets. Only works with Vite 4.1+ ([#9073](https://github.com/sveltejs/kit/pull/9073))
+
+## 1.7.0
+
+### Minor Changes
+
+- feat: richer error message for invalid exports ([#9055](https://github.com/sveltejs/kit/pull/9055))
+
+### Patch Changes
+
+- chore: throw more helpful error when encoding uri fails during prerendering ([#9053](https://github.com/sveltejs/kit/pull/9053))
+
+## 1.6.0
+
+### Minor Changes
+
+- feat: add `OPTIONS` server method ([#8731](https://github.com/sveltejs/kit/pull/8731))
+
+### Patch Changes
+
+- fix: solve `missing "./paths" specifier in "@sveltejs/kit" package` error occurring in all projects ([#9050](https://github.com/sveltejs/kit/pull/9050))
+
+## 1.5.7
+
+### Patch Changes
+
+- fix: use internal alias that won't collide with user aliases ([#9022](https://github.com/sveltejs/kit/pull/9022))
+
 ## 1.5.6
 
 ### Patch Changes

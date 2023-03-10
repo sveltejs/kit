@@ -1,6 +1,8 @@
-import fs from 'fs';
-import http from 'http';
+import fs from 'node:fs';
+import path from 'node:path';
+import http from 'node:http';
 import { test as base, devices } from '@playwright/test';
+import { fileURLToPath } from 'node:url';
 
 export const test = base.extend({
 	app: async ({ page }, use) => {
@@ -91,7 +93,7 @@ export const test = base.extend({
 			page[fn] = async function (...args) {
 				const res = await page_fn.call(page, ...args);
 				if (javaScriptEnabled && args[1]?.wait_for_started !== false) {
-					await page.waitForSelector('body.started', { timeout: 5000 });
+					await page.waitForSelector('body.started', { timeout: 15000 });
 				}
 				return res;
 			};
@@ -245,5 +247,11 @@ export const config = {
 		screenshot: 'only-on-failure',
 		trace: 'retain-on-failure'
 	},
-	workers: process.env.CI ? 2 : undefined
+	workers: process.env.CI ? 2 : undefined,
+	reporter: process.env.CI
+		? [
+				['dot'],
+				[path.resolve(fileURLToPath(import.meta.url), '../github-flaky-warning-reporter.js')]
+		  ]
+		: 'list'
 };

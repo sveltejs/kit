@@ -10,4 +10,4 @@ export const browser = BROWSER;
  */
 export const dev = DEV;
 
-export { building, version } from '../shared.js';
+export { building, version } from '__sveltekit/environment';

@@ -1,6 +1,6 @@
 {
 	"name": "create-svelte",
-	"version": "2.3.4",
+	"version": "3.1.2",
 	"repository": {
 		"type": "git",
 		"url": "https://github.com/sveltejs/kit",
@@ -11,8 +11,8 @@
 	"bin": "./bin.js",
 	"main": "./index.js",
 	"dependencies": {
-		"kleur": "^4.1.5",
-		"prompts": "^2.4.2"
+		"@clack/prompts": "^0.6.3",
+		"kleur": "^4.1.5"
 	},
 	"devDependencies": {
 		"@playwright/test": "^1.28.1",

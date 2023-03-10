@@ -1,5 +1,35 @@
 # @sveltejs/adapter-cloudflare
 
+## 2.2.0
+
+### Minor Changes
+
+- feat: generate `404.html` ([#9294](https://github.com/sveltejs/kit/pull/9294))
+
+- feat: use `es2022` target ([#9293](https://github.com/sveltejs/kit/pull/9293))
+
+### Patch Changes
+
+- Updated dependencies [[`2b647fd8`](https://github.com/sveltejs/kit/commit/2b647fd85be028bc5775894567ee8b13f91411a7), [`fbe4fe76`](https://github.com/sveltejs/kit/commit/fbe4fe768140abac09bd66edd12c77787cafc2c5), [`744dc81c`](https://github.com/sveltejs/kit/commit/744dc81c6b0d8cade087df733c6d3d3f1281e68c)]:
+  - @sveltejs/kit@1.10.0
+
+## 2.1.0
+
+### Minor Changes
+
+- feat: allow custom `include` and `exclude` rules in `_routes.json` ([#9111](https://github.com/sveltejs/kit/pull/9111))
+
+## 2.0.2
+
+### Patch Changes
+
+- fix: exclude `_headers` and `_redirects` files from Cloudflare Pages static request list ([#9042](https://github.com/sveltejs/kit/pull/9042))
+
+- fix: remove redundant cloudflare worker static asset serving ([#9040](https://github.com/sveltejs/kit/pull/9040))
+
+- Updated dependencies [[`19c0e62a`](https://github.com/sveltejs/kit/commit/19c0e62a6bd281e656061b453973c35fa2dd9d3d)]:
+  - @sveltejs/kit@1.5.7
+
 ## 2.0.1
 
 ### Patch Changes

@@ -25,9 +25,7 @@ import {
 } from './fetcher.js';
 import { parse } from './parse.js';
 
-import Root from '__GENERATED__/root.svelte';
-import { nodes, server_loads, dictionary, matchers, hooks } from '__CLIENT__/manifest.js';
-import { base } from '$internal/paths';
+import { base } from '__sveltekit/paths';
 import { HttpError, Redirect } from '../control.js';
 import { stores } from './singletons.js';
 import { unwrap_promises } from '../../utils/promises.js';
@@ -35,16 +33,7 @@ import * as devalue from 'devalue';
 import { INDEX_KEY, PRELOAD_PRIORITIES, SCROLL_KEY, SNAPSHOT_KEY } from './constants.js';
 import { validate_common_exports } from '../../utils/exports.js';
 import { compact } from '../../utils/array.js';
-
-const routes = parse(nodes, server_loads, dictionary, matchers);
-
-const default_layout_loader = nodes[0];
-const default_error_loader = nodes[1];
-
-// we import the root layout/error nodes eagerly, so that
-// connectivity errors after initialisation don't nuke the app
-default_layout_loader();
-default_error_loader();
+import { validate_depends } from '../shared.js';
 
 // We track the scroll position associated with each history entry in sessionStorage,
 // rather than on history.state itself, because when navigation is driven by
@@ -64,12 +53,21 @@ function update_scroll_positions(index) {
 }
 
 /**
- * @param {{
- *   target: HTMLElement;
- * }} opts
+ * @param {import('./types').SvelteKitApp} app
+ * @param {HTMLElement} target
  * @returns {import('./types').Client}
  */
-export function create_client({ target }) {
+export function create_client(app, target) {
+	const routes = parse(app);
+
+	const default_layout_loader = app.nodes[0];
+	const default_error_loader = app.nodes[1];
+
+	// we import the root layout/error nodes eagerly, so that
+	// connectivity errors after initialisation don't nuke the app
+	default_layout_loader();
+	default_error_loader();
+
 	const container = __SVELTEKIT_EMBEDDED__ ? target : document.documentElement;
 	/** @type {Array<((url: URL) => boolean)>} */
 	const invalidated = [];
@@ -177,6 +175,14 @@ export function create_client({ target }) {
 		snapshots[index]?.forEach((value, i) => {
 			components[i]?.snapshot?.restore(value);
 		});
+	}
+
+	function persist_state() {
+		update_scroll_positions(current_history_index);
+		storage.set(SCROLL_KEY, scroll_positions);
+
+		capture_snapshot(current_history_index);
+		storage.set(SNAPSHOT_KEY, snapshots);
 	}
 
 	/**
@@ -381,17 +387,7 @@ export function create_client({ target }) {
 			// need to render the DOM before we can scroll to the rendered elements and do focus management
 			await tick();
 
-			const changed_focus =
-				// reset focus only if any manual focus management didn't override it
-				document.activeElement !== activeElement &&
-				// also refocus when activeElement is body already because the
-				// focus event might not have been fired on it yet
-				document.activeElement !== document.body;
-
-			if (!keepfocus && !changed_focus) {
-				await reset_focus();
-			}
-
+			// we reset scroll before dealing with focus, to avoid a flash of unscrolled content
 			if (autoscroll) {
 				const deep_linked =
 					url.hash && document.getElementById(decodeURIComponent(url.hash.slice(1)));
@@ -405,6 +401,17 @@ export function create_client({ target }) {
 				} else {
 					scrollTo(0, 0);
 				}
+			}
+
+			const changed_focus =
+				// reset focus only if any manual focus management didn't override it
+				document.activeElement !== activeElement &&
+				// also refocus when activeElement is body already because the
+				// focus event might not have been fired on it yet
+				document.activeElement !== document.body;
+
+			if (!keepfocus && !changed_focus) {
+				await reset_focus();
 			}
 		} else {
 			await tick();
@@ -432,7 +439,7 @@ export function create_client({ target }) {
 
 		page = /** @type {import('types').Page} */ (result.props.page);
 
-		root = new Root({
+		root = new app.root({
 			target,
 			props: { ...result.props, stores, components },
 			hydrate: true
@@ -589,6 +596,8 @@ export function create_client({ target }) {
 			/** @param {string[]} deps */
 			function depends(...deps) {
 				for (const dep of deps) {
+					if (DEV) validate_depends(/** @type {string} */ (route.id), dep);
+
 					const { href } = new URL(dep, url);
 					uses.dependencies.add(href);
 				}
@@ -736,22 +745,8 @@ export function create_client({ target }) {
 	 * @returns {import('./types').DataNode | null}
 	 */
 	function create_data_node(node, previous) {
-		if (node?.type === 'data') {
-			return {
-				type: 'data',
-				data: node.data,
-				uses: {
-					dependencies: new Set(node.uses.dependencies ?? []),
-					params: new Set(node.uses.params ?? []),
-					parent: !!node.uses.parent,
-					route: !!node.uses.route,
-					url: !!node.uses.url
-				},
-				slash: node.slash
-			};
-		} else if (node?.type === 'skip') {
-			return previous ?? null;
-		}
+		if (node?.type === 'data') return node;
+		if (node?.type === 'skip') return previous ?? null;
 		return null;
 	}
 
@@ -774,7 +769,7 @@ export function create_client({ target }) {
 		errors.forEach((loader) => loader?.().catch(() => {}));
 		loaders.forEach((loader) => loader?.[1]().catch(() => {}));
 
-		/** @type {import('types').ServerData | null} */
+		/** @type {import('types').ServerNodesResponse | import('types').ServerRedirectNode | null} */
 		let server_data = null;
 
 		const url_changed = current.url ? id !== current.url.pathname + current.url.search : false;
@@ -981,7 +976,7 @@ export function create_client({ target }) {
 		/** @type {import('types').ServerDataNode | null} */
 		let server_data_node = null;
 
-		const default_layout_has_server_load = server_loads[0] === 0;
+		const default_layout_has_server_load = app.server_loads[0] === 0;
 
 		if (default_layout_has_server_load) {
 			// TODO post-https://github.com/sveltejs/kit/discussions/6124 we can use
@@ -1194,6 +1189,15 @@ export function create_client({ target }) {
 				route
 			});
 		}
+
+		if (__SVELTEKIT_DEV__) {
+			console.error(
+				'An error occurred while loading the page. This will cause a full page reload. (This message will only appear during development.)'
+			);
+
+			debugger;
+		}
+
 		return await native_navigation(url);
 	}
 
@@ -1311,6 +1315,21 @@ export function create_client({ target }) {
 		after_navigate();
 	}
 
+	/**
+	 * @param {unknown} error
+	 * @param {import('types').NavigationEvent} event
+	 * @returns {import('types').MaybePromise<App.Error>}
+	 */
+	function handle_error(error, event) {
+		if (error instanceof HttpError) {
+			return error.body;
+		}
+		return (
+			app.hooks.handleError({ error, event }) ??
+			/** @type {any} */ ({ message: event.route.id != null ? 'Internal Error' : 'Not Found' })
+		);
+	}
+
 	return {
 		after_navigate: (fn) => {
 			onMount(() => {
@@ -1409,14 +1428,19 @@ export function create_client({ target }) {
 				goto(result.location, { invalidateAll: true }, []);
 			} else {
 				/** @type {Record<string, any>} */
-				const props = {
-					form: result.data,
+				root.$set({
+					// this brings Svelte's view of the world in line with SvelteKit's
+					// after use:enhance reset the form....
+					form: null,
 					page: { ...page, form: result.data, status: result.status }
-				};
-				root.$set(props);
+				});
+
+				// ...so that setting the `form` prop takes effect and isn't ignored
+				await tick();
+				root.$set({ form: result.data });
 
 				if (result.type === 'success') {
-					tick().then(reset_focus);
+					reset_focus();
 				}
 			}
 		},
@@ -1430,6 +1454,8 @@ export function create_client({ target }) {
 			// scrolling position.
 			addEventListener('beforeunload', (e) => {
 				let should_block = false;
+
+				persist_state();
 
 				if (!navigating) {
 					// If we're navigating, beforeNavigate was already called. If we end up in here during navigation,
@@ -1460,11 +1486,7 @@ export function create_client({ target }) {
 
 			addEventListener('visibilitychange', () => {
 				if (document.visibilityState === 'hidden') {
-					update_scroll_positions(current_history_index);
-					storage.set(SCROLL_KEY, scroll_positions);
-
-					capture_snapshot(current_history_index);
-					storage.set(SNAPSHOT_KEY, snapshots);
+					persist_state();
 				}
 			});
 
@@ -1514,11 +1536,14 @@ export function create_client({ target }) {
 
 				// Ignore the following but fire beforeNavigate
 				if (external || options.reload) {
-					const navigation = before_navigate({ url, type: 'link' });
-					if (!navigation) {
+					if (before_navigate({ url, type: 'link' })) {
+						// set `navigating` to `true` to prevent `beforeNavigate` callbacks
+						// being called when the page unloads
+						navigating = true;
+					} else {
 						event.preventDefault();
 					}
-					navigating = true;
+
 					return;
 				}
 
@@ -1710,9 +1735,13 @@ export function create_client({ target }) {
 			try {
 				const branch_promises = node_ids.map(async (n, i) => {
 					const server_data_node = server_data_nodes[i];
+					// Type isn't completely accurate, we still need to deserialize uses
+					if (server_data_node?.uses) {
+						server_data_node.uses = deserialize_uses(server_data_node.uses);
+					}
 
 					return load_node({
-						loader: nodes[n],
+						loader: app.nodes[n],
 						url,
 						params,
 						route,
@@ -1760,7 +1789,7 @@ export function create_client({ target }) {
 /**
  * @param {URL} url
  * @param {boolean[]} invalid
- * @returns {Promise<import('types').ServerData>}
+ * @returns {Promise<import('types').ServerNodesResponse |import('types').ServerRedirectNode>}
  */
 async function load_data(url, invalid) {
 	const data_url = new URL(url);
@@ -1774,44 +1803,98 @@ async function load_data(url, invalid) {
 	);
 
 	const res = await native_fetch(data_url.href);
-	const data = await res.json();
 
 	if (!res.ok) {
 		// error message is a JSON-stringified string which devalue can't handle at the top level
 		// turn it into a HttpError to not call handleError on the client again (was already handled on the server)
-		throw new HttpError(res.status, data);
+		throw new HttpError(res.status, await res.json());
 	}
 
-	// revive devalue-flattened data
-	data.nodes?.forEach((/** @type {any} */ node) => {
-		if (node?.type === 'data') {
-			node.data = devalue.unflatten(node.data);
-			node.uses = {
-				dependencies: new Set(node.uses.dependencies ?? []),
-				params: new Set(node.uses.params ?? []),
-				parent: !!node.uses.parent,
-				route: !!node.uses.route,
-				url: !!node.uses.url
-			};
+	return new Promise(async (resolve) => {
+		/**
+		 * Map of deferred promises that will be resolved by a subsequent chunk of data
+		 * @type {Map<string, import('types').Deferred>}
+		 */
+		const deferreds = new Map();
+		const reader = /** @type {ReadableStream<Uint8Array>} */ (res.body).getReader();
+		const decoder = new TextDecoder();
+
+		/**
+		 * @param {any} data
+		 */
+		function deserialize(data) {
+			return devalue.unflatten(data, {
+				Promise: (id) => {
+					return new Promise((fulfil, reject) => {
+						deferreds.set(id, { fulfil, reject });
+					});
+				}
+			});
+		}
+
+		let text = '';
+
+		while (true) {
+			// Format follows ndjson (each line is a JSON object) or regular JSON spec
+			const { done, value } = await reader.read();
+			if (done && !text) break;
+
+			text += !value && text ? '\n' : decoder.decode(value); // no value -> final chunk -> add a new line to trigger the last parse
+
+			while (true) {
+				const split = text.indexOf('\n');
+				if (split === -1) {
+					break;
+				}
+
+				const node = JSON.parse(text.slice(0, split));
+				text = text.slice(split + 1);
+
+				if (node.type === 'redirect') {
+					return resolve(node);
+				}
+
+				if (node.type === 'data') {
+					// This is the first (and possibly only, if no pending promises) chunk
+					node.nodes?.forEach((/** @type {any} */ node) => {
+						if (node?.type === 'data') {
+							node.uses = deserialize_uses(node.uses);
+							node.data = deserialize(node.data);
+						}
+					});
+
+					resolve(node);
+				} else if (node.type === 'chunk') {
+					// This is a subsequent chunk containing deferred data
+					const { id, data, error } = node;
+					const deferred = /** @type {import('types').Deferred} */ (deferreds.get(id));
+					deferreds.delete(id);
+
+					if (error) {
+						deferred.reject(deserialize(error));
+					} else {
+						deferred.fulfil(deserialize(data));
+					}
+				}
+			}
 		}
 	});
 
-	return data;
+	// TODO edge case handling necessary? stream() read fails?
 }
 
 /**
- * @param {unknown} error
- * @param {import('types').NavigationEvent} event
- * @returns {import('../../../types/private.js').MaybePromise<App.Error>}
+ * @param {any} uses
+ * @return {import('types').Uses}
  */
-function handle_error(error, event) {
-	if (error instanceof HttpError) {
-		return error.body;
-	}
-	return (
-		hooks.handleError({ error, event }) ??
-		/** @type {any} */ ({ message: event.route.id != null ? 'Internal Error' : 'Not Found' })
-	);
+function deserialize_uses(uses) {
+	return {
+		dependencies: new Set(uses?.dependencies ?? []),
+		params: new Set(uses?.params ?? []),
+		parent: !!uses?.parent,
+		route: !!uses?.route,
+		url: !!uses?.url
+	};
 }
 
 function reset_focus() {

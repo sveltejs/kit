@@ -1,11 +1,11 @@
 import { DEV } from 'esm-env';
-import { base } from '$internal/paths';
+import { base } from '__sveltekit/paths';
 import { is_endpoint_request, render_endpoint } from './endpoint.js';
 import { render_page } from './page/index.js';
 import { render_response } from './page/render.js';
 import { respond_with_error } from './page/respond_with_error.js';
 import { is_form_content_type } from '../../utils/http.js';
-import { GENERIC_ERROR, handle_fatal_error, redirect_response } from './utils.js';
+import { handle_fatal_error, redirect_response } from './utils.js';
 import {
 	decode_pathname,
 	decode_params,
@@ -38,7 +38,13 @@ const default_filter = () => false;
 /** @type {import('types').RequiredResolveOptions['preload']} */
 const default_preload = ({ type }) => type === 'js' || type === 'css';
 
-/** @type {import('types').Respond} */
+/**
+ * @param {Request} request
+ * @param {import('types').SSROptions} options
+ * @param {import('types').SSRManifest} manifest
+ * @param {import('types').SSRState} state
+ * @returns {Promise<Response>}
+ */
 export async function respond(request, options, manifest, state) {
 	/** URL but stripped from the potential `/__data.json` suffix and its search param  */
 	let url = new URL(request.url);
@@ -207,7 +213,7 @@ export async function respond(request, options, manifest, state) {
 
 			if (normalized !== url.pathname && !state.prerendering?.fallback) {
 				return new Response(undefined, {
-					status: 301,
+					status: 308,
 					headers: {
 						'x-sveltekit-normalize': '1',
 						location:
@@ -358,17 +364,9 @@ export async function respond(request, options, manifest, state) {
 						trailing_slash ?? 'never'
 					);
 				} else if (route.endpoint && (!route.page || is_endpoint_request(event))) {
-					response = await render_endpoint(event, route, await route.endpoint(), state);
+					response = await render_endpoint(event, await route.endpoint(), state);
 				} else if (route.page) {
-					response = await render_page(
-						event,
-						route,
-						route.page,
-						options,
-						manifest,
-						state,
-						resolve_opts
-					);
+					response = await render_page(event, route.page, options, manifest, state, resolve_opts);
 				} else {
 					// a route will always have a page or an endpoint, but TypeScript
 					// doesn't know that
@@ -378,15 +376,15 @@ export async function respond(request, options, manifest, state) {
 				return response;
 			}
 
-			if (state.initiator === GENERIC_ERROR) {
+			if (state.error) {
 				return text('Internal Server Error', {
 					status: 500
 				});
 			}
 
 			// if this request came direct from the user, rather than
-			// via a `fetch` in a `load`, render a 404 page
-			if (!state.initiator) {
+			// via our own `fetch`, render a 404 page
+			if (state.depth === 0) {
 				return await respond_with_error({
 					event,
 					options,

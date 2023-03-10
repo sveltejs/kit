@@ -1,4 +1,4 @@
-import path from 'path';
+import path from 'node:path';
 import { platforms } from './platforms.js';
 
 /** @type {import('.').default} */

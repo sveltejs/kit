@@ -14,7 +14,7 @@ function create_fetch(event) {
 		/** @type {Pick<import('types').RequestEvent, 'fetch' | 'url' | 'request' | 'route'>} */ (
 			event
 		),
-		{ getClientAddress: () => '' },
+		{ getClientAddress: () => '', error: false, depth: 0 },
 		[],
 		true,
 		{

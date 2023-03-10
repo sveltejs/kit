@@ -1,6 +1,6 @@
-import fs from 'fs';
-import { join, resolve } from 'path';
-import { fileURLToPath } from 'url';
+import fs from 'node:fs';
+import { join, resolve } from 'node:path';
+import { fileURLToPath } from 'node:url';
 
 import prettier from 'prettier';
 import { test } from 'uvu';
@@ -9,48 +9,55 @@ import * as assert from 'uvu/assert';
 import { build, watch } from '../src/index.js';
 import { load_config } from '../src/config.js';
 import { rimraf, walk } from '../src/filesystem.js';
+import { _create_validator } from '../src/validate.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = join(__filename, '..');
 
 /**
  * @param {string} path
+ * @param {Partial<import('../src/types').Options>} [options]
  */
-async function test_make_package(path) {
+async function test_make_package(path, options) {
 	const cwd = join(__dirname, 'fixtures', path);
 	const ewd = join(cwd, 'expected');
-	const pwd = join(cwd, 'package');
+	const output = join(cwd, 'dist');
 
-	try {
-		const config = await load_config({ cwd });
-		config.package.dir = resolve(cwd, config.package.dir);
+	const config = await load_config({ cwd });
 
-		await build(config, cwd);
-		const expected_files = walk(ewd, true);
-		const actual_files = walk(pwd, true);
+	const input = resolve(cwd, config.kit?.files?.lib ?? 'src/lib');
 
-		assert.equal(actual_files, expected_files);
+	await build({
+		cwd,
+		input,
+		output,
+		types: true,
+		config,
+		...options
+	});
 
-		const extensions = ['.json', '.svelte', '.ts', 'js'];
-		for (const file of actual_files) {
-			const pathname = join(pwd, file);
-			if (fs.statSync(pathname).isDirectory()) continue;
-			assert.ok(expected_files.includes(file), `Did not expect ${file} in ${path}`);
+	const expected_files = walk(ewd, true);
+	const actual_files = walk(output, true);
 
-			const expected = fs.readFileSync(join(ewd, file));
-			const actual = fs.readFileSync(join(pwd, file));
-			const err_msg = `Expected equal file contents for ${file} in ${path}`;
+	assert.equal(actual_files, expected_files);
 
-			if (extensions.some((ext) => pathname.endsWith(ext))) {
-				const expected_content = format(file, expected.toString('utf-8'));
-				const actual_content = format(file, actual.toString('utf-8'));
-				assert.fixture(actual_content, expected_content, err_msg);
-			} else {
-				assert.ok(expected.equals(actual), err_msg);
-			}
+	const extensions = ['.json', '.svelte', '.ts', 'js'];
+	for (const file of actual_files) {
+		const pathname = join(output, file);
+		if (fs.statSync(pathname).isDirectory()) continue;
+		assert.ok(expected_files.includes(file), `Did not expect ${file} in ${path}`);
+
+		const expected = fs.readFileSync(join(ewd, file));
+		const actual = fs.readFileSync(join(output, file));
+		const err_msg = `Expected equal file contents for ${file} in ${path}`;
+
+		if (extensions.some((ext) => pathname.endsWith(ext))) {
+			const expected_content = format(file, expected.toString('utf-8'));
+			const actual_content = format(file, actual.toString('utf-8'));
+			assert.fixture(actual_content, expected_content, err_msg);
+		} else {
+			assert.ok(expected.equals(actual), err_msg);
 		}
-	} finally {
-		rimraf(pwd);
 	}
 }
 
@@ -75,25 +82,23 @@ function format(file, content) {
 for (const dir of fs.readdirSync(join(__dirname, 'errors'))) {
 	test(`package error [${dir}]`, async () => {
 		const cwd = join(__dirname, 'errors', dir);
-		const pwd = join(cwd, 'package');
+		const output = join(cwd, 'dist');
 
 		const config = await load_config({ cwd });
-		config.package.dir = resolve(cwd, config.package.dir);
+
+		const input = resolve(cwd, config.kit?.files?.lib ?? 'src/lib');
 
 		try {
-			await build(config, cwd);
+			await build({ cwd, input, output, types: true, config });
 			assert.unreachable('Must not pass build');
 		} catch (/** @type {any} */ error) {
 			assert.instance(error, Error);
 			switch (dir) {
-				case 'duplicate-export':
-					assert.match(
-						error.message,
-						'Duplicate "./utils" export. Please remove or rename either $lib/utils/index.js or $lib/utils.ts'
-					);
-					break;
 				case 'no-lib-folder':
-					assert.match(error.message, `${join(cwd, 'src', 'lib')} does not exist`);
+					assert.match(
+						error.message.replace(/\\/g, '/'),
+						`test/errors/no-lib-folder/src/lib does not exist`
+					);
 					break;
 				// TODO: non-existent tsconfig passes without error
 				// 	it detects tsconfig in packages/kit instead and creates package folder
@@ -107,7 +112,7 @@ for (const dir of fs.readdirSync(join(__dirname, 'errors'))) {
 					break;
 			}
 		} finally {
-			rimraf(pwd);
+			rimraf(output);
 		}
 	});
 }
@@ -127,19 +132,7 @@ test('create package and assets are not tampered', async () => {
 });
 
 test('create package with emitTypes settings disabled', async () => {
-	await test_make_package('emitTypes-false');
-});
-
-test('create package and properly merge exports map', async () => {
-	await test_make_package('exports-merge');
-});
-
-test('create package and properly exclude all exports', async () => {
-	await test_make_package('exports-replace');
-});
-
-test('create package with files.exclude settings', async () => {
-	await test_make_package('files-exclude');
+	await test_make_package('emitTypes-false', { types: false });
 });
 
 test('create package and resolves $lib alias', async () => {
@@ -156,9 +149,14 @@ if (!process.env.CI) {
 		const cwd = join(__dirname, 'watch');
 
 		const config = await load_config({ cwd });
-		config.package.dir = resolve(cwd, config.package.dir);
 
-		const { watcher, ready, settled } = await watch(config, cwd);
+		const { watcher, ready, settled } = await watch({
+			cwd,
+			input: 'src/lib',
+			output: 'package',
+			types: true,
+			config
+		});
 
 		/** @param {string} file */
 		function compare(file) {
@@ -216,5 +214,90 @@ if (!process.env.CI) {
 		}
 	});
 }
+
+/**
+ * @param {string[]} actual
+ * @param {string[]} expected
+ */
+function has_warnings(actual, expected) {
+	assert.equal(actual.length, expected.length);
+	assert.equal(
+		actual.filter((warning) => expected.some((str) => warning.startsWith(str))).length,
+		expected.length
+	);
+}
+
+test('validates package (1)', () => {
+	const { analyse_code, validate } = _create_validator({
+		config: {},
+		cwd: '',
+		input: '',
+		output: '',
+		types: true
+	});
+	analyse_code('src/lib/index.js', 'export const a = 1;import.meta.env;');
+	analyse_code('src/lib/C.svelte', '');
+	const warnings = validate({});
+
+	has_warnings(warnings, [
+		'No `exports` field found in `package.json`, please provide one.',
+		'Avoid usage of `import.meta.env` in your code',
+		'You are using Svelte components or Svelte-specific imports in your code, but you have not declared a dependency on `svelte` in your `package.json`. '
+	]);
+});
+
+test('validates package (2)', () => {
+	const { analyse_code, validate } = _create_validator({
+		config: {},
+		cwd: '',
+		input: '',
+		output: '',
+		types: true
+	});
+	analyse_code('src/lib/C.svelte', '');
+	const warnings = validate({
+		exports: { '.': './dist/C.svelte' },
+		peerDependencies: { svelte: '^3.55.0' }
+	});
+
+	has_warnings(warnings, [
+		'You are using Svelte files, but did not declare a `svelte` condition in one of your `exports` in your `package.json`. '
+	]);
+});
+
+test('validates package (all ok 1)', () => {
+	const { analyse_code, validate } = _create_validator({
+		config: {},
+		cwd: '',
+		input: '',
+		output: '',
+		types: true
+	});
+	analyse_code('src/lib/C.svelte', '');
+	const warnings = validate({
+		exports: { '.': { svelte: './dist/C.svelte' } },
+		peerDependencies: { svelte: '^3.55.0' }
+	});
+
+	assert.equal(warnings.length, 0);
+});
+
+test('validates package (all ok 2)', () => {
+	const { analyse_code, validate } = _create_validator({
+		config: {},
+		cwd: '',
+		input: '',
+		output: '',
+		types: true
+	});
+	analyse_code('src/lib/C.svelte', '');
+	const warnings = validate({
+		exports: { '.': { svelte: './dist/C.svelte' } },
+		peerDependencies: { svelte: '^3.55.0' },
+		svelte: './dist/C.svelte'
+	});
+
+	assert.equal(warnings.length, 0);
+});
 
 test.run();

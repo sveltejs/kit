@@ -1,3 +1,4 @@
+import * as http from 'node:http';
 import { expect } from '@playwright/test';
 import { test } from '../../../utils.js';
 
@@ -173,14 +174,24 @@ test.describe('env', () => {
 
 test.describe('trailingSlash', () => {
 	test('adds trailing slash', async ({ baseURL, page, clicknav }) => {
+		// we can't use Playwright's `request` here, because it resolves redirects
+		const status = await new Promise((fulfil, reject) => {
+			const request = http.get(`${baseURL}/path-base/slash`);
+			request.on('error', reject);
+			request.on('response', (response) => {
+				fulfil(response.statusCode);
+			});
+		});
+		expect(status).toBe(308);
+
 		await page.goto('/path-base/slash');
 
 		expect(page.url()).toBe(`${baseURL}/path-base/slash/`);
-		expect(await page.textContent('h2')).toBe('/slash/');
+		expect(await page.textContent('h2')).toBe('/path-base/slash/');
 
-		await clicknav('[href="/path-base/slash/child"]');
+		await clicknav('[data-testid="child"]');
 		expect(page.url()).toBe(`${baseURL}/path-base/slash/child/`);
-		expect(await page.textContent('h2')).toBe('/slash/child/');
+		expect(await page.textContent('h2')).toBe('/path-base/slash/child/');
 	});
 
 	test('removes trailing slash on endpoint', async ({ baseURL, request }) => {
@@ -233,7 +244,7 @@ test.describe('trailingSlash', () => {
 		if (process.env.DEV) {
 			expect(requests.filter((req) => req.endsWith('.svelte')).length).toBe(1);
 		} else {
-			expect(requests.filter((req) => req.endsWith('.js')).length).toBeGreaterThan(0);
+			expect(requests.filter((req) => req.endsWith('.mjs')).length).toBeGreaterThan(0);
 		}
 
 		expect(requests.includes(`/path-base/preloading/preloaded/__data.json`)).toBe(true);
@@ -262,7 +273,7 @@ test.describe('trailingSlash', () => {
 		if (process.env.DEV) {
 			expect(requests.filter((req) => req.endsWith('.svelte')).length).toBe(1);
 		} else {
-			expect(requests.filter((req) => req.endsWith('.js')).length).toBeGreaterThan(0);
+			expect(requests.filter((req) => req.endsWith('.mjs')).length).toBeGreaterThan(0);
 		}
 
 		requests = [];

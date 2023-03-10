@@ -57,7 +57,14 @@ export default function (opts = {}) {
 					// dependencies could have deep exports, so we need a regex
 					...Object.keys(pkg.dependencies || {}).map((d) => new RegExp(`^${d}(\\/.*)?$`))
 				],
-				plugins: [nodeResolve({ preferBuiltins: true }), commonjs({ strictRequires: true }), json()]
+				plugins: [
+					nodeResolve({
+						preferBuiltins: true,
+						exportConditions: ['node']
+					}),
+					commonjs({ strictRequires: true }),
+					json()
+				]
 			});
 
 			await bundle.write({

@@ -200,6 +200,19 @@ test.describe('beforeNavigate', () => {
 		await page.goBack();
 		expect(await page.textContent('h1')).toBe('before_navigate_ran: false');
 	});
+
+	test('cancel() on an unloading navigation does not prevent subsequent beforeNavigate callbacks', async ({
+		page,
+		app
+	}) => {
+		await page.goto('/before-navigate/prevent-navigation');
+		await page.click('h1'); // The browsers block attempts to prevent navigation on a frame that's never had a user gesture.
+
+		await app.goto('https://google.de');
+		await app.goto('/before-navigate/prevent-navigation?x=1');
+
+		expect(await page.innerHTML('pre')).toBe('2 false goto');
+	});
 });
 
 test.describe('Scrolling', () => {

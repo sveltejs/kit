@@ -29,7 +29,7 @@ test.describe('Imports', () => {
 			]);
 		} else {
 			expect(sources[0].startsWith('data:image/png;base64,')).toBeTruthy();
-			expect(sources[1]).toBe(`${baseURL}/_app/immutable/assets/large-3183867c.jpg`);
+			expect(sources[1]).toBe(`${baseURL}/_app/immutable/assets/large.3183867c.jpg`);
 		}
 	});
 });
@@ -496,6 +496,22 @@ test.describe('Load', () => {
 			'Im prerendered and called from a non-prerendered +page.server.js'
 		);
 	});
+
+	test('Prerendered +server.js called from a non-prerendered handle hook works', async ({
+		page,
+		javaScriptEnabled
+	}) => {
+		if (javaScriptEnabled) {
+			await page.goto('/prerendering/prerendered-endpoint');
+			await page.click('a', { noWaitAfter: true });
+		} else {
+			await page.goto('/prerendering/prerendered-endpoint/from-handle-hook');
+		}
+
+		expect(await page.textContent('html')).toBe(
+			'{"message":"Im prerendered and called from a non-prerendered +page.server.js"}'
+		);
+	});
 });
 
 test.describe('Nested layouts', () => {
@@ -611,6 +627,15 @@ test.describe('$app/environment', () => {
 test.describe('$app/paths', () => {
 	test('includes paths', async ({ page }) => {
 		await page.goto('/paths');
+
+		expect(await page.innerHTML('pre')).toBe(
+			JSON.stringify({
+				base: '',
+				assets: ''
+			})
+		);
+
+		await page.goto('/paths/deeply/nested');
 
 		expect(await page.innerHTML('pre')).toBe(
 			JSON.stringify({
@@ -951,7 +976,7 @@ test.describe('Actions', () => {
 		}
 	});
 
-	test('use:enhance button with formAction', async ({ page, app }) => {
+	test('use:enhance button with formAction', async ({ page }) => {
 		await page.goto('/actions/enhance');
 
 		expect(await page.textContent('pre.formdata1')).toBe(JSON.stringify(null));
@@ -964,7 +989,7 @@ test.describe('Actions', () => {
 		);
 	});
 
-	test('use:enhance button with name', async ({ page, app }) => {
+	test('use:enhance button with name', async ({ page }) => {
 		await page.goto('/actions/enhance');
 
 		expect(await page.textContent('pre.formdata1')).toBe(JSON.stringify(null));
@@ -977,6 +1002,21 @@ test.describe('Actions', () => {
 		await expect(page.locator('pre.formdata1')).toHaveText(
 			JSON.stringify({ result: 'submitter: foo' })
 		);
+	});
+
+	test('use:enhance does not clear form on second submit', async ({ page }) => {
+		await page.goto('/actions/enhance');
+
+		await page.locator('input[name="message"]').fill('hello');
+
+		await page.locator('.form3').click();
+		await expect(page.locator('pre.formdata1')).toHaveText(JSON.stringify({ message: 'hello' }));
+		await expect(page.locator('pre.formdata2')).toHaveText(JSON.stringify({ message: 'hello' }));
+
+		await page.locator('.form3').click();
+		await page.waitForTimeout(0); // wait for next tick
+		await expect(page.locator('pre.formdata1')).toHaveText(JSON.stringify({ message: 'hello' }));
+		await expect(page.locator('pre.formdata2')).toHaveText(JSON.stringify({ message: 'hello' }));
 	});
 
 	test('redirect', async ({ page, javaScriptEnabled }) => {

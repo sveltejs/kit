@@ -9,10 +9,11 @@
 		"test:cross-platform:build": "pnpm run --dir packages/kit test:cross-platform:build",
 		"test:vite-ecosystem-ci": "pnpm test --dir packages/kit",
 		"check": "pnpm -r check",
-		"lint": "pnpm -r lint",
+		"lint": "pnpm -r lint && eslint 'packages/**/*.js'",
 		"format": "pnpm -r format",
 		"precommit": "pnpm format && pnpm lint",
-		"release": "changeset publish"
+		"release": "changeset publish",
+		"start": "cd sites/kit.svelte.dev && npm run dev"
 	},
 	"repository": {
 		"type": "git",
@@ -25,13 +26,14 @@
 	},
 	"homepage": "https://github.com/sveltejs/kit#readme",
 	"devDependencies": {
-		"@changesets/cli": "^2.25.2",
+		"@changesets/cli": "^2.26.0",
 		"@rollup/plugin-commonjs": "^24.0.0",
 		"@rollup/plugin-json": "^6.0.0",
 		"@rollup/plugin-node-resolve": "^15.0.1",
 		"@svitejs/changesets-changelog-github-compact": "^1.1.0",
+		"@typescript-eslint/eslint-plugin": "^5.53.0",
 		"eslint": "^8.33.0",
-		"eslint-plugin-unicorn": "^45.0.2",
+		"eslint-plugin-unicorn": "^46.0.0",
 		"playwright": "^1.29.2",
 		"prettier": "^2.8.0",
 		"rollup": "^3.7.0",
@@ -39,7 +41,7 @@
 		"tiny-glob": "^0.2.9",
 		"typescript": "^4.9.4"
 	},
-	"packageManager": "pnpm@7.27.0",
+	"packageManager": "pnpm@7.29.1",
 	"engines": {
 		"pnpm": "^7.0.0"
 	},

@@ -1,10 +1,10 @@
-import { readFileSync, writeFileSync } from 'node:fs';
+import { existsSync, readFileSync, writeFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { pathToFileURL } from 'node:url';
 import { installPolyfills } from '../../exports/node/polyfills.js';
 import { mkdirp, posixify, walk } from '../../utils/filesystem.js';
 import { should_polyfill } from '../../utils/platform.js';
-import { is_root_relative, resolve } from '../../utils/url.js';
+import { decode_uri, is_root_relative, resolve } from '../../utils/url.js';
 import { escape_html_attr } from '../../utils/escape.js';
 import { logger } from '../utils.js';
 import { load_config } from '../config/index.js';
@@ -144,6 +144,13 @@ async function prerender({ out, manifest_path, metadata, verbose, env }) {
 	}
 
 	const files = new Set(walk(`${out}/client`).map(posixify));
+
+	const immutable = `${config.appDir}/immutable`;
+	if (existsSync(`${out}/server/${immutable}`)) {
+		for (const file of walk(`${out}/server/${immutable}`)) {
+			files.add(posixify(`${config.appDir}/immutable/${file}`));
+		}
+	}
 	const seen = new Set();
 	const written = new Set();
 
@@ -207,7 +214,7 @@ async function prerender({ out, manifest_path, metadata, verbose, env }) {
 			// this seems circuitous, but using new URL allows us to not care
 			// whether dependency_path is encoded or not
 			const encoded_dependency_path = new URL(dependency_path, 'http://localhost').pathname;
-			const decoded_dependency_path = decodeURI(encoded_dependency_path);
+			const decoded_dependency_path = decode_uri(encoded_dependency_path);
 
 			const headers = Object.fromEntries(result.response.headers);
 
@@ -215,7 +222,7 @@ async function prerender({ out, manifest_path, metadata, verbose, env }) {
 			if (prerender) {
 				const encoded_route_id = headers['x-sveltekit-routeid'];
 				if (encoded_route_id != null) {
-					const route_id = decodeURI(encoded_route_id);
+					const route_id = decode_uri(encoded_route_id);
 					const existing_value = prerender_map.get(route_id);
 					if (existing_value !== 'auto') {
 						prerender_map.set(route_id, prerender === 'true' ? true : 'auto');
@@ -240,24 +247,21 @@ async function prerender({ out, manifest_path, metadata, verbose, env }) {
 		const headers = Object.fromEntries(response.headers);
 
 		if (config.prerender.crawl && headers['content-type'] === 'text/html') {
-			const { ids, hrefs } = crawl(body.toString());
+			const { ids, hrefs } = crawl(body.toString(), decoded);
 
 			actual_hashlinks.set(decoded, ids);
 
 			for (const href of hrefs) {
-				if (href.startsWith('data:')) continue;
+				if (!is_root_relative(href)) continue;
 
-				const resolved = resolve(encoded, href);
-				if (!is_root_relative(resolved)) continue;
-
-				const { pathname, search, hash } = new URL(resolved, 'http://localhost');
+				const { pathname, search, hash } = new URL(href, 'http://localhost');
 
 				if (search) {
 					// TODO warn that query strings have no effect on statically-exported pages
 				}
 
 				if (hash) {
-					const key = decodeURI(pathname + hash);
+					const key = decode_uri(pathname + hash);
 
 					if (!expected_hashlinks.has(key)) {
 						expected_hashlinks.set(key, new Set());
@@ -266,7 +270,7 @@ async function prerender({ out, manifest_path, metadata, verbose, env }) {
 					/** @type {Set<string>} */ (expected_hashlinks.get(key)).add(decoded);
 				}
 
-				enqueue(decoded, decodeURI(pathname), pathname);
+				enqueue(decoded, decode_uri(pathname), pathname);
 			}
 		}
 	}
@@ -293,7 +297,7 @@ async function prerender({ out, manifest_path, metadata, verbose, env }) {
 		if (written.has(file)) return;
 
 		const encoded_route_id = response.headers.get('x-sveltekit-routeid');
-		const route_id = encoded_route_id != null ? decodeURI(encoded_route_id) : null;
+		const route_id = encoded_route_id != null ? decode_uri(encoded_route_id) : null;
 		if (route_id !== null) prerendered_routes.add(route_id);
 
 		if (response_type === REDIRECT) {
@@ -302,7 +306,7 @@ async function prerender({ out, manifest_path, metadata, verbose, env }) {
 			if (location) {
 				const resolved = resolve(encoded, location);
 				if (is_root_relative(resolved)) {
-					enqueue(decoded, decodeURI(resolved), resolved);
+					enqueue(decoded, decode_uri(resolved), resolved);
 				}
 
 				if (!headers['x-sveltekit-normalize']) {

@@ -1,4 +1,4 @@
-import fs from 'fs';
+import fs from 'node:fs';
 import { sequence } from '@sveltejs/kit/hooks';
 import { HttpError } from '../../../../src/runtime/control';
 import { error, redirect } from '@sveltejs/kit';
@@ -103,6 +103,13 @@ export const handle = sequence(
 			} else {
 				return new Response(undefined, { status: 307, headers: { location: '/redirect/c' } });
 			}
+		}
+
+		return resolve(event);
+	},
+	async ({ event, resolve }) => {
+		if (event.url.pathname === '/prerendering/prerendered-endpoint/from-handle-hook') {
+			return event.fetch('/prerendering/prerendered-endpoint/api');
 		}
 
 		return resolve(event);

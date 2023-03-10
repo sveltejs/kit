@@ -1,5 +1,55 @@
 # create-svelte
 
+## 3.1.2
+
+### Patch Changes
+
+- fix: prevent duplicated lines in project creation CLI ([#9346](https://github.com/sveltejs/kit/pull/9346))
+
+## 3.1.1
+
+### Patch Changes
+
+- chore: Add hint for toggling additional options during scaffolding flow. ([#9318](https://github.com/sveltejs/kit/pull/9318))
+
+## 3.1.0
+
+### Minor Changes
+
+- feat: use `@clack/prompts` ([#9219](https://github.com/sveltejs/kit/pull/9219))
+
+## 3.0.4
+
+### Patch Changes
+
+- docs: inform about adapter-auto not supporting all environments ([#9196](https://github.com/sveltejs/kit/pull/9196))
+
+## 3.0.3
+
+### Patch Changes
+
+- chore: enhance library skeleton readme with some library instructions ([#9128](https://github.com/sveltejs/kit/pull/9128))
+
+## 3.0.2
+
+### Patch Changes
+
+- chore: avoid running publint twice in prepublish ([#9126](https://github.com/sveltejs/kit/pull/9126))
+
+- fix: add `dist` to `pkg.files` and `.gitignore` ([#9124](https://github.com/sveltejs/kit/pull/9124))
+
+## 3.0.1
+
+### Patch Changes
+
+- fix: update dependency @sveltejs/package to v2.0.0 ([#9087](https://github.com/sveltejs/kit/pull/9087))
+
+## 3.0.0
+
+### Major Changes
+
+- breaking: update library scaffolding for `@sveltejs/package` version 2 ([#8922](https://github.com/sveltejs/kit/pull/8922))
+
 ## 2.3.4
 
 ### Patch Changes
