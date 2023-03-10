@@ -37,7 +37,7 @@ function serve(path, client = false) {
 				client &&
 				((res, pathname) => {
 					// only apply to build directory, not e.g. version.json
-					if (pathname.startsWith(`/${manifest.appPath}/immutable/`)) {
+					if (pathname.startsWith(`/${manifest.appPath}/immutable/`) && res.statusCode === 200) {
 						res.setHeader('cache-control', 'public,max-age=31536000,immutable');
 					}
 				})
@@ -93,8 +93,7 @@ const ssr = async (req, res) => {
 
 	if (address_header && !(address_header in req.headers)) {
 		throw new Error(
-			`Address header was specified with ${
-				ENV_PREFIX + 'ADDRESS_HEADER'
+			`Address header was specified with ${ENV_PREFIX + 'ADDRESS_HEADER'
 			}=${address_header} but is absent from request`
 		);
 	}
@@ -116,8 +115,7 @@ const ssr = async (req, res) => {
 
 						if (xff_depth > addresses.length) {
 							throw new Error(
-								`${ENV_PREFIX + 'XFF_DEPTH'} is ${xff_depth}, but only found ${
-									addresses.length
+								`${ENV_PREFIX + 'XFF_DEPTH'} is ${xff_depth}, but only found ${addresses.length
 								} addresses`
 							);
 						}
