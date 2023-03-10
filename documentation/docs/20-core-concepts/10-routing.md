@@ -348,6 +348,10 @@ For example, annotating `export let data` with `PageData` (or `LayoutData`, for 
 
 In turn, annotating the `load` function with `PageLoad`, `PageServerLoad`, `LayoutLoad` or `LayoutServerLoad` (for `+page.js`, `+page.server.js`, `+layout.js` and `+layout.server.js` respectively) ensures that `params` and the return value are correctly typed.
 
+If you're using VS Code or any IDE that supports the language server protocol and TypeScript plugins then you can omit these types _entirely_! Svelte's IDE tooling will insert the correct types for you, so you'll get type checking without writing them yourself.
+
+You can read more about `$types` in our [blog post](https://svelte.dev/blog/zero-config-type-safety) about it.
+
 ## Other files
 
 Any other files inside a route directory are ignored by SvelteKit. This means you can colocate components and utility modules with the routes that need them.
