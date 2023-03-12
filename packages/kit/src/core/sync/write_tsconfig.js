@@ -183,9 +183,7 @@ function validate_user_config(kit, cwd, out, config) {
 		console.warn(
 			colors
 				.bold()
-				.yellow(
-					`Your extends field in ${config.kind} should be a string or an array of strings.`
-				)
+				.yellow(`Your extends field in ${config.kind} should be a string or an array of strings.`)
 		);
 		return false;
 	})();
