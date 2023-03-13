@@ -2,4 +2,4 @@
 '@sveltejs/adapter-node': patch
 ---
 
-Only send cache header when static resource is 200
+fix: only send cache header when static resource is 200
