@@ -86,7 +86,7 @@ When creating a search input using a `<form>` which reflects its input value in 
 </form>
 ```
 
-...will cause the currently focused element to retain focus after navigation. Note that this only really makes sense for `<form>` elements. If you would add this to a link, the focused element would be the `<a>` tag, which is probably not what you want.
+...will cause the currently focused element to retain focus after navigation. Note that this only really makes sense for `<form>` elements. If you would add this to a link, the focused element would be the `<a>` tag, which is probably not what you want. You should also only use this on elements that still exist after navigation.
 
 By default, focus will be reset to the body.
 
