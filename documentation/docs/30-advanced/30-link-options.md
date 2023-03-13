@@ -66,6 +66,30 @@ Occasionally, we need to tell SvelteKit not to handle a link, but allow the brow
 
 Links with a `rel="external"` attribute will receive the same treatment. In addition, they will be ignored during [prerendering](page-options#prerender).
 
+## data-sveltekit-replacestate
+
+Sometimes you don't want navigation to create a new entry in the browser's session history. Adding a `data-sveltekit-replacestate` attribute to a link...
+
+```html
+<a data-sveltekit-replacestate href="/path">Path</a>
+```
+
+...will replace the current `history` entry rather than creating a new one with `pushState` when the link is clicked.
+
+## data-sveltekit-keepfocus
+
+When creating a search input using a `<form>` which reflects its input value in the URL, you might not want it to lose focus after navigation. Adding a `data-sveltekit-keepfocus` attribute to it...
+
+```html
+<form data-sveltekit-keepfocus>
+	<input type="text" name="query">
+</form>
+```
+
+...will cause the currently focused element to retain focus after navigation. Note that this only really makes sense for `<form>` elements. If you would add this to a link, the focused element would be the `<a>` tag, which is probably not what you want. You should also only use this on elements that still exist after navigation.
+
+By default, focus will be reset to the body.
+
 ## data-sveltekit-noscroll
 
 When navigating to internal links, SvelteKit mirrors the browser's default navigation behaviour: it will change the scroll position to 0,0 so that the user is at the very top left of the page (unless the link includes a `#hash`, in which case it will scroll to the element with a matching ID).
