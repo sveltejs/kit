@@ -78,13 +78,17 @@ Sometimes you don't want navigation to create a new entry in the browser's sessi
 
 ## data-sveltekit-keepfocus
 
-Sometimes you don't want an element to lose focus after navigation. Adding a `data-sveltekit-keepfocus` attribute to a link...
+When creating a search input using a `<form>` which reflects its input value in the URL, you might not want it to lose focus after navigation. Adding a `data-sveltekit-keepfocus` attribute to it...
 
 ```html
-<a data-sveltekit-keepfocus href="/path">Path</a>
+<form data-sveltekit-keepfocus>
+	<input type="text" name="query">
+</form>
 ```
 
-...will cause the currently focused element to retain focus after navigation. Otherwise, focus will be reset to the body.
+...will cause the currently focused element to retain focus after navigation. Note that this only really makes sense for `<form>` elements. If you would add this to a link, the focused element would be the `<a>` tag, which is probably not what you want.
+
+By default, focus will be reset to the body.
 
 ## data-sveltekit-noscroll
 
