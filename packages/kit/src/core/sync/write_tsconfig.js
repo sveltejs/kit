@@ -176,17 +176,12 @@ function load_user_tsconfig(cwd) {
 function validate_user_config(kit, cwd, out, config) {
 	// we need to check that the user's tsconfig extends the framework config
 	const extend = config.options.extends;
-	const extends_framework_config = (() => {
-		if (!extend) return false;
-		if (typeof extend === 'string') return path.resolve(cwd, extend) === out;
-		if (Array.isArray(extend)) return extend.some((e) => path.resolve(cwd, e) === out);
-		console.warn(
-			colors
-				.bold()
-				.yellow(`Your extends field in ${config.kind} should be a string or an array of strings.`)
-		);
-		return false;
-	})();
+	const extends_framework_config =
+		typeof extend === 'string'
+			? path.resolve(cwd, extend) === out
+			: Array.isArray(extend)
+			? extend.some((e) => path.resolve(cwd, e) === out)
+			: false;
 
 	const options = config.options.compilerOptions || {};
 

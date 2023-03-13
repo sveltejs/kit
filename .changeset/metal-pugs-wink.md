@@ -2,4 +2,4 @@
 '@sveltejs/kit': patch
 ---
 
-allow tsconfig to extend multiple other tsconfigs
+fix: allow tsconfig to extend multiple other tsconfigs
