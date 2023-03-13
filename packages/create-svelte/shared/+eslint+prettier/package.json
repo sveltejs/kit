@@ -3,7 +3,7 @@
 		"eslint-config-prettier": "^8.5.0"
 	},
 	"scripts": {
-		"lint": "prettier --plugin-search-dir . --check . && eslint .",
-		"format": "prettier --plugin-search-dir . --write ."
+		"lint": "prettier --cache --plugin-search-dir . --check . && eslint .",
+		"format": "prettier --cache --plugin-search-dir . --write ."
 	}
 }
