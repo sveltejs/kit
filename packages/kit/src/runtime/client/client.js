@@ -1190,7 +1190,7 @@ export function create_client(app, target) {
 			});
 		}
 
-		if (__SVELTEKIT_DEV__) {
+		if (__SVELTEKIT_DEV__ && status !== 404) {
 			console.error(
 				'An error occurred while loading the page. This will cause a full page reload. (This message will only appear during development.)'
 			);
