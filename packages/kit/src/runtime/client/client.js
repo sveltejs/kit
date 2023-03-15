@@ -277,6 +277,9 @@ export function create_client(app, target) {
 		let navigation_result = intent && (await load_route(intent));
 
 		if (!navigation_result) {
+			if (is_external_url(url, base)) {
+				return await native_navigation(url);
+			}
 			navigation_result = await server_fallback(
 				url,
 				{ id: null },
@@ -1190,7 +1193,7 @@ export function create_client(app, target) {
 			});
 		}
 
-		if (__SVELTEKIT_DEV__) {
+		if (__SVELTEKIT_DEV__ && status !== 404) {
 			console.error(
 				'An error occurred while loading the page. This will cause a full page reload. (This message will only appear during development.)'
 			);
