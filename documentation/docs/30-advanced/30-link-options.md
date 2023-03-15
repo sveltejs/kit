@@ -88,7 +88,7 @@ Sometimes you don't want [focus to be reset](/docs/accessibility#focus-managemen
 </form>
 ```
 
-...will cause the currently focused element to retain focus after navigation. In general, avoid using this attribute on links, since screen reader and other assistive technology users often expect focus to be moved after a navigation. You should also only use this attribute on elements that still exist after navigation. If the element no longer exists, the user's focus will be lost, making for a confusing experience for assistive technology users.
+...will cause the currently focused element to retain focus after navigation. In general, avoid using this attribute on links, since the focused element would be the `<a>` tag (and not a previously focused element) and screen reader and other assistive technology users often expect focus to be moved after a navigation. You should also only use this attribute on elements that still exist after navigation. If the element no longer exists, the user's focus will be lost, making for a confusing experience for assistive technology users.
 
 ## data-sveltekit-noscroll
 
