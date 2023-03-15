@@ -277,6 +277,9 @@ export function create_client(app, target) {
 		let navigation_result = intent && (await load_route(intent));
 
 		if (!navigation_result) {
+			if (is_external_url(url, base)) {
+				return await native_navigation(url);
+			}
 			navigation_result = await server_fallback(
 				url,
 				{ id: null },
