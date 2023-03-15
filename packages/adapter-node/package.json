@@ -1,6 +1,7 @@
 {
 	"name": "@sveltejs/adapter-node",
 	"version": "1.2.2",
+	"description": "An adapter for SvelteKit suitable for Node environments",
 	"repository": {
 		"type": "git",
 		"url": "https://github.com/sveltejs/kit",

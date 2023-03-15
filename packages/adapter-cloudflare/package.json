@@ -1,6 +1,7 @@
 {
 	"name": "@sveltejs/adapter-cloudflare",
 	"version": "2.2.0",
+	"description": "An adapter for SvelteKit, making it possible to run your app on Cloudflare",
 	"repository": {
 		"type": "git",
 		"url": "https://github.com/sveltejs/kit",
