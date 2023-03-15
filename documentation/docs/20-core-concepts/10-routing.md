@@ -350,7 +350,7 @@ In turn, annotating the `load` function with `PageLoad`, `PageServerLoad`, `Layo
 
 If you're using VS Code or any IDE that supports the language server protocol and TypeScript plugins then you can omit these types _entirely_! Svelte's IDE tooling will insert the correct types for you, so you'll get type checking without writing them yourself. It also works with our command line tool `svelte-check`.
 
-You can read more about `$types` in our [blog post](https://svelte.dev/blog/zero-config-type-safety) about it.
+You can read more about omitting `$types` in our [blog post](https://svelte.dev/blog/zero-config-type-safety) about it.
 
 ## Other files
 
