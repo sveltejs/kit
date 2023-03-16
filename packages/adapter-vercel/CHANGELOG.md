@@ -1,5 +1,14 @@
 # @sveltejs/adapter-vercel
 
+## 2.3.2
+
+### Patch Changes
+
+- fix: throw error if `isr` is combined with `runtime: 'edge'` ([#9432](https://github.com/sveltejs/kit/pull/9432))
+
+- Updated dependencies [[`385bd49e`](https://github.com/sveltejs/kit/commit/385bd49efb6890078dcdb523fdf5b621fe1c3e72), [`29ffc785`](https://github.com/sveltejs/kit/commit/29ffc78560a99ce387b10a24f48b7f01205f51e7), [`d257d37d`](https://github.com/sveltejs/kit/commit/d257d37d3cac94f30befa9fe38c2987f84fb551a), [`c45c35e7`](https://github.com/sveltejs/kit/commit/c45c35e7b40837cd1bea3fc26cfb831478e03c00), [`75e2c6f7`](https://github.com/sveltejs/kit/commit/75e2c6f7c8376685317b669767c7767fd21670eb), [`1c085780`](https://github.com/sveltejs/kit/commit/1c08578031395377a98b365a27eb9587594dd06e)]:
+  - @sveltejs/kit@1.12.0
+
 ## 2.3.1
 
 ### Patch Changes

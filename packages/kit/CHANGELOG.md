@@ -1,5 +1,23 @@
 # @sveltejs/kit
 
+## 1.12.0
+
+### Minor Changes
+
+- feat: expose submitter in use:enhance SubmitFunction ([#9425](https://github.com/sveltejs/kit/pull/9425))
+
+- feat: add data-sveltekit-keepfocus and data-sveltekit-replacestate options to links (requires Svelte version 3.56 for type-checking with `svelte-check`) ([#9019](https://github.com/sveltejs/kit/pull/9019))
+
+### Patch Changes
+
+- fix: don't start debugger on 404s ([#9424](https://github.com/sveltejs/kit/pull/9424))
+
+- fix: handle srcset attributes with newline after comma ([#9388](https://github.com/sveltejs/kit/pull/9388))
+
+- fix: allow tsconfig to extend multiple other tsconfigs ([#9413](https://github.com/sveltejs/kit/pull/9413))
+
+- chore: update Undici to 5.21.0 ([#9417](https://github.com/sveltejs/kit/pull/9417))
+
 ## 1.11.0
 
 ### Minor Changes
