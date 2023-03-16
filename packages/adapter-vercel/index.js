@@ -174,11 +174,15 @@ const plugin = function (defaults = {}) {
 					const directory = path.relative('.', builder.config.kit.files.routes + route.id);
 
 					if (runtime !== 'nodejs16.x' && runtime !== 'nodejs18.x') {
-						throw new Error(`${directory}: Routes using \`isr\` must use either \`runtime: 'nodejs16.x'\` or \`runtime: 'nodejs18.x'\``);
+						throw new Error(
+							`${directory}: Routes using \`isr\` must use either \`runtime: 'nodejs16.x'\` or \`runtime: 'nodejs18.x'\``
+						);
 					}
 
 					if (config.isr.allowQuery?.includes('__pathname')) {
-						throw new Error(`${directory}: \`__pathname\` is a reserved query parameter for \`isr.allowQuery\``);
+						throw new Error(
+							`${directory}: \`__pathname\` is a reserved query parameter for \`isr.allowQuery\``
+						);
 					}
 
 					isr_config.set(route, {
