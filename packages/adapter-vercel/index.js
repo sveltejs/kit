@@ -153,13 +153,21 @@ const plugin = function (defaults = {}) {
 			/** @type {Map<import('@sveltejs/kit').RouteDefinition<import('.').Config>, { expiration: number | false, bypassToken: string | undefined, allowQuery: string[], group: number, passQuery: true }>} */
 			const isr_config = new Map();
 
+			/** @type {Set<string>} */
+			const ignored_isr = new Set();
+
 			// group routes by config
 			for (const route of builder.routes) {
-				if (route.prerender === true) continue;
-
-				const pattern = route.pattern.toString();
-
 				const runtime = route.config?.runtime ?? defaults?.runtime ?? get_default_runtime();
+				const config = { runtime, ...defaults, ...route.config };
+
+				if (is_prerendered(route)) {
+					if (config.isr) {
+						ignored_isr.add(route.id);
+					}
+					continue;
+				}
+
 				if (runtime && !VALID_RUNTIMES.includes(runtime)) {
 					throw new Error(
 						`Invalid runtime '${runtime}' for route ${
@@ -167,8 +175,6 @@ const plugin = function (defaults = {}) {
 						}. Valid runtimes are ${VALID_RUNTIMES.join(', ')}`
 					);
 				}
-
-				const config = { runtime, ...defaults, ...route.config };
 
 				if (config.isr) {
 					const directory = path.relative('.', builder.config.kit.files.routes + route.id);
@@ -197,6 +203,7 @@ const plugin = function (defaults = {}) {
 				const hash = hash_config(config);
 
 				// first, check there are no routes with incompatible configs that will be merged
+				const pattern = route.pattern.toString();
 				const existing = conflicts.get(pattern);
 				if (existing) {
 					if (existing.hash !== hash) {
@@ -217,6 +224,20 @@ const plugin = function (defaults = {}) {
 				}
 
 				group.routes.push(route);
+			}
+
+			if (ignored_isr.size) {
+				builder.log.warn(
+					`\nWarning: The following routes have an ISR config which is ignored because the route is prerendered:`
+				);
+
+				for (const ignored of ignored_isr) {
+					console.log(`    - ${ignored}`);
+				}
+
+				console.log(
+					'Either remove the "prerender" option from these routes to use ISR, or remove the ISR config.\n'
+				);
 			}
 
 			const singular = groups.size === 1;
@@ -240,7 +261,7 @@ const plugin = function (defaults = {}) {
 			}
 
 			for (const route of builder.routes) {
-				if (route.prerender === true) continue;
+				if (is_prerendered(route)) continue;
 
 				const pattern = route.pattern.toString();
 
@@ -456,7 +477,7 @@ async function create_function_bundle(builder, entry, dir, config) {
 	if (resolution_failures.size > 0) {
 		const cwd = process.cwd();
 		builder.log.warn(
-			'The following modules failed to locate dependencies that may (or may not) be required for your app to work:'
+			'Warning: The following modules failed to locate dependencies that may (or may not) be required for your app to work:'
 		);
 
 		for (const [importer, modules] of resolution_failures) {
@@ -572,15 +593,26 @@ function validate_vercel_json(builder, vercel_config) {
 		unmatched_paths.push(path);
 	}
 
-	builder.log.warn(
-		`\nvercel.json defines cron tasks that use paths that do not correspond to an API route with a GET handler (ignore this if the request is handled in your \`handle\` hook):`
-	);
+	if (unmatched_paths.length) {
+		builder.log.warn(
+			`\nWarning: vercel.json defines cron tasks that use paths that do not correspond to an API route with a GET handler (ignore this if the request is handled in your \`handle\` hook):`
+		);
 
-	for (const path of unmatched_paths) {
-		console.log(`    - ${path}`);
+		for (const path of unmatched_paths) {
+			console.log(`    - ${path}`);
+		}
+
+		console.log('');
 	}
+}
 
-	console.log('');
+/** @param {import('@sveltejs/kit').RouteDefinition} route */
+function is_prerendered(route) {
+	return (
+		route.prerender === true ||
+		(route.prerender === 'auto' &&
+			!route.segments.some((segment) => segment.dynamic || segment.rest))
+	);
 }
 
 export default plugin;
