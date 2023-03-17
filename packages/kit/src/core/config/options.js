@@ -138,6 +138,10 @@ const options = object(
 
 			outDir: string('.svelte-kit'),
 
+			output: object({
+				preloadStrategy: list(['modulepreload', 'preload-js', 'preload-mjs'], 'modulepreload')
+			}),
+
 			paths: object({
 				base: validate('', (input, keypath) => {
 					assert_string(input, keypath);
@@ -165,6 +169,13 @@ const options = object(
 								`${keypath} option must not end with '/'. See https://kit.svelte.dev/docs/configuration#paths`
 							);
 						}
+					}
+
+					return input;
+				}),
+				relative: validate(undefined, (input, keypath) => {
+					if (typeof input !== 'boolean') {
+						throw new Error(`${keypath} option must be a boolean or undefined`);
 					}
 
 					return input;

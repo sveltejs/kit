@@ -1,9 +1,9 @@
-import { existsSync, readFileSync, writeFileSync } from 'fs';
-import { posix, dirname } from 'path';
-import { execSync } from 'child_process';
+import { existsSync, readFileSync, writeFileSync } from 'node:fs';
+import { posix, dirname } from 'node:path';
+import { execSync } from 'node:child_process';
 import esbuild from 'esbuild';
 import toml from '@iarna/toml';
-import { fileURLToPath } from 'url';
+import { fileURLToPath } from 'node:url';
 
 /**
  * @typedef {{
@@ -58,7 +58,7 @@ export default function ({ config = 'wrangler.toml' } = {}) {
 				platform: 'browser',
 				conditions: ['worker', 'browser'],
 				sourcemap: 'linked',
-				target: 'es2020',
+				target: 'es2022',
 				entryPoints: [`${tmp}/entry.js`],
 				outfile: main,
 				bundle: true,

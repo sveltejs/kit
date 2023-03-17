@@ -203,7 +203,13 @@ export interface Cookies {
 	get(name: string, opts?: import('cookie').CookieParseOptions): string | undefined;
 
 	/**
-	 * Sets a cookie. This will add a `set-cookie` header to the response, but also make the cookie available via `cookies.get` during the current request.
+	 * Gets all cookies that were previously set with `cookies.set`, or from the request headers.
+	 * @param opts the options, passed directily to `cookie.parse`. See documentation [here](https://github.com/jshttp/cookie#cookieparsestr-options)
+	 */
+	getAll(opts?: import('cookie').CookieParseOptions): Array<{ name: string; value: string }>;
+
+	/**
+	 * Sets a cookie. This will add a `set-cookie` header to the response, but also make the cookie available via `cookies.get` or `cookies.getAll` during the current request.
 	 *
 	 * The `httpOnly` and `secure` options are `true` by default (except on http://localhost, where `secure` is `false`), and must be explicitly disabled if you want cookies to be readable by client-side JavaScript and/or transmitted over HTTP. The `sameSite` option defaults to `lax`.
 	 *
@@ -427,17 +433,41 @@ export interface KitConfig {
 	 * @default ".svelte-kit"
 	 */
 	outDir?: string;
+	/**
+	 * Options related to the build output format
+	 */
+	output?: {
+		/**
+		 * SvelteKit will preload the JavaScript modules needed for the initial page to avoid import 'waterfalls', resulting in faster application startup. There
+		 * are three strategies with different trade-offs:
+		 * - `modulepreload` - uses `<link rel="modulepreload">`. This delivers the best results in Chromium-based browsers, but is currently ignored by Firefox and Safari (though support is coming to Safari soon).
+		 * - `preload-js` - uses `<link rel="preload">`. Prevents waterfalls in Chromium and Safari, but Chromium will parse each module twice (once as a script, once as a module). Causes modules to be requested twice in Firefox. This is a good setting if you want to maximise performance for users on iOS devices at the cost of a very slight degradation for Chromium users.
+		 * - `preload-mjs` - uses `<link rel="preload">` but with the `.mjs` extension which prevents double-parsing in Chromium. Some static webservers will fail to serve .mjs files with a `Content-Type: application/javascript` header, which will cause your application to break. If that doesn't apply to you, this is the option that will deliver the best performance for the largest number of users, until `modulepreload` is more widely supported.
+		 * @default "modulepreload"
+		 */
+		preloadStrategy?: 'modulepreload' | 'preload-js' | 'preload-mjs';
+	};
 	paths?: {
 		/**
 		 * An absolute path that your app's files are served from. This is useful if your files are served from a storage bucket of some kind.
 		 * @default ""
 		 */
-		assets?: string;
+		assets?: '' | `http://${string}` | `https://${string}`;
 		/**
 		 * A root-relative path that must start, but not end with `/` (e.g. `/base-path`), unless it is the empty string. This specifies where your app is served from and allows the app to live on a non-root path. Note that you need to prepend all your root-relative links with the base value or they will point to the root of your domain, not your `base` (this is how the browser works). You can use [`base` from `$app/paths`](/docs/modules#$app-paths-base) for that: `<a href="{base}/your-page">Link</a>`. If you find yourself writing this often, it may make sense to extract this into a reusable component.
 		 * @default ""
 		 */
-		base?: string;
+		base?: '' | `/${string}`;
+		/**
+		 * Whether to use relative asset paths. By default, if `paths.assets` is not external, SvelteKit will replace `%sveltekit.assets%` with a relative path and use relative paths to reference build artifacts, but `base` and `assets` imported from `$app/paths` will be as specified in your config.
+		 *
+		 * If `true`, `base` and `assets` imported from `$app/paths` will be replaced with relative asset paths during server-side rendering, resulting in portable HTML.
+		 * If `false`, `%sveltekit.assets%` and references to build artifacts will always be root-relative paths, unless `paths.assets` is an external URL
+		 *
+		 * If your app uses a `<base>` element, you should set this to `false`, otherwise asset URLs will incorrectly be resolved against the `<base>` URL rather than the current page.
+		 * @default undefined
+		 */
+		relative?: boolean | undefined;
 	};
 	/**
 	 * See [Prerendering](https://kit.svelte.dev/docs/page-options#prerender).
@@ -530,7 +560,7 @@ export interface KitConfig {
 	 * Client-side navigation can be buggy if you deploy a new version of your app while people are using it. If the code for the new page is already loaded, it may have stale content; if it isn't, the app's route manifest may point to a JavaScript file that no longer exists.
 	 * SvelteKit helps you solve this problem through version management.
 	 * If SvelteKit encounters an error while loading the page and detects that a new version has been deployed (using the `name` specified here, which defaults to a timestamp of the build) it will fall back to traditional full-page navigation.
-	 * Not all navigations will result in an error though, for example if the JavaScript for the next page is already loaded. If you still want to force a full-page navigation in these cases, use techniques such as setting the `pollInverval` and then using `beforeNavigate`:
+	 * Not all navigations will result in an error though, for example if the JavaScript for the next page is already loaded. If you still want to force a full-page navigation in these cases, use techniques such as setting the `pollInterval` and then using `beforeNavigate`:
 	 * ```html
 	 * /// +layout.svelte
 	 * <script>
@@ -549,7 +579,22 @@ export interface KitConfig {
 	 */
 	version?: {
 		/**
-		 * The current app version string. If specified, this must be deterministic (e.g. a commit ref rather than `Math.random()` or Date.now().toString()`), otherwise defaults to a timestamp of the build
+		 * The current app version string. If specified, this must be deterministic (e.g. a commit ref rather than `Math.random()` or `Date.now().toString()`), otherwise defaults to a timestamp of the build.
+		 *
+		 * For example, to use the current commit hash, you could do use `git rev-parse HEAD`:
+		 *
+		 * ```js
+		 * /// file: svelte.config.js
+		 * import * as child_process from 'node:child_process';
+		 *
+		 * export default {
+		 *   kit: {
+		 *     version: {
+		 *       name: child_process.execSync('git rev-parse HEAD').toString().trim()
+		 *     }
+		 *   }
+		 * };
+		 * ```
 		 */
 		name?: string;
 		/**
@@ -897,7 +942,7 @@ export interface RequestEvent<
 	 */
 	locals: App.Locals;
 	/**
-	 * The parameters of the current page or endpoint - e.g. for a route like `/blog/[slug]`, a `{ slug: string }` object
+	 * The parameters of the current route - e.g. for a route like `/blog/[slug]`, a `{ slug: string }` object
 	 */
 	params: Params;
 	/**
@@ -941,7 +986,7 @@ export interface RequestEvent<
 	 */
 	setHeaders(headers: Record<string, string>): void;
 	/**
-	 * The URL of the current page or endpoint.
+	 * The requested URL.
 	 */
 	url: URL;
 	/**
@@ -988,6 +1033,12 @@ export interface ResolveOptions {
 
 export interface RouteDefinition<Config = any> {
 	id: string;
+	api: {
+		methods: HttpMethod[];
+	};
+	page: {
+		methods: Extract<HttpMethod, 'GET' | 'POST'>[];
+	};
 	pattern: RegExp;
 	prerender: PrerenderOption;
 	segments: RouteSegment[];

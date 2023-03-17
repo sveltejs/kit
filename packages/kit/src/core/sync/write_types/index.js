@@ -592,7 +592,10 @@ export function tweak_types(content, is_server) {
 				});
 			}
 
-			if (node.modifiers?.some((modifier) => modifier.kind === ts.SyntaxKind.ExportKeyword)) {
+			if (
+				ts.canHaveModifiers(node) &&
+				ts.getModifiers(node)?.some((modifier) => modifier.kind === ts.SyntaxKind.ExportKeyword)
+			) {
 				if (ts.isFunctionDeclaration(node) && node.name?.text && names.has(node.name?.text)) {
 					exports.set(node.name.text, node.name.text);
 				}

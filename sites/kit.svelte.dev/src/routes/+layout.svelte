@@ -64,17 +64,19 @@
 	<slot />
 </main>
 
-<div class="banner" style:--banner-footer-height={banner_height}>
-	<a target="_blank" rel="noopener noreferrer" href="https://hack.sveltesociety.dev/">
-		<span class="small">
-			<strong>Announcing SvelteHack</strong> Participate →
-		</span>
-		<span class="large">
-			<strong>Announcing SvelteHack</strong> Participate in our first hackathon and win →
-		</span>
-	</a>
-	<button on:click={() => (banner_height = '0px')}> ✕ </button>
-</div>
+{#if banner_height !== '0px'}
+	<div class="banner" style:--banner-footer-height={banner_height}>
+		<a target="_blank" rel="noopener noreferrer" href="https://hack.sveltesociety.dev/">
+			<span class="small">
+				<strong>Announcing SvelteHack</strong> Participate →
+			</span>
+			<span class="large">
+				<strong>Announcing SvelteHack</strong> Our first hackathon with over $12,000 in prizes →
+			</span>
+		</a>
+		<button on:click={() => (banner_height = '0px')}> ✕ </button>
+	</div>
+{/if}
 
 {#if browser}
 	<SearchBox />

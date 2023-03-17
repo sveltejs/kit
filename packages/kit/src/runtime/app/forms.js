@@ -91,7 +91,8 @@ export function enhance(form, submit = () => {}) {
 				cancel,
 				controller,
 				data,
-				form
+				form,
+				submitter: event.submitter
 			})) ?? fallback_callback;
 		if (cancelled) return;
 

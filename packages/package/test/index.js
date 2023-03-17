@@ -1,6 +1,6 @@
-import fs from 'fs';
-import { join, resolve } from 'path';
-import { fileURLToPath } from 'url';
+import fs from 'node:fs';
+import { join, resolve } from 'node:path';
+import { fileURLToPath } from 'node:url';
 
 import prettier from 'prettier';
 import { test } from 'uvu';

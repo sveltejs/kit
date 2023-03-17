@@ -1,4 +1,7 @@
-import { build, version } from '$service-worker';
+import { base, build, files, prerendered, version } from '$service-worker';
+
+self.base = base;
+self.build = build;
 
 const name = `cache-${version}`;
 

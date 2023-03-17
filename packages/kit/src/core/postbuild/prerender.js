@@ -1,4 +1,4 @@
-import { readFileSync, writeFileSync } from 'node:fs';
+import { existsSync, readFileSync, writeFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { pathToFileURL } from 'node:url';
 import { installPolyfills } from '../../exports/node/polyfills.js';
@@ -144,6 +144,13 @@ async function prerender({ out, manifest_path, metadata, verbose, env }) {
 	}
 
 	const files = new Set(walk(`${out}/client`).map(posixify));
+
+	const immutable = `${config.appDir}/immutable`;
+	if (existsSync(`${out}/server/${immutable}`)) {
+		for (const file of walk(`${out}/server/${immutable}`)) {
+			files.add(posixify(`${config.appDir}/immutable/${file}`));
+		}
+	}
 	const seen = new Set();
 	const written = new Set();
 
@@ -240,17 +247,14 @@ async function prerender({ out, manifest_path, metadata, verbose, env }) {
 		const headers = Object.fromEntries(response.headers);
 
 		if (config.prerender.crawl && headers['content-type'] === 'text/html') {
-			const { ids, hrefs } = crawl(body.toString());
+			const { ids, hrefs } = crawl(body.toString(), decoded);
 
 			actual_hashlinks.set(decoded, ids);
 
 			for (const href of hrefs) {
-				if (href.startsWith('data:')) continue;
+				if (!is_root_relative(href)) continue;
 
-				const resolved = resolve(encoded, href);
-				if (!is_root_relative(resolved)) continue;
-
-				const { pathname, search, hash } = new URL(resolved, 'http://localhost');
+				const { pathname, search, hash } = new URL(href, 'http://localhost');
 
 				if (search) {
 					// TODO warn that query strings have no effect on statically-exported pages

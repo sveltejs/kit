@@ -32,7 +32,7 @@
 		"proxy-polyfill": "^0.3.2",
 		"regenerator-runtime": "^0.13.9",
 		"shiki-twoslash": "^3.1.0",
-		"svelte": "^3.55.1",
+		"svelte": "^3.56.0",
 		"svelte-preprocess": "^4.10.7",
 		"terser": ">=5.4.0 <6.0.0",
 		"tiny-glob": "^0.2.9",

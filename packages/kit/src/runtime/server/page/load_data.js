@@ -1,6 +1,7 @@
 import { disable_search, make_trackable } from '../../../utils/url.js';
 import { unwrap_promises } from '../../../utils/promises.js';
 import { DEV } from 'esm-env';
+import { validate_depends } from '../../shared.js';
 
 /**
  * Calls the user's server `load` function.
@@ -59,10 +60,14 @@ export async function load_server_data({ event, state, node, parent }) {
 			for (const dep of deps) {
 				const { href } = new URL(dep, event.url);
 
-				if (DEV && done && !uses.dependencies.has(href)) {
-					console.warn(
-						`${node.server_id}: Calling \`depends(...)\` in a promise handler after \`load(...)\` has returned will not cause the function to re-run when the dependency is invalidated`
-					);
+				if (DEV) {
+					validate_depends(node.server_id, dep);
+
+					if (done && !uses.dependencies.has(href)) {
+						console.warn(
+							`${node.server_id}: Calling \`depends(...)\` in a promise handler after \`load(...)\` has returned will not cause the function to re-run when the dependency is invalidated`
+						);
+					}
 				}
 
 				uses.dependencies.add(href);

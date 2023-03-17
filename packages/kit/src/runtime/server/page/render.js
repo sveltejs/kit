@@ -1,7 +1,7 @@
 import * as devalue from 'devalue';
 import { readable, writable } from 'svelte/store';
 import { DEV } from 'esm-env';
-import { assets, base } from '__sveltekit/paths';
+import * as paths from '__sveltekit/paths';
 import { hash } from '../../hash.js';
 import { serialize_data } from './serialize_data.js';
 import { s } from '../../../utils/misc.js';
@@ -11,6 +11,7 @@ import { clarify_devalue_error, stringify_uses, handle_error_and_jsonify } from 
 import { public_env } from '../../shared-server.js';
 import { text } from '../../../exports/index.js';
 import { create_async_iterator } from '../../../utils/streaming.js';
+import { SVELTE_KIT_ASSETS } from '../../../constants.js';
 
 // TODO rename this function/module
 
@@ -80,6 +81,43 @@ export async function render_response({
 			? action_result.data ?? null
 			: null;
 
+	/** @type {string} */
+	let base = paths.base;
+
+	/** @type {string} */
+	let assets = paths.assets;
+
+	/**
+	 * An expression that will evaluate in the client to determine the resolved base path.
+	 * We use a relative path when possible to support IPFS, the internet archive, etc.
+	 */
+	let base_expression = s(paths.base);
+
+	// if appropriate, use relative paths for greater portability
+	if (paths.relative !== false && !state.prerendering?.fallback) {
+		const segments = event.url.pathname.slice(paths.base.length).split('/');
+
+		if (segments.length === 1 && paths.base !== '') {
+			// if we're on `/my-base-path`, relative links need to start `./my-base-path` rather than `.`
+			base = `./${paths.base.split('/').at(-1)}`;
+
+			base_expression = `new URL(${s(base)}, location).pathname`;
+		} else {
+			base =
+				segments
+					.slice(2)
+					.map(() => '..')
+					.join('/') || '.';
+
+			// resolve e.g. '../..' against current location, then remove trailing slash
+			base_expression = `new URL(${s(base)}, location).pathname.slice(0, -1)`;
+		}
+
+		if (!paths.assets || (paths.assets[0] === '/' && paths.assets !== SVELTE_KIT_ASSETS)) {
+			assets = base;
+		}
+	}
+
 	if (page_config.ssr) {
 		if (__SVELTEKIT_DEV__ && !branch.at(-1)?.node.component) {
 			// Can only be the leaf, layouts have a fallback component generated
@@ -116,6 +154,10 @@ export async function render_response({
 			form: form_value
 		};
 
+		// use relative paths during rendering, so that the resulting HTML is as
+		// portable as possible, but reset afterwards
+		if (paths.relative) paths.override({ base, assets });
+
 		if (__SVELTEKIT_DEV__) {
 			const fetch = globalThis.fetch;
 			let warned = false;
@@ -138,9 +180,14 @@ export async function render_response({
 				rendered = options.root.render(props);
 			} finally {
 				globalThis.fetch = fetch;
+				paths.reset();
 			}
 		} else {
-			rendered = options.root.render(props);
+			try {
+				rendered = options.root.render(props);
+			} finally {
+				paths.reset();
+			}
 		}
 
 		for (const { node } of branch) {
@@ -156,36 +203,6 @@ export async function render_response({
 		rendered = { head: '', html: '', css: { code: '', map: null } };
 	}
 
-	/**
-	 * The prefix to use for static assets. Replaces `%sveltekit.assets%` in the template
-	 * @type {string}
-	 */
-	let resolved_assets;
-
-	/**
-	 * @type {string}
-	 * An expression that will evaluate in the client to determine the resolved asset path
-	 */
-	let asset_expression;
-
-	if (assets) {
-		// if an asset path is specified, use it
-		resolved_assets = assets;
-		asset_expression = s(assets);
-	} else if (state.prerendering?.fallback) {
-		// if we're creating a fallback page, asset paths need to be root-relative
-		resolved_assets = base;
-		asset_expression = s(base);
-	} else {
-		// otherwise we want asset paths to be relative to the page, so that they
-		// will work in odd contexts like IPFS, the internet archive, and so on
-		const segments = event.url.pathname.slice(base.length).split('/').slice(2);
-		resolved_assets = segments.length > 0 ? segments.map(() => '..').join('/') : '.';
-		asset_expression = `new URL(${s(
-			resolved_assets
-		)}, location.href).pathname.replace(/^\\\/$/, '')`;
-	}
-
 	let head = '';
 	let body = rendered.html;
 
@@ -199,9 +216,9 @@ export async function render_response({
 			// Vite makes the start script available through the base path and without it.
 			// We load it via the base path in order to support remote IDE environments which proxy
 			// all URLs under the base path during development.
-			return base + path;
+			return paths.base + path;
 		}
-		return `${resolved_assets}/${path}`;
+		return `${assets}/${path}`;
 	};
 
 	if (inline_styles.size > 0) {
@@ -218,20 +235,20 @@ export async function render_response({
 	for (const dep of stylesheets) {
 		const path = prefixed(dep);
 
-		if (resolve_opts.preload({ type: 'css', path })) {
-			const attributes = ['rel="stylesheet"'];
+		const attributes = ['rel="stylesheet"'];
 
-			if (inline_styles.has(dep)) {
-				// don't load stylesheets that are already inlined
-				// include them in disabled state so that Vite can detect them and doesn't try to add them
-				attributes.push('disabled', 'media="(max-width: 0)"');
-			} else {
+		if (inline_styles.has(dep)) {
+			// don't load stylesheets that are already inlined
+			// include them in disabled state so that Vite can detect them and doesn't try to add them
+			attributes.push('disabled', 'media="(max-width: 0)"');
+		} else {
+			if (resolve_opts.preload({ type: 'css', path })) {
 				const preload_atts = ['rel="preload"', 'as="style"'];
 				link_header_preloads.add(`<${encodeURI(path)}>; ${preload_atts.join(';')}; nopush`);
 			}
-
-			head += `\n\t\t<link href="${path}" ${attributes.join(' ')}>`;
 		}
+
+		head += `\n\t\t<link href="${path}" ${attributes.join(' ')}>`;
 	}
 
 	for (const dep of fonts) {
@@ -251,7 +268,7 @@ export async function render_response({
 		}
 	}
 
-	const global = `__sveltekit_${options.version_hash}`;
+	const global = __SVELTEKIT_DEV__ ? `__sveltekit_dev` : `__sveltekit_${options.version_hash}`;
 
 	const { data, chunks } = get_data(
 		event,
@@ -324,13 +341,14 @@ export async function render_response({
 
 			const properties = [
 				`env: ${s(public_env)}`,
-				`assets: ${asset_expression}`,
+				paths.assets && `assets: ${s(paths.assets)}`,
+				`base: ${base_expression}`,
 				`element: ${
 					legacy_support_and_export_init
 						? `document.getElementById(${s(init_script_id)})`
 						: 'document.currentScript'
 				}.parentNode`
-			];
+			].filter(Boolean);
 
 			if (chunks) {
 				pre_init_input['deferred'] = 'new Map()';
@@ -472,12 +490,13 @@ export async function render_response({
 		);
 
 		for (const path of included_modulepreloads) {
-			// we use modulepreload with the Link header for Chrome, along with
-			// <link rel="preload"> for Safari. This results in the fastest loading in
-			// the most used browsers, with no double-loading. Note that we need to use
-			// .mjs extensions for `preload` to behave like `modulepreload` in Chrome
+			// see the kit.output.preloadStrategy option for details on why we have multiple options here
 			link_header_preloads.add(`<${encodeURI(path)}>; rel="modulepreload"; nopush`);
-			head += `\n\t\t<link rel="preload" as="script" crossorigin="anonymous" href="${path}">`;
+			if (options.preload_strategy !== 'modulepreload') {
+				head += `\n\t\t<link rel="preload" as="script" crossorigin="anonymous" href="${path}">`;
+			} else if (state.prerendering) {
+				head += `\n\t\t<link rel="modulepreload" href="${path}">`;
+			}
 		}
 
 		/**
@@ -613,7 +632,7 @@ export async function render_response({
 	const html = options.templates.app({
 		head,
 		body,
-		assets: resolved_assets,
+		assets,
 		nonce: /** @type {string} */ (csp.nonce),
 		env: public_env
 	});

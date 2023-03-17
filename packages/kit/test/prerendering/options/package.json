@@ -11,7 +11,7 @@
 	},
 	"devDependencies": {
 		"@sveltejs/kit": "workspace:^",
-		"svelte": "^3.55.1",
+		"svelte": "^3.56.0",
 		"svelte-check": "^3.0.2",
 		"typescript": "^4.9.4",
 		"uvu": "^0.5.6",

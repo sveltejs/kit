@@ -1,4 +1,4 @@
-import fs from 'fs';
+import fs from 'node:fs';
 import colors from 'kleur';
 import MagicString from 'magic-string';
 import ts from 'typescript';

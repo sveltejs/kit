@@ -179,15 +179,20 @@ export async function dev(vite, vite_config, svelte_config) {
 							const styles = {};
 
 							for (const dep of deps) {
-								const parsed = new URL(dep.url, 'http://localhost/');
-								const query = parsed.searchParams;
+								const url = new URL(dep.url, 'http://localhost/');
+								const query = url.searchParams;
 
 								if (
 									isCSSRequest(dep.file) ||
 									(query.has('svelte') && query.get('type') === 'style')
 								) {
+									// setting `?inline` to load CSS modules as css string
+									query.set('inline', '');
+
 									try {
-										const mod = await loud_ssr_load_module(dep.url);
+										const mod = await loud_ssr_load_module(
+											`${url.pathname}${url.search}${url.hash}`
+										);
 										styles[dep.url] = mod.default;
 									} catch {
 										// this can happen with dynamically imported modules, I think
@@ -455,14 +460,13 @@ export async function dev(vite, vite_config, svelte_config) {
 					await vite.ssrLoadModule(`${runtime_base}/server/index.js`)
 				);
 
-				const { set_assets, set_fix_stack_trace } =
-					/** @type {import('types').ServerInternalModule} */ (
-						await vite.ssrLoadModule(`${runtime_base}/shared-server.js`)
-					);
-
-				set_assets(assets);
-
+				const { set_fix_stack_trace } = await vite.ssrLoadModule(
+					`${runtime_base}/shared-server.js`
+				);
 				set_fix_stack_trace(fix_stack_trace);
+
+				const { set_assets } = await vite.ssrLoadModule('__sveltekit/paths');
+				set_assets(assets);
 
 				const server = new Server(manifest);
 

@@ -27,7 +27,8 @@ const server_template = ({
 }) => `
 import root from '../root.svelte';
 import { set_building } from '__sveltekit/environment';
-import { set_assets, set_private_env, set_public_env } from '${runtime_directory}/shared-server.js';
+import { set_assets } from '__sveltekit/paths';
+import { set_private_env, set_public_env } from '${runtime_directory}/shared-server.js';
 
 export const options = {
 	app_template_contains_nonce: ${template.includes('%sveltekit.nonce%')},
@@ -36,6 +37,7 @@ export const options = {
 	embedded: ${config.kit.embedded},
 	env_public_prefix: '${config.kit.env.publicPrefix}',
 	hooks: null, // added lazily, via \`get_hooks\`
+	preload_strategy: ${s(config.kit.output.preloadStrategy)},
 	root,
 	service_worker: ${has_service_worker},
 	templates: {

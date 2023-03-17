@@ -1,9 +1,9 @@
-import fs from 'fs';
+import fs from 'node:fs';
 import colors from 'kleur';
-import path from 'path';
+import path from 'node:path';
 import prompts from 'prompts';
 import glob from 'tiny-glob/sync.js';
-import { pathToFileURL } from 'url';
+import { pathToFileURL } from 'node:url';
 import { migrate_scripts } from './migrate_scripts/index.js';
 import { migrate_page } from './migrate_page_js/index.js';
 import { migrate_page_server } from './migrate_page_server/index.js';

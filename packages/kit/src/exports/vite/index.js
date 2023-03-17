@@ -24,6 +24,7 @@ import prerender from '../../core/postbuild/prerender.js';
 import analyse from '../../core/postbuild/analyse.js';
 import { s } from '../../utils/misc.js';
 import { hash } from '../../runtime/hash.js';
+import { dedent } from '../../core/sync/utils.js';
 
 export { vitePreprocess } from '@sveltejs/vite-plugin-svelte';
 
@@ -254,6 +255,25 @@ function kit({ svelte_config }) {
 						'$app',
 						'$env'
 					]
+				},
+				ssr: {
+					noExternal: [
+						// This ensures that esm-env is inlined into the server output with the
+						// export conditions resolved correctly through Vite. This prevents adapters
+						// that bundle later on from resolving the export conditions incorrectly
+						// and for example include browser-only code in the server output
+						// because they for example use esbuild.build with `platform: 'browser'`
+						'esm-env',
+						// We need this for two reasons:
+						// 1. Without this, `@sveltejs/kit` imports are kept as-is in the server output,
+						//    and that causes modules and therefore classes like `Redirect` to be imported twice
+						//    under different IDs, which breaks a bunch of stuff because of failing instanceof checks.
+						// 2. Vitest bypasses Vite when loading external modules, so we bundle
+						//    when it is detected to keep our virtual modules working.
+						//    See https://github.com/sveltejs/kit/pull/9172
+						//    and https://vitest.dev/config/#deps-registernodeloader
+						'@sveltejs/kit'
+					]
 				}
 			};
 
@@ -269,19 +289,6 @@ function kit({ svelte_config }) {
 					__SVELTEKIT_EMBEDDED__: kit.embedded ? 'true' : 'false'
 				};
 
-				new_config.ssr = {
-					noExternal: [
-						// TODO document why this is necessary
-						'@sveltejs/kit',
-						// This ensures that esm-env is inlined into the server output with the
-						// export conditions resolved correctly through Vite. This prevents adapters
-						// that bundle later on to resolve the export conditions incorrectly
-						// and for example include browser-only code in the server output
-						// because they for example use esbuild.build with `platform: 'browser'`
-						'esm-env'
-					]
-				};
-
 				if (!secondary_build_started) {
 					manifest_data = (await sync.all(svelte_config, config_env.mode)).manifest_data;
 				}
@@ -292,13 +299,12 @@ function kit({ svelte_config }) {
 					__SVELTEKIT_EMBEDDED__: kit.embedded ? 'true' : 'false'
 				};
 
-				new_config.ssr = {
-					// Without this, Vite will treat `@sveltejs/kit` as noExternal if it's
-					// a linked dependency, and that causes modules to be imported twice
-					// under different IDs, which breaks a bunch of stuff
-					// https://github.com/vitejs/vite/pull/9296
-					external: ['@sveltejs/kit', 'cookie', 'set-cookie-parser']
-				};
+				// These Kit dependencies are packaged as CommonJS, which means they must always be externalized.
+				// Without this, the tests will still pass but `pnpm dev` will fail in projects that link `@sveltejs/kit`.
+				/** @type {NonNullable<import('vite').UserConfig['ssr']>} */ (new_config.ssr).external = [
+					'cookie',
+					'set-cookie-parser'
+				];
 			}
 
 			warn_overridden_config(config, new_config);
@@ -331,7 +337,10 @@ function kit({ svelte_config }) {
 
 		async load(id, options) {
 			const browser = !options?.ssr;
-			const global = `__sveltekit_${version_hash}`;
+
+			const global = is_build
+				? `globalThis.__sveltekit_${version_hash}`
+				: `globalThis.__sveltekit_dev`;
 
 			if (options?.ssr === false && process.env.TEST !== 'true') {
 				const normalized_cwd = vite.normalizePath(cwd);
@@ -351,13 +360,16 @@ function kit({ svelte_config }) {
 			switch (id) {
 				case '\0$env/static/private':
 					return create_static_module('$env/static/private', env.private);
+
 				case '\0$env/static/public':
 					return create_static_module('$env/static/public', env.public);
+
 				case '\0$env/dynamic/private':
 					return create_dynamic_module(
 						'private',
 						vite_config_env.command === 'serve' ? env.private : undefined
 					);
+
 				case '\0$env/dynamic/public':
 					// populate `$env/dynamic/public` from `window`
 					if (browser) {
@@ -368,6 +380,7 @@ function kit({ svelte_config }) {
 						'public',
 						vite_config_env.command === 'serve' ? env.public : undefined
 					);
+
 				case '\0$service-worker':
 					return create_service_worker_module(svelte_config);
 
@@ -376,27 +389,51 @@ function kit({ svelte_config }) {
 				case '\0__sveltekit/paths':
 					const { assets, base } = svelte_config.kit.paths;
 
+					// use the values defined in `global`, but fall back to hard-coded values
+					// for the sake of things like Vitest which may import this module
+					// outside the context of a page
 					if (browser) {
-						return `export const base = ${s(base)};
-export const assets = ${global}.assets;`;
+						return dedent`
+							export const base = ${global}?.base ?? ${s(base)};
+							export const assets = ${global}?.assets ?? ${assets ? s(assets) : 'base'};
+						`;
 					}
 
-					return `export const base = ${s(base)};
-export let assets = ${assets ? s(assets) : 'base'};
+					return dedent`
+						export let base = ${s(base)};
+						export let assets = ${assets ? s(assets) : 'base'};
 
-/** @param {string} path */
-export function set_assets(path) {
-	assets = path;
-}`;
+						export const relative = ${svelte_config.kit.paths.relative};
+
+						const initial = { base, assets };
+
+						export function override(paths) {
+							base = paths.base;
+							assets = paths.assets;
+						}
+
+						export function reset() {
+							base = initial.base;
+							assets = initial.assets;
+						}
+
+						/** @param {string} path */
+						export function set_assets(path) {
+							assets = initial.assets = path;
+						}
+					`;
 
 				case '\0__sveltekit/environment':
 					const { version } = svelte_config.kit;
-					return `export const version = ${s(version.name)};
-export let building = false;
 
-export function set_building() {
-	building = true;
-}`;
+					return dedent`
+						export const version = ${s(version.name)};
+						export let building = false;
+
+						export function set_building() {
+							building = true;
+						}
+					`;
 			}
 		}
 	};
@@ -509,6 +546,9 @@ export function set_building() {
 					}
 				}
 
+				// see the kit.output.preloadStrategy option for details on why we have multiple options here
+				const ext = kit.output.preloadStrategy === 'preload-mjs' ? 'mjs' : 'js';
+
 				new_config = {
 					base: ssr ? assets_base(kit) : './',
 					build: {
@@ -518,12 +558,8 @@ export function set_building() {
 							input,
 							output: {
 								format: 'esm',
-								// we use .mjs for client-side modules, because this signals to Chrome (when it
-								// reads the <link rel="preload">) that it should parse the file as a module
-								// rather than as a script, preventing a double parse. Ideally we'd just use
-								// modulepreload, but Safari prevents that
-								entryFileNames: ssr ? '[name].js' : `${prefix}/[name].[hash].mjs`,
-								chunkFileNames: ssr ? 'chunks/[name].js' : `${prefix}/chunks/[name].[hash].mjs`,
+								entryFileNames: ssr ? '[name].js' : `${prefix}/[name].[hash].${ext}`,
+								chunkFileNames: ssr ? 'chunks/[name].js' : `${prefix}/chunks/[name].[hash].${ext}`,
 								assetFileNames: `${prefix}/assets/[name].[hash][extname]`,
 								hoistTransitiveImports: false
 							},
@@ -874,18 +910,18 @@ function find_overridden_config(config, resolved_config, enforced_config, path, 
 /**
  * @param {import('types').ValidatedConfig} config
  */
-const create_service_worker_module = (config) => `
-if (typeof self === 'undefined' || self instanceof ServiceWorkerGlobalScope === false) {
-	throw new Error('This module can only be imported inside a service worker');
-}
+const create_service_worker_module = (config) => dedent`
+	if (typeof self === 'undefined' || self instanceof ServiceWorkerGlobalScope === false) {
+		throw new Error('This module can only be imported inside a service worker');
+	}
 
-export const build = [];
-export const files = [
-	${create_assets(config)
-		.filter((asset) => config.kit.serviceWorker.files(asset.file))
-		.map((asset) => `${s(`${config.kit.paths.base}/${asset.file}`)}`)
-		.join(',\n\t\t\t\t')}
-];
-export const prerendered = [];
-export const version = ${s(config.kit.version.name)};
+	export const build = [];
+	export const files = [
+		${create_assets(config)
+			.filter((asset) => config.kit.serviceWorker.files(asset.file))
+			.map((asset) => `${s(`${config.kit.paths.base}/${asset.file}`)}`)
+			.join(',\n')}
+	];
+	export const prerendered = [];
+	export const version = ${s(config.kit.version.name)};
 `;

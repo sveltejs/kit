@@ -1,11 +1,6 @@
 import { render_response } from './render.js';
 import { load_data, load_server_data } from './load_data.js';
-import {
-	handle_error_and_jsonify,
-	static_error_page,
-	redirect_response,
-	GENERIC_ERROR
-} from '../utils.js';
+import { handle_error_and_jsonify, static_error_page, redirect_response } from '../utils.js';
 import { get_option } from '../../../utils/options.js';
 import { HttpError, Redirect } from '../../control.js';
 
@@ -43,7 +38,7 @@ export async function respond_with_error({
 		const csr = get_option([default_layout], 'csr') ?? true;
 
 		if (ssr) {
-			state.initiator = GENERIC_ERROR;
+			state.error = true;
 
 			const server_data_promise = load_server_data({
 				event,

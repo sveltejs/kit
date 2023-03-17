@@ -195,7 +195,7 @@ You should think carefully about whether or not the changes you make to your pac
 
 - `-w`/`--watch` — watch files in `src/lib` for changes and rebuild the package
 - `-i`/`--input` — the input directory which contains all the files of the package. Defaults to `src/lib`
-- `-o`/`--o` — the output directory where the processed files are written to. You `package.json`'s `exports` should point to files inside there, and the `files` array should include that folder. Defaults to `dist`
+- `-o`/`--o` — the output directory where the processed files are written to. Your `package.json`'s `exports` should point to files inside there, and the `files` array should include that folder. Defaults to `dist`
 - `-t`/`--types` — whether or not to create type definitions (`d.ts` files). We strongly recommend doing this as it fosters ecosystem library quality. Defaults to `true`
 
 ## Publishing
@@ -213,6 +213,7 @@ All relative file imports need to be fully specified, adhering to Node's ESM alg
 ```diff
 -import { something } from './something';
 +import { something } from './something/index.js';
+```
 
 If you are using TypeScript, you need to import `.ts` files the same way, but using a `.js` file ending, _not_ a `.ts` file ending. (This is a TypeScript design decision outside our control.) Setting `"moduleResolution": "NodeNext"` in your `tsconfig.json` or `jsconfig.json` will help you with this.
 

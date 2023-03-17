@@ -33,6 +33,7 @@ import * as devalue from 'devalue';
 import { INDEX_KEY, PRELOAD_PRIORITIES, SCROLL_KEY, SNAPSHOT_KEY } from './constants.js';
 import { validate_common_exports } from '../../utils/exports.js';
 import { compact } from '../../utils/array.js';
+import { validate_depends } from '../shared.js';
 
 // We track the scroll position associated with each history entry in sessionStorage,
 // rather than on history.state itself, because when navigation is driven by
@@ -177,6 +178,14 @@ export function create_client(app, target) {
 		});
 	}
 
+	function persist_state() {
+		update_scroll_positions(current_history_index);
+		storage.set(SCROLL_KEY, scroll_positions);
+
+		capture_snapshot(current_history_index);
+		storage.set(SNAPSHOT_KEY, snapshots);
+	}
+
 	/**
 	 * @param {string | URL} url
 	 * @param {{ noScroll?: boolean; replaceState?: boolean; keepFocus?: boolean; state?: any; invalidateAll?: boolean }} opts
@@ -269,6 +278,9 @@ export function create_client(app, target) {
 		let navigation_result = intent && (await load_route(intent));
 
 		if (!navigation_result) {
+			if (is_external_url(url, base)) {
+				return await native_navigation(url);
+			}
 			navigation_result = await server_fallback(
 				url,
 				{ id: null },
@@ -379,17 +391,7 @@ export function create_client(app, target) {
 			// need to render the DOM before we can scroll to the rendered elements and do focus management
 			await tick();
 
-			const changed_focus =
-				// reset focus only if any manual focus management didn't override it
-				document.activeElement !== activeElement &&
-				// also refocus when activeElement is body already because the
-				// focus event might not have been fired on it yet
-				document.activeElement !== document.body;
-
-			if (!keepfocus && !changed_focus) {
-				await reset_focus();
-			}
-
+			// we reset scroll before dealing with focus, to avoid a flash of unscrolled content
 			if (autoscroll) {
 				const deep_linked =
 					url.hash && document.getElementById(decodeURIComponent(url.hash.slice(1)));
@@ -403,6 +405,17 @@ export function create_client(app, target) {
 				} else {
 					scrollTo(0, 0);
 				}
+			}
+
+			const changed_focus =
+				// reset focus only if any manual focus management didn't override it
+				document.activeElement !== activeElement &&
+				// also refocus when activeElement is body already because the
+				// focus event might not have been fired on it yet
+				document.activeElement !== document.body;
+
+			if (!keepfocus && !changed_focus) {
+				await reset_focus();
 			}
 		} else {
 			await tick();
@@ -587,6 +600,8 @@ export function create_client(app, target) {
 			/** @param {string[]} deps */
 			function depends(...deps) {
 				for (const dep of deps) {
+					if (DEV) validate_depends(/** @type {string} */ (route.id), dep);
+
 					const { href } = new URL(dep, url);
 					uses.dependencies.add(href);
 				}
@@ -1178,6 +1193,15 @@ export function create_client(app, target) {
 				route
 			});
 		}
+
+		if (__SVELTEKIT_DEV__ && status !== 404) {
+			console.error(
+				'An error occurred while loading the page. This will cause a full page reload. (This message will only appear during development.)'
+			);
+
+			debugger;
+		}
+
 		return await native_navigation(url);
 	}
 
@@ -1408,14 +1432,19 @@ export function create_client(app, target) {
 				goto(result.location, { invalidateAll: true }, []);
 			} else {
 				/** @type {Record<string, any>} */
-				const props = {
-					form: result.data,
+				root.$set({
+					// this brings Svelte's view of the world in line with SvelteKit's
+					// after use:enhance reset the form....
+					form: null,
 					page: { ...page, form: result.data, status: result.status }
-				};
-				root.$set(props);
+				});
+
+				// ...so that setting the `form` prop takes effect and isn't ignored
+				await tick();
+				root.$set({ form: result.data });
 
 				if (result.type === 'success') {
-					tick().then(reset_focus);
+					reset_focus();
 				}
 			}
 		},
@@ -1432,6 +1461,8 @@ export function create_client(app, target) {
 			// scrolling position.
 			addEventListener('beforeunload', (e) => {
 				let should_block = false;
+
+				persist_state();
 
 				if (!navigating) {
 					// If we're navigating, beforeNavigate was already called. If we end up in here during navigation,
@@ -1462,11 +1493,7 @@ export function create_client(app, target) {
 
 			addEventListener('visibilitychange', () => {
 				if (document.visibilityState === 'hidden') {
-					update_scroll_positions(current_history_index);
-					storage.set(SCROLL_KEY, scroll_positions);
-
-					capture_snapshot(current_history_index);
-					storage.set(SNAPSHOT_KEY, snapshots);
+					persist_state();
 				}
 			});
 
@@ -1516,11 +1543,14 @@ export function create_client(app, target) {
 
 				// Ignore the following but fire beforeNavigate
 				if (external || options.reload) {
-					const navigation = before_navigate({ url, type: 'link' });
-					if (!navigation) {
+					if (before_navigate({ url, type: 'link' })) {
+						// set `navigating` to `true` to prevent `beforeNavigate` callbacks
+						// being called when the page unloads
+						navigating = true;
+					} else {
 						event.preventDefault();
 					}
-					navigating = true;
+
 					return;
 				}
 
@@ -1546,11 +1576,11 @@ export function create_client(app, target) {
 				navigate({
 					url,
 					scroll: options.noscroll ? scroll_state() : null,
-					keepfocus: false,
+					keepfocus: options.keep_focus ?? false,
 					redirect_chain: [],
 					details: {
 						state: {},
-						replaceState: url.href === location.href
+						replaceState: options.replace_state ?? url.href === location.href
 					},
 					accepted: () => event.preventDefault(),
 					blocked: () => event.preventDefault(),
@@ -1581,7 +1611,7 @@ export function create_client(app, target) {
 
 				const event_form = /** @type {HTMLFormElement} */ (event.target);
 
-				const { noscroll, reload } = get_router_options(event_form);
+				const { keep_focus, noscroll, reload, replace_state } = get_router_options(event_form);
 				if (reload) return;
 
 				event.preventDefault();
@@ -1600,11 +1630,11 @@ export function create_client(app, target) {
 				navigate({
 					url,
 					scroll: noscroll ? scroll_state() : null,
-					keepfocus: false,
+					keepfocus: keep_focus ?? false,
 					redirect_chain: [],
 					details: {
 						state: {},
-						replaceState: false
+						replaceState: replace_state ?? url.href === location.href
 					},
 					nav_token: {},
 					accepted: () => {},

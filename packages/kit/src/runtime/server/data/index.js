@@ -38,8 +38,6 @@ export async function render_data(
 		});
 	}
 
-	state.initiator = route;
-
 	try {
 		const node_ids = [...route.page.layouts, route.page.leaf];
 		const invalidated = invalidated_data_nodes ?? node_ids.map(() => true);

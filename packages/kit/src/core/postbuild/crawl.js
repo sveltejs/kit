@@ -1,3 +1,4 @@
+import { resolve } from '../../utils/url.js';
 import { decode } from './entities.js';
 
 const DOCTYPE = 'DOCTYPE';
@@ -12,8 +13,11 @@ const ATTRIBUTE_NAME = /[^\t\n\f />"'=]/;
 
 const WHITESPACE = /[\s\n\r]/;
 
-/** @param {string} html */
-export function crawl(html) {
+/**
+ * @param {string} html
+ * @param {string} base
+ */
+export function crawl(html, base) {
 	/** @type {string[]} */
 	const ids = [];
 
@@ -157,7 +161,11 @@ export function crawl(html) {
 							value = decode(value);
 
 							if (name === 'href') {
-								href = value;
+								if (tag === 'BASE') {
+									base = resolve(base, value);
+								} else {
+									href = resolve(base, value);
+								}
 							} else if (name === 'id') {
 								ids.push(value);
 							} else if (name === 'name') {
@@ -165,25 +173,28 @@ export function crawl(html) {
 							} else if (name === 'rel') {
 								rel = value;
 							} else if (name === 'src') {
-								if (value) hrefs.push(value);
+								if (value) hrefs.push(resolve(base, value));
 							} else if (name === 'srcset') {
 								const candidates = [];
 								let insideURL = true;
 								value = value.trim();
 								for (let i = 0; i < value.length; i++) {
-									if (value[i] === ',' && (!insideURL || (insideURL && value[i + 1] === ' '))) {
+									if (
+										value[i] === ',' &&
+										(!insideURL || (insideURL && WHITESPACE.test(value[i + 1])))
+									) {
 										candidates.push(value.slice(0, i));
 										value = value.substring(i + 1).trim();
 										i = 0;
 										insideURL = true;
-									} else if (value[i] === ' ') {
+									} else if (WHITESPACE.test(value[i])) {
 										insideURL = false;
 									}
 								}
 								candidates.push(value);
 								for (const candidate of candidates) {
 									const src = candidate.split(WHITESPACE)[0];
-									if (src) hrefs.push(src);
+									if (src) hrefs.push(resolve(base, src));
 								}
 							}
 						} else {
@@ -195,7 +206,7 @@ export function crawl(html) {
 				}
 
 				if (href && !/\bexternal\b/i.test(rel)) {
-					hrefs.push(href);
+					hrefs.push(resolve(base, href));
 				}
 			}
 		}

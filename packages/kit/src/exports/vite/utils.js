@@ -87,11 +87,11 @@ export function not_found(req, res, base) {
 	if (type === 'text/html') {
 		res.setHeader('Content-Type', 'text/html');
 		res.end(
-			`The server is configured with a public base URL of /path-base - did you mean to visit <a href="${prefixed}">${prefixed}</a> instead?`
+			`The server is configured with a public base URL of ${base} - did you mean to visit <a href="${prefixed}">${prefixed}</a> instead?`
 		);
 	} else {
 		res.end(
-			`The server is configured with a public base URL of /path-base - did you mean to visit ${prefixed} instead?`
+			`The server is configured with a public base URL of ${base} - did you mean to visit ${prefixed} instead?`
 		);
 	}
 }
