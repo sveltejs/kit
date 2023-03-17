@@ -1,5 +1,17 @@
 # @sveltejs/adapter-vercel
 
+## 2.4.0
+
+### Minor Changes
+
+- feat: warn when prerender setting makes isr config useless ([#9436](https://github.com/sveltejs/kit/pull/9436))
+
+### Patch Changes
+
+- fix: don't show cron warning when everything's valid ([#9436](https://github.com/sveltejs/kit/pull/9436))
+
+- fix: allow to set isr to false to clear isr config in leafs ([#9436](https://github.com/sveltejs/kit/pull/9436))
+
 ## 2.3.2
 
 ### Patch Changes
