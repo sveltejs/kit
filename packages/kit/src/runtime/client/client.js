@@ -35,6 +35,8 @@ import { validate_common_exports } from '../../utils/exports.js';
 import { compact } from '../../utils/array.js';
 import { validate_depends } from '../shared.js';
 
+let errored = false;
+
 // We track the scroll position associated with each history entry in sessionStorage,
 // rather than on history.state itself, because when navigation is driven by
 // popstate it's too late to update the scroll position associated with the
@@ -1193,7 +1195,7 @@ export function create_client(app, target) {
 			});
 		}
 
-		if (__SVELTEKIT_DEV__ && status !== 404) {
+		if (DEV && status !== 404) {
 			console.error(
 				'An error occurred while loading the page. This will cause a full page reload. (This message will only appear during development.)'
 			);
@@ -1273,7 +1275,7 @@ export function create_client(app, target) {
 				if (priority <= options.preload_data) {
 					const intent = get_navigation_intent(/** @type {URL} */ (url), false);
 					if (intent) {
-						if (__SVELTEKIT_DEV__) {
+						if (DEV) {
 							preload_data(intent).then((result) => {
 								if (result.type === 'loaded' && result.state.error) {
 									console.warn(
@@ -1324,6 +1326,10 @@ export function create_client(app, target) {
 	 * @returns {import('types').MaybePromise<App.Error>}
 	 */
 	function handle_error(error, event) {
+		if (DEV) {
+			errored = true;
+		}
+
 		if (error instanceof HttpError) {
 			return error.body;
 		}
@@ -1947,4 +1953,12 @@ if (DEV) {
 		}
 		console_warn(...args);
 	};
+
+	if (import.meta.hot) {
+		import.meta.hot.on('vite:beforeUpdate', () => {
+			if (errored) {
+				location.reload();
+			}
+		});
+	}
 }
