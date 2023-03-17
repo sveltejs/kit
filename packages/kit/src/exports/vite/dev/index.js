@@ -58,7 +58,8 @@ export async function dev(vite, vite_config, svelte_config) {
 			const msg = buildErrorMessage(err, [colors.red(`Internal server error: ${err.message}`)]);
 
 			vite.config.logger.error(msg, { error: err });
-			vite.ws.send({ type: 'error',
+			vite.ws.send({
+				type: 'error',
 				err: {
 					...err,
 					// these properties are non-enumerable and will
