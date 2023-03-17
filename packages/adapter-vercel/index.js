@@ -610,8 +610,7 @@ function validate_vercel_json(builder, vercel_config) {
 function is_prerendered(route) {
 	return (
 		route.prerender === true ||
-		(route.prerender === 'auto' &&
-			route.segments.every((segment) => !segment.dynamic))
+		(route.prerender === 'auto' && route.segments.every((segment) => !segment.dynamic))
 	);
 }
 
