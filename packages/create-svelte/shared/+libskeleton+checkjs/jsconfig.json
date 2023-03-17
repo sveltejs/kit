@@ -9,6 +9,6 @@
 		"skipLibCheck": true,
 		"sourceMap": true,
 		"strict": true,
-		"moduleResolution": "NodeNext"
+		"moduleResolution": "bundler"
 	}
 }
