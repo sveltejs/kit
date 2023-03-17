@@ -611,7 +611,7 @@ function is_prerendered(route) {
 	return (
 		route.prerender === true ||
 		(route.prerender === 'auto' &&
-			!route.segments.some((segment) => segment.dynamic || segment.rest))
+			route.segments.every((segment) => !segment.dynamic))
 	);
 }
 
