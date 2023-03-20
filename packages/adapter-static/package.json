@@ -35,7 +35,7 @@
 		"svelte": "^3.56.0",
 		"typescript": "^4.9.4",
 		"uvu": "^0.5.6",
-		"vite": "^4.1.1"
+		"vite": "^4.2.0"
 	},
 	"peerDependencies": {
 		"@sveltejs/kit": "^1.5.0"
