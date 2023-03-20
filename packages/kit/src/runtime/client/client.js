@@ -1326,13 +1326,15 @@ export function create_client(app, target) {
 	 * @returns {import('types').MaybePromise<App.Error>}
 	 */
 	function handle_error(error, event) {
-		if (DEV) {
-			errored = true;
-		}
-
 		if (error instanceof HttpError) {
 			return error.body;
 		}
+
+		if (DEV) {
+			errored = true;
+			console.warn('The next HMR update will cause the page to reload');
+		}
+
 		return (
 			app.hooks.handleError({ error, event }) ??
 			/** @type {any} */ ({ message: event.route.id != null ? 'Internal Error' : 'Not Found' })
