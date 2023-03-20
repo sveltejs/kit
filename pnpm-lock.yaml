@@ -243,7 +243,7 @@ importers:
       '@sveltejs/adapter-auto': workspace:*
       '@sveltejs/kit': workspace:*
       svelte: ^3.56.0
-      typescript: ^4.9.4
+      typescript: ^5.0.0
       vite: ^4.2.0
     dependencies:
       '@fontsource/fira-mono': 4.5.10
@@ -252,7 +252,7 @@ importers:
       '@sveltejs/adapter-auto': link:../../../adapter-auto
       '@sveltejs/kit': link:../../../kit
       svelte: 3.56.0
-      typescript: 4.9.4
+      typescript: 5.0.2
       vite: 4.2.0
 
   packages/create-svelte/templates/skeleton:
@@ -5219,6 +5219,12 @@ packages:
     resolution: {integrity: sha512-Uz+dTXYzxXXbsFpM86Wh3dKCxrQqUcVMxwU54orwlJjOpO3ao8L7j5lH+dWfTwgCwIuM9GQ2kvVotzYJMXTBZg==}
     engines: {node: '>=4.2.0'}
     hasBin: true
+
+  /typescript/5.0.2:
+    resolution: {integrity: sha512-wVORMBGO/FAs/++blGNeAVdbNKtIh1rbBL2EyQ1+J9lClJ93KiiKe8PmFIVdXhHcyv44SL9oglmfeSsndo0jRw==}
+    engines: {node: '>=12.20'}
+    hasBin: true
+    dev: true
 
   /uglify-js/3.17.4:
     resolution: {integrity: sha512-T9q82TJI9e/C1TAxYvfb16xO120tMVFZrGA3f9/P4424DNu6ypK103y0GPFVa17yotwSyZW5iYXgjYHkGrJW/g==}
