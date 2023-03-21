@@ -162,7 +162,7 @@ export function create_builder({
 				relative_path: relativePath,
 				routes: subset
 					? subset.map((route) => /** @type {import('types').RouteData} */ (lookup.get(route)))
-					: route_data
+					: route_data.filter((route) => prerender_map.get(route.id) !== true)
 			});
 		},
 
