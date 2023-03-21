@@ -7,7 +7,25 @@ export default function (options) {
 		name: '@sveltejs/adapter-static',
 
 		async adapt(builder) {
-			if (!options?.fallback) {
+			const platform = platforms.find((platform) => platform.test());
+
+			if (platform) {
+				if (options) {
+					builder.log.warn(
+						`Detected ${platform.name}. Please remove adapter-static options to enable zero-config mode`
+					);
+				} else {
+					builder.log.info(`Detected ${platform.name}, using zero-config mode`);
+				}
+			}
+			const {
+				pages = 'build',
+				assets = pages,
+				fallback,
+				precompress
+			} = options ?? platform?.defaults ?? /** @type {import('./index').AdapterOptions} */ ({});
+
+			if (!fallback) {
 				if (builder.routes.some((route) => route.prerender !== true) && options?.strict !== false) {
 					const prefix = path.relative('.', builder.config.kit.files.routes);
 					const has_param_routes = builder.routes.some((route) => route.id.includes('['));
@@ -37,25 +55,6 @@ See https://kit.svelte.dev/docs/page-options#prerender for more details`
 					throw new Error('Encountered dynamic routes');
 				}
 			}
-
-			const platform = platforms.find((platform) => platform.test());
-
-			if (platform) {
-				if (options) {
-					builder.log.warn(
-						`Detected ${platform.name}. Please remove adapter-static options to enable zero-config mode`
-					);
-				} else {
-					builder.log.info(`Detected ${platform.name}, using zero-config mode`);
-				}
-			}
-
-			const {
-				pages = 'build',
-				assets = pages,
-				fallback,
-				precompress
-			} = options ?? platform?.defaults ?? /** @type {import('./index').AdapterOptions} */ ({});
 
 			builder.rimraf(assets);
 			builder.rimraf(pages);
