@@ -3,6 +3,7 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { nodeFileTrace } from '@vercel/nft';
 import esbuild from 'esbuild';
+import { get_pathname } from './utils.js';
 
 const VALID_RUNTIMES = ['edge', 'nodejs16.x', 'nodejs18.x'];
 
@@ -292,13 +293,7 @@ const plugin = function (defaults = {}) {
 					fs.symlinkSync(relative, `${base}.func`);
 					fs.symlinkSync(`../${relative}`, `${base}/__data.json.func`);
 
-					let i = 1;
-					const pathname = route.segments
-						.map((segment) => {
-							return segment.dynamic ? `$${i++}` : segment.content;
-						})
-						.join('/');
-
+					const pathname = get_pathname(route);
 					const json = JSON.stringify(isr, null, '\t');
 
 					write(`${base}.prerender-config.json`, json);
