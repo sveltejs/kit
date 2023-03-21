@@ -362,7 +362,7 @@ function create_routes_and_nodes(cwd, config, fallback) {
 			current_route = current_route.parent;
 		}
 
-		if (parent_id !== undefined) {
+		if (parent_id !== undefined && parent_id !== '@') {
 			throw new Error(`${current_node.component} references missing segment "${parent_id}"`);
 		}
 	}
