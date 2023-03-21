@@ -72,16 +72,16 @@ type UnpackValidationError<T> = T extends ActionFailure<infer X>
 	: T;
 
 export type ActionsSuccess<T extends Record<string, (...args: any) => any>> = {
-	[Key in keyof T]: ExcludeValidationError<Awaited<ReturnType<T[Key]>>>;
+	[Key in keyof T]: ExcludeActionFailure<Awaited<ReturnType<T[Key]>>>;
 }[keyof T];
 
-type ExcludeValidationError<T> = T extends ActionFailure<any> ? never : T extends void ? never : T;
+type ExcludeActionFailure<T> = T extends ActionFailure<any> ? never : T extends void ? never : T;
 
-export type ActionsInvalid<T extends Record<string, (...args: any) => any>> = {
-	[Key in keyof T]: Exclude<ExtractValidationError<Awaited<ReturnType<T[Key]>>>, void>;
+export type ActionsFailure<T extends Record<string, (...args: any) => any>> = {
+	[Key in keyof T]: Exclude<ExtractActionFailure<Awaited<ReturnType<T[Key]>>>, void>;
 }[keyof T];
 
-type ExtractValidationError<T> = T extends ActionFailure<infer X>
+type ExtractActionFailure<T> = T extends ActionFailure<infer X>
 	? X extends void
 		? never
 		: X
@@ -1236,7 +1236,7 @@ export interface SubmitFunction<
 				form: HTMLFormElement;
 				action: URL;
 			result: ActionResult<Success, Failure>;
-				/**D
+				/**
 				 * Call this to get the default behavior of a form submission response.
 				 * @param options Set `reset: false` if you don't want the `<form>` values to be reset after a successful submission.
 				 */

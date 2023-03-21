@@ -399,7 +399,7 @@ function process_node(node, outdir, is_page, proxies, all_pages_have_load = true
 
 				exports.push(
 					`type ActionsExport = typeof import('${from}').actions`,
-					`export type SubmitFunction = Kit.SubmitFunction<Expand<Kit.ActionsSuccess<ActionsExport>>, Expand<Kit.ActionsInvalid<ActionsExport>>>`
+					`export type SubmitFunction = Kit.SubmitFunction<Expand<Kit.ActionsSuccess<ActionsExport>>, Expand<Kit.ActionsFailure<ActionsExport>>>`
 				);
 
 				type = `Expand<Kit.AwaitedActions<ActionsExport>> | null`;
