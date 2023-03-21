@@ -24,7 +24,7 @@
 		"index.d.ts"
 	],
 	"scripts": {
-		"lint": "prettier --check . --config ../../.prettierrc --ignore-path .gitignore",
+		"lint": "prettier --cache --check . --config ../../.prettierrc --ignore-path .gitignore",
 		"format": "pnpm lint --write",
 		"check": "tsc"
 	},

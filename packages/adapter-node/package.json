@@ -27,7 +27,7 @@
 		"build": "rimraf files && rollup -c",
 		"test": "echo \"tests temporarily disabled\" # c8 uvu tests",
 		"check": "tsc",
-		"lint": "prettier --check . --config ../../.prettierrc --ignore-path .gitignore",
+		"lint": "prettier --cache --check . --config ../../.prettierrc --ignore-path .gitignore",
 		"format": "pnpm lint --write",
 		"prepublishOnly": "pnpm build"
 	},

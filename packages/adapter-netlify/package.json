@@ -27,7 +27,7 @@
 		"build": "rimraf files && rollup -c && cp src/edge.js files/edge.js",
 		"test": "uvu src \"(spec\\.js|test[\\\\/]index\\.js)\"",
 		"check": "tsc",
-		"lint": "prettier --check . --config ../../.prettierrc --ignore-path .gitignore",
+		"lint": "prettier --cache --check . --config ../../.prettierrc --ignore-path .gitignore",
 		"format": "pnpm lint --write",
 		"prepublishOnly": "pnpm build"
 	},

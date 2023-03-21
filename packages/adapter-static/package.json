@@ -23,7 +23,7 @@
 		"platforms.js"
 	],
 	"scripts": {
-		"lint": "prettier --check . --config ../../.prettierrc --ignore-path .gitignore",
+		"lint": "prettier --cache --check . --config ../../.prettierrc --ignore-path .gitignore",
 		"check": "tsc",
 		"format": "pnpm lint --write",
 		"test": "uvu test test.js"
