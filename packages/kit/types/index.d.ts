@@ -1264,6 +1264,7 @@ export interface SubmitFunction<
 		data: FormData;
 		form: HTMLFormElement;
 		controller: AbortController;
+		submitter: HTMLElement | null;
 		cancel(): void;
 	}): MaybePromise<
 		| void
