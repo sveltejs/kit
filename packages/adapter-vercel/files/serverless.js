@@ -22,10 +22,12 @@ export default async (req, res) => {
 		const [path, search] = req.url.split('?');
 
 		const params = new URLSearchParams(search);
-		const pathname = params.get('__pathname');
+		let pathname = params.get('__pathname');
 
 		if (pathname) {
 			params.delete('__pathname');
+			// Optional routes' pathname replacements look like `/foo/$1/bar` which means we could end up with an url like /foo//bar
+			pathname = pathname.replace(/\/+/g, '/');
 			req.url = `${pathname}${path.endsWith(DATA_SUFFIX) ? DATA_SUFFIX : ''}?${params}`;
 		}
 	}
