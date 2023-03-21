@@ -71,5 +71,13 @@ export const platforms = [
 			const config = static_vercel_config(builder);
 			fs.writeFileSync('.vercel/output/config.json', JSON.stringify(config, null, '  '));
 		}
+	},
+	{
+		name: 'Tauri',
+		test: () => !!process.env.TAURI_PLATFORM_VERSION,
+		defaults: {
+			fallback: 'index.html'
+		},
+		done: () => {}
 	}
 ];
