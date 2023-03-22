@@ -2,4 +2,4 @@
 '@sveltejs/kit': patch
 ---
 
-Add `submitter` type to `SumbitFunction` arguments in `index.d.ts`
+fix: add `submitter` type to `SumbitFunction`
