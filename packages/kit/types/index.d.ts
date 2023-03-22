@@ -71,22 +71,6 @@ type UnpackValidationError<T> = T extends ActionFailure<infer X>
 	? undefined // needs to be undefined, because void will corrupt union type
 	: T;
 
-export type ActionsSuccess<T extends Record<string, (...args: any) => any>> = {
-	[Key in keyof T]: ExcludeActionFailure<Awaited<ReturnType<T[Key]>>>;
-}[keyof T];
-
-type ExcludeActionFailure<T> = T extends ActionFailure<any> ? never : T extends void ? never : T;
-
-export type ActionsFailure<T extends Record<string, (...args: any) => any>> = {
-	[Key in keyof T]: Exclude<ExtractActionFailure<Awaited<ReturnType<T[Key]>>>, void>;
-}[keyof T];
-
-type ExtractActionFailure<T> = T extends ActionFailure<infer X>
-	? X extends void
-		? never
-		: X
-	: never;
-
 /**
  * This object is passed to the `adapt` function of adapters.
  * It contains various methods and properties that are useful for adapting the app.

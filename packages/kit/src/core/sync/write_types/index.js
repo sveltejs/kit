@@ -398,8 +398,12 @@ function process_node(node, outdir, is_page, proxies, all_pages_have_load = true
 					: path_to_original(outdir, node.server);
 
 				exports.push(
+					`type ExcludeActionFailure<T> = T extends Kit.ActionFailure<any> ? never : T extends void ? never : T;`,
+					`type ActionsSuccess<T extends Record<string, (...args: any) => any>> = { [Key in keyof T]: ExcludeActionFailure<Awaited<ReturnType<T[Key]>>>; }[keyof T];`,
+					`type ExtractActionFailure<T> = T extends Kit.ActionFailure<infer X>	? X extends void ? never : X : never;`,
+					`type ActionsFailure<T extends Record<string, (...args: any) => any>> = { [Key in keyof T]: Exclude<ExtractActionFailure<Awaited<ReturnType<T[Key]>>>, void>; }[keyof T];`,
 					`type ActionsExport = typeof import('${from}').actions`,
-					`export type SubmitFunction = Kit.SubmitFunction<Expand<Kit.ActionsSuccess<ActionsExport>>, Expand<Kit.ActionsFailure<ActionsExport>>>`
+					`export type SubmitFunction = Kit.SubmitFunction<Expand<ActionsSuccess<ActionsExport>>, Expand<ActionsFailure<ActionsExport>>>`
 				);
 
 				type = `Expand<Kit.AwaitedActions<ActionsExport>> | null`;
