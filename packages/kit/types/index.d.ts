@@ -1219,7 +1219,7 @@ export interface SubmitFunction<
 		| ((opts: {
 				form: HTMLFormElement;
 				action: URL;
-			result: ActionResult<Success, Failure>;
+				result: ActionResult<Success, Failure>;
 				/**
 				 * Call this to get the default behavior of a form submission response.
 				 * @param options Set `reset: false` if you don't want the `<form>` values to be reset after a successful submission.
