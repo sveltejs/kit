@@ -198,6 +198,27 @@ function create_routes_and_nodes(cwd, config, fallback) {
 				name
 			}));
 
+			const pages = files
+				.filter((file) => /^\+(?:(page(?:@(.*))?)).svelte$/.test(file.name))
+				.map((file) => posixify(path.relative(cwd, path.join(dir, file.name))));
+			const layouts = files
+				.filter((file) => /^\+(?:(layout(?:@(.*))?)).svelte$/.test(file.name))
+				.map((file) => posixify(path.relative(cwd, path.join(dir, file.name))));
+
+			if (layouts.length > 1)
+				throw new Error(
+					`Conflicting layout files in the same directory:\n\n${layouts.join(
+						'\n'
+					)}\n\nOnly one layout file should exist.`
+				);
+
+			if (pages.length > 1)
+				throw new Error(
+					`Conflicting page files in the same directory:\n\n${pages.join(
+						'\n'
+					)}\n\nOnly one page file should exist.`
+				);
+
 			// process files first
 			for (const file of files) {
 				if (file.is_dir) continue;
