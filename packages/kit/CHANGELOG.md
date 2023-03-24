@@ -1,5 +1,15 @@
 # @sveltejs/kit
 
+## 1.14.0
+
+### Minor Changes
+
+- feat: add HMR to fallback error pages during dev ([#9497](https://github.com/sveltejs/kit/pull/9497))
+
+### Patch Changes
+
+- fix: add `submitter` type to `SumbitFunction` ([#9484](https://github.com/sveltejs/kit/pull/9484))
+
 ## 1.13.0
 
 ### Minor Changes
