@@ -358,7 +358,8 @@ function hash_config(config) {
 		config.external ?? '',
 		config.regions ?? '',
 		config.memory ?? '',
-		config.maxDuration ?? ''
+		config.maxDuration ?? '',
+		!!config.isr // need to distinguish ISR from non-ISR functions, because ISR functions can't use streaming mode
 	].join('/');
 }
 
