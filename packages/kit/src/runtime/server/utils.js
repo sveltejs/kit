@@ -56,6 +56,7 @@ export function static_error_page(options, status, message) {
 	let page = options.templates.error({ status, message });
 
 	if (DEV) {
+		// inject Vite HMR client, for easier debugging
 		page = page.replace('</head>', '<script type="module" src="/@vite/client"></script></head>');
 	}
 
