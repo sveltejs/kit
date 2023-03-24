@@ -1,5 +1,11 @@
 # @sveltejs/adapter-vercel
 
+## 2.4.1
+
+### Patch Changes
+
+- fix: create separate functions for ISR routes ([#9504](https://github.com/sveltejs/kit/pull/9504))
+
 ## 2.4.0
 
 ### Minor Changes
