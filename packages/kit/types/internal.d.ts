@@ -13,7 +13,8 @@ import {
 	SSRManifest,
 	HandleFetch,
 	Actions,
-	HandleClientError
+	HandleClientError,
+	HandleLoad
 } from './index.js';
 import {
 	HttpMethod,
@@ -98,6 +99,7 @@ export interface ServerHooks {
 
 export interface ClientHooks {
 	handleError: HandleClientError;
+	handleLoad: HandleLoad;
 }
 
 export interface Env {

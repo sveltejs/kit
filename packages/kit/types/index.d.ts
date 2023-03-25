@@ -634,6 +634,15 @@ export interface HandleClientError {
 }
 
 /**
+ * The `handleLoad` hook runs every time a universal `load` function (for example from +page.js) is called.
+ * This hook can be registered on the client as well as on the server side.
+ * This hook provides the load `event` and a `resolve` function to call the actual hook with the event.
+ */
+export interface HandleLoad {
+	(input: { event: LoadEvent; resolve: Load }): ReturnType<Load>;
+}
+
+/**
  * The [`handleFetch`](https://kit.svelte.dev/docs/hooks#server-hooks-handlefetch) hook allows you to modify (or replace) a `fetch` request that happens inside a `load` function that runs on the server (or during pre-rendering)
  */
 export interface HandleFetch {
