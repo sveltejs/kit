@@ -22,4 +22,4 @@ Try editing the files to get a feel for how everything works.
 
 ## Editor setup
 
-We recommend using [Visual Studio Code (aka VS Code)](https://code.visualstudio.com/download) with [the Svelte extension](https://marketplace.visualstudio.com/items?itemName=svelte.svelte-vscode), but [support also exists for numerous other editors](https://sveltesociety.dev/tools#editor-support).
+We recommend using [Visual Studio Code (aka VS Code)](https://code.visualstudio.com/download) with [the Svelte extension](https://marketplace.visualstudio.com/items?itemName=svelte.svelte-vscode), but [support also exists for numerous other editors](https://sveltesociety.dev/tools#editor-support). If you're using Typescript, you'll want to turn on `Svelte: Enable-TS-plugin` in settings.
