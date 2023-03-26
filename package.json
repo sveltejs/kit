@@ -41,7 +41,7 @@
 		"tiny-glob": "^0.2.9",
 		"typescript": "^4.9.4"
 	},
-	"packageManager": "pnpm@7.30.1",
+	"packageManager": "pnpm@7.30.3",
 	"engines": {
 		"pnpm": "^7.0.0"
 	},
