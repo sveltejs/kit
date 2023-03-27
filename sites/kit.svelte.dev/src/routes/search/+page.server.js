@@ -1,4 +1,4 @@
-import { init, inited, search } from '@sveltejs/site-kit/search/search.js';
+import { init, inited, search } from '@sveltejs/site-kit/search/search';
 
 /** @type {import('./$types').PageServerLoad} */
 export async function load({ url, fetch }) {
