@@ -106,7 +106,7 @@ navigator.serviceWorker.register('/service-worker.js', {
 
 ## Type safety
 
-Setting up proper types for service workers requires some manual setup. Inside your `service-worker.js`, add the following to the top of your file:
+Setting up proper types for service workers requires some manual setup. Inside your `service-worker.ts`, add the following to the top of your file:
 
 ```original-js
 /// <reference types="@sveltejs/kit" />
