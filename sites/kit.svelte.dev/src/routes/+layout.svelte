@@ -1,70 +1,58 @@
 <script>
-	import '@sveltejs/site-kit/styles/index.css';
-	import { browser } from '$app/environment';
 	import { base } from '$app/paths';
-	import { page, navigating } from '$app/stores';
+	import { page } from '$app/stores';
+	import Search from '@sveltejs/site-kit/search/Search.svelte';
 	import Icon from '@sveltejs/site-kit/components/Icon.svelte';
-	import Icons from '@sveltejs/site-kit/components/Icons.svelte';
 	import Nav from '@sveltejs/site-kit/components/Nav.svelte';
 	import NavItem from '@sveltejs/site-kit/components/NavItem.svelte';
-	import PreloadingIndicator from '@sveltejs/site-kit/components/PreloadingIndicator.svelte';
-	import SkipLink from '@sveltejs/site-kit/components/SkipLink.svelte';
-	import Search from '$lib/search/Search.svelte';
-	import SearchBox from '$lib/search/SearchBox.svelte';
+	import Separator from '@sveltejs/site-kit/components/Separator.svelte';
+	import Shell from '@sveltejs/site-kit/components/Shell.svelte';
+	import '@sveltejs/site-kit/styles/index.css';
 	import Logo from './home/svelte-logo.svg';
 
 	let banner_height = '48px';
 </script>
 
-<Icons />
-
-{#if $navigating}
-	<PreloadingIndicator />
-{/if}
-
-<SkipLink href="#main" />
-
-<Nav {page} logo={Logo}>
-	<svelte:fragment slot="nav-center">
-		{#if $page.url.pathname !== '/search'}
-			<!-- the <Nav> component renders this content inside a <ul>, so
+<Shell banner_bottom_height={banner_height}>
+	<Nav logo={Logo} slot="top-nav">
+		<svelte:fragment slot="nav-center">
+			{#if $page.url.pathname !== '/search'}
+				<!-- the <Nav> component renders this content inside a <ul>, so
 				we need to wrap it in an <li>. TODO if we adopt this design
 				on other sites, change <Nav> so we don't need to do this -->
-			<li><Search /></li>
-		{/if}
-	</svelte:fragment>
+				<li><Search /></li>
+			{/if}
+		</svelte:fragment>
 
-	<svelte:fragment slot="nav-right">
-		<NavItem
-			selected={$page.url.pathname.startsWith(`${base}/docs`) || undefined}
-			href="{base}/docs">Docs</NavItem
-		>
-		<NavItem selected={$page.url.pathname.startsWith(`${base}/faq`) || undefined} href="{base}/faq"
-			>FAQ</NavItem
-		>
+		<svelte:fragment slot="nav-right">
+			<NavItem
+				selected={$page.url.pathname.startsWith(`${base}/docs`) || undefined}
+				href="{base}/docs">Docs</NavItem
+			>
+			<NavItem
+				selected={$page.url.pathname.startsWith(`${base}/faq`) || undefined}
+				href="{base}/faq">FAQ</NavItem
+			>
 
-		<li aria-hidden="true"><span class="separator" /></li>
+			<Separator />
 
-		<NavItem external="https://svelte.dev">Svelte</NavItem>
+			<NavItem external="https://svelte.dev">Svelte</NavItem>
 
-		<NavItem external="https://svelte.dev/chat" title="Discord Chat">
-			<span class="small">Discord</span>
-			<span class="large"><Icon name="message-square" /></span>
-		</NavItem>
+			<NavItem external="https://svelte.dev/chat" title="Discord Chat">
+				<span slot="small">Discord</span>
+				<Icon name="message-square" />
+			</NavItem>
 
-		<NavItem external="https://github.com/sveltejs/kit" title="GitHub Repo">
-			<span class="small">GitHub</span>
-			<span class="large"><Icon name="github" /></span>
-		</NavItem>
-	</svelte:fragment>
-</Nav>
+			<NavItem external="https://github.com/sveltejs/kit" title="GitHub Repo">
+				<span slot="small">GitHub</span>
+				<Icon name="github" />
+			</NavItem>
+		</svelte:fragment>
+	</Nav>
 
-<main id="main" style:--banner-footer-height={banner_height}>
 	<slot />
-</main>
 
-{#if banner_height !== '0px'}
-	<div class="banner" style:--banner-footer-height={banner_height}>
+	<div class="banner" slot="banner-bottom">
 		<a target="_blank" rel="noopener noreferrer" href="https://hack.sveltesociety.dev/">
 			<span class="small">
 				<strong>Announcing SvelteHack</strong> Participate →
@@ -75,40 +63,15 @@
 		</a>
 		<button on:click={() => (banner_height = '0px')}> ✕ </button>
 	</div>
-{/if}
-
-{#if browser}
-	<SearchBox />
-{/if}
+</Shell>
 
 <style>
-	:root {
-		--banner-footer-height: 48px;
-	}
-
-	main {
-		position: relative;
-		margin: 0 auto;
-		padding-top: var(--sk-nav-height);
-		padding-bottom: var(--banner-footer-height);
-		overflow: hidden;
-	}
-
 	.small {
 		display: inline;
 	}
 
 	.large {
 		display: none;
-	}
-
-	/* duplicating content from <Nav> — bit hacky but will do for now */
-	.separator {
-		display: block;
-		position: relative;
-		height: 1px;
-		margin: 0.5rem 0;
-		background: radial-gradient(circle at center, rgba(0, 0, 0, 0.1), rgba(0, 0, 0, 0.05));
 	}
 
 	@media (min-width: 800px) {
@@ -119,35 +82,6 @@
 		.large {
 			display: inline;
 		}
-
-		.separator {
-			display: flex;
-			align-items: center;
-			justify-content: center;
-			background: none;
-			height: 100%;
-			margin: 0;
-			border: none;
-			text-align: center;
-		}
-
-		.separator::before {
-			content: '•';
-			margin: 0 0.3rem;
-			color: #ccc;
-		}
-	}
-
-	@media (min-width: 960px) {
-		/* this is an unfortunate hack, but necessary to temporarily avoid
-		breaking changes to site-kit */
-		:global(ul.external) {
-			width: 30rem !important;
-		}
-	}
-
-	:global(body) {
-		font-size: 1.6rem !important;
 	}
 
 	li {
@@ -163,12 +97,6 @@
 		bottom: 0 !important;
 	}
 
-	@media (max-width: 830px) {
-		:global(aside) {
-			z-index: 9999 !important;
-		}
-	}
-
 	.banner {
 		--banner-bg: #ff4700;
 		--banner-color: white;
@@ -182,7 +110,7 @@
 		justify-content: center;
 		bottom: 0;
 		width: 100vw;
-		height: var(--banner-footer-height);
+		height: var(--sk-banner-bottom-height);
 		z-index: 999;
 	}
 

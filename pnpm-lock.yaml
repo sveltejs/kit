@@ -689,7 +689,7 @@ importers:
       '@sveltejs/adapter-vercel': workspace:^
       '@sveltejs/amp': workspace:^
       '@sveltejs/kit': workspace:^
-      '@sveltejs/site-kit': ^3.1.0
+      '@sveltejs/site-kit': ^3.3.3
       '@types/d3-geo': ^3.0.2
       '@types/node': ^16.18.6
       d3-geo: ^3.0.1
@@ -715,7 +715,7 @@ importers:
       '@sveltejs/adapter-vercel': link:../../packages/adapter-vercel
       '@sveltejs/amp': link:../../packages/amp
       '@sveltejs/kit': link:../../packages/kit
-      '@sveltejs/site-kit': 3.1.0
+      '@sveltejs/site-kit': 3.3.3_r4kk7euspt2csvnnykfg5n6pxi
       '@types/d3-geo': 3.0.2
       '@types/node': 16.18.6
       flexsearch: 0.7.31
@@ -1590,8 +1590,14 @@ packages:
       picomatch: 2.3.1
       rollup: 3.7.0
 
-  /@sveltejs/site-kit/3.1.0:
-    resolution: {integrity: sha512-Vv9Efzax+NMRZUfZ9TdUqQYicj2Z3kynLkUUdGPfahjlFEwQ3EGyj1vVCg5jxyqvNUgOsVVUb35nXI5CPsmCfA==}
+  /@sveltejs/site-kit/3.3.3_r4kk7euspt2csvnnykfg5n6pxi:
+    resolution: {integrity: sha512-zcl4FgWLpvBIkEZn7FwWlMqBYZy0WTSbtJV4SaFY7NGdNjKekZJoE8yd1asyvtvCM1bd5POvJeCOaKSdBOgWRA==}
+    peerDependencies:
+      '@sveltejs/kit': ^1.0.0
+      svelte: ^3.54.0
+    dependencies:
+      '@sveltejs/kit': link:packages\kit
+      svelte: 3.56.0
     dev: true
 
   /@sveltejs/vite-plugin-svelte/2.0.0_svelte@3.56.0+vite@4.2.0:
