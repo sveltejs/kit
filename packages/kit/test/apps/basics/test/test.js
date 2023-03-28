@@ -770,7 +770,10 @@ test.describe('$app/stores', () => {
 		}
 	});
 
-	test("url's hash is updated when it is modified in the address bar", async ({ page, javaScriptEnabled }) => {
+	test("url's hash is updated when it is modified in the address bar", async ({
+		page,
+		javaScriptEnabled
+	}) => {
 		if (javaScriptEnabled) {
 			const baseUrl = '/store/data/www';
 			// Go to page where store data, as well as URL, are displayed
@@ -781,12 +784,12 @@ test.describe('$app/stores', () => {
 				history.pushState({}, '', '#2');
 			});
 
-      await page.reload();
+			await page.reload();
 
 			await page.waitForTimeout(500);
 
 			const url = await page.evaluate(() => {
-				const el = document.getElementById("page-url");
+				const el = document.getElementById('page-url');
 				return el && el.textContent;
 			});
 
