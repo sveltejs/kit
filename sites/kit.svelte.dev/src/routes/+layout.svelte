@@ -1,12 +1,9 @@
 <script>
+	import { browser } from '$app/environment';
 	import { base } from '$app/paths';
 	import { page } from '$app/stores';
-	import Search from '@sveltejs/site-kit/search/Search.svelte';
-	import Icon from '@sveltejs/site-kit/components/Icon.svelte';
-	import Nav from '@sveltejs/site-kit/components/Nav.svelte';
-	import NavItem from '@sveltejs/site-kit/components/NavItem.svelte';
-	import Separator from '@sveltejs/site-kit/components/Separator.svelte';
-	import Shell from '@sveltejs/site-kit/components/Shell.svelte';
+	import { Icon, Nav, NavItem, Separator, Shell } from '@sveltejs/site-kit/components';
+	import { Search, SearchBox } from '@sveltejs/site-kit/search';
 	import '@sveltejs/site-kit/styles/index.css';
 	import Logo from './home/svelte-logo.svg';
 
@@ -17,9 +14,6 @@
 	<Nav logo={Logo} slot="top-nav">
 		<svelte:fragment slot="nav-center">
 			{#if $page.url.pathname !== '/search'}
-				<!-- the <Nav> component renders this content inside a <ul>, so
-				we need to wrap it in an <li>. TODO if we adopt this design
-				on other sites, change <Nav> so we don't need to do this -->
 				<li><Search /></li>
 			{/if}
 		</svelte:fragment>
@@ -64,6 +58,10 @@
 		<button on:click={() => (banner_height = '0px')}> ✕ </button>
 	</div>
 </Shell>
+
+{#if browser}
+	<SearchBox />
+{/if}
 
 <style>
 	.small {

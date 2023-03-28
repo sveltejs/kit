@@ -1,6 +1,6 @@
 <script>
 	import { page } from '$app/stores';
-	import Icon from '@sveltejs/site-kit/components/Icon.svelte';
+	import { Icon } from '@sveltejs/site-kit/components';
 	import * as hovers from '$lib/docs/client/hovers.js';
 	import OnThisPage from './OnThisPage.svelte';
 

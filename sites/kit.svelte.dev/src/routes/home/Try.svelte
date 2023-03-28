@@ -1,5 +1,5 @@
 <script>
-	import Section from '@sveltejs/site-kit/components/Section.svelte';
+	import { Section } from '@sveltejs/site-kit/components';
 </script>
 
 <Section --background="var(--background-2)">

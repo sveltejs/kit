@@ -20,7 +20,7 @@ const categories = [
 ];
 
 export function content() {
-	/** @type {import('@sveltejs/site-kit/search/types').Block[]} */
+	/** @type {import('@sveltejs/site-kit/search').Block[]} */
 	const blocks = [];
 
 	for (const category of categories) {

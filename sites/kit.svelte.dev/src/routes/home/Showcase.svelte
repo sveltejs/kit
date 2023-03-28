@@ -1,6 +1,6 @@
 <script>
 	import Image from '$lib/Image.svelte';
-	import Section from '@sveltejs/site-kit/components/Section.svelte';
+	import { Section } from '@sveltejs/site-kit/components';
 	import pudding from './showcase/pudding.png';
 	import pocketbase from './showcase/pocketbase.png';
 	import pronauns from './showcase/pronauns.png';
