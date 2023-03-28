@@ -1,4 +1,5 @@
 <script>
+	import { base } from '$app/paths';
 	import { createEventDispatcher } from 'svelte';
 
 	/** @type {import('./types').Tree[]} */
@@ -43,7 +44,7 @@
 		<li>
 			<a
 				data-sveltekit-preload-data
-				href={result.href}
+				href="{base}{result.href}"
 				on:click={() => dispatch('select', { href: result.href })}
 				data-has-node={result.node ? true : undefined}
 			>

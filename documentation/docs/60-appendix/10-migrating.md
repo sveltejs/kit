@@ -49,7 +49,7 @@ This file has no equivalent in SvelteKit. Any custom logic (beyond `sapper.start
 
 ### src/server.js
 
-When using `adapter-node` the equivalent is a [custom server](/docs/adapter-node#custom-server). Otherwise, this file has no direct equivalent, since SvelteKit apps can run in serverless environments.
+When using `adapter-node` the equivalent is a [custom server](adapter-node#custom-server). Otherwise, this file has no direct equivalent, since SvelteKit apps can run in serverless environments.
 
 ### src/service-worker.js
 
@@ -146,7 +146,7 @@ To support this environment-agnostic behavior, `fetch` is now available in the g
 
 ## Integrations
 
-See [the FAQ](/faq#integrations) for detailed information about integrations.
+See [the FAQ](../faq#integrations) for detailed information about integrations.
 
 ### HTML minifier
 

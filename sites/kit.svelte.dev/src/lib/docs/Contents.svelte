@@ -1,4 +1,5 @@
 <script>
+	import { base } from '$app/paths';
 	import { page } from '$app/stores';
 
 	export let contents = [];
@@ -19,7 +20,7 @@
 								data-sveltekit-preload-data
 								class="page"
 								class:active={path === $page.url.pathname}
-								href={path}
+								href="{base}{path}"
 							>
 								{title}
 							</a>
