@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<html lang="en" class="no-js">
+	<head>
+		<meta charset="utf-8" />
+		<meta name="viewport" content="width=device-width" />
+		<meta name="theme-color" content="#ff3e00" />
+		<meta name="color-scheme" content="dark light" />
+
+		<link rel="manifest" href="/manifest.json" />
+		<link rel="icon" type="image/png" href="/favicon.png" />
+
+		<meta name="twitter:card" content="summary" />
+		<meta name="twitter:site" content="@sveltejs" />
+		<meta name="twitter:creator" content="@sveltejs" />
+		<meta name="twitter:image" content="/images/twitter-thumbnail.jpg" />
+		<meta name="og:image" content="/images/twitter-thumbnail.jpg" />
+
+		<!-- add inline style and blocking script to prevent content flash/jump -->
+		<style>
+			.ts-version {
+				display: none;
+			}
+			.prefers-ts .js-version {
+				display: none;
+			}
+			.prefers-ts .ts-version {
+				display: block;
+			}
+			.no-js .ts-toggle {
+				display: none;
+			}
+		</style>
+		<script>
+			document.getElementsByTagName('html')[0].classList.remove('no-js');
+			localStorage.getItem('prefers-ts') === 'true' &&
+				document.documentElement.classList.add('prefers-ts');
+		</script>
+
+		<meta http-equiv="content-security-policy" content="">
+		<link href="../_app/immutable/assets/_layout.4a4977ec.css" rel="stylesheet">
+		<link href="../_app/immutable/assets/navigation.24972d74.css" rel="stylesheet">
+		<link href="../_app/immutable/assets/SearchResults.fb8f4adf.css" rel="stylesheet">
+		<link href="../_app/immutable/assets/_layout.8f434bed.css" rel="stylesheet">
+		<link href="../_app/immutable/assets/_page.b054ce5e.css" rel="stylesheet">
+		<link href="../_app/immutable/assets/hovers.7cc24a08.css" rel="stylesheet">
+		<link rel="preload" as="font" type="font/woff2" href="../_app/immutable/assets/overpass-latin-300.3782c01a.woff2" crossorigin>
+		<link rel="preload" as="font" type="font/woff2" href="../_app/immutable/assets/overpass-latin-600.0ca25556.woff2" crossorigin>
+		<link rel="preload" as="font" type="font/woff2" href="../_app/immutable/assets/fira-mono-latin-400.8d4e0c52.woff2" crossorigin>
+		<link rel="modulepreload" href="../_app/immutable/entry/start.bc2154d3.js">
+		<link rel="modulepreload" href="../_app/immutable/chunks/index.1cc2e0ff.js">
+		<link rel="modulepreload" href="../_app/immutable/chunks/singletons.3ca5ba59.js">
+		<link rel="modulepreload" href="../_app/immutable/chunks/paths.8c4e863e.js">
+		<link rel="modulepreload" href="../_app/immutable/chunks/control.e7f5239e.js">
+		<link rel="modulepreload" href="../_app/immutable/entry/app.6b34a82d.js">
+		<link rel="modulepreload" href="../_app/immutable/entry/_layout.svelte.c9a87e1c.js">
+		<link rel="modulepreload" href="../_app/immutable/chunks/stores.c28f0607.js">
+		<link rel="modulepreload" href="../_app/immutable/chunks/navigation.ad4a0c68.js">
+		<link rel="modulepreload" href="../_app/immutable/chunks/SearchResults.ee33e9c4.js">
+		<link rel="modulepreload" href="../_app/immutable/entry/_layout.js.984db11e.js">
+		<link rel="modulepreload" href="../_app/immutable/chunks/_layout.da46b06b.js">
+		<link rel="modulepreload" href="../_app/immutable/entry/docs-layout.svelte.7d27cb05.js">
+		<link rel="modulepreload" href="../_app/immutable/entry/docs-_slug_-page.svelte.42d084fc.js">
+		<link rel="modulepreload" href="../_app/immutable/chunks/hovers.010bb342.js"><title>Command Line Interface • Docs • SvelteKit</title><!-- HEAD_svelte-18gm73m_START --><meta name="twitter:title" content="SvelteKit docs"><meta name="twitter:description" content="Command Line Interface • SvelteKit documentation"><meta name="Description" content="Command Line Interface • SvelteKit documentation"><!-- HEAD_svelte-18gm73m_END -->
+	</head>
+	<body>
+		<div>
+
+
+<div style="display: none">
+	<svg><symbol id="arrow-left" class="icon" viewBox="0 0 24 24"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></symbol><symbol id="arrow-right" class="icon" viewBox="0 0 24 24"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></symbol><symbol id="arrow-up" class="icon" viewBox="0 0 24 24"><line x1="12" y1="19" x2="12" y2="5"></line><polyline points="5 12 12 5 19 12"></polyline></symbol><symbol id="arrow-down" class="icon" viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"></line><polyline points="19 12 12 19 5 12"></polyline></symbol><symbol id="check" class="icon" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"></polyline></symbol><symbol id="close" class="icon" viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></symbol><symbol id="download" class="icon" viewBox="0 0 24 24"><path d="M21 15V19A2 2 0 0 1 19 21H5A2 2 0 0 1 3 19V15"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></symbol><symbol id="edit" class="icon" viewBox="0 0 24 24"><path d="M20 14.66V20a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h5.34"></path><polygon points="18 2 22 6 12 16 8 16 8 12 18 2"></polygon></symbol><symbol id="github" class="icon" viewBox="0 0 24 24"><path fill-rule="evenodd" clip-rule="evenodd" d="M12 2C6.47715 2 2 6.47715 2 12C2 17.5229 6.47715 22 12 22C17.5229 22 22 17.5229 22 12C22 6.47715 17.5229 2 12 2ZM0 12C0 5.3726 5.3726 0 12 0C18.6274 0 24 5.3726 24 12C24 18.6274 18.6274 24 12 24C5.3726 24 0 18.6274 0 12Z" fill="currentColor" stroke="none"></path><path fill-rule="evenodd" clip-rule="evenodd" d="M9.59162 22.7357C9.49492 22.6109 9.49492 21.4986 9.59162 19.399C8.55572 19.4347 7.90122 19.3628 7.62812 19.1833C7.21852 18.9139 6.80842 18.0833 6.44457 17.4979C6.08072 16.9125 5.27312 16.8199 4.94702 16.6891C4.62091 16.5582 4.53905 16.0247 5.84562 16.4282C7.15222 16.8316 7.21592 17.9303 7.62812 18.1872C8.04032 18.4441 9.02572 18.3317 9.47242 18.1259C9.91907 17.9201 9.88622 17.1538 9.96587 16.8503C10.0666 16.5669 9.71162 16.5041 9.70382 16.5018C9.26777 16.5018 6.97697 16.0036 6.34772 13.7852C5.71852 11.5669 6.52907 10.117 6.96147 9.49369C7.24972 9.07814 7.22422 8.19254 6.88497 6.83679C8.11677 6.67939 9.06732 7.06709 9.73672 7.99999C9.73737 8.00534 10.6143 7.47854 12.0001 7.47854C13.386 7.47854 13.8777 7.90764 14.2571 7.99999C14.6365 8.09234 14.94 6.36699 17.2834 6.83679C16.7942 7.79839 16.3844 8.99999 16.6972 9.49369C17.0099 9.98739 18.2372 11.5573 17.4833 13.7852C16.9807 15.2706 15.9927 16.1761 14.5192 16.5018C14.3502 16.5557 14.2658 16.6427 14.2658 16.7627C14.2658 16.9427 14.4942 16.9624 14.8233 17.8058C15.0426 18.368 15.0585 19.9739 14.8708 22.6234C14.3953 22.7445 14.0254 22.8257 13.7611 22.8673C13.2924 22.9409 12.7835 22.9822 12.2834 22.9982C11.7834 23.0141 11.6098 23.0123 10.9185 22.948C10.4577 22.9051 10.0154 22.8343 9.59162 22.7357Z" fill="currentColor" stroke="none"></path></symbol><symbol id="git-branch" class="icon" viewBox="0 0 24 24"><line x1="6" y1="3" x2="6" y2="15"></line><circle cx="18" cy="6" r="3"></circle><circle cx="6" cy="18" r="3"></circle><path d="M18 9a9 9 0 0 1-9 9"></path></symbol><symbol id="log-in" class="icon" viewBox="0 0 24 24"><path d="M15 3H19A2 2 0 0 1 21 5V19A2 2 0 0 1 19 21H15"></path><polyline points="10 17 15 12 10 7"></polyline><line x1="15" y1="12" x2="3" y2="12"></line></symbol><symbol id="maximize" class="icon" viewBox="0 0 24 24"><path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"></path></symbol><symbol id="maximize-2" class="icon" viewBox="0 0 24 24"><polyline points="15 3 21 3 21 9"></polyline><polyline points="9 21 3 21 3 15"></polyline><line x1="21" y1="3" x2="14" y2="10"></line><line x1="3" y1="21" x2="10" y2="14"></line></symbol><symbol id="menu" class="icon" viewBox="0 0 24 24"><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="18" x2="21" y2="18"></line></symbol><symbol id="message-square" class="icon" viewBox="0 0 24 24"><g transform="translate(0, 1)"><path d="M16.5 19H11V15H18V11H22V19H19.5L18 20.5L16.5 19Z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"></path><path d="M2 3H18V15H8.5L6.5 17L4.5 15H2V3Z" fill="currentColor" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"></path><path d="M6 11H9" stroke="white" stroke-width="1.5" stroke-linecap="round"></path><path d="M6 7H12" stroke="white" stroke-width="1.5" stroke-linecap="round"></path></g></symbol><symbol id="minus" class="icon" viewBox="0 0 24 24"><line x1="5" y1="12" x2="19" y2="12"></line></symbol><symbol id="plus" class="icon" viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></symbol><symbol id="save" class="icon" viewBox="0 0 24 24"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path><polyline points="17 21 17 13 7 13 7 21"></polyline><polyline points="7 3 7 8 15 8"></polyline></symbol><symbol id="link" class="icon" viewBox="0 0 24 24"><path d="M9,7L6,7A2 2 0 0 0 6,17L9,17"></path><path d="M15,7L18,7A2 2 0 0 1 18,17L15,17"></path><path d="M7,12L17,12"></path></symbol><symbol id="chevron" class="icon" viewBox="0 0 24 24"><path d="M2,7 L12,17 L20,7"></path></symbol><symbol id="delete" class="icon" viewBox="0 0 24 24"><path fill="currentColor" stroke="none" d="M22 4.2h-5.6L15 1.6c-.1-.2-.4-.4-.7-.4H9.6c-.2 0-.5.2-.6.4L7.6 4.2H2c-.4 0-.8.4-.8.8s.4.8.8.8h1.8V22c0 .4.3.8.8.8h15c.4 0 .8-.3.8-.8V5.8H22c.4 0 .8-.3.8-.8s-.4-.8-.8-.8zM10.8 16.5c0 .4-.3.8-.8.8s-.8-.3-.8-.8V10c0-.4.3-.8.8-.8s.8.3.8.8v6.5zm4 0c0 .4-.3.8-.8.8s-.8-.3-.8-.8V10c0-.4.3-.8.8-.8s.8.3.8.8v6.5z"></path></symbol></svg></div>
+
+
+
+<a href="#main" class="svelte-1rscj97">Skip to main content</a>
+
+
+
+
+
+<nav aria-label="Primary" class="svelte-173nfcg visible"><a href="/" class="nav-spot home svelte-173nfcg" title="Homepage" style="background-image: url(/_app/immutable/assets/svelte-logo.5c5d7d20.svg)">Home</a>
+
+	<button aria-label="Toggle menu" aria-expanded="false" class="menu-toggle svelte-173nfcg">
+
+
+<svg class="icon svelte-5yec89" width="1em" height="1em"><use xlink:href="#menu"></use></svg></button>
+
+	<ul class="svelte-173nfcg">
+			<li class="svelte-tdqbhp"><form class="search-container svelte-9kfram" action="/search"><input value="" type="search" name="q" placeholder="Search" aria-label="Search" spellcheck="false" class="svelte-9kfram">
+
+	
+</form></li></ul>
+
+	<ul class="external svelte-173nfcg"><li><a aria-current="true" href="/docs" class="svelte-1iex17r">Docs</a></li>
+		<li><a href="/faq" class="svelte-1iex17r">FAQ</a></li>
+
+		<li aria-hidden="true" class="svelte-tdqbhp"><span class="separator svelte-tdqbhp"></span></li>
+
+		<li><a href="https://svelte.dev" rel="external" class="svelte-1iex17r">Svelte</a></li>
+
+		<li><a href="https://svelte.dev/chat" title="Discord Chat" rel="external" class="svelte-1iex17r"><span class="small svelte-tdqbhp">Discord</span>
+			<span class="large svelte-tdqbhp">
+
+
+<svg class="icon svelte-5yec89" width="20" height="20"><use xlink:href="#message-square"></use></svg></span></a></li>
+
+		<li><a href="https://github.com/sveltejs/kit" title="GitHub Repo" rel="external" class="svelte-1iex17r"><span class="small svelte-tdqbhp">GitHub</span>
+			<span class="large svelte-tdqbhp">
+
+
+<svg class="icon svelte-5yec89" width="20" height="20"><use xlink:href="#github"></use></svg></span></a></li>
+	</ul>
+</nav>
+
+<main id="main" class="svelte-tdqbhp" style="--banner-footer-height: 48px;"><div class="container svelte-1rc2dnd"><div class="page svelte-1rc2dnd">
+
+<div class="text content svelte-zelrq3"><h1>Command Line Interface</h1>
+
+	<a class="edit svelte-zelrq3" href="https://github.com/sveltejs/kit/edit/master/documentation/docs/50-reference/20-cli.md">
+
+
+<svg class="icon svelte-5yec89" width="50" height="50"><use xlink:href="#edit"></use></svg> Edit this page on GitHub
+	</a>
+
+	<section><!-- HTML_TAG_START --><p>SvelteKit projects use <a href="https://vitejs.dev">Vite</a>, meaning you&#39;ll mostly use its CLI (albeit via <code>npm run dev/build/preview</code> scripts):</p>
+<ul>
+<li><code>vite dev</code> — start a development server</li>
+<li><code>vite build</code> — build a production version of your app</li>
+<li><code>vite preview</code> — run the production version locally</li>
+</ul>
+<p>However SvelteKit includes its own CLI for initialising your project:</p>
+<h2 id="svelte-kit-sync">svelte-kit sync<a href="#svelte-kit-sync" class="permalink"><span class="visually-hidden">permalink</span></a></h2><p><code>svelte-kit sync</code> creates the <code>tsconfig.json</code> and all generated types (which you can import as <code>./$types</code> inside routing files) for your project. When you create a new project, it is listed as the <code>prepare</code> script and will be run automatically as part of the npm lifecycle, so you should not ordinarily have to run this command.</p>
+<!-- HTML_TAG_END --></section>
+
+	<div class="controls svelte-zelrq3"><div class="svelte-zelrq3"><span class="svelte-zelrq3">previous</span>
+			<a href="/docs/configuration">Configuration</a></div>
+
+		<div class="svelte-zelrq3"><span class="svelte-zelrq3">next</span>
+			<a href="/docs/modules">Modules</a></div></div></div>
+
+
+
+<aside class="on-this-page svelte-tsiaal"><h2 class="svelte-tsiaal">On this page</h2>
+	<nav><ul class="svelte-tsiaal"><li><a href="/docs/cli" class="svelte-tsiaal active">Command Line Interface</a></li>
+			<li><a href="#svelte-kit-sync" class="svelte-tsiaal">svelte-kit sync</a></li></ul></nav>
+</aside></div>
+
+	<div class="toc-container svelte-1rc2dnd"><nav aria-label="Docs" class="svelte-1izbfc5"><ul class="sidebar svelte-1izbfc5"><li class="svelte-1izbfc5"><span class="section svelte-1izbfc5">Getting started</span>
+
+				<ul class="svelte-1izbfc5"><li class="svelte-1izbfc5"><a data-sveltekit-preload-data class="page svelte-1izbfc5" href="/docs/introduction">Introduction</a>
+						</li><li class="svelte-1izbfc5"><a data-sveltekit-preload-data class="page svelte-1izbfc5" href="/docs/creating-a-project">Creating a project</a>
+						</li><li class="svelte-1izbfc5"><a data-sveltekit-preload-data class="page svelte-1izbfc5" href="/docs/project-structure">Project structure</a>
+						</li><li class="svelte-1izbfc5"><a data-sveltekit-preload-data class="page svelte-1izbfc5" href="/docs/web-standards">Web standards</a>
+						</li></ul>
+			</li><li class="svelte-1izbfc5"><span class="section svelte-1izbfc5">Core concepts</span>
+
+				<ul class="svelte-1izbfc5"><li class="svelte-1izbfc5"><a data-sveltekit-preload-data class="page svelte-1izbfc5" href="/docs/routing">Routing</a>
+						</li><li class="svelte-1izbfc5"><a data-sveltekit-preload-data class="page svelte-1izbfc5" href="/docs/load">Loading data</a>
+						</li><li class="svelte-1izbfc5"><a data-sveltekit-preload-data class="page svelte-1izbfc5" href="/docs/form-actions">Form actions</a>
+						</li><li class="svelte-1izbfc5"><a data-sveltekit-preload-data class="page svelte-1izbfc5" href="/docs/page-options">Page options</a>
+						</li><li class="svelte-1izbfc5"><a data-sveltekit-preload-data class="page svelte-1izbfc5" href="/docs/state-management">State management</a>
+						</li></ul>
+			</li><li class="svelte-1izbfc5"><span class="section svelte-1izbfc5">Build and deploy</span>
+
+				<ul class="svelte-1izbfc5"><li class="svelte-1izbfc5"><a data-sveltekit-preload-data class="page svelte-1izbfc5" href="/docs/building-your-app">Building your app</a>
+						</li><li class="svelte-1izbfc5"><a data-sveltekit-preload-data class="page svelte-1izbfc5" href="/docs/adapters">Adapters</a>
+						</li><li class="svelte-1izbfc5"><a data-sveltekit-preload-data class="page svelte-1izbfc5" href="/docs/adapter-auto">Zero-config deployments</a>
+						</li><li class="svelte-1izbfc5"><a data-sveltekit-preload-data class="page svelte-1izbfc5" href="/docs/adapter-node">Node servers</a>
+						</li><li class="svelte-1izbfc5"><a data-sveltekit-preload-data class="page svelte-1izbfc5" href="/docs/adapter-static">Static site generation</a>
+						</li><li class="svelte-1izbfc5"><a data-sveltekit-preload-data class="page svelte-1izbfc5" href="/docs/single-page-apps">Single-page apps</a>
+						</li><li class="svelte-1izbfc5"><a data-sveltekit-preload-data class="page svelte-1izbfc5" href="/docs/adapter-cloudflare">Cloudflare Pages</a>
+						</li><li class="svelte-1izbfc5"><a data-sveltekit-preload-data class="page svelte-1izbfc5" href="/docs/adapter-cloudflare-workers">Cloudflare Workers</a>
+						</li><li class="svelte-1izbfc5"><a data-sveltekit-preload-data class="page svelte-1izbfc5" href="/docs/adapter-netlify">Netlify</a>
+						</li><li class="svelte-1izbfc5"><a data-sveltekit-preload-data class="page svelte-1izbfc5" href="/docs/adapter-vercel">Vercel</a>
+						</li><li class="svelte-1izbfc5"><a data-sveltekit-preload-data class="page svelte-1izbfc5" href="/docs/writing-adapters">Writing adapters</a>
+						</li></ul>
+			</li><li class="svelte-1izbfc5"><span class="section svelte-1izbfc5">Advanced</span>
+
+				<ul class="svelte-1izbfc5"><li class="svelte-1izbfc5"><a data-sveltekit-preload-data class="page svelte-1izbfc5" href="/docs/advanced-routing">Advanced routing</a>
+						</li><li class="svelte-1izbfc5"><a data-sveltekit-preload-data class="page svelte-1izbfc5" href="/docs/hooks">Hooks</a>
+						</li><li class="svelte-1izbfc5"><a data-sveltekit-preload-data class="page svelte-1izbfc5" href="/docs/errors">Errors</a>
+						</li><li class="svelte-1izbfc5"><a data-sveltekit-preload-data class="page svelte-1izbfc5" href="/docs/link-options">Link options</a>
+						</li><li class="svelte-1izbfc5"><a data-sveltekit-preload-data class="page svelte-1izbfc5" href="/docs/service-workers">Service workers</a>
+						</li><li class="svelte-1izbfc5"><a data-sveltekit-preload-data class="page svelte-1izbfc5" href="/docs/server-only-modules">Server-only modules</a>
+						</li><li class="svelte-1izbfc5"><a data-sveltekit-preload-data class="page svelte-1izbfc5" href="/docs/assets">Asset handling</a>
+						</li><li class="svelte-1izbfc5"><a data-sveltekit-preload-data class="page svelte-1izbfc5" href="/docs/snapshots">Snapshots</a>
+						</li><li class="svelte-1izbfc5"><a data-sveltekit-preload-data class="page svelte-1izbfc5" href="/docs/packaging">Packaging</a>
+						</li></ul>
+			</li><li class="svelte-1izbfc5"><span class="section svelte-1izbfc5">Best practices</span>
+
+				<ul class="svelte-1izbfc5"><li class="svelte-1izbfc5"><a data-sveltekit-preload-data class="page svelte-1izbfc5" href="/docs/accessibility">Accessibility</a>
+						</li><li class="svelte-1izbfc5"><a data-sveltekit-preload-data class="page svelte-1izbfc5" href="/docs/seo">SEO</a>
+						</li></ul>
+			</li><li class="svelte-1izbfc5"><span class="section svelte-1izbfc5">Reference</span>
+
+				<ul class="svelte-1izbfc5"><li class="svelte-1izbfc5"><a data-sveltekit-preload-data class="page svelte-1izbfc5" href="/docs/configuration">Configuration</a>
+						</li><li class="svelte-1izbfc5"><a data-sveltekit-preload-data class="page svelte-1izbfc5 active" href="/docs/cli">Command Line Interface</a>
+						</li><li class="svelte-1izbfc5"><a data-sveltekit-preload-data class="page svelte-1izbfc5" href="/docs/modules">Modules</a>
+						</li><li class="svelte-1izbfc5"><a data-sveltekit-preload-data class="page svelte-1izbfc5" href="/docs/types">Types</a>
+						</li></ul>
+			</li><li class="svelte-1izbfc5"><span class="section svelte-1izbfc5">Appendix</span>
+
+				<ul class="svelte-1izbfc5"><li class="svelte-1izbfc5"><a data-sveltekit-preload-data class="page svelte-1izbfc5" href="/docs/integrations">Integrations</a>
+						</li><li class="svelte-1izbfc5"><a data-sveltekit-preload-data class="page svelte-1izbfc5" href="/docs/migrating">Migrating from Sapper</a>
+						</li><li class="svelte-1izbfc5"><a data-sveltekit-preload-data class="page svelte-1izbfc5" href="/docs/additional-resources">Additional resources</a>
+						</li><li class="svelte-1izbfc5"><a data-sveltekit-preload-data class="page svelte-1izbfc5" href="/docs/glossary">Glossary</a>
+						</li></ul>
+			</li></ul>
+</nav></div>
+
+	<div class="ts-toggle svelte-1rc2dnd"><div class="input-output-toggle svelte-1ev6lam"><span aria-hidden="true">JavaScript</span> <button aria-pressed="false" class="svelte-1c3yzdv"><span class="visually-hidden">TypeScript code examples</span>
+</button> <span aria-hidden="true">TypeScript</span>
+</div></div>
+</div></main>
+
+<div class="banner svelte-tdqbhp" style="--banner-footer-height: 48px;"><a target="_blank" rel="noopener noreferrer" href="https://hack.sveltesociety.dev/"><span class="small svelte-tdqbhp"><strong class="svelte-tdqbhp">Announcing SvelteHack</strong> Participate →
+			</span>
+			<span class="large svelte-tdqbhp"><strong class="svelte-tdqbhp">Announcing SvelteHack</strong> Our first hackathon with over $12,000 in prizes →
+			</span></a>
+		<button class="svelte-tdqbhp">✕ </button></div>
+
+
+
+
+			
+			<script>
+				{
+					__sveltekit_duwvm8 = {
+						env: {},
+						base: new URL("..", location).pathname.slice(0, -1),
+						element: document.currentScript.parentElement
+					};
+
+					const data = [null,{"type":"data","data":{sections:[{title:"Getting started",pages:[{title:"Introduction",path:"\u002Fdocs\u002Fintroduction"},{title:"Creating a project",path:"\u002Fdocs\u002Fcreating-a-project"},{title:"Project structure",path:"\u002Fdocs\u002Fproject-structure"},{title:"Web standards",path:"\u002Fdocs\u002Fweb-standards"}]},{title:"Core concepts",pages:[{title:"Routing",path:"\u002Fdocs\u002Frouting"},{title:"Loading data",path:"\u002Fdocs\u002Fload"},{title:"Form actions",path:"\u002Fdocs\u002Fform-actions"},{title:"Page options",path:"\u002Fdocs\u002Fpage-options"},{title:"State management",path:"\u002Fdocs\u002Fstate-management"}]},{title:"Build and deploy",pages:[{title:"Building your app",path:"\u002Fdocs\u002Fbuilding-your-app"},{title:"Adapters",path:"\u002Fdocs\u002Fadapters"},{title:"Zero-config deployments",path:"\u002Fdocs\u002Fadapter-auto"},{title:"Node servers",path:"\u002Fdocs\u002Fadapter-node"},{title:"Static site generation",path:"\u002Fdocs\u002Fadapter-static"},{title:"Single-page apps",path:"\u002Fdocs\u002Fsingle-page-apps"},{title:"Cloudflare Pages",path:"\u002Fdocs\u002Fadapter-cloudflare"},{title:"Cloudflare Workers",path:"\u002Fdocs\u002Fadapter-cloudflare-workers"},{title:"Netlify",path:"\u002Fdocs\u002Fadapter-netlify"},{title:"Vercel",path:"\u002Fdocs\u002Fadapter-vercel"},{title:"Writing adapters",path:"\u002Fdocs\u002Fwriting-adapters"}]},{title:"Advanced",pages:[{title:"Advanced routing",path:"\u002Fdocs\u002Fadvanced-routing"},{title:"Hooks",path:"\u002Fdocs\u002Fhooks"},{title:"Errors",path:"\u002Fdocs\u002Ferrors"},{title:"Link options",path:"\u002Fdocs\u002Flink-options"},{title:"Service workers",path:"\u002Fdocs\u002Fservice-workers"},{title:"Server-only modules",path:"\u002Fdocs\u002Fserver-only-modules"},{title:"Asset handling",path:"\u002Fdocs\u002Fassets"},{title:"Snapshots",path:"\u002Fdocs\u002Fsnapshots"},{title:"Packaging",path:"\u002Fdocs\u002Fpackaging"}]},{title:"Best practices",pages:[{title:"Accessibility",path:"\u002Fdocs\u002Faccessibility"},{title:"SEO",path:"\u002Fdocs\u002Fseo"}]},{title:"Reference",pages:[{title:"Configuration",path:"\u002Fdocs\u002Fconfiguration"},{title:"Command Line Interface",path:"\u002Fdocs\u002Fcli"},{title:"Modules",path:"\u002Fdocs\u002Fmodules"},{title:"Types",path:"\u002Fdocs\u002Ftypes"}]},{title:"Appendix",pages:[{title:"Integrations",path:"\u002Fdocs\u002Fintegrations"},{title:"Migrating from Sapper",path:"\u002Fdocs\u002Fmigrating"},{title:"Additional resources",path:"\u002Fdocs\u002Fadditional-resources"},{title:"Glossary",path:"\u002Fdocs\u002Fglossary"}]}]},"uses":{}},{"type":"data","data":{page:{file:"docs\u002F50-reference\u002F20-cli.md",slug:"cli",title:"Command Line Interface",content:"\u003Cp\u003ESvelteKit projects use \u003Ca href=\"https:\u002F\u002Fvitejs.dev\"\u003EVite\u003C\u002Fa\u003E, meaning you&#39;ll mostly use its CLI (albeit via \u003Ccode\u003Enpm run dev\u002Fbuild\u002Fpreview\u003C\u002Fcode\u003E scripts):\u003C\u002Fp\u003E\n\u003Cul\u003E\n\u003Cli\u003E\u003Ccode\u003Evite dev\u003C\u002Fcode\u003E — start a development server\u003C\u002Fli\u003E\n\u003Cli\u003E\u003Ccode\u003Evite build\u003C\u002Fcode\u003E — build a production version of your app\u003C\u002Fli\u003E\n\u003Cli\u003E\u003Ccode\u003Evite preview\u003C\u002Fcode\u003E — run the production version locally\u003C\u002Fli\u003E\n\u003C\u002Ful\u003E\n\u003Cp\u003EHowever SvelteKit includes its own CLI for initialising your project:\u003C\u002Fp\u003E\n\u003Ch2 id=\"svelte-kit-sync\"\u003Esvelte-kit sync\u003Ca href=\"#svelte-kit-sync\" class=\"permalink\"\u003E\u003Cspan class=\"visually-hidden\"\u003Epermalink\u003C\u002Fspan\u003E\u003C\u002Fa\u003E\u003C\u002Fh2\u003E\u003Cp\u003E\u003Ccode\u003Esvelte-kit sync\u003C\u002Fcode\u003E creates the \u003Ccode\u003Etsconfig.json\u003C\u002Fcode\u003E and all generated types (which you can import as \u003Ccode\u003E.\u002F$types\u003C\u002Fcode\u003E inside routing files) for your project. When you create a new project, it is listed as the \u003Ccode\u003Eprepare\u003C\u002Fcode\u003E script and will be run automatically as part of the npm lifecycle, so you should not ordinarily have to run this command.\u003C\u002Fp\u003E\n",sections:[{title:"svelte-kit sync",slug:"svelte-kit-sync",sections:[]}]}},"uses":{"params":["slug"]}}];
+
+					Promise.all([
+						import("../_app/immutable/entry/start.bc2154d3.js"),
+						import("../_app/immutable/entry/app.6b34a82d.js")
+					]).then(([kit, app]) => {
+						kit.start(app, __sveltekit_duwvm8.element, {
+							node_ids: [0, 2, 5],
+							data,
+							form: null,
+							error: null
+						});
+					});
+				}
+			</script>
+		</div>
+	</body>
+</html>

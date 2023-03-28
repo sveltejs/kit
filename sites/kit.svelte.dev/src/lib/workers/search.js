@@ -4,7 +4,7 @@ addEventListener('message', async (event) => {
 	const { type, payload } = event.data;
 
 	if (type === 'init') {
-		const res = await fetch(`${payload.origin}/content.json`);
+		const res = await fetch(`${payload.base}/content.json`);
 		const { blocks } = await res.json();
 		init(blocks);
 

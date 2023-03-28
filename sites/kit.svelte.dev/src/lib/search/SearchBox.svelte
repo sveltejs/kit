@@ -2,6 +2,7 @@
 	import { onMount } from 'svelte';
 	import Icon from '@sveltejs/site-kit/components/Icon.svelte';
 	import { afterNavigate } from '$app/navigation';
+	import { base } from '$app/paths';
 	import { searching, query, recent } from './stores.js';
 	import { focusable_children, trap } from '../actions/focus.js';
 	import SearchResults from './SearchResults.svelte';
@@ -40,7 +41,7 @@
 		worker.postMessage({
 			type: 'init',
 			payload: {
-				origin: location.origin
+				base
 			}
 		});
 	});
