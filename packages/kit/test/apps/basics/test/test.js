@@ -769,6 +769,28 @@ test.describe('$app/stores', () => {
 			expect(await page.textContent('#nav-status')).toBe('not currently navigating');
 		}
 	});
+
+	test("url's hash is updated when it is modified in the address bar", async ({ page, javaScriptEnabled }) => {
+		if (javaScriptEnabled) {
+			const baseUrl = '/store/data/www';
+			// Go to page where store data, as well as URL, are displayed
+			await page.goto(baseUrl);
+
+			// Change hash to #2 in address bar
+			await page.evaluate(() => {
+				history.pushState({}, '', '#2');
+			});
+
+			await page.waitForTimeout(500);
+
+			const url = await page.evaluate(() => {
+				const el = document.getElementById("page-url");
+				return el && el.textContent;
+			});
+
+			expect(url).toMatch(/#2$/);
+		}
+	});
 });
 
 test.describe('searchParams', () => {

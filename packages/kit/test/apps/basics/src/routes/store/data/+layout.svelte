@@ -4,6 +4,7 @@
 
 <div id="store-data">{JSON.stringify($page.data)}</div>
 <div id="store-error">{$page.error?.message}</div>
+<div id="page-url">{$page.url}</div>
 
 <nav>
 	<a href="/store/data/xxx">xxx</a> <a href="/store/data/yyy">yyy</a>
