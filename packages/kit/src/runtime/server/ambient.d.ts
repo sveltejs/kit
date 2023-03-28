@@ -5,5 +5,6 @@ declare module '__SERVER__/internal.js' {
 		handleError?: import('types').HandleServerError;
 		handleFetch?: import('types').HandleFetch;
 		handleLoad?: import('types').HandleLoad;
+		handleServerLoad?: import('types').HandleServerLoad;
 	}>;
 }

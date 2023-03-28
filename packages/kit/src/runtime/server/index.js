@@ -42,7 +42,8 @@ export class Server {
 				// @ts-expect-error
 				handleError: module.handleError || (({ error }) => console.error(error?.stack)),
 				handleFetch: module.handleFetch || (({ request, fetch }) => fetch(request)),
-				handleLoad: module.handleLoad || (({ event, resolve }) => resolve(event))
+				handleLoad: module.handleLoad || (({ event, resolve }) => resolve(event)),
+				handleServerLoad: module.handleServerLoad || (({ event, resolve }) => resolve(event))
 			};
 		}
 	}

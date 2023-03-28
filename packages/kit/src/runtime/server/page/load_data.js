@@ -10,10 +10,11 @@ import { validate_depends } from '../../shared.js';
  *   state: import('types').SSRState;
  *   node: import('types').SSRNode | undefined;
  *   parent: () => Promise<Record<string, any>>;
+ *   handleServerLoad: import('types').HandleServerLoad;
  * }} opts
  * @returns {Promise<import('types').ServerDataNode | null>}
  */
-export async function load_server_data({ event, state, node, parent }) {
+export async function load_server_data({ event, state, node, parent, handleServerLoad }) {
 	if (!node?.server) return null;
 
 	let done = false;
@@ -40,9 +41,9 @@ export async function load_server_data({ event, state, node, parent }) {
 		disable_search(url);
 	}
 
-	const result = await node.server.load?.call(null, {
+	const load_event = {
 		...event,
-		fetch: (info, init) => {
+		fetch: (/** @type {URL | RequestInfo} */ info, /** @type {RequestInit | undefined} */ init) => {
 			const url = new URL(info instanceof Request ? info.url : info, event.url);
 
 			if (DEV && done && !uses.dependencies.has(url.href)) {
@@ -112,7 +113,11 @@ export async function load_server_data({ event, state, node, parent }) {
 			}
 		}),
 		url
-	});
+	};
+
+	const result = node.server.load
+		? await handleServerLoad({ event: load_event, resolve: node.server.load })
+		: null;
 
 	const data = result ? await unwrap_promises(result) : null;
 	if (__SVELTEKIT_DEV__) {

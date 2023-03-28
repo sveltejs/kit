@@ -44,7 +44,8 @@ export async function respond_with_error({
 				event,
 				state,
 				node: default_layout,
-				parent: async () => ({})
+				parent: async () => ({}),
+				handleServerLoad: options.hooks.handleServerLoad
 			});
 
 			const server_data = await server_data_promise;

@@ -78,7 +78,8 @@ export async function render_data(
 								}
 							}
 							return data;
-						}
+						},
+						handleServerLoad: options.hooks.handleServerLoad
 					});
 				} catch (e) {
 					aborted = true;

@@ -14,7 +14,8 @@ import {
 	HandleFetch,
 	Actions,
 	HandleClientError,
-	HandleLoad
+	HandleLoad,
+	HandleServerLoad
 } from './index.js';
 import {
 	HttpMethod,
@@ -96,6 +97,7 @@ export interface ServerHooks {
 	handle: Handle;
 	handleError: HandleServerError;
 	handleLoad: HandleLoad;
+	handleServerLoad: HandleServerLoad;
 }
 
 export interface ClientHooks {
