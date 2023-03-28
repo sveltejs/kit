@@ -140,6 +140,7 @@ export async function load_server_data({ event, state, node, parent }) {
  *   server_data_promise: Promise<import('types').ServerDataNode | null>;
  *   state: import('types').SSRState;
  *   csr: boolean;
+ * 	 handleLoad: import('types').HandleLoad;
  * }} opts
  * @returns {Promise<Record<string, any | Promise<any>> | null>}
  */
@@ -151,7 +152,8 @@ export async function load_data({
 	server_data_promise,
 	state,
 	resolve_opts,
-	csr
+	csr,
+	handleLoad
 }) {
 	const server_data_node = await server_data_promise;
 
@@ -159,7 +161,7 @@ export async function load_data({
 		return server_data_node?.data ?? null;
 	}
 
-	const result = await node.universal.load.call(null, {
+	const load_event = {
 		url: event.url,
 		params: event.params,
 		data: server_data_node?.data ?? null,
@@ -168,7 +170,9 @@ export async function load_data({
 		setHeaders: event.setHeaders,
 		depends: () => {},
 		parent
-	});
+	};
+
+	const result = await handleLoad({ event: load_event, resolve: node.universal.load });
 
 	const data = result ? await unwrap_promises(result) : null;
 	if (__SVELTEKIT_DEV__) {

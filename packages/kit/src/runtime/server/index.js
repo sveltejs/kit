@@ -41,7 +41,8 @@ export class Server {
 				handle: module.handle || (({ event, resolve }) => resolve(event)),
 				// @ts-expect-error
 				handleError: module.handleError || (({ error }) => console.error(error?.stack)),
-				handleFetch: module.handleFetch || (({ request, fetch }) => fetch(request))
+				handleFetch: module.handleFetch || (({ request, fetch }) => fetch(request)),
+				handleLoad: module.handleLoad || (({ event, resolve }) => resolve(event))
 			};
 		}
 	}

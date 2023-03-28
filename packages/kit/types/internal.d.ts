@@ -95,6 +95,7 @@ export interface ServerHooks {
 	handleFetch: HandleFetch;
 	handle: Handle;
 	handleError: HandleServerError;
+	handleLoad: HandleLoad;
 }
 
 export interface ClientHooks {

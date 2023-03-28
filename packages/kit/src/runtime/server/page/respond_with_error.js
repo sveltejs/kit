@@ -57,7 +57,8 @@ export async function respond_with_error({
 				resolve_opts,
 				server_data_promise,
 				state,
-				csr
+				csr,
+				handleLoad: options.hooks.handleLoad
 			});
 
 			branch.push(

@@ -180,7 +180,8 @@ export async function render_page(event, page, options, manifest, state, resolve
 						resolve_opts,
 						server_data_promise: server_promises[i],
 						state,
-						csr
+						csr,
+						handleLoad: options.hooks.handleLoad
 					});
 				} catch (e) {
 					load_error = /** @type {Error} */ (e);
