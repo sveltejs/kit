@@ -1700,6 +1700,16 @@ export function create_client(app, target) {
 						'',
 						location.href
 					);
+				} else {
+					// In the occasion of the hash being updated directly through
+					// the browser's address bar, the page store needs to be
+					// updated
+					const url = new URL(location.href, document.baseURI);
+
+					current.url = url;
+
+					stores.page.set({ ...page, url });
+					stores.page.notify();
 				}
 			});
 
