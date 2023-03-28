@@ -781,6 +781,8 @@ test.describe('$app/stores', () => {
 				history.pushState({}, '', '#2');
 			});
 
+      await page.reload();
+
 			await page.waitForTimeout(500);
 
 			const url = await page.evaluate(() => {
