@@ -784,16 +784,9 @@ test.describe('$app/stores', () => {
 				history.pushState({}, '', '#2');
 			});
 
-			await page.reload();
-
-			await page.waitForTimeout(500);
-
-			const url = await page.evaluate(() => {
-				const el = document.getElementById('page-url');
-				return el && el.textContent;
+			expect(await page.locator('#page-url').textContent({ timeout: 5000 })).toMatch(/#2$/, {
+				timeout: 5000
 			});
-
-			expect(url).toMatch(/#2$/);
 		}
 	});
 });
