@@ -1,9 +1,9 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import glob from 'tiny-glob/sync.js';
-import { slugify } from '../docs/server';
-import { extract_frontmatter, transform } from '../docs/server/markdown.js';
-import { replace_placeholders } from '../docs/server/render.js';
+import { slugify } from '$lib/docs/server';
+import { extract_frontmatter, transform } from '$lib/docs/server/markdown.js';
+import { replace_placeholders } from '$lib/docs/server/render.js';
 
 const categories = [
 	{
@@ -20,7 +20,7 @@ const categories = [
 ];
 
 export function content() {
-	/** @type {import('$lib/search/types').Block[]} */
+	/** @type {import('@sveltejs/site-kit/search').Block[]} */
 	const blocks = [];
 
 	for (const category of categories) {
