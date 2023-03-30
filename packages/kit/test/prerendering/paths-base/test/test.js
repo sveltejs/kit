@@ -10,7 +10,7 @@ const read = (file) => fs.readFileSync(`${build}/${file}`, 'utf-8');
 
 test('prerenders /path-base', () => {
 	const content = read('index.html');
-	assert.ok(content.includes('/path-base/favicon.png') && content.includes('/path-base/nested'));
+	assert.ok(content.includes('favicon.png') && content.includes('nested'));
 });
 
 test('prerenders /path-base/redirect', () => {

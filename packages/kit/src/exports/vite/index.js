@@ -24,6 +24,7 @@ import prerender from '../../core/postbuild/prerender.js';
 import analyse from '../../core/postbuild/analyse.js';
 import { s } from '../../utils/misc.js';
 import { hash } from '../../runtime/hash.js';
+import { dedent } from '../../core/sync/utils.js';
 
 export { vitePreprocess } from '@sveltejs/vite-plugin-svelte';
 
@@ -334,7 +335,10 @@ function kit({ svelte_config }) {
 
 		async load(id, options) {
 			const browser = !options?.ssr;
-			const global = `globalThis.__sveltekit_${version_hash}`;
+
+			const global = is_build
+				? `globalThis.__sveltekit_${version_hash}`
+				: `globalThis.__sveltekit_dev`;
 
 			if (options?.ssr === false && process.env.TEST !== 'true') {
 				const normalized_cwd = vite.normalizePath(cwd);
@@ -354,13 +358,16 @@ function kit({ svelte_config }) {
 			switch (id) {
 				case '\0$env/static/private':
 					return create_static_module('$env/static/private', env.private);
+
 				case '\0$env/static/public':
 					return create_static_module('$env/static/public', env.public);
+
 				case '\0$env/dynamic/private':
 					return create_dynamic_module(
 						'private',
 						vite_config_env.command === 'serve' ? env.private : undefined
 					);
+
 				case '\0$env/dynamic/public':
 					// populate `$env/dynamic/public` from `window`
 					if (browser) {
@@ -371,6 +378,7 @@ function kit({ svelte_config }) {
 						'public',
 						vite_config_env.command === 'serve' ? env.public : undefined
 					);
+
 				case '\0$service-worker':
 					return create_service_worker_module(svelte_config);
 
@@ -383,40 +391,47 @@ function kit({ svelte_config }) {
 					// for the sake of things like Vitest which may import this module
 					// outside the context of a page
 					if (browser) {
-						return `export const base = ${global}?.base ?? ${s(base)};
-export const assets = ${global}?.assets ?? ${assets ? s(assets) : 'base'};`;
+						return dedent`
+							export const base = ${global}?.base ?? ${s(base)};
+							export const assets = ${global}?.assets ?? ${assets ? s(assets) : 'base'};
+						`;
 					}
 
-					return `export let base = ${s(base)};
-export let assets = ${assets ? s(assets) : 'base'};
+					return dedent`
+						export let base = ${s(base)};
+						export let assets = ${assets ? s(assets) : 'base'};
 
-export const relative = ${svelte_config.kit.paths.relative};
+						export const relative = ${svelte_config.kit.paths.relative};
 
-const initial = { base, assets };
+						const initial = { base, assets };
 
-export function override(paths) {
-	base = paths.base;
-	assets = paths.assets;
-}
+						export function override(paths) {
+							base = paths.base;
+							assets = paths.assets;
+						}
 
-export function reset() {
-	base = initial.base;
-	assets = initial.assets;
-}
+						export function reset() {
+							base = initial.base;
+							assets = initial.assets;
+						}
 
-/** @param {string} path */
-export function set_assets(path) {
-	assets = initial.assets = path;
-}`;
+						/** @param {string} path */
+						export function set_assets(path) {
+							assets = initial.assets = path;
+						}
+					`;
 
 				case '\0__sveltekit/environment':
 					const { version } = svelte_config.kit;
-					return `export const version = ${s(version.name)};
-export let building = false;
 
-export function set_building() {
-	building = true;
-}`;
+					return dedent`
+						export const version = ${s(version.name)};
+						export let building = false;
+
+						export function set_building() {
+							building = true;
+						}
+					`;
 			}
 		}
 	};
@@ -549,11 +564,12 @@ export function set_building() {
 							preserveEntrySignatures: 'strict'
 						},
 						ssrEmitAssets: true,
+						copyPublicDir: !ssr,
 						target: ssr ? 'node16.14' : undefined,
 						// don't use the default name to avoid collisions with 'static/manifest.json'
 						manifest: 'vite-manifest.json'
 					},
-					publicDir: ssr ? false : kit.files.assets,
+					publicDir: kit.files.assets,
 					worker: {
 						rollupOptions: {
 							output: {
@@ -863,18 +879,18 @@ function find_overridden_config(config, resolved_config, enforced_config, path, 
 /**
  * @param {import('types').ValidatedConfig} config
  */
-const create_service_worker_module = (config) => `
-if (typeof self === 'undefined' || self instanceof ServiceWorkerGlobalScope === false) {
-	throw new Error('This module can only be imported inside a service worker');
-}
+const create_service_worker_module = (config) => dedent`
+	if (typeof self === 'undefined' || self instanceof ServiceWorkerGlobalScope === false) {
+		throw new Error('This module can only be imported inside a service worker');
+	}
 
-export const build = [];
-export const files = [
-	${create_assets(config)
-		.filter((asset) => config.kit.serviceWorker.files(asset.file))
-		.map((asset) => `${s(`${config.kit.paths.base}/${asset.file}`)}`)
-		.join(',\n\t\t\t\t')}
-];
-export const prerendered = [];
-export const version = ${s(config.kit.version.name)};
+	export const build = [];
+	export const files = [
+		${create_assets(config)
+			.filter((asset) => config.kit.serviceWorker.files(asset.file))
+			.map((asset) => `${s(`${config.kit.paths.base}/${asset.file}`)}`)
+			.join(',\n')}
+	];
+	export const prerendered = [];
+	export const version = ${s(config.kit.version.name)};
 `;

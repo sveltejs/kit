@@ -214,7 +214,7 @@ async function call_action(event, actions) {
 
 	if (!is_form_content_type(event.request)) {
 		throw new Error(
-			`Actions expect form-encoded data (received ${event.request.headers.get('content-type')}`
+			`Actions expect form-encoded data (received ${event.request.headers.get('content-type')})`
 		);
 	}
 

@@ -13,7 +13,7 @@ for (const fixture of fs.readdirSync(fixtures)) {
 
 		// const start = Date.now();
 
-		const output = crawl(input);
+		const output = crawl(input, '/');
 
 		// uncomment to see how long it took
 		// console.error(fixture, Date.now() - start);

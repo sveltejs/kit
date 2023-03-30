@@ -1,8 +1,12 @@
-declare module 'SERVER' {
-	export { Server } from '@sveltejs/kit';
-}
+import { RequestContext } from './index.js';
 
-declare module 'MANIFEST' {
-	import { SSRManifest } from '@sveltejs/kit';
-	export const manifest: SSRManifest;
+declare global {
+	namespace App {
+		export interface Platform {
+			/**
+			 * `context` is only available in Edge Functions
+			 */
+			context?: RequestContext;
+		}
+	}
 }

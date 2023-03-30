@@ -1,5 +1,23 @@
 # @sveltejs/adapter-node
 
+## 1.2.3
+
+### Patch Changes
+
+- fix: only send cache header when static resource is 200 ([#9394](https://github.com/sveltejs/kit/pull/9394))
+
+- Updated dependencies [[`385bd49e`](https://github.com/sveltejs/kit/commit/385bd49efb6890078dcdb523fdf5b621fe1c3e72), [`29ffc785`](https://github.com/sveltejs/kit/commit/29ffc78560a99ce387b10a24f48b7f01205f51e7), [`d257d37d`](https://github.com/sveltejs/kit/commit/d257d37d3cac94f30befa9fe38c2987f84fb551a), [`c45c35e7`](https://github.com/sveltejs/kit/commit/c45c35e7b40837cd1bea3fc26cfb831478e03c00), [`75e2c6f7`](https://github.com/sveltejs/kit/commit/75e2c6f7c8376685317b669767c7767fd21670eb), [`1c085780`](https://github.com/sveltejs/kit/commit/1c08578031395377a98b365a27eb9587594dd06e)]:
+  - @sveltejs/kit@1.12.0
+
+## 1.2.2
+
+### Patch Changes
+
+- fix: add `BODY_SIZE_LIMIT` to the list of recognized env variables ([#9326](https://github.com/sveltejs/kit/pull/9326))
+
+- Updated dependencies [[`b575287d`](https://github.com/sveltejs/kit/commit/b575287d063562868d7726f6451352aa43a63453), [`8114c658`](https://github.com/sveltejs/kit/commit/8114c658c0bc053198ff76704c002cfeb8225e2a), [`620f5605`](https://github.com/sveltejs/kit/commit/620f56058de0993e776c146db4c19fca97b9cb39), [`6a91e887`](https://github.com/sveltejs/kit/commit/6a91e887ee4c1bef8aabfafbf1ab6079113c2832), [`1c32723a`](https://github.com/sveltejs/kit/commit/1c32723a52beca0c5aa895b1114341da78d92eaf), [`0f863bbc`](https://github.com/sveltejs/kit/commit/0f863bbc957ab2ed37b04ebd839fc864b945034d), [`78b4a1bb`](https://github.com/sveltejs/kit/commit/78b4a1bb5e1ae11a894d70a0a28cc344ea0b1284), [`66b2f4ef`](https://github.com/sveltejs/kit/commit/66b2f4ef03a5dd60da2757edde4effcfdf3183cf), [`5dada256`](https://github.com/sveltejs/kit/commit/5dada256dc05674a18946f8f19db1f25ba91aeaf), [`a71b5e69`](https://github.com/sveltejs/kit/commit/a71b5e69ef37ce46e8e8590d537036cb7e267d51), [`daad7e48`](https://github.com/sveltejs/kit/commit/daad7e48b175245cbb7efd0e255263bfb52a5ee6), [`18d330b1`](https://github.com/sveltejs/kit/commit/18d330b16330d76c4b2991839c6b4462d5a4163f), [`18d7e81a`](https://github.com/sveltejs/kit/commit/18d7e81a9892e718c3cd07b2366a60f2e09561ab)]:
+  - @sveltejs/kit@1.11.0
+
 ## 1.2.1
 
 ### Patch Changes

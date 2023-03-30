@@ -1,5 +1,27 @@
 # create-svelte
 
+## 3.2.0
+
+### Minor Changes
+
+- feat: upgrade to TypeScript 5 ([#9435](https://github.com/sveltejs/kit/pull/9435))
+
+### Patch Changes
+
+- chore: upgrade to Vite 4.2 ([#9434](https://github.com/sveltejs/kit/pull/9434))
+
+## 3.1.2
+
+### Patch Changes
+
+- fix: prevent duplicated lines in project creation CLI ([#9346](https://github.com/sveltejs/kit/pull/9346))
+
+## 3.1.1
+
+### Patch Changes
+
+- chore: Add hint for toggling additional options during scaffolding flow. ([#9318](https://github.com/sveltejs/kit/pull/9318))
+
 ## 3.1.0
 
 ### Minor Changes

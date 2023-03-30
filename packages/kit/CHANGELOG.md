@@ -1,5 +1,113 @@
 # @sveltejs/kit
 
+## 1.15.0
+
+### Minor Changes
+
+- feat: expose stronger typed `SubmitFunction` through `./$types` ([#9201](https://github.com/sveltejs/kit/pull/9201))
+
+### Patch Changes
+
+- fix: throw error when file can't be found in Vite manifest ([#9558](https://github.com/sveltejs/kit/pull/9558))
+
+- fix: make `error.message` enumerable when sending `ssrLoadModule` error to client ([#9440](https://github.com/sveltejs/kit/pull/9440))
+
+- fix: pass `publicDir` Vite config in SSR ([#9565](https://github.com/sveltejs/kit/pull/9565))
+
+- fix: balance parentheses in error about wrong content type for action ([#9513](https://github.com/sveltejs/kit/pull/9513))
+
+## 1.14.0
+
+### Minor Changes
+
+- feat: add HMR to fallback error pages during dev ([#9497](https://github.com/sveltejs/kit/pull/9497))
+
+### Patch Changes
+
+- fix: add `submitter` type to `SumbitFunction` ([#9484](https://github.com/sveltejs/kit/pull/9484))
+
+## 1.13.0
+
+### Minor Changes
+
+- feat: add dark mode styles to default error page ([#9460](https://github.com/sveltejs/kit/pull/9460))
+
+### Patch Changes
+
+- fix: recover from errors during dev by reloading ([#9441](https://github.com/sveltejs/kit/pull/9441))
+
+## 1.12.0
+
+### Minor Changes
+
+- feat: expose submitter in use:enhance SubmitFunction ([#9425](https://github.com/sveltejs/kit/pull/9425))
+
+- feat: add data-sveltekit-keepfocus and data-sveltekit-replacestate options to links (requires Svelte version 3.56 for type-checking with `svelte-check`) ([#9019](https://github.com/sveltejs/kit/pull/9019))
+
+### Patch Changes
+
+- fix: don't start debugger on 404s ([#9424](https://github.com/sveltejs/kit/pull/9424))
+
+- fix: handle srcset attributes with newline after comma ([#9388](https://github.com/sveltejs/kit/pull/9388))
+
+- fix: allow tsconfig to extend multiple other tsconfigs ([#9413](https://github.com/sveltejs/kit/pull/9413))
+
+- chore: update Undici to 5.21.0 ([#9417](https://github.com/sveltejs/kit/pull/9417))
+
+## 1.11.0
+
+### Minor Changes
+
+- feat: pause on debugger when falling back to full page reload during development ([#9305](https://github.com/sveltejs/kit/pull/9305))
+
+- feat: expose `base` via `$service-worker`, make paths relative ([#9250](https://github.com/sveltejs/kit/pull/9250))
+
+### Patch Changes
+
+- fix: don't automatically prerender non-SSR'd pages ([#9352](https://github.com/sveltejs/kit/pull/9352))
+
+- fix: use 308 responses for trailing slash redirects, instead of 301s ([#9351](https://github.com/sveltejs/kit/pull/9351))
+
+- fix: remove buggy cookie path detection ([#9298](https://github.com/sveltejs/kit/pull/9298))
+
+- fix: don't prevent `beforeNavigate` callbacks from running following a cancelled unloading navigation ([#9347](https://github.com/sveltejs/kit/pull/9347))
+
+- fix: persist DOM state on beforeunload ([#9345](https://github.com/sveltejs/kit/pull/9345))
+
+- fix: redirect to path with/without trailing slash when previewing prerendered pages ([#9353](https://github.com/sveltejs/kit/pull/9353))
+
+- fix: avoid FOUC when using CSS modules in dev ([#9323](https://github.com/sveltejs/kit/pull/9323))
+
+- fix: don't skip required parameters after missing optional parameters ([#9331](https://github.com/sveltejs/kit/pull/9331))
+
+- fix: account for server-emitted assets when prerenering ([#9349](https://github.com/sveltejs/kit/pull/9349))
+
+- fix: deal with fast consecutive promise resolutions when streaming ([#9332](https://github.com/sveltejs/kit/pull/9332))
+
+- chore: replace deprecated property access in preparation for TS 5.0 ([#9361](https://github.com/sveltejs/kit/pull/9361))
+
+## 1.10.1
+
+### Patch Changes
+
+- fix: respect `<base>` when crawling ([#9257](https://github.com/sveltejs/kit/pull/9257))
+
+- fix: scroll before resetting focus, to avoid flash of unscrolled content ([#9311](https://github.com/sveltejs/kit/pull/9311))
+
+- fix: omit hash from global during development ([#9310](https://github.com/sveltejs/kit/pull/9310))
+
+## 1.10.0
+
+### Minor Changes
+
+- feat: add `cookies.getAll` ([#9287](https://github.com/sveltejs/kit/pull/9287))
+
+### Patch Changes
+
+- fix: always include `<link rel="stylesheet">`, even for stylesheets excluded from Link headers ([#9255](https://github.com/sveltejs/kit/pull/9255))
+
+- fix: preserve form state when submitting a second time ([#9267](https://github.com/sveltejs/kit/pull/9267))
+
 ## 1.9.3
 
 ### Patch Changes
