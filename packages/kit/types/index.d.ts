@@ -1167,10 +1167,10 @@ export type Actions<
  */
 export type ActionResult<
 	Success extends Record<string, unknown> | undefined = Record<string, any>,
-	Invalid extends Record<string, unknown> | undefined = Record<string, any>
+	Failure extends Record<string, unknown> | undefined = Record<string, any>
 > =
 	| { type: 'success'; status: number; data?: Success }
-	| { type: 'failure'; status: number; data?: Invalid }
+	| { type: 'failure'; status: number; data?: Failure }
 	| { type: 'redirect'; status: number; location: string }
 	| { type: 'error'; status?: number; error: any };
 
@@ -1239,7 +1239,7 @@ export function text(body: string, init?: ResponseInit): Response;
  * @param status The [HTTP status code](https://developer.mozilla.org/en-US/docs/Web/HTTP/Status#client_error_responses). Must be in the range 400-599.
  * @param data Data associated with the failure (e.g. validation errors)
  */
-export function fail<T extends Record<string, unknown> | undefined>(
+export function fail<T extends Record<string, unknown> | undefined = undefined>(
 	status: number,
 	data?: T
 ): ActionFailure<T>;
@@ -1257,7 +1257,7 @@ export interface ActionFailure<T extends Record<string, unknown> | undefined = u
 
 export interface SubmitFunction<
 	Success extends Record<string, unknown> | undefined = Record<string, any>,
-	Invalid extends Record<string, unknown> | undefined = Record<string, any>
+	Failure extends Record<string, unknown> | undefined = Record<string, any>
 > {
 	(input: {
 		action: URL;
@@ -1271,7 +1271,7 @@ export interface SubmitFunction<
 		| ((opts: {
 				form: HTMLFormElement;
 				action: URL;
-				result: ActionResult<Success, Invalid>;
+				result: ActionResult<Success, Failure>;
 				/**
 				 * Call this to get the default behavior of a form submission response.
 				 * @param options Set `reset: false` if you don't want the `<form>` values to be reset after a successful submission.
