@@ -132,12 +132,18 @@ async function prerender({ out, manifest_path, metadata, verbose, env }) {
 	/**
 	 * @param {string} path
 	 * @param {boolean} is_html
+	 * @param {string} type
 	 */
-	function output_filename(path, is_html) {
+	function output_filename(path, is_html, type) {
 		const file = path.slice(config.paths.base.length + 1) || 'index.html';
 
 		if (is_html && !file.endsWith('.html')) {
 			return file + (file.endsWith('/') ? 'index.html' : '.html');
+		}
+
+		if (!file.includes('.')) {
+			const ext = type === 'application/json' ? 'json' : 'txt';
+			return `${file}.${ext}`;
 		}
 
 		return file;
@@ -291,7 +297,7 @@ async function prerender({ out, manifest_path, metadata, verbose, env }) {
 		const type = headers['content-type'];
 		const is_html = response_type === REDIRECT || type === 'text/html';
 
-		const file = output_filename(decoded, is_html);
+		const file = output_filename(decoded, is_html, type);
 		const dest = `${config.outDir}/output/prerendered/${category}/${file}`;
 
 		if (written.has(file)) return;
