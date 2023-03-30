@@ -86,7 +86,7 @@ export async function build_service_worker(
 		experimental: {
 			renderBuiltUrl(filename) {
 				return {
-					runtime: `new URL(${JSON.stringify(filename)}, location.pathname).href`
+					runtime: `new URL(${JSON.stringify(filename)}, location.href).pathname`
 				};
 			}
 		}
