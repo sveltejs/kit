@@ -178,7 +178,7 @@
 								{#each recent_searches as search, i}
 									<!-- svelte-ignore a11y-mouse-events-have-key-events -->
 									<li class="recent">
-										<a on:click={() => navigate(search.href)} href={search.href}>
+										<a on:click={() => navigate(search.href)} href="{base}{search.href}">
 											<small>{search.breadcrumbs.join('/')}</small>
 											<strong>{search.breadcrumbs.at(-1)}</strong>
 										</a>
