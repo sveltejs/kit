@@ -564,11 +564,12 @@ function kit({ svelte_config }) {
 							preserveEntrySignatures: 'strict'
 						},
 						ssrEmitAssets: true,
+						copyPublicDir: !ssr,
 						target: ssr ? 'node16.14' : undefined,
 						// don't use the default name to avoid collisions with 'static/manifest.json'
 						manifest: 'vite-manifest.json'
 					},
-					publicDir: ssr ? false : kit.files.assets,
+					publicDir: kit.files.assets,
 					worker: {
 						rollupOptions: {
 							output: {
