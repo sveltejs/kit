@@ -42,7 +42,7 @@ test.describe('paths', () => {
 test.describe('Service worker', () => {
 	if (process.env.DEV) return;
 
-	test('build /basepath/service-worker.js', async ({ request }) => {
+	test('build /basepath/service-worker.js', async ({ baseURL, request }) => {
 		const response = await request.get('/basepath/service-worker.js');
 		const content = await response.text();
 
@@ -54,12 +54,16 @@ test.describe('Service worker', () => {
 			build: null
 		};
 
+		const pathname = '/basepath/service-worker.js';
+
 		fn(self, {
-			pathname: '/basepath/service-worker.js'
+			href: baseURL + pathname,
+			pathname
 		});
 
 		expect(self.base).toBe('/basepath');
 		expect(self.build[0]).toMatch(/\/basepath\/_app\/immutable\/entry\/start\.[a-z0-9]+\.js/);
+		expect(self.image_src).toMatch(/\/basepath\/_app\/immutable\/assets\/image\.[a-z0-9]+\.jpg/);
 	});
 
 	test('does not register /basepath/service-worker.js', async ({ page }) => {
