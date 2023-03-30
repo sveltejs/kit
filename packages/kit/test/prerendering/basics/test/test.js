@@ -220,4 +220,12 @@ test('prerendered.paths omits trailing slashes for endpoints', () => {
 	}
 });
 
+test('store assets with file ending', () => {
+	const rootContent = read('safe-assets/api.json');
+	assert.ok(rootContent.includes(`root`));
+
+	const childContent = read('safe-assets/api/child.json');
+	assert.ok(childContent.includes(`child`));
+});
+
 test.run();
