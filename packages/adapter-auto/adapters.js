@@ -8,6 +8,12 @@ export const adapters = [
 		version: '2'
 	},
 	{
+		name: 'Deta Space',
+		test: () => !!process.env.DETA_SPACE_APP,
+		module: '@sveltejs/adapter-node',
+		version: '1'
+	},
+	{
 		name: 'Cloudflare Pages',
 		test: () => !!process.env.CF_PAGES,
 		module: '@sveltejs/adapter-cloudflare',
