@@ -9,7 +9,7 @@ export const adapters = [
 	},
 	{
 		name: 'Deta Space',
-		test: () => !!process.env.DETA_SPACE_APP,
+		test: () => !!process.env.DETA_SPACE,
 		module: '@sveltejs/adapter-node',
 		version: '1'
 	},
