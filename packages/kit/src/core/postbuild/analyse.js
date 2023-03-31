@@ -10,6 +10,7 @@ import { load_config } from '../config/index.js';
 import { forked } from '../../utils/fork.js';
 import { should_polyfill } from '../../utils/platform.js';
 import { installPolyfills } from '../../exports/node/polyfills.js';
+import { route_from_entry } from '../../utils/routing.js';
 
 export default forked(import.meta.url, analyse);
 
@@ -72,6 +73,8 @@ async function analyse({ manifest_path, env }) {
 		let prerender = undefined;
 		/** @type {any} */
 		let config = undefined;
+		/** @type {import('types').PrerenderEntriesGenerator | undefined} */
+		let entries = undefined;
 
 		if (route.endpoint) {
 			const mod = await route.endpoint();
@@ -95,6 +98,7 @@ async function analyse({ manifest_path, env }) {
 			if (mod.OPTIONS) api_methods.push('OPTIONS');
 
 			config = mod.config;
+			entries = mod.entries;
 		}
 
 		if (route.page) {
@@ -125,6 +129,7 @@ async function analyse({ manifest_path, env }) {
 			prerender = get_option(nodes, 'prerender') ?? false;
 
 			config = get_config(nodes);
+			entries = get_option(nodes, 'entries');
 		}
 
 		metadata.routes.set(route.id, {
@@ -136,7 +141,9 @@ async function analyse({ manifest_path, env }) {
 			api: {
 				methods: api_methods
 			},
-			prerender
+			prerender,
+			entries:
+				entries && (await entries()).map((entryObject) => route_from_entry(route.id, entryObject))
 		});
 	}
 

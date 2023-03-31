@@ -264,6 +264,7 @@ export interface ServerMetadataRoute {
 	};
 	methods: HttpMethod[];
 	prerender: PrerenderOption | undefined;
+	entries: Array<string> | undefined;
 }
 
 export interface ServerMetadata {
@@ -308,6 +309,7 @@ export interface SSRNode {
 		csr?: boolean;
 		trailingSlash?: TrailingSlash;
 		config?: any;
+		entries?: PrerenderEntriesGenerator;
 	};
 
 	server: {
@@ -318,6 +320,7 @@ export interface SSRNode {
 		trailingSlash?: TrailingSlash;
 		actions?: Actions;
 		config?: any;
+		entries?: PrerenderEntriesGenerator;
 	};
 
 	universal_id: string;
@@ -355,10 +358,13 @@ export interface PageNodeIndexes {
 	leaf: number;
 }
 
+export type PrerenderEntriesGenerator = () => MaybePromise<Array<Record<string, string>>>;
+
 export type SSREndpoint = Partial<Record<HttpMethod, RequestHandler>> & {
 	prerender?: PrerenderOption;
 	trailingSlash?: TrailingSlash;
 	config?: any;
+	entries?: PrerenderEntriesGenerator;
 };
 
 export interface SSRRoute {

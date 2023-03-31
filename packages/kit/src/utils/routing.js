@@ -96,6 +96,49 @@ export function parse_route_id(id) {
 	return { pattern, params };
 }
 
+const basic_param_pattern = /\[(\[)?(?:\.\.\.)?(.+?)(?:=(.+))?\]\]?/;
+
+/**
+ * Parses a route ID, then resolves it to a route by replacing parameters with actual values from `entry`.
+ * @param {string} id The route id
+ * @param {Record<string, string>} entry The entry meant to populate the route. For example, if the route is `/blog/[slug]`, the entry would be `{ slug: 'hello-world' }`
+ * @example
+ * ```js
+ * route_from_entry(`/blog/[slug]/[...somethingElse]`, { slug: 'hello-world', somethingElse: 'something/else' }); // `/blog/hello-world/something/else`
+ * ```
+ */
+export function route_from_entry(id, entry) {
+	const segments = get_route_segments(id);
+	return (
+		'/' +
+		segments
+			.map((segment) => {
+				const match = basic_param_pattern.exec(segment);
+
+				// static content -- i.e. not a param
+				if (!match) return segment;
+
+				const optional = !!match[1];
+				const name = match[2];
+				const paramValue = entry[name];
+
+				// If the param is optional and there's no value, don't do anything to the output string
+				if (!paramValue && optional) return '';
+
+				if (!paramValue && !optional)
+					throw new Error(`Missing parameter '${name}' in route '${id}'`);
+
+				if (paramValue.startsWith('/') || paramValue.endsWith('/'))
+					throw new Error(
+						`Parameter '${name}' in route '${id}' cannot start or end with a slash -- this would cause an invalid route like 'foo//bar'`
+					);
+
+				return paramValue;
+			})
+			.join('/')
+	);
+}
+
 /**
  * Returns `false` for `(group)` segments
  * @param {string} segment

@@ -363,9 +363,18 @@ async function prerender({ out, manifest_path, metadata, verbose, env }) {
 		saved.set(file, dest);
 	}
 
+	/** @type {Array<string>} */
+	const route_level_entries = [];
+	for (const route of metadata.routes.values()) {
+		if (route.entries) {
+			route_level_entries.push(...route.entries);
+		}
+	}
+
 	if (
 		config.prerender.entries.length > 1 ||
 		config.prerender.entries[0] !== '*' ||
+		route_level_entries.length > 0 ||
 		prerender_map.size > 0
 	) {
 		// Only log if we're actually going to do something to not confuse users
@@ -384,6 +393,12 @@ async function prerender({ out, manifest_path, metadata, verbose, env }) {
 		} else {
 			enqueue(null, config.paths.base + entry);
 		}
+	}
+
+	console.log({ route_level_entries });
+
+	for (const entry of route_level_entries) {
+		enqueue(null, config.paths.base + entry);
 	}
 
 	await q.done();

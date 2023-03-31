@@ -1,6 +1,6 @@
 /**
- * @template {'prerender' | 'ssr' | 'csr' | 'trailingSlash'} Option
- * @template {Option extends 'prerender' ? import('types').PrerenderOption : Option extends 'trailingSlash' ? import('types').TrailingSlash : boolean} Value
+ * @template {'prerender' | 'ssr' | 'csr' | 'trailingSlash' | 'entries'} Option
+ * @template {Option extends 'prerender' ? import('types').PrerenderOption : Option extends 'trailingSlash' ? import('types').TrailingSlash : Option extends 'entries' ? import('types').PrerenderEntriesGenerator : boolean} Value
  *
  * @param {Array<import('types').SSRNode | undefined>} nodes
  * @param {Option} option

@@ -50,7 +50,16 @@ function hint_for_supported_files(key, ext = '.js') {
 	}
 }
 
-const valid_common_exports = ['load', 'prerender', 'csr', 'ssr', 'trailingSlash', 'config'];
+// TODO: Need to distinguish between pages and layouts; should not be able to export entries from layouts
+const valid_common_exports = [
+	'load',
+	'prerender',
+	'csr',
+	'ssr',
+	'trailingSlash',
+	'config',
+	'entries'
+];
 const valid_page_server_exports = [
 	'load',
 	'prerender',
@@ -58,7 +67,8 @@ const valid_page_server_exports = [
 	'ssr',
 	'actions',
 	'trailingSlash',
-	'config'
+	'config',
+	'entries'
 ];
 const valid_server_exports = [
 	'GET',
@@ -69,7 +79,8 @@ const valid_server_exports = [
 	'OPTIONS',
 	'prerender',
 	'trailingSlash',
-	'config'
+	'config',
+	'entries'
 ];
 
 export const validate_common_exports = validator(valid_common_exports);
