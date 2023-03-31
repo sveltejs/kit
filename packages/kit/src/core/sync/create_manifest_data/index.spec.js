@@ -754,14 +754,14 @@ test('prevents route conflicts between groups', () => {
 test('errors with multiple layouts on same directory', () => {
 	assert.throws(
 		() => create('samples/multiple-layouts'),
-		/Conflicting layout files in the same directory:\n\nsamples\/multiple-layouts\/\+layout\.svelte\nsamples\/multiple-layouts\/\+layout@\.svelte\n\nOnly one layout file should exist\./
+		/^Each route should contain only one Svelte layout file \(check in directory samples\/multiple-layouts\/\)$/
 	);
 });
 
 test('errors with multiple pages on same directory', () => {
 	assert.throws(
 		() => create('samples/multiple-pages'),
-		/Conflicting page files in the same directory:\n\nsamples\/multiple-pages\/\+page\.svelte\nsamples\/multiple-pages\/\+page@\.svelte\n\nOnly one page file should exist\./
+		/^Each route should contain only one Svelte page file \(check in directory samples\/multiple-pages\/\)$/
 	);
 });
 
