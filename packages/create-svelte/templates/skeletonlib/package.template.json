@@ -14,7 +14,7 @@
 			"svelte": "./dist/index.js"
 		}
 	},
-	"files": ["dist"],
+	"files": ["dist", "!dist/**/tests", "!dist/**/*.test.*"],
 	"peerDependencies": {
 		"svelte": "^3.54.0"
 	},
