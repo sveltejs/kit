@@ -2,4 +2,4 @@
 '@sveltejs/kit': patch
 ---
 
-fix: Enables $page.url changes when URL is directly altered in address bar
+fix: update `$page.url` when URL hash is directly altered in address bar
