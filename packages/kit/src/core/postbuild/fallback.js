@@ -36,22 +36,28 @@ async function generate_fallback({ manifest_path, env }) {
 	await server.init({ env });
 
 	const usual_browser_headers = {
-		'accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.9',
+		accept:
+			'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.9',
 		'accept-encoding': 'gzip, deflate, br',
-		'user-agent': 'Mozilla/5.0 (Linux; Android 6.0; Nexus 5 Build/MRA58N) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/107.0.0.0 Mobile Safari/537.36'
+		'user-agent':
+			'Mozilla/5.0 (Linux; Android 6.0; Nexus 5 Build/MRA58N) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/107.0.0.0 Mobile Safari/537.36'
 		//other VERY VERY COMMON stuff
+		//if this looks weird, `pnpm format` did it idk
 	};
 
-	const response = await server.respond(new Request(config.prerender.origin + '/[fallback]', {headers: usual_browser_headers}), {
-		getClientAddress: () => {
-			throw new Error('Cannot read clientAddress during prerendering');
-		},
-		prerendering: {
-			fallback: true,
-			dependencies: new Map()
-		},
-		read: (file) => readFileSync(join(config.files.assets, file))
-	});
+	const response = await server.respond(
+		new Request(config.prerender.origin + '/[fallback]', { headers: usual_browser_headers }),
+		{
+			getClientAddress: () => {
+				throw new Error('Cannot read clientAddress during prerendering');
+			},
+			prerendering: {
+				fallback: true,
+				dependencies: new Map()
+			},
+			read: (file) => readFileSync(join(config.files.assets, file))
+		}
+	);
 
 	if (response.ok) {
 		return await response.text();
