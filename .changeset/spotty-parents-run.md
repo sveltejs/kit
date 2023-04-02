@@ -2,4 +2,4 @@
 '@sveltejs/kit': patch
 ---
 
-fix: prevent routes from having multiple Svelte page/layout files
+fix: prevent routes/layouts from having conflicting files through resets or different extensions
