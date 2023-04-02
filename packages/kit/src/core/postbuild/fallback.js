@@ -35,7 +35,7 @@ async function generate_fallback({ manifest_path, env }) {
 	const server = new Server(manifest);
 	await server.init({ env });
 
-	const response = await server.respond(new Request(config.prerender.origin + '/[fallback]'), {
+	const response = await server.respond(new Request(config.prerender.origin + '/[fallback]', {headers: {'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.9'}}), {
 		getClientAddress: () => {
 			throw new Error('Cannot read clientAddress during prerendering');
 		},
