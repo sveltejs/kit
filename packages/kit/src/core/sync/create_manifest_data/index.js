@@ -235,7 +235,7 @@ function create_routes_and_nodes(cwd, config, fallback) {
 					return new Error(
 						`Multiple ${type} files found in ${routes_base}${route.id} : ${path.basename(
 							existingFile
-						)} and ${path.basename(project_relative)}`
+						)} and ${file.name}`
 					);
 				}
 
