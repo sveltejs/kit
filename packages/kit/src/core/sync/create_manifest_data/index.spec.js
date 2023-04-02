@@ -767,8 +767,18 @@ test('errors with multiple pages on same directory', () => {
 
 test('errors with both ts and js handlers for the same route', () => {
 	assert.throws(
-		() => create('samples/conflicting-ts-js-handlers'),
-		/^Multiple universal page module files found in samples\/conflicting-ts-js-handlers\/ : \+page\.js and \+page\.ts/
+		() => create('samples/conflicting-ts-js-handlers-page'),
+		/^Multiple universal page module files found in samples\/conflicting-ts-js-handlers-page\/ : \+page\.js and \+page\.ts/
+	);
+
+	assert.throws(
+		() => create('samples/conflicting-ts-js-handlers-layout'),
+		/^Multiple server layout module files found in samples\/conflicting-ts-js-handlers-layout\/ : \+layout\.server\.js and \+layout\.server\.ts/
+	);
+
+	assert.throws(
+		() => create('samples/conflicting-ts-js-handlers-server'),
+		/^Multiple endpoint files found in samples\/conflicting-ts-js-handlers-server\/ : \+server\.js and \+server\.ts/
 	);
 });
 
