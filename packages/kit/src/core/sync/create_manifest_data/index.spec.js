@@ -754,14 +754,21 @@ test('prevents route conflicts between groups', () => {
 test('errors with multiple layouts on same directory', () => {
 	assert.throws(
 		() => create('samples/multiple-layouts'),
-		/^Each route should contain only one Svelte layout file \(check in directory samples\/multiple-layouts\/\)$/
+		/^Multiple layout component files found in samples\/multiple-layouts\/ : \+layout\.svelte and \+layout@\.svelte/
 	);
 });
 
 test('errors with multiple pages on same directory', () => {
 	assert.throws(
 		() => create('samples/multiple-pages'),
-		/^Each route should contain only one Svelte page file \(check in directory samples\/multiple-pages\/\)$/
+		/^Multiple page component files found in samples\/multiple-pages\/ : \+page\.svelte and \+page@\.svelte/
+	);
+});
+
+test('errors with both ts and js handlers for the same route', () => {
+	assert.throws(
+		() => create('samples/conflicting-ts-js-handlers'),
+		/^Multiple universal page module files found in samples\/conflicting-ts-js-handlers\/ : \+page\.js and \+page\.ts/
 	);
 });
 
