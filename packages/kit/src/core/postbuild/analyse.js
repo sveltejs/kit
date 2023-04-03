@@ -143,7 +143,7 @@ async function analyse({ manifest_path, env }) {
 			},
 			prerender,
 			entries:
-				entries && (await entries()).map((entryObject) => route_from_entry(route.id, entryObject))
+				entries && (await entries()).map((entry_object) => route_from_entry(route.id, entry_object))
 		});
 	}
 
