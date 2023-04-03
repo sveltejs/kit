@@ -73,7 +73,7 @@ async function analyse({ manifest_path, env }) {
 		let prerender = undefined;
 		/** @type {any} */
 		let config = undefined;
-		/** @type {import('types').PrerenderEntriesGenerator | undefined} */
+		/** @type {import('types').PrerenderEntryGenerator | undefined} */
 		let entries = undefined;
 
 		if (route.endpoint) {
