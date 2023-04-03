@@ -442,15 +442,6 @@ function process_node(node, outdir, is_page, proxies, all_pages_have_load = true
 
 	exports.push(`export type ${prefix}Data = ${data};`);
 
-	if (
-		proxies?.server?.exports.includes('entries') ||
-		proxies?.universal?.exports.includes('entries')
-	) {
-		exports.push(
-			`export type EntryGenerator = () => Promise<Array<RouteParams>> | Array<RouteParams>;`
-		);
-	}
-
 	return { declarations, exports, proxies };
 
 	/**
@@ -569,7 +560,7 @@ function replace_ext_with_js(file_path) {
  * @returns {Omit<NonNullable<Proxy>, 'file_name'> | null}
  */
 export function tweak_types(content, is_server) {
-	const names = new Set(is_server ? ['load', 'actions', 'entries'] : ['load', 'entries']);
+	const names = new Set(is_server ? ['load', 'actions'] : ['load']);
 
 	try {
 		let modified = false;
