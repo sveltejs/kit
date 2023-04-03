@@ -9,7 +9,7 @@
  */
 export function get_option(nodes, option) {
 	return nodes.reduce((value, node) => {
-		return /** @type {any} TypeScript's too dumb to understand this */ (
+		return /** @type {Value} TypeScript's too dumb to understand this */ (
 			node?.universal?.[option] ?? node?.server?.[option] ?? value
 		);
 	}, /** @type {Value | undefined} */ (undefined));

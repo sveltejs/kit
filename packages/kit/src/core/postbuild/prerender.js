@@ -395,8 +395,6 @@ async function prerender({ out, manifest_path, metadata, verbose, env }) {
 		}
 	}
 
-	console.log({ route_level_entries });
-
 	for (const entry of route_level_entries) {
 		enqueue(null, config.paths.base + entry);
 	}

@@ -129,7 +129,7 @@ async function analyse({ manifest_path, env }) {
 			prerender = get_option(nodes, 'prerender') ?? false;
 
 			config = get_config(nodes);
-			entries = get_option(nodes, 'entries');
+			entries ??= get_option(nodes, 'entries');
 		}
 
 		metadata.routes.set(route.id, {
