@@ -1,6 +1,6 @@
 import { test } from 'uvu';
 import * as assert from 'uvu/assert';
-import { exec, parse_route_id } from './routing.js';
+import { exec, parse_route_id, route_from_entry } from './routing.js';
 
 const tests = {
 	'/': {
@@ -218,9 +218,52 @@ for (const { path, route, expected } of exec_tests) {
 	});
 }
 
-test('errors on bad param name', () => {
+test('parse_route_id errors on bad param name', () => {
 	assert.throws(() => parse_route_id('abc/[b-c]'), /Invalid param: b-c/);
 	assert.throws(() => parse_route_id('abc/[bc=d-e]'), /Invalid param: bc=d-e/);
+});
+
+const from_entry_tests = [
+	{
+		route: '/blog/[one]/[two]',
+		entry: { one: 'one', two: 'two' },
+		expected: '/blog/one/two'
+	},
+	{
+		route: '/blog/[one=matcher]/[...two]',
+		entry: { one: 'one', two: 'two/three' },
+		expected: '/blog/one/two/three'
+	},
+	{
+		route: '/blog/[one=matcher]/[[two]]',
+		entry: { one: 'one' },
+		expected: '/blog/one'
+	}
+];
+
+for (const { route, entry, expected } of from_entry_tests) {
+	test(`route_from_entry generates correct path for ${route}`, () => {
+		const result = route_from_entry(route, entry);
+		assert.equal(result, expected);
+	});
+}
+
+test('route_from_entry errors on missing entry for required param', () => {
+	assert.throws(
+		() => route_from_entry('/blog/[one]/[two]', { one: 'one' }),
+		"Missing param 'two' in route /blog/[one]/[two]"
+	);
+});
+
+test('route_from_entry errors on entry values starting or ending with slashes', () => {
+	assert.throws(
+		() => route_from_entry('/blog/[one]/[two]', { one: 'one', two: '/two' }),
+		"Parameter 'two' in route /blog/[one]/[two] cannot start or end with a slash -- this would cause an invalid route like foo//bar"
+	);
+	assert.throws(
+		() => route_from_entry('/blog/[one]/[two]', { one: 'one', two: 'two/' }),
+		"Parameter 'two' in route /blog/[one]/[two] cannot start or end with a slash -- this would cause an invalid route like foo//bar"
+	);
 });
 
 test.run();
