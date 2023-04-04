@@ -120,20 +120,20 @@ export function route_from_entry(id, entry) {
 
 				const optional = !!match[1];
 				const name = match[2];
-				const paramValue = entry[name];
+				const param_value = entry[name];
 
 				// This is nested so TS correctly narrows the type
-				if (!paramValue) {
+				if (!param_value) {
 					if (optional) return '';
 					throw new Error(`Missing parameter '${name}' in route ${id}`);
 				}
 
-				if (paramValue.startsWith('/') || paramValue.endsWith('/'))
+				if (param_value.startsWith('/') || param_value.endsWith('/'))
 					throw new Error(
 						`Parameter '${name}' in route ${id} cannot start or end with a slash -- this would cause an invalid route like foo//bar`
 					);
 
-				return paramValue;
+				return param_value;
 			})
 			.filter(Boolean)
 			.join('/')
