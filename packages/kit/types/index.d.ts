@@ -11,6 +11,7 @@ import {
 	Logger,
 	MaybePromise,
 	Prerendered,
+	PrerenderEntryGeneratorMismatchHandlerValue,
 	PrerenderHttpErrorHandlerValue,
 	PrerenderMissingIdHandlerValue,
 	PrerenderOption,
@@ -525,6 +526,7 @@ export interface KitConfig {
 		 * @default "fail"
 		 */
 		handleMissingId?: PrerenderMissingIdHandlerValue;
+		handleEntryGeneratorMismatch?: PrerenderEntryGeneratorMismatchHandlerValue;
 		/**
 		 * The value of `url.origin` during prerendering; useful if it is included in rendered content.
 		 * @default "http://sveltekit-prerender"

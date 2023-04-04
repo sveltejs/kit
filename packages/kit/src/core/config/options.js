@@ -213,6 +213,12 @@ const options = object(
 					throw new Error(`${keypath} should be "fail", "warn", "ignore" or a custom function`);
 				}),
 
+				handleEntryGeneratorMismatch: validate('fail', (input, keypath) => {
+					if (typeof input === 'function') return input;
+					if (['fail', 'warn', 'ignore'].includes(input)) return input;
+					throw new Error(`${keypath} should be "fail", "warn", "ignore" or a custom function`);
+				}),
+
 				origin: validate('http://sveltekit-prerender', (input, keypath) => {
 					assert_string(input, keypath);
 
