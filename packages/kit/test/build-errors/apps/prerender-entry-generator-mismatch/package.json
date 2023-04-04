@@ -1,0 +1,20 @@
+{
+	"name": "prerenderable-incorrect-fragment",
+	"private": true,
+	"version": "0.0.1",
+	"scripts": {
+		"dev": "vite dev",
+		"build": "vite build",
+		"preview": "vite preview",
+		"check": "svelte-kit sync && tsc && svelte-check"
+	},
+	"devDependencies": {
+		"@sveltejs/adapter-auto": "workspace:^",
+		"@sveltejs/kit": "workspace:^",
+		"svelte": "^3.56.0",
+		"svelte-check": "^3.0.2",
+		"typescript": "^4.9.4",
+		"vite": "^4.2.0"
+	},
+	"type": "module"
+}
