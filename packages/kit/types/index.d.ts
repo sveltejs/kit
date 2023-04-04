@@ -532,7 +532,7 @@ export interface KitConfig {
 		 * - `'fail'` — fail the build
 		 * - `'ignore'` - silently ignore the failure and continue
 		 * - `'warn'` — continue, but print a warning
-		 * - `(details) => void` — a custom error handler that takes a `details` object with `path`, `id`, `referrers` and `message` properties. If you `throw` from this function, the build will fail
+		 * - `(details) => void` — a custom error handler that takes a `details` object with `generatedFromId`, `entry`, `matchedId` and `message` properties. If you `throw` from this function, the build will fail
 		 *
 		 * @default "fail"
 		 */
