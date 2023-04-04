@@ -96,7 +96,7 @@ export function parse_route_id(id) {
 	return { pattern, params };
 }
 
-const basic_param_pattern = /\[(\[)?(?:\.\.\.)?(.+?)(?:=(.+))?\]\]?/;
+const basic_param_pattern = /\[(\[)?(?:\.\.\.)?(\w+?)(?:=(\w+))?\]\]?/;
 
 /**
  * Parses a route ID, then resolves it to a route by replacing parameters with actual values from `entry`.
@@ -138,6 +138,17 @@ export function route_from_entry(id, entry) {
 			.filter(Boolean)
 			.join('/')
 	);
+}
+
+const optional_param_regex = /\/\[\[\w+?(?:=\w+)?\]\]/;
+
+/**
+ * Removes optional params from a route ID.
+ * @param {string} id
+ * @returns The route id with optional params removed
+ */
+export function remove_optional_params(id) {
+	return id.replace(optional_param_regex, '');
 }
 
 /**
