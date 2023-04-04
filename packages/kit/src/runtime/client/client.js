@@ -31,7 +31,7 @@ import { stores } from './singletons.js';
 import { unwrap_promises } from '../../utils/promises.js';
 import * as devalue from 'devalue';
 import { INDEX_KEY, PRELOAD_PRIORITIES, SCROLL_KEY, SNAPSHOT_KEY } from './constants.js';
-import { validate_common_exports } from '../../utils/exports.js';
+import { validate_page_exports } from '../../utils/exports.js';
 import { compact } from '../../utils/array.js';
 import { validate_depends } from '../shared.js';
 
@@ -594,7 +594,7 @@ export function create_client(app, target) {
 		const node = await loader();
 
 		if (DEV) {
-			validate_common_exports(node.universal);
+			validate_page_exports(node.universal);
 		}
 
 		if (node.universal?.load) {

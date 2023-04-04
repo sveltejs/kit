@@ -20,7 +20,9 @@ import { add_cookies_to_headers, get_cookies } from './cookie.js';
 import { create_fetch } from './fetch.js';
 import { Redirect } from '../control.js';
 import {
-	validate_common_exports,
+	validate_layout_exports,
+	validate_layout_server_exports,
+	validate_page_exports,
 	validate_page_server_exports,
 	validate_server_exports
 } from '../../utils/exports.js';
@@ -185,8 +187,11 @@ export async function respond(request, options, manifest, state) {
 
 					for (const layout of layouts) {
 						if (layout) {
-							validate_common_exports(layout.server, /** @type {string} */ (layout.server_id));
-							validate_common_exports(
+							validate_layout_server_exports(
+								layout.server,
+								/** @type {string} */ (layout.server_id)
+							);
+							validate_layout_exports(
 								layout.universal,
 								/** @type {string} */ (layout.universal_id)
 							);
@@ -195,7 +200,7 @@ export async function respond(request, options, manifest, state) {
 
 					if (page) {
 						validate_page_server_exports(page.server, /** @type {string} */ (page.server_id));
-						validate_common_exports(page.universal, /** @type {string} */ (page.universal_id));
+						validate_page_exports(page.universal, /** @type {string} */ (page.universal_id));
 					}
 				}
 

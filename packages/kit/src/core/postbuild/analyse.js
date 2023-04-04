@@ -2,7 +2,9 @@ import { join } from 'node:path';
 import { pathToFileURL } from 'node:url';
 import { get_option } from '../../utils/options.js';
 import {
-	validate_common_exports,
+	validate_layout_exports,
+	validate_layout_server_exports,
+	validate_page_exports,
 	validate_page_server_exports,
 	validate_server_exports
 } from '../../utils/exports.js';
@@ -113,8 +115,8 @@ async function analyse({ manifest_path, env }) {
 
 			for (const layout of layouts) {
 				if (layout) {
-					validate_common_exports(layout.server, layout.server_id);
-					validate_common_exports(layout.universal, layout.universal_id);
+					validate_layout_server_exports(layout.server, layout.server_id);
+					validate_layout_exports(layout.universal, layout.universal_id);
 				}
 			}
 
@@ -123,7 +125,7 @@ async function analyse({ manifest_path, env }) {
 				if (page.server?.actions) page_methods.push('POST');
 
 				validate_page_server_exports(page.server, page.server_id);
-				validate_common_exports(page.universal, page.universal_id);
+				validate_page_exports(page.universal, page.universal_id);
 			}
 
 			prerender = get_option(nodes, 'prerender') ?? false;
