@@ -68,5 +68,12 @@ export function is_content_type(request, ...types) {
  * @param {Request} request
  */
 export function is_form_content_type(request) {
-	return is_content_type(request, 'application/x-www-form-urlencoded', 'multipart/form-data');
+	// These content types must be protected against CSRF
+	// https://developer.mozilla.org/en-US/docs/Web/API/HTMLFormElement/enctype
+	return is_content_type(
+		request,
+		'application/x-www-form-urlencoded',
+		'multipart/form-data',
+		'text/plain'
+	);
 }

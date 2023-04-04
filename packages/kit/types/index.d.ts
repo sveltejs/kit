@@ -328,13 +328,13 @@ export interface KitConfig {
 		reportOnly?: CspDirectives;
 	};
 	/**
-	 * Protection against [cross-site request forgery](https://owasp.org/www-community/attacks/csrf) attacks.
+	 * Protection against [cross-site request forgery (CSRF)](https://owasp.org/www-community/attacks/csrf) attacks.
 	 */
 	csrf?: {
 		/**
-		 * Whether to check the incoming `origin` header for `POST` form submissions and verify that it matches the server's origin.
+		 * Whether to check the incoming `origin` header for `POST`, `PUT`, `PATCH`, or `DELETE` form submissions and verify that it matches the server's origin.
 		 *
-		 * To allow people to make `POST` form submissions to your app from other origins, you will need to disable this option. Be careful!
+		 * To allow people to make `POST`, `PUT`, `PATCH`, or `DELETE` requests with a `Content-Type` of `application/x-www-form-urlencoded`, `multipart/form-data`, or `text/plain` to your app from other origins, you will need to disable this option. Be careful!
 		 * @default true
 		 */
 		checkOrigin?: boolean;

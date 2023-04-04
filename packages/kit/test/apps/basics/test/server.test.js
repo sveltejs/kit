@@ -58,15 +58,27 @@ test.describe('Cookies', () => {
 
 test.describe('CSRF', () => {
 	test('Blocks requests with incorrect origin', async ({ baseURL }) => {
-		const res = await fetch(`${baseURL}/csrf`, {
-			method: 'POST',
-			headers: {
-				'content-type': 'application/x-www-form-urlencoded'
+		const content_types = [
+			'application/x-www-form-urlencoded',
+			'multipart/form-data',
+			'text/plain'
+		];
+		const methods = ['POST', 'PUT', 'PATCH', 'DELETE'];
+		for (const method of methods) {
+			for (const content_type of content_types) {
+				const res = await fetch(`${baseURL}/csrf`, {
+					method,
+					headers: {
+						'content-type': content_type
+					}
+				});
+				const message = `request method: ${method}, content-type: ${content_type}`;
+				expect(res.status, message).toBe(403);
+				expect(await res.text(), message).toBe(
+					`Cross-site ${method} form submissions are forbidden`
+				);
 			}
-		});
-
-		expect(res.status).toBe(403);
-		expect(await res.text()).toBe('Cross-site POST form submissions are forbidden');
+		}
 	});
 });
 
