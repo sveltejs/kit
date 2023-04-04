@@ -1,5 +1,13 @@
 # @sveltejs/kit
 
+## 1.15.1
+
+### Patch Changes
+
+- fix: pin undici to 5.20.0 ([#9591](https://github.com/sveltejs/kit/pull/9591))
+
+- fix: address security advisory CVE-2023-29003 by including `text/plain` and `PUT`/`PATCH`/`DELETE` requests in set of blocked cross-origin requests for CSRF protection ([`bb2253d5`](https://github.com/sveltejs/kit/commit/bb2253d51d00aba2e4353952d4fb0dcde6c77123))
+
 ## 1.15.0
 
 ### Minor Changes
