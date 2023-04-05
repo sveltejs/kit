@@ -88,6 +88,23 @@ You will have to prevent GitHub's provided Jekyll from managing your site by put
 
 A config for GitHub Pages might look like the following:
 
+### SvelteKit >=1.9.0
+```js
+// @errors: 2307
+/// file: svelte.config.js
+import adapter from '@sveltejs/adapter-static';
+
+const dev = process.argv.includes('dev');
+
+/** @type {import('@sveltejs/kit').Config} */
+const config = {
+	kit: {
+		adapter: adapter(),
+	}
+};
+```
+
+### SvelteKit <1.9.0
 ```js
 // @errors: 2307
 /// file: svelte.config.js
