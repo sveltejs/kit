@@ -89,7 +89,7 @@ export function create_client(app, target) {
 		/** @type {Array<(navigation: import('types').BeforeNavigate) => void>} */
 		before_navigate: [],
 
-		/** @type {Array<(navigation: import('types').OnNavigate) => (() => void) | void>} */
+		/** @type {Array<(navigation: import('types').OnNavigate) => import('types').MaybePromise<(() => void) | void>>} */
 		on_navigate: [],
 
 		/** @type {Array<(navigation: import('types').AfterNavigate) => void>} */
@@ -377,21 +377,14 @@ export function create_client(app, target) {
 		load_cache = null;
 
 		if (started) {
-			/** @type {import('types').OnNavigate} */
-			const navigation = {
-				from: {
-					params: current.params,
-					route: { id: current.route?.id ?? null },
-					url: current.url
-				},
-				to: {
-					params: intent?.params ?? null,
-					route: { id: intent?.route?.id ?? null },
-					url
-				},
-				willUnload: false,
-				type: /** @type {import('types').NavigationType} */ (type)
-			};
+			const navigation = /** @type {import('types').OnNavigate} */ (
+				create_navigation(
+					current,
+					intent,
+					url,
+					/** @type {import('types').NavigationType} */ (type)
+				)
+			);
 
 			current = navigation_result.state;
 
@@ -1111,20 +1104,7 @@ export function create_client(app, target) {
 		let should_block = false;
 
 		/** @type {import('types').Navigation} */
-		const navigation = {
-			from: {
-				params: current.params,
-				route: { id: current.route?.id ?? null },
-				url: current.url
-			},
-			to: {
-				params: intent?.params ?? null,
-				route: { id: intent?.route?.id ?? null },
-				url
-			},
-			willUnload: !intent,
-			type
-		};
+		const navigation = create_navigation(current, intent, url, type);
 
 		if (delta !== undefined) {
 			navigation.delta = delta;
@@ -1524,14 +1504,7 @@ export function create_client(app, target) {
 					// it's due to an external or full-page-reload link, for which we don't want to call the hook again.
 					/** @type {import('types').BeforeNavigate} */
 					const navigation = {
-						from: {
-							params: current.params,
-							route: { id: current.route?.id ?? null },
-							url: current.url
-						},
-						to: null,
-						willUnload: true,
-						type: 'leave',
+						...create_navigation(current, undefined, null, 'leave'),
 						cancel: () => (should_block = true)
 					};
 
@@ -1990,6 +1963,30 @@ function reset_focus() {
 			});
 		});
 	}
+}
+
+/**
+ * @param {import('./types').NavigationState} current
+ * @param {import('./types').NavigationIntent | undefined} intent
+ * @param {URL | null} url
+ * @param {import('types').NavigationType} type
+ * @returns {import('types').Navigation}
+ */
+function create_navigation(current, intent, url, type) {
+	return {
+		from: {
+			params: current.params,
+			route: { id: current.route?.id ?? null },
+			url: current.url
+		},
+		to: url && {
+			params: intent?.params ?? null,
+			route: { id: intent?.route?.id ?? null },
+			url
+		},
+		willUnload: !intent,
+		type
+	};
 }
 
 if (DEV) {
