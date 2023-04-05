@@ -843,7 +843,7 @@ export interface BeforeNavigate extends Navigation {
 }
 
 /**
- * The argument passed to [`afterNavigate`](https://kit.svelte.dev/docs/modules#$app-navigation-onnavigate) callbacks.
+ * The argument passed to [`onNavigate`](https://kit.svelte.dev/docs/modules#$app-navigation-onnavigate) callbacks.
  */
 export interface OnNavigate extends Navigation {
 	/**
