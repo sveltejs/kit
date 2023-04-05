@@ -111,7 +111,7 @@ test.describe('a11y', () => {
 	});
 });
 
-test.describe.only('Navigation lifecycle functions', () => {
+test.describe('Navigation lifecycle functions', () => {
 	test('beforeNavigate prevents navigation triggered by link click', async ({ page, baseURL }) => {
 		await page.goto('/navigation-lifecycle/before-navigate/prevent-navigation');
 
