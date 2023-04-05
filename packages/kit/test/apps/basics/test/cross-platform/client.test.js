@@ -221,6 +221,14 @@ test.describe('Navigation lifecycle functions', () => {
 		await clicknav('[href="/navigation-lifecycle/after-navigate/b"]');
 		expect(await page.textContent('h1')).toBe('/navigation-lifecycle/after-navigate/a -> /navigation-lifecycle/after-navigate/b');
 	});
+
+	test('onNavigate calls callback', async ({ page, clicknav }) => {
+		await page.goto('/navigation-lifecycle/on-navigate/a');
+		expect(await page.textContent('h1')).toBe('undefined -> /navigation-lifecycle/on-navigate/a (...)');
+
+		await clicknav('[href="/navigation-lifecycle/on-navigate/b"]');
+		expect(await page.textContent('h1')).toBe('/navigation-lifecycle/on-navigate/a -> /navigation-lifecycle/on-navigate/b (link)');
+	});
 });
 
 test.describe('Scrolling', () => {
