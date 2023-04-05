@@ -94,8 +94,6 @@ A config for GitHub Pages might look like the following:
 /// file: svelte.config.js
 import adapter from '@sveltejs/adapter-static';
 
-const dev = process.argv.includes('dev');
-
 /** @type {import('@sveltejs/kit').Config} */
 const config = {
 	kit: {
