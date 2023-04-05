@@ -843,6 +843,24 @@ export interface BeforeNavigate extends Navigation {
 }
 
 /**
+ * The argument passed to [`afterNavigate`](https://kit.svelte.dev/docs/modules#$app-navigation-onnavigate) callbacks.
+ */
+export interface OnNavigate extends Navigation {
+	/**
+	 * The type of navigation:
+	 * - `form`: The user submitted a `<form>`
+	 * - `link`: Navigation was triggered by a link click
+	 * - `goto`: Navigation was triggered by a `goto(...)` call or a redirect
+	 * - `popstate`: Navigation was triggered by back/forward navigation
+	 */
+	type: Omit<NavigationType, 'enter' | 'leave'>;
+	/**
+	 * Since `onNavigate` callbacks are called immediately before a client-side navigation, it will never be called with a navigation that unloads the page.
+	 */
+	willUnload: false;
+}
+
+/**
  * The argument passed to [`afterNavigate`](https://kit.svelte.dev/docs/modules#$app-navigation-afternavigate) callbacks.
  */
 export interface AfterNavigate extends Navigation {
@@ -856,7 +874,7 @@ export interface AfterNavigate extends Navigation {
 	 */
 	type: Omit<NavigationType, 'leave'>;
 	/**
-	 * Since `afterNavigate` is called after a navigation completes, it will never be called with a navigation that unloads the page.
+	 * Since `afterNavigate` callbacks are called after a navigation completes, it will never be called with a navigation that unloads the page.
 	 */
 	willUnload: false;
 }

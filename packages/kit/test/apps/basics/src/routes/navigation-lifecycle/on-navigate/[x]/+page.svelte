@@ -7,12 +7,13 @@
 	/** @type {import('@sveltejs/kit').NavigationTarget} */
 	let to;
 
-    /** @type {Omit<import('@sveltejs/kit').NavigationType, 'enter' | 'leave'>} */
-    let type;
+	/** @type {Omit<import('@sveltejs/kit').NavigationType, 'enter' | 'leave'>} */
+	let type;
 
 	onNavigate((navigation) => {
 		from = navigation.from;
 		to = navigation.to;
+		type = navigation.type;
 	});
 </script>
 

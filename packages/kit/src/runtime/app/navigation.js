@@ -19,4 +19,5 @@ export const invalidateAll = BROWSER ? client.invalidateAll : guard('invalidateA
 export const preloadData = BROWSER ? client.preload_data : guard('preloadData');
 export const preloadCode = BROWSER ? client.preload_code : guard('preloadCode');
 export const beforeNavigate = BROWSER ? client.before_navigate : () => {};
+export const onNavigate = BROWSER ? client.on_navigate : () => {};
 export const afterNavigate = BROWSER ? client.after_navigate : () => {};

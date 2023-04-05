@@ -162,7 +162,9 @@ declare module '$app/forms' {
 }
 
 declare module '$app/navigation' {
-	import { BeforeNavigate, AfterNavigate } from '@sveltejs/kit';
+	import { BeforeNavigate, OnNavigate, AfterNavigate } from '@sveltejs/kit';
+
+	type MaybePromise<T> = T | Promise<T>;
 
 	/**
 	 * If called when the page is being updated following a navigation (in `onMount` or `afterNavigate` or an action, for example), this disables SvelteKit's built-in scroll handling.
@@ -263,6 +265,15 @@ declare module '$app/navigation' {
 	 * `afterNavigate` must be called during a component initialization. It remains active as long as the component is mounted.
 	 */
 	export function afterNavigate(callback: (navigation: AfterNavigate) => void): void;
+
+	/**
+	 * A lifecycle function that runs the supplied `callback` immediately before we navigate to a new URL.
+	 * 
+	 * If a function is returned from the callback, it will be called once the DOM has updated.
+	 *
+	 * `onNavigate` must be called during a component initialization. It remains active as long as the component is mounted.
+	 */
+	export function onNavigate(callback: (navigation: OnNavigate) => MaybePromise<(() => void) | void>): void;
 }
 
 declare module '$app/paths' {

@@ -89,6 +89,9 @@ export function create_client(app, target) {
 		/** @type {Array<(navigation: import('types').BeforeNavigate) => void>} */
 		before_navigate: [],
 
+		/** @type {Array<(navigation: import('types').OnNavigate) => (() => void) | void>} */
+		on_navigate: [],
+
 		/** @type {Array<(navigation: import('types').AfterNavigate) => void>} */
 		after_navigate: []
 	};
@@ -261,6 +264,7 @@ export function create_client(app, target) {
 	 * @param {import('./types').NavigationIntent | undefined} intent
 	 * @param {URL} url
 	 * @param {string[]} redirect_chain
+	 * @param {import('types').NavigationType} [type]
 	 * @param {number} [previous_history_index]
 	 * @param {{hash?: string, scroll: { x: number, y: number } | null, keepfocus: boolean, details: { replaceState: boolean, state: any } | null}} [opts]
 	 * @param {{}} [nav_token] To distinguish between different navigation events and determine the latest. Needed for example for redirects to keep the original token
@@ -270,6 +274,7 @@ export function create_client(app, target) {
 		intent,
 		url,
 		redirect_chain,
+		type,
 		previous_history_index,
 		opts,
 		nav_token = {},
@@ -372,11 +377,45 @@ export function create_client(app, target) {
 		load_cache = null;
 
 		if (started) {
+			/** @type {import('types').OnNavigate} */
+			const navigation = {
+				from: {
+					params: current.params,
+					route: { id: current.route?.id ?? null },
+					url: current.url
+				},
+				to: {
+					params: intent?.params ?? null,
+					route: { id: intent?.route?.id ?? null },
+					url
+				},
+				willUnload: false,
+				type: /** @type {import('types').NavigationType} */ (type)
+			};
+
 			current = navigation_result.state;
 
 			// reset url before updating page store
 			if (navigation_result.props.page) {
 				navigation_result.props.page.url = url;
+			}
+
+			const after_navigate = (
+				await Promise.all(callbacks.on_navigate.map((fn) => fn(navigation)))
+			).filter((value) => typeof value === 'function');
+
+			if (after_navigate.length > 0) {
+				function cleanup() {
+					callbacks.after_navigate = callbacks.after_navigate.filter(
+						// @ts-ignore
+						(fn) => !after_navigate.includes(fn)
+					);
+				}
+
+				after_navigate.push(cleanup);
+
+				// @ts-ignore
+				callbacks.after_navigate.push(...after_navigate);
 			}
 
 			root.$set(navigation_result.props);
@@ -1158,6 +1197,7 @@ export function create_client(app, target) {
 			intent,
 			url,
 			redirect_chain,
+			type,
 			previous_history_index,
 			{
 				scroll,
@@ -1360,6 +1400,17 @@ export function create_client(app, target) {
 				return () => {
 					const i = callbacks.before_navigate.indexOf(fn);
 					callbacks.before_navigate.splice(i, 1);
+				};
+			});
+		},
+
+		on_navigate: (fn) => {
+			onMount(() => {
+				callbacks.on_navigate.push(fn);
+
+				return () => {
+					const i = callbacks.on_navigate.indexOf(fn);
+					callbacks.on_navigate.splice(i, 1);
 				};
 			});
 		},

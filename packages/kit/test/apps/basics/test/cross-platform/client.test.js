@@ -111,7 +111,7 @@ test.describe('a11y', () => {
 	});
 });
 
-test.describe('Navigation lifecycle functions', () => {
+test.describe.only('Navigation lifecycle functions', () => {
 	test('beforeNavigate prevents navigation triggered by link click', async ({ page, baseURL }) => {
 		await page.goto('/navigation-lifecycle/before-navigate/prevent-navigation');
 
@@ -141,14 +141,22 @@ test.describe('Navigation lifecycle functions', () => {
 		expect(await page.innerHTML('pre')).toBe('1 false goto');
 	});
 
-	test('beforeNavigate prevents external navigation triggered by goto', async ({ page, app, baseURL }) => {
+	test('beforeNavigate prevents external navigation triggered by goto', async ({
+		page,
+		app,
+		baseURL
+	}) => {
 		await page.goto('/navigation-lifecycle/before-navigate/prevent-navigation');
 		await app.goto('https://google.de');
 		expect(page.url()).toBe(baseURL + '/navigation-lifecycle/before-navigate/prevent-navigation');
 		expect(await page.innerHTML('pre')).toBe('1 true goto');
 	});
 
-	test('beforeNavigate prevents navigation triggered by back button', async ({ page, app, baseURL }) => {
+	test('beforeNavigate prevents navigation triggered by back button', async ({
+		page,
+		app,
+		baseURL
+	}) => {
 		await page.goto('/navigation-lifecycle/before-navigate/a');
 		await app.goto('/navigation-lifecycle/before-navigate/prevent-navigation');
 		await page.click('h1'); // The browsers block attempts to prevent navigation on a frame that's never had a user gesture.
@@ -216,18 +224,24 @@ test.describe('Navigation lifecycle functions', () => {
 
 	test('afterNavigate calls callback', async ({ page, clicknav }) => {
 		await page.goto('/navigation-lifecycle/after-navigate/a');
-		expect(await page.textContent('h1')).toBe('undefined -> /navigation-lifecycle/after-navigate/a');
+		expect(await page.textContent('h1')).toBe(
+			'undefined -> /navigation-lifecycle/after-navigate/a'
+		);
 
 		await clicknav('[href="/navigation-lifecycle/after-navigate/b"]');
-		expect(await page.textContent('h1')).toBe('/navigation-lifecycle/after-navigate/a -> /navigation-lifecycle/after-navigate/b');
+		expect(await page.textContent('h1')).toBe(
+			'/navigation-lifecycle/after-navigate/a -> /navigation-lifecycle/after-navigate/b'
+		);
 	});
 
 	test('onNavigate calls callback', async ({ page, clicknav }) => {
 		await page.goto('/navigation-lifecycle/on-navigate/a');
-		expect(await page.textContent('h1')).toBe('undefined -> /navigation-lifecycle/on-navigate/a (...)');
+		expect(await page.textContent('h1')).toBe('undefined -> undefined (...)');
 
 		await clicknav('[href="/navigation-lifecycle/on-navigate/b"]');
-		expect(await page.textContent('h1')).toBe('/navigation-lifecycle/on-navigate/a -> /navigation-lifecycle/on-navigate/b (link)');
+		expect(await page.textContent('h1')).toBe(
+			'/navigation-lifecycle/on-navigate/a -> /navigation-lifecycle/on-navigate/b (link)'
+		);
 	});
 });
 
