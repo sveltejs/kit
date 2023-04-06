@@ -61,7 +61,8 @@ test.describe('CSRF', () => {
 		const content_types = [
 			'application/x-www-form-urlencoded',
 			'multipart/form-data',
-			'text/plain'
+			'text/plain',
+			'text/plaiN'
 		];
 		const methods = ['POST', 'PUT', 'PATCH', 'DELETE'];
 		for (const method of methods) {
