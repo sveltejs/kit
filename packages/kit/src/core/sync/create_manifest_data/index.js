@@ -229,12 +229,12 @@ function create_routes_and_nodes(cwd, config, fallback) {
 
 				/**
 				 * @param {string} type
-				 * @param {string} existingFile
+				 * @param {string} existing_file
 				 */
-				function duplicate_files_error(type, existingFile) {
+				function duplicate_files_error(type, existing_file) {
 					return new Error(
 						`Multiple ${type} files found in ${routes_base}${route.id} : ${path.basename(
-							existingFile
+							existing_file
 						)} and ${file.name}`
 					);
 				}
