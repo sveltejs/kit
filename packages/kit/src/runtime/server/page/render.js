@@ -268,7 +268,14 @@ export async function render_response({
 		}
 	}
 
-	const global = __SVELTEKIT_DEV__ ? `__sveltekit_dev` : `__sveltekit_${options.version_hash}`;
+	const leaf = branch.at(-1)
+	let leaf_hash = "leaf"
+
+	if (leaf) {
+		leaf_hash = hash(leaf.node.file)
+	}
+
+	const global = __SVELTEKIT_DEV__ ? `__sveltekit_dev` : `__sveltekit_${options.version_hash}_${leaf_hash}`;
 
 	const { data, chunks } = get_data(
 		event,
