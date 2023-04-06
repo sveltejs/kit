@@ -120,25 +120,23 @@
 		}
 	}
 
-	@media (prefers-color-scheme: dark) {
-		.hero {
-			background: hsl(210, 7%, 20%);
-			background: radial-gradient(
-					64.14% 72.25% at 47.58% 31.75%,
-					hsl(209deg 6% 47% / 52%) 0%,
-					hsla(0, 0%, 100%, 0) 100%
-				),
-				linear-gradient(
-					92.4deg,
-					hsl(210, 7%, 16%) 14.67%,
-					hsl(0deg 0% 0% / 48%) 54.37%,
-					hsla(207, 22%, 13%, 0.62) 92.49%
-				),
-				linear-gradient(0deg, hsl(204, 38%, 20%), hsl(204, 10%, 90%));
-		}
+	:global(body.dark) .hero {
+		background: hsl(210, 7%, 20%);
+		background: radial-gradient(
+				64.14% 72.25% at 47.58% 31.75%,
+				hsl(209deg 6% 47% / 52%) 0%,
+				hsla(0, 0%, 100%, 0) 100%
+			),
+			linear-gradient(
+				92.4deg,
+				hsl(210, 7%, 16%) 14.67%,
+				hsl(0deg 0% 0% / 48%) 54.37%,
+				hsla(207, 22%, 13%, 0.62) 92.49%
+			),
+			linear-gradient(0deg, hsl(204, 38%, 20%), hsl(204, 10%, 90%));
+	}
 
-		.hero-text img {
-			mix-blend-mode: screen;
-		}
+	:global(body.dark) .hero-text img {
+		mix-blend-mode: screen;
 	}
 </style>

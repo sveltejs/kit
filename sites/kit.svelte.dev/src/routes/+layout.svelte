@@ -5,6 +5,7 @@
 	import { Icon, Nav, NavItem, Separator, Shell } from '@sveltejs/site-kit/components';
 	import { Search, SearchBox } from '@sveltejs/site-kit/search';
 	import '@sveltejs/site-kit/styles/index.css';
+	import { ThemeToggle } from '@sveltejs/site-kit/theme';
 	import Logo from './home/svelte-logo.svg';
 
 	let banner_height = '48px';
@@ -41,6 +42,10 @@
 				<span slot="small">GitHub</span>
 				<Icon name="github" />
 			</NavItem>
+
+			<span style="display: flex; height: 100%; align-items: center; margin-left: 0.5rem">
+				<ThemeToggle />
+			</span>
 		</svelte:fragment>
 	</Nav>
 
