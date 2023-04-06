@@ -1,5 +1,11 @@
 # @sveltejs/kit
 
+## 1.15.2
+
+### Patch Changes
+
+- fix: address security advisory CVE-2023-29008 by doing a case-insensitive comparison when checking header value ([`ba436c66`](https://github.com/sveltejs/kit/commit/ba436c6685e751d968a960fbda65f24cf7a82e9f))
+
 ## 1.15.1
 
 ### Patch Changes
