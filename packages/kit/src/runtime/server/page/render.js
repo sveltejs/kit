@@ -267,7 +267,7 @@ export async function render_response({
 			head += `\n\t\t<link ${attributes.join(' ')}>`;
 		}
 	}
-	
+
 	const global = __SVELTEKIT_DEV__ ? `__sveltekit_dev` : `__sveltekit_${options.version_hash}`;
 
 	const { data, chunks } = get_data(
@@ -306,7 +306,6 @@ export async function render_response({
 			`env: ${s(public_env)}`,
 			paths.assets && `assets: ${s(paths.assets)}`,
 			`base: ${base_expression}`,
-			`element: document.currentScript.parentElement`
 		].filter(Boolean);
 
 		if (chunks) {
@@ -329,11 +328,13 @@ export async function render_response({
 						${properties.join(',\n\t\t\t\t\t\t')}
 					};`);
 
-		const args = [`app`, `${global}.element`];
+		const args = [`app`, `element`];
 
 		if (page_config.ssr) {
+
 			const serialized = { form: 'null', error: 'null' };
 
+			blocks.push(`const element = document.currentScript.parentElement;`)
 			blocks.push(`const data = ${data};`);
 
 			if (form_value) {
