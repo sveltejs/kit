@@ -112,7 +112,10 @@ async function prerender({ out, manifest_path, metadata, verbose, env }) {
 					? `${path} does not begin with \`base\`, which is configured in \`paths.base\` and can be imported from \`$app/paths\` - see https://kit.svelte.dev/docs/configuration#paths for more info`
 					: path;
 
-			return `${status} ${message}${referrer ? ` (${referenceType} from ${referrer})` : ''}`;
+			return (
+				`${status} ${message}${referrer ? ` (${referenceType} from ${referrer})` : ''}` +
+				`\nTo suppress or handle this error, implement \`handleHttpError\` in https://kit.svelte.dev/docs/configuration#prerender`
+			);
 		}
 	);
 
@@ -122,7 +125,8 @@ async function prerender({ out, manifest_path, metadata, verbose, env }) {
 		({ path, id, referrers }) => {
 			return (
 				`The following pages contain links to ${path}#${id}, but no element with id="${id}" exists on ${path} - see the \`handleMissingId\` option in https://kit.svelte.dev/docs/configuration#prerender for more info:` +
-				referrers.map((l) => `\n  - ${l}`).join('')
+				referrers.map((l) => `\n  - ${l}`).join('') +
+				`\nTo suppress or handle this error, implement \`handleMissingId\` in https://kit.svelte.dev/docs/configuration#prerender`
 			);
 		}
 	);
