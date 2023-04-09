@@ -1,5 +1,21 @@
 # create-svelte
 
+## 3.3.0
+
+### Minor Changes
+
+- feat: ignore test files in library skeleton package.json ([#9584](https://github.com/sveltejs/kit/pull/9584))
+
+## 3.2.0
+
+### Minor Changes
+
+- feat: upgrade to TypeScript 5 ([#9435](https://github.com/sveltejs/kit/pull/9435))
+
+### Patch Changes
+
+- chore: upgrade to Vite 4.2 ([#9434](https://github.com/sveltejs/kit/pull/9434))
+
 ## 3.1.2
 
 ### Patch Changes

@@ -51,9 +51,12 @@ export async function respond(request, options, manifest, state) {
 
 	if (options.csrf_check_origin) {
 		const forbidden =
-			request.method === 'POST' &&
-			request.headers.get('origin') !== url.origin &&
-			is_form_content_type(request);
+			is_form_content_type(request) &&
+			(request.method === 'POST' ||
+				request.method === 'PUT' ||
+				request.method === 'PATCH' ||
+				request.method === 'DELETE') &&
+			request.headers.get('origin') !== url.origin;
 
 		if (forbidden) {
 			const csrf_error = error(403, `Cross-site ${request.method} form submissions are forbidden`);

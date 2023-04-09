@@ -84,6 +84,7 @@ declare module '$app/forms' {
 		form: HTMLFormElement;
 		controller: AbortController;
 		cancel(): void;
+		submitter: HTMLElement | null;
 	}) => MaybePromise<
 		| void
 		| ((opts: {

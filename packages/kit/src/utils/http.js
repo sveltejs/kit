@@ -59,14 +59,21 @@ export function negotiate(accept, types) {
  * @param {Request} request
  * @param  {...string} types
  */
-export function is_content_type(request, ...types) {
+function is_content_type(request, ...types) {
 	const type = request.headers.get('content-type')?.split(';', 1)[0].trim() ?? '';
-	return types.includes(type);
+	return types.includes(type.toLowerCase());
 }
 
 /**
  * @param {Request} request
  */
 export function is_form_content_type(request) {
-	return is_content_type(request, 'application/x-www-form-urlencoded', 'multipart/form-data');
+	// These content types must be protected against CSRF
+	// https://developer.mozilla.org/en-US/docs/Web/API/HTMLFormElement/enctype
+	return is_content_type(
+		request,
+		'application/x-www-form-urlencoded',
+		'multipart/form-data',
+		'text/plain'
+	);
 }

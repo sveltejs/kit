@@ -179,12 +179,15 @@ export function crawl(html, base) {
 								let insideURL = true;
 								value = value.trim();
 								for (let i = 0; i < value.length; i++) {
-									if (value[i] === ',' && (!insideURL || (insideURL && value[i + 1] === ' '))) {
+									if (
+										value[i] === ',' &&
+										(!insideURL || (insideURL && WHITESPACE.test(value[i + 1])))
+									) {
 										candidates.push(value.slice(0, i));
 										value = value.substring(i + 1).trim();
 										i = 0;
 										insideURL = true;
-									} else if (value[i] === ' ') {
+									} else if (WHITESPACE.test(value[i])) {
 										insideURL = false;
 									}
 								}
