@@ -25,7 +25,7 @@ export default function (options) {
 ${builder.routes.map((route) => `  - ${path.posix.join(prefix, route.id)}`).join('\n')}
 
 You have the following options:
-  - set the \`fallback\` option — see https://github.com/sveltejs/kit/tree/master/packages/adapter-static#spa-mode for more info.
+  - set the \`fallback\` option — see https://kit.svelte.dev/docs/single-page-apps#usage for more info.
   - add \`export const prerender = true\` to your root \`+layout.js/.ts\` or \`+layout.server.js/.ts\` file. This will try to prerender all pages.
   - add \`export const prerender = true\` to any \`+server.js/ts\` files that are not fetched by page \`load\` functions.
 ${config_option}
