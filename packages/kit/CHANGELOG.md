@@ -1,5 +1,55 @@
 # @sveltejs/kit
 
+## 1.15.2
+
+### Patch Changes
+
+- fix: address security advisory [CVE-2023-29008](https://github.com/sveltejs/kit/security/advisories/GHSA-gv7g-x59x-wf8f) by doing a case-insensitive comparison when checking header value ([`ba436c66`](https://github.com/sveltejs/kit/commit/ba436c6685e751d968a960fbda65f24cf7a82e9f))
+
+## 1.15.1
+
+### Patch Changes
+
+- fix: pin undici to 5.20.0 ([#9591](https://github.com/sveltejs/kit/pull/9591))
+
+- fix: address security advisory [CVE-2023-29003](https://github.com/sveltejs/kit/security/advisories/GHSA-5p75-vc5g-8rv2) by including `text/plain` and `PUT`/`PATCH`/`DELETE` requests in set of blocked cross-origin requests for CSRF protection ([`bb2253d5`](https://github.com/sveltejs/kit/commit/bb2253d51d00aba2e4353952d4fb0dcde6c77123))
+
+## 1.15.0
+
+### Minor Changes
+
+- feat: expose stronger typed `SubmitFunction` through `./$types` ([#9201](https://github.com/sveltejs/kit/pull/9201))
+
+### Patch Changes
+
+- fix: throw error when file can't be found in Vite manifest ([#9558](https://github.com/sveltejs/kit/pull/9558))
+
+- fix: make `error.message` enumerable when sending `ssrLoadModule` error to client ([#9440](https://github.com/sveltejs/kit/pull/9440))
+
+- fix: pass `publicDir` Vite config in SSR ([#9565](https://github.com/sveltejs/kit/pull/9565))
+
+- fix: balance parentheses in error about wrong content type for action ([#9513](https://github.com/sveltejs/kit/pull/9513))
+
+## 1.14.0
+
+### Minor Changes
+
+- feat: add HMR to fallback error pages during dev ([#9497](https://github.com/sveltejs/kit/pull/9497))
+
+### Patch Changes
+
+- fix: add `submitter` type to `SumbitFunction` ([#9484](https://github.com/sveltejs/kit/pull/9484))
+
+## 1.13.0
+
+### Minor Changes
+
+- feat: add dark mode styles to default error page ([#9460](https://github.com/sveltejs/kit/pull/9460))
+
+### Patch Changes
+
+- fix: recover from errors during dev by reloading ([#9441](https://github.com/sveltejs/kit/pull/9441))
+
 ## 1.12.0
 
 ### Minor Changes

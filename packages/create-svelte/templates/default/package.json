@@ -12,8 +12,8 @@
 		"@sveltejs/adapter-auto": "workspace:*",
 		"@sveltejs/kit": "workspace:*",
 		"svelte": "^3.56.0",
-		"typescript": "^4.9.4",
-		"vite": "^4.1.1"
+		"typescript": "^5.0.0",
+		"vite": "^4.2.0"
 	},
 	"type": "module",
 	"dependencies": {

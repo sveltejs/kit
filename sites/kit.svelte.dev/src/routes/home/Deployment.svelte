@@ -1,5 +1,5 @@
 <script>
-	import Section from '@sveltejs/site-kit/components/Section.svelte';
+	import { Section } from '@sveltejs/site-kit/components';
 	import html5 from './logos/html5.svg';
 	import node from './logos/node.svg';
 	import vercel from './logos/vercel.svg';

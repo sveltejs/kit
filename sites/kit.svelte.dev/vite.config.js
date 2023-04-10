@@ -39,6 +39,13 @@ const config = {
 		}),
 	],
 
+	ssr: {
+		noExternal: ['@sveltejs/site-kit']
+	},
+	optimizeDeps: {
+		exclude: ['@sveltejs/site-kit']
+	},
+
 	server: {
 		fs: {
 			strict: false
