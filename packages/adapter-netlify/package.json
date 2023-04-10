@@ -1,7 +1,7 @@
 {
 	"name": "@sveltejs/adapter-netlify",
 	"version": "2.0.6",
-	"description": "An adapter for SvelteKit, making it possible to run your app on Netlify",
+	"description": "A SvelteKit adapter that creates a Netlify app",
 	"repository": {
 		"type": "git",
 		"url": "https://github.com/sveltejs/kit",
