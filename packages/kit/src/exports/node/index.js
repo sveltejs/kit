@@ -115,7 +115,15 @@ export async function setResponse(res, response) {
 		headers['set-cookie'] = split;
 	}
 
-	res.writeHead(response.status, headers);
+	try {
+		res.writeHead(response.status, headers);
+	} catch (error) {
+		console.log("wat");
+		res.writeHead(500);
+		res.write(error.message);
+		res.end();
+		return;
+	}
 
 	if (!response.body) {
 		res.end();
