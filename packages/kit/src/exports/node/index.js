@@ -118,10 +118,9 @@ export async function setResponse(res, response) {
 	try {
 		res.writeHead(response.status, headers);
 	} catch (error) {
-		console.log("wat");
+		// TODO: remove the other headers from the response?
 		res.writeHead(500);
-		res.write(error.message);
-		res.end();
+		res.end(String(error));
 		return;
 	}
 
@@ -131,11 +130,11 @@ export async function setResponse(res, response) {
 	}
 
 	if (response.body.locked) {
-		res.write(
+		res.writeHead(500);
+		res.end(
 			'Fatal error: Response body is locked. ' +
 				`This can happen when the response was already read (for example through 'response.json()' or 'response.text()').`
 		);
-		res.end();
 		return;
 	}
 
