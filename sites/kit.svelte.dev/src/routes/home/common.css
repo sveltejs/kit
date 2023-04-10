@@ -33,6 +33,16 @@
 	}
 }
 
+/* In case JS disabled */
+
+@media screen and (prefers-color-scheme: dark) {
+	.home {
+		/* --background-1: radial-gradient(circle at top right, rgb(49, 49, 49), rgb(77, 77, 77)); */
+		--background-1: #222;
+		--background-2: #444;
+	}
+}
+
 body.dark .home {
 	/* --background-1: radial-gradient(circle at top right, rgb(49, 49, 49), rgb(77, 77, 77)); */
 	--background-1: #222;
