@@ -1,7 +1,7 @@
 {
 	"name": "@sveltejs/adapter-static",
 	"version": "2.0.1",
-	"description": "An adapter for SvelteKit suitable for static sites and single page apps",
+	"description": "Adapter for SvelteKit apps that prerenders your entire site as a collection of static files",
 	"repository": {
 		"type": "git",
 		"url": "https://github.com/sveltejs/kit",
