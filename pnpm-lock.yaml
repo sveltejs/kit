@@ -689,7 +689,7 @@ importers:
       '@sveltejs/adapter-vercel': workspace:^
       '@sveltejs/amp': workspace:^
       '@sveltejs/kit': workspace:^
-      '@sveltejs/site-kit': ^3.3.6
+      '@sveltejs/site-kit': 4.0.0-next.0
       '@types/d3-geo': ^3.0.2
       '@types/node': ^16.18.6
       d3-geo: ^3.0.1
@@ -701,6 +701,7 @@ importers:
       prismjs: ^1.29.0
       shiki-twoslash: ^3.1.0
       svelte: ^3.56.0
+      svelte-local-storage-store: ^0.4.0
       tiny-glob: ^0.2.9
       topojson-client: ^3.1.0
       typescript: ^4.9.4
@@ -710,12 +711,13 @@ importers:
     dependencies:
       d3-geo: 3.0.1
       d3-geo-projection: 4.0.0
+      svelte-local-storage-store: 0.4.0_svelte@3.56.0
       topojson-client: 3.1.0
     devDependencies:
       '@sveltejs/adapter-vercel': link:../../packages/adapter-vercel
       '@sveltejs/amp': link:../../packages/amp
       '@sveltejs/kit': link:../../packages/kit
-      '@sveltejs/site-kit': 3.3.6_r4kk7euspt2csvnnykfg5n6pxi
+      '@sveltejs/site-kit': 4.0.0-next.0_r4kk7euspt2csvnnykfg5n6pxi
       '@types/d3-geo': 3.0.2
       '@types/node': 16.18.6
       flexsearch: 0.7.31
@@ -1590,8 +1592,8 @@ packages:
       picomatch: 2.3.1
       rollup: 3.7.0
 
-  /@sveltejs/site-kit/3.3.6_r4kk7euspt2csvnnykfg5n6pxi:
-    resolution: {integrity: sha512-MUqHseHHFJOT6AcJYTbUqK7hMy1OkBa231tS4TXkmbgQ8EaFVI2unjs9+WY8m3CXASc4p31givOiKVSqtorbbg==}
+  /@sveltejs/site-kit/4.0.0-next.0_r4kk7euspt2csvnnykfg5n6pxi:
+    resolution: {integrity: sha512-vRQqAQEEoPXPpYdE4YULLOy5gKUPMMI49XKtbCpnYqk5t7I1e7TtJ++0BafcgEZZIN0QhO2vlkeL1BBJLXEmkw==}
     peerDependencies:
       '@sveltejs/kit': ^1.0.0
       svelte: ^3.54.0
@@ -4971,6 +4973,15 @@ packages:
     engines: {node: ^12.20 || ^14.13.1 || >= 16}
     peerDependencies:
       svelte: '>=3.19.0'
+    dependencies:
+      svelte: 3.56.0
+    dev: false
+
+  /svelte-local-storage-store/0.4.0_svelte@3.56.0:
+    resolution: {integrity: sha512-ctPykTt4S3BE5bF0mfV0jKiUR1qlmqLvnAkQvYHLeb9wRyO1MdIFDVI23X+TZEFleATHkTaOpYZswIvf3b2tWA==}
+    engines: {node: '>=0.14'}
+    peerDependencies:
+      svelte: ^3.48.0
     dependencies:
       svelte: 3.56.0
     dev: false
