@@ -1,6 +1,7 @@
 {
 	"name": "create-svelte",
 	"version": "3.3.0",
+	"description": "A CLI for creating new SvelteKit projects",
 	"repository": {
 		"type": "git",
 		"url": "https://github.com/sveltejs/kit",
