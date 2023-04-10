@@ -1,7 +1,7 @@
 {
 	"name": "@sveltejs/adapter-cloudflare-workers",
 	"version": "1.1.0",
-	"description": "An adapter for SvelteKit, making it possible to run your app on Cloudflare Workers",
+	"description": "SvelteKit adapter that creates a Cloudflare Workers site using a function for dynamic server rendering",
 	"repository": {
 		"type": "git",
 		"url": "https://github.com/sveltejs/kit",
