@@ -79,6 +79,7 @@
 
 		.large {
 			display: inline;
+			line-height: 1;
 		}
 	}
 
