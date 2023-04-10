@@ -92,7 +92,7 @@ importers:
       '@types/node': ^16.18.6
       '@types/set-cookie-parser': ^2.4.2
       esbuild: ^0.16.3
-      rimraf: ^4.0.0
+      rimraf: ^5.0.0
       rollup: ^3.7.0
       set-cookie-parser: ^2.5.1
       typescript: ^4.9.4
@@ -109,7 +109,7 @@ importers:
       '@sveltejs/kit': link:../kit
       '@types/node': 16.18.6
       '@types/set-cookie-parser': 2.4.2
-      rimraf: 4.0.1
+      rimraf: 5.0.0
       rollup: 3.7.0
       typescript: 4.9.4
       uvu: 0.5.6
@@ -124,7 +124,7 @@ importers:
       '@types/node': ^16.18.6
       c8: ^7.12.0
       polka: ^1.0.0-next.22
-      rimraf: ^4.0.0
+      rimraf: ^5.0.0
       rollup: ^3.7.0
       sirv: ^2.0.2
       typescript: ^4.9.4
@@ -140,7 +140,7 @@ importers:
       '@types/node': 16.18.6
       c8: 7.12.0
       polka: 1.0.0-next.22
-      rimraf: 4.0.1
+      rimraf: 5.0.0
       sirv: 2.0.2
       typescript: 4.9.4
       uvu: 0.5.6
@@ -344,7 +344,7 @@ importers:
     specifiers:
       '@sveltejs/kit': workspace:^
       cross-env: ^7.0.3
-      rimraf: ^4.0.0
+      rimraf: ^5.0.0
       svelte: ^3.56.0
       svelte-check: ^3.0.2
       typescript: ^4.9.4
@@ -352,7 +352,7 @@ importers:
     devDependencies:
       '@sveltejs/kit': link:../../..
       cross-env: 7.0.3
-      rimraf: 4.0.1
+      rimraf: 5.0.0
       svelte: 3.56.0
       svelte-check: 3.0.2_svelte@3.56.0
       typescript: 4.9.4
@@ -412,7 +412,7 @@ importers:
     specifiers:
       '@sveltejs/kit': workspace:^
       cross-env: ^7.0.3
-      rimraf: ^4.0.0
+      rimraf: ^5.0.0
       svelte: ^3.56.0
       svelte-check: ^3.0.2
       typescript: ^4.9.4
@@ -420,7 +420,7 @@ importers:
     devDependencies:
       '@sveltejs/kit': link:../../..
       cross-env: 7.0.3
-      rimraf: 4.0.1
+      rimraf: 5.0.0
       svelte: 3.56.0
       svelte-check: 3.0.2_svelte@3.56.0
       typescript: 4.9.4
@@ -3117,6 +3117,16 @@ packages:
       is-glob: 4.0.3
     dev: true
 
+  /glob/10.0.0:
+    resolution: {integrity: sha512-zmp9ZDC6NpDNLujV2W2n+3lH+BafIVZ4/ct+Yj3BMZTH/+bgm/eVjHzeFLwxJrrIGgjjS2eiQLlpurHsNlEAtQ==}
+    engines: {node: '>=16 || 14 >=14.17'}
+    dependencies:
+      fs.realpath: 1.0.0
+      minimatch: 9.0.0
+      minipass: 5.0.0
+      path-scurry: 1.6.4
+    dev: true
+
   /glob/7.1.6:
     resolution: {integrity: sha512-LwaxwyZ72Lk7vZINtNNrywX0ZuLyStrdDtabefZKAY5ZGJhVtgdznluResxNmPitE0SAO+O26sWTHeKSI2wMBA==}
     dependencies:
@@ -3692,6 +3702,11 @@ packages:
     dependencies:
       yallist: 4.0.0
 
+  /lru-cache/9.0.0:
+    resolution: {integrity: sha512-9AEKXzvOZc4BMacFnYiTOlDH/197LNnQIK9wZ6iMB5NXPzuv4bWR/Msv7iUMplkiMQ1qQL+KSv/JF1mZAB5Lrg==}
+    engines: {node: '>=16.14'}
+    dev: true
+
   /lz-string/1.4.4:
     resolution: {integrity: sha512-0ckx7ZHRPqb0oUm8zNr+90mtf9DQB60H1wMCjBtfi62Kl3a7JbHob6gA2bC+xRvZoOL+1hzUK8jeuEIQE8svEQ==}
     hasBin: true
@@ -3798,6 +3813,13 @@ packages:
     dependencies:
       brace-expansion: 2.0.1
 
+  /minimatch/9.0.0:
+    resolution: {integrity: sha512-0jJj8AvgKqWN05mrwuqi8QYKx1WmYSUoKSxu5Qhs9prezTz10sxAHGNZe9J9cqIJzta8DWsleh2KaVaLl6Ru2w==}
+    engines: {node: '>=16 || 14 >=14.17'}
+    dependencies:
+      brace-expansion: 2.0.1
+    dev: true
+
   /minimist-options/4.1.0:
     resolution: {integrity: sha512-Q4r8ghd80yhO/0j1O3B2BjweX3fiHg9cdOwjJd2J76Q135c+NDxGCqdYKQ1SKBuFfgWbAUzBfvYjPUEeNgqN1A==}
     engines: {node: '>= 6'}
@@ -3817,6 +3839,11 @@ packages:
     dependencies:
       yallist: 4.0.0
     dev: false
+
+  /minipass/5.0.0:
+    resolution: {integrity: sha512-3FnjYuehv9k6ovOEbyOswadCDPX1piCfhV8ncmYtHOjuPwylVWsghTLo7rabjC3Rx5xD4HDx8Wm1xnMF7S5qFQ==}
+    engines: {node: '>=8'}
+    dev: true
 
   /minizlib/2.1.2:
     resolution: {integrity: sha512-bAxsR8BVfj60DWXHE3u30oHzfl4G7khkSuPW+qvpd7jFRHm7dLxOjUk1EHACJ/hxLY8phGJ0YhYHZo7jil7Qdg==}
@@ -4144,6 +4171,14 @@ packages:
 
   /path-parse/1.0.7:
     resolution: {integrity: sha512-LDJzPVEEEPR+y48z93A0Ed0yXb8pAByGWo/k5YYdYgpY2/2EsOsksJrq7lOHxryrVOn1ejG6oAp8ahvOIQD8sw==}
+
+  /path-scurry/1.6.4:
+    resolution: {integrity: sha512-Qp/9IHkdNiXJ3/Kon++At2nVpnhRiPq/aSvQN+H3U1WZbvNRK0RIQK/o4HMqPoXjpuGJUEWpHSs6Mnjxqh3TQg==}
+    engines: {node: '>=16 || 14 >=14.17'}
+    dependencies:
+      lru-cache: 9.0.0
+      minipass: 5.0.0
+    dev: true
 
   /path-type/2.0.0:
     resolution: {integrity: sha512-dUnb5dXUf+kzhC/W/F4e5/SkluXIFf5VUHolW1Eg1irn1hGWjPGdsRcvYJ1nD6lhk8Ir7VM0bHJKsYTx8Jx9OQ==}
@@ -4503,10 +4538,12 @@ packages:
     dependencies:
       glob: 7.2.3
 
-  /rimraf/4.0.1:
-    resolution: {integrity: sha512-qwvb/Wzf8XJxdv8InnDtmijfbIk6gk576swPeogHbUh7AT4ezF42lvhXUdbIzMYrO4HbaXi1rYGhKTDyPF1AJw==}
+  /rimraf/5.0.0:
+    resolution: {integrity: sha512-Jf9llaP+RvaEVS5nPShYFhtXIrb3LRKP281ib3So0KkeZKo2wIKyq0Re7TOSwanasA423PSr6CCIL4bP6T040g==}
     engines: {node: '>=14'}
     hasBin: true
+    dependencies:
+      glob: 10.0.0
     dev: true
 
   /rollup-pluginutils/2.8.2:
