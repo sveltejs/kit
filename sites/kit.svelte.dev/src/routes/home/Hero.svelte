@@ -142,6 +142,14 @@
 		.hero-text img {
 			mix-blend-mode: screen;
 		}
+
+		:global(body.light) .hero {
+			background: var(--gradient);
+		}
+
+		:global(body.light) .hero-text img {
+			mix-blend-mode: initial;
+		}
 	}
 
 	:global(body.dark) .hero {
