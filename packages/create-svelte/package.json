@@ -1,6 +1,6 @@
 {
 	"name": "create-svelte",
-	"version": "3.1.2",
+	"version": "3.3.0",
 	"description": "A CLI for creating new SvelteKit projects",
 	"repository": {
 		"type": "git",
@@ -24,7 +24,7 @@
 		"prettier": "^2.8.0",
 		"prettier-plugin-svelte": "^2.8.1",
 		"sucrase": "^3.29.0",
-		"svelte": "^3.55.1",
+		"svelte": "^3.56.0",
 		"tiny-glob": "^0.2.9",
 		"uvu": "^0.5.6"
 	},

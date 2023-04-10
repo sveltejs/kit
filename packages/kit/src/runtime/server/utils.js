@@ -1,3 +1,4 @@
+import { DEV } from 'esm-env';
 import { json, text } from '../../exports/index.js';
 import { coalesce_to_error } from '../../utils/error.js';
 import { negotiate } from '../../utils/http.js';
@@ -52,7 +53,14 @@ export function allowed_methods(mod) {
  * @param {string} message
  */
 export function static_error_page(options, status, message) {
-	return text(options.templates.error({ status, message }), {
+	let page = options.templates.error({ status, message });
+
+	if (DEV) {
+		// inject Vite HMR client, for easier debugging
+		page = page.replace('</head>', '<script type="module" src="/@vite/client"></script></head>');
+	}
+
+	return text(page, {
 		headers: { 'content-type': 'text/html; charset=utf-8' },
 		status
 	});

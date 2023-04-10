@@ -550,7 +550,11 @@ function kit({ svelte_config }) {
 				new_config = {
 					base: ssr ? assets_base(kit) : './',
 					build: {
+						copyPublicDir: !ssr,
 						cssCodeSplit: true,
+						cssMinify: initial_config.build?.minify == null ? true : !!initial_config.build.minify,
+						// don't use the default name to avoid collisions with 'static/manifest.json'
+						manifest: 'vite-manifest.json',
 						outDir: `${out}/${ssr ? 'server' : 'client'}`,
 						rollupOptions: {
 							input,
@@ -564,11 +568,9 @@ function kit({ svelte_config }) {
 							preserveEntrySignatures: 'strict'
 						},
 						ssrEmitAssets: true,
-						target: ssr ? 'node16.14' : undefined,
-						// don't use the default name to avoid collisions with 'static/manifest.json'
-						manifest: 'vite-manifest.json'
+						target: ssr ? 'node16.14' : undefined
 					},
-					publicDir: ssr ? false : kit.files.assets,
+					publicDir: kit.files.assets,
 					worker: {
 						rollupOptions: {
 							output: {

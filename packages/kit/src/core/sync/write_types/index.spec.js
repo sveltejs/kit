@@ -33,6 +33,7 @@ test('Creates correct $types', async () => {
 	// To safe us from creating a real SvelteKit project for each of the tests,
 	// we first run the type generation directly for each test case, and then
 	// call `tsc` to check that the generated types are valid.
+	await run_test('actions');
 	await run_test('simple-page-shared-only');
 	await run_test('simple-page-server-only');
 	await run_test('simple-page-server-and-shared');

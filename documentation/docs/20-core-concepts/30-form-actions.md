@@ -344,11 +344,12 @@ To customise the behaviour, you can provide a `SubmitFunction` that runs immedia
 ```svelte
 <form
 	method="POST"
-	use:enhance={({ form, data, action, cancel }) => {
+	use:enhance={({ form, data, action, cancel, submitter }) => {
 		// `form` is the `<form>` element
 		// `data` is its `FormData` object
 		// `action` is the URL to which the form is posted
 		// `cancel()` will prevent the submission
+		// `submitter` is the `HTMLElement` that caused the form to be submitted
 
 		return async ({ result, update }) => {
 			// `result` is an `ActionResult` object
@@ -496,7 +497,7 @@ Some forms don't need to `POST` data to the server — search inputs, for exampl
 </form>
 ```
 
-Submitting this form will navigate to `/search?q=...` and invoke your load function but will not invoke an action. As with `<a>` elements, you can set the [`data-sveltekit-reload`](link-options#data-sveltekit-reload) and [`data-sveltekit-noscroll`](link-options#data-sveltekit-noscroll) attributes on the `<form>` to control the router's behaviour.
+Submitting this form will navigate to `/search?q=...` and invoke your load function but will not invoke an action. As with `<a>` elements, you can set the [`data-sveltekit-reload`](link-options#data-sveltekit-reload), [`data-sveltekit-replacestate`](link-options#data-sveltekit-replacestate), [`data-sveltekit-keepfocus`](link-options#data-sveltekit-keepfocus) and [`data-sveltekit-noscroll`](link-options#data-sveltekit-noscroll) attributes on the `<form>` to control the router's behaviour.
 
 ## Further reading
 

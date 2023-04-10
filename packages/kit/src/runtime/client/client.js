@@ -35,6 +35,8 @@ import { validate_common_exports } from '../../utils/exports.js';
 import { compact } from '../../utils/array.js';
 import { validate_depends } from '../shared.js';
 
+let errored = false;
+
 // We track the scroll position associated with each history entry in sessionStorage,
 // rather than on history.state itself, because when navigation is driven by
 // popstate it's too late to update the scroll position associated with the
@@ -277,6 +279,9 @@ export function create_client(app, target) {
 		let navigation_result = intent && (await load_route(intent));
 
 		if (!navigation_result) {
+			if (is_external_url(url, base)) {
+				return await native_navigation(url);
+			}
 			navigation_result = await server_fallback(
 				url,
 				{ id: null },
@@ -1190,7 +1195,7 @@ export function create_client(app, target) {
 			});
 		}
 
-		if (__SVELTEKIT_DEV__) {
+		if (DEV && status !== 404) {
 			console.error(
 				'An error occurred while loading the page. This will cause a full page reload. (This message will only appear during development.)'
 			);
@@ -1270,7 +1275,7 @@ export function create_client(app, target) {
 				if (priority <= options.preload_data) {
 					const intent = get_navigation_intent(/** @type {URL} */ (url), false);
 					if (intent) {
-						if (__SVELTEKIT_DEV__) {
+						if (DEV) {
 							preload_data(intent).then((result) => {
 								if (result.type === 'loaded' && result.state.error) {
 									console.warn(
@@ -1324,6 +1329,12 @@ export function create_client(app, target) {
 		if (error instanceof HttpError) {
 			return error.body;
 		}
+
+		if (DEV) {
+			errored = true;
+			console.warn('The next HMR update will cause the page to reload');
+		}
+
 		return (
 			app.hooks.handleError({ error, event }) ??
 			/** @type {any} */ ({ message: event.route.id != null ? 'Internal Error' : 'Not Found' })
@@ -1569,11 +1580,11 @@ export function create_client(app, target) {
 				navigate({
 					url,
 					scroll: options.noscroll ? scroll_state() : null,
-					keepfocus: false,
+					keepfocus: options.keep_focus ?? false,
 					redirect_chain: [],
 					details: {
 						state: {},
-						replaceState: url.href === location.href
+						replaceState: options.replace_state ?? url.href === location.href
 					},
 					accepted: () => event.preventDefault(),
 					blocked: () => event.preventDefault(),
@@ -1604,7 +1615,7 @@ export function create_client(app, target) {
 
 				const event_form = /** @type {HTMLFormElement} */ (event.target);
 
-				const { noscroll, reload } = get_router_options(event_form);
+				const { keep_focus, noscroll, reload, replace_state } = get_router_options(event_form);
 				if (reload) return;
 
 				event.preventDefault();
@@ -1623,11 +1634,11 @@ export function create_client(app, target) {
 				navigate({
 					url,
 					scroll: noscroll ? scroll_state() : null,
-					keepfocus: false,
+					keepfocus: keep_focus ?? false,
 					redirect_chain: [],
 					details: {
 						state: {},
-						replaceState: false
+						replaceState: replace_state ?? url.href === location.href
 					},
 					nav_token: {},
 					accepted: () => {},
@@ -1944,4 +1955,12 @@ if (DEV) {
 		}
 		console_warn(...args);
 	};
+
+	if (import.meta.hot) {
+		import.meta.hot.on('vite:beforeUpdate', () => {
+			if (errored) {
+				location.reload();
+			}
+		});
+	}
 }
