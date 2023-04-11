@@ -33,10 +33,22 @@
 	}
 }
 
-@media (prefers-color-scheme: dark) {
+/* In case JS disabled */
+@media screen and (prefers-color-scheme: dark) {
 	.home {
 		/* --background-1: radial-gradient(circle at top right, rgb(49, 49, 49), rgb(77, 77, 77)); */
 		--background-1: #222;
 		--background-2: #444;
 	}
+
+	body.light .home {
+		--background-1: radial-gradient(circle at top right, rgb(230, 233, 236), rgb(244, 245, 247));
+		--background-2: var(--sk-theme-2);
+	}
+}
+
+body.dark .home {
+	/* --background-1: radial-gradient(circle at top right, rgb(49, 49, 49), rgb(77, 77, 77)); */
+	--background-1: #222;
+	--background-2: #444;
 }
