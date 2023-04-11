@@ -1,84 +1,291 @@
-<!DOCTYPE html><html lang="en"><head>
-		<meta charset="utf-8">
-		<meta name="viewport" content="width=device-width">
-		<link rel="icon" type="image/png" href="http://localhost:4173/_svelte_kit_assets/favicon.png">
-		
-		<link rel="preload" as="script" crossorigin="anonymous" href="/_svelte_kit_assets/_wheee/immutable/entry/start.19ff6a7e.mjs">
-		<link rel="preload" as="script" crossorigin="anonymous" href="/_svelte_kit_assets/_wheee/immutable/chunks/index.3d36496b.mjs">
-		<link rel="preload" as="script" crossorigin="anonymous" href="/_svelte_kit_assets/_wheee/immutable/chunks/singletons.a1d47dd9.mjs">
-		<link rel="preload" as="script" crossorigin="anonymous" href="/_svelte_kit_assets/_wheee/immutable/chunks/paths.8eff7fdc.mjs">
-		<link rel="preload" as="script" crossorigin="anonymous" href="/_svelte_kit_assets/_wheee/immutable/entry/app.769465e8.mjs">
-		<link rel="preload" as="script" crossorigin="anonymous" href="/_svelte_kit_assets/_wheee/immutable/entry/_layout.svelte.bf6042b9.mjs">
-		<link rel="preload" as="script" crossorigin="anonymous" href="/_svelte_kit_assets/_wheee/immutable/entry/embed-page.svelte.4e4da763.mjs">
-		<link rel="preload" as="script" crossorigin="anonymous" href="/_svelte_kit_assets/_wheee/immutable/entry/embed-page.js.de9cd9e6.mjs">
-		<link rel="preload" as="script" crossorigin="anonymous" href="/_svelte_kit_assets/_wheee/immutable/chunks/_page.eef550ad.mjs">
-	<link rel="modulepreload" as="script" crossorigin="" href="http://localhost:4173/_svelte_kit_assets/_wheee/immutable/chunks/0.aa202e9f.mjs"><link rel="modulepreload" as="script" crossorigin="" href="http://localhost:4173/_svelte_kit_assets/_wheee/immutable/chunks/1.3414fbad.mjs"><link rel="modulepreload" as="script" crossorigin="" href="http://localhost:4173/_svelte_kit_assets/_wheee/immutable/entry/error.svelte.1986b697.mjs"><link rel="modulepreload" as="script" crossorigin="" href="http://localhost:4173/_svelte_kit_assets/_wheee/immutable/chunks/stores.136e004b.mjs"><link rel="modulepreload" as="script" crossorigin="" href="http://localhost:4173/_svelte_kit_assets/_wheee/immutable/chunks/7.bb946cfa.mjs"><link rel="modulepreload" as="script" crossorigin="" href="http://localhost:4173/_svelte_kit_assets/_wheee/immutable/chunks/6.6196c73c.mjs"><link rel="modulepreload" as="script" crossorigin="" href="http://localhost:4173/_svelte_kit_assets/_wheee/immutable/chunks/5.d18c33f1.mjs"></head>
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<meta charset="utf-8" />
+		<meta name="viewport" content="width=device-width" />
+		<link rel="icon" type="image/png" href="http://localhost:4173/_svelte_kit_assets/favicon.png" />
+
+		<link
+			rel="preload"
+			as="script"
+			crossorigin="anonymous"
+			href="/_svelte_kit_assets/_wheee/immutable/entry/start.19ff6a7e.mjs"
+		/>
+		<link
+			rel="preload"
+			as="script"
+			crossorigin="anonymous"
+			href="/_svelte_kit_assets/_wheee/immutable/chunks/index.3d36496b.mjs"
+		/>
+		<link
+			rel="preload"
+			as="script"
+			crossorigin="anonymous"
+			href="/_svelte_kit_assets/_wheee/immutable/chunks/singletons.a1d47dd9.mjs"
+		/>
+		<link
+			rel="preload"
+			as="script"
+			crossorigin="anonymous"
+			href="/_svelte_kit_assets/_wheee/immutable/chunks/paths.8eff7fdc.mjs"
+		/>
+		<link
+			rel="preload"
+			as="script"
+			crossorigin="anonymous"
+			href="/_svelte_kit_assets/_wheee/immutable/entry/app.769465e8.mjs"
+		/>
+		<link
+			rel="preload"
+			as="script"
+			crossorigin="anonymous"
+			href="/_svelte_kit_assets/_wheee/immutable/entry/_layout.svelte.bf6042b9.mjs"
+		/>
+		<link
+			rel="preload"
+			as="script"
+			crossorigin="anonymous"
+			href="/_svelte_kit_assets/_wheee/immutable/entry/embed-page.svelte.4e4da763.mjs"
+		/>
+		<link
+			rel="preload"
+			as="script"
+			crossorigin="anonymous"
+			href="/_svelte_kit_assets/_wheee/immutable/entry/embed-page.js.de9cd9e6.mjs"
+		/>
+		<link
+			rel="preload"
+			as="script"
+			crossorigin="anonymous"
+			href="/_svelte_kit_assets/_wheee/immutable/chunks/_page.eef550ad.mjs"
+		/>
+		<link
+			rel="modulepreload"
+			as="script"
+			crossorigin=""
+			href="http://localhost:4173/_svelte_kit_assets/_wheee/immutable/chunks/0.aa202e9f.mjs"
+		/>
+		<link
+			rel="modulepreload"
+			as="script"
+			crossorigin=""
+			href="http://localhost:4173/_svelte_kit_assets/_wheee/immutable/chunks/1.3414fbad.mjs"
+		/>
+		<link
+			rel="modulepreload"
+			as="script"
+			crossorigin=""
+			href="http://localhost:4173/_svelte_kit_assets/_wheee/immutable/entry/error.svelte.1986b697.mjs"
+		/>
+		<link
+			rel="modulepreload"
+			as="script"
+			crossorigin=""
+			href="http://localhost:4173/_svelte_kit_assets/_wheee/immutable/chunks/stores.136e004b.mjs"
+		/>
+		<link
+			rel="modulepreload"
+			as="script"
+			crossorigin=""
+			href="http://localhost:4173/_svelte_kit_assets/_wheee/immutable/chunks/7.bb946cfa.mjs"
+		/>
+		<link
+			rel="modulepreload"
+			as="script"
+			crossorigin=""
+			href="http://localhost:4173/_svelte_kit_assets/_wheee/immutable/chunks/6.6196c73c.mjs"
+		/>
+		<link
+			rel="modulepreload"
+			as="script"
+			crossorigin=""
+			href="http://localhost:4173/_svelte_kit_assets/_wheee/immutable/chunks/5.d18c33f1.mjs"
+		/>
+	</head>
 	<body class="started">
 		<h1>I am in the template</h1>
 		<div>
+			<meta charset="utf-8" />
+			<meta name="viewport" content="width=device-width" />
+			<link
+				rel="icon"
+				type="image/png"
+				href="http://localhost:4173/_svelte_kit_assets/favicon.png"
+			/>
 
-	
-		<meta charset="utf-8">
-		<meta name="viewport" content="width=device-width">
-		<link rel="icon" type="image/png" href="http://localhost:4173/_svelte_kit_assets/favicon.png">
-		
-		<link rel="preload" as="script" crossorigin="anonymous" href="/_svelte_kit_assets/_wheee/immutable/entry/start.19ff6a7e.mjs">
-		<link rel="preload" as="script" crossorigin="anonymous" href="/_svelte_kit_assets/_wheee/immutable/chunks/index.3d36496b.mjs">
-		<link rel="preload" as="script" crossorigin="anonymous" href="/_svelte_kit_assets/_wheee/immutable/chunks/singletons.a1d47dd9.mjs">
-		<link rel="preload" as="script" crossorigin="anonymous" href="/_svelte_kit_assets/_wheee/immutable/chunks/paths.8eff7fdc.mjs">
-		<link rel="preload" as="script" crossorigin="anonymous" href="/_svelte_kit_assets/_wheee/immutable/entry/app.769465e8.mjs">
-		<link rel="preload" as="script" crossorigin="anonymous" href="/_svelte_kit_assets/_wheee/immutable/entry/_layout.svelte.bf6042b9.mjs">
-		<link rel="preload" as="script" crossorigin="anonymous" href="/_svelte_kit_assets/_wheee/immutable/entry/embed-a-page.svelte.917e4b3d.mjs">
-	
-	
-		<h1>I am in the template</h1>
-		<div><h2 class="embed-a">updated a</h2> <div id="svelte-announcer" aria-live="assertive" aria-atomic="true" style="position: absolute; left: 0px; top: 0px; clip: rect(0px, 0px, 0px, 0px); clip-path: inset(50%); overflow: hidden; white-space: nowrap; width: 1px; height: 1px;">untitled page</div></div>
-		<a href="/path-base/routing/link-outside-app-target/target/">outside app target</a>
-	
+			<link
+				rel="preload"
+				as="script"
+				crossorigin="anonymous"
+				href="/_svelte_kit_assets/_wheee/immutable/entry/start.19ff6a7e.mjs"
+			/>
+			<link
+				rel="preload"
+				as="script"
+				crossorigin="anonymous"
+				href="/_svelte_kit_assets/_wheee/immutable/chunks/index.3d36496b.mjs"
+			/>
+			<link
+				rel="preload"
+				as="script"
+				crossorigin="anonymous"
+				href="/_svelte_kit_assets/_wheee/immutable/chunks/singletons.a1d47dd9.mjs"
+			/>
+			<link
+				rel="preload"
+				as="script"
+				crossorigin="anonymous"
+				href="/_svelte_kit_assets/_wheee/immutable/chunks/paths.8eff7fdc.mjs"
+			/>
+			<link
+				rel="preload"
+				as="script"
+				crossorigin="anonymous"
+				href="/_svelte_kit_assets/_wheee/immutable/entry/app.769465e8.mjs"
+			/>
+			<link
+				rel="preload"
+				as="script"
+				crossorigin="anonymous"
+				href="/_svelte_kit_assets/_wheee/immutable/entry/_layout.svelte.bf6042b9.mjs"
+			/>
+			<link
+				rel="preload"
+				as="script"
+				crossorigin="anonymous"
+				href="/_svelte_kit_assets/_wheee/immutable/entry/embed-a-page.svelte.917e4b3d.mjs"
+			/>
 
+			<h1>I am in the template</h1>
+			<div>
+				<h2 class="embed-a">updated a</h2>
+				<div
+					id="svelte-announcer"
+					aria-live="assertive"
+					aria-atomic="true"
+					style="
+						position: absolute;
+						left: 0px;
+						top: 0px;
+						clip: rect(0px, 0px, 0px, 0px);
+						clip-path: inset(50%);
+						overflow: hidden;
+						white-space: nowrap;
+						width: 1px;
+						height: 1px;
+					"
+				>
+					untitled page
+				</div>
+			</div>
+			<a href="/path-base/routing/link-outside-app-target/target/">outside app target</a>
 
+			<meta charset="utf-8" />
+			<meta name="viewport" content="width=device-width" />
+			<link
+				rel="icon"
+				type="image/png"
+				href="http://localhost:4173/_svelte_kit_assets/favicon.png"
+			/>
 
+			<link
+				rel="preload"
+				as="script"
+				crossorigin="anonymous"
+				href="/_svelte_kit_assets/_wheee/immutable/entry/start.19ff6a7e.mjs"
+			/>
+			<link
+				rel="preload"
+				as="script"
+				crossorigin="anonymous"
+				href="/_svelte_kit_assets/_wheee/immutable/chunks/index.3d36496b.mjs"
+			/>
+			<link
+				rel="preload"
+				as="script"
+				crossorigin="anonymous"
+				href="/_svelte_kit_assets/_wheee/immutable/chunks/singletons.a1d47dd9.mjs"
+			/>
+			<link
+				rel="preload"
+				as="script"
+				crossorigin="anonymous"
+				href="/_svelte_kit_assets/_wheee/immutable/chunks/paths.8eff7fdc.mjs"
+			/>
+			<link
+				rel="preload"
+				as="script"
+				crossorigin="anonymous"
+				href="/_svelte_kit_assets/_wheee/immutable/entry/app.769465e8.mjs"
+			/>
+			<link
+				rel="preload"
+				as="script"
+				crossorigin="anonymous"
+				href="/_svelte_kit_assets/_wheee/immutable/entry/_layout.svelte.bf6042b9.mjs"
+			/>
+			<link
+				rel="preload"
+				as="script"
+				crossorigin="anonymous"
+				href="/_svelte_kit_assets/_wheee/immutable/entry/embed-b-page.svelte.eb9c6af1.mjs"
+			/>
 
+			<h1>I am in the template</h1>
+			<div>
+				<h2 class="embed-b">updated b</h2>
+				<div
+					id="svelte-announcer"
+					aria-live="assertive"
+					aria-atomic="true"
+					style="
+						position: absolute;
+						left: 0px;
+						top: 0px;
+						clip: rect(0px, 0px, 0px, 0px);
+						clip-path: inset(50%);
+						overflow: hidden;
+						white-space: nowrap;
+						width: 1px;
+						height: 1px;
+					"
+				>
+					untitled page
+				</div>
+			</div>
+			<a href="/path-base/routing/link-outside-app-target/target/">outside app target</a>
 
-	
-		<meta charset="utf-8">
-		<meta name="viewport" content="width=device-width">
-		<link rel="icon" type="image/png" href="http://localhost:4173/_svelte_kit_assets/favicon.png">
-		
-		<link rel="preload" as="script" crossorigin="anonymous" href="/_svelte_kit_assets/_wheee/immutable/entry/start.19ff6a7e.mjs">
-		<link rel="preload" as="script" crossorigin="anonymous" href="/_svelte_kit_assets/_wheee/immutable/chunks/index.3d36496b.mjs">
-		<link rel="preload" as="script" crossorigin="anonymous" href="/_svelte_kit_assets/_wheee/immutable/chunks/singletons.a1d47dd9.mjs">
-		<link rel="preload" as="script" crossorigin="anonymous" href="/_svelte_kit_assets/_wheee/immutable/chunks/paths.8eff7fdc.mjs">
-		<link rel="preload" as="script" crossorigin="anonymous" href="/_svelte_kit_assets/_wheee/immutable/entry/app.769465e8.mjs">
-		<link rel="preload" as="script" crossorigin="anonymous" href="/_svelte_kit_assets/_wheee/immutable/entry/_layout.svelte.bf6042b9.mjs">
-		<link rel="preload" as="script" crossorigin="anonymous" href="/_svelte_kit_assets/_wheee/immutable/entry/embed-b-page.svelte.eb9c6af1.mjs">
-	
-	
-		<h1>I am in the template</h1>
-		<div><h2 class="embed-b">updated b</h2> <div id="svelte-announcer" aria-live="assertive" aria-atomic="true" style="position: absolute; left: 0px; top: 0px; clip: rect(0px, 0px, 0px, 0px); clip-path: inset(50%); overflow: hidden; white-space: nowrap; width: 1px; height: 1px;">untitled page</div></div>
-		<a href="/path-base/routing/link-outside-app-target/target/">outside app target</a>
-	
-
-
-
-
-			<script type="application/json" data-sveltekit-fetched="" data-url="/path-base/embed/a/">{"status":200,"statusText":"","headers":{},"body":"\u003C!DOCTYPE html>\n\u003Chtml lang=\"en\">\n\t\u003Chead>\n\t\t\u003Cmeta charset=\"utf-8\" />\n\t\t\u003Cmeta name=\"viewport\" content=\"width=device-width\" />\n\t\t\u003Clink rel=\"icon\" type=\"image/png\" href=\"/_svelte_kit_assets/favicon.png\" />\n\t\t\n\t\t\u003Clink rel=\"preload\" as=\"script\" crossorigin=\"anonymous\" href=\"/_svelte_kit_assets/_wheee/immutable/entry/start.19ff6a7e.mjs\">\n\t\t\u003Clink rel=\"preload\" as=\"script\" crossorigin=\"anonymous\" href=\"/_svelte_kit_assets/_wheee/immutable/chunks/index.3d36496b.mjs\">\n\t\t\u003Clink rel=\"preload\" as=\"script\" crossorigin=\"anonymous\" href=\"/_svelte_kit_assets/_wheee/immutable/chunks/singletons.a1d47dd9.mjs\">\n\t\t\u003Clink rel=\"preload\" as=\"script\" crossorigin=\"anonymous\" href=\"/_svelte_kit_assets/_wheee/immutable/chunks/paths.8eff7fdc.mjs\">\n\t\t\u003Clink rel=\"preload\" as=\"script\" crossorigin=\"anonymous\" href=\"/_svelte_kit_assets/_wheee/immutable/entry/app.769465e8.mjs\">\n\t\t\u003Clink rel=\"preload\" as=\"script\" crossorigin=\"anonymous\" href=\"/_svelte_kit_assets/_wheee/immutable/entry/_layout.svelte.bf6042b9.mjs\">\n\t\t\u003Clink rel=\"preload\" as=\"script\" crossorigin=\"anonymous\" href=\"/_svelte_kit_assets/_wheee/immutable/entry/embed-a-page.svelte.917e4b3d.mjs\">\n\t\u003C/head>\n\t\u003Cbody>\n\t\t\u003Ch1>I am in the template\u003C/h1>\n\t\t\u003Cdiv>\n\n\n\u003Ch2 class=\"embed-a\">a\u003C/h2>\n\n\n\t\t\t\n\t\t\t\u003Cscript>\n\t\t\t\t{\n\t\t\t\t\t__sveltekit_1aw28v = {\n\t\t\t\t\t\tenv: {\"GO_AWAY_PLEASE\":\"and thank you\"},\n\t\t\t\t\t\tassets: \"/_svelte_kit_assets\",\n\t\t\t\t\t\tbase: new URL(\"../..\", location).pathname.slice(0, -1)\n\t\t\t\t\t};\n\n\t\t\t\t\tconst element = document.currentScript.parentElement;\n\n\t\t\t\t\tconst data = [{\"type\":\"data\",\"data\":null,\"uses\":{},\"slash\":\"always\"},null];\n\n\t\t\t\t\tPromise.all([\n\t\t\t\t\t\timport(\"/_svelte_kit_assets/_wheee/immutable/entry/start.19ff6a7e.mjs\"),\n\t\t\t\t\t\timport(\"/_svelte_kit_assets/_wheee/immutable/entry/app.769465e8.mjs\")\n\t\t\t\t\t]).then(([kit, app]) => {\n\t\t\t\t\t\tkit.start(app, element, {\n\t\t\t\t\t\t\tnode_ids: [0, 6],\n\t\t\t\t\t\t\tdata,\n\t\t\t\t\t\t\tform: null,\n\t\t\t\t\t\t\terror: null,\n\t\t\t\t\t\t\tparams: {},\n\t\t\t\t\t\t\troute: {\"id\":\"/embed/a\"}\n\t\t\t\t\t\t});\n\t\t\t\t\t});\n\t\t\t\t}\n\t\t\t\u003C/script>\n\t\t\u003C/div>\n\t\t\u003Ca href=\"/path-base/routing/link-outside-app-target/target/\">outside app target\u003C/a>\n\t\u003C/body>\n\u003C/html>\n"}</script>
-			<script type="application/json" data-sveltekit-fetched="" data-url="/path-base/embed/b/">{"status":200,"statusText":"","headers":{},"body":"\u003C!DOCTYPE html>\n\u003Chtml lang=\"en\">\n\t\u003Chead>\n\t\t\u003Cmeta charset=\"utf-8\" />\n\t\t\u003Cmeta name=\"viewport\" content=\"width=device-width\" />\n\t\t\u003Clink rel=\"icon\" type=\"image/png\" href=\"/_svelte_kit_assets/favicon.png\" />\n\t\t\n\t\t\u003Clink rel=\"preload\" as=\"script\" crossorigin=\"anonymous\" href=\"/_svelte_kit_assets/_wheee/immutable/entry/start.19ff6a7e.mjs\">\n\t\t\u003Clink rel=\"preload\" as=\"script\" crossorigin=\"anonymous\" href=\"/_svelte_kit_assets/_wheee/immutable/chunks/index.3d36496b.mjs\">\n\t\t\u003Clink rel=\"preload\" as=\"script\" crossorigin=\"anonymous\" href=\"/_svelte_kit_assets/_wheee/immutable/chunks/singletons.a1d47dd9.mjs\">\n\t\t\u003Clink rel=\"preload\" as=\"script\" crossorigin=\"anonymous\" href=\"/_svelte_kit_assets/_wheee/immutable/chunks/paths.8eff7fdc.mjs\">\n\t\t\u003Clink rel=\"preload\" as=\"script\" crossorigin=\"anonymous\" href=\"/_svelte_kit_assets/_wheee/immutable/entry/app.769465e8.mjs\">\n\t\t\u003Clink rel=\"preload\" as=\"script\" crossorigin=\"anonymous\" href=\"/_svelte_kit_assets/_wheee/immutable/entry/_layout.svelte.bf6042b9.mjs\">\n\t\t\u003Clink rel=\"preload\" as=\"script\" crossorigin=\"anonymous\" href=\"/_svelte_kit_assets/_wheee/immutable/entry/embed-b-page.svelte.eb9c6af1.mjs\">\n\t\u003C/head>\n\t\u003Cbody>\n\t\t\u003Ch1>I am in the template\u003C/h1>\n\t\t\u003Cdiv>\n\n\n\u003Ch2 class=\"embed-b\">b\u003C/h2>\n\n\n\t\t\t\n\t\t\t\u003Cscript>\n\t\t\t\t{\n\t\t\t\t\t__sveltekit_1aw28v = {\n\t\t\t\t\t\tenv: {\"GO_AWAY_PLEASE\":\"and thank you\"},\n\t\t\t\t\t\tassets: \"/_svelte_kit_assets\",\n\t\t\t\t\t\tbase: new URL(\"../..\", location).pathname.slice(0, -1)\n\t\t\t\t\t};\n\n\t\t\t\t\tconst element = document.currentScript.parentElement;\n\n\t\t\t\t\tconst data = [{\"type\":\"data\",\"data\":null,\"uses\":{},\"slash\":\"always\"},null];\n\n\t\t\t\t\tPromise.all([\n\t\t\t\t\t\timport(\"/_svelte_kit_assets/_wheee/immutable/entry/start.19ff6a7e.mjs\"),\n\t\t\t\t\t\timport(\"/_svelte_kit_assets/_wheee/immutable/entry/app.769465e8.mjs\")\n\t\t\t\t\t]).then(([kit, app]) => {\n\t\t\t\t\t\tkit.start(app, element, {\n\t\t\t\t\t\t\tnode_ids: [0, 7],\n\t\t\t\t\t\t\tdata,\n\t\t\t\t\t\t\tform: null,\n\t\t\t\t\t\t\terror: null,\n\t\t\t\t\t\t\tparams: {},\n\t\t\t\t\t\t\troute: {\"id\":\"/embed/b\"}\n\t\t\t\t\t\t});\n\t\t\t\t\t});\n\t\t\t\t}\n\t\t\t\u003C/script>\n\t\t\u003C/div>\n\t\t\u003Ca href=\"/path-base/routing/link-outside-app-target/target/\">outside app target\u003C/a>\n\t\u003C/body>\n\u003C/html>\n"}</script>
+			<script type="application/json" data-sveltekit-fetched="" data-url="/path-base/embed/a/">
+				{
+					"status": 200,
+					"statusText": "",
+					"headers": {},
+					"body": "\u003C!DOCTYPE html>\n\u003Chtml lang=\"en\">\n\t\u003Chead>\n\t\t\u003Cmeta charset=\"utf-8\" />\n\t\t\u003Cmeta name=\"viewport\" content=\"width=device-width\" />\n\t\t\u003Clink rel=\"icon\" type=\"image/png\" href=\"/_svelte_kit_assets/favicon.png\" />\n\t\t\n\t\t\u003Clink rel=\"preload\" as=\"script\" crossorigin=\"anonymous\" href=\"/_svelte_kit_assets/_wheee/immutable/entry/start.19ff6a7e.mjs\">\n\t\t\u003Clink rel=\"preload\" as=\"script\" crossorigin=\"anonymous\" href=\"/_svelte_kit_assets/_wheee/immutable/chunks/index.3d36496b.mjs\">\n\t\t\u003Clink rel=\"preload\" as=\"script\" crossorigin=\"anonymous\" href=\"/_svelte_kit_assets/_wheee/immutable/chunks/singletons.a1d47dd9.mjs\">\n\t\t\u003Clink rel=\"preload\" as=\"script\" crossorigin=\"anonymous\" href=\"/_svelte_kit_assets/_wheee/immutable/chunks/paths.8eff7fdc.mjs\">\n\t\t\u003Clink rel=\"preload\" as=\"script\" crossorigin=\"anonymous\" href=\"/_svelte_kit_assets/_wheee/immutable/entry/app.769465e8.mjs\">\n\t\t\u003Clink rel=\"preload\" as=\"script\" crossorigin=\"anonymous\" href=\"/_svelte_kit_assets/_wheee/immutable/entry/_layout.svelte.bf6042b9.mjs\">\n\t\t\u003Clink rel=\"preload\" as=\"script\" crossorigin=\"anonymous\" href=\"/_svelte_kit_assets/_wheee/immutable/entry/embed-a-page.svelte.917e4b3d.mjs\">\n\t\u003C/head>\n\t\u003Cbody>\n\t\t\u003Ch1>I am in the template\u003C/h1>\n\t\t\u003Cdiv>\n\n\n\u003Ch2 class=\"embed-a\">a\u003C/h2>\n\n\n\t\t\t\n\t\t\t\u003Cscript>\n\t\t\t\t{\n\t\t\t\t\t__sveltekit_1aw28v = {\n\t\t\t\t\t\tenv: {\"GO_AWAY_PLEASE\":\"and thank you\"},\n\t\t\t\t\t\tassets: \"/_svelte_kit_assets\",\n\t\t\t\t\t\tbase: new URL(\"../..\", location).pathname.slice(0, -1)\n\t\t\t\t\t};\n\n\t\t\t\t\tconst element = document.currentScript.parentElement;\n\n\t\t\t\t\tconst data = [{\"type\":\"data\",\"data\":null,\"uses\":{},\"slash\":\"always\"},null];\n\n\t\t\t\t\tPromise.all([\n\t\t\t\t\t\timport(\"/_svelte_kit_assets/_wheee/immutable/entry/start.19ff6a7e.mjs\"),\n\t\t\t\t\t\timport(\"/_svelte_kit_assets/_wheee/immutable/entry/app.769465e8.mjs\")\n\t\t\t\t\t]).then(([kit, app]) => {\n\t\t\t\t\t\tkit.start(app, element, {\n\t\t\t\t\t\t\tnode_ids: [0, 6],\n\t\t\t\t\t\t\tdata,\n\t\t\t\t\t\t\tform: null,\n\t\t\t\t\t\t\terror: null,\n\t\t\t\t\t\t\tparams: {},\n\t\t\t\t\t\t\troute: {\"id\":\"/embed/a\"}\n\t\t\t\t\t\t});\n\t\t\t\t\t});\n\t\t\t\t}\n\t\t\t\u003C/script>\n\t\t\u003C/div>\n\t\t\u003Ca href=\"/path-base/routing/link-outside-app-target/target/\">outside app target\u003C/a>\n\t\u003C/body>\n\u003C/html>\n"
+				}
+			</script>
+			<script type="application/json" data-sveltekit-fetched="" data-url="/path-base/embed/b/">
+				{
+					"status": 200,
+					"statusText": "",
+					"headers": {},
+					"body": "\u003C!DOCTYPE html>\n\u003Chtml lang=\"en\">\n\t\u003Chead>\n\t\t\u003Cmeta charset=\"utf-8\" />\n\t\t\u003Cmeta name=\"viewport\" content=\"width=device-width\" />\n\t\t\u003Clink rel=\"icon\" type=\"image/png\" href=\"/_svelte_kit_assets/favicon.png\" />\n\t\t\n\t\t\u003Clink rel=\"preload\" as=\"script\" crossorigin=\"anonymous\" href=\"/_svelte_kit_assets/_wheee/immutable/entry/start.19ff6a7e.mjs\">\n\t\t\u003Clink rel=\"preload\" as=\"script\" crossorigin=\"anonymous\" href=\"/_svelte_kit_assets/_wheee/immutable/chunks/index.3d36496b.mjs\">\n\t\t\u003Clink rel=\"preload\" as=\"script\" crossorigin=\"anonymous\" href=\"/_svelte_kit_assets/_wheee/immutable/chunks/singletons.a1d47dd9.mjs\">\n\t\t\u003Clink rel=\"preload\" as=\"script\" crossorigin=\"anonymous\" href=\"/_svelte_kit_assets/_wheee/immutable/chunks/paths.8eff7fdc.mjs\">\n\t\t\u003Clink rel=\"preload\" as=\"script\" crossorigin=\"anonymous\" href=\"/_svelte_kit_assets/_wheee/immutable/entry/app.769465e8.mjs\">\n\t\t\u003Clink rel=\"preload\" as=\"script\" crossorigin=\"anonymous\" href=\"/_svelte_kit_assets/_wheee/immutable/entry/_layout.svelte.bf6042b9.mjs\">\n\t\t\u003Clink rel=\"preload\" as=\"script\" crossorigin=\"anonymous\" href=\"/_svelte_kit_assets/_wheee/immutable/entry/embed-b-page.svelte.eb9c6af1.mjs\">\n\t\u003C/head>\n\t\u003Cbody>\n\t\t\u003Ch1>I am in the template\u003C/h1>\n\t\t\u003Cdiv>\n\n\n\u003Ch2 class=\"embed-b\">b\u003C/h2>\n\n\n\t\t\t\n\t\t\t\u003Cscript>\n\t\t\t\t{\n\t\t\t\t\t__sveltekit_1aw28v = {\n\t\t\t\t\t\tenv: {\"GO_AWAY_PLEASE\":\"and thank you\"},\n\t\t\t\t\t\tassets: \"/_svelte_kit_assets\",\n\t\t\t\t\t\tbase: new URL(\"../..\", location).pathname.slice(0, -1)\n\t\t\t\t\t};\n\n\t\t\t\t\tconst element = document.currentScript.parentElement;\n\n\t\t\t\t\tconst data = [{\"type\":\"data\",\"data\":null,\"uses\":{},\"slash\":\"always\"},null];\n\n\t\t\t\t\tPromise.all([\n\t\t\t\t\t\timport(\"/_svelte_kit_assets/_wheee/immutable/entry/start.19ff6a7e.mjs\"),\n\t\t\t\t\t\timport(\"/_svelte_kit_assets/_wheee/immutable/entry/app.769465e8.mjs\")\n\t\t\t\t\t]).then(([kit, app]) => {\n\t\t\t\t\t\tkit.start(app, element, {\n\t\t\t\t\t\t\tnode_ids: [0, 7],\n\t\t\t\t\t\t\tdata,\n\t\t\t\t\t\t\tform: null,\n\t\t\t\t\t\t\terror: null,\n\t\t\t\t\t\t\tparams: {},\n\t\t\t\t\t\t\troute: {\"id\":\"/embed/b\"}\n\t\t\t\t\t\t});\n\t\t\t\t\t});\n\t\t\t\t}\n\t\t\t\u003C/script>\n\t\t\u003C/div>\n\t\t\u003Ca href=\"/path-base/routing/link-outside-app-target/target/\">outside app target\u003C/a>\n\t\u003C/body>\n\u003C/html>\n"
+				}
+			</script>
 			<script>
 				{
 					__sveltekit_1aw28v = {
-						env: {"GO_AWAY_PLEASE":"and thank you"},
-						assets: "/_svelte_kit_assets",
-						base: new URL("..", location).pathname.slice(0, -1)
+						env: { GO_AWAY_PLEASE: 'and thank you' },
+						assets: '/_svelte_kit_assets',
+						base: new URL('..', location).pathname.slice(0, -1)
 					};
 
 					const element = document.currentScript.parentElement;
 
-					const data = [{"type":"data","data":null,"uses":{},"slash":"always"},null];
+					const data = [{ type: 'data', data: null, uses: {}, slash: 'always' }, null];
 
 					Promise.all([
-						import("/_svelte_kit_assets/_wheee/immutable/entry/start.19ff6a7e.mjs"),
-						import("/_svelte_kit_assets/_wheee/immutable/entry/app.769465e8.mjs")
+						import('/_svelte_kit_assets/_wheee/immutable/entry/start.19ff6a7e.mjs'),
+						import('/_svelte_kit_assets/_wheee/immutable/entry/app.769465e8.mjs')
 					]).then(([kit, app]) => {
 						kit.start(app, element, {
 							node_ids: [0, 5],
@@ -86,67 +293,114 @@
 							form: null,
 							error: null,
 							params: {},
-							route: {"id":"/embed"}
-						});
-					});
-				}
-			</script> 
-
-	
-		<meta charset="utf-8">
-		<meta name="viewport" content="width=device-width">
-		<link rel="icon" type="image/png" href="http://localhost:4173/_svelte_kit_assets/favicon.png">
-		
-		<link rel="preload" as="script" crossorigin="anonymous" href="/_svelte_kit_assets/_wheee/immutable/entry/start.19ff6a7e.mjs">
-		<link rel="preload" as="script" crossorigin="anonymous" href="/_svelte_kit_assets/_wheee/immutable/chunks/index.3d36496b.mjs">
-		<link rel="preload" as="script" crossorigin="anonymous" href="/_svelte_kit_assets/_wheee/immutable/chunks/singletons.a1d47dd9.mjs">
-		<link rel="preload" as="script" crossorigin="anonymous" href="/_svelte_kit_assets/_wheee/immutable/chunks/paths.8eff7fdc.mjs">
-		<link rel="preload" as="script" crossorigin="anonymous" href="/_svelte_kit_assets/_wheee/immutable/entry/app.769465e8.mjs">
-		<link rel="preload" as="script" crossorigin="anonymous" href="/_svelte_kit_assets/_wheee/immutable/entry/_layout.svelte.bf6042b9.mjs">
-		<link rel="preload" as="script" crossorigin="anonymous" href="/_svelte_kit_assets/_wheee/immutable/entry/embed-b-page.svelte.eb9c6af1.mjs">
-	
-	
-		<h1>I am in the template</h1>
-		<div>
-
-
-<h2 class="embed-b">b</h2>
-
-
-			
-			<script>
-				{
-					__sveltekit_1aw28v = {
-						env: {"GO_AWAY_PLEASE":"and thank you"},
-						assets: "/_svelte_kit_assets",
-						base: new URL("../..", location).pathname.slice(0, -1)
-					};
-
-					const element = document.currentScript.parentElement;
-
-					const data = [{"type":"data","data":null,"uses":{},"slash":"always"},null];
-
-					Promise.all([
-						import("/_svelte_kit_assets/_wheee/immutable/entry/start.19ff6a7e.mjs"),
-						import("/_svelte_kit_assets/_wheee/immutable/entry/app.769465e8.mjs")
-					]).then(([kit, app]) => {
-						kit.start(app, element, {
-							node_ids: [0, 7],
-							data,
-							form: null,
-							error: null,
-							params: {},
-							route: {"id":"/embed/b"}
+							route: { id: '/embed' }
 						});
 					});
 				}
 			</script>
+
+			<meta charset="utf-8" />
+			<meta name="viewport" content="width=device-width" />
+			<link
+				rel="icon"
+				type="image/png"
+				href="http://localhost:4173/_svelte_kit_assets/favicon.png"
+			/>
+
+			<link
+				rel="preload"
+				as="script"
+				crossorigin="anonymous"
+				href="/_svelte_kit_assets/_wheee/immutable/entry/start.19ff6a7e.mjs"
+			/>
+			<link
+				rel="preload"
+				as="script"
+				crossorigin="anonymous"
+				href="/_svelte_kit_assets/_wheee/immutable/chunks/index.3d36496b.mjs"
+			/>
+			<link
+				rel="preload"
+				as="script"
+				crossorigin="anonymous"
+				href="/_svelte_kit_assets/_wheee/immutable/chunks/singletons.a1d47dd9.mjs"
+			/>
+			<link
+				rel="preload"
+				as="script"
+				crossorigin="anonymous"
+				href="/_svelte_kit_assets/_wheee/immutable/chunks/paths.8eff7fdc.mjs"
+			/>
+			<link
+				rel="preload"
+				as="script"
+				crossorigin="anonymous"
+				href="/_svelte_kit_assets/_wheee/immutable/entry/app.769465e8.mjs"
+			/>
+			<link
+				rel="preload"
+				as="script"
+				crossorigin="anonymous"
+				href="/_svelte_kit_assets/_wheee/immutable/entry/_layout.svelte.bf6042b9.mjs"
+			/>
+			<link
+				rel="preload"
+				as="script"
+				crossorigin="anonymous"
+				href="/_svelte_kit_assets/_wheee/immutable/entry/embed-b-page.svelte.eb9c6af1.mjs"
+			/>
+
+			<h1>I am in the template</h1>
+			<div>
+				<h2 class="embed-b">b</h2>
+
+				<script>
+					{
+						__sveltekit_1aw28v = {
+							env: { GO_AWAY_PLEASE: 'and thank you' },
+							assets: '/_svelte_kit_assets',
+							base: new URL('../..', location).pathname.slice(0, -1)
+						};
+
+						const element = document.currentScript.parentElement;
+
+						const data = [{ type: 'data', data: null, uses: {}, slash: 'always' }, null];
+
+						Promise.all([
+							import('/_svelte_kit_assets/_wheee/immutable/entry/start.19ff6a7e.mjs'),
+							import('/_svelte_kit_assets/_wheee/immutable/entry/app.769465e8.mjs')
+						]).then(([kit, app]) => {
+							kit.start(app, element, {
+								node_ids: [0, 7],
+								data,
+								form: null,
+								error: null,
+								params: {},
+								route: { id: '/embed/b' }
+							});
+						});
+					}
+				</script>
+			</div>
+			<a href="/path-base/routing/link-outside-app-target/target/">outside app target</a>
+
+			<div
+				id="svelte-announcer"
+				aria-live="assertive"
+				aria-atomic="true"
+				style="
+					position: absolute;
+					left: 0px;
+					top: 0px;
+					clip: rect(0px, 0px, 0px, 0px);
+					clip-path: inset(50%);
+					overflow: hidden;
+					white-space: nowrap;
+					width: 1px;
+					height: 1px;
+				"
+			></div>
 		</div>
 		<a href="/path-base/routing/link-outside-app-target/target/">outside app target</a>
-	
-
- <div id="svelte-announcer" aria-live="assertive" aria-atomic="true" style="position: absolute; left: 0px; top: 0px; clip: rect(0px, 0px, 0px, 0px); clip-path: inset(50%); overflow: hidden; white-space: nowrap; width: 1px; height: 1px;"></div></div>
-		<a href="/path-base/routing/link-outside-app-target/target/">outside app target</a>
-	
-
-</body></html>
+	</body>
+</html>

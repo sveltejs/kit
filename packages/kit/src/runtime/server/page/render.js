@@ -305,7 +305,7 @@ export async function render_response({
 		const properties = [
 			`env: ${s(public_env)}`,
 			paths.assets && `assets: ${s(paths.assets)}`,
-			`base: ${base_expression}`,
+			`base: ${base_expression}`
 		].filter(Boolean);
 
 		if (chunks) {
@@ -331,10 +331,9 @@ export async function render_response({
 		const args = [`app`, `element`];
 
 		if (page_config.ssr) {
-
 			const serialized = { form: 'null', error: 'null' };
 
-			blocks.push(`const element = document.currentScript.parentElement;`)
+			blocks.push(`const element = document.currentScript.parentElement;`);
 			blocks.push(`const data = ${data};`);
 
 			if (form_value) {
