@@ -12,7 +12,7 @@
 <Shell banner_bottom_height={banner_height}>
 	<Nav slot="top-nav">
 		<svelte:fragment slot="home">
-			<span><strong>kit</strong><span>.svelte.dev</span></span>
+			<span><strong>kit</strong>.svelte.dev</span>
 		</svelte:fragment>
 
 		<svelte:fragment slot="nav-center">
