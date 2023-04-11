@@ -14,7 +14,7 @@
 		"@sveltejs/adapter-vercel": "workspace:^",
 		"@sveltejs/amp": "workspace:^",
 		"@sveltejs/kit": "workspace:^",
-		"@sveltejs/site-kit": "4.0.0",
+		"@sveltejs/site-kit": "4.0.1",
 		"@types/d3-geo": "^3.0.2",
 		"@types/node": "^16.18.6",
 		"flexsearch": "^0.7.31",
@@ -34,7 +34,6 @@
 	"dependencies": {
 		"d3-geo": "^3.0.1",
 		"d3-geo-projection": "^4.0.0",
-		"svelte-local-storage-store": "^0.4.0",
 		"topojson-client": "^3.1.0"
 	}
 }
