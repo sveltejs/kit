@@ -99,7 +99,7 @@ export function parse_route_id(id) {
 const basic_param_pattern = /\[(\[)?(?:\.\.\.)?(\w+?)(?:=(\w+))?\]\]?/;
 
 /**
- * Parses a route ID, then resolves it to a route by replacing parameters with actual values from `entry`.
+ * Parses a route ID, then resolves it to a path by replacing parameters with actual values from `entry`.
  * @param {string} id The route id
  * @param {Record<string, string | undefined>} entry The entry meant to populate the route. For example, if the route is `/blog/[slug]`, the entry would be `{ slug: 'hello-world' }`
  * @example
