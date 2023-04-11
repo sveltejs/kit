@@ -8,10 +8,15 @@ import {writeFileSync} from "fs";
 test.describe.configure({ mode: 'parallel' });
 
 test.describe('embed', () => {
-	test('resolves downwards', async ({ page }) => {
+	test('serves embedded components in page', async ({ page, javaScriptEnabled }) => {
 		await page.goto('/path-base/embed');
-		let x = await page.content();
-		writeFileSync("test-embed2.html", x)
-		console.log(await page.content())
+		if (javaScriptEnabled) {
+			expect(await page.textContent("#embed-a")).toBe("updated a")
+			expect(await page.textContent("#embed-b")).toBe("updated b")
+		} else {
+			expect(await page.textContent("#embed-a")).toBe("a")
+			expect(await page.textContent("#embed-b")).toBe("b")
+
+		}
 	});
 });
