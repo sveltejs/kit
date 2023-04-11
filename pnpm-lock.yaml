@@ -689,7 +689,7 @@ importers:
       '@sveltejs/adapter-vercel': workspace:^
       '@sveltejs/amp': workspace:^
       '@sveltejs/kit': workspace:^
-      '@sveltejs/site-kit': 4.0.1
+      '@sveltejs/site-kit': 4.0.2
       '@types/d3-geo': ^3.0.2
       '@types/node': ^16.18.6
       d3-geo: ^3.0.1
@@ -715,7 +715,7 @@ importers:
       '@sveltejs/adapter-vercel': link:../../packages/adapter-vercel
       '@sveltejs/amp': link:../../packages/amp
       '@sveltejs/kit': link:../../packages/kit
-      '@sveltejs/site-kit': 4.0.1_r4kk7euspt2csvnnykfg5n6pxi
+      '@sveltejs/site-kit': 4.0.2_r4kk7euspt2csvnnykfg5n6pxi
       '@types/d3-geo': 3.0.2
       '@types/node': 16.18.6
       flexsearch: 0.7.31
@@ -1590,8 +1590,8 @@ packages:
       picomatch: 2.3.1
       rollup: 3.7.0
 
-  /@sveltejs/site-kit/4.0.1_r4kk7euspt2csvnnykfg5n6pxi:
-    resolution: {integrity: sha512-4uMN2quyP+us87690TFMmmt5QtbapZrpbeqVoc9uvgBQqIs+2L0W5y033YnoKKxk/G40AnODYJ0Rqbwuome7jA==}
+  /@sveltejs/site-kit/4.0.2_r4kk7euspt2csvnnykfg5n6pxi:
+    resolution: {integrity: sha512-gqxBMZW5ZiO61m7Bn4x0fMUJC1M27ku1u7u0KJrg0zRSN3Zu30VdwE1SwWO4ueKxOxLXD2gzfUMdvoez7ZoBuQ==}
     peerDependencies:
       '@sveltejs/kit': ^1.0.0
       svelte: ^3.54.0
