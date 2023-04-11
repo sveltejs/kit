@@ -52,8 +52,8 @@ export class Server {
 							throw error;
 						},
 						// @ts-expect-error
-						handleError: (({ error }) => console.error(error?.stack)),
-						handleFetch: (({ request, fetch }) => fetch(request))
+						handleError: ({ error }) => console.error(error?.stack),
+						handleFetch: ({ request, fetch }) => fetch(request)
 					};
 				} else {
 					throw error;
