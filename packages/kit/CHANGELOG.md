@@ -1,5 +1,13 @@
 # @sveltejs/kit
 
+## 1.15.4
+
+### Patch Changes
+
+- fix: gracefully handle failure to load hooks.server.js ([#9641](https://github.com/sveltejs/kit/pull/9641))
+
+- feat: set sourcemapIgnoreList to filter out non-source directories ([#9619](https://github.com/sveltejs/kit/pull/9619))
+
 ## 1.15.3
 
 ### Patch Changes
