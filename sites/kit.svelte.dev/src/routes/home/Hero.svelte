@@ -78,7 +78,7 @@
 		margin: 0 auto;
 	}
 
-	.logotype {
+	.logotype :global(svg) {
 		position: relative;
 		width: 100%;
 		max-width: 400px;
