@@ -172,6 +172,8 @@ export async function respond(request, options, manifest, state) {
 	try {
 		// determine whether we need to redirect to add/remove a trailing slash
 		if (route && !is_data_request) {
+			// if `paths.base === '/a/b/c`, then the root route is `/a/b/c/`,
+			// regardless of the `trailingSlash` route option
 			if (url.pathname === base || url.pathname === base + '/') {
 				trailing_slash = 'always';
 			} else if (route.page) {
