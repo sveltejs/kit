@@ -188,6 +188,9 @@ function kit({ svelte_config }) {
 
 	const service_worker_entry_file = resolve_entry(kit.files.serviceWorker);
 
+	const sourcemapIgnoreList = /** @param {string} relative_path */ (relative_path) =>
+		relative_path.includes('node_modules') || relative_path.includes(kit.outDir);
+
 	/** @type {import('vite').Plugin} */
 	const plugin_setup = {
 		name: 'vite-plugin-sveltekit-setup',
@@ -231,16 +234,17 @@ function kit({ svelte_config }) {
 				},
 				root: cwd,
 				server: {
+					cors: { preflightContinue: true },
 					fs: {
 						allow: [...allow]
 					},
+					sourcemapIgnoreList,
 					watch: {
 						ignored: [
 							// Ignore all siblings of config.kit.outDir/generated
 							`${posixify(kit.outDir)}/!(generated)`
 						]
-					},
-					cors: { preflightContinue: true }
+					}
 				},
 				preview: {
 					cors: { preflightContinue: true }
@@ -563,7 +567,8 @@ function kit({ svelte_config }) {
 								entryFileNames: ssr ? '[name].js' : `${prefix}/[name].[hash].${ext}`,
 								chunkFileNames: ssr ? 'chunks/[name].js' : `${prefix}/chunks/[name].[hash].${ext}`,
 								assetFileNames: `${prefix}/assets/[name].[hash][extname]`,
-								hoistTransitiveImports: false
+								hoistTransitiveImports: false,
+								sourcemapIgnoreList
 							},
 							preserveEntrySignatures: 'strict'
 						},
