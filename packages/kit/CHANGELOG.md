@@ -1,5 +1,11 @@
 # @sveltejs/kit
 
+## 1.15.3
+
+### Patch Changes
+
+- fix: prevent building duplicate CSS files ([#9382](https://github.com/sveltejs/kit/pull/9382))
+
 ## 1.15.2
 
 ### Patch Changes
