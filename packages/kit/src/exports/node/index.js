@@ -105,24 +105,36 @@ export async function getRequest({ request, base, bodySizeLimit }) {
 
 /** @type {import('@sveltejs/kit/node').setResponse} */
 export async function setResponse(res, response) {
-	const headers = Object.fromEntries(response.headers);
+	let copy_header_error = false;
+	/**
+	 * @param {string} name
+	 * @param {string | string[]} value
+	 */
+	function try_copy_header(name, value) {
+		try {
+			res.setHeader(name, value);
+		} catch (error) {
+			// clean out the headers that were set for the original response
+			res.getHeaderNames().forEach((name) => res.removeHeader(name));
+			res.writeHead(500).end(String(error));
+			copy_header_error = true;
+		}
+	}
 
 	if (response.headers.has('set-cookie')) {
 		const header = /** @type {string} */ (response.headers.get('set-cookie'));
-		const split = set_cookie_parser.splitCookiesString(header);
-
-		// @ts-expect-error
-		headers['set-cookie'] = split;
+		try_copy_header('set-cookie', set_cookie_parser.splitCookiesString(header));
+		if (copy_header_error) return;
 	}
 
-	try {
-		res.writeHead(response.status, headers);
-	} catch (error) {
-		// TODO: remove the other headers from the response?
-		res.writeHead(500);
-		res.end(String(error));
-		return;
+	for (const [name, value] of response.headers) {
+		if (name !== 'set-cookie') {
+			try_copy_header(name, value);
+			if (copy_header_error) return;
+		}
 	}
+
+	res.writeHead(response.status);
 
 	if (!response.body) {
 		res.end();
@@ -130,7 +142,6 @@ export async function setResponse(res, response) {
 	}
 
 	if (response.body.locked) {
-		res.writeHead(500);
 		res.end(
 			'Fatal error: Response body is locked. ' +
 				`This can happen when the response was already read (for example through 'response.json()' or 'response.text()').`

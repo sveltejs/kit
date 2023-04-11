@@ -177,6 +177,15 @@ test.describe('Endpoints', () => {
 		expect(await response.text()).toEqual(digest);
 	});
 
+	// TODO see above
+	test('errors in res.writeHead return a 500', async ({ request }) => {
+		const response = await request.get('/endpoint-output/head-write-error');
+		expect(response.status()).toBe(500);
+		expect(await response.text()).toMatch(
+			'TypeError [ERR_INVALID_CHAR]: Invalid character in header content ["x-test"]'
+		);
+	});
+
 	test('OPTIONS handler', async ({ request }) => {
 		const url = '/endpoint-output/options';
 
