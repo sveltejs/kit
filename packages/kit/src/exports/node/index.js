@@ -105,32 +105,17 @@ export async function getRequest({ request, base, bodySizeLimit }) {
 
 /** @type {import('@sveltejs/kit/node').setResponse} */
 export async function setResponse(res, response) {
-	let copy_header_error = false;
-	/**
-	 * @param {string} name
-	 * @param {string | string[]} value
-	 */
-	function try_copy_header(name, value) {
+	for (const key of response.headers.keys()) {
 		try {
-			res.setHeader(name, value);
+			const value = /** @type {string} */ (response.headers.get(key));
+			res.setHeader(
+				key,
+				key === 'set-cookie' ? set_cookie_parser.splitCookiesString(value) : value
+			);
 		} catch (error) {
-			// clean out the headers that were set for the original response
 			res.getHeaderNames().forEach((name) => res.removeHeader(name));
 			res.writeHead(500).end(String(error));
-			copy_header_error = true;
-		}
-	}
-
-	if (response.headers.has('set-cookie')) {
-		const header = /** @type {string} */ (response.headers.get('set-cookie'));
-		try_copy_header('set-cookie', set_cookie_parser.splitCookiesString(header));
-		if (copy_header_error) return;
-	}
-
-	for (const [name, value] of response.headers) {
-		if (name !== 'set-cookie') {
-			try_copy_header(name, value);
-			if (copy_header_error) return;
+			return;
 		}
 	}
 

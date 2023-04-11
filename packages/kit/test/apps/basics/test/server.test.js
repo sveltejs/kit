@@ -178,7 +178,7 @@ test.describe('Endpoints', () => {
 	});
 
 	// TODO see above
-	test('errors in res.writeHead return a 500', async ({ request }) => {
+	test('invalid headers return a 500', async ({ request }) => {
 		const response = await request.get('/endpoint-output/head-write-error');
 		expect(response.status()).toBe(500);
 		expect(await response.text()).toMatch(
@@ -494,7 +494,9 @@ test.describe('setHeaders', () => {
 	test('allows multiple set-cookie headers with different values', async ({ page }) => {
 		const response = await page.goto('/headers/set-cookie/sub');
 		const cookies = (await response?.allHeaders())['set-cookie'];
-		expect(cookies.includes('cookie1=value1') && cookies.includes('cookie2=value2')).toBe(true);
+
+		expect(cookies).toMatch('cookie1=value1');
+		expect(cookies).toMatch('cookie2=value2');
 	});
 });
 
@@ -502,11 +504,10 @@ test.describe('cookies', () => {
 	test('cookie.serialize created correct cookie header string', async ({ page }) => {
 		const response = await page.goto('/cookies/serialize');
 		const cookies = await response.headerValue('set-cookie');
-		expect(
-			cookies.includes('before=before') &&
-				cookies.includes('after=after') &&
-				cookies.includes('endpoint=endpoint')
-		).toBe(true);
+
+		expect(cookies).toMatch('before=before');
+		expect(cookies).toMatch('after=after');
+		expect(cookies).toMatch('endpoint=endpoint');
 	});
 });
 
