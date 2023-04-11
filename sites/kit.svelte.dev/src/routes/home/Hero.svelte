@@ -1,13 +1,16 @@
 <script>
 	import { base } from '$app/paths';
-	import logotype from './svelte-kit-logotype.svg';
+	import Logotype from './svelte-kit-logotype.svg.svelte';
 	import background from './svelte-kit-machine.webp?w=1440;960&format=avif;webp;png&picture';
 </script>
 
 <section class="hero">
 	<div class="hero-contents">
 		<div class="hero-text">
-			<img alt="SvelteKit logotype" width="400" height="50" class="logotype" src={logotype} />
+			<div class="logotype" role="img">
+				<Logotype />
+			</div>
+
 			<div class="tagline">web development, streamlined</div>
 			<a class="cta" href="{base}/docs/introduction">read the docs</a>
 		</div>
@@ -139,7 +142,7 @@
 			background: var(--dark-gradient);
 		}
 
-		.hero-text img {
+		.hero-text :global(svg) {
 			mix-blend-mode: screen;
 		}
 
@@ -147,7 +150,7 @@
 			background: var(--gradient);
 		}
 
-		:global(body.light) .hero-text img {
+		:global(body.light) .hero-text :global(svg) {
 			mix-blend-mode: initial;
 		}
 	}
@@ -157,7 +160,7 @@
 		background: var(--dark-gradient);
 	}
 
-	:global(body.dark) .hero-text img {
+	:global(body.dark) .hero-text :global(svg) {
 		mix-blend-mode: screen;
 	}
 </style>
