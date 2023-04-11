@@ -105,12 +105,16 @@ export async function getRequest({ request, base, bodySizeLimit }) {
 
 /** @type {import('@sveltejs/kit/node').setResponse} */
 export async function setResponse(res, response) {
-	for (const key of response.headers.keys()) {
+	for (const [key, value] of response.headers) {
 		try {
-			const value = /** @type {string} */ (response.headers.get(key));
 			res.setHeader(
 				key,
-				key === 'set-cookie' ? set_cookie_parser.splitCookiesString(value) : value
+				key === 'set-cookie'
+					? set_cookie_parser.splitCookiesString(
+							// This is absurd but necessary, TODO: investigate why
+							/** @type {string}*/ (response.headers.get(key))
+					  )
+					: value
 			);
 		} catch (error) {
 			res.getHeaderNames().forEach((name) => res.removeHeader(name));
