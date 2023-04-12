@@ -32,7 +32,7 @@
 		</style>
 		<script>
 			document.getElementsByTagName('html')[0].classList.remove('no-js');
-			localStorage.getItem('prefers-ts') === 'true' &&
+			localStorage.getItem('svelte:prefers-ts') === 'true' &&
 				document.documentElement.classList.add('prefers-ts');
 		</script>
 
@@ -40,7 +40,7 @@
 	</head>
 	<body>
 		<script>
-			const themeValue = JSON.parse(localStorage.getItem('sveltekit:theme'))?.current;
+			const themeValue = JSON.parse(localStorage.getItem('svelte:theme'))?.current;
 			const systemPreferredTheme = window.matchMedia('(prefers-color-scheme: dark)').matches
 				? 'dark'
 				: 'light';
