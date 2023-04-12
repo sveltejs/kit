@@ -938,8 +938,8 @@ importers:
         specifier: workspace:^
         version: link:../../packages/kit
       '@sveltejs/site-kit':
-        specifier: 4.0.2
-        version: 4.0.2(@sveltejs/kit@packages+kit)(svelte@3.56.0)
+        specifier: 4.1.0
+        version: 4.1.0(@sveltejs/kit@packages+kit)(svelte@3.56.0)
       '@types/d3-geo':
         specifier: ^3.0.2
         version: 3.0.2
@@ -1828,8 +1828,8 @@ packages:
       picomatch: 2.3.1
       rollup: 3.7.0
 
-  /@sveltejs/site-kit@4.0.2(@sveltejs/kit@packages+kit)(svelte@3.56.0):
-    resolution: {integrity: sha512-gqxBMZW5ZiO61m7Bn4x0fMUJC1M27ku1u7u0KJrg0zRSN3Zu30VdwE1SwWO4ueKxOxLXD2gzfUMdvoez7ZoBuQ==}
+  /@sveltejs/site-kit@4.1.0(@sveltejs/kit@packages+kit)(svelte@3.56.0):
+    resolution: {integrity: sha512-DRX3BSyuDvTWcqP5KucomcU90uHKgOcXgTF5mlPcZvoJ4Ekyt9+SbOMR+FU1CBNv1UzYkEtvMuGuQwc1+DCaTQ==}
     peerDependencies:
       '@sveltejs/kit': ^1.0.0
       svelte: ^3.54.0
@@ -2118,7 +2118,7 @@ packages:
       debug: 4.3.4
       globby: 11.1.0
       is-glob: 4.0.3
-      semver: 7.3.8
+      semver: 7.4.0
       tsutils: 3.21.0(typescript@4.9.4)
       typescript: 4.9.4
     transitivePeerDependencies:
@@ -2158,7 +2158,7 @@ packages:
     engines: {node: ^12.22.0 || ^14.17.0 || >=16.0.0}
     dependencies:
       '@typescript-eslint/types': 5.58.0
-      eslint-visitor-keys: 3.3.0
+      eslint-visitor-keys: 3.4.0
     dev: true
 
   /@typescript/twoslash@3.1.0:
@@ -3054,6 +3054,11 @@ packages:
 
   /eslint-visitor-keys@3.3.0:
     resolution: {integrity: sha512-mQ+suqKJVyeuwGYHAdjMFqjCyfl8+Ldnxuyp3ldiMBFKkvytrXUZWaiPCEav8qDHKty44bD+qV1IP4T+w+xXRA==}
+    engines: {node: ^12.22.0 || ^14.17.0 || >=16.0.0}
+    dev: true
+
+  /eslint-visitor-keys@3.4.0:
+    resolution: {integrity: sha512-HPpKPUBQcAsZOsHAFwTtIKcYlCje62XB7SEAcxjtmW6TD1WVpkS6i6/hOVtTZIl4zGj/mBqpFVGvaDneik+VoQ==}
     engines: {node: ^12.22.0 || ^14.17.0 || >=16.0.0}
     dev: true
 
@@ -4930,6 +4935,14 @@ packages:
     hasBin: true
     dependencies:
       lru-cache: 6.0.0
+
+  /semver@7.4.0:
+    resolution: {integrity: sha512-RgOxM8Mw+7Zus0+zcLEUn8+JfoLpj/huFTItQy2hsM4khuC1HYRDp0cU482Ewn/Fcy6bCjufD8vAj7voC66KQw==}
+    engines: {node: '>=10'}
+    hasBin: true
+    dependencies:
+      lru-cache: 6.0.0
+    dev: true
 
   /set-blocking@2.0.0:
     resolution: {integrity: sha512-KiKBS8AnWGEyLzofFfmvKwpdPzqiy16LvQfK3yv/fVH7Bj13/wl3JSR1J+rfgRE9q7xUJK4qvgS8raSOeLUehw==}
