@@ -1487,6 +1487,10 @@ export function create_client(app, target) {
 					callbacks.before_navigate.forEach((fn) => fn(navigation));
 				}
 
+				const url = new URL(location.href, document.baseURI);
+				update_url_and_page_store_notifying_with_url(url);
+
+
 				if (should_block) {
 					e.preventDefault();
 					e.returnValue = '';
@@ -1570,9 +1574,7 @@ export function create_client(app, target) {
 
 					update_scroll_positions(current_history_index);
 
-					current.url = url;
-					stores.page.set({ ...page, url });
-					stores.page.notify();
+					update_url_and_page_store_notifying_with_url(url);
 
 					return;
 				}
@@ -1700,15 +1702,6 @@ export function create_client(app, target) {
 						'',
 						location.href
 					);
-				} else {
-					// when the hash is updated directly through the browser's
-					// address bar, the page store needs to be updated
-					const url = new URL(location.href, document.baseURI);
-
-					current.url = url;
-
-					stores.page.set({ ...page, url });
-					stores.page.notify();
 				}
 			});
 
@@ -1728,6 +1721,15 @@ export function create_client(app, target) {
 					stores.navigating.set(null);
 				}
 			});
+
+			/**
+			* @param {URL} url
+			*/
+			function update_url_and_page_store_notifying_with_url(url) {
+				current.url = url;
+				stores.page.set({ ...page, url });
+				stores.page.notify();
+			}
 		},
 
 		_hydrate: async ({
