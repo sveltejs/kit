@@ -120,11 +120,12 @@ test.describe('Endpoints', () => {
 		});
 	});
 
-	test('invalid request method returns allow header', async ({ request }) => {
+	test.only('invalid request method returns allow header', async ({ request }) => {
 		const response = await request.post('/endpoint-output/body');
 
 		expect(response.status()).toBe(405);
-		expect(response.headers()['allow'].includes('GET'));
+		expect(response.headers()['allow']).toMatch(/\bGET\b/);
+		expect(response.headers()['allow']).toMatch(/\bHEAD\b/);
 	});
 
 	// TODO all the remaining tests in this section are really only testing
