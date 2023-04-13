@@ -1042,7 +1042,7 @@ test.describe('Actions', () => {
 		expect(page.url()).toContain('/actions/enhance');
 	});
 
-	test.only('redirect in handle', async ({ page, javaScriptEnabled }) => {
+	test('redirect in handle', async ({ page, javaScriptEnabled }) => {
 		await page.goto('/actions/redirect-in-handle');
 
 		page.click('button');
