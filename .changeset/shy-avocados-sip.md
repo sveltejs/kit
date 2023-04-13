@@ -2,4 +2,4 @@
 '@sveltejs/kit': patch
 ---
 
-fix: allow header methods list for 405s
+fix: correct allow header methods list for 405s
