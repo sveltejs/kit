@@ -26,6 +26,7 @@ import {
 } from '../../utils/exports.js';
 import { get_option } from '../../utils/options.js';
 import { error, json, text } from '../../exports/index.js';
+import { action_json_redirect, is_action_json_request } from './page/actions.js';
 
 /* global __SVELTEKIT_ADAPTER_NAME__ */
 
@@ -309,6 +310,8 @@ export async function respond(request, options, manifest, state) {
 		if (e instanceof Redirect) {
 			const response = is_data_request
 				? redirect_json_response(e)
+				: route?.page && is_action_json_request(event)
+				? action_json_redirect(e)
 				: redirect_response(e.status, e.location);
 			add_cookies_to_headers(response.headers, Object.values(cookies_to_add));
 			return response;
