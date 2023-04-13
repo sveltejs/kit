@@ -120,7 +120,7 @@ test.describe('Endpoints', () => {
 		});
 	});
 
-	test.only('invalid request method returns allow header', async ({ request }) => {
+	test('invalid request method returns allow header', async ({ request }) => {
 		const response = await request.post('/endpoint-output/body');
 
 		expect(response.status()).toBe(405);
