@@ -2,4 +2,4 @@
 '@sveltejs/kit': patch
 ---
 
-feat: better error messages for handleable prerender failures
+fix: better error messages for handleable prerender failures
