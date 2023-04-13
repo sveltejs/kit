@@ -124,8 +124,10 @@ test.describe('Endpoints', () => {
 		const response = await request.post('/endpoint-output/body');
 
 		expect(response.status()).toBe(405);
-		expect(response.headers()['allow']).toMatch(/\bGET\b/);
-		expect(response.headers()['allow']).toMatch(/\bHEAD\b/);
+
+		const allow_header = response.headers()['allow'];
+		expect(allow_header).toMatch(/\bGET\b/);
+		expect(allow_header).toMatch(/\bHEAD\b/);
 	});
 
 	// TODO all the remaining tests in this section are really only testing
