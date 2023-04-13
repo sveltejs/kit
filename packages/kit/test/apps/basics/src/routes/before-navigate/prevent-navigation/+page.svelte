@@ -20,4 +20,5 @@
 <a href="/before-navigate/prevent-navigation?x=1">self</a>
 <a href="https://google.com" target="_blank" rel="noreferrer">_blank</a>
 <a href="https://google.de">external</a>
+<a download href="#">external</a>
 <pre>{times_triggered} {unload} {navigation_type}</pre>
