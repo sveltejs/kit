@@ -1,5 +1,15 @@
 # @sveltejs/kit
 
+## 1.15.5
+
+### Patch Changes
+
+- fix: correct allow header methods list for 405s ([#9655](https://github.com/sveltejs/kit/pull/9655))
+
+- fix: prevent routes/layouts from having conflicting files through resets or different extensions ([#9590](https://github.com/sveltejs/kit/pull/9590))
+
+- fix: prevent unhandled exceptions for invalid header values ([#9638](https://github.com/sveltejs/kit/pull/9638))
+
 ## 1.15.4
 
 ### Patch Changes
