@@ -5,6 +5,7 @@ import PrismJS from 'prismjs';
 import 'prismjs/components/prism-bash.js';
 import 'prismjs/components/prism-diff.js';
 import 'prismjs/components/prism-typescript.js';
+import 'prismjs/components/prism-yaml.js';
 import 'prism-svelte';
 import { escape, extract_frontmatter, transform } from './markdown.js';
 import { modules } from './type-info.js';
@@ -29,6 +30,7 @@ const languages = {
 	css: 'css',
 	diff: 'diff',
 	ts: 'typescript',
+	yaml: 'yaml',
 	'': ''
 };
 
@@ -75,6 +77,7 @@ export async function read_file(file) {
 		body: generate_ts_from_js(body),
 		code: (source, language, current) => {
 			const hash = createHash('sha256');
+
 			hash.update(source + language + current);
 			const digest = hash.digest().toString('base64').replace(/\//g, '-');
 
@@ -98,7 +101,7 @@ export async function read_file(file) {
 					// for no good reason at all, marked replaces tabs with spaces
 					let tabs = '';
 					for (let i = 0; i < spaces.length; i += 4) {
-						tabs += '  ';
+						tabs += '    ';
 					}
 					return prefix + tabs;
 				})
@@ -241,6 +244,7 @@ export async function read_file(file) {
 					.join('')}</code></pre>`;
 			} else {
 				const plang = languages[language];
+
 				const highlighted = plang
 					? PrismJS.highlight(source, PrismJS.languages[plang], language)
 					: source.replace(/[&<>]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' }[c]));
