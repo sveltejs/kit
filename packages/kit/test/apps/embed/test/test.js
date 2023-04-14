@@ -9,13 +9,17 @@ test.describe.configure({ mode: 'parallel' });
 
 test.describe('embed', () => {
 	test('serves embedded components in page', async ({ page, javaScriptEnabled }) => {
-		await page.goto('/path-base/embed');
+		await page.goto('/embed');
 		if (javaScriptEnabled) {
 			expect(await page.textContent('#embed-a')).toBe('updated a');
 			expect(await page.textContent('#embed-b')).toBe('updated b');
-		} else {
-			expect(await page.textContent('#embed-a')).toBe('a');
-			expect(await page.textContent('#embed-b')).toBe('b');
+
+			// I would expect this next line to pass, but it does not because the test runs against dev server
+			// expect(await page.locator("h1")).toHaveCount(3)
+			return
 		}
+
+		expect(await page.textContent('#embed-a')).toBe('a');
+		expect(await page.textContent('#embed-b')).toBe('b');
 	});
 });
