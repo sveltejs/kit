@@ -1,5 +1,10 @@
 lockfileVersion: '6.0'
 
+patchedDependencies:
+  '@sveltejs/site-kit@4.1.0':
+    hash: qv6cxl73j6q6kl2uk4mgjbbyvu
+    path: patches/@sveltejs__site-kit@4.1.0.patch
+
 importers:
 
   .:
@@ -939,7 +944,7 @@ importers:
         version: link:../../packages/kit
       '@sveltejs/site-kit':
         specifier: 4.1.0
-        version: 4.1.0(@sveltejs/kit@packages+kit)(svelte@3.56.0)
+        version: 4.1.0(patch_hash=qv6cxl73j6q6kl2uk4mgjbbyvu)(@sveltejs/kit@packages+kit)(svelte@3.56.0)
       '@types/d3-geo':
         specifier: ^3.0.2
         version: 3.0.2
@@ -1828,7 +1833,7 @@ packages:
       picomatch: 2.3.1
       rollup: 3.7.0
 
-  /@sveltejs/site-kit@4.1.0(@sveltejs/kit@packages+kit)(svelte@3.56.0):
+  /@sveltejs/site-kit@4.1.0(patch_hash=qv6cxl73j6q6kl2uk4mgjbbyvu)(@sveltejs/kit@packages+kit)(svelte@3.56.0):
     resolution: {integrity: sha512-DRX3BSyuDvTWcqP5KucomcU90uHKgOcXgTF5mlPcZvoJ4Ekyt9+SbOMR+FU1CBNv1UzYkEtvMuGuQwc1+DCaTQ==}
     peerDependencies:
       '@sveltejs/kit': ^1.0.0
@@ -1838,6 +1843,7 @@ packages:
       svelte: 3.56.0
       svelte-local-storage-store: 0.4.0(svelte@3.56.0)
     dev: true
+    patched: true
 
   /@sveltejs/vite-plugin-svelte@2.0.0(svelte@3.56.0)(vite@4.2.0):
     resolution: {integrity: sha512-oUFrYQarRv4fppmxdrv00qw3wX8Ycdj0uv33MfpRZyR8K67dyxiOcHnqkB0zSy5sDJA8RC/2aNtYhXJ8NINVHQ==}

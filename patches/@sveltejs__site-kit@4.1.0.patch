@@ -1,0 +1,12 @@
+diff --git a/styles/code.css b/styles/code.css
+index 8a1596ee2a72c3bb72cf8afa3dab6a8439ca44ce..676cecdef0b6f42a4052945c825b160b80edecc3 100644
+--- a/styles/code.css
++++ b/styles/code.css
+@@ -65,3 +65,7 @@ pre.twoslash .error-behind {
+ pre.twoslash data-lsp {
+ 	border-bottom: 1px dotted rgba(0, 0, 0, 0.2);
+ }
++
++.language-yaml .token.key {
++	color: var(--sk-code-function);
++}
