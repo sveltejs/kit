@@ -123,9 +123,11 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v3
 
-        # If you use pnpm instead, you need to add another step to install it here
-        # and change the cache name and the commands below to match
-        # See https://pnpm.io/continuous-integration#github-actions
+    # If you're using pnpm, add this step then change the commands and cache key below to use `pnpm`
+    # - name: Install pnpm
+    #   uses: pnpm/action-setup@v2
+    #   with:
+    #     version: 8
 
       - name: Install Node.js
         uses: actions/setup-node@v3
