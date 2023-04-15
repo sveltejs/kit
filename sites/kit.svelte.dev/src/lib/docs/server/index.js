@@ -5,7 +5,6 @@ import PrismJS from 'prismjs';
 import 'prismjs/components/prism-bash.js';
 import 'prismjs/components/prism-diff.js';
 import 'prismjs/components/prism-typescript.js';
-import 'prismjs/components/prism-yaml.js';
 import 'prism-svelte';
 import { escape, extract_frontmatter, transform } from './markdown.js';
 import { modules } from './type-info.js';
@@ -30,7 +29,6 @@ const languages = {
 	css: 'css',
 	diff: 'diff',
 	ts: 'typescript',
-	yaml: 'yaml',
 	'': ''
 };
 
@@ -108,6 +106,7 @@ export async function read_file(file) {
 					for (let i = 0; i < spaces.length; i += 4) {
 						tabs += '    ';
 					}
+
 					return prefix + tabs;
 				})
 				.replace(/\*\\\//g, '*/');
@@ -204,7 +203,7 @@ export async function read_file(file) {
 						defaultCompilerOptions: {
 							allowJs: true,
 							checkJs: true,
-							target: 'es2021'
+							target: ts.ScriptTarget.ES2021
 						}
 					});
 
@@ -212,7 +211,7 @@ export async function read_file(file) {
 						twoslash.code,
 						'ts',
 						{ twoslash: true },
-						{},
+						{ themeName: 'css-variables' },
 						highlighter,
 						twoslash
 					);

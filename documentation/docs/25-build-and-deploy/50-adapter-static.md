@@ -148,7 +148,7 @@ jobs:
       - name: Upload Artifacts
         uses: actions/upload-pages-artifact@v1
         with:
-          # adapter-static outputs to the build directory by default
+          # this should match the `pages` option in your adapter-static options
           path: 'build/'
 
   deploy:
