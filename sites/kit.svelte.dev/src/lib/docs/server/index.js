@@ -58,6 +58,11 @@ modules.forEach((module) => {
 		type_links.set(type.name, link);
 	});
 });
+/** @param {string} html */
+function replace_blank_lines(html) {
+	// preserve blank lines in output (maybe there's a more correct way to do this?)
+	return html.replaceAll(/<div class='line'>(&nbsp;)?<\/div>/g, '<div class="line">\n</div>');
+}
 
 /**
  * @param {string} file
@@ -116,8 +121,15 @@ export async function read_file(file) {
 				version_class = 'js-version';
 			}
 
-			if (language === 'dts') {
-				html = renderCodeToHTML(source, 'ts', { twoslash: false }, {}, highlighter);
+			if (language === 'dts' || language === 'yaml') {
+				html = renderCodeToHTML(
+					source,
+					language === 'dts' ? 'ts' : language,
+					{ twoslash: false },
+					{ themeName: 'css-variables' },
+					highlighter
+				);
+				html = replace_blank_lines(html);
 			} else if (language === 'js' || language === 'ts') {
 				try {
 					const injected = [];
@@ -220,8 +232,7 @@ export async function read_file(file) {
 					}
 				);
 
-				// preserve blank lines in output (maybe there's a more correct way to do this?)
-				html = html.replace(/<div class='line'><\/div>/g, '<div class="line"> </div>');
+				html = replace_blank_lines(html);
 			} else if (language === 'diff') {
 				const lines = source.split('\n').map((content) => {
 					let type = null;

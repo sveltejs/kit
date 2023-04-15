@@ -123,11 +123,11 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v3
 
-    # If you're using pnpm, add this step then change the commands and cache key below to use `pnpm`
-    # - name: Install pnpm
-    #   uses: pnpm/action-setup@v2
-    #   with:
-    #     version: 8
+      # If you're using pnpm, add this step then change the commands and cache key below to use `pnpm`
+      # - name: Install pnpm
+      #   uses: pnpm/action-setup@v2
+      #   with:
+      #     version: 8
 
       - name: Install Node.js
         uses: actions/setup-node@v3
@@ -153,6 +153,7 @@ jobs:
 
   deploy:
     needs: build_site
+    runs-on: ubuntu-latest
 
     permissions:
       pages: write
@@ -161,8 +162,7 @@ jobs:
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
-
-    runs-on: ubuntu-latest
+    
     steps:
       - name: Deploy
         id: deployment

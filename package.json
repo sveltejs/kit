@@ -45,10 +45,5 @@
 	"engines": {
 		"pnpm": "^8.0.0"
 	},
-	"type": "module",
-	"pnpm": {
-		"patchedDependencies": {
-			"@sveltejs/site-kit@4.1.0": "patches/@sveltejs__site-kit@4.1.0.patch"
-		}
-	}
+	"type": "module"
 }
