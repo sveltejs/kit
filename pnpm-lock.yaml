@@ -938,8 +938,8 @@ importers:
         specifier: workspace:^
         version: link:../../packages/kit
       '@sveltejs/site-kit':
-        specifier: 4.1.0
-        version: 4.1.0(@sveltejs/kit@packages+kit)(svelte@3.56.0)
+        specifier: 4.1.1
+        version: 4.1.1(@sveltejs/kit@packages+kit)(svelte@3.56.0)
       '@types/d3-geo':
         specifier: ^3.0.2
         version: 3.0.2
@@ -1828,8 +1828,8 @@ packages:
       picomatch: 2.3.1
       rollup: 3.7.0
 
-  /@sveltejs/site-kit@4.1.0(@sveltejs/kit@packages+kit)(svelte@3.56.0):
-    resolution: {integrity: sha512-DRX3BSyuDvTWcqP5KucomcU90uHKgOcXgTF5mlPcZvoJ4Ekyt9+SbOMR+FU1CBNv1UzYkEtvMuGuQwc1+DCaTQ==}
+  /@sveltejs/site-kit@4.1.1(@sveltejs/kit@packages+kit)(svelte@3.56.0):
+    resolution: {integrity: sha512-UJqFI++1R4LJ1ULcA0b19qJmFuw87EcpPfjGZ8H02EnVQHgPjJWwzOlyjPesc0+z4vuyTKlDuW1sR2mdUSPBPw==}
     peerDependencies:
       '@sveltejs/kit': ^1.0.0
       svelte: ^3.54.0
