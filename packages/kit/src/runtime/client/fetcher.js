@@ -29,14 +29,12 @@ if (DEV) {
 		// We use just the filename as the method name sometimes does not appear on the CI.
 		const url = input instanceof Request ? input.url : input.toString();
 		const stack_array = /** @type {string} */ (new Error().stack).split('\n');
-		// We need to do some Firefox-specific cutoff because it (impressively) maintains the stack
-		// across events and for example traces a `fetch` call triggered from a button back
-		// to the creation of the event listener and the element creation itself,
+		// We need to do a cutoff because Safari and Firefox maintain the stack
+		// across events and for example traces a `fetch` call triggered from a button
+		// back to the creation of the event listener and the element creation itself,
 		// where at some point client.js will show up, leading to false positives.
-		const firefox_cutoff = stack_array.findIndex((a) => a.includes('*listen@'));
-		const stack = stack_array
-			.slice(0, firefox_cutoff !== -1 ? firefox_cutoff : undefined)
-			.join('\n');
+		const cutoff = stack_array.findIndex((a) => a.includes('load@') || a.includes('at load'));
+		const stack = stack_array.slice(0, cutoff + 2).join('\n');
 
 		const heuristic = can_inspect_stack_trace
 			? stack.includes('src/runtime/client/client.js')
