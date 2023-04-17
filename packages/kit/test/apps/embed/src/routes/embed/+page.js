@@ -1,14 +1,7 @@
-import { base, assets } from '$app/paths.js';
-
 /** @type {import('@sveltejs/kit').Load} */
-export async function load(e) {
-	let [a, b] = await Promise.all([
-		e.fetch('/embed/a/').then((x) => x.text()),
-		e.fetch('/embed/b/').then((x) => x.text())
-	]);
-
+export async function load({ fetch }) {
 	return {
-		a,
-		b
+		a: fetch('/embed/a').then((x) => x.text()),
+		b: fetch('/embed/b').then((x) => x.text())
 	};
 }

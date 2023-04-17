@@ -1,7 +1,5 @@
-<h2 id="embed-a" use:updateA>a</h2>
-
 <script>
-	function updateA(n) {
-		n.innerText = "updated a"
-	}
+	import { browser } from '$app/environment';
 </script>
+
+<h2 data-testid="a">a ({browser ? 'browser' : 'server'})</h2>

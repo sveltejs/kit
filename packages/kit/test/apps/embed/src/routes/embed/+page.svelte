@@ -1,11 +1,6 @@
 <script>
 	export let data;
-
-	let {a, b} = data;
-
-
 </script>
 
-{@html a}
-
-{@html b}
+{@html data.a}
+{@html data.b}
