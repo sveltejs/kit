@@ -2,13 +2,15 @@
 	"compilerOptions": {
 		"allowJs": true,
 		"checkJs": true,
+		"esModuleInterop": true,
 		"noEmit": true,
 		"paths": {
 			"@sveltejs/kit": ["../../../types"],
-			"$lib": ["./source/components"],
-			"$lib/*": ["./source/components/*"],
+			"$lib": ["./src/lib"],
+			"$lib/*": ["./src/lib/*"],
 			"types": ["../../../types/internal"]
-		}
+		},
+		"resolveJsonModule": true
 	},
-	"extends": "./.custom-out-dir/tsconfig.json"
+	"extends": "./.svelte-kit/tsconfig.json"
 }
