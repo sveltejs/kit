@@ -292,10 +292,9 @@ export async function render_response({
 		const blocks = [];
 
 		const properties = [
-			`env: ${s(public_env)}`,
 			paths.assets && `assets: ${s(paths.assets)}`,
 			`base: ${base_expression}`,
-			`element: document.currentScript.parentElement`
+			`env: ${s(public_env)}`
 		].filter(Boolean);
 
 		if (chunks) {
@@ -318,7 +317,9 @@ export async function render_response({
 						${properties.join(',\n\t\t\t\t\t\t')}
 					};`);
 
-		const args = [`app`, `${global}.element`];
+		const args = [`app`, `element`];
+
+		blocks.push(`const element = document.currentScript.parentElement;`);
 
 		if (page_config.ssr) {
 			const serialized = { form: 'null', error: 'null' };
