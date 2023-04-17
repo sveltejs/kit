@@ -959,8 +959,8 @@ importers:
         specifier: workspace:^
         version: link:../../packages/kit
       '@sveltejs/site-kit':
-        specifier: 4.1.1
-        version: 4.1.1(@sveltejs/kit@packages+kit)(svelte@3.56.0)
+        specifier: 5.0.1
+        version: 5.0.1(@sveltejs/kit@packages+kit)(svelte@3.56.0)
       '@types/d3-geo':
         specifier: ^3.0.2
         version: 3.0.2
@@ -1849,13 +1849,14 @@ packages:
       picomatch: 2.3.1
       rollup: 3.7.0
 
-  /@sveltejs/site-kit@4.1.1(@sveltejs/kit@packages+kit)(svelte@3.56.0):
-    resolution: {integrity: sha512-UJqFI++1R4LJ1ULcA0b19qJmFuw87EcpPfjGZ8H02EnVQHgPjJWwzOlyjPesc0+z4vuyTKlDuW1sR2mdUSPBPw==}
+  /@sveltejs/site-kit@5.0.1(@sveltejs/kit@packages+kit)(svelte@3.56.0):
+    resolution: {integrity: sha512-6LYCxTGzhC/LhObYc3Mazk4HSi/KjdZ+fURpbvi9tppMk4lfGJb3ajLvGoo0k8t0vBEwrN16Hf/JChgkFOorFg==}
     peerDependencies:
       '@sveltejs/kit': ^1.0.0
       svelte: ^3.54.0
     dependencies:
       '@sveltejs/kit': link:packages/kit
+      esm-env: 1.0.0
       svelte: 3.56.0
       svelte-local-storage-store: 0.4.0(svelte@3.56.0)
     dev: true
@@ -3133,7 +3134,6 @@ packages:
 
   /esm-env@1.0.0:
     resolution: {integrity: sha512-Cf6VksWPsTuW01vU9Mk/3vRue91Zevka5SjyNf3nEpokFRuqt/KjUQoGAwq9qMmhpLTHmXzSIrFRw8zxWzmFBA==}
-    dev: false
 
   /espree@9.4.1:
     resolution: {integrity: sha512-XwctdmTO6SIvCzd9810yyNzIrOrqNYV9Koizx4C/mRhf9uq0o4yHoCEU/670pOxOL/MSraektvSAji79kX90Vg==}
