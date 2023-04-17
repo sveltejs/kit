@@ -56,6 +56,11 @@ modules.forEach((module) => {
 		type_links.set(type.name, link);
 	});
 });
+/** @param {string} html */
+function replace_blank_lines(html) {
+	// preserve blank lines in output (maybe there's a more correct way to do this?)
+	return html.replaceAll(/<div class='line'>(&nbsp;)?<\/div>/g, '<div class="line">\n</div>');
+}
 
 /**
  * @param {string} file
@@ -75,6 +80,7 @@ export async function read_file(file) {
 		body: generate_ts_from_js(body),
 		code: (source, language, current) => {
 			const hash = createHash('sha256');
+
 			hash.update(source + language + current);
 			const digest = hash.digest().toString('base64').replace(/\//g, '-');
 
@@ -98,8 +104,9 @@ export async function read_file(file) {
 					// for no good reason at all, marked replaces tabs with spaces
 					let tabs = '';
 					for (let i = 0; i < spaces.length; i += 4) {
-						tabs += '  ';
+						tabs += '    ';
 					}
+
 					return prefix + tabs;
 				})
 				.replace(/\*\\\//g, '*/');
@@ -113,8 +120,15 @@ export async function read_file(file) {
 				version_class = 'js-version';
 			}
 
-			if (language === 'dts') {
-				html = renderCodeToHTML(source, 'ts', { twoslash: false }, {}, highlighter);
+			if (language === 'dts' || language === 'yaml') {
+				html = renderCodeToHTML(
+					source,
+					language === 'dts' ? 'ts' : language,
+					{ twoslash: false },
+					{ themeName: 'css-variables' },
+					highlighter
+				);
+				html = replace_blank_lines(html);
 			} else if (language === 'js' || language === 'ts') {
 				try {
 					const injected = [];
@@ -189,7 +203,7 @@ export async function read_file(file) {
 						defaultCompilerOptions: {
 							allowJs: true,
 							checkJs: true,
-							target: 'es2021'
+							target: ts.ScriptTarget.ES2021
 						}
 					});
 
@@ -197,7 +211,7 @@ export async function read_file(file) {
 						twoslash.code,
 						'ts',
 						{ twoslash: true },
-						{},
+						{ themeName: 'css-variables' },
 						highlighter,
 						twoslash
 					);
@@ -217,8 +231,7 @@ export async function read_file(file) {
 					}
 				);
 
-				// preserve blank lines in output (maybe there's a more correct way to do this?)
-				html = html.replace(/<div class='line'><\/div>/g, '<div class="line"> </div>');
+				html = replace_blank_lines(html);
 			} else if (language === 'diff') {
 				const lines = source.split('\n').map((content) => {
 					let type = null;
@@ -241,6 +254,7 @@ export async function read_file(file) {
 					.join('')}</code></pre>`;
 			} else {
 				const plang = languages[language];
+
 				const highlighted = plang
 					? PrismJS.highlight(source, PrismJS.languages[plang], language)
 					: source.replace(/[&<>]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' }[c]));

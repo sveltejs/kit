@@ -15,9 +15,9 @@ const getEscapeReplacement = (ch) => escapeReplacements[ch];
 
 /**
  * @param {string} html
- * @param {boolean} encode
+ * @param {boolean} [encode]
  */
-export function escape(html, encode) {
+export function escape(html, encode = false) {
 	if (encode) {
 		if (escapeTest.test(html)) {
 			return html.replace(escapeReplace, getEscapeReplacement);
