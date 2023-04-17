@@ -1,5 +1,15 @@
 # @sveltejs/kit
 
+## 1.15.6
+
+### Patch Changes
+
+- fix: use correct relative paths when rendering base path ([#9343](https://github.com/sveltejs/kit/pull/9343))
+
+- fix: handle redirect thrown in handle hook in response to form action ([#9658](https://github.com/sveltejs/kit/pull/9658))
+
+- fix: do not call beforeNavigate for download links ([#9660](https://github.com/sveltejs/kit/pull/9660))
+
 ## 1.15.5
 
 ### Patch Changes
