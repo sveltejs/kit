@@ -4,7 +4,6 @@ export function get_pathname(route) {
 
 	return route.segments
 		.map((segment) => {
-			console.log(segment);
 			if (!segment.dynamic) {
 				return segment.content;
 			}
