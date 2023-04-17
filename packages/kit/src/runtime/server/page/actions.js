@@ -72,11 +72,7 @@ export async function handle_action_json_request(event, options, server) {
 		const err = normalize_error(e);
 
 		if (err instanceof Redirect) {
-			return action_json({
-				type: 'redirect',
-				status: err.status,
-				location: err.location
-			});
+			return action_json_redirect(err);
 		}
 
 		return action_json(
@@ -98,6 +94,17 @@ function check_incorrect_fail_use(error) {
 	return error instanceof ActionFailure
 		? new Error(`Cannot "throw fail()". Use "return fail()"`)
 		: error;
+}
+
+/**
+ * @param {import('types').Redirect} redirect
+ */
+export function action_json_redirect(redirect) {
+	return action_json({
+		type: 'redirect',
+		status: redirect.status,
+		location: redirect.location
+	});
 }
 
 /**
@@ -214,7 +221,7 @@ async function call_action(event, actions) {
 
 	if (!is_form_content_type(event.request)) {
 		throw new Error(
-			`Actions expect form-encoded data (received ${event.request.headers.get('content-type')}`
+			`Actions expect form-encoded data (received ${event.request.headers.get('content-type')})`
 		);
 	}
 

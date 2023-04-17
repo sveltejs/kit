@@ -72,7 +72,9 @@ export function find_deps(manifest, entry, add_dynamic_css) {
  */
 export function resolve_symlinks(manifest, file) {
 	while (!manifest[file]) {
-		file = path.relative('.', fs.realpathSync(file));
+		const next = path.relative('.', fs.realpathSync(file));
+		if (next === file) throw new Error(`Could not find file "${file}" in Vite manifest`);
+		file = next;
 	}
 
 	const chunk = manifest[file];

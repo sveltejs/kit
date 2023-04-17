@@ -105,9 +105,6 @@ const get_defaults = (prefix = '') => ({
 			concurrency: 1,
 			crawl: true,
 			entries: ['*'],
-			handleHttpError: 'fail',
-			handleMissingId: 'fail',
-			handleEntryGeneratorMismatch: 'fail',
 			origin: 'http://sveltekit-prerender'
 		},
 		version: {

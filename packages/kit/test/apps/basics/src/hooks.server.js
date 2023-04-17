@@ -113,6 +113,13 @@ export const handle = sequence(
 		}
 
 		return resolve(event);
+	},
+	async ({ event, resolve }) => {
+		if (event.url.pathname === '/actions/redirect-in-handle' && event.request.method === 'POST') {
+			throw redirect(303, '/actions/enhance');
+		}
+
+		return resolve(event);
 	}
 );
 
