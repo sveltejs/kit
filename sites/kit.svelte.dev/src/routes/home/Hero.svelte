@@ -120,7 +120,7 @@
 			padding: calc(10rem + var(--sk-nav-height)) var(--sk-page-padding-side) 16rem;
 		}
 		.hero-contents {
-			max-width: calc(120rem - 2 * var(--side-nav));
+			max-width: calc(120rem - 2 * var(--sk-page-padding-side));
 			padding-bottom: 0rem;
 		}
 

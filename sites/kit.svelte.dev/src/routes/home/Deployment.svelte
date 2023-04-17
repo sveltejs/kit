@@ -1,5 +1,5 @@
 <script>
-	import { Section } from '@sveltejs/site-kit/components';
+	import { Section, theme } from '@sveltejs/site-kit/components';
 	import html5 from './logos/html5.svg';
 	import node from './logos/node.svg';
 	import vercel from './logos/vercel.svg';
@@ -10,7 +10,6 @@
 	import lambda from './logos/lambda.svg';
 	import azure from './logos/azure.svg';
 	import plus from '$lib/icons/plus.svg';
-	import { theme } from '@sveltejs/site-kit/theme';
 </script>
 
 <Section --background="var(--background-1)">
