@@ -231,14 +231,18 @@ export function create_updated_store() {
 
 		if (interval) timeout = setTimeout(check, interval);
 
-		const res = await fetch(`${assets}/${__SVELTEKIT_APP_VERSION_FILE__}`, {
-			headers: {
-				pragma: 'no-cache',
-				'cache-control': 'no-cache'
-			}
-		});
+		try {
+			const res = await fetch(`${assets}/${__SVELTEKIT_APP_VERSION_FILE__}`, {
+				headers: {
+					pragma: 'no-cache',
+					'cache-control': 'no-cache'
+				}
+			});
 
-		if (res.ok) {
+			if (!res.ok) {
+				return false;
+			}
+
 			const data = await res.json();
 			const updated = data.version !== version;
 
@@ -248,8 +252,8 @@ export function create_updated_store() {
 			}
 
 			return updated;
-		} else {
-			throw new Error(`Version check failed: ${res.status}`);
+		} catch {
+			return false;
 		}
 	}
 
