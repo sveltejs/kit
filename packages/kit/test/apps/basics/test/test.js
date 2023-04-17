@@ -1042,6 +1042,29 @@ test.describe('Actions', () => {
 		expect(page.url()).toContain('/actions/enhance');
 	});
 
+	test('redirect in handle', async ({ page, javaScriptEnabled }) => {
+		await page.goto('/actions/redirect-in-handle');
+
+		page.click('button');
+
+		const [redirect] = await Promise.all([
+			page.waitForResponse('/actions/redirect-in-handle'),
+			page.waitForNavigation()
+		]);
+		if (javaScriptEnabled) {
+			expect(await redirect.json()).toEqual({
+				type: 'redirect',
+				location: '/actions/enhance',
+				status: 303
+			});
+		} else {
+			expect(redirect.status()).toBe(303);
+			expect(redirect.headers()['location']).toBe('/actions/enhance');
+		}
+
+		expect(page.url()).toContain('/actions/enhance');
+	});
+
 	test('$page.status reflects error status', async ({ page, app }) => {
 		await page.goto('/actions/enhance');
 
