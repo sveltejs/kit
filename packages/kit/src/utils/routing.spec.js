@@ -1,6 +1,6 @@
 import { test } from 'uvu';
 import * as assert from 'uvu/assert';
-import { exec, parse_route_id, route_from_entry } from './routing.js';
+import { exec, parse_route_id, resolve_entry } from './routing.js';
 
 const tests = {
 	'/': {
@@ -242,26 +242,26 @@ const from_entry_tests = [
 ];
 
 for (const { route, entry, expected } of from_entry_tests) {
-	test(`route_from_entry generates correct path for ${route}`, () => {
-		const result = route_from_entry(route, entry);
+	test(`resolve_entry generates correct path for ${route}`, () => {
+		const result = resolve_entry(route, entry);
 		assert.equal(result, expected);
 	});
 }
 
-test('route_from_entry errors on missing entry for required param', () => {
+test('resolve_entry errors on missing entry for required param', () => {
 	assert.throws(
-		() => route_from_entry('/blog/[one]/[two]', { one: 'one' }),
+		() => resolve_entry('/blog/[one]/[two]', { one: 'one' }),
 		"Missing param 'two' in route /blog/[one]/[two]"
 	);
 });
 
-test('route_from_entry errors on entry values starting or ending with slashes', () => {
+test('resolve_entry errors on entry values starting or ending with slashes', () => {
 	assert.throws(
-		() => route_from_entry('/blog/[one]/[two]', { one: 'one', two: '/two' }),
+		() => resolve_entry('/blog/[one]/[two]', { one: 'one', two: '/two' }),
 		"Parameter 'two' in route /blog/[one]/[two] cannot start or end with a slash -- this would cause an invalid route like foo//bar"
 	);
 	assert.throws(
-		() => route_from_entry('/blog/[one]/[two]', { one: 'one', two: 'two/' }),
+		() => resolve_entry('/blog/[one]/[two]', { one: 'one', two: 'two/' }),
 		"Parameter 'two' in route /blog/[one]/[two] cannot start or end with a slash -- this would cause an invalid route like foo//bar"
 	);
 });

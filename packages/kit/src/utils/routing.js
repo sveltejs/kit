@@ -104,10 +104,10 @@ const basic_param_pattern = /\[(\[)?(?:\.\.\.)?(\w+?)(?:=(\w+))?\]\]?/;
  * @param {Record<string, string | undefined>} entry The entry meant to populate the route. For example, if the route is `/blog/[slug]`, the entry would be `{ slug: 'hello-world' }`
  * @example
  * ```js
- * route_from_entry(`/blog/[slug]/[...somethingElse]`, { slug: 'hello-world', somethingElse: 'something/else' }); // `/blog/hello-world/something/else`
+ * resolve_entry(`/blog/[slug]/[...somethingElse]`, { slug: 'hello-world', somethingElse: 'something/else' }); // `/blog/hello-world/something/else`
  * ```
  */
-export function route_from_entry(id, entry) {
+export function resolve_entry(id, entry) {
 	const segments = get_route_segments(id);
 	return (
 		'/' +

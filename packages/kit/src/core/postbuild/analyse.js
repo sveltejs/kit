@@ -12,7 +12,7 @@ import { load_config } from '../config/index.js';
 import { forked } from '../../utils/fork.js';
 import { should_polyfill } from '../../utils/platform.js';
 import { installPolyfills } from '../../exports/node/polyfills.js';
-import { route_from_entry } from '../../utils/routing.js';
+import { resolve_entry } from '../../utils/routing.js';
 
 export default forked(import.meta.url, analyse);
 
@@ -145,7 +145,7 @@ async function analyse({ manifest_path, env }) {
 			},
 			prerender,
 			entries:
-				entries && (await entries()).map((entry_object) => route_from_entry(route.id, entry_object))
+				entries && (await entries()).map((entry_object) => resolve_entry(route.id, entry_object))
 		});
 	}
 
