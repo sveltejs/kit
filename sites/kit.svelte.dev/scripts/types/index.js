@@ -201,10 +201,10 @@ function read_d_ts_file(file) {
 	// We can't use JSDoc comments inside JSDoc, so we would get ts(7031) errors if
 	// we didn't ignore this error specifically for `/// file:` code examples
 	const str = fs.readFileSync(resolved, 'utf-8');
-	return str.replace(
-		/(\s*\*\s*)\/\/\/ file:/g,
-		(match, prefix) => prefix + '// @errors: 7031' + match
-	);
+
+	return str.replace(/(\s*\*\s*)```js([\s\S]+?)```/g, (match, prefix, code) => {
+		return `${prefix}\`\`\`js${prefix}// @errors: 7031${code}\`\`\``;
+	});
 }
 
 {
