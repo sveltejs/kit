@@ -227,6 +227,18 @@ function create_routes_and_nodes(cwd, config, fallback) {
 					config.kit.moduleExtensions
 				);
 
+				/**
+				 * @param {string} type
+				 * @param {string} existing_file
+				 */
+				function duplicate_files_error(type, existing_file) {
+					return new Error(
+						`Multiple ${type} files found in ${routes_base}${route.id} : ${path.basename(
+							existing_file
+						)} and ${file.name}`
+					);
+				}
+
 				if (item.kind === 'component') {
 					if (item.is_error) {
 						route.error = {
@@ -234,21 +246,51 @@ function create_routes_and_nodes(cwd, config, fallback) {
 							component: project_relative
 						};
 					} else if (item.is_layout) {
-						if (!route.layout) route.layout = { depth, child_pages: [] };
+						if (!route.layout) {
+							route.layout = { depth, child_pages: [] };
+						} else if (route.layout.component) {
+							throw duplicate_files_error('layout component', route.layout.component);
+						}
+
 						route.layout.component = project_relative;
 						if (item.uses_layout !== undefined) route.layout.parent_id = item.uses_layout;
 					} else {
-						if (!route.leaf) route.leaf = { depth };
+						if (!route.leaf) {
+							route.leaf = { depth };
+						} else if (route.leaf.component) {
+							throw duplicate_files_error('page component', route.leaf.component);
+						}
+
 						route.leaf.component = project_relative;
 						if (item.uses_layout !== undefined) route.leaf.parent_id = item.uses_layout;
 					}
 				} else if (item.is_layout) {
-					if (!route.layout) route.layout = { depth, child_pages: [] };
+					if (!route.layout) {
+						route.layout = { depth, child_pages: [] };
+					} else if (route.layout[item.kind]) {
+						throw duplicate_files_error(
+							item.kind + ' layout module',
+							/** @type {string} */ (route.layout[item.kind])
+						);
+					}
+
 					route.layout[item.kind] = project_relative;
 				} else if (item.is_page) {
-					if (!route.leaf) route.leaf = { depth };
+					if (!route.leaf) {
+						route.leaf = { depth };
+					} else if (route.leaf[item.kind]) {
+						throw duplicate_files_error(
+							item.kind + ' page module',
+							/** @type {string} */ (route.leaf[item.kind])
+						);
+					}
+
 					route.leaf[item.kind] = project_relative;
 				} else {
+					if (route.endpoint) {
+						throw duplicate_files_error('endpoint', route.endpoint.file);
+					}
+
 					route.endpoint = {
 						file: project_relative
 					};

@@ -1266,8 +1266,8 @@ export function create_client(app, target) {
 			const a = find_anchor(element, container);
 			if (!a) return;
 
-			const { url, external } = get_link_info(a, base);
-			if (external) return;
+			const { url, external, download } = get_link_info(a, base);
+			if (external || download) return;
 
 			const options = get_router_options(a);
 
@@ -1300,8 +1300,8 @@ export function create_client(app, target) {
 			observer.disconnect();
 
 			for (const a of container.querySelectorAll('a')) {
-				const { url, external } = get_link_info(a, base);
-				if (external) continue;
+				const { url, external, download } = get_link_info(a, base);
+				if (external || download) continue;
 
 				const options = get_router_options(a);
 				if (options.reload) continue;
@@ -1517,7 +1517,7 @@ export function create_client(app, target) {
 				const a = find_anchor(/** @type {Element} */ (event.composedPath()[0]), container);
 				if (!a) return;
 
-				const { url, external, target } = get_link_info(a, base);
+				const { url, external, target, download } = get_link_info(a, base);
 				if (!url) return;
 
 				// bail out before `beforeNavigate` if link opens in a different tab
@@ -1544,6 +1544,8 @@ export function create_client(app, target) {
 					!(url.protocol === 'https:' || url.protocol === 'http:')
 				)
 					return;
+
+				if (download) return;
 
 				// Ignore the following but fire beforeNavigate
 				if (external || options.reload) {

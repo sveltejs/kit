@@ -1,5 +1,45 @@
 # @sveltejs/kit
 
+## 1.15.6
+
+### Patch Changes
+
+- fix: use correct relative paths when rendering base path ([#9343](https://github.com/sveltejs/kit/pull/9343))
+
+- fix: handle redirect thrown in handle hook in response to form action ([#9658](https://github.com/sveltejs/kit/pull/9658))
+
+- fix: do not call beforeNavigate for download links ([#9660](https://github.com/sveltejs/kit/pull/9660))
+
+## 1.15.5
+
+### Patch Changes
+
+- fix: correct allow header methods list for 405s ([#9655](https://github.com/sveltejs/kit/pull/9655))
+
+- fix: prevent routes/layouts from having conflicting files through resets or different extensions ([#9590](https://github.com/sveltejs/kit/pull/9590))
+
+- fix: prevent unhandled exceptions for invalid header values ([#9638](https://github.com/sveltejs/kit/pull/9638))
+
+## 1.15.4
+
+### Patch Changes
+
+- fix: gracefully handle failure to load hooks.server.js ([#9641](https://github.com/sveltejs/kit/pull/9641))
+
+- feat: set sourcemapIgnoreList to filter out non-source directories ([#9619](https://github.com/sveltejs/kit/pull/9619))
+
+## 1.15.3
+
+### Patch Changes
+
+- fix: prevent building duplicate CSS files ([#9382](https://github.com/sveltejs/kit/pull/9382))
+
+## 1.15.2
+
+### Patch Changes
+
+- fix: address security advisory [CVE-2023-29008](https://github.com/sveltejs/kit/security/advisories/GHSA-gv7g-x59x-wf8f) by doing a case-insensitive comparison when checking header value ([`ba436c66`](https://github.com/sveltejs/kit/commit/ba436c6685e751d968a960fbda65f24cf7a82e9f))
+
 ## 1.15.1
 
 ### Patch Changes

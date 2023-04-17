@@ -89,7 +89,7 @@ You will have to prevent GitHub's provided Jekyll from managing your site by put
 A config for GitHub Pages might look like the following:
 
 ```js
-// @errors: 2307
+// @errors: 2307 2322
 /// file: svelte.config.js
 import adapter from '@sveltejs/adapter-static';
 
@@ -100,8 +100,71 @@ const config = {
 	kit: {
 		adapter: adapter(),
 		paths: {
-			base: dev ? '' : '/your-repo-name',
+			base: dev ? '' : process.env.BASE_PATH,
 		}
 	}
 };
+```
+
+You can use GitHub actions to automatically deploy your site to GitHub Pages when you make a change. Here's an example workflow:
+
+```yaml
+/// file: .github/workflows/deploy.yml
+name: Deploy to GitHub Pages
+
+on:
+  push:
+    branches: 'main'
+
+jobs:
+  build_site:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      # If you're using pnpm, add this step then change the commands and cache key below to use `pnpm`
+      # - name: Install pnpm
+      #   uses: pnpm/action-setup@v2
+      #   with:
+      #     version: 8
+
+      - name: Install Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: 18
+          cache: npm
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: build
+        env:
+          BASE_PATH: '/your-repo-name'
+        run: |
+          npm run build
+          touch build/.nojekyll
+
+      - name: Upload Artifacts
+        uses: actions/upload-pages-artifact@v1
+        with:
+          # this should match the `pages` option in your adapter-static options
+          path: 'build/'
+
+  deploy:
+    needs: build_site
+    runs-on: ubuntu-latest
+
+    permissions:
+      pages: write
+      id-token: write
+
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    
+    steps:
+      - name: Deploy
+        id: deployment
+        uses: actions/deploy-pages@v1
 ```
