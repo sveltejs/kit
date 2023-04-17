@@ -34,9 +34,11 @@ export function sequence(...handlers) {
 						return html;
 					};
 
+					const actionResult = options?.actionResult ?? parent_options?.actionResult;
+
 					return i < length - 1
-						? apply_handle(i + 1, event, { transformPageChunk })
-						: resolve(event, { transformPageChunk });
+						? apply_handle(i + 1, event, { transformPageChunk, actionResult })
+						: resolve(event, { transformPageChunk, actionResult });
 				}
 			});
 		}

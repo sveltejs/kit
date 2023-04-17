@@ -169,7 +169,8 @@ export async function respond(request, options, manifest, state) {
 	let resolve_opts = {
 		transformPageChunk: default_transform,
 		filterSerializedResponseHeaders: default_filter,
-		preload: default_preload
+		preload: default_preload,
+		actionResult: null
 	};
 
 	try {
@@ -333,7 +334,8 @@ export async function respond(request, options, manifest, state) {
 				resolve_opts = {
 					transformPageChunk: opts.transformPageChunk || default_transform,
 					filterSerializedResponseHeaders: opts.filterSerializedResponseHeaders || default_filter,
-					preload: opts.preload || default_preload
+					preload: opts.preload || default_preload,
+					actionResult: opts.actionResult ?? null
 				};
 			}
 

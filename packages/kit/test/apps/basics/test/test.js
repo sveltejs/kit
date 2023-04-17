@@ -1052,6 +1052,17 @@ test.describe('Actions', () => {
 
 		await expect(page.locator('h1')).toHaveText('400');
 	});
+
+	test('actionResult hook handle resolve option', async ({ page }) => {
+		await page.goto('/actions/form-hook-result');
+
+		await Promise.all([
+			page.waitForRequest((request) => request.url().includes('/actions/form-hook-result')),
+			page.click('form button')
+		]);
+
+		await expect(page.locator('pre')).toHaveText(JSON.stringify({ from_hook_handle: true }));
+	});
 });
 
 // Run in serial to not pollute the log with (correct) cookie warnings

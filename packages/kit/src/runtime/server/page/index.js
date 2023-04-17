@@ -40,7 +40,7 @@ export async function render_page(event, page, options, manifest, state, resolve
 
 	if (is_action_json_request(event)) {
 		const node = await manifest._.nodes[page.leaf]();
-		return handle_action_json_request(event, options, node?.server);
+		return handle_action_json_request(event, options, node?.server, resolve_opts.actionResult);
 	}
 
 	try {
@@ -60,7 +60,11 @@ export async function render_page(event, page, options, manifest, state, resolve
 		if (is_action_request(event)) {
 			// for action requests, first call handler in +page.server.js
 			// (this also determines status code)
-			action_result = await handle_action_request(event, leaf_node.server);
+			action_result = await handle_action_request(
+				event,
+				leaf_node.server,
+				resolve_opts.actionResult
+			);
 			if (action_result?.type === 'redirect') {
 				return redirect_response(action_result.status, action_result.location);
 			}

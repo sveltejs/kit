@@ -1024,6 +1024,8 @@ export interface ResolveOptions {
 	 * @param input the type of the file and its path
 	 */
 	preload?(input: { type: 'font' | 'css' | 'js' | 'asset'; path: string }): boolean;
+
+	actionResult?: Record<string, any> | null;
 }
 
 export interface RouteDefinition<Config = any> {

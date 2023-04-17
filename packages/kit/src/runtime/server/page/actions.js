@@ -19,8 +19,9 @@ export function is_action_json_request(event) {
  * @param {import('types').RequestEvent} event
  * @param {import('types').SSROptions} options
  * @param {import('types').SSRNode['server'] | undefined} server
+ * @param {import("types").ResolveOptions["actionResult"]} hook_action_result
  */
-export async function handle_action_json_request(event, options, server) {
+export async function handle_action_json_request(event, options, server, hook_action_result) {
 	const actions = server?.actions;
 
 	if (!actions) {
@@ -45,7 +46,7 @@ export async function handle_action_json_request(event, options, server) {
 	check_named_default_separate(actions);
 
 	try {
-		const data = await call_action(event, actions);
+		const data = hook_action_result ?? (await call_action(event, actions));
 
 		if (__SVELTEKIT_DEV__) {
 			validate_action_return(data);
@@ -118,9 +119,10 @@ export function is_action_request(event) {
 /**
  * @param {import('types').RequestEvent} event
  * @param {import('types').SSRNode['server'] | undefined} server
+ * @param {import("types").ResolveOptions["actionResult"]} hook_action_result
  * @returns {Promise<import('types').ActionResult>}
  */
-export async function handle_action_request(event, server) {
+export async function handle_action_request(event, server, hook_action_result) {
 	const actions = server?.actions;
 
 	if (!actions) {
@@ -139,7 +141,7 @@ export async function handle_action_request(event, server) {
 	check_named_default_separate(actions);
 
 	try {
-		const data = await call_action(event, actions);
+		const data = hook_action_result ?? (await call_action(event, actions));
 
 		if (__SVELTEKIT_DEV__) {
 			validate_action_return(data);

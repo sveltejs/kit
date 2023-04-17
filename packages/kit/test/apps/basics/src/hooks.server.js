@@ -113,6 +113,15 @@ export const handle = sequence(
 		}
 
 		return resolve(event);
+	},
+	async ({ event, resolve }) => {
+		if (event.url.pathname === '/actions/form-hook-result') {
+			return resolve(event, {
+				actionResult: { from_hook_handle: true }
+			});
+		}
+
+		return resolve(event);
 	}
 );
 
