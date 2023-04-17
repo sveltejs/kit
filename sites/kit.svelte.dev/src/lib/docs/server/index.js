@@ -43,6 +43,7 @@ const type_regex = new RegExp(
 );
 
 const ts_js_regex = /(\.js|\.ts)$/;
+const ts_js_spans = '<span class="js-version">.js</span><span class="ts-version">.ts</span>';
 
 const type_links = new Map();
 
@@ -307,21 +308,12 @@ export async function read_file(file) {
 			return html;
 		},
 		codespan: (text) => {
-			const contains_js_ts_extension = ts_js_regex.test(text);
-
-			if (contains_js_ts_extension) {
-				text = text.replace(ts_js_regex, '');
-			}
-
 			return (
 				'<code>' +
-				text.replace(type_regex, (match, prefix, name) => {
+				text.replace(ts_js_regex, ts_js_spans).replace(type_regex, (match, prefix, name) => {
 					const link = `<a href="${type_links.get(name)}">${name}</a>`;
 					return `${prefix || ''}${link}`;
 				}) +
-				(contains_js_ts_extension
-					? '<span class="js-version">.js</span> <span class="ts-version">.ts</span>'
-					: '') +
 				'</code>'
 			);
 		}
@@ -370,12 +362,6 @@ function parse({ file, body, code, codespan }) {
 				.replace(/&lt;/g, '<')
 				.replace(/&gt;/g, '>');
 
-			const contains_js_ts_extension = ts_js_regex.test(html);
-
-			if (contains_js_ts_extension) {
-				html = html.replace(ts_js_regex, '');
-			}
-
 			current = title;
 
 			const normalized = slugify(title);
@@ -402,12 +388,7 @@ function parse({ file, body, code, codespan }) {
 				throw new Error(`Unexpected <h${level}> in ${file}`);
 			}
 
-			return `<h${level} id="${slug}">${
-				html +
-				(contains_js_ts_extension
-					? '<span class="js-version">.js</span><span class="ts-version">.ts</span>'
-					: '')
-			}
+			return `<h${level} id="${slug}">${html.replace(ts_js_regex, ts_js_spans)}
 				<a href="#${slug}" class="permalink"><span class="visually-hidden">permalink</span></a></h${level}>`;
 		},
 		code: (source, language) => code(source, language, current),
