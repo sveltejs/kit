@@ -66,7 +66,7 @@ function replace_blank_lines(html) {
 function dynamic_extensions(text) {
 	if (text === 'svelte.config.js') return text;
 
-	return text.replace(/^([a-zA-Z0-9.+]+)\.(js|ts)$/, (match, $1) => {
+	return text.replace(/^([a-zA-Z0-9-.+]+)\.(js|ts)$/, (match, $1) => {
 		if ($1 === 'svelte.config') return match;
 		return `${$1}<span class="js-version">.js</span><span class="ts-version">.ts</span>`;
 	});

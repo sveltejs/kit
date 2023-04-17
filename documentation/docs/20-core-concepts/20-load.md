@@ -6,7 +6,7 @@ Before a [`+page.svelte`](routing#page-page-svelte) component (and its containin
 
 ## Page data
 
-A `+page.svelte` file can have a sibling `+page.js` (or `+page.ts`) that exports a `load` function, the return value of which is available to the page via the `data` prop:
+A `+page.svelte` file can have a sibling `+page.js` that exports a `load` function, the return value of which is available to the page via the `data` prop:
 
 ```js
 /// file: src/routes/blog/[slug]/+page.js
