@@ -42,7 +42,7 @@ const type_regex = new RegExp(
 	'g'
 );
 
-const ts_js_regex = /(\.js|\.ts)$/;
+const ts_js_regex = /\.(js|ts)$/;
 const ts_js_spans = '<span class="js-version">.js</span><span class="ts-version">.ts</span>';
 
 const type_links = new Map();
