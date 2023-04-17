@@ -54,6 +54,63 @@ function update_scroll_positions(index) {
 	scroll_positions[index] = scroll_state();
 }
 
+/** @param {Element} element */
+function is_scrollable(element) {
+	const style = getComputedStyle(element);
+	return style.display !== 'contents' &&
+		(style.overflowY === 'auto' || style.overflowY === 'scroll') &&
+		element.scrollHeight > element.clientHeight
+		? element
+		: null;
+}
+
+const SCROLLABLE_AREA_ATTRIBUTE = 'data-sveltekit-main-scrollable';
+
+function get_scrollable_area() {
+	const is_default_scrollable = getComputedStyle(document.documentElement).overflowY !== 'hidden';
+	const scrollable_area = is_default_scrollable
+		? document.documentElement
+		: is_scrollable(document.body);
+
+	const custom_scrollable_area = document.querySelector(`*[${SCROLLABLE_AREA_ATTRIBUTE}]`);
+
+	if (DEV) {
+		if (scrollable_area && custom_scrollable_area) {
+			console.warn(
+				`<${scrollable_area.tagName.toLowerCase()}> is already scrollable but '${SCROLLABLE_AREA_ATTRIBUTE}' was found on an element. Only use '${SCROLLABLE_AREA_ATTRIBUTE}' if <html> or <body> are not the main scrollable areas`,
+				custom_scrollable_area
+			);
+		} else if (custom_scrollable_area && !is_scrollable(custom_scrollable_area)) {
+			console.error(
+				`Invalid main scrollable area. Ensure that the overflow style is set to 'auto' or 'scroll', and the element height is less than its content`,
+				custom_scrollable_area
+			);
+		} else if (!scrollable_area && !custom_scrollable_area) {
+			throw new Error(
+				`No scrollable area found. Identify the main scrolling area with '${SCROLLABLE_AREA_ATTRIBUTE}' to ensure navigation functions correctly`
+			);
+		}
+
+		const custom_scrollable_areas = document.querySelectorAll(`*[${SCROLLABLE_AREA_ATTRIBUTE}]`);
+		if (custom_scrollable_areas.length > 1) {
+			console.warn(
+				`More than one '${SCROLLABLE_AREA_ATTRIBUTE}' found. Only one main scrolling area is allowed`,
+				custom_scrollable_areas
+			);
+		}
+	}
+
+	return scrollable_area ?? custom_scrollable_area;
+}
+
+/***
+ * @param {number} x
+ * @param {number} y
+ */
+function scroll_to(x, y) {
+	get_scrollable_area()?.scrollTo(x, y);
+}
+
 /**
  * @param {import('./types').SvelteKitApp} app
  * @param {HTMLElement} target
@@ -135,7 +192,7 @@ export function create_client(app, target) {
 	const scroll = scroll_positions[current_history_index];
 	if (scroll) {
 		history.scrollRestoration = 'manual';
-		scrollTo(scroll.x, scroll.y);
+		scroll_to(scroll.x, scroll.y);
 	}
 
 	/** @type {import('types').Page} */
@@ -397,14 +454,14 @@ export function create_client(app, target) {
 				const deep_linked =
 					url.hash && document.getElementById(decodeURIComponent(url.hash.slice(1)));
 				if (scroll) {
-					scrollTo(scroll.x, scroll.y);
+					scroll_to(scroll.x, scroll.y);
 				} else if (deep_linked) {
 					// Here we use `scrollIntoView` on the element instead of `scrollTo`
 					// because it natively supports the `scroll-margin` and `scroll-behavior`
 					// CSS properties.
 					deep_linked.scrollIntoView();
 				} else {
-					scrollTo(0, 0);
+					scroll_to(0, 0);
 				}
 			}
 
