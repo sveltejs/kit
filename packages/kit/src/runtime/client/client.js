@@ -493,7 +493,8 @@ export function create_client(app, target) {
 				url: new URL(location.href)
 			},
 			willUnload: false,
-			type: 'enter'
+			type: 'enter',
+			complete: Promise.resolve()
 		};
 		callbacks.after_navigate.forEach((fn) => fn(navigation));
 
@@ -1970,10 +1971,21 @@ function reset_focus() {
  * @param {import('./types').NavigationIntent | undefined} intent
  * @param {URL | null} url
  * @param {import('types').NavigationType} type
- * @returns {import('types').Navigation}
  */
 function create_navigation(current, intent, url, type) {
-	return {
+	/** @type {(value: any) => void} */
+	let fulfil;
+
+	/** @type {(error: any) => void} */
+	let reject;
+
+	const complete = new Promise((f, r) => {
+		fulfil = f;
+		reject = r;
+	});
+
+	/** @type {import('types').Navigation} */
+	const navigation = {
 		from: {
 			params: current.params,
 			route: { id: current.route?.id ?? null },
@@ -1985,7 +1997,16 @@ function create_navigation(current, intent, url, type) {
 			url
 		},
 		willUnload: !intent,
-		type
+		type,
+		complete
+	};
+
+	return {
+		navigation,
+		// @ts-expect-error
+		fulfil,
+		// @ts-expect-error
+		reject
 	};
 }
 

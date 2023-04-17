@@ -830,6 +830,11 @@ export interface Navigation {
 	 * In case of a history back/forward navigation, the number of steps to go back/forward
 	 */
 	delta?: number;
+	/**
+	 * A promise that resolves once the navigation is complete, and rejects if the navigation
+	 * fails or is aborted. In the case of a `willUnload` navigation, the promise will never resolve
+	 */
+	complete: Promise<void>;
 }
 
 /**
