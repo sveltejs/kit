@@ -1,4 +1,4 @@
-import { existsSync, readFileSync, writeFileSync } from 'node:fs';
+import { existsSync, readFileSync, statSync, writeFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { pathToFileURL } from 'node:url';
 import { installPolyfills } from '../../exports/node/polyfills.js';
@@ -338,7 +338,22 @@ async function prerender({ out, manifest_path, metadata, verbose, env }) {
 		}
 
 		if (response.status === 200) {
-			mkdirp(dirname(dest));
+			if (existsSync(dest) && statSync(dest).isDirectory()) {
+				throw new Error(
+					`Cannot save ${decoded} as it is already a directory. See https://kit.svelte.dev/docs/page-options#prerender-route-conflicts for more information`
+				);
+			}
+
+			const dir = dirname(dest);
+
+			if (existsSync(dir) && !statSync(dir).isDirectory()) {
+				const parent = decoded.split('/').slice(0, -1).join('/');
+				throw new Error(
+					`Cannot save ${decoded} as ${parent} is already a file. See https://kit.svelte.dev/docs/page-options#prerender-route-conflicts for more information`
+				);
+			}
+
+			mkdirp(dir);
 
 			log.info(`${response.status} ${decoded}`);
 			writeFileSync(dest, body);

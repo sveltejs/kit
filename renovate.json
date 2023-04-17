@@ -12,7 +12,8 @@
 	"ignoreDeps": [
 		"esbuild",
 		"rollup",
-		"typescript"
+		"typescript",
+		"undici"
 	],
 	"ignorePaths": [
 		"**/create-svelte/shared/**",

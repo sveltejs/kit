@@ -1,6 +1,7 @@
 {
 	"name": "@sveltejs/amp",
 	"version": "1.0.2",
+	"description": "AMP integration for SvelteKit",
 	"repository": {
 		"type": "git",
 		"url": "https://github.com/sveltejs/kit",
