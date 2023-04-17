@@ -75,8 +75,8 @@ importers:
         specifier: ^0.16.3
         version: 0.16.3
       worktop:
-        specifier: 0.8.0-next.14
-        version: 0.8.0-next.14
+        specifier: 0.8.0-next.15
+        version: 0.8.0-next.15
     devDependencies:
       '@types/node':
         specifier: ^16.18.6
@@ -5786,8 +5786,8 @@ packages:
     engines: {node: '>=0.10.0'}
     dev: true
 
-  /worktop@0.8.0-next.14:
-    resolution: {integrity: sha512-RZgqHu1w/JcUdWOE/BUEAzarrUUHh39eWkLdX8XpA6MfgLJF6X5Vl26CV7/wcm4O/UpZvHMGJUtB9eYTqDjc9g==}
+  /worktop@0.8.0-next.15:
+    resolution: {integrity: sha512-0ycNO52P6nVwsjr1y20zuf0nqJatAb8L7MODBfQIxbxndHV5O4s50oZZMHWhJG1RLpHwbK0Epq8aaQK4E2GlgQ==}
     engines: {node: '>=12'}
     dependencies:
       mrmime: 1.0.1
