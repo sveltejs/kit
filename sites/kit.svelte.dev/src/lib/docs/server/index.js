@@ -402,10 +402,10 @@ function parse({ file, body, code, codespan }) {
 				throw new Error(`Unexpected <h${level}> in ${file}`);
 			}
 
-			return `<h${level} id="${slug}" style="display: inline-flex">${
+			return `<h${level} id="${slug}">${
 				html +
 				(contains_js_ts_extension
-					? '<span class="js-version">.js</span> <span class="ts-version">.ts</span>'
+					? '<span class="js-version">.js</span><span class="ts-version">.ts</span>'
 					: '')
 			}
 				<a href="#${slug}" class="permalink"><span class="visually-hidden">permalink</span></a></h${level}>`;
