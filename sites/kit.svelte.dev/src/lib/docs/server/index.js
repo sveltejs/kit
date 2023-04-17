@@ -42,9 +42,6 @@ const type_regex = new RegExp(
 	'g'
 );
 
-const ts_js_regex = /\.(js|ts)$/;
-const ts_js_spans = '<span class="js-version">.js</span><span class="ts-version">.ts</span>';
-
 const type_links = new Map();
 
 const slugs = {
@@ -59,10 +56,20 @@ modules.forEach((module) => {
 		type_links.set(type.name, link);
 	});
 });
+
 /** @param {string} html */
 function replace_blank_lines(html) {
 	// preserve blank lines in output (maybe there's a more correct way to do this?)
 	return html.replaceAll(/<div class='line'>(&nbsp;)?<\/div>/g, '<div class="line">\n</div>');
+}
+
+function dynamic_extensions(text) {
+	if (text === 'svelte.config.js') return text;
+
+	return text.replace(/^([a-zA-Z0-9.+]+)\.(js|ts)$/, (match, $1) => {
+		if ($1 === 'svelte.config') return match;
+		return `${$1}<span class="js-version">.js</span><span class="ts-version">.ts</span>`;
+	});
 }
 
 /**
@@ -310,7 +317,7 @@ export async function read_file(file) {
 		codespan: (text) => {
 			return (
 				'<code>' +
-				text.replace(ts_js_regex, ts_js_spans).replace(type_regex, (match, prefix, name) => {
+				dynamic_extensions(text).replace(type_regex, (match, prefix, name) => {
 					const link = `<a href="${type_links.get(name)}">${name}</a>`;
 					return `${prefix || ''}${link}`;
 				}) +
@@ -388,7 +395,7 @@ function parse({ file, body, code, codespan }) {
 				throw new Error(`Unexpected <h${level}> in ${file}`);
 			}
 
-			return `<h${level} id="${slug}">${html.replace(ts_js_regex, ts_js_spans)}
+			return `<h${level} id="${slug}">${dynamic_extensions(html)}
 				<a href="#${slug}" class="permalink"><span class="visually-hidden">permalink</span></a></h${level}>`;
 		},
 		code: (source, language) => code(source, language, current),
