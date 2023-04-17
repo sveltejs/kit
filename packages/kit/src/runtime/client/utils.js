@@ -133,10 +133,11 @@ export function get_link_info(a, base) {
 		!url ||
 		!!target ||
 		is_external_url(url, base) ||
-		(a.getAttribute('rel') || '').split(/\s+/).includes('external') ||
-		a.hasAttribute('download');
+		(a.getAttribute('rel') || '').split(/\s+/).includes('external');
 
-	return { url, external, target };
+	const download = url?.origin === location.origin && a.hasAttribute('download');
+
+	return { url, external, target, download };
 }
 
 /**
