@@ -742,3 +742,24 @@ test.describe('Interactivity', () => {
 		expect(errored).toBe(false);
 	});
 });
+
+test.describe('Load', () => {
+	if (process.env.DEV) {
+		test('using window.fetch does not cause false-positive warning', async ({ page, baseURL }) => {
+			/** @type {string[]} */
+			const warnings = [];
+			page.on('console', (msg) => {
+				if (msg.type() === 'warning') {
+					warnings.push(msg.text());
+				}
+			});
+
+			await page.goto('/load/window-fetch/outside-load');
+			expect(await page.textContent('h1')).toBe('42');
+
+			expect(warnings).not.toContain(
+				`Loading ${baseURL}/load/window-fetch/data.json using \`window.fetch\`. For best results, use the \`fetch\` that is passed to your \`load\` function: https://kit.svelte.dev/docs/load#making-fetch-requests`
+			);
+		});
+	}
+});
