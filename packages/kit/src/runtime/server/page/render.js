@@ -292,9 +292,9 @@ export async function render_response({
 		const blocks = [];
 
 		const properties = [
-			`env: ${s(public_env)}`,
 			paths.assets && `assets: ${s(paths.assets)}`,
-			`base: ${base_expression}`
+			`base: ${base_expression}`,
+			`env: ${s(public_env)}`
 		].filter(Boolean);
 
 		if (chunks) {
