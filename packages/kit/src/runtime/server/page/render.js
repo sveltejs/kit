@@ -319,10 +319,11 @@ export async function render_response({
 
 		const args = [`app`, `element`];
 
+		blocks.push(`const element = document.currentScript.parentElement;`);
+
 		if (page_config.ssr) {
 			const serialized = { form: 'null', error: 'null' };
 
-			blocks.push(`const element = document.currentScript.parentElement;`);
 			blocks.push(`const data = ${data};`);
 
 			if (form_value) {
