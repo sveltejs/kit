@@ -1,5 +1,5 @@
 <script>
-	import Section from '@sveltejs/site-kit/components/Section.svelte';
+	import { Section } from '@sveltejs/site-kit/components';
 	import html5 from './logos/html5.svg';
 	import node from './logos/node.svg';
 	import vercel from './logos/vercel.svg';
@@ -10,6 +10,7 @@
 	import lambda from './logos/lambda.svg';
 	import azure from './logos/azure.svg';
 	import plus from '$lib/icons/plus.svg';
+	import { theme } from '@sveltejs/site-kit/theme';
 </script>
 
 <Section --background="var(--background-1)">
@@ -111,7 +112,7 @@
 
 		<div class="globe">
 			<img
-				src="/edge.svg"
+				src="/edge.svg?{$theme.current}"
 				width="100%"
 				height="100%"
 				alt="Dynamically rendered map of the world, centered on the user's location"
@@ -275,12 +276,20 @@
 	}
 
 	@media (prefers-color-scheme: dark) {
-		.invert img {
+		.platforms .invert img {
 			--invert: 1;
 		}
 
-		.invert-hover img {
+		.platforms .invert-hover img {
 			--invert-hover: 1;
 		}
+	}
+
+	:global(body.dark) .platforms .invert img {
+		--invert: 1;
+	}
+
+	:global(body.dark) .platforms .invert-hover img {
+		--invert-hover: 1;
 	}
 </style>

@@ -1,3 +1,4 @@
+import { DEV } from 'esm-env';
 import { json, text } from '../../exports/index.js';
 import { coalesce_to_error } from '../../utils/error.js';
 import { negotiate } from '../../utils/http.js';
@@ -33,13 +34,11 @@ export function method_not_allowed(mod, method) {
 
 /** @param {Partial<Record<import('types').HttpMethod, any>>} mod */
 export function allowed_methods(mod) {
-	const allowed = [];
+	const allowed = ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'].filter(
+		(method) => method in mod
+	);
 
-	for (const method in ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS']) {
-		if (method in mod) allowed.push(method);
-	}
-
-	if (mod.GET || mod.HEAD) allowed.push('HEAD');
+	if ('GET' in mod || 'HEAD' in mod) allowed.push('HEAD');
 
 	return allowed;
 }
@@ -52,7 +51,14 @@ export function allowed_methods(mod) {
  * @param {string} message
  */
 export function static_error_page(options, status, message) {
-	return text(options.templates.error({ status, message }), {
+	let page = options.templates.error({ status, message });
+
+	if (DEV) {
+		// inject Vite HMR client, for easier debugging
+		page = page.replace('</head>', '<script type="module" src="/@vite/client"></script></head>');
+	}
+
+	return text(page, {
 		headers: { 'content-type': 'text/html; charset=utf-8' },
 		status
 	});

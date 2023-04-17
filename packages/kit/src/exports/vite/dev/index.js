@@ -58,7 +58,16 @@ export async function dev(vite, vite_config, svelte_config) {
 			const msg = buildErrorMessage(err, [colors.red(`Internal server error: ${err.message}`)]);
 
 			vite.config.logger.error(msg, { error: err });
-			vite.ws.send({ type: 'error', err: err });
+			vite.ws.send({
+				type: 'error',
+				err: {
+					...err,
+					// these properties are non-enumerable and will
+					// not be serialized unless we explicitly include them
+					message: err.message,
+					stack: err.stack
+				}
+			});
 
 			throw err;
 		}
@@ -136,12 +145,11 @@ export async function dev(vite, vite_config, svelte_config) {
 
 						if (node.component) {
 							result.component = async () => {
-								const { module_node, module, url } = await resolve(
+								const { module_node, module } = await resolve(
 									/** @type {string} */ (node.component)
 								);
 
 								module_nodes.push(module_node);
-								result.file = url.endsWith('.svelte') ? url : url + '?import'; // TODO what is this for?
 
 								return module.default;
 							};
