@@ -331,7 +331,10 @@ function kit({ svelte_config }) {
 		name: 'vite-plugin-sveltekit-virtual-modules',
 
 		async resolveId(id) {
-			// treat $env/static/[public|private] as virtual
+			if (id === '__sveltekit/APP') {
+				return `${kit.outDir}/generated/client-optimized/app.js`;
+			}
+			// virtual modules
 			if (id.startsWith('$env/') || id.startsWith('__sveltekit/') || id === '$service-worker') {
 				return `\0${id}`;
 			}
@@ -524,7 +527,6 @@ function kit({ svelte_config }) {
 					});
 				} else {
 					input['entry/start'] = `${runtime_directory}/client/start.js`;
-					input['entry/app'] = `${kit.outDir}/generated/client-optimized/app.js`;
 
 					/**
 					 * @param {string | undefined} file
@@ -730,11 +732,6 @@ function kit({ svelte_config }) {
 					start: find_deps(
 						client_manifest,
 						posixify(path.relative('.', `${runtime_directory}/client/start.js`)),
-						false
-					),
-					app: find_deps(
-						client_manifest,
-						posixify(path.relative('.', `${kit.outDir}/generated/client-optimized/app.js`)),
 						false
 					)
 				};

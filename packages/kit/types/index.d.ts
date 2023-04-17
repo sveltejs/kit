@@ -1061,7 +1061,6 @@ export interface SSRManifest {
 	_: {
 		client: {
 			start: AssetDependencies;
-			app: AssetDependencies;
 		};
 		nodes: SSRNodeLoader[];
 		routes: SSRRoute[];

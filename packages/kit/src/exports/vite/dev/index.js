@@ -120,12 +120,6 @@ export async function dev(vite, vite_config, svelte_config) {
 						imports: [],
 						stylesheets: [],
 						fonts: []
-					},
-					app: {
-						file: `${svelte_config.kit.outDir}/generated/client/app.js`,
-						imports: [],
-						stylesheets: [],
-						fonts: []
 					}
 				},
 				nodes: manifest_data.nodes.map((node, index) => {

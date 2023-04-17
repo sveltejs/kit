@@ -56,7 +56,6 @@ export interface BuildData {
 	service_worker: string | null;
 	client: {
 		start: AssetDependencies;
-		app: AssetDependencies;
 	} | null;
 	server_manifest: import('vite').Manifest;
 }

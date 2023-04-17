@@ -63,9 +63,9 @@ export async function render_response({
 
 	const { client } = manifest._;
 
-	const modulepreloads = new Set([...client.start.imports, ...client.app.imports]);
-	const stylesheets = new Set(client.app.stylesheets);
-	const fonts = new Set(client.app.fonts);
+	const modulepreloads = new Set([...client.start.imports]);
+	const stylesheets = new Set(client.start.stylesheets);
+	const fonts = new Set(client.start.fonts);
 
 	/** @type {Set<string>} */
 	const link_header_preloads = new Set();
@@ -329,7 +329,7 @@ export async function render_response({
 						${properties.join(',\n\t\t\t\t\t\t')}
 					};`);
 
-		const args = [`app`, `${global}.element`];
+		const args = [`${global}.element`];
 
 		if (page_config.ssr) {
 			const serialized = { form: 'null', error: 'null' };
@@ -365,10 +365,8 @@ export async function render_response({
 			args.push(`{\n\t\t\t\t\t\t\t${hydrate.join(',\n\t\t\t\t\t\t\t')}\n\t\t\t\t\t\t}`);
 		}
 
-		blocks.push(`Promise.all([
-						import(${s(prefixed(client.start.file))}),
-						import(${s(prefixed(client.app.file))})
-					]).then(([kit, app]) => {
+		blocks.push(`import(${s(prefixed(client.start.file))})
+					.then((kit) => {
 						kit.start(${args.join(', ')});
 					});`);
 
