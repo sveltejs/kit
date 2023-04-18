@@ -726,17 +726,17 @@ function kit({ svelte_config }) {
 				/** @type {import('vite').Manifest} */
 				const client_manifest = JSON.parse(read(`${out}/client/${vite_config.build.manifest}`));
 
+				const deps_of = /** @param {string} f */ (f) =>
+					find_deps(client_manifest, posixify(path.relative('.', f)), false);
+				const start = deps_of(`${runtime_directory}/client/start.js`);
+				const app = deps_of(`${kit.outDir}/generated/client-optimized/app.js`);
+
 				build_data.client = {
-					start: find_deps(
-						client_manifest,
-						posixify(path.relative('.', `${runtime_directory}/client/start.js`)),
-						false
-					),
-					app: find_deps(
-						client_manifest,
-						posixify(path.relative('.', `${kit.outDir}/generated/client-optimized/app.js`)),
-						false
-					)
+					start: start.file,
+					app: app.file,
+					imports: [...start.imports, ...app.imports],
+					stylesheets: [...start.stylesheets, ...app.stylesheets],
+					fonts: [...start.fonts, ...app.fonts]
 				};
 
 				const css = output.filter(
