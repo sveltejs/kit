@@ -441,6 +441,11 @@ export interface KitConfig {
 		 * @default "modulepreload"
 		 */
 		preloadStrategy?: 'modulepreload' | 'preload-js' | 'preload-mjs';
+		/**
+		 * Whether to create separate JS files for each page and common component chunks or bundle everything into one file.
+		 * @default true
+		 */
+		codeSplitJs: boolean;
 	};
 	paths?: {
 		/**

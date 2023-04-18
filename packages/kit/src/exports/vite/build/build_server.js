@@ -10,8 +10,17 @@ import { s } from '../../../utils/misc.js';
  * @param {import('vite').Manifest} server_manifest
  * @param {import('vite').Manifest | null} client_manifest
  * @param {import('rollup').OutputAsset[] | null} css
+ * @param {import('types').RecursiveRequired<import('types').Config['output']>} output_config
  */
-export function build_server_nodes(out, kit, manifest_data, server_manifest, client_manifest, css) {
+export function build_server_nodes(
+	out,
+	kit,
+	manifest_data,
+	server_manifest,
+	client_manifest,
+	css,
+	output_config
+) {
 	mkdirp(`${out}/server/nodes`);
 	mkdirp(`${out}/server/stylesheets`);
 
@@ -47,12 +56,14 @@ export function build_server_nodes(out, kit, manifest_data, server_manifest, cli
 		/** @type {string[]} */
 		const fonts = [];
 
-		if (node.component && client_manifest) {
-			const entry = find_deps(client_manifest, node.component, true);
+		if (node.component) {
+			if (client_manifest && output_config.codeSplitJs) {
+				const entry = find_deps(client_manifest, node.component, true);
 
-			imported.push(...entry.imports);
-			stylesheets.push(...entry.stylesheets);
-			fonts.push(...entry.fonts);
+				imported.push(...entry.imports);
+				stylesheets.push(...entry.stylesheets);
+				fonts.push(...entry.fonts);
+			}
 
 			exports.push(
 				`export const component = async () => (await import('../${
@@ -62,7 +73,7 @@ export function build_server_nodes(out, kit, manifest_data, server_manifest, cli
 		}
 
 		if (node.universal) {
-			if (client_manifest) {
+			if (client_manifest && output_config.codeSplitJs) {
 				const entry = find_deps(client_manifest, node.universal, true);
 
 				imported.push(...entry.imports);

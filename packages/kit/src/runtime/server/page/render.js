@@ -355,12 +355,19 @@ export async function render_response({
 			args.push(`{\n\t\t\t\t\t\t\t${hydrate.join(',\n\t\t\t\t\t\t\t')}\n\t\t\t\t\t\t}`);
 		}
 
-		blocks.push(`Promise.all([
-						import(${s(prefixed(client.start))}),
-						import(${s(prefixed(client.app))})
-					]).then(([kit, app]) => {
-						kit.start(${args.join(', ')});
-					});`);
+		if (client.app) {
+			blocks.push(`Promise.all([
+				import(${s(prefixed(client.start))}),
+				import(${s(prefixed(client.app))})
+			]).then(([kit, app]) => {
+				kit.start(${args.join(', ')});
+			});`);
+		} else {
+			blocks.push(`import(${s(prefixed(client.start))})
+			.then((kit) => {
+				kit.start(${args.join(', ')});
+			});`);
+		}
 
 		if (options.service_worker) {
 			const opts = __SVELTEKIT_DEV__ ? `, { type: 'module' }` : '';

@@ -331,7 +331,10 @@ function kit({ svelte_config }) {
 		name: 'vite-plugin-sveltekit-virtual-modules',
 
 		async resolveId(id) {
-			// treat $env/static/[public|private] as virtual
+			if (id === '__sveltekit/APP') {
+				return `${kit.outDir}/generated/client-optimized/app.js`;
+			}
+			// virtual modules
 			if (id.startsWith('$env/') || id.startsWith('__sveltekit/') || id === '$service-worker') {
 				return `\0${id}`;
 			}
@@ -481,8 +484,8 @@ function kit({ svelte_config }) {
 			/** @type {import('vite').UserConfig} */
 			let new_config;
 
+			const ssr = /** @type {boolean} */ (config.build?.ssr);
 			if (is_build) {
-				const ssr = /** @type {boolean} */ (config.build?.ssr);
 				const prefix = `${kit.appDir}/immutable`;
 
 				/** @type {Record<string, string>} */
@@ -523,28 +526,32 @@ function kit({ svelte_config }) {
 						input[name] = path.resolve(file);
 					});
 				} else {
-					input['entry/start'] = `${runtime_directory}/client/start.js`;
-					input['entry/app'] = `${kit.outDir}/generated/client-optimized/app.js`;
+					if (!svelte_config.kit.output.codeSplitJs) {
+						input['entry/bundle'] = `${runtime_directory}/client/bundled-entry.js`;
+					} else {
+						input['entry/start'] = `${runtime_directory}/client/start.js`;
+						input['entry/app'] = `${kit.outDir}/generated/client-optimized/app.js`;
 
-					/**
-					 * @param {string | undefined} file
-					 */
-					function add_input(file) {
-						if (!file) return;
+						/**
+						 * @param {string | undefined} file
+						 */
+						function add_input(file) {
+							if (!file) return;
 
-						const resolved = path.resolve(file);
-						const relative = decodeURIComponent(path.relative(kit.files.routes, resolved));
+							const resolved = path.resolve(file);
+							const relative = decodeURIComponent(path.relative(kit.files.routes, resolved));
 
-						const name = relative.startsWith('..')
-							? path.basename(file).replace(/^\+/, '')
-							: relative.replace(/(\\|\/)\+/g, '-').replace(/[\\/]/g, '-');
+							const name = relative.startsWith('..')
+								? path.basename(file).replace(/^\+/, '')
+								: relative.replace(/(\\|\/)\+/g, '-').replace(/[\\/]/g, '-');
 
-						input[`entry/${name}`] = resolved;
-					}
+							input[`entry/${name}`] = resolved;
+						}
 
-					for (const node of manifest_data.nodes) {
-						add_input(node.component);
-						add_input(node.universal);
+						for (const node of manifest_data.nodes) {
+							add_input(node.component);
+							add_input(node.universal);
+						}
 					}
 				}
 
@@ -563,7 +570,7 @@ function kit({ svelte_config }) {
 						rollupOptions: {
 							input,
 							output: {
-								format: 'esm',
+								format: ssr || svelte_config.kit.output.codeSplitJs ? 'esm' : 'iife',
 								entryFileNames: ssr ? '[name].js' : `${prefix}/[name].[hash].${ext}`,
 								chunkFileNames: ssr ? 'chunks/[name].js' : `${prefix}/chunks/[name].[hash].${ext}`,
 								assetFileNames: `${prefix}/assets/[name].[hash][extname]`,
@@ -595,7 +602,10 @@ function kit({ svelte_config }) {
 						rollupOptions: {
 							// Vite dependency crawler needs an explicit JS entry point
 							// eventhough server otherwise works without it
-							input: `${runtime_directory}/client/start.js`
+							input: `${runtime_directory}/client/start.js`,
+							output: {
+								format: ssr || svelte_config.kit.output.codeSplitJs ? 'esm' : 'iife'
+							}
 						}
 					},
 					publicDir: kit.files.assets
@@ -686,7 +696,15 @@ function kit({ svelte_config }) {
 				// first, build server nodes without the client manifest so we can analyse it
 				log.info('Analysing routes');
 
-				build_server_nodes(out, kit, manifest_data, server_manifest, null, null);
+				build_server_nodes(
+					out,
+					kit,
+					manifest_data,
+					server_manifest,
+					null,
+					null,
+					svelte_config.output
+				);
 
 				const metadata = await analyse({
 					manifest_path,
@@ -725,19 +743,30 @@ function kit({ svelte_config }) {
 
 				/** @type {import('vite').Manifest} */
 				const client_manifest = JSON.parse(read(`${out}/client/${vite_config.build.manifest}`));
-
 				const deps_of = /** @param {string} f */ (f) =>
 					find_deps(client_manifest, posixify(path.relative('.', f)), false);
-				const start = deps_of(`${runtime_directory}/client/start.js`);
-				const app = deps_of(`${kit.outDir}/generated/client-optimized/app.js`);
 
-				build_data.client = {
-					start: start.file,
-					app: app.file,
-					imports: [...start.imports, ...app.imports],
-					stylesheets: [...start.stylesheets, ...app.stylesheets],
-					fonts: [...start.fonts, ...app.fonts]
-				};
+				if (svelte_config.kit.output.codeSplitJs) {
+					const start = deps_of(`${runtime_directory}/client/start.js`);
+					const app = deps_of(`${kit.outDir}/generated/client-optimized/app.js`);
+
+					build_data.client = {
+						start: start.file,
+						app: app.file,
+						imports: [...start.imports, ...app.imports],
+						stylesheets: [...start.stylesheets, ...app.stylesheets],
+						fonts: [...start.fonts, ...app.fonts]
+					};
+				} else {
+					const start = deps_of(`${runtime_directory}/client/bundled-entry.js`);
+
+					build_data.client = {
+						start: start.file,
+						imports: start.imports,
+						stylesheets: start.stylesheets,
+						fonts: start.fonts
+					};
+				}
 
 				const css = output.filter(
 					/** @type {(value: any) => value is import('rollup').OutputAsset} */
@@ -755,7 +784,15 @@ function kit({ svelte_config }) {
 				);
 
 				// regenerate nodes with the client manifest...
-				build_server_nodes(out, kit, manifest_data, server_manifest, client_manifest, css);
+				build_server_nodes(
+					out,
+					kit,
+					manifest_data,
+					server_manifest,
+					client_manifest,
+					css,
+					svelte_config.kit.output
+				);
 
 				// ...and prerender
 				const { prerendered, prerender_map } = await prerender({
