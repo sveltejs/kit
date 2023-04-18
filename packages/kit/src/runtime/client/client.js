@@ -272,10 +272,10 @@ export function create_client(app, target) {
 	 * @param {import('./types').NavigationIntent | undefined} intent
 	 * @param {URL} url
 	 * @param {string[]} redirect_chain
-	 * @param {number} [previous_history_index]
-	 * @param {{hash?: string, scroll: { x: number, y: number } | null, keepfocus: boolean, details: { replaceState: boolean, state: any } | null}} [opts]
-	 * @param {{}} [nav_token] To distinguish between different navigation events and determine the latest. Needed for example for redirects to keep the original token
-	 * @param {() => void} [callback]
+	 * @param {number} previous_history_index
+	 * @param {{hash?: string, scroll: { x: number, y: number } | null, keepfocus: boolean, details: { replaceState: boolean, state: any } | null}} opts
+	 * @param {{}} nav_token To distinguish between different navigation events and determine the latest. Needed for example for redirects to keep the original token
+	 * @param {() => void} callback
 	 */
 	async function update(
 		intent,
@@ -347,11 +347,8 @@ export function create_client(app, target) {
 
 		updating = true;
 
-		// `previous_history_index` will be undefined for invalidation
-		if (previous_history_index) {
-			update_scroll_positions(previous_history_index);
-			capture_snapshot(previous_history_index);
-		}
+		update_scroll_positions(previous_history_index);
+		capture_snapshot(previous_history_index);
 
 		// ensure the url pathname matches the page's trailing slash option
 		if (
@@ -361,7 +358,7 @@ export function create_client(app, target) {
 			url.pathname = navigation_result.props.page?.url.pathname;
 		}
 
-		if (opts && opts.details) {
+		if (opts.details) {
 			const { details } = opts;
 			const change = details.replaceState ? 0 : 1;
 			details.state[INDEX_KEY] = current_history_index += change;
@@ -395,42 +392,37 @@ export function create_client(app, target) {
 			initialize(navigation_result);
 		}
 
-		// opts must be passed if we're navigating
-		if (opts) {
-			const { scroll, keepfocus } = opts;
-			const { activeElement } = document;
+		const { scroll, keepfocus } = opts;
+		const { activeElement } = document;
 
-			// need to render the DOM before we can scroll to the rendered elements and do focus management
-			await tick();
+		// need to render the DOM before we can scroll to the rendered elements and do focus management
+		await tick();
 
-			// we reset scroll before dealing with focus, to avoid a flash of unscrolled content
-			if (autoscroll) {
-				const deep_linked =
-					url.hash && document.getElementById(decodeURIComponent(url.hash.slice(1)));
-				if (scroll) {
-					scrollTo(scroll.x, scroll.y);
-				} else if (deep_linked) {
-					// Here we use `scrollIntoView` on the element instead of `scrollTo`
-					// because it natively supports the `scroll-margin` and `scroll-behavior`
-					// CSS properties.
-					deep_linked.scrollIntoView();
-				} else {
-					scrollTo(0, 0);
-				}
+		// we reset scroll before dealing with focus, to avoid a flash of unscrolled content
+		if (autoscroll) {
+			const deep_linked =
+				url.hash && document.getElementById(decodeURIComponent(url.hash.slice(1)));
+			if (scroll) {
+				scrollTo(scroll.x, scroll.y);
+			} else if (deep_linked) {
+				// Here we use `scrollIntoView` on the element instead of `scrollTo`
+				// because it natively supports the `scroll-margin` and `scroll-behavior`
+				// CSS properties.
+				deep_linked.scrollIntoView();
+			} else {
+				scrollTo(0, 0);
 			}
+		}
 
-			const changed_focus =
-				// reset focus only if any manual focus management didn't override it
-				document.activeElement !== activeElement &&
-				// also refocus when activeElement is body already because the
-				// focus event might not have been fired on it yet
-				document.activeElement !== document.body;
+		const changed_focus =
+			// reset focus only if any manual focus management didn't override it
+			document.activeElement !== activeElement &&
+			// also refocus when activeElement is body already because the
+			// focus event might not have been fired on it yet
+			document.activeElement !== document.body;
 
-			if (!keepfocus && !changed_focus) {
-				await reset_focus();
-			}
-		} else {
-			await tick();
+		if (!keepfocus && !changed_focus) {
+			await reset_focus();
 		}
 
 		autoscroll = true;
