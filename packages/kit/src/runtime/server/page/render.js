@@ -63,9 +63,9 @@ export async function render_response({
 
 	const { client } = manifest._;
 
-	const modulepreloads = new Set([...client.start.imports, ...client.app.imports]);
-	const stylesheets = new Set(client.app.stylesheets);
-	const fonts = new Set(client.app.fonts);
+	const modulepreloads = new Set(client.imports);
+	const stylesheets = new Set(client.stylesheets);
+	const fonts = new Set(client.fonts);
 
 	/** @type {Set<string>} */
 	const link_header_preloads = new Set();
@@ -356,8 +356,8 @@ export async function render_response({
 		}
 
 		blocks.push(`Promise.all([
-						import(${s(prefixed(client.start.file))}),
-						import(${s(prefixed(client.app.file))})
+						import(${s(prefixed(client.start))}),
+						import(${s(prefixed(client.app))})
 					]).then(([kit, app]) => {
 						kit.start(${args.join(', ')});
 					});`);
