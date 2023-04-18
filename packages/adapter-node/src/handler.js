@@ -86,8 +86,10 @@ const ssr = async (req, res) => {
 			bodySizeLimit: body_size_limit
 		});
 	} catch (err) {
+		const request_error_message = 'Invalid request body';
+		console.error(`${request_error_message}: ${err?.body?.message || 'No message in Error'}`);
 		res.statusCode = err.status || 400;
-		res.end('Invalid request body');
+		res.end(request_error_message);
 		return;
 	}
 
