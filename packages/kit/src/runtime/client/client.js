@@ -162,7 +162,18 @@ export function create_client(app, target) {
 		// was then triggered and is still running while the invalidation kicks in,
 		// at which point the invalidation should take over and "win".
 		load_cache = null;
-		await update(intent, url, []);
+
+		const nav_token = (token = {});
+		const navigation_result = intent && (await load_route(intent));
+		if (nav_token !== token) return;
+
+		if (navigation_result) {
+			if (navigation_result.type === 'redirect') {
+				return goto(new URL(navigation_result.location, url).href, {}, [url.pathname], nav_token);
+			} else {
+				root.$set(navigation_result.props);
+			}
+		}
 	}
 
 	/** @param {number} index */
@@ -254,183 +265,6 @@ export function create_client(app, target) {
 		});
 
 		await Promise.all(promises);
-	}
-
-	/**
-	 * Returns `true` if update completes, `false` if it is aborted
-	 * @param {import('./types').NavigationIntent | undefined} intent
-	 * @param {URL} url
-	 * @param {string[]} redirect_chain
-	 * @param {number} [previous_history_index]
-	 * @param {{hash?: string, scroll: { x: number, y: number } | null, keepfocus: boolean, details: { replaceState: boolean, state: any } | null}} [opts]
-	 * @param {{}} [nav_token] To distinguish between different navigation events and determine the latest. Needed for example for redirects to keep the original token
-	 * @param {() => void} [callback]
-	 */
-	async function update(
-		intent,
-		url,
-		redirect_chain,
-		previous_history_index,
-		opts,
-		nav_token = {},
-		callback
-	) {
-		token = nav_token;
-		let navigation_result = intent && (await load_route(intent));
-
-		if (!navigation_result) {
-			if (is_external_url(url, base)) {
-				return await native_navigation(url);
-			}
-			navigation_result = await server_fallback(
-				url,
-				{ id: null },
-				await handle_error(new Error(`Not found: ${url.pathname}`), {
-					url,
-					params: {},
-					route: { id: null }
-				}),
-				404
-			);
-		}
-
-		// if this is an internal navigation intent, use the normalized
-		// URL for the rest of the function
-		url = intent?.url || url;
-
-		// abort if user navigated during update
-		if (token !== nav_token) return false;
-
-		if (navigation_result.type === 'redirect') {
-			if (redirect_chain.length > 10 || redirect_chain.includes(url.pathname)) {
-				navigation_result = await load_root_error_page({
-					status: 500,
-					error: await handle_error(new Error('Redirect loop'), {
-						url,
-						params: {},
-						route: { id: null }
-					}),
-					url,
-					route: { id: null }
-				});
-			} else {
-				goto(
-					new URL(navigation_result.location, url).href,
-					{},
-					[...redirect_chain, url.pathname],
-					nav_token
-				);
-				return false;
-			}
-		} else if (/** @type {number} */ (navigation_result.props.page?.status) >= 400) {
-			const updated = await stores.updated.check();
-			if (updated) {
-				await native_navigation(url);
-			}
-		}
-
-		// reset invalidation only after a finished navigation. If there are redirects or
-		// additional invalidations, they should get the same invalidation treatment
-		invalidated.length = 0;
-		force_invalidation = false;
-
-		updating = true;
-
-		// `previous_history_index` will be undefined for invalidation
-		if (previous_history_index) {
-			update_scroll_positions(previous_history_index);
-			capture_snapshot(previous_history_index);
-		}
-
-		// ensure the url pathname matches the page's trailing slash option
-		if (
-			navigation_result.props.page?.url &&
-			navigation_result.props.page.url.pathname !== url.pathname
-		) {
-			url.pathname = navigation_result.props.page?.url.pathname;
-		}
-
-		if (opts && opts.details) {
-			const { details } = opts;
-			const change = details.replaceState ? 0 : 1;
-			details.state[INDEX_KEY] = current_history_index += change;
-			history[details.replaceState ? 'replaceState' : 'pushState'](details.state, '', url);
-
-			if (!details.replaceState) {
-				// if we navigated back, then pushed a new state, we can
-				// release memory by pruning the scroll/snapshot lookup
-				let i = current_history_index + 1;
-				while (snapshots[i] || scroll_positions[i]) {
-					delete snapshots[i];
-					delete scroll_positions[i];
-					i += 1;
-				}
-			}
-		}
-
-		// reset preload synchronously after the history state has been set to avoid race conditions
-		load_cache = null;
-
-		if (started) {
-			current = navigation_result.state;
-
-			// reset url before updating page store
-			if (navigation_result.props.page) {
-				navigation_result.props.page.url = url;
-			}
-
-			root.$set(navigation_result.props);
-		} else {
-			initialize(navigation_result);
-		}
-
-		// opts must be passed if we're navigating
-		if (opts) {
-			const { scroll, keepfocus } = opts;
-			const { activeElement } = document;
-
-			// need to render the DOM before we can scroll to the rendered elements and do focus management
-			await tick();
-
-			// we reset scroll before dealing with focus, to avoid a flash of unscrolled content
-			if (autoscroll) {
-				const deep_linked =
-					url.hash && document.getElementById(decodeURIComponent(url.hash.slice(1)));
-				if (scroll) {
-					scrollTo(scroll.x, scroll.y);
-				} else if (deep_linked) {
-					// Here we use `scrollIntoView` on the element instead of `scrollTo`
-					// because it natively supports the `scroll-margin` and `scroll-behavior`
-					// CSS properties.
-					deep_linked.scrollIntoView();
-				} else {
-					scrollTo(0, 0);
-				}
-			}
-
-			const changed_focus =
-				// reset focus only if any manual focus management didn't override it
-				document.activeElement !== activeElement &&
-				// also refocus when activeElement is body already because the
-				// focus event might not have been fired on it yet
-				document.activeElement !== document.body;
-
-			if (!keepfocus && !changed_focus) {
-				await reset_focus();
-			}
-		} else {
-			await tick();
-		}
-
-		autoscroll = true;
-
-		if (navigation_result.props.page) {
-			page = navigation_result.props.page;
-		}
-
-		if (callback) callback();
-
-		updating = false;
 	}
 
 	/** @param {import('./types').NavigationFinished} result */
@@ -1131,7 +965,7 @@ export function create_client(app, target) {
 		details,
 		type,
 		delta,
-		nav_token,
+		nav_token = {},
 		accepted,
 		blocked
 	}) {
@@ -1154,25 +988,156 @@ export function create_client(app, target) {
 			stores.navigating.set(navigation);
 		}
 
-		await update(
-			intent,
-			url,
-			redirect_chain,
-			previous_history_index,
-			{
-				scroll,
-				keepfocus,
-				details
-			},
-			nav_token,
-			() => {
-				navigating = false;
-				callbacks.after_navigate.forEach((fn) =>
-					fn(/** @type {import('types').AfterNavigate} */ (navigation))
-				);
-				stores.navigating.set(null);
+		token = nav_token;
+		let navigation_result = intent && (await load_route(intent));
+
+		if (!navigation_result) {
+			if (is_external_url(url, base)) {
+				return await native_navigation(url);
 			}
+			navigation_result = await server_fallback(
+				url,
+				{ id: null },
+				await handle_error(new Error(`Not found: ${url.pathname}`), {
+					url,
+					params: {},
+					route: { id: null }
+				}),
+				404
+			);
+		}
+
+		// if this is an internal navigation intent, use the normalized
+		// URL for the rest of the function
+		url = intent?.url || url;
+
+		// abort if user navigated during update
+		if (token !== nav_token) return false;
+
+		if (navigation_result.type === 'redirect') {
+			if (redirect_chain.length > 10 || redirect_chain.includes(url.pathname)) {
+				navigation_result = await load_root_error_page({
+					status: 500,
+					error: await handle_error(new Error('Redirect loop'), {
+						url,
+						params: {},
+						route: { id: null }
+					}),
+					url,
+					route: { id: null }
+				});
+			} else {
+				goto(
+					new URL(navigation_result.location, url).href,
+					{},
+					[...redirect_chain, url.pathname],
+					nav_token
+				);
+				return false;
+			}
+		} else if (/** @type {number} */ (navigation_result.props.page?.status) >= 400) {
+			const updated = await stores.updated.check();
+			if (updated) {
+				await native_navigation(url);
+			}
+		}
+
+		// reset invalidation only after a finished navigation. If there are redirects or
+		// additional invalidations, they should get the same invalidation treatment
+		invalidated.length = 0;
+		force_invalidation = false;
+
+		updating = true;
+
+		update_scroll_positions(previous_history_index);
+		capture_snapshot(previous_history_index);
+
+		// ensure the url pathname matches the page's trailing slash option
+		if (
+			navigation_result.props.page?.url &&
+			navigation_result.props.page.url.pathname !== url.pathname
+		) {
+			url.pathname = navigation_result.props.page?.url.pathname;
+		}
+
+		if (details) {
+			const change = details.replaceState ? 0 : 1;
+			details.state[INDEX_KEY] = current_history_index += change;
+			history[details.replaceState ? 'replaceState' : 'pushState'](details.state, '', url);
+
+			if (!details.replaceState) {
+				// if we navigated back, then pushed a new state, we can
+				// release memory by pruning the scroll/snapshot lookup
+				let i = current_history_index + 1;
+				while (snapshots[i] || scroll_positions[i]) {
+					delete snapshots[i];
+					delete scroll_positions[i];
+					i += 1;
+				}
+			}
+		}
+
+		// reset preload synchronously after the history state has been set to avoid race conditions
+		load_cache = null;
+
+		if (started) {
+			current = navigation_result.state;
+
+			// reset url before updating page store
+			if (navigation_result.props.page) {
+				navigation_result.props.page.url = url;
+			}
+
+			root.$set(navigation_result.props);
+		} else {
+			initialize(navigation_result);
+		}
+
+		const { activeElement } = document;
+
+		// need to render the DOM before we can scroll to the rendered elements and do focus management
+		await tick();
+
+		// we reset scroll before dealing with focus, to avoid a flash of unscrolled content
+		if (autoscroll) {
+			const deep_linked =
+				url.hash && document.getElementById(decodeURIComponent(url.hash.slice(1)));
+			if (scroll) {
+				scrollTo(scroll.x, scroll.y);
+			} else if (deep_linked) {
+				// Here we use `scrollIntoView` on the element instead of `scrollTo`
+				// because it natively supports the `scroll-margin` and `scroll-behavior`
+				// CSS properties.
+				deep_linked.scrollIntoView();
+			} else {
+				scrollTo(0, 0);
+			}
+		}
+
+		const changed_focus =
+			// reset focus only if any manual focus management didn't override it
+			document.activeElement !== activeElement &&
+			// also refocus when activeElement is body already because the
+			// focus event might not have been fired on it yet
+			document.activeElement !== document.body;
+
+		if (!keepfocus && !changed_focus) {
+			await reset_focus();
+		}
+
+		autoscroll = true;
+
+		if (navigation_result.props.page) {
+			page = navigation_result.props.page;
+		}
+
+		navigating = false;
+		callbacks.after_navigate.forEach((fn) =>
+			fn(/** @type {import('types').AfterNavigate} */ (navigation))
 		);
+		stores.navigating.set(null);
+
+		updating = false;
 	}
 
 	/**
