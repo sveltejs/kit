@@ -162,7 +162,18 @@ export function create_client(app, target) {
 		// was then triggered and is still running while the invalidation kicks in,
 		// at which point the invalidation should take over and "win".
 		load_cache = null;
-		await update(intent, url, []);
+
+		const nav_token = (token = {});
+		const navigation_result = intent && (await load_route(intent));
+		if (nav_token !== token) return;
+
+		if (navigation_result) {
+			if (navigation_result.type === 'redirect') {
+				return goto(new URL(navigation_result.location, url).href, {}, [url.pathname], nav_token);
+			} else {
+				root.$set(navigation_result.props);
+			}
+		}
 	}
 
 	/** @param {number} index */
