@@ -7,7 +7,7 @@ export function mkdirp(dir) {
 	try {
 		fs.mkdirSync(dir, { recursive: true });
 	} catch (e) {
-		if (e.code === 'EEXIST') return;
+		if (/** @type {any} */ (e).code === 'EEXIST') return;
 		throw e;
 	}
 }

@@ -3,11 +3,12 @@
 		"allowJs": true,
 		"checkJs": true,
 		"noEmit": true,
-		"noImplicitAny": true,
 		"target": "esnext",
 		"module": "esnext",
 		"moduleResolution": "node",
-		"allowSyntheticDefaultImports": true
+		"allowSyntheticDefaultImports": true,
+		"strict": true,
+		"skipLibCheck": true
 	},
 	"include": ["./scripts/**/*", "./index.js", "./bin.js", "./utils.js"]
 }

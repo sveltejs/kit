@@ -63,15 +63,14 @@ const options = await p.group(
 		types: () =>
 			p.select({
 				message: 'Add type checking with TypeScript?',
+				initialValue: /** @type {'checkjs' | 'typescript' | null} */ ('checkjs'),
 				options: [
 					{
 						label: 'Yes, using JavaScript with JSDoc comments',
-						// @ts-expect-error :shrug:
 						value: 'checkjs'
 					},
 					{
 						label: 'Yes, using TypeScript syntax',
-						// @ts-expect-error :shrug:
 						value: 'typescript'
 					},
 					{ label: 'No', value: null }
