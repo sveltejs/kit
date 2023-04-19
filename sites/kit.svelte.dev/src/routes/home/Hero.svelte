@@ -7,7 +7,7 @@
 <section class="hero">
 	<div class="hero-contents">
 		<div class="hero-text">
-			<div class="logotype" role="img">
+			<div class="logotype" role="img" aria-label="SvelteKit">
 				<Logotype />
 			</div>
 
