@@ -188,6 +188,9 @@ function kit({ svelte_config }) {
 
 	const service_worker_entry_file = resolve_entry(kit.files.serviceWorker);
 
+	const sourcemapIgnoreList = /** @param {string} relative_path */ (relative_path) =>
+		relative_path.includes('node_modules') || relative_path.includes(kit.outDir);
+
 	/** @type {import('vite').Plugin} */
 	const plugin_setup = {
 		name: 'vite-plugin-sveltekit-setup',
@@ -231,16 +234,17 @@ function kit({ svelte_config }) {
 				},
 				root: cwd,
 				server: {
+					cors: { preflightContinue: true },
 					fs: {
 						allow: [...allow]
 					},
+					sourcemapIgnoreList,
 					watch: {
 						ignored: [
 							// Ignore all siblings of config.kit.outDir/generated
 							`${posixify(kit.outDir)}/!(generated)`
 						]
-					},
-					cors: { preflightContinue: true }
+					}
 				},
 				preview: {
 					cors: { preflightContinue: true }
@@ -550,7 +554,11 @@ function kit({ svelte_config }) {
 				new_config = {
 					base: ssr ? assets_base(kit) : './',
 					build: {
+						copyPublicDir: !ssr,
 						cssCodeSplit: true,
+						cssMinify: initial_config.build?.minify == null ? true : !!initial_config.build.minify,
+						// don't use the default name to avoid collisions with 'static/manifest.json'
+						manifest: 'vite-manifest.json',
 						outDir: `${out}/${ssr ? 'server' : 'client'}`,
 						rollupOptions: {
 							input,
@@ -559,15 +567,13 @@ function kit({ svelte_config }) {
 								entryFileNames: ssr ? '[name].js' : `${prefix}/[name].[hash].${ext}`,
 								chunkFileNames: ssr ? 'chunks/[name].js' : `${prefix}/chunks/[name].[hash].${ext}`,
 								assetFileNames: `${prefix}/assets/[name].[hash][extname]`,
-								hoistTransitiveImports: false
+								hoistTransitiveImports: false,
+								sourcemapIgnoreList
 							},
 							preserveEntrySignatures: 'strict'
 						},
 						ssrEmitAssets: true,
-						copyPublicDir: !ssr,
-						target: ssr ? 'node16.14' : undefined,
-						// don't use the default name to avoid collisions with 'static/manifest.json'
-						manifest: 'vite-manifest.json'
+						target: ssr ? 'node16.14' : undefined
 					},
 					publicDir: kit.files.assets,
 					worker: {
@@ -720,17 +726,17 @@ function kit({ svelte_config }) {
 				/** @type {import('vite').Manifest} */
 				const client_manifest = JSON.parse(read(`${out}/client/${vite_config.build.manifest}`));
 
+				const deps_of = /** @param {string} f */ (f) =>
+					find_deps(client_manifest, posixify(path.relative('.', f)), false);
+				const start = deps_of(`${runtime_directory}/client/start.js`);
+				const app = deps_of(`${kit.outDir}/generated/client-optimized/app.js`);
+
 				build_data.client = {
-					start: find_deps(
-						client_manifest,
-						posixify(path.relative('.', `${runtime_directory}/client/start.js`)),
-						false
-					),
-					app: find_deps(
-						client_manifest,
-						posixify(path.relative('.', `${kit.outDir}/generated/client-optimized/app.js`)),
-						false
-					)
+					start: start.file,
+					app: app.file,
+					imports: [...start.imports, ...app.imports],
+					stylesheets: [...start.stylesheets, ...app.stylesheets],
+					fonts: [...start.fonts, ...app.fonts]
 				};
 
 				const css = output.filter(

@@ -751,4 +751,35 @@ test('prevents route conflicts between groups', () => {
 	);
 });
 
+test('errors with multiple layouts on same directory', () => {
+	assert.throws(
+		() => create('samples/multiple-layouts'),
+		/^Multiple layout component files found in samples\/multiple-layouts\/ : \+layout\.svelte and \+layout@\.svelte/
+	);
+});
+
+test('errors with multiple pages on same directory', () => {
+	assert.throws(
+		() => create('samples/multiple-pages'),
+		/^Multiple page component files found in samples\/multiple-pages\/ : \+page\.svelte and \+page@\.svelte/
+	);
+});
+
+test('errors with both ts and js handlers for the same route', () => {
+	assert.throws(
+		() => create('samples/conflicting-ts-js-handlers-page'),
+		/^Multiple universal page module files found in samples\/conflicting-ts-js-handlers-page\/ : \+page\.js and \+page\.ts/
+	);
+
+	assert.throws(
+		() => create('samples/conflicting-ts-js-handlers-layout'),
+		/^Multiple server layout module files found in samples\/conflicting-ts-js-handlers-layout\/ : \+layout\.server\.js and \+layout\.server\.ts/
+	);
+
+	assert.throws(
+		() => create('samples/conflicting-ts-js-handlers-server'),
+		/^Multiple endpoint files found in samples\/conflicting-ts-js-handlers-server\/ : \+server\.js and \+server\.ts/
+	);
+});
+
 test.run();

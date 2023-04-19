@@ -34,13 +34,11 @@ export function method_not_allowed(mod, method) {
 
 /** @param {Partial<Record<import('types').HttpMethod, any>>} mod */
 export function allowed_methods(mod) {
-	const allowed = [];
+	const allowed = ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'].filter(
+		(method) => method in mod
+	);
 
-	for (const method in ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS']) {
-		if (method in mod) allowed.push(method);
-	}
-
-	if (mod.GET || mod.HEAD) allowed.push('HEAD');
+	if ('GET' in mod || 'HEAD' in mod) allowed.push('HEAD');
 
 	return allowed;
 }

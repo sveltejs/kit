@@ -1,0 +1,23 @@
+{
+	"name": "test-options",
+	"private": true,
+	"version": "0.0.1",
+	"scripts": {
+		"dev": "vite dev",
+		"build": "vite build",
+		"preview": "vite preview",
+		"check": "svelte-kit sync && tsc && svelte-check",
+		"test": "pnpm test:dev && pnpm test:build",
+		"test:dev": "cross-env DEV=true playwright test",
+		"test:build": "playwright test"
+	},
+	"devDependencies": {
+		"@sveltejs/kit": "workspace:^",
+		"cross-env": "^7.0.3",
+		"svelte": "^3.56.0",
+		"svelte-check": "^3.0.2",
+		"typescript": "^4.9.4",
+		"vite": "^4.2.0"
+	},
+	"type": "module"
+}

@@ -1,8 +1,7 @@
 <script>
 	import Contents from '$lib/docs/Contents.svelte';
-	import TSToggle from '$lib/docs/TSToggle.svelte';
+	import { TSToggle } from '@sveltejs/site-kit/components';
 
-	/** @type {import('./$types').LayoutData} */
 	export let data;
 </script>
 

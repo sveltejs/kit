@@ -26,6 +26,7 @@ import {
 } from '../../utils/exports.js';
 import { get_option } from '../../utils/options.js';
 import { error, json, text } from '../../exports/index.js';
+import { action_json_redirect, is_action_json_request } from './page/actions.js';
 
 /* global __SVELTEKIT_ADAPTER_NAME__ */
 
@@ -175,7 +176,11 @@ export async function respond(request, options, manifest, state) {
 	try {
 		// determine whether we need to redirect to add/remove a trailing slash
 		if (route && !is_data_request) {
-			if (route.page) {
+			// if `paths.base === '/a/b/c`, then the root route is `/a/b/c/`,
+			// regardless of the `trailingSlash` route option
+			if (url.pathname === base || url.pathname === base + '/') {
+				trailing_slash = 'always';
+			} else if (route.page) {
 				const nodes = await Promise.all([
 					// we use == here rather than === because [undefined] serializes as "[null]"
 					...route.page.layouts.map((n) => (n == undefined ? n : manifest._.nodes[n]())),
@@ -309,6 +314,8 @@ export async function respond(request, options, manifest, state) {
 		if (e instanceof Redirect) {
 			const response = is_data_request
 				? redirect_json_response(e)
+				: route?.page && is_action_json_request(event)
+				? action_json_redirect(e)
 				: redirect_response(e.status, e.location);
 			add_cookies_to_headers(response.headers, Object.values(cookies_to_add));
 			return response;

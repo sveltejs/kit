@@ -1,6 +1,7 @@
 import { respond } from './respond.js';
 import { set_private_env, set_public_env } from '../shared-server.js';
 import { options, get_hooks } from '__SERVER__/internal.js';
+import { DEV } from 'esm-env';
 
 export class Server {
 	/** @type {import('types').SSROptions} */
@@ -35,14 +36,29 @@ export class Server {
 		set_public_env(pub);
 
 		if (!this.#options.hooks) {
-			const module = await get_hooks();
+			try {
+				const module = await get_hooks();
 
-			this.#options.hooks = {
-				handle: module.handle || (({ event, resolve }) => resolve(event)),
-				// @ts-expect-error
-				handleError: module.handleError || (({ error }) => console.error(error?.stack)),
-				handleFetch: module.handleFetch || (({ request, fetch }) => fetch(request))
-			};
+				this.#options.hooks = {
+					handle: module.handle || (({ event, resolve }) => resolve(event)),
+					// @ts-expect-error
+					handleError: module.handleError || (({ error }) => console.error(error?.stack)),
+					handleFetch: module.handleFetch || (({ request, fetch }) => fetch(request))
+				};
+			} catch (error) {
+				if (DEV) {
+					this.#options.hooks = {
+						handle: () => {
+							throw error;
+						},
+						// @ts-expect-error
+						handleError: ({ error }) => console.error(error?.stack),
+						handleFetch: ({ request, fetch }) => fetch(request)
+					};
+				} else {
+					throw error;
+				}
+			}
 		}
 	}
 

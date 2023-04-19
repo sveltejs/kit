@@ -105,17 +105,25 @@ export async function getRequest({ request, base, bodySizeLimit }) {
 
 /** @type {import('@sveltejs/kit/node').setResponse} */
 export async function setResponse(res, response) {
-	const headers = Object.fromEntries(response.headers);
-
-	if (response.headers.has('set-cookie')) {
-		const header = /** @type {string} */ (response.headers.get('set-cookie'));
-		const split = set_cookie_parser.splitCookiesString(header);
-
-		// @ts-expect-error
-		headers['set-cookie'] = split;
+	for (const [key, value] of response.headers) {
+		try {
+			res.setHeader(
+				key,
+				key === 'set-cookie'
+					? set_cookie_parser.splitCookiesString(
+							// This is absurd but necessary, TODO: investigate why
+							/** @type {string}*/ (response.headers.get(key))
+					  )
+					: value
+			);
+		} catch (error) {
+			res.getHeaderNames().forEach((name) => res.removeHeader(name));
+			res.writeHead(500).end(String(error));
+			return;
+		}
 	}
 
-	res.writeHead(response.status, headers);
+	res.writeHead(response.status);
 
 	if (!response.body) {
 		res.end();
@@ -123,11 +131,10 @@ export async function setResponse(res, response) {
 	}
 
 	if (response.body.locked) {
-		res.write(
+		res.end(
 			'Fatal error: Response body is locked. ' +
 				`This can happen when the response was already read (for example through 'response.json()' or 'response.text()').`
 		);
-		res.end();
 		return;
 	}
 

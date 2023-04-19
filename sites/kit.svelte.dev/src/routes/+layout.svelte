@@ -5,13 +5,16 @@
 	import { Icon, Nav, NavItem, Separator, Shell } from '@sveltejs/site-kit/components';
 	import { Search, SearchBox } from '@sveltejs/site-kit/search';
 	import '@sveltejs/site-kit/styles/index.css';
-	import Logo from './home/svelte-logo.svg';
 
 	let banner_height = '48px';
 </script>
 
 <Shell banner_bottom_height={banner_height}>
-	<Nav logo={Logo} slot="top-nav">
+	<Nav slot="top-nav">
+		<svelte:fragment slot="home">
+			<span><strong>kit</strong>.svelte.dev</span>
+		</svelte:fragment>
+
 		<svelte:fragment slot="nav-center">
 			{#if $page.url.pathname !== '/search'}
 				<li><Search /></li>

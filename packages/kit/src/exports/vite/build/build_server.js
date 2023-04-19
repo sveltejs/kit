@@ -57,8 +57,7 @@ export function build_server_nodes(out, kit, manifest_data, server_manifest, cli
 			exports.push(
 				`export const component = async () => (await import('../${
 					resolve_symlinks(server_manifest, node.component).chunk.file
-				}')).default;`,
-				`export const file = '${entry.file}';` // TODO what is this?
+				}')).default;`
 			);
 		}
 

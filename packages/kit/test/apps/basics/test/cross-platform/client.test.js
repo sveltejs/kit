@@ -222,6 +222,18 @@ test.describe('Navigation lifecycle functions', () => {
 		expect(await page.innerHTML('pre')).toBe('2 false goto');
 	});
 
+	test('beforeNavigate is triggered after clicking a download link', async ({ page, baseURL }) => {
+		await page.goto('/before-navigate/prevent-navigation');
+
+		await page.click('a[download]');
+		expect(await page.innerHTML('pre')).toBe('0 false undefined');
+
+		await page.click('a[href="/before-navigate/a"]');
+
+		expect(page.url()).toBe(baseURL + '/before-navigate/prevent-navigation');
+		expect(await page.innerHTML('pre')).toBe('1 false link');
+	});
+
 	test('afterNavigate calls callback', async ({ page, clicknav }) => {
 		await page.goto('/navigation-lifecycle/after-navigate/a');
 		expect(await page.textContent('h1')).toBe(
@@ -761,4 +773,25 @@ test.describe('Interactivity', () => {
 
 		expect(errored).toBe(false);
 	});
+});
+
+test.describe('Load', () => {
+	if (process.env.DEV) {
+		test('using window.fetch does not cause false-positive warning', async ({ page, baseURL }) => {
+			/** @type {string[]} */
+			const warnings = [];
+			page.on('console', (msg) => {
+				if (msg.type() === 'warning') {
+					warnings.push(msg.text());
+				}
+			});
+
+			await page.goto('/load/window-fetch/outside-load');
+			expect(await page.textContent('h1')).toBe('42');
+
+			expect(warnings).not.toContain(
+				`Loading ${baseURL}/load/window-fetch/data.json using \`window.fetch\`. For best results, use the \`fetch\` that is passed to your \`load\` function: https://kit.svelte.dev/docs/load#making-fetch-requests`
+			);
+		});
+	}
 });

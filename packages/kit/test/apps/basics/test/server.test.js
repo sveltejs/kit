@@ -61,7 +61,8 @@ test.describe('CSRF', () => {
 		const content_types = [
 			'application/x-www-form-urlencoded',
 			'multipart/form-data',
-			'text/plain'
+			'text/plain',
+			'text/plaiN'
 		];
 		const methods = ['POST', 'PUT', 'PATCH', 'DELETE'];
 		for (const method of methods) {
@@ -124,7 +125,10 @@ test.describe('Endpoints', () => {
 		const response = await request.post('/endpoint-output/body');
 
 		expect(response.status()).toBe(405);
-		expect(response.headers()['allow'].includes('GET'));
+
+		const allow_header = response.headers()['allow'];
+		expect(allow_header).toMatch(/\bGET\b/);
+		expect(allow_header).toMatch(/\bHEAD\b/);
 	});
 
 	// TODO all the remaining tests in this section are really only testing
@@ -174,6 +178,15 @@ test.describe('Endpoints', () => {
 		const digest = createHash('sha256').update(data).digest('base64url');
 		const response = await request.put('/endpoint-input/sha256', { data });
 		expect(await response.text()).toEqual(digest);
+	});
+
+	// TODO see above
+	test('invalid headers return a 500', async ({ request }) => {
+		const response = await request.get('/endpoint-output/head-write-error');
+		expect(response.status()).toBe(500);
+		expect(await response.text()).toMatch(
+			'TypeError [ERR_INVALID_CHAR]: Invalid character in header content ["x-test"]'
+		);
 	});
 
 	test('OPTIONS handler', async ({ request }) => {
@@ -484,7 +497,9 @@ test.describe('setHeaders', () => {
 	test('allows multiple set-cookie headers with different values', async ({ page }) => {
 		const response = await page.goto('/headers/set-cookie/sub');
 		const cookies = (await response?.allHeaders())['set-cookie'];
-		expect(cookies.includes('cookie1=value1') && cookies.includes('cookie2=value2')).toBe(true);
+
+		expect(cookies).toMatch('cookie1=value1');
+		expect(cookies).toMatch('cookie2=value2');
 	});
 });
 
@@ -492,11 +507,10 @@ test.describe('cookies', () => {
 	test('cookie.serialize created correct cookie header string', async ({ page }) => {
 		const response = await page.goto('/cookies/serialize');
 		const cookies = await response.headerValue('set-cookie');
-		expect(
-			cookies.includes('before=before') &&
-				cookies.includes('after=after') &&
-				cookies.includes('endpoint=endpoint')
-		).toBe(true);
+
+		expect(cookies).toMatch('before=before');
+		expect(cookies).toMatch('after=after');
+		expect(cookies).toMatch('endpoint=endpoint');
 	});
 });
 
