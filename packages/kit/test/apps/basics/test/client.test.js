@@ -24,7 +24,7 @@ test.describe('Caching', () => {
 		const [, response] = await Promise.all([
 			app.goto('/caching/server-data'),
 			page.waitForResponse((request) =>
-				request.url().endsWith('server-data/__data.json?x-sveltekit-invalidated=_1')
+				request.url().endsWith('server-data/__data.json?x-sveltekit-invalidated=01')
 			)
 		]);
 		expect(response.headers()['cache-control']).toBe('public, max-age=30');

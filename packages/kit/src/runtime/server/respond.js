@@ -94,7 +94,10 @@ export async function respond(request, options, manifest, state) {
 	if (is_data_request) {
 		decoded = strip_data_suffix(decoded) || '/';
 		url.pathname = strip_data_suffix(url.pathname) || '/';
-		invalidated_data_nodes = url.searchParams.get(INVALIDATED_PARAM)?.split('_').map(Boolean);
+		invalidated_data_nodes = url.searchParams
+			.get(INVALIDATED_PARAM)
+			?.split('')
+			.map((node) => node === '1');
 		url.searchParams.delete(INVALIDATED_PARAM);
 	}
 

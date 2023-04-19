@@ -1777,7 +1777,7 @@ async function load_data(url, invalid) {
 	}
 	data_url.searchParams.append(
 		'x-sveltekit-invalidated',
-		invalid.map((x) => (x ? '1' : '')).join('_')
+		invalid.map((i) => (i ? '1' : '0')).join('')
 	);
 
 	const res = await native_fetch(data_url.href);
