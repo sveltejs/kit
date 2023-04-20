@@ -5,21 +5,21 @@ import { test } from 'uvu';
 import * as assert from 'uvu/assert';
 import { create } from '../index.js';
 import { fileURLToPath } from 'node:url';
-import glob from 'tiny-glob';
+import glob from 'tiny-glob/sync.js';
+
+/** Resolve the given path relative to the current file */
+const resolve_path = (path) => fileURLToPath(new URL(path, import.meta.url));
+
 // use a directory outside of packages to ensure it isn't added to the pnpm workspace
-const test_workspace_dir = fileURLToPath(
-	new URL('../../../.test-tmp/create-svelte/', import.meta.url)
-);
+const test_workspace_dir = resolve_path('../../../.test-tmp/create-svelte/');
 
 const existing_workspace_overrides = JSON.parse(
-	fs.readFileSync(fileURLToPath(new URL('../../../package.json', import.meta.url)), 'utf-8')
+	fs.readFileSync(resolve_path('../../../package.json'), 'utf-8')
 ).pnpm?.overrides;
 
 const overrides = { ...existing_workspace_overrides };
 
-(
-	await glob(fileURLToPath(new URL('../../../packages', import.meta.url)) + '/*/package.json')
-).forEach((pkgPath) => {
+glob(resolve_path('../../../packages') + '/*/package.json').forEach((pkgPath) => {
 	const name = JSON.parse(fs.readFileSync(pkgPath, 'utf-8')).name;
 	// use `file:` protocol for opting into stricter resolve logic which catches more bugs,
 	// but only on CI because it doesn't work locally for some reason
@@ -28,7 +28,7 @@ const overrides = { ...existing_workspace_overrides };
 });
 
 try {
-	const kit_dir = fileURLToPath(new URL('../../../packages/kit', import.meta.url));
+	const kit_dir = resolve_path('../../../packages/kit');
 	const ls_vite_result = execSync(`pnpm ls --json vite`, { cwd: kit_dir });
 	const vite_version = JSON.parse(ls_vite_result)[0].devDependencies.vite.version;
 	overrides.vite = vite_version;
