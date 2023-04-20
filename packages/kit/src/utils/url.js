@@ -94,7 +94,14 @@ export function decode_uri(uri) {
  * URL properties that could change during the lifetime of the page,
  * which excludes things like `origin`
  */
-const tracked_url_properties = /** @type {const} */(['href', 'pathname', 'search', 'searchParams', 'toString', 'toJSON']);
+const tracked_url_properties = /** @type {const} */ ([
+	'href',
+	'pathname',
+	'search',
+	'searchParams',
+	'toString',
+	'toJSON'
+]);
 
 /**
  * @param {URL} url
