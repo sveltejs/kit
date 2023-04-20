@@ -72,7 +72,7 @@ test.describe('base path', () => {
 	test('inlines CSS', async ({ page, javaScriptEnabled }) => {
 		await page.goto('/path-base/base/');
 		if (process.env.DEV) {
-			const ssr_style = await page.evaluate(() => document.querySelector('style[data-sveltekit]'));
+			const ssr_style = await page.$('style[data-sveltekit]');
 
 			if (javaScriptEnabled) {
 				// <style data-sveltekit> is removed upon hydration
@@ -81,17 +81,11 @@ test.describe('base path', () => {
 				expect(ssr_style).not.toBeNull();
 			}
 
-			expect(
-				await page.evaluate(() => document.querySelector('link[rel="stylesheet"]'))
-			).toBeNull();
+			expect(await page.$('link[rel="stylesheet"]')).toBeNull();
 		} else {
-			expect(await page.evaluate(() => document.querySelector('style'))).not.toBeNull();
-			expect(
-				await page.evaluate(() => document.querySelector('link[rel="stylesheet"][disabled]'))
-			).not.toBeNull();
-			expect(
-				await page.evaluate(() => document.querySelector('link[rel="stylesheet"]:not([disabled])'))
-			).not.toBeNull();
+			expect(await page.$('style')).not.toBeNull();
+			expect(await page.$('link[rel="stylesheet"][disabled]')).not.toBeNull();
+			expect(await page.$('link[rel="stylesheet"]:not([disabled])')).not.toBeNull();
 		}
 	});
 
