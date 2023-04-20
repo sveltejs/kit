@@ -32,6 +32,8 @@ node build
 
 Development dependencies will be bundled into your app using [Rollup](https://rollupjs.org). To control whether a given package is bundled or externalised, place it in `devDependencies` or `dependencies` respectively in your `package.json`.
 
+> Make sure that your deployment environment blocks access to all sensitive files from the outside, like the server runtime or environment variables
+
 ## Environment variables
 
 In `dev` and `preview`, SvelteKit will read environment variables from your `.env` file (or `.env.local`, or `.env.[mode]`, [as determined by Vite](https://vitejs.dev/guide/env-and-mode.html#env-files).)
