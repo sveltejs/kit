@@ -28,17 +28,17 @@ test('adds CSP headers via meta tag', () => {
 });
 
 test('does not copy `public` into `_app`', () => {
-	assert.ok(!fs.existsSync(`${build}/_app/robots.txt`));
+	assert.not(fs.existsSync(`${build}/_app/robots.txt`));
 });
 
 // https://github.com/sveltejs/kit/issues/4340
 test('populates fallback 200.html file', () => {
 	const content = read('200.html');
-	assert.ok(content !== '');
+	assert.not.equal(content, "");
 });
 
 test('does not prerender linked +server.js route', () => {
-	assert.ok(!fs.existsSync(`${build}/rss.xml`));
+	assert.not(fs.existsSync(`${build}/rss.xml`));
 });
 
 test.run();
