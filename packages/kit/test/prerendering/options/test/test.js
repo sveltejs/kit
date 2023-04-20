@@ -33,7 +33,7 @@ test('does not copy `public` into `_app`', () => {
 // https://github.com/sveltejs/kit/issues/4340
 test('populates fallback 200.html file', () => {
 	const content = read('200.html');
-	assert.not.equal(content, '');
+	assert.is.not(content, '');
 });
 
 test('does not prerender linked +server.js route', () => {
