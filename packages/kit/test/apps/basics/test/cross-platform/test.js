@@ -962,6 +962,16 @@ test.describe('Routing', () => {
 			expect(await page.textContent('h1')).toBe('symlinked');
 		});
 	}
+	test('__data.json - trailing slash always', async ({ request }) => {
+		const r = await request.get('/routing/trailing-slash-ssr/always/__data.json');
+		const data = await r.json();
+		expect(data.nodes[1].data[1]).toBe('/routing/trailing-slash-ssr/always/');
+	});
+	test('__data.json - trailing slash never', async ({ request }) => {
+		const r = await request.get('/routing/trailing-slash-ssr/never/__data.json');
+		const data = await r.json();
+		expect(data.nodes[1].data[1]).toBe('/routing/trailing-slash-ssr/never');
+	});
 });
 
 test.describe('XSS', () => {
