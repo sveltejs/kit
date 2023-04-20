@@ -349,6 +349,10 @@ export interface SSROptions {
 	version_hash: string;
 }
 
+export interface ServerDevOptions {
+	on_error: (route_id: string | null, error: unknown) => void;
+}
+
 export interface PageNodeIndexes {
 	errors: Array<number | undefined>;
 	layouts: Array<number | undefined>;

@@ -10,11 +10,18 @@ export class Server {
 	/** @type {import('types').SSRManifest} */
 	#manifest;
 
-	/** @param {import('types').SSRManifest} manifest */
-	constructor(manifest) {
+	/** @type {import('types').ServerDevOptions | undefined} */
+	#dev;
+
+	/**
+	 * @param {import('types').SSRManifest} manifest
+	 * @param {import('types').ServerDevOptions} [dev]
+	 */
+	constructor(manifest, dev) {
 		/** @type {import('types').SSROptions} */
 		this.#options = options;
 		this.#manifest = manifest;
+		this.#dev = dev;
 	}
 
 	/**
@@ -45,6 +52,14 @@ export class Server {
 					handleError: module.handleError || (({ error }) => console.error(error?.stack)),
 					handleFetch: module.handleFetch || (({ request, fetch }) => fetch(request))
 				};
+				if (DEV && this.#dev) {
+					const handle_error = this.#options.hooks.handleError;
+					const on_error = this.#dev.on_error;
+					this.#options.hooks.handleError = (event) => {
+						on_error(event.event.route.id, event.error);
+						return handle_error(event);
+					};
+				}
 			} catch (error) {
 				if (DEV) {
 					this.#options.hooks = {

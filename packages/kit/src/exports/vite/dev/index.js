@@ -465,7 +465,27 @@ export async function dev(vite, vite_config, svelte_config) {
 				const { set_assets } = await vite.ssrLoadModule('__sveltekit/paths');
 				set_assets(assets);
 
-				const server = new Server(manifest);
+				const server = new Server(
+					{
+						manifest
+					},
+					// @ts-expect-error internal second argument
+					/** @type {import('types').ServerDevOptions} */ ({
+						on_error: (route_id, e) => {
+							const error = coalesce_to_error(e);
+							// In a timeout, else might be sent too soon before SvelteKit reloads and therefore "deletes" the dialog
+							setTimeout(() => {
+								vite.ws.send({
+									type: 'error',
+									err: {
+										message: `Error while loading data for route ${route_id}: ${error.message}`,
+										stack: error.stack || ''
+									}
+								});
+							}, 500);
+						}
+					})
+				);
 
 				await server.init({ env });
 
