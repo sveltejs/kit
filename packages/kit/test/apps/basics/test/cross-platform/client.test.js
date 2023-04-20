@@ -275,7 +275,7 @@ test.describe('Scrolling', () => {
 	}) => {
 		await page.goto('/anchor');
 		await clicknav('#third-anchor');
-		expect(await page.evaluate(() => scrollY === 0)).toBeTruthy();
+		expect(await page.evaluate(() => scrollY)).toBe(0);
 	});
 
 	test('url-supplied anchor works when navigated from bottom of page', async ({
@@ -294,7 +294,7 @@ test.describe('Scrolling', () => {
 	}) => {
 		await page.goto('/anchor');
 		await clicknav('#last-anchor-2');
-		expect(await page.evaluate(() => scrollY === 0)).toBeTruthy();
+		expect(await page.evaluate(() => scrollY)).toBe(0);
 	});
 
 	test('scroll is restored after hitting the back button', async ({ baseURL, clicknav, page }) => {
