@@ -527,7 +527,7 @@ test.describe('Nested layouts', () => {
 		await page.goto('/nested-layout/error');
 
 		expect(await page.textContent('footer')).toBe('Custom layout');
-		expect(await page.evaluate(() => document.querySelector('p#nested'))).toBe(null);
+		expect(await page.$('p#nested')).toBeNull();
 		expect(await page.textContent('#message')).toBe(
 			'This is your custom error page saying: "Error"'
 		);
@@ -538,7 +538,7 @@ test.describe('Nested layouts', () => {
 		await page.goto('/nested-layout/');
 		await clicknav('[href="/nested-layout/error"]');
 		expect(await page.textContent('footer')).toBe('Custom layout');
-		expect(await page.evaluate(() => document.querySelector('p#nested'))).toBe(null);
+		expect(await page.$('p#nested')).toBe(null);
 		expect(await page.textContent('#message')).toBe(
 			'This is your custom error page saying: "Error"'
 		);
@@ -548,9 +548,9 @@ test.describe('Nested layouts', () => {
 	test('renders deeply-nested errors in the right layout', async ({ page }) => {
 		await page.goto('/nested-layout/foo/bar/nope');
 		expect(await page.textContent('footer')).toBe('Custom layout');
-		expect(await page.evaluate(() => document.querySelector('p#nested'))).toBeTruthy();
-		expect(await page.evaluate(() => document.querySelector('p#nested-foo'))).toBeTruthy();
-		expect(await page.evaluate(() => document.querySelector('p#nested-bar'))).toBeTruthy();
+		expect(await page.$('p#nested')).not.toBeNull();
+		expect(await page.$('p#nested-foo')).not.toBeNull();
+		expect(await page.$('p#nested-bar')).not.toBeNull();
 		expect(await page.textContent('#nested-error-message')).toBe('error.message: nope');
 	});
 
@@ -581,16 +581,10 @@ test.describe('Page options', () => {
 		if (!javaScriptEnabled) {
 			await page.goto('/no-csr');
 			expect(await page.textContent('h1')).toBe('look ma no javascript');
-			expect(
-				await page.evaluate(() => document.querySelectorAll('link[rel="modulepreload"]').length)
-			).toBe(0);
+			expect(await page.$$('link[rel="modulepreload"]')).toHaveLength(0);
 
 			// ensure data wasn't inlined
-			expect(
-				await page.evaluate(
-					() => document.querySelectorAll('script[sveltekit\\:data-type="data"]').length
-				)
-			).toBe(0);
+			expect(await page.$$('script[sveltekit\\:data-type="data"]')).toHaveLength(0);
 		}
 	});
 
@@ -600,8 +594,8 @@ test.describe('Page options', () => {
 		if (javaScriptEnabled) {
 			expect(await page.textContent('h1')).toBe('content was rendered');
 		} else {
-			expect(await page.evaluate(() => document.querySelector('h1'))).toBe(null);
-			expect(await page.evaluate(() => document.querySelector('style[data-sveltekit]'))).toBe(null);
+			expect(await page.$('h1')).toBeNull();
+			expect(await page.$('style[data-sveltekit]')).toBeNull();
 		}
 	});
 

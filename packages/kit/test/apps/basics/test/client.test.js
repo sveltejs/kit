@@ -635,12 +635,10 @@ test.describe('Content negotiation', () => {
 		await page.goto('/routing/content-negotiation');
 		expect(await page.textContent('p')).toBe('Hi');
 
+		const pre = page.locator('pre');
 		for (const method of ['GET', 'PUT', 'PATCH', 'POST', 'DELETE']) {
 			await page.click(`button:has-text("${method}")`);
-			await page.waitForFunction(
-				(method) => document.querySelector('pre')?.textContent === method,
-				method
-			);
+			await expect(pre).toHaveText(method);
 		}
 	});
 
