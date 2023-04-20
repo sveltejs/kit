@@ -10,20 +10,19 @@ const read = (file) => fs.readFileSync(`${build}/${file}`, 'utf-8');
 
 test('prerenders /path-base', () => {
 	const content = read('index.html');
-	assert.ok(content.includes('<h1>hello</h1>'));
+	assert.match(content, '<h1>hello</h1>');
 });
 
 test('prerenders nested /path-base', () => {
 	const content = read('nested/index.html');
-	assert.ok(content.includes('<h1>nested hello</h1>'));
+	assert.match(content, '<h1>nested hello</h1>');
 });
 
 test('adds CSP headers via meta tag', () => {
 	const content = read('index.html');
-	assert.ok(
-		content.includes(
-			'<meta http-equiv="content-security-policy" content="script-src \'self\' \'sha256-'
-		)
+	assert.match(
+		content,
+		'<meta http-equiv="content-security-policy" content="script-src \'self\' \'sha256-'
 	);
 });
 
@@ -34,7 +33,7 @@ test('does not copy `public` into `_app`', () => {
 // https://github.com/sveltejs/kit/issues/4340
 test('populates fallback 200.html file', () => {
 	const content = read('200.html');
-	assert.not.equal(content, "");
+	assert.not.equal(content, '');
 });
 
 test('does not prerender linked +server.js route', () => {
