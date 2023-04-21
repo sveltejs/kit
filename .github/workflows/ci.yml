@@ -123,7 +123,7 @@ jobs:
           retention-days: 3
           name: test-failure-cross-platform-${{ matrix.mode }}-${{ github.run_id }}-${{ matrix.os }}-${{ matrix.node-version }}-${{ matrix.e2e-browser }}
           path: test-results-cross-platform-${{ matrix.mode }}.tar.gz
-  Test-create-svelte-templates:
+  Test-create-svelte:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
