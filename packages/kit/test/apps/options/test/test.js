@@ -59,14 +59,9 @@ test.describe('base path', () => {
 		}
 	});
 
-	test('loads CSS', async ({ page }) => {
+	test('loads CSS', async ({ page, get_computed_style }) => {
 		await page.goto('/path-base/base/');
-		expect(
-			await page.evaluate(() => {
-				const el = document.querySelector('p');
-				return el && getComputedStyle(el).color;
-			})
-		).toBe('rgb(255, 0, 0)');
+		expect(await get_computed_style('p', 'color')).toBe('rgb(255, 0, 0)');
 	});
 
 	test('inlines CSS', async ({ page, javaScriptEnabled }) => {

@@ -427,16 +427,15 @@ test.describe('afterNavigate', () => {
 });
 
 test.describe('CSS', () => {
-	test('applies generated component styles (hides announcer)', async ({ page, clicknav }) => {
+	test('applies generated component styles (hides announcer)', async ({
+		page,
+		clicknav,
+		get_computed_style
+	}) => {
 		await page.goto('/css');
 		await clicknav('[href="/css/other"]');
 
-		expect(
-			await page.evaluate(() => {
-				const el = document.querySelector('#svelte-announcer');
-				return el && getComputedStyle(el).position;
-			})
-		).toBe('absolute');
+		expect(await get_computed_style('#svelte-announcer', 'position')).toBe('absolute');
 	});
 });
 

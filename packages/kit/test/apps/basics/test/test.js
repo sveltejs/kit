@@ -446,16 +446,13 @@ test.describe('Load', () => {
 		expect(cookies.doubled).toBe('84');
 	});
 
-	test('CSS for dynamically imported components is reflected in server render', async ({
-		page
+	test.only('CSS for dynamically imported components is reflected in server render', async ({
+		page,
+		get_computed_style
 	}) => {
 		await page.goto('/load/dynamic-import-styles');
-		expect(
-			await page.evaluate(() => {
-				const el = document.querySelector('#thing');
-				return el && getComputedStyle(el).color;
-			})
-		).toBe('rgb(255, 0, 0)');
+
+		expect(await get_computed_style('#thing', 'color')).toBe('rgb(255, 0, 0)');
 	});
 
 	test('page without load has access to layout data', async ({ page, clicknav }) => {

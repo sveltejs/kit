@@ -280,17 +280,13 @@ test.describe('Load', () => {
 test.describe('Page options', () => {
 	test('applies generated component styles with ssr=false (hides announcer)', async ({
 		page,
-		clicknav
+		clicknav,
+		get_computed_style
 	}) => {
 		await page.goto('/no-ssr');
 		await clicknav('[href="/no-ssr/other"]');
 
-		expect(
-			await page.evaluate(() => {
-				const el = document.querySelector('#svelte-announcer');
-				return el && getComputedStyle(el).position;
-			})
-		).toBe('absolute');
+		expect(await get_computed_style('#svelte-announcer', 'position')).toBe('absolute');
 	});
 });
 
