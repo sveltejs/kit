@@ -446,7 +446,7 @@ test.describe('Load', () => {
 		expect(cookies.doubled).toBe('84');
 	});
 
-	test.only('CSS for dynamically imported components is reflected in server render', async ({
+	test('CSS for dynamically imported components is reflected in server render', async ({
 		page,
 		get_computed_style
 	}) => {
