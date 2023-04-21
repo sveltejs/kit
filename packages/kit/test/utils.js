@@ -80,6 +80,22 @@ export const test = base.extend({
 		use(in_view);
 	},
 
+	get_computed_style: async ({ page }, use) => {
+		/**
+		 * @param {string} selector
+		 * @param {string} prop
+		 */
+		async function get_computed_style(selector, prop) {
+			return page.$eval(
+				selector,
+				(node, prop) => window.getComputedStyle(node).getPropertyValue(prop),
+				prop
+			);
+		}
+
+		await use(get_computed_style);
+	},
+
 	page: async ({ page, javaScriptEnabled }, use) => {
 		// automatically wait for kit started event after navigation functions if js is enabled
 		const page_navigation_functions = ['goto', 'goBack', 'reload'];

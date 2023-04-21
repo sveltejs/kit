@@ -36,7 +36,7 @@ run('spa', (test) => {
 	});
 
 	test('does not prerender pages without prerender=true', ({ cwd }) => {
-		assert.ok(!fs.existsSync(`${cwd}/build/index.html`));
+		assert.not(fs.existsSync(`${cwd}/build/index.html`));
 	});
 
 	test('prerenders page with prerender=true', ({ cwd }) => {

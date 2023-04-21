@@ -6,43 +6,28 @@ import { test } from '../../../../utils.js';
 test.describe.configure({ mode: 'parallel' });
 
 test.describe('CSS', () => {
-	test('applies imported styles', async ({ page }) => {
+	test('applies imported styles', async ({ page, get_computed_style }) => {
 		await page.goto('/css');
 
-		expect(
-			await page.evaluate(() => {
-				const el = document.querySelector('.styled');
-				return el && getComputedStyle(el).color;
-			})
-		).toBe('rgb(255, 0, 0)');
+		expect(await get_computed_style('.styled', 'color')).toBe('rgb(255, 0, 0)');
 	});
 
-	test('applies layout styles', async ({ page }) => {
+	test('applies layout styles', async ({ page, get_computed_style }) => {
 		await page.goto('/css');
 
-		expect(
-			await page.evaluate(() => {
-				const el = document.querySelector('footer');
-				return el && getComputedStyle(el).color;
-			})
-		).toBe('rgb(128, 0, 128)');
+		expect(await get_computed_style('footer', 'color')).toBe('rgb(128, 0, 128)');
 	});
 
-	test('applies local styles', async ({ page }) => {
+	test('applies local styles', async ({ page, get_computed_style }) => {
 		await page.goto('/css');
 
-		expect(
-			await page.evaluate(() => {
-				const el = document.querySelector('.also-styled');
-				return el && getComputedStyle(el).color;
-			})
-		).toBe('rgb(0, 0, 255)');
+		expect(await get_computed_style('.also-styled', 'color')).toBe('rgb(0, 0, 255)');
 	});
 
-	test('applies imported styles in the correct order', async ({ page }) => {
+	test('applies imported styles in the correct order', async ({ page, get_computed_style }) => {
 		await page.goto('/css');
 
-		const color = await page.$eval('.overridden', (el) => getComputedStyle(el).color);
+		const color = await get_computed_style('.overridden', 'color');
 		expect(color).toBe('rgb(0, 128, 0)');
 	});
 });
@@ -271,7 +256,7 @@ test.describe('Errors', () => {
 		});
 	}
 
-	test('server-side load errors', async ({ page }) => {
+	test('server-side load errors', async ({ page, get_computed_style }) => {
 		await page.goto('/errors/load-server');
 
 		expect(await page.textContent('footer')).toBe('Custom layout');
@@ -279,12 +264,7 @@ test.describe('Errors', () => {
 			'This is your custom error page saying: "Crashing now"'
 		);
 
-		expect(
-			await page.evaluate(() => {
-				const el = document.querySelector('h1');
-				return el && getComputedStyle(el).color;
-			})
-		).toBe('rgb(255, 0, 0)');
+		expect(await get_computed_style('h1', 'color')).toBe('rgb(255, 0, 0)');
 	});
 
 	test('404', async ({ page }) => {
@@ -800,23 +780,14 @@ test.describe('Routing', () => {
 	});
 
 	test(':target pseudo-selector works when navigating to a hash on the same page', async ({
-		page
+		page,
+		get_computed_style
 	}) => {
 		await page.goto('/routing/hashes/target#p1');
 
-		expect(
-			await page.evaluate(() => {
-				const el = document.getElementById('p1');
-				return el && getComputedStyle(el).color;
-			})
-		).toBe('rgb(255, 0, 0)');
+		expect(await get_computed_style('#p1', 'color')).toBe('rgb(255, 0, 0)');
 		await page.click('[href="#p2"]');
-		expect(
-			await page.evaluate(() => {
-				const el = document.getElementById('p2');
-				return el && getComputedStyle(el).color;
-			})
-		).toBe('rgb(255, 0, 0)');
+		expect(await get_computed_style('#p2', 'color')).toBe('rgb(255, 0, 0)');
 	});
 
 	test('last parameter in a segment wins in cases of ambiguity', async ({ page, clicknav }) => {

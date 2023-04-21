@@ -275,7 +275,7 @@ test.describe('Scrolling', () => {
 	}) => {
 		await page.goto('/anchor');
 		await clicknav('#third-anchor');
-		expect(await page.evaluate(() => scrollY === 0)).toBeTruthy();
+		expect(await page.evaluate(() => scrollY)).toBe(0);
 	});
 
 	test('url-supplied anchor works when navigated from bottom of page', async ({
@@ -294,7 +294,7 @@ test.describe('Scrolling', () => {
 	}) => {
 		await page.goto('/anchor');
 		await clicknav('#last-anchor-2');
-		expect(await page.evaluate(() => scrollY === 0)).toBeTruthy();
+		expect(await page.evaluate(() => scrollY)).toBe(0);
 	});
 
 	test('scroll is restored after hitting the back button', async ({ baseURL, clicknav, page }) => {
@@ -427,16 +427,15 @@ test.describe('afterNavigate', () => {
 });
 
 test.describe('CSS', () => {
-	test('applies generated component styles (hides announcer)', async ({ page, clicknav }) => {
+	test('applies generated component styles (hides announcer)', async ({
+		page,
+		clicknav,
+		get_computed_style
+	}) => {
 		await page.goto('/css');
 		await clicknav('[href="/css/other"]');
 
-		expect(
-			await page.evaluate(() => {
-				const el = document.querySelector('#svelte-announcer');
-				return el && getComputedStyle(el).position;
-			})
-		).toBe('absolute');
+		expect(await get_computed_style('#svelte-announcer', 'position')).toBe('absolute');
 	});
 });
 

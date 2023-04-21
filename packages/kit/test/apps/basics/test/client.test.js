@@ -280,17 +280,13 @@ test.describe('Load', () => {
 test.describe('Page options', () => {
 	test('applies generated component styles with ssr=false (hides announcer)', async ({
 		page,
-		clicknav
+		clicknav,
+		get_computed_style
 	}) => {
 		await page.goto('/no-ssr');
 		await clicknav('[href="/no-ssr/other"]');
 
-		expect(
-			await page.evaluate(() => {
-				const el = document.querySelector('#svelte-announcer');
-				return el && getComputedStyle(el).position;
-			})
-		).toBe('absolute');
+		expect(await get_computed_style('#svelte-announcer', 'position')).toBe('absolute');
 	});
 });
 
@@ -635,12 +631,10 @@ test.describe('Content negotiation', () => {
 		await page.goto('/routing/content-negotiation');
 		expect(await page.textContent('p')).toBe('Hi');
 
+		const pre = page.locator('pre');
 		for (const method of ['GET', 'PUT', 'PATCH', 'POST', 'DELETE']) {
 			await page.click(`button:has-text("${method}")`);
-			await page.waitForFunction(
-				(method) => document.querySelector('pre')?.textContent === method,
-				method
-			);
+			await expect(pre).toHaveText(method);
 		}
 	});
 
