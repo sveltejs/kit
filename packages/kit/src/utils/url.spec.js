@@ -100,7 +100,7 @@ describe('make_trackable', (test) => {
 		});
 
 		url.origin;
-		assert.ok(!tracked);
+		assert.not(tracked);
 
 		url.pathname;
 		assert.ok(tracked);
