@@ -81,7 +81,6 @@ export const test = base.extend({
 	},
 
 	get_computed_style: async ({ page }, use) => {
-		
 		/**
 		 * @param {string} selector
 		 * @param {string} prop
