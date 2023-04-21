@@ -785,9 +785,9 @@ test.describe('Routing', () => {
 	}) => {
 		await page.goto('/routing/hashes/target#p1');
 
-		expect(await get_computed_style('p1', 'color')).toBe('rgb(255, 0, 0)');
+		expect(await get_computed_style('#p1', 'color')).toBe('rgb(255, 0, 0)');
 		await page.click('[href="#p2"]');
-		expect(await get_computed_style('p2', 'color')).toBe('rgb(255, 0, 0)');
+		expect(await get_computed_style('#p2', 'color')).toBe('rgb(255, 0, 0)');
 	});
 
 	test('last parameter in a segment wins in cases of ambiguity', async ({ page, clicknav }) => {
