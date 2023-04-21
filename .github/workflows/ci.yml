@@ -133,4 +133,4 @@ jobs:
           node-version: 16
           cache: pnpm
       - run: pnpm install --frozen-lockfile
-      - run: pnpm run test:create-svelte-templates
+      - run: pnpm run test:create-svelte
