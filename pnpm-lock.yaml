@@ -397,7 +397,7 @@ importers:
         specifier: ^0.2.9
         version: 0.2.9
       undici:
-        specifier: ^5.22.0
+        specifier: ~5.22.0
         version: 5.22.0
     devDependencies:
       '@playwright/test':
