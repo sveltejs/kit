@@ -214,10 +214,22 @@ test.describe('beforeNavigate', () => {
 		expect(await page.innerHTML('pre')).toBe('2 false goto');
 	});
 
-	test('is triggered after clicking a download link', async ({ page, baseURL }) => {
+	test('is triggered after clicking an explicit download link', async ({ page, baseURL }) => {
 		await page.goto('/before-navigate/prevent-navigation');
 
 		await page.click('a[download]');
+		expect(await page.innerHTML('pre')).toBe('0 false undefined');
+
+		await page.click('a[href="/before-navigate/a"]');
+
+		expect(page.url()).toBe(baseURL + '/before-navigate/prevent-navigation');
+		expect(await page.innerHTML('pre')).toBe('1 false link');
+	});
+
+	test('is triggered after clicking an implicit download link', async ({ page, baseURL }) => {
+		await page.goto('/before-navigate/prevent-navigation');
+
+		await page.click('a[href="/before-navigate/download"]');
 		expect(await page.innerHTML('pre')).toBe('0 false undefined');
 
 		await page.click('a[href="/before-navigate/a"]');
