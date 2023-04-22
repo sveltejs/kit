@@ -230,12 +230,12 @@ test.describe('beforeNavigate', () => {
 		await page.goto('/before-navigate/prevent-navigation');
 
 		await page.click('a[href="/before-navigate/download"]');
-		expect(await page.innerHTML('pre')).toBe('0 false undefined');
+		expect(await page.innerHTML('pre')).toBe('1 true link');
 
 		await page.click('a[href="/before-navigate/a"]');
 
 		expect(page.url()).toBe(baseURL + '/before-navigate/prevent-navigation');
-		expect(await page.innerHTML('pre')).toBe('1 false link');
+		expect(await page.innerHTML('pre')).toBe('2 false link');
 	});
 });
 

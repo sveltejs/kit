@@ -4,10 +4,15 @@
 	let times_triggered = 0;
 	let unload = false;
 	let navigation_type;
+
 	beforeNavigate(({ cancel, type, willUnload, to }) => {
 		times_triggered++;
 		unload = willUnload;
 		navigation_type = type;
+
+		// we don't want the beforeunload alert to pop up for downloads.
+		if (to?.route.id?.includes("download")) return;
+
 		if (!to?.route.id?.includes('redirect')) {
 			cancel();
 		}
@@ -20,6 +25,6 @@
 <a href="/before-navigate/prevent-navigation?x=1">self</a>
 <a href="https://google.com" target="_blank" rel="noreferrer">_blank</a>
 <a href="https://google.de">external</a>
-<a download href="">explicit download</a>
-<a href="/before-navigate/download" rel="external">implicit download</a>
+<a download href="/before-navigate/prevent-navigation">explicit download</a>
+<a href="/before-navigate/download">implicit download</a>
 <pre>{times_triggered} {unload} {navigation_type}</pre>
