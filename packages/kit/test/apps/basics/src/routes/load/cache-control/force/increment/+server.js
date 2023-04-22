@@ -1,7 +1,10 @@
 import { json } from '@sveltejs/kit';
-import { increment } from '../state.js';
 
-export function GET() {
-	increment();
+export function GET({ cookies }) {
+	cookies.set(
+		'cache-control-force-count',
+		+(cookies.get('cache-control-force-count') ?? 0) + 1 + ''
+	);
+
 	return json({});
 }

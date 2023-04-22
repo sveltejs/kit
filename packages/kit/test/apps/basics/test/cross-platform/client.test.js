@@ -75,7 +75,10 @@ test.describe('a11y', () => {
 			})
 		).toBe(1);
 
-		await clicknav('[href="/selection/b"]');
+		await clicknav('[href="/selection/b"]', {
+			waitUntil: 'networkidle'
+		});
+
 		expect(
 			await page.evaluate(() => {
 				const selection = getSelection();
@@ -98,7 +101,7 @@ test.describe('a11y', () => {
 	});
 
 	test('autofocus from previous page is ignored', async ({ page, clicknav }) => {
-		page.addInitScript(`
+		await page.addInitScript(`
 			window.active = null;
 			window.addEventListener('focusin', () => window.active = document.activeElement);
 		`);
@@ -106,8 +109,13 @@ test.describe('a11y', () => {
 		await page.goto('/accessibility/autofocus/a');
 		await clicknav('[href="/"]');
 
-		expect(await page.evaluate(() => (window.active || {}).nodeName)).toBe('BODY');
-		expect(await page.evaluate(() => (document.activeElement || {}).nodeName)).toBe('BODY');
+		expect(
+			await page.evaluate(
+				// @ts-expect-error
+				() => window.active?.nodeName
+			)
+		).toBe('BODY');
+		expect(await page.evaluate(() => document.activeElement?.nodeName)).toBe('BODY');
 	});
 });
 
@@ -302,13 +310,12 @@ test.describe('Scrolling', () => {
 		await page.locator('#scroll-anchor').click();
 		const originalScrollY = /** @type {number} */ (await page.evaluate(() => scrollY));
 		await clicknav('#routing-page');
-		await page.goBack();
-		await page.waitForLoadState('networkidle');
+		await page.goBack({ waitUntil: 'networkidle' });
+
 		expect(page.url()).toBe(baseURL + '/anchor#last-anchor-2');
 		expect(await page.evaluate(() => scrollY)).toEqual(originalScrollY);
 
-		await page.goBack();
-		await page.waitForLoadState('networkidle');
+		await page.goBack({ waitUntil: 'networkidle' });
 
 		expect(page.url()).toBe(baseURL + '/anchor');
 		expect(await page.evaluate(() => scrollY)).toEqual(0);
@@ -507,7 +514,9 @@ test.describe.serial('Errors', () => {
 
 test.describe('Prefetching', () => {
 	test('prefetches programmatically', async ({ baseURL, page, app }) => {
-		await page.goto('/routing/a');
+		await page.goto('/routing/a', {
+			waitUntil: 'networkidle'
+		});
 
 		/** @type {string[]} */
 		let requests = [];
@@ -684,7 +693,9 @@ test.describe('Routing', () => {
 	});
 
 	test('responds to <form method="GET"> submission without reload', async ({ page }) => {
-		await page.goto('/routing/form-get');
+		await page.goto('/routing/form-get', {
+			waitUntil: 'networkidle'
+		});
 		expect(await page.textContent('h1')).toBe('...');
 		expect(await page.textContent('h2')).toBe('enter');
 		expect(await page.textContent('h3')).toBe('...');

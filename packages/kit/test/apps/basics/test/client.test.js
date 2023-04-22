@@ -143,35 +143,43 @@ test.describe('Load', () => {
 	});
 
 	test('load does not call fetch if max-age allows it', async ({ page }) => {
-		page.addInitScript(`
+		// update_state is used to ensure we start waiting at the right time 
+		await page.addInitScript(`
 			window.now = 0;
+			window.update_state = 0;
 			window.performance.now = () => now;
 		`);
 
 		await page.goto('/load/cache-control/default');
-		await expect(page.getByText('Count is 0')).toBeVisible();
-		await page.locator('button').click();
-		await page.waitForLoadState('networkidle');
-		await expect(page.getByText('Count is 0')).toBeVisible();
 
-		await page.evaluate(() => (window.now = 2500));
+		const button = page.locator('button');
+		const p = page.locator('p.counter');
 
-		await page.locator('button').click();
-		await expect(page.getByText('Count is 2')).toBeVisible();
+		await button.click();
+		await page.waitForFunction('window.update_state === 2');
+		await expect(p).toHaveText('Count is 0');
+
+		await page.evaluate('window.now += 2000');
+
+		await button.click();
+		await page.waitForFunction('window.update_state === 4');
+		await expect(p).toHaveText('Count is 2');
 	});
 
 	test('load does ignore ttl if fetch cache options says so', async ({ page }) => {
 		await page.goto('/load/cache-control/force');
-		await expect(page.getByText('Count is 0')).toBeVisible();
+		const p = page.locator('p.counter');
+		await expect(p).toHaveText('Count is 0');
 		await page.locator('button').click();
-		await expect(page.getByText('Count is 1')).toBeVisible();
+		await expect(p).toHaveText('Count is 1');
 	});
 
 	test('load busts cache if non-GET request to resource is made', async ({ page }) => {
 		await page.goto('/load/cache-control/bust');
-		await expect(page.getByText('Count is 0')).toBeVisible();
+		const p = page.locator('p.counter');
+		await expect(p).toHaveText('Count is 0');
 		await page.locator('button').click();
-		await expect(page.getByText('Count is 1')).toBeVisible();
+		await expect(p).toHaveText('Count is 1');
 	});
 
 	test('__data.json has cache-control: private, no-store', async ({ page, clicknav }) => {

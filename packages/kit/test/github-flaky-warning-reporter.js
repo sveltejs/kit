@@ -30,6 +30,6 @@ export default class GithubFlakyWarningReporter {
 	}
 
 	printsToStdio() {
-		return true;
+		return false;
 	}
 }

@@ -1,8 +1,10 @@
 import { json } from '@sveltejs/kit';
-import { count } from '../state.js';
 
-export function GET({ setHeaders }) {
+export function GET({ setHeaders, cookies }) {
 	setHeaders({ 'cache-control': 'public, max-age=4', age: '2' });
+
+	const count = +(cookies.get('cache-control-force-count') ?? 0);
+
 	return json({ count });
 }
 

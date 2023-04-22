@@ -5,10 +5,12 @@
 	export let data;
 
 	async function update() {
+		window.update_state += 1;
 		await fetch('/load/cache-control/default/increment');
-		invalidate('/load/cache-control/default/count');
+		await invalidate('/load/cache-control/default/count');
+		window.update_state += 1;
 	}
 </script>
 
-<p>Count is {data.count}</p>
+<p class="counter">Count is {data.count}</p>
 <button on:click={update}>update</button>
