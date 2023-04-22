@@ -107,6 +107,8 @@ export function create_client(app, target) {
 	let autoscroll = true;
 	let updating = false;
 	let navigating = false;
+	/** @type {import('types').Navigation | null} */
+	let external_link = null;
 	let hash_navigating = false;
 
 	let force_invalidation = false;
@@ -1430,6 +1432,7 @@ export function create_client(app, target) {
 			// scrolling position.
 			addEventListener('beforeunload', (e) => {
 				let should_block = false;
+				console.log(e);
 
 				persist_state();
 
@@ -1443,11 +1446,12 @@ export function create_client(app, target) {
 							route: { id: current.route?.id ?? null },
 							url: current.url
 						},
-						to: null,
+						to: external_link?.to ?? null,
 						willUnload: true,
-						type: 'leave',
+						type: external_link?.type ?? 'leave',
 						cancel: () => (should_block = true)
 					};
+					external_link = null;
 
 					callbacks.before_navigate.forEach((fn) => fn(navigation));
 				}
@@ -1512,16 +1516,23 @@ export function create_client(app, target) {
 
 				if (download) return;
 
-				// Ignore the following but fire beforeNavigate
 				if (external || options.reload) {
-					if (before_navigate({ url, type: 'link' })) {
-						// set `navigating` to `true` to prevent `beforeNavigate` callbacks
-						// being called when the page unloads
-						navigating = true;
-					} else {
-						event.preventDefault();
-					}
-
+					// we can handle the navigation in the `beforeunload` event handler
+					// if it's really an external link and not a download.
+					external_link = {
+						from: {
+							params: current.params,
+							route: { id: current.route?.id ?? null },
+							url: current.url
+						},
+						to: {
+							params: null,
+							route: { id: null },
+							url
+						},
+						type: 'link',
+						willUnload: true
+					};
 					return;
 				}
 
