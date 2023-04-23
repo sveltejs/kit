@@ -1737,12 +1737,12 @@ export function create_client(app, target) {
 				/** @type {Array<import('./types').BranchNode | undefined>} */
 				const branch = await Promise.all(branch_promises);
 
-				const parsed_route = routes.find(({ id }) => id === route.id) ?? null;
+				const parsed_route = routes.find(({ id }) => id === route.id);
 
 				// server-side will have compacted the branch, reinstate empty slots
 				// so that error boundaries can be lined up correctly
 				if (parsed_route) {
-					const layouts = parsed_route?.layouts;
+					const layouts = parsed_route.layouts;
 					for (let i = 0; i < layouts.length; i++) {
 						if (!layouts[i]) {
 							branch.splice(i, 0, undefined);
@@ -1757,7 +1757,7 @@ export function create_client(app, target) {
 					status,
 					error,
 					form,
-					route: parsed_route
+					route: parsed_route ?? null
 				});
 			} catch (error) {
 				if (error instanceof Redirect) {
