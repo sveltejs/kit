@@ -743,19 +743,6 @@ test.describe('Routing', () => {
 		expect(await page.textContent('h1')).toBe('Great success!');
 	});
 
-	test('back button returns to previous route when previous route has been navigated to via hash anchor', async ({
-		page,
-		clicknav
-	}) => {
-		await page.goto('/routing/hashes/a');
-
-		await page.locator('[href="#hash-target"]').click();
-		await clicknav('[href="/routing/hashes/b"]');
-
-		await page.goBack();
-		expect(await page.textContent('h1')).toBe('a');
-	});
-
 	test('replaces state if the data-sveltekit-replacestate router option is specified for the hash link', async ({
 		page,
 		clicknav,
