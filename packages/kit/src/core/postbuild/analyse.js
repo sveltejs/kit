@@ -68,7 +68,7 @@ async function analyse({ manifest_path, env }) {
 		/** @type {Array<'GET' | 'POST'>} */
 		const page_methods = [];
 
-		/** @type {import('types').HttpMethod[]} */
+		/** @type {(import('types').HttpMethod | *)[]} */
 		const api_methods = [];
 
 		/** @type {import('types').PrerenderOption | undefined} */
@@ -98,6 +98,10 @@ async function analyse({ manifest_path, env }) {
 			if (mod.PATCH) api_methods.push('PATCH');
 			if (mod.DELETE) api_methods.push('DELETE');
 			if (mod.OPTIONS) api_methods.push('OPTIONS');
+
+			if (mod.all) {
+				api_methods.push('*');
+			}
 
 			config = mod.config;
 			entries = mod.entries;
