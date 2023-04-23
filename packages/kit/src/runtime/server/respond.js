@@ -366,7 +366,6 @@ export async function respond(request, options, manifest, state) {
 				/** @type {Response} */
 				let response;
 
-				let mod = {};
 				if (is_data_request) {
 					response = await render_data(
 						event,
@@ -378,11 +377,12 @@ export async function respond(request, options, manifest, state) {
 						trailing_slash ?? 'never'
 					);
 				} else if (route.endpoint && (!route.page || is_endpoint_request(event))) {
-					mod = await route.endpoint();
-					response = await render_endpoint(event, mod, state);
+					response = await render_endpoint(event, await route.endpoint(), state);
 				} else if (route.page && page_methods.includes(method)) {
 					response = await render_page(event, route.page, options, manifest, state, resolve_opts);
 				} else {
+					// not a valid endpoint request and no page exists.
+					const mod = route.endpoint ? await route.endpoint() : {};
 					return method_not_allowed(mod, method);
 				}
 

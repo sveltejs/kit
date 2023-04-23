@@ -413,8 +413,8 @@ test.describe('Load', () => {
 		expect(await page.textContent('h1')).toBe(`origin: ${new URL(baseURL).origin}`);
 	});
 
-	test('does not run when co-located with server endpoint', async ({ request }) => {
-		const url = '/endpoint-output/co-located';
+	test('does not run when using invalid request methods', async ({ request }) => {
+		const url = '/load';
 
 		var response = await request.fetch(url, {
 			method: 'OPTIONS'
