@@ -11,7 +11,7 @@
 		navigation_type = type;
 
 		// we don't want the beforeunload alert to pop up for downloads.
-		if (to?.route.id?.includes("download")) return;
+		if (to?.route.id?.includes('download')) return;
 
 		if (!to?.route.id?.includes('redirect')) {
 			cancel();

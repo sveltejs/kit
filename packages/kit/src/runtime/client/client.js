@@ -1432,7 +1432,6 @@ export function create_client(app, target) {
 			// scrolling position.
 			addEventListener('beforeunload', (e) => {
 				let should_block = false;
-				console.log(e);
 
 				persist_state();
 
