@@ -1063,6 +1063,7 @@ export function create_client(app, target) {
 		if (details) {
 			const change = details.replaceState ? 0 : 1;
 			details.state[INDEX_KEY] = current_history_index += change;
+			console.log('details.replaceState', details.replaceState);
 			history[details.replaceState ? 'replaceState' : 'pushState'](details.state, '', url);
 
 			if (!details.replaceState) {
@@ -1532,7 +1533,6 @@ export function create_client(app, target) {
 				if (hash !== undefined && nonhash === location.href.split('#')[0]) {
 					// set this flag to distinguish between navigations triggered by
 					// clicking a hash link and those triggered by popstate
-					// TODO why not update history here directly?
 					hash_navigating = true;
 
 					update_scroll_positions(current_history_index);
@@ -1541,7 +1541,11 @@ export function create_client(app, target) {
 					stores.page.set({ ...page, url });
 					stores.page.notify();
 
-					return;
+					if (!options.replace_state) return;
+
+					// hashchange event shouldn't occur if the router is replacing state.
+					hash_navigating = false;
+					event.preventDefault();
 				}
 
 				navigate({
@@ -1658,6 +1662,7 @@ export function create_client(app, target) {
 			});
 
 			addEventListener('hashchange', () => {
+				console.log('hashchange');
 				// if the hashchange happened as a result of clicking on a link,
 				// we need to update history, otherwise we have to leave it alone
 				if (hash_navigating) {

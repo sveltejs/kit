@@ -11,7 +11,7 @@
 		"test:dev": "rimraf test/errors.json && cross-env DEV=true playwright test",
 		"test:build": "rimraf test/errors.json && playwright test",
 		"test:cross-platform:dev": "node test/setup.js && rimraf test/errors.json && cross-env DEV=true playwright test test/cross-platform/",
-		"test:cross-platform:build": "node test/setup.js && rimraf test/errors.json && playwright test test/cross-platform/"
+		"test:cross-platform:build": "node test/setup.js && rimraf test/errors.json && KIT_E2E_BROWSER=webkit playwright test test/cross-platform/"
 	},
 	"devDependencies": {
 		"@sveltejs/kit": "workspace:^",

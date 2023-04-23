@@ -756,6 +756,20 @@ test.describe('Routing', () => {
 		expect(await page.textContent('h1')).toBe('a');
 	});
 
+	test('replaces state if the data-sveltekit-replacestate router option is specified for the hash link', async ({
+		page,
+		clicknav,
+		baseURL
+	}) => {
+		await page.goto('/routing/hashes/a');
+
+		await clicknav('[href="#hash-target"]');
+		await clicknav('[href="#replace-state"]');
+
+		await page.goBack();
+		expect(await page.url()).toBe(`${baseURL}/routing/hashes/a`);
+	});
+
 	test('focus works if page load has hash', async ({ page, browserName }) => {
 		await page.goto('/routing/hashes/target#p2');
 
