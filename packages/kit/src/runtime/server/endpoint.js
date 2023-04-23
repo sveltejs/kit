@@ -88,8 +88,6 @@ export function is_endpoint_request(event) {
 	// use:enhance uses a custom header to disambiguate
 	if (method === 'POST' && headers.get('x-sveltekit-action') === 'true') return false;
 
-	console.log(event.request.headers.get('accept'));
-
 	// GET/POST requests may be for endpoints or pages. We prefer endpoints if this isn't a text/html request
 	const accept = event.request.headers.get('accept') ?? '*/*';
 	return negotiate(accept, ['*', 'text/html']) !== 'text/html';
