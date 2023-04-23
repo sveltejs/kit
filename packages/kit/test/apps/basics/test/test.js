@@ -1067,7 +1067,7 @@ test.describe('Actions', () => {
 		await expect(page.locator('h1')).toHaveText('400');
 	});
 
-	test.only('errors are rendered at the correct level', async ({ page }) => {
+	test('errors are rendered at the correct level', async ({ page }) => {
 		await page.goto('/actions/form-errors/adjacent-error-boundary');
 		await page.locator('button').click();
 
