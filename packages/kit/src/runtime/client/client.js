@@ -1063,7 +1063,6 @@ export function create_client(app, target) {
 		if (details) {
 			const change = details.replaceState ? 0 : 1;
 			details.state[INDEX_KEY] = current_history_index += change;
-			console.log('details.replaceState', details.replaceState);
 			history[details.replaceState ? 'replaceState' : 'pushState'](details.state, '', url);
 
 			if (!details.replaceState) {
@@ -1662,7 +1661,6 @@ export function create_client(app, target) {
 			});
 
 			addEventListener('hashchange', () => {
-				console.log('hashchange');
 				// if the hashchange happened as a result of clicking on a link,
 				// we need to update history, otherwise we have to leave it alone
 				if (hash_navigating) {
