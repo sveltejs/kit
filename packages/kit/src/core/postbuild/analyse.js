@@ -94,7 +94,7 @@ async function analyse({ manifest_path, env }) {
 			}
 
 			Object.values(mod).forEach((/** @type {import('types').HttpMethod} */ method) => {
-				if (mod[method] && ENDPOINT_METHODS.includes(method)) {
+				if (mod[method] && ENDPOINT_METHODS.has(method)) {
 					api_methods.push(method);
 				}
 			});

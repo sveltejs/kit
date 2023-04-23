@@ -35,7 +35,7 @@ export function method_not_allowed(mod, method) {
 
 /** @param {Partial<Record<import('types').HttpMethod, any>>} mod */
 export function allowed_methods(mod) {
-	const allowed = ENDPOINT_METHODS.filter((method) => method in mod);
+	const allowed = Array.from(ENDPOINT_METHODS).filter((method) => method in mod);
 
 	if ('GET' in mod || 'HEAD' in mod) allowed.push('HEAD');
 
