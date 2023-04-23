@@ -1,7 +1,6 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { normalizePath } from 'vite';
-import { ENDPOINT_METHODS } from '../../../constants';
 
 /**
  * Adds transitive JS and CSS dependencies to the js and css inputs.
@@ -90,13 +89,4 @@ export function resolve_symlinks(manifest, file) {
  */
 export function assets_base(config) {
 	return (config.paths.assets || config.paths.base || '.') + '/';
-}
-
-// If we'd written this in TypeScript, it could be easy...
-/**
- * @param {string} str
- * @returns {str is import('types').HttpMethod}
- */
-export function is_http_method(str) {
-	return ENDPOINT_METHODS.has(str);
 }
