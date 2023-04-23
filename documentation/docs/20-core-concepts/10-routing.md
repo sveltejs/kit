@@ -325,6 +325,26 @@ export async function POST({ request }) {
 
 > In general, [form actions](form-actions) are a better way to submit data from the browser to the server.
 
+### Catch-all method
+
+Exporting the `all` handler will match any unhandled request methods.
+
+```js
+/// file: src/routes/api/add/+server.js
+import { json, text } from '@sveltejs/kit';
+
+export async function POST({ request }) {
+	const { a, b } = await request.json();
+	return json(a + b);
+}
+
+// This handler will respond to PUT, PATCH, DELETE, etc.
+/** @type {import('./$types').RequestHandler} */
+export async function all({ request }) {
+	return text(`I caught your ${request.method} request!`);
+}
+```
+
 ### Content negotiation
 
 `+server.js` files can be placed in the same directory as `+page` files, allowing the same route to be either a page or an API endpoint. To determine which, SvelteKit applies the following rules:
