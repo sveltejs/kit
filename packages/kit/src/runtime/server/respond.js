@@ -5,7 +5,7 @@ import { render_page } from './page/index.js';
 import { render_response } from './page/render.js';
 import { respond_with_error } from './page/respond_with_error.js';
 import { is_form_content_type } from '../../utils/http.js';
-import { handle_fatal_error, redirect_response } from './utils.js';
+import { handle_fatal_error, method_not_allowed, redirect_response } from './utils.js';
 import {
 	decode_pathname,
 	decode_params,
@@ -360,9 +360,13 @@ export async function respond(request, options, manifest, state) {
 			}
 
 			if (route) {
+				const page_methods = ['GET', 'HEAD', 'POST'];
+				const method = /** @type {import('types').HttpMethod} */ (event.request.method);
+
 				/** @type {Response} */
 				let response;
 
+				let mod = {};
 				if (is_data_request) {
 					response = await render_data(
 						event,
@@ -374,13 +378,12 @@ export async function respond(request, options, manifest, state) {
 						trailing_slash ?? 'never'
 					);
 				} else if (route.endpoint && (!route.page || is_endpoint_request(event))) {
-					response = await render_endpoint(event, await route.endpoint(), state);
-				} else if (route.page) {
+					mod = await route.endpoint();
+					response = await render_endpoint(event, mod, state);
+				} else if (route.page && page_methods.includes(method)) {
 					response = await render_page(event, route.page, options, manifest, state, resolve_opts);
 				} else {
-					// a route will always have a page or an endpoint, but TypeScript
-					// doesn't know that
-					throw new Error('This should never happen');
+					return method_not_allowed(mod, method);
 				}
 
 				return response;
