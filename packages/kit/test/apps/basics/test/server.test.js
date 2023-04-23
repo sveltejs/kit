@@ -412,6 +412,17 @@ test.describe('Load', () => {
 		await page.goto(`/load/fetch-origin-external?port=${port}`);
 		expect(await page.textContent('h1')).toBe(`origin: ${new URL(baseURL).origin}`);
 	});
+
+	test('does not run when co-located with server endpoint', async ({ request }) => {
+		const url = '/endpoint-output/co-located';
+
+		var response = await request.fetch(url, {
+			method: 'OPTIONS'
+		});
+
+		expect(response.status()).toBe(405);
+		expect(await response.text()).toBe('OPTIONS method not allowed');
+	});
 });
 
 test.describe('Routing', () => {
