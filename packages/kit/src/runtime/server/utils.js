@@ -4,6 +4,7 @@ import { coalesce_to_error } from '../../utils/error.js';
 import { negotiate } from '../../utils/http.js';
 import { HttpError } from '../control.js';
 import { fix_stack_trace } from '../shared-server.js';
+import { ENDPOINT_METHODS } from '../../constants.js';
 
 /** @param {any} body */
 export function is_pojo(body) {
@@ -34,9 +35,7 @@ export function method_not_allowed(mod, method) {
 
 /** @param {Partial<Record<import('types').HttpMethod, any>>} mod */
 export function allowed_methods(mod) {
-	const allowed = ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'].filter(
-		(method) => method in mod
-	);
+	const allowed = ENDPOINT_METHODS.filter((method) => method in mod);
 
 	if ('GET' in mod || 'HEAD' in mod) allowed.push('HEAD');
 

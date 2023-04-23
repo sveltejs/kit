@@ -190,7 +190,7 @@ test.describe('Endpoints', () => {
 	});
 
 	test('OPTIONS handler', async ({ request }) => {
-		const url = '/endpoint-output/options';
+		const url = '/endpoint-output';
 
 		const response = await request.fetch(url, {
 			method: 'OPTIONS'
@@ -198,6 +198,32 @@ test.describe('Endpoints', () => {
 
 		expect(response.status()).toBe(200);
 		expect(await response.text()).toBe('ok');
+	});
+
+	test('HEAD handler', async ({ request }) => {
+		const url = '/endpoint-output/head-handler';
+
+		const page_response = await request.fetch(url, {
+			method: 'HEAD',
+			headers: {
+				accept: 'text/html'
+			}
+		});
+
+		expect(page_response.status()).toBe(200);
+		expect(await page_response.text()).toBe('');
+		expect(page_response.headers()['x-sveltekit-page']).toBe('true');
+
+		const endpoint_response = await request.fetch(url, {
+			method: 'HEAD',
+			headers: {
+				accept: 'application/json'
+			}
+		});
+
+		expect(endpoint_response.status()).toBe(200);
+		expect(await endpoint_response.text()).toBe('');
+		expect(endpoint_response.headers()['x-sveltekit-head-endpoint']).toBe('true');
 	});
 });
 
