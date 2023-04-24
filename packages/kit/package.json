@@ -11,7 +11,7 @@
 	"homepage": "https://kit.svelte.dev",
 	"type": "module",
 	"dependencies": {
-		"@sveltejs/vite-plugin-svelte": "^2.0.0",
+		"@sveltejs/vite-plugin-svelte": "^2.1.0",
 		"@types/cookie": "^0.5.1",
 		"cookie": "^0.5.0",
 		"devalue": "^4.3.0",
