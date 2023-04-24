@@ -2,4 +2,4 @@
 '@sveltejs/kit': patch
 ---
 
-fix: trailing slash on \_\_data.json request
+fix: compute trailing slash on page server / data request
