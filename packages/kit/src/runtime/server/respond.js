@@ -324,7 +324,7 @@ export async function respond(request, options, manifest, state) {
 		}
 		return await handle_fatal_error(event, options, e);
 	}
-	
+
 	/**
 	 *
 	 * @param {import('types').RequestEvent} event
