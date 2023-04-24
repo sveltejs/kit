@@ -1,6 +1,11 @@
 import { Server } from 'SERVER';
 import { manifest, prerendered } from 'MANIFEST';
-import { getAssetFromKV, mapRequestToAsset } from '@cloudflare/kv-asset-handler';
+import {
+	getAssetFromKV,
+	mapRequestToAsset,
+	MethodNotAllowedError,
+	NotFoundError
+} from '@cloudflare/kv-asset-handler';
 import static_asset_manifest_json from '__STATIC_CONTENT_MANIFEST';
 const static_asset_manifest = JSON.parse(static_asset_manifest_json);
 
@@ -86,19 +91,29 @@ export default {
  * @param {any} context
  */
 async function get_asset_from_kv(req, env, context, map = mapRequestToAsset) {
-	return await getAssetFromKV(
-		{
-			request: req,
-			waitUntil(promise) {
-				return context.waitUntil(promise);
+	try {
+		return await getAssetFromKV(
+			{
+				request: req,
+				waitUntil(promise) {
+					return context.waitUntil(promise);
+				}
+			},
+			{
+				ASSET_NAMESPACE: env.__STATIC_CONTENT,
+				ASSET_MANIFEST: static_asset_manifest,
+				mapRequestToAsset: map
 			}
-		},
-		{
-			ASSET_NAMESPACE: env.__STATIC_CONTENT,
-			ASSET_MANIFEST: static_asset_manifest,
-			mapRequestToAsset: map
+		);
+	} catch (e) {
+		if (e instanceof NotFoundError) {
+			return new Response('Not found', { status: 404 });
+		} else if (e instanceof MethodNotAllowedError) {
+			return new Response('Method not allowed', { status: 405 });
+		} else {
+			return new Response('Internal Error', { status: 500 });
 		}
-	);
+	}
 }
 
 /**
