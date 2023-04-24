@@ -1,5 +1,13 @@
 # create-svelte
 
+## 3.3.1
+
+### Patch Changes
+
+- feat: upgrade to Vite 4.3 for faster build times ([#9737](https://github.com/sveltejs/kit/pull/9737))
+
+- fix: generate tsconfig/jsconfig correctly for library option ([#9712](https://github.com/sveltejs/kit/pull/9712))
+
 ## 3.3.0
 
 ### Minor Changes
