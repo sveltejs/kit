@@ -2,7 +2,7 @@
 	import { base } from '$app/paths';
 	import Logotype from './svelte-kit-logotype.svg.svelte';
 	import Image from '$lib/Image.svelte';
-	import background from './svelte-kit-machine.webp?w=1440;960&format=avif;webp;png&picture';
+	import background from './svelte-kit-machine.webp?w=1440;960';
 </script>
 
 <section class="hero">

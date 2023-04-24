@@ -2,7 +2,17 @@ import { sveltekit } from '@sveltejs/kit/vite';
 import * as path from 'path';
 import { imagetools } from 'vite-imagetools';
 
-const supportedExtensions = ['.png', '.jpg', '.jpeg'];
+const fallback = {
+	'.heic': 'jpg',
+	'.heif': 'jpg',
+	'.avif': 'png',
+	'.jpeg': 'jpg',
+	'.jpg':  'jpg',
+	'.png':  'png',
+	'.tiff': 'jpg',
+	'.webp': 'png',
+	'.gif':  'gif'
+};
 
 /** @type {import('vite').UserConfig} */
 const config = {
@@ -13,14 +23,13 @@ const config = {
 	plugins: [
 		imagetools({
 			defaultDirectives: (url) => {
-				const extension = path.extname(url.pathname);
-				if (supportedExtensions.includes(extension)) {
-					return new URLSearchParams({
-						format: 'avif;webp;' + extension.slice(1),
-						picture: true
-					});
+				const ext = path.extname(url.pathname);
+				const params = new URLSearchParams();
+				params.set('format', 'avif;webp;' + fallback[ext]);
+				if (!params.has('meta') && !params.has('metadata') && !params.has('source') && !params.has('srcset') && !params.has('url')) {
+					params.set('picture', true);
 				}
-				return new URLSearchParams();
+				return params;
 			}
 		}),
 		sveltekit()
