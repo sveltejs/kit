@@ -325,6 +325,8 @@ export async function POST({ request }) {
 
 > In general, [form actions](form-actions) are a better way to submit data from the browser to the server.
 
+> If a `GET` handler is exported, a `HEAD` request will return the `content-length` of the `GET` handler's response body.
+
 ### Catch-all method
 
 Exporting the `all` handler will match any unhandled request methods.
@@ -344,6 +346,8 @@ export async function all({ request }) {
 	return text(`I caught your ${request.method} request!`);
 }
 ```
+
+> The `all` handler will also override the implicit `HEAD` handler that is added when a `GET` handler is exported.
 
 ### Content negotiation
 
