@@ -39,6 +39,8 @@ const default_filter = () => false;
 /** @type {import('types').RequiredResolveOptions['preload']} */
 const default_preload = ({ type }) => type === 'js' || type === 'css';
 
+const page_methods = ['GET', 'HEAD', 'POST'];
+
 /**
  * @param {Request} request
  * @param {import('types').SSROptions} options
@@ -322,7 +324,7 @@ export async function respond(request, options, manifest, state) {
 		}
 		return await handle_fatal_error(event, options, e);
 	}
-
+	
 	/**
 	 *
 	 * @param {import('types').RequestEvent} event
@@ -360,7 +362,6 @@ export async function respond(request, options, manifest, state) {
 			}
 
 			if (route) {
-				const page_methods = ['GET', 'HEAD', 'POST'];
 				const method = /** @type {import('types').HttpMethod} */ (event.request.method);
 
 				/** @type {Response} */
