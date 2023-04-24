@@ -1,5 +1,13 @@
 # @sveltejs/kit
 
+## 1.15.8
+
+### Patch Changes
+
+- chore: revert undici pin and upgrade version ([#9740](https://github.com/sveltejs/kit/pull/9740))
+
+- chore: upgrade vite-plugin-svelte for resolve improvements and warnings ([#9742](https://github.com/sveltejs/kit/pull/9742))
+
 ## 1.15.7
 
 ### Patch Changes
