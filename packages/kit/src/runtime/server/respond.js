@@ -326,7 +326,6 @@ export async function respond(request, options, manifest, state) {
 	}
 
 	/**
-	 *
 	 * @param {import('types').RequestEvent} event
 	 * @param {import('types').ResolveOptions} [opts]
 	 */
