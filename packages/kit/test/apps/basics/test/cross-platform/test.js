@@ -963,16 +963,18 @@ test.describe('Routing', () => {
 		});
 	}
 
-	test('trailing slash is correct in url.pathname in __data.json (always)', async ({ request }) => {
-		const r = await request.get('/routing/trailing-slash-ssr/always/__data.json');
-		const data = await r.json();
-		expect(data.nodes[1].data[1]).toBe('/routing/trailing-slash-ssr/always/');
+	test('trailing slash server with config always', async ({ page, clicknav }) => {
+		await page.goto('/routing/trailing-slash-server');
+		await clicknav('[href="/routing/trailing-slash-server/always"]');
+		expect(await page.textContent('[data-test-id="pathname-store"]')).toBe('/routing/trailing-slash-server/always/');
+		expect(await page.textContent('[data-test-id="pathname-data"]')).toBe('/routing/trailing-slash-server/always/');
 	});
 
-	test('trailing slash is correct in url.pathname in __data.json (never)', async ({ request }) => {
-		const r = await request.get('/routing/trailing-slash-ssr/never/__data.json');
-		const data = await r.json();
-		expect(data.nodes[1].data[1]).toBe('/routing/trailing-slash-ssr/never');
+	test('trailing slash server with config never', async ({ page, clicknav }) => {
+		await page.goto('/routing/trailing-slash-server');
+		await clicknav('[href="/routing/trailing-slash-server/never/"]');
+		expect(await page.textContent('[data-test-id="pathname-store"]')).toBe('/routing/trailing-slash-server/never');
+		expect(await page.textContent('[data-test-id="pathname-data"]')).toBe('/routing/trailing-slash-server/never');
 	});
 });
 
