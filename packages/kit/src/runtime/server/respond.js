@@ -388,7 +388,7 @@ export async function respond(request, options, manifest, state) {
 					const allowed_methods = new Set(allowed_page_methods);
 
 					const node = await manifest._.nodes[route.page.leaf]();
-					if (!node?.server?.actions) {
+					if (node?.server?.actions) {
 						allowed_methods.add('POST');
 					}
 
