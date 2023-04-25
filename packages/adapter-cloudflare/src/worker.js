@@ -57,11 +57,7 @@ const worker = {
 		pragma = res.headers.get('cache-control');
 
 		// only save good responses to Cache
-		if (should_cache(res)) {
-			return Cache.save(req, res, context);
-		}
-
-		return res;
+		return should_cache(res) ? Cache.save(req, res, context) : res;
 	}
 };
 
