@@ -139,6 +139,15 @@ export async function sveltekit() {
 		...svelte_config.vitePlugin
 	};
 
+	// Set `appendTo` if user enables the inspector so it mounts correctly
+	const inspectorOptions = vite_plugin_svelte_options.inspector;
+	if (inspectorOptions) {
+		vite_plugin_svelte_options.inspector = {
+			appendTo: '/generated/root.svelte',
+			...(inspectorOptions === true ? {} : inspectorOptions)
+		};
+	}
+
 	return [...svelte(vite_plugin_svelte_options), ...kit({ svelte_config })];
 }
 
