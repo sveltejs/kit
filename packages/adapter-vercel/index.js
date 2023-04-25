@@ -1,9 +1,10 @@
 import fs from 'node:fs';
 import path from 'node:path';
-import { fileURLToPath } from 'node:url';
+import { fileURLToPath, pathToFileURL } from 'node:url';
 import { nodeFileTrace } from '@vercel/nft';
 import esbuild from 'esbuild';
 import { get_pathname } from './utils.js';
+import { resolve } from 'import-meta-resolve';
 
 const VALID_RUNTIMES = ['edge', 'nodejs16.x', 'nodejs18.x'];
 
@@ -55,7 +56,7 @@ const plugin = function (defaults = {}) {
 				functions: `${dir}/functions`
 			};
 
-			const static_config = static_vercel_config(builder);
+			const static_config = await static_vercel_config(builder);
 
 			builder.log.minor('Generating serverless function...');
 
@@ -374,7 +375,7 @@ function write(file, data) {
 
 // This function is duplicated in adapter-static
 /** @param {import('@sveltejs/kit').Builder} builder */
-function static_vercel_config(builder) {
+async function static_vercel_config(builder) {
 	/** @type {any[]} */
 	const prerendered_redirects = [];
 
@@ -412,8 +413,36 @@ function static_vercel_config(builder) {
 		overrides[page.file] = { path: overrides_path };
 	}
 
+	/** @type {Record<string, any> | undefined} */
+	let images = undefined;
+	try {
+		/** @param {string} name */
+		async function import_from_cwd(name) {
+			const cwd = pathToFileURL(process.cwd()).href;
+			const url = await resolve(name, cwd + '/x.js');
+
+			return import(url);
+		}
+
+		await import_from_cwd('@sveltejs/image/vite');
+
+		const deviceSizes = [640, 750, 828, 1080, 1200, 1920, 2048, 3840];
+		const sizes = [96, 128, 256, 384, ...deviceSizes]; // lower because images could be 33% width on a mobile phone
+
+		// TODO how to find out that the provider was set up to something else?
+		images = {
+			sizes, // TODO how to keep in sync with @sveltejs/image? -> we could do @sveltejs/image/providers/vercel and export defaults from there
+			domains: [], // TODO how to access this from vite config? -> SvelteKit plugin needs to be aware of the vite plugin and pass it on
+			formats: ['image/avif', 'image/webp'],
+			minimumCacheTTL: 60
+		};
+	} catch (e) {
+		// no image optimization
+	}
+
 	return {
 		version: 3,
+		images,
 		routes: [
 			...prerendered_redirects,
 			{

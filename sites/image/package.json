@@ -1,0 +1,18 @@
+{
+	"name": "image",
+	"version": "0.0.1",
+	"private": true,
+	"scripts": {
+		"dev": "vite dev",
+		"build": "vite build",
+		"preview": "vite preview"
+	},
+	"devDependencies": {
+		"@sveltejs/adapter-vercel": "workspace:^",
+		"@sveltejs/kit": "workspace:^",
+		"@sveltejs/image": "workspace:^",
+		"svelte": "^3.54.0",
+		"vite": "^4.3.0"
+	},
+	"type": "module"
+}

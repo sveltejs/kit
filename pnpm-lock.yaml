@@ -264,6 +264,9 @@ importers:
       esbuild:
         specifier: ^0.16.3
         version: 0.16.3
+      import-meta-resolve:
+        specifier: ^3.0.0
+        version: 3.0.0
     devDependencies:
       '@sveltejs/kit':
         specifier: workspace:^
@@ -357,6 +360,40 @@ importers:
       '@sveltejs/adapter-auto':
         specifier: workspace:*
         version: link:../../../adapter-auto
+
+  packages/image:
+    dependencies:
+      esm-env:
+        specifier: ^1.0.0
+        version: 1.0.0
+    devDependencies:
+      '@playwright/test':
+        specifier: 1.30.0
+        version: 1.30.0
+      '@sveltejs/kit':
+        specifier: workspace:^
+        version: link:../kit
+      '@types/node':
+        specifier: ^16.18.6
+        version: 16.18.6
+      rollup:
+        specifier: ^3.7.0
+        version: 3.7.0
+      svelte:
+        specifier: ^3.56.0
+        version: 3.56.0
+      svelte-preprocess:
+        specifier: ^5.0.0
+        version: 5.0.0(svelte@3.56.0)(typescript@4.9.4)
+      typescript:
+        specifier: ^4.9.4
+        version: 4.9.4
+      uvu:
+        specifier: ^0.5.6
+        version: 0.5.6
+      vite:
+        specifier: ^4.3.0
+        version: 4.3.0(@types/node@16.18.6)
 
   packages/kit:
     dependencies:
@@ -939,6 +976,24 @@ importers:
       uvu:
         specifier: ^0.5.6
         version: 0.5.6
+
+  sites/image:
+    devDependencies:
+      '@sveltejs/adapter-vercel':
+        specifier: workspace:^
+        version: link:../../packages/adapter-vercel
+      '@sveltejs/image':
+        specifier: workspace:^
+        version: link:../../packages/image
+      '@sveltejs/kit':
+        specifier: workspace:^
+        version: link:../../packages/kit
+      svelte:
+        specifier: ^3.54.0
+        version: 3.56.0
+      vite:
+        specifier: ^4.3.0
+        version: 4.3.0(@types/node@16.18.6)
 
   sites/kit.svelte.dev:
     dependencies:
@@ -1896,7 +1951,7 @@ packages:
   /@types/connect@3.4.35:
     resolution: {integrity: sha512-cdeYyv4KWoEgpBISTxWvqYsVy444DOqehiF3fM3ne10AmJ62RSyNkUnxMJXHQWRQQX2eR94m5y1IZyDwBjV9FQ==}
     dependencies:
-      '@types/node': 18.11.11
+      '@types/node': 16.18.6
     dev: true
 
   /@types/cookie@0.5.1:
