@@ -1004,8 +1004,8 @@ importers:
         specifier: ^4.3.0
         version: 4.3.0(@types/node@16.18.6)
       vite-imagetools:
-        specifier: ^4.0.16
-        version: 4.0.16(rollup@3.7.0)
+        specifier: ^4.0.19
+        version: 4.0.19(rollup@3.7.0)
 
 packages:
 
@@ -2122,7 +2122,7 @@ packages:
       debug: 4.3.4
       globby: 11.1.0
       is-glob: 4.0.3
-      semver: 7.3.8
+      semver: 7.5.0
       tsutils: 3.21.0(typescript@4.9.4)
       typescript: 4.9.4
     transitivePeerDependencies:
@@ -2164,7 +2164,7 @@ packages:
       eslint: 8.33.0
       eslint-scope: 5.1.1
       eslint-utils: 3.0.0(eslint@8.33.0)
-      semver: 7.3.8
+      semver: 7.5.0
     transitivePeerDependencies:
       - supports-color
       - typescript
@@ -4258,7 +4258,7 @@ packages:
     resolution: {integrity: sha512-qWO5l3SCqbwQavymOmtTVuCWZE23++S+rxyoHjXqUmPyzRcaoI4lA2gO55/drddGnedAyjA7sk76SfQ5lfUMnw==}
     engines: {node: '>=10'}
     dependencies:
-      semver: 7.3.8
+      semver: 7.5.0
     dev: true
 
   /node-addon-api@5.0.0:
@@ -4989,7 +4989,7 @@ packages:
       detect-libc: 2.0.1
       node-addon-api: 5.0.0
       prebuild-install: 7.1.1
-      semver: 7.3.8
+      semver: 7.5.0
       simple-get: 4.0.1
       tar-fs: 2.1.1
       tunnel-agent: 0.6.0
@@ -5690,8 +5690,8 @@ packages:
       spdx-expression-parse: 3.0.1
     dev: true
 
-  /vite-imagetools@4.0.16(rollup@3.7.0):
-    resolution: {integrity: sha512-kjTIcscDYEXLxTeCRVZVArygEOgFBoG6pno6H6wBpq6R07Lov/zRDG7UX/yw3DgMFzeVPWJW8YuItT7M0puSDw==}
+  /vite-imagetools@4.0.19(rollup@3.7.0):
+    resolution: {integrity: sha512-vZaPsjLDgEqZrbj+ZsniRKthmoj4mvVrMOK/FZhRAbrVB4LOsil0BO2Gcq20e/JRlom4DzqtLw1UQUkfcqgCrA==}
     engines: {node: '>=12.0.0'}
     dependencies:
       '@rollup/pluginutils': 5.0.2(rollup@3.7.0)
