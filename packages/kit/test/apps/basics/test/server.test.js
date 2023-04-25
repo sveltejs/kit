@@ -431,7 +431,7 @@ test.describe('Load', () => {
 
 		expect(response.status()).toBe(204);
 		expect(await response.text()).toBe('');
-		expect(response.headers()['allow']).toBe('GET, HEAD, POST, OPTIONS');
+		expect(response.headers()['allow']).toBe('GET, HEAD, OPTIONS, POST');
 	});
 });
 
