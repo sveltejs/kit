@@ -67,15 +67,7 @@ const worker = {
  */
 function should_cache(res) {
 	const cacheControl = res.headers.get('cache-control');
-	return cacheControl && res.ok && !is_error(res.status);
-}
-
-/**
- * @param {number} status
- * @returns {boolean}
- */
-function is_error(status) {
-	return status > 399;
+	return cacheControl && res.ok && res.status < 400;
 }
 
 export default worker;
