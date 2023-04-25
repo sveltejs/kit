@@ -623,6 +623,33 @@ test.describe('Routing', () => {
 		await expect(page.locator('#page-url-hash')).toHaveText('');
 	});
 
+	test('back button returns to previous route when previous route has been navigated to via hash anchor', async ({
+		page,
+		clicknav
+	}) => {
+		await page.goto('/routing/hashes/a');
+
+		await page.locator('[href="#hash-target"]').click();
+		await clicknav('[href="/routing/hashes/b"]');
+
+		await page.goBack();
+		expect(await page.textContent('h1')).toBe('a');
+	});
+
+	test('replaces state if the data-sveltekit-replacestate router option is specified for the hash link', async ({
+		page,
+		clicknav,
+		baseURL
+	}) => {
+		await page.goto('/routing/hashes/a');
+
+		await clicknav('[href="#hash-target"]');
+		await clicknav('[href="#replace-state"]');
+
+		await page.goBack();
+		expect(await page.url()).toBe(`${baseURL}/routing/hashes/a`);
+	});
+
 	test('does not normalize external path', async ({ page, start_server }) => {
 		const html_ok = '<html><head></head><body>ok</body></html>';
 		const { port } = await start_server((_req, res) => {
