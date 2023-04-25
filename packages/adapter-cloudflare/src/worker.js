@@ -53,10 +53,24 @@ const worker = {
 			});
 		}
 
-		// Writes to Cache only if allowed & specified
+		// write to Cache only if allowed & specified
 		pragma = res.headers.get('cache-control');
-		return pragma && res.ok ? Cache.save(req, res, context) : res;
+
+		// only save good responses to Cache
+		if (pragma && res.ok && !is_error(res.status)) {
+			return Cache.save(req, res, context);
+		}
+
+		return res;
 	}
 };
+
+/**
+ * @param {number} status
+ * @returns {boolean}
+ */
+function is_error(status) {
+	return status > 399;
+}
 
 export default worker;
