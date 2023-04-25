@@ -6,4 +6,4 @@
 '@sveltejs/adapter-vercel': patch
 ---
 
-fix: update dependencies
+chore: update all dependencies with minor version bumps
