@@ -381,7 +381,7 @@ export async function respond(request, options, manifest, state) {
 				} else if (route.page && page_methods.includes(method)) {
 					response = await render_page(event, route.page, options, manifest, state, resolve_opts);
 				} else {
-					// not a valid endpoint request and no page exists.
+					// we end up here if the request method is invalid for the page / endpoint.
 					const mod = route.endpoint ? await route.endpoint() : {};
 					return method_not_allowed(mod, method);
 				}
