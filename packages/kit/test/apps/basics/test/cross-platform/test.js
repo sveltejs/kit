@@ -933,6 +933,28 @@ test.describe('Routing', () => {
 			expect(await page.textContent('h1')).toBe('symlinked');
 		});
 	}
+
+	test('trailing slash server with config always', async ({ page, clicknav }) => {
+		await page.goto('/routing/trailing-slash-server');
+		await clicknav('[href="/routing/trailing-slash-server/always"]');
+		expect(await page.textContent('[data-test-id="pathname-store"]')).toBe(
+			'/routing/trailing-slash-server/always/'
+		);
+		expect(await page.textContent('[data-test-id="pathname-data"]')).toBe(
+			'/routing/trailing-slash-server/always/'
+		);
+	});
+
+	test('trailing slash server with config never', async ({ page, clicknav }) => {
+		await page.goto('/routing/trailing-slash-server');
+		await clicknav('[href="/routing/trailing-slash-server/never/"]');
+		expect(await page.textContent('[data-test-id="pathname-store"]')).toBe(
+			'/routing/trailing-slash-server/never'
+		);
+		expect(await page.textContent('[data-test-id="pathname-data"]')).toBe(
+			'/routing/trailing-slash-server/never'
+		);
+	});
 });
 
 test.describe('XSS', () => {
