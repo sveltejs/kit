@@ -47,7 +47,7 @@
 		"@rollup/plugin-node-resolve": "^15.0.1",
 		"polka": "^1.0.0-next.22",
 		"rollup": "^3.7.0",
-		"sirv": "^2.0.2"
+		"sirv": "^2.0.3"
 	},
 	"peerDependencies": {
 		"@sveltejs/kit": "^1.0.0"
