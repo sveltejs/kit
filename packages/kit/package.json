@@ -26,7 +26,7 @@
 		"undici": "~5.22.0"
 	},
 	"devDependencies": {
-		"@playwright/test": "^1.29.2",
+		"@playwright/test": "1.30.0",
 		"@types/connect": "^3.4.35",
 		"@types/marked": "^4.0.7",
 		"@types/mime": "^3.0.1",
