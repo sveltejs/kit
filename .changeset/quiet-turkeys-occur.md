@@ -2,4 +2,4 @@
 '@sveltejs/adapter-node': patch
 ---
 
-fix: distribute package without bundling dependencies
+fix: upgrade `sirv` to 2.0.3
