@@ -41,6 +41,8 @@ const default_preload = ({ type }) => type === 'js' || type === 'css';
 
 const page_methods = new Set(['GET', 'HEAD', 'POST']);
 
+const allowed_page_methods = new Set(['GET', 'HEAD', 'OPTIONS']);
+
 /**
  * @param {Request} request
  * @param {import('types').SSROptions} options
@@ -383,11 +385,11 @@ export async function respond(request, options, manifest, state) {
 					response = await render_page(event, route.page, options, manifest, state, resolve_opts);
 				} else if (route.page && method === 'OPTIONS') {
 					// if no OPTIONS endpoint exists, fallback to handling it gracefully.
-					const allowed_methods = new Set(page_methods).add('OPTIONS');
+					const allowed_methods = new Set(allowed_page_methods);
 
 					const node = await manifest._.nodes[route.page.leaf]();
 					if (!node?.server?.actions) {
-						allowed_methods.delete('POST');
+						allowed_methods.add('POST');
 					}
 
 					response = new Response(null, {
