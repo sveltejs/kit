@@ -31,7 +31,7 @@
 		"test": "uvu test .spec.js"
 	},
 	"dependencies": {
-		"@vercel/nft": "^0.22.1",
+		"@vercel/nft": "^0.22.6",
 		"esbuild": "^0.17.18"
 	},
 	"devDependencies": {

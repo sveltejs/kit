@@ -66,8 +66,8 @@ importers:
   packages/adapter-cloudflare:
     dependencies:
       '@cloudflare/workers-types':
-        specifier: ^4.20221111.1
-        version: 4.20221111.1
+        specifier: ^4.20230404.0
+        version: 4.20230404.0
       '@sveltejs/kit':
         specifier: ^1.0.0
         version: link:../kit
@@ -91,8 +91,8 @@ importers:
   packages/adapter-cloudflare-workers:
     dependencies:
       '@cloudflare/workers-types':
-        specifier: ^4.20221111.1
-        version: 4.20221111.1
+        specifier: ^4.20230404.0
+        version: 4.20230404.0
       '@iarna/toml':
         specifier: ^2.2.5
         version: 2.2.5
@@ -184,8 +184,8 @@ importers:
         specifier: ^16.18.6
         version: 16.18.6
       c8:
-        specifier: ^7.12.0
-        version: 7.12.0
+        specifier: ^7.13.0
+        version: 7.13.0
       polka:
         specifier: ^1.0.0-next.22
         version: 1.0.0-next.22
@@ -259,8 +259,8 @@ importers:
   packages/adapter-vercel:
     dependencies:
       '@vercel/nft':
-        specifier: ^0.22.1
-        version: 0.22.1
+        specifier: ^0.22.6
+        version: 0.22.6
       esbuild:
         specifier: ^0.17.18
         version: 0.17.18
@@ -1257,8 +1257,8 @@ packages:
       mime: 3.0.0
     dev: true
 
-  /@cloudflare/workers-types@4.20221111.1:
-    resolution: {integrity: sha512-BNV2wN8V6Zduvo7UzxcdjBbLQ906D2KhS804PDufLgx/sanGJCHVJMOIaLvS/b61JKtot1U7P/l1fjrjZ7/E3A==}
+  /@cloudflare/workers-types@4.20230404.0:
+    resolution: {integrity: sha512-fG3oaJX1icfsGV74nhx1+AC6opvZsGqnpx6FvrcVqQaBmCNkjKNqDRFrpasXWFiOIvysBXHKQAzsAJkBZgnM+A==}
     dev: false
 
   /@esbuild/android-arm64@0.17.18:
@@ -1640,6 +1640,14 @@ packages:
       resolve: 1.22.1
       rollup: 3.7.0
 
+  /@rollup/pluginutils@4.2.1:
+    resolution: {integrity: sha512-iKnFXr7NkdZAIHiIWE+BX5ULi/ucVFYWD6TbAV+rZctiRTY2PL6tsIKhoIOaoskiWAkgu+VsbXgUVDNLHf+InQ==}
+    engines: {node: '>= 8.0.0'}
+    dependencies:
+      estree-walker: 2.0.2
+      picomatch: 2.3.1
+    dev: false
+
   /@rollup/pluginutils@5.0.2(rollup@3.7.0):
     resolution: {integrity: sha512-pTd9rIsP92h+B6wWwFbW8RkZv4hiR/xKsqre4SIuAOaOEQRxi0lqLke9k2/7WegC85GgUs9pjmOjCUi3In4vwA==}
     engines: {node: '>=14.0.0'}
@@ -2014,11 +2022,13 @@ packages:
       - supports-color
     dev: true
 
-  /@vercel/nft@0.22.1:
-    resolution: {integrity: sha512-lYYZIoxRurqDOSoVIdBicGnpUIpfyaS5qVjdPq+EfI285WqtZK3NK/dyCkiyBul+X2U2OEhRyeMdXPCHGJbohw==}
+  /@vercel/nft@0.22.6:
+    resolution: {integrity: sha512-gTsFnnT4mGxodr4AUlW3/urY+8JKKB452LwF3m477RFUJTAaDmcz2JqFuInzvdybYIeyIv1sSONEJxsxnbQ5JQ==}
+    engines: {node: '>=14'}
     hasBin: true
     dependencies:
       '@mapbox/node-pre-gyp': 1.0.10
+      '@rollup/pluginutils': 4.2.1
       acorn: 8.8.1
       async-sema: 3.1.1
       bindings: 1.5.0
@@ -2028,7 +2038,6 @@ packages:
       micromatch: 4.0.5
       node-gyp-build: 4.5.0
       resolve-from: 5.0.0
-      rollup-pluginutils: 2.8.2
     transitivePeerDependencies:
       - encoding
       - supports-color
@@ -2242,8 +2251,8 @@ packages:
       streamsearch: 1.1.0
     dev: false
 
-  /c8@7.12.0:
-    resolution: {integrity: sha512-CtgQrHOkyxr5koX1wEUmN/5cfDa2ckbHRA4Gy5LAL0zaCFtVWJS5++n+w4/sr2GWGerBxgTjpKeDclk/Qk6W/A==}
+  /c8@7.13.0:
+    resolution: {integrity: sha512-/NL4hQTv1gBL6J6ei80zu3IiTrmePDKXKXOTLpHvcIWZTVYQlDhVWjjWvkhICylE8EwwnMVzDZugCvdx0/DIIA==}
     engines: {node: '>=10.12.0'}
     hasBin: true
     dependencies:
@@ -2953,10 +2962,6 @@ packages:
     resolution: {integrity: sha512-MMdARuVEQziNTeJD8DgMqmhwR11BRQ/cBP+pLtYdSTnf3MIO8fFeiINEbX36ZdNlfU/7A9f3gUw49B3oQsvwBA==}
     engines: {node: '>=4.0'}
     dev: true
-
-  /estree-walker@0.6.1:
-    resolution: {integrity: sha512-SqmZANLWS0mnatqbSfRP5g8OXZC12Fgg1IwNtLsyHDzJizORW4khDfjPqJZsemPWBB2uqykUah5YpQ6epsqC/w==}
-    dev: false
 
   /estree-walker@2.0.2:
     resolution: {integrity: sha512-Rfkk/Mp/DL7JVje3u18FxFujQlTNR2q6QfMSMB7AvCBx91NGj/ba3kCfza0f6dVDbw7YlRf/nDrn7pQrCCyQ/w==}
@@ -4653,12 +4658,6 @@ packages:
     dependencies:
       glob: 10.0.0
     dev: true
-
-  /rollup-pluginutils@2.8.2:
-    resolution: {integrity: sha512-EEp9NhnUkwY8aif6bxgovPHMoMoNr2FulJziTndpt5H9RdwC47GSGuII9XxpSdzVGM0GWrNPHV6ie1LTNJPaLQ==}
-    dependencies:
-      estree-walker: 0.6.1
-    dev: false
 
   /rollup@3.20.6:
     resolution: {integrity: sha512-2yEB3nQXp/tBQDN0hJScJQheXdvU2wFhh6ld7K/aiZ1vYcak6N/BKjY1QrU6BvO2JWYS8bEs14FRaxXosxy2zw==}
