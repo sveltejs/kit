@@ -39,7 +39,7 @@ const default_filter = () => false;
 /** @type {import('types').RequiredResolveOptions['preload']} */
 const default_preload = ({ type }) => type === 'js' || type === 'css';
 
-const page_methods = ['GET', 'HEAD', 'POST'];
+const page_methods = new Set(['GET', 'HEAD', 'POST']);
 
 /**
  * @param {Request} request
@@ -378,10 +378,26 @@ export async function respond(request, options, manifest, state) {
 					);
 				} else if (route.endpoint && (!route.page || is_endpoint_request(event))) {
 					response = await render_endpoint(event, await route.endpoint(), state);
-				} else if (route.page && page_methods.includes(method)) {
+				} else if (route.page && page_methods.has(method)) {
+					console.log(page_methods.has(method));
 					response = await render_page(event, route.page, options, manifest, state, resolve_opts);
+				} else if (route.page && method === 'OPTIONS') {
+					// if no OPTIONS endpoint exists, fallback to handling it gracefully.
+					const allowed_methods = new Set(page_methods).add('OPTIONS');
+
+					const node = await manifest._.nodes[route.page.leaf]();
+					if (!node?.server?.actions) {
+						allowed_methods.delete('POST');
+					}
+
+					response = new Response(null, {
+						status: 204,
+						headers: {
+							allow: Array.from(allowed_methods.values()).join(', ')
+						}
+					});
 				} else {
-					// we end up here if the request method is invalid for the page / endpoint.
+					// if the request method is not allowed by us for the page / endpoint.
 					const mod = route.endpoint ? await route.endpoint() : {};
 					return method_not_allowed(mod, method);
 				}

@@ -414,14 +414,24 @@ test.describe('Load', () => {
 	});
 
 	test('does not run when using invalid request methods', async ({ request }) => {
-		const url = '/load';
+		const load_url = '/load';
 
-		var response = await request.fetch(url, {
+		let response = await request.fetch(load_url, {
 			method: 'OPTIONS'
 		});
 
-		expect(response.status()).toBe(405);
-		expect(await response.text()).toBe('OPTIONS method not allowed');
+		expect(response.status()).toBe(204);
+		expect(await response.text()).toBe('');
+		expect(response.headers()['allow']).toBe('GET, HEAD, OPTIONS');
+
+		const actions_url = '/actions/enhance';
+		response = await request.fetch(actions_url, {
+			method: 'OPTIONS'
+		});
+
+		expect(response.status()).toBe(204);
+		expect(await response.text()).toBe('');
+		expect(response.headers()['allow']).toBe('GET, HEAD, POST, OPTIONS');
 	});
 });
 
