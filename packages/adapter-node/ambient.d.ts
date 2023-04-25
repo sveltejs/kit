@@ -1,5 +1,6 @@
 declare module 'ENV' {
 	export function env(key: string, fallback?: any): string;
+	export const ENV_PREFIX: string;
 }
 
 declare module 'HANDLER' {
@@ -15,6 +16,11 @@ declare module 'MANIFEST' {
 
 declare module 'SERVER' {
 	export { Server } from '@sveltejs/kit';
+}
+
+interface ImportMeta {
+	SERVER_DIR: string;
+	ENV_PREFIX: string;
 }
 
 declare namespace App {

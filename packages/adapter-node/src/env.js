@@ -1,4 +1,6 @@
-/* global ENV_PREFIX */
+/* global __ENV_PREFIX */
+
+export const ENV_PREFIX = import.meta.ENV_PREFIX;
 
 const expected = new Set([
 	'SOCKET_PATH',

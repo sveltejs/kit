@@ -1,11 +1,15 @@
+import commonjs from '@rollup/plugin-commonjs';
+import json from '@rollup/plugin-json';
+import { nodeResolve } from '@rollup/plugin-node-resolve';
 import { readFileSync, writeFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { rollup } from 'rollup';
-import { nodeResolve } from '@rollup/plugin-node-resolve';
-import commonjs from '@rollup/plugin-commonjs';
-import json from '@rollup/plugin-json';
 
-const files = fileURLToPath(new URL('./files', import.meta.url).href);
+/**
+ * @param {string} path
+ * @returns
+ */
+const resolve = (path) => fileURLToPath(new URL(path, import.meta.url));
 
 /** @type {import('.').default} */
 export default function (opts = {}) {
@@ -50,14 +54,40 @@ export default function (opts = {}) {
 			// will get included in the bundled code
 			const bundle = await rollup({
 				input: {
-					index: `${tmp}/index.js`,
-					manifest: `${tmp}/manifest.js`
+					handler: resolve('./src/handler.js'),
+					index: resolve('./src/index.js')
 				},
 				external: [
 					// dependencies could have deep exports, so we need a regex
 					...Object.keys(pkg.dependencies || {}).map((d) => new RegExp(`^${d}(\\/.*)?$`))
 				],
 				plugins: [
+					{
+						name: 'adapter-node-resolve',
+						resolveId(id) {
+							switch (id) {
+								case 'ENV':
+									return resolve('./src/env.js');
+								case 'HANDLER':
+									return resolve('./src/handler.js');
+								case 'MANIFEST':
+									return `${tmp}/manifest.js`;
+								case 'SERVER':
+									return `${tmp}/index.js`;
+								case 'SHIMS':
+									return resolve(polyfill ? './src/shims.js' : './src/shims_empty.js');
+							}
+						},
+						resolveImportMeta(property, { chunkId, moduleId }) {
+							if (property === 'SERVER_DIR' && moduleId === resolve('./src/handler.js')) {
+								const segments = chunkId.split('/').length - 1;
+
+								return `new URL("${'../'.repeat(segments) || '.'}", import.meta.url)`;
+							} else if (property === 'ENV_PREFIX' && moduleId === resolve('./src/env.js')) {
+								return JSON.stringify(envPrefix);
+							}
+						}
+					},
 					nodeResolve({
 						preferBuiltins: true,
 						exportConditions: ['node']
@@ -68,27 +98,11 @@ export default function (opts = {}) {
 			});
 
 			await bundle.write({
-				dir: `${out}/server`,
+				dir: `${out}`,
 				format: 'esm',
 				sourcemap: true,
 				chunkFileNames: 'chunks/[name]-[hash].js'
 			});
-
-			builder.copy(files, out, {
-				replace: {
-					ENV: './env.js',
-					HANDLER: './handler.js',
-					MANIFEST: './server/manifest.js',
-					SERVER: './server/index.js',
-					SHIMS: './shims.js',
-					ENV_PREFIX: JSON.stringify(envPrefix)
-				}
-			});
-
-			// If polyfills aren't wanted then clear the file
-			if (!polyfill) {
-				writeFileSync(`${out}/shims.js`, '', 'utf-8');
-			}
 		}
 	};
 }

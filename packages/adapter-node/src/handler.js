@@ -1,15 +1,16 @@
 import 'SHIMS';
+
 import fs from 'node:fs';
 import path from 'node:path';
-import sirv from 'sirv';
 import { fileURLToPath } from 'node:url';
+
 import { parse as polka_url_parser } from '@polka/url';
 import { getRequest, setResponse } from '@sveltejs/kit/node';
-import { Server } from 'SERVER';
-import { manifest, prerendered } from 'MANIFEST';
-import { env } from 'ENV';
+import sirv from 'sirv';
 
-/* global ENV_PREFIX */
+import { env, ENV_PREFIX } from './env.js';
+import { manifest, prerendered } from 'MANIFEST';
+import { Server } from 'SERVER';
 
 const server = new Server(manifest);
 await server.init({ env: process.env });
@@ -20,7 +21,7 @@ const protocol_header = env('PROTOCOL_HEADER', '').toLowerCase();
 const host_header = env('HOST_HEADER', 'host').toLowerCase();
 const body_size_limit = parseInt(env('BODY_SIZE_LIMIT', '524288'));
 
-const dir = path.dirname(fileURLToPath(import.meta.url));
+const dir = fileURLToPath(import.meta.SERVER_DIR);
 
 /**
  * @param {string} path

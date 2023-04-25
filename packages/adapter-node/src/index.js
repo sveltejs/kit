@@ -1,5 +1,5 @@
-import { handler } from 'HANDLER';
-import { env } from 'ENV';
+import { handler } from './handler.js';
+import { env } from './env.js';
 import polka from 'polka';
 
 export const path = env('SOCKET_PATH', false);
