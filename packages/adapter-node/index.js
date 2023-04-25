@@ -66,16 +66,19 @@ export default function (opts = {}) {
 						name: 'adapter-node-resolve',
 						resolveId(id) {
 							switch (id) {
-								case 'ENV':
-									return resolve('./src/env.js');
-								case 'HANDLER':
-									return resolve('./src/handler.js');
 								case 'MANIFEST':
 									return `${tmp}/manifest.js`;
 								case 'SERVER':
 									return `${tmp}/index.js`;
 								case 'SHIMS':
-									return resolve(polyfill ? './src/shims.js' : './src/shims_empty.js');
+									return `\0SHIMS`;
+							}
+						},
+						load(id) {
+							if (id === `\0SHIMS`) {
+								return polyfill
+									? `import { installPolyfills } from '@sveltejs/kit/node/polyfills'; installPolyfills();`
+									: '';
 							}
 						},
 						resolveImportMeta(property, { chunkId, moduleId }) {
