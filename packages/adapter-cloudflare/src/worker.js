@@ -57,13 +57,22 @@ const worker = {
 		pragma = res.headers.get('cache-control');
 
 		// only save good responses to Cache
-		if (pragma && res.ok && !is_error(res.status)) {
+		if (should_cache(res)) {
 			return Cache.save(req, res, context);
 		}
 
 		return res;
 	}
 };
+
+/**
+ * @param {Response} res
+ * @returns {boolean}
+ */
+function should_cache(res) {
+	const cacheControl = res.headers.get('cache-control');
+	return cacheControl && res.ok && !is_error(res.status);
+}
 
 /**
  * @param {number} status
