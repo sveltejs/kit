@@ -30,6 +30,13 @@ export interface AdapterOptions {
 		 */
 		exclude?: string[];
 	};
+
+	/**
+	 * Should a fallback 404.html be generated?
+	 *
+	 * @default true
+	 */
+	generate404?: boolean;
 }
 
 export interface RoutesJSONSpec {

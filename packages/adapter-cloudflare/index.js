@@ -16,8 +16,10 @@ export default function (options = {}) {
 			builder.rimraf(tmp);
 			builder.mkdirp(tmp);
 
-			// generate 404.html first which can then be overridden by prerendering, if the user defined such a page
-			await builder.generateFallback(path.join(dest, '404.html'));
+			// if enabled, generate 404.html first which can then be overridden by prerendering, if the user defined such a page
+			if (options.generate404 ?? true) {
+				await builder.generateFallback(path.join(dest, '404.html'));
+			}
 
 			const dest_dir = `${dest}${builder.config.kit.paths.base}`;
 			const written_files = builder.writeClient(dest_dir);
