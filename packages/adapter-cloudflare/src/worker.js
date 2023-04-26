@@ -53,21 +53,18 @@ const worker = {
 			});
 		}
 
-		// write to Cache only if allowed & specified
-		pragma = res.headers.get('cache-control');
-
-		// only save good responses to Cache
-		return should_cache(res) ? Cache.save(req, res, context) : res;
+		// write to `Cache` only if response is not an error,
+		// let `Cache.save` handle the Cache-Control and Vary headers
+		return !is_error(res.status) ? Cache.save(req, res, context) : res;
 	}
 };
 
 /**
- * @param {Response} res
+ * @param {number} status
  * @returns {boolean}
  */
-function should_cache(res) {
-	const cacheControl = res.headers.get('cache-control');
-	return cacheControl && res.ok && res.status < 400;
+function is_error(status) {
+	return status > 399;
 }
 
 export default worker;
