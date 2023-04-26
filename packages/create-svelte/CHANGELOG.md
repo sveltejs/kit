@@ -1,5 +1,11 @@
 # create-svelte
 
+## 4.0.0
+
+### Major Changes
+
+- feat: switch default ESLint plugin from `eslint-plugin-svelte3` to `eslint-plugin-svelte` ([#9749](https://github.com/sveltejs/kit/pull/9749))
+
 ## 3.3.1
 
 ### Patch Changes
