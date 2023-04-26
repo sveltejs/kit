@@ -11,7 +11,8 @@
 	"homepage": "https://kit.svelte.dev",
 	"type": "module",
 	"dependencies": {
-		"esm-env": "^1.0.0"
+		"esm-env": "^1.0.0",
+		"vite-imagetools": "^4.0.19"
 	},
 	"devDependencies": {
 		"@playwright/test": "1.30.0",

@@ -425,19 +425,17 @@ async function static_vercel_config(builder) {
 
 	/** @type {Record<string, any> | undefined} */
 	let images = undefined;
+	const images_config = builder.config.kit.images;
 	if (
-		builder.config.kit.images?.providers?.vercel ||
-		builder.config.kit.images?.provider?.default === VERCEL_IMAGE_PROVIDER
+		images_config?.providers?.vercel ||
+		images_config?.provider?.default === VERCEL_IMAGE_PROVIDER
 	) {
-		const deviceSizes = [640, 750, 828, 1080, 1200, 1920, 2048, 3840];
-		const sizes = [96, 128, 256, 384, ...deviceSizes]; // lower because images could be 33% width on a mobile phone
-
-		// TODO how to find out that the provider was set up to something else?
 		images = {
-			sizes, // TODO how to keep in sync with @sveltejs/image? -> we could export defaults from @sveltejs/image or expose it as a config option on svelte.config.js
-			domains: builder.config.kit.images?.domains ?? [],
+			sizes: [...images_config.imageSizes, ...images_config.deviceSizes],
+			domains: images_config?.domains ?? [],
+			// TODO should we expose the following and some other optional options through the adapter?
 			formats: ['image/avif', 'image/webp'],
-			minimumCacheTTL: 60 // TODO should we expose these through the adapter?
+			minimumCacheTTL: 60
 		};
 	}
 

@@ -1,5 +1,6 @@
 <script>
 	import { Image } from '@sveltejs/image';
+	import Test from './twitter-thumbnail.jpg?generate';
 </script>
 
 <h1>Image playground</h1>
@@ -19,3 +20,5 @@
 	style="width: 400px; height: auto;"
 	alt="asd2"
 />
+
+<Image src={Test} />

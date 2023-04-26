@@ -1,34 +1,38 @@
 <script context="module">
-	import { providers, domains } from '__svelte-image-options__.js';
+	import { providers, domains, device_sizes, image_sizes } from '__svelte-image-options__.js';
 	import { DEV } from 'esm-env';
 
-	const deviceSizes = [640, 750, 828, 1080, 1200, 1920, 2048, 3840];
-	const allSizes = [96, 128, 256, 384, ...deviceSizes]; // lower because images could be 33% width on a mobile phone
+	const all_sizes = image_sizes.concat(device_sizes);
 
 	/**
+	 * Calculate the widths to use for the srcset using the following logic:
+	 * - If the sizes prop is set, use the vw sizes in the sizes prop.
+	 * 	 Calculate the smallest ratio to the device size and use that to filter out all sizes that will never be used.
+	 * - Always filter out all sizes above 2x the width (because upscaling beyond 2x is wasteful)
+	 * - Never use widths outside the device/image sizes because many CDN's work with fixed sizes to prevent abuse
+	 *
 	 * @param {number} width
 	 * @param {boolean} fixed
 	 * @param {string | undefined} sizes
 	 */
 	function getWidths(width, fixed, sizes) {
 		if (sizes) {
-			// Find all the "vw" percent sizes used in the sizes prop
-			const viewportWidthRe = /(^|\s)(1?\d?\d)vw/g;
-			const percentSizes = [];
-			for (let match; (match = viewportWidthRe.exec(sizes)); match) {
-				percentSizes.push(parseInt(match[2]));
+			const viewport_width = /(^|\s)(1?\d?\d)vw/g;
+			const percent_sizes = [];
+			for (let match; (match = viewport_width.exec(sizes)); match) {
+				percent_sizes.push(parseInt(match[2]));
 			}
-			if (percentSizes.length) {
-				const smallestRatio = Math.min(...percentSizes) * 0.01;
+			if (percent_sizes.length) {
+				const smallest_ratio = Math.min(...percent_sizes) * 0.01;
 				return {
-					widths: allSizes.filter((s) => s >= deviceSizes[0] * smallestRatio),
+					widths: all_sizes.filter((s) => s >= device_sizes[0] * smallest_ratio && s <= width * 2),
 					kind: 'w'
 				};
 			}
-			return { widths: allSizes, kind: 'w' };
+			return { widths: all_sizes.filter((s) => s <= width * 2), kind: 'w' };
 		}
 		if (!fixed) {
-			return { widths: deviceSizes, kind: 'w' };
+			return { widths: device_sizes.filter((s) => s <= width * 2), kind: 'w' };
 		}
 
 		const widths = [
@@ -41,7 +45,9 @@
 				// > wasteful as the human eye cannot see that level of detail without
 				// > something like a magnifying glass.
 				// https://blog.twitter.com/engineering/en_us/topics/infrastructure/2019/capping-image-fidelity-on-ultra-high-resolution-devices.html
-				[width, width * 2].map((w) => allSizes.find((p) => p >= w) || allSizes[allSizes.length - 1])
+				[width, width * 2].map(
+					(w) => all_sizes.find((p) => p >= w) || all_sizes[all_sizes.length - 1]
+				)
 			)
 		];
 		return { widths, kind: 'x' };
@@ -50,7 +56,7 @@
 	/**
 	 * @param {string} src
 	 */
-	function matchesDomain(src) {
+	function matches_domain(src) {
 		const url = new URL(src, 'http://n'); // if src is protocol relative, use dummy domain
 		if (url.href === src) {
 			return domains.some((domain) => url.hostname === domain);
@@ -81,12 +87,13 @@
 
 	$: {
 		if (typeof src !== 'string') {
+			console.log(src);
 			srcset = src.srcset.map((i) => `${i.src} ${i.w}w`).join(', ');
 			_src = src.src;
 			width = width || src.width;
-			width = height || src.height;
+			height = height || src.height;
 		} else {
-			if (matchesDomain(src)) {
+			if (matches_domain(src)) {
 				const p = providers[provider];
 				if (DEV && !p) {
 					throw new Error(
@@ -102,14 +109,14 @@
 						const url = DEV
 							? src
 							: p.getURL({
-									src,
+									src: /** @type {string} */ (src),
 									width: w,
 									height: Math.round(w * (width / height))
 							  });
 						return `${url} ${w}${widths.kind}`;
 					})
 					.join(', ');
-				_src = DEV ? src : p.getURL({ src, width, height });
+				_src = srcset.at(-1) ?? src;
 			} else {
 				srcset = '';
 				_src = src;

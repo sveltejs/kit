@@ -3,6 +3,8 @@ import { Plugin } from 'vite';
 
 export interface PluginOptions {
 	domains?: string[];
+	deviceSizes?: number[];
+	imageSizes?: number[];
 	providers?: {
 		default: '@sveltejs/image/providers/none' | '@sveltejs/image/providers/vercel' | (string & {});
 		[key: string]:
@@ -13,7 +15,7 @@ export interface PluginOptions {
 }
 
 export interface GetURL<ProviderSpecificOptions = {}> {
-	(opts: { src: string; width: string; height: string; options?: ProviderSpecificOptions }): string;
+	(opts: { src: string; width: number; height: number; options?: ProviderSpecificOptions }): string;
 }
 
 export class Image extends SvelteComponentTyped {} // TODO proper typings
