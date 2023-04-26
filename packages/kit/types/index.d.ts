@@ -35,6 +35,11 @@ export interface Adapter {
 	 * @param builder An object provided by SvelteKit that contains methods for adapting the app
 	 */
 	adapt(builder: Builder): MaybePromise<void>;
+	/**
+	 * This function is called after SvelteKit has resolved the svelte.config.js. You can use it to modify the config.
+	 * @param config The svelte.config.js
+	 */
+	config?(config: ValidatedConfig): MaybePromise<ValidatedConfig>;
 }
 
 type AwaitedPropertiesUnion<input extends Record<string, any> | void> = input extends void
@@ -411,6 +416,9 @@ export interface KitConfig {
 		 */
 		errorTemplate?: string;
 	};
+	images?: typeof import('@sveltejs/image') extends { PluginOptions: { domains?: string[] } }
+		? import('@sveltejs/image').PluginOptions
+		: 'You need to install `@sveltejs/image` to use this option';
 	/**
 	 * Inline CSS inside a `<style>` block at the head of the HTML. This option is a number that specifies the maximum length of a CSS file to be inlined. All CSS files needed for the page and smaller than this value are merged and inlined in a `<style>` block.
 	 *

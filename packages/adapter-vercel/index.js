@@ -1,14 +1,13 @@
 import fs from 'node:fs';
 import path from 'node:path';
-import { fileURLToPath, pathToFileURL } from 'node:url';
+import { fileURLToPath } from 'node:url';
 import { nodeFileTrace } from '@vercel/nft';
 import esbuild from 'esbuild';
 import { get_pathname } from './utils.js';
-import { resolve } from 'import-meta-resolve';
 
 const VALID_RUNTIMES = ['edge', 'nodejs16.x', 'nodejs18.x'];
-
 const DEFAULT_FUNCTION_NAME = 'fn';
+const VERCEL_IMAGE_PROVIDER = '@sveltejs/image/providers/vercel';
 
 const get_default_runtime = () => {
 	const major = process.version.slice(1).split('.')[0];
@@ -28,6 +27,17 @@ const plugin = function (defaults = {}) {
 
 	return {
 		name: '@sveltejs/adapter-vercel',
+
+		config(config) {
+			if (!Object.keys(config.kit.images?.providers || {}).length) {
+				config.kit.images = config.kit.images || {};
+				config.kit.images.providers = {
+					default: VERCEL_IMAGE_PROVIDER,
+					vercel: VERCEL_IMAGE_PROVIDER
+				};
+			}
+			return config;
+		},
 
 		async adapt(builder) {
 			if (!builder.routes) {
@@ -415,29 +425,20 @@ async function static_vercel_config(builder) {
 
 	/** @type {Record<string, any> | undefined} */
 	let images = undefined;
-	try {
-		/** @param {string} name */
-		async function import_from_cwd(name) {
-			const cwd = pathToFileURL(process.cwd()).href;
-			const url = await resolve(name, cwd + '/x.js');
-
-			return import(url);
-		}
-
-		await import_from_cwd('@sveltejs/image/vite');
-
+	if (
+		builder.config.kit.images?.providers?.vercel ||
+		builder.config.kit.images?.provider?.default === VERCEL_IMAGE_PROVIDER
+	) {
 		const deviceSizes = [640, 750, 828, 1080, 1200, 1920, 2048, 3840];
 		const sizes = [96, 128, 256, 384, ...deviceSizes]; // lower because images could be 33% width on a mobile phone
 
 		// TODO how to find out that the provider was set up to something else?
 		images = {
-			sizes, // TODO how to keep in sync with @sveltejs/image? -> we could do @sveltejs/image/providers/vercel and export defaults from there
-			domains: [], // TODO how to access this from vite config? -> SvelteKit plugin needs to be aware of the vite plugin and pass it on
+			sizes, // TODO how to keep in sync with @sveltejs/image? -> we could export defaults from @sveltejs/image or expose it as a config option on svelte.config.js
+			domains: builder.config.kit.images?.domains ?? [],
 			formats: ['image/avif', 'image/webp'],
-			minimumCacheTTL: 60
+			minimumCacheTTL: 60 // TODO should we expose these through the adapter?
 		};
-	} catch (e) {
-		// no image optimization
 	}
 
 	return {

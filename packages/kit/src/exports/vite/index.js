@@ -25,6 +25,8 @@ import analyse from '../../core/postbuild/analyse.js';
 import { s } from '../../utils/misc.js';
 import { hash } from '../../runtime/hash.js';
 import { dedent } from '../../core/sync/utils.js';
+import { pathToFileURL } from 'node:url';
+import { resolve } from 'import-meta-resolve';
 
 export { vitePreprocess } from '@sveltejs/vite-plugin-svelte';
 
@@ -111,9 +113,30 @@ const warning_preprocessor = {
 	}
 };
 
+/** @param {string} name */
+async function import_from_cwd(name) {
+	const cwd = pathToFileURL(process.cwd()).href;
+	const url = resolve(name, cwd + '/x.js'); // TODO save a dependency and do createRequire(import.meta.url).resolve(name) instead?
+
+	return import(url);
+}
+
 /** @return {Promise<import('vite').Plugin[]>} */
 export async function sveltekit() {
 	const svelte_config = await load_config();
+
+	let imagePlugin;
+	try {
+		imagePlugin = (await import_from_cwd('@sveltejs/image/vite')).vitePluginSvelteImage;
+	} catch (e) {
+		// @ts-ignore Image component not installed, strip any image options
+		svelte_config.kit.images = undefined;
+		// TODO theoretically other usages of load_config could use images - is this good design?
+		// Underlying problem is:
+		// - we want adapter to be able to auto-configure this
+		// - but we don't want adapters to later auto-configure image stuff if it's not installed (but it did set the config itself so still does)
+		// ---> should we try to import image plugin in load_config and set config there?
+	}
 
 	/** @type {import('@sveltejs/vite-plugin-svelte').Options['preprocess']} */
 	let preprocess = svelte_config.preprocess;
@@ -139,7 +162,9 @@ export async function sveltekit() {
 		...svelte_config.vitePlugin
 	};
 
-	return [...svelte(vite_plugin_svelte_options), ...kit({ svelte_config })];
+	const plugins = [...svelte(vite_plugin_svelte_options), ...kit({ svelte_config })];
+	if (imagePlugin) plugins.push(imagePlugin(svelte_config.kit.images));
+	return plugins;
 }
 
 // These variables live outside the `kit()` function because it is re-invoked by each Vite build

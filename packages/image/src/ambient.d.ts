@@ -1,4 +1,4 @@
 declare module '__svelte-image-options__.js' {
 	export const domains: string[];
-	export const getURL: import('types').GetURL;
+	export const providers: Record<string, { getURL: import('types').GetURL }>;
 }

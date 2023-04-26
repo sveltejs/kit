@@ -132,6 +132,12 @@ const options = object(
 				errorTemplate: string(join('src', 'error.html'))
 			}),
 
+			// TODO feels weird to have this here, should be in @sveltejs/image - also what about defaults?
+			images: object({
+				domains: string_array([]),
+				providers: validate({}, (input) => input)
+			}),
+
 			inlineStyleThreshold: number(0),
 
 			moduleExtensions: string_array(['.js', '.ts']),

@@ -1,5 +1,5 @@
 <script context="module">
-	import { getURL, domains } from '__svelte-image-options__.js';
+	import { providers, domains } from '__svelte-image-options__.js';
 	import { DEV } from 'esm-env';
 
 	const deviceSizes = [640, 750, 828, 1080, 1200, 1920, 2048, 3840];
@@ -73,6 +73,8 @@
 	export let sizes = undefined;
 	/** @type {string | undefined} */
 	export let style = undefined;
+	/** @type {string} */
+	export let provider = 'default';
 
 	let srcset = '';
 	let _src = '';
@@ -85,16 +87,29 @@
 			width = height || src.height;
 		} else {
 			if (matchesDomain(src)) {
+				const p = providers[provider];
+				if (DEV && !p) {
+					throw new Error(
+						`No provider named "${provider}" found. Available providers are ${Object.keys(
+							providers
+						).join(', ')}. Check the kit.images.providers configuration in your svelte.config.js.`
+					);
+				}
+
 				const widths = getWidths(width, !!style && /width: \d+(px|em|rem)/.test(style), sizes);
 				srcset = widths.widths
 					.map((w) => {
 						const url = DEV
 							? src
-							: getURL({ src, width: w, height: Math.round(w * (width / height)) });
+							: p.getURL({
+									src,
+									width: w,
+									height: Math.round(w * (width / height))
+							  });
 						return `${url} ${w}${widths.kind}`;
 					})
 					.join(', ');
-				_src = DEV ? src : getURL({ src, width, height });
+				_src = DEV ? src : p.getURL({ src, width, height });
 			} else {
 				srcset = '';
 				_src = src;
