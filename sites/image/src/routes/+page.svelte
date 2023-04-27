@@ -10,7 +10,13 @@
 	see image optimization happening
 </p>
 
-<Image src="/images/svelte-android-chrome-192.png" width={100} height={100} alt="asd" />
+<Image
+	src="/images/svelte-android-chrome-192.png"
+	loading="eager"
+	width={100}
+	height={100}
+	alt="asd"
+/>
 
 <Image
 	src="/images/svelte-kit-machine.webp"
@@ -21,4 +27,4 @@
 	alt="asd2"
 />
 
-<Image src={Test} />
+<Image src={Test} alt="priority" priority />

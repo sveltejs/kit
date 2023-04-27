@@ -81,13 +81,18 @@
 	export let style = undefined;
 	/** @type {string} */
 	export let provider = 'default';
+	/** @type {any} */
+	export let providerOptions = undefined;
+	/** @type {'lazy' | 'eager'} */
+	export let loading = 'lazy';
+	/** @type {boolean} */
+	export let priority = false;
 
 	let srcset = '';
 	let _src = '';
 
 	$: {
 		if (typeof src !== 'string') {
-			console.log(src);
 			srcset = src.srcset.map((i) => `${i.src} ${i.w}w`).join(', ');
 			_src = src.src;
 			width = width || src.width;
@@ -111,7 +116,8 @@
 							: p.getURL({
 									src: /** @type {string} */ (src),
 									width: w,
-									height: Math.round(w * (width / height))
+									height: Math.round(w * (width / height)),
+									options: providerOptions
 							  });
 						return `${url} ${w}${widths.kind}`;
 					})
@@ -125,4 +131,12 @@
 	}
 </script>
 
-<img {sizes} {srcset} {width} {height} src={_src} {alt} {style} {...$$restProps} />
+<svelte:head>
+	{#if priority}
+		<!-- don't set href because older browsers which don't support imagesrcset would probably load the wrong image -->
+		<link rel="preload" as="image" imagesrcset={srcset} imagesizes={sizes} />
+	{/if}
+</svelte:head>
+
+<!-- $$restProps in Chrome has an issue in Svelte <= 3.58 because src is reset which redownloads it -->
+<img {...$$restProps} {sizes} {srcset} {width} {height} src={_src} {alt} {style} {loading} />
