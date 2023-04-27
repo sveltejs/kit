@@ -1,5 +1,11 @@
 # @sveltejs/adapter-cloudflare
 
+## 2.2.1
+
+### Patch Changes
+
+- chore: update all dependencies with minor version bumps ([#9761](https://github.com/sveltejs/kit/pull/9761))
+
 ## 2.2.0
 
 ### Minor Changes
