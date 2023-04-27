@@ -83,8 +83,8 @@
 	export let provider = 'default';
 	/** @type {any} */
 	export let providerOptions = undefined;
-	/** @type {'lazy' | 'eager'} */
-	export let loading = 'lazy';
+	/** @type {'lazy' | 'eager' | undefined} */
+	export let loading = undefined;
 	/** @type {boolean} */
 	export let priority = false;
 
@@ -138,10 +138,11 @@
 	{/if}
 </svelte:head>
 
-<!-- $$restProps in Chrome has an issue in Svelte <= 3.58 because src is reset which redownloads it -->
+<!-- Chrome with cache disabled seems to reload the src if it is reset during hydration which redownloads it -->
 <img
 	{...$$restProps}
 	fetchpriority={$$restProps.fetchpriority || (priority ? 'high' : 'auto')}
+	loading={loading ?? (priority ? 'eager' : 'lazy')}
 	{sizes}
 	{srcset}
 	{width}
@@ -149,5 +150,4 @@
 	src={_src}
 	{alt}
 	{style}
-	{loading}
 />
