@@ -381,7 +381,6 @@ export async function respond(request, options, manifest, state) {
 				} else if (route.endpoint && (!route.page || is_endpoint_request(event))) {
 					response = await render_endpoint(event, await route.endpoint(), state);
 				} else if (route.page && page_methods.has(method)) {
-					console.log(page_methods.has(method));
 					response = await render_page(event, route.page, options, manifest, state, resolve_opts);
 				} else if (route.page && method === 'OPTIONS') {
 					// if no OPTIONS endpoint exists, fallback to handling it gracefully.
