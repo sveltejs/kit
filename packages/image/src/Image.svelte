@@ -134,9 +134,20 @@
 <svelte:head>
 	{#if priority}
 		<!-- don't set href because older browsers which don't support imagesrcset would probably load the wrong image -->
-		<link rel="preload" as="image" imagesrcset={srcset} imagesizes={sizes} />
+		<link rel="preload" as="image" imagesrcset={srcset} imagesizes={sizes} fetchpriority="high" />
 	{/if}
 </svelte:head>
 
 <!-- $$restProps in Chrome has an issue in Svelte <= 3.58 because src is reset which redownloads it -->
-<img {...$$restProps} {sizes} {srcset} {width} {height} src={_src} {alt} {style} {loading} />
+<img
+	{...$$restProps}
+	fetchpriority={$$restProps.fetchpriority || (priority ? 'high' : 'auto')}
+	{sizes}
+	{srcset}
+	{width}
+	{height}
+	src={_src}
+	{alt}
+	{style}
+	{loading}
+/>
