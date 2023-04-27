@@ -9,7 +9,8 @@
 		"moduleResolution": "node",
 		"allowSyntheticDefaultImports": true,
 		"paths": {
-			"types": ["./types/index"]
+			"types": ["./types/index"],
+			"types/*": ["./types/*"]
 		},
 		"noUnusedLocals": true,
 		"noUnusedParameters": true

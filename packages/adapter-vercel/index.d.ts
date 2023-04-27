@@ -1,7 +1,16 @@
 import { Adapter } from '@sveltejs/kit';
 import './ambient.js';
 
-export default function plugin(config?: Config): Adapter;
+export default function plugin(
+	config?: Config & {
+		/**
+		 * Enable or disable Vercel's image optimization
+		 * https://vercel.com/docs/concepts/image-optimization
+		 * @default false
+		 */
+		images?: boolean | { domains?: string[] };
+	}
+): Adapter;
 
 export interface ServerlessConfig {
 	/**

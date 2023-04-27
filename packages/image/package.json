@@ -54,6 +54,12 @@
 		"./vite": {
 			"import": "./src/vite-plugin.js"
 		},
+		"./providers/cloudflare": {
+			"import": "./src/providers/cloudflare.js"
+		},
+		"./providers/netlify": {
+			"import": "./src/providers/netlify.js"
+		},
 		"./providers/vercel": {
 			"import": "./src/providers/vercel.js"
 		},
@@ -62,6 +68,16 @@
 		}
 	},
 	"types": "types/index.d.ts",
+	"typesVersions": {
+		"*": {
+			"index": [
+				"types/index.d.ts"
+			],
+			"vite": [
+				"types/vite.d.ts"
+			]
+		}
+	},
 	"engines": {
 		"node": "^16.14 || >=18"
 	}

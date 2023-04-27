@@ -416,9 +416,6 @@ export interface KitConfig {
 		 */
 		errorTemplate?: string;
 	};
-	images?: typeof import('@sveltejs/image') extends { PluginOptions: { domains?: string[] } }
-		? import('@sveltejs/image').PluginOptions
-		: 'You need to install `@sveltejs/image` to use this option';
 	/**
 	 * Inline CSS inside a `<style>` block at the head of the HTML. This option is a number that specifies the maximum length of a CSS file to be inlined. All CSS files needed for the page and smaller than this value are merged and inlined in a `<style>` block.
 	 *

@@ -354,10 +354,6 @@ declare module '$service-worker' {
 	export const version: string;
 }
 
-declare module '@sveltejs/image' {
-	export type PluginOptions = unknown;
-}
-
 declare module '@sveltejs/kit/hooks' {
 	import { Handle } from '@sveltejs/kit';
 

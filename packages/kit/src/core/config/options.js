@@ -132,14 +132,6 @@ const options = object(
 				errorTemplate: string(join('src', 'error.html'))
 			}),
 
-			// TODO feels weird to have this here, should be in @sveltejs/image - also what about defaults?
-			images: object({
-				deviceSizes: number_array([640, 750, 828, 1080, 1200, 1920, 2048, 3840]),
-				imageSizes: number_array([64, 96, 128, 256, 384]),
-				domains: string_array([]),
-				providers: validate({}, (input) => input)
-			}),
-
 			inlineStyleThreshold: number(0),
 
 			moduleExtensions: string_array(['.js', '.ts']),
@@ -350,20 +342,6 @@ function string_array(fallback) {
 	return validate(fallback, (input, keypath) => {
 		if (!Array.isArray(input) || input.some((value) => typeof value !== 'string')) {
 			throw new Error(`${keypath} must be an array of strings, if specified`);
-		}
-
-		return input;
-	});
-}
-
-/**
- * @param {number[] | undefined} [fallback]
- * @returns {Validator}
- */
-function number_array(fallback) {
-	return validate(fallback, (input, keypath) => {
-		if (!Array.isArray(input) || input.some((value) => typeof value !== 'number')) {
-			throw new Error(`${keypath} must be an array of numbers, if specified`);
 		}
 
 		return input;

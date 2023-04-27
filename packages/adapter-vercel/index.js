@@ -7,7 +7,6 @@ import { get_pathname } from './utils.js';
 
 const VALID_RUNTIMES = ['edge', 'nodejs16.x', 'nodejs18.x'];
 const DEFAULT_FUNCTION_NAME = 'fn';
-const VERCEL_IMAGE_PROVIDER = '@sveltejs/image/providers/vercel';
 
 const get_default_runtime = () => {
 	const major = process.version.slice(1).split('.')[0];
@@ -27,17 +26,6 @@ const plugin = function (defaults = {}) {
 
 	return {
 		name: '@sveltejs/adapter-vercel',
-
-		config(config) {
-			if (!Object.keys(config.kit.images?.providers || {}).length) {
-				config.kit.images = config.kit.images || {};
-				config.kit.images.providers = {
-					default: VERCEL_IMAGE_PROVIDER,
-					vercel: VERCEL_IMAGE_PROVIDER
-				};
-			}
-			return config;
-		},
 
 		async adapt(builder) {
 			if (!builder.routes) {
@@ -66,7 +54,7 @@ const plugin = function (defaults = {}) {
 				functions: `${dir}/functions`
 			};
 
-			const static_config = await static_vercel_config(builder);
+			const static_config = await static_vercel_config(builder, defaults);
 
 			builder.log.minor('Generating serverless function...');
 
@@ -384,8 +372,11 @@ function write(file, data) {
 }
 
 // This function is duplicated in adapter-static
-/** @param {import('@sveltejs/kit').Builder} builder */
-async function static_vercel_config(builder) {
+/**
+ * @param {import('@sveltejs/kit').Builder} builder
+ * @param {Parameters<import('.').default>[0]} config
+ */
+async function static_vercel_config(builder, config) {
 	/** @type {any[]} */
 	const prerendered_redirects = [];
 
@@ -425,17 +416,14 @@ async function static_vercel_config(builder) {
 
 	/** @type {Record<string, any> | undefined} */
 	let images = undefined;
-	const images_config = builder.config.kit.images;
-	if (
-		images_config?.providers?.vercel ||
-		images_config?.provider?.default === VERCEL_IMAGE_PROVIDER
-	) {
+	if (config.images) {
 		images = {
-			sizes: [...images_config.imageSizes, ...images_config.deviceSizes],
-			domains: images_config?.domains ?? [],
+			// TODO this is duplicated in @sveltejs/image -> figure out a good way to keep them in sync / make them configurable
+			sizes: [64, 96, 128, 256, 384, 640, 750, 828, 1080, 1200, 1920, 2048, 3840],
+			domains: Array.isArray(config.images?.domains) ? config.images.domains : [],
 			// TODO should we expose the following and some other optional options through the adapter?
 			formats: ['image/avif', 'image/webp'],
-			minimumCacheTTL: 60
+			minimumCacheTTL: 300
 		};
 	}
 
