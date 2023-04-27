@@ -1,5 +1,11 @@
 # create-svelte
 
+## 4.1.0
+
+### Minor Changes
+
+- feat: set `resolution-mode=highest` in generated `.npmrc` ([#9781](https://github.com/sveltejs/kit/pull/9781))
+
 ## 4.0.0
 
 ### Major Changes
