@@ -767,7 +767,7 @@ test.describe('Streaming', () => {
 });
 
 test.describe('Actions', () => {
-	test.only('page store has correct data', async ({ page, app }) => {
+	test('page store has correct data', async ({ page }) => {
 		await page.goto('/actions/enhance');
 		const pre = page.locator('pre.data1');
 
