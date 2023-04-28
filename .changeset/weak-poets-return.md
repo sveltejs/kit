@@ -1,5 +1,5 @@
 ---
-'create-svelte': minor
+'create-svelte': patch
 ---
 
-remove `ignorePatterns: ['*.cjs']` from .eslintrc.cjs
+fix: remove obsolete `ignorePatterns: ['*.cjs']` from .eslintrc.cjs
