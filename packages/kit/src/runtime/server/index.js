@@ -41,8 +41,7 @@ export class Server {
 
 				this.#options.hooks = {
 					handle: module.handle || (({ event, resolve }) => resolve(event)),
-					// @ts-expect-error
-					handleError: module.handleError || (({ error }) => console.error(error?.stack)),
+					handleError: module.handleError || (({ error }) => console.error(error)),
 					handleFetch: module.handleFetch || (({ request, fetch }) => fetch(request))
 				};
 			} catch (error) {
@@ -51,8 +50,7 @@ export class Server {
 						handle: () => {
 							throw error;
 						},
-						// @ts-expect-error
-						handleError: ({ error }) => console.error(error?.stack),
+						handleError: ({ error }) => console.error(error),
 						handleFetch: ({ request, fetch }) => fetch(request)
 					};
 				} else {
