@@ -159,7 +159,7 @@ node build
 
 Controls whether your build will load polyfills for missing modules. It defaults to `true`, and should only be disabled when using Node 18.11 or greater.
 
-Note: even with Node 18.11 or greater, you may still need to use experimental flags. E.g. `--experimental-global-webcrypto` to enable the `crypto` global. More info on which globals require flags can be found [here](https://nodejs.dev/en/api/v18/globals/).
+Note: to use Node's built-in `crypto` global with Node 18 you will need to use the `--experimental-global-webcrypto` flag. This flag is not required with Node 20.
 
 ## Custom server
 
