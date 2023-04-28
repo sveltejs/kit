@@ -16,8 +16,6 @@ export function create_fetch({ event, options, manifest, state, get_cookie_heade
 	return async (info, init) => {
 		const original_request = normalize_fetch_input(info, init, event.url);
 
-		const request_body = init?.body;
-
 		// some runtimes (e.g. Cloudflare) error if you access `request.mode`,
 		// annoyingly, so we need to read the value from the `init` object instead
 		let mode = (info instanceof Request ? info.mode : init?.mode) ?? 'cors';
