@@ -911,7 +911,7 @@ test.describe('Actions', () => {
 			await page.goto('/actions/enhance');
 		}
 
-		expect(await page.textContent('pre')).toBe(JSON.stringify(null));
+		expect(await page.textContent('pre.formdata1')).toBe(JSON.stringify(null));
 	});
 
 	test('applyAction redirects', async ({ page, javaScriptEnabled }) => {
