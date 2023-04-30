@@ -2,6 +2,7 @@ import fs from 'node:fs';
 import { mkdirp } from '../../../utils/filesystem.js';
 import { find_deps, resolve_symlinks } from './utils.js';
 import { s } from '../../../utils/misc.js';
+import { normalizePath } from 'vite';
 
 /**
  * @param {string} out
@@ -48,7 +49,13 @@ export function build_server_nodes(out, kit, manifest_data, server_manifest, cli
 		const fonts = [];
 
 		if (node.component && client_manifest) {
-			const entry = find_deps(client_manifest, node.component, true);
+			const entry = find_deps(
+				client_manifest,
+				// client_manifest will be null for the call with the non-optimized nodes
+				// so it's fine to just use this path
+				`${normalizePath(kit.outDir)}/generated/client-optimized/nodes/${i}.js`,
+				true
+			);
 
 			imported.push(...entry.imports);
 			stylesheets.push(...entry.stylesheets);
@@ -63,7 +70,11 @@ export function build_server_nodes(out, kit, manifest_data, server_manifest, cli
 
 		if (node.universal) {
 			if (client_manifest) {
-				const entry = find_deps(client_manifest, node.universal, true);
+				const entry = find_deps(
+					client_manifest,
+					`${normalizePath(kit.outDir)}/generated/client-optimized/nodes/${i}.js`,
+					true
+				);
 
 				imported.push(...entry.imports);
 				stylesheets.push(...entry.stylesheets);
