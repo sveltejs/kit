@@ -1,19 +1,9 @@
 import * as devalue from 'devalue';
-import { client } from '../client/singletons.js';
+import { DEV } from 'esm-env';
+import { client_method } from '../client/singletons.js';
 import { invalidateAll } from './navigation.js';
-import { BROWSER, DEV } from 'esm-env';
 
-/**
- * @param {string} name
- */
-function guard(name) {
-	return () => {
-		throw new Error(`Cannot call ${name}(...) on the server`);
-	};
-}
-
-/** @type {import('$app/forms').applyAction} */
-export const applyAction = BROWSER ? client.apply_action : guard('applyAction');
+export const applyAction = client_method('apply_action');
 
 /** @type {import('$app/forms').deserialize} */
 export function deserialize(result) {
