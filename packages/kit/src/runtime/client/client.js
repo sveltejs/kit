@@ -1354,8 +1354,7 @@ export function create_client(app, target) {
 			return invalidate();
 		},
 
-		// TODO: Why is only this camel cased?
-		invalidateAll: () => {
+		invalidate_all: () => {
 			force_invalidation = true;
 			return invalidate();
 		},

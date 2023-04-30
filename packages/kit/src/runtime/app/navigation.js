@@ -6,7 +6,7 @@ export const goto = /* @__PURE__ */ client_method('goto');
 
 export const invalidate = /* @__PURE__ */ client_method('invalidate');
 
-export const invalidateAll = /* @__PURE__ */ client_method('invalidateAll');
+export const invalidateAll = /* @__PURE__ */ client_method('invalidate_all');
 
 export const preloadData = /* @__PURE__ */ client_method('preload_data');
 
