@@ -1,7 +1,7 @@
 <script>
+	import { Image } from '@sveltejs/image';
 	import { base } from '$app/paths';
 	import Logotype from './svelte-kit-logotype.svg.svelte';
-	import Image from '$lib/Image.svelte';
 	import background from './svelte-kit-machine.webp?w=1440;960';
 </script>
 

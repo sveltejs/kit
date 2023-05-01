@@ -13,6 +13,7 @@
 	"devDependencies": {
 		"@sveltejs/adapter-vercel": "workspace:^",
 		"@sveltejs/amp": "workspace:^",
+		"@sveltejs/image": "workspace:^",
 		"@sveltejs/kit": "workspace:^",
 		"@sveltejs/site-kit": "5.0.4",
 		"@types/d3-geo": "^3.0.2",

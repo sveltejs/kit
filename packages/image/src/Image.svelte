@@ -93,10 +93,10 @@
 
 	$: {
 		if (typeof src !== 'string') {
-			srcset = src.srcset.map((i) => `${i.src} ${i.w}w`).join(', ');
+			srcset = src.srcset?.map((i) => `${i.src} ${i.w}w`)?.join(', ');
 			_src = src.src;
-			width = width || src.width;
-			height = height || src.height;
+			width = width || src.w;
+			height = height || src.h;
 		} else {
 			if (matches_domain(src)) {
 				const p = providers[provider];

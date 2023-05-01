@@ -1,5 +1,5 @@
 <script>
-	import Image from '$lib/Image.svelte';
+	import { Image } from '@sveltejs/image';
 	import { Section } from '@sveltejs/site-kit/components';
 	import pudding from './showcase/pudding.png';
 	import pocketbase from './showcase/pocketbase.png';

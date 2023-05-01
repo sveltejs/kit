@@ -64,7 +64,7 @@ export default config;
 ```svelte
 <script>
 	import Image from '@sveltejs/image';
-    import YourImage from '/path/to/your/image.jpg?generate';
+	import YourImage from '/path/to/your/image.jpg?generate';
 </script>
 
 <Image src={YourImage} alt="An alt text" />
