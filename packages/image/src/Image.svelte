@@ -151,3 +151,9 @@
 	{alt}
 	{style}
 />
+
+<style>
+	img {
+		height: auto
+	}
+</style>
