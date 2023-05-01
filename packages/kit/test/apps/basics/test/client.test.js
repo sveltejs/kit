@@ -533,7 +533,7 @@ test.describe('Invalidation', () => {
 });
 
 test.describe('data-sveltekit attributes', () => {
-	test.only('data-sveltekit-preload-data', async ({ baseURL, page }) => {
+	test('data-sveltekit-preload-data', async ({ baseURL, page }) => {
 		/** @type {string[]} */
 		const requests = [];
 		page.on('request', (req) => {
