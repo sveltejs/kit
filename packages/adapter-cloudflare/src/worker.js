@@ -55,16 +55,8 @@ const worker = {
 
 		// write to `Cache` only if response is not an error,
 		// let `Cache.save` handle the Cache-Control and Vary headers
-		return !is_error(res.status) ? Cache.save(req, res, context) : res;
+		return res.status >= 400 ? res : Cache.save(req, res, context);
 	}
 };
-
-/**
- * @param {number} status
- * @returns {boolean}
- */
-function is_error(status) {
-	return status > 399;
-}
 
 export default worker;
