@@ -61,12 +61,11 @@ export const image_sizes = ${JSON.stringify(image_sizes(options))};`;
 
 function image_tools() {
 	return imagetools({
-		defaultDirectives: () => {
-				return new URLSearchParams({
-					'as': 'img',
-					'format': 'webp'
-				});
-			}
+		defaultDirectives: () =>
+			new URLSearchParams({
+				as: 'img',
+				format: 'webp'
+			})
 	});
 }
 
