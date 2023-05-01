@@ -63,8 +63,11 @@ function image_tools() {
 	return imagetools({
 		defaultDirectives: () =>
 			new URLSearchParams({
-				as: 'img',
-				format: 'webp'
+				as: 'picture',
+				format: 'avif;webp'
+				// for just an img tag you can do:
+				// 	as: 'img',
+				// 	format: 'webp'
 			})
 	});
 }

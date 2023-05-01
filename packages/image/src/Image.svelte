@@ -93,10 +93,11 @@
 
 	$: {
 		if (typeof src !== 'string') {
-			srcset = src.srcset?.map((i) => `${i.src} ${i.w}w`)?.join(', ');
-			_src = src.src;
-			width = width || src.w;
-			height = height || src.h;
+			// support vite-imagetool's as=img and as=picture
+			srcset = (src.img || src).srcset?.map((i) => `${i.src} ${i.w}w`)?.join(', ');
+			_src = (src.img || src).src;
+			width = width || (src.img || src).w;
+			height = height || (src.img || src).h;
 		} else {
 			if (matches_domain(src)) {
 				const p = providers[provider];
@@ -139,18 +140,38 @@
 </svelte:head>
 
 <!-- Chrome with cache disabled seems to reload the src if it is reset during hydration which redownloads it -->
-<img
-	{...$$restProps}
-	fetchpriority={$$restProps.fetchpriority || (priority ? 'high' : 'auto')}
-	loading={loading ?? (priority ? 'eager' : 'lazy')}
-	{sizes}
-	{srcset}
-	{width}
-	{height}
-	src={_src}
-	{alt}
-	{style}
-/>
+{#if src.img}
+	<picture>
+		{#each Object.entries(src.sources) as [format, images]}
+			<source srcset={images.map((i) => `${i.src} ${i.w}w`).join(', ')} type={'image/' + format} />
+		{/each}
+		<img
+			{...$$restProps}
+			fetchpriority={$$restProps.fetchpriority || (priority ? 'high' : 'auto')}
+			loading={loading ?? (priority ? 'eager' : 'lazy')}
+			{sizes}
+			{srcset}
+			{width}
+			{height}
+			src={_src}
+			{alt}
+			{style}
+			/>
+	</picture>
+{:else}
+	<img
+		{...$$restProps}
+		fetchpriority={$$restProps.fetchpriority || (priority ? 'high' : 'auto')}
+		loading={loading ?? (priority ? 'eager' : 'lazy')}
+		{sizes}
+		{srcset}
+		{width}
+		{height}
+		src={_src}
+		{alt}
+		{style}
+		/>
+{/if}
 
 <style>
 	img {
