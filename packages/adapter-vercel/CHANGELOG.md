@@ -1,5 +1,11 @@
 # @sveltejs/adapter-vercel
 
+## 2.4.3
+
+### Patch Changes
+
+- chore: update all dependencies with minor version bumps ([#9761](https://github.com/sveltejs/kit/pull/9761))
+
 ## 2.4.2
 
 ### Patch Changes
