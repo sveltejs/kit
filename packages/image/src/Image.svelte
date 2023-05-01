@@ -67,7 +67,7 @@
 </script>
 
 <script>
-	/** @type {string | { src: string; height: number; width: number; srcset: Array<{ w: string; src: string }> }} */
+	/** @type {string | import('vite-imagetools').Img | import('vite-imagetools').Picture} */
 	export let src;
 	/** @type {string} */
 	export let alt;

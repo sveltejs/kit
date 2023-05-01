@@ -5,7 +5,7 @@ import { imagetools } from 'vite-imagetools';
  * @returns {import('vite').Plugin[]}
  */
 export function vitePluginSvelteImage(options = {}) {
-	return [image_plugin(options), image_tools()];
+	return [image_plugin(options), image_tools(options)];
 }
 
 /**
@@ -61,28 +61,28 @@ export const image_sizes = ${JSON.stringify(image_sizes(options))};`;
 
 function image_tools() {
 	return imagetools({
-		defaultDirectives: () =>
-			new URLSearchParams({
-				as: 'picture',
-				format: 'avif;webp'
-				// for just an img tag you can do:
-				// 	as: 'img',
-				// 	format: 'webp'
-			})
+		defaultDirectives: new URLSearchParams({
+			// for just an img tag you can do:
+			// 	as: 'img',
+			// 	format: 'webp',
+			as: 'picture',
+			format: 'avif;webp'
+			// w: device_sizes().join(';')
+		})
 	});
 }
 
 // TODO make these configurable from the outside
 
 /**
- * @param {import('types/vite').PluginOptions} _options
+ * @param {import('types/vite').PluginOptions} [_options]
  */
 function device_sizes(_options) {
 	return [640, 750, 828, 1080, 1200, 1920, 2048, 3840];
 }
 
 /**
- * @param {import('types/vite').PluginOptions} _options
+ * @param {import('types/vite').PluginOptions} [_options]
  */
 function image_sizes(_options) {
 	return [64, 96, 128, 256, 384];
