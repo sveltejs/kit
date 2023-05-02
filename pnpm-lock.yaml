@@ -29,8 +29,8 @@ importers:
         specifier: ^46.0.0
         version: 46.0.0(eslint@8.33.0)
       playwright:
-        specifier: 1.30.0
-        version: 1.30.0
+        specifier: 1.33.0
+        version: 1.33.0
       prettier:
         specifier: ^2.8.0
         version: 2.8.0
@@ -57,8 +57,8 @@ importers:
         specifier: workspace:^
         version: link:../kit
       '@types/node':
-        specifier: ^16.18.6
-        version: 16.18.6
+        specifier: ^18.16.3
+        version: 18.16.3
       typescript:
         specifier: ^4.9.4
         version: 4.9.4
@@ -79,8 +79,8 @@ importers:
         version: 0.8.0-next.15
     devDependencies:
       '@types/node':
-        specifier: ^16.18.6
-        version: 16.18.6
+        specifier: ^18.16.3
+        version: 18.16.3
       '@types/ws':
         specifier: ^8.5.3
         version: 8.5.3
@@ -107,8 +107,8 @@ importers:
         specifier: ^0.3.0
         version: 0.3.0
       '@types/node':
-        specifier: ^16.18.6
-        version: 16.18.6
+        specifier: ^18.16.3
+        version: 18.16.3
       typescript:
         specifier: ^4.9.4
         version: 4.9.4
@@ -141,8 +141,8 @@ importers:
         specifier: workspace:^
         version: link:../kit
       '@types/node':
-        specifier: ^16.18.6
-        version: 16.18.6
+        specifier: ^18.16.3
+        version: 18.16.3
       '@types/set-cookie-parser':
         specifier: ^2.4.2
         version: 2.4.2
@@ -181,8 +181,8 @@ importers:
         specifier: workspace:^
         version: link:../kit
       '@types/node':
-        specifier: ^16.18.6
-        version: 16.18.6
+        specifier: ^18.16.3
+        version: 18.16.3
       c8:
         specifier: ^7.13.0
         version: 7.13.0
@@ -208,8 +208,8 @@ importers:
         specifier: workspace:^
         version: link:../kit
       '@types/node':
-        specifier: ^16.18.6
-        version: 16.18.6
+        specifier: ^18.16.3
+        version: 18.16.3
       sirv:
         specifier: ^2.0.3
         version: 2.0.3
@@ -224,7 +224,7 @@ importers:
         version: 0.5.6
       vite:
         specifier: ^4.3.0
-        version: 4.3.0(@types/node@16.18.6)
+        version: 4.3.0(@types/node@18.16.3)
 
   packages/adapter-static/test/apps/prerendered:
     devDependencies:
@@ -236,7 +236,7 @@ importers:
         version: 3.56.0
       vite:
         specifier: ^4.3.0
-        version: 4.3.0(@types/node@16.18.6)
+        version: 4.3.0(@types/node@18.16.3)
 
   packages/adapter-static/test/apps/spa:
     devDependencies:
@@ -254,7 +254,7 @@ importers:
         version: 3.56.0
       vite:
         specifier: ^4.3.0
-        version: 4.3.0(@types/node@16.18.6)
+        version: 4.3.0(@types/node@18.16.3)
 
   packages/adapter-vercel:
     dependencies:
@@ -269,8 +269,8 @@ importers:
         specifier: workspace:^
         version: link:../kit
       '@types/node':
-        specifier: ^16.18.6
-        version: 16.18.6
+        specifier: ^18.16.3
+        version: 18.16.3
       typescript:
         specifier: ^4.9.4
         version: 4.9.4
@@ -294,8 +294,8 @@ importers:
         version: 4.1.5
     devDependencies:
       '@playwright/test':
-        specifier: 1.30.0
-        version: 1.30.0
+        specifier: 1.33.0
+        version: 1.33.0
       '@types/gitignore-parser':
         specifier: ^0.0.0
         version: 0.0.0
@@ -350,7 +350,7 @@ importers:
         version: 5.0.2
       vite:
         specifier: ^4.3.0
-        version: 4.3.0(@types/node@16.18.6)
+        version: 4.3.0(@types/node@18.16.3)
 
   packages/create-svelte/templates/skeleton:
     devDependencies:
@@ -401,8 +401,8 @@ importers:
         version: 5.22.0
     devDependencies:
       '@playwright/test':
-        specifier: 1.30.0
-        version: 1.30.0
+        specifier: 1.33.0
+        version: 1.33.0
       '@types/connect':
         specifier: ^3.4.35
         version: 3.4.35
@@ -413,8 +413,8 @@ importers:
         specifier: ^3.0.1
         version: 3.0.1
       '@types/node':
-        specifier: ^16.18.6
-        version: 16.18.6
+        specifier: ^18.16.3
+        version: 18.16.3
       '@types/sade':
         specifier: ^1.7.4
         version: 1.7.4
@@ -441,7 +441,7 @@ importers:
         version: 0.5.6
       vite:
         specifier: ^4.3.0
-        version: 4.3.0(@types/node@16.18.6)
+        version: 4.3.0(@types/node@18.16.3)
 
   packages/kit/test/apps/amp:
     devDependencies:
@@ -468,7 +468,7 @@ importers:
         version: 4.9.4
       vite:
         specifier: ^4.3.0
-        version: 4.3.0(@types/node@16.18.6)
+        version: 4.3.0(@types/node@18.16.3)
 
   packages/kit/test/apps/basics:
     devDependencies:
@@ -492,7 +492,7 @@ importers:
         version: 4.9.4
       vite:
         specifier: ^4.3.0
-        version: 4.3.0(@types/node@16.18.6)
+        version: 4.3.0(@types/node@18.16.3)
 
   packages/kit/test/apps/dev-only:
     devDependencies:
@@ -513,7 +513,7 @@ importers:
         version: 4.9.4
       vite:
         specifier: ^4.3.0
-        version: 4.3.0(@types/node@16.18.6)
+        version: 4.3.0(@types/node@18.16.3)
 
   packages/kit/test/apps/embed:
     devDependencies:
@@ -534,7 +534,7 @@ importers:
         version: 4.9.4
       vite:
         specifier: ^4.3.0
-        version: 4.3.0(@types/node@16.18.6)
+        version: 4.3.0(@types/node@18.16.3)
 
   packages/kit/test/apps/options:
     devDependencies:
@@ -555,7 +555,7 @@ importers:
         version: 4.9.4
       vite:
         specifier: ^4.3.0
-        version: 4.3.0(@types/node@16.18.6)
+        version: 4.3.0(@types/node@18.16.3)
 
   packages/kit/test/apps/options-2:
     devDependencies:
@@ -579,7 +579,7 @@ importers:
         version: 4.9.4
       vite:
         specifier: ^4.3.0
-        version: 4.3.0(@types/node@16.18.6)
+        version: 4.3.0(@types/node@18.16.3)
 
   packages/kit/test/apps/writes:
     devDependencies:
@@ -603,7 +603,7 @@ importers:
         version: 4.9.4
       vite:
         specifier: ^4.3.0
-        version: 4.3.0(@types/node@16.18.6)
+        version: 4.3.0(@types/node@18.16.3)
 
   packages/kit/test/build-errors:
     devDependencies:
@@ -630,7 +630,7 @@ importers:
         version: 4.9.4
       vite:
         specifier: ^4.3.0
-        version: 4.3.0(@types/node@16.18.6)
+        version: 4.3.0(@types/node@18.16.3)
 
   packages/kit/test/build-errors/apps/prerenderable-not-prerendered:
     devDependencies:
@@ -651,7 +651,7 @@ importers:
         version: 4.9.4
       vite:
         specifier: ^4.3.0
-        version: 4.3.0(@types/node@16.18.6)
+        version: 4.3.0(@types/node@18.16.3)
 
   packages/kit/test/build-errors/apps/private-dynamic-env:
     devDependencies:
@@ -669,7 +669,7 @@ importers:
         version: 4.9.4
       vite:
         specifier: ^4.3.0
-        version: 4.3.0(@types/node@16.18.6)
+        version: 4.3.0(@types/node@18.16.3)
 
   packages/kit/test/build-errors/apps/private-dynamic-env-dynamic-import:
     devDependencies:
@@ -687,7 +687,7 @@ importers:
         version: 4.9.4
       vite:
         specifier: ^4.3.0
-        version: 4.3.0(@types/node@16.18.6)
+        version: 4.3.0(@types/node@18.16.3)
 
   packages/kit/test/build-errors/apps/private-static-env:
     devDependencies:
@@ -708,7 +708,7 @@ importers:
         version: 4.9.4
       vite:
         specifier: ^4.3.0
-        version: 4.3.0(@types/node@16.18.6)
+        version: 4.3.0(@types/node@18.16.3)
 
   packages/kit/test/build-errors/apps/private-static-env-dynamic-import:
     devDependencies:
@@ -726,7 +726,7 @@ importers:
         version: 4.9.4
       vite:
         specifier: ^4.3.0
-        version: 4.3.0(@types/node@16.18.6)
+        version: 4.3.0(@types/node@18.16.3)
 
   packages/kit/test/build-errors/apps/server-only-folder:
     devDependencies:
@@ -744,7 +744,7 @@ importers:
         version: 4.9.4
       vite:
         specifier: ^4.3.0
-        version: 4.3.0(@types/node@16.18.6)
+        version: 4.3.0(@types/node@18.16.3)
 
   packages/kit/test/build-errors/apps/server-only-folder-dynamic-import:
     devDependencies:
@@ -762,7 +762,7 @@ importers:
         version: 4.9.4
       vite:
         specifier: ^4.3.0
-        version: 4.3.0(@types/node@16.18.6)
+        version: 4.3.0(@types/node@18.16.3)
 
   packages/kit/test/build-errors/apps/server-only-module:
     devDependencies:
@@ -780,7 +780,7 @@ importers:
         version: 4.9.4
       vite:
         specifier: ^4.3.0
-        version: 4.3.0(@types/node@16.18.6)
+        version: 4.3.0(@types/node@18.16.3)
 
   packages/kit/test/build-errors/apps/server-only-module-dynamic-import:
     devDependencies:
@@ -798,7 +798,7 @@ importers:
         version: 4.9.4
       vite:
         specifier: ^4.3.0
-        version: 4.3.0(@types/node@16.18.6)
+        version: 4.3.0(@types/node@18.16.3)
 
   packages/kit/test/build-errors/apps/syntax-error:
     devDependencies:
@@ -816,7 +816,7 @@ importers:
         version: 4.9.4
       vite:
         specifier: ^4.3.0
-        version: 4.3.0(@types/node@16.18.6)
+        version: 4.3.0(@types/node@18.16.3)
 
   packages/kit/test/prerendering/basics:
     devDependencies:
@@ -837,7 +837,7 @@ importers:
         version: 0.5.6
       vite:
         specifier: ^4.3.0
-        version: 4.3.0(@types/node@16.18.6)
+        version: 4.3.0(@types/node@18.16.3)
 
   packages/kit/test/prerendering/options:
     devDependencies:
@@ -858,7 +858,7 @@ importers:
         version: 0.5.6
       vite:
         specifier: ^4.3.0
-        version: 4.3.0(@types/node@16.18.6)
+        version: 4.3.0(@types/node@18.16.3)
 
   packages/kit/test/prerendering/paths-base:
     devDependencies:
@@ -879,7 +879,7 @@ importers:
         version: 0.5.6
       vite:
         specifier: ^4.3.0
-        version: 4.3.0(@types/node@16.18.6)
+        version: 4.3.0(@types/node@18.16.3)
 
   packages/migrate:
     dependencies:
@@ -925,8 +925,8 @@ importers:
         version: 0.6.0(svelte@3.56.0)(typescript@4.9.4)
     devDependencies:
       '@types/node':
-        specifier: ^16.18.6
-        version: 16.18.6
+        specifier: ^18.16.3
+        version: 18.16.3
       svelte:
         specifier: ^3.56.0
         version: 3.56.0
@@ -968,8 +968,8 @@ importers:
         specifier: ^3.0.2
         version: 3.0.2
       '@types/node':
-        specifier: ^16.18.6
-        version: 16.18.6
+        specifier: ^18.16.3
+        version: 18.16.3
       flexsearch:
         specifier: ^0.7.31
         version: 0.7.31
@@ -1002,7 +1002,7 @@ importers:
         version: 0.5.6
       vite:
         specifier: ^4.3.0
-        version: 4.3.0(@types/node@16.18.6)
+        version: 4.3.0(@types/node@18.16.3)
       vite-imagetools:
         specifier: ^4.0.19
         version: 4.0.19(rollup@3.7.0)
@@ -1586,13 +1586,15 @@ packages:
       fastq: 1.15.0
     dev: true
 
-  /@playwright/test@1.30.0:
-    resolution: {integrity: sha512-SVxkQw1xvn/Wk/EvBnqWIq6NLo1AppwbYOjNLmyU0R1RoQ3rLEBtmjTnElcnz8VEtn11fptj1ECxK0tgURhajw==}
+  /@playwright/test@1.33.0:
+    resolution: {integrity: sha512-YunBa2mE7Hq4CfPkGzQRK916a4tuZoVx/EpLjeWlTVOnD4S2+fdaQZE0LJkbfhN5FTSKNLdcl7MoT5XB37bTkg==}
     engines: {node: '>=14'}
     hasBin: true
     dependencies:
-      '@types/node': 16.18.6
-      playwright-core: 1.30.0
+      '@types/node': 18.16.3
+      playwright-core: 1.33.0
+    optionalDependencies:
+      fsevents: 2.3.2
     dev: true
 
   /@polka/url@1.0.0-next.21:
@@ -1691,7 +1693,7 @@ packages:
       magic-string: 0.30.0
       svelte: 3.56.0
       svelte-hmr: 0.15.1(svelte@3.56.0)
-      vite: 4.3.0(@types/node@16.18.6)
+      vite: 4.3.0(@types/node@18.16.3)
       vitefu: 0.2.4(vite@4.3.0)
     transitivePeerDependencies:
       - supports-color
@@ -1710,7 +1712,7 @@ packages:
   /@types/connect@3.4.35:
     resolution: {integrity: sha512-cdeYyv4KWoEgpBISTxWvqYsVy444DOqehiF3fM3ne10AmJ62RSyNkUnxMJXHQWRQQX2eR94m5y1IZyDwBjV9FQ==}
     dependencies:
-      '@types/node': 18.11.11
+      '@types/node': 18.16.3
     dev: true
 
   /@types/cookie@0.5.1:
@@ -1768,12 +1770,8 @@ packages:
     resolution: {integrity: sha512-J8xLz7q2OFulZ2cyGTLE1TbbZcjpno7FaN6zdJNrgAdrJ+DZzh/uFR6YrTb4C+nXakvud8Q4+rbhoIWlYQbUFQ==}
     dev: true
 
-  /@types/node@16.18.6:
-    resolution: {integrity: sha512-vmYJF0REqDyyU0gviezF/KHq/fYaUbFhkcNbQCuPGFQj6VTbXuHZoxs/Y7mutWe73C8AC6l9fFu8mSYiBAqkGA==}
-
-  /@types/node@18.11.11:
-    resolution: {integrity: sha512-KJ021B1nlQUBLopzZmPBVuGU9un7WJd/W4ya7Ih02B4Uwky5Nja0yGYav2EfYIk0RR2Q9oVhf60S2XR1BCWJ2g==}
-    dev: true
+  /@types/node@18.16.3:
+    resolution: {integrity: sha512-OPs5WnnT1xkCBiuQrZA4+YAV4HEJejmHneyraIaxsbev5yCEr6KMwINNFP9wQeFIw8FWcoTqF3vQsa5CDaI+8Q==}
 
   /@types/normalize-package-data@2.4.1:
     resolution: {integrity: sha512-Gj7cI7z+98M282Tqmp2K5EIsoouUEzbBJhQQzDE3jSIRk6r9gsz0oUokqIUR4u1R3dMHo0pDHM7sNOHyhulypw==}
@@ -1786,7 +1784,7 @@ packages:
   /@types/prompts@2.4.1:
     resolution: {integrity: sha512-1Mqzhzi9W5KlooNE4o0JwSXGUDeQXKldbGn9NO4tpxwZbHXYd+WcKpCksG2lbhH7U9I9LigfsdVsP2QAY0lNPA==}
     dependencies:
-      '@types/node': 18.11.11
+      '@types/node': 18.16.3
     dev: true
 
   /@types/pug@2.0.6:
@@ -1813,13 +1811,13 @@ packages:
   /@types/set-cookie-parser@2.4.2:
     resolution: {integrity: sha512-fBZgytwhYAUkj/jC/FAV4RQ5EerRup1YQsXQCh8rZfiHkc4UahC192oH0smGwsXol3cL3A5oETuAHeQHmhXM4w==}
     dependencies:
-      '@types/node': 18.11.11
+      '@types/node': 18.16.3
     dev: true
 
   /@types/ws@8.5.3:
     resolution: {integrity: sha512-6YOoWjruKj1uLf3INHH7D3qTXwFfEsg1kf3c0uDdSBJwfa/llkwIjrAGV7j7mVgGNbzTQ3HiHKKDXl6bJPD97w==}
     dependencies:
-      '@types/node': 16.18.6
+      '@types/node': 18.16.3
     dev: true
 
   /@typescript-eslint/eslint-plugin@5.53.0(@typescript-eslint/parser@5.59.2)(eslint@8.33.0)(typescript@4.9.4):
@@ -4332,19 +4330,19 @@ packages:
       find-up: 4.1.0
     dev: true
 
-  /playwright-core@1.30.0:
-    resolution: {integrity: sha512-7AnRmTCf+GVYhHbLJsGUtskWTE33SwMZkybJ0v6rqR1boxq2x36U7p1vDRV7HO2IwTZgmycracLxPEJI49wu4g==}
+  /playwright-core@1.33.0:
+    resolution: {integrity: sha512-aizyPE1Cj62vAECdph1iaMILpT0WUDCq3E6rW6I+dleSbBoGbktvJtzS6VHkZ4DKNEOG9qJpiom/ZxO+S15LAw==}
     engines: {node: '>=14'}
     hasBin: true
     dev: true
 
-  /playwright@1.30.0:
-    resolution: {integrity: sha512-ENbW5o75HYB3YhnMTKJLTErIBExrSlX2ZZ1C/FzmHjUYIfxj/UnI+DWpQr992m+OQVSg0rCExAOlRwB+x+yyIg==}
+  /playwright@1.33.0:
+    resolution: {integrity: sha512-+zzU3V2TslRX2ETBRgQKsKytYBkJeLZ2xzUj4JohnZnxQnivoUvOvNbRBYWSYykQTO0Y4zb8NwZTYFUO+EpPBQ==}
     engines: {node: '>=14'}
     hasBin: true
     requiresBuild: true
     dependencies:
-      playwright-core: 1.30.0
+      playwright-core: 1.33.0
     dev: true
 
   /pluralize@8.0.0:
@@ -5473,7 +5471,7 @@ packages:
       - rollup
     dev: true
 
-  /vite@4.3.0(@types/node@16.18.6):
+  /vite@4.3.0(@types/node@18.16.3):
     resolution: {integrity: sha512-JTGFgDh3dVxeGBpuQX04Up+JZmuG6wu9414Ei36vQzaEruY/M4K0AgwtuB2b4HaBgB7R8l+LHxjB0jcgz4d2qQ==}
     engines: {node: ^14.18.0 || >=16.0.0}
     hasBin: true
@@ -5498,7 +5496,7 @@ packages:
       terser:
         optional: true
     dependencies:
-      '@types/node': 16.18.6
+      '@types/node': 18.16.3
       esbuild: 0.17.18
       postcss: 8.4.21
       rollup: 3.20.6
@@ -5513,7 +5511,7 @@ packages:
       vite:
         optional: true
     dependencies:
-      vite: 4.3.0(@types/node@16.18.6)
+      vite: 4.3.0(@types/node@18.16.3)
     dev: false
 
   /vscode-oniguruma@1.6.2:
