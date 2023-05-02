@@ -93,7 +93,6 @@
 
 	$: {
 		if (typeof src !== 'string') {
-			// support vite-imagetool's as=img and as=picture
 			srcset = (src.img || src).srcset?.map((i) => `${i.src} ${i.w}w`)?.join(', ');
 			_src = (src.img || src).src;
 			width = width || (src.img || src).w;
