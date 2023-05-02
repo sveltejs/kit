@@ -15,7 +15,7 @@ export async function images(options = {}) {
 function image_plugin(options) {
 	if (!options.providers) {
 		console.warn(
-			'vite-plugin-svelte-image: No provider found for @sveltejs/image, images not optimized at build time will not be optimized'
+			'vite-plugin-svelte-image: no CDN provider found for @sveltejs/image. Images will be optimized at build time only'
 		);
 	}
 	const providers =
