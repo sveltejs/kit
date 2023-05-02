@@ -4,7 +4,7 @@ import { imagetools } from 'vite-imagetools';
  * @param {import('types/vite').PluginOptions} options
  * @returns {import('vite').Plugin[]}
  */
-export function vitePluginSvelteImage(options = {}) {
+export function images(options = {}) {
 	return [image_plugin(options), image_tools(options)];
 }
 

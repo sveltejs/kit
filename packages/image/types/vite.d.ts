@@ -15,4 +15,4 @@ export interface PluginOptions {
 	};
 }
 
-export function vitePluginSvelteImage(options?: PluginOptions): Promise<Plugin>;
+export function images(options?: PluginOptions): Promise<Plugin>;

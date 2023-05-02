@@ -1,4 +1,4 @@
-import { vitePluginSvelteImage } from '@sveltejs/image/vite';
+import { images } from '@sveltejs/image/vite';
 import { sveltekit } from '@sveltejs/kit/vite';
 import * as path from 'path';
 import { imagetools } from 'vite-imagetools';
@@ -10,7 +10,7 @@ const config = {
 	logLevel: 'info',
 
 	plugins: [
-		vitePluginSvelteImage(),
+		images(),
 		sveltekit()
 	],
 
