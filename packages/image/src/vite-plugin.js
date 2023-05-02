@@ -59,7 +59,10 @@ export const image_sizes = ${JSON.stringify(image_sizes(options))};`;
 	};
 }
 
-function image_tools() {
+/**
+ * @param {import('types/vite').PluginOptions} [_options]
+ */
+function image_tools(_options) {
 	// TODO: get formats from configuration. if there's only a single format then do as=img
 	// TODO: add `w=${device_sizes().join(';')}`. disabled for now because vite-imagetools is generating duplicates
 	return imagetools({ defaultDirectives: new URLSearchParams('as=picture&format=avif;webp') });
