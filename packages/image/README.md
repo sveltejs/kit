@@ -27,7 +27,7 @@ export default defineConfig({
 });
 ```
 
-> `<choose one>` refers to chosing one of the ready-to-use providers. We plan to add more providers over time. You can create your own by creating a JavaScript with a `export function getURL({ src, width, height }): string` function inside.
+> `<choose one>` refers to choosing one of the ready-to-use providers. We plan to add more providers over time. You can create your own by creating a JavaScript with a `export function getURL({ src, width, height }): string` function inside.
 
 In case of Vercel, adjust `svelte.config.js`:
 
@@ -57,7 +57,7 @@ export default config;
 <Image src="/path/to/your/image.jpg" width={1200} height={1800} alt="An alt text" />
 ```
 
-`width` and `height` should be the natural width/height of the referenced image. `alt` should describe the image. All are required. The `src` is transformed by calling `getURL` of the `default` provider provided in the `vite.config.js`.
+`width` and `height` should be the intrinsic width/height of the referenced image - i.e. the dimensions of the image before styling. `alt` should describe the image. All are required. The `src` is transformed by calling `getURL` of the `default` provider provided in the `vite.config.js`.
 
 ### Static build time optimization:
 
@@ -70,9 +70,9 @@ export default config;
 <Image src={YourImage} alt="An alt text" />
 ```
 
-This optimizes the image at build time using `vite-imagetools`. `width` and `height` are optional as they can be infered from the source image.
+This optimizes the image at build time using `vite-imagetools`. `width` and `height` are optional as they can be inferred from the source image.
 
-### Pros/Cons of the solutions
+### Choosing static vs dynamic
 
 Using the static provider generates the images at build time, so that build time may take longer the more images you transform.
 
@@ -80,11 +80,11 @@ Using an image CDN provides more flexibility with regards to sizes and you can p
 
 You can mix and match both solutions in one project.
 
-### `Image` component options
+### `Image` component props
 
 There are a few things you can customize:
 
-- `priority`: give this to the most important/largest image on the page so it loads faster
+- `priority`: set this to `true` for the most important/largest image on the page so it loads faster
 - `sizes`: If your image is less than full width on one or more screen sizes, add this info here. When using dynamic providers the widths can be adjusted accordingly to produce a more optimal `srcset`. See [MDN](https://developer.mozilla.org/en-US/docs/Web/API/HTMLImageElement/sizes) for more info on the attribute
 - `style`: to style the image
 - `class`: to style the image. Be aware that you need to pass classes that are global (i.e. wrapped in `:global()` when coming from a `<style>` tag)
