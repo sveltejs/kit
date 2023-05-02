@@ -2,7 +2,7 @@
 
 **WARNING**: This package is experimental. It uses pre-1.0 versioning and may introduce breaking changes with every minor version release.
 
-This package aims to bring a plug&play image component to SvelteKit that is opinionated enough so you don't have to worry about the details, yet flexible enough for more advanced use cases or tweaks. It uses the `srcset` and `sizes` attributes of the `img` tag to provide resized images suitable for various device sizes, which for example results in smaller images downloaded for mobile.
+This package aims to bring a plug and play image component to SvelteKit that is opinionated enough so you don't have to worry about the details, yet flexible enough for more advanced use cases or tweaks. It serves a smaller file format like `avif` or `webp` and uses the `srcset` and `sizes` attributes of the `img` tag to provide resized images suitable for various device sizes, which for example results in smaller images downloaded for mobile.
 
 ## Setup
 
