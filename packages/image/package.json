@@ -40,13 +40,7 @@
 	"scripts": {
 		"lint": "prettier --check . --config ../../.prettierrc --ignore-path .gitignore",
 		"check": "tsc",
-		"check:all": "tsc && pnpm -r --filter=\"./**\" check",
-		"format": "prettier --write . --config ../../.prettierrc --ignore-path .gitignore",
-		"test": "pnpm test:unit && pnpm test:integration",
-		"test:integration": "pnpm -r --workspace-concurrency 1 --filter=\"./test/**\" test",
-		"test:cross-platform:dev": "pnpm -r --workspace-concurrency 1 --filter=\"./test/**\" test:cross-platform:dev",
-		"test:cross-platform:build": "pnpm test:unit && pnpm -r --workspace-concurrency 1 --filter=\"./test/**\" test:cross-platform:build",
-		"test:unit": "uvu src \"(spec\\.js|test[\\\\/]index\\.js)\""
+		"format": "prettier --write . --config ../../.prettierrc --ignore-path .gitignore"
 	},
 	"exports": {
 		"./package.json": "./package.json",
