@@ -1,4 +1,5 @@
-import { SvelteComponentTyped } from 'svelte';
+import type { SvelteComponentTyped } from 'svelte';
+import type { Img, Picture } from 'vite-imagetools';
 import './ambient.js';
 
 export interface GetURL<ProviderSpecificOptions = {}> {
@@ -7,16 +8,8 @@ export interface GetURL<ProviderSpecificOptions = {}> {
 
 export class Image extends SvelteComponentTyped<
 	(
-		| {
-				src: {
-					src: string;
-					width: number;
-					height: number;
-					srcset: Array<{ src: string; w: number }>;
-				};
-				width?: number;
-				height?: number;
-		  }
+		| Img
+		| Picture
 		| { src: string; width: number; height: number }
 	) & {
 		alt: string;
