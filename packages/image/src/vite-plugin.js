@@ -60,11 +60,8 @@ export const image_sizes = ${JSON.stringify(image_sizes(options))};`;
 }
 
 function image_tools() {
-	// TODO: allow passing in custom options
-	// for now you can override with the query string on a per-image basis
-	// e.g. for a simple img tag you can do 'as=picture&format=webp'
-	// TODO: add `w=${device_sizes().join(';')}`
-	// disabled for now because vite-imagetools is generating duplicates
+	// TODO: get formats from configuration. if there's only a single format then do as=img
+	// TODO: add `w=${device_sizes().join(';')}`. disabled for now because vite-imagetools is generating duplicates
 	return imagetools({ defaultDirectives: new URLSearchParams('as=picture&format=avif;webp') });
 }
 
