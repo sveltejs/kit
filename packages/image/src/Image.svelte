@@ -9,7 +9,7 @@
 	 * - If the sizes prop is set, use the vw sizes in the sizes prop.
 	 * 	 Calculate the smallest ratio to the device size and use that to filter out all sizes that will never be used.
 	 * - Always filter out all sizes above 2x the width (because upscaling beyond 2x is wasteful)
-	 * - Never use widths outside the device/image sizes because many CDN's work with fixed sizes to prevent abuse
+	 * - Never use widths outside the device/image sizes because many CDNs work with fixed sizes to prevent abuse
 	 *
 	 * @param {number} width
 	 * @param {boolean} fixed
