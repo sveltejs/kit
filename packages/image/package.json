@@ -12,7 +12,7 @@
 	"type": "module",
 	"dependencies": {
 		"esm-env": "^1.0.0",
-		"vite-imagetools": "^4.0.19"
+		"vite-imagetools": "^5.0.0"
 	},
 	"devDependencies": {
 		"@types/node": "^16.18.6",
