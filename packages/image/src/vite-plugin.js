@@ -64,7 +64,7 @@ async function image_tools(_options) {
 	let imagetools;
 	try {
 		imagetools = (await import('vite-imagetools')).imagetools;
-	} catch(err) {
+	} catch (err) {
 		return;
 	}
 	// TODO: get formats from configuration. if there's only a single format then do as=img

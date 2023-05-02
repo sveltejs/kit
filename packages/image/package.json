@@ -21,7 +21,7 @@
 		"svelte": "^3.54.0",
 		"vite": "^4.0.0"
 	},
-	"peerDependencies": { 
+	"peerDependencies": {
 		"vite-imagetools": "^5.0.0"
 	},
 	"peerDependenciesMeta": {
