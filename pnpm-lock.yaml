@@ -370,15 +370,9 @@ importers:
       '@types/node':
         specifier: ^16.18.6
         version: 16.18.6
-      svelte:
-        specifier: ^3.56.0
-        version: 3.56.0
       typescript:
         specifier: ^4.9.4
         version: 4.9.4
-      vite:
-        specifier: ^4.3.0
-        version: 4.3.0(@types/node@16.18.6)
 
   packages/kit:
     dependencies:
@@ -1029,8 +1023,8 @@ importers:
         specifier: ^4.3.0
         version: 4.3.0(@types/node@16.18.6)
       vite-imagetools:
-        specifier: ^4.0.19
-        version: 4.0.19(rollup@3.7.0)
+        specifier: ^5.0.0
+        version: 5.0.0(rollup@3.7.0)
 
 packages:
 
@@ -3396,19 +3390,11 @@ packages:
     engines: {node: '>= 4'}
     dev: true
 
-  /imagetools-core@3.3.1:
-    resolution: {integrity: sha512-xllF2GDRg0SXCQQRxBAtE6N9dPAttc+ro+QDLnRmVSE5lH5clQxD2Al4XluirXj0T7lIH5VbetFmBLowW6ps+w==}
-    engines: {node: '>=12.0.0'}
-    dependencies:
-      sharp: 0.31.3
-    dev: true
-
   /imagetools-core@4.0.0:
     resolution: {integrity: sha512-roN8/ybCvNrx2GJG9+WFxqvjNVFYTUrWJ5gzL78iC6/jLBuJTkie4eBrYtoo5ohthak+W3N8+/ebDqKhEpAEPQ==}
     engines: {node: '>=12.0.0'}
     dependencies:
       sharp: 0.32.1
-    dev: false
 
   /import-fresh@3.3.0:
     resolution: {integrity: sha512-veYYhQa+D1QBKznvhUHxb8faxlrwUnxseDAbAp457E0wLNio2bOSKnjYDhMj+YiAq61xrMGhQk9iXVk5FzgQMw==}
@@ -4046,13 +4032,8 @@ packages:
     dependencies:
       semver: 7.5.0
 
-  /node-addon-api@5.1.0:
-    resolution: {integrity: sha512-eh0GgfEkpnoWDq+VY8OyvYhFEzBk6jIYbRKdIlyTiAXIVJ8PyBaKb0rp7oDtoddbdoHWhq8wwr+XZ81F1rpNdA==}
-    dev: true
-
   /node-addon-api@6.1.0:
     resolution: {integrity: sha512-+eawOlIgy680F0kBzPUNFhMZGtJ1YmqM6l4+Crf4IkImjYrO/mqPwRMh352g23uIaQKFItcQ64I7KMaJxHgAVA==}
-    dev: false
 
   /node-fetch@2.6.7:
     resolution: {integrity: sha512-ZjMPFEfVx5j+y2yF35Kzx5sF7kDzxuDj6ziH4FFbOp87zKDZNx8yExJIb05OGF4Nlt9IHFIMBkRl41VdvcNdbQ==}
@@ -4760,21 +4741,6 @@ packages:
     resolution: {integrity: sha512-RVnVQxTXuerk653XfuliOxBP81Sf0+qfQE73LIYKcyMYHG94AuH0kgrQpRDuTZnSmjpysHmzxJXKNfa6PjFhyQ==}
     dev: false
 
-  /sharp@0.31.3:
-    resolution: {integrity: sha512-XcR4+FCLBFKw1bdB+GEhnUNXNXvnt0tDo4WsBsraKymuo/IAuPuCBVAL2wIkUw2r/dwFW5Q5+g66Kwl2dgDFVg==}
-    engines: {node: '>=14.15.0'}
-    requiresBuild: true
-    dependencies:
-      color: 4.2.3
-      detect-libc: 2.0.1
-      node-addon-api: 5.1.0
-      prebuild-install: 7.1.1
-      semver: 7.5.0
-      simple-get: 4.0.1
-      tar-fs: 2.1.1
-      tunnel-agent: 0.6.0
-    dev: true
-
   /sharp@0.32.1:
     resolution: {integrity: sha512-kQTFtj7ldpUqSe8kDxoGLZc1rnMFU0AO2pqbX6pLy3b7Oj8ivJIdoKNwxHVQG2HN6XpHPJqCSM2nsma2gOXvOg==}
     engines: {node: '>=14.15.0'}
@@ -4788,7 +4754,6 @@ packages:
       simple-get: 4.0.1
       tar-fs: 2.1.1
       tunnel-agent: 0.6.0
-    dev: false
 
   /shebang-command@1.2.0:
     resolution: {integrity: sha512-EV3L1+UQWGor21OmnvojK36mhg+TyIKDh3iFBKBohr5xeXIhNBcx8oWdgkTEEQ+BEFFYdLRuqMfd5L84N1V5Vg==}
@@ -5482,16 +5447,6 @@ packages:
       spdx-expression-parse: 3.0.1
     dev: true
 
-  /vite-imagetools@4.0.19(rollup@3.7.0):
-    resolution: {integrity: sha512-vZaPsjLDgEqZrbj+ZsniRKthmoj4mvVrMOK/FZhRAbrVB4LOsil0BO2Gcq20e/JRlom4DzqtLw1UQUkfcqgCrA==}
-    engines: {node: '>=12.0.0'}
-    dependencies:
-      '@rollup/pluginutils': 5.0.2(rollup@3.7.0)
-      imagetools-core: 3.3.1
-    transitivePeerDependencies:
-      - rollup
-    dev: true
-
   /vite-imagetools@5.0.0(rollup@3.7.0):
     resolution: {integrity: sha512-lQupylFhJx4fdDSJLzoIqb/kUM8zC2rOrvqmWAy4Jq82znzKGKVlx4riDElkPWsnNx8EvZordYBKpd9Bkzia/w==}
     engines: {node: '>=12.0.0'}
@@ -5500,7 +5455,6 @@ packages:
       imagetools-core: 4.0.0
     transitivePeerDependencies:
       - rollup
-    dev: false
 
   /vite@4.3.0(@types/node@16.18.6):
     resolution: {integrity: sha512-JTGFgDh3dVxeGBpuQX04Up+JZmuG6wu9414Ei36vQzaEruY/M4K0AgwtuB2b4HaBgB7R8l+LHxjB0jcgz4d2qQ==}

@@ -61,6 +61,14 @@ export default config;
 
 ### Static build time optimization:
 
+Install:
+
+```bash
+npm install --save-dev vite-imagetools
+```
+
+Use in your `.svelte` components:
+
 ```svelte
 <script>
 	import Image from '@sveltejs/image';

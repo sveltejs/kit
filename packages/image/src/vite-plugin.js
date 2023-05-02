@@ -1,11 +1,9 @@
-import { imagetools } from 'vite-imagetools';
-
 /**
  * @param {import('types/vite').PluginOptions} options
- * @returns {import('vite').Plugin[]}
+ * @returns {Promise<import('vite').Plugin[]>}
  */
-export function images(options = {}) {
-	return [image_plugin(options), image_tools(options)];
+export async function images(options = {}) {
+	return [image_plugin(options), await image_tools(options)].filter(Boolean);
 }
 
 /**
@@ -62,7 +60,13 @@ export const image_sizes = ${JSON.stringify(image_sizes(options))};`;
 /**
  * @param {import('types/vite').PluginOptions} [_options]
  */
-function image_tools(_options) {
+async function image_tools(_options) {
+	let imagetools;
+	try {
+		imagetools = (await import('vite-imagetools')).imagetools;
+	} catch(err) {
+		return;
+	}
 	// TODO: get formats from configuration. if there's only a single format then do as=img
 	// TODO: add `w=${device_sizes().join(';')}`. disabled for now because vite-imagetools is generating duplicates
 	return imagetools({ defaultDirectives: new URLSearchParams('as=picture&format=avif;webp') });

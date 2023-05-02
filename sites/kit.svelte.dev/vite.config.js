@@ -1,7 +1,6 @@
 import { images } from '@sveltejs/image/vite';
 import { sveltekit } from '@sveltejs/kit/vite';
 import * as path from 'path';
-import { imagetools } from 'vite-imagetools';
 
 /** @type {import('vite').UserConfig} */
 const config = {
