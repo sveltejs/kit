@@ -74,9 +74,9 @@ export async function load_config({ cwd = process.cwd() } = {}) {
 
 /**
  * @param {import('types').Config} config
- * @returns {Promise<import('types').ValidatedConfig>}
+ * @returns {import('types').ValidatedConfig}
  */
-async function process_config(config, { cwd = process.cwd() } = {}) {
+function process_config(config, { cwd = process.cwd() } = {}) {
 	const validated = validate_config(config);
 
 	validated.kit.outDir = path.resolve(cwd, validated.kit.outDir);
@@ -91,11 +91,7 @@ async function process_config(config, { cwd = process.cwd() } = {}) {
 		}
 	}
 
-	if (validated.kit.adapter.config) {
-		return validated.kit.adapter.config(validated);
-	} else {
-		return validated;
-	}
+	return validated;
 }
 
 /**

@@ -35,11 +35,6 @@ export interface Adapter {
 	 * @param builder An object provided by SvelteKit that contains methods for adapting the app
 	 */
 	adapt(builder: Builder): MaybePromise<void>;
-	/**
-	 * This function is called after SvelteKit has resolved the svelte.config.js. You can use it to modify the config.
-	 * @param config The svelte.config.js
-	 */
-	config?(config: ValidatedConfig): MaybePromise<ValidatedConfig>;
 }
 
 type AwaitedPropertiesUnion<input extends Record<string, any> | void> = input extends void
