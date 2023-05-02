@@ -4,6 +4,19 @@
  */
 export async function images(options = {}) {
 	const imagetools_plugin = await imagetools(options);
+	if (!options.providers && !image_plugin) {
+		console.warn(
+			'@sveltejs/image: vite-imagetools is not installed and no CDN provider was found. Images will not be optimized. Configuration should be updated or @sveltejs/image should be removed'
+		);
+	} else if (!options.providers) {
+		console.warn(
+			'@sveltejs/image: no CDN provider was found. Images will be optimized at build-time only'
+		);
+	} else if (!imagetools_plugin) {
+		console.warn(
+			'@sveltejs/image: vite-imagetools is not installed. Skipping build-time optimizations'
+		);
+	}
 	return imagetools_plugin ? [image_plugin(options), imagetools_plugin] : [image_plugin(options)];
 }
 
@@ -13,11 +26,6 @@ export async function images(options = {}) {
  * @returns {import('vite').Plugin}
  */
 function image_plugin(options) {
-	if (!options.providers) {
-		console.warn(
-			'vite-plugin-svelte-image: no CDN provider found for @sveltejs/image. Images will be optimized at build time only'
-		);
-	}
 	const providers =
 		!options.providers || !Object.keys(options.providers).length
 			? { default: '@sveltejs/image/providers/none' }
