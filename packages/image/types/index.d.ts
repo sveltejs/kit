@@ -7,11 +7,7 @@ export interface GetURL<ProviderSpecificOptions = {}> {
 }
 
 export class Image extends SvelteComponentTyped<
-	(
-		| Img
-		| Picture
-		| { src: string; width: number; height: number }
-	) & {
+	({ src: Img | Picture } | { src: string; width: number; height: number }) & {
 		alt: string;
 		style?: string | undefined;
 		class?: string | undefined;
