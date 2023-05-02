@@ -97,6 +97,7 @@
 	   https://github.com/sveltejs/svelte/issues/2870#issuecomment-1161082065 */
 	.hero-image :global(img) {
 		width: var(--size);
+		height: auto;
 		aspect-ratio: 4 / 3;
 		object-fit: cover;
 	}

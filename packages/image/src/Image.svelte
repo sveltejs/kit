@@ -171,9 +171,3 @@
 		{style}
 		/>
 {/if}
-
-<style>
-	img {
-		height: auto
-	}
-</style>
