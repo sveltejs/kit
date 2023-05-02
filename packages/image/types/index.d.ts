@@ -1,6 +1,5 @@
 import type { SvelteComponentTyped } from 'svelte';
 import type { Img, Picture } from 'vite-imagetools';
-import './ambient.js';
 
 export interface GetURL<ProviderSpecificOptions = {}> {
 	(opts: { src: string; width: number; height: number; options?: ProviderSpecificOptions }): string;
