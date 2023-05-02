@@ -47,11 +47,11 @@ export const image_sizes = ${JSON.stringify(image_sizes(options))};`;
 		name: 'vite-plugin-svelte-image',
 		async resolveId(id) {
 			if (id === '__svelte-image-options__.js') {
-				return id;
+				return `\0virtual:${id}`;
 			}
 		},
 		async load(id) {
-			if (id === '__svelte-image-options__.js') {
+			if (id === '\0virtual:__svelte-image-options__.js') {
 				return file;
 			}
 		}

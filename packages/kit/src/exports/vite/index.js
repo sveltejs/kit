@@ -333,7 +333,7 @@ function kit({ svelte_config }) {
 		async resolveId(id) {
 			// treat $env/static/[public|private] as virtual
 			if (id.startsWith('$env/') || id.startsWith('__sveltekit/') || id === '$service-worker') {
-				return `\0${id}`;
+				return `\0virtual:${id}`;
 			}
 		},
 
@@ -360,19 +360,19 @@ function kit({ svelte_config }) {
 			}
 
 			switch (id) {
-				case '\0$env/static/private':
+				case '\0virtual:$env/static/private':
 					return create_static_module('$env/static/private', env.private);
 
-				case '\0$env/static/public':
+				case '\0virtual:$env/static/public':
 					return create_static_module('$env/static/public', env.public);
 
-				case '\0$env/dynamic/private':
+				case '\0virtual:$env/dynamic/private':
 					return create_dynamic_module(
 						'private',
 						vite_config_env.command === 'serve' ? env.private : undefined
 					);
 
-				case '\0$env/dynamic/public':
+				case '\0virtual:$env/dynamic/public':
 					// populate `$env/dynamic/public` from `window`
 					if (browser) {
 						return `export const env = ${global}.env;`;
@@ -383,12 +383,12 @@ function kit({ svelte_config }) {
 						vite_config_env.command === 'serve' ? env.public : undefined
 					);
 
-				case '\0$service-worker':
+				case '\0virtual:$service-worker':
 					return create_service_worker_module(svelte_config);
 
 				// for internal use only. it's published as $app/paths externally
 				// we use this alias so that we won't collide with user aliases
-				case '\0__sveltekit/paths':
+				case '\0virtual:__sveltekit/paths':
 					const { assets, base } = svelte_config.kit.paths;
 
 					// use the values defined in `global`, but fall back to hard-coded values
@@ -425,7 +425,7 @@ function kit({ svelte_config }) {
 						}
 					`;
 
-				case '\0__sveltekit/environment':
+				case '\0virtual:__sveltekit/environment':
 					const { version } = svelte_config.kit;
 
 					return dedent`
