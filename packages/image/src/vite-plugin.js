@@ -3,7 +3,8 @@
  * @returns {Promise<import('vite').Plugin[]>}
  */
 export async function images(options = {}) {
-	return [image_plugin(options), await image_tools(options)].filter(Boolean);
+	const imagetools_plugin = await imagetools(options);
+	return imagetools_plugin ? [image_plugin(options), imagetools_plugin] : [image_plugin(options)];
 }
 
 /**
@@ -60,7 +61,7 @@ export const image_sizes = ${JSON.stringify(image_sizes(options))};`;
 /**
  * @param {import('types/vite').PluginOptions} [_options]
  */
-async function image_tools(_options) {
+async function imagetools(_options) {
 	let imagetools;
 	try {
 		imagetools = (await import('vite-imagetools')).imagetools;
