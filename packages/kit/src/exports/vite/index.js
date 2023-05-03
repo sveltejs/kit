@@ -355,7 +355,9 @@ function kit({ svelte_config }) {
 					})
 				) {
 					const relative = normalize_id(id, normalized_lib, normalized_cwd);
-					throw new Error(`Cannot import ${relative} into client-side code`);
+					throw new Error(
+						`Cannot import ${relative.replace('\0virtual:', '')} into client-side code`
+					);
 				}
 			}
 

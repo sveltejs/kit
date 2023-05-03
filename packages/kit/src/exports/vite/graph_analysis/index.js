@@ -1,7 +1,10 @@
 import path from 'node:path';
 import { posixify } from '../../../utils/filesystem.js';
 
-const ILLEGAL_IMPORTS = new Set(['\0$env/dynamic/private', '\0$env/static/private']);
+const ILLEGAL_IMPORTS = new Set([
+	'\0virtual:$env/dynamic/private',
+	'\0virtual:$env/static/private'
+]);
 const ILLEGAL_MODULE_NAME_PATTERN = /.*\.server\..+/;
 
 /**
