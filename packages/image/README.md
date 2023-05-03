@@ -27,9 +27,9 @@ export default defineConfig({
 });
 ```
 
-> `<choose one>` refers to choosing one of the ready-to-use providers. We plan to add more providers over time. You can create your own by creating a JavaScript with a `export function getURL({ src, width, height }): string` function inside.
+> `<choose one>` refers to choosing one of the ready-to-use providers. We plan to add more providers over time. You can create your own by creating a JavaScript file with a `export function getURL({ src, width, height }): string` function inside and then pointing to that file in the config.
 
-In case of Vercel, adjust `svelte.config.js`:
+In case of Vercel, also adjust your `svelte.config.js`:
 
 ```diff
 import adapter from '@sveltejs/adapter-vercel';
@@ -47,7 +47,7 @@ export default config;
 
 ## Usage
 
-### When using one of the providers, i.e. an image CDN:
+### Dynamic runtime optimization using one of the providers, i.e. an image CDN:
 
 ```svelte
 <script>
@@ -58,6 +58,8 @@ export default config;
 ```
 
 `width` and `height` should be the intrinsic width/height of the referenced image - i.e. the dimensions of the image before styling. `alt` should describe the image. All are required. The `src` is transformed by calling `getURL` of the `default` provider provided in the `vite.config.js`.
+
+If you want to optimize an image from an external URL, add its domain to the `domains` config of the plugin.
 
 ### Static build time optimization:
 
