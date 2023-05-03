@@ -1,16 +1,26 @@
 import { importAssets } from 'svelte-preprocess-import-assets';
 
 /**
+ * @template T
+ * @typedef {{ [K in keyof T]-?: Extract<T[K], Function> extends never ? RecursiveRequired<T[K]> : T[K]; }} RecursiveRequired;
+ */
+
+/**
+ * @typedef {RecursiveRequired<import('types/vite').PluginOptions>} PluginOptions
+ */
+
+/**
  * @param {import('types/vite').PluginOptions} options
  * @returns {Promise<import('vite').Plugin[]>}
  */
 export async function images(options = {}) {
-	const imagetools_plugin = await imagetools(options);
-	if (!options.providers && !image_plugin) {
+	const resolved_options = get_options(options);
+	const imagetools_plugin = await imagetools(resolved_options.build);
+	if (!options.runtime?.providers && !image_plugin) {
 		console.warn(
 			'@sveltejs/image: vite-imagetools is not installed and no CDN provider was found. Images will not be optimized. Configuration should be updated or @sveltejs/image should be removed'
 		);
-	} else if (!options.providers) {
+	} else if (!options.runtime?.providers) {
 		console.log(
 			'@sveltejs/image: no CDN provider was found. Images will be optimized at build-time only'
 		);
@@ -19,12 +29,14 @@ export async function images(options = {}) {
 			'@sveltejs/image: vite-imagetools is not installed. Skipping build-time optimizations'
 		);
 	}
-	return imagetools_plugin ? [image_plugin(options), imagetools_plugin] : [image_plugin(options)];
+	return imagetools_plugin
+		? [image_plugin(resolved_options.runtime), imagetools_plugin]
+		: [image_plugin(resolved_options.runtime)];
 }
 
 /**
  * Creates the Svelte image plugin which provides the `__svelte_image_options__` module used in `Image.svelte`.
- * @param {import('types/vite').PluginOptions} options
+ * @param {PluginOptions['runtime']} options
  * @returns {import('vite').Plugin}
  */
 function image_plugin(options) {
@@ -94,7 +106,7 @@ export const image_sizes = ${JSON.stringify(image_sizes(options))};`;
 }
 
 /**
- * @param {import('types/vite').PluginOptions} options
+ * @param {PluginOptions['build']} options
  */
 async function imagetools(options) {
 	/** @type {typeof import('vite-imagetools').imagetools} */
@@ -119,9 +131,9 @@ async function imagetools(options) {
 	// const width = `w=${device_sizes(options).join(';')}&allowUpscale`;
 	// return imagetools({
 	// 	defaultDirectives: new URLSearchParams(
-	// 		formats(options).length === 1
-	// 			? `as=img$format=${formats(options)[0]}&${width}`
-	// 			: `as=picture&format=${formats(options).join(';')}&${width}`
+	// 		options.formats.length === 1
+	// 			? `as=img$format=${options.formats[0]}&${width}`
+	// 			: `as=picture&format=${options.formats.join(';')}&${width}`
 	// 	)
 	// });
 
@@ -130,7 +142,7 @@ async function imagetools(options) {
 		extendOutputFormats: (builtins) => {
 			/** @type {import('vite-imagetools').OutputFormat} */
 			function svelteimage() {
-				if (formats(options).length === 1) {
+				if (options.formats.length === 1) {
 					return (metadata) => {
 						return {
 							src: metadata[0].src,
@@ -195,7 +207,7 @@ async function imagetools(options) {
 					// Use png because it can handle transparent backgrounds.
 					format: 'png'
 				},
-				...device_sizes(options)
+				...options.sizes
 					.map((w) => ({ w, format: ['avif', 'webp'] }))
 					.flatMap(({ w, format }) =>
 						format.map((f) => ({
@@ -235,23 +247,33 @@ async function imagetools(options) {
 }
 
 /**
- * @param {import('types/vite').PluginOptions} [options]
+ * @param {import('types/vite').PluginOptions} options
+ * @returns {RecursiveRequired<import('types/vite').PluginOptions>}
  */
-function formats(options) {
-	return options?.formats ?? ['avif', 'webp'];
+function get_options(options) {
+	return {
+		build: {
+			formats: options.build?.formats ?? ['avif', 'webp'],
+			sizes: options.build?.sizes ?? [640, 828, 1200, 2048, 3840]
+		},
+		runtime: {
+			providers: options.runtime?.providers ?? { default: '@sveltejs/image/providers/none' },
+			domains: options.runtime?.domains ?? []
+		}
+	};
 }
 
 // TODO make these configurable from the outside
 
 /**
- * @param {import('types/vite').PluginOptions} [_options]
+ * @param {PluginOptions['runtime']} [_options]
  */
 function device_sizes(_options) {
 	return [640, 750, 828, 1080, 1200, 1920, 2048, 3840];
 }
 
 /**
- * @param {import('types/vite').PluginOptions} [_options]
+ * @param {PluginOptions['runtime']} [_options]
  */
 function image_sizes(_options) {
 	return [64, 96, 128, 256, 384];
