@@ -2,7 +2,6 @@
 	import { Image } from '@sveltejs/image';
 	import { base } from '$app/paths';
 	import Logotype from './svelte-kit-logotype.svg.svelte';
-	import background from './svelte-kit-machine.webp?w=1440;960';
 </script>
 
 <section class="hero">
@@ -17,7 +16,7 @@
 		</div>
 
 		<div class="hero-image">
-			<Image src={background} alt="SvelteKit illustration" />
+			<Image src="./svelte-kit-machine.webp?w=1440;960" alt="SvelteKit illustration" />
 		</div>
 	</div>
 </section>

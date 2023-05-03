@@ -1,3 +1,5 @@
+import { importAssets } from 'svelte-preprocess-import-assets';
+
 /**
  * @param {import('types/vite').PluginOptions} options
  * @returns {Promise<import('vite').Plugin[]>}
@@ -53,6 +55,18 @@ export const image_sizes = ${JSON.stringify(image_sizes(options))};`;
 
 	return {
 		name: 'vite-plugin-svelte-image',
+		api: {
+			sveltePreprocess: importAssets({
+				sources: () => [
+					{
+						tag: 'Image',
+						srcAttributes: ['src']
+					}
+				],
+				// must start with '.'
+				urlFilter: (url) => /^\./.test(url),
+			})
+		},
 		async resolveId(id) {
 			if (id === '__svelte-image-options__.js') {
 				return `\0virtual:${id}`;

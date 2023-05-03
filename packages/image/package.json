@@ -11,7 +11,8 @@
 	"homepage": "https://kit.svelte.dev",
 	"type": "module",
 	"dependencies": {
-		"esm-env": "^1.0.0"
+		"esm-env": "^1.0.0",
+		"svelte-preprocess-import-assets": "^1.0.0"
 	},
 	"devDependencies": {
 		"@types/node": "^16.18.6",
@@ -19,10 +20,6 @@
 		"typescript": "^4.9.4",
 		"vite": "^4.3.0",
 		"vite-imagetools": "^5.0.0"
-	},
-	"peerDependencies": {
-		"svelte": "^3.54.0",
-		"vite": "^4.0.0"
 	},
 	"peerDependencies": {
 		"vite-imagetools": "^5.0.0"

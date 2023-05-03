@@ -72,13 +72,23 @@ Use in your `.svelte` components:
 ```svelte
 <script>
 	import Image from '@sveltejs/image';
-	import YourImage from '/path/to/your/image.jpg';
 </script>
 
-<Image src={YourImage} alt="An alt text" />
+<Image src="./path/to/your/image.jpg" alt="An alt text" />
 ```
 
 This optimizes the image at build time using `vite-imagetools`. `width` and `height` are optional as they can be inferred from the source image.
+
+> Note that the `src` must start with a `.`. `@sveltejs/image` includes a preprocessor that will convert it to the following:
+>
+>```svelte
+><script>
+>	import Image from '@sveltejs/image';
+>	import YourImage from './path/to/your/image.jpg';
+></script>
+>
+><Image src={YourImage} alt="An alt text" />
+>```
 
 ### Choosing static vs dynamic
 
