@@ -107,13 +107,19 @@
 			width = width || img_src.w;
 			height = height || img_src.h;
 		} else {
+			if (DEV && (!width || !height)) {
+				console.error(
+					`@sveltejs/image: You must provide a width and height for image with src '${src}'. Not providing these will cause layout shift which harms UX and SEO.`
+				);
+			}
+
 			if (matches_domain(src)) {
 				const p = providers[provider];
 				if (DEV && !p) {
 					throw new Error(
-						`No provider named "${provider}" found. Available providers are ${Object.keys(
+						`@sveltejs/image: No provider named "${provider}" found. Available providers are ${Object.keys(
 							providers
-						).join(', ')}. Check the kit.images.providers configuration in your svelte.config.js.`
+						).join(', ')}.`
 					);
 				}
 
@@ -132,6 +138,11 @@
 					.join(', ');
 				_src = srcset.at(-1) ?? src;
 			} else {
+				if (DEV) {
+					console.warn(
+						`@sveltejs/image: Image src '${src}' does not match any of the allowed domains and will therefore not be optimized.`
+					);
+				}
 				srcset = '';
 				_src = src;
 			}
@@ -156,7 +167,7 @@
 		<img
 			{...$$restProps}
 			fetchpriority={$$restProps.fetchpriority || (priority ? 'high' : 'auto')}
-			loading={loading ?? (priority ? 'eager' : 'lazy')}
+			loading={loading || (priority ? 'eager' : undefined)}
 			{sizes}
 			{srcset}
 			{width}
@@ -170,7 +181,7 @@
 	<img
 		{...$$restProps}
 		fetchpriority={$$restProps.fetchpriority || (priority ? 'high' : 'auto')}
-		loading={loading ?? (priority ? 'eager' : 'lazy')}
+		loading={loading || (priority ? 'eager' : undefined)}
 		{sizes}
 		{srcset}
 		{width}
