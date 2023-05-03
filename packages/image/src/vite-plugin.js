@@ -103,11 +103,27 @@ async function imagetools(options) {
 	let format;
 	/** @type {typeof import('vite-imagetools').resize} */
 	let resize;
+	/** @type {typeof import('vite-imagetools').getMetadata} */
+	let getMetadata;
 	try {
-		({ imagetools, format, resize } = await import('vite-imagetools'));
+		({ imagetools, format, resize, getMetadata } = await import('vite-imagetools'));
 	} catch (err) {
 		return;
 	}
+
+	// TODO once vite-imagetools
+	// - supports a dedicated fallback for the img
+	// - supports skipping widths higher than the original or doesn't warn when upscaling
+	// - does not set the width/height to the largest width but the intrinsic width/height
+	// then we can switch to something like this:
+	// const width = `w=${device_sizes(options).join(';')}&allowUpscale`;
+	// return imagetools({
+	// 	defaultDirectives: new URLSearchParams(
+	// 		formats(options).length === 1
+	// 			? `as=img$format=${formats(options)[0]}&${width}`
+	// 			: `as=picture&format=${formats(options).join(';')}&${width}`
+	// 	)
+	// });
 
 	return imagetools({
 		defaultDirectives: new URLSearchParams('as=svelteimage'),
@@ -172,7 +188,13 @@ async function imagetools(options) {
 			}
 
 			return [
-				{ generate: 'original' },
+				{
+					generate: 'original',
+					// Fall back to png because this version will only be shown if srcset/picture is not recognized,
+					// which means webp or avif are likely not supported, either.
+					// Use png because it can handle transparent backgrounds.
+					format: 'png'
+				},
 				...device_sizes(options)
 					.map((w) => ({ w, format: ['avif', 'webp'] }))
 					.flatMap(({ w, format }) =>
@@ -186,24 +208,24 @@ async function imagetools(options) {
 		extendTransforms: (builtins) => {
 			/** @type {import('vite-imagetools').TransformFactory<{ generate: number |'original'; format: any; }>} */
 			function svelteimage(config, ctx) {
-				if (!config.generate) {
+				const generate = config.generate;
+				if (!generate) {
 					return;
 				}
 
-				const resizeTransform =
-					config.generate === 'original'
-						? /** @type {import('vite-imagetools').ImageTransformation} */
-						  (i) => i
-						: // TODO allowUpscale should be false but it prints warnings and we can't disable just not outputting the image
-						  resize({ w: String(config.generate), allowUpscale: 'true' }, ctx);
+				const resizeTransform = resize({ w: String(generate) }, ctx);
 				const formatTransform = format({ format: config.format }, ctx);
 
 				if (!resizeTransform || !formatTransform) return;
 
 				return async function customTransform(image) {
-					// It would be great if we could not return anything at more than double the original image width,
+					// It would be great if we could not return anything at more than the original image width,
 					// but that's not possible with vite-imagetools currently
-					return await formatTransform(await resizeTransform(image));
+					const resized =
+						generate === 'original' || generate > getMetadata(image, 'width')
+							? image
+							: await resizeTransform(image);
+					return await formatTransform(resized);
 				};
 			}
 
