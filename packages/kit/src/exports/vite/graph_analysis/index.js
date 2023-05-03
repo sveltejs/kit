@@ -57,7 +57,10 @@ export function module_guard(context, { cwd, lib }) {
 					return `${' '.repeat(i * 2)}- ${id} ${dynamic ? 'dynamically imports' : 'imports'}\n`;
 				}) + `${' '.repeat(chain.length)}- ${id}`;
 
-			const message = `Cannot import ${id} into client-side code:\n${pyramid}`;
+			const message = `Cannot import ${id.replace(
+				'\0virtual:',
+				''
+			)} into client-side code:\n${pyramid}`;
 
 			throw new Error(message);
 		}

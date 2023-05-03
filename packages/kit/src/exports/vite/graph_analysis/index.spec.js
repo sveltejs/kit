@@ -45,12 +45,12 @@ test('throws an error when importing $env/static/private', () => {
 				importedIds: ['~/src/routes/+page.svelte']
 			},
 			'~/src/routes/+page.svelte': {
-				importedIds: ['\0$env/static/private']
+				importedIds: ['\0virtual:$env/static/private']
 			}
 		},
-		`Cannot import \0$env/static/private into client-side code:
+		`Cannot import $env/static/private into client-side code:
 		- src/routes/+page.svelte imports
-		 - \0$env/static/private`
+		 - \0virtual:$env/static/private`
 	);
 });
 
@@ -61,12 +61,12 @@ test('throws an error when dynamically importing $env/static/private', () => {
 				importedIds: ['~/src/routes/+page.svelte']
 			},
 			'~/src/routes/+page.svelte': {
-				dynamicallyImportedIds: ['\0$env/static/private']
+				dynamicallyImportedIds: ['\0virtual:$env/static/private']
 			}
 		},
-		`Cannot import \0$env/static/private into client-side code:
+		`Cannot import $env/static/private into client-side code:
 		- src/routes/+page.svelte dynamically imports
-		 - \0$env/static/private`
+		 - \0virtual:$env/static/private`
 	);
 });
 
@@ -77,12 +77,12 @@ test('throws an error when importing $env/dynamic/private', () => {
 				importedIds: ['~/src/routes/+page.svelte']
 			},
 			'~/src/routes/+page.svelte': {
-				importedIds: ['\0$env/dynamic/private']
+				importedIds: ['\0virtual:$env/dynamic/private']
 			}
 		},
-		`Cannot import \0$env/dynamic/private into client-side code:
+		`Cannot import $env/dynamic/private into client-side code:
 		- src/routes/+page.svelte imports
-		 - \0$env/dynamic/private`
+		 - \0virtual:$env/dynamic/private`
 	);
 });
 
@@ -93,12 +93,12 @@ test('throws an error when dynamically importing $env/dynamic/private', () => {
 				importedIds: ['~/src/routes/+page.svelte']
 			},
 			'~/src/routes/+page.svelte': {
-				dynamicallyImportedIds: ['\0$env/dynamic/private']
+				dynamicallyImportedIds: ['\0virtual:$env/dynamic/private']
 			}
 		},
-		`Cannot import \0$env/dynamic/private into client-side code:
+		`Cannot import $env/dynamic/private into client-side code:
 		- src/routes/+page.svelte dynamically imports
-		 - \0$env/dynamic/private`
+		 - \0virtual:$env/dynamic/private`
 	);
 });
 
