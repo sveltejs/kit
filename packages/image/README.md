@@ -75,6 +75,8 @@ Static build time optimization uses `vite-imagetools`, which comes as an optiona
 npm install --save-dev vite-imagetools
 ```
 
+> If you have existing image imports like `import SomeImage from './some/image.jpg';` they will be treated differently now. If you want to get back the previous behavior of this import returning a URL string, add `?url` to the end of the import.
+
 Use in your `.svelte` components:
 
 ```svelte
