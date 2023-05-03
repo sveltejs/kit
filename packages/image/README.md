@@ -65,7 +65,7 @@ export default config;
 
 `width` and `height` should be the intrinsic width/height of the referenced image - i.e. the dimensions of the image before styling. `alt` should describe the image. All are required. The `src` is transformed by calling `getURL` of the `default` provider provided in the `vite.config.js`.
 
-If you want to optimize an image from an external URL, add its domain to the `domains` config of the plugin.
+If you want to optimize an image from an external URL, add its domain to the `domains` config of the plugin. Note that you may also add a corresponding config to the image cdn (how exactly depends on the provider).
 
 ### Static build time optimization:
 
