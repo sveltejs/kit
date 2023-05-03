@@ -11,11 +11,11 @@ export async function images(options = {}) {
 			'@sveltejs/image: vite-imagetools is not installed and no CDN provider was found. Images will not be optimized. Configuration should be updated or @sveltejs/image should be removed'
 		);
 	} else if (!options.providers) {
-		console.warn(
+		console.log(
 			'@sveltejs/image: no CDN provider was found. Images will be optimized at build-time only'
 		);
 	} else if (!imagetools_plugin) {
-		console.warn(
+		console.log(
 			'@sveltejs/image: vite-imagetools is not installed. Skipping build-time optimizations'
 		);
 	}
@@ -94,18 +94,129 @@ export const image_sizes = ${JSON.stringify(image_sizes(options))};`;
 }
 
 /**
- * @param {import('types/vite').PluginOptions} [_options]
+ * @param {import('types/vite').PluginOptions} options
  */
-async function imagetools(_options) {
+async function imagetools(options) {
+	/** @type {typeof import('vite-imagetools').imagetools} */
 	let imagetools;
+	/** @type {typeof import('vite-imagetools').format} */
+	let format;
+	/** @type {typeof import('vite-imagetools').resize} */
+	let resize;
 	try {
-		imagetools = (await import('vite-imagetools')).imagetools;
+		({ imagetools, format, resize } = await import('vite-imagetools'));
 	} catch (err) {
 		return;
 	}
-	// TODO: get formats from configuration. if there's only a single format then do as=img
-	// TODO: add `w=${device_sizes().join(';')}`. disabled for now because vite-imagetools is generating duplicates
-	return imagetools({ defaultDirectives: new URLSearchParams('as=picture&format=avif;webp') });
+
+	return imagetools({
+		defaultDirectives: new URLSearchParams('as=svelteimage'),
+		extendOutputFormats: (builtins) => {
+			/** @type {import('vite-imagetools').OutputFormat} */
+			function svelteimage() {
+				if (formats(options).length === 1) {
+					return (metadata) => {
+						return {
+							src: metadata[0].src,
+							w: metadata[0].width,
+							h: metadata[0].height,
+							srcset: metadata.slice(1).map((m) => {
+								return {
+									src: m.src,
+									w: m.width
+								};
+							})
+						};
+					};
+				} else {
+					return (metadata) => {
+						const sources = metadata.slice(1).reduce(
+							/**
+							 * @param {Record<string, import('vite-imagetools').Source[]>} acc
+							 * @param {Record<string, any>} m
+							 */
+							(acc, m) => {
+								const format = /** @type {string} */ (m.format);
+								acc[format] = acc[format] || [];
+								acc[format].push({
+									src: m.src,
+									w: m.width
+								});
+								return acc;
+							},
+							{}
+						);
+
+						return {
+							img: {
+								src: metadata[0].src,
+								w: metadata[0].width,
+								h: metadata[0].height
+							},
+							sources
+						};
+					};
+				}
+			}
+			return {
+				...builtins,
+				svelteimage
+			};
+		},
+		resolveConfigs: (entries, output_formats) => {
+			const generate = entries.find(
+				([key, value]) => key === 'as' && value.includes('svelteimage')
+			);
+			if (!generate || !output_formats['svelteimage']) {
+				return /** @type {any} */ (undefined);
+			}
+
+			return [
+				{ generate: 'original' },
+				...device_sizes(options)
+					.map((w) => ({ w, format: ['avif', 'webp'] }))
+					.flatMap(({ w, format }) =>
+						format.map((f) => ({
+							generate: w,
+							format: f
+						}))
+					)
+			];
+		},
+		extendTransforms: (builtins) => {
+			/** @type {import('vite-imagetools').TransformFactory<{ generate: number |'original'; format: any; }>} */
+			function svelteimage(config, ctx) {
+				if (!config.generate) {
+					return;
+				}
+
+				const resizeTransform =
+					config.generate === 'original'
+						? /** @type {import('vite-imagetools').ImageTransformation} */
+						  (i) => i
+						: // TODO allowUpscale should be false but it prints warnings and we can't disable just not outputting the image
+						  resize({ w: String(config.generate), allowUpscale: 'true' }, ctx);
+				const formatTransform = format({ format: config.format }, ctx);
+
+				if (!resizeTransform || !formatTransform) return;
+
+				return async function customTransform(image) {
+					// It would be great if we could not return anything at more than double the original image width,
+					// but that's not possible with vite-imagetools currently
+					return await formatTransform(await resizeTransform(image));
+				};
+			}
+
+			return [svelteimage, ...builtins];
+		}
+	});
+}
+
+/**
+ * @param {import('types/vite').PluginOptions} [options]
+ */
+function formats(options) {
+	return options?.formats ?? ['avif', 'webp'];
 }
 
 // TODO make these configurable from the outside

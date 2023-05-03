@@ -88,15 +88,24 @@
 	/** @type {boolean} */
 	export let priority = false;
 
-	let srcset = '';
+	/** @type {import('vite-imagetools').Picture['sources'] | undefined} */
+	let picture_sources;
+	/** @type {string | undefined} */
+	let srcset;
 	let _src = '';
 
 	$: {
 		if (typeof src !== 'string') {
-			srcset = (src.img || src).srcset?.map((i) => `${i.src} ${i.w}w`)?.join(', ');
-			_src = (src.img || src).src;
-			width = width || (src.img || src).w;
-			height = height || (src.img || src).h;
+			picture_sources = /** @type {import('vite-imagetools').Picture} */ (src).sources;
+			const img_src =
+				/** @type {import('vite-imagetools').Picture} */ (src).img ??
+				/** @type {import('vite-imagetools').Img} */ (src);
+			srcset = /** @type {import('vite-imagetools').Img} */ (src).srcset
+				?.map((i) => `${i.src} ${i.w}w`)
+				?.join(', ');
+			_src = img_src.src;
+			width = width || img_src.w;
+			height = height || img_src.h;
 		} else {
 			if (matches_domain(src)) {
 				const p = providers[provider];
@@ -116,7 +125,6 @@
 							: p.getURL({
 									src: /** @type {string} */ (src),
 									width: w,
-									height: Math.round(w * (width / height)),
 									options: providerOptions
 							  });
 						return `${url} ${w}${widths.kind}`;
@@ -132,16 +140,17 @@
 </script>
 
 <svelte:head>
-	{#if priority}
+	<!-- No preload for picture elements, browsers don't support that yet -->
+	{#if priority && !picture_sources}
 		<!-- don't set href because older browsers which don't support imagesrcset would probably load the wrong image -->
 		<link rel="preload" as="image" imagesrcset={srcset} imagesizes={sizes} fetchpriority="high" />
 	{/if}
 </svelte:head>
 
 <!-- Chrome with cache disabled seems to reload the src if it is reset during hydration which redownloads it -->
-{#if src.img}
+{#if picture_sources}
 	<picture>
-		{#each Object.entries(src.sources) as [format, images]}
+		{#each Object.entries(picture_sources) as [format, images]}
 			<source srcset={images.map((i) => `${i.src} ${i.w}w`).join(', ')} type={'image/' + format} />
 		{/each}
 		<img
@@ -155,7 +164,7 @@
 			src={_src}
 			{alt}
 			{style}
-			/>
+		/>
 	</picture>
 {:else}
 	<img
@@ -169,5 +178,5 @@
 		src={_src}
 		{alt}
 		{style}
-		/>
+	/>
 {/if}

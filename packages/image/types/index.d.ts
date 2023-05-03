@@ -2,7 +2,7 @@ import type { SvelteComponentTyped } from 'svelte';
 import type { Img, Picture } from 'vite-imagetools';
 
 export interface GetURL<ProviderSpecificOptions = {}> {
-	(opts: { src: string; width: number; height: number; options?: ProviderSpecificOptions }): string;
+	(opts: { src: string; width: number; options?: ProviderSpecificOptions }): string;
 }
 
 /**
