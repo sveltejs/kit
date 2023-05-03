@@ -50,12 +50,12 @@
 	<slot />
 
 	<div class="banner" slot="banner-bottom">
-		<a target="_blank" rel="noopener noreferrer" href="https://hack.sveltesociety.dev/">
+		<a target="_blank" rel="noopener noreferrer" href="https://sveltesummit.com/">
 			<span class="small">
 				<strong>Announcing SvelteHack</strong> Participate →
 			</span>
 			<span class="large">
-				<strong>Announcing SvelteHack</strong> Our first hackathon with over $12,000 in prizes →
+				<strong>Svelte Summit</strong> The Svelte Conference for everyone →
 			</span>
 		</a>
 		<button on:click={() => (banner_height = '0px')}> ✕ </button>
