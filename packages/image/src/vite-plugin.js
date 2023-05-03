@@ -64,7 +64,7 @@ export const image_sizes = ${JSON.stringify(image_sizes(options))};`;
 					}
 				],
 				// must start with '.'
-				urlFilter: (url) => /^\./.test(url),
+				urlFilter: (url) => /^\./.test(url)
 			})
 		},
 		async resolveId(id) {

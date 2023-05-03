@@ -81,14 +81,14 @@ This optimizes the image at build time using `vite-imagetools`. `width` and `hei
 
 > Note that the `src` must start with a `.`. `@sveltejs/image` includes a preprocessor that will convert it to the following:
 >
->```svelte
-><script>
->	import Image from '@sveltejs/image';
->	import YourImage from './path/to/your/image.jpg';
-></script>
+> ```svelte
+> <script>
+> 	import Image from '@sveltejs/image';
+> 	import YourImage from './path/to/your/image.jpg';
+> </script>
 >
-><Image src={YourImage} alt="An alt text" />
->```
+> <Image src={YourImage} alt="An alt text" />
+> ```
 
 ### Choosing static vs dynamic
 
