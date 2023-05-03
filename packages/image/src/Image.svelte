@@ -1,5 +1,10 @@
 <script context="module">
-	import { providers, domains, device_sizes, image_sizes } from '__svelte-image-options__.js';
+	import {
+		providers,
+		domains,
+		device_sizes,
+		image_sizes
+	} from 'virtual:__svelte-image-options__.js';
 	import { DEV } from 'esm-env';
 
 	const all_sizes = image_sizes.concat(device_sizes);

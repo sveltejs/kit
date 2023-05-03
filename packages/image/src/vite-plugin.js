@@ -93,8 +93,8 @@ export const image_sizes = ${JSON.stringify(image_sizes(options))};`;
 			}
 		},
 		async resolveId(id) {
-			if (id === '__svelte-image-options__.js') {
-				return `\0virtual:${id}`;
+			if (id === 'virtual:__svelte-image-options__.js') {
+				return `\0${id}`;
 			}
 		},
 		async load(id) {
