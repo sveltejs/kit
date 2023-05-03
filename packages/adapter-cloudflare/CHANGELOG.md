@@ -1,5 +1,11 @@
 # @sveltejs/adapter-cloudflare
 
+## 2.2.2
+
+### Patch Changes
+
+- fix: respect response status code for caching in `adapter-cloudflare` ([#9820](https://github.com/sveltejs/kit/pull/9820))
+
 ## 2.2.1
 
 ### Patch Changes
