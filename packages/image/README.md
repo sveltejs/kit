@@ -71,7 +71,7 @@ Use in your `.svelte` components:
 
 ```svelte
 <script>
-	import Image from '@sveltejs/image';
+	import { Image } from '@sveltejs/image';
 </script>
 
 <Image src="./path/to/your/image.jpg" alt="An alt text" />
@@ -83,7 +83,7 @@ This optimizes the image at build time using `vite-imagetools`. `width` and `hei
 >
 > ```svelte
 > <script>
-> 	import Image from '@sveltejs/image';
+> 	import { Image } from '@sveltejs/image';
 > 	import YourImage from './path/to/your/image.jpg';
 > </script>
 >
@@ -92,9 +92,9 @@ This optimizes the image at build time using `vite-imagetools`. `width` and `hei
 
 ### Choosing static vs dynamic
 
-Using the static provider generates the images at build time, so that build time may take longer the more images you transform.
+Using the static provider generates the images at build time, so build time may take longer the more images you transform.
 
-Using an image CDN provides more flexibility with regards to sizes and you can pass image sources not known at build time, but it comes with potentially a bit setup overhead (configuring the image CDN) and possibly usage cost.
+Using an image CDN provides more flexibility with regards to sizes and you can pass image sources not known at build time, but it comes with potentially a bit of setup overhead (configuring the image CDN) and possibly usage cost.
 
 You can mix and match both solutions in one project.
 
