@@ -111,14 +111,8 @@ export const image_sizes = ${JSON.stringify(image_sizes(options))};`;
 async function imagetools(options) {
 	/** @type {typeof import('vite-imagetools').imagetools} */
 	let imagetools;
-	/** @type {typeof import('vite-imagetools').format} */
-	let format;
-	/** @type {typeof import('vite-imagetools').resize} */
-	let resize;
-	/** @type {typeof import('vite-imagetools').getMetadata} */
-	let getMetadata;
 	try {
-		({ imagetools, format, resize, getMetadata } = await import('vite-imagetools'));
+		({ imagetools } = await import('vite-imagetools'));
 	} catch (err) {
 		return;
 	}
