@@ -21,7 +21,13 @@ import { defineConfig } from 'vite';
 
 export default defineConfig({
 	plugins: [
-+		images({ providers: { default: '@sveltejs/image/providers/<choose one>' } }),
++		images({
+			runtime: {
+				providers: {
+					default: '@sveltejs/image/providers/<choose one>'
+				}
+			}
+		}),
 		sveltekit()
 	]
 });
