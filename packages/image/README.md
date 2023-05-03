@@ -61,7 +61,7 @@ export default config;
 
 ### Static build time optimization:
 
-Install:
+Static build time optimization uses `vite-imagetools`, which comes as an optional peer dependency, so you first need to install it:
 
 ```bash
 npm install --save-dev vite-imagetools
@@ -79,16 +79,20 @@ Use in your `.svelte` components:
 
 This optimizes the image at build time using `vite-imagetools`. `width` and `height` are optional as they can be inferred from the source image.
 
-> Note that the `src` must start with a `.`. `@sveltejs/image` includes a preprocessor that will convert it to the following:
->
-> ```svelte
-> <script>
-> 	import { Image } from '@sveltejs/image';
-> 	import YourImage from './path/to/your/image.jpg';
-> </script>
->
-> <Image src={YourImage} alt="An alt text" />
-> ```
+Note that the `src` prop must start with a `.`. `@sveltejs/image` includes a preprocessor that will convert it to the following:
+
+```svelte
+<script>
+	import { Image } from '@sveltejs/image';
+	import YourImage from './path/to/your/image.jpg';
+</script>
+
+<Image src={YourImage} alt="An alt text" />
+```
+
+You can also write it yourself like this, if you want to.
+
+Note that the generated code is a `picture` tag (not an `img` tag as in the case of dynamic providers) wrapping one `source` tag per image type.
 
 ### Choosing static vs dynamic
 
@@ -123,4 +127,4 @@ This is an experimental MVP for getting initial feedback on the implementation/u
 
 ## Acknowledgements
 
-We'd like to thank the authors of the Next/Nuxt/Astro/`unpic` image components for inspiring this work.
+We'd like to thank the authors of the Next/Nuxt/Astro/`unpic` image components for inspiring this work. We'd also like to thank the authors of `vite-imagetools` and `svelte-preprocess-import-assets` which are used in `@sveltejs/image`.
