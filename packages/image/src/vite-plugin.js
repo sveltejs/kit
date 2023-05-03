@@ -53,19 +53,32 @@ export const domains = ${options.domains ? JSON.stringify(options.domains) : '[]
 export const device_sizes = ${JSON.stringify(device_sizes(options))};
 export const image_sizes = ${JSON.stringify(image_sizes(options))};`;
 
+	const assets_preprocessor = importAssets({
+		sources: () => [
+			{
+				tag: 'Image',
+				srcAttributes: ['src']
+			}
+		],
+		// must start with '.'
+		urlFilter: (url) => /^\./.test(url)
+	});
+
 	return {
 		name: 'vite-plugin-svelte-image',
 		api: {
-			sveltePreprocess: importAssets({
-				sources: () => [
-					{
-						tag: 'Image',
-						srcAttributes: ['src']
+			sveltePreprocess: {
+				/** @param {any} input */
+				markup(input) {
+					if (input.content.includes('@sveltejs/image') && assets_preprocessor.markup) {
+						return assets_preprocessor.markup(input);
+					} else {
+						return {
+							code: input.content
+						};
 					}
-				],
-				// must start with '.'
-				urlFilter: (url) => /^\./.test(url)
-			})
+				}
+			}
 		},
 		async resolveId(id) {
 			if (id === '__svelte-image-options__.js') {
