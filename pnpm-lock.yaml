@@ -363,6 +363,9 @@ importers:
       esm-env:
         specifier: ^1.0.0
         version: 1.0.0
+      import-meta-resolve:
+        specifier: ^3.0.0
+        version: 3.0.0
       svelte-preprocess-import-assets:
         specifier: ^1.0.0
         version: 1.0.0(svelte@3.56.0)

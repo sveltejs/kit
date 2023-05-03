@@ -1,4 +1,5 @@
 import { importAssets } from 'svelte-preprocess-import-assets';
+import { resolve } from 'import-meta-resolve';
 
 /**
  * @template T
@@ -118,7 +119,8 @@ async function imagetools(options) {
 	/** @type {typeof import('vite-imagetools').getMetadata} */
 	let getMetadata;
 	try {
-		({ imagetools, format, resize, getMetadata } = await import('vite-imagetools'));
+		const resolved = resolve('vite-imagetools', '.');
+		({ imagetools, format, resize, getMetadata } = await import(resolved));
 	} catch (err) {
 		return;
 	}
