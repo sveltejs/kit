@@ -123,126 +123,12 @@ async function imagetools(options) {
 		return;
 	}
 
-	// TODO once vite-imagetools
-	// - supports a dedicated fallback for the img
-	// - supports skipping widths higher than the original or doesn't warn when upscaling
-	// - does not set the width/height to the largest width but the intrinsic width/height
-	// then we can switch to something like this:
-	// const width = `w=${device_sizes(options).join(';')}&allowUpscale`;
-	// return imagetools({
-	// 	defaultDirectives: new URLSearchParams(
-	// 		options.formats.length === 1
-	// 			? `as=img$format=${options.formats[0]}&${width}`
-	// 			: `as=picture&format=${options.formats.join(';')}&${width}`
-	// 	)
-	// });
-
 	return imagetools({
-		defaultDirectives: new URLSearchParams('as=svelteimage'),
-		extendOutputFormats: (builtins) => {
-			/** @type {import('vite-imagetools').OutputFormat} */
-			function svelteimage() {
-				if (options.formats.length === 1) {
-					return (metadata) => {
-						return {
-							src: metadata[0].src,
-							w: metadata[0].width,
-							h: metadata[0].height,
-							srcset: metadata.slice(1).map((m) => {
-								return {
-									src: m.src,
-									w: m.width
-								};
-							})
-						};
-					};
-				} else {
-					return (metadata) => {
-						const sources = metadata.slice(1).reduce(
-							/**
-							 * @param {Record<string, import('vite-imagetools').Source[]>} acc
-							 * @param {Record<string, any>} m
-							 */
-							(acc, m) => {
-								const format = /** @type {string} */ (m.format);
-								acc[format] = acc[format] || [];
-								acc[format].push({
-									src: m.src,
-									w: m.width
-								});
-								return acc;
-							},
-							{}
-						);
-
-						return {
-							img: {
-								src: metadata[0].src,
-								w: metadata[0].width,
-								h: metadata[0].height
-							},
-							sources
-						};
-					};
-				}
-			}
-			return {
-				...builtins,
-				svelteimage
-			};
-		},
-		resolveConfigs: (entries, output_formats) => {
-			const generate = entries.find(
-				([key, value]) => key === 'as' && value.includes('svelteimage')
-			);
-			if (!generate || !output_formats['svelteimage']) {
-				return /** @type {any} */ (undefined);
-			}
-
-			return [
-				{
-					generate: 'original',
-					// Fall back to png because this version will only be shown if srcset/picture is not recognized,
-					// which means webp or avif are likely not supported, either.
-					// Use png because it can handle transparent backgrounds.
-					format: 'png'
-				},
-				...options.sizes
-					.map((w) => ({ w, format: ['avif', 'webp'] }))
-					.flatMap(({ w, format }) =>
-						format.map((f) => ({
-							generate: w,
-							format: f
-						}))
-					)
-			];
-		},
-		extendTransforms: (builtins) => {
-			/** @type {import('vite-imagetools').TransformFactory<{ generate: number |'original'; format: any; }>} */
-			function svelteimage(config, ctx) {
-				const generate = config.generate;
-				if (!generate) {
-					return;
-				}
-
-				const resizeTransform = resize({ w: String(generate) }, ctx);
-				const formatTransform = format({ format: config.format }, ctx);
-
-				if (!resizeTransform || !formatTransform) return;
-
-				return async function customTransform(image) {
-					// It would be great if we could not return anything at more than the original image width,
-					// but that's not possible with vite-imagetools currently
-					const resized =
-						generate === 'original' || generate > getMetadata(image, 'width')
-							? image
-							: await resizeTransform(image);
-					return await formatTransform(resized);
-				};
-			}
-
-			return [svelteimage, ...builtins];
-		}
+		defaultDirectives: new URLSearchParams(
+			options.formats.length === 1
+				? `as=img$format=${options.formats[0]}&w=${device_sizes(options).join(';')}`
+				: `as=picture&format=${options.formats.join(';')}&w=${device_sizes(options).join(';')}`
+		)
 	});
 }
 
@@ -253,7 +139,7 @@ async function imagetools(options) {
 function get_options(options) {
 	return {
 		build: {
-			formats: options.build?.formats ?? ['avif', 'webp'],
+			formats: options.build?.formats ?? ['avif', 'webp', 'png'],
 			sizes: options.build?.sizes ?? [640, 828, 1200, 2048, 3840]
 		},
 		runtime: {

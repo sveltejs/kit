@@ -19,10 +19,10 @@
 		"svelte": "^3.56.0",
 		"typescript": "^4.9.4",
 		"vite": "^4.3.0",
-		"vite-imagetools": "^5.0.0"
+		"vite-imagetools": "^5.0.2"
 	},
 	"peerDependencies": {
-		"vite-imagetools": "^5.0.0"
+		"vite-imagetools": "^5.0.2"
 	},
 	"peerDependenciesMeta": {
 		"vite-imagetools": {
