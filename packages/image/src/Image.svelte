@@ -141,7 +141,7 @@
 						return `${url} ${w}${widths.kind}`;
 					})
 					.join(', ');
-				_src = srcset.at(-1) ?? src;
+				_src = srcset.split(',').at(-1)?.trim().split(' ', 1)[0] ?? src;
 			} else {
 				if (DEV) {
 					console.warn(

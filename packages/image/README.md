@@ -21,7 +21,13 @@ import { defineConfig } from 'vite';
 
 export default defineConfig({
 	plugins: [
-+		images({ providers: { default: '@sveltejs/image/providers/<choose one>' } }),
++		images({
+			runtime: {
+				providers: {
+					default: '@sveltejs/image/providers/<choose one>'
+				}
+			}
+		}),
 		sveltekit()
 	]
 });
@@ -59,7 +65,7 @@ export default config;
 
 `width` and `height` should be the intrinsic width/height of the referenced image - i.e. the dimensions of the image before styling. `alt` should describe the image. All are required. The `src` is transformed by calling `getURL` of the `default` provider provided in the `vite.config.js`.
 
-If you want to optimize an image from an external URL, add its domain to the `domains` config of the plugin.
+If you want to optimize an image from an external URL, add its domain to the `domains` config of the plugin. Note that you may also add a corresponding config to the image cdn (how exactly depends on the provider).
 
 ### Static build time optimization:
 
@@ -68,6 +74,8 @@ Static build time optimization uses `vite-imagetools`, which comes as an optiona
 ```bash
 npm install --save-dev vite-imagetools
 ```
+
+> If you have existing image imports like `import SomeImage from './some/image.jpg';` they will be treated differently now. If you want to get back the previous behavior of this import returning a URL string, add `?url` to the end of the import.
 
 Use in your `.svelte` components:
 
