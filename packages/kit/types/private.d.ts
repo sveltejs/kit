@@ -205,8 +205,17 @@ export interface PrerenderMissingIdHandler {
 	(details: { path: string; id: string; referrers: string[]; message: string }): void;
 }
 
+export interface PrerenderEntryGeneratorMismatchHandler {
+	(details: { generatedFromId: string; entry: string; matchedId: string; message: string }): void;
+}
+
 export type PrerenderHttpErrorHandlerValue = 'fail' | 'warn' | 'ignore' | PrerenderHttpErrorHandler;
 export type PrerenderMissingIdHandlerValue = 'fail' | 'warn' | 'ignore' | PrerenderMissingIdHandler;
+export type PrerenderEntryGeneratorMismatchHandlerValue =
+	| 'fail'
+	| 'warn'
+	| 'ignore'
+	| PrerenderEntryGeneratorMismatchHandler;
 
 export type PrerenderOption = boolean | 'auto';
 
