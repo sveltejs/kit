@@ -525,6 +525,12 @@ function kit({ svelte_config }) {
 				} else {
 					input['entry/start'] = `${runtime_directory}/client/start.js`;
 					input['entry/app'] = `${kit.outDir}/generated/client-optimized/app.js`;
+
+					manifest_data.nodes.forEach((node, i) => {
+						if (node.component || node.universal) {
+							input[`nodes/${i}`] = `${kit.outDir}/generated/client-optimized/nodes/${i}.js`;
+						}
+					});
 				}
 
 				// see the kit.output.preloadStrategy option for details on why we have multiple options here
