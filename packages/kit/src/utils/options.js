@@ -1,6 +1,6 @@
 /**
- * @template {'prerender' | 'ssr' | 'csr' | 'trailingSlash'} Option
- * @template {Option extends 'prerender' ? import('types').PrerenderOption : Option extends 'trailingSlash' ? import('types').TrailingSlash : boolean} Value
+ * @template {'prerender' | 'ssr' | 'csr' | 'trailingSlash' | 'entries'} Option
+ * @template {(import('types').SSRNode['universal'] | import('types').SSRNode['server'])[Option]} Value
  *
  * @param {Array<import('types').SSRNode | undefined>} nodes
  * @param {Option} option
@@ -9,7 +9,7 @@
  */
 export function get_option(nodes, option) {
 	return nodes.reduce((value, node) => {
-		return /** @type {any} TypeScript's too dumb to understand this */ (
+		return /** @type {Value} TypeScript's too dumb to understand this */ (
 			node?.universal?.[option] ?? node?.server?.[option] ?? value
 		);
 	}, /** @type {Value | undefined} */ (undefined));
