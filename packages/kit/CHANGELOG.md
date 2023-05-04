@@ -1,5 +1,11 @@
 # @sveltejs/kit
 
+## 1.16.0
+
+### Minor Changes
+
+- feat: route-level entry generators via `export const entries` ([#9571](https://github.com/sveltejs/kit/pull/9571))
+
 ## 1.15.11
 
 ### Patch Changes
