@@ -61,7 +61,7 @@ const scroll_positions = storage.get(SCROLL_KEY) ?? {};
  * history index -> any
  * @type {Record<string, Record<string, any>>}
  */
-const states = storage.get(STATES_KEY) ?? {};
+const states = storage.get(STATES_KEY, devalue.parse) ?? {};
 
 /**
  * navigation index -> any
@@ -244,6 +244,8 @@ export function create_client(app, target) {
 
 		capture_snapshot(current_navigation_index);
 		storage.set(SNAPSHOT_KEY, snapshots);
+
+		storage.set(STATES_KEY, states, devalue.stringify);
 	}
 
 	/**
@@ -1435,6 +1437,15 @@ export function create_client(app, target) {
 		preload_code,
 
 		push_state: (state, url = current.url) => {
+			if (DEV) {
+				try {
+					devalue.stringify(state);
+				} catch (error) {
+					// @ts-expect-error
+					throw new Error(`Could not serialize state${error.path}`);
+				}
+			}
+
 			history.pushState(
 				{
 					[HISTORY_INDEX]: (current_history_index += 1),
@@ -1453,6 +1464,15 @@ export function create_client(app, target) {
 		},
 
 		replace_state: (state, url = current.url) => {
+			if (DEV) {
+				try {
+					devalue.stringify(state);
+				} catch (error) {
+					// @ts-expect-error
+					throw new Error(`Could not serialize state${error.path}`);
+				}
+			}
+
 			history.replaceState(
 				{
 					[HISTORY_INDEX]: current_history_index,
