@@ -1354,7 +1354,7 @@ export function create_client(app, target) {
 			return invalidate();
 		},
 
-		invalidateAll: () => {
+		invalidate_all: () => {
 			force_invalidation = true;
 			return invalidate();
 		},
