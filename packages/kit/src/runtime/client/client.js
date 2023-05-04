@@ -161,6 +161,8 @@ export function create_client(app, target) {
 	/** @type {number} */
 	let current_navigation_index = history.state?.[NAVIGATION_INDEX];
 
+	let has_navigated = false;
+
 	if (!current_history_index) {
 		// we use Date.now() as an offset so that cross-document navigations
 		// within the app don't result in data loss
@@ -1193,6 +1195,7 @@ export function create_client(app, target) {
 		stores.navigating.set(null);
 
 		updating = false;
+		has_navigated = true;
 	}
 
 	/**
@@ -1749,9 +1752,13 @@ export function create_client(app, target) {
 
 					const navigation_index = event.state[NAVIGATION_INDEX];
 
-					if (navigation_index === current_navigation_index) {
+					const shallow = navigation_index === current_navigation_index && has_navigated;
+
+					if (shallow) {
 						// We don't need to navigate, we just need to update scroll and/or state.
-						// This happens with hash links and `pushState`/`replaceState`
+						// This happens with hash links and `pushState`/`replaceState`. The
+						// exception is if we haven't navigated yet, since we could have
+						// got here after a modal navigation then a reload
 						scroll_positions[current_history_index] = scroll_state();
 						if (scroll) scrollTo(scroll.x, scroll.y);
 
