@@ -49,7 +49,6 @@ let errored = false;
 // We track the scroll position associated with each history entry in sessionStorage,
 // rather than on history.state itself, because when navigation is driven by
 // popstate it's too late to update the scroll position associated with the
-// popstate it's too late to update the scroll position associated with the
 // state we're navigating from
 /**
  * history index -> { x, y }
