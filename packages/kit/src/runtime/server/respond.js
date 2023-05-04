@@ -15,7 +15,7 @@ import {
 	strip_data_suffix
 } from '../../utils/url.js';
 import { exec } from '../../utils/routing.js';
-import { INVALIDATED_PARAM, redirect_json_response, render_data } from './data/index.js';
+import { redirect_json_response, render_data } from './data/index.js';
 import { add_cookies_to_headers, get_cookies } from './cookie.js';
 import { create_fetch } from './fetch.js';
 import { Redirect } from '../control.js';
@@ -27,6 +27,7 @@ import {
 import { get_option } from '../../utils/options.js';
 import { error, json, text } from '../../exports/index.js';
 import { action_json_redirect, is_action_json_request } from './page/actions.js';
+import { INVALIDATED_PARAM } from '../shared.js';
 
 /* global __SVELTEKIT_ADAPTER_NAME__ */
 
@@ -94,7 +95,10 @@ export async function respond(request, options, manifest, state) {
 	if (is_data_request) {
 		decoded = strip_data_suffix(decoded) || '/';
 		url.pathname = strip_data_suffix(url.pathname) || '/';
-		invalidated_data_nodes = url.searchParams.get(INVALIDATED_PARAM)?.split('_').map(Boolean);
+		invalidated_data_nodes = url.searchParams
+			.get(INVALIDATED_PARAM)
+			?.split('')
+			.map((node) => node === '1');
 		url.searchParams.delete(INVALIDATED_PARAM);
 	}
 

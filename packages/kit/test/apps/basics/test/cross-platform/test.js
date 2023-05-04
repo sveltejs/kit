@@ -575,7 +575,7 @@ test.describe('Redirects', () => {
 			const [, response] = await Promise.all([
 				app.goto('/redirect/in-handle?throw&cookies'),
 				page.waitForResponse((request) =>
-					request.url().endsWith('in-handle/__data.json?throw=&cookies=&x-sveltekit-invalidated=_1')
+					request.url().endsWith('in-handle/__data.json?throw=&cookies=&x-sveltekit-invalidated=01')
 				)
 			]);
 			expect((await response.allHeaders())['set-cookie']).toBeDefined();

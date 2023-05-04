@@ -33,7 +33,7 @@ import * as devalue from 'devalue';
 import { INDEX_KEY, PRELOAD_PRIORITIES, SCROLL_KEY, SNAPSHOT_KEY } from './constants.js';
 import { validate_common_exports } from '../../utils/exports.js';
 import { compact } from '../../utils/array.js';
-import { validate_depends } from '../shared.js';
+import { INVALIDATED_PARAM, validate_depends } from '../shared.js';
 
 let errored = false;
 
@@ -1775,13 +1775,10 @@ export function create_client(app, target) {
 async function load_data(url, invalid) {
 	const data_url = new URL(url);
 	data_url.pathname = add_data_suffix(url.pathname);
-	if (DEV && url.searchParams.has('x-sveltekit-invalidated')) {
-		throw new Error('Cannot used reserved query parameter "x-sveltekit-invalidated"');
+	if (DEV && url.searchParams.has(INVALIDATED_PARAM)) {
+		throw new Error(`Cannot used reserved query parameter "${INVALIDATED_PARAM}"`);
 	}
-	data_url.searchParams.append(
-		'x-sveltekit-invalidated',
-		invalid.map((x) => (x ? '1' : '')).join('_')
-	);
+	data_url.searchParams.append(INVALIDATED_PARAM, invalid.map((i) => (i ? '1' : '0')).join(''));
 
 	const res = await native_fetch(data_url.href);
 
