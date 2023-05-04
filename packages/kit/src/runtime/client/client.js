@@ -1902,11 +1902,9 @@ function reset_focus() {
 			root.removeAttribute('tabindex');
 		}
 
-		return new Promise((resolve) => {
-			setTimeout(() => {
-				// fixes https://github.com/sveltejs/kit/issues/8439
-				resolve(getSelection()?.removeAllRanges());
-			});
+		setTimeout(() => {
+			// fixes https://github.com/sveltejs/kit/issues/8439
+			resolve(getSelection()?.removeAllRanges());
 		});
 	}
 }
