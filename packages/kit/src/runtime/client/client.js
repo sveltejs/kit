@@ -1124,6 +1124,8 @@ export function create_client(app, target) {
 			}
 		}
 
+		states[current_history_index] = state;
+
 		// reset preload synchronously after the history state has been set to avoid race conditions
 		load_cache = null;
 
