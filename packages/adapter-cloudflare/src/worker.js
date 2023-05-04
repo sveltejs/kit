@@ -53,9 +53,9 @@ const worker = {
 			});
 		}
 
-		// Writes to Cache only if allowed & specified
-		pragma = res.headers.get('cache-control');
-		return pragma && res.ok ? Cache.save(req, res, context) : res;
+		// write to `Cache` only if response is not an error,
+		// let `Cache.save` handle the Cache-Control and Vary headers
+		return res.status >= 400 ? res : Cache.save(req, res, context);
 	}
 };
 
