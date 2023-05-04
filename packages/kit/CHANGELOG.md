@@ -1,5 +1,19 @@
 # @sveltejs/kit
 
+## 1.15.11
+
+### Patch Changes
+
+- chore: more compact representation for invalidated search param ([#9708](https://github.com/sveltejs/kit/pull/9708))
+
+- chore: fix import path to app script on windows ([#9743](https://github.com/sveltejs/kit/pull/9743))
+
+- fix: make $app/navigation more resilient to bundler reordering ([#9808](https://github.com/sveltejs/kit/pull/9808))
+
+- fix: page load `fetch()` now accepts the same input types for the body as the native fetch function ([#9801](https://github.com/sveltejs/kit/pull/9801))
+
+- fix: handle preload and filterSerializedResponseHeaders in sequence function ([#9741](https://github.com/sveltejs/kit/pull/9741))
+
 ## 1.15.10
 
 ### Patch Changes
