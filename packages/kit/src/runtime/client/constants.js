@@ -1,9 +1,7 @@
 export const SNAPSHOT_KEY = 'sveltekit:snapshot';
 export const SCROLL_KEY = 'sveltekit:scroll';
 export const STATES_KEY = 'sveltekit:states';
-
-export const HISTORY_INDEX = 'sveltekit:history';
-export const NAVIGATION_INDEX = 'sveltekit:navigation';
+export const INDEX_KEY = 'sveltekit:index';
 
 export const PRELOAD_PRIORITIES = /** @type {const} */ ({
 	tap: 1,
