@@ -31,7 +31,8 @@ import { stores } from './singletons.js';
 import { unwrap_promises } from '../../utils/promises.js';
 import * as devalue from 'devalue';
 import {
-	INDEX_KEY,
+	HISTORY_INDEX,
+	NAVIGATION_INDEX,
 	PRELOAD_PRIORITIES,
 	SCROLL_KEY,
 	STATES_KEY,
@@ -43,19 +44,29 @@ import { INVALIDATED_PARAM, validate_depends } from '../shared.js';
 
 let errored = false;
 
+/** @typedef {{ x: number, y: number }} ScrollPosition */
+
 // We track the scroll position associated with each history entry in sessionStorage,
 // rather than on history.state itself, because when navigation is driven by
 // popstate it's too late to update the scroll position associated with the
+// popstate it's too late to update the scroll position associated with the
 // state we're navigating from
-
-/** @typedef {{ x: number, y: number }} ScrollPosition */
-/** @type {Record<number, ScrollPosition>} */
+/**
+ * history index -> { x, y }
+ * @type {Record<number, ScrollPosition>}
+ */
 const scroll_positions = storage.get(SCROLL_KEY) ?? {};
 
-/** @type {Record<string, Record<string, any>>} */
+/**
+ * history index -> any
+ * @type {Record<string, Record<string, any>>}
+ */
 const states = storage.get(STATES_KEY) ?? {};
 
-/** @type {Record<string, any[]>} */
+/**
+ * navigation index -> any
+ * @type {Record<string, any[]>}
+ */
 const snapshots = storage.get(SNAPSHOT_KEY) ?? {};
 
 /** @param {number} index */
@@ -65,14 +76,20 @@ function update_scroll_positions(index) {
 
 /**
  * @param {number} current_history_index
+ * @param {number} current_navigation_index
  */
-function clear_onward_history(current_history_index) {
+function clear_onward_history(current_history_index, current_navigation_index) {
 	// if we navigated back, then pushed a new state, we can
 	// release memory by pruning the scroll/snapshot lookup
 	let i = current_history_index + 1;
-	while (snapshots[i] || scroll_positions[i]) {
-		delete snapshots[i];
+	while (scroll_positions[i]) {
 		delete scroll_positions[i];
+		i += 1;
+	}
+
+	i = current_navigation_index + 1;
+	while (snapshots[i]) {
+		delete snapshots[i];
 		i += 1;
 	}
 }
@@ -138,16 +155,24 @@ export function create_client(app, target) {
 	let root;
 
 	// keeping track of the history index in order to prevent popstate navigation events if needed
-	let current_history_index = history.state?.[INDEX_KEY];
+	/** @type {number} */
+	let current_history_index = history.state?.[HISTORY_INDEX];
+
+	/** @type {number} */
+	let current_navigation_index = history.state?.[NAVIGATION_INDEX];
 
 	if (!current_history_index) {
 		// we use Date.now() as an offset so that cross-document navigations
 		// within the app don't result in data loss
-		current_history_index = Date.now();
+		current_history_index = current_navigation_index = Date.now();
 
 		// create initial history entry, so we can return here
 		history.replaceState(
-			{ ...history.state, [INDEX_KEY]: current_history_index },
+			{
+				...history.state,
+				[HISTORY_INDEX]: current_history_index,
+				[NAVIGATION_INDEX]: current_navigation_index
+			},
 			'',
 			location.href
 		);
@@ -217,7 +242,7 @@ export function create_client(app, target) {
 		update_scroll_positions(current_history_index);
 		storage.set(SCROLL_KEY, scroll_positions);
 
-		capture_snapshot(current_history_index);
+		capture_snapshot(current_navigation_index);
 		storage.set(SNAPSHOT_KEY, snapshots);
 	}
 
@@ -308,7 +333,7 @@ export function create_client(app, target) {
 			hydrate: true
 		});
 
-		restore_snapshot(current_history_index);
+		restore_snapshot(current_navigation_index);
 
 		/** @type {import('types').AfterNavigate} */
 		const navigation = {
@@ -1006,6 +1031,7 @@ export function create_client(app, target) {
 
 		// store this before calling `accepted()`, which may change the index
 		const previous_history_index = current_history_index;
+		const previous_navigation_index = current_navigation_index;
 
 		accepted();
 
@@ -1077,7 +1103,7 @@ export function create_client(app, target) {
 		updating = true;
 
 		update_scroll_positions(previous_history_index);
-		capture_snapshot(previous_history_index);
+		capture_snapshot(previous_navigation_index);
 
 		// ensure the url pathname matches the page's trailing slash option
 		if (
@@ -1089,11 +1115,12 @@ export function create_client(app, target) {
 
 		if (details) {
 			const change = details.replaceState ? 0 : 1;
-			details.state[INDEX_KEY] = current_history_index += change;
+			details.state[HISTORY_INDEX] = current_history_index += change;
+			details.state[NAVIGATION_INDEX] = current_navigation_index += change;
 			history[details.replaceState ? 'replaceState' : 'pushState'](details.state, '', url);
 
 			if (!details.replaceState) {
-				clear_onward_history(current_history_index);
+				clear_onward_history(current_history_index, current_navigation_index);
 			}
 		}
 
@@ -1399,7 +1426,8 @@ export function create_client(app, target) {
 		push_state: (state, url = current.url) => {
 			history.pushState(
 				{
-					[INDEX_KEY]: (current_history_index += 1)
+					[HISTORY_INDEX]: (current_history_index += 1),
+					[NAVIGATION_INDEX]: current_navigation_index
 				},
 				'',
 				new URL(url).href
@@ -1409,13 +1437,14 @@ export function create_client(app, target) {
 			root.$set({ page });
 
 			states[current_history_index] = state;
-			clear_onward_history(current_history_index);
+			clear_onward_history(current_history_index, current_navigation_index);
 		},
 
 		replace_state: (state, url = current.url) => {
 			history.replaceState(
 				{
-					[INDEX_KEY]: current_history_index
+					[HISTORY_INDEX]: current_history_index,
+					[NAVIGATION_INDEX]: current_navigation_index
 				},
 				'',
 				new URL(url).href
@@ -1675,38 +1704,35 @@ export function create_client(app, target) {
 			});
 
 			addEventListener('popstate', async (event) => {
-				if (event.state?.[INDEX_KEY]) {
-					const index = event.state[INDEX_KEY];
+				if (event.state?.[HISTORY_INDEX]) {
+					const history_index = event.state[HISTORY_INDEX];
 
 					// if a popstate-driven navigation is cancelled, we need to counteract it
 					// with history.go, which means we end up back here, hence this check
-					if (index === current_history_index) return;
+					if (history_index === current_history_index) return;
 
-					const scroll = scroll_positions[index];
-					const state = states[index] ?? {};
+					const scroll = scroll_positions[history_index];
+					const state = states[history_index] ?? {};
 
-					console.log({ index, current_history_index, state });
+					const navigation_index = event.state[NAVIGATION_INDEX];
 
-					// if the only change is the hash, we don't need to do anything...
-					if (current.url.href.split('#')[0] === location.href.split('#')[0]) {
-						// TODO I think we need to track current_history_index and (let's call it)
-						// current_navigation_index separately. navigating causes current_history_index
-						// and current_navigation_index to both increment, but clicking on a hash link
-						// or calling pushState/replaceState only increments current_history_index.
-						// we use it (instead of comparing hrefs, as above) to determine whether
-						// we should conduct a navigation, or simply update `$page.state`.
-
-						// ...except handle scroll
+					if (navigation_index === current_navigation_index) {
+						// We don't need to navigate, we just need to update scroll and/or state.
+						// This happens with hash links and `pushState`/`replaceState`
 						scroll_positions[current_history_index] = scroll_state();
-						current_history_index = index;
-						scrollTo(scroll.x, scroll.y);
+						if (scroll) scrollTo(scroll.x, scroll.y);
+
+						if (state !== page.state) {
+							page = { ...page, state };
+							root.$set({ page });
+						}
+
+						current_history_index = history_index;
 						return;
 					}
 
-					const delta = index - current_history_index;
+					const delta = history_index - current_history_index;
 					let blocked = false;
-
-					console.log('navigating', state);
 
 					await navigate({
 						url: new URL(location.href),
@@ -1716,7 +1742,8 @@ export function create_client(app, target) {
 						redirect_chain: [],
 						details: null,
 						accepted: () => {
-							current_history_index = index;
+							current_history_index = history_index;
+							current_navigation_index = navigation_index;
 						},
 						blocked: () => {
 							history.go(-delta);
@@ -1727,7 +1754,7 @@ export function create_client(app, target) {
 					});
 
 					if (!blocked) {
-						restore_snapshot(current_history_index);
+						restore_snapshot(current_navigation_index);
 					}
 				} else {
 					console.log('popstate to a non-SvelteKit index');
@@ -1740,7 +1767,11 @@ export function create_client(app, target) {
 				if (hash_navigating) {
 					hash_navigating = false;
 					history.replaceState(
-						{ ...history.state, [INDEX_KEY]: ++current_history_index },
+						{
+							...history.state,
+							[HISTORY_INDEX]: ++current_history_index,
+							[NAVIGATION_INDEX]: current_navigation_index
+						},
 						'',
 						location.href
 					);
