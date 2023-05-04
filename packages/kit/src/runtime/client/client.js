@@ -1904,7 +1904,7 @@ function reset_focus() {
 
 		setTimeout(() => {
 			// fixes https://github.com/sveltejs/kit/issues/8439
-			resolve(getSelection()?.removeAllRanges());
+			getSelection()?.removeAllRanges();
 		});
 	}
 }
