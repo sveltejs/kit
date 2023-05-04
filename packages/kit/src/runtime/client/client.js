@@ -1526,6 +1526,11 @@ export function create_client(app, target) {
 			addEventListener('beforeunload', (e) => {
 				let should_block = false;
 
+				// if the user reloads the page after a modal navigation, we need to
+				// sever the link between the current state and the previous one,
+				// otherwise hitting back/forward will have no effect
+				history.replaceState({ ...history.state, [NAVIGATION_INDEX]: -1 }, '');
+
 				persist_state();
 
 				if (!navigating) {
