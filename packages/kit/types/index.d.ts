@@ -557,16 +557,16 @@ export interface KitConfig {
 	 * If SvelteKit encounters an error while loading the page and detects that a new version has been deployed (using the `name` specified here, which defaults to a timestamp of the build) it will fall back to traditional full-page navigation.
 	 * Not all navigations will result in an error though, for example if the JavaScript for the next page is already loaded. If you still want to force a full-page navigation in these cases, use techniques such as setting the `pollInterval` and then using `beforeNavigate`:
 	 * ```html
-	 * /// +layout.svelte
+	 * /// file: +layout.svelte
 	 * <script>
-	 * import { beforeNavigate } from '$app/navigation';
-	 * import { updated } from '$app/stores';
+	 *   import { beforeNavigate } from '$app/navigation';
+	 *   import { updated } from '$app/stores';
 	 *
-	 * beforeNavigate(({ willUnload, to }) => {
-	 *   if ($updated && !willUnload && to?.url) {
-	 *     location.href = to.url.href;
-	 *   }
-	 * });
+	 *   beforeNavigate(({ willUnload, to }) => {
+	 *     if ($updated && !willUnload && to?.url) {
+	 *       location.href = to.url.href;
+	 *     }
+	 *   });
 	 * </script>
 	 * ```
 	 *
