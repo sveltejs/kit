@@ -36,7 +36,8 @@ import {
 	PRELOAD_PRIORITIES,
 	SCROLL_KEY,
 	STATES_KEY,
-	SNAPSHOT_KEY
+	SNAPSHOT_KEY,
+	PAGE_URL_KEY
 } from './constants.js';
 import { validate_page_exports } from '../../utils/exports.js';
 import { compact } from '../../utils/array.js';
@@ -1437,7 +1438,8 @@ export function create_client(app, target) {
 			history.pushState(
 				{
 					[HISTORY_INDEX]: (current_history_index += 1),
-					[NAVIGATION_INDEX]: current_navigation_index
+					[NAVIGATION_INDEX]: current_navigation_index,
+					[PAGE_URL_KEY]: page.url.href
 				},
 				'',
 				new URL(url).href
@@ -1454,7 +1456,8 @@ export function create_client(app, target) {
 			history.replaceState(
 				{
 					[HISTORY_INDEX]: current_history_index,
-					[NAVIGATION_INDEX]: current_navigation_index
+					[NAVIGATION_INDEX]: current_navigation_index,
+					[PAGE_URL_KEY]: page.url.href
 				},
 				'',
 				new URL(url).href
@@ -1745,7 +1748,7 @@ export function create_client(app, target) {
 					let blocked = false;
 
 					await navigate({
-						url: new URL(location.href),
+						url: new URL(event.state[PAGE_URL_KEY] ?? location.href),
 						scroll,
 						state,
 						keepfocus: false,
