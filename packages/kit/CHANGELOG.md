@@ -1,5 +1,11 @@
 # @sveltejs/kit
 
+## 1.15.10
+
+### Patch Changes
+
+- fix: log whole error object in default handleError ([#9791](https://github.com/sveltejs/kit/pull/9791))
+
 ## 1.15.9
 
 ### Patch Changes

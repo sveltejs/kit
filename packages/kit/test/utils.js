@@ -269,5 +269,7 @@ export const config = {
 				['dot'],
 				[path.resolve(fileURLToPath(import.meta.url), '../github-flaky-warning-reporter.js')]
 		  ]
-		: 'list'
+		: 'list',
+	testDir: 'test',
+	testMatch: /(.+\.)?(test|spec)\.[jt]s/
 };

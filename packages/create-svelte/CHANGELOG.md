@@ -1,5 +1,13 @@
 # create-svelte
 
+## 4.1.1
+
+### Patch Changes
+
+- fix: default playwright globs ([#9795](https://github.com/sveltejs/kit/pull/9795))
+
+- fix: remove obsolete `ignorePatterns: ['*.cjs']` from .eslintrc.cjs ([#9797](https://github.com/sveltejs/kit/pull/9797))
+
 ## 4.1.0
 
 ### Minor Changes
