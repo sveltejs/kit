@@ -144,15 +144,19 @@ const ssr = async (req, res) => {
 function sequence(handlers) {
 	/** @type {import('polka').Middleware} */
 	return (req, res, next) => {
-		/** @param {number} i */
+		/**
+		 * @param {number} i
+		 * @returns {ReturnType<import('polka').Middleware>}
+		 */
 		function handle(i) {
-			handlers[i](req, res, () => {
-				if (i < handlers.length) handle(i + 1);
-				else next();
-			});
+			if (i < handlers.length) {
+				return handlers[i](req, res, () => handle(i + 1));
+			} else {
+				return next();
+			}
 		}
 
-		handle(0);
+		return handle(0);
 	};
 }
 

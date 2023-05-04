@@ -4,10 +4,11 @@
 	"description": "monorepo for @sveltejs/kit and friends",
 	"private": true,
 	"scripts": {
-		"test": "pnpm test -r --filter=./packages/*",
+		"test": "pnpm test -r --filter=./packages/* --filter=!./packages/create-svelte",
 		"test:cross-platform:dev": "pnpm run --dir packages/kit test:cross-platform:dev",
 		"test:cross-platform:build": "pnpm run --dir packages/kit test:cross-platform:build",
 		"test:vite-ecosystem-ci": "pnpm test --dir packages/kit",
+		"test:create-svelte": "pnpm run --dir packages/create-svelte test",
 		"check": "pnpm -r check",
 		"lint": "pnpm -r lint && eslint 'packages/**/*.js'",
 		"format": "pnpm -r format",
@@ -34,14 +35,14 @@
 		"@typescript-eslint/eslint-plugin": "^5.53.0",
 		"eslint": "^8.33.0",
 		"eslint-plugin-unicorn": "^46.0.0",
-		"playwright": "^1.29.2",
+		"playwright": "1.30.0",
 		"prettier": "^2.8.0",
 		"rollup": "^3.7.0",
 		"svelte": "^3.56.0",
 		"tiny-glob": "^0.2.9",
 		"typescript": "^4.9.4"
 	},
-	"packageManager": "pnpm@8.2.0",
+	"packageManager": "pnpm@8.4.0",
 	"engines": {
 		"pnpm": "^8.0.0"
 	},

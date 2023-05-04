@@ -41,7 +41,7 @@ paths.positive.forEach(([path, constraint]) => {
 
 paths.negative.forEach(([path, constraint]) => {
 	test(`! ${path} / ${constraint}`, () => {
-		assert.ok(!path_matches(path, constraint));
+		assert.not(path_matches(path, constraint));
 	});
 });
 

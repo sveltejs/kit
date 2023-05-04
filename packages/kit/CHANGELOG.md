@@ -1,5 +1,43 @@
 # @sveltejs/kit
 
+## 1.15.10
+
+### Patch Changes
+
+- fix: log whole error object in default handleError ([#9791](https://github.com/sveltejs/kit/pull/9791))
+
+## 1.15.9
+
+### Patch Changes
+
+- fix: correctly replace state when `data-sveltekit-replacestate` is used with a hash link ([#9751](https://github.com/sveltejs/kit/pull/9751))
+
+- fix: compute trailing slash on page server / data request ([#9738](https://github.com/sveltejs/kit/pull/9738))
+
+- fix: update vite-plugin-svelte to fix windows resolution issue ([#9769](https://github.com/sveltejs/kit/pull/9769))
+
+## 1.15.8
+
+### Patch Changes
+
+- chore: revert undici pin and upgrade version ([#9740](https://github.com/sveltejs/kit/pull/9740))
+
+- chore: upgrade vite-plugin-svelte for resolve improvements and warnings ([#9742](https://github.com/sveltejs/kit/pull/9742))
+
+## 1.15.7
+
+### Patch Changes
+
+- fix: provide better error when prerendered routes conflict with each other ([#9692](https://github.com/sveltejs/kit/pull/9692))
+
+- fix: prevent false positive warnings for fetch in Firefox and Safari ([#9680](https://github.com/sveltejs/kit/pull/9680))
+
+- fix: allow embedding two pages generated into the same page in "embedded" mode ([#9610](https://github.com/sveltejs/kit/pull/9610))
+
+- fix: don't include prerendered routes in default generateManifest ([#9471](https://github.com/sveltejs/kit/pull/9471))
+
+- fix: better error messages for handleable prerender failures ([#9621](https://github.com/sveltejs/kit/pull/9621))
+
 ## 1.15.6
 
 ### Patch Changes

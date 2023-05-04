@@ -10,7 +10,6 @@ import {
 	ResolveOptions,
 	Server,
 	ServerInitOptions,
-	SSRManifest,
 	HandleFetch,
 	Actions,
 	HandleClientError
@@ -55,8 +54,11 @@ export interface BuildData {
 	manifest_data: ManifestData;
 	service_worker: string | null;
 	client: {
-		start: AssetDependencies;
-		app: AssetDependencies;
+		start: string;
+		app: string;
+		imports: string[];
+		stylesheets: string[];
+		fonts: string[];
 	} | null;
 	server_manifest: import('vite').Manifest;
 }

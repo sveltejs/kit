@@ -103,4 +103,70 @@ test('merges transformPageChunk option', async () => {
 	assert.equal(await response.text(), '0-3-2-1 0-3-done-2-done-1-done');
 });
 
+test('uses first defined preload option', async () => {
+	const handler = sequence(
+		async ({ event, resolve }) => resolve(event),
+		async ({ event, resolve }) => {
+			return resolve(event, {
+				preload: ({ type }) => type === 'js'
+			});
+		},
+		async ({ event, resolve }) => {
+			return resolve(event, {
+				preload: () => true
+			});
+		}
+	);
+
+	const event = /** @type {import('types').RequestEvent} */ ({});
+	const response = await handler({
+		event,
+		resolve: async (_event, opts = {}) => {
+			let html = '';
+
+			const { preload = () => false } = opts;
+
+			html += preload({ path: '', type: 'js' });
+			html += preload({ path: '', type: 'css' });
+
+			return new Response(html);
+		}
+	});
+
+	assert.equal(await response.text(), 'truefalse');
+});
+
+test('uses first defined filterSerializedResponseHeaders option', async () => {
+	const handler = sequence(
+		async ({ event, resolve }) => resolve(event),
+		async ({ event, resolve }) => {
+			return resolve(event, {
+				filterSerializedResponseHeaders: (name) => name === 'a'
+			});
+		},
+		async ({ event, resolve }) => {
+			return resolve(event, {
+				filterSerializedResponseHeaders: () => true
+			});
+		}
+	);
+
+	const event = /** @type {import('types').RequestEvent} */ ({});
+	const response = await handler({
+		event,
+		resolve: async (_event, opts = {}) => {
+			let html = '';
+
+			const { filterSerializedResponseHeaders = () => false } = opts;
+
+			html += filterSerializedResponseHeaders('a', '');
+			html += filterSerializedResponseHeaders('b', '');
+
+			return new Response(html);
+		}
+	});
+
+	assert.equal(await response.text(), 'truefalse');
+});
+
 test.run();

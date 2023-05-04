@@ -19,7 +19,7 @@ import {
 	RouteSegment,
 	UniqueInterface
 } from './private.js';
-import { AssetDependencies, SSRNodeLoader, SSRRoute, ValidatedConfig } from './internal.js';
+import { BuildData, SSRNodeLoader, SSRRoute, ValidatedConfig } from './internal.js';
 
 export { PrerenderOption } from './private.js';
 
@@ -1071,10 +1071,7 @@ export interface SSRManifest {
 
 	/** private fields */
 	_: {
-		client: {
-			start: AssetDependencies;
-			app: AssetDependencies;
-		};
+		client: NonNullable<BuildData['client']>;
 		nodes: SSRNodeLoader[];
 		routes: SSRRoute[];
 		matchers(): Promise<Record<string, ParamMatcher>>;

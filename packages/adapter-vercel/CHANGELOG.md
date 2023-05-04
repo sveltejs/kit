@@ -1,5 +1,20 @@
 # @sveltejs/adapter-vercel
 
+## 2.4.3
+
+### Patch Changes
+
+- chore: update all dependencies with minor version bumps ([#9761](https://github.com/sveltejs/kit/pull/9761))
+
+## 2.4.2
+
+### Patch Changes
+
+- fix: construct correct pathname for isr from route with nested params ([#9470](https://github.com/sveltejs/kit/pull/9470))
+
+- Updated dependencies [[`84a5250d`](https://github.com/sveltejs/kit/commit/84a5250d5fe80a87eb7df5569e76a1dde857aa82), [`95e95828`](https://github.com/sveltejs/kit/commit/95e95828f444a35ca3f71eb1350c6630895c02c9), [`367067f5`](https://github.com/sveltejs/kit/commit/367067f547bb78c61f511e88b9361632862cb4ee), [`e9dd2559`](https://github.com/sveltejs/kit/commit/e9dd2559445958c2fdcb4faa2d94bccac2f1f950), [`ae2f4a8c`](https://github.com/sveltejs/kit/commit/ae2f4a8caacfb671db159f3cdce0894beb485b4f)]:
+  - @sveltejs/kit@1.15.7
+
 ## 2.4.1
 
 ### Patch Changes

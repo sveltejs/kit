@@ -525,27 +525,6 @@ function kit({ svelte_config }) {
 				} else {
 					input['entry/start'] = `${runtime_directory}/client/start.js`;
 					input['entry/app'] = `${kit.outDir}/generated/client-optimized/app.js`;
-
-					/**
-					 * @param {string | undefined} file
-					 */
-					function add_input(file) {
-						if (!file) return;
-
-						const resolved = path.resolve(file);
-						const relative = decodeURIComponent(path.relative(kit.files.routes, resolved));
-
-						const name = relative.startsWith('..')
-							? path.basename(file).replace(/^\+/, '')
-							: relative.replace(/(\\|\/)\+/g, '-').replace(/[\\/]/g, '-');
-
-						input[`entry/${name}`] = resolved;
-					}
-
-					for (const node of manifest_data.nodes) {
-						add_input(node.component);
-						add_input(node.universal);
-					}
 				}
 
 				// see the kit.output.preloadStrategy option for details on why we have multiple options here
@@ -726,17 +705,17 @@ function kit({ svelte_config }) {
 				/** @type {import('vite').Manifest} */
 				const client_manifest = JSON.parse(read(`${out}/client/${vite_config.build.manifest}`));
 
+				const deps_of = /** @param {string} f */ (f) =>
+					find_deps(client_manifest, posixify(path.relative('.', f)), false);
+				const start = deps_of(`${runtime_directory}/client/start.js`);
+				const app = deps_of(`${kit.outDir}/generated/client-optimized/app.js`);
+
 				build_data.client = {
-					start: find_deps(
-						client_manifest,
-						posixify(path.relative('.', `${runtime_directory}/client/start.js`)),
-						false
-					),
-					app: find_deps(
-						client_manifest,
-						posixify(path.relative('.', `${kit.outDir}/generated/client-optimized/app.js`)),
-						false
-					)
+					start: start.file,
+					app: app.file,
+					imports: [...start.imports, ...app.imports],
+					stylesheets: [...start.stylesheets, ...app.stylesheets],
+					fonts: [...start.fonts, ...app.fonts]
 				};
 
 				const css = output.filter(
