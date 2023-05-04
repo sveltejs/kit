@@ -101,7 +101,7 @@ export type NavigationFinished = {
 	state: NavigationState;
 	props: {
 		components: Array<typeof SvelteComponent>;
-		page?: Page;
+		page: Page;
 		form?: Record<string, any> | null;
 		[key: `data_${number}`]: Record<string, any>;
 	};

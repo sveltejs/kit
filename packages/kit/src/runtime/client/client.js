@@ -396,7 +396,8 @@ export function create_client(app, target) {
 			},
 			props: {
 				// @ts-ignore Somehow it's getting SvelteComponent and SvelteComponentDev mixed up
-				constructors: compact(branch).map((branch_node) => branch_node.node.component)
+				constructors: compact(branch).map((branch_node) => branch_node.node.component),
+				page
 			}
 		};
 
@@ -1092,7 +1093,7 @@ export function create_client(app, target) {
 				);
 				return false;
 			}
-		} else if (/** @type {number} */ (navigation_result.props.page?.status) >= 400) {
+		} else if (/** @type {number} */ (navigation_result.props.page.status) >= 400) {
 			const updated = await stores.updated.check();
 			if (updated) {
 				await native_navigation(url);
@@ -1110,10 +1111,7 @@ export function create_client(app, target) {
 		capture_snapshot(previous_navigation_index);
 
 		// ensure the url pathname matches the page's trailing slash option
-		if (
-			navigation_result.props.page?.url &&
-			navigation_result.props.page.url.pathname !== url.pathname
-		) {
+		if (navigation_result.props.page.url.pathname !== url.pathname) {
 			url.pathname = navigation_result.props.page?.url.pathname;
 		}
 
@@ -1133,9 +1131,7 @@ export function create_client(app, target) {
 		// reset preload synchronously after the history state has been set to avoid race conditions
 		load_cache = null;
 
-		if (navigation_result.props.page) {
-			navigation_result.props.page.state = state;
-		}
+		navigation_result.props.page.state = state;
 
 		if (started) {
 			current = navigation_result.state;
@@ -1752,7 +1748,9 @@ export function create_client(app, target) {
 
 					const navigation_index = event.state[NAVIGATION_INDEX];
 
-					const shallow = navigation_index === current_navigation_index && has_navigated;
+					const is_hash_change = location.href.split('#')[0] === current.url.href.split('#')[0];
+					const shallow =
+						navigation_index === current_navigation_index && (has_navigated || is_hash_change);
 
 					if (shallow) {
 						// We don't need to navigate, we just need to update scroll and/or state.
