@@ -30,7 +30,13 @@ import { HttpError, Redirect } from '../control.js';
 import { stores } from './singletons.js';
 import { unwrap_promises } from '../../utils/promises.js';
 import * as devalue from 'devalue';
-import { INDEX_KEY, PRELOAD_PRIORITIES, SCROLL_KEY, SNAPSHOT_KEY } from './constants.js';
+import {
+	INDEX_KEY,
+	PRELOAD_PRIORITIES,
+	SCROLL_KEY,
+	STATES_KEY,
+	SNAPSHOT_KEY
+} from './constants.js';
 import { validate_common_exports } from '../../utils/exports.js';
 import { compact } from '../../utils/array.js';
 import { INVALIDATED_PARAM, validate_depends } from '../shared.js';
@@ -46,12 +52,29 @@ let errored = false;
 /** @type {Record<number, ScrollPosition>} */
 const scroll_positions = storage.get(SCROLL_KEY) ?? {};
 
+/** @type {Record<string, Record<string, any>>} */
+const states = storage.get(STATES_KEY) ?? {};
+
 /** @type {Record<string, any[]>} */
 const snapshots = storage.get(SNAPSHOT_KEY) ?? {};
 
 /** @param {number} index */
 function update_scroll_positions(index) {
 	scroll_positions[index] = scroll_state();
+}
+
+/**
+ * @param {number} current_history_index
+ */
+function clear_onward_history(current_history_index) {
+	// if we navigated back, then pushed a new state, we can
+	// release memory by pruning the scroll/snapshot lookup
+	let i = current_history_index + 1;
+	while (snapshots[i] || scroll_positions[i]) {
+		delete snapshots[i];
+		delete scroll_positions[i];
+		i += 1;
+	}
 }
 
 /**
@@ -223,6 +246,7 @@ export function create_client(app, target) {
 		return navigate({
 			url,
 			scroll: noScroll ? scroll_state() : null,
+			state,
 			keepfocus: keepFocus,
 			redirect_chain,
 			details: {
@@ -387,6 +411,7 @@ export function create_client(app, target) {
 				route: {
 					id: route?.id ?? null
 				},
+				state: {},
 				status,
 				url: new URL(url),
 				form: form ?? null,
@@ -944,6 +969,7 @@ export function create_client(app, target) {
 	 * @param {{
 	 *   url: URL;
 	 *   scroll: { x: number, y: number } | null;
+	 *   state: Record<string, any>;
 	 *   keepfocus: boolean;
 	 *   redirect_chain: string[];
 	 *   details: {
@@ -960,6 +986,7 @@ export function create_client(app, target) {
 	async function navigate({
 		url,
 		scroll,
+		state,
 		keepfocus,
 		redirect_chain,
 		details,
@@ -1066,19 +1093,16 @@ export function create_client(app, target) {
 			history[details.replaceState ? 'replaceState' : 'pushState'](details.state, '', url);
 
 			if (!details.replaceState) {
-				// if we navigated back, then pushed a new state, we can
-				// release memory by pruning the scroll/snapshot lookup
-				let i = current_history_index + 1;
-				while (snapshots[i] || scroll_positions[i]) {
-					delete snapshots[i];
-					delete scroll_positions[i];
-					i += 1;
-				}
+				clear_onward_history(current_history_index);
 			}
 		}
 
 		// reset preload synchronously after the history state has been set to avoid race conditions
 		load_cache = null;
+
+		if (navigation_result.props.page) {
+			navigation_result.props.page.state = state;
+		}
 
 		if (started) {
 			current = navigation_result.state;
@@ -1372,6 +1396,37 @@ export function create_client(app, target) {
 
 		preload_code,
 
+		push_state: (state, url = current.url) => {
+			history.pushState(
+				{
+					[INDEX_KEY]: (current_history_index += 1)
+				},
+				'',
+				new URL(url).href
+			);
+
+			page = { ...page, state };
+			root.$set({ page });
+
+			states[current_history_index] = state;
+			clear_onward_history(current_history_index);
+		},
+
+		replace_state: (state, url = current.url) => {
+			history.replaceState(
+				{
+					[INDEX_KEY]: current_history_index
+				},
+				'',
+				new URL(url).href
+			);
+
+			page = { ...page, state };
+			root.$set({ page });
+
+			states[current_history_index] = state;
+		},
+
 		apply_action: async (result) => {
 			if (result.type === 'error') {
 				const url = new URL(location.href);
@@ -1550,6 +1605,7 @@ export function create_client(app, target) {
 				navigate({
 					url,
 					scroll: options.noscroll ? scroll_state() : null,
+					state: {},
 					keepfocus: options.keep_focus ?? false,
 					redirect_chain: [],
 					details: {
@@ -1604,6 +1660,7 @@ export function create_client(app, target) {
 				navigate({
 					url,
 					scroll: noscroll ? scroll_state() : null,
+					state: {},
 					keepfocus: keep_focus ?? false,
 					redirect_chain: [],
 					details: {
@@ -1619,32 +1676,47 @@ export function create_client(app, target) {
 
 			addEventListener('popstate', async (event) => {
 				if (event.state?.[INDEX_KEY]) {
+					const index = event.state[INDEX_KEY];
+
 					// if a popstate-driven navigation is cancelled, we need to counteract it
 					// with history.go, which means we end up back here, hence this check
-					if (event.state[INDEX_KEY] === current_history_index) return;
+					if (index === current_history_index) return;
 
-					const scroll = scroll_positions[event.state[INDEX_KEY]];
+					const scroll = scroll_positions[index];
+					const state = states[index] ?? {};
+
+					console.log({ index, current_history_index, state });
 
 					// if the only change is the hash, we don't need to do anything...
 					if (current.url.href.split('#')[0] === location.href.split('#')[0]) {
+						// TODO I think we need to track current_history_index and (let's call it)
+						// current_navigation_index separately. navigating causes current_history_index
+						// and current_navigation_index to both increment, but clicking on a hash link
+						// or calling pushState/replaceState only increments current_history_index.
+						// we use it (instead of comparing hrefs, as above) to determine whether
+						// we should conduct a navigation, or simply update `$page.state`.
+
 						// ...except handle scroll
 						scroll_positions[current_history_index] = scroll_state();
-						current_history_index = event.state[INDEX_KEY];
+						current_history_index = index;
 						scrollTo(scroll.x, scroll.y);
 						return;
 					}
 
-					const delta = event.state[INDEX_KEY] - current_history_index;
+					const delta = index - current_history_index;
 					let blocked = false;
+
+					console.log('navigating', state);
 
 					await navigate({
 						url: new URL(location.href),
 						scroll,
+						state,
 						keepfocus: false,
 						redirect_chain: [],
 						details: null,
 						accepted: () => {
-							current_history_index = event.state[INDEX_KEY];
+							current_history_index = index;
 						},
 						blocked: () => {
 							history.go(-delta);
@@ -1657,6 +1729,8 @@ export function create_client(app, target) {
 					if (!blocked) {
 						restore_snapshot(current_history_index);
 					}
+				} else {
+					console.log('popstate to a non-SvelteKit index');
 				}
 			});
 
@@ -1762,6 +1836,7 @@ export function create_client(app, target) {
 				});
 			}
 
+			result.props.page.state = {};
 			initialize(result);
 		}
 	};

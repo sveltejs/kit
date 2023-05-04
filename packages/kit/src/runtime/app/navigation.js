@@ -15,3 +15,7 @@ export const preloadCode = /* @__PURE__ */ client_method('preload_code');
 export const beforeNavigate = /* @__PURE__ */ client_method('before_navigate');
 
 export const afterNavigate = /* @__PURE__ */ client_method('after_navigate');
+
+export const pushState = /* @__PURE__ */ client_method('push_state');
+
+export const replaceState = /* @__PURE__ */ client_method('replace_state');

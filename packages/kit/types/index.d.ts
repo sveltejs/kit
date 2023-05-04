@@ -886,6 +886,10 @@ export interface Page<
 		id: RouteId;
 	};
 	/**
+	 * Arbitrary state associated with the current history entry. It can be set programmatically with `pushState` and `replaceState` from `$app/navigation`.
+	 */
+	state: Record<string, any>;
+	/**
 	 * Http status code of the current page
 	 */
 	status: number;

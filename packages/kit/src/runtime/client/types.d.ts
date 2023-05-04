@@ -6,7 +6,9 @@ import {
 	invalidate,
 	invalidateAll,
 	preloadCode,
-	preloadData
+	preloadData,
+	pushState,
+	replaceState
 } from '$app/navigation';
 import { SvelteComponent } from 'svelte';
 import {
@@ -57,6 +59,8 @@ export interface Client {
 	invalidate_all: typeof invalidateAll;
 	preload_code: typeof preloadCode;
 	preload_data: typeof preloadData;
+	push_state: typeof pushState;
+	replace_state: typeof replaceState;
 	apply_action: typeof applyAction;
 
 	// private API

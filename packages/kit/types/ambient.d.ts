@@ -263,6 +263,16 @@ declare module '$app/navigation' {
 	 * `afterNavigate` must be called during a component initialization. It remains active as long as the component is mounted.
 	 */
 	export function afterNavigate(callback: (navigation: AfterNavigate) => void): void;
+
+	/**
+	 * TODO
+	 */
+	export function pushState(state: Record<string, any>, url: string | URL): void;
+
+	/**
+	 * TODO
+	 */
+	export function replaceState(state: Record<string, any>, url: string | URL): void;
 }
 
 declare module '$app/paths' {
