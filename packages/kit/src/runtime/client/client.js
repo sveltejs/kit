@@ -1907,7 +1907,10 @@ export function create_client(app, target) {
 				});
 			}
 
-			result.props.page.state = {};
+			if (result.props.page) {
+				result.props.page.state = {};
+			}
+
 			initialize(result);
 		}
 	};
