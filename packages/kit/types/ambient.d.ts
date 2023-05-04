@@ -234,7 +234,11 @@ declare module '$app/navigation' {
 	 *
 	 * @param href Page to preload
 	 */
-	export function preloadData(href: string): Promise<void>;
+	export function preloadData(
+		href: string
+	): Promise<
+		{ type: 'redirect'; location: string } | { type: 'loaded'; status: number; data: App.PageData }
+	>;
 	/**
 	 * Programmatically imports the code for routes that haven't yet been fetched.
 	 * Typically, you might call this to speed up subsequent navigation.

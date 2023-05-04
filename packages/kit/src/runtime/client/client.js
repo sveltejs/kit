@@ -1420,7 +1420,16 @@ export function create_client(app, target) {
 				throw new Error(`Attempted to preload a URL that does not belong to this app: ${url}`);
 			}
 
-			await preload_data(intent);
+			const result = await preload_data(intent);
+			if (result.type === 'redirect') {
+				return {
+					type: result.type,
+					location: result.location
+				};
+			}
+
+			const { status, data } = result.props.page ?? page;
+			return { type: result.type, status, data };
 		},
 
 		preload_code,
