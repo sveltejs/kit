@@ -575,7 +575,7 @@ test.describe('Redirects', () => {
 			const [, response] = await Promise.all([
 				app.goto('/redirect/in-handle?throw&cookies'),
 				page.waitForResponse((request) =>
-					request.url().endsWith('in-handle/__data.json?throw=&cookies=&x-sveltekit-invalidated=_1')
+					request.url().endsWith('in-handle/__data.json?throw=&cookies=&x-sveltekit-invalidated=01')
 				)
 			]);
 			expect((await response.allHeaders())['set-cookie']).toBeDefined();
@@ -741,19 +741,6 @@ test.describe('Routing', () => {
 		await page.goBack();
 		await page.waitForLoadState('networkidle');
 		expect(await page.textContent('h1')).toBe('Great success!');
-	});
-
-	test('back button returns to previous route when previous route has been navigated to via hash anchor', async ({
-		page,
-		clicknav
-	}) => {
-		await page.goto('/routing/hashes/a');
-
-		await page.locator('[href="#hash-target"]').click();
-		await clicknav('[href="/routing/hashes/b"]');
-
-		await page.goBack();
-		expect(await page.textContent('h1')).toBe('a');
 	});
 
 	test('focus works if page load has hash', async ({ page, browserName }) => {
@@ -933,6 +920,28 @@ test.describe('Routing', () => {
 			expect(await page.textContent('h1')).toBe('symlinked');
 		});
 	}
+
+	test('trailing slash server with config always', async ({ page, clicknav }) => {
+		await page.goto('/routing/trailing-slash-server');
+		await clicknav('[href="/routing/trailing-slash-server/always"]');
+		expect(await page.textContent('[data-test-id="pathname-store"]')).toBe(
+			'/routing/trailing-slash-server/always/'
+		);
+		expect(await page.textContent('[data-test-id="pathname-data"]')).toBe(
+			'/routing/trailing-slash-server/always/'
+		);
+	});
+
+	test('trailing slash server with config never', async ({ page, clicknav }) => {
+		await page.goto('/routing/trailing-slash-server');
+		await clicknav('[href="/routing/trailing-slash-server/never/"]');
+		expect(await page.textContent('[data-test-id="pathname-store"]')).toBe(
+			'/routing/trailing-slash-server/never'
+		);
+		expect(await page.textContent('[data-test-id="pathname-data"]')).toBe(
+			'/routing/trailing-slash-server/never'
+		);
+	});
 });
 
 test.describe('XSS', () => {

@@ -1,5 +1,11 @@
 # @sveltejs/adapter-cloudflare-workers
 
+## 1.1.1
+
+### Patch Changes
+
+- chore: update all dependencies with minor version bumps ([#9761](https://github.com/sveltejs/kit/pull/9761))
+
 ## 1.1.0
 
 ### Minor Changes

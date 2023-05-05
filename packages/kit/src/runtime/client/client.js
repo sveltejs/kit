@@ -31,9 +31,9 @@ import { stores } from './singletons.js';
 import { unwrap_promises } from '../../utils/promises.js';
 import * as devalue from 'devalue';
 import { INDEX_KEY, PRELOAD_PRIORITIES, SCROLL_KEY, SNAPSHOT_KEY } from './constants.js';
-import { validate_common_exports } from '../../utils/exports.js';
+import { validate_page_exports } from '../../utils/exports.js';
 import { compact } from '../../utils/array.js';
-import { validate_depends } from '../shared.js';
+import { INVALIDATED_PARAM, validate_depends } from '../shared.js';
 
 let errored = false;
 
@@ -428,7 +428,7 @@ export function create_client(app, target) {
 		const node = await loader();
 
 		if (DEV) {
-			validate_common_exports(node.universal);
+			validate_page_exports(node.universal);
 		}
 
 		if (node.universal?.load) {
@@ -1354,7 +1354,7 @@ export function create_client(app, target) {
 			return invalidate();
 		},
 
-		invalidateAll: () => {
+		invalidate_all: () => {
 			force_invalidation = true;
 			return invalidate();
 		},
@@ -1532,7 +1532,6 @@ export function create_client(app, target) {
 				if (hash !== undefined && nonhash === location.href.split('#')[0]) {
 					// set this flag to distinguish between navigations triggered by
 					// clicking a hash link and those triggered by popstate
-					// TODO why not update history here directly?
 					hash_navigating = true;
 
 					update_scroll_positions(current_history_index);
@@ -1541,7 +1540,11 @@ export function create_client(app, target) {
 					stores.page.set({ ...page, url });
 					stores.page.notify();
 
-					return;
+					if (!options.replace_state) return;
+
+					// hashchange event shouldn't occur if the router is replacing state.
+					hash_navigating = false;
+					event.preventDefault();
 				}
 
 				navigate({
@@ -1772,13 +1775,10 @@ export function create_client(app, target) {
 async function load_data(url, invalid) {
 	const data_url = new URL(url);
 	data_url.pathname = add_data_suffix(url.pathname);
-	if (DEV && url.searchParams.has('x-sveltekit-invalidated')) {
-		throw new Error('Cannot used reserved query parameter "x-sveltekit-invalidated"');
+	if (DEV && url.searchParams.has(INVALIDATED_PARAM)) {
+		throw new Error(`Cannot used reserved query parameter "${INVALIDATED_PARAM}"`);
 	}
-	data_url.searchParams.append(
-		'x-sveltekit-invalidated',
-		invalid.map((x) => (x ? '1' : '')).join('_')
-	);
+	data_url.searchParams.append(INVALIDATED_PARAM, invalid.map((i) => (i ? '1' : '0')).join(''));
 
 	const res = await native_fetch(data_url.href);
 

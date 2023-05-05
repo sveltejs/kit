@@ -131,7 +131,7 @@ if (options.types === 'typescript') {
 
 if (options.features.includes('eslint')) {
 	console.log(bold('✔ ESLint'));
-	console.log(cyan('  https://github.com/sveltejs/eslint-plugin-svelte3\n'));
+	console.log(cyan('  https://github.com/sveltejs/eslint-plugin-svelte\n'));
 }
 
 if (options.features.includes('prettier')) {

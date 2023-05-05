@@ -21,7 +21,7 @@ export function sequence(...handlers) {
 			return handle({
 				event,
 				resolve: (event, options) => {
-					/** @param {{ html: string, done: boolean }} opts */
+					/** @type {import('types').ResolveOptions['transformPageChunk']} */
 					const transformPageChunk = async ({ html, done }) => {
 						if (options?.transformPageChunk) {
 							html = (await options.transformPageChunk({ html, done })) ?? '';
@@ -34,9 +34,21 @@ export function sequence(...handlers) {
 						return html;
 					};
 
+					/** @type {import('types').ResolveOptions['filterSerializedResponseHeaders']} */
+					const filterSerializedResponseHeaders =
+						parent_options?.filterSerializedResponseHeaders ??
+						options?.filterSerializedResponseHeaders;
+
+					/** @type {import('types').ResolveOptions['preload']} */
+					const preload = parent_options?.preload ?? options?.preload;
+
 					return i < length - 1
-						? apply_handle(i + 1, event, { transformPageChunk })
-						: resolve(event, { transformPageChunk });
+						? apply_handle(i + 1, event, {
+								transformPageChunk,
+								filterSerializedResponseHeaders,
+								preload
+						  })
+						: resolve(event, { transformPageChunk, filterSerializedResponseHeaders, preload });
 				}
 			});
 		}

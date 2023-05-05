@@ -28,7 +28,7 @@
 	<div class="showcase">
 		{#each showcase as { url, image }}
 			<a href="https://{url}" target="_blank" rel="noreferrer">
-				<Image src={image} alt="" />
+				<Image src={image} alt="" style="width:100%; height:100%; object-fit:cover" />
 				<span>{url}</span>
 			</a>
 		{/each}

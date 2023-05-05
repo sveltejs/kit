@@ -54,7 +54,7 @@ export interface Client {
 	disable_scroll_handling(): void;
 	goto: typeof goto;
 	invalidate: typeof invalidate;
-	invalidateAll: typeof invalidateAll;
+	invalidate_all: typeof invalidateAll;
 	preload_code: typeof preloadCode;
 	preload_data: typeof preloadData;
 	apply_action: typeof applyAction;

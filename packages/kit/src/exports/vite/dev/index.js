@@ -116,7 +116,7 @@ export async function dev(vite, vite_config, svelte_config) {
 			_: {
 				client: {
 					start: `${runtime_base}/client/start.js`,
-					app: `${svelte_config.kit.outDir}/generated/client/app.js`,
+					app: `${to_fs(svelte_config.kit.outDir)}/generated/client/app.js`,
 					imports: [],
 					stylesheets: [],
 					fonts: []
