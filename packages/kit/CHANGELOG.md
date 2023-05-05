@@ -1,5 +1,13 @@
 # @sveltejs/kit
 
+## 1.16.2
+
+### Patch Changes
+
+- fix: support Node 20 ([`6e2efcf62`](https://github.com/sveltejs/kit/commit/6e2efcf627ce8d179c941212d761aa93568b1724))
+
+- fix: reset focus synchronously on navigation ([#9837](https://github.com/sveltejs/kit/pull/9837))
+
 ## 1.16.1
 
 ### Patch Changes
