@@ -1737,14 +1737,30 @@ export function create_client(app, target) {
 					});
 				});
 
+				/** @type {Array<import('./types').BranchNode | undefined>} */
+				const branch = await Promise.all(branch_promises);
+
+				const parsed_route = routes.find(({ id }) => id === route.id);
+
+				// server-side will have compacted the branch, reinstate empty slots
+				// so that error boundaries can be lined up correctly
+				if (parsed_route) {
+					const layouts = parsed_route.layouts;
+					for (let i = 0; i < layouts.length; i++) {
+						if (!layouts[i]) {
+							branch.splice(i, 0, undefined);
+						}
+					}
+				}
+
 				result = await get_navigation_result_from_branch({
 					url,
 					params,
-					branch: await Promise.all(branch_promises),
+					branch,
 					status,
 					error,
 					form,
-					route: routes.find(({ id }) => id === route.id) ?? null
+					route: parsed_route ?? null
 				});
 			} catch (error) {
 				if (error instanceof Redirect) {

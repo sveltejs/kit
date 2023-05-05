@@ -1066,6 +1066,13 @@ test.describe('Actions', () => {
 
 		await expect(page.locator('h1')).toHaveText('400');
 	});
+
+	test('errors are rendered at the correct level', async ({ page }) => {
+		await page.goto('/actions/form-errors/adjacent-error-boundary');
+		await page.locator('button').click();
+
+		await expect(page.locator('pre')).toHaveText('something went wrong');
+	});
 });
 
 // Run in serial to not pollute the log with (correct) cookie warnings
