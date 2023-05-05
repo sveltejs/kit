@@ -2,4 +2,4 @@
 '@sveltejs/kit': patch
 ---
 
-fix: client state stale after invalidate
+fix: update `$page.data` correctly after invalidate
