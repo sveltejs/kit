@@ -1122,7 +1122,7 @@ export function create_client(app, target) {
 			document.activeElement !== document.body;
 
 		if (!keepfocus && !changed_focus) {
-			await reset_focus();
+			reset_focus();
 		}
 
 		autoscroll = true;
