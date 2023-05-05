@@ -1132,6 +1132,11 @@ export function create_client(app, target) {
 		}
 
 		navigating = false;
+
+		if (type === 'popstate') {
+			restore_snapshot(current_history_index);
+		}
+
 		callbacks.after_navigate.forEach((fn) =>
 			fn(/** @type {import('types').AfterNavigate} */ (navigation))
 		);
@@ -1635,7 +1640,6 @@ export function create_client(app, target) {
 					}
 
 					const delta = event.state[INDEX_KEY] - current_history_index;
-					let blocked = false;
 
 					await navigate({
 						url: new URL(location.href),
@@ -1648,15 +1652,10 @@ export function create_client(app, target) {
 						},
 						blocked: () => {
 							history.go(-delta);
-							blocked = true;
 						},
 						type: 'popstate',
 						delta
 					});
-
-					if (!blocked) {
-						restore_snapshot(current_history_index);
-					}
 				}
 			});
 
