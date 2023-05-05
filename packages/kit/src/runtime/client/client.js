@@ -1904,16 +1904,20 @@ function reset_focus() {
 		// capture current selection, so we can compare the state after
 		// snapshot restoration and afterNavigate callbacks have run
 		const selection = getSelection();
+		/** @type {Range[]} */
 		const a = [];
-		for (let i = 0; i < selection.rangeCount; i += 1) {
-			a.push(selection.getRangeAt(i));
+		if (selection) {
+			for (let i = 0; i < selection.rangeCount; i += 1) {
+				a.push(selection.getRangeAt(i));
+			}
 		}
 
 		setTimeout(() => {
 			const after = getSelection();
 
+			if (!after) return;
 			if (after.rangeCount !== a.length) return;
-			for (let i = 0; i < selection.rangeCount; i += 1) {
+			for (let i = 0; i < after.rangeCount; i += 1) {
 				const old_range = a[i];
 				const new_range = after.getRangeAt(i);
 
