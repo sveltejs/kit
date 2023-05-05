@@ -4,7 +4,7 @@
 	"description": "monorepo for @sveltejs/kit and friends",
 	"private": true,
 	"scripts": {
-		"test": "pnpm test -r --workspace-concurrency=1 --filter=./packages/* --filter=!./packages/create-svelte",
+		"test": "pnpm test -r --filter=./packages/* --filter=!./packages/create-svelte",
 		"test:cross-platform:dev": "pnpm run --dir packages/kit test:cross-platform:dev",
 		"test:cross-platform:build": "pnpm run --dir packages/kit test:cross-platform:build",
 		"test:vite-ecosystem-ci": "pnpm test --dir packages/kit",
