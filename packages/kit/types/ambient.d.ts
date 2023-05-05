@@ -271,12 +271,12 @@ declare module '$app/navigation' {
 	/**
 	 * TODO
 	 */
-	export function pushState(state: Record<string, any>, url: string | URL): void;
+	export function pushState(state: Record<string, any>, url?: string | URL): void;
 
 	/**
 	 * TODO
 	 */
-	export function replaceState(state: Record<string, any>, url: string | URL): void;
+	export function replaceState(state: Record<string, any>, url?: string | URL): void;
 }
 
 declare module '$app/paths' {
