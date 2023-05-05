@@ -1923,7 +1923,7 @@ function reset_focus() {
 				// if the selection hasn't changed (as a result of an element being (auto)focused,
 				// or a programmatic selection, we reset everything as part of the navigation)
 				// fixes https://github.com/sveltejs/kit/issues/8439
-				getSelection()?.removeAllRanges();
+				selection.removeAllRanges();
 			});
 		}
 	}
