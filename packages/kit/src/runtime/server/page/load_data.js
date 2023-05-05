@@ -51,7 +51,8 @@ export async function load_server_data({ event, state, node, parent }) {
 				);
 			}
 
-			uses.dependencies.add(url.href);
+			// @ts-expect-error: Property 'svelte' does not exist on type 'RequestInit'.
+			uses.dependencies.add(init?.svelte?.depends ?? url.href);
 
 			return event.fetch(info, init);
 		},
