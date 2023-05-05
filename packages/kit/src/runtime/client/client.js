@@ -1904,35 +1904,28 @@ function reset_focus() {
 		// capture current selection, so we can compare the state after
 		// snapshot restoration and afterNavigate callbacks have run
 		const selection = getSelection();
-		/** @type {Range[]} */
-		const a = [];
-		if (selection) {
+
+		if (selection && selection.type !== 'None') {
+			/** @type {Range[]} */
+			const ranges = [];
+
 			for (let i = 0; i < selection.rangeCount; i += 1) {
-				a.push(selection.getRangeAt(i));
+				ranges.push(selection.getRangeAt(i));
 			}
+
+			setTimeout(() => {
+				if (selection.rangeCount !== ranges.length) return;
+
+				for (let i = 0; i < selection.rangeCount; i += 1) {
+					if (selection.getRangeAt(i) !== ranges[i]) return;
+				}
+
+				// if the selection hasn't changed (as a result of an element being (auto)focused,
+				// or a programmatic selection, we reset everything as part of the navigation)
+				// fixes https://github.com/sveltejs/kit/issues/8439
+				getSelection()?.removeAllRanges();
+			});
 		}
-
-		setTimeout(() => {
-			const after = getSelection();
-
-			if (!after) return;
-			if (after.rangeCount !== a.length) return;
-			for (let i = 0; i < after.rangeCount; i += 1) {
-				const old_range = a[i];
-				const new_range = after.getRangeAt(i);
-
-				if (old_range.commonAncestorContainer !== new_range.commonAncestorContainer) return;
-				if (old_range.startContainer !== new_range.startContainer) return;
-				if (old_range.endContainer !== new_range.endContainer) return;
-				if (old_range.startOffset !== new_range.startOffset) return;
-				if (old_range.endOffset !== new_range.endOffset) return;
-			}
-
-			// if the selection hasn't changed (as a result of an element being (auto)focused,
-			// or a programmatic selection, we reset everything as part of the navigation)
-			// fixes https://github.com/sveltejs/kit/issues/8439
-			getSelection()?.removeAllRanges();
-		});
 	}
 }
 
