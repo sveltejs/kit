@@ -1190,7 +1190,7 @@ export function create_client(app, target) {
 		navigating = false;
 
 		if (type === 'popstate') {
-			restore_snapshot(current_history_index);
+			restore_snapshot(current_navigation_index);
 		}
 
 		callbacks.after_navigate.forEach((fn) =>
