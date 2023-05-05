@@ -171,6 +171,9 @@ export function create_client(app, target) {
 			if (navigation_result.type === 'redirect') {
 				return goto(new URL(navigation_result.location, url).href, {}, [url.pathname], nav_token);
 			} else {
+				if (navigation_result.props.page !== undefined) {
+					page = navigation_result.props.page;
+				}
 				root.$set(navigation_result.props);
 			}
 		}
