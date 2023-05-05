@@ -1922,11 +1922,15 @@ function reset_focus() {
 
 					// we need to do a deep comparison rather than just `a !== b` because
 					// Safari behaves differently to other browsers
-					if (a.commonAncestorContainer !== b.commonAncestorContainer) return;
-					if (a.startContainer !== b.startContainer) return;
-					if (a.endContainer !== b.endContainer) return;
-					if (a.startOffset !== b.startOffset) return;
-					if (a.endOffset !== b.endOffset) return;
+					if (
+						a.commonAncestorContainer !== b.commonAncestorContainer ||
+						a.startContainer !== b.startContainer ||
+						a.endContainer !== b.endContainer ||
+						a.startOffset !== b.startOffset ||
+						a.endOffset !== b.endOffset
+					) {
+						return;
+					}
 				}
 
 				// if the selection hasn't changed (as a result of an element being (auto)focused,
