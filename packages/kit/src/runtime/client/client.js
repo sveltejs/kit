@@ -1917,7 +1917,16 @@ function reset_focus() {
 				if (selection.rangeCount !== ranges.length) return;
 
 				for (let i = 0; i < selection.rangeCount; i += 1) {
-					if (selection.getRangeAt(i) !== ranges[i]) return;
+					const a = ranges[i];
+					const b = selection.getRangeAt(i);
+
+					// we need to do a deep comparison rather than just `a !== b` because
+					// Safari behaves differently to other browsers
+					if (a.commonAncestorContainer !== b.commonAncestorContainer) return;
+					if (a.startContainer !== b.startContainer) return;
+					if (a.endContainer !== b.endContainer) return;
+					if (a.startOffset !== b.startOffset) return;
+					if (a.endOffset !== b.endOffset) return;
 				}
 
 				// if the selection hasn't changed (as a result of an element being (auto)focused,
