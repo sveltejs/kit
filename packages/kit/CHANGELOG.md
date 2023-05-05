@@ -1,5 +1,15 @@
 # @sveltejs/kit
 
+## 1.16.1
+
+### Patch Changes
+
+- fix: realign state.branch on the client on first load ([#9754](https://github.com/sveltejs/kit/pull/9754))
+
+- fix: update `$page.data` correctly after invalidate ([#9798](https://github.com/sveltejs/kit/pull/9798))
+
+- fix: file not found in manifest ([#9846](https://github.com/sveltejs/kit/pull/9846))
+
 ## 1.16.0
 
 ### Minor Changes
