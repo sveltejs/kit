@@ -775,3 +775,16 @@ test.describe('Streaming', () => {
 		});
 	}
 });
+
+test.describe('Actions', () => {
+	test('page store has correct data', async ({ page }) => {
+		await page.goto('/actions/enhance');
+		const pre = page.locator('pre.data1');
+
+		await expect(pre).toHaveText(`prop: 0, store: 0`);
+		await page.locator('.form4').click();
+		await expect(pre).toHaveText(`prop: 1, store: 1`);
+		await page.evaluate('window.svelte_tick()');
+		await expect(pre).toHaveText(`prop: 1, store: 1`);
+	});
+});

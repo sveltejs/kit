@@ -911,7 +911,7 @@ test.describe('Actions', () => {
 			await page.goto('/actions/enhance');
 		}
 
-		expect(await page.textContent('pre')).toBe(JSON.stringify(null));
+		expect(await page.textContent('pre.formdata1')).toBe(JSON.stringify(null));
 	});
 
 	test('applyAction redirects', async ({ page, javaScriptEnabled }) => {
@@ -1065,6 +1065,13 @@ test.describe('Actions', () => {
 		]);
 
 		await expect(page.locator('h1')).toHaveText('400');
+	});
+
+	test('errors are rendered at the correct level', async ({ page }) => {
+		await page.goto('/actions/form-errors/adjacent-error-boundary');
+		await page.locator('button').click();
+
+		await expect(page.locator('pre')).toHaveText('something went wrong');
 	});
 });
 

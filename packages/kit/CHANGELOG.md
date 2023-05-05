@@ -1,5 +1,23 @@
 # @sveltejs/kit
 
+## 1.16.2
+
+### Patch Changes
+
+- fix: support Node 20 ([`6e2efcf62`](https://github.com/sveltejs/kit/commit/6e2efcf627ce8d179c941212d761aa93568b1724))
+
+- fix: reset focus synchronously on navigation ([#9837](https://github.com/sveltejs/kit/pull/9837))
+
+## 1.16.1
+
+### Patch Changes
+
+- fix: realign state.branch on the client on first load ([#9754](https://github.com/sveltejs/kit/pull/9754))
+
+- fix: update `$page.data` correctly after invalidate ([#9798](https://github.com/sveltejs/kit/pull/9798))
+
+- fix: file not found in manifest ([#9846](https://github.com/sveltejs/kit/pull/9846))
+
 ## 1.16.0
 
 ### Minor Changes
