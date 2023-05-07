@@ -1908,7 +1908,8 @@ function reset_focus() {
 		const tabindex = root.getAttribute('tabindex');
 
 		root.tabIndex = -1;
-		root.focus({ preventScroll: true });
+		// @ts-ignore
+		root.focus({ preventScroll: true, focusVisible: false });
 
 		// restore `tabindex` as to prevent `root` from stealing input from elements
 		if (tabindex !== null) {
