@@ -1,11 +1,11 @@
+import { exec, execSync } from 'node:child_process';
 import fs from 'node:fs';
-import { execSync } from 'node:child_process';
 import path from 'node:path';
-import { test } from 'uvu';
-import * as assert from 'uvu/assert';
-import { create } from '../index.js';
 import { fileURLToPath } from 'node:url';
+import { promisify } from 'node:util';
 import glob from 'tiny-glob';
+import { beforeAll, describe, test } from 'vitest';
+import { create } from '../index.js';
 
 /** Resolve the given path relative to the current file */
 const resolve_path = (path) => fileURLToPath(new URL(path, import.meta.url));
@@ -47,11 +47,23 @@ const workspace = {
 	pnpm: { overrides },
 	devDependencies: overrides
 };
+
 fs.writeFileSync(
 	path.join(test_workspace_dir, 'package.json'),
 	JSON.stringify(workspace, null, '\t')
 );
+
 fs.writeFileSync(path.join(test_workspace_dir, 'pnpm-workspace.yaml'), 'packages:\n  - ./*\n');
+
+const exec_async = promisify(exec);
+
+beforeAll(
+	() =>
+		exec_async(`pnpm install --no-frozen-lockfile`, {
+			cwd: test_workspace_dir
+		}),
+	Infinity
+);
 
 for (const template of fs.readdirSync('templates')) {
 	if (template[0] === '.') continue;
@@ -89,28 +101,22 @@ for (const template of fs.readdirSync('templates')) {
 
 		// run provided scripts that are non-blocking. All of them should exit with 0
 		// package script requires lib dir
+		// TODO: lint should run before format
 		const scripts_to_test = ['sync', 'format', 'lint', 'check', 'build'];
 		if (fs.existsSync(path.join(cwd, 'src', 'lib'))) {
 			scripts_to_test.push('package');
 		}
 
-		for (const script of scripts_to_test.filter((s) => !!pkg.scripts[s])) {
-			test(`${template}-${types}: ${script}`, () => {
-				try {
-					execSync(`pnpm ${script}`, { cwd, stdio: 'pipe' });
-				} catch (e) {
-					assert.unreachable(
-						`script: ${script} failed\n` +
-							`---\nstdout:\n${e.stdout}\n` +
-							`---\nstderr:\n${e.stderr}`
-					);
+		describe(
+			`${template}-${types}`,
+			() => {
+				for (const script of scripts_to_test.filter((s) => !!pkg.scripts[s])) {
+					test(`${script}`, () => exec_async(`pnpm ${script}`, { cwd }));
 				}
-			});
-		}
+			},
+			{
+				timeout: Infinity
+			}
+		);
 	}
 }
-
-console.log('installing dependencies...');
-execSync('pnpm install --no-frozen-lockfile', { cwd: test_workspace_dir, stdio: 'ignore' });
-console.log('done installing dependencies');
-test.run();
