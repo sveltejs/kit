@@ -2,4 +2,4 @@
 'create-svelte': minor
 ---
 
-feat: Added `data-sveltekit-preload-data` to lib template
+feat: Add `data-sveltekit-preload-data` to lib template
