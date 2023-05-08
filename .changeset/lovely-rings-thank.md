@@ -2,4 +2,4 @@
 '@sveltejs/kit': patch
 ---
 
-fix: call focus with focusVisible set to false
+fix: use `focusVisible: false` to prevent unwanted focus ring on navigation
