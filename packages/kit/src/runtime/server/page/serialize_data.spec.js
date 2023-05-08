@@ -1,5 +1,4 @@
-import { test } from 'uvu';
-import * as assert from 'uvu/assert';
+import { assert, test } from 'vitest';
 import { serialize_data } from './serialize_data.js';
 
 test('escapes slashes', () => {
@@ -102,5 +101,3 @@ test('doesnt compute ttl when vary header is present', () => {
 		`<script type="application/json" data-sveltekit-fetched data-url="${escaped}">{"status":200,"statusText":"","headers":{},"body":\"\"}</script>`
 	);
 });
-
-test.run();

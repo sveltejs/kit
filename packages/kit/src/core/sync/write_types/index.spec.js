@@ -1,8 +1,7 @@
 import { execSync } from 'node:child_process';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { test } from 'uvu';
-import * as assert from 'uvu/assert';
+import { assert, expect, test } from 'vitest';
 import { rimraf } from '../../../utils/filesystem.js';
 import options from '../../config/options.js';
 import create_manifest_data from '../create_manifest_data/index.js';
@@ -60,7 +59,7 @@ test('Rewrites types for a TypeScript module', () => {
 
 	const rewritten = tweak_types(source, false);
 
-	assert.equal(rewritten?.exports, ['load']);
+	expect(rewritten?.exports).toEqual(['load']);
 	assert.equal(
 		rewritten?.code,
 		`// @ts-nocheck
@@ -85,7 +84,7 @@ test('Rewrites types for a TypeScript module without param', () => {
 
 	const rewritten = tweak_types(source, false);
 
-	assert.equal(rewritten?.exports, ['load']);
+	expect(rewritten?.exports).toEqual(['load']);
 	assert.equal(
 		rewritten?.code,
 		`// @ts-nocheck
@@ -111,7 +110,7 @@ test('Rewrites types for a TypeScript module without param and jsdoc without typ
 
 	const rewritten = tweak_types(source, false);
 
-	assert.equal(rewritten?.exports, ['load']);
+	expect(rewritten?.exports).toEqual(['load']);
 	assert.equal(
 		rewritten?.code,
 		`// @ts-nocheck
@@ -138,7 +137,7 @@ test('Rewrites types for a JavaScript module with `function`', () => {
 
 	const rewritten = tweak_types(source, false);
 
-	assert.equal(rewritten?.exports, ['load']);
+	expect(rewritten?.exports).toEqual(['load']);
 	assert.equal(
 		rewritten?.code,
 		`// @ts-nocheck
@@ -165,7 +164,7 @@ test('Rewrites types for a JavaScript module with `const`', () => {
 
 	const rewritten = tweak_types(source, false);
 
-	assert.equal(rewritten?.exports, ['load']);
+	expect(rewritten?.exports).toEqual(['load']);
 	assert.equal(
 		rewritten?.code,
 		`// @ts-nocheck
@@ -192,7 +191,7 @@ test('Appends @ts-nocheck after @ts-check', () => {
 
 	const rewritten = tweak_types(source, false);
 
-	assert.equal(rewritten?.exports, ['load']);
+	expect(rewritten?.exports).toEqual(['load']);
 	assert.equal(
 		rewritten?.code,
 		`// @ts-check
@@ -221,7 +220,7 @@ test('Rewrites action types for a JavaScript module', () => {
 
 	const rewritten = tweak_types(source, true);
 
-	assert.equal(rewritten?.exports, ['actions']);
+	expect(rewritten?.exports).toEqual(['actions']);
 	assert.equal(
 		rewritten?.code,
 		`// @ts-nocheck
@@ -250,7 +249,7 @@ test('Rewrites action types for a TypeScript module', () => {
 
 	const rewritten = tweak_types(source, true);
 
-	assert.equal(rewritten?.exports, ['actions']);
+	expect(rewritten?.exports).toEqual(['actions']);
 	assert.equal(
 		rewritten?.code,
 		`// @ts-nocheck
@@ -283,9 +282,7 @@ test('Leaves satisfies operator untouched', () => {
 
 	const rewritten = tweak_types(source, true);
 
-	assert.equal(rewritten?.exports, ['load', 'actions']);
+	expect(rewritten?.exports).toEqual(['load', 'actions']);
 	assert.equal(rewritten?.modified, false);
 	assert.equal(rewritten?.code, source);
 });
-
-test.run();

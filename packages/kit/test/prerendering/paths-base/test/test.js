@@ -1,7 +1,6 @@
 import * as fs from 'node:fs';
 import { fileURLToPath } from 'node:url';
-import { test } from 'uvu';
-import * as assert from 'uvu/assert';
+import { assert, test } from 'vitest';
 
 const build = fileURLToPath(new URL('../build', import.meta.url));
 

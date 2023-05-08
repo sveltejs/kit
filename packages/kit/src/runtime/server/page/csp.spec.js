@@ -1,12 +1,11 @@
 import { webcrypto } from 'node:crypto';
-import { test } from 'uvu';
-import * as assert from 'uvu/assert';
+import { assert, beforeAll, test } from 'vitest';
 import { Csp } from './csp.js';
 
 // @ts-expect-error
 globalThis.crypto = webcrypto;
 
-test.before(() => {
+beforeAll(() => {
 	// @ts-expect-error
 	globalThis.__SVELTEKIT_DEV__ = false;
 });
@@ -273,5 +272,3 @@ test('throws when reportOnly contains directives but no report-uri or report-to'
 		);
 	}, '`content-security-policy-report-only` must be specified with either the `report-to` or `report-uri` directives, or both');
 });
-
-test.run();
