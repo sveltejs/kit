@@ -1,6 +1,6 @@
 import { test } from 'uvu';
 import * as assert from 'uvu/assert';
-import { transform_code } from './migrate.js';
+import { transform_code, transform_svelte_code } from './migrate.js';
 
 test('Updates SvelteComponentTyped #1', () => {
 	const result = transform_code(
@@ -114,6 +114,46 @@ test('Updates Action and ActionReturn', () => {
 		const f: ActionReturn<true> = () => {};
 		const g: ActionReturn<true, {}> = () => {};
         `
+	);
+});
+
+test('Updates svelte:options #1', () => {
+	const result = transform_svelte_code(
+		`<svelte:options tag="asd-asd" />
+		
+		<div>hi</div>`
+	);
+	assert.equal(
+		result,
+		`<svelte:options customElement="asd-asd" />
+		
+		<div>hi</div>`
+	);
+});
+
+test('Updates svelte:options #2', () => {
+	const result = transform_svelte_code(
+		`<script>
+		export let foo;
+		</script>
+		
+		<svelte:options
+			immutable={true}
+			tag="asd-asd"></svelte:options>
+		
+		<div>hi</div>`
+	);
+	assert.equal(
+		result,
+		`<script>
+		export let foo;
+		</script>
+		
+		<svelte:options
+			immutable={true}
+			customElement="asd-asd"></svelte:options>
+		
+		<div>hi</div>`
 	);
 });
 

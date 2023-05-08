@@ -10,7 +10,7 @@ export function update_svelte_file(file_path) {
 			return `<script${attrs}>${transform_code(contents)}</script>${whitespace}`;
 		}
 	);
-	fs.writeFileSync(file_path, updated, 'utf-8');
+	fs.writeFileSync(file_path, transform_svelte_code(updated), 'utf-8');
 }
 
 /** @param {string} file_path */
@@ -31,7 +31,20 @@ export function transform_code(code) {
 	return source.getFullText();
 }
 
-// <svelte:options tag=".." /> -> <svelte:options customElement=".." />
+/** @param {string} code */
+export function transform_svelte_code(code) {
+	return update_svelte_options(code);
+}
+
+/**
+ * <svelte:options tag=".." /> -> <svelte:options customElement=".." />
+ * @param {string} code
+ */
+function update_svelte_options(code) {
+	return code.replace(/<svelte:options([^]*?)\stag=([^]*?)\/?>/, (match) => {
+		return match.replace('tag=', 'customElement=');
+	});
+}
 
 /**
  * Action<T> -> Action<T, any>
