@@ -180,7 +180,7 @@ Sentry.init({/*...*/})
 export async function handleError({ error, event }) {
 	const errorId = crypto.randomUUID();
 	// example integration with https://sentry.io/
-	Sentry.captureException(error, { event, errorId });
+	Sentry.captureException(error, { extra: { event, errorId } });
 
 	return {
 		message: 'Whoops!',
@@ -208,7 +208,7 @@ Sentry.init({/*...*/})
 export async function handleError({ error, event }) {
 	const errorId = crypto.randomUUID();
 	// example integration with https://sentry.io/
-	Sentry.captureException(error, { event, errorId });
+	Sentry.captureException(error, { extra: { event, errorId } });
 
 	return {
 		message: 'Whoops!',
