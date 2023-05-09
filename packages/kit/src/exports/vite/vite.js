@@ -30,7 +30,7 @@ export { vitePreprocess } from '@sveltejs/vite-plugin-svelte';
 
 const cwd = process.cwd();
 
-/** @type {import('./types').EnforcedConfig} */
+/** @type {import('./types.js').EnforcedConfig} */
 const enforced_config = {
 	appType: true,
 	base: true,
@@ -111,7 +111,10 @@ const warning_preprocessor = {
 	}
 };
 
-/** @return {Promise<import('vite').Plugin[]>} */
+/**
+ * Returns the SvelteKit Vite plugins.
+ * @return {Promise<import('vite').Plugin[]>}
+ */
 export async function sveltekit() {
 	const svelte_config = await load_config();
 
@@ -842,7 +845,7 @@ function warn_overridden_config(config, resolved_config) {
 /**
  * @param {Record<string, any>} config
  * @param {Record<string, any>} resolved_config
- * @param {import('./types').EnforcedConfig} enforced_config
+ * @param {import('./types.js').EnforcedConfig} enforced_config
  * @param {string} path
  * @param {string[]} out used locally to compute the return value
  */

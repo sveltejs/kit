@@ -88,7 +88,8 @@
 			"import": "./src/exports/hooks/hooks.js"
 		},
 		"./vite": {
-			"import": "./src/exports/vite/index.js"
+			"types": "./src/exports/vite/index.d.ts",
+			"import": "./src/exports/vite/vite.js"
 		}
 	},
 	"typesVersions": {
@@ -101,6 +102,9 @@
 			],
 			"node/polyfills": [
 				"./src/exports/node/polyfills/index.d.ts"
+			],
+			"vite": [
+				"./src/exports/vite/index.d.ts"
 			]
 		}
 	},
