@@ -113,27 +113,37 @@ export function resolve_entry(id, entry) {
 		'/' +
 		segments
 			.map((segment) => {
-				const match = basic_param_pattern.exec(segment);
+				/** @type {RegExpExecArray | null} */
+				let match = null;
 
-				// static content -- i.e. not a param
-				if (!match) return segment;
-
-				const optional = !!match[1];
-				const name = match[2];
-				const param_value = entry[name];
-
-				// This is nested so TS correctly narrows the type
-				if (!param_value) {
-					if (optional) return '';
-					throw new Error(`Missing parameter '${name}' in route ${id}`);
+				/**
+				 * @param {RegExpExecArray} match
+				 * @param {string} value
+				 */
+				function replace_param(match, value) {
+					segment =
+						segment.slice(0, match.index) + value + segment.slice(match.index + match[0].length);
 				}
 
-				if (param_value.startsWith('/') || param_value.endsWith('/'))
-					throw new Error(
-						`Parameter '${name}' in route ${id} cannot start or end with a slash -- this would cause an invalid route like foo//bar`
-					);
+				while ((match = basic_param_pattern.exec(segment))) {
+					const optional = !!match[1];
+					const name = match[2];
+					const param_value = entry[name];
 
-				return param_value;
+					// This is nested so TS correctly narrows the type
+					if (!param_value) {
+						if (optional) replace_param(match, '');
+						throw new Error(`Missing parameter '${name}' in route ${id}`);
+					}
+
+					if (param_value.startsWith('/') || param_value.endsWith('/'))
+						throw new Error(
+							`Parameter '${name}' in route ${id} cannot start or end with a slash -- this would cause an invalid route like foo//bar`
+						);
+
+					replace_param(match, param_value);
+				}
+				return segment;
 			})
 			.filter(Boolean)
 			.join('/')
