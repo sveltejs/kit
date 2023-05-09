@@ -1,7 +1,7 @@
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { pathToFileURL } from 'node:url';
-import { installPolyfills } from '../../exports/node/polyfills.js';
+import { installPolyfills } from '../../exports/node/polyfills/polyfills.js';
 import { load_config } from '../config/index.js';
 import { forked } from '../../utils/fork.js';
 

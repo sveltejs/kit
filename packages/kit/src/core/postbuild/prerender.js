@@ -1,7 +1,7 @@
 import { existsSync, readFileSync, statSync, writeFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { pathToFileURL } from 'node:url';
-import { installPolyfills } from '../../exports/node/polyfills.js';
+import { installPolyfills } from '../../exports/node/polyfills/polyfills.js';
 import { mkdirp, posixify, walk } from '../../utils/filesystem.js';
 import { should_polyfill } from '../../utils/platform.js';
 import { decode_uri, is_root_relative, resolve } from '../../utils/url.js';
