@@ -427,21 +427,6 @@ declare module '@sveltejs/kit/hooks' {
 	export function sequence(...handlers: Handle[]): Handle;
 }
 
-/**
- * A polyfill for `fetch` and its related interfaces, used by adapters for environments that don't provide a native implementation.
- */
-declare module '@sveltejs/kit/node/polyfills' {
-	/**
-	 * Make various web APIs available as globals:
-	 * - `crypto`
-	 * - `fetch`
-	 * - `Headers`
-	 * - `Request`
-	 * - `Response`
-	 */
-	export function installPolyfills(): void;
-}
-
 declare module '@sveltejs/kit/vite' {
 	import { Plugin } from 'vite';
 
