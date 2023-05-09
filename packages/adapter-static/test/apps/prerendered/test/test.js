@@ -4,7 +4,7 @@ import { expect, test } from '@playwright/test';
 const cwd = process.cwd();
 
 test('generates HTML files', () => {
-	expect(fs.existsSync(`${cwd}/build/index.html`)).toBeTruthy;
+	expect(fs.existsSync(`${cwd}/build/index.html`)).toBeTruthy();
 });
 
 test('prerenders a page', async ({ page }) => {
