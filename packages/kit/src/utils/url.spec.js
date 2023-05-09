@@ -111,7 +111,7 @@ describe('make_trackable', (test) => {
 
 		assert.throws(
 			() => url.hash,
-			'url.hash is inaccessible from load. Consider accessing hash from the page store within the script tag of your component.'
+			/Cannot access event.url.hash. Consider using `\$page.url.hash` inside a component instead/
 		);
 	});
 });
