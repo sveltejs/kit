@@ -1,4 +1,4 @@
-import { vitePreprocess } from '../../../../kit/src/exports/vite/index.js';
+import { vitePreprocess } from '../../../../kit/src/exports/vite/vite.js';
 import { fileURLToPath } from 'node:url';
 import path from 'node:path';
 
