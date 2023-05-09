@@ -1,7 +1,7 @@
 import { test } from 'uvu';
 import * as assert from 'uvu/assert';
 import { sequence } from './sequence.js';
-import { installPolyfills } from '../node/polyfills.js';
+import { installPolyfills } from '../node/polyfills/polyfills.js';
 
 installPolyfills();
 

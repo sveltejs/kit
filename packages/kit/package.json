@@ -84,7 +84,8 @@
 			"import": "./src/exports/node/polyfills/polyfills.js"
 		},
 		"./hooks": {
-			"import": "./src/exports/hooks/index.js"
+			"types": "./src/exports/hooks/index.d.ts",
+			"import": "./src/exports/hooks/hooks.js"
 		},
 		"./vite": {
 			"import": "./src/exports/vite/index.js"
@@ -92,6 +93,9 @@
 	},
 	"typesVersions": {
 		">4.0": {
+			"hooks": [
+				"./src/exports/hooks/index.d.ts"
+			],
 			"node": [
 				"./src/exports/node/index.d.ts"
 			],
