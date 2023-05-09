@@ -442,18 +442,6 @@ declare module '@sveltejs/kit/node/polyfills' {
 	export function installPolyfills(): void;
 }
 
-/**
- * Utilities used by adapters for Node-like environments.
- */
-declare module '@sveltejs/kit/node' {
-	export function getRequest(opts: {
-		base: string;
-		request: import('http').IncomingMessage;
-		bodySizeLimit?: number;
-	}): Promise<Request>;
-	export function setResponse(res: import('http').ServerResponse, response: Response): void;
-}
-
 declare module '@sveltejs/kit/vite' {
 	import { Plugin } from 'vite';
 

@@ -92,7 +92,13 @@ function get_raw_body(req, body_size_limit) {
 	});
 }
 
-/** @type {import('@sveltejs/kit/node').getRequest} */
+/**
+ * @param {{
+ *   base: string;
+ *   request: import('http').IncomingMessage;
+ *   bodySizeLimit?: number;
+ * }} opts
+ */
 export async function getRequest({ request, base, bodySizeLimit }) {
 	return new Request(base + request.url, {
 		// @ts-expect-error
@@ -103,7 +109,10 @@ export async function getRequest({ request, base, bodySizeLimit }) {
 	});
 }
 
-/** @type {import('@sveltejs/kit/node').setResponse} */
+/**
+ * @param {import('http').ServerResponse} res
+ * @param {Response} response
+ */
 export async function setResponse(res, response) {
 	for (const [key, value] of response.headers) {
 		try {

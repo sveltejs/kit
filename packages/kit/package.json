@@ -76,6 +76,7 @@
 			"import": "./src/exports/index.js"
 		},
 		"./node": {
+			"types": "./src/exports/node/index.d.ts",
 			"import": "./src/exports/node/index.js"
 		},
 		"./node/polyfills": {
@@ -88,7 +89,13 @@
 			"import": "./src/exports/vite/index.js"
 		}
 	},
-	"types": "types/index.d.ts",
+	"typesVersions": {
+		">4.0": {
+			"node": [
+				"./src/exports/node/index.d.ts"
+			]
+		}
+	},
 	"engines": {
 		"node": "^16.14 || >=18"
 	}
