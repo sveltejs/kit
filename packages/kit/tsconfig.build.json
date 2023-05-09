@@ -1,0 +1,24 @@
+{
+	"compilerOptions": {
+		"allowJs": true,
+		"checkJs": true,
+		"declaration": true,
+		"declarationDir": "types-generated",
+		"emitDeclarationOnly": true,
+		"strict": true,
+		"target": "es2020",
+		"module": "es2022",
+		"moduleResolution": "node",
+		"allowSyntheticDefaultImports": true,
+		"paths": {
+			"@sveltejs/kit": ["./types/index"],
+			// internal use only
+			"types": ["./types/internal"]
+		},
+		"noUnusedLocals": true,
+		"noUnusedParameters": true
+	},
+	"include": [
+		"src/exports/**/index.d.ts",
+	]
+}
