@@ -101,7 +101,7 @@ SvelteKit will discover pages to prerender automatically, by starting at _entry 
 
 Most of the time, that's enough. In some situations, links to pages like `/blog/hello-world` might not exist (or might not exist on prerendered pages), in which case we need to tell SvelteKit about their existence.
 
-This can be done with [`config.kit.prerender.entries`](configuration#prerender), or by exporting an `entries` function from a `+page.js` or `+page.server.js` belonging to a dynamic route:
+This can be done with [`config.kit.prerender.entries`](configuration#prerender), or by exporting an `entries` function from a `+page.js`, a `+page.server.js` or a `+server.js` belonging to a dynamic route:
 
 ```js
 /// file: src/routes/blog/[slug]/+page.server.js
