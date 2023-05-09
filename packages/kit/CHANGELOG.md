@@ -1,5 +1,13 @@
 # @sveltejs/kit
 
+## 1.16.3
+
+### Patch Changes
+
+- fix: entry generation with mixed segments ([#9879](https://github.com/sveltejs/kit/pull/9879))
+
+- fix: use `focusVisible: false` to prevent unwanted focus ring on navigation ([#9861](https://github.com/sveltejs/kit/pull/9861))
+
 ## 1.16.2
 
 ### Patch Changes
