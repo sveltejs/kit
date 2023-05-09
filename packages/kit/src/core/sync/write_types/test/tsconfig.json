@@ -10,7 +10,7 @@
 		"allowSyntheticDefaultImports": true,
 		"baseUrl": ".",
 		"paths": {
-			"@sveltejs/kit": ["../../../../../types/index"]
+			"@sveltejs/kit": ["../../../../../legacy-types/index"]
 		}
 	},
 	"include": ["./**/*.js"],
