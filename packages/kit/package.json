@@ -80,7 +80,8 @@
 			"import": "./src/exports/node/index.js"
 		},
 		"./node/polyfills": {
-			"import": "./src/exports/node/polyfills.js"
+			"types": "./src/exports/node/polyfills/index.d.ts",
+			"import": "./src/exports/node/polyfills/polyfills.js"
 		},
 		"./hooks": {
 			"import": "./src/exports/hooks/index.js"
@@ -93,6 +94,9 @@
 		">4.0": {
 			"node": [
 				"./src/exports/node/index.d.ts"
+			],
+			"node/polyfills": [
+				"./src/exports/node/polyfills/index.d.ts"
 			]
 		}
 	},
