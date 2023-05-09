@@ -19,11 +19,13 @@ test('entry generators should match their own route', () => {
 	assert.throws(
 		() =>
 			execSync('pnpm build', {
-				cwd: path.join(process.cwd(), 'apps/entry-generator-mismatch'),
+				cwd: path.join(process.cwd(), 'apps/preprender-entry-generator-mismatch'),
 				stdio: 'pipe',
 				timeout: 60000
 			}),
-		`The entries export from /[slug]/[notSpecific] generated entry /whatever/specific, which was matched by /[slug]/specific - see the \`handleEntryGeneratorMismatch\` option in https://kit.svelte.dev/docs/configuration#prerender for more info.`
+		new Error(
+			'The entries export from /[slug]/[notSpecific] generated entry /whatever/specific, which was matched by /[slug]/specific - see the `handleEntryGeneratorMismatch` option in https://kit.svelte.dev/docs/configuration#prerender for more info.'
+		)
 	);
 });
 
