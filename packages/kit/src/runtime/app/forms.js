@@ -65,6 +65,17 @@ export function enhance(form, submit = () => {}) {
 
 		const data = new FormData(form);
 
+		if (DEV && form.enctype !== 'multipart/form-data') {
+			for (const value of data.values()) {
+				if (value instanceof File) {
+					// TODO 2.0: Upgrade to `throw Error`
+					console.warn(
+						'Your form contains <input type="file"> fields, but is missing the `enctype="multipart/form-data"` attribute. This will lead to inconsistent behavior between enhanced and native forms. For more details, see https://github.com/sveltejs/kit/issues/9819. This will be upgraded to an error in v2.0.'
+					);
+				}
+			}
+		}
+
 		const submitter_name = event.submitter?.getAttribute('name');
 		if (submitter_name) {
 			data.append(submitter_name, event.submitter?.getAttribute('value') ?? '');
