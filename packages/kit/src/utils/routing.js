@@ -96,7 +96,7 @@ export function parse_route_id(id) {
 	return { pattern, params };
 }
 
-const basic_param_pattern = /\[(\[)?(?:\.\.\.)?(\w+?)(?:=(\w+))?\]\]?/;
+const basic_param_pattern = /\[(\[)?(?:\.\.\.)?(\w+?)(?:=(\w+))?\]\]?/g;
 
 /**
  * Parses a route ID, then resolves it to a path by replacing parameters with actual values from `entry`.
@@ -112,27 +112,13 @@ export function resolve_entry(id, entry) {
 	return (
 		'/' +
 		segments
-			.map((segment) => {
-				/** @type {RegExpExecArray | null} */
-				let match = null;
-
-				/**
-				 * @param {RegExpExecArray} match
-				 * @param {string} value
-				 */
-				function replace_param(match, value) {
-					segment =
-						segment.slice(0, match.index) + value + segment.slice(match.index + match[0].length);
-				}
-
-				while ((match = basic_param_pattern.exec(segment))) {
-					const optional = !!match[1];
-					const name = match[2];
+			.map((segment) =>
+				segment.replace(basic_param_pattern, (_, optional, name) => {
 					const param_value = entry[name];
 
 					// This is nested so TS correctly narrows the type
 					if (!param_value) {
-						if (optional) replace_param(match, '');
+						if (optional) return '';
 						throw new Error(`Missing parameter '${name}' in route ${id}`);
 					}
 
@@ -140,11 +126,9 @@ export function resolve_entry(id, entry) {
 						throw new Error(
 							`Parameter '${name}' in route ${id} cannot start or end with a slash -- this would cause an invalid route like foo//bar`
 						);
-
-					replace_param(match, param_value);
-				}
-				return segment;
-			})
+					return param_value;
+				})
+			)
 			.filter(Boolean)
 			.join('/')
 	);
