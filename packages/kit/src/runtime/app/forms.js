@@ -65,7 +65,11 @@ export function enhance(form, submit = () => {}) {
 
 		const data = new FormData(form);
 
-		if (DEV && /** @type {HTMLFormElement} */ (HTMLElement.prototype.cloneNode.call(form)).enctype !== 'multipart/form-data') {
+		if (
+			DEV &&
+			/** @type {HTMLFormElement} */ (HTMLElement.prototype.cloneNode.call(form)).enctype !==
+				'multipart/form-data'
+		) {
 			for (const value of data.values()) {
 				if (value instanceof File) {
 					// TODO 2.0: Upgrade to `throw Error`
