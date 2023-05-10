@@ -14,12 +14,7 @@ const ATTRIBUTE_NAME = /[^\t\n\f />"'=]/;
 const WHITESPACE = /[\s\n\r]/;
 
 const CRAWLABLE_META_NAME_ATTRS = new Set([
-	'url',
-	'identifier-URL',
-	'syndication-source',
-	'original-source',
 	'og:url',
-	'msapplication-starturl',
 	'og:image',
 	'og:image:url',
 	'og:image:secure_url',
@@ -192,6 +187,7 @@ export function crawl(html, base) {
 				const href_attr = attributes.get('href');
 				const id_attr = attributes.get('id');
 				const name_attr = attributes.get('name');
+				const property_attr = attributes.get('property');
 				const rel_attr = attributes.get('rel');
 				const src_attr = attributes.get('src');
 				const srcset_attr = attributes.get('srcset');
@@ -240,6 +236,15 @@ export function crawl(html, base) {
 					content_attr &&
 					name_attr &&
 					CRAWLABLE_META_NAME_ATTRS.has(name_attr)
+				) {
+					hrefs.push(resolve(base, content_attr.trim().toLowerCase()));
+				}
+
+				if (
+					tag === 'META' &&
+					content_attr &&
+					property_attr &&
+					CRAWLABLE_META_NAME_ATTRS.has(property_attr.trim().toLowerCase())
 				) {
 					hrefs.push(resolve(base, content_attr));
 				}
