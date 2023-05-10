@@ -2,6 +2,20 @@ import { HttpError, Redirect, ActionFailure } from '../runtime/control.js';
 import { BROWSER, DEV } from 'esm-env';
 
 /**
+ * @overload
+ * @param {number} status
+ * @param {App.Error} body
+ * @return {HttpError}
+ */
+
+/**
+ * @overload
+ * @param {number} status
+ * @param {{ message: string } extends App.Error ? App.Error | string | undefined : never} [body]
+ * @return {HttpError}
+ */
+
+/**
  * Creates an `HttpError` object with an HTTP status code and an optional message.
  * This object, if thrown during request handling, will cause SvelteKit to
  * return an error response without invoking `handleError`.
