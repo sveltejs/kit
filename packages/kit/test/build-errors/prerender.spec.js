@@ -15,7 +15,7 @@ test('prerenderable routes must be prerendered', () => {
 	);
 });
 
-test.only('entry generators should match their own route', () => {
+test('entry generators should match their own route', () => {
 	assert.throws(
 		() =>
 			execSync('pnpm build', {
