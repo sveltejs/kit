@@ -1,5 +1,5 @@
 ---
-'@sveltejs/kit': patch
+'@sveltejs/kit': minor
 ---
 
-fix: Crawl social-image urls during prerender
+feat: Crawl social-image urls during prerender
