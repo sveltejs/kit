@@ -2,7 +2,7 @@
 // but which cannot be imported from `@sveltejs/kit`. Care should
 // be taken to avoid breaking changes when editing this file
 
-import { RouteDefinition } from './index.js';
+import { RouteDefinition } from './public.js';
 
 export interface AdapterEntry {
 	/**
@@ -55,25 +55,31 @@ export interface AdapterEntry {
 // SOFTWARE.
 
 export namespace Csp {
-	type ActionSource = 'strict-dynamic' | 'report-sample';
-	type BaseSource =
+	export type ActionSource = 'strict-dynamic' | 'report-sample';
+	export type BaseSource =
 		| 'self'
 		| 'unsafe-eval'
 		| 'unsafe-hashes'
 		| 'unsafe-inline'
 		| 'wasm-unsafe-eval'
 		| 'none';
-	type CryptoSource = `${'nonce' | 'sha256' | 'sha384' | 'sha512'}-${string}`;
-	type FrameSource = HostSource | SchemeSource | 'self' | 'none';
-	type HostNameScheme = `${string}.${string}` | 'localhost';
-	type HostSource = `${HostProtocolSchemes}${HostNameScheme}${PortScheme}`;
-	type HostProtocolSchemes = `${string}://` | '';
-	type HttpDelineator = '/' | '?' | '#' | '\\';
-	type PortScheme = `:${number}` | '' | ':*';
-	type SchemeSource = 'http:' | 'https:' | 'data:' | 'mediastream:' | 'blob:' | 'filesystem:';
-	type Source = HostSource | SchemeSource | CryptoSource | BaseSource;
-	type Sources = Source[];
-	type UriPath = `${HttpDelineator}${string}`;
+	export type CryptoSource = `${'nonce' | 'sha256' | 'sha384' | 'sha512'}-${string}`;
+	export type FrameSource = HostSource | SchemeSource | 'self' | 'none';
+	export type HostNameScheme = `${string}.${string}` | 'localhost';
+	export type HostSource = `${HostProtocolSchemes}${HostNameScheme}${PortScheme}`;
+	export type HostProtocolSchemes = `${string}://` | '';
+	export type HttpDelineator = '/' | '?' | '#' | '\\';
+	export type PortScheme = `:${number}` | '' | ':*';
+	export type SchemeSource =
+		| 'http:'
+		| 'https:'
+		| 'data:'
+		| 'mediastream:'
+		| 'blob:'
+		| 'filesystem:';
+	export type Source = HostSource | SchemeSource | CryptoSource | BaseSource;
+	export type Sources = Source[];
+	export type UriPath = `${HttpDelineator}${string}`;
 }
 
 export interface CspDirectives {

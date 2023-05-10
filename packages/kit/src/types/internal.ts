@@ -12,18 +12,19 @@ import {
 	ServerInitOptions,
 	HandleFetch,
 	Actions,
-	HandleClientError
-} from './index.js';
+	HandleClientError,
+	SSRManifest
+} from './public';
 import {
 	HttpMethod,
 	MaybePromise,
 	PrerenderOption,
 	RequestOptions,
 	TrailingSlash
-} from './private.js';
+} from './private';
 
 export interface ServerModule {
-	Server: typeof InternalServer;
+	Server: InternalServer;
 }
 
 export interface ServerInternalModule {
@@ -107,7 +108,8 @@ export interface Env {
 	public: Record<string, string>;
 }
 
-export class InternalServer extends Server {
+export interface InternalServer extends Server {
+	new (manifest: SSRManifest): InternalServer;
 	init(options: ServerInitOptions): Promise<void>;
 	respond(
 		request: Request,
@@ -411,8 +413,8 @@ export type ValidatedConfig = RecursiveRequired<Config>;
 
 export type ValidatedKitConfig = RecursiveRequired<KitConfig>;
 
-export * from './index';
-export * from './private';
+export * from './public';
+export * from './private.js';
 
 declare global {
 	const __SVELTEKIT_ADAPTER_NAME__: string;
