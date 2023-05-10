@@ -96,7 +96,7 @@ export function parse_route_id(id) {
 	return { pattern, params };
 }
 
-const basic_param_pattern = /\[(\[)?(?:\.\.\.)?(\w+?)(?:=(\w+))?\]\]?/;
+const basic_param_pattern = /\[(\[)?(?:\.\.\.)?(\w+?)(?:=(\w+))?\]\]?/g;
 
 /**
  * Parses a route ID, then resolves it to a path by replacing parameters with actual values from `entry`.
@@ -112,29 +112,23 @@ export function resolve_entry(id, entry) {
 	return (
 		'/' +
 		segments
-			.map((segment) => {
-				const match = basic_param_pattern.exec(segment);
+			.map((segment) =>
+				segment.replace(basic_param_pattern, (_, optional, name) => {
+					const param_value = entry[name];
 
-				// static content -- i.e. not a param
-				if (!match) return segment;
+					// This is nested so TS correctly narrows the type
+					if (!param_value) {
+						if (optional) return '';
+						throw new Error(`Missing parameter '${name}' in route ${id}`);
+					}
 
-				const optional = !!match[1];
-				const name = match[2];
-				const param_value = entry[name];
-
-				// This is nested so TS correctly narrows the type
-				if (!param_value) {
-					if (optional) return '';
-					throw new Error(`Missing parameter '${name}' in route ${id}`);
-				}
-
-				if (param_value.startsWith('/') || param_value.endsWith('/'))
-					throw new Error(
-						`Parameter '${name}' in route ${id} cannot start or end with a slash -- this would cause an invalid route like foo//bar`
-					);
-
-				return param_value;
-			})
+					if (param_value.startsWith('/') || param_value.endsWith('/'))
+						throw new Error(
+							`Parameter '${name}' in route ${id} cannot start or end with a slash -- this would cause an invalid route like foo//bar`
+						);
+					return param_value;
+				})
+			)
 			.filter(Boolean)
 			.join('/')
 	);

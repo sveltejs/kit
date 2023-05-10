@@ -238,6 +238,16 @@ const from_entry_tests = [
 		route: '/blog/[one=matcher]/[[two]]',
 		entry: { one: 'one' },
 		expected: '/blog/one'
+	},
+	{
+		route: '/blog/[one]/[two]-and-[three]',
+		entry: { one: 'one', two: '2', three: '3' },
+		expected: '/blog/one/2-and-3'
+	},
+	{
+		route: '/blog/[one]/[...two]-not-three',
+		entry: { one: 'one', two: 'two/2' },
+		expected: '/blog/one/two/2-not-three'
 	}
 ];
 

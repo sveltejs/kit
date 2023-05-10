@@ -272,7 +272,7 @@ export function create_client(app, target) {
 
 	/** @param {import('./types').NavigationFinished} result */
 	function initialize(result) {
-		if (DEV && document.querySelector('vite-error-overlay')) return;
+		if (DEV && result.state.error && document.querySelector('vite-error-overlay')) return;
 
 		current = result.state;
 
@@ -1908,7 +1908,8 @@ function reset_focus() {
 		const tabindex = root.getAttribute('tabindex');
 
 		root.tabIndex = -1;
-		root.focus({ preventScroll: true });
+		// @ts-expect-error
+		root.focus({ preventScroll: true, focusVisible: false });
 
 		// restore `tabindex` as to prevent `root` from stealing input from elements
 		if (tabindex !== null) {

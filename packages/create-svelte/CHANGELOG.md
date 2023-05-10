@@ -1,5 +1,11 @@
 # create-svelte
 
+## 4.2.0
+
+### Minor Changes
+
+- feat: Add `data-sveltekit-preload-data` to lib template ([#9863](https://github.com/sveltejs/kit/pull/9863))
+
 ## 4.1.1
 
 ### Patch Changes
