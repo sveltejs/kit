@@ -14,9 +14,21 @@ const ATTRIBUTE_NAME = /[^\t\n\f />"'=]/;
 const WHITESPACE = /[\s\n\r]/;
 
 const CRAWLABLE_META_NAME_ATTRS = new Set([
+	'url',
+	'identifier-URL',
+	'syndication-source',
+	'original-source',
+	'og:url',
+	'msapplication-starturl',
 	'og:image',
 	'og:image:url',
 	'og:image:secure_url',
+	'og:video',
+	'og:video:url',
+	'og:video:secure_url',
+	'og:audio',
+	'og:audio:url',
+	'og:audio:secure_url',
 	'twitter:image'
 ]);
 
