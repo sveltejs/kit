@@ -1,6 +1,5 @@
 import fs from 'node:fs';
 import path from 'node:path';
-import { copy } from '../src/utils/filesystem.js';
 import glob from 'tiny-glob/sync.js';
 
 glob('**/*.d.ts', { cwd: 'src' }).forEach((file) => {
