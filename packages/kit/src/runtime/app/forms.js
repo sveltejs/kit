@@ -20,7 +20,7 @@ export function deserialize(result) {
  * @param {string} callLocation
  * @returns void
  */
-function warnOnAccess(oldName, newName, callLocation) {
+function warn_on_access(oldName, newName, callLocation) {
 	if (!DEV) return;
 	// TODO 2.0: Remove this code
 	console.warn(
@@ -97,12 +97,12 @@ export function enhance(formElement, submit = () => {}) {
 				cancel,
 				controller,
 				get data() {
-					warnOnAccess('data', 'formData', 'use:enhance submit function');
+					warn_on_access('data', 'formData', 'use:enhance submit function');
 					return formData;
 				},
 				formData,
 				get form() {
-					warnOnAccess('form', 'formElement', 'use:enhance submit function');
+					warn_on_access('form', 'formElement', 'use:enhance submit function');
 					return formElement;
 				},
 				formElement,
@@ -135,12 +135,12 @@ export function enhance(formElement, submit = () => {}) {
 		callback({
 			action,
 			get data() {
-				warnOnAccess('data', 'formData', 'callback returned from use:enhance submit function');
+				warn_on_access('data', 'formData', 'callback returned from use:enhance submit function');
 				return formData;
 			},
 			formData,
 			get form() {
-				warnOnAccess('form', 'formElement', 'callback returned from use:enhance submit function');
+				warn_on_access('form', 'formElement', 'callback returned from use:enhance submit function');
 				return formElement;
 			},
 			formElement,
