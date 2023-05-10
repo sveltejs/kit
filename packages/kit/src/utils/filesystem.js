@@ -25,7 +25,7 @@ export function rimraf(path) {
  * @param {string} source
  * @param {string} target
  * @param {{
- *   filter?: (basename: string) => boolean;
+ *   filter?: (basename: string, is_directory: boolean) => boolean;
  *   replace?: Record<string, string>;
  * }} opts
  */
@@ -46,11 +46,12 @@ export function copy(source, target, opts = {}) {
 	 * @param {string} to
 	 */
 	function go(from, to) {
-		if (opts.filter && !opts.filter(path.basename(from))) return;
-
 		const stats = fs.statSync(from);
+		const is_directory = stats.isDirectory();
 
-		if (stats.isDirectory()) {
+		if (opts.filter && !opts.filter(path.basename(from), is_directory)) return;
+
+		if (is_directory) {
 			fs.readdirSync(from).forEach((file) => {
 				go(path.join(from, file), path.join(to, file));
 			});
