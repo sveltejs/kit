@@ -22,7 +22,6 @@
 		"sade": "^1.8.1",
 		"set-cookie-parser": "^2.6.0",
 		"sirv": "^2.0.2",
-		"tiny-glob": "^0.2.9",
 		"undici": "~5.22.0"
 	},
 	"devDependencies": {
@@ -37,6 +36,7 @@
 		"rollup": "^3.7.0",
 		"svelte": "^3.56.0",
 		"svelte-preprocess": "^5.0.3",
+		"tiny-glob": "^0.2.9",
 		"typescript": "^5.0.4",
 		"uvu": "^0.5.6",
 		"vite": "^4.3.0"
@@ -68,7 +68,7 @@
 		"test:cross-platform:build": "pnpm test:unit && pnpm -r --workspace-concurrency 1 --filter=\"./test/**\" test:cross-platform:build",
 		"test:unit": "uvu src \"(spec\\.js|test[\\\\/]index\\.js)\"",
 		"postinstall": "node postinstall.js",
-		"prepublishOnly": "tsc -p tsconfig.build.json && node scripts/copy-declaration-files"
+		"prepublishOnly": "tsc -p tsconfig.build.json && node scripts/process-declaration-files"
 	},
 	"exports": {
 		"./package.json": "./package.json",

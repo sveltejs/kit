@@ -63,8 +63,8 @@
  * first post-processing
  * ```
  *
- * @param {...import('@sveltejs/kit').Handle} handlers The chain of `handle` functions
- * @returns {import('@sveltejs/kit').Handle}
+ * @param {...import('types').Handle} handlers The chain of `handle` functions
+ * @returns {import('types').Handle}
  */
 export function sequence(...handlers) {
 	const length = handlers.length;
