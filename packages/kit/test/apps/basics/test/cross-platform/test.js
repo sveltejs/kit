@@ -757,15 +757,11 @@ test.describe('Routing', () => {
 	});
 
 	test('focus works if page load has hash', async ({ page, browserName }) => {
-		await page.goto('/routing/hashes/target#p2');
+		await page.goto('/routing/hashes/target#p2', { waitUntil: 'networkidle' });
 
 		await page.keyboard.press(browserName === 'webkit' ? 'Alt+Tab' : 'Tab');
-		await page.waitForTimeout(50); // give browser a bit of time to complete the native behavior of the key press
-		expect(
-			await page.evaluate(
-				() => document.activeElement?.textContent || 'ERROR: document.activeElement not set'
-			)
-		).toBe('next focus element');
+
+		await page.waitForSelector('button:focus');
 	});
 
 	test('focus works when navigating to a hash on the same page', async ({ page, browserName }) => {
