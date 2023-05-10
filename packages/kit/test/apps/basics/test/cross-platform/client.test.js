@@ -728,8 +728,8 @@ test.describe('Routing', () => {
 		await expect(page.locator('p')).toHaveText('/routing/trailing-slash/ignore/');
 
 		await clicknav('a[href="/routing/trailing-slash/relative-redirect/always"]');
-		expect(new URL(page.url()).pathname).toBe('/routing/trailing-slash/always/foo/');
-		await expect(page.locator('p')).toHaveText('/routing/trailing-slash/always/foo/');
+		expect(new URL(page.url()).pathname).toBe('/routing/trailing-slash/always/foo');
+		await expect(page.locator('p')).toHaveText('/routing/trailing-slash/always/foo');
 
 		await clicknav('a[href="/routing/trailing-slash/relative-redirect/never/"]');
 		expect(new URL(page.url()).pathname).toBe('/routing/trailing-slash/foo');
