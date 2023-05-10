@@ -235,6 +235,11 @@ function update_types(config, routes, route, to_delete = new Set()) {
 		);
 	}
 
+	const api_types_path = posixify(
+		path.relative(outdir, path.join(config.kit.outDir, 'types', '$api')) // TODO: potential failure point if api file is moved
+	);
+	declarations.push(`type FetchType = typeof import('${api_types_path}').TypedFetch;`);
+
 	if (route.leaf) {
 		let route_info = routes.get(route.leaf);
 		if (!route_info) {
@@ -263,10 +268,10 @@ function update_types(config, routes, route, to_delete = new Set()) {
 
 		if (route.leaf.server) {
 			exports.push(
-				'export type Action<OutputData extends Record<string, any> | void = Record<string, any> | void> = Kit.Action<RouteParams, OutputData, RouteId>'
+				'export type Action<OutputData extends Record<string, any> | void = Record<string, any> | void> = Kit.Action<RouteParams, OutputData, RouteId, FetchType>'
 			);
 			exports.push(
-				'export type Actions<OutputData extends Record<string, any> | void = Record<string, any> | void> = Kit.Actions<RouteParams, OutputData, RouteId>'
+				'export type Actions<OutputData extends Record<string, any> | void = Record<string, any> | void> = Kit.Actions<RouteParams, OutputData, RouteId, FetchType>'
 			);
 		}
 	}
@@ -339,7 +344,7 @@ function update_types(config, routes, route, to_delete = new Set()) {
 	}
 
 	if (route.leaf?.server || route.layout?.server || route.endpoint) {
-		exports.push('export type RequestEvent = Kit.RequestEvent<RouteParams, RouteId>;');
+		exports.push('export type RequestEvent = Kit.RequestEvent<RouteParams, RouteId, FetchType>;');
 	}
 
 	const output = [imports.join('\n'), declarations.join('\n'), exports.join('\n')]
@@ -398,7 +403,7 @@ function process_node(node, outdir, is_page, proxies, all_pages_have_load = true
 				? 'Partial<App.PageData> & Record<string, any> | void'
 				: `OutputDataShape<${parent_type}>`;
 		exports.push(
-			`export type ${prefix}ServerLoad<OutputData extends ${output_data_shape} = ${output_data_shape}> = Kit.ServerLoad<${params}, ${parent_type}, OutputData, ${route_id}>;`
+			`export type ${prefix}ServerLoad<OutputData extends ${output_data_shape} = ${output_data_shape}> = Kit.ServerLoad<${params}, ${parent_type}, OutputData, ${route_id}, FetchType>;`
 		);
 
 		exports.push(`export type ${prefix}ServerLoadEvent = Parameters<${prefix}ServerLoad>[0];`);
@@ -452,7 +457,7 @@ function process_node(node, outdir, is_page, proxies, all_pages_have_load = true
 				? 'Partial<App.PageData> & Record<string, any> | void'
 				: `OutputDataShape<${parent_type}>`;
 		exports.push(
-			`export type ${prefix}Load<OutputData extends ${output_data_shape} = ${output_data_shape}> = Kit.Load<${params}, ${prefix}ServerData, ${parent_type}, OutputData, ${route_id}>;`
+			`export type ${prefix}Load<OutputData extends ${output_data_shape} = ${output_data_shape}> = Kit.Load<${params}, ${prefix}ServerData, ${parent_type}, OutputData, ${route_id}, FetchType>;`
 		);
 
 		exports.push(`export type ${prefix}LoadEvent = Parameters<${prefix}Load>[0];`);
@@ -569,7 +574,7 @@ function path_to_original(outdir, file_path) {
 /**
  * @param {string} file_path
  */
-function replace_ext_with_js(file_path) {
+export function replace_ext_with_js(file_path) {
 	// Another extension than `.js` (or nothing, but that fails with node16 moduleResolution)
 	// will result in TS failing to lookup the file
 	const ext = path.extname(file_path);

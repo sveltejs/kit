@@ -50,8 +50,10 @@ export function redirect(status, location) {
 
 /**
  * Create a JSON `Response` object from the supplied data.
- * @param {any} data The value that will be serialized as JSON.
+ * @template {any} [T=any]
+ * @param {T} data The value that will be serialized as JSON.
  * @param {ResponseInit} [init] Options such as `status` and `headers` that will be added to the response. `Content-Type: application/json` and `Content-Length` headers will be added automatically.
+ * @returns {import('./public.js').TypedResponse<T>}
  */
 export function json(data, init) {
 	// TODO deprecate this in favour of `Response.json` when it's
