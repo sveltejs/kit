@@ -52,7 +52,9 @@ test('errors when no acao header present on cors', async () => {
 		await response.text();
 		throw new Error('should have thrown cors error');
 	} catch (e) {
-		assert.ok(e instanceof Error);
+		if (!(e instanceof Error)) {
+			throw new Error(`Expected an Error to be thrown but received ${typeof e}`);
+		}
 		assert.isTrue(
 			e.message.includes(
 				"CORS error: No 'Access-Control-Allow-Origin' header is present on the requested resource"
