@@ -222,8 +222,13 @@ export function crawl(html, base) {
 						if (src) hrefs.push(resolve(base, src));
 					}
 				}
-				
-				if (tag === 'META' && content_attr && name_attr && CRAWLABLE_META_NAME_ATTRS.has(name_attr)) {
+
+				if (
+					tag === 'META' &&
+					content_attr &&
+					name_attr &&
+					CRAWLABLE_META_NAME_ATTRS.has(name_attr)
+				) {
 					hrefs.push(resolve(base, content_attr));
 				}
 
