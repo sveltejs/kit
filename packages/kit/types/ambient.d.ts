@@ -95,7 +95,7 @@ declare module '$app/forms' {
 				 * Call this to get the default behavior of a form submission response.
 				 * @param options Set `reset: false` if you don't want the `<form>` values to be reset after a successful submission.
 				 */
-				update(options?: { reset: boolean }): Promise<void>;
+				update(options?: { reset?: boolean; invalidateAll?: boolean }): Promise<void>;
 		  }) => void)
 	>;
 

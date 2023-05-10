@@ -28,16 +28,24 @@ export function enhance(form, submit = () => {}) {
 	 * @param {{
 	 *   action: URL;
 	 *   result: import('types').ActionResult;
-	 *   reset?: boolean
+	 *   reset?: boolean;
+	 *   invalidateAll?: boolean;
 	 * }} opts
 	 */
-	const fallback_callback = async ({ action, result, reset }) => {
+	const fallback_callback = async ({
+		action,
+		result,
+		reset,
+		invalidateAll: shouldInvalidateAll
+	}) => {
 		if (result.type === 'success') {
 			if (reset !== false) {
 				// We call reset from the prototype to avoid DOM clobbering
 				HTMLFormElement.prototype.reset.call(form);
 			}
-			await invalidateAll();
+			if (shouldInvalidateAll !== false) {
+				await invalidateAll();
+			}
 		}
 
 		// For success/failure results, only apply action if it belongs to the
@@ -112,7 +120,13 @@ export function enhance(form, submit = () => {}) {
 			action,
 			data,
 			form,
-			update: (opts) => fallback_callback({ action, result, reset: opts?.reset }),
+			update: (opts) =>
+				fallback_callback({
+					action,
+					result,
+					reset: opts?.reset,
+					invalidateAll: opts?.invalidateAll
+				}),
 			// @ts-expect-error generic constraints stuff we don't care about
 			result
 		});

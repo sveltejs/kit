@@ -828,6 +828,28 @@ test.describe('Matchers', () => {
 });
 
 test.describe('Actions', () => {
+	test("invalidateAll = false doesn't invalidate all", async ({ page }) => {
+		await page.goto('/actions/invalidate-all?invalidate_all=false');
+		const preSubmitContent = await page.locator('pre').textContent();
+		await page.click('button');
+		// The value that should not change is time-based and might not have the granularity to change
+		// if we don't give it time to
+		await page.waitForTimeout(1000);
+		const postSubmitContent = await page.locator('pre').textContent();
+		expect(preSubmitContent).toBe(postSubmitContent);
+	});
+
+	test('invalidateAll = true does invalidate all', async ({ page }) => {
+		await page.goto('/actions/invalidate-all?invalidate_all=true');
+		const preSubmitContent = await page.locator('pre').textContent();
+		await page.click('button');
+		// The value that should not change is time-based and might not have the granularity to change
+		// if we don't give it time to
+		await page.waitForTimeout(1000);
+		const postSubmitContent = await page.locator('pre').textContent();
+		expect(preSubmitContent).not.toBe(postSubmitContent);
+	});
+
 	test('Error props are returned', async ({ page, javaScriptEnabled }) => {
 		await page.goto('/actions/form-errors');
 		await page.click('button');
