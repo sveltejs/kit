@@ -143,7 +143,7 @@ test.describe('Load', () => {
 	});
 
 	test('load does not call fetch if max-age allows it', async ({ page }) => {
-		// update_state is used to ensure we start waiting at the right time 
+		// update_state is used to ensure we start waiting at the right time
 		await page.addInitScript(`
 			window.now = 0;
 			window.update_state = 0;
