@@ -20,7 +20,6 @@
 		"noUnusedParameters": true
 	},
 	"include": [
-		"src/exports/**/*.js",
-		"src/exports/**/*.ts"
+		"src/exports/**/*.js"
 	]
 }
