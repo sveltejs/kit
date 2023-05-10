@@ -93,19 +93,20 @@
 			"import": "./src/exports/vite/index.js"
 		}
 	},
+	"types": "./types/exports/types.d.ts",
 	"typesVersions": {
 		">4.0": {
 			"hooks": [
-				"./src/exports/hooks/index.d.ts"
+				"./types/exports/hooks/index.d.ts"
 			],
 			"node": [
-				"./src/exports/node/index.d.ts"
+				"./types/exports/node/index.d.ts"
 			],
 			"node/polyfills": [
-				"./src/exports/node/polyfills/index.d.ts"
+				"./types/exports/node/polyfills/index.d.ts"
 			],
 			"vite": [
-				"./src/exports/vite/index.d.ts"
+				"./types/exports/vite/index.d.ts"
 			]
 		}
 	},
