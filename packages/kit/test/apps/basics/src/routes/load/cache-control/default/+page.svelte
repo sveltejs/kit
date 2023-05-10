@@ -5,9 +5,11 @@
 	export let data;
 
 	async function update() {
+		// @ts-expect-error
 		window.update_state += 1;
 		await fetch('/load/cache-control/default/increment');
 		await invalidate('/load/cache-control/default/count');
+		// @ts-expect-error
 		window.update_state += 1;
 	}
 </script>
