@@ -1,5 +1,6 @@
 import { defineConfig } from 'vitest/config';
 
+// this file needs a custom name so that the numerous test subprojects don't all pick it up
 export default defineConfig({
 	test: {
 		// shave a couple seconds off the tests
