@@ -5,7 +5,7 @@ export default defineConfig({
 		// shave a couple seconds off the tests
 		isolate: false,
 		singleThread: true,
-		include: ['src/**/*.spec.{js,mjs,cjs,ts}'],
+		include: ['src/**/*.spec.js'],
 		exclude: [
 			'**/node_modules/**',
 			'**/.svelte-kit/**',
