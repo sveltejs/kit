@@ -14,12 +14,26 @@ export function deserialize(result) {
 	return parsed;
 }
 
+/**
+ * @param {string} oldName
+ * @param {string} newName
+ * @param {string} callLocation
+ * @returns void
+ */
+function warnOnAccess(oldName, newName, callLocation) {
+	if (!DEV) return;
+	// TODO 2.0: Remove this code
+	console.warn(
+		`\`${oldName}\` has been deprecated in favor of \`${newName}\`. \`${oldName}\` will be removed in a future version. (Called from ${callLocation})`
+	);
+}
+
 /** @type {import('$app/forms').enhance} */
-export function enhance(form, submit = () => {}) {
+export function enhance(formElement, submit = () => {}) {
 	if (
 		DEV &&
-		/** @type {HTMLFormElement} */ (HTMLFormElement.prototype.cloneNode.call(form)).method !==
-			'post'
+		/** @type {HTMLFormElement} */ (HTMLFormElement.prototype.cloneNode.call(formElement))
+			.method !== 'post'
 	) {
 		throw new Error('use:enhance can only be used on <form> fields with method="POST"');
 	}
@@ -35,7 +49,7 @@ export function enhance(form, submit = () => {}) {
 		if (result.type === 'success') {
 			if (reset !== false) {
 				// We call reset from the prototype to avoid DOM clobbering
-				HTMLFormElement.prototype.reset.call(form);
+				HTMLFormElement.prototype.reset.call(formElement);
 			}
 			await invalidateAll();
 		}
@@ -60,14 +74,15 @@ export function enhance(form, submit = () => {}) {
 			// We do cloneNode for avoid DOM clobbering - https://github.com/sveltejs/kit/issues/7593
 			event.submitter?.hasAttribute('formaction')
 				? /** @type {HTMLButtonElement | HTMLInputElement} */ (event.submitter).formAction
-				: /** @type {HTMLFormElement} */ (HTMLFormElement.prototype.cloneNode.call(form)).action
+				: /** @type {HTMLFormElement} */ (HTMLFormElement.prototype.cloneNode.call(formElement))
+						.action
 		);
 
-		const data = new FormData(form);
+		const formData = new FormData(formElement);
 
 		const submitter_name = event.submitter?.getAttribute('name');
 		if (submitter_name) {
-			data.append(submitter_name, event.submitter?.getAttribute('value') ?? '');
+			formData.append(submitter_name, event.submitter?.getAttribute('value') ?? '');
 		}
 
 		const controller = new AbortController();
@@ -75,13 +90,22 @@ export function enhance(form, submit = () => {}) {
 		let cancelled = false;
 		const cancel = () => (cancelled = true);
 
+		// TODO 2.0: Remove `data` and `form`
 		const callback =
 			(await submit({
 				action,
 				cancel,
 				controller,
-				data,
-				form,
+				get data() {
+					warnOnAccess('data', 'formData', 'use:enhance submit function');
+					return formData;
+				},
+				formData,
+				get form() {
+					warnOnAccess('form', 'formElement', 'use:enhance submit function');
+					return formElement;
+				},
+				formElement,
 				submitter: event.submitter
 			})) ?? fallback_callback;
 		if (cancelled) return;
@@ -97,7 +121,7 @@ export function enhance(form, submit = () => {}) {
 					'x-sveltekit-action': 'true'
 				},
 				cache: 'no-store',
-				body: data,
+				body: formData,
 				signal: controller.signal
 			});
 
@@ -110,8 +134,16 @@ export function enhance(form, submit = () => {}) {
 
 		callback({
 			action,
-			data,
-			form,
+			get data() {
+				warnOnAccess('data', 'formData', 'callback returned from use:enhance submit function');
+				return formData;
+			},
+			formData,
+			get form() {
+				warnOnAccess('form', 'formElement', 'callback returned from use:enhance submit function');
+				return formElement;
+			},
+			formElement,
 			update: (opts) => fallback_callback({ action, result, reset: opts?.reset }),
 			// @ts-expect-error generic constraints stuff we don't care about
 			result
@@ -119,12 +151,12 @@ export function enhance(form, submit = () => {}) {
 	}
 
 	// @ts-expect-error
-	HTMLFormElement.prototype.addEventListener.call(form, 'submit', handle_submit);
+	HTMLFormElement.prototype.addEventListener.call(formElement, 'submit', handle_submit);
 
 	return {
 		destroy() {
 			// @ts-expect-error
-			HTMLFormElement.prototype.removeEventListener.call(form, 'submit', handle_submit);
+			HTMLFormElement.prototype.removeEventListener.call(formElement, 'submit', handle_submit);
 		}
 	};
 }

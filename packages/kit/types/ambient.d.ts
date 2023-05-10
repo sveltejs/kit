@@ -81,14 +81,19 @@ declare module '$app/forms' {
 	> = (input: {
 		action: URL;
 		data: FormData;
+		formData: FormData;
 		form: HTMLFormElement;
+		formElement: HTMLFormElement;
 		controller: AbortController;
 		cancel(): void;
 		submitter: HTMLElement | null;
 	}) => MaybePromise<
 		| void
 		| ((opts: {
+				data: FormData;
+				formData: FormData;
 				form: HTMLFormElement;
+				formElement: HTMLFormElement;
 				action: URL;
 				result: ActionResult<Success, Invalid>;
 				/**
@@ -108,7 +113,7 @@ declare module '$app/forms' {
 		Success extends Record<string, unknown> | undefined = Record<string, any>,
 		Invalid extends Record<string, unknown> | undefined = Record<string, any>
 	>(
-		form: HTMLFormElement,
+		formElement: HTMLFormElement,
 		/**
 		 * Called upon submission with the given FormData and the `action` that should be triggered.
 		 * If `cancel` is called, the form will not be submitted.
