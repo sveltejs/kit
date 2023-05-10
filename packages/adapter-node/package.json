@@ -26,7 +26,7 @@
 	"scripts": {
 		"dev": "rimraf files && rollup -cw",
 		"build": "rimraf files && rollup -c",
-		"test": "echo \"tests temporarily disabled\" # c8 vitest run tests",
+		"test": "echo \"tests temporarily disabled\" # c8 vitest run",
 		"check": "tsc",
 		"lint": "prettier --check . --config ../../.prettierrc --ignore-path .gitignore",
 		"format": "pnpm lint --write",

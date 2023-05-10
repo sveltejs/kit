@@ -26,5 +26,3 @@ test('prerenders /path-base/assets', () => {
 	const content = read('assets.html');
 	assert.match(content, /<img[^>]+src="\/path-base\//u);
 });
-
-test.run();

@@ -7,7 +7,7 @@
 		"build": "vite build",
 		"preview": "vite preview",
 		"check": "svelte-kit sync && tsc && svelte-check",
-		"test": "svelte-kit sync && pnpm build && vitest run test",
+		"test": "svelte-kit sync && pnpm build && vitest run",
 		"test:cross-platform": "pnpm test"
 	},
 	"devDependencies": {

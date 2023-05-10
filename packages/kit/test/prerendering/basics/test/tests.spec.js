@@ -26,7 +26,7 @@ test('renders a server-side redirect', () => {
 
 	const data = JSON.parse(read('redirect-server/__data.json'));
 
-	assert.equal(data, {
+	expect(data).toEqual({
 		type: 'redirect',
 		location: 'https://example.com/redirected'
 	});
@@ -76,7 +76,7 @@ test('loads a file with spaces in the filename', () => {
 
 test('generates __data.json file for shadow endpoints', () => {
 	let data = JSON.parse(read('__data.json'));
-	assert.equal(data, {
+	expect(data).toEqual({
 		type: 'data',
 		nodes: [
 			null,
@@ -89,7 +89,7 @@ test('generates __data.json file for shadow endpoints', () => {
 	});
 
 	data = JSON.parse(read('shadowed-get/__data.json'));
-	assert.equal(data, {
+	expect(data).toEqual({
 		type: 'data',
 		nodes: [
 			null,
@@ -152,7 +152,7 @@ test('prerenders binary data', async () => {
 test('fetches data from local endpoint', () => {
 	const data = JSON.parse(read('origin/__data.json'));
 
-	assert.equal(data, {
+	expect(data).toEqual({
 		type: 'data',
 		nodes: [
 			null,
