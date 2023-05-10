@@ -118,6 +118,7 @@ export function get_tsconfig(kit, include_base_url) {
 		exclude.push(config_relative(`${kit.files.serviceWorker}.d.ts`));
 	}
 
+	/** @type {Record<string, any>} */
 	const config = {
 		compilerOptions: {
 			// generated options
