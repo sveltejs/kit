@@ -35,15 +35,15 @@ export function enhance(form, submit = () => {}) {
 	const fallback_callback = async ({
 		action,
 		result,
-		reset,
-		invalidateAll: shouldInvalidateAll
+		reset = true,
+		invalidateAll: shouldInvalidateAll = true
 	}) => {
 		if (result.type === 'success') {
-			if (reset !== false) {
+			if (reset) {
 				// We call reset from the prototype to avoid DOM clobbering
 				HTMLFormElement.prototype.reset.call(form);
 			}
-			if (shouldInvalidateAll !== false) {
+			if (shouldInvalidateAll) {
 				await invalidateAll();
 			}
 		}
