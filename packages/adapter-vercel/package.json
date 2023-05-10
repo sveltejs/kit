@@ -28,7 +28,7 @@
 		"lint": "prettier --check . --config ../../.prettierrc --ignore-path .gitignore",
 		"format": "pnpm lint --write",
 		"check": "tsc",
-		"test": "vitest run test .spec.js"
+		"test": "vitest run"
 	},
 	"dependencies": {
 		"@vercel/nft": "^0.22.6",

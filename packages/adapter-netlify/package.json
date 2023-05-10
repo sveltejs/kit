@@ -26,7 +26,7 @@
 	"scripts": {
 		"dev": "rimraf files && rollup -cw",
 		"build": "rimraf files && rollup -c && cp src/edge.js files/edge.js",
-		"test": "vitest run src \"(spec\\.js|test[\\\\/]index\\.js)\"",
+		"test": "vitest run",
 		"check": "tsc",
 		"lint": "prettier --check . --config ../../.prettierrc --ignore-path .gitignore",
 		"format": "pnpm lint --write",

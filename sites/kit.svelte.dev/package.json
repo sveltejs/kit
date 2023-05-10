@@ -8,7 +8,7 @@
 		"build": "npm run update && vite build",
 		"prebuild": "test \"$CI\" = true && npx pnpm install --store=node_modules/.pnpm-store || echo skipping pnpm install",
 		"preview": "vite preview",
-		"test": "vitest run src \"(spec\\.js|test[\\\\/]index\\.js)\""
+		"test": "vitest run"
 	},
 	"devDependencies": {
 		"@sveltejs/adapter-vercel": "workspace:^",
