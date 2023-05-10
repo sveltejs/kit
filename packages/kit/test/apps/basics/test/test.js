@@ -828,7 +828,7 @@ test.describe('Matchers', () => {
 });
 
 test.describe('Actions', () => {
-	test("invalidateAll = false doesn't invalidate all", async ({ page }) => {
+	test("invalidateAll = false doesn't invalidate all", async ({ page, javaScriptEnabled }) => {
 		await page.goto('/actions/invalidate-all?invalidate_all=false');
 		const preSubmitContent = await page.locator('pre').textContent();
 		await page.click('button');
@@ -836,7 +836,11 @@ test.describe('Actions', () => {
 		// if we don't give it time to
 		await page.waitForTimeout(1000);
 		const postSubmitContent = await page.locator('pre').textContent();
-		expect(preSubmitContent).toBe(postSubmitContent);
+		if (!javaScriptEnabled) {
+			expect(preSubmitContent).not.toBe(postSubmitContent);
+		} else {
+			expect(preSubmitContent).toBe(postSubmitContent);
+		}
 	});
 
 	test('invalidateAll = true does invalidate all', async ({ page }) => {
