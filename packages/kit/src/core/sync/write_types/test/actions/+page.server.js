@@ -1,4 +1,4 @@
-import { fail } from '../../../../../../legacy-types/internal.js';
+import { fail } from '../../../../../../src/types/internal.js';
 
 let condition = false;
 

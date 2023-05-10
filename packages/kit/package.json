@@ -73,24 +73,24 @@
 	"exports": {
 		"./package.json": "./package.json",
 		".": {
-			"types": "./types/index.d.ts",
+			"types": "./types/exports/types.d.ts",
 			"import": "./src/exports/index.js"
 		},
 		"./node": {
-			"types": "./src/exports/node/index.d.ts",
+			"types": "./types/exports/node/index.d.ts",
 			"import": "./src/exports/node/index.js"
 		},
 		"./node/polyfills": {
-			"types": "./src/exports/node/polyfills/index.d.ts",
-			"import": "./src/exports/node/polyfills/polyfills.js"
+			"types": "./types/exports/node/polyfills/index.d.ts",
+			"import": "./src/exports/node/polyfills/index.js"
 		},
 		"./hooks": {
-			"types": "./src/exports/hooks/index.d.ts",
-			"import": "./src/exports/hooks/hooks.js"
+			"types": "./types/exports/hooks/index.d.ts",
+			"import": "./src/exports/hooks/index.js"
 		},
 		"./vite": {
-			"types": "./src/exports/vite/index.d.ts",
-			"import": "./src/exports/vite/vite.js"
+			"types": "./types/exports/vite/index.d.ts",
+			"import": "./src/exports/vite/index.js"
 		}
 	},
 	"typesVersions": {

@@ -9,9 +9,9 @@
 		"moduleResolution": "node",
 		"allowSyntheticDefaultImports": true,
 		"paths": {
-			"@sveltejs/kit": ["./legacy-types/index"],
+			"@sveltejs/kit": ["./src/types/index"],
 			// internal use only
-			"types": ["./legacy-types/internal"]
+			"types": ["./src/types/internal"]
 		},
 		"noUnusedLocals": true,
 		"noUnusedParameters": true
@@ -19,7 +19,7 @@
 	"include": [
 		"scripts/**/*",
 		"src/**/*",
-		"legacy-types/**/*",
+		"src/types/**/*",
 		"../../sites/kit.svelte.dev/scripts/extract-types.js"
 	],
 	"exclude": ["./**/write_types/test/**"]

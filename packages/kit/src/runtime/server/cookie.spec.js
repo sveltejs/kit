@@ -1,7 +1,7 @@
 import { test } from 'uvu';
 import * as assert from 'uvu/assert';
 import { domain_matches, path_matches, get_cookies } from './cookie.js';
-import { installPolyfills } from '../../exports/node/polyfills/polyfills.js';
+import { installPolyfills } from '../../exports/node/polyfills/index.js';
 
 installPolyfills();
 
