@@ -1,4 +1,4 @@
-import { fail } from '../../../../../../src/types/internal.js';
+import { fail } from '../../../../../../src/exports/index.js';
 
 let condition = false;
 

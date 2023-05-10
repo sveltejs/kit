@@ -1,3 +1,6 @@
+/// <reference types="svelte" />
+/// <reference types="vite/client" />
+
 import { CompileOptions } from 'svelte/types/compiler/interfaces';
 import {
 	AdapterEntry,
@@ -15,6 +18,7 @@ import {
 	UniqueInterface
 } from './private';
 import { BuildData, SSRNodeLoader, SSRRoute, ValidatedConfig } from './internal.js';
+import '../types/ambient';
 
 export { PrerenderOption } from './private.js';
 
