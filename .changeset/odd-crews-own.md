@@ -2,4 +2,4 @@
 '@sveltejs/kit': minor
 ---
 
-feat: Unshadow `data` and `form` in `enhance`, warn about future deprecation in dev
+feat: unshadow `data` and `form` in `enhance` and warn about future deprecation when used in `dev` mode
