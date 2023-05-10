@@ -834,9 +834,9 @@ test.describe('Actions', () => {
 	}) => {
 		if (!javaScriptEnabled || !process.env.DEV) return;
 		await page.goto('/actions/file-without-enctype');
-		const logPromise = page.waitForEvent('console');
+		const log_promise = page.waitForEvent('console');
 		await page.click('button');
-		const log = await logPromise;
+		const log = await log_promise;
 		expect(log.text()).toBe(
 			'Your form contains <input type="file"> fields, but is missing the `enctype="multipart/form-data"` attribute. This will lead to inconsistent behavior between enhanced and native forms. For more details, see https://github.com/sveltejs/kit/issues/9819. This will be upgraded to an error in v2.0.'
 		);
