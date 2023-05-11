@@ -1,4 +1,4 @@
-import { appendFileSync } from 'fs';
+import { appendFileSync } from 'node:fs';
 
 /**
  * @class

@@ -1,14 +1,15 @@
 // pnpm captures stdout and prefixes it with the package name which breaks the annotations
 // so save it in a file and print it out at the end
+// ideally we'd just use cat, but that doesn't work on Windows hence this script
 
-import fs from 'fs';
+import { existsSync, createReadStream, unlinkSync } from 'node:fs';
 const filename = '_tmp_flaky_test_output.txt';
 
-if (fs.existsSync(filename)) {
-	const stream = fs.createReadStream(filename);
-	stream.pipe(process.stdout);
-	stream.on('end', () => {
-		fs.unlinkSync(filename);
-	});
-    process.stdout.write('\n');
+if (existsSync(filename)) {
+	createReadStream(filename)
+		.on('end', () => {
+			unlinkSync(filename);
+		})
+		.pipe(process.stdout);
+	process.stdout.write('\n');
 }
