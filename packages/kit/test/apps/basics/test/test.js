@@ -832,7 +832,8 @@ test.describe('Actions', () => {
 		page,
 		javaScriptEnabled
 	}) => {
-		if (!javaScriptEnabled || !process.env.DEV) return;
+		test.skip(!javaScriptEnabled, 'Skip when JavaScript is disabled');
+		test.skip(!process.env.DEV, 'Skip when not in dev mode');
 		await page.goto('/actions/file-without-enctype');
 		const logPromise = page.waitForEvent('console');
 		await page.click('button');
