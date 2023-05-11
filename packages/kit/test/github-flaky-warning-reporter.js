@@ -1,5 +1,4 @@
 import { appendFileSync } from 'fs';
-import { EOL } from 'os';
 
 /**
  * @class
@@ -30,14 +29,11 @@ export default class GithubFlakyWarningReporter {
 		const output = this._flaky
 			.map(
 				({ file, line, title, message }) =>
-					`::warning file=${file},line=${line},title=${title}::${message}`
+					`::warning file=${file},line=${line},title=${title}::${message}\n`
 			)
-			.join(EOL);
-		if (process.env.GITHUB_OUTPUT) {
-			appendFileSync(process.env.GITHUB_OUTPUT, output);
-		} else {
-			console.log(output);
-		}
+			.join('');
+
+		appendFileSync(new URL('../../../_tmp_flaky_test_output.txt', import.meta.url), output);
 	}
 
 	printsToStdio() {
