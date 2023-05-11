@@ -828,30 +828,30 @@ test.describe('Matchers', () => {
 });
 
 test.describe('Actions', () => {
-	for (const { id, oldName, newName, callLocation } of [
+	for (const { id, old_name, new_name, call_location } of [
 		{
 			id: 'access-form-in-submit',
-			oldName: 'form',
-			newName: 'formElement',
-			callLocation: 'use:enhance submit function'
+			old_name: 'form',
+			new_name: 'formElement',
+			call_location: 'use:enhance submit function'
 		},
 		{
 			id: 'access-form-in-callback',
-			oldName: 'form',
-			newName: 'formElement',
-			callLocation: 'callback returned from use:enhance submit function'
+			old_name: 'form',
+			new_name: 'formElement',
+			call_location: 'callback returned from use:enhance submit function'
 		},
 		{
 			id: 'access-data-in-submit',
-			oldName: 'data',
-			newName: 'formData',
-			callLocation: 'use:enhance submit function'
+			old_name: 'data',
+			new_name: 'formData',
+			call_location: 'use:enhance submit function'
 		},
 		{
 			id: 'access-data-in-callback',
-			oldName: 'data',
-			newName: 'formData',
-			callLocation: 'callback returned from use:enhance submit function'
+			old_name: 'data',
+			new_name: 'formData',
+			call_location: 'callback returned from use:enhance submit function'
 		}
 	]) {
 		test(`Accessing v2 deprecated properties results in a warning log, type: ${id}`, async ({
@@ -867,7 +867,7 @@ test.describe('Actions', () => {
 			await button.textContent('processed');
 			const log = await logPromise;
 			expect(log.text()).toBe(
-				`\`${oldName}\` has been deprecated in favor of \`${newName}\`. \`${oldName}\` will be removed in a future version. (Called from ${callLocation})`
+				`\`${old_name}\` has been deprecated in favor of \`${new_name}\`. \`${old_name}\` will be removed in a future version. (Called from ${call_location})`
 			);
 			expect(log.type()).toBe('warning');
 		});
