@@ -1,26 +1,26 @@
 // TODO 2.0: Remove this code and corresponding tests
 export const actions = {
-	formSubmit: () => {
+	form_submit: () => {
 		return {
-			formSubmit: true
+			form_submit: true
 		};
 	},
 
-	formCallback: () => {
+	form_callback: () => {
 		return {
-			formCallback: true
+			form_callback: true
 		};
 	},
 
-	dataSubmit: () => {
+	data_submit: () => {
 		return {
-			dataSubmit: true
+			data_submit: true
 		};
 	},
 
-	dataCallback: () => {
+	data_callback: () => {
 		return {
-			dataCallback: true
+			data_callback: true
 		};
 	}
 };

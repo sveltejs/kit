@@ -3,13 +3,13 @@
 
 	export let form;
 
-	const accessFormSubmit = (node) => {
+	const access_form_submit = (node) => {
 		return enhance(node, ({ form }) => {});
 	};
-	const accessDataSubmit = (node) => {
+	const access_data_submit = (node) => {
 		return enhance(node, ({ data }) => {});
 	};
-	const accessFormCallback = (node) => {
+	const access_form_callback = (node) => {
 		return enhance(
 			node,
 			() =>
@@ -17,7 +17,7 @@
 					update()
 		);
 	};
-	const accessDataCallback = (node) => {
+	const access_data_callback = (node) => {
 		return enhance(
 			node,
 			() =>
@@ -27,26 +27,26 @@
 	};
 </script>
 
-<form method="POST" action="?/formSubmit" use:accessFormSubmit>
+<form method="POST" action="?/form_submit" use:access_form_submit>
 	<button id="access-form-in-submit" type="submit"
-		>{form?.formSubmit ? 'processed' : 'not processed'}</button
+		>{form?.form_submit ? 'processed' : 'not processed'}</button
 	>
 </form>
 
-<form method="POST" action="?/dataSubmit" use:accessDataSubmit>
+<form method="POST" action="?/data_submit" use:access_data_submit>
 	<button id="access-data-in-submit" type="submit"
-		>{form?.dataSubmit ? 'processed' : 'not processed'}</button
+		>{form?.data_submit ? 'processed' : 'not processed'}</button
 	>
 </form>
 
-<form method="POST" action="?/formCallback" use:accessFormCallback>
+<form method="POST" action="?/form_callback" use:access_form_callback>
 	<button id="access-form-in-callback" type="submit"
-		>{form?.formCallback ? 'processed' : 'not processed'}</button
+		>{form?.form_callback ? 'processed' : 'not processed'}</button
 	>
 </form>
 
-<form method="POST" action="?/dataCallback" use:accessDataCallback>
+<form method="POST" action="?/data_callback" use:access_data_callback>
 	<button id="access-data-in-callback" type="submit"
-		>{form?.dataCallback ? 'processed' : 'not processed'}</button
+		>{form?.data_callback ? 'processed' : 'not processed'}</button
 	>
 </form>

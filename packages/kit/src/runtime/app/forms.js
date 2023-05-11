@@ -15,24 +15,24 @@ export function deserialize(result) {
 }
 
 /**
- * @param {string} oldName
- * @param {string} newName
- * @param {string} callLocation
+ * @param {string} old_name
+ * @param {string} new_name
+ * @param {string} call_location
  * @returns void
  */
-function warn_on_access(oldName, newName, callLocation) {
+function warn_on_access(old_name, new_name, call_location) {
 	if (!DEV) return;
 	// TODO 2.0: Remove this code
 	console.warn(
-		`\`${oldName}\` has been deprecated in favor of \`${newName}\`. \`${oldName}\` will be removed in a future version. (Called from ${callLocation})`
+		`\`${old_name}\` has been deprecated in favor of \`${new_name}\`. \`${old_name}\` will be removed in a future version. (Called from ${call_location})`
 	);
 }
 
 /** @type {import('$app/forms').enhance} */
-export function enhance(formElement, submit = () => {}) {
+export function enhance(form_element, submit = () => {}) {
 	if (
 		DEV &&
-		/** @type {HTMLFormElement} */ (HTMLFormElement.prototype.cloneNode.call(formElement))
+		/** @type {HTMLFormElement} */ (HTMLFormElement.prototype.cloneNode.call(form_element))
 			.method !== 'post'
 	) {
 		throw new Error('use:enhance can only be used on <form> fields with method="POST"');
@@ -49,7 +49,7 @@ export function enhance(formElement, submit = () => {}) {
 		if (result.type === 'success') {
 			if (reset !== false) {
 				// We call reset from the prototype to avoid DOM clobbering
-				HTMLFormElement.prototype.reset.call(formElement);
+				HTMLFormElement.prototype.reset.call(form_element);
 			}
 			await invalidateAll();
 		}
@@ -74,15 +74,15 @@ export function enhance(formElement, submit = () => {}) {
 			// We do cloneNode for avoid DOM clobbering - https://github.com/sveltejs/kit/issues/7593
 			event.submitter?.hasAttribute('formaction')
 				? /** @type {HTMLButtonElement | HTMLInputElement} */ (event.submitter).formAction
-				: /** @type {HTMLFormElement} */ (HTMLFormElement.prototype.cloneNode.call(formElement))
+				: /** @type {HTMLFormElement} */ (HTMLFormElement.prototype.cloneNode.call(form_element))
 						.action
 		);
 
-		const formData = new FormData(formElement);
+		const form_data = new FormData(form_element);
 
 		const submitter_name = event.submitter?.getAttribute('name');
 		if (submitter_name) {
-			formData.append(submitter_name, event.submitter?.getAttribute('value') ?? '');
+			form_data.append(submitter_name, event.submitter?.getAttribute('value') ?? '');
 		}
 
 		const controller = new AbortController();
@@ -98,14 +98,14 @@ export function enhance(formElement, submit = () => {}) {
 				controller,
 				get data() {
 					warn_on_access('data', 'formData', 'use:enhance submit function');
-					return formData;
+					return form_data;
 				},
-				formData,
+				formData: form_data,
 				get form() {
 					warn_on_access('form', 'formElement', 'use:enhance submit function');
-					return formElement;
+					return form_element;
 				},
-				formElement,
+				formElement: form_element,
 				submitter: event.submitter
 			})) ?? fallback_callback;
 		if (cancelled) return;
@@ -121,7 +121,7 @@ export function enhance(formElement, submit = () => {}) {
 					'x-sveltekit-action': 'true'
 				},
 				cache: 'no-store',
-				body: formData,
+				body: form_data,
 				signal: controller.signal
 			});
 
@@ -136,14 +136,14 @@ export function enhance(formElement, submit = () => {}) {
 			action,
 			get data() {
 				warn_on_access('data', 'formData', 'callback returned from use:enhance submit function');
-				return formData;
+				return form_data;
 			},
-			formData,
+			formData: form_data,
 			get form() {
 				warn_on_access('form', 'formElement', 'callback returned from use:enhance submit function');
-				return formElement;
+				return form_element;
 			},
-			formElement,
+			formElement: form_element,
 			update: (opts) => fallback_callback({ action, result, reset: opts?.reset }),
 			// @ts-expect-error generic constraints stuff we don't care about
 			result
@@ -151,12 +151,12 @@ export function enhance(formElement, submit = () => {}) {
 	}
 
 	// @ts-expect-error
-	HTMLFormElement.prototype.addEventListener.call(formElement, 'submit', handle_submit);
+	HTMLFormElement.prototype.addEventListener.call(form_element, 'submit', handle_submit);
 
 	return {
 		destroy() {
 			// @ts-expect-error
-			HTMLFormElement.prototype.removeEventListener.call(formElement, 'submit', handle_submit);
+			HTMLFormElement.prototype.removeEventListener.call(form_element, 'submit', handle_submit);
 		}
 	};
 }
