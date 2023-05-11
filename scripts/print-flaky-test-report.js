@@ -8,8 +8,8 @@ const filename = '_tmp_flaky_test_output.txt';
 if (existsSync(filename)) {
 	createReadStream(filename)
 		.on('end', () => {
+			process.stdout.write('\n');
 			unlinkSync(filename);
 		})
 		.pipe(process.stdout);
-	process.stdout.write('\n');
 }
