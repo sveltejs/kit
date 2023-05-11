@@ -18,6 +18,7 @@ export async function load({ cookies, locals, fetch }) {
 	}
 
 	if (locals.url?.pathname === '/non-existent-route-loop') {
+		// @ts-expect-error non existent route
 		await fetch('/non-existent-route-loop');
 	}
 

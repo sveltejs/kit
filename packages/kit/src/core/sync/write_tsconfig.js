@@ -88,6 +88,7 @@ export function get_tsconfig(kit, include_base_url) {
 	const include = new Set([
 		'ambient.d.ts',
 		'./types/**/$types.d.ts',
+		'./types/$api.d.ts',
 		config_relative('vite.config.js'),
 		config_relative('vite.config.ts')
 	]);

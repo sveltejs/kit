@@ -24,6 +24,46 @@ import type { PluginOptions } from '@sveltejs/vite-plugin-svelte';
 export { PrerenderOption } from '../types/private.js';
 export { ActionFailure };
 
+export interface ValidURLs<ToCheck extends string> {
+	0: {
+		id: string;
+		does_match: ToCheck extends '' ? false : false;
+		methods: never;
+		endpoint: false;
+		leaf: false;
+	};
+}
+
+export type MatchedLeafs<S extends string> = {
+	[Index in keyof ValidURLs<S> as ValidURLs<S>[Index]['does_match'] extends true
+		? ValidURLs<S>[Index]['leaf'] extends true
+			? 'matched'
+			: never
+		: never]: ValidURLs<S>[Index];
+};
+
+export type MatchedPaths<S extends string> = {
+	[Index in keyof ValidURLs<S> as ValidURLs<S>[Index]['does_match'] extends true
+		? 'matched'
+		: never]: ValidURLs<S>[Index];
+};
+
+export type Jsonify<T> = T extends { toJSON(): infer U }
+	? U
+	: T extends object
+	  ? { [k in keyof T]: Jsonify<T[k]> }
+	  : T;
+
+export type Equals<X, Y> = (<T>() => T extends X ? 1 : 2) extends <T>() => T extends Y ? 1 : 2
+	? true
+	: false;
+
+export type IsRelativePath<S> = S extends string
+	? S extends `/${string}` | ''
+		? true
+		: false
+	: false;
+
 /**
  * [Adapters](https://kit.svelte.dev/docs/adapters) are responsible for taking the production build and turning it into something that can be deployed to a platform of your choosing.
  */
@@ -1255,7 +1295,8 @@ export interface Redirect {
 /**
  * The object returned by the typed json and typed fetch functions
  */
-export interface TypedResponse<T = any> extends Response {
+export interface TypedResponse<T, Ok extends boolean = boolean> extends Response {
+	ok: Ok;
 	json(): Promise<T>;
 }
 

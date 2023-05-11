@@ -4,6 +4,7 @@ import MagicString from 'magic-string';
 import { posixify, rimraf, walk } from '../../../utils/filesystem.js';
 import { compact } from '../../../utils/array.js';
 import { ts } from '../ts.js';
+import { write_api } from './write_api/index.js';
 
 /**
  *  @typedef {{
@@ -123,6 +124,8 @@ export async function write_all_types(config, manifest_data) {
 		}
 	}
 
+	write_api(config, manifest_data);
+
 	fs.writeFileSync(meta_data_file, JSON.stringify(meta_data, null, '\t'));
 }
 
@@ -148,6 +151,7 @@ export async function write_types(config, manifest_data, file) {
 	if (!route.leaf && !route.layout && !route.endpoint) return; // nothing to do
 
 	update_types(config, create_routes_map(manifest_data), route);
+	write_api(config, manifest_data);
 }
 
 /**
@@ -238,7 +242,7 @@ function update_types(config, routes, route, to_delete = new Set()) {
 	const api_types_path = posixify(
 		path.relative(outdir, path.join(config.kit.outDir, 'types', '$api')) // TODO: potential failure point if api file is moved
 	);
-	declarations.push(`type FetchType = typeof import('${api_types_path}').TypedFetch;`);
+	declarations.push(`type FetchType = typeof import('${api_types_path}').fetch;`);
 
 	if (route.leaf) {
 		let route_info = routes.get(route.leaf);
@@ -340,7 +344,9 @@ function update_types(config, routes, route, to_delete = new Set()) {
 	}
 
 	if (route.endpoint) {
-		exports.push('export type RequestHandler = Kit.RequestHandler<RouteParams, RouteId>;');
+		exports.push(
+			'export type RequestHandler = Kit.RequestHandler<RouteParams, RouteId, FetchType>;'
+		);
 	}
 
 	if (route.leaf?.server || route.layout?.server || route.endpoint) {

@@ -89,18 +89,21 @@ declare module '__sveltekit/environment' {
 
 /** Internal version of $app/paths */
 declare module '__sveltekit/paths' {
+	interface paths {}
 	/**
 	 * A string that matches [`config.kit.paths.base`](https://kit.svelte.dev/docs/configuration#paths).
 	 *
 	 * Example usage: `<a href="{base}/your-page">Link</a>`
 	 */
-	export let base: '' | `/${string}`;
+	export let base: paths extends { base: infer T } ? T : '' | `/${string}`;
 	/**
 	 * An absolute path that matches [`config.kit.paths.assets`](https://kit.svelte.dev/docs/configuration#paths).
 	 *
 	 * > If a value for `config.kit.paths.assets` is specified, it will be replaced with `'/_svelte_kit_assets'` during `vite dev` or `vite preview`, since the assets don't yet live at their eventual URL.
 	 */
-	export let assets: '' | `https://${string}` | `http://${string}` | '/_svelte_kit_assets';
+	export let assets: paths extends { assets: infer T }
+		? T
+		: '' | `https://${string}` | `http://${string}` | '/_svelte_kit_assets';
 	export let relative: boolean | undefined; // TODO in 2.0, make this a `boolean` that defaults to `true`
 	export function reset(): void;
 	export function override(paths: { base: string; assets: string }): void;
