@@ -178,7 +178,6 @@ export async function dev(vite, vite_config, svelte_config) {
 							for (const dep of deps) {
 								const url = new URL(dep.url, 'http://localhost/');
 								const query = url.searchParams;
-								const pathname = decodeURI(url.pathname);
 
 								if (
 									isCSSRequest(dep.file) ||
@@ -188,7 +187,9 @@ export async function dev(vite, vite_config, svelte_config) {
 									query.set('inline', '');
 
 									try {
-										const mod = await loud_ssr_load_module(`${pathname}${url.search}${url.hash}`);
+										const mod = await loud_ssr_load_module(
+											`${decodeURI(url.pathname)}${url.search}${url.hash}`
+										);
 										styles[dep.url] = mod.default;
 									} catch {
 										// this can happen with dynamically imported modules, I think
