@@ -2,4 +2,4 @@
 '@sveltejs/kit': minor
 ---
 
-feat: Crawl urls in `<meta>` tags
+feat: crawl URLs in `<meta>` tags
