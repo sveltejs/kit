@@ -1,3 +1,6 @@
+import { appendFileSync } from 'fs';
+import { EOL } from 'os';
+
 /**
  * @class
  * @implements {import('@playwright/test/reporter').Reporter}
@@ -24,9 +27,17 @@ export default class GithubFlakyWarningReporter {
 	}
 
 	onEnd() {
-		this._flaky.forEach(({ file, line, title, message }) => {
-			console.log(`::warning file=${file},line=${line},title=${title}::${message}`);
-		});
+		const output = this._flaky
+			.map(
+				({ file, line, title, message }) =>
+					`::warning file=${file},line=${line},title=${title}::${message}`
+			)
+			.join(EOL);
+		if (process.env.GITHUB_OUTPUT) {
+			appendFileSync(process.env.GITHUB_OUTPUT, output);
+		} else {
+			console.log(output);
+		}
 	}
 
 	printsToStdio() {
