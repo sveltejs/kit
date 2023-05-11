@@ -131,10 +131,11 @@ export function create_fetch({ event, options, manifest, state, get_cookie_heade
 						const { name, value, ...options } = set_cookie_parser.parseString(str);
 
 						// options.sameSite is string, something more specific is required - type cast is safe
-						event.cookies.set_internal(name, value, {
-							with_defaults: false,
-							.../** @type {import('cookie').CookieSerializeOptions} */ (options)
-						});
+						event.cookies.set(
+							name,
+							value,
+							/** @type {import('cookie').CookieSerializeOptions} */ (options)
+						);
 					}
 				}
 

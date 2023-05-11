@@ -107,23 +107,13 @@ export function get_cookies(request, url, trailing_slash) {
 		 * @param {import('cookie').CookieSerializeOptions} opts
 		 */
 		set(name, value, opts = {}) {
-			return this.set_internal(name, value, { with_defaults: true, ...opts });
-		},
-
-		/**
-		 * @param {string} name
-		 * @param {string} value
-		 * @param {import('cookie').CookieSerializeOptions & { with_defaults?: boolean }} opts
-		 */
-		set_internal(name, value, opts = {}) {
 			let path = opts.path ?? default_path;
-			const with_defaults = opts.with_defaults ?? true;
 
 			new_cookies[name] = {
 				name,
 				value,
 				options: {
-					...(with_defaults ? defaults : {}),
+					...defaults,
 					...opts,
 					path
 				}
