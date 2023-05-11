@@ -641,8 +641,9 @@ test.describe('Routing', () => {
 		await page.locator('[href="#hash-target"]').click();
 		await clicknav('[href="/routing/hashes/b"]');
 
+		await expect(page.locator('h1')).toHaveText('b');
 		await page.goBack();
-		expect(await page.textContent('h1')).toBe('a');
+		await expect(page.locator('h1')).toHaveText('a');
 	});
 
 	test('replaces state if the data-sveltekit-replacestate router option is specified for the hash link', async ({

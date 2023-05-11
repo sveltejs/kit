@@ -742,20 +742,6 @@ test.describe('Routing', () => {
 		expect(await page.textContent('h1')).toBe('Great success!');
 	});
 
-	test('back button returns to previous route when previous route has been navigated to via hash anchor', async ({
-		page,
-		clicknav
-	}) => {
-		await page.goto('/routing/hashes/a');
-
-		await page.locator('[href="#hash-target"]').click();
-		await clicknav('[href="/routing/hashes/b"]');
-		// sanity check - ensure we're on the second page before going back
-		await expect(page.locator('h1')).toHaveText('b');
-		await page.goBack();
-		await expect(page.locator('h1')).toHaveText('a');
-	});
-
 	test('focus works if page load has hash', async ({ page, browserName }) => {
 		await page.goto('/routing/hashes/target#p2', { waitUntil: 'networkidle' });
 
