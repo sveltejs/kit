@@ -861,11 +861,11 @@ test.describe('Actions', () => {
 			test.skip(!javaScriptEnabled, 'skip when js is disabled');
 			test.skip(!process.env.DEV, 'skip when not in dev mode');
 			await page.goto('/actions/enhance/old-property-access');
-			const logPromise = page.waitForEvent('console');
+			const log_promise = page.waitForEvent('console');
 			const button = page.locator(`#${id}`);
 			await button.click();
 			await button.textContent('processed');
-			const log = await logPromise;
+			const log = await log_promise;
 			expect(log.text()).toBe(
 				`\`${old_name}\` has been deprecated in favor of \`${new_name}\`. \`${old_name}\` will be removed in a future version. (Called from ${call_location})`
 			);
