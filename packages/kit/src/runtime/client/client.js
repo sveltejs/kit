@@ -272,7 +272,7 @@ export function create_client(app, target) {
 
 	/** @param {import('./types').NavigationFinished} result */
 	function initialize(result) {
-		if (DEV && document.querySelector('vite-error-overlay')) return;
+		if (DEV && result.state.error && document.querySelector('vite-error-overlay')) return;
 
 		current = result.state;
 
