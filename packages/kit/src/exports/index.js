@@ -94,7 +94,7 @@ export function text(body, init) {
 
 /**
  * Create an `ActionFailure` object.
- * @template {Record<string, any> | undefined} T
+ * @template {Record<string, any> | undefined} [T=undefined]
  * @param {number} status The [HTTP status code](https://developer.mozilla.org/en-US/docs/Web/HTTP/Status#client_error_responses). Must be in the range 400-599.
  * @param {T} [data] Data associated with the failure (e.g. validation errors)
  * @returns {ActionFailure<T>}
