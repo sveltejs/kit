@@ -3,6 +3,8 @@ import path from 'node:path';
 import glob from 'tiny-glob/sync.js';
 
 glob('**/*.d.ts', { cwd: 'src' }).forEach((file) => {
+	const dir = path.dirname(file);
+	fs.mkdirSync(`types/${dir}`, { recursive: true, force: true });
 	fs.copyFileSync(`src/${file}`, `types/${file}`);
 });
 
