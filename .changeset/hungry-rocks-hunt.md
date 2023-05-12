@@ -1,5 +1,5 @@
 ---
-'@sveltejs/kit': minor
+'@sveltejs/kit': patch
 ---
 
-feat: add a speedier script for prerendered redirects
+perf: add a script to prerendered redirects for faster redirects
