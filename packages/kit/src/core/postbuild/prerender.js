@@ -340,7 +340,11 @@ async function prerender({ out, manifest_path, metadata, verbose, env }) {
 
 					writeFileSync(
 						dest,
-						`<meta http-equiv="refresh" content=${escape_html_attr(`0;url=${location}`)}>`
+						`<script>location.href="${encodeURI(
+							decodeURIComponent(location)
+						)}";</script><meta http-equiv="refresh" content=${escape_html_attr(
+							`0;url=${location}`
+						)}>`
 					);
 
 					written.add(file);
