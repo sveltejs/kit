@@ -195,4 +195,19 @@ test('get all cookies from header and set calls', () => {
 	]);
 });
 
+test("set_internal isn't affected by defaults", () => {
+	const { cookies, new_cookies, set_internal } = cookies_setup({
+		href: 'https://example.com/a/b/c'
+	});
+	const options = /** @type {const} */ ({
+		secure: false,
+		httpOnly: false,
+		sameSite: 'none',
+		path: '/a/b/c'
+	});
+	set_internal('test', 'foo', options);
+	assert.equal(cookies.get('test'), 'foo');
+	assert.equal(new_cookies['test']?.options, options);
+});
+
 test.run();

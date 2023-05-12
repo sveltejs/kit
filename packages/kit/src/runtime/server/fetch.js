@@ -9,10 +9,11 @@ import * as paths from '__sveltekit/paths';
  *   manifest: import('types').SSRManifest;
  *   state: import('types').SSRState;
  *   get_cookie_header: (url: URL, header: string | null) => string;
+ *   set_internal: (name: string, value: string, opts: import('cookie').CookieSerializeOptions) => void;
  * }} opts
  * @returns {typeof fetch}
  */
-export function create_fetch({ event, options, manifest, state, get_cookie_header }) {
+export function create_fetch({ event, options, manifest, state, get_cookie_header, set_internal }) {
 	return async (info, init) => {
 		const original_request = normalize_fetch_input(info, init, event.url);
 
@@ -131,7 +132,7 @@ export function create_fetch({ event, options, manifest, state, get_cookie_heade
 						const { name, value, ...options } = set_cookie_parser.parseString(str);
 
 						// options.sameSite is string, something more specific is required - type cast is safe
-						event.cookies.set(
+						set_internal(
 							name,
 							value,
 							/** @type {import('cookie').CookieSerializeOptions} */ (options)
