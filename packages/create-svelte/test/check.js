@@ -62,11 +62,41 @@ beforeAll(
 		exec_async(`pnpm install --no-frozen-lockfile`, {
 			cwd: test_workspace_dir
 		}),
-	Infinity
+	60000
 );
 
-for (const template of fs.readdirSync('templates')) {
-	if (template[0] === '.') continue;
+function patch_package_json(pkg) {
+	Object.entries(overrides).forEach(([key, value]) => {
+		if (pkg.devDependencies?.[key]) {
+			pkg.devDependencies[key] = value;
+		}
+
+		if (pkg.dependencies?.[key]) {
+			pkg.dependencies[key] = value;
+		}
+
+		if (!pkg.pnpm) {
+			pkg.pnpm = {};
+		}
+
+		if (!pkg.pnpm.overrides) {
+			pkg.pnpm.overrides = {};
+		}
+
+		pkg.pnpm.overrides = { ...pkg.pnpm.overrides, ...overrides };
+	});
+	pkg.private = true;
+}
+
+/**
+ * Tests in different templates can be run concurrently for a nice speedup locally, but tests within a template must be run sequentially.
+ * It'd be better to group tests by template, but vitest doesn't support that yet.
+ * @type {Map<string, [string, () => import('node:child_process').PromiseWithChild][]>}
+ */
+const script_test_map = new Map();
+
+function test_template(template) {
+	if (template[0] === '.') return;
 
 	for (const types of ['checkjs', 'typescript']) {
 		const cwd = path.join(test_workspace_dir, `${template}-${types}`);
@@ -80,43 +110,39 @@ for (const template of fs.readdirSync('templates')) {
 			eslint: true,
 			playwright: false
 		});
+
 		const pkg = JSON.parse(fs.readFileSync(path.join(cwd, 'package.json'), 'utf-8'));
-		Object.entries(overrides).forEach(([key, value]) => {
-			if (pkg.devDependencies?.[key]) {
-				pkg.devDependencies[key] = value;
-			}
-			if (pkg.dependencies?.[key]) {
-				pkg.dependencies[key] = value;
-			}
-			if (!pkg.pnpm) {
-				pkg.pnpm = {};
-			}
-			if (!pkg.pnpm.overrides) {
-				pkg.pnpm.overrides = {};
-			}
-			pkg.pnpm.overrides = { ...pkg.pnpm.overrides, ...overrides };
-		});
-		pkg.private = true;
+		patch_package_json(pkg);
+
 		fs.writeFileSync(path.join(cwd, 'package.json'), JSON.stringify(pkg, null, '\t') + '\n');
 
 		// run provided scripts that are non-blocking. All of them should exit with 0
 		// package script requires lib dir
 		// TODO: lint should run before format
-		const scripts_to_test = ['sync', 'format', 'lint', 'check', 'build'];
+		let scripts_to_test = ['sync', 'format', 'lint', 'check', 'build'];
 		if (fs.existsSync(path.join(cwd, 'src', 'lib'))) {
 			scripts_to_test.push('package');
 		}
+		scripts_to_test = scripts_to_test.filter((s) => !!pkg.scripts[s]);
 
-		describe(
-			`${template}-${types}`,
-			() => {
-				for (const script of scripts_to_test.filter((s) => !!pkg.scripts[s])) {
-					test(`${script}`, () => exec_async(`pnpm ${script}`, { cwd }));
-				}
-			},
-			{
-				timeout: Infinity
-			}
-		);
+		for (const script of scripts_to_test) {
+			const tests = script_test_map.get(script) ?? [];
+			tests.push([`${template}-${types}`, () => exec_async(`pnpm ${script}`, { cwd })]);
+			script_test_map.set(script, tests);
+		}
 	}
+}
+
+fs.readdirSync('templates').map((template) => test_template(template));
+
+for (const [script, tests] of script_test_map) {
+	describe.concurrent(
+		script,
+		() => {
+			for (const [name, task] of tests) {
+				test(name, task);
+			}
+		},
+		{ timeout: 60000 }
+	);
 }
