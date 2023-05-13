@@ -1,5 +1,4 @@
-import { test } from 'uvu';
-import * as assert from 'uvu/assert';
+import { assert, expect, test } from 'vitest';
 import { sequence } from './sequence.js';
 import { installPolyfills } from '../node/polyfills.js';
 
@@ -34,7 +33,7 @@ test('applies handlers in sequence', async () => {
 	const response = new Response();
 
 	assert.equal(await handler({ event, resolve: () => response }), response);
-	assert.equal(order, ['1a', '2a', '3a', '3b', '2b', '1b']);
+	expect(order).toEqual(['1a', '2a', '3a', '3b', '2b', '1b']);
 });
 
 test('uses transformPageChunk option passed to non-terminal handle function', async () => {
@@ -168,5 +167,3 @@ test('uses first defined filterSerializedResponseHeaders option', async () => {
 
 	assert.equal(await response.text(), 'truefalse');
 });
-
-test.run();

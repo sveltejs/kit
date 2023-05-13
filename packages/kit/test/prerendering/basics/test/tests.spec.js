@@ -1,7 +1,6 @@
 import * as fs from 'node:fs';
 import { fileURLToPath } from 'node:url';
-import { test } from 'uvu';
-import * as assert from 'uvu/assert';
+import { assert, expect, test } from 'vitest';
 
 const build = fileURLToPath(new URL('../build', import.meta.url));
 
@@ -10,7 +9,7 @@ const read = (file, encoding = 'utf-8') => fs.readFileSync(`${build}/${file}`, e
 
 test('prerenders /', () => {
 	const content = read('index.html');
-	assert.match(content, '<h1>hello</h1>');
+	expect(content).toMatch('<h1>hello</h1>');
 });
 
 test('renders a redirect', () => {
@@ -27,7 +26,7 @@ test('renders a server-side redirect', () => {
 
 	const data = JSON.parse(read('redirect-server/__data.json'));
 
-	assert.equal(data, {
+	expect(data).toEqual({
 		type: 'redirect',
 		location: 'https://example.com/redirected'
 	});
@@ -51,12 +50,12 @@ test('escapes characters in redirect', () => {
 
 test('inserts http-equiv tag for cache-control headers', () => {
 	const content = read('max-age.html');
-	assert.match(content, '<meta http-equiv="cache-control" content="max-age=300">');
+	expect(content).toMatch('<meta http-equiv="cache-control" content="max-age=300">');
 });
 
 test('renders page with data from endpoint', () => {
 	const content = read('fetch-endpoint/buffered.html');
-	assert.match(content, '<h1>the answer is 42</h1>');
+	expect(content).toMatch('<h1>the answer is 42</h1>');
 
 	const json = read('fetch-endpoint/buffered.json');
 	assert.equal(json, JSON.stringify({ answer: 42 }));
@@ -64,7 +63,7 @@ test('renders page with data from endpoint', () => {
 
 test('renders page with unbuffered data from endpoint', () => {
 	const content = read('fetch-endpoint/not-buffered.html');
-	assert.match(content, '<h1>content-type: application/json</h1>');
+	expect(content).toMatch('<h1>content-type: application/json</h1>');
 
 	const json = read('fetch-endpoint/not-buffered.json');
 	assert.equal(json, JSON.stringify({ answer: 42 }));
@@ -72,12 +71,12 @@ test('renders page with unbuffered data from endpoint', () => {
 
 test('loads a file with spaces in the filename', () => {
 	const content = read('load-file-with-spaces.html');
-	assert.match(content, '<h1>answer: 42</h1>');
+	expect(content).toMatch('<h1>answer: 42</h1>');
 });
 
 test('generates __data.json file for shadow endpoints', () => {
 	let data = JSON.parse(read('__data.json'));
-	assert.equal(data, {
+	expect(data).toEqual({
 		type: 'data',
 		nodes: [
 			null,
@@ -90,7 +89,7 @@ test('generates __data.json file for shadow endpoints', () => {
 	});
 
 	data = JSON.parse(read('shadowed-get/__data.json'));
-	assert.equal(data, {
+	expect(data).toEqual({
 		type: 'data',
 		nodes: [
 			null,
@@ -104,30 +103,27 @@ test('generates __data.json file for shadow endpoints', () => {
 });
 
 test('does not prerender page with shadow endpoint with non-load handler', () => {
-	assert.not(fs.existsSync(`${build}/shadowed-post.html`));
-	assert.not(fs.existsSync(`${build}/shadowed-post/__data.json`));
+	assert.isFalse(fs.existsSync(`${build}/shadowed-post.html`));
+	assert.isFalse(fs.existsSync(`${build}/shadowed-post/__data.json`));
 });
 
 test('decodes paths when writing files', () => {
 	let content = read('encoding/path with spaces.html');
-	assert.match(content, '<p id="a">path with spaces</p>');
-	assert.match(content, '<p id="b">path with encoded spaces</p>');
+	expect(content).toMatch('<p id="a">path with spaces</p>');
+	expect(content).toMatch('<p id="b">path with encoded spaces</p>');
 
 	content = read('encoding/dynamic path with spaces.html');
-	assert.match(
-		content,
+	expect(content).toMatch(
 		'<h1>dynamic path with spaces / /encoding/dynamic%20path%20with%20spaces</h1>'
 	);
 
 	content = read('encoding/dynamic path with encoded spaces.html');
-	assert.match(
-		content,
+	expect(content).toMatch(
 		'<h1>dynamic path with encoded spaces / /encoding/dynamic%20path%20with%20encoded%20spaces</h1>'
 	);
 
 	content = read('encoding/redirected path with encoded spaces.html');
-	assert.match(
-		content,
+	expect(content).toMatch(
 		'<h1>redirected path with encoded spaces / /encoding/redirected%20path%20with%20encoded%20spaces</h1>'
 	);
 
@@ -140,12 +136,12 @@ test('decodes paths when writing files', () => {
 
 test('prerendering is set to true in root +layout.js', () => {
 	const content = read('prerendering-true.html');
-	assert.match(content, '<h1>prerendering: true/true</h1>');
+	expect(content).toMatch('<h1>prerendering: true/true</h1>');
 });
 
 test('fetching missing content results in a 404', () => {
 	const content = read('fetch-404.html');
-	assert.match(content, '<h1>status: 404</h1>');
+	expect(content).toMatch('<h1>status: 404</h1>');
 });
 
 test('prerenders binary data', async () => {
@@ -156,7 +152,7 @@ test('prerenders binary data', async () => {
 test('fetches data from local endpoint', () => {
 	const data = JSON.parse(read('origin/__data.json'));
 
-	assert.equal(data, {
+	expect(data).toEqual({
 		type: 'data',
 		nodes: [
 			null,
@@ -174,7 +170,7 @@ test('fetches data from local endpoint', () => {
 
 test('respects config.prerender.origin', () => {
 	const content = read('origin.html');
-	assert.match(content, '<h2>http://example.com</h2>');
+	expect(content).toMatch('<h2>http://example.com</h2>');
 });
 
 test('$env - includes environment variables', () => {
@@ -194,17 +190,17 @@ test('$env - includes environment variables', () => {
 
 test('prerenders a page in a (group)', () => {
 	const content = read('grouped.html');
-	assert.match(content, '<h1>grouped</h1>');
+	expect(content).toMatch('<h1>grouped</h1>');
 });
 
 test('injects relative service worker', () => {
 	const content = read('index.html');
-	assert.match(content, `navigator.serviceWorker.register('./service-worker.js')`);
+	expect(content).toMatch(`navigator.serviceWorker.register('./service-worker.js')`);
 });
 
 test('define service worker variables', () => {
 	const content = read('service-worker.js');
-	assert.match(content, `MY_ENV DEFINED`);
+	expect(content).toMatch(`MY_ENV DEFINED`);
 });
 
 test('prerendered.paths omits trailing slashes for endpoints', () => {
@@ -215,8 +211,6 @@ test('prerendered.paths omits trailing slashes for endpoints', () => {
 		'/trailing-slash/page/__data.json',
 		'/trailing-slash/standalone-endpoint.json'
 	]) {
-		assert.match(content, `"${path}"`, `Missing ${path}`);
+		expect(content, `Missing ${path}`).toMatch(`"${path}"`);
 	}
 });
-
-test.run();

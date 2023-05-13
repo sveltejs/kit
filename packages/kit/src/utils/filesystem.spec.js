@@ -1,18 +1,15 @@
 import { mkdtempSync, writeFileSync, readdirSync, mkdirSync, readFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { dirname, join } from 'node:path';
-import { suite } from 'uvu';
-import * as assert from 'uvu/assert';
+import { assert, expect, beforeEach, test } from 'vitest';
 import { copy, mkdirp } from './filesystem.js';
-
-const suite_copy = suite('#copy()');
 
 /** @type {string} */
 let source_dir;
 /** @type {string} */
 let dest_dir;
 
-suite_copy.before.each(() => {
+beforeEach(() => {
 	const temp_dir = mkdtempSync(join(tmpdir(), 'kit-core-filesystem-'));
 	source_dir = join(temp_dir, 'source');
 	dest_dir = join(temp_dir, 'dest');
@@ -30,7 +27,7 @@ const write = (file, contents) => {
 	writeFileSync(filepath, contents);
 };
 
-suite_copy('without filter', () => {
+test('without filter', () => {
 	write('file-one.js', '');
 	write('file-two.css', '');
 	write('file-three', '');
@@ -39,10 +36,10 @@ suite_copy('without filter', () => {
 
 	const copied = readdirSync(dest_dir);
 
-	assert.equal(copied.sort(), ['file-one.js', 'file-two.css', 'file-three'].sort());
+	expect(copied.sort()).toEqual(['file-one.js', 'file-two.css', 'file-three'].sort());
 });
 
-suite_copy('filters out subdirectory contents', () => {
+test('filters out subdirectory contents', () => {
 	write('file-one.js', '');
 	write('file-two.css', '');
 	write('no-copy/do-not-copy.js', '');
@@ -53,10 +50,10 @@ suite_copy('filters out subdirectory contents', () => {
 
 	const copied = readdirSync(dest_dir);
 
-	assert.equal(copied.sort(), ['file-one.js', 'file-two.css'].sort());
+	expect(copied.sort()).toEqual(['file-one.js', 'file-two.css'].sort());
 });
 
-suite_copy('copies recursively', () => {
+test('copies recursively', () => {
 	write('file-one.js', '');
 	write('file-two.css', '');
 	write('deep/a.js', '');
@@ -66,27 +63,29 @@ suite_copy('copies recursively', () => {
 
 	const root = readdirSync(dest_dir);
 
-	assert.equal(root.sort(), ['file-one.js', 'file-two.css', 'deep'].sort());
+	expect(root.sort()).toEqual(['file-one.js', 'file-two.css', 'deep'].sort());
 
 	const subdir = readdirSync(join(dest_dir, 'deep'));
 
-	assert.equal(subdir.sort(), ['a.js', 'b.js'].sort());
+	expect(subdir.sort()).toEqual(['a.js', 'b.js'].sort());
 });
 
-suite_copy('returns a list of copied files', () => {
+test('returns a list of copied files', () => {
 	write('file-one.js', '');
 	write('file-two.css', '');
 	write('deep/a.js', '');
 	write('deep/b.js', '');
 
 	let file_list = copy(source_dir, dest_dir);
-	assert.equal(file_list.sort(), ['file-one.js', 'file-two.css', 'deep/a.js', 'deep/b.js'].sort());
+	expect(file_list.sort()).toEqual(
+		['file-one.js', 'file-two.css', 'deep/a.js', 'deep/b.js'].sort()
+	);
 
 	file_list = copy(`${source_dir}/file-one.js`, `${dest_dir}/file-one-renamed.js`);
-	assert.equal(file_list, ['file-one-renamed.js']);
+	expect(file_list).toEqual(['file-one-renamed.js']);
 });
 
-suite_copy('replaces strings', () => {
+test('replaces strings', () => {
 	write('foo.md', 'the quick brown JUMPER jumps over the lazy JUMPEE');
 	copy(source_dir, dest_dir, {
 		replace: {
@@ -100,5 +99,3 @@ suite_copy('replaces strings', () => {
 		'the quick brown fox jumps over the lazy dog'
 	);
 });
-
-suite_copy.run();
