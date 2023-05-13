@@ -8,8 +8,8 @@ importers:
         specifier: ^2.26.0
         version: 2.26.0
       '@rollup/plugin-commonjs':
-        specifier: ^24.0.0
-        version: 24.0.0(rollup@3.7.0)
+        specifier: ^25.0.0
+        version: 25.0.0(rollup@3.7.0)
       '@rollup/plugin-json':
         specifier: ^6.0.0
         version: 6.0.0(rollup@3.7.0)
@@ -129,8 +129,8 @@ importers:
         specifier: ^1.3.0
         version: 1.3.0
       '@rollup/plugin-commonjs':
-        specifier: ^24.0.0
-        version: 24.0.0(rollup@3.7.0)
+        specifier: ^25.0.0
+        version: 25.0.0(rollup@3.7.0)
       '@rollup/plugin-json':
         specifier: ^6.0.0
         version: 6.0.0(rollup@3.7.0)
@@ -162,8 +162,8 @@ importers:
   packages/adapter-node:
     dependencies:
       '@rollup/plugin-commonjs':
-        specifier: ^24.0.0
-        version: 24.0.0(rollup@3.7.0)
+        specifier: ^25.0.0
+        version: 25.0.0(rollup@3.7.0)
       '@rollup/plugin-json':
         specifier: ^6.0.0
         version: 6.0.0(rollup@3.7.0)
@@ -1622,8 +1622,8 @@ packages:
   /@polka/url@1.0.0-next.21:
     resolution: {integrity: sha512-a5Sab1C4/icpTZVzZc5Ghpz88yQtGOyNqYXcZgOssB2uuAr+wF/MvN6bgtW32q7HHrvBki+BsZ0OuNv6EV3K9g==}
 
-  /@rollup/plugin-commonjs@24.0.0(rollup@3.7.0):
-    resolution: {integrity: sha512-0w0wyykzdyRRPHOb0cQt14mIBLujfAv6GgP6g8nvg/iBxEm112t3YPPq+Buqe2+imvElTka+bjNlJ/gB56TD8g==}
+  /@rollup/plugin-commonjs@25.0.0(rollup@3.7.0):
+    resolution: {integrity: sha512-hoho2Kay9TZrLu0bnDsTTCaj4Npa+THk9snajP/XDNb9a9mmjTjh52EQM9sKl3HD1LsnihX7js+eA2sd2uKAhw==}
     engines: {node: '>=14.0.0'}
     peerDependencies:
       rollup: ^2.68.0||^3.0.0
