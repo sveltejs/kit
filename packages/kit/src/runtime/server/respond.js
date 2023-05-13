@@ -244,7 +244,7 @@ export async function respond(request, options, manifest, state) {
 			}
 		}
 
-		const { cookies, new_cookies, get_cookie_header } = get_cookies(
+		const { cookies, new_cookies, get_cookie_header, set_internal } = get_cookies(
 			request,
 			url,
 			trailing_slash ?? 'never'
@@ -252,7 +252,14 @@ export async function respond(request, options, manifest, state) {
 
 		cookies_to_add = new_cookies;
 		event.cookies = cookies;
-		event.fetch = create_fetch({ event, options, manifest, state, get_cookie_header });
+		event.fetch = create_fetch({
+			event,
+			options,
+			manifest,
+			state,
+			get_cookie_header,
+			set_internal
+		});
 
 		if (state.prerendering && !state.prerendering.fallback) disable_search(url);
 
