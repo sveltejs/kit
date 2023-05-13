@@ -178,8 +178,6 @@ test('warns if cookie exceeds 4,129 bytes', () => {
 		// @ts-expect-error
 		globalThis.__SVELTEKIT_DEV__ = false;
 	}
-
-	
 });
 
 test('get all cookies from header and set calls', () => {
