@@ -42,7 +42,7 @@ export function forked(module, callback) {
 
 			worker.on(
 				'message',
-				/** @param {any} data */ async (data) => {
+				/** @param {any} data */ (data) => {
 					if (data?.type === 'ready' && data.module === module) {
 						worker.postMessage({
 							type: 'args',
