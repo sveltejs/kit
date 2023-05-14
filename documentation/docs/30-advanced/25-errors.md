@@ -48,7 +48,7 @@ This tells SvelteKit to set the response status code to 404 and render an [`+err
 	import { page } from '$app/stores';
 </script>
 
-<h1>{$page.error.message}</h1>
+<h1>{$page.error?.message}</h1>
 ```
 
 You can add extra properties to the error object if needed...

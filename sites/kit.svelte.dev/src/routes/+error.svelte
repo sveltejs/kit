@@ -16,7 +16,7 @@
 	{:else if online}
 		<h1>Yikes!</h1>
 
-		{#if $page.error.message}
+		{#if $page.error?.message}
 			<p class="error">{$page.status}: {$page.error.message}</p>
 		{/if}
 
