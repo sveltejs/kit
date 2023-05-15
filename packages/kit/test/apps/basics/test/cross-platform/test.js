@@ -26,7 +26,6 @@ test.describe('CSS', () => {
 
 	test('does not apply raw and url', async ({ page, get_computed_style }) => {
 		await page.goto('/css');
-		await page.pause();
 		expect(await get_computed_style('.not', 'color')).toBe('rgb(0, 0, 0)');
 	});
 
