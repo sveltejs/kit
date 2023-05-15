@@ -176,14 +176,13 @@ export async function dev(vite, vite_config, svelte_config) {
 							const styles = {};
 
 							for (const dep of deps) {
-								if (/[?&](?:raw|url|inline)\b/.test(dep.url)) continue;
-
 								const url = new URL(dep.url, 'dummy:/');
 								const query = url.searchParams;
 
 								if (
-									isCSSRequest(dep.file) ||
-									(query.has('svelte') && query.get('type') === 'style')
+									(isCSSRequest(dep.file) ||
+										(query.has('svelte') && query.get('type') === 'style')) &&
+									!(query.has('raw') || query.has('url') || query.has('inline'))
 								) {
 									try {
 										query.set('inline', '');
