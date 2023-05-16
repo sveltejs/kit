@@ -6,29 +6,28 @@ import { test } from '../../../../utils.js';
 test.describe.configure({ mode: 'parallel' });
 
 test.describe('CSS', () => {
-	test('applies imported styles', async ({ page, get_computed_style }) => {
+	test('applies styles correctly', async ({ page, get_computed_style }) => {
 		await page.goto('/css');
 
-		expect(await get_computed_style('.styled', 'color')).toBe('rgb(255, 0, 0)');
-	});
+		test.step('applies imported styles', async () => {
+			expect(await get_computed_style('.styled', 'color')).toBe('rgb(255, 0, 0)');
+		});
 
-	test('applies layout styles', async ({ page, get_computed_style }) => {
-		await page.goto('/css');
+		test.step('applies imported styles in the correct order', async () => {
+			expect(await get_computed_style('.overridden', 'color')).toBe('rgb(0, 128, 0)');
+		});
 
-		expect(await get_computed_style('footer', 'color')).toBe('rgb(128, 0, 128)');
-	});
+		test.step('applies layout styles', async () => {
+			expect(await get_computed_style('footer', 'color')).toBe('rgb(128, 0, 128)');
+		});
 
-	test('applies local styles', async ({ page, get_computed_style }) => {
-		await page.goto('/css');
+		test.step('applies local styles', async () => {
+			expect(await get_computed_style('.also-styled', 'color')).toBe('rgb(0, 0, 255)');
+		});
 
-		expect(await get_computed_style('.also-styled', 'color')).toBe('rgb(0, 0, 255)');
-	});
-
-	test('applies imported styles in the correct order', async ({ page, get_computed_style }) => {
-		await page.goto('/css');
-
-		const color = await get_computed_style('.overridden', 'color');
-		expect(color).toBe('rgb(0, 128, 0)');
+		test.step('does not apply raw and url', async () => {
+			expect(await get_computed_style('.not', 'color')).toBe('rgb(0, 0, 0)');
+		});
 	});
 });
 
