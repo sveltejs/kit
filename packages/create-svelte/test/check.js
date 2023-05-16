@@ -60,8 +60,8 @@ fs.writeFileSync(path.join(test_workspace_dir, 'pnpm-workspace.yaml'), 'packages
 
 const exec_async = promisify(exec);
 
-beforeAll(() => {
-	exec_async(`pnpm install --no-frozen-lockfile`, {
+beforeAll(async () => {
+	await exec_async(`pnpm install --no-frozen-lockfile`, {
 		cwd: test_workspace_dir
 	});
 }, 60000);
