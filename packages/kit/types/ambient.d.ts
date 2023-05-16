@@ -80,8 +80,16 @@ declare module '$app/forms' {
 		Invalid extends Record<string, unknown> | undefined = Record<string, any>
 	> = (input: {
 		action: URL;
+		/**
+		 * use `formData` instead of `data`
+		 * @deprecated
+		 */
 		data: FormData;
 		formData: FormData;
+		/**
+		 * use `formElement` instead of `form`
+		 * @deprecated
+		 */
 		form: HTMLFormElement;
 		formElement: HTMLFormElement;
 		controller: AbortController;
@@ -90,8 +98,16 @@ declare module '$app/forms' {
 	}) => MaybePromise<
 		| void
 		| ((opts: {
+				/**
+				 * use `formData` instead of `data`
+				 * @deprecated
+				 */
 				data: FormData;
 				formData: FormData;
+				/**
+				 * use `formElement` instead of `form`
+				 * @deprecated
+				 */
 				form: HTMLFormElement;
 				formElement: HTMLFormElement;
 				action: URL;
