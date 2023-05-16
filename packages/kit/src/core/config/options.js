@@ -111,6 +111,10 @@ const options = object(
 				checkOrigin: boolean(true)
 			}),
 
+			dangerZone: object({
+				trackServerFetchesPotentiallyExposingSecrets: boolean(false)
+			}),
+
 			embedded: boolean(false),
 
 			env: object({
