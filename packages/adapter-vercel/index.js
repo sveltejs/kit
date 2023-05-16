@@ -96,13 +96,6 @@ const plugin = function (defaults = {}) {
 				const tmp = builder.getBuildDirectory(`vercel-tmp/${name}`);
 				const relativePath = path.posix.relative(tmp, builder.getServerDirectory());
 
-				const envVarsInUse = new Set();
-				routes.forEach((route) => {
-					route.config?.envVarsInUse?.forEach((x) => {
-						envVarsInUse.add(x);
-					});
-				});
-
 				builder.copy(`${files}/edge.js`, `${tmp}/edge.js`, {
 					replace: {
 						SERVER: `${relativePath}/index.js`,
@@ -133,7 +126,6 @@ const plugin = function (defaults = {}) {
 						{
 							runtime: config.runtime,
 							regions: config.regions,
-							envVarsInUse: [...envVarsInUse],
 							entrypoint: 'index.js'
 						},
 						null,
