@@ -7,7 +7,10 @@ import glob from 'tiny-glob';
 import { beforeAll, describe, test } from 'vitest';
 import { create } from '../index.js';
 
-/** Resolve the given path relative to the current file */
+/**
+ * Resolve the given path relative to the current file
+ * @param {string} path
+ */
 const resolve_path = (path) => fileURLToPath(new URL(path, import.meta.url));
 
 // use a directory outside of packages to ensure it isn't added to the pnpm workspace
@@ -30,7 +33,7 @@ const overrides = { ...existing_workspace_overrides };
 try {
 	const kit_dir = resolve_path('../../../packages/kit');
 	const ls_vite_result = execSync(`pnpm ls --json vite`, { cwd: kit_dir });
-	const vite_version = JSON.parse(ls_vite_result)[0].devDependencies.vite.version;
+	const vite_version = JSON.parse(ls_vite_result.toString())[0].devDependencies.vite.version;
 	overrides.vite = vite_version;
 } catch (e) {
 	console.error('failed to parse installed vite version from packages/kit');
@@ -57,14 +60,13 @@ fs.writeFileSync(path.join(test_workspace_dir, 'pnpm-workspace.yaml'), 'packages
 
 const exec_async = promisify(exec);
 
-beforeAll(
-	() =>
-		exec_async(`pnpm install --no-frozen-lockfile`, {
-			cwd: test_workspace_dir
-		}),
-	60000
-);
+beforeAll(() => {
+	exec_async(`pnpm install --no-frozen-lockfile`, {
+		cwd: test_workspace_dir
+	});
+}, 60000);
 
+/** @param {any} pkg */
 function patch_package_json(pkg) {
 	Object.entries(overrides).forEach(([key, value]) => {
 		if (pkg.devDependencies?.[key]) {
@@ -91,14 +93,18 @@ function patch_package_json(pkg) {
 /**
  * Tests in different templates can be run concurrently for a nice speedup locally, but tests within a template must be run sequentially.
  * It'd be better to group tests by template, but vitest doesn't support that yet.
- * @type {Map<string, [string, () => import('node:child_process').PromiseWithChild][]>}
+ * @type {Map<string, [string, () => import('node:child_process').PromiseWithChild<any>][]>}
  */
 const script_test_map = new Map();
 
-function test_template(template) {
-	if (template[0] === '.') return;
+const templates = /** @type {Array<'default' | 'skeleton' | 'skeletonlib'>} */ (
+	fs.readdirSync('templates')
+);
 
-	for (const types of ['checkjs', 'typescript']) {
+for (const template of templates) {
+	if (template[0] === '.') continue;
+
+	for (const types of /** @type {const} */ (['checkjs', 'typescript'])) {
 		const cwd = path.join(test_workspace_dir, `${template}-${types}`);
 		fs.rmSync(cwd, { recursive: true, force: true });
 
@@ -108,7 +114,8 @@ function test_template(template) {
 			types,
 			prettier: true,
 			eslint: true,
-			playwright: false
+			playwright: false,
+			vitest: false
 		});
 
 		const pkg = JSON.parse(fs.readFileSync(path.join(cwd, 'package.json'), 'utf-8'));
@@ -132,8 +139,6 @@ function test_template(template) {
 		}
 	}
 }
-
-fs.readdirSync('templates').map((template) => test_template(template));
 
 for (const [script, tests] of script_test_map) {
 	describe.concurrent(
