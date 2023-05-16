@@ -125,8 +125,7 @@ for (const template of templates) {
 
 		// run provided scripts that are non-blocking. All of them should exit with 0
 		// package script requires lib dir
-		// TODO: lint should run before format
-		const scripts_to_test = ['format', 'lint', 'check', 'build', 'package'].filter(
+		const scripts_to_test = ['lint', 'format', 'check', 'build', 'package'].filter(
 			(s) => s in pkg.scripts
 		);
 

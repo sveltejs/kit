@@ -5,13 +5,17 @@
 	"printWidth": 100,
 	"overrides": [
 		{
-			"files": ["*.svelte"],
+			"files": [
+				"*.svelte"
+			],
 			"options": {
 				"bracketSameLine": false
 			}
 		},
 		{
-			"files": ["packages/*/README.md"],
+			"files": [
+				"packages/*/README.md"
+			],
 			"options": {
 				"useTabs": false,
 				"tabWidth": 2
@@ -22,6 +26,7 @@
 				"**/CHANGELOG.md",
 				"**/.svelte-kit/**",
 				"documentation/**/*.md",
+				"packages/create-svelte/templates/**",
 				"packages/package/test/fixtures/**/expected/**/*",
 				"packages/package/test/watch/expected/**/*",
 				"packages/package/test/watch/package/**/*",

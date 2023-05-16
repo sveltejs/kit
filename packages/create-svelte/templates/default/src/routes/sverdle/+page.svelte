@@ -61,9 +61,7 @@
 	 */
 	function update(event: MouseEvent) {
 		const guess = data.guesses[i];
-		const key = /** @type {HTMLButtonElement} */ (event.target as HTMLButtonElement).getAttribute(
-			'data-key'
-		);
+		const key = /** @type {HTMLButtonElement} */ (event.target as HTMLButtonElement).getAttribute('data-key');
 
 		if (key === 'backspace') {
 			data.guesses[i] = guess.slice(0, -1);
