@@ -54,7 +54,10 @@ export default function (options = {}) {
 				outfile: `${dest}/_worker.js`,
 				allowOverwrite: true,
 				format: 'esm',
-				bundle: true
+				bundle: true,
+				loader: {
+					'.wasm': 'copy'
+				}
 			});
 		}
 	};
