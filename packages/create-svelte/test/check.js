@@ -3,7 +3,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { promisify } from 'node:util';
-import glob from 'tiny-glob';
+import glob from 'tiny-glob/sync.js';
 import { beforeAll, describe, test } from 'vitest';
 import { create } from '../index.js';
 
@@ -22,13 +22,13 @@ const existing_workspace_overrides = JSON.parse(
 
 const overrides = { ...existing_workspace_overrides };
 
-(await glob(resolve_path('../../../packages') + '/*/package.json')).forEach((pkgPath) => {
-	const name = JSON.parse(fs.readFileSync(pkgPath, 'utf-8')).name;
+for (const pkg_path of glob(resolve_path('../../../packages/*/package.json'))) {
+	const name = JSON.parse(fs.readFileSync(pkg_path, 'utf-8')).name;
 	// use `file:` protocol for opting into stricter resolve logic which catches more bugs,
 	// but only on CI because it doesn't work locally for some reason
 	const protocol = process.env.CI ? 'file:' : '';
-	overrides[name] = `${protocol}${path.dirname(path.resolve(pkgPath))}`;
-});
+	overrides[name] = `${protocol}${path.dirname(path.resolve(pkg_path))}`;
+}
 
 try {
 	const kit_dir = resolve_path('../../../packages/kit');
@@ -126,11 +126,9 @@ for (const template of templates) {
 		// run provided scripts that are non-blocking. All of them should exit with 0
 		// package script requires lib dir
 		// TODO: lint should run before format
-		let scripts_to_test = ['sync', 'format', 'lint', 'check', 'build'];
-		if (fs.existsSync(path.join(cwd, 'src', 'lib'))) {
-			scripts_to_test.push('package');
-		}
-		scripts_to_test = scripts_to_test.filter((s) => !!pkg.scripts[s]);
+		const scripts_to_test = ['format', 'lint', 'check', 'build', 'package'].filter(
+			(s) => s in pkg.scripts
+		);
 
 		for (const script of scripts_to_test) {
 			const tests = script_test_map.get(script) ?? [];
