@@ -16,7 +16,7 @@ test('renders a redirect', () => {
 	const content = read('redirect.html');
 	assert.equal(
 		content,
-		'<script>location.href="https:\\u002F\\u002Fexample.com\\u002Fredirected";</script><meta http-equiv="refresh" content="0;url=https://example.com/redirected">'
+		'<script>location.href="https://example.com/redirected";</script><meta http-equiv="refresh" content="0;url=https://example.com/redirected">'
 	);
 });
 
@@ -24,7 +24,7 @@ test('renders a server-side redirect', () => {
 	const html = read('redirect-server.html');
 	assert.equal(
 		html,
-		'<script>location.href="https:\\u002F\\u002Fexample.com\\u002Fredirected";</script><meta http-equiv="refresh" content="0;url=https://example.com/redirected">'
+		'<script>location.href="https://example.com/redirected";</script><meta http-equiv="refresh" content="0;url=https://example.com/redirected">'
 	);
 
 	const data = JSON.parse(read('redirect-server/__data.json'));
@@ -39,7 +39,7 @@ test('does not double-encode redirect locations', () => {
 	const content = read('redirect-encoded.html');
 	assert.equal(
 		content,
-		'<script>location.href="https:\\u002F\\u002Fexample.com\\u002Fredirected?returnTo=%2Ffoo%3Fbar%3Dbaz";</script><meta http-equiv="refresh" content="0;url=https://example.com/redirected?returnTo=%2Ffoo%3Fbar%3Dbaz">'
+		'<script>location.href="https://example.com/redirected?returnTo=%2Ffoo%3Fbar%3Dbaz";</script><meta http-equiv="refresh" content="0;url=https://example.com/redirected?returnTo=%2Ffoo%3Fbar%3Dbaz">'
 	);
 });
 
@@ -47,7 +47,7 @@ test('escapes characters in redirect', () => {
 	const content = read('redirect-malicious.html');
 	assert.equal(
 		content,
-		'<script>location.href="https:\\u002F\\u002Fexample.com\\u002F\\u003C\\u002Fscript\\u003Ealert(\\"pwned\\")";</script><meta http-equiv="refresh" content="0;url=https://example.com/</script>alert(&quot;pwned&quot;)">'
+		'<script>location.href="https://example.com/\\u003C/script>alert(\\"pwned\\")";</script><meta http-equiv="refresh" content="0;url=https://example.com/</script>alert(&quot;pwned&quot;)">'
 	);
 });
 
@@ -55,7 +55,7 @@ test('renders a relative redirect', () => {
 	const content = read('redirect-relative.html');
 	assert.equal(
 		content,
-		'<script>location.href="\\u002Fenv";</script><meta http-equiv="refresh" content="0;url=/env">'
+		'<script>location.href="/env";</script><meta http-equiv="refresh" content="0;url=/env">'
 	);
 });
 

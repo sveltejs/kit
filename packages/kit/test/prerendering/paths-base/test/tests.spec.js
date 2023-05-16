@@ -16,7 +16,7 @@ test('prerenders /path-base/redirect', () => {
 	const content = read('redirect.html');
 	assert.equal(
 		content,
-		'<script>location.href="\\u002Fpath-base\\u002Fdynamic\\u002Ffoo";</script><meta http-equiv="refresh" content="0;url=/path-base/dynamic/foo">'
+		'<script>location.href="/path-base/dynamic/foo";</script><meta http-equiv="refresh" content="0;url=/path-base/dynamic/foo">'
 	);
 });
 
