@@ -1,7 +1,7 @@
-import { test } from 'uvu';
-import * as assert from 'uvu/assert';
+import { assert, test } from 'vitest';
 import { execSync } from 'node:child_process';
 import path from 'node:path';
+import { EOL } from 'node:os';
 
 test('prerenderable routes must be prerendered', () => {
 	assert.throws(
@@ -23,13 +23,6 @@ test('entry generators should match their own route', () => {
 				stdio: 'pipe',
 				timeout: 60000
 			}),
-		/** @param {Error} err */ (err) =>
-			err.message
-				.replace(/\r\n/g, '\n')
-				.includes(
-					'Error: The entries export from /[slug]/[notSpecific] generated entry /whatever/specific, which was matched by /[slug]/specific - see the `handleEntryGeneratorMismatch` option in https://kit.svelte.dev/docs/configuration#prerender for more info.\nTo suppress or handle this error, implement `handleEntryGeneratorMismatch` in https://kit.svelte.dev/docs/configuration#prerender'
-				)
+		`Error: The entries export from /[slug]/[notSpecific] generated entry /whatever/specific, which was matched by /[slug]/specific - see the \`handleEntryGeneratorMismatch\` option in https://kit.svelte.dev/docs/configuration#prerender for more info.${EOL}To suppress or handle this error, implement \`handleEntryGeneratorMismatch\` in https://kit.svelte.dev/docs/configuration#prerender`
 	);
 });
-
-test.run();

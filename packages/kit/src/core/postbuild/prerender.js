@@ -12,6 +12,7 @@ import { get_route_segments } from '../../utils/routing.js';
 import { queue } from './queue.js';
 import { crawl } from './crawl.js';
 import { forked } from '../../utils/fork.js';
+import * as devalue from 'devalue';
 
 export default forked(import.meta.url, prerender);
 
@@ -340,7 +341,11 @@ async function prerender({ out, manifest_path, metadata, verbose, env }) {
 
 					writeFileSync(
 						dest,
-						`<meta http-equiv="refresh" content=${escape_html_attr(`0;url=${location}`)}>`
+						`<script>location.href=${devalue.uneval(
+							location
+						)};</script><meta http-equiv="refresh" content=${escape_html_attr(
+							`0;url=${location}`
+						)}>`
 					);
 
 					written.add(file);

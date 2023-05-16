@@ -1,5 +1,4 @@
-import { test } from 'uvu';
-import * as assert from 'uvu/assert';
+import { assert, test } from 'vitest';
 import { remove_package_from_config } from './migrate_config.js';
 
 test('Removes package config #1', () => {
@@ -77,5 +76,3 @@ test('Leaves config untouched', () => {
 	const result = remove_package_from_config(content);
 	assert.equal(result, content);
 });
-
-test.run();

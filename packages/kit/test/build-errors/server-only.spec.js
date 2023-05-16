@@ -1,5 +1,4 @@
-import { test } from 'uvu';
-import * as assert from 'uvu/assert';
+import { assert, test } from 'vitest';
 import { execSync } from 'node:child_process';
 import path from 'node:path';
 
@@ -17,7 +16,7 @@ test('$lib/*.server.* is not statically importable from the client', () => {
 		);
 		return;
 	}
-	assert.unreachable();
+	throw new Error();
 });
 
 test('$lib/*.server.* is not dynamically importable from the client', () => {
@@ -34,7 +33,7 @@ test('$lib/*.server.* is not dynamically importable from the client', () => {
 		);
 		return;
 	}
-	assert.unreachable();
+	throw new Error();
 });
 
 test('$lib/server/* is not statically importable from the client', () => {
@@ -51,7 +50,7 @@ test('$lib/server/* is not statically importable from the client', () => {
 		);
 		return;
 	}
-	assert.unreachable();
+	throw new Error();
 });
 
 test('$lib/server/* is not dynamically importable from the client', () => {
@@ -68,7 +67,5 @@ test('$lib/server/* is not dynamically importable from the client', () => {
 		);
 		return;
 	}
-	assert.unreachable();
+	throw new Error();
 });
-
-test.run();
