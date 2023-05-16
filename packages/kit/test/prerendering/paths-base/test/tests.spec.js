@@ -14,7 +14,10 @@ test('prerenders /path-base', () => {
 
 test('prerenders /path-base/redirect', () => {
 	const content = read('redirect.html');
-	assert.equal(content, '<meta http-equiv="refresh" content="0;url=/path-base/dynamic/foo">');
+	assert.equal(
+		content,
+		'<script>location.href="\\u002Fpath-base\\u002Fdynamic\\u002Ffoo";</script><meta http-equiv="refresh" content="0;url=/path-base/dynamic/foo">'
+	);
 });
 
 test('prerenders /path-base/dynamic/foo', () => {
