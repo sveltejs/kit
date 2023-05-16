@@ -828,6 +828,51 @@ test.describe('Matchers', () => {
 });
 
 test.describe('Actions', () => {
+	for (const { id, old_name, new_name, call_location } of [
+		{
+			id: 'access-form-in-submit',
+			old_name: 'form',
+			new_name: 'formElement',
+			call_location: 'use:enhance submit function'
+		},
+		{
+			id: 'access-form-in-callback',
+			old_name: 'form',
+			new_name: 'formElement',
+			call_location: 'callback returned from use:enhance submit function'
+		},
+		{
+			id: 'access-data-in-submit',
+			old_name: 'data',
+			new_name: 'formData',
+			call_location: 'use:enhance submit function'
+		},
+		{
+			id: 'access-data-in-callback',
+			old_name: 'data',
+			new_name: 'formData',
+			call_location: 'callback returned from use:enhance submit function'
+		}
+	]) {
+		test(`Accessing v2 deprecated properties results in a warning log, type: ${id}`, async ({
+			page,
+			javaScriptEnabled
+		}) => {
+			test.skip(!javaScriptEnabled, 'skip when js is disabled');
+			test.skip(!process.env.DEV, 'skip when not in dev mode');
+			await page.goto('/actions/enhance/old-property-access');
+			const log_promise = page.waitForEvent('console');
+			const button = page.locator(`#${id}`);
+			await button.click();
+			expect(await button.textContent()).toBe('processed'); // needed to make sure action completes
+			const log = await log_promise;
+			expect(log.text()).toBe(
+				`\`${old_name}\` has been deprecated in favor of \`${new_name}\`. \`${old_name}\` will be removed in a future version. (Called from ${call_location})`
+			);
+			expect(log.type()).toBe('warning');
+		});
+	}
+
 	test('Error props are returned', async ({ page, javaScriptEnabled }) => {
 		await page.goto('/actions/form-errors');
 		await page.click('button');
