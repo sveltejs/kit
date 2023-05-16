@@ -1,5 +1,4 @@
-import { test } from 'uvu';
-import * as assert from 'uvu/assert';
+import { assert, test } from 'vitest';
 import { generate_ts_from_js } from './index.js';
 
 /**
@@ -227,5 +226,3 @@ etc etc
 `
 	);
 });
-
-test.run();

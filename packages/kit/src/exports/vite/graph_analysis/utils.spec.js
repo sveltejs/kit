@@ -1,5 +1,4 @@
-import { describe } from '../../../utils/unit_test.js';
-import * as assert from 'uvu/assert';
+import { assert, describe } from 'vitest';
 import { remove_query_from_id } from './utils.js';
 
 describe('remove_query_string_from_path', (test) => {

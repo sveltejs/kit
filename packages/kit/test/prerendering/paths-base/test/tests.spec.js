@@ -1,7 +1,6 @@
 import * as fs from 'node:fs';
 import { fileURLToPath } from 'node:url';
-import { test } from 'uvu';
-import * as assert from 'uvu/assert';
+import { assert, test } from 'vitest';
 
 const build = fileURLToPath(new URL('../build', import.meta.url));
 
@@ -15,7 +14,10 @@ test('prerenders /path-base', () => {
 
 test('prerenders /path-base/redirect', () => {
 	const content = read('redirect.html');
-	assert.equal(content, '<meta http-equiv="refresh" content="0;url=/path-base/dynamic/foo">');
+	assert.equal(
+		content,
+		'<script>location.href="/path-base/dynamic/foo";</script><meta http-equiv="refresh" content="0;url=/path-base/dynamic/foo">'
+	);
 });
 
 test('prerenders /path-base/dynamic/foo', () => {
@@ -27,5 +29,3 @@ test('prerenders /path-base/assets', () => {
 	const content = read('assets.html');
 	assert.match(content, /<img[^>]+src="\/path-base\//u);
 });
-
-test.run();

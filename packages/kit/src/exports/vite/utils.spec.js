@@ -1,6 +1,5 @@
 import path from 'node:path';
-import { test } from 'uvu';
-import * as assert from 'uvu/assert';
+import { expect, test } from 'vitest';
 import { validate_config } from '../../core/config/index.js';
 import { posixify } from '../../utils/filesystem.js';
 import { get_config_aliases } from './utils.js';
@@ -29,7 +28,7 @@ test('transform kit.alias to resolve.alias', () => {
 		};
 	});
 
-	assert.equal(transformed, [
+	expect(transformed).toEqual([
 		{ find: '$lib', replacement: 'src/lib' },
 		{ find: 'simpleKey', replacement: 'simple/value' },
 		{ find: /^key$/.toString(), replacement: 'value' },
@@ -38,5 +37,3 @@ test('transform kit.alias to resolve.alias', () => {
 		{ find: /^\$regexChar\/(.+)$/.toString(), replacement: 'windows/path/$1' }
 	]);
 });
-
-test.run();

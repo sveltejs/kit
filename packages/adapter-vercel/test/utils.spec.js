@@ -1,5 +1,4 @@
-import { test } from 'uvu';
-import * as assert from 'uvu/assert';
+import { assert, test } from 'vitest';
 import { get_pathname } from '../utils.js';
 
 /**
@@ -34,5 +33,3 @@ test('get_pathname for route with parameters within segment', () => {
 		'foo-$1/$2-buz'
 	);
 });
-
-test.run();

@@ -1,5 +1,4 @@
-import { test } from 'uvu';
-import * as assert from 'uvu/assert';
+import { assert, expect, test } from 'vitest';
 import { create_universal_fetch } from './load_data.js';
 
 /**
@@ -48,17 +47,13 @@ test('succeeds when acao header present on cors', async () => {
 
 test('errors when no acao header present on cors', async () => {
 	const fetch = create_fetch({});
-	try {
+
+	expect(async () => {
 		const response = await fetch('https://domain-b.com');
 		await response.text();
-		assert.unreachable('should have thrown cors error');
-	} catch (e) {
-		assert.ok(e instanceof Error);
-		assert.match(
-			e.message,
-			/CORS error: No 'Access-Control-Allow-Origin' header is present on the requested resource/
-		);
-	}
+	}).rejects.toThrowError(
+		"CORS error: No 'Access-Control-Allow-Origin' header is present on the requested resource"
+	);
 });
 
 test('errors when trying to access non-serialized request headers on the server', async () => {
@@ -69,5 +64,3 @@ test('errors when trying to access non-serialized request headers on the server'
 		/Failed to get response header "content-type" — it must be included by the `filterSerializedResponseHeaders` option/
 	);
 });
-
-test.run();
