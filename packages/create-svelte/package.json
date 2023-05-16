@@ -26,11 +26,11 @@
 		"sucrase": "^3.29.0",
 		"svelte": "^3.56.0",
 		"tiny-glob": "^0.2.9",
-		"uvu": "^0.5.6"
+		"vitest": "^0.31.0"
 	},
 	"scripts": {
 		"build": "node scripts/build-templates",
-		"test": "pnpm build && uvu test",
+		"test": "pnpm build && vitest run",
 		"check": "tsc",
 		"lint": "prettier --check . --config ../../.prettierrc --ignore-path ../../.gitignore --ignore-path .gitignore --plugin prettier-plugin-svelte --plugin-search-dir=.",
 		"format": "pnpm lint --write",

@@ -12,7 +12,9 @@
 	"ignoreDeps": [
 		"esbuild",
 		"rollup",
-		"typescript"
+		"typescript",
+		"playwright",
+		"@playwright/test"
 	],
 	"ignorePaths": [
 		"**/create-svelte/shared/**",

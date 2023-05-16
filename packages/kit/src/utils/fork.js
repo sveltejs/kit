@@ -1,5 +1,5 @@
 import { fileURLToPath } from 'node:url';
-import { Worker, isMainThread, parentPort } from 'node:worker_threads';
+import { Worker, parentPort } from 'node:worker_threads';
 
 /**
  * Runs a task in a subprocess so any dangling stuff gets killed upon completion.
@@ -11,7 +11,7 @@ import { Worker, isMainThread, parentPort } from 'node:worker_threads';
  * @returns {(opts: T) => Promise<U>} A function that when called starts the subprocess
  */
 export function forked(module, callback) {
-	if (!isMainThread && parentPort) {
+	if (process.env.SVELTEKIT_FORK && parentPort) {
 		parentPort.on(
 			'message',
 			/** @param {any} data */ async (data) => {
@@ -36,7 +36,8 @@ export function forked(module, callback) {
 		return new Promise((fulfil, reject) => {
 			const worker = new Worker(fileURLToPath(module), {
 				env: {
-					...process.env
+					...process.env,
+					SVELTEKIT_FORK: 'true'
 				}
 			});
 

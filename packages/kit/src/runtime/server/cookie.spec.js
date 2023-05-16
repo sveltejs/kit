@@ -174,10 +174,10 @@ test('warns if cookie exceeds 4,129 bytes', () => {
 		const error = /** @type {Error} */ (e);
 
 		assert.equal(error.message, `Cookie "a" is too large, and will be discarded by the browser`);
+	} finally {
+		// @ts-expect-error
+		globalThis.__SVELTEKIT_DEV__ = false;
 	}
-
-	// @ts-expect-error
-	globalThis.__SVELTEKIT_DEV__ = false;
 });
 
 test('get all cookies from header and set calls', () => {
