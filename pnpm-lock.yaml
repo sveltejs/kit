@@ -21,7 +21,7 @@ importers:
         version: 1.1.0
       '@typescript-eslint/eslint-plugin':
         specifier: ^5.53.0
-        version: 5.53.0(@typescript-eslint/parser@5.59.2)(eslint@8.33.0)(typescript@4.9.4)
+        version: 5.53.0(@typescript-eslint/parser@5.59.6)(eslint@8.33.0)(typescript@4.9.4)
       eslint:
         specifier: ^8.33.0
         version: 8.33.0
@@ -223,8 +223,8 @@ importers:
         specifier: ^4.9.4
         version: 4.9.4
       vite:
-        specifier: ^4.3.0
-        version: 4.3.0(@types/node@16.18.6)
+        specifier: ^4.3.6
+        version: 4.3.6(@types/node@16.18.6)
 
   packages/adapter-static/test/apps/prerendered:
     devDependencies:
@@ -238,8 +238,8 @@ importers:
         specifier: ^3.56.0
         version: 3.56.0
       vite:
-        specifier: ^4.3.0
-        version: 4.3.0(@types/node@16.18.6)
+        specifier: ^4.3.6
+        version: 4.3.6(@types/node@16.18.6)
 
   packages/adapter-static/test/apps/spa:
     devDependencies:
@@ -256,8 +256,8 @@ importers:
         specifier: ^3.56.0
         version: 3.56.0
       vite:
-        specifier: ^4.3.0
-        version: 4.3.0(@types/node@16.18.6)
+        specifier: ^4.3.6
+        version: 4.3.6(@types/node@16.18.6)
 
   packages/adapter-vercel:
     dependencies:
@@ -352,8 +352,8 @@ importers:
         specifier: ^5.0.0
         version: 5.0.2
       vite:
-        specifier: ^4.3.0
-        version: 4.3.0(@types/node@16.18.6)
+        specifier: ^4.3.6
+        version: 4.3.6(@types/node@16.18.6)
 
   packages/create-svelte/templates/skeleton:
     devDependencies:
@@ -365,7 +365,7 @@ importers:
     dependencies:
       '@sveltejs/vite-plugin-svelte':
         specifier: ^2.1.1
-        version: 2.1.1(svelte@3.56.0)(vite@4.3.0)
+        version: 2.1.1(svelte@3.56.0)(vite@4.3.6)
       '@types/cookie':
         specifier: ^0.5.1
         version: 0.5.1
@@ -373,8 +373,8 @@ importers:
         specifier: ^0.5.0
         version: 0.5.0
       devalue:
-        specifier: ^4.3.0
-        version: 4.3.0
+        specifier: ^4.3.1
+        version: 4.3.1
       esm-env:
         specifier: ^1.0.0
         version: 1.0.0
@@ -440,8 +440,8 @@ importers:
         specifier: ^4.9.4
         version: 4.9.4
       vite:
-        specifier: ^4.3.0
-        version: 4.3.0(@types/node@16.18.6)
+        specifier: ^4.3.6
+        version: 4.3.6(@types/node@16.18.6)
       vitest:
         specifier: ^0.31.0
         version: 0.31.0(playwright@1.30.0)
@@ -470,8 +470,8 @@ importers:
         specifier: ^4.9.4
         version: 4.9.4
       vite:
-        specifier: ^4.3.0
-        version: 4.3.0(@types/node@16.18.6)
+        specifier: ^4.3.6
+        version: 4.3.6(@types/node@16.18.6)
 
   packages/kit/test/apps/basics:
     devDependencies:
@@ -494,8 +494,8 @@ importers:
         specifier: ^4.9.4
         version: 4.9.4
       vite:
-        specifier: ^4.3.0
-        version: 4.3.0(@types/node@16.18.6)
+        specifier: ^4.3.6
+        version: 4.3.6(@types/node@16.18.6)
 
   packages/kit/test/apps/dev-only:
     devDependencies:
@@ -515,8 +515,8 @@ importers:
         specifier: ^4.9.4
         version: 4.9.4
       vite:
-        specifier: ^4.3.0
-        version: 4.3.0(@types/node@16.18.6)
+        specifier: ^4.3.6
+        version: 4.3.6(@types/node@16.18.6)
 
   packages/kit/test/apps/embed:
     devDependencies:
@@ -536,8 +536,8 @@ importers:
         specifier: ^4.9.4
         version: 4.9.4
       vite:
-        specifier: ^4.3.0
-        version: 4.3.0(@types/node@16.18.6)
+        specifier: ^4.3.6
+        version: 4.3.6(@types/node@16.18.6)
 
   packages/kit/test/apps/options:
     devDependencies:
@@ -557,8 +557,8 @@ importers:
         specifier: ^4.9.4
         version: 4.9.4
       vite:
-        specifier: ^4.3.0
-        version: 4.3.0(@types/node@16.18.6)
+        specifier: ^4.3.6
+        version: 4.3.6(@types/node@16.18.6)
 
   packages/kit/test/apps/options-2:
     devDependencies:
@@ -581,8 +581,8 @@ importers:
         specifier: ^4.9.4
         version: 4.9.4
       vite:
-        specifier: ^4.3.0
-        version: 4.3.0(@types/node@16.18.6)
+        specifier: ^4.3.6
+        version: 4.3.6(@types/node@16.18.6)
 
   packages/kit/test/apps/writes:
     devDependencies:
@@ -605,8 +605,8 @@ importers:
         specifier: ^4.9.4
         version: 4.9.4
       vite:
-        specifier: ^4.3.0
-        version: 4.3.0(@types/node@16.18.6)
+        specifier: ^4.3.6
+        version: 4.3.6(@types/node@16.18.6)
 
   packages/kit/test/build-errors:
     devDependencies:
@@ -632,8 +632,8 @@ importers:
         specifier: ^4.9.4
         version: 4.9.4
       vite:
-        specifier: ^4.2.0
-        version: 4.3.0(@types/node@16.18.6)
+        specifier: ^4.3.6
+        version: 4.3.6(@types/node@16.18.6)
 
   packages/kit/test/build-errors/apps/prerenderable-incorrect-fragment:
     devDependencies:
@@ -653,8 +653,8 @@ importers:
         specifier: ^4.9.4
         version: 4.9.4
       vite:
-        specifier: ^4.3.0
-        version: 4.3.0(@types/node@16.18.6)
+        specifier: ^4.3.6
+        version: 4.3.6(@types/node@16.18.6)
 
   packages/kit/test/build-errors/apps/prerenderable-not-prerendered:
     devDependencies:
@@ -674,8 +674,8 @@ importers:
         specifier: ^4.9.4
         version: 4.9.4
       vite:
-        specifier: ^4.3.0
-        version: 4.3.0(@types/node@16.18.6)
+        specifier: ^4.3.6
+        version: 4.3.6(@types/node@16.18.6)
 
   packages/kit/test/build-errors/apps/private-dynamic-env:
     devDependencies:
@@ -692,8 +692,8 @@ importers:
         specifier: ^4.9.4
         version: 4.9.4
       vite:
-        specifier: ^4.3.0
-        version: 4.3.0(@types/node@16.18.6)
+        specifier: ^4.3.6
+        version: 4.3.6(@types/node@16.18.6)
 
   packages/kit/test/build-errors/apps/private-dynamic-env-dynamic-import:
     devDependencies:
@@ -710,8 +710,8 @@ importers:
         specifier: ^4.9.4
         version: 4.9.4
       vite:
-        specifier: ^4.3.0
-        version: 4.3.0(@types/node@16.18.6)
+        specifier: ^4.3.6
+        version: 4.3.6(@types/node@16.18.6)
 
   packages/kit/test/build-errors/apps/private-static-env:
     devDependencies:
@@ -731,8 +731,8 @@ importers:
         specifier: ^4.9.4
         version: 4.9.4
       vite:
-        specifier: ^4.3.0
-        version: 4.3.0(@types/node@16.18.6)
+        specifier: ^4.3.6
+        version: 4.3.6(@types/node@16.18.6)
 
   packages/kit/test/build-errors/apps/private-static-env-dynamic-import:
     devDependencies:
@@ -749,8 +749,8 @@ importers:
         specifier: ^4.9.4
         version: 4.9.4
       vite:
-        specifier: ^4.3.0
-        version: 4.3.0(@types/node@16.18.6)
+        specifier: ^4.3.6
+        version: 4.3.6(@types/node@16.18.6)
 
   packages/kit/test/build-errors/apps/server-only-folder:
     devDependencies:
@@ -767,8 +767,8 @@ importers:
         specifier: ^4.9.4
         version: 4.9.4
       vite:
-        specifier: ^4.3.0
-        version: 4.3.0(@types/node@16.18.6)
+        specifier: ^4.3.6
+        version: 4.3.6(@types/node@16.18.6)
 
   packages/kit/test/build-errors/apps/server-only-folder-dynamic-import:
     devDependencies:
@@ -785,8 +785,8 @@ importers:
         specifier: ^4.9.4
         version: 4.9.4
       vite:
-        specifier: ^4.3.0
-        version: 4.3.0(@types/node@16.18.6)
+        specifier: ^4.3.6
+        version: 4.3.6(@types/node@16.18.6)
 
   packages/kit/test/build-errors/apps/server-only-module:
     devDependencies:
@@ -803,8 +803,8 @@ importers:
         specifier: ^4.9.4
         version: 4.9.4
       vite:
-        specifier: ^4.3.0
-        version: 4.3.0(@types/node@16.18.6)
+        specifier: ^4.3.6
+        version: 4.3.6(@types/node@16.18.6)
 
   packages/kit/test/build-errors/apps/server-only-module-dynamic-import:
     devDependencies:
@@ -821,8 +821,8 @@ importers:
         specifier: ^4.9.4
         version: 4.9.4
       vite:
-        specifier: ^4.3.0
-        version: 4.3.0(@types/node@16.18.6)
+        specifier: ^4.3.6
+        version: 4.3.6(@types/node@16.18.6)
 
   packages/kit/test/build-errors/apps/syntax-error:
     devDependencies:
@@ -839,8 +839,8 @@ importers:
         specifier: ^4.9.4
         version: 4.9.4
       vite:
-        specifier: ^4.3.0
-        version: 4.3.0(@types/node@16.18.6)
+        specifier: ^4.3.6
+        version: 4.3.6(@types/node@16.18.6)
 
   packages/kit/test/prerendering/basics:
     devDependencies:
@@ -857,8 +857,8 @@ importers:
         specifier: ^4.9.4
         version: 4.9.4
       vite:
-        specifier: ^4.3.0
-        version: 4.3.0(@types/node@16.18.6)
+        specifier: ^4.3.6
+        version: 4.3.6(@types/node@16.18.6)
       vitest:
         specifier: ^0.31.0
         version: 0.31.0(playwright@1.30.0)
@@ -878,8 +878,8 @@ importers:
         specifier: ^4.9.4
         version: 4.9.4
       vite:
-        specifier: ^4.3.0
-        version: 4.3.0(@types/node@16.18.6)
+        specifier: ^4.3.6
+        version: 4.3.6(@types/node@16.18.6)
       vitest:
         specifier: ^0.31.0
         version: 0.31.0(playwright@1.30.0)
@@ -899,8 +899,8 @@ importers:
         specifier: ^4.9.4
         version: 4.9.4
       vite:
-        specifier: ^4.3.0
-        version: 4.3.0(@types/node@16.18.6)
+        specifier: ^4.3.6
+        version: 4.3.6(@types/node@16.18.6)
       vitest:
         specifier: ^0.31.0
         version: 0.31.0(playwright@1.30.0)
@@ -1025,8 +1025,8 @@ importers:
         specifier: ^4.9.4
         version: 4.9.4
       vite:
-        specifier: ^4.3.0
-        version: 4.3.0(@types/node@16.18.6)
+        specifier: ^4.3.6
+        version: 4.3.6(@types/node@16.18.6)
       vite-imagetools:
         specifier: ^4.0.19
         version: 4.0.19(rollup@3.7.0)
@@ -1705,7 +1705,7 @@ packages:
       svelte-local-storage-store: 0.4.0(svelte@3.56.0)
     dev: true
 
-  /@sveltejs/vite-plugin-svelte@2.1.1(svelte@3.56.0)(vite@4.3.0):
+  /@sveltejs/vite-plugin-svelte@2.1.1(svelte@3.56.0)(vite@4.3.6):
     resolution: {integrity: sha512-7YeBDt4us0FiIMNsVXxyaP4Hwyn2/v9x3oqStkHU3ZdIc5O22pGwUwH33wUqYo+7Itdmo8zxJ45Qvfm3H7UUjQ==}
     engines: {node: ^14.18.0 || >= 16}
     peerDependencies:
@@ -1718,8 +1718,8 @@ packages:
       magic-string: 0.30.0
       svelte: 3.56.0
       svelte-hmr: 0.15.1(svelte@3.56.0)
-      vite: 4.3.0(@types/node@16.18.6)
-      vitefu: 0.2.4(vite@4.3.0)
+      vite: 4.3.6(@types/node@16.18.6)
+      vitefu: 0.2.4(vite@4.3.6)
     transitivePeerDependencies:
       - supports-color
     dev: false
@@ -1859,7 +1859,7 @@ packages:
       '@types/node': 16.18.6
     dev: true
 
-  /@typescript-eslint/eslint-plugin@5.53.0(@typescript-eslint/parser@5.59.2)(eslint@8.33.0)(typescript@4.9.4):
+  /@typescript-eslint/eslint-plugin@5.53.0(@typescript-eslint/parser@5.59.6)(eslint@8.33.0)(typescript@4.9.4):
     resolution: {integrity: sha512-alFpFWNucPLdUOySmXCJpzr6HKC3bu7XooShWM+3w/EL6J2HIoB2PFxpLnq4JauWVk6DiVeNKzQlFEaE+X9sGw==}
     engines: {node: ^12.22.0 || ^14.17.0 || >=16.0.0}
     peerDependencies:
@@ -1870,7 +1870,7 @@ packages:
       typescript:
         optional: true
     dependencies:
-      '@typescript-eslint/parser': 5.59.2(eslint@8.33.0)(typescript@4.9.4)
+      '@typescript-eslint/parser': 5.59.6(eslint@8.33.0)(typescript@4.9.4)
       '@typescript-eslint/scope-manager': 5.53.0
       '@typescript-eslint/type-utils': 5.53.0(eslint@8.33.0)(typescript@4.9.4)
       '@typescript-eslint/utils': 5.53.0(eslint@8.33.0)(typescript@4.9.4)
@@ -1887,8 +1887,8 @@ packages:
       - supports-color
     dev: true
 
-  /@typescript-eslint/parser@5.59.2(eslint@8.33.0)(typescript@4.9.4):
-    resolution: {integrity: sha512-uq0sKyw6ao1iFOZZGk9F8Nro/8+gfB5ezl1cA06SrqbgJAt0SRoFhb9pXaHvkrxUpZaoLxt8KlovHNk8Gp6/HQ==}
+  /@typescript-eslint/parser@5.59.6(eslint@8.33.0)(typescript@4.9.4):
+    resolution: {integrity: sha512-7pCa6al03Pv1yf/dUg/s1pXz/yGMUBAw5EeWqNTFiSueKvRNonze3hma3lhdsOrQcaOXhbk5gKu2Fludiho9VA==}
     engines: {node: ^12.22.0 || ^14.17.0 || >=16.0.0}
     peerDependencies:
       eslint: ^6.0.0 || ^7.0.0 || ^8.0.0
@@ -1897,9 +1897,9 @@ packages:
       typescript:
         optional: true
     dependencies:
-      '@typescript-eslint/scope-manager': 5.59.2
-      '@typescript-eslint/types': 5.59.2
-      '@typescript-eslint/typescript-estree': 5.59.2(typescript@4.9.4)
+      '@typescript-eslint/scope-manager': 5.59.6
+      '@typescript-eslint/types': 5.59.6
+      '@typescript-eslint/typescript-estree': 5.59.6(typescript@4.9.4)
       debug: 4.3.4
       eslint: 8.33.0
       typescript: 4.9.4
@@ -1915,12 +1915,12 @@ packages:
       '@typescript-eslint/visitor-keys': 5.53.0
     dev: true
 
-  /@typescript-eslint/scope-manager@5.59.2:
-    resolution: {integrity: sha512-dB1v7ROySwQWKqQ8rEWcdbTsFjh2G0vn8KUyvTXdPoyzSL6lLGkiXEV5CvpJsEe9xIdKV+8Zqb7wif2issoOFA==}
+  /@typescript-eslint/scope-manager@5.59.6:
+    resolution: {integrity: sha512-gLbY3Le9Dxcb8KdpF0+SJr6EQ+hFGYFl6tVY8VxLPFDfUZC7BHFw+Vq7bM5lE9DwWPfx4vMWWTLGXgpc0mAYyQ==}
     engines: {node: ^12.22.0 || ^14.17.0 || >=16.0.0}
     dependencies:
-      '@typescript-eslint/types': 5.59.2
-      '@typescript-eslint/visitor-keys': 5.59.2
+      '@typescript-eslint/types': 5.59.6
+      '@typescript-eslint/visitor-keys': 5.59.6
     dev: true
 
   /@typescript-eslint/type-utils@5.53.0(eslint@8.33.0)(typescript@4.9.4):
@@ -1948,8 +1948,8 @@ packages:
     engines: {node: ^12.22.0 || ^14.17.0 || >=16.0.0}
     dev: true
 
-  /@typescript-eslint/types@5.59.2:
-    resolution: {integrity: sha512-LbJ/HqoVs2XTGq5shkiKaNTuVv5tTejdHgfdjqRUGdYhjW1crm/M7og2jhVskMt8/4wS3T1+PfFvL1K3wqYj4w==}
+  /@typescript-eslint/types@5.59.6:
+    resolution: {integrity: sha512-tH5lBXZI7T2MOUgOWFdVNUILsI02shyQvfzG9EJkoONWugCG77NDDa1EeDGw7oJ5IvsTAAGVV8I3Tk2PNu9QfA==}
     engines: {node: ^12.22.0 || ^14.17.0 || >=16.0.0}
     dev: true
 
@@ -1974,8 +1974,8 @@ packages:
       - supports-color
     dev: true
 
-  /@typescript-eslint/typescript-estree@5.59.2(typescript@4.9.4):
-    resolution: {integrity: sha512-+j4SmbwVmZsQ9jEyBMgpuBD0rKwi9RxRpjX71Brr73RsYnEr3Lt5QZ624Bxphp8HUkSKfqGnPJp1kA5nl0Sh7Q==}
+  /@typescript-eslint/typescript-estree@5.59.6(typescript@4.9.4):
+    resolution: {integrity: sha512-vW6JP3lMAs/Tq4KjdI/RiHaaJSO7IUsbkz17it/Rl9Q+WkQ77EOuOnlbaU8kKfVIOJxMhnRiBG+olE7f3M16DA==}
     engines: {node: ^12.22.0 || ^14.17.0 || >=16.0.0}
     peerDependencies:
       typescript: '*'
@@ -1983,12 +1983,12 @@ packages:
       typescript:
         optional: true
     dependencies:
-      '@typescript-eslint/types': 5.59.2
-      '@typescript-eslint/visitor-keys': 5.59.2
+      '@typescript-eslint/types': 5.59.6
+      '@typescript-eslint/visitor-keys': 5.59.6
       debug: 4.3.4
       globby: 11.1.0
       is-glob: 4.0.3
-      semver: 7.5.0
+      semver: 7.5.1
       tsutils: 3.21.0(typescript@4.9.4)
       typescript: 4.9.4
     transitivePeerDependencies:
@@ -2023,12 +2023,12 @@ packages:
       eslint-visitor-keys: 3.4.0
     dev: true
 
-  /@typescript-eslint/visitor-keys@5.59.2:
-    resolution: {integrity: sha512-EEpsO8m3RASrKAHI9jpavNv9NlEUebV4qmF1OWxSTtKSFBpC1NCmWazDQHFivRf0O1DV11BA645yrLEVQ0/Lig==}
+  /@typescript-eslint/visitor-keys@5.59.6:
+    resolution: {integrity: sha512-zEfbFLzB9ETcEJ4HZEEsCR9HHeNku5/Qw1jSS5McYJv5BR+ftYXwFFAH5Al+xkGaZEqowMwl7uoJjQb1YSPF8Q==}
     engines: {node: ^12.22.0 || ^14.17.0 || >=16.0.0}
     dependencies:
-      '@typescript-eslint/types': 5.59.2
-      eslint-visitor-keys: 3.4.0
+      '@typescript-eslint/types': 5.59.6
+      eslint-visitor-keys: 3.4.1
     dev: true
 
   /@typescript/twoslash@3.1.0:
@@ -2813,8 +2813,8 @@ packages:
     resolution: {integrity: sha512-463v3ZeIrcWtdgIg6vI6XUncguvr2TnGl4SzDXinkt9mSLpBJKXT3mW6xT3VQdDN11+WVs29pgvivTc4Lp8v+w==}
     engines: {node: '>=8'}
 
-  /devalue@4.3.0:
-    resolution: {integrity: sha512-n94yQo4LI3w7erwf84mhRUkUJfhLoCZiLyoOZ/QFsDbcWNZePrLwbQpvZBUG2TNxwV3VjCKPxkiiQA6pe3TrTA==}
+  /devalue@4.3.1:
+    resolution: {integrity: sha512-Kc0TSP9IUU9eg55au5Q3YtqaYI2cgntVpunJV9Exbm9nvlBeTE5p2NqYHfpuXK6+VF2hF5PI+BPFPUti7e2N1g==}
     dev: false
 
   /diff@5.1.0:
@@ -3019,6 +3019,11 @@ packages:
 
   /eslint-visitor-keys@3.4.0:
     resolution: {integrity: sha512-HPpKPUBQcAsZOsHAFwTtIKcYlCje62XB7SEAcxjtmW6TD1WVpkS6i6/hOVtTZIl4zGj/mBqpFVGvaDneik+VoQ==}
+    engines: {node: ^12.22.0 || ^14.17.0 || >=16.0.0}
+    dev: true
+
+  /eslint-visitor-keys@3.4.1:
+    resolution: {integrity: sha512-pZnmmLwYzf+kWaM/Qgrvpen51upAktaaiI01nsJD/Yr3lMOdNtq0cxkrrg16w64VtisN6okbs7Q8AfGqj4c9fA==}
     engines: {node: ^12.22.0 || ^14.17.0 || >=16.0.0}
     dev: true
 
@@ -4210,8 +4215,8 @@ packages:
       thenify-all: 1.6.0
     dev: true
 
-  /nanoid@3.3.4:
-    resolution: {integrity: sha512-MqBkQh/OHTS2egovRtLk45wEyNXwF+cokD+1YPf9u5VfJiRdAiRwB2froX5Co9Rh20xs4siNPm8naNotSD6RBw==}
+  /nanoid@3.3.6:
+    resolution: {integrity: sha512-BGcqMMJuToF7i1rt+2PWSNVnWIkGCU78jBG3RxO/bZlnZPK2Cmi2QaffxGO/2RvWi9sL+FAiRiXMgsyxQ1DIDA==}
     engines: {node: ^10 || ^12 || ^13.7 || ^14 || >=15.0.1}
     hasBin: true
 
@@ -4588,11 +4593,11 @@ packages:
       trouter: 3.2.0
     dev: true
 
-  /postcss@8.4.21:
-    resolution: {integrity: sha512-tP7u/Sn/dVxK2NnruI4H9BG+x+Wxz6oeZ1cJ8P6G/PZY0IKk4k/63TDsQf2kQq3+qoJeLm2kIBUNlZe3zgb4Zg==}
+  /postcss@8.4.23:
+    resolution: {integrity: sha512-bQ3qMcpF6A/YjR55xtoTr0jGOlnPOKAIMdOWiv0EIT6HVPEaJiJB4NLljSbiHoC2RX7DN5Uvjtpbg1NPdwv1oA==}
     engines: {node: ^10 || ^12 || >=14}
     dependencies:
-      nanoid: 3.3.4
+      nanoid: 3.3.6
       picocolors: 1.0.0
       source-map-js: 1.0.2
 
@@ -4898,8 +4903,8 @@ packages:
       glob: 10.0.0
     dev: true
 
-  /rollup@3.20.6:
-    resolution: {integrity: sha512-2yEB3nQXp/tBQDN0hJScJQheXdvU2wFhh6ld7K/aiZ1vYcak6N/BKjY1QrU6BvO2JWYS8bEs14FRaxXosxy2zw==}
+  /rollup@3.21.7:
+    resolution: {integrity: sha512-KXPaEuR8FfUoK2uHwNjxTmJ18ApyvD6zJpYv9FOJSqLStmt6xOY84l1IjK2dSolQmoXknrhEFRaPRgOPdqCT5w==}
     engines: {node: '>=14.18.0', npm: '>=8.0.0'}
     hasBin: true
     optionalDependencies:
@@ -4982,6 +4987,14 @@ packages:
     hasBin: true
     dependencies:
       lru-cache: 6.0.0
+
+  /semver@7.5.1:
+    resolution: {integrity: sha512-Wvss5ivl8TMRZXXESstBA4uR5iXgEN/VC5/sOcuXdVLzcdkz4HWetIoRfG5gb5X+ij/G9rw9YoGn3QoQ8OCSpw==}
+    engines: {node: '>=10'}
+    hasBin: true
+    dependencies:
+      lru-cache: 6.0.0
+    dev: true
 
   /set-blocking@2.0.0:
     resolution: {integrity: sha512-KiKBS8AnWGEyLzofFfmvKwpdPzqiy16LvQfK3yv/fVH7Bj13/wl3JSR1J+rfgRE9q7xUJK4qvgS8raSOeLUehw==}
@@ -5770,7 +5783,7 @@ packages:
       mlly: 1.2.0
       pathe: 1.1.0
       picocolors: 1.0.0
-      vite: 4.3.0(@types/node@16.18.6)
+      vite: 4.3.6(@types/node@16.18.6)
     transitivePeerDependencies:
       - '@types/node'
       - less
@@ -5781,8 +5794,8 @@ packages:
       - terser
     dev: true
 
-  /vite@4.3.0(@types/node@16.18.6):
-    resolution: {integrity: sha512-JTGFgDh3dVxeGBpuQX04Up+JZmuG6wu9414Ei36vQzaEruY/M4K0AgwtuB2b4HaBgB7R8l+LHxjB0jcgz4d2qQ==}
+  /vite@4.3.6(@types/node@16.18.6):
+    resolution: {integrity: sha512-cqIyLSbA6gornMS659AXTVKF7cvSHMdKmJJwQ9DXq3lwsT1uZSdktuBRlpHQ8VnOWx0QHtjDwxPpGtyo9Fh/Qg==}
     engines: {node: ^14.18.0 || >=16.0.0}
     hasBin: true
     peerDependencies:
@@ -5808,12 +5821,12 @@ packages:
     dependencies:
       '@types/node': 16.18.6
       esbuild: 0.17.18
-      postcss: 8.4.21
-      rollup: 3.20.6
+      postcss: 8.4.23
+      rollup: 3.21.7
     optionalDependencies:
       fsevents: 2.3.2
 
-  /vitefu@0.2.4(vite@4.3.0):
+  /vitefu@0.2.4(vite@4.3.6):
     resolution: {integrity: sha512-fanAXjSaf9xXtOOeno8wZXIhgia+CZury481LsDaV++lSvcU2R9Ch2bPh3PYFyoHW+w9LqAeYRISVQjUIew14g==}
     peerDependencies:
       vite: ^3.0.0 || ^4.0.0
@@ -5821,7 +5834,7 @@ packages:
       vite:
         optional: true
     dependencies:
-      vite: 4.3.0(@types/node@16.18.6)
+      vite: 4.3.6(@types/node@16.18.6)
     dev: false
 
   /vitest@0.31.0(playwright@1.30.0):
@@ -5878,7 +5891,7 @@ packages:
       strip-literal: 1.0.1
       tinybench: 2.5.0
       tinypool: 0.5.0
-      vite: 4.3.0(@types/node@16.18.6)
+      vite: 4.3.6(@types/node@16.18.6)
       vite-node: 0.31.0(@types/node@16.18.6)
       why-is-node-running: 2.2.2
     transitivePeerDependencies:
