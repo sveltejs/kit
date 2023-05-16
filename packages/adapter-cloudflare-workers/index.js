@@ -63,7 +63,11 @@ export default function ({ config = 'wrangler.toml' } = {}) {
 				outfile: main,
 				bundle: true,
 				external: ['__STATIC_CONTENT_MANIFEST'],
-				format: 'esm'
+				format: 'esm',
+				bundle: true,
+ 				loader: {
+ 					'.wasm': 'copy'
+ 				}
 			});
 
 			builder.log.minor('Copying assets...');
