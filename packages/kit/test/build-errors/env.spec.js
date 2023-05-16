@@ -1,5 +1,4 @@
-import { test } from 'uvu';
-import * as assert from 'uvu/assert';
+import { assert, test } from 'vitest';
 import { execSync } from 'node:child_process';
 import path from 'node:path';
 
@@ -50,5 +49,3 @@ test('$env/static/private is not dynamically importable from the client', () => 
 		/.*Cannot import \0\$env\/static\/private into client-side code:.*/gs
 	);
 });
-
-test.run();

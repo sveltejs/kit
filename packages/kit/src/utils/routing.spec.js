@@ -1,5 +1,4 @@
-import { test } from 'uvu';
-import * as assert from 'uvu/assert';
+import { assert, expect, test } from 'vitest';
 import { exec, parse_route_id, resolve_entry } from './routing.js';
 
 const tests = {
@@ -57,8 +56,8 @@ for (const [key, expected] of Object.entries(tests)) {
 	test(`parse_route_id: "${key}"`, () => {
 		const actual = parse_route_id(key);
 
-		assert.equal(actual.pattern.toString(), expected.pattern.toString());
-		assert.equal(actual.params, expected.params);
+		expect(actual.pattern.toString()).toEqual(expected.pattern.toString());
+		expect(actual.params).toEqual(expected.params);
 	});
 }
 
@@ -214,7 +213,7 @@ for (const { path, route, expected } of exec_tests) {
 			matches: () => true,
 			doesntmatch: () => false
 		});
-		assert.equal(actual, expected);
+		expect(actual).toEqual(expected);
 	});
 }
 
@@ -259,9 +258,8 @@ for (const { route, entry, expected } of from_entry_tests) {
 }
 
 test('resolve_entry errors on missing entry for required param', () => {
-	assert.throws(
-		() => resolve_entry('/blog/[one]/[two]', { one: 'one' }),
-		"Missing param 'two' in route /blog/[one]/[two]"
+	expect(() => resolve_entry('/blog/[one]/[two]', { one: 'one' })).toThrow(
+		"Missing parameter 'two' in route /blog/[one]/[two]"
 	);
 });
 
@@ -275,5 +273,3 @@ test('resolve_entry errors on entry values starting or ending with slashes', () 
 		"Parameter 'two' in route /blog/[one]/[two] cannot start or end with a slash -- this would cause an invalid route like foo//bar"
 	);
 });
-
-test.run();

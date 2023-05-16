@@ -1,8 +1,7 @@
 import { rmSync } from 'node:fs';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { test } from 'uvu';
-import * as assert from 'uvu/assert';
+import { expect, test } from 'vitest';
 import glob from 'tiny-glob/sync.js';
 import { create_builder } from './builder.js';
 import { posixify } from '../../utils/filesystem.js';
@@ -47,29 +46,23 @@ test('copy files', () => {
 
 	rmSync(dest, { recursive: true, force: true });
 
-	assert.equal(
-		builder.writeClient(dest),
+	expect(builder.writeClient(dest)).toEqual(
 		glob('**', { cwd: dest, dot: true, filesOnly: true }).map(posixify)
 	);
 
-	assert.equal(
-		glob('**', { cwd: `${outDir}/output/client`, dot: true }),
+	expect(glob('**', { cwd: `${outDir}/output/client`, dot: true })).toEqual(
 		glob('**', { cwd: dest, dot: true })
 	);
 
 	rmSync(dest, { recursive: true, force: true });
 
-	assert.equal(
-		builder.writeServer(dest),
+	expect(builder.writeServer(dest)).toEqual(
 		glob('**', { cwd: dest, dot: true, filesOnly: true }).map(posixify)
 	);
 
-	assert.equal(
-		glob('**', { cwd: `${outDir}/output/server`, dot: true }),
+	expect(glob('**', { cwd: `${outDir}/output/server`, dot: true })).toEqual(
 		glob('**', { cwd: dest, dot: true })
 	);
 
 	rmSync(dest, { force: true, recursive: true });
 });
-
-test.run();

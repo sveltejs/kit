@@ -1,5 +1,4 @@
-import { test } from 'uvu';
-import * as assert from 'uvu/assert';
+import { assert, expect, test } from 'vitest';
 import { domain_matches, path_matches, get_cookies } from './cookie.js';
 import { installPolyfills } from '../../exports/node/polyfills.js';
 
@@ -41,7 +40,7 @@ paths.positive.forEach(([path, constraint]) => {
 
 paths.negative.forEach(([path, constraint]) => {
 	test(`! ${path} / ${constraint}`, () => {
-		assert.not(path_matches(path, constraint));
+		assert.isFalse(path_matches(path, constraint));
 	});
 });
 
@@ -60,9 +59,9 @@ const cookies_setup = ({ href, headers } = {}) => {
 test('a cookie should not be present after it is deleted', () => {
 	const { cookies } = cookies_setup();
 	cookies.set('a', 'b');
-	assert.equal(cookies.get('a'), 'b');
+	expect(cookies.get('a')).toEqual('b');
 	cookies.delete('a');
-	assert.not(cookies.get('a'));
+	assert.isNotOk(cookies.get('a'));
 });
 
 test('default values when set is called', () => {
@@ -183,13 +182,13 @@ test('warns if cookie exceeds 4,129 bytes', () => {
 
 test('get all cookies from header and set calls', () => {
 	const { cookies } = cookies_setup();
-	assert.equal(cookies.getAll(), [{ name: 'a', value: 'b' }]);
+	expect(cookies.getAll()).toEqual([{ name: 'a', value: 'b' }]);
 
 	cookies.set('a', 'foo');
 	cookies.set('a', 'bar');
 	cookies.set('b', 'baz');
 
-	assert.equal(cookies.getAll(), [
+	expect(cookies.getAll()).toEqual([
 		{ name: 'a', value: 'bar' },
 		{ name: 'b', value: 'baz' }
 	]);
@@ -199,15 +198,16 @@ test("set_internal isn't affected by defaults", () => {
 	const { cookies, new_cookies, set_internal } = cookies_setup({
 		href: 'https://example.com/a/b/c'
 	});
+
 	const options = /** @type {const} */ ({
 		secure: false,
 		httpOnly: false,
 		sameSite: 'none',
 		path: '/a/b/c'
 	});
-	set_internal('test', 'foo', options);
-	assert.equal(cookies.get('test'), 'foo');
-	assert.equal(new_cookies['test']?.options, options);
-});
 
-test.run();
+	set_internal('test', 'foo', options);
+
+	expect(cookies.get('test')).toEqual('foo');
+	expect(new_cookies['test']?.options).toEqual(options);
+});
