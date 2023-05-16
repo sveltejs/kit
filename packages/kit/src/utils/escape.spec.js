@@ -1,5 +1,4 @@
-import { test } from 'uvu';
-import * as assert from 'uvu/assert';
+import { assert, test } from 'vitest';
 import { escape_html_attr } from './escape.js';
 
 test('escape_html_attr escapes special attribute characters', () => {
@@ -18,5 +17,3 @@ test('escape_html_attr escapes invalid surrogates', () => {
 	assert.equal(escape_html_attr('\ud800\udc00\udc00'), '"\ud800\udc00&#56320;"');
 	assert.equal(escape_html_attr('\ud800\ud800\udc00\udc00'), '"&#55296;\ud800\udc00&#56320;"');
 });
-
-test.run();

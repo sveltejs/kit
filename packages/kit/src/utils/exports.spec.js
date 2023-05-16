@@ -1,5 +1,4 @@
-import { test } from 'uvu';
-import * as assert from 'uvu/assert';
+import { assert, test } from 'vitest';
 import {
 	validate_layout_exports,
 	validate_layout_server_exports,
@@ -175,5 +174,3 @@ test('validates +server.js', () => {
 		});
 	}, `Invalid export 'csr' ('csr' is a valid export in +layout.js, +page.js, +layout.server.js or +page.server.js)`);
 });
-
-test.run();

@@ -1,6 +1,5 @@
 import { webcrypto } from 'node:crypto';
-import { test } from 'uvu';
-import * as assert from 'uvu/assert';
+import { assert, test } from 'vitest';
 import { sha256 } from './crypto.js';
 
 const inputs = [
@@ -23,5 +22,3 @@ inputs.forEach((input) => {
 		assert.equal(actual, expected);
 	});
 });
-
-test.run();

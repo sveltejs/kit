@@ -1,5 +1,4 @@
-import { test } from 'uvu';
-import * as assert from 'uvu/assert';
+import { expect, test } from 'vitest';
 import { create_async_iterator } from './streaming.js';
 
 test(`works with fast consecutive promise resolutions`, async () => {
@@ -14,7 +13,5 @@ test(`works with fast consecutive promise resolutions`, async () => {
 		actual.push(value);
 	}
 
-	assert.equal(actual, [1, 2]);
+	expect(actual).toEqual([1, 2]);
 });
-
-test.run();
