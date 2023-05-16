@@ -94,8 +94,9 @@ export function crawl(html, base) {
 				}
 
 				const tag = html.slice(start, i).toUpperCase();
-				/** @type {Map<string,string>} */
-				const attributes = new Map();
+
+				/** @type {Record<string, string>} */
+				const attributes = {};
 
 				if (tag === 'SCRIPT' || tag === 'STYLE') {
 					while (i < html.length) {
@@ -172,7 +173,7 @@ export function crawl(html, base) {
 							}
 
 							value = decode(value);
-							attributes.set(name, value);
+							attributes[name] = value;
 						} else {
 							i -= 1;
 						}
@@ -181,14 +182,7 @@ export function crawl(html, base) {
 					i += 1;
 				}
 
-				const href = attributes.get('href');
-				const id = attributes.get('id');
-				const name = attributes.get('name');
-				const property = attributes.get('property');
-				const rel = attributes.get('rel');
-				const src = attributes.get('src');
-				const srcset = attributes.get('srcset');
-				const content = attributes.get('content');
+				const { href, id, name, property, rel, src, srcset, content } = attributes;
 
 				if (href) {
 					if (tag === 'BASE') {
@@ -232,17 +226,14 @@ export function crawl(html, base) {
 					}
 				}
 
-				if (tag === 'META' && content && name && CRAWLABLE_META_NAME_ATTRS.has(name)) {
-					hrefs.push(resolve(base, content.trim().toLowerCase()));
-				}
+				if (tag === 'META' && content) {
+					if (name && CRAWLABLE_META_NAME_ATTRS.has(name)) {
+						hrefs.push(resolve(base, content.trim().toLowerCase()));
+					}
 
-				if (
-					tag === 'META' &&
-					content &&
-					property &&
-					CRAWLABLE_META_NAME_ATTRS.has(property.trim().toLowerCase())
-				) {
-					hrefs.push(resolve(base, content));
+					if (property && CRAWLABLE_META_NAME_ATTRS.has(property.trim().toLowerCase())) {
+						hrefs.push(resolve(base, content));
+					}
 				}
 			}
 		}
