@@ -10,10 +10,18 @@ import { validate_depends } from '../../shared.js';
  *   state: import('types').SSRState;
  *   node: import('types').SSRNode | undefined;
  *   parent: () => Promise<Record<string, any>>;
+ *   track_server_fetches_potentially_exposing_secrets: boolean;
  * }} opts
  * @returns {Promise<import('types').ServerDataNode | null>}
  */
-export async function load_server_data({ event, state, node, parent }) {
+export async function load_server_data({
+	event,
+	state,
+	node,
+	parent,
+	// TODO 2.0: Remove this
+	track_server_fetches_potentially_exposing_secrets
+}) {
 	if (!node?.server) return null;
 
 	let done = false;
@@ -51,7 +59,10 @@ export async function load_server_data({ event, state, node, parent }) {
 				);
 			}
 
-			uses.dependencies.add(url.href);
+			// TODO 2.0: Remove this
+			if (track_server_fetches_potentially_exposing_secrets) {
+				uses.dependencies.add(url.href);
+			}
 
 			return event.fetch(info, init);
 		},
@@ -200,11 +211,9 @@ export function create_universal_fetch(event, state, fetched, csr, resolve_opts)
 		/** @type {import('types').PrerenderDependency} */
 		let dependency;
 
-		if (same_origin) {
-			if (state.prerendering) {
-				dependency = { response, body: null };
-				state.prerendering.dependencies.set(url.pathname, dependency);
-			}
+		if (same_origin && state.prerendering) {
+			dependency = { response, body: null };
+			state.prerendering.dependencies.set(url.pathname, dependency);
 		} else {
 			// simulate CORS errors and "no access to body in no-cors mode" server-side for consistency with client-side behaviour
 			const mode = input instanceof Request ? input.mode : init?.mode ?? 'cors';

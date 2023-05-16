@@ -44,7 +44,9 @@ export async function respond_with_error({
 				event,
 				state,
 				node: default_layout,
-				parent: async () => ({})
+				parent: async () => ({}),
+				track_server_fetches_potentially_exposing_secrets:
+					options.track_server_fetches_potentially_exposing_secrets
 			});
 
 			const server_data = await server_data_promise;
