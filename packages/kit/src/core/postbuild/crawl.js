@@ -111,9 +111,6 @@ export function crawl(html, base) {
 					}
 				}
 
-				let href = '';
-				let rel = '';
-
 				while (i < html.length) {
 					const start = i;
 
@@ -184,33 +181,37 @@ export function crawl(html, base) {
 					i += 1;
 				}
 
-				const href_attr = attributes.get('href');
-				const id_attr = attributes.get('id');
-				const name_attr = attributes.get('name');
-				const property_attr = attributes.get('property');
-				const rel_attr = attributes.get('rel');
-				const src_attr = attributes.get('src');
-				const srcset_attr = attributes.get('srcset');
-				const content_attr = attributes.get('content');
+				const href = attributes.get('href');
+				const id = attributes.get('id');
+				const name = attributes.get('name');
+				const property = attributes.get('property');
+				const rel = attributes.get('rel');
+				const src = attributes.get('src');
+				const srcset = attributes.get('srcset');
+				const content = attributes.get('content');
 
-				if (href_attr) {
-					if (tag === 'BASE') base = resolve(base, href_attr);
-					else href = resolve(base, href_attr);
+				if (href) {
+					if (tag === 'BASE') {
+						base = resolve(base, href);
+					} else if (!rel || !/\bexternal\b/i.test(rel)) {
+						hrefs.push(resolve(base, href));
+					}
 				}
-				if (id_attr) {
-					ids.push(id_attr);
+
+				if (id) {
+					ids.push(id);
 				}
-				if (name_attr && tag === 'A') {
-					ids.push(name_attr);
+
+				if (name && tag === 'A') {
+					ids.push(name);
 				}
-				if (rel_attr) {
-					rel = rel_attr;
+
+				if (src) {
+					hrefs.push(resolve(base, src));
 				}
-				if (src_attr) {
-					hrefs.push(resolve(base, src_attr));
-				}
-				if (srcset_attr) {
-					let value = srcset_attr;
+
+				if (srcset) {
+					let value = srcset;
 					const candidates = [];
 					let insideURL = true;
 					value = value.trim();
@@ -231,26 +232,17 @@ export function crawl(html, base) {
 					}
 				}
 
-				if (
-					tag === 'META' &&
-					content_attr &&
-					name_attr &&
-					CRAWLABLE_META_NAME_ATTRS.has(name_attr)
-				) {
-					hrefs.push(resolve(base, content_attr.trim().toLowerCase()));
+				if (tag === 'META' && content && name && CRAWLABLE_META_NAME_ATTRS.has(name)) {
+					hrefs.push(resolve(base, content.trim().toLowerCase()));
 				}
 
 				if (
 					tag === 'META' &&
-					content_attr &&
-					property_attr &&
-					CRAWLABLE_META_NAME_ATTRS.has(property_attr.trim().toLowerCase())
+					content &&
+					property &&
+					CRAWLABLE_META_NAME_ATTRS.has(property.trim().toLowerCase())
 				) {
-					hrefs.push(resolve(base, content_attr));
-				}
-
-				if (href && !/\bexternal\b/i.test(rel)) {
-					hrefs.push(resolve(base, href));
+					hrefs.push(resolve(base, content));
 				}
 			}
 		}
