@@ -305,12 +305,12 @@ test.describe('load', () => {
 		app,
 		request
 	}) => {
-		await request.get('/server-fetch-invalidate/count.json?reset');
-		await page.goto('/server-fetch-invalidate');
+		await request.get('/path-base/server-fetch-invalidate/count.json?reset');
+		await page.goto('/path-base/server-fetch-invalidate');
 		const selector = '[data-testid="count"]';
 
 		expect(await page.textContent(selector)).toBe('1');
-		await app.invalidate('/server-fetch-invalidate/count.json');
+		await app.invalidate('/path-base/server-fetch-invalidate/count.json');
 		expect(await page.textContent(selector)).toBe('2');
 	});
 });

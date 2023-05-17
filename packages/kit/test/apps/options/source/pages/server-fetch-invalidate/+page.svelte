@@ -1,4 +1,5 @@
 <script>
+	// TODO 2.0: Delete
 	export let data;
 </script>
 
