@@ -223,14 +223,14 @@ test.describe('Navigation lifecycle functions', () => {
 	});
 
 	test('beforeNavigate is triggered after clicking a download link', async ({ page, baseURL }) => {
-		await page.goto('/before-navigate/prevent-navigation');
+		await page.goto('/navigation-lifecycle/before-navigate/prevent-navigation');
 
 		await page.click('a[download]');
 		expect(await page.innerHTML('pre')).toBe('0 false undefined');
 
-		await page.click('a[href="/before-navigate/a"]');
+		await page.click('a[href="/navigation-lifecycle/before-navigate/a"]');
 
-		expect(page.url()).toBe(baseURL + '/before-navigate/prevent-navigation');
+		expect(page.url()).toBe(baseURL + '/navigation-lifecycle/before-navigate/prevent-navigation');
 		expect(await page.innerHTML('pre')).toBe('1 false link');
 	});
 
