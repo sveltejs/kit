@@ -1,5 +1,11 @@
 # @sveltejs/kit
 
+## 1.18.0
+
+### Minor Changes
+
+- security: Stop implicitly tracking URLs as dependencies in server-side `load`s ([#9945](https://github.com/sveltejs/kit/pull/9945))
+
 ## 1.17.1
 
 ### Patch Changes
