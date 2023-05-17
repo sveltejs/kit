@@ -1,5 +1,11 @@
 # @sveltejs/adapter-cloudflare
 
+## 2.2.4
+
+### Patch Changes
+
+- fix: require explicit cache-control header for caching ([#9885](https://github.com/sveltejs/kit/pull/9885))
+
 ## 2.2.3
 
 ### Patch Changes
