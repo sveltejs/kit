@@ -1,6 +1,6 @@
 import { HttpError, Redirect, ActionFailure } from '../runtime/control.js';
 import { BROWSER, DEV } from 'esm-env';
-import { resolve_entry } from '../utils/routing.js';
+import { get_route_segments } from '../utils/routing.js';
 
 // For some reason we need to type the params as well here,
 // JSdoc doesn't seem to like @type with function overloads
@@ -74,6 +74,8 @@ export function fail(status, data) {
 	return new ActionFailure(status, data);
 }
 
+const basic_param_pattern = /\[(\[)?(?:\.\.\.)?(\w+?)(?:=(\w+))?\]\]?/g;
+
 /**
  * Populate a route ID with params to produce relative path.
  * @example
@@ -87,9 +89,32 @@ export function fail(status, data) {
  * ); // `/blog/hello-world/something/else`
  * ```
  * @param {string} id
- * @param {Record<string, string>} params
+ * @param {Record<string, string | undefined>} params
  * @returns {string}
  */
 export function resolvePath(id, params) {
-	return resolve_entry(id, params);
+	const segments = get_route_segments(id);
+	return (
+		'/' +
+		segments
+			.map((segment) =>
+				segment.replace(basic_param_pattern, (_, optional, name) => {
+					const param_value = params[name];
+
+					// This is nested so TS correctly narrows the type
+					if (!param_value) {
+						if (optional) return '';
+						throw new Error(`Missing parameter '${name}' in route ${id}`);
+					}
+
+					if (param_value.startsWith('/') || param_value.endsWith('/'))
+						throw new Error(
+							`Parameter '${name}' in route ${id} cannot start or end with a slash -- this would cause an invalid route like foo//bar`
+						);
+					return param_value;
+				})
+			)
+			.filter(Boolean)
+			.join('/')
+	);
 }
