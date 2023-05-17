@@ -64,11 +64,6 @@ export interface EdgeConfig {
 	 */
 	regions?: string[] | 'all';
 	/**
-	 * List of environment variable names that will be available for the Edge Function to utilize.
-	 * Edge only.
-	 */
-	envVarsInUse?: string[];
-	/**
 	 * List of packages that should not be bundled into the Edge Function.
 	 * Edge only.
 	 */

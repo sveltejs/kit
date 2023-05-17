@@ -1,5 +1,27 @@
 # @sveltejs/kit
 
+## 1.17.0
+
+### Minor Changes
+
+- feat: unshadow `data` and `form` in `enhance` and warn about future deprecation when used in `dev` mode ([#9902](https://github.com/sveltejs/kit/pull/9902))
+
+- feat: crawl URLs in `<meta>` tags ([#9900](https://github.com/sveltejs/kit/pull/9900))
+
+### Patch Changes
+
+- fix: avoid trying to inline raw or url css imports ([#9925](https://github.com/sveltejs/kit/pull/9925))
+
+- feat: prerender in worker rather than subprocess to support Deno ([#9919](https://github.com/sveltejs/kit/pull/9919))
+
+- perf: add `<script>` to prerendered redirects for faster redirects ([#9911](https://github.com/sveltejs/kit/pull/9911))
+
+- fix: add typing for `vitePlugin` to `Config` ([#9946](https://github.com/sveltejs/kit/pull/9946))
+
+- fix: stop setting Kit cookie defaults on cookies parsed from headers ([#9908](https://github.com/sveltejs/kit/pull/9908))
+
+- fix: only skip hydration with vite overlay if current page is an error ([#9892](https://github.com/sveltejs/kit/pull/9892))
+
 ## 1.16.3
 
 ### Patch Changes
