@@ -727,17 +727,17 @@ test.describe('Routing', () => {
 		expect(new URL(page.url()).pathname).toBe('/routing/trailing-slash/ignore/');
 		await expect(page.locator('p')).toHaveText('/routing/trailing-slash/ignore/');
 
-		await clicknav('a[href="/routing/trailing-slash/relative-redirect/always"]');
-		expect(new URL(page.url()).pathname).toBe('/routing/trailing-slash/always/foo');
-		await expect(page.locator('p')).toHaveText('/routing/trailing-slash/always/foo');
+		await clicknav('a[href="/routing/trailing-slash/with-redirect/always"]');
+		expect(new URL(page.url()).pathname).toBe('/routing/trailing-slash/with-redirect/always/foo');
+		await expect(page.locator('p')).toHaveText('/routing/trailing-slash/with-redirect/always/foo');
 
-		await clicknav('a[href="/routing/trailing-slash/relative-redirect/never/"]');
-		expect(new URL(page.url()).pathname).toBe('/routing/trailing-slash/foo');
-		await expect(page.locator('p')).toHaveText('/routing/trailing-slash/foo');
+		await clicknav('a[href="/routing/trailing-slash/with-redirect/never/"]');
+		expect(new URL(page.url()).pathname).toBe('/routing/trailing-slash/with-redirect/foo');
+		await expect(page.locator('p')).toHaveText('/routing/trailing-slash/with-redirect/foo');
 
-		await clicknav('a[href="/routing/trailing-slash/relative-redirect/ignore/"]');
-		expect(new URL(page.url()).pathname).toBe('/routing/trailing-slash/ignore/foo');
-		await expect(page.locator('p')).toHaveText('/routing/trailing-slash/ignore/foo');
+		await clicknav('a[href="/routing/trailing-slash/with-redirect/ignore/"]');
+		expect(new URL(page.url()).pathname).toBe('/routing/trailing-slash/with-redirect/ignore/foo');
+		await expect(page.locator('p')).toHaveText('/routing/trailing-slash/with-redirect/ignore/foo');
 	});
 });
 
