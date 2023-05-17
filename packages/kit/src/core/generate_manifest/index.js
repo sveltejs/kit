@@ -43,17 +43,6 @@ export function generate_manifest({ build_data, relative_path, routes }) {
 		})
 	);
 
-	/** @typedef {{ index: number, path: string }} LookupEntry */
-	/** @type {Map<import('types').PageNode, LookupEntry>} */
-	const bundled_nodes = new Map();
-
-	build_data.manifest_data.nodes.forEach((node, i) => {
-		bundled_nodes.set(node, {
-			path: join_relative(relative_path, `/nodes/${i}.js`),
-			index: i
-		});
-	});
-
 	/** @type {(path: string) => string} */
 	const loader = (path) => `() => import('${path}')`;
 
@@ -68,14 +57,10 @@ export function generate_manifest({ build_data, relative_path, routes }) {
 	function get_nodes(indexes) {
 		let string = indexes.map((n) => reindexed.get(n) ?? '').join(',');
 
-		if (indexes.at(-1) === undefined) {
-			// since JavaScript ignores trailing commas, we need to insert a dummy
-			// comma so that the array has the correct length if the last item
-			// is undefined
-			string += ',';
-		}
-
-		return `[${string}]`;
+		// since JavaScript ignores trailing commas, we need to insert a dummy
+		// comma so that the array has the correct length if the last item
+		// is undefined
+		return `[${string},]`;
 	}
 
 	// prettier-ignore
@@ -94,11 +79,11 @@ export function generate_manifest({ build_data, relative_path, routes }) {
 				],
 				routes: [
 					${routes.map(route => {
+						if (!route.page && !route.endpoint) return;
+						
 						route.params.forEach(param => {
 							if (param.matcher) matchers.add(param.matcher);
 						});
-
-						if (!route.page && !route.endpoint) return;
 
 						return dedent`
 							{

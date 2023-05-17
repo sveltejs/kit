@@ -63,15 +63,14 @@ const options = await p.group(
 		types: () =>
 			p.select({
 				message: 'Add type checking with TypeScript?',
+				initialValue: /** @type {'checkjs' | 'typescript' | null} */ ('checkjs'),
 				options: [
 					{
 						label: 'Yes, using JavaScript with JSDoc comments',
-						// @ts-expect-error :shrug:
 						value: 'checkjs'
 					},
 					{
 						label: 'Yes, using TypeScript syntax',
-						// @ts-expect-error :shrug:
 						value: 'typescript'
 					},
 					{ label: 'No', value: null }
@@ -132,7 +131,7 @@ if (options.types === 'typescript') {
 
 if (options.features.includes('eslint')) {
 	console.log(bold('✔ ESLint'));
-	console.log(cyan('  https://github.com/sveltejs/eslint-plugin-svelte3\n'));
+	console.log(cyan('  https://github.com/sveltejs/eslint-plugin-svelte\n'));
 }
 
 if (options.features.includes('prettier')) {

@@ -1,5 +1,11 @@
 # @sveltejs/adapter-node
 
+## 1.2.4
+
+### Patch Changes
+
+- chore: update all dependencies with minor version bumps ([#9761](https://github.com/sveltejs/kit/pull/9761))
+
 ## 1.2.3
 
 ### Patch Changes

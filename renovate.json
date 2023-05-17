@@ -13,7 +13,8 @@
 		"esbuild",
 		"rollup",
 		"typescript",
-		"undici"
+		"playwright",
+		"@playwright/test"
 	],
 	"ignorePaths": [
 		"**/create-svelte/shared/**",

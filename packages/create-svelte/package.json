@@ -1,6 +1,6 @@
 {
 	"name": "create-svelte",
-	"version": "3.3.0",
+	"version": "4.2.0",
 	"description": "A CLI for creating new SvelteKit projects",
 	"repository": {
 		"type": "git",
@@ -16,7 +16,7 @@
 		"kleur": "^4.1.5"
 	},
 	"devDependencies": {
-		"@playwright/test": "^1.28.1",
+		"@playwright/test": "1.30.0",
 		"@types/gitignore-parser": "^0.0.0",
 		"@types/prettier": "^2.7.1",
 		"@types/prompts": "^2.4.1",
@@ -26,11 +26,11 @@
 		"sucrase": "^3.29.0",
 		"svelte": "^3.56.0",
 		"tiny-glob": "^0.2.9",
-		"uvu": "^0.5.6"
+		"vitest": "^0.31.0"
 	},
 	"scripts": {
 		"build": "node scripts/build-templates",
-		"test": "pnpm build && uvu test",
+		"test": "pnpm build && vitest run",
 		"check": "tsc",
 		"lint": "prettier --check . --config ../../.prettierrc --ignore-path ../../.gitignore --ignore-path .gitignore --plugin prettier-plugin-svelte --plugin-search-dir=.",
 		"format": "pnpm lint --write",

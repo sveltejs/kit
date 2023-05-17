@@ -15,18 +15,21 @@ import {
 	strip_data_suffix
 } from '../../utils/url.js';
 import { exec } from '../../utils/routing.js';
-import { INVALIDATED_PARAM, redirect_json_response, render_data } from './data/index.js';
+import { redirect_json_response, render_data } from './data/index.js';
 import { add_cookies_to_headers, get_cookies } from './cookie.js';
 import { create_fetch } from './fetch.js';
 import { Redirect } from '../control.js';
 import {
-	validate_common_exports,
+	validate_layout_exports,
+	validate_layout_server_exports,
+	validate_page_exports,
 	validate_page_server_exports,
 	validate_server_exports
 } from '../../utils/exports.js';
 import { get_option } from '../../utils/options.js';
 import { error, json, text } from '../../exports/index.js';
 import { action_json_redirect, is_action_json_request } from './page/actions.js';
+import { INVALIDATED_PARAM } from '../shared.js';
 
 /* global __SVELTEKIT_ADAPTER_NAME__ */
 
@@ -94,7 +97,10 @@ export async function respond(request, options, manifest, state) {
 	if (is_data_request) {
 		decoded = strip_data_suffix(decoded) || '/';
 		url.pathname = strip_data_suffix(url.pathname) || '/';
-		invalidated_data_nodes = url.searchParams.get(INVALIDATED_PARAM)?.split('_').map(Boolean);
+		invalidated_data_nodes = url.searchParams
+			.get(INVALIDATED_PARAM)
+			?.split('')
+			.map((node) => node === '1');
 		url.searchParams.delete(INVALIDATED_PARAM);
 	}
 
@@ -175,7 +181,7 @@ export async function respond(request, options, manifest, state) {
 
 	try {
 		// determine whether we need to redirect to add/remove a trailing slash
-		if (route && !is_data_request) {
+		if (route) {
 			// if `paths.base === '/a/b/c`, then the root route is `/a/b/c/`,
 			// regardless of the `trailingSlash` route option
 			if (url.pathname === base || url.pathname === base + '/') {
@@ -193,8 +199,11 @@ export async function respond(request, options, manifest, state) {
 
 					for (const layout of layouts) {
 						if (layout) {
-							validate_common_exports(layout.server, /** @type {string} */ (layout.server_id));
-							validate_common_exports(
+							validate_layout_server_exports(
+								layout.server,
+								/** @type {string} */ (layout.server_id)
+							);
+							validate_layout_exports(
 								layout.universal,
 								/** @type {string} */ (layout.universal_id)
 							);
@@ -203,7 +212,7 @@ export async function respond(request, options, manifest, state) {
 
 					if (page) {
 						validate_page_server_exports(page.server, /** @type {string} */ (page.server_id));
-						validate_common_exports(page.universal, /** @type {string} */ (page.universal_id));
+						validate_page_exports(page.universal, /** @type {string} */ (page.universal_id));
 					}
 				}
 
@@ -217,23 +226,25 @@ export async function respond(request, options, manifest, state) {
 				}
 			}
 
-			const normalized = normalize_path(url.pathname, trailing_slash ?? 'never');
+			if (!is_data_request) {
+				const normalized = normalize_path(url.pathname, trailing_slash ?? 'never');
 
-			if (normalized !== url.pathname && !state.prerendering?.fallback) {
-				return new Response(undefined, {
-					status: 308,
-					headers: {
-						'x-sveltekit-normalize': '1',
-						location:
-							// ensure paths starting with '//' are not treated as protocol-relative
-							(normalized.startsWith('//') ? url.origin + normalized : normalized) +
-							(url.search === '?' ? '' : url.search)
-					}
-				});
+				if (normalized !== url.pathname && !state.prerendering?.fallback) {
+					return new Response(undefined, {
+						status: 308,
+						headers: {
+							'x-sveltekit-normalize': '1',
+							location:
+								// ensure paths starting with '//' are not treated as protocol-relative
+								(normalized.startsWith('//') ? url.origin + normalized : normalized) +
+								(url.search === '?' ? '' : url.search)
+						}
+					});
+				}
 			}
 		}
 
-		const { cookies, new_cookies, get_cookie_header } = get_cookies(
+		const { cookies, new_cookies, get_cookie_header, set_internal } = get_cookies(
 			request,
 			url,
 			trailing_slash ?? 'never'
@@ -241,7 +252,14 @@ export async function respond(request, options, manifest, state) {
 
 		cookies_to_add = new_cookies;
 		event.cookies = cookies;
-		event.fetch = create_fetch({ event, options, manifest, state, get_cookie_header });
+		event.fetch = create_fetch({
+			event,
+			options,
+			manifest,
+			state,
+			get_cookie_header,
+			set_internal
+		});
 
 		if (state.prerendering && !state.prerendering.fallback) disable_search(url);
 

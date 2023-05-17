@@ -96,6 +96,55 @@ export function parse_route_id(id) {
 	return { pattern, params };
 }
 
+const basic_param_pattern = /\[(\[)?(?:\.\.\.)?(\w+?)(?:=(\w+))?\]\]?/g;
+
+/**
+ * Parses a route ID, then resolves it to a path by replacing parameters with actual values from `entry`.
+ * @param {string} id The route id
+ * @param {Record<string, string | undefined>} entry The entry meant to populate the route. For example, if the route is `/blog/[slug]`, the entry would be `{ slug: 'hello-world' }`
+ * @example
+ * ```js
+ * resolve_entry(`/blog/[slug]/[...somethingElse]`, { slug: 'hello-world', somethingElse: 'something/else' }); // `/blog/hello-world/something/else`
+ * ```
+ */
+export function resolve_entry(id, entry) {
+	const segments = get_route_segments(id);
+	return (
+		'/' +
+		segments
+			.map((segment) =>
+				segment.replace(basic_param_pattern, (_, optional, name) => {
+					const param_value = entry[name];
+
+					// This is nested so TS correctly narrows the type
+					if (!param_value) {
+						if (optional) return '';
+						throw new Error(`Missing parameter '${name}' in route ${id}`);
+					}
+
+					if (param_value.startsWith('/') || param_value.endsWith('/'))
+						throw new Error(
+							`Parameter '${name}' in route ${id} cannot start or end with a slash -- this would cause an invalid route like foo//bar`
+						);
+					return param_value;
+				})
+			)
+			.filter(Boolean)
+			.join('/')
+	);
+}
+
+const optional_param_regex = /\/\[\[\w+?(?:=\w+)?\]\]/;
+
+/**
+ * Removes optional params from a route ID.
+ * @param {string} id
+ * @returns The route id with optional params removed
+ */
+export function remove_optional_params(id) {
+	return id.replace(optional_param_regex, '');
+}
+
 /**
  * Returns `false` for `(group)` segments
  * @param {string} segment

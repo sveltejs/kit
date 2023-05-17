@@ -1,19 +1,9 @@
 import * as devalue from 'devalue';
-import { client } from '../client/singletons.js';
+import { DEV } from 'esm-env';
+import { client_method } from '../client/singletons.js';
 import { invalidateAll } from './navigation.js';
-import { BROWSER, DEV } from 'esm-env';
 
-/**
- * @param {string} name
- */
-function guard(name) {
-	return () => {
-		throw new Error(`Cannot call ${name}(...) on the server`);
-	};
-}
-
-/** @type {import('$app/forms').applyAction} */
-export const applyAction = BROWSER ? client.apply_action : guard('applyAction');
+export const applyAction = client_method('apply_action');
 
 /** @type {import('$app/forms').deserialize} */
 export function deserialize(result) {
@@ -24,13 +14,34 @@ export function deserialize(result) {
 	return parsed;
 }
 
+/**
+ * @param {string} old_name
+ * @param {string} new_name
+ * @param {string} call_location
+ * @returns void
+ */
+function warn_on_access(old_name, new_name, call_location) {
+	if (!DEV) return;
+	// TODO 2.0: Remove this code
+	console.warn(
+		`\`${old_name}\` has been deprecated in favor of \`${new_name}\`. \`${old_name}\` will be removed in a future version. (Called from ${call_location})`
+	);
+}
+
+/**
+ * Shallow clone an element, so that we can access e.g. `form.action` without worrying
+ * that someone has added an `<input name="action">` (https://github.com/sveltejs/kit/issues/7593)
+ * @template {HTMLElement} T
+ * @param {T} element
+ * @returns {T}
+ */
+function clone(element) {
+	return /** @type {T} */ (HTMLElement.prototype.cloneNode.call(element));
+}
+
 /** @type {import('$app/forms').enhance} */
-export function enhance(form, submit = () => {}) {
-	if (
-		DEV &&
-		/** @type {HTMLFormElement} */ (HTMLFormElement.prototype.cloneNode.call(form)).method !==
-			'post'
-	) {
+export function enhance(form_element, submit = () => {}) {
+	if (DEV && clone(form_element).method !== 'post') {
 		throw new Error('use:enhance can only be used on <form> fields with method="POST"');
 	}
 
@@ -45,7 +56,7 @@ export function enhance(form, submit = () => {}) {
 		if (result.type === 'success') {
 			if (reset !== false) {
 				// We call reset from the prototype to avoid DOM clobbering
-				HTMLFormElement.prototype.reset.call(form);
+				HTMLFormElement.prototype.reset.call(form_element);
 			}
 			await invalidateAll();
 		}
@@ -67,17 +78,28 @@ export function enhance(form, submit = () => {}) {
 
 		const action = new URL(
 			// We can't do submitter.formAction directly because that property is always set
-			// We do cloneNode for avoid DOM clobbering - https://github.com/sveltejs/kit/issues/7593
 			event.submitter?.hasAttribute('formaction')
 				? /** @type {HTMLButtonElement | HTMLInputElement} */ (event.submitter).formAction
-				: /** @type {HTMLFormElement} */ (HTMLFormElement.prototype.cloneNode.call(form)).action
+				: clone(form_element).action
 		);
 
-		const data = new FormData(form);
+		const form_data = new FormData(form_element);
+
+		if (DEV && clone(form_element).enctype !== 'multipart/form-data') {
+			for (const value of form_data.values()) {
+				if (value instanceof File) {
+					// TODO 2.0: Upgrade to `throw Error`
+					console.warn(
+						'Your form contains <input type="file"> fields, but is missing the `enctype="multipart/form-data"` attribute. This will lead to inconsistent behavior between enhanced and native forms. For more details, see https://github.com/sveltejs/kit/issues/9819. This will be upgraded to an error in v2.0.'
+					);
+					break;
+				}
+			}
+		}
 
 		const submitter_name = event.submitter?.getAttribute('name');
 		if (submitter_name) {
-			data.append(submitter_name, event.submitter?.getAttribute('value') ?? '');
+			form_data.append(submitter_name, event.submitter?.getAttribute('value') ?? '');
 		}
 
 		const controller = new AbortController();
@@ -85,13 +107,22 @@ export function enhance(form, submit = () => {}) {
 		let cancelled = false;
 		const cancel = () => (cancelled = true);
 
+		// TODO 2.0: Remove `data` and `form`
 		const callback =
 			(await submit({
 				action,
 				cancel,
 				controller,
-				data,
-				form,
+				get data() {
+					warn_on_access('data', 'formData', 'use:enhance submit function');
+					return form_data;
+				},
+				formData: form_data,
+				get form() {
+					warn_on_access('form', 'formElement', 'use:enhance submit function');
+					return form_element;
+				},
+				formElement: form_element,
 				submitter: event.submitter
 			})) ?? fallback_callback;
 		if (cancelled) return;
@@ -107,7 +138,7 @@ export function enhance(form, submit = () => {}) {
 					'x-sveltekit-action': 'true'
 				},
 				cache: 'no-store',
-				body: data,
+				body: form_data,
 				signal: controller.signal
 			});
 
@@ -120,8 +151,16 @@ export function enhance(form, submit = () => {}) {
 
 		callback({
 			action,
-			data,
-			form,
+			get data() {
+				warn_on_access('data', 'formData', 'callback returned from use:enhance submit function');
+				return form_data;
+			},
+			formData: form_data,
+			get form() {
+				warn_on_access('form', 'formElement', 'callback returned from use:enhance submit function');
+				return form_element;
+			},
+			formElement: form_element,
 			update: (opts) => fallback_callback({ action, result, reset: opts?.reset }),
 			// @ts-expect-error generic constraints stuff we don't care about
 			result
@@ -129,12 +168,12 @@ export function enhance(form, submit = () => {}) {
 	}
 
 	// @ts-expect-error
-	HTMLFormElement.prototype.addEventListener.call(form, 'submit', handle_submit);
+	HTMLFormElement.prototype.addEventListener.call(form_element, 'submit', handle_submit);
 
 	return {
 		destroy() {
 			// @ts-expect-error
-			HTMLFormElement.prototype.removeEventListener.call(form, 'submit', handle_submit);
+			HTMLFormElement.prototype.removeEventListener.call(form_element, 'submit', handle_submit);
 		}
 	};
 }
