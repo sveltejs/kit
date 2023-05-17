@@ -211,9 +211,11 @@ export function create_universal_fetch(event, state, fetched, csr, resolve_opts)
 		/** @type {import('types').PrerenderDependency} */
 		let dependency;
 
-		if (same_origin && state.prerendering) {
-			dependency = { response, body: null };
-			state.prerendering.dependencies.set(url.pathname, dependency);
+		if (same_origin) {
+			if (state.prerendering) {
+				dependency = { response, body: null };
+				state.prerendering.dependencies.set(url.pathname, dependency);
+			}
 		} else {
 			// simulate CORS errors and "no access to body in no-cors mode" server-side for consistency with client-side behaviour
 			const mode = input instanceof Request ? input.mode : init?.mode ?? 'cors';
