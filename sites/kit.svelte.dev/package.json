@@ -26,7 +26,7 @@
 		"svelte": "^3.56.0",
 		"tiny-glob": "^0.2.9",
 		"typescript": "^4.9.4",
-		"vite": "^4.3.0",
+		"vite": "^4.3.6",
 		"vite-imagetools": "^4.0.19",
 		"vitest": "^0.31.0"
 	},
