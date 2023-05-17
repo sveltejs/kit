@@ -24,5 +24,11 @@ export const adapters = [
 		test: () => process.env.GITHUB_ACTION_REPOSITORY === 'Azure/static-web-apps-deploy',
 		module: 'svelte-adapter-azure-swa',
 		version: '0.13'
+	},
+	{
+		name: 'AWS via SST',
+		test: () => !!process.env.SST,
+		module: 'svelte-kit-sst',
+		version: '2'
 	}
 ];
