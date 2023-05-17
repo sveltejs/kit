@@ -271,7 +271,7 @@ export const config = {
 	use: {
 		...test_browser_device,
 		screenshot: 'only-on-failure',
-		trace: 'on-first-retry'
+		trace: 'retain-on-failure'
 	},
 	workers: process.env.CI ? 2 : undefined,
 	reporter: process.env.CI
