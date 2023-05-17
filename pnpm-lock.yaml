@@ -57,8 +57,8 @@ importers:
         specifier: workspace:^
         version: link:../kit
       '@types/node':
-        specifier: ^16.18.6
-        version: 16.18.6
+        specifier: 16.18.0
+        version: 16.18.0
       typescript:
         specifier: ^4.9.4
         version: 4.9.4
@@ -79,8 +79,8 @@ importers:
         version: 0.8.0-next.15
     devDependencies:
       '@types/node':
-        specifier: ^16.18.6
-        version: 16.18.6
+        specifier: 16.18.0
+        version: 16.18.0
       '@types/ws':
         specifier: ^8.5.3
         version: 8.5.3
@@ -107,8 +107,8 @@ importers:
         specifier: ^0.3.0
         version: 0.3.0
       '@types/node':
-        specifier: ^16.18.6
-        version: 16.18.6
+        specifier: 16.18.0
+        version: 16.18.0
       typescript:
         specifier: ^4.9.4
         version: 4.9.4
@@ -141,8 +141,8 @@ importers:
         specifier: workspace:^
         version: link:../kit
       '@types/node':
-        specifier: ^16.18.6
-        version: 16.18.6
+        specifier: 16.18.0
+        version: 16.18.0
       '@types/set-cookie-parser':
         specifier: ^2.4.2
         version: 2.4.2
@@ -181,8 +181,8 @@ importers:
         specifier: workspace:^
         version: link:../kit
       '@types/node':
-        specifier: ^16.18.6
-        version: 16.18.6
+        specifier: 16.18.0
+        version: 16.18.0
       c8:
         specifier: ^7.13.0
         version: 7.13.0
@@ -211,8 +211,8 @@ importers:
         specifier: workspace:^
         version: link:../kit
       '@types/node':
-        specifier: ^16.18.6
-        version: 16.18.6
+        specifier: 16.18.0
+        version: 16.18.0
       sirv:
         specifier: ^2.0.3
         version: 2.0.3
@@ -224,7 +224,7 @@ importers:
         version: 4.9.4
       vite:
         specifier: ^4.3.6
-        version: 4.3.6(@types/node@16.18.6)
+        version: 4.3.6(@types/node@16.18.0)
 
   packages/adapter-static/test/apps/prerendered:
     devDependencies:
@@ -239,7 +239,7 @@ importers:
         version: 3.56.0
       vite:
         specifier: ^4.3.6
-        version: 4.3.6(@types/node@16.18.6)
+        version: 4.3.6(@types/node@16.18.0)
 
   packages/adapter-static/test/apps/spa:
     devDependencies:
@@ -257,7 +257,7 @@ importers:
         version: 3.56.0
       vite:
         specifier: ^4.3.6
-        version: 4.3.6(@types/node@16.18.6)
+        version: 4.3.6(@types/node@16.18.0)
 
   packages/adapter-vercel:
     dependencies:
@@ -272,8 +272,8 @@ importers:
         specifier: workspace:^
         version: link:../kit
       '@types/node':
-        specifier: ^16.18.6
-        version: 16.18.6
+        specifier: 16.18.0
+        version: 16.18.0
       typescript:
         specifier: ^4.9.4
         version: 4.9.4
@@ -353,7 +353,7 @@ importers:
         version: 5.0.2
       vite:
         specifier: ^4.3.6
-        version: 4.3.6(@types/node@16.18.6)
+        version: 4.3.6(@types/node@16.18.0)
 
   packages/create-svelte/templates/skeleton:
     devDependencies:
@@ -416,8 +416,8 @@ importers:
         specifier: ^3.0.1
         version: 3.0.1
       '@types/node':
-        specifier: ^16.18.6
-        version: 16.18.6
+        specifier: 16.18.0
+        version: 16.18.0
       '@types/sade':
         specifier: ^1.7.4
         version: 1.7.4
@@ -441,7 +441,7 @@ importers:
         version: 4.9.4
       vite:
         specifier: ^4.3.6
-        version: 4.3.6(@types/node@16.18.6)
+        version: 4.3.6(@types/node@16.18.0)
       vitest:
         specifier: ^0.31.0
         version: 0.31.0(playwright@1.30.0)
@@ -471,7 +471,7 @@ importers:
         version: 4.9.4
       vite:
         specifier: ^4.3.6
-        version: 4.3.6(@types/node@16.18.6)
+        version: 4.3.6(@types/node@16.18.0)
 
   packages/kit/test/apps/basics:
     devDependencies:
@@ -495,7 +495,7 @@ importers:
         version: 4.9.4
       vite:
         specifier: ^4.3.6
-        version: 4.3.6(@types/node@16.18.6)
+        version: 4.3.6(@types/node@16.18.0)
 
   packages/kit/test/apps/dev-only:
     devDependencies:
@@ -516,7 +516,7 @@ importers:
         version: 4.9.4
       vite:
         specifier: ^4.3.6
-        version: 4.3.6(@types/node@16.18.6)
+        version: 4.3.6(@types/node@16.18.0)
 
   packages/kit/test/apps/embed:
     devDependencies:
@@ -537,7 +537,7 @@ importers:
         version: 4.9.4
       vite:
         specifier: ^4.3.6
-        version: 4.3.6(@types/node@16.18.6)
+        version: 4.3.6(@types/node@16.18.0)
 
   packages/kit/test/apps/options:
     devDependencies:
@@ -558,7 +558,7 @@ importers:
         version: 4.9.4
       vite:
         specifier: ^4.3.6
-        version: 4.3.6(@types/node@16.18.6)
+        version: 4.3.6(@types/node@16.18.0)
 
   packages/kit/test/apps/options-2:
     devDependencies:
@@ -582,7 +582,7 @@ importers:
         version: 4.9.4
       vite:
         specifier: ^4.3.6
-        version: 4.3.6(@types/node@16.18.6)
+        version: 4.3.6(@types/node@16.18.0)
 
   packages/kit/test/apps/writes:
     devDependencies:
@@ -606,7 +606,7 @@ importers:
         version: 4.9.4
       vite:
         specifier: ^4.3.6
-        version: 4.3.6(@types/node@16.18.6)
+        version: 4.3.6(@types/node@16.18.0)
 
   packages/kit/test/build-errors:
     devDependencies:
@@ -633,7 +633,7 @@ importers:
         version: 4.9.4
       vite:
         specifier: ^4.3.6
-        version: 4.3.6(@types/node@16.18.6)
+        version: 4.3.6(@types/node@16.18.0)
 
   packages/kit/test/build-errors/apps/prerenderable-incorrect-fragment:
     devDependencies:
@@ -654,7 +654,7 @@ importers:
         version: 4.9.4
       vite:
         specifier: ^4.3.6
-        version: 4.3.6(@types/node@16.18.6)
+        version: 4.3.6(@types/node@16.18.0)
 
   packages/kit/test/build-errors/apps/prerenderable-not-prerendered:
     devDependencies:
@@ -675,7 +675,7 @@ importers:
         version: 4.9.4
       vite:
         specifier: ^4.3.6
-        version: 4.3.6(@types/node@16.18.6)
+        version: 4.3.6(@types/node@16.18.0)
 
   packages/kit/test/build-errors/apps/private-dynamic-env:
     devDependencies:
@@ -693,7 +693,7 @@ importers:
         version: 4.9.4
       vite:
         specifier: ^4.3.6
-        version: 4.3.6(@types/node@16.18.6)
+        version: 4.3.6(@types/node@16.18.0)
 
   packages/kit/test/build-errors/apps/private-dynamic-env-dynamic-import:
     devDependencies:
@@ -711,7 +711,7 @@ importers:
         version: 4.9.4
       vite:
         specifier: ^4.3.6
-        version: 4.3.6(@types/node@16.18.6)
+        version: 4.3.6(@types/node@16.18.0)
 
   packages/kit/test/build-errors/apps/private-static-env:
     devDependencies:
@@ -732,7 +732,7 @@ importers:
         version: 4.9.4
       vite:
         specifier: ^4.3.6
-        version: 4.3.6(@types/node@16.18.6)
+        version: 4.3.6(@types/node@16.18.0)
 
   packages/kit/test/build-errors/apps/private-static-env-dynamic-import:
     devDependencies:
@@ -750,7 +750,7 @@ importers:
         version: 4.9.4
       vite:
         specifier: ^4.3.6
-        version: 4.3.6(@types/node@16.18.6)
+        version: 4.3.6(@types/node@16.18.0)
 
   packages/kit/test/build-errors/apps/server-only-folder:
     devDependencies:
@@ -768,7 +768,7 @@ importers:
         version: 4.9.4
       vite:
         specifier: ^4.3.6
-        version: 4.3.6(@types/node@16.18.6)
+        version: 4.3.6(@types/node@16.18.0)
 
   packages/kit/test/build-errors/apps/server-only-folder-dynamic-import:
     devDependencies:
@@ -786,7 +786,7 @@ importers:
         version: 4.9.4
       vite:
         specifier: ^4.3.6
-        version: 4.3.6(@types/node@16.18.6)
+        version: 4.3.6(@types/node@16.18.0)
 
   packages/kit/test/build-errors/apps/server-only-module:
     devDependencies:
@@ -804,7 +804,7 @@ importers:
         version: 4.9.4
       vite:
         specifier: ^4.3.6
-        version: 4.3.6(@types/node@16.18.6)
+        version: 4.3.6(@types/node@16.18.0)
 
   packages/kit/test/build-errors/apps/server-only-module-dynamic-import:
     devDependencies:
@@ -822,7 +822,7 @@ importers:
         version: 4.9.4
       vite:
         specifier: ^4.3.6
-        version: 4.3.6(@types/node@16.18.6)
+        version: 4.3.6(@types/node@16.18.0)
 
   packages/kit/test/build-errors/apps/syntax-error:
     devDependencies:
@@ -840,7 +840,7 @@ importers:
         version: 4.9.4
       vite:
         specifier: ^4.3.6
-        version: 4.3.6(@types/node@16.18.6)
+        version: 4.3.6(@types/node@16.18.0)
 
   packages/kit/test/prerendering/basics:
     devDependencies:
@@ -858,7 +858,7 @@ importers:
         version: 4.9.4
       vite:
         specifier: ^4.3.6
-        version: 4.3.6(@types/node@16.18.6)
+        version: 4.3.6(@types/node@16.18.0)
       vitest:
         specifier: ^0.31.0
         version: 0.31.0(playwright@1.30.0)
@@ -879,7 +879,7 @@ importers:
         version: 4.9.4
       vite:
         specifier: ^4.3.6
-        version: 4.3.6(@types/node@16.18.6)
+        version: 4.3.6(@types/node@16.18.0)
       vitest:
         specifier: ^0.31.0
         version: 0.31.0(playwright@1.30.0)
@@ -900,7 +900,7 @@ importers:
         version: 4.9.4
       vite:
         specifier: ^4.3.6
-        version: 4.3.6(@types/node@16.18.6)
+        version: 4.3.6(@types/node@16.18.0)
       vitest:
         specifier: ^0.31.0
         version: 0.31.0(playwright@1.30.0)
@@ -924,8 +924,8 @@ importers:
         version: 4.9.4
     devDependencies:
       '@types/node':
-        specifier: ^16.18.6
-        version: 16.18.6
+        specifier: 16.18.0
+        version: 16.18.0
       '@types/prompts':
         specifier: ^2.4.1
         version: 2.4.1
@@ -952,8 +952,8 @@ importers:
         version: 0.6.0(svelte@3.56.0)(typescript@4.9.4)
     devDependencies:
       '@types/node':
-        specifier: ^16.18.6
-        version: 16.18.6
+        specifier: 16.18.0
+        version: 16.18.0
       svelte:
         specifier: ^3.56.0
         version: 3.56.0
@@ -1718,7 +1718,7 @@ packages:
       magic-string: 0.30.0
       svelte: 3.56.0
       svelte-hmr: 0.15.1(svelte@3.56.0)
-      vite: 4.3.6(@types/node@16.18.6)
+      vite: 4.3.6(@types/node@16.18.0)
       vitefu: 0.2.4(vite@4.3.6)
     transitivePeerDependencies:
       - supports-color
@@ -1747,7 +1747,7 @@ packages:
   /@types/connect@3.4.35:
     resolution: {integrity: sha512-cdeYyv4KWoEgpBISTxWvqYsVy444DOqehiF3fM3ne10AmJ62RSyNkUnxMJXHQWRQQX2eR94m5y1IZyDwBjV9FQ==}
     dependencies:
-      '@types/node': 18.11.11
+      '@types/node': 16.18.6
     dev: true
 
   /@types/cookie@0.5.1:
@@ -1805,11 +1805,11 @@ packages:
     resolution: {integrity: sha512-J8xLz7q2OFulZ2cyGTLE1TbbZcjpno7FaN6zdJNrgAdrJ+DZzh/uFR6YrTb4C+nXakvud8Q4+rbhoIWlYQbUFQ==}
     dev: true
 
+  /@types/node@16.18.0:
+    resolution: {integrity: sha512-LqYqYzYvnbCaQfLAwRt0zboqnsViwhZm+vjaMSqcfN36vulAg7Pt0T83q4WZO2YOBw3XdyHi8cQ88H22zmULOA==}
+
   /@types/node@16.18.6:
     resolution: {integrity: sha512-vmYJF0REqDyyU0gviezF/KHq/fYaUbFhkcNbQCuPGFQj6VTbXuHZoxs/Y7mutWe73C8AC6l9fFu8mSYiBAqkGA==}
-
-  /@types/node@18.11.11:
-    resolution: {integrity: sha512-KJ021B1nlQUBLopzZmPBVuGU9un7WJd/W4ya7Ih02B4Uwky5Nja0yGYav2EfYIk0RR2Q9oVhf60S2XR1BCWJ2g==}
     dev: true
 
   /@types/normalize-package-data@2.4.1:
@@ -1823,7 +1823,7 @@ packages:
   /@types/prompts@2.4.1:
     resolution: {integrity: sha512-1Mqzhzi9W5KlooNE4o0JwSXGUDeQXKldbGn9NO4tpxwZbHXYd+WcKpCksG2lbhH7U9I9LigfsdVsP2QAY0lNPA==}
     dependencies:
-      '@types/node': 18.11.11
+      '@types/node': 16.18.6
     dev: true
 
   /@types/pug@2.0.6:
@@ -1850,7 +1850,7 @@ packages:
   /@types/set-cookie-parser@2.4.2:
     resolution: {integrity: sha512-fBZgytwhYAUkj/jC/FAV4RQ5EerRup1YQsXQCh8rZfiHkc4UahC192oH0smGwsXol3cL3A5oETuAHeQHmhXM4w==}
     dependencies:
-      '@types/node': 18.11.11
+      '@types/node': 16.18.6
     dev: true
 
   /@types/ws@8.5.3:
@@ -5794,6 +5794,38 @@ packages:
       - terser
     dev: true
 
+  /vite@4.3.6(@types/node@16.18.0):
+    resolution: {integrity: sha512-cqIyLSbA6gornMS659AXTVKF7cvSHMdKmJJwQ9DXq3lwsT1uZSdktuBRlpHQ8VnOWx0QHtjDwxPpGtyo9Fh/Qg==}
+    engines: {node: ^14.18.0 || >=16.0.0}
+    hasBin: true
+    peerDependencies:
+      '@types/node': '>= 14'
+      less: '*'
+      sass: '*'
+      stylus: '*'
+      sugarss: '*'
+      terser: ^5.4.0
+    peerDependenciesMeta:
+      '@types/node':
+        optional: true
+      less:
+        optional: true
+      sass:
+        optional: true
+      stylus:
+        optional: true
+      sugarss:
+        optional: true
+      terser:
+        optional: true
+    dependencies:
+      '@types/node': 16.18.0
+      esbuild: 0.17.18
+      postcss: 8.4.23
+      rollup: 3.21.7
+    optionalDependencies:
+      fsevents: 2.3.2
+
   /vite@4.3.6(@types/node@16.18.6):
     resolution: {integrity: sha512-cqIyLSbA6gornMS659AXTVKF7cvSHMdKmJJwQ9DXq3lwsT1uZSdktuBRlpHQ8VnOWx0QHtjDwxPpGtyo9Fh/Qg==}
     engines: {node: ^14.18.0 || >=16.0.0}
@@ -5825,6 +5857,7 @@ packages:
       rollup: 3.21.7
     optionalDependencies:
       fsevents: 2.3.2
+    dev: true
 
   /vitefu@0.2.4(vite@4.3.6):
     resolution: {integrity: sha512-fanAXjSaf9xXtOOeno8wZXIhgia+CZury481LsDaV++lSvcU2R9Ch2bPh3PYFyoHW+w9LqAeYRISVQjUIew14g==}
@@ -5834,7 +5867,7 @@ packages:
       vite:
         optional: true
     dependencies:
-      vite: 4.3.6(@types/node@16.18.6)
+      vite: 4.3.6(@types/node@16.18.0)
     dev: false
 
   /vitest@0.31.0(playwright@1.30.0):
