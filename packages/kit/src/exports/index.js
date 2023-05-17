@@ -1,5 +1,6 @@
 import { HttpError, Redirect, ActionFailure } from '../runtime/control.js';
 import { BROWSER, DEV } from 'esm-env';
+import { resolve_entry } from '../utils/routing.js';
 
 // For some reason we need to type the params as well here,
 // JSdoc doesn't seem to like @type with function overloads
@@ -71,4 +72,24 @@ export function text(body, init) {
  */
 export function fail(status, data) {
 	return new ActionFailure(status, data);
+}
+
+/**
+ * Populate a route ID with params to produce relative path.
+ * @example
+ * ```js
+ * resolvePath(
+ *   `/blog/[slug]/[...somethingElse]`,
+ *   {
+ *     slug: 'hello-world',
+ *     somethingElse: 'something/else'
+ *   }
+ * ); // `/blog/hello-world/something/else`
+ * ```
+ * @param {string} id
+ * @param {Record<string, string>} params
+ * @returns {string}
+ */
+export function resolvePath(id, params) {
+	return resolve_entry(id, params);
 }
