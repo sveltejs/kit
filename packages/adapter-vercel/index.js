@@ -117,7 +117,10 @@ const plugin = function (defaults = {}) {
 					format: 'esm',
 					external: config.external,
 					sourcemap: 'linked',
-					banner: { js: 'globalThis.global = globalThis;' }
+					banner: { js: 'globalThis.global = globalThis;' },
+					loader: {
+						'.wasm': 'copy'
+					}
 				});
 
 				write(
