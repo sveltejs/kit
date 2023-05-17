@@ -228,10 +228,10 @@ export function crawl(html, base) {
 
 				if (tag === 'META' && content) {
 					if (name && CRAWLABLE_META_NAME_ATTRS.has(name)) {
-						hrefs.push(resolve(base, content.trim().toLowerCase()));
+						hrefs.push(resolve(base, content));
 					}
 
-					if (property && CRAWLABLE_META_NAME_ATTRS.has(property.trim().toLowerCase())) {
+					if (property && CRAWLABLE_META_NAME_ATTRS.has(property)) {
 						hrefs.push(resolve(base, content));
 					}
 				}
