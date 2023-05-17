@@ -864,7 +864,7 @@ test.describe('Actions', () => {
 			const log_promise = page.waitForEvent('console');
 			const button = page.locator(`#${id}`);
 			await button.click();
-			expect(await button.textContent()).toBe('processed'); // needed to make sure action completes
+			await page.waitForSelector(`button#${id}[data-processed="true"]`);
 			const log = await log_promise;
 			expect(log.text()).toBe(
 				`\`${old_name}\` has been deprecated in favor of \`${new_name}\`. \`${old_name}\` will be removed in a future version. (Called from ${call_location})`
