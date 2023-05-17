@@ -290,6 +290,8 @@ declare module '$app/navigation' {
 	/**
 	 * A lifecycle function that runs the supplied `callback` immediately before we navigate to a new URL.
 	 *
+	 * If you return a Promise, SvelteKit will wait for it to resolve before completing the navigation.
+	 *
 	 * If a function is returned from the callback, it will be called once the DOM has updated.
 	 *
 	 * `onNavigate` must be called during a component initialization. It remains active as long as the component is mounted.
