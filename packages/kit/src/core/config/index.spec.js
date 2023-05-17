@@ -70,7 +70,7 @@ const get_defaults = (prefix = '') => ({
 			checkOrigin: true
 		},
 		dangerZone: {
-			trackServerFetchesPotentiallyExposingSecrets: false
+			trackServerFetches: false
 		},
 		embedded: false,
 		env: {

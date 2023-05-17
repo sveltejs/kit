@@ -113,7 +113,7 @@ const options = object(
 
 			dangerZone: object({
 				// TODO 2.0: Remove this
-				trackServerFetchesPotentiallyExposingSecrets: boolean(false)
+				trackServerFetches: boolean(false)
 			}),
 
 			embedded: boolean(false),

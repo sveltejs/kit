@@ -151,8 +151,7 @@ export async function render_page(event, page, options, manifest, state, resolve
 							}
 							return data;
 						},
-						track_server_fetches_potentially_exposing_secrets:
-							options.track_server_fetches_potentially_exposing_secrets
+						track_server_fetches: options.track_server_fetches
 					});
 				} catch (e) {
 					load_error = /** @type {Error} */ (e);

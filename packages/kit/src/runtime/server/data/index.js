@@ -77,8 +77,7 @@ export async function render_data(
 							}
 							return data;
 						},
-						track_server_fetches_potentially_exposing_secrets:
-							options.track_server_fetches_potentially_exposing_secrets
+						track_server_fetches: options.track_server_fetches
 					});
 				} catch (e) {
 					aborted = true;

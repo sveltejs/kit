@@ -300,7 +300,7 @@ test.describe('Routing', () => {
 
 test.describe('load', () => {
 	// TODO 2.0: Remove this test
-	test('fetch in server load can be invalidated when `dangerZone.trackServerFetchesPotentiallyExposingSecrets` is set', async ({
+	test('fetch in server load can be invalidated when `dangerZone.trackServerFetches` is set', async ({
 		page,
 		app,
 		request,

@@ -10,7 +10,7 @@ import { validate_depends } from '../../shared.js';
  *   state: import('types').SSRState;
  *   node: import('types').SSRNode | undefined;
  *   parent: () => Promise<Record<string, any>>;
- *   track_server_fetches_potentially_exposing_secrets: boolean;
+ *   track_server_fetches: boolean;
  * }} opts
  * @returns {Promise<import('types').ServerDataNode | null>}
  */
@@ -20,7 +20,7 @@ export async function load_server_data({
 	node,
 	parent,
 	// TODO 2.0: Remove this
-	track_server_fetches_potentially_exposing_secrets
+	track_server_fetches
 }) {
 	if (!node?.server) return null;
 
@@ -60,7 +60,7 @@ export async function load_server_data({
 			}
 
 			// TODO 2.0: Remove this
-			if (track_server_fetches_potentially_exposing_secrets) {
+			if (track_server_fetches) {
 				uses.dependencies.add(url.href);
 			}
 

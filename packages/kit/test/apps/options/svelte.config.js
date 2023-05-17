@@ -10,7 +10,7 @@ const config = {
 			}
 		},
 		dangerZone: {
-			trackServerFetchesPotentiallyExposingSecrets: true
+			trackServerFetches: true
 		},
 		files: {
 			assets: 'public',

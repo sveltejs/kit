@@ -457,7 +457,7 @@ test.describe('Invalidation', () => {
 	});
 
 	test('fetch in server load cannot be invalidated', async ({ page, app, request }) => {
-		// TODO 2.0: Can remove this test after `dangerZone.trackServerFetchesPotentiallyExposingSecrets` and associated code is removed
+		// TODO 2.0: Can remove this test after `dangerZone.trackServerFetches` and associated code is removed
 		await request.get('/load/invalidation/server-fetch/count.json?reset');
 		await page.goto('/load/invalidation/server-fetch');
 		const selector = '[data-testid="count"]';
