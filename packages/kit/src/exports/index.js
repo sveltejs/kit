@@ -77,7 +77,7 @@ export function fail(status, data) {
 const basic_param_pattern = /\[(\[)?(?:\.\.\.)?(\w+?)(?:=(\w+))?\]\]?/g;
 
 /**
- * Populate a route ID with params to produce relative path.
+ * Populate a route ID with params to resolve a pathname.
  * @example
  * ```js
  * resolvePath(
