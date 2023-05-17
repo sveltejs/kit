@@ -20,6 +20,7 @@ import {
 	UniqueInterface
 } from './private.js';
 import { BuildData, SSRNodeLoader, SSRRoute, ValidatedConfig } from './internal.js';
+import type { PluginOptions } from '@sveltejs/vite-plugin-svelte';
 
 export { PrerenderOption } from './private.js';
 
@@ -186,6 +187,8 @@ export interface Config {
 	};
 	/** Preprocessor options, if any. Preprocessing can alternatively also be done through Vite's preprocessor capabilities. */
 	preprocess?: any;
+	/** `vite-plugin-svelte` plugin options. */
+	vitePlugin?: PluginOptions;
 	/** Any additional options required by tooling that integrates with Svelte. */
 	[key: string]: any;
 }
