@@ -81,7 +81,7 @@ export type NavigationResult = NavigationRedirect | NavigationFinished;
 
 export type NavigationRedirect = {
 	type: 'redirect';
-	location: string;
+	url: URL;
 };
 
 export type NavigationFinished = {
