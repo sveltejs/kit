@@ -828,7 +828,7 @@ test.describe('Matchers', () => {
 });
 
 test.describe('Actions', () => {
-	test.only(`Accessing v2 deprecated properties results in a warning log`, async ({
+	test(`Accessing v2 deprecated properties results in a warning log`, async ({
 		page,
 		javaScriptEnabled
 	}) => {
