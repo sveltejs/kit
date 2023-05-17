@@ -344,6 +344,16 @@ export interface KitConfig {
 		checkOrigin?: boolean;
 	};
 	/**
+	 * Here be dragons. Enable at your peril.
+	 */
+	dangerZone?: {
+		/**
+		 * Automatically add server-side `fetch`ed URLs to the `dependencies` map of `load` functions. This will expose secrets
+		 * to the client if your URL contains them.
+		 */
+		trackServerFetches?: boolean;
+	};
+	/**
 	 * Whether or not the app is embedded inside a larger app. If `true`, SvelteKit will add its event listeners related to navigation etc on the parent of `%sveltekit.body%` instead of `window`, and will pass `params` from the server rather than inferring them from `location.pathname`.
 	 * @default false
 	 */

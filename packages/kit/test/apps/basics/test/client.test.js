@@ -456,14 +456,15 @@ test.describe('Invalidation', () => {
 		expect(shared).not.toBe(next_shared);
 	});
 
-	test('fetch in server load can be invalidated', async ({ page, app, request }) => {
+	test('fetch in server load cannot be invalidated', async ({ page, app, request }) => {
+		// TODO 2.0: Can remove this test after `dangerZone.trackServerFetches` and associated code is removed
 		await request.get('/load/invalidation/server-fetch/count.json?reset');
 		await page.goto('/load/invalidation/server-fetch');
 		const selector = '[data-testid="count"]';
 
 		expect(await page.textContent(selector)).toBe('1');
 		await app.invalidate('/load/invalidation/server-fetch/count.json');
-		expect(await page.textContent(selector)).toBe('2');
+		expect(await page.textContent(selector)).toBe('1');
 	});
 
 	test('+layout.js is re-run when shared dep is invalidated', async ({ page }) => {
