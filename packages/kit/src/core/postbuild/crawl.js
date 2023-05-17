@@ -227,11 +227,9 @@ export function crawl(html, base) {
 				}
 
 				if (tag === 'META' && content) {
-					if (name && CRAWLABLE_META_NAME_ATTRS.has(name)) {
-						hrefs.push(resolve(base, content));
-					}
+					const attr = name ?? property;
 
-					if (property && CRAWLABLE_META_NAME_ATTRS.has(property)) {
+					if (attr && CRAWLABLE_META_NAME_ATTRS.has(attr)) {
 						hrefs.push(resolve(base, content));
 					}
 				}
