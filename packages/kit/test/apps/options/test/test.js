@@ -303,8 +303,10 @@ test.describe('load', () => {
 	test('fetch in server load can be invalidated when `dangerZone.trackServerFetchesPotentiallyExposingSecrets` is set', async ({
 		page,
 		app,
-		request
+		request,
+		javaScriptEnabled
 	}) => {
+		test.skip(!javaScriptEnabled, 'JavaScript is disabled');
 		await request.get('/path-base/server-fetch-invalidate/count.json?reset');
 		await page.goto('/path-base/server-fetch-invalidate');
 		const selector = '[data-testid="count"]';
