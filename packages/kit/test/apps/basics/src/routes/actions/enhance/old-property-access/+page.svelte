@@ -28,25 +28,33 @@
 </script>
 
 <form method="POST" action="?/form_submit" use:access_form_submit>
-	<button id="access-form-in-submit" type="submit"
-		>{form?.form_submit ? 'processed' : 'not processed'}</button
+	<button
+		id="access-form-in-submit"
+		type="submit"
+		data-processed={form?.form_submit ? 'true' : 'false'}>Access form in submit</button
 	>
 </form>
 
 <form method="POST" action="?/data_submit" use:access_data_submit>
-	<button id="access-data-in-submit" type="submit"
-		>{form?.data_submit ? 'processed' : 'not processed'}</button
+	<button
+		id="access-data-in-submit"
+		type="submit"
+		data-processed={form?.data_submit ? 'true' : 'false'}>Access data in submit</button
 	>
 </form>
 
 <form method="POST" action="?/form_callback" use:access_form_callback>
-	<button id="access-form-in-callback" type="submit"
-		>{form?.form_callback ? 'processed' : 'not processed'}</button
+	<button
+		id="access-form-in-callback"
+		type="submit"
+		data-processed={form?.form_callback ? 'true' : 'false'}>Access form in callback</button
 	>
 </form>
 
 <form method="POST" action="?/data_callback" use:access_data_callback>
-	<button id="access-data-in-callback" type="submit"
-		>{form?.data_callback ? 'processed' : 'not processed'}</button
+	<button
+		id="access-data-in-callback"
+		type="submit"
+		data-processed={form?.data_callback ? 'true' : 'false'}>Access data in callback</button
 	>
 </form>
