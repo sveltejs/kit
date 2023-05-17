@@ -297,3 +297,20 @@ test.describe('Routing', () => {
 		await expect(page.locator('h2')).toHaveText('target: 0');
 	});
 });
+
+test.describe('load', () => {
+	// TODO 2.0: Remove this test
+	test('fetch in server load can be invalidated when `dangerZone.trackServerFetchesPotentiallyExposingSecrets` is set', async ({
+		page,
+		app,
+		request
+	}) => {
+		await request.get('/server-fetch-invalidate/count.json?reset');
+		await page.goto('/server-fetch-invalidate');
+		const selector = '[data-testid="count"]';
+
+		expect(await page.textContent(selector)).toBe('1');
+		await app.invalidate('/server-fetch-invalidate/count.json');
+		expect(await page.textContent(selector)).toBe('2');
+	});
+});
