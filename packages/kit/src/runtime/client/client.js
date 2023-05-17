@@ -295,7 +295,8 @@ export function create_client(app, target) {
 			to: {
 				params: current.params,
 				route: { id: current.route?.id ?? null },
-				url: new URL(location.href)
+				url: new URL(location.href),
+				scroll: scroll_state()
 			},
 			willUnload: false,
 			type: 'enter'
@@ -903,9 +904,10 @@ export function create_client(app, target) {
 	 *   type: import('types').NavigationType;
 	 *   intent?: import('./types').NavigationIntent;
 	 *   delta?: number;
+	 *   scroll?: {x: number, y: number};
 	 * }} opts
 	 */
-	function before_navigate({ url, type, intent, delta }) {
+	function before_navigate({ url, type, intent, delta, scroll }) {
 		let should_block = false;
 
 		/** @type {import('types').Navigation} */
@@ -913,12 +915,18 @@ export function create_client(app, target) {
 			from: {
 				params: current.params,
 				route: { id: current.route?.id ?? null },
-				url: current.url
+				url: current.url,
+				scroll: scroll_state()
 			},
 			to: {
 				params: intent?.params ?? null,
 				route: { id: intent?.route?.id ?? null },
-				url
+				url,
+				scroll: {
+					x: 0,
+					y: 0,
+					...scroll
+				}
 			},
 			willUnload: !intent,
 			type
@@ -973,7 +981,7 @@ export function create_client(app, target) {
 		blocked
 	}) {
 		const intent = get_navigation_intent(url, false);
-		const navigation = before_navigate({ url, type, delta, intent });
+		const navigation = before_navigate({ url, type, delta, intent, scroll: scroll ?? undefined });
 
 		if (!navigation) {
 			blocked();
@@ -1449,7 +1457,14 @@ export function create_client(app, target) {
 						from: {
 							params: current.params,
 							route: { id: current.route?.id ?? null },
-							url: current.url
+							url: current.url,
+							scroll: {
+								// @ts-expect-error
+								x: 0,
+								// @ts-expect-error
+								y: 0,
+								...scroll_positions[current_history_index]
+							}
 						},
 						to: null,
 						willUnload: true,
@@ -1643,6 +1658,8 @@ export function create_client(app, target) {
 					}
 
 					const delta = event.state[INDEX_KEY] - current_history_index;
+
+					console.log({ scroll });
 
 					await navigate({
 						url: new URL(location.href),
