@@ -28,13 +28,20 @@ function warn_on_access(old_name, new_name, call_location) {
 	);
 }
 
+/**
+ * Shallow clone an element, so that we can access e.g. `form.action` without worrying
+ * that someone has added an `<input name="action">` (https://github.com/sveltejs/kit/issues/7593)
+ * @template {HTMLElement} T
+ * @param {T} element
+ * @returns {T}
+ */
+function clone(element) {
+	return /** @type {T} */ (HTMLElement.prototype.cloneNode.call(element));
+}
+
 /** @type {import('$app/forms').enhance} */
 export function enhance(form_element, submit = () => {}) {
-	if (
-		DEV &&
-		/** @type {HTMLFormElement} */ (HTMLFormElement.prototype.cloneNode.call(form_element))
-			.method !== 'post'
-	) {
+	if (DEV && clone(form_element).method !== 'post') {
 		throw new Error('use:enhance can only be used on <form> fields with method="POST"');
 	}
 
@@ -71,14 +78,24 @@ export function enhance(form_element, submit = () => {}) {
 
 		const action = new URL(
 			// We can't do submitter.formAction directly because that property is always set
-			// We do cloneNode for avoid DOM clobbering - https://github.com/sveltejs/kit/issues/7593
 			event.submitter?.hasAttribute('formaction')
 				? /** @type {HTMLButtonElement | HTMLInputElement} */ (event.submitter).formAction
-				: /** @type {HTMLFormElement} */ (HTMLFormElement.prototype.cloneNode.call(form_element))
-						.action
+				: clone(form_element).action
 		);
 
 		const form_data = new FormData(form_element);
+
+		if (DEV && clone(form_element).enctype !== 'multipart/form-data') {
+			for (const value of form_data.values()) {
+				if (value instanceof File) {
+					// TODO 2.0: Upgrade to `throw Error`
+					console.warn(
+						'Your form contains <input type="file"> fields, but is missing the `enctype="multipart/form-data"` attribute. This will lead to inconsistent behavior between enhanced and native forms. For more details, see https://github.com/sveltejs/kit/issues/9819. This will be upgraded to an error in v2.0.'
+					);
+					break;
+				}
+			}
+		}
 
 		const submitter_name = event.submitter?.getAttribute('name');
 		if (submitter_name) {

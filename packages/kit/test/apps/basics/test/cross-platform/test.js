@@ -29,6 +29,11 @@ test.describe('CSS', () => {
 			expect(await get_computed_style('.not', 'color')).toBe('rgb(0, 0, 0)');
 		});
 	});
+
+	test('loads styles on routes with encoded characters', async ({ page, get_computed_style }) => {
+		await page.goto('/css/encöded');
+		expect(await get_computed_style('h1', 'color')).toBe('rgb(128, 0, 128)');
+	});
 });
 
 test.describe('Shadowed pages', () => {

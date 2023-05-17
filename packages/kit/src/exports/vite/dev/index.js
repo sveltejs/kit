@@ -186,7 +186,9 @@ export async function dev(vite, vite_config, svelte_config) {
 								) {
 									try {
 										query.set('inline', '');
-										const mod = await vite.ssrLoadModule(`${url.pathname}${url.search}${url.hash}`);
+										const mod = await vite.ssrLoadModule(
+											`${decodeURI(url.pathname)}${url.search}${url.hash}`
+										);
 										styles[dep.url] = mod.default;
 									} catch {
 										// this can happen with dynamically imported modules, I think

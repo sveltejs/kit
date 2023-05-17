@@ -10,10 +10,18 @@ import { validate_depends } from '../../shared.js';
  *   state: import('types').SSRState;
  *   node: import('types').SSRNode | undefined;
  *   parent: () => Promise<Record<string, any>>;
+ *   track_server_fetches: boolean;
  * }} opts
  * @returns {Promise<import('types').ServerDataNode | null>}
  */
-export async function load_server_data({ event, state, node, parent }) {
+export async function load_server_data({
+	event,
+	state,
+	node,
+	parent,
+	// TODO 2.0: Remove this
+	track_server_fetches
+}) {
 	if (!node?.server) return null;
 
 	let done = false;
@@ -51,7 +59,10 @@ export async function load_server_data({ event, state, node, parent }) {
 				);
 			}
 
-			uses.dependencies.add(url.href);
+			// TODO 2.0: Remove this
+			if (track_server_fetches) {
+				uses.dependencies.add(url.href);
+			}
 
 			return event.fetch(info, init);
 		},
