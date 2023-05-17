@@ -832,9 +832,9 @@ test.describe('Actions', () => {
 		page,
 		javaScriptEnabled
 	}) => {
-		await page.goto('/actions/enhance/old-property-access');
 		test.skip(!javaScriptEnabled, 'skip when js is disabled');
 		test.skip(!process.env.DEV, 'skip when not in dev mode');
+		await page.goto('/actions/enhance/old-property-access');
 
 		for (const { id, old_name, new_name, call_location } of [
 			{
