@@ -75,7 +75,7 @@ export function fail(status, data) {
 }
 
 /**
- * Populate a route ID with params to produce relative path.
+ * Populate a route ID with params to resolve a pathname.
  * @example
  * ```js
  * resolvePath(
