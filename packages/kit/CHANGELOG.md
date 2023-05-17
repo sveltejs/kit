@@ -1,5 +1,13 @@
 # @sveltejs/kit
 
+## 1.17.1
+
+### Patch Changes
+
+- fix: ensure styles are loaded in dev mode for routes containing special characters ([#9894](https://github.com/sveltejs/kit/pull/9894))
+
+- feat: warn users when enhancing forms with files but no `enctype="multipart/form-data"` ([#9888](https://github.com/sveltejs/kit/pull/9888))
+
 ## 1.17.0
 
 ### Minor Changes
