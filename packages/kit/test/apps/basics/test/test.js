@@ -828,6 +828,21 @@ test.describe('Matchers', () => {
 });
 
 test.describe('Actions', () => {
+	test('Submitting a form with a file input but no enctype="multipart/form-data" logs a warning', async ({
+		page,
+		javaScriptEnabled
+	}) => {
+		test.skip(!javaScriptEnabled, 'Skip when JavaScript is disabled');
+		test.skip(!process.env.DEV, 'Skip when not in dev mode');
+		await page.goto('/actions/file-without-enctype');
+		const log_promise = page.waitForEvent('console');
+		await page.click('button');
+		const log = await log_promise;
+		expect(log.text()).toBe(
+			'Your form contains <input type="file"> fields, but is missing the `enctype="multipart/form-data"` attribute. This will lead to inconsistent behavior between enhanced and native forms. For more details, see https://github.com/sveltejs/kit/issues/9819. This will be upgraded to an error in v2.0.'
+		);
+	});
+
 	test(`Accessing v2 deprecated properties results in a warning log`, async ({
 		page,
 		javaScriptEnabled
