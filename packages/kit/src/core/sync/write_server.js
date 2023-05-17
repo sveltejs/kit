@@ -36,7 +36,7 @@ export const options = {
 	csrf_check_origin: ${s(config.kit.csrf.checkOrigin)},
 	track_server_fetches_potentially_exposing_secrets: ${s(
 		config.kit.dangerZone.trackServerFetchesPotentiallyExposingSecrets
-	)}
+	)},
 	embedded: ${config.kit.embedded},
 	env_public_prefix: '${config.kit.env.publicPrefix}',
 	hooks: null, // added lazily, via \`get_hooks\`
