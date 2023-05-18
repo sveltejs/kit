@@ -2,4 +2,4 @@
 '@sveltejs/kit': patch
 ---
 
-export `VERSION` from `@sveltejs/kit`
+feat: export `VERSION` from `@sveltejs/kit`
