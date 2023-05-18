@@ -1,4 +1,4 @@
-import { Cache, CacheStorage } from '@cloudflare/workers-types';
+import { Cache, CacheStorage, IncomingRequestCfProperties } from '@cloudflare/workers-types';
 
 declare global {
 	namespace App {
@@ -7,6 +7,7 @@ declare global {
 				waitUntil(promise: Promise<any>): void;
 			};
 			caches?: CacheStorage & { default: Cache };
+			cf?: IncomingRequestCfProperties;
 		}
 	}
 }
