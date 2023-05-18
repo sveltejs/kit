@@ -92,7 +92,7 @@ function plaintext(markdown) {
 			source
 				.split('// ---cut---\n')
 				.pop()
-				.replace(/^\/\/((\/ file:)|( @errors:)[\s\S]*)/gm, ''),
+				.replace(/^\/\/((\/ file:)|( @errors:))[\s\S]*/gm, ''),
 		blockquote: block,
 		html: () => '\n',
 		heading: (text) => `${text}\n`,
