@@ -7,7 +7,7 @@ const pkg = JSON.parse(fs.readFileSync('package.json', 'utf-8'));
 
 fs.writeFileSync(
 	'src/version.js',
-	`// This file get's auto-updated on each release. Please don't edit it manually.
+	`// This file is auto-updated on each release. Please don't edit it manually.
 export const VERSION = '${pkg.version}';
 `
 );
