@@ -1520,6 +1520,7 @@ export function create_client(app, target) {
 
 				if (download) return;
 
+				// Ignore the following but fire beforeNavigate
 				if (external || options.reload) {
 					if (before_navigate({ url, type: 'link' })) {
 						// set `navigating` to `true` to prevent `beforeNavigate` callbacks
@@ -1528,6 +1529,7 @@ export function create_client(app, target) {
 					} else {
 						event.preventDefault();
 					}
+
 					return;
 				}
 
