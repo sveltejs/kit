@@ -80,15 +80,36 @@ declare module '$app/forms' {
 		Invalid extends Record<string, unknown> | undefined = Record<string, any>
 	> = (input: {
 		action: URL;
+		/**
+		 * use `formData` instead of `data`
+		 * @deprecated
+		 */
 		data: FormData;
+		formData: FormData;
+		/**
+		 * use `formElement` instead of `form`
+		 * @deprecated
+		 */
 		form: HTMLFormElement;
+		formElement: HTMLFormElement;
 		controller: AbortController;
 		cancel(): void;
 		submitter: HTMLElement | null;
 	}) => MaybePromise<
 		| void
 		| ((opts: {
+				/**
+				 * use `formData` instead of `data`
+				 * @deprecated
+				 */
+				data: FormData;
+				formData: FormData;
+				/**
+				 * use `formElement` instead of `form`
+				 * @deprecated
+				 */
 				form: HTMLFormElement;
+				formElement: HTMLFormElement;
 				action: URL;
 				result: ActionResult<Success, Invalid>;
 				/**
@@ -108,7 +129,7 @@ declare module '$app/forms' {
 		Success extends Record<string, unknown> | undefined = Record<string, any>,
 		Invalid extends Record<string, unknown> | undefined = Record<string, any>
 	>(
-		form: HTMLFormElement,
+		formElement: HTMLFormElement,
 		/**
 		 * Called upon submission with the given FormData and the `action` that should be triggered.
 		 * If `cancel` is called, the form will not be submitted.
@@ -359,6 +380,10 @@ declare module '@sveltejs/kit/hooks' {
 
 	/**
 	 * A helper function for sequencing multiple `handle` calls in a middleware-like manner.
+	 * The behavior for the `handle` options is as follows:
+	 * - `transformPageChunk` is applied in reverse order and merged
+	 * - `preload` is applied in forward order, the first option "wins" and no `preload` options after it are called
+	 * - `filterSerializedResponseHeaders` behaves the same as `preload`
 	 *
 	 * ```js
 	 * /// file: src/hooks.server.js
@@ -372,6 +397,10 @@ declare module '@sveltejs/kit/hooks' {
 	 * 			// transforms are applied in reverse order
 	 * 			console.log('first transform');
 	 * 			return html;
+	 * 		},
+	 * 		preload: () => {
+	 * 			// this one wins as it's the first defined in the chain
+	 * 			console.log('first preload');
 	 * 		}
 	 * 	});
 	 * 	console.log('first post-processing');
@@ -385,6 +414,13 @@ declare module '@sveltejs/kit/hooks' {
 	 * 		transformPageChunk: ({ html }) => {
 	 * 			console.log('second transform');
 	 * 			return html;
+	 * 		},
+	 * 		preload: () => {
+	 * 			console.log('second preload');
+	 * 		},
+	 * 		filterSerializedResponseHeaders: () => {
+	 * 			// this one wins as it's the first defined in the chain
+	 *    		console.log('second filterSerializedResponseHeaders');
 	 * 		}
 	 * 	});
 	 * 	console.log('second post-processing');
@@ -398,7 +434,9 @@ declare module '@sveltejs/kit/hooks' {
 	 *
 	 * ```
 	 * first pre-processing
+	 * first preload
 	 * second pre-processing
+	 * second filterSerializedResponseHeaders
 	 * second transform
 	 * first transform
 	 * second post-processing

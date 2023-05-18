@@ -28,21 +28,21 @@
 	"homepage": "https://github.com/sveltejs/kit#readme",
 	"devDependencies": {
 		"@changesets/cli": "^2.26.0",
-		"@rollup/plugin-commonjs": "^24.0.0",
+		"@rollup/plugin-commonjs": "^25.0.0",
 		"@rollup/plugin-json": "^6.0.0",
 		"@rollup/plugin-node-resolve": "^15.0.1",
 		"@svitejs/changesets-changelog-github-compact": "^1.1.0",
 		"@typescript-eslint/eslint-plugin": "^5.53.0",
 		"eslint": "^8.33.0",
-		"eslint-plugin-unicorn": "^46.0.0",
-		"playwright": "^1.29.2",
+		"eslint-plugin-unicorn": "^47.0.0",
+		"playwright": "1.30.0",
 		"prettier": "^2.8.0",
 		"rollup": "^3.7.0",
 		"svelte": "^3.56.0",
 		"tiny-glob": "^0.2.9",
 		"typescript": "^4.9.4"
 	},
-	"packageManager": "pnpm@8.3.1",
+	"packageManager": "pnpm@8.4.0",
 	"engines": {
 		"pnpm": "^8.0.0"
 	},

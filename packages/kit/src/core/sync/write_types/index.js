@@ -194,6 +194,12 @@ function update_types(config, routes, route, to_delete = new Set()) {
 			.join('; ')} }`
 	);
 
+	if (route.params.length > 0) {
+		exports.push(
+			`export type EntryGenerator = () => Promise<Array<RouteParams>> | Array<RouteParams>;`
+		);
+	}
+
 	declarations.push(`type RouteId = '${route.id}';`);
 
 	// These could also be placed in our public types, but it would bloat them unnecessarily and we may want to change these in the future

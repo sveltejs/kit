@@ -116,7 +116,7 @@ export async function dev(vite, vite_config, svelte_config) {
 			_: {
 				client: {
 					start: `${runtime_base}/client/start.js`,
-					app: `${svelte_config.kit.outDir}/generated/client/app.js`,
+					app: `${to_fs(svelte_config.kit.outDir)}/generated/client/app.js`,
 					imports: [],
 					stylesheets: [],
 					fonts: []
@@ -176,19 +176,18 @@ export async function dev(vite, vite_config, svelte_config) {
 							const styles = {};
 
 							for (const dep of deps) {
-								const url = new URL(dep.url, 'http://localhost/');
+								const url = new URL(dep.url, 'dummy:/');
 								const query = url.searchParams;
 
 								if (
-									isCSSRequest(dep.file) ||
-									(query.has('svelte') && query.get('type') === 'style')
+									(isCSSRequest(dep.file) ||
+										(query.has('svelte') && query.get('type') === 'style')) &&
+									!(query.has('raw') || query.has('url') || query.has('inline'))
 								) {
-									// setting `?inline` to load CSS modules as css string
-									query.set('inline', '');
-
 									try {
-										const mod = await loud_ssr_load_module(
-											`${url.pathname}${url.search}${url.hash}`
+										query.set('inline', '');
+										const mod = await vite.ssrLoadModule(
+											`${decodeURI(url.pathname)}${url.search}${url.hash}`
 										);
 										styles[dep.url] = mod.default;
 									} catch {

@@ -1,6 +1,6 @@
 {
 	"name": "@sveltejs/adapter-netlify",
-	"version": "2.0.6",
+	"version": "2.0.7",
 	"description": "A SvelteKit adapter that creates a Netlify app",
 	"repository": {
 		"type": "git",
@@ -26,7 +26,7 @@
 	"scripts": {
 		"dev": "rimraf files && rollup -cw",
 		"build": "rimraf files && rollup -c && cp src/edge.js files/edge.js",
-		"test": "uvu src \"(spec\\.js|test[\\\\/]index\\.js)\"",
+		"test": "vitest run",
 		"check": "tsc",
 		"lint": "prettier --check . --config ../../.prettierrc --ignore-path .gitignore",
 		"format": "pnpm lint --write",
@@ -34,12 +34,12 @@
 	},
 	"dependencies": {
 		"@iarna/toml": "^2.2.5",
-		"esbuild": "^0.16.3",
-		"set-cookie-parser": "^2.5.1"
+		"esbuild": "^0.17.18",
+		"set-cookie-parser": "^2.6.0"
 	},
 	"devDependencies": {
 		"@netlify/functions": "^1.3.0",
-		"@rollup/plugin-commonjs": "^24.0.0",
+		"@rollup/plugin-commonjs": "^25.0.0",
 		"@rollup/plugin-json": "^6.0.0",
 		"@rollup/plugin-node-resolve": "^15.0.1",
 		"@sveltejs/kit": "workspace:^",
@@ -48,7 +48,7 @@
 		"rimraf": "^5.0.0",
 		"rollup": "^3.7.0",
 		"typescript": "^4.9.4",
-		"uvu": "^0.5.6"
+		"vitest": "^0.31.0"
 	},
 	"peerDependencies": {
 		"@sveltejs/kit": "^1.5.0"

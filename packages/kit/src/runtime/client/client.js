@@ -31,9 +31,9 @@ import { stores } from './singletons.js';
 import { unwrap_promises } from '../../utils/promises.js';
 import * as devalue from 'devalue';
 import { INDEX_KEY, PRELOAD_PRIORITIES, SCROLL_KEY, SNAPSHOT_KEY } from './constants.js';
-import { validate_common_exports } from '../../utils/exports.js';
+import { validate_page_exports } from '../../utils/exports.js';
 import { compact } from '../../utils/array.js';
-import { validate_depends } from '../shared.js';
+import { INVALIDATED_PARAM, validate_depends } from '../shared.js';
 
 let errored = false;
 
@@ -173,6 +173,9 @@ export function create_client(app, target) {
 			if (navigation_result.type === 'redirect') {
 				return goto(new URL(navigation_result.location, url).href, {}, [url.pathname], nav_token);
 			} else {
+				if (navigation_result.props.page !== undefined) {
+					page = navigation_result.props.page;
+				}
 				root.$set(navigation_result.props);
 			}
 		}
@@ -271,7 +274,7 @@ export function create_client(app, target) {
 
 	/** @param {import('./types').NavigationFinished} result */
 	function initialize(result) {
-		if (DEV && document.querySelector('vite-error-overlay')) return;
+		if (DEV && result.state.error && document.querySelector('vite-error-overlay')) return;
 
 		current = result.state;
 
@@ -430,7 +433,7 @@ export function create_client(app, target) {
 		const node = await loader();
 
 		if (DEV) {
-			validate_common_exports(node.universal);
+			validate_page_exports(node.universal);
 		}
 
 		if (node.universal?.load) {
@@ -1124,7 +1127,7 @@ export function create_client(app, target) {
 			document.activeElement !== document.body;
 
 		if (!keepfocus && !changed_focus) {
-			await reset_focus();
+			reset_focus();
 		}
 
 		autoscroll = true;
@@ -1134,6 +1137,11 @@ export function create_client(app, target) {
 		}
 
 		navigating = false;
+
+		if (type === 'popstate') {
+			restore_snapshot(current_history_index);
+		}
+
 		callbacks.after_navigate.forEach((fn) =>
 			fn(/** @type {import('types').AfterNavigate} */ (navigation))
 		);
@@ -1356,7 +1364,7 @@ export function create_client(app, target) {
 			return invalidate();
 		},
 
-		invalidateAll: () => {
+		invalidate_all: () => {
 			force_invalidation = true;
 			return invalidate();
 		},
@@ -1542,7 +1550,6 @@ export function create_client(app, target) {
 				if (hash !== undefined && nonhash === location.href.split('#')[0]) {
 					// set this flag to distinguish between navigations triggered by
 					// clicking a hash link and those triggered by popstate
-					// TODO why not update history here directly?
 					hash_navigating = true;
 
 					update_scroll_positions(current_history_index);
@@ -1551,7 +1558,11 @@ export function create_client(app, target) {
 					stores.page.set({ ...page, url });
 					stores.page.notify();
 
-					return;
+					if (!options.replace_state) return;
+
+					// hashchange event shouldn't occur if the router is replacing state.
+					hash_navigating = false;
+					event.preventDefault();
 				}
 
 				navigate({
@@ -1642,7 +1653,6 @@ export function create_client(app, target) {
 					}
 
 					const delta = event.state[INDEX_KEY] - current_history_index;
-					let blocked = false;
 
 					await navigate({
 						url: new URL(location.href),
@@ -1655,15 +1665,10 @@ export function create_client(app, target) {
 						},
 						blocked: () => {
 							history.go(-delta);
-							blocked = true;
 						},
 						type: 'popstate',
 						delta
 					});
-
-					if (!blocked) {
-						restore_snapshot(current_history_index);
-					}
 				}
 			});
 
@@ -1744,14 +1749,30 @@ export function create_client(app, target) {
 					});
 				});
 
+				/** @type {Array<import('./types').BranchNode | undefined>} */
+				const branch = await Promise.all(branch_promises);
+
+				const parsed_route = routes.find(({ id }) => id === route.id);
+
+				// server-side will have compacted the branch, reinstate empty slots
+				// so that error boundaries can be lined up correctly
+				if (parsed_route) {
+					const layouts = parsed_route.layouts;
+					for (let i = 0; i < layouts.length; i++) {
+						if (!layouts[i]) {
+							branch.splice(i, 0, undefined);
+						}
+					}
+				}
+
 				result = await get_navigation_result_from_branch({
 					url,
 					params,
-					branch: await Promise.all(branch_promises),
+					branch,
 					status,
 					error,
 					form,
-					route: routes.find(({ id }) => id === route.id) ?? null
+					route: parsed_route ?? null
 				});
 			} catch (error) {
 				if (error instanceof Redirect) {
@@ -1782,13 +1803,10 @@ export function create_client(app, target) {
 async function load_data(url, invalid) {
 	const data_url = new URL(url);
 	data_url.pathname = add_data_suffix(url.pathname);
-	if (DEV && url.searchParams.has('x-sveltekit-invalidated')) {
-		throw new Error('Cannot used reserved query parameter "x-sveltekit-invalidated"');
+	if (DEV && url.searchParams.has(INVALIDATED_PARAM)) {
+		throw new Error(`Cannot used reserved query parameter "${INVALIDATED_PARAM}"`);
 	}
-	data_url.searchParams.append(
-		'x-sveltekit-invalidated',
-		invalid.map((x) => (x ? '1' : '')).join('_')
-	);
+	data_url.searchParams.append(INVALIDATED_PARAM, invalid.map((i) => (i ? '1' : '0')).join(''));
 
 	const res = await native_fetch(data_url.href);
 
@@ -1900,7 +1918,8 @@ function reset_focus() {
 		const tabindex = root.getAttribute('tabindex');
 
 		root.tabIndex = -1;
-		root.focus({ preventScroll: true });
+		// @ts-expect-error
+		root.focus({ preventScroll: true, focusVisible: false });
 
 		// restore `tabindex` as to prevent `root` from stealing input from elements
 		if (tabindex !== null) {
@@ -1909,12 +1928,44 @@ function reset_focus() {
 			root.removeAttribute('tabindex');
 		}
 
-		return new Promise((resolve) => {
+		// capture current selection, so we can compare the state after
+		// snapshot restoration and afterNavigate callbacks have run
+		const selection = getSelection();
+
+		if (selection && selection.type !== 'None') {
+			/** @type {Range[]} */
+			const ranges = [];
+
+			for (let i = 0; i < selection.rangeCount; i += 1) {
+				ranges.push(selection.getRangeAt(i));
+			}
+
 			setTimeout(() => {
+				if (selection.rangeCount !== ranges.length) return;
+
+				for (let i = 0; i < selection.rangeCount; i += 1) {
+					const a = ranges[i];
+					const b = selection.getRangeAt(i);
+
+					// we need to do a deep comparison rather than just `a !== b` because
+					// Safari behaves differently to other browsers
+					if (
+						a.commonAncestorContainer !== b.commonAncestorContainer ||
+						a.startContainer !== b.startContainer ||
+						a.endContainer !== b.endContainer ||
+						a.startOffset !== b.startOffset ||
+						a.endOffset !== b.endOffset
+					) {
+						return;
+					}
+				}
+
+				// if the selection hasn't changed (as a result of an element being (auto)focused,
+				// or a programmatic selection, we reset everything as part of the navigation)
 				// fixes https://github.com/sveltejs/kit/issues/8439
-				resolve(getSelection()?.removeAllRanges());
+				selection.removeAllRanges();
 			});
-		});
+		}
 	}
 }
 

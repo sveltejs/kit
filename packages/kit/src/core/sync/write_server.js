@@ -34,6 +34,7 @@ export const options = {
 	app_template_contains_nonce: ${template.includes('%sveltekit.nonce%')},
 	csp: ${s(config.kit.csp)},
 	csrf_check_origin: ${s(config.kit.csrf.checkOrigin)},
+	track_server_fetches: ${s(config.kit.dangerZone.trackServerFetches)},
 	embedded: ${config.kit.embedded},
 	env_public_prefix: '${config.kit.env.publicPrefix}',
 	hooks: null, // added lazily, via \`get_hooks\`

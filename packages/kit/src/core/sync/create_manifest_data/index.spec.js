@@ -1,8 +1,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { test } from 'uvu';
-import * as assert from 'uvu/assert';
+import { assert, expect, test } from 'vitest';
 import create_manifest_data from './index.js';
 import options from '../../config/options.js';
 import { sort_routes } from './sort.js';
@@ -65,7 +64,7 @@ function simplify_route(route) {
 test('creates routes', () => {
 	const { nodes, routes } = create('samples/basic');
 
-	assert.equal(nodes.map(simplify_node), [
+	expect(nodes.map(simplify_node)).toEqual([
 		default_layout,
 		default_error,
 		{ component: 'samples/basic/+page.svelte' },
@@ -74,7 +73,7 @@ test('creates routes', () => {
 		{ component: 'samples/basic/blog/[slug]/+page.svelte' }
 	]);
 
-	assert.equal(routes.map(simplify_route), [
+	expect(routes.map(simplify_route)).toEqual([
 		{
 			id: '/',
 			pattern: '/^/$/',
@@ -119,14 +118,14 @@ const test_symlinks = symlink_survived_git ? test : test.skip;
 test_symlinks('creates symlinked routes', () => {
 	const { nodes, routes } = create('samples/symlinks/routes');
 
-	assert.equal(nodes.map(simplify_node), [
+	expect(nodes.map(simplify_node)).toEqual([
 		default_layout,
 		default_error,
 		{ component: 'samples/symlinks/routes/foo/index.svelte' },
 		{ component: 'samples/symlinks/routes/index.svelte' }
 	]);
 
-	assert.equal(routes, [
+	expect(routes).toEqual([
 		{
 			id: '/',
 			pattern: '/^/$/',
@@ -144,7 +143,7 @@ test_symlinks('creates symlinked routes', () => {
 test('creates routes with layout', () => {
 	const { nodes, routes } = create('samples/basic-layout');
 
-	assert.equal(nodes.map(simplify_node), [
+	expect(nodes.map(simplify_node)).toEqual([
 		{ component: 'samples/basic-layout/+layout.svelte' },
 		default_error,
 		{ component: 'samples/basic-layout/foo/+layout.svelte' },
@@ -152,7 +151,7 @@ test('creates routes with layout', () => {
 		{ component: 'samples/basic-layout/foo/+page.svelte' }
 	]);
 
-	assert.equal(routes.map(simplify_route), [
+	expect(routes.map(simplify_route)).toEqual([
 		{
 			id: '/',
 			pattern: '/^/$/',
@@ -169,11 +168,11 @@ test('creates routes with layout', () => {
 
 test('succeeds when routes does not exist', () => {
 	const { nodes, routes } = create('samples/basic/routes');
-	assert.equal(nodes.map(simplify_node), [
+	expect(nodes.map(simplify_node)).toEqual([
 		{ component: 'layout.svelte' },
 		{ component: 'error.svelte' }
 	]);
-	assert.equal(routes.map(simplify_route), [
+	expect(routes.map(simplify_route)).toEqual([
 		{
 			id: '/',
 			pattern: '/^$/'
@@ -188,7 +187,7 @@ test('encodes invalid characters', () => {
 	const hash = { component: 'samples/encoding/[x+23]/+page.svelte' };
 	const question_mark = { component: 'samples/encoding/[x+3f]/+page.svelte' };
 
-	assert.equal(nodes.map(simplify_node), [
+	expect(nodes.map(simplify_node)).toEqual([
 		default_layout,
 		default_error,
 		quote,
@@ -196,8 +195,7 @@ test('encodes invalid characters', () => {
 		question_mark
 	]);
 
-	assert.equal(
-		routes.map((p) => p.pattern.toString()),
+	expect(routes.map((p) => p.pattern.toString())).toEqual(
 		[/^\/$/, /^\/%3[Ff]\/?$/, /^\/%23\/?$/, /^\/"\/?$/].map((pattern) => pattern.toString())
 	);
 });
@@ -240,13 +238,13 @@ test('sorts routes correctly', () => {
 		(route) => route.id
 	);
 
-	assert.equal(actual, expected);
+	expect(actual).toEqual(expected);
 });
 
 test('sorts routes with rest correctly', () => {
 	const { nodes, routes } = create('samples/rest');
 
-	assert.equal(nodes.map(simplify_node), [
+	expect(nodes.map(simplify_node)).toEqual([
 		default_layout,
 		default_error,
 		{
@@ -259,7 +257,7 @@ test('sorts routes with rest correctly', () => {
 		}
 	]);
 
-	assert.equal(routes.map(simplify_route), [
+	expect(routes.map(simplify_route)).toEqual([
 		{
 			id: '/',
 			pattern: '/^/$/'
@@ -288,7 +286,7 @@ test('sorts routes with rest correctly', () => {
 test('allows rest parameters inside segments', () => {
 	const { nodes, routes } = create('samples/rest-prefix-suffix');
 
-	assert.equal(nodes.map(simplify_node), [
+	expect(nodes.map(simplify_node)).toEqual([
 		default_layout,
 		default_error,
 		{
@@ -296,7 +294,7 @@ test('allows rest parameters inside segments', () => {
 		}
 	]);
 
-	assert.equal(routes.map(simplify_route), [
+	expect(routes.map(simplify_route)).toEqual([
 		{
 			id: '/',
 			pattern: '/^/$/'
@@ -319,29 +317,28 @@ test('allows rest parameters inside segments', () => {
 test('optional parameters', () => {
 	const { nodes, routes } = create('samples/optional');
 
-	assert.equal(
+	expect(
 		nodes
 			.map(simplify_node)
 			// for some reason linux and windows have a different order, which is why
 			// we need sort the nodes using a sort function (doesn't work either without),
 			// resulting in the following expected node order
-			.sort((a, b) => a.component?.localeCompare(b.component ?? '') ?? 1),
-		[
-			default_error,
-			default_layout,
-			{
-				component: 'samples/optional/[[optional]]/+page.svelte'
-			},
-			{
-				component: 'samples/optional/nested/[[optional]]/sub/+page.svelte'
-			},
-			{
-				component: 'samples/optional/prefix[[suffix]]/+page.svelte'
-			}
-		]
-	);
+			.sort((a, b) => a.component?.localeCompare(b.component ?? '') ?? 1)
+	).toEqual([
+		default_error,
+		default_layout,
+		{
+			component: 'samples/optional/[[optional]]/+page.svelte'
+		},
+		{
+			component: 'samples/optional/nested/[[optional]]/sub/+page.svelte'
+		},
+		{
+			component: 'samples/optional/prefix[[suffix]]/+page.svelte'
+		}
+	]);
 
-	assert.equal(routes.map(simplify_route), [
+	expect(routes.map(simplify_route)).toEqual([
 		{
 			id: '/',
 			pattern: '/^/$/'
@@ -388,13 +385,13 @@ test('optional parameters', () => {
 
 test('nested optionals', () => {
 	const { nodes, routes } = create('samples/nested-optionals');
-	assert.equal(nodes.map(simplify_node), [
+	expect(nodes.map(simplify_node)).toEqual([
 		default_layout,
 		default_error,
 		{ component: 'samples/nested-optionals/[[a]]/[[b]]/+page.svelte' }
 	]);
 
-	assert.equal(routes.map(simplify_route), [
+	expect(routes.map(simplify_route)).toEqual([
 		{
 			id: '/',
 			pattern: '/^/$/'
@@ -418,7 +415,7 @@ test('nested optionals', () => {
 test('ignores files and directories with leading underscores', () => {
 	const { routes } = create('samples/hidden-underscore');
 
-	assert.equal(routes.map((r) => r.endpoint?.file).filter(Boolean), [
+	expect(routes.map((r) => r.endpoint?.file).filter(Boolean)).toEqual([
 		'samples/hidden-underscore/e/f/g/h/+server.js'
 	]);
 });
@@ -426,7 +423,7 @@ test('ignores files and directories with leading underscores', () => {
 test('ignores files and directories with leading dots except .well-known', () => {
 	const { routes } = create('samples/hidden-dot');
 
-	assert.equal(routes.map((r) => r.endpoint?.file).filter(Boolean), [
+	expect(routes.map((r) => r.endpoint?.file).filter(Boolean)).toEqual([
 		'samples/hidden-dot/.well-known/dnt-policy.txt/+server.js'
 	]);
 });
@@ -434,7 +431,7 @@ test('ignores files and directories with leading dots except .well-known', () =>
 test('allows multiple slugs', () => {
 	const { routes } = create('samples/multiple-slugs');
 
-	assert.equal(routes.filter((route) => route.endpoint).map(simplify_route), [
+	expect(routes.filter((route) => route.endpoint).map(simplify_route)).toEqual([
 		{
 			id: '/[file].[ext]',
 			pattern: '/^/([^/]+?).([^/]+?)/?$/',
@@ -454,7 +451,7 @@ test('fails if dynamic params are not separated', () => {
 test('ignores things that look like lockfiles', () => {
 	const { routes } = create('samples/lockfiles');
 
-	assert.equal(routes.map(simplify_route), [
+	expect(routes.map(simplify_route)).toEqual([
 		{
 			id: '/',
 			pattern: '/^/$/'
@@ -474,7 +471,7 @@ test('works with custom extensions', () => {
 		extensions: ['.jazz', '.beebop', '.funk', '.svelte']
 	});
 
-	assert.equal(nodes.map(simplify_node), [
+	expect(nodes.map(simplify_node)).toEqual([
 		default_layout,
 		default_error,
 		{ component: 'samples/custom-extension/+page.funk' },
@@ -483,7 +480,7 @@ test('works with custom extensions', () => {
 		{ component: 'samples/custom-extension/blog/[slug]/+page.beebop' }
 	]);
 
-	assert.equal(routes.map(simplify_route), [
+	expect(routes.map(simplify_route)).toEqual([
 		{
 			id: '/',
 			pattern: '/^/$/',
@@ -524,7 +521,7 @@ test('works with custom extensions', () => {
 test('lists static assets', () => {
 	const { assets } = create('samples/basic');
 
-	assert.equal(assets, [
+	expect(assets).toEqual([
 		{
 			file: 'bar/baz.txt',
 			size: 14,
@@ -541,7 +538,7 @@ test('lists static assets', () => {
 test('includes nested error components', () => {
 	const { nodes, routes } = create('samples/nested-errors');
 
-	assert.equal(nodes.map(simplify_node), [
+	expect(nodes.map(simplify_node)).toEqual([
 		default_layout,
 		default_error,
 		{ component: 'samples/nested-errors/foo/+layout.svelte' },
@@ -551,7 +548,7 @@ test('includes nested error components', () => {
 		{ component: 'samples/nested-errors/foo/bar/baz/+page.svelte' }
 	]);
 
-	assert.equal(routes.map(simplify_route), [
+	expect(routes.map(simplify_route)).toEqual([
 		{
 			id: '/',
 			pattern: '/^/$/'
@@ -575,7 +572,7 @@ test('includes nested error components', () => {
 test('creates routes with named layouts', () => {
 	const { nodes, routes } = create('samples/named-layouts');
 
-	assert.equal(nodes.map(simplify_node), [
+	expect(nodes.map(simplify_node)).toEqual([
 		// layouts
 		{ component: 'samples/named-layouts/+layout.svelte' }, // 0
 		default_error, // 1
@@ -604,7 +601,7 @@ test('creates routes with named layouts', () => {
 		{ component: 'samples/named-layouts/b/d/d1/+page.svelte' } // 15
 	]);
 
-	assert.equal(routes.filter((route) => route.page).map(simplify_route), [
+	expect(routes.filter((route) => route.page).map(simplify_route)).toEqual([
 		{
 			id: '/a/a1',
 			pattern: '/^/a/a1/?$/',
@@ -651,7 +648,7 @@ test('creates routes with named layouts', () => {
 test('handles pages without .svelte file', () => {
 	const { nodes, routes } = create('samples/page-without-svelte-file');
 
-	assert.equal(nodes.map(simplify_node), [
+	expect(nodes.map(simplify_node)).toEqual([
 		default_layout,
 		default_error,
 		{ component: 'samples/page-without-svelte-file/error/+error.svelte' },
@@ -663,7 +660,7 @@ test('handles pages without .svelte file', () => {
 		{ server: 'samples/page-without-svelte-file/layout/redirect/+page.server.js' }
 	]);
 
-	assert.equal(routes.map(simplify_route), [
+	expect(routes.map(simplify_route)).toEqual([
 		{
 			id: '/',
 			pattern: '/^/$/',
@@ -712,7 +709,7 @@ test('errors on invalid named layout reference', () => {
 test('creates param matchers', () => {
 	const { matchers } = create('samples/basic'); // directory doesn't matter for the test
 
-	assert.equal(matchers, {
+	expect(matchers).toEqual({
 		foo: path.join('params', 'foo.js'),
 		bar: path.join('params', 'bar.js')
 	});
@@ -781,5 +778,3 @@ test('errors with both ts and js handlers for the same route', () => {
 		/^Multiple endpoint files found in samples\/conflicting-ts-js-handlers-server\/ : \+server\.js and \+server\.ts/
 	);
 });
-
-test.run();

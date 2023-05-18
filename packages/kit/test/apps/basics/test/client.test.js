@@ -24,7 +24,7 @@ test.describe('Caching', () => {
 		const [, response] = await Promise.all([
 			app.goto('/caching/server-data'),
 			page.waitForResponse((request) =>
-				request.url().endsWith('server-data/__data.json?x-sveltekit-invalidated=_1')
+				request.url().endsWith('server-data/__data.json?x-sveltekit-invalidated=01')
 			)
 		]);
 		expect(response.headers()['cache-control']).toBe('public, max-age=30');
@@ -456,14 +456,15 @@ test.describe('Invalidation', () => {
 		expect(shared).not.toBe(next_shared);
 	});
 
-	test('fetch in server load can be invalidated', async ({ page, app, request }) => {
+	test('fetch in server load cannot be invalidated', async ({ page, app, request }) => {
+		// TODO 2.0: Can remove this test after `dangerZone.trackServerFetches` and associated code is removed
 		await request.get('/load/invalidation/server-fetch/count.json?reset');
 		await page.goto('/load/invalidation/server-fetch');
 		const selector = '[data-testid="count"]';
 
 		expect(await page.textContent(selector)).toBe('1');
 		await app.invalidate('/load/invalidation/server-fetch/count.json');
-		expect(await page.textContent(selector)).toBe('2');
+		expect(await page.textContent(selector)).toBe('1');
 	});
 
 	test('+layout.js is re-run when shared dep is invalidated', async ({ page }) => {
@@ -536,11 +537,21 @@ test.describe('data-sveltekit attributes', () => {
 	test('data-sveltekit-preload-data', async ({ baseURL, page }) => {
 		/** @type {string[]} */
 		const requests = [];
-		page.on('request', (r) => requests.push(r.url()));
-
-		const module = process.env.DEV
-			? `${baseURL}/src/routes/data-sveltekit/preload-data/target/+page.svelte`
-			: `${baseURL}/_app/immutable/entry/data-sveltekit-preload-data-target-page`;
+		page.on('request', (req) => {
+			if (req.resourceType() === 'script') {
+				req
+					.response()
+					.then(
+						(res) => res.text(),
+						() => ''
+					)
+					.then((response) => {
+						if (response.includes(`this string should only appear in this preloaded file`)) {
+							requests.push(req.url());
+						}
+					});
+			}
+		});
 
 		await page.goto('/data-sveltekit/preload-data');
 		await page.locator('#one').dispatchEvent('mousemove');
@@ -548,7 +559,7 @@ test.describe('data-sveltekit attributes', () => {
 			page.waitForTimeout(100), // wait for preloading to start
 			page.waitForLoadState('networkidle') // wait for preloading to finish
 		]);
-		expect(requests.find((r) => r.startsWith(module))).toBeDefined();
+		expect(requests.length).toBe(1);
 
 		requests.length = 0;
 		await page.goto('/data-sveltekit/preload-data');
@@ -557,7 +568,7 @@ test.describe('data-sveltekit attributes', () => {
 			page.waitForTimeout(100), // wait for preloading to start
 			page.waitForLoadState('networkidle') // wait for preloading to finish
 		]);
-		expect(requests.find((r) => r.startsWith(module))).toBeDefined();
+		expect(requests.length).toBe(1);
 
 		requests.length = 0;
 		await page.goto('/data-sveltekit/preload-data');
@@ -566,7 +577,7 @@ test.describe('data-sveltekit attributes', () => {
 			page.waitForTimeout(100), // wait for preloading to start
 			page.waitForLoadState('networkidle') // wait for preloading to finish
 		]);
-		expect(requests.find((r) => r.startsWith(module))).toBeUndefined();
+		expect(requests.length).toBe(0);
 	});
 
 	test('data-sveltekit-reload', async ({ baseURL, page, clicknav }) => {
@@ -764,4 +775,17 @@ test.describe('Streaming', () => {
 			expect(page.locator('p.loadingfail')).toBeHidden();
 		});
 	}
+});
+
+test.describe('Actions', () => {
+	test('page store has correct data', async ({ page }) => {
+		await page.goto('/actions/enhance');
+		const pre = page.locator('pre.data1');
+
+		await expect(pre).toHaveText(`prop: 0, store: 0`);
+		await page.locator('.form4').click();
+		await expect(pre).toHaveText(`prop: 1, store: 1`);
+		await page.evaluate('window.svelte_tick()');
+		await expect(pre).toHaveText(`prop: 1, store: 1`);
+	});
 });

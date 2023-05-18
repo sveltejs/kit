@@ -5,11 +5,9 @@
 	import { Icon, Nav, NavItem, Separator, Shell } from '@sveltejs/site-kit/components';
 	import { Search, SearchBox } from '@sveltejs/site-kit/search';
 	import '@sveltejs/site-kit/styles/index.css';
-
-	let banner_height = '48px';
 </script>
 
-<Shell banner_bottom_height={banner_height}>
+<Shell>
 	<Nav slot="top-nav">
 		<svelte:fragment slot="home">
 			<span><strong>kit</strong>.svelte.dev</span>
@@ -48,18 +46,6 @@
 	</Nav>
 
 	<slot />
-
-	<div class="banner" slot="banner-bottom">
-		<a target="_blank" rel="noopener noreferrer" href="https://hack.sveltesociety.dev/">
-			<span class="small">
-				<strong>Announcing SvelteHack</strong> Participate →
-			</span>
-			<span class="large">
-				<strong>Announcing SvelteHack</strong> Our first hackathon with over $12,000 in prizes →
-			</span>
-		</a>
-		<button on:click={() => (banner_height = '0px')}> ✕ </button>
-	</div>
 </Shell>
 
 {#if browser}
@@ -96,36 +82,5 @@
 
 	:global(.toggle) {
 		bottom: 0 !important;
-	}
-
-	.banner {
-		--banner-bg: #ff4700;
-		--banner-color: white;
-		--banner-strong-color: white;
-
-		background-color: var(--banner-bg);
-		color: var(--banner-color);
-		position: fixed;
-		display: flex;
-		align-items: center;
-		justify-content: center;
-		bottom: 0;
-		width: 100vw;
-		height: var(--sk-banner-bottom-height);
-		z-index: 999;
-	}
-
-	.banner strong {
-		font-weight: bold;
-	}
-
-	.banner span {
-		color: var(--banner-color);
-	}
-
-	.banner button {
-		position: absolute;
-		right: 30px;
-		font-size: 18px;
 	}
 </style>

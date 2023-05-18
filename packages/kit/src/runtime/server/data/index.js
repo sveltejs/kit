@@ -8,8 +8,6 @@ import { text } from '../../../exports/index.js';
 import * as devalue from 'devalue';
 import { create_async_iterator } from '../../../utils/streaming.js';
 
-export const INVALIDATED_PARAM = 'x-sveltekit-invalidated';
-
 const encoder = new TextEncoder();
 
 /**
@@ -78,7 +76,8 @@ export async function render_data(
 								}
 							}
 							return data;
-						}
+						},
+						track_server_fetches: options.track_server_fetches
 					});
 				} catch (e) {
 					aborted = true;

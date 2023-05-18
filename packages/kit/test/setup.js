@@ -6,7 +6,7 @@ import {
 	beforeNavigate,
 	afterNavigate
 } from '$app/navigation';
-import { onMount } from 'svelte';
+import { onMount, tick } from 'svelte';
 
 export function setup() {
 	onMount(() => {
@@ -17,7 +17,8 @@ export function setup() {
 			preloadCode,
 			preloadData,
 			beforeNavigate,
-			afterNavigate
+			afterNavigate,
+			svelte_tick: tick
 		});
 
 		// communicate that the app is ready

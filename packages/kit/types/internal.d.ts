@@ -266,6 +266,7 @@ export interface ServerMetadataRoute {
 	};
 	methods: HttpMethod[];
 	prerender: PrerenderOption | undefined;
+	entries: Array<string> | undefined;
 }
 
 export interface ServerMetadata {
@@ -308,6 +309,7 @@ export interface SSRNode {
 		csr?: boolean;
 		trailingSlash?: TrailingSlash;
 		config?: any;
+		entries?: PrerenderEntryGenerator;
 	};
 
 	server: {
@@ -318,6 +320,7 @@ export interface SSRNode {
 		trailingSlash?: TrailingSlash;
 		actions?: Actions;
 		config?: any;
+		entries?: PrerenderEntryGenerator;
 	};
 
 	universal_id: string;
@@ -330,6 +333,7 @@ export interface SSROptions {
 	app_template_contains_nonce: boolean;
 	csp: ValidatedConfig['kit']['csp'];
 	csrf_check_origin: boolean;
+	track_server_fetches: boolean;
 	embedded: boolean;
 	env_public_prefix: string;
 	hooks: ServerHooks;
@@ -355,10 +359,13 @@ export interface PageNodeIndexes {
 	leaf: number;
 }
 
+export type PrerenderEntryGenerator = () => MaybePromise<Array<Record<string, string>>>;
+
 export type SSREndpoint = Partial<Record<HttpMethod, RequestHandler>> & {
 	prerender?: PrerenderOption;
 	trailingSlash?: TrailingSlash;
 	config?: any;
+	entries?: PrerenderEntryGenerator;
 };
 
 export interface SSRRoute {

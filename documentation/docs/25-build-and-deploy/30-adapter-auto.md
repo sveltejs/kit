@@ -8,6 +8,7 @@ When you create a new SvelteKit project with `npm create svelte@latest`, it inst
 - [`@sveltejs/adapter-netlify`](adapter-netlify) for [Netlify](https://netlify.com/)
 - [`@sveltejs/adapter-vercel`](adapter-vercel) for [Vercel](https://vercel.com/)
 - [`svelte-adapter-azure-swa`](https://github.com/geoffrich/svelte-adapter-azure-swa) for [Azure Static Web Apps](https://docs.microsoft.com/en-us/azure/static-web-apps/)
+- [`svelte-kit-sst`](https://github.com/serverless-stack/sst/tree/master/packages/svelte-kit-sst) for [AWS via SST](https://docs.sst.dev/start/svelte)
 
 It's recommended to install the appropriate adapter to your `devDependencies` once you've settled on a target environment, since this will add the adapter to your lockfile and slightly improve install times on CI.
 

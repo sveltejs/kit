@@ -1,22 +1,17 @@
-import { BROWSER } from 'esm-env';
-import { client } from '../client/singletons.js';
+import { client_method } from '../client/singletons.js';
 
-/**
- * @param {string} name
- */
-function guard(name) {
-	return () => {
-		throw new Error(`Cannot call ${name}(...) on the server`);
-	};
-}
+export const disableScrollHandling = /* @__PURE__ */ client_method('disable_scroll_handling');
 
-export const disableScrollHandling = BROWSER
-	? client.disable_scroll_handling
-	: guard('disableScrollHandling');
-export const goto = BROWSER ? client.goto : guard('goto');
-export const invalidate = BROWSER ? client.invalidate : guard('invalidate');
-export const invalidateAll = BROWSER ? client.invalidateAll : guard('invalidateAll');
-export const preloadData = BROWSER ? client.preload_data : guard('preloadData');
-export const preloadCode = BROWSER ? client.preload_code : guard('preloadCode');
-export const beforeNavigate = BROWSER ? client.before_navigate : () => {};
-export const afterNavigate = BROWSER ? client.after_navigate : () => {};
+export const goto = /* @__PURE__ */ client_method('goto');
+
+export const invalidate = /* @__PURE__ */ client_method('invalidate');
+
+export const invalidateAll = /* @__PURE__ */ client_method('invalidate_all');
+
+export const preloadData = /* @__PURE__ */ client_method('preload_data');
+
+export const preloadCode = /* @__PURE__ */ client_method('preload_code');
+
+export const beforeNavigate = /* @__PURE__ */ client_method('before_navigate');
+
+export const afterNavigate = /* @__PURE__ */ client_method('after_navigate');

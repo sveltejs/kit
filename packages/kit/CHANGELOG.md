@@ -1,5 +1,111 @@
 # @sveltejs/kit
 
+## 1.18.0
+
+### Minor Changes
+
+- security: Stop implicitly tracking URLs as dependencies in server-side `load`s ([#9945](https://github.com/sveltejs/kit/pull/9945))
+
+## 1.17.1
+
+### Patch Changes
+
+- fix: ensure styles are loaded in dev mode for routes containing special characters ([#9894](https://github.com/sveltejs/kit/pull/9894))
+
+- feat: warn users when enhancing forms with files but no `enctype="multipart/form-data"` ([#9888](https://github.com/sveltejs/kit/pull/9888))
+
+## 1.17.0
+
+### Minor Changes
+
+- feat: unshadow `data` and `form` in `enhance` and warn about future deprecation when used in `dev` mode ([#9902](https://github.com/sveltejs/kit/pull/9902))
+
+- feat: crawl URLs in `<meta>` tags ([#9900](https://github.com/sveltejs/kit/pull/9900))
+
+### Patch Changes
+
+- fix: avoid trying to inline raw or url css imports ([#9925](https://github.com/sveltejs/kit/pull/9925))
+
+- feat: prerender in worker rather than subprocess to support Deno ([#9919](https://github.com/sveltejs/kit/pull/9919))
+
+- perf: add `<script>` to prerendered redirects for faster redirects ([#9911](https://github.com/sveltejs/kit/pull/9911))
+
+- fix: add typing for `vitePlugin` to `Config` ([#9946](https://github.com/sveltejs/kit/pull/9946))
+
+- fix: stop setting Kit cookie defaults on cookies parsed from headers ([#9908](https://github.com/sveltejs/kit/pull/9908))
+
+- fix: only skip hydration with vite overlay if current page is an error ([#9892](https://github.com/sveltejs/kit/pull/9892))
+
+## 1.16.3
+
+### Patch Changes
+
+- fix: entry generation with mixed segments ([#9879](https://github.com/sveltejs/kit/pull/9879))
+
+- fix: use `focusVisible: false` to prevent unwanted focus ring on navigation ([#9861](https://github.com/sveltejs/kit/pull/9861))
+
+## 1.16.2
+
+### Patch Changes
+
+- fix: support Node 20 ([`6e2efcf62`](https://github.com/sveltejs/kit/commit/6e2efcf627ce8d179c941212d761aa93568b1724))
+
+- fix: reset focus synchronously on navigation ([#9837](https://github.com/sveltejs/kit/pull/9837))
+
+## 1.16.1
+
+### Patch Changes
+
+- fix: realign state.branch on the client on first load ([#9754](https://github.com/sveltejs/kit/pull/9754))
+
+- fix: update `$page.data` correctly after invalidate ([#9798](https://github.com/sveltejs/kit/pull/9798))
+
+- fix: file not found in manifest ([#9846](https://github.com/sveltejs/kit/pull/9846))
+
+## 1.16.0
+
+### Minor Changes
+
+- feat: route-level entry generators via `export const entries` ([#9571](https://github.com/sveltejs/kit/pull/9571))
+
+## 1.15.11
+
+### Patch Changes
+
+- chore: more compact representation for invalidated search param ([#9708](https://github.com/sveltejs/kit/pull/9708))
+
+- chore: fix import path to app script on windows ([#9743](https://github.com/sveltejs/kit/pull/9743))
+
+- fix: make $app/navigation more resilient to bundler reordering ([#9808](https://github.com/sveltejs/kit/pull/9808))
+
+- fix: page load `fetch()` now accepts the same input types for the body as the native fetch function ([#9801](https://github.com/sveltejs/kit/pull/9801))
+
+- fix: handle preload and filterSerializedResponseHeaders in sequence function ([#9741](https://github.com/sveltejs/kit/pull/9741))
+
+## 1.15.10
+
+### Patch Changes
+
+- fix: log whole error object in default handleError ([#9791](https://github.com/sveltejs/kit/pull/9791))
+
+## 1.15.9
+
+### Patch Changes
+
+- fix: correctly replace state when `data-sveltekit-replacestate` is used with a hash link ([#9751](https://github.com/sveltejs/kit/pull/9751))
+
+- fix: compute trailing slash on page server / data request ([#9738](https://github.com/sveltejs/kit/pull/9738))
+
+- fix: update vite-plugin-svelte to fix windows resolution issue ([#9769](https://github.com/sveltejs/kit/pull/9769))
+
+## 1.15.8
+
+### Patch Changes
+
+- chore: revert undici pin and upgrade version ([#9740](https://github.com/sveltejs/kit/pull/9740))
+
+- chore: upgrade vite-plugin-svelte for resolve improvements and warnings ([#9742](https://github.com/sveltejs/kit/pull/9742))
+
 ## 1.15.7
 
 ### Patch Changes
