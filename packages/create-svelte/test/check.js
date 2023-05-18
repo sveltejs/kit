@@ -32,7 +32,7 @@ for (const pkg_path of glob(resolve_path('../../../packages/*/package.json'))) {
 
 try {
 	const kit_dir = resolve_path('../../../packages/kit');
-	const ls_vite_result = execSync(`pnpm ls --json vite`, { cwd: kit_dir });
+	const ls_vite_result = execSync('pnpm ls --json vite', { cwd: kit_dir });
 	const vite_version = JSON.parse(ls_vite_result.toString())[0].devDependencies.vite.version;
 	overrides.vite = vite_version;
 } catch (e) {
@@ -61,7 +61,7 @@ fs.writeFileSync(path.join(test_workspace_dir, 'pnpm-workspace.yaml'), 'packages
 const exec_async = promisify(exec);
 
 beforeAll(async () => {
-	await exec_async(`pnpm install --no-frozen-lockfile`, {
+	await exec_async('pnpm install --no-frozen-lockfile', {
 		cwd: test_workspace_dir
 	});
 }, 60000);

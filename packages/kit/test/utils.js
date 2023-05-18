@@ -118,7 +118,7 @@ export const test = base.extend({
 		await use(page);
 	},
 
-	read_errors: ({}, use) => {
+	read_errors: (_, use) => {
 		/** @param {string} path */
 		function read_errors(path) {
 			const errors =
@@ -130,7 +130,7 @@ export const test = base.extend({
 		use(read_errors);
 	},
 
-	start_server: async ({}, use) => {
+	start_server: async (_, use) => {
 		/**
 		 * @type {http.Server}
 		 */
@@ -201,7 +201,7 @@ export const test = base.extend({
 	// setup context
 	// teardown context
 	// teardown start_server
-	context: async function ({ context, start_server }, use) {
+	async context({ context, start_server }, use) {
 		// just here make sure start_server is referenced, don't call
 		if (!start_server) {
 			throw new Error('start_server fixture not present');

@@ -1,15 +1,11 @@
 {
+	"root": true,
+	"extends": "@sveltejs",
 	"env": {
 		"es2022": true
 	},
-	"parserOptions": {
-		"ecmaVersion": "latest",
-		"sourceType": "module"
-	},
-	"plugins": ["unicorn"],
-	"root": true,
 	"ignorePatterns": ["packages/create-svelte/shared/"],
 	"rules": {
-		"unicorn/prefer-node-protocol": "error"
+		"no-undef": "off"
 	}
 }

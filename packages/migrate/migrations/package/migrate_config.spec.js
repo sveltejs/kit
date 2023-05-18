@@ -11,7 +11,7 @@ test('Removes package config #1', () => {
         },
         package: {
             dir: 'package',
-            exports: (filepath) => !/^_|\/_|\.d\.ts$/.test(filepath),
+            exports: (filepath) => !/^_|\\/_|\\.d\\.ts$/.test(filepath),
             files: () => true
         },
         preprocess: []
@@ -35,7 +35,7 @@ test('Removes package config #2', () => {
     export default {
         package: {
             dir: 'package',
-            exports: (filepath) => !/^_|\/_|\.d\.ts$/.test(filepath),
+            exports: (filepath) => !/^_|\\/_|\\.d\\.ts$/.test(filepath),
             files: () => true
         },
     }`);
@@ -51,7 +51,7 @@ test('Removes package config #3', () => {
     const config = {
         package: {
             dir: 'package',
-            exports: (filepath) => !/^_|\/_|\.d\.ts$/.test(filepath),
+            exports: (filepath) => !/^_|\\/_|\\.d\\.ts$/.test(filepath),
             files: () => true
         },
     };

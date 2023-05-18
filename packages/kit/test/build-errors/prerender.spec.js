@@ -11,7 +11,7 @@ test('prerenderable routes must be prerendered', () => {
 				stdio: 'pipe',
 				timeout: 60000
 			}),
-		/The following routes were marked as prerenderable, but were not prerendered because they were not found while crawling your app:\r?\n  - \/\[x\]/gs
+		/The following routes were marked as prerenderable, but were not prerendered because they were not found while crawling your app:\r?\n {2}- \/\[x\]/gs
 	);
 });
 

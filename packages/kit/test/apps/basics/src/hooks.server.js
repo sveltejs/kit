@@ -19,7 +19,7 @@ export function error_to_pojo(error) {
 		};
 	}
 
-	const { name, message, stack, cause, ...custom } = error;
+	const { name, message, stack, ...custom } = error;
 	return { name, message, stack, ...custom };
 }
 
