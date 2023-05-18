@@ -1,6 +1,8 @@
 <script>
 	import { beforeNavigate } from '$app/navigation';
 
+	const download_url = '/before-navigate/download';
+
 	let times_triggered = 0;
 	let unload = false;
 	let navigation_type;
@@ -9,6 +11,9 @@
 		times_triggered++;
 		unload = willUnload;
 		navigation_type = type;
+
+		// we don't call cancel so that clicking the implicit download link works.
+		if (to?.url.href === download_url) return;
 
 		if (!to?.route.id?.includes('redirect')) {
 			cancel();
@@ -23,5 +28,5 @@
 <a href="https://google.com" target="_blank" rel="noreferrer">_blank</a>
 <a href="https://google.de">external</a>
 <a download href="/before-navigate/prevent-navigation">explicit download</a>
-<a href="/before-navigate/download">implicit download</a>
+<a href={download_url}>implicit download</a>
 <pre>{times_triggered} {unload} {navigation_type}</pre>
