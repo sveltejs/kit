@@ -1448,7 +1448,7 @@ export function create_client(app, target) {
 					const navigation = {
 						from: {
 							params: current.params,
-							route: { id: null },
+							route: { id: current.route?.id ?? null },
 							url: current.url
 						},
 						to: null,
