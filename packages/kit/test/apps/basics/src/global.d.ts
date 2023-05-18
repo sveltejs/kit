@@ -6,7 +6,6 @@ declare global {
 		mounted: number;
 		fulfil_navigation: (value: any) => void;
 		promise: Promise<any>;
-		update_state: number;
 		PUBLIC_DYNAMIC: string;
 	}
 }

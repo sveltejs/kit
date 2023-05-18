@@ -146,7 +146,6 @@ test.describe('Load', () => {
 		// update_state is used to ensure we start waiting at the right time
 		await page.addInitScript(`
 			window.now = 0;
-			window.update_state = 0;
 			window.performance.now = () => now;
 		`);
 
@@ -156,13 +155,13 @@ test.describe('Load', () => {
 		const p = page.locator('p.counter');
 
 		await button.click();
-		await page.waitForFunction('window.update_state === 2');
+		await expect(button).toHaveAttribute('data-ticker', '2');
 		await expect(p).toHaveText('Count is 0');
 
 		await page.evaluate('window.now += 2000');
 
 		await button.click();
-		await page.waitForFunction('window.update_state === 4');
+		await expect(button).toHaveAttribute('data-ticker', '4');
 		await expect(p).toHaveText('Count is 2');
 	});
 
