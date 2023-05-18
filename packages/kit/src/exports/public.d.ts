@@ -24,6 +24,8 @@ import type { PluginOptions } from '@sveltejs/vite-plugin-svelte';
 export { PrerenderOption } from '../types/private.js';
 export { ActionFailure };
 
+export const VERSION: `${number}.${number}.${number}`
+
 /**
  * [Adapters](https://kit.svelte.dev/docs/adapters) are responsible for taking the production build and turning it into something that can be deployed to a platform of your choosing.
  */

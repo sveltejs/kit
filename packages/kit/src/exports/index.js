@@ -9,6 +9,8 @@ import { get_route_segments } from '../utils/routing.js';
  * @return {HttpError}
  */
 
+export { VERSION } from '../version.js';
+
 /**
  * @overload
  * @param {number} status
