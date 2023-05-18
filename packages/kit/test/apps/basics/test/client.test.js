@@ -158,7 +158,7 @@ test.describe('Load', () => {
 		await expect(button).toHaveAttribute('data-ticker', '2');
 		await expect(p).toHaveText('Count is 0');
 
-		await page.evaluate('window.now += 2000');
+		await page.evaluate('window.now = 2500');
 
 		await button.click();
 		await expect(button).toHaveAttribute('data-ticker', '4');

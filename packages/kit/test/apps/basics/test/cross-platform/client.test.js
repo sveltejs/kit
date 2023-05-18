@@ -310,14 +310,13 @@ test.describe('Scrolling', () => {
 		await page.locator('#scroll-anchor').click();
 		const originalScrollY = /** @type {number} */ (await page.evaluate(() => scrollY));
 		await clicknav('#routing-page');
-		await page.goBack({ waitUntil: 'networkidle' });
+		await page.goBack();
 
-		expect(page.url()).toBe(baseURL + '/anchor#last-anchor-2');
+		await expect(page).toHaveURL('/anchor#last-anchor-2');
 		expect(await page.evaluate(() => scrollY)).toEqual(originalScrollY);
 
-		await page.goBack({ waitUntil: 'networkidle' });
-
-		expect(page.url()).toBe(baseURL + '/anchor');
+		await page.goBack();
+		await expect(page).toHaveURL('/anchor');
 		expect(await page.evaluate(() => scrollY)).toEqual(0);
 	});
 
@@ -514,9 +513,9 @@ test.describe.serial('Errors', () => {
 
 test.describe('Prefetching', () => {
 	test('prefetches programmatically', async ({ baseURL, page, app }) => {
-		await page.goto('/routing/a', {
-			waitUntil: 'networkidle'
-		});
+		// wait for all initial requests to complete otherwise the check for no requests
+		// below may fail
+		await page.goto('/routing/a', { waitUntil: 'networkidle' });
 
 		/** @type {string[]} */
 		let requests = [];
@@ -538,18 +537,15 @@ test.describe('Prefetching', () => {
 			expect(requests.filter((req) => req.endsWith('.js')).length).toBeGreaterThan(0);
 		}
 
-		expect(requests.includes(`${baseURL}/routing/preloading/preloaded.json`)).toBe(true);
+		expect(requests).toContain(`${baseURL}/routing/preloading/preloaded.json`);
 
 		requests = [];
 		await app.goto('/routing/preloading/preloaded');
 		expect(requests).toEqual([]);
 
-		try {
-			await app.preloadData('https://example.com');
-			throw new Error('Error was not thrown');
-		} catch (/** @type {any} */ e) {
-			expect(e.message).toMatch('Attempted to preload a URL that does not belong to this app');
-		}
+		await expect(app.preloadData('https://example.com')).rejects.toThrowError(
+			'Attempted to preload a URL that does not belong to this app'
+		);
 	});
 
 	test('chooses correct route when hash route is preloaded but regular route is clicked', async ({
@@ -694,9 +690,12 @@ test.describe('Routing', () => {
 	});
 
 	test('responds to <form method="GET"> submission without reload', async ({ page }) => {
+		// Wait until all initial requests have been resolved otherwise
+		// the check for no requests might fail.
 		await page.goto('/routing/form-get', {
 			waitUntil: 'networkidle'
 		});
+
 		expect(await page.textContent('h1')).toBe('...');
 		expect(await page.textContent('h2')).toBe('enter');
 		expect(await page.textContent('h3')).toBe('...');

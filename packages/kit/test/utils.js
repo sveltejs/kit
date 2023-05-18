@@ -115,6 +115,8 @@ export const test = base.extend({
 					}
 					return res;
 				} catch (e) {
+					// Exclude this function from the stack trace so that it points to the failing test
+					// instead of this file.
 					// @ts-expect-error
 					Error.captureStackTrace(e, modified_fn);
 					throw e;

@@ -743,6 +743,7 @@ test.describe('Routing', () => {
 	});
 
 	test('focus works if page load has hash', async ({ page, browserName }) => {
+		// wait until networkidle otherwise the keypress will get lost
 		await page.goto('/routing/hashes/target#p2', { waitUntil: 'networkidle' });
 
 		await page.keyboard.press(browserName === 'webkit' ? 'Alt+Tab' : 'Tab');
