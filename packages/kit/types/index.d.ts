@@ -1310,3 +1310,18 @@ export interface Snapshot<T = any> {
 	capture: () => T;
 	restore: (snapshot: T) => void;
 }
+
+/**
+ * Populate a route ID with params to resolve a pathname.
+ * @example
+ * ```js
+ * resolvePath(
+ *   `/blog/[slug]/[...somethingElse]`,
+ *   {
+ *     slug: 'hello-world',
+ *     somethingElse: 'something/else'
+ *   }
+ * ); // `/blog/hello-world/something/else`
+ * ```
+ */
+export function resolvePath(id: string, params: Record<string, string | undefined>): string;
