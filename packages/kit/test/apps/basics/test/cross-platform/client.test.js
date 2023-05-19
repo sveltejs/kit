@@ -230,7 +230,6 @@ test.describe('beforeNavigate', () => {
 		await page.goto('/before-navigate/prevent-navigation');
 
 		await page.click('a[href="/before-navigate/download"]');
-		await page.waitForTimeout(500);
 
 		expect(page.url()).toBe(baseURL + '/before-navigate/prevent-navigation');
 		expect(await page.innerHTML('pre')).toBe('1 true link');
