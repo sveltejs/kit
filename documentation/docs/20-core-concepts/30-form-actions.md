@@ -344,7 +344,7 @@ To customise the behaviour, you can provide a `SubmitFunction` that runs immedia
 ```svelte
 <form
 	method="POST"
-	use:enhance={({ formElement, formData, action, cancel }) => {
+	use:enhance={({ formElement, formData, action, cancel, submitter }) => {
 		// `formElement` is this `<form>` element
 		// `formData` is its `FormData` object that's about to be submitted
 		// `action` is the URL to which the form is posted
