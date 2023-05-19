@@ -118,7 +118,8 @@ export const test = base.extend({
 		await use(page);
 	},
 
-	read_errors: (_, use) => {
+	// eslint-disable-next-line no-empty-pattern
+	read_errors: ({}, use) => {
 		/** @param {string} path */
 		function read_errors(path) {
 			const errors =
@@ -130,7 +131,8 @@ export const test = base.extend({
 		use(read_errors);
 	},
 
-	start_server: async (_, use) => {
+	// eslint-disable-next-line no-empty-pattern
+	start_server: async ({}, use) => {
 		/**
 		 * @type {http.Server}
 		 */
