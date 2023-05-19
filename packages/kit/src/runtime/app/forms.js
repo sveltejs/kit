@@ -8,6 +8,7 @@ import { invalidateAll } from './navigation.js';
  * In case of an error, it redirects to the nearest error page.
  * @template {Record<string, unknown> | undefined} Success
  * @template {Record<string, unknown> | undefined} Invalid
+ * @type {(result: import('@sveltejs/kit').ActionResult<Success, Invalid>) => void}
  * @param {import('@sveltejs/kit').ActionResult<Success, Invalid>} result
  */
 export const applyAction = client_method('apply_action');

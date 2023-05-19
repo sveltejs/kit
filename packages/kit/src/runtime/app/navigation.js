@@ -11,6 +11,13 @@ export const disableScrollHandling = /* @__PURE__ */ client_method('disable_scro
  * Returns a Promise that resolves when SvelteKit navigates (or fails to navigate, in which case the promise rejects) to the specified `url`.
  * For external URLs, use `window.location = url` instead of calling `goto(url)`.
  *
+ * @type {(url: string | URL, opts?: {
+ *   replaceState?: boolean;
+ *   noScroll?: boolean;
+ *   keepFocus?: boolean;
+ *   invalidateAll?: boolean;
+ *   state?: any
+ * }) => Promise<void>}
  * @param {string | URL} url Where to navigate to. Note that if you've set [`config.kit.paths.base`](https://kit.svelte.dev/docs/configuration#paths) and the URL is root-relative, you need to prepend the base path if you want to navigate within the app.
  * @param {Object} [opts] Options related to the navigation
  * @param {boolean} [opts.replaceState] If `true`, will replace the current `history` entry rather than creating a new one with `pushState`
@@ -37,6 +44,7 @@ export const goto = /* @__PURE__ */ client_method('goto');
  *
  * invalidate((url) => url.pathname === '/path');
  * ```
+ * @type {(url: string | URL | ((url: URL) => boolean)) => Promise<void>}
  * @param {string | URL | ((url: URL) => boolean)} url The invalidated URL
  * @returns {Promise<void>}
  */
@@ -44,6 +52,7 @@ export const invalidate = /* @__PURE__ */ client_method('invalidate');
 
 /**
  * Causes all `load` functions belonging to the currently active page to re-run. Returns a `Promise` that resolves when the page is subsequently updated.
+ * @type {() => Promise<void>}
  * @returns {Promise<void>}
  */
 export const invalidateAll = /* @__PURE__ */ client_method('invalidate_all');
@@ -57,6 +66,7 @@ export const invalidateAll = /* @__PURE__ */ client_method('invalidate_all');
  * If the next navigation is to `href`, the values returned from load will be used, making navigation instantaneous.
  * Returns a Promise that resolves when the preload is complete.
  *
+ * @type {(href: string) => Promise<void>}
  * @param {string} href Page to preload
  * @returns {Promise<void>}
  */
@@ -70,6 +80,8 @@ export const preloadData = /* @__PURE__ */ client_method('preload_data');
  *
  * Unlike `preloadData`, this won't call `load` functions.
  * Returns a Promise that resolves when the modules have been imported.
+ *
+ * @type {(...urls: string[]) => Promise<void>}
  * @param {...string[]} urls
  * @returns {Promise<void>}
  */
@@ -83,6 +95,7 @@ export const preloadCode = /* @__PURE__ */ client_method('preload_code');
  * When a navigation isn't client side, `navigation.to.route.id` will be `null`.
  *
  * `beforeNavigate` must be called during a component initialization. It remains active as long as the component is mounted.
+ * @type {(callback: (navigation: import('@sveltejs/kit').BeforeNavigate) => void) => void}
  * @param {(navigation: import('@sveltejs/kit').BeforeNavigate) => void} callback
  * @returns {void}
  */
@@ -92,6 +105,7 @@ export const beforeNavigate = /* @__PURE__ */ client_method('before_navigate');
  * A lifecycle function that runs the supplied `callback` when the current component mounts, and also whenever we navigate to a new URL.
  *
  * `afterNavigate` must be called during a component initialization. It remains active as long as the component is mounted.
+ * @type {(callback: (navigation: import('@sveltejs/kit').AfterNavigate) => void) => void}
  * @param {(navigation: import('@sveltejs/kit').AfterNavigate) => void} callback
  * @returns {void}
  */

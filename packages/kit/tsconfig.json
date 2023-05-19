@@ -10,8 +10,9 @@
 		"allowSyntheticDefaultImports": true,
 		"paths": {
 			"@sveltejs/kit": ["./src/exports/public.d.ts"],
+			"@sveltejs/kit/node": ["./src/exports/node/index.js"],
 			// internal use only
-			"types": ["src/types/internal"]
+			"types": ["./src/types/internal"]
 		},
 		"noUnusedLocals": true,
 		"noUnusedParameters": true
