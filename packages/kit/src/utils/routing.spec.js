@@ -230,7 +230,7 @@ const complex_tests = [
 	{
 		route: '/[[lang=lang]]/[asset=asset]/[[categoryType]]/[...categories]',
 		path: '/music/genre',
-		expected: { asset: 'music', categoryType: 'genre' },
+		expected: { asset: 'music', categoryType: 'genre', categories: '' },
 		matchers: {
 			lang: () => false,
 			asset: () => true
