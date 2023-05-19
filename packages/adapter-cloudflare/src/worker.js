@@ -46,7 +46,7 @@ const worker = {
 			// dynamically-generated pages
 			res = await server.respond(req, {
 				// @ts-ignore
-				platform: { env, context, caches },
+				platform: { env, context, caches, cf: req.cf },
 				getClientAddress() {
 					return req.headers.get('cf-connecting-ip');
 				}
