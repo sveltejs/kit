@@ -1,6 +1,6 @@
-import { createModuleDeclarations } from 'dts-buddy';
+import { createBundle } from 'dts-buddy';
 
-createModuleDeclarations({
+createBundle({
 	output: 'types/index.d.ts',
 	modules: {
 		'@sveltejs/kit': 'src/exports/public.d.ts',
