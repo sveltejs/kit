@@ -425,8 +425,8 @@ importers:
         specifier: ^2.4.2
         version: 2.4.2
       dts-buddy:
-        specifier: ^0.0.1
-        version: 0.0.1
+        specifier: ^0.0.2
+        version: 0.0.2
       marked:
         specifier: ^4.2.3
         version: 4.2.3
@@ -2865,8 +2865,8 @@ packages:
     engines: {node: '>=12'}
     dev: true
 
-  /dts-buddy@0.0.1:
-    resolution: {integrity: sha512-VKiLpfxCLHrvWdu+Cv+tz4cexL/cFMOWPvGaJU2R/vE/j+HV6zTLU83Q1xuwC0A9oMfUXy7h11e7IbLd5WYxeg==}
+  /dts-buddy@0.0.2:
+    resolution: {integrity: sha512-A1AA4zWn6+AtnBZGRFtyMMayJ6CXfCTTIxxzTYpeqWy1Qjf/tK9Wp2LFgu0e/mgQuoUUowEjj26yZ64TwB/0gA==}
     dependencies:
       '@jridgewell/source-map': 0.3.3
       globrex: 0.1.2
