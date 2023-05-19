@@ -45,7 +45,7 @@ const default_preload = ({ type }) => type === 'js' || type === 'css';
 /**
  * @param {Request} request
  * @param {import('types').SSROptions} options
- * @param {import('types').SSRManifest} manifest
+ * @param {import('@sveltejs/kit').SSRManifest} manifest
  * @param {import('types').SSRState} state
  * @returns {Promise<Response>}
  */
@@ -130,7 +130,7 @@ export async function respond(request, options, manifest, state) {
 	/** @type {Record<string, import('./page/types').Cookie>} */
 	let cookies_to_add = {};
 
-	/** @type {import('types').RequestEvent} */
+	/** @type {import('@sveltejs/kit').RequestEvent} */
 	const event = {
 		// @ts-expect-error `cookies` and `fetch` need to be created after the `event` itself
 		cookies: null,
@@ -343,8 +343,8 @@ export async function respond(request, options, manifest, state) {
 
 	/**
 	 *
-	 * @param {import('types').RequestEvent} event
-	 * @param {import('types').ResolveOptions} [opts]
+	 * @param {import('@sveltejs/kit').RequestEvent} event
+	 * @param {import('@sveltejs/kit').ResolveOptions} [opts]
 	 */
 	async function resolve(event, opts) {
 		try {

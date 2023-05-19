@@ -46,6 +46,6 @@ export function client_method(key) {
 export const stores = {
 	url: notifiable_store({}),
 	page: notifiable_store({}),
-	navigating: writable(/** @type {import('types').Navigation | null} */ (null)),
+	navigating: writable(/** @type {import('@sveltejs/kit').Navigation | null} */ (null)),
 	updated: create_updated_store()
 };

@@ -2,7 +2,7 @@
 // but which cannot be imported from `@sveltejs/kit`. Care should
 // be taken to avoid breaking changes when editing this file
 
-import { RouteDefinition } from '../src/exports/index.js';
+import { RouteDefinition } from '../exports/index.js';
 
 export interface AdapterEntry {
 	/**

@@ -1,5 +1,5 @@
 /**
- * @returns {import("types").Deferred & { promise: Promise<any> }}}
+ * @returns {import('types').Deferred & { promise: Promise<any> }}}
  */
 function defer() {
 	let fulfil;

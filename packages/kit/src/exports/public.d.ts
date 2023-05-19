@@ -1,7 +1,7 @@
 /// <reference types="svelte" />
 /// <reference types="vite/client" />
 
-import '../../types/ambient.js';
+import '../types/ambient.js';
 
 import { CompileOptions } from 'svelte/types/compiler/interfaces';
 import {
@@ -18,11 +18,11 @@ import {
 	RequestOptions,
 	RouteSegment,
 	UniqueInterface
-} from '../../types/private.js';
-import { BuildData, SSRNodeLoader, SSRRoute, ValidatedConfig } from '../../types/internal.js';
+} from '../types/private.js';
+import { BuildData, SSRNodeLoader, SSRRoute, ValidatedConfig } from 'types';
 import type { PluginOptions } from '@sveltejs/vite-plugin-svelte';
 
-export { PrerenderOption } from '../../types/private.js';
+export { PrerenderOption } from '../types/private.js';
 
 /**
  * [Adapters](https://kit.svelte.dev/docs/adapters) are responsible for taking the production build and turning it into something that can be deployed to a platform of your choosing.

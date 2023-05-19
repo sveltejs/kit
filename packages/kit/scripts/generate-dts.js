@@ -1,7 +1,7 @@
 import { createModuleDeclarations } from 'dts-buddy';
 
 createModuleDeclarations({
-	output: 'test-types/index.d.ts',
+	output: 'types/index.d.ts',
 	modules: {
 		'@sveltejs/kit': 'src/exports/public.d.ts',
 		'@sveltejs/kit/hooks': 'src/exports/hooks/index.js',
