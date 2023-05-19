@@ -1,7 +1,7 @@
 /// <reference types="svelte" />
 /// <reference types="vite/client" />
 
-import './ambient.js';
+import '../../types/ambient.js';
 
 import { CompileOptions } from 'svelte/types/compiler/interfaces';
 import {
@@ -18,11 +18,11 @@ import {
 	RequestOptions,
 	RouteSegment,
 	UniqueInterface
-} from './private.js';
-import { BuildData, SSRNodeLoader, SSRRoute, ValidatedConfig } from './internal.js';
+} from '../../types/private.js';
+import { BuildData, SSRNodeLoader, SSRRoute, ValidatedConfig } from '../../types/internal.js';
 import type { PluginOptions } from '@sveltejs/vite-plugin-svelte';
 
-export { PrerenderOption } from './private.js';
+export { PrerenderOption } from '../../types/private.js';
 
 /**
  * [Adapters](https://kit.svelte.dev/docs/adapters) are responsible for taking the production build and turning it into something that can be deployed to a platform of your choosing.
@@ -1197,21 +1197,6 @@ export type ActionResult<
 	| { type: 'error'; status?: number; error: any };
 
 /**
- * Creates an `HttpError` object with an HTTP status code and an optional message.
- * This object, if thrown during request handling, will cause SvelteKit to
- * return an error response without invoking `handleError`.
- * Make sure you're not catching the thrown error, which would prevent SvelteKit from handling it.
- * @param status The [HTTP status code](https://developer.mozilla.org/en-US/docs/Web/HTTP/Status#client_error_responses). Must be in the range 400-599.
- * @param body An object that conforms to the App.Error type. If a string is passed, it will be used as the message property.
- */
-export function error(status: number, body: App.Error): HttpError;
-export function error(
-	status: number,
-	// this overload ensures you can omit the argument or pass in a string if App.Error is of type { message: string }
-	body?: { message: string } extends App.Error ? App.Error | string | undefined : never
-): HttpError;
-
-/**
  * The object returned by the [`error`](https://kit.svelte.dev/docs/modules#sveltejs-kit-error) function.
  */
 export interface HttpError {
@@ -1222,17 +1207,6 @@ export interface HttpError {
 }
 
 /**
- * Create a `Redirect` object. If thrown during request handling, SvelteKit will return a redirect response.
- * Make sure you're not catching the thrown redirect, which would prevent SvelteKit from handling it.
- * @param status The [HTTP status code](https://developer.mozilla.org/en-US/docs/Web/HTTP/Status#redirection_messages). Must be in the range 300-308.
- * @param location The location to redirect to.
- */
-export function redirect(
-	status: 300 | 301 | 302 | 303 | 304 | 305 | 306 | 307 | 308,
-	location: string
-): Redirect;
-
-/**
  * The object returned by the [`redirect`](https://kit.svelte.dev/docs/modules#sveltejs-kit-redirect) function
  */
 export interface Redirect {
@@ -1241,30 +1215,6 @@ export interface Redirect {
 	/** The location to redirect to. */
 	location: string;
 }
-
-/**
- * Create a JSON `Response` object from the supplied data.
- * @param data The value that will be serialized as JSON.
- * @param init Options such as `status` and `headers` that will be added to the response. `Content-Type: application/json` and `Content-Length` headers will be added automatically.
- */
-export function json(data: any, init?: ResponseInit): Response;
-
-/**
- * Create a `Response` object from the supplied body.
- * @param body The value that will be used as-is.
- * @param init Options such as `status` and `headers` that will be added to the response. A `Content-Length` header will be added automatically.
- */
-export function text(body: string, init?: ResponseInit): Response;
-
-/**
- * Create an `ActionFailure` object.
- * @param status The [HTTP status code](https://developer.mozilla.org/en-US/docs/Web/HTTP/Status#client_error_responses). Must be in the range 400-599.
- * @param data Data associated with the failure (e.g. validation errors)
- */
-export function fail<T extends Record<string, unknown> | undefined = undefined>(
-	status: number,
-	data?: T
-): ActionFailure<T>;
 
 /**
  * The object returned by the [`fail`](https://kit.svelte.dev/docs/modules#sveltejs-kit-fail) function
@@ -1283,15 +1233,36 @@ export interface SubmitFunction<
 > {
 	(input: {
 		action: URL;
+		/**
+		 * use `formData` instead of `data`
+		 * @deprecated
+		 */
 		data: FormData;
+		formData: FormData;
+		/**
+		 * use `formElement` instead of `form`
+		 * @deprecated
+		 */
 		form: HTMLFormElement;
+		formElement: HTMLFormElement;
 		controller: AbortController;
 		submitter: HTMLElement | null;
 		cancel(): void;
 	}): MaybePromise<
 		| void
 		| ((opts: {
+				/**
+				 * use `formData` instead of `data`
+				 * @deprecated
+				 */
+				data: FormData;
+				formData: FormData;
+				/**
+				 * use `formElement` instead of `form`
+				 * @deprecated
+				 */
 				form: HTMLFormElement;
+				formElement: HTMLFormElement;
 				action: URL;
 				result: ActionResult<Success, Failure>;
 				/**
@@ -1311,17 +1282,4 @@ export interface Snapshot<T = any> {
 	restore: (snapshot: T) => void;
 }
 
-/**
- * Populate a route ID with params to resolve a pathname.
- * @example
- * ```js
- * resolvePath(
- *   `/blog/[slug]/[...somethingElse]`,
- *   {
- *     slug: 'hello-world',
- *     somethingElse: 'something/else'
- *   }
- * ); // `/blog/hello-world/something/else`
- * ```
- */
-export function resolvePath(id: string, params: Record<string, string | undefined>): string;
+export * from './index.js';

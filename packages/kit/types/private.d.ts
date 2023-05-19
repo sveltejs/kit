@@ -2,7 +2,7 @@
 // but which cannot be imported from `@sveltejs/kit`. Care should
 // be taken to avoid breaking changes when editing this file
 
-import { RouteDefinition } from './index.js';
+import { RouteDefinition } from '../src/exports/index.js';
 
 export interface AdapterEntry {
 	/**
@@ -237,7 +237,7 @@ export type TrailingSlash = 'never' | 'always' | 'ignore';
 /**
  * This doesn't actually exist, it's a way to better distinguish the type
  */
-declare const uniqueSymbol: unique symbol;
+export const uniqueSymbol: unique symbol;
 
 export interface UniqueInterface {
 	readonly [uniqueSymbol]: unknown;

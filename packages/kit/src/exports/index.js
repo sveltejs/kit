@@ -2,12 +2,27 @@ import { HttpError, Redirect, ActionFailure } from '../runtime/control.js';
 import { BROWSER, DEV } from 'esm-env';
 import { get_route_segments } from '../utils/routing.js';
 
-// For some reason we need to type the params as well here,
-// JSdoc doesn't seem to like @type with function overloads
 /**
- * @type {import('@sveltejs/kit').error}
+ * @overload
  * @param {number} status
- * @param {any} message
+ * @param {App.Error} body
+ * @return {HttpError}
+ */
+
+/**
+ * @overload
+ * @param {number} status
+ * @param {{ message: string } extends App.Error ? App.Error | string | undefined : never} [body]
+ * @return {HttpError}
+ */
+
+/**
+ * Creates an `HttpError` object with an HTTP status code and an optional message.
+ * This object, if thrown during request handling, will cause SvelteKit to
+ * return an error response without invoking `handleError`.
+ * Make sure you're not catching the thrown error, which would prevent SvelteKit from handling it.
+ * @param {number} status The [HTTP status code](https://developer.mozilla.org/en-US/docs/Web/HTTP/Status#client_error_responses). Must be in the range 400-599.
+ * @param {{ message: string } extends App.Error ? App.Error | string | undefined : never} message An object that conforms to the App.Error type. If a string is passed, it will be used as the message property.
  */
 export function error(status, message) {
 	if ((!BROWSER || DEV) && (isNaN(status) || status < 400 || status > 599)) {
@@ -17,7 +32,12 @@ export function error(status, message) {
 	return new HttpError(status, message);
 }
 
-/** @type {import('@sveltejs/kit').redirect} */
+/**
+ * Create a `Redirect` object. If thrown during request handling, SvelteKit will return a redirect response.
+ * Make sure you're not catching the thrown redirect, which would prevent SvelteKit from handling it.
+ * @param {300 | 301 | 302 | 303 | 304 | 305 | 306 | 307 | 308} status The [HTTP status code](https://developer.mozilla.org/en-US/docs/Web/HTTP/Status#redirection_messages). Must be in the range 300-308.
+ * @param {string} location The location to redirect to.
+ */
 export function redirect(status, location) {
 	if ((!BROWSER || DEV) && (isNaN(status) || status < 300 || status > 308)) {
 		throw new Error('Invalid status code');
@@ -26,7 +46,11 @@ export function redirect(status, location) {
 	return new Redirect(status, location);
 }
 
-/** @type {import('@sveltejs/kit').json} */
+/**
+ * Create a JSON `Response` object from the supplied data.
+ * @param {any} data The value that will be serialized as JSON.
+ * @param {ResponseInit} [init] Options such as `status` and `headers` that will be added to the response. `Content-Type: application/json` and `Content-Length` headers will be added automatically.
+ */
 export function json(data, init) {
 	// TODO deprecate this in favour of `Response.json` when it's
 	// more widely supported
@@ -52,7 +76,11 @@ export function json(data, init) {
 
 const encoder = new TextEncoder();
 
-/** @type {import('@sveltejs/kit').text} */
+/**
+ * Create a `Response` object from the supplied body.
+ * @param {string} body The value that will be used as-is.
+ * @param {ResponseInit} [init] Options such as `status` and `headers` that will be added to the response. A `Content-Length` header will be added automatically.
+ */
 export function text(body, init) {
 	const headers = new Headers(init?.headers);
 	if (!headers.has('content-length')) {
@@ -66,9 +94,9 @@ export function text(body, init) {
 }
 
 /**
- * Generates an `ActionFailure` object.
- * @param {number} status
- * @param {Record<string, any> | undefined} [data]
+ * Create an `ActionFailure` object.
+ * @param {number} status The [HTTP status code](https://developer.mozilla.org/en-US/docs/Web/HTTP/Status#client_error_responses). Must be in the range 400-599.
+ * @param {Record<string, any> | undefined} [data] Data associated with the failure (e.g. validation errors)
  */
 export function fail(status, data) {
 	return new ActionFailure(status, data);

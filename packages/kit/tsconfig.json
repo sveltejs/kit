@@ -9,7 +9,7 @@
 		"moduleResolution": "node",
 		"allowSyntheticDefaultImports": true,
 		"paths": {
-			"@sveltejs/kit": ["./types/index"],
+			"@sveltejs/kit": ["./src/exports/public.d.ts"],
 			// internal use only
 			"types": ["./types/internal"]
 		},

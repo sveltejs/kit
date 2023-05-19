@@ -375,6 +375,9 @@ importers:
       devalue:
         specifier: ^4.3.1
         version: 4.3.1
+      dts-buddy:
+        specifier: '*'
+        version: link:../../../../../dts-buddy
       esm-env:
         specifier: ^1.0.0
         version: 1.0.0
