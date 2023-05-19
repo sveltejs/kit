@@ -12,8 +12,9 @@
 		unload = willUnload;
 		navigation_type = type;
 
-		// we don't call cancel so that clicking the implicit download link works.
-		if (to?.url.href === download_url) return;
+		// we don't cancel the `beforeunload` event for the implicit download link
+		// because it's needed for the download to occur.
+		if (to?.url.pathname === download_url) return;
 
 		if (!to?.route.id?.includes('redirect')) {
 			cancel();
