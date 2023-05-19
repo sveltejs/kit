@@ -1459,6 +1459,9 @@ export function create_client(app, target) {
 
 					callbacks.before_navigate.forEach((fn) => fn(navigation));
 				}
+				// We need to reset the flag manually here because clicking on an
+				// implicit download link does not reset it for the next navigation.
+				navigating = false;
 
 				if (should_block) {
 					e.preventDefault();
