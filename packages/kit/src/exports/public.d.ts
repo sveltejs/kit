@@ -631,12 +631,10 @@ export interface KitConfig {
  * It receives an `event` object representing the request and a function called `resolve`, which renders the route and generates a `Response`.
  * This allows you to modify response headers or bodies, or bypass SvelteKit entirely (for implementing routes programmatically, for example).
  */
-export interface Handle {
-	(input: {
-		event: RequestEvent;
-		resolve(event: RequestEvent, opts?: ResolveOptions): MaybePromise<Response>;
-	}): MaybePromise<Response>;
-}
+export type Handle = (input: {
+	event: RequestEvent;
+	resolve(event: RequestEvent, opts?: ResolveOptions): MaybePromise<Response>;
+}) => MaybePromise<Response>;
 
 /**
  * The server-side [`handleError`](https://kit.svelte.dev/docs/hooks#shared-hooks-handleerror) hook runs when an unexpected error is thrown while responding to a request.
