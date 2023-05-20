@@ -78,10 +78,14 @@ export function create_dynamic_types(id, env, { public_prefix, private_prefix })
 	const private_prefixed = `[key: \`${private_prefix}\${string}\`]`;
 
 	if (id === 'private') {
-		properties.push(`${public_prefixed}: undefined;`);
+		if (public_prefix) {
+			properties.push(`${public_prefixed}: undefined;`);
+		}
 		properties.push(`${private_prefixed}: string | undefined;`);
 	} else {
-		properties.push(`${private_prefixed}: undefined;`);
+		if (private_prefix) {
+			properties.push(`${private_prefixed}: undefined;`);
+		}
 		properties.push(`${public_prefixed}: string | undefined;`);
 	}
 
