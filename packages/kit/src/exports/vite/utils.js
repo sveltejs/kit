@@ -2,6 +2,7 @@ import path from 'node:path';
 import { loadEnv } from 'vite';
 import { posixify } from '../../utils/filesystem.js';
 import { negotiate } from '../../utils/http.js';
+import { filter_private_env, filter_public_env } from '../../utils/env.js';
 
 /**
  * Transforms kit.alias to a valid vite.resolve.alias array.
@@ -48,40 +49,6 @@ export function get_config_aliases(config) {
  */
 function escape_for_regexp(str) {
 	return str.replace(/[.*+?^${}()|[\]\\]/g, (match) => '\\' + match);
-}
-
-/**
- * @param {Record<string, string>} env
- * @param {{
- * 		public_prefix: string;
- * 		private_prefix: string;
- * }} prefixes
- * @returns {Record<string, string>}
- */
-export function filter_private_env(env, { public_prefix, private_prefix }) {
-	return Object.fromEntries(
-		Object.entries(env).filter(
-			([k]) =>
-				k.startsWith(private_prefix) && (public_prefix === '' || !k.startsWith(public_prefix))
-		)
-	);
-}
-
-/**
- * @param {Record<string, string>} env
- * @param {{
- * 		public_prefix: string;
- *    private_prefix: string;
- * }} prefixes
- * @returns {Record<string, string>}
- */
-export function filter_public_env(env, { public_prefix, private_prefix }) {
-	return Object.fromEntries(
-		Object.entries(env).filter(
-			([k]) =>
-				k.startsWith(public_prefix) && (private_prefix === '' || !k.startsWith(private_prefix))
-		)
-	);
 }
 
 /**

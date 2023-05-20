@@ -2,7 +2,7 @@ import { respond } from './respond.js';
 import { set_private_env, set_public_env } from '../shared-server.js';
 import { options, get_hooks } from '__SERVER__/internal.js';
 import { DEV } from 'esm-env';
-import { filter_private_env, filter_public_env } from '../../exports/vite/utils.js';
+import { filter_private_env, filter_public_env } from '../../utils/env.js';
 
 export class Server {
 	/** @type {import('types').SSROptions} */

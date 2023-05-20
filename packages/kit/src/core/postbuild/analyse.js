@@ -13,7 +13,7 @@ import { forked } from '../../utils/fork.js';
 import { should_polyfill } from '../../utils/platform.js';
 import { installPolyfills } from '../../exports/node/polyfills.js';
 import { resolvePath } from '../../exports/index.js';
-import { filter_private_env, filter_public_env } from '../../exports/vite/utils.js';
+import { filter_private_env, filter_public_env } from '../../utils/env.js';
 
 export default forked(import.meta.url, analyse);
 
