@@ -200,22 +200,29 @@ async function prerender({ out, manifest_path, metadata, verbose, env }) {
 		/** @type {Map<string, import('types').PrerenderDependency>} */
 		const dependencies = new Map();
 
-		const response = await server.respond(new Request(config.prerender.origin + encoded), {
-			getClientAddress() {
-				throw new Error('Cannot read clientAddress during prerendering');
-			},
-			prerendering: {
-				dependencies
-			},
-			read: (file) => {
-				// stuff we just wrote
-				const filepath = saved.get(file);
-				if (filepath) return readFileSync(filepath);
+		const response = await server.respond(
+			new Request(config.prerender.origin + encoded, {
+				headers: {
+					Accept: 'text/html'
+				}
+			}),
+			{
+				getClientAddress() {
+					throw new Error('Cannot read clientAddress during prerendering');
+				},
+				prerendering: {
+					dependencies
+				},
+				read: (file) => {
+					// stuff we just wrote
+					const filepath = saved.get(file);
+					if (filepath) return readFileSync(filepath);
 
-				// stuff in `static`
-				return readFileSync(join(config.files.assets, file));
+					// stuff in `static`
+					return readFileSync(join(config.files.assets, file));
+				}
 			}
-		});
+		);
 
 		const encoded_id = response.headers.get('x-sveltekit-routeid');
 		const decoded_id = encoded_id && decode_uri(encoded_id);
