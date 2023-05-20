@@ -51,16 +51,49 @@ function escape_for_regexp(str) {
 }
 
 /**
+ * @param {Record<string, string>} env
+ * @param {{
+ * 		public_prefix: string;
+ * 		private_prefix: string;
+ * }} prefixes
+ * @returns {Record<string, string>}
+ */
+export function filter_private_env(env, { public_prefix, private_prefix }) {
+	return Object.fromEntries(
+		Object.entries(env).filter(
+			([k]) => !k.startsWith(public_prefix) && k.startsWith(private_prefix)
+		)
+	);
+}
+
+/**
+ * @param {Record<string, string>} env
+ * @param {{
+ * 		public_prefix: string;
+ * 		private_prefix: string;
+ * }} prefixes
+ * @returns {Record<string, string>}
+ */
+export function filter_public_env(env, { public_prefix, private_prefix }) {
+	return Object.fromEntries(
+		Object.entries(env).filter(
+			([k]) => k.startsWith(public_prefix) && !k.startsWith(private_prefix)
+		)
+	);
+}
+
+/**
  * Load environment variables from process.env and .env files
  * @param {import('types').ValidatedKitConfig['env']} env_config
  * @param {string} mode
  */
 export function get_env(env_config, mode) {
-	const entries = Object.entries(loadEnv(mode, env_config.dir, ''));
+	const { publicPrefix: public_prefix, privatePrefix: private_prefix } = env_config;
+	const env = loadEnv(mode, env_config.dir, '');
 
 	return {
-		public: Object.fromEntries(entries.filter(([k]) => k.startsWith(env_config.publicPrefix))),
-		private: Object.fromEntries(entries.filter(([k]) => !k.startsWith(env_config.publicPrefix)))
+		public: filter_private_env(env, { public_prefix, private_prefix }),
+		private: filter_public_env(env, { public_prefix, private_prefix })
 	};
 }
 

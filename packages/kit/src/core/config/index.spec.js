@@ -75,7 +75,8 @@ const get_defaults = (prefix = '') => ({
 		embedded: false,
 		env: {
 			dir: process.cwd(),
-			publicPrefix: 'PUBLIC_'
+			publicPrefix: 'PUBLIC_',
+			privatePrefix: ''
 		},
 		files: {
 			assets: join(prefix, 'static'),

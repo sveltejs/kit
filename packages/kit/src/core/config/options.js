@@ -120,7 +120,8 @@ const options = object(
 
 			env: object({
 				dir: string(process.cwd()),
-				publicPrefix: string('PUBLIC_')
+				publicPrefix: string('PUBLIC_'),
+				privatePrefix: string('')
 			}),
 
 			files: object({
