@@ -223,3 +223,10 @@ test('prerendered.paths omits trailing slashes for endpoints', () => {
 		expect(content, `Missing ${path}`).toMatch(`"${path}"`);
 	}
 });
+
+test('correctly renders a page when a +page.svelte and +server.js file share the same route', () => {
+	const content = read('page-and-server/1.html');
+	expect(content).toMatch('<pre>1</pre>');
+	const dependency = read('page-and-server/1');
+	expect(dependency).toMatch('{"slug":"1"}');
+});
