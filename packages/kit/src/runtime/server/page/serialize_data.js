@@ -55,7 +55,7 @@ export function serialize_data(fetched, filter, prerendering = false) {
 
 		if (key === 'cache-control') cache_control = value;
 		else if (key === 'age') age = value;
-		else if (key === 'vary') varyAny ||= value.trim() === '*';
+		else if (key === 'vary' && value.trim() === '*') varyAny = true;
 	}
 
 	const payload = {
