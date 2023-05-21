@@ -17,8 +17,8 @@ importers:
         specifier: ^15.0.1
         version: 15.0.1(rollup@3.7.0)
       '@sveltejs/eslint-config':
-        specifier: github:sveltejs/eslint-config
-        version: github.com/sveltejs/eslint-config/a651fa341603aa39ac2a56535ec3282257299207(@typescript-eslint/eslint-plugin@5.53.0)(@typescript-eslint/parser@5.59.6)(eslint-config-prettier@8.8.0)(eslint-plugin-import@2.27.5)(eslint-plugin-node@11.1.0)(eslint-plugin-svelte@2.28.0)(eslint-plugin-unicorn@47.0.0)(eslint@8.40.0)(typescript@4.9.4)
+        specifier: ^6.0.2
+        version: 6.0.2(@typescript-eslint/eslint-plugin@5.53.0)(@typescript-eslint/parser@5.59.6)(eslint-config-prettier@8.8.0)(eslint-plugin-import@2.27.5)(eslint-plugin-node@11.1.0)(eslint-plugin-svelte@2.28.0)(eslint-plugin-unicorn@47.0.0)(eslint@8.40.0)(typescript@4.9.4)
       '@svitejs/changesets-changelog-github-compact':
         specifier: ^1.1.0
         version: 1.1.0
@@ -1713,6 +1713,30 @@ packages:
       estree-walker: 2.0.2
       picomatch: 2.3.1
       rollup: 3.7.0
+
+  /@sveltejs/eslint-config@6.0.2(@typescript-eslint/eslint-plugin@5.53.0)(@typescript-eslint/parser@5.59.6)(eslint-config-prettier@8.8.0)(eslint-plugin-import@2.27.5)(eslint-plugin-node@11.1.0)(eslint-plugin-svelte@2.28.0)(eslint-plugin-unicorn@47.0.0)(eslint@8.40.0)(typescript@4.9.4):
+    resolution: {integrity: sha512-TtY39OP1ZEOVbrsNRzDeWP5h0kXabpwbny4+HwrcWWWkDATCYHeR0u7C4n04Fm0d3ean0HTRT9uS+PDRNT0+xw==}
+    peerDependencies:
+      '@typescript-eslint/eslint-plugin': '>= 5'
+      '@typescript-eslint/parser': '>= 5'
+      eslint: '>= 8'
+      eslint-config-prettier: '>= 8'
+      eslint-plugin-import: '>= 2'
+      eslint-plugin-node: '>= 11'
+      eslint-plugin-svelte: '>= 2'
+      eslint-plugin-unicorn: '>= 47'
+      typescript: '>= 4'
+    dependencies:
+      '@typescript-eslint/eslint-plugin': 5.53.0(@typescript-eslint/parser@5.59.6)(eslint@8.40.0)(typescript@4.9.4)
+      '@typescript-eslint/parser': 5.59.6(eslint@8.40.0)(typescript@4.9.4)
+      eslint: 8.40.0
+      eslint-config-prettier: 8.8.0(eslint@8.40.0)
+      eslint-plugin-import: 2.27.5(@typescript-eslint/parser@5.59.6)(eslint@8.40.0)
+      eslint-plugin-node: 11.1.0(eslint@8.40.0)
+      eslint-plugin-svelte: 2.28.0(eslint@8.40.0)(svelte@3.56.0)
+      eslint-plugin-unicorn: 47.0.0(eslint@8.40.0)
+      typescript: 4.9.4
+    dev: true
 
   /@sveltejs/site-kit@5.0.4(@sveltejs/kit@packages+kit)(svelte@3.56.0):
     resolution: {integrity: sha512-bn0Lk3hmIz/pDTMvVjiVX/US4OPoc1CzfceI0Y0ljxHs2fdxRTZz881xvItZRF7istLIueoFR1x3HAZPdI2F6g==}
@@ -6412,31 +6436,4 @@ packages:
   /yocto-queue@1.0.0:
     resolution: {integrity: sha512-9bnSc/HEW2uRy67wc+T8UwauLuPJVn28jb+GtJY16iiKWyvmYJRXVT4UamsAEGQfPohgr2q4Tq0sQbQlxTfi1g==}
     engines: {node: '>=12.20'}
-    dev: true
-
-  github.com/sveltejs/eslint-config/a651fa341603aa39ac2a56535ec3282257299207(@typescript-eslint/eslint-plugin@5.53.0)(@typescript-eslint/parser@5.59.6)(eslint-config-prettier@8.8.0)(eslint-plugin-import@2.27.5)(eslint-plugin-node@11.1.0)(eslint-plugin-svelte@2.28.0)(eslint-plugin-unicorn@47.0.0)(eslint@8.40.0)(typescript@4.9.4):
-    resolution: {tarball: https://codeload.github.com/sveltejs/eslint-config/tar.gz/a651fa341603aa39ac2a56535ec3282257299207}
-    id: github.com/sveltejs/eslint-config/a651fa341603aa39ac2a56535ec3282257299207
-    name: '@sveltejs/eslint-config'
-    version: 5.8.0
-    peerDependencies:
-      '@typescript-eslint/eslint-plugin': '>= 5'
-      '@typescript-eslint/parser': '>= 5'
-      eslint: '>= 8'
-      eslint-config-prettier: '>= 8'
-      eslint-plugin-import: '>= 2'
-      eslint-plugin-node: '>= 11'
-      eslint-plugin-svelte: '>= 2'
-      eslint-plugin-unicorn: '>= 47'
-      typescript: '>= 5'
-    dependencies:
-      '@typescript-eslint/eslint-plugin': 5.53.0(@typescript-eslint/parser@5.59.6)(eslint@8.40.0)(typescript@4.9.4)
-      '@typescript-eslint/parser': 5.59.6(eslint@8.40.0)(typescript@4.9.4)
-      eslint: 8.40.0
-      eslint-config-prettier: 8.8.0(eslint@8.40.0)
-      eslint-plugin-import: 2.27.5(@typescript-eslint/parser@5.59.6)(eslint@8.40.0)
-      eslint-plugin-node: 11.1.0(eslint@8.40.0)
-      eslint-plugin-svelte: 2.28.0(eslint@8.40.0)(svelte@3.56.0)
-      eslint-plugin-unicorn: 47.0.0(eslint@8.40.0)
-      typescript: 4.9.4
     dev: true
