@@ -97,7 +97,7 @@ for (const dir of fs.readdirSync(join(__dirname, 'errors'))) {
 				case 'no-lib-folder':
 					assert.match(
 						error.message.replace(/\\/g, '/'),
-						`test/errors/no-lib-folder/src/lib does not exist`
+						'test/errors/no-lib-folder/src/lib does not exist'
 					);
 					break;
 				// TODO: non-existent tsconfig passes without error

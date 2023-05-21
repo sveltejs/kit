@@ -23,7 +23,7 @@ function defer() {
  * }}
  */
 export function create_async_iterator() {
-	let deferred = [defer()];
+	const deferred = [defer()];
 
 	return {
 		iterator: {

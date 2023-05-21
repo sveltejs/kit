@@ -118,6 +118,7 @@ export const test = base.extend({
 		await use(page);
 	},
 
+	// eslint-disable-next-line no-empty-pattern
 	read_errors: ({}, use) => {
 		/** @param {string} path */
 		function read_errors(path) {
@@ -130,6 +131,7 @@ export const test = base.extend({
 		use(read_errors);
 	},
 
+	// eslint-disable-next-line no-empty-pattern
 	start_server: async ({}, use) => {
 		/**
 		 * @type {http.Server}
@@ -201,7 +203,7 @@ export const test = base.extend({
 	// setup context
 	// teardown context
 	// teardown start_server
-	context: async function ({ context, start_server }, use) {
+	async context({ context, start_server }, use) {
 		// just here make sure start_server is referenced, don't call
 		if (!start_server) {
 			throw new Error('start_server fixture not present');
