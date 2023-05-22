@@ -118,6 +118,7 @@ export function enhance(form_element, submit = () => {}) {
 			result.type === 'redirect' ||
 			result.type === 'error'
 		) {
+			// @ts-expect-error TODO: somebody fix this. it is beyond my powers
 			applyAction(result);
 		}
 	};
