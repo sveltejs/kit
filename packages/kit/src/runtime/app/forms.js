@@ -7,9 +7,9 @@ import { invalidateAll } from './navigation.js';
  * This action updates the `form` property of the current page with the given data and updates `$page.status`.
  * In case of an error, it redirects to the nearest error page.
  * @template {Record<string, unknown> | undefined} Success
- * @template {Record<string, unknown> | undefined} Invalid
- * @type {(result: import('@sveltejs/kit').ActionResult<Success, Invalid>) => void}
- * @param {import('@sveltejs/kit').ActionResult<Success, Invalid>} result
+ * @template {Record<string, unknown> | undefined} Failure
+ * @type {(result: import('@sveltejs/kit').ActionResult<Success, Failure>) => void}
+ * @param {import('@sveltejs/kit').ActionResult<Success, Failure>} result
  */
 export const applyAction = client_method('apply_action');
 
@@ -31,9 +31,9 @@ export const applyAction = client_method('apply_action');
  * }
  * ```
  * @template {Record<string, unknown> | undefined} Success
- * @template {Record<string, unknown> | undefined} Invalid
+ * @template {Record<string, unknown> | undefined} Failure
  * @param {string} result
- * @returns {import('@sveltejs/kit').ActionResult<Success, Invalid>}
+ * @returns {import('@sveltejs/kit').ActionResult<Success, Failure>}
  */
 export function deserialize(result) {
 	const parsed = JSON.parse(result);
@@ -86,9 +86,9 @@ function clone(element) {
  *
  * If you provide a custom function with a callback and want to use the default behavior, invoke `update` in your callback.
  * @template {Record<string, unknown> | undefined} Success
- * @template {Record<string, unknown> | undefined} Invalid
+ * @template {Record<string, unknown> | undefined} Failure
  * @param {HTMLFormElement} form_element The form element
- * @param {import('@sveltejs/kit').SubmitFunction<Success, Invalid>} submit Submit callback
+ * @param {import('@sveltejs/kit').SubmitFunction<Success, Failure>} submit Submit callback
  */
 export function enhance(form_element, submit = () => {}) {
 	if (DEV && clone(form_element).method !== 'post') {
