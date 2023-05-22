@@ -86,7 +86,7 @@ export function initial_fetch(resource, opts) {
 		return Promise.resolve(new Response(body, init));
 	}
 
-	return native_fetch(resource, opts);
+	return DEV ? native_fetch(resource, opts) : window.fetch(resource, opts);
 }
 
 /**
@@ -112,7 +112,7 @@ export function subsequent_fetch(resource, resolved, opts) {
 		}
 	}
 
-	return native_fetch(resolved, opts);
+	return DEV ? native_fetch(resolved, opts) : window.fetch(resolved, opts);
 }
 
 /**
