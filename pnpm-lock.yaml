@@ -425,8 +425,8 @@ importers:
         specifier: ^2.4.2
         version: 2.4.2
       dts-buddy:
-        specifier: ^0.0.2
-        version: 0.0.2
+        specifier: ^0.0.6
+        version: 0.0.6
       marked:
         specifier: ^4.2.3
         version: 4.2.3
@@ -2865,12 +2865,17 @@ packages:
     engines: {node: '>=12'}
     dev: true
 
-  /dts-buddy@0.0.2:
-    resolution: {integrity: sha512-A1AA4zWn6+AtnBZGRFtyMMayJ6CXfCTTIxxzTYpeqWy1Qjf/tK9Wp2LFgu0e/mgQuoUUowEjj26yZ64TwB/0gA==}
+  /dts-buddy@0.0.6:
+    resolution: {integrity: sha512-WBLk0YOF/vMzv1uqd3uQewEirDHKgfBGbf5LgE43e1rolKDOrbpPlhmhllmUp2aiT0ZAA+TvKoJgpnPqSPGAPQ==}
+    hasBin: true
     dependencies:
       '@jridgewell/source-map': 0.3.3
+      '@jridgewell/sourcemap-codec': 1.4.15
       globrex: 0.1.2
+      kleur: 4.1.5
+      locate-character: 2.0.5
       magic-string: 0.30.0
+      sade: 1.8.1
       tiny-glob: 0.2.9
       typescript: 5.0.4
     dev: true
@@ -3980,6 +3985,10 @@ packages:
   /local-pkg@0.4.3:
     resolution: {integrity: sha512-SFppqq5p42fe2qcZQqqEOiVRXl+WCP1MdT6k7BDEW1j++sp5fIY+/fdRQitvKgB5BrBcmrs5m/L0v2FrU5MY1g==}
     engines: {node: '>=14'}
+    dev: true
+
+  /locate-character@2.0.5:
+    resolution: {integrity: sha512-n2GmejDXtOPBAZdIiEFy5dJ5N38xBCXLNOtw2WpB9kGh6pnrEuKlwYI+Tkpofc4wDtVXHtoAOJaMRlYG/oYaxg==}
     dev: true
 
   /locate-path@2.0.0:
