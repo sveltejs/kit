@@ -208,18 +208,7 @@ function read_d_ts_file(file) {
 }
 
 {
-	const code = read_d_ts_file('types/index.d.ts');
-	const node = ts.createSourceFile('index.d.ts', code, ts.ScriptTarget.Latest, true);
-
-	modules.push({
-		name: '@sveltejs/kit',
-		comment: '',
-		...get_types(code, node.statements)
-	});
-}
-
-{
-	const code = read_d_ts_file('types/private.d.ts');
+	const code = read_d_ts_file('src/types/private.d.ts');
 	const node = ts.createSourceFile('private.d.ts', code, ts.ScriptTarget.Latest, true);
 
 	modules.push({
@@ -247,8 +236,8 @@ for (const file of fs.readdirSync(dir)) {
 }
 
 {
-	const code = read_d_ts_file('types/ambient.d.ts');
-	const node = ts.createSourceFile('ambient.d.ts', code, ts.ScriptTarget.Latest, true);
+	const code = read_d_ts_file('types/index.d.ts');
+	const node = ts.createSourceFile('index.d.ts', code, ts.ScriptTarget.Latest, true);
 
 	for (const statement of node.statements) {
 		if (ts.isModuleDeclaration(statement)) {
