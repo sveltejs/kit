@@ -230,7 +230,7 @@ function read_d_ts_file(file) {
 }
 
 const dir = fileURLToPath(
-	new URL('../../../../packages/kit/types/synthetic', import.meta.url).href
+	new URL('../../../../packages/kit/src/types/synthetic', import.meta.url).href
 );
 for (const file of fs.readdirSync(dir)) {
 	if (!file.endsWith('.md')) continue;
