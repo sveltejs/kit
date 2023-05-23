@@ -642,9 +642,7 @@ export type Handle = (input: {
  * If an unexpected error is thrown during loading or rendering, this function will be called with the error and the event.
  * Make sure that this function _never_ throws an error.
  */
-export interface HandleServerError {
-	(input: { error: unknown; event: RequestEvent }): MaybePromise<void | App.Error>;
-}
+export type HandleServerError = (input: { error: unknown; event: RequestEvent }) => MaybePromise<void | App.Error>;
 
 /**
  * The client-side [`handleError`](https://kit.svelte.dev/docs/hooks#shared-hooks-handleerror) hook runs when an unexpected error is thrown while navigating.
@@ -652,30 +650,24 @@ export interface HandleServerError {
  * If an unexpected error is thrown during loading or the following render, this function will be called with the error and the event.
  * Make sure that this function _never_ throws an error.
  */
-export interface HandleClientError {
-	(input: { error: unknown; event: NavigationEvent }): MaybePromise<void | App.Error>;
-}
+export type HandleClientError = (input: { error: unknown; event: NavigationEvent }) => MaybePromise<void | App.Error>;
 
 /**
  * The [`handleFetch`](https://kit.svelte.dev/docs/hooks#server-hooks-handlefetch) hook allows you to modify (or replace) a `fetch` request that happens inside a `load` function that runs on the server (or during pre-rendering)
  */
-export interface HandleFetch {
-	(input: { event: RequestEvent; request: Request; fetch: typeof fetch }): MaybePromise<Response>;
-}
+export type HandleFetch = (input: { event: RequestEvent; request: Request; fetch: typeof fetch }) => MaybePromise<Response>;
 
 /**
  * The generic form of `PageLoad` and `LayoutLoad`. You should import those from `./$types` (see [generated types](https://kit.svelte.dev/docs/types#generated-types))
  * rather than using `Load` directly.
  */
-export interface Load<
+export type Load<
 	Params extends Partial<Record<string, string>> = Partial<Record<string, string>>,
 	InputData extends Record<string, unknown> | null = Record<string, any> | null,
 	ParentData extends Record<string, unknown> = Record<string, any>,
 	OutputData extends Record<string, unknown> | void = Record<string, any> | void,
 	RouteId extends string | null = string | null
-> {
-	(event: LoadEvent<Params, InputData, ParentData, RouteId>): MaybePromise<OutputData>;
-}
+> = (event: LoadEvent<Params, InputData, ParentData, RouteId>) => MaybePromise<OutputData>;
 
 /**
  * The generic form of `PageLoadEvent` and `LayoutLoadEvent`. You should import those from `./$types` (see [generated types](https://kit.svelte.dev/docs/types#generated-types))
@@ -929,9 +921,7 @@ export interface Page<
 /**
  * The shape of a param matcher. See [matching](https://kit.svelte.dev/docs/advanced-routing#matching) for more info.
  */
-export interface ParamMatcher {
-	(param: string): boolean;
-}
+export type ParamMatcher = (param: string) => boolean;
 
 export interface RequestEvent<
 	Params extends Partial<Record<string, string>> = Partial<Record<string, string>>,
@@ -1019,12 +1009,10 @@ export interface RequestEvent<
  *
  * It receives `Params` as the first generic argument, which you can skip by using [generated types](https://kit.svelte.dev/docs/types#generated-types) instead.
  */
-export interface RequestHandler<
+export type RequestHandler<
 	Params extends Partial<Record<string, string>> = Partial<Record<string, string>>,
 	RouteId extends string | null = string | null
-> {
-	(event: RequestEvent<Params, RouteId>): MaybePromise<Response>;
-}
+> = (event: RequestEvent<Params, RouteId>) => MaybePromise<Response>;
 
 export interface ResolveOptions {
 	/**
@@ -1093,14 +1081,12 @@ export interface SSRManifest {
  * The generic form of `PageServerLoad` and `LayoutServerLoad`. You should import those from `./$types` (see [generated types](https://kit.svelte.dev/docs/types#generated-types))
  * rather than using `ServerLoad` directly.
  */
-export interface ServerLoad<
+export type ServerLoad<
 	Params extends Partial<Record<string, string>> = Partial<Record<string, string>>,
 	ParentData extends Record<string, any> = Record<string, any>,
 	OutputData extends Record<string, any> | void = Record<string, any> | void,
 	RouteId extends string | null = string | null
-> {
-	(event: ServerLoadEvent<Params, ParentData, RouteId>): MaybePromise<OutputData>;
-}
+> = (event: ServerLoadEvent<Params, ParentData, RouteId>) => MaybePromise<OutputData>;
 
 export interface ServerLoadEvent<
 	Params extends Partial<Record<string, string>> = Partial<Record<string, string>>,
@@ -1157,13 +1143,11 @@ export interface ServerLoadEvent<
  * Shape of a form action method that is part of `export const actions = {..}` in `+page.server.js`.
  * See [form actions](https://kit.svelte.dev/docs/form-actions) for more information.
  */
-export interface Action<
+export type Action<
 	Params extends Partial<Record<string, string>> = Partial<Record<string, string>>,
 	OutputData extends Record<string, any> | void = Record<string, any> | void,
 	RouteId extends string | null = string | null
-> {
-	(event: RequestEvent<Params, RouteId>): MaybePromise<OutputData>;
-}
+> = (event: RequestEvent<Params, RouteId>) => MaybePromise<OutputData>;
 
 /**
  * Shape of the `export const actions = {..}` object in `+page.server.js`.
@@ -1214,11 +1198,10 @@ export interface Redirect {
 	location: string;
 }
 
-export interface SubmitFunction<
+export type SubmitFunction<
 	Success extends Record<string, unknown> | undefined = Record<string, any>,
 	Failure extends Record<string, unknown> | undefined = Record<string, any>
-> {
-	(input: {
+> = (input: {
 		action: URL;
 		/**
 		 * use `formData` instead of `data`
@@ -1235,7 +1218,7 @@ export interface SubmitFunction<
 		controller: AbortController;
 		submitter: HTMLElement | null;
 		cancel(): void;
-	}): MaybePromise<
+	}) => MaybePromise<
 		| void
 		| ((opts: {
 				/**
@@ -1259,7 +1242,6 @@ export interface SubmitFunction<
 				update(options?: { reset: boolean }): Promise<void>;
 		  }) => void)
 	>;
-}
 
 /**
  * The type of `export const snapshot` exported from a page or layout component.
