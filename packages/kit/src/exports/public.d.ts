@@ -16,8 +16,7 @@ import {
 	PrerenderMissingIdHandlerValue,
 	PrerenderOption,
 	RequestOptions,
-	RouteSegment,
-	UniqueInterface
+	RouteSegment
 } from '../types/private.js';
 import { ActionFailure } from '../runtime/control.js';
 import { BuildData, SSRNodeLoader, SSRRoute, ValidatedConfig } from 'types';
