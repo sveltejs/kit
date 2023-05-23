@@ -219,6 +219,13 @@ export function notifiable_store(value) {
 export function create_updated_store() {
 	const { set, subscribe } = writable(false);
 
+	if (DEV || !BROWSER) {
+		return {
+			subscribe,
+			check: async () => false
+		};
+	}
+
 	const interval = __SVELTEKIT_APP_VERSION_POLL_INTERVAL__;
 
 	/** @type {NodeJS.Timeout} */
@@ -226,8 +233,6 @@ export function create_updated_store() {
 
 	/** @type {() => Promise<boolean>} */
 	async function check() {
-		if (DEV || !BROWSER) return false;
-
 		clearTimeout(timeout);
 
 		if (interval) timeout = setTimeout(check, interval);
