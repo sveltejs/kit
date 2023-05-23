@@ -133,7 +133,7 @@ export async function setResponse(res, response) {
 	if (response.body.locked) {
 		res.end(
 			'Fatal error: Response body is locked. ' +
-				`This can happen when the response was already read (for example through 'response.json()' or 'response.text()').`
+				"This can happen when the response was already read (for example through 'response.json()' or 'response.text()')."
 		);
 		return;
 	}

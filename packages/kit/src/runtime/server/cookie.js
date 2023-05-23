@@ -174,7 +174,7 @@ export function get_cookies(request, url, trailing_slash) {
 	 * @param {import('cookie').CookieSerializeOptions} opts
 	 */
 	function set_internal(name, value, opts) {
-		let path = opts.path ?? default_path;
+		const path = opts.path ?? default_path;
 
 		new_cookies[name] = {
 			name,

@@ -92,7 +92,7 @@ export async function handle_action_json_request(event, options, server) {
  */
 function check_incorrect_fail_use(error) {
 	return error instanceof ActionFailure
-		? new Error(`Cannot "throw fail()". Use "return fail()"`)
+		? new Error('Cannot "throw fail()". Use "return fail()"')
 		: error;
 }
 
@@ -190,7 +190,7 @@ export async function handle_action_request(event, server) {
 function check_named_default_separate(actions) {
 	if (actions.default && Object.keys(actions).length > 1) {
 		throw new Error(
-			`When using named actions, the default action cannot be used. See the docs for more info: https://kit.svelte.dev/docs/form-actions#named-actions`
+			'When using named actions, the default action cannot be used. See the docs for more info: https://kit.svelte.dev/docs/form-actions#named-actions'
 		);
 	}
 }
@@ -231,12 +231,12 @@ async function call_action(event, actions) {
 /** @param {any} data */
 function validate_action_return(data) {
 	if (data instanceof Redirect) {
-		throw new Error(`Cannot \`return redirect(...)\` — use \`throw redirect(...)\` instead`);
+		throw new Error('Cannot `return redirect(...)` — use `throw redirect(...)` instead');
 	}
 
 	if (data instanceof HttpError) {
 		throw new Error(
-			`Cannot \`return error(...)\` — use \`throw error(...)\` or \`return fail(...)\` instead`
+			'Cannot `return error(...)` — use `throw error(...)` or `return fail(...)` instead'
 		);
 	}
 }

@@ -138,7 +138,7 @@ export function get_object_nodes(node) {
 		} else if (ts.isShorthandPropertyAssignment(property)) {
 			obj[property.name.text] = property.name;
 		} else {
-			return null; // object contains funky stuff like computed properties/accessors — bail
+			return null; // object contains funky stuff like computed properties/accessors — bail
 		}
 	}
 
@@ -345,7 +345,7 @@ export function read_samples(test_file) {
  */
 export function rewrite_type(node, code, old_type, new_type) {
 	// @ts-ignore
-	let jsDoc = node.jsDoc || node.parent?.parent?.parent?.jsDoc;
+	const jsDoc = node.jsDoc || node.parent?.parent?.parent?.jsDoc;
 	if (jsDoc) {
 		// @ts-ignore
 		for (const comment of jsDoc) {

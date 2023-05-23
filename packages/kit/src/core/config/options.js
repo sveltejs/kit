@@ -211,7 +211,7 @@ const options = object(
 					(/** @type {any} */ { message }) => {
 						throw new Error(
 							message +
-								`\nTo suppress or handle this error, implement \`handleHttpError\` in https://kit.svelte.dev/docs/configuration#prerender`
+								'\nTo suppress or handle this error, implement `handleHttpError` in https://kit.svelte.dev/docs/configuration#prerender'
 						);
 					},
 					(input, keypath) => {
@@ -225,7 +225,7 @@ const options = object(
 					(/** @type {any} */ { message }) => {
 						throw new Error(
 							message +
-								`\nTo suppress or handle this error, implement \`handleMissingId\` in https://kit.svelte.dev/docs/configuration#prerender`
+								'\nTo suppress or handle this error, implement `handleMissingId` in https://kit.svelte.dev/docs/configuration#prerender'
 						);
 					},
 					(input, keypath) => {
@@ -239,7 +239,7 @@ const options = object(
 					(/** @type {any} */ { message }) => {
 						throw new Error(
 							message +
-								`\nTo suppress or handle this error, implement \`handleEntryGeneratorMismatch\` in https://kit.svelte.dev/docs/configuration#prerender`
+								'\nTo suppress or handle this error, implement `handleEntryGeneratorMismatch` in https://kit.svelte.dev/docs/configuration#prerender'
 						);
 					},
 					(input, keypath) => {
