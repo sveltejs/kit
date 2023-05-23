@@ -58,13 +58,13 @@ export function build_server_nodes(out, kit, manifest_data, server_manifest, cli
 
 		if (node.universal) {
 			imports.push(`import * as universal from '../${server_manifest[node.universal].file}';`);
-			exports.push(`export { universal };`);
+			exports.push('export { universal };');
 			exports.push(`export const universal_id = ${s(node.universal)};`);
 		}
 
 		if (node.server) {
 			imports.push(`import * as server from '../${server_manifest[node.server].file}';`);
-			exports.push(`export { server };`);
+			exports.push('export { server };');
 			exports.push(`export const server_id = ${s(node.server)};`);
 		}
 

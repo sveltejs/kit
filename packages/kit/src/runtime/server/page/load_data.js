@@ -262,7 +262,7 @@ export function create_universal_fetch(event, state, fetched, csr, resolve_opts)
 							),
 							request_headers: init?.headers,
 							response_body: body,
-							response: response
+							response
 						});
 					}
 

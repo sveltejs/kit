@@ -157,7 +157,7 @@ export async function render_response({
 					);
 				} else if (!warned) {
 					console.warn(
-						`Avoid calling \`fetch\` eagerly during server side rendering — put your \`fetch\` calls inside \`onMount\` or a \`load\` function instead`
+						'Avoid calling `fetch` eagerly during server side rendering — put your `fetch` calls inside `onMount` or a `load` function instead'
 					);
 					warned = true;
 				}
@@ -257,7 +257,7 @@ export async function render_response({
 		}
 	}
 
-	const global = __SVELTEKIT_DEV__ ? `__sveltekit_dev` : `__sveltekit_${options.version_hash}`;
+	const global = __SVELTEKIT_DEV__ ? '__sveltekit_dev' : `__sveltekit_${options.version_hash}`;
 
 	const { data, chunks } = get_data(
 		event,
@@ -298,7 +298,7 @@ export async function render_response({
 		].filter(Boolean);
 
 		if (chunks) {
-			blocks.push(`const deferred = new Map();`);
+			blocks.push('const deferred = new Map();');
 
 			properties.push(`defer: (id) => new Promise((fulfil, reject) => {
 							deferred.set(id, { fulfil, reject });
@@ -317,9 +317,9 @@ export async function render_response({
 						${properties.join(',\n\t\t\t\t\t\t')}
 					};`);
 
-		const args = [`app`, `element`];
+		const args = ['app', 'element'];
 
-		blocks.push(`const element = document.currentScript.parentElement;`);
+		blocks.push('const element = document.currentScript.parentElement;');
 
 		if (page_config.ssr) {
 			const serialized = { form: 'null', error: 'null' };
@@ -339,7 +339,7 @@ export async function render_response({
 
 			const hydrate = [
 				`node_ids: [${branch.map(({ node }) => node.index).join(', ')}]`,
-				`data`,
+				'data',
 				`form: ${serialized.form}`,
 				`error: ${serialized.error}`
 			];
@@ -363,7 +363,7 @@ export async function render_response({
 					});`);
 
 		if (options.service_worker) {
-			const opts = __SVELTEKIT_DEV__ ? `, { type: 'module' }` : '';
+			const opts = __SVELTEKIT_DEV__ ? ", { type: 'module' }" : '';
 
 			// we use an anonymous function instead of an arrow function to support
 			// older browsers (https://github.com/sveltejs/kit/pull/5417)

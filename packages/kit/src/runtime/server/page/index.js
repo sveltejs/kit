@@ -118,7 +118,7 @@ export async function render_page(event, page, options, manifest, state, resolve
 		}
 
 		/** @type {Array<import('./types.js').Loaded | null>} */
-		let branch = [];
+		const branch = [];
 
 		/** @type {Error | null} */
 		let load_error = null;

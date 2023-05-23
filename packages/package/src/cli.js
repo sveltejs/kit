@@ -31,7 +31,7 @@ prog
 			// @ts-expect-error
 			if (config.package) {
 				throw new Error(
-					`config.package is no longer supported. See https://github.com/sveltejs/kit/pull/8922 for more information and how to migrate.`
+					'config.package is no longer supported. See https://github.com/sveltejs/kit/pull/8922 for more information and how to migrate.'
 				);
 			}
 

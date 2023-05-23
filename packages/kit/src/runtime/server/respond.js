@@ -51,7 +51,7 @@ const default_preload = ({ type }) => type === 'js' || type === 'css';
  */
 export async function respond(request, options, manifest, state) {
 	/** URL but stripped from the potential `/__data.json` suffix and its search param  */
-	let url = new URL(request.url);
+	const url = new URL(request.url);
 
 	if (options.csrf_check_origin) {
 		const forbidden =
@@ -155,7 +155,7 @@ export async function respond(request, options, manifest, state) {
 
 				if (lower === 'set-cookie') {
 					throw new Error(
-						`Use \`event.cookies.set(name, value, options)\` instead of \`event.setHeaders\` to set cookies`
+						'Use `event.cookies.set(name, value, options)` instead of `event.setHeaders` to set cookies'
 					);
 				} else if (lower in headers) {
 					throw new Error(`"${key}" header is already set`);

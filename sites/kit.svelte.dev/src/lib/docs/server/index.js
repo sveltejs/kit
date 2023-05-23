@@ -215,7 +215,7 @@ export async function read_file(file) {
 						defaultCompilerOptions: {
 							allowJs: true,
 							checkJs: true,
-							target: ts.ScriptTarget.ES2021
+							target: ts.ScriptTarget.ES2022
 						}
 					});
 

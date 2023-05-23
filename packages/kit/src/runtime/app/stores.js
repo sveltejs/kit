@@ -71,8 +71,8 @@ export const updated = {
 	check: () => {
 		throw new Error(
 			browser
-				? `Cannot check updated store before subscribing`
-				: `Can only check updated store in browser`
+				? 'Cannot check updated store before subscribing'
+				: 'Can only check updated store in browser'
 		);
 	}
 };

@@ -74,7 +74,7 @@ export async function handle_fatal_error(event, options, error) {
 	const status = error instanceof HttpError ? error.status : 500;
 	const body = await handle_error_and_jsonify(event, options, error);
 
-	// ideally we'd use sec-fetch-dest instead, but Safari — quelle surprise — doesn't support it
+	// ideally we'd use sec-fetch-dest instead, but Safari — quelle surprise — doesn't support it
 	const type = negotiate(event.request.headers.get('accept') || 'text/html', [
 		'application/json',
 		'text/html'
@@ -162,9 +162,9 @@ export function stringify_uses(node) {
 		uses.push(`"params":${JSON.stringify(Array.from(node.uses.params))}`);
 	}
 
-	if (node.uses?.parent) uses.push(`"parent":1`);
-	if (node.uses?.route) uses.push(`"route":1`);
-	if (node.uses?.url) uses.push(`"url":1`);
+	if (node.uses?.parent) uses.push('"parent":1');
+	if (node.uses?.route) uses.push('"route":1');
+	if (node.uses?.url) uses.push('"url":1');
 
 	return `"uses":{${uses.join(',')}}`;
 }
