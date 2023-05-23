@@ -1,6 +1,5 @@
-/// <reference types="svelte" />
-/// <reference types="vite/client" />
-
+import 'svelte';
+import 'vite/client';
 import '../types/ambient.js';
 
 import { CompileOptions } from 'svelte/types/compiler/interfaces';
