@@ -332,7 +332,6 @@ export function create_client(app, target) {
 			if (node?.slash !== undefined) slash = node.slash;
 		}
 		url.pathname = normalize_path(url.pathname, slash);
-		// eslint-disable-next-line
 		url.search = url.search; // turn `/?` into `/`
 
 		/** @type {import('./types').NavigationFinished} */
@@ -1174,7 +1173,7 @@ export function create_client(app, target) {
 				'An error occurred while loading the page. This will cause a full page reload. (This message will only appear during development.)'
 			);
 
-			debugger; // eslint-disable-line
+			debugger;
 		}
 
 		return await native_navigation(url);
@@ -1680,7 +1679,7 @@ export function create_client(app, target) {
 			// URLs after a pushState/replaceState, resulting in a 404 — see
 			// https://github.com/sveltejs/kit/issues/3748#issuecomment-1125980897
 			for (const link of document.querySelectorAll('link')) {
-				if (link.rel === 'icon') link.href = link.href; // eslint-disable-line
+				if (link.rel === 'icon') link.href = link.href;
 			}
 
 			addEventListener('pageshow', (event) => {
@@ -1807,8 +1806,6 @@ async function load_data(url, invalid) {
 		throw new HttpError(res.status, await res.json());
 	}
 
-	// TODO: fix eslint error
-	// eslint-disable-next-line
 	return new Promise(async (resolve) => {
 		/**
 		 * Map of deferred promises that will be resolved by a subsequent chunk of data

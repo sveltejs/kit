@@ -109,7 +109,7 @@ function find_declarations(content) {
 
 	for (const statement of file.ast.statements) {
 		if (ts.isImportDeclaration(statement) && statement.importClause) {
-			const type_only = statement.importClause.isTypeOnly;
+			let type_only = statement.importClause.isTypeOnly;
 			const from = ts.isStringLiteral(statement.moduleSpecifier)
 				? statement.moduleSpecifier.text
 				: '';

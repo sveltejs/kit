@@ -67,6 +67,9 @@ export function create_fetch({ event, options, manifest, state, get_cookie_heade
 					return fetch(request);
 				}
 
+				/** @type {Response} */
+				let response;
+
 				// handle fetch requests for static assets. e.g. prebaked data, etc.
 				// we need to support everything the browser's fetch supports
 				const prefix = paths.assets || paths.base;
@@ -118,8 +121,7 @@ export function create_fetch({ event, options, manifest, state, get_cookie_heade
 					);
 				}
 
-				/** @type {Response} */
-				const response = await respond(request, options, manifest, {
+				response = await respond(request, options, manifest, {
 					...state,
 					depth: state.depth + 1
 				});
