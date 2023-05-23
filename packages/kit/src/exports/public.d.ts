@@ -642,7 +642,10 @@ export type Handle = (input: {
  * If an unexpected error is thrown during loading or rendering, this function will be called with the error and the event.
  * Make sure that this function _never_ throws an error.
  */
-export type HandleServerError = (input: { error: unknown; event: RequestEvent }) => MaybePromise<void | App.Error>;
+export type HandleServerError = (input: {
+	error: unknown;
+	event: RequestEvent;
+}) => MaybePromise<void | App.Error>;
 
 /**
  * The client-side [`handleError`](https://kit.svelte.dev/docs/hooks#shared-hooks-handleerror) hook runs when an unexpected error is thrown while navigating.
@@ -650,12 +653,19 @@ export type HandleServerError = (input: { error: unknown; event: RequestEvent })
  * If an unexpected error is thrown during loading or the following render, this function will be called with the error and the event.
  * Make sure that this function _never_ throws an error.
  */
-export type HandleClientError = (input: { error: unknown; event: NavigationEvent }) => MaybePromise<void | App.Error>;
+export type HandleClientError = (input: {
+	error: unknown;
+	event: NavigationEvent;
+}) => MaybePromise<void | App.Error>;
 
 /**
  * The [`handleFetch`](https://kit.svelte.dev/docs/hooks#server-hooks-handlefetch) hook allows you to modify (or replace) a `fetch` request that happens inside a `load` function that runs on the server (or during pre-rendering)
  */
-export type HandleFetch = (input: { event: RequestEvent; request: Request; fetch: typeof fetch }) => MaybePromise<Response>;
+export type HandleFetch = (input: {
+	event: RequestEvent;
+	request: Request;
+	fetch: typeof fetch;
+}) => MaybePromise<Response>;
 
 /**
  * The generic form of `PageLoad` and `LayoutLoad`. You should import those from `./$types` (see [generated types](https://kit.svelte.dev/docs/types#generated-types))
@@ -1202,46 +1212,46 @@ export type SubmitFunction<
 	Success extends Record<string, unknown> | undefined = Record<string, any>,
 	Failure extends Record<string, unknown> | undefined = Record<string, any>
 > = (input: {
-		action: URL;
-		/**
-		 * use `formData` instead of `data`
-		 * @deprecated
-		 */
-		data: FormData;
-		formData: FormData;
-		/**
-		 * use `formElement` instead of `form`
-		 * @deprecated
-		 */
-		form: HTMLFormElement;
-		formElement: HTMLFormElement;
-		controller: AbortController;
-		submitter: HTMLElement | null;
-		cancel(): void;
-	}) => MaybePromise<
-		| void
-		| ((opts: {
-				/**
-				 * use `formData` instead of `data`
-				 * @deprecated
-				 */
-				data: FormData;
-				formData: FormData;
-				/**
-				 * use `formElement` instead of `form`
-				 * @deprecated
-				 */
-				form: HTMLFormElement;
-				formElement: HTMLFormElement;
-				action: URL;
-				result: ActionResult<Success, Failure>;
-				/**
-				 * Call this to get the default behavior of a form submission response.
-				 * @param options Set `reset: false` if you don't want the `<form>` values to be reset after a successful submission.
-				 */
-				update(options?: { reset: boolean }): Promise<void>;
-		  }) => void)
-	>;
+	action: URL;
+	/**
+	 * use `formData` instead of `data`
+	 * @deprecated
+	 */
+	data: FormData;
+	formData: FormData;
+	/**
+	 * use `formElement` instead of `form`
+	 * @deprecated
+	 */
+	form: HTMLFormElement;
+	formElement: HTMLFormElement;
+	controller: AbortController;
+	submitter: HTMLElement | null;
+	cancel(): void;
+}) => MaybePromise<
+	| void
+	| ((opts: {
+			/**
+			 * use `formData` instead of `data`
+			 * @deprecated
+			 */
+			data: FormData;
+			formData: FormData;
+			/**
+			 * use `formElement` instead of `form`
+			 * @deprecated
+			 */
+			form: HTMLFormElement;
+			formElement: HTMLFormElement;
+			action: URL;
+			result: ActionResult<Success, Failure>;
+			/**
+			 * Call this to get the default behavior of a form submission response.
+			 * @param options Set `reset: false` if you don't want the `<form>` values to be reset after a successful submission.
+			 */
+			update(options?: { reset: boolean }): Promise<void>;
+	  }) => void)
+>;
 
 /**
  * The type of `export const snapshot` exported from a page or layout component.
