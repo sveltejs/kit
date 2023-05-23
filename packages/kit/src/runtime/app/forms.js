@@ -15,7 +15,7 @@ export function applyAction(result) {
 	if (BROWSER) {
 		return client.apply_action(result);
 	} else {
-		throw new Error(`Cannot call applyAction(...) on the server`);
+		throw new Error('Cannot call applyAction(...) on the server');
 	}
 }
 

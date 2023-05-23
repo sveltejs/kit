@@ -58,9 +58,9 @@ export class ActionFailure {
  */
 export function replace_implementations(implementations) {
 	// @ts-expect-error
-	ActionFailure = implementations.ActionFailure;
+	ActionFailure = implementations.ActionFailure; // eslint-disable-line no-class-assign
 	// @ts-expect-error
-	HttpError = implementations.HttpError;
+	HttpError = implementations.HttpError; // eslint-disable-line no-class-assign
 	// @ts-expect-error
-	Redirect = implementations.Redirect;
+	Redirect = implementations.Redirect; // eslint-disable-line no-class-assign
 }
