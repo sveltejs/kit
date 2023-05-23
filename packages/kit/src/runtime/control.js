@@ -1,4 +1,4 @@
-export let HttpError = class HttpError {
+export class HttpError {
 	/**
 	 * @param {number} status
 	 * @param {{message: string} extends App.Error ? (App.Error | string | undefined) : App.Error} body
@@ -19,7 +19,7 @@ export let HttpError = class HttpError {
 	}
 };
 
-export let Redirect = class Redirect {
+export class Redirect {
 	/**
 	 * @param {300 | 301 | 302 | 303 | 304 | 305 | 306 | 307 | 308} status
 	 * @param {string} location
@@ -33,7 +33,7 @@ export let Redirect = class Redirect {
 /**
  * @template {Record<string, unknown> | undefined} [T=undefined]
  */
-export let ActionFailure = class ActionFailure {
+export class ActionFailure {
 	/**
 	 * @param {number} status
 	 * @param {T} [data]
@@ -57,7 +57,10 @@ export let ActionFailure = class ActionFailure {
  * }} implementations
  */
 export function replace_implementations(implementations) {
+	// @ts-expect-error
 	ActionFailure = implementations.ActionFailure;
+	// @ts-expect-error
 	HttpError = implementations.HttpError;
+	// @ts-expect-error
 	Redirect = implementations.Redirect;
 }

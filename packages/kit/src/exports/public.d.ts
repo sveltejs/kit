@@ -19,10 +19,12 @@ import {
 	RouteSegment,
 	UniqueInterface
 } from '../types/private.js';
+import { ActionFailure } from '../runtime/control.js';
 import { BuildData, SSRNodeLoader, SSRRoute, ValidatedConfig } from 'types';
 import type { PluginOptions } from '@sveltejs/vite-plugin-svelte';
 
 export { PrerenderOption } from '../types/private.js';
+export { ActionFailure };
 
 /**
  * [Adapters](https://kit.svelte.dev/docs/adapters) are responsible for taking the production build and turning it into something that can be deployed to a platform of your choosing.
@@ -1212,17 +1214,6 @@ export interface Redirect {
 	status: 300 | 301 | 302 | 303 | 304 | 305 | 306 | 307 | 308;
 	/** The location to redirect to. */
 	location: string;
-}
-
-/**
- * The object returned by the [`fail`](https://kit.svelte.dev/docs/modules#sveltejs-kit-fail) function
- */
-export interface ActionFailure<T extends Record<string, unknown> | undefined = undefined>
-	extends UniqueInterface {
-	/** The [HTTP status code](https://developer.mozilla.org/en-US/docs/Web/HTTP/Status#client_error_responses), in the range 400-599. */
-	status: number;
-	/** Data associated with the failure (e.g. validation errors) */
-	data: T;
 }
 
 export interface SubmitFunction<
