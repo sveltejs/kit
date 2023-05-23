@@ -17,7 +17,7 @@ export class HttpError {
 	toString() {
 		return JSON.stringify(this.body);
 	}
-};
+}
 
 export class Redirect {
 	/**
@@ -28,7 +28,7 @@ export class Redirect {
 		this.status = status;
 		this.location = location;
 	}
-};
+}
 
 /**
  * @template {Record<string, unknown> | undefined} [T=undefined]
@@ -42,7 +42,7 @@ export class ActionFailure {
 		this.status = status;
 		this.data = data;
 	}
-};
+}
 
 /**
  * This is a grotesque hack that, in dev, allows us to replace the implementations
