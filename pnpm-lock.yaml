@@ -437,8 +437,8 @@ importers:
         specifier: ^2.4.2
         version: 2.4.2
       dts-buddy:
-        specifier: ^0.0.6
-        version: 0.0.6
+        specifier: ^0.0.7
+        version: 0.0.7
       marked:
         specifier: ^4.2.3
         version: 4.2.3
@@ -2953,8 +2953,8 @@ packages:
     engines: {node: '>=12'}
     dev: true
 
-  /dts-buddy@0.0.6:
-    resolution: {integrity: sha512-WBLk0YOF/vMzv1uqd3uQewEirDHKgfBGbf5LgE43e1rolKDOrbpPlhmhllmUp2aiT0ZAA+TvKoJgpnPqSPGAPQ==}
+  /dts-buddy@0.0.7:
+    resolution: {integrity: sha512-MFndKiO7FJBS4JrZc1oZuyxMnuJHPOzhQ1uJnn4uubHLfRKHgrqkqOrvUgGpg/Z87UyrP+Fqjxc9ZABl6xvW8A==}
     hasBin: true
     dependencies:
       '@jridgewell/source-map': 0.3.3
