@@ -1,6 +1,6 @@
 import * as devalue from 'devalue';
-import { DEV } from 'esm-env';
-import { client_method } from '../client/singletons.js';
+import { BROWSER, DEV } from 'esm-env';
+import { client } from '../client/singletons.js';
 import { invalidateAll } from './navigation.js';
 
 /**
@@ -8,10 +8,16 @@ import { invalidateAll } from './navigation.js';
  * In case of an error, it redirects to the nearest error page.
  * @template {Record<string, unknown> | undefined} Success
  * @template {Record<string, unknown> | undefined} Failure
- * @type {(result: import('@sveltejs/kit').ActionResult<Success, Failure>) => void}
  * @param {import('@sveltejs/kit').ActionResult<Success, Failure>} result
+ * @returns {Promise<void>}
  */
-export const applyAction = client_method('apply_action');
+export function applyAction(result) {
+	if (BROWSER) {
+		return client.apply_action(result);
+	} else {
+		throw new Error(`Cannot call applyAction(...) on the server`);
+	}
+}
 
 /**
  * Use this function to deserialize the response from a form submission.
@@ -118,7 +124,6 @@ export function enhance(form_element, submit = () => {}) {
 			result.type === 'redirect' ||
 			result.type === 'error'
 		) {
-			// @ts-expect-error TODO: somebody fix this. it is beyond my powers
 			applyAction(result);
 		}
 	};
