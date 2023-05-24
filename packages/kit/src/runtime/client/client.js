@@ -327,7 +327,7 @@ export function create_client(app, target) {
 		route,
 		form
 	}) {
-		url = normalize_url(url, branch);
+		normalize_url(url, branch);
 
 		/** @type {import('./types').NavigationFinished} */
 		const result = {
@@ -714,7 +714,7 @@ export function create_client(app, target) {
 						const temp_branch = (await Promise.allSettled(branch_promises)).map((s) =>
 							s.status === 'fulfilled' ? s.value : undefined
 						);
-						url = normalize_url(url, temp_branch);
+						normalize_url(url, temp_branch);
 						return {
 							type: 'redirect',
 							url: new URL(err.location, url)
@@ -1969,7 +1969,6 @@ function reset_focus() {
 /**
  * @param {URL} url
  * @param {Array<import('./types').BranchNode | undefined>} branch
- * @returns {URL}
  */
 function normalize_url(url, branch) {
 	/** @type {import('types').TrailingSlash} */
@@ -1977,11 +1976,9 @@ function normalize_url(url, branch) {
 	for (const node of branch) {
 		if (node?.slash !== undefined) slash = node.slash;
 	}
-	const normalized_url = new URL(url);
-	normalized_url.pathname = normalize_path(url.pathname, slash);
+	url.pathname = normalize_path(url.pathname, slash);
 	// eslint-disable-next-line
-	normalized_url.search = url.search; // turn `/?` into `/`
-	return normalized_url;
+	url.search = url.search; // turn `/?` into `/`
 }
 
 if (DEV) {
