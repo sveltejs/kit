@@ -1,4 +1,4 @@
-import 'svelte';      // pick up `declare module "*.svelte"`
+import 'svelte'; // pick up `declare module "*.svelte"`
 import 'vite/client'; // pick up `declare module "*.jpg"`, etc.
 import '../types/ambient.js';
 
