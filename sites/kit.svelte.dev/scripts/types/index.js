@@ -244,6 +244,8 @@ for (const file of fs.readdirSync(dir)) {
 			// @ts-ignore
 			const name = statement.name.text || statement.name.escapedText;
 
+			if (name.startsWith('_')) continue;
+
 			// @ts-ignore
 			const comment = strip_origin(statement.jsDoc?.[0].comment ?? '');
 
