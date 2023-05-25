@@ -1539,6 +1539,15 @@ export function create_client(app, target) {
 				// Removing the hash does a full page navigation in the browser, so make sure a hash is present
 				const [nonhash, hash] = url.href.split('#');
 				if (hash !== undefined && nonhash === location.href.split('#')[0]) {
+					// If we are trying to navigate to the same hash, we should only
+					// attempt to scroll to that element and avoid any history changes.
+					// Otherwise, this can cause Firefox to incorrectly assign a null
+					// history state value without any signal that we can detect.
+					if (current.url.hash === url.hash) {
+						event.preventDefault();
+						a.ownerDocument.getElementById(hash)?.scrollIntoView();
+						return;
+					}
 					// set this flag to distinguish between navigations triggered by
 					// clicking a hash link and those triggered by popstate
 					hash_navigating = true;
