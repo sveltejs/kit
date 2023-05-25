@@ -10,7 +10,7 @@ const cwd = fileURLToPath(new URL('./test', import.meta.url));
 
 /**
  * @param {string} dir
- * @param {import('types').Config} config
+ * @param {import('@sveltejs/kit').Config} config
  */
 const create = (dir, config = {}) => {
 	const initial = options(config, 'config');

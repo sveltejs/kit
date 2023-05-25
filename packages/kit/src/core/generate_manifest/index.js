@@ -65,7 +65,7 @@ export function generate_manifest({ build_data, relative_path, routes }) {
 
 	// prettier-ignore
 	// String representation of
-	/** @type {import('types').SSRManifest} */
+	/** @type {import('@sveltejs/kit').SSRManifest} */
 	return dedent`
 		{
 			appDir: ${s(build_data.app_dir)},

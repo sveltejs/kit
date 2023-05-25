@@ -189,13 +189,13 @@ if (!process.env.CI) {
 			compare('index.js');
 
 			// processes a .js file
-			write('src/lib/a.js', 'export const a = "a";');
+			write('src/lib/a.js', "export const a = 'a';");
 			await settled();
 			compare('a.js');
 			compare('a.d.ts');
 
 			// processes a .ts file
-			write('src/lib/b.ts', 'export const b = "b";');
+			write('src/lib/b.ts', "export const b = 'b';");
 			await settled();
 			compare('b.js');
 			compare('b.d.ts');

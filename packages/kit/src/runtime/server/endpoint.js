@@ -3,7 +3,7 @@ import { Redirect } from '../control.js';
 import { method_not_allowed } from './utils.js';
 
 /**
- * @param {import('types').RequestEvent} event
+ * @param {import('@sveltejs/kit').RequestEvent} event
  * @param {import('types').SSREndpoint} mod
  * @param {import('types').SSRState} state
  * @returns {Promise<Response>}
@@ -40,7 +40,7 @@ export async function render_endpoint(event, mod, state) {
 
 	try {
 		const response = await handler(
-			/** @type {import('types').RequestEvent<Record<string, any>>} */ (event)
+			/** @type {import('@sveltejs/kit').RequestEvent<Record<string, any>>} */ (event)
 		);
 
 		if (!(response instanceof Response)) {
@@ -67,7 +67,7 @@ export async function render_endpoint(event, mod, state) {
 }
 
 /**
- * @param {import('types').RequestEvent} event
+ * @param {import('@sveltejs/kit').RequestEvent} event
  */
 export function is_endpoint_request(event) {
 	const { method, headers } = event.request;

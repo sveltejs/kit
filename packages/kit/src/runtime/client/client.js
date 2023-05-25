@@ -86,10 +86,10 @@ export function create_client(app, target) {
 	let load_cache = null;
 
 	const callbacks = {
-		/** @type {Array<(navigation: import('types').BeforeNavigate) => void>} */
+		/** @type {Array<(navigation: import('@sveltejs/kit').BeforeNavigate) => void>} */
 		before_navigate: [],
 
-		/** @type {Array<(navigation: import('types').AfterNavigate) => void>} */
+		/** @type {Array<(navigation: import('@sveltejs/kit').AfterNavigate) => void>} */
 		after_navigate: []
 	};
 
@@ -138,7 +138,7 @@ export function create_client(app, target) {
 		scrollTo(scroll.x, scroll.y);
 	}
 
-	/** @type {import('types').Page} */
+	/** @type {import('@sveltejs/kit').Page} */
 	let page;
 
 	/** @type {{}} */
@@ -279,7 +279,7 @@ export function create_client(app, target) {
 		const style = document.querySelector('style[data-sveltekit]');
 		if (style) style.remove();
 
-		page = /** @type {import('types').Page} */ (result.props.page);
+		page = /** @type {import('@sveltejs/kit').Page} */ (result.props.page);
 
 		root = new app.root({
 			target,
@@ -289,7 +289,7 @@ export function create_client(app, target) {
 
 		restore_snapshot(current_history_index);
 
-		/** @type {import('types').AfterNavigate} */
+		/** @type {import('@sveltejs/kit').AfterNavigate} */
 		const navigation = {
 			from: null,
 			to: {
@@ -446,7 +446,7 @@ export function create_client(app, target) {
 				}
 			}
 
-			/** @type {import('types').LoadEvent} */
+			/** @type {import('@sveltejs/kit').LoadEvent} */
 			const load_input = {
 				route: {
 					get id() {
@@ -901,7 +901,7 @@ export function create_client(app, target) {
 	/**
 	 * @param {{
 	 *   url: URL;
-	 *   type: import('types').NavigationType;
+	 *   type: import('@sveltejs/kit').NavigationType;
 	 *   intent?: import('./types').NavigationIntent;
 	 *   delta?: number;
 	 * }} opts
@@ -909,7 +909,7 @@ export function create_client(app, target) {
 	function before_navigate({ url, type, intent, delta }) {
 		let should_block = false;
 
-		/** @type {import('types').Navigation} */
+		/** @type {import('@sveltejs/kit').Navigation} */
 		const navigation = {
 			from: {
 				params: current.params,
@@ -954,7 +954,7 @@ export function create_client(app, target) {
 	 *     replaceState: boolean;
 	 *     state: any;
 	 *   } | null;
-	 *   type: import('types').NavigationType;
+	 *   type: import('@sveltejs/kit').NavigationType;
 	 *   delta?: number;
 	 *   nav_token?: {};
 	 *   accepted: () => void;
@@ -1142,7 +1142,7 @@ export function create_client(app, target) {
 		}
 
 		callbacks.after_navigate.forEach((fn) =>
-			fn(/** @type {import('types').AfterNavigate} */ (navigation))
+			fn(/** @type {import('@sveltejs/kit').AfterNavigate} */ (navigation))
 		);
 		stores.navigating.set(null);
 
@@ -1296,7 +1296,7 @@ export function create_client(app, target) {
 
 	/**
 	 * @param {unknown} error
-	 * @param {import('types').NavigationEvent} event
+	 * @param {import('@sveltejs/kit').NavigationEvent} event
 	 * @returns {import('types').MaybePromise<App.Error>}
 	 */
 	function handle_error(error, event) {
@@ -1445,7 +1445,7 @@ export function create_client(app, target) {
 				if (!navigating) {
 					// If we're navigating, beforeNavigate was already called. If we end up in here during navigation,
 					// it's due to an external or full-page-reload link, for which we don't want to call the hook again.
-					/** @type {import('types').BeforeNavigate} */
+					/** @type {import('@sveltejs/kit').BeforeNavigate} */
 					const navigation = {
 						from: {
 							params: current.params,
