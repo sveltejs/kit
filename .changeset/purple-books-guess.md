@@ -2,4 +2,4 @@
 '@sveltejs/kit': patch
 ---
 
-fix: correct ResolveOptions['preload'] inline documentation
+docs: correct `ResolveOptions['preload']` inline documentation
