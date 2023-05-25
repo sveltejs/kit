@@ -22,10 +22,10 @@ import { get_data_json } from '../data/index.js';
 const MAX_DEPTH = 10;
 
 /**
- * @param {import('types').RequestEvent} event
+ * @param {import('@sveltejs/kit').RequestEvent} event
  * @param {import('types').PageNodeIndexes} page
  * @param {import('types').SSROptions} options
- * @param {import('types').SSRManifest} manifest
+ * @param {import('@sveltejs/kit').SSRManifest} manifest
  * @param {import('types').SSRState} state
  * @param {import('types').RequiredResolveOptions} resolve_opts
  * @returns {Promise<Response>}
@@ -54,7 +54,7 @@ export async function render_page(event, page, options, manifest, state, resolve
 
 		let status = 200;
 
-		/** @type {import('types').ActionResult | undefined} */
+		/** @type {import('@sveltejs/kit').ActionResult | undefined} */
 		let action_result = undefined;
 
 		if (is_action_request(event)) {

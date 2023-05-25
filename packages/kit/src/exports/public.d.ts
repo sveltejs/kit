@@ -1,7 +1,6 @@
-/// <reference types="svelte" />
-/// <reference types="vite/client" />
-
-import './ambient.js';
+import 'svelte'; // pick up `declare module "*.svelte"`
+import 'vite/client'; // pick up `declare module "*.jpg"`, etc.
+import '../types/ambient.js';
 
 import { CompileOptions } from 'svelte/types/compiler/interfaces';
 import {
@@ -16,13 +15,14 @@ import {
 	PrerenderMissingIdHandlerValue,
 	PrerenderOption,
 	RequestOptions,
-	RouteSegment,
-	UniqueInterface
-} from './private.js';
-import { BuildData, SSRNodeLoader, SSRRoute, ValidatedConfig } from './internal.js';
+	RouteSegment
+} from '../types/private.js';
+import { ActionFailure } from '../runtime/control.js';
+import { BuildData, SSRNodeLoader, SSRRoute, ValidatedConfig } from 'types';
 import type { PluginOptions } from '@sveltejs/vite-plugin-svelte';
 
-export { PrerenderOption } from './private.js';
+export { PrerenderOption } from '../types/private.js';
+export { ActionFailure };
 
 /**
  * [Adapters](https://kit.svelte.dev/docs/adapters) are responsible for taking the production build and turning it into something that can be deployed to a platform of your choosing.
@@ -631,12 +631,10 @@ export interface KitConfig {
  * It receives an `event` object representing the request and a function called `resolve`, which renders the route and generates a `Response`.
  * This allows you to modify response headers or bodies, or bypass SvelteKit entirely (for implementing routes programmatically, for example).
  */
-export interface Handle {
-	(input: {
-		event: RequestEvent;
-		resolve(event: RequestEvent, opts?: ResolveOptions): MaybePromise<Response>;
-	}): MaybePromise<Response>;
-}
+export type Handle = (input: {
+	event: RequestEvent;
+	resolve(event: RequestEvent, opts?: ResolveOptions): MaybePromise<Response>;
+}) => MaybePromise<Response>;
 
 /**
  * The server-side [`handleError`](https://kit.svelte.dev/docs/hooks#shared-hooks-handleerror) hook runs when an unexpected error is thrown while responding to a request.
@@ -644,9 +642,10 @@ export interface Handle {
  * If an unexpected error is thrown during loading or rendering, this function will be called with the error and the event.
  * Make sure that this function _never_ throws an error.
  */
-export interface HandleServerError {
-	(input: { error: unknown; event: RequestEvent }): MaybePromise<void | App.Error>;
-}
+export type HandleServerError = (input: {
+	error: unknown;
+	event: RequestEvent;
+}) => MaybePromise<void | App.Error>;
 
 /**
  * The client-side [`handleError`](https://kit.svelte.dev/docs/hooks#shared-hooks-handleerror) hook runs when an unexpected error is thrown while navigating.
@@ -654,30 +653,31 @@ export interface HandleServerError {
  * If an unexpected error is thrown during loading or the following render, this function will be called with the error and the event.
  * Make sure that this function _never_ throws an error.
  */
-export interface HandleClientError {
-	(input: { error: unknown; event: NavigationEvent }): MaybePromise<void | App.Error>;
-}
+export type HandleClientError = (input: {
+	error: unknown;
+	event: NavigationEvent;
+}) => MaybePromise<void | App.Error>;
 
 /**
  * The [`handleFetch`](https://kit.svelte.dev/docs/hooks#server-hooks-handlefetch) hook allows you to modify (or replace) a `fetch` request that happens inside a `load` function that runs on the server (or during pre-rendering)
  */
-export interface HandleFetch {
-	(input: { event: RequestEvent; request: Request; fetch: typeof fetch }): MaybePromise<Response>;
-}
+export type HandleFetch = (input: {
+	event: RequestEvent;
+	request: Request;
+	fetch: typeof fetch;
+}) => MaybePromise<Response>;
 
 /**
  * The generic form of `PageLoad` and `LayoutLoad`. You should import those from `./$types` (see [generated types](https://kit.svelte.dev/docs/types#generated-types))
  * rather than using `Load` directly.
  */
-export interface Load<
+export type Load<
 	Params extends Partial<Record<string, string>> = Partial<Record<string, string>>,
 	InputData extends Record<string, unknown> | null = Record<string, any> | null,
 	ParentData extends Record<string, unknown> = Record<string, any>,
 	OutputData extends Record<string, unknown> | void = Record<string, any> | void,
 	RouteId extends string | null = string | null
-> {
-	(event: LoadEvent<Params, InputData, ParentData, RouteId>): MaybePromise<OutputData>;
-}
+> = (event: LoadEvent<Params, InputData, ParentData, RouteId>) => MaybePromise<OutputData>;
 
 /**
  * The generic form of `PageLoadEvent` and `LayoutLoadEvent`. You should import those from `./$types` (see [generated types](https://kit.svelte.dev/docs/types#generated-types))
@@ -931,9 +931,7 @@ export interface Page<
 /**
  * The shape of a param matcher. See [matching](https://kit.svelte.dev/docs/advanced-routing#matching) for more info.
  */
-export interface ParamMatcher {
-	(param: string): boolean;
-}
+export type ParamMatcher = (param: string) => boolean;
 
 export interface RequestEvent<
 	Params extends Partial<Record<string, string>> = Partial<Record<string, string>>,
@@ -1021,12 +1019,10 @@ export interface RequestEvent<
  *
  * It receives `Params` as the first generic argument, which you can skip by using [generated types](https://kit.svelte.dev/docs/types#generated-types) instead.
  */
-export interface RequestHandler<
+export type RequestHandler<
 	Params extends Partial<Record<string, string>> = Partial<Record<string, string>>,
 	RouteId extends string | null = string | null
-> {
-	(event: RequestEvent<Params, RouteId>): MaybePromise<Response>;
-}
+> = (event: RequestEvent<Params, RouteId>) => MaybePromise<Response>;
 
 export interface ResolveOptions {
 	/**
@@ -1095,14 +1091,12 @@ export interface SSRManifest {
  * The generic form of `PageServerLoad` and `LayoutServerLoad`. You should import those from `./$types` (see [generated types](https://kit.svelte.dev/docs/types#generated-types))
  * rather than using `ServerLoad` directly.
  */
-export interface ServerLoad<
+export type ServerLoad<
 	Params extends Partial<Record<string, string>> = Partial<Record<string, string>>,
 	ParentData extends Record<string, any> = Record<string, any>,
 	OutputData extends Record<string, any> | void = Record<string, any> | void,
 	RouteId extends string | null = string | null
-> {
-	(event: ServerLoadEvent<Params, ParentData, RouteId>): MaybePromise<OutputData>;
-}
+> = (event: ServerLoadEvent<Params, ParentData, RouteId>) => MaybePromise<OutputData>;
 
 export interface ServerLoadEvent<
 	Params extends Partial<Record<string, string>> = Partial<Record<string, string>>,
@@ -1159,13 +1153,11 @@ export interface ServerLoadEvent<
  * Shape of a form action method that is part of `export const actions = {..}` in `+page.server.js`.
  * See [form actions](https://kit.svelte.dev/docs/form-actions) for more information.
  */
-export interface Action<
+export type Action<
 	Params extends Partial<Record<string, string>> = Partial<Record<string, string>>,
 	OutputData extends Record<string, any> | void = Record<string, any> | void,
 	RouteId extends string | null = string | null
-> {
-	(event: RequestEvent<Params, RouteId>): MaybePromise<OutputData>;
-}
+> = (event: RequestEvent<Params, RouteId>) => MaybePromise<OutputData>;
 
 /**
  * Shape of the `export const actions = {..}` object in `+page.server.js`.
@@ -1197,21 +1189,6 @@ export type ActionResult<
 	| { type: 'error'; status?: number; error: any };
 
 /**
- * Creates an `HttpError` object with an HTTP status code and an optional message.
- * This object, if thrown during request handling, will cause SvelteKit to
- * return an error response without invoking `handleError`.
- * Make sure you're not catching the thrown error, which would prevent SvelteKit from handling it.
- * @param status The [HTTP status code](https://developer.mozilla.org/en-US/docs/Web/HTTP/Status#client_error_responses). Must be in the range 400-599.
- * @param body An object that conforms to the App.Error type. If a string is passed, it will be used as the message property.
- */
-export function error(status: number, body: App.Error): HttpError;
-export function error(
-	status: number,
-	// this overload ensures you can omit the argument or pass in a string if App.Error is of type { message: string }
-	body?: { message: string } extends App.Error ? App.Error | string | undefined : never
-): HttpError;
-
-/**
  * The object returned by the [`error`](https://kit.svelte.dev/docs/modules#sveltejs-kit-error) function.
  */
 export interface HttpError {
@@ -1220,17 +1197,6 @@ export interface HttpError {
 	/** The content of the error. */
 	body: App.Error;
 }
-
-/**
- * Create a `Redirect` object. If thrown during request handling, SvelteKit will return a redirect response.
- * Make sure you're not catching the thrown redirect, which would prevent SvelteKit from handling it.
- * @param status The [HTTP status code](https://developer.mozilla.org/en-US/docs/Web/HTTP/Status#redirection_messages). Must be in the range 300-308.
- * @param location The location to redirect to.
- */
-export function redirect(
-	status: 300 | 301 | 302 | 303 | 304 | 305 | 306 | 307 | 308,
-	location: string
-): Redirect;
 
 /**
  * The object returned by the [`redirect`](https://kit.svelte.dev/docs/modules#sveltejs-kit-redirect) function
@@ -1242,66 +1208,50 @@ export interface Redirect {
 	location: string;
 }
 
-/**
- * Create a JSON `Response` object from the supplied data.
- * @param data The value that will be serialized as JSON.
- * @param init Options such as `status` and `headers` that will be added to the response. `Content-Type: application/json` and `Content-Length` headers will be added automatically.
- */
-export function json(data: any, init?: ResponseInit): Response;
-
-/**
- * Create a `Response` object from the supplied body.
- * @param body The value that will be used as-is.
- * @param init Options such as `status` and `headers` that will be added to the response. A `Content-Length` header will be added automatically.
- */
-export function text(body: string, init?: ResponseInit): Response;
-
-/**
- * Create an `ActionFailure` object.
- * @param status The [HTTP status code](https://developer.mozilla.org/en-US/docs/Web/HTTP/Status#client_error_responses). Must be in the range 400-599.
- * @param data Data associated with the failure (e.g. validation errors)
- */
-export function fail<T extends Record<string, unknown> | undefined = undefined>(
-	status: number,
-	data?: T
-): ActionFailure<T>;
-
-/**
- * The object returned by the [`fail`](https://kit.svelte.dev/docs/modules#sveltejs-kit-fail) function
- */
-export interface ActionFailure<T extends Record<string, unknown> | undefined = undefined>
-	extends UniqueInterface {
-	/** The [HTTP status code](https://developer.mozilla.org/en-US/docs/Web/HTTP/Status#client_error_responses), in the range 400-599. */
-	status: number;
-	/** Data associated with the failure (e.g. validation errors) */
-	data: T;
-}
-
-export interface SubmitFunction<
+export type SubmitFunction<
 	Success extends Record<string, unknown> | undefined = Record<string, any>,
 	Failure extends Record<string, unknown> | undefined = Record<string, any>
-> {
-	(input: {
-		action: URL;
-		data: FormData;
-		form: HTMLFormElement;
-		controller: AbortController;
-		submitter: HTMLElement | null;
-		cancel(): void;
-	}): MaybePromise<
-		| void
-		| ((opts: {
-				form: HTMLFormElement;
-				action: URL;
-				result: ActionResult<Success, Failure>;
-				/**
-				 * Call this to get the default behavior of a form submission response.
-				 * @param options Set `reset: false` if you don't want the `<form>` values to be reset after a successful submission.
-				 */
-				update(options?: { reset: boolean }): Promise<void>;
-		  }) => void)
-	>;
-}
+> = (input: {
+	action: URL;
+	/**
+	 * use `formData` instead of `data`
+	 * @deprecated
+	 */
+	data: FormData;
+	formData: FormData;
+	/**
+	 * use `formElement` instead of `form`
+	 * @deprecated
+	 */
+	form: HTMLFormElement;
+	formElement: HTMLFormElement;
+	controller: AbortController;
+	submitter: HTMLElement | null;
+	cancel(): void;
+}) => MaybePromise<
+	| void
+	| ((opts: {
+			/**
+			 * use `formData` instead of `data`
+			 * @deprecated
+			 */
+			data: FormData;
+			formData: FormData;
+			/**
+			 * use `formElement` instead of `form`
+			 * @deprecated
+			 */
+			form: HTMLFormElement;
+			formElement: HTMLFormElement;
+			action: URL;
+			result: ActionResult<Success, Failure>;
+			/**
+			 * Call this to get the default behavior of a form submission response.
+			 * @param options Set `reset: false` if you don't want the `<form>` values to be reset after a successful submission.
+			 */
+			update(options?: { reset: boolean }): Promise<void>;
+	  }) => void)
+>;
 
 /**
  * The type of `export const snapshot` exported from a page or layout component.
@@ -1311,17 +1261,4 @@ export interface Snapshot<T = any> {
 	restore: (snapshot: T) => void;
 }
 
-/**
- * Populate a route ID with params to resolve a pathname.
- * @example
- * ```js
- * resolvePath(
- *   `/blog/[slug]/[...somethingElse]`,
- *   {
- *     slug: 'hello-world',
- *     somethingElse: 'something/else'
- *   }
- * ); // `/blog/hello-world/something/else`
- * ```
- */
-export function resolvePath(id: string, params: Record<string, string | undefined>): string;
+export * from './index.js';

@@ -28,14 +28,14 @@ const encoder = new TextEncoder();
  *   branch: Array<import('./types').Loaded>;
  *   fetched: Array<import('./types').Fetched>;
  *   options: import('types').SSROptions;
- *   manifest: import('types').SSRManifest;
+ *   manifest: import('@sveltejs/kit').SSRManifest;
  *   state: import('types').SSRState;
  *   page_config: { ssr: boolean; csr: boolean };
  *   status: number;
  *   error: App.Error | null;
- *   event: import('types').RequestEvent;
+ *   event: import('@sveltejs/kit').RequestEvent;
  *   resolve_opts: import('types').RequiredResolveOptions;
- *   action_result?: import('types').ActionResult;
+ *   action_result?: import('@sveltejs/kit').ActionResult;
  * }} opts
  */
 export async function render_response({
@@ -490,7 +490,7 @@ export async function render_response({
 /**
  * If the serialized data contains promises, `chunks` will be an
  * async iterable containing their resolutions
- * @param {import('types').RequestEvent} event
+ * @param {import('@sveltejs/kit').RequestEvent} event
  * @param {import('types').SSROptions} options
  * @param {Array<import('types').ServerDataNode | null>} nodes
  * @param {string} global
