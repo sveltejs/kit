@@ -39,7 +39,7 @@ export async function render_endpoint(event, mod, state) {
 	}
 
 	try {
-		const response = await handler(
+		let response = await handler(
 			/** @type {import('@sveltejs/kit').RequestEvent<Record<string, any>>} */ (event)
 		);
 
@@ -50,6 +50,13 @@ export async function render_endpoint(event, mod, state) {
 		}
 
 		if (state.prerendering) {
+			// the returned Response might have immutable Headers
+			// so we should clone them before trying to mutate them
+			response = new Response(response.body, {
+				status: response.status,
+				statusText: response.statusText,
+				headers: new Headers(response.headers)
+			});
 			response.headers.set('x-sveltekit-prerender', String(prerender));
 		}
 
