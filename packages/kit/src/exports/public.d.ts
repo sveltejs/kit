@@ -1041,7 +1041,7 @@ export interface ResolveOptions {
 	filterSerializedResponseHeaders?(name: string, value: string): boolean;
 	/**
 	 * Determines what should be added to the `<head>` tag to preload it.
-	 * By default, `js`, `css` and `font` files will be preloaded.
+	 * By default, `js` and `css` files will be preloaded.
 	 * @param input the type of the file and its path
 	 */
 	preload?(input: { type: 'font' | 'css' | 'js' | 'asset'; path: string }): boolean;
