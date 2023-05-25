@@ -40,7 +40,7 @@ const default_transform = ({ html }) => html;
 const default_filter = () => false;
 
 /** @type {import('types').RequiredResolveOptions['preload']} */
-const default_preload = ({ type }) => type === 'js' || type === 'css';
+const default_preload = ({ type }) => type === 'js' || type === 'css' || type === 'font';
 
 /**
  * @param {Request} request
