@@ -1545,7 +1545,7 @@ export function create_client(app, target) {
 					// history state value without any signal that we can detect.
 					if (current.url.hash === url.hash) {
 						event.preventDefault();
-						a.scrollIntoView();
+						a.ownerDocument.getElementById(hash)?.scrollIntoView();
 						return;
 					}
 					// set this flag to distinguish between navigations triggered by
