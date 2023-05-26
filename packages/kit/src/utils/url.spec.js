@@ -1,5 +1,4 @@
-import * as assert from 'uvu/assert';
-import { describe } from './unit_test.js';
+import { assert, describe } from 'vitest';
 import { resolve, normalize_path, make_trackable, disable_search } from './url.js';
 
 describe('resolve', (test) => {
@@ -100,7 +99,7 @@ describe('make_trackable', (test) => {
 		});
 
 		url.origin;
-		assert.not(tracked);
+		assert.isNotOk(tracked);
 
 		url.pathname;
 		assert.ok(tracked);
@@ -111,7 +110,7 @@ describe('make_trackable', (test) => {
 
 		assert.throws(
 			() => url.hash,
-			'url.hash is inaccessible from load. Consider accessing hash from the page store within the script tag of your component.'
+			/Cannot access event.url.hash. Consider using `\$page.url.hash` inside a component instead/
 		);
 	});
 });
@@ -126,7 +125,7 @@ describe('disable_search', (test) => {
 		props.forEach((prop) => {
 			assert.throws(
 				() => url[prop],
-				'Cannot access url.search on a page with prerendering enabled'
+				`Cannot access url.${prop} on a page with prerendering enabled`
 			);
 		});
 	});

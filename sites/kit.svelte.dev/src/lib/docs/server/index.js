@@ -179,7 +179,8 @@ export async function read_file(file) {
 							`export type LayoutServerLoad = Kit.ServerLoad<{${params}}>;`,
 							`export type RequestHandler = Kit.RequestHandler<{${params}}>;`,
 							`export type Action = Kit.Action<{${params}}>;`,
-							`export type Actions = Kit.Actions<{${params}}>;`
+							`export type Actions = Kit.Actions<{${params}}>;`,
+							`export type EntryGenerator = () => Promise<Array<{${params}}>> | Array<{${params}}>;`
 						);
 					}
 
@@ -214,7 +215,7 @@ export async function read_file(file) {
 						defaultCompilerOptions: {
 							allowJs: true,
 							checkJs: true,
-							target: ts.ScriptTarget.ES2021
+							target: ts.ScriptTarget.ES2022
 						}
 					});
 

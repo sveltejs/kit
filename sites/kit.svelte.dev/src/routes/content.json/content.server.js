@@ -88,7 +88,11 @@ function plaintext(markdown) {
 	const inline = (text) => text;
 
 	return transform(markdown, {
-		code: (source) => source.split('// ---cut---\n').pop(),
+		code: (source) =>
+			source
+				.split('// ---cut---\n')
+				.pop()
+				.replace(/^\/\/((\/ file:)|( @errors:))[\s\S]*/gm, ''),
 		blockquote: block,
 		html: () => '\n',
 		heading: (text) => `${text}\n`,

@@ -96,6 +96,17 @@ export function parse_route_id(id) {
 	return { pattern, params };
 }
 
+const optional_param_regex = /\/\[\[\w+?(?:=\w+)?\]\]/;
+
+/**
+ * Removes optional params from a route ID.
+ * @param {string} id
+ * @returns The route id with optional params removed
+ */
+export function remove_optional_params(id) {
+	return id.replace(optional_param_regex, '');
+}
+
 /**
  * Returns `false` for `(group)` segments
  * @param {string} segment
@@ -118,7 +129,7 @@ export function get_route_segments(route) {
 /**
  * @param {RegExpMatchArray} match
  * @param {import('types').RouteParam[]} params
- * @param {Record<string, import('types').ParamMatcher>} matchers
+ * @param {Record<string, import('@sveltejs/kit').ParamMatcher>} matchers
  */
 export function exec(match, params, matchers) {
 	/** @type {Record<string, string>} */
