@@ -327,8 +327,6 @@ export function create_client(app, target) {
 		route,
 		form
 	}) {
-		await normalize_url(url, route);
-
 		/** @type {import('./types').NavigationFinished} */
 		const result = {
 			type: 'loaded',
@@ -707,10 +705,9 @@ export function create_client(app, target) {
 					branch.push(await branch_promises[i]);
 				} catch (err) {
 					if (err instanceof Redirect) {
-						await normalize_url(url, route);
 						return {
 							type: 'redirect',
-							url: new URL(err.location, url)
+							url: new URL(err.location, await normalize_url(url, route))
 						};
 					}
 
@@ -991,6 +988,7 @@ export function create_client(app, target) {
 
 		token = nav_token;
 		let navigation_result = intent && (await load_route(intent));
+		url = await normalize_url(url, intent?.route ?? null);
 
 		if (!navigation_result) {
 			if (is_external_url(url, base)) {
@@ -1043,9 +1041,6 @@ export function create_client(app, target) {
 
 		update_scroll_positions(previous_history_index);
 		capture_snapshot(previous_history_index);
-
-		// ensure the url pathname matches the page's trailing slash option
-		await normalize_url(url, intent?.route ?? null);
 
 		if (details) {
 			const change = details.replaceState ? 0 : 1;
@@ -1957,8 +1952,10 @@ function reset_focus() {
 /**
  * @param {URL} url
  * @param {import('types').CSRRoute | null} route
+ * @returns {Promise<URL>}
  */
 async function normalize_url(url, route) {
+	const normalized = new URL(url);
 	if (route) {
 		/** @type {import('types').TrailingSlash} */
 		let slash = 'never';
@@ -1967,11 +1964,10 @@ async function normalize_url(url, route) {
 			const node = await loader?.[1]();
 			slash = node?.universal?.trailingSlash ?? slash;
 		}
-		url.pathname = normalize_path(url.pathname, slash);
+		normalized.pathname = normalize_path(url.pathname, slash);
 	}
-
-	// eslint-disable-next-line
-	url.search = url.search; // turn `/?` into `/`
+	normalized.search = url.search; // turn `/?` into `/`
+	return normalized;
 }
 
 if (DEV) {
