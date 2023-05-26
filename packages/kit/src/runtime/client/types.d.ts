@@ -101,7 +101,6 @@ export type BranchNode = {
 	server: DataNode | null;
 	universal: DataNode | null;
 	data: Record<string, any> | null;
-	slash?: TrailingSlash;
 };
 
 export interface DataNode {

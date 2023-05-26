@@ -327,7 +327,7 @@ export function create_client(app, target) {
 		route,
 		form
 	}) {
-		normalize_url(url, branch);
+		await normalize_url(url, route);
 
 		/** @type {import('./types').NavigationFinished} */
 		const result = {
@@ -544,8 +544,7 @@ export function create_client(app, target) {
 			loader,
 			server: server_data_node,
 			universal: node.universal?.load ? { type: 'data', data, uses } : null,
-			data: data ?? server_data_node?.data ?? null,
-			slash: node.universal?.trailingSlash ?? server_data_node?.slash
+			data: data ?? server_data_node?.data ?? null
 		};
 	}
 
@@ -708,13 +707,7 @@ export function create_client(app, target) {
 					branch.push(await branch_promises[i]);
 				} catch (err) {
 					if (err instanceof Redirect) {
-						// TODO get per-branch config without running load
-						// https://github.com/sveltejs/kit/pull/9897#issuecomment-1551723833
-						/** @type {Array<import('./types').BranchNode | undefined>} */
-						const temp_branch = (await Promise.allSettled(branch_promises)).map((s) =>
-							s.status === 'fulfilled' ? s.value : undefined
-						);
-						normalize_url(url, temp_branch);
+						await normalize_url(url, route);
 						return {
 							type: 'redirect',
 							url: new URL(err.location, url)
@@ -1968,15 +1961,20 @@ function reset_focus() {
 
 /**
  * @param {URL} url
- * @param {Array<import('./types').BranchNode | undefined>} branch
+ * @param {import('types').CSRRoute | null} route
  */
-function normalize_url(url, branch) {
-	/** @type {import('types').TrailingSlash} */
-	let slash = 'never';
-	for (const node of branch) {
-		if (node?.slash !== undefined) slash = node.slash;
+async function normalize_url(url, route) {
+	if (route) {
+		/** @type {import('types').TrailingSlash} */
+		let slash = 'never';
+		for (const loader of [...route.layouts, route.leaf]) {
+			// okay for this to be serial as module should have been preloaded by this point
+			const node = await loader?.[1]();
+			slash = node?.universal?.trailingSlash ?? slash;
+		}
+		url.pathname = normalize_path(url.pathname, slash);
 	}
-	url.pathname = normalize_path(url.pathname, slash);
+
 	// eslint-disable-next-line
 	url.search = url.search; // turn `/?` into `/`
 }
