@@ -22,7 +22,10 @@ export default function (options = {}) {
 
 			const generate404 = options.generate404 ?? 'auto';
 
-			if ((generate404 === 'auto' && builder.prerendered.paths.length > 0) || generate404 === true) {
+			if (
+				(generate404 === 'auto' && builder.prerendered.paths.length > 0) ||
+				generate404 === true
+			) {
 				await builder.generateFallback(path.join(dest, '404.html'));
 			} else {
 				writeFileSync(
