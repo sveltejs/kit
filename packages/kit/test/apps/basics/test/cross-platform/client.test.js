@@ -736,13 +736,17 @@ test.describe('Routing', () => {
 		for (let i = 0; i < 2; i++) {
 			await clicknav('a[href="/routing/trailing-slash/with-redirect/always"]');
 			expect(new URL(page.url()).pathname).toBe('/routing/trailing-slash/with-redirect/always/foo');
-			await expect(page.locator('p')).toHaveText('/routing/trailing-slash/with-redirect/always/foo');
+			await expect(page.locator('p')).toHaveText(
+				'/routing/trailing-slash/with-redirect/always/foo'
+			);
 		}
 
 		for (let i = 0; i < 2; i++) {
 			await clicknav('a[href="/routing/trailing-slash/with-redirect/ignore/"]');
 			expect(new URL(page.url()).pathname).toBe('/routing/trailing-slash/with-redirect/ignore/foo');
-			await expect(page.locator('p')).toHaveText('/routing/trailing-slash/with-redirect/ignore/foo');
+			await expect(page.locator('p')).toHaveText(
+				'/routing/trailing-slash/with-redirect/ignore/foo'
+			);
 		}
 
 		for (let i = 0; i < 2; i++) {

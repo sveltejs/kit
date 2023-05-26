@@ -165,7 +165,7 @@ export function create_client(app, target) {
 		load_cache = null;
 
 		const nav_token = (token = {});
-		const navigation_result = intent && (await load_route(intent))
+		const navigation_result = intent && (await load_route(intent));
 		if (nav_token !== token) return;
 
 		if (navigation_result) {
