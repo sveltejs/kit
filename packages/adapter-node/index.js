@@ -104,7 +104,8 @@ export default function (opts = {}) {
 				dir: `${out}`,
 				format: 'esm',
 				sourcemap: true,
-				chunkFileNames: 'chunks/[name]-[hash].js'
+				chunkFileNames: 'chunks/[name]-[hash].js',
+				hoistTransitiveImports: false,
 			});
 		}
 	};

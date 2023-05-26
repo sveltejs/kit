@@ -27,8 +27,7 @@
 		"test": "echo \"tests temporarily disabled\" # c8 vitest run",
 		"check": "tsc",
 		"lint": "prettier --check . --config ../../.prettierrc --ignore-path .gitignore",
-		"format": "pnpm lint --write",
-		"prepublishOnly": "pnpm build"
+		"format": "pnpm lint --write"
 	},
 	"devDependencies": {
 		"@sveltejs/kit": "workspace:^",

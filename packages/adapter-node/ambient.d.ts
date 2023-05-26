@@ -1,8 +1,3 @@
-declare module 'ENV' {
-	export function env(key: string, fallback?: any): string;
-	export const ENV_PREFIX: string;
-}
-
 declare module 'HANDLER' {
 	export const handler: import('polka').Middleware;
 }
@@ -20,7 +15,7 @@ declare module 'SERVER' {
 
 interface ImportMeta {
 	SERVER_DIR: string;
-	ENV_PREFIX: string;
+	ENV_PREFIX?: string;
 }
 
 declare namespace App {
