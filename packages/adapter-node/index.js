@@ -77,7 +77,7 @@ export default function (opts = {}) {
 						load(id) {
 							if (id === '\0SHIMS') {
 								return polyfill
-									? 'import { installPolyfills } from \'@sveltejs/kit/node/polyfills\'; installPolyfills();'
+									? "import { installPolyfills } from '@sveltejs/kit/node/polyfills'; installPolyfills();"
 									: '';
 							}
 						},
