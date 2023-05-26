@@ -1,5 +1,4 @@
-import { test } from 'uvu';
-import * as assert from 'uvu/assert';
+import { assert, test } from 'vitest';
 import { transform_code, transform_svelte_code } from './migrate.js';
 
 test('Updates SvelteComponentTyped #1', () => {
@@ -157,4 +156,42 @@ test('Updates svelte:options #2', () => {
 	);
 });
 
-test.run();
+test('Updates transitions', () => {
+	const result = transform_svelte_code(
+		`<div transition:fade />
+		<div transition:fade={true} />
+		<div transition:fade></div>
+		<div transition:fade|local />
+		<div in:fade />
+		<div in:fade={true} />
+		<div in:fade></div>
+		<div in:fade|local />
+		<div out:fade />
+		<div out:fade={true} />
+		<div out:fade></div>
+		<div out:fade|local />
+
+		<div transitionn:fade />
+		<div allin:fade />
+		`
+	);
+	assert.equal(
+		result,
+		`<div transition:fade|global />
+		<div transition:fade|global={true} />
+		<div transition:fade|global></div>
+		<div transition:fade|local />
+		<div in:fade|global />
+		<div in:fade|global={true} />
+		<div in:fade|global></div>
+		<div in:fade|local />
+		<div out:fade|global />
+		<div out:fade|global={true} />
+		<div out:fade|global></div>
+		<div out:fade|local />
+
+		<div transitionn:fade />
+		<div allin:fade />
+		`
+	);
+});

@@ -33,7 +33,7 @@ export function transform_code(code) {
 
 /** @param {string} code */
 export function transform_svelte_code(code) {
-	return update_svelte_options(code);
+	return update_transitions(update_svelte_options(code));
 }
 
 /**
@@ -44,6 +44,14 @@ function update_svelte_options(code) {
 	return code.replace(/<svelte:options([^]*?)\stag=([^]*?)\/?>/, (match) => {
 		return match.replace('tag=', 'customElement=');
 	});
+}
+
+/**
+ * transition/in/out:x -> transition/in/out:x|global
+ * @param {string} code
+ */
+function update_transitions(code) {
+	return code.replace(/(\s)(transition:|in:|out:)(\w+)(?=[\s>=])/g, '$1$2$3|global');
 }
 
 /**
