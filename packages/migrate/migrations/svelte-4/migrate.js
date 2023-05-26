@@ -1,5 +1,5 @@
 import fs from 'node:fs';
-import { Project, SourceFile, ts, Node } from 'ts-morph';
+import { Project, ts, Node } from 'ts-morph';
 
 /** @param {string} file_path */
 export function update_svelte_file(file_path) {
@@ -56,7 +56,7 @@ function update_transitions(code) {
 
 /**
  * Action<T> -> Action<T, any>
- * @param {SourceFile} source
+ * @param {import('ts-morph').SourceFile} source
  */
 function update_action_types(source) {
 	const imports = get_imports(source, 'svelte/action', 'Action');
@@ -79,7 +79,7 @@ function update_action_types(source) {
 
 /**
  * ActionReturn -> ActionReturn<any>
- * @param {SourceFile} source
+ * @param {import('ts-morph').SourceFile} source
  */
 function update_action_return_types(source) {
 	const imports = get_imports(source, 'svelte/action', 'ActionReturn');
@@ -102,7 +102,7 @@ function update_action_return_types(source) {
 
 /**
  * SvelteComponentTyped -> SvelteComponent
- * @param {SourceFile} source
+ * @param {import('ts-morph').SourceFile} source
  */
 function update_imports(source) {
 	const identifiers = find_identifiers(source, 'SvelteComponent');
@@ -140,7 +140,7 @@ function update_imports(source) {
 
 /**
  * typeof SvelteComponent -> typeof SvelteComponent<any>
- * @param {SourceFile} source
+ * @param {import('ts-morph').SourceFile} source
  */
 function update_typeof_svelte_component(source) {
 	const imports = get_imports(source, 'svelte', 'SvelteComponent');
@@ -165,7 +165,7 @@ function update_typeof_svelte_component(source) {
 }
 
 /**
- * @param {SourceFile} source
+ * @param {import('ts-morph').SourceFile} source
  * @param {string} from
  * @param {string} name
  */
@@ -178,7 +178,7 @@ function get_imports(source, from, name) {
 }
 
 /**
- * @param {SourceFile} source
+ * @param {import('ts-morph').SourceFile} source
  * @param {string} name
  */
 function find_identifiers(source, name) {
