@@ -456,7 +456,7 @@ function analyze(project_relative, file, component_extensions, module_extensions
 			);
 		}
 
-		const kind = !!(match[1] || match[4] || match[7]) ? 'server' : 'universal';
+		const kind = match[1] || match[4] || match[7] ? 'server' : 'universal';
 
 		return {
 			kind,
@@ -513,7 +513,7 @@ function prevent_conflicts(routes) {
 		const normalized = normalize_route_id(route.id);
 
 		// find all permutations created by optional parameters
-		const split = normalized.split(/<\?(.+?)\>/g);
+		const split = normalized.split(/<\?(.+?)>/g);
 
 		let permutations = [/** @type {string} */ (split[0])];
 

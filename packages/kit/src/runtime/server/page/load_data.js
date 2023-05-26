@@ -6,14 +6,22 @@ import { validate_depends } from '../../shared.js';
 /**
  * Calls the user's server `load` function.
  * @param {{
- *   event: import('types').RequestEvent;
+ *   event: import('@sveltejs/kit').RequestEvent;
  *   state: import('types').SSRState;
  *   node: import('types').SSRNode | undefined;
  *   parent: () => Promise<Record<string, any>>;
+ *   track_server_fetches: boolean;
  * }} opts
  * @returns {Promise<import('types').ServerDataNode | null>}
  */
-export async function load_server_data({ event, state, node, parent }) {
+export async function load_server_data({
+	event,
+	state,
+	node,
+	parent,
+	// TODO 2.0: Remove this
+	track_server_fetches
+}) {
 	if (!node?.server) return null;
 
 	let done = false;
@@ -51,7 +59,10 @@ export async function load_server_data({ event, state, node, parent }) {
 				);
 			}
 
-			uses.dependencies.add(url.href);
+			// TODO 2.0: Remove this
+			if (track_server_fetches) {
+				uses.dependencies.add(url.href);
+			}
 
 			return event.fetch(info, init);
 		},
@@ -132,7 +143,7 @@ export async function load_server_data({ event, state, node, parent }) {
 /**
  * Calls the user's `load` function.
  * @param {{
- *   event: import('types').RequestEvent;
+ *   event: import('@sveltejs/kit').RequestEvent;
  *   fetched: import('./types').Fetched[];
  *   node: import('types').SSRNode | undefined;
  *   parent: () => Promise<Record<string, any>>;
@@ -179,11 +190,11 @@ export async function load_data({
 }
 
 /**
- * @param {Pick<import('types').RequestEvent, 'fetch' | 'url' | 'request' | 'route'>} event
- * @param {import("types").SSRState} state
- * @param {import("./types").Fetched[]} fetched
+ * @param {Pick<import('@sveltejs/kit').RequestEvent, 'fetch' | 'url' | 'request' | 'route'>} event
+ * @param {import('types').SSRState} state
+ * @param {import('./types').Fetched[]} fetched
  * @param {boolean} csr
- * @param {Pick<Required<import("types").ResolveOptions>, 'filterSerializedResponseHeaders'>} resolve_opts
+ * @param {Pick<Required<import('@sveltejs/kit').ResolveOptions>, 'filterSerializedResponseHeaders'>} resolve_opts
  */
 export function create_universal_fetch(event, state, fetched, csr, resolve_opts) {
 	/**
@@ -251,7 +262,7 @@ export function create_universal_fetch(event, state, fetched, csr, resolve_opts)
 							),
 							request_headers: init?.headers,
 							response_body: body,
-							response: response
+							response
 						});
 					}
 

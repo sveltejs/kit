@@ -13,7 +13,7 @@ test('copy files', () => {
 	const cwd = join(__dirname, 'fixtures/basic');
 	const outDir = join(cwd, '.svelte-kit');
 
-	/** @type {import('types').Config} */
+	/** @type {import('@sveltejs/kit').Config} */
 	const mocked = {
 		extensions: ['.svelte'],
 		kit: {

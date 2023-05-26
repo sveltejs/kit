@@ -55,7 +55,7 @@ export function generate_manifest({ build_data, relative_path, routes }) {
 
 	/** @param {Array<number | undefined>} indexes */
 	function get_nodes(indexes) {
-		let string = indexes.map((n) => reindexed.get(n) ?? '').join(',');
+		const string = indexes.map((n) => reindexed.get(n) ?? '').join(',');
 
 		// since JavaScript ignores trailing commas, we need to insert a dummy
 		// comma so that the array has the correct length if the last item
@@ -65,7 +65,7 @@ export function generate_manifest({ build_data, relative_path, routes }) {
 
 	// prettier-ignore
 	// String representation of
-	/** @type {import('types').SSRManifest} */
+	/** @type {import('@sveltejs/kit').SSRManifest} */
 	return dedent`
 		{
 			appDir: ${s(build_data.app_dir)},

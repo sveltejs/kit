@@ -69,6 +69,9 @@ const get_defaults = (prefix = '') => ({
 		csrf: {
 			checkOrigin: true
 		},
+		dangerZone: {
+			trackServerFetches: false
+		},
 		embedded: false,
 		env: {
 			dir: process.cwd(),
@@ -294,8 +297,8 @@ test('fails if prerender.entries are invalid', () => {
 
 /**
  * @param {string} name
- * @param {import('types').KitConfig['paths']} input
- * @param {import('types').KitConfig['paths']} output
+ * @param {import('@sveltejs/kit').KitConfig['paths']} input
+ * @param {import('@sveltejs/kit').KitConfig['paths']} output
  */
 function validate_paths(name, input, output) {
 	test(name, () => {

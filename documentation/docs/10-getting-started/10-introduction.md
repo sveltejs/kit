@@ -16,7 +16,7 @@ SvelteKit is a framework for rapidly developing robust, performant web applicati
 
 In short, Svelte is a way of writing user interface components — like a navigation bar, comment section, or contact form — that users see and interact with in their browsers. The Svelte compiler converts your components to JavaScript that can be run to render the HTML for the page and to CSS that styles the page. You don't need to know Svelte to understand the rest of this guide, but it will help. If you'd like to learn more, check out [the Svelte tutorial](https://svelte.dev/tutorial).
 
-## What does SvelteKit provide on top of Svelte?
+## SvelteKit vs Svelte
 
 Svelte renders UI components. You can compose these components and render an entire page with just Svelte, but you need more than just Svelte to write an entire app.
 

@@ -29,7 +29,7 @@ async function run_test(dir) {
 }
 
 test('Creates correct $types', async () => {
-	// To safe us from creating a real SvelteKit project for each of the tests,
+	// To save us from creating a real SvelteKit project for each of the tests,
 	// we first run the type generation directly for each test case, and then
 	// call `tsc` to check that the generated types are valid.
 	await run_test('actions');

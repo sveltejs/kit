@@ -1,4 +1,4 @@
-import { applyAction } from '$app/forms';
+import { applyAction } from '../app/forms';
 import {
 	afterNavigate,
 	beforeNavigate,
@@ -8,18 +8,10 @@ import {
 	invalidateAll,
 	preloadCode,
 	preloadData
-} from '$app/navigation';
+} from '../app/navigation';
 import { SvelteComponent } from 'svelte';
-import {
-	ClientHooks,
-	CSRPageNode,
-	CSRPageNodeLoader,
-	CSRRoute,
-	Page,
-	ParamMatcher,
-	TrailingSlash,
-	Uses
-} from 'types';
+import { ClientHooks, CSRPageNode, CSRPageNodeLoader, CSRRoute, TrailingSlash, Uses } from 'types';
+import { Page, ParamMatcher } from '@sveltejs/kit';
 
 export interface SvelteKitApp {
 	/**
