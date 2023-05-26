@@ -165,7 +165,7 @@ export function create_client(app, target) {
 		load_cache = null;
 
 		const nav_token = (token = {});
-		const navigation_result = intent && (await load_route(intent));
+		const navigation_result = intent && (await load_route(intent))
 		if (nav_token !== token) return;
 
 		if (navigation_result) {
@@ -1045,12 +1045,7 @@ export function create_client(app, target) {
 		capture_snapshot(previous_history_index);
 
 		// ensure the url pathname matches the page's trailing slash option
-		if (
-			navigation_result.props.page?.url &&
-			navigation_result.props.page.url.pathname !== url.pathname
-		) {
-			url.pathname = navigation_result.props.page?.url.pathname;
-		}
+		await normalize_url(url, intent?.route ?? null);
 
 		if (details) {
 			const change = details.replaceState ? 0 : 1;
