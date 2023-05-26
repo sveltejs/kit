@@ -71,13 +71,13 @@ export default function (opts = {}) {
 								case 'SERVER':
 									return `${tmp}/index.js`;
 								case 'SHIMS':
-									return `\0SHIMS`;
+									return '\0SHIMS';
 							}
 						},
 						load(id) {
-							if (id === `\0SHIMS`) {
+							if (id === '\0SHIMS') {
 								return polyfill
-									? `import { installPolyfills } from '@sveltejs/kit/node/polyfills'; installPolyfills();`
+									? 'import { installPolyfills } from \'@sveltejs/kit/node/polyfills\'; installPolyfills();'
 									: '';
 							}
 						},
