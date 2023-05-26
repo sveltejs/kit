@@ -97,7 +97,7 @@ Sentry.init({/*...*/})
 /** @type {import('@sveltejs/kit').HandleServerError} */
 export function handleError({ error, event }) {
 	// example integration with https://sentry.io/
-	Sentry.captureException(error, { event });
+	Sentry.captureException(error, { extra: { event } });
 
 	return {
 		message: 'Whoops!',

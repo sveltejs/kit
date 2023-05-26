@@ -1,5 +1,4 @@
-import { test } from 'uvu';
-import * as assert from 'uvu/assert';
+import { assert, expect, test } from 'vitest';
 import { exec, parse_route_id } from './routing.js';
 
 const tests = {
@@ -57,8 +56,8 @@ for (const [key, expected] of Object.entries(tests)) {
 	test(`parse_route_id: "${key}"`, () => {
 		const actual = parse_route_id(key);
 
-		assert.equal(actual.pattern.toString(), expected.pattern.toString());
-		assert.equal(actual.params, expected.params);
+		expect(actual.pattern.toString()).toEqual(expected.pattern.toString());
+		expect(actual.params).toEqual(expected.params);
 	});
 }
 
@@ -214,13 +213,11 @@ for (const { path, route, expected } of exec_tests) {
 			matches: () => true,
 			doesntmatch: () => false
 		});
-		assert.equal(actual, expected);
+		expect(actual).toEqual(expected);
 	});
 }
 
-test('errors on bad param name', () => {
+test('parse_route_id errors on bad param name', () => {
 	assert.throws(() => parse_route_id('abc/[b-c]'), /Invalid param: b-c/);
 	assert.throws(() => parse_route_id('abc/[bc=d-e]'), /Invalid param: bc=d-e/);
 });
-
-test.run();

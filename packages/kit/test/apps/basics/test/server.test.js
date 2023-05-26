@@ -192,7 +192,7 @@ test.describe('Endpoints', () => {
 	test('OPTIONS handler', async ({ request }) => {
 		const url = '/endpoint-output/options';
 
-		var response = await request.fetch(url, {
+		const response = await request.fetch(url, {
 			method: 'OPTIONS'
 		});
 
@@ -496,7 +496,7 @@ test.describe('Static files', () => {
 test.describe('setHeaders', () => {
 	test('allows multiple set-cookie headers with different values', async ({ page }) => {
 		const response = await page.goto('/headers/set-cookie/sub');
-		const cookies = (await response?.allHeaders())['set-cookie'];
+		const cookies = (await response.allHeaders())['set-cookie'];
 
 		expect(cookies).toMatch('cookie1=value1');
 		expect(cookies).toMatch('cookie2=value2');

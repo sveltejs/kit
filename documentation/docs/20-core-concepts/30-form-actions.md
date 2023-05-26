@@ -344,16 +344,16 @@ To customise the behaviour, you can provide a `SubmitFunction` that runs immedia
 ```svelte
 <form
 	method="POST"
-	use:enhance={({ form, data, action, cancel, submitter }) => {
-		// `form` is the `<form>` element
-		// `data` is its `FormData` object
+	use:enhance={({ formElement, formData, action, cancel, submitter }) => {
+		// `formElement` is this `<form>` element
+		// `formData` is its `FormData` object that's about to be submitted
 		// `action` is the URL to which the form is posted
-		// `cancel()` will prevent the submission
+		// calling `cancel()` will prevent the submission
 		// `submitter` is the `HTMLElement` that caused the form to be submitted
 
 		return async ({ result, update }) => {
 			// `result` is an `ActionResult` object
-			// `update` is a function which triggers the logic that would be triggered if this callback wasn't set
+			// `update` is a function which triggers the default logic that would be triggered if this callback wasn't set
 		};
 	}}
 >
@@ -376,11 +376,7 @@ If you provide your own callbacks, you may need to reproduce part of the default
 
 <form
 	method="POST"
-	use:enhance={({ form, data, action, cancel }) => {
-		// `form` is the `<form>` element
-		// `data` is its `FormData` object
-		// `action` is the URL to which the form is posted
-		// `cancel()` will prevent the submission
+	use:enhance={({ formElement, formData, action, cancel }) => {
 
 		return async ({ result }) => {
 			// `result` is an `ActionResult` object

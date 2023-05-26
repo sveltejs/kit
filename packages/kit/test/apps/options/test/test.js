@@ -59,20 +59,15 @@ test.describe('base path', () => {
 		}
 	});
 
-	test('loads CSS', async ({ page }) => {
+	test('loads CSS', async ({ page, get_computed_style }) => {
 		await page.goto('/path-base/base/');
-		expect(
-			await page.evaluate(() => {
-				const el = document.querySelector('p');
-				return el && getComputedStyle(el).color;
-			})
-		).toBe('rgb(255, 0, 0)');
+		expect(await get_computed_style('p', 'color')).toBe('rgb(255, 0, 0)');
 	});
 
 	test('inlines CSS', async ({ page, javaScriptEnabled }) => {
 		await page.goto('/path-base/base/');
 		if (process.env.DEV) {
-			const ssr_style = await page.evaluate(() => document.querySelector('style[data-sveltekit]'));
+			const ssr_style = await page.$('style[data-sveltekit]');
 
 			if (javaScriptEnabled) {
 				// <style data-sveltekit> is removed upon hydration
@@ -81,17 +76,11 @@ test.describe('base path', () => {
 				expect(ssr_style).not.toBeNull();
 			}
 
-			expect(
-				await page.evaluate(() => document.querySelector('link[rel="stylesheet"]'))
-			).toBeNull();
+			expect(await page.$('link[rel="stylesheet"]')).toBeNull();
 		} else {
-			expect(await page.evaluate(() => document.querySelector('style'))).not.toBeNull();
-			expect(
-				await page.evaluate(() => document.querySelector('link[rel="stylesheet"][disabled]'))
-			).not.toBeNull();
-			expect(
-				await page.evaluate(() => document.querySelector('link[rel="stylesheet"]:not([disabled])'))
-			).not.toBeNull();
+			expect(await page.$('style')).not.toBeNull();
+			expect(await page.$('link[rel="stylesheet"][disabled]')).not.toBeNull();
+			expect(await page.$('link[rel="stylesheet"]:not([disabled])')).not.toBeNull();
 		}
 	});
 
@@ -134,7 +123,7 @@ test.describe('CSP', () => {
 	});
 
 	test("quotes 'script'", async ({ page }) => {
-		const response = await page.goto(`/path-base`);
+		const response = await page.goto('/path-base');
 		expect(response.headers()['content-security-policy']).toMatch(
 			/require-trusted-types-for 'script'/
 		);
@@ -247,7 +236,7 @@ test.describe('trailingSlash', () => {
 			expect(requests.filter((req) => req.endsWith('.mjs')).length).toBeGreaterThan(0);
 		}
 
-		expect(requests.includes(`/path-base/preloading/preloaded/__data.json`)).toBe(true);
+		expect(requests.includes('/path-base/preloading/preloaded/__data.json')).toBe(true);
 
 		requests = [];
 		await app.goto('/path-base/preloading/preloaded');
@@ -306,5 +295,24 @@ test.describe('Routing', () => {
 
 		await page.click('[href="/path-base/routing/link-outside-app-target/target/"]');
 		await expect(page.locator('h2')).toHaveText('target: 0');
+	});
+});
+
+test.describe('load', () => {
+	// TODO 2.0: Remove this test
+	test('fetch in server load can be invalidated when `dangerZone.trackServerFetches` is set', async ({
+		page,
+		app,
+		request,
+		javaScriptEnabled
+	}) => {
+		test.skip(!javaScriptEnabled, 'JavaScript is disabled');
+		await request.get('/path-base/server-fetch-invalidate/count.json?reset');
+		await page.goto('/path-base/server-fetch-invalidate');
+		const selector = '[data-testid="count"]';
+
+		expect(await page.textContent(selector)).toBe('1');
+		await app.invalidate('/path-base/server-fetch-invalidate/count.json');
+		expect(await page.textContent(selector)).toBe('2');
 	});
 });

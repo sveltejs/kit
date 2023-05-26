@@ -2,7 +2,7 @@
 // but which cannot be imported from `@sveltejs/kit`. Care should
 // be taken to avoid breaking changes when editing this file
 
-import { RouteDefinition } from './index.js';
+import { RouteDefinition } from '@sveltejs/kit';
 
 export interface AdapterEntry {
 	/**
@@ -205,8 +205,17 @@ export interface PrerenderMissingIdHandler {
 	(details: { path: string; id: string; referrers: string[]; message: string }): void;
 }
 
+export interface PrerenderEntryGeneratorMismatchHandler {
+	(details: { generatedFromId: string; entry: string; matchedId: string; message: string }): void;
+}
+
 export type PrerenderHttpErrorHandlerValue = 'fail' | 'warn' | 'ignore' | PrerenderHttpErrorHandler;
 export type PrerenderMissingIdHandlerValue = 'fail' | 'warn' | 'ignore' | PrerenderMissingIdHandler;
+export type PrerenderEntryGeneratorMismatchHandlerValue =
+	| 'fail'
+	| 'warn'
+	| 'ignore'
+	| PrerenderEntryGeneratorMismatchHandler;
 
 export type PrerenderOption = boolean | 'auto';
 
@@ -224,12 +233,3 @@ export interface RouteSegment {
 }
 
 export type TrailingSlash = 'never' | 'always' | 'ignore';
-
-/**
- * This doesn't actually exist, it's a way to better distinguish the type
- */
-declare const uniqueSymbol: unique symbol;
-
-export interface UniqueInterface {
-	readonly [uniqueSymbol]: unknown;
-}

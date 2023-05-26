@@ -1,5 +1,5 @@
 import { fileURLToPath } from 'node:url';
-import child_process from 'node:child_process';
+import { Worker, parentPort } from 'node:worker_threads';
 
 /**
  * Runs a task in a subprocess so any dangling stuff gets killed upon completion.
@@ -11,23 +11,21 @@ import child_process from 'node:child_process';
  * @returns {(opts: T) => Promise<U>} A function that when called starts the subprocess
  */
 export function forked(module, callback) {
-	if (process.env.SVELTEKIT_FORK && process.send) {
-		process.send({ type: 'ready', module });
-
-		process.on(
+	if (process.env.SVELTEKIT_FORK && parentPort) {
+		parentPort.on(
 			'message',
 			/** @param {any} data */ async (data) => {
 				if (data?.type === 'args' && data.module === module) {
-					if (process.send) {
-						process.send({
-							type: 'result',
-							module,
-							payload: await callback(data.payload)
-						});
-					}
+					parentPort?.postMessage({
+						type: 'result',
+						module,
+						payload: await callback(data.payload)
+					});
 				}
 			}
 		);
+
+		parentPort.postMessage({ type: 'ready', module });
 	}
 
 	/**
@@ -36,20 +34,18 @@ export function forked(module, callback) {
 	 */
 	const fn = function (opts) {
 		return new Promise((fulfil, reject) => {
-			const child = child_process.fork(fileURLToPath(module), {
-				stdio: 'inherit',
+			const worker = new Worker(fileURLToPath(module), {
 				env: {
 					...process.env,
 					SVELTEKIT_FORK: 'true'
-				},
-				serialization: 'advanced'
+				}
 			});
 
-			child.on(
+			worker.on(
 				'message',
 				/** @param {any} data */ (data) => {
 					if (data?.type === 'ready' && data.module === module) {
-						child.send({
+						worker.postMessage({
 							type: 'args',
 							module,
 							payload: opts
@@ -57,13 +53,13 @@ export function forked(module, callback) {
 					}
 
 					if (data?.type === 'result' && data.module === module) {
-						child.kill();
+						worker.terminate();
 						fulfil(data.payload);
 					}
 				}
 			);
 
-			child.on('exit', (code) => {
+			worker.on('exit', (code) => {
 				if (code) {
 					reject(new Error(`Failed with code ${code}`));
 				}

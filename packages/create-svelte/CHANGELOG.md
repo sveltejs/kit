@@ -1,5 +1,39 @@
 # create-svelte
 
+## 4.2.0
+
+### Minor Changes
+
+- feat: Add `data-sveltekit-preload-data` to lib template ([#9863](https://github.com/sveltejs/kit/pull/9863))
+
+## 4.1.1
+
+### Patch Changes
+
+- fix: default playwright globs ([#9795](https://github.com/sveltejs/kit/pull/9795))
+
+- fix: remove obsolete `ignorePatterns: ['*.cjs']` from .eslintrc.cjs ([#9797](https://github.com/sveltejs/kit/pull/9797))
+
+## 4.1.0
+
+### Minor Changes
+
+- feat: set `resolution-mode=highest` in generated `.npmrc` ([#9781](https://github.com/sveltejs/kit/pull/9781))
+
+## 4.0.0
+
+### Major Changes
+
+- feat: switch default ESLint plugin from `eslint-plugin-svelte3` to `eslint-plugin-svelte` ([#9749](https://github.com/sveltejs/kit/pull/9749))
+
+## 3.3.1
+
+### Patch Changes
+
+- feat: upgrade to Vite 4.3 for faster build times ([#9737](https://github.com/sveltejs/kit/pull/9737))
+
+- fix: generate tsconfig/jsconfig correctly for library option ([#9712](https://github.com/sveltejs/kit/pull/9712))
+
 ## 3.3.0
 
 ### Minor Changes
