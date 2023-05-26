@@ -34,9 +34,11 @@ export interface AdapterOptions {
 	/**
 	 * Should a fallback 404.html be generated?
 	 *
-	 * @default true
+	 * 'auto' will only generate a fallback page if there are any prerendered pages
+	 *
+	 * @default auto
 	 */
-	generate404?: boolean;
+	generate404?: boolean | 'auto';
 }
 
 export interface RoutesJSONSpec {

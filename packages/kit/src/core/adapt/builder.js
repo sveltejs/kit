@@ -10,6 +10,7 @@ import { get_route_segments } from '../../utils/routing.js';
 import { get_env } from '../../exports/vite/utils.js';
 import generate_fallback from '../postbuild/fallback.js';
 import { write } from '../sync/utils.js';
+import { load_error_page } from '../config/index.js';
 
 const pipe = promisify(pipeline);
 
@@ -154,6 +155,10 @@ export function create_builder({
 			});
 
 			write(dest, fallback);
+		},
+
+		loadErrorPage: () => {
+			return load_error_page(config);
 		},
 
 		generateManifest: ({ relativePath, routes: subset }) => {

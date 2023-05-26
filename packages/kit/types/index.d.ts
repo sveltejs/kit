@@ -83,6 +83,9 @@ export interface Builder {
 	/** Create `dir` and any required parent directories. */
 	mkdirp(dir: string): void;
 
+	/** Gets the content of the simple error page (src/error.html) */
+	loadErrorPage(): string;
+
 	/** The fully resolved `svelte.config.js`. */
 	config: ValidatedConfig;
 	/** Information about prerendered pages and assets, if any. */

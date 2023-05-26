@@ -16,14 +16,23 @@ export default function (options = {}) {
 			builder.rimraf(tmp);
 			builder.mkdirp(tmp);
 
-			// if enabled, generate 404.html first which can then be overridden by prerendering, if the user defined such a page
-			if (options.generate404 ?? true) {
-				await builder.generateFallback(path.join(dest, '404.html'));
-			}
-
 			const dest_dir = `${dest}${builder.config.kit.paths.base}`;
 			const written_files = builder.writeClient(dest_dir);
 			builder.writePrerendered(dest_dir);
+
+			const generate404 = options.generate404 ?? 'auto';
+
+			if ((generate404 === 'auto' && builder.prerendered.paths.length > 0) || generate404) {
+				await builder.generateFallback(path.join(dest, '404.html'));
+			} else {
+				writeFileSync(
+					path.join(dest_dir, builder.config.kit.appDir, '404.html'),
+					builder
+						.loadErrorPage()
+						.replace(/%sveltekit\.status%/g, '404')
+						.replace(/%sveltekit\.error\.message%/g, 'Not found')
+				);
+			}
 
 			const relativePath = path.posix.relative(tmp, builder.getServerDirectory());
 
