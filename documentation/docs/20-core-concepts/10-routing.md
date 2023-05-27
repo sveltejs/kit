@@ -332,6 +332,7 @@ export async function POST({ request }) {
 Exporting the `all` handler will match any unhandled request methods.
 
 ```js
+// @errors: 7031
 /// file: src/routes/api/add/+server.js
 import { json, text } from '@sveltejs/kit';
 
