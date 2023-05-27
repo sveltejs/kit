@@ -437,8 +437,8 @@ importers:
         specifier: ^2.4.2
         version: 2.4.2
       dts-buddy:
-        specifier: ^0.0.9
-        version: 0.0.9
+        specifier: ^0.0.10
+        version: 0.0.10
       marked:
         specifier: ^4.2.3
         version: 4.2.3
@@ -1004,8 +1004,8 @@ importers:
         specifier: workspace:^
         version: link:../../packages/kit
       '@sveltejs/site-kit':
-        specifier: 5.0.4
-        version: 5.0.4(@sveltejs/kit@packages+kit)(svelte@3.56.0)
+        specifier: 5.2.1
+        version: 5.2.1(@sveltejs/kit@packages+kit)(svelte@3.56.0)
       '@types/d3-geo':
         specifier: ^3.0.2
         version: 3.0.2
@@ -1762,8 +1762,8 @@ packages:
       typescript: 4.9.4
     dev: true
 
-  /@sveltejs/site-kit@5.0.4(@sveltejs/kit@packages+kit)(svelte@3.56.0):
-    resolution: {integrity: sha512-bn0Lk3hmIz/pDTMvVjiVX/US4OPoc1CzfceI0Y0ljxHs2fdxRTZz881xvItZRF7istLIueoFR1x3HAZPdI2F6g==}
+  /@sveltejs/site-kit@5.2.1(@sveltejs/kit@packages+kit)(svelte@3.56.0):
+    resolution: {integrity: sha512-KBl/PlC/I+Db7mm8WHOCtNOyi1nyxicAVuqZ1+NXN6CJTlDtedFouo0sltGaOQgndbXgGmLr8IfCPz/MWgBVKw==}
     peerDependencies:
       '@sveltejs/kit': ^1.0.0
       svelte: ^3.54.0
@@ -2953,8 +2953,8 @@ packages:
     engines: {node: '>=12'}
     dev: true
 
-  /dts-buddy@0.0.9:
-    resolution: {integrity: sha512-T44cc55EgD9J0KEhXa/5Up4E7Cjc45RaGrDdHW/3l/sMu4YQMO77ReehPVweQCDfYwA9XnvxqxhbWLSg2XYQLA==}
+  /dts-buddy@0.0.10:
+    resolution: {integrity: sha512-jkaVtzEAgTUmyjRmDl6t5+nOaaBT7N9nJJ/FGkPBxNBj3Ah4qjeZOZm3xk6HuIlIiy9oZNR9UzDYG2hpeWHBOA==}
     hasBin: true
     dependencies:
       '@jridgewell/source-map': 0.3.3
