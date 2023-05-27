@@ -60,8 +60,8 @@ export function update_pkg_json(config, pkg, files) {
 	if (pkg.publishConfig?.directory || pkg.linkDirectory?.directory) {
 		console.log(
 			colors.yellow(
-				`Detected "publishConfig.directory" or "linkDirectory.directory" fields in your package.json. ` +
-					`This migration removes them, which may or may not be what you want. Please review closely.`
+				'Detected "publishConfig.directory" or "linkDirectory.directory" fields in your package.json. ' +
+					'This migration removes them, which may or may not be what you want. Please review closely.'
 			)
 		);
 		delete pkg.publishConfig?.directory;

@@ -44,7 +44,7 @@ export async function dev(vite, vite_config, svelte_config) {
 
 	/** @type {import('types').ManifestData} */
 	let manifest_data;
-	/** @type {import('types').SSRManifest} */
+	/** @type {import('@sveltejs/kit').SSRManifest} */
 	let manifest;
 
 	/** @type {Error | null} */
@@ -226,7 +226,7 @@ export async function dev(vite, vite_config, svelte_config) {
 					})
 				),
 				matchers: async () => {
-					/** @type {Record<string, import('types').ParamMatcher>} */
+					/** @type {Record<string, import('@sveltejs/kit').ParamMatcher>} */
 					const matchers = {};
 
 					for (const key in manifest_data.matchers) {
@@ -346,7 +346,7 @@ export async function dev(vite, vite_config, svelte_config) {
 		// This shameful hack allows us to load runtime server code via Vite
 		// while apps load `HttpError` and `Redirect` in Node, without
 		// causing `instanceof` checks to fail
-		const control_module_node = await import(`../../../runtime/control.js`);
+		const control_module_node = await import('../../../runtime/control.js');
 		const control_module_vite = await vite.ssrLoadModule(`${runtime_base}/control.js`);
 
 		control_module_node.replace_implementations({

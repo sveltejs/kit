@@ -22,6 +22,14 @@ const globals = {
 
 // exported for dev/preview and node environments
 // TODO: remove this once we only support Node 18.11+ (the version multipart/form-data was added)
+/**
+ * Make various web APIs available as globals:
+ * - `crypto`
+ * - `fetch`
+ * - `Headers`
+ * - `Request`
+ * - `Response`
+ */
 export function installPolyfills() {
 	for (const name in globals) {
 		Object.defineProperty(globalThis, name, {

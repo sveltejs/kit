@@ -19,7 +19,7 @@ export async function load_config({ cwd = process.cwd() } = {}) {
 
 	if (config.package) {
 		throw new Error(
-			`config.package is no longer supported. See https://github.com/sveltejs/kit/discussions/8825 for more information.`
+			'config.package is no longer supported. See https://github.com/sveltejs/kit/discussions/8825 for more information.'
 		);
 	}
 

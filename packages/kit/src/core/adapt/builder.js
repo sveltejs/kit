@@ -24,7 +24,7 @@ const pipe = promisify(pipeline);
  *   prerender_map: import('types').PrerenderMap;
  *   log: import('types').Logger;
  * }} opts
- * @returns {import('types').Builder}
+ * @returns {import('@sveltejs/kit').Builder}
  */
 export function create_builder({
 	config,
@@ -35,7 +35,7 @@ export function create_builder({
 	prerender_map,
 	log
 }) {
-	/** @type {Map<import('types').RouteDefinition, import('types').RouteData>} */
+	/** @type {Map<import('@sveltejs/kit').RouteDefinition, import('types').RouteData>} */
 	const lookup = new Map();
 
 	/**
@@ -47,7 +47,7 @@ export function create_builder({
 			server_metadata.routes.get(route.id)
 		);
 
-		/** @type {import('types').RouteDefinition} */
+		/** @type {import('@sveltejs/kit').RouteDefinition} */
 		const facade = {
 			id: route.id,
 			api,

@@ -2,7 +2,7 @@ import { assert, expect, test } from 'vitest';
 import { create_universal_fetch } from './load_data.js';
 
 /**
- * @param {Partial<Pick<import('types').RequestEvent, 'fetch' | 'url' | 'request' | 'route'>>} event
+ * @param {Partial<Pick<import('@sveltejs/kit').RequestEvent, 'fetch' | 'url' | 'request' | 'route'>>} event
  */
 function create_fetch(event) {
 	event.fetch = event.fetch || (async () => new Response('foo'));
@@ -10,7 +10,7 @@ function create_fetch(event) {
 	event.route = event.route || { id: 'foo' };
 	event.url = event.url || new URL('https://domain-a.com');
 	return create_universal_fetch(
-		/** @type {Pick<import('types').RequestEvent, 'fetch' | 'url' | 'request' | 'route'>} */ (
+		/** @type {Pick<import('@sveltejs/kit').RequestEvent, 'fetch' | 'url' | 'request' | 'route'>} */ (
 			event
 		),
 		{ getClientAddress: () => '', error: false, depth: 0 },

@@ -23,7 +23,7 @@ export default forked(import.meta.url, analyse);
  * }} opts
  */
 async function analyse({ manifest_path, env }) {
-	/** @type {import('types').SSRManifest} */
+	/** @type {import('@sveltejs/kit').SSRManifest} */
 	const manifest = (await import(pathToFileURL(manifest_path).href)).manifest;
 
 	/** @type {import('types').ValidatedKitConfig} */

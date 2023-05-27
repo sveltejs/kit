@@ -75,7 +75,7 @@ export function create_dynamic_types(id, env, prefix) {
 
 	if (id === 'private') {
 		properties.push(`${prefixed}: undefined;`);
-		properties.push(`[key: string]: string | undefined;`);
+		properties.push('[key: string]: string | undefined;');
 	} else {
 		properties.push(`${prefixed}: string | undefined;`);
 	}
