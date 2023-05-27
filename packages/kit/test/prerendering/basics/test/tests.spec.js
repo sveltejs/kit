@@ -223,3 +223,8 @@ test('prerendered.paths omits trailing slashes for endpoints', () => {
 		expect(content, `Missing ${path}`).toMatch(`"${path}"`);
 	}
 });
+
+test('prerenders responses with immutable Headers', () => {
+	const content = read('immutable-headers');
+	expect(content).toMatch('foo');
+});

@@ -3,7 +3,7 @@ import { Redirect } from '../control.js';
 import { method_not_allowed } from './utils.js';
 
 /**
- * @param {import('types').RequestEvent} event
+ * @param {import('@sveltejs/kit').RequestEvent} event
  * @param {import('types').SSREndpoint} mod
  * @param {import('types').SSRState} state
  * @returns {Promise<Response>}
@@ -39,8 +39,8 @@ export async function render_endpoint(event, mod, state) {
 	}
 
 	try {
-		const response = await handler(
-			/** @type {import('types').RequestEvent<Record<string, any>>} */ (event)
+		let response = await handler(
+			/** @type {import('@sveltejs/kit').RequestEvent<Record<string, any>>} */ (event)
 		);
 
 		if (!(response instanceof Response)) {
@@ -50,6 +50,13 @@ export async function render_endpoint(event, mod, state) {
 		}
 
 		if (state.prerendering) {
+			// the returned Response might have immutable Headers
+			// so we should clone them before trying to mutate them
+			response = new Response(response.body, {
+				status: response.status,
+				statusText: response.statusText,
+				headers: new Headers(response.headers)
+			});
 			response.headers.set('x-sveltekit-prerender', String(prerender));
 		}
 
@@ -67,7 +74,7 @@ export async function render_endpoint(event, mod, state) {
 }
 
 /**
- * @param {import('types').RequestEvent} event
+ * @param {import('@sveltejs/kit').RequestEvent} event
  */
 export function is_endpoint_request(event) {
 	const { method, headers } = event.request;

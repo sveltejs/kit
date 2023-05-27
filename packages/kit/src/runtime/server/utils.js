@@ -65,7 +65,7 @@ export function static_error_page(options, status, message) {
 }
 
 /**
- * @param {import('types').RequestEvent} event
+ * @param {import('@sveltejs/kit').RequestEvent} event
  * @param {import('types').SSROptions} options
  * @param {unknown} error
  */
@@ -90,7 +90,7 @@ export async function handle_fatal_error(event, options, error) {
 }
 
 /**
- * @param {import('types').RequestEvent} event
+ * @param {import('@sveltejs/kit').RequestEvent} event
  * @param {import('types').SSROptions} options
  * @param {any} error
  * @returns {Promise<App.Error>}
@@ -132,7 +132,7 @@ export function redirect_response(status, location) {
 }
 
 /**
- * @param {import('types').RequestEvent} event
+ * @param {import('@sveltejs/kit').RequestEvent} event
  * @param {Error & { path: string }} error
  */
 export function clarify_devalue_error(event, error) {

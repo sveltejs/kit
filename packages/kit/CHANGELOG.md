@@ -1,5 +1,25 @@
 # @sveltejs/kit
 
+## 1.19.0
+
+### Minor Changes
+
+- feat: allow link options to be set to `"true"` and `"false"` ([#10039](https://github.com/sveltejs/kit/pull/10039))
+
+- feat: add `resolvePath` export for building relative paths from route IDs and parameters ([#9949](https://github.com/sveltejs/kit/pull/9949))
+
+### Patch Changes
+
+- fix: prevent history change when clicking same hash link ([#10032](https://github.com/sveltejs/kit/pull/10032))
+
+- fix: gracefully handle server endpoints that return `Response`s with immutable `Headers` when prerendering ([#10030](https://github.com/sveltejs/kit/pull/10030))
+
+- fix: do not add content-security-policy meta element if content is empty ([#10026](https://github.com/sveltejs/kit/pull/10026))
+
+- docs: correct `ResolveOptions['preload']` inline documentation ([#10037](https://github.com/sveltejs/kit/pull/10037))
+
+- fix: avoid creating update check timer on the server ([#10015](https://github.com/sveltejs/kit/pull/10015))
+
 ## 1.18.0
 
 ### Minor Changes

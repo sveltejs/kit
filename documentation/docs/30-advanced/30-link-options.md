@@ -104,7 +104,7 @@ In certain cases, you may wish to disable this behaviour. Adding a `data-sveltek
 
 ## Disabling options
 
-To disable any of these options inside an element where they have been enabled, use the `"off"` value:
+To disable any of these options inside an element where they have been enabled, use the `"false"` value:
 
 ```html
 <div data-sveltekit-preload-data>
@@ -113,7 +113,7 @@ To disable any of these options inside an element where they have been enabled, 
 	<a href="/b">b</a>
 	<a href="/c">c</a>
 
-	<div data-sveltekit-preload-data="off">
+	<div data-sveltekit-preload-data="false">
 		<!-- these links will NOT be preloaded -->
 		<a href="/d">d</a>
 		<a href="/e">e</a>
@@ -122,10 +122,8 @@ To disable any of these options inside an element where they have been enabled, 
 </div>
 ```
 
-To apply an attribute to an element conditionally, do this:
+To apply an attribute to an element conditionally, do this (`"true"` and `"false"` are both accepted values):
 
 ```html
-<div data-sveltekit-reload={shouldReload ? '' : 'off'}>
+<div data-sveltekit-reload={shouldReload}>
 ```
-
-> This works because in HTML, `<element attribute>` is equivalent to `<element attribute="">`

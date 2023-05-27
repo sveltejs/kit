@@ -8,10 +8,10 @@ export class Server {
 	/** @type {import('types').SSROptions} */
 	#options;
 
-	/** @type {import('types').SSRManifest} */
+	/** @type {import('@sveltejs/kit').SSRManifest} */
 	#manifest;
 
-	/** @param {import('types').SSRManifest} manifest */
+	/** @param {import('@sveltejs/kit').SSRManifest} manifest */
 	constructor(manifest) {
 		/** @type {import('types').SSROptions} */
 		this.#options = options;
