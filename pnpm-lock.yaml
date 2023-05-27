@@ -185,9 +185,6 @@ importers:
       '@rollup/plugin-node-resolve':
         specifier: ^15.0.1
         version: 15.0.1(rollup@3.7.0)
-      '@rollup/plugin-replace':
-        specifier: ^5.0.2
-        version: 5.0.2(rollup@3.7.0)
       polka:
         specifier: ^1.0.0-next.22
         version: 1.0.0-next.22
@@ -197,9 +194,6 @@ importers:
       sirv:
         specifier: ^2.0.2
         version: 2.0.3
-      undici:
-        specifier: ~5.22.0
-        version: 5.22.0
     devDependencies:
       '@sveltejs/kit':
         specifier: workspace:^
@@ -1718,20 +1712,6 @@ packages:
       is-module: 1.0.0
       resolve: 1.22.1
       rollup: 3.7.0
-
-  /@rollup/plugin-replace@5.0.2(rollup@3.7.0):
-    resolution: {integrity: sha512-M9YXNekv/C/iHHK+cvORzfRYfPbq0RDD8r0G+bMiTXjNGKulPnCT9O3Ss46WfhI6ZOCgApOP7xAdmCQJ+U2LAA==}
-    engines: {node: '>=14.0.0'}
-    peerDependencies:
-      rollup: ^1.20.0||^2.0.0||^3.0.0
-    peerDependenciesMeta:
-      rollup:
-        optional: true
-    dependencies:
-      '@rollup/pluginutils': 5.0.2(rollup@3.7.0)
-      magic-string: 0.27.0
-      rollup: 3.7.0
-    dev: false
 
   /@rollup/pluginutils@4.2.1:
     resolution: {integrity: sha512-iKnFXr7NkdZAIHiIWE+BX5ULi/ucVFYWD6TbAV+rZctiRTY2PL6tsIKhoIOaoskiWAkgu+VsbXgUVDNLHf+InQ==}
