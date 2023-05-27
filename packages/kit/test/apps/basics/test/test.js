@@ -843,7 +843,7 @@ test.describe('Actions', () => {
 		);
 	});
 
-	test(`Accessing v2 deprecated properties results in a warning log`, async ({
+	test('Accessing v2 deprecated properties results in a warning log', async ({
 		page,
 		javaScriptEnabled
 	}) => {
@@ -1119,7 +1119,7 @@ test.describe('Actions', () => {
 		expect(page.url()).toContain('/actions/enhance');
 	});
 
-	test('$page.status reflects error status', async ({ page, app }) => {
+	test('$page.status reflects error status', async ({ page }) => {
 		await page.goto('/actions/enhance');
 
 		await Promise.all([
@@ -1192,7 +1192,7 @@ test.describe.serial('Cookies API', () => {
 
 	test('works with basic enhance', async ({ page }) => {
 		await page.goto('/cookies/enhanced/basic');
-		let span = page.locator('#cookie-value');
+		const span = page.locator('#cookie-value');
 		expect(await span.innerText()).toContain('undefined');
 
 		await page.locator('button#teapot').click();

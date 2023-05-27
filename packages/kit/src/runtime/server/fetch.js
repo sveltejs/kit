@@ -4,9 +4,9 @@ import * as paths from '__sveltekit/paths';
 
 /**
  * @param {{
- *   event: import('types').RequestEvent;
+ *   event: import('@sveltejs/kit').RequestEvent;
  *   options: import('types').SSROptions;
- *   manifest: import('types').SSRManifest;
+ *   manifest: import('@sveltejs/kit').SSRManifest;
  *   state: import('types').SSRState;
  *   get_cookie_header: (url: URL, header: string | null) => string;
  *   set_internal: (name: string, value: string, opts: import('cookie').CookieSerializeOptions) => void;
@@ -67,9 +67,6 @@ export function create_fetch({ event, options, manifest, state, get_cookie_heade
 					return fetch(request);
 				}
 
-				/** @type {Response} */
-				let response;
-
 				// handle fetch requests for static assets. e.g. prebaked data, etc.
 				// we need to support everything the browser's fetch supports
 				const prefix = paths.assets || paths.base;
@@ -121,7 +118,8 @@ export function create_fetch({ event, options, manifest, state, get_cookie_heade
 					);
 				}
 
-				response = await respond(request, options, manifest, {
+				/** @type {Response} */
+				const response = await respond(request, options, manifest, {
 					...state,
 					depth: state.depth + 1
 				});

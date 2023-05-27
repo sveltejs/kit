@@ -71,7 +71,7 @@ export default function (opts = {}) {
 				dir: `${out}/server`,
 				format: 'esm',
 				sourcemap: true,
-				chunkFileNames: `chunks/[name]-[hash].js`
+				chunkFileNames: 'chunks/[name]-[hash].js'
 			});
 
 			builder.copy(files, out, {

@@ -8,7 +8,7 @@ import { write_if_changed } from './utils.js';
 
 // TODO these types should be described in a neutral place, rather than
 // inside either `packages/kit` or `kit.svelte.dev`
-const descriptions_dir = fileURLToPath(new URL('../../../types/synthetic', import.meta.url));
+const descriptions_dir = fileURLToPath(new URL('../../../src/types/synthetic', import.meta.url));
 
 /** @param {string} filename */
 function read_description(filename) {

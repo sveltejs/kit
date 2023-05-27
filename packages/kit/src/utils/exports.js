@@ -31,7 +31,7 @@ function validator(expected) {
  * @returns {string | void}
  */
 function hint_for_supported_files(key, ext = '.js') {
-	let supported_files = [];
+	const supported_files = [];
 
 	if (valid_layout_exports.has(key)) {
 		supported_files.push(`+layout${ext}`);
@@ -54,7 +54,7 @@ function hint_for_supported_files(key, ext = '.js') {
 	}
 
 	if (supported_files.length > 0) {
-		return `'${key}' is a valid export in ${supported_files.slice(0, -1).join(`, `)}${
+		return `'${key}' is a valid export in ${supported_files.slice(0, -1).join(', ')}${
 			supported_files.length > 1 ? ' or ' : ''
 		}${supported_files.at(-1)}`;
 	}

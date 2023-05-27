@@ -45,13 +45,13 @@ const default_preload = ({ type }) => type === 'js' || type === 'css';
 /**
  * @param {Request} request
  * @param {import('types').SSROptions} options
- * @param {import('types').SSRManifest} manifest
+ * @param {import('@sveltejs/kit').SSRManifest} manifest
  * @param {import('types').SSRState} state
  * @returns {Promise<Response>}
  */
 export async function respond(request, options, manifest, state) {
 	/** URL but stripped from the potential `/__data.json` suffix and its search param  */
-	let url = new URL(request.url);
+	const url = new URL(request.url);
 
 	if (options.csrf_check_origin) {
 		const forbidden =
@@ -130,7 +130,7 @@ export async function respond(request, options, manifest, state) {
 	/** @type {Record<string, import('./page/types').Cookie>} */
 	let cookies_to_add = {};
 
-	/** @type {import('types').RequestEvent} */
+	/** @type {import('@sveltejs/kit').RequestEvent} */
 	const event = {
 		// @ts-expect-error `cookies` and `fetch` need to be created after the `event` itself
 		cookies: null,
@@ -155,7 +155,7 @@ export async function respond(request, options, manifest, state) {
 
 				if (lower === 'set-cookie') {
 					throw new Error(
-						`Use \`event.cookies.set(name, value, options)\` instead of \`event.setHeaders\` to set cookies`
+						'Use `event.cookies.set(name, value, options)` instead of `event.setHeaders` to set cookies'
 					);
 				} else if (lower in headers) {
 					throw new Error(`"${key}" header is already set`);
@@ -343,8 +343,8 @@ export async function respond(request, options, manifest, state) {
 
 	/**
 	 *
-	 * @param {import('types').RequestEvent} event
-	 * @param {import('types').ResolveOptions} [opts]
+	 * @param {import('@sveltejs/kit').RequestEvent} event
+	 * @param {import('@sveltejs/kit').ResolveOptions} [opts]
 	 */
 	async function resolve(event, opts) {
 		try {

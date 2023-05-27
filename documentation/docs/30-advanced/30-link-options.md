@@ -6,7 +6,7 @@ In SvelteKit, `<a>` elements (rather than framework-specific `<Link>` components
 
 You can customise the behaviour of links with `data-sveltekit-*` attributes. These can be applied to the `<a>` itself, or to a parent element.
 
-These options also apply to `<form>` elements with [`method="GET"`](/docs/form-actions#get-vs-post).
+These options also apply to `<form>` elements with [`method="GET"`](form-actions#get-vs-post).
 
 ## data-sveltekit-preload-data
 
@@ -80,7 +80,7 @@ Sometimes you don't want navigation to create a new entry in the browser's sessi
 
 ## data-sveltekit-keepfocus
 
-Sometimes you don't want [focus to be reset](/docs/accessibility#focus-management) after navigation. For example, maybe you have a search form that submits as the user is typing, and you want to keep focus on the text input.  Adding a `data-sveltekit-keepfocus` attribute to it...
+Sometimes you don't want [focus to be reset](accessibility#focus-management) after navigation. For example, maybe you have a search form that submits as the user is typing, and you want to keep focus on the text input.  Adding a `data-sveltekit-keepfocus` attribute to it...
 
 ```html
 <form data-sveltekit-keepfocus>
@@ -104,7 +104,7 @@ In certain cases, you may wish to disable this behaviour. Adding a `data-sveltek
 
 ## Disabling options
 
-To disable any of these options inside an element where they have been enabled, use the `"off"` value:
+To disable any of these options inside an element where they have been enabled, use the `"false"` value:
 
 ```html
 <div data-sveltekit-preload-data>
@@ -113,7 +113,7 @@ To disable any of these options inside an element where they have been enabled, 
 	<a href="/b">b</a>
 	<a href="/c">c</a>
 
-	<div data-sveltekit-preload-data="off">
+	<div data-sveltekit-preload-data="false">
 		<!-- these links will NOT be preloaded -->
 		<a href="/d">d</a>
 		<a href="/e">e</a>
@@ -122,10 +122,8 @@ To disable any of these options inside an element where they have been enabled, 
 </div>
 ```
 
-To apply an attribute to an element conditionally, do this:
+To apply an attribute to an element conditionally, do this (`"true"` and `"false"` are both accepted values):
 
 ```html
-<div data-sveltekit-reload={shouldReload ? '' : 'off'}>
+<div data-sveltekit-reload={shouldReload}>
 ```
-
-> This works because in HTML, `<element attribute>` is equivalent to `<element attribute="">`

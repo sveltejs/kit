@@ -12,7 +12,7 @@ import { load_config } from '../config/index.js';
 import { forked } from '../../utils/fork.js';
 import { should_polyfill } from '../../utils/platform.js';
 import { installPolyfills } from '../../exports/node/polyfills.js';
-import { resolve_entry } from '../../utils/routing.js';
+import { resolvePath } from '../../exports/index.js';
 
 export default forked(import.meta.url, analyse);
 
@@ -23,7 +23,7 @@ export default forked(import.meta.url, analyse);
  * }} opts
  */
 async function analyse({ manifest_path, env }) {
-	/** @type {import('types').SSRManifest} */
+	/** @type {import('@sveltejs/kit').SSRManifest} */
 	const manifest = (await import(pathToFileURL(manifest_path).href)).manifest;
 
 	/** @type {import('types').ValidatedKitConfig} */
@@ -145,7 +145,7 @@ async function analyse({ manifest_path, env }) {
 			},
 			prerender,
 			entries:
-				entries && (await entries()).map((entry_object) => resolve_entry(route.id, entry_object))
+				entries && (await entries()).map((entry_object) => resolvePath(route.id, entry_object))
 		});
 	}
 

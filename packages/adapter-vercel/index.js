@@ -224,7 +224,7 @@ const plugin = function (defaults = {}) {
 
 			if (ignored_isr.size) {
 				builder.log.warn(
-					`\nWarning: The following routes have an ISR config which is ignored because the route is prerendered:`
+					'\nWarning: The following routes have an ISR config which is ignored because the route is prerendered:'
 				);
 
 				for (const ignored of ignored_isr) {
@@ -586,7 +586,7 @@ function validate_vercel_json(builder, vercel_config) {
 
 	if (unmatched_paths.length) {
 		builder.log.warn(
-			`\nWarning: vercel.json defines cron tasks that use paths that do not correspond to an API route with a GET handler (ignore this if the request is handled in your \`handle\` hook):`
+			'\nWarning: vercel.json defines cron tasks that use paths that do not correspond to an API route with a GET handler (ignore this if the request is handled in your `handle` hook):'
 		);
 
 		for (const path of unmatched_paths) {

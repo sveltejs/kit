@@ -204,12 +204,12 @@ test('prerenders a page in a (group)', () => {
 
 test('injects relative service worker', () => {
 	const content = read('index.html');
-	expect(content).toMatch(`navigator.serviceWorker.register('./service-worker.js')`);
+	expect(content).toMatch("navigator.serviceWorker.register('./service-worker.js')");
 });
 
 test('define service worker variables', () => {
 	const content = read('service-worker.js');
-	expect(content).toMatch(`MY_ENV DEFINED`);
+	expect(content).toMatch('MY_ENV DEFINED');
 });
 
 test('prerendered.paths omits trailing slashes for endpoints', () => {
@@ -222,4 +222,9 @@ test('prerendered.paths omits trailing slashes for endpoints', () => {
 	]) {
 		expect(content, `Missing ${path}`).toMatch(`"${path}"`);
 	}
+});
+
+test('prerenders responses with immutable Headers', () => {
+	const content = read('immutable-headers');
+	expect(content).toMatch('foo');
 });
