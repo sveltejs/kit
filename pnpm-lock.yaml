@@ -650,6 +650,27 @@ importers:
         specifier: ^4.3.6
         version: 4.3.6(@types/node@16.18.6)
 
+  packages/kit/test/build-errors/apps/prerender-impossible-content-negotiation:
+    devDependencies:
+      '@sveltejs/adapter-auto':
+        specifier: workspace:^
+        version: link:../../../../../adapter-auto
+      '@sveltejs/kit':
+        specifier: workspace:^
+        version: link:../../../..
+      svelte:
+        specifier: ^3.56.0
+        version: 3.56.0
+      svelte-check:
+        specifier: ^3.0.2
+        version: 3.0.2(postcss@8.4.23)(svelte@3.56.0)
+      typescript:
+        specifier: ^4.9.4
+        version: 4.9.4
+      vite:
+        specifier: ^4.3.6
+        version: 4.3.6(@types/node@16.18.6)
+
   packages/kit/test/build-errors/apps/prerenderable-incorrect-fragment:
     devDependencies:
       '@sveltejs/adapter-auto':
@@ -5359,7 +5380,7 @@ packages:
       '@typescript/twoslash': 3.1.0
       '@typescript/vfs': 1.3.4
       shiki: 0.10.1
-      typescript: 5.0.2
+      typescript: 5.0.4
     transitivePeerDependencies:
       - supports-color
     dev: true

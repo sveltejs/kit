@@ -128,10 +128,16 @@ async function analyse({ manifest_path, env }) {
 				validate_page_exports(page.universal, page.universal_id);
 			}
 
-			prerender = get_option(nodes, 'prerender') ?? false;
+			prerender = get_option(nodes, 'prerender') ?? prerender ?? false;
 
 			config = get_config(nodes);
 			entries = get_option(nodes, 'entries') ?? entries;
+		}
+
+		if (prerender && route.endpoint && route.page) {
+			throw new Error(
+				`Detected a prerendered route with both a +server and +page file (route: ${route.id}). Because content negotiation for static files is impossible, this is not allowed.`
+			);
 		}
 
 		metadata.routes.set(route.id, {

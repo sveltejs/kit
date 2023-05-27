@@ -26,3 +26,15 @@ test('entry generators should match their own route', () => {
 		`Error: The entries export from /[slug]/[notSpecific] generated entry /whatever/specific, which was matched by /[slug]/specific - see the \`handleEntryGeneratorMismatch\` option in https://kit.svelte.dev/docs/configuration#prerender for more info.${EOL}To suppress or handle this error, implement \`handleEntryGeneratorMismatch\` in https://kit.svelte.dev/docs/configuration#prerender`
 	);
 });
+
+test('prerendering a route with +page and +server files should fail due to impossible content negotiation', () => {
+	assert.throws(
+		() =>
+			execSync('pnpm build', {
+				cwd: path.join(process.cwd(), 'apps/prerender-impossible-content-negotiation'),
+				stdio: 'pipe',
+				timeout: 60000
+			}),
+		'Detected a prerendered route with both a +server and +page file (route: /). Because content negotiation for static files is impossible, this is not allowed.'
+	);
+});

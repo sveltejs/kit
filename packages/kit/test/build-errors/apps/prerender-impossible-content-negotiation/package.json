@@ -1,5 +1,5 @@
 {
-	"name": "prerenderable-entry-generator-mismatch",
+	"name": "prerender-impossible-content-negotiation",
 	"private": true,
 	"version": "0.0.1",
 	"scripts": {
