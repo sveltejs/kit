@@ -1,7 +1,7 @@
 <script>
-	import SearchResults from '$lib/search/SearchResults.svelte';
+	import { SearchResults } from '@sveltejs/site-kit/search';
 
-	/** @type {import('./$types').Data} */
+	/** @type {import('./$types').PageData} */
 	export let data;
 </script>
 

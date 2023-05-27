@@ -1,5 +1,4 @@
-import { test } from 'uvu';
-import * as assert from 'uvu/assert';
+import { assert, test } from 'vitest';
 import { serialize_data } from './serialize_data.js';
 
 test('escapes slashes', () => {
@@ -57,7 +56,7 @@ test('escapes the attribute values', () => {
 			},
 			() => false
 		),
-		`<script type="application/json" data-sveltekit-fetched data-url="${escaped}">{"status":200,"statusText":"","headers":{},"body":\"\"}</script>`
+		`<script type="application/json" data-sveltekit-fetched data-url="${escaped}">{"status":200,"statusText":"","headers":{},"body":""}</script>`
 	);
 });
 
@@ -78,7 +77,7 @@ test('computes ttl using cache-control and age headers', () => {
 			},
 			() => false
 		),
-		`<script type="application/json" data-sveltekit-fetched data-url="${escaped}" data-ttl="9">{"status":200,"statusText":"","headers":{},"body":\"\"}</script>`
+		`<script type="application/json" data-sveltekit-fetched data-url="${escaped}" data-ttl="9">{"status":200,"statusText":"","headers":{},"body":""}</script>`
 	);
 });
 
@@ -99,8 +98,6 @@ test('doesnt compute ttl when vary header is present', () => {
 			},
 			() => false
 		),
-		`<script type="application/json" data-sveltekit-fetched data-url="${escaped}">{"status":200,"statusText":"","headers":{},"body":\"\"}</script>`
+		`<script type="application/json" data-sveltekit-fetched data-url="${escaped}">{"status":200,"statusText":"","headers":{},"body":""}</script>`
 	);
 });
-
-test.run();

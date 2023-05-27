@@ -30,6 +30,7 @@ jobs:
           cache: pnpm
       - run: pnpm install --frozen-lockfile
       - run: pnpm run lint
+      - run: cd packages/kit && pnpm prepublishOnly
       - run: pnpm run check
   Tests:
     runs-on: ${{ matrix.os }}
@@ -42,6 +43,9 @@ jobs:
             os: ubuntu-latest
             e2e-browser: 'chromium'
           - node-version: 18
+            os: ubuntu-latest
+            e2e-browser: 'chromium'
+          - node-version: 20
             os: ubuntu-latest
             e2e-browser: 'chromium'
     env:
@@ -123,3 +127,15 @@ jobs:
           retention-days: 3
           name: test-failure-cross-platform-${{ matrix.mode }}-${{ github.run_id }}-${{ matrix.os }}-${{ matrix.node-version }}-${{ matrix.e2e-browser }}
           path: test-results-cross-platform-${{ matrix.mode }}.tar.gz
+  Test-create-svelte:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: pnpm/action-setup@v2.2.4
+      - uses: actions/setup-node@v3
+        with:
+          node-version: 16
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: cd packages/kit && pnpm prepublishOnly
+      - run: pnpm run test:create-svelte

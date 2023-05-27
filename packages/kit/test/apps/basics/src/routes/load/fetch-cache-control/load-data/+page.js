@@ -6,7 +6,7 @@ export async function load(event) {
 		headers: {
 			'Content-Type': 'application/json'
 		},
-		body: JSON.stringify({ lang: `fr` })
+		body: JSON.stringify({ lang: 'fr' })
 	});
 	const fr = await res_fr.json();
 
@@ -15,7 +15,7 @@ export async function load(event) {
 		headers: {
 			'Content-Type': 'application/json'
 		},
-		body: JSON.stringify({ lang: `hu` })
+		body: JSON.stringify({ lang: 'hu' })
 	});
 
 	const hu = await res_hu.json();

@@ -26,6 +26,8 @@ const projection = geoSatellite()
 	.scale(450)
 	.precision(0.5);
 
+let isDark = false;
+
 const path = geoPath(projection);
 
 /**
@@ -76,19 +78,21 @@ function render(lat, lon, city, country) {
 					stroke-width: 5;
 				}
 
-				@media (prefers-color-scheme: dark) {
-					.ocean {
-						fill: rgb(120,120,120);
-					}
-
-					.land {
-						fill: #222;
-					}
-
-					.dot {
-						stroke: #222;
-					}
+				${
+					isDark
+						? `.ocean {
+					fill: rgb(120,120,120);
 				}
+
+				.land {
+					fill: #222;
+				}
+
+				.dot {
+					stroke: #222;
+				}`
+						: ''
+				} 
 			</style>
 
 			<path d="${path({ type: 'Sphere' })}" class="ocean"/>
@@ -116,9 +120,10 @@ function render(lat, lon, city, country) {
 	`;
 }
 
-/** @type {import('./$types').RequestHandler} */
-export function GET({ request }) {
+export function GET({ request, url }) {
 	const h = request.headers;
+
+	isDark = !!url.searchParams.has('dark');
 
 	const latitude = h.get('x-vercel-ip-latitude') ?? '';
 	const longitude = h.get('x-vercel-ip-longitude') ?? '';

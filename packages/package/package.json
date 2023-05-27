@@ -1,6 +1,7 @@
 {
 	"name": "@sveltejs/package",
 	"version": "2.0.2",
+	"description": "The fastest way to build Svelte packages",
 	"repository": {
 		"type": "git",
 		"url": "https://github.com/sveltejs/kit",
@@ -18,7 +19,7 @@
 	"devDependencies": {
 		"@types/node": "^16.18.6",
 		"svelte": "^3.56.0",
-		"svelte-preprocess": "^5.0.0",
+		"svelte-preprocess": "^5.0.3",
 		"typescript": "^4.9.4",
 		"uvu": "^0.5.6"
 	},

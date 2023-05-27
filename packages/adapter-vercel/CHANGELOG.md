@@ -1,5 +1,33 @@
 # @sveltejs/adapter-vercel
 
+## 3.0.0
+
+### Major Changes
+
+- breaking: remove obsolete `envVarsInUse` option ([#9942](https://github.com/sveltejs/kit/pull/9942))
+
+### Patch Changes
+
+- fix: Copy .wasm files during build ([#9944](https://github.com/sveltejs/kit/pull/9944))
+
+- Updated dependencies [[`50acb22ca`](https://github.com/sveltejs/kit/commit/50acb22caf2901283e044cdfda36db6f07b3e0ae), [`2e6da9496`](https://github.com/sveltejs/kit/commit/2e6da9496bdace2c65040b9d1845c44801ca868c), [`a81106b3a`](https://github.com/sveltejs/kit/commit/a81106b3a817829c41e048207d6253e63988c58c), [`a6338a0b1`](https://github.com/sveltejs/kit/commit/a6338a0b124f54bda7ba3fe64be1d6173e118d00), [`4a85b7f08`](https://github.com/sveltejs/kit/commit/4a85b7f0820d35c7830c00afe1df3c94fcbf8c3d), [`26d2b7f8f`](https://github.com/sveltejs/kit/commit/26d2b7f8f5ca29c60ef61b936ff86deaeb1636ce), [`bc70b4e63`](https://github.com/sveltejs/kit/commit/bc70b4e636fcbd9593356996bf737e014ff8c238), [`ab9f57721`](https://github.com/sveltejs/kit/commit/ab9f57721fca146af7c4eb41f4875fafa5dfc0d2)]:
+  - @sveltejs/kit@1.17.0
+
+## 2.4.3
+
+### Patch Changes
+
+- chore: update all dependencies with minor version bumps ([#9761](https://github.com/sveltejs/kit/pull/9761))
+
+## 2.4.2
+
+### Patch Changes
+
+- fix: construct correct pathname for isr from route with nested params ([#9470](https://github.com/sveltejs/kit/pull/9470))
+
+- Updated dependencies [[`84a5250d`](https://github.com/sveltejs/kit/commit/84a5250d5fe80a87eb7df5569e76a1dde857aa82), [`95e95828`](https://github.com/sveltejs/kit/commit/95e95828f444a35ca3f71eb1350c6630895c02c9), [`367067f5`](https://github.com/sveltejs/kit/commit/367067f547bb78c61f511e88b9361632862cb4ee), [`e9dd2559`](https://github.com/sveltejs/kit/commit/e9dd2559445958c2fdcb4faa2d94bccac2f1f950), [`ae2f4a8c`](https://github.com/sveltejs/kit/commit/ae2f4a8caacfb671db159f3cdce0894beb485b4f)]:
+  - @sveltejs/kit@1.15.7
+
 ## 2.4.1
 
 ### Patch Changes

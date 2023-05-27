@@ -1,31 +1,30 @@
 <script>
 	import { base } from '$app/paths';
-	import logotype from './svelte-kit-logotype.svg';
-	import background from './svelte-kit-machine.webp?w=1440;960&format=avif;webp;png&picture';
+	import Logotype from './svelte-kit-logotype.svg.svelte';
+	import Image from '$lib/Image.svelte';
+	import background from './svelte-kit-machine.webp?w=1440;960';
 </script>
 
 <section class="hero">
 	<div class="hero-contents">
 		<div class="hero-text">
-			<img alt="SvelteKit logotype" width="400" height="50" class="logotype" src={logotype} />
+			<div class="logotype" role="img" aria-label="SvelteKit">
+				<Logotype />
+			</div>
+
 			<div class="tagline">web development, streamlined</div>
 			<a class="cta" href="{base}/docs/introduction">read the docs</a>
 		</div>
 
-		<picture class="hero-image">
-			{#each Object.entries(background.sources) as [format, images]}
-				<source srcset={images.map((i) => `${i.src} ${i.w}w`).join(', ')} type="image/{format}" />
-			{/each}
-			<img src={background.fallback.src} alt="SvelteKit illustration" />
-		</picture>
+		<div class="hero-image">
+			<Image src={background} alt="SvelteKit illustration" />
+		</div>
 	</div>
 </section>
 
 <style>
 	.hero {
-		max-width: 100vw;
-		background: hsl(210, 7%, 84%);
-		background: radial-gradient(
+		--gradient: radial-gradient(
 				34.14% 72.25% at 47.58% 31.75%,
 				hsla(209, 100%, 95%, 0.52) 0%,
 				hsla(0, 0%, 100%, 0) 100%
@@ -37,6 +36,23 @@
 				hsla(207, 22%, 84%, 0.62) 92.49%
 			),
 			linear-gradient(0deg, hsl(204, 38%, 90%), hsl(204, 38%, 90%));
+
+		--dark-gradient: radial-gradient(
+				64.14% 72.25% at 47.58% 31.75%,
+				hsl(209deg 6% 47% / 52%) 0%,
+				hsla(0, 0%, 100%, 0) 100%
+			),
+			linear-gradient(
+				92.4deg,
+				hsl(210, 7%, 16%) 14.67%,
+				hsl(0deg 0% 0% / 48%) 54.37%,
+				hsla(207, 22%, 13%, 0.62) 92.49%
+			),
+			linear-gradient(0deg, hsl(204, 38%, 20%), hsl(204, 10%, 90%));
+
+		max-width: 100vw;
+		background: hsl(210, 7%, 84%);
+		background: var(--gradient);
 		position: relative;
 		padding: 8rem var(--sk-page-padding-side);
 	}
@@ -62,7 +78,7 @@
 		margin: 0 auto;
 	}
 
-	.logotype {
+	.logotype :global(svg) {
 		position: relative;
 		width: 100%;
 		max-width: 400px;
@@ -77,7 +93,9 @@
 		pointer-events: none;
 	}
 
-	.hero-image img {
+	/* this sucks but it's the best we can do.
+	   https://github.com/sveltejs/svelte/issues/2870#issuecomment-1161082065 */
+	.hero-image :global(img) {
 		width: var(--size);
 		aspect-ratio: 4 / 3;
 		object-fit: cover;
@@ -104,7 +122,7 @@
 			padding: calc(10rem + var(--sk-nav-height)) var(--sk-page-padding-side) 16rem;
 		}
 		.hero-contents {
-			max-width: calc(120rem - 2 * var(--side-nav));
+			max-width: calc(120rem - 2 * var(--sk-page-padding-side));
 			padding-bottom: 0rem;
 		}
 
@@ -123,22 +141,28 @@
 	@media (prefers-color-scheme: dark) {
 		.hero {
 			background: hsl(210, 7%, 20%);
-			background: radial-gradient(
-					64.14% 72.25% at 47.58% 31.75%,
-					hsl(209deg 6% 47% / 52%) 0%,
-					hsla(0, 0%, 100%, 0) 100%
-				),
-				linear-gradient(
-					92.4deg,
-					hsl(210, 7%, 16%) 14.67%,
-					hsl(0deg 0% 0% / 48%) 54.37%,
-					hsla(207, 22%, 13%, 0.62) 92.49%
-				),
-				linear-gradient(0deg, hsl(204, 38%, 20%), hsl(204, 10%, 90%));
+			background: var(--dark-gradient);
 		}
 
-		.hero-text img {
+		.hero-text :global(svg) {
 			mix-blend-mode: screen;
 		}
+
+		:global(body.light) .hero {
+			background: var(--gradient);
+		}
+
+		:global(body.light) .hero-text :global(svg) {
+			mix-blend-mode: initial;
+		}
+	}
+
+	:global(body.dark) .hero {
+		background: hsl(210, 7%, 20%);
+		background: var(--dark-gradient);
+	}
+
+	:global(body.dark) .hero-text :global(svg) {
+		mix-blend-mode: screen;
 	}
 </style>

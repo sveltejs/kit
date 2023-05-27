@@ -447,15 +447,12 @@ test.describe('Load', () => {
 	});
 
 	test('CSS for dynamically imported components is reflected in server render', async ({
-		page
+		page,
+		get_computed_style
 	}) => {
 		await page.goto('/load/dynamic-import-styles');
-		expect(
-			await page.evaluate(() => {
-				const el = document.querySelector('#thing');
-				return el && getComputedStyle(el).color;
-			})
-		).toBe('rgb(255, 0, 0)');
+
+		expect(await get_computed_style('#thing', 'color')).toBe('rgb(255, 0, 0)');
 	});
 
 	test('page without load has access to layout data', async ({ page, clicknav }) => {
@@ -527,7 +524,7 @@ test.describe('Nested layouts', () => {
 		await page.goto('/nested-layout/error');
 
 		expect(await page.textContent('footer')).toBe('Custom layout');
-		expect(await page.evaluate(() => document.querySelector('p#nested'))).toBe(null);
+		expect(await page.$('p#nested')).toBeNull();
 		expect(await page.textContent('#message')).toBe(
 			'This is your custom error page saying: "Error"'
 		);
@@ -538,7 +535,7 @@ test.describe('Nested layouts', () => {
 		await page.goto('/nested-layout/');
 		await clicknav('[href="/nested-layout/error"]');
 		expect(await page.textContent('footer')).toBe('Custom layout');
-		expect(await page.evaluate(() => document.querySelector('p#nested'))).toBe(null);
+		expect(await page.$('p#nested')).toBe(null);
 		expect(await page.textContent('#message')).toBe(
 			'This is your custom error page saying: "Error"'
 		);
@@ -548,9 +545,9 @@ test.describe('Nested layouts', () => {
 	test('renders deeply-nested errors in the right layout', async ({ page }) => {
 		await page.goto('/nested-layout/foo/bar/nope');
 		expect(await page.textContent('footer')).toBe('Custom layout');
-		expect(await page.evaluate(() => document.querySelector('p#nested'))).toBeTruthy();
-		expect(await page.evaluate(() => document.querySelector('p#nested-foo'))).toBeTruthy();
-		expect(await page.evaluate(() => document.querySelector('p#nested-bar'))).toBeTruthy();
+		expect(await page.$('p#nested')).not.toBeNull();
+		expect(await page.$('p#nested-foo')).not.toBeNull();
+		expect(await page.$('p#nested-bar')).not.toBeNull();
 		expect(await page.textContent('#nested-error-message')).toBe('error.message: nope');
 	});
 
@@ -581,16 +578,10 @@ test.describe('Page options', () => {
 		if (!javaScriptEnabled) {
 			await page.goto('/no-csr');
 			expect(await page.textContent('h1')).toBe('look ma no javascript');
-			expect(
-				await page.evaluate(() => document.querySelectorAll('link[rel="modulepreload"]').length)
-			).toBe(0);
+			expect(await page.$$('link[rel="modulepreload"]')).toHaveLength(0);
 
 			// ensure data wasn't inlined
-			expect(
-				await page.evaluate(
-					() => document.querySelectorAll('script[sveltekit\\:data-type="data"]').length
-				)
-			).toBe(0);
+			expect(await page.$$('script[sveltekit\\:data-type="data"]')).toHaveLength(0);
 		}
 	});
 
@@ -600,8 +591,8 @@ test.describe('Page options', () => {
 		if (javaScriptEnabled) {
 			expect(await page.textContent('h1')).toBe('content was rendered');
 		} else {
-			expect(await page.evaluate(() => document.querySelector('h1'))).toBe(null);
-			expect(await page.evaluate(() => document.querySelector('style[data-sveltekit]'))).toBe(null);
+			expect(await page.$('h1')).toBeNull();
+			expect(await page.$('style[data-sveltekit]')).toBeNull();
 		}
 	});
 
@@ -837,6 +828,69 @@ test.describe('Matchers', () => {
 });
 
 test.describe('Actions', () => {
+	test('Submitting a form with a file input but no enctype="multipart/form-data" logs a warning', async ({
+		page,
+		javaScriptEnabled
+	}) => {
+		test.skip(!javaScriptEnabled, 'Skip when JavaScript is disabled');
+		test.skip(!process.env.DEV, 'Skip when not in dev mode');
+		await page.goto('/actions/file-without-enctype');
+		const log_promise = page.waitForEvent('console');
+		await page.click('button');
+		const log = await log_promise;
+		expect(log.text()).toBe(
+			'Your form contains <input type="file"> fields, but is missing the `enctype="multipart/form-data"` attribute. This will lead to inconsistent behavior between enhanced and native forms. For more details, see https://github.com/sveltejs/kit/issues/9819. This will be upgraded to an error in v2.0.'
+		);
+	});
+
+	test('Accessing v2 deprecated properties results in a warning log', async ({
+		page,
+		javaScriptEnabled
+	}) => {
+		test.skip(!javaScriptEnabled, 'skip when js is disabled');
+		test.skip(!process.env.DEV, 'skip when not in dev mode');
+		await page.goto('/actions/enhance/old-property-access');
+
+		for (const { id, old_name, new_name, call_location } of [
+			{
+				id: 'access-form-in-submit',
+				old_name: 'form',
+				new_name: 'formElement',
+				call_location: 'use:enhance submit function'
+			},
+			{
+				id: 'access-form-in-callback',
+				old_name: 'form',
+				new_name: 'formElement',
+				call_location: 'callback returned from use:enhance submit function'
+			},
+			{
+				id: 'access-data-in-submit',
+				old_name: 'data',
+				new_name: 'formData',
+				call_location: 'use:enhance submit function'
+			},
+			{
+				id: 'access-data-in-callback',
+				old_name: 'data',
+				new_name: 'formData',
+				call_location: 'callback returned from use:enhance submit function'
+			}
+		]) {
+			await test.step(id, async () => {
+				const log_promise = page.waitForEvent('console');
+				const button = page.locator(`#${id}`);
+				await button.click();
+				await expect(button).toHaveAttribute('data-processed', 'true');
+				const log = await log_promise;
+				expect(log.text()).toBe(
+					`\`${old_name}\` has been deprecated in favor of \`${new_name}\`. \`${old_name}\` will be removed in a future version. (Called from ${call_location})`
+				);
+				expect(log.type()).toBe('warning');
+			});
+		}
+	});
+
 	test('Error props are returned', async ({ page, javaScriptEnabled }) => {
 		await page.goto('/actions/form-errors');
 		await page.click('button');
@@ -920,7 +974,7 @@ test.describe('Actions', () => {
 			await page.goto('/actions/enhance');
 		}
 
-		expect(await page.textContent('pre')).toBe(JSON.stringify(null));
+		expect(await page.textContent('pre.formdata1')).toBe(JSON.stringify(null));
 	});
 
 	test('applyAction redirects', async ({ page, javaScriptEnabled }) => {
@@ -1042,7 +1096,30 @@ test.describe('Actions', () => {
 		expect(page.url()).toContain('/actions/enhance');
 	});
 
-	test('$page.status reflects error status', async ({ page, app }) => {
+	test('redirect in handle', async ({ page, javaScriptEnabled }) => {
+		await page.goto('/actions/redirect-in-handle');
+
+		page.click('button');
+
+		const [redirect] = await Promise.all([
+			page.waitForResponse('/actions/redirect-in-handle'),
+			page.waitForNavigation()
+		]);
+		if (javaScriptEnabled) {
+			expect(await redirect.json()).toEqual({
+				type: 'redirect',
+				location: '/actions/enhance',
+				status: 303
+			});
+		} else {
+			expect(redirect.status()).toBe(303);
+			expect(redirect.headers()['location']).toBe('/actions/enhance');
+		}
+
+		expect(page.url()).toContain('/actions/enhance');
+	});
+
+	test('$page.status reflects error status', async ({ page }) => {
 		await page.goto('/actions/enhance');
 
 		await Promise.all([
@@ -1051,6 +1128,13 @@ test.describe('Actions', () => {
 		]);
 
 		await expect(page.locator('h1')).toHaveText('400');
+	});
+
+	test('errors are rendered at the correct level', async ({ page }) => {
+		await page.goto('/actions/form-errors/adjacent-error-boundary');
+		await page.locator('button').click();
+
+		await expect(page.locator('pre')).toHaveText('something went wrong');
 	});
 });
 
@@ -1108,7 +1192,7 @@ test.describe.serial('Cookies API', () => {
 
 	test('works with basic enhance', async ({ page }) => {
 		await page.goto('/cookies/enhanced/basic');
-		let span = page.locator('#cookie-value');
+		const span = page.locator('#cookie-value');
 		expect(await span.innerText()).toContain('undefined');
 
 		await page.locator('button#teapot').click();

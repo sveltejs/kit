@@ -1,5 +1,11 @@
 # @sveltejs/adapter-netlify
 
+## 2.0.7
+
+### Patch Changes
+
+- chore: update all dependencies with minor version bumps ([#9761](https://github.com/sveltejs/kit/pull/9761))
+
 ## 2.0.6
 
 ### Patch Changes

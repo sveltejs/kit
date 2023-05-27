@@ -1,5 +1,4 @@
-import { test } from 'uvu';
-import * as assert from 'uvu/assert';
+import { assert, test } from 'vitest';
 import { module_guard } from './index.js';
 
 /**
@@ -159,5 +158,3 @@ test('ignores .server.js files outside the project root', () => {
 		'/illegal.server.js': {}
 	});
 });
-
-test.run();

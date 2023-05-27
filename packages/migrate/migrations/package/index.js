@@ -64,8 +64,8 @@ export async function migrate() {
 
 	const tasks = [
 		use_git && cyan('git commit -m "migration to @sveltejs/package v2"'),
-		`Review the migration guide at https://github.com/sveltejs/kit/pull/8922`,
-		`Read the updated docs at https://kit.svelte.dev/docs/packaging`
+		'Review the migration guide at https://github.com/sveltejs/kit/pull/8922',
+		'Read the updated docs at https://kit.svelte.dev/docs/packaging'
 	].filter(Boolean);
 
 	tasks.forEach((task, i) => {

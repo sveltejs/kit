@@ -15,17 +15,21 @@ import {
 	strip_data_suffix
 } from '../../utils/url.js';
 import { exec } from '../../utils/routing.js';
-import { INVALIDATED_PARAM, redirect_json_response, render_data } from './data/index.js';
+import { redirect_json_response, render_data } from './data/index.js';
 import { add_cookies_to_headers, get_cookies } from './cookie.js';
 import { create_fetch } from './fetch.js';
 import { Redirect } from '../control.js';
 import {
-	validate_common_exports,
+	validate_layout_exports,
+	validate_layout_server_exports,
+	validate_page_exports,
 	validate_page_server_exports,
 	validate_server_exports
 } from '../../utils/exports.js';
 import { get_option } from '../../utils/options.js';
 import { error, json, text } from '../../exports/index.js';
+import { action_json_redirect, is_action_json_request } from './page/actions.js';
+import { INVALIDATED_PARAM } from '../shared.js';
 
 /* global __SVELTEKIT_ADAPTER_NAME__ */
 
@@ -41,19 +45,22 @@ const default_preload = ({ type }) => type === 'js' || type === 'css';
 /**
  * @param {Request} request
  * @param {import('types').SSROptions} options
- * @param {import('types').SSRManifest} manifest
+ * @param {import('@sveltejs/kit').SSRManifest} manifest
  * @param {import('types').SSRState} state
  * @returns {Promise<Response>}
  */
 export async function respond(request, options, manifest, state) {
 	/** URL but stripped from the potential `/__data.json` suffix and its search param  */
-	let url = new URL(request.url);
+	const url = new URL(request.url);
 
 	if (options.csrf_check_origin) {
 		const forbidden =
-			request.method === 'POST' &&
-			request.headers.get('origin') !== url.origin &&
-			is_form_content_type(request);
+			is_form_content_type(request) &&
+			(request.method === 'POST' ||
+				request.method === 'PUT' ||
+				request.method === 'PATCH' ||
+				request.method === 'DELETE') &&
+			request.headers.get('origin') !== url.origin;
 
 		if (forbidden) {
 			const csrf_error = error(403, `Cross-site ${request.method} form submissions are forbidden`);
@@ -90,7 +97,10 @@ export async function respond(request, options, manifest, state) {
 	if (is_data_request) {
 		decoded = strip_data_suffix(decoded) || '/';
 		url.pathname = strip_data_suffix(url.pathname) || '/';
-		invalidated_data_nodes = url.searchParams.get(INVALIDATED_PARAM)?.split('_').map(Boolean);
+		invalidated_data_nodes = url.searchParams
+			.get(INVALIDATED_PARAM)
+			?.split('')
+			.map((node) => node === '1');
 		url.searchParams.delete(INVALIDATED_PARAM);
 	}
 
@@ -120,7 +130,7 @@ export async function respond(request, options, manifest, state) {
 	/** @type {Record<string, import('./page/types').Cookie>} */
 	let cookies_to_add = {};
 
-	/** @type {import('types').RequestEvent} */
+	/** @type {import('@sveltejs/kit').RequestEvent} */
 	const event = {
 		// @ts-expect-error `cookies` and `fetch` need to be created after the `event` itself
 		cookies: null,
@@ -145,7 +155,7 @@ export async function respond(request, options, manifest, state) {
 
 				if (lower === 'set-cookie') {
 					throw new Error(
-						`Use \`event.cookies.set(name, value, options)\` instead of \`event.setHeaders\` to set cookies`
+						'Use `event.cookies.set(name, value, options)` instead of `event.setHeaders` to set cookies'
 					);
 				} else if (lower in headers) {
 					throw new Error(`"${key}" header is already set`);
@@ -171,8 +181,12 @@ export async function respond(request, options, manifest, state) {
 
 	try {
 		// determine whether we need to redirect to add/remove a trailing slash
-		if (route && !is_data_request) {
-			if (route.page) {
+		if (route) {
+			// if `paths.base === '/a/b/c`, then the root route is `/a/b/c/`,
+			// regardless of the `trailingSlash` route option
+			if (url.pathname === base || url.pathname === base + '/') {
+				trailing_slash = 'always';
+			} else if (route.page) {
 				const nodes = await Promise.all([
 					// we use == here rather than === because [undefined] serializes as "[null]"
 					...route.page.layouts.map((n) => (n == undefined ? n : manifest._.nodes[n]())),
@@ -185,8 +199,11 @@ export async function respond(request, options, manifest, state) {
 
 					for (const layout of layouts) {
 						if (layout) {
-							validate_common_exports(layout.server, /** @type {string} */ (layout.server_id));
-							validate_common_exports(
+							validate_layout_server_exports(
+								layout.server,
+								/** @type {string} */ (layout.server_id)
+							);
+							validate_layout_exports(
 								layout.universal,
 								/** @type {string} */ (layout.universal_id)
 							);
@@ -195,7 +212,7 @@ export async function respond(request, options, manifest, state) {
 
 					if (page) {
 						validate_page_server_exports(page.server, /** @type {string} */ (page.server_id));
-						validate_common_exports(page.universal, /** @type {string} */ (page.universal_id));
+						validate_page_exports(page.universal, /** @type {string} */ (page.universal_id));
 					}
 				}
 
@@ -209,23 +226,25 @@ export async function respond(request, options, manifest, state) {
 				}
 			}
 
-			const normalized = normalize_path(url.pathname, trailing_slash ?? 'never');
+			if (!is_data_request) {
+				const normalized = normalize_path(url.pathname, trailing_slash ?? 'never');
 
-			if (normalized !== url.pathname && !state.prerendering?.fallback) {
-				return new Response(undefined, {
-					status: 308,
-					headers: {
-						'x-sveltekit-normalize': '1',
-						location:
-							// ensure paths starting with '//' are not treated as protocol-relative
-							(normalized.startsWith('//') ? url.origin + normalized : normalized) +
-							(url.search === '?' ? '' : url.search)
-					}
-				});
+				if (normalized !== url.pathname && !state.prerendering?.fallback) {
+					return new Response(undefined, {
+						status: 308,
+						headers: {
+							'x-sveltekit-normalize': '1',
+							location:
+								// ensure paths starting with '//' are not treated as protocol-relative
+								(normalized.startsWith('//') ? url.origin + normalized : normalized) +
+								(url.search === '?' ? '' : url.search)
+						}
+					});
+				}
 			}
 		}
 
-		const { cookies, new_cookies, get_cookie_header } = get_cookies(
+		const { cookies, new_cookies, get_cookie_header, set_internal } = get_cookies(
 			request,
 			url,
 			trailing_slash ?? 'never'
@@ -233,7 +252,14 @@ export async function respond(request, options, manifest, state) {
 
 		cookies_to_add = new_cookies;
 		event.cookies = cookies;
-		event.fetch = create_fetch({ event, options, manifest, state, get_cookie_header });
+		event.fetch = create_fetch({
+			event,
+			options,
+			manifest,
+			state,
+			get_cookie_header,
+			set_internal
+		});
 
 		if (state.prerendering && !state.prerendering.fallback) disable_search(url);
 
@@ -306,6 +332,8 @@ export async function respond(request, options, manifest, state) {
 		if (e instanceof Redirect) {
 			const response = is_data_request
 				? redirect_json_response(e)
+				: route?.page && is_action_json_request(event)
+				? action_json_redirect(e)
 				: redirect_response(e.status, e.location);
 			add_cookies_to_headers(response.headers, Object.values(cookies_to_add));
 			return response;
@@ -315,8 +343,8 @@ export async function respond(request, options, manifest, state) {
 
 	/**
 	 *
-	 * @param {import('types').RequestEvent} event
-	 * @param {import('types').ResolveOptions} [opts]
+	 * @param {import('@sveltejs/kit').RequestEvent} event
+	 * @param {import('@sveltejs/kit').ResolveOptions} [opts]
 	 */
 	async function resolve(event, opts) {
 		try {

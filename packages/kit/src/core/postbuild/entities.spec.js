@@ -1,5 +1,4 @@
-import { test } from 'uvu';
-import * as assert from 'uvu/assert';
+import { assert, test } from 'vitest';
 import { decode } from './entities.js';
 
 /*
@@ -37,24 +36,22 @@ const tests = [
 
 for (const { input, output } of tests) {
 	test(input, () => {
-		assert.is(decode(input), output);
+		assert.equal(decode(input), output);
 	});
 }
 
 test('should HTML decode partial legacy entity', () => {
-	assert.is(decode('&timesbar'), '×bar');
+	assert.equal(decode('&timesbar'), '×bar');
 });
 
 test('should HTML decode legacy entities according to spec', () => {
-	assert.is(decode('?&image_uri=1&ℑ=2&image=3'), '?&image_uri=1&ℑ=2&image=3');
+	assert.equal(decode('?&image_uri=1&ℑ=2&image=3'), '?&image_uri=1&ℑ=2&image=3');
 });
 
 test('should back out of legacy entities', () => {
-	assert.is(decode('&ampa'), '&a');
+	assert.equal(decode('&ampa'), '&a');
 });
 
 test('should parse &nbsp followed by < (#852)', () => {
-	assert.is(decode('&nbsp<'), '\u00a0<');
+	assert.equal(decode('&nbsp<'), '\u00a0<');
 });
-
-test.run();

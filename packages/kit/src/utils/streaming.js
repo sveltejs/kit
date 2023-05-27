@@ -1,5 +1,5 @@
 /**
- * @returns {import("types").Deferred & { promise: Promise<any> }}}
+ * @returns {import('types').Deferred & { promise: Promise<any> }}}
  */
 function defer() {
 	let fulfil;
@@ -23,7 +23,7 @@ function defer() {
  * }}
  */
 export function create_async_iterator() {
-	let deferred = [defer()];
+	const deferred = [defer()];
 
 	return {
 		iterator: {
