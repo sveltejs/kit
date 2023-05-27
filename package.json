@@ -1,8 +1,9 @@
 {
-	"name": "kit",
+	"name": "kit-monorepo",
 	"version": "0.0.1",
 	"description": "monorepo for @sveltejs/kit and friends",
 	"private": true,
+	"type": "module",
 	"scripts": {
 		"test": "pnpm test -r --filter=./packages/* --filter=!./packages/create-svelte",
 		"test:cross-platform:dev": "pnpm run --dir packages/kit test:cross-platform:dev",
@@ -16,16 +17,6 @@
 		"release": "changeset publish",
 		"start": "cd sites/kit.svelte.dev && npm run dev"
 	},
-	"repository": {
-		"type": "git",
-		"url": "git+https://github.com/sveltejs/kit.git"
-	},
-	"author": "",
-	"license": "MIT",
-	"bugs": {
-		"url": "https://github.com/sveltejs/kit/issues"
-	},
-	"homepage": "https://github.com/sveltejs/kit#readme",
 	"devDependencies": {
 		"@changesets/cli": "^2.26.0",
 		"@rollup/plugin-commonjs": "^25.0.0",
@@ -49,6 +40,5 @@
 	"packageManager": "pnpm@8.5.1",
 	"engines": {
 		"pnpm": "^8.0.0"
-	},
-	"type": "module"
+	}
 }
