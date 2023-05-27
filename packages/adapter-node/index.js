@@ -2,6 +2,7 @@ import commonjs from '@rollup/plugin-commonjs';
 import json from '@rollup/plugin-json';
 import { nodeResolve } from '@rollup/plugin-node-resolve';
 import { readFileSync, writeFileSync } from 'node:fs';
+import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { rollup } from 'rollup';
 
@@ -19,7 +20,8 @@ export default function (opts = {}) {
 		name: '@sveltejs/adapter-node',
 
 		async adapt(builder) {
-			const tmp = builder.getBuildDirectory('adapter-node');
+			// use an adjacent temporary directory so that any relative paths in eg. sourcemaps don't break
+			const tmp = path.join(path.dirname(builder.getServerDirectory()), 'adapter-node');
 
 			builder.rimraf(out);
 			builder.rimraf(tmp);
