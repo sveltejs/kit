@@ -1,5 +1,11 @@
 # @sveltejs/kit
 
+## 1.20.0
+
+### Minor Changes
+
+- feat: support Svelte 4 ([#10048](https://github.com/sveltejs/kit/pull/10048))
+
 ## 1.19.0
 
 ### Minor Changes
