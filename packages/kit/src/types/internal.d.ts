@@ -276,7 +276,10 @@ export interface ServerMetadata {
 
 export interface SSRComponent {
 	default: {
-		render(props: Record<string, any>): {
+		render(
+			props: Record<string, any>,
+			{ context }: { context: Map<unknown, unknown> }
+		): {
 			html: string;
 			head: string;
 			css: {
