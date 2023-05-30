@@ -1,7 +1,5 @@
 import colors from 'kleur';
 import fs from 'node:fs';
-import path from 'node:path';
-import { pathToFileURL } from 'node:url';
 import prompts from 'prompts';
 import glob from 'tiny-glob/sync.js';
 import { bail, check_git } from '../../utils.js';
@@ -27,12 +25,12 @@ export async function migrate() {
 		process.exit(1);
 	}
 
-	const { default: config } = fs.existsSync('svelte.config.js')
-		? await import(pathToFileURL(path.resolve('svelte.config.js')).href)
-		: { default: {} };
+	// const { default: config } = fs.existsSync('svelte.config.js')
+	// 	? await import(pathToFileURL(path.resolve('svelte.config.js')).href)
+	// 	: { default: {} };
 
 	/** @type {string[]} */
-	const svelte_extensions = config.extensions ?? ['.svelte'];
+	const svelte_extensions = /* config.extensions ?? - disabled because it would break .svx */ ['.svelte'];
 	const extensions = [...svelte_extensions, '.ts', '.js'];
 	// TODO read tsconfig/jsconfig if available? src/** will be good for 99% of cases
 	const files = glob('src/**', { filesOnly: true, dot: true }).map((file) =>
