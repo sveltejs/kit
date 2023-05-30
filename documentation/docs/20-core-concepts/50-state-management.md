@@ -36,7 +36,7 @@ export const actions = {
 
 The `user` variable is shared by everyone who connects to this server. If Alice submitted an embarrassing secret, and Bob visited the page after her, Bob would know Alice's secret. In addition, when Alice returns to the site later in the day, the server may have restarted, losing her data.
 
-Instead, you should _authenticate_ the user using [`cookies`](/docs/load#cookies-and-headers) and persist the data to a database.
+Instead, you should _authenticate_ the user using [`cookies`](load#cookies-and-headers) and persist the data to a database.
 
 ## No side-effects in load
 
@@ -75,13 +75,13 @@ export async function load({ fetch }) {
 }
 ```
 
-...and pass it around to the components that need it, or use [`$page.data`](/docs/load#$page-data).
+...and pass it around to the components that need it, or use [`$page.data`](load#$page-data).
 
 If you're not using SSR, then there's no risk of accidentally exposing one user's data to another. But you should still avoid side-effects in your `load` functions — your application will be much easier to reason about without them.
 
 ## Using stores with context
 
-You might wonder how we're able to use `$page.data` and other [app stores](/docs/modules#$app-stores) if we can't use our own stores. The answer is that app stores on the server use Svelte's [context API](https://learn.svelte.dev/tutorial/context-api) — the store is attached to the component tree with `setContext`, and when you subscribe you retrieve it with `getContext`. We can do the same thing with our own stores:
+You might wonder how we're able to use `$page.data` and other [app stores](modules#$app-stores) if we can't use our own stores. The answer is that app stores on the server use Svelte's [context API](https://learn.svelte.dev/tutorial/context-api) — the store is attached to the component tree with `setContext`, and when you subscribe you retrieve it with `getContext`. We can do the same thing with our own stores:
 
 ```svelte
 /// file: src/routes/+layout.svelte
@@ -167,4 +167,4 @@ If you have state that should survive a reload and/or affect SSR, such as filter
 
 ## Storing ephemeral state in snapshots
 
-Some UI state, such as 'is the accordion open?', is disposable — if the user navigates away or refreshes the page, it doesn't matter if the state is lost. In some cases, you _do_ want the data to persist if the user navigates to a different page and comes back, but storing the state in the URL or in a database would be overkill. For this, SvelteKit provides [snapshots](/docs/snapshots), which let you associate component state with a history entry.
+Some UI state, such as 'is the accordion open?', is disposable — if the user navigates away or refreshes the page, it doesn't matter if the state is lost. In some cases, you _do_ want the data to persist if the user navigates to a different page and comes back, but storing the state in the URL or in a database would be overkill. For this, SvelteKit provides [snapshots](snapshots), which let you associate component state with a history entry.
