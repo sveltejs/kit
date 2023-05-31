@@ -5,6 +5,7 @@ import { readFileSync, writeFileSync } from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { rollup } from 'rollup';
+import rollupPluginSourcemaps from 'rollup-plugin-sourcemaps';
 
 /**
  * @param {string} path
@@ -97,7 +98,8 @@ export default function (opts = {}) {
 						exportConditions: ['node']
 					}),
 					commonjs({ strictRequires: true }),
-					json()
+					json(),
+					rollupPluginSourcemaps()
 				]
 			});
 
