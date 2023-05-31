@@ -11,9 +11,7 @@
 		"strict": true,
 		"noEmit": true,
 		"paths": {
-			"types": ["../../../../types/internal"],
-			"$lib": ["src/lib"],
-			"$lib/*": ["src/lib/*"]
+			"types": ["../../../../types/internal"]
 		}
 	}
 }
