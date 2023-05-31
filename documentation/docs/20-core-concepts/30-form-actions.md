@@ -2,7 +2,7 @@
 title: Form actions
 ---
 
-A `+page.server.js` and `+layout.server.js` file can export _actions_, which allow you to `POST` data to the server using the `<form>` element.
+A `+page.server.js` file can export _actions_, which allow you to `POST` data to the server using the `<form>` element.
 
 When using `<form>`, client-side JavaScript is optional, but you can easily _progressively enhance_ your form interactions with JavaScript to provide the best user experience.
 
