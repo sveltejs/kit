@@ -5,7 +5,8 @@ import { readFileSync, writeFileSync } from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { rollup } from 'rollup';
-import rollupPluginSourcemaps from 'rollup-plugin-sourcemaps';
+import * as sorcery from 'sorcery';
+import { createFilter } from '@rollup/pluginutils';
 
 /**
  * @param {string} path
@@ -26,6 +27,8 @@ export default function (opts = {}) {
 			builder.rimraf(out);
 			builder.rimraf(tmp);
 			builder.mkdirp(tmp);
+
+			const sourcemapfilter = createFilter(`${tmp}/**/*.js`);
 
 			builder.log.minor('Copying assets');
 			builder.writeClient(`${out}/client${builder.config.kit.paths.base}`);
@@ -99,7 +102,21 @@ export default function (opts = {}) {
 					}),
 					commonjs({ strictRequires: true }),
 					json(),
-					rollupPluginSourcemaps()
+					{
+						name: 'adapter-node-sourcemap',
+						load(id) {
+							if (!sourcemapfilter(id)) return null;
+							try {
+								const chain = sorcery.loadSync(id);
+								if (!chain) return null;
+								const map = chain.apply();
+								return {
+									code: readFileSync(id, 'utf-8'),
+									map: map.toString()
+								};
+							} catch {}
+						}
+					}
 				]
 			});
 
