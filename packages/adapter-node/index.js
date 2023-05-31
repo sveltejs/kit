@@ -8,7 +8,6 @@ import { rollup } from 'rollup';
 
 /**
  * @param {string} path
- * @returns
  */
 const resolve = (path) => fileURLToPath(new URL(path, import.meta.url));
 
@@ -73,11 +72,11 @@ export default function (opts = {}) {
 								case 'SERVER':
 									return `${tmp}/index.js`;
 								case 'SHIMS':
-									return '\0SHIMS';
+									return '\0virtual:SHIMS';
 							}
 						},
 						load(id) {
-							if (id === '\0SHIMS') {
+							if (id === '\0virtual:SHIMS') {
 								return polyfill
 									? "import { installPolyfills } from '@sveltejs/kit/node/polyfills'; installPolyfills();"
 									: '';
@@ -103,10 +102,10 @@ export default function (opts = {}) {
 			});
 
 			await bundle.write({
-				dir: `${out}`,
+				dir: out,
 				format: 'esm',
 				sourcemap: true,
-				chunkFileNames: 'chunks/[name]-[hash].js',
+				chunkFileNames: 'server/chunks/[name]-[hash].js',
 				hoistTransitiveImports: false
 			});
 		}
