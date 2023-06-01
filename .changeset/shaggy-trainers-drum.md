@@ -2,4 +2,4 @@
 '@sveltejs/kit': minor
 ---
 
-feat: Add `invalidateAll` boolean option to `enhance` callback
+feat: add `invalidateAll` boolean option to `enhance` callback
