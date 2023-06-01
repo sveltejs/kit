@@ -108,7 +108,11 @@ export interface Builder {
 	 * Generate a server-side manifest to initialise the SvelteKit [server](https://kit.svelte.dev/docs/types#public-types-server) with.
 	 * @param opts a relative path to the base directory of the app and optionally in which format (esm or cjs) the manifest should be generated
 	 */
-	generateManifest(opts: { relativePath: string; routes?: RouteDefinition[], cacheLoaders?: boolean }): string;
+	generateManifest(opts: {
+		relativePath: string;
+		routes?: RouteDefinition[];
+		cacheLoaders?: boolean;
+	}): string;
 
 	/**
 	 * Resolve a path to the `name` directory inside `outDir`, e.g. `/path/to/.svelte-kit/my-adapter`.
