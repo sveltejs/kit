@@ -321,9 +321,6 @@ importers:
       '@types/prettier':
         specifier: ^2.7.1
         version: 2.7.1
-      '@types/prompts':
-        specifier: ^2.4.1
-        version: 2.4.1
       gitignore-parser:
         specifier: ^0.0.2
         version: 0.0.2
