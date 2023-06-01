@@ -140,7 +140,7 @@ jobs:
 
       - name: build
         env:
-          BASE_PATH: '/your-repo-name'
+          BASE_PATH: '/${{ github.event.repository.name }}'
         run: |
           npm run build
           touch build/.nojekyll
@@ -162,8 +162,11 @@ jobs:
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
-    
+
     steps:
+      - name: Setup Pages
+        uses: actions/configure-pages@v3
+
       - name: Deploy
         id: deployment
         uses: actions/deploy-pages@v1
