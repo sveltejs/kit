@@ -12,9 +12,10 @@ import { dedent } from '../sync/utils.js';
  *   build_data: import('types').BuildData;
  *   relative_path: string;
  *   routes: import('types').RouteData[];
+ *   cache_loaders?: boolean;
  * }} opts
  */
-export function generate_manifest({ build_data, relative_path, routes }) {
+export function generate_manifest({ build_data, relative_path, routes, cache_loaders }) {
 	/**
 	 * @type {Map<any, number>} The new index of each node in the filtered nodes array
 	 */
@@ -44,7 +45,8 @@ export function generate_manifest({ build_data, relative_path, routes }) {
 	);
 
 	/** @type {(path: string) => string} */
-	const loader = (path) => `() => import('${path}')`;
+	const loader = (path) =>
+		cache_loaders ? `__memo(() => import('${path}'))` : `() => import('${path}')`;
 
 	const assets = build_data.manifest_data.assets.map((asset) => asset.file);
 	if (build_data.service_worker) {
@@ -65,8 +67,8 @@ export function generate_manifest({ build_data, relative_path, routes }) {
 
 	// prettier-ignore
 	// String representation of
-	/** @type {import('@sveltejs/kit').SSRManifest} */
-	return dedent`
+	/** @template {import('@sveltejs/kit').SSRManifest} T */
+	const manifest_expr = dedent`
 		{
 			appDir: ${s(build_data.app_dir)},
 			appPath: ${s(build_data.app_path)},
@@ -102,5 +104,19 @@ export function generate_manifest({ build_data, relative_path, routes }) {
 				}
 			}
 		}
+	`;
+
+	if (!cache_loaders) {
+		return manifest_expr;
+	} else
+		return dedent`
+		(() => {
+		function __memo(fn) {
+			let value;
+			return () => value ??= (value = fn());
+		}
+
+		return ${manifest_expr}
+		})()
 	`;
 }
