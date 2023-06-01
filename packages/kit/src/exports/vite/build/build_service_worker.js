@@ -65,8 +65,6 @@ export async function build_service_worker(
 
 	await vite.build({
 		base: assets_base(kit),
-		// don't copy anything from public folder
-		publicDir: false,
 		build: {
 			lib: {
 				entry: /** @type {string} */ (service_worker_entry_file),
@@ -81,8 +79,9 @@ export async function build_service_worker(
 			outDir: `${out}/client`,
 			emptyOutDir: false
 		},
-		define: vite_config.define,
 		configFile: false,
+		define: vite_config.define,
+		publicDir: false,
 		resolve: {
 			alias: [...get_config_aliases(kit), { find: '$service-worker', replacement: service_worker }]
 		}
