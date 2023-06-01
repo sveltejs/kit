@@ -680,6 +680,7 @@ function kit({ svelte_config }) {
 
 				const metadata = await analyse({
 					manifest_path,
+					manifest_data,
 					env: { ...env.private, ...env.public }
 				});
 

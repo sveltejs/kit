@@ -19,10 +19,11 @@ export default forked(import.meta.url, analyse);
 /**
  * @param {{
  *   manifest_path: string;
+ *   manifest_data: import('types').ManifestData;
  *   env: Record<string, string>
  * }} opts
  */
-async function analyse({ manifest_path, env }) {
+async function analyse({ manifest_path, manifest_data, env }) {
 	/** @type {import('@sveltejs/kit').SSRManifest} */
 	const manifest = (await import(pathToFileURL(manifest_path).href)).manifest;
 
@@ -65,6 +66,10 @@ async function analyse({ manifest_path, env }) {
 
 	// analyse routes
 	for (const route of manifest._.routes) {
+		const route_data = /** @type {import('types').RouteData} */ (
+			manifest_data.routes.find((r) => r.id === route.id)
+		);
+
 		/** @type {Array<'GET' | 'POST'>} */
 		const page_methods = [];
 
@@ -85,7 +90,7 @@ async function analyse({ manifest_path, env }) {
 
 				if (mod.prerender && (mod.POST || mod.PATCH || mod.PUT || mod.DELETE)) {
 					throw new Error(
-						`Cannot prerender a +server file with POST, PATCH, PUT, or DELETE (${route.id})`
+						`Cannot prerender ${route_data.endpoint?.file} as it exposes POST, PATCH, PUT, or DELETE handlers`
 					);
 				}
 
@@ -135,8 +140,13 @@ async function analyse({ manifest_path, env }) {
 		}
 
 		if (prerender && route.endpoint && route.page) {
+			const page = /** @type {string} */ (
+				route_data.leaf?.component ?? route_data.leaf?.universal ?? route_data.leaf?.server
+			);
+			const endpoint = /** @type {string} */ (route_data.endpoint?.file);
+
 			throw new Error(
-				`Detected a prerendered route with both a +server and +page file (route: ${route.id}). Because content negotiation for static files is impossible, this is not allowed.`
+				`Cannot prerender both ${page} and ${endpoint}. Disable prerendering for this route, or delete one of the files.`
 			);
 		}
 
