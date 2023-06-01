@@ -5,8 +5,10 @@ import { readFileSync, writeFileSync } from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { rollup } from 'rollup';
+// @ts-expect-error	doesn't ship types
 import * as sorcery from 'sorcery';
-import { createFilter } from '@rollup/pluginutils';
+import { createFilter, normalizePath } from '@rollup/pluginutils';
+import { readFile } from 'node:fs/promises';
 
 /**
  * @param {string} path
@@ -27,8 +29,6 @@ export default function (opts = {}) {
 			builder.rimraf(out);
 			builder.rimraf(tmp);
 			builder.mkdirp(tmp);
-
-			const sourcemapfilter = createFilter(`${tmp}/**/*.js`);
 
 			builder.log.minor('Copying assets');
 			builder.writeClient(`${out}/client${builder.config.kit.paths.base}`);
@@ -102,21 +102,7 @@ export default function (opts = {}) {
 					}),
 					commonjs({ strictRequires: true }),
 					json(),
-					{
-						name: 'adapter-node-sourcemap',
-						load(id) {
-							if (!sourcemapfilter(id)) return null;
-							try {
-								const chain = sorcery.loadSync(id);
-								if (!chain) return null;
-								const map = chain.apply();
-								return {
-									code: readFileSync(id, 'utf-8'),
-									map: map.toString()
-								};
-							} catch {}
-						}
-					}
+					merge_sourcemap_plugin(tmp)
 				]
 			});
 
@@ -127,6 +113,30 @@ export default function (opts = {}) {
 				chunkFileNames: 'server/chunks/[name]-[hash].js',
 				hoistTransitiveImports: false
 			});
+		}
+	};
+}
+
+/**
+ * @param {string} tmp
+ * @returns {import('rollup').Plugin}
+ * */
+function merge_sourcemap_plugin(tmp) {
+	const should_process_sourcemaps = createFilter(`${normalizePath(tmp)}/**/*.js`);
+
+	return {
+		name: 'adapter-node-sourcemap',
+		async load(id) {
+			if (!should_process_sourcemaps(id)) return;
+			try {
+				const chain = await sorcery.load(id);
+				if (!chain) return; // no sourcemap
+				const map = chain.apply();
+				return {
+					code: await readFile(id, 'utf-8'),
+					map: map.toString()
+				};
+			} catch {}
 		}
 	};
 }
