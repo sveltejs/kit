@@ -1,5 +1,11 @@
 # @sveltejs/kit
 
+## 1.20.1
+
+### Patch Changes
+
+- fix: don't copy public folder in service worker build ([#10082](https://github.com/sveltejs/kit/pull/10082))
+
 ## 1.20.0
 
 ### Minor Changes
