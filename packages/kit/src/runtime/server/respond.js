@@ -381,6 +381,25 @@ export async function respond(request, options, manifest, state) {
 				/** @type {Response} */
 				let response;
 
+				if (DEV && route.page && route.endpoint) {
+					const nodes = await Promise.all(
+						[...route.page.layouts, route.page.leaf].map((n) => {
+							if (n !== undefined) return manifest._.nodes[n]();
+						})
+					);
+
+					const mod = await route.endpoint();
+
+					if (get_option(nodes, 'prerender') ?? mod.prerender) {
+						const page = nodes.at(-1)?.component_id;
+						const endpoint = route.endpoint_id;
+
+						throw new Error(
+							`Cannot prerender both ${page} and ${endpoint}. Disable prerendering for this route, or delete one of the files.`
+						);
+					}
+				}
+
 				if (is_data_request) {
 					response = await render_data(
 						event,

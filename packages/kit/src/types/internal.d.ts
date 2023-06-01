@@ -323,6 +323,7 @@ export interface SSRNode {
 		entries?: PrerenderEntryGenerator;
 	};
 
+	component_id: string;
 	universal_id: string;
 	server_id: string;
 }

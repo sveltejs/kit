@@ -146,6 +146,8 @@ export async function dev(vite, vite_config, svelte_config) {
 
 								return module.default;
 							};
+
+							result.component_id = node.component;
 						}
 
 						if (node.universal) {
