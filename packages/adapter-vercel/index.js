@@ -575,13 +575,9 @@ function validate_vercel_json(builder, vercel_config) {
 			continue;
 		}
 
-		for (const route of valid_routes) {
-			if (route.pattern.test(path)) {
-				continue;
-			}
+		if (!valid_routes.some((route) => route.pattern.test(path))) {
+			unmatched_paths.push(path);
 		}
-
-		unmatched_paths.push(path);
 	}
 
 	if (unmatched_paths.length) {
