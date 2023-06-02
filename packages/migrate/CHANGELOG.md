@@ -1,5 +1,17 @@
 # svelte-migrate
 
+## 1.2.1
+
+### Patch Changes
+
+- docs: update readme ([#10066](https://github.com/sveltejs/kit/pull/10066))
+
+## 1.2.0
+
+### Minor Changes
+
+- feat: add Svelte 4 migration ([#9729](https://github.com/sveltejs/kit/pull/9729))
+
 ## 1.1.3
 
 ### Patch Changes
