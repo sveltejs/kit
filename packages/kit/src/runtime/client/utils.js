@@ -32,10 +32,10 @@ const warned = new WeakSet();
 const valid_link_options = /** @type {const} */ ({
 	'preload-code': ['', 'off', 'tap', 'hover', 'viewport', 'eager'],
 	'preload-data': ['', 'off', 'tap', 'hover'],
-	keepfocus: ['', 'off'],
-	noscroll: ['', 'off'],
-	reload: ['', 'off'],
-	replacestate: ['', 'off']
+	keepfocus: ['', 'true', 'off', 'false'],
+	noscroll: ['', 'true', 'off', 'false'],
+	reload: ['', 'true', 'off', 'false'],
+	replacestate: ['', 'true', 'off', 'false']
 });
 
 /**
@@ -176,13 +176,27 @@ export function get_router_options(element) {
 		el = /** @type {Element} */ (parent_element(el));
 	}
 
+	/** @param {string | null} value */
+	function get_option_state(value) {
+		switch (value) {
+			case '':
+			case 'true':
+				return true;
+			case 'off':
+			case 'false':
+				return false;
+			default:
+				return null;
+		}
+	}
+
 	return {
 		preload_code: levels[preload_code ?? 'off'],
 		preload_data: levels[preload_data ?? 'off'],
-		keep_focus: keep_focus === 'off' ? false : keep_focus === '' ? true : null,
-		noscroll: noscroll === 'off' ? false : noscroll === '' ? true : null,
-		reload: reload === 'off' ? false : reload === '' ? true : null,
-		replace_state: replace_state === 'off' ? false : replace_state === '' ? true : null
+		keep_focus: get_option_state(keep_focus),
+		noscroll: get_option_state(noscroll),
+		reload: get_option_state(reload),
+		replace_state: get_option_state(replace_state)
 	};
 }
 
