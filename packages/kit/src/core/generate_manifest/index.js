@@ -12,10 +12,9 @@ import { dedent } from '../sync/utils.js';
  *   build_data: import('types').BuildData;
  *   relative_path: string;
  *   routes: import('types').RouteData[];
- *   cache_loaders?: boolean;
  * }} opts
  */
-export function generate_manifest({ build_data, relative_path, routes, cache_loaders }) {
+export function generate_manifest({ build_data, relative_path, routes }) {
 	/**
 	 * @type {Map<any, number>} The new index of each node in the filtered nodes array
 	 */
@@ -45,8 +44,7 @@ export function generate_manifest({ build_data, relative_path, routes, cache_loa
 	);
 
 	/** @type {(path: string) => string} */
-	const loader = (path) =>
-		cache_loaders ? `__memo(() => import('${path}'))` : `() => import('${path}')`;
+	const loader = (path) => `__memo(() => import('${path}'))`;
 
 	const assets = build_data.manifest_data.assets.map((asset) => asset.file);
 	if (build_data.service_worker) {
@@ -99,17 +97,17 @@ export function generate_manifest({ build_data, relative_path, routes, cache_loa
 					}).filter(Boolean).join(',\n')}
 				],
 				matchers: async () => {
-					${Array.from(matchers).map(type => `const { match: ${type} } = await import ('${(join_relative(relative_path, `/entries/matchers/${type}.js`))}')`).join('\n')}
+					${Array.from(
+						matchers, 
+						type => `const { match: ${type} } = await import ('${(join_relative(relative_path, `/entries/matchers/${type}.js`))}')`
+					).join('\n')}
 					return { ${Array.from(matchers).join(', ')} };
 				}
 			}
 		}
 	`;
 
-	if (!cache_loaders) {
-		return manifest_expr;
-	} else
-		return dedent`
+	return dedent`
 		(() => {
 		function __memo(fn) {
 			let value;

@@ -156,14 +156,13 @@ export function create_builder({
 			write(dest, fallback);
 		},
 
-		generateManifest: ({ relativePath, routes: subset, cacheLoaders: cache_loaders }) => {
+		generateManifest: ({ relativePath, routes: subset }) => {
 			return generate_manifest({
 				build_data,
 				relative_path: relativePath,
 				routes: subset
 					? subset.map((route) => /** @type {import('types').RouteData} */ (lookup.get(route)))
-					: route_data.filter((route) => prerender_map.get(route.id) !== true),
-				cache_loaders
+					: route_data.filter((route) => prerender_map.get(route.id) !== true)
 			});
 		},
 
