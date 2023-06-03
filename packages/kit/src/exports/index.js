@@ -84,7 +84,10 @@ const encoder = new TextEncoder();
 export function text(body, init) {
 	const headers = new Headers(init?.headers);
 	if (!headers.has('content-length')) {
-		headers.set('content-length', encoder.encode(body).byteLength.toString());
+		const encoded = encoder.encode(body);
+		headers.set('content-length', encoded.byteLength.toString());
+		// @ts-expect-error
+		body = encoded; // reuse encoded value to avoid duplicating work inside Response
 	}
 
 	return new Response(body, {
