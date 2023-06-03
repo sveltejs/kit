@@ -1,14 +1,12 @@
 import commonjs from '@rollup/plugin-commonjs';
 import json from '@rollup/plugin-json';
 import { nodeResolve } from '@rollup/plugin-node-resolve';
-import { readFileSync, writeFileSync } from 'node:fs';
+import { createFilter, normalizePath } from '@rollup/pluginutils';
+import { existsSync, readFileSync, writeFileSync } from 'node:fs';
+import { readFile } from 'node:fs/promises';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { rollup } from 'rollup';
-// @ts-expect-error	doesn't ship types
-import * as sorcery from 'sorcery';
-import { createFilter, normalizePath } from '@rollup/pluginutils';
-import { readFile } from 'node:fs/promises';
 
 /**
  * @param {string} path
@@ -118,6 +116,9 @@ export default function (opts = {}) {
 }
 
 /**
+ * Load sourcemaps for files in the tmp directory so that the final ones
+ * point to the original source files, instead of the generated files in outDir.
+ * 
  * @param {string} tmp
  * @returns {import('rollup').Plugin}
  * */
@@ -125,18 +126,15 @@ function merge_sourcemap_plugin(tmp) {
 	const should_process_sourcemaps = createFilter(`${normalizePath(tmp)}/**/*.js`);
 
 	return {
-		name: 'adapter-node-sourcemap',
+		name: 'adapter-node-sourcemap-loader',
 		async load(id) {
 			if (!should_process_sourcemaps(id)) return;
-			try {
-				const chain = await sorcery.load(id);
-				if (!chain) return; // no sourcemap
-				const map = chain.apply();
-				return {
-					code: await readFile(id, 'utf-8'),
-					map: map.toString()
-				};
-			} catch {}
+			if (!existsSync(`${id}.map`)) return;
+			const [code, map] = await Promise.all([
+				readFile(id, 'utf-8'),
+				readFile(`${id}.map`, 'utf-8')
+			]);
+			return { code, map };
 		}
 	};
 }

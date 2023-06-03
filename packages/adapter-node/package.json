@@ -44,8 +44,7 @@
 		"@rollup/pluginutils": "^5.0.2",
 		"polka": "^1.0.0-next.22",
 		"rollup": "^3.7.0",
-		"sirv": "^2.0.2",
-		"sorcery": "^0.11.0"
+		"sirv": "^2.0.2"
 	},
 	"peerDependencies": {
 		"@sveltejs/kit": "^1.0.0"
