@@ -74,6 +74,8 @@ export async function POST({ request, platform }) {
 }
 ```
 
+> It doesn't affect how [static variables](https://kit.svelte.dev/docs/modules#$env-static-private) work. They cant still be accessed as imports from `$env/static/private`
+
 To make these types available to your app, reference them in your `src/app.d.ts`:
 
 ```diff
@@ -92,7 +94,7 @@ declare global {
 export {};
 ```
 
-> `platform.env` is only available in the production build. Use [wrangler](https://developers.cloudflare.com/workers/cli-wrangler) to test it locally
+> `platform.env` is only available in the production build. Use [wrangler](https://developers.cloudflare.com/workers/cli-wrangler) to test it locally.
 
 ## Notes
 
