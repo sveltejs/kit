@@ -130,6 +130,9 @@ export function enhance(form_element, submit = () => {}) {
 
 	/** @param {SubmitEvent} event */
 	async function handle_submit(event) {
+		const method = /** @type {HTMLButtonElement | HTMLInputElement} */ (event.submitter).formMethod;
+		if (method === 'dialog') return;
+		
 		event.preventDefault();
 
 		const action = new URL(

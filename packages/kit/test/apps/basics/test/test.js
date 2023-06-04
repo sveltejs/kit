@@ -1043,6 +1043,14 @@ test.describe('Actions', () => {
 		);
 	});
 
+	test('use:enhance button with formAction dialog', async ({ page }) => {
+		await page.goto('/actions/enhance');
+
+		await page.locator('button[formmethod="dialog"]').click();
+
+		await expect(page.locator('button[formmethod="dialog"]')).not.toBeVisible();
+	});
+
 	test('use:enhance button with name', async ({ page }) => {
 		await page.goto('/actions/enhance');
 
