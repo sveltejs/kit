@@ -344,12 +344,12 @@ To customise the behaviour, you can provide a `SubmitFunction` that runs immedia
 ```svelte
 <form
 	method="POST"
-	use:enhance={({ formElement, formData, action, cancel, submitter }) => {
-		// `formElement` is this `<form>` element
-		// `formData` is its `FormData` object that's about to be submitted
+	use:enhance={({ form, data, action, cancel, controller }) => {
+		// `form` is this `<form>` element
+		// `data` is its `FormData` object that's about to be submitted
 		// `action` is the URL to which the form is posted
 		// calling `cancel()` will prevent the submission
-		// `submitter` is the `HTMLElement` that caused the form to be submitted
+		// `controller` is the `AbortController`
 
 		return async ({ result, update }) => {
 			// `result` is an `ActionResult` object
