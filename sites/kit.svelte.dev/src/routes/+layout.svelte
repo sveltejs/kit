@@ -24,6 +24,9 @@
 				selected={$page.url.pathname.startsWith(`${base}/docs`) || undefined}
 				href="{base}/docs">Docs</NavItem
 			>
+			
+			<NavItem external="https://learn.svelte.dev/tutorial/introducing-sveltekit">Tutorial</NavItem>
+			
 			<NavItem
 				selected={$page.url.pathname.startsWith(`${base}/faq`) || undefined}
 				href="{base}/faq">FAQ</NavItem
