@@ -133,7 +133,7 @@ export function enhance(form_element, submit = () => {}) {
 		const method = event.submitter?.hasAttribute('formmethod')
 			? /** @type {HTMLButtonElement | HTMLInputElement} */ (event.submitter).formMethod
 			: clone(form_element).method;
-		if (method === 'dialog') return;
+		if (method !== 'post') return;
 
 		event.preventDefault();
 
