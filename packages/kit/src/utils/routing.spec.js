@@ -201,6 +201,31 @@ const exec_tests = [
 		route: '/[[slug1=doesntmatch]]/[slug2=matches]/[slug3]',
 		path: '/a/b/c',
 		expected: undefined
+	},
+	{
+		route: '/[[lang=doesntmatch]]/[asset=matches]/[[categoryType]]/[...categories]',
+		path: '/music',
+		expected: { asset: 'music', categories: '' }
+	},
+	{
+		route: '/[[lang=doesntmatch]]/[asset=matches]/[[categoryType]]/[...categories]',
+		path: '/music/genre',
+		expected: { asset: 'music', categoryType: 'genre', categories: '' }
+	},
+	{
+		route: '/[[lang=doesntmatch]]/[asset=matches]/[[categoryType]]/[...categories]',
+		path: '/music/genre/rock',
+		expected: { asset: 'music', categoryType: 'genre', categories: 'rock' }
+	},
+	{
+		route: '/[[lang=doesntmatch]]/[asset=matches]/[[categoryType]]/[...categories]',
+		path: '/sfx/category/car/crash',
+		expected: { asset: 'sfx', categoryType: 'category', categories: 'car/crash' }
+	},
+	{
+		route: '/[[lang=matches]]/[asset=matches]/[[categoryType]]/[...categories]',
+		path: '/es/sfx/category/car/crash',
+		expected: { lang: 'es', asset: 'sfx', categoryType: 'category', categories: 'car/crash' }
 	}
 ];
 
