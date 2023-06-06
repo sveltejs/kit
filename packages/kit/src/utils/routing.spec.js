@@ -226,6 +226,11 @@ const exec_tests = [
 		route: '/[[lang=matches]]/[asset=matches]/[[categoryType]]/[...categories]',
 		path: '/es/sfx/category/car/crash',
 		expected: { lang: 'es', asset: 'sfx', categoryType: 'category', categories: 'car/crash' }
+	},
+	{
+		route: '/[[slug1=doesntmatch]]/[...slug2=doesntmatch]',
+		path: '/a/b/c',
+		expected: undefined
 	}
 ];
 
