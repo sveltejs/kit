@@ -86,8 +86,10 @@ export function text(body, init) {
 	if (!headers.has('content-length')) {
 		const encoded = encoder.encode(body);
 		headers.set('content-length', encoded.byteLength.toString());
-		// @ts-expect-error
-		body = encoded; // reuse encoded value to avoid duplicating work inside Response
+		return new Response(encoded, {
+				...init,
+				headers
+		})
 	}
 
 	return new Response(body, {
