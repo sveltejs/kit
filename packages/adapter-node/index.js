@@ -118,7 +118,7 @@ export default function (opts = {}) {
 /**
  * Load sourcemaps for files in the tmp directory so that the final ones
  * point to the original source files, instead of the generated files in outDir.
- * 
+ *
  * @param {string} tmp
  * @returns {import('rollup').Plugin}
  * */
