@@ -2,4 +2,4 @@
 '@sveltejs/kit': patch
 ---
 
-fix: use rest param's matcher if optional is empty
+fix: don't skip rest parameter's matcher when there is a non-matching optional parameter
