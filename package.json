@@ -11,7 +11,7 @@
 		"test:vite-ecosystem-ci": "pnpm test --dir packages/kit",
 		"test:create-svelte": "pnpm run --dir packages/create-svelte test",
 		"check": "pnpm -r prepublishOnly && pnpm -r check",
-		"lint": "pnpm -r lint && eslint 'packages/**/*.js'",
+		"lint": "pnpm -r lint && eslint --cache --cache-location node_modules/.eslintcache 'packages/**/*.js'",
 		"format": "pnpm -r format",
 		"precommit": "pnpm format && pnpm lint",
 		"release": "changeset publish",
