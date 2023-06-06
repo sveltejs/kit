@@ -89,7 +89,7 @@ export function text(body, init) {
 		return new Response(encoded, {
 			...init,
 			headers
-		})
+		});
 	}
 
 	return new Response(body, {
