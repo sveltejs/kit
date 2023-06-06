@@ -87,8 +87,8 @@ export function text(body, init) {
 		const encoded = encoder.encode(body);
 		headers.set('content-length', encoded.byteLength.toString());
 		return new Response(encoded, {
-				...init,
-				headers
+			...init,
+			headers
 		})
 	}
 
