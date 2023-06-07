@@ -1,5 +1,6 @@
 import { Server } from 'SERVER';
 import { manifest, prerendered } from 'MANIFEST';
+DURABLE_OBJECT_EXPORTS;
 import * as Cache from 'worktop/cfw.cache';
 
 const server = new Server(manifest);

@@ -1,4 +1,4 @@
-import { writeFileSync } from 'node:fs';
+import { readFileSync, writeFileSync } from 'node:fs';
 import * as path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import * as esbuild from 'esbuild';
@@ -38,10 +38,20 @@ export default function (options = {}) {
 
 			writeFileSync(`${dest}/_headers`, generate_headers(builder.config.kit.appDir), { flag: 'a' });
 
+			let durable_objects_exports = ''
+			try {
+				durable_objects_exports = readFileSync(options.durableObjectExports ?? './src/lib/durableObjects.js', 'utf-8')
+			} catch {
+				if (options.durableObjectExports) {
+					throw new Error('Specified durableObjectExports file not found');
+				}
+			}
+
 			builder.copy(`${files}/worker.js`, `${tmp}/_worker.js`, {
 				replace: {
 					SERVER: `${relativePath}/index.js`,
-					MANIFEST: './manifest.js'
+					MANIFEST: './manifest.js',
+					DURABLE_OBJECT_EXPORTS: durable_objects_exports
 				}
 			});
 

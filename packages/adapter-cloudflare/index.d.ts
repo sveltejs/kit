@@ -30,6 +30,11 @@ export interface AdapterOptions {
 		 */
 		exclude?: string[];
 	};
+	/**
+	 * Customize the file that exports DurableObject classes definitions
+	 * @default "./src/lib/durableObjects.js"
+	 */
+	durableObjectExports?: string
 }
 
 export interface RoutesJSONSpec {

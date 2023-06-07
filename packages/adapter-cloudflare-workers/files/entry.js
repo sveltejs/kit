@@ -1,5 +1,6 @@
 import { Server } from 'SERVER';
 import { manifest, prerendered } from 'MANIFEST';
+DURABLE_OBJECT_EXPORTS;
 import { getAssetFromKV, mapRequestToAsset } from '@cloudflare/kv-asset-handler';
 import static_asset_manifest_json from '__STATIC_CONTENT_MANIFEST';
 const static_asset_manifest = JSON.parse(static_asset_manifest_json);

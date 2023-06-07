@@ -15,7 +15,7 @@ import { fileURLToPath } from 'node:url';
  */
 
 /** @type {import('.').default} */
-export default function ({ config = 'wrangler.toml' } = {}) {
+export default function ({ config = 'wrangler.toml', ...options } = {}) {
 	return {
 		name: '@sveltejs/adapter-cloudflare-workers',
 
@@ -38,10 +38,20 @@ export default function ({ config = 'wrangler.toml' } = {}) {
 			builder.log.minor('Generating worker...');
 			const relativePath = posix.relative(tmp, builder.getServerDirectory());
 
+			let durable_objects_exports = ''
+			try {
+				durable_objects_exports = readFileSync(options.durableObjectExports ?? './src/lib/durableObjects.js', 'utf-8')
+			} catch {
+				if (options.durableObjectExports) {
+					throw new Error('Specified durableObjectExports file not found');
+				}
+			}
+
 			builder.copy(`${files}/entry.js`, `${tmp}/entry.js`, {
 				replace: {
 					SERVER: `${relativePath}/index.js`,
-					MANIFEST: './manifest.js'
+					MANIFEST: './manifest.js',
+					DURABLE_OBJECT_EXPORTS: durable_objects_exports
 				}
 			});
 
