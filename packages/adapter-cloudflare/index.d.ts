@@ -30,6 +30,20 @@ export interface AdapterOptions {
 		 */
 		exclude?: string[];
 	};
+	/**
+	 * Customize a restricted set of options used by ESBuild to prepare the Cloudflare adapter bundle.
+	 *
+	 * @default {}
+	 */
+	esbuildOptions?: {
+		/**
+		 * Mark a file or a package as external to exclude it from your build.
+		 * Instead of being bundled, the import will be preserved and will be evaluated at run time instead.
+		 *
+		 * @see https://esbuild.github.io/api/#external
+		 */
+		external?: import('esbuild').BuildOptions['external'];
+	};
 }
 
 export interface RoutesJSONSpec {

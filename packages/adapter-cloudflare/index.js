@@ -47,6 +47,7 @@ export default function (options = {}) {
 
 			await esbuild.build({
 				platform: 'browser',
+				external: options?.esbuildOptions?.external,
 				conditions: ['worker', 'browser'],
 				sourcemap: 'linked',
 				target: 'es2022',
