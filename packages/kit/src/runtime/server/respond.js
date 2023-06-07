@@ -378,11 +378,8 @@ export async function respond(request, options, manifest, state) {
 			}
 
 			if (route) {
-				/** @type {Response} */
-				let response;
-
 				if (is_data_request) {
-					response = await render_data(
+					return await render_data(
 						event,
 						route,
 						options,
@@ -392,16 +389,24 @@ export async function respond(request, options, manifest, state) {
 						trailing_slash ?? 'never'
 					);
 				} else if (route.endpoint && (!route.page || is_endpoint_request(event))) {
-					response = await render_endpoint(event, await route.endpoint(), state);
+					const endpoint = await route.endpoint();
+					const response = await render_endpoint(event, endpoint, state);
+
+					if (response.status === 405 && route.page) {
+						switch (event.request.method) {
+							case 'HEAD':
+							case 'GET':
+							case 'POST':
+								return await render_page(event, route.page, options, manifest, state, resolve_opts);
+						}
+					}
 				} else if (route.page) {
-					response = await render_page(event, route.page, options, manifest, state, resolve_opts);
+					return await render_page(event, route.page, options, manifest, state, resolve_opts);
 				} else {
 					// a route will always have a page or an endpoint, but TypeScript
 					// doesn't know that
 					throw new Error('This should never happen');
 				}
-
-				return response;
 			}
 
 			if (state.error) {
