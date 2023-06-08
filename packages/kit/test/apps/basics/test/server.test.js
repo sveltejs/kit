@@ -199,6 +199,13 @@ test.describe('Endpoints', () => {
 		expect(response.status()).toBe(200);
 		expect(await response.text()).toBe('ok');
 	});
+
+	test('falls back to page if no matching handler found', async ({ request }) => {
+		const response = await request.get('/routing/endpoint-fallthrough');
+
+		expect(response.status()).toBe(200);
+		expect(await response.text()).toContain('Hello from the page!');
+	});
 });
 
 test.describe('Errors', () => {
