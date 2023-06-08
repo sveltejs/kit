@@ -63,9 +63,9 @@ When configuring your project settings, you must use the following settings:
 
 > You need to add a `NODE_VERSION` environment variable to both the "production" and "preview" environments. You can add this during project setup or later in the Pages project settings. SvelteKit requires Node `16.14` or later, so you should use `16` as the `NODE_VERSION` value.
 
-## Environment variables
+## Bindings
 
-The [`env`](https://developers.cloudflare.com/workers/runtime-apis/fetch-event#parameters) object, containing KV/DO namespaces etc, is passed to SvelteKit via the `platform` property along with `context` and `caches`, meaning you can access it in hooks and endpoints:
+The [`env`](https://developers.cloudflare.com/workers/runtime-apis/fetch-event#parameters) object contains your project's [bindings](https://developers.cloudflare.com/workers/platform/environment-variables/), which consist of KV/DO namespaces, etc. It is passed to SvelteKit via the `platform` property, along with `context` and `caches`, meaning that you can access it in hooks and endpoints:
 
 ```js
 // @errors: 7031
