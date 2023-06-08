@@ -74,7 +74,7 @@ export async function POST({ request, platform }) {
 }
 ```
 
-> It doesn't affect how [static variables](https://kit.svelte.dev/docs/modules#$env-static-private) work. They can still be accessed as imports from `$env/static/private`.
+> SvelteKit's built-in `$env` module should be preferred for environment variables.
 
 To make these types available to your app, reference them in your `src/app.d.ts`:
 
