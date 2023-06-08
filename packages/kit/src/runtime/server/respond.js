@@ -392,6 +392,7 @@ export async function respond(request, options, manifest, state) {
 					const endpoint = await route.endpoint();
 					const response = await render_endpoint(event, endpoint, state);
 
+					// If endpoint doesn't have a handler for these methods, fall back to the page
 					if (response.status === 405 && route.page) {
 						switch (event.request.method) {
 							case 'HEAD':
