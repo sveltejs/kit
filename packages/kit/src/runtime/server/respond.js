@@ -399,6 +399,8 @@ export async function respond(request, options, manifest, state) {
 							case 'POST':
 								return await render_page(event, route.page, options, manifest, state, resolve_opts);
 						}
+					} else {
+						return response;
 					}
 				} else if (route.page) {
 					return await render_page(event, route.page, options, manifest, state, resolve_opts);
