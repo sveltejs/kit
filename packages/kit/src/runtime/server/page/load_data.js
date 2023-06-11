@@ -204,7 +204,10 @@ export function create_universal_fetch(event, state, fetched, csr, resolve_opts)
 	return async (input, init) => {
 		const cloned_body = input instanceof Request && input.body ? input.clone().body : null;
 
-		const cloned_headers = input instanceof Request && [...input.headers].length ? new Headers(input.headers) : init?.headers;
+		const cloned_headers =
+			input instanceof Request && [...input.headers].length
+				? new Headers(input.headers)
+				: init?.headers;
 
 		let response = await event.fetch(input, init);
 
