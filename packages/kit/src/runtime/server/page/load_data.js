@@ -203,6 +203,15 @@ export function create_universal_fetch(event, state, fetched, csr, resolve_opts)
 	 */
 	return async (input, init) => {
 		const cloned_body = input instanceof Request && input.body ? input.clone().body : null;
+
+		/** @type {HeadersInit | undefined} */
+		let cloned_headers;
+		if (input instanceof Request && input.headers.keys().next().value?.length) {
+			cloned_headers = new Headers(input.headers);
+		} else {
+			cloned_headers = init?.headers;
+		}
+
 		let response = await event.fetch(input, init);
 
 		const url = new URL(input instanceof Request ? input.url : input, event.url);
@@ -260,7 +269,7 @@ export function create_universal_fetch(event, state, fetched, csr, resolve_opts)
 									? await stream_to_string(cloned_body)
 									: init?.body
 							),
-							request_headers: init?.headers,
+							request_headers: cloned_headers,
 							response_body: body,
 							response
 						});
