@@ -8,13 +8,14 @@
 	<button
 		id="multiple-batched"
 		on:click={(event) => {
+			const btn = event.currentTarget;
 			invalidate('multiple:invalidations-go-brr');
 			invalidate('multiple:invalidations-go-brr');
 
 			Promise.resolve()
 				.then(() => invalidate('multiple:invalidations-go-brr'))
 				.then(() => {
-					event.currentTarget.dataset.done = 'true';
+					btn.dataset.done = 'true';
 				});
 		}}>{data.count}</button
 	>
