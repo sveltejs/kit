@@ -24,7 +24,9 @@ const from_params_tests = [
 	},
 	{
 		route: '/blog/[...one]',
-		params: {},
+		params: {
+			one: ''
+		},
 		expected: '/blog'
 	},
 	{

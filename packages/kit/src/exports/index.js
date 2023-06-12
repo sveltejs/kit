@@ -133,7 +133,8 @@ export function resolvePath(id, params) {
 
 					// This is nested so TS correctly narrows the type
 					if (!param_value) {
-						if (optional || rest) return '';
+						if (optional) return '';
+						if (rest && param_value !== undefined) return '';
 						throw new Error(`Missing parameter '${name}' in route ${id}`);
 					}
 
