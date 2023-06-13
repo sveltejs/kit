@@ -200,8 +200,8 @@ importers:
         specifier: ^16.18.6
         version: 16.18.6
       c8:
-        specifier: ^7.13.0
-        version: 7.13.0
+        specifier: ^8.0.0
+        version: 8.0.0
       polka:
         specifier: ^1.0.0-next.22
         version: 1.0.0-next.22
@@ -2471,9 +2471,9 @@ packages:
       streamsearch: 1.1.0
     dev: false
 
-  /c8@7.13.0:
-    resolution: {integrity: sha512-/NL4hQTv1gBL6J6ei80zu3IiTrmePDKXKXOTLpHvcIWZTVYQlDhVWjjWvkhICylE8EwwnMVzDZugCvdx0/DIIA==}
-    engines: {node: '>=10.12.0'}
+  /c8@8.0.0:
+    resolution: {integrity: sha512-XHA5vSfCLglAc0Xt8eLBZMv19lgiBSjnb1FLAQgnwkuhJYEonpilhEB4Ea3jPAbm0FhD6VVJrc0z73jPe7JyGQ==}
+    engines: {node: '>=12'}
     hasBin: true
     dependencies:
       '@bcoe/v8-coverage': 0.2.3
