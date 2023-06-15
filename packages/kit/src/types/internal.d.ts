@@ -38,7 +38,7 @@ export interface ServerInternalModule {
 export interface Asset {
 	file: string;
 	size: number;
-	type: string | null;
+	type: string | void;
 }
 
 export interface AssetDependencies {

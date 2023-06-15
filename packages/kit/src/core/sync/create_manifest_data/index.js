@@ -1,6 +1,6 @@
 import fs from 'node:fs';
 import path from 'node:path';
-import mime from 'mime';
+import { lookup } from 'mrmime';
 import { runtime_directory } from '../../utils.js';
 import { posixify } from '../../../utils/filesystem.js';
 import { parse_route_id } from '../../../utils/routing.js';
@@ -47,7 +47,7 @@ export function create_assets(config) {
 	return list_files(config.kit.files.assets).map((file) => ({
 		file,
 		size: fs.statSync(path.resolve(config.kit.files.assets, file)).size,
-		type: mime.getType(file)
+		type: lookup(file)
 	}));
 }
 
