@@ -1,17 +1,18 @@
 import { existsSync, statSync, createReadStream, createWriteStream } from 'node:fs';
-import { join } from 'node:path/posix';
+import { extname, join } from 'node:path/posix';
 import { pipeline } from 'node:stream';
 import { promisify } from 'node:util';
 import zlib from 'node:zlib';
-import glob from 'tiny-glob';
 import { copy, rimraf, mkdirp } from '../../utils/filesystem.js';
 import { generate_manifest } from '../generate_manifest/index.js';
 import { get_route_segments } from '../../utils/routing.js';
 import { get_env } from '../../exports/vite/utils.js';
 import generate_fallback from '../postbuild/fallback.js';
 import { write } from '../sync/utils.js';
+import { list_files } from '../utils.js';
 
 const pipe = promisify(pipeline);
+const extensions = ['html', 'js', 'mjs', 'json', 'css', 'svg', 'xml', 'wasm'];
 
 /**
  * Creates the Builder which is passed to adapters for building the application.
@@ -83,13 +84,7 @@ export function create_builder({
 				return;
 			}
 
-			const files = await glob('**/*.{html,js,mjs,json,css,svg,xml,wasm}', {
-				cwd: directory,
-				dot: true,
-				absolute: true,
-				filesOnly: true
-			});
-
+			const files = list_files(directory, (file) => extensions.includes(extname(file)));
 			await Promise.all(
 				files.map((file) => Promise.all([compress_file(file, 'gz'), compress_file(file, 'br')]))
 			);
