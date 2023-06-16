@@ -61,7 +61,7 @@ export const handle = sequence(
 			event.request.headers.has('host') &&
 			!event.request.headers.has('user-agent') !== event.isSubRequest
 		) {
-			throw new Error('Synthetic requests should have isSubRequest set to true');
+			throw new Error('SSR API sub-requests should have isSubRequest set to true');
 		}
 		return resolve(event);
 	},
