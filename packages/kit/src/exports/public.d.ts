@@ -1012,6 +1012,10 @@ export interface RequestEvent<
 	 * related to the data request in this case. Use this property instead if the distinction is important to you.
 	 */
 	isDataRequest: boolean;
+	/**
+	 * `true` if the request comes from a call to one of our own API endpoints made during SSR (or prerendering). This is handled by directly calling `+server.js` without the overhead of actually making an HTTP request. Use this property if you want to treat these synthetic requests different in some way.
+	 */
+	isSyntheticRequest: boolean;
 }
 
 /**
