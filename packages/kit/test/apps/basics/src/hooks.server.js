@@ -57,7 +57,7 @@ export const handle = sequence(
 		return resolve(event);
 	},
 	({ event, resolve }) => {
-		if (!(event.request.headers.has('user-agent') ^ event.isSyntheticRequest)) {
+		if (event.request.headers.has('user-agent') === !!event.isSyntheticRequest) {
 			throw new Error('Synthetic requests should have isSyntheticRequest set to true');
 		}
 		return resolve(event);
