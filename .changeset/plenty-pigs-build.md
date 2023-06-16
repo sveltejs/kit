@@ -2,4 +2,4 @@
 '@sveltejs/kit': patch
 ---
 
-chore: don't import from `svelte/internal`
+fix: don't import types from `svelte/internal`
