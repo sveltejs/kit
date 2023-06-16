@@ -1013,7 +1013,7 @@ export interface RequestEvent<
 	 */
 	isDataRequest: boolean;
 	/**
-	 * `true` if the request comes from a call to one of our own API endpoints made during SSR (or prerendering). This is handled by directly calling `+server.js` without the overhead of actually making an HTTP request. Use this property if you want to treat these synthetic requests differently in some way.
+	 * `true` if the request comes from a call to one of our own API endpoints made during SSR (or prerendering). SvelteKit in this case directly calls `+server.js` without the overhead of actually making an HTTP request.
 	 */
 	isSubRequest: boolean;
 }
