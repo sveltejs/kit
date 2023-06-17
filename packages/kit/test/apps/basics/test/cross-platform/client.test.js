@@ -226,8 +226,7 @@ test.describe('beforeNavigate', () => {
 		expect(await page.innerHTML('pre')).toBe('1 false link');
 	});
 
-	// eslint-disable-next-line no-restricted-properties
-	test.only('preserves search parameter between subsequent page navigations when link data preloading is on', async ({
+	test('preserves search parameter between subsequent page navigations when link data preloading is on', async ({
 		page,
 		baseURL
 	}) => {
