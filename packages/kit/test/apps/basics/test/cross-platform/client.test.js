@@ -225,6 +225,56 @@ test.describe('beforeNavigate', () => {
 		expect(page.url()).toBe(baseURL + '/before-navigate/prevent-navigation');
 		expect(await page.innerHTML('pre')).toBe('1 false link');
 	});
+
+	// eslint-disable-next-line no-restricted-properties
+	test.only('preserves search parameter between subsequent page navigations when link data preloading is on', async ({ page, baseURL }) => {
+		const common_path = '/before-navigate/preserve-search-params';
+		const preserved_search_param = '?preserved=true';
+		const requests = [];
+
+		page.on('request', (req) => {
+			if (req.resourceType() === 'script') {
+				req
+					.response()
+					.then(
+						(res) => res.text(),
+						() => ''
+					)
+					.then((response) => {
+						if (response.includes('preserve search param page')) {
+							requests.push(req.url());
+						}
+					});
+			}
+		});
+
+		await page.goto(common_path + preserved_search_param);
+		
+		await page.hover(`a[href="${common_path}/another-page"]`); // trigger preload
+		await Promise.all([
+			page.waitForTimeout(100), // wait for preload to start
+			page.waitForLoadState('networkidle') // wait for /another-page preload to finish
+		]);
+
+		expect(requests.length).toBe(2); // initial navigation + preload
+
+		await page.click(`a[href="${common_path}/another-page"]`);
+		await page.waitForLoadState('networkidle');
+
+		expect(page.url()).toBe(baseURL + common_path + '/another-page' + preserved_search_param);
+
+		await page.hover(`a[href="${common_path}/yet-another-page"]`); // trigger preload
+		await Promise.all([
+			page.waitForTimeout(100), // wait for preload to start
+			page.waitForLoadState('networkidle') // wait for main page preload to finish
+		]);
+
+		await page.click(`a[href="${common_path}/yet-another-page"]`);
+		await page.waitForLoadState('networkidle');
+
+		expect(page.url()).toBe(baseURL + common_path + '/yet-another-page' + preserved_search_param);
+		expect(requests.length).toBe(3); // includes second preload 
+	});
 });
 
 test.describe('Scrolling', () => {

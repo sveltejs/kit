@@ -273,7 +273,7 @@ export function create_client(app, target) {
 	/** @param {import('./types').NavigationFinished} result */
 	function initialize(result) {
 		if (DEV && result.state.error && document.querySelector('vite-error-overlay')) return;
-
+		
 		current = result.state;
 
 		const style = document.querySelector('style[data-sveltekit]');
@@ -1079,6 +1079,12 @@ export function create_client(app, target) {
 					i += 1;
 				}
 			}
+		}
+		
+		// check if load cache overrides any search params
+		if (load_cache) {
+			const { search } = new URL(location.href);
+			navigation_result.state.url.search = search;
 		}
 
 		// reset preload synchronously after the history state has been set to avoid race conditions
