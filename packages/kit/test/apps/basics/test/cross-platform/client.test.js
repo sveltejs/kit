@@ -227,7 +227,10 @@ test.describe('beforeNavigate', () => {
 	});
 
 	// eslint-disable-next-line no-restricted-properties
-	test.only('preserves search parameter between subsequent page navigations when link data preloading is on', async ({ page, baseURL }) => {
+	test.only('preserves search parameter between subsequent page navigations when link data preloading is on', async ({
+		page,
+		baseURL
+	}) => {
 		const common_path = '/before-navigate/preserve-search-params';
 		const preserved_search_param = '?preserved=true';
 		const requests = [];
@@ -249,7 +252,7 @@ test.describe('beforeNavigate', () => {
 		});
 
 		await page.goto(common_path + preserved_search_param);
-		
+
 		await page.hover(`a[href="${common_path}/another-page"]`); // trigger preload
 		await Promise.all([
 			page.waitForTimeout(100), // wait for preload to start
@@ -273,7 +276,7 @@ test.describe('beforeNavigate', () => {
 		await page.waitForLoadState('networkidle');
 
 		expect(page.url()).toBe(baseURL + common_path + '/yet-another-page' + preserved_search_param);
-		expect(requests.length).toBe(3); // includes second preload 
+		expect(requests.length).toBe(3); // includes second preload
 	});
 });
 

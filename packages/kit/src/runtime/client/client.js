@@ -273,7 +273,7 @@ export function create_client(app, target) {
 	/** @param {import('./types').NavigationFinished} result */
 	function initialize(result) {
 		if (DEV && result.state.error && document.querySelector('vite-error-overlay')) return;
-		
+
 		current = result.state;
 
 		const style = document.querySelector('style[data-sveltekit]');
@@ -1080,7 +1080,7 @@ export function create_client(app, target) {
 				}
 			}
 		}
-		
+
 		// check if load cache overrides any search params
 		if (load_cache) {
 			const { search } = new URL(location.href);
