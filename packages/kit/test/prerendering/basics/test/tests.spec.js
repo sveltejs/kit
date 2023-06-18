@@ -4,6 +4,14 @@ import { assert, expect, test } from 'vitest';
 
 const build = fileURLToPath(new URL('../build', import.meta.url));
 
+/** 
+ * For static content, Svelte v4 will add a data-svelte-h attribute.
+ * Remove it before comparing the output.
+ * 
+ * @param {string} html 
+ */
+const strip_hydration_attrs = (html) => html.replace(/\s+data-svelte-h="svelte-\w+"/g, '');
+
 /** @param {string} file */
 const read = (file, encoding = 'utf-8') => fs.readFileSync(`${build}/${file}`, encoding);
 
@@ -146,7 +154,7 @@ test('decodes paths when writing files', () => {
 });
 
 test('prerendering is set to true in root +layout.js', () => {
-	const content = read('prerendering-true.html');
+	const content = strip_hydration_attrs(read('prerendering-true.html'));
 	expect(content).toMatch('<h1>prerendering: true/true</h1>');
 });
 
@@ -198,7 +206,7 @@ test('$env - includes environment variables', () => {
 });
 
 test('prerenders a page in a (group)', () => {
-	const content = read('grouped.html');
+	const content = strip_hydration_attrs(read('grouped.html'));
 	expect(content).toMatch('<h1>grouped</h1>');
 });
 
