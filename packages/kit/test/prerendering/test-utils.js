@@ -5,5 +5,5 @@
  * @param {string} html
  */
 export function replace_hydration_attrs(html) {
-	return html.replace(/(\s+)data-svelte-h="svelte-\w+"/g, '$1data-svelte-h="svelte-abc123"');
+	return html.replace(/(\s+)data-svelte-h="svelte-\w+"/g, '');
 }

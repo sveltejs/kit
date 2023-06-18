@@ -148,7 +148,7 @@ test('decodes paths when writing files', () => {
 
 test('prerendering is set to true in root +layout.js', () => {
 	const content = replace_hydration_attrs(read('prerendering-true.html'));
-	expect(content).toMatch('<h1 data-svelte-h="svelte-abc123">prerendering: true/true</h1>');
+	expect(content).toMatch('<h1>prerendering: true/true</h1>');
 });
 
 test('fetching missing content results in a 404', () => {
@@ -200,7 +200,7 @@ test('$env - includes environment variables', () => {
 
 test('prerenders a page in a (group)', () => {
 	const content = replace_hydration_attrs(read('grouped.html'));
-	expect(content).toMatch('<h1 data-svelte-h="svelte-abc123">grouped</h1>');
+	expect(content).toMatch('<h1>grouped</h1>');
 });
 
 test('injects relative service worker', () => {

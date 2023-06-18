@@ -10,12 +10,12 @@ const read = (file) => fs.readFileSync(`${build}/${file}`, 'utf-8');
 
 test('prerenders /path-base', () => {
 	const content = replace_hydration_attrs(read('index.html'));
-	expect(content).toMatch('<h1 data-svelte-h="svelte-abc123">hello</h1>');
+	expect(content).toMatch('<h1>hello</h1>');
 });
 
 test('prerenders nested /path-base', () => {
 	const content = replace_hydration_attrs(read('nested/index.html'));
-	expect(content).toMatch('<h1 data-svelte-h="svelte-abc123">nested hello</h1>');
+	expect(content).toMatch('<h1>nested hello</h1>');
 });
 
 test('adds CSP headers via meta tag', () => {
