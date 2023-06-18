@@ -17,7 +17,7 @@
 			</svelte:fragment>
 
 			<svelte:fragment slot="home-small">
-				<strong>svelte</strong>
+				<strong>kit</strong>
 			</svelte:fragment>
 
 			<svelte:fragment slot="search">
