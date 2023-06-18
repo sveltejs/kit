@@ -1,6 +1,6 @@
 /**
  * For static content, Svelte v4 will add a data-svelte-h attribute.
- * Remove it before comparing the output.
+ * Replace the hash with something predictable before comparing the output.
  *
  * @param {string} html
  */
