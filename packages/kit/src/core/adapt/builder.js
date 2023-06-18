@@ -1,5 +1,5 @@
 import { existsSync, statSync, createReadStream, createWriteStream } from 'node:fs';
-import { extname, join } from 'node:path/posix';
+import { extname, join, resolve } from 'node:path/posix';
 import { pipeline } from 'node:stream';
 import { promisify } from 'node:util';
 import zlib from 'node:zlib';
@@ -86,7 +86,10 @@ export function create_builder({
 				return;
 			}
 
-			const files = list_files(directory, (file) => extensions.includes(extname(file)));
+			const files = list_files(directory, (file) => extensions.includes(extname(file))).map(
+				(file) => resolve(directory, file)
+			);
+
 			await Promise.all(
 				files.map((file) => Promise.all([compress_file(file, 'gz'), compress_file(file, 'br')]))
 			);
