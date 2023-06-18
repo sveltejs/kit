@@ -1,10 +1,11 @@
-import { rmSync } from 'node:fs';
+import { existsSync, rmSync } from 'node:fs';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { expect, test } from 'vitest';
+import { assert, expect, test } from 'vitest';
 import glob from 'tiny-glob/sync.js';
 import { create_builder } from './builder.js';
 import { posixify } from '../../utils/filesystem.js';
+import { dirname } from 'path/posix';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = join(__filename, '..');
@@ -65,4 +66,18 @@ test('copy files', () => {
 	);
 
 	rmSync(dest, { force: true, recursive: true });
+});
+
+test('compress files', async () => {
+	// @ts-ignore
+	const builder = create_builder({
+		route_data: []
+	});
+
+	const target = new URL('./fixtures/compress/foo.css', import.meta.url).pathname;
+	rmSync(target + '.br', { force: true });
+	rmSync(target + '.gz', { force: true });
+	await builder.compress(dirname(target));
+	assert.ok(existsSync(target + '.br'));
+	assert.ok(existsSync(target + '.gz'));
 });
