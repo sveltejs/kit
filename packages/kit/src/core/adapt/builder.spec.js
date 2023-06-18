@@ -1,11 +1,10 @@
 import { existsSync, rmSync } from 'node:fs';
-import { join } from 'node:path';
+import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { assert, expect, test } from 'vitest';
 import glob from 'tiny-glob/sync.js';
 import { create_builder } from './builder.js';
 import { posixify } from '../../utils/filesystem.js';
-import { dirname } from 'path/posix';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = join(__filename, '..');
