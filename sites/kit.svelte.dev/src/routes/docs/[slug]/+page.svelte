@@ -1,8 +1,8 @@
 <script>
 	import { page } from '$app/stores';
-	import { Icon } from '@sveltejs/site-kit/components';
 	import * as hovers from '$lib/docs/client/hovers.js';
-	import OnThisPage from './OnThisPage.svelte';
+	import { Icon } from '@sveltejs/site-kit/components';
+	import { DocsOnThisPage } from '@sveltejs/site-kit/docs';
 
 	/** @type {import('./$types').PageData} */
 	export let data;
@@ -51,7 +51,7 @@
 	</div>
 </div>
 
-<OnThisPage details={data.page} />
+<DocsOnThisPage details={data.page} />
 
 <style>
 	.content {

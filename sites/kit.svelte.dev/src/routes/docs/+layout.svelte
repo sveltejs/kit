@@ -1,6 +1,5 @@
 <script>
-	import Contents from '$lib/docs/Contents.svelte';
-	import { TSToggle } from '@sveltejs/site-kit/components';
+	import { DocsContents } from '@sveltejs/site-kit/docs';
 
 	export let data;
 </script>
@@ -11,11 +10,7 @@
 	</div>
 
 	<div class="toc-container">
-		<Contents contents={data.sections} />
-	</div>
-
-	<div class="ts-toggle">
-		<TSToggle />
+		<DocsContents contents={data.sections} />
 	</div>
 </div>
 
@@ -33,12 +28,6 @@
 
 	.toc-container {
 		background: var(--sk-back-3);
-	}
-
-	.ts-toggle {
-		width: 100%;
-		border-top: 1px solid var(--sk-back-4);
-		background-color: var(--sk-back-3);
 	}
 
 	@media (min-width: 832px) {
@@ -66,15 +55,6 @@
 
 		.page {
 			padding-left: calc(var(--sidebar-width) + var(--sk-page-padding-side));
-		}
-
-		.ts-toggle {
-			position: fixed;
-			width: var(--sidebar-width);
-			bottom: var(--sk-banner-bottom-height);
-			z-index: 1;
-			margin-right: 0;
-			border-right: 1px solid var(--sk-back-5);
 		}
 	}
 

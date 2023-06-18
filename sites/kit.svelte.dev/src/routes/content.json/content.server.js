@@ -1,9 +1,13 @@
+import { modules } from '$lib/generated/type-info.js';
+import {
+	extractFrontmatter,
+	markedTransform,
+	replaceExportTypePlaceholders,
+	slugify
+} from '@sveltejs/site-kit/markdown';
 import fs from 'node:fs';
 import path from 'node:path';
 import glob from 'tiny-glob/sync.js';
-import { slugify } from '$lib/docs/server';
-import { extract_frontmatter, transform } from '$lib/docs/server/markdown.js';
-import { replace_placeholders } from '$lib/docs/server/render.js';
 
 const categories = [
 	{
@@ -34,9 +38,9 @@ export function content() {
 			const slug = match[1];
 
 			const filepath = `../../documentation/${category.slug}/${file}`;
-			const markdown = replace_placeholders(fs.readFileSync(filepath, 'utf-8'));
+			const markdown = replaceExportTypePlaceholders(fs.readFileSync(filepath, 'utf-8'), modules);
 
-			const { body, metadata } = extract_frontmatter(markdown);
+			const { body, metadata } = extractFrontmatter(markdown);
 
 			const sections = body.trim().split(/^## /m);
 			const intro = sections.shift().trim();
@@ -87,7 +91,7 @@ function plaintext(markdown) {
 	const block = (text) => `${text}\n`;
 	const inline = (text) => text;
 
-	return transform(markdown, {
+	return markedTransform(markdown, {
 		code: (source) =>
 			source
 				.split('// ---cut---\n')
