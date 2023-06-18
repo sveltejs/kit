@@ -73,7 +73,7 @@ test('compress files', async () => {
 		route_data: []
 	});
 
-	const target = new URL('./fixtures/compress/foo.css', import.meta.url).pathname;
+	const target = fileURLToPath(new URL('./fixtures/compress/foo.css', import.meta.url));
 	rmSync(target + '.br', { force: true });
 	rmSync(target + '.gz', { force: true });
 	await builder.compress(dirname(target));
