@@ -110,6 +110,18 @@ We instead read from the _right_, accounting for the number of trusted proxies. 
 
 The maximum request body size to accept in bytes including while streaming. Defaults to 512kb. You can disable this option with a value of 0 and implement a custom check in [`handle`](hooks#server-hooks-handle) if you need something more advanced.
 
+### `CERT_PATH`, `CERT_KEY_PATH`, and `HTTPS_PORT`:
+By default, the server only listens for plain HTTP requests. To enable an additional HTTPS endpoint, you must provide the `CERT_PATH` and `CERT_KEY_PATH` environment variables pointing to a file containing a valid certificate and a file containing its associated private key respectively, both in the PEM format.
+The files are read once on startup, so if the contents of the files change, the app will need to be restarted.
+
+The default port that will be used for the HTTPS endpoint is 3001. You can customize this via the `HTTPS_PORT` environment variable.
+
+### `NO_HTTP2`:
+By default, the HTTPS endpoint will support HTTP/2 as well as HTTP/1.1. If, for some reason, supporting HTTP/2 isn't desirable, you can disable it by setting the `NO_HTTP2` environment variable to a non-empty value (e.g. `1`).
+
+### `ONLY_HTTPS`:
+If you only need an HTTPS endpoint and want to opt out of the default plain HTTP one, you can do so by setting the `ONLY_HTTPS` environment variable to a non-empty value (e.g. `1`).
+
 ## Options
 
 The adapter can be configured with various options:

@@ -9,7 +9,12 @@ const expected = new Set([
 	'ADDRESS_HEADER',
 	'PROTOCOL_HEADER',
 	'HOST_HEADER',
-	'BODY_SIZE_LIMIT'
+	'BODY_SIZE_LIMIT',
+	'CERT_PATH',
+	'CERT_KEY_PATH',
+	'HTTPS_PORT',
+	'ONLY_HTTPS',
+	'NO_HTTP2'
 ]);
 
 if (ENV_PREFIX) {
