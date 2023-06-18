@@ -12,7 +12,9 @@ import { write } from '../sync/utils.js';
 import { list_files } from '../utils.js';
 
 const pipe = promisify(pipeline);
-const extensions = ['html', 'js', 'mjs', 'json', 'css', 'svg', 'xml', 'wasm'].map((ext) => `.${ext}`);
+const extensions = ['html', 'js', 'mjs', 'json', 'css', 'svg', 'xml', 'wasm'].map(
+	(ext) => `.${ext}`
+);
 
 /**
  * Creates the Builder which is passed to adapters for building the application.
