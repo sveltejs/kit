@@ -18,6 +18,8 @@ export const no_http2 = env('NO_HTTP2', false);
 const app = polka().use(handler);
 
 if (!only_https) {
+	// TODO Remove the `@ts-expect-error`s below once https://github.com/lukeed/polka/issues/194 is fixed
+	// @ts-expect-error
 	http.createServer(app.handler).listen({ path, host, port }, () => {
 		console.log(`Listening on http://${path ? path : host + ':' + port}`);
 	});
@@ -27,10 +29,12 @@ if (cert_path && cert_key_path) {
 	const cert = fs.readFileSync(cert_path);
 	const key = fs.readFileSync(cert_key_path);
 	const https_server = no_http2
-		? https.createServer({ cert, key }, app.handler)
-		: http2.createSecureServer({ allowHTTP1: true, cert, key }, app.handler);
+		? // @ts-expect-error
+		  https.createServer({ cert, key }, app.handler)
+		: // @ts-expect-error
+		  http2.createSecureServer({ allowHTTP1: true, cert, key }, app.handler);
 
-	https_server.listen({ path, host, https_port }, () => {
+	https_server.listen({ path, host, port: https_port }, () => {
 		console.log(`Listening on https://${path ? path : host + ':' + https_port}`);
 	});
 }
