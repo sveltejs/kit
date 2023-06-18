@@ -89,7 +89,7 @@ export function create_builder({
 			);
 
 			await Promise.all(
-				files.map((file) => Promise.all([compress_file(file, 'gz'), compress_file(file, 'br')]))
+				files.flatMap((file) => [compress_file(file, 'gz'), compress_file(file, 'br')])
 			);
 		},
 
