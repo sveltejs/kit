@@ -15,11 +15,6 @@ const categories = [
 		label: null,
 		href: (parts) =>
 			parts.length > 1 ? `/docs/${parts[0]}#${parts.slice(1).join('-')}` : `/docs/${parts[0]}`
-	},
-	{
-		slug: 'faq',
-		label: 'FAQ',
-		href: (parts) => `/faq#${parts.join('-')}`
 	}
 ];
 
