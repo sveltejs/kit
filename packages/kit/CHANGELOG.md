@@ -1,5 +1,11 @@
 # @sveltejs/kit
 
+## 1.20.4
+
+### Patch Changes
+
+- fix: remove reference to tiny-glob from postinstall script ([#10174](https://github.com/sveltejs/kit/pull/10174))
+
 ## 1.20.3
 
 ### Patch Changes
