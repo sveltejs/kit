@@ -31,4 +31,4 @@ You will need to install `svelte-preprocess` with `npm install --save-dev svelte
 
 ## Integration FAQs
 
-The SvelteKit FAQ has a [section on integrations](/docs/faq#integrations), which may be helpful if you still have questions.
+The SvelteKit FAQ has a [section on integrations](/docs/frequently-asked-questions#integrations), which may be helpful if you still have questions.
