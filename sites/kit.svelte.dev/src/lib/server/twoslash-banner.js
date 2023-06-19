@@ -30,8 +30,6 @@ export const kit_twoslash_banner = (filename, source, language, options) => {
 			.params.map((param) => `${param.name}: string`)
 			.join(', ');
 
-		console.log(options);
-
 		injected.push(
 			`// @filename: $types.d.ts`,
 			`import type * as Kit from '@sveltejs/kit';`,

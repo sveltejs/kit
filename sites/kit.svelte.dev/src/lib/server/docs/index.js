@@ -28,7 +28,7 @@ export async function get_parsed_docs(docs_data, slug) {
 		content: await renderContentMarkdown(page.file, page.content, {
 			modules,
 			twoslashBanner: kit_twoslash_banner,
-			cacheCodeSnippets: false
+			cacheCodeSnippets: true
 		})
 	};
 }
