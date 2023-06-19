@@ -1,8 +1,7 @@
 <script>
 	import { page } from '$app/stores';
-	import * as hovers from '$lib/docs/client/hovers.js';
 	import { Icon } from '@sveltejs/site-kit/components';
-	import { DocsOnThisPage } from '@sveltejs/site-kit/docs';
+	import { DocsOnThisPage, setupDocsHovers } from '@sveltejs/site-kit/docs';
 
 	/** @type {import('./$types').PageData} */
 	export let data;
@@ -12,7 +11,7 @@
 	$: prev = pages[index - 1];
 	$: next = pages[index + 1];
 
-	hovers.setup();
+	setupDocsHovers();
 </script>
 
 <svelte:head>
