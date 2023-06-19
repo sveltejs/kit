@@ -3,7 +3,6 @@
 	import { Icon } from '@sveltejs/site-kit/components';
 	import { DocsOnThisPage, setupDocsHovers } from '@sveltejs/site-kit/docs';
 
-	/** @type {import('./$types').PageData} */
 	export let data;
 
 	$: pages = data.sections.flatMap((section) => section.pages);

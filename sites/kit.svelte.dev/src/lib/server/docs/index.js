@@ -1,16 +1,16 @@
 import { base as app_base } from '$app/paths';
-import { modules } from '$lib/generated/type-info.js';
 import {
 	escape,
 	extractFrontmatter,
 	markedTransform,
 	normalizeSlugify,
 	removeMarkdown,
-	renderContentMarkdown
+	replaceExportTypePlaceholders
 } from '@sveltejs/site-kit/markdown';
 import fs from 'node:fs';
 import { CONTENT_BASE_PATHS } from '../../../constants.js';
-import { kit_twoslash_banner } from '../twoslash-banner.js';
+import { render_content } from '../renderer';
+import { modules } from '$lib/generated/type-info.js';
 
 /**
  * @param {import('./types').DocsData} docs_data
@@ -25,11 +25,7 @@ export async function get_parsed_docs(docs_data, slug) {
 
 	return {
 		...page,
-		content: await renderContentMarkdown(page.file, page.content, {
-			modules,
-			twoslashBanner: kit_twoslash_banner,
-			cacheCodeSnippets: true
-		})
+		content: await render_content(page.file, page.content)
 	};
 }
 
@@ -104,12 +100,14 @@ export function get_docs_list(docs_data) {
 
 /** @param {string} markdown */
 function get_sections(markdown) {
-	const headingRegex = /^##\s+(.*)$/gm;
+	const headingRegex = /^###?\s+(.*)$/gm;
 	/** @type {import('./types').Section[]} */
 	const secondLevelHeadings = [];
 	let match;
 
-	while ((match = headingRegex.exec(markdown)) !== null) {
+	const placeholders_rendered = replaceExportTypePlaceholders(markdown, modules);
+
+	while ((match = headingRegex.exec(placeholders_rendered)) !== null) {
 		secondLevelHeadings.push({
 			title: removeMarkdown(
 				escape(markedTransform(match[1], { paragraph: (txt) => txt }))

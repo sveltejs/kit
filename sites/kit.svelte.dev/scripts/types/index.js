@@ -5,7 +5,14 @@ import prettier from 'prettier';
 import { mkdirp } from '../../../../packages/kit/src/utils/filesystem.js';
 import { fileURLToPath } from 'url';
 
-/** @typedef {{ name: string; comment: string; markdown: string; }} Extracted */
+/** @typedef {{
+ * name: string;
+ * comment: string;
+ * markdown?: string;
+ * snippet: string;
+ * deprecated: string | null;
+ * children: Extracted[] }
+ * } Extracted */
 
 /** @type {Array<{ name: string; comment: string; exports: Extracted[]; types: Extracted[]; exempt?: boolean; }>} */
 const modules = [];
@@ -28,6 +35,7 @@ function get_types(code, statements) {
 			const export_modifier = modifiers?.find(
 				(modifier) => modifier.kind === ts.SyntaxKind.ExportKeyword
 			);
+
 			if (!export_modifier) continue;
 
 			if (
@@ -47,28 +55,40 @@ function get_types(code, statements) {
 
 				let start = statement.pos;
 				let comment = '';
+				/** @type {string | null} */
+				let deprecated_notice = null;
 
 				// @ts-ignore i think typescript is bad at typescript
 				if (statement.jsDoc) {
 					// @ts-ignore
-					comment = statement.jsDoc[0].comment;
+					const jsDoc = statement.jsDoc[0];
+
+					comment = jsDoc.comment;
+
+					if (jsDoc?.tags?.[0]?.tagName?.escapedText === 'deprecated') {
+						deprecated_notice = jsDoc.tags[0].comment;
+					}
+
 					// @ts-ignore
-					start = statement.jsDoc[0].end;
+					start = jsDoc.end;
 				}
 
 				const i = code.indexOf('export', start);
 				start = i + 6;
 
-				/** @type {string[]} */
-				const children = [];
+				/** @type {Extracted[]} */
+				let children = [];
 
 				let snippet_unformatted = code.slice(start, statement.end).trim();
 
-				if (ts.isInterfaceDeclaration(statement)) {
+				if (ts.isInterfaceDeclaration(statement) || ts.isClassDeclaration(statement)) {
 					if (statement.members.length > 0) {
 						for (const member of statement.members) {
+							// @ts-ignore
 							children.push(munge_type_element(member));
 						}
+
+						children = children.filter(Boolean);
 
 						// collapse `interface Foo {/* lots of stuff*/}` into `interface Foo {…}`
 						const first = statement.members.at(0);
@@ -90,7 +110,7 @@ function get_types(code, statements) {
 				const snippet = prettier
 					.format(snippet_unformatted, {
 						parser: 'typescript',
-						printWidth: 80,
+						printWidth: 60,
 						useTabs: true,
 						singleQuote: true,
 						trailingComma: 'none'
@@ -103,7 +123,13 @@ function get_types(code, statements) {
 						? exports
 						: types;
 
-				collection.push({ name, comment, snippet, children });
+				collection.push({
+					name,
+					comment,
+					snippet,
+					children,
+					deprecated: deprecated_notice
+				});
 			}
 		}
 
@@ -121,13 +147,15 @@ function munge_type_element(member, depth = 1) {
 	// @ts-ignore
 	const doc = member.jsDoc?.[0];
 
-	/** @type {string} */
+	if (/private api/i.test(doc?.comment)) return;
+
+	/** @type {string[]} */
 	const children = [];
 
 	const name = member.name?.escapedText;
 	let snippet = member.getText();
 
-	for (let i = 0; i < depth; i += 1) {
+	for (let i = -1; i < depth; i += 1) {
 		snippet = snippet.replace(/^\t/gm, '');
 	}
 
@@ -153,6 +181,14 @@ function munge_type_element(member, depth = 1) {
 		const type = tag.tagName.escapedText;
 
 		switch (tag.tagName.escapedText) {
+			case 'private':
+				bullets.push(`- <span class="tag">private</span> ${tag.comment}`);
+				break;
+
+			case 'readonly':
+				bullets.push(`- <span class="tag">readonly</span> ${tag.comment}`);
+				break;
+
 			case 'param':
 				bullets.push(`- \`${tag.name.getText()}\` ${tag.comment}`);
 				break;
@@ -165,10 +201,16 @@ function munge_type_element(member, depth = 1) {
 				bullets.push(`- <span class="tag">returns</span> ${tag.comment}`);
 				break;
 
+			case 'deprecated':
+				bullets.push(`- <span class="tag deprecated">deprecated</span> ${tag.comment}`);
+				break;
+
 			default:
 				console.log(`unhandled JSDoc tag: ${type}`); // TODO indicate deprecated stuff
 		}
 	}
+
+	if (name?.includes('alias')) console.log(member?.jsDoc[0].tags);
 
 	return {
 		name,
@@ -204,9 +246,12 @@ function read_d_ts_file(file) {
 	// we didn't ignore this error specifically for `/// file:` code examples
 	const str = fs.readFileSync(resolved, 'utf-8');
 
+	//! For some reason, typescript is reading this @errors as a jsdoc tag, and splitting it into separate pieces
 	return str.replace(/(\s*\*\s*)```js([\s\S]+?)```/g, (match, prefix, code) => {
 		return `${prefix}\`\`\`js${prefix}// @errors: 7031${code}\`\`\``;
 	});
+
+	return str;
 }
 
 {

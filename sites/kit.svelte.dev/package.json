@@ -25,7 +25,7 @@
 		"shiki-twoslash": "^3.1.0",
 		"svelte": "^3.56.0",
 		"tiny-glob": "^0.2.9",
-		"typescript": "^5.1.3",
+		"typescript": "^5.0.4",
 		"vite": "^4.3.6",
 		"vite-imagetools": "^4.0.19",
 		"vitest": "^0.31.0"
