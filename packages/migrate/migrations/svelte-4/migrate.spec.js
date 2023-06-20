@@ -7,7 +7,8 @@ test('Updates SvelteComponentTyped #1', () => {
         
 export class Foo extends SvelteComponentTyped<{}> {}
 
-const bar: SvelteComponentTyped = null;`
+const bar: SvelteComponentTyped = null;`,
+		true
 	);
 	assert.equal(
 		result,
@@ -26,7 +27,8 @@ test('Updates SvelteComponentTyped #2', () => {
 export class Foo extends SvelteComponentTyped<{}> {}
 
 const bar: SvelteComponentTyped = null;
-const baz: SvelteComponent = null;`
+const baz: SvelteComponent = null;`,
+		true
 	);
 	assert.equal(
 		result,
@@ -48,7 +50,8 @@ interface SvelteComponent {}
 export class Foo extends SvelteComponentTyped<{}> {}
 
 const bar: SvelteComponentTyped = null;
-const baz: SvelteComponent = null;`
+const baz: SvelteComponent = null;`,
+		true
 	);
 	assert.equal(
 		result,
@@ -63,6 +66,27 @@ const baz: SvelteComponent = null;`
 	);
 });
 
+test('Updates SvelteComponentTyped (jsdoc)', () => {
+	const result = transform_code(
+		`
+		/** @type {import('svelte').SvelteComponentTyped} */
+		const bar = null;
+		/** @type {import('svelte').SvelteComponentTyped<any>} */
+		const baz = null;
+		`,
+		false
+	);
+	assert.equal(
+		result,
+		`
+		/** @type {import('svelte').SvelteComponent} */
+		const bar = null;
+		/** @type {import('svelte').SvelteComponent<any>} */
+		const baz = null;
+		`
+	);
+});
+
 test('Updates typeof SvelteComponent', () => {
 	const result = transform_code(
 		`import { SvelteComponent } from 'svelte';
@@ -72,7 +96,8 @@ test('Updates typeof SvelteComponent', () => {
         function b(c: typeof SvelteComponent) {}
 		const c: typeof SvelteComponent<any> = null;
 		const d: typeof C = null;
-        `
+        `,
+		true
 	);
 	assert.equal(
 		result,
@@ -87,9 +112,34 @@ test('Updates typeof SvelteComponent', () => {
 	);
 });
 
+test('Updates typeof SvelteComponent (jsdoc)', () => {
+	const result = transform_code(
+		`
+		/** @type {typeof import('svelte').SvelteComponent} */
+        const a = null;
+		/** @type {typeof import('svelte').SvelteComponent<any>} */
+		const c = null;
+		/** @type {typeof C} */
+		const d: typeof C = null;
+        `,
+		false
+	);
+	assert.equal(
+		result,
+		`
+		/** @type {typeof import('svelte').SvelteComponent<any>} */
+        const a = null;
+		/** @type {typeof import('svelte').SvelteComponent<any>} */
+		const c = null;
+		/** @type {typeof C} */
+		const d: typeof C = null;
+        `
+	);
+});
+
 test('Updates Action and ActionReturn', () => {
 	const result = transform_code(
-		`import { Action, ActionReturn } from 'svelte/action';
+		`import type { Action, ActionReturn } from 'svelte/action';
 
         const a: Action = () => {};
         const b: Action<HTMLDivElement> = () => {};
@@ -98,12 +148,13 @@ test('Updates Action and ActionReturn', () => {
 		const e: ActionReturn = () => {};
 		const f: ActionReturn<true> = () => {};
 		const g: ActionReturn<true, {}> = () => {};
-        `
+        `,
+		true
 	);
 	assert.equal(
 		result,
 
-		`import { Action, ActionReturn } from 'svelte/action';
+		`import type { Action, ActionReturn } from 'svelte/action';
 
         const a: Action<HTMLElement, any> = () => {};
         const b: Action<HTMLDivElement, any> = () => {};
@@ -112,6 +163,48 @@ test('Updates Action and ActionReturn', () => {
 		const e: ActionReturn<any> = () => {};
 		const f: ActionReturn<true> = () => {};
 		const g: ActionReturn<true, {}> = () => {};
+        `
+	);
+});
+
+test('Updates Action and ActionReturn (jsdoc)', () => {
+	const result = transform_code(
+		`
+		/** @type {import('svelte/action').Action} */
+        const a = () => {};
+		/** @type {import('svelte/action').Action<HTMLDivElement>} */
+        const b = () => {};
+		/** @type {import('svelte/action').Action<HTMLDivElement, true>} */
+        const c = () => {};
+		/** @type {import('svelte/action').Action<HTMLDivElement, true, {}>} */
+        const d = () => {};
+		/** @type {import('svelte/action').ActionReturn} */
+		const e = () => {};
+		/** @type {import('svelte/action').ActionReturn<true>} */
+		const f = () => {};
+		/** @type {import('svelte/action').ActionReturn<true, {}>} */
+		const g = () => {};
+        `,
+		false
+	);
+	assert.equal(
+		result,
+
+		`
+		/** @type {import('svelte/action').Action<HTMLElement, any>} */
+        const a = () => {};
+		/** @type {import('svelte/action').Action<HTMLDivElement, any>} */
+        const b = () => {};
+		/** @type {import('svelte/action').Action<HTMLDivElement, true>} */
+        const c = () => {};
+		/** @type {import('svelte/action').Action<HTMLDivElement, true, {}>} */
+        const d = () => {};
+		/** @type {import('svelte/action').ActionReturn<any>} */
+		const e = () => {};
+		/** @type {import('svelte/action').ActionReturn<true>} */
+		const f = () => {};
+		/** @type {import('svelte/action').ActionReturn<true, {}>} */
+		const g = () => {};
         `
 	);
 });

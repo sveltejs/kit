@@ -7,7 +7,11 @@ export function update_svelte_file(file_path) {
 	const updated = content.replace(
 		/<script([^]*?)>([^]+?)<\/script>(\n*)/g,
 		(_match, attrs, contents, whitespace) => {
-			return `<script${attrs}>${transform_code(contents)}</script>${whitespace}`;
+			return `<script${attrs}>${transform_code(
+				contents,
+				(attrs.includes('lang=') || attrs.includes('type=')) &&
+					(attrs.includes('ts') || attrs.includes('typescript'))
+			)}</script>${whitespace}`;
 		}
 	);
 	fs.writeFileSync(file_path, transform_svelte_code(updated), 'utf-8');
@@ -16,18 +20,21 @@ export function update_svelte_file(file_path) {
 /** @param {string} file_path */
 export function update_js_file(file_path) {
 	const content = fs.readFileSync(file_path, 'utf-8');
-	const updated = transform_code(content);
+	const updated = transform_code(content, file_path.endsWith('.ts'));
 	fs.writeFileSync(file_path, updated, 'utf-8');
 }
 
-/** @param {string} code */
-export function transform_code(code) {
+/**
+ * @param {string} code
+ * @param {boolean} is_ts
+ */
+export function transform_code(code, is_ts) {
 	const project = new Project({ useInMemoryFileSystem: true });
-	const source = project.createSourceFile('svelte.ts', code);
-	update_imports(source);
-	update_typeof_svelte_component(source);
-	update_action_types(source);
-	update_action_return_types(source);
+	const source = project.createSourceFile(`svelte.${is_ts ? 'ts' : 'js'}`, code);
+	update_imports(source, is_ts);
+	update_typeof_svelte_component(source, is_ts);
+	update_action_types(source, is_ts);
+	update_action_return_types(source, is_ts);
 	return source.getFullText();
 }
 
@@ -60,8 +67,9 @@ function update_transitions(code) {
 /**
  * Action<T> -> Action<T, any>
  * @param {import('ts-morph').SourceFile} source
+ * @param {boolean} is_ts
  */
-function update_action_types(source) {
+function update_action_types(source, is_ts) {
 	const imports = get_imports(source, 'svelte/action', 'Action');
 	for (const namedImport of imports) {
 		const identifiers = find_identifiers(source, namedImport.getAliasNode()?.getText() ?? 'Action');
@@ -78,13 +86,26 @@ function update_action_types(source) {
 			}
 		}
 	}
+
+	if (!is_ts) {
+		replaceInJsDoc(source, (text) => {
+			return text.replace(
+				/import\((['"])svelte\/action['"]\).Action(<\w+>)?(?=[^<\w]|$)/g,
+				(_, quote, type) =>
+					`import(${quote}svelte/action${quote}).Action<${
+						type ? type.slice(1, -1) + '' : 'HTMLElement'
+					}, any>`
+			);
+		});
+	}
 }
 
 /**
  * ActionReturn -> ActionReturn<any>
  * @param {import('ts-morph').SourceFile} source
+ * @param {boolean} is_ts
  */
-function update_action_return_types(source) {
+function update_action_return_types(source, is_ts) {
 	const imports = get_imports(source, 'svelte/action', 'ActionReturn');
 	for (const namedImport of imports) {
 		const identifiers = find_identifiers(
@@ -101,13 +122,23 @@ function update_action_return_types(source) {
 			}
 		}
 	}
+
+	if (!is_ts) {
+		replaceInJsDoc(source, (text) => {
+			return text.replace(
+				/import\((['"])svelte\/action['"]\).ActionReturn(?=[^<\w]|$)/g,
+				'import($1svelte/action$1).ActionReturn<any>'
+			);
+		});
+	}
 }
 
 /**
  * SvelteComponentTyped -> SvelteComponent
  * @param {import('ts-morph').SourceFile} source
+ * @param {boolean} is_ts
  */
-function update_imports(source) {
+function update_imports(source, is_ts) {
 	const identifiers = find_identifiers(source, 'SvelteComponent');
 	const can_rename = identifiers.every((id) => {
 		const parent = id.getParent();
@@ -139,13 +170,23 @@ function update_imports(source) {
 			namedImport.setName('SvelteComponent');
 		}
 	}
+
+	if (!is_ts) {
+		replaceInJsDoc(source, (text) => {
+			return text.replace(
+				/import\((['"])svelte['"]\)\.SvelteComponentTyped(?=\W|$)/g,
+				'import($1svelte$1).SvelteComponent'
+			);
+		});
+	}
 }
 
 /**
  * typeof SvelteComponent -> typeof SvelteComponent<any>
  * @param {import('ts-morph').SourceFile} source
+ * @param {boolean} is_ts
  */
-function update_typeof_svelte_component(source) {
+function update_typeof_svelte_component(source, is_ts) {
 	const imports = get_imports(source, 'svelte', 'SvelteComponent');
 
 	for (const type of imports) {
@@ -164,6 +205,15 @@ function update_typeof_svelte_component(source) {
 				}
 			});
 		}
+	}
+
+	if (!is_ts) {
+		replaceInJsDoc(source, (text) => {
+			return text.replace(
+				/typeof import\((['"])svelte['"]\)\.SvelteComponent(?=[^<\w]|$)/g,
+				'typeof import($1svelte$1).SvelteComponent<any>'
+			);
+		});
 	}
 }
 
@@ -200,4 +250,27 @@ function is_declaration(node) {
 		Node.isTypeAliasDeclaration(node) ||
 		Node.isInterfaceDeclaration(node)
 	);
+}
+
+/**
+ * @param {import('ts-morph').SourceFile} source
+ * @param {(text: string) => string | undefined} replacer
+ */
+function replaceInJsDoc(source, replacer) {
+	source.forEachChild((node) => {
+		if (Node.isJSDocable(node)) {
+			const tags = node.getJsDocs().flatMap((jsdoc) => jsdoc.getTags());
+			tags.forEach((t) =>
+				t.forEachChild((c) => {
+					if (Node.isJSDocTypeExpression(c)) {
+						const text = c.getText().slice(1, -1);
+						const replacement = replacer(text);
+						if (replacement && replacement !== text) {
+							c.replaceWithText(`{${replacement}}`);
+						}
+					}
+				})
+			);
+		}
+	});
 }
