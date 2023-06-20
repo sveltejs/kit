@@ -2,14 +2,14 @@ import { HttpError, Redirect, ActionFailure } from '../runtime/control.js';
 import { BROWSER, DEV } from 'esm-env';
 import { get_route_segments } from '../utils/routing.js';
 
+export { VERSION } from '../version.js';
+
 /**
  * @overload
  * @param {number} status
  * @param {App.Error} body
  * @return {HttpError}
  */
-
-export { VERSION } from '../version.js';
 
 /**
  * @overload
