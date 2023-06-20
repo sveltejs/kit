@@ -58,25 +58,33 @@ export function update_pkg_json_content(content) {
  * @param {boolean} migrate_transition
  */
 export function update_svelte_file(file_path, migrate_transition) {
-	const content = fs.readFileSync(file_path, 'utf-8');
-	const updated = content.replace(
-		/<script([^]*?)>([^]+?)<\/script>(\n*)/g,
-		(_match, attrs, contents, whitespace) => {
-			return `<script${attrs}>${transform_code(
-				contents,
-				(attrs.includes('lang=') || attrs.includes('type=')) &&
-					(attrs.includes('ts') || attrs.includes('typescript'))
-			)}</script>${whitespace}`;
-		}
-	);
-	fs.writeFileSync(file_path, transform_svelte_code(updated, migrate_transition), 'utf-8');
+	try {
+		const content = fs.readFileSync(file_path, 'utf-8');
+		const updated = content.replace(
+			/<script([^]*?)>([^]+?)<\/script>(\n*)/g,
+			(_match, attrs, contents, whitespace) => {
+				return `<script${attrs}>${transform_code(
+					contents,
+					(attrs.includes('lang=') || attrs.includes('type=')) &&
+						(attrs.includes('ts') || attrs.includes('typescript'))
+				)}</script>${whitespace}`;
+			}
+		);
+		fs.writeFileSync(file_path, transform_svelte_code(updated, migrate_transition), 'utf-8');
+	} catch (e) {
+		console.error(`Error updating ${file_path}: ${/** @type {any} */ (e)?.message}`);
+	}
 }
 
 /** @param {string} file_path */
 export function update_js_file(file_path) {
-	const content = fs.readFileSync(file_path, 'utf-8');
-	const updated = transform_code(content, file_path.endsWith('.ts'));
-	fs.writeFileSync(file_path, updated, 'utf-8');
+	try {
+		const content = fs.readFileSync(file_path, 'utf-8');
+		const updated = transform_code(content, file_path.endsWith('.ts'));
+		fs.writeFileSync(file_path, updated, 'utf-8');
+	} catch (e) {
+		console.error(`Error updating ${file_path}: ${/** @type {any} */ (e)?.message}`);
+	}
 }
 
 /**
@@ -85,7 +93,7 @@ export function update_js_file(file_path) {
  */
 export function transform_code(code, is_ts) {
 	const project = new Project({ useInMemoryFileSystem: true });
-	const source = project.createSourceFile(`svelte.${is_ts ? 'ts' : 'js'}`, code);
+	const source = project.createSourceFile(`svelte.ts`, code);
 	update_imports(source, is_ts);
 	update_typeof_svelte_component(source, is_ts);
 	update_action_types(source, is_ts);

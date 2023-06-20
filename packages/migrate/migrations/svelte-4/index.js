@@ -33,6 +33,22 @@ export async function migrate() {
 		initial: true
 	});
 
+	const folders = await prompts({
+		type: 'multiselect',
+		name: 'value',
+		message: 'Which folders should be migrated?',
+		choices: fs
+			.readdirSync('.')
+			.filter(
+				(dir) => fs.statSync(dir).isDirectory() && dir !== 'node_modules' && !dir.startsWith('.')
+			)
+			.map((dir) => ({ title: dir, value: dir, selected: true }))
+	});
+
+	if (!folders.value?.length) {
+		process.exit(1);
+	}
+
 	update_pkg_json();
 
 	// const { default: config } = fs.existsSync('svelte.config.js')
@@ -44,10 +60,9 @@ export async function migrate() {
 		'.svelte'
 	];
 	const extensions = [...svelte_extensions, '.ts', '.js'];
-	// TODO read tsconfig/jsconfig if available? src/** will be good for 99% of cases
-	const files = glob('src/**', { filesOnly: true, dot: true }).map((file) =>
-		file.replace(/\\/g, '/')
-	);
+	const files = glob(`{${folders.value.join(',')}}/**`, { filesOnly: true, dot: true })
+		.map((file) => file.replace(/\\/g, '/'))
+		.filter((file) => !file.includes('/node_modules/'));
 
 	for (const file of files) {
 		if (extensions.some((ext) => file.endsWith(ext))) {
