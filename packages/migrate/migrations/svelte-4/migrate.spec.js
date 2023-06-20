@@ -213,7 +213,8 @@ test('Updates svelte:options #1', () => {
 	const result = transform_svelte_code(
 		`<svelte:options tag="asd-asd" />
 		
-		<div>hi</div>`
+		<div>hi</div>`,
+		true
 	);
 	assert.equal(
 		result,
@@ -233,7 +234,8 @@ test('Updates svelte:options #2', () => {
 			immutable={true}
 			tag="asd-asd"></svelte:options>
 		
-		<div>hi</div>`
+		<div>hi</div>`,
+		true
 	);
 	assert.equal(
 		result,
@@ -266,7 +268,8 @@ test('Updates transitions', () => {
 
 		<div transitionn:fade />
 		<div allin:fade />
-		`
+		`,
+		true
 	);
 	assert.equal(
 		result,
@@ -281,6 +284,47 @@ test('Updates transitions', () => {
 		<div out:fade|global />
 		<div out:fade|global={true} />
 		<div out:fade|global></div>
+		<div out:fade />
+
+		<div transitionn:fade />
+		<div allin:fade />
+		`
+	);
+});
+
+test('Updates transitions #2', () => {
+	const result = transform_svelte_code(
+		`<div transition:fade />
+		<div transition:fade={true} />
+		<div transition:fade></div>
+		<div transition:fade|local />
+		<div in:fade />
+		<div in:fade={true} />
+		<div in:fade></div>
+		<div in:fade|local />
+		<div out:fade />
+		<div out:fade={true} />
+		<div out:fade></div>
+		<div out:fade|local />
+
+		<div transitionn:fade />
+		<div allin:fade />
+		`,
+		false
+	);
+	assert.equal(
+		result,
+		`<div transition:fade />
+		<div transition:fade={true} />
+		<div transition:fade></div>
+		<div transition:fade />
+		<div in:fade />
+		<div in:fade={true} />
+		<div in:fade></div>
+		<div in:fade />
+		<div out:fade />
+		<div out:fade={true} />
+		<div out:fade></div>
 		<div out:fade />
 
 		<div transitionn:fade />

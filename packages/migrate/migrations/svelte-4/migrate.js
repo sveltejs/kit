@@ -1,8 +1,11 @@
 import fs from 'node:fs';
 import { Project, ts, Node } from 'ts-morph';
 
-/** @param {string} file_path */
-export function update_svelte_file(file_path) {
+/**
+ * @param {string} file_path
+ * @param {boolean} migrate_transition
+ */
+export function update_svelte_file(file_path, migrate_transition) {
 	const content = fs.readFileSync(file_path, 'utf-8');
 	const updated = content.replace(
 		/<script([^]*?)>([^]+?)<\/script>(\n*)/g,
@@ -14,7 +17,7 @@ export function update_svelte_file(file_path) {
 			)}</script>${whitespace}`;
 		}
 	);
-	fs.writeFileSync(file_path, transform_svelte_code(updated), 'utf-8');
+	fs.writeFileSync(file_path, transform_svelte_code(updated, migrate_transition), 'utf-8');
 }
 
 /** @param {string} file_path */
@@ -38,9 +41,13 @@ export function transform_code(code, is_ts) {
 	return source.getFullText();
 }
 
-/** @param {string} code */
-export function transform_svelte_code(code) {
-	return update_transitions(update_svelte_options(code));
+/**
+ * @param {string} code
+ * @param {boolean} migrate_transition
+ */
+export function transform_svelte_code(code, migrate_transition) {
+	code = update_svelte_options(code);
+	return update_transitions(code, migrate_transition);
 }
 
 /**
@@ -57,11 +64,14 @@ function update_svelte_options(code) {
  * transition/in/out:x -> transition/in/out:x|global
  * transition/in/out|local:x -> transition/in/out:x
  * @param {string} code
+ * @param {boolean} migrate_transition
  */
-function update_transitions(code) {
-	return code
-		.replace(/(\s)(transition:|in:|out:)(\w+)(?=[\s>=])/g, '$1$2$3|global')
-		.replace(/(\s)(transition:|in:|out:)(\w+)(\|local)(?=[\s>=])/g, '$1$2$3');
+function update_transitions(code, migrate_transition) {
+	if (migrate_transition) {
+		code = code.replace(/(\s)(transition:|in:|out:)(\w+)(?=[\s>=])/g, '$1$2$3|global');
+	}
+	code = code.replace(/(\s)(transition:|in:|out:)(\w+)(\|local)(?=[\s>=])/g, '$1$2$3');
+	return code;
 }
 
 /**

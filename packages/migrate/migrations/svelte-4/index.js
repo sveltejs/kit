@@ -10,7 +10,7 @@ export async function migrate() {
 		bail('Please re-run this script in a directory with a package.json');
 	}
 
-	console.log(colors.bold().yellow('\nThis will update files in the current directory\n'));
+	console.log(colors.bold().yellow('\nThis will update files in the current src/ directory\n'));
 
 	const use_git = check_git();
 
@@ -24,6 +24,14 @@ export async function migrate() {
 	if (!response.value) {
 		process.exit(1);
 	}
+
+	const migrate_transition = await prompts({
+		type: 'confirm',
+		name: 'value',
+		message:
+			'Add the `|global` modifier to currently global transitions for backwards compatibility? More info at https://svelte.dev/docs/v4-migration-guide#transitions-are-local-by-default',
+		initial: true
+	});
 
 	// const { default: config } = fs.existsSync('svelte.config.js')
 	// 	? await import(pathToFileURL(path.resolve('svelte.config.js')).href)
@@ -42,7 +50,7 @@ export async function migrate() {
 	for (const file of files) {
 		if (extensions.some((ext) => file.endsWith(ext))) {
 			if (svelte_extensions.some((ext) => file.endsWith(ext))) {
-				update_svelte_file(file);
+				update_svelte_file(file, migrate_transition.value);
 			} else {
 				update_js_file(file);
 			}
