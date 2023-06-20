@@ -3,7 +3,7 @@ import fs from 'node:fs';
 import prompts from 'prompts';
 import glob from 'tiny-glob/sync.js';
 import { bail, check_git } from '../../utils.js';
-import { update_js_file, update_svelte_file } from './migrate.js';
+import { update_js_file, update_pkg_json, update_svelte_file } from './migrate.js';
 
 export async function migrate() {
 	if (!fs.existsSync('package.json')) {
@@ -32,6 +32,8 @@ export async function migrate() {
 			'Add the `|global` modifier to currently global transitions for backwards compatibility? More info at https://svelte.dev/docs/v4-migration-guide#transitions-are-local-by-default',
 		initial: true
 	});
+
+	update_pkg_json();
 
 	// const { default: config } = fs.existsSync('svelte.config.js')
 	// 	? await import(pathToFileURL(path.resolve('svelte.config.js')).href)

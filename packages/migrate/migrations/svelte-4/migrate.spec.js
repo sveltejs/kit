@@ -1,5 +1,5 @@
 import { assert, test } from 'vitest';
-import { transform_code, transform_svelte_code } from './migrate.js';
+import { transform_code, transform_svelte_code, update_pkg_json_content } from './migrate.js';
 
 test('Updates SvelteComponentTyped #1', () => {
 	const result = transform_code(
@@ -330,5 +330,35 @@ test('Updates transitions #2', () => {
 		<div transitionn:fade />
 		<div allin:fade />
 		`
+	);
+});
+
+test('Update package.json', () => {
+	const result = update_pkg_json_content(`{
+	"name": "svelte-app",
+	"version": "1.0.0",
+	"devDependencies": {
+		"svelte": "^3.0.0",
+		"svelte-check": "^1.0.0",
+		"svelte-preprocess": "^5.0.0"
+	},
+	"dependencies": {
+		"@sveltejs/kit": "^1.0.0"
+	}
+}`);
+	assert.equal(
+		result,
+		`{
+	"name": "svelte-app",
+	"version": "1.0.0",
+	"devDependencies": {
+		"svelte": "^4.0.0",
+		"svelte-check": "^3.4.3",
+		"svelte-preprocess": "^5.0.3"
+	},
+	"dependencies": {
+		"@sveltejs/kit": "^1.20.4"
+	}
+}`
 	);
 });

@@ -1,6 +1,58 @@
 import fs from 'node:fs';
 import { Project, ts, Node } from 'ts-morph';
 
+export function update_pkg_json() {
+	fs.writeFileSync(
+		'package.json',
+		update_pkg_json_content(fs.readFileSync('package.json', 'utf8'))
+	);
+}
+
+/**
+ * @param {string} content
+ */
+export function update_pkg_json_content(content) {
+	const indent = content.split('\n')[1].match(/^\s+/)?.[0] || '  ';
+	const pkg = JSON.parse(content);
+
+	/**
+	 * @param {string} name
+	 * @param {string} version
+	 * @param {string} [additional]
+	 */
+	function update_pkg(name, version, additional = '') {
+		if (pkg.dependencies[name]) {
+			log_migration(`Updated ${name} to ${version}${additional}`);
+			pkg.dependencies[name] = version;
+		}
+		if (pkg.devDependencies[name]) {
+			log_migration(`Updated ${name} to ${version}${additional}`);
+			pkg.devDependencies[name] = version;
+		}
+	}
+
+	update_pkg('svelte', '^4.0.0');
+	update_pkg('svelte-check', '^3.4.3');
+	update_pkg('svelte-preprocess', '^5.0.3');
+	update_pkg('@sveltejs/kit', '^1.20.4');
+	update_pkg('@sveltejs/vite-plugin-svelte', '^2.4.1');
+	update_pkg(
+		'svelte-loader',
+		'^3.1.8',
+		' (if you are still on webpack 4, you need to update to webpack 5)'
+	);
+	update_pkg('rollup-plugin-svelte', '^7.1.5');
+	update_pkg('prettier-plugin-svelte', '^2.10.1');
+	update_pkg('eslint-plugin-svelte', '^2.30.0');
+	update_pkg(
+		'typescript',
+		'^5.0.0',
+		' (this might introduce new type errors due to breaking changes within TypeScript)'
+	);
+
+	return JSON.stringify(pkg, null, indent);
+}
+
 /**
  * @param {string} file_path
  * @param {boolean} migrate_transition
