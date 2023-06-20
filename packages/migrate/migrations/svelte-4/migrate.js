@@ -93,7 +93,7 @@ export function update_js_file(file_path) {
  */
 export function transform_code(code, is_ts) {
 	const project = new Project({ useInMemoryFileSystem: true });
-	const source = project.createSourceFile(`svelte.ts`, code);
+	const source = project.createSourceFile('svelte.ts', code);
 	update_imports(source, is_ts);
 	update_typeof_svelte_component(source, is_ts);
 	update_action_types(source, is_ts);
