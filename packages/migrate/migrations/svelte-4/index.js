@@ -30,7 +30,9 @@ export async function migrate() {
 	// 	: { default: {} };
 
 	/** @type {string[]} */
-	const svelte_extensions = /* config.extensions ?? - disabled because it would break .svx */ ['.svelte'];
+	const svelte_extensions = /* config.extensions ?? - disabled because it would break .svx */ [
+		'.svelte'
+	];
 	const extensions = [...svelte_extensions, '.ts', '.js'];
 	// TODO read tsconfig/jsconfig if available? src/** will be good for 99% of cases
 	const files = glob('src/**', { filesOnly: true, dot: true }).map((file) =>
@@ -55,7 +57,7 @@ export async function migrate() {
 
 	const tasks = [
 		use_git && cyan('git commit -m "migration to Svelte 4"'),
-		'Review the migration guide at TODO',
+		'Review the migration guide at https://svelte.dev/docs/v4-migration-guide',
 		'Read the updated docs at https://svelte.dev/docs'
 	].filter(Boolean);
 
