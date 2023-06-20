@@ -180,15 +180,15 @@ test('Updates transitions', () => {
 		`<div transition:fade|global />
 		<div transition:fade|global={true} />
 		<div transition:fade|global></div>
-		<div transition:fade|local />
+		<div transition:fade />
 		<div in:fade|global />
 		<div in:fade|global={true} />
 		<div in:fade|global></div>
-		<div in:fade|local />
+		<div in:fade />
 		<div out:fade|global />
 		<div out:fade|global={true} />
 		<div out:fade|global></div>
-		<div out:fade|local />
+		<div out:fade />
 
 		<div transitionn:fade />
 		<div allin:fade />

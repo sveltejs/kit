@@ -48,10 +48,13 @@ function update_svelte_options(code) {
 
 /**
  * transition/in/out:x -> transition/in/out:x|global
+ * transition/in/out|local:x -> transition/in/out:x
  * @param {string} code
  */
 function update_transitions(code) {
-	return code.replace(/(\s)(transition:|in:|out:)(\w+)(?=[\s>=])/g, '$1$2$3|global');
+	return code
+		.replace(/(\s)(transition:|in:|out:)(\w+)(?=[\s>=])/g, '$1$2$3|global')
+		.replace(/(\s)(transition:|in:|out:)(\w+)(\|local)(?=[\s>=])/g, '$1$2$3');
 }
 
 /**
