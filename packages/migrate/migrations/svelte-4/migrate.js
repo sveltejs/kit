@@ -56,6 +56,9 @@ export function transform_svelte_code(code, migrate_transition) {
  */
 function update_svelte_options(code) {
 	return code.replace(/<svelte:options([^]*?)\stag=([^]*?)\/?>/, (match) => {
+		log_migration(
+			'Replaced `svelte:options` `tag` attribute with `customElement` attribute: https://svelte.dev/docs/v4-migration-guide#custom-elements-with-svelte'
+		);
 		return match.replace('tag=', 'customElement=');
 	});
 }
@@ -68,10 +71,21 @@ function update_svelte_options(code) {
  */
 function update_transitions(code, migrate_transition) {
 	if (migrate_transition) {
-		code = code.replace(/(\s)(transition:|in:|out:)(\w+)(?=[\s>=])/g, '$1$2$3|global');
+		const replaced = code.replace(/(\s)(transition:|in:|out:)(\w+)(?=[\s>=])/g, '$1$2$3|global');
+		if (replaced !== code) {
+			log_migration(
+				'Added `|global` to `transition`, `in`, and `out` directives (transitions are local by default now): https://svelte.dev/docs/v4-migration-guide#transitions-are-local-by-default'
+			);
+		}
+		code = replaced;
 	}
-	code = code.replace(/(\s)(transition:|in:|out:)(\w+)(\|local)(?=[\s>=])/g, '$1$2$3');
-	return code;
+	const replaced = code.replace(/(\s)(transition:|in:|out:)(\w+)(\|local)(?=[\s>=])/g, '$1$2$3');
+	if (replaced !== code) {
+		log_migration(
+			'Removed `|local` from `transition`, `in`, and `out` directives (transitions are local by default now): https://svelte.dev/docs/v4-migration-guide#transitions-are-local-by-default'
+		);
+	}
+	return replaced;
 }
 
 /**
@@ -80,6 +94,11 @@ function update_transitions(code, migrate_transition) {
  * @param {boolean} is_ts
  */
 function update_action_types(source, is_ts) {
+	const logger = log_on_ts_modification(
+		source,
+		'Updated `Action` interface usages: https://svelte.dev/docs/v4-migration-guide#stricter-types-for-svelte-functions'
+	);
+
 	const imports = get_imports(source, 'svelte/action', 'Action');
 	for (const namedImport of imports) {
 		const identifiers = find_identifiers(source, namedImport.getAliasNode()?.getText() ?? 'Action');
@@ -108,6 +127,8 @@ function update_action_types(source, is_ts) {
 			);
 		});
 	}
+
+	logger();
 }
 
 /**
@@ -116,6 +137,11 @@ function update_action_types(source, is_ts) {
  * @param {boolean} is_ts
  */
 function update_action_return_types(source, is_ts) {
+	const logger = log_on_ts_modification(
+		source,
+		'Updated `ActionReturn` interface usages: https://svelte.dev/docs/v4-migration-guide#stricter-types-for-svelte-functions'
+	);
+
 	const imports = get_imports(source, 'svelte/action', 'ActionReturn');
 	for (const namedImport of imports) {
 		const identifiers = find_identifiers(
@@ -141,6 +167,8 @@ function update_action_return_types(source, is_ts) {
 			);
 		});
 	}
+
+	logger();
 }
 
 /**
@@ -149,6 +177,11 @@ function update_action_return_types(source, is_ts) {
  * @param {boolean} is_ts
  */
 function update_imports(source, is_ts) {
+	const logger = log_on_ts_modification(
+		source,
+		'Replaced `SvelteComponentTyped` imports with `SvelteComponent` imports: https://svelte.dev/docs/v4-migration-guide#stricter-types-for-svelte-functions'
+	);
+
 	const identifiers = find_identifiers(source, 'SvelteComponent');
 	const can_rename = identifiers.every((id) => {
 		const parent = id.getParent();
@@ -189,6 +222,8 @@ function update_imports(source, is_ts) {
 			);
 		});
 	}
+
+	logger();
 }
 
 /**
@@ -197,6 +232,11 @@ function update_imports(source, is_ts) {
  * @param {boolean} is_ts
  */
 function update_typeof_svelte_component(source, is_ts) {
+	const logger = log_on_ts_modification(
+		source,
+		'Adjusted `typeof SvelteComponent` to `typeof SvelteComponent<any>`: https://svelte.dev/docs/v4-migration-guide#stricter-types-for-svelte-functions'
+	);
+
 	const imports = get_imports(source, 'svelte', 'SvelteComponent');
 
 	for (const type of imports) {
@@ -225,6 +265,8 @@ function update_typeof_svelte_component(source, is_ts) {
 			);
 		});
 	}
+
+	logger();
 }
 
 /**
@@ -283,4 +325,29 @@ function replaceInJsDoc(source, replacer) {
 			);
 		}
 	});
+}
+
+const logged_migrations = new Set();
+
+/**
+ * @param {import('ts-morph').SourceFile} source
+ * @param {string} text
+ */
+function log_on_ts_modification(source, text) {
+	let logged = false;
+	const log = () => {
+		if (!logged) {
+			logged = true;
+			log_migration(text);
+		}
+	};
+	source.onModified(log);
+	return () => source.onModified(log, false);
+}
+
+/** @param {string} text */
+function log_migration(text) {
+	if (logged_migrations.has(text)) return;
+	console.log(text);
+	logged_migrations.add(text);
 }
