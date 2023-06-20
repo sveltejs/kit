@@ -83,7 +83,7 @@ export function update_js_file(file_path) {
 		const updated = transform_code(content, file_path.endsWith('.ts'));
 		fs.writeFileSync(file_path, updated, 'utf-8');
 	} catch (e) {
-		console.error(`Error updating ${file_path}: ${/** @type {any} */ (e)?.message}`);
+		console.error(`Error updating ${file_path}:`, e);
 	}
 }
 
