@@ -25,14 +25,6 @@ export async function migrate() {
 		process.exit(1);
 	}
 
-	const migrate_transition = await prompts({
-		type: 'confirm',
-		name: 'value',
-		message:
-			'Add the `|global` modifier to currently global transitions for backwards compatibility? More info at https://svelte.dev/docs/v4-migration-guide#transitions-are-local-by-default',
-		initial: true
-	});
-
 	const folders = await prompts({
 		type: 'multiselect',
 		name: 'value',
@@ -48,6 +40,14 @@ export async function migrate() {
 	if (!folders.value?.length) {
 		process.exit(1);
 	}
+
+	const migrate_transition = await prompts({
+		type: 'confirm',
+		name: 'value',
+		message:
+			'Add the `|global` modifier to currently global transitions for backwards compatibility? More info at https://svelte.dev/docs/v4-migration-guide#transitions-are-local-by-default',
+		initial: true
+	});
 
 	update_pkg_json();
 
