@@ -1554,9 +1554,7 @@ export function create_client(app, target) {
 
 					update_scroll_positions(current_history_index);
 
-					current.url = url;
-					stores.page.set({ ...page, url });
-					stores.page.notify();
+					update_url(url);
 
 					if (!options.replace_state) return;
 
@@ -1670,6 +1668,16 @@ export function create_client(app, target) {
 						delta
 					});
 				}
+				// TODO: should this run regardless of the `event.state?.[INDEX_KEY]` if condition?
+				else {
+					// since popstate event is also emitted when an anchor referencing the same
+					// document is clicked, we have to check that the router isn't already handling
+					// the navigation. otherwise we would be updating the page store twice.
+					if (!hash_navigating) {
+						const url = new URL(location.href);
+						update_url(url);
+					}
+				}
 			});
 
 			addEventListener('hashchange', () => {
@@ -1701,6 +1709,15 @@ export function create_client(app, target) {
 					stores.navigating.set(null);
 				}
 			});
+
+			/**
+			 * @param {URL} url
+			 */
+			function update_url(url) {
+				current.url = url;
+				stores.page.set({ ...page, url });
+				stores.page.notify();
+			}
 		},
 
 		_hydrate: async ({
