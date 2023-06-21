@@ -10,7 +10,14 @@ export async function migrate() {
 		bail('Please re-run this script in a directory with a package.json');
 	}
 
-	console.log(colors.bold().yellow('\nThis will update files in the current src/ directory\n'));
+	console.log(
+		colors
+			.bold()
+			.yellow(
+				'\nThis will update files in the current directory\n' +
+					"If you're inside a monorepo, don't run this in the root directory, rather run it in all projects independently.\n"
+			)
+	);
 
 	const use_git = check_git();
 
