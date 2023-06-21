@@ -5,14 +5,16 @@ import prettier from 'prettier';
 import { mkdirp } from '../../../../packages/kit/src/utils/filesystem.js';
 import { fileURLToPath } from 'url';
 
-/** @typedef {{
+/**
+ * @typedef {{
  * name: string;
  * comment: string;
  * markdown?: string;
  * snippet: string;
  * deprecated: string | null;
  * children: Extracted[] }
- * } Extracted */
+ * } Extracted
+ */
 
 /** @type {Array<{ name: string; comment: string; exports: Extracted[]; types: Extracted[]; exempt?: boolean; }>} */
 const modules = [];

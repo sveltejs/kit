@@ -469,7 +469,7 @@ Form actions are the preferred way to send data to the server, since they can be
 ```
 
 ```js
-// @errors: 2355 1360 2322.
+// @errors: 2355 1360 2322
 /// file: api/ci/+server.js
 
 /** @type {import('./$types').RequestHandler} */
