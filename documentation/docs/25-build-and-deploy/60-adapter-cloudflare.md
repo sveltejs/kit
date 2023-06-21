@@ -12,7 +12,7 @@ This adapter will be installed by default when you use [`adapter-auto`](adapter-
 - `adapter-cloudflare-workers` – supports all SvelteKit features; builds for Cloudflare Workers
 - `adapter-static` – only produces client-side static assets; compatible with Cloudflare Pages
 
-> Unless you have a specific reason to use `adapter-cloudflare-workers`, it's recommended that you use this adapter instead. Both adapters have equivalent functionality, but Cloudflare Pages offers features like GitHub integration with automatic builds and deploys, preview deployments, instant rollback and so on.
+> Unless you have a specific reason to use `adapter-cloudflare-workers`, it's recommended that you use `adapter-cloudflare` instead. Both adapters have equivalent functionality, but Cloudflare Pages offers [features](https://developers.cloudflare.com/pages/framework-guides/deploy-a-svelte-site) like GitHub integration with automatic builds and deploys, preview deployments, instant rollback and so on.
 
 ## Usage
 
