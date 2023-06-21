@@ -68,7 +68,7 @@ test('copy files', () => {
 });
 
 test('compress files', async () => {
-	// @ts-ignore
+	// @ts-expect-error - we don't need the whole config for this test
 	const builder = create_builder({
 		route_data: []
 	});
