@@ -72,7 +72,7 @@ export function update_svelte_file(file_path, migrate_transition) {
 		);
 		fs.writeFileSync(file_path, transform_svelte_code(updated, migrate_transition), 'utf-8');
 	} catch (e) {
-		console.error(`Error updating ${file_path}: ${/** @type {any} */ (e)?.message}`);
+		console.error(`Error updating ${file_path}:`, e);
 	}
 }
 
