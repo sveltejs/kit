@@ -17,16 +17,16 @@ import { modules } from '$lib/generated/type-info.js';
  * @param {string} slug
  */
 export async function get_parsed_docs(docs_data, slug) {
-	const page = docs_data
-		.find(({ pages }) => pages.find((page) => slug === page.slug))
-		?.pages.find((page) => slug === page.slug);
-
-	if (!page) return null;
-
-	return {
-		...page,
-		content: await render_content(page.file, page.content)
-	};
+	for (const { pages } of docs_data) {
+		for (const page of pages) {
+			if (page.slug === slug) {
+				return {
+					...page,
+					content: await render_content(page.file, page.content)
+				};
+			}
+		}
+	}
 }
 
 /** @return {import('./types').DocsData} */
@@ -100,7 +100,7 @@ export function get_docs_list(docs_data) {
 
 /** @param {string} markdown */
 function get_sections(markdown) {
-	const headingRegex = /^###?\s+(.*)$/gm;
+	const headingRegex = /^##\s+(.*)$/gm;
 	/** @type {import('./types').Section[]} */
 	const secondLevelHeadings = [];
 	let match;
@@ -108,9 +108,11 @@ function get_sections(markdown) {
 	const placeholders_rendered = replaceExportTypePlaceholders(markdown, modules);
 
 	while ((match = headingRegex.exec(placeholders_rendered)) !== null) {
+		const unTYPED = match[1].startsWith('[TYPE]:') ? match[1].replace('[TYPE]: ', '') : match[1];
+
 		secondLevelHeadings.push({
 			title: removeMarkdown(
-				escape(markedTransform(match[1], { paragraph: (txt) => txt }))
+				escape(markedTransform(unTYPED, { paragraph: (txt) => txt }))
 					.replace(/<\/?code>/g, '')
 					.replace(/&#39;/g, "'")
 					.replace(/&quot;/g, '"')
@@ -118,7 +120,7 @@ function get_sections(markdown) {
 					.replace(/&gt;/g, '>')
 					.replace(/<(\/)?(em|b|strong|code)>/g, '')
 			),
-			slug: normalizeSlugify(match[1])
+			slug: normalizeSlugify(unTYPED)
 		});
 	}
 

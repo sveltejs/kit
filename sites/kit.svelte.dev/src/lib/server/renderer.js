@@ -5,7 +5,6 @@ import { parse_route_id } from '../../../../../packages/kit/src/utils/routing.js
 /**
  * @param {string} filename
  * @param {string} body
- * @returns
  */
 export const render_content = (filename, body) =>
 	renderContentMarkdown(filename, body, {
@@ -15,7 +14,10 @@ export const render_content = (filename, body) =>
 		resolveTypeLinks: (module_name, type_name) => {
 			if (module_name === '@sveltejs/kit') module_name = 'Public Types';
 
-			return `/docs/types#${slugify(module_name)}-${slugify(type_name)}`;
+			return {
+				page: `/docs/types`,
+				slug: `${slugify(module_name)}-${slugify(type_name)}`
+			};
 		},
 
 		twoslashBanner: (filename, source, language, options) => {
