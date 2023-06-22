@@ -1,4 +1,5 @@
 import { Adapter } from '@sveltejs/kit';
+import type { BuildOptions } from 'esbuild';
 import './ambient.js';
 
 export default function plugin(options?: AdapterOptions): Adapter;
@@ -30,6 +31,15 @@ export interface AdapterOptions {
 		 */
 		exclude?: string[];
 	};
+
+	/**
+	 * Additional options to pass to esbuild when bundling `_worker.js` script.
+	 *
+	 * Documentation: https://esbuild.github.io/api/#build
+	 *
+	 * @default undefined
+	 */
+	esbuildOptions?: BuildOptions | ((ops: BuildOptions) => BuildOptions);
 }
 
 export interface RoutesJSONSpec {

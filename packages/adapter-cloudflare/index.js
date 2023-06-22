@@ -45,7 +45,8 @@ export default function (options = {}) {
 				}
 			});
 
-			await esbuild.build({
+			/** @type {import('esbuild').BuildOptions} */
+			let esbuildOps = {
 				platform: 'browser',
 				conditions: ['worker', 'browser'],
 				sourcemap: 'linked',
@@ -58,7 +59,14 @@ export default function (options = {}) {
 				loader: {
 					'.wasm': 'copy'
 				}
-			});
+			};
+
+			if (typeof options.esbuildOptions === 'object')
+				esbuildOps = { ...esbuildOps, ...options.esbuildOptions };
+			if (typeof options.esbuildOptions === 'function')
+				esbuildOps = options.esbuildOptions(esbuildOps);
+
+			await esbuild.build(esbuildOps);
 		}
 	};
 }
