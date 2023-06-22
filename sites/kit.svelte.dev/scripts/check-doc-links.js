@@ -46,8 +46,6 @@ for (const doc of doc_filenames) {
 	for (const link of links) {
 		let url = link.slice(2, -1);
 
-		console.log(url);
-
 		if (url.startsWith('http')) continue;
 		if (url.startsWith('/faq')) continue;
 		if (url.startsWith('/docs/')) url = url.slice(6);
