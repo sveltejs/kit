@@ -212,8 +212,6 @@ function munge_type_element(member, depth = 1) {
 		}
 	}
 
-	if (name?.includes('alias')) console.log(member?.jsDoc[0].tags);
-
 	return {
 		name,
 		snippet,
@@ -248,12 +246,10 @@ function read_d_ts_file(file) {
 	// we didn't ignore this error specifically for `/// file:` code examples
 	const str = fs.readFileSync(resolved, 'utf-8');
 
-	//! For some reason, typescript is reading this @errors as a jsdoc tag, and splitting it into separate pieces
+	//! For some reason, typescript 5.1> is reading this @errors as a jsdoc tag, and splitting it into separate pieces
 	return str.replace(/(\s*\*\s*)```js([\s\S]+?)```/g, (match, prefix, code) => {
 		return `${prefix}\`\`\`js${prefix}// @errors: 7031${code}\`\`\``;
 	});
-
-	return str;
 }
 
 {

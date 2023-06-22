@@ -12,7 +12,7 @@ SvelteKit has HMR enabled by default powered by [svelte-hmr](https://github.com/
 
 ## How do I include details from package.json in my application?
 
-You cannot directly require JSON files, since SvelteKit expects [`svelte.config.js`](docs/configuration) to be an ES module. If you'd like to include your application's version number or other information from `package.json` in your application, you can load JSON like so:
+You cannot directly require JSON files, since SvelteKit expects [`svelte.config.js`](./configuration) to be an ES module. If you'd like to include your application's version number or other information from `package.json` in your application, you can load JSON like so:
 
 ```js
 /// file: svelte.config.js
@@ -37,7 +37,7 @@ Here are a few things to keep in mind when checking if a library is packaged cor
 - `exports` takes precedence over the other entry point fields such as `main` and `module`. Adding an `exports` field may not be backwards-compatible as it prevents deep imports.
 - ESM files should end with `.mjs` unless `"type": "module"` is set in which any case CommonJS files should end with `.cjs`.
 - `main` should be defined if `exports` is not. It should be either a CommonJS or ESM file and adhere to the previous bullet. If a `module` field is defined, it should refer to an ESM file.
-- Svelte components should be distributed as uncompiled `.svelte` files with any JS in the package written as ESM only. Custom script and style languages, like TypeScript and SCSS, should be preprocessed as vanilla JS and CSS respectively. We recommend using [`svelte-package`](docs/packaging) for packaging Svelte libraries, which will do this for you.
+- Svelte components should be distributed as uncompiled `.svelte` files with any JS in the package written as ESM only. Custom script and style languages, like TypeScript and SCSS, should be preprocessed as vanilla JS and CSS respectively. We recommend using [`svelte-package`](./packaging) for packaging Svelte libraries, which will do this for you.
 
 Libraries work best in the browser with Vite when they distribute an ESM version, especially if they are dependencies of a Svelte component library. You may wish to suggest to library authors that they provide an ESM version. However, CommonJS (CJS) dependencies should work as well since, by default, [`vite-plugin-svelte` will ask Vite to pre-bundle them](https://github.com/sveltejs/vite-plugin-svelte/blob/main/docs/faq.md#what-is-going-on-with-vite-and-pre-bundling-dependencies) using `esbuild` to convert them to ESM.
 
@@ -45,11 +45,11 @@ If you are still encountering issues we recommend searching both [the Vite issue
 
 ## How do I use X with SvelteKit?
 
-Make sure you've read the [documentation section on integrations](docs/integrations). If you're still having trouble, solutions to common issues are listed below.
+Make sure you've read the [documentation section on integrations](./integrations). If you're still having trouble, solutions to common issues are listed below.
 
 ### How do I setup a database?
 
-Put the code to query your database in a [server route](docs/routing#server) - don't query the database in .svelte files. You can create a `db.js` or similar that sets up a connection immediately and makes the client accessible throughout the app as a singleton. You can execute any one-time setup code in `hooks.js` and import your database helpers into any endpoint that needs them.
+Put the code to query your database in a [server route](./routing#server) - don't query the database in .svelte files. You can create a `db.js` or similar that sets up a connection immediately and makes the client accessible throughout the app as a singleton. You can execute any one-time setup code in `hooks.js` and import your database helpers into any endpoint that needs them.
 
 ### How do I use a client-side only library that depends on `document` or `window`?
 
@@ -118,11 +118,11 @@ onMount(() => {
 
 ### How do I use a different backend API server?
 
-You can use [`event.fetch`](docs/load#making-fetch-requests) to request data from an external API server, but be aware that you would need to deal with [CORS](https://developer.mozilla.org/en-US/docs/Web/HTTP/CORS), which will result in complications such as generally requiring requests to be preflighted resulting in higher latency. Requests to a separate subdomain may also increase latency due to an additional DNS lookup, TLS setup, etc. If you wish to use this method, you may find [`handleFetch`](docs/hooks#server-hooks-handlefetch) helpful.
+You can use [`event.fetch`](./load#making-fetch-requests) to request data from an external API server, but be aware that you would need to deal with [CORS](https://developer.mozilla.org/en-US/docs/Web/HTTP/CORS), which will result in complications such as generally requiring requests to be preflighted resulting in higher latency. Requests to a separate subdomain may also increase latency due to an additional DNS lookup, TLS setup, etc. If you wish to use this method, you may find [`handleFetch`](./hooks#server-hooks-handlefetch) helpful.
 
 Another approach is to set up a proxy to bypass CORS headaches. In production, you would rewrite a path like `/api` to the API server; for local development, use Vite's [`server.proxy`](https://vitejs.dev/config/server-options.html#server-proxy) option.
 
-How to setup rewrites in production will depend on your deployment platform. If rewrites aren't an option, you could alternatively add an [API route](https://kit.svelte.dev/docs/routing#server):
+How to setup rewrites in production will depend on your deployment platform. If rewrites aren't an option, you could alternatively add an [API route](./routing#server):
 
 ```js
 /// file: src/routes/api/[...path]/+server.js
