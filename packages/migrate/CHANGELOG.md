@@ -1,5 +1,11 @@
 # svelte-migrate
 
+## 1.2.3
+
+### Patch Changes
+
+- fix: handle missing fields in migrate script ([#10221](https://github.com/sveltejs/kit/pull/10221))
+
 ## 1.2.2
 
 ### Patch Changes
