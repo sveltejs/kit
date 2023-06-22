@@ -1,5 +1,11 @@
 # create-svelte
 
+## 5.0.0
+
+### Major Changes
+
+- breaking: install Svelte 4 ([#10217](https://github.com/sveltejs/kit/pull/10217))
+
 ## 4.2.0
 
 ### Minor Changes
