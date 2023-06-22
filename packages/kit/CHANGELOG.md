@@ -1,5 +1,23 @@
 # @sveltejs/kit
 
+## 1.20.4
+
+### Patch Changes
+
+- fix: remove reference to tiny-glob from postinstall script ([#10174](https://github.com/sveltejs/kit/pull/10174))
+
+## 1.20.3
+
+### Patch Changes
+
+- chore: remove `tiny-glob` as a dependency ([#10166](https://github.com/sveltejs/kit/pull/10166))
+
+- fix: don't import types from `svelte/internal` ([#10172](https://github.com/sveltejs/kit/pull/10172))
+
+- fix: don't skip rest parameter's matcher when there is a non-matching optional parameter ([#10020](https://github.com/sveltejs/kit/pull/10020))
+
+- fix: ensure `fetch` respects headers from provided `Request` ([#10136](https://github.com/sveltejs/kit/pull/10136))
+
 ## 1.20.2
 
 ### Patch Changes

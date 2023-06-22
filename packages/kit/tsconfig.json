@@ -18,6 +18,7 @@
 		"noUnusedParameters": true
 	},
 	"include": [
+		"postinstall.js",
 		"scripts/**/*",
 		"src/**/*",
 		"src/types/**/*",
