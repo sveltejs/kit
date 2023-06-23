@@ -1,5 +1,11 @@
 # svelte-migrate
 
+## 1.2.4
+
+### Patch Changes
+
+- fix: ensure glob finds all files in folders ([#10230](https://github.com/sveltejs/kit/pull/10230))
+
 ## 1.2.3
 
 ### Patch Changes
