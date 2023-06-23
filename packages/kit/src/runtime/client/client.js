@@ -153,6 +153,7 @@ export function create_client(app, target) {
 		// but batch multiple synchronous invalidations.
 		pending_invalidate = pending_invalidate || Promise.resolve();
 		await pending_invalidate;
+		if (!pending_invalidate) return;
 		pending_invalidate = null;
 
 		const url = new URL(location.href);

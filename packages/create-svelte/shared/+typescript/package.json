@@ -6,6 +6,6 @@
 	"devDependencies": {
 		"typescript": "^5.0.0",
 		"tslib": "^2.4.1",
-		"svelte-check": "^3.0.1"
+		"svelte-check": "^3.4.3"
 	}
 }

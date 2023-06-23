@@ -1,5 +1,17 @@
 # @sveltejs/kit
 
+## 1.20.5
+
+### Patch Changes
+
+- fix: batch synchronous invalidate invocations ([#10145](https://github.com/sveltejs/kit/pull/10145))
+
+- fix: allow rest params to be empty in resolvePath ([#10146](https://github.com/sveltejs/kit/pull/10146))
+
+- fix: correctly close dialogs when form is enhanced ([#10093](https://github.com/sveltejs/kit/pull/10093))
+
+- fix: precompress filter ([#10185](https://github.com/sveltejs/kit/pull/10185))
+
 ## 1.20.4
 
 ### Patch Changes
