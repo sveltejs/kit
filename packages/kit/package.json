@@ -32,14 +32,14 @@
 		"@types/node": "^16.18.6",
 		"@types/sade": "^1.7.4",
 		"@types/set-cookie-parser": "^2.4.2",
-		"dts-buddy": "^0.0.10",
+		"dts-buddy": "^0.1.0",
 		"marked": "^4.2.3",
 		"rollup": "^3.7.0",
 		"svelte": "^4.0.0",
 		"svelte-preprocess": "^5.0.4",
 		"typescript": "^4.9.4",
 		"vite": "^4.3.6",
-		"vitest": "^0.31.0"
+		"vitest": "^0.32.0"
 	},
 	"peerDependencies": {
 		"svelte": "^3.54.0 || ^4.0.0-next.0",
