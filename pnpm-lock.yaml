@@ -22,13 +22,13 @@ importers:
         version: 15.0.1(rollup@3.7.0)
       '@sveltejs/eslint-config':
         specifier: ^6.0.4
-        version: 6.0.4(@typescript-eslint/eslint-plugin@5.53.0)(@typescript-eslint/parser@5.59.8)(eslint-config-prettier@8.8.0)(eslint-plugin-svelte@2.28.0)(eslint-plugin-unicorn@47.0.0)(eslint@8.40.0)(typescript@4.9.4)
+        version: 6.0.4(@typescript-eslint/eslint-plugin@5.53.0)(@typescript-eslint/parser@5.60.0)(eslint-config-prettier@8.8.0)(eslint-plugin-svelte@2.31.0)(eslint-plugin-unicorn@47.0.0)(eslint@8.40.0)(typescript@4.9.4)
       '@svitejs/changesets-changelog-github-compact':
         specifier: ^1.1.0
         version: 1.1.0
       '@typescript-eslint/eslint-plugin':
         specifier: ^5.53.0
-        version: 5.53.0(@typescript-eslint/parser@5.59.8)(eslint@8.40.0)(typescript@4.9.4)
+        version: 5.53.0(@typescript-eslint/parser@5.60.0)(eslint@8.40.0)(typescript@4.9.4)
       eslint:
         specifier: ^8.40.0
         version: 8.40.0
@@ -36,8 +36,8 @@ importers:
         specifier: ^8.8.0
         version: 8.8.0(eslint@8.40.0)
       eslint-plugin-svelte:
-        specifier: ^2.28.0
-        version: 2.28.0(eslint@8.40.0)(svelte@4.0.0)
+        specifier: ^2.31.0
+        version: 2.31.0(eslint@8.40.0)(svelte@4.0.0)
       eslint-plugin-unicorn:
         specifier: ^47.0.0
         version: 47.0.0(eslint@8.40.0)
@@ -322,8 +322,8 @@ importers:
         specifier: ^2.8.0
         version: 2.8.0
       prettier-plugin-svelte:
-        specifier: ^2.8.1
-        version: 2.8.1(prettier@2.8.0)(svelte@4.0.0)
+        specifier: ^2.10.1
+        version: 2.10.1(prettier@2.8.0)(svelte@4.0.0)
       sucrase:
         specifier: ^3.29.0
         version: 3.29.0
@@ -441,8 +441,8 @@ importers:
         specifier: ^4.0.0
         version: 4.0.0
       svelte-preprocess:
-        specifier: ^5.0.3
-        version: 5.0.3(postcss@8.4.23)(svelte@4.0.0)(typescript@4.9.4)
+        specifier: ^5.0.4
+        version: 5.0.4(postcss@8.4.23)(svelte@4.0.0)(typescript@4.9.4)
       typescript:
         specifier: ^4.9.4
         version: 4.9.4
@@ -471,8 +471,8 @@ importers:
         specifier: ^4.0.0
         version: 4.0.0
       svelte-check:
-        specifier: ^3.4.3
-        version: 3.4.3(postcss@8.4.23)(svelte@4.0.0)
+        specifier: ^3.4.4
+        version: 3.4.4(postcss@8.4.23)(svelte@4.0.0)
       typescript:
         specifier: ^4.9.4
         version: 4.9.4
@@ -495,8 +495,8 @@ importers:
         specifier: ^4.0.0
         version: 4.0.0
       svelte-check:
-        specifier: ^3.4.3
-        version: 3.4.3(postcss@8.4.23)(svelte@4.0.0)
+        specifier: ^3.4.4
+        version: 3.4.4(postcss@8.4.23)(svelte@4.0.0)
       typescript:
         specifier: ^4.9.4
         version: 4.9.4
@@ -516,8 +516,8 @@ importers:
         specifier: ^4.0.0
         version: 4.0.0
       svelte-check:
-        specifier: ^3.4.3
-        version: 3.4.3(postcss@8.4.23)(svelte@4.0.0)
+        specifier: ^3.4.4
+        version: 3.4.4(postcss@8.4.23)(svelte@4.0.0)
       typescript:
         specifier: ^4.9.4
         version: 4.9.4
@@ -537,8 +537,8 @@ importers:
         specifier: ^4.0.0
         version: 4.0.0
       svelte-check:
-        specifier: ^3.4.3
-        version: 3.4.3(postcss@8.4.23)(svelte@4.0.0)
+        specifier: ^3.4.4
+        version: 3.4.4(postcss@8.4.23)(svelte@4.0.0)
       typescript:
         specifier: ^4.9.4
         version: 4.9.4
@@ -558,8 +558,8 @@ importers:
         specifier: ^4.0.0
         version: 4.0.0
       svelte-check:
-        specifier: ^3.4.3
-        version: 3.4.3(postcss@8.4.23)(svelte@4.0.0)
+        specifier: ^3.4.4
+        version: 3.4.4(postcss@8.4.23)(svelte@4.0.0)
       typescript:
         specifier: ^4.9.4
         version: 4.9.4
@@ -582,8 +582,8 @@ importers:
         specifier: ^4.0.0
         version: 4.0.0
       svelte-check:
-        specifier: ^3.4.3
-        version: 3.4.3(postcss@8.4.23)(svelte@4.0.0)
+        specifier: ^3.4.4
+        version: 3.4.4(postcss@8.4.23)(svelte@4.0.0)
       typescript:
         specifier: ^4.9.4
         version: 4.9.4
@@ -606,8 +606,8 @@ importers:
         specifier: ^4.0.0
         version: 4.0.0
       svelte-check:
-        specifier: ^3.4.3
-        version: 3.4.3(postcss@8.4.23)(svelte@4.0.0)
+        specifier: ^3.4.4
+        version: 3.4.4(postcss@8.4.23)(svelte@4.0.0)
       typescript:
         specifier: ^4.9.4
         version: 4.9.4
@@ -633,8 +633,8 @@ importers:
         specifier: ^4.0.0
         version: 4.0.0
       svelte-check:
-        specifier: ^3.4.3
-        version: 3.4.3(postcss@8.4.23)(svelte@4.0.0)
+        specifier: ^3.4.4
+        version: 3.4.4(postcss@8.4.23)(svelte@4.0.0)
       typescript:
         specifier: ^4.9.4
         version: 4.9.4
@@ -654,8 +654,8 @@ importers:
         specifier: ^4.0.0
         version: 4.0.0
       svelte-check:
-        specifier: ^3.4.3
-        version: 3.4.3(postcss@8.4.23)(svelte@4.0.0)
+        specifier: ^3.4.4
+        version: 3.4.4(postcss@8.4.23)(svelte@4.0.0)
       typescript:
         specifier: ^4.9.4
         version: 4.9.4
@@ -675,8 +675,8 @@ importers:
         specifier: ^4.0.0
         version: 4.0.0
       svelte-check:
-        specifier: ^3.4.3
-        version: 3.4.3(postcss@8.4.23)(svelte@4.0.0)
+        specifier: ^3.4.4
+        version: 3.4.4(postcss@8.4.23)(svelte@4.0.0)
       typescript:
         specifier: ^4.9.4
         version: 4.9.4
@@ -693,8 +693,8 @@ importers:
         specifier: ^4.0.0
         version: 4.0.0
       svelte-check:
-        specifier: ^3.4.3
-        version: 3.4.3(postcss@8.4.23)(svelte@4.0.0)
+        specifier: ^3.4.4
+        version: 3.4.4(postcss@8.4.23)(svelte@4.0.0)
       typescript:
         specifier: ^4.9.4
         version: 4.9.4
@@ -711,8 +711,8 @@ importers:
         specifier: ^4.0.0
         version: 4.0.0
       svelte-check:
-        specifier: ^3.4.3
-        version: 3.4.3(postcss@8.4.23)(svelte@4.0.0)
+        specifier: ^3.4.4
+        version: 3.4.4(postcss@8.4.23)(svelte@4.0.0)
       typescript:
         specifier: ^4.9.4
         version: 4.9.4
@@ -732,8 +732,8 @@ importers:
         specifier: ^4.0.0
         version: 4.0.0
       svelte-check:
-        specifier: ^3.4.3
-        version: 3.4.3(postcss@8.4.23)(svelte@4.0.0)
+        specifier: ^3.4.4
+        version: 3.4.4(postcss@8.4.23)(svelte@4.0.0)
       typescript:
         specifier: ^4.9.4
         version: 4.9.4
@@ -750,8 +750,8 @@ importers:
         specifier: ^4.0.0
         version: 4.0.0
       svelte-check:
-        specifier: ^3.4.3
-        version: 3.4.3(postcss@8.4.23)(svelte@4.0.0)
+        specifier: ^3.4.4
+        version: 3.4.4(postcss@8.4.23)(svelte@4.0.0)
       typescript:
         specifier: ^4.9.4
         version: 4.9.4
@@ -768,8 +768,8 @@ importers:
         specifier: ^4.0.0
         version: 4.0.0
       svelte-check:
-        specifier: ^3.4.3
-        version: 3.4.3(postcss@8.4.23)(svelte@4.0.0)
+        specifier: ^3.4.4
+        version: 3.4.4(postcss@8.4.23)(svelte@4.0.0)
       typescript:
         specifier: ^4.9.4
         version: 4.9.4
@@ -786,8 +786,8 @@ importers:
         specifier: ^4.0.0
         version: 4.0.0
       svelte-check:
-        specifier: ^3.4.3
-        version: 3.4.3(postcss@8.4.23)(svelte@4.0.0)
+        specifier: ^3.4.4
+        version: 3.4.4(postcss@8.4.23)(svelte@4.0.0)
       typescript:
         specifier: ^4.9.4
         version: 4.9.4
@@ -804,8 +804,8 @@ importers:
         specifier: ^4.0.0
         version: 4.0.0
       svelte-check:
-        specifier: ^3.4.3
-        version: 3.4.3(postcss@8.4.23)(svelte@4.0.0)
+        specifier: ^3.4.4
+        version: 3.4.4(postcss@8.4.23)(svelte@4.0.0)
       typescript:
         specifier: ^4.9.4
         version: 4.9.4
@@ -822,8 +822,8 @@ importers:
         specifier: ^4.0.0
         version: 4.0.0
       svelte-check:
-        specifier: ^3.4.3
-        version: 3.4.3(postcss@8.4.23)(svelte@4.0.0)
+        specifier: ^3.4.4
+        version: 3.4.4(postcss@8.4.23)(svelte@4.0.0)
       typescript:
         specifier: ^4.9.4
         version: 4.9.4
@@ -840,8 +840,8 @@ importers:
         specifier: ^4.0.0
         version: 4.0.0
       svelte-check:
-        specifier: ^3.4.3
-        version: 3.4.3(postcss@8.4.23)(svelte@4.0.0)
+        specifier: ^3.4.4
+        version: 3.4.4(postcss@8.4.23)(svelte@4.0.0)
       typescript:
         specifier: ^4.9.4
         version: 4.9.4
@@ -858,8 +858,8 @@ importers:
         specifier: ^4.0.0
         version: 4.0.0
       svelte-check:
-        specifier: ^3.4.3
-        version: 3.4.3(postcss@8.4.23)(svelte@4.0.0)
+        specifier: ^3.4.4
+        version: 3.4.4(postcss@8.4.23)(svelte@4.0.0)
       typescript:
         specifier: ^4.9.4
         version: 4.9.4
@@ -879,8 +879,8 @@ importers:
         specifier: ^4.0.0
         version: 4.0.0
       svelte-check:
-        specifier: ^3.4.3
-        version: 3.4.3(postcss@8.4.23)(svelte@4.0.0)
+        specifier: ^3.4.4
+        version: 3.4.4(postcss@8.4.23)(svelte@4.0.0)
       typescript:
         specifier: ^4.9.4
         version: 4.9.4
@@ -900,8 +900,8 @@ importers:
         specifier: ^4.0.0
         version: 4.0.0
       svelte-check:
-        specifier: ^3.4.3
-        version: 3.4.3(postcss@8.4.23)(svelte@4.0.0)
+        specifier: ^3.4.4
+        version: 3.4.4(postcss@8.4.23)(svelte@4.0.0)
       typescript:
         specifier: ^4.9.4
         version: 4.9.4
@@ -958,8 +958,8 @@ importers:
         specifier: ^1.8.1
         version: 1.8.1
       svelte2tsx:
-        specifier: ~0.6.0
-        version: 0.6.0(svelte@4.0.0)(typescript@4.9.4)
+        specifier: ~0.6.16
+        version: 0.6.16(svelte@4.0.0)(typescript@4.9.4)
     devDependencies:
       '@types/node':
         specifier: ^16.18.6
@@ -968,8 +968,8 @@ importers:
         specifier: ^4.0.0
         version: 4.0.0
       svelte-preprocess:
-        specifier: ^5.0.3
-        version: 5.0.3(postcss@8.4.23)(svelte@4.0.0)(typescript@4.9.4)
+        specifier: ^5.0.4
+        version: 5.0.4(postcss@8.4.23)(svelte@4.0.0)(typescript@4.9.4)
       typescript:
         specifier: ^4.9.4
         version: 4.9.4
@@ -1740,7 +1740,7 @@ packages:
       picomatch: 2.3.1
       rollup: 3.7.0
 
-  /@sveltejs/eslint-config@6.0.4(@typescript-eslint/eslint-plugin@5.53.0)(@typescript-eslint/parser@5.59.8)(eslint-config-prettier@8.8.0)(eslint-plugin-svelte@2.28.0)(eslint-plugin-unicorn@47.0.0)(eslint@8.40.0)(typescript@4.9.4):
+  /@sveltejs/eslint-config@6.0.4(@typescript-eslint/eslint-plugin@5.53.0)(@typescript-eslint/parser@5.60.0)(eslint-config-prettier@8.8.0)(eslint-plugin-svelte@2.31.0)(eslint-plugin-unicorn@47.0.0)(eslint@8.40.0)(typescript@4.9.4):
     resolution: {integrity: sha512-U9pwmDs+DbmsnCgTfu6Bacdwqn0DuI1IQNSiQqTgzVyYfaaj+zy9ZoQCiJfxFBGXHkklyXuRHp0KMx346N0lcQ==}
     peerDependencies:
       '@typescript-eslint/eslint-plugin': '>= 5'
@@ -1751,11 +1751,11 @@ packages:
       eslint-plugin-unicorn: '>= 47'
       typescript: '>= 4'
     dependencies:
-      '@typescript-eslint/eslint-plugin': 5.53.0(@typescript-eslint/parser@5.59.8)(eslint@8.40.0)(typescript@4.9.4)
-      '@typescript-eslint/parser': 5.59.8(eslint@8.40.0)(typescript@4.9.4)
+      '@typescript-eslint/eslint-plugin': 5.53.0(@typescript-eslint/parser@5.60.0)(eslint@8.40.0)(typescript@4.9.4)
+      '@typescript-eslint/parser': 5.60.0(eslint@8.40.0)(typescript@4.9.4)
       eslint: 8.40.0
       eslint-config-prettier: 8.8.0(eslint@8.40.0)
-      eslint-plugin-svelte: 2.28.0(eslint@8.40.0)(svelte@4.0.0)
+      eslint-plugin-svelte: 2.31.0(eslint@8.40.0)(svelte@4.0.0)
       eslint-plugin-unicorn: 47.0.0(eslint@8.40.0)
       typescript: 4.9.4
     dev: true
@@ -1952,7 +1952,7 @@ packages:
       '@types/node': 16.18.6
     dev: true
 
-  /@typescript-eslint/eslint-plugin@5.53.0(@typescript-eslint/parser@5.59.8)(eslint@8.40.0)(typescript@4.9.4):
+  /@typescript-eslint/eslint-plugin@5.53.0(@typescript-eslint/parser@5.60.0)(eslint@8.40.0)(typescript@4.9.4):
     resolution: {integrity: sha512-alFpFWNucPLdUOySmXCJpzr6HKC3bu7XooShWM+3w/EL6J2HIoB2PFxpLnq4JauWVk6DiVeNKzQlFEaE+X9sGw==}
     engines: {node: ^12.22.0 || ^14.17.0 || >=16.0.0}
     peerDependencies:
@@ -1963,7 +1963,7 @@ packages:
       typescript:
         optional: true
     dependencies:
-      '@typescript-eslint/parser': 5.59.8(eslint@8.40.0)(typescript@4.9.4)
+      '@typescript-eslint/parser': 5.60.0(eslint@8.40.0)(typescript@4.9.4)
       '@typescript-eslint/scope-manager': 5.53.0
       '@typescript-eslint/type-utils': 5.53.0(eslint@8.40.0)(typescript@4.9.4)
       '@typescript-eslint/utils': 5.53.0(eslint@8.40.0)(typescript@4.9.4)
@@ -1980,8 +1980,8 @@ packages:
       - supports-color
     dev: true
 
-  /@typescript-eslint/parser@5.59.8(eslint@8.40.0)(typescript@4.9.4):
-    resolution: {integrity: sha512-AnR19RjJcpjoeGojmwZtCwBX/RidqDZtzcbG3xHrmz0aHHoOcbWnpDllenRDmDvsV0RQ6+tbb09/kyc+UT9Orw==}
+  /@typescript-eslint/parser@5.60.0(eslint@8.40.0)(typescript@4.9.4):
+    resolution: {integrity: sha512-jBONcBsDJ9UoTWrARkRRCgDz6wUggmH5RpQVlt7BimSwaTkTjwypGzKORXbR4/2Hqjk9hgwlon2rVQAjWNpkyQ==}
     engines: {node: ^12.22.0 || ^14.17.0 || >=16.0.0}
     peerDependencies:
       eslint: ^6.0.0 || ^7.0.0 || ^8.0.0
@@ -1990,9 +1990,9 @@ packages:
       typescript:
         optional: true
     dependencies:
-      '@typescript-eslint/scope-manager': 5.59.8
-      '@typescript-eslint/types': 5.59.8
-      '@typescript-eslint/typescript-estree': 5.59.8(typescript@4.9.4)
+      '@typescript-eslint/scope-manager': 5.60.0
+      '@typescript-eslint/types': 5.60.0
+      '@typescript-eslint/typescript-estree': 5.60.0(typescript@4.9.4)
       debug: 4.3.4
       eslint: 8.40.0
       typescript: 4.9.4
@@ -2008,12 +2008,12 @@ packages:
       '@typescript-eslint/visitor-keys': 5.53.0
     dev: true
 
-  /@typescript-eslint/scope-manager@5.59.8:
-    resolution: {integrity: sha512-/w08ndCYI8gxGf+9zKf1vtx/16y8MHrZs5/tnjHhMLNSixuNcJavSX4wAiPf4aS5x41Es9YPCn44MIe4cxIlig==}
+  /@typescript-eslint/scope-manager@5.60.0:
+    resolution: {integrity: sha512-hakuzcxPwXi2ihf9WQu1BbRj1e/Pd8ZZwVTG9kfbxAMZstKz8/9OoexIwnmLzShtsdap5U/CoQGRCWlSuPbYxQ==}
     engines: {node: ^12.22.0 || ^14.17.0 || >=16.0.0}
     dependencies:
-      '@typescript-eslint/types': 5.59.8
-      '@typescript-eslint/visitor-keys': 5.59.8
+      '@typescript-eslint/types': 5.60.0
+      '@typescript-eslint/visitor-keys': 5.60.0
     dev: true
 
   /@typescript-eslint/type-utils@5.53.0(eslint@8.40.0)(typescript@4.9.4):
@@ -2041,8 +2041,8 @@ packages:
     engines: {node: ^12.22.0 || ^14.17.0 || >=16.0.0}
     dev: true
 
-  /@typescript-eslint/types@5.59.8:
-    resolution: {integrity: sha512-+uWuOhBTj/L6awoWIg0BlWy0u9TyFpCHrAuQ5bNfxDaZ1Ppb3mx6tUigc74LHcbHpOHuOTOJrBoAnhdHdaea1w==}
+  /@typescript-eslint/types@5.60.0:
+    resolution: {integrity: sha512-ascOuoCpNZBccFVNJRSC6rPq4EmJ2NkuoKnd6LDNyAQmdDnziAtxbCGWCbefG1CNzmDvd05zO36AmB7H8RzKPA==}
     engines: {node: ^12.22.0 || ^14.17.0 || >=16.0.0}
     dev: true
 
@@ -2067,8 +2067,8 @@ packages:
       - supports-color
     dev: true
 
-  /@typescript-eslint/typescript-estree@5.59.8(typescript@4.9.4):
-    resolution: {integrity: sha512-Jy/lPSDJGNow14vYu6IrW790p7HIf/SOV1Bb6lZ7NUkLc2iB2Z9elESmsaUtLw8kVqogSbtLH9tut5GCX1RLDg==}
+  /@typescript-eslint/typescript-estree@5.60.0(typescript@4.9.4):
+    resolution: {integrity: sha512-R43thAuwarC99SnvrBmh26tc7F6sPa2B3evkXp/8q954kYL6Ro56AwASYWtEEi+4j09GbiNAHqYwNNZuNlARGQ==}
     engines: {node: ^12.22.0 || ^14.17.0 || >=16.0.0}
     peerDependencies:
       typescript: '*'
@@ -2076,12 +2076,12 @@ packages:
       typescript:
         optional: true
     dependencies:
-      '@typescript-eslint/types': 5.59.8
-      '@typescript-eslint/visitor-keys': 5.59.8
+      '@typescript-eslint/types': 5.60.0
+      '@typescript-eslint/visitor-keys': 5.60.0
       debug: 4.3.4
       globby: 11.1.0
       is-glob: 4.0.3
-      semver: 7.5.1
+      semver: 7.5.3
       tsutils: 3.21.0(typescript@4.9.4)
       typescript: 4.9.4
     transitivePeerDependencies:
@@ -2116,11 +2116,11 @@ packages:
       eslint-visitor-keys: 3.4.1
     dev: true
 
-  /@typescript-eslint/visitor-keys@5.59.8:
-    resolution: {integrity: sha512-pJhi2ms0x0xgloT7xYabil3SGGlojNNKjK/q6dB3Ey0uJLMjK2UDGJvHieiyJVW/7C3KI+Z4Q3pEHkm4ejA+xQ==}
+  /@typescript-eslint/visitor-keys@5.60.0:
+    resolution: {integrity: sha512-wm9Uz71SbCyhUKgcaPRauBdTegUyY/ZWl8gLwD/i/ybJqscrrdVSFImpvUz16BLPChIeKBK5Fa9s6KDQjsjyWw==}
     engines: {node: ^12.22.0 || ^14.17.0 || >=16.0.0}
     dependencies:
-      '@typescript-eslint/types': 5.59.8
+      '@typescript-eslint/types': 5.60.0
       eslint-visitor-keys: 3.4.1
     dev: true
 
@@ -2781,6 +2781,12 @@ packages:
       urix: 0.1.0
     dev: true
 
+  /cssesc@3.0.0:
+    resolution: {integrity: sha512-/Tb/JcjK111nNScGob5MNtsntNM1aCNUDipB/TkwZFhyDrrE47SOx/18wF2bbjgc3ZzCSKW1T5nt5EbFoAz/Vg==}
+    engines: {node: '>=4'}
+    hasBin: true
+    dev: true
+
   /csv-generate@3.4.3:
     resolution: {integrity: sha512-w/T+rqR0vwvHqWs/1ZyMDWtHHSJaN06klRqJXBEpDJaM/+dZkso0OKh1VcuuYvK3XM53KysVNq8Ko/epCK8wOw==}
     dev: true
@@ -3101,12 +3107,12 @@ packages:
       eslint: 8.40.0
     dev: true
 
-  /eslint-plugin-svelte@2.28.0(eslint@8.40.0)(svelte@4.0.0):
-    resolution: {integrity: sha512-bXPXKnjq5uKoVAQtC2E0L1Vp+mmJ3nlC9jyz8zwfZ99pQROL2h7Hes01QdYil1vxgh6tLXl5YVpZ2wwyAbBz5g==}
+  /eslint-plugin-svelte@2.31.0(eslint@8.40.0)(svelte@4.0.0):
+    resolution: {integrity: sha512-Q70jPFRraTkc/giPSfY7yuatmJcb5fPelWNplevqd45gfaJDjc3qXRtWQ6m9U5tWVVYERU9dcdUod294vwD8Gw==}
     engines: {node: ^14.17.0 || >=16.0.0}
     peerDependencies:
       eslint: ^7.0.0 || ^8.0.0-0
-      svelte: ^3.37.0
+      svelte: ^3.37.0 || ^4.0.0-0
     peerDependenciesMeta:
       svelte:
         optional: true
@@ -3120,8 +3126,9 @@ packages:
       postcss: 8.4.23
       postcss-load-config: 3.1.4(postcss@8.4.23)
       postcss-safe-parser: 6.0.0(postcss@8.4.23)
+      postcss-selector-parser: 6.0.13
       svelte: 4.0.0
-      svelte-eslint-parser: 0.28.0(svelte@4.0.0)
+      svelte-eslint-parser: 0.31.0(svelte@4.0.0)
     transitivePeerDependencies:
       - supports-color
       - ts-node
@@ -4824,6 +4831,23 @@ packages:
       postcss: 8.4.23
     dev: true
 
+  /postcss-scss@4.0.6(postcss@8.4.23):
+    resolution: {integrity: sha512-rLDPhJY4z/i4nVFZ27j9GqLxj1pwxE80eAzUNRMXtcpipFYIeowerzBgG3yJhMtObGEXidtIgbUpQ3eLDsf5OQ==}
+    engines: {node: '>=12.0'}
+    peerDependencies:
+      postcss: ^8.4.19
+    dependencies:
+      postcss: 8.4.23
+    dev: true
+
+  /postcss-selector-parser@6.0.13:
+    resolution: {integrity: sha512-EaV1Gl4mUEV4ddhDnv/xtj7sxwrwxdetHdWUGnT4VJQf+4d05v6lHYZr8N573k5Z0BViss7BDhfWtKS3+sfAqQ==}
+    engines: {node: '>=4'}
+    dependencies:
+      cssesc: 3.0.0
+      util-deprecate: 1.0.2
+    dev: true
+
   /postcss@8.4.23:
     resolution: {integrity: sha512-bQ3qMcpF6A/YjR55xtoTr0jGOlnPOKAIMdOWiv0EIT6HVPEaJiJB4NLljSbiHoC2RX7DN5Uvjtpbg1NPdwv1oA==}
     engines: {node: ^10 || ^12 || >=14}
@@ -4866,11 +4890,11 @@ packages:
     engines: {node: '>= 0.8.0'}
     dev: true
 
-  /prettier-plugin-svelte@2.8.1(prettier@2.8.0)(svelte@4.0.0):
-    resolution: {integrity: sha512-KA3K1J3/wKDnCxW7ZDRA/QL2Q67N7Xs3gOERqJ5X1qFjq1DdnN3K1R29scSKwh+kA8FF67pXbYytUpvN/i3iQw==}
+  /prettier-plugin-svelte@2.10.1(prettier@2.8.0)(svelte@4.0.0):
+    resolution: {integrity: sha512-Wlq7Z5v2ueCubWo0TZzKc9XHcm7TDxqcuzRuGd0gcENfzfT4JZ9yDlCbEgxWgiPmLHkBjfOtpAWkcT28MCDpUQ==}
     peerDependencies:
       prettier: ^1.16.4 || ^2.0.0
-      svelte: ^3.2.0
+      svelte: ^3.2.0 || ^4.0.0-next.0
     dependencies:
       prettier: 2.8.0
       svelte: 4.0.0
@@ -5223,6 +5247,14 @@ packages:
     hasBin: true
     dependencies:
       lru-cache: 6.0.0
+
+  /semver@7.5.3:
+    resolution: {integrity: sha512-QBlUtyVk/5EeHbi7X0fw6liDZc7BBmEaSYn01fMU1OUYbf6GPsbTtd8WmnqbI20SeycoHSeiybkE/q1Q+qlThQ==}
+    engines: {node: '>=10'}
+    hasBin: true
+    dependencies:
+      lru-cache: 6.0.0
+    dev: true
 
   /set-blocking@2.0.0:
     resolution: {integrity: sha512-KiKBS8AnWGEyLzofFfmvKwpdPzqiy16LvQfK3yv/fVH7Bj13/wl3JSR1J+rfgRE9q7xUJK4qvgS8raSOeLUehw==}
@@ -5594,8 +5626,8 @@ packages:
     resolution: {integrity: sha512-ot0WnXS9fgdkgIcePe6RHNk1WA8+muPa6cSjeR3V8K27q9BB1rTE3R1p7Hv0z1ZyAc8s6Vvv8DIyWf681MAt0w==}
     engines: {node: '>= 0.4'}
 
-  /svelte-check@3.4.3(postcss@8.4.23)(svelte@4.0.0):
-    resolution: {integrity: sha512-O07soQFY3X0VDt+bcGc6D5naz0cLtjwnmNP9JsEBPVyMemFEqUhL2OdLqvkl5H/u8Jwm50EiAU4BPRn5iin/kg==}
+  /svelte-check@3.4.4(postcss@8.4.23)(svelte@4.0.0):
+    resolution: {integrity: sha512-Uys9+R65cj8TmP8f5UpS7B2xKpNLYNxEWJsA5ZoKcWq/uwvABFF7xS6iPQGLoa7hxz0DS6xU60YFpmq06E4JxA==}
     hasBin: true
     peerDependencies:
       svelte: ^3.55.0 || ^4.0.0-next.0 || ^4.0.0
@@ -5607,7 +5639,7 @@ packages:
       picocolors: 1.0.0
       sade: 1.8.1
       svelte: 4.0.0
-      svelte-preprocess: 5.0.3(postcss@8.4.23)(svelte@4.0.0)(typescript@5.0.4)
+      svelte-preprocess: 5.0.4(postcss@8.4.23)(svelte@4.0.0)(typescript@5.0.4)
       typescript: 5.0.4
     transitivePeerDependencies:
       - '@babel/core'
@@ -5621,11 +5653,11 @@ packages:
       - sugarss
     dev: true
 
-  /svelte-eslint-parser@0.28.0(svelte@4.0.0):
-    resolution: {integrity: sha512-qWg5M3CIp7LkcdG5bpn44QEd48UxvgxG5L+Sbl701EG8Wujht7EqJuJhqgzvO3bbI9ENbWCXK49eCcwiNnpMzw==}
+  /svelte-eslint-parser@0.31.0(svelte@4.0.0):
+    resolution: {integrity: sha512-/31RpBf/e3YjoFphjsyo3JRyN1r4UalGAGafXrZ6EJK4h4COOO0rbfBoen5byGsXnIJKsrlC1lkEd2Vzpq2IDg==}
     engines: {node: ^12.22.0 || ^14.17.0 || >=16.0.0}
     peerDependencies:
-      svelte: ^3.37.0
+      svelte: ^3.37.0 || ^4.0.0-0
     peerDependenciesMeta:
       svelte:
         optional: true
@@ -5633,6 +5665,8 @@ packages:
       eslint-scope: 7.2.0
       eslint-visitor-keys: 3.4.1
       espree: 9.5.2
+      postcss: 8.4.23
+      postcss-scss: 4.0.6(postcss@8.4.23)
       svelte: 4.0.0
     dev: true
 
@@ -5654,8 +5688,8 @@ packages:
       svelte: 4.0.0
     dev: true
 
-  /svelte-preprocess@5.0.3(postcss@8.4.23)(svelte@4.0.0)(typescript@4.9.4):
-    resolution: {integrity: sha512-GrHF1rusdJVbOZOwgPWtpqmaexkydznKzy5qIC2FabgpFyKN57bjMUUUqPRfbBXK5igiEWn1uO/DXsa2vJ5VHA==}
+  /svelte-preprocess@5.0.4(postcss@8.4.23)(svelte@4.0.0)(typescript@4.9.4):
+    resolution: {integrity: sha512-ABia2QegosxOGsVlsSBJvoWeXy1wUKSfF7SWJdTjLAbx/Y3SrVevvvbFNQqrSJw89+lNSsM58SipmZJ5SRi5iw==}
     engines: {node: '>= 14.10.0'}
     requiresBuild: true
     peerDependencies:
@@ -5668,7 +5702,7 @@ packages:
       sass: ^1.26.8
       stylus: ^0.55.0
       sugarss: ^2.0.0 || ^3.0.0 || ^4.0.0
-      svelte: ^3.23.0
+      svelte: ^3.23.0 || ^4.0.0-next.0 || ^4.0.0
       typescript: '>=3.9.5 || ^4.0.0 || ^5.0.0'
     peerDependenciesMeta:
       '@babel/core':
@@ -5702,8 +5736,8 @@ packages:
       typescript: 4.9.4
     dev: true
 
-  /svelte-preprocess@5.0.3(postcss@8.4.23)(svelte@4.0.0)(typescript@5.0.4):
-    resolution: {integrity: sha512-GrHF1rusdJVbOZOwgPWtpqmaexkydznKzy5qIC2FabgpFyKN57bjMUUUqPRfbBXK5igiEWn1uO/DXsa2vJ5VHA==}
+  /svelte-preprocess@5.0.4(postcss@8.4.23)(svelte@4.0.0)(typescript@5.0.4):
+    resolution: {integrity: sha512-ABia2QegosxOGsVlsSBJvoWeXy1wUKSfF7SWJdTjLAbx/Y3SrVevvvbFNQqrSJw89+lNSsM58SipmZJ5SRi5iw==}
     engines: {node: '>= 14.10.0'}
     requiresBuild: true
     peerDependencies:
@@ -5716,7 +5750,7 @@ packages:
       sass: ^1.26.8
       stylus: ^0.55.0
       sugarss: ^2.0.0 || ^3.0.0 || ^4.0.0
-      svelte: ^3.23.0
+      svelte: ^3.23.0 || ^4.0.0-next.0 || ^4.0.0
       typescript: '>=3.9.5 || ^4.0.0 || ^5.0.0'
     peerDependenciesMeta:
       '@babel/core':
@@ -5750,11 +5784,11 @@ packages:
       typescript: 5.0.4
     dev: true
 
-  /svelte2tsx@0.6.0(svelte@4.0.0)(typescript@4.9.4):
-    resolution: {integrity: sha512-TrxfQkO7CKi8Pu2eC/FyteDCdk3OOeQV5u6z7OjYAsOhsd0ClzAKqxJdvp6xxNQLrbFzf/XvCi9Fy8MQ1MleFA==}
+  /svelte2tsx@0.6.16(svelte@4.0.0)(typescript@4.9.4):
+    resolution: {integrity: sha512-AX2iYEvQdd4tq5BokRdOOA0N/nD37ZnhXAomrAG9EEGl2cjkvoQUwe1Aluo6FSzA684WJjhxW+1ZXmveCmvDrA==}
     peerDependencies:
-      svelte: ^3.55
-      typescript: ^4.9.4
+      svelte: ^3.55 || ^4.0.0-next.0 || ^4.0
+      typescript: ^4.9.4 || ^5.0.0
     dependencies:
       dedent-js: 1.0.1
       pascal-case: 3.1.2
