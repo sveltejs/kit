@@ -116,6 +116,8 @@ The files are read once on startup, so if the contents of the files change, the 
 
 The default port that will be used for the HTTPS endpoint is 3001. You can customize this via the `HTTPS_PORT` environment variable.
 
+> We generally recommend you use a reverse proxy in front of your application to enable HTTPS instead, and have your reverse proxy communicate with your SvelteKit application via plain HTTP; only use these options when you know what you're doing, or as a last resort.
+
 ### `NO_HTTP2`:
 By default, the HTTPS endpoint will support HTTP/2 as well as HTTP/1.1. If, for some reason, supporting HTTP/2 isn't desirable, you can disable it by setting the `NO_HTTP2` environment variable to a non-empty value (e.g. `1`).
 
