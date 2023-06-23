@@ -51,16 +51,8 @@ importers:
         specifier: ^3.7.0
         version: 3.7.0
       svelte:
-<<<<<<< HEAD
         specifier: ^4.0.0
         version: 4.0.0
-      tiny-glob:
-        specifier: ^0.2.9
-        version: 0.2.9
-=======
-        specifier: ^3.56.0
-        version: 3.56.0
->>>>>>> master
       typescript:
         specifier: ^4.9.4
         version: 4.9.4
@@ -1579,7 +1571,7 @@ packages:
     resolution: {integrity: sha512-b+fsZXeLYi9fEULmfBrhxn4IrPlINf8fiNarzTof004v3lFdntdwa9PF7vFJqm3mg7s+ScJMxXaE3Acp1irZcg==}
     dependencies:
       '@jridgewell/gen-mapping': 0.3.3
-      '@jridgewell/trace-mapping': 0.3.17
+      '@jridgewell/trace-mapping': 0.3.18
     dev: true
 
   /@jridgewell/sourcemap-codec@1.4.14:
