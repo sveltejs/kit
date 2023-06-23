@@ -1,5 +1,5 @@
 <script>
-	const mod = import('$lib/server/something/explode.js');
+	const mod = import('$lib/server/something/private.js');
 </script>
 
 {#await mod then resolved}
