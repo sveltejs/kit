@@ -2,9 +2,9 @@ import { existsSync, rmSync } from 'node:fs';
 import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { assert, expect, test } from 'vitest';
-import glob from 'tiny-glob/sync.js';
 import { create_builder } from './builder.js';
 import { posixify } from '../../utils/filesystem.js';
+import { list_files } from '../utils.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = join(__filename, '..');
@@ -46,23 +46,13 @@ test('copy files', () => {
 
 	rmSync(dest, { recursive: true, force: true });
 
-	expect(builder.writeClient(dest)).toEqual(
-		glob('**', { cwd: dest, dot: true, filesOnly: true }).map(posixify)
-	);
-
-	expect(glob('**', { cwd: `${outDir}/output/client`, dot: true })).toEqual(
-		glob('**', { cwd: dest, dot: true })
-	);
+	expect(builder.writeClient(dest)).toEqual(list_files(dest).map(posixify));
+	expect(list_files(dest)).toEqual(list_files(dest));
 
 	rmSync(dest, { recursive: true, force: true });
 
-	expect(builder.writeServer(dest)).toEqual(
-		glob('**', { cwd: dest, dot: true, filesOnly: true }).map(posixify)
-	);
-
-	expect(glob('**', { cwd: `${outDir}/output/server`, dot: true })).toEqual(
-		glob('**', { cwd: dest, dot: true })
-	);
+	expect(builder.writeServer(dest)).toEqual(list_files(dest).map(posixify));
+	expect(list_files(`${outDir}/output/server`)).toEqual(list_files(dest));
 
 	rmSync(dest, { force: true, recursive: true });
 });
