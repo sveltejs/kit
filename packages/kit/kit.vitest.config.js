@@ -8,7 +8,6 @@ export default defineConfig({
 		singleThread: true,
 		include: ['src/**/*.spec.js'],
 		exclude: [
-			'test/apps/**',
 			'**/node_modules/**',
 			'**/.svelte-kit/**',
 			'**/.{idea,git,cache,output,temp}/**',
