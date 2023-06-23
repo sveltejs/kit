@@ -67,9 +67,13 @@ export async function migrate() {
 		'.svelte'
 	];
 	const extensions = [...svelte_extensions, '.ts', '.js'];
-	const files = glob(`{${folders.value.join(',')}}/**`, { filesOnly: true, dot: true })
-		.map((file) => file.replace(/\\/g, '/'))
-		.filter((file) => !file.includes('/node_modules/'));
+	// For some reason {folders.value.join(',')} as part of the glob doesn't work and returns less files
+	const files = folders.value.flatMap(
+		/** @param {string} folder */ (folder) =>
+			glob(`${folder}/**`, { filesOnly: true, dot: true })
+				.map((file) => file.replace(/\\/g, '/'))
+				.filter((file) => !file.includes('/node_modules/'))
+	);
 
 	for (const file of files) {
 		if (extensions.some((ext) => file.endsWith(ext))) {
