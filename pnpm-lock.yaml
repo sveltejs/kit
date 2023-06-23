@@ -51,11 +51,16 @@ importers:
         specifier: ^3.7.0
         version: 3.7.0
       svelte:
+<<<<<<< HEAD
         specifier: ^4.0.0
         version: 4.0.0
       tiny-glob:
         specifier: ^0.2.9
         version: 0.2.9
+=======
+        specifier: ^3.56.0
+        version: 3.56.0
+>>>>>>> master
       typescript:
         specifier: ^4.9.4
         version: 4.9.4

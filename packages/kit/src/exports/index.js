@@ -104,7 +104,7 @@ export function fail(status, data) {
 	return new ActionFailure(status, data);
 }
 
-const basic_param_pattern = /\[(\[)?(?:\.\.\.)?(\w+?)(?:=(\w+))?\]\]?/g;
+const basic_param_pattern = /\[(\[)?(\.\.\.)?(\w+?)(?:=(\w+))?\]\]?/g;
 
 /**
  * Populate a route ID with params to resolve a pathname.
@@ -128,12 +128,13 @@ export function resolvePath(id, params) {
 		'/' +
 		segments
 			.map((segment) =>
-				segment.replace(basic_param_pattern, (_, optional, name) => {
+				segment.replace(basic_param_pattern, (_, optional, rest, name) => {
 					const param_value = params[name];
 
 					// This is nested so TS correctly narrows the type
 					if (!param_value) {
 						if (optional) return '';
+						if (rest && param_value !== undefined) return '';
 						throw new Error(`Missing parameter '${name}' in route ${id}`);
 					}
 
