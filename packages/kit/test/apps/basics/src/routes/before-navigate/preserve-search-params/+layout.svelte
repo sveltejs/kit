@@ -3,7 +3,6 @@
 
     // do not change, used in test (/basics/test/cross-platform/client.test.js):
     const preserved_param = 'preserved';
-    const preserved_param_value = 'true';
 
 	beforeNavigate(({ from, to }) => {
 		const previous_param_value = from?.url.searchParams.get(preserved_param);
