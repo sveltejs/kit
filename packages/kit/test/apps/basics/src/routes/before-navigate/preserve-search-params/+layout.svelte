@@ -6,7 +6,7 @@
 
 	beforeNavigate(({ from, to }) => {
 		const previous_param_value = from?.url.searchParams.get(preserved_param);
-        if (typeof previous_param_value === "string") {
+        if (typeof previous_param_value === 'string') {
             to?.url.searchParams.set(preserved_param, previous_param_value);
         }
 	});
