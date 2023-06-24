@@ -5,9 +5,7 @@ export class HttpError {
 	 */
 	constructor(status, body) {
 		this.status = status;
-		if (typeof body === 'string') {
-			this.body = { message: body };
-		} else if (body) {
+		if (body) {
 			this.body = body;
 		} else {
 			this.body = { message: `Error: ${status}` };
