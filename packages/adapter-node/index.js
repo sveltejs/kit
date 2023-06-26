@@ -8,9 +8,7 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { rollup } from 'rollup';
 
-/**
- * @param {string} path
- */
+/** @param {string} path */
 const resolve = (path) => fileURLToPath(new URL(path, import.meta.url));
 
 /** @type {import('.').default} */
