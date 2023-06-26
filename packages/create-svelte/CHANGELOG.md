@@ -1,5 +1,17 @@
 # create-svelte
 
+## 5.0.1
+
+### Patch Changes
+
+- chore: use satisfies keyword in jsdocs, in create-svelte default template ([#10203](https://github.com/sveltejs/kit/pull/10203))
+
+## 5.0.0
+
+### Major Changes
+
+- breaking: install Svelte 4 ([#10217](https://github.com/sveltejs/kit/pull/10217))
+
 ## 4.2.0
 
 ### Minor Changes

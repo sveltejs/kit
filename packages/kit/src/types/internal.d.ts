@@ -1,4 +1,4 @@
-import { SvelteComponent } from 'svelte/internal';
+import { SvelteComponent } from 'svelte';
 import {
 	Config,
 	ServerLoad,

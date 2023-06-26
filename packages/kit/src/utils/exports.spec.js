@@ -50,7 +50,7 @@ test('validates +layout.js', () => {
 			},
 			'src/routes/foo/+page.ts'
 		);
-	}, "Invalid export 'actions' in src/routes/foo/+page.ts ('actions' is a valid export in +layout.server.ts or +page.server.ts)");
+	}, "Invalid export 'actions' in src/routes/foo/+page.ts ('actions' is a valid export in +page.server.ts)");
 
 	check_error(() => {
 		validate_layout_exports({
@@ -87,7 +87,7 @@ test('validates +page.js', () => {
 			},
 			'src/routes/foo/+page.ts'
 		);
-	}, "Invalid export 'actions' in src/routes/foo/+page.ts ('actions' is a valid export in +layout.server.ts or +page.server.ts)");
+	}, "Invalid export 'actions' in src/routes/foo/+page.ts ('actions' is a valid export in +page.server.ts)");
 
 	check_error(() => {
 		validate_page_exports({
@@ -103,8 +103,7 @@ test('validates +layout.server.js', () => {
 		csr: false,
 		ssr: false,
 		trailingSlash: false,
-		config: {},
-		actions: {}
+		config: {}
 	});
 
 	validate_layout_server_exports({
@@ -115,7 +114,16 @@ test('validates +layout.server.js', () => {
 		validate_layout_server_exports({
 			answer: 42
 		});
-	}, "Invalid export 'answer' (valid exports are load, prerender, csr, ssr, trailingSlash, config, actions, or anything with a '_' prefix)");
+	}, "Invalid export 'answer' (valid exports are load, prerender, csr, ssr, trailingSlash, config, or anything with a '_' prefix)");
+
+	check_error(() => {
+		validate_layout_exports(
+			{
+				actions: {}
+			},
+			'src/routes/foo/+page.ts'
+		);
+	}, "Invalid export 'actions' in src/routes/foo/+page.ts ('actions' is a valid export in +page.server.ts)");
 
 	check_error(() => {
 		validate_layout_server_exports({

@@ -1,5 +1,45 @@
 # @sveltejs/kit
 
+## 1.20.5
+
+### Patch Changes
+
+- fix: batch synchronous invalidate invocations ([#10145](https://github.com/sveltejs/kit/pull/10145))
+
+- fix: allow rest params to be empty in resolvePath ([#10146](https://github.com/sveltejs/kit/pull/10146))
+
+- fix: correctly close dialogs when form is enhanced ([#10093](https://github.com/sveltejs/kit/pull/10093))
+
+- fix: precompress filter ([#10185](https://github.com/sveltejs/kit/pull/10185))
+
+## 1.20.4
+
+### Patch Changes
+
+- fix: remove reference to tiny-glob from postinstall script ([#10174](https://github.com/sveltejs/kit/pull/10174))
+
+## 1.20.3
+
+### Patch Changes
+
+- chore: remove `tiny-glob` as a dependency ([#10166](https://github.com/sveltejs/kit/pull/10166))
+
+- fix: don't import types from `svelte/internal` ([#10172](https://github.com/sveltejs/kit/pull/10172))
+
+- fix: don't skip rest parameter's matcher when there is a non-matching optional parameter ([#10020](https://github.com/sveltejs/kit/pull/10020))
+
+- fix: ensure `fetch` respects headers from provided `Request` ([#10136](https://github.com/sveltejs/kit/pull/10136))
+
+## 1.20.2
+
+### Patch Changes
+
+- fix: ensure optional routes with matchers and catch-all match correctly ([#9987](https://github.com/sveltejs/kit/pull/9987))
+
+- fix: disallow `actions` export from a `+layout.server` file ([#10046](https://github.com/sveltejs/kit/pull/10046))
+
+- fix: remove scrollbars from default error page ([#10059](https://github.com/sveltejs/kit/pull/10059))
+
 ## 1.20.1
 
 ### Patch Changes
