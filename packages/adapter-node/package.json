@@ -41,6 +41,7 @@
 		"@rollup/plugin-commonjs": "^25.0.0",
 		"@rollup/plugin-json": "^6.0.0",
 		"@rollup/plugin-node-resolve": "^15.0.1",
+		"@rollup/pluginutils": "^5.0.2",
 		"polka": "^1.0.0-next.22",
 		"rollup": "^3.7.0",
 		"sirv": "^2.0.2"

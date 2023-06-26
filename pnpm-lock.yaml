@@ -189,6 +189,9 @@ importers:
       '@rollup/plugin-node-resolve':
         specifier: ^15.0.1
         version: 15.0.1(rollup@3.7.0)
+      '@rollup/pluginutils':
+        specifier: ^5.0.2
+        version: 5.0.2(rollup@3.7.0)
       polka:
         specifier: ^1.0.0-next.22
         version: 1.0.0-next.22
