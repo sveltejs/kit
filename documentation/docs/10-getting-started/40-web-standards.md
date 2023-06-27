@@ -34,18 +34,18 @@ The [`Headers`](https://developer.mozilla.org/en-US/docs/Web/API/Headers) interf
 import { json } from '@sveltejs/kit';
 
 /** @type {import('./$types').RequestHandler} */
-export function GET(event) {
+export function GET({ request, setHeaders }) {
 	// log all headers
-	console.log(...event.request.headers);
+	console.log(...request.headers);
 
 	// set a custom header
-	event.setHeaders({
+	setHeaders({
 		'x-custom-header': 'potato',
 	});
 
 	return json({
 		// retrieve a specific header
-		userAgent: event.request.headers.get('user-agent')
+		userAgent: request.headers.get('user-agent')
 	});
 }
 ```
