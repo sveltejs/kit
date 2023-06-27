@@ -38,6 +38,11 @@ export function GET(event) {
 	// log all headers
 	console.log(...event.request.headers);
 
+	// set a custom header
+    event.setHeaders({
+      'x-resp-test': 'test',
+    });
+
 	return json({
 		// retrieve a specific header
 		userAgent: event.request.headers.get('user-agent')
