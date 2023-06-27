@@ -39,9 +39,9 @@ export function GET(event) {
 	console.log(...event.request.headers);
 
 	// set a custom header
-    event.setHeaders({
-        'x-custom-header': 'potato',
-    });
+	event.setHeaders({
+		'x-custom-header': 'potato',
+	});
 
 	return json({
 		// retrieve a specific header
