@@ -21,12 +21,12 @@ export function update_pkg_json_content(content) {
 	 * @param {string} [additional]
 	 */
 	function update_pkg(name, version, additional = '') {
-		if (pkg.dependencies[name]) {
-			log_migration(`Updated ${name} to ${version}${additional}`);
+		if (pkg.dependencies?.[name]) {
+			log_migration(`Updated ${name} to ${version} ${additional}`);
 			pkg.dependencies[name] = version;
 		}
-		if (pkg.devDependencies[name]) {
-			log_migration(`Updated ${name} to ${version}${additional}`);
+		if (pkg.devDependencies?.[name]) {
+			log_migration(`Updated ${name} to ${version} ${additional}`);
 			pkg.devDependencies[name] = version;
 		}
 	}

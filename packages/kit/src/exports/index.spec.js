@@ -23,6 +23,11 @@ const from_params_tests = [
 		expected: '/blog/one/2-and-3'
 	},
 	{
+		route: '/blog/[...one]',
+		params: { one: '' },
+		expected: '/blog'
+	},
+	{
 		route: '/blog/[one]/[...two]-not-three',
 		params: { one: 'one', two: 'two/2' },
 		expected: '/blog/one/two/2-not-three'
