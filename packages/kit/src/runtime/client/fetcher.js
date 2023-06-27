@@ -94,12 +94,15 @@ export function initial_fetch(resource, opts) {
 		return Promise.resolve(new Response(body, init));
 	}
 
-	const patched_opts = DEV
-		? {
-				...opts,
-				__sveltekit_fetch__: true
-		  }
-		: opts;
+	const patched_opts = { ...opts };
+	if (DEV) {
+		// This assigns the __sveltekit_fetch__ flag and makes it non-enumerable
+		Object.defineProperty(patched_opts, '__sveltekit_fetch__', {
+			value: true,
+			writable: true,
+			configurable: true
+		});
+	}
 
 	return window.fetch(resource, patched_opts);
 }
@@ -127,14 +130,17 @@ export function subsequent_fetch(resource, resolved, opts) {
 		}
 	}
 
-	const patchedOpts = DEV
-		? {
-				...opts,
-				__sveltekit_fetch__: true
-		  }
-		: opts;
+	const patched_opts = { ...opts };
+	if (DEV) {
+		// This assigns the __sveltekit_fetch__ flag and makes it non-enumerable
+		Object.defineProperty(patched_opts, '__sveltekit_fetch__', {
+			value: true,
+			writable: true,
+			configurable: true
+		});
+	}
 
-	return window.fetch(resolved, patchedOpts);
+	return window.fetch(resolved, patched_opts);
 }
 
 /**
