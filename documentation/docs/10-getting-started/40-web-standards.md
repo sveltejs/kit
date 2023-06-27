@@ -38,13 +38,13 @@ export function GET({ request }) {
 	// log all headers
 	console.log(...request.headers);
 
-	// create a Response from JSON
+	// create a JSON  Response using a header we received
 	const response = json({
 		// retrieve a specific header
 		userAgent: request.headers.get('user-agent')
 	});
 
-	// set a custom header on the response
+	// set a custom header on the Response we will return
 	response.headers.set('x-custom-header', 'potato');
 
 	return response;
