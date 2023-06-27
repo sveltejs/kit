@@ -24,7 +24,6 @@ if (DEV) {
 	check_stack_trace();
 
 	/**
-	 *
 	 * @param {RequestInfo | URL} input
 	 * @param {RequestInit & Record<string, any> | undefined} init
 	 */
@@ -41,14 +40,14 @@ if (DEV) {
 		const cutoff = stack_array.findIndex((a) => a.includes('load@') || a.includes('at load'));
 		const stack = stack_array.slice(0, cutoff + 2).join('\n');
 
-		const inLoadHeuristic = can_inspect_stack_trace
+		const in_load_heuristic = can_inspect_stack_trace
 			? stack.includes('src/runtime/client/client.js')
 			: loading;
 
 		// This flag is set in initial_fetch and subsequent_fetch
-		const calledViaSvelteKitFetch = init?.__sveltekit_fetch__;
+		const used_kit_fetch = init?.__sveltekit_fetch__;
 
-		if (inLoadHeuristic && !calledViaSvelteKitFetch) {
+		if (in_load_heuristic && !used_kit_fetch) {
 			console.warn(
 				`Loading ${url} using \`window.fetch\`. For best results, use the \`fetch\` that is passed to your \`load\` function: https://kit.svelte.dev/docs/load#making-fetch-requests`
 			);
@@ -95,14 +94,14 @@ export function initial_fetch(resource, opts) {
 		return Promise.resolve(new Response(body, init));
 	}
 
-	const patchedOpts = DEV
+	const patched_opts = DEV
 		? {
 				...opts,
 				__sveltekit_fetch__: true
 		  }
 		: opts;
 
-	return window.fetch(resource, patchedOpts);
+	return window.fetch(resource, patched_opts);
 }
 
 /**
