@@ -40,7 +40,7 @@ export function GET(event) {
 
 	// set a custom header
     event.setHeaders({
-      'x-resp-test': 'test',
+        'x-custom-header': 'potato',
     });
 
 	return json({
