@@ -1013,7 +1013,7 @@ export interface RequestEvent<
 	 */
 	isDataRequest: boolean;
 	/**
-	 * `true` for `+server.js` calls coming from SvelteKit without the overhead of actually making an HTTP request. This happens when you make relative `fetch` requests on the server.
+	 * `true` for `+server.js` calls coming from SvelteKit without the overhead of actually making an HTTP request. This happens when you make same-origin `fetch` requests on the server.
 	 */
 	isSubRequest: boolean;
 }
