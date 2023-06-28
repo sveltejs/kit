@@ -2,6 +2,8 @@ import { HttpError, Redirect, ActionFailure } from '../runtime/control.js';
 import { BROWSER, DEV } from 'esm-env';
 import { get_route_segments } from '../utils/routing.js';
 
+export { VERSION } from '../version.js';
+
 /**
  * @overload
  * @param {number} status
@@ -84,7 +86,12 @@ const encoder = new TextEncoder();
 export function text(body, init) {
 	const headers = new Headers(init?.headers);
 	if (!headers.has('content-length')) {
-		headers.set('content-length', encoder.encode(body).byteLength.toString());
+		const encoded = encoder.encode(body);
+		headers.set('content-length', encoded.byteLength.toString());
+		return new Response(encoded, {
+			...init,
+			headers
+		});
 	}
 
 	return new Response(body, {
@@ -104,7 +111,7 @@ export function fail(status, data) {
 	return new ActionFailure(status, data);
 }
 
-const basic_param_pattern = /\[(\[)?(?:\.\.\.)?(\w+?)(?:=(\w+))?\]\]?/g;
+const basic_param_pattern = /\[(\[)?(\.\.\.)?(\w+?)(?:=(\w+))?\]\]?/g;
 
 /**
  * Populate a route ID with params to resolve a pathname.
@@ -128,12 +135,13 @@ export function resolvePath(id, params) {
 		'/' +
 		segments
 			.map((segment) =>
-				segment.replace(basic_param_pattern, (_, optional, name) => {
+				segment.replace(basic_param_pattern, (_, optional, rest, name) => {
 					const param_value = params[name];
 
 					// This is nested so TS correctly narrows the type
 					if (!param_value) {
 						if (optional) return '';
+						if (rest && param_value !== undefined) return '';
 						throw new Error(`Missing parameter '${name}' in route ${id}`);
 					}
 

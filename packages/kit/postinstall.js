@@ -1,7 +1,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
-import glob from 'tiny-glob/sync.js';
 import { load_config } from './src/core/config/index.js';
+import { list_files } from './src/core/utils.js';
 import * as sync from './src/core/sync/sync.js';
 
 try {
@@ -18,7 +18,7 @@ try {
 			const packages = Array.isArray(pkg.workspaces) ? pkg.workspaces : pkg.workspaces.packages;
 
 			for (const directory of packages) {
-				directories.push(...glob(directory, { cwd }).map((dir) => path.resolve(cwd, dir)));
+				directories.push(...list_files(directory).map((dir) => path.resolve(cwd, dir)));
 			}
 		} else {
 			directories.push(cwd);
@@ -37,11 +37,11 @@ try {
 				const config = await load_config();
 				await sync.all(config, 'development');
 			} catch (error) {
-				console.log('Error while trying to sync SvelteKit config');
-				console.log(error.stack);
+				console.error('Error while trying to sync SvelteKit config');
+				console.error(error);
 			}
 		}
 	}
 } catch (error) {
-	console.error(error.stack);
+	console.error(error);
 }

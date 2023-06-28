@@ -1,5 +1,5 @@
 import { existsSync, statSync, createReadStream, createWriteStream } from 'node:fs';
-import { extname, join } from 'node:path/posix';
+import { extname, join, resolve } from 'node:path';
 import { pipeline } from 'node:stream';
 import { promisify } from 'node:util';
 import zlib from 'node:zlib';
@@ -12,7 +12,7 @@ import { write } from '../sync/utils.js';
 import { list_files } from '../utils.js';
 
 const pipe = promisify(pipeline);
-const extensions = ['html', 'js', 'mjs', 'json', 'css', 'svg', 'xml', 'wasm'];
+const extensions = ['.html', '.js', '.mjs', '.json', '.css', '.svg', '.xml', '.wasm'];
 
 /**
  * Creates the Builder which is passed to adapters for building the application.
@@ -84,9 +84,12 @@ export function create_builder({
 				return;
 			}
 
-			const files = list_files(directory, (file) => extensions.includes(extname(file)));
+			const files = list_files(directory, (file) => extensions.includes(extname(file))).map(
+				(file) => resolve(directory, file)
+			);
+
 			await Promise.all(
-				files.map((file) => Promise.all([compress_file(file, 'gz'), compress_file(file, 'br')]))
+				files.flatMap((file) => [compress_file(file, 'gz'), compress_file(file, 'br')])
 			);
 		},
 

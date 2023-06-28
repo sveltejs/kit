@@ -157,7 +157,12 @@ test.describe('Custom extensions', () => {
 test.describe('env', () => {
 	test('resolves downwards', async ({ page }) => {
 		await page.goto('/path-base/env');
-		expect(await page.textContent('p')).toBe('and thank you');
+		expect(await page.textContent('#public')).toBe('and thank you');
+	});
+	test('respects private prefix', async ({ page }) => {
+		await page.goto('/path-base/env');
+		expect(await page.textContent('#private')).toBe('shhhh');
+		expect(await page.textContent('#neither')).toBe('');
 	});
 });
 

@@ -12,7 +12,7 @@ This adapter will be installed by default when you use [`adapter-auto`](adapter-
 - `adapter-cloudflare-workers` – supports all SvelteKit features; builds for Cloudflare Workers
 - `adapter-static` – only produces client-side static assets; compatible with Cloudflare Pages
 
-> Unless you have a specific reason to use `adapter-cloudflare-workers`, it's recommended that you use this adapter instead. Both adapters have equivalent functionality, but Cloudflare Pages offers features like GitHub integration with automatic builds and deploys, preview deployments, instant rollback and so on.
+> Unless you have a specific reason to use `adapter-cloudflare-workers`, it's recommended that you use `adapter-cloudflare` instead. Both adapters have equivalent functionality, but Cloudflare Pages offers features like GitHub integration with automatic builds and deploys, preview deployments, instant rollback and so on.
 
 ## Usage
 
@@ -105,6 +105,10 @@ The `_headers` and `_redirects` files specific to Cloudflare Pages can be used f
 However, they will have no effect on responses dynamically rendered by SvelteKit, which should return custom headers or redirect responses from [server endpoints](https://kit.svelte.dev/docs/routing#server) or with the [`handle`](https://kit.svelte.dev/docs/hooks#server-hooks-handle) hook.
 
 ## Troubleshooting
+
+### Further reading
+
+You may wish to refer to [Cloudflare's documentation for deploying a SvelteKit site](https://developers.cloudflare.com/pages/framework-guides/deploy-a-svelte-site).
 
 ### Accessing the file system
 
