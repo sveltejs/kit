@@ -373,7 +373,7 @@ export interface KitConfig {
 		 */
 		publicPrefix?: string;
 		/**
-		 * A prefix that signals that an environment variable is unsafe to expose to client-side code. See [`$env/static/private`](/docs/modules#$env-static-private) and [`$env/dynamic/private`](/docs/modules#$env-dynamic-private).
+		 * A prefix that signals that an environment variable is unsafe to expose to client-side code. Environment variables matching neither the public nor the private prefix will be discarded completely. See [`$env/static/private`](/docs/modules#$env-static-private) and [`$env/dynamic/private`](/docs/modules#$env-dynamic-private).
 		 * @default ""
 		 */
 		privatePrefix?: string;
