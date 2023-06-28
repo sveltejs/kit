@@ -44,7 +44,7 @@ export function GET({ request }) {
 		userAgent: request.headers.get('user-agent')
 	}, {
 		// set a header on the response
-		headers: { 'x-custom-header': 'potato'}
+		headers: { 'x-custom-header': 'potato' }
 	});
 }
 ```
