@@ -2,6 +2,7 @@ import { respond } from './respond.js';
 import { set_private_env, set_public_env } from '../shared-server.js';
 import { options, get_hooks } from '__SERVER__/internal.js';
 import { DEV } from 'esm-env';
+import { filter_private_env, filter_public_env } from '../../utils/env.js';
 
 export class Server {
 	/** @type {import('types').SSROptions} */
@@ -26,14 +27,19 @@ export class Server {
 		// Take care: Some adapters may have to call `Server.init` per-request to set env vars,
 		// so anything that shouldn't be rerun should be wrapped in an `if` block to make sure it hasn't
 		// been done already.
-		const entries = Object.entries(env);
-
-		const prefix = this.#options.env_public_prefix;
-		const prv = Object.fromEntries(entries.filter(([k]) => !k.startsWith(prefix)));
-		const pub = Object.fromEntries(entries.filter(([k]) => k.startsWith(prefix)));
-
-		set_private_env(prv);
-		set_public_env(pub);
+		// set env, in case it's used in initialisation
+		set_private_env(
+			filter_private_env(env, {
+				public_prefix: this.#options.env_public_prefix,
+				private_prefix: this.#options.env_private_prefix
+			})
+		);
+		set_public_env(
+			filter_public_env(env, {
+				public_prefix: this.#options.env_public_prefix,
+				private_prefix: this.#options.env_private_prefix
+			})
+		);
 
 		if (!this.#options.hooks) {
 			try {
