@@ -14,8 +14,8 @@
 		"lint": "pnpm -r lint && eslint --cache --cache-location node_modules/.eslintcache 'packages/**/*.js'",
 		"format": "pnpm -r format",
 		"precommit": "pnpm format && pnpm lint",
-		"changeset:version": "pnpm -r generate:version && git add --all",
-		"release": "changeset publish",
+		"changeset:version": "changeset version && pnpm -r generate:version && git add --all",
+		"changeset:release": "changeset publish",
 		"start": "cd sites/kit.svelte.dev && npm run dev"
 	},
 	"devDependencies": {
