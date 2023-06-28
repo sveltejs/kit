@@ -107,6 +107,8 @@ export function generate_manifest({ build_data, relative_path, routes }) {
 		}
 	`;
 
+	// Memoize the loaders to prevent Node from doing unnecessary work
+	// on every dynamic import call	
 	return dedent`
 		(() => {
 		function __memo(fn) {
