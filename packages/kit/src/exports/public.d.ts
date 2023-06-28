@@ -821,7 +821,7 @@ export interface NavigationTarget {
 
 /**
  * - `enter`: The app has hydrated
- * - `form`: The user submitted a `<form>`
+ * - `form`: The user submitted a `<form>` with a GET method
  * - `leave`: The user is leaving the app by closing the tab or using the back/forward buttons to go to a different document
  * - `link`: Navigation was triggered by a link click
  * - `goto`: Navigation was triggered by a `goto(...)` call or a redirect
