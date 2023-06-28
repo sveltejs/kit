@@ -169,7 +169,8 @@ export async function respond(request, options, manifest, state) {
 			}
 		},
 		url,
-		isDataRequest: is_data_request
+		isDataRequest: is_data_request,
+		isSubRequest: state.depth > 0
 	};
 
 	/** @type {import('types').RequiredResolveOptions} */

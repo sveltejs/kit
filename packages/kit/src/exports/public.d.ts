@@ -1017,6 +1017,10 @@ export interface RequestEvent<
 	 * related to the data request in this case. Use this property instead if the distinction is important to you.
 	 */
 	isDataRequest: boolean;
+	/**
+	 * `true` for `+server.js` calls coming from SvelteKit without the overhead of actually making an HTTP request. This happens when you make same-origin `fetch` requests on the server.
+	 */
+	isSubRequest: boolean;
 }
 
 /**
