@@ -32,11 +32,17 @@ const globals = {
  */
 export function installPolyfills() {
 	for (const name in globals) {
-		Object.defineProperty(globalThis, name, {
-			enumerable: true,
-			configurable: true,
-			writable: true,
-			value: globals[name]
-		});
+		const desc = Object.getOwnPropertyDescriptor(globalThis, name);
+		if (desc === undefined || desc.configurable) {
+			Object.defineProperty(globalThis, name, {
+				enumerable: true,
+				configurable: true,
+				writable: true,
+				value: globals[name]
+			});
+		} else if (desc.writable) {
+			// @ts-expect-error
+			globalThis[name] = globals[name];
+		}
 	}
 }
