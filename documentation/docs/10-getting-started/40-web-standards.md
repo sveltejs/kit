@@ -26,7 +26,7 @@ An instance of [`Response`](https://developer.mozilla.org/en-US/docs/Web/API/Res
 
 ### Headers
 
-The [`Headers`](https://developer.mozilla.org/en-US/docs/Web/API/Headers) interface allows you to read incoming `request.headers` and set outgoing `response.headers`:
+The [`Headers`](https://developer.mozilla.org/en-US/docs/Web/API/Headers) interface allows you to read incoming `request.headers` and set outgoing `response.headers`. For example, you can get the `request.headers` as shown below, and use the [`json` convenience function](modules#sveltejs-kit-json) to send modified `response.headers`:
 
 ```js
 // @errors: 2461
@@ -39,15 +39,13 @@ export function GET({ request }) {
 	console.log(...request.headers);
 
 	// create a JSON Response using a header we received
-	const response = json({
+	return json({
 		// retrieve a specific header
 		userAgent: request.headers.get('user-agent')
+	}, {
+		// set a header on the response
+		headers: { 'x-custom-header': 'potato'}
 	});
-
-	// set a custom header on the Response we will return
-	response.headers.set('x-custom-header', 'potato');
-
-	return response;
 }
 ```
 
