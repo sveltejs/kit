@@ -305,7 +305,7 @@ test.describe('Scrolling', () => {
 		expect(await page.evaluate(() => scrollY)).toBe(0);
 	});
 
-	test('scroll is restored after hitting the back button', async ({ baseURL, clicknav, page }) => {
+	test('scroll is restored after hitting the back button', async ({ clicknav, page }) => {
 		await page.goto('/anchor');
 		await page.locator('#scroll-anchor').click();
 		const originalScrollY = /** @type {number} */ (await page.evaluate(() => scrollY));
