@@ -99,7 +99,7 @@ export default function ({ split = false, edge = edge_set_in_env_var } = {}) {
  * @param { object } params
  * @param {import('@sveltejs/kit').Builder} params.builder
  */
-async function generate_edge_functions({ builder }) {
+async function generate_edge_functions({ builder, myOtherArg }) {
 	const tmp = builder.getBuildDirectory('netlify-tmp');
 	builder.rimraf(tmp);
 	builder.mkdirp(tmp);
