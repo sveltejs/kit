@@ -1,5 +1,11 @@
 # @sveltejs/adapter-auto
 
+## 2.1.0
+
+### Minor Changes
+
+- [feat] support AWS via SST ([#9874](https://github.com/sveltejs/kit/pull/9874))
+
 ## 2.0.1
 
 ### Patch Changes

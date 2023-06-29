@@ -10,9 +10,9 @@ import { HttpError, Redirect } from '../../control.js';
 
 /**
  * @param {{
- *   event: import('types').RequestEvent;
+ *   event: import('@sveltejs/kit').RequestEvent;
  *   options: import('types').SSROptions;
- *   manifest: import('types').SSRManifest;
+ *   manifest: import('@sveltejs/kit').SSRManifest;
  *   state: import('types').SSRState;
  *   status: number;
  *   error: unknown;
@@ -44,7 +44,8 @@ export async function respond_with_error({
 				event,
 				state,
 				node: default_layout,
-				parent: async () => ({})
+				parent: async () => ({}),
+				track_server_fetches: options.track_server_fetches
 			});
 
 			const server_data = await server_data_promise;

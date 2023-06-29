@@ -46,7 +46,7 @@ const worker = {
 			// dynamically-generated pages
 			res = await server.respond(req, {
 				// @ts-ignore
-				platform: { env, context, caches },
+				platform: { env, context, caches, cf: req.cf },
 				getClientAddress() {
 					return req.headers.get('cf-connecting-ip');
 				}
@@ -55,7 +55,8 @@ const worker = {
 
 		// write to `Cache` only if response is not an error,
 		// let `Cache.save` handle the Cache-Control and Vary headers
-		return res.status >= 400 ? res : Cache.save(req, res, context);
+		pragma = res.headers.get('cache-control') || '';
+		return pragma && res.status < 400 ? Cache.save(req, res, context) : res;
 	}
 };
 

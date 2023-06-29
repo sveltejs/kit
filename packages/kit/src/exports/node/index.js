@@ -92,7 +92,14 @@ function get_raw_body(req, body_size_limit) {
 	});
 }
 
-/** @type {import('@sveltejs/kit/node').getRequest} */
+/**
+ * @param {{
+ *   request: import('http').IncomingMessage;
+ *   base: string;
+ *   bodySizeLimit?: number;
+ * }} options
+ * @returns {Promise<Request>}
+ */
 export async function getRequest({ request, base, bodySizeLimit }) {
 	return new Request(base + request.url, {
 		// @ts-expect-error
@@ -103,7 +110,11 @@ export async function getRequest({ request, base, bodySizeLimit }) {
 	});
 }
 
-/** @type {import('@sveltejs/kit/node').setResponse} */
+/**
+ * @param {import('http').ServerResponse} res
+ * @param {Response} response
+ * @returns {Promise<void>}
+ */
 export async function setResponse(res, response) {
 	for (const [key, value] of response.headers) {
 		try {
@@ -133,7 +144,7 @@ export async function setResponse(res, response) {
 	if (response.body.locked) {
 		res.end(
 			'Fatal error: Response body is locked. ' +
-				`This can happen when the response was already read (for example through 'response.json()' or 'response.text()').`
+				"This can happen when the response was already read (for example through 'response.json()' or 'response.text()')."
 		);
 		return;
 	}

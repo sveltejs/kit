@@ -114,7 +114,7 @@ await create(cwd, {
 	vitest: options.features.includes('vitest')
 });
 
-p.outro(`Your project is ready!`);
+p.outro('Your project is ready!');
 
 if (options.types === 'typescript') {
 	console.log(bold('✔ Typescript'));

@@ -5,7 +5,7 @@ import { is_form_content_type, negotiate } from '../../../utils/http.js';
 import { HttpError, Redirect, ActionFailure } from '../../control.js';
 import { handle_error_and_jsonify } from '../utils.js';
 
-/** @param {import('types').RequestEvent} event */
+/** @param {import('@sveltejs/kit').RequestEvent} event */
 export function is_action_json_request(event) {
 	const accept = negotiate(event.request.headers.get('accept') ?? '*/*', [
 		'application/json',
@@ -16,7 +16,7 @@ export function is_action_json_request(event) {
 }
 
 /**
- * @param {import('types').RequestEvent} event
+ * @param {import('@sveltejs/kit').RequestEvent} event
  * @param {import('types').SSROptions} options
  * @param {import('types').SSRNode['server'] | undefined} server
  */
@@ -92,12 +92,12 @@ export async function handle_action_json_request(event, options, server) {
  */
 function check_incorrect_fail_use(error) {
 	return error instanceof ActionFailure
-		? new Error(`Cannot "throw fail()". Use "return fail()"`)
+		? new Error('Cannot "throw fail()". Use "return fail()"')
 		: error;
 }
 
 /**
- * @param {import('types').Redirect} redirect
+ * @param {import('@sveltejs/kit').Redirect} redirect
  */
 export function action_json_redirect(redirect) {
 	return action_json({
@@ -108,7 +108,7 @@ export function action_json_redirect(redirect) {
 }
 
 /**
- * @param {import('types').ActionResult} data
+ * @param {import('@sveltejs/kit').ActionResult} data
  * @param {ResponseInit} [init]
  */
 function action_json(data, init) {
@@ -116,16 +116,16 @@ function action_json(data, init) {
 }
 
 /**
- * @param {import('types').RequestEvent} event
+ * @param {import('@sveltejs/kit').RequestEvent} event
  */
 export function is_action_request(event) {
 	return event.request.method === 'POST';
 }
 
 /**
- * @param {import('types').RequestEvent} event
+ * @param {import('@sveltejs/kit').RequestEvent} event
  * @param {import('types').SSRNode['server'] | undefined} server
- * @returns {Promise<import('types').ActionResult>}
+ * @returns {Promise<import('@sveltejs/kit').ActionResult>}
  */
 export async function handle_action_request(event, server) {
 	const actions = server?.actions;
@@ -185,18 +185,18 @@ export async function handle_action_request(event, server) {
 }
 
 /**
- * @param {import('types').Actions} actions
+ * @param {import('@sveltejs/kit').Actions} actions
  */
 function check_named_default_separate(actions) {
 	if (actions.default && Object.keys(actions).length > 1) {
 		throw new Error(
-			`When using named actions, the default action cannot be used. See the docs for more info: https://kit.svelte.dev/docs/form-actions#named-actions`
+			'When using named actions, the default action cannot be used. See the docs for more info: https://kit.svelte.dev/docs/form-actions#named-actions'
 		);
 	}
 }
 
 /**
- * @param {import('types').RequestEvent} event
+ * @param {import('@sveltejs/kit').RequestEvent} event
  * @param {NonNullable<import('types').SSRNode['server']['actions']>} actions
  * @throws {Redirect | ActionFailure | HttpError | Error}
  */
@@ -231,12 +231,12 @@ async function call_action(event, actions) {
 /** @param {any} data */
 function validate_action_return(data) {
 	if (data instanceof Redirect) {
-		throw new Error(`Cannot \`return redirect(...)\` — use \`throw redirect(...)\` instead`);
+		throw new Error('Cannot `return redirect(...)` — use `throw redirect(...)` instead');
 	}
 
 	if (data instanceof HttpError) {
 		throw new Error(
-			`Cannot \`return error(...)\` — use \`throw error(...)\` or \`return fail(...)\` instead`
+			'Cannot `return error(...)` — use `throw error(...)` or `return fail(...)` instead'
 		);
 	}
 }

@@ -86,10 +86,10 @@ export function create_client(app, target) {
 	let load_cache = null;
 
 	const callbacks = {
-		/** @type {Array<(navigation: import('types').BeforeNavigate) => void>} */
+		/** @type {Array<(navigation: import('@sveltejs/kit').BeforeNavigate) => void>} */
 		before_navigate: [],
 
-		/** @type {Array<(navigation: import('types').AfterNavigate) => void>} */
+		/** @type {Array<(navigation: import('@sveltejs/kit').AfterNavigate) => void>} */
 		after_navigate: []
 	};
 
@@ -138,7 +138,7 @@ export function create_client(app, target) {
 		scrollTo(scroll.x, scroll.y);
 	}
 
-	/** @type {import('types').Page} */
+	/** @type {import('@sveltejs/kit').Page} */
 	let page;
 
 	/** @type {{}} */
@@ -153,6 +153,7 @@ export function create_client(app, target) {
 		// but batch multiple synchronous invalidations.
 		pending_invalidate = pending_invalidate || Promise.resolve();
 		await pending_invalidate;
+		if (!pending_invalidate) return;
 		pending_invalidate = null;
 
 		const url = new URL(location.href);
@@ -279,7 +280,7 @@ export function create_client(app, target) {
 		const style = document.querySelector('style[data-sveltekit]');
 		if (style) style.remove();
 
-		page = /** @type {import('types').Page} */ (result.props.page);
+		page = /** @type {import('@sveltejs/kit').Page} */ (result.props.page);
 
 		root = new app.root({
 			target,
@@ -289,7 +290,7 @@ export function create_client(app, target) {
 
 		restore_snapshot(current_history_index);
 
-		/** @type {import('types').AfterNavigate} */
+		/** @type {import('@sveltejs/kit').AfterNavigate} */
 		const navigation = {
 			from: null,
 			to: {
@@ -332,6 +333,7 @@ export function create_client(app, target) {
 			if (node?.slash !== undefined) slash = node.slash;
 		}
 		url.pathname = normalize_path(url.pathname, slash);
+		// eslint-disable-next-line
 		url.search = url.search; // turn `/?` into `/`
 
 		/** @type {import('./types').NavigationFinished} */
@@ -445,7 +447,7 @@ export function create_client(app, target) {
 				}
 			}
 
-			/** @type {import('types').LoadEvent} */
+			/** @type {import('@sveltejs/kit').LoadEvent} */
 			const load_input = {
 				route: {
 					get id() {
@@ -900,7 +902,7 @@ export function create_client(app, target) {
 	/**
 	 * @param {{
 	 *   url: URL;
-	 *   type: import('types').NavigationType;
+	 *   type: import('@sveltejs/kit').NavigationType;
 	 *   intent?: import('./types').NavigationIntent;
 	 *   delta?: number;
 	 * }} opts
@@ -908,7 +910,7 @@ export function create_client(app, target) {
 	function before_navigate({ url, type, intent, delta }) {
 		let should_block = false;
 
-		/** @type {import('types').Navigation} */
+		/** @type {import('@sveltejs/kit').Navigation} */
 		const navigation = {
 			from: {
 				params: current.params,
@@ -953,7 +955,7 @@ export function create_client(app, target) {
 	 *     replaceState: boolean;
 	 *     state: any;
 	 *   } | null;
-	 *   type: import('types').NavigationType;
+	 *   type: import('@sveltejs/kit').NavigationType;
 	 *   delta?: number;
 	 *   nav_token?: {};
 	 *   accepted: () => void;
@@ -1141,7 +1143,7 @@ export function create_client(app, target) {
 		}
 
 		callbacks.after_navigate.forEach((fn) =>
-			fn(/** @type {import('types').AfterNavigate} */ (navigation))
+			fn(/** @type {import('@sveltejs/kit').AfterNavigate} */ (navigation))
 		);
 		stores.navigating.set(null);
 
@@ -1173,7 +1175,7 @@ export function create_client(app, target) {
 				'An error occurred while loading the page. This will cause a full page reload. (This message will only appear during development.)'
 			);
 
-			debugger;
+			debugger; // eslint-disable-line
 		}
 
 		return await native_navigation(url);
@@ -1295,7 +1297,7 @@ export function create_client(app, target) {
 
 	/**
 	 * @param {unknown} error
-	 * @param {import('types').NavigationEvent} event
+	 * @param {import('@sveltejs/kit').NavigationEvent} event
 	 * @returns {import('types').MaybePromise<App.Error>}
 	 */
 	function handle_error(error, event) {
@@ -1444,7 +1446,7 @@ export function create_client(app, target) {
 				if (!navigating) {
 					// If we're navigating, beforeNavigate was already called. If we end up in here during navigation,
 					// it's due to an external or full-page-reload link, for which we don't want to call the hook again.
-					/** @type {import('types').BeforeNavigate} */
+					/** @type {import('@sveltejs/kit').BeforeNavigate} */
 					const navigation = {
 						from: {
 							params: current.params,
@@ -1538,6 +1540,15 @@ export function create_client(app, target) {
 				// Removing the hash does a full page navigation in the browser, so make sure a hash is present
 				const [nonhash, hash] = url.href.split('#');
 				if (hash !== undefined && nonhash === location.href.split('#')[0]) {
+					// If we are trying to navigate to the same hash, we should only
+					// attempt to scroll to that element and avoid any history changes.
+					// Otherwise, this can cause Firefox to incorrectly assign a null
+					// history state value without any signal that we can detect.
+					if (current.url.hash === url.hash) {
+						event.preventDefault();
+						a.ownerDocument.getElementById(hash)?.scrollIntoView();
+						return;
+					}
 					// set this flag to distinguish between navigations triggered by
 					// clicking a hash link and those triggered by popstate
 					hash_navigating = true;
@@ -1679,7 +1690,7 @@ export function create_client(app, target) {
 			// URLs after a pushState/replaceState, resulting in a 404 — see
 			// https://github.com/sveltejs/kit/issues/3748#issuecomment-1125980897
 			for (const link of document.querySelectorAll('link')) {
-				if (link.rel === 'icon') link.href = link.href;
+				if (link.rel === 'icon') link.href = link.href; // eslint-disable-line
 			}
 
 			addEventListener('pageshow', (event) => {
@@ -1806,6 +1817,8 @@ async function load_data(url, invalid) {
 		throw new HttpError(res.status, await res.json());
 	}
 
+	// TODO: fix eslint error
+	// eslint-disable-next-line
 	return new Promise(async (resolve) => {
 		/**
 		 * Map of deferred promises that will be resolved by a subsequent chunk of data

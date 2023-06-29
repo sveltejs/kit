@@ -1,5 +1,31 @@
 # @sveltejs/adapter-cloudflare
 
+## 2.3.0
+
+### Minor Changes
+
+- feat: add cloudflare's `request.cf` object to the `event.platform` property ([#9978](https://github.com/sveltejs/kit/pull/9978))
+
+### Patch Changes
+
+- Updated dependencies [[`4aa976e50`](https://github.com/sveltejs/kit/commit/4aa976e5018664ee333629c5f2f6edacab9d868a), [`c1d34584f`](https://github.com/sveltejs/kit/commit/c1d34584f2404b9c80a547c8138264cac2a813b6), [`1c0423b65`](https://github.com/sveltejs/kit/commit/1c0423b655b7d5909e405d9d15025dc75e71a04f), [`7499d8f31`](https://github.com/sveltejs/kit/commit/7499d8f31195473d2c955f1280e097ac95995efa), [`81af6baf9`](https://github.com/sveltejs/kit/commit/81af6baf9b6f6e8f14212958eb393677db09320a), [`86dd16cc1`](https://github.com/sveltejs/kit/commit/86dd16cc10c35c4b723a4e7f77e654452aa0965e), [`195e9ac22`](https://github.com/sveltejs/kit/commit/195e9ac2233776ecf1aff7dadbadd7226f68e8dd)]:
+  - @sveltejs/kit@1.19.0
+
+## 2.2.4
+
+### Patch Changes
+
+- fix: require explicit cache-control header for caching ([#9885](https://github.com/sveltejs/kit/pull/9885))
+
+## 2.2.3
+
+### Patch Changes
+
+- fix: Copy .wasm files during build ([#9909](https://github.com/sveltejs/kit/pull/9909))
+
+- Updated dependencies [[`50acb22ca`](https://github.com/sveltejs/kit/commit/50acb22caf2901283e044cdfda36db6f07b3e0ae), [`2e6da9496`](https://github.com/sveltejs/kit/commit/2e6da9496bdace2c65040b9d1845c44801ca868c), [`a81106b3a`](https://github.com/sveltejs/kit/commit/a81106b3a817829c41e048207d6253e63988c58c), [`a6338a0b1`](https://github.com/sveltejs/kit/commit/a6338a0b124f54bda7ba3fe64be1d6173e118d00), [`4a85b7f08`](https://github.com/sveltejs/kit/commit/4a85b7f0820d35c7830c00afe1df3c94fcbf8c3d), [`26d2b7f8f`](https://github.com/sveltejs/kit/commit/26d2b7f8f5ca29c60ef61b936ff86deaeb1636ce), [`bc70b4e63`](https://github.com/sveltejs/kit/commit/bc70b4e636fcbd9593356996bf737e014ff8c238), [`ab9f57721`](https://github.com/sveltejs/kit/commit/ab9f57721fca146af7c4eb41f4875fafa5dfc0d2)]:
+  - @sveltejs/kit@1.17.0
+
 ## 2.2.2
 
 ### Patch Changes

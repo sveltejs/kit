@@ -1,5 +1,4 @@
-import { test } from 'uvu';
-import * as assert from 'uvu/assert';
+import { assert, test } from 'vitest';
 import {
 	validate_layout_exports,
 	validate_layout_server_exports,
@@ -42,7 +41,7 @@ test('validates +layout.js', () => {
 		validate_layout_exports({
 			answer: 42
 		});
-	}, `Invalid export 'answer' (valid exports are load, prerender, csr, ssr, trailingSlash, config, or anything with a '_' prefix)`);
+	}, "Invalid export 'answer' (valid exports are load, prerender, csr, ssr, trailingSlash, config, or anything with a '_' prefix)");
 
 	check_error(() => {
 		validate_layout_exports(
@@ -51,13 +50,13 @@ test('validates +layout.js', () => {
 			},
 			'src/routes/foo/+page.ts'
 		);
-	}, `Invalid export 'actions' in src/routes/foo/+page.ts ('actions' is a valid export in +layout.server.ts or +page.server.ts)`);
+	}, "Invalid export 'actions' in src/routes/foo/+page.ts ('actions' is a valid export in +page.server.ts)");
 
 	check_error(() => {
 		validate_layout_exports({
 			GET: {}
 		});
-	}, `Invalid export 'GET' ('GET' is a valid export in +server.js)`);
+	}, "Invalid export 'GET' ('GET' is a valid export in +server.js)");
 });
 
 test('validates +page.js', () => {
@@ -79,7 +78,7 @@ test('validates +page.js', () => {
 		validate_page_exports({
 			answer: 42
 		});
-	}, `Invalid export 'answer' (valid exports are load, prerender, csr, ssr, trailingSlash, config, entries, or anything with a '_' prefix)`);
+	}, "Invalid export 'answer' (valid exports are load, prerender, csr, ssr, trailingSlash, config, entries, or anything with a '_' prefix)");
 
 	check_error(() => {
 		validate_page_exports(
@@ -88,13 +87,13 @@ test('validates +page.js', () => {
 			},
 			'src/routes/foo/+page.ts'
 		);
-	}, `Invalid export 'actions' in src/routes/foo/+page.ts ('actions' is a valid export in +layout.server.ts or +page.server.ts)`);
+	}, "Invalid export 'actions' in src/routes/foo/+page.ts ('actions' is a valid export in +page.server.ts)");
 
 	check_error(() => {
 		validate_page_exports({
 			GET: {}
 		});
-	}, `Invalid export 'GET' ('GET' is a valid export in +server.js)`);
+	}, "Invalid export 'GET' ('GET' is a valid export in +server.js)");
 });
 
 test('validates +layout.server.js', () => {
@@ -104,8 +103,7 @@ test('validates +layout.server.js', () => {
 		csr: false,
 		ssr: false,
 		trailingSlash: false,
-		config: {},
-		actions: {}
+		config: {}
 	});
 
 	validate_layout_server_exports({
@@ -116,13 +114,22 @@ test('validates +layout.server.js', () => {
 		validate_layout_server_exports({
 			answer: 42
 		});
-	}, `Invalid export 'answer' (valid exports are load, prerender, csr, ssr, trailingSlash, config, actions, or anything with a '_' prefix)`);
+	}, "Invalid export 'answer' (valid exports are load, prerender, csr, ssr, trailingSlash, config, or anything with a '_' prefix)");
+
+	check_error(() => {
+		validate_layout_exports(
+			{
+				actions: {}
+			},
+			'src/routes/foo/+page.ts'
+		);
+	}, "Invalid export 'actions' in src/routes/foo/+page.ts ('actions' is a valid export in +page.server.ts)");
 
 	check_error(() => {
 		validate_layout_server_exports({
 			POST: {}
 		});
-	}, `Invalid export 'POST' ('POST' is a valid export in +server.js)`);
+	}, "Invalid export 'POST' ('POST' is a valid export in +server.js)");
 });
 
 test('validates +page.server.js', () => {
@@ -145,13 +152,13 @@ test('validates +page.server.js', () => {
 		validate_page_server_exports({
 			answer: 42
 		});
-	}, `Invalid export 'answer' (valid exports are load, prerender, csr, ssr, trailingSlash, config, actions, entries, or anything with a '_' prefix)`);
+	}, "Invalid export 'answer' (valid exports are load, prerender, csr, ssr, trailingSlash, config, actions, entries, or anything with a '_' prefix)");
 
 	check_error(() => {
 		validate_page_server_exports({
 			POST: {}
 		});
-	}, `Invalid export 'POST' ('POST' is a valid export in +server.js)`);
+	}, "Invalid export 'POST' ('POST' is a valid export in +server.js)");
 });
 
 test('validates +server.js', () => {
@@ -167,13 +174,11 @@ test('validates +server.js', () => {
 		validate_server_exports({
 			answer: 42
 		});
-	}, `Invalid export 'answer' (valid exports are GET, POST, PATCH, PUT, DELETE, OPTIONS, prerender, trailingSlash, config, entries, or anything with a '_' prefix)`);
+	}, "Invalid export 'answer' (valid exports are GET, POST, PATCH, PUT, DELETE, OPTIONS, prerender, trailingSlash, config, entries, or anything with a '_' prefix)");
 
 	check_error(() => {
 		validate_server_exports({
 			csr: false
 		});
-	}, `Invalid export 'csr' ('csr' is a valid export in +layout.js, +page.js, +layout.server.js or +page.server.js)`);
+	}, "Invalid export 'csr' ('csr' is a valid export in +layout.js, +page.js, +layout.server.js or +page.server.js)");
 });
-
-test.run();

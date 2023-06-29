@@ -24,12 +24,7 @@ const config = {
 		imagetools({
 			defaultDirectives: (url) => {
 				const ext = path.extname(url.pathname);
-				const params = new URLSearchParams();
-				params.set('format', 'avif;webp;' + fallback[ext]);
-				if (!params.has('meta') && !params.has('metadata') && !params.has('source') && !params.has('srcset') && !params.has('url')) {
-					params.set('picture', true);
-				}
-				return params;
+				return new URLSearchParams(`format=avif;webp;${fallback[ext]}&as=picture`);
 			}
 		}),
 		sveltekit()
