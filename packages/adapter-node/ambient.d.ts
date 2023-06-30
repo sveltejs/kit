@@ -1,7 +1,3 @@
-declare module 'ENV' {
-	export function env(key: string, fallback?: any): string;
-}
-
 declare module 'HANDLER' {
 	export const handler: import('polka').Middleware;
 }
@@ -15,6 +11,11 @@ declare module 'MANIFEST' {
 
 declare module 'SERVER' {
 	export { Server } from '@sveltejs/kit';
+}
+
+interface ImportMeta {
+	SERVER_DIR: string;
+	ENV_PREFIX?: string;
 }
 
 declare namespace App {
