@@ -1,5 +1,21 @@
 # @sveltejs/kit
 
+## 1.21.0
+
+### Minor Changes
+
+- feat: add `event.isSubRequest` boolean indicating whether this is a call to one of the app's own APIs during SSR (or prerendering) ([#10170](https://github.com/sveltejs/kit/pull/10170))
+
+- feat: add `privatePrefix` to `config.kit.env` ([#9996](https://github.com/sveltejs/kit/pull/9996))
+
+- feat: export `VERSION` from `@sveltejs/kit` ([#9969](https://github.com/sveltejs/kit/pull/9969))
+
+### Patch Changes
+
+- docs: update inline NavigationType documentation ([#10269](https://github.com/sveltejs/kit/pull/10269))
+
+- perf: cache dynamic imports of nodes ([#10080](https://github.com/sveltejs/kit/pull/10080))
+
 ## 1.20.5
 
 ### Patch Changes

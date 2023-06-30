@@ -13,6 +13,7 @@ import { forked } from '../../utils/fork.js';
 import { should_polyfill } from '../../utils/platform.js';
 import { installPolyfills } from '../../exports/node/polyfills.js';
 import { resolvePath } from '../../exports/index.js';
+import { filter_private_env, filter_public_env } from '../../utils/env.js';
 
 export default forked(import.meta.url, analyse);
 
@@ -43,10 +44,9 @@ async function analyse({ manifest_path, env }) {
 	internal.set_building(true);
 
 	// set env, in case it's used in initialisation
-	const entries = Object.entries(env);
-	const prefix = config.env.publicPrefix;
-	internal.set_private_env(Object.fromEntries(entries.filter(([k]) => !k.startsWith(prefix))));
-	internal.set_public_env(Object.fromEntries(entries.filter(([k]) => k.startsWith(prefix))));
+	const { publicPrefix: public_prefix, privatePrefix: private_prefix } = config.env;
+	internal.set_private_env(filter_private_env(env, { public_prefix, private_prefix }));
+	internal.set_public_env(filter_public_env(env, { public_prefix, private_prefix }));
 
 	/** @type {import('types').ServerMetadata} */
 	const metadata = {
