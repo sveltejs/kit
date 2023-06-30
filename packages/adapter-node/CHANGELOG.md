@@ -1,5 +1,17 @@
 # @sveltejs/adapter-node
 
+## 1.3.0
+
+### Minor Changes
+
+- chore: remove build step for adapter node ([#10041](https://github.com/sveltejs/kit/pull/10041))
+
+- feat: load sourcemaps so that they can be merged to point to original sourcefiles ([#10041](https://github.com/sveltejs/kit/pull/10041))
+
+### Patch Changes
+
+- fix: do not crash server if specified `ADDRESS_HEADER` is missing from a request ([#10285](https://github.com/sveltejs/kit/pull/10285))
+
 ## 1.2.4
 
 ### Patch Changes
