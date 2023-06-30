@@ -107,6 +107,8 @@ export default function (opts = {}) {
 				format: 'esm',
 				sourcemap: true,
 				chunkFileNames: 'server/chunks/[name]-[hash].js',
+				// without this rollup will insert some imports to try speed up
+				// module loading but it doesn't really affect anything on the server side
 				hoistTransitiveImports: false
 			});
 		}
