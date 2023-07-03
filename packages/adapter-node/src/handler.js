@@ -22,7 +22,7 @@ const host_header = env('HOST_HEADER', 'host').toLowerCase();
 const body_size_limit = parseInt(env('BODY_SIZE_LIMIT', '524288'));
 
 const root = fileURLToPath(import.meta.SERVER_DIR);
-const dir = root.endsWith('.js') ? path.dirname(root) : root;
+const dir = !fs.statSync(root).isDirectory() ? path.dirname(root) : root;
 
 /**
  * @param {string} path
