@@ -35,7 +35,7 @@
 		"dts-buddy": "^0.0.10",
 		"marked": "^4.2.3",
 		"rollup": "^3.7.0",
-		"svelte": "^4.0.0",
+		"svelte": "^4.0.3",
 		"svelte-preprocess": "^5.0.4",
 		"typescript": "^4.9.4",
 		"vite": "^4.3.6",
