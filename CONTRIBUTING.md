@@ -14,21 +14,20 @@ npm i -g pnpm
 git clone git@github.com:sveltejs/kit.git
 cd kit
 pnpm install
-pnpm check # generates the types needed to run the doc site
 ```
 
 You can now run SvelteKit by linking it into your project with [pnpm `overrides`](https://pnpm.io/package_json#pnpmoverrides):
 
 ```jsonc
 {
-	// ...
-	"pnpm": {
-		"overrides": {
-			"@sveltejs/kit": "link:../path/to/svelte-kit/packages/kit",
-			// additionally/optional the adapter you're using
-			"@sveltejs/adapter-auto": "link:../path/to/svelte-kit/packages/adapter-auto"
-		}
-	}
+  // ...
+  "pnpm": {
+    "overrides": {
+      "@sveltejs/kit": "link:../path/to/svelte-kit/packages/kit",
+      // additionally/optional the adapter you're using
+      "@sveltejs/adapter-auto": "link:../path/to/svelte-kit/packages/adapter-auto"
+    }
+  }
 }
 ```
 
@@ -80,15 +79,15 @@ If you would like to test local changes to Vite or another dependency, you can b
 
 ```jsonc
 {
-	// ...
-	"dependencies": {
-		"vite": "^4.0.0"
-	},
-	"pnpm": {
-		"overrides": {
-			"vite": "link:../path/to/vite/packages/vite"
-		}
-	}
+  // ...
+  "dependencies": {
+    "vite": "^4.0.0"
+  },
+  "pnpm": {
+    "overrides": {
+      "vite": "link:../path/to/vite/packages/vite"
+    }
+  }
 }
 ```
 
