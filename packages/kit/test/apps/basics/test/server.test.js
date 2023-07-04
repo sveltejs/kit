@@ -412,6 +412,27 @@ test.describe('Load', () => {
 		await page.goto(`/load/fetch-origin-external?port=${port}`);
 		expect(await page.textContent('h1')).toBe(`origin: ${new URL(baseURL).origin}`);
 	});
+
+	test('does not run when using invalid request methods', async ({ request }) => {
+		const load_url = '/load';
+
+		let response = await request.fetch(load_url, {
+			method: 'OPTIONS'
+		});
+
+		expect(response.status()).toBe(204);
+		expect(await response.text()).toBe('');
+		expect(response.headers()['allow']).toBe('GET, HEAD, OPTIONS');
+
+		const actions_url = '/actions/enhance';
+		response = await request.fetch(actions_url, {
+			method: 'OPTIONS'
+		});
+
+		expect(response.status()).toBe(204);
+		expect(await response.text()).toBe('');
+		expect(response.headers()['allow']).toBe('GET, HEAD, OPTIONS, POST');
+	});
 });
 
 test.describe('Routing', () => {

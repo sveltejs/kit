@@ -5,7 +5,7 @@ import { render_page } from './page/index.js';
 import { render_response } from './page/render.js';
 import { respond_with_error } from './page/respond_with_error.js';
 import { is_form_content_type } from '../../utils/http.js';
-import { handle_fatal_error, redirect_response } from './utils.js';
+import { handle_fatal_error, method_not_allowed, redirect_response } from './utils.js';
 import {
 	decode_pathname,
 	decode_params,
@@ -41,6 +41,10 @@ const default_filter = () => false;
 
 /** @type {import('types').RequiredResolveOptions['preload']} */
 const default_preload = ({ type }) => type === 'js' || type === 'css';
+
+const page_methods = new Set(['GET', 'HEAD', 'POST']);
+
+const allowed_page_methods = new Set(['GET', 'HEAD', 'OPTIONS']);
 
 /**
  * @param {Request} request
@@ -343,7 +347,6 @@ export async function respond(request, options, manifest, state) {
 	}
 
 	/**
-	 *
 	 * @param {import('@sveltejs/kit').RequestEvent} event
 	 * @param {import('@sveltejs/kit').ResolveOptions} [opts]
 	 */
@@ -379,6 +382,8 @@ export async function respond(request, options, manifest, state) {
 			}
 
 			if (route) {
+				const method = /** @type {import('types').HttpMethod} */ (event.request.method);
+
 				/** @type {Response} */
 				let response;
 
@@ -395,7 +400,32 @@ export async function respond(request, options, manifest, state) {
 				} else if (route.endpoint && (!route.page || is_endpoint_request(event))) {
 					response = await render_endpoint(event, await route.endpoint(), state);
 				} else if (route.page) {
-					response = await render_page(event, route.page, options, manifest, state, resolve_opts);
+					if (page_methods.has(method)) {
+						response = await render_page(event, route.page, options, manifest, state, resolve_opts);
+					} else {
+						const allowed_methods = new Set(allowed_page_methods);
+						const node = await manifest._.nodes[route.page.leaf]();
+						if (node?.server?.actions) {
+							allowed_methods.add('POST');
+						}
+
+						if (method === 'OPTIONS') {
+							// This will deny CORS preflight requests implicitly because we don't
+							// add the required CORS headers to the response.
+							response = new Response(null, {
+								status: 204,
+								headers: {
+									allow: Array.from(allowed_methods.values()).join(', ')
+								}
+							});
+						} else {
+							const mod = [...allowed_methods].reduce((acc, curr) => {
+								acc[curr] = true;
+								return acc;
+							}, /** @type {Record<string, any>} */ ({}));
+							response = method_not_allowed(mod, method);
+						}
+					}
 				} else {
 					// a route will always have a page or an endpoint, but TypeScript
 					// doesn't know that
