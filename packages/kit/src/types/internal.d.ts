@@ -1,4 +1,4 @@
-import { SvelteComponent } from 'svelte/internal';
+import { SvelteComponent } from 'svelte';
 import {
 	Config,
 	ServerLoad,
@@ -336,6 +336,7 @@ export interface SSROptions {
 	track_server_fetches: boolean;
 	embedded: boolean;
 	env_public_prefix: string;
+	env_private_prefix: string;
 	hooks: ServerHooks;
 	preload_strategy: ValidatedConfig['kit']['output']['preloadStrategy'];
 	root: SSRComponent['default'];

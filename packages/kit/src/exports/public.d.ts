@@ -372,6 +372,11 @@ export interface KitConfig {
 		 * @default "PUBLIC_"
 		 */
 		publicPrefix?: string;
+		/**
+		 * A prefix that signals that an environment variable is unsafe to expose to client-side code. Environment variables matching neither the public nor the private prefix will be discarded completely. See [`$env/static/private`](/docs/modules#$env-static-private) and [`$env/dynamic/private`](/docs/modules#$env-dynamic-private).
+		 * @default ""
+		 */
+		privatePrefix?: string;
 	};
 	/**
 	 * Where to find various files within your project.
@@ -449,7 +454,7 @@ export interface KitConfig {
 		/**
 		 * SvelteKit will preload the JavaScript modules needed for the initial page to avoid import 'waterfalls', resulting in faster application startup. There
 		 * are three strategies with different trade-offs:
-		 * - `modulepreload` - uses `<link rel="modulepreload">`. This delivers the best results in Chromium-based browsers, but is currently ignored by Firefox and Safari (though support is coming to Safari soon).
+		 * - `modulepreload` - uses `<link rel="modulepreload">`. This delivers the best results in Chromium-based browsers, in Firefox 115+, and Safari 17+. It is ignored in older browsers.
 		 * - `preload-js` - uses `<link rel="preload">`. Prevents waterfalls in Chromium and Safari, but Chromium will parse each module twice (once as a script, once as a module). Causes modules to be requested twice in Firefox. This is a good setting if you want to maximise performance for users on iOS devices at the cost of a very slight degradation for Chromium users.
 		 * - `preload-mjs` - uses `<link rel="preload">` but with the `.mjs` extension which prevents double-parsing in Chromium. Some static webservers will fail to serve .mjs files with a `Content-Type: application/javascript` header, which will cause your application to break. If that doesn't apply to you, this is the option that will deliver the best performance for the largest number of users, until `modulepreload` is more widely supported.
 		 * @default "modulepreload"
@@ -821,7 +826,7 @@ export interface NavigationTarget {
 
 /**
  * - `enter`: The app has hydrated
- * - `form`: The user submitted a `<form>`
+ * - `form`: The user submitted a `<form>` with a GET method
  * - `leave`: The user is leaving the app by closing the tab or using the back/forward buttons to go to a different document
  * - `link`: Navigation was triggered by a link click
  * - `goto`: Navigation was triggered by a `goto(...)` call or a redirect
@@ -1012,6 +1017,10 @@ export interface RequestEvent<
 	 * related to the data request in this case. Use this property instead if the distinction is important to you.
 	 */
 	isDataRequest: boolean;
+	/**
+	 * `true` for `+server.js` calls coming from SvelteKit without the overhead of actually making an HTTP request. This happens when you make same-origin `fetch` requests on the server.
+	 */
+	isSubRequest: boolean;
 }
 
 /**

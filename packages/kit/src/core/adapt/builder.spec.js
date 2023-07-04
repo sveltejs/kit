@@ -1,10 +1,10 @@
-import { rmSync } from 'node:fs';
-import { join } from 'node:path';
+import { existsSync, rmSync } from 'node:fs';
+import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { expect, test } from 'vitest';
-import glob from 'tiny-glob/sync.js';
+import { assert, expect, test } from 'vitest';
 import { create_builder } from './builder.js';
 import { posixify } from '../../utils/filesystem.js';
+import { list_files } from '../utils.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = join(__filename, '..');
@@ -46,23 +46,27 @@ test('copy files', () => {
 
 	rmSync(dest, { recursive: true, force: true });
 
-	expect(builder.writeClient(dest)).toEqual(
-		glob('**', { cwd: dest, dot: true, filesOnly: true }).map(posixify)
-	);
-
-	expect(glob('**', { cwd: `${outDir}/output/client`, dot: true })).toEqual(
-		glob('**', { cwd: dest, dot: true })
-	);
+	expect(builder.writeClient(dest)).toEqual(list_files(dest).map(posixify));
+	expect(list_files(`${outDir}/output/client`)).toEqual(list_files(dest));
 
 	rmSync(dest, { recursive: true, force: true });
 
-	expect(builder.writeServer(dest)).toEqual(
-		glob('**', { cwd: dest, dot: true, filesOnly: true }).map(posixify)
-	);
-
-	expect(glob('**', { cwd: `${outDir}/output/server`, dot: true })).toEqual(
-		glob('**', { cwd: dest, dot: true })
-	);
+	expect(builder.writeServer(dest)).toEqual(list_files(dest).map(posixify));
+	expect(list_files(`${outDir}/output/server`)).toEqual(list_files(dest));
 
 	rmSync(dest, { force: true, recursive: true });
+});
+
+test('compress files', async () => {
+	// @ts-expect-error - we don't need the whole config for this test
+	const builder = create_builder({
+		route_data: []
+	});
+
+	const target = fileURLToPath(new URL('./fixtures/compress/foo.css', import.meta.url));
+	rmSync(target + '.br', { force: true });
+	rmSync(target + '.gz', { force: true });
+	await builder.compress(dirname(target));
+	assert.ok(existsSync(target + '.br'));
+	assert.ok(existsSync(target + '.gz'));
 });
