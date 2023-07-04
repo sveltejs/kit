@@ -329,7 +329,7 @@ export async function POST({ request }) {
 
 ### Catch-all method
 
-Exporting the `all` handler will match any unhandled request methods.
+Exporting the `all` handler will match any unhandled request methods, including methods like `MOVE` which have no dedicated export from `+server.js`.
 
 ```js
 // @errors: 7031
