@@ -399,27 +399,37 @@ export async function respond(request, options, manifest, state) {
 					);
 				} else if (route.endpoint && (!route.page || is_endpoint_request(event))) {
 					response = await render_endpoint(event, await route.endpoint(), state);
-				} else if (route.page && page_methods.has(method)) {
-					response = await render_page(event, route.page, options, manifest, state, resolve_opts);
-				} else if (route.page && method === 'OPTIONS') {
-					// if no OPTIONS endpoint exists, fallback to handling it gracefully.
-					const allowed_methods = new Set(allowed_page_methods);
-
-					const node = await manifest._.nodes[route.page.leaf]();
-					if (node?.server?.actions) {
-						allowed_methods.add('POST');
-					}
-
-					response = new Response(null, {
-						status: 204,
-						headers: {
-							allow: Array.from(allowed_methods.values()).join(', ')
+				} else if (route.page) {
+					if (page_methods.has(method)) {
+						response = await render_page(event, route.page, options, manifest, state, resolve_opts);
+					} else {
+						const allowed_methods = new Set(allowed_page_methods);
+						const node = await manifest._.nodes[route.page.leaf]();
+						if (node?.server?.actions) {
+							allowed_methods.add('POST');
 						}
-					});
+
+						if (method === 'OPTIONS') {
+							// This will deny CORS preflight requests implicitly because we don't
+							// add the required CORS headers to the response.
+							response = new Response(null, {
+								status: 204,
+								headers: {
+									allow: Array.from(allowed_methods.values()).join(', ')
+								}
+							});
+						} else {
+							const mod = [...allowed_methods].reduce((acc, curr) => {
+								acc[curr] = true;
+								return acc;
+							}, /** @type {Record<string, any>} */ ({}));
+							response = method_not_allowed(mod, method);
+						}
+					}
 				} else {
-					// if the request method is not allowed by us for the page / endpoint.
-					const mod = route.endpoint ? await route.endpoint() : {};
-					return method_not_allowed(mod, method);
+					// a route will always have a page or an endpoint, but TypeScript
+					// doesn't know that
+					throw new Error('This should never happen');
 				}
 
 				// If the route contains a page and an endpoint, we need to add a
