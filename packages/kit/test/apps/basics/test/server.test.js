@@ -237,6 +237,13 @@ test.describe('Endpoints', () => {
 		expect(await response.text()).toBe('ok');
 
 		response = await request.fetch(url, {
+			method: 'MOVE' // also works with arcane methods
+		});
+
+		expect(response.status()).toBe(200);
+		expect(await response.text()).toBe('ok');
+
+		response = await request.fetch(url, {
 			method: 'OPTIONS'
 		});
 
