@@ -241,7 +241,7 @@ test.describe('Endpoints', () => {
 		});
 
 		expect(response.status()).toBe(200);
-		expect(await response.text()).toBe('ok');
+		expect(await response.text()).toBe('catch-all');
 
 		response = await request.fetch(url, {
 			method: 'OPTIONS'
