@@ -259,12 +259,12 @@ export interface ServerErrorNode {
 export interface ServerMetadataRoute {
 	config: any;
 	api: {
-		methods: HttpMethod[];
+		methods: (HttpMethod | '*')[];
 	};
 	page: {
 		methods: Array<'GET' | 'POST'>;
 	};
-	methods: HttpMethod[];
+	methods: (HttpMethod | '*')[];
 	prerender: PrerenderOption | undefined;
 	entries: Array<string> | undefined;
 }
