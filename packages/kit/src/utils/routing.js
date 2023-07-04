@@ -96,6 +96,17 @@ export function parse_route_id(id) {
 	return { pattern, params };
 }
 
+const optional_param_regex = /\/\[\[\w+?(?:=\w+)?\]\]/;
+
+/**
+ * Removes optional params from a route ID.
+ * @param {string} id
+ * @returns The route id with optional params removed
+ */
+export function remove_optional_params(id) {
+	return id.replace(optional_param_regex, '');
+}
+
 /**
  * Returns `false` for `(group)` segments
  * @param {string} segment
@@ -118,7 +129,7 @@ export function get_route_segments(route) {
 /**
  * @param {RegExpMatchArray} match
  * @param {import('types').RouteParam[]} params
- * @param {Record<string, import('types').ParamMatcher>} matchers
+ * @param {Record<string, import('@sveltejs/kit').ParamMatcher>} matchers
  */
 export function exec(match, params, matchers) {
 	/** @type {Record<string, string>} */
@@ -130,18 +141,17 @@ export function exec(match, params, matchers) {
 
 	for (let i = 0; i < params.length; i += 1) {
 		const param = params[i];
-		const value = values[i - buffered];
+		let value = values[i - buffered];
 
 		// in the `[[a=b]]/.../[...rest]` case, if one or more optional parameters
 		// weren't matched, roll the skipped values into the rest
 		if (param.chained && param.rest && buffered) {
-			result[param.name] = values
+			value = values
 				.slice(i - buffered, i + 1)
 				.filter((s) => s)
 				.join('/');
 
 			buffered = 0;
-			continue;
 		}
 
 		// if `value` is undefined, it means this is an optional or rest parameter
@@ -157,7 +167,7 @@ export function exec(match, params, matchers) {
 			// and the next value is defined, otherwise the buffer will cause us to skip values
 			const next_param = params[i + 1];
 			const next_value = values[i + 1];
-			if (next_param && !next_param.rest && next_param.optional && next_value) {
+			if (next_param && !next_param.rest && next_param.optional && next_value && param.chained) {
 				buffered = 0;
 			}
 			continue;

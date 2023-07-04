@@ -66,6 +66,7 @@ export function replace_placeholders(content) {
 			return modules
 				.map((module) => {
 					if (module.exports.length === 0 && !module.exempt) return '';
+					if (module.name === 'Private types') return;
 
 					let import_block = '';
 

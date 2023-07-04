@@ -5,7 +5,11 @@ const config = {
 	kit: {
 		adapter: adapter({
 			runtime: 'edge'
-		})
+		}),
+
+		paths: {
+			relative: true
+		}
 	},
 
 	vitePlugin: {

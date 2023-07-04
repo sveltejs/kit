@@ -93,9 +93,15 @@ export function decode_uri(uri) {
 /**
  * URL properties that could change during the lifetime of the page,
  * which excludes things like `origin`
- * @type {Array<keyof URL>}
  */
-const tracked_url_properties = ['href', 'pathname', 'search', 'searchParams', 'toString', 'toJSON'];
+const tracked_url_properties = /** @type {const} */ ([
+	'href',
+	'pathname',
+	'search',
+	'searchParams',
+	'toString',
+	'toJSON'
+]);
 
 /**
  * @param {URL} url
@@ -105,12 +111,10 @@ export function make_trackable(url, callback) {
 	const tracked = new URL(url);
 
 	for (const property of tracked_url_properties) {
-		let value = tracked[property];
-
 		Object.defineProperty(tracked, property, {
 			get() {
 				callback();
-				return value;
+				return url[property];
 			},
 
 			enumerable: true,

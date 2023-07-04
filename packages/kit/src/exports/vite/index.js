@@ -101,7 +101,7 @@ const warning_preprocessor = {
 		if (basename.startsWith('+layout.') && !content.includes('<slot')) {
 			const message =
 				`\n${colors.bold().red(path.relative('.', filename))}\n` +
-				`\`<slot />\` missing — inner content will not be rendered`;
+				'`<slot />` missing — inner content will not be rendered';
 
 			if (!warned.has(message)) {
 				console.log(message);
@@ -111,7 +111,10 @@ const warning_preprocessor = {
 	}
 };
 
-/** @return {Promise<import('vite').Plugin[]>} */
+/**
+ * Returns the SvelteKit Vite plugins.
+ * @returns {Promise<import('vite').Plugin[]>}
+ */
 export async function sveltekit() {
 	const svelte_config = await load_config();
 
@@ -342,7 +345,7 @@ function kit({ svelte_config }) {
 
 			const global = is_build
 				? `globalThis.__sveltekit_${version_hash}`
-				: `globalThis.__sveltekit_dev`;
+				: 'globalThis.__sveltekit_dev';
 
 			if (options?.ssr === false && process.env.TEST !== 'true') {
 				const normalized_cwd = vite.normalizePath(cwd);
@@ -388,7 +391,7 @@ function kit({ svelte_config }) {
 
 				// for internal use only. it's published as $app/paths externally
 				// we use this alias so that we won't collide with user aliases
-				case '\0__sveltekit/paths':
+				case '\0__sveltekit/paths': {
 					const { assets, base } = svelte_config.kit.paths;
 
 					// use the values defined in `global`, but fall back to hard-coded values
@@ -424,8 +427,9 @@ function kit({ svelte_config }) {
 							assets = initial.assets = path;
 						}
 					`;
+				}
 
-				case '\0__sveltekit/environment':
+				case '\0__sveltekit/environment': {
 					const { version } = svelte_config.kit;
 
 					return dedent`
@@ -436,6 +440,7 @@ function kit({ svelte_config }) {
 							building = true;
 						}
 					`;
+				}
 			}
 		}
 	};
@@ -526,26 +531,11 @@ function kit({ svelte_config }) {
 					input['entry/start'] = `${runtime_directory}/client/start.js`;
 					input['entry/app'] = `${kit.outDir}/generated/client-optimized/app.js`;
 
-					/**
-					 * @param {string | undefined} file
-					 */
-					function add_input(file) {
-						if (!file) return;
-
-						const resolved = path.resolve(file);
-						const relative = decodeURIComponent(path.relative(kit.files.routes, resolved));
-
-						const name = relative.startsWith('..')
-							? path.basename(file).replace(/^\+/, '')
-							: relative.replace(/(\\|\/)\+/g, '-').replace(/[\\/]/g, '-');
-
-						input[`entry/${name}`] = resolved;
-					}
-
-					for (const node of manifest_data.nodes) {
-						add_input(node.component);
-						add_input(node.universal);
-					}
+					manifest_data.nodes.forEach((node, i) => {
+						if (node.component || node.universal) {
+							input[`nodes/${i}`] = `${kit.outDir}/generated/client-optimized/nodes/${i}.js`;
+						}
+					});
 				}
 
 				// see the kit.output.preloadStrategy option for details on why we have multiple options here
@@ -668,7 +658,7 @@ function kit({ svelte_config }) {
 					app_dir: kit.appDir,
 					app_path: `${kit.paths.base.slice(1)}${kit.paths.base ? '/' : ''}${kit.appDir}`,
 					manifest_data,
-					service_worker: !!service_worker_entry_file ? 'service-worker.js' : null, // TODO make file configurable?
+					service_worker: service_worker_entry_file ? 'service-worker.js' : null, // TODO make file configurable?
 					client: null,
 					server_manifest
 				};

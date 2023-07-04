@@ -73,7 +73,7 @@ export async function load_config({ cwd = process.cwd() } = {}) {
 }
 
 /**
- * @param {import('types').Config} config
+ * @param {import('@sveltejs/kit').Config} config
  * @returns {import('types').ValidatedConfig}
  */
 function process_config(config, { cwd = process.cwd() } = {}) {
@@ -95,7 +95,7 @@ function process_config(config, { cwd = process.cwd() } = {}) {
 }
 
 /**
- * @param {import('types').Config} config
+ * @param {import('@sveltejs/kit').Config} config
  * @returns {import('types').ValidatedConfig}
  */
 export function validate_config(config) {

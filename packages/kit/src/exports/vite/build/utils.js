@@ -1,5 +1,6 @@
 import fs from 'node:fs';
 import path from 'node:path';
+import { normalizePath } from 'vite';
 
 /**
  * Adds transitive JS and CSS dependencies to the js and css inputs.
@@ -72,7 +73,7 @@ export function find_deps(manifest, entry, add_dynamic_css) {
  */
 export function resolve_symlinks(manifest, file) {
 	while (!manifest[file]) {
-		const next = path.relative('.', fs.realpathSync(file));
+		const next = normalizePath(path.relative('.', fs.realpathSync(file)));
 		if (next === file) throw new Error(`Could not find file "${file}" in Vite manifest`);
 		file = next;
 	}

@@ -37,11 +37,11 @@ export function get_cookies(request, url, trailing_slash) {
 		secure: url.hostname === 'localhost' && url.protocol === 'http:' ? false : true
 	};
 
-	/** @type {import('types').Cookies} */
+	/** @type {import('@sveltejs/kit').Cookies} */
 	const cookies = {
 		// The JSDoc param annotations appearing below for get, set and delete
 		// are necessary to expose the `cookie` library types to
-		// typescript users. `@type {import('types').Cookies}` above is not
+		// typescript users. `@type {import('@sveltejs/kit').Cookies}` above is not
 		// sufficient to do so.
 
 		/**
@@ -107,32 +107,7 @@ export function get_cookies(request, url, trailing_slash) {
 		 * @param {import('cookie').CookieSerializeOptions} opts
 		 */
 		set(name, value, opts = {}) {
-			let path = opts.path ?? default_path;
-
-			new_cookies[name] = {
-				name,
-				value,
-				options: {
-					...defaults,
-					...opts,
-					path
-				}
-			};
-
-			if (__SVELTEKIT_DEV__) {
-				const serialized = serialize(name, value, new_cookies[name].options);
-				if (new TextEncoder().encode(serialized).byteLength > MAX_COOKIE_SIZE) {
-					throw new Error(`Cookie "${name}" is too large, and will be discarded by the browser`);
-				}
-
-				cookie_paths[name] ??= new Set();
-
-				if (!value) {
-					cookie_paths[name].delete(path);
-				} else {
-					cookie_paths[name].add(path);
-				}
-			}
+			set_internal(name, value, { ...defaults, ...opts });
 		},
 
 		/**
@@ -193,7 +168,40 @@ export function get_cookies(request, url, trailing_slash) {
 			.join('; ');
 	}
 
-	return { cookies, new_cookies, get_cookie_header };
+	/**
+	 * @param {string} name
+	 * @param {string} value
+	 * @param {import('cookie').CookieSerializeOptions} opts
+	 */
+	function set_internal(name, value, opts) {
+		const path = opts.path ?? default_path;
+
+		new_cookies[name] = {
+			name,
+			value,
+			options: {
+				...opts,
+				path
+			}
+		};
+
+		if (__SVELTEKIT_DEV__) {
+			const serialized = serialize(name, value, new_cookies[name].options);
+			if (new TextEncoder().encode(serialized).byteLength > MAX_COOKIE_SIZE) {
+				throw new Error(`Cookie "${name}" is too large, and will be discarded by the browser`);
+			}
+
+			cookie_paths[name] ??= new Set();
+
+			if (!value) {
+				cookie_paths[name].delete(path);
+			} else {
+				cookie_paths[name].add(path);
+			}
+		}
+	}
+
+	return { cookies, new_cookies, get_cookie_header, set_internal };
 }
 
 /**

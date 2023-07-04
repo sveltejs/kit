@@ -1,5 +1,4 @@
-import { test } from 'uvu';
-import * as assert from 'uvu/assert';
+import { assert, test } from 'vitest';
 import { execSync } from 'node:child_process';
 import path from 'node:path';
 
@@ -17,7 +16,7 @@ test('$lib/*.server.* is not statically importable from the client', () => {
 		);
 		return;
 	}
-	assert.unreachable();
+	throw new Error();
 });
 
 test('$lib/*.server.* is not dynamically importable from the client', () => {
@@ -34,7 +33,7 @@ test('$lib/*.server.* is not dynamically importable from the client', () => {
 		);
 		return;
 	}
-	assert.unreachable();
+	throw new Error();
 });
 
 test('$lib/server/* is not statically importable from the client', () => {
@@ -46,12 +45,12 @@ test('$lib/server/* is not statically importable from the client', () => {
 		});
 	} catch (err) {
 		assert.ok(
-			err.message.includes('Cannot import $lib/server/something/test.js into client-side code'),
+			err.message.includes('Cannot import $lib/server/something/private.js into client-side code'),
 			`received unexpected exception message ${err.message}`
 		);
 		return;
 	}
-	assert.unreachable();
+	throw new Error();
 });
 
 test('$lib/server/* is not dynamically importable from the client', () => {
@@ -63,12 +62,10 @@ test('$lib/server/* is not dynamically importable from the client', () => {
 		});
 	} catch (err) {
 		assert.ok(
-			err.message.includes('Cannot import $lib/server/something/test.js into client-side code'),
+			err.message.includes('Cannot import $lib/server/something/private.js into client-side code'),
 			`received unexpected exception message ${err.message}`
 		);
 		return;
 	}
-	assert.unreachable();
+	throw new Error();
 });
-
-test.run();

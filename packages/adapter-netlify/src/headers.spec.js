@@ -1,6 +1,5 @@
+import { expect, test } from 'vitest';
 import './shims.js';
-import { test } from 'uvu';
-import * as assert from 'uvu/assert';
 import { split_headers } from './headers.js';
 
 test('empty headers', () => {
@@ -8,7 +7,7 @@ test('empty headers', () => {
 
 	const result = split_headers(headers);
 
-	assert.equal(result, {
+	expect(result).toEqual({
 		headers: {},
 		multiValueHeaders: {}
 	});
@@ -21,7 +20,7 @@ test('single-value headers', () => {
 
 	const result = split_headers(headers);
 
-	assert.equal(result, {
+	expect(result).toEqual({
 		headers: {
 			// Note: becomes lowercase even if specified as uppercase
 			location: '/apple',
@@ -43,12 +42,10 @@ test('multi-value headers', () => {
 	const result = split_headers(headers);
 
 	// it splits at actual cookie boundaries, not the commas in the dates
-	assert.equal(result, {
+	expect(result).toEqual({
 		headers: {},
 		multiValueHeaders: {
 			'set-cookie': [`flavor=sugar; Expires=${wednesday}`, `diameter=6cm; Expires=${thursday}`]
 		}
 	});
 });
-
-test.run();

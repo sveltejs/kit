@@ -4,7 +4,7 @@ title: Service workers
 
 Service workers act as proxy servers that handle network requests inside your app. This makes it possible to make your app work offline, but even if you don't need offline support (or can't realistically implement it because of the type of app you're building), it's often worth using service workers to speed up navigation by precaching your built JS and CSS.
 
-In SvelteKit, if you have a `src/service-worker.js` file (or `src/service-worker.ts`, `src/service-worker/index.js`, etc) it will be bundled and automatically registered. You can change the [location of your service worker](configuration#files) if you need to.
+In SvelteKit, if you have a `src/service-worker.js` file (or `src/service-worker/index.js`) it will be bundled and automatically registered. You can change the [location of your service worker](configuration#files) if you need to.
 
 You can [disable automatic registration](configuration#serviceworker) if you need to register the service worker with your own logic or use another solution. The default registration looks something like this:
 
