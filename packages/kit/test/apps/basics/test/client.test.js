@@ -436,6 +436,16 @@ test.describe('Invalidation', () => {
 		await expect(page.getByText('layout: 4, page: 4')).toBeVisible();
 	});
 
+	test('multiple synchronous invalidations are batched', async ({ page }) => {
+		await page.goto('/load/invalidation/multiple-batched');
+		const btn = page.locator('#multiple-batched');
+		await expect(btn).toHaveText('0');
+
+		await btn.click();
+		await expect(btn).toHaveAttribute('data-done', 'true');
+		await expect(btn).toHaveText('2');
+	});
+
 	test('invalidateAll persists through redirects', async ({ page }) => {
 		await page.goto('/load/invalidation/multiple/redirect');
 		await page.locator('button.redirect').click();
@@ -640,7 +650,9 @@ test.describe('data-sveltekit attributes', () => {
 
 test.describe('Content negotiation', () => {
 	test('+server.js next to +page.svelte works', async ({ page }) => {
-		await page.goto('/routing/content-negotiation');
+		const response = await page.goto('/routing/content-negotiation');
+
+		expect(response.headers()['vary']).toBe('Accept');
 		expect(await page.textContent('p')).toBe('Hi');
 
 		const pre = page.locator('pre');

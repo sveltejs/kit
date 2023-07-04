@@ -1,5 +1,14 @@
 # @sveltejs/adapter-vercel
 
+## 3.0.1
+
+### Patch Changes
+
+- fix: stop incorrectly warning users that crons don't match paths ([#10074](https://github.com/sveltejs/kit/pull/10074))
+
+- Updated dependencies [[`d4de2049c`](https://github.com/sveltejs/kit/commit/d4de2049cd05c7b32cfbe1b0e63b58f345f13372)]:
+  - @sveltejs/kit@1.20.1
+
 ## 3.0.0
 
 ### Major Changes
