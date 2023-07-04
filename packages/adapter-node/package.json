@@ -19,32 +19,35 @@
 	},
 	"types": "index.d.ts",
 	"files": [
-		"src",
+		"files",
 		"index.js",
 		"index.d.ts"
 	],
 	"scripts": {
+		"dev": "rimraf files && rollup -cw",
+		"build": "rimraf files && rollup -c",
 		"test": "echo \"tests temporarily disabled\" # c8 vitest run",
 		"check": "tsc",
 		"lint": "prettier --check . --config ../../.prettierrc --ignore-path .gitignore",
-		"format": "pnpm lint --write"
+		"format": "pnpm lint --write",
+		"prepublishOnly": "pnpm build"
 	},
 	"devDependencies": {
+		"@polka/url": "^1.0.0-next.21",
 		"@sveltejs/kit": "workspace:^",
 		"@types/node": "^16.18.6",
 		"c8": "^8.0.0",
+		"polka": "^1.0.0-next.22",
+		"rimraf": "^5.0.0",
+		"sirv": "^2.0.3",
 		"typescript": "^4.9.4",
 		"vitest": "^0.32.2"
 	},
 	"dependencies": {
-		"@polka/url": "^1.0.0-next.21",
 		"@rollup/plugin-commonjs": "^25.0.0",
 		"@rollup/plugin-json": "^6.0.0",
 		"@rollup/plugin-node-resolve": "^15.0.1",
-		"@rollup/pluginutils": "^5.0.2",
-		"polka": "^1.0.0-next.22",
-		"rollup": "^3.7.0",
-		"sirv": "^2.0.2"
+		"rollup": "^3.7.0"
 	},
 	"peerDependencies": {
 		"@sveltejs/kit": "^1.0.0"
