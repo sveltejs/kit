@@ -402,6 +402,18 @@ export async function respond(request, options, manifest, state) {
 					throw new Error('This should never happen');
 				}
 
+				// If the route contains a page and an endpoint, we need to add a
+				// `Vary: Accept` header to the response because of browser caching
+				if (request.method === 'GET' && route.page && route.endpoint) {
+					const vary = response.headers
+						.get('vary')
+						?.split(',')
+						?.map((v) => v.trim().toLowerCase());
+					if (!(vary?.includes('accept') || vary?.includes('*'))) {
+						response.headers.append('Vary', 'Accept');
+					}
+				}
+
 				return response;
 			}
 

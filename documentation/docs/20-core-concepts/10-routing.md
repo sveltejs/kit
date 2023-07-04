@@ -330,7 +330,8 @@ export async function POST({ request }) {
 `+server.js` files can be placed in the same directory as `+page` files, allowing the same route to be either a page or an API endpoint. To determine which, SvelteKit applies the following rules:
 
 - `PUT`/`PATCH`/`DELETE`/`OPTIONS` requests are always handled by `+server.js` since they do not apply to pages
-- `GET`/`POST` requests are treated as page requests if the `accept` header prioritises `text/html` (in other words, it's a browser page request), else they are handled by `+server.js`
+- `GET`/`POST` requests are treated as page requests if the `accept` header prioritises `text/html` (in other words, it's a browser page request), else they are handled by `+server.js`.
+- Responses to `GET` requests will inlcude a `Vary: Accept` header, so that proxies and browsers cache HTML and JSON responses separately.
 
 ## $types
 

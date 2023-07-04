@@ -650,7 +650,9 @@ test.describe('data-sveltekit attributes', () => {
 
 test.describe('Content negotiation', () => {
 	test('+server.js next to +page.svelte works', async ({ page }) => {
-		await page.goto('/routing/content-negotiation');
+		const response = await page.goto('/routing/content-negotiation');
+
+		expect(response.headers()['vary']).toBe('Accept');
 		expect(await page.textContent('p')).toBe('Hi');
 
 		const pre = page.locator('pre');
