@@ -10,6 +10,7 @@ createBundle({
 		'@sveltejs/kit/vite': 'src/exports/vite/index.js',
 		'$app/environment': 'src/runtime/app/environment.js',
 		'$app/forms': 'src/runtime/app/forms.js',
+		'$app/images': 'src/runtime/app/images.js',
 		'$app/navigation': 'src/runtime/app/navigation.js',
 		'$app/paths': 'src/runtime/app/paths.js',
 		'$app/stores': 'src/runtime/app/stores.js'

@@ -431,6 +431,31 @@ export interface KitConfig {
 		errorTemplate?: string;
 	};
 	/**
+	 * Image optimization configuration
+	 */
+	images?: {
+		/**
+		 * Path to a a file that contains a loader that will be used to generate the an image URL out of the given source and width.
+		 * It optionally also takes third parameter for options.
+		 *
+		 * ```js
+		 * export default function loader(src, width, opts) {
+		 *  return `https://example.com/${src}?w=${width}&q=${opts.quality || 75}`;
+		 * }
+		 * ```
+		 */
+		loader?: string;
+		/**
+		 * Which srcset sizes to generate
+		 * @default [640, 828, 1200, 1920, 3840]
+		 */
+		sizes?: number[];
+		/**
+		 * Which external domains to trust when optimizing images
+		 */
+		domains?: string[];
+	};
+	/**
 	 * Inline CSS inside a `<style>` block at the head of the HTML. This option is a number that specifies the maximum length of a CSS file to be inlined. All CSS files needed for the page and smaller than this value are merged and inlined in a `<style>` block.
 	 *
 	 * > This results in fewer initial requests and can improve your [First Contentful Paint](https://web.dev/first-contentful-paint) score. However, it generates larger HTML output and reduces the effectiveness of browser caches. Use it advisedly.

@@ -407,8 +407,22 @@ function static_vercel_config(builder) {
 		overrides[page.file] = { path: overrides_path };
 	}
 
+	/** @type {Record<string, any> | undefined} */
+	let images = undefined;
+	const img_config = builder.config.kit.images;
+	if (config.images || img_config.loader === '@sveltejs/adapter-vercel/image-loader') {
+		images = {
+			sizes: img_config.sizes,
+			domains: img_config.domains,
+			// TODO should we expose the following and some other optional options through the adapter?
+			formats: ['image/avif', 'image/webp'],
+			minimumCacheTTL: 300
+		};
+	}
+
 	return {
 		version: 3,
+		images,
 		routes: [
 			...prerendered_redirects,
 			{

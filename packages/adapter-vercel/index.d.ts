@@ -1,7 +1,16 @@
 import { Adapter } from '@sveltejs/kit';
 import './ambient.js';
 
-export default function plugin(config?: Config): Adapter;
+export default function plugin(
+	config?: Config & {
+		/**
+		 * Enable or disable Vercel's image optimization. This is enabled by default if you have
+		 * defined the Vercel loader in your `svelte.config.js` file, else disabled by default.
+		 * https://vercel.com/docs/concepts/image-optimization
+		 */
+		images?: boolean;
+	}
+): Adapter;
 
 export interface ServerlessConfig {
 	/**
