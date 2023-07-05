@@ -45,6 +45,11 @@ export function update_pkg_json_content(content) {
 	update_pkg('prettier-plugin-svelte', '^2.10.1');
 	update_pkg('eslint-plugin-svelte', '^2.30.0');
 	update_pkg(
+		'eslint-plugin-svelte3',
+		'^4.0.0',
+		' (this package is deprecated, use eslint-plugin-svelte instead. More info: https://svelte.dev/docs/v4-migration-guide#new-eslint-package)'
+	);
+	update_pkg(
 		'typescript',
 		'^5.0.0',
 		' (this might introduce new type errors due to breaking changes within TypeScript)'
