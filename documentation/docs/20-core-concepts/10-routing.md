@@ -348,7 +348,7 @@ export async function all({ request }) {
 }
 ```
 
-> The `all` handler will also override the implicit `HEAD` handler that is added when a `GET` handler is exported.
+> For `HEAD` requests, the `GET` handler takes precedence over the `all` handler.
 
 ### Content negotiation
 
