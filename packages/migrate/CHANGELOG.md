@@ -1,5 +1,11 @@
 # svelte-migrate
 
+## 1.2.5
+
+### Patch Changes
+
+- fix: note old eslint plugin deprecation ([#10319](https://github.com/sveltejs/kit/pull/10319))
+
 ## 1.2.4
 
 ### Patch Changes

@@ -1,5 +1,11 @@
 # @sveltejs/kit
 
+## 1.22.1
+
+### Patch Changes
+
+- perf: only have Vite generate relative paths when required ([#10287](https://github.com/sveltejs/kit/pull/10287))
+
 ## 1.22.0
 
 ### Minor Changes
