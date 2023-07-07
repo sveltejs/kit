@@ -25,3 +25,17 @@ export async function load_config({ cwd = process.cwd() } = {}) {
 
 	return config;
 }
+
+/**
+ * @param {string} cwd
+ * @returns Record<string, any>
+ */
+export function load_pkg_json(cwd = process.cwd()) {
+	const pkg_json_file = path.join(cwd, 'package.json');
+
+	if (!fs.existsSync(pkg_json_file)) {
+		return {};
+	}
+
+	return JSON.parse(fs.readFileSync(pkg_json_file, 'utf-8'));
+}
