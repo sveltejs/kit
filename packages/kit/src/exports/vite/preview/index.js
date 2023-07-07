@@ -1,4 +1,4 @@
-import fs from 'node:fs';
+import fs, { existsSync } from 'node:fs';
 import { join } from 'node:path';
 import { pathToFileURL } from 'node:url';
 import sirv from 'sirv';
@@ -35,6 +35,10 @@ export async function preview(vite, vite_config, svelte_config) {
 	const etag = `"${Date.now()}"`;
 
 	const dir = join(svelte_config.kit.outDir, 'output/server');
+
+	if (!existsSync(dir)) {
+		throw new Error(`Server files not found at ${dir}, did you run \`build\` first?`)
+	}
 
 	/** @type {import('types').ServerInternalModule} */
 	const { set_assets } = await import(pathToFileURL(join(dir, 'internal.js')).href);
