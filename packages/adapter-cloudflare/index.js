@@ -88,7 +88,7 @@ function get_routes_json(builder, assets, { include = ['/*'], exclude = ['<all>'
 			if (rule === '<build>') {
 				return `/${builder.config.kit.appDir}/*`;
 			}
-			console.log(assets);
+
 			if (rule === '<files>') {
 				return assets
 					.filter(
