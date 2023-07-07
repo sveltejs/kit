@@ -37,7 +37,7 @@ export async function preview(vite, vite_config, svelte_config) {
 	const dir = join(svelte_config.kit.outDir, 'output/server');
 
 	if (!existsSync(dir)) {
-		throw new Error(`Server files not found at ${dir}, did you run \`build\` first?`)
+		throw new Error(`Server files not found at ${dir}, did you run \`build\` first?`);
 	}
 
 	/** @type {import('types').ServerInternalModule} */
