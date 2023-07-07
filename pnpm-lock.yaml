@@ -1038,8 +1038,8 @@ importers:
         specifier: ^4.3.6
         version: 4.3.6(@types/node@16.18.6)
       vite-imagetools:
-        specifier: ^5.0.4
-        version: 5.0.4(rollup@3.7.0)
+        specifier: ^5.0.5
+        version: 5.0.5(rollup@3.7.0)
       vitest:
         specifier: ^0.32.2
         version: 0.32.2(playwright@1.30.0)
@@ -2060,7 +2060,7 @@ packages:
       debug: 4.3.4
       globby: 11.1.0
       is-glob: 4.0.3
-      semver: 7.3.8
+      semver: 7.5.3
       tsutils: 3.21.0(typescript@4.9.4)
       typescript: 4.9.4
     transitivePeerDependencies:
@@ -6138,8 +6138,8 @@ packages:
       spdx-expression-parse: 3.0.1
     dev: true
 
-  /vite-imagetools@5.0.4(rollup@3.7.0):
-    resolution: {integrity: sha512-EIRstqWlmoQipsucFCioqCYpfp+rG5v8gpKDFvFJBxEKEAEBPnxW+swmE5dfoRQkwMKkYwmBWeXYsnMaDohUtg==}
+  /vite-imagetools@5.0.5(rollup@3.7.0):
+    resolution: {integrity: sha512-q+BRot2b7AxUHgkQzU+5ku+NERVZcXmLdAnQWSnIw31bRoPIBSDxmDRTDldX8gqyjQNkIBjObF+xqPCeNp7CzQ==}
     engines: {node: '>=12.0.0'}
     dependencies:
       '@rollup/pluginutils': 5.0.2(rollup@3.7.0)
