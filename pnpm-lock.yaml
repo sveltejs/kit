@@ -923,6 +923,9 @@ importers:
       prompts:
         specifier: ^2.4.2
         version: 2.4.2
+      semver:
+        specifier: ^7.5.3
+        version: 7.5.3
       tiny-glob:
         specifier: ^0.2.9
         version: 0.2.9
@@ -939,6 +942,9 @@ importers:
       '@types/prompts':
         specifier: ^2.4.1
         version: 2.4.1
+      '@types/semver':
+        specifier: ^7.5.0
+        version: 7.5.0
       prettier:
         specifier: ^2.8.0
         version: 2.8.0
