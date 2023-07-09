@@ -1,5 +1,6 @@
 import fs from 'node:fs';
 import { Project, ts, Node } from 'ts-morph';
+import semver from 'semver';
 
 export function update_pkg_json() {
 	fs.writeFileSync(
@@ -22,12 +23,21 @@ export function update_pkg_json_content(content) {
 	 */
 	function update_pkg(name, version, additional = '') {
 		if (pkg.dependencies?.[name]) {
-			log_migration(`Updated ${name} to ${version} ${additional}`);
-			pkg.dependencies[name] = version;
+			const existing_range = pkg.dependencies[name];
+
+			if (semver.validRange(existing_range) && !semver.subset(existing_range, version)) {
+				log_migration(`Updated ${name} to ${version} ${additional}`);
+				pkg.dependencies[name] = version;
+			}
 		}
+
 		if (pkg.devDependencies?.[name]) {
-			log_migration(`Updated ${name} to ${version} ${additional}`);
-			pkg.devDependencies[name] = version;
+			const existing_range = pkg.devDependencies[name];
+
+			if (semver.validRange(existing_range) && !semver.subset(existing_range, version)) {
+				log_migration(`Updated ${name} to ${version} ${additional}`);
+				pkg.devDependencies[name] = version;
+			}
 		}
 	}
 
