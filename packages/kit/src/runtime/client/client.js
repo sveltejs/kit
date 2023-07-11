@@ -1557,6 +1557,8 @@ export function create_client(app, target) {
 
 					update_url(url);
 
+					load_cache = null;
+
 					if (!options.replace_state) return;
 
 					// hashchange event shouldn't occur if the router is replacing state.
