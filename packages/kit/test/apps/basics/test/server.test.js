@@ -569,4 +569,10 @@ test.describe('Miscellaneous', () => {
 		const headers = response.headers();
 		expect(headers['cache-control'] || '').not.toContain('immutable');
 	});
+
+	test('handles responses with immutable headers', async ({ request }) => {
+		const response = await request.get('/immutable-headers');
+		expect(response.status()).toBe(200);
+		expect(await response.text()).toBe('foo');
+	});
 });
