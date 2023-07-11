@@ -23,10 +23,10 @@
 		"prism-svelte": "^0.5.0",
 		"prismjs": "^1.29.0",
 		"shiki-twoslash": "^3.1.0",
-		"svelte": "^4.0.3",
+		"svelte": "^4.0.5",
 		"tiny-glob": "^0.2.9",
 		"typescript": "^4.9.4",
-		"vite": "^4.3.6",
+		"vite": "^4.4.2",
 		"vite-imagetools": "^5.0.5",
 		"vitest": "^0.32.2"
 	},
