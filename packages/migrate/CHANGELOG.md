@@ -1,5 +1,11 @@
 # svelte-migrate
 
+## 1.2.6
+
+### Patch Changes
+
+- fix: do not downgrade versions ([#10352](https://github.com/sveltejs/kit/pull/10352))
+
 ## 1.2.5
 
 ### Patch Changes
