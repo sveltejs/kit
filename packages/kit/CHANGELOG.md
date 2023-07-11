@@ -1,5 +1,13 @@
 # @sveltejs/kit
 
+## 1.22.2
+
+### Patch Changes
+
+- fix: wait a tick before announcing new page title ([#10363](https://github.com/sveltejs/kit/pull/10363))
+
+- feat: more helpful error for preview if build output doesn't exist ([#10337](https://github.com/sveltejs/kit/pull/10337))
+
 ## 1.22.1
 
 ### Patch Changes
