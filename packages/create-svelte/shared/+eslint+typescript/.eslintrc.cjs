@@ -2,12 +2,14 @@ module.exports = {
 	root: true,
 	extends: [
 		'eslint:recommended',
-		'plugin:@typescript-eslint/recommended',
+		'plugin:@typescript-eslint/recommended-type-checked',
+		'plugin:@typescript-eslint/stylistic-type-checked',
 		'plugin:svelte/recommended'
 	],
 	parser: '@typescript-eslint/parser',
 	plugins: ['@typescript-eslint'],
 	parserOptions: {
+		project: true,
 		sourceType: 'module',
 		ecmaVersion: 2020,
 		extraFileExtensions: ['.svelte']
