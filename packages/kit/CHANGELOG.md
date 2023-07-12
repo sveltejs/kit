@@ -1,5 +1,11 @@
 # @sveltejs/kit
 
+## 1.22.3
+
+### Patch Changes
+
+- fix: gracefully handle server endpoints that return `Response`s with immutable `Headers` ([#10367](https://github.com/sveltejs/kit/pull/10367))
+
 ## 1.22.2
 
 ### Patch Changes
