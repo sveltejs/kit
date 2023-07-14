@@ -91,20 +91,20 @@ const ssr = async (req, res) => {
 		return;
 	}
 
-	if (address_header && !(address_header in req.headers)) {
-		throw new Error(
-			`Address header was specified with ${
-				ENV_PREFIX + 'ADDRESS_HEADER'
-			}=${address_header} but is absent from request`
-		);
-	}
-
 	setResponse(
 		res,
 		await server.respond(request, {
 			platform: { req },
 			getClientAddress: () => {
 				if (address_header) {
+					if (!(address_header in req.headers)) {
+						throw new Error(
+							`Address header was specified with ${
+								ENV_PREFIX + 'ADDRESS_HEADER'
+							}=${address_header} but is absent from request`
+						);
+					}
+
 					const value = /** @type {string} */ (req.headers[address_header]) || '';
 
 					if (address_header === 'x-forwarded-for') {

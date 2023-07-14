@@ -1,5 +1,21 @@
 # create-svelte
 
+## 5.0.3
+
+### Patch Changes
+
+- chore: bump Vite and Svelte dependencies ([#10330](https://github.com/sveltejs/kit/pull/10330))
+
+- fix: create lib folder in skeleton project ([#10341](https://github.com/sveltejs/kit/pull/10341))
+
+## 5.0.2
+
+### Patch Changes
+
+- fix: npm test should run unit tests ([#10241](https://github.com/sveltejs/kit/pull/10241))
+
+- chore: upgrade vitest ([#10236](https://github.com/sveltejs/kit/pull/10236))
+
 ## 5.0.1
 
 ### Patch Changes

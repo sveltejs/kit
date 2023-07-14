@@ -2,6 +2,7 @@ import path from 'node:path';
 import { loadEnv } from 'vite';
 import { posixify } from '../../utils/filesystem.js';
 import { negotiate } from '../../utils/http.js';
+import { filter_private_env, filter_public_env } from '../../utils/env.js';
 
 /**
  * Transforms kit.alias to a valid vite.resolve.alias array.
@@ -56,11 +57,12 @@ function escape_for_regexp(str) {
  * @param {string} mode
  */
 export function get_env(env_config, mode) {
-	const entries = Object.entries(loadEnv(mode, env_config.dir, ''));
+	const { publicPrefix: public_prefix, privatePrefix: private_prefix } = env_config;
+	const env = loadEnv(mode, env_config.dir, '');
 
 	return {
-		public: Object.fromEntries(entries.filter(([k]) => k.startsWith(env_config.publicPrefix))),
-		private: Object.fromEntries(entries.filter(([k]) => !k.startsWith(env_config.publicPrefix)))
+		public: filter_public_env(env, { public_prefix, private_prefix }),
+		private: filter_private_env(env, { public_prefix, private_prefix })
 	};
 }
 
