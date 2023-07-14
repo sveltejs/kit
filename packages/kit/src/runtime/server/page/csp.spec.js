@@ -1,5 +1,8 @@
 import { assert, beforeAll, test } from 'vitest';
 import { Csp } from './csp.js';
+import { installPolyfills } from '../../../exports/node/polyfills.js';
+
+installPolyfills();
 
 beforeAll(() => {
 	// @ts-expect-error
