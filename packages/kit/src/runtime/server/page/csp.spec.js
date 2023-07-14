@@ -1,9 +1,5 @@
-import { webcrypto } from 'node:crypto';
 import { assert, beforeAll, test } from 'vitest';
 import { Csp } from './csp.js';
-
-// @ts-expect-error
-globalThis.crypto = webcrypto;
 
 beforeAll(() => {
 	// @ts-expect-error
