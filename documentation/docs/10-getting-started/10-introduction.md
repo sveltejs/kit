@@ -24,4 +24,4 @@ SvelteKit provides basic functionality like a [router](glossary#routing) — whi
 
 It reflects changes to your code in the browser instantly to provide a lightning-fast and feature-rich development experience by leveraging [Vite](https://vitejs.dev/) with a [Svelte plugin](https://github.com/sveltejs/vite-plugin-svelte) to do [Hot Module Replacement (HMR)](https://github.com/sveltejs/vite-plugin-svelte/blob/main/docs/config.md#hot).
 
-To learn more about the kinds of applications you can build with SvelteKit, see the [FAQ](/faq#what-can-i-create).
+To learn more about the kinds of applications you can build with SvelteKit, see the [FAQ](/faq#what-can-i-make-with-sveltekit).
