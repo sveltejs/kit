@@ -96,7 +96,7 @@ export {};
 
 ### Testing Locally
 
-`platform.env` is only available in your build, for testing locally we can use [wrangler](https://developers.cloudflare.com/workers/cli-wrangler) **version 3**. Once you have built your site you can run `wrangler pages dev .svelte-kit/cloudflare`, ensure you have your [bindings](https://developers.cloudflare.com/workers/wrangler/configuration/#bindings) in your `wrangler.toml`.
+`platform.env` is only available in your build, for testing the build we can use [wrangler](https://developers.cloudflare.com/workers/cli-wrangler) **version 3**. Once you have built your site, run `wrangler pages dev .svelte-kit/cloudflare`. Ensure you have your [bindings](https://developers.cloudflare.com/workers/wrangler/configuration/#bindings) in your `wrangler.toml`.
 
 ## Notes
 

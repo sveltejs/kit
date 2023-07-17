@@ -112,7 +112,7 @@ export {};
 
 ### Testing Locally
 
-`platform.env` is only available in your build, for testing locally we can use [wrangler](https://developers.cloudflare.com/workers/cli-wrangler). Once you have built your site you can run `wrangler dev`, ensure you have your [bindings](https://developers.cloudflare.com/workers/wrangler/configuration/#bindings) in your `wrangler.toml`.
+`platform.env` is only available in your build, for testing the build we can use [wrangler](https://developers.cloudflare.com/workers/cli-wrangler). Once you have built your site, run `wrangler dev`. Ensure you have your [bindings](https://developers.cloudflare.com/workers/wrangler/configuration/#bindings) in your `wrangler.toml`. Wrangler version 3 is recommended.
 
 ## Troubleshooting
 
