@@ -77,9 +77,9 @@ export default {
 };
 ```
 
-## Environment variables
+## Bindings
 
-The [`env`](https://developers.cloudflare.com/workers/runtime-apis/fetch-event#parameters) object, containing KV/DO namespaces etc, is passed to SvelteKit via the `platform` property along with `context` and `caches`, meaning you can access it in hooks and endpoints:
+The [`env`](https://developers.cloudflare.com/workers/runtime-apis/fetch-event#parameters) object contains your project's [bindings](https://developers.cloudflare.com/workers/platform/environment-variables/), which consist of KV/DO namespaces, etc. It is passed to SvelteKit via the `platform` property, along with `context` and `caches`, meaning that you can access it in hooks and endpoints:
 
 ```js
 // @errors: 7031
@@ -87,6 +87,8 @@ export async function POST({ request, platform }) {
 	const x = platform.env.YOUR_DURABLE_OBJECT_NAMESPACE.idFromName('x');
 }
 ```
+
+> SvelteKit's built-in `$env` module should be preferred for environment variables.
 
 To make these types available to your app, reference them in your `src/app.d.ts`:
 
