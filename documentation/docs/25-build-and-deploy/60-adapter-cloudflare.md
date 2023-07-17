@@ -94,7 +94,9 @@ declare global {
 export {};
 ```
 
-> `platform.env` is only available in your build, you can use [wrangler](https://developers.cloudflare.com/workers/cli-wrangler) to test it locally.
+### Testing Locally
+
+`platform.env` is only available in your build, for testing locally we can use [wrangler](https://developers.cloudflare.com/workers/cli-wrangler) **version 3**. Once you have built your site you can run `wrangler pages dev .svelte-kit/cloudflare`, ensure you have your [bindings](https://developers.cloudflare.com/workers/wrangler/configuration/#bindings) in your `wrangler.toml`.
 
 ## Notes
 
