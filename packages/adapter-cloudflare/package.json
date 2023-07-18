@@ -25,7 +25,7 @@
 		"ambient.d.ts"
 	],
 	"scripts": {
-		"build": "esbuild src/worker.js --bundle --outfile=files/worker.js --external:SERVER --external:MANIFEST --external:cloudflare:email --format=esm",
+		"build": "esbuild src/worker.js --bundle --outfile=files/worker.js --external:SERVER --external:MANIFEST --format=esm",
 		"lint": "prettier --check . --config ../../.prettierrc --ignore-path .gitignore",
 		"format": "pnpm lint --write",
 		"check": "tsc --skipLibCheck",
