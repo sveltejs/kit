@@ -1,7 +1,7 @@
 /** @typedef {typeof __propDef.props}  PlainProps */
 /** @typedef {typeof __propDef.events}  PlainEvents */
 /** @typedef {typeof __propDef.slots}  PlainSlots */
-export default class Plain extends SvelteComponentTyped<
+export default class Plain extends SvelteComponent<
 	{
 		foo: boolean;
 	},
@@ -13,7 +13,7 @@ export default class Plain extends SvelteComponentTyped<
 export type PlainProps = typeof __propDef.props;
 export type PlainEvents = typeof __propDef.events;
 export type PlainSlots = typeof __propDef.slots;
-import { SvelteComponentTyped } from 'svelte';
+import { SvelteComponent } from 'svelte';
 declare const __propDef: {
 	props: {
 		foo: import('./foo').Foo;

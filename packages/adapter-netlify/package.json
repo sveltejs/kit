@@ -1,6 +1,6 @@
 {
 	"name": "@sveltejs/adapter-netlify",
-	"version": "2.0.7",
+	"version": "2.0.8",
 	"description": "A SvelteKit adapter that creates a Netlify app",
 	"repository": {
 		"type": "git",
@@ -34,7 +34,7 @@
 	},
 	"dependencies": {
 		"@iarna/toml": "^2.2.5",
-		"esbuild": "^0.17.18",
+		"esbuild": "^0.18.11",
 		"set-cookie-parser": "^2.6.0"
 	},
 	"devDependencies": {
@@ -48,7 +48,7 @@
 		"rimraf": "^5.0.0",
 		"rollup": "^3.7.0",
 		"typescript": "^4.9.4",
-		"vitest": "^0.31.0"
+		"vitest": "^0.32.2"
 	},
 	"peerDependencies": {
 		"@sveltejs/kit": "^1.5.0"

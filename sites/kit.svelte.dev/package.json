@@ -3,9 +3,9 @@
 	"private": true,
 	"version": "0.0.1",
 	"scripts": {
-		"update": "node scripts/types",
-		"dev": "vite dev",
-		"build": "npm run update && vite build",
+		"update": "node scripts/check-doc-links.js && node scripts/types",
+		"dev": "pnpm update && vite dev",
+		"build": "pnpm update && vite build",
 		"prebuild": "test \"$CI\" = true && npx pnpm install --store=node_modules/.pnpm-store || echo skipping pnpm install",
 		"preview": "vite preview",
 		"test": "vitest run"
@@ -23,12 +23,12 @@
 		"prism-svelte": "^0.5.0",
 		"prismjs": "^1.29.0",
 		"shiki-twoslash": "^3.1.0",
-		"svelte": "^4.0.0",
+		"svelte": "^4.0.5",
 		"tiny-glob": "^0.2.9",
 		"typescript": "^5.0.4",
-		"vite": "^4.3.6",
-		"vite-imagetools": "^5.0.4",
-		"vitest": "^0.31.0"
+		"vite": "^4.4.2",
+		"vite-imagetools": "^5.0.5",
+		"vitest": "^0.32.2"
 	},
 	"type": "module",
 	"dependencies": {
