@@ -1,6 +1,6 @@
 {
 	"scripts": {
-		"lint": "prettier --plugin-search-dir . --check .",
-		"format": "prettier --plugin-search-dir . --write ."
+		"lint": "prettier --check .",
+		"format": "prettier --write ."
 	}
 }

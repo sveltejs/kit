@@ -1,6 +1,6 @@
 {
 	"devDependencies": {
-		"prettier": "^2.8.0",
-		"prettier-plugin-svelte": "^2.10.1"
+		"prettier": "^3.0.0",
+		"prettier-plugin-svelte": "^3.0.0"
 	}
 }

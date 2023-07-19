@@ -18,10 +18,9 @@
 	"devDependencies": {
 		"@playwright/test": "1.30.0",
 		"@types/gitignore-parser": "^0.0.0",
-		"@types/prettier": "^2.7.1",
 		"gitignore-parser": "^0.0.2",
-		"prettier": "^2.8.0",
-		"prettier-plugin-svelte": "^2.10.1",
+		"prettier": "^3.0.0",
+		"prettier-plugin-svelte": "^3.0.0",
 		"sucrase": "^3.29.0",
 		"svelte": "^4.0.5",
 		"tiny-glob": "^0.2.9",
@@ -31,7 +30,7 @@
 		"build": "node scripts/build-templates",
 		"test": "pnpm build && vitest run",
 		"check": "tsc",
-		"lint": "prettier --check . --config ../../.prettierrc --ignore-path ../../.gitignore --ignore-path .gitignore --plugin prettier-plugin-svelte --plugin-search-dir=.",
+		"lint": "prettier --check . --config ../../.prettierrc --ignore-path ../../.gitignore --ignore-path .gitignore --plugin prettier-plugin-svelte",
 		"format": "pnpm lint --write",
 		"prepublishOnly": "pnpm build",
 		"postpublish": "echo \"Updating template repo\" && bash ./scripts/update-template-repo.sh"
