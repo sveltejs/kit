@@ -238,7 +238,7 @@ Data returned from a layout's `load` function is also available to all its child
 </script>
 ```
 
-> Often, layout data is unchanged when navigating between pages. SvelteKit will intelligently re-run [`load`](load) functions when necessary.
+> Often, layout data is unchanged when navigating between pages. SvelteKit will intelligently rerun [`load`](load) functions when necessary.
 
 ### +layout.server.js
 
@@ -356,7 +356,7 @@ export async function all({ request }) {
 
 - `PUT`/`PATCH`/`DELETE`/`OPTIONS` requests are always handled by `+server.js` since they do not apply to pages
 - `GET`/`POST`/`HEAD` requests are treated as page requests if the `accept` header prioritises `text/html` (in other words, it's a browser page request), else they are handled by `+server.js`.
-- Responses to `GET` requests will inlcude a `Vary: Accept` header, so that proxies and browsers cache HTML and JSON responses separately.
+- Responses to `GET` requests will include a `Vary: Accept` header, so that proxies and browsers cache HTML and JSON responses separately.
 
 ## $types
 

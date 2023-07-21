@@ -1,5 +1,14 @@
 # @sveltejs/adapter-netlify
 
+## 2.0.8
+
+### Patch Changes
+
+- chore: upgrade to esbuild 0.18.11 ([#10330](https://github.com/sveltejs/kit/pull/10330))
+
+- Updated dependencies [[`23d1df702`](https://github.com/sveltejs/kit/commit/23d1df702f0fd77983040404352d8d83fd1dd8a1), [`486a971fe`](https://github.com/sveltejs/kit/commit/486a971fe7c375aae1585f1fa2505e28f86f4b8e)]:
+  - @sveltejs/kit@1.22.2
+
 ## 2.0.7
 
 ### Patch Changes

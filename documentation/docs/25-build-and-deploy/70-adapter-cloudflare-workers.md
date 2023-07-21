@@ -108,7 +108,7 @@ declare global {
 export {};
 ```
 
-> `platform.env` is only available in the production build. Use [wrangler](https://developers.cloudflare.com/workers/cli-wrangler) to test it locally
+> `platform.env` is only available in your build, you can use [wrangler](https://developers.cloudflare.com/workers/cli-wrangler) to test it locally.
 
 ## Troubleshooting
 

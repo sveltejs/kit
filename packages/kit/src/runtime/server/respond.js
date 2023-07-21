@@ -440,6 +440,13 @@ export async function respond(request, options, manifest, state) {
 						?.split(',')
 						?.map((v) => v.trim().toLowerCase());
 					if (!(vary?.includes('accept') || vary?.includes('*'))) {
+						// the returned response might have immutable headers,
+						// so we have to clone them before trying to mutate them
+						response = new Response(response.body, {
+							status: response.status,
+							statusText: response.statusText,
+							headers: new Headers(response.headers)
+						});
 						response.headers.append('Vary', 'Accept');
 					}
 				}

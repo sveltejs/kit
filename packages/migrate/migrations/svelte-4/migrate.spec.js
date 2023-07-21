@@ -362,3 +362,22 @@ test('Update package.json', () => {
 }`
 	);
 });
+
+
+test('Does not downgrade versions', () => {
+	const result = update_pkg_json_content(`{
+	"devDependencies": {
+		"svelte": "^4.0.5",
+		"typescript": "github:idk"
+	}
+}`);
+	assert.equal(
+		result,
+		`{
+	"devDependencies": {
+		"svelte": "^4.0.5",
+		"typescript": "github:idk"
+	}
+}`
+	);
+});
