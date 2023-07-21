@@ -327,7 +327,7 @@ export async function POST({ request }) {
 
 > If a `GET` handler is exported, a `HEAD` request will return the `content-length` of the `GET` handler's response body.
 
-### Catch-all method
+### Fallback method handler
 
 Exporting the `fallback` handler will match any unhandled request methods, including methods like `MOVE` which have no dedicated export from `+server.js`.
 
