@@ -79,7 +79,7 @@ const valid_server_exports = new Set([
 	'DELETE',
 	'OPTIONS',
 	'HEAD',
-	'all',
+	'fallback',
 	'prerender',
 	'trailingSlash',
 	'config',

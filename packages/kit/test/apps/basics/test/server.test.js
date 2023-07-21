@@ -227,7 +227,7 @@ test.describe('Endpoints', () => {
 	});
 
 	test('catch-all handler', async ({ request }) => {
-		const url = '/endpoint-output/all';
+		const url = '/endpoint-output/fallback';
 
 		let response = await request.fetch(url, {
 			method: 'GET'

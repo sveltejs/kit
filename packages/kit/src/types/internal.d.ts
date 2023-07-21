@@ -259,14 +259,14 @@ export interface ServerErrorNode {
 export interface ServerMetadataRoute {
 	config: any;
 	api: {
-		methods: (HttpMethod | '*')[];
+		methods: Array<HttpMethod | '*'>;
 	};
 	page: {
 		methods: Array<'GET' | 'POST'>;
 	};
-	methods: (HttpMethod | '*')[];
+	methods: Array<HttpMethod | '*'>;
 	prerender: PrerenderOption | undefined;
-	entries: Array<string> | undefined;
+	entries: string[] | undefined;
 }
 
 export interface ServerMetadata {
@@ -367,7 +367,7 @@ export type SSREndpoint = Partial<Record<HttpMethod, RequestHandler>> & {
 	trailingSlash?: TrailingSlash;
 	config?: any;
 	entries?: PrerenderEntryGenerator;
-	all?: RequestHandler;
+	fallback?: RequestHandler;
 };
 
 export interface SSRRoute {

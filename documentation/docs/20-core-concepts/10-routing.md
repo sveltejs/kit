@@ -329,7 +329,7 @@ export async function POST({ request }) {
 
 ### Catch-all method
 
-Exporting the `all` handler will match any unhandled request methods, including methods like `MOVE` which have no dedicated export from `+server.js`.
+Exporting the `fallback` handler will match any unhandled request methods, including methods like `MOVE` which have no dedicated export from `+server.js`.
 
 ```js
 // @errors: 7031
@@ -343,12 +343,12 @@ export async function POST({ request }) {
 
 // This handler will respond to PUT, PATCH, DELETE, etc.
 /** @type {import('./$types').RequestHandler} */
-export async function all({ request }) {
+export async function fallback({ request }) {
 	return text(`I caught your ${request.method} request!`);
 }
 ```
 
-> For `HEAD` requests, the `GET` handler takes precedence over the `all` handler.
+> For `HEAD` requests, the `GET` handler takes precedence over the `fallback` handler.
 
 ### Content negotiation
 

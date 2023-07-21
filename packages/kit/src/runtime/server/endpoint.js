@@ -12,7 +12,7 @@ import { method_not_allowed } from './utils.js';
 export async function render_endpoint(event, mod, state) {
 	const method = /** @type {import('types').HttpMethod} */ (event.request.method);
 
-	let handler = mod[method] || mod.all;
+	let handler = mod[method] || mod.fallback;
 
 	if (method === 'HEAD' && mod.GET && !mod.HEAD) {
 		handler = mod.GET;
