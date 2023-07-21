@@ -2,4 +2,4 @@
 '@sveltejs/kit': minor
 ---
 
-feat: add catch-all method handler `all`
+feat: add server endpoint catch-all method handler `fallback`
