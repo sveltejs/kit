@@ -1,11 +1,18 @@
 <script>
+	import { page } from '$app/stores';
 	import { DocsContents } from '@sveltejs/site-kit/docs';
 
 	export let data;
+
+	$: pageData = $page.data.page;
+	$: category = pageData?.category;
 </script>
 
 <div class="container">
 	<div class="page">
+		{#if category}
+			<p class="category">{category}</p>
+		{/if}
 		<slot />
 	</div>
 
@@ -24,6 +31,14 @@
 	.page {
 		--on-this-page-display: none;
 		padding: var(--sk-page-padding-top) var(--sk-page-padding-side);
+	}
+
+	.category {
+		font: 700 var(--sk-text-s) var(--sk-font);
+		text-transform: uppercase;
+		letter-spacing: 0.12em;
+		margin: 0 0 0.5em;
+		color: var(--sk-text-3);
 	}
 
 	.toc-container {

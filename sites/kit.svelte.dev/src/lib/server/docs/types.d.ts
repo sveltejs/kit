@@ -18,6 +18,7 @@ export type Page = {
 	slug: string;
 	file: string;
 	path: string;
+	category: string;
 	content: string;
 	sections: Section[];
 };
