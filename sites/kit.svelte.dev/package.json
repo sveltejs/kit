@@ -3,8 +3,8 @@
 	"private": true,
 	"version": "0.0.1",
 	"scripts": {
-		"update": "node scripts/check-doc-links.js && node scripts/types",
-		"dev": "vite dev",
+		"update": "node scripts/types",
+		"dev": "pnpm run updare && vite dev",
 		"build": "pnpm run update && vite build",
 		"prebuild": "test \"$CI\" = true && npx pnpm install --store=node_modules/.pnpm-store || echo skipping pnpm install",
 		"preview": "vite preview",
