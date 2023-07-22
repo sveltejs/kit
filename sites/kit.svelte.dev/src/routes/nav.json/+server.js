@@ -11,7 +11,7 @@ export const GET = async () => {
  * @returns {Promise<import('@sveltejs/site-kit').NavigationLink[]>}
  */
 async function get_nav_list() {
-	const docs_list = get_docs_list(get_docs_data());
+	const docs_list = get_docs_list(await get_docs_data());
 	const processed_docs_list = docs_list.map(({ title, pages }) => ({
 		title,
 		sections: pages.map(({ title, path }) => ({ title, path }))

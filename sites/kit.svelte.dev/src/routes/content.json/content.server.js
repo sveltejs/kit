@@ -5,9 +5,9 @@ import {
 	replaceExportTypePlaceholders,
 	slugify
 } from '@sveltejs/site-kit/markdown';
-import fs from 'node:fs';
+import { readFile } from 'node:fs/promises';
 import path from 'node:path';
-import glob from 'tiny-glob/sync.js';
+import glob from 'tiny-glob';
 
 const categories = [
 	{
@@ -18,14 +18,14 @@ const categories = [
 	}
 ];
 
-export function content() {
+export async function content() {
 	/** @type {import('@sveltejs/site-kit/search').Block[]} */
 	const blocks = [];
 
 	for (const category of categories) {
 		const breadcrumbs = category.label ? [category.label] : [];
 
-		for (const file of glob('**/*.md', { cwd: `../../documentation/${category.slug}` })) {
+		for (const file of await glob('**/*.md', { cwd: `../../documentation/${category.slug}` })) {
 			const basename = path.basename(file);
 			const match = /\d{2}-(.+)\.md/.exec(basename);
 			if (!match) continue;
@@ -33,7 +33,7 @@ export function content() {
 			const slug = match[1];
 
 			const filepath = `../../documentation/${category.slug}/${file}`;
-			const markdown = replaceExportTypePlaceholders(fs.readFileSync(filepath, 'utf-8'), modules);
+			const markdown = replaceExportTypePlaceholders(await readFile(filepath, 'utf-8'), modules);
 
 			const { body, metadata } = extractFrontmatter(markdown);
 

@@ -2,6 +2,7 @@
 	import { page } from '$app/stores';
 	import { Icon } from '@sveltejs/site-kit/components';
 	import { DocsOnThisPage, setupDocsHovers } from '@sveltejs/site-kit/docs';
+	import { copy_code_descendants } from '@sveltejs/site-kit/actions';
 
 	export let data;
 
@@ -21,12 +22,14 @@
 	<meta name="Description" content="{data.page.title} • SvelteKit documentation" />
 </svelte:head>
 
-<div class="text content">
+<div class="text content" use:copy_code_descendants>
 	<h1>{data.page.title}</h1>
 
 	<a class="edit" href="https://github.com/sveltejs/kit/edit/master/documentation/{data.page.file}">
 		<Icon size={50} name="edit" /> Edit this page on GitHub
 	</a>
+
+	<DocsOnThisPage details={data.page} />
 
 	<section>
 		{@html data.page.content}
@@ -48,8 +51,6 @@
 		</div>
 	</div>
 </div>
-
-<DocsOnThisPage details={data.page} />
 
 <style>
 	.content {
