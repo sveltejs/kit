@@ -9,7 +9,7 @@ SvelteKit can be used to create most kinds of applications. Out of the box, Svel
 - User-friendly progressively-enhanced interactive pages with SSR and [Form Actions](/docs/form-actions).
 - Static pages with [prerendering](/docs/page-options#prerender).
 
-SvelteKit can also be deployed to a wide spectrum of hosted architectures via [adapters](/docs/adapters). In cases where SSR is used or server-side logic is added without using prerendering, those functions will be adapted to the target backend. Some examples include:
+SvelteKit can also be deployed to a wide spectrum of hosted architectures via [adapters](/docs/adapters). In cases where SSR is used (or server-side logic is added without prerendering), those functions will be adapted to the target backend. Some examples include:
 
 - Self-hosted dynamic web applications with a [Node.js backend](/docs/adapter-node).
 - Serverless web applications with backend loaders and APIs deployed as remote functions. See [zero-config deployments](/docs/adapter-auto) for popular deployment options.
