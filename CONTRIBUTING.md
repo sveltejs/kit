@@ -122,7 +122,7 @@ git config core.hookspath .githooks
 
 ### Generating changelogs
 
-For changes to be reflected in package changelogs, run `pnpm changeset` and follow the prompts.
+Run `pnpm changeset` for user-visible changes and follow the prompts. Changeset messages should generally be prefixed with `feat:` or `fix:`. PRs can also be prefixed with `chore:` or `docs:`, which typically won't require a changeset as they're not user-visible.
 
 ## Releases
 
