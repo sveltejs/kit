@@ -15,12 +15,12 @@ import { fileURLToPath } from 'node:url';
  */
 
 /** @type {import('.').default} */
-export default function ({ config = 'wrangler.toml' } = {}) {
+export default function (options = {}) {
 	return {
 		name: '@sveltejs/adapter-cloudflare-workers',
 
 		async adapt(builder) {
-			const { main, site } = validate_config(builder, config);
+			const { main, site } = validate_config(builder, options.config ?? 'wrangler.toml');
 
 			const files = fileURLToPath(new URL('./files', import.meta.url).href);
 			const tmp = builder.getBuildDirectory('cloudflare-workers-tmp');
@@ -62,11 +62,11 @@ export default function ({ config = 'wrangler.toml' } = {}) {
 				entryPoints: [`${tmp}/entry.js`],
 				outfile: main,
 				bundle: true,
-				external: ['__STATIC_CONTENT_MANIFEST', 'cloudflare:*'],
 				format: 'esm',
 				loader: {
 					'.wasm': 'copy'
-				}
+				},
+				external: ['__STATIC_CONTENT_MANIFEST', 'cloudflare:*', ...(options.external ?? [])]
 			});
 
 			builder.log.minor('Copying assets...');
