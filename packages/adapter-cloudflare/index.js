@@ -105,7 +105,6 @@ function get_routes_json(builder, assets, { include = ['/*'], exclude = ['<all>'
 						// https://developers.cloudflare.com/pages/platform/functions/routing/#create-a-_routesjson-file
 						if (split_path.length > 1) {
 							const exclude_pattern = `/${split_path[0]}/*`;
-
 							return prev.includes(exclude_pattern) ? prev : [...prev, exclude_pattern];
 						}
 						return [...prev, `/${split_path[0]}`];
