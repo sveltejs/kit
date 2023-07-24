@@ -104,8 +104,7 @@ function get_routes_json(builder, assets, { include = ['/*'], exclude = ['<all>'
 						// There's a limit of 100 rules. Take advantage of wildcards and generate as few file paths as possible
 						// https://developers.cloudflare.com/pages/platform/functions/routing/#create-a-_routesjson-file
 						if (split_path.length > 1) {
-							const shallow_folder = split_path[0];
-							const exclude_pattern = `/${shallow_folder}/*`;
+							const exclude_pattern = `/${split_path[0]}/*`;
 
 							return prev.includes(exclude_pattern) ? prev : [...prev, exclude_pattern];
 						}
