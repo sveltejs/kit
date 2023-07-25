@@ -24,7 +24,6 @@ export default function (options = {}) {
 			builder.writePrerendered(dest_dir);
 
 			const relativePath = path.posix.relative(tmp, builder.getServerDirectory());
-
 			writeFileSync(
 				`${tmp}/manifest.js`,
 				`export const manifest = ${builder.generateManifest({ relativePath })};\n\n` +
@@ -100,14 +99,24 @@ function get_routes_json(builder, assets, { include = ['/*'], exclude = ['<all>'
 							)
 					)
 					.reduce((prev, file_path) => {
+						const raw_file_path_return = [...prev, `/${file_path}`];
 						const path_segments = file_path.split('/');
 						// There's a limit of 100 rules. Take advantage of wildcards and generate as few file paths as possible
 						// https://developers.cloudflare.com/pages/platform/functions/routing/#create-a-_routesjson-file
 						if (path_segments.length > 1) {
-							const exclude_pattern = `/${path_segments[0]}/*`;
+							const dir_path = path_segments.slice(0, -1).join('/');
+							// Exclude patterns can conflict with sveltekit routes, so don't wildcard paths in that case.
+							const is_matches_sveltekit_routes = builder.routes.some((route) =>
+								route.pattern.test(`/${file_path}`)
+							);
+							if (is_matches_sveltekit_routes) {
+								return raw_file_path_return;
+							}
+
+							const exclude_pattern = `/${dir_path}/*`;
 							return prev.includes(exclude_pattern) ? prev : [...prev, exclude_pattern];
 						}
-						return [...prev, `/${path_segments[0]}`];
+						return raw_file_path_return;
 					}, []);
 			}
 
