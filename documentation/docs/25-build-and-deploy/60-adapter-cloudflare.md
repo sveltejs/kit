@@ -4,15 +4,13 @@ title: Cloudflare Pages
 
 To deploy to [Cloudflare Pages](https://developers.cloudflare.com/pages/), use [`adapter-cloudflare`](https://github.com/sveltejs/kit/tree/master/packages/adapter-cloudflare).
 
-This adapter will be installed by default when you use [`adapter-auto`](adapter-auto), but adding it to your project is recommended so that `event.platform` is automatically typed.
+This adapter will be installed by default when you use [`adapter-auto`](adapter-auto). If you plan on staying with Cloudflare Pages you can switch from [`adapter-auto`](adapter-auto) to using this adapter directly so that type declarations will be automatically applied and you can set Cloudflare-specific options.
 
 ## Comparisons
 
 - `adapter-cloudflare` – supports all SvelteKit features; builds for [Cloudflare Pages](https://blog.cloudflare.com/cloudflare-pages-goes-full-stack/)
 - `adapter-cloudflare-workers` – supports all SvelteKit features; builds for Cloudflare Workers
 - `adapter-static` – only produces client-side static assets; compatible with Cloudflare Pages
-
-> Unless you have a specific reason to use `adapter-cloudflare-workers`, it's recommended that you use `adapter-cloudflare` instead. Both adapters have equivalent functionality, but Cloudflare Pages offers features like GitHub integration with automatic builds and deploys, preview deployments, instant rollback and so on.
 
 ## Usage
 
@@ -94,7 +92,9 @@ declare global {
 export {};
 ```
 
-> `platform.env` is only available in your build, you can use [wrangler](https://developers.cloudflare.com/workers/cli-wrangler) to test it locally.
+### Testing Locally
+
+`platform.env` is only available in the final build and not in dev mode. For testing the build, you can use [wrangler](https://developers.cloudflare.com/workers/cli-wrangler) **version 3**. Once you have built your site, run `wrangler pages dev .svelte-kit/cloudflare`. Ensure you have your [bindings](https://developers.cloudflare.com/workers/wrangler/configuration/#bindings) in your `wrangler.toml`.
 
 ## Notes
 
