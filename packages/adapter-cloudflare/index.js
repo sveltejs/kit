@@ -63,6 +63,34 @@ export default function (options = {}) {
 }
 
 /**
+ * There's a limit of 100 rules. Take advantage of wildcards and generate as few file paths as possible
+ * https://developers.cloudflare.com/pages/platform/functions/routing/#create-a-_routesjson-file
+ *
+ * @param {import('@sveltejs/kit').Builder} builder
+ * @param {string} file_path
+ */
+function find_shallowest_exclude_pattern(builder, file_path) {
+	const path_segments = file_path.split('/');
+	if (path_segments.length === 0) {
+		return path_segments.join('/');
+	}
+	let exclude_pattern = `/${file_path}`;
+	// Exclude patterns can conflict with sveltekit routes, so don't wildcard paths in that case.
+	for (let i = path_segments.length; i > 0; i--) {
+		const path = `/${path_segments.slice(0, i).join('/')}`;
+		// Test `dir/*` pattern against all sveltekit routes
+		// The reason `%` is used is because it's an invalid character in a file path but valid in a route pattern
+		const tmp_test_string = '%';
+		const test_string = i === path_segments.length ? file_path : `${path}/${tmp_test_string}`;
+		if (builder.routes.some((route) => route.pattern.test(test_string))) {
+			break;
+		}
+		exclude_pattern = path;
+	}
+
+	return exclude_pattern === `/${file_path}` ? exclude_pattern : `${exclude_pattern}/*`;
+}
+/**
  * @param {import('@sveltejs/kit').Builder} builder
  * @param {string[]} assets
  * @param {import('./index').AdapterOptions['routes']} routes
@@ -99,24 +127,9 @@ function get_routes_json(builder, assets, { include = ['/*'], exclude = ['<all>'
 							)
 					)
 					.reduce((prev, file_path) => {
-						const raw_file_path_return = [...prev, `/${file_path}`];
-						const path_segments = file_path.split('/');
-						// There's a limit of 100 rules. Take advantage of wildcards and generate as few file paths as possible
-						// https://developers.cloudflare.com/pages/platform/functions/routing/#create-a-_routesjson-file
-						if (path_segments.length > 1) {
-							const dir_path = path_segments.slice(0, -1).join('/');
-							// Exclude patterns can conflict with sveltekit routes, so don't wildcard paths in that case.
-							const is_matches_sveltekit_routes = builder.routes.some((route) =>
-								route.pattern.test(`/${file_path}`)
-							);
-							if (is_matches_sveltekit_routes) {
-								return raw_file_path_return;
-							}
+						const exclude_pattern = find_shallowest_exclude_pattern(builder, file_path);
 
-							const exclude_pattern = `/${dir_path}/*`;
-							return prev.includes(exclude_pattern) ? prev : [...prev, exclude_pattern];
-						}
-						return raw_file_path_return;
+						return prev.includes(exclude_pattern) ? prev : [...prev, exclude_pattern];
 					}, []);
 			}
 
