@@ -26,8 +26,6 @@ export default function (options) {
 }
 ```
 
-The types for `Adapter` and its parameters are available in [types/index.d.ts](https://github.com/sveltejs/kit/blob/master/packages/kit/types/index.d.ts).
-
 Within the `adapt` method, there are a number of things that an adapter should do:
 
 - Clear out the build directory

@@ -1,12 +1,21 @@
 import { DEV } from 'esm-env';
 import { onMount, tick } from 'svelte';
 import {
-	make_trackable,
-	decode_pathname,
+	add_data_suffix,
 	decode_params,
-	normalize_path,
-	add_data_suffix
+	decode_pathname,
+	make_trackable,
+	normalize_path
 } from '../../utils/url.js';
+import {
+	initial_fetch,
+	lock_fetch,
+	native_fetch,
+	subsequent_fetch,
+	unlock_fetch
+} from './fetcher.js';
+import { parse } from './parse.js';
+import * as storage from './session-storage.js';
 import {
 	find_anchor,
 	get_base_uri,
@@ -15,25 +24,16 @@ import {
 	is_external_url,
 	scroll_state
 } from './utils.js';
-import * as storage from './session-storage.js';
-import {
-	lock_fetch,
-	unlock_fetch,
-	initial_fetch,
-	subsequent_fetch,
-	native_fetch
-} from './fetcher.js';
-import { parse } from './parse.js';
 
 import { base } from '__sveltekit/paths';
-import { HttpError, Redirect } from '../control.js';
-import { stores } from './singletons.js';
-import { unwrap_promises } from '../../utils/promises.js';
 import * as devalue from 'devalue';
-import { INDEX_KEY, PRELOAD_PRIORITIES, SCROLL_KEY, SNAPSHOT_KEY } from './constants.js';
-import { validate_page_exports } from '../../utils/exports.js';
 import { compact } from '../../utils/array.js';
+import { validate_page_exports } from '../../utils/exports.js';
+import { unwrap_promises } from '../../utils/promises.js';
+import { HttpError, Redirect } from '../control.js';
 import { INVALIDATED_PARAM, validate_depends } from '../shared.js';
+import { INDEX_KEY, PRELOAD_PRIORITIES, SCROLL_KEY, SNAPSHOT_KEY } from './constants.js';
+import { stores } from './singletons.js';
 
 let errored = false;
 
@@ -1555,9 +1555,7 @@ export function create_client(app, target) {
 
 					update_scroll_positions(current_history_index);
 
-					current.url = url;
-					stores.page.set({ ...page, url });
-					stores.page.notify();
+					update_url(url);
 
 					if (!options.replace_state) return;
 
@@ -1670,6 +1668,14 @@ export function create_client(app, target) {
 						type: 'popstate',
 						delta
 					});
+				} else {
+					// since popstate event is also emitted when an anchor referencing the same
+					// document is clicked, we have to check that the router isn't already handling
+					// the navigation. otherwise we would be updating the page store twice.
+					if (!hash_navigating) {
+						const url = new URL(location.href);
+						update_url(url);
+					}
 				}
 			});
 
@@ -1702,6 +1708,15 @@ export function create_client(app, target) {
 					stores.navigating.set(null);
 				}
 			});
+
+			/**
+			 * @param {URL} url
+			 */
+			function update_url(url) {
+				current.url = url;
+				stores.page.set({ ...page, url });
+				stores.page.notify();
+			}
 		},
 
 		_hydrate: async ({

@@ -1,5 +1,41 @@
 # @sveltejs/kit
 
+## 1.22.3
+
+### Patch Changes
+
+- fix: gracefully handle server endpoints that return `Response`s with immutable `Headers` ([#10367](https://github.com/sveltejs/kit/pull/10367))
+
+## 1.22.2
+
+### Patch Changes
+
+- fix: wait a tick before announcing new page title ([#10363](https://github.com/sveltejs/kit/pull/10363))
+
+- feat: more helpful error for preview if build output doesn't exist ([#10337](https://github.com/sveltejs/kit/pull/10337))
+
+## 1.22.1
+
+### Patch Changes
+
+- perf: only have Vite generate relative paths when required ([#10287](https://github.com/sveltejs/kit/pull/10287))
+
+## 1.22.0
+
+### Minor Changes
+
+- feat: add `HEAD` server method ([#9753](https://github.com/sveltejs/kit/pull/9753))
+
+- feat: support caching of responses with `Vary` header (except for `Vary: *`) ([#9993](https://github.com/sveltejs/kit/pull/9993))
+
+### Patch Changes
+
+- fix: avoid running load function on invalid requests ([#9752](https://github.com/sveltejs/kit/pull/9752))
+
+- fix: update page store when URL hash is changed from the address bar ([#10202](https://github.com/sveltejs/kit/pull/10202))
+
+- fix: include `Vary: Accept` header to fix browser caching of adjacent pages and endpoints ([#9993](https://github.com/sveltejs/kit/pull/9993))
+
 ## 1.21.0
 
 ### Minor Changes
@@ -4344,7 +4380,7 @@ Starting from now all releases follow semver and changes will be listed as Major
 
 ### Patch Changes
 
-- d279e36: Add invalidate(url) API for re-running load functions ([#1303](https://github.com/sveltejs/kit/pull/1303))
+- d279e36: Add invalidate(url) API for rerunning load functions ([#1303](https://github.com/sveltejs/kit/pull/1303))
 
 ## 1.0.0-next.97
 

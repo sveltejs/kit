@@ -13,6 +13,7 @@ import { forked } from '../../utils/fork.js';
 import { should_polyfill } from '../../utils/platform.js';
 import { installPolyfills } from '../../exports/node/polyfills.js';
 import { resolvePath } from '../../exports/index.js';
+import { ENDPOINT_METHODS } from '../../constants.js';
 import { filter_private_env, filter_public_env } from '../../utils/env.js';
 
 export default forked(import.meta.url, analyse);
@@ -92,12 +93,11 @@ async function analyse({ manifest_path, env }) {
 				prerender = mod.prerender;
 			}
 
-			if (mod.GET) api_methods.push('GET');
-			if (mod.POST) api_methods.push('POST');
-			if (mod.PUT) api_methods.push('PUT');
-			if (mod.PATCH) api_methods.push('PATCH');
-			if (mod.DELETE) api_methods.push('DELETE');
-			if (mod.OPTIONS) api_methods.push('OPTIONS');
+			Object.values(mod).forEach((/** @type {import('types').HttpMethod} */ method) => {
+				if (mod[method] && ENDPOINT_METHODS.has(method)) {
+					api_methods.push(method);
+				}
+			});
 
 			config = mod.config;
 			entries = mod.entries;
