@@ -2,4 +2,4 @@
 '@sveltejs/kit': patch
 ---
 
-docs: Elaborate on fetch credentialled request behaviour
+docs: Elaborate on credentialed `fetch` behaviour

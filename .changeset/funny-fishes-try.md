@@ -2,4 +2,4 @@
 '@sveltejs/kit': patch
 ---
 
-fix: Always include cookies when `credentials: 'include'` is set
+fix: Correctly handle cookies when `credentials: 'include'` is set
