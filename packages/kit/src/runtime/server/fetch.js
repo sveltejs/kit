@@ -51,7 +51,8 @@ export function create_fetch({ event, options, manifest, state, get_cookie_heade
 				}
 
 				if (url.origin !== event.url.origin) {
-					// allow cookie passthrough for "same-origin"
+					// credentials: 'include' will always include cookies
+					// credentials: 'same-origin' depends on the origin
 					// if SvelteKit is serving my.domain.com:
 					// -        domain.com WILL NOT receive cookies
 					// -     my.domain.com WILL receive cookies
@@ -59,7 +60,10 @@ export function create_fetch({ event, options, manifest, state, get_cookie_heade
 					// - sub.my.domain.com WILL receive cookies
 					// ports do not affect the resolution
 					// leading dot prevents mydomain.com matching domain.com
-					if (`.${url.hostname}`.endsWith(`.${event.url.hostname}`) && credentials !== 'omit') {
+					if (
+						credentials === 'include' ||
+						(credentials === 'same-origin' && `.${url.hostname}`.endsWith(`.${event.url.hostname}`))
+					) {
 						const cookie = get_cookie_header(url, request.headers.get('cookie'));
 						if (cookie) request.headers.set('cookie', cookie);
 					}
