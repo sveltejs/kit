@@ -70,11 +70,12 @@ export default function (options = {}) {
  * @param {string} file_path
  */
 function find_shallowest_exclude_pattern(builder, file_path) {
+	const exclude_file_path = `/${file_path}`
 	const path_segments = file_path.split('/');
 	if (path_segments.length === 0) {
 		return file_path;
 	}
-	let exclude_pattern = `/${file_path}`;
+	let exclude_pattern = exclude_file_path;
 	// Exclude patterns can conflict with sveltekit routes, so don't wildcard paths in that case.
 	for (let i = path_segments.length; i > 0; i--) {
 		const path = `/${path_segments.slice(0, i).join('/')}`;
@@ -88,7 +89,7 @@ function find_shallowest_exclude_pattern(builder, file_path) {
 		exclude_pattern = path;
 	}
 
-	return exclude_pattern === `/${file_path}` ? exclude_pattern : `${exclude_pattern}/*`;
+	return exclude_pattern === exclude_file_path ? exclude_pattern : `${exclude_pattern}/*`;
 }
 /**
  * @param {import('@sveltejs/kit').Builder} builder
