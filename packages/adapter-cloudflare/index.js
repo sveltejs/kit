@@ -70,7 +70,7 @@ export default function (options = {}) {
  * @param {string} file_path
  */
 function find_shallowest_exclude_pattern(builder, file_path) {
-	const exclude_file_path = `/${file_path}`
+	const exclude_file_path = `/${file_path}`;
 	const path_segments = file_path.split('/');
 	if (path_segments.length === 0) {
 		return file_path;
