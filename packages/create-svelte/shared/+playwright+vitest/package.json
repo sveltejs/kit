@@ -1,0 +1,11 @@
+{
+	"devDependencies": {
+		"@playwright/test": "^1.28.1",
+		"vitest": "^0.32.2"
+	},
+	"scripts": {
+		"test:integration": "playwright test",
+		"test:unit": "vitest",
+		"test": "npm run test:integration && npm run test:unit"
+	}
+}

@@ -141,18 +141,17 @@ export function exec(match, params, matchers) {
 
 	for (let i = 0; i < params.length; i += 1) {
 		const param = params[i];
-		const value = values[i - buffered];
+		let value = values[i - buffered];
 
 		// in the `[[a=b]]/.../[...rest]` case, if one or more optional parameters
 		// weren't matched, roll the skipped values into the rest
 		if (param.chained && param.rest && buffered) {
-			result[param.name] = values
+			value = values
 				.slice(i - buffered, i + 1)
 				.filter((s) => s)
 				.join('/');
 
 			buffered = 0;
-			continue;
 		}
 
 		// if `value` is undefined, it means this is an optional or rest parameter
@@ -168,7 +167,7 @@ export function exec(match, params, matchers) {
 			// and the next value is defined, otherwise the buffer will cause us to skip values
 			const next_param = params[i + 1];
 			const next_value = values[i + 1];
-			if (next_param && !next_param.rest && next_param.optional && next_value) {
+			if (next_param && !next_param.rest && next_param.optional && next_value && param.chained) {
 				buffered = 0;
 			}
 			continue;

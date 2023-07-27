@@ -113,6 +113,8 @@ You might wonder how we're able to use `$page.data` and other [app stores](modul
 <p>Welcome {$user.name}</p>
 ```
 
+Updating the context-based store value in deeper-level pages or components will not affect the value in the parent component when the page is rendered via SSR: The parent component has already been rendered by the time the store value is updated. To avoid values 'flashing' during state updates during hydration, it is generally recommended to pass state down into components rather than up.
+
 If you're not using SSR (and can guarantee that you won't need to use SSR in future) then you can safely keep state in a shared module, without using the context API.
 
 ## Component state is preserved
@@ -138,7 +140,7 @@ When you navigate around your application, SvelteKit reuses existing layout and 
 <div>{@html data.content}</div>
 ```
 
-...then navigating from `/blog/my-short-post` to `/blog/my-long-post` won't cause the component to be destroyed and recreated. The `data` prop (and by extension `data.title` and `data.content`) will change, but because the code isn't re-running, `estimatedReadingTime` won't be recalculated.
+...then navigating from `/blog/my-short-post` to `/blog/my-long-post` won't cause the component to be destroyed and recreated. The `data` prop (and by extension `data.title` and `data.content`) will change, but because the code isn't rerunning, `estimatedReadingTime` won't be recalculated.
 
 Instead, we need to make the value [_reactive_](https://learn.svelte.dev/tutorial/reactive-assignments):
 

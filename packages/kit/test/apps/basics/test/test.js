@@ -264,10 +264,10 @@ test.describe('Load', () => {
 			const payload_b = '{"status":200,"statusText":"","headers":{},"body":"Y"}';
 			// by the time JS has run, hydration will have nuked these scripts
 			const script_contents_a = await page.innerHTML(
-				'script[data-sveltekit-fetched][data-url="/load/serialization-post.json"][data-hash="3t25"]'
+				'script[data-sveltekit-fetched][data-url="/load/serialization-post.json"][data-hash="1vn6nlx"]'
 			);
 			const script_contents_b = await page.innerHTML(
-				'script[data-sveltekit-fetched][data-url="/load/serialization-post.json"][data-hash="3t24"]'
+				'script[data-sveltekit-fetched][data-url="/load/serialization-post.json"][data-hash="1vn6nlw"]'
 			);
 
 			expect(script_contents_a).toBe(payload_a);
@@ -760,6 +760,30 @@ test.describe('$app/stores', () => {
 			expect(await page.textContent('#nav-status')).toBe('not currently navigating');
 		}
 	});
+
+	test('should update page store when URL hash is changed through the address bar', async ({
+		baseURL,
+		page,
+		javaScriptEnabled
+	}) => {
+		const href = `${baseURL}/store/data/zzz`;
+		await page.goto(href);
+
+		expect(await page.textContent('#url-hash')).toBe('');
+
+		if (javaScriptEnabled) {
+			for (const urlHash of ['#1', '#2', '#5', '#8']) {
+				await page.evaluate(
+					({ href, urlHash }) => {
+						location.href = `${href}${urlHash}`;
+					},
+					{ href, urlHash }
+				);
+
+				expect(await page.textContent('#url-hash')).toBe(urlHash);
+			}
+		}
+	});
 });
 
 test.describe('searchParams', () => {
@@ -1041,6 +1065,14 @@ test.describe('Actions', () => {
 		await expect(page.locator('pre.formdata1')).toHaveText(
 			JSON.stringify({ result: 'register: foo' })
 		);
+	});
+
+	test('use:enhance button with formAction dialog', async ({ page }) => {
+		await page.goto('/actions/enhance');
+
+		await page.locator('button[formmethod="dialog"]').click();
+
+		await expect(page.locator('button[formmethod="dialog"]')).not.toBeVisible();
 	});
 
 	test('use:enhance button with name', async ({ page }) => {

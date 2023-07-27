@@ -135,6 +135,10 @@ test('create package with emitTypes settings disabled', async () => {
 	await test_make_package('emitTypes-false', { types: false });
 });
 
+test('create package with SvelteComponentTyped for backwards compatibility', async () => {
+	await test_make_package('svelte-3-types');
+});
+
 test('create package and resolves $lib alias', async () => {
 	await test_make_package('resolve-alias');
 });
