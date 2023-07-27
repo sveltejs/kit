@@ -43,6 +43,7 @@ const enforced_config = {
 			formats: true
 		},
 		manifest: true,
+		modulePreload: true,
 		outDir: true,
 		rollupOptions: {
 			input: true,
@@ -555,6 +556,10 @@ function kit({ svelte_config }) {
 						cssMinify: initial_config.build?.minify == null ? true : !!initial_config.build.minify,
 						// don't use the default name to avoid collisions with 'static/manifest.json'
 						manifest: 'vite-manifest.json',
+						modulePreload: {
+							// disable Vite's JS module preload
+							resolveDependencies: () => []
+						},
 						outDir: `${out}/${ssr ? 'server' : 'client'}`,
 						rollupOptions: {
 							input,
@@ -711,13 +716,7 @@ function kit({ svelte_config }) {
 						build: {
 							minify: initial_config.build?.minify,
 							assetsInlineLimit: vite_config.build.assetsInlineLimit,
-							sourcemap: vite_config.build.sourcemap,
-							modulePreload: {
-								// disable Vite's JS module preload
-								resolveDependencies: () => {
-									return [];
-								}
-							}
+							sourcemap: vite_config.build.sourcemap
 						},
 						optimizeDeps: {
 							force: vite_config.optimizeDeps.force
