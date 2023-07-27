@@ -655,13 +655,13 @@ importers:
         version: 3.56.0
       svelte-check:
         specifier: ^3.0.2
-        version: 3.0.2(postcss@8.4.23)(svelte@3.56.0)
+        version: 3.4.4(postcss@8.4.23)(svelte@3.56.0)
       typescript:
         specifier: ^4.9.4
         version: 4.9.4
       vite:
         specifier: ^4.3.6
-        version: 4.3.6(@types/node@16.18.6)
+        version: 4.4.2(@types/node@16.18.6)
 
   packages/kit/test/build-errors/apps/prerenderable-incorrect-fragment:
     devDependencies:
@@ -4863,13 +4863,13 @@ packages:
       postcss: 8.4.23
     dev: true
 
-  /postcss-scss@4.0.6(postcss@8.4.23):
+  /postcss-scss@4.0.6(postcss@8.4.25):
     resolution: {integrity: sha512-rLDPhJY4z/i4nVFZ27j9GqLxj1pwxE80eAzUNRMXtcpipFYIeowerzBgG3yJhMtObGEXidtIgbUpQ3eLDsf5OQ==}
     engines: {node: '>=12.0'}
     peerDependencies:
       postcss: ^8.4.19
     dependencies:
-      postcss: 8.4.23
+      postcss: 8.4.25
     dev: true
 
   /postcss-selector-parser@6.0.13:
@@ -5639,6 +5639,33 @@ packages:
     resolution: {integrity: sha512-ot0WnXS9fgdkgIcePe6RHNk1WA8+muPa6cSjeR3V8K27q9BB1rTE3R1p7Hv0z1ZyAc8s6Vvv8DIyWf681MAt0w==}
     engines: {node: '>= 0.4'}
 
+  /svelte-check@3.4.4(postcss@8.4.23)(svelte@3.56.0):
+    resolution: {integrity: sha512-Uys9+R65cj8TmP8f5UpS7B2xKpNLYNxEWJsA5ZoKcWq/uwvABFF7xS6iPQGLoa7hxz0DS6xU60YFpmq06E4JxA==}
+    hasBin: true
+    peerDependencies:
+      svelte: ^3.55.0 || ^4.0.0-next.0 || ^4.0.0
+    dependencies:
+      '@jridgewell/trace-mapping': 0.3.18
+      chokidar: 3.5.3
+      fast-glob: 3.2.12
+      import-fresh: 3.3.0
+      picocolors: 1.0.0
+      sade: 1.8.1
+      svelte: 3.56.0
+      svelte-preprocess: 5.0.4(postcss@8.4.23)(svelte@3.56.0)(typescript@5.1.6)
+      typescript: 5.1.6
+    transitivePeerDependencies:
+      - '@babel/core'
+      - coffeescript
+      - less
+      - postcss
+      - postcss-load-config
+      - pug
+      - sass
+      - stylus
+      - sugarss
+    dev: true
+
   /svelte-check@3.4.4(postcss@8.4.23)(svelte@4.0.5):
     resolution: {integrity: sha512-Uys9+R65cj8TmP8f5UpS7B2xKpNLYNxEWJsA5ZoKcWq/uwvABFF7xS6iPQGLoa7hxz0DS6xU60YFpmq06E4JxA==}
     hasBin: true
@@ -5678,8 +5705,8 @@ packages:
       eslint-scope: 7.2.0
       eslint-visitor-keys: 3.4.1
       espree: 9.5.2
-      postcss: 8.4.23
-      postcss-scss: 4.0.6(postcss@8.4.23)
+      postcss: 8.4.25
+      postcss-scss: 4.0.6(postcss@8.4.25)
       svelte: 4.0.5
     dev: true
 
@@ -5699,6 +5726,54 @@ packages:
       svelte: ^3.48.0
     dependencies:
       svelte: 4.0.5
+    dev: true
+
+  /svelte-preprocess@5.0.4(postcss@8.4.23)(svelte@3.56.0)(typescript@5.1.6):
+    resolution: {integrity: sha512-ABia2QegosxOGsVlsSBJvoWeXy1wUKSfF7SWJdTjLAbx/Y3SrVevvvbFNQqrSJw89+lNSsM58SipmZJ5SRi5iw==}
+    engines: {node: '>= 14.10.0'}
+    requiresBuild: true
+    peerDependencies:
+      '@babel/core': ^7.10.2
+      coffeescript: ^2.5.1
+      less: ^3.11.3 || ^4.0.0
+      postcss: ^7 || ^8
+      postcss-load-config: ^2.1.0 || ^3.0.0 || ^4.0.0
+      pug: ^3.0.0
+      sass: ^1.26.8
+      stylus: ^0.55.0
+      sugarss: ^2.0.0 || ^3.0.0 || ^4.0.0
+      svelte: ^3.23.0 || ^4.0.0-next.0 || ^4.0.0
+      typescript: '>=3.9.5 || ^4.0.0 || ^5.0.0'
+    peerDependenciesMeta:
+      '@babel/core':
+        optional: true
+      coffeescript:
+        optional: true
+      less:
+        optional: true
+      postcss:
+        optional: true
+      postcss-load-config:
+        optional: true
+      pug:
+        optional: true
+      sass:
+        optional: true
+      stylus:
+        optional: true
+      sugarss:
+        optional: true
+      typescript:
+        optional: true
+    dependencies:
+      '@types/pug': 2.0.6
+      detect-indent: 6.1.0
+      magic-string: 0.27.0
+      postcss: 8.4.23
+      sorcery: 0.11.0
+      strip-indent: 3.0.0
+      svelte: 3.56.0
+      typescript: 5.1.6
     dev: true
 
   /svelte-preprocess@5.0.4(postcss@8.4.23)(svelte@4.0.5)(typescript@4.9.4):
@@ -5808,6 +5883,11 @@ packages:
       svelte: 4.0.5
       typescript: 4.9.4
     dev: false
+
+  /svelte@3.56.0:
+    resolution: {integrity: sha512-LvXiJbjdvJKwB/0CQyYpDX0q+hFqCyWmybzC2G6eK1tJJA/RSRCytTfNmjHv+RHlLuA70vWG7nXp6gbeErYvRA==}
+    engines: {node: '>= 8'}
+    dev: true
 
   /svelte@4.0.5:
     resolution: {integrity: sha512-PHKPWP1wiWHBtsE57nCb8xiWB3Ht7/3Kvi3jac0XIxUM2rep8alO7YoAtgWeGD7++tFy46krilOrPW0mG3Dx+A==}
