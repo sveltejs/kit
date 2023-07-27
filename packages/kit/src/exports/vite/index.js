@@ -711,7 +711,8 @@ function kit({ svelte_config }) {
 						build: {
 							minify: initial_config.build?.minify,
 							assetsInlineLimit: vite_config.build.assetsInlineLimit,
-							sourcemap: vite_config.build.sourcemap
+							sourcemap: vite_config.build.sourcemap,
+							modulePreload: false
 						},
 						optimizeDeps: {
 							force: vite_config.optimizeDeps.force
