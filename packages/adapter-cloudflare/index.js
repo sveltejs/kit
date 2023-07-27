@@ -58,7 +58,7 @@ export default function (options = {}) {
 				loader: {
 					'.wasm': 'copy'
 				},
-				external: ['cloudflare:email']
+				external: ['cloudflare:*']
 			});
 		}
 	};
