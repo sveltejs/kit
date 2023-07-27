@@ -712,7 +712,12 @@ function kit({ svelte_config }) {
 							minify: initial_config.build?.minify,
 							assetsInlineLimit: vite_config.build.assetsInlineLimit,
 							sourcemap: vite_config.build.sourcemap,
-							modulePreload: false
+							modulePreload: {
+								// disable Vite's JS module preload
+								resolveDependencies: () => {
+									return [];
+								}
+							}
 						},
 						optimizeDeps: {
 							force: vite_config.optimizeDeps.force
