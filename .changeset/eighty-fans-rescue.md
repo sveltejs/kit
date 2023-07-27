@@ -2,4 +2,4 @@
 '@sveltejs/adapter-cloudflare-workers': patch
 ---
 
-fix: mark `cloudflare:email` as external
+fix: mark `cloudflare:` packages as external
