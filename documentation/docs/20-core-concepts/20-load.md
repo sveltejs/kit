@@ -273,7 +273,7 @@ export async function load({ cookies }) {
 }
 ```
 
-By default (`credentials: 'same-origin'`), cookies will only be passed through the provided `fetch` function if the target host is the same as the SvelteKit application or a more specific subdomain of it.
+Cookies will only be passed through the provided `fetch` function if the target host is the same as the SvelteKit application or a more specific subdomain of it.
 
 For example, if SvelteKit is serving my.domain.com:
 -        domain.com WILL NOT receive cookies
@@ -281,7 +281,7 @@ For example, if SvelteKit is serving my.domain.com:
 -    api.domain.dom WILL NOT receive cookies
 - sub.my.domain.com WILL receive cookies
 
-If you want cookies to always be passed through to `fetch`, you can set `credentials: 'include'`. For example, this is necessary if you have a setup where my.domain.com makes requests to api.domain.com.
+Other cookies will not be passed when `credentials: 'include'` is set, because SvelteKit does not know which domain which cookie belongs to (the browser does not pass this information along), so it's not safe to forward any of them. Use the [handleFetch hook](hooks#server-hooks-handlefetch) to work around it.
 
 > When setting cookies, be aware of the `path` property. By default, the `path` of a cookie is the current pathname. If you for example set a cookie at page `admin/user`, the cookie will only be available within the `admin` pages by default. In most cases you likely want to set `path` to `'/'` to make the cookie available throughout your app.
 
