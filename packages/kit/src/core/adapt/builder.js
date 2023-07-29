@@ -154,7 +154,7 @@ export function create_builder({
 			write(dest, fallback);
 		},
 
-		generateManifest: ({ relativePath, routes: subset }) => {
+		generateManifest({ relativePath, routes: subset }) {
 			return generate_manifest({
 				build_data,
 				relative_path: relativePath,
@@ -189,15 +189,7 @@ export function create_builder({
 			return Array.from(new Set([...server_assets, ...client_assets]));
 		},
 
-		// @ts-expect-error
-		writePrerendered(dest, opts) {
-			// TODO remove for 1.0
-			if (opts?.fallback) {
-				throw new Error(
-					'The fallback option no longer exists — use builder.generateFallback(fallback) instead'
-				);
-			}
-
+		writePrerendered(dest) {
 			const source = `${config.kit.outDir}/output/prerendered`;
 			return [...copy(`${source}/pages`, dest), ...copy(`${source}/dependencies`, dest)];
 		},
