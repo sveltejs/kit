@@ -116,6 +116,13 @@ function get_routes_json(builder, assets, { include = ['/*'], exclude = ['<all>'
 
 			return rule;
 		});
+    
+    if (!exclude.filter(rule => rule === "<build>" || rule === "/_app/*").length) {
+        builder.log.warn(
+            "You set a custom exclude array for your _routes.json without the <build> special value.\n" +
+            "Make sure you know what you're doing, this might result in errors thrown during runtime."
+        );
+    }
 
 	const excess = include.length + exclude.length - 100;
 	if (excess > 0) {
