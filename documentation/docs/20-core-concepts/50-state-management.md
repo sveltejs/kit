@@ -36,7 +36,7 @@ export const actions = {
 
 The `user` variable is shared by everyone who connects to this server. If Alice submitted an embarrassing secret, and Bob visited the page after her, Bob would know Alice's secret. In addition, when Alice returns to the site later in the day, the server may have restarted, losing her data.
 
-Instead, you should _authenticate_ the user using [`cookies`](load#cookies-and-headers) and persist the data to a database.
+Instead, you should _authenticate_ the user using [`cookies`](load#cookies) and persist the data to a database.
 
 ## No side-effects in load
 
