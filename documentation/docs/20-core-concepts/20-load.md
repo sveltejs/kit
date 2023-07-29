@@ -276,9 +276,9 @@ export async function load({ cookies }) {
 Cookies will only be passed through the provided `fetch` function if the target host is the same as the SvelteKit application or a more specific subdomain of it.
 
 For example, if SvelteKit is serving my.domain.com:
--        domain.com WILL NOT receive cookies
--     my.domain.com WILL receive cookies
--    api.domain.dom WILL NOT receive cookies
+- domain.com WILL NOT receive cookies
+- my.domain.com WILL receive cookies
+- api.domain.dom WILL NOT receive cookies
 - sub.my.domain.com WILL receive cookies
 
 Other cookies will not be passed when `credentials: 'include'` is set, because SvelteKit does not know which domain which cookie belongs to (the browser does not pass this information along), so it's not safe to forward any of them. Use the [handleFetch hook](hooks#server-hooks-handlefetch) to work around it.
