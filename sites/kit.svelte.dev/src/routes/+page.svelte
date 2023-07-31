@@ -1,13 +1,14 @@
 <script>
+	import { TrySection } from '@sveltejs/site-kit/home';
 	import { onMount } from 'svelte';
+	import Deployment from './home/Deployment.svelte';
 	import Features from './home/Features.svelte';
 	import Hero from './home/Hero.svelte';
-	import Showcase from './home/Showcase.svelte';
-	import Try from './home/Try.svelte';
-	import Deployment from './home/Deployment.svelte';
-	import Svelte from './home/Svelte.svelte';
 	import Intro from './home/Intro.svelte';
+	import Showcase from './home/Showcase.svelte';
+	import Svelte from './home/Svelte.svelte';
 	import schema_url from './schema.json?url';
+
 	import './home/common.css';
 
 	let schema;
@@ -48,7 +49,7 @@
 
 	<Hero />
 	<Intro />
-	<Try />
+	<TrySection />
 	<Svelte />
 	<Features />
 	<Deployment />
