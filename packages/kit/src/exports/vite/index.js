@@ -545,7 +545,8 @@ function kit({ svelte_config }) {
 				// E.g. Vite generates `new URL('/asset.png', import.meta).href` for a relative path vs just '/asset.png'.
 				// That's larger and takes longer to run and also causes an HTML diff between SSR and client
 				// causing us to do a more expensive hydration check.
-				const client_base = kit.paths.relative || kit.paths.assets ? './' : kit.paths.base || '/';
+				const client_base =
+					kit.paths.relative !== false || kit.paths.assets ? './' : kit.paths.base || '/';
 
 				new_config = {
 					base: ssr ? assets_base(kit) : client_base,
