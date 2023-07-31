@@ -83,6 +83,16 @@ function get_routes_json(builder, assets, { include = ['/*'], exclude = ['<all>'
 		throw new Error('routes.include must contain 100 or fewer routes');
 	}
 
+	if (
+		!exclude.filter((rule) => rule === '<all>' || rule === '<build>' || rule === '/_app/*').length
+	) {
+		const message =
+			'You set a custom exclude array for your _routes.json without the <build>' +
+			"special value.\nMake sure you know what you're doing, this might result in errors" +
+			'thrown during runtime.';
+		builder.log.warn(message);
+	}
+
 	exclude = exclude
 		.flatMap((rule) => (rule === '<all>' ? ['<build>', '<files>', '<prerendered>'] : rule))
 		.flatMap((rule) => {
@@ -116,14 +126,6 @@ function get_routes_json(builder, assets, { include = ['/*'], exclude = ['<all>'
 
 			return rule;
 		});
-
-	if (!exclude.filter((rule) => rule === '<build>' || rule === '/_app/*').length) {
-		const message =
-			'You set a custom exclude array for your _routes.json without the <build>' +
-			"special value.\nMake sure you know what you're doing, this might result in errors" +
-			'thrown during runtime.';
-		builder.log.warn(message);
-	}
 
 	const excess = include.length + exclude.length - 100;
 	if (excess > 0) {
