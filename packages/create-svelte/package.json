@@ -25,7 +25,7 @@
 		"sucrase": "^3.29.0",
 		"svelte": "^4.0.5",
 		"tiny-glob": "^0.2.9",
-		"vitest": "^0.32.2"
+		"vitest": "^0.33.0"
 	},
 	"scripts": {
 		"build": "node scripts/build-templates",
