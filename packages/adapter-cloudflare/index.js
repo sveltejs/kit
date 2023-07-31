@@ -83,8 +83,11 @@ function get_routes_json(builder, assets, { include = ['/*'], exclude = ['<all>'
 		throw new Error('routes.include must contain 100 or fewer routes');
 	}
 
+	const finalBuildRule = `/${builder.config.kit.appDir}/*`;
+
 	if (
-		!exclude.filter((rule) => rule === '<all>' || rule === '<build>' || rule === '/_app/*').length
+		!exclude.filter((rule) => rule === '<all>' || rule === '<build>' || rule === finalBuildRule)
+			.length
 	) {
 		const message =
 			'You set a custom exclude array for your _routes.json without the <build>' +
@@ -97,7 +100,7 @@ function get_routes_json(builder, assets, { include = ['/*'], exclude = ['<all>'
 		.flatMap((rule) => (rule === '<all>' ? ['<build>', '<files>', '<prerendered>'] : rule))
 		.flatMap((rule) => {
 			if (rule === '<build>') {
-				return `/${builder.config.kit.appDir}/*`;
+				return finalBuildRule;
 			}
 
 			if (rule === '<files>') {
