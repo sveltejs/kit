@@ -1,8 +1,9 @@
 <script>
 	import { page } from '$app/stores';
+	import { copy_code_descendants } from '@sveltejs/site-kit/actions';
 	import { Icon } from '@sveltejs/site-kit/components';
 	import { DocsOnThisPage, setupDocsHovers } from '@sveltejs/site-kit/docs';
-	import { copy_code_descendants } from '@sveltejs/site-kit/actions';
+	import { onMount } from 'svelte';
 
 	export let data;
 
@@ -12,6 +13,31 @@
 	$: next = pages[index + 1];
 
 	setupDocsHovers();
+
+	const redirects = {
+		hmr: 'how-do-i-use-hmr-with-sveltekit',
+		'read-package-json': 'how-do-i-include-details-from-package-json-in-my-application',
+		packages: 'how-do-i-fix-the-error-i-m-getting-trying-to-include-a-package',
+		integrations: 'how-do-i-use-x-with-sveltekit',
+		'how-do-i-setup-a-database': 'how-do-i-use-x-with-sveltekit-how-do-i-setup-a-database',
+		'how-do-i-use-a-client-side-only-library-that-depends-on-document-or-window':
+			'how-do-i-use-x-with-sveltekit-how-do-i-use-a-client-side-only-library-that-depends-on-document-or-window',
+		'how-do-i-use-a-different-backend-api-server':
+			'how-do-i-use-x-with-sveltekit-how-do-i-use-a-different-backend-api-server',
+		'how-do-i-use-middleware': 'how-do-i-use-x-with-sveltekit-how-do-i-use-middleware',
+		'does-it-work-with-yarn-2': 'how-do-i-use-x-with-sveltekit-does-it-work-with-yarn-2',
+		'how-do-i-use-with-yarn-3': 'how-do-i-use-x-with-sveltekit-how-do-i-use-with-yarn-3'
+	};
+
+	onMount(() => {
+		if ($page.url.pathname !== '/docs/faq') return;
+
+		const hash = $page.url.hash.replace(/^#/, '');
+
+		if (!redirects[hash]) return;
+
+		document.location.hash = `#${redirects[hash]}`;
+	});
 </script>
 
 <svelte:head>
