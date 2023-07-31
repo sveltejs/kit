@@ -167,7 +167,7 @@ importers:
         version: 4.9.4
       vitest:
         specifier: ^0.33.0
-        version: 0.33.0
+        version: 0.33.0(playwright@1.30.0)
 
   packages/adapter-node:
     dependencies:
@@ -210,7 +210,7 @@ importers:
         version: 4.9.4
       vitest:
         specifier: ^0.33.0
-        version: 0.33.0
+        version: 0.33.0(playwright@1.30.0)
 
   packages/adapter-static:
     devDependencies:
@@ -289,7 +289,7 @@ importers:
         version: 4.9.4
       vitest:
         specifier: ^0.33.0
-        version: 0.33.0
+        version: 0.33.0(playwright@1.30.0)
 
   packages/amp:
     dependencies:
@@ -335,7 +335,7 @@ importers:
         version: 0.2.9
       vitest:
         specifier: ^0.33.0
-        version: 0.33.0
+        version: 0.33.0(playwright@1.30.0)
 
   packages/create-svelte/templates/default:
     dependencies:
@@ -432,8 +432,8 @@ importers:
         specifier: ^0.1.9
         version: 0.1.9
       marked:
-        specifier: ^4.2.3
-        version: 4.2.3
+        specifier: ^6.0.0
+        version: 6.0.0
       rollup:
         specifier: ^3.7.0
         version: 3.7.0
@@ -442,7 +442,7 @@ importers:
         version: 4.0.5
       svelte-preprocess:
         specifier: ^5.0.4
-        version: 5.0.4(svelte@4.0.5)(typescript@4.9.4)
+        version: 5.0.4(postcss@8.4.23)(svelte@4.0.5)(typescript@4.9.4)
       typescript:
         specifier: ^4.9.4
         version: 4.9.4
@@ -451,7 +451,7 @@ importers:
         version: 4.4.2(@types/node@16.18.6)
       vitest:
         specifier: ^0.33.0
-        version: 0.33.0
+        version: 0.33.0(playwright@1.30.0)
 
   packages/kit/test/apps/amp:
     devDependencies:
@@ -619,7 +619,7 @@ importers:
     devDependencies:
       vitest:
         specifier: ^0.33.0
-        version: 0.33.0
+        version: 0.33.0(playwright@1.30.0)
 
   packages/kit/test/build-errors/apps/prerender-entry-generator-mismatch:
     devDependencies:
@@ -859,7 +859,7 @@ importers:
         version: 4.0.5
       svelte-check:
         specifier: ^3.4.4
-        version: 3.4.4(svelte@4.0.5)
+        version: 3.4.4(postcss@8.4.23)(svelte@4.0.5)
       typescript:
         specifier: ^4.9.4
         version: 4.9.4
@@ -868,7 +868,7 @@ importers:
         version: 4.4.2(@types/node@16.18.6)
       vitest:
         specifier: ^0.33.0
-        version: 0.33.0
+        version: 0.33.0(playwright@1.30.0)
 
   packages/kit/test/prerendering/options:
     devDependencies:
@@ -880,7 +880,7 @@ importers:
         version: 4.0.5
       svelte-check:
         specifier: ^3.4.4
-        version: 3.4.4(svelte@4.0.5)
+        version: 3.4.4(postcss@8.4.23)(svelte@4.0.5)
       typescript:
         specifier: ^4.9.4
         version: 4.9.4
@@ -889,7 +889,7 @@ importers:
         version: 4.4.2(@types/node@16.18.6)
       vitest:
         specifier: ^0.33.0
-        version: 0.33.0
+        version: 0.33.0(playwright@1.30.0)
 
   packages/kit/test/prerendering/paths-base:
     devDependencies:
@@ -901,7 +901,7 @@ importers:
         version: 4.0.5
       svelte-check:
         specifier: ^3.4.4
-        version: 3.4.4(svelte@4.0.5)
+        version: 3.4.4(postcss@8.4.23)(svelte@4.0.5)
       typescript:
         specifier: ^4.9.4
         version: 4.9.4
@@ -910,7 +910,7 @@ importers:
         version: 4.4.2(@types/node@16.18.6)
       vitest:
         specifier: ^0.33.0
-        version: 0.33.0
+        version: 0.33.0(playwright@1.30.0)
 
   packages/migrate:
     dependencies:
@@ -950,7 +950,7 @@ importers:
         version: 2.8.0
       vitest:
         specifier: ^0.33.0
-        version: 0.33.0
+        version: 0.33.0(playwright@1.30.0)
 
   packages/package:
     dependencies:
@@ -1026,8 +1026,8 @@ importers:
         specifier: ^0.30.0
         version: 0.30.0
       marked:
-        specifier: ^4.2.3
-        version: 4.2.3
+        specifier: ^6.0.0
+        version: 6.0.0
       prism-svelte:
         specifier: ^0.5.0
         version: 0.5.0
@@ -1051,10 +1051,10 @@ importers:
         version: 4.4.2(@types/node@16.18.6)
       vite-imagetools:
         specifier: ^5.0.5
-        version: 5.0.5
+        version: 5.0.5(rollup@3.7.0)
       vitest:
         specifier: ^0.33.0
-        version: 0.33.0
+        version: 0.33.0(playwright@1.30.0)
 
 packages:
 
@@ -4225,9 +4225,9 @@ packages:
     engines: {node: '>=8'}
     dev: true
 
-  /marked@4.2.3:
-    resolution: {integrity: sha512-slWRdJkbTZ+PjkyJnE30Uid64eHwbwa1Q25INCAYfZlK4o6ylagBy/Le9eWntqJFoFT93ikUKMv47GZ4gTwHkw==}
-    engines: {node: '>= 12'}
+  /marked@6.0.0:
+    resolution: {integrity: sha512-7E3m/xIlymrFL5gWswIT4CheIE3fDeh51NV09M4x8iOc7NDYlyERcQMLAIHcSlrvwliwbPQ4OGD+MpPSYiQcqw==}
+    engines: {node: '>= 16'}
     hasBin: true
     dev: true
 
@@ -5638,33 +5638,6 @@ packages:
       - sugarss
     dev: true
 
-  /svelte-check@3.4.4(svelte@4.0.5):
-    resolution: {integrity: sha512-Uys9+R65cj8TmP8f5UpS7B2xKpNLYNxEWJsA5ZoKcWq/uwvABFF7xS6iPQGLoa7hxz0DS6xU60YFpmq06E4JxA==}
-    hasBin: true
-    peerDependencies:
-      svelte: ^3.55.0 || ^4.0.0-next.0 || ^4.0.0
-    dependencies:
-      '@jridgewell/trace-mapping': 0.3.17
-      chokidar: 3.5.3
-      fast-glob: 3.2.12
-      import-fresh: 3.3.0
-      picocolors: 1.0.0
-      sade: 1.8.1
-      svelte: 4.0.5
-      svelte-preprocess: 5.0.4(svelte@4.0.5)(typescript@5.0.4)
-      typescript: 5.0.4
-    transitivePeerDependencies:
-      - '@babel/core'
-      - coffeescript
-      - less
-      - postcss
-      - postcss-load-config
-      - pug
-      - sass
-      - stylus
-      - sugarss
-    dev: true
-
   /svelte-eslint-parser@0.31.0(svelte@4.0.5):
     resolution: {integrity: sha512-/31RpBf/e3YjoFphjsyo3JRyN1r4UalGAGafXrZ6EJK4h4COOO0rbfBoen5byGsXnIJKsrlC1lkEd2Vzpq2IDg==}
     engines: {node: ^12.22.0 || ^14.17.0 || >=16.0.0}
@@ -5790,100 +5763,6 @@ packages:
       detect-indent: 6.1.0
       magic-string: 0.27.0
       postcss: 8.4.23
-      sorcery: 0.11.0
-      strip-indent: 3.0.0
-      svelte: 4.0.5
-      typescript: 5.0.4
-    dev: true
-
-  /svelte-preprocess@5.0.4(svelte@4.0.5)(typescript@4.9.4):
-    resolution: {integrity: sha512-ABia2QegosxOGsVlsSBJvoWeXy1wUKSfF7SWJdTjLAbx/Y3SrVevvvbFNQqrSJw89+lNSsM58SipmZJ5SRi5iw==}
-    engines: {node: '>= 14.10.0'}
-    requiresBuild: true
-    peerDependencies:
-      '@babel/core': ^7.10.2
-      coffeescript: ^2.5.1
-      less: ^3.11.3 || ^4.0.0
-      postcss: ^7 || ^8
-      postcss-load-config: ^2.1.0 || ^3.0.0 || ^4.0.0
-      pug: ^3.0.0
-      sass: ^1.26.8
-      stylus: ^0.55.0
-      sugarss: ^2.0.0 || ^3.0.0 || ^4.0.0
-      svelte: ^3.23.0 || ^4.0.0-next.0 || ^4.0.0
-      typescript: '>=3.9.5 || ^4.0.0 || ^5.0.0'
-    peerDependenciesMeta:
-      '@babel/core':
-        optional: true
-      coffeescript:
-        optional: true
-      less:
-        optional: true
-      postcss:
-        optional: true
-      postcss-load-config:
-        optional: true
-      pug:
-        optional: true
-      sass:
-        optional: true
-      stylus:
-        optional: true
-      sugarss:
-        optional: true
-      typescript:
-        optional: true
-    dependencies:
-      '@types/pug': 2.0.6
-      detect-indent: 6.1.0
-      magic-string: 0.27.0
-      sorcery: 0.11.0
-      strip-indent: 3.0.0
-      svelte: 4.0.5
-      typescript: 4.9.4
-    dev: true
-
-  /svelte-preprocess@5.0.4(svelte@4.0.5)(typescript@5.0.4):
-    resolution: {integrity: sha512-ABia2QegosxOGsVlsSBJvoWeXy1wUKSfF7SWJdTjLAbx/Y3SrVevvvbFNQqrSJw89+lNSsM58SipmZJ5SRi5iw==}
-    engines: {node: '>= 14.10.0'}
-    requiresBuild: true
-    peerDependencies:
-      '@babel/core': ^7.10.2
-      coffeescript: ^2.5.1
-      less: ^3.11.3 || ^4.0.0
-      postcss: ^7 || ^8
-      postcss-load-config: ^2.1.0 || ^3.0.0 || ^4.0.0
-      pug: ^3.0.0
-      sass: ^1.26.8
-      stylus: ^0.55.0
-      sugarss: ^2.0.0 || ^3.0.0 || ^4.0.0
-      svelte: ^3.23.0 || ^4.0.0-next.0 || ^4.0.0
-      typescript: '>=3.9.5 || ^4.0.0 || ^5.0.0'
-    peerDependenciesMeta:
-      '@babel/core':
-        optional: true
-      coffeescript:
-        optional: true
-      less:
-        optional: true
-      postcss:
-        optional: true
-      postcss-load-config:
-        optional: true
-      pug:
-        optional: true
-      sass:
-        optional: true
-      stylus:
-        optional: true
-      sugarss:
-        optional: true
-      typescript:
-        optional: true
-    dependencies:
-      '@types/pug': 2.0.6
-      detect-indent: 6.1.0
-      magic-string: 0.27.0
       sorcery: 0.11.0
       strip-indent: 3.0.0
       svelte: 4.0.5
@@ -6226,7 +6105,7 @@ packages:
       spdx-expression-parse: 3.0.1
     dev: true
 
-  /vite-imagetools@5.0.5:
+  /vite-imagetools@5.0.5(rollup@3.7.0):
     resolution: {integrity: sha512-q+BRot2b7AxUHgkQzU+5ku+NERVZcXmLdAnQWSnIw31bRoPIBSDxmDRTDldX8gqyjQNkIBjObF+xqPCeNp7CzQ==}
     engines: {node: '>=12.0.0'}
     dependencies:
@@ -6340,7 +6219,7 @@ packages:
       vite: 4.4.2(@types/node@16.18.6)
     dev: false
 
-  /vitest@0.33.0:
+  /vitest@0.33.0(playwright@1.30.0):
     resolution: {integrity: sha512-1CxaugJ50xskkQ0e969R/hW47za4YXDUfWJDxip1hwbnhUjYolpfUn2AMOulqG/Dtd9WYAtkHmM/m3yKVrEejQ==}
     engines: {node: '>=v14.18.0'}
     hasBin: true
@@ -6388,6 +6267,7 @@ packages:
       magic-string: 0.30.1
       pathe: 1.1.1
       picocolors: 1.0.0
+      playwright: 1.30.0
       std-env: 3.3.3
       strip-literal: 1.0.1
       tinybench: 2.5.0
