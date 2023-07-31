@@ -1,6 +1,6 @@
 {
 	"name": "@sveltejs/adapter-vercel",
-	"version": "3.0.2",
+	"version": "3.0.3",
 	"description": "A SvelteKit adapter that creates a Vercel app",
 	"repository": {
 		"type": "git",
