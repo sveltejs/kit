@@ -19,7 +19,7 @@
 		"@types/node": "^16.18.6",
 		"flexsearch": "^0.7.31",
 		"magic-string": "^0.30.0",
-		"marked": "^4.2.3",
+		"marked": "^6.0.0",
 		"prism-svelte": "^0.5.0",
 		"prismjs": "^1.29.0",
 		"shiki-twoslash": "^3.1.0",
