@@ -39,7 +39,7 @@ const FUNCTION_PREFIX = 'sveltekit-';
 export default function ({
 	split = false,
 	edge = edge_set_in_env_var,
-	experimental_scheduler = false
+	experimentalScheduler = false
 } = {}) {
 	return {
 		name: '@sveltejs/adapter-netlify',
@@ -94,7 +94,12 @@ export default function ({
 
 				await generate_edge_functions({ builder });
 			} else {
-				await generate_lambda_functions({ builder, split, publish, experimental_scheduler });
+				await generate_lambda_functions({
+					builder,
+					split,
+					publish,
+					experimental_scheduler: experimentalScheduler
+				});
 			}
 		}
 	};
@@ -358,3 +363,5 @@ function matches(a, b) {
 		return b.length === 1 && b[0].rest;
 	}
 }
+
+export { schedule } from '@netlify/functions';

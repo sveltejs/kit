@@ -4,5 +4,5 @@ import './ambient.js';
 export default function plugin(opts?: {
 	split?: boolean;
 	edge?: boolean;
-	experimental_scheduler?: boolean;
+	experimentalScheduler?: boolean;
 }): Adapter;
