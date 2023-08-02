@@ -414,8 +414,8 @@ importers:
         specifier: ^3.4.35
         version: 3.4.35
       '@types/marked':
-        specifier: ^4.0.7
-        version: 4.0.7
+        specifier: ^5.0.0
+        version: 5.0.0
       '@types/mime':
         specifier: ^3.0.1
         version: 3.0.1
@@ -1901,8 +1901,8 @@ packages:
     resolution: {integrity: sha512-wOuvG1SN4Us4rez+tylwwwCV1psiNVOkJeM3AUWUNWg/jDQY2+HE/444y5gc+jBmRqASOm2Oeh5c1axHobwRKQ==}
     dev: true
 
-  /@types/marked@4.0.7:
-    resolution: {integrity: sha512-eEAhnz21CwvKVW+YvRvcTuFKNU9CV1qH+opcgVK3pIMI6YZzDm6gc8o2vHjldFk6MGKt5pueSB7IOpvpx5Qekw==}
+  /@types/marked@5.0.0:
+    resolution: {integrity: sha512-YcZe50jhltsCq7rc9MNZC/4QB/OnA2Pd6hrOSTOFajtabN+38slqgDDCeE/0F83SjkKBQcsZUj7VLWR0H5cKRA==}
     dev: true
 
   /@types/mime@3.0.1:
