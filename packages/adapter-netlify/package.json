@@ -51,6 +51,7 @@
 		"vitest": "^0.33.0"
 	},
 	"peerDependencies": {
-		"@sveltejs/kit": "^1.5.0"
+		"@sveltejs/kit": "^1.5.0",
+		"@netlify/functions": "^1.6.0"
 	}
 }

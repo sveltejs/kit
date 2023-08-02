@@ -36,7 +36,11 @@ const edge_set_in_env_var =
 const FUNCTION_PREFIX = 'sveltekit-';
 
 /** @type {import('.').default} */
-export default function ({ split = false, edge = edge_set_in_env_var } = {}) {
+export default function ({
+	split = false,
+	edge = edge_set_in_env_var,
+	experimental_scheduler = false
+} = {}) {
 	return {
 		name: '@sveltejs/adapter-netlify',
 
@@ -90,7 +94,7 @@ export default function ({ split = false, edge = edge_set_in_env_var } = {}) {
 
 				await generate_edge_functions({ builder });
 			} else {
-				await generate_lambda_functions({ builder, split, publish });
+				await generate_lambda_functions({ builder, split, publish, experimental_scheduler });
 			}
 		}
 	};
@@ -161,8 +165,9 @@ async function generate_edge_functions({ builder }) {
  * @param {import('@sveltejs/kit').Builder} params.builder
  * @param { string } params.publish
  * @param { boolean } params.split
+ * @param { boolean } params.experimental_scheduler
  */
-async function generate_lambda_functions({ builder, publish, split }) {
+async function generate_lambda_functions({ builder, publish, split, experimental_scheduler }) {
 	builder.mkdirp('.netlify/functions-internal/.svelte-kit');
 
 	/** @type {string[]} */
@@ -236,8 +241,27 @@ async function generate_lambda_functions({ builder, publish, split }) {
 			redirects.push(`${pattern === '/' ? '' : pattern}/__data.json ${redirect}`);
 		}
 	} else {
+		if (experimental_scheduler)
+			for (const r of builder.routes.filter((r) => r.segments[0].content === 'cron')) {
+				const manifest = builder.generateManifest({ relativePath: '../server', routes: [r] });
+				const rule = r.segments.at(-1).content;
+				// Derived from https://stackoverflow.com/a/57639657
+				if (!/(((\d+,)+\d+|(\d+(\/|-)\d+)|\d+|\*)_?){5}/.test(rule))
+					throw new Error(`${r.id}: invalid cron rule`);
+				const fn = `import { init } from '../scheduler.js';\nimport { schedule } from "@netlify/functions";\n\nexport const handler = schedule("${rule.replaceAll(
+					'_',
+					' '
+				)}",init(${manifest}));\n`;
+				const name = FUNCTION_PREFIX + 'cron-' + rule.replaceAll('*', '_') + '-';
+				writeFileSync(`.netlify/functions-internal/${name}render.json`, fn_config);
+				writeFileSync(`.netlify/functions-internal/${name}render.mjs`, fn);
+			}
+
 		const manifest = builder.generateManifest({
-			relativePath: '../server'
+			relativePath: '../server',
+			routes: experimental_scheduler
+				? builder.routes.filter((r) => r.segments[0].content !== 'cron')
+				: undefined
 		});
 
 		const fn = `import { init } from '../serverless.js';\n\nexport const handler = init(${manifest});\n`;

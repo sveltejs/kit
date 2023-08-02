@@ -6,14 +6,15 @@ import json from '@rollup/plugin-json';
 const config = {
 	input: {
 		serverless: 'src/serverless.js',
-		shims: 'src/shims.js'
+		shims: 'src/shims.js',
+		scheduler: 'src/scheduler.js'
 	},
 	output: {
 		dir: 'files/esm',
 		format: 'esm'
 	},
 	plugins: [nodeResolve({ preferBuiltins: true }), commonjs(), json()],
-	external: (id) => id === '0SERVER' || id.startsWith('node:'),
+	external: (id) => id === '0SERVER' || id.startsWith('node:') || id === '@netlify/functions',
 	preserveEntrySignatures: 'exports-only'
 };
 
