@@ -16,22 +16,11 @@ test('renders an AMP page', async ({ page, baseURL }) => {
 	expect(await page.$('script[sveltekit\\:data-type="data"]')).toBeNull();
 });
 
-test('styles are applied', async ({ page, baseURL }) => {
+test('styles are applied', async ({ page, baseURL, get_computed_style }) => {
 	await page.goto(`${baseURL}/valid`);
 
-	expect(
-		await page.evaluate(() => {
-			const el = document.querySelector('p');
-			return el && getComputedStyle(el).color;
-		})
-	).toEqual('rgb(255, 0, 0)');
-
-	expect(
-		await page.evaluate(() => {
-			const el = document.querySelector('footer');
-			return el && getComputedStyle(el).color;
-		})
-	).toEqual('rgb(128, 0, 128)');
+	expect(await get_computed_style('p', 'color')).toEqual('rgb(255, 0, 0)');
+	expect(await get_computed_style('footer', 'color')).toEqual('rgb(128, 0, 128)');
 });
 
 test('sets origin', async ({ baseURL, page }) => {

@@ -190,14 +190,40 @@ test.describe('Endpoints', () => {
 	});
 
 	test('OPTIONS handler', async ({ request }) => {
-		const url = '/endpoint-output/options';
+		const url = '/endpoint-output';
 
-		var response = await request.fetch(url, {
+		const response = await request.fetch(url, {
 			method: 'OPTIONS'
 		});
 
 		expect(response.status()).toBe(200);
 		expect(await response.text()).toBe('ok');
+	});
+
+	test('HEAD handler', async ({ request }) => {
+		const url = '/endpoint-output/head-handler';
+
+		const page_response = await request.fetch(url, {
+			method: 'HEAD',
+			headers: {
+				accept: 'text/html'
+			}
+		});
+
+		expect(page_response.status()).toBe(200);
+		expect(await page_response.text()).toBe('');
+		expect(page_response.headers()['x-sveltekit-page']).toBe('true');
+
+		const endpoint_response = await request.fetch(url, {
+			method: 'HEAD',
+			headers: {
+				accept: 'application/json'
+			}
+		});
+
+		expect(endpoint_response.status()).toBe(200);
+		expect(await endpoint_response.text()).toBe('');
+		expect(endpoint_response.headers()['x-sveltekit-head-endpoint']).toBe('true');
 	});
 });
 
@@ -412,6 +438,27 @@ test.describe('Load', () => {
 		await page.goto(`/load/fetch-origin-external?port=${port}`);
 		expect(await page.textContent('h1')).toBe(`origin: ${new URL(baseURL).origin}`);
 	});
+
+	test('does not run when using invalid request methods', async ({ request }) => {
+		const load_url = '/load';
+
+		let response = await request.fetch(load_url, {
+			method: 'OPTIONS'
+		});
+
+		expect(response.status()).toBe(204);
+		expect(await response.text()).toBe('');
+		expect(response.headers()['allow']).toBe('GET, HEAD, OPTIONS');
+
+		const actions_url = '/actions/enhance';
+		response = await request.fetch(actions_url, {
+			method: 'OPTIONS'
+		});
+
+		expect(response.status()).toBe(204);
+		expect(await response.text()).toBe('');
+		expect(response.headers()['allow']).toBe('GET, HEAD, OPTIONS, POST');
+	});
 });
 
 test.describe('Routing', () => {
@@ -496,7 +543,7 @@ test.describe('Static files', () => {
 test.describe('setHeaders', () => {
 	test('allows multiple set-cookie headers with different values', async ({ page }) => {
 		const response = await page.goto('/headers/set-cookie/sub');
-		const cookies = (await response?.allHeaders())['set-cookie'];
+		const cookies = (await response.allHeaders())['set-cookie'];
 
 		expect(cookies).toMatch('cookie1=value1');
 		expect(cookies).toMatch('cookie2=value2');
@@ -521,5 +568,11 @@ test.describe('Miscellaneous', () => {
 		const response = await request.get('/_app/version.json');
 		const headers = response.headers();
 		expect(headers['cache-control'] || '').not.toContain('immutable');
+	});
+
+	test('handles responses with immutable headers', async ({ request }) => {
+		const response = await request.get('/immutable-headers');
+		expect(response.status()).toBe(200);
+		expect(await response.text()).toBe('foo');
 	});
 });

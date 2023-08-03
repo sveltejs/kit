@@ -1,13 +1,14 @@
 <script>
 	import { base } from '$app/paths';
 	import Logotype from './svelte-kit-logotype.svg.svelte';
-	import background from './svelte-kit-machine.webp?w=1440;960&format=avif;webp;png&picture';
+	import Image from '$lib/Image.svelte';
+	import background from './svelte-kit-machine.webp?w=1440;960';
 </script>
 
 <section class="hero">
 	<div class="hero-contents">
 		<div class="hero-text">
-			<div class="logotype" role="img">
+			<div class="logotype" role="img" aria-label="SvelteKit">
 				<Logotype />
 			</div>
 
@@ -15,12 +16,9 @@
 			<a class="cta" href="{base}/docs/introduction">read the docs</a>
 		</div>
 
-		<picture class="hero-image">
-			{#each Object.entries(background.sources) as [format, images]}
-				<source srcset={images.map((i) => `${i.src} ${i.w}w`).join(', ')} type="image/{format}" />
-			{/each}
-			<img src={background.fallback.src} alt="SvelteKit illustration" />
-		</picture>
+		<div class="hero-image">
+			<Image src={background} alt="SvelteKit illustration" />
+		</div>
 	</div>
 </section>
 
@@ -38,6 +36,7 @@
 				hsla(207, 22%, 84%, 0.62) 92.49%
 			),
 			linear-gradient(0deg, hsl(204, 38%, 90%), hsl(204, 38%, 90%));
+
 		--dark-gradient: radial-gradient(
 				64.14% 72.25% at 47.58% 31.75%,
 				hsl(209deg 6% 47% / 52%) 0%,
@@ -50,6 +49,7 @@
 				hsla(207, 22%, 13%, 0.62) 92.49%
 			),
 			linear-gradient(0deg, hsl(204, 38%, 20%), hsl(204, 10%, 90%));
+
 		max-width: 100vw;
 		background: hsl(210, 7%, 84%);
 		background: var(--gradient);
@@ -93,7 +93,9 @@
 		pointer-events: none;
 	}
 
-	.hero-image img {
+	/* this sucks but it's the best we can do.
+	   https://github.com/sveltejs/svelte/issues/2870#issuecomment-1161082065 */
+	.hero-image :global(img) {
 		width: var(--size);
 		aspect-ratio: 4 / 3;
 		object-fit: cover;
@@ -120,7 +122,7 @@
 			padding: calc(10rem + var(--sk-nav-height)) var(--sk-page-padding-side) 16rem;
 		}
 		.hero-contents {
-			max-width: calc(120rem - 2 * var(--side-nav));
+			max-width: calc(120rem - 2 * var(--sk-page-padding-side));
 			padding-bottom: 0rem;
 		}
 

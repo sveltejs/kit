@@ -1,5 +1,75 @@
 # create-svelte
 
+## 5.0.4
+
+### Patch Changes
+
+- chore: upgrade @fontsource/fira-mono to v5 ([#10445](https://github.com/sveltejs/kit/pull/10445))
+
+- chore: upgrade to vitest 0.33.0 ([#10445](https://github.com/sveltejs/kit/pull/10445))
+
+## 5.0.3
+
+### Patch Changes
+
+- chore: bump Vite and Svelte dependencies ([#10330](https://github.com/sveltejs/kit/pull/10330))
+
+- fix: create lib folder in skeleton project ([#10341](https://github.com/sveltejs/kit/pull/10341))
+
+## 5.0.2
+
+### Patch Changes
+
+- fix: npm test should run unit tests ([#10241](https://github.com/sveltejs/kit/pull/10241))
+
+- chore: upgrade vitest ([#10236](https://github.com/sveltejs/kit/pull/10236))
+
+## 5.0.1
+
+### Patch Changes
+
+- chore: use satisfies keyword in jsdocs, in create-svelte default template ([#10203](https://github.com/sveltejs/kit/pull/10203))
+
+## 5.0.0
+
+### Major Changes
+
+- breaking: install Svelte 4 ([#10217](https://github.com/sveltejs/kit/pull/10217))
+
+## 4.2.0
+
+### Minor Changes
+
+- feat: Add `data-sveltekit-preload-data` to lib template ([#9863](https://github.com/sveltejs/kit/pull/9863))
+
+## 4.1.1
+
+### Patch Changes
+
+- fix: default playwright globs ([#9795](https://github.com/sveltejs/kit/pull/9795))
+
+- fix: remove obsolete `ignorePatterns: ['*.cjs']` from .eslintrc.cjs ([#9797](https://github.com/sveltejs/kit/pull/9797))
+
+## 4.1.0
+
+### Minor Changes
+
+- feat: set `resolution-mode=highest` in generated `.npmrc` ([#9781](https://github.com/sveltejs/kit/pull/9781))
+
+## 4.0.0
+
+### Major Changes
+
+- feat: switch default ESLint plugin from `eslint-plugin-svelte3` to `eslint-plugin-svelte` ([#9749](https://github.com/sveltejs/kit/pull/9749))
+
+## 3.3.1
+
+### Patch Changes
+
+- feat: upgrade to Vite 4.3 for faster build times ([#9737](https://github.com/sveltejs/kit/pull/9737))
+
+- fix: generate tsconfig/jsconfig correctly for library option ([#9712](https://github.com/sveltejs/kit/pull/9712))
+
 ## 3.3.0
 
 ### Minor Changes

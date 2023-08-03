@@ -4,15 +4,13 @@ title: Cloudflare Pages
 
 To deploy to [Cloudflare Pages](https://developers.cloudflare.com/pages/), use [`adapter-cloudflare`](https://github.com/sveltejs/kit/tree/master/packages/adapter-cloudflare).
 
-This adapter will be installed by default when you use [`adapter-auto`](adapter-auto), but adding it to your project is recommended so that `event.platform` is automatically typed.
+This adapter will be installed by default when you use [`adapter-auto`](adapter-auto). If you plan on staying with Cloudflare Pages you can switch from [`adapter-auto`](adapter-auto) to using this adapter directly so that type declarations will be automatically applied and you can set Cloudflare-specific options.
 
 ## Comparisons
 
 - `adapter-cloudflare` – supports all SvelteKit features; builds for [Cloudflare Pages](https://blog.cloudflare.com/cloudflare-pages-goes-full-stack/)
 - `adapter-cloudflare-workers` – supports all SvelteKit features; builds for Cloudflare Workers
 - `adapter-static` – only produces client-side static assets; compatible with Cloudflare Pages
-
-> Unless you have a specific reason to use `adapter-cloudflare-workers`, it's recommended that you use this adapter instead. Both adapters have equivalent functionality, but Cloudflare Pages offers features like GitHub integration with automatic builds and deploys, preview deployments, instant rollback and so on.
 
 ## Usage
 
@@ -55,17 +53,13 @@ Please follow the [Get Started Guide](https://developers.cloudflare.com/pages/ge
 
 When configuring your project settings, you must use the following settings:
 
-- **Framework preset** – None
+- **Framework preset** – SvelteKit
 - **Build command** – `npm run build` or `vite build`
 - **Build output directory** – `.svelte-kit/cloudflare`
-- **Environment variables**
-	- `NODE_VERSION`: `16`
 
-> You need to add a `NODE_VERSION` environment variable to both the "production" and "preview" environments. You can add this during project setup or later in the Pages project settings. SvelteKit requires Node `16.14` or later, so you should use `16` as the `NODE_VERSION` value.
+## Bindings
 
-## Environment variables
-
-The [`env`](https://developers.cloudflare.com/workers/runtime-apis/fetch-event#parameters) object, containing KV/DO namespaces etc, is passed to SvelteKit via the `platform` property along with `context` and `caches`, meaning you can access it in hooks and endpoints:
+The [`env`](https://developers.cloudflare.com/workers/runtime-apis/fetch-event#parameters) object contains your project's [bindings](https://developers.cloudflare.com/workers/platform/environment-variables/), which consist of KV/DO namespaces, etc. It is passed to SvelteKit via the `platform` property, along with `context` and `caches`, meaning that you can access it in hooks and endpoints:
 
 ```js
 // @errors: 7031
@@ -73,6 +67,8 @@ export async function POST({ request, platform }) {
 	const x = platform.env.YOUR_DURABLE_OBJECT_NAMESPACE.idFromName('x');
 }
 ```
+
+> SvelteKit's built-in `$env` module should be preferred for environment variables.
 
 To make these types available to your app, reference them in your `src/app.d.ts`:
 
@@ -92,7 +88,9 @@ declare global {
 export {};
 ```
 
-> `platform.env` is only available in the production build. Use [wrangler](https://developers.cloudflare.com/workers/cli-wrangler) to test it locally
+### Testing Locally
+
+`platform.env` is only available in the final build and not in dev mode. For testing the build, you can use [wrangler](https://developers.cloudflare.com/workers/cli-wrangler) **version 3**. Once you have built your site, run `wrangler pages dev .svelte-kit/cloudflare`. Ensure you have your [bindings](https://developers.cloudflare.com/workers/wrangler/configuration/#bindings) in your `wrangler.toml`.
 
 ## Notes
 
@@ -103,6 +101,10 @@ The `_headers` and `_redirects` files specific to Cloudflare Pages can be used f
 However, they will have no effect on responses dynamically rendered by SvelteKit, which should return custom headers or redirect responses from [server endpoints](https://kit.svelte.dev/docs/routing#server) or with the [`handle`](https://kit.svelte.dev/docs/hooks#server-hooks-handle) hook.
 
 ## Troubleshooting
+
+### Further reading
+
+You may wish to refer to [Cloudflare's documentation for deploying a SvelteKit site](https://developers.cloudflare.com/pages/framework-guides/deploy-a-svelte-site).
 
 ### Accessing the file system
 

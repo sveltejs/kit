@@ -10,10 +10,12 @@
 		"enabled": false
 	},
 	"ignoreDeps": [
+		"@playwright/test",
+		"@types/node",
 		"esbuild",
+		"playwright",
 		"rollup",
-		"typescript",
-		"undici"
+		"typescript"
 	],
 	"ignorePaths": [
 		"**/create-svelte/shared/**",
@@ -21,8 +23,13 @@
 	],
 	"packageRules": [
 		{
-			"matchPackageNames": ["@types/node", "vite"],
-			"matchUpdateTypes": ["minor", "patch", "pin", "digest"]
+			"matchPackageNames": [
+				"vite"
+			],
+			"matchUpdateTypes": [
+				"major"
+			],
+			"enabled": false
 		}
 	]
 }

@@ -249,7 +249,7 @@ export const actions = {
 
 After an action runs, the page will be re-rendered (unless a redirect or an unexpected error occurs), with the action's return value available to the page as the `form` prop. This means that your page's `load` functions will run after the action completes.
 
-Note that `handle` runs before the action is invoked, and does not re-run before the `load` functions. This means that if, for example, you use `handle` to populate `event.locals` based on a cookie, you must update `event.locals` when you set or delete the cookie in an action:
+Note that `handle` runs before the action is invoked, and does not rerun before the `load` functions. This means that if, for example, you use `handle` to populate `event.locals` based on a cookie, you must update `event.locals` when you set or delete the cookie in an action:
 
 ```js
 /// file: src/hooks.server.js
@@ -344,16 +344,16 @@ To customise the behaviour, you can provide a `SubmitFunction` that runs immedia
 ```svelte
 <form
 	method="POST"
-	use:enhance={({ form, data, action, cancel, submitter }) => {
-		// `form` is the `<form>` element
-		// `data` is its `FormData` object
+	use:enhance={({ formElement, formData, action, cancel, submitter }) => {
+		// `formElement` is this `<form>` element
+		// `formData` is its `FormData` object that's about to be submitted
 		// `action` is the URL to which the form is posted
-		// `cancel()` will prevent the submission
+		// calling `cancel()` will prevent the submission
 		// `submitter` is the `HTMLElement` that caused the form to be submitted
 
 		return async ({ result, update }) => {
 			// `result` is an `ActionResult` object
-			// `update` is a function which triggers the logic that would be triggered if this callback wasn't set
+			// `update` is a function which triggers the default logic that would be triggered if this callback wasn't set
 		};
 	}}
 >
@@ -376,11 +376,7 @@ If you provide your own callbacks, you may need to reproduce part of the default
 
 <form
 	method="POST"
-	use:enhance={({ form, data, action, cancel }) => {
-		// `form` is the `<form>` element
-		// `data` is its `FormData` object
-		// `action` is the URL to which the form is posted
-		// `cancel()` will prevent the submission
+	use:enhance={({ formElement, formData, action, cancel }) => {
 
 		return async ({ result }) => {
 			// `result` is an `ActionResult` object
@@ -428,7 +424,7 @@ We can also implement progressive enhancement ourselves, without `use:enhance`, 
 		const result = deserialize(await response.text());
 
 		if (result.type === 'success') {
-			// re-run all `load` functions, following the successful update
+			// rerun all `load` functions, following the successful update
 			await invalidateAll();
 		}
 

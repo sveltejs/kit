@@ -8,15 +8,13 @@ import { text } from '../../../exports/index.js';
 import * as devalue from 'devalue';
 import { create_async_iterator } from '../../../utils/streaming.js';
 
-export const INVALIDATED_PARAM = 'x-sveltekit-invalidated';
-
 const encoder = new TextEncoder();
 
 /**
- * @param {import('types').RequestEvent} event
+ * @param {import('@sveltejs/kit').RequestEvent} event
  * @param {import('types').SSRRoute} route
  * @param {import('types').SSROptions} options
- * @param {import('types').SSRManifest} manifest
+ * @param {import('@sveltejs/kit').SSRManifest} manifest
  * @param {import('types').SSRState} state
  * @param {boolean[] | undefined} invalidated_data_nodes
  * @param {import('types').TrailingSlash} trailing_slash
@@ -78,7 +76,8 @@ export async function render_data(
 								}
 							}
 							return data;
-						}
+						},
+						track_server_fetches: options.track_server_fetches
 					});
 				} catch (e) {
 					aborted = true;
@@ -184,7 +183,7 @@ export function redirect_json_response(redirect) {
 /**
  * If the serialized data contains promises, `chunks` will be an
  * async iterable containing their resolutions
- * @param {import('types').RequestEvent} event
+ * @param {import('@sveltejs/kit').RequestEvent} event
  * @param {import('types').SSROptions} options
  * @param {Array<import('types').ServerDataSkippedNode | import('types').ServerDataNode | import('types').ServerErrorNode | null | undefined>} nodes
  *  @returns {{ data: string, chunks: AsyncIterable<string> | null }}

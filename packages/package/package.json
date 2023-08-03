@@ -1,6 +1,6 @@
 {
 	"name": "@sveltejs/package",
-	"version": "2.0.2",
+	"version": "2.2.0",
 	"description": "The fastest way to build Svelte packages",
 	"repository": {
 		"type": "git",
@@ -14,17 +14,19 @@
 		"chokidar": "^3.5.3",
 		"kleur": "^4.1.5",
 		"sade": "^1.8.1",
-		"svelte2tsx": "~0.6.0"
+		"semver": "^7.5.3",
+		"svelte2tsx": "~0.6.19"
 	},
 	"devDependencies": {
 		"@types/node": "^16.18.6",
-		"svelte": "^3.56.0",
-		"svelte-preprocess": "^5.0.0",
+		"@types/semver": "^7.5.0",
+		"svelte": "^4.0.5",
+		"svelte-preprocess": "^5.0.4",
 		"typescript": "^4.9.4",
 		"uvu": "^0.5.6"
 	},
 	"peerDependencies": {
-		"svelte": "^3.44.0"
+		"svelte": "^3.44.0 || ^4.0.0"
 	},
 	"bin": {
 		"svelte-package": "svelte-package.js"
