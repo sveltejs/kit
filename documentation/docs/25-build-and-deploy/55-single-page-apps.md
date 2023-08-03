@@ -35,6 +35,14 @@ The `fallback` page is an HTML page created by SvelteKit from your page template
 
 On some hosts it may be `index.html` or something else entirely — consult your platform's documentation.
 
+## Netlify
+
+To run an SPA on [Netlify](https://https://app.netlify.com/), you should add a `static/_redirect` file to route requests to the fallback page(more information [here](https://docs.netlify.com/routing/redirects/)):
+
+```
+/*   /index.html   200
+```
+
 ## Apache
 
 To run an SPA on [Apache](https://httpd.apache.org/), you should add a `static/.htaccess` file to route requests to the fallback page:
