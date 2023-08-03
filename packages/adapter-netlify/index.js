@@ -247,7 +247,7 @@ async function generate_lambda_functions({ builder, publish, split, experimental
 		}
 	} else {
 		if (experimental_scheduler)
-			for (const r of builder.routes.filter((r) => r.segments[0].content === 'cron')) {
+			for (const r of builder.routes.filter((r) => r.segments[0].content === '+cron')) {
 				const manifest = builder.generateManifest({ relativePath: '../server', routes: [r] });
 				const rule = r.segments.at(-1).content;
 				// Derived from https://stackoverflow.com/a/57639657
@@ -265,7 +265,7 @@ async function generate_lambda_functions({ builder, publish, split, experimental
 		const manifest = builder.generateManifest({
 			relativePath: '../server',
 			routes: experimental_scheduler
-				? builder.routes.filter((r) => r.segments[0].content !== 'cron')
+				? builder.routes.filter((r) => r.segments[0].content !== '+cron')
 				: undefined
 		});
 
