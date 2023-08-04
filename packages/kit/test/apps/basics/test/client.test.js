@@ -802,3 +802,27 @@ test.describe('Actions', () => {
 		await expect(pre).toHaveText('prop: 1, store: 1');
 	});
 });
+
+test.describe('Assets', () => {
+	test('only one link per stylesheet', async ({ page }) => {
+		if (process.env.DEV) return;
+
+		await page.goto('/');
+
+		expect(
+			await page.evaluate(() => {
+				const links = Array.from(document.head.querySelectorAll('link[rel=stylesheet]'));
+
+				for (let i = 0; i < links.length; ) {
+					const link = links.shift();
+					const asset_name = link.href.split('/').at(-1);
+					if (links.some((link) => link.href.includes(asset_name))) {
+						return false;
+					}
+				}
+
+				return true;
+			})
+		).toBe(true);
+	});
+});
