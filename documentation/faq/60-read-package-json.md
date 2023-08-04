@@ -8,10 +8,10 @@ You cannot directly require JSON files, since SvelteKit expects [`svelte.config.
 /// file: svelte.config.js
 // @filename: index.js
 /// <reference types="@types/node" />
-import { URL } from 'url';
+import { URL } from 'node:url';
 // ---cut---
-import { readFileSync } from 'fs';
-import { fileURLToPath } from 'url';
+import { readFileSync } from 'node:fs';
+import { fileURLToPath } from 'node:url';
 
 const file = fileURLToPath(new URL('package.json', import.meta.url));
 const json = readFileSync(file, 'utf8');
