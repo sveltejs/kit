@@ -1008,8 +1008,8 @@ importers:
         specifier: workspace:^
         version: link:../../packages/kit
       '@sveltejs/site-kit':
-        specifier: 6.0.0-next.22
-        version: 6.0.0-next.22(@sveltejs/kit@packages+kit)(svelte@4.1.2)
+        specifier: 6.0.0-next.24
+        version: 6.0.0-next.24(@sveltejs/kit@packages+kit)(svelte@4.1.2)
       '@types/d3-geo':
         specifier: ^3.0.3
         version: 3.0.3
@@ -1033,7 +1033,7 @@ importers:
         version: 1.29.0
       shiki-twoslash:
         specifier: ^3.1.2
-        version: 3.1.2(typescript@5.1.6)
+        version: 3.1.2(typescript@5.0.4)
       svelte:
         specifier: ^4.1.2
         version: 4.1.2
@@ -1041,8 +1041,8 @@ importers:
         specifier: ^0.2.9
         version: 0.2.9
       typescript:
-        specifier: 5.1.6
-        version: 5.1.6
+        specifier: 5.0.4
+        version: 5.0.4
       vite:
         specifier: ^4.4.8
         version: 4.4.8(@types/node@20.4.7)
@@ -2181,8 +2181,8 @@ packages:
       typescript: 4.9.4
     dev: true
 
-  /@sveltejs/site-kit@6.0.0-next.22(@sveltejs/kit@packages+kit)(svelte@4.1.2):
-    resolution: {integrity: sha512-3LpnxUHvvFii+kfDySqBQu2dJ03YzV3YsfJQHi7UeIVZsPHG9xiS+40lJfUK3j8mHbTvIH26dQHLibZ/zPoXGw==}
+  /@sveltejs/site-kit@6.0.0-next.24(@sveltejs/kit@packages+kit)(svelte@4.1.2):
+    resolution: {integrity: sha512-cyibvq5dmqWD9qzR4dIj66h+wzXG1Awfx//zpwkD9R3kPUhejxYFzdlPkuMBH8NXDydB8YXXCW/1T83Mw5J4Hg==}
     peerDependencies:
       '@sveltejs/kit': ^1.20.0
       svelte: ^4.0.0
@@ -5803,7 +5803,7 @@ packages:
     engines: {node: '>=8'}
     dev: true
 
-  /shiki-twoslash@3.1.2(typescript@5.1.6):
+  /shiki-twoslash@3.1.2(typescript@5.0.4):
     resolution: {integrity: sha512-JBcRIIizi+exIA/OUhYkV6jtyeZco0ykCkIRd5sgwIt1Pm4pz+maoaRZpm6SkhPwvif4fCA7xOtJOykhpIV64Q==}
     peerDependencies:
       typescript: '>3'
@@ -5812,7 +5812,7 @@ packages:
       '@typescript/vfs': 1.3.4
       fenceparser: 1.1.1
       shiki: 0.10.1
-      typescript: 5.1.6
+      typescript: 5.0.4
     transitivePeerDependencies:
       - supports-color
     dev: true
@@ -6598,7 +6598,6 @@ packages:
     resolution: {integrity: sha512-cW9T5W9xY37cc+jfEnaUvX91foxtHkza3Nw3wkoF4sSlKn0MONdkdEndig/qPBWXNkmplh3NzayQzCiHM4/hqw==}
     engines: {node: '>=12.20'}
     hasBin: true
-    dev: false
 
   /typescript@5.1.6:
     resolution: {integrity: sha512-zaWCozRZ6DLEWAWFrVDz1H6FVXzUSfTy5FUMWsQlU8Ym5JP9eO4xkTIROFCQvhQf61z6O/G6ugw3SgAnvvm+HA==}
