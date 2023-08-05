@@ -1,14 +1,14 @@
 {
-	"name": "create-svelte",
-	"version": "5.0.4",
-	"description": "A CLI for creating new SvelteKit projects",
+	"name": "create-sveltese",
+	"version": "0.0.1",
+	"description": "A CLI for creating new SvelteKit SE projects",
 	"repository": {
 		"type": "git",
-		"url": "https://github.com/sveltejs/kit",
-		"directory": "packages/create-svelte"
+		"url": "https://github.com/sveltese/kit",
+		"directory": "packages/create-sveltese"
 	},
 	"license": "MIT",
-	"homepage": "https://kit.svelte.dev",
+	"homepage": "https://sveltese.com",
 	"bin": "./bin.js",
 	"main": "./index.js",
 	"dependencies": {
