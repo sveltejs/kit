@@ -53,5 +53,10 @@
 	"peerDependencies": {
 		"@sveltejs/kit": "^1.5.0",
 		"@netlify/functions": "^1.6.0"
+	},
+	"peerDependenciesMeta": {
+  	"@netlify/functions": {
+    	"optional": true
+	  }
 	}
 }
