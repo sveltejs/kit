@@ -1,6 +1,6 @@
 {
 	"name": "create-sveltese",
-	"version": "0.0.1",
+	"version": "0.0.2",
 	"description": "A CLI for creating new SvelteKit SE projects",
 	"repository": {
 		"type": "git",
