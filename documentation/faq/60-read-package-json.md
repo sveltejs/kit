@@ -13,7 +13,6 @@ import { URL } from 'node:url';
 import { readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 
-const file = fileURLToPath(new URL('package.json', import.meta.url));
-const json = readFileSync(file, 'utf8');
-const pkg = JSON.parse(json);
+const path = fileURLToPath(new URL('package.json', import.meta.url));
+const pkg = JSON.parse(readFileSync(path, 'utf8'));
 ```
