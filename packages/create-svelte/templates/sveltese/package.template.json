@@ -2,16 +2,74 @@
 	"name": "~TODO~",
 	"version": "0.0.1",
 	"private": true,
+	"prisma": {
+		"schema": "prisma/schema.prisma",
+		"generator": {
+			"provider": "prisma-zod-generator",
+			"output": "src/lib/zod.ts"
+		},
+		"seed": "node prisma/seed.js"
+	},
 	"scripts": {
+		"copy-env": "test -f ./.env || ncp ./.env.example .env",
+		"postinstall": "pnpm copy-env",
 		"dev": "vite dev",
 		"build": "vite build",
-		"preview": "vite preview"
+		"preview": "vite preview",
+		"test": "playwright test",
+		"check": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json",
+		"check:watch": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json --watch",
+		"test:unit": "vitest",
+		"lint": "prettier --plugin-search-dir . --check . && eslint .",
+		"format": "prettier --plugin-search-dir . --write .",
+		"db:init": "prisma generate && prisma migrate dev --name init --preview-feature",
+		"db:migrate": "prisma migrate dev --name init --preview-feature",
+		"db:studio": "prisma studio",
+		"db:fresh": "prisma migrate reset --preview-feature",
+		"db:reset": "prisma migrate reset --preview-feature",
+		"db:seed": "prisma db seed",
+		"db:push": "prisma migrate push --preview-feature"
 	},
 	"devDependencies": {
-		"@sveltejs/adapter-auto": "^2.0.0",
-		"@sveltejs/kit": "^1.20.4",
-		"svelte": "^4.0.5",
-		"vite": "^4.4.2"
+		"@playwright/test": "^1.36.2",
+		"@sveltejs/adapter-auto": "^2.1.0",
+		"@sveltejs/kit": "^1.22.4",
+		"@types/node": "^18.17.2",
+		"@types/nodemailer": "^6.4.9",
+		"@typescript-eslint/eslint-plugin": "^5.62.0",
+		"@typescript-eslint/parser": "^5.62.0",
+		"autoprefixer": "^10.4.14",
+		"dotenv": "^16.3.1",
+		"eslint": "^8.46.0",
+		"eslint-config-prettier": "^8.10.0",
+		"eslint-plugin-svelte3": "^4.0.0",
+		"ncp": "^2.0.0",
+		"postcss": "^8.4.27",
+		"postcss-load-config": "^4.0.1",
+		"prettier": "^2.8.8",
+		"prettier-plugin-svelte": "^2.10.1",
+		"prisma": "^4.16.2",
+		"prisma-zod-generator": "^0.8.13",
+		"svelte": "^3.59.2",
+		"svelte-check": "^3.4.6",
+		"svelte-preprocess": "^4.10.7",
+		"sveltekit-superforms": "^0.7.1",
+		"tailwindcss": "^3.3.3",
+		"ts-node": "^10.9.1",
+		"tslib": "^2.6.1",
+		"typescript": "^4.9.5",
+		"vite": "^4.4.8",
+		"vitest": "^0.25.8",
+		"zod": "^3.21.4"
 	},
-	"type": "module"
+	"type": "module",
+	"dependencies": {
+		"@lucia-auth/adapter-prisma": "^2.0.0",
+		"@lucia-auth/oauth": "^1.2.1",
+		"@prisma/client": "4.16.0",
+		"@vercel/analytics": "^1.0.1",
+		"lucia-auth": "^1.8.0",
+		"nodemailer": "^6.9.4",
+		"svelte-email": "^0.0.4"
+	}
 }

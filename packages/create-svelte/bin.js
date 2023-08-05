@@ -42,67 +42,91 @@ if (fs.existsSync(cwd)) {
 	}
 }
 
-const options = await p.group(
-	{
-		template: () =>
-			p.select({
-				message: 'Which Svelte app template?',
-				// @ts-expect-error i have no idea what is going on here
-				options: fs.readdirSync(dist('templates')).map((dir) => {
-					const meta_file = dist(`templates/${dir}/meta.json`);
-					const { title, description } = JSON.parse(fs.readFileSync(meta_file, 'utf8'));
+const svelte_se_confirm = await p.confirm({
+	message: 'Is this a SvelteKit SE project?',
+	initialValue: true
+});
 
-					return {
-						label: title,
-						hint: description,
-						value: dir
-					};
+/**
+ * @typedef {Object} Options
+ * @property {(string|Symbol)} template - The template option.
+ * @property {(Symbol|"checkjs"|"typescript"|null)} types - The types option.
+ * @property {(Symbol|string[])} features - An array of feature options.
+ */
+
+let options = /** @type {Options} */ ({}); // eslint-disable-line prefer-const
+if (svelte_se_confirm !== true) {
+	options = await p.group(
+		{
+			template: () =>
+				p.select({
+					message: 'Which Svelte app template?',
+					// @ts-expect-error i have no idea what is going on here
+					options: fs
+						.readdirSync(dist('templates'))
+						.map((dir) => {
+							const meta_file = dist(`templates/${dir}/meta.json`);
+							const { title, description } = JSON.parse(fs.readFileSync(meta_file, 'utf8'));
+
+							return {
+								label: title,
+								hint: description,
+								value: dir
+							};
+						})
+						.filter((option) => option.value !== 'sveltese')
+				}),
+
+			types: () =>
+				p.select({
+					message: 'Add type checking with TypeScript?',
+					initialValue: /** @type {'checkjs' | 'typescript' | null} */ ('checkjs'),
+					options: [
+						{
+							label: 'Yes, using JavaScript with JSDoc comments',
+							value: 'checkjs'
+						},
+						{
+							label: 'Yes, using TypeScript syntax',
+							value: 'typescript'
+						},
+						{ label: 'No', value: null }
+					]
+				}),
+
+			features: () =>
+				p.multiselect({
+					message: 'Select additional options (use arrow keys/space bar)',
+					required: true,
+					options: [
+						{
+							value: 'eslint',
+							label: 'Add ESLint for code linting'
+						},
+						{
+							value: 'prettier',
+							label: 'Add Prettier for code formatting'
+						},
+						{
+							value: 'playwright',
+							label: 'Add Playwright for browser testing'
+						},
+						{
+							value: 'vitest',
+							label: 'Add Vitest for unit testing'
+						}
+					]
 				})
-			}),
-
-		types: () =>
-			p.select({
-				message: 'Add type checking with TypeScript?',
-				initialValue: /** @type {'checkjs' | 'typescript' | null} */ ('checkjs'),
-				options: [
-					{
-						label: 'Yes, using JavaScript with JSDoc comments',
-						value: 'checkjs'
-					},
-					{
-						label: 'Yes, using TypeScript syntax',
-						value: 'typescript'
-					},
-					{ label: 'No', value: null }
-				]
-			}),
-
-		features: () =>
-			p.multiselect({
-				message: 'Select additional options (use arrow keys/space bar)',
-				required: false,
-				options: [
-					{
-						value: 'eslint',
-						label: 'Add ESLint for code linting'
-					},
-					{
-						value: 'prettier',
-						label: 'Add Prettier for code formatting'
-					},
-					{
-						value: 'playwright',
-						label: 'Add Playwright for browser testing'
-					},
-					{
-						value: 'vitest',
-						label: 'Add Vitest for unit testing'
-					}
-				]
-			})
-	},
-	{ onCancel: () => process.exit(1) }
-);
+		},
+		{ onCancel: () => process.exit(1) }
+	);
+} else {
+	options = {
+		template: 'sveltese',
+		types: 'typescript',
+		features: ['eslint', 'prettier', 'playwright', 'vitest']
+	};
+}
 
 await create(cwd, {
 	name: path.basename(path.resolve(cwd)),
