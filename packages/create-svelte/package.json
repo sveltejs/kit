@@ -5,7 +5,7 @@
 	"repository": {
 		"type": "git",
 		"url": "https://github.com/sveltese/kit",
-		"directory": "packages/create-svelte"
+		"directory": "packages/create-svelte "
 	},
 	"license": "MIT",
 	"homepage": "https://sveltese.com",
@@ -33,8 +33,7 @@
 		"check": "tsc",
 		"lint": "prettier --check . --config ../../.prettierrc --ignore-path ../../.gitignore --ignore-path .gitignore --plugin prettier-plugin-svelte --plugin-search-dir=.",
 		"format": "pnpm lint --write",
-		"prepublishOnly": "pnpm build",
-		"postpublish": "echo \"Updating template repo\" && bash ./scripts/update-template-repo.sh"
+		"prepublishOnly": "pnpm build"
 	},
 	"files": [
 		"index.js",
