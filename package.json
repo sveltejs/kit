@@ -1,8 +1,8 @@
 {
-	"name": "kit-monorepo",
+	"name": "sveltese-monorepo",
 	"version": "0.0.1",
-	"description": "monorepo for @sveltejs/kit and friends",
-	"private": true,
+	"description": "monorepo for @sveltese/kit and friends",
+	"private": false,
 	"type": "module",
 	"scripts": {
 		"test": "pnpm test -r --filter=./packages/* --filter=!./packages/create-svelte",
