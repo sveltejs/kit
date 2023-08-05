@@ -1,46 +1,133 @@
-[![Chat](https://img.shields.io/discord/457912077277855764?label=chat&logo=discord)](https://svelte.dev/chat)
+<p align="center" width="100%">
+    <img width="20%" src="./static/logo.svg"> 
+</p>
 
-# SvelteKit
+# Sveltese
 
-Web development, streamlined. Read the [documentation](https://kit.svelte.dev/docs) to get started.
+Sveltese is a collection of tools and startup packages designed for the SvelteKit framework, aiming to streamline development with its expressive and efficient syntax. Our mission is to make the development process enjoyable and innovative, empowering developers to create robust and scalable applications with ease. Sveltese simplifies common tasks and enhances the SvelteKit experience by offering:
 
-### Packages
+- Pre-configured, modular starter templates.
+- An intuitive routing engine for seamless navigation.
+- Efficient state management solutions.
+- Out-of-the-box integrations with popular backend services.
+- Comprehensive UI component libraries.
+- Optimized build and deployment configurations.
 
-| Package                                                                     | Changelog                                                     |
-| --------------------------------------------------------------------------- | ------------------------------------------------------------- |
-| [@sveltejs/kit](packages/kit)                                               | [Changelog](packages/kit/CHANGELOG.md)                        |
-| [@sveltejs/adapter-auto](packages/adapter-auto)                             | [Changelog](packages/adapter-auto/CHANGELOG.md)               |
-| [@sveltejs/adapter-cloudflare](packages/adapter-cloudflare)                 | [Changelog](packages/adapter-cloudflare/CHANGELOG.md)         |
-| [@sveltejs/adapter-cloudflare-workers](packages/adapter-cloudflare-workers) | [Changelog](packages/adapter-cloudflare-workers/CHANGELOG.md) |
-| [@sveltejs/adapter-netlify](packages/adapter-netlify)                       | [Changelog](packages/adapter-netlify/CHANGELOG.md)            |
-| [@sveltejs/adapter-node](packages/adapter-node)                             | [Changelog](packages/adapter-node/CHANGELOG.md)               |
-| [@sveltejs/adapter-static](packages/adapter-static)                         | [Changelog](packages/adapter-static/CHANGELOG.md)             |
-| [@sveltejs/adapter-vercel](packages/adapter-vercel)                         | [Changelog](packages/adapter-vercel/CHANGELOG.md)             |
-| [@sveltejs/amp](packages/amp)                                               | [Changelog](packages/amp/CHANGELOG.md)                        |
-| [@sveltejs/package](packages/package)                                       | [Changelog](packages/package/CHANGELOG.md)                    |
-| [create-svelte](packages/create-svelte)                                     | [Changelog](packages/create-svelte/CHANGELOG.md)              |
-| [svelte-migrate](packages/migrate)                                          | [Changelog](packages/migrate/CHANGELOG.md)                    |
+Sveltese is user-friendly, adaptable, and equips developers with the resources needed to build and maintain large-scale applications.
 
-[Additional adapters](<(https://sveltesociety.dev/components#adapters)>) are maintained by the community.
+## The Problem
 
-## Bug reporting
+NodeJS has come a long way since its inception, and it has become the de facto standard for building modern web applications. However, the NodeJS ecosystem is vast and fragmented, and it can be challenging to find the right tools and packages for your project. The process of setting up a new project can be time-consuming and tedious, and it often requires a steep learning curve. Furthermore, the NodeJS community is constantly evolving, and it can be difficult to keep up with the latest trends and best practices.
 
-Please make sure the issue you're reporting involves SvelteKit. Many issues related to how a project builds originate from [Vite](https://vitejs.dev/), which is used to build a SvelteKit project. You can create a new Vite project with `npm create vite@latest` for client-side only repros and `npm create vite-extra@latest` for SSR or library repros.
+The builder ecosystem is as vibrany as ever. Entire companies have been built around the idea of making it easier to build and maintain web applications. This is such a thriving space.
 
-If an issue originates from Vite, please report it in the [Vite issue tracker](https://github.com/vitejs/vite/issues).
+By creating a defacto standard around the most promising tools and packages, we can make it easier for developers to get started with NodeJS and build full stack, modern web applications with all the moving parts including:
 
-## Contributing
+- Database
+- Authentication
+- Migrations
+- Email
+- Boilerplate
+- Queueing ( coming soon )
+- Caching ( coming soon )
 
-See [CONTRIBUTING.md](./CONTRIBUTING.md) for information on how to develop SvelteKit locally.
+We will focus on the best of the free solutions so that you can get up and running without having to pay for a bunch of services and hosting. We will also focus on packages that will run anywhere. We will not be focusing on packages that require a specific hosting provider.
 
-## Supporting Svelte
+## Requirements
 
-Svelte is an MIT-licensed open source project with its ongoing development made possible entirely by fantastic volunteers. If you'd like to support their efforts, please consider:
+Sveltese is built on top of the SvelteKit framework, and it requires the following:
 
-- [Becoming a backer on Open Collective](https://opencollective.com/svelte).
+- NodeJS >= 16.0.0
+- SvelteKit >= 1.0.0-next.151
 
-Funds donated via Open Collective will be used for compensating expenses related to Svelte's development such as hosting costs. If sufficient donations are received, funds may also be used to support Svelte's development more directly.
+## Recommendations
 
-## License
+### Postgresql
 
-[MIT](https://github.com/sveltejs/kit/blob/master/LICENSE)
+The Svetelese template is configured to use a Postgresql database, running on localhost, by default. It is a powerful, open-source relational database that is easy to use and highly scalable. It is also the most popular database for SvelteKit applications. If you are new to Postgresql, we recommend using [Homebrew](https://brew.sh/) for macOS or [PostgresSQL](https://www.postgresql.org/download/) for Windows and Linux.
+
+You can install a postgresql database using [Homebrew](https://brew.sh/) on macOS:
+
+```bash
+$ brew install postgresql
+```
+
+#### Changing the Database
+
+Currently the Sveltese template is configured to use a Postgresql database. If you would like to use a different database, you will need to update the `DATABASE_URL` environment variable in the `.env` file and the `schema.prisma` file.
+
+### Prisma
+
+Prisma is an open-source database toolkit that makes it easy to work with databases. It provides a type-safe API for building queries, and it supports multiple databases, including Postgresql, MySQL, and SQLite. It also provides a powerful migration tool that allows you to easily manage database schema changes.
+
+Prisma is installed with the initial Sveltese template, and it is used to manage the database. You can learn more about Prisma [here](https://www.prisma.io/).
+
+Several prisma commands have been written into the `package.json` file for convenience. You can run them using the following command:
+
+```bash
+$ pnpm run
+```
+
+### TailwindCSS
+
+TailwindCSS is a utility-first CSS framework that makes it easy to build responsive web applications. It provides a set of utility classes that can be used to style your application, and it includes a built-in dark mode that can be enabled with a single line of code.
+
+Tailwind is installed with the initial Sveltese template, and it is used to style the application. You can learn more about Tailwind [here](https://tailwindcss.com/).
+
+### Lucia
+
+## Getting Started
+
+Sveltese is heavily inspired by Laravel. It is designed to be a complete solution for building modern web applications, and it includes everything you need to get started.
+
+### Installation
+
+Sveltese is available as an npm package. To install it, run the following command in your terminal:
+
+```bash
+$ degit git@github.com:sveltese/sveltese my-project
+$ cd my-project
+$ git init
+$ pnpm install
+$ cp .env.example .env
+
+
+```
+
+Open the `.env` file and update the database connection settings to match your local environment. For example:
+
+```bash
+DATABASE_URL="postgresql://sveltese:@localhost:5432/sveltese?schema=public"
+```
+
+The default databases URL is configured to use postgresql with a username sveltese and a database named sveltese. You can change those to your liking or create a database and user with those settings.
+
+Back on the command line run the following command to initialize the database:
+
+```bash
+pnpm db:init
+pnpm db:seed
+```
+
+The seed will install a test user with the following credentials:
+
+```bash
+email: test@example.com
+password: password
+```
+
+Run the application using the following command:
+
+```
+pnpm dev
+```
+
+## Walkthrough
+
+Start up the project and open it in your browser. You will see a welcome page that you can change to your liking. The welcome page is located at `src/routes/+page.svelte`.
+
+The point of this exercise was to create something that you can spin up quickly, get some auth boilerplate, and get started building your application.
+
+### Authentication
+
+The Sveltese template includes a basic authentication system that allows users to register, login, and logout. It also includes a user profile page that displays the user's information.
