@@ -64,11 +64,11 @@
 	},
 	"type": "module",
 	"dependencies": {
-		"@lucia-auth/adapter-prisma": "^2.0.0",
-		"@lucia-auth/oauth": "^1.2.1",
-		"@prisma/client": "4.16.0",
+		"@lucia-auth/adapter-prisma": "^3.0.0",
+		"@lucia-auth/oauth": "^2.0.1",
+		"@prisma/client": "4.16.2",
 		"@vercel/analytics": "^1.0.1",
-		"lucia-auth": "^1.8.0",
+		"lucia": "^2.0.0",
 		"nodemailer": "^6.9.4",
 		"svelte-email": "^0.0.4"
 	}

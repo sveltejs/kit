@@ -1,14 +1,14 @@
-import { redirect } from '@sveltejs/kit'
+import { redirect } from '@sveltejs/kit';
 
 export const load = async (event) => {
-	const session = await event.locals.auth.validate()
+	const session = await event.locals.auth.validate();
 	if (!session) {
-		throw redirect(303, '/login')
+		throw redirect(303, '/login');
 	}
-
-	const { user } = await event.locals.auth.validateUser()
+	// console.log(session);
+	const user = session.user;
 
 	return {
 		user
-	}
-}
+	};
+};

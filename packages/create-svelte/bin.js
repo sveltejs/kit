@@ -186,6 +186,8 @@ if (relative !== '') {
 }
 
 console.log(`  ${i++}: ${bold(cyan('npm install'))} (or pnpm install, etc)`);
+console.log(`  ${i++}: ${bold(cyan('npm db:init'))} (or pnpm db:init, etc)`);
+
 // prettier-ignore
 console.log(`  ${i++}: ${bold(cyan('git init && git add -A && git commit -m "Initial commit"'))} (optional)`);
 console.log(`  ${i++}: ${bold(cyan('npm run dev -- --open'))}`);

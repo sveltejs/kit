@@ -1,8 +1,8 @@
-import { fail, redirect } from '@sveltejs/kit'
-import { z } from 'zod'
-import { message, superValidate } from 'sveltekit-superforms/server'
-import { auth } from '$lib/server/lucia'
-import { prisma } from '$lib/server/prisma'
+import { fail, redirect } from '@sveltejs/kit';
+import { z } from 'zod';
+import { message, superValidate } from 'sveltekit-superforms/server';
+import { auth } from '$lib/server/lucia';
+import prismaClient from '$lib/server/prisma';
 // import { emailClient } from '$lib/server/email'
 // import { createHash, randomBytes } from 'node:crypto'
 
@@ -13,13 +13,13 @@ const registerSchema = z
 			.string()
 			.email("Email doesn't look right.")
 			.refine(async (email) => {
-				if (!email) return true
-				const existingEmail = await prisma.authUser.findUnique({
+				if (!email) return true;
+				const existingEmail = await prismaClient.user.findUnique({
 					where: {
 						email: email
 					}
-				})
-				return existingEmail ? false : true
+				});
+				return existingEmail ? false : true;
 			}, 'This email is already in our database.'),
 		password: z.string().min(8, 'Password must be at least 8 characters long.'),
 		confirmPassword: z.string().min(1, 'Please confirm your password.')
@@ -27,39 +27,39 @@ const registerSchema = z
 	.refine((data) => data.password === data.confirmPassword, {
 		message: "Passwords don't match",
 		path: ['password']
-	})
+	});
 
 export const load = async (event) => {
-	const form = await superValidate(event, registerSchema)
-	return { form }
-}
+	const form = await superValidate(event, registerSchema);
+	return { form };
+};
 
 export const actions = {
 	default: async (event) => {
-		const form = await superValidate(event, registerSchema)
+		const form = await superValidate(event, registerSchema);
 
 		if (!form.valid) {
-			return fail(400, { form })
+			return fail(400, { form });
 		}
 
 		// encrypt password
 		// const hash = await createHash('sha256').update(form.data?.password).digest('hex')
 		try {
-			await auth.createUser({
-				primaryKey: {
+			const user = await auth.createUser({
+				key: {
 					providerId: 'email',
-					providerUserId: form.data.email,
+					providerUserId: form.data.email.toLowerCase(),
 					password: form.data.password
 				},
 				attributes: {
 					email: form.data.email,
 					name: form.data.name
 				}
-			})
+			});
 		} catch (error) {
-			console.log('error', error)
-			return message(form, 'There was an error creating your account.')
+			console.log('error', error);
+			return message(form, 'There was an error creating your account.');
 		}
-		throw redirect(303, '/login')
+		throw redirect(303, '/login');
 	}
-}
+};

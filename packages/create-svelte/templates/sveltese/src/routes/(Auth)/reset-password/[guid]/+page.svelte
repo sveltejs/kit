@@ -1,10 +1,10 @@
 <script lang="ts">
-	import Logo from '$lib/shared/Logo.svelte'
-	import { superForm } from 'sveltekit-superforms/client'
-	import SuperDebug from 'sveltekit-superforms/client/SuperDebug.svelte'
-	import { enhance } from '$app/forms'
-	export let data
-	const { form, errors, message } = superForm(data.form)
+	import Logo from '$lib/shared/Logo.svelte';
+	import { superForm } from 'sveltekit-superforms/client';
+	import SuperDebug from 'sveltekit-superforms/client/SuperDebug.svelte';
+	import { enhance } from '$app/forms';
+	export let data;
+	const { form, errors, message } = superForm(data.form);
 </script>
 
 <div class="mx-auto sm:mt-64 my-8 content">
@@ -14,7 +14,7 @@
 </div>
 
 <div class="card w-full max-w-lg mx-auto bg-white rounded-lg shadow-lg px-6 py-4">
-	<SuperDebug {data} />
+	<!-- <SuperDebug {data} /> -->
 	<form method="POST" use:enhance>
 		<input
 			class="block w-full bg-white text-gray-700 border border-gray-200 rounded py-2 px-3 leading-tight focus:outline-none focus:bg-white"

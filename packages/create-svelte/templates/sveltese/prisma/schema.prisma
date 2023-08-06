@@ -20,36 +20,34 @@ model password_reset_tokens {
   created_at DateTime? @db.Timestamp(0)
 }
 
-model AuthUser {
+model User {
   id           String        @id @unique
-  auth_session AuthSession[]
-  auth_key     AuthKey[]
+  auth_session Session[]
+  auth_key     Key[]
   name         String        @db.VarChar(255)
   email        String        @unique(map: "auth_users_email_unique") @db.VarChar(255)
   avatar       String?       @db.VarChar(255)
 
-  @@map("auth_users")
+  @@map("users")
 }
 
-model AuthSession {
+model Session {
   id             String   @id @unique
   user_id        String
   active_expires BigInt
   idle_expires   BigInt
-  auth_user      AuthUser @relation(references: [id], fields: [user_id], onDelete: Cascade)
+  user      User @relation(references: [id], fields: [user_id], onDelete: Cascade)
 
   @@index([user_id])
-  @@map("auth_sessions")
+  @@map("sessions")
 }
 
-model AuthKey {
+model Key {
   id              String   @id @unique
   hashed_password String?
-  user_id         String
-  primary_key     Boolean
-  expires         BigInt?
-  auth_user       AuthUser @relation(references: [id], fields: [user_id], onDelete: Cascade)
+  user_id         String    
+  user       User @relation(references: [id], fields: [user_id], onDelete: Cascade)
 
   @@index([user_id])
-  @@map("auth_keys")
+  @@map("keys")
 }
