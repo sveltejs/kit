@@ -432,8 +432,8 @@ importers:
         specifier: ^0.1.9
         version: 0.1.9
       marked:
-        specifier: ^6.0.0
-        version: 6.0.0
+        specifier: ^7.0.0
+        version: 7.0.0
       rollup:
         specifier: ^3.7.0
         version: 3.7.0
@@ -1026,8 +1026,8 @@ importers:
         specifier: ^0.30.0
         version: 0.30.0
       marked:
-        specifier: ^6.0.0
-        version: 6.0.0
+        specifier: ^7.0.0
+        version: 7.0.0
       prism-svelte:
         specifier: ^0.5.0
         version: 0.5.0
@@ -4225,8 +4225,8 @@ packages:
     engines: {node: '>=8'}
     dev: true
 
-  /marked@6.0.0:
-    resolution: {integrity: sha512-7E3m/xIlymrFL5gWswIT4CheIE3fDeh51NV09M4x8iOc7NDYlyERcQMLAIHcSlrvwliwbPQ4OGD+MpPSYiQcqw==}
+  /marked@7.0.0:
+    resolution: {integrity: sha512-7Gv1Ry8tqR352ElQOQfxdGpIh8kNZh/yYjNCxAQCN1DDbY4bCTG3qDCSkZWlRElSseeEILDxkY/G9w7cgziBNw==}
     engines: {node: '>= 16'}
     hasBin: true
     dev: true
