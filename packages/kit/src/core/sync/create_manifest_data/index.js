@@ -425,7 +425,7 @@ function create_routes_and_nodes(cwd, config, fallback) {
 function analyze(project_relative, file, component_extensions, module_extensions) {
 	const component_extension = component_extensions.find((ext) => file.endsWith(ext));
 	if (component_extension) {
-		const name = file.slice(0, -component_extension.length);
+		const name = file.slice(0, -component_extension.length).replace(/\.[^/.]+$/, '');
 		const pattern = /^\+(?:(page(?:@(.*))?)|(layout(?:@(.*))?)|(error))$/;
 		const match = pattern.exec(name);
 		if (!match) {
