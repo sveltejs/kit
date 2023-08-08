@@ -595,6 +595,7 @@ To summarize, a `load` function will rerun in the following situations:
 
 - It references a property of `params` whose value has changed
 - It references a property of `url` (such as `url.pathname` or `url.search`) whose value has changed. Properties in `request.url` are _not_ tracked
+- It references `url.searchParams`. Any changes to the URL will cause `load` to be rerun regardless if the value of `url.searchParams` has changed.
 - It calls `await parent()` and a parent `load` function reran
 - It declared a dependency on a specific URL via [`fetch`](#making-fetch-requests) (universal load only) or [`depends`](types#public-types-loadevent), and that URL was marked invalid with [`invalidate(url)`](modules#$app-navigation-invalidate)
 - All active `load` functions were forcibly rerun with [`invalidateAll()`](modules#$app-navigation-invalidateall)
