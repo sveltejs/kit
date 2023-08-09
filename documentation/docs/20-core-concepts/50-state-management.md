@@ -84,7 +84,7 @@ If you're not using SSR, then there's no risk of accidentally exposing one user'
 You might wonder how we're able to use `$page.data` and other [app stores](modules#$app-stores) if we can't use our own stores. The answer is that app stores on the server use Svelte's [context API](https://learn.svelte.dev/tutorial/context-api) — the store is attached to the component tree with `setContext`, and when you subscribe you retrieve it with `getContext`. We can do the same thing with our own stores:
 
 ```svelte
-/// file: src/routes/+layout.svelte
+<!--- file: src/routes/+layout.svelte --->
 <script>
 	import { setContext } from 'svelte';
 	import { writable } from 'svelte/store';
@@ -102,7 +102,7 @@ You might wonder how we're able to use `$page.data` and other [app stores](modul
 ```
 
 ```svelte
-/// file: src/routes/user/+page.svelte
+<!--- file: src/routes/user/+page.svelte --->
 <script>
 	import { getContext } from 'svelte';
 
@@ -122,7 +122,7 @@ If you're not using SSR (and can guarantee that you won't need to use SSR in fut
 When you navigate around your application, SvelteKit reuses existing layout and page components. For example, if you have a route like this...
 
 ```svelte
-/// file: src/routes/blog/[slug]/+page.svelte
+<!--- file: src/routes/blog/[slug]/+page.svelte --->
 <script>
 	/** @type {import('./$types').PageData} */
 	export let data;

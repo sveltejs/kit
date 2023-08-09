@@ -20,10 +20,10 @@
 			.ts-version {
 				display: none;
 			}
-			.prefers-ts .js-version {
+			body.prefers-ts .js-version {
 				display: none;
 			}
-			.prefers-ts .ts-version {
+			body.prefers-ts .ts-version {
 				display: inline;
 			}
 			.no-js .ts-toggle {
@@ -48,6 +48,7 @@
 			document.body.classList.remove('light', 'dark');
 			document.body.classList.add(themeValue ?? systemPreferredTheme);
 		</script>
-		<div>%sveltekit.body%</div>
+
+		<div style="height: 100%">%sveltekit.body%</div>
 	</body>
 </html>

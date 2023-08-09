@@ -22,7 +22,7 @@ export function load({ params }) {
 ```
 
 ```svelte
-/// file: src/routes/blog/[slug]/+page.svelte
+<!--- file: src/routes/blog/[slug]/+page.svelte --->
 <script>
 	/** @type {import('./$types').PageData} */
 	export let data;
@@ -83,7 +83,7 @@ export async function load() {
 ```
 
 ```svelte
-/// file: src/routes/blog/[slug]/+layout.svelte
+<!--- file: src/routes/blog/[slug]/+layout.svelte --->
 <script>
 	/** @type {import('./$types').LayoutData} */
 	export let data;
@@ -141,7 +141,7 @@ The `+page.svelte` component, and each `+layout.svelte` component above it, has 
 In some cases, we might need the opposite — a parent layout might need to access page data or data from a child layout. For example, the root layout might want to access a `title` property returned from a `load` function in `+page.js` or `+page.server.js`. This can be done with `$page.data`:
 
 ```svelte
-/// file: src/routes/+layout.svelte
+<!--- file: src/routes/+layout.svelte --->
 <script>
 	import { page } from '$app/stores';
 </script>
@@ -341,7 +341,7 @@ export async function load({ parent }) {
 ```
 
 ```svelte
-/// file: src/routes/abc/+page.svelte
+<!--- file: src/routes/abc/+page.svelte --->
 <script>
 	/** @type {import('./$types').PageData} */
 	export let data;
@@ -464,7 +464,7 @@ export function load() {
 This is useful for creating skeleton loading states, for example:
 
 ```svelte
-/// file: src/routes/+page.svelte
+<!--- file: src/routes/+page.svelte --->
 <script>
 	/** @type {import('./$types').PageData} */
 	export let data;
@@ -569,7 +569,7 @@ export async function load({ fetch, depends }) {
 ```
 
 ```svelte
-/// file: src/routes/random-number/+page.svelte
+<!--- file: src/routes/random-number/+page.svelte --->
 <script>
 	import { invalidate, invalidateAll } from '$app/navigation';
 
