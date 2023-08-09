@@ -82,7 +82,7 @@
 				},
 				{
 					title: 'discord',
-					href: '/chat'
+					href: 'https://svelte.dev/chat'
 				},
 				{
 					title: 'twitter',
