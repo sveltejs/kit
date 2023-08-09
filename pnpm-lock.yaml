@@ -249,7 +249,7 @@ importers:
         version: 4.1.2
       vite:
         specifier: ^4.4.2
-        version: 4.4.8(@types/node@16.18.6)
+        version: 4.4.8(@types/node@20.4.7)
 
   packages/adapter-static/test/apps/spa:
     devDependencies:
@@ -267,7 +267,7 @@ importers:
         version: 4.1.2
       vite:
         specifier: ^4.4.2
-        version: 4.4.8(@types/node@16.18.6)
+        version: 4.4.8(@types/node@20.4.7)
 
   packages/adapter-vercel:
     dependencies:
@@ -360,7 +360,7 @@ importers:
         version: 5.0.4
       vite:
         specifier: ^4.4.2
-        version: 4.4.8(@types/node@16.18.6)
+        version: 4.4.8(@types/node@20.4.7)
 
   packages/create-svelte/templates/skeleton:
     devDependencies:
@@ -475,7 +475,7 @@ importers:
         version: 4.9.4
       vite:
         specifier: ^4.4.2
-        version: 4.4.8(@types/node@16.18.6)
+        version: 4.4.8(@types/node@20.4.7)
 
   packages/kit/test/apps/basics:
     devDependencies:
@@ -499,7 +499,7 @@ importers:
         version: 4.9.4
       vite:
         specifier: ^4.4.2
-        version: 4.4.8(@types/node@16.18.6)
+        version: 4.4.8(@types/node@20.4.7)
 
   packages/kit/test/apps/dev-only:
     devDependencies:
@@ -520,7 +520,7 @@ importers:
         version: 4.9.4
       vite:
         specifier: ^4.4.2
-        version: 4.4.8(@types/node@16.18.6)
+        version: 4.4.8(@types/node@20.4.7)
 
   packages/kit/test/apps/embed:
     devDependencies:
@@ -541,7 +541,7 @@ importers:
         version: 4.9.4
       vite:
         specifier: ^4.4.2
-        version: 4.4.8(@types/node@16.18.6)
+        version: 4.4.8(@types/node@20.4.7)
 
   packages/kit/test/apps/options:
     devDependencies:
@@ -562,7 +562,7 @@ importers:
         version: 4.9.4
       vite:
         specifier: ^4.4.2
-        version: 4.4.8(@types/node@16.18.6)
+        version: 4.4.8(@types/node@20.4.7)
 
   packages/kit/test/apps/options-2:
     devDependencies:
@@ -586,7 +586,7 @@ importers:
         version: 4.9.4
       vite:
         specifier: ^4.4.2
-        version: 4.4.8(@types/node@16.18.6)
+        version: 4.4.8(@types/node@20.4.7)
 
   packages/kit/test/apps/writes:
     devDependencies:
@@ -610,7 +610,7 @@ importers:
         version: 4.9.4
       vite:
         specifier: ^4.4.2
-        version: 4.4.8(@types/node@16.18.6)
+        version: 4.4.8(@types/node@20.4.7)
 
   packages/kit/test/build-errors:
     devDependencies:
@@ -637,7 +637,7 @@ importers:
         version: 4.9.4
       vite:
         specifier: ^4.4.2
-        version: 4.4.8(@types/node@16.18.6)
+        version: 4.4.8(@types/node@20.4.7)
 
   packages/kit/test/build-errors/apps/prerenderable-incorrect-fragment:
     devDependencies:
@@ -658,7 +658,7 @@ importers:
         version: 4.9.4
       vite:
         specifier: ^4.4.2
-        version: 4.4.8(@types/node@16.18.6)
+        version: 4.4.8(@types/node@20.4.7)
 
   packages/kit/test/build-errors/apps/prerenderable-not-prerendered:
     devDependencies:
@@ -679,7 +679,7 @@ importers:
         version: 4.9.4
       vite:
         specifier: ^4.4.2
-        version: 4.4.8(@types/node@16.18.6)
+        version: 4.4.8(@types/node@20.4.7)
 
   packages/kit/test/build-errors/apps/private-dynamic-env:
     devDependencies:
@@ -697,7 +697,7 @@ importers:
         version: 4.9.4
       vite:
         specifier: ^4.4.2
-        version: 4.4.8(@types/node@16.18.6)
+        version: 4.4.8(@types/node@20.4.7)
 
   packages/kit/test/build-errors/apps/private-dynamic-env-dynamic-import:
     devDependencies:
@@ -715,7 +715,7 @@ importers:
         version: 4.9.4
       vite:
         specifier: ^4.4.2
-        version: 4.4.8(@types/node@16.18.6)
+        version: 4.4.8(@types/node@20.4.7)
 
   packages/kit/test/build-errors/apps/private-static-env:
     devDependencies:
@@ -736,7 +736,7 @@ importers:
         version: 4.9.4
       vite:
         specifier: ^4.4.2
-        version: 4.4.8(@types/node@16.18.6)
+        version: 4.4.8(@types/node@20.4.7)
 
   packages/kit/test/build-errors/apps/private-static-env-dynamic-import:
     devDependencies:
@@ -754,7 +754,7 @@ importers:
         version: 4.9.4
       vite:
         specifier: ^4.4.2
-        version: 4.4.8(@types/node@16.18.6)
+        version: 4.4.8(@types/node@20.4.7)
 
   packages/kit/test/build-errors/apps/server-only-folder:
     devDependencies:
@@ -772,7 +772,7 @@ importers:
         version: 4.9.4
       vite:
         specifier: ^4.4.2
-        version: 4.4.8(@types/node@16.18.6)
+        version: 4.4.8(@types/node@20.4.7)
 
   packages/kit/test/build-errors/apps/server-only-folder-dynamic-import:
     devDependencies:
@@ -790,7 +790,7 @@ importers:
         version: 4.9.4
       vite:
         specifier: ^4.4.2
-        version: 4.4.8(@types/node@16.18.6)
+        version: 4.4.8(@types/node@20.4.7)
 
   packages/kit/test/build-errors/apps/server-only-module:
     devDependencies:
@@ -808,7 +808,7 @@ importers:
         version: 4.9.4
       vite:
         specifier: ^4.4.2
-        version: 4.4.8(@types/node@16.18.6)
+        version: 4.4.8(@types/node@20.4.7)
 
   packages/kit/test/build-errors/apps/server-only-module-dynamic-import:
     devDependencies:
@@ -826,7 +826,7 @@ importers:
         version: 4.9.4
       vite:
         specifier: ^4.4.2
-        version: 4.4.8(@types/node@16.18.6)
+        version: 4.4.8(@types/node@20.4.7)
 
   packages/kit/test/build-errors/apps/syntax-error:
     devDependencies:
@@ -844,7 +844,7 @@ importers:
         version: 4.9.4
       vite:
         specifier: ^4.4.2
-        version: 4.4.8(@types/node@16.18.6)
+        version: 4.4.8(@types/node@20.4.7)
 
   packages/kit/test/prerendering/basics:
     devDependencies:
@@ -862,7 +862,7 @@ importers:
         version: 4.9.4
       vite:
         specifier: ^4.4.2
-        version: 4.4.8(@types/node@16.18.6)
+        version: 4.4.8(@types/node@20.4.7)
       vitest:
         specifier: ^0.33.0
         version: 0.33.0(playwright@1.30.0)
@@ -883,7 +883,7 @@ importers:
         version: 4.9.4
       vite:
         specifier: ^4.4.2
-        version: 4.4.8(@types/node@16.18.6)
+        version: 4.4.8(@types/node@20.4.7)
       vitest:
         specifier: ^0.33.0
         version: 0.33.0(playwright@1.30.0)
@@ -904,7 +904,7 @@ importers:
         version: 4.9.4
       vite:
         specifier: ^4.4.2
-        version: 4.4.8(@types/node@16.18.6)
+        version: 4.4.8(@types/node@20.4.7)
       vitest:
         specifier: ^0.33.0
         version: 0.33.0(playwright@1.30.0)
@@ -1033,7 +1033,7 @@ importers:
         version: 1.29.0
       shiki-twoslash:
         specifier: ^3.1.2
-        version: 3.1.2(typescript@4.9.4)
+        version: 3.1.2(typescript@5.0.4)
       svelte:
         specifier: ^4.1.2
         version: 4.1.2
@@ -1041,8 +1041,8 @@ importers:
         specifier: ^0.2.9
         version: 0.2.9
       typescript:
-        specifier: 4.9.4
-        version: 4.9.4
+        specifier: 5.0.4
+        version: 5.0.4
       vite:
         specifier: ^4.4.8
         version: 4.4.8(@types/node@20.4.7)
@@ -5647,7 +5647,7 @@ packages:
     engines: {node: '>=8'}
     dev: true
 
-  /shiki-twoslash@3.1.2(typescript@4.9.4):
+  /shiki-twoslash@3.1.2(typescript@5.0.4):
     resolution: {integrity: sha512-JBcRIIizi+exIA/OUhYkV6jtyeZco0ykCkIRd5sgwIt1Pm4pz+maoaRZpm6SkhPwvif4fCA7xOtJOykhpIV64Q==}
     peerDependencies:
       typescript: '>3'
@@ -5656,7 +5656,7 @@ packages:
       '@typescript/vfs': 1.3.4
       fenceparser: 1.1.1
       shiki: 0.10.1
-      typescript: 4.9.4
+      typescript: 5.0.4
     transitivePeerDependencies:
       - supports-color
     dev: true
