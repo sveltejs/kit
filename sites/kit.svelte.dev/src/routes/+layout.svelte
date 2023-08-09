@@ -36,7 +36,7 @@
 					<span class="large"><Icon name="discord" /></span>
 				</a>
 
-				<a href="https://github.com/sveltejs/svelte" title="GitHub Repo">
+				<a href="https://github.com/sveltejs/kit" title="GitHub Repo">
 					<span class="small">GitHub</span>
 					<span class="large"><Icon name="github" /></span>
 				</a>
