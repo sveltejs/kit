@@ -29,7 +29,7 @@
 			<svelte:fragment slot="external-links">
 				<a href="https://learn.svelte.dev/tutorial/introducing-sveltekit" rel="external">Tutorial</a
 				>
-				<a href="https://kit.svelte.dev">Svelte</a>
+				<a href="https://svelte.dev">Svelte</a>
 
 				<a href="https://svelte.dev/chat" rel="external" title="Discord Chat">
 					<span class="small">Discord</span>
