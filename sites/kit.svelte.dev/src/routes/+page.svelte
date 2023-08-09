@@ -1,5 +1,5 @@
 <script>
-	import { TrySection } from '@sveltejs/site-kit/home';
+	import { Footer, TrySection } from '@sveltejs/site-kit/home';
 	import { onMount } from 'svelte';
 	import Deployment from './home/Deployment.svelte';
 	import Features from './home/Features.svelte';
@@ -55,35 +55,46 @@
 	<Deployment />
 	<Showcase />
 
-	<footer>
-		<p>
+	<Footer
+		links={{
+			resources: [
+				{
+					title: 'documentation',
+					href: '/docs'
+				},
+				{
+					title: 'tutorial',
+					href: 'https://learn.svelte.dev/tutorial/introducing-sveltekit'
+				},
+				{
+					title: 'blog',
+					href: 'https://svelte.dev/blog'
+				}
+			],
+			connect: [
+				{
+					title: 'github',
+					href: 'https://github.com/sveltejs/kit'
+				},
+				{
+					title: 'opencollective',
+					href: 'https://opencollective.com/svelte'
+				},
+				{
+					title: 'discord',
+					href: '/chat'
+				},
+				{
+					title: 'twitter',
+					href: 'https://twitter.com/sveltejs'
+				}
+			]
+		}}
+	>
+		<span slot="license">
 			SvelteKit is <a target="_blank" rel="noreferrer" href="https://github.com/sveltejs/kit"
 				>free and open source software</a
 			> released under the MIT license.
-		</p>
-	</footer>
+		</span></Footer
+	>
 </div>
-
-<style>
-	footer {
-		padding: 1em var(--sk-page-padding-side);
-		text-align: center;
-		background: var(--sk-back-2);
-	}
-
-	footer p {
-		max-width: 20em;
-		margin: 0 auto;
-	}
-
-	footer p a {
-		color: inherit;
-		text-decoration: underline;
-	}
-
-	@media (min-width: 680px) {
-		footer p {
-			max-width: none;
-		}
-	}
-</style>
