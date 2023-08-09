@@ -48,7 +48,7 @@
 		"rimraf": "^5.0.0",
 		"rollup": "^3.7.0",
 		"typescript": "^4.9.4",
-		"vitest": "^0.33.0"
+		"vitest": "^0.34.0"
 	},
 	"peerDependencies": {
 		"@sveltejs/kit": "^1.5.0"

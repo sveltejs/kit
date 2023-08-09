@@ -37,7 +37,7 @@
 		"@types/prompts": "^2.4.1",
 		"@types/semver": "^7.5.0",
 		"prettier": "^2.8.0",
-		"vitest": "^0.33.0"
+		"vitest": "^0.34.0"
 	},
 	"scripts": {
 		"test": "vitest run",

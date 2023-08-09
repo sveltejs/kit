@@ -166,8 +166,8 @@ importers:
         specifier: ^4.9.4
         version: 4.9.4
       vitest:
-        specifier: ^0.33.0
-        version: 0.33.0(playwright@1.30.0)
+        specifier: ^0.34.0
+        version: 0.34.1(lightningcss@1.21.5)(playwright@1.30.0)
 
   packages/adapter-node:
     dependencies:
@@ -209,8 +209,8 @@ importers:
         specifier: ^4.9.4
         version: 4.9.4
       vitest:
-        specifier: ^0.33.0
-        version: 0.33.0(playwright@1.30.0)
+        specifier: ^0.34.0
+        version: 0.34.1(lightningcss@1.21.5)(playwright@1.30.0)
 
   packages/adapter-static:
     devDependencies:
@@ -288,8 +288,8 @@ importers:
         specifier: ^4.9.4
         version: 4.9.4
       vitest:
-        specifier: ^0.33.0
-        version: 0.33.0(playwright@1.30.0)
+        specifier: ^0.34.0
+        version: 0.34.1(lightningcss@1.21.5)(playwright@1.30.0)
 
   packages/amp:
     dependencies:
@@ -300,8 +300,8 @@ importers:
   packages/create-svelte:
     dependencies:
       '@clack/prompts':
-        specifier: ^0.6.3
-        version: 0.6.3
+        specifier: ^0.7.0
+        version: 0.7.0
       kleur:
         specifier: ^4.1.5
         version: 4.1.5
@@ -334,8 +334,8 @@ importers:
         specifier: ^0.2.9
         version: 0.2.9
       vitest:
-        specifier: ^0.33.0
-        version: 0.33.0(playwright@1.30.0)
+        specifier: ^0.34.0
+        version: 0.34.1(lightningcss@1.21.5)(playwright@1.30.0)
 
   packages/create-svelte/templates/default:
     dependencies:
@@ -404,8 +404,8 @@ importers:
         specifier: ^2.0.2
         version: 2.0.3
       undici:
-        specifier: ~5.22.0
-        version: 5.22.0
+        specifier: ~5.23.0
+        version: 5.23.0
     devDependencies:
       '@playwright/test':
         specifier: 1.30.0
@@ -447,8 +447,8 @@ importers:
         specifier: ^4.4.2
         version: 4.4.8(@types/node@16.18.6)
       vitest:
-        specifier: ^0.33.0
-        version: 0.33.0(playwright@1.30.0)
+        specifier: ^0.34.0
+        version: 0.34.1(lightningcss@1.21.5)(playwright@1.30.0)
 
   packages/kit/test/apps/amp:
     devDependencies:
@@ -615,8 +615,8 @@ importers:
   packages/kit/test/build-errors:
     devDependencies:
       vitest:
-        specifier: ^0.33.0
-        version: 0.33.0(playwright@1.30.0)
+        specifier: ^0.34.0
+        version: 0.34.1(lightningcss@1.21.5)(playwright@1.30.0)
 
   packages/kit/test/build-errors/apps/prerender-entry-generator-mismatch:
     devDependencies:
@@ -864,8 +864,8 @@ importers:
         specifier: ^4.4.2
         version: 4.4.8(@types/node@16.18.6)
       vitest:
-        specifier: ^0.33.0
-        version: 0.33.0(playwright@1.30.0)
+        specifier: ^0.34.0
+        version: 0.34.1(lightningcss@1.21.5)(playwright@1.30.0)
 
   packages/kit/test/prerendering/options:
     devDependencies:
@@ -885,8 +885,8 @@ importers:
         specifier: ^4.4.2
         version: 4.4.8(@types/node@16.18.6)
       vitest:
-        specifier: ^0.33.0
-        version: 0.33.0(playwright@1.30.0)
+        specifier: ^0.34.0
+        version: 0.34.1(lightningcss@1.21.5)(playwright@1.30.0)
 
   packages/kit/test/prerendering/paths-base:
     devDependencies:
@@ -906,8 +906,8 @@ importers:
         specifier: ^4.4.2
         version: 4.4.8(@types/node@16.18.6)
       vitest:
-        specifier: ^0.33.0
-        version: 0.33.0(playwright@1.30.0)
+        specifier: ^0.34.0
+        version: 0.34.1(lightningcss@1.21.5)(playwright@1.30.0)
 
   packages/migrate:
     dependencies:
@@ -946,8 +946,8 @@ importers:
         specifier: ^2.8.0
         version: 2.8.0
       vitest:
-        specifier: ^0.33.0
-        version: 0.33.0(playwright@1.30.0)
+        specifier: ^0.34.0
+        version: 0.34.1(lightningcss@1.21.5)(playwright@1.30.0)
 
   packages/package:
     dependencies:
@@ -1299,17 +1299,17 @@ packages:
       prettier: 2.8.0
     dev: true
 
-  /@clack/core@0.3.2:
-    resolution: {integrity: sha512-FZnsNynwGDIDktx6PEZK1EuCkFpY4ldEX6VYvfl0dqeoLPb9Jpw1xoUXaVcGR8ExmYNm1w2vdGdJkEUYD/2pqg==}
+  /@clack/core@0.3.3:
+    resolution: {integrity: sha512-5ZGyb75BUBjlll6eOa1m/IZBxwk91dooBWhPSL67sWcLS0zt9SnswRL0l26TVdBhb0wnWORRxUn//uH6n4z7+A==}
     dependencies:
       picocolors: 1.0.0
       sisteransi: 1.0.5
     dev: false
 
-  /@clack/prompts@0.6.3:
-    resolution: {integrity: sha512-AM+kFmAHawpUQv2q9+mcB6jLKxXGjgu/r2EQjEwujgpCdzrST6BJqYw00GRn56/L/Izw5U7ImoLmy00X/r80Pw==}
+  /@clack/prompts@0.7.0:
+    resolution: {integrity: sha512-0MhX9/B4iL6Re04jPrttDm+BsP8y6mS7byuv0BvXgdXhbV5PdlsHt55dvNsuBCPZ7xq1oTAOOuotR9NFbQyMSA==}
     dependencies:
-      '@clack/core': 0.3.2
+      '@clack/core': 0.3.3
       picocolors: 1.0.0
       sisteransi: 1.0.5
     dev: false
@@ -2410,28 +2410,12 @@ packages:
       - supports-color
     dev: false
 
-  /@vitest/expect@0.33.0:
-    resolution: {integrity: sha512-sVNf+Gla3mhTCxNJx+wJLDPp/WcstOe0Ksqz4Vec51MmgMth/ia0MGFEkIZmVGeTL5HtjYR4Wl/ZxBxBXZJTzQ==}
-    dependencies:
-      '@vitest/spy': 0.33.0
-      '@vitest/utils': 0.33.0
-      chai: 4.3.7
-    dev: true
-
   /@vitest/expect@0.34.1:
     resolution: {integrity: sha512-q2CD8+XIsQ+tHwypnoCk8Mnv5e6afLFvinVGCq3/BOT4kQdVQmY6rRfyKkwcg635lbliLPqbunXZr+L1ssUWiQ==}
     dependencies:
       '@vitest/spy': 0.34.1
       '@vitest/utils': 0.34.1
       chai: 4.3.7
-    dev: true
-
-  /@vitest/runner@0.33.0:
-    resolution: {integrity: sha512-UPfACnmCB6HKRHTlcgCoBh6ppl6fDn+J/xR8dTufWiKt/74Y9bHci5CKB8tESSV82zKYtkBJo9whU3mNvfaisg==}
-    dependencies:
-      '@vitest/utils': 0.33.0
-      p-limit: 4.0.0
-      pathe: 1.1.1
     dev: true
 
   /@vitest/runner@0.34.1:
@@ -2442,14 +2426,6 @@ packages:
       pathe: 1.1.1
     dev: true
 
-  /@vitest/snapshot@0.33.0:
-    resolution: {integrity: sha512-tJjrl//qAHbyHajpFvr8Wsk8DIOODEebTu7pgBrP07iOepR5jYkLFiqLq2Ltxv+r0uptUb4izv1J8XBOwKkVYA==}
-    dependencies:
-      magic-string: 0.30.2
-      pathe: 1.1.1
-      pretty-format: 29.6.2
-    dev: true
-
   /@vitest/snapshot@0.34.1:
     resolution: {integrity: sha512-0O9LfLU0114OqdF8lENlrLsnn024Tb1CsS9UwG0YMWY2oGTQfPtkW+B/7ieyv0X9R2Oijhi3caB1xgGgEgclSQ==}
     dependencies:
@@ -2458,24 +2434,10 @@ packages:
       pretty-format: 29.6.2
     dev: true
 
-  /@vitest/spy@0.33.0:
-    resolution: {integrity: sha512-Kv+yZ4hnH1WdiAkPUQTpRxW8kGtH8VRTnus7ZTGovFYM1ZezJpvGtb9nPIjPnptHbsyIAxYZsEpVPYgtpjGnrg==}
-    dependencies:
-      tinyspy: 2.1.1
-    dev: true
-
   /@vitest/spy@0.34.1:
     resolution: {integrity: sha512-UT4WcI3EAPUNO8n6y9QoEqynGGEPmmRxC+cLzneFFXpmacivjHZsNbiKD88KUScv5DCHVDgdBsLD7O7s1enFcQ==}
     dependencies:
       tinyspy: 2.1.1
-    dev: true
-
-  /@vitest/utils@0.33.0:
-    resolution: {integrity: sha512-pF1w22ic965sv+EN6uoePkAOTkAPWM03Ri/jXNyMIKBb/XHLDPfhLvf/Fa9g0YECevAIz56oVYXhodLvLQ/awA==}
-    dependencies:
-      diff-sequences: 29.4.3
-      loupe: 2.3.6
-      pretty-format: 29.6.2
     dev: true
 
   /@vitest/utils@0.34.1:
@@ -6443,11 +6405,6 @@ packages:
     engines: {node: '>=4'}
     dev: true
 
-  /tinypool@0.6.0:
-    resolution: {integrity: sha512-FdswUUo5SxRizcBc6b1GSuLpLjisa8N8qMyYoP3rl+bym+QauhtJP5bvZY1ytt8krKGmMLYIRl36HBZfeAoqhQ==}
-    engines: {node: '>=14.0.0'}
-    dev: true
-
   /tinypool@0.7.0:
     resolution: {integrity: sha512-zSYNUlYSMhJ6Zdou4cJwo/p7w5nmAH17GRfU/ui3ctvjXFErXXkruT4MWW6poDeXgCaIBlGLrfU6TbTXxyGMww==}
     engines: {node: '>=14.0.0'}
@@ -6655,8 +6612,8 @@ packages:
       which-boxed-primitive: 1.0.2
     dev: true
 
-  /undici@5.22.0:
-    resolution: {integrity: sha512-fR9RXCc+6Dxav4P9VV/sp5w3eFiSdOjJYsbtWfd4s5L5C4ogyuVpdKIVHeW0vV1MloM65/f7W45nR9ZxwVdyiA==}
+  /undici@5.23.0:
+    resolution: {integrity: sha512-1D7w+fvRsqlQ9GscLBwcAJinqcZGHUKjbOmXdlE/v8BvEGXjeWAax+341q44EuTcHXXnfyKNbKRq4Lg7OzhMmg==}
     engines: {node: '>=14.0'}
     dependencies:
       busboy: 1.6.0
@@ -6729,28 +6686,6 @@ packages:
       - rollup
     dev: true
 
-  /vite-node@0.33.0(@types/node@16.18.6):
-    resolution: {integrity: sha512-19FpHYbwWWxDr73ruNahC+vtEdza52kA90Qb3La98yZ0xULqV8A5JLNPUff0f5zID4984tW7l3DH2przTJUZSw==}
-    engines: {node: '>=v14.18.0'}
-    hasBin: true
-    dependencies:
-      cac: 6.7.14
-      debug: 4.3.4
-      mlly: 1.4.0
-      pathe: 1.1.1
-      picocolors: 1.0.0
-      vite: 4.4.9(@types/node@16.18.6)
-    transitivePeerDependencies:
-      - '@types/node'
-      - less
-      - lightningcss
-      - sass
-      - stylus
-      - sugarss
-      - supports-color
-      - terser
-    dev: true
-
   /vite-node@0.34.1(@types/node@20.4.9)(lightningcss@1.21.5):
     resolution: {integrity: sha512-odAZAL9xFMuAg8aWd7nSPT+hU8u2r9gU3LRm9QKjxBEF2rRdWpMuqkrkjvyVQEdNFiBctqr2Gg4uJYizm5Le6w==}
     engines: {node: '>=v14.18.0'}
@@ -6808,42 +6743,6 @@ packages:
     optionalDependencies:
       fsevents: 2.3.2
 
-  /vite@4.4.9(@types/node@16.18.6):
-    resolution: {integrity: sha512-2mbUn2LlUmNASWwSCNSJ/EG2HuSRTnVNaydp6vMCm5VIqJsjMfbIWtbH2kDuwUVW5mMUKKZvGPX/rqeqVvv1XA==}
-    engines: {node: ^14.18.0 || >=16.0.0}
-    hasBin: true
-    peerDependencies:
-      '@types/node': '>= 14'
-      less: '*'
-      lightningcss: ^1.21.0
-      sass: '*'
-      stylus: '*'
-      sugarss: '*'
-      terser: ^5.4.0
-    peerDependenciesMeta:
-      '@types/node':
-        optional: true
-      less:
-        optional: true
-      lightningcss:
-        optional: true
-      sass:
-        optional: true
-      stylus:
-        optional: true
-      sugarss:
-        optional: true
-      terser:
-        optional: true
-    dependencies:
-      '@types/node': 16.18.6
-      esbuild: 0.18.20
-      postcss: 8.4.27
-      rollup: 3.28.0
-    optionalDependencies:
-      fsevents: 2.3.2
-    dev: true
-
   /vite@4.4.9(@types/node@20.4.9)(lightningcss@1.21.5):
     resolution: {integrity: sha512-2mbUn2LlUmNASWwSCNSJ/EG2HuSRTnVNaydp6vMCm5VIqJsjMfbIWtbH2kDuwUVW5mMUKKZvGPX/rqeqVvv1XA==}
     engines: {node: ^14.18.0 || >=16.0.0}
@@ -6891,72 +6790,6 @@ packages:
     dependencies:
       vite: 4.4.8(@types/node@16.18.6)
     dev: false
-
-  /vitest@0.33.0(playwright@1.30.0):
-    resolution: {integrity: sha512-1CxaugJ50xskkQ0e969R/hW47za4YXDUfWJDxip1hwbnhUjYolpfUn2AMOulqG/Dtd9WYAtkHmM/m3yKVrEejQ==}
-    engines: {node: '>=v14.18.0'}
-    hasBin: true
-    peerDependencies:
-      '@edge-runtime/vm': '*'
-      '@vitest/browser': '*'
-      '@vitest/ui': '*'
-      happy-dom: '*'
-      jsdom: '*'
-      playwright: '*'
-      safaridriver: '*'
-      webdriverio: '*'
-    peerDependenciesMeta:
-      '@edge-runtime/vm':
-        optional: true
-      '@vitest/browser':
-        optional: true
-      '@vitest/ui':
-        optional: true
-      happy-dom:
-        optional: true
-      jsdom:
-        optional: true
-      playwright:
-        optional: true
-      safaridriver:
-        optional: true
-      webdriverio:
-        optional: true
-    dependencies:
-      '@types/chai': 4.3.5
-      '@types/chai-subset': 1.3.3
-      '@types/node': 16.18.6
-      '@vitest/expect': 0.33.0
-      '@vitest/runner': 0.33.0
-      '@vitest/snapshot': 0.33.0
-      '@vitest/spy': 0.33.0
-      '@vitest/utils': 0.33.0
-      acorn: 8.10.0
-      acorn-walk: 8.2.0
-      cac: 6.7.14
-      chai: 4.3.7
-      debug: 4.3.4
-      local-pkg: 0.4.3
-      magic-string: 0.30.2
-      pathe: 1.1.1
-      picocolors: 1.0.0
-      playwright: 1.30.0
-      std-env: 3.3.3
-      strip-literal: 1.3.0
-      tinybench: 2.5.0
-      tinypool: 0.6.0
-      vite: 4.4.9(@types/node@16.18.6)
-      vite-node: 0.33.0(@types/node@16.18.6)
-      why-is-node-running: 2.2.2
-    transitivePeerDependencies:
-      - less
-      - lightningcss
-      - sass
-      - stylus
-      - sugarss
-      - supports-color
-      - terser
-    dev: true
 
   /vitest@0.34.1(lightningcss@1.21.5)(playwright@1.30.0):
     resolution: {integrity: sha512-G1PzuBEq9A75XSU88yO5G4vPT20UovbC/2osB2KEuV/FisSIIsw7m5y2xMdB7RsAGHAfg2lPmp2qKr3KWliVlQ==}
