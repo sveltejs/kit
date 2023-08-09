@@ -249,7 +249,7 @@ importers:
         version: 4.1.2
       vite:
         specifier: ^4.4.2
-        version: 4.4.8(@types/node@20.4.7)
+        version: 4.4.8(@types/node@16.18.6)
 
   packages/adapter-static/test/apps/spa:
     devDependencies:
@@ -267,7 +267,7 @@ importers:
         version: 4.1.2
       vite:
         specifier: ^4.4.2
-        version: 4.4.8(@types/node@20.4.7)
+        version: 4.4.8(@types/node@16.18.6)
 
   packages/adapter-vercel:
     dependencies:
@@ -360,7 +360,7 @@ importers:
         version: 5.0.4
       vite:
         specifier: ^4.4.2
-        version: 4.4.8(@types/node@20.4.7)
+        version: 4.4.8(@types/node@16.18.6)
 
   packages/create-svelte/templates/skeleton:
     devDependencies:
@@ -475,7 +475,7 @@ importers:
         version: 4.9.4
       vite:
         specifier: ^4.4.2
-        version: 4.4.8(@types/node@20.4.7)
+        version: 4.4.8(@types/node@16.18.6)
 
   packages/kit/test/apps/basics:
     devDependencies:
@@ -499,7 +499,7 @@ importers:
         version: 4.9.4
       vite:
         specifier: ^4.4.2
-        version: 4.4.8(@types/node@20.4.7)
+        version: 4.4.8(@types/node@16.18.6)
 
   packages/kit/test/apps/dev-only:
     devDependencies:
@@ -520,7 +520,7 @@ importers:
         version: 4.9.4
       vite:
         specifier: ^4.4.2
-        version: 4.4.8(@types/node@20.4.7)
+        version: 4.4.8(@types/node@16.18.6)
 
   packages/kit/test/apps/embed:
     devDependencies:
@@ -541,7 +541,7 @@ importers:
         version: 4.9.4
       vite:
         specifier: ^4.4.2
-        version: 4.4.8(@types/node@20.4.7)
+        version: 4.4.8(@types/node@16.18.6)
 
   packages/kit/test/apps/options:
     devDependencies:
@@ -562,7 +562,7 @@ importers:
         version: 4.9.4
       vite:
         specifier: ^4.4.2
-        version: 4.4.8(@types/node@20.4.7)
+        version: 4.4.8(@types/node@16.18.6)
 
   packages/kit/test/apps/options-2:
     devDependencies:
@@ -586,7 +586,7 @@ importers:
         version: 4.9.4
       vite:
         specifier: ^4.4.2
-        version: 4.4.8(@types/node@20.4.7)
+        version: 4.4.8(@types/node@16.18.6)
 
   packages/kit/test/apps/writes:
     devDependencies:
@@ -610,7 +610,7 @@ importers:
         version: 4.9.4
       vite:
         specifier: ^4.4.2
-        version: 4.4.8(@types/node@20.4.7)
+        version: 4.4.8(@types/node@16.18.6)
 
   packages/kit/test/build-errors:
     devDependencies:
@@ -637,7 +637,7 @@ importers:
         version: 4.9.4
       vite:
         specifier: ^4.4.2
-        version: 4.4.8(@types/node@20.4.7)
+        version: 4.4.8(@types/node@16.18.6)
 
   packages/kit/test/build-errors/apps/prerenderable-incorrect-fragment:
     devDependencies:
@@ -658,7 +658,7 @@ importers:
         version: 4.9.4
       vite:
         specifier: ^4.4.2
-        version: 4.4.8(@types/node@20.4.7)
+        version: 4.4.8(@types/node@16.18.6)
 
   packages/kit/test/build-errors/apps/prerenderable-not-prerendered:
     devDependencies:
@@ -679,7 +679,7 @@ importers:
         version: 4.9.4
       vite:
         specifier: ^4.4.2
-        version: 4.4.8(@types/node@20.4.7)
+        version: 4.4.8(@types/node@16.18.6)
 
   packages/kit/test/build-errors/apps/private-dynamic-env:
     devDependencies:
@@ -697,7 +697,7 @@ importers:
         version: 4.9.4
       vite:
         specifier: ^4.4.2
-        version: 4.4.8(@types/node@20.4.7)
+        version: 4.4.8(@types/node@16.18.6)
 
   packages/kit/test/build-errors/apps/private-dynamic-env-dynamic-import:
     devDependencies:
@@ -715,7 +715,7 @@ importers:
         version: 4.9.4
       vite:
         specifier: ^4.4.2
-        version: 4.4.8(@types/node@20.4.7)
+        version: 4.4.8(@types/node@16.18.6)
 
   packages/kit/test/build-errors/apps/private-static-env:
     devDependencies:
@@ -736,7 +736,7 @@ importers:
         version: 4.9.4
       vite:
         specifier: ^4.4.2
-        version: 4.4.8(@types/node@20.4.7)
+        version: 4.4.8(@types/node@16.18.6)
 
   packages/kit/test/build-errors/apps/private-static-env-dynamic-import:
     devDependencies:
@@ -754,7 +754,7 @@ importers:
         version: 4.9.4
       vite:
         specifier: ^4.4.2
-        version: 4.4.8(@types/node@20.4.7)
+        version: 4.4.8(@types/node@16.18.6)
 
   packages/kit/test/build-errors/apps/server-only-folder:
     devDependencies:
@@ -772,7 +772,7 @@ importers:
         version: 4.9.4
       vite:
         specifier: ^4.4.2
-        version: 4.4.8(@types/node@20.4.7)
+        version: 4.4.8(@types/node@16.18.6)
 
   packages/kit/test/build-errors/apps/server-only-folder-dynamic-import:
     devDependencies:
@@ -790,7 +790,7 @@ importers:
         version: 4.9.4
       vite:
         specifier: ^4.4.2
-        version: 4.4.8(@types/node@20.4.7)
+        version: 4.4.8(@types/node@16.18.6)
 
   packages/kit/test/build-errors/apps/server-only-module:
     devDependencies:
@@ -808,7 +808,7 @@ importers:
         version: 4.9.4
       vite:
         specifier: ^4.4.2
-        version: 4.4.8(@types/node@20.4.7)
+        version: 4.4.8(@types/node@16.18.6)
 
   packages/kit/test/build-errors/apps/server-only-module-dynamic-import:
     devDependencies:
@@ -826,7 +826,7 @@ importers:
         version: 4.9.4
       vite:
         specifier: ^4.4.2
-        version: 4.4.8(@types/node@20.4.7)
+        version: 4.4.8(@types/node@16.18.6)
 
   packages/kit/test/build-errors/apps/syntax-error:
     devDependencies:
@@ -844,7 +844,7 @@ importers:
         version: 4.9.4
       vite:
         specifier: ^4.4.2
-        version: 4.4.8(@types/node@20.4.7)
+        version: 4.4.8(@types/node@16.18.6)
 
   packages/kit/test/prerendering/basics:
     devDependencies:
@@ -862,7 +862,7 @@ importers:
         version: 4.9.4
       vite:
         specifier: ^4.4.2
-        version: 4.4.8(@types/node@20.4.7)
+        version: 4.4.8(@types/node@16.18.6)
       vitest:
         specifier: ^0.33.0
         version: 0.33.0(playwright@1.30.0)
@@ -883,7 +883,7 @@ importers:
         version: 4.9.4
       vite:
         specifier: ^4.4.2
-        version: 4.4.8(@types/node@20.4.7)
+        version: 4.4.8(@types/node@16.18.6)
       vitest:
         specifier: ^0.33.0
         version: 0.33.0(playwright@1.30.0)
@@ -904,7 +904,7 @@ importers:
         version: 4.9.4
       vite:
         specifier: ^4.4.2
-        version: 4.4.8(@types/node@20.4.7)
+        version: 4.4.8(@types/node@16.18.6)
       vitest:
         specifier: ^0.33.0
         version: 0.33.0(playwright@1.30.0)
@@ -1014,8 +1014,8 @@ importers:
         specifier: ^3.0.3
         version: 3.0.3
       '@types/node':
-        specifier: ^20.4.7
-        version: 20.4.7
+        specifier: ^20.4.9
+        version: 20.4.9
       flexsearch:
         specifier: ^0.7.31
         version: 0.7.31
@@ -1023,8 +1023,8 @@ importers:
         specifier: ^0.30.2
         version: 0.30.2
       marked:
-        specifier: ^7.0.0
-        version: 7.0.0
+        specifier: ^7.0.1
+        version: 7.0.1
       prism-svelte:
         specifier: ^0.5.0
         version: 0.5.0
@@ -1044,8 +1044,8 @@ importers:
         specifier: 5.0.4
         version: 5.0.4
       vite:
-        specifier: ^4.4.8
-        version: 4.4.8(@types/node@20.4.7)
+        specifier: ^4.4.9
+        version: 4.4.9(@types/node@20.4.9)
       vite-imagetools:
         specifier: ^5.0.7
         version: 5.0.7(rollup@3.7.0)
@@ -1326,6 +1326,7 @@ packages:
     cpu: [arm64]
     os: [android]
     requiresBuild: true
+    dev: false
     optional: true
 
   /@esbuild/android-arm64@0.18.20:
@@ -1342,6 +1343,7 @@ packages:
     cpu: [arm]
     os: [android]
     requiresBuild: true
+    dev: false
     optional: true
 
   /@esbuild/android-arm@0.18.20:
@@ -1358,6 +1360,7 @@ packages:
     cpu: [x64]
     os: [android]
     requiresBuild: true
+    dev: false
     optional: true
 
   /@esbuild/android-x64@0.18.20:
@@ -1374,6 +1377,7 @@ packages:
     cpu: [arm64]
     os: [darwin]
     requiresBuild: true
+    dev: false
     optional: true
 
   /@esbuild/darwin-arm64@0.18.20:
@@ -1390,6 +1394,7 @@ packages:
     cpu: [x64]
     os: [darwin]
     requiresBuild: true
+    dev: false
     optional: true
 
   /@esbuild/darwin-x64@0.18.20:
@@ -1406,6 +1411,7 @@ packages:
     cpu: [arm64]
     os: [freebsd]
     requiresBuild: true
+    dev: false
     optional: true
 
   /@esbuild/freebsd-arm64@0.18.20:
@@ -1422,6 +1428,7 @@ packages:
     cpu: [x64]
     os: [freebsd]
     requiresBuild: true
+    dev: false
     optional: true
 
   /@esbuild/freebsd-x64@0.18.20:
@@ -1438,6 +1445,7 @@ packages:
     cpu: [arm64]
     os: [linux]
     requiresBuild: true
+    dev: false
     optional: true
 
   /@esbuild/linux-arm64@0.18.20:
@@ -1454,6 +1462,7 @@ packages:
     cpu: [arm]
     os: [linux]
     requiresBuild: true
+    dev: false
     optional: true
 
   /@esbuild/linux-arm@0.18.20:
@@ -1470,6 +1479,7 @@ packages:
     cpu: [ia32]
     os: [linux]
     requiresBuild: true
+    dev: false
     optional: true
 
   /@esbuild/linux-ia32@0.18.20:
@@ -1486,6 +1496,7 @@ packages:
     cpu: [loong64]
     os: [linux]
     requiresBuild: true
+    dev: false
     optional: true
 
   /@esbuild/linux-loong64@0.18.20:
@@ -1502,6 +1513,7 @@ packages:
     cpu: [mips64el]
     os: [linux]
     requiresBuild: true
+    dev: false
     optional: true
 
   /@esbuild/linux-mips64el@0.18.20:
@@ -1518,6 +1530,7 @@ packages:
     cpu: [ppc64]
     os: [linux]
     requiresBuild: true
+    dev: false
     optional: true
 
   /@esbuild/linux-ppc64@0.18.20:
@@ -1534,6 +1547,7 @@ packages:
     cpu: [riscv64]
     os: [linux]
     requiresBuild: true
+    dev: false
     optional: true
 
   /@esbuild/linux-riscv64@0.18.20:
@@ -1550,6 +1564,7 @@ packages:
     cpu: [s390x]
     os: [linux]
     requiresBuild: true
+    dev: false
     optional: true
 
   /@esbuild/linux-s390x@0.18.20:
@@ -1566,6 +1581,7 @@ packages:
     cpu: [x64]
     os: [linux]
     requiresBuild: true
+    dev: false
     optional: true
 
   /@esbuild/linux-x64@0.18.20:
@@ -1582,6 +1598,7 @@ packages:
     cpu: [x64]
     os: [netbsd]
     requiresBuild: true
+    dev: false
     optional: true
 
   /@esbuild/netbsd-x64@0.18.20:
@@ -1598,6 +1615,7 @@ packages:
     cpu: [x64]
     os: [openbsd]
     requiresBuild: true
+    dev: false
     optional: true
 
   /@esbuild/openbsd-x64@0.18.20:
@@ -1614,6 +1632,7 @@ packages:
     cpu: [x64]
     os: [sunos]
     requiresBuild: true
+    dev: false
     optional: true
 
   /@esbuild/sunos-x64@0.18.20:
@@ -1630,6 +1649,7 @@ packages:
     cpu: [arm64]
     os: [win32]
     requiresBuild: true
+    dev: false
     optional: true
 
   /@esbuild/win32-arm64@0.18.20:
@@ -1646,6 +1666,7 @@ packages:
     cpu: [ia32]
     os: [win32]
     requiresBuild: true
+    dev: false
     optional: true
 
   /@esbuild/win32-ia32@0.18.20:
@@ -1662,6 +1683,7 @@ packages:
     cpu: [x64]
     os: [win32]
     requiresBuild: true
+    dev: false
     optional: true
 
   /@esbuild/win32-x64@0.18.20:
@@ -2108,8 +2130,8 @@ packages:
   /@types/node@16.18.6:
     resolution: {integrity: sha512-vmYJF0REqDyyU0gviezF/KHq/fYaUbFhkcNbQCuPGFQj6VTbXuHZoxs/Y7mutWe73C8AC6l9fFu8mSYiBAqkGA==}
 
-  /@types/node@20.4.7:
-    resolution: {integrity: sha512-bUBrPjEry2QUTsnuEjzjbS7voGWCc30W0qzgMf90GPeDGFRakvrz47ju+oqDAKCXLUCe39u57/ORMl/O/04/9g==}
+  /@types/node@20.4.9:
+    resolution: {integrity: sha512-8e2HYcg7ohnTUbHk8focoklEQYvemQmu9M/f43DZVx43kHn0tE3BY/6gSDxS7k0SprtS0NHvj+L80cGLnoOUcQ==}
     dev: true
 
   /@types/normalize-package-data@2.4.1:
@@ -3371,6 +3393,7 @@ packages:
       '@esbuild/win32-arm64': 0.18.11
       '@esbuild/win32-ia32': 0.18.11
       '@esbuild/win32-x64': 0.18.11
+    dev: false
 
   /esbuild@0.18.20:
     resolution: {integrity: sha512-ceqxoedUrcayh7Y7ZX6NdbbDzGROiyVBgC4PriJThBKSVPWnnFHZAkfI1lJT8QFkOwH4qOS2SJkS4wvpGl8BpA==}
@@ -4596,6 +4619,12 @@ packages:
     hasBin: true
     dev: true
 
+  /marked@7.0.1:
+    resolution: {integrity: sha512-m8Aze620Ts62yaciz2DghZGUkUfdgvSNRicS2/XtQkStMNoce3NWjOD2b/jWF32+XXK6udM6pRhv2dKNlneAFA==}
+    engines: {node: '>= 16'}
+    hasBin: true
+    dev: true
+
   /mdn-data@2.0.30:
     resolution: {integrity: sha512-GaqWWShW4kv/G9IEucWScBx9G1/vsFZZJUO+tD26M8J8z3Kw5RDQjaoZe03YAClgeS/SWPOcb4nkFBTEi5DUEA==}
 
@@ -5518,6 +5547,14 @@ packages:
     hasBin: true
     optionalDependencies:
       fsevents: 2.3.2
+
+  /rollup@3.28.0:
+    resolution: {integrity: sha512-d7zhvo1OUY2SXSM6pfNjgD5+d0Nz87CUp4mt8l/GgVP3oBsPwzNvSzyu1me6BSG9JIgWNTVcafIXBIyM8yQ3yw==}
+    engines: {node: '>=14.18.0', npm: '>=8.0.0'}
+    hasBin: true
+    optionalDependencies:
+      fsevents: 2.3.2
+    dev: true
 
   /rollup@3.7.0:
     resolution: {integrity: sha512-FIJe0msW9P7L9BTfvaJyvn1U1BVCNTL3w8O+PKIrCyiMLg+rIUGb4MbcgVZ10Lnm1uWXOTOWRNARjfXC1+M12Q==}
@@ -6580,7 +6617,7 @@ packages:
       - terser
     dev: true
 
-  /vite-node@0.34.1(@types/node@20.4.7):
+  /vite-node@0.34.1(@types/node@20.4.9):
     resolution: {integrity: sha512-odAZAL9xFMuAg8aWd7nSPT+hU8u2r9gU3LRm9QKjxBEF2rRdWpMuqkrkjvyVQEdNFiBctqr2Gg4uJYizm5Le6w==}
     engines: {node: '>=v14.18.0'}
     hasBin: true
@@ -6590,7 +6627,7 @@ packages:
       mlly: 1.4.0
       pathe: 1.1.1
       picocolors: 1.0.0
-      vite: 4.4.8(@types/node@20.4.7)
+      vite: 4.4.9(@types/node@20.4.9)
     transitivePeerDependencies:
       - '@types/node'
       - less
@@ -6637,42 +6674,6 @@ packages:
     optionalDependencies:
       fsevents: 2.3.2
 
-  /vite@4.4.8(@types/node@20.4.7):
-    resolution: {integrity: sha512-LONawOUUjxQridNWGQlNizfKH89qPigK36XhMI7COMGztz8KNY0JHim7/xDd71CZwGT4HtSRgI7Hy+RlhG0Gvg==}
-    engines: {node: ^14.18.0 || >=16.0.0}
-    hasBin: true
-    peerDependencies:
-      '@types/node': '>= 14'
-      less: '*'
-      lightningcss: ^1.21.0
-      sass: '*'
-      stylus: '*'
-      sugarss: '*'
-      terser: ^5.4.0
-    peerDependenciesMeta:
-      '@types/node':
-        optional: true
-      less:
-        optional: true
-      lightningcss:
-        optional: true
-      sass:
-        optional: true
-      stylus:
-        optional: true
-      sugarss:
-        optional: true
-      terser:
-        optional: true
-    dependencies:
-      '@types/node': 20.4.7
-      esbuild: 0.18.20
-      postcss: 8.4.27
-      rollup: 3.27.2
-    optionalDependencies:
-      fsevents: 2.3.2
-    dev: true
-
   /vite@4.4.9(@types/node@16.18.6):
     resolution: {integrity: sha512-2mbUn2LlUmNASWwSCNSJ/EG2HuSRTnVNaydp6vMCm5VIqJsjMfbIWtbH2kDuwUVW5mMUKKZvGPX/rqeqVvv1XA==}
     engines: {node: ^14.18.0 || >=16.0.0}
@@ -6702,9 +6703,45 @@ packages:
         optional: true
     dependencies:
       '@types/node': 16.18.6
-      esbuild: 0.18.11
+      esbuild: 0.18.20
       postcss: 8.4.27
-      rollup: 3.27.2
+      rollup: 3.28.0
+    optionalDependencies:
+      fsevents: 2.3.2
+    dev: true
+
+  /vite@4.4.9(@types/node@20.4.9):
+    resolution: {integrity: sha512-2mbUn2LlUmNASWwSCNSJ/EG2HuSRTnVNaydp6vMCm5VIqJsjMfbIWtbH2kDuwUVW5mMUKKZvGPX/rqeqVvv1XA==}
+    engines: {node: ^14.18.0 || >=16.0.0}
+    hasBin: true
+    peerDependencies:
+      '@types/node': '>= 14'
+      less: '*'
+      lightningcss: ^1.21.0
+      sass: '*'
+      stylus: '*'
+      sugarss: '*'
+      terser: ^5.4.0
+    peerDependenciesMeta:
+      '@types/node':
+        optional: true
+      less:
+        optional: true
+      lightningcss:
+        optional: true
+      sass:
+        optional: true
+      stylus:
+        optional: true
+      sugarss:
+        optional: true
+      terser:
+        optional: true
+    dependencies:
+      '@types/node': 20.4.9
+      esbuild: 0.18.20
+      postcss: 8.4.27
+      rollup: 3.28.0
     optionalDependencies:
       fsevents: 2.3.2
     dev: true
@@ -6819,7 +6856,7 @@ packages:
     dependencies:
       '@types/chai': 4.3.5
       '@types/chai-subset': 1.3.3
-      '@types/node': 20.4.7
+      '@types/node': 20.4.9
       '@vitest/expect': 0.34.1
       '@vitest/runner': 0.34.1
       '@vitest/snapshot': 0.34.1
@@ -6839,8 +6876,8 @@ packages:
       strip-literal: 1.3.0
       tinybench: 2.5.0
       tinypool: 0.7.0
-      vite: 4.4.8(@types/node@20.4.7)
-      vite-node: 0.34.1(@types/node@20.4.7)
+      vite: 4.4.9(@types/node@20.4.9)
+      vite-node: 0.34.1(@types/node@20.4.9)
       why-is-node-running: 2.2.2
     transitivePeerDependencies:
       - less
