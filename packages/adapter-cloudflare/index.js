@@ -55,6 +55,7 @@ export default function (options = {}) {
 				allowOverwrite: true,
 				format: 'esm',
 				bundle: true,
+				alias: options.alias,
 				loader: {
 					'.wasm': 'copy'
 				},

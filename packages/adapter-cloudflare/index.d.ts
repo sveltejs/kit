@@ -10,6 +10,11 @@ export interface AdapterOptions {
 	external?: string[];
 
 	/**
+	 * Map of packages that should be replaced with a different package.
+	 */
+	alias?: { string: string };
+
+	/**
 	 * Customize the automatically-generated `_routes.json` file
 	 * https://developers.cloudflare.com/pages/platform/functions/routing/#create-a-_routesjson-file
 	 */

@@ -66,7 +66,8 @@ export default function (options = {}) {
 				loader: {
 					'.wasm': 'copy'
 				},
-				external: ['__STATIC_CONTENT_MANIFEST', 'cloudflare:*', ...(options.external ?? [])]
+				external: ['__STATIC_CONTENT_MANIFEST', 'cloudflare:*', ...(options.external ?? [])],
+				alias: options.alias
 			});
 
 			builder.log.minor('Copying assets...');

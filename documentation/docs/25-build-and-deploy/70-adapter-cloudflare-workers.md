@@ -63,7 +63,7 @@ wrangler publish
 
 ## Adapter configuration
 
-The adapter configuration accepts two options: `config` and `external`.
+The adapter configuration accepts the options `config`, `external` and `alias`.
 
 ```js
 // @errors: 2307
@@ -74,7 +74,10 @@ export default {
 	kit: {
 		adapter: adapter({
 			config: '<your-wrangler-name>.toml',
-			external: [ 'fs' ]
+			external: [ 'fs' ],
+			alias: {
+				fs: './fs-stub.js'
+			}
 		})
 	}
 };
@@ -89,6 +92,10 @@ If you would like to use a config file other than the default `wrangler.toml`, s
 `external` is equivalent to the respective [_external_ option of esbuild](https://esbuild.github.io/api/#external). You can use it to mark a file or package as external to exclude it from your build. Typically, this can be used for packages that do import _NodeJS_ modules such as `fs`.
 
 The values `__STATIC_CONTENT_MANIFEST` and `cloudflare:*` are always in the list of excluded packages and this can't be changed.
+
+### `alias`
+
+`alias` is equivalent to the respective [_alias_ option of esbuild](https://esbuild.github.io/api/#alias). You can use it to substitute one package for another when bundling.
 
 ## Bindings
 

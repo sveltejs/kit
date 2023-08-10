@@ -10,6 +10,11 @@ export interface AdapterOptions {
 	external?: string[];
 
 	/**
+	 * Map of packages that should be replaced with a different package.
+	 */
+	alias?: { string: string };
+
+	/**
 	 * The name of the wrangler config file to use.
 	 * Defaults to `wrangler.toml`.
 	 */

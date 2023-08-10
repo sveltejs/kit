@@ -29,7 +29,10 @@ export default {
 				include: ['/*'],
 				exclude: ['<all>']
 			},
-			external: [ 'fs' ]
+			external: [ 'fs' ],
+			alias: {
+				fs: './fs-stub.js'
+			}
 		})
 	}
 };
@@ -37,7 +40,7 @@ export default {
 
 ## Options
 
-The adapter accepts two options: `routes` and `external`.
+The adapter accepts the options `routes`, `external` and `alias`.
 
 ### `routes`
 
@@ -55,6 +58,10 @@ You can have up to 100 `include` and `exclude` rules combined. Generally you can
 ### `external`
 
 `external` is equivalent to the respective [_external_ option of esbuild](https://esbuild.github.io/api/#external). You can use it to mark a file or package as external to exclude it from your build. Typically, this can be used for packages that do import _NodeJS_ modules such as `fs`.
+
+### `alias`
+
+`alias` is equivalent to the respective [_alias_ option of esbuild](https://esbuild.github.io/api/#alias). You can use it to substitute one package for another when bundling.
 
 ## Deployment
 
