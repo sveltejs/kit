@@ -12,6 +12,7 @@ export interface Options {
 			files?: {
 				lib?: string;
 			};
+			outDir?: string;
 		};
 		preprocess?: PreprocessorGroup;
 	};
