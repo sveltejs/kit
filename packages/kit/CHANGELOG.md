@@ -1,5 +1,13 @@
 # @sveltejs/kit
 
+## 1.22.5
+
+### Patch Changes
+
+- fix: make server assets available during `vite preview` ([#10511](https://github.com/sveltejs/kit/pull/10511))
+
+- chore: upgrade `undici` to 5.23.0 ([#10240](https://github.com/sveltejs/kit/pull/10240))
+
 ## 1.22.4
 
 ### Patch Changes

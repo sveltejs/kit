@@ -1,5 +1,11 @@
 # @sveltejs/package
 
+## 2.2.1
+
+### Patch Changes
+
+- fix: delay emptying `dist/` folder ([#10514](https://github.com/sveltejs/kit/pull/10514))
+
 ## 2.2.0
 
 ### Minor Changes
