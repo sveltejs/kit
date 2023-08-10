@@ -59,8 +59,6 @@ HOST=127.0.0.1 PORT=4000 node build
 
 Alternatively, the server can be configured to accept connections on a specified path. When this is done using the `SOCKET_PATH` environment variable, the `HOST` and `PORT` settings will be disregarded.
 
-
-
 ```
 SOCKET_PATH=/tmp/socket node build
 ```
