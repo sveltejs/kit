@@ -2,4 +2,4 @@
 '@sveltejs/kit': patch
 ---
 
-fix: check property descriptors for configurability before polyfill
+fix: only polyfill APIs if they don't exist
