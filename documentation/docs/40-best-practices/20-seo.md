@@ -109,6 +109,7 @@ export const csr = false;
 ...and transforming the HTML using `transformPageChunk` along with `transform` imported from `@sveltejs/amp`:
 
 ```js
+/// file: src/hooks.server.js
 import * as amp from '@sveltejs/amp';
 
 /** @type {import('@sveltejs/kit').Handle} */
@@ -117,7 +118,7 @@ export async function handle({ event, resolve }) {
 	return resolve(event, {
 		transformPageChunk: ({ html, done }) => {
 			buffer += html;
-			if (done) return amp.transform(html);
+			if (done) return amp.transform(buffer);
 		}
 	});
 }
