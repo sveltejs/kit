@@ -3,5 +3,11 @@
 	"private": true,
 	"version": "1.0.0",
 	"description": "standard typescript package with declarationMap:true",
-	"type": "module"
+	"type": "module",
+	"exports": {
+		".": {
+			"types": "./dist/index.d.ts",
+			"svelte": "./dist/index.js"
+		}
+	}
 }
