@@ -1,6 +1,5 @@
 import { DEV } from 'esm-env';
 import { hash } from '../hash.js';
-import { decode as b64_decode } from 'base64-arraybuffer';
 
 let loading = 0;
 
@@ -67,6 +66,22 @@ if (DEV) {
 }
 
 const cache = new Map();
+
+/**
+ * @param {string} text
+ * @returns {ArrayBufferLike}
+ */
+function b64_decode(text) {
+	const d = atob(text);
+
+	const u8 = new Uint8Array(d.length);
+
+	for (let i = 0; i < d.length; i++) {
+		u8[i] = d.charCodeAt(i);
+	}
+
+	return u8.buffer;
+}
 
 /**
  * Should be called on the initial run of load functions that hydrate the page.

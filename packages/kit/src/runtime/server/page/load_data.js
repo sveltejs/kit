@@ -2,7 +2,6 @@ import { disable_search, make_trackable } from '../../../utils/url.js';
 import { unwrap_promises } from '../../../utils/promises.js';
 import { DEV } from 'esm-env';
 import { validate_depends } from '../../shared.js';
-import { encode as encode_b64 } from 'base64-arraybuffer';
 
 /**
  * Calls the user's server `load` function.
@@ -191,6 +190,20 @@ export async function load_data({
 }
 
 /**
+ * @param {ArrayBuffer} buff
+ * @returns {string}
+ */
+function b64_encode(buff) {
+	if (globalThis.Buffer) {
+		return Buffer.from(buff).toString('base64');
+	}
+
+	// The Uint16Arrray(Uint8Array(..)) is done on purpose
+	// this way the code points are padded with 0's
+	return btoa(new TextDecoder('utf-16').decode(new Uint16Array(new Uint8Array(buff))));
+}
+
+/**
  * @param {Pick<import('@sveltejs/kit').RequestEvent, 'fetch' | 'url' | 'request' | 'route'>} event
  * @param {import('types').SSRState} state
  * @param {import('./types').Fetched[]} fetched
@@ -284,7 +297,7 @@ export function create_universal_fetch(event, state, fetched, csr, resolve_opts)
 						}
 
 						if (buffer instanceof ArrayBuffer) {
-							await push_fetched(encode_b64(buffer), true);
+							await push_fetched(b64_encode(buffer), true);
 						}
 
 						return buffer;
