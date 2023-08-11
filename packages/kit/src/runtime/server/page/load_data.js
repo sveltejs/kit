@@ -2,6 +2,7 @@ import { disable_search, make_trackable } from '../../../utils/url.js';
 import { unwrap_promises } from '../../../utils/promises.js';
 import { DEV } from 'esm-env';
 import { validate_depends } from '../../shared.js';
+import { encode as encode_b64 } from 'base64-arraybuffer';
 
 /**
  * Calls the user's server `load` function.
@@ -245,38 +246,33 @@ export function create_universal_fetch(event, state, fetched, csr, resolve_opts)
 
 		const proxy = new Proxy(response, {
 			get(response, key, _receiver) {
-				async function text() {
-					const body = await response.text();
-
-					if (!body || typeof body === 'string') {
-						const status_number = Number(response.status);
-						if (isNaN(status_number)) {
-							throw new Error(
-								`response.status is not a number. value: "${
-									response.status
-								}" type: ${typeof response.status}`
-							);
-						}
-
-						fetched.push({
-							url: same_origin ? url.href.slice(event.url.origin.length) : url.href,
-							method: event.request.method,
-							request_body: /** @type {string | ArrayBufferView | undefined} */ (
-								input instanceof Request && cloned_body
-									? await stream_to_string(cloned_body)
-									: init?.body
-							),
-							request_headers: cloned_headers,
-							response_body: body,
-							response
-						});
+				/**
+				 * @param {string} body
+				 * @param {boolean} is_b64
+				 */
+				async function push_fetched(body, is_b64) {
+					const status_number = Number(response.status);
+					if (isNaN(status_number)) {
+						throw new Error(
+							`response.status is not a number. value: "${
+								response.status
+							}" type: ${typeof response.status}`
+						);
 					}
 
-					if (dependency) {
-						dependency.body = body;
-					}
-
-					return body;
+					fetched.push({
+						url: same_origin ? url.href.slice(event.url.origin.length) : url.href,
+						method: event.request.method,
+						request_body: /** @type {string | ArrayBufferView | undefined} */ (
+							input instanceof Request && cloned_body
+								? await stream_to_string(cloned_body)
+								: init?.body
+						),
+						request_headers: cloned_headers,
+						response_body: body,
+						response,
+						is_b64
+					});
 				}
 
 				if (key === 'arrayBuffer') {
@@ -287,11 +283,26 @@ export function create_universal_fetch(event, state, fetched, csr, resolve_opts)
 							dependency.body = new Uint8Array(buffer);
 						}
 
-						// TODO should buffer be inlined into the page (albeit base64'd)?
-						// any conditions in which it shouldn't be?
+						if (buffer instanceof ArrayBuffer) {
+							await push_fetched(encode_b64(buffer), true);
+						}
 
 						return buffer;
 					};
+				}
+
+				async function text() {
+					const body = await response.text();
+
+					if (!body || typeof body === 'string') {
+						await push_fetched(body, false);
+					}
+
+					if (dependency) {
+						dependency.body = body;
+					}
+
+					return body;
 				}
 
 				if (key === 'text') {

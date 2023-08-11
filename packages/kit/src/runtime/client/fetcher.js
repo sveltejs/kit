@@ -1,5 +1,6 @@
 import { DEV } from 'esm-env';
 import { hash } from '../hash.js';
+import { decode as b64_decode } from 'base64-arraybuffer';
 
 let loading = 0;
 
@@ -78,10 +79,16 @@ export function initial_fetch(resource, opts) {
 
 	const script = document.querySelector(selector);
 	if (script?.textContent) {
-		const { body, ...init } = JSON.parse(script.textContent);
+		let { body, ...init } = JSON.parse(script.textContent);
 
 		const ttl = script.getAttribute('data-ttl');
 		if (ttl) cache.set(selector, { body, init, ttl: 1000 * Number(ttl) });
+		const b64 = script.getAttribute('data-b64');
+		if (b64 !== null) {
+			// Can't use native_fetch('data:...;base64,${body}')
+			// csp can block the request
+			body = b64_decode(body);
+		}
 
 		return Promise.resolve(new Response(body, init));
 	}
