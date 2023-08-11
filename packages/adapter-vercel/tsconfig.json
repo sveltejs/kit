@@ -2,6 +2,7 @@
 	"compilerOptions": {
 		"allowJs": true,
 		"checkJs": true,
+		"strict": true,
 		"noEmit": true,
 		"noImplicitAny": true,
 		"module": "es2022",
@@ -13,5 +14,5 @@
 			"@sveltejs/kit": ["../kit/types/index"]
 		}
 	},
-	"include": ["**/*.js", "ambient.d.ts"]
+	"include": ["**/*.js", "index.d.ts", "internal.d.ts"]
 }

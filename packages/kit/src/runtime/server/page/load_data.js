@@ -1,18 +1,30 @@
 import { disable_search, make_trackable } from '../../../utils/url.js';
 import { unwrap_promises } from '../../../utils/promises.js';
+import { DEV } from 'esm-env';
+import { validate_depends } from '../../shared.js';
 
 /**
  * Calls the user's server `load` function.
  * @param {{
- *   event: import('types').RequestEvent;
+ *   event: import('@sveltejs/kit').RequestEvent;
  *   state: import('types').SSRState;
  *   node: import('types').SSRNode | undefined;
  *   parent: () => Promise<Record<string, any>>;
+ *   track_server_fetches: boolean;
  * }} opts
  * @returns {Promise<import('types').ServerDataNode | null>}
  */
-export async function load_server_data({ event, state, node, parent }) {
+export async function load_server_data({
+	event,
+	state,
+	node,
+	parent,
+	// TODO 2.0: Remove this
+	track_server_fetches
+}) {
 	if (!node?.server) return null;
+
+	let done = false;
 
 	const uses = {
 		dependencies: new Set(),
@@ -23,6 +35,12 @@ export async function load_server_data({ event, state, node, parent }) {
 	};
 
 	const url = make_trackable(event.url, () => {
+		if (DEV && done && !uses.url) {
+			console.warn(
+				`${node.server_id}: Accessing URL properties in a promise handler after \`load(...)\` has returned will not cause the function to re-run when the URL changes`
+			);
+		}
+
 		uses.url = true;
 	});
 
@@ -34,7 +52,17 @@ export async function load_server_data({ event, state, node, parent }) {
 		...event,
 		fetch: (info, init) => {
 			const url = new URL(info instanceof Request ? info.url : info, event.url);
-			uses.dependencies.add(url.href);
+
+			if (DEV && done && !uses.dependencies.has(url.href)) {
+				console.warn(
+					`${node.server_id}: Calling \`event.fetch(...)\` in a promise handler after \`load(...)\` has returned will not cause the function to re-run when the dependency is invalidated`
+				);
+			}
+
+			// TODO 2.0: Remove this
+			if (track_server_fetches) {
+				uses.dependencies.add(url.href);
+			}
 
 			return event.fetch(info, init);
 		},
@@ -42,25 +70,58 @@ export async function load_server_data({ event, state, node, parent }) {
 		depends: (...deps) => {
 			for (const dep of deps) {
 				const { href } = new URL(dep, event.url);
+
+				if (DEV) {
+					validate_depends(node.server_id, dep);
+
+					if (done && !uses.dependencies.has(href)) {
+						console.warn(
+							`${node.server_id}: Calling \`depends(...)\` in a promise handler after \`load(...)\` has returned will not cause the function to re-run when the dependency is invalidated`
+						);
+					}
+				}
+
 				uses.dependencies.add(href);
 			}
 		},
 		params: new Proxy(event.params, {
 			get: (target, key) => {
+				if (DEV && done && typeof key === 'string' && !uses.params.has(key)) {
+					console.warn(
+						`${node.server_id}: Accessing \`params.${String(
+							key
+						)}\` in a promise handler after \`load(...)\` has returned will not cause the function to re-run when the param changes`
+					);
+				}
+
 				uses.params.add(key);
 				return target[/** @type {string} */ (key)];
 			}
 		}),
 		parent: async () => {
+			if (DEV && done && !uses.parent) {
+				console.warn(
+					`${node.server_id}: Calling \`parent(...)\` in a promise handler after \`load(...)\` has returned will not cause the function to re-run when parent data changes`
+				);
+			}
+
 			uses.parent = true;
 			return parent();
 		},
-		route: {
-			get id() {
+		route: new Proxy(event.route, {
+			get: (target, key) => {
+				if (DEV && done && typeof key === 'string' && !uses.route) {
+					console.warn(
+						`${node.server_id}: Accessing \`route.${String(
+							key
+						)}\` in a promise handler after \`load(...)\` has returned will not cause the function to re-run when the route changes`
+					);
+				}
+
 				uses.route = true;
-				return event.route.id;
+				return target[/** @type {'id'} */ (key)];
 			}
-		},
+		}),
 		url
 	});
 
@@ -68,6 +129,8 @@ export async function load_server_data({ event, state, node, parent }) {
 	if (__SVELTEKIT_DEV__) {
 		validate_load_response(data, /** @type {string} */ (event.route.id));
 	}
+
+	done = true;
 
 	return {
 		type: 'data',
@@ -80,7 +143,7 @@ export async function load_server_data({ event, state, node, parent }) {
 /**
  * Calls the user's `load` function.
  * @param {{
- *   event: import('types').RequestEvent;
+ *   event: import('@sveltejs/kit').RequestEvent;
  *   fetched: import('./types').Fetched[];
  *   node: import('types').SSRNode | undefined;
  *   parent: () => Promise<Record<string, any>>;
@@ -89,7 +152,7 @@ export async function load_server_data({ event, state, node, parent }) {
  *   state: import('types').SSRState;
  *   csr: boolean;
  * }} opts
- * @returns {Promise<Record<string, any> | null>}
+ * @returns {Promise<Record<string, any | Promise<any>> | null>}
  */
 export async function load_data({
 	event,
@@ -119,16 +182,19 @@ export async function load_data({
 	});
 
 	const data = result ? await unwrap_promises(result) : null;
-	validate_load_response(data, /** @type {string} */ (event.route.id));
+	if (__SVELTEKIT_DEV__) {
+		validate_load_response(data, /** @type {string} */ (event.route.id));
+	}
+
 	return data;
 }
 
 /**
- * @param {Pick<import('types').RequestEvent, 'fetch' | 'url' | 'request' | 'route'>} event
- * @param {import("types").SSRState} state
- * @param {import("./types").Fetched[]} fetched
+ * @param {Pick<import('@sveltejs/kit').RequestEvent, 'fetch' | 'url' | 'request' | 'route'>} event
+ * @param {import('types').SSRState} state
+ * @param {import('./types').Fetched[]} fetched
  * @param {boolean} csr
- * @param {Pick<Required<import("types").ResolveOptions>, 'filterSerializedResponseHeaders'>} resolve_opts
+ * @param {Pick<Required<import('@sveltejs/kit').ResolveOptions>, 'filterSerializedResponseHeaders'>} resolve_opts
  */
 export function create_universal_fetch(event, state, fetched, csr, resolve_opts) {
 	/**
@@ -137,6 +203,12 @@ export function create_universal_fetch(event, state, fetched, csr, resolve_opts)
 	 */
 	return async (input, init) => {
 		const cloned_body = input instanceof Request && input.body ? input.clone().body : null;
+
+		const cloned_headers =
+			input instanceof Request && [...input.headers].length
+				? new Headers(input.headers)
+				: init?.headers;
+
 		let response = await event.fetch(input, init);
 
 		const url = new URL(input instanceof Request ? input.url : input, event.url);
@@ -194,9 +266,9 @@ export function create_universal_fetch(event, state, fetched, csr, resolve_opts)
 									? await stream_to_string(cloned_body)
 									: init?.body
 							),
-							request_headers: init?.headers,
+							request_headers: cloned_headers,
 							response_body: body,
-							response: response
+							response
 						});
 					}
 

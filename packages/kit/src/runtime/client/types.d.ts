@@ -1,4 +1,4 @@
-import { applyAction } from '$app/forms';
+import { applyAction } from '../app/forms';
 import {
 	afterNavigate,
 	beforeNavigate,
@@ -7,9 +7,37 @@ import {
 	invalidateAll,
 	preloadCode,
 	preloadData
-} from '$app/navigation';
+} from '../app/navigation';
 import { SvelteComponent } from 'svelte';
-import { CSRPageNode, CSRPageNodeLoader, CSRRoute, Page, TrailingSlash, Uses } from 'types';
+import { ClientHooks, CSRPageNode, CSRPageNodeLoader, CSRRoute, TrailingSlash, Uses } from 'types';
+import { Page, ParamMatcher } from '@sveltejs/kit';
+
+export interface SvelteKitApp {
+	/**
+	 * A list of all the error/layout/page nodes used in the app
+	 */
+	nodes: CSRPageNodeLoader[];
+
+	/**
+	 * A list of all layout node ids that have a server load function.
+	 * Pages are not present because it's shorter to encode it on the leaf itself.
+	 */
+	server_loads: number[];
+
+	/**
+	 * A map of `[routeId: string]: [leaf, layouts, errors]` tuples, which
+	 * is parsed into an array of routes on startup. The numbers refer to the indices in `nodes`.
+	 * If the leaf number is negative, it means it does use a server load function and the complement is the node index.
+	 * The route layout and error nodes are not referenced, they are always number 0 and 1 and always apply.
+	 */
+	dictionary: Record<string, [leaf: number, layouts: number[], errors?: number[]]>;
+
+	matchers: Record<string, ParamMatcher>;
+
+	hooks: ClientHooks;
+
+	root: typeof SvelteComponent;
+}
 
 export interface Client {
 	// public API, exposed via $app/navigation
@@ -18,7 +46,7 @@ export interface Client {
 	disable_scroll_handling(): void;
 	goto: typeof goto;
 	invalidate: typeof invalidate;
-	invalidateAll: typeof invalidateAll;
+	invalidate_all: typeof invalidateAll;
 	preload_code: typeof preloadCode;
 	preload_data: typeof preloadData;
 	apply_action: typeof applyAction;

@@ -1,5 +1,161 @@
 # create-svelte
 
+## 5.0.5
+
+### Patch Changes
+
+- chore: upgrade `vitest` to 0.34.0 and `@clack/prompts` to 0.7.0 ([#10240](https://github.com/sveltejs/kit/pull/10240))
+
+## 5.0.4
+
+### Patch Changes
+
+- chore: upgrade @fontsource/fira-mono to v5 ([#10445](https://github.com/sveltejs/kit/pull/10445))
+
+- chore: upgrade to vitest 0.33.0 ([#10445](https://github.com/sveltejs/kit/pull/10445))
+
+## 5.0.3
+
+### Patch Changes
+
+- chore: bump Vite and Svelte dependencies ([#10330](https://github.com/sveltejs/kit/pull/10330))
+
+- fix: create lib folder in skeleton project ([#10341](https://github.com/sveltejs/kit/pull/10341))
+
+## 5.0.2
+
+### Patch Changes
+
+- fix: npm test should run unit tests ([#10241](https://github.com/sveltejs/kit/pull/10241))
+
+- chore: upgrade vitest ([#10236](https://github.com/sveltejs/kit/pull/10236))
+
+## 5.0.1
+
+### Patch Changes
+
+- chore: use satisfies keyword in jsdocs, in create-svelte default template ([#10203](https://github.com/sveltejs/kit/pull/10203))
+
+## 5.0.0
+
+### Major Changes
+
+- breaking: install Svelte 4 ([#10217](https://github.com/sveltejs/kit/pull/10217))
+
+## 4.2.0
+
+### Minor Changes
+
+- feat: Add `data-sveltekit-preload-data` to lib template ([#9863](https://github.com/sveltejs/kit/pull/9863))
+
+## 4.1.1
+
+### Patch Changes
+
+- fix: default playwright globs ([#9795](https://github.com/sveltejs/kit/pull/9795))
+
+- fix: remove obsolete `ignorePatterns: ['*.cjs']` from .eslintrc.cjs ([#9797](https://github.com/sveltejs/kit/pull/9797))
+
+## 4.1.0
+
+### Minor Changes
+
+- feat: set `resolution-mode=highest` in generated `.npmrc` ([#9781](https://github.com/sveltejs/kit/pull/9781))
+
+## 4.0.0
+
+### Major Changes
+
+- feat: switch default ESLint plugin from `eslint-plugin-svelte3` to `eslint-plugin-svelte` ([#9749](https://github.com/sveltejs/kit/pull/9749))
+
+## 3.3.1
+
+### Patch Changes
+
+- feat: upgrade to Vite 4.3 for faster build times ([#9737](https://github.com/sveltejs/kit/pull/9737))
+
+- fix: generate tsconfig/jsconfig correctly for library option ([#9712](https://github.com/sveltejs/kit/pull/9712))
+
+## 3.3.0
+
+### Minor Changes
+
+- feat: ignore test files in library skeleton package.json ([#9584](https://github.com/sveltejs/kit/pull/9584))
+
+## 3.2.0
+
+### Minor Changes
+
+- feat: upgrade to TypeScript 5 ([#9435](https://github.com/sveltejs/kit/pull/9435))
+
+### Patch Changes
+
+- chore: upgrade to Vite 4.2 ([#9434](https://github.com/sveltejs/kit/pull/9434))
+
+## 3.1.2
+
+### Patch Changes
+
+- fix: prevent duplicated lines in project creation CLI ([#9346](https://github.com/sveltejs/kit/pull/9346))
+
+## 3.1.1
+
+### Patch Changes
+
+- chore: Add hint for toggling additional options during scaffolding flow. ([#9318](https://github.com/sveltejs/kit/pull/9318))
+
+## 3.1.0
+
+### Minor Changes
+
+- feat: use `@clack/prompts` ([#9219](https://github.com/sveltejs/kit/pull/9219))
+
+## 3.0.4
+
+### Patch Changes
+
+- docs: inform about adapter-auto not supporting all environments ([#9196](https://github.com/sveltejs/kit/pull/9196))
+
+## 3.0.3
+
+### Patch Changes
+
+- chore: enhance library skeleton readme with some library instructions ([#9128](https://github.com/sveltejs/kit/pull/9128))
+
+## 3.0.2
+
+### Patch Changes
+
+- chore: avoid running publint twice in prepublish ([#9126](https://github.com/sveltejs/kit/pull/9126))
+
+- fix: add `dist` to `pkg.files` and `.gitignore` ([#9124](https://github.com/sveltejs/kit/pull/9124))
+
+## 3.0.1
+
+### Patch Changes
+
+- fix: update dependency @sveltejs/package to v2.0.0 ([#9087](https://github.com/sveltejs/kit/pull/9087))
+
+## 3.0.0
+
+### Major Changes
+
+- breaking: update library scaffolding for `@sveltejs/package` version 2 ([#8922](https://github.com/sveltejs/kit/pull/8922))
+
+## 2.3.4
+
+### Patch Changes
+
+- fix: use new locator API to improve demo test ([#8988](https://github.com/sveltejs/kit/pull/8988))
+
+## 2.3.3
+
+### Patch Changes
+
+- chore: bump `@sveltejs/kit` and `@sveltejs/adapter-auto` versions ([#8740](https://github.com/sveltejs/kit/pull/8740))
+
+- fix: adjust vite config type to work with vitest options ([#8871](https://github.com/sveltejs/kit/pull/8871))
+
 ## 2.3.2
 
 ### Patch Changes

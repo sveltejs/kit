@@ -1,15 +1,15 @@
-import { execSync } from 'child_process';
-import { pathToFileURL } from 'url';
+import { execSync } from 'node:child_process';
+import { pathToFileURL } from 'node:url';
 import { resolve } from 'import-meta-resolve';
 import { adapters } from './adapters.js';
-import { dirname, join } from 'path';
-import { existsSync } from 'fs';
+import { dirname, join } from 'node:path';
+import { existsSync } from 'node:fs';
 
-/** @type {Record<string, (name: string) => string>} */
+/** @type {Record<string, (name: string, version: string) => string>} */
 const commands = {
-	npm: (name) => `npm install -D ${name}`,
-	pnpm: (name) => `pnpm add -D ${name}`,
-	yarn: (name) => `yarn add -D ${name}`
+	npm: (name, version) => `npm install -D ${name}@${version}`,
+	pnpm: (name, version) => `pnpm add -D ${name}@${version}`,
+	yarn: (name, version) => `yarn add -D ${name}@${version}`
 };
 
 function detect_lockfile() {
@@ -64,7 +64,7 @@ async function get_adapter() {
 			error.message.startsWith(`Cannot find package '${match.module}'`)
 		) {
 			const package_manager = detect_package_manager();
-			const command = commands[package_manager](match.module);
+			const command = commands[package_manager](match.module, match.version);
 
 			try {
 				console.log(`Installing ${match.module}...`);

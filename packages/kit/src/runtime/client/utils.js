@@ -1,6 +1,7 @@
 import { BROWSER, DEV } from 'esm-env';
 import { writable } from 'svelte/store';
-import { assets, version } from '../shared.js';
+import { assets } from '__sveltekit/paths';
+import { version } from '__sveltekit/environment';
 import { PRELOAD_PRIORITIES } from './constants.js';
 
 /* global __SVELTEKIT_APP_VERSION_FILE__, __SVELTEKIT_APP_VERSION_POLL_INTERVAL__ */
@@ -31,8 +32,10 @@ const warned = new WeakSet();
 const valid_link_options = /** @type {const} */ ({
 	'preload-code': ['', 'off', 'tap', 'hover', 'viewport', 'eager'],
 	'preload-data': ['', 'off', 'tap', 'hover'],
-	noscroll: ['', 'off'],
-	reload: ['', 'off']
+	keepfocus: ['', 'true', 'off', 'false'],
+	noscroll: ['', 'true', 'off', 'false'],
+	reload: ['', 'true', 'off', 'false'],
+	replacestate: ['', 'true', 'off', 'false']
 });
 
 /**
@@ -130,16 +133,20 @@ export function get_link_info(a, base) {
 		!url ||
 		!!target ||
 		is_external_url(url, base) ||
-		(a.getAttribute('rel') || '').split(/\s+/).includes('external') ||
-		a.hasAttribute('download');
+		(a.getAttribute('rel') || '').split(/\s+/).includes('external');
 
-	return { url, external, target };
+	const download = url?.origin === location.origin && a.hasAttribute('download');
+
+	return { url, external, target, download };
 }
 
 /**
  * @param {HTMLFormElement | HTMLAnchorElement | SVGAElement} element
  */
 export function get_router_options(element) {
+	/** @type {ValidLinkOptions<'keepfocus'> | null} */
+	let keep_focus = null;
+
 	/** @type {ValidLinkOptions<'noscroll'> | null} */
 	let noscroll = null;
 
@@ -152,23 +159,44 @@ export function get_router_options(element) {
 	/** @type {ValidLinkOptions<'reload'> | null} */
 	let reload = null;
 
+	/** @type {ValidLinkOptions<'replacestate'> | null} */
+	let replace_state = null;
+
 	/** @type {Element} */
 	let el = element;
 
 	while (el && el !== document.documentElement) {
 		if (preload_code === null) preload_code = link_option(el, 'preload-code');
 		if (preload_data === null) preload_data = link_option(el, 'preload-data');
+		if (keep_focus === null) keep_focus = link_option(el, 'keepfocus');
 		if (noscroll === null) noscroll = link_option(el, 'noscroll');
 		if (reload === null) reload = link_option(el, 'reload');
+		if (replace_state === null) replace_state = link_option(el, 'replacestate');
 
 		el = /** @type {Element} */ (parent_element(el));
+	}
+
+	/** @param {string | null} value */
+	function get_option_state(value) {
+		switch (value) {
+			case '':
+			case 'true':
+				return true;
+			case 'off':
+			case 'false':
+				return false;
+			default:
+				return null;
+		}
 	}
 
 	return {
 		preload_code: levels[preload_code ?? 'off'],
 		preload_data: levels[preload_data ?? 'off'],
-		noscroll: noscroll === 'off' ? false : noscroll === '' ? true : null,
-		reload: reload === 'off' ? false : reload === '' ? true : null
+		keep_focus: get_option_state(keep_focus),
+		noscroll: get_option_state(noscroll),
+		reload: get_option_state(reload),
+		replace_state: get_option_state(replace_state)
 	};
 }
 
@@ -205,6 +233,13 @@ export function notifiable_store(value) {
 export function create_updated_store() {
 	const { set, subscribe } = writable(false);
 
+	if (DEV || !BROWSER) {
+		return {
+			subscribe,
+			check: async () => false
+		};
+	}
+
 	const interval = __SVELTEKIT_APP_VERSION_POLL_INTERVAL__;
 
 	/** @type {NodeJS.Timeout} */
@@ -212,20 +247,22 @@ export function create_updated_store() {
 
 	/** @type {() => Promise<boolean>} */
 	async function check() {
-		if (DEV || !BROWSER) return false;
-
 		clearTimeout(timeout);
 
 		if (interval) timeout = setTimeout(check, interval);
 
-		const res = await fetch(`${assets}/${__SVELTEKIT_APP_VERSION_FILE__}`, {
-			headers: {
-				pragma: 'no-cache',
-				'cache-control': 'no-cache'
-			}
-		});
+		try {
+			const res = await fetch(`${assets}/${__SVELTEKIT_APP_VERSION_FILE__}`, {
+				headers: {
+					pragma: 'no-cache',
+					'cache-control': 'no-cache'
+				}
+			});
 
-		if (res.ok) {
+			if (!res.ok) {
+				return false;
+			}
+
 			const data = await res.json();
 			const updated = data.version !== version;
 
@@ -235,8 +272,8 @@ export function create_updated_store() {
 			}
 
 			return updated;
-		} else {
-			throw new Error(`Version check failed: ${res.status}`);
+		} catch {
+			return false;
 		}
 	}
 

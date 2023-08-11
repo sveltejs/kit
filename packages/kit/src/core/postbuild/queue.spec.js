@@ -1,5 +1,4 @@
-import { test } from 'uvu';
-import * as assert from 'uvu/assert';
+import { assert, expect, test } from 'vitest';
 import { queue } from './queue.js';
 
 /** @param {number} ms */
@@ -53,26 +52,26 @@ test('starts tasks in sequence', async () => {
 			});
 	}
 
-	assert.equal(started, [true, true, false, false]);
-	assert.equal(finished, [false, false, false, false]);
+	expect(started).toEqual([true, true, false, false]);
+	expect(finished).toEqual([false, false, false, false]);
 
 	fulfils[0]();
 	await promises[0];
 
-	assert.equal(started, [true, true, true, false]);
-	assert.equal(finished, [true, false, false, false]);
+	expect(started).toEqual([true, true, true, false]);
+	expect(finished).toEqual([true, false, false, false]);
 
 	fulfils[1]();
 	await promises[1];
 
-	assert.equal(started, [true, true, true, true]);
-	assert.equal(finished, [true, true, false, false]);
+	expect(started).toEqual([true, true, true, true]);
+	expect(finished).toEqual([true, true, false, false]);
 
 	fulfils[2]();
 	fulfils[3]();
 	await q.done();
 
-	assert.equal(finished, [true, true, true, true]);
+	expect(finished).toEqual([true, true, true, true]);
 });
 
 test('q.add fails if queue is already finished', async () => {
@@ -110,5 +109,3 @@ test('q.done() rejects if task rejects', async () => {
 		assert.equal(/** @type {Error} */ (e).message, 'nope');
 	}
 });
-
-test.run();

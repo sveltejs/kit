@@ -8,7 +8,8 @@ const expected = new Set([
 	'XFF_DEPTH',
 	'ADDRESS_HEADER',
 	'PROTOCOL_HEADER',
-	'HOST_HEADER'
+	'HOST_HEADER',
+	'BODY_SIZE_LIMIT'
 ]);
 
 if (ENV_PREFIX) {

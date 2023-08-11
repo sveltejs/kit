@@ -1,44 +1,14 @@
-export let assets = '';
-export let base = '';
-export let building = false;
-export let version = '';
-
-/** @type {Record<string, string>} */
-export let private_env = {};
-
-/** @type {Record<string, string>} */
-export let public_env = {};
-
-/** @param {string} stack */
-export let fix_stack_trace = (stack) => stack;
-
-/** @param {{ base: string, assets: string }} paths */
-export function set_paths(paths) {
-	base = paths.base;
-	assets = paths.assets || base;
+/**
+ * @param {string} route_id
+ * @param {string} dep
+ */
+export function validate_depends(route_id, dep) {
+	const match = /^(moz-icon|view-source|jar):/.exec(dep);
+	if (match) {
+		console.warn(
+			`${route_id}: Calling \`depends('${dep}')\` will throw an error in Firefox because \`${match[1]}\` is a special URI scheme`
+		);
+	}
 }
 
-/** @param {boolean} value */
-export function set_building(value) {
-	building = value;
-}
-
-/** @type {(environment: Record<string, string>) => void} */
-export function set_private_env(environment) {
-	private_env = environment;
-}
-
-/** @type {(environment: Record<string, string>) => void} */
-export function set_public_env(environment) {
-	public_env = environment;
-}
-
-/** @param {string} value */
-export function set_version(value) {
-	version = value;
-}
-
-/** @param {(stack: string) => string} value */
-export function set_fix_stack_trace(value) {
-	fix_stack_trace = value;
-}
+export const INVALIDATED_PARAM = 'x-sveltekit-invalidated';

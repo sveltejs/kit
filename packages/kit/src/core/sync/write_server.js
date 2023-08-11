@@ -1,5 +1,6 @@
 import fs from 'node:fs';
 import path from 'node:path';
+import { hash } from '../../runtime/hash.js';
 import { posixify, resolve_entry } from '../../utils/filesystem.js';
 import { s } from '../../utils/misc.js';
 import { load_error_page, load_template } from '../config/index.js';
@@ -25,17 +26,20 @@ const server_template = ({
 	error_page
 }) => `
 import root from '../root.svelte';
-import { set_building, set_paths, set_private_env, set_public_env, set_version } from '${runtime_directory}/shared.js';
-
-set_paths(${s(config.kit.paths)});
-set_version(${s(config.kit.version.name)});
+import { set_building } from '__sveltekit/environment';
+import { set_assets } from '__sveltekit/paths';
+import { set_private_env, set_public_env } from '${runtime_directory}/shared-server.js';
 
 export const options = {
+	app_template_contains_nonce: ${template.includes('%sveltekit.nonce%')},
 	csp: ${s(config.kit.csp)},
 	csrf_check_origin: ${s(config.kit.csrf.checkOrigin)},
+	track_server_fetches: ${s(config.kit.dangerZone.trackServerFetches)},
 	embedded: ${config.kit.embedded},
 	env_public_prefix: '${config.kit.env.publicPrefix}',
+	env_private_prefix: '${config.kit.env.privatePrefix}',
 	hooks: null, // added lazily, via \`get_hooks\`
+	preload_strategy: ${s(config.kit.output.preloadStrategy)},
 	root,
 	service_worker: ${has_service_worker},
 	templates: {
@@ -51,14 +55,15 @@ export const options = {
 		error: ({ status, message }) => ${s(error_page)
 			.replace(/%sveltekit\.status%/g, '" + status + "')
 			.replace(/%sveltekit\.error\.message%/g, '" + message + "')}
-	}
+	},
+	version_hash: ${s(hash(config.kit.version.name))}
 };
 
 export function get_hooks() {
 	return ${hooks ? `import(${s(hooks)})` : '{}'};
 }
 
-export { set_building, set_paths, set_private_env, set_public_env };
+export { set_assets, set_building, set_private_env, set_public_env };
 `;
 
 // TODO need to re-run this whenever src/app.html or src/error.html are
@@ -71,7 +76,7 @@ export { set_building, set_paths, set_private_env, set_public_env };
  * @param {string} output
  */
 export function write_server(config, output) {
-	// TODO the casting shouldn't be necessary — investigate
+	// TODO the casting shouldn't be necessary — investigate
 	const hooks_file = /** @type {string} */ (resolve_entry(config.kit.files.hooks.server));
 
 	/** @param {string} file */

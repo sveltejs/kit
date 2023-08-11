@@ -1,8 +1,10 @@
 import { join } from 'node:path';
 import { pathToFileURL } from 'node:url';
-import { get_option } from '../../runtime/server/utils.js';
+import { get_option } from '../../utils/options.js';
 import {
-	validate_common_exports,
+	validate_layout_exports,
+	validate_layout_server_exports,
+	validate_page_exports,
 	validate_page_server_exports,
 	validate_server_exports
 } from '../../utils/exports.js';
@@ -10,6 +12,9 @@ import { load_config } from '../config/index.js';
 import { forked } from '../../utils/fork.js';
 import { should_polyfill } from '../../utils/platform.js';
 import { installPolyfills } from '../../exports/node/polyfills.js';
+import { resolvePath } from '../../exports/index.js';
+import { ENDPOINT_METHODS } from '../../constants.js';
+import { filter_private_env, filter_public_env } from '../../utils/env.js';
 
 export default forked(import.meta.url, analyse);
 
@@ -20,7 +25,7 @@ export default forked(import.meta.url, analyse);
  * }} opts
  */
 async function analyse({ manifest_path, env }) {
-	/** @type {import('types').SSRManifest} */
+	/** @type {import('@sveltejs/kit').SSRManifest} */
 	const manifest = (await import(pathToFileURL(manifest_path).href)).manifest;
 
 	/** @type {import('types').ValidatedKitConfig} */
@@ -40,10 +45,9 @@ async function analyse({ manifest_path, env }) {
 	internal.set_building(true);
 
 	// set env, in case it's used in initialisation
-	const entries = Object.entries(env);
-	const prefix = config.env.publicPrefix;
-	internal.set_private_env(Object.fromEntries(entries.filter(([k]) => !k.startsWith(prefix))));
-	internal.set_public_env(Object.fromEntries(entries.filter(([k]) => k.startsWith(prefix))));
+	const { publicPrefix: public_prefix, privatePrefix: private_prefix } = config.env;
+	internal.set_private_env(filter_private_env(env, { public_prefix, private_prefix }));
+	internal.set_public_env(filter_public_env(env, { public_prefix, private_prefix }));
 
 	/** @type {import('types').ServerMetadata} */
 	const metadata = {
@@ -62,11 +66,18 @@ async function analyse({ manifest_path, env }) {
 
 	// analyse routes
 	for (const route of manifest._.routes) {
-		/** @type {Set<import('types').HttpMethod>} */
-		const methods = new Set();
+		/** @type {Array<'GET' | 'POST'>} */
+		const page_methods = [];
+
+		/** @type {import('types').HttpMethod[]} */
+		const api_methods = [];
 
 		/** @type {import('types').PrerenderOption | undefined} */
 		let prerender = undefined;
+		/** @type {any} */
+		let config = undefined;
+		/** @type {import('types').PrerenderEntryGenerator | undefined} */
+		let entries = undefined;
 
 		if (route.endpoint) {
 			const mod = await route.endpoint();
@@ -82,11 +93,14 @@ async function analyse({ manifest_path, env }) {
 				prerender = mod.prerender;
 			}
 
-			if (mod.GET) methods.add('GET');
-			if (mod.POST) methods.add('POST');
-			if (mod.PUT) methods.add('PUT');
-			if (mod.PATCH) methods.add('PATCH');
-			if (mod.DELETE) methods.add('DELETE');
+			Object.values(mod).forEach((/** @type {import('types').HttpMethod} */ method) => {
+				if (mod[method] && ENDPOINT_METHODS.has(method)) {
+					api_methods.push(method);
+				}
+			});
+
+			config = mod.config;
+			entries = mod.entries;
 		}
 
 		if (route.page) {
@@ -101,35 +115,58 @@ async function analyse({ manifest_path, env }) {
 
 			for (const layout of layouts) {
 				if (layout) {
-					validate_common_exports(layout.server, route.id);
-					validate_common_exports(layout.universal, route.id);
+					validate_layout_server_exports(layout.server, layout.server_id);
+					validate_layout_exports(layout.universal, layout.universal_id);
 				}
 			}
 
 			if (page) {
-				methods.add('GET');
-				if (page.server?.actions) methods.add('POST');
+				page_methods.push('GET');
+				if (page.server?.actions) page_methods.push('POST');
 
-				validate_page_server_exports(page.server, route.id);
-				validate_common_exports(page.universal, route.id);
+				validate_page_server_exports(page.server, page.server_id);
+				validate_page_exports(page.universal, page.universal_id);
 			}
 
-			const should_prerender = get_option(nodes, 'prerender');
-			prerender =
-				should_prerender === true ||
-				// Try prerendering if ssr is false and no server needed. Set it to 'auto' so that
-				// the route is not removed from the manifest, there could be a server load function.
-				// People can opt out of this behavior by explicitly setting prerender to false
-				(should_prerender !== false && get_option(nodes, 'ssr') === false && !page?.server?.actions
-					? 'auto'
-					: should_prerender ?? false);
+			prerender = get_option(nodes, 'prerender') ?? false;
+
+			config = get_config(nodes);
+			entries ??= get_option(nodes, 'entries');
 		}
 
 		metadata.routes.set(route.id, {
+			config,
+			methods: Array.from(new Set([...page_methods, ...api_methods])),
+			page: {
+				methods: page_methods
+			},
+			api: {
+				methods: api_methods
+			},
 			prerender,
-			methods: Array.from(methods)
+			entries:
+				entries && (await entries()).map((entry_object) => resolvePath(route.id, entry_object))
 		});
 	}
 
 	return metadata;
+}
+
+/**
+ * Do a shallow merge (first level) of the config object
+ * @param {Array<import('types').SSRNode | undefined>} nodes
+ */
+function get_config(nodes) {
+	let current = {};
+	for (const node of nodes) {
+		const config = node?.universal?.config ?? node?.server?.config;
+		if (config) {
+			current = {
+				...current,
+				...config
+			};
+		}
+	}
+
+	return Object.keys(current).length ? current : undefined;
 }

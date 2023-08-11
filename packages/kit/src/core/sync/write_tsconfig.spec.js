@@ -1,5 +1,4 @@
-import { test } from 'uvu';
-import * as assert from 'uvu/assert';
+import { assert, expect, test } from 'vitest';
 import { validate_config } from '../config/index.js';
 import { get_tsconfig } from './write_tsconfig.js';
 
@@ -19,7 +18,7 @@ test('Creates tsconfig path aliases from kit.alias', () => {
 
 	// $lib isn't part of the outcome because there's a "path exists"
 	// check in the implementation
-	assert.equal(compilerOptions.paths, {
+	expect(compilerOptions.paths).toEqual({
 		simpleKey: ['../simple/value'],
 		'simpleKey/*': ['../simple/value/*'],
 		key: ['../value'],
@@ -44,7 +43,7 @@ test('Creates tsconfig path aliases from kit.alias with existing baseUrl', () =>
 
 	// $lib isn't part of the outcome because there's a "path exists"
 	// check in the implementation
-	assert.equal(compilerOptions.paths, {
+	expect(compilerOptions.paths).toEqual({
 		simpleKey: ['simple/value'],
 		'simpleKey/*': ['simple/value/*'],
 		key: ['value'],
@@ -86,4 +85,29 @@ test('Allows generated tsconfig to be replaced', () => {
 	assert.equal(config.extends, 'some/other/tsconfig.json');
 });
 
-test.run();
+test('Creates tsconfig include from kit.files', () => {
+	const { kit } = validate_config({
+		kit: {
+			files: {
+				lib: 'app'
+			}
+		}
+	});
+
+	const { include } = get_tsconfig(kit, false);
+
+	expect(include).toEqual([
+		'ambient.d.ts',
+		'./types/**/$types.d.ts',
+		'../vite.config.ts',
+		'../app/**/*.js',
+		'../app/**/*.ts',
+		'../app/**/*.svelte',
+		'../src/**/*.js',
+		'../src/**/*.ts',
+		'../src/**/*.svelte',
+		'../tests/**/*.js',
+		'../tests/**/*.ts',
+		'../tests/**/*.svelte'
+	]);
+});

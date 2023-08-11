@@ -1,11 +1,10 @@
-import { content } from '$lib/search/content.server.js';
+import { content } from './content.server.js';
 import { json } from '@sveltejs/kit';
 
 export const prerender = true;
 
-/** @type {import('./$types').RequestHandler} */
-export function GET() {
+export async function GET() {
 	return json({
-		blocks: content()
+		blocks: await content()
 	});
 }

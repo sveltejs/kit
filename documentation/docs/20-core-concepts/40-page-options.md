@@ -33,7 +33,7 @@ export const prerender = 'auto';
 
 > If your entire app is suitable for prerendering, you can use [`adapter-static`](https://github.com/sveltejs/kit/tree/master/packages/adapter-static), which will output files suitable for use with any static webserver.
 
-The prerenderer will start at the root of your app and generate files for any prerenderable pages or `+server.js` routes it finds. Each page is scanned for `<a>` elements that point to other pages that are candidates for prerendering — because of this, you generally don't need to specify which pages should be accessed. If you _do_ need to specify which pages should be accessed by the prerenderer, you can do so with the `entries` option in the [prerender configuration](configuration#prerender).
+The prerenderer will start at the root of your app and generate files for any prerenderable pages or `+server.js` routes it finds. Each page is scanned for `<a>` elements that point to other pages that are candidates for prerendering — because of this, you generally don't need to specify which pages should be accessed. If you _do_ need to specify which pages should be accessed by the prerenderer, you can do so with [`config.kit.prerender.entries`](configuration#prerender), or by exporting an [`entries`](#entries) function from your dynamic route.
 
 While prerendering, the value of `building` imported from [`$app/environment`](modules#$app-environment) will be `true`.
 
@@ -78,16 +78,45 @@ For that reason among others, it's recommended that you always include a file ex
 
 For _pages_, we skirt around this problem by writing `foo/index.html` instead of `foo`.
 
-Note that this will disable client-side routing for any navigation from this page, regardless of whether the router is already active.
-
 ### Troubleshooting
 
 If you encounter an error like 'The following routes were marked as prerenderable, but were not prerendered' it's because the route in question (or a parent layout, if it's a page) has `export const prerender = true` but the page wasn't actually prerendered, because it wasn't reached by the prerendering crawler.
 
 Since these routes cannot be dynamically server-rendered, this will cause errors when people try to access the route in question. There are two ways to fix it:
 
-* Ensure that SvelteKit can find the route by following links from [`config.kit.prerender.entries`](configuration#prerender). Add links to dynamic routes (i.e. pages with `[parameters]` ) to this option if they are not found through crawling the other entry points, else they are not prerendered because SvelteKit doesn't know what value the parameters should have. Pages not marked as prerenderable will be ignored and their links to other pages will not be crawled, even if some of them would be prerenderable.
+* Ensure that SvelteKit can find the route by following links from [`config.kit.prerender.entries`](configuration#prerender) or the [`entries`](#entries) page option. Add links to dynamic routes (i.e. pages with `[parameters]` ) to this option if they are not found through crawling the other entry points, else they are not prerendered because SvelteKit doesn't know what value the parameters should have. Pages not marked as prerenderable will be ignored and their links to other pages will not be crawled, even if some of them would be prerenderable.
 * Change `export const prerender = true` to `export const prerender = 'auto'`. Routes with `'auto'` can be dynamically server rendered
+
+## entries
+
+SvelteKit will discover pages to prerender automatically, by starting at _entry points_ and crawling them. By default, all your non-dynamic routes are considered entry points — for example, if you have these routes...
+
+```bash
+/             # non-dynamic
+/blog         # non-dynamic
+/blog/[slug]  # dynamic, because of `[slug]`
+```
+
+...SvelteKit will prerender `/` and `/blog`, and in the process discover links like `<a href="/blog/hello-world">` which give it new pages to prerender.
+
+Most of the time, that's enough. In some situations, links to pages like `/blog/hello-world` might not exist (or might not exist on prerendered pages), in which case we need to tell SvelteKit about their existence.
+
+This can be done with [`config.kit.prerender.entries`](configuration#prerender), or by exporting an `entries` function from a `+page.js`, a `+page.server.js` or a `+server.js` belonging to a dynamic route:
+
+```js
+/// file: src/routes/blog/[slug]/+page.server.js
+/** @type {import('./$types').EntryGenerator} */
+export function entries() {
+	return [
+		{ slug: 'hello-world' },
+		{ slug: 'another-blog-post' }
+	];
+}
+
+export const prerender = true;
+```
+
+`entries` can be an `async` function, allowing you to (for example) retrieve a list of posts from a CMS or database, in the example above.
 
 ## ssr
 
@@ -125,3 +154,55 @@ export const trailingSlash = 'always';
 This option also affects [prerendering](#prerender). If `trailingSlash` is `always`, a route like `/about` will result in an `about/index.html` file, otherwise it will create `about.html`, mirroring static webserver conventions.
 
 > Ignoring trailing slashes is not recommended — the semantics of relative paths differ between the two cases (`./y` from `/x` is `/y`, but from `/x/` is `/x/y`), and `/x` and `/x/` are treated as separate URLs which is harmful to SEO.
+
+## config
+
+With the concept of [adapters](adapters), SvelteKit is able to run on a variety of platforms. Each of these might have specific configuration to further tweak the deployment — for example on Vercel you could choose to deploy some parts of your app on the edge and others on serverless environments.
+
+`config` is an object with key-value pairs at the top level. Beyond that, the concrete shape is dependent on the adapter you're using. Every adapter should provide a `Config` interface to import for type safety. Consult the documentation of your adapter for more information.
+
+```js
+// @filename: ambient.d.ts
+declare module 'some-adapter' {
+	export interface Config { runtime: string }
+}
+
+// @filename: index.js
+// ---cut---
+/// file: src/routes/+page.js
+/** @type {import('some-adapter').Config} */
+export const config = {
+	runtime: 'edge'
+};
+```
+
+`config` objects are merged at the top level (but _not_ deeper levels). This means you don't need to repeat all the values in a `+page.js` if you want to only override some of the values in the upper `+layout.js`. For example this layout configuration...
+
+```js
+/// file: src/routes/+layout.js
+export const config = {
+	runtime: 'edge',
+	regions: 'all',
+	foo: {
+		bar: true
+	}
+}
+```
+
+...is overridden by this page configuration...
+
+```js
+/// file: src/routes/+page.js
+export const config = {
+	regions: ['us1', 'us2'],
+	foo: {
+		baz: true
+	}
+}
+```
+
+...which results in the config value `{ runtime: 'edge', regions: ['us1', 'us2'], foo: { baz: true } }` for that page.
+
+## Further reading
+
+- [Tutorial: Page options](https://learn.svelte.dev/tutorial/page-options)

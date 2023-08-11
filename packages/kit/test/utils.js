@@ -1,6 +1,8 @@
-import fs from 'fs';
-import http from 'http';
+import fs from 'node:fs';
+import path from 'node:path';
+import http from 'node:http';
 import { test as base, devices } from '@playwright/test';
+import { fileURLToPath } from 'node:url';
 
 export const test = base.extend({
 	app: async ({ page }, use) => {
@@ -78,6 +80,22 @@ export const test = base.extend({
 		use(in_view);
 	},
 
+	get_computed_style: async ({ page }, use) => {
+		/**
+		 * @param {string} selector
+		 * @param {string} prop
+		 */
+		async function get_computed_style(selector, prop) {
+			return page.$eval(
+				selector,
+				(node, prop) => window.getComputedStyle(node).getPropertyValue(prop),
+				prop
+			);
+		}
+
+		await use(get_computed_style);
+	},
+
 	page: async ({ page, javaScriptEnabled }, use) => {
 		// automatically wait for kit started event after navigation functions if js is enabled
 		const page_navigation_functions = ['goto', 'goBack', 'reload'];
@@ -91,7 +109,7 @@ export const test = base.extend({
 			page[fn] = async function (...args) {
 				const res = await page_fn.call(page, ...args);
 				if (javaScriptEnabled && args[1]?.wait_for_started !== false) {
-					await page.waitForSelector('body.started', { timeout: 5000 });
+					await page.waitForSelector('body.started', { timeout: 15000 });
 				}
 				return res;
 			};
@@ -100,6 +118,7 @@ export const test = base.extend({
 		await use(page);
 	},
 
+	// eslint-disable-next-line no-empty-pattern
 	read_errors: ({}, use) => {
 		/** @param {string} path */
 		function read_errors(path) {
@@ -112,6 +131,7 @@ export const test = base.extend({
 		use(read_errors);
 	},
 
+	// eslint-disable-next-line no-empty-pattern
 	start_server: async ({}, use) => {
 		/**
 		 * @type {http.Server}
@@ -183,7 +203,7 @@ export const test = base.extend({
 	// setup context
 	// teardown context
 	// teardown start_server
-	context: async function ({ context, start_server }, use) {
+	async context({ context, start_server }, use) {
 		// just here make sure start_server is referenced, don't call
 		if (!start_server) {
 			throw new Error('start_server fixture not present');
@@ -245,5 +265,13 @@ export const config = {
 		screenshot: 'only-on-failure',
 		trace: 'retain-on-failure'
 	},
-	workers: process.env.CI ? 2 : undefined
+	workers: process.env.CI ? 2 : undefined,
+	reporter: process.env.CI
+		? [
+				['dot'],
+				[path.resolve(fileURLToPath(import.meta.url), '../github-flaky-warning-reporter.js')]
+		  ]
+		: 'list',
+	testDir: 'test',
+	testMatch: /(.+\.)?(test|spec)\.[jt]s/
 };

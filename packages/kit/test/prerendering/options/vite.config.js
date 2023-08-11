@@ -1,4 +1,4 @@
-import * as path from 'path';
+import * as path from 'node:path';
 import { sveltekit } from '@sveltejs/kit/vite';
 
 /** @type {import('vite').UserConfig} */
