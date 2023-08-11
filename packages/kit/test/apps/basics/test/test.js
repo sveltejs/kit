@@ -275,6 +275,22 @@ test.describe('Load', () => {
 		}
 	});
 
+	test('fetches using an arraybuffer serialized with b64', async ({ page, javaScriptEnabled }) => {
+		await page.goto('/load/fetch-arraybuffer-b64');
+
+		expect(await page.textContent('.test-content')).toBe('[1,2,3,4]');
+
+		if (!javaScriptEnabled) {
+			const payload = '{"status":200,"statusText":"","headers":{},"body":"AQIDBA=="}';
+
+			const script_content = await page.innerHTML(
+				'script[data-sveltekit-fetched][data-b64][data-url="/load/fetch-arraybuffer-b64/data"]'
+			);
+
+			expect(script_content).toBe(payload);
+		}
+	});
+
 	test('json string is returned', async ({ page }) => {
 		await page.goto('/load/relay');
 		expect(await page.textContent('h1')).toBe('42');
