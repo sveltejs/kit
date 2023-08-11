@@ -19,4 +19,4 @@ SvelteKit can also be deployed to a wide spectrum of hosted architectures via [a
 
 In order to support SSR, a JS backend — such as Node.js or Deno-based server, serverless function, or edge function — is required.
 
-It is also possible to write custom adapters or leverage community adapters to deploy SvelteKit to more platforms such as specialized server environments, browser extensions, or native applications. See [How do I use X with SvelteKit](#integrations) for more examples and integrations.
+It is also possible to write custom adapters or leverage community adapters to deploy SvelteKit to more platforms such as specialized server environments, browser extensions, or native applications. See [How do I use X with SvelteKit](/docs/integrations) for more examples and integrations.

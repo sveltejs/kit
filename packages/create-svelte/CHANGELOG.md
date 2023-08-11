@@ -1,5 +1,19 @@
 # create-svelte
 
+## 5.0.5
+
+### Patch Changes
+
+- chore: upgrade `vitest` to 0.34.0 and `@clack/prompts` to 0.7.0 ([#10240](https://github.com/sveltejs/kit/pull/10240))
+
+## 5.0.4
+
+### Patch Changes
+
+- chore: upgrade @fontsource/fira-mono to v5 ([#10445](https://github.com/sveltejs/kit/pull/10445))
+
+- chore: upgrade to vitest 0.33.0 ([#10445](https://github.com/sveltejs/kit/pull/10445))
+
 ## 5.0.3
 
 ### Patch Changes
