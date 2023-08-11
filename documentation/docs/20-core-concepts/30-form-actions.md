@@ -23,7 +23,7 @@ export const actions = {
 To invoke this action from the `/login` page, just add a `<form>` — no JavaScript needed:
 
 ```svelte
-/// file: src/routes/login/+page.svelte
+<!--- file: src/routes/login/+page.svelte --->
 <form method="POST">
 	<label>
 		Email
@@ -71,12 +71,12 @@ export const actions = {
 To invoke a named action, add a query parameter with the name prefixed by a `/` character:
 
 ```svelte
-/// file: src/routes/login/+page.svelte
+<!--- file: src/routes/login/+page.svelte --->
 <form method="POST" action="?/register">
 ```
 
 ```svelte
-/// file: src/routes/+layout.svelte
+<!--- file: src/routes/+layout.svelte --->
 <form method="POST" action="/login?/register">
 ```
 
@@ -133,7 +133,7 @@ export const actions = {
 ```
 
 ```svelte
-/// file: src/routes/login/+page.svelte
+<!--- file: src/routes/login/+page.svelte --->
 <script>
 	/** @type {import('./$types').PageData} */
 	export let data;
@@ -249,7 +249,7 @@ export const actions = {
 
 After an action runs, the page will be re-rendered (unless a redirect or an unexpected error occurs), with the action's return value available to the page as the `form` prop. This means that your page's `load` functions will run after the action completes.
 
-Note that `handle` runs before the action is invoked, and does not re-run before the `load` functions. This means that if, for example, you use `handle` to populate `event.locals` based on a cookie, you must update `event.locals` when you set or delete the cookie in an action:
+Note that `handle` runs before the action is invoked, and does not rerun before the `load` functions. This means that if, for example, you use `handle` to populate `event.locals` based on a cookie, you must update `event.locals` when you set or delete the cookie in an action:
 
 ```js
 /// file: src/hooks.server.js
@@ -401,7 +401,7 @@ In all cases, [focus will be reset](accessibility#focus-management).
 We can also implement progressive enhancement ourselves, without `use:enhance`, with a normal event listener on the `<form>`:
 
 ```svelte
-/// file: src/routes/login/+page.svelte
+<!--- file: src/routes/login/+page.svelte --->
 <script>
 	import { invalidateAll, goto } from '$app/navigation';
 	import { applyAction, deserialize } from '$app/forms';
@@ -424,7 +424,7 @@ We can also implement progressive enhancement ourselves, without `use:enhance`, 
 		const result = deserialize(await response.text());
 
 		if (result.type === 'success') {
-			// re-run all `load` functions, following the successful update
+			// rerun all `load` functions, following the successful update
 			await invalidateAll();
 		}
 
@@ -456,7 +456,7 @@ const response = await fetch(this.action, {
 Form actions are the preferred way to send data to the server, since they can be progressively enhanced, but you can also use [`+server.js`](routing#server) files to expose (for example) a JSON API. Here's how such an interaction could look like:
 
 ```svelte
-/// file: send-message/+page.svelte
+<!--- file: send-message/+page.svelte --->
 <script>
 	function rerun() {
 		fetch('/api/ci', {
@@ -469,7 +469,7 @@ Form actions are the preferred way to send data to the server, since they can be
 ```
 
 ```js
-// @errors: 2355 1360
+// @errors: 2355 1360 2322
 /// file: api/ci/+server.js
 
 /** @type {import('./$types').RequestHandler} */

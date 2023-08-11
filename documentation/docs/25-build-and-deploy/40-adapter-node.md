@@ -49,12 +49,18 @@ npm install dotenv
 +node -r dotenv/config build
 ```
 
-### `PORT` and `HOST`
+### `PORT`, `HOST` and `SOCKET_PATH`
 
 By default, the server will accept connections on `0.0.0.0` using port 3000. These can be customised with the `PORT` and `HOST` environment variables:
 
 ```
 HOST=127.0.0.1 PORT=4000 node build
+```
+
+Alternatively, the server can be configured to accept connections on a specified socket path. When this is done using the `SOCKET_PATH` environment variable, the `HOST` and `PORT` environment variables will be disregarded.
+
+```
+SOCKET_PATH=/tmp/socket node build
 ```
 
 ### `ORIGIN`, `PROTOCOL_HEADER` and `HOST_HEADER`

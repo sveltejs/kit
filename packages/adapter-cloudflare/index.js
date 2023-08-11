@@ -71,7 +71,8 @@ export default function (options = {}) {
 				bundle: true,
 				loader: {
 					'.wasm': 'copy'
-				}
+				},
+				external: ['cloudflare:*']
 			});
 		}
 	};

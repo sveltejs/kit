@@ -1,0 +1,16 @@
+{
+	"name": "svelte-3-types",
+	"private": true,
+	"version": "1.0.0",
+	"description": "creates Svelte 3 backwards compatible types",
+	"type": "module",
+	"peerDependencies": {
+		"svelte": "^3.0.0 || ^4.0.0"
+	},
+	"exports": {
+		".": {
+			"types": "./dist/index.d.ts",
+			"svelte": "./dist/index.js"
+		}
+	}
+}

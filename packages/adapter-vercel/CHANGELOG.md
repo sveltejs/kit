@@ -1,5 +1,32 @@
 # @sveltejs/adapter-vercel
 
+## 3.0.3
+
+### Patch Changes
+
+- chore: upgrade to @vercel/nft version 0.23.0 ([#10445](https://github.com/sveltejs/kit/pull/10445))
+
+- Updated dependencies [[`0f0049810`](https://github.com/sveltejs/kit/commit/0f00498100361ef0a4ea8b0b4e8465e442fa22a6), [`6f36aefe1`](https://github.com/sveltejs/kit/commit/6f36aefe13bf55cfaef14166c60ecee989061ddd)]:
+  - @sveltejs/kit@1.22.4
+
+## 3.0.2
+
+### Patch Changes
+
+- chore: upgrade to esbuild 0.18.11 ([#10330](https://github.com/sveltejs/kit/pull/10330))
+
+- Updated dependencies [[`23d1df702`](https://github.com/sveltejs/kit/commit/23d1df702f0fd77983040404352d8d83fd1dd8a1), [`486a971fe`](https://github.com/sveltejs/kit/commit/486a971fe7c375aae1585f1fa2505e28f86f4b8e)]:
+  - @sveltejs/kit@1.22.2
+
+## 3.0.1
+
+### Patch Changes
+
+- fix: stop incorrectly warning users that crons don't match paths ([#10074](https://github.com/sveltejs/kit/pull/10074))
+
+- Updated dependencies [[`d4de2049c`](https://github.com/sveltejs/kit/commit/d4de2049cd05c7b32cfbe1b0e63b58f345f13372)]:
+  - @sveltejs/kit@1.20.1
+
 ## 3.0.0
 
 ### Major Changes

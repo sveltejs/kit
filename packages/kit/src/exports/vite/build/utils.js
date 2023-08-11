@@ -90,14 +90,3 @@ export function resolve_symlinks(manifest, file) {
 export function assets_base(config) {
 	return (config.paths.assets || config.paths.base || '.') + '/';
 }
-
-const method_names = new Set(['GET', 'HEAD', 'PUT', 'POST', 'DELETE', 'PATCH', 'OPTIONS']);
-
-// If we'd written this in TypeScript, it could be easy...
-/**
- * @param {string} str
- * @returns {str is import('types').HttpMethod}
- */
-export function is_http_method(str) {
-	return method_names.has(str);
-}

@@ -57,6 +57,15 @@ export const handle = sequence(
 		return resolve(event);
 	},
 	({ event, resolve }) => {
+		if (
+			event.request.headers.has('host') &&
+			!event.request.headers.has('user-agent') !== event.isSubRequest
+		) {
+			throw new Error('SSR API sub-requests should have isSubRequest set to true');
+		}
+		return resolve(event);
+	},
+	({ event, resolve }) => {
 		if (event.url.pathname.includes('fetch-credentialed')) {
 			// Only get the cookie at the test where we know it's set to avoid polluting our logs with (correct) warnings
 			event.locals.name = /** @type {string} */ (event.cookies.get('name'));

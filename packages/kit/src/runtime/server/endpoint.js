@@ -1,3 +1,4 @@
+import { ENDPOINT_METHODS, PAGE_METHODS } from '../../constants.js';
 import { negotiate } from '../../utils/http.js';
 import { Redirect } from '../control.js';
 import { method_not_allowed } from './utils.js';
@@ -79,8 +80,8 @@ export async function render_endpoint(event, mod, state) {
 export function is_endpoint_request(event) {
 	const { method, headers } = event.request;
 
-	if (method === 'PUT' || method === 'PATCH' || method === 'DELETE' || method === 'OPTIONS') {
-		// These methods exist exclusively for endpoints
+	// These methods exist exclusively for endpoints
+	if (ENDPOINT_METHODS.has(method) && !PAGE_METHODS.has(method)) {
 		return true;
 	}
 

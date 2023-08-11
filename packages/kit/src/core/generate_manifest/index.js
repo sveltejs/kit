@@ -44,7 +44,7 @@ export function generate_manifest({ build_data, relative_path, routes }) {
 	);
 
 	/** @type {(path: string) => string} */
-	const loader = (path) => `() => import('${path}')`;
+	const loader = (path) => `__memo(() => import('${path}'))`;
 
 	const assets = build_data.manifest_data.assets.map((asset) => asset.file);
 	if (build_data.service_worker) {
@@ -65,8 +65,8 @@ export function generate_manifest({ build_data, relative_path, routes }) {
 
 	// prettier-ignore
 	// String representation of
-	/** @type {import('@sveltejs/kit').SSRManifest} */
-	return dedent`
+	/** @template {import('@sveltejs/kit').SSRManifest} T */
+	const manifest_expr = dedent`
 		{
 			appDir: ${s(build_data.app_dir)},
 			appPath: ${s(build_data.app_path)},
@@ -97,10 +97,26 @@ export function generate_manifest({ build_data, relative_path, routes }) {
 					}).filter(Boolean).join(',\n')}
 				],
 				matchers: async () => {
-					${Array.from(matchers).map(type => `const { match: ${type} } = await import ('${(join_relative(relative_path, `/entries/matchers/${type}.js`))}')`).join('\n')}
+					${Array.from(
+						matchers, 
+						type => `const { match: ${type} } = await import ('${(join_relative(relative_path, `/entries/matchers/${type}.js`))}')`
+					).join('\n')}
 					return { ${Array.from(matchers).join(', ')} };
 				}
 			}
 		}
+	`;
+
+	// Memoize the loaders to prevent Node from doing unnecessary work
+	// on every dynamic import call
+	return dedent`
+		(() => {
+		function __memo(fn) {
+			let value;
+			return () => value ??= (value = fn());
+		}
+
+		return ${manifest_expr}
+		})()
 	`;
 }

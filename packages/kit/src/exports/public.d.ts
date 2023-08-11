@@ -375,6 +375,11 @@ export interface KitConfig {
 		 * @default "PUBLIC_"
 		 */
 		publicPrefix?: string;
+		/**
+		 * A prefix that signals that an environment variable is unsafe to expose to client-side code. Environment variables matching neither the public nor the private prefix will be discarded completely. See [`$env/static/private`](/docs/modules#$env-static-private) and [`$env/dynamic/private`](/docs/modules#$env-dynamic-private).
+		 * @default ""
+		 */
+		privatePrefix?: string;
 	};
 	/**
 	 * Where to find various files within your project.
@@ -429,7 +434,7 @@ export interface KitConfig {
 		errorTemplate?: string;
 	};
 	/**
-	 * Inline CSS inside a `<style>` block at the head of the HTML. This option is a number that specifies the maximum length of a CSS file to be inlined. All CSS files needed for the page and smaller than this value are merged and inlined in a `<style>` block.
+	 * Inline CSS inside a `<style>` block at the head of the HTML. This option is a number that specifies the maximum length of a CSS file in UTF-16 code units, as specified by the [String.length](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/String/length) property, to be inlined. All CSS files needed for the page and smaller than this value are merged and inlined in a `<style>` block.
 	 *
 	 * > This results in fewer initial requests and can improve your [First Contentful Paint](https://web.dev/first-contentful-paint) score. However, it generates larger HTML output and reduces the effectiveness of browser caches. Use it advisedly.
 	 * @default 0
@@ -452,7 +457,7 @@ export interface KitConfig {
 		/**
 		 * SvelteKit will preload the JavaScript modules needed for the initial page to avoid import 'waterfalls', resulting in faster application startup. There
 		 * are three strategies with different trade-offs:
-		 * - `modulepreload` - uses `<link rel="modulepreload">`. This delivers the best results in Chromium-based browsers, but is currently ignored by Firefox and Safari (though support is coming to Safari soon).
+		 * - `modulepreload` - uses `<link rel="modulepreload">`. This delivers the best results in Chromium-based browsers, in Firefox 115+, and Safari 17+. It is ignored in older browsers.
 		 * - `preload-js` - uses `<link rel="preload">`. Prevents waterfalls in Chromium and Safari, but Chromium will parse each module twice (once as a script, once as a module). Causes modules to be requested twice in Firefox. This is a good setting if you want to maximise performance for users on iOS devices at the cost of a very slight degradation for Chromium users.
 		 * - `preload-mjs` - uses `<link rel="preload">` but with the `.mjs` extension which prevents double-parsing in Chromium. Some static webservers will fail to serve .mjs files with a `Content-Type: application/javascript` header, which will cause your application to break. If that doesn't apply to you, this is the option that will deliver the best performance for the largest number of users, until `modulepreload` is more widely supported.
 		 * @default "modulepreload"
@@ -695,13 +700,13 @@ export interface LoadEvent<
 	/**
 	 * `fetch` is equivalent to the [native `fetch` web API](https://developer.mozilla.org/en-US/docs/Web/API/fetch), with a few additional features:
 	 *
-	 * - it can be used to make credentialed requests on the server, as it inherits the `cookie` and `authorization` headers for the page request
-	 * - it can make relative requests on the server (ordinarily, `fetch` requires a URL with an origin when used in a server context)
-	 * - internal requests (e.g. for `+server.js` routes) go directly to the handler function when running on the server, without the overhead of an HTTP call
-	 * - during server-side rendering, the response will be captured and inlined into the rendered HTML. Note that headers will _not_ be serialized, unless explicitly included via [`filterSerializedResponseHeaders`](https://kit.svelte.dev/docs/hooks#server-hooks-handle)
-	 * - during hydration, the response will be read from the HTML, guaranteeing consistency and preventing an additional network request
+	 * - It can be used to make credentialed requests on the server, as it inherits the `cookie` and `authorization` headers for the page request.
+	 * - It can make relative requests on the server (ordinarily, `fetch` requires a URL with an origin when used in a server context).
+	 * - Internal requests (e.g. for `+server.js` routes) go directly to the handler function when running on the server, without the overhead of an HTTP call.
+	 * - During server-side rendering, the response will be captured and inlined into the rendered HTML by hooking into the `text` and `json` methods of the `Response` object. Note that headers will _not_ be serialized, unless explicitly included via [`filterSerializedResponseHeaders`](https://kit.svelte.dev/docs/hooks#server-hooks-handle)
+	 * - During hydration, the response will be read from the HTML, guaranteeing consistency and preventing an additional network request.
 	 *
-	 * > Cookies will only be passed through if the target host is the same as the SvelteKit application or a more specific subdomain of it.
+	 * You can learn more about making credentialed requests with cookies [here](https://kit.svelte.dev/docs/load#cookies)
 	 */
 	fetch: typeof fetch;
 	/**
@@ -824,7 +829,7 @@ export interface NavigationTarget {
 
 /**
  * - `enter`: The app has hydrated
- * - `form`: The user submitted a `<form>`
+ * - `form`: The user submitted a `<form>` with a GET method
  * - `leave`: The user is leaving the app by closing the tab or using the back/forward buttons to go to a different document
  * - `link`: Navigation was triggered by a link click
  * - `goto`: Navigation was triggered by a `goto(...)` call or a redirect
@@ -947,11 +952,13 @@ export interface RequestEvent<
 	/**
 	 * `fetch` is equivalent to the [native `fetch` web API](https://developer.mozilla.org/en-US/docs/Web/API/fetch), with a few additional features:
 	 *
-	 * - it can be used to make credentialed requests on the server, as it inherits the `cookie` and `authorization` headers for the page request
-	 * - it can make relative requests on the server (ordinarily, `fetch` requires a URL with an origin when used in a server context)
-	 * - internal requests (e.g. for `+server.js` routes) go directly to the handler function when running on the server, without the overhead of an HTTP call
+	 * - It can be used to make credentialed requests on the server, as it inherits the `cookie` and `authorization` headers for the page request.
+	 * - It can make relative requests on the server (ordinarily, `fetch` requires a URL with an origin when used in a server context).
+	 * - Internal requests (e.g. for `+server.js` routes) go directly to the handler function when running on the server, without the overhead of an HTTP call.
+	 * - During server-side rendering, the response will be captured and inlined into the rendered HTML by hooking into the `text` and `json` methods of the `Response` object. Note that headers will _not_ be serialized, unless explicitly included via [`filterSerializedResponseHeaders`](https://kit.svelte.dev/docs/hooks#server-hooks-handle)
+	 * - During hydration, the response will be read from the HTML, guaranteeing consistency and preventing an additional network request.
 	 *
-	 * > Cookies will only be passed through if the target host is the same as the SvelteKit application or a more specific subdomain of it.
+	 * You can learn more about making credentialed requests with cookies [here](https://kit.svelte.dev/docs/load#cookies)
 	 */
 	fetch: typeof fetch;
 	/**
@@ -1015,6 +1022,10 @@ export interface RequestEvent<
 	 * related to the data request in this case. Use this property instead if the distinction is important to you.
 	 */
 	isDataRequest: boolean;
+	/**
+	 * `true` for `+server.js` calls coming from SvelteKit without the overhead of actually making an HTTP request. This happens when you make same-origin `fetch` requests on the server.
+	 */
+	isSubRequest: boolean;
 }
 
 /**

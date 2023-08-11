@@ -1,4 +1,6 @@
 import { sveltekit } from '@sveltejs/kit/vite';
+import browserslist from 'browserslist';
+import { browserslistToTargets } from 'lightningcss';
 import * as path from 'path';
 import { imagetools } from 'vite-imagetools';
 
@@ -7,11 +9,11 @@ const fallback = {
 	'.heif': 'jpg',
 	'.avif': 'png',
 	'.jpeg': 'jpg',
-	'.jpg':  'jpg',
-	'.png':  'png',
+	'.jpg': 'jpg',
+	'.png': 'png',
 	'.tiff': 'jpg',
 	'.webp': 'png',
-	'.gif':  'gif'
+	'.gif': 'gif'
 };
 
 /** @type {import('vite').UserConfig} */
@@ -20,16 +22,21 @@ const config = {
 
 	logLevel: 'info',
 
+	css: {
+		transformer: 'lightningcss',
+		lightningcss: {
+			targets: browserslistToTargets(browserslist(['>0.2%', 'not dead']))
+		}
+	},
+	build: {
+		cssMinify: 'lightningcss'
+	},
+
 	plugins: [
 		imagetools({
 			defaultDirectives: (url) => {
 				const ext = path.extname(url.pathname);
-				const params = new URLSearchParams();
-				params.set('format', 'avif;webp;' + fallback[ext]);
-				if (!params.has('meta') && !params.has('metadata') && !params.has('source') && !params.has('srcset') && !params.has('url')) {
-					params.set('picture', true);
-				}
-				return params;
+				return new URLSearchParams(`format=avif;webp;${fallback[ext]}&as=picture`);
 			}
 		}),
 		sveltekit()
