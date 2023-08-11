@@ -31,7 +31,7 @@ import { compact } from '../../utils/array.js';
 import { validate_page_exports } from '../../utils/exports.js';
 import { unwrap_promises } from '../../utils/promises.js';
 import { HttpError, Redirect } from '../control.js';
-import { INVALIDATED_PARAM, validate_depends } from '../shared.js';
+import { INVALIDATED_PARAM, TRAILING_SLASH_PARAM, validate_depends } from '../shared.js';
 import { INDEX_KEY, PRELOAD_PRIORITIES, SCROLL_KEY, SNAPSHOT_KEY } from './constants.js';
 import { stores } from './singletons.js';
 
@@ -1819,6 +1819,9 @@ export function create_client(app, target) {
 async function load_data(url, invalid) {
 	const data_url = new URL(url);
 	data_url.pathname = add_data_suffix(url.pathname);
+	if (url.pathname.endsWith('/')) {
+		data_url.searchParams.append(TRAILING_SLASH_PARAM, '1');
+	}
 	if (DEV && url.searchParams.has(INVALIDATED_PARAM)) {
 		throw new Error(`Cannot used reserved query parameter "${INVALIDATED_PARAM}"`);
 	}

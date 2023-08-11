@@ -29,7 +29,7 @@ import {
 import { get_option } from '../../utils/options.js';
 import { error, json, text } from '../../exports/index.js';
 import { action_json_redirect, is_action_json_request } from './page/actions.js';
-import { INVALIDATED_PARAM } from '../shared.js';
+import { INVALIDATED_PARAM, TRAILING_SLASH_PARAM } from '../shared.js';
 
 /* global __SVELTEKIT_ADAPTER_NAME__ */
 
@@ -100,7 +100,10 @@ export async function respond(request, options, manifest, state) {
 	let invalidated_data_nodes;
 	if (is_data_request) {
 		decoded = strip_data_suffix(decoded) || '/';
-		url.pathname = strip_data_suffix(url.pathname) || '/';
+		url.pathname =
+			strip_data_suffix(url.pathname) +
+				(url.searchParams.get(TRAILING_SLASH_PARAM) === '1' ? '/' : '') || '/';
+		url.searchParams.delete(TRAILING_SLASH_PARAM);
 		invalidated_data_nodes = url.searchParams
 			.get(INVALIDATED_PARAM)
 			?.split('')
