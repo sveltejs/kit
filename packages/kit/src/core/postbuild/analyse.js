@@ -60,7 +60,7 @@ async function analyse({ manifest_path, env }) {
 		const node = await loader();
 
 		metadata.nodes[node.index] = {
-			has_server_load: node.server?.load !== undefined
+			has_server_load: node.server?.load !== undefined || node.server?.trailingSlash !== undefined
 		};
 	}
 
