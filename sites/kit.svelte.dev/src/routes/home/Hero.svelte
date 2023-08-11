@@ -13,7 +13,7 @@
 			</div>
 
 			<div class="tagline">web development, streamlined</div>
-			<a class="cta" href="{base}/docs/introduction">read the docs</a>
+			<a href="{base}/docs/introduction" class="cta"> read the docs </a>
 		</div>
 
 		<div class="hero-image">
@@ -25,36 +25,36 @@
 <style>
 	.hero {
 		--gradient: radial-gradient(
-				34.14% 72.25% at 47.58% 31.75%,
-				hsla(209, 100%, 95%, 0.52) 0%,
-				hsla(0, 0%, 100%, 0) 100%
+				98.69% 140.63% at 43.93% 40.46%,
+				rgba(255, 255, 255, 0.52) 0%,
+				rgba(255, 255, 255, 0) 100%
 			),
 			linear-gradient(
-				92.4deg,
-				hsl(210, 7%, 83%) 14.67%,
-				hsla(208, 100%, 97%, 0.48) 54.37%,
-				hsla(207, 22%, 84%, 0.62) 92.49%
-			),
-			linear-gradient(0deg, hsl(204, 38%, 90%), hsl(204, 38%, 90%));
+				120deg,
+				rgba(223, 217, 216, 0.48) 0%,
+				rgba(253, 253, 253, 0.42) 34.51%,
+				rgba(226, 223, 222, 0.48) 100%
+			);
 
 		--dark-gradient: radial-gradient(
-				64.14% 72.25% at 47.58% 31.75%,
-				hsl(209deg 6% 47% / 52%) 0%,
-				hsla(0, 0%, 100%, 0) 100%
+				92.33% 127.6% at 45.25% 29.06%,
+				rgba(237, 246, 255, 0.16) 0%,
+				rgba(255, 255, 255, 0) 100%
 			),
 			linear-gradient(
-				92.4deg,
-				hsl(210, 7%, 16%) 14.67%,
-				hsl(0deg 0% 0% / 48%) 54.37%,
-				hsla(207, 22%, 13%, 0.62) 92.49%
-			),
-			linear-gradient(0deg, hsl(204, 38%, 20%), hsl(204, 10%, 90%));
+				127deg,
+				rgba(155, 178, 192, 0.35) 0%,
+				rgba(238, 247, 255, 0.21) 46.39%,
+				rgba(125, 135, 151, 0.34) 100%
+			);
 
 		max-width: 100vw;
 		background: hsl(210, 7%, 84%);
 		background: var(--gradient);
+		background-blend-mode: hard-light, multiply, normal;
 		position: relative;
 		padding: 8rem var(--sk-page-padding-side);
+		margin-bottom: 2rem;
 	}
 
 	.hero-contents {
@@ -89,7 +89,7 @@
 		--size: 64rem;
 		position: absolute;
 		left: calc(50% - 0.53 * var(--size));
-		bottom: -28rem;
+		bottom: -30rem;
 		pointer-events: none;
 	}
 
@@ -103,12 +103,27 @@
 
 	.cta {
 		display: inline-block;
+		align-items: center;
+		gap: 0.1rem;
 		background: var(--sk-theme-1);
-		padding: 0.5em 1em;
-		font-size: var(--sk-text-m);
+		padding: 0.35em 0.8em;
+		width: max-content;
+		margin-top: 1.6rem;
+		font-size: var(--sk-text-s);
+		letter-spacing: 0.05em;
+		font-weight: 600;
+		white-space: nowrap;
 		border-radius: var(--sk-border-radius);
-		color: white;
-		margin: 1em 0;
+		box-shadow: 0px 6px 14px rgba(0, 0, 0, 0.08);
+		color: #fff;
+		color: color-mix(in hwb, hsl(var(--sk-theme-1-hsl)) 10%, var(--sk-back-1) 95%);
+		transition: 0.5s var(--quint-out);
+		transition-property: box-shadow, color;
+	}
+
+	.cta:hover {
+		text-decoration: none;
+		box-shadow: 0px 0.8px 3.8px rgba(0, 0, 0, 0.115), 0px 6px 30px rgba(0, 0, 0, 0.23);
 	}
 
 	@media (min-width: 400px) {
@@ -135,6 +150,10 @@
 			left: auto;
 			right: -20rem;
 			bottom: calc(-5rem - 0.38 * var(--size));
+		}
+
+		.cta {
+			font-size: var(--sk-text-m);
 		}
 	}
 
