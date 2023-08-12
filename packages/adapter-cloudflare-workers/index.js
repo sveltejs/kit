@@ -62,7 +62,7 @@ export default function ({ config = 'wrangler.toml' } = {}) {
 				entryPoints: [`${tmp}/entry.js`],
 				outfile: main,
 				bundle: true,
-				external: ['__STATIC_CONTENT_MANIFEST', 'cloudflare:*'],
+				external: ['__STATIC_CONTENT_MANIFEST', 'cloudflare:*', 'node:*'],
 				format: 'esm',
 				loader: {
 					'.wasm': 'copy'
