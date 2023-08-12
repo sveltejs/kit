@@ -56,7 +56,6 @@ The `generate404` option allows you to specify whether a fallback `404.html` pag
 The default value of `auto` will only generate a fallback `404.html` page if there are *any* prerendered pages.
 
 You may want to set this to `false` if you have a fully dynamic app that does not prerender pages during build time.
-Otherwise, it will default to `true`.
 
 
 ## Deployment
