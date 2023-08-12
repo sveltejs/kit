@@ -22,10 +22,10 @@ The `RequestHandler` and `Load` types both accept a `Params` argument allowing y
 /// file: src/routes/[foo]/[bar]/[baz]/+page.server.js
 // @errors: 2355 2322 1360
 /** @type {import('@sveltejs/kit').RequestHandler<{
- *   foo: string;
- *   bar: string;
- *   baz: string
- * }>} */
+    foo: string;
+    bar: string;
+    baz: string
+  }>} */
 export async function GET({ params }) {
 	// ...
 }
@@ -98,7 +98,7 @@ export async function load({ params, fetch }) {
 
 > For this to work, your own `tsconfig.json` or `jsconfig.json` should extend from the generated `.svelte-kit/tsconfig.json` (where `.svelte-kit` is your [`outDir`](configuration#outdir)):
 >
->     { "extends": "./.svelte-kit/tsconfig.json" }
+> `{ "extends": "./.svelte-kit/tsconfig.json" }`
 
 ### Default tsconfig.json
 

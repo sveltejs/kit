@@ -4,4 +4,4 @@
 /.snippets
 /build/
 /functions/
-/src/lib/docs/server/type-info.js
+/src/lib/generated/type-info.js
