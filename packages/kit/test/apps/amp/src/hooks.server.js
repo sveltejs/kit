@@ -1,5 +1,5 @@
-import purify from 'purify-css';
 import * as amp from '@sveltejs/amp';
+import dropcss from 'dropcss';
 
 /** @type {import('@sveltejs/kit').Handle} */
 export async function handle({ event, resolve }) {
@@ -22,7 +22,7 @@ export async function handle({ event, resolve }) {
 					}
 				);
 
-				css = purify(markup, css);
+				css = dropcss({ css, html: markup }).css;
 				return markup.replace('</style>', `${css}</style>`);
 			}
 		}
