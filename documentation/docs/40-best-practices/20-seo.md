@@ -106,6 +106,13 @@ export default config;
 export const csr = false;
 ```
 
+...adding `amp` to your `app.html`
+
+```html
+<html amp>
+...
+```
+
 ...and transforming the HTML using `transformPageChunk` along with `transform` imported from `@sveltejs/amp`:
 
 ```js
