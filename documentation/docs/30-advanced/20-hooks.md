@@ -99,7 +99,7 @@ For example, your `load` function might make a request to a public URL like `htt
 ```js
 /// file: src/hooks.server.js
 /** @type {import('@sveltejs/kit').HandleFetch} */
-export function handleFetch({ request, fetch }) {
+export async function handleFetch({ request, fetch }) {
 	if (request.url.startsWith('https://api.yourapp.com/')) {
 		// clone the original request, but change the URL
 		request = new Request(
@@ -124,7 +124,7 @@ If your app and your API are on sibling subdomains — `www.my-domain.com` and `
 /// file: src/hooks.server.js
 // @errors: 2345
 /** @type {import('@sveltejs/kit').HandleFetch} */
-export function handleFetch({ event, request, fetch }) {
+export async function handleFetch({ event, request, fetch }) {
 	if (request.url.startsWith('https://api.my-domain.com/')) {
 		request.headers.set('cookie', event.request.headers.get('cookie'));
 	}
@@ -177,10 +177,10 @@ import crypto from 'crypto';
 Sentry.init({/*...*/})
 
 /** @type {import('@sveltejs/kit').HandleServerError} */
-export function handleError({ error, event }) {
+export async function handleError({ error, event }) {
 	const errorId = crypto.randomUUID();
 	// example integration with https://sentry.io/
-	Sentry.captureException(error, { event, errorId });
+	Sentry.captureException(error, { extra: { event, errorId } });
 
 	return {
 		message: 'Whoops!',
@@ -205,10 +205,10 @@ import * as Sentry from '@sentry/svelte';
 Sentry.init({/*...*/})
 
 /** @type {import('@sveltejs/kit').HandleClientError} */
-export function handleError({ error, event }) {
+export async function handleError({ error, event }) {
 	const errorId = crypto.randomUUID();
 	// example integration with https://sentry.io/
-	Sentry.captureException(error, { event, errorId });
+	Sentry.captureException(error, { extra: { event, errorId } });
 
 	return {
 		message: 'Whoops!',
@@ -224,3 +224,7 @@ This function is not called for _expected_ errors (those thrown with the [`error
 During development, if an error occurs because of a syntax error in your Svelte code, the passed in error has a `frame` property appended highlighting the location of the error.
 
 > Make sure that `handleError` _never_ throws an error
+
+## Further reading
+
+- [Tutorial: Hooks](https://learn.svelte.dev/tutorial/handle)

@@ -16,7 +16,20 @@ cd kit
 pnpm install
 ```
 
-You can now run SvelteKit by linking it into your project with [pnpm `overrides`](https://pnpm.io/package_json#pnpmoverrides) as demonstrated in the [sandbox example](https://github.com/sveltejs/kit-sandbox) or by running one of the test projects as described in [the testing section](#testing) below.
+You can now run SvelteKit by linking it into your project with [pnpm `overrides`](https://pnpm.io/package_json#pnpmoverrides):
+
+```jsonc
+{
+  // ...
+  "pnpm": {
+    "overrides": {
+      "@sveltejs/kit": "link:../path/to/svelte-kit/packages/kit",
+      // additionally/optional the adapter you're using
+      "@sveltejs/adapter-auto": "link:../path/to/svelte-kit/packages/adapter-auto"
+    }
+  }
+}
+```
 
 ## Code structure
 
@@ -44,7 +57,7 @@ Run `pnpm test` to run the tests from all subpackages. Browser tests live in sub
 
 You can run the tests for only a single package by first moving to that directory. E.g. `cd packages/kit`.
 
-You must rebuild each time before running the tests if you've made code changes.
+For some packages you must rebuild each time before running the tests if you've made code changes. These packages have a `build` command. Packages like `packages/kit` don't require a build step.
 
 To run a single integration test or otherwise control the running of the tests locally see [the Playwright CLI docs](https://playwright.dev/docs/test-cli). Note that you will need to run these commands from the test project directory such as `packages/kit/test/apps/basics`.
 

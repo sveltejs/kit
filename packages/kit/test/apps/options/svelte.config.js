@@ -9,6 +9,9 @@ const config = {
 				'require-trusted-types-for': ['script']
 			}
 		},
+		dangerZone: {
+			trackServerFetches: true
+		},
 		files: {
 			assets: 'public',
 			lib: 'source/components',
@@ -24,13 +27,17 @@ const config = {
 		appDir: '_wheee',
 		inlineStyleThreshold: 1024,
 		outDir: '.custom-out-dir',
+		output: {
+			preloadStrategy: 'preload-mjs'
+		},
 		paths: {
 			base: '/path-base',
 			assets: 'https://cdn.example.com/stuff'
 		},
 		env: {
 			dir: './env-dir',
-			publicPrefix: 'GO_AWAY_'
+			publicPrefix: 'GO_AWAY_',
+			privatePrefix: 'TOP_SECRET_SHH'
 		}
 	}
 };

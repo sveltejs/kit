@@ -1,39 +1,41 @@
-import path from 'path';
-import fs from 'fs';
-import url from 'url';
+import path from 'node:path';
+import fs from 'node:fs';
+import url from 'node:url';
 
 /**
  * Loads and validates svelte.config.js
  * @param {{ cwd?: string }} options
- * @returns {Promise<import('./types').ValidatedConfig>}
+ * @returns {Promise<import('./types').Options['config']>}
  */
 export async function load_config({ cwd = process.cwd() } = {}) {
 	const config_file = path.join(cwd, 'svelte.config.js');
 
 	if (!fs.existsSync(config_file)) {
-		return process_config({}, { cwd });
+		return {};
 	}
 
-	const config = await import(`${url.pathToFileURL(config_file).href}?ts=${Date.now()}`);
+	const module = await import(`${url.pathToFileURL(config_file).href}?ts=${Date.now()}`);
+	const config = module.default;
 
-	return process_config(config.default, { cwd });
+	if (config.package) {
+		throw new Error(
+			'config.package is no longer supported. See https://github.com/sveltejs/kit/discussions/8825 for more information.'
+		);
+	}
+
+	return config;
 }
 
 /**
- * @param {import('types').Config} config
- * @returns {import('./types').ValidatedConfig}
+ * @param {string} cwd
+ * @returns Record<string, any>
  */
-function process_config(config, { cwd = process.cwd() } = {}) {
-	return {
-		extensions: config.extensions ?? ['.svelte'],
-		kit: config.kit,
-		package: {
-			source: path.resolve(cwd, config.kit?.files?.lib ?? config.package?.source ?? 'src/lib'),
-			dir: config.package?.dir ?? 'package',
-			exports: config.package?.exports ?? ((filepath) => !/^_|\/_|\.d\.ts$/.test(filepath)),
-			files: config.package?.files ?? (() => true),
-			emitTypes: config.package?.emitTypes ?? true
-		},
-		preprocess: config.preprocess
-	};
+export function load_pkg_json(cwd = process.cwd()) {
+	const pkg_json_file = path.join(cwd, 'package.json');
+
+	if (!fs.existsSync(pkg_json_file)) {
+		return {};
+	}
+
+	return JSON.parse(fs.readFileSync(pkg_json_file, 'utf-8'));
 }

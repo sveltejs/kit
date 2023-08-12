@@ -1,7 +1,0 @@
-{
-	"name": "files-exclude",
-	"private": true,
-	"version": "1.0.0",
-	"description": "files.exclude settings configured",
-	"type": "module"
-}

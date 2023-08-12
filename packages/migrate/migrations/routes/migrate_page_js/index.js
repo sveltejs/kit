@@ -1,7 +1,6 @@
 import ts from 'typescript';
 import {
 	automigration,
-	dedent,
 	error,
 	get_function_node,
 	get_object_nodes,
@@ -15,6 +14,7 @@ import {
 	unwrap
 } from '../utils.js';
 import * as TASKS from '../tasks.js';
+import { dedent } from '../../../utils.js';
 
 const give_up = `${error('Update load function', TASKS.PAGE_LOAD)}\n\n`;
 
@@ -38,7 +38,7 @@ export function migrate_page(content, filename) {
 	}
 
 	const match = /__layout(?:-([^.@]+))?/.exec(filename);
-	const load_name = match?.[1] ? `LayoutLoad.${match[1]}` : match ? `LayoutLoad` : 'PageLoad';
+	const load_name = match?.[1] ? `LayoutLoad.${match[1]}` : match ? 'LayoutLoad' : 'PageLoad';
 
 	for (const statement of file.ast.statements) {
 		const fn = name ? get_function_node(statement, name) : undefined;

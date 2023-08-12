@@ -76,11 +76,32 @@ export function decode_params(params) {
 }
 
 /**
+ * The error when a URL is malformed is not very helpful, so we augment it with the URI
+ * @param {string} uri
+ */
+export function decode_uri(uri) {
+	try {
+		return decodeURI(uri);
+	} catch (e) {
+		if (e instanceof Error) {
+			e.message = `Failed to decode URI: ${uri}\n` + e.message;
+		}
+		throw e;
+	}
+}
+
+/**
  * URL properties that could change during the lifetime of the page,
  * which excludes things like `origin`
- * @type {Array<keyof URL>}
  */
-const tracked_url_properties = ['href', 'pathname', 'search', 'searchParams', 'toString', 'toJSON'];
+const tracked_url_properties = /** @type {const} */ ([
+	'href',
+	'pathname',
+	'search',
+	'searchParams',
+	'toString',
+	'toJSON'
+]);
 
 /**
  * @param {URL} url
@@ -90,12 +111,10 @@ export function make_trackable(url, callback) {
 	const tracked = new URL(url);
 
 	for (const property of tracked_url_properties) {
-		let value = tracked[property];
-
 		Object.defineProperty(tracked, property, {
 			get() {
 				callback();
-				return value;
+				return url[property];
 			},
 
 			enumerable: true,

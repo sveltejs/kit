@@ -1,5 +1,5 @@
-import fs from 'fs';
-import path from 'path';
+import fs from 'node:fs';
+import path from 'node:path';
 import parser from 'gitignore-parser';
 import prettier from 'prettier';
 import { transform } from 'sucrase';
@@ -39,7 +39,7 @@ function strip_jsdoc(content) {
 					return '';
 				}
 
-				return `/**${description.replace(/\*\ $/, '')}*/${whitespace}`;
+				return `/**${description.replace(/\* $/, '')}*/${whitespace}`;
 			}
 		);
 }

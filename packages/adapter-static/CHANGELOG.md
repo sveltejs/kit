@@ -1,5 +1,20 @@
 # @sveltejs/adapter-static
 
+## 2.0.3
+
+### Patch Changes
+
+- fix: correctly list dynamic routes in error log ([#10443](https://github.com/sveltejs/kit/pull/10443))
+
+## 2.0.2
+
+### Patch Changes
+
+- fix: update broken link in error message ([`118ce5a0`](https://github.com/sveltejs/kit/commit/118ce5a07a3a984353c3fc858b34c67e9e560fa0))
+
+- Updated dependencies [[`748a8720`](https://github.com/sveltejs/kit/commit/748a8720fea8ea938576041207b81e19bb8f7dff)]:
+  - @sveltejs/kit@1.15.3
+
 ## 2.0.1
 
 ### Patch Changes

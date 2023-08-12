@@ -1,9 +1,12 @@
 import { error } from '@sveltejs/kit';
 
 /** @type {import('./$types').PageServerLoad} */
-export function load() {
+export function load({ cookies }) {
+	const enhance_counter = +(cookies.get('enhance-counter') ?? 0);
+
 	return {
-		initial: 'initial'
+		initial: 'initial',
+		enhance_counter
 	};
 }
 
@@ -32,5 +35,23 @@ export const actions = {
 	},
 	error: () => {
 		throw error(400, 'error');
+	},
+	echo: async ({ request }) => {
+		const data = await request.formData();
+
+		return {
+			message: data.get('message')
+		};
+	},
+	counter: async ({ cookies }) => {
+		let count = +(cookies.get('enhance-counter') ?? 0);
+
+		count += 1;
+
+		cookies.set('enhance-counter', count + '', {
+			path: '/actions/enhance'
+		});
+
+		return {};
 	}
 };

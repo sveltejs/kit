@@ -1,5 +1,75 @@
 # svelte-migrate
 
+## 1.2.6
+
+### Patch Changes
+
+- fix: do not downgrade versions ([#10352](https://github.com/sveltejs/kit/pull/10352))
+
+## 1.2.5
+
+### Patch Changes
+
+- fix: note old eslint plugin deprecation ([#10319](https://github.com/sveltejs/kit/pull/10319))
+
+## 1.2.4
+
+### Patch Changes
+
+- fix: ensure glob finds all files in folders ([#10230](https://github.com/sveltejs/kit/pull/10230))
+
+## 1.2.3
+
+### Patch Changes
+
+- fix: handle missing fields in migrate script ([#10221](https://github.com/sveltejs/kit/pull/10221))
+
+## 1.2.2
+
+### Patch Changes
+
+- fix: finalize svelte-4 migration ([#10195](https://github.com/sveltejs/kit/pull/10195))
+
+- fix: changed `index` to `index.d.ts` in `typesVersions` ([#10180](https://github.com/sveltejs/kit/pull/10180))
+
+## 1.2.1
+
+### Patch Changes
+
+- docs: update readme ([#10066](https://github.com/sveltejs/kit/pull/10066))
+
+## 1.2.0
+
+### Minor Changes
+
+- feat: add Svelte 4 migration ([#9729](https://github.com/sveltejs/kit/pull/9729))
+
+## 1.1.3
+
+### Patch Changes
+
+- fix: include index in typesVersions because it's always matched ([#9147](https://github.com/sveltejs/kit/pull/9147))
+
+## 1.1.2
+
+### Patch Changes
+
+- fix: update existing exports with prepended outdir ([#9133](https://github.com/sveltejs/kit/pull/9133))
+
+- fix: use typesVersions to wire up deep imports ([#9133](https://github.com/sveltejs/kit/pull/9133))
+
+## 1.1.1
+
+### Patch Changes
+
+- fix: include utils in migrate's published files ([#9085](https://github.com/sveltejs/kit/pull/9085))
+
+## 1.1.0
+
+### Minor Changes
+
+- feat: add `@sveltejs/package` migration (v1->v2) ([#8922](https://github.com/sveltejs/kit/pull/8922))
+
 ## 1.0.1
 
 ### Patch Changes

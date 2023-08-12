@@ -1,9 +1,9 @@
-import { execSync } from 'child_process';
-import { pathToFileURL } from 'url';
+import { execSync } from 'node:child_process';
+import { pathToFileURL } from 'node:url';
 import { resolve } from 'import-meta-resolve';
 import { adapters } from './adapters.js';
-import { dirname, join } from 'path';
-import { existsSync } from 'fs';
+import { dirname, join } from 'node:path';
+import { existsSync } from 'node:fs';
 
 /** @type {Record<string, (name: string, version: string) => string>} */
 const commands = {

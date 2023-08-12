@@ -1,16 +1,18 @@
 import { existsSync, statSync, createReadStream, createWriteStream } from 'node:fs';
+import { extname, resolve } from 'node:path';
 import { pipeline } from 'node:stream';
 import { promisify } from 'node:util';
 import zlib from 'node:zlib';
-import glob from 'tiny-glob';
 import { copy, rimraf, mkdirp } from '../../utils/filesystem.js';
 import { generate_manifest } from '../generate_manifest/index.js';
 import { get_route_segments } from '../../utils/routing.js';
 import { get_env } from '../../exports/vite/utils.js';
 import generate_fallback from '../postbuild/fallback.js';
 import { write } from '../sync/utils.js';
+import { list_files } from '../utils.js';
 
 const pipe = promisify(pipeline);
+const extensions = ['.html', '.js', '.mjs', '.json', '.css', '.svg', '.xml', '.wasm'];
 
 /**
  * Creates the Builder which is passed to adapters for building the application.
@@ -23,7 +25,7 @@ const pipe = promisify(pipeline);
  *   prerender_map: import('types').PrerenderMap;
  *   log: import('types').Logger;
  * }} opts
- * @returns {import('types').Builder}
+ * @returns {import('@sveltejs/kit').Builder}
  */
 export function create_builder({
 	config,
@@ -34,7 +36,7 @@ export function create_builder({
 	prerender_map,
 	log
 }) {
-	/** @type {Map<import('types').RouteDefinition, import('types').RouteData>} */
+	/** @type {Map<import('@sveltejs/kit').RouteDefinition, import('types').RouteData>} */
 	const lookup = new Map();
 
 	/**
@@ -42,14 +44,15 @@ export function create_builder({
 	 * we expose a stable type that adapters can use to group/filter routes
 	 */
 	const routes = route_data.map((route) => {
-		const methods =
-			/** @type {import('types').HttpMethod[]} */
-			(server_metadata.routes.get(route.id)?.methods);
-		const config = server_metadata.routes.get(route.id)?.config;
+		const { config, methods, page, api } = /** @type {import('types').ServerMetadataRoute} */ (
+			server_metadata.routes.get(route.id)
+		);
 
-		/** @type {import('types').RouteDefinition} */
+		/** @type {import('@sveltejs/kit').RouteDefinition} */
 		const facade = {
 			id: route.id,
+			api,
+			page,
 			segments: get_route_segments(route.id).map((segment) => ({
 				dynamic: segment.includes('['),
 				rest: segment.includes('[...'),
@@ -81,15 +84,12 @@ export function create_builder({
 				return;
 			}
 
-			const files = await glob('**/*.{html,js,json,css,svg,xml,wasm}', {
-				cwd: directory,
-				dot: true,
-				absolute: true,
-				filesOnly: true
-			});
+			const files = list_files(directory, (file) => extensions.includes(extname(file))).map(
+				(file) => resolve(directory, file)
+			);
 
 			await Promise.all(
-				files.map((file) => Promise.all([compress_file(file, 'gz'), compress_file(file, 'br')]))
+				files.flatMap((file) => [compress_file(file, 'gz'), compress_file(file, 'br')])
 			);
 		},
 
@@ -154,13 +154,13 @@ export function create_builder({
 			write(dest, fallback);
 		},
 
-		generateManifest: ({ relativePath, routes: subset }) => {
+		generateManifest({ relativePath, routes: subset }) {
 			return generate_manifest({
 				build_data,
 				relative_path: relativePath,
 				routes: subset
 					? subset.map((route) => /** @type {import('types').RouteData} */ (lookup.get(route)))
-					: route_data
+					: route_data.filter((route) => prerender_map.get(route.id) !== true)
 			});
 		},
 
@@ -181,18 +181,10 @@ export function create_builder({
 		},
 
 		writeClient(dest) {
-			return [...copy(`${config.kit.outDir}/output/client`, dest)];
+			return copy(`${config.kit.outDir}/output/client`, dest);
 		},
 
-		// @ts-expect-error
-		writePrerendered(dest, opts) {
-			// TODO remove for 1.0
-			if (opts?.fallback) {
-				throw new Error(
-					'The fallback option no longer exists — use builder.generateFallback(fallback) instead'
-				);
-			}
-
+		writePrerendered(dest) {
 			const source = `${config.kit.outDir}/output/prerendered`;
 			return [...copy(`${source}/pages`, dest), ...copy(`${source}/dependencies`, dest)];
 		},

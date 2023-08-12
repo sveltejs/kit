@@ -200,6 +200,31 @@ test.describe('beforeNavigate', () => {
 		await page.goBack();
 		expect(await page.textContent('h1')).toBe('before_navigate_ran: false');
 	});
+
+	test('cancel() on an unloading navigation does not prevent subsequent beforeNavigate callbacks', async ({
+		page,
+		app
+	}) => {
+		await page.goto('/before-navigate/prevent-navigation');
+		await page.click('h1'); // The browsers block attempts to prevent navigation on a frame that's never had a user gesture.
+
+		await app.goto('https://google.de');
+		await app.goto('/before-navigate/prevent-navigation?x=1');
+
+		expect(await page.innerHTML('pre')).toBe('2 false goto');
+	});
+
+	test('is triggered after clicking a download link', async ({ page, baseURL }) => {
+		await page.goto('/before-navigate/prevent-navigation');
+
+		await page.click('a[download]');
+		expect(await page.innerHTML('pre')).toBe('0 false undefined');
+
+		await page.click('a[href="/before-navigate/a"]');
+
+		expect(page.url()).toBe(baseURL + '/before-navigate/prevent-navigation');
+		expect(await page.innerHTML('pre')).toBe('1 false link');
+	});
 });
 
 test.describe('Scrolling', () => {
@@ -250,7 +275,7 @@ test.describe('Scrolling', () => {
 	}) => {
 		await page.goto('/anchor');
 		await clicknav('#third-anchor');
-		expect(await page.evaluate(() => scrollY === 0)).toBeTruthy();
+		expect(await page.evaluate(() => scrollY)).toBe(0);
 	});
 
 	test('url-supplied anchor works when navigated from bottom of page', async ({
@@ -269,7 +294,7 @@ test.describe('Scrolling', () => {
 	}) => {
 		await page.goto('/anchor');
 		await clicknav('#last-anchor-2');
-		expect(await page.evaluate(() => scrollY === 0)).toBeTruthy();
+		expect(await page.evaluate(() => scrollY)).toBe(0);
 	});
 
 	test('scroll is restored after hitting the back button', async ({ baseURL, clicknav, page }) => {
@@ -402,16 +427,15 @@ test.describe('afterNavigate', () => {
 });
 
 test.describe('CSS', () => {
-	test('applies generated component styles (hides announcer)', async ({ page, clicknav }) => {
+	test('applies generated component styles (hides announcer)', async ({
+		page,
+		clicknav,
+		get_computed_style
+	}) => {
 		await page.goto('/css');
 		await clicknav('[href="/css/other"]');
 
-		expect(
-			await page.evaluate(() => {
-				const el = document.querySelector('#svelte-announcer');
-				return el && getComputedStyle(el).position;
-			})
-		).toBe('absolute');
+		expect(await get_computed_style('#svelte-announcer', 'position')).toBe('absolute');
 	});
 });
 
@@ -599,6 +623,33 @@ test.describe('Routing', () => {
 		await expect(page.locator('#page-url-hash')).toHaveText('');
 	});
 
+	test('back button returns to previous route when previous route has been navigated to via hash anchor', async ({
+		page,
+		clicknav
+	}) => {
+		await page.goto('/routing/hashes/a');
+
+		await page.locator('[href="#hash-target"]').click();
+		await clicknav('[href="/routing/hashes/b"]');
+
+		await page.goBack();
+		expect(await page.textContent('h1')).toBe('a');
+	});
+
+	test('replaces state if the data-sveltekit-replacestate router option is specified for the hash link', async ({
+		page,
+		clicknav,
+		baseURL
+	}) => {
+		await page.goto('/routing/hashes/a');
+
+		await clicknav('[href="#hash-target"]');
+		await clicknav('[href="#replace-state"]');
+
+		await page.goBack();
+		expect(await page.url()).toBe(`${baseURL}/routing/hashes/a`);
+	});
+
 	test('does not normalize external path', async ({ page, start_server }) => {
 		const html_ok = '<html><head></head><body>ok</body></html>';
 		const { port } = await start_server((_req, res) => {
@@ -660,6 +711,22 @@ test.describe('Routing', () => {
 		await page.locator(selector).click();
 		expect(await page.textContent(selector)).toBe('count: 1');
 	});
+
+	test('trailing slash redirect', async ({ page, clicknav }) => {
+		await page.goto('/routing/trailing-slash');
+
+		await clicknav('a[href="/routing/trailing-slash/always"]');
+		expect(new URL(page.url()).pathname).toBe('/routing/trailing-slash/always/');
+		await expect(page.locator('p')).toHaveText('/routing/trailing-slash/always/');
+
+		await clicknav('a[href="/routing/trailing-slash/never/"]');
+		expect(new URL(page.url()).pathname).toBe('/routing/trailing-slash/never');
+		await expect(page.locator('p')).toHaveText('/routing/trailing-slash/never');
+
+		await clicknav('a[href="/routing/trailing-slash/ignore/"]');
+		expect(new URL(page.url()).pathname).toBe('/routing/trailing-slash/ignore/');
+		await expect(page.locator('p')).toHaveText('/routing/trailing-slash/ignore/');
+	});
 });
 
 test.describe('Shadow DOM', () => {
@@ -712,4 +779,25 @@ test.describe('Interactivity', () => {
 
 		expect(errored).toBe(false);
 	});
+});
+
+test.describe('Load', () => {
+	if (process.env.DEV) {
+		test('using window.fetch does not cause false-positive warning', async ({ page, baseURL }) => {
+			/** @type {string[]} */
+			const warnings = [];
+			page.on('console', (msg) => {
+				if (msg.type() === 'warning') {
+					warnings.push(msg.text());
+				}
+			});
+
+			await page.goto('/load/window-fetch/outside-load');
+			expect(await page.textContent('h1')).toBe('42');
+
+			expect(warnings).not.toContain(
+				`Loading ${baseURL}/load/window-fetch/data.json using \`window.fetch\`. For best results, use the \`fetch\` that is passed to your \`load\` function: https://kit.svelte.dev/docs/load#making-fetch-requests`
+			);
+		});
+	}
 });

@@ -1,9 +1,10 @@
-import * as devalue from 'devalue';
+import { DEV } from 'esm-env';
 import { json, text } from '../../exports/index.js';
 import { coalesce_to_error } from '../../utils/error.js';
 import { negotiate } from '../../utils/http.js';
 import { HttpError } from '../control.js';
-import { fix_stack_trace } from '../shared.js';
+import { fix_stack_trace } from '../shared-server.js';
+import { ENDPOINT_METHODS } from '../../constants.js';
 
 /** @param {any} body */
 export function is_pojo(body) {
@@ -16,11 +17,6 @@ export function is_pojo(body) {
 
 	return true;
 }
-
-/** @type {import('types').SSRErrorPage} */
-export const GENERIC_ERROR = {
-	id: '__error'
-};
 
 /**
  * @param {Partial<Record<import('types').HttpMethod, any>>} mod
@@ -39,13 +35,9 @@ export function method_not_allowed(mod, method) {
 
 /** @param {Partial<Record<import('types').HttpMethod, any>>} mod */
 export function allowed_methods(mod) {
-	const allowed = [];
+	const allowed = Array.from(ENDPOINT_METHODS).filter((method) => method in mod);
 
-	for (const method of ['GET', 'POST', 'PUT', 'PATCH', 'DELETE']) {
-		if (method in mod) allowed.push(method);
-	}
-
-	if (mod.GET || mod.HEAD) allowed.push('HEAD');
+	if ('GET' in mod || 'HEAD' in mod) allowed.push('HEAD');
 
 	return allowed;
 }
@@ -58,14 +50,21 @@ export function allowed_methods(mod) {
  * @param {string} message
  */
 export function static_error_page(options, status, message) {
-	return text(options.templates.error({ status, message }), {
+	let page = options.templates.error({ status, message });
+
+	if (DEV) {
+		// inject Vite HMR client, for easier debugging
+		page = page.replace('</head>', '<script type="module" src="/@vite/client"></script></head>');
+	}
+
+	return text(page, {
 		headers: { 'content-type': 'text/html; charset=utf-8' },
 		status
 	});
 }
 
 /**
- * @param {import('types').RequestEvent} event
+ * @param {import('@sveltejs/kit').RequestEvent} event
  * @param {import('types').SSROptions} options
  * @param {unknown} error
  */
@@ -74,7 +73,7 @@ export async function handle_fatal_error(event, options, error) {
 	const status = error instanceof HttpError ? error.status : 500;
 	const body = await handle_error_and_jsonify(event, options, error);
 
-	// ideally we'd use sec-fetch-dest instead, but Safari — quelle surprise — doesn't support it
+	// ideally we'd use sec-fetch-dest instead, but Safari — quelle surprise — doesn't support it
 	const type = negotiate(event.request.headers.get('accept') || 'text/html', [
 		'application/json',
 		'text/html'
@@ -90,7 +89,7 @@ export async function handle_fatal_error(event, options, error) {
 }
 
 /**
- * @param {import('types').RequestEvent} event
+ * @param {import('@sveltejs/kit').RequestEvent} event
  * @param {import('types').SSROptions} options
  * @param {any} error
  * @returns {Promise<App.Error>}
@@ -99,7 +98,7 @@ export async function handle_error_and_jsonify(event, options, error) {
 	if (error instanceof HttpError) {
 		return error.body;
 	} else {
-		if (__SVELTEKIT_DEV__) {
+		if (__SVELTEKIT_DEV__ && typeof error == 'object') {
 			error = new Proxy(error, {
 				get: (target, property) => {
 					if (property === 'stack') {
@@ -132,7 +131,7 @@ export function redirect_response(status, location) {
 }
 
 /**
- * @param {import('types').RequestEvent} event
+ * @param {import('@sveltejs/kit').RequestEvent} event
  * @param {Error & { path: string }} error
  */
 export function clarify_devalue_error(event, error) {
@@ -148,31 +147,23 @@ export function clarify_devalue_error(event, error) {
 	return error.message;
 }
 
-/** @param {import('types').ServerDataNode | import('types').ServerDataSkippedNode | import('types').ServerErrorNode | null} node */
-export function serialize_data_node(node) {
-	if (!node) return 'null';
-
-	if (node.type === 'error' || node.type === 'skip') {
-		return JSON.stringify(node);
-	}
-
-	const stringified = devalue.stringify(node.data);
-
+/**
+ * @param {import('types').ServerDataNode} node
+ */
+export function stringify_uses(node) {
 	const uses = [];
 
-	if (node.uses.dependencies.size > 0) {
+	if (node.uses && node.uses.dependencies.size > 0) {
 		uses.push(`"dependencies":${JSON.stringify(Array.from(node.uses.dependencies))}`);
 	}
 
-	if (node.uses.params.size > 0) {
+	if (node.uses && node.uses.params.size > 0) {
 		uses.push(`"params":${JSON.stringify(Array.from(node.uses.params))}`);
 	}
 
-	if (node.uses.parent) uses.push(`"parent":1`);
-	if (node.uses.route) uses.push(`"route":1`);
-	if (node.uses.url) uses.push(`"url":1`);
+	if (node.uses?.parent) uses.push('"parent":1');
+	if (node.uses?.route) uses.push('"route":1');
+	if (node.uses?.url) uses.push('"url":1');
 
-	return `{"type":"data","data":${stringified},"uses":{${uses.join(',')}}${
-		node.slash ? `,"slash":${JSON.stringify(node.slash)}` : ''
-	}}`;
+	return `"uses":{${uses.join(',')}}`;
 }

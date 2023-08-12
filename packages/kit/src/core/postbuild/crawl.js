@@ -1,3 +1,4 @@
+import { resolve } from '../../utils/url.js';
 import { decode } from './entities.js';
 
 const DOCTYPE = 'DOCTYPE';
@@ -12,8 +13,25 @@ const ATTRIBUTE_NAME = /[^\t\n\f />"'=]/;
 
 const WHITESPACE = /[\s\n\r]/;
 
-/** @param {string} html */
-export function crawl(html) {
+const CRAWLABLE_META_NAME_ATTRS = new Set([
+	'og:url',
+	'og:image',
+	'og:image:url',
+	'og:image:secure_url',
+	'og:video',
+	'og:video:url',
+	'og:video:secure_url',
+	'og:audio',
+	'og:audio:url',
+	'og:audio:secure_url',
+	'twitter:image'
+]);
+
+/**
+ * @param {string} html
+ * @param {string} base
+ */
+export function crawl(html, base) {
 	/** @type {string[]} */
 	const ids = [];
 
@@ -77,6 +95,9 @@ export function crawl(html) {
 
 				const tag = html.slice(start, i).toUpperCase();
 
+				/** @type {Record<string, string>} */
+				const attributes = {};
+
 				if (tag === 'SCRIPT' || tag === 'STYLE') {
 					while (i < html.length) {
 						if (
@@ -90,9 +111,6 @@ export function crawl(html) {
 						i += 1;
 					}
 				}
-
-				let href = '';
-				let rel = '';
 
 				while (i < html.length) {
 					const start = i;
@@ -155,37 +173,7 @@ export function crawl(html) {
 							}
 
 							value = decode(value);
-
-							if (name === 'href') {
-								href = value;
-							} else if (name === 'id') {
-								ids.push(value);
-							} else if (name === 'name') {
-								if (tag === 'A') ids.push(value);
-							} else if (name === 'rel') {
-								rel = value;
-							} else if (name === 'src') {
-								if (value) hrefs.push(value);
-							} else if (name === 'srcset') {
-								const candidates = [];
-								let insideURL = true;
-								value = value.trim();
-								for (let i = 0; i < value.length; i++) {
-									if (value[i] === ',' && (!insideURL || (insideURL && value[i + 1] === ' '))) {
-										candidates.push(value.slice(0, i));
-										value = value.substring(i + 1).trim();
-										i = 0;
-										insideURL = true;
-									} else if (value[i] === ' ') {
-										insideURL = false;
-									}
-								}
-								candidates.push(value);
-								for (const candidate of candidates) {
-									const src = candidate.split(WHITESPACE)[0];
-									if (src) hrefs.push(src);
-								}
-							}
+							attributes[name] = value;
 						} else {
 							i -= 1;
 						}
@@ -194,8 +182,56 @@ export function crawl(html) {
 					i += 1;
 				}
 
-				if (href && !/\bexternal\b/i.test(rel)) {
-					hrefs.push(href);
+				const { href, id, name, property, rel, src, srcset, content } = attributes;
+
+				if (href) {
+					if (tag === 'BASE') {
+						base = resolve(base, href);
+					} else if (!rel || !/\bexternal\b/i.test(rel)) {
+						hrefs.push(resolve(base, href));
+					}
+				}
+
+				if (id) {
+					ids.push(id);
+				}
+
+				if (name && tag === 'A') {
+					ids.push(name);
+				}
+
+				if (src) {
+					hrefs.push(resolve(base, src));
+				}
+
+				if (srcset) {
+					let value = srcset;
+					const candidates = [];
+					let insideURL = true;
+					value = value.trim();
+					for (let i = 0; i < value.length; i++) {
+						if (value[i] === ',' && (!insideURL || (insideURL && WHITESPACE.test(value[i + 1])))) {
+							candidates.push(value.slice(0, i));
+							value = value.substring(i + 1).trim();
+							i = 0;
+							insideURL = true;
+						} else if (WHITESPACE.test(value[i])) {
+							insideURL = false;
+						}
+					}
+					candidates.push(value);
+					for (const candidate of candidates) {
+						const src = candidate.split(WHITESPACE)[0];
+						if (src) hrefs.push(resolve(base, src));
+					}
+				}
+
+				if (tag === 'META' && content) {
+					const attr = name ?? property;
+
+					if (attr && CRAWLABLE_META_NAME_ATTRS.has(attr)) {
+						hrefs.push(resolve(base, content));
+					}
 				}
 			}
 		}

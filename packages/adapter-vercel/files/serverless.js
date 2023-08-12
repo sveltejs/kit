@@ -11,11 +11,27 @@ await server.init({
 	env: /** @type {Record<string, string>} */ (process.env)
 });
 
+const DATA_SUFFIX = '/__data.json';
+
 /**
  * @param {import('http').IncomingMessage} req
  * @param {import('http').ServerResponse} res
  */
 export default async (req, res) => {
+	if (req.url) {
+		const [path, search] = req.url.split('?');
+
+		const params = new URLSearchParams(search);
+		let pathname = params.get('__pathname');
+
+		if (pathname) {
+			params.delete('__pathname');
+			// Optional routes' pathname replacements look like `/foo/$1/bar` which means we could end up with an url like /foo//bar
+			pathname = pathname.replace(/\/+/g, '/');
+			req.url = `${pathname}${path.endsWith(DATA_SUFFIX) ? DATA_SUFFIX : ''}?${params}`;
+		}
+	}
+
 	/** @type {Request} */
 	let request;
 

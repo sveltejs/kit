@@ -1,5 +1,70 @@
 # @sveltejs/adapter-node
 
+## 1.3.1
+
+### Patch Changes
+
+- fix: build output stuck on top level await ([#10314](https://github.com/sveltejs/kit/pull/10314))
+
+- Updated dependencies [[`c1ad5b2f8`](https://github.com/sveltejs/kit/commit/c1ad5b2f84762a34adb327a0e309792603b405b3), [`67a0d869b`](https://github.com/sveltejs/kit/commit/67a0d869b3221925c3f456127205a4aee0b28e85), [`4d7f38fa1`](https://github.com/sveltejs/kit/commit/4d7f38fa18c75991bca3f723cdc50d8a67036f83), [`42c9b935e`](https://github.com/sveltejs/kit/commit/42c9b935e49fbbeff7065d1b2a31986c0b814956), [`42c9b935e`](https://github.com/sveltejs/kit/commit/42c9b935e49fbbeff7065d1b2a31986c0b814956)]:
+  - @sveltejs/kit@1.22.0
+
+## 1.3.0
+
+### Minor Changes
+
+- chore: remove build step for adapter node ([#10041](https://github.com/sveltejs/kit/pull/10041))
+
+- feat: load sourcemaps so that they can be merged to point to original sourcefiles ([#10041](https://github.com/sveltejs/kit/pull/10041))
+
+### Patch Changes
+
+- fix: do not crash server if specified `ADDRESS_HEADER` is missing from a request ([#10285](https://github.com/sveltejs/kit/pull/10285))
+
+## 1.2.4
+
+### Patch Changes
+
+- chore: update all dependencies with minor version bumps ([#9761](https://github.com/sveltejs/kit/pull/9761))
+
+## 1.2.3
+
+### Patch Changes
+
+- fix: only send cache header when static resource is 200 ([#9394](https://github.com/sveltejs/kit/pull/9394))
+
+- Updated dependencies [[`385bd49e`](https://github.com/sveltejs/kit/commit/385bd49efb6890078dcdb523fdf5b621fe1c3e72), [`29ffc785`](https://github.com/sveltejs/kit/commit/29ffc78560a99ce387b10a24f48b7f01205f51e7), [`d257d37d`](https://github.com/sveltejs/kit/commit/d257d37d3cac94f30befa9fe38c2987f84fb551a), [`c45c35e7`](https://github.com/sveltejs/kit/commit/c45c35e7b40837cd1bea3fc26cfb831478e03c00), [`75e2c6f7`](https://github.com/sveltejs/kit/commit/75e2c6f7c8376685317b669767c7767fd21670eb), [`1c085780`](https://github.com/sveltejs/kit/commit/1c08578031395377a98b365a27eb9587594dd06e)]:
+  - @sveltejs/kit@1.12.0
+
+## 1.2.2
+
+### Patch Changes
+
+- fix: add `BODY_SIZE_LIMIT` to the list of recognized env variables ([#9326](https://github.com/sveltejs/kit/pull/9326))
+
+- Updated dependencies [[`b575287d`](https://github.com/sveltejs/kit/commit/b575287d063562868d7726f6451352aa43a63453), [`8114c658`](https://github.com/sveltejs/kit/commit/8114c658c0bc053198ff76704c002cfeb8225e2a), [`620f5605`](https://github.com/sveltejs/kit/commit/620f56058de0993e776c146db4c19fca97b9cb39), [`6a91e887`](https://github.com/sveltejs/kit/commit/6a91e887ee4c1bef8aabfafbf1ab6079113c2832), [`1c32723a`](https://github.com/sveltejs/kit/commit/1c32723a52beca0c5aa895b1114341da78d92eaf), [`0f863bbc`](https://github.com/sveltejs/kit/commit/0f863bbc957ab2ed37b04ebd839fc864b945034d), [`78b4a1bb`](https://github.com/sveltejs/kit/commit/78b4a1bb5e1ae11a894d70a0a28cc344ea0b1284), [`66b2f4ef`](https://github.com/sveltejs/kit/commit/66b2f4ef03a5dd60da2757edde4effcfdf3183cf), [`5dada256`](https://github.com/sveltejs/kit/commit/5dada256dc05674a18946f8f19db1f25ba91aeaf), [`a71b5e69`](https://github.com/sveltejs/kit/commit/a71b5e69ef37ce46e8e8590d537036cb7e267d51), [`daad7e48`](https://github.com/sveltejs/kit/commit/daad7e48b175245cbb7efd0e255263bfb52a5ee6), [`18d330b1`](https://github.com/sveltejs/kit/commit/18d330b16330d76c4b2991839c6b4462d5a4163f), [`18d7e81a`](https://github.com/sveltejs/kit/commit/18d7e81a9892e718c3cd07b2366a60f2e09561ab)]:
+  - @sveltejs/kit@1.11.0
+
+## 1.2.1
+
+### Patch Changes
+
+- fix: use `node` export condition when bundling ([#9276](https://github.com/sveltejs/kit/pull/9276))
+
+- Updated dependencies [[`1e2c8269`](https://github.com/sveltejs/kit/commit/1e2c82697d501c88c6027722ea9b106e09a0eb6d)]:
+  - @sveltejs/kit@1.9.3
+
+## 1.2.0
+
+### Minor Changes
+
+- add polyfill option ([#8991](https://github.com/sveltejs/kit/pull/8991))
+
+### Patch Changes
+
+- Updated dependencies [[`74cfa8d5`](https://github.com/sveltejs/kit/commit/74cfa8d5f1f13f81759e20e90f4ff86a4f96040d), [`bfa2b6ec`](https://github.com/sveltejs/kit/commit/bfa2b6ec88a6d522d87c924d7c466c01e142e66e)]:
+  - @sveltejs/kit@1.5.6
+
 ## 1.1.8
 
 ### Patch Changes

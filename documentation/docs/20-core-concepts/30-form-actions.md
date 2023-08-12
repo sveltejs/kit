@@ -23,7 +23,7 @@ export const actions = {
 To invoke this action from the `/login` page, just add a `<form>` — no JavaScript needed:
 
 ```svelte
-/// file: src/routes/login/+page.svelte
+<!--- file: src/routes/login/+page.svelte --->
 <form method="POST">
 	<label>
 		Email
@@ -71,12 +71,12 @@ export const actions = {
 To invoke a named action, add a query parameter with the name prefixed by a `/` character:
 
 ```svelte
-/// file: src/routes/login/+page.svelte
+<!--- file: src/routes/login/+page.svelte --->
 <form method="POST" action="?/register">
 ```
 
 ```svelte
-/// file: src/routes/+layout.svelte
+<!--- file: src/routes/+layout.svelte --->
 <form method="POST" action="/login?/register">
 ```
 
@@ -133,7 +133,7 @@ export const actions = {
 ```
 
 ```svelte
-/// file: src/routes/login/+page.svelte
+<!--- file: src/routes/login/+page.svelte --->
 <script>
 	/** @type {import('./$types').PageData} */
 	export let data;
@@ -249,7 +249,7 @@ export const actions = {
 
 After an action runs, the page will be re-rendered (unless a redirect or an unexpected error occurs), with the action's return value available to the page as the `form` prop. This means that your page's `load` functions will run after the action completes.
 
-Note that `handle` runs before the action is invoked, and does not re-run before the `load` functions. This means that if, for example, you use `handle` to populate `event.locals` based on a cookie, you must update `event.locals` when you set or delete the cookie in an action:
+Note that `handle` runs before the action is invoked, and does not rerun before the `load` functions. This means that if, for example, you use `handle` to populate `event.locals` based on a cookie, you must update `event.locals` when you set or delete the cookie in an action:
 
 ```js
 /// file: src/hooks.server.js
@@ -333,7 +333,7 @@ The easiest way to progressively enhance a form is to add the `use:enhance` acti
 
 Without an argument, `use:enhance` will emulate the browser-native behaviour, just without the full-page reloads. It will:
 
-- update the `form` property, `$page.form` and `$page.status` on a successful or invalid response, but only if the action is on the same page you're submitting from. So for example if your form looks like `<form action="/somewhere/else" ..>`, `form` and `$page` will _not_ be updated. This is because in the native form submission case you would be redirected to the page the action is on.
+- update the `form` property, `$page.form` and `$page.status` on a successful or invalid response, but only if the action is on the same page you're submitting from. So for example if your form looks like `<form action="/somewhere/else" ..>`, `form` and `$page` will _not_ be updated. This is because in the native form submission case you would be redirected to the page the action is on. If you want to have them updated either way, use [`applyAction`](#progressive-enhancement-applyaction)
 - reset the `<form>` element and invalidate all data using `invalidateAll` on a successful response
 - call `goto` on a redirect response
 - render the nearest `+error` boundary if an error occurs
@@ -344,15 +344,16 @@ To customise the behaviour, you can provide a `SubmitFunction` that runs immedia
 ```svelte
 <form
 	method="POST"
-	use:enhance={({ form, data, action, cancel }) => {
-		// `form` is the `<form>` element
-		// `data` is its `FormData` object
+	use:enhance={({ formElement, formData, action, cancel, submitter }) => {
+		// `formElement` is this `<form>` element
+		// `formData` is its `FormData` object that's about to be submitted
 		// `action` is the URL to which the form is posted
-		// `cancel()` will prevent the submission
+		// calling `cancel()` will prevent the submission
+		// `submitter` is the `HTMLElement` that caused the form to be submitted
 
 		return async ({ result, update }) => {
 			// `result` is an `ActionResult` object
-			// `update` is a function which triggers the logic that would be triggered if this callback wasn't set
+			// `update` is a function which triggers the default logic that would be triggered if this callback wasn't set
 		};
 	}}
 >
@@ -375,11 +376,7 @@ If you provide your own callbacks, you may need to reproduce part of the default
 
 <form
 	method="POST"
-	use:enhance={({ form, data, action, cancel }) => {
-		// `form` is the `<form>` element
-		// `data` is its `FormData` object
-		// `action` is the URL to which the form is posted
-		// `cancel()` will prevent the submission
+	use:enhance={({ formElement, formData, action, cancel }) => {
 
 		return async ({ result }) => {
 			// `result` is an `ActionResult` object
@@ -404,7 +401,7 @@ In all cases, [focus will be reset](accessibility#focus-management).
 We can also implement progressive enhancement ourselves, without `use:enhance`, with a normal event listener on the `<form>`:
 
 ```svelte
-/// file: src/routes/login/+page.svelte
+<!--- file: src/routes/login/+page.svelte --->
 <script>
 	import { invalidateAll, goto } from '$app/navigation';
 	import { applyAction, deserialize } from '$app/forms';
@@ -427,7 +424,7 @@ We can also implement progressive enhancement ourselves, without `use:enhance`, 
 		const result = deserialize(await response.text());
 
 		if (result.type === 'success') {
-			// re-run all `load` functions, following the successful update
+			// rerun all `load` functions, following the successful update
 			await invalidateAll();
 		}
 
@@ -456,7 +453,30 @@ const response = await fetch(this.action, {
 
 ## Alternatives
 
-Form actions are the preferred way to send data to the server, since they can be progressively enhanced, but you can also use [`+server.js`](routing#server) files to expose (for example) a JSON API.
+Form actions are the preferred way to send data to the server, since they can be progressively enhanced, but you can also use [`+server.js`](routing#server) files to expose (for example) a JSON API. Here's how such an interaction could look like:
+
+```svelte
+<!--- file: send-message/+page.svelte --->
+<script>
+	function rerun() {
+		fetch('/api/ci', {
+			method: 'POST'
+		});
+	}
+</script>
+
+<button on:click={rerun}>Rerun CI</button>
+```
+
+```js
+// @errors: 2355 1360 2322
+/// file: api/ci/+server.js
+
+/** @type {import('./$types').RequestHandler} */
+export function POST() {
+	// do something
+}
+```
 
 ## GET vs POST
 
@@ -473,4 +493,8 @@ Some forms don't need to `POST` data to the server — search inputs, for exampl
 </form>
 ```
 
-As with `<a>` elements, you can set the [`data-sveltekit-reload`](link-options#data-sveltekit-reload) and [`data-sveltekit-noscroll`](link-options#data-sveltekit-noscroll) attributes on the `<form>` to control the router's behaviour.
+Submitting this form will navigate to `/search?q=...` and invoke your load function but will not invoke an action. As with `<a>` elements, you can set the [`data-sveltekit-reload`](link-options#data-sveltekit-reload), [`data-sveltekit-replacestate`](link-options#data-sveltekit-replacestate), [`data-sveltekit-keepfocus`](link-options#data-sveltekit-keepfocus) and [`data-sveltekit-noscroll`](link-options#data-sveltekit-noscroll) attributes on the `<form>` to control the router's behaviour.
+
+## Further reading
+
+- [Tutorial: Forms](https://learn.svelte.dev/tutorial/the-form-element)

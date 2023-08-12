@@ -10,7 +10,10 @@
 		"enabled": false
 	},
 	"ignoreDeps": [
+		"@playwright/test",
+		"@types/node",
 		"esbuild",
+		"playwright",
 		"rollup",
 		"typescript"
 	],
@@ -20,8 +23,13 @@
 	],
 	"packageRules": [
 		{
-			"matchPackageNames": ["@types/node", "vite"],
-			"matchUpdateTypes": ["minor", "patch", "pin", "digest"]
+			"matchPackageNames": [
+				"vite"
+			],
+			"matchUpdateTypes": [
+				"major"
+			],
+			"enabled": false
 		}
 	]
 }

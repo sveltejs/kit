@@ -1,7 +1,6 @@
 import ts from 'typescript';
 import {
 	automigration,
-	dedent,
 	error,
 	get_function_node,
 	get_object_nodes,
@@ -14,6 +13,7 @@ import {
 	uppercase_migration
 } from '../utils.js';
 import * as TASKS from '../tasks.js';
+import { dedent } from '../../../utils.js';
 
 const give_up = `${error('Update +page.server.js', TASKS.PAGE_ENDPOINT)}\n\n`;
 
@@ -46,7 +46,7 @@ export function migrate_page_server(content, filename) {
 	const load_name = match?.[3]
 		? `LayoutServerLoad.${match[3]}`
 		: match?.[2]
-		? `LayoutServerLoad`
+		? 'LayoutServerLoad'
 		: 'PageServerLoad';
 
 	const has_load = file.exports.map.has('GET');
