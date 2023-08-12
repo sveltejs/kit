@@ -14,7 +14,7 @@ export async function handle({ event, resolve }) {
 
 				// remove unused CSS
 				let css = '';
-				const markup = html.replace(
+				const markup = buffer.replace(
 					/<style amp-custom([^>]*?)>([^]+?)<\/style>/,
 					(match, attributes, contents) => {
 						css = contents;
