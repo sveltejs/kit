@@ -5,28 +5,22 @@ import dropcss from 'dropcss';
 export async function handle({ event, resolve }) {
 	let buffer = '';
 
-	const response = await resolve(event, {
+	return await resolve(event, {
 		transformPageChunk: ({ html, done }) => {
 			buffer += html;
 
 			if (done) {
-				const html = amp.transform(buffer);
-
-				// remove unused CSS
 				let css = '';
-				const markup = buffer.replace(
-					/<style amp-custom([^>]*?)>([^]+?)<\/style>/,
-					(match, attributes, contents) => {
+				const markup = amp
+					.transform(buffer)
+					.replace(/<style amp-custom([^>]*?)>([^]+?)<\/style>/, (match, attributes, contents) => {
 						css = contents;
 						return `<style amp-custom${attributes}></style>`;
-					}
-				);
+					});
 
 				css = dropcss({ css, html: markup }).css;
 				return markup.replace('</style>', `${css}</style>`);
 			}
 		}
 	});
-
-	return response;
 }
