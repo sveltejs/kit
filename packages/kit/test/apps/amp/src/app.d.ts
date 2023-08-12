@@ -1,15 +1,15 @@
 /// <reference types="@sveltejs/kit" />
 
 declare module 'dropcss' {
-    interface Options {
-        html: string;
-        css: string;
+	interface Options {
+		html: string;
+		css: string;
 
-        shouldDrop?: (selector: string) => boolean;
-        didRetain?: (selector: string) => void;
+		shouldDrop?: (selector: string) => boolean;
+		didRetain?: (selector: string) => void;
 
-        keepText?: boolean;
-    }
+		keepText?: boolean;
+	}
 
-    export default function dropcss(options: Options): { css: string };
+	export default function dropcss(options: Options): { css: string };
 }
