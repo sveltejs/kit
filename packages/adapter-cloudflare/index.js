@@ -58,7 +58,7 @@ export default function (options = {}) {
 				loader: {
 					'.wasm': 'copy'
 				},
-				external: ['cloudflare:*', 'node:*']
+				external: ['cloudflare:*', ...(options.nodeCompat ? ['node:*'] : [])]
 			});
 		}
 	};

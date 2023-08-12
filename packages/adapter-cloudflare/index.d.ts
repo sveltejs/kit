@@ -30,6 +30,12 @@ export interface AdapterOptions {
 		 */
 		exclude?: string[];
 	};
+	/**
+	 * Enable Node.js compatibility
+	 * https://developers.cloudflare.com/workers/runtime-apis/nodejs/
+	 * @default undefined
+	 */
+	nodeCompat?: boolean;
 }
 
 export interface RoutesJSONSpec {

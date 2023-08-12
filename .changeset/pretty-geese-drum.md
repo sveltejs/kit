@@ -3,4 +3,4 @@
 '@sveltejs/adapter-cloudflare': patch
 ---
 
-fix: mark `node:` packages as external
+fix: add `options.nodeCompat` to allow Node.js compatibility
