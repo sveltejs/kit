@@ -135,6 +135,7 @@ To prevent shipping any unused CSS as a result of transforming the page to amp, 
 
 ```js
 /// file: src/hooks.server.js
+// @errors: 2307
 import * as amp from '@sveltejs/amp';
 import dropcss from 'dropcss';
 
