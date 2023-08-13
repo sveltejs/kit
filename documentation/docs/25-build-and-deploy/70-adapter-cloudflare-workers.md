@@ -77,6 +77,22 @@ export default {
 };
 ```
 
+If you would like to enable [Node.js compatibility](https://developers.cloudflare.com/workers/runtime-apis/nodejs/#enable-nodejs-from-the-cloudflare-dashboard), you can do like so:
+
+```js
+// @errors: 2307
+/// file: svelte.config.js
+import adapter from '@sveltejs/adapter-cloudflare-workers';
+
+export default {
+	kit: {
+		adapter: adapter({ nodeCompat: true })
+	}
+};
+```
+
+You will also need to [Enable Node.js with Workers](https://developers.cloudflare.com/workers/runtime-apis/nodejs/#enable-nodejs-with-workers).
+
 ## Bindings
 
 The [`env`](https://developers.cloudflare.com/workers/runtime-apis/fetch-event#parameters) object contains your project's [bindings](https://developers.cloudflare.com/workers/platform/environment-variables/), which consist of KV/DO namespaces, etc. It is passed to SvelteKit via the `platform` property, along with `context` and `caches`, meaning that you can access it in hooks and endpoints:
