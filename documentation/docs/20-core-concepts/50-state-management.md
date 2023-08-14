@@ -142,7 +142,7 @@ When you navigate around your application, SvelteKit reuses existing layout and 
 <div>{@html data.content}</div>
 ```
 
-...then navigating from `/blog/my-short-post` to `/blog/my-long-post` won't cause the component to be destroyed and recreated. Instead the `data` prop (and by extension `data.title` and `data.content`) will change as happens with regular Svelte component, and because the code isn't rerunning, `estimatedReadingTime` won't be recalculated.
+...then navigating from `/blog/my-short-post` to `/blog/my-long-post` won't cause the component to be destroyed and recreated. Instead the `data` prop (and by extension `data.title` and `data.content`) will reactively change (as it would with a regular Svelte component) and, because the code isn't rerunning, `estimatedReadingTime` won't be recalculated.
 
 Instead, we need to make the value [_reactive_](https://learn.svelte.dev/tutorial/reactive-assignments):
 
