@@ -119,7 +119,7 @@ If you're not using SSR (and can guarantee that you won't need to use SSR in fut
 
 ## Component and Page states are preserved
 
-> In SvelteKit, pages and layouts are considered components and follow the same rules and limitations as normal Svelte components.
+> In SvelteKit, pages and layouts are components and follow the same rules and limitations as normal Svelte components.
 
 When you navigate around your application, SvelteKit reuses existing layout and page components. For example, if you have a route like this...
 
