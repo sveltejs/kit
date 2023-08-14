@@ -117,7 +117,9 @@ Updating the context-based store value in deeper-level pages or components will 
 
 If you're not using SSR (and can guarantee that you won't need to use SSR in future) then you can safely keep state in a shared module, without using the context API.
 
-## Component state is preserved
+## Component and Page states are preserved
+
+> In SvelteKit, pages and layouts are considered components and follow the same rules and limitations as normal Svelte components.
 
 When you navigate around your application, SvelteKit reuses existing layout and page components. For example, if you have a route like this...
 
@@ -140,7 +142,7 @@ When you navigate around your application, SvelteKit reuses existing layout and 
 <div>{@html data.content}</div>
 ```
 
-...then navigating from `/blog/my-short-post` to `/blog/my-long-post` won't cause the component to be destroyed and recreated. The `data` prop (and by extension `data.title` and `data.content`) will change, but because the code isn't rerunning, `estimatedReadingTime` won't be recalculated.
+...then navigating from `/blog/my-short-post` to `/blog/my-long-post` won't cause the component to be destroyed and recreated. Instead the `data` prop (and by extension `data.title` and `data.content`) will change as happens with regular Svelte component, and because the code isn't rerunning, `estimatedReadingTime` won't be recalculated.
 
 Instead, we need to make the value [_reactive_](https://learn.svelte.dev/tutorial/reactive-assignments):
 
