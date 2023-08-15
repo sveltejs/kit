@@ -108,8 +108,8 @@ const config = {
 
 You can use GitHub actions to automatically deploy your site to GitHub Pages when you make a change. Here's an example workflow:
 
-```yaml
-/// file: .github/workflows/deploy.yml
+<pre class="shiki twoslash">
+<code>/// file: .github/workflows/deploy.yml
 name: Deploy to GitHub Pages
 
 on:
@@ -167,4 +167,5 @@ jobs:
       - name: Deploy
         id: deployment
         uses: actions/deploy-pages@v1
-```
+</code>
+</pre>
