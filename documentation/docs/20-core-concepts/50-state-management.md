@@ -140,7 +140,7 @@ When you navigate around your application, SvelteKit reuses existing layout and 
 <div>{@html data.content}</div>
 ```
 
-...then navigating from `/blog/my-short-post` to `/blog/my-long-post` won't cause the components (layout and page) to be destroyed and recreated. Instead the `data` prop (and by extension `data.title` and `data.content`) will reactively change (as it would with a regular Svelte component) and, because the code isn't rerunning, `estimatedReadingTime` won't be recalculated nor will lifecycle methods like `onMount` and `onDestroy` run.
+...then navigating from `/blog/my-short-post` to `/blog/my-long-post` won't cause the components (layout and page) to be destroyed and recreated. Instead the `data` prop (and by extension `data.title` and `data.content`) will reactively change (as it would with a regular Svelte component) and, because the code isn't rerunning, `estimatedReadingTime` won't be recalculated and lifecycle methods like `onMount` and `onDestroy` won't rerun.
 
 > If your code in `onMount` and `onDestroy` has to run again after navigation you can use [aferNavigate](modules#$app-navigation-afternavigate) and [beforeNaviate](modules#$app-navigation-beforenavigate) respectively.
 
