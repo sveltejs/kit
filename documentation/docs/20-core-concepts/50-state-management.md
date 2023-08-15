@@ -140,7 +140,9 @@ When you navigate around your application, SvelteKit reuses existing layout and 
 <div>{@html data.content}</div>
 ```
 
-...then navigating from `/blog/my-short-post` to `/blog/my-long-post` won't cause the components (layout, page and any components on the page) to be destroyed and recreated. Instead the `data` prop (and by extension `data.title` and `data.content`) will reactively change (as it would with a regular Svelte component) and, because the code isn't rerunning, `estimatedReadingTime` won't be recalculated nor will lifecycle methods like `onMount` and `onDestroy` run.
+...then navigating from `/blog/my-short-post` to `/blog/my-long-post` won't cause the components (layout and page) to be destroyed and recreated. Instead the `data` prop (and by extension `data.title` and `data.content`) will reactively change (as it would with a regular Svelte component) and, because the code isn't rerunning, `estimatedReadingTime` won't be recalculated nor will lifecycle methods like `onMount` and `onDestroy` run.
+
+> If your code in `onMount` and `onDestroy` has to run again after navigation you can use [aferNavigate](modules#$app-navigation-afternavigate) and [beforeNaviate](modules#$app-navigation-beforenavigate) respectively.
 
 Instead, we need to make the value [_reactive_](https://learn.svelte.dev/tutorial/reactive-assignments):
 
@@ -155,15 +157,13 @@ Instead, we need to make the value [_reactive_](https://learn.svelte.dev/tutoria
 </script>
 ```
 
-Reusing components like this means that things like sidebar scroll state are preserved, and you can easily animate between changing values. However, if you do need to completely destroy and remount a component on navigation, you can use this pattern:
+Reusing components like this means that things like sidebar scroll state are preserved, and you can easily animate between changing values. However, because only the state changes all other components on the page will also behave the same and will not remount if they are already visible on the page, only their props will change. In the case that you do need to completely destroy and remount a component on navigation, you can use this pattern:
 
 ```svelte
 {#key $page.url.pathname}
 	<BlogPost title={data.title} content={data.title} />
 {/key}
 ```
-
-> Instead of `onMount` and `onDestroy` you can use [aferNavigate](modules#$app-navigation-afternavigate) and [beforeNaviate](modules#$app-navigation-beforenavigate) respectively.
 
 ## Storing state in the URL
 
