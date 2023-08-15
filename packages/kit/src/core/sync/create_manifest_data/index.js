@@ -5,6 +5,7 @@ import { list_files, runtime_directory } from '../../utils.js';
 import { posixify } from '../../../utils/filesystem.js';
 import { parse_route_id } from '../../../utils/routing.js';
 import { sort_routes } from './sort.js';
+import colors from 'kleur';
 
 /**
  * Generates the manifest data used for the client-side manifest and types generation.
@@ -201,8 +202,30 @@ function create_routes_and_nodes(cwd, config, fallback) {
 			// process files first
 			for (const file of files) {
 				if (file.is_dir) continue;
-				if (!file.name.startsWith('+')) continue;
-				if (!valid_extensions.find((ext) => file.name.endsWith(ext))) continue;
+
+				const ext = valid_extensions.find((ext) => file.name.endsWith(ext));
+				if (!ext) continue;
+
+				if (!file.name.startsWith('+')) {
+					const name = file.name.slice(0, -ext.length);
+					const typo =
+						/^(?:(page(?:@(.*))?)|(layout(?:@(.*))?)|(error))$/.test(name) ||
+						/^(?:(server)|(page(?:(@[a-zA-Z0-9_-]*))?(\.server)?)|(layout(?:(@[a-zA-Z0-9_-]*))?(\.server)?))$/.test(
+							name
+						);
+					if (typo) {
+						console.log(
+							colors
+								.bold()
+								.yellow(
+									`Missing route file prefix. Did you mean +${file.name}?\n` +
+										`  at ${path.join(dir, file.name)}`
+								)
+						);
+					}
+
+					continue;
+				}
 
 				if (file.name.endsWith('.d.ts')) {
 					let name = file.name.slice(0, -5);
