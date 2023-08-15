@@ -218,7 +218,7 @@ function create_routes_and_nodes(cwd, config, fallback) {
 							colors
 								.bold()
 								.yellow(
-									`Missing route file prefix. Did you mean +${file.name}?\n` +
+									`Missing route file prefix. Did you mean +${file.name}?` +
 										`  at ${path.join(dir, file.name)}`
 								)
 						);
