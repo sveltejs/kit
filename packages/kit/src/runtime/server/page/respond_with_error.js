@@ -38,7 +38,7 @@ export async function respond_with_error({
 		const csr = get_option([default_layout], 'csr') ?? true;
 
 		if (ssr) {
-			state.error = { status };
+			state.error = true;
 
 			const server_data_promise = load_server_data({
 				event,

@@ -457,7 +457,11 @@ export async function respond(request, options, manifest, state) {
 				return response;
 			}
 
-			if (state.error && state.error.status >= 500) {
+			if (state.error && state.depth > 0) {
+				return await fetch(request);
+			}
+
+			if (state.error) {
 				return text('Internal Server Error', {
 					status: 500
 				});

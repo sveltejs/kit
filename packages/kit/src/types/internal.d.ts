@@ -382,11 +382,9 @@ export interface SSRState {
 	fallback?: string;
 	getClientAddress(): string;
 	/**
-	 * Contains the HTTP status if we're attempting to render an error page
+	 * True if we're currently attempting to render an error page
 	 */
-	error?: {
-		status: number;
-	};
+	error: boolean;
 	/**
 	 * Allows us to prevent `event.fetch` from making infinitely looping internal requests
 	 */

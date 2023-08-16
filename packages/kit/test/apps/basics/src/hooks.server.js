@@ -129,6 +129,12 @@ export const handle = sequence(
 		}
 
 		return resolve(event);
+	},
+	async ({ event, resolve }) => {
+		if (event.url.pathname === '/non-existent-route') {
+			event.locals.url = new URL(event.request.url);
+		}
+		return resolve(event);
 	}
 );
 

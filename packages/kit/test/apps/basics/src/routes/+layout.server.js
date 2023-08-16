@@ -12,7 +12,11 @@ if (JSON.parse(env.SOME_JSON).answer !== 42) {
 }
 
 /** @type {import('./$types').LayoutServerLoad} */
-export async function load({ cookies }) {
+export async function load({ cookies, locals, fetch }) {
+	if (locals.url?.pathname === '/non-existent-route') {
+		await fetch('/prerendering/prerendered-endpoint/api').then((r) => r.json());
+	}
+
 	const should_fail = cookies.get('fail-type');
 	if (should_fail) {
 		cookies.delete('fail-type', { path: '/' });
