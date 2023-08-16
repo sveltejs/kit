@@ -75,7 +75,8 @@ const get_defaults = (prefix = '') => ({
 		embedded: false,
 		env: {
 			dir: process.cwd(),
-			publicPrefix: 'PUBLIC_'
+			publicPrefix: 'PUBLIC_',
+			privatePrefix: ''
 		},
 		files: {
 			assets: join(prefix, 'static'),
@@ -297,8 +298,8 @@ test('fails if prerender.entries are invalid', () => {
 
 /**
  * @param {string} name
- * @param {import('types').KitConfig['paths']} input
- * @param {import('types').KitConfig['paths']} output
+ * @param {import('@sveltejs/kit').KitConfig['paths']} input
+ * @param {import('@sveltejs/kit').KitConfig['paths']} output
  */
 function validate_paths(name, input, output) {
 	test(name, () => {

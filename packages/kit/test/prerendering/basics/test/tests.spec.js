@@ -1,6 +1,7 @@
 import * as fs from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { assert, expect, test } from 'vitest';
+import { replace_hydration_attrs } from '../../test-utils';
 
 const build = fileURLToPath(new URL('../build', import.meta.url));
 
@@ -146,7 +147,7 @@ test('decodes paths when writing files', () => {
 });
 
 test('prerendering is set to true in root +layout.js', () => {
-	const content = read('prerendering-true.html');
+	const content = replace_hydration_attrs(read('prerendering-true.html'));
 	expect(content).toMatch('<h1>prerendering: true/true</h1>');
 });
 
@@ -198,18 +199,18 @@ test('$env - includes environment variables', () => {
 });
 
 test('prerenders a page in a (group)', () => {
-	const content = read('grouped.html');
+	const content = replace_hydration_attrs(read('grouped.html'));
 	expect(content).toMatch('<h1>grouped</h1>');
 });
 
 test('injects relative service worker', () => {
 	const content = read('index.html');
-	expect(content).toMatch(`navigator.serviceWorker.register('./service-worker.js')`);
+	expect(content).toMatch("navigator.serviceWorker.register('./service-worker.js')");
 });
 
 test('define service worker variables', () => {
 	const content = read('service-worker.js');
-	expect(content).toMatch(`MY_ENV DEFINED`);
+	expect(content).toMatch('MY_ENV DEFINED');
 });
 
 test('prerendered.paths omits trailing slashes for endpoints', () => {
@@ -222,4 +223,9 @@ test('prerendered.paths omits trailing slashes for endpoints', () => {
 	]) {
 		expect(content, `Missing ${path}`).toMatch(`"${path}"`);
 	}
+});
+
+test('prerenders responses with immutable Headers', () => {
+	const content = read('immutable-headers');
+	expect(content).toMatch('foo');
 });

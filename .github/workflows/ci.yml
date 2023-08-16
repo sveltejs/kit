@@ -23,13 +23,14 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
-      - uses: pnpm/action-setup@v2.2.4
+      - uses: pnpm/action-setup@v2.4.0
       - uses: actions/setup-node@v3
         with:
           node-version: '16.x'
           cache: pnpm
       - run: pnpm install --frozen-lockfile
       - run: pnpm run lint
+      - run: cd packages/kit && pnpm prepublishOnly
       - run: pnpm run check
   Tests:
     runs-on: ${{ matrix.os }}
@@ -52,7 +53,7 @@ jobs:
     steps:
       - run: git config --global core.autocrlf false
       - uses: actions/checkout@v3
-      - uses: pnpm/action-setup@v2.2.4
+      - uses: pnpm/action-setup@v2.4.0
       - uses: actions/setup-node@v3
         with:
           node-version: ${{ matrix.node-version }}
@@ -107,7 +108,7 @@ jobs:
     steps:
       - run: git config --global core.autocrlf false
       - uses: actions/checkout@v3
-      - uses: pnpm/action-setup@v2.2.4
+      - uses: pnpm/action-setup@v2.4.0
       - uses: actions/setup-node@v3
         with:
           node-version: ${{ matrix.node-version }}
@@ -130,10 +131,11 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
-      - uses: pnpm/action-setup@v2.2.4
+      - uses: pnpm/action-setup@v2.4.0
       - uses: actions/setup-node@v3
         with:
           node-version: 16
           cache: pnpm
       - run: pnpm install --frozen-lockfile
+      - run: cd packages/kit && pnpm prepublishOnly
       - run: pnpm run test:create-svelte

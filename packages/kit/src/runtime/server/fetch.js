@@ -4,9 +4,9 @@ import * as paths from '__sveltekit/paths';
 
 /**
  * @param {{
- *   event: import('types').RequestEvent;
+ *   event: import('@sveltejs/kit').RequestEvent;
  *   options: import('types').SSROptions;
- *   manifest: import('types').SSRManifest;
+ *   manifest: import('@sveltejs/kit').SSRManifest;
  *   state: import('types').SSRState;
  *   get_cookie_header: (url: URL, header: string | null) => string;
  *   set_internal: (name: string, value: string, opts: import('cookie').CookieSerializeOptions) => void;
@@ -51,7 +51,7 @@ export function create_fetch({ event, options, manifest, state, get_cookie_heade
 				}
 
 				if (url.origin !== event.url.origin) {
-					// allow cookie passthrough for "same-origin"
+					// Allow cookie passthrough for "credentials: same-origin" and "credentials: include"
 					// if SvelteKit is serving my.domain.com:
 					// -        domain.com WILL NOT receive cookies
 					// -     my.domain.com WILL receive cookies
@@ -59,6 +59,8 @@ export function create_fetch({ event, options, manifest, state, get_cookie_heade
 					// - sub.my.domain.com WILL receive cookies
 					// ports do not affect the resolution
 					// leading dot prevents mydomain.com matching domain.com
+					// Do not forward other cookies for "credentials: include" because we don't know
+					// which cookie belongs to which domain (browser does not pass this info)
 					if (`.${url.hostname}`.endsWith(`.${event.url.hostname}`) && credentials !== 'omit') {
 						const cookie = get_cookie_header(url, request.headers.get('cookie'));
 						if (cookie) request.headers.set('cookie', cookie);
@@ -66,9 +68,6 @@ export function create_fetch({ event, options, manifest, state, get_cookie_heade
 
 					return fetch(request);
 				}
-
-				/** @type {Response} */
-				let response;
 
 				// handle fetch requests for static assets. e.g. prebaked data, etc.
 				// we need to support everything the browser's fetch supports
@@ -121,7 +120,8 @@ export function create_fetch({ event, options, manifest, state, get_cookie_heade
 					);
 				}
 
-				response = await respond(request, options, manifest, {
+				/** @type {Response} */
+				const response = await respond(request, options, manifest, {
 					...state,
 					depth: state.depth + 1
 				});

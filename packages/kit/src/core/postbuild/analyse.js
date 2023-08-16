@@ -12,7 +12,9 @@ import { load_config } from '../config/index.js';
 import { forked } from '../../utils/fork.js';
 import { should_polyfill } from '../../utils/platform.js';
 import { installPolyfills } from '../../exports/node/polyfills.js';
-import { resolve_entry } from '../../utils/routing.js';
+import { resolvePath } from '../../exports/index.js';
+import { ENDPOINT_METHODS } from '../../constants.js';
+import { filter_private_env, filter_public_env } from '../../utils/env.js';
 
 export default forked(import.meta.url, analyse);
 
@@ -23,7 +25,7 @@ export default forked(import.meta.url, analyse);
  * }} opts
  */
 async function analyse({ manifest_path, env }) {
-	/** @type {import('types').SSRManifest} */
+	/** @type {import('@sveltejs/kit').SSRManifest} */
 	const manifest = (await import(pathToFileURL(manifest_path).href)).manifest;
 
 	/** @type {import('types').ValidatedKitConfig} */
@@ -43,10 +45,9 @@ async function analyse({ manifest_path, env }) {
 	internal.set_building(true);
 
 	// set env, in case it's used in initialisation
-	const entries = Object.entries(env);
-	const prefix = config.env.publicPrefix;
-	internal.set_private_env(Object.fromEntries(entries.filter(([k]) => !k.startsWith(prefix))));
-	internal.set_public_env(Object.fromEntries(entries.filter(([k]) => k.startsWith(prefix))));
+	const { publicPrefix: public_prefix, privatePrefix: private_prefix } = config.env;
+	internal.set_private_env(filter_private_env(env, { public_prefix, private_prefix }));
+	internal.set_public_env(filter_public_env(env, { public_prefix, private_prefix }));
 
 	/** @type {import('types').ServerMetadata} */
 	const metadata = {
@@ -59,7 +60,7 @@ async function analyse({ manifest_path, env }) {
 		const node = await loader();
 
 		metadata.nodes[node.index] = {
-			has_server_load: node.server?.load !== undefined
+			has_server_load: node.server?.load !== undefined || node.server?.trailingSlash !== undefined
 		};
 	}
 
@@ -92,12 +93,11 @@ async function analyse({ manifest_path, env }) {
 				prerender = mod.prerender;
 			}
 
-			if (mod.GET) api_methods.push('GET');
-			if (mod.POST) api_methods.push('POST');
-			if (mod.PUT) api_methods.push('PUT');
-			if (mod.PATCH) api_methods.push('PATCH');
-			if (mod.DELETE) api_methods.push('DELETE');
-			if (mod.OPTIONS) api_methods.push('OPTIONS');
+			Object.values(mod).forEach((/** @type {import('types').HttpMethod} */ method) => {
+				if (mod[method] && ENDPOINT_METHODS.has(method)) {
+					api_methods.push(method);
+				}
+			});
 
 			config = mod.config;
 			entries = mod.entries;
@@ -145,7 +145,7 @@ async function analyse({ manifest_path, env }) {
 			},
 			prerender,
 			entries:
-				entries && (await entries()).map((entry_object) => resolve_entry(route.id, entry_object))
+				entries && (await entries()).map((entry_object) => resolvePath(route.id, entry_object))
 		});
 	}
 

@@ -1,7 +1,7 @@
 /** @typedef {typeof __propDef.props}  TestProps */
 /** @typedef {typeof __propDef.events}  TestEvents */
 /** @typedef {typeof __propDef.slots}  TestSlots */
-export default class Test extends SvelteComponentTyped<
+export default class Test extends SvelteComponent<
 	{
 		foo: boolean;
 	},
@@ -13,7 +13,7 @@ export default class Test extends SvelteComponentTyped<
 export type TestProps = typeof __propDef.props;
 export type TestEvents = typeof __propDef.events;
 export type TestSlots = typeof __propDef.slots;
-import { SvelteComponentTyped } from 'svelte';
+import { SvelteComponent } from 'svelte';
 declare const __propDef: {
 	props: {
 		foo: import('./foo').Foo;

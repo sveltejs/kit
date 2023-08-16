@@ -26,7 +26,7 @@ export default {
 
 ## Deployment configuration
 
-To control how your routes are deployed to Vercel as functions, you can specify deployment configuration, either through the option shown above or with [`export const config`](/docs/page-options#config) inside `+server.js`, `+page(.server).js` and `+layout(.server).js` files.
+To control how your routes are deployed to Vercel as functions, you can specify deployment configuration, either through the option shown above or with [`export const config`](page-options#config) inside `+server.js`, `+page(.server).js` and `+layout(.server).js` files.
 
 For example you could deploy some parts of your app as [Edge Functions](https://vercel.com/docs/concepts/functions/edge-functions)...
 
@@ -120,7 +120,7 @@ export function load() {
 ```
 
 ```svelte
-/// file: +layout.svelte
+<!--- file: +layout.svelte --->
 <script>
 	/** @type {import('./$types').LayoutServerData} */
 	export let data;

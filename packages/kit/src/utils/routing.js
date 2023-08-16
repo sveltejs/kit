@@ -96,44 +96,6 @@ export function parse_route_id(id) {
 	return { pattern, params };
 }
 
-const basic_param_pattern = /\[(\[)?(?:\.\.\.)?(\w+?)(?:=(\w+))?\]\]?/g;
-
-/**
- * Parses a route ID, then resolves it to a path by replacing parameters with actual values from `entry`.
- * @param {string} id The route id
- * @param {Record<string, string | undefined>} entry The entry meant to populate the route. For example, if the route is `/blog/[slug]`, the entry would be `{ slug: 'hello-world' }`
- * @example
- * ```js
- * resolve_entry(`/blog/[slug]/[...somethingElse]`, { slug: 'hello-world', somethingElse: 'something/else' }); // `/blog/hello-world/something/else`
- * ```
- */
-export function resolve_entry(id, entry) {
-	const segments = get_route_segments(id);
-	return (
-		'/' +
-		segments
-			.map((segment) =>
-				segment.replace(basic_param_pattern, (_, optional, name) => {
-					const param_value = entry[name];
-
-					// This is nested so TS correctly narrows the type
-					if (!param_value) {
-						if (optional) return '';
-						throw new Error(`Missing parameter '${name}' in route ${id}`);
-					}
-
-					if (param_value.startsWith('/') || param_value.endsWith('/'))
-						throw new Error(
-							`Parameter '${name}' in route ${id} cannot start or end with a slash -- this would cause an invalid route like foo//bar`
-						);
-					return param_value;
-				})
-			)
-			.filter(Boolean)
-			.join('/')
-	);
-}
-
 const optional_param_regex = /\/\[\[\w+?(?:=\w+)?\]\]/;
 
 /**
@@ -167,7 +129,7 @@ export function get_route_segments(route) {
 /**
  * @param {RegExpMatchArray} match
  * @param {import('types').RouteParam[]} params
- * @param {Record<string, import('types').ParamMatcher>} matchers
+ * @param {Record<string, import('@sveltejs/kit').ParamMatcher>} matchers
  */
 export function exec(match, params, matchers) {
 	/** @type {Record<string, string>} */
@@ -179,18 +141,17 @@ export function exec(match, params, matchers) {
 
 	for (let i = 0; i < params.length; i += 1) {
 		const param = params[i];
-		const value = values[i - buffered];
+		let value = values[i - buffered];
 
 		// in the `[[a=b]]/.../[...rest]` case, if one or more optional parameters
 		// weren't matched, roll the skipped values into the rest
 		if (param.chained && param.rest && buffered) {
-			result[param.name] = values
+			value = values
 				.slice(i - buffered, i + 1)
 				.filter((s) => s)
 				.join('/');
 
 			buffered = 0;
-			continue;
 		}
 
 		// if `value` is undefined, it means this is an optional or rest parameter
@@ -206,7 +167,7 @@ export function exec(match, params, matchers) {
 			// and the next value is defined, otherwise the buffer will cause us to skip values
 			const next_param = params[i + 1];
 			const next_value = values[i + 1];
-			if (next_param && !next_param.rest && next_param.optional && next_value) {
+			if (next_param && !next_param.rest && next_param.optional && next_value && param.chained) {
 				buffered = 0;
 			}
 			continue;

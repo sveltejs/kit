@@ -1,7 +1,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import mime from 'mime';
-import { runtime_directory } from '../../utils.js';
+import { list_files, runtime_directory } from '../../utils.js';
 import { posixify } from '../../../utils/filesystem.js';
 import { parse_route_id } from '../../../utils/routing.js';
 import { sort_routes } from './sort.js';
@@ -456,7 +456,7 @@ function analyze(project_relative, file, component_extensions, module_extensions
 			);
 		}
 
-		const kind = !!(match[1] || match[4] || match[7]) ? 'server' : 'universal';
+		const kind = match[1] || match[4] || match[7] ? 'server' : 'universal';
 
 		return {
 			kind,
@@ -466,28 +466,6 @@ function analyze(project_relative, file, component_extensions, module_extensions
 	}
 
 	throw new Error(`Files and directories prefixed with + are reserved (saw ${project_relative})`);
-}
-
-/** @param {string} dir */
-function list_files(dir) {
-	/** @type {string[]} */
-	const files = [];
-
-	/** @param {string} current */
-	function walk(current) {
-		for (const file of fs.readdirSync(path.resolve(dir, current))) {
-			const child = path.posix.join(current, file);
-			if (fs.statSync(path.resolve(dir, child)).isDirectory()) {
-				walk(child);
-			} else {
-				files.push(child);
-			}
-		}
-	}
-
-	if (fs.existsSync(dir)) walk('');
-
-	return files;
 }
 
 /**
@@ -513,7 +491,7 @@ function prevent_conflicts(routes) {
 		const normalized = normalize_route_id(route.id);
 
 		// find all permutations created by optional parameters
-		const split = normalized.split(/<\?(.+?)\>/g);
+		const split = normalized.split(/<\?(.+?)>/g);
 
 		let permutations = [/** @type {string} */ (split[0])];
 

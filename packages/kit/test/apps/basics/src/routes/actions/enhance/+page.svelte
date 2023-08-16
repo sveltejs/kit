@@ -51,3 +51,9 @@
 <form action="?/counter" method="post" use:enhance>
 	<button class="form4">Submit</button>
 </form>
+
+<dialog id="dialog" open>
+	<form action="?/echo" method="post" use:enhance>
+		<button formmethod="dialog">Cancel</button>
+	</form>
+</dialog>

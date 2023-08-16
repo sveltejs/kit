@@ -19,9 +19,23 @@ export async function load_config({ cwd = process.cwd() } = {}) {
 
 	if (config.package) {
 		throw new Error(
-			`config.package is no longer supported. See https://github.com/sveltejs/kit/discussions/8825 for more information.`
+			'config.package is no longer supported. See https://github.com/sveltejs/kit/discussions/8825 for more information.'
 		);
 	}
 
 	return config;
+}
+
+/**
+ * @param {string} cwd
+ * @returns Record<string, any>
+ */
+export function load_pkg_json(cwd = process.cwd()) {
+	const pkg_json_file = path.join(cwd, 'package.json');
+
+	if (!fs.existsSync(pkg_json_file)) {
+		return {};
+	}
+
+	return JSON.parse(fs.readFileSync(pkg_json_file, 'utf-8'));
 }

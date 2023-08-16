@@ -37,6 +37,7 @@ export const options = {
 	track_server_fetches: ${s(config.kit.dangerZone.trackServerFetches)},
 	embedded: ${config.kit.embedded},
 	env_public_prefix: '${config.kit.env.publicPrefix}',
+	env_private_prefix: '${config.kit.env.privatePrefix}',
 	hooks: null, // added lazily, via \`get_hooks\`
 	preload_strategy: ${s(config.kit.output.preloadStrategy)},
 	root,
@@ -75,7 +76,7 @@ export { set_assets, set_building, set_private_env, set_public_env };
  * @param {string} output
  */
 export function write_server(config, output) {
-	// TODO the casting shouldn't be necessary — investigate
+	// TODO the casting shouldn't be necessary — investigate
 	const hooks_file = /** @type {string} */ (resolve_entry(config.kit.files.hooks.server));
 
 	/** @param {string} file */

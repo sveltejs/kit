@@ -26,7 +26,7 @@ export default forked(import.meta.url, prerender);
  * }} opts
  */
 async function prerender({ out, manifest_path, metadata, verbose, env }) {
-	/** @type {import('types').SSRManifest} */
+	/** @type {import('@sveltejs/kit').SSRManifest} */
 	const manifest = (await import(pathToFileURL(manifest_path).href)).manifest;
 
 	/** @type {import('types').ServerInternalModule} */

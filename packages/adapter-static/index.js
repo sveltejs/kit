@@ -8,7 +8,8 @@ export default function (options) {
 
 		async adapt(builder) {
 			if (!options?.fallback) {
-				if (builder.routes.some((route) => route.prerender !== true) && options?.strict !== false) {
+				const dynamic_routes = builder.routes.filter((route) => route.prerender !== true);
+				if (dynamic_routes.length > 0 && options?.strict !== false) {
 					const prefix = path.relative('.', builder.config.kit.files.routes);
 					const has_param_routes = builder.routes.some((route) => route.id.includes('['));
 					const config_option =
@@ -22,7 +23,7 @@ export default function (options) {
 
 					builder.log.error(
 						`@sveltejs/adapter-static: all routes must be fully prerenderable, but found the following routes that are dynamic:
-${builder.routes.map((route) => `  - ${path.posix.join(prefix, route.id)}`).join('\n')}
+${dynamic_routes.map((route) => `  - ${path.posix.join(prefix, route.id)}`).join('\n')}
 
 You have the following options:
   - set the \`fallback\` option — see https://kit.svelte.dev/docs/single-page-apps#usage for more info.

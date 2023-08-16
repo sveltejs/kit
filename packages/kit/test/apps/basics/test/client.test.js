@@ -268,11 +268,12 @@ test.describe('Load', () => {
 		}) => {
 			await page.goto('/load/no-server-load/a');
 
+			/** @type {string[]} */
 			const pathnames = [];
 			page.on('request', (r) => pathnames.push(new URL(r.url()).pathname));
 			await clicknav('[href="/load/no-server-load/b"]');
 
-			expect(pathnames).not.toContain(`/load/no-server-load/b/__data.json`);
+			expect(pathnames).not.toContain('/load/no-server-load/b/__data.json');
 		});
 	}
 });
@@ -435,6 +436,16 @@ test.describe('Invalidation', () => {
 		await expect(page.getByText('layout: 4, page: 4')).toBeVisible();
 	});
 
+	test('multiple synchronous invalidations are batched', async ({ page }) => {
+		await page.goto('/load/invalidation/multiple-batched');
+		const btn = page.locator('#multiple-batched');
+		await expect(btn).toHaveText('0');
+
+		await btn.click();
+		await expect(btn).toHaveAttribute('data-done', 'true');
+		await expect(btn).toHaveText('2');
+	});
+
 	test('invalidateAll persists through redirects', async ({ page }) => {
 		await page.goto('/load/invalidation/multiple/redirect');
 		await page.locator('button.redirect').click();
@@ -534,7 +545,7 @@ test.describe('Invalidation', () => {
 });
 
 test.describe('data-sveltekit attributes', () => {
-	test('data-sveltekit-preload-data', async ({ baseURL, page }) => {
+	test('data-sveltekit-preload-data', async ({ page }) => {
 		/** @type {string[]} */
 		const requests = [];
 		page.on('request', (req) => {
@@ -546,7 +557,7 @@ test.describe('data-sveltekit attributes', () => {
 						() => ''
 					)
 					.then((response) => {
-						if (response.includes(`this string should only appear in this preloaded file`)) {
+						if (response.includes('this string should only appear in this preloaded file')) {
 							requests.push(req.url());
 						}
 					});
@@ -639,7 +650,9 @@ test.describe('data-sveltekit attributes', () => {
 
 test.describe('Content negotiation', () => {
 	test('+server.js next to +page.svelte works', async ({ page }) => {
-		await page.goto('/routing/content-negotiation');
+		const response = await page.goto('/routing/content-negotiation');
+
+		expect(response.headers()['vary']).toBe('Accept');
 		expect(await page.textContent('p')).toBe('Hi');
 
 		const pre = page.locator('pre');
@@ -782,10 +795,34 @@ test.describe('Actions', () => {
 		await page.goto('/actions/enhance');
 		const pre = page.locator('pre.data1');
 
-		await expect(pre).toHaveText(`prop: 0, store: 0`);
+		await expect(pre).toHaveText('prop: 0, store: 0');
 		await page.locator('.form4').click();
-		await expect(pre).toHaveText(`prop: 1, store: 1`);
+		await expect(pre).toHaveText('prop: 1, store: 1');
 		await page.evaluate('window.svelte_tick()');
-		await expect(pre).toHaveText(`prop: 1, store: 1`);
+		await expect(pre).toHaveText('prop: 1, store: 1');
+	});
+});
+
+test.describe('Assets', () => {
+	test('only one link per stylesheet', async ({ page }) => {
+		if (process.env.DEV) return;
+
+		await page.goto('/');
+
+		expect(
+			await page.evaluate(() => {
+				const links = Array.from(document.head.querySelectorAll('link[rel=stylesheet]'));
+
+				for (let i = 0; i < links.length; ) {
+					const link = links.shift();
+					const asset_name = link.href.split('/').at(-1);
+					if (links.some((link) => link.href.includes(asset_name))) {
+						return false;
+					}
+				}
+
+				return true;
+			})
+		).toBe(true);
 	});
 });

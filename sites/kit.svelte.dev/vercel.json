@@ -5,5 +5,5 @@
 	},
 	"trailingSlash": false,
 	"installCommand": "pnpm install --frozen-lockfile --verbose && pnpm rebuild",
-	"buildCommand": "pnpm build"
+	"buildCommand": "cd ../../packages/kit && pnpm prepublishOnly && cd ../../sites/kit.svelte.dev && pnpm build"
 }

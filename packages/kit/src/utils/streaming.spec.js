@@ -1,7 +1,7 @@
 import { expect, test } from 'vitest';
 import { create_async_iterator } from './streaming.js';
 
-test(`works with fast consecutive promise resolutions`, async () => {
+test('works with fast consecutive promise resolutions', async () => {
 	const iterator = create_async_iterator();
 
 	Promise.resolve(1).then((n) => iterator.push(n));

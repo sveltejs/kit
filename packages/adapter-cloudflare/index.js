@@ -57,7 +57,8 @@ export default function (options = {}) {
 				bundle: true,
 				loader: {
 					'.wasm': 'copy'
-				}
+				},
+				external: ['cloudflare:*']
 			});
 		}
 	};
@@ -71,15 +72,15 @@ export default function (options = {}) {
  */
 function get_routes_json(builder, assets, { include = ['/*'], exclude = ['<all>'] }) {
 	if (!Array.isArray(include) || !Array.isArray(exclude)) {
-		throw new Error(`routes.include and routes.exclude must be arrays`);
+		throw new Error('routes.include and routes.exclude must be arrays');
 	}
 
 	if (include.length === 0) {
-		throw new Error(`routes.include must contain at least one route`);
+		throw new Error('routes.include must contain at least one route');
 	}
 
 	if (include.length > 100) {
-		throw new Error(`routes.include must contain 100 or fewer routes`);
+		throw new Error('routes.include must contain 100 or fewer routes');
 	}
 
 	exclude = exclude

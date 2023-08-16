@@ -1,4 +1,4 @@
-export let HttpError = class HttpError {
+export class HttpError {
 	/**
 	 * @param {number} status
 	 * @param {{message: string} extends App.Error ? (App.Error | string | undefined) : App.Error} body
@@ -17,9 +17,9 @@ export let HttpError = class HttpError {
 	toString() {
 		return JSON.stringify(this.body);
 	}
-};
+}
 
-export let Redirect = class Redirect {
+export class Redirect {
 	/**
 	 * @param {300 | 301 | 302 | 303 | 304 | 305 | 306 | 307 | 308} status
 	 * @param {string} location
@@ -28,12 +28,12 @@ export let Redirect = class Redirect {
 		this.status = status;
 		this.location = location;
 	}
-};
+}
 
 /**
  * @template {Record<string, unknown> | undefined} [T=undefined]
  */
-export let ActionFailure = class ActionFailure {
+export class ActionFailure {
 	/**
 	 * @param {number} status
 	 * @param {T} [data]
@@ -42,7 +42,7 @@ export let ActionFailure = class ActionFailure {
 		this.status = status;
 		this.data = data;
 	}
-};
+}
 
 /**
  * This is a grotesque hack that, in dev, allows us to replace the implementations
@@ -57,7 +57,10 @@ export let ActionFailure = class ActionFailure {
  * }} implementations
  */
 export function replace_implementations(implementations) {
-	ActionFailure = implementations.ActionFailure;
-	HttpError = implementations.HttpError;
-	Redirect = implementations.Redirect;
+	// @ts-expect-error
+	ActionFailure = implementations.ActionFailure; // eslint-disable-line no-class-assign
+	// @ts-expect-error
+	HttpError = implementations.HttpError; // eslint-disable-line no-class-assign
+	// @ts-expect-error
+	Redirect = implementations.Redirect; // eslint-disable-line no-class-assign
 }

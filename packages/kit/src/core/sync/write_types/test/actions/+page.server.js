@@ -1,6 +1,6 @@
-import { fail } from '../../../../../../types/internal.js';
+import { fail } from '../../../../../../src/exports/index.js';
 
-let condition = false;
+const condition = false;
 
 export const actions = {
 	default: () => {
@@ -36,8 +36,12 @@ export const actions = {
 	}
 };
 
-/** @type {import('./.svelte-kit/types/src/core/sync/write_types/test/actions/$types').SubmitFunction} */
-const submit = () => {
+/**
+ * Ordinarily this would live in a +page.svelte, but to make it easy to run the tests, we put it here.
+ * The `export` is so that eslint doesn't throw a hissy fit about the unused variable
+ * @type {import('./.svelte-kit/types/src/core/sync/write_types/test/actions/$types').SubmitFunction}
+ */
+export const submit = () => {
 	return ({ result }) => {
 		if (result.type === 'success') {
 			// @ts-expect-error does only exist on `failure` result

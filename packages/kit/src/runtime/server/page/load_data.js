@@ -6,7 +6,7 @@ import { validate_depends } from '../../shared.js';
 /**
  * Calls the user's server `load` function.
  * @param {{
- *   event: import('types').RequestEvent;
+ *   event: import('@sveltejs/kit').RequestEvent;
  *   state: import('types').SSRState;
  *   node: import('types').SSRNode | undefined;
  *   parent: () => Promise<Record<string, any>>;
@@ -143,7 +143,7 @@ export async function load_server_data({
 /**
  * Calls the user's `load` function.
  * @param {{
- *   event: import('types').RequestEvent;
+ *   event: import('@sveltejs/kit').RequestEvent;
  *   fetched: import('./types').Fetched[];
  *   node: import('types').SSRNode | undefined;
  *   parent: () => Promise<Record<string, any>>;
@@ -190,11 +190,11 @@ export async function load_data({
 }
 
 /**
- * @param {Pick<import('types').RequestEvent, 'fetch' | 'url' | 'request' | 'route'>} event
- * @param {import("types").SSRState} state
- * @param {import("./types").Fetched[]} fetched
+ * @param {Pick<import('@sveltejs/kit').RequestEvent, 'fetch' | 'url' | 'request' | 'route'>} event
+ * @param {import('types').SSRState} state
+ * @param {import('./types').Fetched[]} fetched
  * @param {boolean} csr
- * @param {Pick<Required<import("types").ResolveOptions>, 'filterSerializedResponseHeaders'>} resolve_opts
+ * @param {Pick<Required<import('@sveltejs/kit').ResolveOptions>, 'filterSerializedResponseHeaders'>} resolve_opts
  */
 export function create_universal_fetch(event, state, fetched, csr, resolve_opts) {
 	/**
@@ -203,6 +203,12 @@ export function create_universal_fetch(event, state, fetched, csr, resolve_opts)
 	 */
 	return async (input, init) => {
 		const cloned_body = input instanceof Request && input.body ? input.clone().body : null;
+
+		const cloned_headers =
+			input instanceof Request && [...input.headers].length
+				? new Headers(input.headers)
+				: init?.headers;
+
 		let response = await event.fetch(input, init);
 
 		const url = new URL(input instanceof Request ? input.url : input, event.url);
@@ -260,9 +266,9 @@ export function create_universal_fetch(event, state, fetched, csr, resolve_opts)
 									? await stream_to_string(cloned_body)
 									: init?.body
 							),
-							request_headers: init?.headers,
+							request_headers: cloned_headers,
 							response_body: body,
-							response: response
+							response
 						});
 					}
 
