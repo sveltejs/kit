@@ -1,11 +1,11 @@
 import fs from 'node:fs';
 import path from 'node:path';
+import colors from 'kleur';
 import mime from 'mime';
 import { list_files, runtime_directory } from '../../utils.js';
 import { posixify } from '../../../utils/filesystem.js';
 import { parse_route_id } from '../../../utils/routing.js';
 import { sort_routes } from './sort.js';
-import colors from 'kleur';
 
 /**
  * Generates the manifest data used for the client-side manifest and types generation.
