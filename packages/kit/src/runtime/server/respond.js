@@ -457,7 +457,7 @@ export async function respond(request, options, manifest, state) {
 				return response;
 			}
 
-			if (state.error) {
+			if (state.error && state.error.status >= 500) {
 				return text('Internal Server Error', {
 					status: 500
 				});
