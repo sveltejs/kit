@@ -125,5 +125,5 @@ To disable any of these options inside an element where they have been enabled, 
 To apply an attribute to an element conditionally, do this:
 
 ```svelte
-<div data-sveltekit-preload-data={condition ? "hover" : "false"}>
+<div data-sveltekit-preload-data={condition ? 'hover' : false}>
 ```
