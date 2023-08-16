@@ -509,6 +509,14 @@ test.describe('Load', () => {
 			'{"message":"Im prerendered and called from a non-prerendered +page.server.js"}'
 		);
 	});
+
+	test('404 and root layout load fetch to prerendered endpoint works', async ({
+		page
+	}) => {
+		await page.goto('/non-existent-route');
+
+		expect(await page.textContent('h1')).toBe('404');
+	});
 });
 
 test.describe('Nested layouts', () => {
