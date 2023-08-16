@@ -139,6 +139,8 @@ export function make_trackable(url, callback) {
  * @param {URL} url
  */
 export function disable_hash(url) {
+	allow_nodejs_console_log(url);
+
 	Object.defineProperty(url, 'hash', {
 		get() {
 			throw new Error(
@@ -153,12 +155,27 @@ export function disable_hash(url) {
  * @param {URL} url
  */
 export function disable_search(url) {
+	allow_nodejs_console_log(url);
+
 	for (const property of ['search', 'searchParams']) {
 		Object.defineProperty(url, property, {
 			get() {
 				throw new Error(`Cannot access url.${property} on a page with prerendering enabled`);
 			}
 		});
+	}
+}
+
+/**
+ * Allow URL to be console logged, bypassing disabled properties.
+ * @param {URL} url
+ */
+function allow_nodejs_console_log(url) {
+	if (!BROWSER) {
+		// @ts-ignore
+		url[Symbol.for('nodejs.util.inspect.custom')] = (depth, opts, inspect) => {
+			return inspect(new URL(url), opts);
+		};
 	}
 }
 

@@ -509,6 +509,12 @@ test.describe('Load', () => {
 			'{"message":"Im prerendered and called from a non-prerendered +page.server.js"}'
 		);
 	});
+
+	test('Logging $page.url during prerendering works', async ({ page }) => {
+		await page.goto('/prerendering/log-url');
+
+		expect(await page.textContent('p')).toBe('error: false');
+	});
 });
 
 test.describe('Nested layouts', () => {
