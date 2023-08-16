@@ -510,9 +510,7 @@ test.describe('Load', () => {
 		);
 	});
 
-	test('404 and root layout load fetch to prerendered endpoint works', async ({
-		page
-	}) => {
+	test('404 and root layout load fetch to prerendered endpoint works', async ({ page }) => {
 		await page.goto('/non-existent-route');
 
 		expect(await page.textContent('h1')).toBe('404');
