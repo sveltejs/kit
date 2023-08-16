@@ -514,7 +514,7 @@ test.describe('Load', () => {
 		await page.goto('/prerendering/log-url');
 
 		expect(await page.textContent('p')).toBe('error: false');
-	})
+	});
 });
 
 test.describe('Nested layouts', () => {
