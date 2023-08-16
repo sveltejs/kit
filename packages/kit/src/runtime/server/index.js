@@ -80,7 +80,7 @@ export class Server {
 
 		return respond(request, this.#options, this.#manifest, {
 			...options,
-			error: false,
+			error: undefined,
 			depth: 0
 		});
 	}
