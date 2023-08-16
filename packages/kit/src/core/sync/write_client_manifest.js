@@ -116,8 +116,8 @@ export function write_client_manifest(kit, manifest_data, output, metadata) {
 			colors
 				.bold()
 				.yellow(
-					`Unexpected + prefix. Did you mean ${typo.split('/').at(-1)?.slice(1)}?\n` +
-						`  at ${path.resolve(typo)}`
+					`Unexpected + prefix. Did you mean ${typo.split('/').at(-1)?.slice(1)}?` +
+						` at ${path.resolve(typo)}`
 				)
 		);
 	}
