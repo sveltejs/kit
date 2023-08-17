@@ -1,10 +1,10 @@
 <script>
 	import { page } from '$app/stores';
+	import { copy_code_descendants } from '@sveltejs/site-kit/actions';
 	import { Icon } from '@sveltejs/site-kit/components';
-	import * as hovers from '$lib/docs/client/hovers.js';
-	import OnThisPage from './OnThisPage.svelte';
+	import { DocsOnThisPage, setupDocsHovers } from '@sveltejs/site-kit/docs';
+	import { onMount } from 'svelte';
 
-	/** @type {import('./$types').PageData} */
 	export let data;
 
 	$: pages = data.sections.flatMap((section) => section.pages);
@@ -12,7 +12,32 @@
 	$: prev = pages[index - 1];
 	$: next = pages[index + 1];
 
-	hovers.setup();
+	setupDocsHovers();
+
+	const redirects = {
+		hmr: 'how-do-i-use-hmr-with-sveltekit',
+		'read-package-json': 'how-do-i-include-details-from-package-json-in-my-application',
+		packages: 'how-do-i-fix-the-error-i-m-getting-trying-to-include-a-package',
+		integrations: 'how-do-i-use-x-with-sveltekit',
+		'how-do-i-setup-a-database': 'how-do-i-use-x-with-sveltekit-how-do-i-setup-a-database',
+		'how-do-i-use-a-client-side-only-library-that-depends-on-document-or-window':
+			'how-do-i-use-x-with-sveltekit-how-do-i-use-a-client-side-only-library-that-depends-on-document-or-window',
+		'how-do-i-use-a-different-backend-api-server':
+			'how-do-i-use-x-with-sveltekit-how-do-i-use-a-different-backend-api-server',
+		'how-do-i-use-middleware': 'how-do-i-use-x-with-sveltekit-how-do-i-use-middleware',
+		'does-it-work-with-yarn-2': 'how-do-i-use-x-with-sveltekit-does-it-work-with-yarn-2',
+		'how-do-i-use-with-yarn-3': 'how-do-i-use-x-with-sveltekit-how-do-i-use-with-yarn-3'
+	};
+
+	onMount(() => {
+		if ($page.url.pathname !== '/docs/faq') return;
+
+		const hash = $page.url.hash.replace(/^#/, '');
+
+		if (!redirects[hash]) return;
+
+		document.location.hash = `#${redirects[hash]}`;
+	});
 </script>
 
 <svelte:head>
@@ -23,12 +48,14 @@
 	<meta name="Description" content="{data.page.title} • SvelteKit documentation" />
 </svelte:head>
 
-<div class="text content">
+<div class="text content" use:copy_code_descendants>
 	<h1>{data.page.title}</h1>
 
 	<a class="edit" href="https://github.com/sveltejs/kit/edit/master/documentation/{data.page.file}">
 		<Icon size={50} name="edit" /> Edit this page on GitHub
 	</a>
+
+	<DocsOnThisPage details={data.page} />
 
 	<section>
 		{@html data.page.content}
@@ -50,8 +77,6 @@
 		</div>
 	</div>
 </div>
-
-<OnThisPage details={data.page} />
 
 <style>
 	.content {

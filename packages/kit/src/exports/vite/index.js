@@ -5,7 +5,7 @@ import { svelte } from '@sveltejs/vite-plugin-svelte';
 import colors from 'kleur';
 import * as vite from 'vite';
 
-import { mkdirp, posixify, read, resolve_entry, rimraf } from '../../utils/filesystem.js';
+import { copy, mkdirp, posixify, read, resolve_entry, rimraf } from '../../utils/filesystem.js';
 import { create_static_module, create_dynamic_module } from '../../core/env.js';
 import * as sync from '../../core/sync/sync.js';
 import { create_assets } from '../../core/sync/create_manifest_data/index.js';
@@ -541,8 +541,15 @@ function kit({ svelte_config }) {
 				// see the kit.output.preloadStrategy option for details on why we have multiple options here
 				const ext = kit.output.preloadStrategy === 'preload-mjs' ? 'mjs' : 'js';
 
+				// We could always use a relative asset base path here, but it's better for performance not to.
+				// E.g. Vite generates `new URL('/asset.png', import.meta).href` for a relative path vs just '/asset.png'.
+				// That's larger and takes longer to run and also causes an HTML diff between SSR and client
+				// causing us to do a more expensive hydration check.
+				const client_base =
+					kit.paths.relative !== false || kit.paths.assets ? './' : kit.paths.base || '/';
+
 				new_config = {
-					base: ssr ? assets_base(kit) : './',
+					base: ssr ? assets_base(kit) : client_base,
 					build: {
 						copyPublicDir: !ssr,
 						cssCodeSplit: true,
@@ -711,6 +718,11 @@ function kit({ svelte_config }) {
 							force: vite_config.optimizeDeps.force
 						}
 					})
+				);
+
+				copy(
+					`${out}/server/${kit.appDir}/immutable/assets`,
+					`${out}/client/${kit.appDir}/immutable/assets`
 				);
 
 				/** @type {import('vite').Manifest} */

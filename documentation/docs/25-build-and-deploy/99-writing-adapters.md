@@ -26,8 +26,6 @@ export default function (options) {
 }
 ```
 
-The types for `Adapter` and its parameters are available in [types/index.d.ts](https://github.com/sveltejs/kit/blob/master/packages/kit/types/index.d.ts).
-
 Within the `adapt` method, there are a number of things that an adapter should do:
 
 - Clear out the build directory
@@ -37,7 +35,7 @@ Within the `adapt` method, there are a number of things that an adapter should d
 	- Instantiates the app with a manifest generated with `builder.generateManifest({ relativePath })`
 	- Listens for requests from the platform, converts them to a standard [Request](https://developer.mozilla.org/en-US/docs/Web/API/Request) if necessary, calls the `server.respond(request, { getClientAddress })` function to generate a [Response](https://developer.mozilla.org/en-US/docs/Web/API/Response) and responds with it
 	- expose any platform-specific information to SvelteKit via the `platform` option passed to `server.respond`
-	- Globally shims `fetch` to work on the target platform, if necessary. SvelteKit provides a `@sveltejs/kit/install-fetch` helper for platforms that can use `node-fetch`
+	- Globally shims `fetch` to work on the target platform, if necessary. SvelteKit provides a `@sveltejs/kit/node/polyfills` helper for platforms that can use `undici`
 - Bundle the output to avoid needing to install dependencies on the target platform, if necessary
 - Put the user's static files and the generated JS/CSS in the correct location for the target platform
 

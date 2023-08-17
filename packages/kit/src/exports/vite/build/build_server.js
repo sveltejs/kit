@@ -50,7 +50,8 @@ export function build_server_nodes(out, kit, manifest_data, server_manifest, cli
 
 		if (node.component && client_manifest) {
 			exports.push(
-				`export const component = async () => (await import('../${
+				'let component_cache;',
+				`export const component = async () => component_cache ??= (await import('../${
 					resolve_symlinks(server_manifest, node.component).chunk.file
 				}')).default;`
 			);
