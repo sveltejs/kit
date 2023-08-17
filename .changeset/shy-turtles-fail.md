@@ -2,4 +2,4 @@
 "@sveltejs/kit": patch
 ---
 
-fix: made `redirect` accept URL objects
+feat: accept `URL` in `redirect`
