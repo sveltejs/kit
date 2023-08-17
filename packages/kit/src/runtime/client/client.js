@@ -449,12 +449,12 @@ export function create_client(app, target) {
 
 			/** @type {import('@sveltejs/kit').LoadEvent} */
 			const load_input = {
-				route: {
-					get id() {
+				route: new Proxy(route, {
+					get: (target, key) => {
 						uses.route = true;
-						return route.id;
+						return target[/** @type {'id'} */ (key)];
 					}
-				},
+				}),
 				params: new Proxy(params, {
 					get: (target, key) => {
 						uses.params.add(/** @type {string} */ (key));
