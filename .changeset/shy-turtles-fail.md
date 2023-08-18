@@ -1,5 +1,5 @@
 ---
-"@sveltejs/kit": patch
+"@sveltejs/kit": minor
 ---
 
 feat: accept `URL` in `redirect`
