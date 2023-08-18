@@ -45,7 +45,7 @@ export function redirect(status, location) {
 		throw new Error('Invalid status code');
 	}
 
-	return new Redirect(status, String(location));
+	return new Redirect(status, location.toString());
 }
 
 /**
