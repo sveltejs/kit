@@ -1090,7 +1090,7 @@ export function create_client(app, target) {
 			const after_navigate = (
 				await Promise.all(
 					callbacks.on_navigate.map((fn) =>
-						fn(/** @type {import('types').OnNavigate} */ (nav.navigation))
+						fn(/** @type {import('@sveltejs/kit').OnNavigate} */ (nav.navigation))
 					)
 				)
 			).filter((value) => typeof value === 'function');
@@ -2021,7 +2021,7 @@ function reset_focus() {
  * @param {import('./types').NavigationState} current
  * @param {import('./types').NavigationIntent | undefined} intent
  * @param {URL | null} url
- * @param {import('types').NavigationType} type
+ * @param {import('@sveltejs/kit').NavigationType} type
  */
 function create_navigation(current, intent, url, type) {
 	/** @type {(value: any) => void} */
@@ -2035,7 +2035,7 @@ function create_navigation(current, intent, url, type) {
 		reject = r;
 	});
 
-	/** @type {import('types').Navigation} */
+	/** @type {import('@sveltejs/kit').Navigation} */
 	const navigation = {
 		from: {
 			params: current.params,
