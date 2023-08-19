@@ -208,6 +208,7 @@ function create_routes_and_nodes(cwd, config, fallback) {
 
 				if (!file.name.startsWith('+')) {
 					const name = file.name.slice(0, -ext.length);
+					// check if it is a valid route filename but missing the + prefix
 					const typo =
 						/^(?:(page(?:@(.*))?)|(layout(?:@(.*))?)|(error))$/.test(name) ||
 						/^(?:(server)|(page(?:(@[a-zA-Z0-9_-]*))?(\.server)?)|(layout(?:(@[a-zA-Z0-9_-]*))?(\.server)?))$/.test(
