@@ -24,7 +24,7 @@ You can use the playground at [`playgrounds/basic`](./playgrounds/basic/) to exp
 
 ### Linking
 
-If you don't want to use the playground you can use [pnpm `overrides`](https://pnpm.io/package_json#pnpmoverrides) to link it to your existing project:
+If you want to test against an existing project, you can use [pnpm `overrides`](https://pnpm.io/package_json#pnpmoverrides) in that project:
 
 ```jsonc
 {
