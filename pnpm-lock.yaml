@@ -986,6 +986,24 @@ importers:
         specifier: ^0.5.6
         version: 0.5.6
 
+  playgrounds/basic:
+    devDependencies:
+      '@sveltejs/adapter-auto':
+        specifier: workspace:*
+        version: link:../../packages/adapter-auto
+      '@sveltejs/kit':
+        specifier: workspace:*
+        version: link:../../packages/kit
+      svelte:
+        specifier: ^4.0.5
+        version: 4.1.2
+      typescript:
+        specifier: ^5.0.0
+        version: 5.0.4
+      vite:
+        specifier: ^4.4.2
+        version: 4.4.9(@types/node@20.4.9)(lightningcss@1.21.5)
+
   sites/kit.svelte.dev:
     dependencies:
       d3-geo:

@@ -16,7 +16,15 @@ cd kit
 pnpm install
 ```
 
-You can now run SvelteKit by linking it into your project with [pnpm `overrides`](https://pnpm.io/package_json#pnpmoverrides):
+## Testing Changes
+
+### Playground
+
+You can use the playground at [`playgrounds/basic`](./playgrounds/basic/) to experiment with your changes to SvelteKit locally.
+
+### Linking
+
+If you want to test against an existing project, you can use [pnpm `overrides`](https://pnpm.io/package_json#pnpmoverrides) in that project:
 
 ```jsonc
 {
