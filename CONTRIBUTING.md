@@ -20,7 +20,7 @@ pnpm install
 
 ### Playground
 
-You can use the playground at `packages/playground` to experiment with your changes to Kit locally. Nothing you change there will get detected by git by default.
+You can use the playground at [`playgrounds/basic`](./playgrounds/basic/) to experiment with your changes to Kit locally.
 
 ### Linking
 
