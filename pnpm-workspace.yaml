@@ -8,4 +8,4 @@ packages:
   - 'packages/kit/test/build-errors/apps/*'
   - 'packages/create-svelte/templates/*'
   - '!.test-tmp/**'
-  - playgrounds/*
+  - 'playgrounds/*'
