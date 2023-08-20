@@ -19,20 +19,20 @@ Each route directory contains one or more _route files_, which can be identified
 A `+page.svelte` component defines a page of your app. By default, pages are rendered both on the server ([SSR](glossary#ssr)) for the initial request and in the browser ([CSR](glossary#csr)) for subsequent navigation.
 
 ```svelte
-/// file: src/routes/+page.svelte
+<!--- file: src/routes/+page.svelte --->
 <h1>Hello and welcome to my site!</h1>
 <a href="/about">About my site</a>
 ```
 
 ```svelte
-/// file: src/routes/about/+page.svelte
+<!--- file: src/routes/about/+page.svelte --->
 <h1>About this site</h1>
 <p>TODO...</p>
 <a href="/">Home</a>
 ```
 
 ```svelte
-/// file: src/routes/blog/[slug]/+page.svelte
+<!--- file: src/routes/blog/[slug]/+page.svelte --->
 <script>
 	/** @type {import('./$types').PageData} */
 	export let data;
@@ -119,7 +119,7 @@ A `+page.server.js` file can also export _actions_. If `load` lets you read data
 If an error occurs during `load`, SvelteKit will render a default error page. You can customise this error page on a per-route basis by adding an `+error.svelte` file:
 
 ```svelte
-/// file: src/routes/blog/[slug]/+error.svelte
+<!--- file: src/routes/blog/[slug]/+error.svelte --->
 <script>
 	import { page } from '$app/stores';
 </script>
@@ -188,7 +188,7 @@ Layouts can be _nested_. Suppose we don't just have a single `/settings` page, b
 We can create a layout that only applies to pages below `/settings` (while inheriting the root layout with the top-level nav):
 
 ```svelte
-/// file: src/routes/settings/+layout.svelte
+<!--- file: src/routes/settings/+layout.svelte --->
 <script>
 	/** @type {import('./$types').LayoutData} */
 	export let data;
@@ -229,7 +229,7 @@ If a `+layout.js` exports [page options](page-options) — `prerender`, `ssr` an
 Data returned from a layout's `load` function is also available to all its child pages:
 
 ```svelte
-/// file: src/routes/settings/profile/+page.svelte
+<!--- file: src/routes/settings/profile/+page.svelte --->
 <script>
 	/** @type {import('./$types').PageData} */
 	export let data;
@@ -286,7 +286,7 @@ If an error is thrown (either `throw error(...)` or an unexpected error), the re
 By exporting `POST`/`PUT`/`PATCH`/`DELETE`/`OPTIONS`/`HEAD` handlers, `+server.js` files can be used to create a complete API:
 
 ```svelte
-/// file: src/routes/add/+page.svelte
+<!--- file: src/routes/add/+page.svelte --->
 <script>
 	let a = 0;
 	let b = 0;
@@ -340,7 +340,7 @@ Throughout the examples above, we've been importing types from a `$types.d.ts` f
 For example, annotating `export let data` with `PageData` (or `LayoutData`, for a `+layout.svelte` file) tells TypeScript that the type of `data` is whatever was returned from `load`:
 
 ```svelte
-/// file: src/routes/blog/[slug]/+page.svelte
+<!--- file: src/routes/blog/[slug]/+page.svelte --->
 <script>
 	/** @type {import('./$types').PageData} */
 	export let data;

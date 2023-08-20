@@ -1,5 +1,14 @@
 # @sveltejs/adapter-vercel
 
+## 3.0.3
+
+### Patch Changes
+
+- chore: upgrade to @vercel/nft version 0.23.0 ([#10445](https://github.com/sveltejs/kit/pull/10445))
+
+- Updated dependencies [[`0f0049810`](https://github.com/sveltejs/kit/commit/0f00498100361ef0a4ea8b0b4e8465e442fa22a6), [`6f36aefe1`](https://github.com/sveltejs/kit/commit/6f36aefe13bf55cfaef14166c60ecee989061ddd)]:
+  - @sveltejs/kit@1.22.4
+
 ## 3.0.2
 
 ### Patch Changes

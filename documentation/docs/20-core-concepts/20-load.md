@@ -22,7 +22,7 @@ export function load({ params }) {
 ```
 
 ```svelte
-/// file: src/routes/blog/[slug]/+page.svelte
+<!--- file: src/routes/blog/[slug]/+page.svelte --->
 <script>
 	/** @type {import('./$types').PageData} */
 	export let data;
@@ -83,7 +83,7 @@ export async function load() {
 ```
 
 ```svelte
-/// file: src/routes/blog/[slug]/+layout.svelte
+<!--- file: src/routes/blog/[slug]/+layout.svelte --->
 <script>
 	/** @type {import('./$types').LayoutData} */
 	export let data;
@@ -141,7 +141,7 @@ The `+page.svelte` component, and each `+layout.svelte` component above it, has 
 In some cases, we might need the opposite — a parent layout might need to access page data or data from a child layout. For example, the root layout might want to access a `title` property returned from a `load` function in `+page.js` or `+page.server.js`. This can be done with `$page.data`:
 
 ```svelte
-/// file: src/routes/+layout.svelte
+<!--- file: src/routes/+layout.svelte --->
 <script>
 	import { page } from '$app/stores';
 </script>
@@ -231,10 +231,11 @@ Given a `route.id` of `/a/[b]/[...c]` and a `url.pathname` of `/a/x/y/z`, the `p
 
 To get data from an external API or a `+server.js` handler, you can use the provided `fetch` function, which behaves identically to the [native `fetch` web API](https://developer.mozilla.org/en-US/docs/Web/API/fetch) with a few additional features:
 
-- it can be used to make credentialed requests on the server, as it inherits the `cookie` and `authorization` headers for the page request
-- it can make relative requests on the server (ordinarily, `fetch` requires a URL with an origin when used in a server context)
-- internal requests (e.g. for `+server.js` routes) go direct to the handler function when running on the server, without the overhead of an HTTP call
-- during server-side rendering, the response will be captured and inlined into the rendered HTML by hooking into the `text` and `json` methods of the `Response` object. Note that headers will _not_ be serialized, unless explicitly included via [`filterSerializedResponseHeaders`](hooks#server-hooks-handle). Then, during hydration, the response will be read from the HTML, guaranteeing consistency and preventing an additional network request - if you got a warning in your browser console when using the browser `fetch` instead of the `load` `fetch`, this is why.
+- It can be used to make credentialed requests on the server, as it inherits the `cookie` and `authorization` headers for the page request.
+- It can make relative requests on the server (ordinarily, `fetch` requires a URL with an origin when used in a server context).
+- Internal requests (e.g. for `+server.js` routes) go directly to the handler function when running on the server, without the overhead of an HTTP call.
+- During server-side rendering, the response will be captured and inlined into the rendered HTML by hooking into the `text` and `json` methods of the `Response` object. Note that headers will _not_ be serialized, unless explicitly included via [`filterSerializedResponseHeaders`](hooks#server-hooks-handle).
+- During hydration, the response will be read from the HTML, guaranteeing consistency and preventing an additional network request - if you received a warning in your browser console when using the browser `fetch` instead of the `load` `fetch`, this is why.
 
 ```js
 /// file: src/routes/items/[id]/+page.js
@@ -247,9 +248,7 @@ export async function load({ fetch, params }) {
 }
 ```
 
-> Cookies will only be passed through if the target host is the same as the SvelteKit application or a more specific subdomain of it.
-
-## Cookies and headers
+## Cookies
 
 A server `load` function can get and set [`cookies`](types#public-types-cookies).
 
@@ -274,7 +273,19 @@ export async function load({ cookies }) {
 }
 ```
 
+Cookies will only be passed through the provided `fetch` function if the target host is the same as the SvelteKit application or a more specific subdomain of it.
+
+For example, if SvelteKit is serving my.domain.com:
+- domain.com WILL NOT receive cookies
+- my.domain.com WILL receive cookies
+- api.domain.dom WILL NOT receive cookies
+- sub.my.domain.com WILL receive cookies
+
+Other cookies will not be passed when `credentials: 'include'` is set, because SvelteKit does not know which domain which cookie belongs to (the browser does not pass this information along), so it's not safe to forward any of them. Use the [handleFetch hook](hooks#server-hooks-handlefetch) to work around it.
+
 > When setting cookies, be aware of the `path` property. By default, the `path` of a cookie is the current pathname. If you for example set a cookie at page `admin/user`, the cookie will only be available within the `admin` pages by default. In most cases you likely want to set `path` to `'/'` to make the cookie available throughout your app.
+
+## Headers
 
 Both server and universal `load` functions have access to a `setHeaders` function that, when running on the server, can set headers for the response. (When running in the browser, `setHeaders` has no effect.) This is useful if you want the page to be cached, for example:
 
@@ -330,7 +341,7 @@ export async function load({ parent }) {
 ```
 
 ```svelte
-/// file: src/routes/abc/+page.svelte
+<!--- file: src/routes/abc/+page.svelte --->
 <script>
 	/** @type {import('./$types').PageData} */
 	export let data;
@@ -453,7 +464,7 @@ export function load() {
 This is useful for creating skeleton loading states, for example:
 
 ```svelte
-/// file: src/routes/+page.svelte
+<!--- file: src/routes/+page.svelte --->
 <script>
 	/** @type {import('./$types').PageData} */
 	export let data;
@@ -477,9 +488,11 @@ This is useful for creating skeleton loading states, for example:
 </p>
 ```
 
-On platforms that do not support streaming, such as AWS Lambda, responses will be buffered. This means the page will only render once all promises resolve.
+> On platforms that do not support streaming, such as AWS Lambda, responses will be buffered. This means the page will only render once all promises resolve. If you are using a proxy (e.g. NGINX), make sure it does not buffer responses from the proxied server.
 
 > Streaming data will only work when JavaScript is enabled. You should avoid returning nested promises from a universal `load` function if the page is server rendered, as these are _not_ streamed — instead, the promise is recreated when the function reruns in the browser.
+
+> The headers and status code of a response cannot be changed once the response has started streaming, therefore you cannot `setHeaders` or throw redirects inside a streamed promise.
 
 ## Parallel loading
 
@@ -558,7 +571,7 @@ export async function load({ fetch, depends }) {
 ```
 
 ```svelte
-/// file: src/routes/random-number/+page.svelte
+<!--- file: src/routes/random-number/+page.svelte --->
 <script>
 	import { invalidate, invalidateAll } from '$app/navigation';
 
