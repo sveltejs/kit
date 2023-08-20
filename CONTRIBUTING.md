@@ -20,7 +20,7 @@ pnpm install
 
 ### Playground
 
-You can use the playground at [`playgrounds/basic`](./playgrounds/basic/) to experiment with your changes to Kit locally.
+You can use the playground at [`playgrounds/basic`](./playgrounds/basic/) to experiment with your changes to SvelteKit locally.
 
 ### Linking
 
