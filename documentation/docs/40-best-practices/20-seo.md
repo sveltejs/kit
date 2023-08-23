@@ -151,7 +151,7 @@ export async function handle({ event, resolve }) {
 				let css = '';
 				const markup = amp
 					.transform(buffer)
-					.replace('⚡', 'amp')
+					.replace('⚡', 'amp') // dropcss can't handle this character
 					.replace(/<style amp-custom([^>]*?)>([^]+?)<\/style>/, (match, attributes, contents) => {
 						css = contents;
 						return `<style amp-custom${attributes}></style>`;
