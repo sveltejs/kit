@@ -1,5 +1,19 @@
 # @sveltejs/kit
 
+## 1.23.0
+
+### Minor Changes
+
+- feat: add warning for mistyped route filenames ([#10558](https://github.com/sveltejs/kit/pull/10558))
+
+- feat: accept `URL` in `redirect` ([#10570](https://github.com/sveltejs/kit/pull/10570))
+
+### Patch Changes
+
+- fix: adjust the type of `Navigation["type"]` ([#10599](https://github.com/sveltejs/kit/pull/10599))
+
+- fix: allow logging `$page.url` during prerendering ([#10567](https://github.com/sveltejs/kit/pull/10567))
+
 ## 1.22.6
 
 ### Patch Changes
