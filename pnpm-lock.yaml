@@ -991,9 +991,33 @@ importers:
       '@sveltejs/adapter-auto':
         specifier: workspace:*
         version: link:../../packages/adapter-auto
+      '@sveltejs/adapter-cloudflare':
+        specifier: workspace:*
+        version: link:../../packages/adapter-cloudflare
+      '@sveltejs/adapter-cloudflare-workers':
+        specifier: workspace:*
+        version: link:../../packages/adapter-cloudflare-workers
+      '@sveltejs/adapter-netlify':
+        specifier: workspace:*
+        version: link:../../packages/adapter-netlify
+      '@sveltejs/adapter-node':
+        specifier: workspace:*
+        version: link:../../packages/adapter-node
+      '@sveltejs/adapter-static':
+        specifier: workspace:*
+        version: link:../../packages/adapter-static
+      '@sveltejs/adapter-vercel':
+        specifier: workspace:*
+        version: link:../../packages/adapter-vercel
+      '@sveltejs/amp':
+        specifier: workspace:*
+        version: link:../../packages/amp
       '@sveltejs/kit':
         specifier: workspace:*
         version: link:../../packages/kit
+      '@sveltejs/package':
+        specifier: workspace:*
+        version: link:../../packages/package
       svelte:
         specifier: ^4.0.5
         version: 4.1.2
@@ -1002,7 +1026,7 @@ importers:
         version: 5.0.4
       vite:
         specifier: ^4.4.2
-        version: 4.4.9(@types/node@20.4.9)(lightningcss@1.21.5)
+        version: 4.4.9
 
   sites/kit.svelte.dev:
     dependencies:
@@ -6760,6 +6784,41 @@ packages:
       rollup: 3.27.2
     optionalDependencies:
       fsevents: 2.3.2
+
+  /vite@4.4.9:
+    resolution: {integrity: sha512-2mbUn2LlUmNASWwSCNSJ/EG2HuSRTnVNaydp6vMCm5VIqJsjMfbIWtbH2kDuwUVW5mMUKKZvGPX/rqeqVvv1XA==}
+    engines: {node: ^14.18.0 || >=16.0.0}
+    hasBin: true
+    peerDependencies:
+      '@types/node': '>= 14'
+      less: '*'
+      lightningcss: ^1.21.0
+      sass: '*'
+      stylus: '*'
+      sugarss: '*'
+      terser: ^5.4.0
+    peerDependenciesMeta:
+      '@types/node':
+        optional: true
+      less:
+        optional: true
+      lightningcss:
+        optional: true
+      sass:
+        optional: true
+      stylus:
+        optional: true
+      sugarss:
+        optional: true
+      terser:
+        optional: true
+    dependencies:
+      esbuild: 0.18.20
+      postcss: 8.4.27
+      rollup: 3.28.0
+    optionalDependencies:
+      fsevents: 2.3.2
+    dev: true
 
   /vite@4.4.9(@types/node@20.4.9)(lightningcss@1.21.5):
     resolution: {integrity: sha512-2mbUn2LlUmNASWwSCNSJ/EG2HuSRTnVNaydp6vMCm5VIqJsjMfbIWtbH2kDuwUVW5mMUKKZvGPX/rqeqVvv1XA==}
