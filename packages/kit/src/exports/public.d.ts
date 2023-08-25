@@ -890,7 +890,7 @@ export interface OnNavigate extends Navigation {
 	 */
 	type: Omit<NavigationType, 'enter' | 'leave'>;
 	/**
-	 * Since `onNavigate` callbacks are called immediately before a client-side navigation, it will never be called with a navigation that unloads the page.
+	 * Since `onNavigate` callbacks are called immediately before a client-side navigation, they will never be called with a navigation that unloads the page.
 	 */
 	willUnload: false;
 }
