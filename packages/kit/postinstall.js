@@ -17,7 +17,11 @@ try {
 			const packages = Array.isArray(pkg.workspaces) ? pkg.workspaces : pkg.workspaces.packages;
 
 			for (const directory of packages) {
-				directories.push(...glob(directory, { cwd, absolute: true }).filter(path => fs.statSync(path).isDirectory()));
+				directories.push(
+					...glob(directory, { cwd, absolute: true }).filter((path) =>
+						fs.statSync(path).isDirectory()
+					)
+				);
 			}
 		} else {
 			directories.push(cwd);
