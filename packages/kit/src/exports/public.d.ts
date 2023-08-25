@@ -909,7 +909,7 @@ export interface AfterNavigate extends Navigation {
 	 */
 	type: Omit<NavigationType, 'leave'>;
 	/**
-	 * Since `afterNavigate` callbacks are called after a navigation completes, it will never be called with a navigation that unloads the page.
+	 * Since `afterNavigate` callbacks are called after a navigation completes, they will never be called with a navigation that unloads the page.
 	 */
 	willUnload: false;
 }
