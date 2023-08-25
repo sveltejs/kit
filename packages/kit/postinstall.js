@@ -17,15 +17,13 @@ try {
 			const packages = Array.isArray(pkg.workspaces) ? pkg.workspaces : pkg.workspaces.packages;
 
 			for (const directory of packages) {
-				directories.push(...glob(directory, { cwd, absolute: true }));
+				directories.push(...glob(directory, { cwd, absolute: true }).filter(path => fs.statSync(path).isDirectory()));
 			}
 		} else {
 			directories.push(cwd);
 		}
 
 		for (const cwd of directories) {
-			if (fs.statSync(cwd).isFile()) continue;
-
 			process.chdir(cwd);
 
 			if (!fs.existsSync('package.json')) continue;
