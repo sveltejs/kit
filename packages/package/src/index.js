@@ -92,6 +92,8 @@ export async function watch(options) {
 			const events = pending.slice();
 			pending.length = 0;
 
+			let errored = false;
+
 			for (const { file, type } of events) {
 				if (type === 'unlink') {
 					for (const candidate of [
@@ -116,14 +118,27 @@ export async function watch(options) {
 
 				if (type === 'add' || type === 'change') {
 					console.log(`Processing ${file.name}`);
-					await process_file(input, output, file, options.config.preprocess, alias, analyse_code);
-					validate();
+					try {
+						await process_file(input, output, file, options.config.preprocess, alias, analyse_code);
+					} catch (e) {
+						errored = true;
+						console.error(e);
+					}
 				}
 			}
 
-			if (options.types) {
-				await emit_dts(input, output, options.cwd, alias, files);
-				console.log('Updated .d.ts files');
+			if (!errored && options.types) {
+				try {
+					await emit_dts(input, output, options.cwd, alias, files);
+					console.log('Updated .d.ts files');
+				} catch (e) {
+					errored = true;
+					console.error(e);
+				}
+			}
+
+			if (!errored) {
+				validate();
 			}
 
 			console.log(message);
