@@ -209,12 +209,22 @@ if (!process.env.CI) {
 			await settled();
 			compare('Test.svelte');
 			compare('Test.svelte.d.ts');
+
+			// doesn't crash on an error
+			write('src/lib/post-error.svelte', '<button on:={foo}>click me</button>');
+			await settled();
+
+			// recovers on subsequent change
+			write('src/lib/post-error.svelte', '<button on:click={foo}>click me</button>');
+			await settled();
+			compare('post-error.svelte');
 		} finally {
 			watcher.close();
 
 			remove('src/lib/Test.svelte');
 			remove('src/lib/a.js');
 			remove('src/lib/b.ts');
+			remove('src/lib/post-error.svelte');
 		}
 	});
 }
