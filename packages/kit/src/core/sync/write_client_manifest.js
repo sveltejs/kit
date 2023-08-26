@@ -1,6 +1,8 @@
+import path from 'node:path';
 import { relative_path, resolve_entry } from '../../utils/filesystem.js';
 import { s } from '../../utils/misc.js';
 import { dedent, write_if_changed } from './utils.js';
+import colors from 'kleur';
 
 /**
  * Writes the client manifest to disk. The manifest is used to power the router. It contains the
@@ -107,6 +109,18 @@ export function write_client_manifest(kit, manifest_data, output, metadata) {
 	`;
 
 	const hooks_file = resolve_entry(kit.files.hooks.client);
+
+	const typo = resolve_entry('src/+hooks.client');
+	if (typo) {
+		console.log(
+			colors
+				.bold()
+				.yellow(
+					`Unexpected + prefix. Did you mean ${typo.split('/').at(-1)?.slice(1)}?` +
+						` at ${path.resolve(typo)}`
+				)
+		);
+	}
 
 	write_if_changed(
 		`${output}/app.js`,
