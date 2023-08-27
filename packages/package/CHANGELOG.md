@@ -1,5 +1,11 @@
 # @sveltejs/package
 
+## 2.2.2
+
+### Patch Changes
+
+- fix: prevent crash on errors in watch mode ([#10628](https://github.com/sveltejs/kit/pull/10628))
+
 ## 2.2.1
 
 ### Patch Changes
