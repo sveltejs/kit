@@ -1641,9 +1641,8 @@ export function create_client(app, target) {
 					if (event.state[INDEX_KEY] === current_history_index) return;
 
 					const scroll = scroll_positions[event.state[INDEX_KEY]];
-
 					// if the only change is the hash, we don't need to do anything...
-					if (current.url.href.split('#')[0] === location.href.split('#')[0]) {
+					if (current.url?.href.split('#')[0] === location.href.split('#')[0]) {
 						// ...except handle scroll
 						scroll_positions[current_history_index] = scroll_state();
 						current_history_index = event.state[INDEX_KEY];
