@@ -10,24 +10,26 @@ try {
 	if (fs.existsSync('package.json')) {
 		const pkg = JSON.parse(fs.readFileSync('package.json', 'utf8'));
 
-		const directories = [];
+		const workspaces = [];
 
 		if (pkg.workspaces) {
-			// we have to do this because of https://classic.yarnpkg.com/blog/2018/02/15/nohoist/
-			const packages = Array.isArray(pkg.workspaces) ? pkg.workspaces : pkg.workspaces.packages;
+			// Find all NPM and Yarn workspace glob patterns
+			// https://classic.yarnpkg.com/blog/2018/02/15/nohoist/
+			// https://docs.npmjs.com/cli/v9/configuring-npm/package-json#workspaces
+			const patterns = Array.isArray(pkg.workspaces) ? pkg.workspaces : pkg.workspaces.packages;
 
-			for (const directory of packages) {
-				directories.push(
+			for (const directory of patterns) {
+				workspaces.push(
 					...glob(directory, { cwd, absolute: true }).filter((path) =>
 						fs.statSync(path).isDirectory()
 					)
 				);
 			}
 		} else {
-			directories.push(cwd);
+			workspaces.push(cwd);
 		}
 
-		for (const cwd of directories) {
+		for (const cwd of workspaces) {
 			process.chdir(cwd);
 
 			if (!fs.existsSync('package.json')) continue;
