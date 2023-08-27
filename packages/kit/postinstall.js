@@ -18,9 +18,9 @@ try {
 			// https://docs.npmjs.com/cli/v9/configuring-npm/package-json#workspaces
 			const patterns = Array.isArray(pkg.workspaces) ? pkg.workspaces : pkg.workspaces.packages;
 
-			for (const directory of patterns) {
+			for (const pattern of patterns) {
 				workspaces.push(
-					...glob(directory, { cwd, absolute: true }).filter((path) =>
+					...glob(pattern, { cwd, absolute: true }).filter((path) =>
 						fs.statSync(path).isDirectory()
 					)
 				);
