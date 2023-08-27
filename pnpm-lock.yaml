@@ -1015,9 +1015,6 @@ importers:
       '@sveltejs/kit':
         specifier: workspace:*
         version: link:../../packages/kit
-      '@sveltejs/package':
-        specifier: workspace:*
-        version: link:../../packages/package
       svelte:
         specifier: ^4.0.5
         version: 4.1.2
