@@ -2,4 +2,4 @@
 'create-svelte': minor
 ---
 
-feat: remove resolution-mode=highest in template .npmrc
+feat: remove `resolution-mode=highest` in template `.npmrc`
