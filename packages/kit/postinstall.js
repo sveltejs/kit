@@ -13,7 +13,7 @@ try {
 		const workspaces = [];
 
 		if (pkg.workspaces) {
-			// Find all NPM and Yarn workspace glob patterns
+			// Find all npm and Yarn workspace glob patterns
 			// https://classic.yarnpkg.com/blog/2018/02/15/nohoist/
 			// https://docs.npmjs.com/cli/v9/configuring-npm/package-json#workspaces
 			const patterns = Array.isArray(pkg.workspaces) ? pkg.workspaces : pkg.workspaces.packages;
