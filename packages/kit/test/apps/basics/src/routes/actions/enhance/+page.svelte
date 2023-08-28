@@ -8,6 +8,17 @@
 	/** @type {import('./$types').PageData} */
 	export let data;
 
+	let stored_message = data.stored_message;
+
+	/**
+	 * Use a function because reactive assignment blocks keypresses
+	 * @param {string} s
+	 */
+	function update_message(s) {
+		stored_message = s;
+	}
+	$: update_message(data.stored_message);
+
 	/** @type {AbortController | undefined} */
 	let previous;
 	let count = 0;
@@ -49,7 +60,12 @@
 </form>
 
 <form action="?/counter" method="post" use:enhance>
-	<button class="form4">Submit</button>
+	<button class="form4">Submit counter</button>
+</form>
+
+<form method="post" action="?/store_message" use:enhance>
+	<input name="store-message" type="text" bind:value={stored_message} />
+	<button class="form5">Store message</button>
 </form>
 
 <dialog id="dialog" open>

@@ -801,6 +801,23 @@ test.describe('Actions', () => {
 		await page.evaluate('window.svelte_tick()');
 		await expect(pre).toHaveText('prop: 1, store: 1');
 	});
+
+	test('use:enhance correctly resets bind:values after submission', async ({ page }) => {
+		await page.goto('/actions/enhance');
+		const input = page.locator('input[name="store-message"]');
+
+		await expect(input).toHaveValue('');
+
+		await input.fill('hello');
+		page.locator('.form5').click();
+		await page.evaluate('window.svelte_tick()'); // wait for data invalidation
+		await expect(input).toHaveValue('hello');
+
+		await input.fill('world');
+		page.locator('.form5').click();
+		await page.evaluate('window.svelte_tick()'); // wait for data invalidation
+		await expect(input).toHaveValue('world');
+	});
 });
 
 test.describe('Assets', () => {

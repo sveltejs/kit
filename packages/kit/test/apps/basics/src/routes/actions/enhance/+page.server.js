@@ -6,7 +6,8 @@ export function load({ cookies }) {
 
 	return {
 		initial: 'initial',
-		enhance_counter
+		enhance_counter,
+		stored_message: cookies.get('store-message') ?? ''
 	};
 }
 
@@ -49,6 +50,15 @@ export const actions = {
 		count += 1;
 
 		cookies.set('enhance-counter', count + '', {
+			path: '/actions/enhance'
+		});
+
+		return {};
+	},
+	store_message: async ({ request, cookies }) => {
+		const data = await request.formData();
+
+		cookies.set('store-message', data.get('store-message') + '', {
 			path: '/actions/enhance'
 		});
 
