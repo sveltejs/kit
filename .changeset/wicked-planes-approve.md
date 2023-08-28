@@ -2,4 +2,4 @@
 "@sveltejs/kit": patch
 ---
 
-ensure ssrRewriteStacktrace doesn't throw
+fix: ensure ssrRewriteStacktrace doesn't throw
