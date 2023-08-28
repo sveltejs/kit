@@ -888,7 +888,7 @@ export interface OnNavigate extends Navigation {
 	 * - `goto`: Navigation was triggered by a `goto(...)` call or a redirect
 	 * - `popstate`: Navigation was triggered by back/forward navigation
 	 */
-	type: Omit<NavigationType, 'enter' | 'leave'>;
+	type: Exclude<NavigationType, 'enter' | 'leave'>;
 	/**
 	 * Since `onNavigate` callbacks are called immediately before a client-side navigation, they will never be called with a navigation that unloads the page.
 	 */
