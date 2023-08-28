@@ -2021,7 +2021,7 @@ function reset_focus() {
  * @param {import('./types').NavigationState} current
  * @param {import('./types').NavigationIntent | undefined} intent
  * @param {URL | null} url
- * @param {import('@sveltejs/kit').NavigationType} type
+ * @param {Exclude<import('@sveltejs/kit').NavigationType, 'enter'>} type
  */
 function create_navigation(current, intent, url, type) {
 	/** @type {(value: any) => void} */
