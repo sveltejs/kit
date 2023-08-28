@@ -22,6 +22,7 @@
 		"sade": "^1.8.1",
 		"set-cookie-parser": "^2.6.0",
 		"sirv": "^2.0.2",
+		"tiny-glob": "^0.2.9",
 		"undici": "~5.23.0"
 	},
 	"devDependencies": {
