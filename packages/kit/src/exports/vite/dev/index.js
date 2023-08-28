@@ -249,7 +249,11 @@ export async function dev(vite, vite_config, svelte_config) {
 
 	/** @param {string} stack */
 	function fix_stack_trace(stack) {
-		return stack ? vite.ssrRewriteStacktrace(stack) : stack;
+		try{
+			return stack ? vite.ssrRewriteStacktrace(stack) : stack;
+		}catch(_e){
+			return stack;
+		}
 	}
 
 	await update_manifest();
