@@ -115,10 +115,10 @@ export function enhance(form_element, submit = () => {}) {
 		if (result.type === 'success') {
 			await client._invalidate_all_with_callback(() => {
 				if (reset !== false) {
-					// Here we call the browser-native reset. Svelte removes the form elements' value attributes
+					// Here we call the browser-native reset. Svelte removes the form elements' value
 					// attributes during hydration (https://github.com/sveltejs/svelte/issues/9148), so this
-					// only empties the form controls - But we still need to do this in case there are newly
-					// added elements to reset. We call reset from the prototype to avoid DOM clobbering.
+					// only empties the form controls - But we still need this as a fallback for any newly
+					// added elements. We call reset from the prototype to avoid DOM clobbering.
 					HTMLFormElement.prototype.reset.call(form_element);
 					// Now we emulate the native behavior of form.reset() for all the values we saved earlier.
 					for (let i = 0; i < controls.length; i++) {
