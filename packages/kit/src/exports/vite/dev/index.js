@@ -249,9 +249,9 @@ export async function dev(vite, vite_config, svelte_config) {
 
 	/** @param {string} stack */
 	function fix_stack_trace(stack) {
-		try{
+		try {
 			return stack ? vite.ssrRewriteStacktrace(stack) : stack;
-		}catch(_e){
+		} catch (_e) {
 			return stack;
 		}
 	}
