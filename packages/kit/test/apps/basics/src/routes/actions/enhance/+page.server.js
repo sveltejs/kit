@@ -7,7 +7,7 @@ export function load({ cookies }) {
 	return {
 		initial: 'initial',
 		enhance_counter,
-		stored_message: cookies.get('store-message') ?? ''
+		stored_message: (cookies.get('store-message') ?? '') + 'x'
 	};
 }
 

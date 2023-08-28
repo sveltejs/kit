@@ -806,17 +806,19 @@ test.describe('Actions', () => {
 		await page.goto('/actions/enhance');
 		const input = page.locator('input[name="store-message"]');
 
-		await expect(input).toHaveValue('');
+		await expect(input).toHaveValue('x');
 
 		await input.fill('hello');
 		page.locator('.form5').click();
-		await page.evaluate('window.svelte_tick()'); // wait for data invalidation
 		await expect(input).toHaveValue('hello');
+		await page.evaluate('window.svelte_tick()'); // wait for data invalidation
+		await expect(input).toHaveValue('hellox');
 
 		await input.fill('world');
 		page.locator('.form5').click();
-		await page.evaluate('window.svelte_tick()'); // wait for data invalidation
 		await expect(input).toHaveValue('world');
+		await page.evaluate('window.svelte_tick()'); // wait for data invalidation
+		await expect(input).toHaveValue('worldx');
 	});
 });
 

@@ -52,6 +52,7 @@ export interface Client {
 	apply_action: typeof applyAction;
 
 	// private API
+	_invalidate_all_with_callback: (before_data_write: () => void) => void;
 	_hydrate(opts: {
 		status: number;
 		error: App.Error | null;

@@ -1,8 +1,6 @@
 import * as devalue from 'devalue';
 import { BROWSER, DEV } from 'esm-env';
 import { client } from '../client/singletons.js';
-import { invalidateAll } from './navigation.js';
-import { tick } from 'svelte';
 
 /**
  * This action updates the `form` property of the current page with the given data and updates `$page.status`.
@@ -115,21 +113,21 @@ export function enhance(form_element, submit = () => {}) {
 	 */
 	const fallback_callback = async ({ action, result, reset }) => {
 		if (result.type === 'success') {
-			if (reset !== false) {
-				// Emulate the behavior of form.reset() because Svelte removes the form controls' value
-				// attributes during hydration (https://github.com/sveltejs/svelte/issues/9148). If Svelte
-				// starts to keep the value attributes, we could move back to using form.reset() and simply
-				// update the form controls' value attributes after calling invalidateAll() below.
-				for (let i = 0; i < controls.length; i++) {
-					const control = controls[i];
-					if ('value' in control && control.value !== values[i]) {
-						control.value = values[i];
-						control.dispatchEvent(new Event('input'));
+			await client._invalidate_all_with_callback(() => {
+				if (reset !== false) {
+					// Emulate the behavior of form.reset() because Svelte removes the form controls' value
+					// attributes during hydration (https://github.com/sveltejs/svelte/issues/9148). If Svelte
+					// starts to keep the value attributes, we could move back to using form.reset() and simply
+					// update the form controls' value attributes after calling invalidateAll() below.
+					for (let i = 0; i < controls.length; i++) {
+						const control = controls[i];
+						if ('value' in control && control.value !== values[i]) {
+							control.value = values[i];
+							control.dispatchEvent(new Event('input'));
+						}
 					}
 				}
-			}
-
-			await invalidateAll();
+			});
 
 			// Save new initial values because they may heva been invalidated
 			controls = Array.from(form_element.elements);
