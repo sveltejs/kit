@@ -38,14 +38,14 @@ export function error(status, body) {
  * Create a `Redirect` object. If thrown during request handling, SvelteKit will return a redirect response.
  * Make sure you're not catching the thrown redirect, which would prevent SvelteKit from handling it.
  * @param {300 | 301 | 302 | 303 | 304 | 305 | 306 | 307 | 308} status The [HTTP status code](https://developer.mozilla.org/en-US/docs/Web/HTTP/Status#redirection_messages). Must be in the range 300-308.
- * @param {string} location The location to redirect to.
+ * @param {string | URL} location The location to redirect to.
  */
 export function redirect(status, location) {
 	if ((!BROWSER || DEV) && (isNaN(status) || status < 300 || status > 308)) {
 		throw new Error('Invalid status code');
 	}
 
-	return new Redirect(status, location);
+	return new Redirect(status, location.toString());
 }
 
 /**

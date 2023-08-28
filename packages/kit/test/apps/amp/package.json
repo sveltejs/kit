@@ -15,7 +15,7 @@
 		"@sveltejs/amp": "workspace:^",
 		"@sveltejs/kit": "workspace:^",
 		"cross-env": "^7.0.3",
-		"purify-css": "^1.2.5",
+		"dropcss": "^1.0.16",
 		"svelte": "^4.0.5",
 		"svelte-check": "^3.4.4",
 		"typescript": "^4.9.4",

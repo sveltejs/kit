@@ -119,7 +119,7 @@ export interface Builder {
 	getClientDirectory(): string;
 	/** Get the fully resolved path to the directory containing server-side code. */
 	getServerDirectory(): string;
-	/** Get the application path including any configured `base` path, e.g. `/my-base-path/_app`. */
+	/** Get the application path including any configured `base` path, e.g. `my-base-path/_app`. */
 	getAppPath(): string;
 
 	/**
@@ -851,7 +851,7 @@ export interface Navigation {
 	 * - `goto`: Navigation was triggered by a `goto(...)` call or a redirect
 	 * - `popstate`: Navigation was triggered by back/forward navigation
 	 */
-	type: Omit<NavigationType, 'enter'>;
+	type: Exclude<NavigationType, 'enter'>;
 	/**
 	 * Whether or not the navigation will result in the page being unloaded (i.e. not a client-side navigation)
 	 */
@@ -898,7 +898,7 @@ export interface OnNavigate extends Navigation {
 /**
  * The argument passed to [`afterNavigate`](https://kit.svelte.dev/docs/modules#$app-navigation-afternavigate) callbacks.
  */
-export interface AfterNavigate extends Navigation {
+export interface AfterNavigate extends Omit<Navigation, 'type'> {
 	/**
 	 * The type of navigation:
 	 * - `enter`: The app has hydrated
@@ -907,7 +907,7 @@ export interface AfterNavigate extends Navigation {
 	 * - `goto`: Navigation was triggered by a `goto(...)` call or a redirect
 	 * - `popstate`: Navigation was triggered by back/forward navigation
 	 */
-	type: Omit<NavigationType, 'leave'>;
+	type: Exclude<NavigationType, 'leave'>;
 	/**
 	 * Since `afterNavigate` callbacks are called after a navigation completes, they will never be called with a navigation that unloads the page.
 	 */

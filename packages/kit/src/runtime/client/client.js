@@ -906,7 +906,7 @@ export function create_client(app, target) {
 	/**
 	 * @param {{
 	 *   url: URL;
-	 *   type: import('@sveltejs/kit').NavigationType;
+	 *   type: import('@sveltejs/kit').Navigation["type"];
 	 *   intent?: import('./types').NavigationIntent;
 	 *   delta?: number;
 	 * }} opts
@@ -946,7 +946,7 @@ export function create_client(app, target) {
 	 *     replaceState: boolean;
 	 *     state: any;
 	 *   } | null;
-	 *   type: import('@sveltejs/kit').NavigationType;
+	 *   type: import('@sveltejs/kit').Navigation["type"];
 	 *   delta?: number;
 	 *   nav_token?: {};
 	 *   accepted: () => void;
