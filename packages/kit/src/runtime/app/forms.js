@@ -129,7 +129,7 @@ export function enhance(form_element, submit = () => {}) {
 				}
 			});
 
-			// Save new initial values because they may heva been invalidated
+			// Save new initial values because they may have been invalidated
 			controls = Array.from(form_element.elements);
 			values = controls.map((el) => ('value' in el ? el.value : undefined));
 		}
