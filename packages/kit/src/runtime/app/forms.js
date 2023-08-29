@@ -116,7 +116,7 @@ export function enhance(form_element, submit = () => {}) {
 			await client._invalidate_all_with_callback(() => {
 				if (reset !== false) {
 					// Here we call the browser-native reset. Svelte removes the form elements' value
-					// attributes during hydration (https://github.com/sveltejs/svelte/issues/9148), so this
+					// attributes during hydration (https://github.com/sveltejs/svelte/issues/8220), so this
 					// only empties the form controls - But we still need this as a fallback for any newly
 					// added elements. We call reset from the prototype to avoid DOM clobbering.
 					HTMLFormElement.prototype.reset.call(form_element);
