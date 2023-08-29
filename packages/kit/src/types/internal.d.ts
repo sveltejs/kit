@@ -266,7 +266,7 @@ export interface ServerMetadataRoute {
 	};
 	methods: HttpMethod[];
 	prerender: PrerenderOption | undefined;
-	entries: Array<string> | undefined;
+	entries: string[] | undefined;
 }
 
 export interface ServerMetadata {
