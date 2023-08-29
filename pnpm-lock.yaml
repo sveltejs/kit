@@ -1029,8 +1029,8 @@ importers:
         specifier: workspace:^
         version: link:../../packages/kit
       '@sveltejs/site-kit':
-        specifier: 6.0.0-next.26
-        version: 6.0.0-next.26(@sveltejs/kit@packages+kit)(svelte@4.1.2)
+        specifier: 6.0.0-next.33
+        version: 6.0.0-next.33(@sveltejs/kit@packages+kit)(svelte@4.1.2)
       '@types/d3-geo':
         specifier: ^3.0.3
         version: 3.0.3
@@ -1050,8 +1050,8 @@ importers:
         specifier: ^0.30.2
         version: 0.30.2
       marked:
-        specifier: ^7.0.1
-        version: 7.0.1
+        specifier: ^7.0.5
+        version: 7.0.5
       prism-svelte:
         specifier: ^0.5.0
         version: 0.5.0
@@ -2034,8 +2034,8 @@ packages:
       typescript: 4.9.4
     dev: true
 
-  /@sveltejs/site-kit@6.0.0-next.26(@sveltejs/kit@packages+kit)(svelte@4.1.2):
-    resolution: {integrity: sha512-MtxtbAfwwev7S6UHcMiOVxypaR0Yd5mKNPlzGnOnfRPy/1omeL5s/qyOYtuYxdqNJvNws9Iqu3sERK6o55+sRQ==}
+  /@sveltejs/site-kit@6.0.0-next.33(@sveltejs/kit@packages+kit)(svelte@4.1.2):
+    resolution: {integrity: sha512-S2qRlP+7kvchL5qmyiU+YsQKYAqiugHRs64xWTKF/9icNJD0lPKZhtw3rdY7twFSBM7yr6FLdtICdvX5HlRg9g==}
     peerDependencies:
       '@sveltejs/kit': ^1.20.0
       svelte: ^4.0.0
@@ -2043,7 +2043,7 @@ packages:
       '@sveltejs/kit': link:packages/kit
       esm-env: 1.0.0
       svelte: 4.1.2
-      svelte-local-storage-store: 0.5.0(svelte@4.1.2)
+      svelte-local-storage-store: 0.6.0(svelte@4.1.2)
     dev: true
 
   /@sveltejs/vite-plugin-svelte-inspector@1.0.3(@sveltejs/vite-plugin-svelte@2.4.1)(svelte@4.1.2)(vite@4.4.8):
@@ -4616,8 +4616,8 @@ packages:
     hasBin: true
     dev: true
 
-  /marked@7.0.1:
-    resolution: {integrity: sha512-m8Aze620Ts62yaciz2DghZGUkUfdgvSNRicS2/XtQkStMNoce3NWjOD2b/jWF32+XXK6udM6pRhv2dKNlneAFA==}
+  /marked@7.0.5:
+    resolution: {integrity: sha512-lwNAFTfXgqpt/XvK17a/8wY9/q6fcSPZT1aP6QW0u74VwaJF/Z9KbRcX23sWE4tODM+AolJNcUtErTkgOeFP/Q==}
     engines: {node: '>= 16'}
     hasBin: true
     dev: true
@@ -5905,8 +5905,8 @@ packages:
       svelte: 4.1.2
     dev: false
 
-  /svelte-local-storage-store@0.5.0(svelte@4.1.2):
-    resolution: {integrity: sha512-SEDrpapeia6fUqta+r1NvSLlJYPkZ4pBcl15EYIOSPNzy6vhpoXu8cnzUDmZxsWl7fZGAHxrVH9UyZCbyO4W+g==}
+  /svelte-local-storage-store@0.6.0(svelte@4.1.2):
+    resolution: {integrity: sha512-UbCY/yT/YUadU5IX/gZkoRQnA+ebFZHKKQjlJvfWHnBj3CPe9sNn8ndxYz/xy4LUzGjuBLq8+wH5RYK54ba3wA==}
     engines: {node: '>=0.14'}
     peerDependencies:
       svelte: ^3.48.0 || ^4.0.0

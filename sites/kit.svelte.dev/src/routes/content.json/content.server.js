@@ -44,7 +44,7 @@ export async function content() {
 			blocks.push({
 				breadcrumbs: [...breadcrumbs, metadata.title],
 				href: category.href([slug]),
-				content: plaintext(intro),
+				content: await plaintext(intro),
 				rank
 			});
 
@@ -60,7 +60,7 @@ export async function content() {
 				blocks.push({
 					breadcrumbs: [...breadcrumbs, metadata.title, h3],
 					href: category.href([slug, slugify(h3)]),
-					content: plaintext(intro),
+					content: await plaintext(intro),
 					rank
 				});
 
@@ -71,7 +71,7 @@ export async function content() {
 					blocks.push({
 						breadcrumbs: [...breadcrumbs, metadata.title, h3, h4],
 						href: category.href([slug, slugify(h3), slugify(h4)]),
-						content: plaintext(lines.join('\n').trim()),
+						content: await plaintext(lines.join('\n').trim()),
 						rank
 					});
 				}
@@ -82,11 +82,11 @@ export async function content() {
 	return blocks;
 }
 
-function plaintext(markdown) {
+async function plaintext(markdown) {
 	const block = (text) => `${text}\n`;
 	const inline = (text) => text;
 
-	return markedTransform(markdown, {
+	return (await markedTransform(markdown, {
 		code: (source) =>
 			source
 				.split('// ---cut---\n')
@@ -113,7 +113,7 @@ function plaintext(markdown) {
 		link: (href, title, text) => text,
 		image: (href, title, text) => text,
 		text: inline
-	})
+	}))
 		.replace(/&lt;/g, '<')
 		.replace(/&gt;/g, '>')
 		.replace(/&#(\d+);/g, (match, code) => {
