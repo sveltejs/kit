@@ -1029,8 +1029,8 @@ importers:
         specifier: workspace:^
         version: link:../../packages/kit
       '@sveltejs/site-kit':
-        specifier: 6.0.0-next.35
-        version: 6.0.0-next.35(@sveltejs/kit@packages+kit)(svelte@4.1.2)
+        specifier: 6.0.0-next.36
+        version: 6.0.0-next.36(@sveltejs/kit@packages+kit)(svelte@4.1.2)
       '@types/d3-geo':
         specifier: ^3.0.3
         version: 3.0.3
@@ -2034,8 +2034,8 @@ packages:
       typescript: 4.9.4
     dev: true
 
-  /@sveltejs/site-kit@6.0.0-next.35(@sveltejs/kit@packages+kit)(svelte@4.1.2):
-    resolution: {integrity: sha512-Q/URfJe2nSSZ9WZgegKtD9xwszNKWrwlbSq7ICvST3BDotwqxZJA1C9W5M6aW7/gAegsh8RZ1fodpkFPhnhMMg==}
+  /@sveltejs/site-kit@6.0.0-next.36(@sveltejs/kit@packages+kit)(svelte@4.1.2):
+    resolution: {integrity: sha512-DZC+eqpHt76X3mCRZzaynPCFyA8J9IzZufsZMf6SOT/BU53WrbvjENzf4LKKz3Ktg7wYdo72sUuGGgO9SEEbdQ==}
     peerDependencies:
       '@sveltejs/kit': ^1.20.0
       svelte: ^4.0.0
