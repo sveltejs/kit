@@ -1,5 +1,11 @@
 # @sveltejs/kit
 
+## 1.23.1
+
+### Patch Changes
+
+- fix: process globs in `pkg.workspaces` ([#10625](https://github.com/sveltejs/kit/pull/10625))
+
 ## 1.23.0
 
 ### Minor Changes
