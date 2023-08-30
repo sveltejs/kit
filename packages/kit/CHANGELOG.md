@@ -1,5 +1,43 @@
 # @sveltejs/kit
 
+## 1.24.0
+
+### Minor Changes
+
+- feat: onNavigate lifecycle function ([#9605](https://github.com/sveltejs/kit/pull/9605))
+
+### Patch Changes
+
+- fix: Use Proxy to track usage of client side load `event.route` ([#10576](https://github.com/sveltejs/kit/pull/10576))
+
+## 1.23.1
+
+### Patch Changes
+
+- fix: process globs in `pkg.workspaces` ([#10625](https://github.com/sveltejs/kit/pull/10625))
+
+## 1.23.0
+
+### Minor Changes
+
+- feat: add warning for mistyped route filenames ([#10558](https://github.com/sveltejs/kit/pull/10558))
+
+- feat: accept `URL` in `redirect` ([#10570](https://github.com/sveltejs/kit/pull/10570))
+
+### Patch Changes
+
+- fix: adjust the type of `Navigation["type"]` ([#10599](https://github.com/sveltejs/kit/pull/10599))
+
+- fix: allow logging `$page.url` during prerendering ([#10567](https://github.com/sveltejs/kit/pull/10567))
+
+## 1.22.6
+
+### Patch Changes
+
+- fix: correctly restore trailing slash in url pathname for data requests ([#10475](https://github.com/sveltejs/kit/pull/10475))
+
+- fix: load trailing slash option from server even when there's no load function ([#10475](https://github.com/sveltejs/kit/pull/10475))
+
 ## 1.22.5
 
 ### Patch Changes
