@@ -31,7 +31,7 @@ export async function dev(vite, vite_config, svelte_config) {
 
 	const fetch = globalThis.fetch;
 	globalThis.fetch = (info, init) => {
-		if (typeof info === 'string' && !/^\w+:\/\//.test(info)) {
+		if (typeof info === 'string' && !/^(\w+:\/\/|data:)/.test(info)) {
 			throw new Error(
 				`Cannot use relative URL (${info}) with global fetch — use \`event.fetch\` instead: https://kit.svelte.dev/docs/web-standards#fetch-apis`
 			);
