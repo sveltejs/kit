@@ -63,6 +63,28 @@ Libraries work best in the browser with Vite when they distribute an ESM version
 
 If you are still encountering issues we recommend searching both [the Vite issue tracker](https://github.com/vitejs/vite/issues) and the issue tracker of the library in question. Sometimes issues can be worked around by fiddling with the [`optimizeDeps`](https://vitejs.dev/config/#dep-optimization-options) or [`ssr`](https://vitejs.dev/config/#ssr-options) config values though we recommend this as only a short-term workaround in favor of fixing the library in question.
 
+## How do I use the view transitions API with SvelteKit?
+
+While SvelteKit does not have any specific integration with [view transitions](https://developer.chrome.com/docs/web-platform/view-transitions/), you can call `document.startViewTransition` in [`onNavigate`](/docs/modules#$app-navigation-onnavigate) to trigger a view transition on every navigation.
+
+```js
+// @errors: 2339 2810
+import { onNavigate } from '$app/navigation';
+
+onNavigate((navigation) => {
+	if (!document.startViewTransition) return;
+
+	return new Promise((resolve) => {
+		document.startViewTransition(async () => {
+			resolve();
+			await navigation.complete;
+		});
+	});
+});
+```
+
+For more, see ["Unlocking view transitions"](https://svelte.dev/blog/view-transitions) on the Svelte blog.
+
 ## How do I use X with SvelteKit?
 
 Make sure you've read the [documentation section on integrations](./integrations). If you're still having trouble, solutions to common issues are listed below.
