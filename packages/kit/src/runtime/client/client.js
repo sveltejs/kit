@@ -2034,6 +2034,7 @@ function create_navigation(current, intent, url, type) {
 		fulfil = f;
 		reject = r;
 	});
+	complete.catch(() => {});
 
 	/** @type {import('@sveltejs/kit').Navigation} */
 	const navigation = {
