@@ -2035,6 +2035,9 @@ function create_navigation(current, intent, url, type) {
 		reject = r;
 	});
 
+	// Handle any errors off-chain so that it doesn't show up as an unhandled rejection
+	complete.catch(() => {});
+
 	/** @type {import('@sveltejs/kit').Navigation} */
 	const navigation = {
 		from: {
