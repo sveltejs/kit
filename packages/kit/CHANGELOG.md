@@ -1,5 +1,11 @@
 # @sveltejs/kit
 
+## 1.24.1
+
+### Patch Changes
+
+- fix: mark aborted/cancelled navigation as handled ([#10666](https://github.com/sveltejs/kit/pull/10666))
+
 ## 1.24.0
 
 ### Minor Changes
