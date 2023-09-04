@@ -520,6 +520,10 @@ test.describe('Load', () => {
 		await page.goto('/non-existent-route');
 
 		expect(await page.textContent('h1')).toBe('404');
+
+		await page.goto('/non-existent-route-loop');
+
+		expect(await page.textContent('h1')).toBe('404');
 	});
 });
 
