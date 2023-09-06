@@ -18,10 +18,7 @@ export async function load({ cookies, locals, fetch }) {
 	}
 
 	if (locals.url?.pathname === '/non-existent-route-loop') {
-		await fetch('/non-existent-route-loop').then((r) => {
-			console.log(r.status);
-			return r.json();
-		});
+		await fetch('/non-existent-route-loop');
 	}
 
 	const should_fail = cookies.get('fail-type');
