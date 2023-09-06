@@ -51,7 +51,7 @@
 <div class="text content" use:copy_code_descendants>
 	<h1>{data.page.title}</h1>
 
-	<a class="edit" href="https://github.com/sveltejs/kit/edit/master/documentation/{data.page.file}">
+	<a class="edit" href="https://github.com/sveltejs/kit/edit/master/documentation/docs/{data.page.file}">
 		<Icon size={50} name="edit" /> Edit this page on GitHub
 	</a>
 

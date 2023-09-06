@@ -76,7 +76,7 @@ export async function get_docs_data(base = CONTENT_BASE_PATHS.DOCS) {
 				slug: page_slug,
 				content: page_content,
 				category: category_title,
-				sections: get_sections(page_content),
+				sections: await get_sections(page_content),
 				path: `${app_base}/docs/${page_slug}`,
 				file: `${category_dir}/${page_md}`
 			});
@@ -100,7 +100,7 @@ export function get_docs_list(docs_data) {
 }
 
 /** @param {string} markdown */
-function get_sections(markdown) {
+async function get_sections(markdown) {
 	const headingRegex = /^##\s+(.*)$/gm;
 	/** @type {import('./types').Section[]} */
 	const secondLevelHeadings = [];
@@ -113,7 +113,7 @@ function get_sections(markdown) {
 
 		secondLevelHeadings.push({
 			title: removeMarkdown(
-				escape(markedTransform(unTYPED, { paragraph: (txt) => txt }))
+				escape(await markedTransform(unTYPED, { paragraph: (txt) => txt }))
 					.replace(/<\/?code>/g, '')
 					.replace(/&#39;/g, "'")
 					.replace(/&quot;/g, '"')

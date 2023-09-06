@@ -435,7 +435,7 @@ export function load({ locals }) {
 }
 ```
 
-> Make sure you're not catching the thrown redirect, which would prevent SvelteKit from handling it.
+> Don't use `throw redirect()` from within a try-catch block, as the redirect will immediately trigger the catch statement.
 
 In the browser, you can also navigate programmatically outside of a `load` function using [`goto`](modules#$app-navigation-goto) from [`$app.navigation`](modules#$app-navigation).
 

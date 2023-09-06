@@ -2,6 +2,7 @@ import { applyAction } from '../app/forms';
 import {
 	afterNavigate,
 	beforeNavigate,
+	onNavigate,
 	goto,
 	invalidate,
 	invalidateAll,
@@ -43,6 +44,7 @@ export interface Client {
 	// public API, exposed via $app/navigation
 	after_navigate: typeof afterNavigate;
 	before_navigate: typeof beforeNavigate;
+	on_navigate: typeof onNavigate;
 	disable_scroll_handling(): void;
 	goto: typeof goto;
 	invalidate: typeof invalidate;

@@ -2,7 +2,7 @@
 
 ## Preparing
 
-This is a monorepo, meaning the repo holds multiple packages. It requires the use of [pnpm](https://pnpm.js.org/en/). You can [install pnpm](https://pnpm.io/installation) with:
+This is a monorepo, meaning the repo holds multiple packages. It requires the use of [pnpm](https://pnpm.io/). You can [install pnpm](https://pnpm.io/installation) with:
 
 ```bash
 npm i -g pnpm
@@ -16,7 +16,15 @@ cd kit
 pnpm install
 ```
 
-You can now run SvelteKit by linking it into your project with [pnpm `overrides`](https://pnpm.io/package_json#pnpmoverrides):
+## Testing Changes
+
+### Playground
+
+You can use the playground at [`playgrounds/basic`](./playgrounds/basic/) to experiment with your changes to SvelteKit locally.
+
+### Linking
+
+If you want to test against an existing project, you can use [pnpm `overrides`](https://pnpm.io/package_json#pnpmoverrides) in that project:
 
 ```jsonc
 {

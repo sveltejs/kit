@@ -1,5 +1,41 @@
 # @sveltejs/kit
 
+## 1.24.1
+
+### Patch Changes
+
+- fix: mark aborted/cancelled navigation as handled ([#10666](https://github.com/sveltejs/kit/pull/10666))
+
+## 1.24.0
+
+### Minor Changes
+
+- feat: onNavigate lifecycle function ([#9605](https://github.com/sveltejs/kit/pull/9605))
+
+### Patch Changes
+
+- fix: Use Proxy to track usage of client side load `event.route` ([#10576](https://github.com/sveltejs/kit/pull/10576))
+
+## 1.23.1
+
+### Patch Changes
+
+- fix: process globs in `pkg.workspaces` ([#10625](https://github.com/sveltejs/kit/pull/10625))
+
+## 1.23.0
+
+### Minor Changes
+
+- feat: add warning for mistyped route filenames ([#10558](https://github.com/sveltejs/kit/pull/10558))
+
+- feat: accept `URL` in `redirect` ([#10570](https://github.com/sveltejs/kit/pull/10570))
+
+### Patch Changes
+
+- fix: adjust the type of `Navigation["type"]` ([#10599](https://github.com/sveltejs/kit/pull/10599))
+
+- fix: allow logging `$page.url` during prerendering ([#10567](https://github.com/sveltejs/kit/pull/10567))
+
 ## 1.22.6
 
 ### Patch Changes
