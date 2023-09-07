@@ -225,6 +225,31 @@ test.describe('Endpoints', () => {
 		expect(await endpoint_response.text()).toBe('');
 		expect(endpoint_response.headers()['x-sveltekit-head-endpoint']).toBe('true');
 	});
+
+	test('catch-all handler', async ({ request }) => {
+		const url = '/endpoint-output/fallback';
+
+		let response = await request.fetch(url, {
+			method: 'GET'
+		});
+
+		expect(response.status()).toBe(200);
+		expect(await response.text()).toBe('ok');
+
+		response = await request.fetch(url, {
+			method: 'MOVE' // also works with arcane methods
+		});
+
+		expect(response.status()).toBe(200);
+		expect(await response.text()).toBe('catch-all');
+
+		response = await request.fetch(url, {
+			method: 'OPTIONS'
+		});
+
+		expect(response.status()).toBe(200);
+		expect(await response.text()).toBe('catch-all');
+	});
 });
 
 test.describe('Errors', () => {
