@@ -145,6 +145,7 @@ By adding `"sideEffects": false` in the `package.json`, you're signaling to the 
 Make sure that `"sideEffects"` is correctly set. If a file with side effects is incorrectly marked as having no side effects, it can result in broken functionality. If your package has files with side effects, you can specify them in an array:
 
 ```json
+/// file: package.json
 {
     "sideEffects": ["./src/sideEffectfulFile.js"]
 }
