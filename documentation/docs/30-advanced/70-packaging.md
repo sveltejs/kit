@@ -128,9 +128,7 @@ This is a legacy field that enabled tooling to recognise Svelte component librar
 
 ### sideEffects
 
-The `"sideEffects"` flag is used by bundlers to determine if a file may contain code that has side effects - code that performs actions outside its scope when the module is imported, such as modifying global variables or the prototype of built-in JavaScript objects. 
-
-In JavaScript, a module is considered to have "side effects" if it makes changes that are observable from other scripts outside the module when it's imported. Because a side effect could potentially affect the behavior of other parts of the application, these files/modules will be included in the final bundle regardless of whether their exports are used in the application.
+The `sideEffects` option is used by bundlers to determine if a module may contain code that has side effects. A module is considered to have "side effects" if it makes changes that are observable from other scripts outside the module when it's imported; such as modifying global variables or the prototype of built-in JavaScript objects. Because a side effect could potentially affect the behavior of other parts of the application, these files/modules will be included in the final bundle regardless of whether their exports are used in the application.
 
 ```json
 {
