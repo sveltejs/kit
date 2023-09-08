@@ -412,10 +412,11 @@ We can also implement progressive enhancement ourselves, without `use:enhance`, 
 	/** @type {any} */
 	let error;
 
+	/** @param {{ currentTarget: EventTarget & HTMLFormElement}} event */
 	async function handleSubmit(event) {
-		const data = new FormData(this);
+		const data = new FormData(event.currentTarget);
 
-		const response = await fetch(this.action, {
+		const response = await fetch(event.currentTarget.action, {
 			method: 'POST',
 			body: data
 		});
