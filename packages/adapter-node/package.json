@@ -24,8 +24,8 @@
 		"index.d.ts"
 	],
 	"scripts": {
-		"dev": "rimraf files && rollup -cw",
-		"build": "rimraf files && rollup -c",
+		"dev": "node -e \"fs.rmSync('files', { force: true, recursive: true })\" && rollup -cw",
+		"build": "node -e \"fs.rmSync('files', { force: true, recursive: true })\" && rollup -c",
 		"test": "echo \"tests temporarily disabled\" # c8 vitest run",
 		"check": "tsc",
 		"lint": "prettier --check . --config ../../.prettierrc --ignore-path .gitignore",
@@ -38,7 +38,6 @@
 		"@types/node": "^16.18.6",
 		"c8": "^8.0.0",
 		"polka": "^1.0.0-next.22",
-		"rimraf": "^5.0.0",
 		"sirv": "^2.0.3",
 		"typescript": "^4.9.4",
 		"vitest": "^0.34.0"
