@@ -8,15 +8,14 @@
 		"preview": "vite preview",
 		"check": "svelte-kit sync && tsc && svelte-check",
 		"test": "node test/setup.js && pnpm test:dev && pnpm test:build",
-		"test:dev": "rimraf test/errors.json && cross-env DEV=true playwright test",
-		"test:build": "rimraf test/errors.json && playwright test",
-		"test:cross-platform:dev": "node test/setup.js && rimraf test/errors.json && cross-env DEV=true playwright test test/cross-platform/",
-		"test:cross-platform:build": "node test/setup.js && rimraf test/errors.json && playwright test test/cross-platform/"
+		"test:dev": "node -e \"fs.rmSync('test/errors.json', { force: true })\" && cross-env DEV=true playwright test",
+		"test:build": "node -e \"fs.rmSync('test/errors.json', { force: true })\" && playwright test",
+		"test:cross-platform:dev": "node test/setup.js && node -e \"fs.rmSync('test/errors.json', { force: true })\" && cross-env DEV=true playwright test test/cross-platform/",
+		"test:cross-platform:build": "node test/setup.js && node -e \"fs.rmSync('test/errors.json', { force: true })\" && playwright test test/cross-platform/"
 	},
 	"devDependencies": {
 		"@sveltejs/kit": "workspace:^",
 		"cross-env": "^7.0.3",
-		"rimraf": "^5.0.0",
 		"svelte": "^4.0.5",
 		"svelte-check": "^3.4.4",
 		"typescript": "^4.9.4",

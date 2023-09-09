@@ -14,7 +14,6 @@
 	"devDependencies": {
 		"@sveltejs/kit": "workspace:^",
 		"cross-env": "^7.0.3",
-		"rimraf": "^5.0.0",
 		"svelte": "^4.0.5",
 		"svelte-check": "^3.4.4",
 		"typescript": "^4.9.4",
