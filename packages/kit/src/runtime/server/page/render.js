@@ -151,7 +151,7 @@ export async function render_response({
 			const fetch = globalThis.fetch;
 			let warned = false;
 			globalThis.fetch = (info, init) => {
-				if (typeof info === 'string' && !/^\w+:\/\//.test(info)) {
+				if (typeof info === 'string' && !/^[a-z][a-z\d+\-.]+:/i.test(info)) {
 					throw new Error(
 						`Cannot call \`fetch\` eagerly during server side rendering with relative URL (${info}) — put your \`fetch\` calls inside \`onMount\` or a \`load\` function instead`
 					);
