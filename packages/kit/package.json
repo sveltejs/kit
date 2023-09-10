@@ -33,7 +33,7 @@
 		"@types/sade": "^1.7.4",
 		"@types/set-cookie-parser": "^2.4.2",
 		"dts-buddy": "^0.2.4",
-		"marked": "^8.0.0",
+		"marked": "^9.0.0",
 		"rollup": "^3.7.0",
 		"svelte": "^4.0.5",
 		"svelte-preprocess": "^5.0.4",
