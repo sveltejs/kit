@@ -31,6 +31,10 @@ export async function dev(vite, vite_config, svelte_config) {
 
 	const fetch = globalThis.fetch;
 	globalThis.fetch = (info, init) => {
+		// The regex below does not strictly check if a URL is absolute, but checks for the existance
+		// of a scheme, which implies that it is absolute when the scheme is e.g., http or https.
+		// And it will accept data URLs, which don't require a network request.
+		// Regex based on scheme definition at https://www.rfc-editor.org/rfc/rfc3986#section-3.1
 		if (typeof info === 'string' && !/^[a-z][a-z\d+\-.]+:/i.test(info)) {
 			throw new Error(
 				`Cannot use relative URL (${info}) with global fetch — use \`event.fetch\` instead: https://kit.svelte.dev/docs/web-standards#fetch-apis`
