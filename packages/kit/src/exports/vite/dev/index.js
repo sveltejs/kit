@@ -15,6 +15,7 @@ import * as sync from '../../../core/sync/sync.js';
 import { get_mime_lookup, runtime_base } from '../../../core/utils.js';
 import { compact } from '../../../utils/array.js';
 import { not_found } from '../utils.js';
+import { SCHEME } from '../../../utils/url.js';
 
 const cwd = process.cwd();
 
@@ -35,7 +36,7 @@ export async function dev(vite, vite_config, svelte_config) {
 		// of a scheme, which implies that it is absolute when the scheme is e.g., http or https.
 		// And it will accept data URLs, which don't require a network request.
 		// Regex based on scheme definition at https://www.rfc-editor.org/rfc/rfc3986#section-3.1
-		if (typeof info === 'string' && !/^[a-z][a-z\d+\-.]+:/i.test(info)) {
+		if (typeof info === 'string' && !SCHEME.test(info)) {
 			throw new Error(
 				`Cannot use relative URL (${info}) with global fetch — use \`event.fetch\` instead: https://kit.svelte.dev/docs/web-standards#fetch-apis`
 			);

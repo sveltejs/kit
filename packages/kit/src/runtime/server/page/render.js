@@ -12,6 +12,7 @@ import { public_env } from '../../shared-server.js';
 import { text } from '../../../exports/index.js';
 import { create_async_iterator } from '../../../utils/streaming.js';
 import { SVELTE_KIT_ASSETS } from '../../../constants.js';
+import { SCHEME } from '../../../utils/url.js';
 
 // TODO rename this function/module
 
@@ -155,7 +156,7 @@ export async function render_response({
 				// of a scheme, which implies that it is absolute when the scheme is e.g., http or https.
 				// And it will accept data URLs, which don't require a network request.
 				// Regex based on scheme definition at https://www.rfc-editor.org/rfc/rfc3986#section-3.1
-				if (typeof info === 'string' && !/^[a-z][a-z\d+\-.]+:/i.test(info)) {
+				if (typeof info === 'string' && !SCHEME.test(info)) {
 					throw new Error(
 						`Cannot call \`fetch\` eagerly during server side rendering with relative URL (${info}) — put your \`fetch\` calls inside \`onMount\` or a \`load\` function instead`
 					);
