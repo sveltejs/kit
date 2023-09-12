@@ -1,9 +1,9 @@
 import { BROWSER } from 'esm-env';
 
-/** @constant - Matches a URI scheme (https://www.rfc-editor.org/rfc/rfc3986#section-3.1)
-    @type {RegExp}
-    @default
-*/
+/**
+ * Matches a URI scheme. See https://www.rfc-editor.org/rfc/rfc3986#section-3.1
+ * @type {RegExp}
+ */
 export const SCHEME = /^[a-z][a-z\d+\-.]+:/i;
 
 const absolute = /^([a-z]+:)?\/?\//;
