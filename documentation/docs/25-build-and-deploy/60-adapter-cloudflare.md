@@ -23,17 +23,7 @@ import adapter from '@sveltejs/adapter-cloudflare';
 
 export default {
 	kit: {
-		adapter: adapter({
-			// See below for an explanation of these options
-			routes: {
-				include: ['/*'],
-				exclude: ['<all>']
-			},
-			external: [ 'fs' ],
-			alias: {
-				fs: './fs-stub.js'
-			}
-		})
+		adapter: adapter()
 	}
 };
 ```
@@ -55,13 +45,63 @@ The `routes` option allows you to customise the [`_routes.json`](https://develop
 
 You can have up to 100 `include` and `exclude` rules combined. Generally you can omit the `routes` options, but if (for example) your `<prerendered>` paths exceed that limit, you may find it helpful to manually create an `exclude` list that includes `'/articles/*'` instead of the auto-generated `['/articles/foo', '/articles/bar', '/articles/baz', ...]`.
 
+```js
+// @errors: 2307
+/// file: svelte.config.js
+import adapter from '@sveltejs/adapter-cloudflare';
+
+export default {
+	kit: {
+		adapter: adapter({
+			// other options here …
+			routes: {
+				include: ['/*'],
+				exclude: ['<all>']
+			}
+		})
+	}
+};
+```
+
 ### `external`
 
 `external` is equivalent to the respective [_external_ option of esbuild](https://esbuild.github.io/api/#external). You can use it to mark a file or package as external to exclude it from your build. Typically, this can be used for packages that do import _NodeJS_ modules such as `fs`.
 
+```js
+// @errors: 2307
+/// file: svelte.config.js
+import adapter from '@sveltejs/adapter-cloudflare';
+
+export default {
+	kit: {
+		adapter: adapter({
+			// other options here …
+			external: [ 'fs' ]
+		})
+	}
+};
+```
+
 ### `alias`
 
 `alias` is equivalent to the respective [_alias_ option of esbuild](https://esbuild.github.io/api/#alias). You can use it to substitute one package for another when bundling.
+
+```js
+// @errors: 2307
+/// file: svelte.config.js
+import adapter from '@sveltejs/adapter-cloudflare';
+
+export default {
+	kit: {
+		adapter: adapter({
+			// other options here …
+			alias: {
+				fs: './fs-stub.js'
+			}
+		})
+	}
+};
+```
 
 ## Deployment
 
