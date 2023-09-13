@@ -1,4 +1,3 @@
-// @ts-check
 import { readFile, readdir, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -310,12 +309,12 @@ const app_environment = modules.find((module) => module.name === '$app/environme
 const __sveltekit_paths = modules.find((module) => module.name === '__sveltekit/paths');
 const __sveltekit_environment = modules.find((module) => module.name === '__sveltekit/environment');
 
-app_paths.exports.push(
+app_paths?.exports.push(
 	__sveltekit_paths.exports.find((e) => e.name === 'assets'),
 	__sveltekit_paths.exports.find((e) => e.name === 'base')
 );
 
-app_environment.exports.push(
+app_environment?.exports.push(
 	__sveltekit_environment.exports.find((e) => e.name === 'building'),
 	__sveltekit_environment.exports.find((e) => e.name === 'version')
 );
