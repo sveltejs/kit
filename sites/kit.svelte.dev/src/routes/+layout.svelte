@@ -7,10 +7,15 @@
 	import '@sveltejs/site-kit/styles/index.css';
 
 	export let data;
+
+	/** @type {import('@sveltejs/kit').Snapshot<number>} */
+	let shell_snapshot;
+
+	export const snapshot = shell_snapshot;
 </script>
 
 <div style:display={$page.url.pathname !== '/docs' ? 'contents' : 'none'}>
-	<Shell nav_visible={$page.url.pathname !== '/repl/embed'}>
+	<Shell nav_visible={$page.url.pathname !== '/repl/embed'} bind:snapshot={shell_snapshot}>
 		<Nav slot="top-nav" title={data.nav_title} links={data.nav_links}>
 			<svelte:fragment slot="home-large">
 				<strong>kit</strong>.svelte.dev
