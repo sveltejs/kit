@@ -1,5 +1,21 @@
 # @sveltejs/kit
 
+## 1.25.0
+
+### Minor Changes
+
+- feat: add server endpoint catch-all method handler `fallback` ([#9755](https://github.com/sveltejs/kit/pull/9755))
+
+### Patch Changes
+
+- fix: allow calling `fetch` for any scheme ([#10699](https://github.com/sveltejs/kit/pull/10699))
+
+## 1.24.1
+
+### Patch Changes
+
+- fix: mark aborted/cancelled navigation as handled ([#10666](https://github.com/sveltejs/kit/pull/10666))
+
 ## 1.24.0
 
 ### Minor Changes

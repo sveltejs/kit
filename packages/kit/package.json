@@ -1,6 +1,6 @@
 {
 	"name": "@sveltejs/kit",
-	"version": "1.24.0",
+	"version": "1.25.0",
 	"description": "The fastest way to build Svelte apps",
 	"repository": {
 		"type": "git",
@@ -33,7 +33,7 @@
 		"@types/sade": "^1.7.4",
 		"@types/set-cookie-parser": "^2.4.2",
 		"dts-buddy": "^0.2.4",
-		"marked": "^7.0.0",
+		"marked": "^9.0.0",
 		"rollup": "^3.7.0",
 		"svelte": "^4.0.5",
 		"svelte-preprocess": "^5.0.4",

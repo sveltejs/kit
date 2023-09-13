@@ -1,14 +1,19 @@
 import { BROWSER } from 'esm-env';
 
+/**
+ * Matches a URI scheme. See https://www.rfc-editor.org/rfc/rfc3986#section-3.1
+ * @type {RegExp}
+ */
+export const SCHEME = /^[a-z][a-z\d+\-.]+:/i;
+
 const absolute = /^([a-z]+:)?\/?\//;
-const scheme = /^[a-z]+:/;
 
 /**
  * @param {string} base
  * @param {string} path
  */
 export function resolve(base, path) {
-	if (scheme.test(path)) return path;
+	if (SCHEME.test(path)) return path;
 	if (path[0] === '#') return base + path;
 
 	const base_match = absolute.exec(base);

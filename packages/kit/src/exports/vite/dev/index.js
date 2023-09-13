@@ -15,6 +15,7 @@ import * as sync from '../../../core/sync/sync.js';
 import { get_mime_lookup, runtime_base } from '../../../core/utils.js';
 import { compact } from '../../../utils/array.js';
 import { not_found } from '../utils.js';
+import { SCHEME } from '../../../utils/url.js';
 
 const cwd = process.cwd();
 
@@ -31,7 +32,7 @@ export async function dev(vite, vite_config, svelte_config) {
 
 	const fetch = globalThis.fetch;
 	globalThis.fetch = (info, init) => {
-		if (typeof info === 'string' && !/^\w+:\/\//.test(info)) {
+		if (typeof info === 'string' && !SCHEME.test(info)) {
 			throw new Error(
 				`Cannot use relative URL (${info}) with global fetch — use \`event.fetch\` instead: https://kit.svelte.dev/docs/web-standards#fetch-apis`
 			);

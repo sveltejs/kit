@@ -1084,7 +1084,7 @@ export interface ResolveOptions {
 export interface RouteDefinition<Config = any> {
 	id: string;
 	api: {
-		methods: HttpMethod[];
+		methods: Array<HttpMethod | '*'>;
 	};
 	page: {
 		methods: Array<Extract<HttpMethod, 'GET' | 'POST'>>;
@@ -1092,7 +1092,7 @@ export interface RouteDefinition<Config = any> {
 	pattern: RegExp;
 	prerender: PrerenderOption;
 	segments: RouteSegment[];
-	methods: HttpMethod[];
+	methods: Array<HttpMethod | '*'>;
 	config: Config;
 }
 

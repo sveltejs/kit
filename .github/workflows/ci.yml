@@ -22,7 +22,7 @@ jobs:
   Lint:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - uses: pnpm/action-setup@v2.4.0
       - uses: actions/setup-node@v3
         with:
@@ -52,7 +52,7 @@ jobs:
       KIT_E2E_BROWSER: ${{matrix.e2e-browser}}
     steps:
       - run: git config --global core.autocrlf false
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - uses: pnpm/action-setup@v2.4.0
       - uses: actions/setup-node@v3
         with:
@@ -107,7 +107,7 @@ jobs:
       KIT_E2E_BROWSER: ${{matrix.e2e-browser}}
     steps:
       - run: git config --global core.autocrlf false
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - uses: pnpm/action-setup@v2.4.0
       - uses: actions/setup-node@v3
         with:
@@ -130,7 +130,7 @@ jobs:
   Test-create-svelte:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - uses: pnpm/action-setup@v2.4.0
       - uses: actions/setup-node@v3
         with:
