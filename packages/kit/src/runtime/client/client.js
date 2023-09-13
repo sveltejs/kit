@@ -1695,7 +1695,7 @@ export function create_client(app, target) {
 						},
 						type: 'popstate',
 						delta,
-						nav_token: token,
+						nav_token: token
 					});
 				} else {
 					// since popstate event is also emitted when an anchor referencing the same
