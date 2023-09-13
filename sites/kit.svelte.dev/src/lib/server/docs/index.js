@@ -106,7 +106,7 @@ async function get_sections(markdown) {
 	const secondLevelHeadings = [];
 	let match;
 
-	const placeholders_rendered = replaceExportTypePlaceholders(markdown, modules);
+	const placeholders_rendered = await replaceExportTypePlaceholders(markdown, modules);
 
 	while ((match = headingRegex.exec(placeholders_rendered)) !== null) {
 		secondLevelHeadings.push({
