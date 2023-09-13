@@ -31,7 +31,7 @@
 		"typescript": "5.0.4",
 		"vite": "^4.4.9",
 		"vite-imagetools": "^5.0.8",
-		"vitest": "^0.34.4"
+		"vitest": "^0.34.1"
 	},
 	"type": "module",
 	"dependencies": {
