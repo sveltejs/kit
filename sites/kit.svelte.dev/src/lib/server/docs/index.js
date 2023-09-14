@@ -106,14 +106,12 @@ async function get_sections(markdown) {
 	const secondLevelHeadings = [];
 	let match;
 
-	const placeholders_rendered = replaceExportTypePlaceholders(markdown, modules);
+	const placeholders_rendered = await replaceExportTypePlaceholders(markdown, modules);
 
 	while ((match = headingRegex.exec(placeholders_rendered)) !== null) {
-		const unTYPED = match[1].startsWith('[TYPE]:') ? match[1].replace('[TYPE]: ', '') : match[1];
-
 		secondLevelHeadings.push({
 			title: removeMarkdown(
-				escape(await markedTransform(unTYPED, { paragraph: (txt) => txt }))
+				escape(await markedTransform(match[1], { paragraph: (txt) => txt }))
 					.replace(/<\/?code>/g, '')
 					.replace(/&#39;/g, "'")
 					.replace(/&quot;/g, '"')
@@ -121,7 +119,7 @@ async function get_sections(markdown) {
 					.replace(/&gt;/g, '>')
 					.replace(/<(\/)?(em|b|strong|code)>/g, '')
 			),
-			slug: normalizeSlugify(unTYPED)
+			slug: normalizeSlugify(match[1])
 		});
 	}
 

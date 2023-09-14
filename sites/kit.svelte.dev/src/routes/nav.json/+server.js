@@ -22,7 +22,12 @@ async function get_nav_list() {
 			title: 'Docs',
 			prefix: 'docs',
 			pathname: '/docs/introduction',
-			sections: processed_docs_list
+			sections: [
+				{
+					title: 'DOCS',
+					sections: processed_docs_list
+				}
+			]
 		}
 	];
 }

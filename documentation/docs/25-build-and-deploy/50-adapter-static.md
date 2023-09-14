@@ -109,7 +109,7 @@ const config = {
 You can use GitHub actions to automatically deploy your site to GitHub Pages when you make a change. Here's an example workflow:
 
 ```yaml
-/// file: .github/workflows/deploy.yml
+### file: .github/workflows/deploy.yml
 name: Deploy to GitHub Pages
 
 on:
