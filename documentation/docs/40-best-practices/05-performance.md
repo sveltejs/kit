@@ -2,101 +2,103 @@
 title: Performance
 ---
 
-Out of the box, SvelteKit does a lot of work to make your applications as performant as possible:
+SvelteKit fait beaucoup de travail pour rendre vos applications aussi performantes que possible :
 
-- Code-splitting, so that only the code you need for the current page is loaded
-- Asset preloading, so that 'waterfalls' (of files requesting other files) are prevented
-- File hashing, so that your assets can be cached forever
-- Request coalescing, so that data fetched from separate server `load` functions is grouped into a single HTTP request
-- Parallel loading, so that separate universal `load` functions fetch data simultaneously
-- Data inlining, so that requests made with `fetch` during server rendering can be replayed in the browser without issuing a new request
-- Conservative invalidation, so that `load` functions are only re-run when necessary
-- Prerendering (configurable on a per-route basis, if necessary) so that pages without dynamic data can be served instantaneously
-- Link preloading, so that data and code requirements for a client-side navigation are eagerly anticipated
+- la division du code ([code-splitting](PUBLIC_SVELTE_SITE_URL/docs/web#code-splitting)), afin que seul le code dont vous avez besoin pour la page en cours soit chargé
+- le préchargement des ressources, afin d'éviter les "cascades" (de fichiers demandant d'autres fichiers)
+- le hachage des fichiers, pour que vos ressources puissent être mises en cache pour toujours
+- la fusion des requêtes, de sorte que les données extraites de fonctions `load` distinctes du serveur soient regroupées en une seule requête HTTP
+- le chargement parallèle, de sorte que des fonctions `load` distinctes récupèrent des données simultanément.
+- Inlining des données, de sorte que les requêtes faites avec `fetch` pendant le rendu du serveur peuvent être rejouées dans le navigateur sans émettre une nouvelle requête.
+- L'invalidation conservatrice, afin que les fonctions `load` ne soient réexécutées qu'en cas de nécessité.
+- Pré-rendu (configurable par route, si nécessaire) pour que les pages sans données dynamiques puissent être servies instantanément.
+- Le préchargement des liens, de sorte que les données et le code nécessaires à la navigation côté client soient anticipés.
 
-Nevertheless, we can't (yet) eliminate all sources of slowness. To eke out maximum performance, you should be mindful of the following tips.
+Néanmoins, nous ne pouvons pas (encore) éliminer toutes les sources de lenteur. Pour obtenir des performances maximales, vous devez tenir compte des conseils suivants.
 
-## Diagnosing issues
+## Diagnostiquer les problèmes
 
-Google's [PageSpeed Insights](https://pagespeed.web.dev/) and (for more advanced analysis) [WebPageTest](https://www.webpagetest.org/) are excellent ways to understand the performance characteristics of a site that is already deployed to the internet.
+Les outils de Google [PageSpeed Insights] (https://pagespeed.web.dev/) et (pour une analyse plus poussée) [WebPageTest] (https://www.webpagetest.org/) sont d'excellents moyens de comprendre les caractéristiques de performance d'un site déjà déployé sur l'internet.
 
-Your browser also includes useful developer tools for analysing your site, whether deployed or running locally:
+Votre navigateur comprend également des outils de développement utiles pour analyser votre site, qu'il soit déployé ou exécuté localement :
 
-* Chrome - [Lighthouse](https://developer.chrome.com/docs/lighthouse/overview#devtools), [Network](https://developer.chrome.com/docs/devtools/network), and [Performance](https://developer.chrome.com/docs/devtools/performance) devtools
-* Edge - [Lighthouse](https://learn.microsoft.com/en-us/microsoft-edge/devtools-guide-chromium/lighthouse/lighthouse-tool), [Network](https://learn.microsoft.com/en-us/microsoft-edge/devtools-guide-chromium/network/), and [Performance](https://learn.microsoft.com/en-us/microsoft-edge/devtools-guide-chromium/evaluate-performance/) devtools
-* Firefox - [Network](https://firefox-source-docs.mozilla.org/devtools-user/network_monitor/) and [Performance](https://hacks.mozilla.org/2022/03/performance-tool-in-firefox-devtools-reloaded/) devtools
-* Safari - [enhancing the performance of your webpage](https://developer.apple.com/library/archive/documentation/NetworkingInternetWeb/Conceptual/Web_Inspector_Tutorial/EnhancingyourWebpagesPerformance/EnhancingyourWebpagesPerformance.html)
+* Chrome - [Lighthouse](https://developer.chrome.com/docs/lighthouse/overview#devtools), [Network](https://developer.chrome.com/docs/devtools/network), et [Performance](https://developer.chrome.com/docs/devtools/performance) dans les devtools
+* Edge - [Lighthouse](https://learn.microsoft.com/en-us/microsoft-edge/devtools-guide-chromium/lighthouse/lighthouse-tool), [Network](https://learn.microsoft.com/en-us/microsoft-edge/devtools-guide-chromium/network/), et [Performance](https://learn.microsoft.com/en-us/microsoft-edge/devtools-guide-chromium/evaluate-performance/) dans les devtools
+* Firefox - [Network](https://firefox-source-docs.mozilla.org/devtools-user/network_monitor/) et [Performance](https://hacks.mozilla.org/2022/03/performance-tool-in-firefox-devtools-reloaded/) dans les devtools
+* Safari - [améliorer les performances de votre page web](https://developer.apple.com/library/archive/documentation/NetworkingInternetWeb/Conceptual/Web_Inspector_Tutorial/EnhancingyourWebpagesPerformance/EnhancingyourWebpagesPerformance.html)
 
-Note that your site running locally in `dev` mode will exhibit different behaviour than your production app, so you should do performance testing in [preview](/docs/building-your-app#preview-your-app) mode after building.
+Notez que votre site fonctionnant localement en mode `dev` aura un comportement différent de celui de votre application de production, vous devriez donc faire des tests de performance en mode [preview](/docs/building-your-app#pr-visualiser-votre-application) après le [build](PUBLIC_SVELTE_SITE_URL/docs/development#build).
 
-### Instrumenting
+### Instrumenter
 
-If you see in the network tab of your browser that an API call is taking a long time and you'd like to understand why, you may consider instrumenting your backend with a tool like [OpenTelemetry](https://opentelemetry.io/) or [Server-Timing headers](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Server-Timing).
+Si vous voyez dans l'onglet réseau de votre navigateur qu'un appel d'API prend beaucoup de temps et que vous aimeriez comprendre pourquoi, vous pouvez envisager d'instrumenter votre backend avec un outil comme [OpenTelemetry](https://opentelemetry.io/) (en anglais) ou [Server-Timing headers](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Server-Timing) (en anglais).
 
-## Optimizing assets
+## Optimisation des ressources
 
 ### Images
 
-Reducing the size of image files is often one of the most impactful changes you can make to a site's performance. Svelte provides the `@sveltejs/enhanced-image` package, detailed on the [images](images) page, for making this easier. Additionally, Lighthouse is useful for identifying the worst offenders.
+Réduire la taille des images est souvent l'un des changements les plus importants que vous puissiez faire pour améliorer les performances d'un site. Svelte fournit le paquet `@sveltejs/enhanced-image`, détaillé sur la page [images](images), pour faciliter cette opération. De plus, Lighthouse est utile pour identifier les problèmes les plus importants.
 
 ### Videos
 
-Video files can be very large, so extra care should be taken to ensure that they're optimized:
+Les fichiers vidéo peuvent être très volumineux, il faut donc veiller à ce qu'ils soient optimisés :
 
-- Compress videos with tools such as [Handbrake](https://handbrake.fr/). Consider converting the videos to web-friendly formats such as `.webm` or `.mp4`.
-- You can [lazy-load videos](https://web.dev/articles/lazy-loading-video) located below the fold with `preload="none"` (though note that this will slow down playback when the user _does_ initiate it).
-- Strip the audio track out of muted videos using a tool like [FFmpeg](https://ffmpeg.org/).
+- Compressez les vidéos avec des outils tels que [Handbrake] (https://handbrake.fr/). Envisagez de convertir les vidéos dans des formats adaptés au web tels que `.webm` ou `.mp4`.
+- Vous pouvez [lazy-loader les vidéos](https://web.dev/articles/lazy-loading-video) situées sous la ligne de flottaison avec `preload="none"` (mais notez que cela ralentira la lecture lorsque l'utilisateur _lance_ la vidéo).
+- Supprimez la piste audio des vidéos muettes à l'aide d'un outil comme [FFmpeg](https://ffmpeg.org/).
 
-### Fonts
+### Polices
 
-SvelteKit automatically preloads critical `.js` and `.css` files when the user visits a page, but it does _not_ preload fonts by default, since this may cause unnecessary files (such as font weights that are referenced by your CSS but not actually used on the current page) to be downloaded. Having said that, preloading fonts correctly can make a big difference to how fast your site feels. In your [`handle`](hooks#server-hooks-handle) hook, you can call `resolve` with a `preload` filter that includes your fonts.
+SvelteKit précharge automatiquement les fichiers `.js` et `.css` critiques lorsque l'utilisateur visite une page, mais il ne précharge pas les polices par défaut, car cela peut entraîner le téléchargement de fichiers inutiles (tels que les graisses de police référencés par votre CSS mais qui ne sont pas utilisés sur la page actuelle). Cela dit, le préchargement correct des polices peut faire une grande différence dans la rapidité de votre site. Dans votre hook [`handle`](hooks#hooks-de-serveur), vous pouvez appeler `resolve` avec un filtre `preload` qui inclut vos polices.
 
-You can reduce the size of font files by [subsetting](https://web.dev/learn/performance/optimize-web-fonts#subset_your_web_fonts) your fonts.
+Vous pouvez réduire la taille des fichiers de polices de caractères en [sous-ensembles] (https://web.dev/learn/performance/optimize-web-fonts#subset_your_web_fonts) vos polices de caractères.
 
-## Reducing code size
+## Réduction de la taille du code
 
-### Svelte version
+### version de Svelte
 
-We recommend running the latest version of Svelte. Svelte 4 is smaller and faster than Svelte 3. (The [Svelte 5 preview](https://svelte-5-preview.vercel.app/) is much smaller and faster still, but we don't recommend that you upgrade to this version until it's production ready.)
+Nous recommandons d'utiliser la dernière version de Svelte. Svelte 4 est plus petit et plus rapide que Svelte 3. (La [la version de Svelte 5] (https://svelte-5-preview.vercel.app/) est encore plus petite et plus rapide, mais nous ne vous recommandons pas de passer à cette version tant qu'elle n'est pas prête pour la production).
 
-### Packages
+### Paquets
 
-[`rollup-plugin-visualizer`](https://www.npmjs.com/package/rollup-plugin-visualizer) can be helpful for identifying which packages are contributing the most to the size of your site. You may also find opportunities to remove code by manually inspecting the build output (use `build: { minify: false }` in your [Vite config](https://vitejs.dev/config/build-options.html#build-minify) to make the output readable, but remember to undo that before deploying your app), or via the network tab of your browser's devtools.
+[`rollup-plugin-visualizer`] (https://www.npmjs.com/package/rollup-plugin-visualizer) peut être utile pour identifier les paquets qui contribuent le plus à la taille de votre site. Vous pouvez également trouver du code à supprimer en inspectant manuellement la sortie de la compilation (utilisez `build : { minify : false }` dans votre [Vite config](https://vitejs.dev/config/build-options.html#build-minify) pour rendre la sortie lisible, mais n'oubliez pas de l'annuler avant de déployer votre application), ou via l'onglet réseau des outils de développement de votre navigateur.
 
-### External scripts
+### Scripts externes
 
-Try to minimize the number of third-party scripts running in the browser. For example, instead of using JavaScript-based analytics consider using server-side implementations, such as those offered by many platforms with SvelteKit adapters including [Cloudflare](https://www.cloudflare.com/web-analytics/), [Netlify](https://docs.netlify.com/monitor-sites/site-analytics/), and [Vercel](https://vercel.com/docs/analytics).
+Essayez de minimiser le nombre de scripts tiers exécutés dans le navigateur. Par exemple, au lieu d'utiliser des analyses basées sur JavaScript, envisagez d'utiliser des implémentations côté serveur, telles que celles proposées par de nombreuses plateformes dotées d'adaptateurs SvelteKit, notamment [Cloudflare](https://www.cloudflare.com/web-analytics/), [Netlify](https://docs.netlify.com/monitor-sites/site-analytics/) et [Vercel](https://vercel.com/docs/analytics).
 
 To run third party scripts in a web worker (which avoids blocking the main thread), use [Partytown's SvelteKit integration](https://partytown.builder.io/sveltekit).
 
-### Selective loading
+Pour exécuter des scripts tiers dans un [web worker](PUBLIC_SVELTE_SITE_URL/docs/web#web-worker) (ce qui évite de bloquer le thread principal), utilisez [l'intégration SvelteKit de Partytown] (https://partytown.builder.io/sveltekit) (en anglais).
 
-Code imported with static `import` declarations will be automatically bundled with the rest of your page. If there is a piece of code you need only when some condition is met, use the dynamic `import(...)` form instead.
+### Chargement sélectif
+
+Le code importé avec les déclarations statiques `import` sera automatiquement regroupé avec le reste de votre page. S'il y a un morceau de code dont vous n'avez besoin que lorsqu'une certaine condition est remplie, utilisez plutôt la forme dynamique `import(...)`.
 
 ## Navigation
 
-### Preloading
+### Préchargement
 
-You can speed up client-side navigations by eagerly preloading the necessary code and data, using [link options](link-options). This is configured by default on the `<body>` element when you create a new SvelteKit app.
+Vous pouvez accélérer les navigations côté client en préchargeant le code et les données nécessaires, en utilisant [les options de lien](link-options). Ceci est configuré par défaut sur l'élément `<body>` lorsque vous créez une nouvelle application SvelteKit.
 
-### Non-essential data
+### Données non essentielles
 
-For slow-loading data that isn't needed immediately, the object returned from your `load` function can contain promises rather than the data itself. For server `load` functions, this will cause the data to [stream](load#streaming-with-promises) in after the navigation (or initial page load).
+Pour les données à chargement lent qui ne sont pas nécessaires immédiatement, l'objet retourné par votre fonction `load` peut contenir des promesses plutôt que les données elles-mêmes. Pour les fonctions `load` du serveur, cela fera que les données seront [streamées] (load#streaming-with-promises) après la navigation (ou le chargement initial de la page).
 
-### Preventing waterfalls
+### Prévenir les cascades
 
-One of the biggest performance killers is what is referred to as a _waterfall_, which is a series of requests that is made sequentially. This can happen on the server or in the browser.
+L'un des plus grands facteurs de dégradation des performances est ce que l'on appelle une "cascade", c'est-à-dire une série de requêtes effectuées de manière séquentielle. Cela peut se produire sur le serveur ou dans le navigateur.
 
-- Asset waterfalls can occur in the browser when your HTML requests JS which requests CSS which requests a background image and web font. SvelteKit will largely solve this class of problems for you by adding [`modulepreload`](https://developer.mozilla.org/en-US/docs/Web/HTML/Attributes/rel/modulepreload) tags or headers, but you should view [the network tab in your devtools](#diagnosing-issues) to check whether additional resources need to be preloaded. Pay special attention to this if you use web [fonts](#optimizing-assets-fonts) since they need to be handled manually.
-- If a universal `load` function makes an API call to fetch the current user, then uses the details from that response to fetch a list of saved items, and then uses _that_ response to fetch the details for each item, the browser will end up making multiple sequential requests. This is deadly for performance, especially for users that are physically located far from your backend. Avoid this issue by using [server `load` functions](/docs/load#universal-vs-server) where possible.
-- Server `load` functions are also not immune to waterfalls (though they are much less costly since they rarely involve roundtrips with high latency). For example if you query a database to get the current user and then use that data to make a second query for a list of saved items, it will typically be more performant to issue a single query with a database join.
+- Des cascades de ressources peuvent se produire dans le navigateur lorsque votre HTML demande du JS qui demande du CSS qui demande une image de fond et une police web. SvelteKit résoudra en grande partie cette catégorie de problèmes pour vous en ajoutant des balises ou des en-têtes [`modulepreload`](https://developer.mozilla.org/en-US/docs/Web/HTML/Attributes/rel/modulepreload), mais vous devriez consulter [l'onglet réseau dans votre devtools](#diagnostiquer-les-probl-mes) pour vérifier si des ressources supplémentaires doivent être pré-chargées. Faites particulièrement attention à cela si vous utilisez des [polices](#optimisation-des-ressources-polices) web, car elles doivent être gérées manuellement.
+- Si une fonction `load` universelle effectue un appel API pour récupérer l'utilisateur actuel, puis utilise les détails de cette réponse pour récupérer une liste d'éléments sauvegardés, et enfin utilise _cette_ réponse pour récupérer les détails de chaque élément, le navigateur finira par effectuer plusieurs requêtes séquentielles. Ceci est fatal pour les performances, en particulier pour les utilisateurs qui sont physiquement situés loin de votre backend. Évitez ce problème en utilisant [les fonctions `load` de serveur] (/docs/load#universal-vs-server) lorsque c'est possible.
+- Les fonctions `load` de serveur ne sont pas non plus à l'abri des cascades (bien qu'elles soient beaucoup moins coûteuses puisqu'elles impliquent rarement des allers-retours avec une latence élevée). Par exemple, si vous interrogez une base de données pour obtenir l'utilisateur actuel et que vous utilisez ensuite ces données pour effectuer une seconde requête pour une liste d'éléments sauvegardés, il sera généralement plus performant d'effectuer une seule requête avec une jointure de base de données.
 
-## Hosting
+## Hébergement
 
-Your frontend should be located in the same data center as your backend to minimize latency. For sites with no central backend, many SvelteKit adapters support deploying to the _edge_, which means handling each user's requests from a nearby server. This can reduce load times significantly. Some adapters even support [configuring deployment on a per-route basis](https://kit.svelte.dev/docs/page-options#config). You should also consider serving images from a CDN (which are typically edge networks) — the hosts for many SvelteKit adapters will do this automatically.
+Votre frontend devrait être situé dans le même data center que votre backend afin de minimiser la latence. Pour les sites qui n'ont pas de backend, de nombreux adaptateurs SvelteKit supportent le déploiement vers les services _edge_, ce qui signifie traiter les requêtes de chaque utilisateur à partir d'un serveur proche. Cela peut considérablement réduire les temps de chargement. Certains adaptateurs prennent même en charge [la configuration du déploiement par itinéraire] (https://kit.svelte.dev/docs/page-options#config). Vous devriez également envisager de servir des images à partir d'un CDN (qui sont généralement des réseaux proches) - les hôtes de nombreux adaptateurs SvelteKit le feront automatiquement.
 
-Ensure your host uses HTTP/2 or newer. Vite's code splitting creates numerous small files for improved cacheability, which results in excellent performance, but this does assume that your files can be loaded in parallel with HTTP/2.
+Assurez-vous que votre hôte utilise HTTP/2 ou une version plus récente. Le découpage du code de Vite crée de nombreux petits fichiers pour améliorer la mise en cache, ce qui se traduit par d'excellentes performances, mais cela suppose que vos fichiers puissent être chargés en parallèle avec HTTP/2.
 
-## Further reading
+## Lecture complémentaire
 
-For the most part, building a performant SvelteKit app is the same as building any performant web app. You should be able to apply information from general performance resources such as [Core Web Vitals](https://web.dev/explore/learn-core-web-vitals) to any web experience you build.
+Pour l'essentiel, la construction d'une application SvelteKit performante est identique à la construction de n'importe quelle application web performante. Vous devriez être en mesure d'appliquer les informations des ressources générales sur les performance telles que [les Core Web Vitals] (https://web.dev/explore/learn-core-web-vitals) à toute expérience web que vous construisez.

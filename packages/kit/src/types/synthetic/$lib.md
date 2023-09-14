@@ -1,5 +1,5 @@
-This is a simple alias to `src/lib`, or whatever directory is specified as [`config.kit.files.lib`](https://kit.svelte.dev/docs/configuration#files). It allows you to access common components and utility modules without `../../../../` nonsense.
+Ceci est un simple alias vers `src/lib`, ou tout dossier spécifié par [`config.kit.files.lib`](https://kit.sveltefr.dev/docs/configuration#files). Cela vous permet d'accéder aux composants et utilitaires communs sans l'aberration `../../../../`.
 
 ### `$lib/server`
 
-A subdirectory of `$lib`. SvelteKit will prevent you from importing any modules in `$lib/server` into client-side code. See [server-only modules](/docs/server-only-modules).
+Un sous-dossier de `$lib`. SvelteKit vous empêche d'importer les modules de `$lib/server` dans votre code client. Voir la section [Modules réservés serveur](/docs/server-only-modules).

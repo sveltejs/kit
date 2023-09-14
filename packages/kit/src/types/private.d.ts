@@ -6,25 +6,26 @@ import { RouteDefinition } from '@sveltejs/kit';
 
 export interface AdapterEntry {
 	/**
-	 * A string that uniquely identifies an HTTP service (e.g. serverless function) and is used for deduplication.
-	 * For example, `/foo/a-[b]` and `/foo/[c]` are different routes, but would both
-	 * be represented in a Netlify _redirects file as `/foo/:param`, so they share an ID
+	 * Une chaîne de caractères qui identifie de manière unique un service HTTP (par exemple une fonction <span class='vo'>[serverless](https://sveltefr.dev/docs/web#serverless)</span>) et utile pour dédoublonner.
+	 * Par exemple, `/foo/a-[b]` et `/foo/[c]` sont des routes différentes, mais sont toutes deux
+	 * représentées par `/foo/:param` dans un fichier Netlify `_redirects`, et partagent donc un ID.
 	 */
 	id: string;
 
 	/**
-	 * A function that compares the candidate route with the current route to determine
-	 * if it should be grouped with the current route.
+	 * Une fonction qui compare la route candidate avec la route courante pour déterminer
+	 * si elle devrait être groupée avec la route courante.
 	 *
-	 * Use cases:
-	 * - Fallback pages: `/foo/[c]` is a fallback for `/foo/a-[b]`, and `/[...catchall]` is a fallback for all routes
-	 * - Grouping routes that share a common `config`: `/foo` should be deployed to the edge, `/bar` and `/baz` should be deployed to a serverless function
+	 * Cas d'usage :
+	 * - Pages de repli : `/foo/[c]` is une solution de repli pour `/foo/a-[b]`, et `/[...catchall]` est une solution de repli pour toutes les routes
+	 * - Grouper les routes qui partagent une `config` commune : `/foo` devraient être déployée sur le réseau <span class='vo'>[edge](https://sveltefr.dev/docs/web#edge)</span>,
+	 * `/bar` et `/baz` devraient être déployées sur une fonction <span class='vo'>[serverless](https://sveltefr.dev/docs/web#serverless)</span>
 	 */
 	filter(route: RouteDefinition): boolean;
 
 	/**
-	 * A function that is invoked once the entry has been created. This is where you
-	 * should write the function to the filesystem and generate redirect manifests.
+	 * Une fonction qui est invoquée une fois que l'entrée a été créée. C'est ici que vous devriez
+	 * écrire la fonction dans le système de fichiers et générer les manifestes de redirections.
 	 */
 	complete(entry: { generateManifest(opts: { relativePath: string }): string }): MaybePromise<void>;
 }
@@ -158,27 +159,27 @@ export type MaybePromise<T> = T | Promise<T>;
 
 export interface Prerendered {
 	/**
-	 * A map of `path` to `{ file }` objects, where a path like `/foo` corresponds to `foo.html` and a path like `/bar/` corresponds to `bar/index.html`.
+	 * Un dictionnaire de `path` vers des objets `{ file }`, où un chemin comme `/foo` correspond à `foo.html` et un chemin comme `/bar/` correspond à `bar/index.html`.
 	 */
 	pages: Map<
 		string,
 		{
-			/** The location of the .html file relative to the output directory */
+			/** L'emplacement du fichier `.html`, relatif au dossier de compilation */
 			file: string;
 		}
 	>;
 	/**
-	 * A map of `path` to `{ type }` objects.
+	 * Un dictionnaire de `path` vers des objets `{ type }`
 	 */
 	assets: Map<
 		string,
 		{
-			/** The MIME type of the asset */
+			/** Le type <span class='vo'>[MIME](https://sveltefr.dev/docs/web#mime)</span> du fichier statique */
 			type: string;
 		}
 	>;
 	/**
-	 * A map of redirects encountered during prerendering.
+	 * Un dictionnaire de redirections rencontrées durant le prérendu.
 	 */
 	redirects: Map<
 		string,
@@ -187,7 +188,7 @@ export interface Prerendered {
 			location: string;
 		}
 	>;
-	/** An array of prerendered paths (without trailing slashes, regardless of the trailingSlash config) */
+	/** Un tableau de chemins prérendus (sans les <span class='vo'>[trailing slashs](https://sveltefr.dev/docs/web#trailing-slash)</span>, peu importe la configuration de trailing slash) */
 	paths: string[];
 }
 

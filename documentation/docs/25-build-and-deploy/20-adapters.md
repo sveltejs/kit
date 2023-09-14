@@ -1,23 +1,22 @@
 ---
-title: Adapters
+title: Adaptateurs
 ---
 
-Before you can deploy your SvelteKit app, you need to _adapt_ it for your deployment target. Adapters are small plugins that take the built app as input and generate output for deployment.
+Avant que vous puissiez déployer votre application SvelteKit, vous avez besoin de l'_adapter_ à votre environnement de déploiement cible. Les adaptateurs sont des petits <span class="vo">[plugins](PUBLIC_SVELTE_SITE_URL/docs/development#plugin)</span> qui prennent l'application compilée comme entrée et génèrent en sortie un dossier prêt à être déployé.
 
-Official adapters exist for a variety of platforms — these are documented on the following pages:
+Des adaptateurs officiels existent pour plusieurs plateformes – ils sont documentés dans les pages suivantes :
+- [`@sveltejs/adapter-cloudflare`](adapter-cloudflare) pour [Cloudflare Pages](https://developers.cloudflare.com/pages/)
+- [`@sveltejs/adapter-cloudflare-workers`](adapter-cloudflare-workers) pour [Cloudflare Workers](https://workers.cloudflare.com/)
+- [`@sveltejs/adapter-netlify`](adapter-netlify) pour [Netlify](https://netlify.com/)
+- [`@sveltejs/adapter-node`](adapter-node) pour les serveurs Node
+- [`@sveltejs/adapter-static`](adapter-static) pour les générateurs de sites statiques (<span class="vo">[SSG](PUBLIC_SVELTE_SITE_URL/docs/web#ssg)</span>)
+- [`@sveltejs/adapter-vercel`](adapter-vercel) pour [Vercel](https://vercel.com/home)
 
-- [`@sveltejs/adapter-cloudflare`](adapter-cloudflare) for Cloudflare Pages
-- [`@sveltejs/adapter-cloudflare-workers`](adapter-cloudflare-workers) for Cloudflare Workers
-- [`@sveltejs/adapter-netlify`](adapter-netlify) for Netlify
-- [`@sveltejs/adapter-node`](adapter-node) for Node servers
-- [`@sveltejs/adapter-static`](adapter-static) for static site generation (SSG)
-- [`@sveltejs/adapter-vercel`](adapter-vercel) for Vercel
+D'autres [adaptateurs gérés par la communauté](https://sveltesociety.dev/packages?category=sveltekit-adapters) (en anglais) existent pour d'autres plateformes.
 
-Additional [community-provided adapters](https://sveltesociety.dev/packages?category=sveltekit-adapters) exist for other platforms.
+## Utiliser un adaptateur
 
-## Using adapters
-
-Your adapter is specified in `svelte.config.js`:
+Votre adaptateur est précisé dans `svelte.config.js` :
 
 ```js
 /// file: svelte.config.js
@@ -35,7 +34,7 @@ import adapter from 'svelte-adapter-foo';
 const config = {
 	kit: {
 		adapter: adapter({
-			// adapter options go here
+			// les options de l'adaptateur se définissent ici
 		})
 	}
 };
@@ -43,7 +42,6 @@ const config = {
 export default config;
 ```
 
-## Platform-specific context
+## Contexte spécifique à chaque plateforme
 
-Some adapters may have access to additional information about the request. For example, Cloudflare Workers can access an `env` object containing KV namespaces etc. This can be passed to the `RequestEvent` used in [hooks](hooks) and [server routes](routing#server) as the `platform` property — consult each adapter's documentation to learn more.
-
+Certains adaptateurs peuvent avoir accès à des informations de requête additionnelles. Par exemple, les "Cloudflare Workers" ont accès à un objet `env` contenant les <span class="vo">[namespaces](PUBLIC_SVELTE_SITE_URL/docs/development#namespace)</span> KV, etc. Ceci peut être passé à un évènement [`RequestEvent`](types#public-types-requestevent) utilisé dans les [hooks](hooks) ainsi qu'aux [routes de serveur](routing#server) comme propriété `platform` – consultez la documentation de chaque adaptateur pour en savoir plus.

@@ -204,15 +204,15 @@ function munge_type_element(member, depth = 1) {
 				break;
 
 			case 'default':
-				bullets.push(`- <span class="tag">default</span> \`${tag.comment}\``);
+				bullets.push(`- <span class="tag">par défaut</span> \`${tag.comment}\``);
 				break;
 
 			case 'returns':
-				bullets.push(`- <span class="tag">returns</span> ${tag.comment}`);
+				bullets.push(`- <span class="tag">valeur de retour</span> ${tag.comment}`);
 				break;
 
 			case 'deprecated':
-				bullets.push(`- <span class="tag deprecated">deprecated</span> ${tag.comment}`);
+				bullets.push(`- <span class="tag deprecated">déprécié</span> ${tag.comment}`);
 				break;
 
 			default:

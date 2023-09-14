@@ -1,5 +1,6 @@
 <script>
 	import { page } from '$app/stores';
+	import { PUBLIC_SVELTE_SITE_URL, PUBLIC_GITHUB_ORG } from '$env/static/public';
 
 	// we don't want to use <svelte:window bind:online> here, because we only care about the online
 	// state when the page first loads
@@ -12,25 +13,27 @@
 
 <div class="container">
 	{#if $page.status === 404}
-		<h1>Not found!</h1>
+		<h1>Non trouvé !</h1>
 	{:else if online}
-		<h1>Yikes!</h1>
+		<h1>Beurk !</h1>
 
 		{#if $page.error.message}
 			<p class="error">{$page.status}: {$page.error.message}</p>
 		{/if}
 
-		<p>Please try reloading the page.</p>
+		<p>Merci d'essayer de recharger la page.</p>
 
 		<p>
-			If the error persists, please drop by <a href="https://svelte.dev/chat">Discord chatroom</a>
-			and let us know, or raise an issue on
-			<a href="https://github.com/sveltejs/svelte">GitHub</a>. Thanks!
+			Si l'erreur persiste, merci de vous rendre sur le <a href="{PUBLIC_SVELTE_SITE_URL}/chat"
+				>forum Discord</a
+			>
+			et de nous remonter le problème, ou ouvrez une issue sur
+			<a href="https://github.com/{PUBLIC_GITHUB_ORG}/kit">GitHub</a>. Merci !
 		</p>
 	{:else}
-		<h1>It looks like you're offline</h1>
+		<h1>Il semblerait que vous soyez hors ligne</h1>
 
-		<p>Reload the page once you've found the internet.</p>
+		<p>Rechargez la page une fois que vous aurez retrouvé internet.</p>
 	{/if}
 </div>
 

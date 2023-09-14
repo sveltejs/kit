@@ -1,10 +1,10 @@
 ---
-title: Writing adapters
+title: Écrire son adaptateur
 ---
 
-If an adapter for your preferred environment doesn't yet exist, you can build your own. We recommend [looking at the source for an adapter](https://github.com/sveltejs/kit/tree/main/packages) to a platform similar to yours and copying it as a starting point.
+Si un adaptateur pour votre environnement préféré n'existe pas encore, vous pouvez en écrire un. Nous vous recommandons de vous inspirer du [code source de l'adaptateur](https://github.com/sveltejs/kit/tree/main/packages) d'une plateforme similaire à la vôtre, et de le dupliquer pour avoir un point de départ.
 
-Adapter packages implement the following API, which creates an `Adapter`:
+Les adaptateurs doivent implémenter l'<span class="vo">[API](PUBLIC_SVELTE_SITE_URL/docs/development#api)</span> suivante, qui crée un `Adapter` :
 
 ```js
 // @errors: 2322
@@ -19,7 +19,7 @@ export default function (options) {
 	const adapter = {
 		name: 'adapter-package-name',
 		async adapt(builder) {
-			// adapter implementation
+			// implémentation de l'adaptateur
 		},
 		async emulate() {
 			return {
@@ -31,9 +31,9 @@ export default function (options) {
 		},
 		supports: {
 			read: ({ config, route }) => {
-				// Return `true` if the route with the given `config` can use `read`
-				// from `$app/server` in production, return `false` if it can't.
-				// Or throw a descriptive error describing how to configure the deployment
+				// Retourne `true` si la route avec la `config` donnée peut utiliser `read`
+				// de `$app/server` en production, retourner `false` si ce n'est pas le cas.
+				// Ou bien une erreur est levée décrivant comment configurer le déploiement.
 			}
 		}
 	};
@@ -42,19 +42,19 @@ export default function (options) {
 }
 ```
 
-Of these, `name` and `adapt` are required. `emulate` and `supports` are optional.
+Parmi ceux-ci, `name` et `adapt` sont obligatoires. `emulate` et `supports` sont optionnels.
 
-Within the `adapt` method, there are a number of things that an adapter should do:
+Au sein de la méthode `adapt`, il y a un certain nombre de choses qu'un adaptateur doit faire :
 
-- Clear out the build directory
-- Write SvelteKit output with `builder.writeClient`, `builder.writeServer`, and `builder.writePrerendered`
-- Output code that:
-	- Imports `Server` from `${builder.getServerDirectory()}/index.js`
-	- Instantiates the app with a manifest generated with `builder.generateManifest({ relativePath })`
-	- Listens for requests from the platform, converts them to a standard [Request](https://developer.mozilla.org/en-US/docs/Web/API/Request) if necessary, calls the `server.respond(request, { getClientAddress })` function to generate a [Response](https://developer.mozilla.org/en-US/docs/Web/API/Response) and responds with it
-	- expose any platform-specific information to SvelteKit via the `platform` option passed to `server.respond`
-	- Globally shims `fetch` to work on the target platform, if necessary. SvelteKit provides a `@sveltejs/kit/node/polyfills` helper for platforms that can use `undici`
-- Bundle the output to avoid needing to install dependencies on the target platform, if necessary
-- Put the user's static files and the generated JS/CSS in the correct location for the target platform
+- Vider le contenu du dossier de <span class="vo">[build](PUBLIC_SVELTE_SITE_URL/docs/development#build)</span>
+- Écrire le contenu SvelteKit généré avec `builder.writeClient`, `builder.writeServer`, et `builder.writePrerendered`
+- Générer le code qui :
+	- importe `Server` depuis `${builder.getServerDirectory()}/index.js`
+	- instancie l'application avec un manifeste généré avec `builder.generateManifest({ relativePath })`
+	- écoute les requêtes vers la plateforme, les convertit en objets standards [Request](https://developer.mozilla.org/fr/docs/Web/API/Request) si nécessaire, appelle la fonction `server.respond(request, { getClientAddress })` pour générer un objet [Response](https://developer.mozilla.org/fr/docs/Web/API/Response) et répond avec cet objet
+	- expose à SvelteKit toute information spécifique à la plateforme via l'option `platform` passée à `server.respond`
+	- rend `fetch` utilisable sur la plateforme cible, si nécessaire. SvelteKit fournit un utilitaire `@sveltejs/kit/node/polyfills` pour les plateformes qui peuvent utiliser `undici`
+- Préparer le code pour éviter d'avoir à installer les dépendances sur la plateforme cible, si nécessaire
+- Place les fichiers statiques de l'utilisateur ou l'utilisatrice ainsi que les fichiers JS/CSS à l'endroit prévu par la plateforme cible
 
-Where possible, we recommend putting the adapter output under the `build/` directory with any intermediate output placed under `.svelte-kit/[adapter-name]`.
+Lorsque c'est possible, nous recommandons de placer le code généré par l'adaptateur dans le dossier `build/` avec tout code généré temporairement placé dans `.svelte-kit/[adapter-name]`.

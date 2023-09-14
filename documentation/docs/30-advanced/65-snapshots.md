@@ -2,11 +2,11 @@
 title: Snapshots
 ---
 
-Ephemeral DOM state — like scroll positions on sidebars, the content of `<input>` elements and so on — is discarded when you navigate from one page to another.
+L'état éphémère du <span class="vo">[DOM](PUBLIC_SVELTE_SITE_URL/docs/web#dom)</span> – comme les positions des barres de défilement, le contenu des éléments `<inputs>` et d'autres choses – est perdu lorsque vous naviguez d'une page à une autre.
 
-For example, if the user fills out a form but clicks a link before submitting, then hits the browser's back button, the values they filled in will be lost. In cases where it's valuable to preserve that input, you can take a _snapshot_ of DOM state, which can then be restored if the user navigates back.
+Par exemple, si l'utilisateur ou l'utilisatrice remplit un formulaire mais clique sur un lien avant de l'avoir soumis, puis revient en arrière grâce au bouton "Retour" de son navigateur, les valeurs précédemment remplies auront disparues. Dans les cas où il est important de sauvegarder ces valeurs, vous pouvez prendre un <span class="vo">_[snapshot](PUBLIC_SVELTE_SITE_URL/docs/sveltejs#snapshot)_</span> de l'état du <span class="vo">[DOM](PUBLIC_SVELTE_SITE_URL/docs/web#dom)</span>, qui sera restauré si la personne revient sur la page.
 
-To do this, export a `snapshot` object with `capture` and `restore` methods from a `+page.svelte` or `+layout.svelte`:
+Pour faire cela, exportez un objet `snapshot` avec les méthodes `capture` et `restore` depuis un fichier `+page.svelte` or `+layout.svelte` :
 
 ```svelte
 <!--- file: +page.svelte --->
@@ -21,14 +21,14 @@ To do this, export a `snapshot` object with `capture` and `restore` methods from
 </script>
 
 <form method="POST">
-	<label for="comment">Comment</label>
+	<label for="comment">Commentaire</label>
 	<textarea id="comment" bind:value={comment} />
-	<button>Post comment</button>
+	<button>Publier le commentaire</button>
 </form>
 ```
 
-When you navigate away from this page, the `capture` function is called immediately before the page updates, and the returned value is associated with the current entry in the browser's history stack. If you navigate back, the `restore` function is called with the stored value as soon as the page is updated.
+Lorsque vous naviguez en dehors de cette page, la fonction `capture` est appelée immédiatement avant la mise à jour de la page, et la valeur renvoyée est associée à l'entrée courante dans la pile d'historique du navigateur. Si vous revenez sur la page, la fonction `restore` est appelée avec la valeur stockée dès que la page est mise à jour.
 
-The data must be serializable as JSON so that it can be persisted to `sessionStorage`. This allows the state to be restored when the page is reloaded, or when the user navigates back from a different site.
+La donnée doit être sérialisable en <span class="vo">[JSON](PUBLIC_SVELTE_SITE_URL/docs/web#json)</span> afin qu'elle puisse être persistée dans `sessionStorage`. Cela permet à l'état d'être restauré lorsque la page est rechargée, ou lorsque l'utilisateur ou l'utilisatrice revient sur la page depuis un autre site.
 
-> Avoid returning very large objects from `capture` — once captured, objects will be retained in memory for the duration of the session, and in extreme cases may be too large to persist to `sessionStorage`.
+> Évitez de stocker de très gros objets avec `capture` – une fois "capturés", les objets seront gardés en mémoire pour la durée de la session, et pourraient être dans certains cas trop lourds pour être persistés dans `sessionStorage`.

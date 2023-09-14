@@ -2,8 +2,8 @@
 /// <reference types="vite/client" />
 
 declare module '@sveltejs/kit' {
-	import type { CompileOptions } from 'svelte/compiler';
 	import type { PluginOptions } from '@sveltejs/vite-plugin-svelte';
+	import type { CompileOptions } from 'svelte/compiler';
 	/**
 	 * [Adapters](https://kit.svelte.dev/docs/adapters) are responsible for taking the production build and turning it into something that can be deployed to a platform of your choosing.
 	 */
@@ -37,8 +37,8 @@ declare module '@sveltejs/kit' {
 	export type LoadProperties<input extends Record<string, any> | void> = input extends void
 		? undefined // needs to be undefined, because void will break intellisense
 		: input extends Record<string, any>
-			? input
-			: unknown;
+		? input
+		: unknown;
 
 	export type AwaitedActions<T extends Record<string, (...args: any) => any>> = OptionalUnion<
 		{
@@ -63,10 +63,10 @@ declare module '@sveltejs/kit' {
 
 	type UnpackValidationError<T> =
 		T extends ActionFailure<infer X>
-			? X
-			: T extends void
-				? undefined // needs to be undefined, because void will corrupt union type
-				: T;
+		? X
+		: T extends void
+		? undefined // needs to be undefined, because void will corrupt union type
+		: T;
 
 	/**
 	 * This object is passed to the `adapt` function of adapters.
@@ -670,7 +670,7 @@ declare module '@sveltejs/kit' {
 	}) => MaybePromise<Response>;
 
 	/**
-	 * The server-side [`handleError`](https://kit.svelte.dev/docs/hooks#shared-hooks-handleerror) hook runs when an unexpected error is thrown while responding to a request.
+	 * The server-side [`handleError`](https://kit.svelte.dev/docs/hooks#hooks-partag-s-handleerror) hook runs when an unexpected error is thrown while responding to a request.
 	 *
 	 * If an unexpected error is thrown during loading or rendering, this function will be called with the error and the event.
 	 * Make sure that this function _never_ throws an error.
@@ -683,7 +683,7 @@ declare module '@sveltejs/kit' {
 	}) => MaybePromise<void | App.Error>;
 
 	/**
-	 * The client-side [`handleError`](https://kit.svelte.dev/docs/hooks#shared-hooks-handleerror) hook runs when an unexpected error is thrown while navigating.
+	 * The client-side [`handleError`](https://kit.svelte.dev/docs/hooks#hooks-partag-s-handleerror) hook runs when an unexpected error is thrown while navigating.
 	 *
 	 * If an unexpected error is thrown during loading or the following render, this function will be called with the error and the event.
 	 * Make sure that this function _never_ throws an error.
@@ -1330,17 +1330,17 @@ declare module '@sveltejs/kit' {
 	}) => MaybePromise<
 		| void
 		| ((opts: {
-				formData: FormData;
-				formElement: HTMLFormElement;
-				action: URL;
-				result: ActionResult<Success, Failure>;
-				/**
-				 * Call this to get the default behavior of a form submission response.
-				 * @param options Set `reset: false` if you don't want the `<form>` values to be reset after a successful submission.
-				 * @param invalidateAll Set `invalidateAll: false` if you don't want the action to call `invalidateAll` after submission.
-				 */
-				update(options?: { reset?: boolean; invalidateAll?: boolean }): Promise<void>;
-		  }) => void)
+			formData: FormData;
+			formElement: HTMLFormElement;
+			action: URL;
+			result: ActionResult<Success, Failure>;
+			/**
+			 * Call this to get the default behavior of a form submission response.
+			 * @param options Set `reset: false` if you don't want the `<form>` values to be reset after a successful submission.
+			 * @param invalidateAll Set `invalidateAll: false` if you don't want the action to call `invalidateAll` after submission.
+			 */
+			update(options?: { reset?: boolean; invalidateAll?: boolean }): Promise<void>;
+		}) => void)
 	>;
 
 	/**
@@ -1372,7 +1372,9 @@ declare module '@sveltejs/kit' {
 		 * A function that is invoked once the entry has been created. This is where you
 		 * should write the function to the filesystem and generate redirect manifests.
 		 */
-		complete(entry: { generateManifest(opts: { relativePath: string }): string }): MaybePromise<void>;
+		complete(entry: {
+			generateManifest(opts: { relativePath: string }): string;
+		}): MaybePromise<void>;
 	}
 
 	// Based on https://github.com/josh-hemphill/csp-typed-directives/blob/latest/src/csp.types.ts
@@ -1629,8 +1631,8 @@ declare module '@sveltejs/kit' {
 		// Recursive implementation of TypeScript's Required utility type.
 		// Will recursively continue until it reaches a primitive or Function
 		[K in keyof T]-?: Extract<T[K], Function> extends never // If it does not have a Function type
-			? RecursiveRequired<T[K]> // recursively continue through.
-			: T[K]; // Use the exact type for everything else
+		? RecursiveRequired<T[K]> // recursively continue through.
+		: T[K]; // Use the exact type for everything else
 	};
 
 	interface RouteParam {
@@ -1785,7 +1787,10 @@ declare module '@sveltejs/kit' {
 	 * Checks whether this is an error thrown by {@link error}.
 	 * @param status The status to filter for.
 	 * */
-	export function isHttpError<T extends number>(e: unknown, status?: T | undefined): e is HttpError_1 & {
+	export function isHttpError<T extends number>(
+		e: unknown,
+		status?: T | undefined
+	): e is HttpError_1 & {
 		status: T extends undefined ? never : T;
 	};
 	/**
@@ -1824,21 +1829,35 @@ declare module '@sveltejs/kit' {
 	 * @param status The [HTTP status code](https://developer.mozilla.org/en-US/docs/Web/HTTP/Status#client_error_responses). Must be in the range 400-599.
 	 * @param data Data associated with the failure (e.g. validation errors)
 	 * */
-	export function fail<T extends Record<string, unknown> | undefined = undefined>(status: number, data: T): ActionFailure<T>;
-	export type LessThan<TNumber extends number, TArray extends any[] = []> = TNumber extends TArray['length'] ? TArray[number] : LessThan<TNumber, [...TArray, TArray['length']]>;
-	export type NumericRange<TStart extends number, TEnd extends number> = Exclude<TEnd | LessThan<TEnd>, LessThan<TStart>>;
+	export function fail<T extends Record<string, unknown> | undefined = undefined>(
+		status: number,
+		data: T
+	): ActionFailure<T>;
+	export type LessThan<
+		TNumber extends number,
+		TArray extends any[] = []
+	> = TNumber extends TArray['length']
+		? TArray[number]
+		: LessThan<TNumber, [...TArray, TArray['length']]>;
+	export type NumericRange<TStart extends number, TEnd extends number> = Exclude<
+		TEnd | LessThan<TEnd>,
+		LessThan<TStart>
+	>;
 	export const VERSION: string;
 	class HttpError_1 {
-		
-		constructor(status: number, body: {
-			message: string;
-		} extends App.Error ? (App.Error | string | undefined) : App.Error);
+		constructor(
+			status: number,
+			body: {
+				message: string;
+			} extends App.Error
+				? App.Error | string | undefined
+				: App.Error
+		);
 		status: number;
 		body: App.Error;
 		toString(): string;
 	}
 	class Redirect_1 {
-		
 		constructor(status: 300 | 301 | 302 | 303 | 304 | 305 | 306 | 307 | 308, location: string);
 		status: 301 | 302 | 303 | 307 | 308 | 300 | 304 | 305 | 306;
 		location: string;
@@ -1913,11 +1932,17 @@ declare module '@sveltejs/kit/hooks' {
 	 *
 	 * @param handlers The chain of `handle` functions
 	 * */
-	export function sequence(...handlers: import('@sveltejs/kit').Handle[]): import('@sveltejs/kit').Handle;
+	export function sequence(
+		...handlers: import('@sveltejs/kit').Handle[]
+	): import('@sveltejs/kit').Handle;
 }
 
 declare module '@sveltejs/kit/node' {
-	export function getRequest({ request, base, bodySizeLimit }: {
+	export function getRequest({
+		request,
+		base,
+		bodySizeLimit
+	}: {
 		request: import('http').IncomingMessage;
 		base: string;
 		bodySizeLimit?: number;
@@ -1988,7 +2013,10 @@ declare module '$app/forms' {
 	 * }
 	 * ```
 	 * */
-	export function deserialize<Success extends Record<string, unknown> | undefined, Failure extends Record<string, unknown> | undefined>(result: string): import("@sveltejs/kit").ActionResult<Success, Failure>;
+	export function deserialize<
+		Success extends Record<string, unknown> | undefined,
+		Failure extends Record<string, unknown> | undefined
+	>(result: string): import('@sveltejs/kit').ActionResult<Success, Failure>;
 	/**
 	 * This action enhances a `<form>` element that otherwise would work without JavaScript.
 	 *
@@ -2009,7 +2037,13 @@ declare module '$app/forms' {
 	 * @param form_element The form element
 	 * @param submit Submit callback
 	 */
-	export function enhance<Success extends Record<string, unknown> | undefined, Failure extends Record<string, unknown> | undefined>(form_element: HTMLFormElement, submit?: import("@sveltejs/kit").SubmitFunction<Success, Failure>): {
+	export function enhance<
+		Success extends Record<string, unknown> | undefined,
+		Failure extends Record<string, unknown> | undefined
+	>(
+		form_element: HTMLFormElement,
+		submit?: import('@sveltejs/kit').SubmitFunction<Success, Failure>
+	): {
 		destroy(): void;
 	};
 	/**
@@ -2181,11 +2215,10 @@ declare module '$app/server' {
 
 declare module '$app/stores' {
 	export function getStores(): {
-		
 		page: typeof page;
-		
+
 		navigating: typeof navigating;
-		
+
 		updated: typeof updated;
 	};
 	/**
@@ -2202,7 +2235,9 @@ declare module '$app/stores' {
 	 *
 	 * On the server, this store can only be subscribed to during component initialization. In the browser, it can be subscribed to at any time.
 	 * */
-	export const navigating: import('svelte/store').Readable<import('@sveltejs/kit').Navigation | null>;
+	export const navigating: import('svelte/store').Readable<
+		import('@sveltejs/kit').Navigation | null
+	>;
 	/**
 	 * A readable store whose initial value is `false`. If [`version.pollInterval`](https://kit.svelte.dev/docs/configuration#version) is a non-zero value, SvelteKit will poll for new versions of the app and update the store value to `true` when it detects one. `updated.check()` will force an immediate check, regardless of polling.
 	 *
@@ -2211,7 +2246,7 @@ declare module '$app/stores' {
 	export const updated: import('svelte/store').Readable<boolean> & {
 		check(): Promise<boolean>;
 	};
-}/**
+} /**
  * It's possible to tell SvelteKit how to type objects inside your app by declaring the `App` namespace. By default, a new project will have a file called `src/app.d.ts` containing the following:
  *
  * ```ts
@@ -2244,24 +2279,24 @@ declare namespace App {
 	/**
 	 * The interface that defines `event.locals`, which can be accessed in [hooks](https://kit.svelte.dev/docs/hooks) (`handle`, and `handleError`), server-only `load` functions, and `+server.js` files.
 	 */
-	export interface Locals {}
+	export interface Locals { }
 
 	/**
 	 * Defines the common shape of the [$page.data store](https://kit.svelte.dev/docs/modules#$app-stores-page) - that is, the data that is shared between all pages.
 	 * The `Load` and `ServerLoad` functions in `./$types` will be narrowed accordingly.
 	 * Use optional properties for data that is only present on specific pages. Do not add an index signature (`[key: string]: any`).
 	 */
-	export interface PageData {}
+	export interface PageData { }
 
 	/**
 	 * The shape of the `$page.state` object, which can be manipulated using the [`pushState`](https://kit.svelte.dev/docs/modules#$app-navigation-pushstate) and [`replaceState`](https://kit.svelte.dev/docs/modules#$app-navigation-replacestate) functions from `$app/navigation`.
 	 */
-	export interface PageState {}
+	export interface PageState { }
 
 	/**
 	 * If your adapter provides [platform-specific context](https://kit.svelte.dev/docs/adapters#platform-specific-context) via `event.platform`, you can specify it here.
 	 */
-	export interface Platform {}
+	export interface Platform { }
 }
 
 /**

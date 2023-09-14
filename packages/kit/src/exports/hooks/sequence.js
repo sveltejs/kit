@@ -1,9 +1,9 @@
 /**
- * A helper function for sequencing multiple `handle` calls in a middleware-like manner.
- * The behavior for the `handle` options is as follows:
- * - `transformPageChunk` is applied in reverse order and merged
- * - `preload` is applied in forward order, the first option "wins" and no `preload` options after it are called
- * - `filterSerializedResponseHeaders` behaves the same as `preload`
+ * Une fonction utilitaire pour orchestrer plusieurs appels à `handle` à la manière d'un <span class='vo'>[middleware](https://sveltefr.dev/docs/web#middleware)</span>.
+ * Le comportement des options de `handle` est le suivant :
+ * - `transformPageChunk` s'applique dans l'ordre inverse et ses résultats sont fusionnés
+ * - `preload` s'applique dans l'ordre normal, la première option "gagne" et aucune option `preload` ne sera appelée après celle-ci
+ * - `filterSerializedResponseHeaders` fonctionne comme `preload`
  *
  * ```js
  * /// file: src/hooks.server.js
@@ -14,12 +14,12 @@
  * 	console.log('first pre-processing');
  * 	const result = await resolve(event, {
  * 		transformPageChunk: ({ html }) => {
- * 			// transforms are applied in reverse order
+ * 			// les transformations sont appliquées dans l'ordre inverse
  * 			console.log('first transform');
  * 			return html;
  * 		},
  * 		preload: () => {
- * 			// this one wins as it's the first defined in the chain
+ * 			// cette option gagne puisque c'est la première définie dans la chaîne
  * 			console.log('first preload');
  * 		}
  * 	});
@@ -36,10 +36,10 @@
  * 			return html;
  * 		},
  * 		preload: () => {
- * 			console.log('second preload');
+ * 			console.log('second préchargement');
  * 		},
  * 		filterSerializedResponseHeaders: () => {
- * 			// this one wins as it's the first defined in the chain
+ * 			// cette option gagne puisque c'est la première définie dans la chaîne
  *    		console.log('second filterSerializedResponseHeaders');
  * 		}
  * 	});
@@ -50,7 +50,7 @@
  * export const handle = sequence(first, second);
  * ```
  *
- * The example above would print:
+ * L'exemple ci-dessus affichera :
  *
  * ```
  * first pre-processing

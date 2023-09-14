@@ -1,39 +1,39 @@
 ---
-title: Frequently asked questions
+title: Foire aux questions
 ---
 
-## Other resources
+## Autres ressources
 
-Please see [the Svelte FAQ](https://svelte.dev/faq) and [`vite-plugin-svelte` FAQ](https://github.com/sveltejs/vite-plugin-svelte/blob/main/docs/faq.md) as well for the answers to questions deriving from those libraries.
+Merci de consulter [la FAQ de Svelte](PUBLIC_SVELTE_SITE_URL/faq) ainsi que la [FAQ de `vite-plugin-svelte`](https://github.com/sveltejs/vite-plugin-svelte/blob/main/docs/faq.md) (en anglais) pour vos questions relatives à ces librairies.
 
-## What can I make with SvelteKit?
+## À quoi sert SvelteKit ?
 
-SvelteKit can be used to create most kinds of applications. Out of the box, SvelteKit supports many features including:
+SvelteKit peut être utilisé pour créer la plupart des applications. Il fournit clé en main plusieurs fonctionnalités dont :
 
-- Dynamic page content with [load](/docs/load) functions and [API routes](/docs/routing#server).
-- SEO-friendly dynamic content with [server-side rendering (SSR)](/docs/glossary#ssr).
-- User-friendly progressively-enhanced interactive pages with SSR and [Form Actions](/docs/form-actions).
-- Static pages with [prerendering](/docs/page-options#prerender).
+- Du contenu de page dynamique grâce aux fonctions [load](/docs/load) et aux [routes d'API](/docs/routing#server).
+- Du contenu dynamique compatible avec un référencement de qualité grâce au [rendu côté serveur (SSR)](/docs/glossary#ssr).
+- Des pages interactives améliorables progressivement permettant une bonne expérience utilisateur grâce au SSR et aux [actions de formulaire](/docs/form-actions).
+- Des pages statiques grâce au [prérendu](/docs/page-options#prerender).
 
-SvelteKit can also be deployed to a wide spectrum of hosted architectures via [adapters](/docs/adapters). In cases where SSR is used (or server-side logic is added without prerendering), those functions will be adapted to the target backend. Some examples include:
+SvelteKit peut aussi être déployé sur une grande variété d'architectures d'hébergements grâce aux [adaptateurs](/docs/adapters). Dans les situations où le rendu côté serveur est utilisé (ou si de la logique côté serveur est ajouté sans prérendu), ces fonctionnalités seront adaptées à la plateforme ciblée. Voici quelques exemples :
 
-- Self-hosted dynamic web applications with a [Node.js backend](/docs/adapter-node).
-- Serverless web applications with backend loaders and APIs deployed as remote functions. See [zero-config deployments](/docs/adapter-auto) for popular deployment options.
-- [Static pre-rendered sites](/docs/adapter-static) such as a blog or multi-page site hosted on a CDN or static host. Statically-generated sites are shipped without a backend.
-- [Single-page Applications (SPAs)](/docs/single-page-apps) with client-side routing and rendering for API-driven dynamic content. SPAs are shipped without a backend and are not server-rendered. This option is commonly chosen when bundling SvelteKit with an app written in PHP, .Net, Java, C, Golang, Rust, etc.
-- A mix of the above; some routes can be static, and some routes can use backend functions to fetch dynamic information. This can be configured with [page options](/docs/page-options) that includes the option to opt out of SSR.
+- Applications web dynamiques auto-hébergées sur un [serveur Node.js](/docs/adapter-node).
+- Applications web <span class='vo'>[serverless](PUBLIC_SVELTE_SITE_URL/docs/web#serverless)</span> avec des fonctions de chargement sur le serveur et des <span class='vo'>[API](PUBLIC_SVELTE_SITE_URL/docs/development#api)</span> déployées en tant que fonctions distantes. Voir la section [Déploiements sans configuration](/docs/adapter-auto) pour plus d'infos sur les options de déploiement disponibles.
+- [Sites statiques prérendus](/docs/adapter-static) tels qu'un blog ou un site multi-pages hébergées sur un <span class='vo'>[CDN](PUBLIC_SVELTE_SITE_URL/docs/web#cdn)</span> ou un hébergeur de contenu statique. Les sites générées de manière statique sont déployés sans aucun serveur.
+- Applications de type [SPA](/docs/single-page-apps) avec un <span class='vo'>[routing](PUBLIC_SVELTE_SITE_URL/docs/web#routing)</span> et des rendus côté client pour des contenus dynamiques se basant sur des <span class='vo'>[APIs](PUBLIC_SVELTE_SITE_URL/docs/development#api)</span>. Les SPAs sont déployées sans aucun serveur et ne sont donc pas rendues sur un serveur. Cette option est souvent choisie lorsque l'on compile SvelteKit avec une application écrite en PHP, .NET, Java, C, Golang, Rust, etc.
+- Un mélange de tout ce qui précède ; certaines routes peuvent être statiques, et d'autres routes peuvent utiliser des fonctions de serveur pour récupérer des informations dynamiques. Ceci peut être configuré grâce aux [options de page](/docs/page-options) qui incluent la possibilité de désactiver le SSR.
 
-In order to support SSR, a JS backend — such as Node.js or Deno-based server, serverless function, or edge function — is required.
+Si vous souhaitez permettre le SSR, un serveur JS – basé par exemple sur Node.js, Deno, des fonctions <span class='vo'>[serverless](PUBLIC_SVELTE_SITE_URL/docs/web#serverless)</span> ou <span class='vo'>[edge](PUBLIC_SVELTE_SITE_URL/docs/web#edge)</span> – est requis.
 
-It is also possible to write custom adapters or leverage community adapters to deploy SvelteKit to more platforms such as specialized server environments, browser extensions, or native applications. See [integrations](./integrations) for more examples and integrations.
+Il est également possible d'écrire des adaptateurs personnalisés ou de se servir des adapatateurs de la communauté pour déployer SvelteKit sur plus de plateformes tels que des environnements serveur spécialisés, des extensions de navigateur ou des applications natives. Voir la section [Intégrations](./integrations) pour plus d'exemples.
 
-## How do I use HMR with SvelteKit?
+## Comment utiliser le HMR avec SvelteKit ?
 
-SvelteKit has HMR enabled by default powered by [svelte-hmr](https://github.com/sveltejs/svelte-hmr). If you saw [Rich's presentation at the 2020 Svelte Summit](https://svelte.dev/blog/whats-the-deal-with-sveltekit), you may have seen a more powerful-looking version of HMR presented. This demo had `svelte-hmr`'s `preserveLocalState` flag on. This flag is now off by default because it may lead to unexpected behaviour and edge cases. But don't worry, you are still getting HMR with SvelteKit! If you'd like to preserve local state you can use the `@hmr:keep` or `@hmr:keep-all` directives as documented on the [svelte-hmr](https://github.com/sveltejs/svelte-hmr) page.
+SvelteKit propose le <span class='vo'>[HMR](PUBLIC_SVELTE_SITE_URL/docs/web#hmr)</span> activé par défaut grâce à [svelte-hmr](https://github.com/sveltejs/svelte-hmr). Si vous avez vu [la présentation de Rich au Svelte Summit 2020](https://svelte.dev/blog/whats-the-deal-with-sveltekit), vous avez peut-être constaté une version du HMR qui semble plus puissante. Cette démo avait activé l'option `preserveLocalState` de `svelte-hmr`. Cette option est maintenant désactivée par défaut car elle peut amener à des comportements inattendus. Mais ne vous inquiétez pas, vous bénéficiez tout de même du HMR avec SvelteKit ! Si vous souhaitez préserver l'état local vous pouvez utiliser les directives `@hmr:keep` ou `@hmr:keep-all` comme documenté sur la page de [svelte-hmr](https://github.com/sveltejs/svelte-hmr) (en anglais).
 
-## How do I include details from package.json in my application?
+## Comment inclure les détails de mon `package.json` dans mon application ?
 
-You cannot directly require JSON files, since SvelteKit expects [`svelte.config.js`](./configuration) to be an ES module. If you'd like to include your application's version number or other information from `package.json` in your application, you can load JSON like so:
+Vous ne pouvez pas importer directement des fichiers <span class='vo'>[JSON](PUBLIC_SVELTE_SITE_URL/docs/web#json)</span>, puisque SvelteKit attend que le fichier [`svelte.config.js`](./configuration) soit un module ECMAScript. Si vous souhaitez inclure le numéro de version de votre application ou toute autre information de votre fichier `package.json` dans votre application, vous pouvez charger le JSON de cette manière :
 
 ```js
 /// file: svelte.config.js
@@ -48,24 +48,24 @@ const path = fileURLToPath(new URL('package.json', import.meta.url));
 const pkg = JSON.parse(readFileSync(path, 'utf8'));
 ```
 
-## How do I fix the error I'm getting trying to include a package?
+## Comment corriger l'erreur qui se produit lorsque j'essaie d'inclure un paquet ?
 
-Most issues related to including a library are due to incorrect packaging. You can check if a library's packaging is compatible with Node.js by entering it into [the publint website](https://publint.dev/).
+La plupart des problèmes liés à l'ajout de librairies sont dus à un mauvais <span class="vo">[packaging](PUBLIC_SVELTE_SITE_URL/docs/development#bundler-packager)</span>. Vous pouvez vérifier que le paquet d'une librairie est compatible avec Node.js sur [le site publint](https://publint.dev/).
 
-Here are a few things to keep in mind when checking if a library is packaged correctly:
+Voici quelques choses à savoir lorsque vous vérifiez si une librairie est correctement <span class="vo">[packagée](PUBLIC_SVELTE_SITE_URL/docs/development#bundler-packager)</span> :
 
-- `exports` takes precedence over the other entry point fields such as `main` and `module`. Adding an `exports` field may not be backwards-compatible as it prevents deep imports.
-- ESM files should end with `.mjs` unless `"type": "module"` is set in which any case CommonJS files should end with `.cjs`.
-- `main` should be defined if `exports` is not. It should be either a CommonJS or ESM file and adhere to the previous bullet. If a `module` field is defined, it should refer to an ESM file.
-- Svelte components should be distributed as uncompiled `.svelte` files with any JS in the package written as ESM only. Custom script and style languages, like TypeScript and SCSS, should be preprocessed as vanilla JS and CSS respectively. We recommend using [`svelte-package`](./packaging) for packaging Svelte libraries, which will do this for you.
+- `exports` est prioritaire sur les autres champs de point d'entrée tels que `main` et `module`. Ajouter un champ `exports` peut ne pas être rétro-compatible car il empêche les imports profonds.
+- les fichiers ESM doivent avoir une extension `.mjs` à moins que `"type": "module"` ne soit défini, et dans ce cas les fichiers CommonJS doivent avoir une extension `.cjs`.
+- `main` doit être défini si `exports` ne l'est pas. Il doit pointer vers un fichier CommonJS ou ESM et satisfaire le point précédent. Si un champ `module` est défini, il doit pointer vers un fichier ESM.
+- les composants Svelte doivent être distribués en tant que fichiers `.svelte` non compilés, et tout fichier JS du paquet doit être écrit en tant que module ESM uniquement. Les langages classiques de scripts et de style, comme TypeScript et SCSS, doivent être préprocessés en tant que JS et CSS vanille respectivement. Nous recommandons l'utilisation de [`svelte-package`](./packaging) pour <span class="vo">[packager](PUBLIC_SVELTE_SITE_URL/docs/development#bundler-packager)</span> une librairie Svelte, qui s'occupera de cela pour vous.
 
-Libraries work best in the browser with Vite when they distribute an ESM version, especially if they are dependencies of a Svelte component library. You may wish to suggest to library authors that they provide an ESM version. However, CommonJS (CJS) dependencies should work as well since, by default, [`vite-plugin-svelte` will ask Vite to pre-bundle them](https://github.com/sveltejs/vite-plugin-svelte/blob/main/docs/faq.md#what-is-going-on-with-vite-and-pre-bundling-dependencies) using `esbuild` to convert them to ESM.
+Les librairies fonctionnent mieux dans le navigateur avec Vite lorsqu'elle sont distribuées en version ESM, surtout si ce sont de dépendances d'une librairie de composants Svelte. Vous pouvez suggérer aux auteurs et autrices de librairies qu'elles fournissent une version ESM. Néanmoins, les dépendances CommonJS (CJS) devraient également fonctionner, puisque par défaut, [`vite-plugin-svelte` va demander à Vite de les pré-compiler](https://github.com/sveltejs/vite-plugin-svelte/blob/main/docs/faq.md#what-is-going-on-with-vite-and-pre-bundling-dependencies) en utilisant `esbuild` pour les convertir en ESM.
 
-If you are still encountering issues we recommend searching both [the Vite issue tracker](https://github.com/vitejs/vite/issues) and the issue tracker of the library in question. Sometimes issues can be worked around by fiddling with the [`optimizeDeps`](https://vitejs.dev/config/#dep-optimization-options) or [`ssr`](https://vitejs.dev/config/#ssr-options) config values though we recommend this as only a short-term workaround in favor of fixing the library in question.
+Si vous rencontrez toujours des problèmes, nous vous recommandons de faire un tour dans [les issues de Vite](https://github.com/vitejs/vite/issues) et les <span class='vo'>[issues](PUBLIC_SVELTE_SITE_URL/docs/development#issue)</span> de la librairie en question. Parfois les problèmes peuvent être contournés en jouant avec les options [`optimizeDeps`](https://vitejs.dev/config/#dep-optimization-options) ou [`ssr`](https://vitejs.dev/config/#ssr-options), même si nous recommandons ceci comme une solution court-terme – corriger la librairie en question est une bien meilleure solution.
 
-## How do I use the view transitions API with SvelteKit?
+## Comment utiliser l'API de transition de vue avec SvelteKit ?
 
-While SvelteKit does not have any specific integration with [view transitions](https://developer.chrome.com/docs/web-platform/view-transitions/), you can call `document.startViewTransition` in [`onNavigate`](/docs/modules#$app-navigation-onnavigate) to trigger a view transition on every client-side navigation.
+Bien que SvelteKit n'ait pas d'intégration spécifique aux [transitions de vue](https://developer.chrome.com/docs/web-platform/view-transitions/), vous pouvez appeler `document.startViewTransition` dans [`onNavigate`](/docs/modules#$app-navigation-onnavigate) pour déclencher une transition de vue à chaque navigation côté client.
 
 ```js
 // @errors: 2339 2810
@@ -83,19 +83,19 @@ onNavigate((navigation) => {
 });
 ```
 
-For more, see ["Unlocking view transitions"](https://svelte.dev/blog/view-transitions) on the Svelte blog.
+Pour plus d'informations, voir ["Unlocking view transitions"](PUBLIC_SVELTE_SITE_URL/blog/view-transitions) (en anglais) sur le blog de Svelte.
 
-## How do I use X with SvelteKit?
+## Comment utiliser X avec SvelteKit ?
 
-Make sure you've read the [documentation section on integrations](./integrations). If you're still having trouble, solutions to common issues are listed below.
+Assurez-vous d'avoir lu [la section sur les intégrations](./integrations). Si vous avez toujours des problèmes, voici quelques solutions à des problèmes classiques.
 
-### How do I setup a database?
+### Comment mettre en place une base de données ?
 
-Put the code to query your database in a [server route](./routing#server) - don't query the database in .svelte files. You can create a `db.js` or similar that sets up a connection immediately and makes the client accessible throughout the app as a singleton. You can execute any one-time setup code in `hooks.js` and import your database helpers into any endpoint that needs them.
+Mettez le code qui requête votre base de données dans une [route de serveur](./routing#server) – ne requêtez pas la base de données dans des fichiers `.svelte`. Vous pouvez créer un fichier `db.js` ou similaire qui met en place une connection immédiatement et rend le client accessible dans votre application en tant que singleton. Vous pouvez exécuter tout code de mise en place dans le fichier `hooks.js` et importer vos utilitaires de base de données dans tout fichier de <span class='vo'>[endpoint](PUBLIC_SVELTE_SITE_URL/docs/web#endpoint)</span> qui les nécessite.
 
-### How do I use a client-side only library that depends on `document` or `window`?
+### Comment utiliser une librairie réservée au client qui dépend de `document` ou de `window` ?
 
-If you need access to the `document` or `window` variables or otherwise need code to run only on the client-side you can wrap it in a `browser` check:
+Si vous avez besoin d'accéder aux variables `document` ou `window`, ou si vous avez besoin d'exécuter du code uniquement côté client, vous pouvez le faire au sein d'un bloc qui vérifie si `browser` vaut `true` :
 
 ```js
 /// <reference types="@sveltejs/kit" />
@@ -103,71 +103,72 @@ If you need access to the `document` or `window` variables or otherwise need cod
 import { browser } from '$app/environment';
 
 if (browser) {
-	// client-only code here
+	// code client uniquement
 }
 ```
 
-You can also run code in `onMount` if you'd like to run it after the component has been first rendered to the DOM:
+Vous pouvez aussi exécuter du code dans `onMount` si vous souhaitez qu'il soit joué après le premier rendu du composant dans le <span class='vo'>[DOM](PUBLIC_SVELTE_SITE_URL/docs/web#dom)</span> :
 
 ```js
 // @filename: ambient.d.ts
 // @lib: ES2015
-declare module 'some-browser-only-library';
+declare module 'une-librairie-uniquement-client';
 
 // @filename: index.js
 // ---cut---
 import { onMount } from 'svelte';
 
 onMount(async () => {
-	const { method } = await import('some-browser-only-library');
-	method('hello world');
+	const { method } = await import('une-librairie-uniquement-client');
+	method('bonjour tout le monde');
 });
 ```
 
-If the library you'd like to use is side-effect free you can also statically import it and it will be tree-shaken out in the server-side build where `onMount` will be automatically replaced with a no-op:
+Si la librairie que vous souhaitez utiliser n'a pas d'effet de bord, vous pouvez aussi l'importer de manière statique, elle sera alors retirée lors de la compilation (grâce au <span class='vo'>[tree shaking](PUBLIC_SVELTE_SITE_URL/docs/development#tree-shaking)</span>) du code serveur compilé dans lequel `onMount` est automatiquement remplacé par une fonction inerte :
 
 ```js
 // @filename: ambient.d.ts
 // @lib: ES2015
-declare module 'some-browser-only-library';
+declare module 'une-librairie-uniquement-client';
 
 // @filename: index.js
 // ---cut---
 import { onMount } from 'svelte';
-import { method } from 'some-browser-only-library';
+import { method } from 'une-librairie-uniquement-client';
 
 onMount(() => {
-	method('hello world');
+	method('bonjour tout le monde');
 });
 ```
 
-Finally, you may also consider using an `{#await}` block:
+Enfin, vous pouvez aussi envisager l'utilisation d'un bloc `{#await}` :
+
 ```svelte
 <!--- file: index.svelte --->
 <script>
 	import { browser } from '$app/environment';
 
 	const ComponentConstructor = browser ?
-		import('some-browser-only-library').then((module) => module.Component) :
+		import('une-librairie-uniquement-client').then((module) => module.Component) :
 		new Promise(() => {});
 </script>
 
 {#await ComponentConstructor}
-	<p>Loading...</p>
+	<p>Chargement...</p>
 {:then component}
 	<svelte:component this={component} />
 {:catch error}
-	<p>Something went wrong: {error.message}</p>
+	<p>Quelque chose s'est mal passé : {error.message}</p>
 {/await}
 ```
 
-### How do I use a different backend API server?
+### Comment utiliser un autre serveur d'API ?
 
-You can use [`event.fetch`](./load#making-fetch-requests) to request data from an external API server, but be aware that you would need to deal with [CORS](https://developer.mozilla.org/en-US/docs/Web/HTTP/CORS), which will result in complications such as generally requiring requests to be preflighted resulting in higher latency. Requests to a separate subdomain may also increase latency due to an additional DNS lookup, TLS setup, etc. If you wish to use this method, you may find [`handleFetch`](./hooks#server-hooks-handlefetch) helpful.
+Vous pouvez utiliser [`event.fetch`](./load#requ-ter-avec-fetch) pour requêter des données depuis un serveur d'<span class='vo'>[API](PUBLIC_SVELTE_SITE_URL/docs/development#api)</span> externe, mais ayez conscience que vous aurez besoin de gérer les [CORS](https://developer.mozilla.org/fr/docs/Web/HTTP/CORS), ce qui amène certaines complications telles que faire des [requêtes de pré-vérification](https://developer.mozilla.org/fr/docs/Glossary/Preflight_request), impliquant ainsi une plus grande latence. Requêter un domaine séparé peut aussi augmenter la latence à cause d'une vérification <span class='vo'>[DNS](PUBLIC_SVELTE_SITE_URL/docs/web#dns)</span> additionnelle, de la mise en place du <span class='vo'>[TLS](PUBLIC_SVELTE_SITE_URL/docs/web#tls)</span>, etc. Si vous souhaitez utiliser cette méthode, vous pourriez avoir besoin de [`handleFetch`](./hooks#hooks-de-serveur-handlefetch).
 
-Another approach is to set up a proxy to bypass CORS headaches. In production, you would rewrite a path like `/api` to the API server; for local development, use Vite's [`server.proxy`](https://vitejs.dev/config/server-options.html#server-proxy) option.
+Une autre approche est de définir un <span class='vo'>[proxy](PUBLIC_SVELTE_SITE_URL/docs/web#proxy)</span> pour contourner les problèmes liés aux CORS. En production, vous devrez alors réécrire un chemin tel que `/api` vers le serveur d'API ; en développement local, utilisez l'option [`server.proxy`](https://vitejs.dev/config/server-options.html#server-proxy) de Vite.
 
-How to setup rewrites in production will depend on your deployment platform. If rewrites aren't an option, you could alternatively add an [API route](./routing#server):
+La manière de mettre en place les réécritures en production va dépendre de votre plateforme de déploiement. Si les réécritures ne sont pas une option, vous pourriez alors ajouter une [route d'API](./routing#server) :
 
 ```js
 /// file: src/routes/api/[...path]/+server.js
@@ -177,11 +178,11 @@ export function GET({ params, url }) {
 }
 ```
 
-(Note that you may also need to proxy `POST`/`PATCH` etc requests, and forward `request.headers`, depending on your needs.)
+(Notez que vous pourriez aussi avoir besoin de relayer les requêtes `POST`/`PATCH` etc., ainsi que les `request.headers`, en fonction de vos besoins.)
 
-### How do I use middleware?
+### Comment utiliser des middlewares ?
 
-`adapter-node` builds a middleware that you can use with your own server for production mode. In dev, you can add middleware to Vite by using a Vite plugin. For example:
+L'adaptateur `adapter-node` fournit un <span class='vo'>[middleware](PUBLIC_SVELTE_SITE_URL/docs/web#middleware)</span> que vous pouvez utiliser avec votre propre serveur en production. En mode développement, vous pouvez ajouter des middlewares à Vite en utilisant un <span class='vo'>[plugin](PUBLIC_SVELTE_SITE_URL/docs/development#plugin)</span> Vite. Par exemple :
 
 ```js
 // @errors: 2322
@@ -197,7 +198,7 @@ const myPlugin = {
 	name: 'log-request-middleware',
 	configureServer(server) {
 		server.middlewares.use((req, res, next) => {
-			console.log(`Got request ${req.url}`);
+			console.log(`Requête reçue ${req.url}`);
 			next();
 		});
 	}
@@ -211,38 +212,39 @@ const config = {
 export default config;
 ```
 
-See [Vite's `configureServer` docs](https://vitejs.dev/guide/api-plugin.html#configureserver) for more details including how to control ordering.
+Voir [la documentation Vite sur `configureServer`](https://vitejs.dev/guide/api-plugin.html#configureserver) (en anglais) pour plus de détails, notamment sur gestion de l'ordre.
 
-### Does it work with Yarn 2?
+### Est-ce compatible avec Yarn 2 ?
 
-Sort of. The Plug'n'Play feature, aka 'pnp', is broken (it deviates from the Node module resolution algorithm, and [doesn't yet work with native JavaScript modules](https://github.com/yarnpkg/berry/issues/638) which SvelteKit — along with an [increasing number of packages](https://blog.sindresorhus.com/get-ready-for-esm-aa53530b3f77) — uses). You can use `nodeLinker: 'node-modules'` in your [`.yarnrc.yml`](https://yarnpkg.com/configuration/yarnrc#nodeLinker) file to disable pnp, but it's probably easier to just use npm or [pnpm](https://pnpm.io/), which is similarly fast and efficient but without the compatibility headaches.
+Plus ou moins. La fonctionnalité Plug'n'Play, ou "PNP", ne fonctionnera pas (elle n'est pas compatible avec l'algorithme de résolution de modules de Node, et [ne fonctionne pas encore avec les modules JavaScript natifs](https://github.com/yarnpkg/berry/issues/638), ce que SvelteKit – comme [un nombre grandissant de paquets](https://blog.sindresorhus.com/get-ready-for-esm-aa53530b3f77) – utilise). Vous pouvez utiliser `nodeLinker: 'node-modules'` dans votre fichier [`.yarnrc.yml`](https://yarnpkg.com/configuration/yarnrc#nodeLinker) pour désactiver le PNP, mais il est probablement plus facile de plutôt utiliser NPM ou [pnpm](https://pnpm.io/), qui sont tout aussi efficaces et rapides, la complexité de la compatibilité en moins.
 
-### How do I use with Yarn 3?
+### Est-ce compatible avec Yarn 3 ?
 
-Currently ESM Support within the latest Yarn (version 3) is considered [experimental](https://github.com/yarnpkg/berry/pull/2161).
+La compatibilité ESM avec la dernière version de Yarn (version 3) est actuellement considérée comme [expérimentale](https://github.com/yarnpkg/berry/pull/2161).
 
-The below seems to work although your results may vary.
+Ce qui suit semble fonctionner, même si votre cas peut être un peu différent.
 
-First create a new application:
+Créez d'abord une nouvelle application :
 
 ```sh
 yarn create svelte myapp
 cd myapp
 ```
 
-And enable Yarn Berry:
+Et activez Yarn Berry :
 
 ```sh
 yarn set version berry
 yarn install
 ```
 
-#### Yarn 3 global cache
+#### Le cache global de Yarn 3
 
-One of the more interesting features of Yarn Berry is the ability to have a single global cache for packages, instead of having multiple copies for each project on the disk. However, setting `enableGlobalCache` to true causes building to fail, so it is recommended to add the following to the `.yarnrc.yml` file:
+Une des fonctionnalités les plus intéressantes de Yarn Berry est la possibilité d'avoir un seul cache global pour tous les paquets, plutôt que d'avoir plusieurs copies pour chaque projet sur le disque. Cependant, définir `enableGlobalCache` à `true` fait échouer la compilation, il est donc recommandé d'ajouter la chose suivante dans votre fichier `.yarnrc.yml` :
 
 ```yaml
 nodeLinker: node-modules
 ```
 
-This will cause packages to be downloaded into a local node_modules directory but avoids the above problem and is your best bet for using version 3 of Yarn at this point in time.
+Cette option implique que vos paquets seront téléchargés dans un dossier `node_modules` local, mais évite le problème décrit ci-dessus, et c'est actuellement votre meilleure chance d'utiliser Yarn 3.
+

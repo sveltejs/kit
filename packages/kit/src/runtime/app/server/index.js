@@ -4,7 +4,7 @@ import { DEV } from 'esm-env';
 import { b64_decode } from '../../utils.js';
 
 /**
- * Read the contents of an imported asset from the filesystem
+ * Importe un fichier statique lu depuis le disque
  * @example
  * ```js
  * import { read } from '$app/server';

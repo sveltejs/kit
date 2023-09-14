@@ -1,26 +1,26 @@
 ---
-title: Form actions
+title: Actions de formulaire
 ---
 
-A `+page.server.js` file can export _actions_, which allow you to `POST` data to the server using the `<form>` element.
+Un fichier `+page.server.js` peut exporter des _actions_, qui vous permettent d'envoyer avec `POST` des données au serveur en utilisant l'élément `<form>`.
 
-When using `<form>`, client-side JavaScript is optional, but you can easily _progressively enhance_ your form interactions with JavaScript to provide the best user experience.
+Lorsque vous utilisez un formulaire natif `<form>`, l'envoi du formulaire est réalisé sans JavaScript, rendant JavaScript complètement facultatif sur la page, mais vous pouvez _améliorer progressivement_ les interactions du formulaire de manière simple avec JavaScript pour proposer une meilleure expérience utilisateur (plus d'infos dans [cette section](form-actions#am-lioration-progressive)).
 
-## Default actions
+## Actions par défaut
 
-In the simplest case, a page declares a `default` action:
+Dans le cas le plus simple, une page déclare une action `default` :
 
 ```js
 /// file: src/routes/login/+page.server.js
 /** @type {import('./$types').Actions} */
 export const actions = {
 	default: async (event) => {
-		// TODO log the user in
+		// TODO connecter l'utilisateur
 	}
 };
 ```
 
-To invoke this action from the `/login` page, just add a `<form>` — no JavaScript needed:
+Pour invoquer cette action depuis la page `/login`, ajoutez simplement un `<form>` — vous n'avez pas besoin de JavaScript :
 
 ```svelte
 <!--- file: src/routes/login/+page.svelte --->
@@ -30,29 +30,29 @@ To invoke this action from the `/login` page, just add a `<form>` — no JavaScr
 		<input name="email" type="email">
 	</label>
 	<label>
-		Password
+		Mot de passe
 		<input name="password" type="password">
 	</label>
-	<button>Log in</button>
+	<button>Connexion</button>
 </form>
 ```
 
-If someone were to click the button, the browser would send the form data via `POST` request to the server, running the default action.
+Si quelqu'un clique sur le bouton, le navigateur enverra au serveur la donnée du formulaire via une requête `POST`, déclenchant l'action par défaut.
 
-> Actions always use `POST` requests, since `GET` requests should never have side-effects.
+> Les actions utilisent toujours des requêtes `POST`, puisque les requêtes `GET` ne sont pas censées avoir d'effets de bord.
 
-We can also invoke the action from other pages (for example if there's a login widget in the nav in the root layout) by adding the `action` attribute, pointing to the page:
+Nous pouvons aussi invoquer l'action depuis d'autres pages (par exemple s'il y a un bouton de connexion dans la barre de navigation du <span class="vo">[layout](PUBLIC_SVELTE_SITE_URL/docs/web#layout)</span> racine) en ajoutant l'attribut `action` qui pointe vers la page :
 
 ```html
 /// file: src/routes/+layout.svelte
 <form method="POST" action="/login">
-	<!-- content -->
+	<!-- contenu -->
 </form>
 ```
 
-## Named actions
+## Actions nommées
 
-Instead of one `default` action, a page can have as many named actions as it needs:
+À la place d'une action `default`, une page peut avoir autant d'actions nommées que nécessaire :
 
 ```diff
 /// file: src/routes/login/+page.server.js
@@ -60,15 +60,15 @@ Instead of one `default` action, a page can have as many named actions as it nee
 export const actions = {
 -	default: async (event) => {
 +	login: async (event) => {
-		// TODO log the user in
+		// TODO connecter l'utilisateur
 	},
 +	register: async (event) => {
-+		// TODO register the user
++		// TODO inscrire l'utilisateur
 +	}
 };
 ```
 
-To invoke a named action, add a query parameter with the name prefixed by a `/` character:
+Pour invoquer une action nommée, ajouter un paramètre de requête dont le nom est préfixé par un `/` :
 
 ```svelte
 <!--- file: src/routes/login/+page.svelte --->
@@ -80,7 +80,7 @@ To invoke a named action, add a query parameter with the name prefixed by a `/` 
 <form method="POST" action="/login?/register">
 ```
 
-As well as the `action` attribute, we can use the `formaction` attribute on a button to `POST` the same form data to a different action than the parent `<form>`:
+Comme pour l'attribut `action`, nous pouvons utiliser l'attribut `formaction` sur le bouton pour envoyer avec `POST` la même donnée de formulaire à une action différente de celle du `<form>` originel :
 
 ```diff
 /// file: src/routes/login/+page.svelte
@@ -91,19 +91,19 @@ As well as the `action` attribute, we can use the `formaction` attribute on a bu
 		<input name="email" type="email">
 	</label>
 	<label>
-		Password
+		Mot de passe
 		<input name="password" type="password">
 	</label>
-	<button>Log in</button>
-+	<button formaction="?/register">Register</button>
+	<button>Connexion</button>
++	<button formaction="?/register">Inscription</button>
 </form>
 ```
 
-> We can't have default actions next to named actions, because if you POST to a named action without a redirect, the query parameter is persisted in the URL, which means the next default POST would go through the named action from before.
+> Nous ne pouvons pas avoir une action par défaut en même temps que des actions nommées, car si vous envoyez avec `POST` à une action nommée sans redirection, le paramètre de recherche est persisté dans l'URL, ce qui signifie que la prochaine requête `POST` par défaut repasserait par la même action nommée que précédemment.
 
-## Anatomy of an action
+## Anatomie d'une action
 
-Each action receives a `RequestEvent` object, allowing you to read the data with `request.formData()`. After processing the request (for example, logging the user in by setting a cookie), the action can respond with data that will be available through the `form` property on the corresponding page and through `$page.form` app-wide until the next update.
+Chaque action reçoit un objet `RequestEvent`, vous permettant de lire la donnée avec `request.formData()`. Après avoir traité la requête (par exemple, en connectant l'utilisateur grâce à un cookie), l'action peut répondre avec des données qui seront disponibles au travers de la propriété `form` dans la page correspondante, et à travers `$page.form` dans toute l'application jusqu'à la prochaine mise à jour.
 
 ```js
 // @errors: 2304
@@ -127,7 +127,7 @@ export const actions = {
 		return { success: true };
 	},
 	register: async (event) => {
-		// TODO register the user
+		// TODO inscrire l'utilisateur
 	}
 };
 ```
@@ -143,15 +143,15 @@ export const actions = {
 </script>
 
 {#if form?.success}
-	<!-- this message is ephemeral; it exists because the page was rendered in
-	       response to a form submission. it will vanish if the user reloads -->
-	<p>Successfully logged in! Welcome back, {data.user.name}</p>
+	<!-- ce message est ephémère ; il existe parce que la page a été rendue en
+        réponse à la soumission du formulaire. il disparaîtra si l'utilisateur recharge la page -->
+	<p>Vous êtes bien connecté•e ! Ravi de vous revoir, {data.user.name}</p>
 {/if}
 ```
 
-### Validation errors
+### Erreurs de validation
 
-If the request couldn't be processed because of invalid data, you can return validation errors — along with the previously submitted form values — back to the user so that they can try again. The `fail` function lets you return an HTTP status code (typically 400 or 422, in the case of validation errors) along with the data. The status code is available through `$page.status` and the data through `form`:
+Si la requête n'a pas pu être traitée à cause de données invalides, vous pouvez renvoyer des erreurs de validation — en plus des valeurs du formulaire reçues — à l'utilisateur ou l'utilisatrice pour qu'elle réessaie. La fonction `fail` vous permet de renvoyer un code HTTP (en général 400 ou 422, dans le cas d'erreurs de validation) avec la donnée. Le code est disponible via `$page.status` et la donnée via `form` :
 
 ```diff
 /// file: src/routes/login/+page.server.js
@@ -179,12 +179,12 @@ export const actions = {
 		return { success: true };
 	},
 	register: async (event) => {
-		// TODO register the user
+		// TODO inscrire l'utilisateur
 	}
 };
 ```
 
-> Note that as a precaution, we only return the email back to the page — not the password.
+> Notez que par précaution, nous renvoyons uniquement l'email à la page — pas le mot de passe.
 
 ```diff
 /// file: src/routes/login/+page.svelte
@@ -197,19 +197,19 @@ export const actions = {
 +		<input name="email" type="email" value={form?.email ?? ''}>
 	</label>
 	<label>
-		Password
+		Mot de passe
 		<input name="password" type="password">
 	</label>
-	<button>Log in</button>
-	<button formaction="?/register">Register</button>
+	<button>Connexion</button>
+	<button formaction="?/register">Inscription</button>
 </form>
 ```
 
-The returned data must be serializable as JSON. Beyond that, the structure is entirely up to you. For example, if you had multiple forms on the page, you could distinguish which `<form>` the returned `form` data referred to with an `id` property or similar.
+La donnée renvoyée doit être sérialisable en <span class="vo">[JSON](PUBLIC_SVELTE_SITE_URL/docs/web#json)</span>. À part ça, vous pouvez utiliser la structure que vous voulez. Par exemple, si vous avez plusieurs formulaires sur la page, vous pouvez distinguer à quel `<form>` la donnée `form` fait référence avec une propriété `id` ou équivalent.
 
-### Redirects
+### Redirections
 
-Redirects (and errors) work exactly the same as in [`load`](load#redirects):
+Les redirections (et erreurs) fonctionnent exactement de la même façon que dans [`load`](load#redirections) :
 
 ```diff
 /// file: src/routes/login/+page.server.js
@@ -240,16 +240,16 @@ export const actions = {
 		return { success: true };
 	},
 	register: async (event) => {
-		// TODO register the user
+		// TODO inscrire l'utilisateur
 	}
 };
 ```
 
-## Loading data
+## Chargement de données
 
-After an action runs, the page will be re-rendered (unless a redirect or an unexpected error occurs), with the action's return value available to the page as the `form` prop. This means that your page's `load` functions will run after the action completes.
+Après l'exécution d'une action, la page est re-rendue (à moins qu'une redirection ou une erreur inattendue ne se produise). La valeur de retour de l'action rendue disponible dans la page en tant que la <span class="vo">[prop](PUBLIC_SVELTE_SITE_URL/docs/sveltejs#prop)</span> `form`. Cela implique que les fonctions `load` de votre page sont exécutées après l'exécution de l'action.
 
-Note that `handle` runs before the action is invoked, and does not rerun before the `load` functions. This means that if, for example, you use `handle` to populate `event.locals` based on a cookie, you must update `event.locals` when you set or delete the cookie in an action:
+Notez que `handle` est exécutée avant l'invocation de l'action, et n'est pas rejouée avant les fonctions `load`. Cela signifie que si, par exemple, vous utilisez `handle` pour remplir `event.locals` en fonction d'un cookie, vous devez mettre à jour `event.locals` lorsque vous définissez ou supprimez le cookie dans une action :
 
 ```js
 /// file: src/hooks.server.js
@@ -309,13 +309,13 @@ export const actions = {
 };
 ```
 
-## Progressive enhancement
+## Amélioration progressive
 
-In the preceding sections we built a `/login` action that [works without client-side JavaScript](https://kryogenix.org/code/browser/everyonehasjs.html) — not a `fetch` in sight. That's great, but when JavaScript _is_ available we can progressively enhance our form interactions to provide a better user experience.
+Dans les sections précédentes nous avons construit une action `/login` qui fonctionne [même sans JavaScript côté client](https://kryogenix.org/code/browser/everyonehasjs.html) — pas un seul `fetch` en vue. C'est très bien, mais lorsque JavaScript _est_ disponible, nous pouvons améliorer nos interactions de formulaire pour proposer une meilleure expérience utilisateur.
 
 ### use:enhance
 
-The easiest way to progressively enhance a form is to add the `use:enhance` action:
+La façon la plus simple d'améliorer progressivement un formulaire est d'ajouter l'action `use:enhance` :
 
 ```diff
 /// file: src/routes/login/+page.svelte
@@ -329,42 +329,43 @@ The easiest way to progressively enhance a form is to add the `use:enhance` acti
 +<form method="POST" use:enhance>
 ```
 
-> Yes, it's a little confusing that the `enhance` action and `<form action>` are both called 'action'. These docs are action-packed. Sorry.
+> Oui, c'est un peu déroutant que l'action `enhance` et l'action de formulaire `<form action>` soient toutes les deux appelées des "actions". Cette documentation est remplie d'actions. Désolé.
 
-Without an argument, `use:enhance` will emulate the browser-native behaviour, just without the full-page reloads. It will:
+Sans argument, `use:enhance` va simuler le comportement natif du navigateur, sauf le chargement intégral de la page. L'action va donc :
 
-- update the `form` property, `$page.form` and `$page.status` on a successful or invalid response, but only if the action is on the same page you're submitting from. For example, if your form looks like `<form action="/somewhere/else" ..>`, `form` and `$page` will _not_ be updated. This is because in the native form submission case you would be redirected to the page the action is on. If you want to have them updated either way, use [`applyAction`](#progressive-enhancement-customising-use-enhance)
-- reset the `<form>` element
-- invalidate all data using `invalidateAll` on a successful response
-- call `goto` on a redirect response
-- render the nearest `+error` boundary if an error occurs
-- [reset focus](accessibility#focus-management) to the appropriate element
+- mettre à jour la propriété `form`, les valeurs `$page.form` et `$page.status` lors d'une réponse valide ou invalide, mais seulement si l'action est sur la même page depuis laquelle vous avez envoyé le formulaire. Par exemple, si votre formulaire ressemble à `<form action="/quelque/part/ailleurs" ..>`, `form` et `$page` ne seront _pas_ mises à jour. Cela s'explique par le fait que lors d'une soumission de formulaire native nous serions redirigés vers la page correspondant à l'action. Si vous souhaitez tout de même les mettre à jour, utilisez [`applyAction`](#am-lioration-progressive-personnaliser-use-enhance)
+- réinitialiser l'élément `<form>`
+- invalider toutes les données en utilisant `invalidateAll` si la réponse est un succès
+- appeler `goto` lors d'une réponse de redirection
+- rendre le composant `+error` le plus proche si une erreur se produit
+- [réinitialiser le focus](accessibility#gestion-du-focus) sur l'élément approprié
 
-### Customising use:enhance
+### Personnaliser `use:enhance`
 
-To customise the behaviour, you can provide a `SubmitFunction` that runs immediately before the form is submitted, and (optionally) returns a callback that runs with the `ActionResult`. Note that if you return a callback, the default behavior mentioned above is not triggered. To get it back, call `update`.
+Pour personnaliser le comportement, vous pouvez fournir une fonction de type `SubmitFunction` qui sera jouée immédiatement avant la soumission du formulaire, et renverra (optionnellement) un <span class="vo">[callback](PUBLIC_SVELTE_SITE_URL/docs/development#callback)</span> qui s'exécutera avec le résultat de l'action `ActionResult`. Notez que si vous renvoyez un callback, le comportement par défaut mentionné plus haut ne s'applique pas. Pour qu'il s'applique tout de même dans ce cas, pensez à appeler `update`.
 
 ```svelte
 <form
 	method="POST"
 	use:enhance={({ formElement, formData, action, cancel, submitter }) => {
-		// `formElement` is this `<form>` element
-		// `formData` is its `FormData` object that's about to be submitted
-		// `action` is the URL to which the form is posted
-		// calling `cancel()` will prevent the submission
-		// `submitter` is the `HTMLElement` that caused the form to be submitted
+		// `formElement` est l'élément `<form>` courant
+		// `formData` est l'objet de données `FormData` qui s'apprête à être envoyé
+		// `action` est l'URL que le formulaire cible
+		// appeler `cancel()` va empêcher la soumission
+		// `submitter` est l'élément `HTMLElement` qui a causé la soumission du formulaire
 
 		return async ({ result, update }) => {
-			// `result` is an `ActionResult` object
-			// `update` is a function which triggers the default logic that would be triggered if this callback wasn't set
+			// `result` est un objet `ActionResult`
+			// `update` est la fonction qui déclenche la logique par défaut qui serait jouée si le callback n'était pas défini
 		};
 	}}
 >
 ```
 
-You can use these functions to show and hide loading UI, and so on.
+Vous pouvez utiliser ces fonctions pour afficher ou cacher une interface de charger, ou autre.
 
-If you return a callback, you may need to reproduce part of the default `use:enhance` behaviour, but without invalidating all data on a successful response. You can do so with `applyAction`:
+Si vous renvoyez un <span class="vo">[callback](PUBLIC_SVELTE_SITE_URL/docs/development#callback)</span>, vous pourriez avoir besoin de reproduire en partie le comportement par défaut de `use:enhance`, mais sans invalider les données d'une réponse de succès. Vous pouvez faire cela avec `applyAction` :
+
 
 ```diff
 /// file: src/routes/login/+page.svelte
@@ -380,28 +381,28 @@ If you return a callback, you may need to reproduce part of the default `use:enh
 	use:enhance={({ formElement, formData, action, cancel }) => {
 
 		return async ({ result }) => {
-			// `result` is an `ActionResult` object
-+			if (result.type === 'redirect') {
-+				goto(result.location);
-+			} else {
-+				await applyAction(result);
-+			}
+			// `result` est un objet `ActionResult`
+			if (result.type === 'redirect') {
+				goto(result.location);
+			} else {
+				await applyAction(result);
+			}
 		};
 	}}
 >
 ```
 
-The behaviour of `applyAction(result)` depends on `result.type`:
+Le comportement de `applyAction(result)` dépend de `result.type` :
 
-- `success`, `failure` — sets `$page.status` to `result.status` and updates `form` and `$page.form` to `result.data` (regardless of where you are submitting from, in contrast to `update` from `enhance`)
-- `redirect` — calls `goto(result.location, { invalidateAll: true })`
-- `error` — renders the nearest `+error` boundary with `result.error`
+- `success`, `failure` — définit `$page.status` à `result.status` et met à jour `form` et `$page.form` à `result.data` (peu importe d'où vous soumettez le formulaire, à la différence de `update` de `enhance`)
+- `redirect` — appelle `goto(result.location, { invalidateAll: true })`
+- `error` — rend le composant `+error` le plus proche avec `result.error`
 
-In all cases, [focus will be reset](accessibility#focus-management).
+Dans tous les cas, le [focus sera réinitialisé](accessibility#gestion-du-focus).
 
-### Custom event listener
+### Gestionnaire d'évènement personnalisé
 
-We can also implement progressive enhancement ourselves, without `use:enhance`, with a normal event listener on the `<form>`:
+Nous pouvons aussi implémenter de l'amélioration progressive nous-même, sans `use:enhance`, avec un gestionnaire d'évènement sur l'élément `<form>` :
 
 ```svelte
 <!--- file: src/routes/login/+page.svelte --->
@@ -428,7 +429,7 @@ We can also implement progressive enhancement ourselves, without `use:enhance`, 
 		const result = deserialize(await response.text());
 
 		if (result.type === 'success') {
-			// rerun all `load` functions, following the successful update
+			// rejoue toutes les fonctions `load`, en cas de soumission réussie
 			await invalidateAll();
 		}
 
@@ -437,13 +438,13 @@ We can also implement progressive enhancement ourselves, without `use:enhance`, 
 </script>
 
 <form method="POST" on:submit|preventDefault={handleSubmit}>
-	<!-- content -->
+	<!-- contenu -->
 </form>
 ```
 
-Note that you need to `deserialize` the response before processing it further using the corresponding method from `$app/forms`. `JSON.parse()` isn't enough because form actions - like `load` functions - also support returning `Date` or `BigInt` objects.
+Notez que vous avez besoin de désérialiser la réponse avant d'effectuer d'autres traitements en utilisant la méthode `deserialize` de `$app/forms`. `JSON.parse()` ne suffit pas car les actions de formulaire – comme les fonctions `load` – peuvent aussi renvoyer des objets `Date` ou `BigInt`.
 
-If you have a `+server.js` alongside your `+page.server.js`, `fetch` requests will be routed there by default. To `POST` to an action in `+page.server.js` instead, use the custom `x-sveltekit-action` header:
+Si vous avez un fichier `+server.js` en plus de votre `+page.server.js`, les requêtes `fetch` seront envoyées vers `+server.js` par défaut. Pour plutôt soumettre avec `POST` vers une action de `+page.server.js`, utilisez le <span class="vo">[header](PUBLIC_SVELTE_SITE_URL/docs/web#header)</span> personnalisé `x-sveltekit-action` :
 
 ```diff
 const response = await fetch(this.action, {
@@ -457,7 +458,7 @@ const response = await fetch(this.action, {
 
 ## Alternatives
 
-Form actions are the preferred way to send data to the server, since they can be progressively enhanced, but you can also use [`+server.js`](routing#server) files to expose (for example) a JSON API. Here's how such an interaction could look like:
+Les actions de formulaires sont la méthode à privilégier pour envoyer des données au serveur, puisqu'elles peuvent améliorer progressivement votre application, mais vous pouvez aussi utiliser des fichiers [`+server.js`](routing#server) pour exposer (par exemple) une <span class="vo">[API](PUBLIC_SVELTE_SITE_URL/docs/development#api)</span> <span class="vo">[JSON](PUBLIC_SVELTE_SITE_URL/docs/web#json)</span>. Voici comment une telle interaction serait écrite :
 
 ```svelte
 <!--- file: send-message/+page.svelte --->
@@ -478,27 +479,27 @@ Form actions are the preferred way to send data to the server, since they can be
 
 /** @type {import('./$types').RequestHandler} */
 export function POST() {
-	// do something
+	// faire quelque chose
 }
 ```
 
 ## GET vs POST
 
-As we've seen, to invoke a form action you must use `method="POST"`.
+Comme nous l'avons vu, pour invoquer une action de formulaire, vous devez utiliser `method="POST"`.
 
-Some forms don't need to `POST` data to the server — search inputs, for example. For these you can use `method="GET"` (or, equivalently, no `method` at all), and SvelteKit will treat them like `<a>` elements, using the client-side router instead of a full page navigation:
+Certains formulaires n'ont pas besoin d'utiliser `POST` pour envoyer des données au serveur – les `<input>` de recherche par exemple. Dans ces cas-là, vous pouvez utiliser `method="GET"` (ou de manière équivalente, ne pas spécifier l'attribut `method`), et SvelteKit les traitera alors comme les éléments `<a>`, utilisant le routeur client plutôt qu'une navigation rechargeant la page entièrement :
 
 ```html
 <form action="/search">
 	<label>
-		Search
+		Rechercher
 		<input name="q">
 	</label>
 </form>
 ```
 
-Submitting this form will navigate to `/search?q=...` and invoke your load function but will not invoke an action. As with `<a>` elements, you can set the [`data-sveltekit-reload`](link-options#data-sveltekit-reload), [`data-sveltekit-replacestate`](link-options#data-sveltekit-replacestate), [`data-sveltekit-keepfocus`](link-options#data-sveltekit-keepfocus) and [`data-sveltekit-noscroll`](link-options#data-sveltekit-noscroll) attributes on the `<form>` to control the router's behaviour.
+Soumettre ce formulaire va naviguer vers `/search?q=...` et invoquer votre fonction `load` mais n'invoquera pas d'action. Comme pour les éléments `<a>`, vous pouvez définir les attributs [`data-sveltekit-reload`](link-options#data-sveltekit-reload), [`data-sveltekit-replacestate`](link-options#data-sveltekit-replacestate), [`data-sveltekit-keepfocus`](link-options#data-sveltekit-keepfocus) et [`data-sveltekit-noscroll`](link-options#data-sveltekit-noscroll) sur le `<form>` pour contrôler le comportement du routeur.
 
-## Further reading
+## Sur le même sujet
 
-- [Tutorial: Forms](https://learn.svelte.dev/tutorial/the-form-element)
+- [Tutoriel: Forms](PUBLIC_LEARN_SITE_URL/tutorial/the-form-element)

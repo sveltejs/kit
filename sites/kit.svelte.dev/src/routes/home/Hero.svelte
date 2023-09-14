@@ -11,7 +11,7 @@
 			</div>
 
 			<div class="tagline">web development, streamlined</div>
-			<a href="{base}/docs/introduction" class="cta"> read the docs </a>
+			<a href="{base}/docs/introduction" class="cta"> lire la documentation </a>
 		</div>
 
 		<div class="hero-image-wrapper">
@@ -19,7 +19,7 @@
 				src="./svelte-kit-machine.webp?w=1440;1080;768;640"
 				sizes="(min-width: 768px) min(100vw, 108rem), 64rem"
 				class="hero-image"
-				alt="SvelteKit illustration"
+				alt="Illustration SvelteKit"
 			/>
 		</div>
 	</div>
@@ -126,9 +126,7 @@
 
 	.cta:hover {
 		text-decoration: none;
-		box-shadow:
-			0px 0.8px 3.8px rgba(0, 0, 0, 0.115),
-			0px 6px 30px rgba(0, 0, 0, 0.23);
+		box-shadow: 0px 0.8px 3.8px rgba(0, 0, 0, 0.115), 0px 6px 30px rgba(0, 0, 0, 0.23);
 	}
 
 	@media (min-width: 400px) {

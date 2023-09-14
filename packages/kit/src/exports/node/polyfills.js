@@ -12,7 +12,7 @@ const globals = {
 
 // exported for dev/preview and node environments
 /**
- * Make various web APIs available as globals:
+ * Rend ces <span class='vo'>[APIs](https://sveltefr.dev/docs/development#api)</span> web disponibles en tant que variables globales :
  * - `crypto`
  * - `File`
  */

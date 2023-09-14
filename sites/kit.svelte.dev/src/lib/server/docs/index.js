@@ -11,6 +11,12 @@ import {
 import { render_content } from '../renderer';
 import { read } from '$app/server';
 import { error } from '@sveltejs/kit';
+import {
+	PUBLIC_SVELTE_SITE_URL,
+	PUBLIC_KIT_SITE_URL,
+	PUBLIC_LEARN_SITE_URL,
+	PUBLIC_GITHUB_ORG
+} from '$env/static/public';
 
 const meta = import.meta.glob('../../../../../../documentation/docs/*/meta.json', {
 	as: 'url',
@@ -58,13 +64,19 @@ for (const [file, asset] of Object.entries(markdown)) {
 		path: `${base}/docs/${slug}`
 	});
 
+	const content = body
+		.replace(/PUBLIC_SVELTE_SITE_URL/g, PUBLIC_SVELTE_SITE_URL)
+		.replace(/PUBLIC_KIT_SITE_URL/g, PUBLIC_KIT_SITE_URL)
+		.replace(/PUBLIC_LEARN_SITE_URL/g, PUBLIC_LEARN_SITE_URL)
+		.replace(/PUBLIC_GITHUB_ORG/g, PUBLIC_GITHUB_ORG);
+
 	pages[slug] = {
 		rank: +rank || undefined,
 		category: category.title,
 		title,
 		file: `${category_dir}/${basename}`,
-		sections: await get_sections(body),
-		body
+		sections: await get_sections(content),
+		body: content
 	};
 }
 

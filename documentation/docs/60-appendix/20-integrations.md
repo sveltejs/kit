@@ -1,14 +1,14 @@
 ---
-title: Integrations
+title: Intégrations
 ---
 
-## Preprocessors
+## Pré-processeurs
 
-Preprocessors transform your `.svelte` files before passing them to the compiler. For example, if your `.svelte` file uses TypeScript and PostCSS, it must first be transformed into JavaScript and CSS so that the Svelte compiler can handle it. There are many [available preprocessors](https://sveltesociety.dev/packages?category=preprocessors). The Svelte team maintains two official ones discussed below.
+Les pré-processeurs transforment vos fichiers `.svelte` avant de les passer au compilateur. Par exemple, si votre fichier `.svelte` utilise TypeScript et PostCSS, il doit d'abord être transformé en Javascript et CSS afin que le compilateur Svelte puisse le traiter. Il existe plusieurs [pré-processeurs disponibles](https://sveltesociety.dev/packages?category=preprocessors). L'équipe Svelte maintient deux pré-processeurs officiels qui sont décrits ci-dessous.
 
 ### `vitePreprocess`
 
-`vite-plugin-svelte` offers a [`vitePreprocess`](https://github.com/sveltejs/vite-plugin-svelte/blob/main/docs/preprocess.md) feature which utilizes Vite for preprocessing. It is capable of handling the language flavors Vite handles: TypeScript, PostCSS, SCSS, Less, Stylus, and SugarSS. If you set your project up with TypeScript it will be included by default:
+`vite-plugin-svelte` offre une fonctionnalité [`vitePreprocess`](https://github.com/sveltejs/vite-plugin-svelte/blob/main/docs/preprocess.md) qui utilise Vite comme pré-processeur. Il est capable de gérer les différentes nuances de langages que Vite gère : TypeScript, PostCSS, SCSS, Less, Stylus, et SugarSS. Pour des raisons pratiques, ce pré-processeur est ré-exporté depuis le paquet `@sveltejs/kit/vite`. Si vous mettez TypeScript en place dans votre projet, il sera inclus par défaut :
 
 ```js
 // svelte.config.js
@@ -21,18 +21,18 @@ export default {
 
 ### `svelte-preprocess`
 
-`svelte-preprocess` has some additional functionality not found in `vitePreprocess` such as support for Pug, Babel, and global styles. However, `vitePreprocess` may be faster and require less configuration, so it is used by default. Note that CoffeeScript is [not supported](https://github.com/sveltejs/kit/issues/2920#issuecomment-996469815) by SvelteKit.
+`svelte-preprocess` possède des fonctionnalités supplémentaires que `vitePreprocess` ne propose pas, comme le support de Pug, Babel, et les styles globaux. Cependant `vitePreprocess` est généralement plus rapide et demande moins de configuration, il est donc utilisé par défaut. Notez que [CoffeeScript n'est pas supporté](https://github.com/sveltejs/kit/issues/2920#issuecomment-996469815) par SvelteKit.
 
-You will need to install `svelte-preprocess` with `npm install --save-dev svelte-preprocess` and [add it to your `svelte.config.js`](https://github.com/sveltejs/svelte-preprocess/blob/main/docs/usage.md#with-svelte-config). After that, you will often need to [install the corresponding library](https://github.com/sveltejs/svelte-preprocess/blob/main/docs/getting-started.md) such as `npm install -D sass` or `npm install -D less`.
+Vous aurez besoin d'installer `svelte-preprocess` avec `npm install --save-dev svelte-preprocess` et de [l'ajouter à votre fichier `svelte.config.js`](https://github.com/sveltejs/svelte-preprocess/blob/main/docs/usage.md#with-svelte-config). Après cela, vous aurez probablement besoin d'[installer la librairie correspondante](https://github.com/sveltejs/svelte-preprocess/blob/main/docs/getting-started.md) avec par exemple `npm install -D sass` ou `npm install -D less`.
 
 ## Adders
 
-[Svelte Adders](https://sveltesociety.dev/templates?category=svelte-add) allow you to setup many different complex integrations like Tailwind, PostCSS, Storybook, Firebase, GraphQL, mdsvex, and more with a single command. Please see [sveltesociety.dev](https://sveltesociety.dev/) for a full listing of templates, components, and tools available for use with Svelte and SvelteKit.
+[Svelte Adders](https://sveltesociety.dev/templates?category=svelte-add) vous permet de mettre en place différentes intégrations complexes comme Tailwind, PostCSS, Storybook, Firebase, GraphQL, mdsvex, et d'autres en une seule commande. Vous trouverez sur [sveltesociety.dev](https://sveltesociety.dev/) une liste complète des <span class='vo'>[templates](PUBLIC_SVELTE_SITE_URL/docs/development#template)</span>, composants, et outils disponibles à l'usage avec Svelte et SvelteKit.
 
-## Vite plugins
+## Plugins Vite
 
-Since SvelteKit projects are built with Vite, you can use Vite plugins to enhance your project. See a list of available plugins at [`vitejs/awesome-vite`](https://github.com/vitejs/awesome-vite).
+Puisque les projets SvelteKit sont compilés avec Vite, vous pouvez utiliser les <span class='vo'>[plugins](PUBLIC_SVELTE_SITE_URL/docs/development#plugin)</span> Vite pour améliorer votre projet. Vous trouverez sur [`vitejs/awesome-vite`](https://github.com/vitejs/awesome-vite) une liste complète des plugins disponibles.
 
-## Integration FAQs
+## FAQ des intégrations
 
-The SvelteKit FAQ has a [how to do X with SvelteKit](./faq#how-do-i-use-x-with-sveltekit), which may be helpful if you still have questions.
+La FAQ de SvelteKit a une section [Comment utiliser X avec SvelteKit](./faq#comment-utiliser-x-avec-sveltekit), qui peut vous aider si vous avez encore des questions.

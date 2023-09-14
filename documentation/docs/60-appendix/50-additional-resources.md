@@ -1,24 +1,24 @@
 ---
-title: Additional resources
+title: Ressources supplémentaires
 ---
 
-## FAQs
+## FAQ
 
-Please see the [SvelteKit FAQ](../faq) for solutions to common issues and helpful tips and tricks.
+Vous trouverez des astuces et des solutions aux problèmes communs sur [la FAQ de SvelteKit](../faq).
 
-The [Svelte FAQ](https://svelte.dev/faq) and [`vite-plugin-svelte` FAQ](https://github.com/sveltejs/vite-plugin-svelte/blob/main/docs/faq.md) may also be helpful for questions deriving from those libraries.
+[La FAQ de Svelte](PUBLIC_SVELTE_SITE_URL/faq) et celle de [`vite-plugin-svelte`](https://github.com/sveltejs/vite-plugin-svelte/blob/main/docs/faq.md) (en anglais) peuvent également être utiles pour des questions relatives à ces librairies.
 
-## Examples
+## Exemples
 
-We've written and published a few different SvelteKit sites as examples:
+Nous avons écrit et publié quelques sites SvelteKit comme exemples :
 
-- [`sveltejs/realworld`](https://github.com/sveltejs/realworld) contains an example blog site
-- [A HackerNews clone](https://github.com/sveltejs/sites/tree/master/sites/hn.svelte.dev)
+- [`sveltejs/realworld`](https://github.com/sveltejs/realworld) conteient un exemple de blog
+- [Un clone de Hacker News](https://github.com/sveltejs/sites/tree/master/sites/hn.svelte.dev)
 - [`kit.svelte.dev`](https://github.com/sveltejs/kit/tree/main/sites/kit.svelte.dev)
 - [`svelte.dev`](https://github.com/sveltejs/svelte/tree/main/sites/svelte.dev)
 
-SvelteKit users have also published plenty of examples on GitHub, under the [#sveltekit](https://github.com/topics/sveltekit) and [#sveltekit-template](https://github.com/topics/sveltekit-template) topics, as well as on [the Svelte Society site](https://sveltesociety.dev/templates?category=sveltekit). Note that these have not been vetted by the maintainers and may not be up to date.
+Les utilisateurs et utilisatrices de SvelteKit ont aussi publié plusieurs exemples sur Github, dans les rubriques [#sveltekit](https://github.com/topics/sveltekit) et [#sveltekit-template](https://github.com/topics/sveltekit-template), ainsi que sur le site de [Svelte Society](https://sveltesociety.dev/templates?category=sveltekit). Notez que ces exemples-ci n'ont pas été vérifiés pas les personnes en charge du développement de SvelteKit, et peuvent ne pas être à jour.
 
 ## Support
 
-You can ask for help on [Discord](https://svelte.dev/chat) and [StackOverflow](https://stackoverflow.com/questions/tagged/sveltekit). Please first search for information related to your issue in the FAQ, Google or another search engine, issue tracker, and Discord chat history in order to be respectful of others' time. There are many more people asking questions than answering them, so this will help in allowing the community to grow in a scalable fashion.
+Vous pouvez demander de l'aide sur le [serveur Discord officiel](https://svelte.dev/chat) ou sur le [serveur Discord francophone](PUBLIC_SVELTE_SITE_URL/chat), ainsi que sur [StackOverflow](https://stackoverflow.com/questions/tagged/sveltekit). Merci de d'abord chercher des informations sur votre problème dans la FAQ, sur Google, ou tout autre moteur de recherche, gestionnaire de tickets ou historique Discord afin de rester dans le respect du temps d'autrui. Il y a beaucoup plus de personnes qui posent des questions que de personnes qui y répondent, vous aiderez ainsi la communauté à se développer de manière fluide.

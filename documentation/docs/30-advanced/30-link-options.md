@@ -1,25 +1,24 @@
 ---
-title: Link options
+title: Options de lien
 ---
 
-In SvelteKit, `<a>` elements (rather than framework-specific `<Link>` components) are used to navigate between the routes of your app. If the user clicks on a link whose `href` is 'owned' by the app (as opposed to, say, a link to an external site) then SvelteKit will navigate to the new page by importing its code and then calling any `load` functions it needs to fetch data.
+Dans une application SvelteKit, les éléments `<a>` sont utilisés pour naviguer entre les différentes routes de votre application, plutôt qu'avec des composants `<Link>` spécifiques au <span class="vo">[framework](PUBLIC_SVELTE_SITE_URL/docs/web#framework)</span>. Si l'utilisateur ou l'utilisatrice clique sur un lien dontl l'attribut `href` "appartient" à votre application (plutôt que de pointer vers un site extérieur par exemple), alors SvelteKit va naviguer vers la nouvelle page en important son code puis en appelant toute fonction `load` nécessaire pour le chargement des données de la page.
 
-You can customise the behaviour of links with `data-sveltekit-*` attributes. These can be applied to the `<a>` itself, or to a parent element.
+Vous pouvez personnaliser le comportement des liens avec des attributs `data-sveltekit-*`. Ces attributs peuvent être ajoutés à l'élément `<a>` lui-même, ou à un élément parent.
 
-These options also apply to `<form>` elements with [`method="GET"`](form-actions#get-vs-post).
+Ces options s'appliquent aussi aux éléments `<form>` avec un attribut [`method="GET"`](form-actions#get-vs-post).
 
-## data-sveltekit-preload-data
+## `data-sveltekit-preload-data`
 
-Before the browser registers that the user has clicked on a link, we can detect that they've hovered the mouse over it (on desktop) or that a `touchstart` or `mousedown` event was triggered. In both cases, we can make an educated guess that a `click` event is coming.
+Avant que le navigateur se rende compte qu'un lien n'ait été cliqué, nous pouvons détecter que le lien est en train d'être survolé (sur ordinateur) ou qu'un évènement `touchstart` ou `mousedown` a été déclenché. Dans les deux cas, nous pouvons supposer qu'un évènement `click` sur ce lien est probable.
 
-SvelteKit can use this information to get a head start on importing the code and fetching the page's data, which can give us an extra couple of hundred milliseconds — the difference between a user interface that feels laggy and one that feels snappy.
+SvelteKit peut utiliser cette information pour anticiper le téléchargement du code et des données de la page concernée, ce qui peut faire gagner quelques centaines de millisecondes – la différence entre une interface qui paraît lente et une interface qui paraît fluide.
 
-We can control this behaviour with the `data-sveltekit-preload-data` attribute, which can have one of two values:
+Nous pouvons contrôler ce comportement avec l'attribut `data-sveltekit-preload-data`, qui peut avoir l'une de ces deux valeurs :
+- `"hover"` signifie que le préchargement commence lorsque la souris s'arrêtre sur un lien. Sur mobile, le préchargement commence lors d'un `touchstart`
+- `"tap"` signifie que le préchargement commence dès qu'un évènement `touchstart` ou `mousedown` est détecté
 
-- `"hover"` means that preloading will start if the mouse comes to a rest over a link. On mobile, preloading begins on `touchstart`
-- `"tap"` means that preloading will start as soon as a `touchstart` or `mousedown` event is registered
-
-The default project template has a `data-sveltekit-preload-data="hover"` attribute applied to the `<body>` element in `src/app.html`, meaning that every link is preloaded on hover by default:
+Un projet SvelteKit a par défaut l'attribut `data-sveltekit-preload-data="hover"` appliqué à l'élément `<body>` du fichier `src/app.html`, impliquant que tous les liens utilisent le préchargement au survol par défaut :
 
 ```html
 <body data-sveltekit-preload-data="hover">
@@ -27,60 +26,60 @@ The default project template has a `data-sveltekit-preload-data="hover"` attribu
 </body>
 ```
 
-Sometimes, calling `load` when the user hovers over a link might be undesirable, either because it's likely to result in false positives (a click needn't follow a hover) or because data is updating very quickly and a delay could mean staleness.
+Parfois, il n'est pas souhaitable d'appeler `load` lorsqu'un lien est survolé, soit parce qu'il est très probable qu'un clic ne suive pas le survol, soit parce que la donnée est très souvent mise à jour et un délai dans ce cas peut conduire à des données périmées.
 
-In these cases, you can specify the `"tap"` value, which causes SvelteKit to call `load` only when the user taps or clicks on a link:
+Dans ces situations, vous pouvez spécifier la valeur `"tap"`, qui dit à SvelteKit d'appeler `load` uniquement lorsqu'un lien est cliqué :
 
 ```html
 <a data-sveltekit-preload-data="tap" href="/stonks">
-	Get current stonk values
+	Récupérer la valeur actuelle
 </a>
 ```
 
-> You can also programmatically invoke `preloadData` from `$app/navigation`.
+> Vous pouvez aussi invoquer programmatiquement la méthode `preloadData` du module `$app/navigation`.
 
-Data will never be preloaded if the user has chosen reduced data usage, meaning [`navigator.connection.saveData`](https://developer.mozilla.org/en-US/docs/Web/API/NetworkInformation/saveData) is `true`.
+Les données ne seront jamais préchargées si l'utilisateur ou l'utilisatrice a activé l'usage réduit de données, impliquant que la valeur [`navigator.connection.saveData`](https://developer.mozilla.org/fr/docs/Web/API/NetworkInformation/saveData) vaut `true`.
 
-## data-sveltekit-preload-code
+## `data-sveltekit-preload-code`
 
-Even in cases where you don't want to preload _data_ for a link, it can be beneficial to preload the _code_. The `data-sveltekit-preload-code` attribute works similarly to `data-sveltekit-preload-data`, except that it can take one of four values, in decreasing 'eagerness':
+Même dans les situations dans lesquelles vous ne souhaitez pas précharger des _données_ liées à un lien, il peut être utile de précharger le _code_ lié. L'attribut `data-sveltekit-preload-code` fonctionne de manière similaire à `data-sveltekit-preload-data`, à l'exception qu'il accepte une des quatre valeurs suivantes, classées par "empressement" décroissant :
 
-- `"eager"` means that links will be preloaded straight away
-- `"viewport"` means that links will be preloaded once they enter the viewport
-- `"hover"` - as above, except that only code is preloaded
-- `"tap"` - as above, except that only code is preloaded
+- `"eager"` signifie que le code des liens sera immédiatement préchargé
+- `"viewport"` signifie que le code d'un lien sera préchargé lors que celui-ci entre dans le <span class="vo">[viewport](PUBLIC_SVELTE_SITE_URL/docs/web#viewport)</span>
+- `"hover"` - comme pour `data-sveltekit-preload-data`, mais uniquement le code est préchargé
+- `"tap"` - comme pour `data-sveltekit-preload-data`, mais uniquement le code est préchargé
 
-Note that `viewport` and `eager` only apply to links that are present in the DOM immediately following navigation — if a link is added later (in an `{#if ...}` block, for example) it will not be preloaded until triggered by `hover` or `tap`. This is to avoid performance pitfalls resulting from aggressively observing the DOM for changes.
+Notez que `viewport` et `eager` ne s'appliquent qu'aux liens présents dans le <span class="vo">[DOM](PUBLIC_SVELTE_SITE_URL/docs/web#dom)</span> immédiatement après la navigation – si un lien est ajouté plus tard (par exemple via un bloc `{#if ...}`), son préchargement ne sera pas déclenché avant un éventuel `hover` ou un `tap`. Cela permet d'éviter d'observer les changements de DOM de manière agressive, ce qui pourrait conduire à des problèmes de performance.
 
-> Since preloading code is a prerequisite for preloading data, this attribute will only have an effect if it specifies a more eager value than any `data-sveltekit-preload-data` attribute that is present.
+> Puisque le préchargement du code est un prérequis au préchargement de la donnée, cet attribut n'aura de l'effet que si sa valeur implique un comportement plus "pressé" que le comportement décrit par un éventuel attribut `data-sveltekit-preload-data` qui s'appliquerait au même élément.
 
-As with `data-sveltekit-preload-data`, this attribute will be ignored if the user has chosen reduced data usage.
+Comme pour `data-sveltekit-preload-data`, cet attribut sera ignoré si l'usage réduit de données a été activé.
 
-## data-sveltekit-reload
+## `data-sveltekit-reload`
 
-Occasionally, we need to tell SvelteKit not to handle a link, but allow the browser to handle it. Adding a `data-sveltekit-reload` attribute to a link...
-
-```html
-<a data-sveltekit-reload href="/path">Path</a>
-```
-
-...will cause a full-page navigation when the link is clicked.
-
-Links with a `rel="external"` attribute will receive the same treatment. In addition, they will be ignored during [prerendering](page-options#prerender).
-
-## data-sveltekit-replacestate
-
-Sometimes you don't want navigation to create a new entry in the browser's session history. Adding a `data-sveltekit-replacestate` attribute to a link...
+Nous avons parfois besoin de dire à SvelteKit de ne pas gérer le comportement d'un lien, et de plutôt laisser le navigateur le gérer. L'ajout de l'attribut `data-sveltekit-reload` sur un lien...
 
 ```html
-<a data-sveltekit-replacestate href="/path">Path</a>
+<a data-sveltekit-reload href="/path">Chemin</a>
 ```
 
-...will replace the current `history` entry rather than creating a new one with `pushState` when the link is clicked.
+...va déclencher une navigation avec rechargement complet de la page lors que le lien sera cliqué.
 
-## data-sveltekit-keepfocus
+Les liens avec l'attribut `rel="external"` auront le même traitement. De plus, ils seront ignorés lors d'un [prérendu](page-options#prerender).
 
-Sometimes you don't want [focus to be reset](accessibility#focus-management) after navigation. For example, maybe you have a search form that submits as the user is typing, and you want to keep focus on the text input.  Adding a `data-sveltekit-keepfocus` attribute to it...
+## `data-sveltekit-replacestate`
+
+Parfois, vous ne souhaitez pas que la navigation crée une nouvelle entrée dans l'historique de navigation de la session. L'ajout de l'attribut `data-sveltekit-replacestate` sur un lien...
+
+```html
+<a data-sveltekit-replacestate href="/path">Chemin</a>
+```
+
+...remplacera l'entrée courante dans `history` plutôt qu'en créer une nouvelle avec `pushState` lorsque le lien sera cliqué.
+
+## `data-sveltekit-keepfocus`
+
+Parfois, vous ne souhaitez pas [réinitialiser le focus](accessibility#gestion-du-focus) après la navigation. Par exemple, vous avez peut-être un formulaire de recherche qui est soumis au fur et à mesure que l'utilisateur ou l'utilisatrice entre du texte, et vous souhaitez donc garder le focus sur l'élément `<input>` de texte. L'ajout de l'attribut `data-sveltekit-keepfocus` sur le formulaire...
 
 ```html
 <form data-sveltekit-keepfocus>
@@ -88,33 +87,33 @@ Sometimes you don't want [focus to be reset](accessibility#focus-management) aft
 </form>
 ```
 
-...will cause the currently focused element to retain focus after navigation. In general, avoid using this attribute on links, since the focused element would be the `<a>` tag (and not a previously focused element) and screen reader and other assistive technology users often expect focus to be moved after a navigation. You should also only use this attribute on elements that still exist after navigation. If the element no longer exists, the user's focus will be lost, making for a confusing experience for assistive technology users.
+...va permettre à l'élément ayant le focus de le garder après la navigation. Il est en général recommandé d'éviter d'utiliser cet attribut sur des liens, puisque l'élément ayant le focus serait la balise `<a>` (et non un autre élément ayant eu précédemment le focus), et les lecteurs d'écran et les personnes utilisant des technologies d'assistance s'attendent à voir le focus se déplacer après une navigation. De plus, vous ne devriez utiliser cet attribut que sur des éléments qui existent toujours après la navigation, sinon, le focus sera perdu, entraînant de la confusion pour les personnes utilisant des technologies d'assistance.
 
-## data-sveltekit-noscroll
+## `data-sveltekit-noscroll`
 
-When navigating to internal links, SvelteKit mirrors the browser's default navigation behaviour: it will change the scroll position to 0,0 so that the user is at the very top left of the page (unless the link includes a `#hash`, in which case it will scroll to the element with a matching ID).
+Lorsqu'il navigue vers des liens internes, SvelteKit reproduit le comportement par défaut du navigateur : il réinitialise la position du défilement à 0,0 afin que l'utilisateur ou l'utilisatrice se trouve tout en haut de la page (à moins que le lien possède un `#hash`, auquel cas la position du défilement sera celle de l'élément possédant l'attribut `id` concerné).
 
-In certain cases, you may wish to disable this behaviour. Adding a `data-sveltekit-noscroll` attribute to a link...
+Dans certains cas, vous pourriez souhaiter désactiver ce comportement. L'ajout de l'attribut `data-sveltekit-noscroll` sur un lien...
 
 ```html
-<a href="path" data-sveltekit-noscroll>Path</a>
+<a href="path" data-sveltekit-noscroll>Chemin</a>
 ```
 
-...will prevent scrolling after the link is clicked.
+...empêchera la réinitialisation du défilement après un clic sur un lien.
 
-## Disabling options
+## Désactiver les options
 
-To disable any of these options inside an element where they have been enabled, use the `"false"` value:
+Pour désactiver n'importe laquelle de ces options dans un élément où elles ont été activées, utilisez la valeur `"false"` :
 
 ```html
 <div data-sveltekit-preload-data>
-	<!-- these links will be preloaded -->
+	<!-- ces liens seront préchargés -->
 	<a href="/a">a</a>
 	<a href="/b">b</a>
 	<a href="/c">c</a>
 
 	<div data-sveltekit-preload-data="false">
-		<!-- these links will NOT be preloaded -->
+		<!-- ces liens ne seront PAS préchargés -->
 		<a href="/d">d</a>
 		<a href="/e">e</a>
 		<a href="/f">f</a>
@@ -122,7 +121,7 @@ To disable any of these options inside an element where they have been enabled, 
 </div>
 ```
 
-To apply an attribute to an element conditionally, do this:
+Pour appliquer conditionnellement un attribut à un élément, faites comme ceci :
 
 ```svelte
 <div data-sveltekit-preload-data={condition ? 'hover' : false}>

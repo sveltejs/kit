@@ -5,38 +5,40 @@
 <Section --background="var(--sk-back-1)">
 	<div class="container">
 		<div class="features">
-			<h2><span>features? we got 'em.</span></h2>
+			<h2><span>des fonctionnalités ? on a ça en stock.</span></h2>
 			<p class="wall">
-				Mix and match <strong>prerendered</strong> pages for maximum performance with dynamic
-				<strong>server-side rendering</strong> for maximum flexibility. Turn your app into a
-				client-rendered
-				<strong>PWA</strong> with a single line of code, for the whole thing or just one page. Use
-				accessible <strong>client-side routing</strong> with automatic
-				<strong>preloading</strong> for slick, instantaneous navigation that doesn't reload your
-				entire page (and your analytics, and all that other junk). Protect your users with automatic
-				<strong>CSRF protection</strong>
-				and easy-to-use
-				<strong>Content Security Policy</strong> configuration. Keep your secrets to yourself with
-				advanced <strong>environment variable</strong> handling. Handle errors gracefully and
-				<strong>securely</strong>. Load data
-				<strong>directly from your database</strong>
-				and connect your back end to your front end with <strong>type-safe</strong> data loading and
-				built-in <strong>form actions</strong>
-				that work with or without JavaScript. <strong>Co-exist</strong> with other client-side
-				routing frameworks on the same page. Add service workers for <strong>offline</strong>
-				support. Generate <strong>AMP-compliant</strong>
-				pages if you really have to. Build complex UIs with unusually powerful
-				<strong>filesystem-based routes</strong>. Nested layouts? Duh. Learn
-				<strong>web standards</strong>
-				that work across environments. Integrate with <strong>Tailwind</strong>
-				and <strong>Playwright</strong> and <strong>Vitest</strong> and <strong>Storybook</strong>
-				and, well, whatever you want. Build <strong>libraries</strong> as well as apps.
-				<strong>Deploy anywhere</strong> with adapters.
+				Mélangez des pages <strong>pré-rendues</strong> pour une perfomance optimale avec du
+				<strong>rendu dynamique sur le serveur</strong>
+				pour une flexibilité maximale. Transformez votre application en une
+				<strong>PWA</strong> rendue côté client avec une seule ligne de code, pour toute votre
+				application ou seulement une seule page. Utilisez un <strong>routeur côté client</strong>
+				accessible avec du <strong>préchargement</strong> automatique pour une navigation
+				instantanée qui ne recharge pas entièrement votre page (ni vos analytiques, et toutes ces
+				choses qui pèsent lourd). Protégez vos utilisateurs avec de la
+				<strong>protection CSRF</strong>
+				et une configuration
+				<strong>Content Security Policy</strong> simple à utiliser. Gardez vos secrets bien gardés
+				avec une gestion avancée des <strong>variables d'environnement</strong>. Gérez les erreurs
+				proprement et <strong>efficacement</strong>. Chargez la donnée
+				<strong>directement depuis votre base de données</strong>
+				et connectez votre back-end à votre front-end avec des chargements de données
+				<strong>typés</strong>
+				et des <strong>actions de formulaire</strong> qui fonctionnent avec ou sans JavaScript.
+				Faites <strong>co-exister</strong> d'autres frameworks utilisant du routing côté client sur
+				la même page. Ajoutez des service workers pour le support <strong>hors ligne</strong>.
+				Générez des pages <strong>compatibles AMP</strong> si vous en avez le besoin. Construisez
+				des UI complexes à l'aide d'un système puissant de routes basé sur votre arborescence de
+				fichiers Des layouts imbriqués ? Évidemment. Apprenez les <strong>standards du web</strong>
+				qui fonctionnent dans tous les environnements. Utilisez <strong>Tailwind</strong> et
+				<strong>Playwright</strong>
+				et <strong>Vitest</strong> et <strong>Storybook</strong> et, bah, ce que vous voulez.
+				Développez des <strong>librairies</strong> ou bien des applications.
+				<strong>Déployez partout</strong> avec les adaptateurs.
 			</p>
 
 			<p>
-				SvelteKit is the framework that
-				<strong>grows with you</strong>, whatever you end up building.
+				SvelteKit est le framework qui <strong>grandit avec vous</strong>, peu importe ce que vous
+				construisez.
 			</p>
 		</div>
 	</div>

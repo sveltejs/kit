@@ -1,32 +1,32 @@
 ---
-title: Web standards
+title: Standards du web
 ---
 
-Throughout this documentation, you'll see references to the standard [Web APIs](https://developer.mozilla.org/en-US/docs/Web/API) that SvelteKit builds on top of. Rather than reinventing the wheel, we _use the platform_, which means your existing web development skills are applicable to SvelteKit. Conversely, time spent learning SvelteKit will help you be a better web developer elsewhere.
+Tout au long de cette documentation, vous trouverez des références aux [APIs Web](https://developer.mozilla.org/fr/docs/Web/API) standards sur lesquelles s'appuie SvelteKit. Plutôt que de réinventer la roue, SvelteKit _utilise la plateforme_, ce qui signifie que vos compétences en développement web sont utilisables avec SvelteKit. De même, le temps passé à apprendre SvelteKit vous aidera à progresser en tant que développeur ou développeuse web de manière générale.
 
-These APIs are available in all modern browsers and in many non-browser environments like Cloudflare Workers, Deno and Vercel Edge Functions. During development, and in [adapters](adapters) for Node-based environments (including AWS Lambda), they're made available via polyfills where necessary (for now, that is — Node is rapidly adding support for more web standards).
+Ces <span class="vo">[APIs](PUBLIC_SVELTE_SITE_URL/docs/development#api)</span> sont disponibles dans tous les navigateurs modernes et dans de nombreux environnements hors navigateur, comme les "Cloudflare Workers", ou les "Edge Functions" de Deno et Vercel. Pendant le développement, et au sein des [adaptateurs](adapters) d'environnement Node (dont AWS Lambda), elles sont rendues disponibles via des <span class="vo">[polyfills](PUBLIC_SVELTE_SITE_URL/docs/javascript#polyfill)</span> lorsque nécessaire (en tout cas pour le moment — Node ajoute de plus en plus de standards web).
 
-In particular, you'll get comfortable with the following:
+En particulier, vous deviendrez familier•e•s avec :
 
-## Fetch APIs
+## APIs Fetch
 
-SvelteKit uses [`fetch`](https://developer.mozilla.org/en-US/docs/Web/API/fetch) for getting data from the network. It's available in [hooks](hooks) and [server routes](routing#server) as well as in the browser.
+Svelte utilise [`fetch`](https://developer.mozilla.org/fr/docs/Web/API/fetch) pour récupérer la donnée du réseau. Cette méthode est disponible dans les [hooks](hooks) et les [routes serveur](routing#server) ainsi que dans le navigateur.
 
-> A special version of `fetch` is available in [`load`](load) functions, [server hooks](hooks#server-hooks) and [API routes](routing#server) for invoking endpoints directly during server-side rendering, without making an HTTP call, while preserving credentials. (To make credentialled fetches in server-side code outside `load`, you must explicitly pass `cookie` and/or `authorization` headers.) It also allows you to make relative requests, whereas server-side `fetch` normally requires a fully qualified URL.
+> Une version spéciale de `fetch` est disponible dans les fonctions [`load`](load), dans les [hooks server](hooks#hooks-de-serveur), ainsi que dans les [routes d'API serveur](routing#server) pour appeler des <span class="vo">[endpoints](PUBLIC_SVELTE_SITE_URL/docs/web#endpoint)</span> directement lors du rendu côté serveur, sans faire d'appel HTTP tout en préservant les identifiants. (Pour faire des appels identifiés dans du code serveur en dehors de `load`, vous devez explicitement passer des <span class="vo">[headers](PUBLIC_SVELTE_SITE_URL/docs/web#header)</span> `cookie` et/ou `authorization`.) Elle vous permet également de faire des requêtes relatives, là où un `fetch` côté serveur vous impose normalement une URL complète.
 
-Besides `fetch` itself, the [Fetch API](https://developer.mozilla.org/en-US/docs/Web/API/Fetch_API) includes the following interfaces:
+En plus de `fetch`, l'[API Fetch](https://developer.mozilla.org/fr/docs/Web/API/Fetch_API) inclut les interfaces suivantes :
 
 ### Request
 
-An instance of [`Request`](https://developer.mozilla.org/en-US/docs/Web/API/Request) is accessible in [hooks](hooks) and [server routes](routing#server) as `event.request`. It contains useful methods like `request.json()` and `request.formData()` for getting data that was posted to an endpoint.
+Une instance de [`Request`](https://developer.mozilla.org/fr/docs/Web/API/Request) est accessible dans les [hooks](hooks) et les [routes serveur](routing#server) en tant que `event.request`. Elle contient des méthodes utiles comme `request.json()` et `request.formData()` pour récupérer la donnée envoyée au <span class="vo">[endpoint](PUBLIC_SVELTE_SITE_URL/docs/web#endpoint)</span>.
 
 ### Response
 
-An instance of [`Response`](https://developer.mozilla.org/en-US/docs/Web/API/Response) is returned from `await fetch(...)` and handlers in `+server.js` files. Fundamentally, a SvelteKit app is a machine for turning a `Request` into a `Response`.
+Une instance de [`Response`](https://developer.mozilla.org/fr/docs/Web/API/Response) est renvoyée de `await fetch(...)` et des fonctions des fichiers `+server.js`. Au fond, une application SvelteKit est une machine à tranformer une `Request` en `Response`.
 
 ### Headers
 
-The [`Headers`](https://developer.mozilla.org/en-US/docs/Web/API/Headers) interface allows you to read incoming `request.headers` and set outgoing `response.headers`. For example, you can get the `request.headers` as shown below, and use the [`json` convenience function](modules#sveltejs-kit-json) to send modified `response.headers`:
+L'interface [`Headers`](https://developer.mozilla.org/fr/docs/Web/API/Headers) vous permet de lire les `request.headers` entrants et de définir des `response.headers` sortants. Par exemple, vous pouvez récupérer les `request.headers` comme montré ci-dessous, et utiliser la [fonction utilitaire `json`](modules#sveltejs-kit-json) pour envoyer des `response.headers` modifiés :
 
 ```js
 // @errors: 2461
@@ -35,15 +35,15 @@ import { json } from '@sveltejs/kit';
 
 /** @type {import('./$types').RequestHandler} */
 export function GET({ request }) {
-	// log all headers
+	// affiche tous les headers
 	console.log(...request.headers);
 
-	// create a JSON Response using a header we received
+	// crée une Response JSON en utilisant un header reçu
 	return json({
-		// retrieve a specific header
+		// récupère un header spécifique
 		userAgent: request.headers.get('user-agent')
 	}, {
-		// set a header on the response
+		// définit un header sur la réponse
 		headers: { 'x-custom-header': 'potato' }
 	});
 }
@@ -51,7 +51,7 @@ export function GET({ request }) {
 
 ## FormData
 
-When dealing with HTML native form submissions you'll be working with [`FormData`](https://developer.mozilla.org/en-US/docs/Web/API/FormData) objects.
+Lorsque vous recevez des soumissions natives de formulaire HTML, vous avez affaire avec des objets [`FormData`](https://developer.mozilla.org/fr/docs/Web/API/FormData).
 
 ```js
 // @errors: 2461
@@ -62,27 +62,27 @@ import { json } from '@sveltejs/kit';
 export async function POST(event) {
 	const body = await event.request.formData();
 
-	// log all fields
+	// affiche tous les champs
 	console.log([...body]);
 
 	return json({
-		// get a specific field's value
+		// récupère une valeur spécifique
 		name: body.get('name') ?? 'world'
 	});
 }
 ```
 
-## Stream APIs
+## APIs de Stream
 
-Most of the time, your endpoints will return complete data, as in the `userAgent` example above. Sometimes, you may need to return a response that's too large to fit in memory in one go, or is delivered in chunks, and for this the platform provides [streams](https://developer.mozilla.org/en-US/docs/Web/API/Streams_API) — [ReadableStream](https://developer.mozilla.org/en-US/docs/Web/API/ReadableStream), [WritableStream](https://developer.mozilla.org/en-US/docs/Web/API/WritableStream) and [TransformStream](https://developer.mozilla.org/en-US/docs/Web/API/TransformStream).
+La plupart du temps, vos <span class="vo">[endpoints](PUBLIC_SVELTE_SITE_URL/docs/web#endpoint)</span> vous renverront des données complètes, comme dans l'exemple `userAgent` ci-dessus. Parfois, vous pourriez avoir besoin de renvoyer une réponse trop lourde pour être envoyée en une seule fois, ou de renvoyer la donnée en morceaux, et pour cela la plateforme fournit des [streams](https://developer.mozilla.org/fr/docs/Web/API/Streams_API) — [ReadableStream](https://developer.mozilla.org/fr/docs/Web/API/ReadableStream), [WritableStream](https://developer.mozilla.org/fr/docs/Web/API/WritableStream) et [TransformStream](https://developer.mozilla.org/fr/docs/Web/API/TransformStream).
 
-## URL APIs
+## APIs d'URL
 
-URLs are represented by the [`URL`](https://developer.mozilla.org/en-US/docs/Web/API/URL) interface, which includes useful properties like `origin` and `pathname` (and, in the browser, `hash`). This interface shows up in various places — `event.url` in [hooks](hooks) and [server routes](routing#server), [`$page.url`](modules#$app-stores) in [pages](routing#page), `from` and `to` in [`beforeNavigate` and `afterNavigate`](modules#$app-navigation) and so on.
+Les URLs sont représentées par l'interface [`URL`](https://developer.mozilla.org/fr/docs/Web/API/URL), qui inclut des propriétés utiles comme `origin` et `pathname` (et `hash` dans le navigateur). Cette interface est utilisée à différents endroits — `event.url` dans les [hooks](hooks) et les [routes de serveur](routing#server), [`$page.url`](modules#$app-stores) dans les [pages](routing#page), `from` et `to` dans les fonctions [`beforeNavigate` et `afterNavigate`](modules#$app-navigation) et ainsi de suite.
 
 ### URLSearchParams
 
-Wherever you encounter a URL, you can access query parameters via `url.searchParams`, which is an instance of [`URLSearchParams`](https://developer.mozilla.org/en-US/docs/Web/API/URLSearchParams):
+Peu importe où vous rencontrez une URL, vous pouvez toujours accéder aux paramètres de recherche via `url.searchParams`, qui est une instance de [`URLSearchParams`](https://developer.mozilla.org/fr/docs/Web/API/URLSearchParams) :
 
 ```js
 // @filename: ambient.d.ts
@@ -99,7 +99,7 @@ const foo = url.searchParams.get('foo');
 
 ## Web Crypto
 
-The [Web Crypto API](https://developer.mozilla.org/en-US/docs/Web/API/Web_Crypto_API) is made available via the `crypto` global. It's used internally for [Content Security Policy](configuration#csp) headers, but you can also use it for things like generating UUIDs:
+L'[API Web Crypto](https://developer.mozilla.org/fr/docs/Web/API/Web_Crypto_API) est rendue disponible via le module global `crypto`. Elle est utilisée en interne pour les <span class="vo">[headers](PUBLIC_SVELTE_SITE_URL/docs/web#header)</span> de [Content Security Policy](configuration#csp), mais vous pouvez également vous en servir pour par exemple générer des identifiants UUID :
 
 ```js
 const uuid = crypto.randomUUID();

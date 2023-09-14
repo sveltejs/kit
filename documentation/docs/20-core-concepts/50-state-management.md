@@ -1,14 +1,14 @@
 ---
-title: State management
+title: Gestion d'état
 ---
 
-If you're used to building client-only apps, state management in an app that spans server and client might seem intimidating. This section provides tips for avoiding some common gotchas.
+Si vous êtes habitué•e•s à construire des applications pur-client, la gestion d'état dans une application qui couvre un serveur et un client peut sembler intimidante. Cette section fournit des astuces pour vous permettre d'éviter certains problèmes classiques.
 
-## Avoid shared state on the server
+## Éviter les états partagés sur le serveur
 
-Browsers are _stateful_ — state is stored in memory as the user interacts with the application. Servers, on the other hand, are _stateless_ — the content of the response is determined entirely by the content of the request.
+Les navigateurs _gèrent des états_ nativement — l'état est stocké en mémoire au fur et à mesure que l'utilisateur ou l'utilisatrice interagit avec l'application. En revanche, les serveurs _ne gèrent pas d'état_ — le contenu de la réponse est déterminé entièrement par le contenu de la requête.
 
-Conceptually, that is. In reality, servers are often long-lived and shared by multiple users. For that reason it's important not to store data in shared variables. For example, consider this code:
+C'est un état de fait théorique. En réalité, les serveurs sont souvent en service pendant de longues durées et sont partagés entre plusieurs utilisateurs. Pour cette raison il est important de ne pas y stocker de données dans des variables partagées. Par exemple, prenons ce code :
 
 ```js
 // @errors: 7034 7005
@@ -25,7 +25,7 @@ export const actions = {
 	default: async ({ request }) => {
 		const data = await request.formData();
 
-		// NEVER DO THIS!
+		// NE FAITES JAMAIS ÇA !
 		user = {
 			name: data.get('name'),
 			embarrassingSecret: data.get('secret')
@@ -34,13 +34,13 @@ export const actions = {
 }
 ```
 
-The `user` variable is shared by everyone who connects to this server. If Alice submitted an embarrassing secret, and Bob visited the page after her, Bob would know Alice's secret. In addition, when Alice returns to the site later in the day, the server may have restarted, losing her data.
+La variable `user` est partagée à toute personne se connectant à ce serveur. Si Alice a soumis un secret gênant, et Bob visite la page juste après elle, Bob a alors accès au secret d'Alice. De plus, lorsqu'Alice revient sur le site un peu plus tard, le serveur peut s'être relancé, lui faisant perdre sa donnée.
 
-Instead, you should _authenticate_ the user using [`cookies`](load#cookies) and persist the data to a database.
+À la place, vous devriez _authentifier_ l'utilisateur ou l'utilisatrice en utilisant des [`cookies`](load#cookies) et persister la donnée dans une base de données.
 
-## No side-effects in load
+## Pas d'effets de bord dans les fonctions `load`
 
-For the same reason, your `load` functions should be _pure_ — no side-effects (except maybe the occasional `console.log(...)`). For example, you might be tempted to write to a store inside a `load` function so that you can use the store value in your components:
+Pour la même raison, vos fonctions `load` doivent être _pures_ — sans aucun effet de bord (à l'exception éventuellement d'un `console.log(...)` ponctuel). Par exemple, vous pourriez être tenté•e d'écrire dans un <span class="vo">[store](PUBLIC_SVELTE_SITE_URL/docs/sveltejs#store)</span> au sein d'une fonction `load` afin de réutiliser la valeur de ce store dans vos composants :
 
 ```js
 /// file: +page.js
@@ -57,12 +57,12 @@ import { user } from '$lib/user';
 export async function load({ fetch }) {
 	const response = await fetch('/api/user');
 
-	// NEVER DO THIS!
+	// NE FAITES JAMAIS ÇA !
 	user.set(await response.json());
 }
 ```
 
-As with the previous example, this puts one user's information in a place that is shared by _all_ users. Instead, just return the data...
+Comme dans l'exemple précédent, ceci place la donnée de l'utilisateur dans un endroit qui est partagée à _toute personne_ se rendant sur le site. À la place, contentez-vous de renvoyer la donnée...
 
 ```diff
 /// file: +page.js
@@ -75,13 +75,13 @@ export async function load({ fetch }) {
 }
 ```
 
-...and pass it around to the components that need it, or use [`$page.data`](load#$page-data).
+...et passez-la alors à vos composants qui en ont besoin, ou utilisez [`$page.data`](load#$page-data).
 
-If you're not using SSR, then there's no risk of accidentally exposing one user's data to another. But you should still avoid side-effects in your `load` functions — your application will be much easier to reason about without them.
+Si vous n'utilisez pas le <span class="vo">[SSR](PUBLIC_SVELTE_SITE_URL/docs/web#server-side-rendering)</span>, vous ne prenez pas le risque d'exposer accidentellement la donnée à quelqu'un d'autre. Mais vous devriez tout de même éviter les effets de bord dans vos fonctions `load` — votre application sera alors bien plus simple à maintenir.
 
-## Using stores with context
+## Utiliser les stores avec du contexte
 
-You might wonder how we're able to use `$page.data` and other [app stores](modules#$app-stores) if we can't use our own stores. The answer is that app stores on the server use Svelte's [context API](https://learn.svelte.dev/tutorial/context-api) — the store is attached to the component tree with `setContext`, and when you subscribe you retrieve it with `getContext`. We can do the same thing with our own stores:
+Vous vous demandez peut-être comment nous pouvons utiliser `$page.data` et d'autres [stores de page](modules#$app-stores) si nous ne pouvons pas utiliser nos propres stores. La réponse est que les <span class="vo">[stores](PUBLIC_SVELTE_SITE_URL/docs/sveltejs#store)</span> d'application utilisent sur le serveur l'[API de contexte](PUBLIC_LEARN_SITE_URL/tutorial/context-api) de Svelte — le store est attaché à l'arbre de composant avec `setContext`, et lorsque vous vous y abonnez, vous le récupérez avec `getContext`. Nous pouvons faire la même chose avec nos propres stores :
 
 ```svelte
 <!--- file: src/routes/+layout.svelte --->
@@ -92,11 +92,11 @@ You might wonder how we're able to use `$page.data` and other [app stores](modul
 	/** @type {import('./$types').LayoutData} */
 	export let data;
 
-	// Create a store and update it when necessary...
+	// Crée un store et le met à jour lorsque nécessaire...
 	const user = writable();
 	$: user.set(data.user);
 
-	// ...and add it to the context for child components to access
+	// ...et l'ajoute au contexte pour que les composants enfants puissent y accéder
 	setContext('user', user);
 </script>
 ```
@@ -106,20 +106,20 @@ You might wonder how we're able to use `$page.data` and other [app stores](modul
 <script>
 	import { getContext } from 'svelte';
 
-	// Retrieve user store from context
+	// Récupère le store user depuis le contexte
 	const user = getContext('user');
 </script>
 
-<p>Welcome {$user.name}</p>
+<p>Bienvenue {$user.name}</p>
 ```
 
-Updating the value of a context-based store in deeper-level pages or components while the page is being rendered via SSR will not affect the value in the parent component because it has already been rendered by the time the store value is updated. In contrast, on the client (when CSR is enabled, which is the default) the value will be propagated and components, pages, and layouts higher in the hierarchy will react to the new value. Therefore, to avoid values 'flashing' during state updates during hydration, it is generally recommended to pass state down into components rather than up.
+Mettre à jour la valeur d'un store de contexte dans des pages ou composants plus profonds pendant le rendu de la page via [SSR](glossary#ssr) ne mettra pas à jour la valeur dans un composant parent parcequ'il aura déjà été rendu au moment ou la valeur du store est mise à jour. En revanche, côté client (lorsque le [CSR](glossary#csr) est activé, ce qui est le cas par défaut), la valeur sera propagée et les composants, pages et layouts parents seont mis à jours avec la nouvelle valeur. C'est pourquoi, pour éviter que les valeurs "clignotent" pendant les mises à jour d'état lors de l'hydratation, il est en général recommandé de faire descendre l'état vers les composants plutôt que de le faire remonter.
 
-If you're not using SSR (and can guarantee that you won't need to use SSR in future) then you can safely keep state in a shared module, without using the context API.
+Si vous n'utilisez pas le <span class="vo">[SSR](PUBLIC_SVELTE_SITE_URL/docs/web#server-side-rendering)</span> (et pouvez garantir que vous n'aurez pas besoin d'utiliser le SSR dans le futur), vous pouvez alors garder votre état en toute sécurité dans un module partagé, sans avoir besoin de l'<span class="vo">[API](PUBLIC_SVELTE_SITE_URL/docs/development#api)</span> de contexte.
 
-## Component and page state is preserved
+## L'état du composant et l'état de la page sont préservés
 
-When you navigate around your application, SvelteKit reuses existing layout and page components. For example, if you have a route like this...
+Lorsque vous naviguez dans votre application, SvelteKit réutilise les composants de <span class="vo">[layout](PUBLIC_SVELTE_SITE_URL/docs/web#layout)</span> et de page. Par exemple, si vous avez une route comme celle-ci...
 
 ```svelte
 <!--- file: src/routes/blog/[slug]/+page.svelte --->
@@ -127,22 +127,22 @@ When you navigate around your application, SvelteKit reuses existing layout and 
 	/** @type {import('./$types').PageData} */
 	export let data;
 
-	// THIS CODE IS BUGGY!
+	// CE CODE EST BUGGUÉ !
 	const wordCount = data.content.split(' ').length;
 	const estimatedReadingTime = wordCount / 250;
 </script>
 
 <header>
 	<h1>{data.title}</h1>
-	<p>Reading time: {Math.round(estimatedReadingTime)} minutes</p>
+	<p>Temps de lecture : {Math.round(estimatedReadingTime)} minutes</p>
 </header>
 
 <div>{@html data.content}</div>
 ```
 
-...then navigating from `/blog/my-short-post` to `/blog/my-long-post` won't cause the layout, page and any other components within to be destroyed and recreated. Instead the `data` prop (and by extension `data.title` and `data.content`) will update (as it would with any other Svelte component) and, because the code isn't rerunning, lifecycle methods like `onMount` and `onDestroy` won't rerun and `estimatedReadingTime` won't be recalculated.
+...alors naviguer depuis `/blog/my-short-post` vers `/blog/my-long-post` ne va pas déclencher la destruction et regénération du layout, de la page ni d'aucun composant de la page. A la place, la <span class="vo">[prop](PUBLIC_SVELTE_SITE_URL/docs/sveltejs#prop)</span> `data` (et par extension `data.title` and `data.content`) vont changer (comme ce serait le cas pour n'importe quel composant Svelte), mais parce que le code n'est pas réexécuté, les méthodes de cycle de vie `onMount` et `onDestroy` ne seront pas rejouées et `estimatedReadingTime` ne sera pas recalculé.
 
-Instead, we need to make the value [_reactive_](https://learn.svelte.dev/tutorial/reactive-assignments):
+Pour régler ce problème, nous devons rendre cette valeur [_réactive_](PUBLIC_LEARN_SITE_URL/tutorial/reactive-assignments) :
 
 ```diff
 /// file: src/routes/blog/[slug]/+page.svelte
@@ -155,9 +155,9 @@ Instead, we need to make the value [_reactive_](https://learn.svelte.dev/tutoria
 </script>
 ```
 
-> If your code in `onMount` and `onDestroy` has to run again after navigation you can use [afterNavigate](modules#$app-navigation-afternavigate) and [beforeNavigate](modules#$app-navigation-beforenavigate) respectively.
+> Si le code dans `onMount` et `onDestroy` doit être exécuté à chaque navigation, vous pouvez utiliser [afterNavigate](modules#$app-navigation-afternavigate) et [beforeNavigate](modules#$app-navigation-beforenavigate) respectivement.
 
-Reusing components like this means that things like sidebar scroll state are preserved, and you can easily animate between changing values. In the case that you do need to completely destroy and remount a component on navigation, you can use this pattern:
+Réutiliser des composants de cette manière signifie que des choses comme l'état des barres de défilement sont préservés, et vous pouvez alors facilement créer des animations entre les différentes valeurs. Dans le cas ou vous auriez besoin de complètement détruire et reconstruire votre composant à chaque navigation, vous pouvez utiliser cette méthode :
 
 ```svelte
 {#key $page.url.pathname}
@@ -165,10 +165,11 @@ Reusing components like this means that things like sidebar scroll state are pre
 {/key}
 ```
 
-## Storing state in the URL
+## Stocker l'état dans l'URL
 
-If you have state that should survive a reload and/or affect SSR, such as filters or sorting rules on a table, URL search parameters (like `?sort=price&order=ascending`) are a good place to put them. You can put them in `<a href="...">` or `<form action="...">` attributes, or set them programmatically via `goto('?key=value')`. They can be accessed inside `load` functions via the `url` parameter, and inside components via `$page.url.searchParams`.
+Si vous avez un état qui a besoin de survivre à un rechargement et/ou d'affecter le <span class="vo">[SSR](PUBLIC_SVELTE_SITE_URL/docs/web#server-side-rendering)</span>, comme des filtres ou des règles de tri sur un tableau, les paramètres de recherche de l'URL (comme `?sort=price&order=ascending`) sont un emplacement idéal pour le stocker. Vous pouvez les préciser dans les attributs d'un `<a href="...">` ou d'un `<form action="...">`, ou les définir programmatiquement via `goto('?key=value')`. Ces états sont alors accessibles dans les fonctions `load` via le paramètre `url`, et dans les composants via `$page.url.searchParams`.
 
-## Storing ephemeral state in snapshots
+## Stocker un état éphémère dans des snapshots
 
-Some UI state, such as 'is the accordion open?', is disposable — if the user navigates away or refreshes the page, it doesn't matter if the state is lost. In some cases, you _do_ want the data to persist if the user navigates to a different page and comes back, but storing the state in the URL or in a database would be overkill. For this, SvelteKit provides [snapshots](snapshots), which let you associate component state with a history entry.
+Certains états d'interface, comme "est-ce que cette liste est ouverte ?", sont jetables — si l'utilisateur ou l'utilisatrice navigue sur une autre page ou rafraîchit la page, ce n'est pas grave de perdre ces états. Dans certains cas, vous aurez _besoin_ de persister cette donnée, mais stocker ce genre d'état dans l'URL ou dans une base de données n'est pas approprié. Dans ces cas-là, SvelteKit fournit des [snapshots](snapshots), qui vous permettent d'associer l'état des composants avec une entrée dans l'historique de navigation.
+

@@ -1,16 +1,16 @@
 ---
-title: Advanced routing
+title: Routing avancé
 ---
 
-## Rest parameters
+## Paramètres de reste
 
-If the number of route segments is unknown, you can use rest syntax — for example you might implement GitHub's file viewer like so...
+Si le nombre de segments de route est inconnu, vous pouvez utiliser la syntaxe de reste – vous pouvez par exemple implémenter le visualisateur de fichiers de Github de cette manière...
 
 ```bash
 /[org]/[repo]/tree/[branch]/[...file]
 ```
 
-...in which case a request for `/sveltejs/kit/tree/main/documentation/docs/04-advanced-routing.md` would result in the following parameters being available to the page:
+...auquel cas une requête vers `/sveltejs/kit/tree/main/documentation/docs/04-advanced-routing.md` rendrait disponibles les paramètres suivants dans la page :
 
 ```js
 // @noErrors
@@ -22,11 +22,11 @@ If the number of route segments is unknown, you can use rest syntax — for exam
 }
 ```
 
-> `src/routes/a/[...rest]/z/+page.svelte` will match `/a/z` (i.e. there's no parameter at all) as well as `/a/b/z` and `/a/b/c/z` and so on. Make sure you check that the value of the rest parameter is valid, for example using a [matcher](#matching).
+> `src/routes/a/[...rest]/z/+page.svelte` correspond à `/a/z` (c'est-à-dire sans aucun paramètre), ainsi qu'à `/a/b/z` et `/a/b/c/z` et ainsi de suite. Assurez-vous de bien vérifier que la valeur de votre paramètre de reste est valide, en utilisant par exemple une [fonction `match`](#fonctions-match).
 
-### 404 pages
+### Pages 404
 
-Rest parameters also allow you to render custom 404s. Given these routes...
+Les paramètres de reste vous permettent également d'afficher des pages 404 personnalisées. Étant données ces routes...
 
 ```
 src/routes/
@@ -38,7 +38,7 @@ src/routes/
 └ +error.svelte
 ```
 
-...the `marx-brothers/+error.svelte` file will _not_ be rendered if you visit `/marx-brothers/karl`, because no route was matched. If you want to render the nested error page, you should create a route that matches any `/marx-brothers/*` request, and return a 404 from it:
+...le fichier `marx-brothers/+error.svelte` ne sera _pas_ rendu si vous vous rendez sur `/marx-brothers/karl`, parce qu'aucune route ne correspond. Si vous voulez afficher la page d'erreur imbriquée, vous devez créer une route qui correspond à toute requête `/marx-brothers/*`, et renvoyer une 404 depuis cette route :
 
 ```diff
 src/routes/
@@ -61,17 +61,17 @@ export function load(event) {
 }
 ```
 
-> If you don't handle 404 cases, they will appear in [`handleError`](hooks#shared-hooks-handleerror)
+> Si vous ne gérez pas les cas 404, ils seront à gérer dans [`handleError`](hooks#hooks-partag-s-handleerror)
 
-## Optional parameters
+## Paramètres optionnels
 
-A route like `[lang]/home` contains a parameter named `lang` which is required. Sometimes it's beneficial to make these parameters optional, so that in this example both `home` and `en/home` point to the same page. You can do that by wrapping the parameter in another bracket pair: `[[lang]]/home`
+Une route comme `[lang]/home` contient un paramètre appelé `lang` qui est requis. Il est parfois bénéfique de rendre ces paramètres optionnels, pour diriger dans cet exemple `home` et `en/home` vers la même page. Vous pouvez faire cela en entourant le paramètre dans une autre paire de crochets : `[[lang]]/home`.
 
-Note that an optional route parameter cannot follow a rest parameter (`[...rest]/[[optional]]`), since parameters are matched 'greedily' and the optional parameter would always be unused.
+Notez qu'un paramètre de route optionnel ne peut pas être placé à la suite d'un paramètre de reste (`[...rest]/[[optional]]`), puisque le paramètre de reste, étant générique, va s'appliquer en premier et sur toute la route, rendant le paramètre optionnel systématiquement inutilisé.
 
-## Matching
+## Fonctions `match`
 
-A route like `src/routes/archive/[page]` would match `/archive/3`, but it would also match `/archive/potato`. We don't want that. You can ensure that route parameters are well-formed by adding a _matcher_ — which takes the parameter string (`"3"` or `"potato"`) and returns `true` if it is valid — to your [`params`](configuration#files) directory...
+Une route comme `src/routes/archive/[page]` peut correspondre à `/archive/3`, mais aussi à `/archive/potato`. Ce n'est pas souhaitable. Vous voulez vous assurer que les paramètres de route sont bien formés en ajoutant une _fonction `match`_ – qui prend en argument la chaîne de caractères représentant le paramètre (`"3"` ou `"potato"`) et renvoie `true` si le paramètre est valide – dans votre dossier [`params`](configuration#files)...
 
 ```js
 /// file: src/params/integer.js
@@ -81,22 +81,22 @@ export function match(param) {
 }
 ```
 
-...and augmenting your routes:
+...et en ajustant vos routes :
 
 ```diff
 -src/routes/archive/[page]
 +src/routes/archive/[page=integer]
 ```
 
-If the pathname doesn't match, SvelteKit will try to match other routes (using the sort order specified below), before eventually returning a 404.
+Si le chemin ne correspond pas, SvelteKit testera d'autres routes (en utilisant l'ordre précisé plus bas), avant d'éventuellement renvoyer une 404 s'il ne trouve rien.
 
-Each module in the `params` directory corresponds to a matcher, with the exception of `*.test.js` and `*.spec.js` files which may be used to unit test your matchers.
+Chaque module dans le dossier `params` correspond à une fonction `match`, à l'exception des fichiers `*.test.js` et `*.spec.js` qui peuvent être utilisés pour tester vos fonctions `match`.
 
-> Matchers run both on the server and in the browser.
+> Les fonctions `match` sont exécutées à la fois sur le serveur et dans le navigateur.
 
-## Sorting
+## Tri des routes
 
-It's possible for multiple routes to match a given path. For example each of these routes would match `/foo-abc`:
+Il est possible que plusieurs routes soient compatibles pour un chemin demandé. Par exemple, chacune de ces routes sont compatibles avec `/foo-abc` :
 
 ```bash
 src/routes/[...catchall]/+page.svelte
@@ -106,14 +106,14 @@ src/routes/foo-[c]/+page.svelte
 src/routes/foo-abc/+page.svelte
 ```
 
-SvelteKit needs to know which route is being requested. To do so, it sorts them according to the following rules...
+SvelteKit a besoin de savoir quelle route est en train d'être requêtée. Pour cela, SvelteKit tri les routes selon les règles suivantes...
 
-- More specific routes are higher priority (e.g. a route with no parameters is more specific than a route with one dynamic parameter, and so on)
-- Parameters with [matchers](#matching) (`[name=type]`) are higher priority than those without (`[name]`)
-- `[[optional]]` and `[...rest]` parameters are ignored unless they are the final part of the route, in which case they are treated with lowest priority. In other words `x/[[y]]/z` is treated equivalently to `x/z` for the purposes of sorting
-- Ties are resolved alphabetically
+- Les routes plus spécifiques ont une priorité plus élevée (par exemple, une route avec aucun paramètre est plus spécifique qu'une route avec un paramètre dynamique, et ainsi de suite)
+- Les paramètres avec des [fonctions `match`](#fonctions-match) (`[name=type]`) ont une priorité plus élevée que celles sans (`[name]`)
+- Les paramètres `[[optional]]` et `[...rest]` sont ignorés à moins qu'ils soient tout à la fin de la route, auquel cas ils sont traitées avec la priorité la plus faible. En d'autres mots `x/[[y]]/z` est traité de manière équivalente à `x/z` d'un point de vue du tri
+- Les égalités sont résolues par ordre alphabétique
 
-...resulting in this ordering, meaning that `/foo-abc` will invoke `src/routes/foo-abc/+page.svelte`, and `/foo-def` will invoke `src/routes/foo-[c]/+page.svelte` rather than less specific routes:
+...ce qui donne l'ordre suivant, impliquant que `/foo-abc` va invoquer `src/routes/foo-abc/+page.svelte`, et `/foo-def` va invoquer `src/routes/foo-[c]/+page.svelte` plutôt que des routes moins spécifiques :
 
 ```bash
 src/routes/foo-abc/+page.svelte
@@ -123,11 +123,11 @@ src/routes/[b]/+page.svelte
 src/routes/[...catchall]/+page.svelte
 ```
 
-## Encoding
+## Encodage
 
-Some characters can't be used on the filesystem — `/` on Linux and Mac, `\ / : * ? " < > |` on Windows. The `#` and `%` characters have special meaning in URLs, and the `[ ] ( )` characters have special meaning to SvelteKit, so these also can't be used directly as part of your route.
+Certains caractères ne peuvent pas être utilisés pas le système de fichiers – `/` sur Linux et Mac, `\ / : * ? " < > |` sur Windows. Les caractères `#` et `%` ont un sens particulier dans les URLs, et les caractères `[ ] ( )` ont un sens particulier pour SvelteKit, ce qui implique qu'ils ne peuvent pas non plus être utilisés directement comme morceaux de votre route.
 
-To use these characters in your routes, you can use hexadecimal escape sequences, which have the format `[x+nn]` where `nn` is a hexadecimal character code:
+Pour utiliser ces caractères dans vos routes, vous pouvez utiliser leurs équivalents hexadécimaux, qui ont le format `[x+nn]` où `nn` est le code d'un caractère en hexadécimal :
 
 - `\` — `[x+5c]`
 - `/` — `[x+2f]`
@@ -145,32 +145,32 @@ To use these characters in your routes, you can use hexadecimal escape sequences
 - `(` — `[x+28]`
 - `)` — `[x+29]`
 
-For example, to create a `/smileys/:-)` route, you would create a `src/routes/smileys/[x+3a]-[x+29]/+page.svelte` file.
+Par exemple, pour créer une route `/smileys/:-)`, vous devez créer un fichier `src/routes/smileys/[x+3a]-[x+29]/+page.svelte`.
 
-You can determine the hexadecimal code for a character with JavaScript:
+Vous pouvez déterminer le code hexadécimal d'un caractère avec JavaScript :
 
 ```js
-':'.charCodeAt(0).toString(16); // '3a', hence '[x+3a]'
+':'.charCodeAt(0).toString(16); // '3a', donc '[x+3a]'
 ```
 
-You can also use Unicode escape sequences. Generally you won't need to as you can use the unencoded character directly, but if — for some reason — you can't have a filename with an emoji in it, for example, then you can use the escaped characters. In other words, these are equivalent:
+Vous pouvez aussi utiliser des séquences Unicode. Généralement vous ne devriez pas en avoir besoin car vous pouvez utiliser le caractère non encodé directement, mais si – pour une raison ou une autre – vous ne pouvez pas avoir de nom de fichier incluant un emoji, par exemple, vous pouvez alors utiliser les séquences Unicode. En d'autres mots, ces noms de fichiers sont équivalents :
 
 ```
 src/routes/[u+d83e][u+dd2a]/+page.svelte
 src/routes/🤪/+page.svelte
 ```
 
-The format for a Unicode escape sequence is `[u+nnnn]` where `nnnn` is a valid value between `0000` and `10ffff`. (Unlike JavaScript string escaping, there's no need to use surrogate pairs to represent code points above `ffff`.) To learn more about Unicode encodings, consult [Programming with Unicode](https://unicodebook.readthedocs.io/unicode_encodings.html).
+Le format pour une séquence Unicode est `[u+nnnn]` où `nnnn` est une valeur valide entre `0000` et `10ffff`. (À l'inverse des séquences hexadécimales de JavaScript, il n'y a pas besoin d'utiliser deux mots (codets) successifs pour représenter des points au-delà de `ffff`.) Pour en savoir plus sur l'encodage Unicode, consultez [Programming with Unicode](https://unicodebook.readthedocs.io/unicode_encodings.html) (en anglais).
 
-> Since TypeScript [struggles](https://github.com/microsoft/TypeScript/issues/13399) with directories with a leading `.` character, you may find it useful to encode these characters when creating e.g. [`.well-known`](https://en.wikipedia.org/wiki/Well-known_URI) routes: `src/routes/[x+2e]well-known/...`
+> Puisque TypeScript [peine](https://github.com/microsoft/TypeScript/issues/13399) avec les dossiers dont le nom commence par un `.`, vous pourriez trouver utile d'encoder ce caractère lorsque vous créez une route [`.well-known`](https://en.wikipedia.org/wiki/Well-known_URI) par exemple : `src/routes/[x+2e]well-known/...`.
 
-## Advanced layouts
+## Layouts avancés
 
-By default, the _layout hierarchy_ mirrors the _route hierarchy_. In some cases, that might not be what you want.
+Par défaut, la _hiérarchie de <span class="vo">[layout](PUBLIC_SVELTE_SITE_URL/docs/web#layout)</span>_ reflète la _hiérarchie de route_. Dans certains cas, il arrive que cela ne soit pas pertinent.
 
 ### (group)
 
-Perhaps you have some routes that are 'app' routes that should have one layout (e.g. `/dashboard` or `/item`), and others that are 'marketing' routes that should have a different layout (`/about` or `/testimonials`). We can group these routes with a directory whose name is wrapped in parentheses — unlike normal directories, `(app)` and `(marketing)` do not affect the URL pathname of the routes inside them:
+Vous avez peut-être des routes de type "application" qui ont un <span class="vo">[layout](PUBLIC_SVELTE_SITE_URL/docs/web#layout)</span> (par exemple `/dashboard` or `/item`), et d'autres routes de type "marketing" qui ont besoin d'un layout différent (`/a-propos` ou `/temoignages`). Nous pouvons grouper ces routes dans un dossier dont le nom est entre parenthèses – contrairement aux dossiers normaux, `(app)` et `(marketing)` n'affectent pas le chemin de l'URL des routes qu'ils contiennent :
 
 ```diff
 src/routes/
@@ -179,24 +179,24 @@ src/routes/
 │ ├ item/
 │ └ +layout.svelte
 +│ (marketing)/
-│ ├ about/
-│ ├ testimonials/
+│ ├ a-propos/
+│ ├ temoignages/
 │ └ +layout.svelte
 ├ admin/
 └ +layout.svelte
 ```
 
-You can also put a `+page` directly inside a `(group)`, for example if `/` should be an `(app)` or a `(marketing)` page.
+Vous pouvez aussi mettre un fichier `+page` directement dans un dossier `(group)`, par exemple si `/` doit être une page `(app)` ou `(marketing)`.
 
-### Breaking out of layouts
+### S'échapper des layouts
 
-The root layout applies to every page of your app — if omitted, it defaults to `<slot />`. If you want some pages to have a different layout hierarchy than the rest, then you can put your entire app inside one or more groups _except_ the routes that should not inherit the common layouts.
+Le <span class="vo">[layout](PUBLIC_SVELTE_SITE_URL/docs/web#layout)</span> racine s'applique à toutes les pages de votre application – si vous n'en créez pas, il sera considéré par défaut comme `<slot />`. Si vous voulez que certaines pages aient une hiérarchie de layout différente des autres, vous pouvez alors mettre toute votre application dans un ou plusieurs groupes _sauf_ les routes qui ne doivent pas hériter des layouts communs.
 
-In the example above, the `/admin` route does not inherit either the `(app)` or `(marketing)` layouts.
+Dans l'exemple au-dessus, la route `/admin` n'hérite pas des <span class="vo">[layouts](PUBLIC_SVELTE_SITE_URL/docs/web#layout)</span> `(app)` ou `(marketing)`.
 
 ### +page@
 
-Pages can break out of the current layout hierarchy on a route-by-route basis. Suppose we have an `/item/[id]/embed` route inside the `(app)` group from the previous example:
+Les pages peuvent s'échapper de la hiérarchie de <span class="vo">[layout](PUBLIC_SVELTE_SITE_URL/docs/web#layout)</span> courante, route par route. Supposez que nous ayons une route `/item/[id]/embed` dans le groupe `(app)` de l'exemple précédent :
 
 ```diff
 src/routes/
@@ -211,12 +211,12 @@ src/routes/
 └ +layout.svelte
 ```
 
-Ordinarily, this would inherit the root layout, the `(app)` layout, the `item` layout and the `[id]` layout. We can reset to one of those layouts by appending `@` followed by the segment name — or, for the root layout, the empty string. In this example, we can choose from the following options:
+Par défaut, cette route hérite du <span class="vo">[layout](PUBLIC_SVELTE_SITE_URL/docs/web#layout)</span> racine, du layout `(app)`, du layout `item` et du layout `[id]`. Nous pouvons redéfinir cette hiérarchie en ajoutant au nom du fichier de page le caractère `@` suivi du layout cible – ou, pour le layout racine, la chaîne de caractères vide. Dans cet exemple, nous pouvons choisir une option parmi les suivantes :
 
-- `+page@[id].svelte` - inherits from `src/routes/(app)/item/[id]/+layout.svelte`
-- `+page@item.svelte` - inherits from `src/routes/(app)/item/+layout.svelte`
-- `+page@(app).svelte` - inherits from `src/routes/(app)/+layout.svelte`
-- `+page@.svelte` - inherits from `src/routes/+layout.svelte`
+- `+page@[id].svelte` - hérite de `src/routes/(app)/item/[id]/+layout.svelte`
+- `+page@item.svelte` - hérite de `src/routes/(app)/item/+layout.svelte`
+- `+page@(app).svelte` - hérite de `src/routes/(app)/+layout.svelte`
+- `+page@.svelte` - hérite de `src/routes/+layout.svelte`
 
 ```diff
 src/routes/
@@ -233,7 +233,7 @@ src/routes/
 
 ### +layout@
 
-Like pages, layouts can _themselves_ break out of their parent layout hierarchy, using the same technique. For example, a `+layout@.svelte` component would reset the hierarchy for all its child routes.
+Comme les pages, les <span class="vo">[layouts](PUBLIC_SVELTE_SITE_URL/docs/web#layout)</span> peuvent _eux-mêmes_ s'échapper de leur hiérarchie de layout, en utilisant la même technique. Par exemple, un composant `+layout@.svelte` peut réinitialiser sa hiérarchie pour toutes ses routes enfant.
 
 ```
 src/routes/
@@ -241,17 +241,17 @@ src/routes/
 │ ├ item/
 │ │ ├ [id]/
 │ │ │ ├ embed/
-│ │ │ │ └ +page.svelte  // uses (app)/item/[id]/+layout.svelte
-│ │ │ ├ +layout.svelte  // inherits from (app)/item/+layout@.svelte
-│ │ │ └ +page.svelte    // uses (app)/item/+layout@.svelte
-│ │ └ +layout@.svelte   // inherits from root layout, skipping (app)/+layout.svelte
+│ │ │ │ └ +page.svelte  // utilise (app)/item/[id]/+layout.svelte
+│ │ │ ├ +layout.svelte  // hérite de (app)/item/+layout@.svelte
+│ │ │ └ +page.svelte    // utilise (app)/item/+layout@.svelte
+│ │ └ +layout@.svelte   // hérite du layout racine, évitant (app)/+layout.svelte
 │ └ +layout.svelte
 └ +layout.svelte
 ```
 
-### When to use layout groups
+### Cas d'utilisation des groupes de layout
 
-Not all use cases are suited for layout grouping, nor should you feel compelled to use them. It might be that your use case would result in complex `(group)` nesting, or that you don't want to introduce a `(group)` for a single outlier. It's perfectly fine to use other means such as composition (reusable `load` functions or Svelte components) or if-statements to achieve what you want. The following example shows a layout that rewinds to the root layout and reuses components and functions that other layouts can also use:
+Toutes les situations ne sont pas adaptées aux groupes de <span class="vo">[layouts](PUBLIC_SVELTE_SITE_URL/docs/web#layout)</span>, et vous ne devez pas vous sentir obligé•e de les utiliser. Votre cas particulier pourrait conduire à une imbrication complexe de `(group)`, ou peut-être que vous ne souhaitez pas introduire un `(group)` pour une seule route. Il est tout-à-fait acceptable d'utiliser d'autres moyens comme la composition (des fonctions `load` ou composants Svelte réutilisables), ou des blocs `if` pour construire votre application. L'exemple suivant montre un layout qui hérite du layout racine et réutilise des composants et fonctions que d'autres layouts peuvent aussi utiliser :
 
 ```svelte
 <!--- file: src/routes/nested/route/+layout@.svelte --->
@@ -277,11 +277,11 @@ import { reusableLoad } from '$lib/reusable-load-function';
 
 /** @type {import('./$types').PageLoad} */
 export function load(event) {
-	// Add additional logic here, if needed
+	// Ajoutez de la logique supplémentaire ici, si besoin
 	return reusableLoad(event);
 }
 ```
 
-## Further reading
+## Sur le même sujet
 
-- [Tutorial: Advanced Routing](https://learn.svelte.dev/tutorial/optional-params)
+- [Tutoriel: Routing avancé](PUBLIC_LEARN_SITE_URL/tutorial/optional-params)

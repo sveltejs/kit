@@ -24,9 +24,9 @@ export const getStores = () => {
 };
 
 /**
- * A readable store whose value contains page data.
+ * Un <span class='vo'>[store](https://sveltefr.dev/docs/sveltejs#store)</span> de lecture dont la valeur contient les données de page.
  *
- * On the server, this store can only be subscribed to during component initialization. In the browser, it can be subscribed to at any time.
+ * Sur le serveur, il est uniquement possible de s'abonner à ce store pendant l'initialisation du composant. Dans le navigateur, vous pouvez vous y abonner à tout moment.
  *
  * @type {import('svelte/store').Readable<import('@sveltejs/kit').Page>}
  */
@@ -38,11 +38,12 @@ export const page = {
 };
 
 /**
- * A readable store.
- * When navigating starts, its value is a `Navigation` object with `from`, `to`, `type` and (if `type === 'popstate'`) `delta` properties.
- * When navigating finishes, its value reverts to `null`.
+ * Un <span class='vo'>[store](https://sveltefr.dev/docs/sveltejs#store)</span> de lecture.
+ * Lorsque la navigation démarre, la valeur de ce store est un objet `Navigation` avec les propriétés `from`, `to`, `type` et (si `type === 'popstate'`) `delta`.
+ * Lorsque la navigation se termine, la valeur de ce store revient à `null`.
  *
- * On the server, this store can only be subscribed to during component initialization. In the browser, it can be subscribed to at any time.
+ * Sur le serveur, il est uniquement possible de s'abonner à ce store pendant l'initialisation du composant. Dans le navigateur, vous pouvez vous y abonner à tout moment.
+ *
  * @type {import('svelte/store').Readable<import('@sveltejs/kit').Navigation | null>}
  */
 export const navigating = {
@@ -53,9 +54,10 @@ export const navigating = {
 };
 
 /**
- * A readable store whose initial value is `false`. If [`version.pollInterval`](https://kit.svelte.dev/docs/configuration#version) is a non-zero value, SvelteKit will poll for new versions of the app and update the store value to `true` when it detects one. `updated.check()` will force an immediate check, regardless of polling.
+ * Un <span class='vo'>[store](https://sveltefr.dev/docs/sveltejs#store)</span> de lecture dont la valeur initiale est `false`. Si [`version.pollInterval`](https://kit.sveltefr.dev/docs/configuration#version) est une valeur différente de zéro, SvelteKit va vérifier si une nouvelle version de l'application est disponible
+ * et mettre à jour la valeur du store à `true` lorsque c'est le cas. `updated.check()` va forcer une vérification immédiate, peu importe la valeur de `version.pollInterval`.
  *
- * On the server, this store can only be subscribed to during component initialization. In the browser, it can be subscribed to at any time.
+ * Sur le serveur, il est uniquement possible de s'abonner à ce store pendant l'initialisation du composant. Dans le navigateur, vous pouvez vous y abonner à tout moment.
  * @type {import('svelte/store').Readable<boolean> & { check(): Promise<boolean> }}
  */
 export const updated = {

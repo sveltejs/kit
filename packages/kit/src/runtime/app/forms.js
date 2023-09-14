@@ -6,7 +6,7 @@ import { applyAction } from '../client/client.js';
 export { applyAction };
 
 /**
- * Use this function to deserialize the response from a form submission.
+ * Utilisez cette fonction pour désérialiser la réponse à une soumission de formulaire.
  * Usage:
  *
  * ```js
@@ -47,22 +47,22 @@ function clone(element) {
 }
 
 /**
- * This action enhances a `<form>` element that otherwise would work without JavaScript.
+ * Cette action améliore un élément `<form>` qui fonctionne même sans JavaScript.
  *
- * The `submit` function is called upon submission with the given FormData and the `action` that should be triggered.
- * If `cancel` is called, the form will not be submitted.
- * You can use the abort `controller` to cancel the submission in case another one starts.
- * If a function is returned, that function is called with the response from the server.
- * If nothing is returned, the fallback will be used.
+ * La fonction `submit` est appelée à la soumission avec l'objet `FormData` donné et l'`action` qui doit être déclenchée.
+ * Si la fonction `cancel` est exécutée, le formulaire ne sera pas envoyé.
+ * Vous pouvez utiliser le `controller` d'annulation pour annuler la soumission dans le cas où une autre soumission démarre.
+ * Si une fonction est renvoyée, cette fonction est appelée avec la réponse du serveur.
+ * Si rien n'est renvoyé, le comportement par défaut sera utilisé.
  *
- * If this function or its return value isn't set, it
- * - falls back to updating the `form` prop with the returned data if the action is one same page as the form
- * - updates `$page.status`
- * - resets the `<form>` element and invalidates all data in case of successful submission with no redirect response
- * - redirects in case of a redirect response
- * - redirects to the nearest error page in case of an unexpected error
+ * Si cette fonction ou sa valeur de retour n'est pas définie, SvelteKit
+ * - met à jour par défaut la propriété `form` avec la donnée renvoyée si l'action est sur la même page que le formulaire
+ * - met à jour `$page.status`
+ * - réinitialise l'élément `<form>` et invalide toutes les données dans le cas où la soumission est réussie sans redirection
+ * - redirige en cas de réponse de redirection
+ * - redirige vers la page d'erreur la plus proche dans le cas d'une erreur inattendue
  *
- * If you provide a custom function with a callback and want to use the default behavior, invoke `update` in your callback.
+ * Si vous fournissez une fonction personnalisée avec un <span class='vo'>[callback](https://sveltefr.dev/docs/development#callback)</span> et voulez utiliser le comportement par défaut, exécutez `update` dans votre callback.
  * @template {Record<string, unknown> | undefined} Success
  * @template {Record<string, unknown> | undefined} Failure
  * @param {HTMLFormElement} form_element The form element

@@ -1,6 +1,6 @@
-This module provides access to runtime environment variables, as defined by the platform you're running on. For example if you're using [`adapter-node`](https://github.com/sveltejs/kit/tree/main/packages/adapter-node) (or running [`vite preview`](https://kit.svelte.dev/docs/cli)), this is equivalent to `process.env`. This module only includes variables that _do not_ begin with [`config.kit.env.publicPrefix`](https://kit.svelte.dev/docs/configuration#env) _and do_ start with [`config.kit.env.privatePrefix`](https://kit.svelte.dev/docs/configuration#env) (if configured).
+Ce module fournit un accès aux variables d'environnement d'exécution, tel que défini par votre plateforme d'exécution. Par exemple, si vous utilisez [`adapter-node`](https://github.com/sveltejs/kit/tree/main/packages/adapter-node) (ou si vous lancez [`vite preview`](https://kit.sveltefr.dev/docs/cli)), ceci est équivalent à `process.env`. Ce module inclut uniquement les variables dont le nom _ne commence pas_ par [`config.kit.env.publicPrefix`](https://kit.sveltefr.dev/docs/configuration#env) et _commence_ par [`config.kit.env.privatePrefix`](https://kit.sveltefr.dev/docs/configuration#env) (si configuré)
 
-This module cannot be imported into client-side code.
+Ce module ne peut pas être importé côté client.
 
 Dynamic environment variables cannot be used during prerendering.
 
@@ -9,4 +9,4 @@ import { env } from '$env/dynamic/private';
 console.log(env.DEPLOYMENT_SPECIFIC_VARIABLE);
 ```
 
-> In `dev`, `$env/dynamic` always includes environment variables from `.env`. In `prod`, this behavior will depend on your adapter.
+> En mode `dev`, `$env/dynamic` inclut toujours les variables d'environnement de `.env`. En `prod`, ce comportement dépend de votre adaptateur.

@@ -1,5 +1,6 @@
 <script>
 	import { page } from '$app/stores';
+	import { PUBLIC_GITHUB_ORG } from '$env/static/public';
 	import { copy_code_descendants } from '@sveltejs/site-kit/actions';
 	import { Icon } from '@sveltejs/site-kit/components';
 	import { DocsOnThisPage, setupDocsHovers } from '@sveltejs/site-kit/docs';
@@ -53,12 +54,13 @@
 
 	<a
 		class="edit"
-		href="https://github.com/sveltejs/kit/edit/main/documentation/docs/{data.page.file}"
+		href="https://github.com/{PUBLIC_GITHUB_ORG}/kit/edit/french/documentation/docs/{data.page
+			.file}"
 	>
-		<Icon size={50} name="edit" /> Edit this page on GitHub
+		<Icon size={50} name="edit" /> Éditer cette page sur Github
 	</a>
 
-	<DocsOnThisPage details={data.page} />
+	<DocsOnThisPage details={data.page}>Sur cette page</DocsOnThisPage>
 
 	<section>
 		{@html data.page.content}
@@ -66,14 +68,14 @@
 
 	<div class="controls">
 		<div>
-			<span class:faded={!prev}>previous</span>
+			<span class:faded={!prev}>précédent</span>
 			{#if prev}
 				<a href={prev.path}>{prev.title}</a>
 			{/if}
 		</div>
 
 		<div>
-			<span class:faded={!next}>next</span>
+			<span class:faded={!next}>suivant</span>
 			{#if next}
 				<a href={next.path}>{next.title}</a>
 			{/if}

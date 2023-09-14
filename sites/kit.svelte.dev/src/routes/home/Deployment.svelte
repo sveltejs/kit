@@ -13,19 +13,23 @@
 	import netlify from './logos/netlify.svg';
 	import node from './logos/node.svg';
 	import vercel from './logos/vercel.svg';
+
+	import { PUBLIC_KIT_SITE_URL } from '$env/static/public';
 </script>
 
 <Section --background="var(--background-1)">
 	<div class="grid" style="--columns: 3">
-		<h2>deploy anywhere</h2>
+		<h2>déployez partout</h2>
 		<div class="blurb">
 			<p>
-				Export static HTML files. Run your own Node server. Deploy code to the edge of the world. If
-				a platform runs JavaScript, it runs SvelteKit — in some cases with <strong
-					>zero configuration</strong
-				>.
+				Exportez des fichiers HTML statiques. Lancer votre propre serveur Node. Déployez du code aux
+				confins du monde. Si une plateforme fait tourner JavaScript, elle fait tourner SvelteKit —
+				dans certains cas <strong>sans aucune configuration</strong>.
 			</p>
-			<p>Want to try deploying somewhere else? Swap out your adapter with a single line of code.</p>
+			<p>
+				Vous voulez essayer de déployer ailleurs ? Changer votre adaptateur en une seule ligne de
+				code.
+			</p>
 		</div>
 	</div>
 
@@ -38,7 +42,7 @@
 				class="invert"
 			>
 				<img src={html5} alt="" />
-				<span><span class="large">Static</span> HTML</span>
+				<span>HTML <span class="large">statique</span></span>
 			</a>
 			<a
 				target="_blank"
@@ -106,9 +110,9 @@
 				<img src={azure} alt="" />
 				<span>Azure</span>
 			</a>
-			<a target="_blank" rel="noreferrer" href="https://kit.svelte.dev/docs/adapters">
+			<a target="_blank" rel="noreferrer" href="{PUBLIC_KIT_SITE_URL}/docs/adapters">
 				<img src={plus} alt="" />
-				<span>More...</span>
+				<span>Et plus...</span>
 			</a>
 		</div>
 
@@ -117,9 +121,9 @@
 				src="{base}/edge.svg?{$theme.current}"
 				width="100%"
 				height="100%"
-				alt="Dynamically rendered map of the world, centered on the user's location"
+				alt="Carte du monde rendue dynamiquement, en fonction de la position de l'utilisateur"
 			/>
-			<span> rendered on the edge, just for you </span>
+			<span> rendu sur le réseau edge, juste pour vous</span>
 		</div>
 	</div>
 </Section>

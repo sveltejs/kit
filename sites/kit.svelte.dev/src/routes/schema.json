@@ -2,7 +2,7 @@
 	"@context": "http://schema.org",
 	"@type": "SoftwareSourceCode",
 	"name": "SvelteKit",
-	"description": "SvelteKit is the official Svelte application framework.",
+	"description": "SvelteKit est le framework d'application officiel pour Svelte.",
 	"url": "https://kit.svelte.dev/",
 	"codeRepository": "https://github.com/sveltejs/kit",
 	"dateCreated": "2020-10-15T16:00:00",

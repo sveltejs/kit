@@ -5,8 +5,10 @@
 
 <Section --background="var(--background-1)">
 	<p class="definition">
-		<em>/ˈsvɛlt/</em> <span class="adjective">adjective</span>
-		<span class="description">attractively thin, graceful and stylish</span>
+		<em>/ˈsvɛlt/</em> <span class="adjective">adjectif</span>
+		<span class="description"
+			>qui produit une impression de légèreté, de souplesse, par sa forme élancée.</span
+		>
 	</p>
 
 	<div class="grid" style="--columns: 3">
@@ -19,42 +21,43 @@
 					rel="noreferrer"
 					href="https://www.offerzen.com/community/svelte-origins-documentary"
 				>
-					Watch the full Svelte Origins documentary
+					Regarder le documentaire Svelte Origins en entier
 				</a>
 			</p>
 		</div>
 
 		<div>
 			<p>
-				SvelteKit is built on Svelte, a UI framework that uses a compiler to let you write
-				breathtakingly concise components that do minimal work in the browser, using languages you
-				already know — HTML, CSS and JavaScript. <strong
-					>It's a love letter to web development.</strong
-				>
+				SvelteKit est construit par dessus Svelte, un framework d'interface qui utilise un
+				compilateur pour vous permettre d'écrire des composants incroyablement concis qui effectuent
+				le minimum de travail dans le navigateur, en utilisant des langages que vous connaissez
+				déjà, HTML, CSS, JavaScript. <strong>C'est une lettre d'amour au développment web.</strong>
 			</p>
 
 			<p>
-				But don't take our word for it. Developers consistently rank Svelte as the framework they're
+				Mais ne nous prenez pas au mot. Les développeurs et développeuses notent régulièrement
+				Svelte comme le framework qu'
 				<a
 					target="_blank"
 					rel="noreferrer"
 					href="https://insights.stackoverflow.com/survey/2021#section-most-loved-dreaded-and-wanted-web-frameworks"
 				>
-					most
+					ils
 				</a>
+				ou
 				<a
 					target="_blank"
 					rel="noreferrer"
 					href="https://tsh.io/state-of-frontend/#which-of-the-following-frameworks-would-you-like-to-learn-in-the-future"
 				>
-					excited
+					elles
 				</a>
 				<a
 					target="_blank"
 					rel="noreferrer"
 					href="https://2021.stateofjs.com/en-US/libraries/front-end-frameworks/"
 				>
-					about
+					préfèrent
 				</a>
 
 				<a
@@ -62,7 +65,7 @@
 					rel="noreferrer"
 					href="https://twitter.com/Rich_Harris/status/1589675637195042817"
 				>
-					using</a
+					utiliser</a
 				>.
 			</p>
 		</div>

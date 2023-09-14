@@ -22,7 +22,7 @@
 </script>
 
 <Section --background="var(--background-2)">
-	<h2>showcase</h2>
+	<h2>galerie</h2>
 
 	<div class="showcase">
 		{#each showcase as { url, image }}

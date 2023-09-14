@@ -1,37 +1,37 @@
 ---
-title: Accessibility
+title: Accessibilité
 ---
 
-SvelteKit strives to provide an accessible platform for your app by default. Svelte's [compile-time accessibility checks](https://svelte.dev/docs#accessibility-warnings) will also apply to any SvelteKit application you build.
+SvelteKit aspire à fournir par défaut une plateforme accessible pour votre application. Les <span class='vo'>[vérifications d'accessibilité faites par Svelte au moment de la compilation](PUBLIC_SVELTE_SITE_URL/docs#accessibility-warnings)</span> sont aussi appliquées à toute application SvelteKit que vous développez.
 
-Here's how SvelteKit's built-in accessibility features work and what you need to do to help these features to work as well as possible. Keep in mind that while SvelteKit provides an accessible foundation, you are still responsible for making sure your application code is accessible. If you're new to accessibility, see the ["further reading"](accessibility#further-reading) section of this guide for additional resources.
+Voici comment les fonctionnalités d'accessibilité intégrées de SvelteKit fonctionnent et ce que vous devez savoir pour aider ces vérifications à fonctionner aussi bien que possible. Gardez en tête que même si SvelteKit fournit une base accessible, vous êtes tout de même vous assurer que le code de votre application soit accessible. Si vous êtes novice en accessibilité, reportez-vous à la section ["sur le même sujet"](#sur-le-m-me-sujet) de ce guide pour obtenir des ressources supplémentaires.
 
-We recognize that accessibility can be hard to get right. If you want to suggest improvements to how SvelteKit handles accessibility, please [open a GitHub issue](https://github.com/sveltejs/kit/issues).
+Nous avons conscience que l'accessibilité est un sujet difficile. Si vous souhaitez suggérer des améliorations à la façon dont SvelteKit gère l'accessibilité, nous vous invitons à [ouvrir une issue sur Github](https://github.com/sveltejs/kit/issues).
 
-## Route announcements
+## Annonce des routes
 
-In traditional server-rendered applications, every navigation (e.g. clicking on an `<a>` tag) triggers a full page reload. When this happens, screen readers and other assistive technology will read out the new page's title so that users understand that the page has changed.
+Dans les applications rendues côté serveur traditionnelles, chaque navigation (c'est-à-dire, chaque clic sur une balise `<a>`) déclenche un rechargement complet de la page. Lorsque ceci se produit, les lecteurs d'écrans et autres technologies d'assistance lisent le titre de la nouvelle page afin que les utilisateurs et utilisatrices comprennent que la page a changé.
 
-Since navigation between pages in SvelteKit happens without reloading the page (known as [client-side routing](glossary#routing)), SvelteKit injects a [live region](https://developer.mozilla.org/en-US/docs/Web/Accessibility/ARIA/ARIA_Live_Regions) onto the page that will read out the new page name after each navigation. This determines the page name to announce by inspecting the `<title>` element.
+Puisque la navigation entre pages dans une application SvelteKit se produit sans rechargement de la page (ce qu'on appelle le [routing côté client](glossary#routing)), SvelteKit injecte une [zone live](https://developer.mozilla.org/fr/docs/Web/Accessibility/ARIA/ARIA_Live_Regions) dans la page qui va permettre la lecture à voix haute du nom de la nouvelle page après chaque navigation. Ce processus détermine le nom de la page à annoncer en inspectant l'élément `<title>`.
 
-Because of this behavior, every page in your app should have a unique, descriptive title. In SvelteKit, you can do this by placing a `<svelte:head>` element on each page:
+À cause de ce comportement, chaque page dans votre application doit avoir un titre unique et descriptif. Vous pouvez faire cela avec SvelteKit en plaçant un élément `<svelte:head>` sur chaque page :
 
 ```svelte
 <!--- file: src/routes/+page.svelte --->
 <svelte:head>
-	<title>Todo List</title>
+	<title>À faire</title>
 </svelte:head>
 ```
 
-This will allow screen readers and other assistive technology to identify the new page after a navigation occurs. Providing a descriptive title is also important for [SEO](seo#manual-setup-title-and-meta).
+Ceci va permettre aux lecteurs d'écrans et autres technologies d'assistance d'identifier la nouvelle page après qu'une navigation a eu lieu. Fournir un titre descriptif est également important pour le [référencement](seo#gestion-manuelle-title-et-meta).
 
-## Focus management
+## Gestion du focus
 
-In traditional server-rendered applications, every navigation will reset focus to the top of the page. This ensures that people browsing the web with a keyboard or screen reader will start interacting with the page from the beginning.
+Dans les applications rendues côté serveur traditionnelles, chaque navigation va réinitialiser le focus en haut de la page. Cela garantit aux personnes naviguant sur le web avec un clavier ou un lecteur d'écran de commencer à interagir avec la page depuis son début.
 
-To simulate this behavior during client-side routing, SvelteKit focuses the `<body>` element after each navigation and [enhanced form submission](https://kit.svelte.dev/docs/form-actions#progressive-enhancement). There is one exception - if an element with the [`autofocus`](https://developer.mozilla.org/en-US/docs/Web/HTML/Global_attributes/autofocus) attribute is present, SvelteKit will focus that element instead. Make sure to [consider the implications for assistive technology](https://developer.mozilla.org/en-US/docs/Web/HTML/Global_attributes/autofocus#accessibility_considerations) when using that attribute.
+Pour simuler ce comportement pendant les navigations côté client, SvelteKit met le focus sur l'élément `<body>` après chaque navigation et chaque [soumission de formulaire améliorée](form-actions#am-lioration-progressive). Il y a une exception – si un élément avec l'attribut [`autofocus`](https://developer.mozilla.org/fr/docs/Web/HTML/Global_attributes/autofocus) est présent dans la page, SvelteKit va plutôt mettre le focus sur cet élément. Ayez toutefois conscience des implications que ce choix a sur les technologies d'assistance lorsque vous souhaitez utiliser cet attribut.
 
-If you want to customize SvelteKit's focus management, you can use the `afterNavigate` hook:
+Si vous souhaitez personnaliser la gestion du focus de SvelteKit, vous pouvez utiliser la fonction `afterNavigate` :
 
 ```js
 /// <reference types="@sveltejs/kit" />
@@ -45,18 +45,18 @@ afterNavigate(() => {
 });
 ```
 
-You can also programmatically navigate to a different page using the [`goto`](modules#$app-navigation-goto) function. By default, this will have the same client-side routing behavior as clicking on a link. However, `goto` also accepts a `keepFocus` option that will preserve the currently-focused element instead of resetting focus. If you enable this option, make sure the currently-focused element still exists on the page after navigation. If the element no longer exists, the user's focus will be lost, making for a confusing experience for assistive technology users.
+Vous pouvez aussi naviguer programmatiquement vers une page différente en utilisant la fonction [`goto`](modules#$app-navigation-goto). Par défaut, ceci aura le même comportement côté client qu'un clic sur un lien. Toutefois, `goto` accepte aussi une option `keepFocus` qui permet de préserver l'élément ayant actuellement le focus plutôt que de réinitialiser le focus. Si vous activez cette option, assurez-vous que l'élément ayant le focus existe toujours sur la page après la navigation. Si l'élément n'existe plus, l'utilisateur ou l'utilisatrice va perdre le focus, rendant l'expérience confuse pour les personnes utilisant des technologies d'assistance.
 
-## The "lang" attribute
+## L'attribut `lang`
 
-By default, SvelteKit's page template sets the default language of the document to English. If your content is not in English, you should update the `<html>` element in `src/app.html` to have the correct [`lang`](https://developer.mozilla.org/en-US/docs/Web/HTML/Global_attributes/lang#accessibility) attribute. This will ensure that any assistive technology reading the document uses the correct pronunciation. For example, if your content is in German, you should update `app.html` to the following:
+Par défaut, le <span class='vo'>[template](PUBLIC_SVELTE_SITE_URL/docs/development#template)</span> de page de SvelteKit définit le langage par défaut à Anglais. Si votre contenu n'est pas en Anglais, vous devriez mettre à jour l'élément `<html>` dans `src/app.html` pour avoir l'attribut [`lang`](https://developer.mozilla.org/fr/docs/Web/HTML/Global_attributes/lang#accessibility) correct. Cela permet aux technologies d'assistance qui lisent le document d'utiliser la bonne prononciation. Par exemple, si votre contenu est en Allemand, vous devriez mettre à jour le fichier `app.html` de cette manière :
 
 ```html
 /// file: src/app.html
 <html lang="de">
 ```
 
-If your content is available in multiple languages, you should set the `lang` attribute based on the language of the current page. You can do this with SvelteKit's [handle hook](hooks#server-hooks-handle):
+Si votre contenu est disponible dans plusieurs langages, vous devriez définir l'attribut `lang` en fonction du langage de la page courante. Vous pouvez faire ceci en utilisant le [hook `handle` de SvelteKit](hooks#hooks-de-serveur-handle) :
 
 ```html
 /// file: src/app.html
@@ -80,10 +80,10 @@ export function handle({ event, resolve }) {
 }
 ```
 
-## Further reading
+## Sur le même sujet
 
-For the most part, building an accessible SvelteKit app is the same as building an accessible web app. You should be able to apply information from the following general accessibility resources to any web experience you build:
+Dans les grandes lignes, le développement d'une application accessible avec SvelteKit est similaire au développement d'une application web accessible classique. Vous devriez pouvoir appliquer les recommandations des ressources suivantes sur l'accessibilité à n'importe expérience web que vous construisez :
 
-- [MDN Web Docs: Accessibility](https://developer.mozilla.org/en-US/docs/Learn/Accessibility)
-- [The A11y Project](https://www.a11yproject.com/)
-- [How to Meet WCAG (Quick Reference)](https://www.w3.org/WAI/WCAG21/quickref/)
+- [Documentation de MDN Web: Accessibilité](https://developer.mozilla.org/fr/docs/Learn/Accessibility)
+- [Le Projet A11y](https://www.a11yproject.com/) (en anglais)
+- [How to Meet WCAG (Quick Reference)](https://www.w3.org/WAI/WCAG21/quickref/) (en anglais)

@@ -2,11 +2,11 @@
 title: Service workers
 ---
 
-Service workers act as proxy servers that handle network requests inside your app. This makes it possible to make your app work offline, but even if you don't need offline support (or can't realistically implement it because of the type of app you're building), it's often worth using service workers to speed up navigation by precaching your built JS and CSS.
+Les _service workers_ sont des scripts qui jouent le rôle de <span class="vo">[proxy](PUBLIC_SVELTE_SITE_URL/docs/web#proxy)</span> afin de gérer les requêtes réseau au sein de votre application. Cela rend possible le fonctionnement hors-ligne de votre application, mais même si vous n'avez pas besoin d'un support hors-ligne (ou si vous ne pouvez pas vraiment l'implémenter à cause du type d'application que vous développez), il est souvent pertinent d'utiliser des service workers pour accélérer la navigation en mettant en cache de manière anticipée votre JS et votre CSS.
 
-In SvelteKit, if you have a `src/service-worker.js` file (or `src/service-worker/index.js`) it will be bundled and automatically registered. You can change the [location of your service worker](configuration#files) if you need to.
+Dans SvelteKit, si vous avez un fichier `src/service-worker.js` (ou `src/service-worker/index.js`), celui-ci sera compilé et automatiquement activé. Vous pouvez modifier l'[emplacement de votre service worker](configuration#files) si nécessaire.
 
-You can [disable automatic registration](configuration#serviceworker) if you need to register the service worker with your own logic or use another solution. The default registration looks something like this:
+Vous pouvez [désactiver l'activation automatique](configuration#serviceworker) si vous souhaitez activer le service worker selon votre propre logique ou utiliser une autre solution. L'activation par défaut ressemble à quelque chose comme ça :
 
 ```js
 if ('serviceWorker' in navigator) {
@@ -16,27 +16,27 @@ if ('serviceWorker' in navigator) {
 }
 ```
 
-## Inside the service worker
+## À l'intérieur du service worker
 
-Inside the service worker you have access to the [`$service-worker` module](modules#$service-worker), which provides you with the paths to all static assets, build files and prerendered pages. You're also provided with an app version string, which you can use for creating a unique cache name, and the deployment's `base` path. If your Vite config specifies `define` (used for global variable replacements), this will be applied to service workers as well as your server/client builds.
+Au sein du service worker, vous avez accès au [module `$service-worker`](modules#$service-worker), qui vous fournit les chemins de tous les fichiers statiques, fichiers compilés et pages prérendues. Vous avez également accès à la chaîne de caractères représentant la version de votre application, que vous pouvez utiliser pour créer un nom de cache unique, ainsi qu'au chemin de `base` du déploiement. Si votre configuration Vite précise l'option `define` (utilisée pour les remplacements de variables globales), celle-ci sera appliquée à vos service workers ainsi qu'à vos <span class="vo">[builds](PUBLIC_SVELTE_SITE_URL/docs/development#build)</span> serveur/client.
 
-The following example caches the built app and any files in `static` eagerly, and caches all other requests as they happen. This would make each page work offline once visited.
+L'exemple suivant met en cache immédiatement l'application compilée ainsi que tout fichier du dossier `static`, et met toutes les autres requêtes en cache au fur et à mesure qu'elles se produisent. Cela permet de rendre disponible chaque page en hors-ligne après une première visite.
 
 ```js
 // @errors: 2339
 /// <reference types="@sveltejs/kit" />
 import { build, files, version } from '$service-worker';
 
-// Create a unique cache name for this deployment
+// Crée un nom de cache unique pour ce déploiement
 const CACHE = `cache-${version}`;
 
 const ASSETS = [
-	...build, // the app itself
-	...files  // everything in `static`
+	...build, // l'application elle-même
+	...files  // tout ce qu'il y a dans 'static'
 ];
 
 self.addEventListener('install', (event) => {
-	// Create a new cache and add all files to it
+	// Crée un nouveau cache et y ajoute tous les fichiers
 	async function addFilesToCache() {
 		const cache = await caches.open(CACHE);
 		await cache.addAll(ASSETS);
@@ -57,14 +57,14 @@ self.addEventListener('activate', (event) => {
 });
 
 self.addEventListener('fetch', (event) => {
-	// ignore POST requests etc
+	// ignore les requêtes POST etc
 	if (event.request.method !== 'GET') return;
 
 	async function respond() {
 		const url = new URL(event.request.url);
 		const cache = await caches.open(CACHE);
 
-		// `build`/`files` can always be served from the cache
+		// `build`/`files` peuvent toujours être servis depuis le cache
 		if (ASSETS.includes(url.pathname)) {
 			const response = await cache.match(url.pathname);
 
@@ -73,8 +73,8 @@ self.addEventListener('fetch', (event) => {
 			}
 		}
 
-		// for everything else, try the network first, but
-		// fall back to the cache if we're offline
+		// pour tout le reste, commence par essayer le réseau,
+		// mais utilise le cache si nous sommes hors-ligne
 		try {
 			const response = await fetch(event.request);
 
@@ -106,11 +106,11 @@ self.addEventListener('fetch', (event) => {
 });
 ```
 
-> Be careful when caching! In some cases, stale data might be worse than data that's unavailable while offline. Since browsers will empty caches if they get too full, you should also be careful about caching large assets like video files.
+> Soyez vigilant•e•s lorsque vous mettez en cache ! Dans certains cas, afficher des données périmées peut être plus problématique que ne pas afficher de données si vous être hors-ligne. De plus, puisque les navigateurs vident leur cache si celui-ci se remplit trop, vous devriez également faire attention lorsque vous choisissez de mettre en cache de gros fichiers comme des vidéos.
 
-## During development
+## Pendant le développement
 
-The service worker is bundled for production, but not during development. For that reason, only browsers that support [modules in service workers](https://web.dev/es-modules-in-sw) will be able to use them at dev time. If you are manually registering your service worker, you will need to pass the `{ type: 'module' }` option in development:
+Les service workers sont utilisés pour la production, mais pas pendant le développement. Pour cette raison, seuls les navigateurs qui supportent les [modules dans les service workers](https://web.dev/es-modules-in-sw) (en anglais) seront capables de les utiliser pendant que vous développez. Si vous activez manuellement votre service worker, vous aurez besoin d'utiliser l'option `{ type: 'module' }` pendant le développement :
 
 ```js
 import { dev } from '$app/environment';
@@ -120,11 +120,11 @@ navigator.serviceWorker.register('/service-worker.js', {
 });
 ```
 
-> `build` and `prerendered` are empty arrays during development
+> `build` et `prerendered` sont des tableaux vides pendant le développement
 
-## Type safety
+## Typage
 
-Setting up proper types for service workers requires some manual setup. Inside your `service-worker.js`, add the following to the top of your file:
+Mettre en place un typage correct pour les service workers nécessite un peu de préparation manuelle. Dans votre fichier `service-worker.js`, ajoutez ce qui suit en haut de votre fichier :
 
 ```original-js
 /// <reference types="@sveltejs/kit" />
@@ -143,8 +143,8 @@ const sw = /** @type {ServiceWorkerGlobalScope} */ (/** @type {unknown} */ (self
 const sw = self as unknown as ServiceWorkerGlobalScope;
 ```
 
-This disables access to DOM typings like `HTMLElement` which are not available inside a service worker and instantiates the correct globals. The reassignment of `self` to `sw` allows you to type cast it in the process (there are a couple of ways to do this, but the easiest that requires no additional files). Use `sw` instead of `self` in the rest of the file. The reference to the SvelteKit types ensures that the `$service-worker` import has proper type definitions.
+Ceci désactive l'accès aux types du <span class="vo">[DOM](PUBLIC_SVELTE_SITE_URL/docs/web#dom)</span> comme `HTMLElement` qui ne sont pas disponibles dans un service worker, et instancie les bonnes variables globales. La réassignation de `self` en `sw` vous permet également de lui assigner le bon type (il y a plusieurs moyens pour faire cela, mais celui-ci est le plus simple sans rajouter de fichier). Utilisez `sw` au lieu de `self` dans le reste de votre fichier. La référence aux types de SvelteKit assure que l'import de `$service-worker` est correctement typé.
 
-## Other solutions
+## Autres solutions
 
-SvelteKit's service worker implementation is deliberately low-level. If you need a more full-flegded but also more opinionated solution, we recommend looking at solutions like [Vite PWA plugin](https://vite-pwa-org.netlify.app/frameworks/sveltekit.html), which uses [Workbox](https://web.dev/learn/pwa/workbox). For more general information on service workers, we recommend [the MDN web docs](https://developer.mozilla.org/en-US/docs/Web/API/Service_Worker_API/Using_Service_Workers).
+L'implémentation des service workers dans SvelteKit est délibérément bas niveau. Si vous avez besoin d'une solution plus clé-en-main, nous vous recommandons de vous tourner vers [le plugin Vite PWA](https://vite-pwa-org.netlify.app/frameworks/sveltekit.html), qui utilise [Workbox](https://web.dev/learn/pwa/workbox). Pour plus d'informations sur les service workers, nous vous recommandons de lire la [documentation de MDN sur le sujet](https://developer.mozilla.org/fr/docs/Web/API/Service_Worker_API/Using_Service_Workers).

@@ -15,7 +15,7 @@ export const load = async ({ url, fetch }) => {
 
 /** @param {URL} url */
 function get_nav_title(url) {
-	const list = new Map([[/^docs/, 'Docs']]);
+	const list = new Map([[/^docs/, 'Documentation']]);
 
 	for (const [regex, title] of list) {
 		if (regex.test(url.pathname.replace(/^\/(.+)/, '$1'))) {

@@ -82,8 +82,8 @@ export function isHttpError(e, status) {
 }
 
 /**
- * Redirect a request. When called during request handling, SvelteKit will return a redirect response.
- * Make sure you're not catching the thrown redirect, which would prevent SvelteKit from handling it.
+ * Redirige une requête. Si appelé pendant le traitement d'une requête, Sveltekit va retourner une réponse de redirection.
+ * Assurez-vous de ne pas "attraper" la redirection levée, ce qui empêcherait SvelteKit de la gérer.
  * @param {300 | 301 | 302 | 303 | 304 | 305 | 306 | 307 | 308 | ({} & number)} status The [HTTP status code](https://developer.mozilla.org/en-US/docs/Web/HTTP/Status#redirection_messages). Must be in the range 300-308.
  * @param {string | URL} location The location to redirect to.
  * @throws {Redirect} This error instructs SvelteKit to redirect to the specified location.
@@ -112,7 +112,7 @@ export function isRedirect(e) {
 }
 
 /**
- * Create a JSON `Response` object from the supplied data.
+ * Crée un objet `Response` en <span class='vo'>[JSON](https://sveltefr.dev/docs/web#json)</span> à partir des données fournies.
  * @param {any} data The value that will be serialized as JSON.
  * @param {ResponseInit} [init] Options such as `status` and `headers` that will be added to the response. `Content-Type: application/json` and `Content-Length` headers will be added automatically.
  */
@@ -142,7 +142,7 @@ export function json(data, init) {
 const encoder = new TextEncoder();
 
 /**
- * Create a `Response` object from the supplied body.
+ * Crée un objet `Response` à partir du <span class='vo'>[body](https://sveltefr.dev/docs/web#body)</span> fournit.
  * @param {string} body The value that will be used as-is.
  * @param {ResponseInit} [init] Options such as `status` and `headers` that will be added to the response. A `Content-Length` header will be added automatically.
  */
@@ -171,7 +171,7 @@ export function text(body, init) {
  * @returns {import('./public.js').ActionFailure<undefined>}
  */
 /**
- * Create an `ActionFailure` object.
+ * Crée un objet `ActionFailure`.
  * @template {Record<string, unknown> | undefined} [T=undefined]
  * @param {number} status The [HTTP status code](https://developer.mozilla.org/en-US/docs/Web/HTTP/Status#client_error_responses). Must be in the range 400-599.
  * @param {T} data Data associated with the failure (e.g. validation errors)

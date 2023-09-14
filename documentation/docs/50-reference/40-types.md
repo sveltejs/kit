@@ -4,19 +4,19 @@ title: Types
 
 ## Public types
 
-The following types can be imported from `@sveltejs/kit`:
+Les types suivants peuvent être importés depuis `@sveltejs/kit` :
 
 > TYPES: @sveltejs/kit
 
 ## Private types
 
-The following are referenced by the public types documented above, but cannot be imported directly:
+Les types suivants sont référencés par les types publics documentés ci-dessus, mais ne peuvent pas être directement importés :
 
 > TYPES: Private types
 
 ## Generated types
 
-The `RequestHandler` and `Load` types both accept a `Params` argument allowing you to type the `params` object. For example this endpoint expects `foo`, `bar` and `baz` params:
+Les types `RequestHandler` et `Load` acceptent tous les deux un argument `Params` vous permettant de typer l'objet `params`. Par exemple, ce <span class='vo'>[endpoint](PUBLIC_SVELTE_SITE_URL/docs/web#endpoint)</span> attend les paramètres `foo`, `bar`, et `baz` :
 
 ```js
 /// file: src/routes/[foo]/[bar]/[baz]/+page.server.js
@@ -31,9 +31,9 @@ export async function GET({ params }) {
 }
 ```
 
-Needless to say, this is cumbersome to write out, and less portable (if you were to rename the `[foo]` directory to `[qux]`, the type would no longer reflect reality).
+Il est évident que ceci est lourd à écrire, et peu versatile (si vous êtes amené•e à renommer le dossier `[foo]` en `[qux]`, le type ne reflèterait plus la réalité).
 
-To solve this problem, SvelteKit generates `.d.ts` files for each of your endpoints and pages:
+Pour résoudre ce problème, SvelteKit génère des fichiers `.d.ts` pour chacun de vos <span class='vo'>[endpoints](PUBLIC_SVELTE_SITE_URL/docs/web#endpoint)</span> et chacune de vos pages :
 
 ```ts
 /// file: .svelte-kit/types/src/routes/[foo]/[bar]/[baz]/$types.d.ts
@@ -50,7 +50,7 @@ export type PageServerLoad = Kit.ServerLoad<RouteParams>;
 export type PageLoad = Kit.Load<RouteParams>;
 ```
 
-These files can be imported into your endpoints and pages as siblings, thanks to the [`rootDirs`](https://www.typescriptlang.org/tsconfig#rootDirs) option in your TypeScript configuration:
+Ces types peuvent être importés dans vos <span class='vo'>[endpoints](PUBLIC_SVELTE_SITE_URL/docs/web#endpoint)</span> et pages comme s'ils appartenaient au même dossier, grâce à l'option [`rootDirs`](https://www.typescriptlang.org/tsconfig#rootDirs) de votre configuration TypeScript :
 
 ```js
 /// file: src/routes/[foo]/[bar]/[baz]/+page.server.js
@@ -96,13 +96,13 @@ export async function load({ params, fetch }) {
 }
 ```
 
-> For this to work, your own `tsconfig.json` or `jsconfig.json` should extend from the generated `.svelte-kit/tsconfig.json` (where `.svelte-kit` is your [`outDir`](configuration#outdir)):
+> Pour que ceci fonctionne, votre propre fichier `tsconfig.json` ou `jsconfig.json` doit étendre le fichier `.svelte-kit/tsconfig.json` que SvelteKit génère (où `.svelte-kit` est votre [`outDir`](configuration#outdir)) :
 >
 > `{ "extends": "./.svelte-kit/tsconfig.json" }`
 
-### Default tsconfig.json
+### `tsconfig.json` par défaut
 
-The generated `.svelte-kit/tsconfig.json` file contains a mixture of options. Some are generated programmatically based on your project configuration, and should generally not be overridden without good reason:
+Le fichier généré `.svelte-kit/tsconfig.json` contient un mélange d'options. Certaines sont générées programmatiquement en fonction de votre configuration de projet, et ne devraient pas être redéfinies sans une bonne raison :
 
 ```json
 /// file: .svelte-kit/tsconfig.json
@@ -120,30 +120,29 @@ The generated `.svelte-kit/tsconfig.json` file contains a mixture of options. So
 }
 ```
 
-Others are required for SvelteKit to work properly, and should also be left untouched unless you know what you're doing:
+D'autres sont requises pour que SvelteKit fonctionne correctement, et devraient également être laissées telles quelles sauf si vous savez ce que vous faites :
 
 ```json
 /// file: .svelte-kit/tsconfig.json
 {
 	"compilerOptions": {
-		// this ensures that types are explicitly
-		// imported with `import type`, which is
-		// necessary as svelte-preprocess cannot
-		// otherwise compile components correctly
+		// ceci assure que les types sont explicitement
+		// importés avec `import type`, ce qui est
+		// nécessaire car sinon `svelte-preprocess`
+		// ne peut pas compiler les composants correctement
 		"importsNotUsedAsValues": "error",
 
-		// Vite compiles one TypeScript module
-		// at a time, rather than compiling
-		// the entire module graph
+		// Vite compile un module TypeScript à la fois,
+		// plutôt que de compiler le graph entier de modules
 		"isolatedModules": true,
 
-		// TypeScript cannot 'see' when you
-		// use an imported value in your
-		// markup, so we need this
+		// TypeSCript ne peut pas "voir" lorsque
+		// vous utilisez une valeur importée dans votre markup,
+		// nous avons donc besoin de ceci
 		"preserveValueImports": true,
 
-		// This ensures both `vite build`
-		// and `svelte-package` work correctly
+		// Ceci assure que `vite build` et `svelte-package`
+		// fonctionnent correctement
 		"lib": ["esnext", "DOM", "DOM.Iterable"],
 		"moduleResolution": "node",
 		"module": "esnext",

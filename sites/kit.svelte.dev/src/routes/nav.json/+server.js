@@ -9,7 +9,7 @@ export const GET = async () => {
 	/** @type {import('@sveltejs/site-kit').NavigationLink[]} */
 	const nav_list = [
 		{
-			title: 'Docs',
+			title: 'Documentation',
 			prefix: 'docs',
 			pathname: '/docs/introduction',
 			sections: [

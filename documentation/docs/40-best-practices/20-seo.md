@@ -1,36 +1,36 @@
 ---
-title: SEO
+title: Référencement
 ---
 
-The most important aspect of SEO is to create high-quality content that is widely linked to from around the web. However, there are a few technical considerations for building sites that rank well.
+L'aspect le plus important du référencement (_SEO_ en anglais) est de créer du contenu de bonne qualité que beaucoup d'autres sites web référencent via des liens. Cependant, certaines considérations techniques sont à connaître pour construire des sites bien référencés.
 
-## Out of the box
+## Clé-en-main
 
 ### SSR
 
-While search engines have got better in recent years at indexing content that was rendered with client-side JavaScript, server-side rendered content is indexed more frequently and reliably. SvelteKit employs SSR by default, and while you can disable it in [`handle`](hooks#server-hooks-handle), you should leave it on unless you have a good reason not to.
+Même si ces dernières années les moteurs de recherche se sont améliorés dans l'indexation du contenu rendu par du code JavaScript côté client, le contenu rendu côté serveur ([SSR](glossary#ssr)) est indexé plus fréquemment et plus efficacement. SvelteKit utilise le SSR par défaut, et bien que vous ayez la possibilité de le désactiver dans le [hook `handle`](hooks#hooks-de-serveur-handle), vous devriez le laisser activé, à moins d'avoir une bonne raison de le désactiver.
 
-> SvelteKit's rendering is highly configurable and you can implement [dynamic rendering](https://developers.google.com/search/docs/advanced/javascript/dynamic-rendering) if necessary. It's not generally recommended, since SSR has other benefits beyond SEO.
+> Le rendu qu'effectue SvelteKit est très configurable, et vous pouvez implémenter du [rendu dynamique](https://developers.google.com/search/docs/advanced/javascript/dynamic-rendering) si nécessaire. Ce n'est en général pas recommandé, puisque le SSR a d'autres avantages au-delà du référencement.
 
 ### Performance
 
-Signals such as [Core Web Vitals](https://web.dev/vitals/#core-web-vitals) impact search engine ranking. Because Svelte and SvelteKit introduce minimal overhead, it's easier to build high performance sites. You can test your site's performance using Google's [PageSpeed Insights](https://pagespeed.web.dev/) or [Lighthouse](https://developers.google.com/web/tools/lighthouse). Read [the performance page](performance) for more details.
+Les indicateurs tels que les [Core Web Vitals](https://web.dev/vitals/#core-web-vitals) impactent la qualité du référencement. Svelte et SvelteKit n'introduisent qu'une surcouche minimale, et permettent donc de facilement construire des sites très performants. Vous pouvez tester la performance de votre site en utilisant les outils [PageSpeed Insights](https://pagespeed.web.dev/) ou [Lighthouse](https://developers.google.com/web/tools/lighthouse) que propose Google. N'hésitez pas à lire la [page dédiée aux performances](performance) pour plus de détails.
 
-### Normalized URLs
+### URLs normalisées
 
-SvelteKit redirects pathnames with trailing slashes to ones without (or vice versa depending on your [configuration](page-options#trailingslash)), as duplicate URLs are bad for SEO.
+SvelteKit redirige les chemins avec des <span class='vo'>[trailing slashs](PUBLIC_SVELTE_SITE_URL/docs/web#trailing-slash)</span> vers des chemins sans (ou inversement, selon votre [configuration](page-options#trailingslash)), car les URLs dupliquées détériorent votre référencement.
 
-## Manual setup
+## Gestion manuelle
 
-### &lt;title&gt; and &lt;meta&gt;
+### &lt;title&gt; et &lt;meta&gt;
 
-Every page should have well-written and unique `<title>` and `<meta name="description">` elements inside a [`<svelte:head>`](https://svelte.dev/docs#template-syntax-svelte-head). Guidance on how to write descriptive titles and descriptions, along with other suggestions on making content understandable by search engines, can be found on Google's [Lighthouse SEO audits](https://web.dev/lighthouse-seo/) documentation.
+Chaque page devrait avoir des balises `<title>` et `<meta name="description">` uniques et bien écrites dans un [`<svelte:head>`](PUBLIC_SVELTE_SITE_URL/docs#template-syntax-svelte-head). Des guides pour bien écrire ses titres et descriptions, ainsi que d'autres suggestions pour rendre le contenu compréhensible par les moteurs de recherche, sont disponibles dans la documentation de [audits Lighthouse SEO](https://web.dev/lighthouse-seo/) (en anglais).
 
-> A common pattern is to return SEO-related `data` from page [`load`](load) functions, then use it (as [`$page.data`](modules#$app-stores)) in a `<svelte:head>` in your root [layout](routing#layout).
+> Une pratique classique est de renvoyer les données liées au référencement dans les fonctions [`load`](load) de page, puis de les utiliser (en tant que [`$page.data`](modules#$app-stores)) dans le `<svelte:head>` de votre [layout](routing#layout) racine.
 
 ### Sitemaps
 
-[Sitemaps](https://developers.google.com/search/docs/advanced/sitemaps/build-sitemap) help search engines prioritize pages within your site, particularly when you have a large amount of content. You can create a sitemap dynamically using an endpoint:
+Les [sitemaps](https://developers.google.com/search/docs/advanced/sitemaps/build-sitemap) aident les moteurs de recherche à prioriser les pages au sein de votre site, particulièrement lorsque vous avez une grande quantité de contenu. Vous pouvez créer un <span class='vo'>[sitemap](PUBLIC_SVELTE_SITE_URL/docs/web#sitemap)</span> dynamiquement en utilisant un <span class='vo'>[endpoint](PUBLIC_SVELTE_SITE_URL/docs/web#endpoint)</span> :
 
 ```js
 /// file: src/routes/sitemap.xml/+server.js
@@ -46,7 +46,7 @@ export async function GET() {
 			xmlns:image="https://www.google.com/schemas/sitemap-image/1.1"
 			xmlns:video="https://www.google.com/schemas/sitemap-video/1.1"
 		>
-			<!-- <url> elements go here -->
+			<!-- les éléments <url> sont définis ici -->
 		</urlset>`.trim(),
 		{
 			headers: {
@@ -59,15 +59,15 @@ export async function GET() {
 
 ### AMP
 
-An unfortunate reality of modern web development is that it is sometimes necessary to create an [Accelerated Mobile Pages (AMP)](https://amp.dev/) version of your site. In SvelteKit this can be done by setting the [`inlineStyleThreshold`](configuration#inlinestylethreshold) option...
+Une réalité malheureuse du développement web moderne est qu'il est parfois nécessaire de créer une version [AMP](https://amp.dev/) de votre site. Avec SvelteKit, ceci peut être fait en définissant l'option [`inlineStyleThreshold`](configuration#inlinestylethreshold)...
 
 ```js
 /// file: svelte.config.js
 /** @type {import('@sveltejs/kit').Config} */
 const config = {
 	kit: {
-		// since <link rel="stylesheet"> isn't
-		// allowed, inline all styles
+		// puisque les <link rel="stylesheet">
+		// ne sont pas permis, inliner tous les styles
 		inlineStyleThreshold: Infinity
 	}
 };
@@ -75,21 +75,21 @@ const config = {
 export default config;
 ```
 
-...disabling `csr` in your root `+layout.js`/`+layout.server.js`...
+...puis en désactivant le rendu côté client (`csr`) dans votre fichier `+layout.js`/`+layout.server.js` racine...
 
 ```js
 /// file: src/routes/+layout.server.js
 export const csr = false;
 ```
 
-...adding `amp` to your `app.html`
+...puis en ajoutant `amp` dans votre fichier `app.html`...
 
 ```html
 <html amp>
 ...
 ```
 
-...and transforming the HTML using `transformPageChunk` along with `transform` imported from `@sveltejs/amp`:
+...et en transformant le HTML à l'aide de `tranformPageChunk` et de la fonction `transform` importée de `@sveltejs/amp` :
 
 ```js
 /// file: src/hooks.server.js
@@ -107,7 +107,7 @@ export async function handle({ event, resolve }) {
 }
 ```
 
-To prevent shipping any unused CSS as a result of transforming the page to amp, we can use [`dropcss`](https://www.npmjs.com/package/dropcss):
+Afin d'éviter d'envoyer du CSS inutilisé après avoir transformé une page en sa version AMP, nous pouvons utiliser le paquet [`dropcss`](https://www.npmjs.com/package/dropcss) :
 
 ```js
 /// file: src/hooks.server.js
@@ -127,7 +127,7 @@ export async function handle({ event, resolve }) {
 				let css = '';
 				const markup = amp
 					.transform(buffer)
-					.replace('⚡', 'amp') // dropcss can't handle this character
+					.replace('⚡', 'amp') // dropcss ne sait pas gérer ce caractère
 					.replace(/<style amp-custom([^>]*?)>([^]+?)<\/style>/, (match, attributes, contents) => {
 						css = contents;
 						return `<style amp-custom${attributes}></style>`;
@@ -142,4 +142,5 @@ export async function handle({ event, resolve }) {
 
 ```
 
-> It's a good idea to use the `handle` hook to validate the transformed HTML using `amphtml-validator`, but only if you're prerendering pages since it's very slow.
+> C'est une bonne idée d'utiliser le <span class='vo'>[hook](PUBLIC_SVELTE_SITE_URL/docs/sveltejs#hook)</span> `handle` pour valider le HTML transformé grâce à `amphtml-validator`, mais seulement si vous prérendez les pages, car ce processus est très lent.
+

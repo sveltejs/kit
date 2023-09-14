@@ -1,18 +1,7 @@
-<!-- Your PR description here -->
+## Attention
 
----
+Vous vous apprêtez à ouvrir une PR sur le projet de traduction francophone de la documentation de SvelteKit.
 
-### Please don't delete this checklist! Before submitting the PR, please make sure you do the following:
-- [ ] It's really useful if your PR references an issue where it is discussed ahead of time. In many cases, features are absent for a reason. For large changes, please create an RFC: https://github.com/sveltejs/rfcs
-- [ ] This message body should clearly illustrate what problems it solves.
-- [ ] Ideally, include a test that fails without this PR but passes with it.
+Ce projet est uniquement dédié à de la traduction, et nous n'accepterons donc que les PRs dont l'objet est l'ajout ou la modification de traductions, ou tout outillage associé.
 
-### Tests
-- [ ] Run the tests with `pnpm test` and lint the project with `pnpm lint` and `pnpm check`
-
-### Changesets
-- [ ] If your PR makes a change that should be noted in one or more packages' changelogs, generate a changeset by running `pnpm changeset` and following the prompts. Changesets that add features should be `minor` and those that fix bugs should be `patch`. Please prefix changeset messages with `feat:`, `fix:`, or `chore:`.
-
-### Edits
-
-- [ ] Please ensure that 'Allow edits from maintainers' is checked. PRs without this option may be closed.
+Pour toute PR liée au projet SvelteKit en lui-même, merci de les ouvrir sur le [repository officiel](https://github.com/sveltejs/kit/pulls).

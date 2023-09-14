@@ -1,27 +1,27 @@
 ---
-title: Server-only modules
+title: Modules réservés serveur
 ---
 
-Like a good friend, SvelteKit keeps your secrets. When writing your backend and frontend in the same repository, it can be easy to accidentally import sensitive data into your front-end code (environment variables containing API keys, for example). SvelteKit provides a way to prevent this entirely: server-only modules.
+Tel un ami proche, SvelteKit sait garder vos secrets. Lorsque vous écrivez votre code <span class="vo">[backend](PUBLIC_SVELTE_SITE_URL/docs/web#backend)</span> et votre code <span class="vo">[frontend](PUBLIC_SVELTE_SITE_URL/docs/web#frontend)</span> dans le même projet, il est facile d'importer accidentellement des données sensibles dans votre code frontend (des variables d'environnement contenant des clés d'<span class="vo">[API](PUBLIC_SVELTE_SITE_URL/docs/developpement)</span> par exemple). SvelteKit fournit un moyen de vous protéger de ce problème : les modules réservés serveur.
 
-## Private environment variables
+## Variables d'environnement privées
 
-The `$env/static/private` and `$env/dynamic/private` modules, which are covered in the [modules](modules) section, can only be imported into modules that only run on the server, such as [`hooks.server.js`](hooks#server-hooks) or [`+page.server.js`](routing#page-page-server-js).
+Les modules `$env/static/private` et `$env/dynamic/private`, qui sont traités dans la section [modules](modules), peuvent uniquement être importés dans des modules qui sont exécutés sur le serveur, comme [`hooks.server.js`](hooks#hooks-de-serveur) ou [`+page.server.js`](routing#page-page-server-js).
 
-## Server-only utilities
+## Utilitaires côté serveur Server-only utilities
 
-The [`$app/server`](/docs/modules#$app-server) module, which contains a `read` function for reading assets from the filesystem, can likewise only be imported by code that runs on the server.
+Le module [`$app/server`](/docs/modules#$app-server), qui contient une fonction `read` pour lire les fichiers statiques depuis le disque, ne peut être importé que par le code serveur.
 
-## Your modules
+## Vos modules
 
-You can make your own modules server-only in two ways:
+Vous pouvez rendre vos propres modules réservés au serveur de deux manières :
 
-- adding `.server` to the filename, e.g. `secrets.server.js`
-- placing them in `$lib/server`, e.g. `$lib/server/secrets.js`
+- en ajoutant `.server` au nom de fichier, par ex. `secrets.server.js`
+- en les plaçant dans le dossier `$lib/server`, par ex. `$lib/server/secrets.js`
 
-## How it works
+## Comment ça marche ?
 
-Any time you have public-facing code that imports server-only code (whether directly or indirectly)...
+À chaque fois que du code prévu pour être affiché au public importe du code réservé au serveur (directement ou indirectement)...
 
 ```js
 // @errors: 7005
@@ -44,7 +44,7 @@ export const add = (a, b) => a + b;
 </script>
 ```
 
-...SvelteKit will error:
+...SvelteKit déclenche l'erreur :
 
 ```
 Cannot import $lib/server/secrets.js into public-facing code:
@@ -53,12 +53,12 @@ Cannot import $lib/server/secrets.js into public-facing code:
 		- $lib/server/secrets.js
 ```
 
-Even though the public-facing code — `src/routes/+page.svelte` — only uses the `add` export and not the secret `atlantisCoordinates` export, the secret code could end up in JavaScript that the browser downloads, and so the import chain is considered unsafe.
+Même si le code affiché au public – `src/routes/+page.svelte` – n'utilise que l'export `add` et non l'export de la variable secrète `atlantisCoordinates`, le code secret pourrait se retrouver dans du JavaScript que le navigateur télécharge, et donc la chaîne d'import est considérée non sécurisée.
 
-This feature also works with dynamic imports, even interpolated ones like ``await import(`./${foo}.js`)``, with one small caveat: during development, if there are two or more dynamic imports between the public-facing code and the server-only module, the illegal import will not be detected the first time the code is loaded.
+Cette fonctionnalité marche aussi avec les imports dynamiques, même ceux utilisant l'interpolation comme ``await import(`./${foo}.js`)``, avec un léger défaut : pendant le développement, s'il y a deux imports ou plus entre le code affiché au public et le module réservé au serveur, l'import illégal ne sera pas détécté la première fois que le code est chargé.
 
-> Unit testing frameworks like Vitest do not distinguish between server-only and public-facing code. For this reason, illegal import detection is disabled when running tests, as determined by `process.env.TEST === 'true'`.
+> Les <span class="vo">[frameworks](PUBLIC_SVELTE_SITE_URL/docs/web#framework)</span> de test comme Vitest ne font pas la différence entre du code réservé serveur et du code affiché au public. Pour cette raison, la détection d'imports illégaux est désactivée lorsque les tests sont exécutés, c'est-à-dire quand `process.env.TEST === 'true'`.
 
-## Further reading
+## Sur le même sujet
 
-- [Tutorial: Environment variables](https://learn.svelte.dev/tutorial/env-static-private)
+- [Tutoriel: Variables d'environment](PUBLIC_LEARN_SITE_URL/tutorial/env-static-private)
