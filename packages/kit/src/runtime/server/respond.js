@@ -457,6 +457,14 @@ export async function respond(request, options, manifest, state) {
 				return response;
 			}
 
+			if (state.error && event.isSubRequest) {
+				return await fetch(request, {
+					headers: {
+						'x-sveltekit-error': 'true'
+					}
+				});
+			}
+
 			if (state.error) {
 				return text('Internal Server Error', {
 					status: 500
