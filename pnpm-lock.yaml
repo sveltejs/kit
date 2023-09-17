@@ -266,8 +266,8 @@ importers:
   packages/adapter-vercel:
     dependencies:
       '@vercel/nft':
-        specifier: ^0.23.0
-        version: 0.23.0
+        specifier: ^0.24.0
+        version: 0.24.0
       esbuild:
         specifier: ^0.18.11
         version: 0.18.11
@@ -1017,8 +1017,8 @@ importers:
         specifier: workspace:^
         version: link:../../packages/kit
       '@sveltejs/site-kit':
-        specifier: 6.0.0-next.44
-        version: 6.0.0-next.44(@sveltejs/kit@packages+kit)(svelte@4.2.0)
+        specifier: 6.0.0-next.46
+        version: 6.0.0-next.46(@sveltejs/kit@packages+kit)(svelte@4.2.0)
       '@types/d3-geo':
         specifier: ^3.0.4
         version: 3.0.4
@@ -2025,8 +2025,8 @@ packages:
       typescript: 4.9.4
     dev: true
 
-  /@sveltejs/site-kit@6.0.0-next.44(@sveltejs/kit@packages+kit)(svelte@4.2.0):
-    resolution: {integrity: sha512-WZBcEcNd/+9bqUVFVf2qIpR6j4QSxy1KSZYATy0jHASADtp5WVUgKWJ1iuJVNTH9Tj7OlIUl8j0ImalHcCGsbw==}
+  /@sveltejs/site-kit@6.0.0-next.46(@sveltejs/kit@packages+kit)(svelte@4.2.0):
+    resolution: {integrity: sha512-VgFKJ6G3gXqlbnjVeZTD6MPWidhZuu93D2WdfsOd4DLL6eFKaCbF60qZXtmWF2hLj7+WDk8+NAwj3V+UZ84k8A==}
     peerDependencies:
       '@sveltejs/kit': ^1.20.0
       svelte: ^4.0.0
@@ -2415,9 +2415,9 @@ packages:
       - supports-color
     dev: true
 
-  /@vercel/nft@0.23.0:
-    resolution: {integrity: sha512-1iuPjyltiPqyZrvc/bW1CyICRdng8bVhpJT8MsIXV7Wj+mRFyJs9krsHbVy2pZwu7BMAgforQsT5TCY1JoBDxw==}
-    engines: {node: '>=14'}
+  /@vercel/nft@0.24.0:
+    resolution: {integrity: sha512-6TaZleggfN0zsT8QVyOGStYAfKgvfinhpj8jEcdN6Hx6BSWpfkipoM7IVmQd4rCnEgPUFx9zLU2Di6iA0nstUA==}
+    engines: {node: '>=16'}
     hasBin: true
     dependencies:
       '@mapbox/node-pre-gyp': 1.0.11
@@ -3019,7 +3019,7 @@ packages:
     resolution: {integrity: sha512-W9pAhw0ja1Edb5GVdIF1mjZw/ASI0AlShXM83UUGe2DVr5TdAPEA1OA8m/g8zWp9x6On7gqufY+FatDbC3MDQg==}
 
   /concat-map@0.0.1:
-    resolution: {integrity: sha1-2Klr13/Wjfd5OnMDajug1UBdR3s=}
+    resolution: {integrity: sha512-/Srv4dswyQNBfohGpz9o6Yb3Gz3SrUDqBH5rTuhGR7ahtlbYKnVxw2bCFMRljaA7EXHaXZ8wsHdodFvbkhKmqg==}
 
   /console-clear@1.1.1:
     resolution: {integrity: sha512-pMD+MVR538ipqkG5JXeOEbKWS5um1H4LUUccUQG68qpeqBYbzYy79Gh55jkd2TtPdRfUaLWdv6LPP//5Zt0aPQ==}
