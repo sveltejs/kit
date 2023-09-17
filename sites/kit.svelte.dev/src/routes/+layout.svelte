@@ -1,17 +1,28 @@
 <script>
+	import '@sveltejs/site-kit/styles/index.css';
+
 	import { browser } from '$app/environment';
 	import { page } from '$app/stores';
 	import { Icon, Shell } from '@sveltejs/site-kit/components';
 	import { Nav, Separator } from '@sveltejs/site-kit/nav';
 	import { Search, SearchBox } from '@sveltejs/site-kit/search';
-	import '@sveltejs/site-kit/styles/index.css';
 
 	export let data;
 
 	/** @type {import('@sveltejs/kit').Snapshot<number>} */
 	let shell_snapshot;
 
-	export const snapshot = shell_snapshot;
+	/** @type {import('@sveltejs/kit').Snapshot<{shell: number}>} */
+	export const snapshot = {
+		capture() {
+			return {
+				shell: shell_snapshot?.capture()
+			};
+		},
+		restore(data) {
+			shell_snapshot?.restore(data.shell);
+		}
+	};
 </script>
 
 <div style:display={$page.url.pathname !== '/docs' ? 'contents' : 'none'}>
