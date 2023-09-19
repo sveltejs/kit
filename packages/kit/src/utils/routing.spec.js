@@ -198,6 +198,16 @@ const exec_tests = [
 		expected: { slug2: 'b', slug3: 'c' }
 	},
 	{
+		route: '/[[slug1=doesntmatch]]/[[slug2=matches]]/[[slug3=matches]]',
+		path: '/b/c',
+		expected: { slug2: 'b', slug3: 'c' }
+	},
+	{
+		route: '/[slug1]/[[lang=doesntmatch]]/[[page=matches]]',
+		path: '/a/2',
+		expected: { slug1: 'a', lang: undefined, page: '2' }
+	},
+	{
 		route: '/[[slug1=doesntmatch]]/[slug2=matches]/[slug3]',
 		path: '/a/b/c',
 		expected: undefined
