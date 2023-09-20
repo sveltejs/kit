@@ -308,7 +308,7 @@ function update_types(config, routes, route, to_delete = new Set()) {
 		declarations.push(`type LayoutRouteId = ${ids.join(' | ')}`);
 
 		declarations.push(
-			`type LayoutParams = RouteParams & ` + generate_params_type(layout_params, outdir, config)
+			'type LayoutParams = RouteParams & ' + generate_params_type(layout_params, outdir, config)
 		);
 
 		const {
