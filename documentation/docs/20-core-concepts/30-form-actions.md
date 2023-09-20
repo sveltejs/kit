@@ -333,16 +333,16 @@ The easiest way to progressively enhance a form is to add the `use:enhance` acti
 
 Without an argument, `use:enhance` will emulate the browser-native behaviour, just without the full-page reloads. It will:
 
-- update the `form` property, `$page.form` and `$page.status` on a successful or invalid response, but only if the action is on the same page you're submitting from. So for example if your form looks like `<form action="/somewhere/else" ..>`, `form` and `$page` will _not_ be updated. This is because in the native form submission case you would be redirected to the page the action is on. If you want to have them updated either way, use [`applyAction`](#progressive-enhancement-applyaction)
+- update the `form` property, `$page.form` and `$page.status` on a successful or invalid response, but only if the action is on the same page you're submitting from. So for example if your form looks like `<form action="/somewhere/else" ..>`, `form` and `$page` will _not_ be updated. This is because in the native form submission case you would be redirected to the page the action is on. If you want to have them updated either way, use [`applyAction`](#progressive-enhancement-custombehaviour)
 - reset the `<form>` element
 - invalidate all data using `invalidateAll` on a successful response
 - call `goto` on a redirect response
 - render the nearest `+error` boundary if an error occurs
 - [reset focus](accessibility#focus-management) to the appropriate element
 
-### Customizing behaviour
+### Custom behaviour
 
-To customise the behaviour, you can provide a `SubmitFunction` that runs immediately before the form is submitted, and (optionally) returns a callback that runs with the `ActionResult`. Note that if you return a callback, the default behavior mentioned above is not triggered. To get it back, call `update`.
+To customize the behaviour, you can provide a `SubmitFunction` that runs immediately before the form is submitted, and (optionally) returns a callback that runs with the `ActionResult`. Note that if you return a callback, the default behavior mentioned above is not triggered. To get it back, call `update`.
 
 ```svelte
 <form
