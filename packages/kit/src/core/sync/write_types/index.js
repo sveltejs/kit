@@ -279,7 +279,7 @@ function update_types(config, routes, route, to_delete = new Set()) {
 				if (leaf.route.page) ids.push(`"${leaf.route.id}"`);
 
 				for (const param of leaf.route.params) {
-					//Skip if already added
+					// skip if already added
 					if (layout_params.some((p) => p.name === param.name)) continue;
 					layout_params.push({ ...param, optional: true });
 				}
