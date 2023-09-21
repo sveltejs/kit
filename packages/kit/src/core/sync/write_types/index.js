@@ -189,7 +189,7 @@ function update_types(config, routes, route, to_delete = new Set()) {
 	// Makes sure a type is "repackaged" and therefore more readable
 	declarations.push('type Expand<T> = T extends infer O ? { [K in keyof O]: O[K] } : never;');
 
-	//Returns the predicate of a matcher's type guard - or string if there is no type guard
+	// returns the predicate of a matcher's type guard - or string if there is no type guard
 	declarations.push(
 		'//@ts-ignore\ntype MatcherParam<M> = M extends (param: string) => param is infer U ? U : string;'
 	);
