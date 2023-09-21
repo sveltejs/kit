@@ -304,8 +304,8 @@ importers:
         specifier: 1.30.0
         version: 1.30.0
       '@types/gitignore-parser':
-        specifier: ^0.0.0
-        version: 0.0.0
+        specifier: ^0.0.1
+        version: 0.0.1
       '@types/prettier':
         specifier: ^2.7.1
         version: 2.7.1
@@ -401,8 +401,8 @@ importers:
         specifier: ^0.2.9
         version: 0.2.9
       undici:
-        specifier: ~5.24.0
-        version: 5.24.0
+        specifier: ~5.25.0
+        version: 5.25.1
     devDependencies:
       '@playwright/test':
         specifier: 1.30.0
@@ -1017,8 +1017,8 @@ importers:
         specifier: workspace:^
         version: link:../../packages/kit
       '@sveltejs/site-kit':
-        specifier: 6.0.0-next.46
-        version: 6.0.0-next.46(@sveltejs/kit@packages+kit)(svelte@4.2.0)
+        specifier: 6.0.0-next.50
+        version: 6.0.0-next.50(@sveltejs/kit@packages+kit)(svelte@4.2.0)
       '@types/d3-geo':
         specifier: ^3.0.4
         version: 3.0.4
@@ -2025,8 +2025,8 @@ packages:
       typescript: 4.9.4
     dev: true
 
-  /@sveltejs/site-kit@6.0.0-next.46(@sveltejs/kit@packages+kit)(svelte@4.2.0):
-    resolution: {integrity: sha512-VgFKJ6G3gXqlbnjVeZTD6MPWidhZuu93D2WdfsOd4DLL6eFKaCbF60qZXtmWF2hLj7+WDk8+NAwj3V+UZ84k8A==}
+  /@sveltejs/site-kit@6.0.0-next.50(@sveltejs/kit@packages+kit)(svelte@4.2.0):
+    resolution: {integrity: sha512-kgJVREVGuhhNO1YfQwJelFsBqfJiPhP7J4ytGUg05FaYlNQn3jb+BMUo027fSRpLgAjCqoo0IzIwX6CSSqqyJg==}
     peerDependencies:
       '@sveltejs/kit': ^1.20.0
       svelte: ^4.0.0
@@ -2129,8 +2129,8 @@ packages:
     resolution: {integrity: sha512-Nmh0K3iWQJzniTuPRcJn5hxXkfB1T1pgB89SBig5PlJQU5yocazeu4jATJlaA0GYFKWMqDdvYemoSnF2pXgLVA==}
     dev: true
 
-  /@types/gitignore-parser@0.0.0:
-    resolution: {integrity: sha512-qxOKILdhl4e639fWdkMySS4tBkRYHkrU2ZNScsMu84EPicliFRr+gAXCLPrs7kTFWdDpgAIlxtUr+YCRtVjsKw==}
+  /@types/gitignore-parser@0.0.1:
+    resolution: {integrity: sha512-prmXF2Fi8T+s8TXcOMOobf3d5ra3n2BiNC3Z7HaRBeY1UMMk6kJ+x4v1pfQM3uS5pRYuF50irlXEIyR6Kvjg7w==}
     dev: true
 
   /@types/is-ci@3.0.0:
@@ -6365,8 +6365,8 @@ packages:
       which-boxed-primitive: 1.0.2
     dev: true
 
-  /undici@5.24.0:
-    resolution: {integrity: sha512-OKlckxBjFl0oXxcj9FU6oB8fDAaiRUq+D8jrFWGmOfI/gIyjk/IeS75LMzgYKUaeHzLUcYvf9bbJGSrUwTfwwQ==}
+  /undici@5.25.1:
+    resolution: {integrity: sha512-nTw6b2G2OqP6btYPyghCgV4hSwjJlL/78FMJatVLCa3otj6PCOQSt6dVtYt82OtNqFz8XsnJ+vsXLADPXjPhqw==}
     engines: {node: '>=14.0'}
     dependencies:
       busboy: 1.6.0
