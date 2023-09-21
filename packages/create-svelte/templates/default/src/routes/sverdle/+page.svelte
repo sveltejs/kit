@@ -16,8 +16,11 @@
 	/** The index of the current guess */
 	$: i = won ? -1 : data.answers.length;
 
+	/** The current guess */
+	$: currentGuess = data.guesses[i] || '';
+
 	/** Whether the current guess can be submitted */
-	$: submittable = data.guesses[i]?.length === 5;
+	$: submittable = currentGuess.length === 5;
 
 	/**
 	 * A map of classnames for all letters that have been guessed,
@@ -60,16 +63,15 @@
 	 * @param {MouseEvent} event
 	 */
 	function update(event: MouseEvent) {
-		const guess = data.guesses[i];
 		const key = /** @type {HTMLButtonElement} */ (event.target as HTMLButtonElement).getAttribute(
 			'data-key'
 		);
 
 		if (key === 'backspace') {
-			data.guesses[i] = guess.slice(0, -1);
+			currentGuess = currentGuess.slice(0, -1);
 			if (form?.badGuess) form.badGuess = false;
-		} else if (guess.length < 5) {
-			data.guesses[i] += key;
+		} else if (currentGuess.length < 5) {
+			currentGuess += key;
 		}
 	}
 
@@ -80,6 +82,8 @@
 	 */
 	function keydown(event: KeyboardEvent) {
 		if (event.metaKey) return;
+
+		if (event.key === 'Enter' && !submittable) return;
 
 		document
 			.querySelector(`[data-key="${event.key}" i]`)
@@ -114,9 +118,10 @@
 			<h2 class="visually-hidden">Row {row + 1}</h2>
 			<div class="row" class:current>
 				{#each Array.from(Array(5).keys()) as column (column)}
+					{@const guess = current ? currentGuess : data.guesses[row]}
 					{@const answer = data.answers[row]?.[column]}
-					{@const value = data.guesses[row]?.[column] ?? ''}
-					{@const selected = current && column === data.guesses[row].length}
+					{@const value = guess?.[column] ?? ''}
+					{@const selected = current && column === guess.length}
 					{@const exact = answer === 'x'}
 					{@const close = answer === 'c'}
 					{@const missing = answer === '_'}
@@ -169,7 +174,7 @@
 								on:click|preventDefault={update}
 								data-key={letter}
 								class={classnames[letter]}
-								disabled={data.guesses[i].length === 5}
+								disabled={submittable}
 								formaction="?/update"
 								name="key"
 								value={letter}
