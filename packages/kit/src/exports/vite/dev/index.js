@@ -54,7 +54,7 @@ export async function dev(vite, vite_config, svelte_config) {
 	/** @param {string} url */
 	async function loud_ssr_load_module(url) {
 		try {
-			return await vite.ssrLoadModule(url);
+			return await vite.ssrLoadModule(url, { fixStacktrace: true });
 		} catch (/** @type {any} */ err) {
 			const msg = buildErrorMessage(err, [colors.red(`Internal server error: ${err.message}`)]);
 
@@ -248,9 +248,10 @@ export async function dev(vite, vite_config, svelte_config) {
 		};
 	}
 
-	/** @param {string} stack */
-	function fix_stack_trace(stack) {
-		return stack ? vite.ssrRewriteStacktrace(stack) : stack;
+	/** @param {Error} error */
+	function fix_stack_trace(error) {
+		vite.ssrFixStacktrace(error);
+		return error.stack;
 	}
 
 	await update_manifest();
@@ -393,7 +394,7 @@ export async function dev(vite, vite_config, svelte_config) {
 		} catch (e) {
 			const error = coalesce_to_error(e);
 			res.statusCode = 500;
-			res.end(fix_stack_trace(/** @type {string} */ (error.stack)));
+			res.end(fix_stack_trace(error));
 		}
 	});
 
@@ -523,7 +524,7 @@ export async function dev(vite, vite_config, svelte_config) {
 			} catch (e) {
 				const error = coalesce_to_error(e);
 				res.statusCode = 500;
-				res.end(fix_stack_trace(/** @type {string} */ (error.stack)));
+				res.end(fix_stack_trace(error));
 			}
 		});
 	};
