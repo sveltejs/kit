@@ -233,7 +233,7 @@ export async function dev(vite, vite_config, svelte_config) {
 					for (const key in manifest_data.matchers) {
 						const file = manifest_data.matchers[key];
 						const url = path.resolve(cwd, file);
-						const module = await vite.ssrLoadModule(url);
+						const module = await vite.ssrLoadModule(url, { fixStacktrace: true });
 
 						if (module.match) {
 							matchers[key] = module.match;
