@@ -141,6 +141,7 @@ jobs:
       - name: build
         env:
           BASE_PATH: '/your-repo-name'
+		      NODE_OPTIONS: '--max-old-space-size=4096'
         run: |
           npm run build
           touch build/.nojekyll
