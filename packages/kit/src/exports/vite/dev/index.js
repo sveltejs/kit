@@ -54,11 +54,14 @@ export async function dev(vite, vite_config, svelte_config) {
 	/** @param {string} url */
 	async function loud_ssr_load_module(url) {
 		try {
-			return await vite.ssrLoadModule(url);
+			return await vite.ssrLoadModule(url, { fixStacktrace: true });
 		} catch (/** @type {any} */ err) {
 			const msg = buildErrorMessage(err, [colors.red(`Internal server error: ${err.message}`)]);
 
-			vite.config.logger.error(msg, { error: err });
+			if (!vite.config.logger.hasErrorLogged(err)) {
+				vite.config.logger.error(msg, { error: err });
+			}
+
 			vite.ws.send({
 				type: 'error',
 				err: {
@@ -233,7 +236,7 @@ export async function dev(vite, vite_config, svelte_config) {
 					for (const key in manifest_data.matchers) {
 						const file = manifest_data.matchers[key];
 						const url = path.resolve(cwd, file);
-						const module = await vite.ssrLoadModule(url);
+						const module = await vite.ssrLoadModule(url, { fixStacktrace: true });
 
 						if (module.match) {
 							matchers[key] = module.match;
@@ -248,9 +251,10 @@ export async function dev(vite, vite_config, svelte_config) {
 		};
 	}
 
-	/** @param {string} stack */
-	function fix_stack_trace(stack) {
-		return stack ? vite.ssrRewriteStacktrace(stack) : stack;
+	/** @param {Error} error */
+	function fix_stack_trace(error) {
+		vite.ssrFixStacktrace(error);
+		return error.stack;
 	}
 
 	await update_manifest();
@@ -393,7 +397,7 @@ export async function dev(vite, vite_config, svelte_config) {
 		} catch (e) {
 			const error = coalesce_to_error(e);
 			res.statusCode = 500;
-			res.end(fix_stack_trace(/** @type {string} */ (error.stack)));
+			res.end(fix_stack_trace(error));
 		}
 	});
 
@@ -454,7 +458,7 @@ export async function dev(vite, vite_config, svelte_config) {
 
 				// we have to import `Server` before calling `set_assets`
 				const { Server } = /** @type {import('types').ServerModule} */ (
-					await vite.ssrLoadModule(`${runtime_base}/server/index.js`)
+					await vite.ssrLoadModule(`${runtime_base}/server/index.js`, { fixStacktrace: true })
 				);
 
 				const { set_fix_stack_trace } = await vite.ssrLoadModule(
@@ -523,7 +527,7 @@ export async function dev(vite, vite_config, svelte_config) {
 			} catch (e) {
 				const error = coalesce_to_error(e);
 				res.statusCode = 500;
-				res.end(fix_stack_trace(/** @type {string} */ (error.stack)));
+				res.end(fix_stack_trace(error));
 			}
 		});
 	};
