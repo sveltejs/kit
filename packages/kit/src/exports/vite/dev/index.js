@@ -455,7 +455,7 @@ export async function dev(vite, vite_config, svelte_config) {
 
 				// we have to import `Server` before calling `set_assets`
 				const { Server } = /** @type {import('types').ServerModule} */ (
-					await vite.ssrLoadModule(`${runtime_base}/server/index.js`)
+					await vite.ssrLoadModule(`${runtime_base}/server/index.js`, { fixStacktrace: true })
 				);
 
 				const { set_fix_stack_trace } = await vite.ssrLoadModule(
