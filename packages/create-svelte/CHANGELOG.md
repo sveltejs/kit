@@ -1,5 +1,15 @@
 # create-svelte
 
+## 5.1.0
+
+### Minor Changes
+
+- chore: remove `resolution-mode=highest` in template `.npmrc` ([#10635](https://github.com/sveltejs/kit/pull/10635))
+
+### Patch Changes
+
+- feat: improve sverdle reactivity ([#10670](https://github.com/sveltejs/kit/pull/10670))
+
 ## 5.0.6
 
 ### Patch Changes
