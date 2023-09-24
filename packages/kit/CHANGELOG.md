@@ -1,5 +1,17 @@
 # @sveltejs/kit
 
+## 1.25.1
+
+### Patch Changes
+
+- fix: correct line numbers in stack trace ([#10769](https://github.com/sveltejs/kit/pull/10769))
+
+- fix: correctly return 404 when navigating to a missing page and the root layout fetches a prerendered endpoint ([#10565](https://github.com/sveltejs/kit/pull/10565))
+
+- fix: allow optional param in middle of route ([#10736](https://github.com/sveltejs/kit/pull/10736))
+
+- chore: update `undici` ([#10641](https://github.com/sveltejs/kit/pull/10641))
+
 ## 1.25.0
 
 ### Minor Changes
