@@ -58,7 +58,10 @@ export async function dev(vite, vite_config, svelte_config) {
 		} catch (/** @type {any} */ err) {
 			const msg = buildErrorMessage(err, [colors.red(`Internal server error: ${err.message}`)]);
 
-			vite.config.logger.error(msg, { error: err });
+			if (!vite.config.logger.hasErrorLogged(err)) {
+				vite.config.logger.error(msg, { error: err });
+			}
+
 			vite.ws.send({
 				type: 'error',
 				err: {
