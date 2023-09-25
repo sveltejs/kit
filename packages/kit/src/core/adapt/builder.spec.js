@@ -2,7 +2,7 @@ import { existsSync, rmSync } from 'node:fs';
 import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { assert, expect, test } from 'vitest';
-import { create_builder } from './builder.js';
+import { create_builder, filter_vite_files } from './builder.js';
 import { posixify } from '../../utils/filesystem.js';
 import { list_files } from '../utils.js';
 
@@ -47,12 +47,12 @@ test('copy files', () => {
 	rmSync(dest, { recursive: true, force: true });
 
 	expect(builder.writeClient(dest)).toEqual(list_files(dest).map(posixify));
-	expect(list_files(`${outDir}/output/client`)).toEqual(list_files(dest));
+	expect(filter_vite_files(list_files(`${outDir}/output/client`))).toEqual(list_files(dest));
 
 	rmSync(dest, { recursive: true, force: true });
 
 	expect(builder.writeServer(dest)).toEqual(list_files(dest).map(posixify));
-	expect(list_files(`${outDir}/output/server`)).toEqual(list_files(dest));
+	expect(filter_vite_files(list_files(`${outDir}/output/server`))).toEqual(list_files(dest));
 
 	rmSync(dest, { force: true, recursive: true });
 });

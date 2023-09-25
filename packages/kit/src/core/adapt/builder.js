@@ -1,4 +1,4 @@
-import { existsSync, statSync, createReadStream, createWriteStream, unlinkSync } from 'node:fs';
+import { existsSync, statSync, createReadStream, createWriteStream, rmSync } from 'node:fs';
 import { extname, resolve } from 'node:path';
 import { pipeline } from 'node:stream';
 import { promisify } from 'node:util';
@@ -183,8 +183,8 @@ export function create_builder({
 		writeClient(dest) {
 			const files = copy(`${config.kit.outDir}/output/client`, dest);
 			// avoid making vite files public
-			unlinkSync(`${dest}/.vite`);
-			return files;
+			rmSync(`${dest}/.vite`, { force: true, recursive: true });
+			return filter_vite_files(files);
 		},
 
 		writePrerendered(dest) {
@@ -195,8 +195,8 @@ export function create_builder({
 		writeServer(dest) {
 			const files = copy(`${config.kit.outDir}/output/server`, dest);
 			// remove unused vite files
-			unlinkSync(`${dest}/.vite`);
-			return files;
+			rmSync(`${dest}/.vite`, { force: true, recursive: true });
+			return filter_vite_files(files);
 		}
 	};
 }
@@ -221,4 +221,13 @@ async function compress_file(file, format = 'gz') {
 	const destination = createWriteStream(`${file}.${format}`);
 
 	await pipe(source, compress, destination);
+}
+
+/**
+ *
+ * @param {string[]} files
+ * @returns {string[]}
+ */
+export function filter_vite_files(files) {
+	return files.filter((file) => !file.startsWith('.vite/'));
 }
