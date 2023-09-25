@@ -1,4 +1,4 @@
-import { existsSync, statSync, createReadStream, createWriteStream } from 'node:fs';
+import { existsSync, statSync, createReadStream, createWriteStream, unlinkSync } from 'node:fs';
 import { extname, resolve } from 'node:path';
 import { pipeline } from 'node:stream';
 import { promisify } from 'node:util';
@@ -181,7 +181,10 @@ export function create_builder({
 		},
 
 		writeClient(dest) {
-			return copy(`${config.kit.outDir}/output/client`, dest);
+			const files = copy(`${config.kit.outDir}/output/client`, dest);
+			// avoid making vite files public
+			unlinkSync(`${dest}/.vite`);
+			return files;
 		},
 
 		writePrerendered(dest) {
@@ -190,7 +193,10 @@ export function create_builder({
 		},
 
 		writeServer(dest) {
-			return copy(`${config.kit.outDir}/output/server`, dest);
+			const files = copy(`${config.kit.outDir}/output/server`, dest);
+			// remove unused vite files
+			unlinkSync(`${dest}/.vite`);
+			return files;
 		}
 	};
 }
