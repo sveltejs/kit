@@ -194,8 +194,6 @@ export function create_builder({
 
 		writeServer(dest) {
 			const files = copy(`${config.kit.outDir}/output/server`, dest);
-			// remove unused vite files
-			rmSync(`${dest}/.vite`, { force: true, recursive: true });
 			return filter_vite_files(files);
 		}
 	};
@@ -224,7 +222,6 @@ async function compress_file(file, format = 'gz') {
 }
 
 /**
- *
  * @param {string[]} files
  * @returns {string[]}
  */
