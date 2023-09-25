@@ -1,8 +1,6 @@
 <script>
 	import { base } from '$app/paths';
 	import Logotype from './svelte-kit-logotype.svg.svelte';
-	import Image from '$lib/Image.svelte';
-	import background from './svelte-kit-machine.webp?w=1440;960';
 </script>
 
 <section class="hero">
@@ -17,7 +15,7 @@
 		</div>
 
 		<div class="hero-image">
-			<Image src={background} alt="SvelteKit illustration" />
+			<img src="./svelte-kit-machine.webp?w=1440;960" alt="SvelteKit illustration" />
 		</div>
 	</div>
 </section>
@@ -98,6 +96,7 @@
 	   https://github.com/sveltejs/svelte/issues/2870#issuecomment-1161082065 */
 	.hero-image :global(img) {
 		width: var(--size);
+		height: auto;
 		aspect-ratio: 4 / 3;
 		object-fit: cover;
 	}
