@@ -128,9 +128,9 @@ export function migrate_server(content) {
 								nodes.body.expression.getText() === 'JSON.stringify');
 
 						if (safe_headers) {
-							let status = nodes.status ? nodes.status.getText() : '200';
-							let headers = nodes.headers?.getText();
-							let body = dedent(nodes.body?.getText() || 'undefined');
+							const status = nodes.status ? nodes.status.getText() : '200';
+							const headers = nodes.headers?.getText();
+							const body = dedent(nodes.body?.getText() || 'undefined');
 
 							const multiline = /\n/.test(headers);
 

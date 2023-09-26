@@ -1,21 +1,23 @@
 <script>
-	import Contents from '$lib/docs/Contents.svelte';
-	import { TSToggle } from '@sveltejs/site-kit/components';
+	import { page } from '$app/stores';
+	import { DocsContents } from '@sveltejs/site-kit/docs';
 
 	export let data;
+
+	$: pageData = $page.data.page;
+	$: category = pageData?.category;
 </script>
 
 <div class="container">
 	<div class="page">
+		{#if category}
+			<p class="category">{category}</p>
+		{/if}
 		<slot />
 	</div>
 
 	<div class="toc-container">
-		<Contents contents={data.sections} />
-	</div>
-
-	<div class="ts-toggle">
-		<TSToggle />
+		<DocsContents contents={data.sections} />
 	</div>
 </div>
 
@@ -31,18 +33,22 @@
 		padding: var(--sk-page-padding-top) var(--sk-page-padding-side);
 	}
 
-	.toc-container {
-		background: var(--sk-back-3);
+	.category {
+		font: 700 var(--sk-text-s) var(--sk-font);
+		text-transform: uppercase;
+		letter-spacing: 0.12em;
+		margin: 0 0 0.5em;
+		color: var(--sk-text-3);
 	}
 
-	.ts-toggle {
-		width: 100%;
-		border-top: 1px solid var(--sk-back-4);
-		background-color: var(--sk-back-3);
+	.toc-container {
+		background: var(--sk-back-3);
+		display: none;
 	}
 
 	@media (min-width: 832px) {
 		.toc-container {
+			display: block;
 			width: var(--sidebar-width);
 			height: calc(
 				100vh - var(--sk-nav-height) - var(--ts-toggle-height) - var(--sk-banner-bottom-height)
@@ -66,15 +72,6 @@
 
 		.page {
 			padding-left: calc(var(--sidebar-width) + var(--sk-page-padding-side));
-		}
-
-		.ts-toggle {
-			position: fixed;
-			width: var(--sidebar-width);
-			bottom: var(--sk-banner-bottom-height);
-			z-index: 1;
-			margin-right: 0;
-			border-right: 1px solid var(--sk-back-5);
 		}
 	}
 

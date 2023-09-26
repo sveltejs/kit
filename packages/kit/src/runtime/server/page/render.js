@@ -12,6 +12,7 @@ import { public_env } from '../../shared-server.js';
 import { text } from '../../../exports/index.js';
 import { create_async_iterator } from '../../../utils/streaming.js';
 import { SVELTE_KIT_ASSETS } from '../../../constants.js';
+import { SCHEME } from '../../../utils/url.js';
 
 // TODO rename this function/module
 
@@ -28,14 +29,14 @@ const encoder = new TextEncoder();
  *   branch: Array<import('./types').Loaded>;
  *   fetched: Array<import('./types').Fetched>;
  *   options: import('types').SSROptions;
- *   manifest: import('types').SSRManifest;
+ *   manifest: import('@sveltejs/kit').SSRManifest;
  *   state: import('types').SSRState;
  *   page_config: { ssr: boolean; csr: boolean };
  *   status: number;
  *   error: App.Error | null;
- *   event: import('types').RequestEvent;
+ *   event: import('@sveltejs/kit').RequestEvent;
  *   resolve_opts: import('types').RequiredResolveOptions;
- *   action_result?: import('types').ActionResult;
+ *   action_result?: import('@sveltejs/kit').ActionResult;
  * }} opts
  */
 export async function render_response({
@@ -151,13 +152,13 @@ export async function render_response({
 			const fetch = globalThis.fetch;
 			let warned = false;
 			globalThis.fetch = (info, init) => {
-				if (typeof info === 'string' && !/^\w+:\/\//.test(info)) {
+				if (typeof info === 'string' && !SCHEME.test(info)) {
 					throw new Error(
 						`Cannot call \`fetch\` eagerly during server side rendering with relative URL (${info}) — put your \`fetch\` calls inside \`onMount\` or a \`load\` function instead`
 					);
 				} else if (!warned) {
 					console.warn(
-						`Avoid calling \`fetch\` eagerly during server side rendering — put your \`fetch\` calls inside \`onMount\` or a \`load\` function instead`
+						'Avoid calling `fetch` eagerly during server side rendering — put your `fetch` calls inside `onMount` or a `load` function instead'
 					);
 					warned = true;
 				}
@@ -257,7 +258,7 @@ export async function render_response({
 		}
 	}
 
-	const global = __SVELTEKIT_DEV__ ? `__sveltekit_dev` : `__sveltekit_${options.version_hash}`;
+	const global = __SVELTEKIT_DEV__ ? '__sveltekit_dev' : `__sveltekit_${options.version_hash}`;
 
 	const { data, chunks } = get_data(
 		event,
@@ -298,7 +299,7 @@ export async function render_response({
 		].filter(Boolean);
 
 		if (chunks) {
-			blocks.push(`const deferred = new Map();`);
+			blocks.push('const deferred = new Map();');
 
 			properties.push(`defer: (id) => new Promise((fulfil, reject) => {
 							deferred.set(id, { fulfil, reject });
@@ -317,9 +318,9 @@ export async function render_response({
 						${properties.join(',\n\t\t\t\t\t\t')}
 					};`);
 
-		const args = [`app`, `element`];
+		const args = ['app', 'element'];
 
-		blocks.push(`const element = document.currentScript.parentElement;`);
+		blocks.push('const element = document.currentScript.parentElement;');
 
 		if (page_config.ssr) {
 			const serialized = { form: 'null', error: 'null' };
@@ -339,7 +340,7 @@ export async function render_response({
 
 			const hydrate = [
 				`node_ids: [${branch.map(({ node }) => node.index).join(', ')}]`,
-				`data`,
+				'data',
 				`form: ${serialized.form}`,
 				`error: ${serialized.error}`
 			];
@@ -363,7 +364,7 @@ export async function render_response({
 					});`);
 
 		if (options.service_worker) {
-			const opts = __SVELTEKIT_DEV__ ? `, { type: 'module' }` : '';
+			const opts = __SVELTEKIT_DEV__ ? ", { type: 'module' }" : '';
 
 			// we use an anonymous function instead of an arrow function to support
 			// older browsers (https://github.com/sveltejs/kit/pull/5417)
@@ -490,7 +491,7 @@ export async function render_response({
 /**
  * If the serialized data contains promises, `chunks` will be an
  * async iterable containing their resolutions
- * @param {import('types').RequestEvent} event
+ * @param {import('@sveltejs/kit').RequestEvent} event
  * @param {import('types').SSROptions} options
  * @param {Array<import('types').ServerDataNode | null>} nodes
  * @param {string} global

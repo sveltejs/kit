@@ -192,7 +192,7 @@ export async function migrate() {
 
 	const tasks = [
 		use_git && cyan('git commit -m "svelte-migrate: renamed files"'),
-		`Review the migration guide at https://github.com/sveltejs/kit/discussions/5774`,
+		'Review the migration guide at https://github.com/sveltejs/kit/discussions/5774',
 		`Search codebase for ${cyan('"@migration"')} and manually complete migration tasks`,
 		use_git && cyan('git add -A'),
 		use_git && cyan('git commit -m "svelte-migrate: updated files"')

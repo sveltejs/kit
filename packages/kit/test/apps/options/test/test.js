@@ -123,7 +123,7 @@ test.describe('CSP', () => {
 	});
 
 	test("quotes 'script'", async ({ page }) => {
-		const response = await page.goto(`/path-base`);
+		const response = await page.goto('/path-base');
 		expect(response.headers()['content-security-policy']).toMatch(
 			/require-trusted-types-for 'script'/
 		);
@@ -157,7 +157,12 @@ test.describe('Custom extensions', () => {
 test.describe('env', () => {
 	test('resolves downwards', async ({ page }) => {
 		await page.goto('/path-base/env');
-		expect(await page.textContent('p')).toBe('and thank you');
+		expect(await page.textContent('#public')).toBe('and thank you');
+	});
+	test('respects private prefix', async ({ page }) => {
+		await page.goto('/path-base/env');
+		expect(await page.textContent('#private')).toBe('shhhh');
+		expect(await page.textContent('#neither')).toBe('');
 	});
 });
 
@@ -236,7 +241,7 @@ test.describe('trailingSlash', () => {
 			expect(requests.filter((req) => req.endsWith('.mjs')).length).toBeGreaterThan(0);
 		}
 
-		expect(requests.includes(`/path-base/preloading/preloaded/__data.json`)).toBe(true);
+		expect(requests.includes('/path-base/preloading/preloaded/__data.json')).toBe(true);
 
 		requests = [];
 		await app.goto('/path-base/preloading/preloaded');
@@ -295,5 +300,24 @@ test.describe('Routing', () => {
 
 		await page.click('[href="/path-base/routing/link-outside-app-target/target/"]');
 		await expect(page.locator('h2')).toHaveText('target: 0');
+	});
+});
+
+test.describe('load', () => {
+	// TODO 2.0: Remove this test
+	test('fetch in server load can be invalidated when `dangerZone.trackServerFetches` is set', async ({
+		page,
+		app,
+		request,
+		javaScriptEnabled
+	}) => {
+		test.skip(!javaScriptEnabled, 'JavaScript is disabled');
+		await request.get('/path-base/server-fetch-invalidate/count.json?reset');
+		await page.goto('/path-base/server-fetch-invalidate');
+		const selector = '[data-testid="count"]';
+
+		expect(await page.textContent(selector)).toBe('1');
+		await app.invalidate('/path-base/server-fetch-invalidate/count.json');
+		expect(await page.textContent(selector)).toBe('2');
 	});
 });

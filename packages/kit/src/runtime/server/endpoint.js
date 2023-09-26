@@ -1,9 +1,10 @@
+import { ENDPOINT_METHODS, PAGE_METHODS } from '../../constants.js';
 import { negotiate } from '../../utils/http.js';
 import { Redirect } from '../control.js';
 import { method_not_allowed } from './utils.js';
 
 /**
- * @param {import('types').RequestEvent} event
+ * @param {import('@sveltejs/kit').RequestEvent} event
  * @param {import('types').SSREndpoint} mod
  * @param {import('types').SSRState} state
  * @returns {Promise<Response>}
@@ -11,9 +12,9 @@ import { method_not_allowed } from './utils.js';
 export async function render_endpoint(event, mod, state) {
 	const method = /** @type {import('types').HttpMethod} */ (event.request.method);
 
-	let handler = mod[method];
+	let handler = mod[method] || mod.fallback;
 
-	if (!handler && method === 'HEAD') {
+	if (method === 'HEAD' && mod.GET && !mod.HEAD) {
 		handler = mod.GET;
 	}
 
@@ -39,8 +40,8 @@ export async function render_endpoint(event, mod, state) {
 	}
 
 	try {
-		const response = await handler(
-			/** @type {import('types').RequestEvent<Record<string, any>>} */ (event)
+		let response = await handler(
+			/** @type {import('@sveltejs/kit').RequestEvent<Record<string, any>>} */ (event)
 		);
 
 		if (!(response instanceof Response)) {
@@ -50,6 +51,13 @@ export async function render_endpoint(event, mod, state) {
 		}
 
 		if (state.prerendering) {
+			// the returned Response might have immutable Headers
+			// so we should clone them before trying to mutate them
+			response = new Response(response.body, {
+				status: response.status,
+				statusText: response.statusText,
+				headers: new Headers(response.headers)
+			});
 			response.headers.set('x-sveltekit-prerender', String(prerender));
 		}
 
@@ -67,13 +75,13 @@ export async function render_endpoint(event, mod, state) {
 }
 
 /**
- * @param {import('types').RequestEvent} event
+ * @param {import('@sveltejs/kit').RequestEvent} event
  */
 export function is_endpoint_request(event) {
 	const { method, headers } = event.request;
 
-	if (method === 'PUT' || method === 'PATCH' || method === 'DELETE' || method === 'OPTIONS') {
-		// These methods exist exclusively for endpoints
+	// These methods exist exclusively for endpoints
+	if (ENDPOINT_METHODS.has(method) && !PAGE_METHODS.has(method)) {
 		return true;
 	}
 

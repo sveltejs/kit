@@ -2,6 +2,7 @@ import fs from 'node:fs';
 import { mkdirp } from '../../../utils/filesystem.js';
 import { find_deps, resolve_symlinks } from './utils.js';
 import { s } from '../../../utils/misc.js';
+import { normalizePath } from 'vite';
 
 /**
  * @param {string} out
@@ -48,37 +49,36 @@ export function build_server_nodes(out, kit, manifest_data, server_manifest, cli
 		const fonts = [];
 
 		if (node.component && client_manifest) {
-			const entry = find_deps(client_manifest, node.component, true);
-
-			imported.push(...entry.imports);
-			stylesheets.push(...entry.stylesheets);
-			fonts.push(...entry.fonts);
-
 			exports.push(
-				`export const component = async () => (await import('../${
+				'let component_cache;',
+				`export const component = async () => component_cache ??= (await import('../${
 					resolve_symlinks(server_manifest, node.component).chunk.file
 				}')).default;`
 			);
 		}
 
 		if (node.universal) {
-			if (client_manifest) {
-				const entry = find_deps(client_manifest, node.universal, true);
-
-				imported.push(...entry.imports);
-				stylesheets.push(...entry.stylesheets);
-				fonts.push(...entry.fonts);
-			}
-
 			imports.push(`import * as universal from '../${server_manifest[node.universal].file}';`);
-			exports.push(`export { universal };`);
+			exports.push('export { universal };');
 			exports.push(`export const universal_id = ${s(node.universal)};`);
 		}
 
 		if (node.server) {
 			imports.push(`import * as server from '../${server_manifest[node.server].file}';`);
-			exports.push(`export { server };`);
+			exports.push('export { server };');
 			exports.push(`export const server_id = ${s(node.server)};`);
+		}
+
+		if (client_manifest && (node.universal || node.component)) {
+			const entry = find_deps(
+				client_manifest,
+				`${normalizePath(kit.outDir)}/generated/client-optimized/nodes/${i}.js`,
+				true
+			);
+
+			imported.push(...entry.imports);
+			stylesheets.push(...entry.stylesheets);
+			fonts.push(...entry.fonts);
 		}
 
 		exports.push(

@@ -9,17 +9,19 @@
 		"moduleResolution": "node",
 		"allowSyntheticDefaultImports": true,
 		"paths": {
-			"@sveltejs/kit": ["./types/index"],
+			"@sveltejs/kit": ["./src/exports/public.d.ts"],
+			"@sveltejs/kit/node": ["./src/exports/node/index.js"],
 			// internal use only
-			"types": ["./types/internal"]
+			"types": ["./src/types/internal"]
 		},
 		"noUnusedLocals": true,
 		"noUnusedParameters": true
 	},
 	"include": [
+		"postinstall.js",
 		"scripts/**/*",
 		"src/**/*",
-		"types/**/*",
+		"src/types/**/*",
 		"../../sites/kit.svelte.dev/scripts/extract-types.js"
 	],
 	"exclude": ["./**/write_types/test/**"]

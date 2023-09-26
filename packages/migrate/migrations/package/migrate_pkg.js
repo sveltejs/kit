@@ -60,8 +60,8 @@ export function update_pkg_json(config, pkg, files) {
 	if (pkg.publishConfig?.directory || pkg.linkDirectory?.directory) {
 		console.log(
 			colors.yellow(
-				`Detected "publishConfig.directory" or "linkDirectory.directory" fields in your package.json. ` +
-					`This migration removes them, which may or may not be what you want. Please review closely.`
+				'Detected "publishConfig.directory" or "linkDirectory.directory" fields in your package.json. ' +
+					'This migration removes them, which may or may not be what you want. Please review closely.'
 			)
 		);
 		delete pkg.publishConfig?.directory;
@@ -114,7 +114,7 @@ export function update_pkg_json(config, pkg, files) {
 			}`;
 
 			if (has_type) {
-				const type_key = key.slice(2) || 'index';
+				const type_key = key.slice(2) || 'index.d.ts';
 				if (!pkg.exports[key]) {
 					types_versions[type_key] = [out_dir_type_path];
 				} else {
@@ -191,7 +191,7 @@ export function update_pkg_json(config, pkg, files) {
 	// A hack to get around the limitation that TS doesn't support "exports" field  with moduleResolution: 'node'
 	if (
 		Object.keys(types_versions).length > 1 ||
-		(Object.keys(types_versions).length > 0 && !types_versions['index'])
+		(Object.keys(types_versions).length > 0 && !types_versions['index.d.ts'])
 	) {
 		pkg.typesVersions = { '>4.0': types_versions };
 	}

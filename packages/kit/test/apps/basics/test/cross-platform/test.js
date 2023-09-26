@@ -6,29 +6,33 @@ import { test } from '../../../../utils.js';
 test.describe.configure({ mode: 'parallel' });
 
 test.describe('CSS', () => {
-	test('applies imported styles', async ({ page, get_computed_style }) => {
+	test('applies styles correctly', async ({ page, get_computed_style }) => {
 		await page.goto('/css');
 
-		expect(await get_computed_style('.styled', 'color')).toBe('rgb(255, 0, 0)');
+		test.step('applies imported styles', async () => {
+			expect(await get_computed_style('.styled', 'color')).toBe('rgb(255, 0, 0)');
+		});
+
+		test.step('applies imported styles in the correct order', async () => {
+			expect(await get_computed_style('.overridden', 'color')).toBe('rgb(0, 128, 0)');
+		});
+
+		test.step('applies layout styles', async () => {
+			expect(await get_computed_style('footer', 'color')).toBe('rgb(128, 0, 128)');
+		});
+
+		test.step('applies local styles', async () => {
+			expect(await get_computed_style('.also-styled', 'color')).toBe('rgb(0, 0, 255)');
+		});
+
+		test.step('does not apply raw and url', async () => {
+			expect(await get_computed_style('.not', 'color')).toBe('rgb(0, 0, 0)');
+		});
 	});
 
-	test('applies layout styles', async ({ page, get_computed_style }) => {
-		await page.goto('/css');
-
-		expect(await get_computed_style('footer', 'color')).toBe('rgb(128, 0, 128)');
-	});
-
-	test('applies local styles', async ({ page, get_computed_style }) => {
-		await page.goto('/css');
-
-		expect(await get_computed_style('.also-styled', 'color')).toBe('rgb(0, 0, 255)');
-	});
-
-	test('applies imported styles in the correct order', async ({ page, get_computed_style }) => {
-		await page.goto('/css');
-
-		const color = await get_computed_style('.overridden', 'color');
-		expect(color).toBe('rgb(0, 128, 0)');
+	test('loads styles on routes with encoded characters', async ({ page, get_computed_style }) => {
+		await page.goto('/css/encöded');
+		expect(await get_computed_style('h1', 'color')).toBe('rgb(128, 0, 128)');
 	});
 });
 
@@ -575,7 +579,7 @@ test.describe('Redirects', () => {
 			const [, response] = await Promise.all([
 				app.goto('/redirect/in-handle?throw&cookies'),
 				page.waitForResponse((request) =>
-					request.url().endsWith('in-handle/__data.json?throw=&cookies=&x-sveltekit-invalidated=_1')
+					request.url().endsWith('in-handle/__data.json?throw=&cookies=&x-sveltekit-invalidated=01')
 				)
 			]);
 			expect((await response.allHeaders())['set-cookie']).toBeDefined();
@@ -929,6 +933,34 @@ test.describe('Routing', () => {
 		);
 		expect(await page.textContent('[data-test-id="pathname-data"]')).toBe(
 			'/routing/trailing-slash-server/always/'
+		);
+	});
+
+	test('trailing slash server with config ignore and no trailing slash in URL', async ({
+		page,
+		clicknav
+	}) => {
+		await page.goto('/routing/trailing-slash-server');
+		await clicknav('[href="/routing/trailing-slash-server/ignore"]');
+		expect(await page.textContent('[data-test-id="pathname-store"]')).toBe(
+			'/routing/trailing-slash-server/ignore'
+		);
+		expect(await page.textContent('[data-test-id="pathname-data"]')).toBe(
+			'/routing/trailing-slash-server/ignore'
+		);
+	});
+
+	test('trailing slash server with config ignore and trailing slash in URL', async ({
+		page,
+		clicknav
+	}) => {
+		await page.goto('/routing/trailing-slash-server');
+		await clicknav('[href="/routing/trailing-slash-server/ignore/"]');
+		expect(await page.textContent('[data-test-id="pathname-store"]')).toBe(
+			'/routing/trailing-slash-server/ignore/'
+		);
+		expect(await page.textContent('[data-test-id="pathname-data"]')).toBe(
+			'/routing/trailing-slash-server/ignore/'
 		);
 	});
 

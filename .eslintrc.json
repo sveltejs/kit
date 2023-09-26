@@ -1,15 +1,18 @@
 {
+	"root": true,
+	"extends": "@sveltejs",
 	"env": {
 		"es2022": true
 	},
-	"parserOptions": {
-		"ecmaVersion": "latest",
-		"sourceType": "module"
-	},
-	"plugins": ["unicorn"],
-	"root": true,
-	"ignorePatterns": ["packages/create-svelte/shared/"],
+	"ignorePatterns": [
+		"packages/create-svelte/shared/",
+		"packages/kit/test/prerendering/*/build",
+		"packages/adapter-static/test/apps/*/build",
+		"packages/adapter-cloudflare/files",
+		"packages/adapter-netlify/files",
+		"packages/adapter-node/files"
+	],
 	"rules": {
-		"unicorn/prefer-node-protocol": "error"
+		"no-undef": "off"
 	}
 }

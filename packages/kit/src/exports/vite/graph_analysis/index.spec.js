@@ -1,5 +1,4 @@
-import { test } from 'uvu';
-import * as assert from 'uvu/assert';
+import { assert, test } from 'vitest';
 import { module_guard } from './index.js';
 
 /**
@@ -50,7 +49,7 @@ test('throws an error when importing $env/static/private', () => {
 		},
 		`Cannot import $env/static/private into client-side code:
 		- src/routes/+page.svelte imports
-		 - \0virtual:$env/static/private`
+		 - $env/static/private`
 	);
 });
 
@@ -66,7 +65,7 @@ test('throws an error when dynamically importing $env/static/private', () => {
 		},
 		`Cannot import $env/static/private into client-side code:
 		- src/routes/+page.svelte dynamically imports
-		 - \0virtual:$env/static/private`
+		 - $env/static/private`
 	);
 });
 
@@ -82,7 +81,7 @@ test('throws an error when importing $env/dynamic/private', () => {
 		},
 		`Cannot import $env/dynamic/private into client-side code:
 		- src/routes/+page.svelte imports
-		 - \0virtual:$env/dynamic/private`
+		 - $env/dynamic/private`
 	);
 });
 
@@ -98,7 +97,7 @@ test('throws an error when dynamically importing $env/dynamic/private', () => {
 		},
 		`Cannot import $env/dynamic/private into client-side code:
 		- src/routes/+page.svelte dynamically imports
-		 - \0virtual:$env/dynamic/private`
+		 - $env/dynamic/private`
 	);
 });
 
@@ -159,5 +158,3 @@ test('ignores .server.js files outside the project root', () => {
 		'/illegal.server.js': {}
 	});
 });
-
-test.run();

@@ -2,7 +2,7 @@
 
 ## Preparing
 
-This is a monorepo, meaning the repo holds multiple packages. It requires the use of [pnpm](https://pnpm.js.org/en/). You can [install pnpm](https://pnpm.io/installation) with:
+This is a monorepo, meaning the repo holds multiple packages. It requires the use of [pnpm](https://pnpm.io/). You can [install pnpm](https://pnpm.io/installation) with:
 
 ```bash
 npm i -g pnpm
@@ -16,7 +16,28 @@ cd kit
 pnpm install
 ```
 
-You can now run SvelteKit by linking it into your project with [pnpm `overrides`](https://pnpm.io/package_json#pnpmoverrides) as demonstrated in the [sandbox example](https://github.com/sveltejs/kit-sandbox) or by running one of the test projects as described in [the testing section](#testing) below.
+## Testing Changes
+
+### Playground
+
+You can use the playground at [`playgrounds/basic`](./playgrounds/basic/) to experiment with your changes to SvelteKit locally.
+
+### Linking
+
+If you want to test against an existing project, you can use [pnpm `overrides`](https://pnpm.io/package_json#pnpmoverrides) in that project:
+
+```jsonc
+{
+  // ...
+  "pnpm": {
+    "overrides": {
+      "@sveltejs/kit": "link:../path/to/svelte-kit/packages/kit",
+      // additionally/optional the adapter you're using
+      "@sveltejs/adapter-auto": "link:../path/to/svelte-kit/packages/adapter-auto"
+    }
+  }
+}
+```
 
 ## Code structure
 
@@ -44,7 +65,7 @@ Run `pnpm test` to run the tests from all subpackages. Browser tests live in sub
 
 You can run the tests for only a single package by first moving to that directory. E.g. `cd packages/kit`.
 
-You must rebuild each time before running the tests if you've made code changes.
+For some packages you must rebuild each time before running the tests if you've made code changes. These packages have a `build` command. Packages like `packages/kit` don't require a build step.
 
 To run a single integration test or otherwise control the running of the tests locally see [the Playwright CLI docs](https://playwright.dev/docs/test-cli). Note that you will need to run these commands from the test project directory such as `packages/kit/test/apps/basics`.
 

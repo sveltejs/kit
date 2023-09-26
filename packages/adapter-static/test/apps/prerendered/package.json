@@ -5,12 +5,14 @@
 	"scripts": {
 		"dev": "vite dev",
 		"build": "vite build",
-		"start": "vite start"
+		"preview": "sirv -p 5173 -s 200.html build",
+		"test": "playwright test"
 	},
 	"devDependencies": {
 		"@sveltejs/kit": "workspace:^",
-		"svelte": "^3.56.0",
-		"vite": "^4.3.0"
+		"sirv-cli": "^2.0.2",
+		"svelte": "^4.0.5",
+		"vite": "^4.4.2"
 	},
 	"type": "module"
 }
