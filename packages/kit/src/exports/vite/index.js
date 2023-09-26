@@ -555,7 +555,7 @@ function kit({ svelte_config }) {
 						cssCodeSplit: true,
 						cssMinify: initial_config.build?.minify == null ? true : !!initial_config.build.minify,
 						// don't use the default name to avoid collisions with 'static/manifest.json'
-						manifest: '.vite/manifest.json', // TODO: we can remove this when vite 5 comes out
+						manifest: '.vite/manifest.json', // TODO: remove this after bumping peer dep to vite 5
 						outDir: `${out}/${ssr ? 'server' : 'client'}`,
 						rollupOptions: {
 							input,
