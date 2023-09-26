@@ -2,7 +2,7 @@ import { existsSync, rmSync } from 'node:fs';
 import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { assert, expect, test } from 'vitest';
-import { create_builder, filter_vite_files } from './builder.js';
+import { create_builder } from './builder.js';
 import { posixify } from '../../utils/filesystem.js';
 import { list_files } from '../utils.js';
 
