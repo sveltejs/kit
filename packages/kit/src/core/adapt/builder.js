@@ -1,4 +1,4 @@
-import { existsSync, statSync, createReadStream, createWriteStream, rmSync } from 'node:fs';
+import { existsSync, statSync, createReadStream, createWriteStream } from 'node:fs';
 import { extname, resolve } from 'node:path';
 import { pipeline } from 'node:stream';
 import { promisify } from 'node:util';
@@ -183,7 +183,7 @@ export function create_builder({
 		writeClient(dest) {
 			const files = copy(`${config.kit.outDir}/output/client`, dest);
 			// avoid making vite files public
-			rmSync(`${dest}/.vite`, { force: true, recursive: true });
+			rimraf(`${dest}/.vite`);
 			return filter_vite_files(files);
 		},
 
