@@ -47,12 +47,14 @@ test('copy files', () => {
 	rmSync(dest, { recursive: true, force: true });
 
 	expect(builder.writeClient(dest)).toEqual(list_files(dest).map(posixify));
-	expect(filter_vite_files(list_files(`${outDir}/output/client`))).toEqual(list_files(dest));
+	expect(
+		list_files(`${outDir}/output/client`).filter((file) => !file.startsWith('.vite/'))
+	).toEqual(list_files(dest));
 
 	rmSync(dest, { recursive: true, force: true });
 
 	expect(builder.writeServer(dest)).toEqual(list_files(dest).map(posixify));
-	expect(filter_vite_files(list_files(`${outDir}/output/server`))).toEqual(list_files(dest));
+	expect(list_files(`${outDir}/output/server`)).toEqual(list_files(dest));
 
 	rmSync(dest, { force: true, recursive: true });
 });

@@ -181,11 +181,10 @@ export function create_builder({
 		},
 
 		writeClient(dest) {
-			const files = copy(`${config.kit.outDir}/output/client`, dest, {
+			return copy(`${config.kit.outDir}/output/client`, dest, {
 				// avoid making vite files public
 				filter: (basename) => basename !== '.vite'
 			});
-			return filter_vite_files(files);
 		},
 
 		writePrerendered(dest) {
@@ -194,8 +193,7 @@ export function create_builder({
 		},
 
 		writeServer(dest) {
-			const files = copy(`${config.kit.outDir}/output/server`, dest);
-			return filter_vite_files(files);
+			return copy(`${config.kit.outDir}/output/server`, dest);
 		}
 	};
 }
@@ -220,12 +218,4 @@ async function compress_file(file, format = 'gz') {
 	const destination = createWriteStream(`${file}.${format}`);
 
 	await pipe(source, compress, destination);
-}
-
-/**
- * @param {string[]} files
- * @returns {string[]}
- */
-export function filter_vite_files(files) {
-	return files.filter((file) => !file.startsWith('.vite/'));
 }
