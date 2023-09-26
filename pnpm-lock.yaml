@@ -22,13 +22,13 @@ importers:
         version: 15.0.1(rollup@3.7.0)
       '@sveltejs/eslint-config':
         specifier: ^6.0.4
-        version: 6.0.4(@typescript-eslint/eslint-plugin@6.0.0)(@typescript-eslint/parser@6.7.0)(eslint-config-prettier@9.0.0)(eslint-plugin-svelte@2.31.0)(eslint-plugin-unicorn@48.0.0)(eslint@8.45.0)(typescript@4.9.4)
+        version: 6.0.4(@typescript-eslint/eslint-plugin@6.0.0)(@typescript-eslint/parser@6.7.3)(eslint-config-prettier@9.0.0)(eslint-plugin-svelte@2.31.0)(eslint-plugin-unicorn@48.0.0)(eslint@8.45.0)(typescript@4.9.4)
       '@svitejs/changesets-changelog-github-compact':
         specifier: ^1.1.0
         version: 1.1.0
       '@typescript-eslint/eslint-plugin':
         specifier: ^6.0.0
-        version: 6.0.0(@typescript-eslint/parser@6.7.0)(eslint@8.45.0)(typescript@4.9.4)
+        version: 6.0.0(@typescript-eslint/parser@6.7.3)(eslint@8.45.0)(typescript@4.9.4)
       eslint:
         specifier: ^8.45.0
         version: 8.45.0
@@ -227,8 +227,8 @@ importers:
         specifier: ^4.9.4
         version: 4.9.4
       vite:
-        specifier: ^4.4.2
-        version: 4.4.8(@types/node@16.18.6)
+        specifier: ^4.4.9
+        version: 4.4.9(@types/node@16.18.6)
 
   packages/adapter-static/test/apps/prerendered:
     devDependencies:
@@ -242,8 +242,8 @@ importers:
         specifier: ^4.0.5
         version: 4.1.2
       vite:
-        specifier: ^4.4.2
-        version: 4.4.8(@types/node@16.18.6)
+        specifier: ^4.4.9
+        version: 4.4.9(@types/node@16.18.6)(lightningcss@1.21.8)
 
   packages/adapter-static/test/apps/spa:
     devDependencies:
@@ -260,8 +260,8 @@ importers:
         specifier: ^4.0.5
         version: 4.1.2
       vite:
-        specifier: ^4.4.2
-        version: 4.4.8(@types/node@16.18.6)
+        specifier: ^4.4.9
+        version: 4.4.9(@types/node@16.18.6)(lightningcss@1.21.8)
 
   packages/adapter-vercel:
     dependencies:
@@ -353,8 +353,8 @@ importers:
         specifier: ^5.0.0
         version: 5.0.4
       vite:
-        specifier: ^4.4.2
-        version: 4.4.8(@types/node@16.18.6)
+        specifier: ^4.4.9
+        version: 4.4.9(@types/node@16.18.6)(lightningcss@1.21.8)
 
   packages/create-svelte/templates/skeleton:
     devDependencies:
@@ -366,7 +366,7 @@ importers:
     dependencies:
       '@sveltejs/vite-plugin-svelte':
         specifier: ^2.4.1
-        version: 2.4.1(svelte@4.1.2)(vite@4.4.8)
+        version: 2.4.1(svelte@4.1.2)(vite@4.4.9)
       '@types/cookie':
         specifier: ^0.5.1
         version: 0.5.1
@@ -441,8 +441,8 @@ importers:
         specifier: ^4.9.4
         version: 4.9.4
       vite:
-        specifier: ^4.4.2
-        version: 4.4.8(@types/node@16.18.6)
+        specifier: ^4.4.9
+        version: 4.4.9(@types/node@16.18.6)
       vitest:
         specifier: ^0.34.0
         version: 0.34.1(playwright@1.30.0)
@@ -471,8 +471,8 @@ importers:
         specifier: ^4.9.4
         version: 4.9.4
       vite:
-        specifier: ^4.4.2
-        version: 4.4.8(@types/node@16.18.6)
+        specifier: ^4.4.9
+        version: 4.4.9(@types/node@16.18.6)(lightningcss@1.21.8)
 
   packages/kit/test/apps/basics:
     devDependencies:
@@ -492,8 +492,8 @@ importers:
         specifier: ^4.9.4
         version: 4.9.4
       vite:
-        specifier: ^4.4.2
-        version: 4.4.8(@types/node@16.18.6)
+        specifier: ^4.4.9
+        version: 4.4.9(@types/node@16.18.6)(lightningcss@1.21.8)
 
   packages/kit/test/apps/dev-only:
     devDependencies:
@@ -513,8 +513,8 @@ importers:
         specifier: ^4.9.4
         version: 4.9.4
       vite:
-        specifier: ^4.4.2
-        version: 4.4.8(@types/node@16.18.6)
+        specifier: ^4.4.9
+        version: 4.4.9(@types/node@16.18.6)(lightningcss@1.21.8)
 
   packages/kit/test/apps/embed:
     devDependencies:
@@ -534,8 +534,8 @@ importers:
         specifier: ^4.9.4
         version: 4.9.4
       vite:
-        specifier: ^4.4.2
-        version: 4.4.8(@types/node@16.18.6)
+        specifier: ^4.4.9
+        version: 4.4.9(@types/node@16.18.6)(lightningcss@1.21.8)
 
   packages/kit/test/apps/options:
     devDependencies:
@@ -555,8 +555,8 @@ importers:
         specifier: ^4.9.4
         version: 4.9.4
       vite:
-        specifier: ^4.4.2
-        version: 4.4.8(@types/node@16.18.6)
+        specifier: ^4.4.9
+        version: 4.4.9(@types/node@16.18.6)(lightningcss@1.21.8)
 
   packages/kit/test/apps/options-2:
     devDependencies:
@@ -579,8 +579,8 @@ importers:
         specifier: ^4.9.4
         version: 4.9.4
       vite:
-        specifier: ^4.4.2
-        version: 4.4.8(@types/node@16.18.6)
+        specifier: ^4.4.9
+        version: 4.4.9(@types/node@16.18.6)(lightningcss@1.21.8)
 
   packages/kit/test/apps/writes:
     devDependencies:
@@ -600,8 +600,8 @@ importers:
         specifier: ^4.9.4
         version: 4.9.4
       vite:
-        specifier: ^4.4.2
-        version: 4.4.8(@types/node@16.18.6)
+        specifier: ^4.4.9
+        version: 4.4.9(@types/node@16.18.6)(lightningcss@1.21.8)
 
   packages/kit/test/build-errors:
     devDependencies:
@@ -627,8 +627,8 @@ importers:
         specifier: ^4.9.4
         version: 4.9.4
       vite:
-        specifier: ^4.4.2
-        version: 4.4.8(@types/node@16.18.6)
+        specifier: ^4.4.9
+        version: 4.4.9(@types/node@16.18.6)(lightningcss@1.21.8)
 
   packages/kit/test/build-errors/apps/prerenderable-incorrect-fragment:
     devDependencies:
@@ -648,8 +648,8 @@ importers:
         specifier: ^4.9.4
         version: 4.9.4
       vite:
-        specifier: ^4.4.2
-        version: 4.4.8(@types/node@16.18.6)
+        specifier: ^4.4.9
+        version: 4.4.9(@types/node@16.18.6)(lightningcss@1.21.8)
 
   packages/kit/test/build-errors/apps/prerenderable-not-prerendered:
     devDependencies:
@@ -669,8 +669,8 @@ importers:
         specifier: ^4.9.4
         version: 4.9.4
       vite:
-        specifier: ^4.4.2
-        version: 4.4.8(@types/node@16.18.6)
+        specifier: ^4.4.9
+        version: 4.4.9(@types/node@16.18.6)(lightningcss@1.21.8)
 
   packages/kit/test/build-errors/apps/private-dynamic-env:
     devDependencies:
@@ -687,8 +687,8 @@ importers:
         specifier: ^4.9.4
         version: 4.9.4
       vite:
-        specifier: ^4.4.2
-        version: 4.4.8(@types/node@16.18.6)
+        specifier: ^4.4.9
+        version: 4.4.9(@types/node@16.18.6)(lightningcss@1.21.8)
 
   packages/kit/test/build-errors/apps/private-dynamic-env-dynamic-import:
     devDependencies:
@@ -705,8 +705,8 @@ importers:
         specifier: ^4.9.4
         version: 4.9.4
       vite:
-        specifier: ^4.4.2
-        version: 4.4.8(@types/node@16.18.6)
+        specifier: ^4.4.9
+        version: 4.4.9(@types/node@16.18.6)(lightningcss@1.21.8)
 
   packages/kit/test/build-errors/apps/private-static-env:
     devDependencies:
@@ -726,8 +726,8 @@ importers:
         specifier: ^4.9.4
         version: 4.9.4
       vite:
-        specifier: ^4.4.2
-        version: 4.4.8(@types/node@16.18.6)
+        specifier: ^4.4.9
+        version: 4.4.9(@types/node@16.18.6)(lightningcss@1.21.8)
 
   packages/kit/test/build-errors/apps/private-static-env-dynamic-import:
     devDependencies:
@@ -744,8 +744,8 @@ importers:
         specifier: ^4.9.4
         version: 4.9.4
       vite:
-        specifier: ^4.4.2
-        version: 4.4.8(@types/node@16.18.6)
+        specifier: ^4.4.9
+        version: 4.4.9(@types/node@16.18.6)(lightningcss@1.21.8)
 
   packages/kit/test/build-errors/apps/server-only-folder:
     devDependencies:
@@ -762,8 +762,8 @@ importers:
         specifier: ^4.9.4
         version: 4.9.4
       vite:
-        specifier: ^4.4.2
-        version: 4.4.8(@types/node@16.18.6)
+        specifier: ^4.4.9
+        version: 4.4.9(@types/node@16.18.6)(lightningcss@1.21.8)
 
   packages/kit/test/build-errors/apps/server-only-folder-dynamic-import:
     devDependencies:
@@ -780,8 +780,8 @@ importers:
         specifier: ^4.9.4
         version: 4.9.4
       vite:
-        specifier: ^4.4.2
-        version: 4.4.8(@types/node@16.18.6)
+        specifier: ^4.4.9
+        version: 4.4.9(@types/node@16.18.6)(lightningcss@1.21.8)
 
   packages/kit/test/build-errors/apps/server-only-module:
     devDependencies:
@@ -798,8 +798,8 @@ importers:
         specifier: ^4.9.4
         version: 4.9.4
       vite:
-        specifier: ^4.4.2
-        version: 4.4.8(@types/node@16.18.6)
+        specifier: ^4.4.9
+        version: 4.4.9(@types/node@16.18.6)(lightningcss@1.21.8)
 
   packages/kit/test/build-errors/apps/server-only-module-dynamic-import:
     devDependencies:
@@ -816,8 +816,8 @@ importers:
         specifier: ^4.9.4
         version: 4.9.4
       vite:
-        specifier: ^4.4.2
-        version: 4.4.8(@types/node@16.18.6)
+        specifier: ^4.4.9
+        version: 4.4.9(@types/node@16.18.6)(lightningcss@1.21.8)
 
   packages/kit/test/build-errors/apps/syntax-error:
     devDependencies:
@@ -834,8 +834,8 @@ importers:
         specifier: ^4.9.4
         version: 4.9.4
       vite:
-        specifier: ^4.4.2
-        version: 4.4.8(@types/node@16.18.6)
+        specifier: ^4.4.9
+        version: 4.4.9(@types/node@16.18.6)(lightningcss@1.21.8)
 
   packages/kit/test/prerendering/basics:
     devDependencies:
@@ -852,8 +852,8 @@ importers:
         specifier: ^4.9.4
         version: 4.9.4
       vite:
-        specifier: ^4.4.2
-        version: 4.4.8(@types/node@16.18.6)
+        specifier: ^4.4.9
+        version: 4.4.9(@types/node@16.18.6)(lightningcss@1.21.8)
       vitest:
         specifier: ^0.34.0
         version: 0.34.1(playwright@1.30.0)
@@ -873,8 +873,8 @@ importers:
         specifier: ^4.9.4
         version: 4.9.4
       vite:
-        specifier: ^4.4.2
-        version: 4.4.8(@types/node@16.18.6)
+        specifier: ^4.4.9
+        version: 4.4.9(@types/node@16.18.6)(lightningcss@1.21.8)
       vitest:
         specifier: ^0.34.0
         version: 0.34.1(playwright@1.30.0)
@@ -894,8 +894,8 @@ importers:
         specifier: ^4.9.4
         version: 4.9.4
       vite:
-        specifier: ^4.4.2
-        version: 4.4.8(@types/node@16.18.6)
+        specifier: ^4.4.9
+        version: 4.4.9(@types/node@16.18.6)(lightningcss@1.21.8)
       vitest:
         specifier: ^0.34.0
         version: 0.34.1(playwright@1.30.0)
@@ -992,7 +992,7 @@ importers:
         specifier: ^5.0.0
         version: 5.0.4
       vite:
-        specifier: ^4.4.2
+        specifier: ^4.4.9
         version: 4.4.9(@types/node@16.18.6)(lightningcss@1.21.8)
 
   sites/kit.svelte.dev:
@@ -1059,7 +1059,7 @@ importers:
         specifier: 5.0.4
         version: 5.0.4
       vite:
-        specifier: ^4.4.8
+        specifier: ^4.4.9
         version: 4.4.9(@types/node@16.18.6)(lightningcss@1.21.8)
       vite-imagetools:
         specifier: ^5.0.8
@@ -2005,7 +2005,7 @@ packages:
     resolution: {integrity: sha512-+Fj43pSMwJs4KRrH/938Uf+uAELIgVBmQzg/q1YG10djyfA3TnrU8N8XzqCh/okZdszqBQTZf96idMfE5lnwTA==}
     dev: true
 
-  /@sveltejs/eslint-config@6.0.4(@typescript-eslint/eslint-plugin@6.0.0)(@typescript-eslint/parser@6.7.0)(eslint-config-prettier@9.0.0)(eslint-plugin-svelte@2.31.0)(eslint-plugin-unicorn@48.0.0)(eslint@8.45.0)(typescript@4.9.4):
+  /@sveltejs/eslint-config@6.0.4(@typescript-eslint/eslint-plugin@6.0.0)(@typescript-eslint/parser@6.7.3)(eslint-config-prettier@9.0.0)(eslint-plugin-svelte@2.31.0)(eslint-plugin-unicorn@48.0.0)(eslint@8.45.0)(typescript@4.9.4):
     resolution: {integrity: sha512-U9pwmDs+DbmsnCgTfu6Bacdwqn0DuI1IQNSiQqTgzVyYfaaj+zy9ZoQCiJfxFBGXHkklyXuRHp0KMx346N0lcQ==}
     peerDependencies:
       '@typescript-eslint/eslint-plugin': '>= 5'
@@ -2016,8 +2016,8 @@ packages:
       eslint-plugin-unicorn: '>= 47'
       typescript: '>= 4'
     dependencies:
-      '@typescript-eslint/eslint-plugin': 6.0.0(@typescript-eslint/parser@6.7.0)(eslint@8.45.0)(typescript@4.9.4)
-      '@typescript-eslint/parser': 6.7.0(eslint@8.45.0)(typescript@4.9.4)
+      '@typescript-eslint/eslint-plugin': 6.0.0(@typescript-eslint/parser@6.7.3)(eslint@8.45.0)(typescript@4.9.4)
+      '@typescript-eslint/parser': 6.7.3(eslint@8.45.0)(typescript@4.9.4)
       eslint: 8.45.0
       eslint-config-prettier: 9.0.0(eslint@8.45.0)
       eslint-plugin-svelte: 2.31.0(eslint@8.45.0)(svelte@4.1.2)
@@ -2037,7 +2037,7 @@ packages:
       svelte-local-storage-store: 0.6.0(svelte@4.2.0)
     dev: true
 
-  /@sveltejs/vite-plugin-svelte-inspector@1.0.3(@sveltejs/vite-plugin-svelte@2.4.1)(svelte@4.1.2)(vite@4.4.8):
+  /@sveltejs/vite-plugin-svelte-inspector@1.0.3(@sveltejs/vite-plugin-svelte@2.4.1)(svelte@4.1.2)(vite@4.4.9):
     resolution: {integrity: sha512-Khdl5jmmPN6SUsVuqSXatKpQTMIifoQPDanaxC84m9JxIibWvSABJyHpyys0Z+1yYrxY5TTEQm+6elh0XCMaOA==}
     engines: {node: ^14.18.0 || >= 16}
     peerDependencies:
@@ -2045,30 +2045,30 @@ packages:
       svelte: ^3.54.0 || ^4.0.0
       vite: ^4.0.0
     dependencies:
-      '@sveltejs/vite-plugin-svelte': 2.4.1(svelte@4.1.2)(vite@4.4.8)
+      '@sveltejs/vite-plugin-svelte': 2.4.1(svelte@4.1.2)(vite@4.4.9)
       debug: 4.3.4
       svelte: 4.1.2
-      vite: 4.4.8(@types/node@16.18.6)
+      vite: 4.4.9(@types/node@16.18.6)
     transitivePeerDependencies:
       - supports-color
     dev: false
 
-  /@sveltejs/vite-plugin-svelte@2.4.1(svelte@4.1.2)(vite@4.4.8):
+  /@sveltejs/vite-plugin-svelte@2.4.1(svelte@4.1.2)(vite@4.4.9):
     resolution: {integrity: sha512-bNNKvoRY89ptY7udeBSCmTdCVwkjmMcZ0j/z9J5MuedT8jPjq0zrknAo/jF1sToAza4NVaAgR9AkZoD9oJJmnA==}
     engines: {node: ^14.18.0 || >= 16}
     peerDependencies:
       svelte: ^3.54.0 || ^4.0.0-next.0
       vite: ^4.0.0
     dependencies:
-      '@sveltejs/vite-plugin-svelte-inspector': 1.0.3(@sveltejs/vite-plugin-svelte@2.4.1)(svelte@4.1.2)(vite@4.4.8)
+      '@sveltejs/vite-plugin-svelte-inspector': 1.0.3(@sveltejs/vite-plugin-svelte@2.4.1)(svelte@4.1.2)(vite@4.4.9)
       debug: 4.3.4
       deepmerge: 4.3.1
       kleur: 4.1.5
       magic-string: 0.30.2
       svelte: 4.1.2
       svelte-hmr: 0.15.3(svelte@4.1.2)
-      vite: 4.4.8(@types/node@16.18.6)
-      vitefu: 0.2.4(vite@4.4.8)
+      vite: 4.4.9(@types/node@16.18.6)
+      vitefu: 0.2.4(vite@4.4.9)
     transitivePeerDependencies:
       - supports-color
     dev: false
@@ -2213,7 +2213,7 @@ packages:
       '@types/node': 16.18.6
     dev: true
 
-  /@typescript-eslint/eslint-plugin@6.0.0(@typescript-eslint/parser@6.7.0)(eslint@8.45.0)(typescript@4.9.4):
+  /@typescript-eslint/eslint-plugin@6.0.0(@typescript-eslint/parser@6.7.3)(eslint@8.45.0)(typescript@4.9.4):
     resolution: {integrity: sha512-xuv6ghKGoiq856Bww/yVYnXGsKa588kY3M0XK7uUW/3fJNNULKRfZfSBkMTSpqGG/8ZCXCadfh8G/z/B4aqS/A==}
     engines: {node: ^16.0.0 || >=18.0.0}
     peerDependencies:
@@ -2225,7 +2225,7 @@ packages:
         optional: true
     dependencies:
       '@eslint-community/regexpp': 4.6.2
-      '@typescript-eslint/parser': 6.7.0(eslint@8.45.0)(typescript@4.9.4)
+      '@typescript-eslint/parser': 6.7.3(eslint@8.45.0)(typescript@4.9.4)
       '@typescript-eslint/scope-manager': 6.0.0
       '@typescript-eslint/type-utils': 6.0.0(eslint@8.45.0)(typescript@4.9.4)
       '@typescript-eslint/utils': 6.0.0(eslint@8.45.0)(typescript@4.9.4)
@@ -2244,8 +2244,8 @@ packages:
       - supports-color
     dev: true
 
-  /@typescript-eslint/parser@6.7.0(eslint@8.45.0)(typescript@4.9.4):
-    resolution: {integrity: sha512-jZKYwqNpNm5kzPVP5z1JXAuxjtl2uG+5NpaMocFPTNC2EdYIgbXIPImObOkhbONxtFTTdoZstLZefbaK+wXZng==}
+  /@typescript-eslint/parser@6.7.3(eslint@8.45.0)(typescript@4.9.4):
+    resolution: {integrity: sha512-TlutE+iep2o7R8Lf+yoer3zU6/0EAUc8QIBB3GYBc1KGz4c4TRm83xwXUZVPlZ6YCLss4r77jbu6j3sendJoiQ==}
     engines: {node: ^16.0.0 || >=18.0.0}
     peerDependencies:
       eslint: ^7.0.0 || ^8.0.0
@@ -2254,10 +2254,10 @@ packages:
       typescript:
         optional: true
     dependencies:
-      '@typescript-eslint/scope-manager': 6.7.0
-      '@typescript-eslint/types': 6.7.0
-      '@typescript-eslint/typescript-estree': 6.7.0(typescript@4.9.4)
-      '@typescript-eslint/visitor-keys': 6.7.0
+      '@typescript-eslint/scope-manager': 6.7.3
+      '@typescript-eslint/types': 6.7.3
+      '@typescript-eslint/typescript-estree': 6.7.3(typescript@4.9.4)
+      '@typescript-eslint/visitor-keys': 6.7.3
       debug: 4.3.4
       eslint: 8.45.0
       typescript: 4.9.4
@@ -2273,12 +2273,12 @@ packages:
       '@typescript-eslint/visitor-keys': 6.0.0
     dev: true
 
-  /@typescript-eslint/scope-manager@6.7.0:
-    resolution: {integrity: sha512-lAT1Uau20lQyjoLUQ5FUMSX/dS07qux9rYd5FGzKz/Kf8W8ccuvMyldb8hadHdK/qOI7aikvQWqulnEq2nCEYA==}
+  /@typescript-eslint/scope-manager@6.7.3:
+    resolution: {integrity: sha512-wOlo0QnEou9cHO2TdkJmzF7DFGvAKEnB82PuPNHpT8ZKKaZu6Bm63ugOTn9fXNJtvuDPanBc78lGUGGytJoVzQ==}
     engines: {node: ^16.0.0 || >=18.0.0}
     dependencies:
-      '@typescript-eslint/types': 6.7.0
-      '@typescript-eslint/visitor-keys': 6.7.0
+      '@typescript-eslint/types': 6.7.3
+      '@typescript-eslint/visitor-keys': 6.7.3
     dev: true
 
   /@typescript-eslint/type-utils@6.0.0(eslint@8.45.0)(typescript@4.9.4):
@@ -2306,8 +2306,8 @@ packages:
     engines: {node: ^16.0.0 || >=18.0.0}
     dev: true
 
-  /@typescript-eslint/types@6.7.0:
-    resolution: {integrity: sha512-ihPfvOp7pOcN/ysoj0RpBPOx3HQTJTrIN8UZK+WFd3/iDeFHHqeyYxa4hQk4rMhsz9H9mXpR61IzwlBVGXtl9Q==}
+  /@typescript-eslint/types@6.7.3:
+    resolution: {integrity: sha512-4g+de6roB2NFcfkZb439tigpAMnvEIg3rIjWQ+EM7IBaYt/CdJt6em9BJ4h4UpdgaBWdmx2iWsafHTrqmgIPNw==}
     engines: {node: ^16.0.0 || >=18.0.0}
     dev: true
 
@@ -2332,8 +2332,8 @@ packages:
       - supports-color
     dev: true
 
-  /@typescript-eslint/typescript-estree@6.7.0(typescript@4.9.4):
-    resolution: {integrity: sha512-dPvkXj3n6e9yd/0LfojNU8VMUGHWiLuBZvbM6V6QYD+2qxqInE7J+J/ieY2iGwR9ivf/R/haWGkIj04WVUeiSQ==}
+  /@typescript-eslint/typescript-estree@6.7.3(typescript@4.9.4):
+    resolution: {integrity: sha512-YLQ3tJoS4VxLFYHTw21oe1/vIZPRqAO91z6Uv0Ss2BKm/Ag7/RVQBcXTGcXhgJMdA4U+HrKuY5gWlJlvoaKZ5g==}
     engines: {node: ^16.0.0 || >=18.0.0}
     peerDependencies:
       typescript: '*'
@@ -2341,8 +2341,8 @@ packages:
       typescript:
         optional: true
     dependencies:
-      '@typescript-eslint/types': 6.7.0
-      '@typescript-eslint/visitor-keys': 6.7.0
+      '@typescript-eslint/types': 6.7.3
+      '@typescript-eslint/visitor-keys': 6.7.3
       debug: 4.3.4
       globby: 11.1.0
       is-glob: 4.0.3
@@ -2381,11 +2381,11 @@ packages:
       eslint-visitor-keys: 3.4.2
     dev: true
 
-  /@typescript-eslint/visitor-keys@6.7.0:
-    resolution: {integrity: sha512-/C1RVgKFDmGMcVGeD8HjKv2bd72oI1KxQDeY8uc66gw9R0OK0eMq48cA+jv9/2Ag6cdrsUGySm1yzYmfz0hxwQ==}
+  /@typescript-eslint/visitor-keys@6.7.3:
+    resolution: {integrity: sha512-HEVXkU9IB+nk9o63CeICMHxFWbHWr3E1mpilIQBe9+7L/lH97rleFLVtYsfnWB+JVMaiFnEaxvknvmIzX+CqVg==}
     engines: {node: ^16.0.0 || >=18.0.0}
     dependencies:
-      '@typescript-eslint/types': 6.7.0
+      '@typescript-eslint/types': 6.7.3
       eslint-visitor-keys: 3.4.3
     dev: true
 
@@ -6448,7 +6448,7 @@ packages:
       mlly: 1.4.0
       pathe: 1.1.1
       picocolors: 1.0.0
-      vite: 4.4.9(@types/node@16.18.6)(lightningcss@1.21.8)
+      vite: 4.4.9(@types/node@16.18.6)
     transitivePeerDependencies:
       - '@types/node'
       - less
@@ -6482,8 +6482,8 @@ packages:
       - terser
     dev: true
 
-  /vite@4.4.8(@types/node@16.18.6):
-    resolution: {integrity: sha512-LONawOUUjxQridNWGQlNizfKH89qPigK36XhMI7COMGztz8KNY0JHim7/xDd71CZwGT4HtSRgI7Hy+RlhG0Gvg==}
+  /vite@4.4.9(@types/node@16.18.6):
+    resolution: {integrity: sha512-2mbUn2LlUmNASWwSCNSJ/EG2HuSRTnVNaydp6vMCm5VIqJsjMfbIWtbH2kDuwUVW5mMUKKZvGPX/rqeqVvv1XA==}
     engines: {node: ^14.18.0 || >=16.0.0}
     hasBin: true
     peerDependencies:
@@ -6554,7 +6554,7 @@ packages:
       fsevents: 2.3.3
     dev: true
 
-  /vitefu@0.2.4(vite@4.4.8):
+  /vitefu@0.2.4(vite@4.4.9):
     resolution: {integrity: sha512-fanAXjSaf9xXtOOeno8wZXIhgia+CZury481LsDaV++lSvcU2R9Ch2bPh3PYFyoHW+w9LqAeYRISVQjUIew14g==}
     peerDependencies:
       vite: ^3.0.0 || ^4.0.0
@@ -6562,7 +6562,7 @@ packages:
       vite:
         optional: true
     dependencies:
-      vite: 4.4.8(@types/node@16.18.6)
+      vite: 4.4.9(@types/node@16.18.6)
     dev: false
 
   /vitest@0.34.1(playwright@1.30.0):
@@ -6618,7 +6618,7 @@ packages:
       strip-literal: 1.3.0
       tinybench: 2.5.0
       tinypool: 0.7.0
-      vite: 4.4.9(@types/node@16.18.6)(lightningcss@1.21.8)
+      vite: 4.4.9(@types/node@16.18.6)
       vite-node: 0.34.1(@types/node@16.18.6)
       why-is-node-running: 2.2.2
     transitivePeerDependencies:
