@@ -11,7 +11,7 @@ export default function loader(src, width, options) {
 		set_param(url, 'w', width);
 		set_param(url, 'q', options?.quality ?? 75, false);
 	} else {
-		url.pathname = `/_vercel/image`;
+		url.pathname = '_vercel/image';
 		set_param(url, 'url', src);
 		set_param(url, 'w', width);
 		set_param(url, 'q', options?.quality ?? 75);
