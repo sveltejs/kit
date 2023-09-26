@@ -181,9 +181,10 @@ export function create_builder({
 		},
 
 		writeClient(dest) {
-			const files = copy(`${config.kit.outDir}/output/client`, dest);
-			// avoid making vite files public
-			rimraf(`${dest}/.vite`);
+			const files = copy(`${config.kit.outDir}/output/client`, dest, {
+				// avoid making vite files public
+				filter: (basename) => basename === '.vite'
+			});
 			return filter_vite_files(files);
 		},
 
