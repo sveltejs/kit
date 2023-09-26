@@ -936,6 +936,34 @@ test.describe('Routing', () => {
 		);
 	});
 
+	test('trailing slash server with config ignore and no trailing slash in URL', async ({
+		page,
+		clicknav
+	}) => {
+		await page.goto('/routing/trailing-slash-server');
+		await clicknav('[href="/routing/trailing-slash-server/ignore"]');
+		expect(await page.textContent('[data-test-id="pathname-store"]')).toBe(
+			'/routing/trailing-slash-server/ignore'
+		);
+		expect(await page.textContent('[data-test-id="pathname-data"]')).toBe(
+			'/routing/trailing-slash-server/ignore'
+		);
+	});
+
+	test('trailing slash server with config ignore and trailing slash in URL', async ({
+		page,
+		clicknav
+	}) => {
+		await page.goto('/routing/trailing-slash-server');
+		await clicknav('[href="/routing/trailing-slash-server/ignore/"]');
+		expect(await page.textContent('[data-test-id="pathname-store"]')).toBe(
+			'/routing/trailing-slash-server/ignore/'
+		);
+		expect(await page.textContent('[data-test-id="pathname-data"]')).toBe(
+			'/routing/trailing-slash-server/ignore/'
+		);
+	});
+
 	test('trailing slash server with config never', async ({ page, clicknav }) => {
 		await page.goto('/routing/trailing-slash-server');
 		await clicknav('[href="/routing/trailing-slash-server/never/"]');

@@ -36,7 +36,7 @@ export default function (options = {}) {
 				JSON.stringify(get_routes_json(builder, written_files, options.routes ?? {}), null, '\t')
 			);
 
-			writeFileSync(`${dest}/_headers`, generate_headers(builder.config.kit.appDir), { flag: 'a' });
+			writeFileSync(`${dest}/_headers`, generate_headers(builder.getAppPath()), { flag: 'a' });
 
 			builder.copy(`${files}/worker.js`, `${tmp}/_worker.js`, {
 				replace: {
@@ -57,7 +57,8 @@ export default function (options = {}) {
 				bundle: true,
 				loader: {
 					'.wasm': 'copy'
-				}
+				},
+				external: ['cloudflare:*']
 			});
 		}
 	};
@@ -86,7 +87,7 @@ function get_routes_json(builder, assets, { include = ['/*'], exclude = ['<all>'
 		.flatMap((rule) => (rule === '<all>' ? ['<build>', '<files>', '<prerendered>'] : rule))
 		.flatMap((rule) => {
 			if (rule === '<build>') {
-				return `/${builder.config.kit.appDir}/*`;
+				return `/${builder.getAppPath()}/*`;
 			}
 
 			if (rule === '<files>') {

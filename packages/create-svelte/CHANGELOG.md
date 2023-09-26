@@ -1,5 +1,43 @@
 # create-svelte
 
+## 5.1.0
+
+### Minor Changes
+
+- chore: remove `resolution-mode=highest` in template `.npmrc` ([#10635](https://github.com/sveltejs/kit/pull/10635))
+
+### Patch Changes
+
+- feat: improve sverdle reactivity ([#10670](https://github.com/sveltejs/kit/pull/10670))
+
+## 5.0.6
+
+### Patch Changes
+
+- chore: bump typescript-eslint to v6 ([#10371](https://github.com/sveltejs/kit/pull/10371))
+
+## 5.0.5
+
+### Patch Changes
+
+- chore: upgrade `vitest` to 0.34.0 and `@clack/prompts` to 0.7.0 ([#10240](https://github.com/sveltejs/kit/pull/10240))
+
+## 5.0.4
+
+### Patch Changes
+
+- chore: upgrade @fontsource/fira-mono to v5 ([#10445](https://github.com/sveltejs/kit/pull/10445))
+
+- chore: upgrade to vitest 0.33.0 ([#10445](https://github.com/sveltejs/kit/pull/10445))
+
+## 5.0.3
+
+### Patch Changes
+
+- chore: bump Vite and Svelte dependencies ([#10330](https://github.com/sveltejs/kit/pull/10330))
+
+- fix: create lib folder in skeleton project ([#10341](https://github.com/sveltejs/kit/pull/10341))
+
 ## 5.0.2
 
 ### Patch Changes

@@ -1,5 +1,23 @@
 # svelte-migrate
 
+## 1.2.7
+
+### Patch Changes
+
+- chore(deps): update dependency ts-morph to v20 ([#10766](https://github.com/sveltejs/kit/pull/10766))
+
+## 1.2.6
+
+### Patch Changes
+
+- fix: do not downgrade versions ([#10352](https://github.com/sveltejs/kit/pull/10352))
+
+## 1.2.5
+
+### Patch Changes
+
+- fix: note old eslint plugin deprecation ([#10319](https://github.com/sveltejs/kit/pull/10319))
+
 ## 1.2.4
 
 ### Patch Changes

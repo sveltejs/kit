@@ -22,24 +22,28 @@ export async function build(options) {
  * @param {(name: string, code: string) => void} analyse_code
  */
 async function do_build(options, analyse_code) {
-	const { input, output, extensions, alias } = normalize_options(options);
+	const { input, output, temp, extensions, alias } = normalize_options(options);
 
 	if (!fs.existsSync(input)) {
 		throw new Error(`${path.relative('.', input)} does not exist`);
 	}
 
-	rimraf(output);
-	mkdirp(output);
+	rimraf(temp);
+	mkdirp(temp);
 
 	const files = scan(input, extensions);
 
 	if (options.types) {
-		await emit_dts(input, output, options.cwd, alias, files);
+		await emit_dts(input, temp, options.cwd, alias, files);
 	}
 
 	for (const file of files) {
-		await process_file(input, output, file, options.config.preprocess, alias, analyse_code);
+		await process_file(input, temp, file, options.config.preprocess, alias, analyse_code);
 	}
+
+	rimraf(output);
+	mkdirp(output);
+	copy(temp, output);
 
 	console.log(
 		colors
@@ -88,6 +92,8 @@ export async function watch(options) {
 			const events = pending.slice();
 			pending.length = 0;
 
+			let errored = false;
+
 			for (const { file, type } of events) {
 				if (type === 'unlink') {
 					for (const candidate of [
@@ -112,14 +118,27 @@ export async function watch(options) {
 
 				if (type === 'add' || type === 'change') {
 					console.log(`Processing ${file.name}`);
-					await process_file(input, output, file, options.config.preprocess, alias, analyse_code);
-					validate();
+					try {
+						await process_file(input, output, file, options.config.preprocess, alias, analyse_code);
+					} catch (e) {
+						errored = true;
+						console.error(e);
+					}
 				}
 			}
 
-			if (options.types) {
-				await emit_dts(input, output, options.cwd, alias, files);
-				console.log('Updated .d.ts files');
+			if (!errored && options.types) {
+				try {
+					await emit_dts(input, output, options.cwd, alias, files);
+					console.log('Updated .d.ts files');
+				} catch (e) {
+					errored = true;
+					console.error(e);
+				}
+			}
+
+			if (!errored) {
+				validate();
 			}
 
 			console.log(message);
@@ -145,6 +164,11 @@ export async function watch(options) {
 function normalize_options(options) {
 	const input = path.resolve(options.cwd, options.input);
 	const output = path.resolve(options.cwd, options.output);
+	const temp = path.resolve(
+		options.cwd,
+		options.config.kit?.outDir ?? '.svelte-kit',
+		'__package__'
+	);
 	const extensions = options.config.extensions ?? ['.svelte'];
 
 	const alias = {
@@ -155,6 +179,7 @@ function normalize_options(options) {
 	return {
 		input,
 		output,
+		temp,
 		extensions,
 		alias
 	};

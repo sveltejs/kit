@@ -31,7 +31,7 @@ import { compact } from '../../utils/array.js';
 import { validate_page_exports } from '../../utils/exports.js';
 import { unwrap_promises } from '../../utils/promises.js';
 import { HttpError, Redirect } from '../control.js';
-import { INVALIDATED_PARAM, validate_depends } from '../shared.js';
+import { INVALIDATED_PARAM, TRAILING_SLASH_PARAM, validate_depends } from '../shared.js';
 import { INDEX_KEY, PRELOAD_PRIORITIES, SCROLL_KEY, SNAPSHOT_KEY } from './constants.js';
 import { stores } from './singletons.js';
 
@@ -88,6 +88,9 @@ export function create_client(app, target) {
 	const callbacks = {
 		/** @type {Array<(navigation: import('@sveltejs/kit').BeforeNavigate) => void>} */
 		before_navigate: [],
+
+		/** @type {Array<(navigation: import('@sveltejs/kit').OnNavigate) => import('types').MaybePromise<(() => void) | void>>} */
+		on_navigate: [],
 
 		/** @type {Array<(navigation: import('@sveltejs/kit').AfterNavigate) => void>} */
 		after_navigate: []
@@ -299,7 +302,8 @@ export function create_client(app, target) {
 				url: new URL(location.href)
 			},
 			willUnload: false,
-			type: 'enter'
+			type: 'enter',
+			complete: Promise.resolve()
 		};
 		callbacks.after_navigate.forEach((fn) => fn(navigation));
 
@@ -449,12 +453,12 @@ export function create_client(app, target) {
 
 			/** @type {import('@sveltejs/kit').LoadEvent} */
 			const load_input = {
-				route: {
-					get id() {
+				route: new Proxy(route, {
+					get: (target, key) => {
 						uses.route = true;
-						return route.id;
+						return target[/** @type {'id'} */ (key)];
 					}
-				},
+				}),
 				params: new Proxy(params, {
 					get: (target, key) => {
 						uses.params.add(/** @type {string} */ (key));
@@ -902,7 +906,7 @@ export function create_client(app, target) {
 	/**
 	 * @param {{
 	 *   url: URL;
-	 *   type: import('@sveltejs/kit').NavigationType;
+	 *   type: import('@sveltejs/kit').Navigation["type"];
 	 *   intent?: import('./types').NavigationIntent;
 	 *   delta?: number;
 	 * }} opts
@@ -910,30 +914,17 @@ export function create_client(app, target) {
 	function before_navigate({ url, type, intent, delta }) {
 		let should_block = false;
 
-		/** @type {import('@sveltejs/kit').Navigation} */
-		const navigation = {
-			from: {
-				params: current.params,
-				route: { id: current.route?.id ?? null },
-				url: current.url
-			},
-			to: {
-				params: intent?.params ?? null,
-				route: { id: intent?.route?.id ?? null },
-				url
-			},
-			willUnload: !intent,
-			type
-		};
+		const nav = create_navigation(current, intent, url, type);
 
 		if (delta !== undefined) {
-			navigation.delta = delta;
+			nav.navigation.delta = delta;
 		}
 
 		const cancellable = {
-			...navigation,
+			...nav.navigation,
 			cancel: () => {
 				should_block = true;
+				nav.reject(new Error('navigation was cancelled'));
 			}
 		};
 
@@ -942,7 +933,7 @@ export function create_client(app, target) {
 			callbacks.before_navigate.forEach((fn) => fn(cancellable));
 		}
 
-		return should_block ? null : navigation;
+		return should_block ? null : nav;
 	}
 
 	/**
@@ -955,7 +946,7 @@ export function create_client(app, target) {
 	 *     replaceState: boolean;
 	 *     state: any;
 	 *   } | null;
-	 *   type: import('@sveltejs/kit').NavigationType;
+	 *   type: import('@sveltejs/kit').Navigation["type"];
 	 *   delta?: number;
 	 *   nav_token?: {};
 	 *   accepted: () => void;
@@ -975,9 +966,9 @@ export function create_client(app, target) {
 		blocked
 	}) {
 		const intent = get_navigation_intent(url, false);
-		const navigation = before_navigate({ url, type, delta, intent });
+		const nav = before_navigate({ url, type, delta, intent });
 
-		if (!navigation) {
+		if (!nav) {
 			blocked();
 			return;
 		}
@@ -990,7 +981,7 @@ export function create_client(app, target) {
 		navigating = true;
 
 		if (started) {
-			stores.navigating.set(navigation);
+			stores.navigating.set(nav.navigation);
 		}
 
 		token = nav_token;
@@ -1017,7 +1008,10 @@ export function create_client(app, target) {
 		url = intent?.url || url;
 
 		// abort if user navigated during update
-		if (token !== nav_token) return false;
+		if (token !== nav_token) {
+			nav.reject(new Error('navigation was aborted'));
+			return false;
+		}
 
 		if (navigation_result.type === 'redirect') {
 			if (redirect_chain.length > 10 || redirect_chain.includes(url.pathname)) {
@@ -1093,6 +1087,28 @@ export function create_client(app, target) {
 				navigation_result.props.page.url = url;
 			}
 
+			const after_navigate = (
+				await Promise.all(
+					callbacks.on_navigate.map((fn) =>
+						fn(/** @type {import('@sveltejs/kit').OnNavigate} */ (nav.navigation))
+					)
+				)
+			).filter((value) => typeof value === 'function');
+
+			if (after_navigate.length > 0) {
+				function cleanup() {
+					callbacks.after_navigate = callbacks.after_navigate.filter(
+						// @ts-ignore
+						(fn) => !after_navigate.includes(fn)
+					);
+				}
+
+				after_navigate.push(cleanup);
+
+				// @ts-ignore
+				callbacks.after_navigate.push(...after_navigate);
+			}
+
 			root.$set(navigation_result.props);
 		} else {
 			initialize(navigation_result);
@@ -1142,8 +1158,10 @@ export function create_client(app, target) {
 			restore_snapshot(current_history_index);
 		}
 
+		nav.fulfil(undefined);
+
 		callbacks.after_navigate.forEach((fn) =>
-			fn(/** @type {import('@sveltejs/kit').AfterNavigate} */ (navigation))
+			fn(/** @type {import('@sveltejs/kit').AfterNavigate} */ (nav.navigation))
 		);
 		stores.navigating.set(null);
 
@@ -1339,6 +1357,17 @@ export function create_client(app, target) {
 			});
 		},
 
+		on_navigate: (fn) => {
+			onMount(() => {
+				callbacks.on_navigate.push(fn);
+
+				return () => {
+					const i = callbacks.on_navigate.indexOf(fn);
+					callbacks.on_navigate.splice(i, 1);
+				};
+			});
+		},
+
 		disable_scroll_handling: () => {
 			if (DEV && started && !updating) {
 				throw new Error('Can only disable scroll handling during navigation');
@@ -1444,19 +1473,17 @@ export function create_client(app, target) {
 				persist_state();
 
 				if (!navigating) {
+					const nav = create_navigation(current, undefined, null, 'leave');
+
 					// If we're navigating, beforeNavigate was already called. If we end up in here during navigation,
 					// it's due to an external or full-page-reload link, for which we don't want to call the hook again.
 					/** @type {import('@sveltejs/kit').BeforeNavigate} */
 					const navigation = {
-						from: {
-							params: current.params,
-							route: { id: current.route?.id ?? null },
-							url: current.url
-						},
-						to: null,
-						willUnload: true,
-						type: 'leave',
-						cancel: () => (should_block = true)
+						...nav.navigation,
+						cancel: () => {
+							should_block = true;
+							nav.reject(new Error('navigation was cancelled'));
+						}
 					};
 
 					callbacks.before_navigate.forEach((fn) => fn(navigation));
@@ -1819,6 +1846,9 @@ export function create_client(app, target) {
 async function load_data(url, invalid) {
 	const data_url = new URL(url);
 	data_url.pathname = add_data_suffix(url.pathname);
+	if (url.pathname.endsWith('/')) {
+		data_url.searchParams.append(TRAILING_SLASH_PARAM, '1');
+	}
 	if (DEV && url.searchParams.has(INVALIDATED_PARAM)) {
 		throw new Error(`Cannot used reserved query parameter "${INVALIDATED_PARAM}"`);
 	}
@@ -1985,6 +2015,53 @@ function reset_focus() {
 			});
 		}
 	}
+}
+
+/**
+ * @param {import('./types').NavigationState} current
+ * @param {import('./types').NavigationIntent | undefined} intent
+ * @param {URL | null} url
+ * @param {Exclude<import('@sveltejs/kit').NavigationType, 'enter'>} type
+ */
+function create_navigation(current, intent, url, type) {
+	/** @type {(value: any) => void} */
+	let fulfil;
+
+	/** @type {(error: any) => void} */
+	let reject;
+
+	const complete = new Promise((f, r) => {
+		fulfil = f;
+		reject = r;
+	});
+
+	// Handle any errors off-chain so that it doesn't show up as an unhandled rejection
+	complete.catch(() => {});
+
+	/** @type {import('@sveltejs/kit').Navigation} */
+	const navigation = {
+		from: {
+			params: current.params,
+			route: { id: current.route?.id ?? null },
+			url: current.url
+		},
+		to: url && {
+			params: intent?.params ?? null,
+			route: { id: intent?.route?.id ?? null },
+			url
+		},
+		willUnload: !intent,
+		type,
+		complete
+	};
+
+	return {
+		navigation,
+		// @ts-expect-error
+		fulfil,
+		// @ts-expect-error
+		reject
+	};
 }
 
 if (DEV) {

@@ -1,4 +1,6 @@
 import { sveltekit } from '@sveltejs/kit/vite';
+import browserslist from 'browserslist';
+import { browserslistToTargets } from 'lightningcss';
 import * as path from 'path';
 import { imagetools } from 'vite-imagetools';
 
@@ -7,11 +9,11 @@ const fallback = {
 	'.heif': 'jpg',
 	'.avif': 'png',
 	'.jpeg': 'jpg',
-	'.jpg':  'jpg',
-	'.png':  'png',
+	'.jpg': 'jpg',
+	'.png': 'png',
 	'.tiff': 'jpg',
 	'.webp': 'png',
-	'.gif':  'gif'
+	'.gif': 'gif'
 };
 
 /** @type {import('vite').UserConfig} */
@@ -19,6 +21,16 @@ const config = {
 	assetsInclude: ['**/*.vtt'],
 
 	logLevel: 'info',
+
+	css: {
+		transformer: 'lightningcss',
+		lightningcss: {
+			targets: browserslistToTargets(browserslist(['>0.2%', 'not dead']))
+		}
+	},
+	build: {
+		cssMinify: 'lightningcss'
+	},
 
 	plugins: [
 		imagetools({
