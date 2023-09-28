@@ -555,7 +555,7 @@ function kit({ svelte_config }) {
 						cssCodeSplit: true,
 						cssMinify: initial_config.build?.minify == null ? true : !!initial_config.build.minify,
 						// don't use the default name to avoid collisions with 'static/manifest.json'
-						manifest: 'vite-manifest.json',
+						manifest: '.vite/manifest.json', // TODO: remove this after bumping peer dep to vite 5
 						outDir: `${out}/${ssr ? 'server' : 'client'}`,
 						rollupOptions: {
 							input,
@@ -804,10 +804,6 @@ function kit({ svelte_config }) {
 							.bold()
 							.cyan('npm run preview')} to preview your production build locally.`
 					);
-
-					// avoid making the manifest available to users
-					fs.unlinkSync(`${out}/client/${vite_config.build.manifest}`);
-					fs.unlinkSync(`${out}/server/${vite_config.build.manifest}`);
 
 					if (kit.adapter) {
 						const { adapt } = await import('../../core/adapt/index.js');

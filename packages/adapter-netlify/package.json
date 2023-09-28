@@ -47,7 +47,7 @@
 		"@types/set-cookie-parser": "^2.4.2",
 		"rollup": "^3.7.0",
 		"typescript": "^4.9.4",
-		"vitest": "^0.34.0"
+		"vitest": "^0.34.5"
 	},
 	"peerDependencies": {
 		"@sveltejs/kit": "^1.5.0"
