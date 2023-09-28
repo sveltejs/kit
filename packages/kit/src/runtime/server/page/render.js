@@ -60,6 +60,10 @@ export async function render_response({
 		if (options.app_template_contains_nonce) {
 			throw new Error('Cannot use prerendering if page template contains %sveltekit.nonce%');
 		}
+
+		if (Object.keys(public_env)) {
+			throw new Error('Cannot use prerendering with runtime environment variables');
+		}
 	}
 
 	const { client } = manifest._;
