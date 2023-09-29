@@ -5,7 +5,6 @@ import * as p from '@clack/prompts';
 import { bold, cyan, grey, yellow } from 'kleur/colors';
 import { create } from './index.js';
 import { dist, getPackageManager } from './utils.js';
-import { log } from 'node:console';
 
 const { version } = JSON.parse(fs.readFileSync(new URL('package.json', import.meta.url), 'utf-8'));
 let cwd = process.argv[2] || '.';
