@@ -13,12 +13,14 @@
 	"main": "./index.js",
 	"dependencies": {
 		"@clack/prompts": "^0.7.0",
-		"kleur": "^4.1.5"
+		"kleur": "^4.1.5",
+		"which-pm-runs": "^1.1.0"
 	},
 	"devDependencies": {
 		"@playwright/test": "1.30.0",
 		"@types/gitignore-parser": "^0.0.1",
 		"@types/prettier": "^2.7.1",
+		"@types/which-pm-runs": "^1.0.0",
 		"gitignore-parser": "^0.0.2",
 		"prettier": "^2.8.0",
 		"prettier-plugin-svelte": "^2.10.1",

@@ -4,10 +4,13 @@ import path from 'node:path';
 import * as p from '@clack/prompts';
 import { bold, cyan, grey, yellow } from 'kleur/colors';
 import { create } from './index.js';
-import { dist } from './utils.js';
+import { dist, getPackageManager } from './utils.js';
+import { log } from 'node:console';
 
 const { version } = JSON.parse(fs.readFileSync(new URL('package.json', import.meta.url), 'utf-8'));
 let cwd = process.argv[2] || '.';
+
+const pkgManager = getPackageManager();
 
 console.log(`
 ${grey(`create-svelte version ${version}`)}
@@ -161,10 +164,10 @@ if (relative !== '') {
 	console.log(`  ${i++}: ${bold(cyan(`cd ${relative}`))}`);
 }
 
-console.log(`  ${i++}: ${bold(cyan('npm install'))} (or pnpm install, etc)`);
+console.log(`  ${i++}: ${bold(cyan(`${pkgManager} install`))}`);
 // prettier-ignore
 console.log(`  ${i++}: ${bold(cyan('git init && git add -A && git commit -m "Initial commit"'))} (optional)`);
-console.log(`  ${i++}: ${bold(cyan('npm run dev -- --open'))}`);
+console.log(`  ${i++}: ${bold(cyan(`${pkgManager} run dev -- --open`))}`);
 
 console.log(`\nTo close the dev server, hit ${bold(cyan('Ctrl-C'))}`);
 console.log(`\nStuck? Visit us at ${cyan('https://svelte.dev/chat')}`);

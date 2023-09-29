@@ -299,6 +299,9 @@ importers:
       kleur:
         specifier: ^4.1.5
         version: 4.1.5
+      which-pm-runs:
+        specifier: ^1.1.0
+        version: 1.1.0
     devDependencies:
       '@playwright/test':
         specifier: 1.30.0
@@ -309,6 +312,9 @@ importers:
       '@types/prettier':
         specifier: ^2.7.1
         version: 2.7.1
+      '@types/which-pm-runs':
+        specifier: ^1.0.0
+        version: 1.0.0
       gitignore-parser:
         specifier: ^0.0.2
         version: 0.0.2
@@ -2194,6 +2200,10 @@ packages:
     resolution: {integrity: sha512-fBZgytwhYAUkj/jC/FAV4RQ5EerRup1YQsXQCh8rZfiHkc4UahC192oH0smGwsXol3cL3A5oETuAHeQHmhXM4w==}
     dependencies:
       '@types/node': 16.18.6
+    dev: true
+
+  /@types/which-pm-runs@1.0.0:
+    resolution: {integrity: sha512-BXfdlYLWvRhngJbih4N57DjO+63Z7AxiFiip8yq3rD46U7V4I2W538gngPvBsZiMehhD8sfGf4xLI6k7TgXvNw==}
     dev: true
 
   /@types/ws@8.5.3:
@@ -6493,6 +6503,11 @@ packages:
   /which-module@2.0.1:
     resolution: {integrity: sha512-iBdZ57RDvnOR9AGBhML2vFZf7h8vmBjhoaZqODJBFWHVtKkDmKuHai3cx5PgVMrX5YDNp27AofYbAwctSS+vhQ==}
     dev: true
+
+  /which-pm-runs@1.1.0:
+    resolution: {integrity: sha512-n1brCuqClxfFfq/Rb0ICg9giSZqCS+pLtccdag6C2HyufBrh3fBOiy9nb6ggRMvWOVH5GrdJskj5iGTZNxd7SA==}
+    engines: {node: '>=4'}
+    dev: false
 
   /which-pm@2.0.0:
     resolution: {integrity: sha512-Lhs9Pmyph0p5n5Z3mVnN0yWcbQYUAD7rbQUiMsQxOJ3T57k7RFe35SUwWMf7dsbDZks1uOmw4AecB/JMDj3v/w==}

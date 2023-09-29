@@ -1,6 +1,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
+import detectPackageManager from 'which-pm-runs';
 
 /** @param {string} dir */
 export function mkdirp(dir) {
@@ -48,4 +49,8 @@ export function copy(from, to, rename = identity) {
 /** @param {string} path */
 export function dist(path) {
 	return fileURLToPath(new URL(`./dist/${path}`, import.meta.url).href);
+}
+
+export function getPackageManager() {
+	return detectPackageManager()?.name || 'npm';
 }
