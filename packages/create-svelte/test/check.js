@@ -16,9 +16,10 @@ const resolve_path = (path) => fileURLToPath(new URL(path, import.meta.url));
 // use a directory outside of packages to ensure it isn't added to the pnpm workspace
 const test_workspace_dir = resolve_path('../../../.test-tmp/create-svelte/');
 
-const existing_workspace_overrides = JSON.parse(
+const workspace_pkg = JSON.parse(
 	fs.readFileSync(resolve_path('../../../package.json'), 'utf-8')
-).pnpm?.overrides;
+);
+const existing_workspace_overrides = workspace_pkg.pnpm?.overrides;
 
 const overrides = { ...existing_workspace_overrides };
 
@@ -28,6 +29,14 @@ for (const pkg_path of glob(resolve_path('../../../packages/*/package.json'))) {
 	// but only on CI because it doesn't work locally for some reason
 	const protocol = process.env.CI ? 'file:' : '';
 	overrides[name] = `${protocol}${path.dirname(path.resolve(pkg_path))}`;
+}
+
+for(const [name,version] of Object.entries(overrides)) {
+	if(version.startsWith('$')) {
+		overrides[name] = workspace_pkg.devDependencies[name]
+	} else if(version.startsWith('workspace:')) {
+		throw new Error(`create-svelte test overrides contain an unresolved workspace: selector for ${name}`);
+	}
 }
 
 try {
