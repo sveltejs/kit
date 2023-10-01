@@ -25,20 +25,45 @@
 		"@rollup/plugin-json": "^6.0.0",
 		"@rollup/plugin-node-resolve": "^15.0.1",
 		"@sveltejs/eslint-config": "^6.0.4",
+		"@sveltejs/vite-plugin-svelte": "^3.0.0-next.0",
 		"@svitejs/changesets-changelog-github-compact": "^1.1.0",
+		"@types/node": "^18.18.1",
 		"@typescript-eslint/eslint-plugin": "^6.0.0",
+		"esbuild": "^0.19.4",
 		"eslint": "^8.45.0",
 		"eslint-config-prettier": "^9.0.0",
 		"eslint-plugin-svelte": "^2.31.0",
 		"eslint-plugin-unicorn": "^48.0.0",
 		"playwright": "1.30.0",
 		"prettier": "^2.8.0",
-		"rollup": "^3.7.0",
-		"svelte": "^4.0.5",
-		"typescript": "^4.9.4"
+		"rollup": "^3.29.4",
+		"svelte": "^4.2.1",
+		"vite": "^5.0.0-beta.3",
+		"typescript": "^5.2.2"
 	},
 	"packageManager": "pnpm@8.8.0",
 	"engines": {
 		"pnpm": "^8.0.0"
+	},
+	"pnpm": {
+		"overrides": {
+			"@sveltejs/adapter-auto": "workspace:^",
+			"@sveltejs/adapter-cloudflare": "workspace:^",
+			"@sveltejs/adapter-cloudflare-workers": "workspace:^",
+			"@sveltejs/adapter-netlify": "workspace:^",
+			"@sveltejs/adapter-node": "workspace:^",
+			"@sveltejs/adapter-static": "workspace:^",
+			"@sveltejs/adapter-vercel": "workspace:^",
+			"@sveltejs/amp": "workspace:^",
+			"@sveltejs/kit": "workspace:^",
+			"@sveltejs/vite-plugin-svelte": "$@sveltejs/vite-plugin-svelte",
+			"@types/node": "$@types/node",
+			"create-svelte": "workspace:^",
+			"esbuild": "$esbuild",
+			"svelte": "$svelte",
+			"vite": "$vite",
+			"typescript": "$typescript",
+			"rollup": "$rollup"
+		}
 	}
 }

@@ -3,7 +3,6 @@ import buffer from 'node:buffer';
 import { webcrypto as crypto } from 'node:crypto';
 import { fetch, Response, Request, Headers, FormData, File as UndiciFile } from 'undici';
 
-// @ts-expect-error
 const File = buffer.File ?? UndiciFile;
 
 /** @type {Record<string, any>} */
