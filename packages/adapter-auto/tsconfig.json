@@ -7,7 +7,7 @@
 		"module": "esnext",
 		"target": "esnext",
 		"skipLibCheck": true,
-		"moduleResolution": "node16",
+		"moduleResolution": "node",
 		"baseUrl": "."
 	},
 	"include": ["**/*.js"]

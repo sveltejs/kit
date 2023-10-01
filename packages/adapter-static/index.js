@@ -52,6 +52,7 @@ See https://kit.svelte.dev/docs/page-options#prerender for more details`
 			}
 
 			const {
+          // @ts-expect-error indirect reference by own initializer causing any
 				pages = 'build',
 				assets = pages,
 				fallback,
