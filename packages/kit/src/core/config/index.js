@@ -56,14 +56,27 @@ export function load_error_page(config) {
 }
 
 /**
+ * Searches for svelte config file and returns its path
+ * @param {{ cwd?: string }} options
+ * @returns {string | undefined}
+ */
+export function find_config_file({ cwd = process.cwd() } = {}) {
+	const js_config_file = path.join(cwd, 'svelte.config.js');
+	const cjs_config_file = path.join(cwd, 'svelte.config.cjs');
+	const mjs_config_file = path.join(cwd, 'svelte.config.mjs');
+
+	return [js_config_file, cjs_config_file, mjs_config_file].find((file) => fs.existsSync(file));
+}
+
+/**
  * Loads and validates svelte.config.js
  * @param {{ cwd?: string }} options
  * @returns {Promise<import('types').ValidatedConfig>}
  */
 export async function load_config({ cwd = process.cwd() } = {}) {
-	const config_file = path.join(cwd, 'svelte.config.js');
+	const config_file = find_config_file({ cwd });
 
-	if (!fs.existsSync(config_file)) {
+	if (!config_file) {
 		return process_config({}, { cwd });
 	}
 
