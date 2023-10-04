@@ -59,12 +59,12 @@ export function get_package_manager() {
 }
 
 /** @param {string} userAgent */
-function pmFromUserAgent(userAgent) {
-	const pmSpec = userAgent.split(' ')[0];
-	const separatorPos = pmSpec.lastIndexOf('/');
-	const name = pmSpec.substring(0, separatorPos);
+function pm_from_user_agent(user_agent) {
+	const pm_spec = user_agent.split(' ')[0];
+	const separator_pos = pm_spec.lastIndexOf('/');
+	const name = pm_spec.substring(0, separator_pos);
 	return {
 		name: name === 'npminstall' ? 'cnpm' : name,
-		version: pmSpec.substring(separatorPos + 1)
+		version: pm_spec.substring(separator_pos + 1)
 	};
 }
