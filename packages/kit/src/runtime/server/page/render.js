@@ -62,7 +62,9 @@ export async function render_response({
 		}
 
 		if (Object.keys(public_env).length) {
-			throw new Error('Cannot use prerendering with runtime environment variables');
+			console.warn(
+				'Page is being prerendering with runtime environment variables. Please make sure if dynamic env is appropriate on this page.'
+			);
 		}
 	}
 
