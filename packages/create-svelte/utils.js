@@ -1,7 +1,6 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
-import detectPackageManager from 'which-pm-runs';
 
 /** @param {string} dir */
 export function mkdirp(dir) {
@@ -51,6 +50,21 @@ export function dist(path) {
 	return fileURLToPath(new URL(`./dist/${path}`, import.meta.url).href);
 }
 
+// Thanks to https://github.com/zkochan/packages/tree/main/which-pm-runs for this code!
 export function getPackageManager() {
-	return detectPackageManager()?.name || 'npm';
+	if (!process.env.npm_config_user_agent) {
+		return undefined;
+	}
+	return pmFromUserAgent(process.env.npm_config_user_agent);
+}
+
+/** @param {string} userAgent */
+function pmFromUserAgent(userAgent) {
+	const pmSpec = userAgent.split(' ')[0];
+	const separatorPos = pmSpec.lastIndexOf('/');
+	const name = pmSpec.substring(0, separatorPos);
+	return {
+		name: name === 'npminstall' ? 'cnpm' : name,
+		version: pmSpec.substring(separatorPos + 1)
+	};
 }
