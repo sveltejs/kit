@@ -63,8 +63,5 @@ function pm_from_user_agent(user_agent) {
 	const pm_spec = user_agent.split(' ')[0];
 	const separator_pos = pm_spec.lastIndexOf('/');
 	const name = pm_spec.substring(0, separator_pos);
-	return {
-		name: name === 'npminstall' ? 'cnpm' : name,
-		version: pm_spec.substring(separator_pos + 1)
-	};
+	return name === 'npminstall' ? 'cnpm' : name;
 }
