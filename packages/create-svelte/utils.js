@@ -49,7 +49,8 @@ export function copy(from, to, rename = identity) {
 export function dist(path) {
 	return fileURLToPath(new URL(`./dist/${path}`, import.meta.url).href);
 }
-export package_manger = get_package_manager() || 'npm';
+
+export const package_manger = get_package_manager() || 'npm';
 
 // Thanks to https://github.com/zkochan/packages/tree/main/which-pm-runs for this code!
 function get_package_manager() {
