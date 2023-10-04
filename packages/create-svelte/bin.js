@@ -163,7 +163,7 @@ if (relative !== '') {
 	console.log(`  ${i++}: ${bold(cyan(`cd ${relative}`))}`);
 }
 
-console.log(`  ${i++}: ${bold(cyan(`${pkgManager} install`))}`);
+console.log(`  ${i++}: ${bold(cyan(`${pkg_manager} install`))}`);
 // prettier-ignore
 console.log(`  ${i++}: ${bold(cyan('git init && git add -A && git commit -m "Initial commit"'))} (optional)`);
 console.log(`  ${i++}: ${bold(cyan(`${pkgManager} run dev -- --open`))}`);
