@@ -50,9 +50,14 @@ export function dist(path) {
 	return fileURLToPath(new URL(`./dist/${path}`, import.meta.url).href);
 }
 
+/** @type {string} */
 export const package_manager = get_package_manager() || 'npm';
 
-// Thanks to https://github.com/zkochan/packages/tree/main/which-pm-runs for this code!
+/**
+ * Supports npm, pnpm, Yarn, cnpm, bun and any other package manager that sets the
+ * npm_config_user_agent env variable.
+ * Thanks to https://github.com/zkochan/packages/tree/main/which-pm-runs for this code!
+ */
 function get_package_manager() {
 	if (!process.env.npm_config_user_agent) {
 		return undefined;
