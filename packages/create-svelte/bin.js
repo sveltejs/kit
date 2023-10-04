@@ -9,7 +9,7 @@ import { dist, get_package_manager } from './utils.js';
 const { version } = JSON.parse(fs.readFileSync(new URL('package.json', import.meta.url), 'utf-8'));
 let cwd = process.argv[2] || '.';
 
-const pkg_manager = get_package_manager() || 'npm';
+const pkg_manager = get_package_manager();
 
 console.log(`
 ${grey(`create-svelte version ${version}`)}
