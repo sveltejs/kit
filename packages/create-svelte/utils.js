@@ -51,7 +51,7 @@ export function dist(path) {
 }
 
 // Thanks to https://github.com/zkochan/packages/tree/main/which-pm-runs for this code!
-export function getPackageManager() {
+export function get_package_manager() {
 	if (!process.env.npm_config_user_agent) {
 		return undefined;
 	}
