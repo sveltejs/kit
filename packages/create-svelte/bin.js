@@ -166,7 +166,7 @@ if (relative !== '') {
 console.log(`  ${i++}: ${bold(cyan(`${pkg_manager} install`))}`);
 // prettier-ignore
 console.log(`  ${i++}: ${bold(cyan('git init && git add -A && git commit -m "Initial commit"'))} (optional)`);
-console.log(`  ${i++}: ${bold(cyan(`${pkgManager} run dev -- --open`))}`);
+console.log(`  ${i++}: ${bold(cyan(`${pkg_manager} run dev -- --open`))}`);
 
 console.log(`\nTo close the dev server, hit ${bold(cyan('Ctrl-C'))}`);
 console.log(`\nStuck? Visit us at ${cyan('https://svelte.dev/chat')}`);
