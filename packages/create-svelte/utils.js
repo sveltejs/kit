@@ -55,7 +55,7 @@ export const package_manger = get_package_manager();
 // Thanks to https://github.com/zkochan/packages/tree/main/which-pm-runs for this code!
 function get_package_manager() {
 	if (!process.env.npm_config_user_agent) {
-		return "npm";
+		return 'npm';
 	}
 	const user_agent = process.env.npm_config_user_agent;
 	const pm_spec = user_agent.split(' ')[0];
