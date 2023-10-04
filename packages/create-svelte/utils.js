@@ -58,7 +58,7 @@ export function get_package_manager() {
 	return pm_from_user_agent(process.env.npm_config_user_agent);
 }
 
-/** @param {string} userAgent */
+/** @param {string} user_agent */
 function pm_from_user_agent(user_agent) {
 	const pm_spec = user_agent.split(' ')[0];
 	const separator_pos = pm_spec.lastIndexOf('/');
