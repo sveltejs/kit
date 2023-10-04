@@ -55,7 +55,7 @@ export function get_package_manager() {
 	if (!process.env.npm_config_user_agent) {
 		return undefined;
 	}
-	return pmFromUserAgent(process.env.npm_config_user_agent);
+	return pm_from_user_agent(process.env.npm_config_user_agent);
 }
 
 /** @param {string} userAgent */
