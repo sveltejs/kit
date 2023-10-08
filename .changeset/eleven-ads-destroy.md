@@ -2,4 +2,4 @@
 '@sveltejs/kit': patch
 ---
 
-fix: correctly track URL hash when navigating history
+fix: correctly update `$page.url.hash` when navigating history
