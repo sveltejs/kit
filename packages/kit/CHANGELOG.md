@@ -1,5 +1,17 @@
 # @sveltejs/kit
 
+## 1.25.2
+
+### Patch Changes
+
+- fix: correctly update `$page.url.hash` when navigating history ([#10843](https://github.com/sveltejs/kit/pull/10843))
+
+- fix: strip virtual module prefix from error messages ([#10776](https://github.com/sveltejs/kit/pull/10776))
+
+- fix: cancel ongoing navigation when the browser back button is hit to prevent an incorrect page from being rendered ([#10727](https://github.com/sveltejs/kit/pull/10727))
+
+- fix: only remove Vite manifest when copying files ([#10782](https://github.com/sveltejs/kit/pull/10782))
+
 ## 1.25.1
 
 ### Patch Changes

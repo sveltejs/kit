@@ -1,5 +1,13 @@
 # create-svelte
 
+## 5.1.1
+
+### Patch Changes
+
+- fix: specified `initial-scale=1` on all viewport meta tags ([#10793](https://github.com/sveltejs/kit/pull/10793))
+
+- feat: make output reflect user's choice of package manager ([#10811](https://github.com/sveltejs/kit/pull/10811))
+
 ## 5.1.0
 
 ### Minor Changes
