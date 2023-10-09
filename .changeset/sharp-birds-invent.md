@@ -2,4 +2,4 @@
 '@sveltejs/kit': patch
 ---
 
-fix: Use `window.fetch` instead of unpatched fetch in `load` functions
+fix: use `window.fetch` in `load` functions to allow libraries to patch it
