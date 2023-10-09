@@ -55,7 +55,7 @@ const plugin = function (defaults = {}) {
 				functions: `${dir}/functions`
 			};
 
-			const static_config = static_vercel_config(builder);
+			const static_config = static_vercel_config(builder, defaults);
 
 			builder.log.minor('Generating serverless function...');
 
@@ -368,8 +368,11 @@ function write(file, data) {
 }
 
 // This function is duplicated in adapter-static
-/** @param {import('@sveltejs/kit').Builder} builder */
-function static_vercel_config(builder) {
+/**
+ * @param {import('@sveltejs/kit').Builder} builder
+ * @param {import('.').Config} config
+ */
+function static_vercel_config(builder, config) {
 	/** @type {any[]} */
 	const prerendered_redirects = [];
 
@@ -377,7 +380,7 @@ function static_vercel_config(builder) {
 	const overrides = {};
 
 	/** @type {import('./index').ImagesConfig} */
-	const images = undefined;
+	const images = config.images;
 
 	for (const [src, redirect] of builder.prerendered.redirects) {
 		prerendered_redirects.push({
