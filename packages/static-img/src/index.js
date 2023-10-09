@@ -8,7 +8,7 @@ export async function images() {
 	const imagetools_plugin = await imagetools();
 	if (!imagetools_plugin) {
 		console.error(
-			'@sveltejs/image: vite-imagetools is not installed. Skipping build-time optimizations'
+			'@sveltejs/static-img: vite-imagetools is not installed. Skipping build-time optimizations'
 		);
 	}
 	return imagetools_plugin ? [image_plugin(), imagetools_plugin] : [];

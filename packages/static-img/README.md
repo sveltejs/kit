@@ -1,4 +1,4 @@
-# `@sveltejs/image`
+# `@sveltejs/static-img`
 
 **WARNING**: This package is experimental. It uses pre-1.0 versioning and may introduce breaking changes with every minor version release.
 
@@ -9,14 +9,14 @@ This package aims to bring a plug and play image component to SvelteKit that is 
 Install:
 
 ```bash
-npm install --save @sveltejs/image
+npm install --save @sveltejs/static-img
 ```
 
 Adjust `vite.config.js`:
 
 ```diff
-+import { images } from '@sveltejs/image/vite';
 import { sveltekit } from '@sveltejs/kit/vite';
++import { images } from '@sveltejs/static-img';
 import { defineConfig } from 'vite';
 
 export default defineConfig({
@@ -83,4 +83,4 @@ This is an experimental MVP for getting initial feedback on the implementation/u
 
 ## Acknowledgements
 
-We'd like to thank the authors of the Next/Nuxt/Astro/`unpic` image components and `svelte-preprocess-import-assets` for inspiring this work. We'd also like to thank the authors of `vite-imagetools` which is used in `@sveltejs/image`.
+We'd like to thank the authors of the Next/Nuxt/Astro/`unpic` image components and `svelte-preprocess-import-assets` for inspiring this work. We'd also like to thank the authors of `vite-imagetools` which is used in `@sveltejs/static-img`.

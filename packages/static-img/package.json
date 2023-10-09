@@ -1,5 +1,5 @@
 {
-	"name": "@sveltejs/image",
+	"name": "@sveltejs/static-img",
 	"version": "0.1.0",
 	"description": "Image optimization for your Svelte apps",
 	"repository": {
@@ -21,30 +21,14 @@
 		"types"
 	],
 	"exports": {
-		"./package.json": "./package.json",
-		".": {
-			"types": "./types/index.d.ts",
-			"import": "./src/index.js"
-		},
-		"./vite": {
-			"import": "./src/vite-plugin.js"
-		}
+		"types": "./types/index.d.ts",
+		"import": "./src/index.js"
 	},
 	"types": "types/index.d.ts",
-	"typesVersions": {
-		"*": {
-			"index": [
-				"types/index.d.ts"
-			],
-			"vite": [
-				"types/vite.d.ts"
-			]
-		}
-	},
 	"dependencies": {
-		"esm-env": "^1.0.0",
 		"magic-string": "^0.30.0",
-		"svelte-parse-markup": "^0.1.1"
+		"svelte-parse-markup": "^0.1.1",
+		"vite-imagetools": "^5.0.8"
 	},
 	"devDependencies": {
 		"@types/estree": "^1.0.2",
@@ -54,14 +38,5 @@
 		"vite": "^4.4.2",
 		"vite-imagetools": "^5.0.8",
 		"vitest": "^0.34.0"
-	},
-	"peerDependencies": {
-		"svelte": "^4.0.0",
-		"vite-imagetools": "^5.0.8"
-	},
-	"peerDependenciesMeta": {
-		"vite-imagetools": {
-			"optional": true
-		}
 	}
 }

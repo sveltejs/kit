@@ -13,9 +13,9 @@
 	"devDependencies": {
 		"@sveltejs/adapter-vercel": "workspace:^",
 		"@sveltejs/amp": "workspace:^",
-		"@sveltejs/image": "workspace:^",
 		"@sveltejs/kit": "workspace:^",
 		"@sveltejs/site-kit": "6.0.0-next.50",
+		"@sveltejs/static-img": "workspace:^",
 		"@types/d3-geo": "^3.0.4",
 		"@types/node": "^16.18.6",
 		"browserslist": "^4.21.10",
@@ -30,7 +30,6 @@
 		"tiny-glob": "^0.2.9",
 		"typescript": "5.0.4",
 		"vite": "^4.4.9",
-		"vite-imagetools": "^5.0.8",
 		"vitest": "^0.34.5"
 	},
 	"type": "module",

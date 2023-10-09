@@ -1,5 +1,5 @@
-import { images } from '@sveltejs/image/vite';
 import { sveltekit } from '@sveltejs/kit/vite';
+import { images } from '@sveltejs/static-img';
 import browserslist from 'browserslist';
 import { browserslistToTargets } from 'lightningcss';
 
