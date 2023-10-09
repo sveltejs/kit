@@ -1,89 +1,81 @@
 <script>
 	import '@sveltejs/site-kit/styles/index.css';
+
 	import { browser } from '$app/environment';
-	import { page, navigating } from '$app/stores';
-	import Icon from '@sveltejs/site-kit/components/Icon.svelte';
-	import Icons from '@sveltejs/site-kit/components/Icons.svelte';
-	import Nav from '@sveltejs/site-kit/components/Nav.svelte';
-	import NavItem from '@sveltejs/site-kit/components/NavItem.svelte';
-	import PreloadingIndicator from '@sveltejs/site-kit/components/PreloadingIndicator.svelte';
-	import SkipLink from '@sveltejs/site-kit/components/SkipLink.svelte';
-	import Search from '$lib/search/Search.svelte';
-	import SearchBox from '$lib/search/SearchBox.svelte';
-	import Logo from './home/svelte-logo.svg';
+	import { page } from '$app/stores';
+	import { Icon, Shell } from '@sveltejs/site-kit/components';
+	import { Nav, Separator } from '@sveltejs/site-kit/nav';
+	import { Search, SearchBox } from '@sveltejs/site-kit/search';
+
+	export let data;
+
+	/** @type {import('@sveltejs/kit').Snapshot<number>} */
+	let shell_snapshot;
+
+	/** @type {import('@sveltejs/kit').Snapshot<{shell: number}>} */
+	export const snapshot = {
+		capture() {
+			return {
+				shell: shell_snapshot?.capture()
+			};
+		},
+		restore(data) {
+			shell_snapshot?.restore(data.shell);
+		}
+	};
 </script>
 
-<Icons />
+<div style:display={$page.url.pathname !== '/docs' ? 'contents' : 'none'}>
+	<Shell nav_visible={$page.url.pathname !== '/repl/embed'} bind:snapshot={shell_snapshot}>
+		<Nav slot="top-nav" title={data.nav_title} links={data.nav_links}>
+			<svelte:fragment slot="home-large">
+				<strong>kit</strong>.svelte.dev
+			</svelte:fragment>
 
-{#if $navigating}
-	<PreloadingIndicator />
-{/if}
+			<svelte:fragment slot="home-small">
+				<strong>kit</strong>
+			</svelte:fragment>
 
-<SkipLink href="#main" />
+			<svelte:fragment slot="search">
+				{#if $page.url.pathname !== '/search'}
+					<Search />
+				{/if}
+			</svelte:fragment>
 
-<Nav {page} logo={Logo}>
-	<svelte:fragment slot="nav-center">
-		{#if $page.url.pathname !== '/search'}
-			<!-- the <Nav> component renders this content inside a <ul>, so
-				we need to wrap it in an <li>. TODO if we adopt this design
-				on other sites, change <Nav> so we don't need to do this -->
-			<li><Search /></li>
-		{/if}
-	</svelte:fragment>
+			<svelte:fragment slot="external-links">
+				<a href="https://learn.svelte.dev/tutorial/introducing-sveltekit" rel="external">Tutorial</a
+				>
+				<a href="https://svelte.dev">Svelte</a>
 
-	<svelte:fragment slot="nav-right">
-		<NavItem selected={$page.url.pathname.startsWith('/docs') || undefined} href="/docs"
-			>Docs</NavItem
-		>
-		<NavItem selected={$page.url.pathname.startsWith('/faq') || undefined} href="/faq">FAQ</NavItem>
+				<Separator />
 
-		<li aria-hidden="true"><span class="separator" /></li>
+				<a href="https://svelte.dev/chat" rel="external" title="Discord Chat">
+					<span class="small">Discord</span>
+					<span class="large"><Icon name="discord" /></span>
+				</a>
 
-		<NavItem external="https://svelte.dev">Svelte</NavItem>
+				<a href="https://github.com/sveltejs/kit" title="GitHub Repo">
+					<span class="small">GitHub</span>
+					<span class="large"><Icon name="github" /></span>
+				</a>
+			</svelte:fragment>
+		</Nav>
 
-		<NavItem external="https://svelte.dev/chat" title="Discord Chat">
-			<span class="small">Discord</span>
-			<span class="large"><Icon name="message-square" /></span>
-		</NavItem>
-
-		<NavItem external="https://github.com/sveltejs/kit" title="GitHub Repo">
-			<span class="small">GitHub</span>
-			<span class="large"><Icon name="github" /></span>
-		</NavItem>
-	</svelte:fragment>
-</Nav>
-
-<main id="main">
-	<slot />
-</main>
+		<slot />
+	</Shell>
+</div>
 
 {#if browser}
 	<SearchBox />
 {/if}
 
 <style>
-	main {
-		position: relative;
-		margin: 0 auto;
-		padding-top: var(--sk-nav-height);
-		overflow: hidden;
-	}
-
 	.small {
 		display: inline;
 	}
 
 	.large {
 		display: none;
-	}
-
-	/* duplicating content from <Nav> — bit hacky but will do for now */
-	.separator {
-		display: block;
-		position: relative;
-		height: 1px;
-		margin: 0.5rem 0;
-		background: radial-gradient(circle at center, rgba(0, 0, 0, 0.1), rgba(0, 0, 0, 0.05));
 	}
 
 	@media (min-width: 800px) {
@@ -94,40 +86,6 @@
 		.large {
 			display: inline;
 		}
-
-		.separator {
-			display: flex;
-			align-items: center;
-			justify-content: center;
-			background: none;
-			height: 100%;
-			margin: 0;
-			border: none;
-			text-align: center;
-		}
-
-		.separator::before {
-			content: '•';
-			margin: 0 0.3rem;
-			color: #ccc;
-		}
-	}
-
-	@media (min-width: 960px) {
-		/* this is an unfortunate hack, but necessary to temporarily avoid
-		breaking changes to site-kit */
-		:global(ul.external) {
-			width: 30rem !important;
-		}
-	}
-
-	:global(body) {
-		font-size: 1.6rem !important;
-	}
-
-	li {
-		display: flex;
-		align-items: center;
 	}
 
 	:global(.examples-container, .repl-outer, .tutorial-outer) {
@@ -136,11 +94,5 @@
 
 	:global(.toggle) {
 		bottom: 0 !important;
-	}
-
-	@media (max-width: 830px) {
-		:global(aside) {
-			z-index: 9999 !important;
-		}
 	}
 </style>

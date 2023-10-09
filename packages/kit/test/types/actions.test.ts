@@ -11,3 +11,15 @@ form.message = '';
 form.success = true;
 // @ts-expect-error - cannot both be present at the same time
 form = { message: '', success: true };
+
+// Test: Actions with different return types are transformed into a union that has all types accessible
+type Actions2 = {
+	foo: () => Promise<{ message: string }>;
+	bar: () => Promise<{ success: boolean }>;
+};
+
+let form2: Kit.AwaitedActions<Actions2> = null as any;
+form2.message = '';
+form2.success = true;
+// @ts-expect-error - cannot both be present at the same time
+form2 = { message: '', success: true };

@@ -1,7 +1,6 @@
-import { join } from 'path';
-import { fileURLToPath } from 'url';
-import { test } from 'uvu';
-import * as assert from 'uvu/assert';
+import { join } from 'node:path';
+import { fileURLToPath } from 'node:url';
+import { assert, expect, test } from 'vitest';
 import { validate_config, load_config } from './index.js';
 
 const __filename = fileURLToPath(import.meta.url);
@@ -70,10 +69,14 @@ const get_defaults = (prefix = '') => ({
 		csrf: {
 			checkOrigin: true
 		},
+		dangerZone: {
+			trackServerFetches: false
+		},
 		embedded: false,
 		env: {
 			dir: process.cwd(),
-			publicPrefix: 'PUBLIC_'
+			publicPrefix: 'PUBLIC_',
+			privatePrefix: ''
 		},
 		files: {
 			assets: join(prefix, 'static'),
@@ -90,20 +93,21 @@ const get_defaults = (prefix = '') => ({
 		},
 		inlineStyleThreshold: 0,
 		moduleExtensions: ['.js', '.ts'],
+		output: { preloadStrategy: 'modulepreload' },
 		outDir: join(prefix, '.svelte-kit'),
 		serviceWorker: {
 			register: true
 		},
+		typescript: {},
 		paths: {
 			base: '',
-			assets: ''
+			assets: '',
+			relative: undefined
 		},
 		prerender: {
 			concurrency: 1,
 			crawl: true,
 			entries: ['*'],
-			handleHttpError: 'fail',
-			handleMissingId: 'fail',
 			origin: 'http://sveltekit-prerender'
 		},
 		version: {
@@ -123,7 +127,7 @@ test('fills in defaults', () => {
 	const defaults = get_defaults();
 	defaults.kit.version.name = validated.kit.version.name;
 
-	assert.equal(validated, defaults);
+	expect(validated).toEqual(defaults);
 });
 
 test('errors on invalid values', () => {
@@ -151,7 +155,7 @@ test('errors on invalid nested values', () => {
 });
 
 test('does not error on invalid top-level values', () => {
-	assert.not.throws(() => {
+	assert.doesNotThrow(() => {
 		validate_config({
 			onwarn: () => {}
 		});
@@ -186,7 +190,7 @@ test('fills in partial blanks', () => {
 	config.kit.files.assets = 'public';
 	config.kit.version.name = '0';
 
-	assert.equal(validated, config);
+	expect(validated).toEqual(config);
 });
 
 test('fails if kit.appDir is blank', () => {
@@ -234,6 +238,7 @@ test('fails if paths.base is not root-relative', () => {
 		validate_config({
 			kit: {
 				paths: {
+					// @ts-expect-error
 					base: 'https://example.com/somewhere/else'
 				}
 			}
@@ -258,6 +263,7 @@ test('fails if paths.assets is relative', () => {
 		validate_config({
 			kit: {
 				paths: {
+					// @ts-expect-error
 					assets: 'foo'
 				}
 			}
@@ -292,19 +298,18 @@ test('fails if prerender.entries are invalid', () => {
 
 /**
  * @param {string} name
- * @param {{ base?: string, assets?: string }} input
- * @param {{ base?: string, assets?: string }} output
+ * @param {import('@sveltejs/kit').KitConfig['paths']} input
+ * @param {import('@sveltejs/kit').KitConfig['paths']} output
  */
 function validate_paths(name, input, output) {
 	test(name, () => {
-		assert.equal(
+		expect(
 			validate_config({
 				kit: {
 					paths: input
 				}
-			}).kit.paths,
-			output
-		);
+			}).kit.paths
+		).toEqual(output);
 	});
 }
 
@@ -315,7 +320,8 @@ validate_paths(
 	},
 	{
 		base: '/path/to/base',
-		assets: ''
+		assets: '',
+		relative: undefined
 	}
 );
 
@@ -326,7 +332,8 @@ validate_paths(
 	},
 	{
 		base: '',
-		assets: 'https://cdn.example.com'
+		assets: 'https://cdn.example.com',
+		relative: undefined
 	}
 );
 
@@ -338,7 +345,8 @@ validate_paths(
 	},
 	{
 		base: '/path/to/base',
-		assets: 'https://cdn.example.com'
+		assets: 'https://cdn.example.com',
+		relative: undefined
 	}
 );
 
@@ -351,7 +359,7 @@ test('load default config (esm)', async () => {
 	const defaults = get_defaults(cwd + '/');
 	defaults.kit.version.name = config.kit.version.name;
 
-	assert.equal(config, defaults);
+	expect(config).toEqual(defaults);
 });
 
 test('errors on loading config with incorrect default export', async () => {
@@ -369,5 +377,3 @@ test('errors on loading config with incorrect default export', async () => {
 		'svelte.config.js must have a configuration object as its default export. See https://kit.svelte.dev/docs/configuration'
 	);
 });
-
-test.run();

@@ -1,5 +1,5 @@
-import fs from 'fs';
-import path from 'path';
+import fs from 'node:fs';
+import path from 'node:path';
 import parser from 'gitignore-parser';
 import prettier from 'prettier';
 import { transform } from 'sucrase';
@@ -31,7 +31,7 @@ function convert_typescript(content) {
 /** @param {string} content */
 function strip_jsdoc(content) {
 	return content
-		.replace(/\/\*\*\*\//g, '')
+		.replace(/ \/\*\*\*\//g, '')
 		.replace(
 			/\/\*\*([\s\S]+?)(@[\s\S]+?)?\*\/([\s\n]+)/g,
 			(match, description, tags, whitespace) => {
@@ -39,7 +39,7 @@ function strip_jsdoc(content) {
 					return '';
 				}
 
-				return `/**${description.replace(/\*\ $/, '')}*/${whitespace}`;
+				return `/**${description.replace(/\* $/, '')}*/${whitespace}`;
 			}
 		);
 }

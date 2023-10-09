@@ -1,0 +1,174 @@
+import { join } from 'node:path';
+import { pathToFileURL } from 'node:url';
+import { get_option } from '../../utils/options.js';
+import {
+	validate_layout_exports,
+	validate_layout_server_exports,
+	validate_page_exports,
+	validate_page_server_exports,
+	validate_server_exports
+} from '../../utils/exports.js';
+import { load_config } from '../config/index.js';
+import { forked } from '../../utils/fork.js';
+import { should_polyfill } from '../../utils/platform.js';
+import { installPolyfills } from '../../exports/node/polyfills.js';
+import { resolvePath } from '../../exports/index.js';
+import { ENDPOINT_METHODS } from '../../constants.js';
+import { filter_private_env, filter_public_env } from '../../utils/env.js';
+
+export default forked(import.meta.url, analyse);
+
+/**
+ * @param {{
+ *   manifest_path: string;
+ *   env: Record<string, string>
+ * }} opts
+ */
+async function analyse({ manifest_path, env }) {
+	/** @type {import('@sveltejs/kit').SSRManifest} */
+	const manifest = (await import(pathToFileURL(manifest_path).href)).manifest;
+
+	/** @type {import('types').ValidatedKitConfig} */
+	const config = (await load_config()).kit;
+
+	const server_root = join(config.outDir, 'output');
+
+	/** @type {import('types').ServerInternalModule} */
+	const internal = await import(pathToFileURL(`${server_root}/server/internal.js`).href);
+
+	if (should_polyfill) {
+		installPolyfills();
+	}
+
+	// configure `import { building } from '$app/environment'` —
+	// essential we do this before analysing the code
+	internal.set_building(true);
+
+	// set env, in case it's used in initialisation
+	const { publicPrefix: public_prefix, privatePrefix: private_prefix } = config.env;
+	internal.set_private_env(filter_private_env(env, { public_prefix, private_prefix }));
+	internal.set_public_env(filter_public_env(env, { public_prefix, private_prefix }));
+
+	/** @type {import('types').ServerMetadata} */
+	const metadata = {
+		nodes: [],
+		routes: new Map()
+	};
+
+	// analyse nodes
+	for (const loader of manifest._.nodes) {
+		const node = await loader();
+
+		metadata.nodes[node.index] = {
+			has_server_load: node.server?.load !== undefined || node.server?.trailingSlash !== undefined
+		};
+	}
+
+	// analyse routes
+	for (const route of manifest._.routes) {
+		/** @type {Array<'GET' | 'POST'>} */
+		const page_methods = [];
+
+		/** @type {(import('types').HttpMethod | '*')[]} */
+		const api_methods = [];
+
+		/** @type {import('types').PrerenderOption | undefined} */
+		let prerender = undefined;
+		/** @type {any} */
+		let config = undefined;
+		/** @type {import('types').PrerenderEntryGenerator | undefined} */
+		let entries = undefined;
+
+		if (route.endpoint) {
+			const mod = await route.endpoint();
+			if (mod.prerender !== undefined) {
+				validate_server_exports(mod, route.id);
+
+				if (mod.prerender && (mod.POST || mod.PATCH || mod.PUT || mod.DELETE)) {
+					throw new Error(
+						`Cannot prerender a +server file with POST, PATCH, PUT, or DELETE (${route.id})`
+					);
+				}
+
+				prerender = mod.prerender;
+			}
+
+			Object.values(mod).forEach((/** @type {import('types').HttpMethod} */ method) => {
+				if (mod[method] && ENDPOINT_METHODS.has(method)) {
+					api_methods.push(method);
+				} else if (mod.fallback) {
+					api_methods.push('*');
+				}
+			});
+
+			config = mod.config;
+			entries = mod.entries;
+		}
+
+		if (route.page) {
+			const nodes = await Promise.all(
+				[...route.page.layouts, route.page.leaf].map((n) => {
+					if (n !== undefined) return manifest._.nodes[n]();
+				})
+			);
+
+			const layouts = nodes.slice(0, -1);
+			const page = nodes.at(-1);
+
+			for (const layout of layouts) {
+				if (layout) {
+					validate_layout_server_exports(layout.server, layout.server_id);
+					validate_layout_exports(layout.universal, layout.universal_id);
+				}
+			}
+
+			if (page) {
+				page_methods.push('GET');
+				if (page.server?.actions) page_methods.push('POST');
+
+				validate_page_server_exports(page.server, page.server_id);
+				validate_page_exports(page.universal, page.universal_id);
+			}
+
+			prerender = get_option(nodes, 'prerender') ?? false;
+
+			config = get_config(nodes);
+			entries ??= get_option(nodes, 'entries');
+		}
+
+		metadata.routes.set(route.id, {
+			config,
+			methods: Array.from(new Set([...page_methods, ...api_methods])),
+			page: {
+				methods: page_methods
+			},
+			api: {
+				methods: api_methods
+			},
+			prerender,
+			entries:
+				entries && (await entries()).map((entry_object) => resolvePath(route.id, entry_object))
+		});
+	}
+
+	return metadata;
+}
+
+/**
+ * Do a shallow merge (first level) of the config object
+ * @param {Array<import('types').SSRNode | undefined>} nodes
+ */
+function get_config(nodes) {
+	let current = {};
+	for (const node of nodes) {
+		const config = node?.universal?.config ?? node?.server?.config;
+		if (config) {
+			current = {
+				...current,
+				...config
+			};
+		}
+	}
+
+	return Object.keys(current).length ? current : undefined;
+}

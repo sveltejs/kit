@@ -1,5 +1,49 @@
 # @sveltejs/adapter-static
 
+## 2.0.3
+
+### Patch Changes
+
+- fix: correctly list dynamic routes in error log ([#10443](https://github.com/sveltejs/kit/pull/10443))
+
+## 2.0.2
+
+### Patch Changes
+
+- fix: update broken link in error message ([`118ce5a0`](https://github.com/sveltejs/kit/commit/118ce5a07a3a984353c3fc858b34c67e9e560fa0))
+
+- Updated dependencies [[`748a8720`](https://github.com/sveltejs/kit/commit/748a8720fea8ea938576041207b81e19bb8f7dff)]:
+  - @sveltejs/kit@1.15.3
+
+## 2.0.1
+
+### Patch Changes
+
+- fix: generate fallback page before compressing ([#8972](https://github.com/sveltejs/kit/pull/8972))
+
+- Updated dependencies [[`0abb8ebf`](https://github.com/sveltejs/kit/commit/0abb8ebffc6121f81c2bbfa0a0f68866d4cc1627), [`bef54f63`](https://github.com/sveltejs/kit/commit/bef54f63d2315066d30e8f1bcf471ddf2bd72c35), [`51cd6e64`](https://github.com/sveltejs/kit/commit/51cd6e643178e3a113fc2c3e8a63755bcbfe902d), [`930c8e4e`](https://github.com/sveltejs/kit/commit/930c8e4ee2e3046ed1b622777dafa23029a19fe5), [`ee8066fc`](https://github.com/sveltejs/kit/commit/ee8066fcb29ed1e7e3ab513cabb7997e38c984f2), [`49d2ec62`](https://github.com/sveltejs/kit/commit/49d2ec62e6385694f11701bf2fa411d07449344c), [`eb943565`](https://github.com/sveltejs/kit/commit/eb943565a4324dbed3da5a581924ca91a24366de)]:
+  - @sveltejs/kit@1.5.3
+
+## 2.0.0
+
+### Major Changes
+
+- breaking: bump `@sveltejs/kit` peer dependency ([#8740](https://github.com/sveltejs/kit/pull/8740))
+
+### Patch Changes
+
+- Updated dependencies [[`c7648f66`](https://github.com/sveltejs/kit/commit/c7648f6608a413e2654625cbd30f890d2148cf13), [`63613bf1`](https://github.com/sveltejs/kit/commit/63613bf194c18ce50e111585ad770fc93f9e43c7), [`d1f7655e`](https://github.com/sveltejs/kit/commit/d1f7655efdff70d91f94fe0cb0de50ed2511b5e5)]:
+  - @sveltejs/kit@1.5.0
+
+## 1.0.6
+
+### Patch Changes
+
+- docs: fix link in README ([#8854](https://github.com/sveltejs/kit/pull/8854))
+
+- Updated dependencies [[`7cdb7a65`](https://github.com/sveltejs/kit/commit/7cdb7a65819342c6d334c79defc697d531d5cbf4)]:
+  - @sveltejs/kit@1.3.10
+
 ## 1.0.5
 
 ### Patch Changes

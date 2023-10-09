@@ -1,5 +1,5 @@
-import fs from 'fs';
-import path from 'path';
+import fs from 'node:fs';
+import path from 'node:path';
 import { mkdirp, copy, dist } from './utils.js';
 
 /** @type {import('./types/index').create} */

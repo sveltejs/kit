@@ -1,61 +1,34 @@
 import fs from 'node:fs';
-import path from 'node:path';
-import * as vite from 'vite';
-import { mkdirp, posixify } from '../../../utils/filesystem.js';
-import { find_deps, is_http_method, resolve_symlinks } from './utils.js';
+import { mkdirp } from '../../../utils/filesystem.js';
+import { find_deps, resolve_symlinks } from './utils.js';
 import { s } from '../../../utils/misc.js';
+import { normalizePath } from 'vite';
 
 /**
- * @param {{
- *   config: import('types').ValidatedConfig;
- *   vite_config: import('vite').ResolvedConfig;
- *   vite_config_env: import('vite').ConfigEnv;
- *   manifest_data: import('types').ManifestData;
- *   output_dir: string;
- * }} options
- * @param {{ vite_manifest: import('vite').Manifest, assets: import('rollup').OutputAsset[] }} client
+ * @param {string} out
+ * @param {import('types').ValidatedKitConfig} kit
+ * @param {import('types').ManifestData} manifest_data
+ * @param {import('vite').Manifest} server_manifest
+ * @param {import('vite').Manifest | null} client_manifest
+ * @param {import('rollup').OutputAsset[] | null} css
  */
-export async function build_server(options, client) {
-	const { config, vite_config, vite_config_env, manifest_data, output_dir } = options;
-
-	const { output } = /** @type {import('rollup').RollupOutput} */ (
-		await vite.build({
-			// CLI args
-			configFile: vite_config.configFile,
-			mode: vite_config_env.mode,
-			logLevel: config.logLevel,
-			clearScreen: config.clearScreen,
-			build: {
-				ssr: true
-			}
-		})
-	);
-
-	const chunks = /** @type {import('rollup').OutputChunk[]} */ (
-		output.filter((chunk) => chunk.type === 'chunk')
-	);
-
-	/** @type {import('vite').Manifest} */
-	const vite_manifest = JSON.parse(
-		fs.readFileSync(`${output_dir}/server/${vite_config.build.manifest}`, 'utf-8')
-	);
-
-	mkdirp(`${output_dir}/server/nodes`);
-	mkdirp(`${output_dir}/server/stylesheets`);
+export function build_server_nodes(out, kit, manifest_data, server_manifest, client_manifest, css) {
+	mkdirp(`${out}/server/nodes`);
+	mkdirp(`${out}/server/stylesheets`);
 
 	const stylesheet_lookup = new Map();
 
-	client.assets.forEach((asset) => {
-		if (asset.fileName.endsWith('.css')) {
-			if (asset.source.length < config.kit.inlineStyleThreshold) {
+	if (css) {
+		css.forEach((asset) => {
+			if (asset.source.length < kit.inlineStyleThreshold) {
 				const index = stylesheet_lookup.size;
-				const file = `${output_dir}/server/stylesheets/${index}.js`;
+				const file = `${out}/server/stylesheets/${index}.js`;
 
 				fs.writeFileSync(file, `// ${asset.fileName}\nexport default ${s(asset.source)};`);
 				stylesheet_lookup.set(asset.fileName, index);
 			}
-		}
-	});
+		});
+	}
 
 	manifest_data.nodes.forEach((node, i) => {
 		/** @type {string[]} */
@@ -75,35 +48,37 @@ export async function build_server(options, client) {
 		/** @type {string[]} */
 		const fonts = [];
 
-		if (node.component) {
-			const entry = find_deps(client.vite_manifest, node.component, true);
-
-			imported.push(...entry.imports);
-			stylesheets.push(...entry.stylesheets);
-			fonts.push(...entry.fonts);
-
+		if (node.component && client_manifest) {
 			exports.push(
-				`export const component = async () => (await import('../${
-					resolve_symlinks(vite_manifest, node.component).chunk.file
-				}')).default;`,
-				`export const file = '${entry.file}';` // TODO what is this?
+				'let component_cache;',
+				`export const component = async () => component_cache ??= (await import('../${
+					resolve_symlinks(server_manifest, node.component).chunk.file
+				}')).default;`
 			);
 		}
 
 		if (node.universal) {
-			const entry = find_deps(client.vite_manifest, node.universal, true);
+			imports.push(`import * as universal from '../${server_manifest[node.universal].file}';`);
+			exports.push('export { universal };');
+			exports.push(`export const universal_id = ${s(node.universal)};`);
+		}
+
+		if (node.server) {
+			imports.push(`import * as server from '../${server_manifest[node.server].file}';`);
+			exports.push('export { server };');
+			exports.push(`export const server_id = ${s(node.server)};`);
+		}
+
+		if (client_manifest && (node.universal || node.component)) {
+			const entry = find_deps(
+				client_manifest,
+				`${normalizePath(kit.outDir)}/generated/client-optimized/nodes/${i}.js`,
+				true
+			);
 
 			imported.push(...entry.imports);
 			stylesheets.push(...entry.stylesheets);
 			fonts.push(...entry.fonts);
-
-			imports.push(`import * as universal from '../${vite_manifest[node.universal].file}';`);
-			exports.push(`export { universal };`);
-		}
-
-		if (node.server) {
-			imports.push(`import * as server from '../${vite_manifest[node.server].file}';`);
-			exports.push(`export { server };`);
 		}
 
 		exports.push(
@@ -128,45 +103,9 @@ export async function build_server(options, client) {
 			exports.push(`export const inline_styles = () => ({\n${styles.join(',\n')}\n});`);
 		}
 
-		const out = `${output_dir}/server/nodes/${i}.js`;
-		fs.writeFileSync(out, `${imports.join('\n')}\n\n${exports.join('\n')}\n`);
+		fs.writeFileSync(
+			`${out}/server/nodes/${i}.js`,
+			`${imports.join('\n')}\n\n${exports.join('\n')}\n`
+		);
 	});
-
-	return {
-		chunks,
-		vite_manifest,
-		methods: get_methods(chunks, manifest_data)
-	};
-}
-
-/**
- * @param {import('rollup').OutputChunk[]} output
- * @param {import('types').ManifestData} manifest_data
- */
-function get_methods(output, manifest_data) {
-	/** @type {Record<string, string[]>} */
-	const lookup = {};
-	output.forEach((chunk) => {
-		if (!chunk.facadeModuleId) return;
-		const id = posixify(path.relative('.', chunk.facadeModuleId));
-		lookup[id] = chunk.exports;
-	});
-
-	/** @type {Record<string, import('types').HttpMethod[]>} */
-	const methods = {};
-	manifest_data.routes.forEach((route) => {
-		if (route.endpoint) {
-			if (lookup[route.endpoint.file]) {
-				methods[route.endpoint.file] = lookup[route.endpoint.file].filter(is_http_method);
-			}
-		}
-
-		if (route.leaf?.server) {
-			if (lookup[route.leaf.server]) {
-				methods[route.leaf.server] = lookup[route.leaf.server].filter(is_http_method);
-			}
-		}
-	});
-
-	return methods;
 }

@@ -9,5 +9,5 @@
 		"moduleResolution": "node",
 		"allowSyntheticDefaultImports": true
 	},
-	"include": ["./migrations/**/*", "./bin.js"]
+	"include": ["./migrations/**/*", "./utils.js", "./bin.js"]
 }

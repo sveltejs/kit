@@ -1,11 +1,20 @@
-import fs from 'fs';
-import path from 'path';
+import { readFile, readdir, writeFile } from 'node:fs/promises';
+import path from 'node:path';
+import { fileURLToPath } from 'node:url';
+import { format } from 'prettier';
 import ts from 'typescript';
-import prettier from 'prettier';
 import { mkdirp } from '../../../../packages/kit/src/utils/filesystem.js';
-import { fileURLToPath } from 'url';
 
-/** @typedef {{ name: string; comment: string; markdown: string; }} Extracted */
+/**
+ * @typedef {{
+ * name: string;
+ * comment: string;
+ * markdown?: string;
+ * snippet: string;
+ * deprecated: string | null;
+ * children: Extracted[] }
+ * } Extracted
+ */
 
 /** @type {Array<{ name: string; comment: string; exports: Extracted[]; types: Extracted[]; exempt?: boolean; }>} */
 const modules = [];
@@ -14,7 +23,7 @@ const modules = [];
  * @param {string} code
  * @param {ts.NodeArray<ts.Statement>} statements
  */
-function get_types(code, statements) {
+async function get_types(code, statements) {
 	/** @type {Extracted[]} */
 	const exports = [];
 
@@ -25,7 +34,10 @@ function get_types(code, statements) {
 		for (const statement of statements) {
 			const modifiers = ts.canHaveModifiers(statement) ? ts.getModifiers(statement) : undefined;
 
-			const export_modifier = modifiers?.find((modifier) => modifier.kind === 93);
+			const export_modifier = modifiers?.find(
+				(modifier) => modifier.kind === ts.SyntaxKind.ExportKeyword
+			);
+
 			if (!export_modifier) continue;
 
 			if (
@@ -45,28 +57,40 @@ function get_types(code, statements) {
 
 				let start = statement.pos;
 				let comment = '';
+				/** @type {string | null} */
+				let deprecated_notice = null;
 
 				// @ts-ignore i think typescript is bad at typescript
 				if (statement.jsDoc) {
 					// @ts-ignore
-					comment = statement.jsDoc[0].comment;
+					const jsDoc = statement.jsDoc[0];
+
+					comment = jsDoc.comment;
+
+					if (jsDoc?.tags?.[0]?.tagName?.escapedText === 'deprecated') {
+						deprecated_notice = jsDoc.tags[0].comment;
+					}
+
 					// @ts-ignore
-					start = statement.jsDoc[0].end;
+					start = jsDoc.end;
 				}
 
 				const i = code.indexOf('export', start);
 				start = i + 6;
 
-				/** @type {string[]} */
-				const children = [];
+				/** @type {Extracted[]} */
+				let children = [];
 
 				let snippet_unformatted = code.slice(start, statement.end).trim();
 
-				if (ts.isInterfaceDeclaration(statement)) {
+				if (ts.isInterfaceDeclaration(statement) || ts.isClassDeclaration(statement)) {
 					if (statement.members.length > 0) {
 						for (const member of statement.members) {
+							// @ts-ignore
 							children.push(munge_type_element(member));
 						}
+
+						children = children.filter(Boolean);
 
 						// collapse `interface Foo {/* lots of stuff*/}` into `interface Foo {…}`
 						const first = statement.members.at(0);
@@ -85,14 +109,15 @@ function get_types(code, statements) {
 					}
 				}
 
-				const snippet = prettier
-					.format(snippet_unformatted, {
+				const snippet = (
+					await format(snippet_unformatted, {
 						parser: 'typescript',
-						printWidth: 80,
+						printWidth: 60,
 						useTabs: true,
 						singleQuote: true,
 						trailingComma: 'none'
 					})
+				)
 					.replace(/\s*(\/\*…\*\/)\s*/g, '/*…*/')
 					.trim();
 
@@ -101,7 +126,13 @@ function get_types(code, statements) {
 						? exports
 						: types;
 
-				collection.push({ name, comment, snippet, children });
+				collection.push({
+					name,
+					comment,
+					snippet,
+					children,
+					deprecated: deprecated_notice
+				});
 			}
 		}
 
@@ -119,13 +150,15 @@ function munge_type_element(member, depth = 1) {
 	// @ts-ignore
 	const doc = member.jsDoc?.[0];
 
-	/** @type {string} */
+	if (/private api/i.test(doc?.comment)) return;
+
+	/** @type {string[]} */
 	const children = [];
 
 	const name = member.name?.escapedText;
 	let snippet = member.getText();
 
-	for (let i = 0; i < depth; i += 1) {
+	for (let i = -1; i < depth; i += 1) {
 		snippet = snippet.replace(/^\t/gm, '');
 	}
 
@@ -151,6 +184,14 @@ function munge_type_element(member, depth = 1) {
 		const type = tag.tagName.escapedText;
 
 		switch (tag.tagName.escapedText) {
+			case 'private':
+				bullets.push(`- <span class="tag">private</span> ${tag.comment}`);
+				break;
+
+			case 'readonly':
+				bullets.push(`- <span class="tag">readonly</span> ${tag.comment}`);
+				break;
+
 			case 'param':
 				bullets.push(`- \`${tag.name.getText()}\` ${tag.comment}`);
 				break;
@@ -161,6 +202,10 @@ function munge_type_element(member, depth = 1) {
 
 			case 'returns':
 				bullets.push(`- <span class="tag">returns</span> ${tag.comment}`);
+				break;
+
+			case 'deprecated':
+				bullets.push(`- <span class="tag deprecated">deprecated</span> ${tag.comment}`);
 				break;
 
 			default:
@@ -195,47 +240,37 @@ function strip_origin(str) {
 /**
  * @param {string} file
  */
-function read_d_ts_file(file) {
+async function read_d_ts_file(file) {
 	const resolved = path.resolve('../../packages/kit', file);
 
 	// We can't use JSDoc comments inside JSDoc, so we would get ts(7031) errors if
 	// we didn't ignore this error specifically for `/// file:` code examples
-	const str = fs.readFileSync(resolved, 'utf-8');
-	return str.replace(
-		/(\s*\*\s*)\/\/\/ file:/g,
-		(match, prefix) => prefix + '// @errors: 7031' + match
-	);
-}
+	const str = await readFile(resolved, 'utf-8');
 
-{
-	const code = read_d_ts_file('types/index.d.ts');
-	const node = ts.createSourceFile('index.d.ts', code, ts.ScriptTarget.Latest, true);
-
-	modules.push({
-		name: '@sveltejs/kit',
-		comment: '',
-		...get_types(code, node.statements)
+	//! For some reason, typescript 5.1> is reading this @errors as a jsdoc tag, and splitting it into separate pieces
+	return str.replace(/(\s*\*\s*)```js([\s\S]+?)```/g, (match, prefix, code) => {
+		return `${prefix}\`\`\`js${prefix}// @errors: 7031${code}\`\`\``;
 	});
 }
 
 {
-	const code = read_d_ts_file('types/private.d.ts');
+	const code = await read_d_ts_file('src/types/private.d.ts');
 	const node = ts.createSourceFile('private.d.ts', code, ts.ScriptTarget.Latest, true);
 
 	modules.push({
 		name: 'Private types',
 		comment: '',
-		...get_types(code, node.statements)
+		...(await get_types(code, node.statements))
 	});
 }
 
 const dir = fileURLToPath(
-	new URL('../../../../packages/kit/types/synthetic', import.meta.url).href
+	new URL('../../../../packages/kit/src/types/synthetic', import.meta.url).href
 );
-for (const file of fs.readdirSync(dir)) {
+for (const file of await readdir(dir)) {
 	if (!file.endsWith('.md')) continue;
 
-	const comment = strip_origin(read_d_ts_file(`${dir}/${file}`));
+	const comment = strip_origin(await read_d_ts_file(`${dir}/${file}`));
 
 	modules.push({
 		name: file.replace(/\+/g, '/').slice(0, -3),
@@ -247,8 +282,8 @@ for (const file of fs.readdirSync(dir)) {
 }
 
 {
-	const code = read_d_ts_file('types/ambient.d.ts');
-	const node = ts.createSourceFile('ambient.d.ts', code, ts.ScriptTarget.Latest, true);
+	const code = await read_d_ts_file('types/index.d.ts');
+	const node = ts.createSourceFile('index.d.ts', code, ts.ScriptTarget.Latest, true);
 
 	for (const statement of node.statements) {
 		if (ts.isModuleDeclaration(statement)) {
@@ -262,20 +297,40 @@ for (const file of fs.readdirSync(dir)) {
 				name,
 				comment,
 				// @ts-ignore
-				...get_types(code, statement.body?.statements)
+				...(await get_types(code, statement.body?.statements))
 			});
 		}
 	}
 }
 
+// need to do some unfortunate finagling here, hopefully we can remove this one day
+const app_paths = modules.find((module) => module.name === '$app/paths');
+const app_environment = modules.find((module) => module.name === '$app/environment');
+const __sveltekit_paths = modules.find((module) => module.name === '__sveltekit/paths');
+const __sveltekit_environment = modules.find((module) => module.name === '__sveltekit/environment');
+
+app_paths?.exports.push(
+	__sveltekit_paths.exports.find((e) => e.name === 'assets'),
+	__sveltekit_paths.exports.find((e) => e.name === 'base')
+);
+
+app_environment?.exports.push(
+	__sveltekit_environment.exports.find((e) => e.name === 'building'),
+	__sveltekit_environment.exports.find((e) => e.name === 'version')
+);
+
 modules.sort((a, b) => (a.name < b.name ? -1 : 1));
 
-mkdirp('docs');
-fs.writeFileSync(
-	'src/lib/docs/server/type-info.js',
+mkdirp('src/lib/generated');
+writeFile(
+	'src/lib/generated/type-info.js',
 	`
-/* This file is generated by running \`node scripts/extract-types.js\`
-   in the packages/kit directory — do not edit it */
-export const modules = ${JSON.stringify(modules, null, '  ')};
+/* This file is generated by running \`pnpm run update\`
+   in the sites/kit.svelte.dev directory — do not edit it */
+export const modules = /** @type {import('@sveltejs/site-kit/markdown').Modules} */ (${JSON.stringify(
+		modules.filter((m) => !m.name.startsWith('_')),
+		null,
+		'  '
+	)});
 `.trim()
 );

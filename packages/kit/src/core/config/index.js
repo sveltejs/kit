@@ -1,6 +1,6 @@
-import fs from 'fs';
-import path from 'path';
-import * as url from 'url';
+import fs from 'node:fs';
+import path from 'node:path';
+import * as url from 'node:url';
 import options from './options.js';
 
 /**
@@ -73,7 +73,7 @@ export async function load_config({ cwd = process.cwd() } = {}) {
 }
 
 /**
- * @param {import('types').Config} config
+ * @param {import('@sveltejs/kit').Config} config
  * @returns {import('types').ValidatedConfig}
  */
 function process_config(config, { cwd = process.cwd() } = {}) {
@@ -95,7 +95,7 @@ function process_config(config, { cwd = process.cwd() } = {}) {
 }
 
 /**
- * @param {import('types').Config} config
+ * @param {import('@sveltejs/kit').Config} config
  * @returns {import('types').ValidatedConfig}
  */
 export function validate_config(config) {

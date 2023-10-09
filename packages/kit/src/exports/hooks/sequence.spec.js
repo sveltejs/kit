@@ -1,5 +1,4 @@
-import { test } from 'uvu';
-import * as assert from 'uvu/assert';
+import { assert, expect, test } from 'vitest';
 import { sequence } from './sequence.js';
 import { installPolyfills } from '../node/polyfills.js';
 
@@ -30,11 +29,11 @@ test('applies handlers in sequence', async () => {
 		}
 	);
 
-	const event = /** @type {import('types').RequestEvent} */ ({});
+	const event = /** @type {import('@sveltejs/kit').RequestEvent} */ ({});
 	const response = new Response();
 
 	assert.equal(await handler({ event, resolve: () => response }), response);
-	assert.equal(order, ['1a', '2a', '3a', '3b', '2b', '1b']);
+	expect(order).toEqual(['1a', '2a', '3a', '3b', '2b', '1b']);
 });
 
 test('uses transformPageChunk option passed to non-terminal handle function', async () => {
@@ -48,7 +47,7 @@ test('uses transformPageChunk option passed to non-terminal handle function', as
 		async ({ event, resolve }) => resolve(event)
 	);
 
-	const event = /** @type {import('types').RequestEvent} */ ({});
+	const event = /** @type {import('@sveltejs/kit').RequestEvent} */ ({});
 	const response = await handler({
 		event,
 		resolve: async (_event, opts = {}) => {
@@ -85,7 +84,7 @@ test('merges transformPageChunk option', async () => {
 		}
 	);
 
-	const event = /** @type {import('types').RequestEvent} */ ({});
+	const event = /** @type {import('@sveltejs/kit').RequestEvent} */ ({});
 	const response = await handler({
 		event,
 		resolve: async (_event, opts = {}) => {
@@ -103,4 +102,68 @@ test('merges transformPageChunk option', async () => {
 	assert.equal(await response.text(), '0-3-2-1 0-3-done-2-done-1-done');
 });
 
-test.run();
+test('uses first defined preload option', async () => {
+	const handler = sequence(
+		async ({ event, resolve }) => resolve(event),
+		async ({ event, resolve }) => {
+			return resolve(event, {
+				preload: ({ type }) => type === 'js'
+			});
+		},
+		async ({ event, resolve }) => {
+			return resolve(event, {
+				preload: () => true
+			});
+		}
+	);
+
+	const event = /** @type {import('@sveltejs/kit').RequestEvent} */ ({});
+	const response = await handler({
+		event,
+		resolve: async (_event, opts = {}) => {
+			let html = '';
+
+			const { preload = () => false } = opts;
+
+			html += preload({ path: '', type: 'js' });
+			html += preload({ path: '', type: 'css' });
+
+			return new Response(html);
+		}
+	});
+
+	assert.equal(await response.text(), 'truefalse');
+});
+
+test('uses first defined filterSerializedResponseHeaders option', async () => {
+	const handler = sequence(
+		async ({ event, resolve }) => resolve(event),
+		async ({ event, resolve }) => {
+			return resolve(event, {
+				filterSerializedResponseHeaders: (name) => name === 'a'
+			});
+		},
+		async ({ event, resolve }) => {
+			return resolve(event, {
+				filterSerializedResponseHeaders: () => true
+			});
+		}
+	);
+
+	const event = /** @type {import('@sveltejs/kit').RequestEvent} */ ({});
+	const response = await handler({
+		event,
+		resolve: async (_event, opts = {}) => {
+			let html = '';
+
+			const { filterSerializedResponseHeaders = () => false } = opts;
+
+			html += filterSerializedResponseHeaders('a', '');
+			html += filterSerializedResponseHeaders('b', '');
+
+			return new Response(html);
+		}
+	});
+
+	assert.equal(await response.text(), 'truefalse');
+});

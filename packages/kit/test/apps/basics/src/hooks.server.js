@@ -1,7 +1,8 @@
-import fs from 'fs';
+import fs from 'node:fs';
 import { sequence } from '@sveltejs/kit/hooks';
 import { HttpError } from '../../../../src/runtime/control';
 import { error, redirect } from '@sveltejs/kit';
+import { COOKIE_NAME } from './routes/cookies/shared';
 
 /**
  * Transform an error into a POJO, by copying its `name`, `message`
@@ -18,7 +19,7 @@ export function error_to_pojo(error) {
 		};
 	}
 
-	const { name, message, stack, cause, ...custom } = error;
+	const { name, message, stack, ...custom } = error;
 	return { name, message, stack, ...custom };
 }
 
@@ -52,6 +53,15 @@ export const handle = sequence(
 			throw new Error(
 				'__data.json requests should have the suffix stripped from the URL and isDataRequest set to true'
 			);
+		}
+		return resolve(event);
+	},
+	({ event, resolve }) => {
+		if (
+			event.request.headers.has('host') &&
+			!event.request.headers.has('user-agent') !== event.isSubRequest
+		) {
+			throw new Error('SSR API sub-requests should have isSubRequest set to true');
 		}
 		return resolve(event);
 	},
@@ -96,11 +106,34 @@ export const handle = sequence(
 		if (event.url.pathname.includes('/redirect/in-handle')) {
 			if (event.url.search === '?throw') {
 				throw redirect(307, event.url.origin + '/redirect/c');
+			} else if (event.url.search.includes('cookies')) {
+				event.cookies.delete(COOKIE_NAME, { path: '/cookies' });
+				throw redirect(307, event.url.origin + '/cookies');
 			} else {
 				return new Response(undefined, { status: 307, headers: { location: '/redirect/c' } });
 			}
 		}
 
+		return resolve(event);
+	},
+	async ({ event, resolve }) => {
+		if (event.url.pathname === '/prerendering/prerendered-endpoint/from-handle-hook') {
+			return event.fetch('/prerendering/prerendered-endpoint/api');
+		}
+
+		return resolve(event);
+	},
+	async ({ event, resolve }) => {
+		if (event.url.pathname === '/actions/redirect-in-handle' && event.request.method === 'POST') {
+			throw redirect(303, '/actions/enhance');
+		}
+
+		return resolve(event);
+	},
+	async ({ event, resolve }) => {
+		if (['/non-existent-route', '/non-existent-route-loop'].includes(event.url.pathname)) {
+			event.locals.url = new URL(event.request.url);
+		}
 		return resolve(event);
 	}
 );

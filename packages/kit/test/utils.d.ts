@@ -22,6 +22,7 @@ export const test: TestType<
 			};
 			clicknav(selector: string, options?: { timeout?: number }): Promise<void>;
 			in_view(selector: string): Promise<boolean>;
+			get_computed_style(selector: string, prop: string): Promise<string>;
 			/**
 			 * `handleError` defines the shape
 			 */

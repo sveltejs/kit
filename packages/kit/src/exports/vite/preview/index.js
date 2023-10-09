@@ -1,7 +1,7 @@
-import fs from 'fs';
-import { join } from 'path';
+import fs from 'node:fs';
+import { join } from 'node:path';
+import { pathToFileURL } from 'node:url';
 import sirv from 'sirv';
-import { pathToFileURL } from 'url';
 import { loadEnv, normalizePath } from 'vite';
 import { getRequest, setResponse } from '../../../exports/node/index.js';
 import { installPolyfills } from '../../../exports/node/polyfills.js';
@@ -36,15 +36,19 @@ export async function preview(vite, vite_config, svelte_config) {
 
 	const dir = join(svelte_config.kit.outDir, 'output/server');
 
+	if (!fs.existsSync(dir)) {
+		throw new Error(`Server files not found at ${dir}, did you run \`build\` first?`);
+	}
+
 	/** @type {import('types').ServerInternalModule} */
-	const { set_paths } = await import(pathToFileURL(join(dir, 'internal.js')).href);
+	const { set_assets } = await import(pathToFileURL(join(dir, 'internal.js')).href);
 
 	/** @type {import('types').ServerModule} */
 	const { Server } = await import(pathToFileURL(join(dir, 'index.js')).href);
 
 	const { manifest } = await import(pathToFileURL(join(dir, 'manifest.js')).href);
 
-	set_paths({ base, assets });
+	set_assets(assets);
 
 	const server = new Server(manifest);
 	await server.init({
@@ -108,8 +112,31 @@ export async function preview(vite, vite_config, svelte_config) {
 				let prerendered = is_file(filename);
 
 				if (!prerendered) {
-					filename += filename.endsWith('/') ? 'index.html' : '.html';
-					prerendered = is_file(filename);
+					const has_trailing_slash = pathname.endsWith('/');
+					const html_filename = `${filename}${has_trailing_slash ? 'index.html' : '.html'}`;
+
+					let redirect;
+
+					if (is_file(html_filename)) {
+						filename = html_filename;
+						prerendered = true;
+					} else if (has_trailing_slash) {
+						if (is_file(filename.slice(0, -1) + '.html')) {
+							redirect = pathname.slice(0, -1);
+						}
+					} else if (is_file(filename + '/index.html')) {
+						redirect = pathname + '/';
+					}
+
+					if (redirect) {
+						res.writeHead(307, {
+							location: redirect
+						});
+
+						res.end();
+
+						return;
+					}
 				}
 
 				if (prerendered) {

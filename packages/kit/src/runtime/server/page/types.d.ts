@@ -1,10 +1,11 @@
 import { CookieSerializeOptions } from 'cookie';
-import { SSRNode, CspDirectives } from 'types';
+import { SSRNode, CspDirectives, ServerDataNode } from 'types';
 
 export interface Fetched {
 	url: string;
 	method: string;
 	request_body?: string | ArrayBufferView | null;
+	request_headers?: HeadersInit | undefined;
 	response_body: string;
 	response: Response;
 }
@@ -12,7 +13,7 @@ export interface Fetched {
 export type Loaded = {
 	node: SSRNode;
 	data: Record<string, any> | null;
-	server_data: any;
+	server_data: ServerDataNode | null;
 };
 
 type CspMode = 'hash' | 'nonce' | 'auto';

@@ -1,13 +1,10 @@
 import ts from 'typescript';
 import {
 	automigration,
-	dedent,
 	uppercase_migration,
 	error,
 	get_function_node,
 	get_object_nodes,
-	guess_indent,
-	indent_at_line,
 	is_new,
 	is_string_like,
 	manual_return_migration,
@@ -16,6 +13,7 @@ import {
 	unwrap
 } from '../utils.js';
 import * as TASKS from '../tasks.js';
+import { dedent, guess_indent, indent_at_line } from '../../../utils.js';
 
 const give_up = `${error('Update +server.js', TASKS.STANDALONE_ENDPOINT)}\n\n`;
 
@@ -130,9 +128,9 @@ export function migrate_server(content) {
 								nodes.body.expression.getText() === 'JSON.stringify');
 
 						if (safe_headers) {
-							let status = nodes.status ? nodes.status.getText() : '200';
-							let headers = nodes.headers?.getText();
-							let body = dedent(nodes.body?.getText() || 'undefined');
+							const status = nodes.status ? nodes.status.getText() : '200';
+							const headers = nodes.headers?.getText();
+							const body = dedent(nodes.body?.getText() || 'undefined');
 
 							const multiline = /\n/.test(headers);
 

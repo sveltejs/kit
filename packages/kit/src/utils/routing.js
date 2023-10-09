@@ -96,6 +96,17 @@ export function parse_route_id(id) {
 	return { pattern, params };
 }
 
+const optional_param_regex = /\/\[\[\w+?(?:=\w+)?\]\]/;
+
+/**
+ * Removes optional params from a route ID.
+ * @param {string} id
+ * @returns The route id with optional params removed
+ */
+export function remove_optional_params(id) {
+	return id.replace(optional_param_regex, '');
+}
+
 /**
  * Returns `false` for `(group)` segments
  * @param {string} segment
@@ -118,65 +129,69 @@ export function get_route_segments(route) {
 /**
  * @param {RegExpMatchArray} match
  * @param {import('types').RouteParam[]} params
- * @param {Record<string, import('types').ParamMatcher>} matchers
+ * @param {Record<string, import('@sveltejs/kit').ParamMatcher>} matchers
  */
 export function exec(match, params, matchers) {
 	/** @type {Record<string, string>} */
 	const result = {};
 
 	const values = match.slice(1);
+	const values_needing_match = values.filter((value) => value !== undefined);
 
-	let buffered = '';
+	let buffered = 0;
 
 	for (let i = 0; i < params.length; i += 1) {
 		const param = params[i];
-		let value = values[i];
+		let value = values[i - buffered];
 
+		// in the `[[a=b]]/.../[...rest]` case, if one or more optional parameters
+		// weren't matched, roll the skipped values into the rest
 		if (param.chained && param.rest && buffered) {
-			// in the `[[lang=lang]]/[...rest]` case, if `lang` didn't
-			// match, we roll it over into the rest value
-			value = value ? buffered + '/' + value : buffered;
+			value = values
+				.slice(i - buffered, i + 1)
+				.filter((s) => s)
+				.join('/');
+
+			buffered = 0;
 		}
 
-		buffered = '';
-
+		// if `value` is undefined, it means this is an optional or rest parameter
 		if (value === undefined) {
-			// if `value` is undefined, it means this is
-			// an optional or rest parameter
 			if (param.rest) result[param.name] = '';
-		} else {
-			if (param.matcher && !matchers[param.matcher](value)) {
-				// in the `/[[a=b]]/[[c=d]]` case, if the value didn't satisfy the `b` matcher,
-				// try again with the next segment by shifting values rightwards
-				if (param.optional && param.chained) {
-					// @ts-expect-error TypeScript is... wrong
-					let j = values.indexOf(undefined, i);
+			continue;
+		}
 
-					if (j === -1) {
-						// we can't shift values any further, so hang on to this value
-						// so it can be rolled into a subsequent `[...rest]` param
-						const next = params[i + 1];
-						if (next?.rest && next.chained) {
-							buffered = value;
-						} else {
-							return;
-						}
-					}
+		if (!param.matcher || matchers[param.matcher](value)) {
+			result[param.name] = value;
 
-					while (j >= i) {
-						values[j] = values[j - 1];
-						j -= 1;
-					}
-
-					continue;
-				}
-
-				// otherwise, if the matcher returns `false`, the route did not match
-				return;
+			// Now that the params match, reset the buffer if the next param isn't the [...rest]
+			// and the next value is defined, otherwise the buffer will cause us to skip values
+			const next_param = params[i + 1];
+			const next_value = values[i + 1];
+			if (next_param && !next_param.rest && next_param.optional && next_value && param.chained) {
+				buffered = 0;
 			}
 
-			result[param.name] = value;
+			// There are no more params and no more values, but all non-empty values have been matched
+			if (
+				!next_param &&
+				!next_value &&
+				Object.keys(result).length === values_needing_match.length
+			) {
+				buffered = 0;
+			}
+			continue;
 		}
+
+		// in the `/[[a=b]]/...` case, if the value didn't satisfy the matcher,
+		// keep track of the number of skipped optional parameters and continue
+		if (param.optional && param.chained) {
+			buffered++;
+			continue;
+		}
+
+		// otherwise, if the matcher returns `false`, the route did not match
+		return;
 	}
 
 	if (buffered) return;

@@ -1,9 +1,11 @@
-import fs from 'node:fs';
 import path from 'node:path';
+import { hash } from '../../runtime/hash.js';
 import { posixify, resolve_entry } from '../../utils/filesystem.js';
 import { s } from '../../utils/misc.js';
 import { load_error_page, load_template } from '../config/index.js';
 import { runtime_directory } from '../utils.js';
+import { write_if_changed } from './utils.js';
+import colors from 'kleur';
 
 /**
  * @param {{
@@ -23,18 +25,21 @@ const server_template = ({
 	template,
 	error_page
 }) => `
-import root from './root.svelte';
-import { set_building, set_paths, set_private_env, set_public_env, set_version } from '${runtime_directory}/shared.js';
-
-set_paths(${s(config.kit.paths)});
-set_version(${s(config.kit.version.name)});
+import root from '../root.svelte';
+import { set_building } from '__sveltekit/environment';
+import { set_assets } from '__sveltekit/paths';
+import { set_private_env, set_public_env } from '${runtime_directory}/shared-server.js';
 
 export const options = {
+	app_template_contains_nonce: ${template.includes('%sveltekit.nonce%')},
 	csp: ${s(config.kit.csp)},
 	csrf_check_origin: ${s(config.kit.csrf.checkOrigin)},
+	track_server_fetches: ${s(config.kit.dangerZone.trackServerFetches)},
 	embedded: ${config.kit.embedded},
 	env_public_prefix: '${config.kit.env.publicPrefix}',
+	env_private_prefix: '${config.kit.env.privatePrefix}',
 	hooks: null, // added lazily, via \`get_hooks\`
+	preload_strategy: ${s(config.kit.output.preloadStrategy)},
 	root,
 	service_worker: ${has_service_worker},
 	templates: {
@@ -50,14 +55,15 @@ export const options = {
 		error: ({ status, message }) => ${s(error_page)
 			.replace(/%sveltekit\.status%/g, '" + status + "')
 			.replace(/%sveltekit\.error\.message%/g, '" + message + "')}
-	}
+	},
+	version_hash: ${s(hash(config.kit.version.name))}
 };
 
 export function get_hooks() {
 	return ${hooks ? `import(${s(hooks)})` : '{}'};
 }
 
-export { set_building, set_paths, set_private_env, set_public_env };
+export { set_assets, set_building, set_private_env, set_public_env };
 `;
 
 // TODO need to re-run this whenever src/app.html or src/error.html are
@@ -70,19 +76,30 @@ export { set_building, set_paths, set_private_env, set_public_env };
  * @param {string} output
  */
 export function write_server(config, output) {
-	// TODO the casting shouldn't be necessary — investigate
-	const hooks_file = /** @type {string} */ (resolve_entry(config.kit.files.hooks.server));
+	const hooks_file = resolve_entry(config.kit.files.hooks.server);
+
+	const typo = resolve_entry('src/+hooks.server');
+	if (typo) {
+		console.log(
+			colors
+				.bold()
+				.yellow(
+					`Unexpected + prefix. Did you mean ${typo.split('/').at(-1)?.slice(1)}?` +
+						` at ${path.resolve(typo)}`
+				)
+		);
+	}
 
 	/** @param {string} file */
 	function relative(file) {
-		return posixify(path.relative(output, file));
+		return posixify(path.relative(`${output}/server`, file));
 	}
 
-	fs.writeFileSync(
-		`${output}/server-internal.js`,
+	write_if_changed(
+		`${output}/server/internal.js`,
 		server_template({
 			config,
-			hooks: fs.existsSync(hooks_file) ? relative(hooks_file) : null,
+			hooks: hooks_file ? relative(hooks_file) : null,
 			has_service_worker:
 				config.kit.serviceWorker.register && !!resolve_entry(config.kit.files.serviceWorker),
 			runtime_directory: relative(runtime_directory),

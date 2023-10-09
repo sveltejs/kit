@@ -1,11 +1,13 @@
 import fs from 'node:fs';
 import path from 'node:path';
+import { normalizePath } from 'vite';
 
 /**
  * Adds transitive JS and CSS dependencies to the js and css inputs.
  * @param {import('vite').Manifest} manifest
  * @param {string} entry
  * @param {boolean} add_dynamic_css
+ * @returns {import('types').AssetDependencies}
  */
 export function find_deps(manifest, entry, add_dynamic_css) {
 	/** @type {Set<string>} */
@@ -71,7 +73,9 @@ export function find_deps(manifest, entry, add_dynamic_css) {
  */
 export function resolve_symlinks(manifest, file) {
 	while (!manifest[file]) {
-		file = path.relative('.', fs.realpathSync(file));
+		const next = normalizePath(path.relative('.', fs.realpathSync(file)));
+		if (next === file) throw new Error(`Could not find file "${file}" in Vite manifest`);
+		file = next;
 	}
 
 	const chunk = manifest[file];
@@ -85,15 +89,4 @@ export function resolve_symlinks(manifest, file) {
  */
 export function assets_base(config) {
 	return (config.paths.assets || config.paths.base || '.') + '/';
-}
-
-const method_names = new Set(['GET', 'HEAD', 'PUT', 'POST', 'DELETE', 'PATCH']);
-
-// If we'd written this in TypeScript, it could be easy...
-/**
- * @param {string} str
- * @returns {str is import('types').HttpMethod}
- */
-export function is_http_method(str) {
-	return method_names.has(str);
 }

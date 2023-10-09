@@ -23,6 +23,12 @@ Web development, streamlined. Read the [documentation](https://kit.svelte.dev/do
 
 [Additional adapters](<(https://sveltesociety.dev/components#adapters)>) are maintained by the community.
 
+## Bug reporting
+
+Please make sure the issue you're reporting involves SvelteKit. Many issues related to how a project builds originate from [Vite](https://vitejs.dev/), which is used to build a SvelteKit project. You can create a new Vite project with `npm create vite@latest` for client-side only repros and `npm create vite-extra@latest` for SSR or library repros.
+
+If an issue originates from Vite, please report it in the [Vite issue tracker](https://github.com/vitejs/vite/issues).
+
 ## Contributing
 
 See [CONTRIBUTING.md](./CONTRIBUTING.md) for information on how to develop SvelteKit locally.

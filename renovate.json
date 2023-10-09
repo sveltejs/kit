@@ -3,13 +3,17 @@
 		"github>whitesource/merge-confidence:beta",
 		"config:base",
 		":preserveSemverRanges",
-		"group:allNonMajor"
+		"group:allNonMajor",
+		":semanticCommitTypeAll(chore)"
 	],
 	"pin": {
 		"enabled": false
 	},
 	"ignoreDeps": [
+		"@playwright/test",
+		"@types/node",
 		"esbuild",
+		"playwright",
 		"rollup",
 		"typescript"
 	],
@@ -19,8 +23,13 @@
 	],
 	"packageRules": [
 		{
-			"matchPackageNames": ["@types/node", "vite"],
-			"matchUpdateTypes": ["minor", "patch", "pin", "digest"]
+			"matchPackageNames": [
+				"vite"
+			],
+			"matchUpdateTypes": [
+				"major"
+			],
+			"enabled": false
 		}
 	]
 }

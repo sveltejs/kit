@@ -1,7 +1,3 @@
-const config = {
-	package: {
-		emitTypes: false
-	}
-};
+const config = {};
 
 export default config;
