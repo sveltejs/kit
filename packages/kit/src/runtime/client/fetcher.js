@@ -94,17 +94,7 @@ export function initial_fetch(resource, opts) {
 		return Promise.resolve(new Response(body, init));
 	}
 
-	const patched_opts = { ...opts };
-	if (DEV) {
-		// This assigns the __sveltekit_fetch__ flag and makes it non-enumerable
-		Object.defineProperty(patched_opts, '__sveltekit_fetch__', {
-			value: true,
-			writable: true,
-			configurable: true
-		});
-	}
-
-	return window.fetch(resource, patched_opts);
+	return DEV ? dev_fetch(resource, opts) : window.fetch(resource, opts);
 }
 
 /**
@@ -130,17 +120,22 @@ export function subsequent_fetch(resource, resolved, opts) {
 		}
 	}
 
-	const patched_opts = { ...opts };
-	if (DEV) {
-		// This assigns the __sveltekit_fetch__ flag and makes it non-enumerable
-		Object.defineProperty(patched_opts, '__sveltekit_fetch__', {
-			value: true,
-			writable: true,
-			configurable: true
-		});
-	}
+	return DEV ? dev_fetch(resolved, opts) : window.fetch(resolved, opts);
+}
 
-	return window.fetch(resolved, patched_opts);
+/**
+ * @param {RequestInfo | URL} resource
+ * @param {RequestInit & Record<string, any> | undefined} opts
+ */
+function dev_fetch(resource, opts) {
+	const patched_opts = { ...opts };
+	// This assigns the __sveltekit_fetch__ flag and makes it non-enumerable
+	Object.defineProperty(patched_opts, '__sveltekit_fetch__', {
+		value: true,
+		writable: true,
+		configurable: true
+	});
+	return window.fetch(resource, patched_opts);
 }
 
 /**
