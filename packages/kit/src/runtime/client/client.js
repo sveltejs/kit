@@ -1662,6 +1662,7 @@ export function create_client(app, target) {
 			});
 
 			addEventListener('popstate', async (event) => {
+				token = {};
 				if (event.state?.[INDEX_KEY]) {
 					// if a popstate-driven navigation is cancelled, we need to counteract it
 					// with history.go, which means we end up back here, hence this check
@@ -1695,7 +1696,8 @@ export function create_client(app, target) {
 							history.go(-delta);
 						},
 						type: 'popstate',
-						delta
+						delta,
+						nav_token: token
 					});
 				} else {
 					// since popstate event is also emitted when an anchor referencing the same
