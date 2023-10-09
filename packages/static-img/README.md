@@ -29,12 +29,6 @@ export default defineConfig({
 
 ## Usage
 
-Static build time optimization uses `vite-imagetools`, which comes as an optional peer dependency, so you first need to install it:
-
-```bash
-npm install --save-dev vite-imagetools
-```
-
 Use in your `.svelte` components by referencing a relative path beginning with `./` or `$` (for Vite aliases):
 
 ```svelte
@@ -83,4 +77,4 @@ This is an experimental MVP for getting initial feedback on the implementation/u
 
 ## Acknowledgements
 
-We'd like to thank the authors of the Next/Nuxt/Astro/`unpic` image components and `svelte-preprocess-import-assets` for inspiring this work. We'd also like to thank the authors of `vite-imagetools` which is used in `@sveltejs/static-img`.
+We'd like to thank the author of `svelte-preprocess-import-assets`, which this code is partially based off of. We'd also like to thank the authors of `vite-imagetools` which is used in `@sveltejs/static-img`.
