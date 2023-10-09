@@ -1,6 +1,7 @@
 import fs from 'node:fs';
 import { join } from 'node:path';
 import { pathToFileURL } from 'node:url';
+import { lookup } from 'mrmime';
 import sirv from 'sirv';
 import { loadEnv, normalizePath } from 'vite';
 import { getRequest, setResponse } from '../../../exports/node/index.js';
@@ -141,7 +142,7 @@ export async function preview(vite, vite_config, svelte_config) {
 
 				if (prerendered) {
 					res.writeHead(200, {
-						'content-type': 'text/html',
+						'content-type': lookup(pathname) || 'text/html',
 						etag
 					});
 
