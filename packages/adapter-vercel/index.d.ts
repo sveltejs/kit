@@ -76,10 +76,7 @@ type ImagesConfig = {
 	formats?: ImageFormat[];
 	dangerouslyAllowSVG?: boolean;
 	contentSecurityPolicy?: string;
-};
-
-type VercelConfig = {
-	images: ImagesConfig;
+	contentDispositionType?: string;
 };
 
 export interface EdgeConfig {
