@@ -12,6 +12,7 @@ import { public_env } from '../../shared-server.js';
 import { text } from '../../../exports/index.js';
 import { create_async_iterator } from '../../../utils/streaming.js';
 import { SVELTE_KIT_ASSETS } from '../../../constants.js';
+import { SCHEME } from '../../../utils/url.js';
 
 // TODO rename this function/module
 
@@ -151,7 +152,7 @@ export async function render_response({
 			const fetch = globalThis.fetch;
 			let warned = false;
 			globalThis.fetch = (info, init) => {
-				if (typeof info === 'string' && !/^\w+:\/\//.test(info)) {
+				if (typeof info === 'string' && !SCHEME.test(info)) {
 					throw new Error(
 						`Cannot call \`fetch\` eagerly during server side rendering with relative URL (${info}) — put your \`fetch\` calls inside \`onMount\` or a \`load\` function instead`
 					);

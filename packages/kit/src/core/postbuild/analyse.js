@@ -61,7 +61,7 @@ async function analyse({ manifest_path, manifest_data, env }) {
 		const node = await loader();
 
 		metadata.nodes[node.index] = {
-			has_server_load: node.server?.load !== undefined
+			has_server_load: node.server?.load !== undefined || node.server?.trailingSlash !== undefined
 		};
 	}
 
@@ -74,7 +74,7 @@ async function analyse({ manifest_path, manifest_data, env }) {
 		/** @type {Array<'GET' | 'POST'>} */
 		const page_methods = [];
 
-		/** @type {import('types').HttpMethod[]} */
+		/** @type {(import('types').HttpMethod | '*')[]} */
 		const api_methods = [];
 
 		/** @type {import('types').PrerenderOption | undefined} */
@@ -101,6 +101,8 @@ async function analyse({ manifest_path, manifest_data, env }) {
 			Object.values(mod).forEach((/** @type {import('types').HttpMethod} */ method) => {
 				if (mod[method] && ENDPOINT_METHODS.has(method)) {
 					api_methods.push(method);
+				} else if (mod.fallback) {
+					api_methods.push('*');
 				}
 			});
 

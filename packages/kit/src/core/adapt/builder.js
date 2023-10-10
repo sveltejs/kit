@@ -181,7 +181,10 @@ export function create_builder({
 		},
 
 		writeClient(dest) {
-			return copy(`${config.kit.outDir}/output/client`, dest);
+			return copy(`${config.kit.outDir}/output/client`, dest, {
+				// avoid making vite build artefacts public
+				filter: (basename) => basename !== '.vite'
+			});
 		},
 
 		writePrerendered(dest) {
