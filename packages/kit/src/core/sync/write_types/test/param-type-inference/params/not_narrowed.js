@@ -1,5 +1,5 @@
 /**
- * @param {string} param 
- * @returns {boolean} 
+ * @param {string} param
+ * @returns {boolean}
  */
 export const match = (param) => true;
