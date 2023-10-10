@@ -21,7 +21,7 @@ export function init(opts) {
  */
 export function client_method(key) {
 	if (!BROWSER) {
-		if (key === 'before_navigate' || key === 'after_navigate') {
+		if (key === 'before_navigate' || key === 'after_navigate' || key === 'on_navigate') {
 			// @ts-expect-error doesn't recognize that both keys here return void so expects a async function
 			return () => {};
 		} else {

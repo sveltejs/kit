@@ -1,14 +1,19 @@
 import { BROWSER } from 'esm-env';
 
+/**
+ * Matches a URI scheme. See https://www.rfc-editor.org/rfc/rfc3986#section-3.1
+ * @type {RegExp}
+ */
+export const SCHEME = /^[a-z][a-z\d+\-.]+:/i;
+
 const absolute = /^([a-z]+:)?\/?\//;
-const scheme = /^[a-z]+:/;
 
 /**
  * @param {string} base
  * @param {string} path
  */
 export function resolve(base, path) {
-	if (scheme.test(path)) return path;
+	if (SCHEME.test(path)) return path;
 	if (path[0] === '#') return base + path;
 
 	const base_match = absolute.exec(base);
@@ -139,6 +144,8 @@ export function make_trackable(url, callback) {
  * @param {URL} url
  */
 export function disable_hash(url) {
+	allow_nodejs_console_log(url);
+
 	Object.defineProperty(url, 'hash', {
 		get() {
 			throw new Error(
@@ -153,12 +160,27 @@ export function disable_hash(url) {
  * @param {URL} url
  */
 export function disable_search(url) {
+	allow_nodejs_console_log(url);
+
 	for (const property of ['search', 'searchParams']) {
 		Object.defineProperty(url, property, {
 			get() {
 				throw new Error(`Cannot access url.${property} on a page with prerendering enabled`);
 			}
 		});
+	}
+}
+
+/**
+ * Allow URL to be console logged, bypassing disabled properties.
+ * @param {URL} url
+ */
+function allow_nodejs_console_log(url) {
+	if (!BROWSER) {
+		// @ts-ignore
+		url[Symbol.for('nodejs.util.inspect.custom')] = (depth, opts, inspect) => {
+			return inspect(new URL(url), opts);
+		};
 	}
 }
 

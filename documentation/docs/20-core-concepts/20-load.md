@@ -435,7 +435,7 @@ export function load({ locals }) {
 }
 ```
 
-> Make sure you're not catching the thrown redirect, which would prevent SvelteKit from handling it.
+> Don't use `throw redirect()` from within a try-catch block, as the redirect will immediately trigger the catch statement.
 
 In the browser, you can also navigate programmatically outside of a `load` function using [`goto`](modules#$app-navigation-goto) from [`$app.navigation`](modules#$app-navigation).
 
@@ -491,6 +491,8 @@ This is useful for creating skeleton loading states, for example:
 > On platforms that do not support streaming, such as AWS Lambda, responses will be buffered. This means the page will only render once all promises resolve. If you are using a proxy (e.g. NGINX), make sure it does not buffer responses from the proxied server.
 
 > Streaming data will only work when JavaScript is enabled. You should avoid returning nested promises from a universal `load` function if the page is server rendered, as these are _not_ streamed — instead, the promise is recreated when the function reruns in the browser.
+
+> The headers and status code of a response cannot be changed once the response has started streaming, therefore you cannot `setHeaders` or throw redirects inside a streamed promise.
 
 ## Parallel loading
 

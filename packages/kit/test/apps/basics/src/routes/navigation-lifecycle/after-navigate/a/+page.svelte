@@ -14,4 +14,4 @@
 </script>
 
 <h1>{from?.url.pathname} -> {to?.url.pathname}</h1>
-<a href="/after-navigate/b">/b</a>
+<a href="/navigation-lifecycle/after-navigate/b">/b</a>
