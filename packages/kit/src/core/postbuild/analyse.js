@@ -77,12 +77,12 @@ async function analyse({ manifest_path, manifest_data, env }) {
 		/** @type {(import('types').HttpMethod | '*')[]} */
 		const api_methods = [];
 
-		/** @type {import('types').PrerenderOption | undefined} */
-		let prerender = undefined;
-		/** @type {any} */
-		let config = undefined;
-		/** @type {import('types').PrerenderEntryGenerator | undefined} */
-		let entries = undefined;
+		/** @type {{ endpoint?: import('types').PrerenderOption, page?: import('types').PrerenderOption }} */
+		const prerender_option = {};
+		/** @type {{ endpoint?: unknown, page?: unknown }} */
+		const config_option = {};
+		/** @type {{ endpoint?: import('types').PrerenderEntryGenerator | undefined, page?: import('types').PrerenderEntryGenerator | undefined }} */
+		const entries_option = {};
 
 		if (route.endpoint) {
 			const mod = await route.endpoint();
@@ -98,7 +98,7 @@ async function analyse({ manifest_path, manifest_data, env }) {
 					);
 				}
 
-				prerender = mod.prerender;
+				prerender_option.endpoint = mod.prerender;
 			}
 
 			Object.values(mod).forEach((/** @type {import('types').HttpMethod} */ method) => {
@@ -109,8 +109,8 @@ async function analyse({ manifest_path, manifest_data, env }) {
 				}
 			});
 
-			config = mod.config;
-			entries = mod.entries;
+			config_option.endpoint = mod.config;
+			entries_option.endpoint = mod.entries;
 		}
 
 		if (route.page) {
@@ -138,13 +138,17 @@ async function analyse({ manifest_path, manifest_data, env }) {
 				validate_page_exports(page.universal, page.universal_id);
 			}
 
-			prerender = get_option(nodes, 'prerender') ?? prerender ?? false;
+			prerender_option.page = get_option(nodes, 'prerender');
 
-			config = get_config(nodes);
-			entries = get_option(nodes, 'entries') ?? entries;
+			config_option.page = get_config(nodes);
+			entries_option.page = get_option(nodes, 'entries');
 		}
 
-		if (prerender && route.endpoint && route.page) {
+		const prerender = prerender_option.page ?? prerender_option.endpoint ?? false;
+		const config = config_option.page ?? entries_option.endpoint;
+		const entries = entries_option.page ?? entries_option.endpoint;
+
+		if (prerender === true && route.endpoint && route.page) {
 			const page = /** @type {string} */ (
 				route_data.leaf?.component ?? route_data.leaf?.universal ?? route_data.leaf?.server
 			);
