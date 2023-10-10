@@ -1,7 +1,6 @@
 import fs from 'node:fs';
 import { fileURLToPath } from 'node:url';
-import { test } from 'uvu';
-import * as assert from 'uvu/assert';
+import { expect, test } from 'vitest';
 import { crawl } from './crawl.js';
 
 const fixtures = fileURLToPath(new URL('./fixtures', import.meta.url));
@@ -18,8 +17,6 @@ for (const fixture of fs.readdirSync(fixtures)) {
 		// uncomment to see how long it took
 		// console.error(fixture, Date.now() - start);
 
-		assert.equal(output, expected);
+		expect(output).toEqual(expected);
 	});
 }
-
-test.run();

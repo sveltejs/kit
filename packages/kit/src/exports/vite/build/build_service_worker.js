@@ -35,7 +35,7 @@ export async function build_service_worker(
 
 	// in a service worker, `location` is the location of the service worker itself,
 	// which is guaranteed to be `<base>/service-worker.js`
-	const base = `location.pathname.split('/').slice(0, -1).join('/')`;
+	const base = "location.pathname.split('/').slice(0, -1).join('/')";
 
 	fs.writeFileSync(
 		service_worker,
@@ -79,8 +79,9 @@ export async function build_service_worker(
 			outDir: `${out}/client`,
 			emptyOutDir: false
 		},
-		define: vite_config.define,
 		configFile: false,
+		define: vite_config.define,
+		publicDir: false,
 		resolve: {
 			alias: [...get_config_aliases(kit), { find: '$service-worker', replacement: service_worker }]
 		}

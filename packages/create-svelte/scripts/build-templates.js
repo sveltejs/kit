@@ -39,7 +39,7 @@ function strip_jsdoc(content) {
 					return '';
 				}
 
-				return `/**${description.replace(/\*\ $/, '')}*/${whitespace}`;
+				return `/**${description.replace(/\* $/, '')}*/${whitespace}`;
 			}
 		);
 }

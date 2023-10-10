@@ -106,21 +106,64 @@ export default config;
 export const csr = false;
 ```
 
+...adding `amp` to your `app.html`
+
+```html
+<html amp>
+...
+```
+
 ...and transforming the HTML using `transformPageChunk` along with `transform` imported from `@sveltejs/amp`:
 
 ```js
+/// file: src/hooks.server.js
 import * as amp from '@sveltejs/amp';
 
 /** @type {import('@sveltejs/kit').Handle} */
 export async function handle({ event, resolve }) {
 	let buffer = '';
-	return resolve(event, {
+	return await resolve(event, {
 		transformPageChunk: ({ html, done }) => {
 			buffer += html;
-			if (done) return amp.transform(html);
+			if (done) return amp.transform(buffer);
 		}
 	});
 }
+```
+
+To prevent shipping any unused CSS as a result of transforming the page to amp, we can use [`dropcss`](https://www.npmjs.com/package/dropcss):
+
+```js
+/// file: src/hooks.server.js
+// @errors: 2307
+import * as amp from '@sveltejs/amp';
+import dropcss from 'dropcss';
+
+/** @type {import('@sveltejs/kit').Handle} */
+export async function handle({ event, resolve }) {
+	let buffer = '';
+
+	return await resolve(event, {
+		transformPageChunk: ({ html, done }) => {
+			buffer += html;
+
+			if (done) {
+				let css = '';
+				const markup = amp
+					.transform(buffer)
+					.replace('⚡', 'amp') // dropcss can't handle this character
+					.replace(/<style amp-custom([^>]*?)>([^]+?)<\/style>/, (match, attributes, contents) => {
+						css = contents;
+						return `<style amp-custom${attributes}></style>`;
+					});
+
+				css = dropcss({ css, html: markup }).css;
+				return markup.replace('</style>', `${css}</style>`);
+			}
+		}
+	});
+}
+
 ```
 
 > It's a good idea to use the `handle` hook to validate the transformed HTML using `amphtml-validator`, but only if you're prerendering pages since it's very slow.

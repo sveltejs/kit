@@ -10,9 +10,9 @@ import { HttpError, Redirect } from '../../control.js';
 
 /**
  * @param {{
- *   event: import('types').RequestEvent;
+ *   event: import('@sveltejs/kit').RequestEvent;
  *   options: import('types').SSROptions;
- *   manifest: import('types').SSRManifest;
+ *   manifest: import('@sveltejs/kit').SSRManifest;
  *   state: import('types').SSRState;
  *   status: number;
  *   error: unknown;
@@ -28,6 +28,11 @@ export async function respond_with_error({
 	error,
 	resolve_opts
 }) {
+	// reroute to the fallback page to prevent an infinite chain of requests.
+	if (event.request.headers.get('x-sveltekit-error')) {
+		return static_error_page(options, status, /** @type {Error} */ (error).message);
+	}
+
 	/** @type {import('./types').Fetched[]} */
 	const fetched = [];
 
@@ -44,7 +49,8 @@ export async function respond_with_error({
 				event,
 				state,
 				node: default_layout,
-				parent: async () => ({})
+				parent: async () => ({}),
+				track_server_fetches: options.track_server_fetches
 			});
 
 			const server_data = await server_data_promise;

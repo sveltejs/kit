@@ -1,5 +1,55 @@
 # svelte-migrate
 
+## 1.2.7
+
+### Patch Changes
+
+- chore(deps): update dependency ts-morph to v20 ([#10766](https://github.com/sveltejs/kit/pull/10766))
+
+## 1.2.6
+
+### Patch Changes
+
+- fix: do not downgrade versions ([#10352](https://github.com/sveltejs/kit/pull/10352))
+
+## 1.2.5
+
+### Patch Changes
+
+- fix: note old eslint plugin deprecation ([#10319](https://github.com/sveltejs/kit/pull/10319))
+
+## 1.2.4
+
+### Patch Changes
+
+- fix: ensure glob finds all files in folders ([#10230](https://github.com/sveltejs/kit/pull/10230))
+
+## 1.2.3
+
+### Patch Changes
+
+- fix: handle missing fields in migrate script ([#10221](https://github.com/sveltejs/kit/pull/10221))
+
+## 1.2.2
+
+### Patch Changes
+
+- fix: finalize svelte-4 migration ([#10195](https://github.com/sveltejs/kit/pull/10195))
+
+- fix: changed `index` to `index.d.ts` in `typesVersions` ([#10180](https://github.com/sveltejs/kit/pull/10180))
+
+## 1.2.1
+
+### Patch Changes
+
+- docs: update readme ([#10066](https://github.com/sveltejs/kit/pull/10066))
+
+## 1.2.0
+
+### Minor Changes
+
+- feat: add Svelte 4 migration ([#9729](https://github.com/sveltejs/kit/pull/9729))
+
 ## 1.1.3
 
 ### Patch Changes

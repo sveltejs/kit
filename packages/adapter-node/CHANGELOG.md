@@ -1,5 +1,26 @@
 # @sveltejs/adapter-node
 
+## 1.3.1
+
+### Patch Changes
+
+- fix: build output stuck on top level await ([#10314](https://github.com/sveltejs/kit/pull/10314))
+
+- Updated dependencies [[`c1ad5b2f8`](https://github.com/sveltejs/kit/commit/c1ad5b2f84762a34adb327a0e309792603b405b3), [`67a0d869b`](https://github.com/sveltejs/kit/commit/67a0d869b3221925c3f456127205a4aee0b28e85), [`4d7f38fa1`](https://github.com/sveltejs/kit/commit/4d7f38fa18c75991bca3f723cdc50d8a67036f83), [`42c9b935e`](https://github.com/sveltejs/kit/commit/42c9b935e49fbbeff7065d1b2a31986c0b814956), [`42c9b935e`](https://github.com/sveltejs/kit/commit/42c9b935e49fbbeff7065d1b2a31986c0b814956)]:
+  - @sveltejs/kit@1.22.0
+
+## 1.3.0
+
+### Minor Changes
+
+- chore: remove build step for adapter node ([#10041](https://github.com/sveltejs/kit/pull/10041))
+
+- feat: load sourcemaps so that they can be merged to point to original sourcefiles ([#10041](https://github.com/sveltejs/kit/pull/10041))
+
+### Patch Changes
+
+- fix: do not crash server if specified `ADDRESS_HEADER` is missing from a request ([#10285](https://github.com/sveltejs/kit/pull/10285))
+
 ## 1.2.4
 
 ### Patch Changes

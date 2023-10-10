@@ -1,5 +1,29 @@
 # @sveltejs/package
 
+## 2.2.2
+
+### Patch Changes
+
+- fix: prevent crash on errors in watch mode ([#10628](https://github.com/sveltejs/kit/pull/10628))
+
+## 2.2.1
+
+### Patch Changes
+
+- fix: delay emptying `dist/` folder ([#10514](https://github.com/sveltejs/kit/pull/10514))
+
+## 2.2.0
+
+### Minor Changes
+
+- feat: use Svelte 4 typings when packaging if dependencies allow it ([#10328](https://github.com/sveltejs/kit/pull/10328))
+
+## 2.1.0
+
+### Minor Changes
+
+- feat: support Svelte 4 ([#10225](https://github.com/sveltejs/kit/pull/10225))
+
 ## 2.0.2
 
 ### Patch Changes

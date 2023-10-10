@@ -1,15 +1,18 @@
 <script>
-	import { Section, theme } from '@sveltejs/site-kit/components';
+	import { Section } from '@sveltejs/site-kit/components';
+	import { theme } from '@sveltejs/site-kit/stores';
+
+	import { base } from '$app/paths';
+	import plus from '$lib/icons/plus.svg';
+	import azure from './logos/azure.svg';
+	import cloudflare from './logos/cloudflare.svg';
+	import deno from './logos/deno.svg';
+	import firebase from './logos/firebase.svg';
 	import html5 from './logos/html5.svg';
+	import lambda from './logos/lambda.svg';
+	import netlify from './logos/netlify.svg';
 	import node from './logos/node.svg';
 	import vercel from './logos/vercel.svg';
-	import netlify from './logos/netlify.svg';
-	import cloudflare from './logos/cloudflare.svg';
-	import firebase from './logos/firebase.svg';
-	import deno from './logos/deno.svg';
-	import lambda from './logos/lambda.svg';
-	import azure from './logos/azure.svg';
-	import plus from '$lib/icons/plus.svg';
 </script>
 
 <Section --background="var(--background-1)">
@@ -111,7 +114,7 @@
 
 		<div class="globe">
 			<img
-				src="/edge.svg?{$theme.current}"
+				src="{base}/edge.svg?{$theme.current}"
 				width="100%"
 				height="100%"
 				alt="Dynamically rendered map of the world, centered on the user's location"

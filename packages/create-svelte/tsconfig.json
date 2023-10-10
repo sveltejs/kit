@@ -10,5 +10,5 @@
 		"strict": true,
 		"skipLibCheck": true
 	},
-	"include": ["./scripts/**/*", "./index.js", "./bin.js", "./utils.js"]
+	"include": ["./scripts/**/*", "./test/*.js", "./*.js"]
 }

@@ -16,17 +16,17 @@
 	},
 	"files": ["dist", "!dist/**/*.test.*", "!dist/**/*.spec.*"],
 	"peerDependencies": {
-		"svelte": "^3.54.0"
+		"svelte": "^4.0.0"
 	},
 	"devDependencies": {
 		"@sveltejs/adapter-auto": "^2.0.0",
-		"@sveltejs/kit": "^1.5.0",
+		"@sveltejs/kit": "^1.20.4",
 		"@sveltejs/package": "^2.0.0",
 		"publint": "^0.1.9",
-		"svelte": "^3.54.0",
+		"svelte": "^4.0.5",
 		"tslib": "^2.4.1",
 		"typescript": "^5.0.0",
-		"vite": "^4.3.0"
+		"vite": "^4.4.2"
 	},
 	"svelte": "./dist/index.js",
 	"types": "./dist/index.d.ts",

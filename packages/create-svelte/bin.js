@@ -4,7 +4,7 @@ import path from 'node:path';
 import * as p from '@clack/prompts';
 import { bold, cyan, grey, yellow } from 'kleur/colors';
 import { create } from './index.js';
-import { dist } from './utils.js';
+import { dist, package_manager } from './utils.js';
 
 const { version } = JSON.parse(fs.readFileSync(new URL('package.json', import.meta.url), 'utf-8'));
 let cwd = process.argv[2] || '.';
@@ -114,7 +114,7 @@ await create(cwd, {
 	vitest: options.features.includes('vitest')
 });
 
-p.outro(`Your project is ready!`);
+p.outro('Your project is ready!');
 
 if (options.types === 'typescript') {
 	console.log(bold('✔ Typescript'));
@@ -161,10 +161,10 @@ if (relative !== '') {
 	console.log(`  ${i++}: ${bold(cyan(`cd ${relative}`))}`);
 }
 
-console.log(`  ${i++}: ${bold(cyan('npm install'))} (or pnpm install, etc)`);
+console.log(`  ${i++}: ${bold(cyan(`${package_manager} install`))}`);
 // prettier-ignore
 console.log(`  ${i++}: ${bold(cyan('git init && git add -A && git commit -m "Initial commit"'))} (optional)`);
-console.log(`  ${i++}: ${bold(cyan('npm run dev -- --open'))}`);
+console.log(`  ${i++}: ${bold(cyan(`${package_manager} run dev -- --open`))}`);
 
 console.log(`\nTo close the dev server, hit ${bold(cyan('Ctrl-C'))}`);
 console.log(`\nStuck? Visit us at ${cyan('https://svelte.dev/chat')}`);

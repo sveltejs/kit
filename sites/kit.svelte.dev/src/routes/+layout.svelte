@@ -1,66 +1,69 @@
 <script>
-	import { browser } from '$app/environment';
-	import { base } from '$app/paths';
-	import { page } from '$app/stores';
-	import { Icon, Nav, NavItem, Separator, Shell } from '@sveltejs/site-kit/components';
-	import { Search, SearchBox } from '@sveltejs/site-kit/search';
 	import '@sveltejs/site-kit/styles/index.css';
 
-	let banner_height = '48px';
+	import { browser } from '$app/environment';
+	import { page } from '$app/stores';
+	import { Icon, Shell } from '@sveltejs/site-kit/components';
+	import { Nav, Separator } from '@sveltejs/site-kit/nav';
+	import { Search, SearchBox } from '@sveltejs/site-kit/search';
+
+	export let data;
+
+	/** @type {import('@sveltejs/kit').Snapshot<number>} */
+	let shell_snapshot;
+
+	/** @type {import('@sveltejs/kit').Snapshot<{shell: number}>} */
+	export const snapshot = {
+		capture() {
+			return {
+				shell: shell_snapshot?.capture()
+			};
+		},
+		restore(data) {
+			shell_snapshot?.restore(data.shell);
+		}
+	};
 </script>
 
-<Shell banner_bottom_height={banner_height}>
-	<Nav slot="top-nav">
-		<svelte:fragment slot="home">
-			<span><strong>kit</strong>.svelte.dev</span>
-		</svelte:fragment>
+<div style:display={$page.url.pathname !== '/docs' ? 'contents' : 'none'}>
+	<Shell nav_visible={$page.url.pathname !== '/repl/embed'} bind:snapshot={shell_snapshot}>
+		<Nav slot="top-nav" title={data.nav_title} links={data.nav_links}>
+			<svelte:fragment slot="home-large">
+				<strong>kit</strong>.svelte.dev
+			</svelte:fragment>
 
-		<svelte:fragment slot="nav-center">
-			{#if $page.url.pathname !== '/search'}
-				<li><Search /></li>
-			{/if}
-		</svelte:fragment>
+			<svelte:fragment slot="home-small">
+				<strong>kit</strong>
+			</svelte:fragment>
 
-		<svelte:fragment slot="nav-right">
-			<NavItem
-				selected={$page.url.pathname.startsWith(`${base}/docs`) || undefined}
-				href="{base}/docs">Docs</NavItem
-			>
-			<NavItem
-				selected={$page.url.pathname.startsWith(`${base}/faq`) || undefined}
-				href="{base}/faq">FAQ</NavItem
-			>
+			<svelte:fragment slot="search">
+				{#if $page.url.pathname !== '/search'}
+					<Search />
+				{/if}
+			</svelte:fragment>
 
-			<Separator />
+			<svelte:fragment slot="external-links">
+				<a href="https://learn.svelte.dev/tutorial/introducing-sveltekit" rel="external">Tutorial</a
+				>
+				<a href="https://svelte.dev">Svelte</a>
 
-			<NavItem external="https://svelte.dev">Svelte</NavItem>
+				<Separator />
 
-			<NavItem external="https://svelte.dev/chat" title="Discord Chat">
-				<span slot="small">Discord</span>
-				<Icon name="message-square" />
-			</NavItem>
+				<a href="https://svelte.dev/chat" rel="external" title="Discord Chat">
+					<span class="small">Discord</span>
+					<span class="large"><Icon name="discord" /></span>
+				</a>
 
-			<NavItem external="https://github.com/sveltejs/kit" title="GitHub Repo">
-				<span slot="small">GitHub</span>
-				<Icon name="github" />
-			</NavItem>
-		</svelte:fragment>
-	</Nav>
+				<a href="https://github.com/sveltejs/kit" title="GitHub Repo">
+					<span class="small">GitHub</span>
+					<span class="large"><Icon name="github" /></span>
+				</a>
+			</svelte:fragment>
+		</Nav>
 
-	<slot />
-
-	<div class="banner" slot="banner-bottom">
-		<a target="_blank" rel="noopener noreferrer" href="https://sveltesummit.com/">
-			<span class="small">
-				<strong>Svelte Summit</strong> spring conference →
-			</span>
-			<span class="large">
-				<strong>Svelte Summit</strong> The Svelte Conference for everyone →
-			</span>
-		</a>
-		<button on:click={() => (banner_height = '0px')}> ✕ </button>
-	</div>
-</Shell>
+		<slot />
+	</Shell>
+</div>
 
 {#if browser}
 	<SearchBox />
@@ -85,47 +88,11 @@
 		}
 	}
 
-	li {
-		display: flex;
-		align-items: center;
-	}
-
 	:global(.examples-container, .repl-outer, .tutorial-outer) {
 		height: calc(100vh - var(--sk-nav-height)) !important;
 	}
 
 	:global(.toggle) {
 		bottom: 0 !important;
-	}
-
-	.banner {
-		--banner-bg: #ff4700;
-		--banner-color: white;
-		--banner-strong-color: white;
-
-		background-color: var(--banner-bg);
-		color: var(--banner-color);
-		position: fixed;
-		display: flex;
-		align-items: center;
-		justify-content: center;
-		bottom: 0;
-		width: 100vw;
-		height: var(--sk-banner-bottom-height);
-		z-index: 999;
-	}
-
-	.banner strong {
-		font-weight: bold;
-	}
-
-	.banner span {
-		color: var(--banner-color);
-	}
-
-	.banner button {
-		position: absolute;
-		right: 30px;
-		font-size: 18px;
 	}
 </style>

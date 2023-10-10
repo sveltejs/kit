@@ -1,12 +1,21 @@
 import { DEV } from 'esm-env';
 import { onMount, tick } from 'svelte';
 import {
-	make_trackable,
-	decode_pathname,
+	add_data_suffix,
 	decode_params,
-	normalize_path,
-	add_data_suffix
+	decode_pathname,
+	make_trackable,
+	normalize_path
 } from '../../utils/url.js';
+import {
+	initial_fetch,
+	lock_fetch,
+	native_fetch,
+	subsequent_fetch,
+	unlock_fetch
+} from './fetcher.js';
+import { parse } from './parse.js';
+import * as storage from './session-storage.js';
 import {
 	find_anchor,
 	get_base_uri,
@@ -15,25 +24,16 @@ import {
 	is_external_url,
 	scroll_state
 } from './utils.js';
-import * as storage from './session-storage.js';
-import {
-	lock_fetch,
-	unlock_fetch,
-	initial_fetch,
-	subsequent_fetch,
-	native_fetch
-} from './fetcher.js';
-import { parse } from './parse.js';
 
 import { base } from '__sveltekit/paths';
-import { HttpError, Redirect } from '../control.js';
-import { stores } from './singletons.js';
-import { unwrap_promises } from '../../utils/promises.js';
 import * as devalue from 'devalue';
-import { INDEX_KEY, PRELOAD_PRIORITIES, SCROLL_KEY, SNAPSHOT_KEY } from './constants.js';
-import { validate_page_exports } from '../../utils/exports.js';
 import { compact } from '../../utils/array.js';
-import { INVALIDATED_PARAM, validate_depends } from '../shared.js';
+import { validate_page_exports } from '../../utils/exports.js';
+import { unwrap_promises } from '../../utils/promises.js';
+import { HttpError, Redirect } from '../control.js';
+import { INVALIDATED_PARAM, TRAILING_SLASH_PARAM, validate_depends } from '../shared.js';
+import { INDEX_KEY, PRELOAD_PRIORITIES, SCROLL_KEY, SNAPSHOT_KEY } from './constants.js';
+import { stores } from './singletons.js';
 
 let errored = false;
 
@@ -86,10 +86,13 @@ export function create_client(app, target) {
 	let load_cache = null;
 
 	const callbacks = {
-		/** @type {Array<(navigation: import('types').BeforeNavigate) => void>} */
+		/** @type {Array<(navigation: import('@sveltejs/kit').BeforeNavigate) => void>} */
 		before_navigate: [],
 
-		/** @type {Array<(navigation: import('types').AfterNavigate) => void>} */
+		/** @type {Array<(navigation: import('@sveltejs/kit').OnNavigate) => import('types').MaybePromise<(() => void) | void>>} */
+		on_navigate: [],
+
+		/** @type {Array<(navigation: import('@sveltejs/kit').AfterNavigate) => void>} */
 		after_navigate: []
 	};
 
@@ -138,7 +141,7 @@ export function create_client(app, target) {
 		scrollTo(scroll.x, scroll.y);
 	}
 
-	/** @type {import('types').Page} */
+	/** @type {import('@sveltejs/kit').Page} */
 	let page;
 
 	/** @type {{}} */
@@ -153,6 +156,7 @@ export function create_client(app, target) {
 		// but batch multiple synchronous invalidations.
 		pending_invalidate = pending_invalidate || Promise.resolve();
 		await pending_invalidate;
+		if (!pending_invalidate) return;
 		pending_invalidate = null;
 
 		const url = new URL(location.href);
@@ -279,7 +283,7 @@ export function create_client(app, target) {
 		const style = document.querySelector('style[data-sveltekit]');
 		if (style) style.remove();
 
-		page = /** @type {import('types').Page} */ (result.props.page);
+		page = /** @type {import('@sveltejs/kit').Page} */ (result.props.page);
 
 		root = new app.root({
 			target,
@@ -289,7 +293,7 @@ export function create_client(app, target) {
 
 		restore_snapshot(current_history_index);
 
-		/** @type {import('types').AfterNavigate} */
+		/** @type {import('@sveltejs/kit').AfterNavigate} */
 		const navigation = {
 			from: null,
 			to: {
@@ -298,7 +302,8 @@ export function create_client(app, target) {
 				url: new URL(location.href)
 			},
 			willUnload: false,
-			type: 'enter'
+			type: 'enter',
+			complete: Promise.resolve()
 		};
 		callbacks.after_navigate.forEach((fn) => fn(navigation));
 
@@ -332,6 +337,7 @@ export function create_client(app, target) {
 			if (node?.slash !== undefined) slash = node.slash;
 		}
 		url.pathname = normalize_path(url.pathname, slash);
+		// eslint-disable-next-line
 		url.search = url.search; // turn `/?` into `/`
 
 		/** @type {import('./types').NavigationFinished} */
@@ -445,14 +451,14 @@ export function create_client(app, target) {
 				}
 			}
 
-			/** @type {import('types').LoadEvent} */
+			/** @type {import('@sveltejs/kit').LoadEvent} */
 			const load_input = {
-				route: {
-					get id() {
+				route: new Proxy(route, {
+					get: (target, key) => {
 						uses.route = true;
-						return route.id;
+						return target[/** @type {'id'} */ (key)];
 					}
-				},
+				}),
 				params: new Proxy(params, {
 					get: (target, key) => {
 						uses.params.add(/** @type {string} */ (key));
@@ -900,7 +906,7 @@ export function create_client(app, target) {
 	/**
 	 * @param {{
 	 *   url: URL;
-	 *   type: import('types').NavigationType;
+	 *   type: import('@sveltejs/kit').Navigation["type"];
 	 *   intent?: import('./types').NavigationIntent;
 	 *   delta?: number;
 	 * }} opts
@@ -908,30 +914,17 @@ export function create_client(app, target) {
 	function before_navigate({ url, type, intent, delta }) {
 		let should_block = false;
 
-		/** @type {import('types').Navigation} */
-		const navigation = {
-			from: {
-				params: current.params,
-				route: { id: current.route?.id ?? null },
-				url: current.url
-			},
-			to: {
-				params: intent?.params ?? null,
-				route: { id: intent?.route?.id ?? null },
-				url
-			},
-			willUnload: !intent,
-			type
-		};
+		const nav = create_navigation(current, intent, url, type);
 
 		if (delta !== undefined) {
-			navigation.delta = delta;
+			nav.navigation.delta = delta;
 		}
 
 		const cancellable = {
-			...navigation,
+			...nav.navigation,
 			cancel: () => {
 				should_block = true;
+				nav.reject(new Error('navigation was cancelled'));
 			}
 		};
 
@@ -940,7 +933,7 @@ export function create_client(app, target) {
 			callbacks.before_navigate.forEach((fn) => fn(cancellable));
 		}
 
-		return should_block ? null : navigation;
+		return should_block ? null : nav;
 	}
 
 	/**
@@ -953,7 +946,7 @@ export function create_client(app, target) {
 	 *     replaceState: boolean;
 	 *     state: any;
 	 *   } | null;
-	 *   type: import('types').NavigationType;
+	 *   type: import('@sveltejs/kit').Navigation["type"];
 	 *   delta?: number;
 	 *   nav_token?: {};
 	 *   accepted: () => void;
@@ -973,9 +966,9 @@ export function create_client(app, target) {
 		blocked
 	}) {
 		const intent = get_navigation_intent(url, false);
-		const navigation = before_navigate({ url, type, delta, intent });
+		const nav = before_navigate({ url, type, delta, intent });
 
-		if (!navigation) {
+		if (!nav) {
 			blocked();
 			return;
 		}
@@ -988,7 +981,7 @@ export function create_client(app, target) {
 		navigating = true;
 
 		if (started) {
-			stores.navigating.set(navigation);
+			stores.navigating.set(nav.navigation);
 		}
 
 		token = nav_token;
@@ -1015,7 +1008,10 @@ export function create_client(app, target) {
 		url = intent?.url || url;
 
 		// abort if user navigated during update
-		if (token !== nav_token) return false;
+		if (token !== nav_token) {
+			nav.reject(new Error('navigation was aborted'));
+			return false;
+		}
 
 		if (navigation_result.type === 'redirect') {
 			if (redirect_chain.length > 10 || redirect_chain.includes(url.pathname)) {
@@ -1091,6 +1087,28 @@ export function create_client(app, target) {
 				navigation_result.props.page.url = url;
 			}
 
+			const after_navigate = (
+				await Promise.all(
+					callbacks.on_navigate.map((fn) =>
+						fn(/** @type {import('@sveltejs/kit').OnNavigate} */ (nav.navigation))
+					)
+				)
+			).filter((value) => typeof value === 'function');
+
+			if (after_navigate.length > 0) {
+				function cleanup() {
+					callbacks.after_navigate = callbacks.after_navigate.filter(
+						// @ts-ignore
+						(fn) => !after_navigate.includes(fn)
+					);
+				}
+
+				after_navigate.push(cleanup);
+
+				// @ts-ignore
+				callbacks.after_navigate.push(...after_navigate);
+			}
+
 			root.$set(navigation_result.props);
 		} else {
 			initialize(navigation_result);
@@ -1140,8 +1158,10 @@ export function create_client(app, target) {
 			restore_snapshot(current_history_index);
 		}
 
+		nav.fulfil(undefined);
+
 		callbacks.after_navigate.forEach((fn) =>
-			fn(/** @type {import('types').AfterNavigate} */ (navigation))
+			fn(/** @type {import('@sveltejs/kit').AfterNavigate} */ (nav.navigation))
 		);
 		stores.navigating.set(null);
 
@@ -1173,7 +1193,7 @@ export function create_client(app, target) {
 				'An error occurred while loading the page. This will cause a full page reload. (This message will only appear during development.)'
 			);
 
-			debugger;
+			debugger; // eslint-disable-line
 		}
 
 		return await native_navigation(url);
@@ -1295,7 +1315,7 @@ export function create_client(app, target) {
 
 	/**
 	 * @param {unknown} error
-	 * @param {import('types').NavigationEvent} event
+	 * @param {import('@sveltejs/kit').NavigationEvent} event
 	 * @returns {import('types').MaybePromise<App.Error>}
 	 */
 	function handle_error(error, event) {
@@ -1333,6 +1353,17 @@ export function create_client(app, target) {
 				return () => {
 					const i = callbacks.before_navigate.indexOf(fn);
 					callbacks.before_navigate.splice(i, 1);
+				};
+			});
+		},
+
+		on_navigate: (fn) => {
+			onMount(() => {
+				callbacks.on_navigate.push(fn);
+
+				return () => {
+					const i = callbacks.on_navigate.indexOf(fn);
+					callbacks.on_navigate.splice(i, 1);
 				};
 			});
 		},
@@ -1442,19 +1473,17 @@ export function create_client(app, target) {
 				persist_state();
 
 				if (!navigating) {
+					const nav = create_navigation(current, undefined, null, 'leave');
+
 					// If we're navigating, beforeNavigate was already called. If we end up in here during navigation,
 					// it's due to an external or full-page-reload link, for which we don't want to call the hook again.
-					/** @type {import('types').BeforeNavigate} */
+					/** @type {import('@sveltejs/kit').BeforeNavigate} */
 					const navigation = {
-						from: {
-							params: current.params,
-							route: { id: current.route?.id ?? null },
-							url: current.url
-						},
-						to: null,
-						willUnload: true,
-						type: 'leave',
-						cancel: () => (should_block = true)
+						...nav.navigation,
+						cancel: () => {
+							should_block = true;
+							nav.reject(new Error('navigation was cancelled'));
+						}
 					};
 
 					callbacks.before_navigate.forEach((fn) => fn(navigation));
@@ -1538,15 +1567,22 @@ export function create_client(app, target) {
 				// Removing the hash does a full page navigation in the browser, so make sure a hash is present
 				const [nonhash, hash] = url.href.split('#');
 				if (hash !== undefined && nonhash === location.href.split('#')[0]) {
+					// If we are trying to navigate to the same hash, we should only
+					// attempt to scroll to that element and avoid any history changes.
+					// Otherwise, this can cause Firefox to incorrectly assign a null
+					// history state value without any signal that we can detect.
+					if (current.url.hash === url.hash) {
+						event.preventDefault();
+						a.ownerDocument.getElementById(hash)?.scrollIntoView();
+						return;
+					}
 					// set this flag to distinguish between navigations triggered by
 					// clicking a hash link and those triggered by popstate
 					hash_navigating = true;
 
 					update_scroll_positions(current_history_index);
 
-					current.url = url;
-					stores.page.set({ ...page, url });
-					stores.page.notify();
+					update_url(url);
 
 					if (!options.replace_state) return;
 
@@ -1626,16 +1662,19 @@ export function create_client(app, target) {
 			});
 
 			addEventListener('popstate', async (event) => {
+				token = {};
 				if (event.state?.[INDEX_KEY]) {
 					// if a popstate-driven navigation is cancelled, we need to counteract it
 					// with history.go, which means we end up back here, hence this check
 					if (event.state[INDEX_KEY] === current_history_index) return;
 
 					const scroll = scroll_positions[event.state[INDEX_KEY]];
+					const url = new URL(location.href);
 
 					// if the only change is the hash, we don't need to do anything...
 					if (current.url.href.split('#')[0] === location.href.split('#')[0]) {
-						// ...except handle scroll
+						// ...except update our internal URL tracking and handle scroll
+						update_url(url);
 						scroll_positions[current_history_index] = scroll_state();
 						current_history_index = event.state[INDEX_KEY];
 						scrollTo(scroll.x, scroll.y);
@@ -1645,7 +1684,7 @@ export function create_client(app, target) {
 					const delta = event.state[INDEX_KEY] - current_history_index;
 
 					await navigate({
-						url: new URL(location.href),
+						url,
 						scroll,
 						keepfocus: false,
 						redirect_chain: [],
@@ -1657,8 +1696,17 @@ export function create_client(app, target) {
 							history.go(-delta);
 						},
 						type: 'popstate',
-						delta
+						delta,
+						nav_token: token
 					});
+				} else {
+					// since popstate event is also emitted when an anchor referencing the same
+					// document is clicked, we have to check that the router isn't already handling
+					// the navigation. otherwise we would be updating the page store twice.
+					if (!hash_navigating) {
+						const url = new URL(location.href);
+						update_url(url);
+					}
 				}
 			});
 
@@ -1679,7 +1727,7 @@ export function create_client(app, target) {
 			// URLs after a pushState/replaceState, resulting in a 404 — see
 			// https://github.com/sveltejs/kit/issues/3748#issuecomment-1125980897
 			for (const link of document.querySelectorAll('link')) {
-				if (link.rel === 'icon') link.href = link.href;
+				if (link.rel === 'icon') link.href = link.href; // eslint-disable-line
 			}
 
 			addEventListener('pageshow', (event) => {
@@ -1691,6 +1739,15 @@ export function create_client(app, target) {
 					stores.navigating.set(null);
 				}
 			});
+
+			/**
+			 * @param {URL} url
+			 */
+			function update_url(url) {
+				current.url = url;
+				stores.page.set({ ...page, url });
+				stores.page.notify();
+			}
 		},
 
 		_hydrate: async ({
@@ -1793,6 +1850,9 @@ export function create_client(app, target) {
 async function load_data(url, invalid) {
 	const data_url = new URL(url);
 	data_url.pathname = add_data_suffix(url.pathname);
+	if (url.pathname.endsWith('/')) {
+		data_url.searchParams.append(TRAILING_SLASH_PARAM, '1');
+	}
 	if (DEV && url.searchParams.has(INVALIDATED_PARAM)) {
 		throw new Error(`Cannot used reserved query parameter "${INVALIDATED_PARAM}"`);
 	}
@@ -1806,6 +1866,8 @@ async function load_data(url, invalid) {
 		throw new HttpError(res.status, await res.json());
 	}
 
+	// TODO: fix eslint error
+	// eslint-disable-next-line
 	return new Promise(async (resolve) => {
 		/**
 		 * Map of deferred promises that will be resolved by a subsequent chunk of data
@@ -1957,6 +2019,53 @@ function reset_focus() {
 			});
 		}
 	}
+}
+
+/**
+ * @param {import('./types').NavigationState} current
+ * @param {import('./types').NavigationIntent | undefined} intent
+ * @param {URL | null} url
+ * @param {Exclude<import('@sveltejs/kit').NavigationType, 'enter'>} type
+ */
+function create_navigation(current, intent, url, type) {
+	/** @type {(value: any) => void} */
+	let fulfil;
+
+	/** @type {(error: any) => void} */
+	let reject;
+
+	const complete = new Promise((f, r) => {
+		fulfil = f;
+		reject = r;
+	});
+
+	// Handle any errors off-chain so that it doesn't show up as an unhandled rejection
+	complete.catch(() => {});
+
+	/** @type {import('@sveltejs/kit').Navigation} */
+	const navigation = {
+		from: {
+			params: current.params,
+			route: { id: current.route?.id ?? null },
+			url: current.url
+		},
+		to: url && {
+			params: intent?.params ?? null,
+			route: { id: intent?.route?.id ?? null },
+			url
+		},
+		willUnload: !intent,
+		type,
+		complete
+	};
+
+	return {
+		navigation,
+		// @ts-expect-error
+		fulfil,
+		// @ts-expect-error
+		reject
+	};
 }
 
 if (DEV) {

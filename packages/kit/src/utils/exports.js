@@ -31,7 +31,7 @@ function validator(expected) {
  * @returns {string | void}
  */
 function hint_for_supported_files(key, ext = '.js') {
-	let supported_files = [];
+	const supported_files = [];
 
 	if (valid_layout_exports.has(key)) {
 		supported_files.push(`+layout${ext}`);
@@ -54,7 +54,7 @@ function hint_for_supported_files(key, ext = '.js') {
 	}
 
 	if (supported_files.length > 0) {
-		return `'${key}' is a valid export in ${supported_files.slice(0, -1).join(`, `)}${
+		return `'${key}' is a valid export in ${supported_files.slice(0, -1).join(', ')}${
 			supported_files.length > 1 ? ' or ' : ''
 		}${supported_files.at(-1)}`;
 	}
@@ -69,8 +69,8 @@ const valid_layout_exports = new Set([
 	'config'
 ]);
 const valid_page_exports = new Set([...valid_layout_exports, 'entries']);
-const valid_layout_server_exports = new Set([...valid_layout_exports, 'actions']);
-const valid_page_server_exports = new Set([...valid_layout_server_exports, 'entries']);
+const valid_layout_server_exports = new Set([...valid_layout_exports]);
+const valid_page_server_exports = new Set([...valid_layout_server_exports, 'actions', 'entries']);
 const valid_server_exports = new Set([
 	'GET',
 	'POST',
@@ -78,6 +78,8 @@ const valid_server_exports = new Set([
 	'PUT',
 	'DELETE',
 	'OPTIONS',
+	'HEAD',
+	'fallback',
 	'prerender',
 	'trailingSlash',
 	'config',
