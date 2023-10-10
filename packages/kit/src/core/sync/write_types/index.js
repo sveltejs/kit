@@ -191,7 +191,11 @@ function update_types(config, routes, route, to_delete = new Set()) {
 
 	// returns the predicate of a matcher's type guard - or string if there is no type guard
 	declarations.push(
-		'//@ts-expect-error\ntype MatcherParam<M> = M extends (param: string) => param is infer U ? U : string;'
+		[
+			'// TS complains on infer U, which seems weird',
+			'// @ts-ignore',
+			'type MatcherParam<M> = M extends (param : string) => param is infer U ? U extends string ? U : string : string;'
+		].join('\n')
 	);
 
 	declarations.push(
