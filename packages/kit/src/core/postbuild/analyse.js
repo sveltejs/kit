@@ -89,9 +89,12 @@ async function analyse({ manifest_path, manifest_data, env }) {
 			if (mod.prerender !== undefined) {
 				validate_server_exports(mod, route.id);
 
-				if (mod.prerender && (mod.POST || mod.PATCH || mod.PUT || mod.DELETE)) {
+				if (
+					mod.prerender &&
+					(mod.POST || mod.PATCH || mod.PUT || mod.DELETE || mod.HEAD || mod.OPTIONS)
+				) {
 					throw new Error(
-						`Cannot prerender ${route_data.endpoint?.file} as it exposes POST, PATCH, PUT, or DELETE handlers`
+						`Cannot prerender ${route_data.endpoint?.file} as it exposes POST, PATCH, PUT, DELETE, HEAD, or OPTIONS handlers`
 					);
 				}
 
