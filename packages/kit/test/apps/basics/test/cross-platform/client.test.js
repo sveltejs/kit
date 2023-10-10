@@ -646,6 +646,15 @@ test.describe('Routing', () => {
 		expect(await page.textContent('#page-url-hash')).toBe('#target');
 	});
 
+	test('clicking on hash link to a new page focuses the correct element', async ({ page, browserName }) => {
+		const tab = browserName === 'webkit' ? 'Alt+Tab' : 'Tab';
+		await page.goto('/routing/focus');
+		await page.locator('[href="/routing/focus/a#p"]').click();
+		expect(await page.evaluate(() => (document.activeElement || {}).nodeName)).toBe('BODY');
+		await page.keyboard.press(tab);
+		await expect(page.locator('#button3')).toBeFocused();
+	});
+
 	test('back button returns to previous route when previous route has been navigated to via hash anchor', async ({
 		page,
 		clicknav

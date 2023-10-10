@@ -1126,10 +1126,10 @@ export function create_client(app, target) {
 			if (scroll) {
 				scrollTo(scroll.x, scroll.y);
 			} else if (deep_linked) {
-				// Here we use `scrollIntoView` on the element instead of `scrollTo`
-				// because it natively supports the `scroll-margin` and `scroll-behavior`
-				// CSS properties.
-				deep_linked.scrollIntoView();
+				// `location.replace` emulates the browser native behaviour when a hash
+				// link is clicked by scrolling to and focusing the correct element
+				// even when the element cannot be manually focused.
+				location.replace(url.hash);
 			} else {
 				scrollTo(0, 0);
 			}
