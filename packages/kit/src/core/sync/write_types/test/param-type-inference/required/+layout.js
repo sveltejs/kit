@@ -1,9 +1,10 @@
+/* eslint-disable */
+
 /** @type {import('../.svelte-kit/types/src/core/sync/write_types/test/param-type-inference/required/$types').LayoutLoad} */
 export function load({ params }) {
 	if (params.narrowedParam) {
 		/** @type {"a" | "b"} */
-		let a;
-		a = params.narrowedParam;
+		const a = params.narrowedParam;
 	}
 
 	if (params.regularParam) {

@@ -1,3 +1,5 @@
+/* eslint-disable */
+
 /**
  * @param {string} param
  * @returns {boolean}
