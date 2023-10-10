@@ -646,7 +646,10 @@ test.describe('Routing', () => {
 		expect(await page.textContent('#page-url-hash')).toBe('#target');
 	});
 
-	test('clicking on hash link to a new page focuses the correct element', async ({ page, browserName }) => {
+	test('clicking on hash link to a new page focuses the correct element', async ({
+		page,
+		browserName
+	}) => {
 		const tab = browserName === 'webkit' ? 'Alt+Tab' : 'Tab';
 		await page.goto('/routing/focus');
 		await page.locator('[href="/routing/focus/a#p"]').click();
