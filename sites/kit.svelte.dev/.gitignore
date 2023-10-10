@@ -2,6 +2,7 @@
 .env
 /.svelte-kit/
 /.snippets
+/.vercel/
 /build/
 /functions/
 /src/lib/generated/type-info.js
