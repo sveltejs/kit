@@ -69,7 +69,8 @@ This will replace your `img` tag with a `picture` tag wrapping one `source` tag 
 
 ### Dynamically choosing an image
 
-You can also manually import an image and then pass it to a transformed `img` tag.
+You can also manually import an image and then pass it to a transformed `img` tag. This is useful when you have a collection of static images and would like to dynamically choose one. You can create a collection of images manually [as we do on the homepage showcase](https://github.com/sveltejs/kit/blob/master/sites/kit.svelte.dev/src/routes/home/Showcase.svelte) or with [Vite's `import.meta.glob`](https://vitejs.dev/guide/features.html#glob-import).
+
 
 ```svelte
 <script>
@@ -79,8 +80,6 @@ You can also manually import an image and then pass it to a transformed `img` ta
 <!-- static-img-enable -->
 <img src={MyImage} alt="An alt text" />
 ```
-
-This is useful when you have a collection of static images and would like to dynamically choose one. A collection of images can be imported with [Vite's `import.meta.glob`](https://vitejs.dev/guide/features.html#glob-import).
 
 ### Intrinsic Dimensions
 
@@ -99,7 +98,7 @@ This is useful when you have a collection of static images and would like to dyn
 
 > If you have existing image imports like `import SomeImage from './some/image.jpg';` they will be treated differently now. If you want to get back the previous behavior of this import returning a URL string, add `?url` to the end of the import.
 
-If you have an image tag you do not want to be transformed you can use the comment `<!-- static-img-disable -->`.
+If you have an image tag that you do not want to be transformed you can use the comment `<!-- static-img-disable -->`.
 
 ## Best practices
 
