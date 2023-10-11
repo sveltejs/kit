@@ -1,5 +1,5 @@
 import { sveltekit } from '@sveltejs/kit/vite';
-import { images } from '@sveltejs/static-img';
+import { staticImages } from '@sveltejs/static-img';
 import browserslist from 'browserslist';
 import { browserslistToTargets } from 'lightningcss';
 
@@ -20,7 +20,7 @@ const config = {
 	},
 
 	plugins: [
-		images(),
+		staticImages(),
 		sveltekit()
 	],
 

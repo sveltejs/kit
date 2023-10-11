@@ -1,3 +1,3 @@
 import { Plugin } from 'vite';
 
-export function images(): Promise<Plugin>;
+export function staticImages(): Promise<Plugin>;

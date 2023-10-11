@@ -333,11 +333,14 @@ The easiest way to progressively enhance a form is to add the `use:enhance` acti
 
 Without an argument, `use:enhance` will emulate the browser-native behaviour, just without the full-page reloads. It will:
 
-- update the `form` property, `$page.form` and `$page.status` on a successful or invalid response, but only if the action is on the same page you're submitting from. So for example if your form looks like `<form action="/somewhere/else" ..>`, `form` and `$page` will _not_ be updated. This is because in the native form submission case you would be redirected to the page the action is on. If you want to have them updated either way, use [`applyAction`](#progressive-enhancement-applyaction)
-- reset the `<form>` element and invalidate all data using `invalidateAll` on a successful response
+- update the `form` property, `$page.form` and `$page.status` on a successful or invalid response, but only if the action is on the same page you're submitting from. For example, if your form looks like `<form action="/somewhere/else" ..>`, `form` and `$page` will _not_ be updated. This is because in the native form submission case you would be redirected to the page the action is on. If you want to have them updated either way, use [`applyAction`](#progressive-enhancement-customising-use-enhance)
+- reset the `<form>` element
+- invalidate all data using `invalidateAll` on a successful response
 - call `goto` on a redirect response
 - render the nearest `+error` boundary if an error occurs
 - [reset focus](accessibility#focus-management) to the appropriate element
+
+### Customising use:enhance
 
 To customise the behaviour, you can provide a `SubmitFunction` that runs immediately before the form is submitted, and (optionally) returns a callback that runs with the `ActionResult`. Note that if you return a callback, the default behavior mentioned above is not triggered. To get it back, call `update`.
 
@@ -361,9 +364,7 @@ To customise the behaviour, you can provide a `SubmitFunction` that runs immedia
 
 You can use these functions to show and hide loading UI, and so on.
 
-### applyAction
-
-If you provide your own callbacks, you may need to reproduce part of the default `use:enhance` behaviour, such as showing the nearest `+error` boundary. Most of the time, calling `update` passed to the callback is enough. If you need more customization you can do so with `applyAction`:
+If you return a callback, you may need to reproduce part of the default `use:enhance` behaviour, but without invalidating all data on a successful response. You can do so with `applyAction`:
 
 ```diff
 /// file: src/routes/login/+page.svelte
@@ -380,7 +381,9 @@ If you provide your own callbacks, you may need to reproduce part of the default
 
 		return async ({ result }) => {
 			// `result` is an `ActionResult` object
-+			if (result.type === 'error') {
++			if (result.type === 'redirect') {
++				goto(result.location);
++			} else {
 +				await applyAction(result);
 +			}
 		};
@@ -391,7 +394,7 @@ If you provide your own callbacks, you may need to reproduce part of the default
 The behaviour of `applyAction(result)` depends on `result.type`:
 
 - `success`, `failure` — sets `$page.status` to `result.status` and updates `form` and `$page.form` to `result.data` (regardless of where you are submitting from, in contrast to `update` from `enhance`)
-- `redirect` — calls `goto(result.location)`
+- `redirect` — calls `goto(result.location, { invalidateAll: true })`
 - `error` — renders the nearest `+error` boundary with `result.error`
 
 In all cases, [focus will be reset](accessibility#focus-management).

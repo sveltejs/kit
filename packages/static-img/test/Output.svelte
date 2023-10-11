@@ -58,7 +58,7 @@
 <img src="/foo.png" alt="test" />
 
 {#each images as image}
-	<!-- svelte-image-enable -->
+	<!-- static-img-enable -->
 	{#if typeof image === 'string'}
 	<img src={image.img.src} alt="test" width={image.img.w} height={image.img.h} />
 {:else}
@@ -71,7 +71,7 @@
 {/if}
 {/each}
 
-<!-- svelte-image-disable -->
+<!-- static-img-disable -->
 <img src="./foo.png" alt="test" />
 
 <img srcset="./foo.png" alt="test" />

@@ -2,8 +2,8 @@ import MagicString from 'magic-string';
 import { parse } from 'svelte-parse-markup';
 import { walk } from 'svelte/compiler';
 
-const IGNORE_FLAG = 'svelte-image-disable';
-const FORCE_FLAG = 'svelte-image-enable';
+const IGNORE_FLAG = 'static-img-disable';
+const FORCE_FLAG = 'static-img-enable';
 const ASSET_PREFIX = '___ASSET___';
 
 // TODO: expose this in vite-imagetools rather than duplicating it

@@ -84,8 +84,6 @@ By default, `adapter-static` checks that either all pages and endpoints (if any)
 
 When building for GitHub Pages, make sure to update [`paths.base`](configuration#paths) to match your repo name, since the site will be served from <https://your-username.github.io/your-repo-name> rather than from the root.
 
-You will have to prevent GitHub's provided Jekyll from managing your site by putting an empty `.nojekyll` file in your `static` folder.
-
 A config for GitHub Pages might look like the following:
 
 ```js
@@ -93,17 +91,16 @@ A config for GitHub Pages might look like the following:
 /// file: svelte.config.js
 import adapter from '@sveltejs/adapter-static';
 
-const dev = process.argv.includes('dev');
-
 /** @type {import('@sveltejs/kit').Config} */
 const config = {
 	kit: {
-		adapter: adapter(),
-		paths: {
-			base: dev ? '' : process.env.BASE_PATH,
-		}
+		adapter: adapter()
 	}
 };
+
+config.paths = { base: process.argv.includes('dev') ? '' : process.env.BASE_PATH }
+
+export default config;
 ```
 
 You can use GitHub actions to automatically deploy your site to GitHub Pages when you make a change. Here's an example workflow:
@@ -140,13 +137,12 @@ jobs:
 
       - name: build
         env:
-          BASE_PATH: '/your-repo-name'
+          BASE_PATH: '/${{ github.event.repository.name }}'
         run: |
           npm run build
-          touch build/.nojekyll
 
       - name: Upload Artifacts
-        uses: actions/upload-pages-artifact@v1
+        uses: actions/upload-pages-artifact@v2
         with:
           # this should match the `pages` option in your adapter-static options
           path: 'build/'
@@ -162,9 +158,9 @@ jobs:
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
-    
+
     steps:
       - name: Deploy
         id: deployment
-        uses: actions/deploy-pages@v1
+        uses: actions/deploy-pages@v2
 ```

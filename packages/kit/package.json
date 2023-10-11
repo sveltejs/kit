@@ -1,6 +1,6 @@
 {
 	"name": "@sveltejs/kit",
-	"version": "1.25.1",
+	"version": "1.25.2",
 	"description": "The fastest way to build Svelte apps",
 	"repository": {
 		"type": "git",
@@ -23,7 +23,7 @@
 		"set-cookie-parser": "^2.6.0",
 		"sirv": "^2.0.2",
 		"tiny-glob": "^0.2.9",
-		"undici": "~5.25.0"
+		"undici": "~5.26.0"
 	},
 	"devDependencies": {
 		"@playwright/test": "1.30.0",

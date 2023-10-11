@@ -173,7 +173,7 @@ export function create_client(app, target) {
 
 		if (navigation_result) {
 			if (navigation_result.type === 'redirect') {
-				return goto(new URL(navigation_result.location, url).href, {}, [url.pathname], nav_token);
+				return goto(new URL(navigation_result.location, url).href, {}, 1, nav_token);
 			} else {
 				if (navigation_result.props.page !== undefined) {
 					page = navigation_result.props.page;
@@ -208,7 +208,7 @@ export function create_client(app, target) {
 	/**
 	 * @param {string | URL} url
 	 * @param {{ noScroll?: boolean; replaceState?: boolean; keepFocus?: boolean; state?: any; invalidateAll?: boolean }} opts
-	 * @param {string[]} redirect_chain
+	 * @param {number} redirect_count
 	 * @param {{}} [nav_token]
 	 */
 	async function goto(
@@ -220,7 +220,7 @@ export function create_client(app, target) {
 			state = {},
 			invalidateAll = false
 		},
-		redirect_chain,
+		redirect_count,
 		nav_token
 	) {
 		if (typeof url === 'string') {
@@ -231,7 +231,7 @@ export function create_client(app, target) {
 			url,
 			scroll: noScroll ? scroll_state() : null,
 			keepfocus: keepFocus,
-			redirect_chain,
+			redirect_count,
 			details: {
 				state,
 				replaceState
@@ -941,7 +941,7 @@ export function create_client(app, target) {
 	 *   url: URL;
 	 *   scroll: { x: number, y: number } | null;
 	 *   keepfocus: boolean;
-	 *   redirect_chain: string[];
+	 *   redirect_count: number;
 	 *   details: {
 	 *     replaceState: boolean;
 	 *     state: any;
@@ -957,7 +957,7 @@ export function create_client(app, target) {
 		url,
 		scroll,
 		keepfocus,
-		redirect_chain,
+		redirect_count,
 		details,
 		type,
 		delta,
@@ -1014,7 +1014,8 @@ export function create_client(app, target) {
 		}
 
 		if (navigation_result.type === 'redirect') {
-			if (redirect_chain.length > 10 || redirect_chain.includes(url.pathname)) {
+			// whatwg fetch spec https://fetch.spec.whatwg.org/#http-redirect-fetch says to error after 20 redirects
+			if (redirect_count >= 20) {
 				navigation_result = await load_root_error_page({
 					status: 500,
 					error: await handle_error(new Error('Redirect loop'), {
@@ -1026,12 +1027,7 @@ export function create_client(app, target) {
 					route: { id: null }
 				});
 			} else {
-				goto(
-					new URL(navigation_result.location, url).href,
-					{},
-					[...redirect_chain, url.pathname],
-					nav_token
-				);
+				goto(new URL(navigation_result.location, url).href, {}, redirect_count + 1, nav_token);
 				return false;
 			}
 		} else if (/** @type {number} */ (navigation_result.props.page?.status) >= 400) {
@@ -1379,7 +1375,7 @@ export function create_client(app, target) {
 		},
 
 		goto: (href, opts = {}) => {
-			return goto(href, opts, []);
+			return goto(href, opts, 0);
 		},
 
 		invalidate: (resource) => {
@@ -1440,7 +1436,7 @@ export function create_client(app, target) {
 					tick().then(reset_focus);
 				}
 			} else if (result.type === 'redirect') {
-				goto(result.location, { invalidateAll: true }, []);
+				goto(result.location, { invalidateAll: true }, 0);
 			} else {
 				/** @type {Record<string, any>} */
 				root.$set({
@@ -1595,7 +1591,7 @@ export function create_client(app, target) {
 					url,
 					scroll: options.noscroll ? scroll_state() : null,
 					keepfocus: options.keep_focus ?? false,
-					redirect_chain: [],
+					redirect_count: 0,
 					details: {
 						state: {},
 						replaceState: options.replace_state ?? url.href === location.href
@@ -1649,7 +1645,7 @@ export function create_client(app, target) {
 					url,
 					scroll: noscroll ? scroll_state() : null,
 					keepfocus: keep_focus ?? false,
-					redirect_chain: [],
+					redirect_count: 0,
 					details: {
 						state: {},
 						replaceState: replace_state ?? url.href === location.href
@@ -1662,16 +1658,19 @@ export function create_client(app, target) {
 			});
 
 			addEventListener('popstate', async (event) => {
+				token = {};
 				if (event.state?.[INDEX_KEY]) {
 					// if a popstate-driven navigation is cancelled, we need to counteract it
 					// with history.go, which means we end up back here, hence this check
 					if (event.state[INDEX_KEY] === current_history_index) return;
 
 					const scroll = scroll_positions[event.state[INDEX_KEY]];
+					const url = new URL(location.href);
 
 					// if the only change is the hash, we don't need to do anything...
 					if (current.url.href.split('#')[0] === location.href.split('#')[0]) {
-						// ...except handle scroll
+						// ...except update our internal URL tracking and handle scroll
+						update_url(url);
 						scroll_positions[current_history_index] = scroll_state();
 						current_history_index = event.state[INDEX_KEY];
 						scrollTo(scroll.x, scroll.y);
@@ -1681,10 +1680,10 @@ export function create_client(app, target) {
 					const delta = event.state[INDEX_KEY] - current_history_index;
 
 					await navigate({
-						url: new URL(location.href),
+						url,
 						scroll,
 						keepfocus: false,
-						redirect_chain: [],
+						redirect_count: 0,
 						details: null,
 						accepted: () => {
 							current_history_index = event.state[INDEX_KEY];
@@ -1693,7 +1692,8 @@ export function create_client(app, target) {
 							history.go(-delta);
 						},
 						type: 'popstate',
-						delta
+						delta,
+						nav_token: token
 					});
 				} else {
 					// since popstate event is also emitted when an anchor referencing the same

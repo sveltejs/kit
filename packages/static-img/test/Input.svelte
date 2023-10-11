@@ -27,11 +27,11 @@
 <img src="/foo.png" alt="test" />
 
 {#each images as image}
-	<!-- svelte-image-enable -->
+	<!-- static-img-enable -->
 	<img src={image} alt="test" />
 {/each}
 
-<!-- svelte-image-disable -->
+<!-- static-img-disable -->
 <img src="./foo.png" alt="test" />
 
 <img srcset="./foo.png" alt="test" />

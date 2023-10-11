@@ -92,9 +92,7 @@
 		pointer-events: none;
 	}
 
-	/* this sucks but it's the best we can do.
-	   https://github.com/sveltejs/svelte/issues/2870#issuecomment-1161082065 */
-	.hero-image :global(img) {
+	.hero-image img {
 		width: var(--size);
 		height: auto;
 		aspect-ratio: 4 / 3;

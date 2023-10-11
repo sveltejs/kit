@@ -4,7 +4,7 @@ import { image } from './preprocessor.js';
 /**
  * @returns {Promise<import('vite').Plugin[]>}
  */
-export async function images() {
+export async function staticImages() {
 	const imagetools_plugin = await imagetools();
 	if (!imagetools_plugin) {
 		console.error(
