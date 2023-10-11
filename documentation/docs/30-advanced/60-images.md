@@ -100,6 +100,16 @@ You can also manually import an image and then pass it to a transformed `img` ta
 
 If you have an image tag that you do not want to be transformed you can use the comment `<!-- static-img-disable -->`.
 
+### Other transforms
+
+By default, your images will be transformed to more efficient formats. However, you may wish to apply other transforms such as a blur, quality, flatten, or rotate operation. You can do this by appending a query string:
+
+```svelte
+<img src="./path/to/your/image.jpg?blur=15" alt="An alt text" />
+```
+
+[See the imagetools repo for the full list of directives](https://github.com/JonasKruckenberg/imagetools/blob/main/docs/directives.md).
+
 ## Best practices
 
 - Always provide a good `alt` text
