@@ -1126,10 +1126,10 @@ export function create_client(app, target) {
 			if (scroll) {
 				scrollTo(scroll.x, scroll.y);
 			} else if (deep_linked) {
-				// `location.replace` emulates the browser native behaviour when a hash
-				// link is clicked by scrolling to and focusing the correct element
-				// even when the element cannot be manually focused.
-				location.replace(url.hash);
+				// Here we use `scrollIntoView` on the element instead of `scrollTo`
+				// because it natively supports the `scroll-margin` and `scroll-behavior`
+				// CSS properties.
+				deep_linked.scrollIntoView();
 			} else {
 				scrollTo(0, 0);
 			}
@@ -1145,6 +1145,8 @@ export function create_client(app, target) {
 		if (!keepfocus && !changed_focus) {
 			reset_focus();
 		}
+
+		console.log(document.activeElement);
 
 		autoscroll = true;
 
@@ -1962,22 +1964,28 @@ function reset_focus() {
 		autofocus.focus();
 	} else {
 		// Reset page selection and focus
-		// We try to mimic browsers' behaviour as closely as possible by targeting the
-		// first scrollable region, but unfortunately it's not a perfect match — e.g.
-		// shift-tabbing won't immediately cycle up from the end of the page on Chromium
-		// See https://html.spec.whatwg.org/multipage/interaction.html#get-the-focusable-area
-		const root = document.body;
-		const tabindex = root.getAttribute('tabindex');
-
-		root.tabIndex = -1;
-		// @ts-expect-error
-		root.focus({ preventScroll: true, focusVisible: false });
-
-		// restore `tabindex` as to prevent `root` from stealing input from elements
-		if (tabindex !== null) {
-			root.setAttribute('tabindex', tabindex);
+		// Mimic browsers' behaviour and set the sequential focus navigation starting point
+		// to the fragment identifier
+		if (location.hash) {
+			location.replace(location.hash);
 		} else {
-			root.removeAttribute('tabindex');
+			// We try to mimic browsers' behaviour as closely as possible by targeting the
+			// first scrollable region, but unfortunately it's not a perfect match — e.g.
+			// shift-tabbing won't immediately cycle up from the end of the page on Chromium
+			// See https://html.spec.whatwg.org/multipage/interaction.html#get-the-focusable-area
+			const root = document.body;
+			const tabindex = root.getAttribute('tabindex');
+
+			root.tabIndex = -1;
+			// @ts-expect-error
+			root.focus({ preventScroll: true, focusVisible: false });
+
+			// restore `tabindex` as to prevent `root` from stealing input from elements
+			if (tabindex !== null) {
+				root.setAttribute('tabindex', tabindex);
+			} else {
+				root.removeAttribute('tabindex');
+			}
 		}
 
 		// capture current selection, so we can compare the state after

@@ -646,7 +646,7 @@ test.describe('Routing', () => {
 		expect(await page.textContent('#page-url-hash')).toBe('#target');
 	});
 
-	test('clicking on hash link to a new page focuses the correct element', async ({
+	test('sequential focus navigation starting point is set correctly on navigation', async ({
 		page,
 		browserName
 	}) => {
