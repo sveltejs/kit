@@ -2,4 +2,4 @@
 '@sveltejs/kit': patch
 ---
 
-fix: hash links to new pages focuses the correct element
+fix: correctly set sequential focus navigation starting point after navigation

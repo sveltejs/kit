@@ -1146,8 +1146,6 @@ export function create_client(app, target) {
 			reset_focus();
 		}
 
-		console.log(document.activeElement);
-
 		autoscroll = true;
 
 		if (navigation_result.props.page) {
@@ -1964,10 +1962,14 @@ function reset_focus() {
 		autofocus.focus();
 	} else {
 		// Reset page selection and focus
-		// Mimic browsers' behaviour and set the sequential focus navigation starting point
-		// to the fragment identifier
-		if (location.hash) {
+		if (location.hash && document.querySelector(location.hash)) {
+			// scroll management has already happened earlier so we need to make sure
+			// the scroll position stays the same after setting the sequential focus navigation starting point
+			const { x, y } = scroll_state();
+			// mimic browsers' behaviour and set the sequential focus navigation starting point
+			// to the fragment identifier
 			location.replace(location.hash);
+			scrollTo(x, y);
 		} else {
 			// We try to mimic browsers' behaviour as closely as possible by targeting the
 			// first scrollable region, but unfortunately it's not a perfect match — e.g.
@@ -1977,7 +1979,8 @@ function reset_focus() {
 			const tabindex = root.getAttribute('tabindex');
 
 			root.tabIndex = -1;
-			// @ts-expect-error
+			// @ts-expect-error options.focusVisible is only supported in Firefox
+			// See https://developer.mozilla.org/en-US/docs/Web/API/HTMLElement/focus#browser_compatibility
 			root.focus({ preventScroll: true, focusVisible: false });
 
 			// restore `tabindex` as to prevent `root` from stealing input from elements

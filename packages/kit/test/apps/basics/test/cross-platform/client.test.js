@@ -653,6 +653,7 @@ test.describe('Routing', () => {
 		const tab = browserName === 'webkit' ? 'Alt+Tab' : 'Tab';
 		await page.goto('/routing/focus');
 		await page.locator('[href="/routing/focus/a#p"]').click();
+		await page.waitForURL('**/routing/focus/a#p');
 		expect(await page.evaluate(() => (document.activeElement || {}).nodeName)).toBe('BODY');
 		await page.keyboard.press(tab);
 		await expect(page.locator('#button3')).toBeFocused();
