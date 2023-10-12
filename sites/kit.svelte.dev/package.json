@@ -3,6 +3,8 @@
 	"private": true,
 	"version": "0.0.1",
 	"scripts": {
+		"lint": "prettier --check . --config ../../.prettierrc --ignore-path .gitignore --ignore-path .prettierignore",
+		"format": "prettier --write . --config ../../.prettierrc --ignore-path .gitignore --ignore-path .prettierignore",
 		"update": "node scripts/types",
 		"dev": "pnpm run update && vite dev",
 		"build": "pnpm run update && vite build",
