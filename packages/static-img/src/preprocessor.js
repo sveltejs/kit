@@ -45,7 +45,7 @@ export function image() {
 				/** @type {string | undefined} */
 				const sizes = get_attr_value(node, 'sizes');
 				const width = get_attr_value(node, 'width');
-				url += (url.includes('?') ? '&' : '?');
+				url += url.includes('?') ? '&' : '?';
 				if (sizes) {
 					url += 'sizes=' + encodeURIComponent(sizes) + '&';
 				}
@@ -180,9 +180,11 @@ function img_to_picture(content, node, import_name) {
 	/** @type {Array<import('svelte/types/compiler/interfaces').BaseDirective | import('svelte/types/compiler/interfaces').Attribute | import('svelte/types/compiler/interfaces').SpreadAttribute>} attributes */
 	const attributes = node.attributes;
 	const index = attributes.findIndex((attribute) => attribute.name === 'sizes');
-	const sizes_string =
-		index >= 0 ? ' ' + content.substring(attributes[index].start, attributes[index].end) : '';
-	attributes.splice(index, 1);
+	let sizes_string = '';
+	if (index >= 0) {
+		sizes_string = content.substring(attributes[index].start, attributes[index].end);
+		attributes.splice(index, 1);
+	}
 
 	return `<picture>
 	{#each Object.entries(${import_name}.sources) as [format, images]}
