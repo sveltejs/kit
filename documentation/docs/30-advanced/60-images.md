@@ -73,16 +73,29 @@ If you have an image tag that you do not want to be transformed you can use the 
 
 ### Dynamically choosing an image
 
-You can also manually import an image and then pass it to a transformed `img` tag. This is useful when you have a collection of static images and would like to dynamically choose one. You can create a collection of images manually [as we do on the homepage showcase](https://github.com/sveltejs/kit/blob/master/sites/kit.svelte.dev/src/routes/home/Showcase.svelte) or with [Vite's `import.meta.glob`](https://vitejs.dev/guide/features.html#glob-import).
+You can also manually import an image and then pass it to a transformed `img` tag. This is useful when you have a collection of static images and would like to dynamically choose one. You can create a collection of images manually [as we do on the homepage showcase](https://github.com/sveltejs/kit/blob/master/sites/kit.svelte.dev/src/routes/home/Showcase.svelte). In this case you will need to both tag the `import` statement and `img` tag to indicate you'd like process them.
 
 
 ```svelte
 <script>
-	import { MyImage } from './path/to/your/image.jpg';
+	import { MyImage } from './path/to/your/image.jpg?svelte-static-img';
 </script>
 
 <!-- static-img-enable -->
 <img src={MyImage} alt="An alt text" />
+```
+
+You can also use [Vite's `import.meta.glob`](https://vitejs.dev/guide/features.html#glob-import). Note that you will have to specify `svelte-static-img` via a [custom query](https://vitejs.dev/guide/features.html#custom-queries):
+
+```js
+const pictures = import.meta.glob(
+	'/path/to/assets/*.{heic,heif,avif,jpg,jpeg,png,tiff,webp,gif,svg}',
+	{
+		query: {
+			'svelte-static-img': true
+		}
+	}
+);
 ```
 
 ### Intrinsic Dimensions
