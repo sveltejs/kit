@@ -1,13 +1,13 @@
 <script>
 	import { Section } from '@sveltejs/site-kit/components';
-	import pudding from './showcase/pudding.png';
-	import pocketbase from './showcase/pocketbase.png';
-	import pronauns from './showcase/pronauns.png';
-	import pausly from './showcase/pausly.png';
-	import asmeditor from './showcase/asmeditor.png';
-	import monogram from './showcase/monogram.png';
-	import raster from './showcase/raster.png';
-	import tradingstrategy from './showcase/tradingstrategy.png';
+	import pudding from './showcase/pudding.png?static-img';
+	import pocketbase from './showcase/pocketbase.png?static-img';
+	import pronauns from './showcase/pronauns.png?static-img';
+	import pausly from './showcase/pausly.png?static-img';
+	import asmeditor from './showcase/asmeditor.png?static-img';
+	import monogram from './showcase/monogram.png?static-img';
+	import raster from './showcase/raster.png?static-img';
+	import tradingstrategy from './showcase/tradingstrategy.png?static-img';
 
 	const showcase = [
 		{ url: 'pudding.cool', image: pudding },

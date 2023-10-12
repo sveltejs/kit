@@ -1,8 +1,9 @@
 <script lang="ts">
-	import ___ASSET___0 from "./foo.png";
-	import ___ASSET___1 from "./foo.png?blur=5";
-	import ___ASSET___2 from "./foo.svg";
-	import ___ASSET___3 from "$lib/foo.png";
+	import ___ASSET___0 from "./foo.png?static-img";
+	import ___ASSET___1 from "./foo.png?blur=5&static-img";
+	import ___ASSET___2 from "./foo.png?w=1024,640,320&sizes=%5Bobject%20Object%5D&static-img";
+	import ___ASSET___3 from "./foo.svg?static-img";
+	import ___ASSET___4 from "$lib/foo.png?static-img";
 	
 	import manual_image1 from './no.png';
 	
@@ -22,59 +23,66 @@
 	{#each Object.entries(___ASSET___0.sources) as [format, images]}
 		<source srcset={images.map((i) => `${i.src} ${i.w}w`).join(', ')} type={'image/' + format} />
 	{/each}
-	<img src={___ASSET___0.img.src} alt="test" width={___ASSET___0.img.w} height={___ASSET___0.img.h} />
+	<img src={___ASSET___0.img.src} width={___ASSET___0.img.w} height={___ASSET___0.img.h} />
 </picture>
 
 <picture>
 	{#each Object.entries(___ASSET___0.sources) as [format, images]}
 		<source srcset={images.map((i) => `${i.src} ${i.w}w`).join(', ')} type={'image/' + format} />
 	{/each}
-	<img src={___ASSET___0.img.src} width="5" height="10" alt="test" />
+	<img src={___ASSET___0.img.src} width="5" height="10" />
 </picture>
 
 <picture>
 	{#each Object.entries(___ASSET___1.sources) as [format, images]}
 		<source srcset={images.map((i) => `${i.src} ${i.w}w`).join(', ')} type={'image/' + format} />
 	{/each}
-	<img src={___ASSET___1.img.src} alt="test" width={___ASSET___1.img.w} height={___ASSET___1.img.h} />
+	<img src={___ASSET___1.img.src} width={___ASSET___1.img.w} height={___ASSET___1.img.h} />
 </picture>
 
 <picture>
 	{#each Object.entries(___ASSET___0.sources) as [format, images]}
 		<source srcset={images.map((i) => `${i.src} ${i.w}w`).join(', ')} type={'image/' + format} />
 	{/each}
-	<img src={___ASSET___0.img.src} {...{foo}} alt="test" width={___ASSET___0.img.w} height={___ASSET___0.img.h} />
+	<img src={___ASSET___0.img.src} {...{foo}} width={___ASSET___0.img.w} height={___ASSET___0.img.h} />
 </picture>
-
-<img src="{___ASSET___2}" on:click={foo = 'clicked an image!'} alt="test" />
 
 <picture>
-	{#each Object.entries(___ASSET___3.sources) as [format, images]}
-		<source srcset={images.map((i) => `${i.src} ${i.w}w`).join(', ')} type={'image/' + format} />
+	{#each Object.entries(___ASSET___2.sources) as [format, images]}
+		<source srcset={images.map((i) => `${i.src} ${i.w}w`).join(', ')} sizes="(min-width: 60rem) 80vw, (min-width: 40rem) 90vw, 100vw" type={'image/' + format} />
 	{/each}
-	<img src={___ASSET___3.img.src} alt="test" width={___ASSET___3.img.w} height={___ASSET___3.img.h} />
+	<img src={___ASSET___2.img.src} alt="sizes test" width={___ASSET___2.img.w} height={___ASSET___2.img.h} />
 </picture>
 
-<img src="/foo.png" alt="test" />
+<img src="{___ASSET___3}" on:click={foo = 'clicked an image!'} alt="event handler test" />
+
+<picture>
+	{#each Object.entries(___ASSET___4.sources) as [format, images]}
+		<source srcset={images.map((i) => `${i.src} ${i.w}w`).join(', ')} type={'image/' + format} />
+	{/each}
+	<img src={___ASSET___4.img.src} width={___ASSET___4.img.w} height={___ASSET___4.img.h} />
+</picture>
+
+<img src="/foo.png" alt="publicDir test" />
 
 {#each images as image}
 	<!-- static-img-enable -->
 	{#if typeof image === 'string'}
-	<img src={image.img.src} alt="test" width={image.img.w} height={image.img.h} />
+	<img src={image.img.src} alt="opt-in test" width={image.img.w} height={image.img.h} />
 {:else}
 	<picture>
 	{#each Object.entries(image.sources) as [format, images]}
 		<source srcset={images.map((i) => `${i.src} ${i.w}w`).join(', ')} type={'image/' + format} />
 	{/each}
-	<img src={image.img.src} alt="test" width={image.img.w} height={image.img.h} />
+	<img src={image.img.src} width={image.img.w} height={image.img.h} />
 </picture>
 {/if}
 {/each}
 
 <!-- static-img-disable -->
-<img src="./foo.png" alt="test" />
+<img src="./foo.png" alt="disable test" />
 
-<img srcset="./foo.png" alt="test" />
+<img srcset="./foo.png" alt="srcset test" />
 
 <picture>
 	<source src="./foo.avif" />
@@ -82,4 +90,4 @@
 	<source srcset="./foo.avif, ./bar.avif 1v" />
 </picture>
 
-<img src="https://example.com/foo.png" alt="test" />
+<img src="https://example.com/foo.png" alt="full url test" />

@@ -20,11 +20,11 @@ For assets included via the CSS `url()` function, you may find [`vitePreprocess`
 
 ## Transforming background
 
-You may wish to transform your images to output compressed image formats such as `.webp` or `.avif`, responsive images with different sizes for different devices, or images with the EXIF data stripped for privacy.
+You may wish to transform your images to output compressed image formats such as `.webp` or `.avif`, responsive images with different sizes for different devices, or images with the EXIF data stripped for privacy. There are two approaches two transforming images, which will be discussed below. With either approach, the transformed images may be served via a CDN. CDNs reduce latency by distributing copies of static assets globally.
 
-The `@sveltejs/static-img` package only handles images that are located in your project and can be referred to with a static string. It generates images at build time, so building may take longer the more images you transform. These images may be served via CDN so that they are served with low latency to users.
+The `@sveltejs/static-img` package only handles images that are located in your project and can be referred to with a static string. It can automatically set the intrinsic `width` and `height` for you, which can't be done with a dynamic approach. It generates images at build time, so building may take longer the more images you transform.
 
-Alternatively, using an CDN to do the image transformation provides more flexibility with regards to sizes and you can pass image sources not known at build time, but it comes with potentially a bit of setup overhead (configuring the image CDN) and possibly usage cost. CDNs reduce latency by distributing copies of static assets globally. Building HTML to target CDNs may result in slightly smaller HTML because they can serve the appropriate file format for an `img` tag based on the `User-Agent` header whereas build-time optimizations must produce `picture` tags. Finally some CDNs may generate images lazily, which could have a negative performance impact for sites with low traffic and frequently changing images. SvelteKit does not currently offer any tools for dynamic image transforms since they're easier for users to implement, but we may offer such utilities in the future.
+Alternatively, using a CDN to do the image transformation provides more flexibility with regards to sizes and you can pass image sources not known at build time, but it comes with potentially a bit of setup overhead (configuring the image CDN) and possibly usage cost. Building HTML to target CDNs may result in slightly smaller and simpler HTML because they can serve the appropriate file format for an `img` tag based on the `User-Agent` header whereas build-time optimizations must produce `picture` tags. Finally some CDNs may generate images lazily, which could have a negative performance impact for sites with low traffic and frequently changing images. SvelteKit does not currently offer any tools for dynamic image transforms since they're more straightforward for users to implement on their own, but we may offer such utilities in the future.
 
 You can mix and match both solutions in one project. For example, you may display images on your homepage with `@sveltejs/static-img` and display user-submitted content with a dynamic approach.
 
@@ -67,6 +67,10 @@ Use in your `.svelte` components by referencing a relative path beginning with `
 
 This will replace your `img` tag with a `picture` tag wrapping one `source` tag per image type.
 
+### Skipping an image
+
+If you have an image tag that you do not want to be transformed you can use the comment `<!-- static-img-disable -->`.
+
 ### Dynamically choosing an image
 
 You can also manually import an image and then pass it to a transformed `img` tag. This is useful when you have a collection of static images and would like to dynamically choose one. You can create a collection of images manually [as we do on the homepage showcase](https://github.com/sveltejs/kit/blob/master/sites/kit.svelte.dev/src/routes/home/Showcase.svelte) or with [Vite's `import.meta.glob`](https://vitejs.dev/guide/features.html#glob-import).
@@ -94,13 +98,29 @@ You can also manually import an image and then pass it to a transformed `img` ta
 </style>
 ```
 
-### Skipping an image
+### `srcset` and `sizes`
 
-> If you have existing image imports like `import SomeImage from './some/image.jpg';` they will be treated differently now. If you want to get back the previous behavior of this import returning a URL string, add `?url` to the end of the import.
+Only `img` tags with a `src` will be processed. Those with a `srcset` will not be. You may then be wondering how to do something like:
 
-If you have an image tag that you do not want to be transformed you can use the comment `<!-- static-img-disable -->`.
+```html
+<img
+  srcset="image-small.png 160w, image-medium.png 400w, image-large.png 600w"
+  sizes="(min-width: 60rem) 80vw, (min-width: 40rem) 90vw, 100vw"
+  />
+```
 
-### Other transforms
+In this example, we don't have you to have to manually create three versions of your image. Instead, you can specify the widths as a query parameter and we'll generate the `srcset` for you.
+
+```svelte
+<img
+  src="./image.png?w=160,400,600"
+  sizes="(min-width: 60rem) 80vw, (min-width: 40rem) 90vw, 100vw"
+  />
+```
+
+If `sizes` is specified as a `string` (i.e. not a text expression like `sizes={['(min-width: 60rem) 80vw', '(min-width: 40rem) 90vw', '100vw'].join(', ')}`) then we will automatically generate widths.
+
+### Per-image transforms
 
 By default, your images will be transformed to more efficient formats. However, you may wish to apply other transforms such as a blur, quality, flatten, or rotate operation. You can do this by appending a query string:
 
@@ -109,6 +129,10 @@ By default, your images will be transformed to more efficient formats. However, 
 ```
 
 [See the imagetools repo for the full list of directives](https://github.com/JonasKruckenberg/imagetools/blob/main/docs/directives.md).
+
+### Processing other images
+
+If you have existing image imports like `import SomeImage from './some/image.jpg';` they will not be processed by this plugin.
 
 ## Best practices
 

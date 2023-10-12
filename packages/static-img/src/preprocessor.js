@@ -25,25 +25,31 @@ export function image() {
 
 			/**
 			 * @param {import('svelte/types/compiler/interfaces').TemplateNode} node
-			 * @param {{ type: string, start: number, end: number, raw: string }} attribute_value
+			 * @param {{ type: string, start: number, end: number, raw: string }} src_attribute
 			 */
-			function update_element(node, attribute_value) {
-				if (attribute_value.type === 'MustacheTag') {
+			function update_element(node, src_attribute) {
+				if (src_attribute.type === 'MustacheTag') {
 					const src_var_name = content
-						.substring(attribute_value.start + 1, attribute_value.end - 1)
+						.substring(src_attribute.start + 1, src_attribute.end - 1)
 						.trim();
 					s.update(node.start, node.end, dynamic_img_to_picture(content, node, src_var_name));
 					return;
 				}
 
-				const url = attribute_value.raw.trim();
+				let url = src_attribute.raw.trim();
 
 				// if it's not a relative reference or Vite alias then skip it
 				// TODO: read vite aliases here rather than assuming $
 				if (!url.startsWith('./') && !url.startsWith('$')) return;
 
-				let import_name = '';
+				/** @type {string | undefined} */
+				const sizes = get_attr_value(node, 'sizes');
+				if (sizes) {
+					url += (url.includes('?') ? '&' : '?') + 'sizes=' + encodeURIComponent(sizes);
+				}
+				url += (url.includes('?') ? '&' : '?') + 'static-img';
 
+				let import_name = '';
 				if (imports.has(url)) {
 					import_name = /** @type {string} */ (imports.get(url));
 				} else {
@@ -55,7 +61,7 @@ export function image() {
 					s.update(node.start, node.end, img_to_picture(content, node, import_name));
 				} else {
 					// e.g. <img src="./foo.svg" /> => <img src="{___ASSET___0}" />
-					s.update(attribute_value.start, attribute_value.end, `{${import_name}}`);
+					s.update(src_attribute.start, src_attribute.end, `{${import_name}}`);
 				}
 			}
 
@@ -82,28 +88,7 @@ export function image() {
 
 						// Compare node tag match
 						if (node.name === 'img') {
-							/**
-							 * @param {string} attr
-							 */
-							function get_attr_value(attr) {
-								const attribute = node.attributes.find(
-									/** @param {any} v */ (v) => v.type === 'Attribute' && v.name === attr
-								);
-								if (!attribute) return;
-
-								// Ensure value only consists of one element, and is of type "Text".
-								// Which should only match instances of static `foo="bar"` attributes.
-								if (
-									!force_next_element &&
-									(attribute.value.length !== 1 || attribute.value[0].type !== 'Text')
-								) {
-									return;
-								}
-
-								return attribute.value[0];
-							}
-
-							const src = get_attr_value('src');
+							const src = get_attr_value(node, 'src', force_next_element);
 							if (!src) return;
 							update_element(node, src);
 						}
@@ -131,6 +116,27 @@ export function image() {
 			};
 		}
 	};
+}
+
+/**
+ * @param {import('svelte/types/compiler/interfaces').TemplateNode} node
+ * @param {string} attr
+ * @param {boolean} [force_next_element]
+ */
+function get_attr_value(node, attr, force_next_element) {
+	const attribute = node.attributes.find(
+		/** @param {any} v */ (v) => v.type === 'Attribute' && v.name === attr
+	);
+
+	if (!attribute) return;
+
+	// Ensure value only consists of one element, and is of type "Text".
+	// Which should only match instances of static `foo="bar"` attributes.
+	if (!force_next_element && (attribute.value.length !== 1 || attribute.value[0].type !== 'Text')) {
+		return;
+	}
+
+	return attribute.value[0];
 }
 
 /**
@@ -166,11 +172,18 @@ function attributes_to_markdown(content, attributes, src_var_name) {
  * @param {string} import_name
  */
 function img_to_picture(content, node, import_name) {
+	/** @type {Array<import('svelte/types/compiler/interfaces').BaseDirective | import('svelte/types/compiler/interfaces').Attribute | import('svelte/types/compiler/interfaces').SpreadAttribute>} attributes */
+	const attributes = node.attributes;
+	const index = attributes.findIndex((attribute) => attribute.name === 'sizes');
+	const sizes_string =
+		index >= 0 ? ' ' + content.substring(attributes[index].start, attributes[index].end) : '';
+	attributes.splice(index, 1);
+
 	return `<picture>
 	{#each Object.entries(${import_name}.sources) as [format, images]}
-		<source srcset={images.map((i) => \`\${i.src} \${i.w}w\`).join(', ')} type={'image/' + format} />
+		<source srcset={images.map((i) => \`\${i.src} \${i.w}w\`).join(', ')}${sizes_string} type={'image/' + format} />
 	{/each}
-	<img ${attributes_to_markdown(content, node.attributes, import_name)} />
+	<img ${attributes_to_markdown(content, attributes, import_name)} />
 </picture>`;
 }
 

@@ -12,29 +12,31 @@
 
 {foo}
 
-<img src="./foo.png" alt="test" />
+<img src="./foo.png" alt="basic test" />
 
-<img src="./foo.png" width="5" height="10" alt="test" />
+<img src="./foo.png" width="5" height="10" alt="dimensions test" />
 
-<img src="./foo.png?blur=5" alt="test" />
+<img src="./foo.png?blur=5" alt="directive test" />
 
-<img src="./foo.png" {...{foo}} alt="test" />
+<img src="./foo.png" {...{foo}} alt="spread attributes test" />
 
-<img src="./foo.svg" on:click={foo = 'clicked an image!'} alt="test" />
+<img src="./foo.png?w=1024,640,320" sizes="(min-width: 60rem) 80vw, (min-width: 40rem) 90vw, 100vw" alt="sizes test" />
 
-<img src="$lib/foo.png" alt="test" />
+<img src="./foo.svg" on:click={foo = 'clicked an image!'} alt="event handler test" />
 
-<img src="/foo.png" alt="test" />
+<img src="$lib/foo.png" alt="alias test" />
+
+<img src="/foo.png" alt="publicDir test" />
 
 {#each images as image}
 	<!-- static-img-enable -->
-	<img src={image} alt="test" />
+	<img src={image} alt="opt-in test" />
 {/each}
 
 <!-- static-img-disable -->
-<img src="./foo.png" alt="test" />
+<img src="./foo.png" alt="disable test" />
 
-<img srcset="./foo.png" alt="test" />
+<img srcset="./foo.png" alt="srcset test" />
 
 <picture>
 	<source src="./foo.avif" />
@@ -42,4 +44,4 @@
 	<source srcset="./foo.avif, ./bar.avif 1v" />
 </picture>
 
-<img src="https://example.com/foo.png" alt="test" />
+<img src="https://example.com/foo.png" alt="full url test" />
