@@ -1,6 +1,5 @@
 import path from 'node:path';
 import { image } from './preprocessor.js';
-import { get } from 'node:http';
 
 /**
  * @param {import('../types').PluginOptions | undefined} opts
