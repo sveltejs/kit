@@ -1,4 +1,5 @@
-import { Plugin } from 'vite';
+import type { Plugin } from 'vite';
+import type { DefaultDirectives } from 'vite-imagetools';
 
 interface PluginOptions {
 	/**
@@ -6,7 +7,7 @@ interface PluginOptions {
 	 * You can also provide a function, in which case the function gets passed the asset ID and should return an object of directives.
 	 * This can be used to define all sorts of shorthands or presets.
 	 */
-	defaultDirectives?: URLSearchParams | ((url: URL) => URLSearchParams);
+	defaultDirectives?: DefaultDirectives;
 }
 
 export function staticImages(opts?: PluginOptions): Promise<Plugin[]>;

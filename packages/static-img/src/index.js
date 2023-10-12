@@ -58,7 +58,7 @@ async function imagetools(plugin_opts) {
 
 	/** @type {import('../types').PluginOptions} */
 	const imagetools_opts = {
-		defaultDirectives: (url) => {
+		defaultDirectives: async (url, metadata) => {
 			if (url.searchParams.has('static-img')) {
 				/** @type {Record<string,string>} */
 				const result = {
@@ -68,9 +68,7 @@ async function imagetools(plugin_opts) {
 					const deviceSizes = [640, 750, 828, 1080, 1200, 1920, 2048, 3840];
 					const allSizes = [16, 32, 48, 64, 96, 128, 256, 384].concat(deviceSizes);
 					const sizes = url.searchParams.get('sizes') ?? undefined;
-					// TODO: we can't get the width right now because it's not determined until the import is loaded
-					// we will need to eagerly load the import URL
-					const width = '100%';
+					const width = url.searchParams.get('width') || (await metadata()).width;
 					getWidths(deviceSizes, allSizes, width, sizes);
 					result.w = '';
 				}
@@ -94,7 +92,7 @@ async function imagetools(plugin_opts) {
  * https://github.com/vercel/next.js/blob/3f25a2e747fc27da6c2166e45d54fc95e96d7895/packages/next/src/shared/lib/get-img-props.ts#L132
  * @param {number[]} deviceSizes
  * @param {number[]} allSizes
- * @param {number | string} width
+ * @param {number | string | undefined} width
  * @param {string | undefined} sizes
  * @returns {{ widths: number[]; kind: 'w' | 'x' }}
  */

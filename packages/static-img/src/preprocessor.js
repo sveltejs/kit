@@ -44,10 +44,15 @@ export function image() {
 
 				/** @type {string | undefined} */
 				const sizes = get_attr_value(node, 'sizes');
+				const width = get_attr_value(node, 'width');
+				url += (url.includes('?') ? '&' : '?');
 				if (sizes) {
-					url += (url.includes('?') ? '&' : '?') + 'sizes=' + encodeURIComponent(sizes);
+					url += 'sizes=' + encodeURIComponent(sizes) + '&';
 				}
-				url += (url.includes('?') ? '&' : '?') + 'static-img';
+				if (width) {
+					url += 'width=' + encodeURIComponent(width) + '&';
+				}
+				url += 'static-img';
 
 				let import_name = '';
 				if (imports.has(url)) {
