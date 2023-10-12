@@ -1,8 +1,8 @@
 <script lang="ts">
 	import ___ASSET___0 from "./foo.png?static-img";
-	import ___ASSET___1 from "./foo.png?width=%5Bobject%20Object%5D&static-img";
+	import ___ASSET___1 from "./foo.png?width=5&static-img";
 	import ___ASSET___2 from "./foo.png?blur=5&static-img";
-	import ___ASSET___3 from "./foo.png?w=1024,640,320&sizes=%5Bobject%20Object%5D&static-img";
+	import ___ASSET___3 from "./foo.png?w=1024,640,320&sizes=(min-width%3A%2060rem)%2080vw%2C%20(min-width%3A%2040rem)%2090vw%2C%20100vw&static-img";
 	import ___ASSET___4 from "./foo.svg?static-img";
 	import ___ASSET___5 from "$lib/foo.png?static-img";
 	
@@ -32,6 +32,13 @@
 		<source srcset={images.map((i) => `${i.src} ${i.w}w`).join(', ')} type={'image/' + format} />
 	{/each}
 	<img src={___ASSET___1.img.src} width="5" height="10" alt="dimensions test" />
+</picture>
+
+<picture>
+	{#each Object.entries(___ASSET___1.sources) as [format, images]}
+		<source srcset={images.map((i) => `${i.src} ${i.w}w`).join(', ')} type={'image/' + format} />
+	{/each}
+	<img src={___ASSET___1.img.src} width=5 height=10 alt="unquoted dimensions test" />
 </picture>
 
 <picture>

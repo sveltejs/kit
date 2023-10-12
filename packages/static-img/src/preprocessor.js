@@ -42,15 +42,14 @@ export function image() {
 				// TODO: read vite aliases here rather than assuming $
 				if (!url.startsWith('./') && !url.startsWith('$')) return;
 
-				/** @type {string | undefined} */
 				const sizes = get_attr_value(node, 'sizes');
 				const width = get_attr_value(node, 'width');
 				url += url.includes('?') ? '&' : '?';
 				if (sizes) {
-					url += 'sizes=' + encodeURIComponent(sizes) + '&';
+					url += 'sizes=' + encodeURIComponent(sizes.raw) + '&';
 				}
 				if (width) {
-					url += 'width=' + encodeURIComponent(width) + '&';
+					url += 'width=' + encodeURIComponent(width.raw) + '&';
 				}
 				url += 'static-img';
 

@@ -16,6 +16,8 @@
 
 <img src="./foo.png" width="5" height="10" alt="dimensions test" />
 
+<img src="./foo.png" width=5 height=10 alt="unquoted dimensions test" />
+
 <img src="./foo.png?blur=5" alt="directive test" />
 
 <img src="./foo.png" {...{foo}} alt="spread attributes test" />
