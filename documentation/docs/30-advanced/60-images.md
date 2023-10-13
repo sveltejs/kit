@@ -131,7 +131,7 @@ In this example, we don't have you to have to manually create three versions of 
   />
 ```
 
-If `sizes` is specified as a `string` (i.e. not a text expression like `sizes={['(min-width: 60rem) 80vw', '(min-width: 40rem) 90vw', '100vw'].join(', ')}`) then we will automatically generate widths.
+If `sizes` is specified as a `string` (i.e. not a text expression like `sizes={['(min-width: 60rem) 80vw', '(min-width: 40rem) 90vw', '100vw'].join(', ')}`) then we will automatically generate different width images. If `sizes` is not provided, `1x` and `2x` images will be generated. If sizes is provided, then a large srcset is generated. If some of the `sizes` have been specified as a percentage of the viewport width using the `vw` unit then the `srcset` will filter out any values which are too small to ever be requested by the browser.
 
 ### Per-image transforms
 

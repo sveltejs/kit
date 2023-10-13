@@ -60,20 +60,24 @@ async function imagetools(plugin_opts) {
 		defaultDirectives: async (url, metadata) => {
 			if (url.searchParams.has('static-img')) {
 				/** @type {Record<string,string>} */
-				const result = {
+				const directives = {
 					as: 'picture'
 				};
-				if (url.searchParams.has('sizes')) {
-					const deviceSizes = [640, 750, 828, 1080, 1200, 1920, 2048, 3840];
-					const allSizes = [16, 32, 48, 64, 96, 128, 256, 384].concat(deviceSizes);
-					const sizes = url.searchParams.get('sizes') ?? undefined;
-					const width = url.searchParams.get('width') || (await metadata()).width;
-					getWidths(deviceSizes, allSizes, width, sizes);
-					result.w = '';
+
+				const deviceSizes = [640, 750, 828, 1080, 1200, 1920, 2048, 3840];
+				const allSizes = [16, 32, 48, 64, 96, 128, 256, 384].concat(deviceSizes);
+				const sizes = url.searchParams.get('sizes') ?? undefined;
+				const width = url.searchParams.get('width') || (await metadata()).width;
+				const calculated = getWidths(deviceSizes, allSizes, width, sizes);
+				// TODO: how should 2x work? we don't want to double the image...
+				// do we take the one on disk and half it? but that could be frustrating if it's not what you want...
+				if (calculated.kind === 'w') {
+					directives.w = calculated.widths.map((w) => w).join(',');
 				}
+
 				const ext = path.extname(url.pathname);
-				result.format = `avif;webp;${fallback[ext] ?? 'png'}`;
-				return new URLSearchParams(result);
+				directives.format = `avif;webp;${fallback[ext] ?? 'png'}`;
+				return new URLSearchParams(directives);
 			}
 			return url.searchParams;
 		},
