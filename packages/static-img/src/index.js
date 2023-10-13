@@ -64,16 +64,10 @@ async function imagetools(plugin_opts) {
 					as: 'picture'
 				};
 
-				const deviceSizes = [640, 750, 828, 1080, 1200, 1920, 2048, 3840];
-				const allSizes = [16, 32, 48, 64, 96, 128, 256, 384].concat(deviceSizes);
 				const sizes = url.searchParams.get('sizes') ?? undefined;
-				const width = url.searchParams.get('width') || (await metadata()).width;
-				const calculated = getWidths(deviceSizes, allSizes, width, sizes);
-				// TODO: how should 2x work? we don't want to double the image...
-				// do we take the one on disk and half it? but that could be frustrating if it's not what you want...
-				if (calculated.kind === 'w') {
-					directives.w = calculated.widths.map((w) => w).join(',');
-				}
+				const widthParam = url.searchParams.get('width');
+				const width = widthParam === null ? (await metadata()).width : parseInt(widthParam);
+				directives.w = getWidths(width, sizes).join(',');
 
 				const ext = path.extname(url.pathname);
 				directives.format = `avif;webp;${fallback[ext] ?? 'png'}`;
@@ -91,49 +85,50 @@ async function imagetools(plugin_opts) {
 }
 
 /**
- * Taken under MIT license (Copyright (c) 2023 Vercel, Inc.) from
+ * Derived from
  * https://github.com/vercel/next.js/blob/3f25a2e747fc27da6c2166e45d54fc95e96d7895/packages/next/src/shared/lib/get-img-props.ts#L132
- * @param {number[]} deviceSizes
- * @param {number[]} allSizes
- * @param {number | string | undefined} width
+ * under the MIT license. Copyright (c) Vercel, Inc.
+ * @param {number | undefined} width
  * @param {string | undefined} sizes
- * @returns {{ widths: number[]; kind: 'w' | 'x' }}
+ * @param {number[]} [deviceSizes]
+ * @param {number[]} [imageSizes]
+ * @returns { number[] }
  */
-function getWidths(deviceSizes, allSizes, width, sizes) {
+function getWidths(width, sizes, deviceSizes, imageSizes) {
+	const chosen_device_sizes = deviceSizes || [640, 750, 828, 1080, 1200, 1920, 2048, 3840];
+	const all_sizes = (imageSizes || [16, 32, 48, 64, 96, 128, 256, 384]).concat(chosen_device_sizes);
+
 	if (sizes) {
 		// Find all the "vw" percent sizes used in the sizes prop
-		const viewportWidthRe = /(^|\s)(1?\d?\d)vw/g;
-		const percentSizes = [];
-		for (let match; (match = viewportWidthRe.exec(sizes)); match) {
-			percentSizes.push(parseInt(match[2]));
+		const viewport_width_re = /(^|\s)(1?\d?\d)vw/g;
+		const percent_sizes = [];
+		for (let match; (match = viewport_width_re.exec(sizes)); match) {
+			percent_sizes.push(parseInt(match[2]));
 		}
-		if (percentSizes.length) {
-			const smallestRatio = Math.min(...percentSizes) * 0.01;
-			return {
-				widths: allSizes.filter((s) => s >= deviceSizes[0] * smallestRatio),
-				kind: 'w'
-			};
+		if (percent_sizes.length) {
+			const smallest_ratio = Math.min(...percent_sizes) * 0.01;
+			return all_sizes.filter((s) => s >= chosen_device_sizes[0] * smallest_ratio);
 		}
-		return { widths: allSizes, kind: 'w' };
+		return all_sizes;
 	}
 	if (typeof width !== 'number') {
-		return { widths: deviceSizes, kind: 'w' };
+		return chosen_device_sizes;
 	}
 
-	const widths = [
-		...new Set(
-			// > This means that most OLED screens that say they are 3x resolution,
-			// > are actually 3x in the green color, but only 1.5x in the red and
-			// > blue colors. Showing a 3x resolution image in the app vs a 2x
-			// > resolution image will be visually the same, though the 3x image
-			// > takes significantly more data. Even true 3x resolution screens are
-			// > wasteful as the human eye cannot see that level of detail without
-			// > something like a magnifying glass.
-			// https://blog.twitter.com/engineering/en_us/topics/infrastructure/2019/capping-image-fidelity-on-ultra-high-resolution-devices.html
-			[width, width * 2 /*, width * 3*/].map(
-				(w) => allSizes.find((p) => p >= w) || allSizes[allSizes.length - 1]
-			)
-		)
-	];
-	return { widths, kind: 'x' };
+	// Don't need more than 2x resolution.
+	// Most OLED screens that say they are 3x resolution,
+	// are actually 3x in the green color, but only 1.5x in the red and
+	// blue colors. Showing a 3x resolution image in the app vs a 2x
+	// resolution image will be visually the same, though the 3x image
+	// takes significantly more data. Even true 3x resolution screens are
+	// wasteful as the human eye cannot see that level of detail without
+	// something like a magnifying glass.
+	// https://blog.twitter.com/engineering/en_us/topics/infrastructure/2019/capping-image-fidelity-on-ultra-high-resolution-devices.html
+
+	// We diverge from the Next.js logic here
+	// You can't really scale up an image, so you can't 2x the width
+	// Instead the user should provide the high-res image and we'll downscale
+	// Also, Vercel builds specific image sizes and picks the closest from those,
+	// but we can just build the ones we want exactly.
+	return [width, Math.round(width / 2)];
 }
