@@ -67,7 +67,7 @@ async function imagetools(plugin_opts) {
 				const sizes = url.searchParams.get('sizes') ?? undefined;
 				const widthParam = url.searchParams.get('width');
 				const width = widthParam === null ? (await metadata()).width : parseInt(widthParam);
-				directives.w = getWidths(width, sizes).join(';');
+				directives.w = getWidths(width, sizes).widths.join(';');
 
 				const ext = path.extname(url.pathname);
 				directives.format = `avif;webp;${fallback[ext] ?? 'png'}`;
@@ -89,11 +89,11 @@ async function imagetools(plugin_opts) {
  * Derived from
  * https://github.com/vercel/next.js/blob/3f25a2e747fc27da6c2166e45d54fc95e96d7895/packages/next/src/shared/lib/get-img-props.ts#L132
  * under the MIT license. Copyright (c) Vercel, Inc.
- * @param {number | undefined} width
+ * @param {number | string | undefined} width
  * @param {string | undefined} sizes
  * @param {number[]} [deviceSizes]
  * @param {number[]} [imageSizes]
- * @returns { number[] }
+ * @returns {{ widths: number[]; kind: 'w' | 'x' }}
  */
 function getWidths(width, sizes, deviceSizes, imageSizes) {
 	const chosen_device_sizes = deviceSizes || [640, 750, 828, 1080, 1200, 1920, 2048, 3840];
@@ -108,12 +108,15 @@ function getWidths(width, sizes, deviceSizes, imageSizes) {
 		}
 		if (percent_sizes.length) {
 			const smallest_ratio = Math.min(...percent_sizes) * 0.01;
-			return all_sizes.filter((s) => s >= chosen_device_sizes[0] * smallest_ratio);
+			return {
+				widths: all_sizes.filter((s) => s >= chosen_device_sizes[0] * smallest_ratio),
+				kind: 'w'
+			};
 		}
-		return all_sizes;
+		return { widths: all_sizes, kind: 'w' };
 	}
 	if (typeof width !== 'number') {
-		return chosen_device_sizes;
+		return { widths: chosen_device_sizes, kind: 'w' };
 	}
 
 	// Don't need more than 2x resolution.
@@ -126,10 +129,10 @@ function getWidths(width, sizes, deviceSizes, imageSizes) {
 	// something like a magnifying glass.
 	// https://blog.twitter.com/engineering/en_us/topics/infrastructure/2019/capping-image-fidelity-on-ultra-high-resolution-devices.html
 
-	// We diverge from the Next.js logic here.
-	// You can't really scale up an image, so you can't 2x the width.
-	// Instead the user should provide the high-res image and we'll downscale.
+	// We diverge from the Next.js logic here
+	// You can't really scale up an image, so you can't 2x the width
+	// Instead the user should provide the high-res image and we'll downscale
 	// Also, Vercel builds specific image sizes and picks the closest from those,
 	// but we can just build the ones we want exactly.
-	return [width, Math.round(width / 2)];
+	return { widths: [width, Math.round(width / 2)], kind: 'x' };
 }
