@@ -67,10 +67,11 @@ async function imagetools(plugin_opts) {
 				const sizes = url.searchParams.get('sizes') ?? undefined;
 				const widthParam = url.searchParams.get('width');
 				const width = widthParam === null ? (await metadata()).width : parseInt(widthParam);
-				directives.w = getWidths(width, sizes).join(',');
+				directives.w = getWidths(width, sizes).join(';');
 
 				const ext = path.extname(url.pathname);
 				directives.format = `avif;webp;${fallback[ext] ?? 'png'}`;
+
 				return new URLSearchParams(directives);
 			}
 			return url.searchParams;
@@ -125,9 +126,9 @@ function getWidths(width, sizes, deviceSizes, imageSizes) {
 	// something like a magnifying glass.
 	// https://blog.twitter.com/engineering/en_us/topics/infrastructure/2019/capping-image-fidelity-on-ultra-high-resolution-devices.html
 
-	// We diverge from the Next.js logic here
-	// You can't really scale up an image, so you can't 2x the width
-	// Instead the user should provide the high-res image and we'll downscale
+	// We diverge from the Next.js logic here.
+	// You can't really scale up an image, so you can't 2x the width.
+	// Instead the user should provide the high-res image and we'll downscale.
 	// Also, Vercel builds specific image sizes and picks the closest from those,
 	// but we can just build the ones we want exactly.
 	return [width, Math.round(width / 2)];
