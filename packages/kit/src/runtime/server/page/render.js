@@ -63,7 +63,7 @@ export async function render_response({
 
 		if (Object.keys(public_env).length) {
 			console.warn(
-				'Page is being prerendering with runtime environment variables. Please make sure if dynamic env is appropriate on this page.'
+				'Page with dynamic environment variables is being prerendered, which will save their values into the page. Please ensure that is desired.'
 			);
 		}
 	}
