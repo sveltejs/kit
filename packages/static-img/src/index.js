@@ -59,7 +59,7 @@ async function imagetools(plugin_opts) {
 	const imagetools_opts = {
 		defaultDirectives: async (url, metadata) => {
 			if (url.searchParams.has('static-img')) {
-				/** @type {Record<string,string>} */
+				/** @type {Record<string,any>} */
 				const directives = {
 					as: 'picture'
 				};
@@ -67,7 +67,11 @@ async function imagetools(plugin_opts) {
 				const sizes = url.searchParams.get('sizes') ?? undefined;
 				const widthParam = url.searchParams.get('width');
 				const width = widthParam === null ? (await metadata()).width : parseInt(widthParam);
-				directives.w = getWidths(width, sizes).widths.join(';');
+				const calculated = getWidths(width, sizes);
+				directives.w = calculated.widths.join(';');
+				if (calculated.kind === 'x') {
+					directives.basePixels = calculated.widths[0];
+				}
 
 				const ext = path.extname(url.pathname);
 				directives.format = `avif;webp;${fallback[ext] ?? 'png'}`;
@@ -134,5 +138,5 @@ function getWidths(width, sizes, deviceSizes, imageSizes) {
 	// Instead the user should provide the high-res image and we'll downscale
 	// Also, Vercel builds specific image sizes and picks the closest from those,
 	// but we can just build the ones we want exactly.
-	return { widths: [width, Math.round(width / 2)], kind: 'x' };
+	return { widths: [Math.round(width / 2), width], kind: 'x' };
 }
