@@ -57,28 +57,19 @@ async function imagetools(plugin_opts) {
 
 	/** @type {import('../types').PluginOptions} */
 	const imagetools_opts = {
-		defaultDirectives: async (url, metadata) => {
-			if (url.searchParams.has('static-img')) {
-				/** @type {Record<string,any>} */
-				const directives = {
-					as: 'picture'
-				};
+		defaultDirectives: async ({ pathname, searchParams }, metadata) => {
+			if (!searchParams.has('static-img')) searchParams;
 
-				const sizes = url.searchParams.get('sizes') ?? undefined;
-				const widthParam = url.searchParams.get('width');
-				const width = widthParam === null ? (await metadata()).width : parseInt(widthParam);
-				const calculated = getWidths(width, sizes);
-				directives.w = calculated.widths.join(';');
-				if (calculated.kind === 'x') {
-					directives.basePixels = calculated.widths[0];
-				}
-
-				const ext = path.extname(url.pathname);
-				directives.format = `avif;webp;${fallback[ext] ?? 'png'}`;
-
-				return new URLSearchParams(directives);
-			}
-			return url.searchParams;
+			const width_param = searchParams.get('width');
+			const width = width_param ? parseInt(width_param) : (await metadata()).width;
+			const sizes = searchParams.get('sizes');
+			const { widths } = getWidths(width, sizes);
+			return new URLSearchParams({
+				as: 'picture',
+				format: `avif;webp;${fallback[path.extname(pathname)] ?? 'png'}`,
+				w: widths.join(';'),
+				...(!sizes && { basePixels: widths[0].toString() })
+			});
 		},
 		...(plugin_opts || {})
 	};
@@ -93,8 +84,8 @@ async function imagetools(plugin_opts) {
  * Derived from
  * https://github.com/vercel/next.js/blob/3f25a2e747fc27da6c2166e45d54fc95e96d7895/packages/next/src/shared/lib/get-img-props.ts#L132
  * under the MIT license. Copyright (c) Vercel, Inc.
- * @param {number | string | undefined} width
- * @param {string | undefined} sizes
+ * @param {number | undefined} width
+ * @param {string | null | undefined} sizes
  * @param {number[]} [deviceSizes]
  * @param {number[]} [imageSizes]
  * @returns {{ widths: number[]; kind: 'w' | 'x' }}
