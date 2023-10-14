@@ -57,13 +57,10 @@ async function imagetools(plugin_opts) {
 
 	/** @type {import('../types').PluginOptions} */
 	const imagetools_opts = {
-		defaultDirectives: async ({ pathname, searchParams }, metadata) => {
-			if (!searchParams.has('static-img')) searchParams;
+		defaultDirectives: async ({ pathname, searchParams: qs }, metadata) => {
+			if (!qs.has('static-img')) qs;
 
-			const width_param = searchParams.get('width');
-			const width = width_param ? parseInt(width_param) : (await metadata()).width;
-			const sizes = searchParams.get('sizes');
-			const calculated = getWidths(width, sizes);
+			const calculated = getWidths(qs.get('width') ?? (await metadata()).width, qs.get('sizes'));
 			return new URLSearchParams({
 				as: 'picture',
 				format: `avif;webp;${fallback[path.extname(pathname)] ?? 'png'}`,
@@ -84,13 +81,14 @@ async function imagetools(plugin_opts) {
  * Derived from
  * https://github.com/vercel/next.js/blob/3f25a2e747fc27da6c2166e45d54fc95e96d7895/packages/next/src/shared/lib/get-img-props.ts#L132
  * under the MIT license. Copyright (c) Vercel, Inc.
- * @param {number | undefined} width
+ * @param {number | string | undefined} width
  * @param {string | null | undefined} sizes
  * @param {number[]} [deviceSizes]
  * @param {number[]} [imageSizes]
  * @returns {{ widths: number[]; kind: 'w' | 'x' }}
  */
 function getWidths(width, sizes, deviceSizes, imageSizes) {
+	width = typeof width === 'string' ? parseInt(width) : width;
 	const chosen_device_sizes = deviceSizes || [640, 750, 828, 1080, 1200, 1920, 2048, 3840];
 	const all_sizes = (imageSizes || [16, 32, 48, 64, 96, 128, 256, 384]).concat(chosen_device_sizes);
 
