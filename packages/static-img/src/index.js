@@ -63,12 +63,12 @@ async function imagetools(plugin_opts) {
 			const width_param = searchParams.get('width');
 			const width = width_param ? parseInt(width_param) : (await metadata()).width;
 			const sizes = searchParams.get('sizes');
-			const { widths } = getWidths(width, sizes);
+			const calculated = getWidths(width, sizes);
 			return new URLSearchParams({
 				as: 'picture',
 				format: `avif;webp;${fallback[path.extname(pathname)] ?? 'png'}`,
-				w: widths.join(';'),
-				...(!sizes && { basePixels: widths[0].toString() })
+				w: calculated.widths.join(';'),
+				...(calculated.kind === 'x' && { basePixels: calculated.widths[0].toString() })
 			});
 		},
 		...(plugin_opts || {})
