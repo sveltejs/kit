@@ -19,10 +19,7 @@ const config = {
 		cssMinify: 'lightningcss'
 	},
 
-	plugins: [
-		staticImages(),
-		sveltekit()
-	],
+	plugins: [staticImages(), sveltekit()],
 
 	ssr: {
 		noExternal: ['@sveltejs/site-kit']
