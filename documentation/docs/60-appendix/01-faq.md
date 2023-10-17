@@ -188,6 +188,33 @@ onMount(() => {
 });
 ```
 
+If the library provides a component you can use a combination of a [dynamic import](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Operators/import), `{#await}` and `<svelte:component>`:
+
+```svelte
+<!--- file: index.svelte --->
+<script>
+	import { browser } from '$app/environment';
+
+	/** @type {Promise<import('svelte').ComponentType<import('some-browser-only-library').Component>>} */
+	let ComponentConstructor
+	if (browser) {
+		ComponentConstructor = import('some-browser-only-library').then((module) => module.Component);
+	} else {
+		/*
+			Workaround for https://github.com/sveltejs/kit/issues/10882.
+			Assign an empty promise on the server to force rendering the pending-state, preventing weird layout shifts.
+		*/
+		ComponentConstructor = new Promise(() => {});
+	}
+</script>
+
+{#await ComponentConstructor}
+	<p>Loading...</p>
+{:then component}
+	<svelte:component this={component} />
+{/await}
+```
+
 ### How do I use a different backend API server?
 
 You can use [`event.fetch`](./load#making-fetch-requests) to request data from an external API server, but be aware that you would need to deal with [CORS](https://developer.mozilla.org/en-US/docs/Web/HTTP/CORS), which will result in complications such as generally requiring requests to be preflighted resulting in higher latency. Requests to a separate subdomain may also increase latency due to an additional DNS lookup, TLS setup, etc. If you wish to use this method, you may find [`handleFetch`](./hooks#server-hooks-handlefetch) helpful.
