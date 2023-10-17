@@ -107,24 +107,18 @@ if (browser) {
 }
 ```
 
-You can also run code in `onMount` if you'd like to run it after the component has been first rendered to the DOM:
+You can also put code in `onMount` if you'd like to run it after the component has been first rendered to the DOM:
 
 ```js
-// @filename: ambient.d.ts
-// @lib: ES2015
-declare module 'some-browser-only-library';
-
-// @filename: index.js
-// ---cut---
 import { onMount } from 'svelte';
 
-onMount(async () => {
-	const { method } = await import('some-browser-only-library');
-	method('hello world');
+onMount(() => {
+	// client-only code here
 });
 ```
 
-If the library you'd like to use is side-effect free you can also statically import it and it will be tree-shaken out in the server-side build where `onMount` will be automatically replaced with a no-op:
+If a library you'd like to use is side-effect free you can safely statically import it as long as you only use it inside `onMount`.
+In the server-side build `onMount` is replaced with a no-op, after which tree-shaking will automatically get rid of your client-only import.
 
 ```js
 // @filename: ambient.d.ts
@@ -141,7 +135,41 @@ onMount(() => {
 });
 ```
 
-Otherwise, if the library has side effects and you'd still prefer to use static imports, check out [vite-plugin-iso-import](https://github.com/bluwy/vite-plugin-iso-import) to support the `?client` import suffix. The import will be stripped out in SSR builds. However, note that you will lose the ability to use VS Code Intellisense if you use this method.
+Otherwise, if the library has side effects you can use a [dynamic import](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Operators/import):
+
+```js
+// @filename: ambient.d.ts
+// @lib: ES2015
+declare module 'some-browser-only-library';
+
+// @filename: index.js
+// ---cut---
+import { onMount } from 'svelte';
+
+if (browser) {
+	import('some-browser-only-library').then(({ method }) => {
+		method('hello world');
+	})
+}
+```
+
+Note that top-level await is not available in Svelte components.
+This is not a problem inside an `async` function passed to `onMount`:
+
+```js
+// @filename: ambient.d.ts
+// @lib: ES2015
+declare module 'some-browser-only-library';
+
+// @filename: index.js
+// ---cut---
+onMount(async () => {
+	const { method } = await import('some-browser-only-library');
+	method('hello world');
+});
+```
+
+If a library has side effects and you'd prefer to use static imports, check out [vite-plugin-iso-import](https://github.com/bluwy/vite-plugin-iso-import) to support the `?client` import suffix. The import will be stripped out in SSR builds. However, note that you will lose the ability to use VS Code Intellisense if you use this method.
 
 ```js
 // @filename: ambient.d.ts
