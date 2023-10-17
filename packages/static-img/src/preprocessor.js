@@ -186,8 +186,8 @@ function img_to_picture(content, node, import_name) {
 	}
 
 	return `<picture>
-	{#each Object.entries(${import_name}.sources) as [format, images]}
-		<source srcset={images.map((i) => \`\${i.src} \${i.w}w\`).join(', ')}${sizes_string} type={'image/' + format} />
+	{#each Object.entries(${import_name}.sources) as [format, srcset]}
+		<source {srcset}${sizes_string} type={'image/' + format} />
 	{/each}
 	<img ${attributes_to_markdown(content, attributes, import_name)} />
 </picture>`;
