@@ -234,11 +234,11 @@ yarn set version berry
 yarn install
 ```
 
-**Yarn 3 global cache**
+#### Yarn 3 global cache
 
 One of the more interesting features of Yarn Berry is the ability to have a single global cache for packages, instead of having multiple copies for each project on the disk. However, setting `enableGlobalCache` to true causes building to fail, so it is recommended to add the following to the `.yarnrc.yml` file:
 
-```
+```yaml
 nodeLinker: node-modules
 ```
 
