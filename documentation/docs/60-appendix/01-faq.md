@@ -169,6 +169,8 @@ onMount(async () => {
 });
 ```
 
+> Be careful with `await import` in `onMount`, this can cause hard to debug race conditions. Normally `onMount` runs synchronously in order from child to parent. If you use asynchronous APIs this is no longer the case, meaning the `onMount` of a component might run before all of its children have been fully initialized.
+
 If a library has side effects and you'd prefer to use static imports, check out [vite-plugin-iso-import](https://github.com/bluwy/vite-plugin-iso-import) to support the `?client` import suffix. The import will be stripped out in SSR builds. However, note that you will lose the ability to use VS Code Intellisense if you use this method.
 
 ```js
