@@ -2,11 +2,10 @@ import path from 'node:path';
 import { image } from './preprocessor.js';
 
 /**
- * @param {import('../types').PluginOptions | undefined} opts
  * @returns {Promise<import('vite').Plugin[]>}
  */
-export async function staticImages(opts) {
-	const imagetools_plugin = await imagetools(opts);
+export async function staticImages() {
+	const imagetools_plugin = await imagetools();
 	if (!imagetools_plugin) {
 		console.error(
 			'@sveltejs/static-img: vite-imagetools is not installed. Skipping build-time optimizations'
@@ -43,10 +42,7 @@ const fallback = {
 	'.gif': 'gif'
 };
 
-/**
- * @param {import('../types').PluginOptions | undefined} plugin_opts
- */
-async function imagetools(plugin_opts) {
+async function imagetools() {
 	/** @type {typeof import('vite-imagetools').imagetools} */
 	let imagetools;
 	try {
@@ -55,7 +51,7 @@ async function imagetools(plugin_opts) {
 		return;
 	}
 
-	/** @type {import('../types').PluginOptions} */
+	/** @type {Partial<import('vite-imagetools').VitePluginOptions>} */
 	const imagetools_opts = {
 		defaultDirectives: async ({ pathname, searchParams: qs }, metadata) => {
 			if (!qs.has('static-img')) qs;
@@ -67,8 +63,7 @@ async function imagetools(plugin_opts) {
 				w: calculated.widths.join(';'),
 				...(calculated.kind === 'x' && { basePixels: calculated.widths[0].toString() })
 			});
-		},
-		...(plugin_opts || {})
+		}
 	};
 
 	// TODO: should we make formats or sizes configurable besides just letting people override defaultDirectives?
