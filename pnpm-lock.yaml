@@ -385,9 +385,9 @@ importers:
       magic-string:
         specifier: ^0.30.0
         version: 0.30.2
-      mime:
-        specifier: ^3.0.0
-        version: 3.0.0
+      mrmime:
+        specifier: ^1.0.1
+        version: 1.0.1
       sade:
         specifier: ^1.8.1
         version: 1.8.1
@@ -410,9 +410,6 @@ importers:
       '@types/connect':
         specifier: ^3.4.35
         version: 3.4.35
-      '@types/mime':
-        specifier: ^3.0.1
-        version: 3.0.1
       '@types/node':
         specifier: ^16.18.6
         version: 16.18.6
@@ -2139,10 +2136,6 @@ packages:
 
   /@types/json-schema@7.0.12:
     resolution: {integrity: sha512-Hr5Jfhc9eYOQNPYO5WLDq/n4jqijdHNlDXjuAQkkt+mWdQR+XJToOHrsD4cPaMXpn6KO7y2+wM8AZEs8VpBLVA==}
-    dev: true
-
-  /@types/mime@3.0.1:
-    resolution: {integrity: sha512-Y4XFY5VJAuw0FgAqPNd6NNoV44jbq9Bz2L7Rh/J6jLTiHBSBJa9fxqQIvkIld4GsoDOcCbvzOUAbLPsSKKg+uA==}
     dev: true
 
   /@types/minimist@1.2.2:
@@ -4592,6 +4585,7 @@ packages:
     resolution: {integrity: sha512-jSCU7/VB1loIWBZe14aEYHU/+1UMEHoaO7qxCOVJOw9GgH72VAWppxNcjU+x9a2k3GSIBXNKxXQFqRvvZ7vr3A==}
     engines: {node: '>=10.0.0'}
     hasBin: true
+    dev: true
 
   /mimic-response@3.1.0:
     resolution: {integrity: sha512-z0yWI+4FDrrweS8Zmt4Ej5HdJmky15+L2e6Wgn3+iK5fWzb6T3fhNFq2+MeTRb064c6Wr4N/wv0DzQTjNzHNGQ==}
