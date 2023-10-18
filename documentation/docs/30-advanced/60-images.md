@@ -6,7 +6,7 @@ title: Images
 
 [Vite will automatically process imported assets](https://vitejs.dev/guide/assets.html) for improved performance. Hashes will be added to the filenames so that they can be cached and assets smaller than `assetsInlineLimit` will be inlined.
 
-```html
+```svelte
 <script>
 	import logo from '$lib/assets/logo.png';
 </script>
@@ -102,7 +102,7 @@ const pictures = import.meta.glob(
 
 `width` and `height` are optional as they can be inferred from the source image and will be automatically added when the `<img>` tag is preprocessed. These attributes are added because the browser can reserve the correct amount of space when it knows image dimensions which prevents layout shift. If you'd like to use a different `width` and `height` you can style the image with CSS. Because the preprocessor adds a `width` and `height` for you, if you'd like one of the dimensions to be automatically calculated then you will need to specify that:
 
-```
+```svelte
 <style>
 	.hero-image img {
 		width: var(--size);
