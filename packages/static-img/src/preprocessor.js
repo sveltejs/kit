@@ -2,7 +2,6 @@ import MagicString from 'magic-string';
 import { parse } from 'svelte-parse-markup';
 import { walk } from 'svelte/compiler';
 
-const IGNORE_FLAG = 'static-img-disable';
 const FORCE_FLAG = 'static-img-enable';
 const ASSET_PREFIX = '___ASSET___';
 
@@ -79,9 +78,7 @@ export function image() {
 				 */
 				enter(node) {
 					if (node.type === 'Comment') {
-						if (node.data.trim() === IGNORE_FLAG) {
-							ignore_next_element = true;
-						} else if (node.data.trim() === FORCE_FLAG) {
+						if (node.data.trim() === FORCE_FLAG) {
 							force_next_element = true;
 						}
 					} else if (node.type === 'Element') {

@@ -65,10 +65,6 @@ Use in your `.svelte` components by referencing a relative path beginning with `
 
 This will replace your `img` tag with a `picture` tag wrapping one `source` tag per image type.
 
-### Skipping an image
-
-If you have an image tag that you do not want to be transformed you can use the comment `<!-- static-img-disable -->`.
-
 ### Dynamically choosing an image
 
 You can also manually import an image and then pass it to a transformed `img` tag. This is useful when you have a collection of static images and would like to dynamically choose one. You can create a collection of images manually [as we do on the homepage showcase](https://github.com/sveltejs/kit/blob/master/sites/kit.svelte.dev/src/routes/home/Showcase.svelte). In this case you will need to both tag the `import` statement and `img` tag to indicate you'd like process them.
