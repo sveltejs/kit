@@ -31,7 +31,7 @@
 		"tiny-glob": "^0.2.9",
 		"typescript": "5.0.4",
 		"vite": "^4.4.9",
-		"vite-imagetools": "^5.0.8",
+		"vite-imagetools": "^6.0.0",
 		"vitest": "^0.34.5"
 	},
 	"type": "module",
