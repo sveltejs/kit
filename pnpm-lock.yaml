@@ -1092,6 +1092,12 @@ importers:
       vite:
         specifier: ^4.4.9
         version: 4.4.9(@types/node@16.18.6)(lightningcss@1.21.8)
+<<<<<<< HEAD
+=======
+      vite-imagetools:
+        specifier: ^6.0.0
+        version: 6.0.0(rollup@3.7.0)
+>>>>>>> master
       vitest:
         specifier: ^0.34.5
         version: 0.34.5(lightningcss@1.21.8)(playwright@1.30.0)
@@ -3803,7 +3809,11 @@ packages:
 
   /github-from-package@0.0.0:
     resolution: {integrity: sha1-l/tdlr/eiXMxPyDoKI75oWf6ZM4=}
+<<<<<<< HEAD
     dev: false
+=======
+    dev: true
+>>>>>>> master
 
   /gitignore-parser@0.0.2:
     resolution: {integrity: sha512-X6mpqUv59uWLGD4n3hZ8Cu8KbF2PMWPSFYmxZjdkpm3yOU7hSUYnzTkZI1mcWqchphvqyuz3/BhgBR4E/JtkCg==}
@@ -6325,7 +6335,11 @@ packages:
     resolution: {integrity: sha512-t/k4LXN6+V+otKRM3EAsqG/iHS2Ja8S+biEJWBJk5IKeyQpJ2KZKR5hAn7n5UlNC7J5EzUpiBkUyUFKxGr90fw==}
     engines: {node: '>=12.0.0'}
     dependencies:
+<<<<<<< HEAD
       '@rollup/pluginutils': 5.0.2(rollup@3.7.0)
+=======
+      '@rollup/pluginutils': 5.0.4(rollup@3.7.0)
+>>>>>>> master
       imagetools-core: 5.0.0
     transitivePeerDependencies:
       - rollup
