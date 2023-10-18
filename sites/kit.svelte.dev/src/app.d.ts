@@ -9,10 +9,4 @@ declare global {
 	}
 }
 
-// TODO: I think we need to do something like this to fix Showcase.svelte but why isn't it working?
-declare module '*?static-img' {
-	const value: string;
-	export default value;
-}
-
 export {};
