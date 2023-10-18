@@ -4,7 +4,7 @@ title: Images
 
 ## Caching and inlining
 
-[Vite will automatically process imported assets](https://vitejs.dev/guide/assets.html) for improved performance. Hashes will be added to the filenames so that they can be cached and assets smaller than `assetsInlineLimit` will be inlined.
+[Vite will automatically process imported assets](https://vitejs.dev/guide/assets.html) for improved performance. This includes assets referenced via the CSS `url()` function. Hashes will be added to the filenames so that they can be cached and assets smaller than `assetsInlineLimit` will be inlined. Vite's asset handling is most often used for images, but is also useful for video, audio, etc.
 
 ```svelte
 <script>
@@ -14,9 +14,7 @@ title: Images
 <img alt="The project logo" src={logo} />
 ```
 
-To reference assets directly in the markup, you can use a preprocessor such as [`@sveltejs/static-img`](#static-image-transforms), which also transforms images, or [svelte-preprocess-import-assets](https://github.com/bluwy/svelte-preprocess-import-assets) which simply creates the import for you without other changes.
-
-For assets included via the CSS `url()` function, you may find [`vitePreprocess`](https://kit.svelte.dev/docs/integrations#preprocessors-vitepreprocess) useful.
+To reference assets directly in the markup, you can use a preprocessor such as [`@sveltejs/static-img`](#static-image-transforms), which is discussed below and additionally transforms your images.
 
 ## Transforming background
 
