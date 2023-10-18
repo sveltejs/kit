@@ -1,0 +1,26 @@
+/**
+ * @param {string} s
+ * @return {number}
+ */
+var lengthOfLongestSubstring = function(s) {
+     let sub = s[0];
+    if(!s.length){
+        return 0;
+    }
+    let longest = sub
+    let j = 0;
+    for (let i = j+1; i < s.length; i++) {
+        if(s.slice(j,i).split("").includes(s[i])){
+            ++j;
+            i=j;
+        }else{
+            sub=s.slice(j,i+1)
+        }
+
+        if(sub.length>longest.length){
+            longest = sub;
+        }
+
+    }
+    return longest.length;   
+};
