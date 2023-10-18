@@ -150,7 +150,10 @@ export function create_client(app, target) {
 	/** @type {Promise<void> | null} */
 	let pending_invalidate;
 
-	async function invalidate() {
+	/**
+	 * @param {(() => unknown) | undefined} [before_data_write]
+	 */
+	async function invalidate(before_data_write) {
 		// Accept all invalidations as they come, don't swallow any while another invalidation
 		// is running because subsequent invalidations may make earlier ones outdated,
 		// but batch multiple synchronous invalidations.
@@ -177,6 +180,9 @@ export function create_client(app, target) {
 			} else {
 				if (navigation_result.props.page !== undefined) {
 					page = navigation_result.props.page;
+				}
+				if (before_data_write) {
+					await before_data_write();
 				}
 				root.$set(navigation_result.props);
 			}
@@ -1454,6 +1460,11 @@ export function create_client(app, target) {
 					reset_focus();
 				}
 			}
+		},
+
+		_invalidate_all_with_callback: (before_data_write) => {
+			force_invalidation = true;
+			return invalidate(before_data_write);
 		},
 
 		_start_router: () => {

@@ -1,7 +1,6 @@
 import * as devalue from 'devalue';
 import { BROWSER, DEV } from 'esm-env';
 import { client } from '../client/singletons.js';
-import { invalidateAll } from './navigation.js';
 
 /**
  * This action updates the `form` property of the current page with the given data and updates `$page.status`.
@@ -101,6 +100,10 @@ export function enhance(form_element, submit = () => {}) {
 		throw new Error('use:enhance can only be used on <form> fields with method="POST"');
 	}
 
+	// Save the initial values of the form controls for form resetting
+	let controls = Array.from(form_element.elements);
+	let values = controls.map((el) => ('value' in el ? el.value : undefined));
+
 	/**
 	 * @param {{
 	 *   action: URL;
@@ -110,11 +113,27 @@ export function enhance(form_element, submit = () => {}) {
 	 */
 	const fallback_callback = async ({ action, result, reset }) => {
 		if (result.type === 'success') {
-			if (reset !== false) {
-				// We call reset from the prototype to avoid DOM clobbering
-				HTMLFormElement.prototype.reset.call(form_element);
-			}
-			await invalidateAll();
+			await client._invalidate_all_with_callback(() => {
+				if (reset !== false) {
+					// Here we call the browser-native reset. Svelte removes the form elements' value
+					// attributes during hydration (https://github.com/sveltejs/svelte/issues/8220), so this
+					// only empties the form controls - But we still need this as a fallback for any newly
+					// added elements. We call reset from the prototype to avoid DOM clobbering.
+					HTMLFormElement.prototype.reset.call(form_element);
+					// Now we emulate the native behavior of form.reset() for all the values we saved earlier.
+					for (let i = 0; i < controls.length; i++) {
+						const control = controls[i];
+						if ('value' in control && control.value !== values[i]) {
+							control.value = values[i];
+							control.dispatchEvent(new Event('input'));
+						}
+					}
+				}
+			});
+
+			// Save new initial values because they may have been invalidated
+			controls = Array.from(form_element.elements);
+			values = controls.map((el) => ('value' in el ? el.value : undefined));
 		}
 
 		// For success/failure results, only apply action if it belongs to the
