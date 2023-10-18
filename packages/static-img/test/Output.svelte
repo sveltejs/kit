@@ -87,9 +87,6 @@
 {/if}
 {/each}
 
-<!-- static-img-disable -->
-<img src="./foo.png" alt="disable test" />
-
 <img srcset="./foo.png" alt="srcset test" />
 
 <picture>
