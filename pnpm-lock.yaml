@@ -1059,8 +1059,8 @@ importers:
         specifier: ^4.4.9
         version: 4.4.9(@types/node@16.18.6)(lightningcss@1.21.8)
       vite-imagetools:
-        specifier: ^5.0.8
-        version: 5.0.8(rollup@3.7.0)
+        specifier: ^6.0.0
+        version: 6.0.0(rollup@3.7.0)
       vitest:
         specifier: ^0.34.5
         version: 0.34.5(lightningcss@1.21.8)(playwright@1.30.0)
@@ -3788,7 +3788,7 @@ packages:
     dev: true
 
   /github-from-package@0.0.0:
-    resolution: {integrity: sha512-SyHy3T1v2NUXn29OsWdxmK6RwHD+vkj3v8en8AOBZ1wBQ/hCAQ5bAQTD02kW4W9tUp/3Qh6J8r9EvntiyCmOOw==}
+    resolution: {integrity: sha1-l/tdlr/eiXMxPyDoKI75oWf6ZM4=}
     dev: true
 
   /gitignore-parser@0.0.2:
@@ -3979,8 +3979,8 @@ packages:
     engines: {node: '>= 4'}
     dev: true
 
-  /imagetools-core@4.0.5:
-    resolution: {integrity: sha512-sNRVfUwkUcsVWNn5inTHDXWzpPRWPWbSgGkuQmlsFCWXAR2+K5R5vG5tC3Qs4LeJaMugKB8hGVm6rvZjFHQrUw==}
+  /imagetools-core@5.0.0:
+    resolution: {integrity: sha512-BCtqtjFoFo0C423IaeoKxS2SYp3s7+Oilu9ToRG9q5OBmT/wx0kEeHEiW87Ly2er2jX2fChFDuckQGzb3gFwFQ==}
     engines: {node: '>=12.0.0'}
     dependencies:
       sharp: 0.32.5
@@ -6299,12 +6299,12 @@ packages:
       spdx-expression-parse: 3.0.1
     dev: true
 
-  /vite-imagetools@5.0.8(rollup@3.7.0):
-    resolution: {integrity: sha512-oFNfc58iLz1lHFsIKQy+wp0RNcZjiaDeHYTexYowpf4RYx9tZ97eWEcw8lQ1jDT8AnOso6XZi5iGjLNAeTR9Tw==}
+  /vite-imagetools@6.0.0(rollup@3.7.0):
+    resolution: {integrity: sha512-t/k4LXN6+V+otKRM3EAsqG/iHS2Ja8S+biEJWBJk5IKeyQpJ2KZKR5hAn7n5UlNC7J5EzUpiBkUyUFKxGr90fw==}
     engines: {node: '>=12.0.0'}
     dependencies:
       '@rollup/pluginutils': 5.0.4(rollup@3.7.0)
-      imagetools-core: 4.0.5
+      imagetools-core: 5.0.0
     transitivePeerDependencies:
       - rollup
     dev: true
