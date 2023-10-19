@@ -17,7 +17,7 @@
 	},
 	"devDependencies": {
 		"@playwright/test": "1.30.0",
-		"@types/gitignore-parser": "^0.0.1",
+		"@types/gitignore-parser": "^0.0.2",
 		"@types/prettier": "^2.7.1",
 		"gitignore-parser": "^0.0.2",
 		"prettier": "^2.8.0",
