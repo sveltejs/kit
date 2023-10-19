@@ -24,7 +24,7 @@ export { VERSION } from '../version.js';
  * return an error response without invoking `handleError`.
  * Make sure you're not catching the thrown error, which would prevent SvelteKit from handling it.
  * @param {number} status The [HTTP status code](https://developer.mozilla.org/en-US/docs/Web/HTTP/Status#client_error_responses). Must be in the range 400-599.
- * @param {{ message: string } extends App.Error ? App.Error | string | undefined : never} body An object that conforms to the App.Error type. If a string is passed, it will be used as the message property.
+ * @param {{ message: string } extends App.Error ? App.Error | string | undefined : never} [body] An object that conforms to the App.Error type. If a string is passed, it will be used as the message property.
  */
 export function error(status, body) {
 	if ((!BROWSER || DEV) && (isNaN(status) || status < 400 || status > 599)) {
