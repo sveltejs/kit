@@ -3,6 +3,8 @@
 	"private": true,
 	"version": "0.0.1",
 	"scripts": {
+		"lint": "prettier --check . --config ../../.prettierrc --ignore-path .gitignore --ignore-path .prettierignore",
+		"format": "prettier --write . --config ../../.prettierrc --ignore-path .gitignore --ignore-path .prettierignore",
 		"update": "node scripts/types",
 		"dev": "pnpm run update && vite dev",
 		"build": "pnpm run update && vite build",
@@ -14,7 +16,7 @@
 		"@sveltejs/adapter-vercel": "workspace:^",
 		"@sveltejs/amp": "workspace:^",
 		"@sveltejs/kit": "workspace:^",
-		"@sveltejs/site-kit": "6.0.0-next.50",
+		"@sveltejs/site-kit": "6.0.0-next.52",
 		"@types/d3-geo": "^3.0.4",
 		"@types/node": "^16.18.6",
 		"browserslist": "^4.21.10",
@@ -29,7 +31,7 @@
 		"tiny-glob": "^0.2.9",
 		"typescript": "5.0.4",
 		"vite": "^4.4.9",
-		"vite-imagetools": "^5.0.8",
+		"vite-imagetools": "^6.0.0",
 		"vitest": "^0.34.5"
 	},
 	"type": "module",

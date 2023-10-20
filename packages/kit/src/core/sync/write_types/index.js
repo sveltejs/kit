@@ -188,10 +188,18 @@ function update_types(config, routes, route, to_delete = new Set()) {
 	// add 'Expand' helper
 	// Makes sure a type is "repackaged" and therefore more readable
 	declarations.push('type Expand<T> = T extends infer O ? { [K in keyof O]: O[K] } : never;');
+
+	// returns the predicate of a matcher's type guard - or string if there is no type guard
 	declarations.push(
-		`type RouteParams = { ${route.params
-			.map((param) => `${param.name}${param.optional ? '?' : ''}: string`)
-			.join('; ')} }`
+		// TS complains on infer U, which seems weird, therefore ts-ignore it
+		[
+			'// @ts-ignore',
+			'type MatcherParam<M> = M extends (param : string) => param is infer U ? U extends string ? U : string : string;'
+		].join('\n')
+	);
+
+	declarations.push(
+		'type RouteParams = ' + generate_params_type(route.params, outdir, config) + ';'
 	);
 
 	if (route.params.length > 0) {
@@ -265,7 +273,8 @@ function update_types(config, routes, route, to_delete = new Set()) {
 
 	if (route.layout) {
 		let all_pages_have_load = true;
-		const layout_params = new Set();
+		/** @type {import('types').RouteParam[]} */
+		const layout_params = [];
 		const ids = ['RouteId'];
 
 		route.layout.child_pages?.forEach((page) => {
@@ -274,7 +283,9 @@ function update_types(config, routes, route, to_delete = new Set()) {
 				if (leaf.route.page) ids.push(`"${leaf.route.id}"`);
 
 				for (const param of leaf.route.params) {
-					layout_params.add(param.name);
+					// skip if already added
+					if (layout_params.some((p) => p.name === param.name)) continue;
+					layout_params.push({ ...param, optional: true });
 				}
 
 				ensureProxies(page, leaf.proxies);
@@ -301,9 +312,7 @@ function update_types(config, routes, route, to_delete = new Set()) {
 		declarations.push(`type LayoutRouteId = ${ids.join(' | ')}`);
 
 		declarations.push(
-			`type LayoutParams = RouteParams & { ${Array.from(layout_params).map(
-				(param) => `${param}?: string`
-			)} }`
+			'type LayoutParams = RouteParams & ' + generate_params_type(layout_params, outdir, config)
 		);
 
 		const {
@@ -565,6 +574,28 @@ function replace_ext_with_js(file_path) {
 	// will result in TS failing to lookup the file
 	const ext = path.extname(file_path);
 	return file_path.slice(0, -ext.length) + '.js';
+}
+
+/**
+ * @param {import('types').RouteParam[]} params
+ * @param {string} outdir
+ * @param {import('types').ValidatedConfig} config
+ */
+function generate_params_type(params, outdir, config) {
+	/** @param {string} matcher */
+	const path_to_matcher = (matcher) =>
+		posixify(path.relative(outdir, path.join(config.kit.files.params, matcher)));
+
+	return `{ ${params
+		.map(
+			(param) =>
+				`${param.name}${param.optional ? '?' : ''}: ${
+					param.matcher
+						? `MatcherParam<typeof import('${path_to_matcher(param.matcher)}').match>`
+						: 'string'
+				}`
+		)
+		.join('; ')} }`;
 }
 
 /**

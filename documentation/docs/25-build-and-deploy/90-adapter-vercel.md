@@ -59,7 +59,7 @@ Additionally, the following option applies to edge functions:
 
 And the following option apply to serverless functions:
 - `memory`: the amount of memory available to the function. Defaults to `1024` Mb, and can be decreased to `128` Mb or [increased](https://vercel.com/docs/concepts/limits/overview#serverless-function-memory) in 64Mb increments up to `3008` Mb on Pro or Enterprise accounts
-- `maxDuration`: maximum execution duration of the function. Defaults to `10` seconds for Hobby accounts, `60` for Pro and `900` for Enterprise
+- `maxDuration`: maximum execution duration of the function. Defaults to `10` seconds for Hobby accounts, `15` for Pro and `900` for Enterprise
 - `isr`: configuration Incremental Static Regeneration, described below
 
 If your functions need to access data in a specific region, it's recommended that they be deployed in the same region (or close to it) for optimal performance.

@@ -41,7 +41,7 @@
 		"vite": "^5.0.0-beta.3",
 		"typescript": "^5.2.2"
 	},
-	"packageManager": "pnpm@8.8.0",
+	"packageManager": "pnpm@8.9.2",
 	"engines": {
 		"pnpm": "^8.0.0"
 	},
