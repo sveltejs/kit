@@ -35,8 +35,8 @@
 		"@types/node": "^16.18.6",
 		"sirv": "^2.0.3",
 		"svelte": "^4.0.5",
-		"typescript": "^4.9.4",
-		"vite": "^5.0.0-beta.3"
+		"typescript": "^5.2.2",
+		"vite": "^5.0.0-beta.11"
 	},
 	"peerDependencies": {
 		"@sveltejs/kit": "^1.5.0"
