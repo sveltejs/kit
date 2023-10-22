@@ -67,16 +67,14 @@ This will replace your `img` tag with a `picture` tag wrapping one `source` tag 
 
 ### Dynamically choosing an image
 
-You can also manually import an image and then pass it to a transformed `img` tag. This is useful when you have a collection of static images and would like to dynamically choose one. You can create a collection of images manually [as we do on the homepage showcase](https://github.com/sveltejs/kit/blob/master/sites/kit.svelte.dev/src/routes/home/Showcase.svelte). In this case you will need to both tag the `import` statement and `img` tag to indicate you'd like process them.
-
+You can also manually import an image and then pass it to a transformed `img` tag. This is useful when you have a collection of static images and would like to dynamically choose one. You can create a collection of images manually [as we do on the homepage showcase](https://github.com/sveltejs/kit/blob/master/sites/kit.svelte.dev/src/routes/home/Showcase.svelte). In this case you will need to update both the `import` statement and `img` tag as shown below to indicate you'd like process them.
 
 ```svelte
 <script>
 	import { MyImage } from './path/to/your/image.jpg?static-img';
 </script>
 
-<!-- static-img-enable -->
-<img src={MyImage} alt="An alt text" />
+<optimized:img src={MyImage} alt="An alt text" />
 ```
 
 You can also use [Vite's `import.meta.glob`](https://vitejs.dev/guide/features.html#glob-import). Note that you will have to specify `static-img` via a [custom query](https://vitejs.dev/guide/features.html#custom-queries):

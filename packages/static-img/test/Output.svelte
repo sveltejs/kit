@@ -74,7 +74,6 @@
 <img src="/foo.png" alt="publicDir test" />
 
 {#each images as image}
-	<!-- static-img-enable -->
 	{#if typeof image === 'string'}
 	<img src={image.img.src} alt="opt-in test" width={image.img.w} height={image.img.h} />
 {:else}

@@ -2,7 +2,6 @@ import MagicString from 'magic-string';
 import { parse } from 'svelte-parse-markup';
 import { walk } from 'svelte/compiler';
 
-const FORCE_FLAG = 'static-img-enable';
 const ASSET_PREFIX = '___ASSET___';
 
 // TODO: expose this in vite-imagetools rather than duplicating it
@@ -69,7 +68,6 @@ export function image() {
 			}
 
 			let ignore_next_element = false;
-			let force_next_element = false;
 
 			// @ts-ignore
 			walk(ast.html, {
@@ -77,19 +75,15 @@ export function image() {
 				 * @param {import('svelte/types/compiler/interfaces').TemplateNode} node
 				 */
 				enter(node) {
-					if (node.type === 'Comment') {
-						if (node.data.trim() === FORCE_FLAG) {
-							force_next_element = true;
-						}
-					} else if (node.type === 'Element') {
+					if (node.type === 'Element') {
 						if (ignore_next_element) {
 							ignore_next_element = false;
 							return;
 						}
 
 						// Compare node tag match
-						if (node.name === 'img') {
-							const src = get_attr_value(node, 'src', force_next_element);
+						if (node.name === 'img' || node.name === 'optimized:img') {
+							const src = get_attr_value(node, 'src');
 							if (!src) return;
 							update_element(node, src);
 						}
@@ -122,9 +116,8 @@ export function image() {
 /**
  * @param {import('svelte/types/compiler/interfaces').TemplateNode} node
  * @param {string} attr
- * @param {boolean} [force_next_element]
  */
-function get_attr_value(node, attr, force_next_element) {
+function get_attr_value(node, attr) {
 	const attribute = node.attributes.find(
 		/** @param {any} v */ (v) => v.type === 'Attribute' && v.name === attr
 	);
@@ -133,7 +126,7 @@ function get_attr_value(node, attr, force_next_element) {
 
 	// Ensure value only consists of one element, and is of type "Text".
 	// Which should only match instances of static `foo="bar"` attributes.
-	if (!force_next_element && (attribute.value.length !== 1 || attribute.value[0].type !== 'Text')) {
+	if (node.name === 'img' && (attribute.value.length !== 1 || attribute.value[0].type !== 'Text')) {
 		return;
 	}
 
