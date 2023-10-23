@@ -795,9 +795,10 @@ export interface NavigationEvent<
 	 */
 	route: {
 		/**
-		 * The ID of the current route - e.g. for `src/routes/blog/[slug]`, it would be `/blog/[slug]`
+		 * The ID of the current route - e.g. for `src/routes/blog/[slug]`, it would be `/blog/[slug]`.
+		 * May be null if vthere is no corresponding route — i.e. a page returning status code 404.
 		 */
-		id: RouteId;
+		id: RouteId | null;
 	};
 	/**
 	 * The URL of the current page
