@@ -5,8 +5,8 @@ import { sveltekit } from '@sveltejs/kit/vite';
 const config = {
 	build: {
 		minify: false,
-		// lower threshold to prevent inline to test asset base path
-		assetsInlineLimit: 100
+		// disable inlining to test asset base path
+		assetsInlineLimit: 0
 	},
 
 	clearScreen: false,
