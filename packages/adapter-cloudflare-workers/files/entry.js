@@ -71,7 +71,9 @@ export default {
 				env,
 				context,
 				// @ts-expect-error lib.dom is interfering with workers-types
-				caches
+				caches,
+				// @ts-expect-error req is actually a Cloudflare request not a standard request
+				cf: req.cf
 			},
 			getClientAddress() {
 				return req.headers.get('cf-connecting-ip');
