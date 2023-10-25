@@ -37,14 +37,15 @@ const globals_pre_node_18_11 = {
  */
 export function installPolyfills() {
 	// Be defensive (we don't know in which environments this is called) and always apply if something goes wrong
-	const version =
-		(typeof process !== undefined &&
-			process.versions?.node?.split('.').map((n) => parseInt(n, 10))) ||
-		[];
-	const globals =
-		(version[0] === 18 && version[1] >= 11) || version[0] > 18
-			? globals_post_node_18_11
-			: globals_pre_node_18_11;
+	let globals = globals_pre_node_18_11;
+	try {
+		const version = process.versions.node.split('.').map((n) => parseInt(n, 10));
+		if ((version[0] === 18 && version[1] >= 11) || version[0] > 18) {
+			globals = globals_post_node_18_11;
+		}
+	} catch (e) {
+		// ignore
+	}
 
 	for (const name in globals) {
 		Object.defineProperty(globalThis, name, {
