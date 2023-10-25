@@ -107,18 +107,24 @@ if (browser) {
 }
 ```
 
-You can also put code in `onMount` if you'd like to run it after the component has been first rendered to the DOM:
+You can also run code in `onMount` if you'd like to run it after the component has been first rendered to the DOM:
 
 ```js
+// @filename: ambient.d.ts
+// @lib: ES2015
+declare module 'some-browser-only-library';
+
+// @filename: index.js
+// ---cut---
 import { onMount } from 'svelte';
 
-onMount(() => {
-	// client-only code here
+onMount(async () => {
+	const { method } = await import('some-browser-only-library');
+	method('hello world');
 });
 ```
 
-If a library you'd like to use is side-effect free you can safely statically import it as long as you only use it inside `onMount`.
-In the server-side build `onMount` is replaced with a no-op, after which tree-shaking will automatically get rid of your client-only import.
+If the library you'd like to use is side-effect free you can also statically import it and it will be tree-shaken out in the server-side build where `onMount` will be automatically replaced with a no-op:
 
 ```js
 // @filename: ambient.d.ts
@@ -135,83 +141,23 @@ onMount(() => {
 });
 ```
 
-Otherwise, if the library has side effects you can use a [dynamic import](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Operators/import):
-
-```js
-// @filename: ambient.d.ts
-// @lib: ES2015
-declare module 'some-browser-only-library';
-
-// @filename: index.js
-// ---cut---
-import { onMount } from 'svelte';
-
-if (browser) {
-	import('some-browser-only-library').then(({ method }) => {
-		method('hello world');
-	})
-}
-```
-
-Note that top-level await is not available in Svelte components.
-This is not a problem inside an `async` function passed to `onMount`:
-
-```js
-// @filename: ambient.d.ts
-// @lib: ES2015
-declare module 'some-browser-only-library';
-
-// @filename: index.js
-// ---cut---
-onMount(async () => {
-	const { method } = await import('some-browser-only-library');
-	method('hello world');
-});
-```
-
-> Be careful with `await import` in `onMount`, this can cause hard to debug race conditions. Normally `onMount` runs synchronously in order from child to parent. If you use asynchronous APIs this is no longer the case, meaning the `onMount` of a component might run before all of its children have been fully initialized.
-
-If a library has side effects and you'd prefer to use static imports, check out [vite-plugin-iso-import](https://github.com/bluwy/vite-plugin-iso-import) to support the `?client` import suffix. The import will be stripped out in SSR builds. However, note that you will lose the ability to use VS Code Intellisense if you use this method.
-
-```js
-// @filename: ambient.d.ts
-// @lib: ES2015
-declare module 'some-browser-only-library?client';
-
-// @filename: index.js
-// ---cut---
-import { onMount } from 'svelte';
-import { method } from 'some-browser-only-library?client';
-
-onMount(() => {
-	method('hello world');
-});
-```
-
-If the library provides a component you can use a combination of a [dynamic import](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Operators/import), `{#await}` and `<svelte:component>`:
-
+Finally, you may also consider using an `{#await}` block:
 ```svelte
 <!--- file: index.svelte --->
 <script>
 	import { browser } from '$app/environment';
 
-	/** @type {Promise<import('svelte').ComponentType<import('some-browser-only-library').Component>>} */
-	let ComponentConstructor
-	if (browser) {
-		ComponentConstructor = import('some-browser-only-library').then((module) => module.Component);
-	} else {
-		/*
-			Workaround for https://github.com/sveltejs/kit/issues/10882.
-			Assign an empty promise on the server to force rendering the pending-state, preventing weird layout shifts.
-		*/
-		ComponentConstructor = new Promise(() => {});
-	}
+	const ComponentConstructor = browser ?
+		import('some-browser-only-library').then((module) => module.Component) :
+		new Promise(() => {});
 </script>
 
 {#await ComponentConstructor}
 	<p>Loading...</p>
 {:then component}
 	<svelte:component this={component} />
+{:catch error}
+	<p>Something went wrong: {error.message}</p>
 {/await}
 ```
 
