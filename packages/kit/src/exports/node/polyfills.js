@@ -29,10 +29,10 @@ const globals_pre_node_18_11 = {
 /**
  * Make various web APIs available as globals:
  * - `crypto`
- * - `fetch` (only in node 18.11-)
- * - `Headers` (only in node 18.11-)
- * - `Request` (only in node 18.11-)
- * - `Response` (only in node 18.11-)
+ * - `fetch` (only in node < 18.11)
+ * - `Headers` (only in node < 18.11)
+ * - `Request` (only in node < 18.11)
+ * - `Response` (only in node < 18.11)
  */
 export function installPolyfills() {
 	const version = process.versions.node.split('.').map((n) => parseInt(n, 10));
