@@ -104,17 +104,25 @@ export function enhance(form_element, submit = () => {}) {
 	/**
 	 * @param {{
 	 *   action: URL;
+	 *   invalidateAll?: boolean;
 	 *   result: import('@sveltejs/kit').ActionResult;
 	 *   reset?: boolean
 	 * }} opts
 	 */
-	const fallback_callback = async ({ action, result, reset }) => {
+	const fallback_callback = async ({
+		action,
+		result,
+		reset = true,
+		invalidateAll: shouldInvalidateAll = true
+	}) => {
 		if (result.type === 'success') {
-			if (reset !== false) {
+			if (reset) {
 				// We call reset from the prototype to avoid DOM clobbering
 				HTMLFormElement.prototype.reset.call(form_element);
 			}
-			await invalidateAll();
+			if (shouldInvalidateAll) {
+				await invalidateAll();
+			}
 		}
 
 		// For success/failure results, only apply action if it belongs to the
@@ -222,7 +230,13 @@ export function enhance(form_element, submit = () => {}) {
 				return form_element;
 			},
 			formElement: form_element,
-			update: (opts) => fallback_callback({ action, result, reset: opts?.reset }),
+			update: (opts) =>
+				fallback_callback({
+					action,
+					result,
+					reset: opts?.reset,
+					invalidateAll: opts?.invalidateAll
+				}),
 			// @ts-expect-error generic constraints stuff we don't care about
 			result
 		});

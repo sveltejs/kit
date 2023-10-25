@@ -1,5 +1,11 @@
 # @sveltejs/kit
 
+## 1.27.0
+
+### Minor Changes
+
+- feat: add `invalidateAll` boolean option to `enhance` callback ([#9889](https://github.com/sveltejs/kit/pull/9889))
+
 ## 1.26.0
 
 ### Minor Changes
