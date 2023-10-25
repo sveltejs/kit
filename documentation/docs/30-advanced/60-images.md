@@ -14,42 +14,42 @@ title: Images
 <img alt="The project logo" src={logo} />
 ```
 
-To reference assets directly in the markup, you can use a preprocessor such as [`@sveltejs/static-img`](#static-image-transforms), which is discussed below and additionally transforms your images.
+To reference assets directly in the markup, you can use a preprocessor such as [`@sveltejs/enhanced-img`](#static-image-transforms), which is discussed below and additionally transforms your images.
 
 ## Transforming background
 
 You may wish to transform your images to output compressed image formats such as `.webp` or `.avif`, responsive images with different sizes for different devices, or images with the EXIF data stripped for privacy. There are two approaches two transforming images, which will be discussed below. With either approach, the transformed images may be served via a CDN. CDNs reduce latency by distributing copies of static assets globally.
 
-The `@sveltejs/static-img` package handles images that are located in your project and can be referred to with a static string. It can automatically set the intrinsic `width` and `height` for you, which can't be done with a dynamic approach. It is generated with a hash in the filename so that it can be maximally cached. It generates images at build time, so building may take longer the more images you transform.
+The `@sveltejs/enhanced-img` package handles images that are located in your project and can be referred to with a static string. It can automatically set the intrinsic `width` and `height` for you, which can't be done with a dynamic approach. It is generated with a hash in the filename so that it can be maximally cached. It generates images at build time, so building may take longer the more images you transform.
 
 Alternatively, using a CDN to do the image transformation provides more flexibility with regards to sizes and you can pass image sources not known at build time, but it comes with potentially a bit of setup overhead (configuring the image CDN) and possibly usage cost. Some images served from a CDN may require a request to the server to verify that the image has not changed. This will block the browser from using its cache until a [304 response](https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/304) is received from the server. Building HTML to target CDNs may result in slightly smaller and simpler HTML because they can serve the appropriate file format for an `img` tag based on the `User-Agent` header whereas build-time optimizations must produce `picture` tags. Finally some CDNs may generate images lazily, which could have a negative performance impact for sites with low traffic and frequently changing images. We do not currently offer any tools for dynamic image transforms since they're more straightforward for users to implement on their own, but we may offer such utilities in the future.
 
-You can mix and match both solutions in one project. For example, you may display images on your homepage with `@sveltejs/static-img` and display user-submitted content with a dynamic approach.
+You can mix and match both solutions in one project. For example, you may display images on your homepage with `@sveltejs/enhanced-img` and display user-submitted content with a dynamic approach.
 
 ## Static image transforms
 
-> **WARNING**: The `@sveltejs/static-img` package is experimental. It uses pre-1.0 versioning and may introduce breaking changes with every minor version release.
+> **WARNING**: The `@sveltejs/enhanced-img` package is experimental. It uses pre-1.0 versioning and may introduce breaking changes with every minor version release.
 
-`@sveltejs/static-img` aims to offer plug and play image processing that is opinionated enough so you don't have to worry about the details, yet flexible enough for more advanced use cases or tweaks. It serves smaller file formats like `avif` or `webp`, automatically sets the intrinsic width and height of the image to avoid layout shift, and creates images of multiple sizes for use with the `sizes attribute`. It will work in any Vite-based project including, but not limited to, Svelte projects.
+`@sveltejs/enhanced-img` aims to offer plug and play image processing that is opinionated enough so you don't have to worry about the details, yet flexible enough for more advanced use cases or tweaks. It serves smaller file formats like `avif` or `webp`, automatically sets the intrinsic width and height of the image to avoid layout shift, and creates images of multiple sizes for use with the `sizes attribute`. It will work in any Vite-based project including, but not limited to, Svelte projects.
 
 ### Setup
 
 Install:
 
 ```bash
-npm install --save @sveltejs/static-img
+npm install --save @sveltejs/enhanced-img
 ```
 
 Adjust `vite.config.js`:
 
 ```diff
 import { sveltekit } from '@sveltejs/kit/vite';
-+import { staticImages } from '@sveltejs/static-img';
++import { enhancedImages } from '@sveltejs/enhanced-img';
 import { defineConfig } from 'vite';
 
 export default defineConfig({
 	plugins: [
-+		staticImages(),
++		enhancedImages(),
 		sveltekit()
 	]
 });
@@ -71,20 +71,20 @@ You can also manually import an image and then pass it to a transformed `img` ta
 
 ```svelte
 <script>
-	import { MyImage } from './path/to/your/image.jpg?static-img';
+	import { MyImage } from './path/to/your/image.jpg?enhanced-img';
 </script>
 
-<optimized:img src={MyImage} alt="An alt text" />
+<enhanced:img src={MyImage} alt="An alt text" />
 ```
 
-You can also use [Vite's `import.meta.glob`](https://vitejs.dev/guide/features.html#glob-import). Note that you will have to specify `static-img` via a [custom query](https://vitejs.dev/guide/features.html#custom-queries):
+You can also use [Vite's `import.meta.glob`](https://vitejs.dev/guide/features.html#glob-import). Note that you will have to specify `enhanced-img` via a [custom query](https://vitejs.dev/guide/features.html#custom-queries):
 
 ```js
 const pictures = import.meta.glob(
 	'/path/to/assets/*.{heic,heif,avif,jpg,jpeg,png,tiff,webp,gif,svg}',
 	{
 		query: {
-			'static-img': true
+			'enhanced-img': true
 		}
 	}
 );
@@ -148,4 +148,4 @@ If you have existing image imports like `import SomeImage from './some/image.jpg
 - Always provide a good `alt` text
 - Choose one image per page which is the most important/largest one and give it `priority` so it loads faster. This gives you better web vitals scores (largest contentful paint in particular)
 - Your original images should have a good quality/resolution. Impage processing can size images down to save bandwidth when serving smaller screens, but cannot invent pixels to size images up any better than browsers can
-- Give the image a container or a styling so that it is constrained and does not jump around. `width` and `height` help the browser reserving space while the image is still loading. `@sveltejs/static-img` will add a `width` and `height` for you
+- Give the image a container or a styling so that it is constrained and does not jump around. `width` and `height` help the browser reserving space while the image is still loading. `@sveltejs/enhanced-img` will add a `width` and `height` for you

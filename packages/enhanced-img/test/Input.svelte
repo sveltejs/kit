@@ -31,7 +31,7 @@
 <img src="/foo.png" alt="publicDir test" />
 
 {#each images as image}
-	<optimized:img src={image} alt="opt-in test" />
+	<enhanced:img src={image} alt="opt-in test" />
 {/each}
 
 <img srcset="./foo.png" alt="srcset test" />

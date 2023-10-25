@@ -49,7 +49,7 @@ export function image() {
 				if (width) {
 					url += 'width=' + encodeURIComponent(width.raw) + '&';
 				}
-				url += 'static-img';
+				url += 'enhanced-img';
 
 				let import_name = '';
 				if (imports.has(url)) {
@@ -82,7 +82,7 @@ export function image() {
 						}
 
 						// Compare node tag match
-						if (node.name === 'img' || node.name === 'optimized:img') {
+						if (node.name === 'img' || node.name === 'enhanced:img') {
 							const src = get_attr_value(node, 'src');
 							if (!src) return;
 							update_element(node, src);

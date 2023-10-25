@@ -1,5 +1,5 @@
 {
-	"name": "@sveltejs/static-img",
+	"name": "@sveltejs/enhanced-img",
 	"version": "0.1.0",
 	"description": "Image optimization for your Svelte apps",
 	"repository": {

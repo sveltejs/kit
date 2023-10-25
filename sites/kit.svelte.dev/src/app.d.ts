@@ -1,8 +1,8 @@
-// TODO: get this from @sveltejs/static-img
+// TODO: get this from @sveltejs/enhanced-img
 // https://svelte.dev/docs/typescript#enhancing-built-in-dom-types
 declare module 'svelte/elements' {
 	export interface SvelteHTMLElements {
-		'optimized:img': HTMLImgAttributes;
+		'enhanced:img': HTMLImgAttributes;
 	}
 }
 

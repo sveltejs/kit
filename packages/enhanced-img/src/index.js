@@ -4,11 +4,11 @@ import { image } from './preprocessor.js';
 /**
  * @returns {Promise<import('vite').Plugin[]>}
  */
-export async function staticImages() {
+export async function enhancedImages() {
 	const imagetools_plugin = await imagetools();
 	if (!imagetools_plugin) {
 		console.error(
-			'@sveltejs/static-img: vite-imagetools is not installed. Skipping build-time optimizations'
+			'@sveltejs/enhanced-img: vite-imagetools is not installed. Skipping build-time optimizations'
 		);
 	}
 	return imagetools_plugin ? [image_plugin(), imagetools_plugin] : [];
@@ -22,7 +22,7 @@ function image_plugin() {
 	const preprocessor = image();
 
 	return {
-		name: 'vite-plugin-svelte-image',
+		name: 'vite-plugin-enhanced-img',
 		api: {
 			sveltePreprocess: preprocessor
 		}
@@ -54,7 +54,7 @@ async function imagetools() {
 	/** @type {Partial<import('vite-imagetools').VitePluginOptions>} */
 	const imagetools_opts = {
 		defaultDirectives: async ({ pathname, searchParams: qs }, metadata) => {
-			if (!qs.has('static-img')) qs;
+			if (!qs.has('enhanced-img')) qs;
 
 			const calculated = getWidths(qs.get('width') ?? (await metadata()).width, qs.get('sizes'));
 			return new URLSearchParams({

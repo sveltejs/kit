@@ -1,5 +1,5 @@
 import { sveltekit } from '@sveltejs/kit/vite';
-import { staticImages } from '@sveltejs/static-img';
+import { enhancedImages } from '@sveltejs/enhanced-img';
 import browserslist from 'browserslist';
 import { browserslistToTargets } from 'lightningcss';
 
@@ -19,7 +19,7 @@ const config = {
 		cssMinify: 'lightningcss'
 	},
 
-	plugins: [staticImages(), sveltekit()],
+	plugins: [enhancedImages(), sveltekit()],
 
 	ssr: {
 		noExternal: ['@sveltejs/site-kit']
