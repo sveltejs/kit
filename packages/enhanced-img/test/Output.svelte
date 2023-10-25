@@ -1,10 +1,10 @@
 <script lang="ts">
-	import ___ASSET___0 from "./foo.png?static-img";
-	import ___ASSET___1 from "./foo.png?width=5&static-img";
-	import ___ASSET___2 from "./foo.png?blur=5&static-img";
-	import ___ASSET___3 from "./foo.png?w=1024,640,320&sizes=(min-width%3A%2060rem)%2080vw%2C%20(min-width%3A%2040rem)%2090vw%2C%20100vw&static-img";
-	import ___ASSET___4 from "./foo.svg?static-img";
-	import ___ASSET___5 from "$lib/foo.png?static-img";
+	import ___ASSET___0 from "./foo.png?enhanced-img";
+	import ___ASSET___1 from "./foo.png?width=5&enhanced-img";
+	import ___ASSET___2 from "./foo.png?blur=5&enhanced-img";
+	import ___ASSET___3 from "./foo.png?w=1024,640,320&sizes=(min-width%3A%2060rem)%2080vw%2C%20(min-width%3A%2040rem)%2090vw%2C%20100vw&enhanced-img";
+	import ___ASSET___4 from "./foo.svg?enhanced-img";
+	import ___ASSET___5 from "$lib/foo.png?enhanced-img";
 	
 	import manual_image1 from './no.png';
 	
