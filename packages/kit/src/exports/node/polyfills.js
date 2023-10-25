@@ -3,11 +3,16 @@ import buffer from 'node:buffer';
 import { webcrypto as crypto } from 'node:crypto';
 import { fetch, Response, Request, Headers, FormData, File as UndiciFile } from 'undici';
 
+/** @type {Record<string, any>} */
+const globals_post_node_18_11 = {
+	crypto
+};
+
 // @ts-expect-error
 const File = buffer.File ?? UndiciFile;
 
 /** @type {Record<string, any>} */
-const globals = {
+const globals_pre_node_18_11 = {
 	crypto,
 	fetch,
 	Response,
@@ -21,16 +26,21 @@ const globals = {
 };
 
 // exported for dev/preview and node environments
-// TODO: remove this once we only support Node 18.11+ (the version multipart/form-data was added)
 /**
  * Make various web APIs available as globals:
  * - `crypto`
- * - `fetch`
- * - `Headers`
- * - `Request`
- * - `Response`
+ * - `fetch` (only in node 18.11-)
+ * - `Headers` (only in node 18.11-)
+ * - `Request` (only in node 18.11-)
+ * - `Response` (only in node 18.11-)
  */
 export function installPolyfills() {
+	const version = process.versions.node.split('.').map((n) => parseInt(n, 10));
+	const globals =
+		(version[0] === 18 && version[1] >= 11) || version[0] > 18
+			? globals_post_node_18_11
+			: globals_pre_node_18_11;
+
 	for (const name in globals) {
 		Object.defineProperty(globalThis, name, {
 			enumerable: true,
