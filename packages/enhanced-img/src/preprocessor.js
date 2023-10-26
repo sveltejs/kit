@@ -40,12 +40,12 @@ export function image() {
 				const width = get_attr_value(node, 'width');
 				url += url.includes('?') ? '&' : '?';
 				if (sizes) {
-					url += 'sizes=' + encodeURIComponent(sizes.raw) + '&';
+					url += 'imgSizes=' + encodeURIComponent(sizes.raw) + '&';
 				}
 				if (width) {
-					url += 'width=' + encodeURIComponent(width.raw) + '&';
+					url += 'imgWidth=' + encodeURIComponent(width.raw) + '&';
 				}
-				url += 'enhanced-img';
+				url += 'enhancedImg';
 
 				let import_name = '';
 				if (imports.has(url)) {
@@ -143,8 +143,8 @@ function attributes_to_markdown(content, attributes, src_var_name) {
 		if (attribute.name === 'height') has_height = true;
 	}
 	if (!has_width && !has_height) {
-		attribute_strings.push(`width={${src_var_name}.img.w}`);
-		attribute_strings.push(`height={${src_var_name}.img.h}`);
+		attribute_strings.push(`imgWidth={${src_var_name}.img.w}`);
+		attribute_strings.push(`imgHeight={${src_var_name}.img.h}`);
 	}
 
 	return attribute_strings.join(' ');

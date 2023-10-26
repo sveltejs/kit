@@ -1,10 +1,10 @@
 <script lang="ts">
-	import ___ASSET___0 from "./foo.png?enhanced-img";
-	import ___ASSET___1 from "./foo.png?width=5&enhanced-img";
-	import ___ASSET___2 from "./foo.png?blur=5&enhanced-img";
-	import ___ASSET___3 from "./foo.png?w=1024,640,320&sizes=(min-width%3A%2060rem)%2080vw%2C%20(min-width%3A%2040rem)%2090vw%2C%20100vw&enhanced-img";
-	import ___ASSET___4 from "$lib/foo.png?enhanced-img";
-	import ___ASSET___5 from "/static/foo.png?enhanced-img";
+	import ___ASSET___0 from "./foo.png?enhancedImg";
+	import ___ASSET___1 from "./foo.png?imgWidth=5&enhancedImg";
+	import ___ASSET___2 from "./foo.png?blur=5&enhancedImg";
+	import ___ASSET___3 from "./foo.png?w=1024,640,320&imgSizes=(min-width%3A%2060rem)%2080vw%2C%20(min-width%3A%2040rem)%2090vw%2C%20100vw&enhancedImg";
+	import ___ASSET___4 from "$lib/foo.png?enhancedImg";
+	import ___ASSET___5 from "/src/foo.png?enhancedImg";
 	
 	import manual_image1 from './no.png';
 	
@@ -26,7 +26,7 @@
 	{#each Object.entries(___ASSET___0.sources) as [format, srcset]}
 		<source {srcset} type={'image/' + format} />
 	{/each}
-	<img src={___ASSET___0.img.src} alt="basic test" width={___ASSET___0.img.w} height={___ASSET___0.img.h} />
+	<img src={___ASSET___0.img.src} alt="basic test" imgWidth={___ASSET___0.img.w} imgHeight={___ASSET___0.img.h} />
 </picture>
 
 <picture>
@@ -47,53 +47,53 @@
 	{#each Object.entries(___ASSET___2.sources) as [format, srcset]}
 		<source {srcset} type={'image/' + format} />
 	{/each}
-	<img src={___ASSET___2.img.src} alt="directive test" width={___ASSET___2.img.w} height={___ASSET___2.img.h} />
+	<img src={___ASSET___2.img.src} alt="directive test" imgWidth={___ASSET___2.img.w} imgHeight={___ASSET___2.img.h} />
 </picture>
 
 <picture>
 	{#each Object.entries(___ASSET___0.sources) as [format, srcset]}
 		<source {srcset} type={'image/' + format} />
 	{/each}
-	<img src={___ASSET___0.img.src} {...{foo}} alt="spread attributes test" width={___ASSET___0.img.w} height={___ASSET___0.img.h} />
+	<img src={___ASSET___0.img.src} {...{foo}} alt="spread attributes test" imgWidth={___ASSET___0.img.w} imgHeight={___ASSET___0.img.h} />
 </picture>
 
 <picture>
 	{#each Object.entries(___ASSET___3.sources) as [format, srcset]}
 		<source {srcset}sizes="(min-width: 60rem) 80vw, (min-width: 40rem) 90vw, 100vw" type={'image/' + format} />
 	{/each}
-	<img src={___ASSET___3.img.src} alt="sizes test" width={___ASSET___3.img.w} height={___ASSET___3.img.h} />
+	<img src={___ASSET___3.img.src} alt="sizes test" imgWidth={___ASSET___3.img.w} imgHeight={___ASSET___3.img.h} />
 </picture>
 
 <picture>
 	{#each Object.entries(___ASSET___0.sources) as [format, srcset]}
 		<source {srcset} type={'image/' + format} />
 	{/each}
-	<img src={___ASSET___0.img.src} on:click={foo = 'clicked an image!'} alt="event handler test" width={___ASSET___0.img.w} height={___ASSET___0.img.h} />
+	<img src={___ASSET___0.img.src} on:click={foo = 'clicked an image!'} alt="event handler test" imgWidth={___ASSET___0.img.w} imgHeight={___ASSET___0.img.h} />
 </picture>
 
 <picture>
 	{#each Object.entries(___ASSET___4.sources) as [format, srcset]}
 		<source {srcset} type={'image/' + format} />
 	{/each}
-	<img src={___ASSET___4.img.src} alt="alias test" width={___ASSET___4.img.w} height={___ASSET___4.img.h} />
+	<img src={___ASSET___4.img.src} alt="alias test" imgWidth={___ASSET___4.img.w} imgHeight={___ASSET___4.img.h} />
 </picture>
 
 <picture>
 	{#each Object.entries(___ASSET___5.sources) as [format, srcset]}
 		<source {srcset} type={'image/' + format} />
 	{/each}
-	<img src={___ASSET___5.img.src} alt="publicDir test" width={___ASSET___5.img.w} height={___ASSET___5.img.h} />
+	<img src={___ASSET___5.img.src} alt="absolute path test" imgWidth={___ASSET___5.img.w} imgHeight={___ASSET___5.img.h} />
 </picture>
 
 {#each images as image}
 	{#if typeof image === 'string'}
-	<img src={image.img.src} alt="opt-in test" width={image.img.w} height={image.img.h} />
+	<img src={image.img.src} alt="opt-in test" imgWidth={image.img.w} imgHeight={image.img.h} />
 {:else}
 	<picture>
 	{#each Object.entries(image.sources) as [format, srcset]}
 		<source {srcset} type={'image/' + format} />
 	{/each}
-	<img src={image.img.src} alt="opt-in test" width={image.img.w} height={image.img.h} />
+	<img src={image.img.src} alt="opt-in test" imgWidth={image.img.w} imgHeight={image.img.h} />
 </picture>
 {/if}
 {/each}

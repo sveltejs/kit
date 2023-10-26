@@ -30,7 +30,7 @@
 
 <enhanced:img src="$lib/foo.png" alt="alias test" />
 
-<enhanced:img src="/static/foo.png" alt="publicDir test" />
+<enhanced:img src="/src/foo.png" alt="absolute path test" />
 
 {#each images as image}
 	<enhanced:img src={image} alt="opt-in test" />

@@ -1,5 +1,5 @@
-// TODO: get this from @sveltejs/static-img
-declare module '*?static-img' {
+// TODO: get this from @sveltejs/enhanced-img
+declare module '*?enhancedImg' {
 	const value: string;
 	export default value;
 }
