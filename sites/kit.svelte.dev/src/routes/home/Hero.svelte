@@ -15,7 +15,7 @@
 		</div>
 
 		<div class="hero-image">
-			<img src="./svelte-kit-machine.webp?w=1440;960" alt="SvelteKit illustration" />
+			<enhanced:img src="./svelte-kit-machine.webp?w=1440;960" alt="SvelteKit illustration" />
 		</div>
 	</div>
 </section>

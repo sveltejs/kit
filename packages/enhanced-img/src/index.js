@@ -56,12 +56,13 @@ async function imagetools() {
 		defaultDirectives: async ({ pathname, searchParams: qs }, metadata) => {
 			if (!qs.has('enhanced-img')) qs;
 
-			const calculated = getWidths(qs.get('width') ?? (await metadata()).width, qs.get('sizes'));
+			const { sizes, w, width } = Object.fromEntries(qs);
+			const { widths, kind } = getWidths(width ?? (await metadata()).width, sizes);
 			return new URLSearchParams({
 				as: 'picture',
 				format: `avif;webp;${fallback[path.extname(pathname)] ?? 'png'}`,
-				w: calculated.widths.join(';'),
-				...(calculated.kind === 'x' && { basePixels: calculated.widths[0].toString() })
+				w: widths.join(';'),
+				...(kind === 'x' && !w && { basePixels: widths[0].toString() })
 			});
 		}
 	};
