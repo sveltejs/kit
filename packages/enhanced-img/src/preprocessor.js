@@ -5,7 +5,7 @@ import { walk } from 'svelte/compiler';
 const ASSET_PREFIX = '___ASSET___';
 
 // TODO: expose this in vite-imagetools rather than duplicating it
-const OPTIMIZABLE = /^[^?]+\.(heic|heif|avif|jpeg|jpg|png|tiff|webp|gif)(\?.*)?$/;
+const OPTIMIZABLE = /^[^?]+\.(avif|heif|gif|jpeg|jpg|png|tiff|webp)(\?.*)?$/;
 
 /**
  * @returns {import('svelte/types/compiler/preprocess').PreprocessorGroup}

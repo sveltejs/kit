@@ -83,7 +83,7 @@ You can also use [Vite's `import.meta.glob`](https://vitejs.dev/guide/features.h
 
 ```js
 const pictures = import.meta.glob(
-	'/path/to/assets/*.{avif,gif,heif,jpg,jpeg,png,tiff,webp}',
+	'/path/to/assets/*.{avif,gif,heif,jpeg,jpg,png,tiff,webp}',
 	{
 		query: {
 			enhancedImg: true

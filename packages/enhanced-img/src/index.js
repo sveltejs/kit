@@ -31,15 +31,14 @@ function image_plugin() {
 
 /** @type {Record<string,string>} */
 const fallback = {
-	'.heic': 'jpg',
-	'.heif': 'jpg',
 	'.avif': 'png',
+	'.gif': 'gif',
+	'.heif': 'jpg',
 	'.jpeg': 'jpg',
 	'.jpg': 'jpg',
 	'.png': 'png',
 	'.tiff': 'jpg',
-	'.webp': 'png',
-	'.gif': 'gif'
+	'.webp': 'png'
 };
 
 async function imagetools() {
