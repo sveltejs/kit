@@ -3,8 +3,8 @@
 	import ___ASSET___1 from "./foo.png?width=5&enhanced-img";
 	import ___ASSET___2 from "./foo.png?blur=5&enhanced-img";
 	import ___ASSET___3 from "./foo.png?w=1024,640,320&sizes=(min-width%3A%2060rem)%2080vw%2C%20(min-width%3A%2040rem)%2090vw%2C%20100vw&enhanced-img";
-	import ___ASSET___4 from "./foo.svg?enhanced-img";
-	import ___ASSET___5 from "$lib/foo.png?enhanced-img";
+	import ___ASSET___4 from "$lib/foo.png?enhanced-img";
+	import ___ASSET___5 from "/static/foo.png?enhanced-img";
 	
 	import manual_image1 from './no.png';
 	
@@ -19,6 +19,8 @@
 </script>
 
 {foo}
+
+<img src="./foo.png" alt="non-enhanced test" />
 
 <picture>
 	{#each Object.entries(___ASSET___0.sources) as [format, srcset]}
@@ -62,16 +64,26 @@
 	<img src={___ASSET___3.img.src} alt="sizes test" width={___ASSET___3.img.w} height={___ASSET___3.img.h} />
 </picture>
 
-<img src="{___ASSET___4}" on:click={foo = 'clicked an image!'} alt="event handler test" />
+<picture>
+	{#each Object.entries(___ASSET___0.sources) as [format, srcset]}
+		<source {srcset} type={'image/' + format} />
+	{/each}
+	<img src={___ASSET___0.img.src} on:click={foo = 'clicked an image!'} alt="event handler test" width={___ASSET___0.img.w} height={___ASSET___0.img.h} />
+</picture>
+
+<picture>
+	{#each Object.entries(___ASSET___4.sources) as [format, srcset]}
+		<source {srcset} type={'image/' + format} />
+	{/each}
+	<img src={___ASSET___4.img.src} alt="alias test" width={___ASSET___4.img.w} height={___ASSET___4.img.h} />
+</picture>
 
 <picture>
 	{#each Object.entries(___ASSET___5.sources) as [format, srcset]}
 		<source {srcset} type={'image/' + format} />
 	{/each}
-	<img src={___ASSET___5.img.src} alt="alias test" width={___ASSET___5.img.w} height={___ASSET___5.img.h} />
+	<img src={___ASSET___5.img.src} alt="publicDir test" width={___ASSET___5.img.w} height={___ASSET___5.img.h} />
 </picture>
-
-<img src="/foo.png" alt="publicDir test" />
 
 {#each images as image}
 	{#if typeof image === 'string'}
@@ -86,12 +98,8 @@
 {/if}
 {/each}
 
-<img srcset="./foo.png" alt="srcset test" />
-
 <picture>
 	<source src="./foo.avif" />
 	<source srcset="./foo.avif 500v ./bar.avif 100v" />
 	<source srcset="./foo.avif, ./bar.avif 1v" />
 </picture>
-
-<img src="https://example.com/foo.png" alt="full url test" />

@@ -36,10 +36,6 @@ export function image() {
 
 				let url = src_attribute.raw.trim();
 
-				// if it's not a relative reference or Vite alias then skip it
-				// TODO: read vite aliases here rather than assuming $
-				if (!url.startsWith('./') && !url.startsWith('$')) return;
-
 				const sizes = get_attr_value(node, 'sizes');
 				const width = get_attr_value(node, 'width');
 				url += url.includes('?') ? '&' : '?';
@@ -82,7 +78,7 @@ export function image() {
 						}
 
 						// Compare node tag match
-						if (node.name === 'img' || node.name === 'enhanced:img') {
+						if (node.name === 'enhanced:img') {
 							const src = get_attr_value(node, 'src');
 							if (!src) return;
 							update_element(node, src);
@@ -123,12 +119,6 @@ function get_attr_value(node, attr) {
 	);
 
 	if (!attribute) return;
-
-	// Ensure value only consists of one element, and is of type "Text".
-	// Which should only match instances of static `foo="bar"` attributes.
-	if (node.name === 'img' && (attribute.value.length !== 1 || attribute.value[0].type !== 'Text')) {
-		return;
-	}
 
 	return attribute.value[0];
 }

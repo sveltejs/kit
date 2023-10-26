@@ -57,17 +57,19 @@ export default defineConfig({
 
 ### Basic usage
 
-Use in your `.svelte` components by referencing a relative path beginning with `./` or `$` (for Vite aliases):
+Use in your `.svelte` components by using `enhanced:img` rather than `img` and referencing with a [Vite asset import](https://vitejs.dev/guide/assets.html#static-asset-handling) path:
 
 ```svelte
-<img src="./path/to/your/image.jpg" alt="An alt text" />
+<enhanced:img src="./path/to/your/image.jpg" alt="An alt text" />
 ```
 
-This will replace your `img` tag with a `picture` tag wrapping one `source` tag per image type.
+At build time, your `img` tag will be replaced with a `picture` providing multiple image types and sizes. It's only possible to downscale images without losing quality, which means that you should provide the highest resolution image that you need — smaller versions will be generated for the various device types that may request an image. If you're not using the [`sizes` attribute](#srcset-and-sizes) you should provide your image at 2x resolution for HiDPI displays (a.k.a. retina displays).
+
+Since the `enhanced:img` tag will be replaced with a `picture` tag, you should refer to it as such within your `style` tag. Generally we recommend styling the `img` tag within the `picture` tag rather than the `picture` tag itself to make it easier to switch between various solutions such as a dynamic CDN-based solution should you ever need to do so.
 
 ### Dynamically choosing an image
 
-You can also manually import an image and then pass it to a transformed `img` tag. This is useful when you have a collection of static images and would like to dynamically choose one. You can create a collection of images manually [as we do on the homepage showcase](https://github.com/sveltejs/kit/blob/master/sites/kit.svelte.dev/src/routes/home/Showcase.svelte). In this case you will need to update both the `import` statement and `img` tag as shown below to indicate you'd like process them.
+You can also manually import an image and then pass it to an `enhanced:img` tag. This is useful when you have a collection of static images and would like to dynamically choose one. You can create a collection of images manually [as we do on the homepage showcase](https://github.com/sveltejs/kit/blob/master/sites/kit.svelte.dev/src/routes/home/Showcase.svelte). In this case you will need to update both the `import` statement and `img` tag as shown below to indicate you'd like process them.
 
 ```svelte
 <script>
@@ -92,7 +94,7 @@ const pictures = import.meta.glob(
 
 ### Intrinsic Dimensions
 
-`width` and `height` are optional as they can be inferred from the source image and will be automatically added when the `<img>` tag is preprocessed. These attributes are added because the browser can reserve the correct amount of space when it knows image dimensions which prevents layout shift. If you'd like to use a different `width` and `height` you can style the image with CSS. Because the preprocessor adds a `width` and `height` for you, if you'd like one of the dimensions to be automatically calculated then you will need to specify that:
+`width` and `height` are optional as they can be inferred from the source image and will be automatically added when the `<enhanced:img>` tag is preprocessed. These attributes are added because the browser can reserve the correct amount of space when it knows image dimensions which prevents layout shift. If you'd like to use a different `width` and `height` you can style the image with CSS. Because the preprocessor adds a `width` and `height` for you, if you'd like one of the dimensions to be automatically calculated then you will need to specify that:
 
 ```svelte
 <style>
@@ -114,10 +116,10 @@ Only `img` tags with a `src` will be processed. Those with a `srcset` will not b
   />
 ```
 
-In this example, we don't have you to have to manually create three versions of your image. Instead, you can specify the widths as a query parameter and we'll generate the `srcset` for you.
+In this example, it would be tedious to have to manually create three versions of your image. Instead, you can specify the widths as a query parameter and we'll generate the `srcset` for you.
 
 ```svelte
-<img
+<enhanced:img
   src="./image.png?w=160,400,600"
   sizes="(min-width: 60rem) 80vw, (min-width: 40rem) 90vw, 100vw"
   />
@@ -134,14 +136,10 @@ If `sizes` is specified directly as a string on the `img` tag then the plugin wi
 By default, your images will be transformed to more efficient formats. However, you may wish to apply other transforms such as a blur, quality, flatten, or rotate operation. You can do this by appending a query string:
 
 ```svelte
-<img src="./path/to/your/image.jpg?blur=15" alt="An alt text" />
+<enhanced:img src="./path/to/your/image.jpg?blur=15" alt="An alt text" />
 ```
 
 [See the imagetools repo for the full list of directives](https://github.com/JonasKruckenberg/imagetools/blob/main/docs/directives.md).
-
-### Processing other images
-
-If you have existing image imports like `import SomeImage from './some/image.jpg';` they will not be processed by this plugin.
 
 ## Best practices
 

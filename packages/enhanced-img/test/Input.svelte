@@ -12,34 +12,32 @@
 
 {foo}
 
-<img src="./foo.png" alt="basic test" />
+<img src="./foo.png" alt="non-enhanced test" />
 
-<img src="./foo.png" width="5" height="10" alt="dimensions test" />
+<enhanced:img src="./foo.png" alt="basic test" />
 
-<img src="./foo.png" width=5 height=10 alt="unquoted dimensions test" />
+<enhanced:img src="./foo.png" width="5" height="10" alt="dimensions test" />
 
-<img src="./foo.png?blur=5" alt="directive test" />
+<enhanced:img src="./foo.png" width=5 height=10 alt="unquoted dimensions test" />
 
-<img src="./foo.png" {...{foo}} alt="spread attributes test" />
+<enhanced:img src="./foo.png?blur=5" alt="directive test" />
 
-<img src="./foo.png?w=1024,640,320" sizes="(min-width: 60rem) 80vw, (min-width: 40rem) 90vw, 100vw" alt="sizes test" />
+<enhanced:img src="./foo.png" {...{foo}} alt="spread attributes test" />
 
-<img src="./foo.svg" on:click={foo = 'clicked an image!'} alt="event handler test" />
+<enhanced:img src="./foo.png?w=1024,640,320" sizes="(min-width: 60rem) 80vw, (min-width: 40rem) 90vw, 100vw" alt="sizes test" />
 
-<img src="$lib/foo.png" alt="alias test" />
+<enhanced:img src="./foo.png" on:click={foo = 'clicked an image!'} alt="event handler test" />
 
-<img src="/foo.png" alt="publicDir test" />
+<enhanced:img src="$lib/foo.png" alt="alias test" />
+
+<enhanced:img src="/static/foo.png" alt="publicDir test" />
 
 {#each images as image}
 	<enhanced:img src={image} alt="opt-in test" />
 {/each}
-
-<img srcset="./foo.png" alt="srcset test" />
 
 <picture>
 	<source src="./foo.avif" />
 	<source srcset="./foo.avif 500v ./bar.avif 100v" />
 	<source srcset="./foo.avif, ./bar.avif 1v" />
 </picture>
-
-<img src="https://example.com/foo.png" alt="full url test" />
