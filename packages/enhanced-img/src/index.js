@@ -54,15 +54,15 @@ async function imagetools() {
 	/** @type {Partial<import('vite-imagetools').VitePluginOptions>} */
 	const imagetools_opts = {
 		defaultDirectives: async ({ pathname, searchParams: qs }, metadata) => {
-			const { enhancedImg, imgSizes, imgWidth, w } = Object.fromEntries(qs);
-			if (!enhancedImg) return new URLSearchParams();
+			const { imgSizes, imgWidth } = Object.fromEntries(qs);
+			if (!qs.has('enhancedImg')) return new URLSearchParams();
 
 			const { widths, kind } = getWidths(imgWidth ?? (await metadata()).width, imgSizes);
 			return new URLSearchParams({
 				as: 'picture',
 				format: `avif;webp;${fallback[path.extname(pathname)] ?? 'png'}`,
 				w: widths.join(';'),
-				...(kind === 'x' && !w && { basePixels: widths[0].toString() })
+				...(kind === 'x' && !qs.has('w') && { basePixels: widths[0].toString() })
 			});
 		}
 	};
