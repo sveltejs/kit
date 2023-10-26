@@ -63,7 +63,7 @@ Use in your `.svelte` components by using `enhanced:img` rather than `img` and r
 <enhanced:img src="./path/to/your/image.jpg" alt="An alt text" />
 ```
 
-At build time, your `img` tag will be replaced with a `picture` providing multiple image types and sizes. It's only possible to downscale images without losing quality, which means that you should provide the highest resolution image that you need — smaller versions will be generated for the various device types that may request an image. If you're not using the [`sizes` attribute](#srcset-and-sizes) you should provide your image at 2x resolution for HiDPI displays (a.k.a. retina displays).
+At build time, your `img` tag will be replaced with a `picture` providing multiple image types and sizes. It's only possible to downscale images without losing quality, which means that you should provide the highest resolution image that you need — smaller versions will be generated for the various device types that may request an image. If you're not using the [`sizes` attribute](#static-image-transforms-srcset-and-sizes) you should provide your image at 2x resolution for HiDPI displays (a.k.a. retina displays).
 
 Since the `enhanced:img` tag will be replaced with a `picture` tag, you should refer to it as such within your `style` tag. Generally we recommend styling the `img` tag within the `picture` tag rather than the `picture` tag itself to make it easier to switch between various solutions such as a dynamic CDN-based solution should you ever need to do so.
 
