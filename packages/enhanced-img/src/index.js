@@ -11,7 +11,9 @@ export async function enhancedImages() {
 			'@sveltejs/enhanced-img: vite-imagetools is not installed. Skipping build-time optimizations'
 		);
 	}
-	return imagetools_plugin ? [image_plugin(), imagetools_plugin] : [];
+	return imagetools_plugin && !process.versions.webcontainer
+		? [image_plugin(), imagetools_plugin]
+		: [];
 }
 
 /**
