@@ -121,7 +121,7 @@ You may be wondering how to create something that looks like:
 <img
   srcset="image-small.png 160w, image-medium.png 400w, image-large.png 600w"
   sizes="(min-width: 60rem) 80vw, (min-width: 40rem) 90vw, 100vw"
-  />
+/>
 ```
 
 In this example, it would be tedious to have to manually create three versions of your image. Instead, you can specify the widths as a query parameter and we'll generate the `srcset` for you.
