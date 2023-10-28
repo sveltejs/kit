@@ -84,7 +84,7 @@ You can also manually import an image and then pass it to an `enhanced:img` tag.
 	import { MyImage } from './path/to/your/image.jpg?enhanced';
 </script>
 
-<enhanced:img src={MyImage} alt="An alt text" />
+<enhanced:img src={MyImage} alt="Some alt text" />
 ```
 
 You can also use [Vite's `import.meta.glob`](https://vitejs.dev/guide/features.html#glob-import). Note that you will have to specify `enhancedImg` via a [custom query](https://vitejs.dev/guide/features.html#custom-queries):
