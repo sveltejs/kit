@@ -2,7 +2,15 @@
 title: Images
 ---
 
-## Caching and inlining
+Images can have a big impact on your app's performance. For best results, you should optimize them:
+
+- generate optimal formats like `.avif` and `.webp`
+- create different sizes for different screens
+- ensure that assets can be cached effectively
+
+Doing this manually is tedious. There are a variety of techniques you can use, depending on your needs and preferences.
+
+## Vite's built-in handling
 
 [Vite will automatically process imported assets](https://vitejs.dev/guide/assets.html) for improved performance. This includes assets referenced via the CSS `url()` function. Hashes will be added to the filenames so that they can be cached and assets smaller than `assetsInlineLimit` will be inlined. Vite's asset handling is most often used for images, but is also useful for video, audio, etc.
 
