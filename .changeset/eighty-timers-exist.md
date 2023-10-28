@@ -2,4 +2,4 @@
 '@sveltejs/static-img': patch
 ---
 
-feat: add experimental `@sveltejs/static-img` package
+feat: add experimental `@sveltejs/enhanced-img` package
