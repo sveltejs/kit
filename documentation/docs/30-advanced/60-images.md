@@ -65,7 +65,7 @@ export default defineConfig({
 
 ### Basic usage
 
-Use in your `.svelte` components by using `enhanced:img` rather than `img` and referencing the image file with a [Vite asset import](https://vitejs.dev/guide/assets.html#static-asset-handling) path:
+Use in your `.svelte` components by using `<enhanced:img>` rather than `<img>` and referencing the image file with a [Vite asset import](https://vitejs.dev/guide/assets.html#static-asset-handling) path:
 
 ```svelte
 <enhanced:img src="./path/to/your/image.jpg" alt="An alt text" />
