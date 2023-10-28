@@ -3,13 +3,14 @@ import buffer from 'node:buffer';
 import { webcrypto as crypto } from 'node:crypto';
 import { fetch, Response, Request, Headers, FormData, File as UndiciFile } from 'undici';
 
+// @ts-expect-error `buffer.File` is added in Node 20
+const File = buffer.File ?? UndiciFile;
+
 /** @type {Record<string, any>} */
 const globals_post_node_18_11 = {
-	crypto
+	crypto,
+	File
 };
-
-// @ts-expect-error
-const File = buffer.File ?? UndiciFile;
 
 /** @type {Record<string, any>} */
 // TODO: remove this once we only support Node 18.11+ (the version multipart/form-data was added)
