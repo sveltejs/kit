@@ -77,7 +77,7 @@ Since the `<enhanced:img>` element is converted to an `<img>` element, you can s
 
 ### Dynamically choosing an image
 
-You can also manually import an image asset and pass it to an `enhanced:img`. This is useful when you have a collection of static images and would like to dynamically choose one or [iterate over them](https://github.com/sveltejs/kit/blob/master/sites/kit.svelte.dev/src/routes/home/Showcase.svelte). In this case you will need to update both the `import` statement and `img` tag as shown below to indicate you'd like process them.
+You can also manually import an image asset and pass it to an `<enhanced:img>`. This is useful when you have a collection of static images and would like to dynamically choose one or [iterate over them](https://github.com/sveltejs/kit/blob/master/sites/kit.svelte.dev/src/routes/home/Showcase.svelte). In this case you will need to update both the `import` statement and `<img>` element as shown below to indicate you'd like process them.
 
 ```svelte
 <script>
