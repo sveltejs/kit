@@ -157,8 +157,7 @@ Using a content delivery network (CDN) can allow you to optimize these images dy
 
 ## Best practices
 
-For each image type, use the appropriate solution from those discussed above. You can mix and match all three solutions in one project. For example, you may use Vite's built-in handling to provide images for `<meta>` tags, display images on your homepage with `@sveltejs/enhanced-img`, and display user-submitted content with a dynamic approach.
-
+- For each image type, use the appropriate solution from those discussed above. You can mix and match all three solutions in one project. For example, you may use Vite's built-in handling to provide images for `<meta>` tags, display images on your homepage with `@sveltejs/enhanced-img`, and display user-submitted content with a dynamic approach.
 - Always provide a good `alt` text
 - Choose one image per page which is the most important/largest one and give it `priority` so it loads faster. This gives you better web vitals scores (largest contentful paint in particular).
 - Your original images should have a good quality/resolution. Image processing can size images down to save bandwidth when serving smaller screens, but cannot invent pixels to size images up any better than browsers can.
