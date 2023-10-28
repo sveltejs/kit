@@ -2,7 +2,7 @@
 title: Images
 ---
 
-Images can have a big impact on your app's performance. For best results, you should optimize them:
+Images can have a big impact on your app's performance. For best results, you should optimize them by doing the following:
 
 - generate optimal formats like `.avif` and `.webp`
 - create different sizes for different screens
