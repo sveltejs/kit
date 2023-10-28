@@ -22,18 +22,6 @@ Doing this manually is tedious. There are a variety of techniques you can use, d
 <img alt="The project logo" src={logo} />
 ```
 
-To reference assets directly in the markup, you can use a preprocessor such as [`@sveltejs/enhanced-img`](#sveltejs-enhanced-img), which is discussed below and additionally transforms your images.
-
-## Transforming background
-
-You may wish to transform your images to output compressed image formats such as `.webp` or `.avif` or responsive images with different sizes for different devices. There are two approaches to transforming images, which will be discussed below. With either approach, the transformed images may be served via a CDN. CDNs reduce latency by distributing copies of static assets globally.
-
-The `@sveltejs/enhanced-img` package handles images that are located in your project and can be referred to with a static string. It can automatically set the intrinsic `width` and `height` for you, which can't be done with a dynamic approach. It is generated with a hash in the filename so that it can be maximally cached. It generates images at build time, so building may take longer the more images you transform.
-
-Alternatively, using a CDN to do the image transformation provides more flexibility with regards to sizes and you can pass image sources not known at build time, but it comes with potentially a bit of setup overhead in configuring the image CDN and possible usage costs. Some images served from a CDN may require a request to the server to verify that the image has not changed. This will block the browser from using its cache until a [304 response](https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/304) is received from the server. Building HTML to target CDNs may result in slightly smaller and simpler HTML because they can serve the appropriate file format for an `img` tag based on the `User-Agent` header whereas build-time optimizations must produce `picture` tags. Finally some CDNs may generate images lazily, which could have a negative performance impact for sites with low traffic and frequently changing images. We do not currently offer any tools for dynamic image transforms, but we may offer such utilities in the future.
-
-You can mix and match both solutions in one project. For example, you may display images on your homepage with `@sveltejs/enhanced-img` and display user-submitted content with a dynamic approach.
-
 ## @sveltejs/enhanced-img
 
 > **WARNING**: The `@sveltejs/enhanced-img` package is experimental. It uses pre-1.0 versioning and may introduce breaking changes with every minor version release.
