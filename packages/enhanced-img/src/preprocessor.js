@@ -63,8 +63,6 @@ export function image() {
 				}
 			}
 
-			let ignore_next_element = false;
-
 			// @ts-ignore
 			walk(ast.html, {
 				/**
