@@ -130,7 +130,7 @@ In this example, it would be tedious to have to manually create three versions o
 <enhanced:img
   src="./image.png?w=160,400,600"
   sizes="(min-width: 60rem) 80vw, (min-width: 40rem) 90vw, 100vw"
-  />
+/>
 ```
 
 If `sizes` is specified directly as a string on the `img` tag then the plugin will automatically generate different width images:
