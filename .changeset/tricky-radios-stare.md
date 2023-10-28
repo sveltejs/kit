@@ -2,4 +2,4 @@
 '@sveltejs/kit': patch
 ---
 
-fix: missing `File` Node polyfill for versions below Node 20
+fix: missing `File` Node polyfill for Node version 18.11.0+
