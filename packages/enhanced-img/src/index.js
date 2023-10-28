@@ -56,7 +56,7 @@ async function imagetools() {
 	const imagetools_opts = {
 		defaultDirectives: async ({ pathname, searchParams: qs }, metadata) => {
 			const { imgSizes, imgWidth } = Object.fromEntries(qs);
-			if (!qs.has('enhancedImg')) return new URLSearchParams();
+			if (!qs.has('enhanced')) return new URLSearchParams();
 
 			const { widths, kind } = getWidths(imgWidth ?? (await metadata()).width, imgSizes);
 			return new URLSearchParams({
