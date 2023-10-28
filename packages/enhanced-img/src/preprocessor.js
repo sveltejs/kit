@@ -13,6 +13,8 @@ const OPTIMIZABLE = /^[^?]+\.(avif|heif|gif|jpeg|jpg|png|tiff|webp)(\?.*)?$/;
 export function image() {
 	return {
 		markup({ content, filename }) {
+			if (!content.includes('<enhanced:img')) return;
+
 			const s = new MagicString(content);
 			const ast = parse(content, { filename });
 
