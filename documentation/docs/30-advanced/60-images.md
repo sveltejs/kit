@@ -81,7 +81,7 @@ You can also manually import an image and then pass it to an `enhanced:img` tag.
 
 ```svelte
 <script>
-	import { MyImage } from './path/to/your/image.jpg?enhancedImg';
+	import { MyImage } from './path/to/your/image.jpg?enhanced';
 </script>
 
 <enhanced:img src={MyImage} alt="An alt text" />
