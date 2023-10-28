@@ -45,7 +45,7 @@ export function image() {
 				if (width) {
 					url += 'imgWidth=' + encodeURIComponent(width.raw) + '&';
 				}
-				url += 'enhancedImg';
+				url += 'enhanced';
 
 				let import_name = '';
 				if (imports.has(url)) {
