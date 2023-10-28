@@ -72,11 +72,6 @@ export function image() {
 				 */
 				enter(node) {
 					if (node.type === 'Element') {
-						if (ignore_next_element) {
-							ignore_next_element = false;
-							return;
-						}
-
 						// Compare node tag match
 						if (node.name === 'enhanced:img') {
 							const src = get_attr_value(node, 'src');
