@@ -133,7 +133,7 @@ In this example, it would be tedious to have to manually create three versions o
 />
 ```
 
-If `sizes` is specified directly as a string on the `img` tag then the plugin will automatically generate different width images:
+If `sizes` is specified directly as a string on the `<enhanced:img>` tag then the plugin will automatically generate different width images:
 - If `sizes` is not provided, then a HiDPI/Retina image and a standard resolution image will be generated. The image you provide should be 2x the resolution you wish to display so that the browser can display that image on devices with a high [device pixel ratio](https://developer.mozilla.org/en-US/docs/Web/API/Window/devicePixelRatio).
 - If `sizes` is provided, then a large `srcset` is generated. If some of the `sizes` have been specified as a percentage of the viewport width using the `vw` unit then the `srcset` will filter out any values which are too small to ever be requested by the browser.
 
