@@ -28,6 +28,7 @@ export function image() {
 			 * @param {{ type: string, start: number, end: number, raw: string }} src_attribute
 			 */
 			function update_element(node, src_attribute) {
+				// TODO: this will become ExpressionTag in Svelte 5
 				if (src_attribute.type === 'MustacheTag') {
 					const src_var_name = content
 						.substring(src_attribute.start + 1, src_attribute.end - 1)
