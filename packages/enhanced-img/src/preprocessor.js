@@ -66,6 +66,7 @@ export function image() {
 				}
 			}
 
+			// TODO: switch to zimmerframe with Svelte 5
 			// @ts-ignore
 			walk(ast.html, {
 				/**
