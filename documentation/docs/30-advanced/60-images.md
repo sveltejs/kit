@@ -38,7 +38,7 @@ You can mix and match both solutions in one project. For example, you may displa
 
 > **WARNING**: The `@sveltejs/enhanced-img` package is experimental. It uses pre-1.0 versioning and may introduce breaking changes with every minor version release.
 
-`@sveltejs/enhanced-img` offers plug and play image processing that serves smaller file formats like `avif` or `webp`, automatically sets the intrinsic width and height of the image to avoid layout shift, creates images of multiple sizes for various devices, and strips EXIF data for privacy. It will work in any Vite-based project including, but not limited to, SvelteKit projects.
+`@sveltejs/enhanced-img` builds on top of Vite's built-in asset handling. It offers plug and play image processing that serves smaller file formats like `avif` or `webp`, automatically sets the intrinsic `width` and `height` of the image to avoid layout shift, creates images of multiple sizes for various devices, and strips EXIF data for privacy. It will work in any Vite-based project including, but not limited to, SvelteKit projects.
 
 ### Setup
 
