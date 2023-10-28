@@ -94,7 +94,7 @@ const pictures = import.meta.glob(
 	'/path/to/assets/*.{avif,gif,heif,jpeg,jpg,png,tiff,webp}',
 	{
 		query: {
-			enhancedImg: true
+			enhanced: true
 		}
 	}
 );
