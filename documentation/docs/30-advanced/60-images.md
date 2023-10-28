@@ -149,7 +149,7 @@ By default, enhanced images will be transformed to more efficient formats. Howev
 
 [See the imagetools repo for the full list of directives](https://github.com/JonasKruckenberg/imagetools/blob/main/docs/directives.md).
 
-## Loading images from a CDN
+## Loading images dynamically from a CDN
 
 In some cases, the images may not be accessible at build time — they live inside a content management system or elsewhere.
 
