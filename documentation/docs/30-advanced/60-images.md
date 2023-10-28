@@ -137,7 +137,7 @@ If `sizes` is specified directly as a string on the `img` tag then the plugin wi
 - If `sizes` is not provided, then a HiDPI/Retina image and a standard resolution image will be generated. The image you provide should be 2x the resolution you wish to display so that the browser can display that image on devices with a high [device pixel ratio](https://developer.mozilla.org/en-US/docs/Web/API/Window/devicePixelRatio).
 - If `sizes` is provided, then a large `srcset` is generated. If some of the `sizes` have been specified as a percentage of the viewport width using the `vw` unit then the `srcset` will filter out any values which are too small to ever be requested by the browser.
 
-> Text expressions like `sizes={computedSizes}` or `sizes={['(min-width: 60rem) 80vw', '(min-width: 40rem) 90vw', '100vw'].join(', ')}` will not be evaluated for the purposes of automatic image generation and will be skipped.
+> Dynamic expressions like `sizes={computedSizes}` will not be evaluated for the purposes of automatic image generation and will be skipped.
 
 ### Per-image transforms
 
