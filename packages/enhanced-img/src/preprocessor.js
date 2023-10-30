@@ -1,6 +1,6 @@
 import MagicString from 'magic-string';
+import { asyncWalk } from 'estree-walker';
 import { parse } from 'svelte-parse-markup';
-import { walk } from 'svelte/compiler';
 
 const ASSET_PREFIX = '___ASSET___';
 
@@ -8,26 +8,34 @@ const ASSET_PREFIX = '___ASSET___';
 const OPTIMIZABLE = /^[^?]+\.(avif|heif|gif|jpeg|jpg|png|tiff|webp)(\?.*)?$/;
 
 /**
+ * @param {{
+ *   plugin_context: import('rollup').PluginContext
+ *   imagetools_plugin: import('vite').Plugin
+ * }} opts
  * @returns {import('svelte/types/compiler/preprocess').PreprocessorGroup}
  */
-export function image() {
+export function image(opts) {
+	/**
+	 * URL to image details
+	 * @type {Map<string, { image: import('vite-imagetools').Picture, name: string }>}
+	 */
+	const images = new Map();
+
 	return {
-		markup({ content, filename }) {
-			if (!content.includes('<enhanced:img')) return;
+		async markup({ content, filename }) {
+			if (!content.includes('<enhanced:img')) {
+				return;
+			}
 
 			const s = new MagicString(content);
 			const ast = parse(content, { filename });
 
-			// Import path to import name
-			// e.g. ./foo.png => ___ASSET___0
-			/** @type {Map<string, string>} */
-			const imports = new Map();
-
 			/**
 			 * @param {import('svelte/types/compiler/interfaces').TemplateNode} node
 			 * @param {{ type: string, start: number, end: number, raw: string }} src_attribute
+			 * @returns {Promise<void>}
 			 */
-			function update_element(node, src_attribute) {
+			async function update_element(node, src_attribute) {
 				// TODO: this will become ExpressionTag in Svelte 5
 				if (src_attribute.type === 'MustacheTag') {
 					const src_var_name = content
@@ -50,51 +58,53 @@ export function image() {
 				}
 				url += 'enhanced';
 
-				let import_name = '';
-				if (imports.has(url)) {
-					import_name = /** @type {string} */ (imports.get(url));
-				} else {
-					import_name = ASSET_PREFIX + imports.size;
-					imports.set(url, import_name);
+				let details = images.get(url);
+				if (!details) {
+					const image = await resolve(opts, url, filename);
+					if (!image) {
+						return;
+					}
+					details = images.get(url) || { name: ASSET_PREFIX + images.size, image };
+					images.set(url, details);
 				}
 
 				if (OPTIMIZABLE.test(url)) {
-					s.update(node.start, node.end, img_to_picture(content, node, import_name));
+					s.update(node.start, node.end, img_to_picture(content, node, details.name));
 				} else {
 					// e.g. <img src="./foo.svg" /> => <img src="{___ASSET___0}" />
-					s.update(src_attribute.start, src_attribute.end, `{${import_name}}`);
+					s.update(src_attribute.start, src_attribute.end, `{${details}}`);
 				}
 			}
 
 			// TODO: switch to zimmerframe with Svelte 5
 			// @ts-ignore
-			walk(ast.html, {
+			await asyncWalk(ast.html, {
 				/**
 				 * @param {import('svelte/types/compiler/interfaces').TemplateNode} node
 				 */
-				enter(node) {
+				async enter(node) {
 					if (node.type === 'Element') {
 						// Compare node tag match
 						if (node.name === 'enhanced:img') {
 							const src = get_attr_value(node, 'src');
 							if (!src) return;
-							update_element(node, src);
+							await update_element(node, src);
 						}
 					}
 				}
 			});
 
-			// add imports
-			if (imports.size) {
-				let import_text = '';
-				for (const [path, import_name] of imports.entries()) {
-					import_text += `import ${import_name} from "${path}";`;
+			// add hoisted consts
+			if (images.size) {
+				let const_text = '';
+				for (const details of images.values()) {
+					const_text += `const ${details.name} = ${JSON.stringify(details.image)};`;
 				}
 				if (ast.instance) {
 					// @ts-ignore
-					s.appendLeft(ast.instance.content.start, import_text);
+					s.appendLeft(ast.instance.content.start, const_text);
 				} else {
-					s.append(`<script>${import_text}</script>`);
+					s.append(`<script>${const_text}</script>`);
 				}
 			}
 
@@ -104,6 +114,41 @@ export function image() {
 			};
 		}
 	};
+}
+
+/**
+ * @param {{
+*   plugin_context: import('rollup').PluginContext
+*   imagetools_plugin: import('vite').Plugin
+* }} opts
+ * @param {string} url
+ * @param {string | undefined} importer
+ * @returns {Promise<import('vite-imagetools').Picture | undefined>}
+ */
+async function resolve(opts, url, importer) {
+	const resolved = await opts.plugin_context.resolve(url, importer);
+	const id = resolved?.id;
+	if (!id) {
+		return;
+	}
+	if (!opts.imagetools_plugin.load) {
+		throw new Error('Invalid instance of vite-imagetools. Could not find load method.');
+	}
+	const hook = opts.imagetools_plugin.load;
+	const handler = typeof hook === 'object' ? hook.handler : hook;
+	const module_info = await handler.call(opts.plugin_context, id);
+	if (!module_info) {
+		throw new Error(`Could not load ${id}`);
+	}
+	const code = typeof module_info === 'string' ? module_info : module_info.code;
+	return parseObject(code.replace('export default', '').replace(/;$/, ''));
+}
+
+/**
+ * @param {string} str
+ */
+export function parseObject(str) {
+	return JSON.parse(str.replaceAll('{', '{"').replaceAll(':', '":').replaceAll(/,([^ ])/g, ',"$1'));
 }
 
 /**
@@ -150,9 +195,9 @@ function attributes_to_markdown(content, attributes, src_var_name) {
 /**
  * @param {string} content
  * @param {import('svelte/types/compiler/interfaces').TemplateNode} node
- * @param {string} import_name
+ * @param {string} var_name
  */
-function img_to_picture(content, node, import_name) {
+function img_to_picture(content, node, var_name) {
 	/** @type {Array<import('svelte/types/compiler/interfaces').BaseDirective | import('svelte/types/compiler/interfaces').Attribute | import('svelte/types/compiler/interfaces').SpreadAttribute>} attributes */
 	const attributes = node.attributes;
 	const index = attributes.findIndex((attribute) => attribute.name === 'sizes');
@@ -163,10 +208,10 @@ function img_to_picture(content, node, import_name) {
 	}
 
 	return `<picture>
-	{#each Object.entries(${import_name}.sources) as [format, srcset]}
+	{#each Object.entries(${var_name}.sources) as [format, srcset]}
 		<source {srcset}${sizes_string} type={'image/' + format} />
 	{/each}
-	<img ${attributes_to_markdown(content, attributes, import_name)} />
+	<img ${attributes_to_markdown(content, attributes, var_name)} />
 </picture>`;
 }
 

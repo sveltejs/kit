@@ -12,21 +12,36 @@ export async function enhancedImages() {
 		);
 	}
 	return imagetools_plugin && !process.versions.webcontainer
-		? [image_plugin(), imagetools_plugin]
+		? [image_plugin(imagetools_plugin), imagetools_plugin]
 		: [];
 }
 
 /**
  * Creates the Svelte image plugin which provides the preprocessor.
+ * @param {import('vite').Plugin} imagetools_plugin
  * @returns {import('vite').Plugin}
  */
-function image_plugin() {
-	const preprocessor = image();
+function image_plugin(imagetools_plugin) {
+	/**
+	 * @type {{
+	 *   plugin_context: import('rollup').PluginContext
+	 *   imagetools_plugin: import('vite').Plugin
+	 * }}
+	 */
+	const opts = {
+		// @ts-expect-error populated when build starts so we cheat on type
+		plugin_context: undefined,
+		imagetools_plugin
+	};
+	const preprocessor = image(opts);
 
 	return {
 		name: 'vite-plugin-enhanced-img',
 		api: {
 			sveltePreprocess: preprocessor
+		},
+		buildStart() {
+			opts.plugin_context = this;
 		}
 	};
 }
@@ -65,7 +80,8 @@ async function imagetools() {
 				w: widths.join(';'),
 				...(kind === 'x' && !qs.has('w') && { basePixels: widths[0].toString() })
 			});
-		}
+		},
+		namedExports: false
 	};
 
 	// TODO: should we make formats or sizes configurable besides just letting people override defaultDirectives?
