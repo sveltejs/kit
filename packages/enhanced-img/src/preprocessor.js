@@ -130,19 +130,23 @@ async function resolve(opts, url, importer) {
 		throw new Error(`Could not load ${id}`);
 	}
 	const code = typeof module_info === 'string' ? module_info : module_info.code;
-	return parseObject(code.replace('export default', '').replace(/;$/, ''));
+	return parseObject(code.replace('export default', '').replace(/;$/, '').trim());
 }
 
 /**
  * @param {string} str
  */
 export function parseObject(str) {
-	return JSON.parse(
-		str
-			.replaceAll('{', '{"')
-			.replaceAll(':', '":')
-			.replaceAll(/,([^ ])/g, ',"$1')
-	);
+	try {
+		return JSON.parse(
+			str
+				.replaceAll('{', '{"')
+				.replaceAll(':', '":')
+				.replaceAll(/,([^ ])/g, ',"$1')
+		);
+	} catch (err) {
+		throw new Error(`Unable to parse string to object: ${str}`);
+	}
 }
 
 /**
