@@ -10,14 +10,26 @@ it('Image preprocess snapshot test', async () => {
 	const filename = 'Input.svelte';
 	const processed = await preprocess(
 		await fs.readFile(resolve(filename), { encoding: 'utf-8' }),
-		[image()],
+		[
+			image({
+				plugin_context: {
+					// @ts-ignore
+					resolve(url) {
+						return { id: url };
+					}
+				},
+				// @ts-ignore
+				imagetools_plugin: {
+					load() {
+						return 'export default {sources:{avif:"/1 1440w, /2 960w",webp:"/3 1440w, /4 960w",png:"5 1440w, /6 960w"},img:{src:"/7",w:1440,h:1440}};';
+					}
+				}
+			})
+		],
 		{ filename }
 	);
 
-	// Make imports readable
-	const outputCode = processed.code.replace(/import/g, '\n\timport');
-
-	expect(outputCode).toMatchFileSnapshot('./Output.svelte');
+	expect(processed).toMatchFileSnapshot('./Output.svelte');
 });
 
 it('parses an object', () => {

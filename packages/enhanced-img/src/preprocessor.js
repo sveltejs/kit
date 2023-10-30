@@ -95,20 +95,6 @@ export function image(opts) {
 				}
 			});
 
-			// add hoisted consts
-			if (images.size) {
-				let const_text = '';
-				for (const details of images.values()) {
-					const_text += `const ${details.name} = ${JSON.stringify(details.image)};`;
-				}
-				if (ast.instance) {
-					// @ts-ignore
-					s.appendLeft(ast.instance.content.start, const_text);
-				} else {
-					s.append(`<script>${const_text}</script>`);
-				}
-			}
-
 			return {
 				code: s.toString(),
 				map: s.generateMap()
@@ -118,6 +104,8 @@ export function image(opts) {
 }
 
 /**
+ * Resolve the import so that we can insert a const that can be used in the
+ * template string and we don't need any `{#each}` block
  * @param {{
  *   plugin_context: import('rollup').PluginContext
  *   imagetools_plugin: import('vite').Plugin
@@ -174,12 +162,16 @@ function get_attr_value(node, attr) {
 /**
  * @param {string} content
  * @param {Array<import('svelte/types/compiler/interfaces').BaseDirective | import('svelte/types/compiler/interfaces').Attribute | import('svelte/types/compiler/interfaces').SpreadAttribute>} attributes
- * @param {string} src_var_name
+ * @param {{
+ *   src: string,
+ *   width: string | number,
+ *   height: string | number
+ * }} details
  */
-function attributes_to_markdown(content, attributes, src_var_name) {
+function img_attributes_to_markdown(content, attributes, details) {
 	const attribute_strings = attributes.map((attribute) => {
 		if (attribute.name === 'src') {
-			return `src={${src_var_name}.img.src}`;
+			return `src=${details.src}`;
 		}
 		return content.substring(attribute.start, attribute.end);
 	});
@@ -191,8 +183,8 @@ function attributes_to_markdown(content, attributes, src_var_name) {
 		if (attribute.name === 'height') has_height = true;
 	}
 	if (!has_width && !has_height) {
-		attribute_strings.push(`imgWidth={${src_var_name}.img.w}`);
-		attribute_strings.push(`imgHeight={${src_var_name}.img.h}`);
+		attribute_strings.push(`width=${details.width}`);
+		attribute_strings.push(`height=${details.height}`);
 	}
 
 	return attribute_strings.join(' ');
@@ -209,7 +201,7 @@ function img_to_picture(content, node, details) {
 	const index = attributes.findIndex((attribute) => attribute.name === 'sizes');
 	let sizes_string = '';
 	if (index >= 0) {
-		sizes_string = content.substring(attributes[index].start, attributes[index].end);
+		sizes_string = ' ' + content.substring(attributes[index].start, attributes[index].end);
 		attributes.splice(index, 1);
 	}
 
@@ -217,7 +209,11 @@ function img_to_picture(content, node, details) {
 	for (const [format, srcset] of Object.entries(details.image.sources)) {
 		res += `<source srcset="${srcset}"${sizes_string} type="image/${format}" />`;
 	}
-	res += `<img ${attributes_to_markdown(content, attributes, details.name)} />`;
+	res += `<img ${img_attributes_to_markdown(content, attributes, {
+		src: details.image.img.src,
+		width: details.image.img.w,
+		height: details.image.img.h
+	})} />`;
 	res += '</picture>';
 	return res;
 }
@@ -234,18 +230,24 @@ function dynamic_img_to_picture(content, node, src_var_name) {
 	const index = attributes.findIndex((attribute) => attribute.name === 'sizes');
 	let sizes_string = '';
 	if (index >= 0) {
-		sizes_string = content.substring(attributes[index].start, attributes[index].end);
+		sizes_string = ' ' + content.substring(attributes[index].start, attributes[index].end);
 		attributes.splice(index, 1);
 	}
 
+	const details = {
+		src: `{${src_var_name}.img.src}`,
+		width: `{${src_var_name}.img.w}`,
+		height: `{${src_var_name}.img.h}`
+	};
+
 	return `{#if typeof ${src_var_name} === 'string'}
-	<img ${attributes_to_markdown(content, node.attributes, src_var_name)} />
+	<img ${img_attributes_to_markdown(content, node.attributes, details)} />
 {:else}
 	<picture>
 		{#each Object.entries(${src_var_name}.sources) as [format, srcset]}
 			<source {srcset}${sizes_string} type={'image/' + format} />
 		{/each}
-		<img ${attributes_to_markdown(content, attributes, src_var_name)} />
+		<img ${img_attributes_to_markdown(content, attributes, details)} />
 	</picture>
 {/if}`;
 }
