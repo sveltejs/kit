@@ -137,15 +137,14 @@ async function resolve(opts, url, importer) {
  * @param {string} str
  */
 export function parseObject(str) {
+	const updated = str
+		.replaceAll(/{(\n\s*)?/gm, '{"')
+		.replaceAll(':', '":')
+		.replaceAll(/,(\n\s*)?([^ ])/g, ',"$2');
 	try {
-		return JSON.parse(
-			str
-				.replaceAll('{', '{"')
-				.replaceAll(':', '":')
-				.replaceAll(/,([^ ])/g, ',"$1')
-		);
+		return JSON.parse(updated);
 	} catch (err) {
-		throw new Error(`Unable to parse string to object: ${str}`);
+		throw new Error(`Failed parsing string to object: ${str}`);
 	}
 }
 
