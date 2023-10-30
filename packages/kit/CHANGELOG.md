@@ -1,5 +1,17 @@
 # @sveltejs/kit
 
+## 1.27.2
+
+### Patch Changes
+
+- fix: missing `File` Node polyfill for Node version 18.11.0+ ([#10948](https://github.com/sveltejs/kit/pull/10948))
+
+## 1.27.1
+
+### Patch Changes
+
+- fix: only apply some polyfills below node 18.11 ([#10920](https://github.com/sveltejs/kit/pull/10920))
+
 ## 1.27.0
 
 ### Minor Changes
