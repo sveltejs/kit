@@ -15,6 +15,7 @@ const OPTIMIZABLE = /^[^?]+\.(avif|heif|gif|jpeg|jpg|png|tiff|webp)(\?.*)?$/;
  * @returns {import('svelte/types/compiler/preprocess').PreprocessorGroup}
  */
 export function image(opts) {
+	// TODO: clear this map in dev mode to avoid memory leak
 	/**
 	 * URL to image details
 	 * @type {Map<string, { image: import('vite-imagetools').Picture, name: string }>}
@@ -69,7 +70,7 @@ export function image(opts) {
 				}
 
 				if (OPTIMIZABLE.test(url)) {
-					s.update(node.start, node.end, img_to_picture(content, node, details.name));
+					s.update(node.start, node.end, img_to_picture(content, node, details));
 				} else {
 					// e.g. <img src="./foo.svg" /> => <img src="{___ASSET___0}" />
 					s.update(src_attribute.start, src_attribute.end, `{${details}}`);
@@ -118,9 +119,9 @@ export function image(opts) {
 
 /**
  * @param {{
-*   plugin_context: import('rollup').PluginContext
-*   imagetools_plugin: import('vite').Plugin
-* }} opts
+ *   plugin_context: import('rollup').PluginContext
+ *   imagetools_plugin: import('vite').Plugin
+ * }} opts
  * @param {string} url
  * @param {string | undefined} importer
  * @returns {Promise<import('vite-imagetools').Picture | undefined>}
@@ -148,7 +149,12 @@ async function resolve(opts, url, importer) {
  * @param {string} str
  */
 export function parseObject(str) {
-	return JSON.parse(str.replaceAll('{', '{"').replaceAll(':', '":').replaceAll(/,([^ ])/g, ',"$1'));
+	return JSON.parse(
+		str
+			.replaceAll('{', '{"')
+			.replaceAll(':', '":')
+			.replaceAll(/,([^ ])/g, ',"$1')
+	);
 }
 
 /**
@@ -195,9 +201,9 @@ function attributes_to_markdown(content, attributes, src_var_name) {
 /**
  * @param {string} content
  * @param {import('svelte/types/compiler/interfaces').TemplateNode} node
- * @param {string} var_name
+ * @param {{ image: import('vite-imagetools').Picture, name: string }} details
  */
-function img_to_picture(content, node, var_name) {
+function img_to_picture(content, node, details) {
 	/** @type {Array<import('svelte/types/compiler/interfaces').BaseDirective | import('svelte/types/compiler/interfaces').Attribute | import('svelte/types/compiler/interfaces').SpreadAttribute>} attributes */
 	const attributes = node.attributes;
 	const index = attributes.findIndex((attribute) => attribute.name === 'sizes');
@@ -207,12 +213,13 @@ function img_to_picture(content, node, var_name) {
 		attributes.splice(index, 1);
 	}
 
-	return `<picture>
-	{#each Object.entries(${var_name}.sources) as [format, srcset]}
-		<source {srcset}${sizes_string} type={'image/' + format} />
-	{/each}
-	<img ${attributes_to_markdown(content, attributes, var_name)} />
-</picture>`;
+	let res = '<picture>';
+	for (const [format, srcset] of Object.entries(details.image.sources)) {
+		res += `<source srcset="${srcset}"${sizes_string} type="image/${format}" />`;
+	}
+	res += `<img ${attributes_to_markdown(content, attributes, details.name)} />`;
+	res += '</picture>';
+	return res;
 }
 
 /**
@@ -222,9 +229,23 @@ function img_to_picture(content, node, var_name) {
  * @param {string} src_var_name
  */
 function dynamic_img_to_picture(content, node, src_var_name) {
+	/** @type {Array<import('svelte/types/compiler/interfaces').BaseDirective | import('svelte/types/compiler/interfaces').Attribute | import('svelte/types/compiler/interfaces').SpreadAttribute>} attributes */
+	const attributes = node.attributes;
+	const index = attributes.findIndex((attribute) => attribute.name === 'sizes');
+	let sizes_string = '';
+	if (index >= 0) {
+		sizes_string = content.substring(attributes[index].start, attributes[index].end);
+		attributes.splice(index, 1);
+	}
+
 	return `{#if typeof ${src_var_name} === 'string'}
 	<img ${attributes_to_markdown(content, node.attributes, src_var_name)} />
 {:else}
-	${img_to_picture(content, node, src_var_name)}
+	<picture>
+		{#each Object.entries(${src_var_name}.sources) as [format, srcset]}
+			<source {srcset}${sizes_string} type={'image/' + format} />
+		{/each}
+		<img ${attributes_to_markdown(content, attributes, src_var_name)} />
+	</picture>
 {/if}`;
 }
