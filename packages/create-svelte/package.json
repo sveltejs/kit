@@ -20,7 +20,7 @@
 		"@types/gitignore-parser": "^0.0.2",
 		"@types/prettier": "^2.7.1",
 		"gitignore-parser": "^0.0.2",
-		"prettier": "^2.8.0",
+		"prettier": "^3.0.0",
 		"prettier-plugin-svelte": "^2.10.1",
 		"sucrase": "^3.29.0",
 		"svelte": "^4.2.2",
