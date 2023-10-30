@@ -61,6 +61,8 @@ export function image(opts) {
 
 				let details = images.get(url);
 				if (!details) {
+					// resolves the import so that we can build the entire picture template string and don't
+					// need any logic blocks
 					const image = await resolve(opts, url, filename);
 					if (!image) {
 						return;
@@ -104,8 +106,6 @@ export function image(opts) {
 }
 
 /**
- * Resolve the import so that we can insert a const that can be used in the
- * template string and we don't need any `{#each}` block
  * @param {{
  *   plugin_context: import('rollup').PluginContext
  *   imagetools_plugin: import('vite').Plugin
