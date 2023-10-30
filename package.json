@@ -30,7 +30,7 @@
 		"eslint": "^8.45.0",
 		"eslint-config-prettier": "^9.0.0",
 		"eslint-plugin-svelte": "^2.31.0",
-		"eslint-plugin-unicorn": "^48.0.0",
+		"eslint-plugin-unicorn": "^49.0.0",
 		"playwright": "1.30.0",
 		"prettier": "^2.8.0",
 		"rollup": "^3.7.0",
