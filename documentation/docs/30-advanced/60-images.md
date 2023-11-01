@@ -103,27 +103,35 @@ const pictures = import.meta.glob(
 
 ### `srcset` and `sizes`
 
-You may be wondering how to create something that looks like:
+If you have a large image, such as a hero image taking the width of the design, you should specify `sizes` so that smaller versions are requested on smaller devices. This would typically look like:
 
 ```html
 <img
-  srcset="image-small.png 160w, image-medium.png 400w, image-large.png 600w"
-  sizes="(min-width: 60rem) 80vw, (min-width: 40rem) 90vw, 100vw"
+  srcset="image-640.png 640w, image-750.png 750w, image-828.png 828w, image-1080.png 1080w, image-1200.png 1200w, image-1280.png 1280w"
+  sizes="(min-width:1280px) 1280px, 100vw"
 />
 ```
 
-In this example, it would be tedious to have to manually create three versions of your image. Instead, you can specify the widths as a query parameter and we'll generate the `srcset` for you.
+In this example, it would be tedious to have to manually create half a dozen versions of your image, so we'll generate the `srcset` for you when you specify `sizes`.
 
 ```svelte
 <enhanced:img
-  src="./image.png?w=160,400,600"
-  sizes="(min-width: 60rem) 80vw, (min-width: 40rem) 90vw, 100vw"
+  src="./image.png"
+  sizes="(min-width:1280px) 1280px, 100vw"
 />
 ```
 
-If `sizes` is specified directly as a string on the `<enhanced:img>` tag then the plugin will automatically generate different width images:
-- If `sizes` is not provided, then a HiDPI/Retina image and a standard resolution image will be generated. The image you provide should be 2x the resolution you wish to display so that the browser can display that image on devices with a high [device pixel ratio](https://developer.mozilla.org/en-US/docs/Web/API/Window/devicePixelRatio).
-- If `sizes` is provided, then a large `srcset` is generated. If some of the `sizes` have been specified as a percentage of the viewport width using the `vw` unit then the `srcset` will filter out any values which are too small to ever be requested by the browser.
+If you'd like to specify custom widths of a particular image you can do that with the `w` query parameter:
+```svelte
+<enhanced:img
+  src="./image.png?w=1280;640;400"
+  sizes="(min-width:1280px) 1280px, 100vw"
+/>
+```
+
+If `sizes` is specified directly as a string on the `<enhanced:img>` tag then the plugin will generate different width images and a corresponding `srcset`. If some of the `sizes` have been specified as a percentage of the viewport width using the `vw` unit then the `srcset` will filter out any values which are too small to ever be requested by the browser.
+
+If `sizes` is not provided, then a HiDPI/Retina image and a standard resolution image will be generated. The image you provide should be 2x the resolution you wish to display so that the browser can display that image on devices with a high [device pixel ratio](https://developer.mozilla.org/en-US/docs/Web/API/Window/devicePixelRatio).
 
 > Dynamic expressions like `sizes={computedSizes}` will not be evaluated for the purposes of automatic image generation and will be skipped.
 
@@ -145,9 +153,10 @@ Using a content delivery network (CDN) can allow you to optimize these images dy
 
 ## Best practices
 
+- Always provide a good `alt` text
+- Your original images should have a good quality/resolution and should have 2x the width it will be displayed at to serve HiDPI devices. Image processing can size images down to save bandwidth when serving smaller screens, but it would be a waste of bandwidth to invent pixels to size images up.
+- Give the image a container or styling so that it is constrained and does not jump around. `width` and `height` help the browser reserving space while the image is still loading. `@sveltejs/enhanced-img` will add a `width` and `height` for you.
+- For images which are much larger than the width of a mobile device (roughly 400px), such as a hero image taking the width of the page design, specify `sizes` so that smaller images can be served on smaller devices.
+- Choose one image per page which is the most important/largest one and give it `priority` so it loads faster. This gives you better web vitals scores (largest contentful paint in particular).
 - For each image type, use the appropriate solution from those discussed above. You can mix and match all three solutions in one project. For example, you may use Vite's built-in handling to provide images for `<meta>` tags, display images on your homepage with `@sveltejs/enhanced-img`, and display user-submitted content with a dynamic approach.
 - Consider serving all images via CDN regardless of the image optimization types you use. CDNs reduce latency by distributing copies of static assets globally.
-- Always provide a good `alt` text
-- Choose one image per page which is the most important/largest one and give it `priority` so it loads faster. This gives you better web vitals scores (largest contentful paint in particular).
-- Your original images should have a good quality/resolution. Image processing can size images down to save bandwidth when serving smaller screens, but cannot invent pixels to size images up any better than browsers can.
-- Give the image a container or styling so that it is constrained and does not jump around. `width` and `height` help the browser reserving space while the image is still loading. `@sveltejs/enhanced-img` will add a `width` and `height` for you.
