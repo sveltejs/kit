@@ -807,7 +807,15 @@ function kit({ svelte_config }) {
 
 					if (kit.adapter) {
 						const { adapt } = await import('../../core/adapt/index.js');
-						await adapt(svelte_config, build_data, metadata, prerendered, prerender_map, log);
+						await adapt(
+							svelte_config,
+							build_data,
+							metadata,
+							prerendered,
+							prerender_map,
+							log,
+							vite_config
+						);
 					} else {
 						console.log(colors.bold().yellow('\nNo adapter specified'));
 
