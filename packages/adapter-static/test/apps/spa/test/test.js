@@ -29,7 +29,6 @@ test('renders error page for missing page', async ({ page }) => {
 });
 
 test('uses correct environment variables for fallback page (mode = staging)', async ({ page }) => {
-	await page.goto('/');
 	await page.goto('/fallback/x/y/z');
 	expect(await page.textContent('b')).toEqual('42');
 });
