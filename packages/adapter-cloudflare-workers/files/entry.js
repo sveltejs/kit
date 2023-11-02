@@ -61,8 +61,8 @@ export default {
 
 		if (is_static_asset || prerendered.has(pathname)) {
 			return get_asset_from_kv(req, env, context, (request, options) => {
-				if (prerendered.has(pathname || '/')) {
-					url.pathname = '/' + prerendered.get(pathname || '/').file;
+				if (prerendered.has(pathname)) {
+					url.pathname = '/' + prerendered.get(pathname).file;
 					return new Request(url.toString(), request);
 				}
 
