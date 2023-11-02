@@ -2,4 +2,4 @@
 '@sveltejs/adapter-cloudflare-workers': patch
 ---
 
-fix: correctly check url pathnames
+fix: correctly check url pathnames for trailing slashes
