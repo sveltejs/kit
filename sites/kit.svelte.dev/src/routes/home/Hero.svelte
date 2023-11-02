@@ -14,8 +14,8 @@
 			<a href="{base}/docs/introduction" class="cta"> read the docs </a>
 		</div>
 
-		<div class="hero-image">
-			<enhanced:img src="./svelte-kit-machine.webp?w=1440;960" alt="SvelteKit illustration" />
+		<div class="hero-image-wrapper">
+			<enhanced:img src="./svelte-kit-machine.webp?w=1440;960" class="hero-image" alt="SvelteKit illustration" />
 		</div>
 	</div>
 </section>
@@ -84,7 +84,7 @@
 		margin: 0 0 1rem 0;
 	}
 
-	.hero-image {
+	.hero-image-wrapper {
 		--size: 64rem;
 		position: absolute;
 		left: calc(50% - 0.53 * var(--size));
@@ -92,7 +92,7 @@
 		pointer-events: none;
 	}
 
-	.hero-image img {
+	.hero-image {
 		width: var(--size);
 		height: auto;
 		aspect-ratio: 4 / 3;
@@ -143,7 +143,7 @@
 			text-align: left;
 		}
 
-		.hero-image {
+		.hero-image-wrapper {
 			--size: min(100vw, 108rem);
 			left: auto;
 			right: -20rem;
