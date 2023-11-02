@@ -40,7 +40,7 @@ export default {
 			});
 		}
 
-		let { pathname } = new URL(req.url);
+		let { pathname } = url;
 		try {
 			pathname = decodeURIComponent(pathname);
 		} catch {
