@@ -19,7 +19,8 @@
 				src="./svelte-kit-machine.webp?w=2160;1656;1280;1080;828;640"
 				sizes="(min-width: 768px) min(100vw, 1080px), 640px"
 				class="hero-image"
-				alt="SvelteKit illustration" />
+				alt="SvelteKit illustration"
+			/>
 		</div>
 	</div>
 </section>
