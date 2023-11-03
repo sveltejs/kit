@@ -1,5 +1,11 @@
 # @sveltejs/kit
 
+## 1.27.3
+
+### Patch Changes
+
+- fix: use correct environment file for rendering spa fallback page ([#10963](https://github.com/sveltejs/kit/pull/10963))
+
 ## 1.27.2
 
 ### Patch Changes
