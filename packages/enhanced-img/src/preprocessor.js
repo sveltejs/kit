@@ -48,12 +48,8 @@ export function image(opts) {
 
 				let url = src_attribute.raw.trim();
 
-				const sizes = get_attr_value(node, 'sizes');
 				const width = get_attr_value(node, 'width');
 				url += url.includes('?') ? '&' : '?';
-				if (sizes) {
-					url += 'imgSizes=' + encodeURIComponent(sizes.raw) + '&';
-				}
 				if (width) {
 					url += 'imgWidth=' + encodeURIComponent(width.raw) + '&';
 				}
@@ -202,15 +198,17 @@ function img_to_picture(content, node, details) {
 	/** @type {Array<import('svelte/types/compiler/interfaces').BaseDirective | import('svelte/types/compiler/interfaces').Attribute | import('svelte/types/compiler/interfaces').SpreadAttribute>} attributes */
 	const attributes = node.attributes;
 	const index = attributes.findIndex((attribute) => attribute.name === 'sizes');
-	let sizes_string = '';
+	let sizes = '';
 	if (index >= 0) {
-		sizes_string = ' ' + content.substring(attributes[index].start, attributes[index].end);
+		sizes = content.substring(attributes[index].start, attributes[index].end);
 		attributes.splice(index, 1);
+	} else {
+		sizes = `sizes="min(${details.image.img.w}px, 100vw)"`;
 	}
 
 	let res = '<picture>';
 	for (const [format, srcset] of Object.entries(details.image.sources)) {
-		res += `<source srcset="${srcset}"${sizes_string} type="image/${format}" />`;
+		res += `<source srcset="${srcset}" ${sizes} type="image/${format}" />`;
 	}
 	res += `<img ${img_attributes_to_markdown(content, attributes, {
 		src: details.image.img.src,
@@ -231,10 +229,12 @@ function dynamic_img_to_picture(content, node, src_var_name) {
 	/** @type {Array<import('svelte/types/compiler/interfaces').BaseDirective | import('svelte/types/compiler/interfaces').Attribute | import('svelte/types/compiler/interfaces').SpreadAttribute>} attributes */
 	const attributes = node.attributes;
 	const index = attributes.findIndex((attribute) => attribute.name === 'sizes');
-	let sizes_string = '';
+	let sizes = '';
 	if (index >= 0) {
-		sizes_string = ' ' + content.substring(attributes[index].start, attributes[index].end);
+		sizes = '' + content.substring(attributes[index].start, attributes[index].end);
 		attributes.splice(index, 1);
+	} else {
+		sizes = `sizes="min({${src_var_name}.img.w}px, 100vw)"`;
 	}
 
 	const details = {
@@ -248,7 +248,7 @@ function dynamic_img_to_picture(content, node, src_var_name) {
 {:else}
 	<picture>
 		{#each Object.entries(${src_var_name}.sources) as [format, srcset]}
-			<source {srcset}${sizes_string} type={'image/' + format} />
+			<source {srcset} ${sizes} type={'image/' + format} />
 		{/each}
 		<img ${img_attributes_to_markdown(content, attributes, details)} />
 	</picture>
