@@ -16,8 +16,8 @@
 
 		<div class="hero-image-wrapper">
 			<enhanced:img
-				src="./svelte-kit-machine.webp?w=2160;1656;1280;1080;828;640"
-				sizes="(min-width: 768px) min(100vw, 1080px), 640px"
+				src="./svelte-kit-machine.webp?w=1440;1080;768;640"
+				sizes="(min-width: 768px) min(100vw, 108rem), 64rem"
 				class="hero-image"
 				alt="SvelteKit illustration"
 			/>
@@ -90,7 +90,7 @@
 	}
 
 	.hero-image-wrapper {
-		--size: 640px;
+		--size: 64rem;
 		position: absolute;
 		left: calc(50% - 0.53 * var(--size));
 		bottom: -30rem;
@@ -151,7 +151,7 @@
 		}
 
 		.hero-image-wrapper {
-			--size: min(100vw, 1080px);
+			--size: min(100vw, 108rem);
 			left: auto;
 			right: -20rem;
 			bottom: calc(-5rem - 0.38 * var(--size));

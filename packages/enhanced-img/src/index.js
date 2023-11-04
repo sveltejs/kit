@@ -70,10 +70,16 @@ async function imagetools() {
 	/** @type {Partial<import('vite-imagetools').VitePluginOptions>} */
 	const imagetools_opts = {
 		defaultDirectives: async ({ pathname, searchParams: qs }, metadata) => {
-			const { imgSizes, imgWidth } = Object.fromEntries(qs);
 			if (!qs.has('enhanced')) return new URLSearchParams();
 
-			const { widths, kind } = getWidths(imgWidth ?? (await metadata()).width, imgSizes);
+			const img_width = qs.get('imgWidth');
+			const width = img_width ? parseInt(img_width) : (await metadata()).width;
+			if (!width) {
+				console.warn(`Could not determine width of image ${pathname}`);
+				return new URLSearchParams();
+			}
+
+			const { widths, kind } = get_widths(width, qs.get('imgSizes'));
 			return new URLSearchParams({
 				as: 'picture',
 				format: `avif;webp;${fallback[path.extname(pathname)] ?? 'png'}`,
@@ -91,54 +97,39 @@ async function imagetools() {
 }
 
 /**
- * Derived from
- * https://github.com/vercel/next.js/blob/3f25a2e747fc27da6c2166e45d54fc95e96d7895/packages/next/src/shared/lib/get-img-props.ts#L132
- * under the MIT license. Copyright (c) Vercel, Inc.
- * @param {number | string | undefined} width
- * @param {string | null | undefined} sizes
- * @param {number[]} [deviceSizes]
- * @param {number[]} [imageSizes]
+ * @param {number} width
+ * @param {string | null} sizes
  * @returns {{ widths: number[]; kind: 'w' | 'x' }}
  */
-function getWidths(width, sizes, deviceSizes, imageSizes) {
-	width = typeof width === 'string' ? parseInt(width) : width;
-	const chosen_device_sizes = deviceSizes || [640, 750, 828, 1080, 1200, 1920, 2048, 3840];
-	const all_sizes = (imageSizes || [16, 32, 48, 64, 96, 128, 256, 384]).concat(chosen_device_sizes);
-
+function get_widths(width, sizes) {
+	// We don't really know what the user wants here. But if they have an image that's really big
+	// then we can probably assume they're always displaying it full viewport/breakpoint.
+	// If the user is displaying a responsive image then the size usually doesn't change that much
+	// Instead, the number of columns in the design may reduce and the image may take a greater
+	// fraction of the screen.
+	// Assume if they're bothering to specify sizes that it's going to take most of the screen
+	// as that's the case where an image may be rendered at very different sizes. Otherwise, it's
+	// probably a responsive image and a single size is okay (two when accounting for HiDPI).
 	if (sizes) {
-		// Find all the "vw" percent sizes used in the sizes prop
-		const viewport_width_re = /(^|\s)(1?\d?\d)vw/g;
-		const percent_sizes = [];
-		for (let match; (match = viewport_width_re.exec(sizes)); match) {
-			percent_sizes.push(parseInt(match[2]));
-		}
-		if (percent_sizes.length) {
-			const smallest_ratio = Math.min(...percent_sizes) * 0.01;
-			return {
-				widths: all_sizes.filter((s) => s >= chosen_device_sizes[0] * smallest_ratio),
-				kind: 'w'
-			};
-		}
-		return { widths: all_sizes, kind: 'w' };
-	}
-	if (typeof width !== 'number') {
-		return { widths: chosen_device_sizes, kind: 'w' };
+		// Use common device sizes. Doesn't hurt to include larger sizes as the user will rarely
+		// provide an image that large.
+		// https://screensiz.es/
+		// https://gs.statcounter.com/screen-resolution-stats (note: logical. we want physical)
+		// Include 1080 because lighthouse uses a moto g4 with 360 logical pixels and 3x pixel ratio.
+		const widths = [540, 768, 1080, 1366, 1536, 1920, 2560, 3000, 4096, 5120];
+		widths.push(width);
+		return { widths, kind: 'w' };
 	}
 
-	// Don't need more than 2x resolution.
-	// Most OLED screens that say they are 3x resolution,
-	// are actually 3x in the green color, but only 1.5x in the red and
-	// blue colors. Showing a 3x resolution image in the app vs a 2x
-	// resolution image will be visually the same, though the 3x image
-	// takes significantly more data. Even true 3x resolution screens are
-	// wasteful as the human eye cannot see that level of detail without
-	// something like a magnifying glass.
+	// Don't need more than 2x resolution. Note that due to this optimization, pixel density
+	// descriptors will often end up being cheaper as many mobile devices have pixel density ratios
+	// near 3 which would cause larger images to be chosen on mobile when using sizes.
+
+	// Most OLED screens that say they are 3x resolution, are actually 3x in the green color, but
+	// only 1.5x in the red and blue colors. Showing a 3x resolution image in the app vs a 2x
+	// resolution image will be visually the same, though the 3x image takes significantly more
+	// data. Even true 3x resolution screens are wasteful as the human eye cannot see that level of
+	// detail without something like a magnifying glass.
 	// https://blog.twitter.com/engineering/en_us/topics/infrastructure/2019/capping-image-fidelity-on-ultra-high-resolution-devices.html
-
-	// We diverge from the Next.js logic here
-	// You can't really scale up an image, so you can't 2x the width
-	// Instead the user should provide the high-res image and we'll downscale
-	// Also, Vercel builds specific image sizes and picks the closest from those,
-	// but we can just build the ones we want exactly.
 	return { widths: [Math.round(width / 2), width], kind: 'x' };
 }
