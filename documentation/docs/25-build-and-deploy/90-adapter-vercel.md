@@ -148,20 +148,12 @@ You can (use files in Serverless Functions on Vercel)[https://vercel.com/guides/
 ```js
 // @errors: 2307
 import path from 'node:path';
-import { env } from '$env/dynamic/private';
-import { dev } from '$app/environment';
 import { FFmpeg } from '@ffmpeg.wasm/main';
 import core from '@ffmpeg.wasm/core-mt';
 import wasmPathAb from '@ffmpeg.wasm/core-mt/dist/core.wasm?url';
 
 export async function GET() {
 	let wasmPath = path.join(process.cwd(), wasmPathAb);
-
-	// when running `vite preview`, files are served from `.svelte-kit/output`
-	// see https://kit.svelte.dev/docs/building-your-app#preview-your-app
-	if (!dev && !env.VERCEL) {
-		wasmPath = path.join(process.cwd(), '.svelte-kit/output/server', wasmPathAb)
-	}
 
   const ffmpeg = await FFmpeg.create({
     core,
