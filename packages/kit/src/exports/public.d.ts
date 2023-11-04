@@ -1094,6 +1094,7 @@ export interface RouteDefinition<Config = any> {
 	segments: RouteSegment[];
 	methods: Array<HttpMethod | '*'>;
 	config: Config;
+	serverAssets: string[];
 }
 
 export class Server {

@@ -41,6 +41,59 @@ export function create_builder({
 	/** @type {Map<import('@sveltejs/kit').RouteDefinition, import('types').RouteData>} */
 	const lookup = new Map();
 
+	/** @type {Set<string>} */
+	let asset_chunks = new Set();
+
+	for (const [filename, meta] of Object.entries(build_data.server_manifest)) {
+		if (filename.startsWith('_') && meta.assets) {
+			asset_chunks = new Set([...asset_chunks, ...meta.assets]);
+		}
+	}
+
+	/**
+	 * @param {string | undefined} filename
+	 */
+	function get_server_assets(filename) {
+		if (!filename) {
+			return [];
+		}
+		const { imports, assets } = build_data.server_manifest[filename];
+
+		/** @type {string[]} */
+		let server_assets = [];
+
+		if (imports) {
+			server_assets = imports.filter((file) => asset_chunks.has(file));
+		}
+		if (assets) {
+			server_assets = [...server_assets, ...assets];
+		}
+
+		return new Set(server_assets);
+	}
+
+	/**
+	 * @param {{
+	 *   component?: string;
+	 *   server?: string;
+	 *   universal?: string;
+	 *   parent?: import('types').PageNode;
+	 * }} node
+	 * @returns
+	 */
+	function get_page_node_assets({ component, server, universal, parent }) {
+		/** @type {string[]} */
+		let server_assets = [
+			...get_server_assets(component),
+			...get_server_assets(server),
+			...get_server_assets(universal)
+		];
+		if (parent) {
+			server_assets = [...server_assets, ...get_page_node_assets(parent)];
+		}
+		return new Set(server_assets);
+	}
+
 	/**
 	 * Rather than exposing the internal `RouteData` type, which is subject to change,
 	 * we expose a stable type that adapters can use to group/filter routes
@@ -49,6 +102,15 @@ export function create_builder({
 		const { config, methods, page, api } = /** @type {import('types').ServerMetadataRoute} */ (
 			server_metadata.routes.get(route.id)
 		);
+
+		/** @type {Set<string>} */
+		let server_assets = new Set();
+		if (route.leaf) {
+			server_assets = new Set(get_page_node_assets(route.leaf));
+		}
+		if (route.endpoint) {
+			server_assets = new Set([...server_assets, ...get_server_assets(route.endpoint.file)]);
+		}
 
 		/** @type {import('@sveltejs/kit').RouteDefinition} */
 		const facade = {
@@ -63,7 +125,8 @@ export function create_builder({
 			pattern: route.pattern,
 			prerender: prerender_map.get(route.id) ?? false,
 			methods,
-			config
+			config,
+			serverAssets: Array.from(server_assets)
 		};
 
 		lookup.set(facade, route);

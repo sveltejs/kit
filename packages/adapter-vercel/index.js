@@ -83,7 +83,8 @@ const plugin = function (defaults = {}) {
 					builder,
 					`${tmp}/index.js`,
 					`${dirs.functions}/${name}.func`,
-					config
+					config,
+					routes
 				);
 			}
 
@@ -430,8 +431,9 @@ function static_vercel_config(builder) {
  * @param {string} entry
  * @param {string} dir
  * @param {import('.').ServerlessConfig} config
+ * @param {import('@sveltejs/kit').RouteDefinition[]} routes
  */
-async function create_function_bundle(builder, entry, dir, config) {
+async function create_function_bundle(builder, entry, dir, config, routes) {
 	fs.rmSync(dir, { force: true, recursive: true });
 
 	let base = entry;
@@ -538,6 +540,10 @@ async function create_function_bundle(builder, entry, dir, config) {
 			'\t'
 		)
 	);
+
+	for (const asset of new Set(routes.flatMap((route) => route.serverAssets))) {
+		builder.copy(path.join(builder.getServerDirectory(), asset), dir);
+	}
 
 	write(`${dir}/package.json`, JSON.stringify({ type: 'module' }));
 }

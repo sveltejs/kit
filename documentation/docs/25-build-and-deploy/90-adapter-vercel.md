@@ -141,8 +141,34 @@ If you have Vercel functions contained in the `api` directory at the project's r
 
 Projects created before a certain date will default to using Node 14, while SvelteKit requires Node 16 or later. You can [change the Node version in your project settings](https://vercel.com/docs/concepts/functions/serverless-functions/runtimes/node-js#node.js-version).
 
-## Troubleshooting
+## Accessing the file system
 
-### Accessing the file system
+You can (use files in Serverless Functions on Vercel)[https://vercel.com/guides/how-can-i-use-files-in-serverless-functions].
 
-You can't access the file system through methods like `fs.readFileSync` in Serverless/Edge environments. If you need to access files that way, do that during building the app through [prerendering](https://kit.svelte.dev/docs/page-options#prerender). If you have a blog for example and don't want to manage your content through a CMS, then you need to prerender the content (or prerender the endpoint from which you get it) and redeploy your blog everytime you add new content.
+```js
+import path from 'node:path';
+import { env } from '$env/dynamic/private';
+import { dev } from '$app/environment';
+import { FFmpeg } from '@ffmpeg.wasm/main';
+import core from '@ffmpeg.wasm/core-mt';
+import wasmPathAb from '@ffmpeg.wasm/core-mt/dist/core.wasm?url';
+
+export async function GET() {
+	let wasmPath = path.join(process.cwd(), wasmPathAb);
+
+	// when running `vite preview`, files are served from `.svelte-kit/output`
+	// see https://kit.svelte.dev/docs/building-your-app#preview-your-app
+	if (!dev && !env.VERCEL) {
+		wasmPath = path.join(process.cwd(), '.svelte-kit/output/server', wasmPathAb)
+	}
+
+  const ffmpeg = await FFmpeg.create({
+    core,
+    coreOptions: {
+      wasmPath,
+    },
+  });
+
+  return new Response(wasmPath);
+}
+```
