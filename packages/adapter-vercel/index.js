@@ -542,7 +542,7 @@ async function create_function_bundle(builder, entry, dir, config, routes) {
 	);
 
 	for (const asset of new Set(routes.flatMap((route) => route.serverAssets))) {
-		builder.copy(path.join(builder.getServerDirectory(), asset), dir);
+		builder.copy(path.join(builder.getServerDirectory(), asset), path.join(dir, asset));
 	}
 
 	write(`${dir}/package.json`, JSON.stringify({ type: 'module' }));
