@@ -146,6 +146,7 @@ Projects created before a certain date will default to using Node 14, while Svel
 You can (use files in Serverless Functions on Vercel)[https://vercel.com/guides/how-can-i-use-files-in-serverless-functions].
 
 ```js
+// @errors: 2307
 import path from 'node:path';
 import { env } from '$env/dynamic/private';
 import { dev } from '$app/environment';
