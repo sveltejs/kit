@@ -28,7 +28,9 @@ test('copy files', () => {
 	const builder = create_builder({
 		config: /** @type {import('types').ValidatedConfig} */ (mocked),
 		// @ts-expect-error
-		build_data: {},
+		build_data: {
+			server_manifest: {}
+		},
 		// @ts-expect-error
 		server_metadata: {},
 		route_data: [],
@@ -60,9 +62,12 @@ test('copy files', () => {
 });
 
 test('compress files', async () => {
-	// @ts-expect-error - we don't need the whole config for this test
 	const builder = create_builder({
-		route_data: []
+		route_data: [],
+		// @ts-expect-error - we don't need the whole config for this test
+		build_data: {
+			server_manifest: {}
+		}
 	});
 
 	const target = fileURLToPath(new URL('./fixtures/compress/foo.css', import.meta.url));
