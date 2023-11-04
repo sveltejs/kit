@@ -179,18 +179,39 @@ function img_attributes_to_markdown(content, attributes, details) {
 		return content.substring(attribute.start, attribute.end);
 	});
 
-	let has_width = false;
-	let has_height = false;
+	/** @type {number | undefined} */
+	let user_width;
+	/** @type {number | undefined} */
+	let user_height;
 	for (const attribute of attributes) {
-		if (attribute.name === 'width') has_width = true;
-		if (attribute.name === 'height') has_height = true;
+		if (attribute.name === 'width') user_width = parseInt(attribute.value[0]);
+		if (attribute.name === 'height') user_height = parseInt(attribute.value[0]);
 	}
-	if (!has_width && !has_height) {
+	if (!user_width && !user_height) {
 		attribute_strings.push(`width=${details.width}`);
 		attribute_strings.push(`height=${details.height}`);
+	} else if (!user_width && user_height) {
+		attribute_strings.push(
+			`width=${Math.round(
+				(stringToNumber(details.width) * user_height) / stringToNumber(details.height)
+			)}`
+		);
+	} else if (!user_height && user_width) {
+		attribute_strings.push(
+			`height=${Math.round(
+				(stringToNumber(details.height) * user_width) / stringToNumber(details.width)
+			)}`
+		);
 	}
 
 	return attribute_strings.join(' ');
+}
+
+/**
+ * @param {string|number} param
+ */
+function stringToNumber(param) {
+	return typeof param === 'string' ? parseInt(param) : param;
 }
 
 /**
