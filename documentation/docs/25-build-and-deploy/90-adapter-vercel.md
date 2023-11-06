@@ -143,7 +143,7 @@ Projects created before a certain date will default to using Node 14, while Svel
 
 ## Accessing the file system
 
-You can (use files in Serverless Functions on Vercel)[https://vercel.com/guides/how-can-i-use-files-in-serverless-functions].
+You can [use files in Serverless Functions on Vercel](https://vercel.com/guides/how-can-i-use-files-in-serverless-functions).
 
 ```js
 // @errors: 2307
