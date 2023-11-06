@@ -121,6 +121,8 @@ export interface Builder {
 	getServerDirectory(): string;
 	/** Get the application path including any configured `base` path, e.g. `my-base-path/_app`. */
 	getAppPath(): string;
+	/** Get an array of server assets used by the root [default error page](https://kit.svelte.dev/docs/routing#error). */
+	getRootErrorPageServerAssets(): string[];
 
 	/**
 	 * Write client assets to `dest`.

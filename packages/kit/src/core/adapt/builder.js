@@ -10,6 +10,7 @@ import { get_env } from '../../exports/vite/utils.js';
 import generate_fallback from '../postbuild/fallback.js';
 import { write } from '../sync/utils.js';
 import { list_files } from '../utils.js';
+import { concat } from '../../utils/set.js';
 
 const pipe = promisify(pipeline);
 const extensions = ['.html', '.js', '.mjs', '.json', '.css', '.svg', '.xml', '.wasm'];
@@ -46,30 +47,34 @@ export function create_builder({
 
 	for (const [filename, meta] of Object.entries(build_data.server_manifest)) {
 		if (filename.startsWith('_') && meta.assets) {
-			asset_chunks = new Set([...asset_chunks, ...meta.assets]);
+			asset_chunks = concat(asset_chunks, meta.assets);
 		}
 	}
 
 	/**
 	 * @param {string | undefined} filename
+	 * @returns {Set<string>}
 	 */
 	function get_server_assets(filename) {
-		if (!filename) {
-			return [];
+		if (!filename || !build_data.server_manifest[filename]) {
+			return /** @type {Set<string>} */ (new Set());
 		}
 		const { imports, assets } = build_data.server_manifest[filename];
 
-		/** @type {string[]} */
-		let server_assets = [];
+		/** @type {Set<string>} */
+		let server_assets = new Set();
 
 		if (imports) {
-			server_assets = imports.filter((file) => asset_chunks.has(file));
+			server_assets = concat(
+				server_assets,
+				imports.filter((file) => asset_chunks.has(file))
+			);
 		}
 		if (assets) {
-			server_assets = [...server_assets, ...assets];
+			server_assets = concat(server_assets, assets);
 		}
 
-		return new Set(server_assets);
+		return server_assets;
 	}
 
 	/**
@@ -82,16 +87,35 @@ export function create_builder({
 	 * @returns
 	 */
 	function get_page_node_assets({ component, server, universal, parent }) {
-		/** @type {string[]} */
-		let server_assets = [
-			...get_server_assets(component),
-			...get_server_assets(server),
-			...get_server_assets(universal)
-		];
+		let server_assets = concat(
+			/** @type {Set<string>}*/ (new Set()),
+			get_server_assets(component),
+			get_server_assets(server),
+			get_server_assets(universal)
+		);
 		if (parent) {
-			server_assets = [...server_assets, ...get_page_node_assets(parent)];
+			server_assets = concat(server_assets, get_page_node_assets(parent));
 		}
-		return new Set(server_assets);
+		return server_assets;
+	}
+
+	/**
+	 * @param {import('types').RouteData} route
+	 */
+	function get_default_error_page_assets(route) {
+		/** @type {Set<string>} */
+		let server_assets = new Set();
+		let route_id = route.id;
+		do {
+			server_assets = concat(
+				server_assets,
+				get_server_assets(
+					`${config.kit.files.routes}${route_id === '/' ? route_id : route_id + '/'}+error.svelte`
+				)
+			);
+			route_id = route_id.split('/').slice(0, -1).join('/');
+		} while (route_id);
+		return server_assets;
 	}
 
 	/**
@@ -103,13 +127,16 @@ export function create_builder({
 			server_metadata.routes.get(route.id)
 		);
 
-		/** @type {Set<string>} */
 		let server_assets = new Set();
 		if (route.leaf) {
-			server_assets = new Set(get_page_node_assets(route.leaf));
+			server_assets = concat(
+				server_assets,
+				get_page_node_assets(route.leaf),
+				get_default_error_page_assets(route)
+			);
 		}
 		if (route.endpoint) {
-			server_assets = new Set([...server_assets, ...get_server_assets(route.endpoint.file)]);
+			server_assets = concat(server_assets, get_server_assets(route.endpoint.file));
 		}
 
 		/** @type {import('@sveltejs/kit').RouteDefinition} */
@@ -243,6 +270,23 @@ export function create_builder({
 
 		getAppPath() {
 			return build_data.app_path;
+		},
+
+		getRootErrorPageServerAssets() {
+			const route = route_data.find((route) => route.leaf);
+			if (!route || !route.leaf) {
+				return /** @type {string[]}*/ ([]);
+			}
+
+			let assets = new Set(get_server_assets(`${config.kit.files.routes}/+error.svelte`));
+
+			let layout = route.leaf.parent;
+			while (layout) {
+				assets = concat(assets, get_page_node_assets(layout));
+				layout = layout.parent;
+			}
+
+			return [...assets];
 		},
 
 		writeClient(dest) {

@@ -541,7 +541,10 @@ async function create_function_bundle(builder, entry, dir, config, routes) {
 		)
 	);
 
-	for (const asset of new Set(routes.flatMap((route) => route.serverAssets))) {
+	for (const asset of new Set([
+		...routes.flatMap((route) => route.serverAssets),
+		...builder.getRootErrorPageServerAssets()
+	])) {
 		builder.copy(path.join(builder.getServerDirectory(), asset), path.join(dir, asset));
 	}
 
