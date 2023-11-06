@@ -99,23 +99,7 @@ export async function render_page(event, page, options, manifest, state, resolve
 		/** @type {import('./types').Fetched[]} */
 		const fetched = [];
 
-		if (get_option(nodes, 'ssr') === false) {
-			return await render_response({
-				branch: [],
-				fetched,
-				page_config: {
-					ssr: false,
-					csr: get_option(nodes, 'csr') ?? true
-				},
-				status,
-				error: null,
-				event,
-				options,
-				manifest,
-				state,
-				resolve_opts
-			});
-		}
+		const ssr_disabled = get_option(nodes, 'ssr') === false
 
 		/** @type {Array<import('./types.js').Loaded | null>} */
 		const branch = [];
@@ -163,7 +147,7 @@ export async function render_page(event, page, options, manifest, state, resolve
 		const csr = get_option(nodes, 'csr') ?? true;
 
 		/** @type {Array<Promise<Record<string, any> | null>>} */
-		const load_promises = nodes.map((node, i) => {
+		const load_promises = ssr_disabled ? [] : nodes.map((node, i) => {
 			if (load_error) throw load_error;
 			return Promise.resolve().then(async () => {
 				try {
@@ -280,6 +264,24 @@ export async function render_page(event, page, options, manifest, state, resolve
 			state.prerendering.dependencies.set(data_pathname, {
 				response: text(data),
 				body: data
+			});
+		}
+
+		if (ssr_disabled) {
+			return await render_response({
+				branch: [],
+				fetched,
+				page_config: {
+					ssr: false,
+					csr: get_option(nodes, 'csr') ?? true
+				},
+				status,
+				error: null,
+				event,
+				options,
+				manifest,
+				state,
+				resolve_opts
 			});
 		}
 
