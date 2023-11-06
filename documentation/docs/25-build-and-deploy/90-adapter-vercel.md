@@ -147,21 +147,33 @@ You can [use files in Serverless Functions on Vercel](https://vercel.com/guides/
 
 ```js
 // @errors: 2307
-import path from 'node:path';
-import { FFmpeg } from '@ffmpeg.wasm/main';
-import core from '@ffmpeg.wasm/core-mt';
-import wasmPathAb from '@ffmpeg.wasm/core-mt/dist/core.wasm?url';
+/// file: api/pdf/+server.js
+import fs from "node:fs";
+import path from "node:path";
+import { json } from '@sveltejs/kit';
+import PDFDocument from "pdfkit";
+import PalatinoBoldFont from "$lib/fonts/PalatinoBold.ttf";
 
-export async function GET() {
-	let wasmPath = path.join(process.cwd(), wasmPathAb);
+const font = path.join(process.cwd(), PalatinoBoldFont);
 
-  const ffmpeg = await FFmpeg.create({
-    core,
-    coreOptions: {
-      wasmPath,
-    },
+export async function POST({ url }) {
+	const title = url.searchParams.get('title');
+	const filename = url.searchParams.get('filename');
+
+  const doc = new PDFDocument();
+  // use the tmp serverless function folder to create the write stream for the pdf
+  const file = `/tmp/${filename}.pdf`;
+  let writeStream = fs.createWriteStream(file);
+  doc.pipe(writeStream);
+  doc.font(font).fontSize(25).text(title, 100, 100);
+  doc.end();
+
+  writeStream.on("finish", () => {
+    const fileContent = fs.readFileSync(file);
+
+    // upload file to storage bucket
+
+    return json({ response: `File ${filename} saved` });
   });
-
-  return new Response(wasmPath);
 }
 ```
