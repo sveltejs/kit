@@ -50,7 +50,6 @@ test('$env/static/private is not dynamically importable from the client', () => 
 	);
 });
 
-
 test('$env/dynamic/private is not importable from the service worker', () => {
 	assert.throws(
 		() =>
