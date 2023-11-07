@@ -1,6 +1,8 @@
 import { base, build, version } from '$service-worker';
 
+//@ts-ignore
 self.base = base;
+//@ts-ignore
 self.build = build;
 
 const name = `cache-${version}`;
