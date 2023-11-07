@@ -5,7 +5,6 @@ import { HTMLImgAttributes } from 'svelte/elements';
 // https://svelte.dev/docs/typescript#enhancing-built-in-dom-types
 declare module 'svelte/elements' {
 	export interface SvelteHTMLElements {
-		/** asdasd */
 		'enhanced:img': HTMLImgAttributes;
 	}
 }
