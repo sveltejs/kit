@@ -72,6 +72,8 @@ export async function build_service_worker(
 		},
 
 		async load(id) {
+			if(!id.startsWith('\0virtual:')) return;
+
 			if (id === '\0virtual:$service-worker') {
 				return $serviceWorkerCode;
 			}
