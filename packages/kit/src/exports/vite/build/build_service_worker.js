@@ -49,7 +49,7 @@ export async function build_service_worker(
 				.filter((asset) => kit.serviceWorker.files(asset.file))
 				.map((asset) => `base + ${s(`/${asset.file}`)}`)
 				.join(',\n')}
-		];s
+		];
 
 		export const prerendered = [
 			${prerendered.paths.map((path) => `base + ${s(path.replace(kit.paths.base, ''))}`).join(',\n')}
