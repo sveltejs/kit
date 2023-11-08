@@ -4,9 +4,9 @@
 		"checkJs": true,
 		"noEmit": true,
 		"strict": true,
-		"target": "es2020",
-		"module": "es2022",
-		"moduleResolution": "node",
+		"target": "ES2022",
+		"module": "Node16",
+		"moduleResolution": "Node16",
 		"allowSyntheticDefaultImports": true,
 		"paths": {
 			// internal use only

@@ -55,9 +55,9 @@ function update_scroll_positions(index) {
 }
 
 /**
- * @param {import('./types').SvelteKitApp} app
+ * @param {import('./types.js').SvelteKitApp} app
  * @param {HTMLElement} target
- * @returns {import('./types').Client}
+ * @returns {import('./types.js').Client}
  */
 export function create_client(app, target) {
 	const routes = parse(app);
@@ -82,7 +82,7 @@ export function create_client(app, target) {
 	 */
 	const components = [];
 
-	/** @type {{id: string, promise: Promise<import('./types').NavigationResult>} | null} */
+	/** @type {{id: string, promise: Promise<import('./types.js').NavigationResult>} | null} */
 	let load_cache = null;
 
 	const callbacks = {
@@ -96,7 +96,7 @@ export function create_client(app, target) {
 		after_navigate: []
 	};
 
-	/** @type {import('./types').NavigationState} */
+	/** @type {import('./types.js').NavigationState} */
 	let current = {
 		branch: [],
 		error: null,
@@ -247,7 +247,7 @@ export function create_client(app, target) {
 		});
 	}
 
-	/** @param {import('./types').NavigationIntent} intent */
+	/** @param {import('./types.js').NavigationIntent} intent */
 	async function preload_data(intent) {
 		load_cache = {
 			id: intent.id,
@@ -274,7 +274,7 @@ export function create_client(app, target) {
 		await Promise.all(promises);
 	}
 
-	/** @param {import('./types').NavigationFinished} result */
+	/** @param {import('./types.js').NavigationFinished} result */
 	function initialize(result) {
 		if (DEV && result.state.error && document.querySelector('vite-error-overlay')) return;
 
@@ -315,7 +315,7 @@ export function create_client(app, target) {
 	 * @param {{
 	 *   url: URL;
 	 *   params: Record<string, string>;
-	 *   branch: Array<import('./types').BranchNode | undefined>;
+	 *   branch: Array<import('./types.js').BranchNode | undefined>;
 	 *   status: number;
 	 *   error: App.Error | null;
 	 *   route: import('types').CSRRoute | null;
@@ -340,7 +340,7 @@ export function create_client(app, target) {
 		// eslint-disable-next-line
 		url.search = url.search; // turn `/?` into `/`
 
-		/** @type {import('./types').NavigationFinished} */
+		/** @type {import('./types.js').NavigationFinished} */
 		const result = {
 			type: 'loaded',
 			state: {
@@ -417,9 +417,9 @@ export function create_client(app, target) {
 	 *   url: URL;
 	 *   params: Record<string, string>;
 	 *   route: { id: string | null };
-	 * 	 server_data_node: import('./types').DataNode | null;
+	 * 	 server_data_node: import('./types.js').DataNode | null;
 	 * }} options
-	 * @returns {Promise<import('./types').BranchNode>}
+	 * @returns {Promise<import('./types.js').BranchNode>}
 	 */
 	async function load_node({ loader, parent, url, params, route, server_data_node }) {
 		/** @type {Record<string, any> | null} */
@@ -589,8 +589,8 @@ export function create_client(app, target) {
 
 	/**
 	 * @param {import('types').ServerDataNode | import('types').ServerDataSkippedNode | null} node
-	 * @param {import('./types').DataNode | null} [previous]
-	 * @returns {import('./types').DataNode | null}
+	 * @param {import('./types.js').DataNode | null} [previous]
+	 * @returns {import('./types.js').DataNode | null}
 	 */
 	function create_data_node(node, previous) {
 		if (node?.type === 'data') return node;
@@ -599,8 +599,8 @@ export function create_client(app, target) {
 	}
 
 	/**
-	 * @param {import('./types').NavigationIntent} intent
-	 * @returns {Promise<import('./types').NavigationResult>}
+	 * @param {import('./types.js').NavigationIntent} intent
+	 * @returns {Promise<import('./types.js').NavigationResult>}
 	 */
 	async function load_route({ id, invalidating, url, params, route }) {
 		if (load_cache?.id === id) {
@@ -664,7 +664,7 @@ export function create_client(app, target) {
 		const branch_promises = loaders.map(async (loader, i) => {
 			if (!loader) return;
 
-			/** @type {import('./types').BranchNode | undefined} */
+			/** @type {import('./types.js').BranchNode | undefined} */
 			const previous = current.branch[i];
 
 			const server_data_node = server_data_nodes?.[i];
@@ -707,7 +707,7 @@ export function create_client(app, target) {
 		// if we don't do this, rejections will be unhandled
 		for (const p of branch_promises) p.catch(() => {});
 
-		/** @type {Array<import('./types').BranchNode | undefined>} */
+		/** @type {Array<import('./types.js').BranchNode | undefined>} */
 		const branch = [];
 
 		for (let i = 0; i < loaders.length; i += 1) {
@@ -781,9 +781,9 @@ export function create_client(app, target) {
 
 	/**
 	 * @param {number} i Start index to backtrack from
-	 * @param {Array<import('./types').BranchNode | undefined>} branch Branch to backtrack
+	 * @param {Array<import('./types.js').BranchNode | undefined>} branch Branch to backtrack
 	 * @param {Array<import('types').CSRPageNodeLoader | undefined>} errors All error pages for this branch
-	 * @returns {Promise<{idx: number; node: import('./types').BranchNode} | undefined>}
+	 * @returns {Promise<{idx: number; node: import('./types.js').BranchNode} | undefined>}
 	 */
 	async function load_nearest_error_page(i, branch, errors) {
 		while (i--) {
@@ -815,7 +815,7 @@ export function create_client(app, target) {
 	 *   url: URL;
 	 *   route: { id: string | null }
 	 * }} opts
-	 * @returns {Promise<import('./types').NavigationFinished>}
+	 * @returns {Promise<import('./types.js').NavigationFinished>}
 	 */
 	async function load_root_error_page({ status, error, url, route }) {
 		/** @type {Record<string, string>} */
@@ -858,7 +858,7 @@ export function create_client(app, target) {
 			server_data_node: create_data_node(server_data_node)
 		});
 
-		/** @type {import('./types').BranchNode} */
+		/** @type {import('./types.js').BranchNode} */
 		const root_error = {
 			node: await default_error_loader(),
 			loader: default_error_loader,
@@ -891,7 +891,7 @@ export function create_client(app, target) {
 
 			if (params) {
 				const id = url.pathname + url.search;
-				/** @type {import('./types').NavigationIntent} */
+				/** @type {import('./types.js').NavigationIntent} */
 				const intent = { id, invalidating, route, params: decode_params(params), url };
 				return intent;
 			}
@@ -907,7 +907,7 @@ export function create_client(app, target) {
 	 * @param {{
 	 *   url: URL;
 	 *   type: import('@sveltejs/kit').Navigation["type"];
-	 *   intent?: import('./types').NavigationIntent;
+	 *   intent?: import('./types.js').NavigationIntent;
 	 *   delta?: number;
 	 * }} opts
 	 */
@@ -1170,7 +1170,7 @@ export function create_client(app, target) {
 	 * @param {{ id: string | null }} route
 	 * @param {App.Error} error
 	 * @param {number} status
-	 * @returns {Promise<import('./types').NavigationFinished>}
+	 * @returns {Promise<import('./types.js').NavigationFinished>}
 	 */
 	async function server_fallback(url, route, error, status) {
 		if (url.origin === location.origin && url.pathname === location.pathname && !hydrated) {
@@ -1765,7 +1765,7 @@ export function create_client(app, target) {
 				({ params = {}, route = { id: null } } = get_navigation_intent(url, false) || {});
 			}
 
-			/** @type {import('./types').NavigationFinished | undefined} */
+			/** @type {import('./types.js').NavigationFinished | undefined} */
 			let result;
 
 			try {
@@ -1792,7 +1792,7 @@ export function create_client(app, target) {
 					});
 				});
 
-				/** @type {Array<import('./types').BranchNode | undefined>} */
+				/** @type {Array<import('./types.js').BranchNode | undefined>} */
 				const branch = await Promise.all(branch_promises);
 
 				const parsed_route = routes.find(({ id }) => id === route.id);
@@ -2018,8 +2018,8 @@ function reset_focus() {
 }
 
 /**
- * @param {import('./types').NavigationState} current
- * @param {import('./types').NavigationIntent | undefined} intent
+ * @param {import('./types.js').NavigationState} current
+ * @param {import('./types.js').NavigationIntent | undefined} intent
  * @param {URL | null} url
  * @param {Exclude<import('@sveltejs/kit').NavigationType, 'enter'>} type
  */

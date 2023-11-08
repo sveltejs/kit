@@ -22,13 +22,13 @@ importers:
         version: 15.0.1(rollup@3.29.4)
       '@sveltejs/eslint-config':
         specifier: ^6.0.4
-        version: 6.0.4(@typescript-eslint/eslint-plugin@6.0.0)(@typescript-eslint/parser@6.9.1)(eslint-config-prettier@9.0.0)(eslint-plugin-svelte@2.31.0)(eslint-plugin-unicorn@49.0.0)(eslint@8.52.0)(typescript@4.9.4)
+        version: 6.0.4(@typescript-eslint/eslint-plugin@6.0.0)(@typescript-eslint/parser@6.9.1)(eslint-config-prettier@9.0.0)(eslint-plugin-svelte@2.31.0)(eslint-plugin-unicorn@49.0.0)(eslint@8.52.0)(typescript@5.2.2)
       '@svitejs/changesets-changelog-github-compact':
         specifier: ^1.1.0
         version: 1.1.0
       '@typescript-eslint/eslint-plugin':
         specifier: ^6.0.0
-        version: 6.0.0(@typescript-eslint/parser@6.9.1)(eslint@8.52.0)(typescript@4.9.4)
+        version: 6.0.0(@typescript-eslint/parser@6.9.1)(eslint@8.52.0)(typescript@5.2.2)
       eslint:
         specifier: ^8.52.0
         version: 8.52.0
@@ -54,8 +54,8 @@ importers:
         specifier: ^4.2.2
         version: 4.2.2
       typescript:
-        specifier: ^4.9.4
-        version: 4.9.4
+        specifier: ^5.2.2
+        version: 5.2.2
 
   packages/adapter-auto:
     dependencies:
@@ -70,8 +70,8 @@ importers:
         specifier: ^16.18.6
         version: 16.18.6
       typescript:
-        specifier: ^4.9.4
-        version: 4.9.4
+        specifier: ^5.2.2
+        version: 5.2.2
 
   packages/adapter-cloudflare:
     dependencies:
@@ -95,8 +95,8 @@ importers:
         specifier: ^8.5.3
         version: 8.5.3
       typescript:
-        specifier: ^4.9.4
-        version: 4.9.4
+        specifier: ^5.2.2
+        version: 5.2.2
 
   packages/adapter-cloudflare-workers:
     dependencies:
@@ -120,8 +120,8 @@ importers:
         specifier: ^16.18.6
         version: 16.18.6
       typescript:
-        specifier: ^4.9.4
-        version: 4.9.4
+        specifier: ^5.2.2
+        version: 5.2.2
 
   packages/adapter-netlify:
     dependencies:
@@ -160,8 +160,8 @@ importers:
         specifier: ^3.29.4
         version: 3.29.4
       typescript:
-        specifier: ^4.9.4
-        version: 4.9.4
+        specifier: ^5.2.2
+        version: 5.2.2
       vitest:
         specifier: ^0.34.5
         version: 0.34.5(lightningcss@1.21.8)(playwright@1.30.0)
@@ -200,8 +200,8 @@ importers:
         specifier: ^2.0.3
         version: 2.0.3
       typescript:
-        specifier: ^4.9.4
-        version: 4.9.4
+        specifier: ^5.2.2
+        version: 5.2.2
       vitest:
         specifier: ^0.34.5
         version: 0.34.5(lightningcss@1.21.8)(playwright@1.30.0)
@@ -224,8 +224,8 @@ importers:
         specifier: ^4.2.2
         version: 4.2.2
       typescript:
-        specifier: ^4.9.4
-        version: 4.9.4
+        specifier: ^5.2.2
+        version: 5.2.2
       vite:
         specifier: ^4.4.9
         version: 4.4.9(@types/node@16.18.6)(lightningcss@1.21.8)
@@ -279,8 +279,8 @@ importers:
         specifier: ^16.18.6
         version: 16.18.6
       typescript:
-        specifier: ^4.9.4
-        version: 4.9.4
+        specifier: ^5.2.2
+        version: 5.2.2
       vitest:
         specifier: ^0.34.5
         version: 0.34.5(lightningcss@1.21.8)(playwright@1.30.0)
@@ -350,8 +350,8 @@ importers:
         specifier: ^4.2.2
         version: 4.2.2
       typescript:
-        specifier: ^5.0.0
-        version: 5.0.4
+        specifier: ^5.2.2
+        version: 5.2.2
       vite:
         specifier: ^4.4.9
         version: 4.4.9(@types/node@16.18.6)(lightningcss@1.21.8)
@@ -420,8 +420,8 @@ importers:
         specifier: ^2.4.2
         version: 2.4.2
       dts-buddy:
-        specifier: ^0.2.4
-        version: 0.2.4
+        specifier: ^0.4.0
+        version: 0.4.0(typescript@5.2.2)
       marked:
         specifier: ^9.0.0
         version: 9.0.0
@@ -433,10 +433,10 @@ importers:
         version: 4.2.2
       svelte-preprocess:
         specifier: ^5.0.4
-        version: 5.0.4(postcss@8.4.31)(svelte@4.2.2)(typescript@4.9.4)
+        version: 5.0.4(postcss@8.4.31)(svelte@4.2.2)(typescript@5.2.2)
       typescript:
-        specifier: ^4.9.4
-        version: 4.9.4
+        specifier: ^5.2.2
+        version: 5.2.2
       vite:
         specifier: ^4.4.9
         version: 4.4.9(@types/node@16.18.6)(lightningcss@1.21.8)
@@ -465,8 +465,8 @@ importers:
         specifier: ^3.4.4
         version: 3.4.4(postcss@8.4.31)(svelte@4.2.2)
       typescript:
-        specifier: ^4.9.4
-        version: 4.9.4
+        specifier: ^5.2.2
+        version: 5.2.2
       vite:
         specifier: ^4.4.9
         version: 4.4.9(@types/node@16.18.6)(lightningcss@1.21.8)
@@ -486,8 +486,8 @@ importers:
         specifier: ^3.4.4
         version: 3.4.4(postcss@8.4.31)(svelte@4.2.2)
       typescript:
-        specifier: ^4.9.4
-        version: 4.9.4
+        specifier: ^5.2.2
+        version: 5.2.2
       vite:
         specifier: ^4.4.9
         version: 4.4.9(@types/node@16.18.6)(lightningcss@1.21.8)
@@ -507,8 +507,8 @@ importers:
         specifier: ^3.4.4
         version: 3.4.4(postcss@8.4.31)(svelte@4.2.2)
       typescript:
-        specifier: ^4.9.4
-        version: 4.9.4
+        specifier: ^5.2.2
+        version: 5.2.2
       vite:
         specifier: ^4.4.9
         version: 4.4.9(@types/node@16.18.6)(lightningcss@1.21.8)
@@ -528,8 +528,8 @@ importers:
         specifier: ^3.4.4
         version: 3.4.4(postcss@8.4.31)(svelte@4.2.2)
       typescript:
-        specifier: ^4.9.4
-        version: 4.9.4
+        specifier: ^5.2.2
+        version: 5.2.2
       vite:
         specifier: ^4.4.9
         version: 4.4.9(@types/node@16.18.6)(lightningcss@1.21.8)
@@ -549,8 +549,8 @@ importers:
         specifier: ^3.4.4
         version: 3.4.4(postcss@8.4.31)(svelte@4.2.2)
       typescript:
-        specifier: ^4.9.4
-        version: 4.9.4
+        specifier: ^5.2.2
+        version: 5.2.2
       vite:
         specifier: ^4.4.9
         version: 4.4.9(@types/node@16.18.6)(lightningcss@1.21.8)
@@ -573,8 +573,8 @@ importers:
         specifier: ^3.4.4
         version: 3.4.4(postcss@8.4.31)(svelte@4.2.2)
       typescript:
-        specifier: ^4.9.4
-        version: 4.9.4
+        specifier: ^5.2.2
+        version: 5.2.2
       vite:
         specifier: ^4.4.9
         version: 4.4.9(@types/node@16.18.6)(lightningcss@1.21.8)
@@ -594,8 +594,8 @@ importers:
         specifier: ^3.4.4
         version: 3.4.4(postcss@8.4.31)(svelte@4.2.2)
       typescript:
-        specifier: ^4.9.4
-        version: 4.9.4
+        specifier: ^5.2.2
+        version: 5.2.2
       vite:
         specifier: ^4.4.9
         version: 4.4.9(@types/node@16.18.6)(lightningcss@1.21.8)
@@ -621,8 +621,8 @@ importers:
         specifier: ^3.4.4
         version: 3.4.4(postcss@8.4.31)(svelte@4.2.2)
       typescript:
-        specifier: ^4.9.4
-        version: 4.9.4
+        specifier: ^5.2.2
+        version: 5.2.2
       vite:
         specifier: ^4.4.9
         version: 4.4.9(@types/node@16.18.6)(lightningcss@1.21.8)
@@ -642,8 +642,8 @@ importers:
         specifier: ^3.4.4
         version: 3.4.4(postcss@8.4.31)(svelte@4.2.2)
       typescript:
-        specifier: ^4.9.4
-        version: 4.9.4
+        specifier: ^5.2.2
+        version: 5.2.2
       vite:
         specifier: ^4.4.9
         version: 4.4.9(@types/node@16.18.6)(lightningcss@1.21.8)
@@ -663,8 +663,8 @@ importers:
         specifier: ^3.4.4
         version: 3.4.4(postcss@8.4.31)(svelte@4.2.2)
       typescript:
-        specifier: ^4.9.4
-        version: 4.9.4
+        specifier: ^5.2.2
+        version: 5.2.2
       vite:
         specifier: ^4.4.9
         version: 4.4.9(@types/node@16.18.6)(lightningcss@1.21.8)
@@ -681,8 +681,8 @@ importers:
         specifier: ^3.4.4
         version: 3.4.4(postcss@8.4.31)(svelte@4.2.2)
       typescript:
-        specifier: ^4.9.4
-        version: 4.9.4
+        specifier: ^5.2.2
+        version: 5.2.2
       vite:
         specifier: ^4.4.9
         version: 4.4.9(@types/node@16.18.6)(lightningcss@1.21.8)
@@ -699,8 +699,8 @@ importers:
         specifier: ^3.4.4
         version: 3.4.4(postcss@8.4.31)(svelte@4.2.2)
       typescript:
-        specifier: ^4.9.4
-        version: 4.9.4
+        specifier: ^5.2.2
+        version: 5.2.2
       vite:
         specifier: ^4.4.9
         version: 4.4.9(@types/node@16.18.6)(lightningcss@1.21.8)
@@ -720,8 +720,8 @@ importers:
         specifier: ^3.4.4
         version: 3.4.4(postcss@8.4.31)(svelte@4.2.2)
       typescript:
-        specifier: ^4.9.4
-        version: 4.9.4
+        specifier: ^5.2.2
+        version: 5.2.2
       vite:
         specifier: ^4.4.9
         version: 4.4.9(@types/node@16.18.6)(lightningcss@1.21.8)
@@ -738,8 +738,8 @@ importers:
         specifier: ^3.4.4
         version: 3.4.4(postcss@8.4.31)(svelte@4.2.2)
       typescript:
-        specifier: ^4.9.4
-        version: 4.9.4
+        specifier: ^5.2.2
+        version: 5.2.2
       vite:
         specifier: ^4.4.9
         version: 4.4.9(@types/node@16.18.6)(lightningcss@1.21.8)
@@ -756,8 +756,8 @@ importers:
         specifier: ^3.4.4
         version: 3.4.4(postcss@8.4.31)(svelte@4.2.2)
       typescript:
-        specifier: ^4.9.4
-        version: 4.9.4
+        specifier: ^5.2.2
+        version: 5.2.2
       vite:
         specifier: ^4.4.9
         version: 4.4.9(@types/node@16.18.6)(lightningcss@1.21.8)
@@ -774,8 +774,8 @@ importers:
         specifier: ^3.4.4
         version: 3.4.4(postcss@8.4.31)(svelte@4.2.2)
       typescript:
-        specifier: ^4.9.4
-        version: 4.9.4
+        specifier: ^5.2.2
+        version: 5.2.2
       vite:
         specifier: ^4.4.9
         version: 4.4.9(@types/node@16.18.6)(lightningcss@1.21.8)
@@ -792,8 +792,8 @@ importers:
         specifier: ^3.4.4
         version: 3.4.4(postcss@8.4.31)(svelte@4.2.2)
       typescript:
-        specifier: ^4.9.4
-        version: 4.9.4
+        specifier: ^5.2.2
+        version: 5.2.2
       vite:
         specifier: ^4.4.9
         version: 4.4.9(@types/node@16.18.6)(lightningcss@1.21.8)
@@ -810,8 +810,8 @@ importers:
         specifier: ^3.4.4
         version: 3.4.4(postcss@8.4.31)(svelte@4.2.2)
       typescript:
-        specifier: ^4.9.4
-        version: 4.9.4
+        specifier: ^5.2.2
+        version: 5.2.2
       vite:
         specifier: ^4.4.9
         version: 4.4.9(@types/node@16.18.6)(lightningcss@1.21.8)
@@ -828,8 +828,8 @@ importers:
         specifier: ^3.4.4
         version: 3.4.4(postcss@8.4.31)(svelte@4.2.2)
       typescript:
-        specifier: ^4.9.4
-        version: 4.9.4
+        specifier: ^5.2.2
+        version: 5.2.2
       vite:
         specifier: ^4.4.9
         version: 4.4.9(@types/node@16.18.6)(lightningcss@1.21.8)
@@ -846,8 +846,8 @@ importers:
         specifier: ^3.4.4
         version: 3.4.4(postcss@8.4.31)(svelte@4.2.2)
       typescript:
-        specifier: ^4.9.4
-        version: 4.9.4
+        specifier: ^5.2.2
+        version: 5.2.2
       vite:
         specifier: ^4.4.9
         version: 4.4.9(@types/node@16.18.6)(lightningcss@1.21.8)
@@ -867,8 +867,8 @@ importers:
         specifier: ^3.4.4
         version: 3.4.4(postcss@8.4.31)(svelte@4.2.2)
       typescript:
-        specifier: ^4.9.4
-        version: 4.9.4
+        specifier: ^5.2.2
+        version: 5.2.2
       vite:
         specifier: ^4.4.9
         version: 4.4.9(@types/node@16.18.6)(lightningcss@1.21.8)
@@ -888,8 +888,8 @@ importers:
         specifier: ^3.4.4
         version: 3.4.4(postcss@8.4.31)(svelte@4.2.2)
       typescript:
-        specifier: ^4.9.4
-        version: 4.9.4
+        specifier: ^5.2.2
+        version: 5.2.2
       vite:
         specifier: ^4.4.9
         version: 4.4.9(@types/node@16.18.6)(lightningcss@1.21.8)
@@ -918,8 +918,8 @@ importers:
         specifier: ^20.0.0
         version: 20.0.0
       typescript:
-        specifier: ^5.0.4
-        version: 5.0.4
+        specifier: ^5.2.2
+        version: 5.2.2
     devDependencies:
       '@types/node':
         specifier: ^16.18.6
@@ -953,7 +953,7 @@ importers:
         version: 7.5.3
       svelte2tsx:
         specifier: ~0.6.19
-        version: 0.6.19(svelte@4.2.2)(typescript@4.9.4)
+        version: 0.6.19(svelte@4.2.2)(typescript@5.2.2)
     devDependencies:
       '@types/node':
         specifier: ^16.18.6
@@ -966,10 +966,10 @@ importers:
         version: 4.2.2
       svelte-preprocess:
         specifier: ^5.0.4
-        version: 5.0.4(postcss@8.4.31)(svelte@4.2.2)(typescript@4.9.4)
+        version: 5.0.4(postcss@8.4.31)(svelte@4.2.2)(typescript@5.2.2)
       typescript:
-        specifier: ^4.9.4
-        version: 4.9.4
+        specifier: ^5.2.2
+        version: 5.2.2
       uvu:
         specifier: ^0.5.6
         version: 0.5.6
@@ -986,8 +986,8 @@ importers:
         specifier: ^4.2.2
         version: 4.2.2
       typescript:
-        specifier: ^5.0.0
-        version: 5.0.4
+        specifier: ^5.2.2
+        version: 5.2.2
       vite:
         specifier: ^4.4.9
         version: 4.4.9(@types/node@16.18.6)(lightningcss@1.21.8)
@@ -1048,7 +1048,7 @@ importers:
         version: 1.29.0
       shiki-twoslash:
         specifier: ^3.1.2
-        version: 3.1.2(typescript@5.0.4)
+        version: 3.1.2(typescript@5.2.2)
       svelte:
         specifier: ^4.2.2
         version: 4.2.2
@@ -1056,8 +1056,8 @@ importers:
         specifier: ^0.2.9
         version: 0.2.9
       typescript:
-        specifier: 5.0.4
-        version: 5.0.4
+        specifier: ^5.2.2
+        version: 5.2.2
       vite:
         specifier: ^4.4.9
         version: 4.4.9(@types/node@16.18.6)(lightningcss@1.21.8)
@@ -2003,7 +2003,7 @@ packages:
     resolution: {integrity: sha512-+Fj43pSMwJs4KRrH/938Uf+uAELIgVBmQzg/q1YG10djyfA3TnrU8N8XzqCh/okZdszqBQTZf96idMfE5lnwTA==}
     dev: true
 
-  /@sveltejs/eslint-config@6.0.4(@typescript-eslint/eslint-plugin@6.0.0)(@typescript-eslint/parser@6.9.1)(eslint-config-prettier@9.0.0)(eslint-plugin-svelte@2.31.0)(eslint-plugin-unicorn@49.0.0)(eslint@8.52.0)(typescript@4.9.4):
+  /@sveltejs/eslint-config@6.0.4(@typescript-eslint/eslint-plugin@6.0.0)(@typescript-eslint/parser@6.9.1)(eslint-config-prettier@9.0.0)(eslint-plugin-svelte@2.31.0)(eslint-plugin-unicorn@49.0.0)(eslint@8.52.0)(typescript@5.2.2):
     resolution: {integrity: sha512-U9pwmDs+DbmsnCgTfu6Bacdwqn0DuI1IQNSiQqTgzVyYfaaj+zy9ZoQCiJfxFBGXHkklyXuRHp0KMx346N0lcQ==}
     peerDependencies:
       '@typescript-eslint/eslint-plugin': '>= 5'
@@ -2014,13 +2014,13 @@ packages:
       eslint-plugin-unicorn: '>= 47'
       typescript: '>= 4'
     dependencies:
-      '@typescript-eslint/eslint-plugin': 6.0.0(@typescript-eslint/parser@6.9.1)(eslint@8.52.0)(typescript@4.9.4)
-      '@typescript-eslint/parser': 6.9.1(eslint@8.52.0)(typescript@4.9.4)
+      '@typescript-eslint/eslint-plugin': 6.0.0(@typescript-eslint/parser@6.9.1)(eslint@8.52.0)(typescript@5.2.2)
+      '@typescript-eslint/parser': 6.9.1(eslint@8.52.0)(typescript@5.2.2)
       eslint: 8.52.0
       eslint-config-prettier: 9.0.0(eslint@8.52.0)
       eslint-plugin-svelte: 2.31.0(eslint@8.52.0)(svelte@4.2.2)
       eslint-plugin-unicorn: 49.0.0(eslint@8.52.0)
-      typescript: 4.9.4
+      typescript: 5.2.2
     dev: true
 
   /@sveltejs/site-kit@6.0.0-next.52(@sveltejs/kit@packages+kit)(svelte@4.2.2):
@@ -2203,7 +2203,7 @@ packages:
       '@types/node': 16.18.6
     dev: true
 
-  /@typescript-eslint/eslint-plugin@6.0.0(@typescript-eslint/parser@6.9.1)(eslint@8.52.0)(typescript@4.9.4):
+  /@typescript-eslint/eslint-plugin@6.0.0(@typescript-eslint/parser@6.9.1)(eslint@8.52.0)(typescript@5.2.2):
     resolution: {integrity: sha512-xuv6ghKGoiq856Bww/yVYnXGsKa588kY3M0XK7uUW/3fJNNULKRfZfSBkMTSpqGG/8ZCXCadfh8G/z/B4aqS/A==}
     engines: {node: ^16.0.0 || >=18.0.0}
     peerDependencies:
@@ -2215,10 +2215,10 @@ packages:
         optional: true
     dependencies:
       '@eslint-community/regexpp': 4.6.2
-      '@typescript-eslint/parser': 6.9.1(eslint@8.52.0)(typescript@4.9.4)
+      '@typescript-eslint/parser': 6.9.1(eslint@8.52.0)(typescript@5.2.2)
       '@typescript-eslint/scope-manager': 6.0.0
-      '@typescript-eslint/type-utils': 6.0.0(eslint@8.52.0)(typescript@4.9.4)
-      '@typescript-eslint/utils': 6.0.0(eslint@8.52.0)(typescript@4.9.4)
+      '@typescript-eslint/type-utils': 6.0.0(eslint@8.52.0)(typescript@5.2.2)
+      '@typescript-eslint/utils': 6.0.0(eslint@8.52.0)(typescript@5.2.2)
       '@typescript-eslint/visitor-keys': 6.0.0
       debug: 4.3.4
       eslint: 8.52.0
@@ -2228,13 +2228,13 @@ packages:
       natural-compare: 1.4.0
       natural-compare-lite: 1.4.0
       semver: 7.5.4
-      ts-api-utils: 1.0.1(typescript@4.9.4)
-      typescript: 4.9.4
+      ts-api-utils: 1.0.1(typescript@5.2.2)
+      typescript: 5.2.2
     transitivePeerDependencies:
       - supports-color
     dev: true
 
-  /@typescript-eslint/parser@6.9.1(eslint@8.52.0)(typescript@4.9.4):
+  /@typescript-eslint/parser@6.9.1(eslint@8.52.0)(typescript@5.2.2):
     resolution: {integrity: sha512-C7AK2wn43GSaCUZ9do6Ksgi2g3mwFkMO3Cis96kzmgudoVaKyt62yNzJOktP0HDLb/iO2O0n2lBOzJgr6Q/cyg==}
     engines: {node: ^16.0.0 || >=18.0.0}
     peerDependencies:
@@ -2246,11 +2246,11 @@ packages:
     dependencies:
       '@typescript-eslint/scope-manager': 6.9.1
       '@typescript-eslint/types': 6.9.1
-      '@typescript-eslint/typescript-estree': 6.9.1(typescript@4.9.4)
+      '@typescript-eslint/typescript-estree': 6.9.1(typescript@5.2.2)
       '@typescript-eslint/visitor-keys': 6.9.1
       debug: 4.3.4
       eslint: 8.52.0
-      typescript: 4.9.4
+      typescript: 5.2.2
     transitivePeerDependencies:
       - supports-color
     dev: true
@@ -2271,7 +2271,7 @@ packages:
       '@typescript-eslint/visitor-keys': 6.9.1
     dev: true
 
-  /@typescript-eslint/type-utils@6.0.0(eslint@8.52.0)(typescript@4.9.4):
+  /@typescript-eslint/type-utils@6.0.0(eslint@8.52.0)(typescript@5.2.2):
     resolution: {integrity: sha512-ah6LJvLgkoZ/pyJ9GAdFkzeuMZ8goV6BH7eC9FPmojrnX9yNCIsfjB+zYcnex28YO3RFvBkV6rMV6WpIqkPvoQ==}
     engines: {node: ^16.0.0 || >=18.0.0}
     peerDependencies:
@@ -2281,12 +2281,12 @@ packages:
       typescript:
         optional: true
     dependencies:
-      '@typescript-eslint/typescript-estree': 6.0.0(typescript@4.9.4)
-      '@typescript-eslint/utils': 6.0.0(eslint@8.52.0)(typescript@4.9.4)
+      '@typescript-eslint/typescript-estree': 6.0.0(typescript@5.2.2)
+      '@typescript-eslint/utils': 6.0.0(eslint@8.52.0)(typescript@5.2.2)
       debug: 4.3.4
       eslint: 8.52.0
-      ts-api-utils: 1.0.1(typescript@4.9.4)
-      typescript: 4.9.4
+      ts-api-utils: 1.0.1(typescript@5.2.2)
+      typescript: 5.2.2
     transitivePeerDependencies:
       - supports-color
     dev: true
@@ -2301,7 +2301,7 @@ packages:
     engines: {node: ^16.0.0 || >=18.0.0}
     dev: true
 
-  /@typescript-eslint/typescript-estree@6.0.0(typescript@4.9.4):
+  /@typescript-eslint/typescript-estree@6.0.0(typescript@5.2.2):
     resolution: {integrity: sha512-2zq4O7P6YCQADfmJ5OTDQTP3ktajnXIRrYAtHM9ofto/CJZV3QfJ89GEaM2BNGeSr1KgmBuLhEkz5FBkS2RQhQ==}
     engines: {node: ^16.0.0 || >=18.0.0}
     peerDependencies:
@@ -2316,13 +2316,13 @@ packages:
       globby: 11.1.0
       is-glob: 4.0.3
       semver: 7.5.4
-      ts-api-utils: 1.0.1(typescript@4.9.4)
-      typescript: 4.9.4
+      ts-api-utils: 1.0.1(typescript@5.2.2)
+      typescript: 5.2.2
     transitivePeerDependencies:
       - supports-color
     dev: true
 
-  /@typescript-eslint/typescript-estree@6.9.1(typescript@4.9.4):
+  /@typescript-eslint/typescript-estree@6.9.1(typescript@5.2.2):
     resolution: {integrity: sha512-U+mUylTHfcqeO7mLWVQ5W/tMLXqVpRv61wm9ZtfE5egz7gtnmqVIw9ryh0mgIlkKk9rZLY3UHygsBSdB9/ftyw==}
     engines: {node: ^16.0.0 || >=18.0.0}
     peerDependencies:
@@ -2337,13 +2337,13 @@ packages:
       globby: 11.1.0
       is-glob: 4.0.3
       semver: 7.5.4
-      ts-api-utils: 1.0.3(typescript@4.9.4)
-      typescript: 4.9.4
+      ts-api-utils: 1.0.3(typescript@5.2.2)
+      typescript: 5.2.2
     transitivePeerDependencies:
       - supports-color
     dev: true
 
-  /@typescript-eslint/utils@6.0.0(eslint@8.52.0)(typescript@4.9.4):
+  /@typescript-eslint/utils@6.0.0(eslint@8.52.0)(typescript@5.2.2):
     resolution: {integrity: sha512-SOr6l4NB6HE4H/ktz0JVVWNXqCJTOo/mHnvIte1ZhBQ0Cvd04x5uKZa3zT6tiodL06zf5xxdK8COiDvPnQ27JQ==}
     engines: {node: ^16.0.0 || >=18.0.0}
     peerDependencies:
@@ -2354,7 +2354,7 @@ packages:
       '@types/semver': 7.5.0
       '@typescript-eslint/scope-manager': 6.0.0
       '@typescript-eslint/types': 6.0.0
-      '@typescript-eslint/typescript-estree': 6.0.0(typescript@4.9.4)
+      '@typescript-eslint/typescript-estree': 6.0.0(typescript@5.2.2)
       eslint: 8.52.0
       eslint-scope: 5.1.1
       semver: 7.5.4
@@ -3181,20 +3181,22 @@ packages:
     resolution: {integrity: sha512-QgA6BUh2SoBYE/dSuMmeGhNdoGtGewt3Rn66xKyXoGNyjrKRXf163wuM+xeQ83p87l/3ALoB6Il1dgKyGS5pEw==}
     dev: true
 
-  /dts-buddy@0.2.4:
-    resolution: {integrity: sha512-41d7aGv2DXJYlzeKSKHf0GtpCC8OdpEHhz+aqjylKV5aP3fl4APzNmQ5hL5vSKZMaO/lrkrKWC+HQrxl+mcgUw==}
+  /dts-buddy@0.4.0(typescript@5.2.2):
+    resolution: {integrity: sha512-L8sHp1mmpufZhz/+HLIA40hJG6T937rsWhEIED2W2QMbGSpdg1G5pc2EK1WLKvmd1DvGZ0Qs8uoeSUaqK5mqkw==}
     hasBin: true
+    peerDependencies:
+      typescript: '>=5.0.4 <5.3'
     dependencies:
       '@jridgewell/source-map': 0.3.5
       '@jridgewell/sourcemap-codec': 1.4.15
       globrex: 0.1.2
       kleur: 4.1.5
       locate-character: 3.0.0
-      magic-string: 0.30.3
+      magic-string: 0.30.5
       sade: 1.8.1
       tiny-glob: 0.2.9
-      ts-api-utils: 1.0.2(typescript@5.0.4)
-      typescript: 5.0.4
+      ts-api-utils: 1.0.3(typescript@5.2.2)
+      typescript: 5.2.2
     dev: true
 
   /electron-to-chromium@1.4.488:
@@ -5446,7 +5448,7 @@ packages:
     engines: {node: '>=8'}
     dev: true
 
-  /shiki-twoslash@3.1.2(typescript@5.0.4):
+  /shiki-twoslash@3.1.2(typescript@5.2.2):
     resolution: {integrity: sha512-JBcRIIizi+exIA/OUhYkV6jtyeZco0ykCkIRd5sgwIt1Pm4pz+maoaRZpm6SkhPwvif4fCA7xOtJOykhpIV64Q==}
     peerDependencies:
       typescript: '>3'
@@ -5455,7 +5457,7 @@ packages:
       '@typescript/vfs': 1.3.4
       fenceparser: 1.1.1
       shiki: 0.10.1
-      typescript: 5.0.4
+      typescript: 5.2.2
     transitivePeerDependencies:
       - supports-color
     dev: true
@@ -5779,54 +5781,6 @@ packages:
       svelte: 4.2.2
     dev: true
 
-  /svelte-preprocess@5.0.4(postcss@8.4.31)(svelte@4.2.2)(typescript@4.9.4):
-    resolution: {integrity: sha512-ABia2QegosxOGsVlsSBJvoWeXy1wUKSfF7SWJdTjLAbx/Y3SrVevvvbFNQqrSJw89+lNSsM58SipmZJ5SRi5iw==}
-    engines: {node: '>= 14.10.0'}
-    requiresBuild: true
-    peerDependencies:
-      '@babel/core': ^7.10.2
-      coffeescript: ^2.5.1
-      less: ^3.11.3 || ^4.0.0
-      postcss: ^7 || ^8
-      postcss-load-config: ^2.1.0 || ^3.0.0 || ^4.0.0
-      pug: ^3.0.0
-      sass: ^1.26.8
-      stylus: ^0.55.0
-      sugarss: ^2.0.0 || ^3.0.0 || ^4.0.0
-      svelte: ^3.23.0 || ^4.0.0-next.0 || ^4.0.0
-      typescript: '>=3.9.5 || ^4.0.0 || ^5.0.0'
-    peerDependenciesMeta:
-      '@babel/core':
-        optional: true
-      coffeescript:
-        optional: true
-      less:
-        optional: true
-      postcss:
-        optional: true
-      postcss-load-config:
-        optional: true
-      pug:
-        optional: true
-      sass:
-        optional: true
-      stylus:
-        optional: true
-      sugarss:
-        optional: true
-      typescript:
-        optional: true
-    dependencies:
-      '@types/pug': 2.0.6
-      detect-indent: 6.1.0
-      magic-string: 0.27.0
-      postcss: 8.4.31
-      sorcery: 0.11.0
-      strip-indent: 3.0.0
-      svelte: 4.2.2
-      typescript: 4.9.4
-    dev: true
-
   /svelte-preprocess@5.0.4(postcss@8.4.31)(svelte@4.2.2)(typescript@5.2.2):
     resolution: {integrity: sha512-ABia2QegosxOGsVlsSBJvoWeXy1wUKSfF7SWJdTjLAbx/Y3SrVevvvbFNQqrSJw89+lNSsM58SipmZJ5SRi5iw==}
     engines: {node: '>= 14.10.0'}
@@ -5875,7 +5829,7 @@ packages:
       typescript: 5.2.2
     dev: true
 
-  /svelte2tsx@0.6.19(svelte@4.2.2)(typescript@4.9.4):
+  /svelte2tsx@0.6.19(svelte@4.2.2)(typescript@5.2.2):
     resolution: {integrity: sha512-h3b5OtcO8zyVL/RiB2zsDwCopeo/UH+887uyhgb2mjnewOFwiTxu+4IGuVwrrlyuh2onM2ktfUemNrNmQwXONQ==}
     peerDependencies:
       svelte: ^3.55 || ^4.0.0-next.0 || ^4.0
@@ -5884,7 +5838,7 @@ packages:
       dedent-js: 1.0.1
       pascal-case: 3.1.2
       svelte: 4.2.2
-      typescript: 4.9.4
+      typescript: 5.2.2
     dev: false
 
   /svelte@4.2.2:
@@ -6048,31 +6002,22 @@ packages:
       regexparam: 1.3.0
     dev: true
 
-  /ts-api-utils@1.0.1(typescript@4.9.4):
+  /ts-api-utils@1.0.1(typescript@5.2.2):
     resolution: {integrity: sha512-lC/RGlPmwdrIBFTX59wwNzqh7aR2otPNPR/5brHZm/XKFYKsfqxihXUe9pU3JI+3vGkl+vyCoNNnPhJn3aLK1A==}
     engines: {node: '>=16.13.0'}
     peerDependencies:
       typescript: '>=4.2.0'
     dependencies:
-      typescript: 4.9.4
+      typescript: 5.2.2
     dev: true
 
-  /ts-api-utils@1.0.2(typescript@5.0.4):
-    resolution: {integrity: sha512-Cbu4nIqnEdd+THNEsBdkolnOXhg0I8XteoHaEKgvsxpsbWda4IsUut2c187HxywQCvveojow0Dgw/amxtSKVkQ==}
-    engines: {node: '>=16.13.0'}
-    peerDependencies:
-      typescript: '>=4.2.0'
-    dependencies:
-      typescript: 5.0.4
-    dev: true
-
-  /ts-api-utils@1.0.3(typescript@4.9.4):
+  /ts-api-utils@1.0.3(typescript@5.2.2):
     resolution: {integrity: sha512-wNMeqtMz5NtwpT/UZGY5alT+VoKdSsOOP/kqHFcUW1P/VRhH2wJ48+DN2WwUliNbQ976ETwDL0Ifd2VVvgonvg==}
     engines: {node: '>=16.13.0'}
     peerDependencies:
       typescript: '>=4.2.0'
     dependencies:
-      typescript: 4.9.4
+      typescript: 5.2.2
     dev: true
 
   /ts-interface-checker@0.1.13:
@@ -6180,21 +6125,10 @@ packages:
       is-typed-array: 1.1.12
     dev: true
 
-  /typescript@4.9.4:
-    resolution: {integrity: sha512-Uz+dTXYzxXXbsFpM86Wh3dKCxrQqUcVMxwU54orwlJjOpO3ao8L7j5lH+dWfTwgCwIuM9GQ2kvVotzYJMXTBZg==}
-    engines: {node: '>=4.2.0'}
-    hasBin: true
-
-  /typescript@5.0.4:
-    resolution: {integrity: sha512-cW9T5W9xY37cc+jfEnaUvX91foxtHkza3Nw3wkoF4sSlKn0MONdkdEndig/qPBWXNkmplh3NzayQzCiHM4/hqw==}
-    engines: {node: '>=12.20'}
-    hasBin: true
-
   /typescript@5.2.2:
     resolution: {integrity: sha512-mI4WrpHsbCIcwT9cF4FZvr80QUeKvsUsUvKDoR+X/7XHQH98xYD8YHZg7ANtz2GtZt/CBq2QJ0thkGJMHfqc1w==}
     engines: {node: '>=14.17'}
     hasBin: true
-    dev: true
 
   /ufo@1.3.0:
     resolution: {integrity: sha512-bRn3CsoojyNStCZe0BG0Mt4Nr/4KF+rhFlnNXybgqt5pXHNFRlqinSoQaTrGyzE4X8aHplSb+TorH+COin9Yxw==}

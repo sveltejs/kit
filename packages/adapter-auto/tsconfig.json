@@ -4,10 +4,10 @@
 		"checkJs": true,
 		"noEmit": true,
 		"noImplicitAny": true,
-		"module": "esnext",
-		"target": "esnext",
+		"target": "ES2022",
+		"module": "Node16",
+		"moduleResolution": "Node16",
 		"skipLibCheck": true,
-		"moduleResolution": "node16",
 		"baseUrl": "."
 	},
 	"include": ["**/*.js"]

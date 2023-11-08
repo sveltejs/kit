@@ -1,7 +1,7 @@
 import path from 'node:path';
 import { platforms } from './platforms.js';
 
-/** @type {import('.').default} */
+/** @type {import('./index.js').default} */
 export default function (options) {
 	return {
 		name: '@sveltejs/adapter-static',
@@ -51,12 +51,15 @@ See https://kit.svelte.dev/docs/page-options#prerender for more details`
 				}
 			}
 
+			const adapter_options = options ?? platform?.defaults ?? {};
 			const {
 				pages = 'build',
 				assets = pages,
 				fallback,
 				precompress
-			} = options ?? platform?.defaults ?? /** @type {import('./index').AdapterOptions} */ ({});
+				// There's a TypeScript bug that requires `adapter_options` to be extracted out first
+				// so the destructured types can be correctly inferred
+			} = adapter_options;
 
 			builder.rimraf(assets);
 			builder.rimraf(pages);

@@ -5,9 +5,11 @@
 		"noEmit": true,
 		"noImplicitAny": true,
 		"allowSyntheticDefaultImports": true,
-		"moduleResolution": "node",
-		"module": "es2022",
-		"target": "es2017",
+		"target": "ES2022",
+		"module": "ES2022",
+		// `polka` and `@polka/url` types are incorrectly packaged,
+		// so using this moduleResolution for now
+		"moduleResolution": "Node",
 		"baseUrl": ".",
 		"paths": {
 			"@sveltejs/kit": ["../kit/types/index"]

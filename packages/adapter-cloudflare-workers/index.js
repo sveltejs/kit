@@ -14,7 +14,7 @@ import { fileURLToPath } from 'node:url';
  * }} WranglerConfig
  */
 
-/** @type {import('.').default} */
+/** @type {import('./index.js').default} */
 export default function ({ config = 'wrangler.toml' } = {}) {
 	return {
 		name: '@sveltejs/adapter-cloudflare-workers',
