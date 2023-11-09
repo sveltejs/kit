@@ -182,8 +182,8 @@ importers:
         version: 3.29.4
     devDependencies:
       '@polka/url':
-        specifier: ^1.0.0-next.21
-        version: 1.0.0-next.21
+        specifier: ^1.0.0-next.23
+        version: 1.0.0-next.23
       '@sveltejs/kit':
         specifier: workspace:^
         version: link:../kit
@@ -194,8 +194,8 @@ importers:
         specifier: ^8.0.0
         version: 8.0.0
       polka:
-        specifier: ^1.0.0-next.22
-        version: 1.0.0-next.22
+        specifier: ^1.0.0-next.23
+        version: 1.0.0-next.23
       sirv:
         specifier: ^2.0.3
         version: 2.0.3
@@ -1913,8 +1913,8 @@ packages:
       playwright-core: 1.30.0
     dev: true
 
-  /@polka/url@1.0.0-next.21:
-    resolution: {integrity: sha512-a5Sab1C4/icpTZVzZc5Ghpz88yQtGOyNqYXcZgOssB2uuAr+wF/MvN6bgtW32q7HHrvBki+BsZ0OuNv6EV3K9g==}
+  /@polka/url@1.0.0-next.23:
+    resolution: {integrity: sha512-C16M+IYz0rgRhWZdCmK+h58JMv8vijAA61gmz2rspCSwKwzBebpdcsiUmwrtJRdphuY30i6BSLEOP8ppbNLyLg==}
 
   /@rollup/plugin-commonjs@25.0.0(rollup@3.29.4):
     resolution: {integrity: sha512-hoho2Kay9TZrLu0bnDsTTCaj4Npa+THk9snajP/XDNb9a9mmjTjh52EQM9sKl3HD1LsnihX7js+eA2sd2uKAhw==}
@@ -4996,11 +4996,11 @@ packages:
     engines: {node: '>=4'}
     dev: true
 
-  /polka@1.0.0-next.22:
-    resolution: {integrity: sha512-a7tsZy5gFbJr0aUltZS97xCkbPglXuD67AMvTyZX7BTDBH384FWf0ZQF6rPvdutSxnO1vUlXM2zSLf5tCKk5RA==}
+  /polka@1.0.0-next.23:
+    resolution: {integrity: sha512-19z2ny2aGdx+dns3icsQy6G7sWe0Dg7QTqSGE4B010EFbxvGzjjn37gBBjM8T0K2p6rthZ6+oXoBF3DcFceOPA==}
     engines: {node: '>=8'}
     dependencies:
-      '@polka/url': 1.0.0-next.21
+      '@polka/url': 1.0.0-next.23
       trouter: 3.2.1
     dev: true
 
@@ -5520,7 +5520,7 @@ packages:
     resolution: {integrity: sha512-O9jm9BsID1P+0HOi81VpXPoDxYP374pkOLzACAoyUQ/3OUVndNpsz6wMnY2z+yOxzbllCKZrM+9QrWsv4THnyA==}
     engines: {node: '>= 10'}
     dependencies:
-      '@polka/url': 1.0.0-next.21
+      '@polka/url': 1.0.0-next.23
       mrmime: 1.0.1
       totalist: 3.0.1
 
