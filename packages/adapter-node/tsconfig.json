@@ -7,8 +7,9 @@
 		"allowSyntheticDefaultImports": true,
 		"target": "es2022",
 		"module": "es2022",
-		// `polka` and `@polka/url` types are incorrectly packaged,
-		// so using this moduleResolution for now
+		// Can't use moduleResolution: node16 because of these issues:
+		// https://github.com/rollup/plugins/issues/1329
+		// https://github.com/lukeed/polka/issues/199
 		"moduleResolution": "node",
 		"baseUrl": ".",
 		"paths": {
