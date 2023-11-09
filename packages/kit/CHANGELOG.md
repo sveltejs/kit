@@ -1,5 +1,13 @@
 # @sveltejs/kit
 
+## 1.27.4
+
+### Patch Changes
+
+- fix: generate `__data.json` for prerendered pages when SSR is turned off ([#10988](https://github.com/sveltejs/kit/pull/10988))
+
+- chore: cleanup ([#11002](https://github.com/sveltejs/kit/pull/11002))
+
 ## 1.27.3
 
 ### Patch Changes
