@@ -22,7 +22,8 @@ import {
 	get_link_info,
 	get_router_options,
 	is_external_url,
-	scroll_state
+	scroll_state,
+	origin
 } from './utils.js';
 
 import { base } from '__sveltekit/paths';
@@ -843,7 +844,7 @@ export function create_client(app, target) {
 			} catch {
 				// at this point we have no choice but to fall back to the server, if it wouldn't
 				// bring us right back here, turning this into an endless loop
-				if (url.origin !== location.origin || url.pathname !== location.pathname || hydrated) {
+				if (url.origin !== origin || url.pathname !== location.pathname || hydrated) {
 					await native_navigation(url);
 				}
 			}
@@ -1173,7 +1174,7 @@ export function create_client(app, target) {
 	 * @returns {Promise<import('./types').NavigationFinished>}
 	 */
 	async function server_fallback(url, route, error, status) {
-		if (url.origin === location.origin && url.pathname === location.pathname && !hydrated) {
+		if (url.origin === origin && url.pathname === location.pathname && !hydrated) {
 			// We would reload the same page we're currently on, which isn't hydrated,
 			// which means no SSR, which means we would end up in an endless loop
 			return await load_root_error_page({
