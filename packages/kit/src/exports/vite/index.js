@@ -24,7 +24,7 @@ import prerender from '../../core/postbuild/prerender.js';
 import analyse from '../../core/postbuild/analyse.js';
 import { s } from '../../utils/misc.js';
 import { hash } from '../../runtime/hash.js';
-import { dedent } from '../../core/sync/utils.js';
+import { dedent, isSvelte5Plus } from '../../core/sync/utils.js';
 
 export { vitePreprocess } from '@sveltejs/vite-plugin-svelte';
 
@@ -136,7 +136,7 @@ export async function sveltekit() {
 		onwarn: svelte_config.onwarn,
 		compilerOptions: {
 			// @ts-expect-error SvelteKit requires hydratable true by default
-			hydratable: true,
+			hydratable: isSvelte5Plus() ? undefined : true,
 			...svelte_config.compilerOptions
 		},
 		...svelte_config.vitePlugin
