@@ -1,5 +1,14 @@
 # @sveltejs/adapter-auto
 
+## 2.1.1
+
+### Patch Changes
+
+- chore(deps): update dependency `import-meta-resolve` to v4 ([#10970](https://github.com/sveltejs/kit/pull/10970))
+
+- Updated dependencies [[`072430ec5`](https://github.com/sveltejs/kit/commit/072430ec5c64782cd25c750f40534fea9cab4b40)]:
+  - @sveltejs/kit@1.27.3
+
 ## 2.1.0
 
 ### Minor Changes
