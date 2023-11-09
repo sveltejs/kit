@@ -4,11 +4,11 @@
 		"checkJs": true,
 		"noEmit": true,
 		"noImplicitAny": true,
-		"target": "ES2022",
-		"module": "ES2022",
+		"target": "es2022",
+		"module": "es2022",
 		// `@netlify/function` > `@netlify/serverless-functions-api` types are not compatible,
 		// so using this moduleResolution for now
-		"moduleResolution": "Node",
+		"moduleResolution": "node",
 		"allowSyntheticDefaultImports": true,
 		"baseUrl": ".",
 		"paths": {
