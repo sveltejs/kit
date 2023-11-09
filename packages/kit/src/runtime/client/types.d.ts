@@ -90,7 +90,8 @@ export type NavigationFinished = {
 	type: 'loaded';
 	state: NavigationState;
 	props: {
-		components: Array<typeof SvelteComponent>;
+		constructors: Array<typeof SvelteComponent>;
+		components?: Array<SvelteComponent>;
 		page?: Page;
 		form?: Record<string, any> | null;
 		[key: `data_${number}`]: Record<string, any>;
