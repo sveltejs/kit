@@ -27,7 +27,7 @@ export function get_cookies(request, url, trailing_slash) {
 	// Emulate browser-behavior: if the cookie is set at '/foo/bar', its path is '/foo'
 	const default_path = normalized_url.split('/').slice(0, -1).join('/') || '/';
 
-	/** @type {Record<string, import('./page/types').Cookie>} */
+	/** @type {Record<string, import('./page/types.js').Cookie>} */
 	const new_cookies = {};
 
 	/** @type {import('cookie').CookieSerializeOptions} */
@@ -232,7 +232,7 @@ export function path_matches(path, constraint) {
 
 /**
  * @param {Headers} headers
- * @param {import('./page/types').Cookie[]} cookies
+ * @param {import('./page/types.js').Cookie[]} cookies
  */
 export function add_cookies_to_headers(headers, cookies) {
 	for (const new_cookie of cookies) {

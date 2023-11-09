@@ -30,7 +30,7 @@ export { vitePreprocess } from '@sveltejs/vite-plugin-svelte';
 
 const cwd = process.cwd();
 
-/** @type {import('./types').EnforcedConfig} */
+/** @type {import('./types.js').EnforcedConfig} */
 const enforced_config = {
 	appType: true,
 	base: true,
@@ -702,7 +702,7 @@ function kit({ svelte_config }) {
 
 				secondary_build_started = true;
 
-				const { output } = /** @type {import('rollup').RollupOutput} */ (
+				const { output } = /** @type {import('vite').Rollup.RollupOutput} */ (
 					await vite.build({
 						configFile: vite_config.configFile,
 						// CLI args
@@ -742,7 +742,7 @@ function kit({ svelte_config }) {
 				};
 
 				const css = output.filter(
-					/** @type {(value: any) => value is import('rollup').OutputAsset} */
+					/** @type {(value: any) => value is import('vite').Rollup.OutputAsset} */
 					(value) => value.type === 'asset' && value.fileName.endsWith('.css')
 				);
 
@@ -863,7 +863,7 @@ function warn_overridden_config(config, resolved_config) {
 /**
  * @param {Record<string, any>} config
  * @param {Record<string, any>} resolved_config
- * @param {import('./types').EnforcedConfig} enforced_config
+ * @param {import('./types.js').EnforcedConfig} enforced_config
  * @param {string} path
  * @param {string[]} out used locally to compute the return value
  */

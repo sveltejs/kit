@@ -33,7 +33,7 @@ export async function respond_with_error({
 		return static_error_page(options, status, /** @type {Error} */ (error).message);
 	}
 
-	/** @type {import('./types').Fetched[]} */
+	/** @type {import('./types.js').Fetched[]} */
 	const fetched = [];
 
 	try {
