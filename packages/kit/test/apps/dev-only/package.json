@@ -6,7 +6,7 @@
 		"dev": "vite dev",
 		"build": "vite build",
 		"preview": "vite preview",
-		"check": "svelte-kit sync && tsc --skipLibCheck && svelte-check",
+		"check": "svelte-kit sync && tsc && svelte-check",
 		"test": "cross-env DEV=true playwright test"
 	},
 	"devDependencies": {
