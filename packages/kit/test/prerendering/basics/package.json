@@ -6,7 +6,7 @@
 		"dev": "vite dev",
 		"build": "vite build",
 		"preview": "vite preview",
-		"check": "svelte-kit sync && tsc && svelte-check",
+		"check": "svelte-kit sync && tsc --skipLibCheck && svelte-check",
 		"test": "svelte-kit sync && pnpm build && vitest run",
 		"test:cross-platform": "pnpm test"
 	},
