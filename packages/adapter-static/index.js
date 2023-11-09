@@ -51,15 +51,12 @@ See https://kit.svelte.dev/docs/page-options#prerender for more details`
 				}
 			}
 
-			const adapter_options = options ?? platform?.defaults ?? {};
 			const {
 				pages = 'build',
 				assets = pages,
 				fallback,
 				precompress
-				// There's a TypeScript bug that requires `adapter_options` to be extracted out first
-				// so the destructured types can be correctly inferred
-			} = adapter_options;
+			} = options ?? platform?.defaults ?? /** @type {import('./index.js').AdapterOptions} */ ({});
 
 			builder.rimraf(assets);
 			builder.rimraf(pages);
