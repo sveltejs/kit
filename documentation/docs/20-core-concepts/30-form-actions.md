@@ -364,7 +364,7 @@ To customise the behaviour, you can provide a `SubmitFunction` that runs immedia
 
 You can use these functions to show and hide loading UI, and so on.
 
-If you return a callback, you may need to reproduce part of the default `use:enhance` behaviour, but without invalidating all data on a successful response. You can do so with `applyAction`:
+If you return a callback, you may need to reproduce part of the default `use:enhance` behaviour, but without invalidating all data on a successful response. Whereas `update` will invalidate all data on successful responses, you can reproduce the behavior without invalidation using `applyAction`:
 
 ```diff
 /// file: src/routes/login/+page.svelte
