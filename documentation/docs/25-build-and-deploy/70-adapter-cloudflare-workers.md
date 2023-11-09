@@ -61,9 +61,9 @@ Then, you can build your app and deploy it:
 wrangler publish
 ```
 
-## Custom config
+## Adapter configuration
 
-If you would like to use a config file other than `wrangler.toml`, you can do like so:
+The adapter configuration accepts the options `config`, `external` and `alias`.
 
 ```js
 // @errors: 2307
@@ -72,10 +72,30 @@ import adapter from '@sveltejs/adapter-cloudflare-workers';
 
 export default {
 	kit: {
-		adapter: adapter({ config: '<your-wrangler-name>.toml' })
+		adapter: adapter({
+			config: '<your-wrangler-name>.toml',
+			external: [ 'fs' ],
+			alias: {
+				fs: './fs-stub.js'
+			}
+		})
 	}
 };
 ```
+
+### Custom config
+
+If you would like to use a config file other than the default `wrangler.toml`, set `config` to the name of the file. The path is relative to the root of your project.
+
+### `external`
+
+`external` is equivalent to the respective [_external_ option of esbuild](https://esbuild.github.io/api/#external). You can use it to mark a file or package as external to exclude it from your build. Typically, this can be used for packages that do import _NodeJS_ modules such as `fs`.
+
+The values `__STATIC_CONTENT_MANIFEST` and `cloudflare:*` are always in the list of excluded packages and this can't be changed.
+
+### `alias`
+
+`alias` is equivalent to the respective [_alias_ option of esbuild](https://esbuild.github.io/api/#alias). You can use it to substitute one package for another when bundling.
 
 ## Bindings
 

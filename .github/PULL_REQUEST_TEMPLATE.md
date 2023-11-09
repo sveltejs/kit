@@ -7,4 +7,4 @@
 - [ ] Run the tests with `pnpm test` and lint the project with `pnpm lint` and `pnpm check`
 
 ### Changesets
-- [ ] If your PR makes a change that should be noted in one or more packages' changelogs, generate a changeset by running `pnpm changeset` and following the prompts. Changesets that add features should be `minor` and those that fix bugs should be `patch`. Please prefix changeset messages with `feat:`, `fix:`, or `chore:`.
+- [ ] Run `pnpm changeset` for user-visible changes and follow the prompts. Changeset messages should generally be prefixed with `feat:` or `fix:`. PRs can also be prefixed with `chore:` or `docs:`, which typically won't require a changeset as they're not user-visible.
