@@ -4,7 +4,7 @@
 	"private": true,
 	"scripts": {
 		"dev": "vite dev",
-		"build": "vite build",
+		"build": "vite build --mode staging",
 		"preview": "sirv -p 5173 -s 200.html build",
 		"test": "playwright test"
 	},

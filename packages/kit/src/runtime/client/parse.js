@@ -1,7 +1,7 @@
 import { exec, parse_route_id } from '../../utils/routing.js';
 
 /**
- * @param {import('./types').SvelteKitApp} app
+ * @param {import('./types.js').SvelteKitApp} app
  * @returns {import('types').CSRRoute[]}
  */
 export function parse({ nodes, server_loads, dictionary, matchers }) {

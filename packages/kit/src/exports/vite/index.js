@@ -24,13 +24,13 @@ import prerender from '../../core/postbuild/prerender.js';
 import analyse from '../../core/postbuild/analyse.js';
 import { s } from '../../utils/misc.js';
 import { hash } from '../../runtime/hash.js';
-import { dedent } from '../../core/sync/utils.js';
+import { dedent, isSvelte5Plus } from '../../core/sync/utils.js';
 
 export { vitePreprocess } from '@sveltejs/vite-plugin-svelte';
 
 const cwd = process.cwd();
 
-/** @type {import('./types').EnforcedConfig} */
+/** @type {import('./types.js').EnforcedConfig} */
 const enforced_config = {
 	appType: true,
 	base: true,
@@ -136,7 +136,7 @@ export async function sveltekit() {
 		onwarn: svelte_config.onwarn,
 		compilerOptions: {
 			// @ts-expect-error SvelteKit requires hydratable true by default
-			hydratable: true,
+			hydratable: isSvelte5Plus() ? undefined : true,
 			...svelte_config.compilerOptions
 		},
 		...svelte_config.vitePlugin
@@ -702,7 +702,7 @@ function kit({ svelte_config }) {
 
 				secondary_build_started = true;
 
-				const { output } = /** @type {import('rollup').RollupOutput} */ (
+				const { output } = /** @type {import('vite').Rollup.RollupOutput} */ (
 					await vite.build({
 						configFile: vite_config.configFile,
 						// CLI args
@@ -742,7 +742,7 @@ function kit({ svelte_config }) {
 				};
 
 				const css = output.filter(
-					/** @type {(value: any) => value is import('rollup').OutputAsset} */
+					/** @type {(value: any) => value is import('vite').Rollup.OutputAsset} */
 					(value) => value.type === 'asset' && value.fileName.endsWith('.css')
 				);
 
@@ -807,7 +807,15 @@ function kit({ svelte_config }) {
 
 					if (kit.adapter) {
 						const { adapt } = await import('../../core/adapt/index.js');
-						await adapt(svelte_config, build_data, metadata, prerendered, prerender_map, log);
+						await adapt(
+							svelte_config,
+							build_data,
+							metadata,
+							prerendered,
+							prerender_map,
+							log,
+							vite_config
+						);
 					} else {
 						console.log(colors.bold().yellow('\nNo adapter specified'));
 
@@ -855,7 +863,7 @@ function warn_overridden_config(config, resolved_config) {
 /**
  * @param {Record<string, any>} config
  * @param {Record<string, any>} resolved_config
- * @param {import('./types').EnforcedConfig} enforced_config
+ * @param {import('./types.js').EnforcedConfig} enforced_config
  * @param {string} path
  * @param {string[]} out used locally to compute the return value
  */

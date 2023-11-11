@@ -444,7 +444,7 @@ function create_routes_and_nodes(cwd, config, fallback) {
  * @param {string} file
  * @param {string[]} component_extensions
  * @param {string[]} module_extensions
- * @returns {import('./types').RouteFile}
+ * @returns {import('./types.js').RouteFile}
  */
 function analyze(project_relative, file, component_extensions, module_extensions) {
 	const component_extension = component_extensions.find((ext) => file.endsWith(ext));

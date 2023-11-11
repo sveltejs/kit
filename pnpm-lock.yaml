@@ -60,8 +60,8 @@ importers:
   packages/adapter-auto:
     dependencies:
       import-meta-resolve:
-        specifier: ^3.0.0
-        version: 3.0.0
+        specifier: ^4.0.0
+        version: 4.0.0
     devDependencies:
       '@sveltejs/kit':
         specifier: workspace:^
@@ -182,8 +182,8 @@ importers:
         version: 3.29.4
     devDependencies:
       '@polka/url':
-        specifier: ^1.0.0-next.21
-        version: 1.0.0-next.21
+        specifier: ^1.0.0-next.23
+        version: 1.0.0-next.23
       '@sveltejs/kit':
         specifier: workspace:^
         version: link:../kit
@@ -194,8 +194,8 @@ importers:
         specifier: ^8.0.0
         version: 8.0.0
       polka:
-        specifier: ^1.0.0-next.22
-        version: 1.0.0-next.22
+        specifier: ^1.0.0-next.23
+        version: 1.0.0-next.23
       sirv:
         specifier: ^2.0.3
         version: 2.0.3
@@ -399,8 +399,8 @@ importers:
   packages/kit:
     dependencies:
       '@sveltejs/vite-plugin-svelte':
-        specifier: ^2.4.1
-        version: 2.4.1(svelte@4.2.2)(vite@4.4.9)
+        specifier: ^2.5.0
+        version: 2.5.0(svelte@4.2.2)(vite@4.4.9)
       '@types/cookie':
         specifier: ^0.5.1
         version: 0.5.1
@@ -1947,8 +1947,8 @@ packages:
       playwright-core: 1.30.0
     dev: true
 
-  /@polka/url@1.0.0-next.21:
-    resolution: {integrity: sha512-a5Sab1C4/icpTZVzZc5Ghpz88yQtGOyNqYXcZgOssB2uuAr+wF/MvN6bgtW32q7HHrvBki+BsZ0OuNv6EV3K9g==}
+  /@polka/url@1.0.0-next.23:
+    resolution: {integrity: sha512-C16M+IYz0rgRhWZdCmK+h58JMv8vijAA61gmz2rspCSwKwzBebpdcsiUmwrtJRdphuY30i6BSLEOP8ppbNLyLg==}
 
   /@rollup/plugin-commonjs@25.0.0(rollup@3.29.4):
     resolution: {integrity: sha512-hoho2Kay9TZrLu0bnDsTTCaj4Npa+THk9snajP/XDNb9a9mmjTjh52EQM9sKl3HD1LsnihX7js+eA2sd2uKAhw==}
@@ -2097,15 +2097,15 @@ packages:
       svelte-local-storage-store: 0.6.0(svelte@4.2.2)
     dev: true
 
-  /@sveltejs/vite-plugin-svelte-inspector@1.0.3(@sveltejs/vite-plugin-svelte@2.4.1)(svelte@4.2.2)(vite@4.4.9):
-    resolution: {integrity: sha512-Khdl5jmmPN6SUsVuqSXatKpQTMIifoQPDanaxC84m9JxIibWvSABJyHpyys0Z+1yYrxY5TTEQm+6elh0XCMaOA==}
+  /@sveltejs/vite-plugin-svelte-inspector@1.0.4(@sveltejs/vite-plugin-svelte@2.5.0)(svelte@4.2.2)(vite@4.4.9):
+    resolution: {integrity: sha512-zjiuZ3yydBtwpF3bj0kQNV0YXe+iKE545QGZVTaylW3eAzFr+pJ/cwK8lZEaRp4JtaJXhD5DyWAV4AxLh6DgaQ==}
     engines: {node: ^14.18.0 || >= 16}
     peerDependencies:
       '@sveltejs/vite-plugin-svelte': ^2.2.0
       svelte: ^3.54.0 || ^4.0.0
       vite: ^4.0.0
     dependencies:
-      '@sveltejs/vite-plugin-svelte': 2.4.1(svelte@4.2.2)(vite@4.4.9)
+      '@sveltejs/vite-plugin-svelte': 2.5.0(svelte@4.2.2)(vite@4.4.9)
       debug: 4.3.4
       svelte: 4.2.2
       vite: 4.4.9(@types/node@16.18.6)(lightningcss@1.21.8)
@@ -2113,14 +2113,14 @@ packages:
       - supports-color
     dev: false
 
-  /@sveltejs/vite-plugin-svelte@2.4.1(svelte@4.2.2)(vite@4.4.9):
-    resolution: {integrity: sha512-bNNKvoRY89ptY7udeBSCmTdCVwkjmMcZ0j/z9J5MuedT8jPjq0zrknAo/jF1sToAza4NVaAgR9AkZoD9oJJmnA==}
+  /@sveltejs/vite-plugin-svelte@2.5.0(svelte@4.2.2)(vite@4.4.9):
+    resolution: {integrity: sha512-FxLZLVfFA2soGw7ej8Ohuav7+AOsJILiPlL8FgY5MABDDmDqb637o8Xd/QGkrXLC1qXyG1bnteOw5Z5yrA2lHA==}
     engines: {node: ^14.18.0 || >= 16}
     peerDependencies:
-      svelte: ^3.54.0 || ^4.0.0-next.0
+      svelte: ^3.54.0 || ^4.0.0 || ^5.0.0-next.0
       vite: ^4.0.0
     dependencies:
-      '@sveltejs/vite-plugin-svelte-inspector': 1.0.3(@sveltejs/vite-plugin-svelte@2.4.1)(svelte@4.2.2)(vite@4.4.9)
+      '@sveltejs/vite-plugin-svelte-inspector': 1.0.4(@sveltejs/vite-plugin-svelte@2.5.0)(svelte@4.2.2)(vite@4.4.9)
       debug: 4.3.4
       deepmerge: 4.3.1
       kleur: 4.1.5
@@ -4047,8 +4047,8 @@ packages:
       resolve-from: 4.0.0
     dev: true
 
-  /import-meta-resolve@3.0.0:
-    resolution: {integrity: sha512-4IwhLhNNA8yy445rPjD/lWh++7hMDOml2eHtd58eG7h+qK3EryMuuRbsHGPikCoAgIkkDnckKfWSk2iDla/ejg==}
+  /import-meta-resolve@4.0.0:
+    resolution: {integrity: sha512-okYUR7ZQPH+efeuMJGlq4f8ubUgO50kByRPyt/Cy1Io4PSRsPjxME+YlVaCOx+NIToW7hCsZNFJyTPFFKepRSA==}
     dev: false
 
   /imurmurhash@0.1.4:
@@ -5056,11 +5056,11 @@ packages:
     engines: {node: '>=4'}
     dev: true
 
-  /polka@1.0.0-next.22:
-    resolution: {integrity: sha512-a7tsZy5gFbJr0aUltZS97xCkbPglXuD67AMvTyZX7BTDBH384FWf0ZQF6rPvdutSxnO1vUlXM2zSLf5tCKk5RA==}
+  /polka@1.0.0-next.23:
+    resolution: {integrity: sha512-19z2ny2aGdx+dns3icsQy6G7sWe0Dg7QTqSGE4B010EFbxvGzjjn37gBBjM8T0K2p6rthZ6+oXoBF3DcFceOPA==}
     engines: {node: '>=8'}
     dependencies:
-      '@polka/url': 1.0.0-next.21
+      '@polka/url': 1.0.0-next.23
       trouter: 3.2.1
     dev: true
 
@@ -5582,7 +5582,7 @@ packages:
     resolution: {integrity: sha512-O9jm9BsID1P+0HOi81VpXPoDxYP374pkOLzACAoyUQ/3OUVndNpsz6wMnY2z+yOxzbllCKZrM+9QrWsv4THnyA==}
     engines: {node: '>= 10'}
     dependencies:
-      '@polka/url': 1.0.0-next.21
+      '@polka/url': 1.0.0-next.23
       mrmime: 1.0.1
       totalist: 3.0.1
 
