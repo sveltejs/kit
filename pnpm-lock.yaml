@@ -454,8 +454,8 @@ importers:
         specifier: ^2.4.2
         version: 2.4.2
       dts-buddy:
-        specifier: ^0.2.4
-        version: 0.2.4
+        specifier: ^0.4.0
+        version: 0.4.0(typescript@4.9.4)
       marked:
         specifier: ^9.0.0
         version: 9.0.0
@@ -3214,9 +3214,11 @@ packages:
     resolution: {integrity: sha512-QgA6BUh2SoBYE/dSuMmeGhNdoGtGewt3Rn66xKyXoGNyjrKRXf163wuM+xeQ83p87l/3ALoB6Il1dgKyGS5pEw==}
     dev: true
 
-  /dts-buddy@0.2.4:
-    resolution: {integrity: sha512-41d7aGv2DXJYlzeKSKHf0GtpCC8OdpEHhz+aqjylKV5aP3fl4APzNmQ5hL5vSKZMaO/lrkrKWC+HQrxl+mcgUw==}
+  /dts-buddy@0.4.0(typescript@4.9.4):
+    resolution: {integrity: sha512-L8sHp1mmpufZhz/+HLIA40hJG6T937rsWhEIED2W2QMbGSpdg1G5pc2EK1WLKvmd1DvGZ0Qs8uoeSUaqK5mqkw==}
     hasBin: true
+    peerDependencies:
+      typescript: '>=5.0.4 <5.3'
     dependencies:
       '@jridgewell/source-map': 0.3.5
       '@jridgewell/sourcemap-codec': 1.4.15
@@ -3226,8 +3228,8 @@ packages:
       magic-string: 0.30.5
       sade: 1.8.1
       tiny-glob: 0.2.9
-      ts-api-utils: 1.0.2(typescript@5.0.4)
-      typescript: 5.0.4
+      ts-api-utils: 1.0.3(typescript@4.9.4)
+      typescript: 4.9.4
     dev: true
 
   /electron-to-chromium@1.4.488:
@@ -6098,15 +6100,6 @@ packages:
       typescript: '>=4.2.0'
     dependencies:
       typescript: 4.9.4
-    dev: true
-
-  /ts-api-utils@1.0.2(typescript@5.0.4):
-    resolution: {integrity: sha512-Cbu4nIqnEdd+THNEsBdkolnOXhg0I8XteoHaEKgvsxpsbWda4IsUut2c187HxywQCvveojow0Dgw/amxtSKVkQ==}
-    engines: {node: '>=16.13.0'}
-    peerDependencies:
-      typescript: '>=4.2.0'
-    dependencies:
-      typescript: 5.0.4
     dev: true
 
   /ts-api-utils@1.0.3(typescript@4.9.4):
