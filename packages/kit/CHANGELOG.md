@@ -1,5 +1,13 @@
 # @sveltejs/kit
 
+## 1.27.5
+
+### Patch Changes
+
+- fix: add vite.config.js to included files in generated tsconfig ([#10788](https://github.com/sveltejs/kit/pull/10788))
+
+- fix: cache location.origin on startup ([#11004](https://github.com/sveltejs/kit/pull/11004))
+
 ## 1.27.4
 
 ### Patch Changes
