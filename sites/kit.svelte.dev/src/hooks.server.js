@@ -1,6 +1,7 @@
 const redirects = {
-	'/docs/typescript': '/docs/types',
-	'/docs/amp': '/docs/seo#manual-setup-amp'
+	'/docs/amp': '/docs/seo#manual-setup-amp',
+	'/docs/assets': '/docs/images',
+	'/docs/typescript': '/docs/types'
 };
 
 const preload_types = ['js', 'css', 'font'];

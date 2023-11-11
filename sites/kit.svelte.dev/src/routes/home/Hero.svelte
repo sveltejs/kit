@@ -1,8 +1,6 @@
 <script>
 	import { base } from '$app/paths';
 	import Logotype from './svelte-kit-logotype.svg.svelte';
-	import Image from '$lib/Image.svelte';
-	import background from './svelte-kit-machine.webp?w=1440;960';
 </script>
 
 <section class="hero">
@@ -16,8 +14,13 @@
 			<a href="{base}/docs/introduction" class="cta"> read the docs </a>
 		</div>
 
-		<div class="hero-image">
-			<Image src={background} alt="SvelteKit illustration" />
+		<div class="hero-image-wrapper">
+			<enhanced:img
+				src="./svelte-kit-machine.webp?w=1440;1080;768;640"
+				sizes="(min-width: 768px) min(100vw, 108rem), 64rem"
+				class="hero-image"
+				alt="SvelteKit illustration"
+			/>
 		</div>
 	</div>
 </section>
@@ -86,7 +89,7 @@
 		margin: 0 0 1rem 0;
 	}
 
-	.hero-image {
+	.hero-image-wrapper {
 		--size: 64rem;
 		position: absolute;
 		left: calc(50% - 0.53 * var(--size));
@@ -94,10 +97,9 @@
 		pointer-events: none;
 	}
 
-	/* this sucks but it's the best we can do.
-	   https://github.com/sveltejs/svelte/issues/2870#issuecomment-1161082065 */
-	.hero-image :global(img) {
+	.hero-image {
 		width: var(--size);
+		height: auto;
 		aspect-ratio: 4 / 3;
 		object-fit: cover;
 	}
@@ -148,7 +150,7 @@
 			text-align: left;
 		}
 
-		.hero-image {
+		.hero-image-wrapper {
 			--size: min(100vw, 108rem);
 			left: auto;
 			right: -20rem;

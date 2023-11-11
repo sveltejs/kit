@@ -1,0 +1,42 @@
+{
+	"name": "@sveltejs/enhanced-img",
+	"version": "0.1.0",
+	"description": "Image optimization for your Svelte apps",
+	"repository": {
+		"type": "git",
+		"url": "https://github.com/sveltejs/kit",
+		"directory": "packages/image"
+	},
+	"license": "MIT",
+	"homepage": "https://kit.svelte.dev",
+	"type": "module",
+	"scripts": {
+		"lint": "prettier --check . --config ../../.prettierrc --ignore-path .gitignore",
+		"check": "tsc",
+		"format": "prettier --write . --config ../../.prettierrc --ignore-path .gitignore",
+		"test": "vitest"
+	},
+	"files": [
+		"src",
+		"types"
+	],
+	"exports": {
+		"types": "./types/index.d.ts",
+		"import": "./src/index.js"
+	},
+	"types": "types/index.d.ts",
+	"dependencies": {
+		"magic-string": "^0.30.0",
+		"svelte-parse-markup": "^0.1.1",
+		"vite-imagetools": "^6.2.3"
+	},
+	"devDependencies": {
+		"@types/estree": "^1.0.2",
+		"@types/node": "^16.18.6",
+		"estree-walker": "^3.0.3",
+		"svelte": "^4.0.5",
+		"typescript": "^4.9.4",
+		"vite": "^4.4.2",
+		"vitest": "^0.34.0"
+	}
+}
