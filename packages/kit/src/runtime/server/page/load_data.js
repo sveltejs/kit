@@ -144,7 +144,7 @@ export async function load_server_data({
  * Calls the user's `load` function.
  * @param {{
  *   event: import('@sveltejs/kit').RequestEvent;
- *   fetched: import('./types').Fetched[];
+ *   fetched: import('./types.js').Fetched[];
  *   node: import('types').SSRNode | undefined;
  *   parent: () => Promise<Record<string, any>>;
  *   resolve_opts: import('types').RequiredResolveOptions;
@@ -192,7 +192,7 @@ export async function load_data({
 /**
  * @param {Pick<import('@sveltejs/kit').RequestEvent, 'fetch' | 'url' | 'request' | 'route'>} event
  * @param {import('types').SSRState} state
- * @param {import('./types').Fetched[]} fetched
+ * @param {import('./types.js').Fetched[]} fetched
  * @param {boolean} csr
  * @param {Pick<Required<import('@sveltejs/kit').ResolveOptions>, 'filterSerializedResponseHeaders'>} resolve_opts
  */

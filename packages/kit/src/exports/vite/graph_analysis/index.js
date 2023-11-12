@@ -25,7 +25,7 @@ export function is_illegal(id, dirs) {
 
 /**
  * Creates a guard that checks that no id imports a module that is not allowed to be imported into client-side code.
- * @param {import('rollup').PluginContext} context
+ * @param {import('vite').Rollup.PluginContext} context
  * @param {{ cwd: string; lib: string }} paths
  */
 export function module_guard(context, { cwd, lib }) {

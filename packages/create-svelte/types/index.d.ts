@@ -1,4 +1,4 @@
-import { Options } from './internal';
+import { Options } from './internal.js';
 
 /**
  * Create a new SvelteKit project.

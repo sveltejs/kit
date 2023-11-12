@@ -96,10 +96,10 @@ export async function render_page(event, page, options, manifest, state, resolve
 		// inherit the prerender option of the page
 		state.prerender_default = should_prerender;
 
-		/** @type {import('./types').Fetched[]} */
+		/** @type {import('./types.js').Fetched[]} */
 		const fetched = [];
 
-		if (get_option(nodes, 'ssr') === false) {
+		if (get_option(nodes, 'ssr') === false && !state.prerendering) {
 			return await render_response({
 				branch: [],
 				fetched,

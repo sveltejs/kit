@@ -414,5 +414,5 @@ export type ValidatedConfig = RecursiveRequired<Config>;
 
 export type ValidatedKitConfig = RecursiveRequired<KitConfig>;
 
-export * from '../exports/index';
+export * from '../exports/index.js';
 export * from './private.js';
