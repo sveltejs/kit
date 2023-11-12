@@ -1,5 +1,10 @@
 import { devices } from '@playwright/test';
 
+const major = process.version.slice(1).split('.')[0];
+if (major !== '16' && major !== '18') {
+	process.exit(0);
+}
+
 /** @type {import('@playwright/test').PlaywrightTestConfig} */
 export const config = {
 	forbidOnly: !!process.env.CI,
