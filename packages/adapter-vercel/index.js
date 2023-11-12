@@ -19,7 +19,7 @@ const get_default_runtime = () => {
 	);
 };
 
-/** @type {import('.').default} **/
+/** @type {import('./index.js').default} **/
 const plugin = function (defaults = {}) {
 	if ('edge' in defaults) {
 		throw new Error("{ edge: true } has been removed in favour of { runtime: 'edge' }");
@@ -61,8 +61,8 @@ const plugin = function (defaults = {}) {
 
 			/**
 			 * @param {string} name
-			 * @param {import('.').ServerlessConfig} config
-			 * @param {import('@sveltejs/kit').RouteDefinition<import('.').Config>[]} routes
+			 * @param {import('./index.js').ServerlessConfig} config
+			 * @param {import('@sveltejs/kit').RouteDefinition<import('./index.js').Config>[]} routes
 			 */
 			async function generate_serverless_function(name, config, routes) {
 				const relativePath = path.posix.relative(tmp, builder.getServerDirectory());
@@ -90,8 +90,8 @@ const plugin = function (defaults = {}) {
 
 			/**
 			 * @param {string} name
-			 * @param {import('.').EdgeConfig} config
-			 * @param {import('@sveltejs/kit').RouteDefinition<import('.').EdgeConfig>[]} routes
+			 * @param {import('./index.js').EdgeConfig} config
+			 * @param {import('@sveltejs/kit').RouteDefinition<import('./index.js').EdgeConfig>[]} routes
 			 */
 			async function generate_edge_function(name, config, routes) {
 				const tmp = builder.getBuildDirectory(`vercel-tmp/${name}`);
@@ -138,7 +138,7 @@ const plugin = function (defaults = {}) {
 				);
 			}
 
-			/** @type {Map<string, { i: number, config: import('.').Config, routes: import('@sveltejs/kit').RouteDefinition<import('.').Config>[] }>} */
+			/** @type {Map<string, { i: number, config: import('./index.js').Config, routes: import('@sveltejs/kit').RouteDefinition<import('./index.js').Config>[] }>} */
 			const groups = new Map();
 
 			/** @type {Map<string, { hash: string, route_id: string }>} */
@@ -147,7 +147,7 @@ const plugin = function (defaults = {}) {
 			/** @type {Map<string, string>} */
 			const functions = new Map();
 
-			/** @type {Map<import('@sveltejs/kit').RouteDefinition<import('.').Config>, { expiration: number | false, bypassToken: string | undefined, allowQuery: string[], group: number, passQuery: true }>} */
+			/** @type {Map<import('@sveltejs/kit').RouteDefinition<import('./index.js').Config>, { expiration: number | false, bypassToken: string | undefined, allowQuery: string[], group: number, passQuery: true }>} */
 			const isr_config = new Map();
 
 			/** @type {Set<string>} */
@@ -342,7 +342,7 @@ const plugin = function (defaults = {}) {
 	};
 };
 
-/** @param {import('.').EdgeConfig & import('.').ServerlessConfig} config */
+/** @param {import('./index.js').EdgeConfig & import('./index.js').ServerlessConfig} config */
 function hash_config(config) {
 	return [
 		config.runtime ?? '',
@@ -430,7 +430,7 @@ function static_vercel_config(builder) {
  * @param {import('@sveltejs/kit').Builder} builder
  * @param {string} entry
  * @param {string} dir
- * @param {import('.').ServerlessConfig} config
+ * @param {import('./index.js').ServerlessConfig} config
  * @param {import('@sveltejs/kit').RouteDefinition[]} routes
  */
 async function create_function_bundle(builder, entry, dir, config, routes) {
@@ -541,10 +541,21 @@ async function create_function_bundle(builder, entry, dir, config, routes) {
 		)
 	);
 
-	for (const asset of new Set([
-		...routes.flatMap((route) => route.serverAssets),
-		...builder.getRootErrorPageServerAssets()
-	])) {
+	const { serverAssets, rootErrorPageAssets } = builder.getServerAssets();
+	const routes_assets = new Set(rootErrorPageAssets);
+
+	const routes_length = routes.length;
+	for (let i = 0; i < routes_length; i++) {
+		const assets = serverAssets.get(routes[i].id);
+		if (assets) {
+			const assets_length = assets.length;
+			for (let j = 0; j < assets_length; j++) {
+				routes_assets.add(assets[j]);
+			}
+		}
+	}
+
+	for (const asset of routes_assets) {
 		builder.copy(path.join(builder.getServerDirectory(), asset), path.join(dir, asset));
 	}
 

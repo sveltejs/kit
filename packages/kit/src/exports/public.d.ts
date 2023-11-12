@@ -121,8 +121,13 @@ export interface Builder {
 	getServerDirectory(): string;
 	/** Get the application path including any configured `base` path, e.g. `my-base-path/_app`. */
 	getAppPath(): string;
-	/** Get an array of server assets used by the root [default error page](https://kit.svelte.dev/docs/routing#error). */
-	getRootErrorPageServerAssets(): string[];
+	/** Get the asset paths imported by server-side code. */
+	getServerAssets(): {
+		/** A map of route IDs and its array of assets paths imported by server-side code. */
+		serverAssets: Map<string, string[]>;
+		/** An array of asset paths imported by the root [default error page](https://kit.svelte.dev/docs/routing#error). */
+		rootErrorPageAssets: string[];
+	};
 
 	/**
 	 * Write client assets to `dest`.
@@ -1096,7 +1101,6 @@ export interface RouteDefinition<Config = any> {
 	segments: RouteSegment[];
 	methods: Array<HttpMethod | '*'>;
 	config: Config;
-	serverAssets: string[];
 }
 
 export class Server {

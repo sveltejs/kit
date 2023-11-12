@@ -42,84 +42,6 @@ export function create_builder({
 	/** @type {Map<import('@sveltejs/kit').RouteDefinition, import('types').RouteData>} */
 	const lookup = new Map();
 
-	/** @type {Set<string>} */
-	let asset_chunks = new Set();
-
-	for (const [filename, meta] of Object.entries(build_data.server_manifest)) {
-		if (filename.startsWith('_') && meta.assets) {
-			asset_chunks = concat(asset_chunks, meta.assets);
-		}
-	}
-
-	/**
-	 * @param {string | undefined} filename
-	 * @returns {Set<string>}
-	 */
-	function get_server_assets(filename) {
-		if (!filename || !build_data.server_manifest[filename]) {
-			return /** @type {Set<string>} */ (new Set());
-		}
-		const { imports, assets } = build_data.server_manifest[filename];
-
-		/** @type {Set<string>} */
-		let server_assets = new Set();
-
-		if (imports) {
-			server_assets = concat(
-				server_assets,
-				imports.filter((file) => asset_chunks.has(file))
-			);
-		}
-		if (assets) {
-			server_assets = concat(server_assets, assets);
-		}
-
-		return server_assets;
-	}
-
-	/**
-	 * @param {{
-	 *   component?: string;
-	 *   server?: string;
-	 *   universal?: string;
-	 *   parent?: import('types').PageNode;
-	 * }} node
-	 * @returns
-	 */
-	function get_page_node_assets({ component, server, universal, parent }) {
-		let server_assets = concat(
-			/** @type {Set<string>}*/ (new Set()),
-			get_server_assets(component),
-			get_server_assets(server),
-			get_server_assets(universal)
-		);
-		if (parent) {
-			server_assets = concat(server_assets, get_page_node_assets(parent));
-		}
-		return server_assets;
-	}
-
-	const route_dir = config.kit.files.routes.slice(process.cwd().length + 1);
-
-	/**
-	 * @param {import('types').RouteData} route
-	 */
-	function get_default_error_page_assets(route) {
-		/** @type {Set<string>} */
-		let server_assets = new Set();
-		let route_id = route.id;
-		do {
-			server_assets = concat(
-				server_assets,
-				get_server_assets(
-					`${route_dir}${route_id === '/' ? route_id : route_id + '/'}+error.svelte`
-				)
-			);
-			route_id = route_id.split('/').slice(0, -1).join('/');
-		} while (route_id);
-		return server_assets;
-	}
-
 	/**
 	 * Rather than exposing the internal `RouteData` type, which is subject to change,
 	 * we expose a stable type that adapters can use to group/filter routes
@@ -128,18 +50,6 @@ export function create_builder({
 		const { config, methods, page, api } = /** @type {import('types').ServerMetadataRoute} */ (
 			server_metadata.routes.get(route.id)
 		);
-
-		let server_assets = new Set();
-		if (route.leaf) {
-			server_assets = concat(
-				server_assets,
-				get_page_node_assets(route.leaf),
-				get_default_error_page_assets(route)
-			);
-		}
-		if (route.endpoint) {
-			server_assets = concat(server_assets, get_server_assets(route.endpoint.file));
-		}
 
 		/** @type {import('@sveltejs/kit').RouteDefinition} */
 		const facade = {
@@ -154,14 +64,18 @@ export function create_builder({
 			pattern: route.pattern,
 			prerender: prerender_map.get(route.id) ?? false,
 			methods,
-			config,
-			serverAssets: Array.from(server_assets)
+			config
 		};
 
 		lookup.set(facade, route);
 
 		return facade;
 	});
+
+	/** @type {Map<string, string[]> | undefined} */
+	let serverAssets;
+	/** @type {string[] | undefined} */
+	let rootErrorPageAssets;
 
 	return {
 		log,
@@ -274,21 +188,135 @@ export function create_builder({
 			return build_data.app_path;
 		},
 
-		getRootErrorPageServerAssets() {
-			const route = route_data.find((route) => route.leaf);
-			if (!route || !route.leaf) {
-				return /** @type {string[]}*/ ([]);
+		getServerAssets() {
+			if (serverAssets && rootErrorPageAssets) {
+				return {
+					serverAssets,
+					rootErrorPageAssets
+				};
 			}
 
-			let assets = new Set(get_server_assets(`${route_dir}/+error.svelte`));
+			/** @type {Set<string>} */
+			let asset_chunks = new Set();
 
-			let layout = route.leaf.parent;
-			while (layout) {
-				assets = concat(assets, get_page_node_assets(layout));
-				layout = layout.parent;
+			for (const [filename, meta] of Object.entries(build_data.server_manifest)) {
+				if (filename.startsWith('_') && meta.assets) {
+					asset_chunks = concat(asset_chunks, meta.assets);
+				}
 			}
 
-			return [...assets];
+			/**
+			 * @param {string | undefined} filename
+			 * @returns {Set<string>}
+			 */
+			function get_server_assets(filename) {
+				if (!filename || !build_data.server_manifest[filename]) {
+					return /** @type {Set<string>} */ (new Set());
+				}
+				const { imports, assets } = build_data.server_manifest[filename];
+
+				/** @type {Set<string>} */
+				let server_assets = new Set();
+
+				if (imports) {
+					server_assets = concat(
+						server_assets,
+						imports.filter((file) => asset_chunks.has(file))
+					);
+				}
+				if (assets) {
+					server_assets = concat(server_assets, assets);
+				}
+
+				return server_assets;
+			}
+
+			/**
+			 * @param {{
+			 *   component?: string;
+			 *   server?: string;
+			 *   universal?: string;
+			 *   parent?: import('types').PageNode;
+			 * }} node
+			 * @returns
+			 */
+			function get_page_node_assets({ component, server, universal, parent }) {
+				let server_assets = concat(
+					/** @type {Set<string>}*/ (new Set()),
+					get_server_assets(component),
+					get_server_assets(server),
+					get_server_assets(universal)
+				);
+				if (parent) {
+					server_assets = concat(server_assets, get_page_node_assets(parent));
+				}
+				return server_assets;
+			}
+
+			const route_dir = config.kit.files.routes.slice(process.cwd().length + 1);
+
+			/**
+			 * @param {import('types').RouteData} route
+			 */
+			function get_default_error_page_assets(route) {
+				/** @type {Set<string>} */
+				let server_assets = new Set();
+				let route_id = route.id;
+				do {
+					server_assets = concat(
+						server_assets,
+						get_server_assets(
+							`${route_dir}${route_id === '/' ? route_id : route_id + '/'}+error.svelte`
+						)
+					);
+					route_id = route_id.split('/').slice(0, -1).join('/');
+				} while (route_id);
+				return server_assets;
+			}
+
+			function get_root_error_page_assets() {
+				const route = route_data.find((route) => route.leaf);
+				if (!route || !route.leaf) {
+					return /** @type {string[]}*/ ([]);
+				}
+
+				let assets = new Set(get_server_assets(`${route_dir}/+error.svelte`));
+
+				let layout = route.leaf.parent;
+				while (layout) {
+					assets = concat(assets, get_page_node_assets(layout));
+					layout = layout.parent;
+				}
+
+				return [...assets];
+			}
+
+			/** @type {Map<string, string[]>} */
+			const routes = new Map();
+			route_data.forEach((route) => {
+				/** @type {Set<string>} */
+				let server_assets = new Set();
+				if (route.leaf) {
+					server_assets = concat(
+						server_assets,
+						get_page_node_assets(route.leaf),
+						get_default_error_page_assets(route)
+					);
+				}
+				if (route.endpoint) {
+					server_assets = concat(server_assets, get_server_assets(route.endpoint.file));
+				}
+
+				routes.set(route.id, Array.from(server_assets));
+			});
+
+			serverAssets = routes;
+			rootErrorPageAssets = get_root_error_page_assets();
+
+			return {
+				serverAssets,
+				rootErrorPageAssets
+			};
 		},
 
 		writeClient(dest) {
