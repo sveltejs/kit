@@ -19,8 +19,7 @@ test('copy files', () => {
 		kit: {
 			appDir: '_app',
 			files: {
-				assets: join(__dirname, 'fixtures/basic/static'),
-				routes: ''
+				assets: join(__dirname, 'fixtures/basic/static')
 			},
 			outDir
 		}
@@ -29,9 +28,7 @@ test('copy files', () => {
 	const builder = create_builder({
 		config: /** @type {import('types').ValidatedConfig} */ (mocked),
 		// @ts-expect-error
-		build_data: {
-			server_manifest: {}
-		},
+		build_data: {},
 		// @ts-expect-error
 		server_metadata: {},
 		route_data: [],
@@ -63,19 +60,9 @@ test('copy files', () => {
 });
 
 test('compress files', async () => {
+	// @ts-expect-error - we don't need the whole config for this test
 	const builder = create_builder({
-		config: /** @type {import('types').ValidatedConfig} */ ({
-			kit: {
-				files: {
-					routes: ''
-				}
-			}
-		}),
-		route_data: [],
-		// @ts-expect-error - we don't need the whole config for this test
-		build_data: {
-			server_manifest: {}
-		}
+		route_data: []
 	});
 
 	const target = fileURLToPath(new URL('./fixtures/compress/foo.css', import.meta.url));
