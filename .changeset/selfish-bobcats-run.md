@@ -2,4 +2,4 @@
 '@sveltejs/kit': minor
 ---
 
-feat: build metadata includes the server assets used by each route
+feat: adapter method to get server assets used by each route
