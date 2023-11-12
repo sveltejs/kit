@@ -93,11 +93,10 @@ async function analyse({ manifest_path, env }) {
 				prerender = mod.prerender;
 			}
 
-			Object.keys(mod).forEach((key) => {
-				// @ts-ignore
-				if (mod[key] && ENDPOINT_METHODS.has(key)) {
-					api_methods.push(/** @type {import('types').HttpMethod} */ (key));
-				} else if (mod.fallback && key === 'fallback') {
+			Object.values(mod).forEach((/** @type {import('types').HttpMethod} */ method) => {
+				if (mod[method] && ENDPOINT_METHODS.has(method)) {
+					api_methods.push(method);
+				} else if (mod.fallback) {
 					api_methods.push('*');
 				}
 			});
