@@ -141,7 +141,7 @@ If you have Vercel functions contained in the `api` directory at the project's r
 
 Projects created before a certain date will default to using Node 14, while SvelteKit requires Node 16 or later. You can [change the Node version in your project settings](https://vercel.com/docs/concepts/functions/serverless-functions/runtimes/node-js#node.js-version).
 
-## Accessing the file system
+### Accessing the file system
 
 You can [use files in Serverless Functions on Vercel](https://vercel.com/guides/how-can-i-use-files-in-serverless-functions).
 

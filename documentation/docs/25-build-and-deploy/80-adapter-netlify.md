@@ -107,8 +107,42 @@ Additionally, you can add your own Netlify functions by creating a directory for
 	directory = "functions"
 ```
 
-## Troubleshooting
-
 ### Accessing the file system
 
-You can't access the file system through methods like `fs.readFileSync` in Serverless/Edge environments. If you need to access files that way, do that during building the app through [prerendering](https://kit.svelte.dev/docs/page-options#prerender). If you have a blog for example and don't want to manage your content through a CMS, then you need to prerender the content (or prerender the endpoint from which you get it) and redeploy your blog everytime you add new content.
+You can [use files in Netlify Serverless Functions](https://www.netlify.com/blog/2021/08/12/how-to-include-files-in-netlify-serverless-functions/).
+
+```js
+// @errors: 2307 7031
+/// file: api/pdf/+server.js
+import fs from "node:fs";
+import path from "node:path";
+import { json } from '@sveltejs/kit';
+import { dev } from '$app/environment';
+import PDFDocument from "pdfkit";
+import PalatinoBoldFont from "$lib/fonts/PalatinoBold.ttf";
+
+// server assets live in `.netlify/server` when deployed to Netlify
+const dir = dev ? process.cwd() : path.join(process.cwd(), '.netlify/server');
+
+const font = path.join(dir, PalatinoBoldFont);
+
+export async function GET({ url }) {
+	const title = url.searchParams.get('title');
+	const filename = url.searchParams.get('filename');
+
+  const doc = new PDFDocument();
+  const file = `/tmp/${filename}.pdf`;
+  let writeStream = fs.createWriteStream(file);
+  doc.pipe(writeStream);
+  doc.font(font).fontSize(25).text(title, 100, 100);
+  doc.end();
+
+  writeStream.on("finish", () => {
+    const fileContent = fs.readFileSync(file);
+
+    // upload file to storage bucket
+
+    return json({ response: `File ${filename} saved` });
+  });
+}
+```
