@@ -14,7 +14,7 @@ test('includes server assets from page', () => {
 test('includes server assets from layouts', () => {
 	expect(fs.existsSync(`${vercel}/fn-2.func/${assets}/component1.49f0d6ea.txt`)).toBeTruthy();
 	expect(fs.existsSync(`${vercel}/fn-2.func/${assets}/layout3.d0b1d3a8.txt`)).toBeTruthy();
-})
+});
 
 test('includes server assets from load functions', () => {
 	expect(fs.existsSync(`${vercel}/fn-2.func/${assets}/layout1.a02b2ee3.txt`)).toBeTruthy();
