@@ -1,0 +1,17 @@
+{
+	"name": "~TODO~",
+	"version": "0.0.1",
+	"private": true,
+	"scripts": {
+		"dev": "vite dev",
+		"build": "vite build",
+		"preview": "vite preview",
+		"test": "playwright test"
+	},
+	"devDependencies": {
+		"@sveltejs/kit": "workspace:^",
+		"svelte": "^4.2.3",
+		"vite": "^4.5.0"
+	},
+	"type": "module"
+}

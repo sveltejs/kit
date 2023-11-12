@@ -99,6 +99,8 @@ export function create_builder({
 		return server_assets;
 	}
 
+	const route_dir = config.kit.files.routes.split(process.cwd() + '/').join('');
+
 	/**
 	 * @param {import('types').RouteData} route
 	 */
@@ -110,7 +112,7 @@ export function create_builder({
 			server_assets = concat(
 				server_assets,
 				get_server_assets(
-					`${config.kit.files.routes}${route_id === '/' ? route_id : route_id + '/'}+error.svelte`
+					`${route_dir}${route_id === '/' ? route_id : route_id + '/'}+error.svelte`
 				)
 			);
 			route_id = route_id.split('/').slice(0, -1).join('/');
@@ -278,7 +280,7 @@ export function create_builder({
 				return /** @type {string[]}*/ ([]);
 			}
 
-			let assets = new Set(get_server_assets(`${config.kit.files.routes}/+error.svelte`));
+			let assets = new Set(get_server_assets(`${route_dir}/+error.svelte`));
 
 			let layout = route.leaf.parent;
 			while (layout) {
