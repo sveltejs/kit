@@ -80,7 +80,7 @@ importers:
         version: 4.20230404.0
       '@sveltejs/kit':
         specifier: ^1.0.0
-        version: link:../kit
+        version: 1.27.5(svelte@4.2.2)(vite@4.4.9)
       esbuild:
         specifier: ^0.18.11
         version: 0.18.11
@@ -108,7 +108,7 @@ importers:
         version: 2.2.5
       '@sveltejs/kit':
         specifier: ^1.0.0
-        version: link:../kit
+        version: 1.27.5(svelte@4.2.2)(vite@4.4.9)
       esbuild:
         specifier: ^0.18.11
         version: 0.18.11
@@ -289,7 +289,7 @@ importers:
     dependencies:
       '@sveltejs/kit':
         specifier: ^1.0.0
-        version: link:../kit
+        version: 1.27.5(svelte@4.2.2)(vite@4.4.9)
 
   packages/create-svelte:
     dependencies:
@@ -456,9 +456,6 @@ importers:
       dts-buddy:
         specifier: ^0.2.4
         version: 0.2.4
-      marked:
-        specifier: ^9.0.0
-        version: 9.0.0
       rollup:
         specifier: ^3.29.4
         version: 3.29.4
@@ -513,6 +510,9 @@ importers:
       cross-env:
         specifier: ^7.0.3
         version: 7.0.3
+      marked:
+        specifier: ^10.0.0
+        version: 10.0.0
       svelte:
         specifier: ^4.2.2
         version: 4.2.2
@@ -1069,8 +1069,8 @@ importers:
         specifier: ^1.21.8
         version: 1.21.8
       marked:
-        specifier: ^9.0.0
-        version: 9.0.0
+        specifier: ^10.0.0
+        version: 10.0.0
       prettier:
         specifier: ^3.0.3
         version: 3.0.3
@@ -2056,6 +2056,34 @@ packages:
       eslint-plugin-unicorn: 49.0.0(eslint@8.52.0)
       typescript: 4.9.4
     dev: true
+
+  /@sveltejs/kit@1.27.5(svelte@4.2.2)(vite@4.4.9):
+    resolution: {integrity: sha512-+L1WPs/ZYNjXoBFoFARypD4aZOjkT51vFpRCtQI45+Fmmfi4Y0dH/8VFlmYD6VlGe89ViIPg7lgf/JpGQ2tr7A==}
+    engines: {node: ^16.14 || >=18}
+    hasBin: true
+    requiresBuild: true
+    peerDependencies:
+      svelte: ^3.54.0 || ^4.0.0-next.0 || ^5.0.0-next.0
+      vite: ^4.0.0
+    dependencies:
+      '@sveltejs/vite-plugin-svelte': 2.5.0(svelte@4.2.2)(vite@4.4.9)
+      '@types/cookie': 0.5.1
+      cookie: 0.5.0
+      devalue: 4.3.1
+      esm-env: 1.0.0
+      kleur: 4.1.5
+      magic-string: 0.30.5
+      mrmime: 1.0.1
+      sade: 1.8.1
+      set-cookie-parser: 2.6.0
+      sirv: 2.0.3
+      svelte: 4.2.2
+      tiny-glob: 0.2.9
+      undici: 5.26.3
+      vite: 4.4.9(@types/node@16.18.6)(lightningcss@1.21.8)
+    transitivePeerDependencies:
+      - supports-color
+    dev: false
 
   /@sveltejs/site-kit@6.0.0-next.52(@sveltejs/kit@packages+kit)(svelte@4.2.2):
     resolution: {integrity: sha512-r/VoVllvrr9So9LcYT7XRXDK38Q6Fx062gosuTkDztENBw+qGp3hMq1vg9qSomJastmavRzze1cjJnQFgacWMw==}
@@ -4566,9 +4594,9 @@ packages:
     engines: {node: '>=8'}
     dev: true
 
-  /marked@9.0.0:
-    resolution: {integrity: sha512-37yoTpjU+TSXb9OBYY5n78z/CqXh76KiQj9xsKxEdztzU9fRLmbWO5YqKxgCVGKlNdexppnbKTkwB3RipVri8w==}
-    engines: {node: '>= 16'}
+  /marked@10.0.0:
+    resolution: {integrity: sha512-YiGcYcWj50YrwBgNzFoYhQ1hT6GmQbFG8SksnYJX1z4BXTHSOrz1GB5/Jm2yQvMg4nN1FHP4M6r03R10KrVUiA==}
+    engines: {node: '>= 18'}
     hasBin: true
     dev: true
 
