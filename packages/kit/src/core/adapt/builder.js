@@ -99,7 +99,7 @@ export function create_builder({
 		return server_assets;
 	}
 
-	const route_dir = config.kit.files.routes.split(process.cwd() + '/').join('');
+	const route_dir = config.kit.files.routes.slice(process.cwd().length + 1);
 
 	/**
 	 * @param {import('types').RouteData} route

@@ -19,7 +19,8 @@ test('copy files', () => {
 		kit: {
 			appDir: '_app',
 			files: {
-				assets: join(__dirname, 'fixtures/basic/static')
+				assets: join(__dirname, 'fixtures/basic/static'),
+				routes: ''
 			},
 			outDir
 		}
@@ -63,6 +64,13 @@ test('copy files', () => {
 
 test('compress files', async () => {
 	const builder = create_builder({
+		config: /** @type {import('types').ValidatedConfig} */ ({
+			kit: {
+				files: {
+					routes: ''
+				}
+			}
+		}),
 		route_data: [],
 		// @ts-expect-error - we don't need the whole config for this test
 		build_data: {

@@ -3,7 +3,7 @@ import { expect, test } from '@playwright/test';
 
 const cwd = process.cwd();
 
-const vercel = `${cwd}.vercel/output/functions`;
+const vercel = `${cwd}/.vercel/output/functions`;
 
 const assets = '_app/immutable/assets';
 
