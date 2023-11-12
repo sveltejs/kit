@@ -1,7 +1,7 @@
 import { handler } from 'HANDLER';
 import { env } from 'ENV';
 import polka from 'polka';
-import process from 'process';
+import process from 'node:process';
 
 export const path = env('SOCKET_PATH', false);
 export const host = env('HOST', '0.0.0.0');
