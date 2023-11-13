@@ -1,4 +1,4 @@
-import { dedent, write_if_changed } from './utils.js';
+import { dedent, isSvelte5Plus, write_if_changed } from './utils.js';
 
 /**
  * @param {import('types').ManifestData} manifest_data
@@ -89,4 +89,15 @@ export function write_root(manifest_data, output) {
 			{/if}
 		`
 	);
+
+	if (isSvelte5Plus()) {
+		write_if_changed(
+			`${output}/root.js`,
+			dedent`
+			import { asClassComponent } from 'svelte/legacy';
+			import Root from './root.svelte';
+			export default asClassComponent(Root);
+		`
+		);
+	}
 }

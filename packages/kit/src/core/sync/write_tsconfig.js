@@ -88,6 +88,7 @@ export function get_tsconfig(kit, include_base_url) {
 	const include = new Set([
 		'ambient.d.ts',
 		'./types/**/$types.d.ts',
+		config_relative('vite.config.js'),
 		config_relative('vite.config.ts')
 	]);
 	// TODO(v2): find a better way to include all src files. We can't just use routes/lib only because

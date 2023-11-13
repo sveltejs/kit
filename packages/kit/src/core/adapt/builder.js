@@ -24,6 +24,7 @@ const extensions = ['.html', '.js', '.mjs', '.json', '.css', '.svg', '.xml', '.w
  *   prerendered: import('types').Prerendered;
  *   prerender_map: import('types').PrerenderMap;
  *   log: import('types').Logger;
+ *   vite_config: import('vite').ResolvedConfig;
  * }} opts
  * @returns {import('@sveltejs/kit').Builder}
  */
@@ -34,7 +35,8 @@ export function create_builder({
 	route_data,
 	prerendered,
 	prerender_map,
-	log
+	log,
+	vite_config
 }) {
 	/** @type {Map<import('@sveltejs/kit').RouteDefinition, import('types').RouteData>} */
 	const lookup = new Map();
@@ -144,7 +146,7 @@ export function create_builder({
 
 		async generateFallback(dest) {
 			const manifest_path = `${config.kit.outDir}/output/server/manifest-full.js`;
-			const env = get_env(config.kit.env, 'production');
+			const env = get_env(config.kit.env, vite_config.mode);
 
 			const fallback = await generate_fallback({
 				manifest_path,
@@ -181,7 +183,10 @@ export function create_builder({
 		},
 
 		writeClient(dest) {
-			return copy(`${config.kit.outDir}/output/client`, dest);
+			return copy(`${config.kit.outDir}/output/client`, dest, {
+				// avoid making vite build artefacts public
+				filter: (basename) => basename !== '.vite'
+			});
 		},
 
 		writePrerendered(dest) {

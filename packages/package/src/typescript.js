@@ -16,7 +16,7 @@ import { load_pkg_json } from './config.js';
  * @param {string} output
  * @param {string} cwd
  * @param {Record<string, string>} alias
- * @param {import('./types').File[]} files
+ * @param {import('./types.js').File[]} files
  */
 export async function emit_dts(input, output, cwd, alias, files) {
 	const tmp = `${output}/__package_types_tmp__`;

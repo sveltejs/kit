@@ -3,7 +3,7 @@ import * as path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import * as esbuild from 'esbuild';
 
-/** @type {import('.').default} */
+/** @type {import('./index.js').default} */
 export default function (options = {}) {
 	return {
 		name: '@sveltejs/adapter-cloudflare',
@@ -67,8 +67,8 @@ export default function (options = {}) {
 /**
  * @param {import('@sveltejs/kit').Builder} builder
  * @param {string[]} assets
- * @param {import('./index').AdapterOptions['routes']} routes
- * @returns {import('.').RoutesJSONSpec}
+ * @param {import('./index.js').AdapterOptions['routes']} routes
+ * @returns {import('./index.js').RoutesJSONSpec}
  */
 function get_routes_json(builder, assets, { include = ['/*'], exclude = ['<all>'] }) {
 	if (!Array.isArray(include) || !Array.isArray(exclude)) {

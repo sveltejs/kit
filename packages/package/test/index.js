@@ -16,7 +16,7 @@ const __dirname = join(__filename, '..');
 
 /**
  * @param {string} path
- * @param {Partial<import('../src/types').Options>} [options]
+ * @param {Partial<import('../src/types.js').Options>} [options]
  */
 async function test_make_package(path, options) {
 	const cwd = join(__dirname, 'fixtures', path);

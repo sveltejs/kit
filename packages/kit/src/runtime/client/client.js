@@ -22,7 +22,8 @@ import {
 	get_link_info,
 	get_router_options,
 	is_external_url,
-	scroll_state
+	scroll_state,
+	origin
 } from './utils.js';
 
 import { base } from '__sveltekit/paths';
@@ -55,9 +56,9 @@ function update_scroll_positions(index) {
 }
 
 /**
- * @param {import('./types').SvelteKitApp} app
+ * @param {import('./types.js').SvelteKitApp} app
  * @param {HTMLElement} target
- * @returns {import('./types').Client}
+ * @returns {import('./types.js').Client}
  */
 export function create_client(app, target) {
 	const routes = parse(app);
@@ -82,7 +83,7 @@ export function create_client(app, target) {
 	 */
 	const components = [];
 
-	/** @type {{id: string, promise: Promise<import('./types').NavigationResult>} | null} */
+	/** @type {{id: string, promise: Promise<import('./types.js').NavigationResult>} | null} */
 	let load_cache = null;
 
 	const callbacks = {
@@ -96,7 +97,7 @@ export function create_client(app, target) {
 		after_navigate: []
 	};
 
-	/** @type {import('./types').NavigationState} */
+	/** @type {import('./types.js').NavigationState} */
 	let current = {
 		branch: [],
 		error: null,
@@ -173,7 +174,7 @@ export function create_client(app, target) {
 
 		if (navigation_result) {
 			if (navigation_result.type === 'redirect') {
-				return goto(new URL(navigation_result.location, url).href, {}, [url.pathname], nav_token);
+				return goto(new URL(navigation_result.location, url).href, {}, 1, nav_token);
 			} else {
 				if (navigation_result.props.page !== undefined) {
 					page = navigation_result.props.page;
@@ -208,7 +209,7 @@ export function create_client(app, target) {
 	/**
 	 * @param {string | URL} url
 	 * @param {{ noScroll?: boolean; replaceState?: boolean; keepFocus?: boolean; state?: any; invalidateAll?: boolean }} opts
-	 * @param {string[]} redirect_chain
+	 * @param {number} redirect_count
 	 * @param {{}} [nav_token]
 	 */
 	async function goto(
@@ -220,7 +221,7 @@ export function create_client(app, target) {
 			state = {},
 			invalidateAll = false
 		},
-		redirect_chain,
+		redirect_count,
 		nav_token
 	) {
 		if (typeof url === 'string') {
@@ -231,7 +232,7 @@ export function create_client(app, target) {
 			url,
 			scroll: noScroll ? scroll_state() : null,
 			keepfocus: keepFocus,
-			redirect_chain,
+			redirect_count,
 			details: {
 				state,
 				replaceState
@@ -247,7 +248,7 @@ export function create_client(app, target) {
 		});
 	}
 
-	/** @param {import('./types').NavigationIntent} intent */
+	/** @param {import('./types.js').NavigationIntent} intent */
 	async function preload_data(intent) {
 		load_cache = {
 			id: intent.id,
@@ -274,7 +275,7 @@ export function create_client(app, target) {
 		await Promise.all(promises);
 	}
 
-	/** @param {import('./types').NavigationFinished} result */
+	/** @param {import('./types.js').NavigationFinished} result */
 	function initialize(result) {
 		if (DEV && result.state.error && document.querySelector('vite-error-overlay')) return;
 
@@ -315,7 +316,7 @@ export function create_client(app, target) {
 	 * @param {{
 	 *   url: URL;
 	 *   params: Record<string, string>;
-	 *   branch: Array<import('./types').BranchNode | undefined>;
+	 *   branch: Array<import('./types.js').BranchNode | undefined>;
 	 *   status: number;
 	 *   error: App.Error | null;
 	 *   route: import('types').CSRRoute | null;
@@ -340,7 +341,7 @@ export function create_client(app, target) {
 		// eslint-disable-next-line
 		url.search = url.search; // turn `/?` into `/`
 
-		/** @type {import('./types').NavigationFinished} */
+		/** @type {import('./types.js').NavigationFinished} */
 		const result = {
 			type: 'loaded',
 			state: {
@@ -417,9 +418,9 @@ export function create_client(app, target) {
 	 *   url: URL;
 	 *   params: Record<string, string>;
 	 *   route: { id: string | null };
-	 * 	 server_data_node: import('./types').DataNode | null;
+	 * 	 server_data_node: import('./types.js').DataNode | null;
 	 * }} options
-	 * @returns {Promise<import('./types').BranchNode>}
+	 * @returns {Promise<import('./types.js').BranchNode>}
 	 */
 	async function load_node({ loader, parent, url, params, route, server_data_node }) {
 		/** @type {Record<string, any> | null} */
@@ -589,8 +590,8 @@ export function create_client(app, target) {
 
 	/**
 	 * @param {import('types').ServerDataNode | import('types').ServerDataSkippedNode | null} node
-	 * @param {import('./types').DataNode | null} [previous]
-	 * @returns {import('./types').DataNode | null}
+	 * @param {import('./types.js').DataNode | null} [previous]
+	 * @returns {import('./types.js').DataNode | null}
 	 */
 	function create_data_node(node, previous) {
 		if (node?.type === 'data') return node;
@@ -599,8 +600,8 @@ export function create_client(app, target) {
 	}
 
 	/**
-	 * @param {import('./types').NavigationIntent} intent
-	 * @returns {Promise<import('./types').NavigationResult>}
+	 * @param {import('./types.js').NavigationIntent} intent
+	 * @returns {Promise<import('./types.js').NavigationResult>}
 	 */
 	async function load_route({ id, invalidating, url, params, route }) {
 		if (load_cache?.id === id) {
@@ -664,7 +665,7 @@ export function create_client(app, target) {
 		const branch_promises = loaders.map(async (loader, i) => {
 			if (!loader) return;
 
-			/** @type {import('./types').BranchNode | undefined} */
+			/** @type {import('./types.js').BranchNode | undefined} */
 			const previous = current.branch[i];
 
 			const server_data_node = server_data_nodes?.[i];
@@ -707,7 +708,7 @@ export function create_client(app, target) {
 		// if we don't do this, rejections will be unhandled
 		for (const p of branch_promises) p.catch(() => {});
 
-		/** @type {Array<import('./types').BranchNode | undefined>} */
+		/** @type {Array<import('./types.js').BranchNode | undefined>} */
 		const branch = [];
 
 		for (let i = 0; i < loaders.length; i += 1) {
@@ -781,9 +782,9 @@ export function create_client(app, target) {
 
 	/**
 	 * @param {number} i Start index to backtrack from
-	 * @param {Array<import('./types').BranchNode | undefined>} branch Branch to backtrack
+	 * @param {Array<import('./types.js').BranchNode | undefined>} branch Branch to backtrack
 	 * @param {Array<import('types').CSRPageNodeLoader | undefined>} errors All error pages for this branch
-	 * @returns {Promise<{idx: number; node: import('./types').BranchNode} | undefined>}
+	 * @returns {Promise<{idx: number; node: import('./types.js').BranchNode} | undefined>}
 	 */
 	async function load_nearest_error_page(i, branch, errors) {
 		while (i--) {
@@ -815,7 +816,7 @@ export function create_client(app, target) {
 	 *   url: URL;
 	 *   route: { id: string | null }
 	 * }} opts
-	 * @returns {Promise<import('./types').NavigationFinished>}
+	 * @returns {Promise<import('./types.js').NavigationFinished>}
 	 */
 	async function load_root_error_page({ status, error, url, route }) {
 		/** @type {Record<string, string>} */
@@ -843,7 +844,7 @@ export function create_client(app, target) {
 			} catch {
 				// at this point we have no choice but to fall back to the server, if it wouldn't
 				// bring us right back here, turning this into an endless loop
-				if (url.origin !== location.origin || url.pathname !== location.pathname || hydrated) {
+				if (url.origin !== origin || url.pathname !== location.pathname || hydrated) {
 					await native_navigation(url);
 				}
 			}
@@ -858,7 +859,7 @@ export function create_client(app, target) {
 			server_data_node: create_data_node(server_data_node)
 		});
 
-		/** @type {import('./types').BranchNode} */
+		/** @type {import('./types.js').BranchNode} */
 		const root_error = {
 			node: await default_error_loader(),
 			loader: default_error_loader,
@@ -891,7 +892,7 @@ export function create_client(app, target) {
 
 			if (params) {
 				const id = url.pathname + url.search;
-				/** @type {import('./types').NavigationIntent} */
+				/** @type {import('./types.js').NavigationIntent} */
 				const intent = { id, invalidating, route, params: decode_params(params), url };
 				return intent;
 			}
@@ -907,7 +908,7 @@ export function create_client(app, target) {
 	 * @param {{
 	 *   url: URL;
 	 *   type: import('@sveltejs/kit').Navigation["type"];
-	 *   intent?: import('./types').NavigationIntent;
+	 *   intent?: import('./types.js').NavigationIntent;
 	 *   delta?: number;
 	 * }} opts
 	 */
@@ -941,7 +942,7 @@ export function create_client(app, target) {
 	 *   url: URL;
 	 *   scroll: { x: number, y: number } | null;
 	 *   keepfocus: boolean;
-	 *   redirect_chain: string[];
+	 *   redirect_count: number;
 	 *   details: {
 	 *     replaceState: boolean;
 	 *     state: any;
@@ -957,7 +958,7 @@ export function create_client(app, target) {
 		url,
 		scroll,
 		keepfocus,
-		redirect_chain,
+		redirect_count,
 		details,
 		type,
 		delta,
@@ -1014,7 +1015,8 @@ export function create_client(app, target) {
 		}
 
 		if (navigation_result.type === 'redirect') {
-			if (redirect_chain.length > 10 || redirect_chain.includes(url.pathname)) {
+			// whatwg fetch spec https://fetch.spec.whatwg.org/#http-redirect-fetch says to error after 20 redirects
+			if (redirect_count >= 20) {
 				navigation_result = await load_root_error_page({
 					status: 500,
 					error: await handle_error(new Error('Redirect loop'), {
@@ -1026,12 +1028,7 @@ export function create_client(app, target) {
 					route: { id: null }
 				});
 			} else {
-				goto(
-					new URL(navigation_result.location, url).href,
-					{},
-					[...redirect_chain, url.pathname],
-					nav_token
-				);
+				goto(new URL(navigation_result.location, url).href, {}, redirect_count + 1, nav_token);
 				return false;
 			}
 		} else if (/** @type {number} */ (navigation_result.props.page?.status) >= 400) {
@@ -1174,10 +1171,10 @@ export function create_client(app, target) {
 	 * @param {{ id: string | null }} route
 	 * @param {App.Error} error
 	 * @param {number} status
-	 * @returns {Promise<import('./types').NavigationFinished>}
+	 * @returns {Promise<import('./types.js').NavigationFinished>}
 	 */
 	async function server_fallback(url, route, error, status) {
-		if (url.origin === location.origin && url.pathname === location.pathname && !hydrated) {
+		if (url.origin === origin && url.pathname === location.pathname && !hydrated) {
 			// We would reload the same page we're currently on, which isn't hydrated,
 			// which means no SSR, which means we would end up in an endless loop
 			return await load_root_error_page({
@@ -1379,7 +1376,7 @@ export function create_client(app, target) {
 		},
 
 		goto: (href, opts = {}) => {
-			return goto(href, opts, []);
+			return goto(href, opts, 0);
 		},
 
 		invalidate: (resource) => {
@@ -1440,7 +1437,7 @@ export function create_client(app, target) {
 					tick().then(reset_focus);
 				}
 			} else if (result.type === 'redirect') {
-				goto(result.location, { invalidateAll: true }, []);
+				goto(result.location, { invalidateAll: true }, 0);
 			} else {
 				/** @type {Record<string, any>} */
 				root.$set({
@@ -1595,7 +1592,7 @@ export function create_client(app, target) {
 					url,
 					scroll: options.noscroll ? scroll_state() : null,
 					keepfocus: options.keep_focus ?? false,
-					redirect_chain: [],
+					redirect_count: 0,
 					details: {
 						state: {},
 						replaceState: options.replace_state ?? url.href === location.href
@@ -1649,7 +1646,7 @@ export function create_client(app, target) {
 					url,
 					scroll: noscroll ? scroll_state() : null,
 					keepfocus: keep_focus ?? false,
-					redirect_chain: [],
+					redirect_count: 0,
 					details: {
 						state: {},
 						replaceState: replace_state ?? url.href === location.href
@@ -1662,16 +1659,19 @@ export function create_client(app, target) {
 			});
 
 			addEventListener('popstate', async (event) => {
+				token = {};
 				if (event.state?.[INDEX_KEY]) {
 					// if a popstate-driven navigation is cancelled, we need to counteract it
 					// with history.go, which means we end up back here, hence this check
 					if (event.state[INDEX_KEY] === current_history_index) return;
 
 					const scroll = scroll_positions[event.state[INDEX_KEY]];
+					const url = new URL(location.href);
 
 					// if the only change is the hash, we don't need to do anything...
 					if (current.url.href.split('#')[0] === location.href.split('#')[0]) {
-						// ...except handle scroll
+						// ...except update our internal URL tracking and handle scroll
+						update_url(url);
 						scroll_positions[current_history_index] = scroll_state();
 						current_history_index = event.state[INDEX_KEY];
 						scrollTo(scroll.x, scroll.y);
@@ -1681,10 +1681,10 @@ export function create_client(app, target) {
 					const delta = event.state[INDEX_KEY] - current_history_index;
 
 					await navigate({
-						url: new URL(location.href),
+						url,
 						scroll,
 						keepfocus: false,
-						redirect_chain: [],
+						redirect_count: 0,
 						details: null,
 						accepted: () => {
 							current_history_index = event.state[INDEX_KEY];
@@ -1693,7 +1693,8 @@ export function create_client(app, target) {
 							history.go(-delta);
 						},
 						type: 'popstate',
-						delta
+						delta,
+						nav_token: token
 					});
 				} else {
 					// since popstate event is also emitted when an anchor referencing the same
@@ -1765,7 +1766,7 @@ export function create_client(app, target) {
 				({ params = {}, route = { id: null } } = get_navigation_intent(url, false) || {});
 			}
 
-			/** @type {import('./types').NavigationFinished | undefined} */
+			/** @type {import('./types.js').NavigationFinished | undefined} */
 			let result;
 
 			try {
@@ -1792,7 +1793,7 @@ export function create_client(app, target) {
 					});
 				});
 
-				/** @type {Array<import('./types').BranchNode | undefined>} */
+				/** @type {Array<import('./types.js').BranchNode | undefined>} */
 				const branch = await Promise.all(branch_promises);
 
 				const parsed_route = routes.find(({ id }) => id === route.id);
@@ -2018,8 +2019,8 @@ function reset_focus() {
 }
 
 /**
- * @param {import('./types').NavigationState} current
- * @param {import('./types').NavigationIntent | undefined} intent
+ * @param {import('./types.js').NavigationState} current
+ * @param {import('./types.js').NavigationIntent | undefined} intent
  * @param {URL | null} url
  * @param {Exclude<import('@sveltejs/kit').NavigationType, 'enter'>} type
  */
