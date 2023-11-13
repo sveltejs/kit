@@ -141,6 +141,7 @@ export function get_tsconfig(kit, include_base_url) {
 			lib: ['esnext', 'DOM', 'DOM.Iterable'],
 			moduleResolution: 'node',
 			module: 'esnext',
+			noEmit: true,
 			target: 'esnext',
 
 			// TODO(v2): use the new flag verbatimModuleSyntax instead (requires support by Vite/Esbuild)

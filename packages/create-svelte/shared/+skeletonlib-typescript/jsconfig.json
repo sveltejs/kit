@@ -7,7 +7,6 @@
 		"skipLibCheck": true,
 		"sourceMap": true,
 		"module": "NodeNext",
-		"moduleResolution": "NodeNext",
-		"noEmit": true
+		"moduleResolution": "NodeNext"
 	}
 }
