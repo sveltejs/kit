@@ -2,4 +2,4 @@
 'create-svelte': patch
 ---
 
-fix: correctly set `module` property in tsconfig.json for TypeScript library projects
+fix: correctly configure `module` and `noEmit` tsconfig and jsconfig properties
