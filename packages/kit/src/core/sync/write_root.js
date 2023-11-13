@@ -43,7 +43,8 @@ export function write_root(manifest_data, output) {
 				import { setContext, ${isSvelte5Plus() ? '' : 'afterUpdate, '}onMount, tick } from 'svelte';
 				import { browser } from '$app/environment';
 
-				// stores${
+				// stores
+				${
 					isSvelte5Plus()
 						? dedent`
 							let { stores, page, constructors, components = [], form, ${levels
@@ -74,7 +75,7 @@ export function write_root(manifest_data, output) {
 								stores.page.set(page);
 							}
 						`
-						: `$: stores.page.set(page);`
+						: '$: stores.page.set(page);'
 				}
 				${
 					isSvelte5Plus()
@@ -84,7 +85,7 @@ export function write_root(manifest_data, output) {
 								stores.page.notify();
 							});
 						`
-						: `afterUpdate(stores.page.notify);`
+						: 'afterUpdate(stores.page.notify);'
 				}
 
 				let mounted = ${isSvelte5Plus() ? '$state(false)' : 'false'};
