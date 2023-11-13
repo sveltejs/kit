@@ -1857,6 +1857,8 @@ async function load_data(url, invalid) {
 
 	const res = await native_fetch(data_url.href);
 
+	// if `__data.json` doesn't exist or the server has an internal error,
+	// fallback to native navigation so we avoid parsing the HTML error page as a JSON
 	if (res.headers.get('content-type')?.includes('text/html')) {
 		await native_navigation(url);
 	}
