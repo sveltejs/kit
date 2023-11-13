@@ -6,7 +6,7 @@ export type Options = {
 	eslint: boolean;
 	playwright: boolean;
 	vitest: boolean;
-	svelte5: boolean;
+	svelte5?: boolean; // optional to not introduce a breaking change to the `create` API
 };
 
 export type File = {
