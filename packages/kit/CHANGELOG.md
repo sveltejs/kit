@@ -14,7 +14,7 @@
 
 - fix: generate `__data.json` for prerendered pages when SSR is turned off ([#10988](https://github.com/sveltejs/kit/pull/10988))
 
-- chore: cleanup ([#11002](https://github.com/sveltejs/kit/pull/11002))
+- chore: add experimental compatibility for Svelte 5 ([#11002](https://github.com/sveltejs/kit/pull/11002))
 
 ## 1.27.3
 
