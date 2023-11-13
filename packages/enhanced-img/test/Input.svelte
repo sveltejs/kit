@@ -2,12 +2,9 @@
 	import manual_image1 from './no.png';
 	import manual_image2 from './no.svg';
 
-	const images = [
-		manual_image1,
-		manual_image2
-	];
+	const images = [manual_image1, manual_image2];
 
-	let foo: string = 'bar'
+	let foo: string = 'bar';
 </script>
 
 {foo}
@@ -18,15 +15,17 @@
 
 <enhanced:img src="./foo.png" width="5" height="10" alt="dimensions test" />
 
-<enhanced:img src="./foo.png" width=5 height=10 alt="unquoted dimensions test" />
-
 <enhanced:img src="./foo.png?blur=5" alt="directive test" />
 
-<enhanced:img src="./foo.png" {...{foo}} alt="spread attributes test" />
+<enhanced:img src="./foo.png" {...{ foo }} alt="spread attributes test" />
 
-<enhanced:img src="./foo.png?w=1024,640,320" sizes="(min-width: 60rem) 80vw, (min-width: 40rem) 90vw, 100vw" alt="sizes test" />
+<enhanced:img
+	src="./foo.png?w=1024,640,320"
+	sizes="(min-width: 60rem) 80vw, (min-width: 40rem) 90vw, 100vw"
+	alt="sizes test"
+/>
 
-<enhanced:img src="./foo.png" on:click={foo = 'clicked an image!'} alt="event handler test" />
+<enhanced:img src="./foo.png" on:click={(foo = 'clicked an image!')} alt="event handler test" />
 
 <enhanced:img src="$lib/foo.png" alt="alias test" />
 
