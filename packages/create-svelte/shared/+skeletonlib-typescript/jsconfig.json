@@ -6,7 +6,6 @@
 		"resolveJsonModule": true,
 		"skipLibCheck": true,
 		"sourceMap": true,
-		"module": "NodeNext",
-		"moduleResolution": "NodeNext"
+		"moduleResolution": "bundler"
 	}
 }
