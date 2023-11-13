@@ -40,28 +40,40 @@ export default {
 			});
 		}
 
-		// prerendered pages and index.html files
-		const pathname = url.pathname.replace(/\/$/, '');
-		let file = pathname.substring(1);
-
+		let { pathname } = url;
 		try {
-			file = decodeURIComponent(file);
-		} catch (err) {
-			// ignore
+			pathname = decodeURIComponent(pathname);
+		} catch {
+			// ignore invalid URI
 		}
 
-		if (
-			manifest.assets.has(file) ||
-			manifest.assets.has(file + '/index.html') ||
-			prerendered.has(pathname || '/')
-		) {
+		const stripped_pathname = pathname.replace(/\/$/, '');
+
+		// prerendered pages and /static files
+		let is_static_asset = false;
+		const filename = stripped_pathname.substring(1);
+		if (filename) {
+			is_static_asset =
+				manifest.assets.has(filename) || manifest.assets.has(filename + '/index.html');
+		}
+
+		const location = pathname.at(-1) === '/' ? stripped_pathname : pathname + '/';
+
+		if (is_static_asset || prerendered.has(pathname)) {
 			return get_asset_from_kv(req, env, context, (request, options) => {
-				if (prerendered.has(pathname || '/')) {
-					url.pathname = '/' + prerendered.get(pathname || '/').file;
+				if (prerendered.has(pathname)) {
+					url.pathname = '/' + prerendered.get(pathname).file;
 					return new Request(url.toString(), request);
 				}
 
 				return mapRequestToAsset(request, options);
+			});
+		} else if (location && prerendered.has(location)) {
+			return new Response('', {
+				status: 308,
+				headers: {
+					location
+				}
 			});
 		}
 
