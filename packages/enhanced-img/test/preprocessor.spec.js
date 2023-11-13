@@ -29,7 +29,10 @@ it('Image preprocess snapshot test', async () => {
 		{ filename }
 	);
 
-	expect(processed.code).toMatchFileSnapshot('./Output.svelte');
+	// Make imports readable
+	const ouput = processed.code.replace(/import/g, '\n\timport');
+
+	expect(ouput).toMatchFileSnapshot('./Output.svelte');
 });
 
 it('parses a minimized object', () => {

@@ -31,6 +31,11 @@ export function image(opts) {
 			const s = new MagicString(content);
 			const ast = parse(content, { filename });
 
+			// Import path to import name
+			// e.g. ./foo.png => ___ASSET___0
+			/** @type {Map<string, string>} */
+			const imports = new Map();
+
 			/**
 			 * @param {import('svelte/types/compiler/interfaces').TemplateNode} node
 			 * @param {{ type: string, start: number, end: number, raw: string }} src_attribute
@@ -46,7 +51,8 @@ export function image(opts) {
 					return;
 				}
 
-				let url = src_attribute.raw.trim();
+				const original_url = src_attribute.raw.trim();
+				let url = original_url;
 
 				const sizes = get_attr_value(node, 'sizes');
 				const width = get_attr_value(node, 'width');
@@ -74,8 +80,17 @@ export function image(opts) {
 				if (OPTIMIZABLE.test(url)) {
 					s.update(node.start, node.end, img_to_picture(content, node, details));
 				} else {
-					// e.g. <img src="./foo.svg" /> => <img src="{___ASSET___0}" />
-					s.update(src_attribute.start, src_attribute.end, `{${details}}`);
+					// e.g. <img src="./foo.svg" /> => <img src={___ASSET___0} />
+					const { start, end } = src_attribute;
+					// update src with reference to imported asset
+					s.update(
+						is_quote(content, start - 1) ? start - 1 : start,
+						is_quote(content, end) ? end + 1 : end,
+						`{${details.name}}`
+					);
+					// update `enhanced:img` to `img`
+					s.update(node.start + 1, node.start + 1 + 'enhanced:img'.length, 'img');
+					imports.set(original_url, details.name);
 				}
 			}
 
@@ -97,12 +112,35 @@ export function image(opts) {
 				}
 			});
 
+			// add imports
+			if (imports.size) {
+				let import_text = '';
+				for (const [path, import_name] of imports.entries()) {
+					import_text += `import ${import_name} from "${path}";`;
+				}
+				if (ast.instance) {
+					// @ts-ignore
+					s.appendLeft(ast.instance.content.start, import_text);
+				} else {
+					s.append(`<script>${import_text}</script>`);
+				}
+			}
+
 			return {
 				code: s.toString(),
 				map: s.generateMap()
 			};
 		}
 	};
+}
+
+/**
+ * @param {string} content
+ * @param {number} index
+ * @returns {boolean}
+ */
+function is_quote(content, index) {
+	return content.charAt(index) === '"' || content.charAt(index) === "'";
 }
 
 /**

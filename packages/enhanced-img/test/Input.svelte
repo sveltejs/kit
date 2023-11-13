@@ -31,6 +31,8 @@
 
 <enhanced:img src="/src/foo.png" alt="absolute path test" />
 
+<enhanced:img src="./foo.svg" alt="svg test" />
+
 {#each images as image}
 	<enhanced:img src={image} alt="opt-in test" />
 {/each}

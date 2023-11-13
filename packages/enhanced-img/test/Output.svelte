@@ -1,5 +1,8 @@
 <script lang="ts">
+	import ___ASSET___6 from "./foo.svg";
+	
 	import manual_image1 from './no.png';
+	
 	import manual_image2 from './no.svg';
 
 	const images = [manual_image1, manual_image2];
@@ -26,6 +29,8 @@
 <picture><source srcset="/1 1440w, /2 960w" type="image/avif" /><source srcset="/3 1440w, /4 960w" type="image/webp" /><source srcset="5 1440w, /6 960w" type="image/png" /><img src=/7 alt="alias test" width=1440 height=1440 /></picture>
 
 <picture><source srcset="/1 1440w, /2 960w" type="image/avif" /><source srcset="/3 1440w, /4 960w" type="image/webp" /><source srcset="5 1440w, /6 960w" type="image/png" /><img src=/7 alt="absolute path test" width=1440 height=1440 /></picture>
+
+<img src={___ASSET___6} alt="svg test" />
 
 {#each images as image}
 	{#if typeof image === 'string'}
