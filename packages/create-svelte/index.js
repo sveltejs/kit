@@ -84,7 +84,7 @@ function matches_condition(condition, options) {
 	if (condition === 'typescript' || condition === 'checkjs') {
 		return options.types === condition;
 	}
-	return options[condition];
+	return !!options[condition];
 }
 
 /**

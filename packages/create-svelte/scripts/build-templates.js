@@ -219,7 +219,7 @@ async function generate_shared() {
 		if (file.startsWith('+') || file.startsWith('-')) {
 			const [conditions, ...rest] = file.split(path.sep);
 
-			const pattern = /([+-])([a-z]+)/g;
+			const pattern = /([+-])([a-z0-9]+)/g;
 			let match;
 			while ((match = pattern.exec(conditions))) {
 				const set = match[1] === '+' ? include : exclude;
