@@ -11,9 +11,9 @@
 	"homepage": "https://kit.svelte.dev",
 	"type": "module",
 	"scripts": {
-		"lint": "prettier --check . --config ../../.prettierrc",
+		"lint": "prettier --check .",
 		"check": "tsc",
-		"format": "prettier --write . --config ../../.prettierrc",
+		"format": "prettier --write .",
 		"test": "vitest"
 	},
 	"files": [
