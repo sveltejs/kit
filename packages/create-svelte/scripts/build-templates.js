@@ -88,14 +88,14 @@ async function generate_templates(shared) {
 				// TODO package-specific versions
 				contents = contents.replace(/workspace:\*/g, 'next');
 				fs.writeFileSync(`${dir}/package.json`, contents);
-				return;
+				continue;
 			}
 
 			// ignore files that are written conditionally
-			if (shared.has(name)) return;
+			if (shared.has(name)) continue;
 
 			// ignore contents of .gitignore or .ignore
-			if (!gitignore.accepts(name) || !ignore.accepts(name) || name === '.ignore') return;
+			if (!gitignore.accepts(name) || !ignore.accepts(name) || name === '.ignore') continue;
 
 			if (/\.(ts|svelte)$/.test(name)) {
 				const contents = fs.readFileSync(path.join(cwd, name), 'utf8');
