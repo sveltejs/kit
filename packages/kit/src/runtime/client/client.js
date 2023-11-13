@@ -56,6 +56,17 @@ function update_scroll_positions(index) {
 }
 
 /**
+ * Loads `href` the old-fashioned way, with a full page reload.
+ * Returns a `Promise` that never resolves (to prevent any
+ * subsequent work, e.g. history manipulation, from happening)
+ * @param {URL} url
+ */
+function native_navigation(url) {
+	location.href = url.href;
+	return new Promise(() => {});
+}
+
+/**
  * @param {import('./types.js').SvelteKitApp} app
  * @param {HTMLElement} target
  * @returns {import('./types.js').Client}
@@ -1196,17 +1207,6 @@ export function create_client(app, target) {
 		return await native_navigation(url);
 	}
 
-	/**
-	 * Loads `href` the old-fashioned way, with a full page reload.
-	 * Returns a `Promise` that never resolves (to prevent any
-	 * subsequent work, e.g. history manipulation, from happening)
-	 * @param {URL} url
-	 */
-	function native_navigation(url) {
-		location.href = url.href;
-		return new Promise(() => {});
-	}
-
 	if (import.meta.hot) {
 		import.meta.hot.on('vite:beforeUpdate', () => {
 			if (current.error) location.reload();
@@ -1842,7 +1842,7 @@ export function create_client(app, target) {
 /**
  * @param {URL} url
  * @param {boolean[]} invalid
- * @returns {Promise<import('types').ServerNodesResponse |import('types').ServerRedirectNode>}
+ * @returns {Promise<import('types').ServerNodesResponse | import('types').ServerRedirectNode>}
  */
 async function load_data(url, invalid) {
 	const data_url = new URL(url);
@@ -1857,19 +1857,14 @@ async function load_data(url, invalid) {
 
 	const res = await native_fetch(data_url.href);
 
+	if (res.headers.get('content-type') !== 'application/json') {
+		await native_navigation(url);
+	}
+
 	if (!res.ok) {
 		// error message is a JSON-stringified string which devalue can't handle at the top level
 		// turn it into a HttpError to not call handleError on the client again (was already handled on the server)
-		throw new HttpError(
-			res.status,
-			await res.json().catch(() => {
-				// JSON parsing fails if the server responds with a HTML error page.
-				if (res.status >= 500) {
-					return 'Internal Server Error';
-				}
-				return `Not found: ${url.pathname}`;
-			})
-		);
+		throw new HttpError(res.status, await res.json());
 	}
 
 	return new Promise((resolve) => {
