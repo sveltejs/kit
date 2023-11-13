@@ -65,6 +65,7 @@ test('Allows generated tsconfig to be mutated', () => {
 
 	const config = get_tsconfig(kit, false);
 
+	// @ts-expect-error
 	assert.equal(config.extends, 'some/other/tsconfig.json');
 });
 
@@ -82,6 +83,7 @@ test('Allows generated tsconfig to be replaced', () => {
 
 	const config = get_tsconfig(kit, false);
 
+	// @ts-expect-error
 	assert.equal(config.extends, 'some/other/tsconfig.json');
 });
 
