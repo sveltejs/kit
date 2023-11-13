@@ -6,6 +6,7 @@ export type Options = {
 	eslint: boolean;
 	playwright: boolean;
 	vitest: boolean;
+	svelte5: boolean;
 };
 
 export type File = {
@@ -22,7 +23,8 @@ export type Condition =
 	| 'vitest'
 	| 'skeleton'
 	| 'default'
-	| 'skeletonlib';
+	| 'skeletonlib'
+	| 'svelte5';
 
 export type Common = {
 	files: Array<{

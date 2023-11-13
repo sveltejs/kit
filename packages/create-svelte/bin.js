@@ -97,6 +97,10 @@ const options = await p.group(
 					{
 						value: 'vitest',
 						label: 'Add Vitest for unit testing'
+					},
+					{
+						value: 'svelte5',
+						label: 'Try out Svelte 5 beta'
 					}
 				]
 			})
@@ -111,7 +115,8 @@ await create(cwd, {
 	prettier: options.features.includes('prettier'),
 	eslint: options.features.includes('eslint'),
 	playwright: options.features.includes('playwright'),
-	vitest: options.features.includes('vitest')
+	vitest: options.features.includes('vitest'),
+	svelte5: options.features.includes('svelte5')
 });
 
 p.outro('Your project is ready!');
