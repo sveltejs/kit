@@ -11,9 +11,9 @@
 	"homepage": "https://kit.svelte.dev",
 	"type": "module",
 	"scripts": {
-		"lint": "prettier --check . --config ../../.prettierrc --ignore-path .gitignore",
+		"lint": "prettier --check .",
 		"check": "tsc",
-		"format": "prettier --write . --config ../../.prettierrc --ignore-path .gitignore",
+		"format": "prettier --write .",
 		"test": "vitest"
 	},
 	"files": [

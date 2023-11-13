@@ -56,10 +56,10 @@
 		"postinstall.js"
 	],
 	"scripts": {
-		"lint": "prettier --check . --config ../../.prettierrc --ignore-path .gitignore",
+		"lint": "prettier --config ../../.prettierrc --check .",
 		"check": "tsc",
 		"check:all": "tsc && pnpm -r --filter=\"./**\" check",
-		"format": "prettier --write . --config ../../.prettierrc --ignore-path .gitignore",
+		"format": "prettier --config ../../.prettierrc --write .",
 		"test": "pnpm test:unit && pnpm test:integration",
 		"test:integration": "pnpm -r --workspace-concurrency 1 --filter=\"./test/**\" test",
 		"test:cross-platform:dev": "pnpm -r --workspace-concurrency 1 --filter=\"./test/**\" test:cross-platform:dev",

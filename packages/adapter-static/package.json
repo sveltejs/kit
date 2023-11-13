@@ -24,7 +24,7 @@
 		"platforms.js"
 	],
 	"scripts": {
-		"lint": "prettier --check . --config ../../.prettierrc --ignore-path .gitignore",
+		"lint": "prettier --check .",
 		"check": "tsc",
 		"format": "pnpm lint --write",
 		"test": "pnpm -r --workspace-concurrency 1 --filter=\"./test/**\" test"
