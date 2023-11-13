@@ -25,7 +25,7 @@
 		"index.d.ts"
 	],
 	"scripts": {
-		"lint": "prettier --check . --config ../../.prettierrc --ignore-path .gitignore",
+		"lint": "prettier --check .",
 		"format": "pnpm lint --write",
 		"check": "tsc",
 		"test": "vitest run"

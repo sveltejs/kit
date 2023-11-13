@@ -3,8 +3,8 @@
 	"private": true,
 	"version": "0.0.1",
 	"scripts": {
-		"lint": "prettier --plugin prettier-plugin-svelte --check . --config ../../.prettierrc --ignore-path .gitignore --ignore-path .prettierignore",
-		"format": "prettier --plugin prettier-plugin-svelte --write . --config ../../.prettierrc --ignore-path .gitignore --ignore-path .prettierignore",
+		"lint": "prettier --check .",
+		"format": "prettier --write .",
 		"update": "node scripts/types",
 		"dev": "pnpm run update && vite dev",
 		"build": "pnpm run update && vite build",

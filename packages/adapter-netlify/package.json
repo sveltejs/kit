@@ -28,7 +28,7 @@
 		"build": "node -e \"fs.rmSync('files', { force: true, recursive: true })\" && rollup -c && cp src/edge.js files/edge.js",
 		"test": "vitest run",
 		"check": "tsc",
-		"lint": "prettier --check . --config ../../.prettierrc --ignore-path .gitignore",
+		"lint": "prettier --check .",
 		"format": "pnpm lint --write",
 		"prepublishOnly": "pnpm build"
 	},

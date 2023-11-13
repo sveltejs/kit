@@ -5,7 +5,6 @@ test-results/
 package-lock.json
 yarn.lock
 vite.config.js.timestamp-*
-/packages/create-svelte/template/CHANGELOG.md
 /packages/package/test/**/package
 /documentation/types.js
 .env
