@@ -8,6 +8,6 @@
 
 <button
 	on:click={() => {
-		getStores().page.subscribe(($page) => pathname = $page.url.pathname)();
+		getStores().page.subscribe(($page) => (pathname = $page.url.pathname))();
 	}}>click</button
 >
