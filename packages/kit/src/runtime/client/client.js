@@ -1857,7 +1857,7 @@ async function load_data(url, invalid) {
 
 	const res = await native_fetch(data_url.href);
 
-	if (res.headers.get('content-type') !== 'application/json') {
+	if (res.headers.get('content-type')?.includes('text/html')) {
 		await native_navigation(url);
 	}
 
