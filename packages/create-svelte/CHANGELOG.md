@@ -1,5 +1,11 @@
 # create-svelte
 
+## 5.2.0
+
+### Minor Changes
+
+- feat: add option to try out Svelte 5 beta ([#11026](https://github.com/sveltejs/kit/pull/11026))
+
 ## 5.1.1
 
 ### Patch Changes
