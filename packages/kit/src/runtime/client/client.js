@@ -1860,12 +1860,19 @@ async function load_data(url, invalid) {
 	if (!res.ok) {
 		// error message is a JSON-stringified string which devalue can't handle at the top level
 		// turn it into a HttpError to not call handleError on the client again (was already handled on the server)
-		throw new HttpError(res.status, await res.json());
+		throw new HttpError(
+			res.status,
+			await res.json().catch(() => {
+				// JSON parsing fails if the server responds with a HTML error page.
+				if (res.status >= 500) {
+					return 'Internal Server Error';
+				}
+				return `Not found: ${url.pathname}`;
+			})
+		);
 	}
 
-	// TODO: fix eslint error
-	// eslint-disable-next-line
-	return new Promise(async (resolve) => {
+	return new Promise((resolve) => {
 		/**
 		 * Map of deferred promises that will be resolved by a subsequent chunk of data
 		 * @type {Map<string, import('types').Deferred>}
@@ -1889,50 +1896,53 @@ async function load_data(url, invalid) {
 
 		let text = '';
 
-		while (true) {
-			// Format follows ndjson (each line is a JSON object) or regular JSON spec
-			const { done, value } = await reader.read();
-			if (done && !text) break;
-
-			text += !value && text ? '\n' : decoder.decode(value); // no value -> final chunk -> add a new line to trigger the last parse
-
+		async function handle_stream() {
 			while (true) {
-				const split = text.indexOf('\n');
-				if (split === -1) {
-					break;
-				}
+				// Format follows ndjson (each line is a JSON object) or regular JSON spec
+				const { done, value } = await reader.read();
+				if (done && !text) break;
 
-				const node = JSON.parse(text.slice(0, split));
-				text = text.slice(split + 1);
+				text += !value && text ? '\n' : decoder.decode(value); // no value -> final chunk -> add a new line to trigger the last parse
 
-				if (node.type === 'redirect') {
-					return resolve(node);
-				}
+				while (true) {
+					const split = text.indexOf('\n');
+					if (split === -1) {
+						break;
+					}
 
-				if (node.type === 'data') {
-					// This is the first (and possibly only, if no pending promises) chunk
-					node.nodes?.forEach((/** @type {any} */ node) => {
-						if (node?.type === 'data') {
-							node.uses = deserialize_uses(node.uses);
-							node.data = deserialize(node.data);
+					const node = JSON.parse(text.slice(0, split));
+					text = text.slice(split + 1);
+
+					if (node.type === 'redirect') {
+						return resolve(node);
+					}
+
+					if (node.type === 'data') {
+						// This is the first (and possibly only, if no pending promises) chunk
+						node.nodes?.forEach((/** @type {any} */ node) => {
+							if (node?.type === 'data') {
+								node.uses = deserialize_uses(node.uses);
+								node.data = deserialize(node.data);
+							}
+						});
+
+						resolve(node);
+					} else if (node.type === 'chunk') {
+						// This is a subsequent chunk containing deferred data
+						const { id, data, error } = node;
+						const deferred = /** @type {import('types').Deferred} */ (deferreds.get(id));
+						deferreds.delete(id);
+
+						if (error) {
+							deferred.reject(deserialize(error));
+						} else {
+							deferred.fulfil(deserialize(data));
 						}
-					});
-
-					resolve(node);
-				} else if (node.type === 'chunk') {
-					// This is a subsequent chunk containing deferred data
-					const { id, data, error } = node;
-					const deferred = /** @type {import('types').Deferred} */ (deferreds.get(id));
-					deferreds.delete(id);
-
-					if (error) {
-						deferred.reject(deserialize(error));
-					} else {
-						deferred.fulfil(deserialize(data));
 					}
 				}
 			}
 		}
+		handle_stream();
 	});
 
 	// TODO edge case handling necessary? stream() read fails?
