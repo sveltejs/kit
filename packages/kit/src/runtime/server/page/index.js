@@ -291,7 +291,7 @@ export async function render_page(event, page, options, manifest, state, resolve
 			resolve_opts,
 			page_config: {
 				csr: get_option(nodes, 'csr') ?? true,
-				ssr: true
+				ssr: get_option(nodes, 'ssr') ?? true
 			},
 			status,
 			error: null,
