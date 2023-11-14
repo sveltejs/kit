@@ -65,19 +65,19 @@ export function image(opts) {
 				}
 				url += 'enhanced';
 
-				let details = images.get(url);
-				if (!details) {
-					// resolves the import so that we can build the entire picture template string and don't
-					// need any logic blocks
-					const image = await resolve(opts, url, filename);
-					if (!image) {
-						return;
-					}
-					details = images.get(url) || { name: ASSET_PREFIX + images.size, image };
-					images.set(url, details);
-				}
-
+				const name = ASSET_PREFIX + images.size;
 				if (OPTIMIZABLE.test(url)) {
+					let details = images.get(url);
+					if (!details) {
+						// resolves the import so that we can build the entire picture template string and don't
+						// need any logic blocks
+						const image = await resolve(opts, url, filename);
+						if (!image) {
+							return;
+						}
+						details = images.get(url) || { name, image };
+						images.set(url, details);
+					}
 					s.update(node.start, node.end, img_to_picture(content, node, details));
 				} else {
 					// e.g. <img src="./foo.svg" /> => <img src={___ASSET___0} />
@@ -86,11 +86,11 @@ export function image(opts) {
 					s.update(
 						is_quote(content, start - 1) ? start - 1 : start,
 						is_quote(content, end) ? end + 1 : end,
-						`{${details.name}}`
+						`{${name}}`
 					);
 					// update `enhanced:img` to `img`
 					s.update(node.start + 1, node.start + 1 + 'enhanced:img'.length, 'img');
-					imports.set(original_url, details.name);
+					imports.set(original_url, name);
 				}
 			}
 
