@@ -29,7 +29,7 @@ test.describe('Imports', () => {
 			]);
 		} else {
 			expect(sources[0].startsWith('data:image/png;base64,')).toBeTruthy();
-			expect(sources[1]).toBe(`${baseURL}/_app/immutable/assets/large.3183867c.jpg`);
+			expect(sources[1]).toMatch(/\/_app\/immutable\/assets\/large\.[\w-]+\.jpg/);
 		}
 	});
 });
@@ -515,6 +515,16 @@ test.describe('Load', () => {
 
 		expect(await page.textContent('p')).toBe('error: false');
 	});
+
+	test('404 and root layout load fetch to prerendered endpoint works', async ({ page }) => {
+		await page.goto('/non-existent-route');
+
+		expect(await page.textContent('h1')).toBe('404');
+
+		await page.goto('/non-existent-route-loop');
+
+		expect(await page.textContent('h1')).toBe('404');
+	});
 });
 
 test.describe('Nested layouts', () => {
@@ -611,6 +621,16 @@ test.describe('Page options', () => {
 	test('transformPageChunk can change the html output', async ({ page }) => {
 		await page.goto('/transform-page-chunk');
 		expect(await page.getAttribute('meta[name="transform-page"]', 'content')).toBe('Worked!');
+	});
+
+	test('prerenders page that uses browser globals with ssr=false', async ({
+		page,
+		javaScriptEnabled
+	}) => {
+		test.skip(process.env.DEV, 'skip when in dev mode');
+		test.skip(!javaScriptEnabled, 'skip when JavaScript is disabled');
+		await page.goto('/prerendering/no-ssr');
+		await expect(page.getByText('Hello world!')).toBeVisible();
 	});
 });
 
@@ -858,6 +878,32 @@ test.describe('Matchers', () => {
 });
 
 test.describe('Actions', () => {
+	test("invalidateAll = false doesn't invalidate all", async ({ page, javaScriptEnabled }) => {
+		await page.goto('/actions/invalidate-all?invalidate_all=false');
+		const preSubmitContent = await page.locator('pre').textContent();
+		await page.click('button');
+		// The value that should not change is time-based and might not have the granularity to change
+		// if we don't give it time to
+		await page.waitForTimeout(1000);
+		const postSubmitContent = await page.locator('pre').textContent();
+		if (!javaScriptEnabled) {
+			expect(preSubmitContent).not.toBe(postSubmitContent);
+		} else {
+			expect(preSubmitContent).toBe(postSubmitContent);
+		}
+	});
+
+	test('invalidateAll = true does invalidate all', async ({ page }) => {
+		await page.goto('/actions/invalidate-all?invalidate_all=true');
+		const preSubmitContent = await page.locator('pre').textContent();
+		await page.click('button');
+		// The value that should not change is time-based and might not have the granularity to change
+		// if we don't give it time to
+		await page.waitForTimeout(1000);
+		const postSubmitContent = await page.locator('pre').textContent();
+		expect(preSubmitContent).not.toBe(postSubmitContent);
+	});
+
 	test('Submitting a form with a file input but no enctype="multipart/form-data" logs a warning', async ({
 		page,
 		javaScriptEnabled

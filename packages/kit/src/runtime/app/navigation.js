@@ -102,6 +102,20 @@ export const preloadCode = /* @__PURE__ */ client_method('preload_code');
 export const beforeNavigate = /* @__PURE__ */ client_method('before_navigate');
 
 /**
+ * A lifecycle function that runs the supplied `callback` immediately before we navigate to a new URL.
+ *
+ * If you return a `Promise`, SvelteKit will wait for it to resolve before completing the navigation. This allows you to — for example — use `document.startViewTransition`. Avoid promises that are slow to resolve, since navigation will appear stalled to the user.
+ *
+ * If a function (or a `Promise` that resolves to a function) is returned from the callback, it will be called once the DOM has updated.
+ *
+ * `onNavigate` must be called during a component initialization. It remains active as long as the component is mounted.
+ * @type {(callback: (navigation: import('@sveltejs/kit').OnNavigate) => import('../../types/internal.js').MaybePromise<(() => void) | void>) => void}
+ * @param {(navigation: import('@sveltejs/kit').OnNavigate) => void} callback
+ * @returns {void}
+ */
+export const onNavigate = /* @__PURE__ */ client_method('on_navigate');
+
+/**
  * A lifecycle function that runs the supplied `callback` when the current component mounts, and also whenever we navigate to a new URL.
  *
  * `afterNavigate` must be called during a component initialization. It remains active as long as the component is mounted.

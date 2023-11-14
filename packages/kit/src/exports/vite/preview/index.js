@@ -1,6 +1,7 @@
 import fs from 'node:fs';
 import { join } from 'node:path';
 import { pathToFileURL } from 'node:url';
+import { lookup } from 'mrmime';
 import sirv from 'sirv';
 import { loadEnv, normalizePath } from 'vite';
 import { getRequest, setResponse } from '../../../exports/node/index.js';
@@ -14,10 +15,7 @@ import { not_found } from '../utils.js';
 /** @typedef {(req: Req, res: Res, next: () => void) => void} Handler */
 
 /**
- * @param {{
- *   middlewares: import('connect').Server;
- *   httpServer: import('http').Server;
- * }} vite
+ * @param {{ middlewares: import('connect').Server }} vite
  * @param {import('vite').ResolvedConfig} vite_config
  * @param {import('types').ValidatedConfig} svelte_config
  */
@@ -141,7 +139,7 @@ export async function preview(vite, vite_config, svelte_config) {
 
 				if (prerendered) {
 					res.writeHead(200, {
-						'content-type': 'text/html',
+						'content-type': lookup(pathname) || 'text/html',
 						etag
 					});
 

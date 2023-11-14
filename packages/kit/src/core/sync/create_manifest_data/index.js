@@ -1,7 +1,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import colors from 'kleur';
-import mime from 'mime';
+import { lookup } from 'mrmime';
 import { list_files, runtime_directory } from '../../utils.js';
 import { posixify } from '../../../utils/filesystem.js';
 import { parse_route_id } from '../../../utils/routing.js';
@@ -48,7 +48,7 @@ export function create_assets(config) {
 	return list_files(config.kit.files.assets).map((file) => ({
 		file,
 		size: fs.statSync(path.resolve(config.kit.files.assets, file)).size,
-		type: mime.getType(file)
+		type: lookup(file) || null
 	}));
 }
 
@@ -444,7 +444,7 @@ function create_routes_and_nodes(cwd, config, fallback) {
  * @param {string} file
  * @param {string[]} component_extensions
  * @param {string[]} module_extensions
- * @returns {import('./types').RouteFile}
+ * @returns {import('./types.js').RouteFile}
  */
 function analyze(project_relative, file, component_extensions, module_extensions) {
 	const component_extension = component_extensions.find((ext) => file.endsWith(ext));

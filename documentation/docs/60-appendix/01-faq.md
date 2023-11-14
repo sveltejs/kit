@@ -63,6 +63,28 @@ Libraries work best in the browser with Vite when they distribute an ESM version
 
 If you are still encountering issues we recommend searching both [the Vite issue tracker](https://github.com/vitejs/vite/issues) and the issue tracker of the library in question. Sometimes issues can be worked around by fiddling with the [`optimizeDeps`](https://vitejs.dev/config/#dep-optimization-options) or [`ssr`](https://vitejs.dev/config/#ssr-options) config values though we recommend this as only a short-term workaround in favor of fixing the library in question.
 
+## How do I use the view transitions API with SvelteKit?
+
+While SvelteKit does not have any specific integration with [view transitions](https://developer.chrome.com/docs/web-platform/view-transitions/), you can call `document.startViewTransition` in [`onNavigate`](/docs/modules#$app-navigation-onnavigate) to trigger a view transition on every navigation.
+
+```js
+// @errors: 2339 2810
+import { onNavigate } from '$app/navigation';
+
+onNavigate((navigation) => {
+	if (!document.startViewTransition) return;
+
+	return new Promise((resolve) => {
+		document.startViewTransition(async () => {
+			resolve();
+			await navigation.complete;
+		});
+	});
+});
+```
+
+For more, see ["Unlocking view transitions"](https://svelte.dev/blog/view-transitions) on the Svelte blog.
+
 ## How do I use X with SvelteKit?
 
 Make sure you've read the [documentation section on integrations](./integrations). If you're still having trouble, solutions to common issues are listed below.
@@ -119,21 +141,24 @@ onMount(() => {
 });
 ```
 
-Otherwise, if the library has side effects and you'd still prefer to use static imports, check out [vite-plugin-iso-import](https://github.com/bluwy/vite-plugin-iso-import) to support the `?client` import suffix. The import will be stripped out in SSR builds. However, note that you will lose the ability to use VS Code Intellisense if you use this method.
+Finally, you may also consider using an `{#await}` block:
+```svelte
+<!--- file: index.svelte --->
+<script>
+	import { browser } from '$app/environment';
 
-```js
-// @filename: ambient.d.ts
-// @lib: ES2015
-declare module 'some-browser-only-library?client';
+	const ComponentConstructor = browser ?
+		import('some-browser-only-library').then((module) => module.Component) :
+		new Promise(() => {});
+</script>
 
-// @filename: index.js
-// ---cut---
-import { onMount } from 'svelte';
-import { method } from 'some-browser-only-library?client';
-
-onMount(() => {
-	method('hello world');
-});
+{#await ComponentConstructor}
+	<p>Loading...</p>
+{:then component}
+	<svelte:component this={component} />
+{:catch error}
+	<p>Something went wrong: {error.message}</p>
+{/await}
 ```
 
 ### How do I use a different backend API server?
@@ -212,11 +237,11 @@ yarn set version berry
 yarn install
 ```
 
-**Yarn 3 global cache**
+#### Yarn 3 global cache
 
 One of the more interesting features of Yarn Berry is the ability to have a single global cache for packages, instead of having multiple copies for each project on the disk. However, setting `enableGlobalCache` to true causes building to fail, so it is recommended to add the following to the `.yarnrc.yml` file:
 
-```
+```yaml
 nodeLinker: node-modules
 ```
 

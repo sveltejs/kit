@@ -59,7 +59,7 @@ test.describe('Service worker', () => {
 		});
 
 		expect(self.base).toBe('/basepath');
-		expect(self.build[0]).toMatch(/\/basepath\/_app\/immutable\/entry\/start\.[a-z0-9]+\.js/);
+		expect(self.build[0]).toMatch(/\/basepath\/_app\/immutable\/entry\/start\.[\w-]+\.js/);
 	});
 
 	test('does not register /basepath/service-worker.js', async ({ page }) => {

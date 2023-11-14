@@ -225,6 +225,31 @@ test.describe('Endpoints', () => {
 		expect(await endpoint_response.text()).toBe('');
 		expect(endpoint_response.headers()['x-sveltekit-head-endpoint']).toBe('true');
 	});
+
+	test('catch-all handler', async ({ request }) => {
+		const url = '/endpoint-output/fallback';
+
+		let response = await request.fetch(url, {
+			method: 'GET'
+		});
+
+		expect(response.status()).toBe(200);
+		expect(await response.text()).toBe('ok');
+
+		response = await request.fetch(url, {
+			method: 'MOVE' // also works with arcane methods
+		});
+
+		expect(response.status()).toBe(200);
+		expect(await response.text()).toBe('catch-all');
+
+		response = await request.fetch(url, {
+			method: 'OPTIONS'
+		});
+
+		expect(response.status()).toBe(200);
+		expect(await response.text()).toBe('catch-all');
+	});
 });
 
 test.describe('Errors', () => {
@@ -514,13 +539,13 @@ test.describe('Static files', () => {
 	});
 
 	test('Vite serves assets in allowed directories', async ({ page, request }) => {
-		await page.goto('/assets');
-		const path = await page.textContent('h1');
+		await page.goto('/asset-import');
+		const path = await page.getAttribute('img[alt=potatoes]', 'src');
 		if (!path) throw new Error('Could not determine path');
 
 		const r1 = await request.get(path);
 		expect(r1.status()).toBe(200);
-		expect(await r1.text()).toContain('http://www.w3.org/2000/svg');
+		expect(await r1.text()).toBeTruthy();
 
 		// check that we can fetch a route which overlaps with the name of a file
 		const r2 = await request.get('/package.json');
