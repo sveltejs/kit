@@ -1,5 +1,15 @@
 # @sveltejs/kit
 
+## 1.27.6
+
+### Patch Changes
+
+- fix: use runes in generated root when detecting Svelte 5 ([#11028](https://github.com/sveltejs/kit/pull/11028))
+
+- fix: correctly prerender pages that use browser globals and have SSR turned off ([#11032](https://github.com/sveltejs/kit/pull/11032))
+
+- fix: correctly show 404 for prerendered dynamic routes when navigating client-side without a root layout server load ([#11025](https://github.com/sveltejs/kit/pull/11025))
+
 ## 1.27.5
 
 ### Patch Changes
