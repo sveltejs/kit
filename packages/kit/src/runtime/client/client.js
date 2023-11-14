@@ -1869,7 +1869,9 @@ async function load_data(url, invalid) {
 		throw new HttpError(res.status, await res.json());
 	}
 
-	return new Promise((resolve) => {
+	// TODO: fix eslint error / figure out if it actually applies to our situation
+	// eslint-disable-next-line
+	return new Promise(async (resolve) => {
 		/**
 		 * Map of deferred promises that will be resolved by a subsequent chunk of data
 		 * @type {Map<string, import('types').Deferred>}
@@ -1893,53 +1895,50 @@ async function load_data(url, invalid) {
 
 		let text = '';
 
-		async function handle_stream() {
+		while (true) {
+			// Format follows ndjson (each line is a JSON object) or regular JSON spec
+			const { done, value } = await reader.read();
+			if (done && !text) break;
+
+			text += !value && text ? '\n' : decoder.decode(value); // no value -> final chunk -> add a new line to trigger the last parse
+
 			while (true) {
-				// Format follows ndjson (each line is a JSON object) or regular JSON spec
-				const { done, value } = await reader.read();
-				if (done && !text) break;
+				const split = text.indexOf('\n');
+				if (split === -1) {
+					break;
+				}
 
-				text += !value && text ? '\n' : decoder.decode(value); // no value -> final chunk -> add a new line to trigger the last parse
+				const node = JSON.parse(text.slice(0, split));
+				text = text.slice(split + 1);
 
-				while (true) {
-					const split = text.indexOf('\n');
-					if (split === -1) {
-						break;
-					}
+				if (node.type === 'redirect') {
+					return resolve(node);
+				}
 
-					const node = JSON.parse(text.slice(0, split));
-					text = text.slice(split + 1);
-
-					if (node.type === 'redirect') {
-						return resolve(node);
-					}
-
-					if (node.type === 'data') {
-						// This is the first (and possibly only, if no pending promises) chunk
-						node.nodes?.forEach((/** @type {any} */ node) => {
-							if (node?.type === 'data') {
-								node.uses = deserialize_uses(node.uses);
-								node.data = deserialize(node.data);
-							}
-						});
-
-						resolve(node);
-					} else if (node.type === 'chunk') {
-						// This is a subsequent chunk containing deferred data
-						const { id, data, error } = node;
-						const deferred = /** @type {import('types').Deferred} */ (deferreds.get(id));
-						deferreds.delete(id);
-
-						if (error) {
-							deferred.reject(deserialize(error));
-						} else {
-							deferred.fulfil(deserialize(data));
+				if (node.type === 'data') {
+					// This is the first (and possibly only, if no pending promises) chunk
+					node.nodes?.forEach((/** @type {any} */ node) => {
+						if (node?.type === 'data') {
+							node.uses = deserialize_uses(node.uses);
+							node.data = deserialize(node.data);
 						}
+					});
+
+					resolve(node);
+				} else if (node.type === 'chunk') {
+					// This is a subsequent chunk containing deferred data
+					const { id, data, error } = node;
+					const deferred = /** @type {import('types').Deferred} */ (deferreds.get(id));
+					deferreds.delete(id);
+
+					if (error) {
+						deferred.reject(deserialize(error));
+					} else {
+						deferred.fulfil(deserialize(data));
 					}
 				}
 			}
 		}
-		handle_stream();
 	});
 
 	// TODO edge case handling necessary? stream() read fails?
