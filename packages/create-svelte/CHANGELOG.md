@@ -1,5 +1,11 @@
 # create-svelte
 
+## 5.3.1
+
+### Patch Changes
+
+- chore: upgrade eslint-config-prettier ([#11037](https://github.com/sveltejs/kit/pull/11037))
+
 ## 5.3.0
 
 ### Minor Changes
