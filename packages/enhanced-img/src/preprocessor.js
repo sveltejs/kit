@@ -18,7 +18,7 @@ export function image(opts) {
 	// TODO: clear this map in dev mode to avoid memory leak
 	/**
 	 * URL to image details
-	 * @type {Map<string, { image: import('vite-imagetools').Picture, name: string }>}
+	 * @type {Map<string, import('vite-imagetools').Picture>}
 	 */
 	const images = new Map();
 
@@ -65,22 +65,21 @@ export function image(opts) {
 				}
 				url += 'enhanced';
 
-				const name = ASSET_PREFIX + images.size;
 				if (OPTIMIZABLE.test(url)) {
-					let details = images.get(url);
-					if (!details) {
+					let image = images.get(url);
+					if (!image) {
 						// resolves the import so that we can build the entire picture template string and don't
 						// need any logic blocks
-						const image = await resolve(opts, url, filename);
+						image = await resolve(opts, url, filename);
 						if (!image) {
 							return;
 						}
-						details = images.get(url) || { name, image };
-						images.set(url, details);
+						images.set(url, image);
 					}
-					s.update(node.start, node.end, img_to_picture(content, node, details));
+					s.update(node.start, node.end, img_to_picture(content, node, image));
 				} else {
 					// e.g. <img src="./foo.svg" /> => <img src={___ASSET___0} />
+					const name = ASSET_PREFIX + imports.size;
 					const { start, end } = src_attribute;
 					// update src with reference to imported asset
 					s.update(
@@ -255,9 +254,9 @@ function stringToNumber(param) {
 /**
  * @param {string} content
  * @param {import('svelte/types/compiler/interfaces').TemplateNode} node
- * @param {{ image: import('vite-imagetools').Picture, name: string }} details
+ * @param {import('vite-imagetools').Picture} image
  */
-function img_to_picture(content, node, details) {
+function img_to_picture(content, node, image) {
 	/** @type {Array<import('svelte/types/compiler/interfaces').BaseDirective | import('svelte/types/compiler/interfaces').Attribute | import('svelte/types/compiler/interfaces').SpreadAttribute>} attributes */
 	const attributes = node.attributes;
 	const index = attributes.findIndex((attribute) => attribute.name === 'sizes');
@@ -268,13 +267,13 @@ function img_to_picture(content, node, details) {
 	}
 
 	let res = '<picture>';
-	for (const [format, srcset] of Object.entries(details.image.sources)) {
+	for (const [format, srcset] of Object.entries(image.sources)) {
 		res += `<source srcset="${srcset}"${sizes_string} type="image/${format}" />`;
 	}
 	res += `<img ${img_attributes_to_markdown(content, attributes, {
-		src: details.image.img.src,
-		width: details.image.img.w,
-		height: details.image.img.h
+		src: image.img.src,
+		width: image.img.w,
+		height: image.img.h
 	})} />`;
 	res += '</picture>';
 	return res;
