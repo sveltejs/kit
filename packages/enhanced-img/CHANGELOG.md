@@ -1,5 +1,11 @@
 # @sveltejs/enhanced-img
 
+## 0.1.4
+
+### Patch Changes
+
+- fix: avoid creating conflicting import statements ([#11047](https://github.com/sveltejs/kit/pull/11047))
+
 ## 0.1.3
 
 ### Patch Changes
