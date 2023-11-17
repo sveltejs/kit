@@ -137,7 +137,7 @@ describe('make_trackable', (test) => {
 		assert.isNotOk(tracked);
 		assert.ok(tracked_search_params.has('test'));
 
-		url.searchParams.get('test-getall');
+		url.searchParams.getAll('test-getall');
 		assert.isNotOk(tracked);
 		assert.ok(tracked_search_params.has('test-getall'));
 
