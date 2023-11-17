@@ -31,18 +31,30 @@ export async function load_server_data({
 		params: new Set(),
 		parent: false,
 		route: false,
-		url: false
+		url: false,
+		search_params: new Set()
 	};
 
-	const url = make_trackable(event.url, () => {
-		if (DEV && done && !uses.url) {
-			console.warn(
-				`${node.server_id}: Accessing URL properties in a promise handler after \`load(...)\` has returned will not cause the function to re-run when the URL changes`
-			);
-		}
+	const url = make_trackable(
+		event.url,
+		() => {
+			if (DEV && done && !uses.url) {
+				console.warn(
+					`${node.server_id}: Accessing URL properties in a promise handler after \`load(...)\` has returned will not cause the function to re-run when the URL changes`
+				);
+			}
 
-		uses.url = true;
-	});
+			uses.url = true;
+		},
+		(search_params) => {
+			if (DEV && done && uses.search_params.size === 0) {
+				console.warn(
+					`${node.server_id}: Accessing URL properties in a promise handler after \`load(...)\` has returned will not cause the function to re-run when the URL changes`
+				);
+			}
+			uses.search_params.add(search_params);
+		}
+	);
 
 	if (state.prerendering) {
 		disable_search(url);

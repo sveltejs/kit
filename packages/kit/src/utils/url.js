@@ -103,16 +103,34 @@ const tracked_url_properties = /** @type {const} */ ([
 	'href',
 	'pathname',
 	'search',
-	'searchParams',
 	'toString',
 	'toJSON'
 ]);
 
 /**
+ * @param {URLSearchParams} search_params
+ * @param {(search_param: string) => void} callback
+ */
+function tracked_search_params(search_params, callback) {
+	return new Proxy(search_params, {
+		get(obj, key) {
+			if (key === 'get') {
+				return (/**@type {string}*/ search_param) => {
+					callback(search_param);
+					return search_params.get(search_param);
+				};
+			}
+			return Reflect.get(obj, key);
+		}
+	});
+}
+
+/**
  * @param {URL} url
  * @param {() => void} callback
+ * @param {(search_param: string) => void} search_params_callback
  */
-export function make_trackable(url, callback) {
+export function make_trackable(url, callback, search_params_callback) {
 	const tracked = new URL(url);
 
 	for (const property of tracked_url_properties) {
@@ -126,6 +144,16 @@ export function make_trackable(url, callback) {
 			configurable: true
 		});
 	}
+
+	const search_params_to_track = new URLSearchParams(tracked.searchParams);
+
+	Object.defineProperty(tracked, 'searchParams', {
+		get() {
+			return tracked_search_params(search_params_to_track, search_params_callback);
+		},
+		enumerable: true,
+		configurable: true
+	});
 
 	if (!BROWSER) {
 		// @ts-ignore
