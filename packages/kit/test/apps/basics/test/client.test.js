@@ -413,6 +413,54 @@ test.describe('Invalidation', () => {
 		expect(await page.textContent('h1')).toBe('3');
 	});
 
+	test('load function does not re-runs when another searchParams change (layout)', async ({
+		page,
+		clicknav
+	}) => {
+		await page.goto('/load/invalidation/search-params/layout?test=0');
+		expect(await page.textContent('span')).toBe('count: 0');
+		await clicknav('[href="?test=1"]');
+		expect(await page.textContent('span')).toBe('count: 1');
+		await clicknav('[href="?test=1&another=another"]');
+		expect(await page.textContent('span')).toBe('count: 1');
+	});
+
+	test('load function does not re-runs when another searchParams change (layout-server)', async ({
+		page,
+		clicknav
+	}) => {
+		await page.goto('/load/invalidation/search-params/layout-server?test=0');
+		expect(await page.textContent('span')).toBe('count: 0');
+		await clicknav('[href="?test=1"]');
+		expect(await page.textContent('span')).toBe('count: 1');
+		await clicknav('[href="?test=1&another=another"]');
+		expect(await page.textContent('span')).toBe('count: 1');
+	});
+
+	test('load function does not re-runs when another searchParams change (page)', async ({
+		page,
+		clicknav
+	}) => {
+		await page.goto('/load/invalidation/search-params/page?test=0');
+		expect(await page.textContent('span')).toBe('count: 0');
+		await clicknav('[href="?test=1"]');
+		expect(await page.textContent('span')).toBe('count: 1');
+		await clicknav('[href="?test=1&another=another"]');
+		expect(await page.textContent('span')).toBe('count: 1');
+	});
+
+	test('load function does not re-runs when another searchParams change (page-server)', async ({
+		page,
+		clicknav
+	}) => {
+		await page.goto('/load/invalidation/search-params/page-server?test=0');
+		expect(await page.textContent('span')).toBe('count: 0');
+		await clicknav('[href="?test=1"]');
+		expect(await page.textContent('span')).toBe('count: 1');
+		await clicknav('[href="?test=1&another=another"]');
+		expect(await page.textContent('span')).toBe('count: 1');
+	});
+
 	test('server-only load functions are re-run following forced invalidation', async ({ page }) => {
 		await page.goto('/load/invalidation/forced');
 		expect(await page.textContent('h1')).toBe('a: 0, b: 1');
