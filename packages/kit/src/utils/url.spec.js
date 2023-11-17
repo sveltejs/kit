@@ -90,7 +90,7 @@ describe('normalize_path', (test) => {
 	});
 });
 
-describe.only('make_trackable', (test) => {
+describe('make_trackable', (test) => {
 	test('makes URL properties trackable', () => {
 		let tracked = false;
 		const url = make_trackable(
