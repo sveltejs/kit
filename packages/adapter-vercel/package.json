@@ -15,9 +15,13 @@
 			"types": "./index.d.ts",
 			"import": "./index.js"
 		},
-		"./image-loader": {
-			"types": "./image-loader.d.ts",
-			"import": "./image-loader.js"
+		"./images/loader": {
+			"types": "./image/loader.d.ts",
+			"import": "./image/loader.js"
+		},
+		"./images/options": {
+			"types": "./image/options.d.ts",
+			"import": "./image/options.js"
 		},
 		"./package.json": "./package.json"
 	},

@@ -435,8 +435,8 @@ export interface KitConfig {
 	 */
 	images?: {
 		/**
-		 * Path to a a file that contains a loader that will be used to generate the an image URL out of the given source and width.
-		 * It optionally also takes third parameter for options.
+		 * Path to a module that contains a loader that will be used to generate the an image URL out of the given source and width.
+		 * It optionally also takes third parameter for options. Can be either a relative path or a reference to an npm packe.
 		 *
 		 * ```js
 		 * export default function loader(src, width, opts) {
@@ -446,14 +446,14 @@ export interface KitConfig {
 		 */
 		loader?: string;
 		/**
-		 * Which srcset sizes to generate
-		 * @default [640, 828, 1200, 1920, 3840]
+		 * Specific options passed to the loader. Needs to be a JSON-stringifiable object.
 		 */
-		sizes?: number[];
+		loaderOptions?: Record<string, any>;
 		/**
-		 * Which external domains to trust when optimizing images
+		 * Which srcset sizes to generate
+		 * @default [48, 128, 256, 540, 768, 1080, 1366, 1536, 1920, 2560, 3000, 4096, 5120]
 		 */
-		domains?: string[];
+		widths?: number[];
 	};
 	/**
 	 * Inline CSS inside a `<style>` block at the head of the HTML. This option is a number that specifies the maximum length of a CSS file in UTF-16 code units, as specified by the [String.length](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/String/length) property, to be inlined. All CSS files needed for the page and smaller than this value are merged and inlined in a `<style>` block.

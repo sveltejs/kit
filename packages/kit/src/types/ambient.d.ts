@@ -109,7 +109,12 @@ declare module '__sveltekit/paths' {
 
 /** Internal version of $app/images */
 declare module '__sveltekit/images' {
-	export let sizes: number[];
-	export let loader: (url: string, size: number, opts?: any) => string;
-	export let domains: string[];
+	export let widths: number[];
+	export let loader: (
+		url: string,
+		size: number | undefined,
+		loader_options: Record<string, any>,
+		image_options?: Record<string, any>
+	) => string;
+	export let loader_options: Record<string, any>;
 }

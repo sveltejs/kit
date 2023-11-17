@@ -449,8 +449,8 @@ function kit({ svelte_config }) {
 						: 'export function loader(src) { console.warn("No image loader in kit.config.kit.images.loader set, images will not be optimized."); return src; }';
 
 					return dedent`
-						export const sizes = ${JSON.stringify(images.sizes)};
-						export const domains = ${JSON.stringify(images.domains)};
+						export const widths = ${JSON.stringify(images.widths)};
+						export const loader_options = ${JSON.stringify(images.loaderOptions)};
 						${loader}
 					`;
 				}

@@ -139,9 +139,11 @@ const options = object(
 			}),
 
 			images: object({
-				domains: string_array([]),
 				loader: string(null),
-				sizes: number_array([640, 828, 1200, 1920, 3840])
+				loaderOptions: object({}, true),
+				widths: number_array([
+					48, 128, 256, 540, 768, 1080, 1366, 1536, 1920, 2560, 3000, 4096, 5120
+				])
 			}),
 
 			inlineStyleThreshold: number(0),
