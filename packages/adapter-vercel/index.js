@@ -176,7 +176,7 @@ const plugin = function (defaults = {}) {
 
 					if (!runtime.startsWith('nodejs')) {
 						throw new Error(
-							`${directory}: Routes using \`isr\` must use a NodeJs runtime (for example 'nodejs20.x')`
+							`${directory}: Routes using \`isr\` must use a Node.js runtime (for example 'nodejs20.x')`
 						);
 					}
 
