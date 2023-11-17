@@ -548,6 +548,8 @@ A `load` function that calls `await parent()` will also rerun if a parent `load`
 
 Dependency tracking does not apply _after_ the `load` function has returned — for example, accessing `params.x` inside a nested [promise](#streaming-with-promises) will not cause the function to rerun when `params.x` changes. (Don't worry, you'll get a warning in development if you accidentally do this.) Instead, access the parameter in the main body of your `load` function.
 
+Also accessing one single query parameter is tracked independently from the rest of the url. This means that accessing `event.url.searchParams.get("query")` inside a `load` function will make that load function rerun only when the `query` search param changes. For example navigating from `/search?query=svelte&page=1` to `/search?query=svelte&page=2` will not rerun a load function that access `event.url.searchParams.get("query")` but not `event.url.searchParams.get("page")`.
+
 ### Manual invalidation
 
 You can also rerun `load` functions that apply to the current page using [`invalidate(url)`](modules#$app-navigation-invalidate), which reruns all `load` functions that depend on `url`, and [`invalidateAll()`](modules#$app-navigation-invalidateall), which reruns every `load` function. Server load functions will never automatically depend on a fetched `url` to avoid leaking secrets to the client.
