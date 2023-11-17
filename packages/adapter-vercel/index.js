@@ -417,7 +417,7 @@ function static_vercel_config(builder, image_config) {
 	if (image_config || is_vercel_loader) {
 		images = {
 			...image_config,
-			sizes: is_vercel_loader ? img_config.widths : image_config?.sizes
+			sizes: is_vercel_loader ? img_config.widths : image_config?.sizes ?? img_config.widths
 			// TODO should we set some defaults?
 		};
 	}
