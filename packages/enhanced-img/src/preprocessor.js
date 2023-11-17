@@ -211,7 +211,7 @@ function get_attr_value(node, attr) {
 function img_attributes_to_markdown(content, attributes, details) {
 	const attribute_strings = attributes.map((attribute) => {
 		if (attribute.name === 'src') {
-			return `src=${details.src}`;
+			return `src={"${details.src}"}`;
 		}
 		return content.substring(attribute.start, attribute.end);
 	});
@@ -268,7 +268,7 @@ function img_to_picture(content, node, image) {
 
 	let res = '<picture>';
 	for (const [format, srcset] of Object.entries(image.sources)) {
-		res += `<source srcset="${srcset}"${sizes_string} type="image/${format}" />`;
+		res += `<source srcset={"${srcset}"}${sizes_string} type="image/${format}" />`;
 	}
 	res += `<img ${img_attributes_to_markdown(content, attributes, {
 		src: image.img.src,
