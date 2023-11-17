@@ -442,7 +442,7 @@ function kit({ svelte_config }) {
 					`;
 				}
 
-				case '\0__sveltekit/images': {
+				case '\0virtual:__sveltekit/images': {
 					const { images } = svelte_config.kit;
 					const loader = images.loader
 						? `export { default as loader } from '${images.loader}';`

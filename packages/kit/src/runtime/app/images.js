@@ -21,6 +21,7 @@ import { widths as default_widths, loader, loader_options } from '__sveltekit/im
  */
 export function getImage(payload) {
 	const src = payload.src;
+	const widths = get_widths(payload.width, payload.sizes);
 
 	if (DEV) {
 		if (!('width' in payload) && !('layout' in payload)) {
@@ -28,16 +29,14 @@ export function getImage(payload) {
 				`Missing 'width' or 'layout' for image ${src}. Provide one of them to prevent layout shift.`
 			);
 		}
-		return { srcset: src, src };
 	}
 
-	const widths = get_widths(payload.width, payload.sizes);
 	let _src = src;
 	const srcset = widths.widths
-		.map((width) => {
-			const url = loader(src, width, loader_options, payload.options);
+		.map((width, i) => {
+			const url = DEV ? src : loader(src, width, loader_options, payload.options);
 			_src = url; // ensures that the largest one is set
-			const w = width + widths.kind;
+			const w = widths.kind === 'x' ? `${i + 1}x` : `${width}w`;
 			return `${url} ${w}`;
 		})
 		.join(', ');
@@ -45,7 +44,7 @@ export function getImage(payload) {
 	let style = payload.style;
 	// @ts-expect-error
 	if (payload.layout === 'fill') {
-		style = 'object-fit:cover;object-position:0 0' + (style ? ';' + style : '');
+		style = 'position:absolute;width:100%;height:100%;inset:0px;' + (style || '');
 	}
 
 	// Order of attributes is important here as they are set in this order
@@ -56,7 +55,7 @@ export function getImage(payload) {
 		sizes: payload.sizes,
 		loading: payload.loading,
 		fetchpriority: payload.fetchpriority,
-		style: payload.style,
+		style,
 		class: payload.class,
 		width: payload.width,
 		height: payload.height,
