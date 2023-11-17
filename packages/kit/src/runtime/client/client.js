@@ -631,13 +631,13 @@ export function create_client(app, target) {
 
 	/**
 	 *
-	 * @param {URL} old_url
-	 * @param {URL} new_url
+	 * @param {URL} [old_url]
+	 * @param {URL} [new_url]
 	 */
 	function check_search_params_changed(old_url, new_url) {
 		const changed = new Set();
-		const new_search_params = new URLSearchParams(new_url.searchParams);
-		for (const [key, value] of old_url.searchParams.entries()) {
+		const new_search_params = new URLSearchParams(new_url?.searchParams);
+		for (const [key, value] of old_url?.searchParams?.entries?.() ?? []) {
 			if (new_search_params.get(key) !== value) {
 				changed.add(key);
 			}
