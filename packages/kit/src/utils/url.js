@@ -107,20 +107,34 @@ const tracked_url_properties = /** @type {const} */ ([
 	'toJSON'
 ]);
 
+const tracked_search_params_properties = /** @type {const} */ ['get', 'getAll', 'has'];
+
 /**
  * @param {URLSearchParams} search_params
- * @param {(search_param: string) => void} callback
+ * @param {() => void} callback
+ * @param {(search_param: string) => void} search_params_callback
  */
-function tracked_search_params(search_params, callback) {
+function tracked_search_params(search_params, callback, search_params_callback) {
 	return new Proxy(search_params, {
 		get(obj, key) {
-			if (key === 'get') {
-				return (/**@type {string}*/ search_param) => {
-					callback(search_param);
-					return search_params.get(search_param);
-				};
+			if (typeof key === 'string' && tracked_search_params_properties.includes(key)) {
+				// @ts-expect-error
+				const function_to_call = key in search_params ? search_params[key].bind(search_params) : '';
+				if (function_to_call && function_to_call instanceof Function) {
+					return (/**@type {string}*/ search_param) => {
+						search_params_callback(search_param);
+						return function_to_call(search_param);
+					};
+				}
 			}
-			return Reflect.get(obj, key);
+			// if they try to access something different from what is in `tracked_search_params_properties`
+			// we track the whole url (entries, values, keys etc)
+			callback();
+			let retval = Reflect.get(obj, key);
+			if (retval instanceof Function) {
+				retval = retval.bind(search_params);
+			}
+			return retval;
 		}
 	});
 }
@@ -149,7 +163,7 @@ export function make_trackable(url, callback, search_params_callback) {
 
 	Object.defineProperty(tracked, 'searchParams', {
 		get() {
-			return tracked_search_params(search_params_to_track, search_params_callback);
+			return tracked_search_params(search_params_to_track, callback, search_params_callback);
 		},
 		enumerable: true,
 		configurable: true
