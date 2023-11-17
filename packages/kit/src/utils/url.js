@@ -150,6 +150,7 @@ export function make_trackable(url, callback, search_params_callback) {
 	for (const property of tracked_url_properties) {
 		Object.defineProperty(tracked, property, {
 			get() {
+				console.log({ property });
 				callback();
 				return url[property];
 			},

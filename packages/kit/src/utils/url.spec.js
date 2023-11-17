@@ -96,6 +96,7 @@ describe('make_trackable', (test) => {
 		const url = make_trackable(
 			new URL('https://kit.svelte.dev/docs'),
 			() => {
+				console.log('setting tracked to true');
 				tracked = true;
 			},
 			() => {}
