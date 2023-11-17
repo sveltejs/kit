@@ -1,6 +1,6 @@
 import { join } from 'node:path';
 
-/** @typedef {import('./types').Validator} Validator */
+/** @typedef {import('./types.js').Validator} Validator */
 
 const directives = object({
 	'child-src': string_array(),

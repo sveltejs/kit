@@ -228,6 +228,21 @@ test.describe('Load', () => {
 		expect(requests).toEqual([]);
 	});
 
+	test('permits 3rd party patching of fetch in universal load functions', async ({ page }) => {
+		/** @type {string[]} */
+		const logs = [];
+		page.on('console', (msg) => {
+			if (msg.type() === 'log') {
+				logs.push(msg.text());
+			}
+		});
+
+		await page.goto('/load/window-fetch/patching');
+		expect(await page.textContent('h1')).toBe('42');
+
+		expect(logs).toContain('Called a patched window.fetch');
+	});
+
 	if (process.env.DEV) {
 		test('using window.fetch causes a warning', async ({ page, baseURL }) => {
 			await Promise.all([

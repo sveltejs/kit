@@ -1,6 +1,6 @@
 import './shims';
 import { Server } from '0SERVER';
-import { split_headers } from './headers';
+import { split_headers } from './headers.js';
 
 /**
  * @param {import('@sveltejs/kit').SSRManifest} manifest

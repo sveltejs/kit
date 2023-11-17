@@ -641,6 +641,9 @@ test.describe('Routing', () => {
 		await page.locator('[href="/routing/hashes/pagestore"]').click();
 		await expect(page.locator('#window-hash')).toHaveText('#target'); // hashchange doesn't fire for these
 		await expect(page.locator('#page-url-hash')).toHaveText('');
+		await page.goBack();
+		expect(await page.textContent('#window-hash')).toBe('#target');
+		expect(await page.textContent('#page-url-hash')).toBe('#target');
 	});
 
 	test('back button returns to previous route when previous route has been navigated to via hash anchor', async ({

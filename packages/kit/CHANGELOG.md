@@ -1,5 +1,87 @@
 # @sveltejs/kit
 
+## 1.27.6
+
+### Patch Changes
+
+- fix: use runes in generated root when detecting Svelte 5 ([#11028](https://github.com/sveltejs/kit/pull/11028))
+
+- fix: correctly prerender pages that use browser globals and have SSR turned off ([#11032](https://github.com/sveltejs/kit/pull/11032))
+
+- fix: correctly show 404 for prerendered dynamic routes when navigating client-side without a root layout server load ([#11025](https://github.com/sveltejs/kit/pull/11025))
+
+## 1.27.5
+
+### Patch Changes
+
+- fix: add vite.config.js to included files in generated tsconfig ([#10788](https://github.com/sveltejs/kit/pull/10788))
+
+- fix: cache location.origin on startup ([#11004](https://github.com/sveltejs/kit/pull/11004))
+
+## 1.27.4
+
+### Patch Changes
+
+- fix: generate `__data.json` for prerendered pages when SSR is turned off ([#10988](https://github.com/sveltejs/kit/pull/10988))
+
+- chore: add experimental compatibility for Svelte 5 ([#11002](https://github.com/sveltejs/kit/pull/11002))
+
+## 1.27.3
+
+### Patch Changes
+
+- fix: use correct environment file for rendering spa fallback page ([#10963](https://github.com/sveltejs/kit/pull/10963))
+
+## 1.27.2
+
+### Patch Changes
+
+- fix: missing `File` Node polyfill for Node version 18.11.0+ ([#10948](https://github.com/sveltejs/kit/pull/10948))
+
+## 1.27.1
+
+### Patch Changes
+
+- fix: only apply some polyfills below node 18.11 ([#10920](https://github.com/sveltejs/kit/pull/10920))
+
+## 1.27.0
+
+### Minor Changes
+
+- feat: add `invalidateAll` boolean option to `enhance` callback ([#9889](https://github.com/sveltejs/kit/pull/9889))
+
+## 1.26.0
+
+### Minor Changes
+
+- feat: infer route parameter type from matcher's guard check if applicable ([#10755](https://github.com/sveltejs/kit/pull/10755))
+
+### Patch Changes
+
+- fix: basic mime type handling for prerendered pages in preview ([#10851](https://github.com/sveltejs/kit/pull/10851))
+
+- chore: use just a single library (mrmime) for mime type handling ([#10851](https://github.com/sveltejs/kit/pull/10851))
+
+- chore: bump undici to address security issue ([#10885](https://github.com/sveltejs/kit/pull/10885))
+
+- fix: follow whatwg fetch spec for handling redirect loops ([#10857](https://github.com/sveltejs/kit/pull/10857))
+
+- fix: use `window.fetch` in `load` functions to allow libraries to patch it ([#10009](https://github.com/sveltejs/kit/pull/10009))
+
+- chore(deps): update dependency undici to ~5.26.0 ([#10860](https://github.com/sveltejs/kit/pull/10860))
+
+## 1.25.2
+
+### Patch Changes
+
+- fix: correctly update `$page.url.hash` when navigating history ([#10843](https://github.com/sveltejs/kit/pull/10843))
+
+- fix: strip virtual module prefix from error messages ([#10776](https://github.com/sveltejs/kit/pull/10776))
+
+- fix: cancel ongoing navigation when the browser back button is hit to prevent an incorrect page from being rendered ([#10727](https://github.com/sveltejs/kit/pull/10727))
+
+- fix: only remove Vite manifest when copying files ([#10782](https://github.com/sveltejs/kit/pull/10782))
+
 ## 1.25.1
 
 ### Patch Changes

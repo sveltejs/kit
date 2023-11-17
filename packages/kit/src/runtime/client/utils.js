@@ -6,6 +6,8 @@ import { PRELOAD_PRIORITIES } from './constants.js';
 
 /* global __SVELTEKIT_APP_VERSION_FILE__, __SVELTEKIT_APP_VERSION_POLL_INTERVAL__ */
 
+export const origin = BROWSER ? location.origin : '';
+
 /** @param {HTMLDocument} doc */
 export function get_base_uri(doc) {
 	let baseURI = doc.baseURI;
@@ -135,7 +137,7 @@ export function get_link_info(a, base) {
 		is_external_url(url, base) ||
 		(a.getAttribute('rel') || '').split(/\s+/).includes('external');
 
-	const download = url?.origin === location.origin && a.hasAttribute('download');
+	const download = url?.origin === origin && a.hasAttribute('download');
 
 	return { url, external, target, download };
 }
@@ -290,5 +292,5 @@ export function create_updated_store() {
  * @param {string} base
  */
 export function is_external_url(url, base) {
-	return url.origin !== location.origin || !url.pathname.startsWith(base);
+	return url.origin !== origin || !url.pathname.startsWith(base);
 }

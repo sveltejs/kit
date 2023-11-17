@@ -8,7 +8,7 @@ import { module_guard } from './index.js';
  */
 function check(graph, expected_error) {
 	// @ts-expect-error
-	const context = /** @type {import('rollup').PluginContext} */ ({
+	const context = /** @type {import('vite').Rollup.PluginContext} */ ({
 		/** @param {string} id */
 		getModuleInfo(id) {
 			return {
