@@ -9,6 +9,7 @@ import { widths as default_widths, loader, loader_options } from '__sveltekit/im
  *  loading?: 'eager' | 'lazy';
  *  style?: string;
  *  class?: string;
+ *  alt?: string;
  *  options?: Record<string, any>;
  *  } & ({ width: number; height: number } | { layout: 'fill' | 'custom', width?: number; height?: number })
  * } ImageOptions
@@ -16,7 +17,7 @@ import { widths as default_widths, loader, loader_options } from '__sveltekit/im
 
 /**
  * @param {ImageOptions} payload
- * @returns {{ src: string, srcset: string, sizes?: string, width?: number, height?: number, loading?: 'eager' | 'lazy', fetchpriority?: 'high' | 'low' | 'auto', style?: string, class?: string }}
+ * @returns {{ src: string, srcset: string, sizes?: string, width?: number, height?: number, loading?: 'eager' | 'lazy', fetchpriority?: 'high' | 'low' | 'auto', style?: string, class?: string, alt?: string }}
  */
 export function getImage(payload) {
 	const src = payload.src;
@@ -58,7 +59,8 @@ export function getImage(payload) {
 		style: payload.style,
 		class: payload.class,
 		width: payload.width,
-		height: payload.height
+		height: payload.height,
+		alt: payload.alt
 	};
 }
 

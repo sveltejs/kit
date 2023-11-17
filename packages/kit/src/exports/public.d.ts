@@ -444,7 +444,7 @@ export interface KitConfig {
 		 * }
 		 * ```
 		 */
-		loader?: string;
+		loader: string;
 		/**
 		 * Specific options passed to the loader. Needs to be a JSON-stringifiable object.
 		 */

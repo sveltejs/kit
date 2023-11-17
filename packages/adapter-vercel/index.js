@@ -55,7 +55,7 @@ const plugin = function (defaults = {}) {
 				functions: `${dir}/functions`
 			};
 
-			const static_config = static_vercel_config(builder);
+			const static_config = static_vercel_config(builder, defaults.images);
 
 			builder.log.minor('Generating serverless function...');
 
@@ -367,9 +367,12 @@ function write(file, data) {
 	fs.writeFileSync(file, data);
 }
 
-// This function is duplicated in adapter-static
-/** @param {import('@sveltejs/kit').Builder} builder */
-function static_vercel_config(builder) {
+// This function is mostly duplicated in adapter-static
+/**
+ * @param {import('@sveltejs/kit').Builder} builder
+ * @param {import('./index.js').ImageConfig | undefined}
+ */
+function static_vercel_config(builder, image_config) {
 	/** @type {any[]} */
 	const prerendered_redirects = [];
 
@@ -410,11 +413,11 @@ function static_vercel_config(builder) {
 	/** @type {Record<string, any> | undefined} */
 	let images = undefined;
 	const img_config = builder.config.kit.images;
-	if (config.images || img_config.loader === '@sveltejs/adapter-vercel/image-loader') {
+	const is_vercel_loader = img_config.loader === '@sveltejs/adapter-vercel/image-loader';
+	if (image_config || is_vercel_loader) {
 		images = {
-			...img_config.loaderOptions,
-			sizes: img_config.widths,
-			domains: img_config.loaderOptions?.domains ?? []
+			...image_config,
+			sizes: is_vercel_loader ? img_config.widths : image_config?.sizes
 			// TODO should we set some defaults?
 		};
 	}

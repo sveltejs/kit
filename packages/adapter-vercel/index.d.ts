@@ -8,9 +8,33 @@ export default function plugin(
 		 * defined the Vercel loader in `kit.images.loader`, else disabled by default.
 		 * https://vercel.com/docs/concepts/image-optimization
 		 */
-		images?: boolean;
+		images?: ImageConfig;
 	}
 ): Adapter;
+
+/**
+ * https://vercel.com/docs/concepts/image-optimization
+ */
+export interface ImageConfig {
+	/** Only set this if you're not using SvelteKit's `getImage` from `$app/images` */
+	sizes?: number[];
+	domains?: string[];
+	remotePatterns?: RemotePattern[];
+	minimumCacheTTL?: number;
+	formats?: ImageFormat[];
+	dangerouslyAllowSVG?: boolean;
+	contentSecurityPolicy?: string;
+	contentDispositionType?: string;
+}
+
+type ImageFormat = 'image/avif' | 'image/webp';
+
+type RemotePattern = {
+	protocol?: 'http' | 'https';
+	hostname: string;
+	port?: string;
+	pathname?: string;
+};
 
 export interface ServerlessConfig {
 	/**
