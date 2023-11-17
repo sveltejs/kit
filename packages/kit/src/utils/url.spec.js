@@ -96,18 +96,15 @@ describe('make_trackable', (test) => {
 		const url = make_trackable(
 			new URL('https://kit.svelte.dev/docs'),
 			() => {
-				console.log('setting tracked to true');
 				tracked = true;
 			},
 			() => {}
 		);
 
 		url.origin;
-		console.log({ tracked });
 		assert.isNotOk(tracked);
 
 		url.pathname;
-		console.log({ tracked });
 		assert.ok(tracked);
 	});
 

@@ -146,11 +146,11 @@ function tracked_search_params(search_params, callback, search_params_callback) 
  */
 export function make_trackable(url, callback, search_params_callback) {
 	const tracked = new URL(url);
+	const search_params_to_track = new URLSearchParams(tracked.searchParams);
 
 	for (const property of tracked_url_properties) {
 		Object.defineProperty(tracked, property, {
 			get() {
-				console.log({ property });
 				callback();
 				return url[property];
 			},
@@ -159,8 +159,6 @@ export function make_trackable(url, callback, search_params_callback) {
 			configurable: true
 		});
 	}
-
-	const search_params_to_track = new URLSearchParams(tracked.searchParams);
 
 	Object.defineProperty(tracked, 'searchParams', {
 		get() {
