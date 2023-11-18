@@ -62,7 +62,7 @@ const options = await p.group(
 
 		types: () =>
 			p.select({
-				message: 'Add type checking with TypeScript?',
+				message: 'Add type checking to project?',
 				initialValue: /** @type {'checkjs' | 'typescript' | null} */ ('checkjs'),
 				options: [
 					{
