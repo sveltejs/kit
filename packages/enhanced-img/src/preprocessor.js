@@ -272,8 +272,9 @@ function img_to_picture(content, node, image) {
 	}
 	// Need to handle src differently when using either Vite's renderBuiltUrl or relative base path in Vite.
 	// See https://github.com/vitejs/vite/blob/b93dfe3e08f56cafe2e549efd80285a12a3dc2f0/packages/vite/src/node/plugins/asset.ts#L132
+	/** @type {string} */
 	const src =
-		image.img.src.startsWith('"+') && src.endsWith('+"')
+		image.img.src.startsWith('"+') && image.img.src.endsWith('+"')
 			? `{"${image.img.src.substring(2, image.img.src.length - 2)}"}`
 			: `"${image.img.src}"`;
 	res += `<img ${img_attributes_to_markdown(content, attributes, {
