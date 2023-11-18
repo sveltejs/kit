@@ -1,5 +1,11 @@
 # @sveltejs/enhanced-img
 
+## 0.1.5
+
+### Patch Changes
+
+- fix: correctly generate client-side code ([#11059](https://github.com/sveltejs/kit/pull/11059))
+
 ## 0.1.4
 
 ### Patch Changes
