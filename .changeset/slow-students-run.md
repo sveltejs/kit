@@ -2,4 +2,4 @@
 '@sveltejs/enhanced-img': patch
 ---
 
-Fixes compilation for client chunks
+fix: correctly generate client-side code
