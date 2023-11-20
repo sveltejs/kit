@@ -1,3 +1,5 @@
+/** @type { import("eslint").Linter.FlatConfig } */
+
 module.exports = {
 	root: true,
 	extends: ['eslint:recommended', 'plugin:svelte/recommended'],
