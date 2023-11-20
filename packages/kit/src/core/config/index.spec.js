@@ -91,6 +91,11 @@ const get_defaults = (prefix = '') => ({
 			appTemplate: join(prefix, 'src/app.html'),
 			errorTemplate: join(prefix, 'src/error.html')
 		},
+		images: {
+			loader: null,
+			loaderOptions: {},
+			widths: [48, 128, 256, 540, 768, 1080, 1366, 1536, 1920, 2560, 3000, 4096, 5120]
+		},
 		inlineStyleThreshold: 0,
 		moduleExtensions: ['.js', '.ts'],
 		output: { preloadStrategy: 'modulepreload' },
