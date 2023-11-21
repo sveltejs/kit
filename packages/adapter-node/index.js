@@ -9,7 +9,7 @@ const files = fileURLToPath(new URL('./files', import.meta.url).href);
 
 /** @type {import('./index.js').default} */
 export default function (opts = {}) {
-	const { out = 'build', precompress, envPrefix = '', polyfill = true } = opts;
+	const { out = 'build', precompress, envPrefix = '', polyfill = true, packageJsonPath = 'package.json' } = opts;
 
 	return {
 		name: '@sveltejs/adapter-node',
@@ -43,7 +43,7 @@ export default function (opts = {}) {
 					`export const prerendered = new Set(${JSON.stringify(builder.prerendered.paths)});\n`
 			);
 
-			const pkg = JSON.parse(readFileSync('package.json', 'utf8'));
+			const pkg = JSON.parse(readFileSync(packageJsonPath, 'utf8'));
 
 			// we bundle the Vite output so that deployments only need
 			// their production dependencies. Anything in devDependencies

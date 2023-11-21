@@ -10,6 +10,7 @@ interface AdapterOptions {
 	precompress?: boolean;
 	envPrefix?: string;
 	polyfill?: boolean;
+	packageJsonPath: string;
 }
 
 export default function plugin(options?: AdapterOptions): Adapter;

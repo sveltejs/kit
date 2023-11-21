@@ -132,7 +132,8 @@ export default {
 			out: 'build',
 			precompress: false,
 			envPrefix: '',
-			polyfill: true
+			polyfill: true,
+			packageJsonPath: 'package.json'
 		})
 	}
 };
@@ -166,6 +167,16 @@ node build
 Controls whether your build will load polyfills for missing modules. It defaults to `true`, and should only be disabled when using Node 18.11 or greater.
 
 Note: to use Node's built-in `crypto` global with Node 18 you will need to use the `--experimental-global-webcrypto` flag. This flag is not required with Node 20.
+
+### packageJsonPath
+
+In case your package.json is not located in the root directory of your app, you can specify the absolute path to it:
+
+```js
+adapter({
+	packageJsonPath: path.resolve('../../package.json')
+})
+```
 
 ## Custom server
 
