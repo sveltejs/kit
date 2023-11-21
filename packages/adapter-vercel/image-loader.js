@@ -3,21 +3,25 @@
 /**
  * @param {string} src
  * @param {number} width
- * @param {any} _loader_options
  * @param {{ quality?: number }} [image_options]
  */
-export default function loader(src, width, _loader_options, image_options) {
+export default function loader(src, width, image_options) {
 	const url = new URL(src, 'http://n'); // If the base is a relative URL, we need to add a dummy host to the URL
 
 	if (url.pathname === '/_vercel/image') {
 		set_param(url, 'w', width);
-		set_param(url, 'q', image_options?.quality ?? 100, false);
+		if (image_options?.quality) {
+			set_param(url, 'q', image_options.quality, false);
+		}
 	} else {
 		url.pathname = '_vercel/image';
 		set_param(url, 'url', src);
 		set_param(url, 'w', width);
-		set_param(url, 'q', image_options?.quality ?? 100);
+		if (image_options?.quality) {
+			set_param(url, 'q', image_options.quality);
+		}
 	}
+
 	return src === url.href ? url.href : relative_url(url);
 }
 

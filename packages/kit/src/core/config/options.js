@@ -140,7 +140,6 @@ const options = object(
 
 			images: object({
 				loader: string(null),
-				loaderOptions: object({}, true),
 				widths: number_array([
 					48, 128, 256, 540, 768, 1080, 1366, 1536, 1920, 2560, 3000, 4096, 5120
 				])

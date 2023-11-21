@@ -113,8 +113,6 @@ declare module '__sveltekit/images' {
 	export let loader: (
 		url: string,
 		size: number | undefined,
-		loader_options: Record<string, any>,
 		image_options?: Record<string, any>
 	) => string;
-	export let loader_options: Record<string, any>;
 }

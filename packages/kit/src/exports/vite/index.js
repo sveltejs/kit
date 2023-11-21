@@ -450,7 +450,6 @@ function kit({ svelte_config }) {
 
 					return dedent`
 						export const widths = ${JSON.stringify(images.widths)};
-						export const loader_options = ${JSON.stringify(images.loaderOptions)};
 						${loader}
 					`;
 				}

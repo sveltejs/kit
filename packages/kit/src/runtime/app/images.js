@@ -1,5 +1,5 @@
 import { DEV } from 'esm-env';
-import { widths as default_widths, loader, loader_options } from '__sveltekit/images';
+import { widths as default_widths, loader } from '__sveltekit/images';
 
 /**
  * @typedef {{
@@ -34,7 +34,7 @@ export function getImage(payload) {
 	let _src = src;
 	const srcset = widths.widths
 		.map((width, i) => {
-			const url = DEV ? src : loader(src, width, loader_options, payload.options);
+			const url = DEV ? src : loader(src, width, payload.options);
 			_src = url; // ensures that the largest one is set
 			const w = widths.kind === 'x' ? `${i + 1}x` : `${width}w`;
 			return `${url} ${w}`;
