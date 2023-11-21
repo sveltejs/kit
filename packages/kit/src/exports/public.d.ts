@@ -438,8 +438,8 @@ export interface KitConfig {
 		 * Path to a module that contains a loader that will be used to generate the an image URL out of the given source and width.
 		 * It optionally also takes third parameter for options. Can be either a relative path or a reference to an npm packe.
 		 *
-		 * ```js
-		 * export default function loader(src, width, opts) {
+		 * ```ts
+		 * export default function loader(src: string, width: number, opts: any) {
 		 *  return `https://example.com/${src}?w=${width}&q=${opts.quality || 75}`;
 		 * }
 		 * ```
