@@ -4,6 +4,5 @@
 export default function loader(
 	src: string,
 	width: number,
-	loader_options: any,
 	image_options?: { quality?: number }
 ): string;
