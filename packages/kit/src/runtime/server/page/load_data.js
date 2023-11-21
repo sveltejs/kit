@@ -11,7 +11,7 @@ import { validate_depends } from '../../shared.js';
  *   node: import('types').SSRNode | undefined;
  *   parent: () => Promise<Record<string, any>>;
  *   track_server_fetches: boolean;
- * 	 fine_grained_search_params_invalidation: boolean;
+ * 	 fine_grained_search_params_invalidation: boolean | undefined;
  * }} opts
  * @returns {Promise<import('types').ServerDataNode | null>}
  */

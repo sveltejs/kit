@@ -50,7 +50,8 @@ export async function respond_with_error({
 				state,
 				node: default_layout,
 				parent: async () => ({}),
-				track_server_fetches: options.track_server_fetches
+				track_server_fetches: options.track_server_fetches,
+				fine_grained_search_params_invalidation: options.fine_grained_search_params_invalidation
 			});
 
 			const server_data = await server_data_promise;

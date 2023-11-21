@@ -113,7 +113,8 @@ const get_defaults = (prefix = '') => ({
 		version: {
 			name: Date.now().toString(),
 			pollInterval: 0
-		}
+		},
+		fineGrainedSearchParamsInvalidation: false
 	}
 });
 

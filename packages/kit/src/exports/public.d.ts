@@ -632,7 +632,7 @@ export interface KitConfig {
 	 * Wether access the searchParams on the url object should track the whole URL or just that specific searchParam
 	 * @default false
 	 */
-	fineGrainedSearchParamsInvalidation: boolean;
+	fineGrainedSearchParamsInvalidation?: boolean;
 }
 
 /**
