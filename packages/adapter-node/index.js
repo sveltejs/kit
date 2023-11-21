@@ -9,7 +9,13 @@ const files = fileURLToPath(new URL('./files', import.meta.url).href);
 
 /** @type {import('./index.js').default} */
 export default function (opts = {}) {
-	const { out = 'build', precompress, envPrefix = '', polyfill = true, packageJsonPath = 'package.json' } = opts;
+	const {
+		out = 'build',
+		precompress,
+		envPrefix = '',
+		polyfill = true,
+		packageJsonPath = 'package.json'
+	} = opts;
 
 	return {
 		name: '@sveltejs/adapter-node',
