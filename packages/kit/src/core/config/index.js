@@ -2,6 +2,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import * as url from 'node:url';
 import options from './options.js';
+import { posixify } from '../../utils/filesystem.js';
 
 /**
  * Loads the template (src/app.html by default) and validates that it has the
@@ -89,6 +90,11 @@ function process_config(config, { cwd = process.cwd() } = {}) {
 			// @ts-expect-error
 			validated.kit.files[key] = path.resolve(cwd, validated.kit.files[key]);
 		}
+	}
+
+	// Resolve relative loader urls
+	if (validated.kit.images.loader[0] === '.') {
+		validated.kit.images.loader = posixify(path.resolve(cwd, validated.kit.images.loader));
 	}
 
 	return validated;
