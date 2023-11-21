@@ -11,6 +11,7 @@ import { validate_depends } from '../../shared.js';
  *   node: import('types').SSRNode | undefined;
  *   parent: () => Promise<Record<string, any>>;
  *   track_server_fetches: boolean;
+ * 	 fine_grained_search_params_invalidation: boolean;
  * }} opts
  * @returns {Promise<import('types').ServerDataNode | null>}
  */
@@ -20,7 +21,8 @@ export async function load_server_data({
 	node,
 	parent,
 	// TODO 2.0: Remove this
-	track_server_fetches
+	track_server_fetches,
+	fine_grained_search_params_invalidation
 }) {
 	if (!node?.server) return null;
 
@@ -52,7 +54,12 @@ export async function load_server_data({
 					`${node.server_id}: Accessing URL properties in a promise handler after \`load(...)\` has returned will not cause the function to re-run when the URL changes`
 				);
 			}
-			uses.search_params.add(search_params);
+			// TODO remove fine_grained_search_params_invalidation after 2.0
+			if (fine_grained_search_params_invalidation) {
+				uses.search_params.add(search_params);
+			} else {
+				uses.url = true;
+			}
 		}
 	);
 

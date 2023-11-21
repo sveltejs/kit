@@ -318,7 +318,8 @@ export async function render_response({
 						${properties.join(',\n\t\t\t\t\t\t')}
 					};`);
 
-		const args = ['app', 'element'];
+		// TODO remove fine_grained_search_params_invalidation after 2.0
+		const args = ['app', 'element', `${options.fine_grained_search_params_invalidation}`];
 
 		blocks.push('const element = document.currentScript.parentElement;');
 

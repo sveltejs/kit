@@ -151,7 +151,9 @@ export async function render_page(event, page, options, manifest, state, resolve
 							}
 							return data;
 						},
-						track_server_fetches: options.track_server_fetches
+						track_server_fetches: options.track_server_fetches,
+						// TODO remove fine_grained_search_params_invalidation after 2.0
+						fine_grained_search_params_invalidation: options.fine_grained_search_params_invalidation
 					});
 				} catch (e) {
 					load_error = /** @type {Error} */ (e);

@@ -69,9 +69,11 @@ function native_navigation(url) {
 /**
  * @param {import('./types.js').SvelteKitApp} app
  * @param {HTMLElement} target
+ * @param {boolean} fine_grained_search_params_invalidation
  * @returns {import('./types.js').Client}
  */
-export function create_client(app, target) {
+export function create_client(app, target, fine_grained_search_params_invalidation) {
+	// TODO remove fine_grained_search_params_invalidation after 2.0
 	const routes = parse(app);
 
 	const default_layout_loader = app.nodes[0];
@@ -485,7 +487,12 @@ export function create_client(app, target) {
 						uses.url = true;
 					},
 					(search_param) => {
-						uses.search_params.add(search_param);
+						// TODO remove fine_grained_search_params_invalidation after 2.0
+						if (fine_grained_search_params_invalidation) {
+							uses.search_params.add(search_param);
+						} else {
+							uses.url = true;
+						}
 					}
 				),
 				async fetch(resource, init) {

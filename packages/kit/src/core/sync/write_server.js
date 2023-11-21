@@ -7,6 +7,8 @@ import { runtime_directory } from '../utils.js';
 import { isSvelte5Plus, write_if_changed } from './utils.js';
 import colors from 'kleur';
 
+// TODO remove fine_grained_search_params_invalidation after 2.0
+
 /**
  * @param {{
  *   hooks: string | null;
@@ -24,7 +26,8 @@ const server_template = ({
 	runtime_directory,
 	template,
 	error_page
-}) => `
+}) =>
+	`
 import root from '../root.${isSvelte5Plus() ? 'js' : 'svelte'}';
 import { set_building } from '__sveltekit/environment';
 import { set_assets } from '__sveltekit/paths';
@@ -33,6 +36,7 @@ import { set_private_env, set_public_env } from '${runtime_directory}/shared-ser
 export const options = {
 	app_template_contains_nonce: ${template.includes('%sveltekit.nonce%')},
 	csp: ${s(config.kit.csp)},
+	fine_grained_search_params_invalidation: ${config.kit.fineGrainedSearchParamsInvalidation},
 	csrf_check_origin: ${s(config.kit.csrf.checkOrigin)},
 	track_server_fetches: ${s(config.kit.dangerZone.trackServerFetches)},
 	embedded: ${config.kit.embedded},

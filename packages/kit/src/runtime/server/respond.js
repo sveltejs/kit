@@ -54,6 +54,7 @@ const allowed_page_methods = new Set(['GET', 'HEAD', 'OPTIONS']);
  * @returns {Promise<Response>}
  */
 export async function respond(request, options, manifest, state) {
+	console.log({ options });
 	/** URL but stripped from the potential `/__data.json` suffix and its search param  */
 	const url = new URL(request.url);
 
