@@ -104,5 +104,19 @@ function get_widths(width, sizes) {
 	// data. Even true 3x resolution screens are wasteful as the human eye cannot see that level of
 	// detail without something like a magnifying glass.
 	// https://blog.twitter.com/engineering/en_us/topics/infrastructure/2019/capping-image-fidelity-on-ultra-high-resolution-devices.html
-	return { widths: [Math.round(width / 2), width], kind: 'x' };
+	return {
+		widths:
+			// We can't just use the provided width, we need to take one of the predefined ones because
+			// some image providers will throw a 400 error if the width is not one of the ones in the settings.
+			[nearest_width(Math.round(width / 2)), nearest_width(width)],
+		kind: 'x'
+	};
+}
+
+/** @param {number} width */
+function nearest_width(width) {
+	const widths = default_widths;
+	let i = 0;
+	while (i < widths.length - 1 && widths[i] < width) i += 1;
+	return widths[i];
 }
