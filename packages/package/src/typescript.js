@@ -73,7 +73,6 @@ export async function transpile_ts(filename, source) {
 	return ts.transpileModule(source, {
 		compilerOptions: {
 			...options,
-			target: ts.ScriptTarget.ESNext,
 			module: ts.ModuleKind.ESNext,
 			moduleResolution: ts.ModuleResolutionKind.NodeJs // switch this to bundler in the next major, although it probably doesn't make a difference
 		},

@@ -127,6 +127,10 @@ test('create standard package with typescript', async () => {
 	await test_make_package('typescript');
 });
 
+test('create standard package with typescript using nodenext', async () => {
+	await test_make_package('typescript-nodenext');
+});
+
 test('create package and assets are not tampered', async () => {
 	await test_make_package('assets');
 });
