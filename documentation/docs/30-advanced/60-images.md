@@ -147,14 +147,14 @@ In some cases, the images may not be accessible at build time — e.g. they may 
 
 The result in this case will be generated `src` and `srcset` attributes. The `srcset` will contain two resolution variants and the browser decides based on the device's pixel density which image to load.
 
-If you provide the `size` property or set `layout: "fill"` instead of `width` and `height`, the `srcset` will instead contain a list of URLs for various device widths and the browser will choose the appropriate one.
+If you provide the `sizes` property or set `layout: "fill"` instead of `width` and `height`, the `srcset` will instead contain a list of URLs for various device widths and the browser will choose the appropriate one.
 
 ```svelte
 <script>
 	import { getImage } from '$app/images';
 </script>
 
-<img {...getImage({ src: '/path/to/image', width: 1000, height: 800, size: '100vw' })} alt="An alt text" />
+<img {...getImage({ src: '/path/to/image', width: 1000, height: 800, sizes: '100vw' })} alt="An alt text" />
 ```
 
 Remember to give the largest image above the fold (i.e. the largest one that is immediately visible) a `fetchpriority` of `high` to ensure browsers download it earlier and set `loading: 'lazy'` for unimportant images, which both contributes to better web vital scores.
@@ -164,7 +164,7 @@ Remember to give the largest image above the fold (i.e. the largest one that is 
 	import { getImage } from '$app/images';
 </script>
 
-<img {...getImage({ src: '/path/to/image', width: 1000, height: 800, size: '100vw', fetchpriority: 'high' })} alt="An alt text" />
+<img {...getImage({ src: '/path/to/image', width: 1000, height: 800, sizes: '100vw', fetchpriority: 'high' })} alt="An alt text" />
 ```
 
 Because `getImage` is just a simple function, you can wrap it in a function to set sensible defaults for your app, or use it as a base for a custom image component.
