@@ -5,7 +5,7 @@
 	},
 	"scripts": {
 		"test:integration": "playwright test",
-		"test:unit": "vitest",
+		"test:unit": "vitest run",
 		"test": "npm run test:integration && npm run test:unit"
 	}
 }
