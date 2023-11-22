@@ -190,9 +190,10 @@ import { transform } from 'unpic/transformers/shopify';
 /**
  * @param {string} url
  * @param {number} width
+ * @param {Record<string, any>} options
  */
-export default function loader(url, width) {
-	return transform({ url, width });
+export default function loader(url, width, options) {
+	return transform({ url, width, ...options });
 }
 ```
 

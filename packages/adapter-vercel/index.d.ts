@@ -13,7 +13,9 @@ export default function plugin(
 ): Adapter;
 
 /**
- * https://vercel.com/docs/concepts/image-optimization
+ * Define how Vercel should optimize your images. Links to the documentation:
+ * - https://vercel.com/docs/concepts/image-optimization
+ * - https://vercel.com/docs/build-output-api/v3/configuration#images
  */
 export interface ImageConfig {
 	/** Only set this if you're not using SvelteKit's `getImage` from `$app/images` */
