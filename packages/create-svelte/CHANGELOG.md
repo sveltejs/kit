@@ -1,5 +1,11 @@
 # create-svelte
 
+## 5.3.2
+
+### Patch Changes
+
+- chore: add type declaration to `.eslintrc.cjs` files ([#11091](https://github.com/sveltejs/kit/pull/11091))
+
 ## 5.3.1
 
 ### Patch Changes
