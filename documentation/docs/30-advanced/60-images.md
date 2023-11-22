@@ -133,13 +133,80 @@ By default, enhanced images will be transformed to more efficient formats. Howev
 
 [See the imagetools repo for the full list of directives](https://github.com/JonasKruckenberg/imagetools/blob/main/docs/directives.md).
 
-## Loading images dynamically from a CDN
+## `$app/images`
 
-In some cases, the images may not be accessible at build time — e.g. they may live inside a content management system or elsewhere.
+In some cases, the images may not be accessible at build time — e.g. they may live inside a content management system or elsewhere. SvelteKit provides a helper through `$app/images` to make it possible to load these images using best practices. In its simplest form, you pass an image url and the intrinsic width and height of the image to `getImage` and spread the result onto an `img` tag:
 
-Using a content delivery network (CDN) can allow you to optimize these images dynamically, and provides more flexibility with regards to sizes, but it may involve some setup overhead and usage costs. Depending on caching strategy, the browser may not be able to use a cached copy of the asset until a [304 response](https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/304) is received from the CDN. Building HTML to target CDNs may result in slightly smaller and simpler HTML because they can serve the appropriate file format for an `<img>` tag based on the `User-Agent` header whereas build-time optimizations must produce `<picture>` tags with multiple sources. Finally, some CDNs may generate images lazily, which could have a negative performance impact for sites with low traffic and frequently changing images.
+```svelte
+<script>
+	import { getImage } from '$app/images';
+</script>
 
-CDNs can generally be used without any need for a library. However, there are a number of libraries with Svelte support that make it easier. [`@unpic/svelte`](https://unpic.pics/img/svelte/) is a CDN-agnostic library with support for a large number of providers. You may also find that specific CDNs like [Cloudinary](https://svelte.cloudinary.dev/) have Svelte support. Finally, some content management systems (CMS) which support Svelte (such as [Contentful](https://www.contentful.com/sveltekit-starter-guide/), [Storyblok](https://github.com/storyblok/storyblok-svelte), and [Contentstack](https://www.contentstack.com/docs/developers/sample-apps/build-a-starter-website-with-sveltekit-and-contentstack)) have built-in support for image handling.
+<img {...getImage({ src: '/path/to/image', width: 1000, height: 800 })} alt="An alt text" />
+```
+
+The result in this case will be generated `src` and `srcset` attributes. The `srcset` will contain two resolution variants and the browser decides based on the device's pixel density which image to load.
+
+If you provide the `size` property or set `layout: "fill"` instead of `width` and `height`, the `srcset` will instead contain a list of URLs for various device widths and the browser will choose the appropriate one.
+
+```svelte
+<script>
+	import { getImage } from '$app/images';
+</script>
+
+<img {...getImage({ src: '/path/to/image', width: 1000, height: 800, size: '100vw' })} alt="An alt text" />
+```
+
+Remember to give the largest image above the fold (i.e. the largest one that is immediately visible) a `fetchpriority` of `high` to ensure browsers download it earlier and set `loading: 'lazy'` for unimportant images, which both contributes to better web vital scores.
+
+```svelte
+<script>
+	import { getImage } from '$app/images';
+</script>
+
+<img {...getImage({ src: '/path/to/image', width: 1000, height: 800, size: '100vw', fetchpriority: 'high' })} alt="An alt text" />
+```
+
+Because `getImage` is just a simple function, you can wrap it in a function to set sensible defaults for your app, or use it as a base for a custom image component.
+
+### Configurating an image loader
+
+`getImage` calculates the variants for an image based on its input and the `kit.images.width` configuration, which contains an array of numbers corresponding to various screen widths. For each variant, the configured image loader is invoked when running in production - at dev time, the loader is not invoked to prevent accidental image CDN costs.
+
+By default, no loader is configured and as such the image url is handed back without any modifications. To configure an image loader, pass a string to `kit.images.loader` which represents a path to a file on disk (either a relative path, or referencing an npm package). Some adapters like [`adapter-vercel`](adapter-vercel) provide ready-made loaders. It's also very easy to create your own loader. Here's an example using [`unpic`](https://unpic.pics/lib/), which provides solutions for a wide range of image CDNs:
+
+```js
+/// file: custom-loader.js
+// @filename: ambient.d.ts
+declare module 'unpic' {
+	export function transformUrl(args: any): string;
+}
+
+// @filename: index.js
+// ---cut---
+import { transformUrl } from 'unpic';
+
+/**
+ * @param {string} url
+ * @param {number} width
+ */
+export default function loader(url, width) {
+	return transformUrl({
+		url,
+		width,
+		// specify which cdn to use; you can leave this out if unpic can infer this from the url itself
+		cdn: 'shopify'
+	});
+}
+```
+
+A loader optionally takes a third parameter which corresponds to the `options` property passed to `getImage`. This allows for more control over the image transformation process, if needed.
+
+### Other considerations
+
+Using a content delivery network (CDN) can allow you to optimize images dynamically, and provides more flexibility with regards to sizes, but it may involve some setup overhead and usage costs. Depending on caching strategy, the browser may not be able to use a cached copy of the asset until a [304 response](https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/304) is received from the CDN. Building HTML to target CDNs may result in slightly smaller and simpler HTML because they can serve the appropriate file format for an `<img>` tag based on the `User-Agent` header whereas build-time optimizations must produce `<picture>` tags with multiple sources. Finally, some CDNs may generate images lazily, which could have a negative performance impact for sites with low traffic and frequently changing images.
+
+CDNs can generally be used without any need for a library, but calling the CDN and ensuring that smaller images are called for smaller screens is generally up to you. Besides using `$app/images`, there are a number of libraries with Svelte support that make it easier. [`@unpic/svelte`](https://unpic.pics/img/svelte/) is a CDN-agnostic library with support for a large number of providers. You may also find that specific CDNs like [Cloudinary](https://svelte.cloudinary.dev/) have Svelte support. Finally, some content management systems (CMS) which support Svelte (such as [Contentful](https://www.contentful.com/sveltekit-starter-guide/), [Storyblok](https://github.com/storyblok/storyblok-svelte), and [Contentstack](https://www.contentstack.com/docs/developers/sample-apps/build-a-starter-website-with-sveltekit-and-contentstack)) have built-in support for image handling.
 
 ## Best practices
 
