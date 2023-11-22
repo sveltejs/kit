@@ -178,25 +178,21 @@ By default, no loader is configured and as such the image url is handed back wit
 ```js
 /// file: custom-loader.js
 // @filename: ambient.d.ts
-declare module 'unpic' {
-	export function transformUrl(args: any): string;
+declare module 'unpic/transformers/shopify' {
+	export function transform(args: any): string;
 }
 
 // @filename: index.js
 // ---cut---
-import { transformUrl } from 'unpic';
+// This example uses shopify as the target image CDN
+import { transform } from 'unpic/transformers/shopify';
 
 /**
  * @param {string} url
  * @param {number} width
  */
 export default function loader(url, width) {
-	return transformUrl({
-		url,
-		width,
-		// specify which cdn to use; you can leave this out if unpic can infer this from the url itself
-		cdn: 'shopify'
-	});
+	return transform({ url, width });
 }
 ```
 
