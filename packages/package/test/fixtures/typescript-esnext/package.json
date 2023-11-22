@@ -2,7 +2,7 @@
 	"name": "typescript",
 	"private": true,
 	"version": "1.0.0",
-	"description": "standard typescript package",
+	"description": "typescript package using esnext",
 	"type": "module",
 	"peerDependencies": {
 		"svelte": "^4.0.0"
