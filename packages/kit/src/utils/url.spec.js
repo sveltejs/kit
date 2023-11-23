@@ -120,6 +120,7 @@ describe('make_trackable', (test) => {
 			/Cannot access event.url.hash. Consider using `\$page.url.hash` inside a component instead/
 		);
 	});
+
 	test('track each search param separately if accessed directly', () => {
 		let tracked = false;
 		const tracked_search_params = new Set();
