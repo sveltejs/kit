@@ -425,6 +425,18 @@ test.describe('Invalidation', () => {
 		expect(await page.textContent('span')).toBe('count: 1');
 	});
 
+	test('load function does re-runs when one of multiple searchParams change (page)', async ({
+		page,
+		clicknav
+	}) => {
+		await page.goto('/load/invalidation/search-params/multiple-search-params?test=0');
+		expect(await page.textContent('span')).toBe('count: 0');
+		await clicknav('[href="?test=1&test=2"]');
+		expect(await page.textContent('span')).toBe('count: 1');
+		await clicknav('[href="?test=1&test=3"]');
+		expect(await page.textContent('span')).toBe('count: 2');
+	});
+
 	test('load function does not re-runs when another searchParams change (layout-server)', async ({
 		page,
 		clicknav

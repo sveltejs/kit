@@ -642,8 +642,17 @@ export function create_client(app, target, fine_grained_search_params_invalidati
 	function check_search_params_changed(old_url, new_url) {
 		const changed = new Set();
 		const new_search_params = new URLSearchParams(new_url?.searchParams);
-		for (const [key, value] of old_url?.searchParams?.entries?.() ?? []) {
-			if (new_search_params.get(key) !== value) {
+		const old_search_params = old_url?.searchParams;
+		for (const key of new Set(old_search_params?.keys?.() ?? [])) {
+			const new_get_all = new_search_params.getAll(key);
+			const old_get_all = old_search_params?.getAll?.(key) ?? [];
+			if (
+				// check if the two arrays contains the same values
+				!(
+					new_get_all.every((query_param) => old_get_all.includes(query_param)) &&
+					old_get_all.every((query_param) => new_get_all.includes(query_param))
+				)
+			) {
 				changed.add(key);
 			}
 			new_search_params.delete(key);
