@@ -548,7 +548,7 @@ A `load` function that calls `await parent()` will also rerun if a parent `load`
 
 Dependency tracking does not apply _after_ the `load` function has returned — for example, accessing `params.x` inside a nested [promise](#streaming-with-promises) will not cause the function to rerun when `params.x` changes. (Don't worry, you'll get a warning in development if you accidentally do this.) Instead, access the parameter in the main body of your `load` function.
 
-Also accessing one single query parameter is tracked independently from the rest of the url. This means that accessing `event.url.searchParams.get("query")` inside a `load` function will make that load function rerun only when the `query` search param changes. For example navigating from `/search?query=svelte&page=1` to `/search?query=svelte&page=2` will not rerun a load function that access `event.url.searchParams.get("query")` but not `event.url.searchParams.get("page")`.
+When setting the `fineGrainedSearchParamsInvalidation` option to `true`, accessing a query parameter is tracked independently from the rest of the url. For example, accessing `event.url.searchParams.get("query")` inside a `load` function will make that `load` function rerun only when the `query` search param changes: Navigating from `/search?query=svelte&page=1` to `/search?query=svelte&page=2` will not rerun the load function.
 
 ### Manual invalidation
 
