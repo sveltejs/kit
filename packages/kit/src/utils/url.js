@@ -118,14 +118,11 @@ function tracked_search_params(search_params, callback, search_params_callback) 
 	return new Proxy(search_params, {
 		get(obj, key) {
 			if (typeof key === 'string' && tracked_search_params_properties.includes(key)) {
-				// @ts-expect-error
-				const function_to_call = key in search_params ? search_params[key].bind(search_params) : '';
-				if (function_to_call && function_to_call instanceof Function) {
-					return (/**@type {string}*/ search_param) => {
-						search_params_callback(search_param);
-						return function_to_call(search_param);
-					};
-				}
+				return (/**@type {string}*/ search_param) => {
+					search_params_callback(search_param);
+					// @ts-expect-error
+					return search_params[key].bind(search_params)(search_param);
+				};
 			}
 			// if they try to access something different from what is in `tracked_search_params_properties`
 			// we track the whole url (entries, values, keys etc)

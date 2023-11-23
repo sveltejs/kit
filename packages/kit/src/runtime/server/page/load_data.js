@@ -54,7 +54,6 @@ export async function load_server_data({
 					`${node.server_id}: Accessing URL properties in a promise handler after \`load(...)\` has returned will not cause the function to re-run when the URL changes`
 				);
 			}
-			// TODO remove fine_grained_search_params_invalidation after 2.0
 			if (fine_grained_search_params_invalidation) {
 				uses.search_params.add(search_params);
 			} else {

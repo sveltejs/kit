@@ -7,8 +7,6 @@ import { runtime_directory } from '../utils.js';
 import { isSvelte5Plus, write_if_changed } from './utils.js';
 import colors from 'kleur';
 
-// TODO remove fine_grained_search_params_invalidation after 2.0
-
 /**
  * @param {{
  *   hooks: string | null;

@@ -332,7 +332,6 @@ export type SSRNodeLoader = () => Promise<SSRNode>;
 export interface SSROptions {
 	app_template_contains_nonce: boolean;
 	csp: ValidatedConfig['kit']['csp'];
-	// TODO remove fine_grained_search_params_invalidation after 2.0
 	fine_grained_search_params_invalidation?: boolean;
 	csrf_check_origin: boolean;
 	track_server_fetches: boolean;

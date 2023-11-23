@@ -73,7 +73,6 @@ function native_navigation(url) {
  * @returns {import('./types.js').Client}
  */
 export function create_client(app, target, fine_grained_search_params_invalidation) {
-	// TODO remove fine_grained_search_params_invalidation after 2.0
 	const routes = parse(app);
 
 	const default_layout_loader = app.nodes[0];
@@ -487,7 +486,6 @@ export function create_client(app, target, fine_grained_search_params_invalidati
 						uses.url = true;
 					},
 					(search_param) => {
-						// TODO remove fine_grained_search_params_invalidation after 2.0
 						if (fine_grained_search_params_invalidation) {
 							uses.search_params.add(search_param);
 						} else {

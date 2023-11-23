@@ -281,7 +281,7 @@ const options = object(
 				name: string(Date.now().toString()),
 				pollInterval: number(0)
 			}),
-
+			// TODO v2: remove this option (always true)
 			fineGrainedSearchParamsInvalidation: boolean(false)
 		})
 	},
