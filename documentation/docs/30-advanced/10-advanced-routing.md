@@ -4,13 +4,13 @@ title: Advanced routing
 
 ## Rest parameters
 
-If the number of route segments is unknown, you can use rest syntax — for example you might implement GitHub's file viewer like so...
+If the number of route segments is unknown, you can use rest syntax — for example you might implement GitHub's file viewer like so &mdash;
 
 ```bash
 /[org]/[repo]/tree/[branch]/[...file]
 ```
 
-...in which case a request for `/sveltejs/kit/tree/master/documentation/docs/04-advanced-routing.md` would result in the following parameters being available to the page:
+&mdash; in which case a request for `/sveltejs/kit/tree/master/documentation/docs/04-advanced-routing.md` would result in the following parameters being available to the page:
 
 ```js
 // @noErrors
@@ -26,7 +26,7 @@ If the number of route segments is unknown, you can use rest syntax — for exam
 
 ### 404 pages
 
-Rest parameters also allow you to render custom 404s. Given these routes...
+Rest parameters also allow you to render custom 404s. Given these routes &mdash;
 
 ```
 src/routes/
@@ -38,7 +38,7 @@ src/routes/
 └ +error.svelte
 ```
 
-...the `marx-brothers/+error.svelte` file will _not_ be rendered if you visit `/marx-brothers/karl`, because no route was matched. If you want to render the nested error page, you should create a route that matches any `/marx-brothers/*` request, and return a 404 from it:
+&mdash; the `marx-brothers/+error.svelte` file will _not_ be rendered if you visit `/marx-brothers/karl`, because no route was matched. If you want to render the nested error page, you should create a route that matches any `/marx-brothers/*` request, and return a 404 from it:
 
 ```diff
 src/routes/
@@ -71,7 +71,7 @@ Note that an optional route parameter cannot follow a rest parameter (`[...rest]
 
 ## Matching
 
-A route like `src/routes/archive/[page]` would match `/archive/3`, but it would also match `/archive/potato`. We don't want that. You can ensure that route parameters are well-formed by adding a _matcher_ — which takes the parameter string (`"3"` or `"potato"`) and returns `true` if it is valid — to your [`params`](configuration#files) directory...
+A route like `src/routes/archive/[page]` would match `/archive/3`, but it would also match `/archive/potato`. We don't want that. You can ensure that route parameters are well-formed by adding a _matcher_ — which takes the parameter string (`"3"` or `"potato"`) and returns `true` if it is valid — to your [`params`](configuration#files) directory &mdash;
 
 ```js
 /// file: src/params/integer.js
@@ -81,7 +81,7 @@ export function match(param) {
 }
 ```
 
-...and augmenting your routes:
+&mdash; and augmenting your routes:
 
 ```diff
 -src/routes/archive/[page]
@@ -106,14 +106,14 @@ src/routes/foo-[c]/+page.svelte
 src/routes/foo-abc/+page.svelte
 ```
 
-SvelteKit needs to know which route is being requested. To do so, it sorts them according to the following rules...
+SvelteKit needs to know which route is being requested. To do so, it sorts them according to the following rules &mdash;
 
 - More specific routes are higher priority (e.g. a route with no parameters is more specific than a route with one dynamic parameter, and so on)
 - Parameters with [matchers](#matching) (`[name=type]`) are higher priority than those without (`[name]`)
 - `[[optional]]` and `[...rest]` parameters are ignored unless they are the final part of the route, in which case they are treated with lowest priority. In other words `x/[[y]]/z` is treated equivalently to `x/z` for the purposes of sorting
 - Ties are resolved alphabetically
 
-...resulting in this ordering, meaning that `/foo-abc` will invoke `src/routes/foo-abc/+page.svelte`, and `/foo-def` will invoke `src/routes/foo-[c]/+page.svelte` rather than less specific routes:
+&mdash; resulting in this ordering, meaning that `/foo-abc` will invoke `src/routes/foo-abc/+page.svelte`, and `/foo-def` will invoke `src/routes/foo-[c]/+page.svelte` rather than less specific routes:
 
 ```bash
 src/routes/foo-abc/+page.svelte

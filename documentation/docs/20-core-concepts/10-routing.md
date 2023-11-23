@@ -145,13 +145,13 @@ But in many apps, there are elements that should be visible on _every_ page, suc
 
 ### +layout.svelte
 
-To create a layout that applies to every page, make a file called `src/routes/+layout.svelte`. The default layout (the one that SvelteKit uses if you don't bring your own) looks like this...
+To create a layout that applies to every page, make a file called `src/routes/+layout.svelte`. The default layout (the one that SvelteKit uses if you don't bring your own) looks like this &mdash;
 
 ```html
 <slot></slot>
 ```
 
-...but we can add whatever markup, styles and behaviour we want. The only requirement is that the component includes a `<slot>` for the page content. For example, let's add a nav bar:
+&mdash; but we can add whatever markup, styles and behaviour we want. The only requirement is that the component includes a `<slot>` for the page content. For example, let's add a nav bar:
 
 ```html
 /// file: src/routes/+layout.svelte
@@ -164,7 +164,7 @@ To create a layout that applies to every page, make a file called `src/routes/+l
 <slot></slot>
 ```
 
-If we create pages for `/`, `/about` and `/settings`...
+If we create pages for `/`, `/about` and `/settings`&mdash;
 
 ```html
 /// file: src/routes/+page.svelte
@@ -181,7 +181,7 @@ If we create pages for `/`, `/about` and `/settings`...
 <h1>Settings</h1>
 ```
 
-...the nav will always be visible, and clicking between the three pages will only result in the `<h1>` being replaced.
+&mdash;the nav will always be visible, and clicking between the three pages will only result in the `<h1>` being replaced.
 
 Layouts can be _nested_. Suppose we don't just have a single `/settings` page, but instead have nested pages like `/settings/profile` and `/settings/notifications` with a shared submenu (for a real-life example, see [github.com/settings](https://github.com/settings)).
 
