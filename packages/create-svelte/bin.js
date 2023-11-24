@@ -100,7 +100,7 @@ const options = await p.group(
 					},
 					{
 						value: 'svelte5',
-						label: 'Try out Svelte 5 beta'
+						label: 'Try out Svelte 5 alpha'
 					}
 				]
 			})
