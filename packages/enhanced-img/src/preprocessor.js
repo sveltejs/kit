@@ -9,7 +9,7 @@ const OPTIMIZABLE = /^[^?]+\.(avif|heif|gif|jpeg|jpg|png|tiff|webp)(\?.*)?$/;
 
 /**
  * @param {{
- *   plugin_context: import('rollup').PluginContext
+ *   plugin_context: import('vite').Rollup.PluginContext
  *   imagetools_plugin: import('vite').Plugin
  * }} opts
  * @returns {import('svelte/types/compiler/preprocess').PreprocessorGroup}
@@ -144,7 +144,7 @@ function is_quote(content, index) {
 
 /**
  * @param {{
- *   plugin_context: import('rollup').PluginContext
+ *   plugin_context: import('vite').Rollup.PluginContext
  *   imagetools_plugin: import('vite').Plugin
  * }} opts
  * @param {string} url
