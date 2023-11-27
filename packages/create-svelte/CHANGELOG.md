@@ -1,5 +1,33 @@
 # create-svelte
 
+## 5.3.2
+
+### Patch Changes
+
+- chore: add type declaration to `.eslintrc.cjs` files ([#11091](https://github.com/sveltejs/kit/pull/11091))
+
+## 5.3.1
+
+### Patch Changes
+
+- chore: upgrade eslint-config-prettier ([#11037](https://github.com/sveltejs/kit/pull/11037))
+
+## 5.3.0
+
+### Minor Changes
+
+- feat: upgrade to prettier 3 and prettier-plugin-svelte 3 ([#10410](https://github.com/sveltejs/kit/pull/10410))
+
+### Patch Changes
+
+- fix: correctly configure `module` and `noEmit` tsconfig and jsconfig properties ([#11029](https://github.com/sveltejs/kit/pull/11029))
+
+## 5.2.0
+
+### Minor Changes
+
+- feat: add option to try out Svelte 5 beta ([#11026](https://github.com/sveltejs/kit/pull/11026))
+
 ## 5.1.1
 
 ### Patch Changes

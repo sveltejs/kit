@@ -5,9 +5,12 @@
 		"noEmit": true,
 		"noImplicitAny": true,
 		"allowSyntheticDefaultImports": true,
-		"moduleResolution": "node",
+		"target": "es2022",
 		"module": "es2022",
-		"target": "es2017",
+		// Can't use moduleResolution: node16 because of these issues:
+		// https://github.com/rollup/plugins/issues/1329
+		// https://github.com/lukeed/polka/issues/199
+		"moduleResolution": "node",
 		"baseUrl": ".",
 		"paths": {
 			"@sveltejs/kit": ["../kit/types/index"]

@@ -1,5 +1,6 @@
 import fs from 'node:fs';
 import path from 'node:path';
+import { VERSION } from 'svelte/compiler';
 import { mkdirp } from '../../utils/filesystem.js';
 
 /** @type {Map<string, string>} */
@@ -67,4 +68,8 @@ export function dedent(strings, ...values) {
 	str = str.trim();
 
 	return str;
+}
+
+export function isSvelte5Plus() {
+	return Number(VERSION[0]) >= 5;
 }

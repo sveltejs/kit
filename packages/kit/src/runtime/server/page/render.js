@@ -26,8 +26,8 @@ const encoder = new TextEncoder();
 /**
  * Creates the HTML response.
  * @param {{
- *   branch: Array<import('./types').Loaded>;
- *   fetched: Array<import('./types').Fetched>;
+ *   branch: Array<import('./types.js').Loaded>;
+ *   fetched: Array<import('./types.js').Fetched>;
  *   options: import('types').SSROptions;
  *   manifest: import('@sveltejs/kit').SSRManifest;
  *   state: import('types').SSRState;

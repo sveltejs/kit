@@ -1,5 +1,11 @@
 # @sveltejs/adapter-cloudflare-workers
 
+## 1.2.1
+
+### Patch Changes
+
+- fix: correctly check url pathnames for trailing slashes ([#10968](https://github.com/sveltejs/kit/pull/10968))
+
 ## 1.2.0
 
 ### Minor Changes

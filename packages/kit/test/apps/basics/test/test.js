@@ -622,6 +622,16 @@ test.describe('Page options', () => {
 		await page.goto('/transform-page-chunk');
 		expect(await page.getAttribute('meta[name="transform-page"]', 'content')).toBe('Worked!');
 	});
+
+	test('prerenders page that uses browser globals with ssr=false', async ({
+		page,
+		javaScriptEnabled
+	}) => {
+		test.skip(process.env.DEV, 'skip when in dev mode');
+		test.skip(!javaScriptEnabled, 'skip when JavaScript is disabled');
+		await page.goto('/prerendering/no-ssr');
+		await expect(page.getByText('Hello world!')).toBeVisible();
+	});
 });
 
 test.describe('$app/environment', () => {
