@@ -334,9 +334,9 @@ function kit({ svelte_config }) {
 		name: 'vite-plugin-sveltekit-virtual-modules',
 
 		async resolveId(id, importer) {
-			//If importing from a service-worker, only allow $service-worker & $env/static/public, but none of the other virtual modules.
-			//This check won't catch transitive imports, but it will warn when the import comes from a service-worker directly.
-			//Transitive imports will be caught during the build.
+			// If importing from a service-worker, only allow $service-worker & $env/static/public, but none of the other virtual modules.
+			// This check won't catch transitive imports, but it will warn when the import comes from a service-worker directly.
+			// Transitive imports will be caught during the build.
 			if (importer) {
 				const parsedImporter = path.parse(importer);
 				const parsedServiceWorker = path.parse(kit.files.serviceWorker);
