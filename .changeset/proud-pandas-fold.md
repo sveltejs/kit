@@ -2,4 +2,4 @@
 '@sveltejs/kit': minor
 ---
 
-feat: Expose `$env/static/public` in service workers.
+feat: expose `$env/static/public` in service workers
