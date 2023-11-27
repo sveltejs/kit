@@ -69,7 +69,7 @@ export async function build_service_worker(
 			lib: {
 				entry: /** @type {string} */ (service_worker_entry_file),
 				name: 'app',
-				formats: ['es']
+				formats: ['iife']
 			},
 			rollupOptions: {
 				output: {
