@@ -2,4 +2,4 @@
 '@sveltejs/kit': patch
 ---
 
-build service workers in iife format
+fix: build service workers in IIFE format
