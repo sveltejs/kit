@@ -103,9 +103,8 @@ export async function handle_error_and_jsonify(event, options, error) {
 		fix_stack_trace(error);
 	}
 
-	const is_runtime_error = error instanceof TypeError ||
-		error instanceof SyntaxError ||
-		error instanceof ReferenceError;
+	const is_runtime_error =
+		error instanceof TypeError || error instanceof SyntaxError || error instanceof ReferenceError;
 
 	return (
 		(await options.hooks.handleError({ error, event })) ?? {
