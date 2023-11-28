@@ -97,17 +97,21 @@ export async function handle_fatal_error(event, options, error) {
 export async function handle_error_and_jsonify(event, options, error) {
 	if (error instanceof HttpError) {
 		return error.body;
-	} else {
-		if (__SVELTEKIT_DEV__ && typeof error == 'object') {
-			fix_stack_trace(error);
-		}
-
-		return (
-			(await options.hooks.handleError({ error, event })) ?? {
-				message: event.route.id != null ? 'Internal Error' : 'Not Found'
-			}
-		);
 	}
+
+	if (__SVELTEKIT_DEV__ && typeof error == 'object') {
+		fix_stack_trace(error);
+	}
+
+	const is_runtime_error = error instanceof TypeError ||
+		error instanceof SyntaxError ||
+		error instanceof ReferenceError;
+
+	return (
+		(await options.hooks.handleError({ error, event })) ?? {
+			message: event.route.id != null || is_runtime_error ? 'Internal Error' : 'Not Found'
+		}
+	);
 }
 
 /**
