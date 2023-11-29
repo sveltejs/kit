@@ -508,8 +508,8 @@ importers:
         specifier: ^7.0.3
         version: 7.0.3
       marked:
-        specifier: ^10.0.0
-        version: 10.0.0
+        specifier: ^11.0.0
+        version: 11.0.0
       svelte:
         specifier: ^4.2.7
         version: 4.2.7
@@ -1066,8 +1066,8 @@ importers:
         specifier: ^1.21.8
         version: 1.21.8
       marked:
-        specifier: ^10.0.0
-        version: 10.0.0
+        specifier: ^11.0.0
+        version: 11.0.0
       prettier:
         specifier: ^3.1.0
         version: 3.1.0
@@ -4555,8 +4555,8 @@ packages:
     engines: {node: '>=8'}
     dev: true
 
-  /marked@10.0.0:
-    resolution: {integrity: sha512-YiGcYcWj50YrwBgNzFoYhQ1hT6GmQbFG8SksnYJX1z4BXTHSOrz1GB5/Jm2yQvMg4nN1FHP4M6r03R10KrVUiA==}
+  /marked@11.0.0:
+    resolution: {integrity: sha512-2GsW34uXaFEGTQ/+3rCnNC6vUYTAgFuDLGl70v/aWinA5mIJtTrrFAmfbLOfVvgPyxXuDVL9He/7reCK+6j3Sw==}
     engines: {node: '>= 18'}
     hasBin: true
     dev: true

@@ -23,7 +23,7 @@
 		"browserslist": "^4.21.10",
 		"flexsearch": "^0.7.31",
 		"lightningcss": "^1.21.8",
-		"marked": "^10.0.0",
+		"marked": "^11.0.0",
 		"prettier": "^3.1.0",
 		"prettier-plugin-svelte": "^3.0.3",
 		"prism-svelte": "^0.5.0",
