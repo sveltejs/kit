@@ -77,8 +77,7 @@ export async function render_data(
 							}
 							return data;
 						},
-						track_server_fetches: options.track_server_fetches,
-						fine_grained_search_params_invalidation: options.fine_grained_search_params_invalidation
+						track_server_fetches: options.track_server_fetches
 					});
 				} catch (e) {
 					aborted = true;

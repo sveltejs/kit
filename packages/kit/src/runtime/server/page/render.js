@@ -318,7 +318,7 @@ export async function render_response({
 						${properties.join(',\n\t\t\t\t\t\t')}
 					};`);
 
-		const args = ['app', 'element', `${options.fine_grained_search_params_invalidation}`];
+		const args = ['app', 'element'];
 
 		blocks.push('const element = document.currentScript.parentElement;');
 
