@@ -52,11 +52,7 @@ export async function load_server_data({
 					`${node.server_id}: Accessing URL properties in a promise handler after \`load(...)\` has returned will not cause the function to re-run when the URL changes`
 				);
 			}
-			if (__SVELTEKIT_ENABLE_FINE_GRAINED_PARAMS_INVALIDATION__) {
-				uses.search_params.add(search_params);
-			} else {
-				uses.url = true;
-			}
+			uses.search_params.add(search_params);
 		}
 	);
 

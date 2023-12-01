@@ -485,11 +485,7 @@ export function create_client(app, target) {
 						uses.url = true;
 					},
 					(search_param) => {
-						if (__SVELTEKIT_ENABLE_FINE_GRAINED_PARAMS_INVALIDATION__) {
-							uses.search_params.add(search_param);
-						} else {
-							uses.url = true;
-						}
+						uses.search_params.add(search_param);
 					}
 				),
 				async fetch(resource, init) {

@@ -628,12 +628,6 @@ export interface KitConfig {
 		 */
 		pollInterval?: number;
 	};
-	/**
-	 * When set to `true`, accessing `searchParams` on the `url` object tracks just that specific searchParam and not the whole URL, resulting in less load function reruns.
-	 * This option will be removed and always be `true` in SvelteKit version 2.
-	 * @default false
-	 */
-	fineGrainedSearchParamsInvalidation?: boolean;
 }
 
 /**

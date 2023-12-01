@@ -291,9 +291,7 @@ function kit({ svelte_config }) {
 					__SVELTEKIT_APP_VERSION_FILE__: s(`${kit.appDir}/version.json`),
 					__SVELTEKIT_APP_VERSION_POLL_INTERVAL__: s(kit.version.pollInterval),
 					__SVELTEKIT_DEV__: 'false',
-					__SVELTEKIT_EMBEDDED__: kit.embedded ? 'true' : 'false',
-					__SVELTEKIT_ENABLE_FINE_GRAINED_PARAMS_INVALIDATION__:
-						kit.fineGrainedSearchParamsInvalidation ? 'true' : 'false'
+					__SVELTEKIT_EMBEDDED__: kit.embedded ? 'true' : 'false'
 				};
 
 				if (!secondary_build_started) {
@@ -303,9 +301,7 @@ function kit({ svelte_config }) {
 				new_config.define = {
 					__SVELTEKIT_APP_VERSION_POLL_INTERVAL__: '0',
 					__SVELTEKIT_DEV__: 'true',
-					__SVELTEKIT_EMBEDDED__: kit.embedded ? 'true' : 'false',
-					__SVELTEKIT_ENABLE_FINE_GRAINED_PARAMS_INVALIDATION__:
-						kit.fineGrainedSearchParamsInvalidation ? 'true' : 'false'
+					__SVELTEKIT_EMBEDDED__: kit.embedded ? 'true' : 'false'
 				};
 
 				// These Kit dependencies are packaged as CommonJS, which means they must always be externalized.

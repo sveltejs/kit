@@ -548,7 +548,7 @@ A `load` function that calls `await parent()` will also rerun if a parent `load`
 
 Dependency tracking does not apply _after_ the `load` function has returned — for example, accessing `params.x` inside a nested [promise](#streaming-with-promises) will not cause the function to rerun when `params.x` changes. (Don't worry, you'll get a warning in development if you accidentally do this.) Instead, access the parameter in the main body of your `load` function.
 
-When setting the `kit.fineGrainedSearchParamsInvalidation` option in your `svelte.config.js` to `true`, accessing a query parameter is tracked independently from the rest of the url. For example, accessing `event.url.searchParams.get("query")` inside a `load` function will make that `load` function rerun only when the `query` search param changes: Navigating from `/search?query=svelte&page=1` to `/search?query=svelte&page=2` will not rerun the load function.
+Accessing a query parameter is tracked independently from the rest of the url. For example, accessing `event.url.searchParams.get("query")` inside a `load` function will make that `load` function rerun only when the `query` search param changes: Navigating from `/search?query=svelte&page=1` to `/search?query=svelte&page=2` will not rerun the load function.
 
 ### Manual invalidation
 
@@ -599,7 +599,7 @@ To summarize, a `load` function will rerun in the following situations:
 
 - It references a property of `params` whose value has changed
 - It references a property of `url` (such as `url.pathname` or `url.search`) whose value has changed. Properties in `request.url` are _not_ tracked
-- It calls `url.searchParams.get`, `url.searchParams.getAll` or `url.searchParams.has` and the specific search param passed to those functions changes. Accessing other properties of searchParams will have the same effect as accessing `url.search`. When `fineGrainedSearchParamsInvalidation` is `false`, accessing _any_ search param will cause the load function to rerun.
+- It calls `url.searchParams.get`, `url.searchParams.getAll` or `url.searchParams.has` and the specific search param passed to those functions changes. Accessing other properties of searchParams will have the same effect as accessing `url.search`.
 - It calls `await parent()` and a parent `load` function reran
 - It declared a dependency on a specific URL via [`fetch`](#making-fetch-requests) (universal load only) or [`depends`](types#public-types-loadevent), and that URL was marked invalid with [`invalidate(url)`](modules#$app-navigation-invalidate)
 - All active `load` functions were forcibly rerun with [`invalidateAll()`](modules#$app-navigation-invalidateall)

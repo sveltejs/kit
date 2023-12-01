@@ -7,8 +7,7 @@ const config = {
 
 		version: {
 			name: 'TEST_VERSION'
-		},
-		fineGrainedSearchParamsInvalidation: true
+		}
 	}
 };
 
