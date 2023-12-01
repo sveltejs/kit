@@ -122,7 +122,12 @@ test.describe('Navigation lifecycle functions', () => {
 		expect(await page.innerHTML('pre')).toBe('1 false link');
 	});
 
-	test('beforeNavigate prevents navigation to external', async ({ page, baseURL }) => {
+	test('beforeNavigate prevents navigation to external', async ({ page, baseURL, browserName }) => {
+		test.skip(
+			browserName === 'webkit',
+			'cancelling beforeunload is broken https://bugs.webkit.org/show_bug.cgi?id=255837'
+		);
+
 		await page.goto('/navigation-lifecycle/before-navigate/prevent-navigation');
 		await page.click('h1'); // The browsers block attempts to prevent navigation on a frame that's never had a user gesture.
 
