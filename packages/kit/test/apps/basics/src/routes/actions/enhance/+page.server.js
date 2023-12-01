@@ -34,7 +34,7 @@ export const actions = {
 		};
 	},
 	error: () => {
-		throw error(400, 'error');
+		error(400, 'error');
 	},
 	echo: async ({ request }) => {
 		const data = await request.formData();

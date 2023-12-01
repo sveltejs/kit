@@ -300,7 +300,7 @@ test.describe('Errors', () => {
 		);
 	});
 
-	test('throw error(...) in endpoint', async ({ request, read_errors }) => {
+	test('error(...) in endpoint', async ({ request, read_errors }) => {
 		// HTML
 		{
 			const res = await request.get('/errors/endpoint-throw-error', {

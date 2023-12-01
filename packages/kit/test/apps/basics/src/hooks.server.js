@@ -85,7 +85,7 @@ export const handle = sequence(
 		if (event.url.pathname === '/errors/error-in-handle') {
 			throw new Error('Error in handle');
 		} else if (event.url.pathname === '/errors/expected-error-in-handle') {
-			throw error(500, 'Expected error in handle');
+			error(500, 'Expected error in handle');
 		}
 
 		const response = await resolve(event, {

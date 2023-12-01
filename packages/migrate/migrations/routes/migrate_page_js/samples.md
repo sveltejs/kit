@@ -129,7 +129,7 @@ import { error } from '@sveltejs/kit';
 
 export function load({ session }) {
 	if (!session.user?.admin) {
-		throw error(403, 'unauthorized');
+		error(403, 'unauthorized');
 	}
 }
 ```
@@ -152,7 +152,7 @@ import { error } from '@sveltejs/kit';
 
 export function load({ session }) {
 	if (!session.user?.admin) {
-		throw error(403, 'unauthorized');
+		error(403, 'unauthorized');
 	}
 }
 ```
@@ -175,7 +175,7 @@ import { error } from '@sveltejs/kit';
 
 export function load({ session }) {
 	if (!session.user?.admin) {
-		throw error(403);
+		error(403);
 	}
 }
 ```
@@ -192,7 +192,7 @@ export function load() {
 import { error } from '@sveltejs/kit';
 
 export function load() {
-	throw error(518);
+	error(518);
 }
 ```
 
