@@ -105,10 +105,10 @@ export const handle = sequence(
 	async ({ event, resolve }) => {
 		if (event.url.pathname.includes('/redirect/in-handle')) {
 			if (event.url.search === '?throw') {
-				throw redirect(307, event.url.origin + '/redirect/c');
+				redirect(307, event.url.origin + '/redirect/c');
 			} else if (event.url.search.includes('cookies')) {
 				event.cookies.delete(COOKIE_NAME, { path: '/cookies' });
-				throw redirect(307, event.url.origin + '/cookies');
+				redirect(307, event.url.origin + '/cookies');
 			} else {
 				return new Response(undefined, { status: 307, headers: { location: '/redirect/c' } });
 			}
@@ -125,7 +125,7 @@ export const handle = sequence(
 	},
 	async ({ event, resolve }) => {
 		if (event.url.pathname === '/actions/redirect-in-handle' && event.request.method === 'POST') {
-			throw redirect(303, '/actions/enhance');
+			redirect(303, '/actions/enhance');
 		}
 
 		return resolve(event);

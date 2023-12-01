@@ -77,11 +77,7 @@ export function migrate_page(content, filename) {
 
 						// logic based on https://github.com/sveltejs/kit/blob/67e2342149847d267eb0c50809a1f93f41fa529b/packages/kit/src/runtime/load.js
 						if (keys === 'redirect status' && status > 300 && status < 400) {
-							automigration(
-								node,
-								file.code,
-								`throw redirect(${status}, ${nodes.redirect.getText()});`
-							);
+							automigration(node, file.code, `redirect(${status}, ${nodes.redirect.getText()});`);
 							imports.add('redirect');
 							return;
 						}

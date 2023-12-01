@@ -29,7 +29,7 @@ export async function load({ cookies, locals, fetch }) {
 		} else if (should_fail === 'unexpected') {
 			throw new Error('Failed to load');
 		} else {
-			throw redirect(307, '/load');
+			redirect(307, '/load');
 		}
 	}
 	// Do NOT make this load function depend on something which would cause it to rerun
