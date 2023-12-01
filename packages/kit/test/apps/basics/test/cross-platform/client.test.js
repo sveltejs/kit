@@ -131,17 +131,17 @@ test.describe('Navigation lifecycle functions', () => {
 		await page.goto('/navigation-lifecycle/before-navigate/prevent-navigation');
 		await page.click('h1'); // The browsers block attempts to prevent navigation on a frame that's never had a user gesture.
 
-		let confirmationDialog = false;
-
-		page.on('dialog', async (dialog) => {
-			confirmationDialog = dialog.type() === 'beforeunload';
-			await dialog.dismiss();
+		const type = new Promise((fulfil) => {
+			page.on('dialog', async (dialog) => {
+				fulfil(dialog.type());
+				await dialog.dismiss();
+			});
 		});
 
 		page.click('a[href="https://google.de"]'); // do NOT await this, promise only resolves after successful navigation, which never happens
 		await page.waitForTimeout(500);
 		await expect(page.locator('pre')).toHaveText('1 true link');
-		expect(confirmationDialog).toBe(true);
+		expect(await type).toBe('beforeunload');
 		expect(page.url()).toBe(baseURL + '/navigation-lifecycle/before-navigate/prevent-navigation');
 	});
 
