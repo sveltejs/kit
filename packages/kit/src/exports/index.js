@@ -34,11 +34,17 @@ export function error(status, body) {
 
 /**
  * Checks whether this is an error thrown by {@link error}.
- * @param {unknown} e The object to check.
- * @returns {e is HttpError}
+ * @template {number} T
+ * @param {unknown} e
+ * @param {T} [status] The status to filter for.
+ * @return {e is (HttpError & e extends undefined ? {} : { status: T })}
  */
-export function isHttpError(e) {
-	return e instanceof HttpError;
+export function isHttpError(e, status) {
+	const isInstance = e instanceof HttpError;
+	if (status) {
+		return isInstance && e.status === status;
+	}
+	return isInstance;
 }
 
 /**
@@ -46,7 +52,7 @@ export function isHttpError(e) {
  * Make sure you're not catching the thrown redirect, which would prevent SvelteKit from handling it.
  * @param {300 | 301 | 302 | 303 | 304 | 305 | 306 | 307 | 308} status The [HTTP status code](https://developer.mozilla.org/en-US/docs/Web/HTTP/Status#redirection_messages). Must be in the range 300-308.
  * @param {string | URL} location The location to redirect to.
- * @returns {never}
+ * @return {never}
  */
 export function redirect(status, location) {
 	if ((!BROWSER || DEV) && (isNaN(status) || status < 300 || status > 308)) {
@@ -59,20 +65,10 @@ export function redirect(status, location) {
 /**
  * Checks whether this is a redirect thrown by {@link redirect}.
  * @param {unknown} e The object to check.
- * @returns {e is Redirect}
+ * @return {e is Redirect}
  */
 export function isRedirect(e) {
 	return e instanceof Redirect;
-}
-
-/**
- * Checks whether this is command error thrown by {@link redirect} or {@link error}. If caught,
- * these should generally be re-thrown to allow Kit to handle them.
- * @param {unknown} e The object to check.
- * @returns {e is Redirect | HttpError}
- */
-export function isKitCommand(e) {
-	return isRedirect(e) || isHttpError(e);
 }
 
 /**
