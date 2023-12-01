@@ -123,7 +123,6 @@ export function create_client(app, target) {
 	let updating = false;
 	let navigating = false;
 	let hash_navigating = false;
-	let unloadFromLink = false;
 
 	let force_invalidation = false;
 
@@ -1471,11 +1470,14 @@ export function create_client(app, target) {
 				persist_state();
 
 				if (!navigating) {
+					const isLinkClick = document.activeElement?.tagName === 'A';
 					const nav = create_navigation(
 						current,
 						undefined,
-						null,
-						unloadFromLink ? 'link' : 'leave'
+						isLinkClick
+							? new URL(/** @type {HTMLAnchorElement} */ (document.activeElement).href)
+							: null,
+						isLinkClick ? 'link' : 'leave'
 					);
 
 					// If we're navigating, beforeNavigate was already called. If we end up in here during navigation,
@@ -1550,9 +1552,7 @@ export function create_client(app, target) {
 				)
 					return;
 
-				unloadFromLink = !!(external || options.reload);
-
-				if (download || unloadFromLink) return;
+				if (download || external || options.reload) return;
 
 				// Check if new url only differs by hash and use the browser default behavior in that case
 				// This will ensure the `hashchange` event is fired
