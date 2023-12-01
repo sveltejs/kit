@@ -234,7 +234,7 @@ export const actions = {
 		cookies.set('sessionid', await db.createSession(user));
 
 +		if (url.searchParams.has('redirectTo')) {
-+			throw redirect(303, url.searchParams.get('redirectTo'));
++			redirect(303, url.searchParams.get('redirectTo'));
 +		}
 
 		return { success: true };
