@@ -78,7 +78,7 @@ const options_regex = /(export\s+const\s+(prerender|csr|ssr|trailingSlash))\s*=/
 /** @type {Set<string>} */
 const warned = new Set();
 
-/** @type {import('@sveltejs/vite-plugin-svelte').PreprocessorGroup} */
+/** @type {import('svelte/compiler').PreprocessorGroup} */
 const warning_preprocessor = {
 	script: ({ content, filename }) => {
 		if (!filename) return;
@@ -630,7 +630,7 @@ function kit({ svelte_config }) {
 				scoped(
 					assets,
 					sirv(join(svelte_config.kit.outDir, 'output/client'), {
-					setHeaders: (res, pathname) => {
+						setHeaders: (res, pathname) => {
 							// only apply to immutable directory, not e.g. version.json
 							if (pathname.startsWith(`/${svelte_config.kit.appDir}/immutable`)) {
 								res.setHeader('cache-control', 'public,max-age=31536000,immutable');
