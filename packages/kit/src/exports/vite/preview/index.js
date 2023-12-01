@@ -8,7 +8,6 @@ import { getRequest, setResponse } from '../../../exports/node/index.js';
 import { installPolyfills } from '../../../exports/node/polyfills.js';
 import { SVELTE_KIT_ASSETS } from '../../../constants.js';
 import { should_polyfill } from '../../../utils/platform.js';
-import { not_found } from '../utils.js';
 
 /** @typedef {import('http').IncomingMessage} Req */
 /** @typedef {import('http').ServerResponse} Res */
@@ -54,42 +53,15 @@ export async function preview(vite, vite_config, svelte_config) {
 	});
 
 	return () => {
-		// generated client assets and the contents of `static`
-		vite.middlewares.use(
-			scoped(
-				assets,
-				sirv(join(svelte_config.kit.outDir, 'output/client'), {
-					setHeaders: (res, pathname) => {
-						// only apply to immutable directory, not e.g. version.json
-						if (pathname.startsWith(`/${svelte_config.kit.appDir}/immutable`)) {
-							res.setHeader('cache-control', 'public,max-age=31536000,immutable');
-						}
-					}
-				})
-			)
-		);
-
-		vite.middlewares.use((req, res, next) => {
-			const original_url = /** @type {string} */ (req.url);
-			const { pathname } = new URL(original_url, 'http://dummy');
-
-			if (pathname.startsWith(base)) {
-				next();
-			} else {
-				res.statusCode = 404;
-				not_found(req, res, base);
-			}
-		});
-
 		// prerendered dependencies
 		vite.middlewares.use(
-			scoped(base, mutable(join(svelte_config.kit.outDir, 'output/prerendered/dependencies')))
+			mutable(join(svelte_config.kit.outDir, 'output/prerendered/dependencies'))
 		);
 
 		// prerendered pages (we can't just use sirv because we need to
 		// preserve the correct trailingSlash behaviour)
 		vite.middlewares.use(
-			scoped(base, (req, res, next) => {
+			(req, res, next) => {
 				let if_none_match_value = req.headers['if-none-match'];
 
 				if (if_none_match_value?.startsWith('W/"')) {
@@ -149,7 +121,7 @@ export async function preview(vite, vite_config, svelte_config) {
 				} else {
 					next();
 				}
-			})
+			}
 		);
 
 		// SSR
@@ -157,10 +129,9 @@ export async function preview(vite, vite_config, svelte_config) {
 			const host = req.headers['host'];
 
 			let request;
-
 			try {
 				request = await getRequest({
-					base: `${protocol}://${host}`,
+					base: new URL(base, `${protocol}://${host}`).href,
 					request: req
 				});
 			} catch (/** @type {any} */ err) {
@@ -194,28 +165,6 @@ const mutable = (dir) =>
 				maxAge: 0
 		  })
 		: (_req, _res, next) => next();
-
-/**
- * @param {string} scope
- * @param {Handler} handler
- * @returns {Handler}
- */
-function scoped(scope, handler) {
-	if (scope === '') return handler;
-
-	return (req, res, next) => {
-		if (req.url?.startsWith(scope)) {
-			const original_url = req.url;
-			req.url = req.url.slice(scope.length);
-			handler(req, res, () => {
-				req.url = original_url;
-				next();
-			});
-		} else {
-			next();
-		}
-	};
-}
 
 /** @param {string} path */
 function is_file(path) {
