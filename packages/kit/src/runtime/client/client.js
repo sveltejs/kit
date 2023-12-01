@@ -1470,15 +1470,15 @@ export function create_client(app, target) {
 				persist_state();
 
 				if (!navigating) {
-					const isLinkClick = document.activeElement?.tagName === 'A';
-					const nav = create_navigation(
-						current,
-						undefined,
-						isLinkClick
-							? new URL(/** @type {HTMLAnchorElement} */ (document.activeElement).href)
-							: null,
-						isLinkClick ? 'link' : 'leave'
-					);
+					const nav =
+						document.activeElement?.tagName === 'A'
+							? create_navigation(
+									current,
+									undefined,
+									new URL(/** @type {HTMLAnchorElement} */ (document.activeElement).href),
+									'link'
+							  )
+							: create_navigation(current, undefined, null, 'leave');
 
 					// If we're navigating, beforeNavigate was already called. If we end up in here during navigation,
 					// it's due to an external or full-page-reload link, for which we don't want to call the hook again.
