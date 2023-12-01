@@ -63,9 +63,9 @@ test('Allows generated tsconfig to be mutated', () => {
 		}
 	});
 
-	// @ts-expect-error
 	const config = get_tsconfig(kit, false);
 
+	// @ts-expect-error
 	assert.equal(config.extends, 'some/other/tsconfig.json');
 });
 
@@ -81,9 +81,9 @@ test('Allows generated tsconfig to be replaced', () => {
 		}
 	});
 
-	// @ts-expect-error
 	const config = get_tsconfig(kit, false);
 
+	// @ts-expect-error
 	assert.equal(config.extends, 'some/other/tsconfig.json');
 });
 
