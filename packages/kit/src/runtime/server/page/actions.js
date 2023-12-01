@@ -231,7 +231,7 @@ async function call_action(event, actions) {
 /** @param {any} data */
 function validate_action_return(data) {
 	if (data instanceof Redirect) {
-		throw new Error('Cannot `return redirect(...)` — use `throw redirect(...)` instead');
+		throw new Error('Cannot `return redirect(...)` — use `redirect(...)` instead');
 	}
 
 	if (data instanceof HttpError) {

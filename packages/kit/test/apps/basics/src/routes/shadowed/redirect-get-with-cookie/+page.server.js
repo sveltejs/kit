@@ -5,5 +5,5 @@ export function load({ cookies }) {
 	cookies.set('shadow-redirect', 'happy', {
 		secure: false // safari
 	});
-	throw redirect(302, '/shadowed/redirected');
+	redirect(302, '/shadowed/redirected');
 }

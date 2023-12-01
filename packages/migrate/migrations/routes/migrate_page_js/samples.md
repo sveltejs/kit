@@ -102,7 +102,7 @@ import { redirect } from '@sveltejs/kit';
 
 export function load({ session }) {
 	if (!session.user) {
-		throw redirect(307, '/login');
+		redirect(307, '/login');
 	}
 
 	return {
@@ -368,7 +368,7 @@ export function load() {
 ```js before
 export function load() {
 	return {
-		status: 200 
+		status: 200
 	};
 }
 ```
