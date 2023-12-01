@@ -235,9 +235,7 @@ function validate_action_return(data) {
 	}
 
 	if (data instanceof HttpError) {
-		throw new Error(
-			'Cannot `return error(...)` — use `throw error(...)` or `return fail(...)` instead'
-		);
+		throw new Error('Cannot `return error(...)` — use `error(...)` or `return fail(...)` instead');
 	}
 }
 

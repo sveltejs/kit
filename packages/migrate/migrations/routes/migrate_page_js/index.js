@@ -93,13 +93,13 @@ export function migrate_page(content, filename) {
 								automigration(
 									node,
 									file.code,
-									`throw error(${status || 500}${message ? `, ${message}` : ''});`
+									`error(${status || 500}${message ? `, ${message}` : ''});`
 								);
 								imports.add('error');
 								return;
 							}
 						} else if (status >= 400) {
-							automigration(node, file.code, `throw error(${status});`);
+							automigration(node, file.code, `error(${status});`);
 							imports.add('error');
 							return;
 						}
