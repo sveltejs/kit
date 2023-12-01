@@ -32,7 +32,7 @@
 		"svelte": "^4.2.7",
 		"tiny-glob": "^0.2.9",
 		"typescript": "5.0.4",
-		"vite": "^4.4.9",
+		"vite": "^5.0.4",
 		"vitest": "^0.34.5"
 	},
 	"type": "module",
