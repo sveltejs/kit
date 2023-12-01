@@ -37,7 +37,7 @@ export function error(status, body) {
  * @template {number} T
  * @param {unknown} e
  * @param {T} [status] The status to filter for.
- * @return {e is (HttpError & e extends undefined ? {} : { status: T })}
+ * @return {e is (HttpError & { status: T extends undefined ? never : T })}
  */
 export function isHttpError(e, status) {
 	const isInstance = e instanceof HttpError;
