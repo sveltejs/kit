@@ -1551,21 +1551,8 @@ export function create_client(app, target) {
 					return;
 
 				unloadFromLink = !!(external || options.reload);
+
 				if (download || unloadFromLink) return;
-				// if (download) return;
-
-				// // Ignore the following but fire beforeNavigate
-				// if (external || options.reload) {
-				// 	if (before_navigate({ url, type: 'link' })) {
-				// 		// set `navigating` to `true` to prevent `beforeNavigate` callbacks
-				// 		// being called when the page unloads
-				// 		navigating = true;
-				// 	} else {
-				// 		event.preventDefault();
-				// 	}
-
-				// 	return;
-				// }
 
 				// Check if new url only differs by hash and use the browser default behavior in that case
 				// This will ensure the `hashchange` event is fired
