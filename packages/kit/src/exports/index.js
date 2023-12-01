@@ -8,19 +8,17 @@ export { VERSION } from '../version.js';
  * @overload
  * @param {number} status
  * @param {App.Error} body
- * @return {HttpError}
+ * @return {never}
  */
-
 /**
  * @overload
  * @param {number} status
  * @param {{ message: string } extends App.Error ? App.Error | string | undefined : never} [body]
- * @return {HttpError}
+ * @return {never}
  */
-
 /**
- * Creates an `HttpError` object with an HTTP status code and an optional message.
- * This object, if thrown during request handling, will cause SvelteKit to
+ * Throws an error with a HTTP status code and an optional message.
+ * When called during request handling, this will cause SvelteKit to
  * return an error response without invoking `handleError`.
  * Make sure you're not catching the thrown error, which would prevent SvelteKit from handling it.
  * @param {number} status The [HTTP status code](https://developer.mozilla.org/en-US/docs/Web/HTTP/Status#client_error_responses). Must be in the range 400-599.
@@ -31,21 +29,50 @@ export function error(status, body) {
 		throw new Error(`HTTP error status codes must be between 400 and 599 — ${status} is invalid`);
 	}
 
-	return new HttpError(status, body);
+	throw new HttpError(status, body);
 }
 
 /**
- * Create a `Redirect` object. If thrown during request handling, SvelteKit will return a redirect response.
+ * Checks whether this is an error thrown by {@link error}.
+ * @param {unknown} e The object to check.
+ * @returns {e is HttpError}
+ */
+export function isHttpError(e) {
+	return e instanceof HttpError;
+}
+
+/**
+ * Redirect a request. When called during request handling, SvelteKit will return a redirect response.
  * Make sure you're not catching the thrown redirect, which would prevent SvelteKit from handling it.
  * @param {300 | 301 | 302 | 303 | 304 | 305 | 306 | 307 | 308} status The [HTTP status code](https://developer.mozilla.org/en-US/docs/Web/HTTP/Status#redirection_messages). Must be in the range 300-308.
  * @param {string | URL} location The location to redirect to.
+ * @returns {never}
  */
 export function redirect(status, location) {
 	if ((!BROWSER || DEV) && (isNaN(status) || status < 300 || status > 308)) {
 		throw new Error('Invalid status code');
 	}
 
-	return new Redirect(status, location.toString());
+	throw new Redirect(status, location.toString());
+}
+
+/**
+ * Checks whether this is a redirect thrown by {@link redirect}.
+ * @param {unknown} e The object to check.
+ * @returns {e is Redirect}
+ */
+export function isRedirect(e) {
+	return e instanceof Redirect;
+}
+
+/**
+ * Checks whether this is command error thrown by {@link redirect} or {@link error}. If caught,
+ * these should generally be re-thrown to allow Kit to handle them.
+ * @param {unknown} e The object to check.
+ * @returns {e is Redirect | HttpError}
+ */
+export function isKitCommand(e) {
+	return isRedirect(e) || isHttpError(e);
 }
 
 /**
