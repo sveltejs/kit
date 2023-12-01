@@ -74,7 +74,7 @@ export async function transpile_ts(filename, source) {
 		compilerOptions: {
 			...options,
 			module: ts.ModuleKind.ESNext,
-			moduleResolution: ts.ModuleResolutionKind.NodeJs // TODO(v2): should we make this bundler, Node16, or NodeNext?
+			moduleResolution: ts.ModuleResolutionKind.NodeNext
 		},
 		fileName: filename
 	}).outputText;
