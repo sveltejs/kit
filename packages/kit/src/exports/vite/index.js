@@ -72,7 +72,7 @@ const options_regex = /(export\s+const\s+(prerender|csr|ssr|trailingSlash))\s*=/
 /** @type {Set<string>} */
 const warned = new Set();
 
-/** @type {import('@sveltejs/vite-plugin-svelte').PreprocessorGroup} */
+/** @type {import('svelte/compiler').PreprocessorGroup} */
 const warning_preprocessor = {
 	script: ({ content, filename }) => {
 		if (!filename) return;
