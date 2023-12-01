@@ -3,7 +3,7 @@
 
 	import { browser } from '$app/environment';
 	import { page } from '$app/stores';
-	import { Banner, Icon, Shell } from '@sveltejs/site-kit/components';
+	import { Banners, Icon, Shell } from '@sveltejs/site-kit/components';
 	import { Nav, Separator } from '@sveltejs/site-kit/nav';
 	import { Search, SearchBox } from '@sveltejs/site-kit/search';
 
@@ -63,18 +63,7 @@
 
 		<slot />
 
-		{#each data.banner as { content, href, id, start, arrow, end }}
-			<Banner
-				slot="banner-bottom"
-				{id}
-				start={new Date(start)}
-				end={end ? new Date(end) : undefined}
-				{arrow}
-				{href}
-			>
-				{@html content}
-			</Banner>
-		{/each}
+		<Banners slot="banner-bottom" data={data.banner} />
 	</Shell>
 </div>
 
