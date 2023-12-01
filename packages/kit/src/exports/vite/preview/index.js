@@ -60,69 +60,67 @@ export async function preview(vite, vite_config, svelte_config) {
 
 		// prerendered pages (we can't just use sirv because we need to
 		// preserve the correct trailingSlash behaviour)
-		vite.middlewares.use(
-			(req, res, next) => {
-				let if_none_match_value = req.headers['if-none-match'];
+		vite.middlewares.use((req, res, next) => {
+			let if_none_match_value = req.headers['if-none-match'];
 
-				if (if_none_match_value?.startsWith('W/"')) {
-					if_none_match_value = if_none_match_value.substring(2);
-				}
+			if (if_none_match_value?.startsWith('W/"')) {
+				if_none_match_value = if_none_match_value.substring(2);
+			}
 
-				if (if_none_match_value === etag) {
-					res.statusCode = 304;
-					res.end();
-					return;
-				}
+			if (if_none_match_value === etag) {
+				res.statusCode = 304;
+				res.end();
+				return;
+			}
 
-				const { pathname, search } = new URL(/** @type {string} */ (req.url), 'http://dummy');
+			const { pathname, search } = new URL(/** @type {string} */ (req.url), 'http://dummy');
 
-				let filename = normalizePath(
-					join(svelte_config.kit.outDir, 'output/prerendered/pages' + pathname)
-				);
-				let prerendered = is_file(filename);
+			let filename = normalizePath(
+				join(svelte_config.kit.outDir, 'output/prerendered/pages' + pathname)
+			);
+			let prerendered = is_file(filename);
 
-				if (!prerendered) {
-					const has_trailing_slash = pathname.endsWith('/');
-					const html_filename = `${filename}${has_trailing_slash ? 'index.html' : '.html'}`;
+			if (!prerendered) {
+				const has_trailing_slash = pathname.endsWith('/');
+				const html_filename = `${filename}${has_trailing_slash ? 'index.html' : '.html'}`;
 
-					/** @type {string | undefined} */
-					let redirect;
+				/** @type {string | undefined} */
+				let redirect;
 
-					if (is_file(html_filename)) {
-						filename = html_filename;
-						prerendered = true;
-					} else if (has_trailing_slash) {
-						if (is_file(filename.slice(0, -1) + '.html')) {
-							redirect = pathname.slice(0, -1);
-						}
-					} else if (is_file(filename + '/index.html')) {
-						redirect = pathname + '/';
+				if (is_file(html_filename)) {
+					filename = html_filename;
+					prerendered = true;
+				} else if (has_trailing_slash) {
+					if (is_file(filename.slice(0, -1) + '.html')) {
+						redirect = pathname.slice(0, -1);
 					}
-
-					if (redirect) {
-						if (search) redirect += search;
-						res.writeHead(307, {
-							location: redirect
-						});
-
-						res.end();
-
-						return;
-					}
+				} else if (is_file(filename + '/index.html')) {
+					redirect = pathname + '/';
 				}
 
-				if (prerendered) {
-					res.writeHead(200, {
-						'content-type': lookup(pathname) || 'text/html',
-						etag
+				if (redirect) {
+					if (search) redirect += search;
+					res.writeHead(307, {
+						location: redirect
 					});
 
-					fs.createReadStream(filename).pipe(res);
-				} else {
-					next();
+					res.end();
+
+					return;
 				}
 			}
-		);
+
+			if (prerendered) {
+				res.writeHead(200, {
+					'content-type': lookup(pathname) || 'text/html',
+					etag
+				});
+
+				fs.createReadStream(filename).pipe(res);
+			} else {
+				next();
+			}
+		});
 
 		// SSR
 		vite.middlewares.use(async (req, res) => {
