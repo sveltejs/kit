@@ -73,7 +73,7 @@ export async function transpile_ts(filename, source) {
 	return ts.transpileModule(source, {
 		compilerOptions: {
 			...options,
-			module: ts.ModuleKind.ESNext,
+			module: ts.ModuleKind.NodeNext,
 			moduleResolution: ts.ModuleResolutionKind.NodeNext
 		},
 		fileName: filename
