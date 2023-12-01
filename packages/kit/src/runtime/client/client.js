@@ -123,6 +123,7 @@ export function create_client(app, target) {
 	let updating = false;
 	let navigating = false;
 	let hash_navigating = false;
+	let unloadFromLink = false;
 
 	let force_invalidation = false;
 
@@ -1470,7 +1471,12 @@ export function create_client(app, target) {
 				persist_state();
 
 				if (!navigating) {
-					const nav = create_navigation(current, undefined, null, 'leave');
+					const nav = create_navigation(
+						current,
+						undefined,
+						null,
+						unloadFromLink ? 'link' : 'leave'
+					);
 
 					// If we're navigating, beforeNavigate was already called. If we end up in here during navigation,
 					// it's due to an external or full-page-reload link, for which we don't want to call the hook again.
@@ -1544,20 +1550,22 @@ export function create_client(app, target) {
 				)
 					return;
 
-				if (download) return;
+				unloadFromLink = !!(external || options.reload);
+				if (download || unloadFromLink) return;
+				// if (download) return;
 
-				// Ignore the following but fire beforeNavigate
-				if (external || options.reload) {
-					if (before_navigate({ url, type: 'link' })) {
-						// set `navigating` to `true` to prevent `beforeNavigate` callbacks
-						// being called when the page unloads
-						navigating = true;
-					} else {
-						event.preventDefault();
-					}
+				// // Ignore the following but fire beforeNavigate
+				// if (external || options.reload) {
+				// 	if (before_navigate({ url, type: 'link' })) {
+				// 		// set `navigating` to `true` to prevent `beforeNavigate` callbacks
+				// 		// being called when the page unloads
+				// 		navigating = true;
+				// 	} else {
+				// 		event.preventDefault();
+				// 	}
 
-					return;
-				}
+				// 	return;
+				// }
 
 				// Check if new url only differs by hash and use the browser default behavior in that case
 				// This will ensure the `hashchange` event is fired
