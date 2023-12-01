@@ -62,7 +62,9 @@ export default function (opts = {}) {
 						preferBuiltins: true,
 						exportConditions: ['node']
 					}),
+					// @ts-ignore https://github.com/rollup/plugins/issues/1329
 					commonjs({ strictRequires: true }),
+					// @ts-ignore https://github.com/rollup/plugins/issues/1329
 					json()
 				]
 			});
