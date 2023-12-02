@@ -2,4 +2,4 @@
 '@sveltejs/kit': major
 ---
 
-breaking: Turn `error` and `redirect` into commands
+breaking: turn `error` and `redirect` into commands
