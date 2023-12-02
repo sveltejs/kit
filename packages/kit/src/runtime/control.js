@@ -30,13 +30,15 @@ export class Redirect {
 	}
 }
 
-export class NotFound {
+export class NotFound extends Error {
 	/**
 	 * @param {string} pathname
 	 */
 	constructor(pathname) {
+		super();
+
 		this.status = 404;
-		this.pathname = pathname;
+		this.message = `Not found: ${pathname}`;
 	}
 }
 
