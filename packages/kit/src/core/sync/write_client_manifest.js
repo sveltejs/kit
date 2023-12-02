@@ -1,7 +1,7 @@
 import path from 'node:path';
 import { relative_path, resolve_entry } from '../../utils/filesystem.js';
 import { s } from '../../utils/misc.js';
-import { dedent, write_if_changed } from './utils.js';
+import { dedent, isSvelte5Plus, write_if_changed } from './utils.js';
 import colors from 'kleur';
 
 /**
@@ -143,7 +143,7 @@ export function write_client_manifest(kit, manifest_data, output, metadata) {
 				}(({ error }) => { console.error(error) }),
 			};
 
-			export { default as root } from '../root.svelte';
+			export { default as root } from '../root.${isSvelte5Plus() ? 'js' : 'svelte'}';
 		`
 	);
 

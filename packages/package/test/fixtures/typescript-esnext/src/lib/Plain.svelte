@@ -4,5 +4,9 @@
 </script>
 
 <svelte:head>
-  <script type="application/ld+json">{JSON.stringify(jsonLd)}</script>
+	<script type="application/ld+json">
+		{
+			JSON.stringify(jsonLd);
+		}
+	</script>
 </svelte:head>

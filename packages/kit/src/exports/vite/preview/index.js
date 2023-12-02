@@ -15,10 +15,7 @@ import { not_found } from '../utils.js';
 /** @typedef {(req: Req, res: Res, next: () => void) => void} Handler */
 
 /**
- * @param {{
- *   middlewares: import('connect').Server;
- *   httpServer: import('http').Server;
- * }} vite
+ * @param {{ middlewares: import('connect').Server }} vite
  * @param {import('vite').ResolvedConfig} vite_config
  * @param {import('types').ValidatedConfig} svelte_config
  */
@@ -105,7 +102,7 @@ export async function preview(vite, vite_config, svelte_config) {
 					return;
 				}
 
-				const { pathname } = new URL(/** @type {string} */ (req.url), 'http://dummy');
+				const { pathname, search } = new URL(/** @type {string} */ (req.url), 'http://dummy');
 
 				let filename = normalizePath(
 					join(svelte_config.kit.outDir, 'output/prerendered/pages' + pathname)
@@ -116,6 +113,7 @@ export async function preview(vite, vite_config, svelte_config) {
 					const has_trailing_slash = pathname.endsWith('/');
 					const html_filename = `${filename}${has_trailing_slash ? 'index.html' : '.html'}`;
 
+					/** @type {string | undefined} */
 					let redirect;
 
 					if (is_file(html_filename)) {
@@ -130,6 +128,7 @@ export async function preview(vite, vite_config, svelte_config) {
 					}
 
 					if (redirect) {
+						if (search) redirect += search;
 						res.writeHead(307, {
 							location: redirect
 						});

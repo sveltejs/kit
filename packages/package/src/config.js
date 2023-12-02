@@ -5,7 +5,7 @@ import url from 'node:url';
 /**
  * Loads and validates svelte.config.js
  * @param {{ cwd?: string }} options
- * @returns {Promise<import('./types').Options['config']>}
+ * @returns {Promise<import('./types.js').Options['config']>}
  */
 export async function load_config({ cwd = process.cwd() } = {}) {
 	const config_file = path.join(cwd, 'svelte.config.js');

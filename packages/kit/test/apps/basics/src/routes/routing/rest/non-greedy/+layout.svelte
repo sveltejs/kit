@@ -1,6 +1,6 @@
 <h1>non-greedy</h1>
 
-<slot></slot>
+<slot />
 
 <a href="/routing/rest/non-greedy/foo/one/two">foo/one/two</a>
 <a href="/routing/rest/non-greedy/food/one/two">food/one/two</a>
