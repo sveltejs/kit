@@ -1327,7 +1327,10 @@ export function create_client(app, target) {
 
 		return (
 			app.hooks.handleError({ error, event }) ??
-			/** @type {any} */ ({ message: event.route.id === null && error instanceof NotFound ? 'Not Found' : 'Internal Error' })
+			/** @type {any} */ ({
+				message:
+					event.route.id === null && error instanceof NotFound ? 'Not Found' : 'Internal Error'
+			})
 		);
 	}
 
