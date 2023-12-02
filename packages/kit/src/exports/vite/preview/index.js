@@ -125,11 +125,11 @@ export async function preview(vite, vite_config, svelte_config) {
 		// SSR
 		vite.middlewares.use(async (req, res) => {
 			const host = req.headers['host'];
-
+			const resolved = new URL(base, `${protocol}://${host}`).href;
 			let request;
 			try {
 				request = await getRequest({
-					base: new URL(base, `${protocol}://${host}`).href,
+					base: resolved.endsWith('/') ? resolved.substring(0, resolved.length - 1) : resolved,
 					request: req
 				});
 			} catch (/** @type {any} */ err) {
