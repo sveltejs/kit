@@ -124,7 +124,6 @@ export async function load_server_data({
 		url
 	});
 
-	
 	if (__SVELTEKIT_DEV__) {
 		validate_load_response(result, /** @type {string} */ (event.route.id));
 	}
@@ -180,7 +179,6 @@ export async function load_data({
 		parent
 	});
 
-	
 	if (__SVELTEKIT_DEV__) {
 		validate_load_response(result, /** @type {string} */ (event.route.id));
 	}

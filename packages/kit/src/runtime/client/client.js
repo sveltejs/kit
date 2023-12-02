@@ -558,7 +558,6 @@ export function create_client(app, target) {
 			} else {
 				data = (await node.universal.load.call(null, load_input)) ?? null;
 			}
-			
 		}
 
 		return {
