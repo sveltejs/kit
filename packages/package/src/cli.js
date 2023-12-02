@@ -37,7 +37,7 @@ prog
 
 			const packaging = await import('./index.js');
 
-			/** @type {import('./types').Options} */
+			/** @type {import('./types.js').Options} */
 			const options = {
 				cwd: process.cwd(),
 				input: args.input ?? config.kit?.files?.lib ?? 'src/lib',

@@ -43,7 +43,7 @@ export const render_content = (filename, body) =>
 			}
 
 			if (source.includes('./$types') && !source.includes('@filename: $types.d.ts')) {
-				const params = parse_route_id(options.file || `+page.${language}`)
+				const params = parse_route_id(`${options.file}` || `+page.${language}`)
 					.params.map((param) => `${param.name}: string`)
 					.join(', ');
 

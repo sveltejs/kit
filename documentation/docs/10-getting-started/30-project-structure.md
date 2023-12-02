@@ -18,7 +18,8 @@ my-project/
 │ ├ app.html
 │ ├ error.html
 │ ├ hooks.client.js
-│ └ hooks.server.js
+│ ├ hooks.server.js
+│ └ service-worker.js
 ├ static/
 │ └ [your static assets]
 ├ tests/

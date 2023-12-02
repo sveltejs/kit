@@ -2,12 +2,12 @@ import { writable } from 'svelte/store';
 import { create_updated_store, notifiable_store } from './utils.js';
 import { BROWSER } from 'esm-env';
 
-/** @type {import('./types').Client} */
+/** @type {import('./types.js').Client} */
 export let client;
 
 /**
  * @param {{
- *   client: import('./types').Client;
+ *   client: import('./types.js').Client;
  * }} opts
  */
 export function init(opts) {
@@ -21,7 +21,7 @@ export function init(opts) {
  */
 export function client_method(key) {
 	if (!BROWSER) {
-		if (key === 'before_navigate' || key === 'after_navigate') {
+		if (key === 'before_navigate' || key === 'after_navigate' || key === 'on_navigate') {
 			// @ts-expect-error doesn't recognize that both keys here return void so expects a async function
 			return () => {};
 		} else {

@@ -66,10 +66,6 @@ Accessing [`url.searchParams`](load#using-url-data-url) during prerendering is f
 
 Pages with [actions](form-actions) cannot be prerendered, because a server must be able to handle the action `POST` requests.
 
-### Prerender and ssr
-
-If you set the [ssr option](#ssr) to `false`, each request will result in the same empty HTML shell. Since this would result in unnecessary work, SvelteKit defaults to prerendering any pages it finds where `prerender` is not explicitly set to `false`.
-
 ### Route conflicts
 
 Because prerendering writes to the filesystem, it isn't possible to have two endpoints that would cause a directory and a file to have the same name. For example, `src/routes/foo/+server.js` and `src/routes/foo/bar/+server.js` would try to create `foo` and `foo/bar`, which is impossible.
@@ -125,6 +121,7 @@ Normally, SvelteKit renders your page on the server first and sends that HTML to
 ```js
 /// file: +page.js
 export const ssr = false;
+// If both `ssr` and `csr` are `false`, nothing will be rendered!
 ```
 
 If you add `export const ssr = false` to your root `+layout.js`, your entire app will only be rendered on the client — which essentially means you turn your app into an SPA.
@@ -136,9 +133,15 @@ Ordinarily, SvelteKit [hydrates](glossary#hydration) your server-rendered HTML i
 ```js
 /// file: +page.js
 export const csr = false;
+// If both `csr` and `ssr` are `false`, nothing will be rendered!
 ```
 
-> If both `ssr` and `csr` are `false`, nothing will be rendered!
+Disabling CSR does not ship any JavaScript to the client. This means:
+
+* The webpage should work with HTML and CSS only.
+* `<script>` tags inside all Svelte components are removed.
+* `<form>` elements cannot be [progressively enhanced](form-actions#progressive-enhancement).
+* Links are handled by the browser with a full-page navigation.
 
 ## trailingSlash
 

@@ -1,5 +1,57 @@
 # create-svelte
 
+## 5.3.2
+
+### Patch Changes
+
+- chore: add type declaration to `.eslintrc.cjs` files ([#11091](https://github.com/sveltejs/kit/pull/11091))
+
+## 5.3.1
+
+### Patch Changes
+
+- chore: upgrade eslint-config-prettier ([#11037](https://github.com/sveltejs/kit/pull/11037))
+
+## 5.3.0
+
+### Minor Changes
+
+- feat: upgrade to prettier 3 and prettier-plugin-svelte 3 ([#10410](https://github.com/sveltejs/kit/pull/10410))
+
+### Patch Changes
+
+- fix: correctly configure `module` and `noEmit` tsconfig and jsconfig properties ([#11029](https://github.com/sveltejs/kit/pull/11029))
+
+## 5.2.0
+
+### Minor Changes
+
+- feat: add option to try out Svelte 5 beta ([#11026](https://github.com/sveltejs/kit/pull/11026))
+
+## 5.1.1
+
+### Patch Changes
+
+- fix: specified `initial-scale=1` on all viewport meta tags ([#10793](https://github.com/sveltejs/kit/pull/10793))
+
+- feat: make output reflect user's choice of package manager ([#10811](https://github.com/sveltejs/kit/pull/10811))
+
+## 5.1.0
+
+### Minor Changes
+
+- chore: remove `resolution-mode=highest` in template `.npmrc` ([#10635](https://github.com/sveltejs/kit/pull/10635))
+
+### Patch Changes
+
+- feat: improve sverdle reactivity ([#10670](https://github.com/sveltejs/kit/pull/10670))
+
+## 5.0.6
+
+### Patch Changes
+
+- chore: bump typescript-eslint to v6 ([#10371](https://github.com/sveltejs/kit/pull/10371))
+
 ## 5.0.5
 
 ### Patch Changes

@@ -28,7 +28,12 @@ export async function respond_with_error({
 	error,
 	resolve_opts
 }) {
-	/** @type {import('./types').Fetched[]} */
+	// reroute to the fallback page to prevent an infinite chain of requests.
+	if (event.request.headers.get('x-sveltekit-error')) {
+		return static_error_page(options, status, /** @type {Error} */ (error).message);
+	}
+
+	/** @type {import('./types.js').Fetched[]} */
 	const fetched = [];
 
 	try {

@@ -1,6 +1,6 @@
 {
 	"name": "@sveltejs/adapter-cloudflare",
-	"version": "2.3.2",
+	"version": "2.3.3",
 	"description": "Adapter for building SvelteKit applications on Cloudflare Pages with Workers integration",
 	"repository": {
 		"type": "git",
@@ -26,7 +26,7 @@
 	],
 	"scripts": {
 		"build": "esbuild src/worker.js --bundle --outfile=files/worker.js --external:SERVER --external:MANIFEST --format=esm",
-		"lint": "prettier --check . --config ../../.prettierrc --ignore-path .gitignore",
+		"lint": "prettier --check .",
 		"format": "pnpm lint --write",
 		"check": "tsc --skipLibCheck",
 		"prepublishOnly": "pnpm build"

@@ -223,8 +223,8 @@ export class Csp {
 	report_only_provider;
 
 	/**
-	 * @param {import('./types').CspConfig} config
-	 * @param {import('./types').CspOpts} opts
+	 * @param {import('./types.js').CspConfig} config
+	 * @param {import('./types.js').CspOpts} opts
 	 */
 	constructor({ mode, directives, reportOnly }, { prerender }) {
 		const use_hashes = mode === 'hash' || (mode === 'auto' && prerender);

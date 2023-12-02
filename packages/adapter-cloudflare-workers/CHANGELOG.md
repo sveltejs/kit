@@ -1,5 +1,17 @@
 # @sveltejs/adapter-cloudflare-workers
 
+## 1.2.1
+
+### Patch Changes
+
+- fix: correctly check url pathnames for trailing slashes ([#10968](https://github.com/sveltejs/kit/pull/10968))
+
+## 1.2.0
+
+### Minor Changes
+
+- feat: add cloudflare's `request.cf` object to the `event.platform` property ([#10873](https://github.com/sveltejs/kit/pull/10873))
+
 ## 1.1.4
 
 ### Patch Changes

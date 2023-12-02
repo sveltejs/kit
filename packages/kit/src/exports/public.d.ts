@@ -42,12 +42,12 @@ export interface Adapter {
 type AwaitedPropertiesUnion<input extends Record<string, any> | void> = input extends void
 	? undefined // needs to be undefined, because void will break intellisense
 	: input extends Record<string, any>
-	? {
-			[key in keyof input]: Awaited<input[key]>;
-	  }
-	: {} extends input // handles the any case
-	? input
-	: unknown;
+	  ? {
+				[key in keyof input]: Awaited<input[key]>;
+	    }
+	  : {} extends input // handles the any case
+	    ? input
+	    : unknown;
 
 export type AwaitedProperties<input extends Record<string, any> | void> =
 	AwaitedPropertiesUnion<input> extends Record<string, any>
@@ -70,8 +70,8 @@ type OptionalUnion<
 type UnpackValidationError<T> = T extends ActionFailure<infer X>
 	? X
 	: T extends void
-	? undefined // needs to be undefined, because void will corrupt union type
-	: T;
+	  ? undefined // needs to be undefined, because void will corrupt union type
+	  : T;
 
 /**
  * This object is passed to the `adapt` function of adapters.
@@ -119,7 +119,7 @@ export interface Builder {
 	getClientDirectory(): string;
 	/** Get the fully resolved path to the directory containing server-side code. */
 	getServerDirectory(): string;
-	/** Get the application path including any configured `base` path, e.g. `/my-base-path/_app`. */
+	/** Get the application path including any configured `base` path, e.g. `my-base-path/_app`. */
 	getAppPath(): string;
 
 	/**
@@ -203,7 +203,7 @@ export interface Cookies {
 
 	/**
 	 * Gets all cookies that were previously set with `cookies.set`, or from the request headers.
-	 * @param opts the options, passed directily to `cookie.parse`. See documentation [here](https://github.com/jshttp/cookie#cookieparsestr-options)
+	 * @param opts the options, passed directly to `cookie.parse`. See documentation [here](https://github.com/jshttp/cookie#cookieparsestr-options)
 	 */
 	getAll(opts?: import('cookie').CookieParseOptions): Array<{ name: string; value: string }>;
 
@@ -215,7 +215,7 @@ export interface Cookies {
 	 * By default, the `path` of a cookie is the 'directory' of the current pathname. In most cases you should explicitly set `path: '/'` to make the cookie available throughout your app.
 	 * @param name the name of the cookie
 	 * @param value the cookie value
-	 * @param opts the options, passed directory to `cookie.serialize`. See documentation [here](https://github.com/jshttp/cookie#cookieserializename-value-options)
+	 * @param opts the options, passed directly to `cookie.serialize`. See documentation [here](https://github.com/jshttp/cookie#cookieserializename-value-options)
 	 */
 	set(name: string, value: string, opts?: import('cookie').CookieSerializeOptions): void;
 
@@ -224,7 +224,7 @@ export interface Cookies {
 	 *
 	 * By default, the `path` of a cookie is the 'directory' of the current pathname. In most cases you should explicitly set `path: '/'` to make the cookie available throughout your app.
 	 * @param name the name of the cookie
-	 * @param opts the options, passed directory to `cookie.serialize`. The `path` must match the path of the cookie you want to delete. See documentation [here](https://github.com/jshttp/cookie#cookieserializename-value-options)
+	 * @param opts the options, passed directly to `cookie.serialize`. The `path` must match the path of the cookie you want to delete. See documentation [here](https://github.com/jshttp/cookie#cookieserializename-value-options)
 	 */
 	delete(name: string, opts?: import('cookie').CookieSerializeOptions): void;
 
@@ -237,7 +237,7 @@ export interface Cookies {
 	 *
 	 * @param name the name of the cookie
 	 * @param value the cookie value
-	 * @param opts the options, passed directory to `cookie.serialize`. See documentation [here](https://github.com/jshttp/cookie#cookieserializename-value-options)
+	 * @param opts the options, passed directly to `cookie.serialize`. See documentation [here](https://github.com/jshttp/cookie#cookieserializename-value-options)
 	 */
 	serialize(name: string, value: string, opts?: import('cookie').CookieSerializeOptions): string;
 }
@@ -730,7 +730,7 @@ export interface LoadEvent<
 	 *
 	 * Setting the same header multiple times (even in separate `load` functions) is an error — you can only set a given header once.
 	 *
-	 * You cannot add a `set-cookie` header with `setHeaders` — use the [`cookies`](https://kit.svelte.dev/docs/types#public-types-cookies) API in a server-only `load` function instead.
+	 * You cannot add a `set-cookie` header with `setHeaders` — use the [`cookies`](https://kit.svelte.dev/docs/types#public-types-cookies) API in a server-only `load` function instead.
 	 *
 	 * `setHeaders` has no effect when a `load` function runs in the browser.
 	 */
@@ -851,7 +851,7 @@ export interface Navigation {
 	 * - `goto`: Navigation was triggered by a `goto(...)` call or a redirect
 	 * - `popstate`: Navigation was triggered by back/forward navigation
 	 */
-	type: Omit<NavigationType, 'enter'>;
+	type: Exclude<NavigationType, 'enter'>;
 	/**
 	 * Whether or not the navigation will result in the page being unloaded (i.e. not a client-side navigation)
 	 */
@@ -860,6 +860,11 @@ export interface Navigation {
 	 * In case of a history back/forward navigation, the number of steps to go back/forward
 	 */
 	delta?: number;
+	/**
+	 * A promise that resolves once the navigation is complete, and rejects if the navigation
+	 * fails or is aborted. In the case of a `willUnload` navigation, the promise will never resolve
+	 */
+	complete: Promise<void>;
 }
 
 /**
@@ -873,9 +878,27 @@ export interface BeforeNavigate extends Navigation {
 }
 
 /**
+ * The argument passed to [`onNavigate`](https://kit.svelte.dev/docs/modules#$app-navigation-onnavigate) callbacks.
+ */
+export interface OnNavigate extends Navigation {
+	/**
+	 * The type of navigation:
+	 * - `form`: The user submitted a `<form>`
+	 * - `link`: Navigation was triggered by a link click
+	 * - `goto`: Navigation was triggered by a `goto(...)` call or a redirect
+	 * - `popstate`: Navigation was triggered by back/forward navigation
+	 */
+	type: Exclude<NavigationType, 'enter' | 'leave'>;
+	/**
+	 * Since `onNavigate` callbacks are called immediately before a client-side navigation, they will never be called with a navigation that unloads the page.
+	 */
+	willUnload: false;
+}
+
+/**
  * The argument passed to [`afterNavigate`](https://kit.svelte.dev/docs/modules#$app-navigation-afternavigate) callbacks.
  */
-export interface AfterNavigate extends Navigation {
+export interface AfterNavigate extends Omit<Navigation, 'type'> {
 	/**
 	 * The type of navigation:
 	 * - `enter`: The app has hydrated
@@ -884,9 +907,9 @@ export interface AfterNavigate extends Navigation {
 	 * - `goto`: Navigation was triggered by a `goto(...)` call or a redirect
 	 * - `popstate`: Navigation was triggered by back/forward navigation
 	 */
-	type: Omit<NavigationType, 'leave'>;
+	type: Exclude<NavigationType, 'leave'>;
 	/**
-	 * Since `afterNavigate` is called after a navigation completes, it will never be called with a navigation that unloads the page.
+	 * Since `afterNavigate` callbacks are called after a navigation completes, they will never be called with a navigation that unloads the page.
 	 */
 	willUnload: false;
 }
@@ -1007,7 +1030,7 @@ export interface RequestEvent<
 	 *
 	 * Setting the same header multiple times (even in separate `load` functions) is an error — you can only set a given header once.
 	 *
-	 * You cannot add a `set-cookie` header with `setHeaders` — use the [`cookies`](https://kit.svelte.dev/docs/types#public-types-cookies) API instead.
+	 * You cannot add a `set-cookie` header with `setHeaders` — use the [`cookies`](https://kit.svelte.dev/docs/types#public-types-cookies) API instead.
 	 */
 	setHeaders(headers: Record<string, string>): void;
 	/**
@@ -1061,15 +1084,15 @@ export interface ResolveOptions {
 export interface RouteDefinition<Config = any> {
 	id: string;
 	api: {
-		methods: HttpMethod[];
+		methods: Array<HttpMethod | '*'>;
 	};
 	page: {
-		methods: Extract<HttpMethod, 'GET' | 'POST'>[];
+		methods: Array<Extract<HttpMethod, 'GET' | 'POST'>>;
 	};
 	pattern: RegExp;
 	prerender: PrerenderOption;
 	segments: RouteSegment[];
-	methods: HttpMethod[];
+	methods: Array<HttpMethod | '*'>;
 	config: Config;
 }
 
@@ -1259,8 +1282,9 @@ export type SubmitFunction<
 			/**
 			 * Call this to get the default behavior of a form submission response.
 			 * @param options Set `reset: false` if you don't want the `<form>` values to be reset after a successful submission.
+			 * @param invalidateAll Set `invalidateAll: false` if you don't want the action to call `invalidateAll` after submission.
 			 */
-			update(options?: { reset: boolean }): Promise<void>;
+			update(options?: { reset?: boolean; invalidateAll?: boolean }): Promise<void>;
 	  }) => void)
 >;
 
