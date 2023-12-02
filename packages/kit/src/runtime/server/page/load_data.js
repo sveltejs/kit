@@ -1,6 +1,5 @@
-import { disable_search, make_trackable } from '../../../utils/url.js';
-import { unwrap_promises } from '../../../utils/promises.js';
 import { DEV } from 'esm-env';
+import { disable_search, make_trackable } from '../../../utils/url.js';
 import { validate_depends } from '../../shared.js';
 
 /**
@@ -125,16 +124,16 @@ export async function load_server_data({
 		url
 	});
 
-	const data = result ? await unwrap_promises(result, event.route.id) : null;
+	
 	if (__SVELTEKIT_DEV__) {
-		validate_load_response(data, /** @type {string} */ (event.route.id));
+		validate_load_response(result, /** @type {string} */ (event.route.id));
 	}
 
 	done = true;
 
 	return {
 		type: 'data',
-		data,
+		data: result ?? null,
 		uses,
 		slash: node.server.trailingSlash
 	};
@@ -181,12 +180,12 @@ export async function load_data({
 		parent
 	});
 
-	const data = result ? await unwrap_promises(result, event.route.id) : null;
+	
 	if (__SVELTEKIT_DEV__) {
-		validate_load_response(data, /** @type {string} */ (event.route.id));
+		validate_load_response(result, /** @type {string} */ (event.route.id));
 	}
 
-	return data;
+	return result ?? null;
 }
 
 /**
