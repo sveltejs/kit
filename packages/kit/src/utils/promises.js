@@ -1,6 +1,4 @@
-import { DEV } from "esm-env";
-
-
+import { DEV } from 'esm-env';
 
 let warned_top_level_promise_property = false;
 /**
@@ -19,7 +17,7 @@ export async function unwrap_promises(object, route_id) {
 					'Top level promises returned from load will not be automatically awaited in SvelteKit v2. To get rid of this warning, await the promise before returning it.',
 					route_id ? `(key: ${key} from route ${route_id})` : ''
 				);
-				
+
 				warned_top_level_promise_property = true;
 			}
 			return Object.fromEntries(
