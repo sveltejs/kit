@@ -428,9 +428,13 @@ async function prerender({ out, manifest_path, metadata, verbose, env }) {
 	for (const entry of config.prerender.entries) {
 		if (entry === '*') {
 			for (const [id, prerender] of prerender_map) {
-				if (prerender) {
-					if (id.includes('[')) continue;
-					const path = `/${get_route_segments(id).join('/')}`;
+				if (prerender) {	
+					//Remove optional parameters from the route
+					const segments = get_route_segments(id).filter((segment) => !segment.startsWith("[["));
+					const processed_id = "/" + segments.join('/');
+
+					if (processed_id.includes('[')) continue;
+					const path = `/${get_route_segments(processed_id).join('/')}`;
 					enqueue(null, config.paths.base + path);
 				}
 			}
