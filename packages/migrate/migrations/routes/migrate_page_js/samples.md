@@ -102,7 +102,7 @@ import { redirect } from '@sveltejs/kit';
 
 export function load({ session }) {
 	if (!session.user) {
-		redirect(307, '/login');
+		throw redirect(307, '/login');
 	}
 
 	return {
@@ -129,7 +129,7 @@ import { error } from '@sveltejs/kit';
 
 export function load({ session }) {
 	if (!session.user?.admin) {
-		error(403, 'unauthorized');
+		throw error(403, 'unauthorized');
 	}
 }
 ```
@@ -152,7 +152,7 @@ import { error } from '@sveltejs/kit';
 
 export function load({ session }) {
 	if (!session.user?.admin) {
-		error(403, 'unauthorized');
+		throw error(403, 'unauthorized');
 	}
 }
 ```
@@ -175,7 +175,7 @@ import { error } from '@sveltejs/kit';
 
 export function load({ session }) {
 	if (!session.user?.admin) {
-		error(403);
+		throw error(403);
 	}
 }
 ```
@@ -192,7 +192,7 @@ export function load() {
 import { error } from '@sveltejs/kit';
 
 export function load() {
-	error(518);
+	throw error(518);
 }
 ```
 
@@ -368,7 +368,7 @@ export function load() {
 ```js before
 export function load() {
 	return {
-		status: 200
+		status: 200 
 	};
 }
 ```
