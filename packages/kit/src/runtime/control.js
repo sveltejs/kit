@@ -30,6 +30,16 @@ export class Redirect {
 	}
 }
 
+export class NotFound {
+	/**
+	 * @param {string} pathname
+	 */
+	constructor(pathname) {
+		this.status = 404;
+		this.pathname = pathname;
+	}
+}
+
 /**
  * @template {Record<string, unknown> | undefined} [T=undefined]
  */

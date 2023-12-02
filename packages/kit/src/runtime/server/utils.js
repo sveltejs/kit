@@ -2,7 +2,7 @@ import { DEV } from 'esm-env';
 import { json, text } from '../../exports/index.js';
 import { coalesce_to_error } from '../../utils/error.js';
 import { negotiate } from '../../utils/http.js';
-import { HttpError } from '../control.js';
+import { HttpError, NotFound } from '../control.js';
 import { fix_stack_trace } from '../shared-server.js';
 import { ENDPOINT_METHODS } from '../../constants.js';
 
@@ -103,12 +103,9 @@ export async function handle_error_and_jsonify(event, options, error) {
 		fix_stack_trace(error);
 	}
 
-	const is_runtime_error =
-		error instanceof TypeError || error instanceof SyntaxError || error instanceof ReferenceError;
-
 	return (
 		(await options.hooks.handleError({ error, event })) ?? {
-			message: event.route.id != null || is_runtime_error ? 'Internal Error' : 'Not Found'
+			message: event.route.id === null && error instanceof NotFound ? 'Not Found' : 'Internal Error'
 		}
 	);
 }

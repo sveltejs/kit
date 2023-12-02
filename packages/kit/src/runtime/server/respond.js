@@ -18,7 +18,7 @@ import { exec } from '../../utils/routing.js';
 import { redirect_json_response, render_data } from './data/index.js';
 import { add_cookies_to_headers, get_cookies } from './cookie.js';
 import { create_fetch } from './fetch.js';
-import { Redirect } from '../control.js';
+import { Redirect, NotFound } from '../control.js';
 import {
 	validate_layout_exports,
 	validate_layout_server_exports,
@@ -480,7 +480,7 @@ export async function respond(request, options, manifest, state) {
 					manifest,
 					state,
 					status: 404,
-					error: new Error(`Not found: ${event.url.pathname}`),
+					error: new NotFound(event.url.pathname),
 					resolve_opts
 				});
 			}
