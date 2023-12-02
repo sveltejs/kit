@@ -125,7 +125,7 @@ export async function load_server_data({
 		url
 	});
 
-	const data = result ? await unwrap_promises(result) : null;
+	const data = result ? await unwrap_promises(result, event.route.id) : null;
 	if (__SVELTEKIT_DEV__) {
 		validate_load_response(data, /** @type {string} */ (event.route.id));
 	}
@@ -181,7 +181,7 @@ export async function load_data({
 		parent
 	});
 
-	const data = result ? await unwrap_promises(result) : null;
+	const data = result ? await unwrap_promises(result, event.route.id) : null;
 	if (__SVELTEKIT_DEV__) {
 		validate_load_response(data, /** @type {string} */ (event.route.id));
 	}
