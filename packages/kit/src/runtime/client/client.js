@@ -141,7 +141,7 @@ export function create_client(app, target) {
 		history.replaceState(
 			{ ...history.state, [INDEX_KEY]: current_history_index },
 			'',
-			location.href
+			location.pathname + location.search + location.hash
 		);
 	}
 
@@ -1715,7 +1715,7 @@ export function create_client(app, target) {
 					history.replaceState(
 						{ ...history.state, [INDEX_KEY]: ++current_history_index },
 						'',
-						location.href
+						location.pathname + location.search + location.hash
 					);
 				}
 			});
