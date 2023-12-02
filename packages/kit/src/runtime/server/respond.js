@@ -67,7 +67,10 @@ export async function respond(request, options, manifest, state) {
 			request.headers.get('origin') !== url.origin;
 
 		if (forbidden) {
-			const csrf_error = new HttpError(403, `Cross-site ${request.method} form submissions are forbidden`);
+			const csrf_error = new HttpError(
+				403,
+				`Cross-site ${request.method} form submissions are forbidden`
+			);
 			if (request.headers.get('accept') === 'application/json') {
 				return json(csrf_error.body, { status: csrf_error.status });
 			}
