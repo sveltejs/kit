@@ -17,4 +17,3 @@ test('prerenders nested /en', () => {
 	const content = replace_hydration_attrs(read('en.html'));
 	expect(content).toContain('<a href="/en">English</a>');
 });
-
