@@ -542,7 +542,11 @@ test.describe('Static files', () => {
 		response = await request.get('/subdirectory/static.json');
 		expect(await response.json()).toBe('subdirectory file');
 
-		expect(response.headers()['access-control-allow-origin']).toBe('*');
+		// TODO: should this actually be set by default?
+		// it was set in https://github.com/sveltejs/kit/pull/7688
+		// but sirv sets it only if cors is enabled:
+		// https://github.com/lukeed/sirv/blob/19c6895483cc71e9ef367f8a6a863af1e558ecb0/packages/sirv-cli/index.js#L37
+		// expect(response.headers()['access-control-allow-origin']).toBe('*');
 
 		response = await request.get('/favicon.ico');
 		expect(response.status()).toBe(200);
