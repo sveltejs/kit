@@ -442,8 +442,8 @@ importers:
         specifier: ^2.4.2
         version: 2.4.2
       dts-buddy:
-        specifier: ^0.4.0
-        version: 0.4.0(typescript@5.3.2)
+        specifier: ^0.4.1
+        version: 0.4.1(typescript@5.3.2)
       rollup:
         specifier: ^4.2.0
         version: 4.5.2
@@ -3570,11 +3570,11 @@ packages:
     resolution: {integrity: sha512-QgA6BUh2SoBYE/dSuMmeGhNdoGtGewt3Rn66xKyXoGNyjrKRXf163wuM+xeQ83p87l/3ALoB6Il1dgKyGS5pEw==}
     dev: true
 
-  /dts-buddy@0.4.0(typescript@5.3.2):
-    resolution: {integrity: sha512-L8sHp1mmpufZhz/+HLIA40hJG6T937rsWhEIED2W2QMbGSpdg1G5pc2EK1WLKvmd1DvGZ0Qs8uoeSUaqK5mqkw==}
+  /dts-buddy@0.4.1(typescript@5.3.2):
+    resolution: {integrity: sha512-woiEULfkFVVIjenirf5mHY2vTTw9Ey3XmN1mYC9SrCxNlyU6NZFZ8e4L2LpaIuKoMKqU2Pqn+GoHnVyRBqhfVg==}
     hasBin: true
     peerDependencies:
-      typescript: '>=5.0.4 <5.3'
+      typescript: '>=5.0.4 <5.4'
     dependencies:
       '@jridgewell/source-map': 0.3.5
       '@jridgewell/sourcemap-codec': 1.4.15
