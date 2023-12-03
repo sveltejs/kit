@@ -247,5 +247,5 @@ test('prerenders responses with immutable Headers', () => {
 
 test('prerenders paths with optional parameters with empty values', () => {
 	const content = read('optional-params.html');
-	expect(content).includes('<a href="/optional-params/extra">Extra</a>');
+	expect(content).includes('Path with Value');
 });
