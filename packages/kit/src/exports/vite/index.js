@@ -624,6 +624,8 @@ function kit({ svelte_config }) {
 		 */
 		configurePreviewServer(vite) {
 			// generated client assets and the contents of `static`
+			// should we use Vite's built-in asset server for this?
+			// we would need to set the outDir to do so
 			const { paths } = svelte_config.kit;
 			const assets = paths.assets ? SVELTE_KIT_ASSETS : paths.base;
 			vite.middlewares.use(
