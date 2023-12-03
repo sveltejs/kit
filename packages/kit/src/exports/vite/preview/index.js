@@ -130,7 +130,7 @@ export async function preview(vite, vite_config, svelte_config) {
 			let request;
 			try {
 				request = await getRequest({
-					base: resolved.endsWith('/') ? resolved.substring(0, resolved.length - 1) : resolved,
+					base: `${protocol}://${host}`
 					request: req
 				});
 			} catch (/** @type {any} */ err) {
