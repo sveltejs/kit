@@ -631,9 +631,12 @@ function kit({ svelte_config }) {
 					assets,
 					sirv(join(svelte_config.kit.outDir, 'output/client'), {
 						setHeaders: (res, pathname) => {
-							// only apply to immutable directory, not e.g. version.json
 							if (pathname.startsWith(`/${svelte_config.kit.appDir}/immutable`)) {
 								res.setHeader('cache-control', 'public,max-age=31536000,immutable');
+							}
+							if (vite_config.preview.cors) {
+								res.setHeader('Access-Control-Allow-Origin', '*');
+								res.setHeader('Access-Control-Allow-Headers', 'Origin, Content-Type, Accept, Range');
 							}
 						}
 					})
