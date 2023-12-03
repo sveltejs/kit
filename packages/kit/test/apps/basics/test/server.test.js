@@ -542,7 +542,7 @@ test.describe('Static files', () => {
 		response = await request.get('/subdirectory/static.json');
 		expect(await response.json()).toBe('subdirectory file');
 
-		// TODO: should this actually be set by default?
+		// TODO: pass Vite's cors option to sirv. https://vitejs.dev/config/server-options.html#server-cors
 		// it was set in https://github.com/sveltejs/kit/pull/7688
 		// but sirv sets it only if cors is enabled:
 		// https://github.com/lukeed/sirv/blob/19c6895483cc71e9ef367f8a6a863af1e558ecb0/packages/sirv-cli/index.js#L37
