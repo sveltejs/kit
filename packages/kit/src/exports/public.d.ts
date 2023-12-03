@@ -498,7 +498,7 @@ export interface KitConfig {
 		 */
 		crawl?: boolean;
 		/**
-		 * An array of pages to prerender, or start crawling from (if `crawl: true`). The `*` string includes all non-dynamic routes (i.e. pages with no `[parameters]`, because SvelteKit doesn't know what value the parameters should have).
+		 * An array of pages to prerender, or start crawling from (if `crawl: true`). The `*` string includes all non-dynamic routes (i.e. pages with no `[parameters]`, because SvelteKit doesn't know what value the parameters should have), as well as routes with optional parameters which are included with no value.
 		 * @default ["*"]
 		 */
 		entries?: Array<'*' | `/${string}`>;
