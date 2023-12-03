@@ -138,11 +138,24 @@ export function create_client(app, target) {
 		current_history_index = Date.now();
 
 		// create initial history entry, so we can return here
-		history.replaceState(
-			{ ...history.state, [INDEX_KEY]: current_history_index },
-			'',
-			location.pathname + location.search + location.hash
-		);
+		try {
+			history.replaceState(
+				{ ...history.state, [INDEX_KEY]: current_history_index },
+				'',
+				location.href
+			);
+		} catch (error) {
+			// detect if the issue has been created by basic auth credentials in the current URL
+			// https://github.com/sveltejs/kit/issues/10522
+			// if so, refresh the page without credentials
+			const a = document.createElement('a');
+			a.href = '/';
+			const url = new URL(a.href);
+			if (!(url.username || url.password)) {
+				throw error;
+			}
+			location.href = `${location.href}`;
+		}
 	}
 
 	// if we reload the page, or Cmd-Shift-T back to it,
@@ -1715,7 +1728,7 @@ export function create_client(app, target) {
 					history.replaceState(
 						{ ...history.state, [INDEX_KEY]: ++current_history_index },
 						'',
-						location.pathname + location.search + location.hash
+						location.href
 					);
 				}
 			});
