@@ -179,9 +179,9 @@ const options = object(
 
 					return input;
 				}),
-				relative: validate(undefined, (input, keypath) => {
+				relative: validate(true, (input, keypath) => {
 					if (typeof input !== 'boolean') {
-						throw new Error(`${keypath} option must be a boolean or undefined`);
+						throw new Error(`${keypath} option must be a boolean`);
 					}
 
 					return input;
