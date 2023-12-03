@@ -429,7 +429,7 @@ async function prerender({ out, manifest_path, metadata, verbose, env }) {
 		if (entry === '*') {
 			for (const [id, prerender] of prerender_map) {
 				if (prerender) {
-					//Remove optional parameters from the route
+					// remove optional parameters from the route
 					const segments = get_route_segments(id).filter((segment) => !segment.startsWith('[['));
 					const processed_id = '/' + segments.join('/');
 
