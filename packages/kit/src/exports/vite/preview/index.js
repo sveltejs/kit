@@ -126,7 +126,6 @@ export async function preview(vite, vite_config, svelte_config) {
 		vite.middlewares.use(async (req, res) => {
 			const host = req.headers['host'];
 			req.url = req.originalUrl;
-			const resolved = new URL(base, `${protocol}://${host}`).href;
 			let request;
 			try {
 				request = await getRequest({
