@@ -4,8 +4,8 @@ export let private_env = {};
 /** @type {Record<string, string>} */
 export let public_env = {};
 
-/** @param {string} stack */
-export let fix_stack_trace = (stack) => stack;
+/** @param {any} error */
+export let fix_stack_trace = (error) => error?.stack;
 
 /** @type {(environment: Record<string, string>) => void} */
 export function set_private_env(environment) {
@@ -17,7 +17,7 @@ export function set_public_env(environment) {
 	public_env = environment;
 }
 
-/** @param {(stack: string) => string} value */
+/** @param {(error: Error) => string} value */
 export function set_fix_stack_trace(value) {
 	fix_stack_trace = value;
 }

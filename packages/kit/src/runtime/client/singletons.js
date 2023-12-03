@@ -2,12 +2,12 @@ import { writable } from 'svelte/store';
 import { create_updated_store, notifiable_store } from './utils.js';
 import { BROWSER } from 'esm-env';
 
-/** @type {import('./types').Client} */
+/** @type {import('./types.js').Client} */
 export let client;
 
 /**
  * @param {{
- *   client: import('./types').Client;
+ *   client: import('./types.js').Client;
  * }} opts
  */
 export function init(opts) {

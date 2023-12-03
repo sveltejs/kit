@@ -2,6 +2,12 @@
 const config = {
 	kit: {
 		prerender: {
+			entries: [
+				'*',
+				'/routing/prerendered/trailing-slash/always/',
+				'/routing/prerendered/trailing-slash/never',
+				'/routing/prerendered/trailing-slash/ignore'
+			],
 			handleHttpError: 'warn'
 		},
 

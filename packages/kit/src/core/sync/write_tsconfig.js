@@ -88,6 +88,7 @@ export function get_tsconfig(kit, include_base_url) {
 	const include = new Set([
 		'ambient.d.ts',
 		'./types/**/$types.d.ts',
+		config_relative('vite.config.js'),
 		config_relative('vite.config.ts')
 	]);
 	// TODO(v2): find a better way to include all src files. We can't just use routes/lib only because
@@ -138,8 +139,9 @@ export function get_tsconfig(kit, include_base_url) {
 			// This is required for svelte-package to work as expected
 			// Can be overwritten
 			lib: ['esnext', 'DOM', 'DOM.Iterable'],
-			moduleResolution: 'node',
+			moduleResolution: 'node', // TODO change to "bundler" in SvelteKit v2
 			module: 'esnext',
+			noEmit: true, // prevent tsconfig error "overwriting input files" - Vite handles the build and ignores this
 			target: 'esnext',
 
 			// TODO(v2): use the new flag verbatimModuleSyntax instead (requires support by Vite/Esbuild)
@@ -180,8 +182,8 @@ function validate_user_config(kit, cwd, out, config) {
 		typeof extend === 'string'
 			? path.resolve(cwd, extend) === out
 			: Array.isArray(extend)
-			? extend.some((e) => path.resolve(cwd, e) === out)
-			: false;
+			  ? extend.some((e) => path.resolve(cwd, e) === out)
+			  : false;
 
 	const options = config.options.compilerOptions || {};
 

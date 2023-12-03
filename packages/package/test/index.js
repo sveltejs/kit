@@ -16,7 +16,7 @@ const __dirname = join(__filename, '..');
 
 /**
  * @param {string} path
- * @param {Partial<import('../src/types').Options>} [options]
+ * @param {Partial<import('../src/types.js').Options>} [options]
  */
 async function test_make_package(path, options) {
 	const cwd = join(__dirname, 'fixtures', path);
@@ -52,8 +52,8 @@ async function test_make_package(path, options) {
 		const err_msg = `Expected equal file contents for ${file} in ${path}`;
 
 		if (extensions.some((ext) => pathname.endsWith(ext))) {
-			const expected_content = format(file, expected.toString('utf-8'));
-			const actual_content = format(file, actual.toString('utf-8'));
+			const expected_content = await format(file, expected.toString('utf-8'));
+			const actual_content = await format(file, actual.toString('utf-8'));
 			assert.fixture(actual_content, expected_content, err_msg);
 		} else {
 			assert.ok(expected.equals(actual), err_msg);
@@ -66,14 +66,14 @@ async function test_make_package(path, options) {
  * @param {string} file
  * @param {string} content
  */
-function format(file, content) {
+async function format(file, content) {
 	if (file.endsWith('package.json')) {
 		// For some reason these are ordered differently in different test environments
 		const json = JSON.parse(content);
 		json.exports = Object.entries(json.exports).sort(([ak], [bk]) => ak.localeCompare(bk));
 		content = JSON.stringify(json);
 	}
-	return prettier.format(content, {
+	return await prettier.format(content, {
 		parser: file.endsWith('.svelte') ? 'svelte' : file.endsWith('.json') ? 'json' : 'typescript',
 		plugins: ['prettier-plugin-svelte']
 	});
@@ -117,14 +117,18 @@ for (const dir of fs.readdirSync(join(__dirname, 'errors'))) {
 	});
 }
 
-test('create standard package with javascript', async () => {
+test('create package with javascript', async () => {
 	// should also preserve filename casing
 	// should also correctly handle nested folders
 	await test_make_package('javascript');
 });
 
-test('create standard package with typescript', async () => {
-	await test_make_package('typescript');
+test('create package with typescript using esnext', async () => {
+	await test_make_package('typescript-esnext');
+});
+
+test('create package with typescript using nodenext', async () => {
+	await test_make_package('typescript-nodenext');
 });
 
 test('create package and assets are not tampered', async () => {
