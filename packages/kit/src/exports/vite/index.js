@@ -1,5 +1,5 @@
 import fs from 'node:fs';
-import path from 'node:path';
+import path, { join } from 'node:path';
 
 import { svelte } from '@sveltejs/vite-plugin-svelte';
 import colors from 'kleur';
@@ -19,14 +19,20 @@ import { dev } from './dev/index.js';
 import { is_illegal, module_guard, normalize_id } from './graph_analysis/index.js';
 import { preview } from './preview/index.js';
 import { get_config_aliases, get_env, strip_virtual_prefix } from './utils.js';
+import { SVELTE_KIT_ASSETS } from '../../constants.js';
 import { write_client_manifest } from '../../core/sync/write_client_manifest.js';
 import prerender from '../../core/postbuild/prerender.js';
 import analyse from '../../core/postbuild/analyse.js';
 import { s } from '../../utils/misc.js';
 import { hash } from '../../runtime/hash.js';
 import { dedent, isSvelte5Plus } from '../../core/sync/utils.js';
+import sirv from 'sirv';
 
 export { vitePreprocess } from '@sveltejs/vite-plugin-svelte';
+
+/** @typedef {import('http').IncomingMessage} Req */
+/** @typedef {import('http').ServerResponse} Res */
+/** @typedef {(req: Req, res: Res, next: () => void) => void} Handler */
 
 const cwd = process.cwd();
 
@@ -72,7 +78,7 @@ const options_regex = /(export\s+const\s+(prerender|csr|ssr|trailingSlash))\s*=/
 /** @type {Set<string>} */
 const warned = new Set();
 
-/** @type {import('@sveltejs/vite-plugin-svelte').PreprocessorGroup} */
+/** @type {import('svelte/compiler').PreprocessorGroup} */
 const warning_preprocessor = {
 	script: ({ content, filename }) => {
 		if (!filename) return;
@@ -617,6 +623,31 @@ function kit({ svelte_config }) {
 		 * @see https://vitejs.dev/guide/api-plugin.html#configurepreviewserver
 		 */
 		configurePreviewServer(vite) {
+			// generated client assets and the contents of `static`
+			// should we use Vite's built-in asset server for this?
+			// we would need to set the outDir to do so
+			const { paths } = svelte_config.kit;
+			const assets = paths.assets ? SVELTE_KIT_ASSETS : paths.base;
+			vite.middlewares.use(
+				scoped(
+					assets,
+					sirv(join(svelte_config.kit.outDir, 'output/client'), {
+						setHeaders: (res, pathname) => {
+							if (pathname.startsWith(`/${svelte_config.kit.appDir}/immutable`)) {
+								res.setHeader('cache-control', 'public,max-age=31536000,immutable');
+							}
+							if (vite_config.preview.cors) {
+								res.setHeader('Access-Control-Allow-Origin', '*');
+								res.setHeader(
+									'Access-Control-Allow-Headers',
+									'Origin, Content-Type, Accept, Range'
+								);
+							}
+						}
+					})
+				)
+			);
+
 			return preview(vite, vite_config, svelte_config);
 		},
 
@@ -906,3 +937,25 @@ const create_service_worker_module = (config) => dedent`
 	export const prerendered = [];
 	export const version = ${s(config.kit.version.name)};
 `;
+
+/**
+ * @param {string} scope
+ * @param {Handler} handler
+ * @returns {Handler}
+ */
+function scoped(scope, handler) {
+	if (scope === '') return handler;
+
+	return (req, res, next) => {
+		if (req.url?.startsWith(scope)) {
+			const original_url = req.url;
+			req.url = req.url.slice(scope.length);
+			handler(req, res, () => {
+				req.url = original_url;
+				next();
+			});
+		} else {
+			next();
+		}
+	};
+}
