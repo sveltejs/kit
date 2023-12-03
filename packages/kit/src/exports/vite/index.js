@@ -636,7 +636,10 @@ function kit({ svelte_config }) {
 							}
 							if (vite_config.preview.cors) {
 								res.setHeader('Access-Control-Allow-Origin', '*');
-								res.setHeader('Access-Control-Allow-Headers', 'Origin, Content-Type, Accept, Range');
+								res.setHeader(
+									'Access-Control-Allow-Headers',
+									'Origin, Content-Type, Accept, Range'
+								);
 							}
 						}
 					})
