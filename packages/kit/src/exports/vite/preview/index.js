@@ -24,7 +24,6 @@ export async function preview(vite, vite_config, svelte_config) {
 	}
 
 	const { paths } = svelte_config.kit;
-	const base = paths.base;
 	const assets = paths.assets ? SVELTE_KIT_ASSETS : paths.base;
 
 	const protocol = vite_config.preview.https ? 'https' : 'http';
@@ -125,11 +124,11 @@ export async function preview(vite, vite_config, svelte_config) {
 		// SSR
 		vite.middlewares.use(async (req, res) => {
 			const host = req.headers['host'];
-
+			req.url = req.originalUrl;
 			let request;
 			try {
 				request = await getRequest({
-					base: new URL(base, `${protocol}://${host}`).href,
+					base: `${protocol}://${host}`,
 					request: req
 				});
 			} catch (/** @type {any} */ err) {
