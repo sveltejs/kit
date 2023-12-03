@@ -162,7 +162,7 @@ export {};
 
 ```js
 /// file: src/hooks.server.js
-// @errors: 2322
+// @errors: 2322 2353
 // @filename: ambient.d.ts
 declare module '@sentry/node' {
 	export const init: (opts: any) => void;
@@ -191,7 +191,7 @@ export async function handleError({ error, event }) {
 
 ```js
 /// file: src/hooks.client.js
-// @errors: 2322
+// @errors: 2322 2353
 // @filename: ambient.d.ts
 declare module '@sentry/svelte' {
 	export const init: (opts: any) => void;
