@@ -292,8 +292,8 @@ importers:
         specifier: 1.30.0
         version: 1.30.0
       '@types/gitignore-parser':
-        specifier: ^0.0.2
-        version: 0.0.2
+        specifier: ^0.0.3
+        version: 0.0.3
       gitignore-parser:
         specifier: ^0.0.2
         version: 0.0.2
@@ -390,11 +390,11 @@ importers:
         specifier: ^3.0.0
         version: 3.0.1(svelte@4.2.7)(vite@5.0.4)
       '@types/cookie':
-        specifier: ^0.5.1
-        version: 0.5.1
+        specifier: ^0.6.0
+        version: 0.6.0
       cookie:
-        specifier: ^0.5.0
-        version: 0.5.0
+        specifier: ^0.6.0
+        version: 0.6.0
       devalue:
         specifier: ^4.3.1
         version: 4.3.1
@@ -2501,8 +2501,8 @@ packages:
       '@types/node': 16.18.6
     dev: true
 
-  /@types/cookie@0.5.1:
-    resolution: {integrity: sha512-COUnqfB2+ckwXXSFInsFdOAWQzCCx+a5hq2ruyj+Vjund94RJQd4LG2u9hnvJrTgunKAaax7ancBYlDrNYxA0g==}
+  /@types/cookie@0.6.0:
+    resolution: {integrity: sha512-4Kh9a6B2bQciAhf7FSuMRRkUWecJgJu9nPnx3yzpsfXX/c50REIqpHY4C82bXP90qrLtXtkDxTZosYO3UpOwlA==}
     dev: false
 
   /@types/d3-geo@3.0.4:
@@ -2521,8 +2521,8 @@ packages:
     resolution: {integrity: sha512-Nmh0K3iWQJzniTuPRcJn5hxXkfB1T1pgB89SBig5PlJQU5yocazeu4jATJlaA0GYFKWMqDdvYemoSnF2pXgLVA==}
     dev: true
 
-  /@types/gitignore-parser@0.0.2:
-    resolution: {integrity: sha512-T1yLXu5BQ5Wet3gYfXBA+Nj1fTZp1ijl8EMMKPdAOy3WDVDJGXNmHTF7LMXS+FVYG+919bdil0LwLjPtX8w8Tg==}
+  /@types/gitignore-parser@0.0.3:
+    resolution: {integrity: sha512-sbdu1sG2pQcwjEYWTsX78OqJo5pKnonwC4FV3m2JeQRE2xYb3q0icHHopCHEvpn4uIBuvWBTpJUCJ76ISK24CA==}
     dev: true
 
   /@types/is-ci@3.0.0:
@@ -3348,8 +3348,8 @@ packages:
     resolution: {integrity: sha512-ASFBup0Mz1uyiIjANan1jzLQami9z1PoYSZCiiYW2FczPbenXc45FZdBZLzOT+r6+iciuEModtmCti+hjaAk0A==}
     dev: true
 
-  /cookie@0.5.0:
-    resolution: {integrity: sha512-YZ3GUyn/o8gfKJlnlX7g7xq4gyO6OSuhGPKaaGssGB2qgDUS0gPgtTvoyZLTt9Ab6dC4hfc9dV5arkvc/OCmrw==}
+  /cookie@0.6.0:
+    resolution: {integrity: sha512-U71cyTamuh1CRNCfpGY6to28lxvNwPG4Guz/EVjgf3Jmzv0vlDp1atT9eS5dDjMYHucpHbWns6Lwf3BKz6svdw==}
     engines: {node: '>= 0.6'}
     dev: false
 
