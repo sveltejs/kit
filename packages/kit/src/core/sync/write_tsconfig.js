@@ -3,7 +3,6 @@ import path from 'node:path';
 import colors from 'kleur';
 import { posixify } from '../../utils/filesystem.js';
 import { write_if_changed } from './utils.js';
-import { ts } from './ts.js';
 
 /**
  * @param {string} cwd
