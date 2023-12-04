@@ -4,16 +4,19 @@ import { get_route_segments } from '../utils/routing.js';
 
 export { VERSION } from '../version.js';
 
+// we have to repeat the JSDoc because the display for function overloads is broken
+// see https://github.com/microsoft/TypeScript/issues/55056
+
 /**
+ * Throws an error with a HTTP status code and an optional message.
+ * When called during request handling, this will cause SvelteKit to
+ * return an error response without invoking `handleError`.
+ * Make sure you're not catching the thrown error, which would prevent SvelteKit from handling it.
+ * @param {number} status The [HTTP status code](https://developer.mozilla.org/en-US/docs/Web/HTTP/Status#client_error_responses). Must be in the range 400-599.
+ * @param {App.Error} body An object that conforms to the App.Error type. If a string is passed, it will be used as the message property.
  * @overload
- * @param {number} status
- * @param {App.Error} body
- * @return {never}
- */
-/**
- * @overload
- * @param {number} status
- * @param {{ message: string } extends App.Error ? App.Error | string | undefined : never} [body]
+ * @param {number} status The [HTTP status code](https://developer.mozilla.org/en-US/docs/Web/HTTP/Status#client_error_responses). Must be in the range 400-599.
+ * @param {App.Error} body An object that conforms to the App.Error type. If a string is passed, it will be used as the message property.
  * @return {never}
  */
 /**
@@ -22,7 +25,15 @@ export { VERSION } from '../version.js';
  * return an error response without invoking `handleError`.
  * Make sure you're not catching the thrown error, which would prevent SvelteKit from handling it.
  * @param {number} status The [HTTP status code](https://developer.mozilla.org/en-US/docs/Web/HTTP/Status#client_error_responses). Must be in the range 400-599.
- * @param {{ message: string } extends App.Error ? App.Error | string | undefined : never} body An object that conforms to the App.Error type. If a string is passed, it will be used as the message property.
+ * @param {App.Error} body An object that conforms to the App.Error type. If a string is passed, it will be used as the message property.
+ * @overload
+ * @param {number} status The [HTTP status code](https://developer.mozilla.org/en-US/docs/Web/HTTP/Status#client_error_responses). Must be in the range 400-599.
+ * @param {{ message: string } extends App.Error ? App.Error | string | undefined : never} [body] An object that conforms to the App.Error type. If a string is passed, it will be used as the message property.
+ * @return {never}
+ */
+/**
+ * @param {number} status
+ * @param {{ message: string } extends App.Error ? App.Error | string | undefined : never} body
  */
 export function error(status, body) {
 	if ((!BROWSER || DEV) && (isNaN(status) || status < 400 || status > 599)) {
@@ -33,7 +44,7 @@ export function error(status, body) {
 }
 
 /**
- * Checks whether this is an error thrown by {@link error}.
+ * Checks whether this is an error thrown by `error`.
  * @template {number} T
  * @param {unknown} e
  * @param {T} [status] The status to filter for.
@@ -63,7 +74,7 @@ export function redirect(status, location) {
 }
 
 /**
- * Checks whether this is a redirect thrown by {@link redirect}.
+ * Checks whether this is a redirect thrown by `redirect`.
  * @param {unknown} e The object to check.
  * @return {e is Redirect}
  */
