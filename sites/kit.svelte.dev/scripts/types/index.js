@@ -55,10 +55,6 @@ async function get_types(code, statements) {
 				// @ts-ignore no idea why it's complaining here
 				const name = name_node.name?.escapedText;
 
-				if (name === 'error') {
-					console.log(statement);
-				}
-
 				let start = statement.pos;
 				let comment = '';
 				/** @type {string | null} */
