@@ -55,6 +55,10 @@ async function get_types(code, statements) {
 				// @ts-ignore no idea why it's complaining here
 				const name = name_node.name?.escapedText;
 
+				if (name === 'error') {
+					console.log(statement);
+				}
+
 				let start = statement.pos;
 				let comment = '';
 				/** @type {string | null} */
@@ -65,7 +69,14 @@ async function get_types(code, statements) {
 					// @ts-ignore
 					const jsDoc = statement.jsDoc[0];
 
-					comment = jsDoc.comment;
+					// resolve `@link` JSDoc tags
+					if (Array.isArray(jsDoc.comment)) {
+						comment = jsDoc.comment
+							.map(({ name, text }) => (name ? `\`${name.escapedText}\`` : text))
+							.join('');
+					} else {
+						comment = jsDoc.comment;
+					}
 
 					if (jsDoc?.tags?.[0]?.tagName?.escapedText === 'deprecated') {
 						deprecated_notice = jsDoc.tags[0].comment;
