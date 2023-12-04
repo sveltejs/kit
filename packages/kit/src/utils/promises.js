@@ -1,6 +1,7 @@
 import { DEV } from 'esm-env';
 
 let warned_top_level_promise_property = false;
+
 /**
  * Given an object, return a new object where all top level values are awaited
  *
