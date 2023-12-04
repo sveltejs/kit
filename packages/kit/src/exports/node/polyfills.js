@@ -18,6 +18,8 @@ const globals = {
  */
 export function installPolyfills() {
 	for (const name in globals) {
+		if (name in globalThis) continue;
+
 		Object.defineProperty(globalThis, name, {
 			enumerable: true,
 			configurable: true,
