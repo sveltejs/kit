@@ -647,8 +647,8 @@ test.describe('$app/paths', () => {
 
 		expect(await page.innerHTML('pre')).toBe(
 			JSON.stringify({
-				base: '.',
-				assets: '.'
+				base: '',
+				assets: ''
 			})
 		);
 
@@ -656,8 +656,8 @@ test.describe('$app/paths', () => {
 
 		expect(await page.innerHTML('pre')).toBe(
 			JSON.stringify({
-				base: '.',
-				assets: '.'
+				base: '../..',
+				assets: '../..'
 			})
 		);
 	});
