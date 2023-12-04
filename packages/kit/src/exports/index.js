@@ -44,7 +44,7 @@ export function error(status, body) {
 }
 
 /**
- * Checks whether this is an error thrown by `error`.
+ * Checks whether this is an error thrown by {@link error}.
  * @template {number} T
  * @param {unknown} e
  * @param {T} [status] The status to filter for.
@@ -74,7 +74,7 @@ export function redirect(status, location) {
 }
 
 /**
- * Checks whether this is a redirect thrown by `redirect`.
+ * Checks whether this is a redirect thrown by {@link redirect}.
  * @param {unknown} e The object to check.
  * @return {e is Redirect}
  */
