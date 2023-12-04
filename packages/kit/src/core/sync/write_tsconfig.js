@@ -129,12 +129,11 @@ export function get_tsconfig(kit, include_base_url) {
 			// essential options
 			// svelte-preprocess cannot figure out whether you have a value or a type, so tell TypeScript
 			// to enforce using \`import type\` instead of \`import\` for Types.
-			importsNotUsedAsValues: 'error',
+			// Also, TypeScript doesn't know about import usages in the template because it only sees the
+			// script of a Svelte file. Therefore preserve all value imports.
+			verbatimModuleSyntax: true,
 			// Vite compiles modules one at a time
 			isolatedModules: true,
-			// TypeScript doesn't know about import usages in the template because it only sees the
-			// script of a Svelte file. Therefore preserve all value imports. Requires TS 4.5 or higher.
-			preserveValueImports: true,
 
 			// This is required for svelte-package to work as expected
 			// Can be overwritten
@@ -142,10 +141,7 @@ export function get_tsconfig(kit, include_base_url) {
 			moduleResolution: 'bundler',
 			module: 'esnext',
 			noEmit: true, // prevent tsconfig error "overwriting input files" - Vite handles the build and ignores this
-			target: 'esnext',
-
-			// TODO(v2): use the new flag verbatimModuleSyntax instead (requires support by Vite/Esbuild)
-			ignoreDeprecations: ts && Number(ts.version.split('.')[0]) >= 5 ? '5.0' : undefined
+			target: 'esnext'
 		},
 		include: [...include],
 		exclude
