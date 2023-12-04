@@ -2,7 +2,7 @@ import 'svelte'; // pick up `declare module "*.svelte"`
 import 'vite/client'; // pick up `declare module "*.jpg"`, etc.
 import '../types/ambient.js';
 
-import { CompileOptions } from 'svelte/types/compiler/interfaces';
+import { CompileOptions } from 'svelte/compiler';
 import {
 	AdapterEntry,
 	CspDirectives,
