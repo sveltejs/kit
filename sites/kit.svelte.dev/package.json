@@ -34,7 +34,7 @@
 		"tiny-glob": "^0.2.9",
 		"typescript": "5.0.4",
 		"vite": "^5.0.4",
-		"vitest": "^0.34.5"
+		"vitest": "^1.0.0"
 	},
 	"type": "module",
 	"dependencies": {
