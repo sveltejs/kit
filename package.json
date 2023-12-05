@@ -33,7 +33,7 @@
 		"svelte": "^4.2.7",
 		"typescript": "^5.3.2"
 	},
-	"packageManager": "pnpm@8.10.2",
+	"packageManager": "pnpm@8.11.0",
 	"engines": {
 		"pnpm": "^8.0.0"
 	}

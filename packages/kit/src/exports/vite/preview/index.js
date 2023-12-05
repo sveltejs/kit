@@ -7,7 +7,6 @@ import { loadEnv, normalizePath } from 'vite';
 import { getRequest, setResponse } from '../../../exports/node/index.js';
 import { installPolyfills } from '../../../exports/node/polyfills.js';
 import { SVELTE_KIT_ASSETS } from '../../../constants.js';
-import { should_polyfill } from '../../../utils/platform.js';
 
 /** @typedef {import('http').IncomingMessage} Req */
 /** @typedef {import('http').ServerResponse} Res */
@@ -19,9 +18,7 @@ import { should_polyfill } from '../../../utils/platform.js';
  * @param {import('types').ValidatedConfig} svelte_config
  */
 export async function preview(vite, vite_config, svelte_config) {
-	if (should_polyfill) {
-		installPolyfills();
-	}
+	installPolyfills();
 
 	const { paths } = svelte_config.kit;
 	const assets = paths.assets ? SVELTE_KIT_ASSETS : paths.base;
