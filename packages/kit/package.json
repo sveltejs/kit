@@ -11,8 +11,8 @@
 	"homepage": "https://kit.svelte.dev",
 	"type": "module",
 	"dependencies": {
-		"@types/cookie": "^0.5.1",
-		"cookie": "^0.5.0",
+		"@types/cookie": "^0.6.0",
+		"cookie": "^0.6.0",
 		"devalue": "^4.3.1",
 		"esm-env": "^1.0.0",
 		"kleur": "^4.1.5",
