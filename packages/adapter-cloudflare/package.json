@@ -1,6 +1,6 @@
 {
 	"name": "@sveltejs/adapter-cloudflare",
-	"version": "2.3.3",
+	"version": "2.3.4",
 	"description": "Adapter for building SvelteKit applications on Cloudflare Pages with Workers integration",
 	"repository": {
 		"type": "git",

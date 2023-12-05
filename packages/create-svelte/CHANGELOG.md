@@ -1,5 +1,11 @@
 # create-svelte
 
+## 5.3.3
+
+### Patch Changes
+
+- fix: call Svelte 5 an alpha rather than beta ([#11119](https://github.com/sveltejs/kit/pull/11119))
+
 ## 5.3.2
 
 ### Patch Changes
