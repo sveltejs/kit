@@ -1,6 +1,5 @@
 import { expect } from '@playwright/test';
 import { test } from '../../../utils.js';
-import { fetch } from 'undici';
 import { createHash, randomBytes } from 'node:crypto';
 
 /** @typedef {import('@playwright/test').Response} Response */

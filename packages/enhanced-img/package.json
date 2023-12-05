@@ -32,7 +32,7 @@
 	},
 	"devDependencies": {
 		"@types/estree": "^1.0.2",
-		"@types/node": "^16.18.6",
+		"@types/node": "^18.19.1",
 		"estree-walker": "^3.0.3",
 		"rollup": "^4.2.0",
 		"svelte": "^4.2.7",
