@@ -1,5 +1,5 @@
 import { assert, test } from 'vitest';
-import { transform_code } from './migrate.js';
+import { transform_code, update_tsconfig_content } from './migrate.js';
 
 test('Removes throws#1', () => {
 	const result = transform_code(
@@ -48,5 +48,46 @@ throw redirect();
 redirect();
 throw error();
 error();`
+	);
+});
+
+test('Removes old tsconfig options#1', () => {
+	const result = update_tsconfig_content(
+		`{
+	"extends": "./.svelte-kit/tsconfig.json",
+	"compilerOptions": {
+		"importsNotUsedAsValues": "error",
+		"preserveValueImports": true
+	}
+}`
+	);
+	assert.equal(
+		result,
+
+		`{
+	"extends": "./.svelte-kit/tsconfig.json",
+	"compilerOptions": {
+	}
+}`
+	);
+});
+
+test('Removes old tsconfig options#2', () => {
+	const result = update_tsconfig_content(
+		`{
+	"compilerOptions": {
+		"importsNotUsedAsValues": "error",
+		"preserveValueImports": true
+	}
+}`
+	);
+	assert.equal(
+		result,
+		`{
+	"compilerOptions": {
+		"importsNotUsedAsValues": "error",
+		"preserveValueImports": true
+	}
+}`
 	);
 });

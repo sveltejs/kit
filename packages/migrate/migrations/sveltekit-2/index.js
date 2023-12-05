@@ -4,7 +4,7 @@ import prompts from 'prompts';
 import semver from 'semver';
 import glob from 'tiny-glob/sync.js';
 import { bail, check_git, update_js_file, update_svelte_file } from '../../utils.js';
-import { transform_code, update_pkg_json } from './migrate.js';
+import { transform_code, update_pkg_json, update_tsconfig } from './migrate.js';
 import { migrate as migrate_svelte_4 } from '../svelte-4/index.js';
 
 export async function migrate() {
@@ -101,6 +101,7 @@ export async function migrate() {
 	}
 
 	update_pkg_json();
+	update_tsconfig();
 
 	// const { default: config } = fs.existsSync('svelte.config.js')
 	// 	? await import(pathToFileURL(path.resolve('svelte.config.js')).href)

@@ -1,6 +1,6 @@
 import fs from 'node:fs';
 import { Project, Node } from 'ts-morph';
-import { log_on_ts_modification, update_pkg } from '../../utils.js';
+import { log_migration, log_on_ts_modification, update_pkg } from '../../utils.js';
 
 export function update_pkg_json() {
 	fs.writeFileSync(
@@ -27,6 +27,37 @@ export function update_pkg_json_content(content) {
 	]);
 }
 
+export function update_tsconfig() {
+	fs.writeFileSync(
+		'tsconfig.json',
+		update_tsconfig_content(fs.readFileSync('tsconfig.json', 'utf8'))
+	);
+}
+
+/** @param {string} content */
+export function update_tsconfig_content(content) {
+	if (!content.includes('"extends"')) {
+		// Don't touch the tsconfig if people opted out of our default config
+		return content;
+	}
+
+	const updated = content
+		.split('\n')
+		.filter(
+			(line) => !line.includes('importsNotUsedAsValues') && !line.includes('preserveValueImports')
+		)
+		.join('\n');
+
+	if (updated !== content) {
+		log_migration(
+			'Removed deprecated `importsNotUsedAsValues` and `preserveValueImports`' +
+				' from tsconfig.json: https://kit.svelte.dev/docs/v2-migration-guide#updated-dependency-requirements'
+		);
+	}
+
+	return updated;
+}
+
 /**
  * @param {string} code
  */
@@ -44,7 +75,7 @@ export function transform_code(code) {
 function remove_throws(source) {
 	const logger = log_on_ts_modification(
 		source,
-		'Removed `throw` from redirect/error functions: https://kit.svelte.dev/docs/v2-migration-guide#throw-redirect-error'
+		'Removed `throw` from redirect/error functions: https://kit.svelte.dev/docs/v2-migration-guide#redirect-and-error-are-no-longer-thrown-by-you'
 	);
 
 	/** @param {string} id */
