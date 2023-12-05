@@ -44,8 +44,8 @@ export const goto = /* @__PURE__ */ client_method('goto');
  *
  * invalidate((url) => url.pathname === '/path');
  * ```
- * @type {(url: string | URL | ((url: URL) => boolean)) => Promise<void>}
- * @param {string | URL | ((url: URL) => boolean)} url The invalidated URL
+ * @type {(url: `${string}:${string}` | URL | ((url: URL) => boolean)) => Promise<void>}
+ * @param {`${string}:${string}` | URL | ((url: URL) => boolean)} url The invalidated URL
  * @returns {Promise<void>}
  */
 export const invalidate = /* @__PURE__ */ client_method('invalidate');

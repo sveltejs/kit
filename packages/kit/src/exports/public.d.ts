@@ -779,7 +779,7 @@ export interface LoadEvent<
 	 * <button on:click={increase}>Increase Count</button>
 	 * ```
 	 */
-	depends(...deps: string[]): void;
+	depends(...deps: Array<`${string}:${string}`>): void;
 }
 
 export interface NavigationEvent<
