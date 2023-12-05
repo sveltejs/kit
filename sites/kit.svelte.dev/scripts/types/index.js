@@ -65,7 +65,7 @@ async function get_types(code, statements) {
 					// @ts-ignore
 					const jsDoc = statement.jsDoc[0];
 
-					// resolve `@link` JSDoc tags
+					// `@link` JSDoc tags (and maybe others?) turn this property into an array, which we need to join manually
 					if (Array.isArray(jsDoc.comment)) {
 						comment = jsDoc.comment
 							.map(({ name, text }) => (name ? `\`${name.escapedText}\`` : text))
