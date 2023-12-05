@@ -6,7 +6,6 @@ export const path = env('SOCKET_PATH', false);
 export const host = env('HOST', '0.0.0.0');
 export const port = env('PORT', !path && '3000');
 
-// @ts-ignore - https://github.com/lukeed/polka/issues/199
 const server = polka().use(handler);
 
 server.listen({ path, host, port }, () => {
