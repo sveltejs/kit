@@ -33,12 +33,12 @@
 		"prepublishOnly": "pnpm build"
 	},
 	"devDependencies": {
-		"@polka/url": "^1.0.0-next.23",
+		"@polka/url": "^1.0.0-next.24",
 		"@sveltejs/kit": "workspace:^",
 		"@sveltejs/vite-plugin-svelte": "^3.0.0",
 		"@types/node": "^18.19.1",
 		"c8": "^8.0.0",
-		"polka": "^1.0.0-next.23",
+		"polka": "^1.0.0-next.24",
 		"sirv": "^2.0.3",
 		"typescript": "^5.3.2",
 		"vitest": "^0.34.5"
