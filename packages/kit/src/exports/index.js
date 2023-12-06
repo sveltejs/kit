@@ -46,11 +46,6 @@ export { VERSION } from '../version.js';
  * @throws {Error} If the provided status is invalid (not between 400 and 599).
  */
 /**
- * Throws an error with a HTTP status code and an optional message.
- * When called during request handling, this will cause SvelteKit to
- * return an error response without invoking `handleError`.
- * Make sure you're not catching the thrown error, which would prevent SvelteKit from handling it.
- *
  * @param {NumericRange<400, 599>} status
  * @param {{ message: string } extends App.Error ? App.Error | string | undefined : never} body
  * @return {never}
