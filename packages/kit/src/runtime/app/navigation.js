@@ -16,6 +16,7 @@ export const disableScrollHandling = /* @__PURE__ */ client_method('disable_scro
  *   noScroll?: boolean;
  *   keepFocus?: boolean;
  *   invalidateAll?: boolean;
+ *   external?: boolean;
  *   state?: any
  * }) => Promise<void>}
  * @param {string | URL} url Where to navigate to. Note that if you've set [`config.kit.paths.base`](https://kit.svelte.dev/docs/configuration#paths) and the URL is root-relative, you need to prepend the base path if you want to navigate within the app.
@@ -23,7 +24,8 @@ export const disableScrollHandling = /* @__PURE__ */ client_method('disable_scro
  * @param {boolean} [opts.replaceState] If `true`, will replace the current `history` entry rather than creating a new one with `pushState`
  * @param {boolean} [opts.noScroll] If `true`, the browser will maintain its scroll position rather than scrolling to the top of the page after navigation
  * @param {boolean} [opts.keepFocus] If `true`, the currently focused element will retain focus after navigation. Otherwise, focus will be reset to the body
- * @param {boolean} [invalidateAll] If `true`, all `load` functions of the page will be rerun. See https://kit.svelte.dev/docs/load#rerunning-load-functions for more info on invalidation.
+ * @param {boolean} [opts.invalidateAll] If `true`, all `load` functions of the page will be rerun. See https://kit.svelte.dev/docs/load#rerunning-load-functions for more info on invalidation.
+ * @param {boolean} [opts.external] By default, `goto` will not navigate to external URLs for consistency and security reasons. Set this to `true` to allow navigating to external URLs.
  * @param {any} [opts.state] The state of the new/updated history entry
  * @returns {Promise<void>}
  */

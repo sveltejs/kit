@@ -219,7 +219,7 @@ export function create_client(app, target) {
 
 	/**
 	 * @param {string | URL} url
-	 * @param {{ noScroll?: boolean; replaceState?: boolean; keepFocus?: boolean; state?: any; invalidateAll?: boolean }} opts
+	 * @param {{ noScroll?: boolean; replaceState?: boolean; keepFocus?: boolean; state?: any; invalidateAll?: boolean, external?: boolean }} opts
 	 * @param {number} redirect_count
 	 * @param {{}} [nav_token]
 	 */
@@ -230,13 +230,22 @@ export function create_client(app, target) {
 			replaceState = false,
 			keepFocus = false,
 			state = {},
-			invalidateAll = false
+			invalidateAll = false,
+			external = false
 		},
 		redirect_count,
 		nav_token
 	) {
 		if (typeof url === 'string') {
 			url = new URL(url, get_base_uri(document));
+		}
+		if (!external && url.origin !== origin) {
+			if (DEV) {
+				throw new Error(
+					'Cannot navigate to an external URL using `goto` unless the `external` option is set'
+				);
+			}
+			return;
 		}
 
 		return navigate({
