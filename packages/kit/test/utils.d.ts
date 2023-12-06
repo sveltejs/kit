@@ -13,7 +13,7 @@ export const test: TestType<
 	PlaywrightTestArgs &
 		PlaywrightTestOptions & {
 			app: {
-				goto(url: string, opts?: { replaceState?: boolean }): Promise<void>;
+				goto(url: string, opts?: { replaceState?: boolean; external?: boolean }): Promise<void>;
 				invalidate(url: string): Promise<void>;
 				beforeNavigate(url: URL): void | boolean;
 				afterNavigate(url: URL): void;
