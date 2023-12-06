@@ -24,10 +24,11 @@ export { VERSION } from '../version.js';
  * When called during request handling, this will cause SvelteKit to
  * return an error response without invoking `handleError`.
  * Make sure you're not catching the thrown error, which would prevent SvelteKit from handling it.
- *
- * @overload
  * @param {NumericRange<400, 599>} status The [HTTP status code](https://developer.mozilla.org/en-US/docs/Web/HTTP/Status#client_error_responses). Must be in the range 400-599.
  * @param {App.Error} body An object that conforms to the App.Error type. If a string is passed, it will be used as the message property.
+ * @overload
+ * @param {NumericRange<400, 599>} status
+ * @param {App.Error} body
  * @return {never}
  * @throws {HttpError} This error instructs SvelteKit to initiate HTTP error handling.
  * @throws {Error} If the provided status is invalid (not between 400 and 599).
@@ -37,20 +38,25 @@ export { VERSION } from '../version.js';
  * When called during request handling, this will cause SvelteKit to
  * return an error response without invoking `handleError`.
  * Make sure you're not catching the thrown error, which would prevent SvelteKit from handling it.
- *
- * @overload
  * @param {NumericRange<400, 599>} status The [HTTP status code](https://developer.mozilla.org/en-US/docs/Web/HTTP/Status#client_error_responses). Must be in the range 400-599.
  * @param {{ message: string } extends App.Error ? App.Error | string | undefined : never} [body] An object that conforms to the App.Error type. If a string is passed, it will be used as the message property.
+ * @overload
+ * @param {NumericRange<400, 599>} status
+ * @param {{ message: string } extends App.Error ? App.Error | string | undefined : never} [body]
  * @return {never}
  * @throws {HttpError} This error instructs SvelteKit to initiate HTTP error handling.
  * @throws {Error} If the provided status is invalid (not between 400 and 599).
  */
 /**
- * @param {NumericRange<400, 599>} status
- * @param {{ message: string } extends App.Error ? App.Error | string | undefined : never} body
+ * Throws an error with a HTTP status code and an optional message.
+ * When called during request handling, this will cause SvelteKit to
+ * return an error response without invoking `handleError`.
+ * Make sure you're not catching the thrown error, which would prevent SvelteKit from handling it.
+ * @param {NumericRange<400, 599>} status The [HTTP status code](https://developer.mozilla.org/en-US/docs/Web/HTTP/Status#client_error_responses). Must be in the range 400-599.
+ * @param {{ message: string } extends App.Error ? App.Error | string | undefined : never} body An object that conforms to the App.Error type. If a string is passed, it will be used as the message property.
  * @return {never}
- * @throws {HttpError}
- * @throws {Error}
+ * @throws {HttpError} This error instructs SvelteKit to initiate HTTP error handling.
+ * @throws {Error} If the provided status is invalid (not between 400 and 599).
  */
 export function error(status, body) {
 	if ((!BROWSER || DEV) && (isNaN(status) || status < 400 || status > 599)) {
