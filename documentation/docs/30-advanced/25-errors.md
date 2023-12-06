@@ -81,7 +81,7 @@ Unexpected errors will go through the [`handleError`](hooks#shared-hooks-handlee
 
 ```js
 /// file: src/hooks.server.js
-// @errors: 2322 1360 2571 2339
+// @errors: 2322 1360 2571 2339 2353
 // @filename: ambient.d.ts
 declare module '@sentry/node' {
 	export const init: (opts: any) => void;

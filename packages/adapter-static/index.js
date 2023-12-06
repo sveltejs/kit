@@ -52,6 +52,7 @@ See https://kit.svelte.dev/docs/page-options#prerender for more details`
 			}
 
 			const {
+				// @ts-ignore
 				pages = 'build',
 				assets = pages,
 				fallback,
