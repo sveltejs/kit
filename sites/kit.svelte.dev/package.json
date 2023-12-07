@@ -17,7 +17,7 @@
 		"@sveltejs/amp": "workspace:^",
 		"@sveltejs/enhanced-img": "workspace:^",
 		"@sveltejs/kit": "workspace:^",
-		"@sveltejs/site-kit": "6.0.0-next.52",
+		"@sveltejs/site-kit": "6.0.0-next.59",
 		"@types/d3-geo": "^3.0.4",
 		"@types/node": "^16.18.6",
 		"browserslist": "^4.21.10",

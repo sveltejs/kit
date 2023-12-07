@@ -1048,8 +1048,8 @@ importers:
         specifier: workspace:^
         version: link:../../packages/kit
       '@sveltejs/site-kit':
-        specifier: 6.0.0-next.52
-        version: 6.0.0-next.52(@sveltejs/kit@packages+kit)(svelte@4.2.7)
+        specifier: 6.0.0-next.59
+        version: 6.0.0-next.59(@sveltejs/kit@packages+kit)(svelte@4.2.7)
       '@types/d3-geo':
         specifier: ^3.0.4
         version: 3.0.4
@@ -2054,8 +2054,8 @@ packages:
       typescript: 4.9.4
     dev: true
 
-  /@sveltejs/site-kit@6.0.0-next.52(@sveltejs/kit@packages+kit)(svelte@4.2.7):
-    resolution: {integrity: sha512-r/VoVllvrr9So9LcYT7XRXDK38Q6Fx062gosuTkDztENBw+qGp3hMq1vg9qSomJastmavRzze1cjJnQFgacWMw==}
+  /@sveltejs/site-kit@6.0.0-next.59(@sveltejs/kit@packages+kit)(svelte@4.2.7):
+    resolution: {integrity: sha512-nAUCuunhN0DmurQBxbsauqvdvv4mL0F/Aluxq0hFf6gB3iSn9WdaUZdPMXoujy+8cy+m6UvKuyhkgApZhmOLvw==}
     peerDependencies:
       '@sveltejs/kit': ^1.20.0
       svelte: ^4.0.0
@@ -2063,7 +2063,7 @@ packages:
       '@sveltejs/kit': link:packages/kit
       esm-env: 1.0.0
       svelte: 4.2.7
-      svelte-local-storage-store: 0.6.0(svelte@4.2.7)
+      svelte-local-storage-store: 0.6.4(svelte@4.2.7)
     dev: true
 
   /@sveltejs/vite-plugin-svelte-inspector@1.0.4(@sveltejs/vite-plugin-svelte@2.5.0)(svelte@4.2.7)(vite@4.4.9):
@@ -5796,11 +5796,11 @@ packages:
       svelte: 4.2.7
     dev: false
 
-  /svelte-local-storage-store@0.6.0(svelte@4.2.7):
-    resolution: {integrity: sha512-UbCY/yT/YUadU5IX/gZkoRQnA+ebFZHKKQjlJvfWHnBj3CPe9sNn8ndxYz/xy4LUzGjuBLq8+wH5RYK54ba3wA==}
+  /svelte-local-storage-store@0.6.4(svelte@4.2.7):
+    resolution: {integrity: sha512-45WoY2vSGPQM1sIQJ9jTkPPj20hYeqm+af6mUGRFSPP5WglZf36YYoZqwmZZ8Dt/2SU8lem+BTA8/Z/8TkqNLg==}
     engines: {node: '>=0.14'}
     peerDependencies:
-      svelte: ^3.48.0 || ^4.0.0
+      svelte: ^3.48.0 || >4.0.0
     dependencies:
       svelte: 4.2.7
     dev: true
