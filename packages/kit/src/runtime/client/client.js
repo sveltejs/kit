@@ -1376,6 +1376,17 @@ export function create_client(app, target) {
 		},
 
 		goto: (href, opts = {}) => {
+			if (DEV) {
+				if (typeof href === 'string') {
+					href = new URL(href, get_base_uri(document));
+				}
+				if (!opts.external && href.origin !== origin) {
+					console.warn(
+						'Navigating to an external URL using `goto` will be an error in SvelteKit 2 unless the `external` option is set'
+					);
+				}
+			}
+
 			return goto(href, opts, 0);
 		},
 
