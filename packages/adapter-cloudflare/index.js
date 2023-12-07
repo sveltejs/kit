@@ -56,7 +56,8 @@ export default function (options = {}) {
 				format: 'esm',
 				bundle: true,
 				loader: {
-					'.wasm': 'copy'
+					'.wasm': 'copy',
+					'.ttf': 'copy'
 				},
 				external: ['cloudflare:*']
 			});
