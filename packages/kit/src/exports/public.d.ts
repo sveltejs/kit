@@ -38,6 +38,13 @@ export interface Adapter {
 	 */
 	adapt(builder: Builder): MaybePromise<void>;
 }
+
+export type LoadProperties<input extends Record<string, any> | void> = input extends void
+	? undefined // needs to be undefined, because void will break intellisense
+	: input extends Record<string, any>
+	  ? input
+	  : unknown;
+
 export type AwaitedActions<T extends Record<string, (...args: any) => any>> = OptionalUnion<
 	{
 		[Key in keyof T]: UnpackValidationError<Awaited<ReturnType<T[Key]>>>;
