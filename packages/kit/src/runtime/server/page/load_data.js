@@ -195,13 +195,14 @@ export async function load_data({
  * @param {import('./types.js').Fetched[]} fetched
  * @param {boolean} csr
  * @param {Pick<Required<import('@sveltejs/kit').ResolveOptions>, 'filterSerializedResponseHeaders'>} resolve_opts
+ * @returns {typeof fetch}
  */
 export function create_universal_fetch(event, state, fetched, csr, resolve_opts) {
 	/**
 	 * @param {URL | RequestInfo} input
 	 * @param {RequestInit} [init]
 	 */
-	return async (input, init) => {
+	const universal_fetch = async (input, init) => {
 		const cloned_body = input instanceof Request && input.body ? input.clone().body : null;
 
 		const cloned_headers =
@@ -328,6 +329,15 @@ export function create_universal_fetch(event, state, fetched, csr, resolve_opts)
 		}
 
 		return proxy;
+	};
+
+	// Don't make this function `async`! Otherwise, the user has to `catch` promises they use for streaming responses or else
+	// it will be an unhandled rejection. Instead, we add a `.catch(() => {})` ourselves below to this from happening.
+	return (input, init) => {
+		// See docs in fetch.js for why we need to do this
+		const response = universal_fetch(input, init);
+		response.catch(() => {});
+		return response;
 	};
 }
 
