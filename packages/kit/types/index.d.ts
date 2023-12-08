@@ -5,7 +5,7 @@ declare module '@sveltejs/kit' {
 	import type { CompileOptions } from 'svelte/types/compiler/interfaces';
 	import type { PluginOptions } from '@sveltejs/vite-plugin-svelte';
 	/**
-	 * [Adapters](https://kit.svelte.dev/docs/adapters) ared responsible for taking the production build and turning it into something that can be deployed to a platform of your choosing.
+	 * [Adapters](https://kit.svelte.dev/docs/adapters) are responsible for taking the production build and turning it into something that can be deployed to a platform of your choosing.
 	 */
 	export interface Adapter {
 		/**
