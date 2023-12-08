@@ -546,10 +546,10 @@ export function create_client(app, target) {
 								typeof data !== 'object'
 									? `a ${typeof data}`
 									: data instanceof Response
-									  ? 'a Response object'
-									  : Array.isArray(data)
-									    ? 'an array'
-									    : 'a non-plain object'
+									? 'a Response object'
+									: Array.isArray(data)
+									? 'an array'
+									: 'a non-plain object'
 							}, but must return a plain object at the top level (i.e. \`return {...}\`)`
 						);
 					}
@@ -1380,13 +1380,13 @@ export function create_client(app, target) {
 				href = new URL(href, get_base_uri(document));
 			}
 			if (href.origin !== origin) {
-				if (DEV) {
-					return Promise.reject(
-						`Cannot use \`goto\` with an external URL. Use \`window.location = "${href}"\` instead`
-					);
-				} else {
-					return Promise.reject();
-				}
+				return Promise.reject(
+					new Error(
+						DEV
+							? `Cannot use \`goto\` with an external URL. Use \`window.location = "${href}"\` instead`
+							: 'Invalid URL'
+					)
+				);
 			}
 
 			return goto(href, opts, 0);

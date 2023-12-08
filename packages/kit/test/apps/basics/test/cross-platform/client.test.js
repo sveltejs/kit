@@ -141,17 +141,6 @@ test.describe('Navigation lifecycle functions', () => {
 		expect(await page.innerHTML('pre')).toBe('1 false goto');
 	});
 
-	test('beforeNavigate prevents external navigation triggered by goto', async ({
-		page,
-		baseURL
-	}) => {
-		await page.goto('/navigation-lifecycle/before-navigate/prevent-navigation');
-		page.goto('https://google.de');
-		await page.waitForTimeout(500);
-		expect(page.url()).toBe(baseURL + '/navigation-lifecycle/before-navigate/prevent-navigation');
-		expect(await page.innerHTML('pre')).toBe('1 true goto');
-	});
-
 	test('beforeNavigate prevents navigation triggered by back button', async ({
 		page,
 		app,
