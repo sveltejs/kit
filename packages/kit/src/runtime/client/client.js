@@ -1379,7 +1379,7 @@ export function create_client(app, target) {
 			if (typeof href === 'string') {
 				href = new URL(href, get_base_uri(document));
 			}
-			if (!opts.external && href.origin !== origin) {
+			if (href.origin !== origin) {
 				if (DEV) {
 					return Promise.reject(
 						'Cannot navigate to an external URL using `goto` unless the `external` option is set'
