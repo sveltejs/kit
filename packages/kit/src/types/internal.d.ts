@@ -333,7 +333,6 @@ export interface SSROptions {
 	app_template_contains_nonce: boolean;
 	csp: ValidatedConfig['kit']['csp'];
 	csrf_check_origin: boolean;
-	track_server_fetches: boolean;
 	embedded: boolean;
 	env_public_prefix: string;
 	env_private_prefix: string;

@@ -111,10 +111,7 @@ const options = object(
 				checkOrigin: boolean(true)
 			}),
 
-			dangerZone: object({
-				// TODO 2.0: Remove this
-				trackServerFetches: boolean(false)
-			}),
+			dangerZone: object({}),
 
 			embedded: boolean(false),
 
