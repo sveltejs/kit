@@ -24,10 +24,13 @@ In SvelteKit version 1, promises returned from the top level of a `load` functio
 
 ```diff
 export function load({ fetch }) {
-    const response1 = fetch(...).then(r => r.json());
-    const response2 = fetch(...).then(r => r.json());
--    return { response1, response2 }
-+    return Promise.all({ response1, response2 })
+-    const a = fetch(...).then(r => r.json());
+-    const b = fetch(...).then(r => r.json());
++    const [a, b] = Promise.all([
++      fetch(...).then(r => r.json()),
++      fetch(...).then(r => r.json()),
++    ]);
+    return { a, b };
 }
 
 // Or if you only have a single promise
