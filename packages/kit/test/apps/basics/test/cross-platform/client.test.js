@@ -204,8 +204,11 @@ test.describe('Navigation lifecycle functions', () => {
 	}) => {
 		await page.goto('/navigation-lifecycle/before-navigate/prevent-navigation');
 		await page.click('h1'); // The browsers block attempts to prevent navigation on a frame that's never had a user gesture.
-
-		await page.click('[href="https://google.de"]');
+		page.on('dialog', async (dialog) => {
+			await dialog.dismiss();
+		});
+		await page.close({ runBeforeUnload: true });
+		await page.waitForTimeout(100);
 		await app.goto('/navigation-lifecycle/before-navigate/prevent-navigation?x=1');
 
 		expect(await page.innerHTML('pre')).toBe('2 false goto');
