@@ -8,7 +8,6 @@ import { getRequest, setResponse } from '../../../exports/node/index.js';
 import { installPolyfills } from '../../../exports/node/polyfills.js';
 import { coalesce_to_error } from '../../../utils/error.js';
 import { posixify, resolve_entry, to_fs } from '../../../utils/filesystem.js';
-import { should_polyfill } from '../../../utils/platform.js';
 import { load_error_page } from '../../../core/config/index.js';
 import { SVELTE_KIT_ASSETS } from '../../../constants.js';
 import * as sync from '../../../core/sync/sync.js';
@@ -26,9 +25,7 @@ const cwd = process.cwd();
  * @return {Promise<Promise<() => void>>}
  */
 export async function dev(vite, vite_config, svelte_config) {
-	if (should_polyfill) {
-		installPolyfills();
-	}
+	installPolyfills();
 
 	const fetch = globalThis.fetch;
 	globalThis.fetch = (info, init) => {
