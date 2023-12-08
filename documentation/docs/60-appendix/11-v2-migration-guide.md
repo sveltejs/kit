@@ -41,6 +41,10 @@ export function load({ fetch }) {
 }
 ```
 
+## goto(...) no longer accepts external URLs
+
+To navigate to an external URL, use `window.location = url`.
+
 ## paths are now relative by default
 
 TODO explain
