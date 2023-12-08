@@ -100,6 +100,7 @@ test('Creates tsconfig include from kit.files', () => {
 
 	expect(include).toEqual([
 		'ambient.d.ts',
+		'non-ambient.d.ts',
 		'./types/**/$types.d.ts',
 		'../vite.config.js',
 		'../vite.config.ts',
