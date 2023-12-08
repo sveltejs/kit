@@ -1384,7 +1384,7 @@ export function create_client(app, target) {
 					new Error(
 						DEV
 							? `Cannot use \`goto\` with an external URL. Use \`window.location = "${href}"\` instead`
-							: 'Invalid URL'
+							: 'goto: invalid URL'
 					)
 				);
 			}
