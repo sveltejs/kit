@@ -1382,7 +1382,7 @@ export function create_client(app, target) {
 			if (href.origin !== origin) {
 				if (DEV) {
 					return Promise.reject(
-						'Cannot navigate to an external URL using `goto` unless the `external` option is set'
+						`Cannot use \`goto\` with an external URL. Use \`window.location = "${href}"\` instead`
 					);
 				} else {
 					return Promise.reject();
