@@ -33,7 +33,7 @@ export async function unwrap_promises(object, id) {
 					? `${promises.map((p) => `"${p}"`).join(', ')} and "${last}" properties`
 					: `"${last}" property`;
 
-			const location = id ? `the \`load\` function in ${id}` : `a \`load\` function`;
+			const location = id ? `the \`load\` function in ${id}` : 'a `load` function';
 
 			const description = promises.length > 0 ? 'are promises' : 'is a promise';
 
