@@ -46,7 +46,7 @@ async function analyse({ manifest_path, env }) {
 	internal.set_private_env(filter_private_env(env, { public_prefix, private_prefix }));
 	internal.set_public_env(filter_public_env(env, { public_prefix, private_prefix }));
 
-	const node_promises = manifest._.nodes.map(load_node);
+	const node_promises = manifest._.nodes.map((loader) => loader());
 	const node_metadata_promise = Promise.all(node_promises.map(analyse_node));
 	const route_metadata_promise = Promise.all(
 		manifest._.routes.map((route) => analyse_route(route, { node_promises }))
@@ -77,14 +77,6 @@ function get_config(nodes) {
 	}
 
 	return Object.keys(current).length ? current : undefined;
-}
-
-/**
- * @param {import('types').SSRNodeLoader} loader
- * @returns {Promise<import('types').SSRNode>}
- */
-function load_node(loader) {
-	return loader();
 }
 
 /**
