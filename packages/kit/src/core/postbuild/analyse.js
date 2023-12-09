@@ -46,109 +46,18 @@ async function analyse({ manifest_path, env }) {
 	internal.set_private_env(filter_private_env(env, { public_prefix, private_prefix }));
 	internal.set_public_env(filter_public_env(env, { public_prefix, private_prefix }));
 
-	/** @type {import('types').ServerMetadata} */
-	const metadata = {
-		nodes: [],
-		routes: new Map()
+	const node_promises = manifest._.nodes.map(load_node);
+	const node_metadata_promise = Promise.all(node_promises.map(analyse_node));
+	const route_metadata_promise = Promise.all(
+		manifest._.routes.map((route) => analyse_route(route, { node_promises }))
+	);
+
+	const [nodes, routes] = await Promise.all([node_metadata_promise, route_metadata_promise]);
+
+	return {
+		nodes,
+		routes: new Map(routes)
 	};
-
-	// analyse nodes
-	for (const loader of manifest._.nodes) {
-		const node = await loader();
-
-		metadata.nodes[node.index] = {
-			has_server_load: node.server?.load !== undefined || node.server?.trailingSlash !== undefined
-		};
-	}
-
-	// analyse routes
-	for (const route of manifest._.routes) {
-		/** @type {Array<'GET' | 'POST'>} */
-		const page_methods = [];
-
-		/** @type {(import('types').HttpMethod | '*')[]} */
-		const api_methods = [];
-
-		/** @type {import('types').PrerenderOption | undefined} */
-		let prerender = undefined;
-		/** @type {any} */
-		let config = undefined;
-		/** @type {import('types').PrerenderEntryGenerator | undefined} */
-		let entries = undefined;
-
-		if (route.endpoint) {
-			const mod = await route.endpoint();
-			if (mod.prerender !== undefined) {
-				validate_server_exports(mod, route.id);
-
-				if (mod.prerender && (mod.POST || mod.PATCH || mod.PUT || mod.DELETE)) {
-					throw new Error(
-						`Cannot prerender a +server file with POST, PATCH, PUT, or DELETE (${route.id})`
-					);
-				}
-
-				prerender = mod.prerender;
-			}
-
-			Object.values(mod).forEach((/** @type {import('types').HttpMethod} */ method) => {
-				if (mod[method] && ENDPOINT_METHODS.has(method)) {
-					api_methods.push(method);
-				} else if (mod.fallback) {
-					api_methods.push('*');
-				}
-			});
-
-			config = mod.config;
-			entries = mod.entries;
-		}
-
-		if (route.page) {
-			const nodes = await Promise.all(
-				[...route.page.layouts, route.page.leaf].map((n) => {
-					if (n !== undefined) return manifest._.nodes[n]();
-				})
-			);
-
-			const layouts = nodes.slice(0, -1);
-			const page = nodes.at(-1);
-
-			for (const layout of layouts) {
-				if (layout) {
-					validate_layout_server_exports(layout.server, layout.server_id);
-					validate_layout_exports(layout.universal, layout.universal_id);
-				}
-			}
-
-			if (page) {
-				page_methods.push('GET');
-				if (page.server?.actions) page_methods.push('POST');
-
-				validate_page_server_exports(page.server, page.server_id);
-				validate_page_exports(page.universal, page.universal_id);
-			}
-
-			prerender = get_option(nodes, 'prerender') ?? false;
-
-			config = get_config(nodes);
-			entries ??= get_option(nodes, 'entries');
-		}
-
-		metadata.routes.set(route.id, {
-			config,
-			methods: Array.from(new Set([...page_methods, ...api_methods])),
-			page: {
-				methods: page_methods
-			},
-			api: {
-				methods: api_methods
-			},
-			prerender,
-			entries:
-				entries && (await entries()).map((entry_object) => resolvePath(route.id, entry_object))
-		});
-	}
-
-	return metadata;
 }
 
 /**
@@ -168,4 +77,173 @@ function get_config(nodes) {
 	}
 
 	return Object.keys(current).length ? current : undefined;
+}
+
+/**
+ * @param {import('types').SSRNodeLoader} loader
+ * @returns {Promise<import('types').SSRNode>}
+ */
+function load_node(loader) {
+	return loader();
+}
+
+/**
+ * @param {Promise<import('types').SSRNode>} nodePromise
+ * @returns {Promise<{ has_server_load: boolean }>}
+ */
+async function analyse_node(nodePromise) {
+	const node = await nodePromise;
+	return {
+		has_server_load: node.server?.load !== undefined || node.server?.trailingSlash !== undefined
+	};
+}
+
+/**
+ *
+ * @param {import('types').SSRRoute} route
+ * @param {{node_promises: Promise<import('types').SSRNode>[]}} config
+ * @returns {Promise<[string, import('types').ServerMetadataRoute]>}
+ */
+async function analyse_route(route, { node_promises }) {
+	const endpointResultPromise = analyse_route_endpoint(route.endpoint?.(), { file: route.id });
+	const pageResultPromise = analyse_route_page(route.page, { node_promises });
+	const [endpoint, page] = await Promise.all([endpointResultPromise, pageResultPromise]);
+	const { methods, prerender, config, entries } = merge_route_options({ endpoint, page });
+	return [
+		route.id,
+		{
+			config,
+			methods,
+			page: {
+				methods: /** @type {("GET" | "POST")[]} */ (page.methods)
+			},
+			api: {
+				methods: endpoint.methods
+			},
+			prerender,
+			entries:
+				entries && (await entries()).map((entry_object) => resolvePath(route.id, entry_object))
+		}
+	];
+}
+
+/**
+ *
+ * @param {{ endpoint: RouteAnalysisResult, page: RouteAnalysisResult }} analysis_results
+ * @returns {RouteAnalysisResult}
+ */
+function merge_route_options({ endpoint, page }) {
+	return {
+		methods: [...new Set([...endpoint.methods, ...page.methods])],
+		prerender: page.prerender ?? endpoint.prerender,
+		entries: page.entries ?? endpoint.entries,
+		config: {
+			...endpoint.config,
+			...page.config
+		}
+	};
+}
+
+/** @typedef {{
+     methods: (import('types').HttpMethod | "*")[];
+     prerender: import('types').PrerenderOption | undefined;
+     config: any;
+     entries: import('types').PrerenderEntryGenerator | undefined;
+   }} RouteAnalysisResult
+ */
+
+/**
+ * @param {Promise<import('types').SSREndpoint> | undefined} endpoint_promise
+ * @param {{file: string}} config
+ * @returns {Promise<RouteAnalysisResult>}
+ */
+async function analyse_route_endpoint(endpoint_promise, { file }) {
+	if (!endpoint_promise) {
+		return {
+			methods: [],
+			prerender: undefined,
+			config: undefined,
+			entries: undefined
+		};
+	}
+	const endpoint_module = await endpoint_promise;
+	if (endpoint_module.prerender !== undefined) {
+		validate_server_exports(endpoint_module, file);
+
+		if (
+			endpoint_module.prerender &&
+			(endpoint_module.POST ||
+				endpoint_module.PATCH ||
+				endpoint_module.PUT ||
+				endpoint_module.DELETE)
+		) {
+			throw new Error(`Cannot prerender a +server file with POST, PATCH, PUT, or DELETE (${file})`);
+		}
+	}
+
+	/** @type {(import('types').HttpMethod | '*')[]} */
+	const methods = [];
+	Object.values(endpoint_module).forEach((/** @type {import('types').HttpMethod} */ method) => {
+		if (endpoint_module[method] && ENDPOINT_METHODS.has(method)) {
+			methods.push(method);
+		} else if (endpoint_module.fallback) {
+			methods.push('*');
+		}
+	});
+
+	return {
+		methods,
+		prerender: endpoint_module.prerender,
+		config: endpoint_module.config,
+		entries: endpoint_module.entries
+	};
+}
+
+/**
+ * @param {import('types').PageNodeIndexes | null} page_indexes
+ * @param {{ node_promises: Promise<import('types').SSRNode>[] }} config
+ * @returns {Promise<RouteAnalysisResult>}
+ */
+async function analyse_route_page(page_indexes, { node_promises }) {
+	if (!page_indexes) {
+		return {
+			methods: [],
+			prerender: undefined,
+			config: undefined,
+			entries: undefined
+		};
+	}
+
+	const nodes = await Promise.all(
+		[...page_indexes.layouts, page_indexes.leaf].map((n) => {
+			if (n !== undefined) return node_promises[n];
+		})
+	);
+
+	const layouts = nodes.slice(0, -1);
+	const page = nodes.at(-1);
+
+	for (const layout of layouts) {
+		if (layout) {
+			validate_layout_server_exports(layout.server, layout.server_id);
+			validate_layout_exports(layout.universal, layout.universal_id);
+		}
+	}
+
+	/** @type {Array<'GET' | 'POST'>} */
+	const methods = [];
+	if (page) {
+		methods.push('GET');
+		if (page.server?.actions) methods.push('POST');
+
+		validate_page_server_exports(page.server, page.server_id);
+		validate_page_exports(page.universal, page.universal_id);
+	}
+
+	return {
+		methods,
+		prerender: get_option(nodes, 'prerender'),
+		config: get_config(nodes),
+		entries: get_option(nodes, 'entries')
+	};
 }
