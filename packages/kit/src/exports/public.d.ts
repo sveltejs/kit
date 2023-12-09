@@ -49,11 +49,6 @@ type AwaitedPropertiesUnion<input extends Record<string, any> | void> = input ex
 	    ? input
 	    : unknown;
 
-export type AwaitedProperties<input extends Record<string, any> | void> =
-	AwaitedPropertiesUnion<input> extends Record<string, any>
-		? OptionalUnion<AwaitedPropertiesUnion<input>>
-		: AwaitedPropertiesUnion<input>;
-
 export type AwaitedActions<T extends Record<string, (...args: any) => any>> = OptionalUnion<
 	{
 		[Key in keyof T]: UnpackValidationError<Awaited<ReturnType<T[Key]>>>;
