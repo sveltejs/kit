@@ -1,26 +1,56 @@
 import { DEV } from 'esm-env';
 
-let warned_top_level_promise_property = false;
+/** @type {Set<string> | null} */
+let warned = null;
+
+// TODO v2: remove all references to unwrap_promises
 
 /**
  * Given an object, return a new object where all top level values are awaited
  *
  * @param {Record<string, any>} object
- * @param {string | null} [route_id]
+ * @param {string | null} [id]
  * @returns {Promise<Record<string, any>>}
  */
-export async function unwrap_promises(object, route_id) {
-	for (const key in object) {
-		if (typeof object[key]?.then === 'function') {
-			// TODO v2: remove this warning and all references to unwrap_promises
-			if (DEV && !warned_top_level_promise_property) {
+export async function unwrap_promises(object, id) {
+	if (DEV) {
+		/** @type {string[]} */
+		const promises = [];
+
+		for (const key in object) {
+			if (typeof object[key]?.then === 'function') {
+				promises.push(key);
+			}
+		}
+
+		if (promises.length > 0) {
+			if (!warned) warned = new Set();
+
+			const last = promises.pop();
+
+			const properties =
+				promises.length > 0
+					? `${promises.map((p) => `"${p}"`).join(', ')} and "${last}" properties`
+					: `"${last}" property`;
+
+			const location = id ? `the \`load\` function in ${id}` : `a \`load\` function`;
+
+			const description = promises.length > 0 ? 'are promises' : 'is a promise';
+
+			const message = `The top-level ${properties} returned from ${location} ${description}.`;
+
+			if (!warned.has(message)) {
 				console.warn(
-					'Top level promises returned from load will not be automatically awaited in SvelteKit v2. To get rid of this warning, await the promise before returning it.',
-					route_id ? `(key: ${key} from route ${route_id})` : ''
+					`\n${message}\n\nIn SvelteKit 2.0, these will longer be awaited automatically. To get rid of this warning, await all promises included as top-level properties in \`load\` return values.\n`
 				);
 
-				warned_top_level_promise_property = true;
+				warned.add(message);
 			}
+		}
+	}
+
+	for (const key in object) {
+		if (typeof object[key]?.then === 'function') {
 			return Object.fromEntries(
 				await Promise.all(Object.entries(object).map(async ([key, value]) => [key, await value]))
 			);
