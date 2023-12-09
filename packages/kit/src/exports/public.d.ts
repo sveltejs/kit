@@ -217,7 +217,11 @@ export interface Cookies {
 	 * @param value the cookie value
 	 * @param opts the options, passed directly to `cookie.serialize`. See documentation [here](https://github.com/jshttp/cookie#cookieserializename-value-options)
 	 */
-	set(name: string, value: string, opts?: import('cookie').CookieSerializeOptions): void;
+	set(
+		name: string,
+		value: string,
+		opts?: import('cookie').CookieSerializeOptions & { path: string }
+	): void;
 
 	/**
 	 * Deletes a cookie by setting its value to an empty string and setting the expiry date in the past.
@@ -226,7 +230,7 @@ export interface Cookies {
 	 * @param name the name of the cookie
 	 * @param opts the options, passed directly to `cookie.serialize`. The `path` must match the path of the cookie you want to delete. See documentation [here](https://github.com/jshttp/cookie#cookieserializename-value-options)
 	 */
-	delete(name: string, opts?: import('cookie').CookieSerializeOptions): void;
+	delete(name: string, opts?: import('cookie').CookieSerializeOptions & { path: string }): void;
 
 	/**
 	 * Serialize a cookie name-value pair into a `Set-Cookie` header string, but don't apply it to the response.
@@ -239,7 +243,11 @@ export interface Cookies {
 	 * @param value the cookie value
 	 * @param opts the options, passed directly to `cookie.serialize`. See documentation [here](https://github.com/jshttp/cookie#cookieserializename-value-options)
 	 */
-	serialize(name: string, value: string, opts?: import('cookie').CookieSerializeOptions): string;
+	serialize(
+		name: string,
+		value: string,
+		opts?: import('cookie').CookieSerializeOptions & { path: string }
+	): string;
 }
 
 export interface KitConfig {
