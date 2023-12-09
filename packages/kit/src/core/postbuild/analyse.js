@@ -71,7 +71,8 @@ function get_config(nodes) {
 		if (config) {
 			current = {
 				...current,
-				...config
+				...(node?.server?.config ?? {}),
+				...(node?.universal?.config ?? {})
 			};
 		}
 	}
@@ -99,8 +100,11 @@ async function analyse_node(nodePromise) {
 async function analyse_route(route, { node_promises }) {
 	const endpointResultPromise = analyse_route_endpoint(route.endpoint?.(), { file: route.id });
 	const pageResultPromise = analyse_route_page(route.page, { node_promises });
-	const [endpoint, page] = await Promise.all([endpointResultPromise, pageResultPromise]);
-	const { methods, prerender, config, entries } = merge_route_options({ endpoint, page });
+	const [endpoint, { page, layout }] = await Promise.all([
+		endpointResultPromise,
+		pageResultPromise
+	]);
+	const { methods, prerender, config, entries } = merge_route_options({ endpoint, page, layout });
 	return [
 		route.id,
 		{
@@ -121,15 +125,16 @@ async function analyse_route(route, { node_promises }) {
 
 /**
  *
- * @param {{ endpoint: RouteAnalysisResult, page: RouteAnalysisResult }} analysis_results
- * @returns {RouteAnalysisResult}
+ * @param {{ endpoint: EndpointRouteAnalysisResult, page: PageRouteAnalysisResult, layout: LayoutRouteAnalysisResult }} analysis_results
+ * @returns {MergedRouteAnalysisResult}
  */
-function merge_route_options({ endpoint, page }) {
+function merge_route_options({ endpoint, page, layout }) {
 	return {
 		methods: [...new Set([...endpoint.methods, ...page.methods])],
-		prerender: page.prerender ?? endpoint.prerender,
-		entries: page.entries ?? endpoint.entries,
+		prerender: page.prerender ?? endpoint.prerender ?? layout.prerender,
+		entries: page.entries ?? endpoint.entries, // layouts can't have entries
 		config: {
+			...layout.config,
 			...endpoint.config,
 			...page.config
 		}
@@ -141,13 +146,35 @@ function merge_route_options({ endpoint, page }) {
      prerender: import('types').PrerenderOption | undefined;
      config: any;
      entries: import('types').PrerenderEntryGenerator | undefined;
-   }} RouteAnalysisResult
+   }} EndpointRouteAnalysisResult
+ */
+
+/** @typedef {{
+     methods: ("GET" | "POST")[];
+     prerender: import('types').PrerenderOption | undefined;
+     config: any;
+     entries: import('types').PrerenderEntryGenerator | undefined;
+   }} PageRouteAnalysisResult
+ */
+
+/** @typedef {{
+     prerender: import('types').PrerenderOption | undefined;
+     config: any;
+   }} LayoutRouteAnalysisResult
+ */
+
+/** @typedef {{
+     methods: (import('types').HttpMethod | "*")[];
+     prerender: import('types').PrerenderOption | undefined;
+     config: any;
+     entries: import('types').PrerenderEntryGenerator | undefined;
+   }} MergedRouteAnalysisResult
  */
 
 /**
  * @param {Promise<import('types').SSREndpoint> | undefined} endpoint_promise
  * @param {{file: string}} config
- * @returns {Promise<RouteAnalysisResult>}
+ * @returns {Promise<EndpointRouteAnalysisResult>}
  */
 async function analyse_route_endpoint(endpoint_promise, { file }) {
 	if (!endpoint_promise) {
@@ -194,15 +221,21 @@ async function analyse_route_endpoint(endpoint_promise, { file }) {
 /**
  * @param {import('types').PageNodeIndexes | null} page_indexes
  * @param {{ node_promises: Promise<import('types').SSRNode>[] }} config
- * @returns {Promise<RouteAnalysisResult>}
+ * @returns {Promise<{ page: PageRouteAnalysisResult, layout: LayoutRouteAnalysisResult }>}
  */
 async function analyse_route_page(page_indexes, { node_promises }) {
 	if (!page_indexes) {
 		return {
-			methods: [],
-			prerender: undefined,
-			config: undefined,
-			entries: undefined
+			page: {
+				methods: [],
+				prerender: undefined,
+				config: undefined,
+				entries: undefined
+			},
+			layout: {
+				prerender: undefined,
+				config: undefined
+			}
 		};
 	}
 
@@ -226,16 +259,24 @@ async function analyse_route_page(page_indexes, { node_promises }) {
 	const methods = [];
 	if (page) {
 		methods.push('GET');
-		if (page.server?.actions) methods.push('POST');
+		if (page.server?.actions) {
+			methods.push('POST');
+		}
 
 		validate_page_server_exports(page.server, page.server_id);
 		validate_page_exports(page.universal, page.universal_id);
 	}
 
 	return {
-		methods,
-		prerender: get_option(nodes, 'prerender'),
-		config: get_config(nodes),
-		entries: get_option(nodes, 'entries')
+		page: {
+			methods,
+			prerender: get_option([page], 'prerender'),
+			config: get_config([page]),
+			entries: get_option([page], 'entries')
+		},
+		layout: {
+			prerender: get_option(layouts, 'prerender'),
+			config: get_config(layouts)
+		}
 	};
 }
