@@ -125,9 +125,9 @@ export async function load_server_data({
 		url
 	});
 
-	const data = result ? await unwrap_promises(result) : null;
+	const data = result ? await unwrap_promises(result, node.server_id) : null;
 	if (__SVELTEKIT_DEV__) {
-		validate_load_response(data, /** @type {string} */ (event.route.id));
+		validate_load_response(data, node.server_id);
 	}
 
 	done = true;
@@ -181,9 +181,9 @@ export async function load_data({
 		parent
 	});
 
-	const data = result ? await unwrap_promises(result) : null;
+	const data = result ? await unwrap_promises(result, node.universal_id) : null;
 	if (__SVELTEKIT_DEV__) {
-		validate_load_response(data, /** @type {string} */ (event.route.id));
+		validate_load_response(data, node.universal_id);
 	}
 
 	return data;
@@ -360,12 +360,12 @@ async function stream_to_string(stream) {
 
 /**
  * @param {any} data
- * @param {string} [routeId]
+ * @param {string} [id]
  */
-function validate_load_response(data, routeId) {
+function validate_load_response(data, id) {
 	if (data != null && Object.getPrototypeOf(data) !== Object.prototype) {
 		throw new Error(
-			`a load function related to route '${routeId}' returned ${
+			`a load function in ${id} returned ${
 				typeof data !== 'object'
 					? `a ${typeof data}`
 					: data instanceof Response

@@ -555,7 +555,7 @@ export function create_client(app, target) {
 			} else {
 				data = (await node.universal.load.call(null, load_input)) ?? null;
 			}
-			data = data ? await unwrap_promises(data) : null;
+			data = data ? await unwrap_promises(data, route.id) : null;
 		}
 
 		return {
