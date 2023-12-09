@@ -131,9 +131,11 @@ export function create_fetch({ event, options, manifest, state, get_cookie_heade
 					for (const str of set_cookie_parser.splitCookiesString(set_cookie)) {
 						const { name, value, ...options } = set_cookie_parser.parseString(str);
 
+						const path = options.path ?? (url.pathname.split('/').slice(0, -1).join('/') || '/');
+
 						// options.sameSite is string, something more specific is required - type cast is safe
 						set_internal(name, value, {
-							path: url.pathname,
+							path,
 							.../** @type {import('cookie').CookieSerializeOptions} */ (options)
 						});
 					}
