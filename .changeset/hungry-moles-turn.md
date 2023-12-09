@@ -2,4 +2,4 @@
 '@sveltejs/adapter-cloudflare-workers': patch
 ---
 
-fix: the adapter plugin parameter is now optional
+fix: declare the adapter plugin options as optional
