@@ -1,6 +1,6 @@
 {
 	"name": "@sveltejs/kit",
-	"version": "1.27.6",
+	"version": "1.27.7",
 	"description": "The fastest way to build Svelte apps",
 	"repository": {
 		"type": "git",

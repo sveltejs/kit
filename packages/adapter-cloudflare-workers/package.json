@@ -1,6 +1,6 @@
 {
 	"name": "@sveltejs/adapter-cloudflare-workers",
-	"version": "1.2.1",
+	"version": "1.2.2",
 	"description": "SvelteKit adapter that creates a Cloudflare Workers site using a function for dynamic server rendering",
 	"repository": {
 		"type": "git",

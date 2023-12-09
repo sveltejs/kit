@@ -761,6 +761,14 @@ test.describe('Streaming', () => {
 		expect(page.locator('p.loadingfail')).toBeHidden();
 	});
 
+	test('Catches fetch errors from server load functions (client nav)', async ({ page }) => {
+		await page.goto('/streaming');
+		page.click('[href="/streaming/server-error"]');
+
+		await expect(page.locator('p.eager')).toHaveText('eager');
+		expect(page.locator('p.fail')).toBeVisible();
+	});
+
 	// TODO `vite preview` buffers responses, causing these tests to fail
 	if (process.env.DEV) {
 		test('Works for universal load functions (direct hit)', async ({ page }) => {
@@ -801,6 +809,12 @@ test.describe('Streaming', () => {
 			await expect(page.locator('p.fail')).toHaveText('fail');
 			expect(page.locator('p.loadingsuccess')).toBeHidden();
 			expect(page.locator('p.loadingfail')).toBeHidden();
+		});
+
+		test('Catches fetch errors from server load functions (direct hit)', async ({ page }) => {
+			page.goto('/streaming/server-error');
+			await expect(page.locator('p.eager')).toHaveText('eager');
+			await expect(page.locator('p.fail')).toHaveText('fail');
 		});
 	}
 });
