@@ -12,7 +12,7 @@ export async function load({ fetch, url }) {
 	});
 
 	return {
-		a: r1.json(),
-		b: r2.json()
+		a: await r1.json(),
+		b: await r2.json()
 	};
 }
