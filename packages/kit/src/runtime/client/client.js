@@ -18,7 +18,7 @@ import { parse } from './parse.js';
 import * as storage from './session-storage.js';
 import {
 	find_anchor,
-	get_base_uri,
+	resolve_url,
 	get_link_info,
 	get_router_options,
 	is_external_url,
@@ -235,12 +235,8 @@ export function create_client(app, target) {
 		redirect_count,
 		nav_token
 	) {
-		if (typeof url === 'string') {
-			url = new URL(url, get_base_uri(document));
-		}
-
 		return navigate({
-			url,
+			url: resolve_url(url),
 			scroll: noScroll ? scroll_state() : null,
 			keepfocus: keepFocus,
 			redirect_count,
@@ -1375,8 +1371,20 @@ export function create_client(app, target) {
 			}
 		},
 
-		goto: (href, opts = {}) => {
-			return goto(href, opts, 0);
+		goto: (url, opts = {}) => {
+			url = resolve_url(url);
+
+			if (url.origin !== origin) {
+				return Promise.reject(
+					new Error(
+						DEV
+							? `Cannot use \`goto\` with an external URL. Use \`window.location = "${url}"\` instead`
+							: 'goto: invalid URL'
+					)
+				);
+			}
+
+			return goto(url, opts, 0);
 		},
 
 		invalidate: (resource) => {
@@ -1396,7 +1404,7 @@ export function create_client(app, target) {
 		},
 
 		preload_data: async (href) => {
-			const url = new URL(href, get_base_uri(document));
+			const url = resolve_url(href);
 			const intent = get_navigation_intent(url, false);
 
 			if (!intent) {
