@@ -37,9 +37,6 @@ export interface Adapter {
 	 * @param builder An object provided by SvelteKit that contains methods for adapting the app
 	 */
 	adapt(builder: Builder): MaybePromise<void>;
-
-	// just testing something
-	tmp_delete_me: number;
 }
 
 type AwaitedPropertiesUnion<input extends Record<string, any> | void> = input extends void
