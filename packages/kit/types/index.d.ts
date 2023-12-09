@@ -2,7 +2,7 @@
 /// <reference types="vite/client" />
 
 declare module '@sveltejs/kit' {
-	import type { CompileOptions } from 'svelte/types/compiler/interfaces';
+	import type { CompileOptions } from 'svelte/compiler';
 	import type { PluginOptions } from '@sveltejs/vite-plugin-svelte';
 	/**
 	 * [Adapters](https://kit.svelte.dev/docs/adapters) are responsible for taking the production build and turning it into something that can be deployed to a platform of your choosing.
@@ -759,7 +759,7 @@ declare module '@sveltejs/kit' {
 		 * <button on:click={increase}>Increase Count</button>
 		 * ```
 		 */
-		depends(...deps: string[]): void;
+		depends(...deps: Array<`${string}:${string}`>): void;
 	}
 
 	export interface NavigationEvent<
@@ -826,7 +826,7 @@ declare module '@sveltejs/kit' {
 		/**
 		 * The type of navigation:
 		 * - `form`: The user submitted a `<form>`
-		 * - `leave`: The user is leaving the app by closing the tab or using the back/forward buttons to go to a different document
+		 * - `leave`: The app is being left either because the tab is being closed or a navigation to a different document is occurring
 		 * - `link`: Navigation was triggered by a link click
 		 * - `goto`: Navigation was triggered by a `goto(...)` call or a redirect
 		 * - `popstate`: Navigation was triggered by back/forward navigation
@@ -1691,6 +1691,7 @@ declare module '@sveltejs/kit' {
 
 	type ValidatedConfig = RecursiveRequired<Config>;
 	export function error(status: number, body: App.Error): HttpError_1;
+
 	export function error(status: number, body?: {
 		message: string;
 	} extends App.Error ? App.Error | string | undefined : never): HttpError_1;
@@ -1821,10 +1822,7 @@ declare module '@sveltejs/kit/node/polyfills' {
 	/**
 	 * Make various web APIs available as globals:
 	 * - `crypto`
-	 * - `fetch` (only in node < 18.11)
-	 * - `Headers` (only in node < 18.11)
-	 * - `Request` (only in node < 18.11)
-	 * - `Response` (only in node < 18.11)
+	 * - `File`
 	 */
 	export function installPolyfills(): void;
 }
@@ -1835,6 +1833,9 @@ declare module '@sveltejs/kit/vite' {
 	 * Returns the SvelteKit Vite plugins.
 	 * */
 	export function sveltekit(): Promise<import('vite').Plugin[]>;
+	export type Req = import('http').IncomingMessage;
+	export type Res = import('http').ServerResponse;
+	export type Handler = (req: Req, res: Res, next: () => void) => void;
 }
 
 declare module '$app/environment' {
@@ -1911,8 +1912,6 @@ declare module '$app/navigation' {
 	 *
 	 * @param url Where to navigate to. Note that if you've set [`config.kit.paths.base`](https://kit.svelte.dev/docs/configuration#paths) and the URL is root-relative, you need to prepend the base path if you want to navigate within the app.
 	 * @param {Object} opts Options related to the navigation
-	 * @param invalidateAll If `true`, all `load` functions of the page will be rerun. See https://kit.svelte.dev/docs/load#rerunning-load-functions for more info on invalidation.
-	 * @param opts.state The state of the new/updated history entry
 	 * */
 	export const goto: (url: string | URL, opts?: {
 		replaceState?: boolean;
