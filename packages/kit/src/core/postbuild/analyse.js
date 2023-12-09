@@ -67,14 +67,12 @@ async function analyse({ manifest_path, env }) {
 function get_config(nodes) {
 	let current = {};
 	for (const node of nodes) {
-		const config = node?.universal?.config ?? node?.server?.config;
-		if (config) {
-			current = {
-				...current,
-				...(node?.server?.config ?? {}),
-				...(node?.universal?.config ?? {})
-			};
-		}
+		if (!(node?.server?.config || node?.universal?.config)) continue;
+		current = {
+			...current,
+			...(node?.server?.config ?? {}),
+			...(node?.universal?.config ?? {})
+		};
 	}
 
 	return Object.keys(current).length ? current : undefined;
