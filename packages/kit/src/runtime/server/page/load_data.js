@@ -10,18 +10,10 @@ import { validate_depends } from '../../shared.js';
  *   state: import('types').SSRState;
  *   node: import('types').SSRNode | undefined;
  *   parent: () => Promise<Record<string, any>>;
- *   track_server_fetches: boolean;
  * }} opts
  * @returns {Promise<import('types').ServerDataNode | null>}
  */
-export async function load_server_data({
-	event,
-	state,
-	node,
-	parent,
-	// TODO 2.0: Remove this
-	track_server_fetches
-}) {
+export async function load_server_data({ event, state, node, parent }) {
 	if (!node?.server) return null;
 
 	let done = false;
@@ -57,11 +49,6 @@ export async function load_server_data({
 				console.warn(
 					`${node.server_id}: Calling \`event.fetch(...)\` in a promise handler after \`load(...)\` has returned will not cause the function to re-run when the dependency is invalidated`
 				);
-			}
-
-			// TODO 2.0: Remove this
-			if (track_server_fetches) {
-				uses.dependencies.add(url.href);
 			}
 
 			return event.fetch(info, init);

@@ -69,9 +69,6 @@ const get_defaults = (prefix = '') => ({
 		csrf: {
 			checkOrigin: true
 		},
-		dangerZone: {
-			trackServerFetches: false
-		},
 		embedded: false,
 		env: {
 			dir: process.cwd(),

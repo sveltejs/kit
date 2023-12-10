@@ -483,7 +483,8 @@ test.describe('Invalidation', () => {
 	});
 
 	test('fetch in server load cannot be invalidated', async ({ page, app, request }) => {
-		// TODO 2.0: Can remove this test after `dangerZone.trackServerFetches` and associated code is removed
+		// legacy behavior was to track server dependencies -- this could leak secrets to the client (see github.com/sveltejs/kit/pull/9945)
+		// we keep this test just to make sure the behavior stays the same.
 		await request.get('/load/invalidation/server-fetch/count.json?reset');
 		await page.goto('/load/invalidation/server-fetch');
 		const selector = '[data-testid="count"]';
