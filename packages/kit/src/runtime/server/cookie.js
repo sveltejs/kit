@@ -133,7 +133,13 @@ export function get_cookies(request, url, trailing_slash) {
 		 */
 		serialize(name, value, options) {
 			validate_options(options);
-			const path = resolve(normalized_url, options.path);
+
+			let path = options.path;
+
+			if (!options.domain || options.domain === url.hostname) {
+				path = resolve(normalized_url, path);
+			}
+
 			return serialize(name, value, { ...defaults, ...options, path });
 		}
 	};
@@ -178,7 +184,12 @@ export function get_cookies(request, url, trailing_slash) {
 	 * @param {import('./page/types.js').Cookie['options']} options
 	 */
 	function set_internal(name, value, options) {
-		const path = resolve(normalized_url, options.path);
+		let path = options.path;
+
+		if (!options.domain || options.domain === url.hostname) {
+			path = resolve(normalized_url, path);
+		}
+
 		new_cookies[name] = { name, value, options: { ...options, path } };
 
 		if (__SVELTEKIT_DEV__) {
