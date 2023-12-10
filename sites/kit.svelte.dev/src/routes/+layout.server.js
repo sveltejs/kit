@@ -8,8 +8,8 @@ export const load = async ({ url, fetch }) => {
 
 	return {
 		nav_title: get_nav_title(url),
-		nav_links,
-		banner
+		nav_links: await nav_links,
+		banner: await banner
 	};
 };
 
