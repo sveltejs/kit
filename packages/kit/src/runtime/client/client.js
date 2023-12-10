@@ -22,15 +22,14 @@ import {
 	get_link_info,
 	get_router_options,
 	is_external_url,
-	scroll_state,
-	origin
+	origin,
+	scroll_state
 } from './utils.js';
 
 import { base } from '__sveltekit/paths';
 import * as devalue from 'devalue';
 import { compact } from '../../utils/array.js';
 import { validate_page_exports } from '../../utils/exports.js';
-import { unwrap_promises } from '../../utils/promises.js';
 import { HttpError, Redirect } from '../control.js';
 import { INVALIDATED_PARAM, TRAILING_SLASH_PARAM, validate_depends } from '../shared.js';
 import { INDEX_KEY, PRELOAD_PRIORITIES, SCROLL_KEY, SNAPSHOT_KEY } from './constants.js';
@@ -555,7 +554,6 @@ export function create_client(app, target) {
 			} else {
 				data = (await node.universal.load.call(null, load_input)) ?? null;
 			}
-			data = data ? await unwrap_promises(data, route.id) : null;
 		}
 
 		return {
