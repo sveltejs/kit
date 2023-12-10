@@ -99,7 +99,7 @@ const get_defaults = (prefix = '') => ({
 		paths: {
 			base: '',
 			assets: '',
-			relative: undefined
+			relative: true
 		},
 		prerender: {
 			concurrency: 1,
@@ -318,7 +318,7 @@ validate_paths(
 	{
 		base: '/path/to/base',
 		assets: '',
-		relative: undefined
+		relative: true
 	}
 );
 
@@ -330,7 +330,7 @@ validate_paths(
 	{
 		base: '',
 		assets: 'https://cdn.example.com',
-		relative: undefined
+		relative: true
 	}
 );
 
@@ -343,7 +343,7 @@ validate_paths(
 	{
 		base: '/path/to/base',
 		assets: 'https://cdn.example.com',
-		relative: undefined
+		relative: true
 	}
 );
 

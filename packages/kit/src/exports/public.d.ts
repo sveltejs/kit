@@ -463,15 +463,18 @@ export interface KitConfig {
 		 */
 		base?: '' | `/${string}`;
 		/**
-		 * Whether to use relative asset paths. By default, if `paths.assets` is not external, SvelteKit will replace `%sveltekit.assets%` with a relative path and use relative paths to reference build artifacts, but `base` and `assets` imported from `$app/paths` will be as specified in your config.
+		 * Whether to use relative asset paths.
 		 *
-		 * If `true`, `base` and `assets` imported from `$app/paths` will be replaced with relative asset paths during server-side rendering, resulting in portable HTML.
+		 * If `true`, `base` and `assets` imported from `$app/paths` will be replaced with relative asset paths during server-side rendering, resulting in more portable HTML.
 		 * If `false`, `%sveltekit.assets%` and references to build artifacts will always be root-relative paths, unless `paths.assets` is an external URL
 		 *
 		 * If your app uses a `<base>` element, you should set this to `false`, otherwise asset URLs will incorrectly be resolved against the `<base>` URL rather than the current page.
-		 * @default undefined
+		 *
+		 * In 1.0, `undefined` was a valid value, which was set by default. In that case, if `paths.assets` was not external, SvelteKit would replace `%sveltekit.assets%` with a relative path and use relative paths to reference build artifacts, but `base` and `assets` imported from `$app/paths` would be as specified in your config.
+		 *
+		 * @default true
 		 */
-		relative?: boolean | undefined;
+		relative?: boolean;
 	};
 	/**
 	 * See [Prerendering](https://kit.svelte.dev/docs/page-options#prerender).
