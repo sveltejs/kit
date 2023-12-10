@@ -433,7 +433,7 @@ export function load({ locals }) {
 }
 ```
 
-> Don't use `redirect()` from within a try-catch block, as the redirect will immediately trigger the catch statement.
+> Don't use `redirect()` inside a `try {...}` block, as the redirect will immediately trigger the catch statement.
 
 In the browser, you can also navigate programmatically outside of a `load` function using [`goto`](modules#$app-navigation-goto) from [`$app.navigation`](modules#$app-navigation).
 
