@@ -69,7 +69,6 @@ const get_defaults = (prefix = '') => ({
 		csrf: {
 			checkOrigin: true
 		},
-		dangerZone: {},
 		embedded: false,
 		env: {
 			dir: process.cwd(),

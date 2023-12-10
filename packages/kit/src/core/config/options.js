@@ -111,8 +111,6 @@ const options = object(
 				checkOrigin: boolean(true)
 			}),
 
-			dangerZone: object({}),
-
 			embedded: boolean(false),
 
 			env: object({
