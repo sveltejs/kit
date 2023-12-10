@@ -15,6 +15,7 @@ const absolute = /^([a-z]+:)?\/?\//;
 export function resolve(base, path) {
 	if (SCHEME.test(path)) return path;
 	if (path[0] === '#') return base + path;
+	if (path === '') return base;
 
 	const base_match = absolute.exec(base);
 	const path_match = absolute.exec(path);

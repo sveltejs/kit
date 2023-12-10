@@ -283,8 +283,6 @@ For example, if SvelteKit is serving my.domain.com:
 
 Other cookies will not be passed when `credentials: 'include'` is set, because SvelteKit does not know which domain which cookie belongs to (the browser does not pass this information along), so it's not safe to forward any of them. Use the [handleFetch hook](hooks#server-hooks-handlefetch) to work around it.
 
-> When setting cookies, be aware of the `path` property. By default, the `path` of a cookie is the current pathname. If you for example set a cookie at page `admin/user`, the cookie will only be available within the `admin` pages by default. In most cases you likely want to set `path` to `'/'` to make the cookie available throughout your app.
-
 ## Headers
 
 Both server and universal `load` functions have access to a `setHeaders` function that, when running on the server, can set headers for the response. (When running in the browser, `setHeaders` has no effect.) This is useful if you want the page to be cached, for example:
@@ -486,6 +484,25 @@ This is useful for creating skeleton loading states, for example:
 		{error.message}
 	{/await}
 </p>
+```
+
+When streaming data, be careful to handle promise rejections correctly. More specifically, the server could crash with an "unhandled promise rejection" error if a lazy-loaded promise fails before rendering starts (at which point it's caught) and isn't handling the error in some way. When using SvelteKit's `fetch` directly in the `load` function, SvelteKit will handle this case for you. For other promises, it is enough to attach a noop-`catch` to the promise to mark it as handled.
+
+```js
+/// file: src/routes/+page.server.js
+/** @type {import('./$types').PageServerLoad} */
+export function load({ fetch }) {
+	const ok_manual = Promise.reject();
+	ok_manual.catch(() => {});
+
+	return {
+		streamed: {
+			ok_manual,
+			ok_fetch: fetch('/fetch/that/could/fail'),
+			dangerous_unhandled: Promise.reject()
+		}
+	};
+}
 ```
 
 > On platforms that do not support streaming, such as AWS Lambda, responses will be buffered. This means the page will only render once all promises resolve. If you are using a proxy (e.g. NGINX), make sure it does not buffer responses from the proxied server.

@@ -1,5 +1,5 @@
 import { parse, serialize } from 'cookie';
-import { normalize_path } from '../../utils/url.js';
+import { normalize_path, resolve } from '../../utils/url.js';
 
 /**
  * Tracks all cookies set during dev mode so we can emit warnings
@@ -14,6 +14,14 @@ const cookie_paths = {};
  */
 const MAX_COOKIE_SIZE = 4129;
 
+// TODO 3.0 remove this check
+/** @param {import('./page/types.js').Cookie['options']} options */
+function validate_options(options) {
+	if (options?.path === undefined) {
+		throw new Error('You must specify a `path` when setting, deleting or serializing cookies');
+	}
+}
+
 /**
  * @param {Request} request
  * @param {URL} url
@@ -24,8 +32,6 @@ export function get_cookies(request, url, trailing_slash) {
 	const initial_cookies = parse(header, { decode: (value) => value });
 
 	const normalized_url = normalize_path(url.pathname, trailing_slash);
-	// Emulate browser-behavior: if the cookie is set at '/foo/bar', its path is '/foo'
-	const default_path = normalized_url.split('/').slice(0, -1).join('/') || '/';
 
 	/** @type {Record<string, import('./page/types.js').Cookie>} */
 	const new_cookies = {};
@@ -104,33 +110,37 @@ export function get_cookies(request, url, trailing_slash) {
 		/**
 		 * @param {string} name
 		 * @param {string} value
-		 * @param {import('cookie').CookieSerializeOptions} opts
+		 * @param {import('./page/types.js').Cookie['options']} options
 		 */
-		set(name, value, opts = {}) {
-			set_internal(name, value, { ...defaults, ...opts });
+		set(name, value, options) {
+			validate_options(options);
+			set_internal(name, value, { ...defaults, ...options });
 		},
 
 		/**
 		 * @param {string} name
-		 * @param {import('cookie').CookieSerializeOptions} opts
+		 *  @param {import('./page/types.js').Cookie['options']} options
 		 */
-		delete(name, opts = {}) {
-			cookies.set(name, '', {
-				...opts,
-				maxAge: 0
-			});
+		delete(name, options) {
+			validate_options(options);
+			cookies.set(name, '', { ...options, maxAge: 0 });
 		},
 
 		/**
 		 * @param {string} name
 		 * @param {string} value
-		 * @param {import('cookie').CookieSerializeOptions} opts
+		 *  @param {import('./page/types.js').Cookie['options']} options
 		 */
-		serialize(name, value, opts) {
-			return serialize(name, value, {
-				...defaults,
-				...opts
-			});
+		serialize(name, value, options) {
+			validate_options(options);
+
+			let path = options.path;
+
+			if (!options.domain || options.domain === url.hostname) {
+				path = resolve(normalized_url, path);
+			}
+
+			return serialize(name, value, { ...defaults, ...options, path });
 		}
 	};
 
@@ -171,19 +181,16 @@ export function get_cookies(request, url, trailing_slash) {
 	/**
 	 * @param {string} name
 	 * @param {string} value
-	 * @param {import('cookie').CookieSerializeOptions} opts
+	 * @param {import('./page/types.js').Cookie['options']} options
 	 */
-	function set_internal(name, value, opts) {
-		const path = opts.path ?? default_path;
+	function set_internal(name, value, options) {
+		let path = options.path;
 
-		new_cookies[name] = {
-			name,
-			value,
-			options: {
-				...opts,
-				path
-			}
-		};
+		if (!options.domain || options.domain === url.hostname) {
+			path = resolve(normalized_url, path);
+		}
+
+		new_cookies[name] = { name, value, options: { ...options, path } };
 
 		if (__SVELTEKIT_DEV__) {
 			const serialized = serialize(name, value, new_cookies[name].options);
@@ -194,9 +201,9 @@ export function get_cookies(request, url, trailing_slash) {
 			cookie_paths[name] ??= new Set();
 
 			if (!value) {
-				cookie_paths[name].delete(path);
+				cookie_paths[name].delete(options.path);
 			} else {
-				cookie_paths[name].add(path);
+				cookie_paths[name].add(options.path);
 			}
 		}
 	}

@@ -74,9 +74,12 @@ export const handle = sequence(
 	},
 	async ({ event, resolve }) => {
 		if (event.url.pathname === '/cookies/serialize') {
-			event.cookies.set('before', 'before');
+			event.cookies.set('before', 'before', { path: '' });
 			const response = await resolve(event);
-			response.headers.append('set-cookie', event.cookies.serialize('after', 'after'));
+			response.headers.append(
+				'set-cookie',
+				event.cookies.serialize('after', 'after', { path: '' })
+			);
 			return response;
 		}
 		return resolve(event);

@@ -18,19 +18,18 @@ import { parse } from './parse.js';
 import * as storage from './session-storage.js';
 import {
 	find_anchor,
-	get_base_uri,
+	resolve_url,
 	get_link_info,
 	get_router_options,
 	is_external_url,
-	scroll_state,
-	origin
+	origin,
+	scroll_state
 } from './utils.js';
 
 import { base } from '__sveltekit/paths';
 import * as devalue from 'devalue';
 import { compact } from '../../utils/array.js';
 import { validate_page_exports } from '../../utils/exports.js';
-import { unwrap_promises } from '../../utils/promises.js';
 import { HttpError, Redirect } from '../control.js';
 import { INVALIDATED_PARAM, TRAILING_SLASH_PARAM, validate_depends } from '../shared.js';
 import { INDEX_KEY, PRELOAD_PRIORITIES, SCROLL_KEY, SNAPSHOT_KEY } from './constants.js';
@@ -235,12 +234,8 @@ export function create_client(app, target) {
 		redirect_count,
 		nav_token
 	) {
-		if (typeof url === 'string') {
-			url = new URL(url, get_base_uri(document));
-		}
-
 		return navigate({
-			url,
+			url: resolve_url(url),
 			scroll: noScroll ? scroll_state() : null,
 			keepfocus: keepFocus,
 			redirect_count,
@@ -559,7 +554,6 @@ export function create_client(app, target) {
 			} else {
 				data = (await node.universal.load.call(null, load_input)) ?? null;
 			}
-			data = data ? await unwrap_promises(data) : null;
 		}
 
 		return {
@@ -1375,8 +1369,20 @@ export function create_client(app, target) {
 			}
 		},
 
-		goto: (href, opts = {}) => {
-			return goto(href, opts, 0);
+		goto: (url, opts = {}) => {
+			url = resolve_url(url);
+
+			if (url.origin !== origin) {
+				return Promise.reject(
+					new Error(
+						DEV
+							? `Cannot use \`goto\` with an external URL. Use \`window.location = "${url}"\` instead`
+							: 'goto: invalid URL'
+					)
+				);
+			}
+
+			return goto(url, opts, 0);
 		},
 
 		invalidate: (resource) => {
@@ -1396,7 +1402,7 @@ export function create_client(app, target) {
 		},
 
 		preload_data: async (href) => {
-			const url = new URL(href, get_base_uri(document));
+			const url = resolve_url(href);
 			const intent = get_navigation_intent(url, false);
 
 			if (!intent) {

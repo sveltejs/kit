@@ -17,7 +17,7 @@
 		"@sveltejs/amp": "workspace:^",
 		"@sveltejs/enhanced-img": "workspace:^",
 		"@sveltejs/kit": "workspace:^",
-		"@sveltejs/site-kit": "6.0.0-next.52",
+		"@sveltejs/site-kit": "6.0.0-next.59",
 		"@sveltejs/vite-plugin-svelte": "^3.0.0",
 		"@types/d3-geo": "^3.0.4",
 		"@types/node": "^18.19.1",
@@ -34,7 +34,7 @@
 		"tiny-glob": "^0.2.9",
 		"typescript": "5.0.4",
 		"vite": "^5.0.4",
-		"vitest": "^0.34.5"
+		"vitest": "^1.0.0"
 	},
 	"type": "module",
 	"dependencies": {
