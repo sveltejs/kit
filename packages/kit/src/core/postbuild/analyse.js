@@ -163,7 +163,7 @@ function get_config(nodes) {
 
 		current = {
 			...current,
-			...node?.universal?.config
+			...node?.universal?.config,
 			...node?.server?.config
 		};
 	}
