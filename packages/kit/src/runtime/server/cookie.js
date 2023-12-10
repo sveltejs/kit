@@ -23,7 +23,7 @@ const MAX_COOKIE_SIZE = 4129;
 function deprecate_missing_path(opts, method) {
 	if (opts.path === undefined) {
 		warn_with_callsite(
-			`Calling \`cookies.${method}}(...)\` without specifying a \`path\` is deprecated, and will be disallowed in SvelteKit 2.0. Relative paths can be used`,
+			`Calling \`cookies.${method}(...)\` without specifying a \`path\` is deprecated, and will be disallowed in SvelteKit 2.0. Relative paths can be used`,
 			1
 		);
 	}
@@ -152,7 +152,7 @@ export function get_cookies(request, url, trailing_slash) {
 		 * @param {string} value
 		 * @param {import('cookie').CookieSerializeOptions} opts
 		 */
-		serialize(name, value, opts) {
+		serialize(name, value, opts = {}) {
 			deprecate_missing_path(opts, 'serialize');
 
 			return serialize(name, value, {
