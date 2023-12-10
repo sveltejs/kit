@@ -642,24 +642,42 @@ test.describe('$app/environment', () => {
 });
 
 test.describe('$app/paths', () => {
-	test('includes paths', async ({ page }) => {
+	test('includes paths', async ({ page, javaScriptEnabled }) => {
 		await page.goto('/paths');
 
-		expect(await page.innerHTML('pre')).toBe(
-			JSON.stringify({
-				base: '',
-				assets: ''
-			})
-		);
+		if (javaScriptEnabled) {
+			expect(await page.innerHTML('pre')).toBe(
+				JSON.stringify({
+					base: '',
+					assets: ''
+				})
+			);
+		} else {
+			expect(await page.innerHTML('pre')).toBe(
+				JSON.stringify({
+					base: '.',
+					assets: '.'
+				})
+			);
+		}
 
 		await page.goto('/paths/deeply/nested');
 
-		expect(await page.innerHTML('pre')).toBe(
-			JSON.stringify({
-				base: '../..',
-				assets: '../..'
-			})
-		);
+		if (javaScriptEnabled) {
+			expect(await page.innerHTML('pre')).toBe(
+				JSON.stringify({
+					base: '',
+					assets: ''
+				})
+			);
+		} else {
+			expect(await page.innerHTML('pre')).toBe(
+				JSON.stringify({
+					base: '../..',
+					assets: '../..'
+				})
+			);
+		}
 	});
 
 	// some browsers will re-request assets after a `pushState`
