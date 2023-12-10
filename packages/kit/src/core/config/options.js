@@ -179,13 +179,7 @@ const options = object(
 
 					return input;
 				}),
-				relative: validate(true, (input, keypath) => {
-					if (typeof input !== 'boolean') {
-						throw new Error(`${keypath} option must be a boolean`);
-					}
-
-					return input;
-				})
+				relative: boolean(true)
 			}),
 
 			prerender: object({
