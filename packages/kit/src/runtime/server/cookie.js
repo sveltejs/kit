@@ -204,7 +204,7 @@ export function get_cookies(request, url, trailing_slash) {
 	function set_internal(name, value, opts) {
 		let path = opts.path;
 
-		if (domain_matches(url.hostname, opts.domain)) {
+		if (!opts.domain || opts.domain === url.hostname) {
 			if (path) {
 				if (path[0] === '.') path = resolve(url.pathname, path);
 			} else {
