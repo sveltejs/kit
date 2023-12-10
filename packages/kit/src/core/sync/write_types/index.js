@@ -480,7 +480,7 @@ function process_node(node, outdir, is_page, proxies, all_pages_have_load = true
 				const from = proxy.modified
 					? `./proxy${replace_ext_with_js(path.basename(file_path))}`
 					: path_to_original(outdir, file_path);
-				const type = `Kit.AwaitedProperties<Awaited<ReturnType<typeof import('${from}').load>>>`;
+				const type = `Kit.LoadProperties<Awaited<ReturnType<typeof import('${from}').load>>>`;
 				return expand ? `Expand<OptionalUnion<EnsureDefined<${type}>>>` : type;
 			} else {
 				return fallback;

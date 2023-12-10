@@ -3,6 +3,6 @@ import { COOKIE_NAME } from '../shared';
 
 /** @type {import('@sveltejs/kit').RequestHandler} */
 export const GET = (event) => {
-	event.cookies.set(COOKIE_NAME, 'teapot');
+	event.cookies.set(COOKIE_NAME, 'teapot', { path: '/cookies' });
 	throw redirect(303, '/cookies');
 };

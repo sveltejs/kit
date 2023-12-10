@@ -4,6 +4,7 @@ import { redirect } from '@sveltejs/kit';
 export const actions = {
 	default: ({ cookies }) => {
 		cookies.set('shadow-redirect', 'happy', {
+			path: '/shadowed',
 			secure: false // safari
 		});
 		throw redirect(302, '/shadowed/redirected');

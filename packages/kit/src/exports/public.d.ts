@@ -39,20 +39,11 @@ export interface Adapter {
 	adapt(builder: Builder): MaybePromise<void>;
 }
 
-type AwaitedPropertiesUnion<input extends Record<string, any> | void> = input extends void
+export type LoadProperties<input extends Record<string, any> | void> = input extends void
 	? undefined // needs to be undefined, because void will break intellisense
 	: input extends Record<string, any>
-	  ? {
-				[key in keyof input]: Awaited<input[key]>;
-	    }
-	  : {} extends input // handles the any case
-	    ? input
-	    : unknown;
-
-export type AwaitedProperties<input extends Record<string, any> | void> =
-	AwaitedPropertiesUnion<input> extends Record<string, any>
-		? OptionalUnion<AwaitedPropertiesUnion<input>>
-		: AwaitedPropertiesUnion<input>;
+	  ? input
+	  : unknown;
 
 export type AwaitedActions<T extends Record<string, (...args: any) => any>> = OptionalUnion<
 	{
@@ -212,34 +203,42 @@ export interface Cookies {
 	 *
 	 * The `httpOnly` and `secure` options are `true` by default (except on http://localhost, where `secure` is `false`), and must be explicitly disabled if you want cookies to be readable by client-side JavaScript and/or transmitted over HTTP. The `sameSite` option defaults to `lax`.
 	 *
-	 * By default, the `path` of a cookie is the 'directory' of the current pathname. In most cases you should explicitly set `path: '/'` to make the cookie available throughout your app.
+	 * You must specify a `path` for the cookie. In most cases you should explicitly set `path: '/'` to make the cookie available throughout your app. You can use relative paths, or set `path: ''` to make the cookie only available on the current path and its children
 	 * @param name the name of the cookie
 	 * @param value the cookie value
 	 * @param opts the options, passed directly to `cookie.serialize`. See documentation [here](https://github.com/jshttp/cookie#cookieserializename-value-options)
 	 */
-	set(name: string, value: string, opts?: import('cookie').CookieSerializeOptions): void;
+	set(
+		name: string,
+		value: string,
+		opts: import('cookie').CookieSerializeOptions & { path: string }
+	): void;
 
 	/**
 	 * Deletes a cookie by setting its value to an empty string and setting the expiry date in the past.
 	 *
-	 * By default, the `path` of a cookie is the 'directory' of the current pathname. In most cases you should explicitly set `path: '/'` to make the cookie available throughout your app.
+	 * You must specify a `path` for the cookie. In most cases you should explicitly set `path: '/'` to make the cookie available throughout your app. You can use relative paths, or set `path: ''` to make the cookie only available on the current path and its children
 	 * @param name the name of the cookie
 	 * @param opts the options, passed directly to `cookie.serialize`. The `path` must match the path of the cookie you want to delete. See documentation [here](https://github.com/jshttp/cookie#cookieserializename-value-options)
 	 */
-	delete(name: string, opts?: import('cookie').CookieSerializeOptions): void;
+	delete(name: string, opts: import('cookie').CookieSerializeOptions & { path: string }): void;
 
 	/**
 	 * Serialize a cookie name-value pair into a `Set-Cookie` header string, but don't apply it to the response.
 	 *
 	 * The `httpOnly` and `secure` options are `true` by default (except on http://localhost, where `secure` is `false`), and must be explicitly disabled if you want cookies to be readable by client-side JavaScript and/or transmitted over HTTP. The `sameSite` option defaults to `lax`.
 	 *
-	 * By default, the `path` of a cookie is the current pathname. In most cases you should explicitly set `path: '/'` to make the cookie available throughout your app.
+	 * You must specify a `path` for the cookie. In most cases you should explicitly set `path: '/'` to make the cookie available throughout your app. You can use relative paths, or set `path: ''` to make the cookie only available on the current path and its children
 	 *
 	 * @param name the name of the cookie
 	 * @param value the cookie value
 	 * @param opts the options, passed directly to `cookie.serialize`. See documentation [here](https://github.com/jshttp/cookie#cookieserializename-value-options)
 	 */
-	serialize(name: string, value: string, opts?: import('cookie').CookieSerializeOptions): string;
+	serialize(
+		name: string,
+		value: string,
+		opts: import('cookie').CookieSerializeOptions & { path: string }
+	): string;
 }
 
 export interface KitConfig {
@@ -342,16 +341,6 @@ export interface KitConfig {
 		 * @default true
 		 */
 		checkOrigin?: boolean;
-	};
-	/**
-	 * Here be dragons. Enable at your peril.
-	 */
-	dangerZone?: {
-		/**
-		 * Automatically add server-side `fetch`ed URLs to the `dependencies` map of `load` functions. This will expose secrets
-		 * to the client if your URL contains them.
-		 */
-		trackServerFetches?: boolean;
 	};
 	/**
 	 * Whether or not the app is embedded inside a larger app. If `true`, SvelteKit will add its event listeners related to navigation etc on the parent of `%sveltekit.body%` instead of `window`, and will pass `params` from the server rather than inferring them from `location.pathname`.
@@ -473,15 +462,18 @@ export interface KitConfig {
 		 */
 		base?: '' | `/${string}`;
 		/**
-		 * Whether to use relative asset paths. By default, if `paths.assets` is not external, SvelteKit will replace `%sveltekit.assets%` with a relative path and use relative paths to reference build artifacts, but `base` and `assets` imported from `$app/paths` will be as specified in your config.
+		 * Whether to use relative asset paths.
 		 *
-		 * If `true`, `base` and `assets` imported from `$app/paths` will be replaced with relative asset paths during server-side rendering, resulting in portable HTML.
+		 * If `true`, `base` and `assets` imported from `$app/paths` will be replaced with relative asset paths during server-side rendering, resulting in more portable HTML.
 		 * If `false`, `%sveltekit.assets%` and references to build artifacts will always be root-relative paths, unless `paths.assets` is an external URL
 		 *
 		 * If your app uses a `<base>` element, you should set this to `false`, otherwise asset URLs will incorrectly be resolved against the `<base>` URL rather than the current page.
-		 * @default undefined
+		 *
+		 * In 1.0, `undefined` was a valid value, which was set by default. In that case, if `paths.assets` was not external, SvelteKit would replace `%sveltekit.assets%` with a relative path and use relative paths to reference build artifacts, but `base` and `assets` imported from `$app/paths` would be as specified in your config.
+		 *
+		 * @default true
 		 */
-		relative?: boolean | undefined;
+		relative?: boolean;
 	};
 	/**
 	 * See [Prerendering](https://kit.svelte.dev/docs/page-options#prerender).
