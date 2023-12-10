@@ -473,7 +473,7 @@ export interface KitConfig {
 		 */
 		base?: '' | `/${string}`;
 		/**
-		 * Whether to use relative asset paths. `true` by default in order to support things like the Internet Archive. `false` may have slight performance advantages and may be preferrable for internal applications.
+		 * Whether to use relative asset paths.
 		 *
 		 * If `true`, `base` and `assets` imported from `$app/paths` will be replaced with relative asset paths during server-side rendering, resulting in portable HTML.
 		 * If `false`, `%sveltekit.assets%` and references to build artifacts will always be root-relative paths, unless `paths.assets` is an external URL
