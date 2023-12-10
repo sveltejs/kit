@@ -74,11 +74,8 @@ export function error(status, body) {
  * @return {e is (HttpError & { status: T extends undefined ? never : T })}
  */
 export function isHttpError(e, status) {
-	const isInstance = e instanceof HttpError;
-	if (status) {
-		return isInstance && e.status === status;
-	}
-	return isInstance;
+	if (!(e instanceof HttpError)) return false;
+	return !status || e.status === status;
 }
 
 /**
