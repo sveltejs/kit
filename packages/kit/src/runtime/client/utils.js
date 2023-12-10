@@ -8,16 +8,18 @@ import { PRELOAD_PRIORITIES } from './constants.js';
 
 export const origin = BROWSER ? location.origin : '';
 
-/** @param {HTMLDocument} doc */
-export function get_base_uri(doc) {
-	let baseURI = doc.baseURI;
+/** @param {string | URL} url */
+export function resolve_url(url) {
+	if (url instanceof URL) return url;
+
+	let baseURI = document.baseURI;
 
 	if (!baseURI) {
-		const baseTags = doc.getElementsByTagName('base');
-		baseURI = baseTags.length ? baseTags[0].href : doc.URL;
+		const baseTags = document.getElementsByTagName('base');
+		baseURI = baseTags.length ? baseTags[0].href : document.URL;
 	}
 
-	return baseURI;
+	return new URL(url, baseURI);
 }
 
 export function scroll_state() {

@@ -1,5 +1,13 @@
 # @sveltejs/kit
 
+## 1.27.7
+
+### Patch Changes
+
+- fix: set runes option in generated root ([#11111](https://github.com/sveltejs/kit/pull/11111))
+
+- fix: retain URL query string for trailing slash redirects to prerendered pages ([#11142](https://github.com/sveltejs/kit/pull/11142))
+
 ## 1.27.6
 
 ### Patch Changes

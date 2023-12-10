@@ -1,5 +1,5 @@
 ---
-'@sveltejs/kit': major
+'@sveltejs/kit': minor
 ---
 
-chore: remove top level promise await behaviour
+chore: deprecate top level promise await behaviour

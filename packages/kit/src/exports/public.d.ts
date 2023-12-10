@@ -770,7 +770,7 @@ export interface LoadEvent<
 	 * <button on:click={increase}>Increase Count</button>
 	 * ```
 	 */
-	depends(...deps: string[]): void;
+	depends(...deps: Array<`${string}:${string}`>): void;
 }
 
 export interface NavigationEvent<
@@ -837,7 +837,7 @@ export interface Navigation {
 	/**
 	 * The type of navigation:
 	 * - `form`: The user submitted a `<form>`
-	 * - `leave`: The user is leaving the app by closing the tab or using the back/forward buttons to go to a different document
+	 * - `leave`: The app is being left either because the tab is being closed or a navigation to a different document is occurring
 	 * - `link`: Navigation was triggered by a link click
 	 * - `goto`: Navigation was triggered by a `goto(...)` call or a redirect
 	 * - `popstate`: Navigation was triggered by back/forward navigation
