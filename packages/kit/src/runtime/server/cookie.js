@@ -230,8 +230,10 @@ export function get_cookies(request, url, trailing_slash) {
 			cookie_paths[name] ??= new Set();
 
 			if (!value) {
+				// @ts-expect-error temporary
 				cookie_paths[name].delete(path);
 			} else {
+				// @ts-expect-error temporary
 				cookie_paths[name].add(path);
 			}
 		}
