@@ -58,7 +58,7 @@ wrangler login
 Then, you can build your app and deploy it:
 
 ```sh
-wrangler publish
+wrangler deploy
 ```
 
 ## Custom config
