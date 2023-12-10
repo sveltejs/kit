@@ -1833,9 +1833,6 @@ declare module '@sveltejs/kit/vite' {
 	 * Returns the SvelteKit Vite plugins.
 	 * */
 	export function sveltekit(): Promise<import('vite').Plugin[]>;
-	export type Req = import('http').IncomingMessage;
-	export type Res = import('http').ServerResponse;
-	export type Handler = (req: Req, res: Res, next: () => void) => void;
 }
 
 declare module '$app/environment' {
