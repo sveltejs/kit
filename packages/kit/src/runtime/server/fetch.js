@@ -9,7 +9,7 @@ import * as paths from '__sveltekit/paths';
  *   manifest: import('@sveltejs/kit').SSRManifest;
  *   state: import('types').SSRState;
  *   get_cookie_header: (url: URL, header: string | null) => string;
- *   set_internal: (name: string, value: string, opts: import('cookie').CookieSerializeOptions) => void;
+ *   set_internal: (name: string, value: string, opts: import('./page/types.js').Cookie['options']) => void;
  * }} opts
  * @returns {typeof fetch}
  */
@@ -134,12 +134,13 @@ export function create_fetch({ event, options, manifest, state, get_cookie_heade
 					for (const str of set_cookie_parser.splitCookiesString(set_cookie)) {
 						const { name, value, ...options } = set_cookie_parser.parseString(str);
 
+						const path = options.path ?? (url.pathname.split('/').slice(0, -1).join('/') || '/');
+
 						// options.sameSite is string, something more specific is required - type cast is safe
-						set_internal(
-							name,
-							value,
-							/** @type {import('cookie').CookieSerializeOptions} */ (options)
-						);
+						set_internal(name, value, {
+							path,
+							.../** @type {import('cookie').CookieSerializeOptions} */ (options)
+						});
 					}
 				}
 

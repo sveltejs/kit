@@ -57,6 +57,10 @@ describe('resolve', (test) => {
 	test('resolves data: urls', () => {
 		assert.equal(resolve('/a/b/c', 'data:text/plain,hello'), 'data:text/plain,hello');
 	});
+
+	test('resolves empty string', () => {
+		assert.equal(resolve('/a/b/c', ''), '/a/b/c');
+	});
 });
 
 describe('normalize_path', (test) => {
