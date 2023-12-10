@@ -645,39 +645,13 @@ test.describe('$app/paths', () => {
 	test('includes paths', async ({ page, javaScriptEnabled }) => {
 		await page.goto('/paths');
 
-		if (javaScriptEnabled) {
-			expect(await page.innerHTML('pre')).toBe(
-				JSON.stringify({
-					base: '',
-					assets: ''
-				})
-			);
-		} else {
-			expect(await page.innerHTML('pre')).toBe(
-				JSON.stringify({
-					base: '.',
-					assets: '.'
-				})
-			);
-		}
+		let base = javaScriptEnabled ? '' : '.';
+		expect(await page.innerHTML('pre')).toBe(JSON.stringify({ base, assets: base }));
 
 		await page.goto('/paths/deeply/nested');
 
-		if (javaScriptEnabled) {
-			expect(await page.innerHTML('pre')).toBe(
-				JSON.stringify({
-					base: '',
-					assets: ''
-				})
-			);
-		} else {
-			expect(await page.innerHTML('pre')).toBe(
-				JSON.stringify({
-					base: '../..',
-					assets: '../..'
-				})
-			);
-		}
+		base = javaScriptEnabled ? '' : '../..';
+		expect(await page.innerHTML('pre')).toBe(JSON.stringify({ base, assets: base }));
 	});
 
 	// some browsers will re-request assets after a `pushState`
