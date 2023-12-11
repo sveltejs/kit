@@ -1,5 +1,5 @@
 import * as devalue from 'devalue';
-import { error, json } from '../../../exports/index.js';
+import { json } from '../../../exports/index.js';
 import { normalize_error } from '../../../utils/error.js';
 import { is_form_content_type, negotiate } from '../../../utils/http.js';
 import { HttpError, Redirect, ActionFailure } from '../../control.js';
@@ -25,7 +25,10 @@ export async function handle_action_json_request(event, options, server) {
 
 	if (!actions) {
 		// TODO should this be a different error altogether?
-		const no_actions_error = error(405, 'POST method not allowed. No actions exist for this page');
+		const no_actions_error = new HttpError(
+			405,
+			'POST method not allowed. No actions exist for this page'
+		);
 		return action_json(
 			{
 				type: 'error',
@@ -139,7 +142,7 @@ export async function handle_action_request(event, server) {
 		});
 		return {
 			type: 'error',
-			error: error(405, 'POST method not allowed. No actions exist for this page')
+			error: new HttpError(405, 'POST method not allowed. No actions exist for this page')
 		};
 	}
 
@@ -231,13 +234,11 @@ async function call_action(event, actions) {
 /** @param {any} data */
 function validate_action_return(data) {
 	if (data instanceof Redirect) {
-		throw new Error('Cannot `return redirect(...)` — use `throw redirect(...)` instead');
+		throw new Error('Cannot `return redirect(...)` — use `redirect(...)` instead');
 	}
 
 	if (data instanceof HttpError) {
-		throw new Error(
-			'Cannot `return error(...)` — use `throw error(...)` or `return fail(...)` instead'
-		);
+		throw new Error('Cannot `return error(...)` — use `error(...)` or `return fail(...)` instead');
 	}
 }
 

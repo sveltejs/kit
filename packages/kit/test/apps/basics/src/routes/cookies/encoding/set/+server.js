@@ -4,5 +4,5 @@ import { redirect } from '@sveltejs/kit';
 export const GET = (event) => {
 	const needsEncoding = 'teapot, jane austen';
 	event.cookies.set('encoding', needsEncoding, { path: '.' });
-	throw redirect(303, '/cookies/encoding');
+	redirect(303, '/cookies/encoding');
 };

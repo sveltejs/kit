@@ -299,7 +299,7 @@ test.describe('Errors', () => {
 		);
 	});
 
-	test('throw error(...) in endpoint', async ({ request, read_errors }) => {
+	test('error(...) in endpoint', async ({ request, read_errors }) => {
 		// HTML
 		{
 			const res = await request.get('/errors/endpoint-throw-error', {
@@ -331,7 +331,7 @@ test.describe('Errors', () => {
 		}
 	});
 
-	test('throw redirect(...) in endpoint', async ({ page, read_errors }) => {
+	test('redirect(...) in endpoint', async ({ page, read_errors }) => {
 		const res = await page.goto('/errors/endpoint-throw-redirect');
 		expect(res?.status()).toBe(200); // redirects are opaque to the browser
 

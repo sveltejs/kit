@@ -31,7 +31,7 @@ export async function load({ params }) {
 	const post = await db.getPost(params.slug);
 
 	if (!post) {
-		throw error(404, {
+		error(404, {
 			message: 'Not found'
 		});
 	}
@@ -54,7 +54,7 @@ This tells SvelteKit to set the response status code to 404 and render an [`+err
 You can add extra properties to the error object if needed...
 
 ```diff
-throw error(404, {
+error(404, {
 	message: 'Not found',
 +	code: 'NOT_FOUND'
 });
@@ -63,8 +63,8 @@ throw error(404, {
 ...otherwise, for convenience, you can pass a string as the second argument:
 
 ```diff
--throw error(404, { message: 'Not found' });
-+throw error(404, 'Not found');
+-error(404, { message: 'Not found' });
++error(404, 'Not found');
 ```
 
 ## Unexpected errors

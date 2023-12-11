@@ -395,11 +395,11 @@ import { error } from '@sveltejs/kit';
 /** @type {import('./$types').LayoutServerLoad} */
 export function load({ locals }) {
 	if (!locals.user) {
-		throw error(401, 'not logged in');
+		error(401, 'not logged in');
 	}
 
 	if (!locals.user.isAdmin) {
-		throw error(403, 'not an admin');
+		error(403, 'not an admin');
 	}
 }
 ```
@@ -428,12 +428,12 @@ import { redirect } from '@sveltejs/kit';
 /** @type {import('./$types').LayoutServerLoad} */
 export function load({ locals }) {
 	if (!locals.user) {
-		throw redirect(307, '/login');
+		redirect(307, '/login');
 	}
 }
 ```
 
-> Don't use `throw redirect()` from within a try-catch block, as the redirect will immediately trigger the catch statement.
+> Don't use `redirect()` inside a `try {...}` block, as the redirect will immediately trigger the catch statement.
 
 In the browser, you can also navigate programmatically outside of a `load` function using [`goto`](modules#$app-navigation-goto) from [`$app.navigation`](modules#$app-navigation).
 
