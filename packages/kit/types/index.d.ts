@@ -1693,7 +1693,6 @@ declare module '@sveltejs/kit' {
 
 	type ValidatedConfig = RecursiveRequired<Config>;
 	export function error(status: number, body: App.Error): HttpError_1;
-
 	export function error(status: number, body?: {
 		message: string;
 	} extends App.Error ? App.Error | string | undefined : never): HttpError_1;
