@@ -1682,18 +1682,51 @@ declare module '@sveltejs/kit' {
 	}
 
 	type ValidatedConfig = RecursiveRequired<Config>;
-	export function error(status: number, body: App.Error): HttpError_1;
-
-	export function error(status: number, body?: {
-		message: string;
-	} extends App.Error ? App.Error | string | undefined : never): HttpError_1;
 	/**
-	 * Create a `Redirect` object. If thrown during request handling, SvelteKit will return a redirect response.
+	 * Throws an error with a HTTP status code and an optional message.
+	 * When called during request handling, this will cause SvelteKit to
+	 * return an error response without invoking `handleError`.
+	 * Make sure you're not catching the thrown error, which would prevent SvelteKit from handling it.
+	 * @param status The [HTTP status code](https://developer.mozilla.org/en-US/docs/Web/HTTP/Status#client_error_responses). Must be in the range 400-599.
+	 * @param body An object that conforms to the App.Error type. If a string is passed, it will be used as the message property.
+	 * @throws {HttpError} This error instructs SvelteKit to initiate HTTP error handling.
+	 * @throws {Error} If the provided status is invalid (not between 400 and 599).
+	 */
+	export function error(status: NumericRange<400, 599>, body: App.Error): never;
+	/**
+	 * Throws an error with a HTTP status code and an optional message.
+	 * When called during request handling, this will cause SvelteKit to
+	 * return an error response without invoking `handleError`.
+	 * Make sure you're not catching the thrown error, which would prevent SvelteKit from handling it.
+	 * @param status The [HTTP status code](https://developer.mozilla.org/en-US/docs/Web/HTTP/Status#client_error_responses). Must be in the range 400-599.
+	 * @param body An object that conforms to the App.Error type. If a string is passed, it will be used as the message property.
+	 * @throws {HttpError} This error instructs SvelteKit to initiate HTTP error handling.
+	 * @throws {Error} If the provided status is invalid (not between 400 and 599).
+	 */
+	export function error(status: NumericRange<400, 599>, body?: {
+		message: string;
+	} extends App.Error ? App.Error | string | undefined : never): never;
+	/**
+	 * Checks whether this is an error thrown by {@link error}.
+	 * @param status The status to filter for.
+	 * */
+	export function isHttpError<T extends number>(e: unknown, status?: T | undefined): e is HttpError_1 & {
+		status: T extends undefined ? never : T;
+	};
+	/**
+	 * Redirect a request. When called during request handling, SvelteKit will return a redirect response.
 	 * Make sure you're not catching the thrown redirect, which would prevent SvelteKit from handling it.
 	 * @param status The [HTTP status code](https://developer.mozilla.org/en-US/docs/Web/HTTP/Status#redirection_messages). Must be in the range 300-308.
 	 * @param location The location to redirect to.
-	 */
-	export function redirect(status: 300 | 301 | 302 | 303 | 304 | 305 | 306 | 307 | 308, location: string | URL): Redirect_1;
+	 * @throws {Redirect} This error instructs SvelteKit to redirect to the specified location.
+	 * @throws {Error} If the provided status is invalid.
+	 * */
+	export function redirect(status: NumericRange<300, 308>, location: string | URL): never;
+	/**
+	 * Checks whether this is a redirect thrown by {@link redirect}.
+	 * @param e The object to check.
+	 * */
+	export function isRedirect(e: unknown): e is Redirect_1;
 	/**
 	 * Create a JSON `Response` object from the supplied data.
 	 * @param data The value that will be serialized as JSON.
@@ -1726,6 +1759,8 @@ declare module '@sveltejs/kit' {
 	 * ```
 	 * */
 	export function resolvePath(id: string, params: Record<string, string | undefined>): string;
+	export type LessThan<TNumber extends number, TArray extends any[] = []> = TNumber extends TArray['length'] ? TArray[number] : LessThan<TNumber, [...TArray, TArray['length']]>;
+	export type NumericRange<TStart extends number, TEnd extends number> = Exclude<TEnd | LessThan<TEnd>, LessThan<TStart>>;
 	export const VERSION: string;
 }
 
