@@ -1,7 +1,7 @@
 let count = 0;
 
 export function load({ url }) {
-	url.searchParams.get('tracked');
+	url.searchParams.get('a');
 	return {
 		count: count++
 	};
