@@ -624,7 +624,7 @@ export function create_client(app, target) {
 	 * @param {URL | null} old_url
 	 * @param {URL} new_url
 	 */
-	function check_search_params_changed(old_url, new_url) {
+	function diff_search_params(old_url, new_url) {
 		if (!old_url) return new Set(new_url.searchParams.keys());
 
 		const changed = new Set([...old_url.searchParams.keys(), ...new_url.searchParams.keys()]);
@@ -667,7 +667,7 @@ export function create_client(app, target) {
 		let server_data = null;
 		const url_changed = current.url ? id !== current.url.pathname + current.url.search : false;
 		const route_changed = current.route ? route.id !== current.route.id : false;
-		const search_params_changed = check_search_params_changed(current.url, url);
+		const search_params_changed = diff_search_params(current.url, url);
 
 		let parent_invalid = false;
 		const invalid_server_nodes = loaders.map((loader, i) => {
