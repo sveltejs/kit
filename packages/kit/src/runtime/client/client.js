@@ -148,9 +148,7 @@ export function create_client(app, target) {
 			// detect if the issue has been created by basic auth credentials in the current URL
 			// https://github.com/sveltejs/kit/issues/10522
 			// if so, refresh the page without credentials
-			const a = document.createElement('a');
-			a.href = '/';
-			const url = new URL(a.href);
+			const url = new URL(document.URL);
 			if (!(url.username || url.password)) {
 				throw error;
 			}
