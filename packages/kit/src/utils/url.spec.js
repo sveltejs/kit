@@ -97,10 +97,13 @@ describe('normalize_path', (test) => {
 describe('make_trackable', (test) => {
 	test('makes URL properties trackable', () => {
 		let tracked = false;
-
-		const url = make_trackable(new URL('https://kit.svelte.dev/docs'), () => {
-			tracked = true;
-		});
+		const url = make_trackable(
+			new URL('https://kit.svelte.dev/docs'),
+			() => {
+				tracked = true;
+			},
+			() => {}
+		);
 
 		url.origin;
 		assert.isNotOk(tracked);
@@ -110,12 +113,45 @@ describe('make_trackable', (test) => {
 	});
 
 	test('throws an error when its hash property is accessed', () => {
-		const url = make_trackable(new URL('https://kit.svelte.dev/docs'), () => {});
+		const url = make_trackable(
+			new URL('https://kit.svelte.dev/docs'),
+			() => {},
+			() => {}
+		);
 
 		assert.throws(
 			() => url.hash,
 			/Cannot access event.url.hash. Consider using `\$page.url.hash` inside a component instead/
 		);
+	});
+
+	test('track each search param separately if accessed directly', () => {
+		let tracked = false;
+		const tracked_search_params = new Set();
+		const url = make_trackable(
+			new URL('https://kit.svelte.dev/docs'),
+			() => {
+				tracked = true;
+			},
+			(search_param) => {
+				tracked_search_params.add(search_param);
+			}
+		);
+
+		url.searchParams.get('test');
+		assert.isNotOk(tracked);
+		assert.ok(tracked_search_params.has('test'));
+
+		url.searchParams.getAll('test-getall');
+		assert.isNotOk(tracked);
+		assert.ok(tracked_search_params.has('test-getall'));
+
+		url.searchParams.has('test-has');
+		assert.isNotOk(tracked);
+		assert.ok(tracked_search_params.has('test-has'));
+
+		url.searchParams.entries();
+		assert.ok(tracked);
 	});
 });
 

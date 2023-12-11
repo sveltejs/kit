@@ -407,6 +407,7 @@ export interface Uses {
 	parent: boolean;
 	route: boolean;
 	url: boolean;
+	search_params: Set<string>;
 }
 
 export type ValidatedConfig = RecursiveRequired<Config>;

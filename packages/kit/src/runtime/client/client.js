@@ -438,7 +438,8 @@ export function create_client(app, target) {
 			params: new Set(),
 			parent: false,
 			route: false,
-			url: false
+			url: false,
+			search_params: new Set()
 		};
 
 		const node = await loader();
@@ -473,9 +474,15 @@ export function create_client(app, target) {
 					}
 				}),
 				data: server_data_node?.data ?? null,
-				url: make_trackable(url, () => {
-					uses.url = true;
-				}),
+				url: make_trackable(
+					url,
+					() => {
+						uses.url = true;
+					},
+					(search_param) => {
+						uses.search_params.add(search_param);
+					}
+				),
 				async fetch(resource, init) {
 					/** @type {URL | string} */
 					let requested;
@@ -570,10 +577,18 @@ export function create_client(app, target) {
 	 * @param {boolean} parent_changed
 	 * @param {boolean} route_changed
 	 * @param {boolean} url_changed
+	 * @param {Set<string>} search_params_changed
 	 * @param {import('types').Uses | undefined} uses
 	 * @param {Record<string, string>} params
 	 */
-	function has_changed(parent_changed, route_changed, url_changed, uses, params) {
+	function has_changed(
+		parent_changed,
+		route_changed,
+		url_changed,
+		search_params_changed,
+		uses,
+		params
+	) {
 		if (force_invalidation) return true;
 
 		if (!uses) return false;
@@ -581,6 +596,10 @@ export function create_client(app, target) {
 		if (uses.parent && parent_changed) return true;
 		if (uses.route && route_changed) return true;
 		if (uses.url && url_changed) return true;
+
+		for (const tracked_params of uses.search_params) {
+			if (search_params_changed.has(tracked_params)) return true;
+		}
 
 		for (const param of uses.params) {
 			if (params[param] !== current.params[param]) return true;
@@ -605,6 +624,35 @@ export function create_client(app, target) {
 	}
 
 	/**
+	 *
+	 * @param {URL} [old_url]
+	 * @param {URL} [new_url]
+	 */
+	function check_search_params_changed(old_url, new_url) {
+		const changed = new Set();
+		const new_search_params = new URLSearchParams(new_url?.searchParams);
+		const old_search_params = old_url?.searchParams;
+		for (const key of new Set(old_search_params?.keys?.() ?? [])) {
+			const new_get_all = new_search_params.getAll(key);
+			const old_get_all = old_search_params?.getAll?.(key) ?? [];
+			if (
+				// check if the two arrays contains the same values
+				!(
+					new_get_all.every((query_param) => old_get_all.includes(query_param)) &&
+					old_get_all.every((query_param) => new_get_all.includes(query_param))
+				)
+			) {
+				changed.add(key);
+			}
+			new_search_params.delete(key);
+		}
+		for (const [key] of new_search_params) {
+			changed.add(key);
+		}
+		return changed;
+	}
+
+	/**
 	 * @param {import('./types.js').NavigationIntent} intent
 	 * @returns {Promise<import('./types.js').NavigationResult>}
 	 */
@@ -625,9 +673,9 @@ export function create_client(app, target) {
 
 		/** @type {import('types').ServerNodesResponse | import('types').ServerRedirectNode | null} */
 		let server_data = null;
-
 		const url_changed = current.url ? id !== current.url.pathname + current.url.search : false;
 		const route_changed = current.route ? route.id !== current.route.id : false;
+		const search_params_changed = check_search_params_changed(current.url, url);
 
 		let parent_invalid = false;
 		const invalid_server_nodes = loaders.map((loader, i) => {
@@ -636,7 +684,14 @@ export function create_client(app, target) {
 			const invalid =
 				!!loader?.[0] &&
 				(previous?.loader !== loader[1] ||
-					has_changed(parent_invalid, route_changed, url_changed, previous.server?.uses, params));
+					has_changed(
+						parent_invalid,
+						route_changed,
+						url_changed,
+						search_params_changed,
+						previous.server?.uses,
+						params
+					));
 
 			if (invalid) {
 				// For the next one
@@ -679,7 +734,14 @@ export function create_client(app, target) {
 			const valid =
 				(!server_data_node || server_data_node.type === 'skip') &&
 				loader[1] === previous?.loader &&
-				!has_changed(parent_changed, route_changed, url_changed, previous.universal?.uses, params);
+				!has_changed(
+					parent_changed,
+					route_changed,
+					url_changed,
+					search_params_changed,
+					previous.universal?.uses,
+					params
+				);
 			if (valid) return previous;
 
 			parent_changed = true;
@@ -1960,7 +2022,8 @@ function deserialize_uses(uses) {
 		params: new Set(uses?.params ?? []),
 		parent: !!uses?.parent,
 		route: !!uses?.route,
-		url: !!uses?.url
+		url: !!uses?.url,
+		search_params: new Set(uses?.search_params ?? [])
 	};
 }
 
