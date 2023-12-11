@@ -2,11 +2,13 @@
 title: Migration to SvelteKit v2
 ---
 
-Bumping from SvelteKit version 1 to version 2 should be mostly seamless. There are a few breaking changes to note, which are listed here. You can use `npx svelte-migrate sveltekit-2` to migrate some of these changes automatically.
+Upgrading from SvelteKit version 1 to version 2 should be mostly seamless. There are a few breaking changes to note, which are listed here. You can use `npx svelte-migrate sveltekit-2` to migrate some of these changes automatically.
+
+We highly recommend upgrading to the most recent 1.x version before upgrading to 2.0, so that you can take advantage of targeted deprecation warnings.
 
 ## `redirect` and `error` are no longer thrown by you
 
-Previously, you had to `throw` the `error` and `redirect` methods yourself. In SvelteKit 2, these methods themselves throw, so you no longer need to do it yourself.
+Previously, you had to `throw` the values returned from `error(...)` and `redirect(...)` yourself. In SvelteKit 2 this is no longer the case — calling the functions is sufficient.
 
 ```diff
 import { error } from '@sveltejs/kit'
@@ -18,11 +20,25 @@ import { error } from '@sveltejs/kit'
 
 `svelte-migrate` will do these changes automatically for you.
 
+If the error or redirect is thrown inside a `try {...}` block (hint: don't do this!), you can distinguish them from unexpected errors using [`isHttpError`](/docs/modules#sveltejs-kit-ishttperror) and [`isRedirect`](/docs/modules#sveltejs-kit-isredirect) imported from `@sveltejs/kit`.
+
 ## Top-level promises are no longer awaited
 
-In SvelteKit version 1, promises returned from the top level of a `load` function are automatically awaited. Very few people actually took advantage of this, and with the introduction of [streaming load functions](https://svelte.dev/blog/streaming-snapshots-sveltekit) this behavior became a bit awkward as it forces you to nest your streamed data one level deep. Therefore, SvelteKit no longer awaits top level promises returned from a `load` function and instead streams these, too. To get back the blocking behavior, wrap your top level promises with `Promise.all(...)`, or if you only have one promise, `await` it.
+In SvelteKit version 1, if the top-level properties of the object returned from a `load` function were promises, they were automatically awaited. With the introduction of [streaming](https://svelte.dev/blog/streaming-snapshots-sveltekit) this behavior became a bit awkward as it forces you to nest your streamed data one level deep.
+
+As of version 2, SvelteKit no longer differentiates between top-level and non-top-level promises. To get back the blocking behavior, use `await` (with `Promise.all` to prevent waterfalls, where appropriate):
 
 ```diff
+// If you have a single promise
+export function load({ fetch }) {
+-    const response = fetch(...).then(r => r.json());
++    const response = await fetch(...).then(r => r.json());
+    return { response }
+}
+```
+
+```diff
+// If you have multiple promises
 export function load({ fetch }) {
 -    const a = fetch(...).then(r => r.json());
 -    const b = fetch(...).then(r => r.json());
@@ -32,13 +48,6 @@ export function load({ fetch }) {
 +    ]);
     return { a, b };
 }
-
-// Or if you only have a single promise
-export function load({ fetch }) {
--    const response = fetch(...).then(r => r.json());
-+    const response = await fetch(...).then(r => r.json());
-    return { response }
-}
 ```
 
 ## goto(...) no longer accepts external URLs
@@ -47,7 +56,9 @@ To navigate to an external URL, use `window.location = url`.
 
 ## paths are now relative by default
 
-TODO explain
+In SvelteKit 1, `%sveltekit.assets%` in your `app.html` was replaced with a relative path by default (i.e. `.` or `..` or `../..` etc, depending on the path being rendered) during server-side rendering unless the [`paths.relative`](/docs/configuration#paths) config option was explicitly set to `false`. The same was true for `base` and `assets` imported from `$app/paths`, but only if the `paths.relative` option was explicitly set to `true`.
+
+This inconsistency is fixed in version 2. Paths are either always relative or always absolute, depending on the value of [`paths.relative`](/docs/configuration#paths). It defaults to `true` as this results in more portable apps: if the `base` is something other than the app expected (as is the case when viewed on the [Internet Archive](https://archive.org/), for example) or unknown at build time (as is the case when deploying to [IPFS](https://ipfs.tech/) and so on), fewer things are likely to break.
 
 ## Server fetches are not trackable anymore
 
