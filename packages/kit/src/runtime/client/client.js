@@ -270,17 +270,13 @@ export function create_client(app, target) {
 		return load_cache.promise;
 	}
 
-	/** @param {...string} pathnames */
-	async function preload_code(...pathnames) {
-		const matching = routes.filter((route) =>
-			pathnames.some((pathname) => route.exec(get_url_path(pathname)))
-		);
+	/** @param {string} pathname */
+	async function preload_code(pathname) {
+		const route = routes.find((route) => route.exec(get_url_path(pathname)));
 
-		const promises = matching.map((r) => {
-			return Promise.all([...r.layouts, r.leaf].map((load) => load?.[1]()));
-		});
-
-		await Promise.all(promises);
+		if (route) {
+			await Promise.all([...route.layouts, route.leaf].map((load) => load?.[1]()));
+		}
 	}
 
 	/** @param {import('./types.js').NavigationFinished} result */
@@ -1466,22 +1462,20 @@ export function create_client(app, target) {
 			await preload_data(intent);
 		},
 
-		preload_code: (...pathnames) => {
+		preload_code: (pathname) => {
 			if (DEV) {
-				for (const pathname of pathnames) {
-					if (!pathname.startsWith(base)) {
-						throw new Error(
-							`pathnames passed to preloadCode must start with \`paths.base\` (i.e. "${base}${pathname}" rather than "${pathname}")`
-						);
-					}
+				if (!pathname.startsWith(base)) {
+					throw new Error(
+						`pathnames passed to preloadCode must start with \`paths.base\` (i.e. "${base}${pathname}" rather than "${pathname}")`
+					);
+				}
 
-					if (!routes.find((route) => route.exec(get_url_path(pathname)))) {
-						throw new Error(`'${pathname}' did not match any routes`);
-					}
+				if (!routes.find((route) => route.exec(get_url_path(pathname)))) {
+					throw new Error(`'${pathname}' did not match any routes`);
 				}
 			}
 
-			return preload_code(...pathnames);
+			return preload_code(pathname);
 		},
 
 		apply_action: async (result) => {

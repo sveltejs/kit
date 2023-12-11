@@ -92,6 +92,14 @@ This inconsistency is fixed in version 2. Paths are either always relative or al
 
 Previously it was possible to track URLs from `fetch`es on the server in order to rerun load functions. This poses a possible security risk (private URLs leaking), and as such it was behind the `dangerZone.trackServerFetches` setting, which is now removed.
 
+## `preloadCode` arguments must be prefixed with `base`
+
+SvelteKit exposes two functions, [`preloadCode`](/docs/modules#$app-navigation-preloadcode) and [`preloadData`](/docs/modules#$app-navigation-preloaddata), for programmatically loading the code and data associated with a particular path. In version 1, there was a subtle inconsistency — the path passed to `preloadCode` did not need to be prefixed with the `base` path (if set), while the path passed to `preloadData` did.
+
+This is fixed in SvelteKit 2 — in both cases, the path should be prefixed with `base` if it is set.
+
+Additionally, `preloadCode` now takes a single argument rather than _n_ arguments.
+
 ## Updated dependency requirements
 
 SvelteKit requires Node `18.13` or higher, Vite `^5.0`, vite-plugin-svelte `^3.0`, TypeScript `^5.0` and Svelte version 4 or higher. `svelte-migrate` will do the `package.json` bumps for you.
