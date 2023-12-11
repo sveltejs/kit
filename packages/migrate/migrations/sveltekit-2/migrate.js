@@ -67,6 +67,21 @@ export function update_tsconfig_content(content) {
 	return updated;
 }
 
+export function update_svelte_config() {
+	fs.writeFileSync(
+		'svelte.config.js',
+		update_svelte_config_content(fs.readFileSync('svelte.config.js', 'utf8'))
+	);
+}
+
+/**
+ * @param {string} code
+ */
+export function update_svelte_config_content(code) {
+	const regex = /\s*dangerZone:\s*{[^}]*},?/g;
+	return code.replace(regex, '');
+}
+
 /**
  * @param {string} code
  */

@@ -1,5 +1,9 @@
 import { assert, test } from 'vitest';
-import { transform_code, update_tsconfig_content } from './migrate.js';
+import {
+	transform_code,
+	update_svelte_config_content,
+	update_tsconfig_content
+} from './migrate.js';
 
 test('Removes throws#1', () => {
 	const result = transform_code(
@@ -89,5 +93,26 @@ test('Removes old tsconfig options#2', () => {
 		"preserveValueImports": true
 	}
 }`
+	);
+});
+
+test('Updates svelte.config.js', () => {
+	const result = update_svelte_config_content(
+		`export default {
+			kit: {
+				foo: bar,
+				dangerZone: {
+					trackServerFetches: true
+				},
+				baz: qux
+		}`
+	);
+	assert.equal(
+		result,
+		`export default {
+			kit: {
+				foo: bar,
+				baz: qux
+		}`
 	);
 });
