@@ -276,8 +276,8 @@ export function log_migration(text) {
  * Parses the scripts contents and invoked `transform_script_code` with it, then runs the result through `transform_svelte_code`.
  * The result is written back to disk.
  * @param {string} file_path
- * @param {(code: string, is_ts: boolean) => string} transform_script_code
- * @param {(code: string) => string} transform_svelte_code
+ * @param {(code: string, is_ts: boolean, file_path: string) => string} transform_script_code
+ * @param {(code: string, file_path: string) => string} transform_svelte_code
  */
 export function update_svelte_file(file_path, transform_script_code, transform_svelte_code) {
 	try {
@@ -288,11 +288,12 @@ export function update_svelte_file(file_path, transform_script_code, transform_s
 				return `<script${attrs}>${transform_script_code(
 					contents,
 					(attrs.includes('lang=') || attrs.includes('type=')) &&
-						(attrs.includes('ts') || attrs.includes('typescript'))
+						(attrs.includes('ts') || attrs.includes('typescript')),
+					file_path
 				)}</script>${whitespace}`;
 			}
 		);
-		fs.writeFileSync(file_path, transform_svelte_code(updated), 'utf-8');
+		fs.writeFileSync(file_path, transform_svelte_code(updated, file_path), 'utf-8');
 	} catch (e) {
 		console.error(`Error updating ${file_path}:`, e);
 	}
@@ -301,12 +302,12 @@ export function update_svelte_file(file_path, transform_script_code, transform_s
 /**
  * Reads the file and invokes `transform_code` with its contents. The result is written back to disk.
  * @param {string} file_path
- * @param {(code: string, is_ts: boolean) => string} transform_code
+ * @param {(code: string, is_ts: boolean, file_path: string) => string} transform_code
  */
 export function update_js_file(file_path, transform_code) {
 	try {
 		const content = fs.readFileSync(file_path, 'utf-8');
-		const updated = transform_code(content, file_path.endsWith('.ts'));
+		const updated = transform_code(content, file_path.endsWith('.ts'), file_path);
 		fs.writeFileSync(file_path, updated, 'utf-8');
 	} catch (e) {
 		console.error(`Error updating ${file_path}:`, e);

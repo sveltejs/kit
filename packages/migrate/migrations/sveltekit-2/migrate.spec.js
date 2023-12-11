@@ -16,7 +16,9 @@ error();
 function x() {
 	let redirect = true;
 	throw redirect();
-}`
+}`,
+		false,
+		''
 	);
 	assert.equal(
 		result,
@@ -41,7 +43,9 @@ test('Removes throws#2', () => {
 throw redirect();
 redirect();
 throw error();
-error();`
+error();`,
+		false,
+		''
 	);
 	assert.equal(
 		result,
@@ -52,6 +56,44 @@ throw redirect();
 redirect();
 throw error();
 error();`
+	);
+});
+
+test('Notes cookies#1', () => {
+	const result = transform_code(
+		`
+export function load({ cookies }) {
+	cookies.set('foo', 'bar');
+}`,
+		false,
+		'+page.js'
+	);
+	assert.equal(
+		result,
+
+		`
+export function load({ cookies }) {
+	/* @migration task: add path argument */cookies.set('foo', 'bar');
+}`
+	);
+});
+
+test('Notes cookies#2', () => {
+	const result = transform_code(
+		`
+export function load({ cookies }) {
+	cookies.set('foo', 'bar', { path: '/' });
+}`,
+		false,
+		'+page.js'
+	);
+	assert.equal(
+		result,
+
+		`
+export function load({ cookies }) {
+	cookies.set('foo', 'bar', { path: '/' });
+}`
 	);
 });
 

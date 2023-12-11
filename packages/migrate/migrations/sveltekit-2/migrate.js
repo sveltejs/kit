@@ -1,6 +1,14 @@
 import fs from 'node:fs';
-import { Project, Node } from 'ts-morph';
+import {
+	Project,
+	Node,
+	SyntaxKind,
+	FunctionDeclaration,
+	VariableDeclaration,
+	ArrowFunction
+} from 'ts-morph';
 import { log_migration, log_on_ts_modification, update_pkg } from '../../utils.js';
+import path from 'node:path';
 
 export function update_pkg_json() {
 	fs.writeFileSync(
@@ -84,11 +92,14 @@ export function update_svelte_config_content(code) {
 
 /**
  * @param {string} code
+ * @param {boolean} _is_ts
+ * @param {string} file_path
  */
-export function transform_code(code) {
+export function transform_code(code, _is_ts, file_path) {
 	const project = new Project({ useInMemoryFileSystem: true });
 	const source = project.createSourceFile('svelte.ts', code);
 	remove_throws(source);
+	adjust_cookies(file_path, source);
 	return source.getFullText();
 }
 
@@ -118,6 +129,79 @@ function remove_throws(source) {
 
 	remove_throw('redirect');
 	remove_throw('error');
+
+	logger();
+}
+
+/**
+ * Adds `path` option to `cookies.set/delete/serialize` calls
+ * @param {string} file_path
+ * @param {import('ts-morph').SourceFile} source
+ */
+function adjust_cookies(file_path, source) {
+	const basename = path.basename(file_path);
+	if (
+		basename !== '+page.js' &&
+		basename !== '+page.ts' &&
+		basename !== '+page.server.js' &&
+		basename !== '+page.server.ts' &&
+		basename !== '+server.js' &&
+		basename !== '+server.ts' &&
+		basename !== 'hooks.server.js' &&
+		basename !== 'hooks.server.ts'
+	) {
+		return;
+	}
+
+	const logger = log_on_ts_modification(
+		source,
+		'Remember to add the `path` option to `cookies.set/delete/serialize` calls: https://kit.svelte.dev/docs/v2-migration-guide#path-is-now-a-required-option-for-cookies'
+	);
+
+	for (const call of source.getDescendantsOfKind(SyntaxKind.CallExpression)) {
+		const expression = call.getExpression();
+		if (!Node.isPropertyAccessExpression(expression)) {
+			continue;
+		}
+
+		const name = expression.getName();
+		if (name !== 'set' && name !== 'delete' && name !== 'serialize') {
+			continue;
+		}
+
+		if (call.getText().includes('path:')) {
+			continue;
+		}
+
+		const expression_text = expression.getExpression().getText();
+		if (expression_text !== 'cookies') {
+			continue;
+		}
+
+		const some_function = call.getFirstAncestor(
+			/** @returns {ancestor is FunctionDeclaration | VariableDeclaration} */
+			(ancestor) => {
+				// Check if this is inside a function
+				const fn = ancestor.asKind(SyntaxKind.FunctionDeclaration);
+				const arrow_fn = ancestor.asKind(SyntaxKind.VariableDeclaration);
+				return (
+					!!fn || (!!arrow_fn && arrow_fn.getInitializer()?.getKind() === SyntaxKind.ArrowFunction)
+				);
+			}
+		);
+		if (!some_function) {
+			continue;
+		}
+
+		const parentStatement = call.getParentIfKind(SyntaxKind.ExpressionStatement);
+		if (!parentStatement) {
+			continue;
+		}
+
+		parentStatement.replaceWithText(
+			'/* @migration task: add path argument */' + parentStatement.getText()
+		);
+	}
 
 	logger();
 }
