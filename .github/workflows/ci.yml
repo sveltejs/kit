@@ -30,7 +30,7 @@ jobs:
           cache: pnpm
       - run: pnpm install --frozen-lockfile
       - run: pnpm run lint
-      - run: cd packages/kit && pnpm prepublishOnly && { [ "`git status --porcelain=v1`" == "" ] || echo "Generated types have changed — please run prepublishOnly locally and commit the changes after you have reviewed them"; }
+      - run: cd packages/kit && pnpm prepublishOnly && { [ "`git status --porcelain=v1`" == "" ] || (echo "Generated types have changed — please run prepublishOnly locally and commit the changes after you have reviewed them" && exit 1); }
       - run: pnpm run check
   Tests:
     runs-on: ${{ matrix.os }}
