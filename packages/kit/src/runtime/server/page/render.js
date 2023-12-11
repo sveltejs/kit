@@ -95,7 +95,7 @@ export async function render_response({
 	let base_expression = s(paths.base);
 
 	// if appropriate, use relative paths for greater portability
-	if (paths.relative !== false && !state.prerendering?.fallback) {
+	if (paths.relative && !state.prerendering?.fallback) {
 		const segments = event.url.pathname.slice(paths.base.length).split('/').slice(2);
 
 		base = segments.map(() => '..').join('/') || '.';

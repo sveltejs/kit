@@ -18,7 +18,7 @@ import { exec } from '../../utils/routing.js';
 import { redirect_json_response, render_data } from './data/index.js';
 import { add_cookies_to_headers, get_cookies } from './cookie.js';
 import { create_fetch } from './fetch.js';
-import { Redirect } from '../control.js';
+import { HttpError, Redirect } from '../control.js';
 import {
 	validate_layout_exports,
 	validate_layout_server_exports,
@@ -27,7 +27,7 @@ import {
 	validate_server_exports
 } from '../../utils/exports.js';
 import { get_option } from '../../utils/options.js';
-import { error, json, text } from '../../exports/index.js';
+import { json, text } from '../../exports/index.js';
 import { action_json_redirect, is_action_json_request } from './page/actions.js';
 import { INVALIDATED_PARAM, TRAILING_SLASH_PARAM } from '../shared.js';
 
@@ -67,7 +67,10 @@ export async function respond(request, options, manifest, state) {
 			request.headers.get('origin') !== url.origin;
 
 		if (forbidden) {
-			const csrf_error = error(403, `Cross-site ${request.method} form submissions are forbidden`);
+			const csrf_error = new HttpError(
+				403,
+				`Cross-site ${request.method} form submissions are forbidden`
+			);
 			if (request.headers.get('accept') === 'application/json') {
 				return json(csrf_error.body, { status: csrf_error.status });
 			}

@@ -28,7 +28,7 @@ function get_raw_body(req, body_size_limit) {
 		if (!length) {
 			length = body_size_limit;
 		} else if (length > body_size_limit) {
-			throw error(
+			error(
 				413,
 				`Received content-length of ${length}, but only accept up to ${body_size_limit} bytes.`
 			);

@@ -149,6 +149,10 @@ export function stringify_uses(node) {
 		uses.push(`"dependencies":${JSON.stringify(Array.from(node.uses.dependencies))}`);
 	}
 
+	if (node.uses && node.uses.search_params.size > 0) {
+		uses.push(`"search_params":${JSON.stringify(Array.from(node.uses.search_params))}`);
+	}
+
 	if (node.uses && node.uses.params.size > 0) {
 		uses.push(`"params":${JSON.stringify(Array.from(node.uses.params))}`);
 	}
@@ -158,4 +162,18 @@ export function stringify_uses(node) {
 	if (node.uses?.url) uses.push('"url":1');
 
 	return `"uses":{${uses.join(',')}}`;
+}
+
+/**
+ * @param {string} message
+ * @param {number} offset
+ */
+export function warn_with_callsite(message, offset = 0) {
+	if (DEV) {
+		const stack = fix_stack_trace(new Error()).split('\n');
+		const line = stack.at(3 + offset);
+		message += `\n${line}`;
+	}
+
+	console.warn(message);
 }

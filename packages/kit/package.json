@@ -1,6 +1,6 @@
 {
 	"name": "@sveltejs/kit",
-	"version": "1.27.6",
+	"version": "1.28.0",
 	"description": "The fastest way to build Svelte apps",
 	"repository": {
 		"type": "git",
@@ -11,8 +11,8 @@
 	"homepage": "https://kit.svelte.dev",
 	"type": "module",
 	"dependencies": {
-		"@types/cookie": "^0.5.1",
-		"cookie": "^0.5.0",
+		"@types/cookie": "^0.6.0",
+		"cookie": "^0.6.0",
 		"devalue": "^4.3.1",
 		"esm-env": "^1.0.0",
 		"kleur": "^4.1.5",
@@ -30,13 +30,13 @@
 		"@types/node": "^18.19.1",
 		"@types/sade": "^1.7.4",
 		"@types/set-cookie-parser": "^2.4.2",
-		"dts-buddy": "^0.4.1",
+		"dts-buddy": "^0.4.2",
 		"rollup": "^4.2.0",
 		"svelte": "^4.2.7",
 		"svelte-preprocess": "^5.1.1",
 		"typescript": "^5.3.2",
 		"vite": "^5.0.4",
-		"vitest": "^0.34.5"
+		"vitest": "^1.0.0"
 	},
 	"peerDependencies": {
 		"@sveltejs/vite-plugin-svelte": "^3.0.0",
@@ -57,7 +57,7 @@
 	],
 	"scripts": {
 		"lint": "prettier --config ../../.prettierrc --check .",
-		"check": "tsc",
+		"check": "tsc && cd ./test/types && tsc",
 		"check:all": "tsc && pnpm -r --filter=\"./**\" check",
 		"format": "prettier --config ../../.prettierrc --write .",
 		"test": "pnpm test:unit && pnpm test:integration",
