@@ -146,9 +146,11 @@ export async function render_data(
 			}
 		);
 	} catch (e) {
+		console.error(e);
 		const error = normalize_error(e);
 
 		if (error instanceof Redirect) {
+			console.error("caught a redirect in SSR'd data route...", error);
 			return redirect_json_response(error);
 		} else {
 			return json_response(await handle_error_and_jsonify(event, options, error), 500);

@@ -25,6 +25,7 @@ import analyse from '../../core/postbuild/analyse.js';
 import { s } from '../../utils/misc.js';
 import { hash } from '../../runtime/hash.js';
 import { dedent, isSvelte5Plus } from '../../core/sync/utils.js';
+import { resolve_destination_preprocessor } from './preprocessor/resolveDestination.js';
 
 export { vitePreprocess } from '@sveltejs/vite-plugin-svelte';
 
@@ -842,7 +843,19 @@ function kit({ svelte_config }) {
 		}
 	};
 
-	return [plugin_setup, plugin_virtual_modules, plugin_guard, plugin_compile];
+	const router_hook_entry = resolve_entry(kit.files.hooks.router);
+	/** @type {import('vite').Plugin} */
+	const resolve_destination = {
+		name: 'vite-plugin-sveltekit-resolve-destination',
+
+		api: {
+			sveltePreprocess: router_hook_entry
+				? resolve_destination_preprocessor({ router_hook_entry })
+				: undefined
+		}
+	};
+
+	return [plugin_setup, plugin_virtual_modules, plugin_guard, plugin_compile, resolve_destination];
 }
 
 /**

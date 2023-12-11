@@ -207,10 +207,17 @@ export async function render_page(event, page, options, manifest, state, resolve
 					const err = normalize_error(e);
 
 					if (err instanceof Redirect) {
+						console.error('caught redirect in load function', err);
+
+						const from = event.url;
+						const to = new URL(err.location, from);
+
+						const resolvedUrl = options.hooks.resolveDestination({ from, to });
+
 						if (state.prerendering && should_prerender_data) {
 							const body = JSON.stringify({
 								type: 'redirect',
-								location: err.location
+								location: resolvedUrl.href
 							});
 
 							state.prerendering.dependencies.set(data_pathname, {
@@ -219,7 +226,7 @@ export async function render_page(event, page, options, manifest, state, resolve
 							});
 						}
 
-						return redirect_response(err.status, err.location);
+						return redirect_response(err.status, resolvedUrl.href);
 					}
 
 					const status = err instanceof HttpError ? err.status : 500;

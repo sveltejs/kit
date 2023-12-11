@@ -239,6 +239,8 @@ export function create_client(app, target) {
 			url = new URL(url, get_base_uri(document));
 		}
 
+		url = app.hooks.resolveDestination({ from: new URL(location.href), to: url });
+
 		return navigate({
 			url,
 			scroll: noScroll ? scroll_state() : null,
@@ -1822,7 +1824,16 @@ export function create_client(app, target) {
 				if (error instanceof Redirect) {
 					// this is a real edge case — `load` would need to return
 					// a redirect but only in the browser
-					await native_navigation(new URL(error.location, location.href));
+
+					const from = new URL(location.href);
+					const to = new URL(error.location, from);
+
+					const destination = app.hooks.resolveDestination({
+						from,
+						to
+					});
+
+					await native_navigation(new URL(destination, location.href));
 					return;
 				}
 

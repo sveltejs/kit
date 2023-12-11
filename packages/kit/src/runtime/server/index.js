@@ -48,7 +48,8 @@ export class Server {
 				this.#options.hooks = {
 					handle: module.handle || (({ event, resolve }) => resolve(event)),
 					handleError: module.handleError || (({ error }) => console.error(error)),
-					handleFetch: module.handleFetch || (({ request, fetch }) => fetch(request))
+					handleFetch: module.handleFetch || (({ request, fetch }) => fetch(request)),
+					resolveDestination: module.resolveDestination || ((event) => event.to)
 				};
 			} catch (error) {
 				if (DEV) {
@@ -57,7 +58,8 @@ export class Server {
 							throw error;
 						},
 						handleError: ({ error }) => console.error(error),
-						handleFetch: ({ request, fetch }) => fetch(request)
+						handleFetch: ({ request, fetch }) => fetch(request),
+						resolveDestination: (event) => event.to
 					};
 				} else {
 					throw error;

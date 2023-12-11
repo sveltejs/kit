@@ -10,6 +10,7 @@ import colors from 'kleur';
 /**
  * @param {{
  *   hooks: string | null;
+ *   router_hooks: string | null;
  *   config: import('types').ValidatedConfig;
  *   has_service_worker: boolean;
  *   runtime_directory: string;
@@ -20,6 +21,7 @@ import colors from 'kleur';
 const server_template = ({
 	config,
 	hooks,
+	router_hooks,
 	has_service_worker,
 	runtime_directory,
 	template,
@@ -59,8 +61,11 @@ export const options = {
 	version_hash: ${s(hash(config.kit.version.name))}
 };
 
-export function get_hooks() {
-	return ${hooks ? `import(${s(hooks)})` : '{}'};
+export async function get_hooks() {
+	return {
+		${hooks ? `...(await import(${s(hooks)})),` : ''}
+		${router_hooks ? `...(await import(${s(router_hooks)})),` : ''}
+	};
 }
 
 export { set_assets, set_building, set_private_env, set_public_env };
@@ -77,6 +82,7 @@ export { set_assets, set_building, set_private_env, set_public_env };
  */
 export function write_server(config, output) {
 	const hooks_file = resolve_entry(config.kit.files.hooks.server);
+	const router_hooks_file = resolve_entry(config.kit.files.hooks.router);
 
 	const typo = resolve_entry('src/+hooks.server');
 	if (typo) {
@@ -100,6 +106,7 @@ export function write_server(config, output) {
 		server_template({
 			config,
 			hooks: hooks_file ? relative(hooks_file) : null,
+			router_hooks: router_hooks_file ? relative(router_hooks_file) : null,
 			has_service_worker:
 				config.kit.serviceWorker.register && !!resolve_entry(config.kit.files.serviceWorker),
 			runtime_directory: relative(runtime_directory),

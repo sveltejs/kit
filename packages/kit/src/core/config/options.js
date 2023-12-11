@@ -128,7 +128,8 @@ const options = object(
 				assets: string('static'),
 				hooks: object({
 					client: string(join('src', 'hooks.client')),
-					server: string(join('src', 'hooks.server'))
+					server: string(join('src', 'hooks.server')),
+					router: string(join('src', 'hooks.router'))
 				}),
 				lib: string(join('src', 'lib')),
 				params: string(join('src', 'params')),

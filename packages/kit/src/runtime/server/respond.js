@@ -337,6 +337,7 @@ export async function respond(request, options, manifest, state) {
 
 		return response;
 	} catch (e) {
+		console.error(e);
 		if (e instanceof Redirect) {
 			const response = is_data_request
 				? redirect_json_response(e)
@@ -493,6 +494,7 @@ export async function respond(request, options, manifest, state) {
 			// so we need to make an actual HTTP request
 			return await fetch(request);
 		} catch (e) {
+			console.error('fatal', e);
 			// TODO if `e` is instead named `error`, some fucked up Vite transformation happens
 			// and I don't even know how to describe it. need to investigate at some point
 
