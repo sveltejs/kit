@@ -22,6 +22,20 @@ import { error } from '@sveltejs/kit'
 
 If the error or redirect is thrown inside a `try {...}` block (hint: don't do this!), you can distinguish them from unexpected errors using [`isHttpError`](/docs/modules#sveltejs-kit-ishttperror) and [`isRedirect`](/docs/modules#sveltejs-kit-isredirect) imported from `@sveltejs/kit`.
 
+## path is required when setting cookies
+
+When receiving a `Set-Cookie` header that doesn't specify a `path`, browsers will [set the cookie path](https://www.rfc-editor.org/rfc/rfc6265#section-5.1.4) to the parent of the resource in question. This behaviour isn't particularly helpful or intuitive, and frequently results in bugs because the developer expected the cookie to apply to the domain as a whole.
+
+As of SvelteKit 2.0, you need to set a `path` when calling `cookies.set(...)`, `cookies.delete(...)` or `cookies.serialize(...)` so that there's no ambiguity. Most of the time, you probably want to use `path: '/'`, but you can set it to whatever you like, including relative paths — `''` means 'the current path', `'.'` means 'the current directory'.
+
+```diff
+export function load({ cookies }) {
+-    cookies.set(name, value);
++    cookies.set(name, value, { path: '/' });
+    return { response }
+}
+```
+
 ## Top-level promises are no longer awaited
 
 In SvelteKit version 1, if the top-level properties of the object returned from a `load` function were promises, they were automatically awaited. With the introduction of [streaming](https://svelte.dev/blog/streaming-snapshots-sveltekit) this behavior became a bit awkward as it forces you to nest your streamed data one level deep.

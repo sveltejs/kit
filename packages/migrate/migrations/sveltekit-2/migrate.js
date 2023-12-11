@@ -1,12 +1,5 @@
 import fs from 'node:fs';
-import {
-	Project,
-	Node,
-	SyntaxKind,
-	FunctionDeclaration,
-	VariableDeclaration,
-	ArrowFunction
-} from 'ts-morph';
+import { Project, Node, SyntaxKind, FunctionDeclaration, VariableDeclaration } from 'ts-morph';
 import { log_migration, log_on_ts_modification, update_pkg } from '../../utils.js';
 import path from 'node:path';
 
@@ -99,7 +92,7 @@ export function transform_code(code, _is_ts, file_path) {
 	const project = new Project({ useInMemoryFileSystem: true });
 	const source = project.createSourceFile('svelte.ts', code);
 	remove_throws(source);
-	adjust_cookies(file_path, source);
+	add_cookie_note(file_path, source);
 	return source.getFullText();
 }
 
@@ -138,7 +131,7 @@ function remove_throws(source) {
  * @param {string} file_path
  * @param {import('ts-morph').SourceFile} source
  */
-function adjust_cookies(file_path, source) {
+function add_cookie_note(file_path, source) {
 	const basename = path.basename(file_path);
 	if (
 		basename !== '+page.js' &&
