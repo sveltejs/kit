@@ -1998,8 +1998,7 @@ declare module '$app/navigation' {
 }
 
 declare module '$app/paths' {
-	import type { base, assets } from '__sveltekit/paths';
-	/// <reference path="../../types/ambient.d.ts" />
+	export { base, assets } from '__sveltekit/paths';
 	/**
 	 * Populate a route ID with params to resolve a pathname.
 	 * @example
@@ -2014,7 +2013,6 @@ declare module '$app/paths' {
 	 * ```
 	 * */
 	export function resolveRoute(id: string, params: Record<string, string | undefined>): string;
-	export { base, assets };
 }
 
 declare module '$app/stores' {

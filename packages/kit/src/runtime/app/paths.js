@@ -1,7 +1,6 @@
-import { base, assets } from '__sveltekit/paths';
+export { base, assets } from '__sveltekit/paths';
+import { base } from '__sveltekit/paths';
 import { get_route_segments } from '../../utils/routing.js';
-
-export { base, assets };
 
 const basic_param_pattern = /\[(\[)?(\.\.\.)?(\w+?)(?:=(\w+))?\]\]?/g;
 
