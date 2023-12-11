@@ -158,12 +158,29 @@ export function text(body, init) {
 
 /**
  * Create an `ActionFailure` object.
+ * @param {number} status The [HTTP status code](https://developer.mozilla.org/en-US/docs/Web/HTTP/Status#client_error_responses). Must be in the range 400-599.
+ * @overload
+ * @param {number} status
+ * @returns {import('./public.js').ActionFailure<undefined>}
+ */
+/**
+ * Create an `ActionFailure` object.
  * @template {Record<string, unknown> | undefined} [T=undefined]
  * @param {number} status The [HTTP status code](https://developer.mozilla.org/en-US/docs/Web/HTTP/Status#client_error_responses). Must be in the range 400-599.
- * @param {T} [data] Data associated with the failure (e.g. validation errors)
- * @returns {ActionFailure<T>}
+ * @param {T} data Data associated with the failure (e.g. validation errors)
+ * @overload
+ * @param {number} status
+ * @param {T} data
+ * @returns {import('./public.js').ActionFailure<T>}
+ */
+/**
+ * Create an `ActionFailure` object.
+ * @param {number} status
+ * @param {any} [data]
+ * @returns {import('./public.js').ActionFailure<any>}
  */
 export function fail(status, data) {
+	// @ts-expect-error unique symbol missing
 	return new ActionFailure(status, data);
 }
 
