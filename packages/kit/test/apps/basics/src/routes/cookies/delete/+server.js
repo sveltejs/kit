@@ -4,5 +4,5 @@ import { COOKIE_NAME } from '../shared';
 /** @type {import('@sveltejs/kit').RequestHandler} */
 export const GET = (event) => {
 	event.cookies.delete(COOKIE_NAME, { path: '/cookies' });
-	throw redirect(303, '/cookies');
+	redirect(303, '/cookies');
 };

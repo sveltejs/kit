@@ -201,9 +201,9 @@ export function get_cookies(request, url, trailing_slash) {
 			cookie_paths[name] ??= new Set();
 
 			if (!value) {
-				cookie_paths[name].delete(options.path);
+				cookie_paths[name].delete(path);
 			} else {
-				cookie_paths[name].add(options.path);
+				cookie_paths[name].add(path);
 			}
 		}
 	}
