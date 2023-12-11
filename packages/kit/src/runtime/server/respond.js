@@ -402,7 +402,7 @@ export async function respond(request, options, manifest, state) {
 						trailing_slash ?? 'never'
 					);
 				} else if (route.endpoint && (!route.page || is_endpoint_request(event))) {
-					response = await render_endpoint(event, await route.endpoint(), state);
+					response = await render_endpoint(event, await route.endpoint(), state, options);
 				} else if (route.page) {
 					if (page_methods.has(method)) {
 						response = await render_page(event, route.page, options, manifest, state, resolve_opts);

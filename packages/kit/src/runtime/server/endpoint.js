@@ -7,9 +7,10 @@ import { method_not_allowed } from './utils.js';
  * @param {import('@sveltejs/kit').RequestEvent} event
  * @param {import('types').SSREndpoint} mod
  * @param {import('types').SSRState} state
+ * @param {import('types').SSROptions} options
  * @returns {Promise<Response>}
  */
-export async function render_endpoint(event, mod, state) {
+export async function render_endpoint(event, mod, state, options) {
 	const method = /** @type {import('types').HttpMethod} */ (event.request.method);
 
 	let handler = mod[method] || mod.fallback;
@@ -64,9 +65,12 @@ export async function render_endpoint(event, mod, state) {
 		return response;
 	} catch (e) {
 		if (e instanceof Redirect) {
+			const from = event.url;
+			const to = new URL(e.location, event.url);
+			const resolvedUrl = options.hooks.resolveDestination({ from, to });
 			return new Response(undefined, {
 				status: e.status,
-				headers: { location: e.location }
+				headers: { location: resolvedUrl.href }
 			});
 		}
 
