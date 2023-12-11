@@ -37,13 +37,13 @@ export async function load_server_data({ event, state, node, parent }) {
 
 			uses.url = true;
 		},
-		(search_params) => {
-			if (DEV && done && uses.search_params.size === 0) {
+		(param) => {
+			if (DEV && done && !uses.search_params.has(param)) {
 				console.warn(
 					`${node.server_id}: Accessing URL properties in a promise handler after \`load(...)\` has returned will not cause the function to re-run when the URL changes`
 				);
 			}
-			uses.search_params.add(search_params);
+			uses.search_params.add(param);
 		}
 	);
 
