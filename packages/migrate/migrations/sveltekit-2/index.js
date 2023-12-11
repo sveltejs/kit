@@ -21,7 +21,7 @@ export async function migrate() {
 			.bold()
 			.yellow(
 				'\nThis will update files in the current directory\n' +
-					"If you're inside a monorepo, don't run this in the root directory, rather run it in all projects independently.\n"
+					"If you're inside a monorepo, run this in individual project directories rather than the workspace root.\n"
 			)
 	);
 
@@ -41,7 +41,7 @@ export async function migrate() {
 	const pkg = JSON.parse(fs.readFileSync('package.json', 'utf8'));
 	const svelte_dep = pkg.devDependencies?.svelte ?? pkg.dependencies?.svelte;
 	if (svelte_dep === undefined) {
-		bail('Please install Svelte first');
+		bail('Please install Svelte before continuing');
 	}
 
 	if (semver.lt(svelte_dep, '4.0.0')) {
@@ -49,14 +49,13 @@ export async function migrate() {
 			colors
 				.bold()
 				.yellow(
-					'\nSveltKit 2 requires a minimum version of Svelte 4. We recommend updating to Svelte 4 first ' +
-						'(using `npx svelte-migrate svelte-4`), and then do the SvelteKit 2 migration.\n'
+					'\nSvelteKit 2 requires Svelte 4 or newer. We recommend running the `svelte-4` migration first (`npx svelte-migrate svelte-4`).\n'
 				)
 		);
 		const response = await prompts({
 			type: 'confirm',
 			name: 'value',
-			message: 'Upgrade to Svelte 4 as part of the SvelteKit 2 migration?',
+			message: 'Run `svelte-4` migration now?',
 			initial: false
 		});
 		if (!response.value) {
@@ -66,7 +65,7 @@ export async function migrate() {
 			console.log(
 				colors
 					.bold()
-					.green('\nMigration to Svelte 4 completed. Continue with the SvelteKit 2 migration?\n')
+					.green('`svelte-4` migration complete. Continue with `sveltekit-2` migration?\n')
 			);
 			const response = await prompts({
 				type: 'confirm',
