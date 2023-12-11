@@ -1,6 +1,5 @@
 import { HttpError, Redirect, ActionFailure } from '../runtime/control.js';
 import { BROWSER, DEV } from 'esm-env';
-import { get_route_segments } from '../utils/routing.js';
 
 export { VERSION } from '../version.js';
 
@@ -182,59 +181,4 @@ export function text(body, init) {
 export function fail(status, data) {
 	// @ts-expect-error unique symbol missing
 	return new ActionFailure(status, data);
-}
-
-const basic_param_pattern = /\[(\[)?(\.\.\.)?(\w+?)(?:=(\w+))?\]\]?/g;
-
-let warned = false;
-
-/**
- * @deprecated Use `resolveRoute` from `$app/paths` instead.
- *
- * Populate a route ID with params to resolve a pathname.
- * @example
- * ```js
- * resolvePath(
- *   `/blog/[slug]/[...somethingElse]`,
- *   {
- *     slug: 'hello-world',
- *     somethingElse: 'something/else'
- *   }
- * ); // `/blog/hello-world/something/else`
- * ```
- * @param {string} id
- * @param {Record<string, string | undefined>} params
- * @returns {string}
- */
-export function resolvePath(id, params) {
-	if (!warned) {
-		console.warn('`resolvePath` is deprecated. Use `resolveRoute` from `$app/paths` instead.');
-		warned = true;
-	}
-
-	const segments = get_route_segments(id);
-	return (
-		'/' +
-		segments
-			.map((segment) =>
-				segment.replace(basic_param_pattern, (_, optional, rest, name) => {
-					const param_value = params[name];
-
-					// This is nested so TS correctly narrows the type
-					if (!param_value) {
-						if (optional) return '';
-						if (rest && param_value !== undefined) return '';
-						throw new Error(`Missing parameter '${name}' in route ${id}`);
-					}
-
-					if (param_value.startsWith('/') || param_value.endsWith('/'))
-						throw new Error(
-							`Parameter '${name}' in route ${id} cannot start or end with a slash -- this would cause an invalid route like foo//bar`
-						);
-					return param_value;
-				})
-			)
-			.filter(Boolean)
-			.join('/')
-	);
 }
