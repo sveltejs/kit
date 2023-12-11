@@ -1,5 +1,5 @@
 ---
-title: Migration to SvelteKit v2
+title: Migrating to SvelteKit v2
 ---
 
 Upgrading from SvelteKit version 1 to version 2 should be mostly seamless. There are a few breaking changes to note, which are listed here. You can use `npx svelte-migrate sveltekit-2` to migrate some of these changes automatically.
