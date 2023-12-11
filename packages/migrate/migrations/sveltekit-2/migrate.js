@@ -1,4 +1,5 @@
 import fs from 'node:fs';
+import ts from 'typescript';
 import { Project, Node } from 'ts-morph';
 import { log_migration, log_on_ts_modification, update_pkg } from '../../utils.js';
 
@@ -65,6 +66,7 @@ export function transform_code(code) {
 	const project = new Project({ useInMemoryFileSystem: true });
 	const source = project.createSourceFile('svelte.ts', code);
 	remove_throws(source);
+	add_cookie_path_comments(source);
 	return source.getFullText();
 }
 
@@ -94,6 +96,50 @@ function remove_throws(source) {
 
 	remove_throw('redirect');
 	remove_throw('error');
+
+	logger();
+}
+
+/**
+ * `cookies.set(a, b, {...})` — add comment if path is missing
+ * @param {import('ts-morph').SourceFile} source
+ */
+function add_cookie_path_comments(source) {
+	const logger = log_on_ts_modification(
+		source,
+		'Added @migration task to `cookies` method calls: https://kit.svelte.dev/docs/migrating-to-sveltekit-2#path-is-required-when-setting-cookies'
+	);
+
+	source.forEachDescendant((node) => {
+		if (!Node.isExpressionStatement(node)) return;
+
+		const expression = node.getChildAtIndex(0);
+		if (!Node.isCallExpression(expression)) return;
+
+		const callee = expression.getChildAtIndex(0).getText();
+		if (callee !== 'cookies.set' && callee !== 'cookies.delete' && callee !== 'cookies.serialize') {
+			return;
+		}
+
+		const args = expression.compilerNode.arguments;
+
+		const index = callee === 'cookies.delete' ? 1 : 2;
+		const options = args[index];
+
+		let has_path = false;
+		if (options) {
+			if (ts.isObjectLiteralExpression(options)) {
+				if (options.properties.some((p) => p.name?.getText() === 'path')) {
+					has_path = true;
+				}
+			}
+		}
+
+		if (!has_path) {
+			// TODO somehow prepend `node` with a comment:
+			// // @migration cookies: path is required
+		}
+	});
 
 	logger();
 }
