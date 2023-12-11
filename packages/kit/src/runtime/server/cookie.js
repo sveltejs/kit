@@ -1,5 +1,5 @@
 import { parse, serialize } from 'cookie';
-import { normalize_path } from '../../utils/url.js';
+import { normalize_path, resolve } from '../../utils/url.js';
 import { warn_with_callsite } from './utils.js';
 
 /**
@@ -18,12 +18,12 @@ const MAX_COOKIE_SIZE = 4129;
 /**
  *
  * @param {import('cookie').CookieSerializeOptions} opts
- * @param {'set' | 'delete'} method
+ * @param {'set' | 'delete' | 'serialize'} method
  */
 function deprecate_missing_path(opts, method) {
 	if (opts.path === undefined) {
 		warn_with_callsite(
-			`Calling \`cookies.${method}}(...)\` without specifying a \`path\` is deprecated, and will be disallowed in SvelteKit 2.0. Relative paths can be used`,
+			`Calling \`cookies.${method}(...)\` without specifying a \`path\` is deprecated, and will be disallowed in SvelteKit 2.0. Relative paths can be used`,
 			1
 		);
 	}
@@ -152,7 +152,9 @@ export function get_cookies(request, url, trailing_slash) {
 		 * @param {string} value
 		 * @param {import('cookie').CookieSerializeOptions} opts
 		 */
-		serialize(name, value, opts) {
+		serialize(name, value, opts = {}) {
+			deprecate_missing_path(opts, 'serialize');
+
 			return serialize(name, value, {
 				...defaults,
 				...opts
@@ -200,7 +202,15 @@ export function get_cookies(request, url, trailing_slash) {
 	 * @param {import('cookie').CookieSerializeOptions} opts
 	 */
 	function set_internal(name, value, opts) {
-		const path = opts.path ?? default_path;
+		let path = opts.path;
+
+		if (!opts.domain || opts.domain === url.hostname) {
+			if (path) {
+				if (path[0] === '.') path = resolve(url.pathname, path);
+			} else {
+				path = default_path;
+			}
+		}
 
 		new_cookies[name] = {
 			name,
@@ -220,8 +230,10 @@ export function get_cookies(request, url, trailing_slash) {
 			cookie_paths[name] ??= new Set();
 
 			if (!value) {
+				// @ts-expect-error temporary
 				cookie_paths[name].delete(path);
 			} else {
+				// @ts-expect-error temporary
 				cookie_paths[name].add(path);
 			}
 		}
