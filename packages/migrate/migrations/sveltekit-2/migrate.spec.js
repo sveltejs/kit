@@ -8,7 +8,7 @@ import {
 test('Removes throws#1', () => {
 	const result = transform_code(
 		`import { redirect, error } from '@sveltejs/kit';
-        
+
 throw redirect();
 redirect();
 throw error();
@@ -24,7 +24,7 @@ function x() {
 		result,
 
 		`import { redirect, error } from '@sveltejs/kit';
-        
+
 redirect();
 redirect();
 error();
@@ -39,7 +39,7 @@ function x() {
 test('Removes throws#2', () => {
 	const result = transform_code(
 		`import { redirect, error } from 'somewhere-else';
-        
+
 throw redirect();
 redirect();
 throw error();
@@ -51,7 +51,7 @@ error();`,
 		result,
 
 		`import { redirect, error } from 'somewhere-else';
-        
+
 throw redirect();
 redirect();
 throw error();
@@ -59,7 +59,7 @@ error();`
 	);
 });
 
-test('Notes cookies#1', () => {
+test.skip('Notes cookies#1', () => {
 	const result = transform_code(
 		`
 export function load({ cookies }) {
@@ -78,7 +78,7 @@ export function load({ cookies }) {
 	);
 });
 
-test('Notes cookies#2', () => {
+test.skip('Notes cookies#2', () => {
 	const result = transform_code(
 		`
 export function load({ cookies }) {

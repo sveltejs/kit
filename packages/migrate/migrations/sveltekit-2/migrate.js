@@ -92,7 +92,8 @@ export function transform_code(code, _is_ts, file_path) {
 	const project = new Project({ useInMemoryFileSystem: true });
 	const source = project.createSourceFile('svelte.ts', code);
 	remove_throws(source);
-	add_cookie_note(file_path, source);
+	// TODO fix the crazy indentation before reinstating this
+	// add_cookie_note(file_path, source);
 	return source.getFullText();
 }
 
@@ -132,9 +133,6 @@ function remove_throws(source) {
  * @param {import('ts-morph').SourceFile} source
  */
 function add_cookie_note(file_path, source) {
-	// TODO fix the crazy indentation before reinstating this
-	return;
-
 	const basename = path.basename(file_path);
 	if (
 		basename !== '+page.js' &&
