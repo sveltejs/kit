@@ -413,63 +413,27 @@ test.describe('Invalidation', () => {
 		expect(await page.textContent('h1')).toBe('3');
 	});
 
-	test('load function does not re-runs when another searchParams change (layout)', async ({
+	test('load function only re-runs when tracked searchParams change (universal)', async ({
 		page,
 		clicknav
 	}) => {
-		await page.goto('/load/invalidation/search-params/layout?test=0');
+		await page.goto('/load/invalidation/search-params/universal?tracked=0');
 		expect(await page.textContent('span')).toBe('count: 0');
-		await clicknav('[href="?test=1"]');
+		await clicknav('[data-id="tracked"]');
 		expect(await page.textContent('span')).toBe('count: 1');
-		await clicknav('[href="?test=1&another=another"]');
+		await clicknav('[data-id="untracked"]');
 		expect(await page.textContent('span')).toBe('count: 1');
 	});
 
-	test('load function does re-runs when one of multiple searchParams change (page)', async ({
+	test('load function only re-runs when tracked searchParams change (server)', async ({
 		page,
 		clicknav
 	}) => {
-		await page.goto('/load/invalidation/search-params/multiple-search-params?test=0');
+		await page.goto('/load/invalidation/search-params/server?tracked=0');
 		expect(await page.textContent('span')).toBe('count: 0');
-		await clicknav('[href="?test=1&test=2"]');
+		await clicknav('[data-id="tracked"]');
 		expect(await page.textContent('span')).toBe('count: 1');
-		await clicknav('[href="?test=1&test=3"]');
-		expect(await page.textContent('span')).toBe('count: 2');
-	});
-
-	test('load function does not re-runs when another searchParams change (layout-server)', async ({
-		page,
-		clicknav
-	}) => {
-		await page.goto('/load/invalidation/search-params/layout-server?test=0');
-		expect(await page.textContent('span')).toBe('count: 0');
-		await clicknav('[href="?test=1"]');
-		expect(await page.textContent('span')).toBe('count: 1');
-		await clicknav('[href="?test=1&another=another"]');
-		expect(await page.textContent('span')).toBe('count: 1');
-	});
-
-	test('load function does not re-runs when another searchParams change (page)', async ({
-		page,
-		clicknav
-	}) => {
-		await page.goto('/load/invalidation/search-params/page?test=0');
-		expect(await page.textContent('span')).toBe('count: 0');
-		await clicknav('[href="?test=1"]');
-		expect(await page.textContent('span')).toBe('count: 1');
-		await clicknav('[href="?test=1&another=another"]');
-		expect(await page.textContent('span')).toBe('count: 1');
-	});
-
-	test('load function does not re-runs when another searchParams change (page-server)', async ({
-		page,
-		clicknav
-	}) => {
-		await page.goto('/load/invalidation/search-params/page-server?test=0');
-		expect(await page.textContent('span')).toBe('count: 0');
-		await clicknav('[href="?test=1"]');
-		expect(await page.textContent('span')).toBe('count: 1');
-		await clicknav('[href="?test=1&another=another"]');
+		await clicknav('[data-id="untracked"]');
 		expect(await page.textContent('span')).toBe('count: 1');
 	});
 
