@@ -1720,6 +1720,8 @@ declare module '@sveltejs/kit' {
 	 * */
 	export function fail<T extends Record<string, unknown> | undefined = undefined>(status: number, data?: T | undefined): ActionFailure<T>;
 	/**
+	 * @deprecated Use `resolveRoute` from `$app/paths` instead.
+	 *
 	 * Populate a route ID with params to resolve a pathname.
 	 * @example
 	 * ```js
@@ -1996,7 +1998,23 @@ declare module '$app/navigation' {
 }
 
 declare module '$app/paths' {
-	export { base, assets } from '__sveltekit/paths';
+	import type { base, assets } from '__sveltekit/paths';
+	/// <reference types="src/types/ambient.js" />
+	/**
+	 * Populate a route ID with params to resolve a pathname.
+	 * @example
+	 * ```js
+	 * resolveRoute(
+	 *   `/blog/[slug]/[...somethingElse]`,
+	 *   {
+	 *     slug: 'hello-world',
+	 *     somethingElse: 'something/else'
+	 *   }
+	 * ); // `/blog/hello-world/something/else`
+	 * ```
+	 * */
+	export function resolveRoute(id: string, params: Record<string, string | undefined>): string;
+	export { base, assets };
 }
 
 declare module '$app/stores' {
