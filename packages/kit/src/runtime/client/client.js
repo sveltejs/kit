@@ -272,7 +272,19 @@ export function create_client(app, target) {
 
 	/** @param {...string} pathnames */
 	async function preload_code(...pathnames) {
-		const matching = routes.filter((route) => pathnames.some((pathname) => route.exec(pathname)));
+		if (DEV) {
+			for (const pathname of pathnames) {
+				if (!pathname.startsWith(base)) {
+					throw new Error(
+						`pathnames passed to preloadCode must start with \`paths.base\` (i.e. "${base}${pathname}" rather than "${pathname}")`
+					);
+				}
+			}
+		}
+
+		const matching = routes.filter((route) =>
+			pathnames.some((pathname) => route.exec(pathname.slice(base.length)))
+		);
 
 		const promises = matching.map((r) => {
 			return Promise.all([...r.layouts, r.leaf].map((load) => load?.[1]()));
