@@ -1,9 +1,5 @@
 import { parse, serialize } from 'cookie';
 import { normalize_path, resolve } from '../../utils/url.js';
-<<<<<<< HEAD
-=======
-import { warn_with_callsite } from './utils.js';
->>>>>>> master
 
 /**
  * Tracks all cookies set during dev mode so we can emit warnings
@@ -18,32 +14,11 @@ const cookie_paths = {};
  */
 const MAX_COOKIE_SIZE = 4129;
 
-<<<<<<< HEAD
 // TODO 3.0 remove this check
 /** @param {import('./page/types.js').Cookie['options']} options */
 function validate_options(options) {
 	if (options?.path === undefined) {
 		throw new Error('You must specify a `path` when setting, deleting or serializing cookies');
-=======
-/**
- *
- * @param {import('cookie').CookieSerializeOptions} opts
- * @param {'set' | 'delete' | 'serialize'} method
- */
-function deprecate_missing_path(opts, method) {
-	if (opts.path === undefined) {
-		warn_with_callsite(
-			`Calling \`cookies.${method}(...)\` without specifying a \`path\` is deprecated, and will be disallowed in SvelteKit 2.0. Relative paths can be used`,
-			1
-		);
-	}
-
-	if (opts.path === '') {
-		warn_with_callsite(
-			`Calling \`cookies.${method}(...)\` with \`path: ''\` will behave differently in SvelteKit 2.0. Instead of using the browser default behaviour, it will set the cookie path to the current pathname`,
-			1
-		);
->>>>>>> master
 	}
 }
 
