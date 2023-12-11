@@ -1,5 +1,5 @@
 import fs from 'node:fs';
-import { Project, Node, SyntaxKind, FunctionDeclaration, VariableDeclaration } from 'ts-morph';
+import { Project, Node, SyntaxKind } from 'ts-morph';
 import { log_migration, log_on_ts_modification, update_pkg } from '../../utils.js';
 import path from 'node:path';
 
@@ -172,7 +172,7 @@ function add_cookie_note(file_path, source) {
 		}
 
 		const some_function = call.getFirstAncestor(
-			/** @returns {ancestor is FunctionDeclaration | VariableDeclaration} */
+			/** @returns {ancestor is import('ts-morph').FunctionDeclaration | import('ts-morph').VariableDeclaration} */
 			(ancestor) => {
 				// Check if this is inside a function
 				const fn = ancestor.asKind(SyntaxKind.FunctionDeclaration);
