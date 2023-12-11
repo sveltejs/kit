@@ -17,12 +17,10 @@ import {
 	RequestOptions,
 	RouteSegment
 } from '../types/private.js';
-import { ActionFailure } from '../runtime/control.js';
 import { BuildData, SSRNodeLoader, SSRRoute, ValidatedConfig } from 'types';
 import type { PluginOptions } from '@sveltejs/vite-plugin-svelte';
 
 export { PrerenderOption } from '../types/private.js';
-export { ActionFailure };
 
 /**
  * [Adapters](https://kit.svelte.dev/docs/adapters) are responsible for taking the production build and turning it into something that can be deployed to a platform of your choosing.
@@ -57,6 +55,14 @@ type OptionalUnion<
 	U extends Record<string, any>, // not unknown, else interfaces don't satisfy this constraint
 	A extends keyof U = U extends U ? keyof U : never
 > = U extends unknown ? { [P in Exclude<A, keyof U>]?: never } & U : never;
+
+declare const uniqueSymbol: unique symbol;
+
+export interface ActionFailure<T extends Record<string, unknown> | undefined = undefined> {
+	status: number;
+	data: T;
+	[uniqueSymbol]: true; // necessary or else UnpackValidationError could wrongly unpack objects with the same shape as ActionFailure
+}
 
 type UnpackValidationError<T> = T extends ActionFailure<infer X>
 	? X

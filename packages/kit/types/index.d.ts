@@ -38,6 +38,14 @@ declare module '@sveltejs/kit' {
 		A extends keyof U = U extends U ? keyof U : never
 	> = U extends unknown ? { [P in Exclude<A, keyof U>]?: never } & U : never;
 
+	const uniqueSymbol: unique symbol;
+
+	export interface ActionFailure<T extends Record<string, unknown> | undefined = undefined> {
+		status: number;
+		data: T;
+		[uniqueSymbol]: true; // necessary or else UnpackValidationError could wrongly unpack objects with the same shape as ActionFailure
+	}
+
 	type UnpackValidationError<T> = T extends ActionFailure<infer X>
 		? X
 		: T extends void
@@ -1494,28 +1502,6 @@ declare module '@sveltejs/kit' {
 	}
 
 	type TrailingSlash = 'never' | 'always' | 'ignore';
-	class HttpError_1 {
-		
-		constructor(status: number, body: {
-			message: string;
-		} extends App.Error ? (App.Error | string | undefined) : App.Error);
-		status: number;
-		body: App.Error;
-		toString(): string;
-	}
-	class Redirect_1 {
-		
-		constructor(status: 300 | 301 | 302 | 303 | 304 | 305 | 306 | 307 | 308, location: string);
-		status: 300 | 301 | 302 | 303 | 304 | 305 | 306 | 307 | 308;
-		location: string;
-	}
-
-	export class ActionFailure<T extends Record<string, unknown> | undefined = undefined> {
-		
-		constructor(status: number, data?: T | undefined);
-		status: number;
-		data: T | undefined;
-	}
 	interface Asset {
 		file: string;
 		size: number;
@@ -1742,9 +1728,14 @@ declare module '@sveltejs/kit' {
 	/**
 	 * Create an `ActionFailure` object.
 	 * @param status The [HTTP status code](https://developer.mozilla.org/en-US/docs/Web/HTTP/Status#client_error_responses). Must be in the range 400-599.
+	 * */
+	export function fail(status: number): ActionFailure<undefined>;
+	/**
+	 * Create an `ActionFailure` object.
+	 * @param status The [HTTP status code](https://developer.mozilla.org/en-US/docs/Web/HTTP/Status#client_error_responses). Must be in the range 400-599.
 	 * @param data Data associated with the failure (e.g. validation errors)
 	 * */
-	export function fail<T extends Record<string, unknown> | undefined = undefined>(status: number, data?: T | undefined): ActionFailure<T>;
+	export function fail<T extends Record<string, unknown> | undefined = undefined>(status: number, data: T): ActionFailure<T>;
 	/**
 	 * Populate a route ID with params to resolve a pathname.
 	 * @example
@@ -1762,6 +1753,21 @@ declare module '@sveltejs/kit' {
 	export type LessThan<TNumber extends number, TArray extends any[] = []> = TNumber extends TArray['length'] ? TArray[number] : LessThan<TNumber, [...TArray, TArray['length']]>;
 	export type NumericRange<TStart extends number, TEnd extends number> = Exclude<TEnd | LessThan<TEnd>, LessThan<TStart>>;
 	export const VERSION: string;
+	class HttpError_1 {
+		
+		constructor(status: number, body: {
+			message: string;
+		} extends App.Error ? (App.Error | string | undefined) : App.Error);
+		status: number;
+		body: App.Error;
+		toString(): string;
+	}
+	class Redirect_1 {
+		
+		constructor(status: 300 | 301 | 302 | 303 | 304 | 305 | 306 | 307 | 308, location: string);
+		status: 301 | 302 | 303 | 307 | 308 | 300 | 304 | 305 | 306;
+		location: string;
+	}
 }
 
 declare module '@sveltejs/kit/hooks' {
