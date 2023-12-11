@@ -272,16 +272,6 @@ export function create_client(app, target) {
 
 	/** @param {...string} pathnames */
 	async function preload_code(...pathnames) {
-		if (DEV) {
-			for (const pathname of pathnames) {
-				if (!pathname.startsWith(base)) {
-					throw new Error(
-						`pathnames passed to preloadCode must start with \`paths.base\` (i.e. "${base}${pathname}" rather than "${pathname}")`
-					);
-				}
-			}
-		}
-
 		const matching = routes.filter((route) =>
 			pathnames.some((pathname) => route.exec(get_url_path(pathname)))
 		);
@@ -1476,7 +1466,23 @@ export function create_client(app, target) {
 			await preload_data(intent);
 		},
 
-		preload_code,
+		preload_code: (...pathnames) => {
+			if (DEV) {
+				for (const pathname of pathnames) {
+					if (!pathname.startsWith(base)) {
+						throw new Error(
+							`pathnames passed to preloadCode must start with \`paths.base\` (i.e. "${base}${pathname}" rather than "${pathname}")`
+						);
+					}
+
+					if (!routes.find((route) => route.exec(get_url_path(pathname)))) {
+						throw new Error(`'${pathname}' did not match any routes`);
+					}
+				}
+			}
+
+			return preload_code(...pathnames);
+		},
 
 		apply_action: async (result) => {
 			if (result.type === 'error') {
