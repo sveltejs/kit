@@ -108,8 +108,6 @@ const tracked_url_properties = /** @type {const} */ ([
 	'toJSON'
 ]);
 
-const tracked_search_params_properties = /** @type {const} */ ['get', 'getAll', 'has'];
-
 /**
  * @param {URLSearchParams} search_params
  * @param {() => void} callback
@@ -118,10 +116,9 @@ const tracked_search_params_properties = /** @type {const} */ ['get', 'getAll', 
 function tracked_search_params(search_params, callback, search_params_callback) {
 	return new Proxy(search_params, {
 		get(obj, key) {
-			if (typeof key === 'string' && tracked_search_params_properties.includes(key)) {
+			if (key === 'get' || key === 'getAll' || key === 'has') {
 				return (/**@type {string}*/ search_param) => {
 					search_params_callback(search_param);
-					// @ts-expect-error
 					return search_params[key].bind(search_params)(search_param);
 				};
 			}
