@@ -1,5 +1,19 @@
 # @sveltejs/kit
 
+## 1.28.0
+
+### Minor Changes
+
+- chore: deprecate top level promise await behaviour ([#11175](https://github.com/sveltejs/kit/pull/11175))
+
+### Patch Changes
+
+- fix: resolve relative cookie paths before storing ([#11253](https://github.com/sveltejs/kit/pull/11253))
+
+- chore: deprecate cookies.set/delete without path option ([#11237](https://github.com/sveltejs/kit/pull/11237))
+
+- fix: make sure promises from fetch handle errors ([#11228](https://github.com/sveltejs/kit/pull/11228))
+
 ## 1.27.7
 
 ### Patch Changes
