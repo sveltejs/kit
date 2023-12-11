@@ -17,13 +17,14 @@ export function update_pkg_json_content(content) {
 		// All other bumps are done as part of the Svelte 4 migration
 		['@sveltejs/kit', '^2.0.0'],
 		['vite', '^5.0.0'],
+		['vitest', '^1.0.0'],
+		['typescript', '^5.0.0'], // should already be done by Svelte 4 migration, but who knows
 		[
 			'@sveltejs/vite-plugin-svelte',
 			'^3.0.0',
 			' (vite-plugin-svelte is a peer dependency of SvelteKit now)',
 			'devDependencies'
 		]
-		// TODO bump vitest? others?
 	]);
 }
 
@@ -41,17 +42,25 @@ export function update_tsconfig_content(content) {
 		return content;
 	}
 
-	const updated = content
+	let updated = content
 		.split('\n')
 		.filter(
 			(line) => !line.includes('importsNotUsedAsValues') && !line.includes('preserveValueImports')
 		)
 		.join('\n');
-
 	if (updated !== content) {
 		log_migration(
 			'Removed deprecated `importsNotUsedAsValues` and `preserveValueImports`' +
 				' from tsconfig.json: https://kit.svelte.dev/docs/v2-migration-guide#updated-dependency-requirements'
+		);
+	}
+
+	content = updated;
+	updated = content.replace('"moduleResolution": "node"', '"moduleResolution": "bundler"');
+	if (updated !== content) {
+		log_migration(
+			'Updated `moduleResolution` to `bundler`' +
+				' in tsconfig.json: https://kit.svelte.dev/docs/v2-migration-guide#updated-dependency-requirements'
 		);
 	}
 
