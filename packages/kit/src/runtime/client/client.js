@@ -634,8 +634,8 @@ export function create_client(app, target) {
 			const new_values = new_url.searchParams.getAll(key);
 
 			if (
-				old_values.some((value) => !new_values.includes(value)) ||
-				new_values.some((value) => !old_values.includes(value))
+				old_values.every((value) => new_values.includes(value)) &&
+				new_values.every((value) => old_values.includes(value))
 			) {
 				changed.delete(key);
 			}
