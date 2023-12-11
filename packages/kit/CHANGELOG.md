@@ -1,5 +1,11 @@
 # @sveltejs/kit
 
+## 1.29.0
+
+### Minor Changes
+
+- feat: add `resolveRoute` to `$app/paths`, deprecate `resolvePath` ([#11261](https://github.com/sveltejs/kit/pull/11261))
+
 ## 1.28.0
 
 ### Minor Changes
