@@ -106,7 +106,7 @@ describe('make_trackable', (test) => {
 		);
 
 		url.origin;
-		assert.isNotOk(tracked);
+		assert.ok(!tracked);
 
 		url.pathname;
 		assert.ok(tracked);
@@ -139,15 +139,15 @@ describe('make_trackable', (test) => {
 		);
 
 		url.searchParams.get('test');
-		assert.isNotOk(tracked);
+		assert.ok(!tracked);
 		assert.ok(tracked_search_params.has('test'));
 
 		url.searchParams.getAll('test-getall');
-		assert.isNotOk(tracked);
+		assert.ok(!tracked);
 		assert.ok(tracked_search_params.has('test-getall'));
 
 		url.searchParams.has('test-has');
-		assert.isNotOk(tracked);
+		assert.ok(!tracked);
 		assert.ok(tracked_search_params.has('test-has'));
 
 		url.searchParams.entries();
