@@ -621,30 +621,26 @@ export function create_client(app, target) {
 
 	/**
 	 *
-	 * @param {URL} [old_url]
-	 * @param {URL} [new_url]
+	 * @param {URL | null} old_url
+	 * @param {URL} new_url
 	 */
 	function check_search_params_changed(old_url, new_url) {
-		const changed = new Set();
-		const new_search_params = new URLSearchParams(new_url?.searchParams);
-		const old_search_params = old_url?.searchParams;
-		for (const key of new Set(old_search_params?.keys?.() ?? [])) {
-			const new_get_all = new_search_params.getAll(key);
-			const old_get_all = old_search_params?.getAll?.(key) ?? [];
+		if (!old_url) return new Set(new_url.searchParams.keys());
+
+		const changed = new Set([...old_url.searchParams.keys(), ...new_url.searchParams.keys()]);
+
+		for (const key of changed) {
+			const old_values = old_url.searchParams.getAll(key);
+			const new_values = new_url.searchParams.getAll(key);
+
 			if (
-				// check if the two arrays contains the same values
-				!(
-					new_get_all.every((query_param) => old_get_all.includes(query_param)) &&
-					old_get_all.every((query_param) => new_get_all.includes(query_param))
-				)
+				old_values.some((value) => !new_values.includes(value)) ||
+				new_values.some((value) => !old_values.includes(value))
 			) {
-				changed.add(key);
+				changed.delete(key);
 			}
-			new_search_params.delete(key);
 		}
-		for (const [key] of new_search_params) {
-			changed.add(key);
-		}
+
 		return changed;
 	}
 

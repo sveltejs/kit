@@ -24,8 +24,7 @@ const server_template = ({
 	runtime_directory,
 	template,
 	error_page
-}) =>
-	`
+}) => `
 import root from '../root.${isSvelte5Plus() ? 'js' : 'svelte'}';
 import { set_building } from '__sveltekit/environment';
 import { set_assets } from '__sveltekit/paths';
