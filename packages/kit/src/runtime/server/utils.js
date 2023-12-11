@@ -149,6 +149,10 @@ export function stringify_uses(node) {
 		uses.push(`"dependencies":${JSON.stringify(Array.from(node.uses.dependencies))}`);
 	}
 
+	if (node.uses && node.uses.search_params.size > 0) {
+		uses.push(`"search_params":${JSON.stringify(Array.from(node.uses.search_params))}`);
+	}
+
 	if (node.uses && node.uses.params.size > 0) {
 		uses.push(`"params":${JSON.stringify(Array.from(node.uses.params))}`);
 	}

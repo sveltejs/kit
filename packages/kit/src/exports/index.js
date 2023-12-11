@@ -158,18 +158,39 @@ export function text(body, init) {
 
 /**
  * Create an `ActionFailure` object.
+ * @param {number} status The [HTTP status code](https://developer.mozilla.org/en-US/docs/Web/HTTP/Status#client_error_responses). Must be in the range 400-599.
+ * @overload
+ * @param {number} status
+ * @returns {import('./public.js').ActionFailure<undefined>}
+ */
+/**
+ * Create an `ActionFailure` object.
  * @template {Record<string, unknown> | undefined} [T=undefined]
  * @param {number} status The [HTTP status code](https://developer.mozilla.org/en-US/docs/Web/HTTP/Status#client_error_responses). Must be in the range 400-599.
- * @param {T} [data] Data associated with the failure (e.g. validation errors)
- * @returns {ActionFailure<T>}
+ * @param {T} data Data associated with the failure (e.g. validation errors)
+ * @overload
+ * @param {number} status
+ * @param {T} data
+ * @returns {import('./public.js').ActionFailure<T>}
+ */
+/**
+ * Create an `ActionFailure` object.
+ * @param {number} status
+ * @param {any} [data]
+ * @returns {import('./public.js').ActionFailure<any>}
  */
 export function fail(status, data) {
+	// @ts-expect-error unique symbol missing
 	return new ActionFailure(status, data);
 }
 
 const basic_param_pattern = /\[(\[)?(\.\.\.)?(\w+?)(?:=(\w+))?\]\]?/g;
 
+let warned = false;
+
 /**
+ * @deprecated Use `resolveRoute` from `$app/paths` instead.
+ *
  * Populate a route ID with params to resolve a pathname.
  * @example
  * ```js
@@ -186,6 +207,11 @@ const basic_param_pattern = /\[(\[)?(\.\.\.)?(\w+?)(?:=(\w+))?\]\]?/g;
  * @returns {string}
  */
 export function resolvePath(id, params) {
+	if (!warned) {
+		console.warn('`resolvePath` is deprecated. Use `resolveRoute` from `$app/paths` instead.');
+		warned = true;
+	}
+
 	const segments = get_route_segments(id);
 	return (
 		'/' +

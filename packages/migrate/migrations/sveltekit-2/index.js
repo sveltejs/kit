@@ -1,13 +1,24 @@
 import colors from 'kleur';
 import fs from 'node:fs';
 import prompts from 'prompts';
+import semver from 'semver';
 import glob from 'tiny-glob/sync.js';
 import { bail, check_git, update_js_file, update_svelte_file } from '../../utils.js';
-import { transform_code, transform_svelte_code, update_pkg_json } from './migrate.js';
+import {
+	transform_code,
+	update_pkg_json,
+	update_svelte_config,
+	update_tsconfig
+} from './migrate.js';
+import { migrate as migrate_svelte_4 } from '../svelte-4/index.js';
 
 export async function migrate() {
 	if (!fs.existsSync('package.json')) {
 		bail('Please re-run this script in a directory with a package.json');
+	}
+
+	if (!fs.existsSync('svelte.config.js')) {
+		bail('Please re-run this script in a directory with a svelte.config.js');
 	}
 
 	console.log(
@@ -15,7 +26,7 @@ export async function migrate() {
 			.bold()
 			.yellow(
 				'\nThis will update files in the current directory\n' +
-					"If you're inside a monorepo, don't run this in the root directory, rather run it in all projects independently.\n"
+					"If you're inside a monorepo, run this in individual project directories rather than the workspace root.\n"
 			)
 	);
 
@@ -32,6 +43,47 @@ export async function migrate() {
 		process.exit(1);
 	}
 
+	const pkg = JSON.parse(fs.readFileSync('package.json', 'utf8'));
+	const svelte_dep = pkg.devDependencies?.svelte ?? pkg.dependencies?.svelte;
+	if (svelte_dep === undefined) {
+		bail('Please install Svelte before continuing');
+	}
+
+	if (semver.gtr('4.0.0', svelte_dep)) {
+		console.log(
+			colors
+				.bold()
+				.yellow(
+					'\nSvelteKit 2 requires Svelte 4 or newer. We recommend running the `svelte-4` migration first (`npx svelte-migrate svelte-4`).\n'
+				)
+		);
+		const response = await prompts({
+			type: 'confirm',
+			name: 'value',
+			message: 'Run `svelte-4` migration now?',
+			initial: false
+		});
+		if (!response.value) {
+			process.exit(1);
+		} else {
+			await migrate_svelte_4();
+			console.log(
+				colors
+					.bold()
+					.green('`svelte-4` migration complete. Continue with `sveltekit-2` migration?\n')
+			);
+			const response = await prompts({
+				type: 'confirm',
+				name: 'value',
+				message: 'Continue?',
+				initial: false
+			});
+			if (!response.value) {
+				process.exit(1);
+			}
+		}
+	}
+
 	const folders = await prompts({
 		type: 'multiselect',
 		name: 'value',
@@ -39,24 +91,22 @@ export async function migrate() {
 		choices: fs
 			.readdirSync('.')
 			.filter(
-				(dir) => fs.statSync(dir).isDirectory() && dir !== 'node_modules' && !dir.startsWith('.')
+				(dir) =>
+					fs.statSync(dir).isDirectory() &&
+					dir !== 'node_modules' &&
+					dir !== 'dist' &&
+					!dir.startsWith('.')
 			)
-			.map((dir) => ({ title: dir, value: dir, selected: true }))
+			.map((dir) => ({ title: dir, value: dir, selected: dir === 'src' }))
 	});
 
 	if (!folders.value?.length) {
 		process.exit(1);
 	}
 
-	const migrate_transition = await prompts({
-		type: 'confirm',
-		name: 'value',
-		message:
-			'Add the `|global` modifier to currently global transitions for backwards compatibility? More info at https://svelte.dev/docs/v4-migration-guide#transitions-are-local-by-default',
-		initial: true
-	});
-
 	update_pkg_json();
+	update_tsconfig();
+	update_svelte_config();
 
 	// const { default: config } = fs.existsSync('svelte.config.js')
 	// 	? await import(pathToFileURL(path.resolve('svelte.config.js')).href)
@@ -78,9 +128,7 @@ export async function migrate() {
 	for (const file of files) {
 		if (extensions.some((ext) => file.endsWith(ext))) {
 			if (svelte_extensions.some((ext) => file.endsWith(ext))) {
-				update_svelte_file(file, transform_code, (code) =>
-					transform_svelte_code(code, migrate_transition.value)
-				);
+				update_svelte_file(file, transform_code, (code) => code);
 			} else {
 				update_js_file(file, transform_code);
 			}
@@ -94,9 +142,9 @@ export async function migrate() {
 	const cyan = colors.bold().cyan;
 
 	const tasks = [
-		use_git && cyan('git commit -m "migration to Svelte 4"'),
-		'Review the migration guide at https://svelte.dev/docs/v4-migration-guide',
-		'Read the updated docs at https://svelte.dev/docs'
+		use_git && cyan('git commit -m "migration to SvelteKit 2"'),
+		'Review the migration guide at https://kit.svelte.dev/docs/v2-migration-guide',
+		'Read the updated docs at https://kit.svelte.dev/docs'
 	].filter(Boolean);
 
 	tasks.forEach((task, i) => {

@@ -1,6 +1,6 @@
 {
 	"name": "@sveltejs/kit",
-	"version": "1.27.7",
+	"version": "1.28.0",
 	"description": "The fastest way to build Svelte apps",
 	"repository": {
 		"type": "git",
@@ -57,7 +57,7 @@
 	],
 	"scripts": {
 		"lint": "prettier --config ../../.prettierrc --check .",
-		"check": "tsc",
+		"check": "tsc && cd ./test/types && tsc",
 		"check:all": "tsc && pnpm -r --filter=\"./**\" check",
 		"format": "prettier --config ../../.prettierrc --write .",
 		"test": "pnpm test:unit && pnpm test:integration",

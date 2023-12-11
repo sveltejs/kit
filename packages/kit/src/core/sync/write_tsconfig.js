@@ -86,6 +86,7 @@ export function get_tsconfig(kit, include_base_url) {
 
 	const include = new Set([
 		'ambient.d.ts',
+		'non-ambient.d.ts',
 		'./types/**/$types.d.ts',
 		config_relative('vite.config.js'),
 		config_relative('vite.config.ts')
@@ -109,7 +110,7 @@ export function get_tsconfig(kit, include_base_url) {
 	include.add(config_relative(`${test_folder}/**/*.ts`));
 	include.add(config_relative(`${test_folder}/**/*.svelte`));
 
-	const exclude = [config_relative('node_modules/**'), './[!ambient.d.ts]**'];
+	const exclude = [config_relative('node_modules/**')];
 	if (path.extname(kit.files.serviceWorker)) {
 		exclude.push(config_relative(kit.files.serviceWorker));
 	} else {

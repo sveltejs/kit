@@ -413,6 +413,30 @@ test.describe('Invalidation', () => {
 		expect(await page.textContent('h1')).toBe('3');
 	});
 
+	test('load function only re-runs when tracked searchParams change (universal)', async ({
+		page,
+		clicknav
+	}) => {
+		await page.goto('/load/invalidation/search-params/universal?tracked=0');
+		expect(await page.textContent('span')).toBe('count: 0');
+		await clicknav('[data-id="tracked"]');
+		expect(await page.textContent('span')).toBe('count: 1');
+		await clicknav('[data-id="untracked"]');
+		expect(await page.textContent('span')).toBe('count: 1');
+	});
+
+	test('load function only re-runs when tracked searchParams change (server)', async ({
+		page,
+		clicknav
+	}) => {
+		await page.goto('/load/invalidation/search-params/server?tracked=0');
+		expect(await page.textContent('span')).toBe('count: 0');
+		await clicknav('[data-id="tracked"]');
+		expect(await page.textContent('span')).toBe('count: 1');
+		await clicknav('[data-id="untracked"]');
+		expect(await page.textContent('span')).toBe('count: 1');
+	});
+
 	test('server-only load functions are re-run following forced invalidation', async ({ page }) => {
 		await page.goto('/load/invalidation/forced');
 		expect(await page.textContent('h1')).toBe('a: 0, b: 1');

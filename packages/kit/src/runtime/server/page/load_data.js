@@ -22,18 +22,31 @@ export async function load_server_data({ event, state, node, parent }) {
 		params: new Set(),
 		parent: false,
 		route: false,
-		url: false
+		url: false,
+		search_params: new Set()
 	};
 
-	const url = make_trackable(event.url, () => {
-		if (DEV && done && !uses.url) {
-			console.warn(
-				`${node.server_id}: Accessing URL properties in a promise handler after \`load(...)\` has returned will not cause the function to re-run when the URL changes`
-			);
-		}
+	const url = make_trackable(
+		event.url,
+		() => {
+			if (DEV && done && !uses.url) {
+				console.warn(
+					`${node.server_id}: Accessing URL properties in a promise handler after \`load(...)\` has returned will not cause the function to re-run when the URL changes`
+				);
+			}
 
-		uses.url = true;
-	});
+			uses.url = true;
+		},
+		(param) => {
+			if (DEV && done && !uses.search_params.has(param)) {
+				console.warn(
+					`${node.server_id}: Accessing URL properties in a promise handler after \`load(...)\` has returned will not cause the function to re-run when the URL changes`
+				);
+			}
+
+			uses.search_params.add(param);
+		}
+	);
 
 	if (state.prerendering) {
 		disable_search(url);

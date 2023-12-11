@@ -92,6 +92,13 @@ test.describe('base path', () => {
 		await clicknav('[href="/path-base/base/two"]');
 		expect(await page.textContent('h2')).toBe('two');
 	});
+
+	test('resolveRoute accounts for base path', async ({ baseURL, page, clicknav }) => {
+		await page.goto('/path-base/resolve-route');
+		await clicknav('[data-id=target]');
+		expect(page.url()).toBe(`${baseURL}/path-base/resolve-route/resolved/`);
+		expect(await page.textContent('h2')).toBe('resolved');
+	});
 });
 
 test.describe('assets path', () => {
