@@ -113,19 +113,12 @@ async function analyse({ manifest_path, env }) {
  * @param {import('types').SSREndpoint} mod
  */
 function analyse_endpoint(route, mod) {
-	/** @type {import('types').PrerenderOption} */
-	let prerender = false;
+	validate_server_exports(mod, route.id);
 
-	if (mod.prerender !== undefined) {
-		validate_server_exports(mod, route.id);
-
-		if (mod.prerender && (mod.POST || mod.PATCH || mod.PUT || mod.DELETE)) {
-			throw new Error(
-				`Cannot prerender a +server file with POST, PATCH, PUT, or DELETE (${route.id})`
-			);
-		}
-
-		prerender = mod.prerender;
+	if (mod.prerender && (mod.POST || mod.PATCH || mod.PUT || mod.DELETE)) {
+		throw new Error(
+			`Cannot prerender a +server file with POST, PATCH, PUT, or DELETE (${route.id})`
+		);
 	}
 
 	/** @type {Array<import('types').HttpMethod | '*'>} */
@@ -143,7 +136,7 @@ function analyse_endpoint(route, mod) {
 		config: mod.config,
 		entries: mod.entries,
 		methods,
-		prerender
+		prerender: mod.prerender ?? false
 	};
 }
 
