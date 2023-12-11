@@ -476,12 +476,8 @@ export function create_client(app, target) {
 				data: server_data_node?.data ?? null,
 				url: make_trackable(
 					url,
-					() => {
-						uses.url = true;
-					},
-					(search_param) => {
-						uses.search_params.add(search_param);
-					}
+					() => (uses.url = true),
+					(param) => uses.search_params.add(param)
 				),
 				async fetch(resource, init) {
 					/** @type {URL | string} */

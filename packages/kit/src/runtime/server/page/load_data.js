@@ -43,6 +43,7 @@ export async function load_server_data({ event, state, node, parent }) {
 					`${node.server_id}: Accessing URL properties in a promise handler after \`load(...)\` has returned will not cause the function to re-run when the URL changes`
 				);
 			}
+
 			uses.search_params.add(param);
 		}
 	);
