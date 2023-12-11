@@ -159,9 +159,7 @@ export function make_trackable(url, callback, search_params_callback) {
 	}
 
 	Object.defineProperty(tracked, 'searchParams', {
-		get() {
-			return tracked_search_params(search_params_to_track, callback, search_params_callback);
-		},
+		value: tracked_search_params(search_params_to_track, callback, search_params_callback),
 		enumerable: true,
 		configurable: true
 	});
