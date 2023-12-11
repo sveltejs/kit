@@ -101,7 +101,7 @@ async function analyse({ manifest_path, env }) {
 			},
 			prerender: page?.prerender ?? endpoint?.prerender,
 			entries:
-				entries && (await entries()).map((entry_object) => resolve_route(route.id, entry_object)) // TODO should this be prefixed with `base`?
+				entries && (await entries()).map((entry_object) => resolve_route(route.id, entry_object))
 		});
 	}
 
