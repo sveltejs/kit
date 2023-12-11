@@ -1999,7 +1999,7 @@ declare module '$app/navigation' {
 
 declare module '$app/paths' {
 	import type { base, assets } from '__sveltekit/paths';
-	/// <reference types="src/types/ambient.js" />
+	/// <reference path="../../types/ambient.d.ts" />
 	/**
 	 * Populate a route ID with params to resolve a pathname.
 	 * @example
