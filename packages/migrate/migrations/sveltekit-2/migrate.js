@@ -88,6 +88,7 @@ export function update_svelte_config_content(code) {
  * @param {boolean} _is_ts
  * @param {string} file_path
  */
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 export function transform_code(code, _is_ts, file_path) {
 	const project = new Project({ useInMemoryFileSystem: true });
 	const source = project.createSourceFile('svelte.ts', code);
@@ -132,6 +133,7 @@ function remove_throws(source) {
  * @param {string} file_path
  * @param {import('ts-morph').SourceFile} source
  */
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 function add_cookie_note(file_path, source) {
 	const basename = path.basename(file_path);
 	if (
