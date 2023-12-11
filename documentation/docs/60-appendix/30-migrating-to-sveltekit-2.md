@@ -76,7 +76,7 @@ export function load ({ cookies }) {
 }
 ```
 
-`svelte-migrate` will do these changes automatically for you, though it's best that you manually go over the changes afterwards to see if you want to apply different `path` settings.
+`svelte-migrate` will add comments highlighting the locations that need to be adjusted.
 
 ## goto(...) no longer accepts external URLs
 
