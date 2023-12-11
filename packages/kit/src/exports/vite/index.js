@@ -30,10 +30,6 @@ import sirv from 'sirv';
 
 export { vitePreprocess } from '@sveltejs/vite-plugin-svelte';
 
-/** @typedef {import('http').IncomingMessage} Req */
-/** @typedef {import('http').ServerResponse} Res */
-/** @typedef {(req: Req, res: Res, next: () => void) => void} Handler */
-
 const cwd = process.cwd();
 
 /** @type {import('./types.js').EnforcedConfig} */
@@ -940,8 +936,8 @@ const create_service_worker_module = (config) => dedent`
 
 /**
  * @param {string} scope
- * @param {Handler} handler
- * @returns {Handler}
+ * @param {(req: import('http').IncomingMessage, res: import('http').ServerResponse, next: () => void) => void} handler
+ * @returns {(req: import('http').IncomingMessage, res: import('http').ServerResponse, next: () => void) => void}
  */
 function scoped(scope, handler) {
 	if (scope === '') return handler;
