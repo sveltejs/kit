@@ -132,6 +132,9 @@ function remove_throws(source) {
  * @param {import('ts-morph').SourceFile} source
  */
 function add_cookie_note(file_path, source) {
+	// TODO fix the crazy indentation before reinstating this
+	return;
+
 	const basename = path.basename(file_path);
 	if (
 		basename !== '+page.js' &&
@@ -151,6 +154,8 @@ function add_cookie_note(file_path, source) {
 		'Remember to add the `path` option to `cookies.set/delete/serialize` calls: https://kit.svelte.dev/docs/v2-migration-guide#path-is-now-a-required-option-for-cookies'
 	);
 
+	const calls = [];
+
 	for (const call of source.getDescendantsOfKind(SyntaxKind.CallExpression)) {
 		const expression = call.getExpression();
 		if (!Node.isPropertyAccessExpression(expression)) {
@@ -162,7 +167,7 @@ function add_cookie_note(file_path, source) {
 			continue;
 		}
 
-		if (call.getText().includes('path:')) {
+		if (call.getText().includes('path')) {
 			continue;
 		}
 
@@ -171,29 +176,26 @@ function add_cookie_note(file_path, source) {
 			continue;
 		}
 
-		const some_function = call.getFirstAncestor(
+		const parent_function = call.getFirstAncestor(
 			/** @returns {ancestor is import('ts-morph').FunctionDeclaration | import('ts-morph').VariableDeclaration} */
 			(ancestor) => {
 				// Check if this is inside a function
-				const fn = ancestor.asKind(SyntaxKind.FunctionDeclaration);
-				const arrow_fn = ancestor.asKind(SyntaxKind.VariableDeclaration);
-				return (
-					!!fn || (!!arrow_fn && arrow_fn.getInitializer()?.getKind() === SyntaxKind.ArrowFunction)
-				);
+				const fn_declaration = ancestor.asKind(SyntaxKind.FunctionDeclaration);
+				const fn_expression = ancestor.asKind(SyntaxKind.FunctionExpression);
+				const arrow_fn_expression = ancestor.asKind(SyntaxKind.ArrowFunction);
+				return !!fn_declaration || !!fn_expression || !!arrow_fn_expression;
 			}
 		);
-		if (!some_function) {
+
+		if (!parent_function) {
 			continue;
 		}
 
-		const parentStatement = call.getParentIfKind(SyntaxKind.ExpressionStatement);
-		if (!parentStatement) {
-			continue;
-		}
+		calls.push(call);
+	}
 
-		parentStatement.replaceWithText(
-			'/* @migration task: add path argument */' + parentStatement.getText()
-		);
+	for (const call of calls) {
+		call.replaceWithText('/* @migration task: add path argument */ ' + call.getText());
 	}
 
 	logger();
