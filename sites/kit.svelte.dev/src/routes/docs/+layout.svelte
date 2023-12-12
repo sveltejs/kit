@@ -43,10 +43,12 @@
 
 	.toc-container {
 		background: var(--sk-back-3);
+		display: none;
 	}
 
 	@media (min-width: 832px) {
 		.toc-container {
+			display: block;
 			width: var(--sidebar-width);
 			height: calc(
 				100vh - var(--sk-nav-height) - var(--ts-toggle-height) - var(--sk-banner-bottom-height)
@@ -54,8 +56,7 @@
 			position: fixed;
 			left: 0;
 			top: var(--sk-nav-height);
-			overflow-x: hidden;
-			overflow-y: auto;
+			overflow: hidden;
 		}
 
 		.toc-container::before {

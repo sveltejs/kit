@@ -1,5 +1,17 @@
 # svelte-migrate
 
+## 1.2.8
+
+### Patch Changes
+
+- chore(deps): update dependency ts-morph to v21 ([#11181](https://github.com/sveltejs/kit/pull/11181))
+
+## 1.2.7
+
+### Patch Changes
+
+- chore(deps): update dependency ts-morph to v20 ([#10766](https://github.com/sveltejs/kit/pull/10766))
+
 ## 1.2.6
 
 ### Patch Changes

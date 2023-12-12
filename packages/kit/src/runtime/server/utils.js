@@ -99,15 +99,7 @@ export async function handle_error_and_jsonify(event, options, error) {
 		return error.body;
 	} else {
 		if (__SVELTEKIT_DEV__ && typeof error == 'object') {
-			error = new Proxy(error, {
-				get: (target, property) => {
-					if (property === 'stack') {
-						return fix_stack_trace(target.stack);
-					}
-
-					return Reflect.get(target, property, target);
-				}
-			});
+			fix_stack_trace(error);
 		}
 
 		return (
@@ -166,4 +158,18 @@ export function stringify_uses(node) {
 	if (node.uses?.url) uses.push('"url":1');
 
 	return `"uses":{${uses.join(',')}}`;
+}
+
+/**
+ * @param {string} message
+ * @param {number} offset
+ */
+export function warn_with_callsite(message, offset = 0) {
+	if (DEV) {
+		const stack = fix_stack_trace(new Error()).split('\n');
+		const line = stack.at(3 + offset);
+		message += `\n${line}`;
+	}
+
+	console.warn(message);
 }

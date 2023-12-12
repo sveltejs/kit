@@ -2,7 +2,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { mkdirp, copy, dist } from './utils.js';
 
-/** @type {import('./types/index').create} */
+/** @type {import('./types/index.js').create} */
 export async function create(cwd, options) {
 	mkdirp(cwd);
 
@@ -22,7 +22,7 @@ function write_template_files(template, types, name, cwd) {
 	copy(`${dir}/package.json`, `${cwd}/package.json`);
 
 	const manifest = `${dir}/files.types=${types}.json`;
-	const files = /** @type {import('./types/internal').File[]} */ (
+	const files = /** @type {import('./types/internal.js').File[]} */ (
 		JSON.parse(fs.readFileSync(manifest, 'utf-8'))
 	);
 
@@ -37,12 +37,12 @@ function write_template_files(template, types, name, cwd) {
 /**
  *
  * @param {string} cwd
- * @param {import('./types/internal').Options} options
+ * @param {import('./types/internal.js').Options} options
  * @param {string} name
  */
 function write_common_files(cwd, options, name) {
 	const shared = dist('shared.json');
-	const { files } = /** @type {import('./types/internal').Common} */ (
+	const { files } = /** @type {import('./types/internal.js').Common} */ (
 		JSON.parse(fs.readFileSync(shared, 'utf-8'))
 	);
 
@@ -73,8 +73,8 @@ function write_common_files(cwd, options, name) {
 }
 
 /**
- * @param {import('./types/internal').Condition} condition
- * @param {import('./types/internal').Options} options
+ * @param {import('./types/internal.js').Condition} condition
+ * @param {import('./types/internal.js').Options} options
  * @returns {boolean}
  */
 function matches_condition(condition, options) {
@@ -84,7 +84,7 @@ function matches_condition(condition, options) {
 	if (condition === 'typescript' || condition === 'checkjs') {
 		return options.types === condition;
 	}
-	return options[condition];
+	return !!options[condition];
 }
 
 /**
@@ -134,8 +134,8 @@ function sort_keys(obj) {
  * Sort files so that those which apply more generically come first so they
  * can be overwritten by files for more precise cases later.
  *
- * @param files {import('./types/internal').Common['files']}
- *  */
+ * @param {import('./types/internal.js').Common['files']} files
+ */
 function sort_files(files) {
 	return files.sort((f1, f2) => {
 		const f1_more_generic =

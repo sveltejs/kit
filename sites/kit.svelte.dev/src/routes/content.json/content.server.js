@@ -33,7 +33,10 @@ export async function content() {
 			const slug = match[1];
 
 			const filepath = `../../documentation/${category.slug}/${file}`;
-			const markdown = replaceExportTypePlaceholders(await readFile(filepath, 'utf-8'), modules);
+			const markdown = await replaceExportTypePlaceholders(
+				await readFile(filepath, 'utf-8'),
+				modules
+			);
 
 			const { body, metadata } = extractFrontmatter(markdown);
 
@@ -82,38 +85,41 @@ export async function content() {
 	return blocks;
 }
 
+/** @param {string} markdown  */
 async function plaintext(markdown) {
 	const block = (text) => `${text}\n`;
 	const inline = (text) => text;
 
-	return (await markedTransform(markdown, {
-		code: (source) =>
-			source
-				.split('// ---cut---\n')
-				.pop()
-				.replace(/^\/\/((\/ file:)|( @errors:))[\s\S]*/gm, ''),
-		blockquote: block,
-		html: () => '\n',
-		heading: (text) => `${text}\n`,
-		hr: () => '',
-		list: block,
-		listitem: block,
-		checkbox: block,
-		paragraph: (text) => `${text}\n\n`,
-		table: block,
-		tablerow: block,
-		tablecell: (text, opts) => {
-			return text + ' ';
-		},
-		strong: inline,
-		em: inline,
-		codespan: inline,
-		br: () => '',
-		del: inline,
-		link: (href, title, text) => text,
-		image: (href, title, text) => text,
-		text: inline
-	}))
+	return (
+		await markedTransform(markdown, {
+			code: (source) =>
+				source
+					.split('// ---cut---\n')
+					.pop()
+					.replace(/^\/\/((\/ file:)|( @errors:))[\s\S]*/gm, ''),
+			blockquote: block,
+			html: () => '\n',
+			heading: (text) => `${text}\n`,
+			hr: () => '',
+			list: block,
+			listitem: block,
+			checkbox: block,
+			paragraph: (text) => `${text}\n\n`,
+			table: block,
+			tablerow: block,
+			tablecell: (text, opts) => {
+				return text + ' ';
+			},
+			strong: inline,
+			em: inline,
+			codespan: inline,
+			br: () => '',
+			del: inline,
+			link: (href, title, text) => text,
+			image: (href, title, text) => text,
+			text: inline
+		})
+	)
 		.replace(/&lt;/g, '<')
 		.replace(/&gt;/g, '>')
 		.replace(/&#(\d+);/g, (match, code) => {

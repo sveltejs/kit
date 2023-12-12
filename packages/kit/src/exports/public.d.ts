@@ -42,12 +42,12 @@ export interface Adapter {
 type AwaitedPropertiesUnion<input extends Record<string, any> | void> = input extends void
 	? undefined // needs to be undefined, because void will break intellisense
 	: input extends Record<string, any>
-	? {
-			[key in keyof input]: Awaited<input[key]>;
-	  }
-	: {} extends input // handles the any case
-	? input
-	: unknown;
+	  ? {
+				[key in keyof input]: Awaited<input[key]>;
+	    }
+	  : {} extends input // handles the any case
+	    ? input
+	    : unknown;
 
 export type AwaitedProperties<input extends Record<string, any> | void> =
 	AwaitedPropertiesUnion<input> extends Record<string, any>
@@ -70,8 +70,8 @@ type OptionalUnion<
 type UnpackValidationError<T> = T extends ActionFailure<infer X>
 	? X
 	: T extends void
-	? undefined // needs to be undefined, because void will corrupt union type
-	: T;
+	  ? undefined // needs to be undefined, because void will corrupt union type
+	  : T;
 
 /**
  * This object is passed to the `adapt` function of adapters.
@@ -203,7 +203,7 @@ export interface Cookies {
 
 	/**
 	 * Gets all cookies that were previously set with `cookies.set`, or from the request headers.
-	 * @param opts the options, passed directily to `cookie.parse`. See documentation [here](https://github.com/jshttp/cookie#cookieparsestr-options)
+	 * @param opts the options, passed directly to `cookie.parse`. See documentation [here](https://github.com/jshttp/cookie#cookieparsestr-options)
 	 */
 	getAll(opts?: import('cookie').CookieParseOptions): Array<{ name: string; value: string }>;
 
@@ -215,7 +215,7 @@ export interface Cookies {
 	 * By default, the `path` of a cookie is the 'directory' of the current pathname. In most cases you should explicitly set `path: '/'` to make the cookie available throughout your app.
 	 * @param name the name of the cookie
 	 * @param value the cookie value
-	 * @param opts the options, passed directory to `cookie.serialize`. See documentation [here](https://github.com/jshttp/cookie#cookieserializename-value-options)
+	 * @param opts the options, passed directly to `cookie.serialize`. See documentation [here](https://github.com/jshttp/cookie#cookieserializename-value-options)
 	 */
 	set(name: string, value: string, opts?: import('cookie').CookieSerializeOptions): void;
 
@@ -224,7 +224,7 @@ export interface Cookies {
 	 *
 	 * By default, the `path` of a cookie is the 'directory' of the current pathname. In most cases you should explicitly set `path: '/'` to make the cookie available throughout your app.
 	 * @param name the name of the cookie
-	 * @param opts the options, passed directory to `cookie.serialize`. The `path` must match the path of the cookie you want to delete. See documentation [here](https://github.com/jshttp/cookie#cookieserializename-value-options)
+	 * @param opts the options, passed directly to `cookie.serialize`. The `path` must match the path of the cookie you want to delete. See documentation [here](https://github.com/jshttp/cookie#cookieserializename-value-options)
 	 */
 	delete(name: string, opts?: import('cookie').CookieSerializeOptions): void;
 
@@ -237,7 +237,7 @@ export interface Cookies {
 	 *
 	 * @param name the name of the cookie
 	 * @param value the cookie value
-	 * @param opts the options, passed directory to `cookie.serialize`. See documentation [here](https://github.com/jshttp/cookie#cookieserializename-value-options)
+	 * @param opts the options, passed directly to `cookie.serialize`. See documentation [here](https://github.com/jshttp/cookie#cookieserializename-value-options)
 	 */
 	serialize(name: string, value: string, opts?: import('cookie').CookieSerializeOptions): string;
 }
@@ -477,6 +477,8 @@ export interface KitConfig {
 		 *
 		 * If `true`, `base` and `assets` imported from `$app/paths` will be replaced with relative asset paths during server-side rendering, resulting in portable HTML.
 		 * If `false`, `%sveltekit.assets%` and references to build artifacts will always be root-relative paths, unless `paths.assets` is an external URL
+		 *
+		 * [Single-page app](https://kit.svelte.dev/docs/single-page-apps) fallback pages will always use absolute paths, regardless of this setting.
 		 *
 		 * If your app uses a `<base>` element, you should set this to `false`, otherwise asset URLs will incorrectly be resolved against the `<base>` URL rather than the current page.
 		 * @default undefined
@@ -1282,8 +1284,9 @@ export type SubmitFunction<
 			/**
 			 * Call this to get the default behavior of a form submission response.
 			 * @param options Set `reset: false` if you don't want the `<form>` values to be reset after a successful submission.
+			 * @param invalidateAll Set `invalidateAll: false` if you don't want the action to call `invalidateAll` after submission.
 			 */
-			update(options?: { reset: boolean }): Promise<void>;
+			update(options?: { reset?: boolean; invalidateAll?: boolean }): Promise<void>;
 	  }) => void)
 >;
 

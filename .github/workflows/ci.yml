@@ -24,13 +24,13 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: pnpm/action-setup@v2.4.0
-      - uses: actions/setup-node@v3
+      - uses: actions/setup-node@v4
         with:
           node-version: '16.x'
           cache: pnpm
       - run: pnpm install --frozen-lockfile
       - run: pnpm run lint
-      - run: cd packages/kit && pnpm prepublishOnly
+      - run: cd packages/kit && pnpm prepublishOnly && { [ "`git status --porcelain=v1`" == "" ] || (echo "Generated types have changed — please run prepublishOnly locally and commit the changes after you have reviewed them" && exit 1); }
       - run: pnpm run check
   Tests:
     runs-on: ${{ matrix.os }}
@@ -54,7 +54,7 @@ jobs:
       - run: git config --global core.autocrlf false
       - uses: actions/checkout@v4
       - uses: pnpm/action-setup@v2.4.0
-      - uses: actions/setup-node@v3
+      - uses: actions/setup-node@v4
         with:
           node-version: ${{ matrix.node-version }}
           cache: pnpm
@@ -109,7 +109,7 @@ jobs:
       - run: git config --global core.autocrlf false
       - uses: actions/checkout@v4
       - uses: pnpm/action-setup@v2.4.0
-      - uses: actions/setup-node@v3
+      - uses: actions/setup-node@v4
         with:
           node-version: ${{ matrix.node-version }}
           cache: pnpm
@@ -132,7 +132,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: pnpm/action-setup@v2.4.0
-      - uses: actions/setup-node@v3
+      - uses: actions/setup-node@v4
         with:
           node-version: 16
           cache: pnpm

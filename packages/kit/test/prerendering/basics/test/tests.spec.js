@@ -114,6 +114,21 @@ test('generates __data.json file for shadow endpoints', () => {
 	});
 });
 
+test('generates __data.json file for shadow endpoints with ssr turned off', () => {
+	const data = JSON.parse(read('shadowed-get/ssr-off/__data.json'));
+	expect(data).toEqual({
+		type: 'data',
+		nodes: [
+			null,
+			{
+				type: 'data',
+				data: [{ answer: 1 }, 42],
+				uses: {}
+			}
+		]
+	});
+});
+
 test('does not prerender page with shadow endpoint with non-load handler', () => {
 	assert.isFalse(fs.existsSync(`${build}/shadowed-post.html`));
 	assert.isFalse(fs.existsSync(`${build}/shadowed-post/__data.json`));

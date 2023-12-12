@@ -136,6 +136,7 @@ export function exec(match, params, matchers) {
 	const result = {};
 
 	const values = match.slice(1);
+	const values_needing_match = values.filter((value) => value !== undefined);
 
 	let buffered = 0;
 
@@ -168,6 +169,15 @@ export function exec(match, params, matchers) {
 			const next_param = params[i + 1];
 			const next_value = values[i + 1];
 			if (next_param && !next_param.rest && next_param.optional && next_value && param.chained) {
+				buffered = 0;
+			}
+
+			// There are no more params and no more values, but all non-empty values have been matched
+			if (
+				!next_param &&
+				!next_value &&
+				Object.keys(result).length === values_needing_match.length
+			) {
 				buffered = 0;
 			}
 			continue;

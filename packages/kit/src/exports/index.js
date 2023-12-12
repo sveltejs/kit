@@ -113,7 +113,11 @@ export function fail(status, data) {
 
 const basic_param_pattern = /\[(\[)?(\.\.\.)?(\w+?)(?:=(\w+))?\]\]?/g;
 
+let warned = false;
+
 /**
+ * @deprecated Use `resolveRoute` from `$app/paths` instead.
+ *
  * Populate a route ID with params to resolve a pathname.
  * @example
  * ```js
@@ -130,6 +134,11 @@ const basic_param_pattern = /\[(\[)?(\.\.\.)?(\w+?)(?:=(\w+))?\]\]?/g;
  * @returns {string}
  */
 export function resolvePath(id, params) {
+	if (!warned) {
+		console.warn('`resolvePath` is deprecated. Use `resolveRoute` from `$app/paths` instead.');
+		warned = true;
+	}
+
 	const segments = get_route_segments(id);
 	return (
 		'/' +
