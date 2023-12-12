@@ -1220,6 +1220,21 @@ test.describe('Actions', () => {
 
 		await expect(page.locator('pre')).toHaveText('something went wrong');
 	});
+
+	test('submitting application/json should return http status code 415', async ({ baseURL }) => {
+		const response = await fetch(`${baseURL}/actions/form-errors`, {
+			method: 'POST',
+			body: JSON.stringify({ foo: 'bar' }),
+			headers: {
+				'Content-Type': 'application/json',
+				Origin: `${baseURL}`
+			}
+		});
+		const { type, error } = await response.json();
+		expect(type).toBe('error');
+		expect(error.message).toBe('Actions expect form-encoded data (received application/json)');
+		expect(response.status).toBe(415);
+	});
 });
 
 // Run in serial to not pollute the log with (correct) cookie warnings
