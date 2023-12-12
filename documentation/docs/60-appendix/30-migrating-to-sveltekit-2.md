@@ -107,6 +107,8 @@ As such, SvelteKit 2 replaces `resolvePath` with a (slightly better named) funct
 +const path = resolveRoute('/blog/[slug]', { slug });
 ```
 
+`svelte-migrate` will do the method replacement for you, though if you later prepend the result with `base`, you need to remove that yourself.
+
 ## Updated dependency requirements
 
 SvelteKit requires Node `18.13` or higher, Vite `^5.0`, vite-plugin-svelte `^3.0`, TypeScript `^5.0` and Svelte version 4 or higher. `svelte-migrate` will do the `package.json` bumps for you.
