@@ -2,6 +2,12 @@ import { parse } from 'svelte/compiler';
 import MagicString from 'magic-string';
 import { dedent } from '../../../core/sync/utils.js';
 
+const rewritten_attributes = [
+	['a', 'href'],
+	['form', 'action'],
+	['button', 'formaction']
+]
+
 /**
  * Rewrites every single href attribute in the markup, so that it's wrapped
  * with the resolveDestination router-hook.
@@ -17,26 +23,47 @@ import { dedent } from '../../../core/sync/utils.js';
  */
 export const resolve_destination_preprocessor = ({ router_hook_entry }) => ({
 	markup({ content }) {
-		if (!content.includes('href')) return;
 
+		//Do some quick checks to see if we need to do anything
+		// keep trach of the tag_name - attribute_name pairs that may be present
+		const matchedAttributeIndexes = [];
+		for (let i = 0; i < rewritten_attributes.length; i++) {
+			const [_tag_name, attribute_name] = rewritten_attributes[i];
+			if(content.includes(attribute_name)) matchedAttributeIndexes.push(i);
+		}
+
+		//If none of the attributes are present, skip parsing & processing
+		if (matchedAttributeIndexes.length === 0 ) return;
+		
 		const ast = parse(content);
-		const links = getElements(ast, 'a');
-		if (!links.length) return;
-
 		const s = new MagicString(content);
 
-		for (const link of links) {
-			/** @type {import("svelte/types/compiler/interfaces").Attribute[]} */
-			const attributes = link.attributes || [];
 
-			const hrefAttribute = attributes.find((attribute) => attribute.name === 'href');
-			if (!hrefAttribute) continue;
+		let rewroteAttribute = false;
 
-			const attributeTemplateString = attributeToTemplateString(hrefAttribute, content);
+		//For all the matched attributes, find all the elements and rewrite the attributes
+		for (const index of matchedAttributeIndexes) {
+			const [tag_name, attribute_name] = rewritten_attributes[index];
+			const elements = getElements(ast, tag_name);
+			if (!elements.length) continue;
 
-			const newAttribute = `href={${i('resolveHref')}(${attributeTemplateString})}`;
-			s.overwrite(hrefAttribute.start, hrefAttribute.end, newAttribute);
+			for (const element of elements) {
+				/** @type {import("svelte/types/compiler/interfaces").Attribute[]} */
+				const attributes = element.attributes || [];
+
+				const attribute = attributes.find((attribute) => attribute.name === attribute_name);
+				if (!attribute) continue;
+
+				const attributeTemplateString = attributeToTemplateString(attribute, content);
+
+				const newAttribute = `${attribute_name}={${i('resolveHref')}(${attributeTemplateString})}`;
+				s.overwrite(attribute.start, attribute.end, newAttribute);
+				rewroteAttribute = true;
+			}
 		}
+
+		//If none of the attributes were rewritten, skip adding the code
+		if(!rewroteAttribute) return;
 
 		addCodeToScript(
 			ast,
@@ -51,11 +78,15 @@ export const resolve_destination_preprocessor = ({ router_hook_entry }) => ({
 			 */
             function ${i('resolveHref')}(href) {
 				const resolve_destination = ${i('router_hooks')}.resolveDestination;
+
+				//If there is no hook, bail
 				if (!resolve_destination) return href;
 
+				//Resolve the origin & destination of the navigation
 				const from = $${i('page')}.url;
 				const to = new URL(href, from);
 
+				// rewrite the href attribute
 				return resolve_destination({ from, to }).href;
 			}
         	`
