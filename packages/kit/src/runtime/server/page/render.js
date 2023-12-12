@@ -8,7 +8,7 @@ import { s } from '../../../utils/misc.js';
 import { Csp } from './csp.js';
 import { uneval_action_response } from './actions.js';
 import { clarify_devalue_error, stringify_uses, handle_error_and_jsonify } from '../utils.js';
-import { public_env } from '../../shared-server.js';
+import { public_env, safe_public_env } from '../../shared-server.js';
 import { text } from '../../../exports/index.js';
 import { create_async_iterator } from '../../../utils/streaming.js';
 import { SVELTE_KIT_ASSETS } from '../../../constants.js';
@@ -432,7 +432,7 @@ export async function render_response({
 		body,
 		assets,
 		nonce: /** @type {string} */ (csp.nonce),
-		env: public_env
+		env: safe_public_env
 	});
 
 	// TODO flush chunks as early as we can

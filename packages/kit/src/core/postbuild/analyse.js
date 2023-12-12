@@ -43,8 +43,11 @@ async function analyse({ manifest_path, env }) {
 
 	// set env, in case it's used in initialisation
 	const { publicPrefix: public_prefix, privatePrefix: private_prefix } = config.env;
-	internal.set_private_env(filter_private_env(env, { public_prefix, private_prefix }));
-	internal.set_public_env(filter_public_env(env, { public_prefix, private_prefix }));
+	const private_env = filter_private_env(env, { public_prefix, private_prefix });
+	const public_env = filter_public_env(env, { public_prefix, private_prefix });
+	internal.set_private_env(private_env);
+	internal.set_public_env(public_env);
+	internal.set_safe_public_env(public_env);
 
 	/** @type {import('types').ServerMetadata} */
 	const metadata = {

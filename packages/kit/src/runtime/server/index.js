@@ -1,5 +1,5 @@
 import { respond } from './respond.js';
-import { set_private_env, set_public_env } from '../shared-server.js';
+import { set_private_env, set_public_env, set_safe_public_env } from '../shared-server.js';
 import { options, get_hooks } from '__SERVER__/internal.js';
 import { DEV } from 'esm-env';
 import { filter_private_env, filter_public_env } from '../../utils/env.js';
@@ -36,25 +36,24 @@ export class Server {
 	 * }} opts
 	 */
 	async init({ env }) {
-		const private_env = filter_private_env(env, {
-			public_prefix: this.#options.env_public_prefix,
-			private_prefix: this.#options.env_private_prefix
-		});
-
-		const public_env = building
-			? prerender_env
-			: filter_public_env(env, {
-					public_prefix: this.#options.env_public_prefix,
-					private_prefix: this.#options.env_private_prefix
-			  });
-
 		// Take care: Some adapters may have to call `Server.init` per-request to set env vars,
 		// so anything that shouldn't be rerun should be wrapped in an `if` block to make sure it hasn't
 		// been done already.
 		// set env, in case it's used in initialisation
 
+		const private_env = filter_private_env(env, {
+			public_prefix: this.#options.env_public_prefix,
+			private_prefix: this.#options.env_private_prefix
+		});
+
+		const public_env = filter_public_env(env, {
+			public_prefix: this.#options.env_public_prefix,
+			private_prefix: this.#options.env_private_prefix
+		});
+
 		set_private_env(private_env);
-		set_public_env(public_env);
+		set_public_env(building ? prerender_env : public_env);
+		set_safe_public_env(public_env);
 
 		if (!this.#options.hooks) {
 			try {

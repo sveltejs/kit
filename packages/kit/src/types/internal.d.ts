@@ -31,6 +31,7 @@ export interface ServerInternalModule {
 	set_assets(path: string): void;
 	set_private_env(environment: Record<string, string>): void;
 	set_public_env(environment: Record<string, string>): void;
+	set_safe_public_env(environment: Record<string, string>): void;
 	set_version(version: string): void;
 	set_fix_stack_trace(fix_stack_trace: (error: unknown) => string): void;
 }
