@@ -1675,8 +1675,8 @@ export function create_client(app, target) {
 					const scroll = scroll_positions[event.state[INDEX_KEY]];
 					const url = new URL(location.href);
 
-					// if the only change is the hash, we don't need to do anything...
-					if (current.url.href.split('#')[0] === location.href.split('#')[0]) {
+					// if the only change is the hash, we don't need to do anything (see https://github.com/sveltejs/kit/pull/10636 for why we need to do `url?.`)...
+					if (current.url?.href.split('#')[0] === location.href.split('#')[0]) {
 						// ...except update our internal URL tracking and handle scroll
 						update_url(url);
 						scroll_positions[current_history_index] = scroll_state();
