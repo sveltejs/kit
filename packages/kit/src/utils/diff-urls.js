@@ -10,13 +10,18 @@ export function getHrefBetween(from, to) {
 	//check if they use the same protocol - If not, we can't do anything
 	if (from.protocol !== to.protocol) {
 		return to.href;
-	}
+    }
 
-	//check if they use the same host - If not, we can't do anything
+    //If the credentials are different, inherit the protocol and use the rest of the url
+    if (from.password !== to.password || from.username !== to.username) {
+        const credentials = [to.username, to.password].filter(Boolean).join(':');
+        return '//' + credentials + "@" + to.host + to.pathname + to.search + to.hash;
+    }
+
 	// host = hostname + port
-	if (from.host !== to.host) {
+    if (from.host !== to.host) {
 		//since they have the same protocol, we can omit the protocol
-		return '//' + to.host + to.pathname + to.search + to.hash;
+		return '//'  + to.host + to.pathname + to.search + to.hash; 
 	}
 
 	//If the pathnames are different, we need to find the shortest path between them
@@ -47,6 +52,7 @@ function getRelativePath(from, to) {
 		commonStartSegments.push(fromPath[i]);
 	}
 
+    /** The number of ".."s needed to reach common ground */
 	const backtracks = Math.max(fromPath.length - commonStartSegments.length - 1, 0);
 	const differentEndSegments = toPath.slice(commonStartSegments.length, toPath.length);
     const relativePathSegments = [...new Array(backtracks).fill('..'), ...differentEndSegments];

@@ -125,4 +125,14 @@ describe("getHrefBetween", () => {
         expect(href).toBe("/");
         expect(new URL(href, from).href).toBe(to.href);
     })
+
+    test("urls with different credentials", () => {
+        const from = new URL("https://user:pass1@example.com/some-page");
+        const to = new URL("https://user:pass2@example.com/some-page");
+
+        const href = getHrefBetween(from, to);
+
+        expect(href).toBe("//user:pass2@example.com/some-page");
+        expect(new URL(href, from).href).toBe(to.href);
+    })
 })
