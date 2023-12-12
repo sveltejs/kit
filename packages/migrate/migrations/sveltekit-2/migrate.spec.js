@@ -59,7 +59,7 @@ error();`
 	);
 });
 
-test.skip('Notes cookies#1', () => {
+test('Notes cookies#1', () => {
 	const result = transform_code(
 		`
 export function load({ cookies }) {
@@ -73,12 +73,32 @@ export function load({ cookies }) {
 
 		`
 export function load({ cookies }) {
-	/* @migration task: add path argument */cookies.set('foo', 'bar');
+	/* @migration task: add path argument */ cookies.set('foo', 'bar');
 }`
 	);
 });
 
-test.skip('Notes cookies#2', () => {
+test('Notes cookies#2', () => {
+	const result = transform_code(
+		`
+export function load({ cookies }) {
+	cookies.delete('foo');
+	cookies.set('x', 'y', { z: '' });
+}`,
+		false,
+		'+page.js'
+	);
+	assert.equal(
+		result,
+		`
+export function load({ cookies }) {
+	/* @migration task: add path argument */ cookies.delete('foo');
+	/* @migration task: add path argument */ cookies.set('x', 'y', { z: '' });
+}`
+	);
+});
+
+test('Notes cookies#3', () => {
 	const result = transform_code(
 		`
 export function load({ cookies }) {

@@ -88,13 +88,11 @@ export function update_svelte_config_content(code) {
  * @param {boolean} _is_ts
  * @param {string} file_path
  */
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
 export function transform_code(code, _is_ts, file_path) {
 	const project = new Project({ useInMemoryFileSystem: true });
 	const source = project.createSourceFile('svelte.ts', code);
 	remove_throws(source);
-	// TODO fix the crazy indentation before reinstating this
-	// add_cookie_note(file_path, source);
+	add_cookie_note(file_path, source);
 	return source.getFullText();
 }
 
@@ -133,7 +131,6 @@ function remove_throws(source) {
  * @param {string} file_path
  * @param {import('ts-morph').SourceFile} source
  */
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
 function add_cookie_note(file_path, source) {
 	const basename = path.basename(file_path);
 	if (
@@ -171,13 +168,18 @@ function add_cookie_note(file_path, source) {
 			continue;
 		}
 
+		const options_arg = call.getArguments()[name === 'delete' ? 1 : 2];
+		if (options_arg && !Node.isObjectLiteralExpression(options_arg)) {
+			continue;
+		}
+
 		const expression_text = expression.getExpression().getText();
 		if (expression_text !== 'cookies') {
 			continue;
 		}
 
 		const parent_function = call.getFirstAncestor(
-			/** @returns {ancestor is import('ts-morph').FunctionDeclaration | import('ts-morph').VariableDeclaration} */
+			/** @returns {ancestor is import('ts-morph').FunctionDeclaration | import('ts-morph').FunctionExpression | import('ts-morph').ArrowFunction} */
 			(ancestor) => {
 				// Check if this is inside a function
 				const fn_declaration = ancestor.asKind(SyntaxKind.FunctionDeclaration);
@@ -186,16 +188,25 @@ function add_cookie_note(file_path, source) {
 				return !!fn_declaration || !!fn_expression || !!arrow_fn_expression;
 			}
 		);
-
 		if (!parent_function) {
 			continue;
 		}
 
-		calls.push(call);
+		const parent = call.getFirstAncestorByKind(SyntaxKind.Block);
+		if (!parent) {
+			continue;
+		}
+
+		calls.push(() =>
+			call.replaceWithText((writer) => {
+				writer.setIndentationLevel(0); // prevent ts-morph from being unhelpful and adding its own indentation
+				writer.write('/* @migration task: add path argument */ ' + call.getText());
+			})
+		);
 	}
 
 	for (const call of calls) {
-		call.replaceWithText('/* @migration task: add path argument */ ' + call.getText());
+		call();
 	}
 
 	logger();
