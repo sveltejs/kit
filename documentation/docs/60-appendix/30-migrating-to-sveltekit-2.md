@@ -56,7 +56,7 @@ export function load({ fetch }) {
 export function load({ fetch }) {
 -    const a = fetch(...).then(r => r.json());
 -    const b = fetch(...).then(r => r.json());
-+    const [a, b] = Promise.all([
++    const [a, b] = await Promise.all([
 +      fetch(...).then(r => r.json()),
 +      fetch(...).then(r => r.json()),
 +    ]);

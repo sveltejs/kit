@@ -313,3 +313,32 @@ export function update_js_file(file_path, transform_code) {
 		console.error(`Error updating ${file_path}:`, e);
 	}
 }
+
+/** @param {string | URL} test_file */
+export function read_samples(test_file) {
+	const markdown = fs.readFileSync(test_file, 'utf8').replaceAll('\r\n', '\n');
+	const samples = markdown
+		.split(/^##/gm)
+		.slice(1)
+		.map((block) => {
+			const description = block.split('\n')[0];
+			const before = /```(js|ts|svelte) before\n([^]*?)\n```/.exec(block);
+			const after = /```(js|ts|svelte) after\n([^]*?)\n```/.exec(block);
+
+			const match = /> file: (.+)/.exec(block);
+
+			return {
+				description,
+				before: before ? before[2] : '',
+				after: after ? after[2] : '',
+				filename: match?.[1],
+				solo: block.includes('> solo')
+			};
+		});
+
+	if (samples.some((sample) => sample.solo)) {
+		return samples.filter((sample) => sample.solo);
+	}
+
+	return samples;
+}
