@@ -28,7 +28,8 @@ export function getHrefBetween(from, to) {
 	const relativePath = getRelativePath(from.pathname, to.pathname);
 	const absolutePath = to.pathname;
 
-	const path = absolutePath.length < relativePath.length ? absolutePath : relativePath;
+	// use the shortest path - use absolute path if they are the same length
+	const path = absolutePath.length <= relativePath.length ? absolutePath : relativePath;
 	return path + to.search + to.hash;
 }
 
