@@ -92,6 +92,23 @@ This inconsistency is fixed in version 2. Paths are either always relative or al
 
 Previously it was possible to track URLs from `fetch`es on the server in order to rerun load functions. This poses a possible security risk (private URLs leaking), and as such it was behind the `dangerZone.trackServerFetches` setting, which is now removed.
 
+## `resolvePath` has been removed
+
+SvelteKit 1 included a function called `resolvePath` which allows you to resolve a route ID (like `/blog/[slug]`) and a set of parameters (like `{ slug: 'hello' }`) to a pathname. Unfortunately the return value didn't include the `base` path, limiting its usefulness in cases where `base` was set.
+
+As such, SvelteKit 2 replaces `resolvePath` with a (slightly better named) function called `resolveRoute`, which is imported from `$app/paths` and which takes `base` into account.
+
+```diff
+-import { resolvePath } from '@sveltejs/kit';
+-import { base } from '$app/paths';
++import { resolveRoute } from '$app/paths';
+
+-const path = base + resolvePath('/blog/[slug]', { slug });
++const path = resolveRoute('/blog/[slug]', { slug });
+```
+
+`svelte-migrate` will do the method replacement for you, though if you later prepend the result with `base`, you need to remove that yourself.
+
 ## Updated dependency requirements
 
 SvelteKit requires Node `18.13` or higher, Vite `^5.0`, vite-plugin-svelte `^3.0`, TypeScript `^5.0` and Svelte version 4 or higher. `svelte-migrate` will do the `package.json` bumps for you.
