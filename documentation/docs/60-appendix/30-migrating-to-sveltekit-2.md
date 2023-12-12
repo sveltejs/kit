@@ -36,6 +36,8 @@ export function load({ cookies }) {
 }
 ```
 
+`svelte-migrate` will add comments highlighting the locations that need to be adjusted.
+
 ## Top-level promises are no longer awaited
 
 In SvelteKit version 1, if the top-level properties of the object returned from a `load` function were promises, they were automatically awaited. With the introduction of [streaming](https://svelte.dev/blog/streaming-snapshots-sveltekit) this behavior became a bit awkward as it forces you to nest your streamed data one level deep.
@@ -63,20 +65,6 @@ export function load({ fetch }) {
     return { a, b };
 }
 ```
-
-## `path` is now a required option for cookies
-
-`cookies.set`, `cookies.delete` and `cookies.serialize` all have an options argument through which certain cookie serialization options are configurable. One of the is the `path` setting, which tells browser under which URLs a cookie is applicable. In SvelteKit 1.x, the `path` is optional and defaults to what the browser does, which is removing everything up to and including the last slash in the pathname of the URL. This means that if you're on `/foo/bar`, then the `path` is `/foo`, but if you're on `/foo/bar/`, the `path` is `/foo/bar`. This behavior is somewhat confusing, and most of the time you probably want to have cookies available more broadly (many people set `path` to `/` for that reason) instead of scratching their heads why a cookie they have set doesn't apply elsewhere. For this reason, `path` is a required option in SvelteKit 2.
-
-```diff
-// file: foo/bar/+page.svelte
-export function load ({ cookies }) {
--    cookies.set('key', 'value');
-+    cookies.set('key', 'value', { path: '/foo' });
-}
-```
-
-`svelte-migrate` will add comments highlighting the locations that need to be adjusted.
 
 ## goto(...) no longer accepts external URLs
 
