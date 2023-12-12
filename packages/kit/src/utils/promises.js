@@ -41,7 +41,7 @@ export async function unwrap_promises(object, id) {
 
 			if (!warned.has(message)) {
 				console.warn(
-					`\n${message}\n\nIn SvelteKit 2.0, these will longer be awaited automatically. To get rid of this warning, await all promises included as top-level properties in \`load\` return values.\n`
+					`\n${message}\n\nIn SvelteKit 2.0, these will no longer be awaited automatically. To get rid of this warning, await all promises included as top-level properties in \`load\` return values.\n`
 				);
 
 				warned.add(message);
