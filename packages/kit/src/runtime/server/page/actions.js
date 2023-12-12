@@ -25,7 +25,10 @@ export async function handle_action_json_request(event, options, server) {
 
 	if (!actions) {
 		// TODO should this be a different error altogether?
-		const no_actions_error = error(405, 'POST method not allowed. No actions exist for this page');
+		const no_actions_error = new HttpError(
+			405,
+			'POST method not allowed. No actions exist for this page'
+		);
 		return action_json(
 			{
 				type: 'error',
@@ -139,7 +142,7 @@ export async function handle_action_request(event, server) {
 		});
 		return {
 			type: 'error',
-			error: error(405, 'POST method not allowed. No actions exist for this page')
+			error: new HttpError(405, 'POST method not allowed. No actions exist for this page')
 		};
 	}
 
@@ -220,7 +223,8 @@ async function call_action(event, actions) {
 	}
 
 	if (!is_form_content_type(event.request)) {
-		throw new Error(
+		throw error(
+			415,
 			`Actions expect form-encoded data (received ${event.request.headers.get('content-type')})`
 		);
 	}
@@ -231,13 +235,11 @@ async function call_action(event, actions) {
 /** @param {any} data */
 function validate_action_return(data) {
 	if (data instanceof Redirect) {
-		throw new Error('Cannot `return redirect(...)` — use `throw redirect(...)` instead');
+		throw new Error('Cannot `return redirect(...)` — use `redirect(...)` instead');
 	}
 
 	if (data instanceof HttpError) {
-		throw new Error(
-			'Cannot `return error(...)` — use `throw error(...)` or `return fail(...)` instead'
-		);
+		throw new Error('Cannot `return error(...)` — use `error(...)` or `return fail(...)` instead');
 	}
 }
 

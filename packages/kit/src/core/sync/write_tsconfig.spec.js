@@ -65,6 +65,7 @@ test('Allows generated tsconfig to be mutated', () => {
 
 	const config = get_tsconfig(kit, false);
 
+	// @ts-expect-error
 	assert.equal(config.extends, 'some/other/tsconfig.json');
 });
 
@@ -82,6 +83,7 @@ test('Allows generated tsconfig to be replaced', () => {
 
 	const config = get_tsconfig(kit, false);
 
+	// @ts-expect-error
 	assert.equal(config.extends, 'some/other/tsconfig.json');
 });
 
@@ -98,6 +100,7 @@ test('Creates tsconfig include from kit.files', () => {
 
 	expect(include).toEqual([
 		'ambient.d.ts',
+		'non-ambient.d.ts',
 		'./types/**/$types.d.ts',
 		'../vite.config.js',
 		'../vite.config.ts',

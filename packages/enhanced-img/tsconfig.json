@@ -5,8 +5,8 @@
 		"noEmit": true,
 		"strict": true,
 		"target": "es2022",
-		"module": "es2022",
-		"moduleResolution": "node",
+		"module": "node16",
+		"moduleResolution": "node16",
 		"allowSyntheticDefaultImports": true,
 		"paths": {
 			"types": ["./types/index"],

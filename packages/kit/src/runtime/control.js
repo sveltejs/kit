@@ -36,7 +36,7 @@ export class Redirect {
 export class ActionFailure {
 	/**
 	 * @param {number} status
-	 * @param {T} [data]
+	 * @param {T} data
 	 */
 	constructor(status, data) {
 		this.status = status;

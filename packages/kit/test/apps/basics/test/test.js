@@ -642,24 +642,16 @@ test.describe('$app/environment', () => {
 });
 
 test.describe('$app/paths', () => {
-	test('includes paths', async ({ page }) => {
+	test('includes paths', async ({ page, javaScriptEnabled }) => {
 		await page.goto('/paths');
 
-		expect(await page.innerHTML('pre')).toBe(
-			JSON.stringify({
-				base: '',
-				assets: ''
-			})
-		);
+		let base = javaScriptEnabled ? '' : '.';
+		expect(await page.innerHTML('pre')).toBe(JSON.stringify({ base, assets: base }));
 
 		await page.goto('/paths/deeply/nested');
 
-		expect(await page.innerHTML('pre')).toBe(
-			JSON.stringify({
-				base: '',
-				assets: ''
-			})
-		);
+		base = javaScriptEnabled ? '' : '../..';
+		expect(await page.innerHTML('pre')).toBe(JSON.stringify({ base, assets: base }));
 	});
 
 	// some browsers will re-request assets after a `pushState`
@@ -1219,6 +1211,24 @@ test.describe('Actions', () => {
 		await page.locator('button').click();
 
 		await expect(page.locator('pre')).toHaveText('something went wrong');
+	});
+
+	test('submitting application/json should return http status code 415', async ({
+		baseURL,
+		page
+	}) => {
+		const response = await page.request.fetch(`${baseURL}/actions/form-errors`, {
+			method: 'POST',
+			body: JSON.stringify({ foo: 'bar' }),
+			headers: {
+				'Content-Type': 'application/json',
+				Origin: `${baseURL}`
+			}
+		});
+		const { type, error } = await response.json();
+		expect(type).toBe('error');
+		expect(error.message).toBe('Actions expect form-encoded data (received application/json)');
+		expect(response.status()).toBe(415);
 	});
 });
 

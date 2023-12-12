@@ -162,16 +162,16 @@ export {};
 
 ```js
 /// file: src/hooks.server.js
-// @errors: 2322
+// @errors: 2322 2353
 // @filename: ambient.d.ts
-declare module '@sentry/node' {
+declare module '@sentry/sveltekit' {
 	export const init: (opts: any) => void;
 	export const captureException: (error: any, opts: any) => void;
 }
 
 // @filename: index.js
 // ---cut---
-import * as Sentry from '@sentry/node';
+import * as Sentry from '@sentry/sveltekit';
 import crypto from 'crypto';
 
 Sentry.init({/*...*/})
@@ -191,16 +191,16 @@ export async function handleError({ error, event }) {
 
 ```js
 /// file: src/hooks.client.js
-// @errors: 2322
+// @errors: 2322 2353
 // @filename: ambient.d.ts
-declare module '@sentry/svelte' {
+declare module '@sentry/sveltekit' {
 	export const init: (opts: any) => void;
 	export const captureException: (error: any, opts: any) => void;
 }
 
 // @filename: index.js
 // ---cut---
-import * as Sentry from '@sentry/svelte';
+import * as Sentry from '@sentry/sveltekit';
 
 Sentry.init({/*...*/})
 

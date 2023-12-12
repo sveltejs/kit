@@ -25,11 +25,11 @@ export async function load({ cookies, locals, fetch }) {
 	if (should_fail) {
 		cookies.delete('fail-type', { path: '/' });
 		if (should_fail === 'expected') {
-			throw error(401, 'Not allowed');
+			error(401, 'Not allowed');
 		} else if (should_fail === 'unexpected') {
 			throw new Error('Failed to load');
 		} else {
-			throw redirect(307, '/load');
+			redirect(307, '/load');
 		}
 	}
 	// Do NOT make this load function depend on something which would cause it to rerun

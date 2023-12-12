@@ -1,5 +1,33 @@
 # @sveltejs/kit
 
+## 1.29.0
+
+### Minor Changes
+
+- feat: add `resolveRoute` to `$app/paths`, deprecate `resolvePath` ([#11261](https://github.com/sveltejs/kit/pull/11261))
+
+## 1.28.0
+
+### Minor Changes
+
+- chore: deprecate top level promise await behaviour ([#11175](https://github.com/sveltejs/kit/pull/11175))
+
+### Patch Changes
+
+- fix: resolve relative cookie paths before storing ([#11253](https://github.com/sveltejs/kit/pull/11253))
+
+- chore: deprecate cookies.set/delete without path option ([#11237](https://github.com/sveltejs/kit/pull/11237))
+
+- fix: make sure promises from fetch handle errors ([#11228](https://github.com/sveltejs/kit/pull/11228))
+
+## 1.27.7
+
+### Patch Changes
+
+- fix: set runes option in generated root ([#11111](https://github.com/sveltejs/kit/pull/11111))
+
+- fix: retain URL query string for trailing slash redirects to prerendered pages ([#11142](https://github.com/sveltejs/kit/pull/11142))
+
 ## 1.27.6
 
 ### Patch Changes

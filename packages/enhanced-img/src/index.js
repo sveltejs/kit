@@ -24,7 +24,7 @@ export async function enhancedImages() {
 function image_plugin(imagetools_plugin) {
 	/**
 	 * @type {{
-	 *   plugin_context: import('rollup').PluginContext
+	 *   plugin_context: import('vite').Rollup.PluginContext
 	 *   imagetools_plugin: import('vite').Plugin
 	 * }}
 	 */

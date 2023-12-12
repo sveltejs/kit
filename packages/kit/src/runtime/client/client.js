@@ -18,19 +18,18 @@ import { parse } from './parse.js';
 import * as storage from './session-storage.js';
 import {
 	find_anchor,
-	get_base_uri,
+	resolve_url,
 	get_link_info,
 	get_router_options,
 	is_external_url,
-	scroll_state,
-	origin
+	origin,
+	scroll_state
 } from './utils.js';
 
 import { base } from '__sveltekit/paths';
 import * as devalue from 'devalue';
 import { compact } from '../../utils/array.js';
 import { validate_page_exports } from '../../utils/exports.js';
-import { unwrap_promises } from '../../utils/promises.js';
 import { HttpError, Redirect } from '../control.js';
 import { INVALIDATED_PARAM, TRAILING_SLASH_PARAM, validate_depends } from '../shared.js';
 import { INDEX_KEY, PRELOAD_PRIORITIES, SCROLL_KEY, SNAPSHOT_KEY } from './constants.js';
@@ -83,6 +82,7 @@ export function create_client(app, target) {
 	default_error_loader();
 
 	const container = __SVELTEKIT_EMBEDDED__ ? target : document.documentElement;
+
 	/** @type {Array<((url: URL) => boolean)>} */
 	const invalidated = [];
 
@@ -166,13 +166,13 @@ export function create_client(app, target) {
 		// Accept all invalidations as they come, don't swallow any while another invalidation
 		// is running because subsequent invalidations may make earlier ones outdated,
 		// but batch multiple synchronous invalidations.
-		pending_invalidate = pending_invalidate || Promise.resolve();
-		await pending_invalidate;
+		await (pending_invalidate ||= Promise.resolve());
 		if (!pending_invalidate) return;
 		pending_invalidate = null;
 
 		const url = new URL(location.href);
 		const intent = get_navigation_intent(url, true);
+
 		// Clear preload, it might be affected by the invalidation.
 		// Also solves an edge case where a preload is triggered, the navigation for it
 		// was then triggered and is still running while the invalidation kicks in,
@@ -185,7 +185,7 @@ export function create_client(app, target) {
 
 		if (navigation_result) {
 			if (navigation_result.type === 'redirect') {
-				return goto(new URL(navigation_result.location, url).href, {}, 1, nav_token);
+				await goto(new URL(navigation_result.location, url).href, {}, 1, nav_token);
 			} else {
 				if (navigation_result.props.page !== undefined) {
 					page = navigation_result.props.page;
@@ -193,6 +193,8 @@ export function create_client(app, target) {
 				root.$set(navigation_result.props);
 			}
 		}
+
+		invalidated.length = 0;
 	}
 
 	/** @param {number} index */
@@ -235,12 +237,8 @@ export function create_client(app, target) {
 		redirect_count,
 		nav_token
 	) {
-		if (typeof url === 'string') {
-			url = new URL(url, get_base_uri(document));
-		}
-
 		return navigate({
-			url,
+			url: resolve_url(url),
 			scroll: noScroll ? scroll_state() : null,
 			keepfocus: keepFocus,
 			redirect_count,
@@ -275,15 +273,13 @@ export function create_client(app, target) {
 		return load_cache.promise;
 	}
 
-	/** @param {...string} pathnames */
-	async function preload_code(...pathnames) {
-		const matching = routes.filter((route) => pathnames.some((pathname) => route.exec(pathname)));
+	/** @param {string} pathname */
+	async function preload_code(pathname) {
+		const route = routes.find((route) => route.exec(get_url_path(pathname)));
 
-		const promises = matching.map((r) => {
-			return Promise.all([...r.layouts, r.leaf].map((load) => load?.[1]()));
-		});
-
-		await Promise.all(promises);
+		if (route) {
+			await Promise.all([...route.layouts, route.leaf].map((load) => load?.[1]()));
+		}
 	}
 
 	/** @param {import('./types.js').NavigationFinished} result */
@@ -443,7 +439,8 @@ export function create_client(app, target) {
 			params: new Set(),
 			parent: false,
 			route: false,
-			url: false
+			url: false,
+			search_params: new Set()
 		};
 
 		const node = await loader();
@@ -478,9 +475,11 @@ export function create_client(app, target) {
 					}
 				}),
 				data: server_data_node?.data ?? null,
-				url: make_trackable(url, () => {
-					uses.url = true;
-				}),
+				url: make_trackable(
+					url,
+					() => (uses.url = true),
+					(param) => uses.search_params.add(param)
+				),
 				async fetch(resource, init) {
 					/** @type {URL | string} */
 					let requested;
@@ -559,7 +558,6 @@ export function create_client(app, target) {
 			} else {
 				data = (await node.universal.load.call(null, load_input)) ?? null;
 			}
-			data = data ? await unwrap_promises(data) : null;
 		}
 
 		return {
@@ -576,10 +574,18 @@ export function create_client(app, target) {
 	 * @param {boolean} parent_changed
 	 * @param {boolean} route_changed
 	 * @param {boolean} url_changed
+	 * @param {Set<string>} search_params_changed
 	 * @param {import('types').Uses | undefined} uses
 	 * @param {Record<string, string>} params
 	 */
-	function has_changed(parent_changed, route_changed, url_changed, uses, params) {
+	function has_changed(
+		parent_changed,
+		route_changed,
+		url_changed,
+		search_params_changed,
+		uses,
+		params
+	) {
 		if (force_invalidation) return true;
 
 		if (!uses) return false;
@@ -587,6 +593,10 @@ export function create_client(app, target) {
 		if (uses.parent && parent_changed) return true;
 		if (uses.route && route_changed) return true;
 		if (uses.url && url_changed) return true;
+
+		for (const tracked_params of uses.search_params) {
+			if (search_params_changed.has(tracked_params)) return true;
+		}
 
 		for (const param of uses.params) {
 			if (params[param] !== current.params[param]) return true;
@@ -611,6 +621,31 @@ export function create_client(app, target) {
 	}
 
 	/**
+	 *
+	 * @param {URL | null} old_url
+	 * @param {URL} new_url
+	 */
+	function diff_search_params(old_url, new_url) {
+		if (!old_url) return new Set(new_url.searchParams.keys());
+
+		const changed = new Set([...old_url.searchParams.keys(), ...new_url.searchParams.keys()]);
+
+		for (const key of changed) {
+			const old_values = old_url.searchParams.getAll(key);
+			const new_values = new_url.searchParams.getAll(key);
+
+			if (
+				old_values.every((value) => new_values.includes(value)) &&
+				new_values.every((value) => old_values.includes(value))
+			) {
+				changed.delete(key);
+			}
+		}
+
+		return changed;
+	}
+
+	/**
 	 * @param {import('./types.js').NavigationIntent} intent
 	 * @returns {Promise<import('./types.js').NavigationResult>}
 	 */
@@ -631,9 +666,9 @@ export function create_client(app, target) {
 
 		/** @type {import('types').ServerNodesResponse | import('types').ServerRedirectNode | null} */
 		let server_data = null;
-
 		const url_changed = current.url ? id !== current.url.pathname + current.url.search : false;
 		const route_changed = current.route ? route.id !== current.route.id : false;
+		const search_params_changed = diff_search_params(current.url, url);
 
 		let parent_invalid = false;
 		const invalid_server_nodes = loaders.map((loader, i) => {
@@ -642,7 +677,14 @@ export function create_client(app, target) {
 			const invalid =
 				!!loader?.[0] &&
 				(previous?.loader !== loader[1] ||
-					has_changed(parent_invalid, route_changed, url_changed, previous.server?.uses, params));
+					has_changed(
+						parent_invalid,
+						route_changed,
+						url_changed,
+						search_params_changed,
+						previous.server?.uses,
+						params
+					));
 
 			if (invalid) {
 				// For the next one
@@ -685,7 +727,14 @@ export function create_client(app, target) {
 			const valid =
 				(!server_data_node || server_data_node.type === 'skip') &&
 				loader[1] === previous?.loader &&
-				!has_changed(parent_changed, route_changed, url_changed, previous.universal?.uses, params);
+				!has_changed(
+					parent_changed,
+					route_changed,
+					url_changed,
+					search_params_changed,
+					previous.universal?.uses,
+					params
+				);
 			if (valid) return previous;
 
 			parent_changed = true;
@@ -896,7 +945,7 @@ export function create_client(app, target) {
 	function get_navigation_intent(url, invalidating) {
 		if (is_external_url(url, base)) return;
 
-		const path = get_url_path(url);
+		const path = get_url_path(url.pathname);
 
 		for (const route of routes) {
 			const params = route.exec(path);
@@ -910,9 +959,9 @@ export function create_client(app, target) {
 		}
 	}
 
-	/** @param {URL} url */
-	function get_url_path(url) {
-		return decode_pathname(url.pathname.slice(base.length) || '/');
+	/** @param {string} pathname */
+	function get_url_path(pathname) {
+		return decode_pathname(pathname.slice(base.length) || '/');
 	}
 
 	/**
@@ -1238,9 +1287,7 @@ export function create_client(app, target) {
 			(entries) => {
 				for (const entry of entries) {
 					if (entry.isIntersecting) {
-						preload_code(
-							get_url_path(new URL(/** @type {HTMLAnchorElement} */ (entry.target).href))
-						);
+						preload_code(/** @type {HTMLAnchorElement} */ (entry.target).href);
 						observer.unobserve(entry.target);
 					}
 				}
@@ -1281,7 +1328,7 @@ export function create_client(app, target) {
 						}
 					}
 				} else if (priority <= options.preload_code) {
-					preload_code(get_url_path(/** @type {URL} */ (url)));
+					preload_code(/** @type {URL} */ (url).pathname);
 				}
 			}
 		}
@@ -1301,7 +1348,7 @@ export function create_client(app, target) {
 				}
 
 				if (options.preload_code === PRELOAD_PRIORITIES.eager) {
-					preload_code(get_url_path(/** @type {URL} */ (url)));
+					preload_code(/** @type {URL} */ (url).pathname);
 				}
 			}
 		}
@@ -1375,8 +1422,20 @@ export function create_client(app, target) {
 			}
 		},
 
-		goto: (href, opts = {}) => {
-			return goto(href, opts, 0);
+		goto: (url, opts = {}) => {
+			url = resolve_url(url);
+
+			if (url.origin !== origin) {
+				return Promise.reject(
+					new Error(
+						DEV
+							? `Cannot use \`goto\` with an external URL. Use \`window.location = "${url}"\` instead`
+							: 'goto: invalid URL'
+					)
+				);
+			}
+
+			return goto(url, opts, 0);
 		},
 
 		invalidate: (resource) => {
@@ -1396,7 +1455,7 @@ export function create_client(app, target) {
 		},
 
 		preload_data: async (href) => {
-			const url = new URL(href, get_base_uri(document));
+			const url = resolve_url(href);
 			const intent = get_navigation_intent(url, false);
 
 			if (!intent) {
@@ -1406,7 +1465,21 @@ export function create_client(app, target) {
 			await preload_data(intent);
 		},
 
-		preload_code,
+		preload_code: (pathname) => {
+			if (DEV) {
+				if (!pathname.startsWith(base)) {
+					throw new Error(
+						`pathnames passed to preloadCode must start with \`paths.base\` (i.e. "${base}${pathname}" rather than "${pathname}")`
+					);
+				}
+
+				if (!routes.find((route) => route.exec(get_url_path(pathname)))) {
+					throw new Error(`'${pathname}' did not match any routes`);
+				}
+			}
+
+			return preload_code(pathname);
+		},
 
 		apply_action: async (result) => {
 			if (result.type === 'error') {
@@ -1954,7 +2027,8 @@ function deserialize_uses(uses) {
 		params: new Set(uses?.params ?? []),
 		parent: !!uses?.parent,
 		route: !!uses?.route,
-		url: !!uses?.url
+		url: !!uses?.url,
+		search_params: new Set(uses?.search_params ?? [])
 	};
 }
 

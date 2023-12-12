@@ -23,7 +23,7 @@ export const disableScrollHandling = /* @__PURE__ */ client_method('disable_scro
  * @param {boolean} [opts.replaceState] If `true`, will replace the current `history` entry rather than creating a new one with `pushState`
  * @param {boolean} [opts.noScroll] If `true`, the browser will maintain its scroll position rather than scrolling to the top of the page after navigation
  * @param {boolean} [opts.keepFocus] If `true`, the currently focused element will retain focus after navigation. Otherwise, focus will be reset to the body
- * @param {boolean} [invalidateAll] If `true`, all `load` functions of the page will be rerun. See https://kit.svelte.dev/docs/load#rerunning-load-functions for more info on invalidation.
+ * @param {boolean} [opts.invalidateAll] If `true`, all `load` functions of the page will be rerun. See https://kit.svelte.dev/docs/load#rerunning-load-functions for more info on invalidation.
  * @param {any} [opts.state] The state of the new/updated history entry
  * @returns {Promise<void>}
  */
@@ -81,8 +81,8 @@ export const preloadData = /* @__PURE__ */ client_method('preload_data');
  * Unlike `preloadData`, this won't call `load` functions.
  * Returns a Promise that resolves when the modules have been imported.
  *
- * @type {(...urls: string[]) => Promise<void>}
- * @param {...string[]} urls
+ * @type {(url: string) => Promise<void>}
+ * @param {string} url
  * @returns {Promise<void>}
  */
 export const preloadCode = /* @__PURE__ */ client_method('preload_code');
@@ -109,7 +109,7 @@ export const beforeNavigate = /* @__PURE__ */ client_method('before_navigate');
  * If a function (or a `Promise` that resolves to a function) is returned from the callback, it will be called once the DOM has updated.
  *
  * `onNavigate` must be called during a component initialization. It remains active as long as the component is mounted.
- * @type {(callback: (navigation: import('@sveltejs/kit').OnNavigate) => import('../../types/internal.js').MaybePromise<(() => void) | void>) => void}
+ * @type {(callback: (navigation: import('@sveltejs/kit').OnNavigate) => import('types').MaybePromise<(() => void) | void>) => void}
  * @param {(navigation: import('@sveltejs/kit').OnNavigate) => void} callback
  * @returns {void}
  */

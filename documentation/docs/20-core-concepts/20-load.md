@@ -283,8 +283,6 @@ For example, if SvelteKit is serving my.domain.com:
 
 Other cookies will not be passed when `credentials: 'include'` is set, because SvelteKit does not know which domain which cookie belongs to (the browser does not pass this information along), so it's not safe to forward any of them. Use the [handleFetch hook](hooks#server-hooks-handlefetch) to work around it.
 
-> When setting cookies, be aware of the `path` property. By default, the `path` of a cookie is the current pathname. If you for example set a cookie at page `admin/user`, the cookie will only be available within the `admin` pages by default. In most cases you likely want to set `path` to `'/'` to make the cookie available throughout your app.
-
 ## Headers
 
 Both server and universal `load` functions have access to a `setHeaders` function that, when running on the server, can set headers for the response. (When running in the browser, `setHeaders` has no effect.) This is useful if you want the page to be cached, for example:
@@ -397,11 +395,11 @@ import { error } from '@sveltejs/kit';
 /** @type {import('./$types').LayoutServerLoad} */
 export function load({ locals }) {
 	if (!locals.user) {
-		throw error(401, 'not logged in');
+		error(401, 'not logged in');
 	}
 
 	if (!locals.user.isAdmin) {
-		throw error(403, 'not an admin');
+		error(403, 'not an admin');
 	}
 }
 ```
@@ -430,12 +428,12 @@ import { redirect } from '@sveltejs/kit';
 /** @type {import('./$types').LayoutServerLoad} */
 export function load({ locals }) {
 	if (!locals.user) {
-		throw redirect(307, '/login');
+		redirect(307, '/login');
 	}
 }
 ```
 
-> Don't use `throw redirect()` from within a try-catch block, as the redirect will immediately trigger the catch statement.
+> Don't use `redirect()` inside a `try {...}` block, as the redirect will immediately trigger the catch statement.
 
 In the browser, you can also navigate programmatically outside of a `load` function using [`goto`](modules#$app-navigation-goto) from [`$app.navigation`](modules#$app-navigation).
 
@@ -486,6 +484,25 @@ This is useful for creating skeleton loading states, for example:
 		{error.message}
 	{/await}
 </p>
+```
+
+When streaming data, be careful to handle promise rejections correctly. More specifically, the server could crash with an "unhandled promise rejection" error if a lazy-loaded promise fails before rendering starts (at which point it's caught) and isn't handling the error in some way. When using SvelteKit's `fetch` directly in the `load` function, SvelteKit will handle this case for you. For other promises, it is enough to attach a noop-`catch` to the promise to mark it as handled.
+
+```js
+/// file: src/routes/+page.server.js
+/** @type {import('./$types').PageServerLoad} */
+export function load({ fetch }) {
+	const ok_manual = Promise.reject();
+	ok_manual.catch(() => {});
+
+	return {
+		streamed: {
+			ok_manual,
+			ok_fetch: fetch('/fetch/that/could/fail'),
+			dangerous_unhandled: Promise.reject()
+		}
+	};
+}
 ```
 
 > On platforms that do not support streaming, such as AWS Lambda, responses will be buffered. This means the page will only render once all promises resolve. If you are using a proxy (e.g. NGINX), make sure it does not buffer responses from the proxied server.
@@ -548,6 +565,8 @@ A `load` function that calls `await parent()` will also rerun if a parent `load`
 
 Dependency tracking does not apply _after_ the `load` function has returned — for example, accessing `params.x` inside a nested [promise](#streaming-with-promises) will not cause the function to rerun when `params.x` changes. (Don't worry, you'll get a warning in development if you accidentally do this.) Instead, access the parameter in the main body of your `load` function.
 
+Search parameters are tracked independently from the rest of the url. For example, accessing `event.url.searchParams.get("x")` inside a `load` function will make that `load` function re-run when navigating from `?x=1` to `?x=2`, but not when navigating from `?x=1&y=1` to `?x=1&y=2`.
+
 ### Manual invalidation
 
 You can also rerun `load` functions that apply to the current page using [`invalidate(url)`](modules#$app-navigation-invalidate), which reruns all `load` functions that depend on `url`, and [`invalidateAll()`](modules#$app-navigation-invalidateall), which reruns every `load` function. Server load functions will never automatically depend on a fetched `url` to avoid leaking secrets to the client.
@@ -597,6 +616,7 @@ To summarize, a `load` function will rerun in the following situations:
 
 - It references a property of `params` whose value has changed
 - It references a property of `url` (such as `url.pathname` or `url.search`) whose value has changed. Properties in `request.url` are _not_ tracked
+- It calls `url.searchParams.get(...)`, `url.searchParams.getAll(...)` or `url.searchParams.has(...)` and the parameter in question changes. Accessing other properties of `url.searchParams` will have the same effect as accessing `url.search`.
 - It calls `await parent()` and a parent `load` function reran
 - It declared a dependency on a specific URL via [`fetch`](#making-fetch-requests) (universal load only) or [`depends`](types#public-types-loadevent), and that URL was marked invalid with [`invalidate(url)`](modules#$app-navigation-invalidate)
 - All active `load` functions were forcibly rerun with [`invalidateAll()`](modules#$app-navigation-invalidateall)

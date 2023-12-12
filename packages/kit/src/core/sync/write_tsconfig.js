@@ -3,7 +3,6 @@ import path from 'node:path';
 import colors from 'kleur';
 import { posixify } from '../../utils/filesystem.js';
 import { write_if_changed } from './utils.js';
-import { ts } from './ts.js';
 
 /**
  * @param {string} cwd
@@ -87,6 +86,7 @@ export function get_tsconfig(kit, include_base_url) {
 
 	const include = new Set([
 		'ambient.d.ts',
+		'non-ambient.d.ts',
 		'./types/**/$types.d.ts',
 		config_relative('vite.config.js'),
 		config_relative('vite.config.ts')
@@ -110,7 +110,7 @@ export function get_tsconfig(kit, include_base_url) {
 	include.add(config_relative(`${test_folder}/**/*.ts`));
 	include.add(config_relative(`${test_folder}/**/*.svelte`));
 
-	const exclude = [config_relative('node_modules/**'), './[!ambient.d.ts]**'];
+	const exclude = [config_relative('node_modules/**')];
 	if (path.extname(kit.files.serviceWorker)) {
 		exclude.push(config_relative(kit.files.serviceWorker));
 	} else {
@@ -129,23 +129,19 @@ export function get_tsconfig(kit, include_base_url) {
 			// essential options
 			// svelte-preprocess cannot figure out whether you have a value or a type, so tell TypeScript
 			// to enforce using \`import type\` instead of \`import\` for Types.
-			importsNotUsedAsValues: 'error',
+			// Also, TypeScript doesn't know about import usages in the template because it only sees the
+			// script of a Svelte file. Therefore preserve all value imports.
+			verbatimModuleSyntax: true,
 			// Vite compiles modules one at a time
 			isolatedModules: true,
-			// TypeScript doesn't know about import usages in the template because it only sees the
-			// script of a Svelte file. Therefore preserve all value imports. Requires TS 4.5 or higher.
-			preserveValueImports: true,
 
 			// This is required for svelte-package to work as expected
 			// Can be overwritten
 			lib: ['esnext', 'DOM', 'DOM.Iterable'],
-			moduleResolution: 'node', // TODO change to "bundler" in SvelteKit v2
+			moduleResolution: 'bundler',
 			module: 'esnext',
 			noEmit: true, // prevent tsconfig error "overwriting input files" - Vite handles the build and ignores this
-			target: 'esnext',
-
-			// TODO(v2): use the new flag verbatimModuleSyntax instead (requires support by Vite/Esbuild)
-			ignoreDeprecations: ts && Number(ts.version.split('.')[0]) >= 5 ? '5.0' : undefined
+			target: 'esnext'
 		},
 		include: [...include],
 		exclude

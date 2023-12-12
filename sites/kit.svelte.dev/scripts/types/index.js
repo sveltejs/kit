@@ -65,7 +65,14 @@ async function get_types(code, statements) {
 					// @ts-ignore
 					const jsDoc = statement.jsDoc[0];
 
-					comment = jsDoc.comment;
+					// `@link` JSDoc tags (and maybe others?) turn this property into an array, which we need to join manually
+					if (Array.isArray(jsDoc.comment)) {
+						comment = jsDoc.comment
+							.map(({ name, text }) => (name ? `\`${name.escapedText}\`` : text))
+							.join('');
+					} else {
+						comment = jsDoc.comment;
+					}
 
 					if (jsDoc?.tags?.[0]?.tagName?.escapedText === 'deprecated') {
 						deprecated_notice = jsDoc.tags[0].comment;
