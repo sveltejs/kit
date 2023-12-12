@@ -151,6 +151,8 @@ function add_cookie_note(file_path, source) {
 		'Remember to add the `path` option to `cookies.set/delete/serialize` calls: https://kit.svelte.dev/docs/v2-migration-guide#path-is-now-a-required-option-for-cookies'
 	);
 
+	const calls = [];
+
 	for (const call of source.getDescendantsOfKind(SyntaxKind.CallExpression)) {
 		const expression = call.getExpression();
 		if (!Node.isPropertyAccessExpression(expression)) {
@@ -162,38 +164,53 @@ function add_cookie_note(file_path, source) {
 			continue;
 		}
 
-		if (call.getText().includes('path:')) {
+		if (call.getText().includes('path')) {
+			continue;
+		}
+
+		const options_arg = call.getArguments()[name === 'delete' ? 1 : 2];
+		if (options_arg && !Node.isObjectLiteralExpression(options_arg)) {
+			continue;
+		}
+
+		const parent_function = call.getFirstAncestor(
+			/** @returns {ancestor is import('ts-morph').FunctionDeclaration | import('ts-morph').FunctionExpression | import('ts-morph').ArrowFunction} */
+			(ancestor) => {
+				// Check if this is inside a function
+				const fn_declaration = ancestor.asKind(SyntaxKind.FunctionDeclaration);
+				const fn_expression = ancestor.asKind(SyntaxKind.FunctionExpression);
+				const arrow_fn_expression = ancestor.asKind(SyntaxKind.ArrowFunction);
+				return !!fn_declaration || !!fn_expression || !!arrow_fn_expression;
+			}
+		);
+		if (!parent_function) {
 			continue;
 		}
 
 		const expression_text = expression.getExpression().getText();
-		if (expression_text !== 'cookies') {
+		if (
+			expression_text !== 'cookies' &&
+			(!expression_text.includes('.') ||
+				!parent_function.getParameter(expression_text.split('.')[0]))
+		) {
 			continue;
 		}
 
-		const some_function = call.getFirstAncestor(
-			/** @returns {ancestor is import('ts-morph').FunctionDeclaration | import('ts-morph').VariableDeclaration} */
-			(ancestor) => {
-				// Check if this is inside a function
-				const fn = ancestor.asKind(SyntaxKind.FunctionDeclaration);
-				const arrow_fn = ancestor.asKind(SyntaxKind.VariableDeclaration);
-				return (
-					!!fn || (!!arrow_fn && arrow_fn.getInitializer()?.getKind() === SyntaxKind.ArrowFunction)
-				);
-			}
+		const parent = call.getFirstAncestorByKind(SyntaxKind.Block);
+		if (!parent) {
+			continue;
+		}
+
+		calls.push(() =>
+			call.replaceWithText((writer) => {
+				writer.setIndentationLevel(0); // prevent ts-morph from being unhelpful and adding its own indentation
+				writer.write('/* @migration task: add path argument */ ' + call.getText());
+			})
 		);
-		if (!some_function) {
-			continue;
-		}
+	}
 
-		const parentStatement = call.getParentIfKind(SyntaxKind.ExpressionStatement);
-		if (!parentStatement) {
-			continue;
-		}
-
-		parentStatement.replaceWithText(
-			'/* @migration task: add path argument */' + parentStatement.getText()
-		);
+	for (const call of calls) {
+		call();
 	}
 
 	logger();
