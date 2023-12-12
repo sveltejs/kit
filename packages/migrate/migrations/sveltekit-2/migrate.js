@@ -173,11 +173,6 @@ function add_cookie_note(file_path, source) {
 			continue;
 		}
 
-		const expression_text = expression.getExpression().getText();
-		if (expression_text !== 'cookies') {
-			continue;
-		}
-
 		const parent_function = call.getFirstAncestor(
 			/** @returns {ancestor is import('ts-morph').FunctionDeclaration | import('ts-morph').FunctionExpression | import('ts-morph').ArrowFunction} */
 			(ancestor) => {
@@ -189,6 +184,15 @@ function add_cookie_note(file_path, source) {
 			}
 		);
 		if (!parent_function) {
+			continue;
+		}
+
+		const expression_text = expression.getExpression().getText();
+		if (
+			expression_text !== 'cookies' &&
+			(!expression_text.includes('.') ||
+				!parent_function.getParameter(expression_text.split('.')[0]))
+		) {
 			continue;
 		}
 

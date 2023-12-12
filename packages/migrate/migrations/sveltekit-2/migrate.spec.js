@@ -101,6 +101,24 @@ export function load({ cookies }) {
 test('Notes cookies#3', () => {
 	const result = transform_code(
 		`
+export function load(event) {
+	event.cookies.set('x', 'y');
+}`,
+		false,
+		'+page.js'
+	);
+	assert.equal(
+		result,
+		`
+export function load(event) {
+	/* @migration task: add path argument */ event.cookies.set('x', 'y');
+}`
+	);
+});
+
+test('Notes cookies#4', () => {
+	const result = transform_code(
+		`
 export function load({ cookies }) {
 	cookies.set('foo', 'bar', { path: '/' });
 }`,
