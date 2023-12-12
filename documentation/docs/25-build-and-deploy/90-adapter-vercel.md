@@ -18,7 +18,7 @@ import adapter from '@sveltejs/adapter-vercel';
 export default {
 	kit: {
 		adapter: adapter({
-			// see the 'Deployment configuration' section below
+			// see below for options that can be set here
 		})
 	}
 };
@@ -63,6 +63,18 @@ And the following option apply to serverless functions:
 - `isr`: configuration Incremental Static Regeneration, described below
 
 If your functions need to access data in a specific region, it's recommended that they be deployed in the same region (or close to it) for optimal performance.
+
+## Image Optimization
+
+You may set the `images` config to control how Vercel builds your images. See the [image configuration reference](https://vercel.com/docs/build-output-api/v3/configuration#images) for full details. As an example, you may set:
+
+```
+{
+	sizes: [640, 828, 1200, 1920, 3840],
+	formats: ['image/avif', 'image/webp'],
+	minimumCacheTTL: 300
+}
+```
 
 ## Incremental Static Regeneration
 
