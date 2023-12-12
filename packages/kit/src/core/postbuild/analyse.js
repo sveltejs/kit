@@ -11,9 +11,9 @@ import {
 import { load_config } from '../config/index.js';
 import { forked } from '../../utils/fork.js';
 import { installPolyfills } from '../../exports/node/polyfills.js';
-import { resolvePath } from '../../exports/index.js';
 import { ENDPOINT_METHODS } from '../../constants.js';
 import { filter_private_env, filter_public_env } from '../../utils/env.js';
+import { resolve_route } from '../../utils/routing.js';
 
 export default forked(import.meta.url, analyse);
 
@@ -101,7 +101,7 @@ async function analyse({ manifest_path, env }) {
 			},
 			prerender: page?.prerender ?? endpoint?.prerender,
 			entries:
-				entries && (await entries()).map((entry_object) => resolvePath(route.id, entry_object))
+				entries && (await entries()).map((entry_object) => resolve_route(route.id, entry_object))
 		});
 	}
 

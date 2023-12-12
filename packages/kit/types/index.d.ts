@@ -1738,22 +1738,6 @@ declare module '@sveltejs/kit' {
 	 * @param data Data associated with the failure (e.g. validation errors)
 	 * */
 	export function fail<T extends Record<string, unknown> | undefined = undefined>(status: number, data: T): ActionFailure<T>;
-	/**
-	 * @deprecated Use `resolveRoute` from `$app/paths` instead.
-	 *
-	 * Populate a route ID with params to resolve a pathname.
-	 * @example
-	 * ```js
-	 * resolvePath(
-	 *   `/blog/[slug]/[...somethingElse]`,
-	 *   {
-	 *     slug: 'hello-world',
-	 *     somethingElse: 'something/else'
-	 *   }
-	 * ); // `/blog/hello-world/something/else`
-	 * ```
-	 * */
-	export function resolvePath(id: string, params: Record<string, string | undefined>): string;
 	export type LessThan<TNumber extends number, TArray extends any[] = []> = TNumber extends TArray['length'] ? TArray[number] : LessThan<TNumber, [...TArray, TArray['length']]>;
 	export type NumericRange<TStart extends number, TEnd extends number> = Exclude<TEnd | LessThan<TEnd>, LessThan<TStart>>;
 	export const VERSION: string;

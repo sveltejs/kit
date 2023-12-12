@@ -93,6 +93,7 @@ export function transform_code(code, _is_ts, file_path) {
 	const source = project.createSourceFile('svelte.ts', code);
 	remove_throws(source);
 	add_cookie_note(file_path, source);
+	replace_resolve_path(source);
 	return source.getFullText();
 }
 
@@ -108,14 +109,13 @@ function remove_throws(source) {
 
 	/** @param {string} id */
 	function remove_throw(id) {
-		const imports = get_imports(source, '@sveltejs/kit', id);
-		for (const namedImport of imports) {
-			for (const id of namedImport.getNameNode().findReferencesAsNodes()) {
-				const call_expression = id.getParent();
-				const throw_stmt = call_expression?.getParent();
-				if (Node.isCallExpression(call_expression) && Node.isThrowStatement(throw_stmt)) {
-					throw_stmt.replaceWithText(call_expression.getText() + ';');
-				}
+		const namedImport = get_import(source, '@sveltejs/kit', id);
+		if (!namedImport) return;
+		for (const id of namedImport.getNameNode().findReferencesAsNodes()) {
+			const call_expression = id.getParent();
+			const throw_stmt = call_expression?.getParent();
+			if (Node.isCallExpression(call_expression) && Node.isThrowStatement(throw_stmt)) {
+				throw_stmt.replaceWithText(call_expression.getText() + ';');
 			}
 		}
 	}
@@ -217,14 +217,44 @@ function add_cookie_note(file_path, source) {
 }
 
 /**
+ * `resolvePath` from `@sveltejs/kit` -> `resolveRoute` from `$app/paths`
+ * @param {import('ts-morph').SourceFile} source
+ */
+function replace_resolve_path(source) {
+	const namedImport = get_import(source, '@sveltejs/kit', 'resolvePath');
+	if (!namedImport) return;
+
+	for (const id of namedImport.getNameNode().findReferencesAsNodes()) {
+		id.replaceWithText('resolveRoute');
+	}
+	if (namedImport.getParent().getParent().getNamedImports().length === 1) {
+		namedImport.getParent().getParent().getParent().remove();
+	} else {
+		namedImport.remove();
+	}
+
+	const paths_import = source.getImportDeclaration(
+		(i) => i.getModuleSpecifierValue() === '$app/paths'
+	);
+	if (paths_import) {
+		paths_import.addNamedImport('resolveRoute');
+	} else {
+		source.addImportDeclaration({
+			moduleSpecifier: '$app/paths',
+			namedImports: ['resolveRoute']
+		});
+	}
+}
+
+/**
  * @param {import('ts-morph').SourceFile} source
  * @param {string} from
  * @param {string} name
  */
-function get_imports(source, from, name) {
+function get_import(source, from, name) {
 	return source
 		.getImportDeclarations()
 		.filter((i) => i.getModuleSpecifierValue() === from)
 		.flatMap((i) => i.getNamedImports())
-		.filter((i) => i.getName() === name);
+		.find((i) => i.getName() === name);
 }

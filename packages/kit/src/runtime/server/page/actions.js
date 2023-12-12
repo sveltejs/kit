@@ -1,5 +1,5 @@
 import * as devalue from 'devalue';
-import { json } from '../../../exports/index.js';
+import { error, json } from '../../../exports/index.js';
 import { normalize_error } from '../../../utils/error.js';
 import { is_form_content_type, negotiate } from '../../../utils/http.js';
 import { HttpError, Redirect, ActionFailure } from '../../control.js';

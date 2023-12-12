@@ -90,7 +90,7 @@ export function load(event) {
 }
 ```
 
-## Recognizes false positives
+## Recognizes cookies false positives
 
 ```js before
 export function load({ cookies }) {
@@ -114,4 +114,49 @@ export function foo(event) {
 }
 
 cookies.set('foo', 'bar');
+```
+
+## Replaces resolvePath
+
+```js before
+import { resolvePath } from '@sveltejs/kit';
+
+resolvePath('x', y);
+```
+
+<!-- prettier-ignore -->
+```js after
+import { resolveRoute } from "$app/paths";
+
+resolveRoute('x', y);
+```
+
+## Replaces resolvePath taking care of imports
+
+```js before
+import { resolvePath, x } from '@sveltejs/kit';
+import { y } from '$app/paths';
+
+resolvePath('x');
+```
+
+```js after
+import { x } from '@sveltejs/kit';
+import { y, resolveRoute } from '$app/paths';
+
+resolveRoute('x');
+```
+
+## Doesn't replace resolvePath from other sources
+
+```js before
+import { resolvePath } from 'x';
+
+resolvePath('x');
+```
+
+```js after
+import { resolvePath } from 'x';
+
+resolvePath('x');
 ```
