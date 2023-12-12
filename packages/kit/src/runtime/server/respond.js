@@ -30,7 +30,7 @@ import { get_option } from '../../utils/options.js';
 import { json, text } from '../../exports/index.js';
 import { action_json_redirect, is_action_json_request } from './page/actions.js';
 import { INVALIDATED_PARAM, TRAILING_SLASH_PARAM } from '../shared.js';
-import { public_env } from '../shared-server.js';
+import { get_public_env } from './env_module.js';
 
 /* global __SVELTEKIT_ADAPTER_NAME__ */
 
@@ -46,15 +46,6 @@ const default_preload = ({ type }) => type === 'js' || type === 'css';
 const page_methods = new Set(['GET', 'HEAD', 'POST']);
 
 const allowed_page_methods = new Set(['GET', 'HEAD', 'OPTIONS']);
-
-/** @type {string} */
-let public_env_body;
-
-/** @type {string} */
-let public_env_etag;
-
-/** @type {Headers} */
-let public_env_headers;
 
 /**
  * @param {Request} request
@@ -109,23 +100,7 @@ export async function respond(request, options, manifest, state) {
 	}
 
 	if (decoded === '/_env.js') {
-		public_env_body ??= `export const env=${JSON.stringify(public_env)}`;
-		public_env_etag ??= `W/${Date.now()}`;
-		public_env_headers ??= new Headers({
-			'content-type': 'application/javascript; charset=utf-8',
-			etag: public_env_etag
-		});
-
-		if (request.headers.get('if-none-match') === public_env_etag) {
-			return new Response(null, {
-				status: 304,
-				headers: public_env_headers
-			});
-		}
-
-		return new Response(public_env_body, {
-			headers: public_env_headers
-		});
+		return get_public_env(request);
 	}
 
 	const is_data_request = has_data_suffix(decoded);
