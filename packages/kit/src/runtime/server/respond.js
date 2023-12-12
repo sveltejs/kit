@@ -116,9 +116,7 @@ export async function respond(request, options, manifest, state) {
 			etag: public_env_etag
 		});
 
-		let if_none_match_value = request.headers.get('if-none-match');
-
-		if (if_none_match_value === (public_env_etag ??= `W/${Date.now()}`)) {
+		if (request.headers.get('if-none-match') === public_env_etag) {
 			return new Response(null, {
 				status: 304,
 				headers: public_env_headers
