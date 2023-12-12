@@ -78,7 +78,7 @@ export async function render_page(event, page, options, manifest, state, resolve
 
 		// it's crucial that we do this before returning the non-SSR response, otherwise
 		// SvelteKit will erroneously believe that the path has been prerendered,
-		// causing functions to be omitted from the manifesst generated later
+		// causing functions to be omitted from the manifest generated later
 		const should_prerender = get_option(nodes, 'prerender') ?? false;
 		if (should_prerender) {
 			const mod = leaf_node.server;
