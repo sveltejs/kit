@@ -275,6 +275,10 @@ export function create_client(app, target) {
 
 	/** @param {...string} pathnames */
 	async function preload_code(...pathnames) {
+		if (DEV && pathnames.length > 1) {
+			console.warn('Calling `preloadCode` with multiple arguments is deprecated');
+		}
+
 		const matching = routes.filter((route) => pathnames.some((pathname) => route.exec(pathname)));
 
 		const promises = matching.map((r) => {
