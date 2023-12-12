@@ -1221,8 +1221,11 @@ test.describe('Actions', () => {
 		await expect(page.locator('pre')).toHaveText('something went wrong');
 	});
 
-	test('submitting application/json should return http status code 415', async ({ baseURL }) => {
-		const response = await fetch(`${baseURL}/actions/form-errors`, {
+	test('submitting application/json should return http status code 415', async ({
+		baseURL,
+		page
+	}) => {
+		const response = await page.request.fetch(`${baseURL}/actions/form-errors`, {
 			method: 'POST',
 			body: JSON.stringify({ foo: 'bar' }),
 			headers: {
@@ -1233,7 +1236,7 @@ test.describe('Actions', () => {
 		const { type, error } = await response.json();
 		expect(type).toBe('error');
 		expect(error.message).toBe('Actions expect form-encoded data (received application/json)');
-		expect(response.status).toBe(415);
+		expect(response.status()).toBe(415);
 	});
 });
 
