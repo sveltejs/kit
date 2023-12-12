@@ -208,7 +208,7 @@ function add_cookie_note(file_path, source) {
 				// Additional hoop-jumping necessary to not mix tabs and spaces
 				options_arg.addPropertyAssignment({
 					name: 'path',
-					initializer: `'.'`,
+					initializer: "'.'",
 					leadingTrivia: (writer) => {
 						writer.setIndentationLevel(0);
 					},
@@ -219,7 +219,7 @@ function add_cookie_note(file_path, source) {
 				call.formatText({ convertTabsToSpaces: !indent.includes('\t') });
 			});
 		} else {
-			calls.push(() => call.insertArguments(name === 'delete' ? 1 : 2, [`{ path: '.' }`]));
+			calls.push(() => call.insertArguments(name === 'delete' ? 1 : 2, ["{ path: '.' }"]));
 		}
 	}
 
