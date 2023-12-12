@@ -115,6 +115,7 @@ const options = object(
 
 			env: object({
 				dir: string(process.cwd()),
+				publicModule: string('_env.js'),
 				publicPrefix: string('PUBLIC_'),
 				privatePrefix: string('')
 			}),

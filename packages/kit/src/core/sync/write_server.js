@@ -35,6 +35,7 @@ export const options = {
 	csp: ${s(config.kit.csp)},
 	csrf_check_origin: ${s(config.kit.csrf.checkOrigin)},
 	embedded: ${config.kit.embedded},
+	env_public_module: '${config.kit.env.publicModule}',
 	env_public_prefix: '${config.kit.env.publicPrefix}',
 	env_private_prefix: '${config.kit.env.privatePrefix}',
 	hooks: null, // added lazily, via \`get_hooks\`

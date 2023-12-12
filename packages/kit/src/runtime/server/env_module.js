@@ -22,7 +22,7 @@ export function get_public_env(request) {
 	});
 
 	if (request.headers.get('if-none-match') === etag) {
-		return new Response('', { status: 304, headers });
+		return new Response(undefined, { status: 304, headers });
 	}
 
 	return new Response(body, { headers });

@@ -335,6 +335,7 @@ export interface SSROptions {
 	csp: ValidatedConfig['kit']['csp'];
 	csrf_check_origin: boolean;
 	embedded: boolean;
+	env_public_module: string;
 	env_public_prefix: string;
 	env_private_prefix: string;
 	hooks: ServerHooks;

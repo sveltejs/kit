@@ -99,7 +99,7 @@ export async function respond(request, options, manifest, state) {
 		decoded = decoded.slice(base.length) || '/';
 	}
 
-	if (decoded === '/_env.js') {
+	if (decoded === '/' + options.env_public_module) {
 		return get_public_env(request);
 	}
 
