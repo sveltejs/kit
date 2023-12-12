@@ -30,6 +30,7 @@ import { get_option } from '../../utils/options.js';
 import { json, text } from '../../exports/index.js';
 import { action_json_redirect, is_action_json_request } from './page/actions.js';
 import { INVALIDATED_PARAM, TRAILING_SLASH_PARAM } from '../shared.js';
+import { public_env } from '../shared-server.js';
 
 /* global __SVELTEKIT_ADAPTER_NAME__ */
 
@@ -45,6 +46,15 @@ const default_preload = ({ type }) => type === 'js' || type === 'css';
 const page_methods = new Set(['GET', 'HEAD', 'POST']);
 
 const allowed_page_methods = new Set(['GET', 'HEAD', 'OPTIONS']);
+
+/** @type {string} */
+let public_env_body;
+
+/** @type {string} */
+let public_env_etag;
+
+/** @type {Headers} */
+let public_env_headers;
 
 /**
  * @param {Request} request
@@ -96,6 +106,28 @@ export async function respond(request, options, manifest, state) {
 			return text('Not found', { status: 404 });
 		}
 		decoded = decoded.slice(base.length) || '/';
+	}
+
+	if (decoded === '/_env.js') {
+		public_env_body ??= `export const env=${JSON.stringify(public_env)}`;
+		public_env_etag ??= `W/${Date.now()}`;
+		public_env_headers ??= new Headers({
+			'content-type': 'application/javascript; charset=utf-8',
+			etag: public_env_etag
+		});
+
+		let if_none_match_value = request.headers.get('if-none-match');
+
+		if (if_none_match_value === (public_env_etag ??= `W/${Date.now()}`)) {
+			return new Response(null, {
+				status: 304,
+				headers: public_env_headers
+			});
+		}
+
+		return new Response(public_env_body, {
+			headers: public_env_headers
+		});
 	}
 
 	const is_data_request = has_data_suffix(decoded);

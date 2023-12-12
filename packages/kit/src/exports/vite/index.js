@@ -380,7 +380,7 @@ function kit({ svelte_config }) {
 				case '\0virtual:$env/dynamic/public':
 					// populate `$env/dynamic/public` from `window`
 					if (browser) {
-						return `export const env = ${global}.env;`;
+						return `export const env = ${global}.env ?? (await import(/* @vite-ignore */ ${global}.base + '/_env.js')).env;`;
 					}
 
 					return create_dynamic_module(
@@ -572,7 +572,7 @@ function kit({ svelte_config }) {
 							preserveEntrySignatures: 'strict'
 						},
 						ssrEmitAssets: true,
-						target: ssr ? 'node16.14' : undefined
+						target: ssr ? 'node18.13' : 'es2022'
 					},
 					publicDir: kit.files.assets,
 					worker: {

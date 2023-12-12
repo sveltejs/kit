@@ -292,10 +292,11 @@ export async function render_response({
 
 		const blocks = [];
 
+		// TODO only populate `env` if `$env/dynamic/public` is used in the app
 		const properties = [
 			paths.assets && `assets: ${s(paths.assets)}`,
 			`base: ${base_expression}`,
-			`env: ${s(public_env)}`
+			`env: ${state.prerendering ? null : s(public_env)}`
 		].filter(Boolean);
 
 		if (chunks) {
