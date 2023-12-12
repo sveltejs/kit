@@ -36,7 +36,7 @@ export function load({ cookies }) {
 }
 ```
 
-`svelte-migrate` will add comments highlighting the locations that need to be adjusted.
+`svelte-migrate` will add the `path` option automatically where possible using `'.'` as the `path` value (which reflects the previous default behavior), but it's a good opportunity to review these locations and adjust them where it makes sense.
 
 ## Top-level promises are no longer awaited
 

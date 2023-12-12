@@ -201,12 +201,26 @@ function add_cookie_note(file_path, source) {
 			continue;
 		}
 
-		calls.push(() =>
-			call.replaceWithText((writer) => {
-				writer.setIndentationLevel(0); // prevent ts-morph from being unhelpful and adding its own indentation
-				writer.write('/* @migration task: add path argument */ ' + call.getText());
-			})
-		);
+		if (options_arg) {
+			const text = source.getText();
+			const indent = text.substring(text.lastIndexOf('\n', call.getStart()) + 1, call.getStart());
+			calls.push(() => {
+				// Additional hoop-jumping necessary to not mix tabs and spaces
+				options_arg.addPropertyAssignment({
+					name: 'path',
+					initializer: `'.'`,
+					leadingTrivia: (writer) => {
+						writer.setIndentationLevel(0);
+					},
+					trailingTrivia: (writer) => {
+						writer.setIndentationLevel(0);
+					}
+				});
+				call.formatText({ convertTabsToSpaces: !indent.includes('\t') });
+			});
+		} else {
+			calls.push(() => call.insertArguments(name === 'delete' ? 1 : 2, [`{ path: '.' }`]));
+		}
 	}
 
 	for (const call of calls) {

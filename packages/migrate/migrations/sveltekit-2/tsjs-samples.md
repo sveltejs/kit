@@ -46,33 +46,33 @@ throw error();
 error();
 ```
 
-## Notes cookie migration
+## Migrates cookies
 
 ```js before
 export function load({ cookies }) {
-	cookies.set('foo', 'bar');
-}
-```
-
-```js after
-export function load({ cookies }) {
-	/* @migration task: add path argument */ cookies.set('foo', 'bar');
-}
-```
-
-## Notes cookie migration with multiple occurences
-
-```js before
-export function load({ cookies }) {
-	cookies.delete('foo');
+	cookies.delete('x');
 	cookies.set('x', 'y', { z: '' });
+	cookies.serialize('x', 'y', {});
+	cookies.set('x', 'y', {
+		z: ''
+	});
 }
 ```
 
 ```js after
 export function load({ cookies }) {
-	/* @migration task: add path argument */ cookies.delete('foo');
-	/* @migration task: add path argument */ cookies.set('x', 'y', { z: '' });
+	cookies.delete('x', { path: '.' });
+	cookies.set('x', 'y', {
+		z: '',
+		path: '.'
+	});
+	cookies.serialize('x', 'y', {
+		path: '.'
+	});
+	cookies.set('x', 'y', {
+		z: '',
+		path: '.'
+	});
 }
 ```
 
@@ -81,12 +81,17 @@ export function load({ cookies }) {
 ```js before
 export function load(event) {
 	event.cookies.set('x', 'y');
+	event.cookies.delete('x', { x: '' });
 }
 ```
 
 ```js after
 export function load(event) {
-	/* @migration task: add path argument */ event.cookies.set('x', 'y');
+	event.cookies.set('x', 'y', { path: '.' });
+	event.cookies.delete('x', {
+		x: '',
+		path: '.'
+	});
 }
 ```
 
