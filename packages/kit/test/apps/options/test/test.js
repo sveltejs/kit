@@ -239,7 +239,7 @@ test.describe('trailingSlash', () => {
 
 		// also wait for network processing to complete, see
 		// https://playwright.dev/docs/network#network-events
-		await app.preloadData('/path-base/preloading/preloaded');
+		await app.preloadCode('/path-base/preloading/preloaded');
 
 		// svelte request made is environment dependent
 		if (process.env.DEV) {
@@ -247,6 +247,9 @@ test.describe('trailingSlash', () => {
 		} else {
 			expect(requests.filter((req) => req.endsWith('.mjs')).length).toBeGreaterThan(0);
 		}
+
+		requests = [];
+		await app.preloadData('/path-base/preloading/preloaded');
 
 		expect(requests.includes('/path-base/preloading/preloaded/__data.json')).toBe(true);
 

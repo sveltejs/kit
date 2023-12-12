@@ -1982,7 +1982,7 @@ declare module '$app/navigation' {
 	 * Returns a Promise that resolves when the modules have been imported.
 	 *
 	 * */
-	export const preloadCode: (...urls: string[]) => Promise<void>;
+	export const preloadCode: (url: string) => Promise<void>;
 	/**
 	 * A navigation interceptor that triggers before we navigate to a new URL, whether by clicking a link, calling `goto(...)`, or using the browser back/forward controls.
 	 * Calling `cancel()` will prevent the navigation from completing. If the navigation would have directly unloaded the current page, calling `cancel` will trigger the native

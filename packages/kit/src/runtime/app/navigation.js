@@ -81,8 +81,8 @@ export const preloadData = /* @__PURE__ */ client_method('preload_data');
  * Unlike `preloadData`, this won't call `load` functions.
  * Returns a Promise that resolves when the modules have been imported.
  *
- * @type {(...urls: string[]) => Promise<void>}
- * @param {...string[]} urls
+ * @type {(url: string) => Promise<void>}
+ * @param {string} url
  * @returns {Promise<void>}
  */
 export const preloadCode = /* @__PURE__ */ client_method('preload_code');
