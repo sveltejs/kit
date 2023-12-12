@@ -198,9 +198,10 @@ function b64_encode(buff) {
 		return Buffer.from(buff).toString('base64');
 	}
 
+	const little_endian = new Uint8Array(new Uint16Array([1]).buffer)[0] > 0;
 	// The Uint16Arrray(Uint8Array(..)) is done on purpose
 	// this way the code points are padded with 0's
-	return btoa(new TextDecoder('utf-16').decode(new Uint16Array(new Uint8Array(buff))));
+	return btoa(new TextDecoder(little_endian ? 'utf-16le' : 'utf-16be').decode(new Uint16Array(new Uint8Array(buff))));
 }
 
 /**
