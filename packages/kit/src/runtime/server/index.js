@@ -37,8 +37,8 @@ export class Server {
 		// Take care: Some adapters may have to call `Server.init` per-request to set env vars,
 		// so anything that shouldn't be rerun should be wrapped in an `if` block to make sure it hasn't
 		// been done already.
-		// set env, in case it's used in initialisation
 
+		// set env, in case it's used in initialisation
 		const private_env = filter_private_env(env, {
 			public_prefix: this.#options.env_public_prefix,
 			private_prefix: this.#options.env_private_prefix
