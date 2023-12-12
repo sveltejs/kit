@@ -1,4 +1,5 @@
 import { ENDPOINT_METHODS, PAGE_METHODS } from '../../constants.js';
+import { getHrefBetween } from '../../utils/diff-urls.js';
 import { negotiate } from '../../utils/http.js';
 import { Redirect } from '../control.js';
 import { method_not_allowed } from './utils.js';
@@ -68,9 +69,11 @@ export async function render_endpoint(event, mod, state, options) {
 			const from = event.url;
 			const to = new URL(e.location, event.url);
 			const resolvedUrl = options.hooks.resolveDestination({ from, to });
+			const resolvedLocation = getHrefBetween(from, resolvedUrl);
+
 			return new Response(undefined, {
 				status: e.status,
-				headers: { location: resolvedUrl.href }
+				headers: { location: resolvedLocation }
 			});
 		}
 

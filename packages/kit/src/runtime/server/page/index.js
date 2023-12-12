@@ -15,6 +15,7 @@ import { render_response } from './render.js';
 import { respond_with_error } from './respond_with_error.js';
 import { get_option } from '../../../utils/options.js';
 import { get_data_json } from '../data/index.js';
+import { getHrefBetween } from '../../../utils/diff-urls.js';
 
 /**
  * The maximum request depth permitted before assuming we're stuck in an infinite loop
@@ -213,11 +214,14 @@ export async function render_page(event, page, options, manifest, state, resolve
 						const to = new URL(err.location, from);
 
 						const resolvedUrl = options.hooks.resolveDestination({ from, to });
+						const resolvedLocation = getHrefBetween(from, resolvedUrl);
+
+						console.log("RESOLVED LOCATION", resolvedLocation)
 
 						if (state.prerendering && should_prerender_data) {
 							const body = JSON.stringify({
 								type: 'redirect',
-								location: resolvedUrl.href
+								location: resolvedLocation
 							});
 
 							state.prerendering.dependencies.set(data_pathname, {
@@ -226,7 +230,7 @@ export async function render_page(event, page, options, manifest, state, resolve
 							});
 						}
 
-						return redirect_response(err.status, resolvedUrl.href);
+						return redirect_response(err.status, resolvedLocation);
 					}
 
 					const status = err instanceof HttpError ? err.status : 500;
