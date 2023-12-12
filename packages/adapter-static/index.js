@@ -1,7 +1,7 @@
 import path from 'node:path';
 import { platforms } from './platforms.js';
 
-/** @type {import('.').default} */
+/** @type {import('./index.js').default} */
 export default function (options) {
 	return {
 		name: '@sveltejs/adapter-static',
@@ -56,7 +56,7 @@ See https://kit.svelte.dev/docs/page-options#prerender for more details`
 				assets = pages,
 				fallback,
 				precompress
-			} = options ?? platform?.defaults ?? /** @type {import('./index').AdapterOptions} */ ({});
+			} = options ?? platform?.defaults ?? /** @type {import('./index.js').AdapterOptions} */ ({});
 
 			builder.rimraf(assets);
 			builder.rimraf(pages);

@@ -435,7 +435,7 @@ export function load({ locals }) {
 }
 ```
 
-> Make sure you're not catching the thrown redirect, which would prevent SvelteKit from handling it.
+> Don't use `throw redirect()` from within a try-catch block, as the redirect will immediately trigger the catch statement.
 
 In the browser, you can also navigate programmatically outside of a `load` function using [`goto`](modules#$app-navigation-goto) from [`$app.navigation`](modules#$app-navigation).
 
@@ -486,6 +486,25 @@ This is useful for creating skeleton loading states, for example:
 		{error.message}
 	{/await}
 </p>
+```
+
+When streaming data, be careful to handle promise rejections correctly. More specifically, the server could crash with an "unhandled promise rejection" error if a lazy-loaded promise fails before rendering starts (at which point it's caught) and isn't handling the error in some way. When using SvelteKit's `fetch` directly in the `load` function, SvelteKit will handle this case for you. For other promises, it is enough to attach a noop-`catch` to the promise to mark it as handled.
+
+```js
+/// file: src/routes/+page.server.js
+/** @type {import('./$types').PageServerLoad} */
+export function load({ fetch }) {
+	const ok_manual = Promise.reject();
+	ok_manual.catch(() => {});
+
+	return {
+		streamed: {
+			ok_manual,
+			ok_fetch: fetch('/fetch/that/could/fail'),
+			dangerous_unhandled: Promise.reject()
+		}
+	};
+}
 ```
 
 > On platforms that do not support streaming, such as AWS Lambda, responses will be buffered. This means the page will only render once all promises resolve. If you are using a proxy (e.g. NGINX), make sure it does not buffer responses from the proxied server.
@@ -604,6 +623,20 @@ To summarize, a `load` function will rerun in the following situations:
 `params` and `url` can change in response to a `<a href="..">` link click, a [`<form>` interaction](form-actions#get-vs-post), a [`goto`](modules#$app-navigation-goto) invocation, or a [`redirect`](modules#sveltejs-kit-redirect).
 
 Note that rerunning a `load` function will update the `data` prop inside the corresponding `+layout.svelte` or `+page.svelte`; it does _not_ cause the component to be recreated. As a result, internal state is preserved. If this isn't what you want, you can reset whatever you need to reset inside an [`afterNavigate`](modules#$app-navigation-afternavigate) callback, and/or wrap your component in a [`{#key ...}`](https://svelte.dev/docs#template-syntax-key) block.
+
+## Implications for authentication
+
+A couple features of loading data have important implications for auth checks:
+- Layout `load` functions do not run on every request, such as during client side navigation between child routes. [(When do load functions rerun?)](load#rerunning-load-functions-when-do-load-functions-rerun)
+- Layout and page `load` functions run concurrently unless `await parent()` is called. If a layout `load` throws, the page `load` function runs, but the client will not receive the returned data.
+
+There are a few possible strategies to ensure an auth check occurs before protected code.
+
+To prevent data waterfalls and preserve layout `load` caches:
+- Use [hooks](hooks) to protect multiple routes before any `load` functions run
+- Use auth guards directly in `+page.server.js` `load` functions for route specific protection
+
+Putting an auth guard in `+layout.server.js` requires all child pages to call `await parent()` before protected code. Unless every child page depends on returned data from `await parent()`, the other options will be more performant.
 
 ## Further reading
 

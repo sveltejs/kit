@@ -97,3 +97,5 @@ export function not_found(req, res, base) {
 		);
 	}
 }
+
+export const strip_virtual_prefix = /** @param {string} id */ (id) => id.replace('\0virtual:', '');

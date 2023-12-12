@@ -125,9 +125,9 @@ export async function load_server_data({
 		url
 	});
 
-	const data = result ? await unwrap_promises(result) : null;
+	const data = result ? await unwrap_promises(result, node.server_id) : null;
 	if (__SVELTEKIT_DEV__) {
-		validate_load_response(data, /** @type {string} */ (event.route.id));
+		validate_load_response(data, node.server_id);
 	}
 
 	done = true;
@@ -144,7 +144,7 @@ export async function load_server_data({
  * Calls the user's `load` function.
  * @param {{
  *   event: import('@sveltejs/kit').RequestEvent;
- *   fetched: import('./types').Fetched[];
+ *   fetched: import('./types.js').Fetched[];
  *   node: import('types').SSRNode | undefined;
  *   parent: () => Promise<Record<string, any>>;
  *   resolve_opts: import('types').RequiredResolveOptions;
@@ -181,9 +181,9 @@ export async function load_data({
 		parent
 	});
 
-	const data = result ? await unwrap_promises(result) : null;
+	const data = result ? await unwrap_promises(result, node.universal_id) : null;
 	if (__SVELTEKIT_DEV__) {
-		validate_load_response(data, /** @type {string} */ (event.route.id));
+		validate_load_response(data, node.universal_id);
 	}
 
 	return data;
@@ -192,16 +192,17 @@ export async function load_data({
 /**
  * @param {Pick<import('@sveltejs/kit').RequestEvent, 'fetch' | 'url' | 'request' | 'route'>} event
  * @param {import('types').SSRState} state
- * @param {import('./types').Fetched[]} fetched
+ * @param {import('./types.js').Fetched[]} fetched
  * @param {boolean} csr
  * @param {Pick<Required<import('@sveltejs/kit').ResolveOptions>, 'filterSerializedResponseHeaders'>} resolve_opts
+ * @returns {typeof fetch}
  */
 export function create_universal_fetch(event, state, fetched, csr, resolve_opts) {
 	/**
 	 * @param {URL | RequestInfo} input
 	 * @param {RequestInit} [init]
 	 */
-	return async (input, init) => {
+	const universal_fetch = async (input, init) => {
 		const cloned_body = input instanceof Request && input.body ? input.clone().body : null;
 
 		const cloned_headers =
@@ -329,6 +330,15 @@ export function create_universal_fetch(event, state, fetched, csr, resolve_opts)
 
 		return proxy;
 	};
+
+	// Don't make this function `async`! Otherwise, the user has to `catch` promises they use for streaming responses or else
+	// it will be an unhandled rejection. Instead, we add a `.catch(() => {})` ourselves below to this from happening.
+	return (input, init) => {
+		// See docs in fetch.js for why we need to do this
+		const response = universal_fetch(input, init);
+		response.catch(() => {});
+		return response;
+	};
 }
 
 /**
@@ -350,19 +360,19 @@ async function stream_to_string(stream) {
 
 /**
  * @param {any} data
- * @param {string} [routeId]
+ * @param {string} [id]
  */
-function validate_load_response(data, routeId) {
+function validate_load_response(data, id) {
 	if (data != null && Object.getPrototypeOf(data) !== Object.prototype) {
 		throw new Error(
-			`a load function related to route '${routeId}' returned ${
+			`a load function in ${id} returned ${
 				typeof data !== 'object'
 					? `a ${typeof data}`
 					: data instanceof Response
-					? 'a Response object'
-					: Array.isArray(data)
-					? 'an array'
-					: 'a non-plain object'
+					  ? 'a Response object'
+					  : Array.isArray(data)
+					    ? 'an array'
+					    : 'a non-plain object'
 			}, but must return a plain object at the top level (i.e. \`return {...}\`)`
 		);
 	}

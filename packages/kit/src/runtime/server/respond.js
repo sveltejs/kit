@@ -18,7 +18,7 @@ import { exec } from '../../utils/routing.js';
 import { redirect_json_response, render_data } from './data/index.js';
 import { add_cookies_to_headers, get_cookies } from './cookie.js';
 import { create_fetch } from './fetch.js';
-import { Redirect } from '../control.js';
+import { Redirect, NotFound } from '../control.js';
 import {
 	validate_layout_exports,
 	validate_layout_server_exports,
@@ -134,7 +134,7 @@ export async function respond(request, options, manifest, state) {
 	/** @type {Record<string, string>} */
 	const headers = {};
 
-	/** @type {Record<string, import('./page/types').Cookie>} */
+	/** @type {Record<string, import('./page/types.js').Cookie>} */
 	let cookies_to_add = {};
 
 	/** @type {import('@sveltejs/kit').RequestEvent} */
@@ -341,8 +341,8 @@ export async function respond(request, options, manifest, state) {
 			const response = is_data_request
 				? redirect_json_response(e)
 				: route?.page && is_action_json_request(event)
-				? action_json_redirect(e)
-				: redirect_response(e.status, e.location);
+				  ? action_json_redirect(e)
+				  : redirect_response(e.status, e.location);
 			add_cookies_to_headers(response.headers, Object.values(cookies_to_add));
 			return response;
 		}
@@ -457,6 +457,14 @@ export async function respond(request, options, manifest, state) {
 				return response;
 			}
 
+			if (state.error && event.isSubRequest) {
+				return await fetch(request, {
+					headers: {
+						'x-sveltekit-error': 'true'
+					}
+				});
+			}
+
 			if (state.error) {
 				return text('Internal Server Error', {
 					status: 500
@@ -472,7 +480,7 @@ export async function respond(request, options, manifest, state) {
 					manifest,
 					state,
 					status: 404,
-					error: new Error(`Not found: ${event.url.pathname}`),
+					error: new NotFound(event.url.pathname),
 					resolve_opts
 				});
 			}

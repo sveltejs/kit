@@ -18,19 +18,19 @@ import { assets_base, find_deps } from './build/utils.js';
 import { dev } from './dev/index.js';
 import { is_illegal, module_guard, normalize_id } from './graph_analysis/index.js';
 import { preview } from './preview/index.js';
-import { get_config_aliases, get_env } from './utils.js';
+import { get_config_aliases, get_env, strip_virtual_prefix } from './utils.js';
 import { write_client_manifest } from '../../core/sync/write_client_manifest.js';
 import prerender from '../../core/postbuild/prerender.js';
 import analyse from '../../core/postbuild/analyse.js';
 import { s } from '../../utils/misc.js';
 import { hash } from '../../runtime/hash.js';
-import { dedent } from '../../core/sync/utils.js';
+import { dedent, isSvelte5Plus } from '../../core/sync/utils.js';
 
 export { vitePreprocess } from '@sveltejs/vite-plugin-svelte';
 
 const cwd = process.cwd();
 
-/** @type {import('./types').EnforcedConfig} */
+/** @type {import('./types.js').EnforcedConfig} */
 const enforced_config = {
 	appType: true,
 	base: true,
@@ -136,7 +136,7 @@ export async function sveltekit() {
 		onwarn: svelte_config.onwarn,
 		compilerOptions: {
 			// @ts-expect-error SvelteKit requires hydratable true by default
-			hydratable: true,
+			hydratable: isSvelte5Plus() ? undefined : true,
 			...svelte_config.compilerOptions
 		},
 		...svelte_config.vitePlugin
@@ -336,7 +336,7 @@ function kit({ svelte_config }) {
 		async resolveId(id) {
 			// treat $env/static/[public|private] as virtual
 			if (id.startsWith('$env/') || id.startsWith('__sveltekit/') || id === '$service-worker') {
-				return `\0${id}`;
+				return `\0virtual:${id}`;
 			}
 		},
 
@@ -358,24 +358,24 @@ function kit({ svelte_config }) {
 					})
 				) {
 					const relative = normalize_id(id, normalized_lib, normalized_cwd);
-					throw new Error(`Cannot import ${relative} into client-side code`);
+					throw new Error(`Cannot import ${strip_virtual_prefix(relative)} into client-side code`);
 				}
 			}
 
 			switch (id) {
-				case '\0$env/static/private':
+				case '\0virtual:$env/static/private':
 					return create_static_module('$env/static/private', env.private);
 
-				case '\0$env/static/public':
+				case '\0virtual:$env/static/public':
 					return create_static_module('$env/static/public', env.public);
 
-				case '\0$env/dynamic/private':
+				case '\0virtual:$env/dynamic/private':
 					return create_dynamic_module(
 						'private',
 						vite_config_env.command === 'serve' ? env.private : undefined
 					);
 
-				case '\0$env/dynamic/public':
+				case '\0virtual:$env/dynamic/public':
 					// populate `$env/dynamic/public` from `window`
 					if (browser) {
 						return `export const env = ${global}.env;`;
@@ -386,12 +386,12 @@ function kit({ svelte_config }) {
 						vite_config_env.command === 'serve' ? env.public : undefined
 					);
 
-				case '\0$service-worker':
+				case '\0virtual:$service-worker':
 					return create_service_worker_module(svelte_config);
 
 				// for internal use only. it's published as $app/paths externally
 				// we use this alias so that we won't collide with user aliases
-				case '\0__sveltekit/paths': {
+				case '\0virtual:__sveltekit/paths': {
 					const { assets, base } = svelte_config.kit.paths;
 
 					// use the values defined in `global`, but fall back to hard-coded values
@@ -429,7 +429,7 @@ function kit({ svelte_config }) {
 					`;
 				}
 
-				case '\0__sveltekit/environment': {
+				case '\0virtual:__sveltekit/environment': {
 					const { version } = svelte_config.kit;
 
 					return dedent`
@@ -555,7 +555,7 @@ function kit({ svelte_config }) {
 						cssCodeSplit: true,
 						cssMinify: initial_config.build?.minify == null ? true : !!initial_config.build.minify,
 						// don't use the default name to avoid collisions with 'static/manifest.json'
-						manifest: 'vite-manifest.json',
+						manifest: '.vite/manifest.json', // TODO: remove this after bumping peer dep to vite 5
 						outDir: `${out}/${ssr ? 'server' : 'client'}`,
 						rollupOptions: {
 							input,
@@ -702,7 +702,7 @@ function kit({ svelte_config }) {
 
 				secondary_build_started = true;
 
-				const { output } = /** @type {import('rollup').RollupOutput} */ (
+				const { output } = /** @type {import('vite').Rollup.RollupOutput} */ (
 					await vite.build({
 						configFile: vite_config.configFile,
 						// CLI args
@@ -742,7 +742,7 @@ function kit({ svelte_config }) {
 				};
 
 				const css = output.filter(
-					/** @type {(value: any) => value is import('rollup').OutputAsset} */
+					/** @type {(value: any) => value is import('vite').Rollup.OutputAsset} */
 					(value) => value.type === 'asset' && value.fileName.endsWith('.css')
 				);
 
@@ -805,13 +805,17 @@ function kit({ svelte_config }) {
 							.cyan('npm run preview')} to preview your production build locally.`
 					);
 
-					// avoid making the manifest available to users
-					fs.unlinkSync(`${out}/client/${vite_config.build.manifest}`);
-					fs.unlinkSync(`${out}/server/${vite_config.build.manifest}`);
-
 					if (kit.adapter) {
 						const { adapt } = await import('../../core/adapt/index.js');
-						await adapt(svelte_config, build_data, metadata, prerendered, prerender_map, log);
+						await adapt(
+							svelte_config,
+							build_data,
+							metadata,
+							prerendered,
+							prerender_map,
+							log,
+							vite_config
+						);
 					} else {
 						console.log(colors.bold().yellow('\nNo adapter specified'));
 
@@ -859,7 +863,7 @@ function warn_overridden_config(config, resolved_config) {
 /**
  * @param {Record<string, any>} config
  * @param {Record<string, any>} resolved_config
- * @param {import('./types').EnforcedConfig} enforced_config
+ * @param {import('./types.js').EnforcedConfig} enforced_config
  * @param {string} path
  * @param {string[]} out used locally to compute the return value
  */

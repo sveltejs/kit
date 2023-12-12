@@ -1,5 +1,11 @@
 # @sveltejs/adapter-vercel
 
+## 3.1.0
+
+### Minor Changes
+
+- feat: add support for nodejs20.x ([#11067](https://github.com/sveltejs/kit/pull/11067))
+
 ## 3.0.3
 
 ### Patch Changes

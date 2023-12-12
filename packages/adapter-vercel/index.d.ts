@@ -5,10 +5,10 @@ export default function plugin(config?: Config): Adapter;
 
 export interface ServerlessConfig {
 	/**
-	 * Whether to use [Edge Functions](https://vercel.com/docs/concepts/functions/edge-functions) or [Serverless Functions](https://vercel.com/docs/concepts/functions/serverless-functions)
+	 * Whether to use [Edge Functions](https://vercel.com/docs/concepts/functions/edge-functions) (`'edge'`) or [Serverless Functions](https://vercel.com/docs/concepts/functions/serverless-functions) (`'nodejs18.x'`, `'nodejs20.x'` etc).
 	 * @default 'nodejs18.x'
 	 */
-	runtime?: 'nodejs16.x' | 'nodejs18.x';
+	runtime?: `nodejs${number}.x`;
 	/**
 	 * To which regions to deploy the app. A list of regions.
 	 * More info: https://vercel.com/docs/concepts/edge-network/regions
@@ -55,7 +55,7 @@ export interface ServerlessConfig {
 
 export interface EdgeConfig {
 	/**
-	 * Whether to use [Edge Functions](https://vercel.com/docs/concepts/functions/edge-functions) or [Serverless Functions](https://vercel.com/docs/concepts/functions/serverless-functions)
+	 * Whether to use [Edge Functions](https://vercel.com/docs/concepts/functions/edge-functions) (`'edge'`) or [Serverless Functions](https://vercel.com/docs/concepts/functions/serverless-functions) (`'nodejs18.x'`, `'nodejs20.x'` etc).
 	 */
 	runtime?: 'edge';
 	/**

@@ -83,14 +83,14 @@ Unexpected errors will go through the [`handleError`](hooks#shared-hooks-handlee
 /// file: src/hooks.server.js
 // @errors: 2322 1360 2571 2339
 // @filename: ambient.d.ts
-declare module '@sentry/node' {
+declare module '@sentry/sveltekit' {
 	export const init: (opts: any) => void;
 	export const captureException: (error: any, opts: any) => void;
 }
 
 // @filename: index.js
 // ---cut---
-import * as Sentry from '@sentry/node';
+import * as Sentry from '@sentry/sveltekit';
 
 Sentry.init({/*...*/})
 

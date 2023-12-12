@@ -4,7 +4,7 @@ import { posixify, resolve_entry } from '../../utils/filesystem.js';
 import { s } from '../../utils/misc.js';
 import { load_error_page, load_template } from '../config/index.js';
 import { runtime_directory } from '../utils.js';
-import { write_if_changed } from './utils.js';
+import { isSvelte5Plus, write_if_changed } from './utils.js';
 import colors from 'kleur';
 
 /**
@@ -25,7 +25,7 @@ const server_template = ({
 	template,
 	error_page
 }) => `
-import root from '../root.svelte';
+import root from '../root.${isSvelte5Plus() ? 'js' : 'svelte'}';
 import { set_building } from '__sveltekit/environment';
 import { set_assets } from '__sveltekit/paths';
 import { set_private_env, set_public_env } from '${runtime_directory}/shared-server.js';

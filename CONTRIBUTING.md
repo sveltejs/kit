@@ -28,14 +28,14 @@ If you want to test against an existing project, you can use [pnpm `overrides`](
 
 ```jsonc
 {
-  // ...
-  "pnpm": {
-    "overrides": {
-      "@sveltejs/kit": "link:../path/to/svelte-kit/packages/kit",
-      // additionally/optional the adapter you're using
-      "@sveltejs/adapter-auto": "link:../path/to/svelte-kit/packages/adapter-auto"
-    }
-  }
+	// ...
+	"pnpm": {
+		"overrides": {
+			"@sveltejs/kit": "link:../path/to/svelte-kit/packages/kit",
+			// additionally/optional the adapter you're using
+			"@sveltejs/adapter-auto": "link:../path/to/svelte-kit/packages/adapter-auto"
+		}
+	}
 }
 ```
 
@@ -87,15 +87,15 @@ If you would like to test local changes to Vite or another dependency, you can b
 
 ```jsonc
 {
-  // ...
-  "dependencies": {
-    "vite": "^4.0.0"
-  },
-  "pnpm": {
-    "overrides": {
-      "vite": "link:../path/to/vite/packages/vite"
-    }
-  }
+	// ...
+	"dependencies": {
+		"vite": "^4.0.0"
+	},
+	"pnpm": {
+		"overrides": {
+			"vite": "link:../path/to/vite/packages/vite"
+		}
+	}
 }
 ```
 
@@ -123,6 +123,10 @@ git config core.hookspath .githooks
 ### Generating changelogs
 
 For changes to be reflected in package changelogs, run `pnpm changeset` and follow the prompts.
+
+### Type changes
+
+If your PR changes the generated types of SvelteKit, run `pnpm generate:types` inside `packages/kit` and commit the new output (don't format it with Prettier!). Review the changes carefully to ensure there are no unwanted changes. If you don't commit type changes, CI will fail.
 
 ## Releases
 

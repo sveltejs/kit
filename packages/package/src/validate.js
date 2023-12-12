@@ -3,7 +3,7 @@ import { join } from 'node:path';
 import colors from 'kleur';
 
 /**
- * @param {import("./types").Options} options
+ * @param {import("./types.js").Options} options
  */
 export function create_validator(options) {
 	const { analyse_code, validate } = _create_validator(options);
@@ -38,7 +38,7 @@ export function create_validator(options) {
 	};
 }
 /**
- * @param {import("./types").Options} options
+ * @param {import("./types.js").Options} options
  */
 export function _create_validator(options) {
 	/** @type {Set<string>} */

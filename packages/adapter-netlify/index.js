@@ -35,7 +35,7 @@ const edge_set_in_env_var =
 
 const FUNCTION_PREFIX = 'sveltekit-';
 
-/** @type {import('.').default} */
+/** @type {import('./index.js').default} */
 export default function ({ split = false, edge = edge_set_in_env_var } = {}) {
 	return {
 		name: '@sveltejs/adapter-netlify',
