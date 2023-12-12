@@ -39,15 +39,13 @@ export class Server {
 		// been done already.
 
 		// set env, in case it's used in initialisation
-		const private_env = filter_private_env(env, {
+		const prefixes = {
 			public_prefix: this.#options.env_public_prefix,
 			private_prefix: this.#options.env_private_prefix
-		});
+		};
 
-		const public_env = filter_public_env(env, {
-			public_prefix: this.#options.env_public_prefix,
-			private_prefix: this.#options.env_private_prefix
-		});
+		const private_env = filter_private_env(env, prefixes);
+		const public_env = filter_public_env(env, prefixes);
 
 		set_private_env(building ? new Proxy({ type: 'private' }, prerender_env_handler) : private_env);
 		set_public_env(building ? new Proxy({ type: 'public' }, prerender_env_handler) : public_env);
