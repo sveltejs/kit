@@ -6,5 +6,4 @@
 </script>
 
 <p id="static-private">PRIVATE_STATIC: {data.PRIVATE_STATIC}</p>
-<p id="dynamic-private">PRIVATE_DYNAMIC: {data.PRIVATE_DYNAMIC}</p>
 <p id="static-public">PUBLIC_STATIC: {PUBLIC_STATIC}</p>

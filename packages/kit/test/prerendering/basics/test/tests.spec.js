@@ -205,10 +205,7 @@ test('$env - includes environment variables', () => {
 		content,
 		/.*PRIVATE_STATIC: accessible to server-side code\/replaced at build time.*/gs
 	);
-	assert.match(
-		content,
-		/.*PRIVATE_DYNAMIC: accessible to server-side code\/evaluated at run time.*/gs
-	);
+
 	assert.match(content, /.*PUBLIC_STATIC: accessible anywhere\/replaced at build time.*/gs);
 });
 

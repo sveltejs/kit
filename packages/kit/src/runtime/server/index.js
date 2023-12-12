@@ -5,16 +5,14 @@ import { DEV } from 'esm-env';
 import { filter_private_env, filter_public_env } from '../../utils/env.js';
 import { building } from '../app/environment.js';
 
-const prerender_env = new Proxy(
-	{},
-	{
-		get() {
-			throw new Error(
-				'Cannot read values from $env/dynamic/public while prerendering. Use $env/static/public instead'
-			);
-		}
+/** @type {ProxyHandler<{ type: 'public' | 'private' }>} */
+const prerender_env_handler = {
+	get({ type }, prop) {
+		throw new Error(
+			`Cannot read values from $env/dynamic/${type} while prerendering (attempted to read env.${prop.toString()}). Use $env/static/${type} instead`
+		);
 	}
-);
+};
 
 export class Server {
 	/** @type {import('types').SSROptions} */
@@ -51,8 +49,8 @@ export class Server {
 			private_prefix: this.#options.env_private_prefix
 		});
 
-		set_private_env(private_env);
-		set_public_env(building ? prerender_env : public_env);
+		set_private_env(building ? new Proxy({ type: 'private' }, prerender_env_handler) : private_env);
+		set_public_env(building ? new Proxy({ type: 'public' }, prerender_env_handler) : public_env);
 		set_safe_public_env(public_env);
 
 		if (!this.#options.hooks) {
