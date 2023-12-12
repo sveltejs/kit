@@ -244,3 +244,8 @@ test('prerenders responses with immutable Headers', () => {
 	const content = read('immutable-headers');
 	expect(content).toMatch('foo');
 });
+
+test('prerenders paths with optional parameters with empty values', () => {
+	const content = read('optional-params.html');
+	expect(content).includes('Path with Value');
+});
