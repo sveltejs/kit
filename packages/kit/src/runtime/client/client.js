@@ -82,6 +82,7 @@ export function create_client(app, target) {
 	default_error_loader();
 
 	const container = __SVELTEKIT_EMBEDDED__ ? target : document.documentElement;
+
 	/** @type {Array<((url: URL) => boolean)>} */
 	const invalidated = [];
 
@@ -165,13 +166,13 @@ export function create_client(app, target) {
 		// Accept all invalidations as they come, don't swallow any while another invalidation
 		// is running because subsequent invalidations may make earlier ones outdated,
 		// but batch multiple synchronous invalidations.
-		pending_invalidate = pending_invalidate || Promise.resolve();
-		await pending_invalidate;
+		await (pending_invalidate ||= Promise.resolve());
 		if (!pending_invalidate) return;
 		pending_invalidate = null;
 
 		const url = new URL(location.href);
 		const intent = get_navigation_intent(url, true);
+
 		// Clear preload, it might be affected by the invalidation.
 		// Also solves an edge case where a preload is triggered, the navigation for it
 		// was then triggered and is still running while the invalidation kicks in,
@@ -184,7 +185,7 @@ export function create_client(app, target) {
 
 		if (navigation_result) {
 			if (navigation_result.type === 'redirect') {
-				return goto(new URL(navigation_result.location, url).href, {}, 1, nav_token);
+				await goto(new URL(navigation_result.location, url).href, {}, 1, nav_token);
 			} else {
 				if (navigation_result.props.page !== undefined) {
 					page = navigation_result.props.page;
@@ -192,6 +193,8 @@ export function create_client(app, target) {
 				root.$set(navigation_result.props);
 			}
 		}
+
+		invalidated.length = 0;
 	}
 
 	/** @param {number} index */

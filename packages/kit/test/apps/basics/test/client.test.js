@@ -504,6 +504,11 @@ test.describe('Invalidation', () => {
 		const next_shared = await page.textContent('p.shared');
 		expect(server).not.toBe(next_server);
 		expect(shared).not.toBe(next_shared);
+
+		await page.click('button.neither');
+		await page.evaluate(() => window.promise);
+		expect(await page.textContent('p.server')).toBe(next_server);
+		expect(await page.textContent('p.shared')).toBe(next_shared);
 	});
 
 	test('fetch in server load cannot be invalidated', async ({ page, app, request }) => {
@@ -531,6 +536,11 @@ test.describe('Invalidation', () => {
 		const next_shared = await page.textContent('p.shared');
 		expect(server).toBe(next_server);
 		expect(shared).not.toBe(next_shared);
+
+		await page.click('button.neither');
+		await page.evaluate(() => window.promise);
+		expect(await page.textContent('p.server')).toBe(next_server);
+		expect(await page.textContent('p.shared')).toBe(next_shared);
 	});
 
 	test('Parameter use is tracked even for routes that do not use the parameters', async ({
