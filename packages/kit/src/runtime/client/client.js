@@ -39,11 +39,9 @@ import {
 } from './constants.js';
 import { validate_page_exports } from '../../utils/exports.js';
 import { compact } from '../../utils/array.js';
-import { validate_page_exports } from '../../utils/exports.js';
 import { unwrap_promises } from '../../utils/promises.js';
 import { HttpError, Redirect, NotFound } from '../control.js';
 import { INVALIDATED_PARAM, TRAILING_SLASH_PARAM, validate_depends } from '../shared.js';
-import { INDEX_KEY, PRELOAD_PRIORITIES, SCROLL_KEY, SNAPSHOT_KEY } from './constants.js';
 import { stores } from './singletons.js';
 
 let errored = false;
@@ -98,7 +96,7 @@ function clear_onward_history(current_history_index, current_navigation_index) {
 }
 
 /**
- * @param {import('./types').SvelteKitApp} app
+ * @param {import('./types.js').SvelteKitApp} app
  * Loads `href` the old-fashioned way, with a full page reload.
  * Returns a `Promise` that never resolves (to prevent any
  * subsequent work, e.g. history manipulation, from happening)
