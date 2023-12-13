@@ -80,7 +80,7 @@ self.addEventListener('fetch', (event) => {
 
 			// if we're offline, fetch can return a value that is not a Response
 			// instead of throwing - and we can't pass this non-Response to respondWith
-			if (response instanceof Response === false) {
+			if (!(response instanceof Response)) {
 				throw new Error('invalid response from fetch');
 			}
 
