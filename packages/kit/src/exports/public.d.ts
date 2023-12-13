@@ -102,6 +102,11 @@ export interface Builder {
 	generateFallback(dest: string): Promise<void>;
 
 	/**
+	 * Generate a module exposing build-time environment variables as `$env/dynamic/public`.
+	 */
+	generateEnvModule(): void;
+
+	/**
 	 * Generate a server-side manifest to initialise the SvelteKit [server](https://kit.svelte.dev/docs/types#public-types-server) with.
 	 * @param opts a relative path to the base directory of the app and optionally in which format (esm or cjs) the manifest should be generated
 	 */

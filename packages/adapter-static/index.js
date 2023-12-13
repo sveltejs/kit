@@ -62,6 +62,7 @@ See https://kit.svelte.dev/docs/page-options#prerender for more details`
 			builder.rimraf(assets);
 			builder.rimraf(pages);
 
+			builder.generateEnvModule();
 			builder.writeClient(assets);
 			builder.writePrerendered(pages);
 
