@@ -271,7 +271,9 @@ declare module '@sveltejs/kit' {
 		 */
 		alias?: Record<string, string>;
 		/**
-		 * The directory relative to `paths.assets` where the built JS and CSS (and imported assets) are served from. (The filenames therein contain content-based hashes, meaning they can be cached indefinitely). Must not start or end with `/`.
+		 * The directory where SvelteKit keeps its stuff, including static assets (such as JS and CSS) and internally-used routes.
+		 *
+		 * If `paths.assets` is specified, there will be two app directories — `${paths.assets}/${appDir}` and `${paths.base}/${appDir}`.
 		 * @default "_app"
 		 */
 		appDir?: string;
@@ -349,11 +351,6 @@ declare module '@sveltejs/kit' {
 			 * @default "."
 			 */
 			dir?: string;
-			/**
-			 * The name of the module that contains public environment variables, relative to `paths.base`. Normally, these values are inlined into the HTML for maximum performance, but if the user lands on a prerendered page, values will instead be retrieved from this module — which is dynamically created by the server — if they are needed elsewhere in the app.
-			 * @default "_env.js";
-			 */
-			publicModule?: string;
 			/**
 			 * A prefix that signals that an environment variable is safe to expose to client-side code. See [`$env/static/public`](/docs/modules#$env-static-public) and [`$env/dynamic/public`](/docs/modules#$env-dynamic-public). Note that Vite's [`envPrefix`](https://vitejs.dev/config/shared-options.html#envprefix) must be set separately if you are using Vite's environment variable handling - though use of that feature should generally be unnecessary.
 			 * @default "PUBLIC_"
