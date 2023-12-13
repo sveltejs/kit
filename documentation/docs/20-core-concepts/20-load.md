@@ -457,7 +457,7 @@ export function load() {
 				fulfil(2)
 			}, 1000);
 		}),
-		eager: wait Promise.resolve(1)
+		eager: await Promise.resolve(1)
 	};
 }
 ```
