@@ -124,13 +124,13 @@ function analyse_endpoint(route, mod) {
 	/** @type {Array<import('types').HttpMethod | '*'>} */
 	const methods = [];
 
-	Object.values(mod).forEach((/** @type {import('types').HttpMethod} */ method) => {
-		if (mod[method] && ENDPOINT_METHODS.has(method)) {
-			methods.push(method);
-		} else if (mod.fallback) {
-			methods.push('*');
-		}
-	});
+	for (const method of /** @type {import('types').HttpMethod[]} */ (ENDPOINT_METHODS)) {
+		if (mod[method]) methods.push(method);
+	}
+
+	if (mod.fallback) {
+		methods.push('*');
+	}
 
 	return {
 		config: mod.config,

@@ -30,7 +30,7 @@ import { base } from '__sveltekit/paths';
 import * as devalue from 'devalue';
 import { compact } from '../../utils/array.js';
 import { validate_page_exports } from '../../utils/exports.js';
-import { HttpError, Redirect } from '../control.js';
+import { HttpError, Redirect, NotFound } from '../control.js';
 import { INVALIDATED_PARAM, TRAILING_SLASH_PARAM, validate_depends } from '../shared.js';
 import { INDEX_KEY, PRELOAD_PRIORITIES, SCROLL_KEY, SNAPSHOT_KEY } from './constants.js';
 import { stores } from './singletons.js';
@@ -545,10 +545,10 @@ export function create_client(app, target) {
 								typeof data !== 'object'
 									? `a ${typeof data}`
 									: data instanceof Response
-										? 'a Response object'
-										: Array.isArray(data)
-											? 'an array'
-											: 'a non-plain object'
+									  ? 'a Response object'
+									  : Array.isArray(data)
+									    ? 'an array'
+									    : 'a non-plain object'
 							}, but must return a plain object at the top level (i.e. \`return {...}\`)`
 						);
 					}
@@ -1374,7 +1374,10 @@ export function create_client(app, target) {
 
 		return (
 			app.hooks.handleError({ error, event }) ??
-			/** @type {any} */ ({ message: event.route.id != null ? 'Internal Error' : 'Not Found' })
+			/** @type {any} */ ({
+				message:
+					event.route.id === null && error instanceof NotFound ? 'Not Found' : 'Internal Error'
+			})
 		);
 	}
 
@@ -1741,8 +1744,8 @@ export function create_client(app, target) {
 					const scroll = scroll_positions[event.state[INDEX_KEY]];
 					const url = new URL(location.href);
 
-					// if the only change is the hash, we don't need to do anything...
-					if (current.url.href.split('#')[0] === location.href.split('#')[0]) {
+					// if the only change is the hash, we don't need to do anything (see https://github.com/sveltejs/kit/pull/10636 for why we need to do `url?.`)...
+					if (current.url?.href.split('#')[0] === location.href.split('#')[0]) {
 						// ...except update our internal URL tracking and handle scroll
 						update_url(url);
 						scroll_positions[current_history_index] = scroll_state();
