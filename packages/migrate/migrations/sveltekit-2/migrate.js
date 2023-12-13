@@ -17,6 +17,7 @@ export function update_pkg_json_content(content) {
 	return update_pkg(content, [
 		// All other bumps are done as part of the Svelte 4 migration
 		['@sveltejs/kit', '^2.0.0'],
+		['@sveltejs/adapter-static', '^3.0.0'],
 		['vite', '^5.0.0'],
 		['vitest', '^1.0.0'],
 		['typescript', '^5.0.0'], // should already be done by Svelte 4 migration, but who knows
