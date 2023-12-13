@@ -105,6 +105,14 @@ As such, SvelteKit 2 replaces `resolvePath` with a (slightly better named) funct
 
 `svelte-migrate` will do the method replacement for you, though if you later prepend the result with `base`, you need to remove that yourself.
 
+## Dynamic environment variables cannot be used during prerendering
+
+The `$env/dynamic/public` and `$env/dynamic/private` modules provide access to _run time_ environment variables, as opposed to the _build time_ environment variables exposed by `$env/static/public` and `$env/static/private`.
+
+During prerendering in SvelteKit 1, they are one and the same. As such, prerendered pages that make use of 'dynamic' environment variables are really 'baking in' build time values, which is incorrect. Worse, `$env/dynamic/public` is populated in the browser with these stale values if the user happens to land on a prerendered page before navigating to dynamically-rendered pages.
+
+Because of this, dynamic environment variables can no longer be read during prerendering in SvelteKit 2 — you should use the `static` modules instead. If the user lands on a prerendered page, SvelteKit will request up-to-date values for `$env/dynamic/public` from the server (by default from a module called `_env.js` — this can be configured with `config.kit.env.publicModule`) instead of reading them from the server-rendered HTML.
+
 ## `form` and `data` have been removed from `use:enhance` callbacks
 
 If you provide a callback to [`use:enhance`](/docs/form-actions#progressive-enhancement-use-enhance), it will be called with an object containing various useful properties.
@@ -117,6 +125,16 @@ If a form contains an `<input type="file">` but does not have an `enctype="multi
 
 ## Updated dependency requirements
 
-SvelteKit requires Node `18.13` or higher, Vite `^5.0`, vite-plugin-svelte `^3.0`, TypeScript `^5.0` and Svelte version 4 or higher. `svelte-migrate` will do the `package.json` bumps for you.
+SvelteKit 2 requires Node `18.13` or higher, and the following minimum dependency versions:
+
+- `svelte@4`
+- `vite@5`
+- `typescript@5`
+- `@sveltejs/adapter-static@3` (if you're using it)
+- `@sveltejs/vite-plugin-svelte@3` (this is now required as a `peerDependency` of SvelteKit — previously it was directly depended upon)
+
+`svelte-migrate` will update your `package.json` for you.
 
 As part of the TypeScript upgrade, the generated `tsconfig.json` (the one your `tsconfig.json` extends from) now uses `"moduleResolution": "bundler"` (which is recommended by the TypeScript team, as it properly resolves types from packages with an `exports` map in package.json) and `verbatimModuleSyntax` (which replaces the existing `importsNotUsedAsValues ` and `preserveValueImports` flags — if you have those in your `tsconfig.json`, remove them. `svelte-migrate` will do this for you).
+
+SvelteKit 2 uses ES2022 features, which are supported in all modern browsers.

@@ -27,6 +27,15 @@ import { s } from '../../utils/misc.js';
 import { hash } from '../../runtime/hash.js';
 import { dedent, isSvelte5Plus } from '../../core/sync/utils.js';
 import sirv from 'sirv';
+import {
+	env_dynamic_private,
+	env_dynamic_public,
+	env_static_private,
+	env_static_public,
+	service_worker,
+	sveltekit_environment,
+	sveltekit_paths
+} from './module_ids.js';
 
 export { vitePreprocess } from '@sveltejs/vite-plugin-svelte';
 
@@ -365,22 +374,22 @@ function kit({ svelte_config }) {
 			}
 
 			switch (id) {
-				case '\0virtual:$env/static/private':
+				case env_static_private:
 					return create_static_module('$env/static/private', env.private);
 
-				case '\0virtual:$env/static/public':
+				case env_static_public:
 					return create_static_module('$env/static/public', env.public);
 
-				case '\0virtual:$env/dynamic/private':
+				case env_dynamic_private:
 					return create_dynamic_module(
 						'private',
 						vite_config_env.command === 'serve' ? env.private : undefined
 					);
 
-				case '\0virtual:$env/dynamic/public':
+				case env_dynamic_public:
 					// populate `$env/dynamic/public` from `window`
 					if (browser) {
-						return `export const env = ${global}.env;`;
+						return `export const env = ${global}.env ?? (await import(/* @vite-ignore */ ${global}.base + '/' + '${kit.appDir}/env.js')).env;`;
 					}
 
 					return create_dynamic_module(
@@ -388,12 +397,12 @@ function kit({ svelte_config }) {
 						vite_config_env.command === 'serve' ? env.public : undefined
 					);
 
-				case '\0virtual:$service-worker':
+				case service_worker:
 					return create_service_worker_module(svelte_config);
 
 				// for internal use only. it's published as $app/paths externally
 				// we use this alias so that we won't collide with user aliases
-				case '\0virtual:__sveltekit/paths': {
+				case sveltekit_paths: {
 					const { assets, base } = svelte_config.kit.paths;
 
 					// use the values defined in `global`, but fall back to hard-coded values
@@ -431,7 +440,7 @@ function kit({ svelte_config }) {
 					`;
 				}
 
-				case '\0virtual:__sveltekit/environment': {
+				case sveltekit_environment: {
 					const { version } = svelte_config.kit;
 
 					return dedent`
@@ -572,7 +581,7 @@ function kit({ svelte_config }) {
 							preserveEntrySignatures: 'strict'
 						},
 						ssrEmitAssets: true,
-						target: ssr ? 'node16.14' : undefined
+						target: ssr ? 'node18.13' : 'es2022'
 					},
 					publicDir: kit.files.assets,
 					worker: {
@@ -765,7 +774,10 @@ function kit({ svelte_config }) {
 					app: app.file,
 					imports: [...start.imports, ...app.imports],
 					stylesheets: [...start.stylesheets, ...app.stylesheets],
-					fonts: [...start.fonts, ...app.fonts]
+					fonts: [...start.fonts, ...app.fonts],
+					uses_env_dynamic_public: output.some(
+						(chunk) => chunk.type === 'chunk' && chunk.modules[env_dynamic_public]
+					)
 				};
 
 				const css = output.filter(
