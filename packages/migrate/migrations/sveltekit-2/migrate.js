@@ -87,7 +87,47 @@ export function update_svelte_config() {
  */
 export function update_svelte_config_content(code) {
 	const regex = /\s*dangerZone:\s*{[^}]*},?/g;
-	return code.replace(regex, '');
+	const result = code.replace(regex, '');
+	if (result !== code) {
+		log_migration(
+			'Removed `dangerZone` from svelte.config.js: https://kit.svelte.dev/docs/v2-migration-guide#server-fetches-are-not-trackable-anymore'
+		);
+	}
+
+	const project = new Project({ useInMemoryFileSystem: true });
+	const source = project.createSourceFile('svelte.ts', result);
+
+	const namedImport = get_import(source, '@sveltejs/kit/vite', 'vitePreprocess');
+	if (!namedImport) return result;
+
+	const logger = log_on_ts_modification(
+		source,
+		'Changed `vitePreprocess` import: https://kit.svelte.dev/docs/v2-migration-guide#vitepreprocess-is-no-longer-exported-from-sveltejs-kit-vite'
+	);
+
+	if (namedImport.getParent().getParent().getNamedImports().length === 1) {
+		namedImport
+			.getParent()
+			.getParent()
+			.getParent()
+			.setModuleSpecifier('@sveltejs/vite-plugin-svelte');
+	} else {
+		namedImport.remove();
+		const vps = source.getImportDeclaration(
+			(i) => i.getModuleSpecifierValue() === '@sveltejs/vite-plugin-svelte'
+		);
+		if (vps) {
+			vps.addNamedImport('vitePreprocess');
+		} else {
+			source.addImportDeclaration({
+				moduleSpecifier: '@sveltejs/vite-plugin-svelte',
+				namedImports: ['vitePreprocess']
+			});
+		}
+	}
+
+	logger();
+	return source.getFullText();
 }
 
 /**
@@ -231,6 +271,11 @@ function replace_resolve_path(source) {
 	const namedImport = get_import(source, '@sveltejs/kit', 'resolvePath');
 	if (!namedImport) return;
 
+	const logger = log_on_ts_modification(
+		source,
+		'Replaced `resolvePath` with `resolveRoute`: https://kit.svelte.dev/docs/v2-migration-guide#resolvePath-has-been-removed'
+	);
+
 	for (const id of namedImport.getNameNode().findReferencesAsNodes()) {
 		id.replaceWithText('resolveRoute');
 	}
@@ -251,6 +296,8 @@ function replace_resolve_path(source) {
 			namedImports: ['resolveRoute']
 		});
 	}
+
+	logger();
 }
 
 /**
