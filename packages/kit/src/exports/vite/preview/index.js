@@ -157,7 +157,7 @@ const mutable = (dir) =>
 		? sirv(dir, {
 				etag: true,
 				maxAge: 0
-		  })
+			})
 		: (_req, _res, next) => next();
 
 /** @param {string} path */
