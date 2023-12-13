@@ -34,5 +34,5 @@ export function get_status(error) {
  * @param {unknown} error
  */
 export function get_message(error) {
-	return error instanceof SvelteKitError ? error.message : 'Internal Error';
+	return error instanceof SvelteKitError ? error.text : 'Internal Error';
 }

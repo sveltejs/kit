@@ -37,13 +37,13 @@ export class Redirect {
 export class SvelteKitError extends Error {
 	/**
 	 * @param {number} status
+	 * @param {string} text
 	 * @param {string} message
-	 * @param {string} [details]
 	 */
-	constructor(status, message, details) {
+	constructor(status, text, message) {
 		super(message);
 		this.status = status;
-		this.details = details;
+		this.text = text;
 	}
 }
 

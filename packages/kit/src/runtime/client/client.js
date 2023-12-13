@@ -1377,18 +1377,11 @@ export function create_client(app, target) {
 			console.warn('The next HMR update will cause the page to reload');
 		}
 
+		const status = get_status(error);
 		const message = get_message(error);
 
 		return (
-			app.hooks.handleError({
-				error,
-				event,
-				status: get_status(error),
-				message
-			}) ??
-			/** @type {any} */ ({
-				message
-			})
+			app.hooks.handleError({ error, event, status, message }) ?? /** @type {any} */ ({ message })
 		);
 	}
 

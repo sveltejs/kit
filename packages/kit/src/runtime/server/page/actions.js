@@ -26,6 +26,7 @@ export async function handle_action_json_request(event, options, server) {
 	if (!actions) {
 		const no_actions_error = new SvelteKitError(
 			405,
+			'Method Not Allowed',
 			'POST method not allowed. No actions exist for this page'
 		);
 		return action_json(

@@ -103,13 +103,10 @@ export async function handle_error_and_jsonify(event, options, error) {
 		fix_stack_trace(error);
 	}
 
+	const status = get_status(error);
 	const message = get_message(error);
 
-	return (
-		(await options.hooks.handleError({ error, event, status: get_status(error), message })) ?? {
-			message
-		}
-	);
+	return (await options.hooks.handleError({ error, event, status, message })) ?? { message };
 }
 
 /**
