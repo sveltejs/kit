@@ -156,6 +156,13 @@ export function create_builder({
 			write(dest, fallback);
 		},
 
+		generateEnvModule() {
+			const dest = `${config.kit.outDir}/output/prerendered/dependencies/${config.kit.appDir}/env.js`;
+			const env = get_env(config.kit.env, vite_config.mode);
+
+			write(dest, `export const env=${JSON.stringify(env.public)}`);
+		},
+
 		generateManifest({ relativePath, routes: subset }) {
 			return generate_manifest({
 				build_data,

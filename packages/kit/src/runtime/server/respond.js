@@ -30,6 +30,7 @@ import { get_option } from '../../utils/options.js';
 import { json, text } from '../../exports/index.js';
 import { action_json_redirect, is_action_json_request } from './page/actions.js';
 import { INVALIDATED_PARAM, TRAILING_SLASH_PARAM } from '../shared.js';
+import { get_public_env } from './env_module.js';
 
 /* global __SVELTEKIT_ADAPTER_NAME__ */
 
@@ -96,6 +97,10 @@ export async function respond(request, options, manifest, state) {
 			return text('Not found', { status: 404 });
 		}
 		decoded = decoded.slice(base.length) || '/';
+	}
+
+	if (decoded === `/${options.app_dir}/env.js`) {
+		return get_public_env(request);
 	}
 
 	const is_data_request = has_data_suffix(decoded);

@@ -120,7 +120,8 @@ export async function dev(vite, vite_config, svelte_config) {
 					app: `${to_fs(svelte_config.kit.outDir)}/generated/client/app.js`,
 					imports: [],
 					stylesheets: [],
-					fonts: []
+					fonts: [],
+					uses_env_dynamic_public: true
 				},
 				nodes: manifest_data.nodes.map((node, index) => {
 					return async () => {

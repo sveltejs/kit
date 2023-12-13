@@ -84,6 +84,11 @@ declare module '@sveltejs/kit' {
 		generateFallback(dest: string): Promise<void>;
 
 		/**
+		 * Generate a module exposing build-time environment variables as `$env/dynamic/public`.
+		 */
+		generateEnvModule(): void;
+
+		/**
 		 * Generate a server-side manifest to initialise the SvelteKit [server](https://kit.svelte.dev/docs/types#public-types-server) with.
 		 * @param opts a relative path to the base directory of the app and optionally in which format (esm or cjs) the manifest should be generated
 		 */
@@ -266,7 +271,9 @@ declare module '@sveltejs/kit' {
 		 */
 		alias?: Record<string, string>;
 		/**
-		 * The directory relative to `paths.assets` where the built JS and CSS (and imported assets) are served from. (The filenames therein contain content-based hashes, meaning they can be cached indefinitely). Must not start or end with `/`.
+		 * The directory where SvelteKit keeps its stuff, including static assets (such as JS and CSS) and internally-used routes.
+		 *
+		 * If `paths.assets` is specified, there will be two app directories — `${paths.assets}/${appDir}` and `${paths.base}/${appDir}`.
 		 * @default "_app"
 		 */
 		appDir?: string;
@@ -1501,6 +1508,7 @@ declare module '@sveltejs/kit' {
 			imports: string[];
 			stylesheets: string[];
 			fonts: string[];
+			uses_env_dynamic_public: boolean;
 		} | null;
 		server_manifest: import('vite').Manifest;
 	}

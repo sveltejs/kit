@@ -736,6 +736,15 @@ test.describe('env', () => {
 			'accessible anywhere/evaluated at run time'
 		);
 	});
+
+	test('uses correct dynamic env when navigating from prerendered page', async ({
+		page,
+		clicknav
+	}) => {
+		await page.goto('/prerendering/env/prerendered');
+		await clicknav('[href="/prerendering/env/dynamic"]');
+		expect(await page.locator('h2')).toHaveText('prerendering: false');
+	});
 });
 
 test.describe('Snapshots', () => {
