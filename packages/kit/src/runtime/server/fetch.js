@@ -14,7 +14,10 @@ import * as paths from '__sveltekit/paths';
  * @returns {typeof fetch}
  */
 export function create_fetch({ event, options, manifest, state, get_cookie_header, set_internal }) {
-	return async (info, init) => {
+	/**
+	 * @type {typeof fetch}
+	 */
+	const server_fetch = async (info, init) => {
 		const original_request = normalize_fetch_input(info, init, event.url);
 
 		// some runtimes (e.g. Cloudflare) error if you access `request.mode`,
@@ -23,7 +26,7 @@ export function create_fetch({ event, options, manifest, state, get_cookie_heade
 		let credentials =
 			(info instanceof Request ? info.credentials : init?.credentials) ?? 'same-origin';
 
-		return await options.hooks.handleFetch({
+		return options.hooks.handleFetch({
 			event,
 			request: original_request,
 			fetch: async (info, init) => {
@@ -143,6 +146,15 @@ export function create_fetch({ event, options, manifest, state, get_cookie_heade
 				return response;
 			}
 		});
+	};
+
+	// Don't make this function `async`! Otherwise, the user has to `catch` promises they use for streaming responses or else
+	// it will be an unhandled rejection. Instead, we add a `.catch(() => {})` ourselves below to this from happening.
+	return (input, init) => {
+		// See docs in fetch.js for why we need to do this
+		const response = server_fetch(input, init);
+		response.catch(() => {});
+		return response;
 	};
 }
 

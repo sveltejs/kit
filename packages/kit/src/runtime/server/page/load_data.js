@@ -125,9 +125,9 @@ export async function load_server_data({
 		url
 	});
 
-	const data = result ? await unwrap_promises(result) : null;
+	const data = result ? await unwrap_promises(result, node.server_id) : null;
 	if (__SVELTEKIT_DEV__) {
-		validate_load_response(data, /** @type {string} */ (event.route.id));
+		validate_load_response(data, node.server_id);
 	}
 
 	done = true;
@@ -181,12 +181,31 @@ export async function load_data({
 		parent
 	});
 
-	const data = result ? await unwrap_promises(result) : null;
+	const data = result ? await unwrap_promises(result, node.universal_id) : null;
 	if (__SVELTEKIT_DEV__) {
-		validate_load_response(data, /** @type {string} */ (event.route.id));
+		validate_load_response(data, node.universal_id);
 	}
 
 	return data;
+}
+
+/**
+ * @param {ArrayBuffer} buffer
+ * @returns {string}
+ */
+function b64_encode(buffer) {
+	if (globalThis.Buffer) {
+		return Buffer.from(buffer).toString('base64');
+	}
+
+	const little_endian = new Uint8Array(new Uint16Array([1]).buffer)[0] > 0;
+
+	// The Uint16Array(Uint8Array(...)) ensures the code points are padded with 0's
+	return btoa(
+		new TextDecoder(little_endian ? 'utf-16le' : 'utf-16be').decode(
+			new Uint16Array(new Uint8Array(buffer))
+		)
+	);
 }
 
 /**
@@ -195,13 +214,14 @@ export async function load_data({
  * @param {import('./types.js').Fetched[]} fetched
  * @param {boolean} csr
  * @param {Pick<Required<import('@sveltejs/kit').ResolveOptions>, 'filterSerializedResponseHeaders'>} resolve_opts
+ * @returns {typeof fetch}
  */
 export function create_universal_fetch(event, state, fetched, csr, resolve_opts) {
 	/**
 	 * @param {URL | RequestInfo} input
 	 * @param {RequestInit} [init]
 	 */
-	return async (input, init) => {
+	const universal_fetch = async (input, init) => {
 		const cloned_body = input instanceof Request && input.body ? input.clone().body : null;
 
 		const cloned_headers =
@@ -245,38 +265,33 @@ export function create_universal_fetch(event, state, fetched, csr, resolve_opts)
 
 		const proxy = new Proxy(response, {
 			get(response, key, _receiver) {
-				async function text() {
-					const body = await response.text();
-
-					if (!body || typeof body === 'string') {
-						const status_number = Number(response.status);
-						if (isNaN(status_number)) {
-							throw new Error(
-								`response.status is not a number. value: "${
-									response.status
-								}" type: ${typeof response.status}`
-							);
-						}
-
-						fetched.push({
-							url: same_origin ? url.href.slice(event.url.origin.length) : url.href,
-							method: event.request.method,
-							request_body: /** @type {string | ArrayBufferView | undefined} */ (
-								input instanceof Request && cloned_body
-									? await stream_to_string(cloned_body)
-									: init?.body
-							),
-							request_headers: cloned_headers,
-							response_body: body,
-							response
-						});
+				/**
+				 * @param {string} body
+				 * @param {boolean} is_b64
+				 */
+				async function push_fetched(body, is_b64) {
+					const status_number = Number(response.status);
+					if (isNaN(status_number)) {
+						throw new Error(
+							`response.status is not a number. value: "${
+								response.status
+							}" type: ${typeof response.status}`
+						);
 					}
 
-					if (dependency) {
-						dependency.body = body;
-					}
-
-					return body;
+					fetched.push({
+						url: same_origin ? url.href.slice(event.url.origin.length) : url.href,
+						method: event.request.method,
+						request_body: /** @type {string | ArrayBufferView | undefined} */ (
+							input instanceof Request && cloned_body
+								? await stream_to_string(cloned_body)
+								: init?.body
+						),
+						request_headers: cloned_headers,
+						response_body: body,
+						response,
+						is_b64
+					});
 				}
 
 				if (key === 'arrayBuffer') {
@@ -287,11 +302,26 @@ export function create_universal_fetch(event, state, fetched, csr, resolve_opts)
 							dependency.body = new Uint8Array(buffer);
 						}
 
-						// TODO should buffer be inlined into the page (albeit base64'd)?
-						// any conditions in which it shouldn't be?
+						if (buffer instanceof ArrayBuffer) {
+							await push_fetched(b64_encode(buffer), true);
+						}
 
 						return buffer;
 					};
+				}
+
+				async function text() {
+					const body = await response.text();
+
+					if (!body || typeof body === 'string') {
+						await push_fetched(body, false);
+					}
+
+					if (dependency) {
+						dependency.body = body;
+					}
+
+					return body;
 				}
 
 				if (key === 'text') {
@@ -329,6 +359,15 @@ export function create_universal_fetch(event, state, fetched, csr, resolve_opts)
 
 		return proxy;
 	};
+
+	// Don't make this function `async`! Otherwise, the user has to `catch` promises they use for streaming responses or else
+	// it will be an unhandled rejection. Instead, we add a `.catch(() => {})` ourselves below to this from happening.
+	return (input, init) => {
+		// See docs in fetch.js for why we need to do this
+		const response = universal_fetch(input, init);
+		response.catch(() => {});
+		return response;
+	};
 }
 
 /**
@@ -350,12 +389,12 @@ async function stream_to_string(stream) {
 
 /**
  * @param {any} data
- * @param {string} [routeId]
+ * @param {string} [id]
  */
-function validate_load_response(data, routeId) {
+function validate_load_response(data, id) {
 	if (data != null && Object.getPrototypeOf(data) !== Object.prototype) {
 		throw new Error(
-			`a load function related to route '${routeId}' returned ${
+			`a load function in ${id} returned ${
 				typeof data !== 'object'
 					? `a ${typeof data}`
 					: data instanceof Response

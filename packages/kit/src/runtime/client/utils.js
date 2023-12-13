@@ -32,8 +32,8 @@ const warned = new WeakSet();
 /** @typedef {keyof typeof valid_link_options} LinkOptionName */
 
 const valid_link_options = /** @type {const} */ ({
-	'preload-code': ['', 'off', 'tap', 'hover', 'viewport', 'eager'],
-	'preload-data': ['', 'off', 'tap', 'hover'],
+	'preload-code': ['', 'off', 'false', 'tap', 'hover', 'viewport', 'eager'],
+	'preload-data': ['', 'off', 'false', 'tap', 'hover'],
 	keepfocus: ['', 'true', 'off', 'false'],
 	noscroll: ['', 'true', 'off', 'false'],
 	reload: ['', 'true', 'off', 'false'],

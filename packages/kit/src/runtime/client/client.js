@@ -31,7 +31,7 @@ import * as devalue from 'devalue';
 import { compact } from '../../utils/array.js';
 import { validate_page_exports } from '../../utils/exports.js';
 import { unwrap_promises } from '../../utils/promises.js';
-import { HttpError, Redirect } from '../control.js';
+import { HttpError, Redirect, NotFound } from '../control.js';
 import { INVALIDATED_PARAM, TRAILING_SLASH_PARAM, validate_depends } from '../shared.js';
 import { INDEX_KEY, PRELOAD_PRIORITIES, SCROLL_KEY, SNAPSHOT_KEY } from './constants.js';
 import { stores } from './singletons.js';
@@ -279,6 +279,10 @@ export function create_client(app, target) {
 
 	/** @param {...string} pathnames */
 	async function preload_code(...pathnames) {
+		if (DEV && pathnames.length > 1) {
+			console.warn('Calling `preloadCode` with multiple arguments is deprecated');
+		}
+
 		const matching = routes.filter((route) => pathnames.some((pathname) => route.exec(pathname)));
 
 		const promises = matching.map((r) => {
@@ -561,7 +565,7 @@ export function create_client(app, target) {
 			} else {
 				data = (await node.universal.load.call(null, load_input)) ?? null;
 			}
-			data = data ? await unwrap_promises(data) : null;
+			data = data ? await unwrap_promises(data, route.id) : null;
 		}
 
 		return {
@@ -1329,7 +1333,10 @@ export function create_client(app, target) {
 
 		return (
 			app.hooks.handleError({ error, event }) ??
-			/** @type {any} */ ({ message: event.route.id != null ? 'Internal Error' : 'Not Found' })
+			/** @type {any} */ ({
+				message:
+					event.route.id === null && error instanceof NotFound ? 'Not Found' : 'Internal Error'
+			})
 		);
 	}
 
@@ -1670,8 +1677,8 @@ export function create_client(app, target) {
 					const scroll = scroll_positions[event.state[INDEX_KEY]];
 					const url = new URL(location.href);
 
-					// if the only change is the hash, we don't need to do anything...
-					if (current.url.href.split('#')[0] === location.href.split('#')[0]) {
+					// if the only change is the hash, we don't need to do anything (see https://github.com/sveltejs/kit/pull/10636 for why we need to do `url?.`)...
+					if (current.url?.href.split('#')[0] === location.href.split('#')[0]) {
 						// ...except update our internal URL tracking and handle scroll
 						update_url(url);
 						scroll_positions[current_history_index] = scroll_state();

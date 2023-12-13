@@ -8,6 +8,7 @@ export interface Fetched {
 	request_headers?: HeadersInit | undefined;
 	response_body: string;
 	response: Response;
+	is_b64?: boolean;
 }
 
 export type Loaded = {

@@ -39,7 +39,7 @@ While prerendering, the value of `building` imported from [`$app/environment`](m
 
 ### Prerendering server routes
 
-Unlike the other page options, `prerender` also applies to `+server.js` files. These files are _not_ affected from layouts, but will inherit default values from the pages that fetch data from them, if any. For example if a `+page.js` contains this `load` function...
+Unlike the other page options, `prerender` also applies to `+server.js` files. These files are _not_ affected by layouts, but will inherit default values from the pages that fetch data from them, if any. For example if a `+page.js` contains this `load` function...
 
 ```js
 /// file: +page.js
