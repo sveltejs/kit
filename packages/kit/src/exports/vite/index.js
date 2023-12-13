@@ -37,8 +37,6 @@ import {
 	sveltekit_paths
 } from './module_ids.js';
 
-export { vitePreprocess } from '@sveltejs/vite-plugin-svelte';
-
 const cwd = process.cwd();
 
 /** @type {import('./types.js').EnforcedConfig} */
