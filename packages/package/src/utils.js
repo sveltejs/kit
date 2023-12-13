@@ -84,10 +84,10 @@ export function analyze(file, extensions) {
 	const dest = svelte_extension
 		? name.slice(0, -svelte_extension.length) + '.svelte'
 		: name.endsWith('.d.ts')
-		? name
-		: name.endsWith('.ts')
-		? name.slice(0, -3) + '.js'
-		: name;
+		  ? name
+		  : name.endsWith('.ts')
+		    ? name.slice(0, -3) + '.js'
+		    : name;
 
 	return {
 		name,

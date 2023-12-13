@@ -102,7 +102,7 @@ export const preloadCode = /* @__PURE__ */ client_method('preload_code');
 export const beforeNavigate = /* @__PURE__ */ client_method('before_navigate');
 
 /**
- * A lifecycle function that runs the supplied `callback` immediately before we navigate to a new URL.
+ * A lifecycle function that runs the supplied `callback` immediately before we navigate to a new URL except during full-page navigations.
  *
  * If you return a `Promise`, SvelteKit will wait for it to resolve before completing the navigation. This allows you to — for example — use `document.startViewTransition`. Avoid promises that are slow to resolve, since navigation will appear stalled to the user.
  *

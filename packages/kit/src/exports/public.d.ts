@@ -42,12 +42,12 @@ export interface Adapter {
 type AwaitedPropertiesUnion<input extends Record<string, any> | void> = input extends void
 	? undefined // needs to be undefined, because void will break intellisense
 	: input extends Record<string, any>
-	? {
-			[key in keyof input]: Awaited<input[key]>;
-	  }
-	: {} extends input // handles the any case
-	? input
-	: unknown;
+	  ? {
+				[key in keyof input]: Awaited<input[key]>;
+	    }
+	  : {} extends input // handles the any case
+	    ? input
+	    : unknown;
 
 export type AwaitedProperties<input extends Record<string, any> | void> =
 	AwaitedPropertiesUnion<input> extends Record<string, any>
@@ -70,8 +70,8 @@ type OptionalUnion<
 type UnpackValidationError<T> = T extends ActionFailure<infer X>
 	? X
 	: T extends void
-	? undefined // needs to be undefined, because void will corrupt union type
-	: T;
+	  ? undefined // needs to be undefined, because void will corrupt union type
+	  : T;
 
 /**
  * This object is passed to the `adapt` function of adapters.
@@ -477,6 +477,8 @@ export interface KitConfig {
 		 *
 		 * If `true`, `base` and `assets` imported from `$app/paths` will be replaced with relative asset paths during server-side rendering, resulting in portable HTML.
 		 * If `false`, `%sveltekit.assets%` and references to build artifacts will always be root-relative paths, unless `paths.assets` is an external URL
+		 *
+		 * [Single-page app](https://kit.svelte.dev/docs/single-page-apps) fallback pages will always use absolute paths, regardless of this setting.
 		 *
 		 * If your app uses a `<base>` element, you should set this to `false`, otherwise asset URLs will incorrectly be resolved against the `<base>` URL rather than the current page.
 		 * @default undefined

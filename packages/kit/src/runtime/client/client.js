@@ -31,7 +31,7 @@ import * as devalue from 'devalue';
 import { compact } from '../../utils/array.js';
 import { validate_page_exports } from '../../utils/exports.js';
 import { unwrap_promises } from '../../utils/promises.js';
-import { HttpError, Redirect } from '../control.js';
+import { HttpError, Redirect, NotFound } from '../control.js';
 import { INVALIDATED_PARAM, TRAILING_SLASH_PARAM, validate_depends } from '../shared.js';
 import { INDEX_KEY, PRELOAD_PRIORITIES, SCROLL_KEY, SNAPSHOT_KEY } from './constants.js';
 import { stores } from './singletons.js';
@@ -53,6 +53,17 @@ const snapshots = storage.get(SNAPSHOT_KEY) ?? {};
 /** @param {number} index */
 function update_scroll_positions(index) {
 	scroll_positions[index] = scroll_state();
+}
+
+/**
+ * Loads `href` the old-fashioned way, with a full page reload.
+ * Returns a `Promise` that never resolves (to prevent any
+ * subsequent work, e.g. history manipulation, from happening)
+ * @param {URL} url
+ */
+function native_navigation(url) {
+	location.href = url.href;
+	return new Promise(() => {});
 }
 
 /**
@@ -266,6 +277,10 @@ export function create_client(app, target) {
 
 	/** @param {...string} pathnames */
 	async function preload_code(...pathnames) {
+		if (DEV && pathnames.length > 1) {
+			console.warn('Calling `preloadCode` with multiple arguments is deprecated');
+		}
+
 		const matching = routes.filter((route) => pathnames.some((pathname) => route.exec(pathname)));
 
 		const promises = matching.map((r) => {
@@ -535,10 +550,10 @@ export function create_client(app, target) {
 								typeof data !== 'object'
 									? `a ${typeof data}`
 									: data instanceof Response
-									? 'a Response object'
-									: Array.isArray(data)
-									? 'an array'
-									: 'a non-plain object'
+									  ? 'a Response object'
+									  : Array.isArray(data)
+									    ? 'an array'
+									    : 'a non-plain object'
 							}, but must return a plain object at the top level (i.e. \`return {...}\`)`
 						);
 					}
@@ -548,7 +563,7 @@ export function create_client(app, target) {
 			} else {
 				data = (await node.universal.load.call(null, load_input)) ?? null;
 			}
-			data = data ? await unwrap_promises(data) : null;
+			data = data ? await unwrap_promises(data, route.id) : null;
 		}
 
 		return {
@@ -557,7 +572,12 @@ export function create_client(app, target) {
 			server: server_data_node,
 			universal: node.universal?.load ? { type: 'data', data, uses } : null,
 			data: data ?? server_data_node?.data ?? null,
-			slash: node.universal?.trailingSlash ?? server_data_node?.slash
+			// if `paths.base === '/a/b/c`, then the root route is `/a/b/c/`,
+			// regardless of the `trailingSlash` route option
+			slash:
+				url.pathname === base || url.pathname === base + '/'
+					? 'always'
+					: node.universal?.trailingSlash ?? server_data_node?.slash
 		};
 	}
 
@@ -1196,17 +1216,6 @@ export function create_client(app, target) {
 		return await native_navigation(url);
 	}
 
-	/**
-	 * Loads `href` the old-fashioned way, with a full page reload.
-	 * Returns a `Promise` that never resolves (to prevent any
-	 * subsequent work, e.g. history manipulation, from happening)
-	 * @param {URL} url
-	 */
-	function native_navigation(url) {
-		location.href = url.href;
-		return new Promise(() => {});
-	}
-
 	if (import.meta.hot) {
 		import.meta.hot.on('vite:beforeUpdate', () => {
 			if (current.error) location.reload();
@@ -1327,7 +1336,10 @@ export function create_client(app, target) {
 
 		return (
 			app.hooks.handleError({ error, event }) ??
-			/** @type {any} */ ({ message: event.route.id != null ? 'Internal Error' : 'Not Found' })
+			/** @type {any} */ ({
+				message:
+					event.route.id === null && error instanceof NotFound ? 'Not Found' : 'Internal Error'
+			})
 		);
 	}
 
@@ -1668,8 +1680,8 @@ export function create_client(app, target) {
 					const scroll = scroll_positions[event.state[INDEX_KEY]];
 					const url = new URL(location.href);
 
-					// if the only change is the hash, we don't need to do anything...
-					if (current.url.href.split('#')[0] === location.href.split('#')[0]) {
+					// if the only change is the hash, we don't need to do anything (see https://github.com/sveltejs/kit/pull/10636 for why we need to do `url?.`)...
+					if (current.url?.href.split('#')[0] === location.href.split('#')[0]) {
 						// ...except update our internal URL tracking and handle scroll
 						update_url(url);
 						scroll_positions[current_history_index] = scroll_state();
@@ -1842,7 +1854,7 @@ export function create_client(app, target) {
 /**
  * @param {URL} url
  * @param {boolean[]} invalid
- * @returns {Promise<import('types').ServerNodesResponse |import('types').ServerRedirectNode>}
+ * @returns {Promise<import('types').ServerNodesResponse | import('types').ServerRedirectNode>}
  */
 async function load_data(url, invalid) {
 	const data_url = new URL(url);
@@ -1857,13 +1869,19 @@ async function load_data(url, invalid) {
 
 	const res = await native_fetch(data_url.href);
 
+	// if `__data.json` doesn't exist or the server has an internal error,
+	// fallback to native navigation so we avoid parsing the HTML error page as a JSON
+	if (res.headers.get('content-type')?.includes('text/html')) {
+		await native_navigation(url);
+	}
+
 	if (!res.ok) {
 		// error message is a JSON-stringified string which devalue can't handle at the top level
 		// turn it into a HttpError to not call handleError on the client again (was already handled on the server)
 		throw new HttpError(res.status, await res.json());
 	}
 
-	// TODO: fix eslint error
+	// TODO: fix eslint error / figure out if it actually applies to our situation
 	// eslint-disable-next-line
 	return new Promise(async (resolve) => {
 		/**

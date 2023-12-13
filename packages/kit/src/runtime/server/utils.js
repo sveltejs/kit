@@ -2,7 +2,7 @@ import { DEV } from 'esm-env';
 import { json, text } from '../../exports/index.js';
 import { coalesce_to_error } from '../../utils/error.js';
 import { negotiate } from '../../utils/http.js';
-import { HttpError } from '../control.js';
+import { HttpError, NotFound } from '../control.js';
 import { fix_stack_trace } from '../shared-server.js';
 import { ENDPOINT_METHODS } from '../../constants.js';
 
@@ -35,7 +35,7 @@ export function method_not_allowed(mod, method) {
 
 /** @param {Partial<Record<import('types').HttpMethod, any>>} mod */
 export function allowed_methods(mod) {
-	const allowed = Array.from(ENDPOINT_METHODS).filter((method) => method in mod);
+	const allowed = ENDPOINT_METHODS.filter((method) => method in mod);
 
 	if ('GET' in mod || 'HEAD' in mod) allowed.push('HEAD');
 
@@ -97,17 +97,17 @@ export async function handle_fatal_error(event, options, error) {
 export async function handle_error_and_jsonify(event, options, error) {
 	if (error instanceof HttpError) {
 		return error.body;
-	} else {
-		if (__SVELTEKIT_DEV__ && typeof error == 'object') {
-			fix_stack_trace(error);
-		}
-
-		return (
-			(await options.hooks.handleError({ error, event })) ?? {
-				message: event.route.id != null ? 'Internal Error' : 'Not Found'
-			}
-		);
 	}
+
+	if (__SVELTEKIT_DEV__ && typeof error == 'object') {
+		fix_stack_trace(error);
+	}
+
+	return (
+		(await options.hooks.handleError({ error, event })) ?? {
+			message: event.route.id === null && error instanceof NotFound ? 'Not Found' : 'Internal Error'
+		}
+	);
 }
 
 /**
@@ -158,4 +158,18 @@ export function stringify_uses(node) {
 	if (node.uses?.url) uses.push('"url":1');
 
 	return `"uses":{${uses.join(',')}}`;
+}
+
+/**
+ * @param {string} message
+ * @param {number} offset
+ */
+export function warn_with_callsite(message, offset = 0) {
+	if (DEV) {
+		const stack = fix_stack_trace(new Error()).split('\n');
+		const line = stack.at(3 + offset);
+		message += `\n${line}`;
+	}
+
+	console.warn(message);
 }

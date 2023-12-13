@@ -1,5 +1,11 @@
 # @sveltejs/package
 
+## 2.2.3
+
+### Patch Changes
+
+- fix: overwrite nodenext option when transpiling ([#11092](https://github.com/sveltejs/kit/pull/11092))
+
 ## 2.2.2
 
 ### Patch Changes

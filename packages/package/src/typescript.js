@@ -67,8 +67,15 @@ export async function emit_dts(input, output, cwd, alias, files) {
  */
 export async function transpile_ts(filename, source) {
 	const ts = await try_load_ts();
+	const options = load_tsconfig(filename, ts);
+	// transpileModule treats NodeNext as CommonJS because it doesn't read the package.json. Therefore we need to override it.
+	// Also see https://github.com/microsoft/TypeScript/issues/53022 (the filename workaround doesn't work).
 	return ts.transpileModule(source, {
-		compilerOptions: load_tsconfig(filename, ts),
+		compilerOptions: {
+			...options,
+			module: ts.ModuleKind.ESNext,
+			moduleResolution: ts.ModuleResolutionKind.NodeJs // switch this to bundler in the next major, although it probably doesn't make a difference
+		},
 		fileName: filename
 	}).outputText;
 }

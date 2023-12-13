@@ -1,5 +1,6 @@
 import { parse, serialize } from 'cookie';
-import { normalize_path } from '../../utils/url.js';
+import { normalize_path, resolve } from '../../utils/url.js';
+import { warn_with_callsite } from './utils.js';
 
 /**
  * Tracks all cookies set during dev mode so we can emit warnings
@@ -13,6 +14,27 @@ const cookie_paths = {};
  * attributes) are discarded by browsers
  */
 const MAX_COOKIE_SIZE = 4129;
+
+/**
+ *
+ * @param {import('cookie').CookieSerializeOptions} opts
+ * @param {'set' | 'delete' | 'serialize'} method
+ */
+function deprecate_missing_path(opts, method) {
+	if (opts.path === undefined) {
+		warn_with_callsite(
+			`Calling \`cookies.${method}(...)\` without specifying a \`path\` is deprecated, and will be disallowed in SvelteKit 2.0. Relative paths can be used`,
+			1
+		);
+	}
+
+	if (opts.path === '') {
+		warn_with_callsite(
+			`Calling \`cookies.${method}(...)\` with \`path: ''\` will behave differently in SvelteKit 2.0. Instead of using the browser default behaviour, it will set the cookie path to the current pathname`,
+			1
+		);
+	}
+}
 
 /**
  * @param {Request} request
@@ -107,6 +129,7 @@ export function get_cookies(request, url, trailing_slash) {
 		 * @param {import('cookie').CookieSerializeOptions} opts
 		 */
 		set(name, value, opts = {}) {
+			deprecate_missing_path(opts, 'set');
 			set_internal(name, value, { ...defaults, ...opts });
 		},
 
@@ -115,7 +138,10 @@ export function get_cookies(request, url, trailing_slash) {
 		 * @param {import('cookie').CookieSerializeOptions} opts
 		 */
 		delete(name, opts = {}) {
+			deprecate_missing_path(opts, 'delete');
+
 			cookies.set(name, '', {
+				path: default_path, // TODO 2.0 remove this
 				...opts,
 				maxAge: 0
 			});
@@ -126,7 +152,9 @@ export function get_cookies(request, url, trailing_slash) {
 		 * @param {string} value
 		 * @param {import('cookie').CookieSerializeOptions} opts
 		 */
-		serialize(name, value, opts) {
+		serialize(name, value, opts = {}) {
+			deprecate_missing_path(opts, 'serialize');
+
 			return serialize(name, value, {
 				...defaults,
 				...opts
@@ -174,7 +202,15 @@ export function get_cookies(request, url, trailing_slash) {
 	 * @param {import('cookie').CookieSerializeOptions} opts
 	 */
 	function set_internal(name, value, opts) {
-		const path = opts.path ?? default_path;
+		let path = opts.path;
+
+		if (!opts.domain || opts.domain === url.hostname) {
+			if (path) {
+				if (path[0] === '.') path = resolve(url.pathname, path);
+			} else {
+				path = default_path;
+			}
+		}
 
 		new_cookies[name] = {
 			name,
@@ -194,8 +230,10 @@ export function get_cookies(request, url, trailing_slash) {
 			cookie_paths[name] ??= new Set();
 
 			if (!value) {
+				// @ts-expect-error temporary
 				cookie_paths[name].delete(path);
 			} else {
+				// @ts-expect-error temporary
 				cookie_paths[name].add(path);
 			}
 		}

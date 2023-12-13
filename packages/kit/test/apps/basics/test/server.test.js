@@ -502,6 +502,21 @@ test.describe('Routing', () => {
 		const data = await response.json();
 		expect(data).toEqual({ surprise: 'lol' });
 	});
+
+	test('Vite trailing slash redirect for prerendered pages retains URL query string', async ({
+		request
+	}) => {
+		if (process.env.DEV) return;
+
+		let response = await request.get('/routing/prerendered/trailing-slash/always?a=1');
+		expect(new URL(response.url()).search).toBe('?a=1');
+
+		response = await request.get('/routing/prerendered/trailing-slash/never/?a=1');
+		expect(new URL(response.url()).search).toBe('?a=1');
+
+		response = await request.get('/routing/prerendered/trailing-slash/ignore/?a=1');
+		expect(new URL(response.url()).search).toBe('?a=1');
+	});
 });
 
 test.describe('Shadowed pages', () => {
