@@ -71,7 +71,19 @@ export async function preview(vite, vite_config, svelte_config) {
 
 		vite.middlewares.use((req, res, next) => {
 			const original_url = /** @type {string} */ (req.url);
-			const { pathname } = new URL(original_url, 'http://dummy');
+			const { pathname, search } = new URL(original_url, 'http://dummy');
+
+			// if `paths.base === '/a/b/c`, then the root route is `/a/b/c/`,
+			// regardless of the `trailingSlash` route option
+			if (base.length > 1 && pathname === base) {
+				let location = base + '/';
+				if (search) location += search;
+				res.writeHead(307, {
+					location
+				});
+				res.end();
+				return;
+			}
 
 			if (pathname.startsWith(base)) {
 				next();
