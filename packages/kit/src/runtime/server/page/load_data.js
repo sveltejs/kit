@@ -187,6 +187,25 @@ export async function load_data({
 }
 
 /**
+ * @param {ArrayBuffer} buffer
+ * @returns {string}
+ */
+function b64_encode(buffer) {
+	if (globalThis.Buffer) {
+		return Buffer.from(buffer).toString('base64');
+	}
+
+	const little_endian = new Uint8Array(new Uint16Array([1]).buffer)[0] > 0;
+
+	// The Uint16Array(Uint8Array(...)) ensures the code points are padded with 0's
+	return btoa(
+		new TextDecoder(little_endian ? 'utf-16le' : 'utf-16be').decode(
+			new Uint16Array(new Uint8Array(buffer))
+		)
+	);
+}
+
+/**
  * @param {Pick<import('@sveltejs/kit').RequestEvent, 'fetch' | 'url' | 'request' | 'route'>} event
  * @param {import('types').SSRState} state
  * @param {import('./types.js').Fetched[]} fetched
@@ -243,38 +262,33 @@ export function create_universal_fetch(event, state, fetched, csr, resolve_opts)
 
 		const proxy = new Proxy(response, {
 			get(response, key, _receiver) {
-				async function text() {
-					const body = await response.text();
-
-					if (!body || typeof body === 'string') {
-						const status_number = Number(response.status);
-						if (isNaN(status_number)) {
-							throw new Error(
-								`response.status is not a number. value: "${
-									response.status
-								}" type: ${typeof response.status}`
-							);
-						}
-
-						fetched.push({
-							url: same_origin ? url.href.slice(event.url.origin.length) : url.href,
-							method: event.request.method,
-							request_body: /** @type {string | ArrayBufferView | undefined} */ (
-								input instanceof Request && cloned_body
-									? await stream_to_string(cloned_body)
-									: init?.body
-							),
-							request_headers: cloned_headers,
-							response_body: body,
-							response
-						});
+				/**
+				 * @param {string} body
+				 * @param {boolean} is_b64
+				 */
+				async function push_fetched(body, is_b64) {
+					const status_number = Number(response.status);
+					if (isNaN(status_number)) {
+						throw new Error(
+							`response.status is not a number. value: "${
+								response.status
+							}" type: ${typeof response.status}`
+						);
 					}
 
-					if (dependency) {
-						dependency.body = body;
-					}
-
-					return body;
+					fetched.push({
+						url: same_origin ? url.href.slice(event.url.origin.length) : url.href,
+						method: event.request.method,
+						request_body: /** @type {string | ArrayBufferView | undefined} */ (
+							input instanceof Request && cloned_body
+								? await stream_to_string(cloned_body)
+								: init?.body
+						),
+						request_headers: cloned_headers,
+						response_body: body,
+						response,
+						is_b64
+					});
 				}
 
 				if (key === 'arrayBuffer') {
@@ -285,11 +299,26 @@ export function create_universal_fetch(event, state, fetched, csr, resolve_opts)
 							dependency.body = new Uint8Array(buffer);
 						}
 
-						// TODO should buffer be inlined into the page (albeit base64'd)?
-						// any conditions in which it shouldn't be?
+						if (buffer instanceof ArrayBuffer) {
+							await push_fetched(b64_encode(buffer), true);
+						}
 
 						return buffer;
 					};
+				}
+
+				async function text() {
+					const body = await response.text();
+
+					if (!body || typeof body === 'string') {
+						await push_fetched(body, false);
+					}
+
+					if (dependency) {
+						dependency.body = body;
+					}
+
+					return body;
 				}
 
 				if (key === 'text') {
