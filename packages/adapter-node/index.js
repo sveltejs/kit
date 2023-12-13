@@ -7,7 +7,7 @@ import json from '@rollup/plugin-json';
 
 const files = fileURLToPath(new URL('./files', import.meta.url).href);
 
-/** @type {import('.').default} */
+/** @type {import('./index.js').default} */
 export default function (opts = {}) {
 	const { out = 'build', precompress, envPrefix = '', polyfill = true } = opts;
 
@@ -71,7 +71,7 @@ export default function (opts = {}) {
 				dir: `${out}/server`,
 				format: 'esm',
 				sourcemap: true,
-				chunkFileNames: `chunks/[name]-[hash].js`
+				chunkFileNames: 'chunks/[name]-[hash].js'
 			});
 
 			builder.copy(files, out, {

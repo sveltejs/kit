@@ -26,7 +26,7 @@ export default {
 
 ## Deployment configuration
 
-To control how your routes are deployed to Vercel as functions, you can specify deployment configuration, either through the option shown above or with [`export const config`](/docs/page-options#config) inside `+server.js`, `+page(.server).js` and `+layout(.server).js` files.
+To control how your routes are deployed to Vercel as functions, you can specify deployment configuration, either through the option shown above or with [`export const config`](page-options#config) inside `+server.js`, `+page(.server).js` and `+layout(.server).js` files.
 
 For example you could deploy some parts of your app as [Edge Functions](https://vercel.com/docs/concepts/functions/edge-functions)...
 
@@ -54,13 +54,12 @@ The following options apply to all functions:
 - `regions`: an array of [edge network regions](https://vercel.com/docs/concepts/edge-network/regions) (defaulting to `["iad1"]` for serverless functions) or `'all'` if `runtime` is `edge` (its default). Note that multiple regions for serverless functions are only supported on Enterprise plans
 - `split`: if `true`, causes a route to be deployed as an individual function. If `split` is set to `true` at the adapter level, all routes will be deployed as individual functions
 
-Additionally, the following options apply to edge functions:
-- `envVarsInUse`: an array of environment variables that should be accessible inside the edge function
+Additionally, the following option applies to edge functions:
 - `external`: an array of dependencies that esbuild should treat as external when bundling functions. This should only be used to exclude optional dependencies that will not run outside Node
 
 And the following option apply to serverless functions:
 - `memory`: the amount of memory available to the function. Defaults to `1024` Mb, and can be decreased to `128` Mb or [increased](https://vercel.com/docs/concepts/limits/overview#serverless-function-memory) in 64Mb increments up to `3008` Mb on Pro or Enterprise accounts
-- `maxDuration`: maximum execution duration of the function. Defaults to `10` seconds for Hobby accounts, `60` for Pro and `900` for Enterprise
+- `maxDuration`: maximum execution duration of the function. Defaults to `10` seconds for Hobby accounts, `15` for Pro and `900` for Enterprise
 - `isr`: configuration Incremental Static Regeneration, described below
 
 If your functions need to access data in a specific region, it's recommended that they be deployed in the same region (or close to it) for optimal performance.
@@ -121,7 +120,7 @@ export function load() {
 ```
 
 ```svelte
-/// file: +layout.svelte
+<!--- file: +layout.svelte --->
 <script>
 	/** @type {import('./$types').LayoutServerData} */
 	export let data;
@@ -130,7 +129,7 @@ export function load() {
 <p>This staging environment was deployed from {data.deploymentGitBranch}.</p>
 ```
 
-Since all of these variables are unchanged between build time and run time when building on Vercel, we recommend using `$env/static/private` — which will statically replace the variables, enabling optimisations like dead code elimination — rather than `$env/dynamic/private`. If you're deploying with `edge: true` you must either use `$env/static/private` or populate the `envVarsInUse` configuration.
+Since all of these variables are unchanged between build time and run time when building on Vercel, we recommend using `$env/static/private` — which will statically replace the variables, enabling optimisations like dead code elimination — rather than `$env/dynamic/private`.
 
 ## Notes
 

@@ -27,7 +27,7 @@ test.describe('paths', () => {
 	test('uses relative paths during SSR', async ({ page, javaScriptEnabled }) => {
 		await page.goto('/basepath');
 
-		let base = javaScriptEnabled ? '/basepath' : './basepath';
+		let base = javaScriptEnabled ? '/basepath' : '.';
 		expect(await page.textContent('[data-testid="base"]')).toBe(`base: ${base}`);
 		expect(await page.textContent('[data-testid="assets"]')).toBe(`assets: ${base}`);
 
@@ -62,8 +62,8 @@ test.describe('Service worker', () => {
 		});
 
 		expect(self.base).toBe('/basepath');
-		expect(self.build[0]).toMatch(/\/basepath\/_app\/immutable\/entry\/start\.[a-z0-9]+\.js/);
-		expect(self.image_src).toMatch(/\/basepath\/_app\/immutable\/assets\/image\.[a-z0-9]+\.jpg/);
+		expect(self.build[0]).toMatch(/\/basepath\/_app\/immutable\/entry\/start\.[\w-]+\.js/);
+		expect(self.image_src).toMatch(/\/basepath\/_app\/immutable\/assets\/image\.[\w-]+\.jpg/);
 	});
 
 	test('does not register /basepath/service-worker.js', async ({ page }) => {

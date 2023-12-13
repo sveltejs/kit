@@ -1,8 +1,7 @@
 import { execSync } from 'node:child_process';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { test } from 'uvu';
-import * as assert from 'uvu/assert';
+import { assert, expect, test } from 'vitest';
 import { rimraf } from '../../../utils/filesystem.js';
 import options from '../../config/options.js';
 import create_manifest_data from '../create_manifest_data/index.js';
@@ -19,7 +18,7 @@ async function run_test(dir) {
 	const initial = options({}, 'config');
 
 	initial.kit.files.assets = path.resolve(cwd, 'static');
-	initial.kit.files.params = path.resolve(cwd, 'params');
+	initial.kit.files.params = path.resolve(cwd, dir, 'params');
 	initial.kit.files.routes = path.resolve(cwd, dir);
 	initial.kit.outDir = path.resolve(cwd, path.join(dir, '.svelte-kit'));
 
@@ -30,7 +29,7 @@ async function run_test(dir) {
 }
 
 test('Creates correct $types', async () => {
-	// To safe us from creating a real SvelteKit project for each of the tests,
+	// To save us from creating a real SvelteKit project for each of the tests,
 	// we first run the type generation directly for each test case, and then
 	// call `tsc` to check that the generated types are valid.
 	await run_test('actions');
@@ -41,6 +40,7 @@ test('Creates correct $types', async () => {
 	await run_test('layout-advanced');
 	await run_test('slugs');
 	await run_test('slugs-layout-not-all-pages-have-load');
+	await run_test('param-type-inference');
 	try {
 		execSync('pnpm testtypes', { cwd });
 	} catch (e) {
@@ -60,7 +60,7 @@ test('Rewrites types for a TypeScript module', () => {
 
 	const rewritten = tweak_types(source, false);
 
-	assert.equal(rewritten?.exports, ['load']);
+	expect(rewritten?.exports).toEqual(['load']);
 	assert.equal(
 		rewritten?.code,
 		`// @ts-nocheck
@@ -85,7 +85,7 @@ test('Rewrites types for a TypeScript module without param', () => {
 
 	const rewritten = tweak_types(source, false);
 
-	assert.equal(rewritten?.exports, ['load']);
+	expect(rewritten?.exports).toEqual(['load']);
 	assert.equal(
 		rewritten?.code,
 		`// @ts-nocheck
@@ -111,7 +111,7 @@ test('Rewrites types for a TypeScript module without param and jsdoc without typ
 
 	const rewritten = tweak_types(source, false);
 
-	assert.equal(rewritten?.exports, ['load']);
+	expect(rewritten?.exports).toEqual(['load']);
 	assert.equal(
 		rewritten?.code,
 		`// @ts-nocheck
@@ -138,7 +138,7 @@ test('Rewrites types for a JavaScript module with `function`', () => {
 
 	const rewritten = tweak_types(source, false);
 
-	assert.equal(rewritten?.exports, ['load']);
+	expect(rewritten?.exports).toEqual(['load']);
 	assert.equal(
 		rewritten?.code,
 		`// @ts-nocheck
@@ -165,7 +165,7 @@ test('Rewrites types for a JavaScript module with `const`', () => {
 
 	const rewritten = tweak_types(source, false);
 
-	assert.equal(rewritten?.exports, ['load']);
+	expect(rewritten?.exports).toEqual(['load']);
 	assert.equal(
 		rewritten?.code,
 		`// @ts-nocheck
@@ -192,7 +192,7 @@ test('Appends @ts-nocheck after @ts-check', () => {
 
 	const rewritten = tweak_types(source, false);
 
-	assert.equal(rewritten?.exports, ['load']);
+	expect(rewritten?.exports).toEqual(['load']);
 	assert.equal(
 		rewritten?.code,
 		`// @ts-check
@@ -221,7 +221,7 @@ test('Rewrites action types for a JavaScript module', () => {
 
 	const rewritten = tweak_types(source, true);
 
-	assert.equal(rewritten?.exports, ['actions']);
+	expect(rewritten?.exports).toEqual(['actions']);
 	assert.equal(
 		rewritten?.code,
 		`// @ts-nocheck
@@ -250,7 +250,7 @@ test('Rewrites action types for a TypeScript module', () => {
 
 	const rewritten = tweak_types(source, true);
 
-	assert.equal(rewritten?.exports, ['actions']);
+	expect(rewritten?.exports).toEqual(['actions']);
 	assert.equal(
 		rewritten?.code,
 		`// @ts-nocheck
@@ -283,9 +283,7 @@ test('Leaves satisfies operator untouched', () => {
 
 	const rewritten = tweak_types(source, true);
 
-	assert.equal(rewritten?.exports, ['load', 'actions']);
+	expect(rewritten?.exports).toEqual(['load', 'actions']);
 	assert.equal(rewritten?.modified, false);
 	assert.equal(rewritten?.code, source);
 });
-
-test.run();

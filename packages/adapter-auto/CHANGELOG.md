@@ -1,5 +1,29 @@
 # @sveltejs/adapter-auto
 
+## 2.1.1
+
+### Patch Changes
+
+- chore(deps): update dependency `import-meta-resolve` to v4 ([#10970](https://github.com/sveltejs/kit/pull/10970))
+
+- Updated dependencies [[`072430ec5`](https://github.com/sveltejs/kit/commit/072430ec5c64782cd25c750f40534fea9cab4b40)]:
+  - @sveltejs/kit@1.27.3
+
+## 2.1.0
+
+### Minor Changes
+
+- [feat] support AWS via SST ([#9874](https://github.com/sveltejs/kit/pull/9874))
+
+## 2.0.1
+
+### Patch Changes
+
+- chore: update dependency `import-meta-resolve` to v3 ([#9758](https://github.com/sveltejs/kit/pull/9758))
+
+- Updated dependencies [[`aae5992e4`](https://github.com/sveltejs/kit/commit/aae5992e4568d93b477befe02b4018a59a298262), [`415358258`](https://github.com/sveltejs/kit/commit/415358258797911a8406c3b1e569b7cdcae6b207)]:
+  - @sveltejs/kit@1.15.8
+
 ## 2.0.0
 
 ### Major Changes

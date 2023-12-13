@@ -12,6 +12,7 @@ import { public_env } from '../../shared-server.js';
 import { text } from '../../../exports/index.js';
 import { create_async_iterator } from '../../../utils/streaming.js';
 import { SVELTE_KIT_ASSETS } from '../../../constants.js';
+import { SCHEME } from '../../../utils/url.js';
 
 // TODO rename this function/module
 
@@ -25,17 +26,17 @@ const encoder = new TextEncoder();
 /**
  * Creates the HTML response.
  * @param {{
- *   branch: Array<import('./types').Loaded>;
- *   fetched: Array<import('./types').Fetched>;
+ *   branch: Array<import('./types.js').Loaded>;
+ *   fetched: Array<import('./types.js').Fetched>;
  *   options: import('types').SSROptions;
- *   manifest: import('types').SSRManifest;
+ *   manifest: import('@sveltejs/kit').SSRManifest;
  *   state: import('types').SSRState;
  *   page_config: { ssr: boolean; csr: boolean };
  *   status: number;
  *   error: App.Error | null;
- *   event: import('types').RequestEvent;
+ *   event: import('@sveltejs/kit').RequestEvent;
  *   resolve_opts: import('types').RequiredResolveOptions;
- *   action_result?: import('types').ActionResult;
+ *   action_result?: import('@sveltejs/kit').ActionResult;
  * }} opts
  */
 export async function render_response({
@@ -63,9 +64,9 @@ export async function render_response({
 
 	const { client } = manifest._;
 
-	const modulepreloads = new Set([...client.start.imports, ...client.app.imports]);
-	const stylesheets = new Set(client.app.stylesheets);
-	const fonts = new Set(client.app.fonts);
+	const modulepreloads = new Set(client.imports);
+	const stylesheets = new Set(client.stylesheets);
+	const fonts = new Set(client.fonts);
 
 	/** @type {Set<string>} */
 	const link_header_preloads = new Set();
@@ -95,23 +96,12 @@ export async function render_response({
 
 	// if appropriate, use relative paths for greater portability
 	if (paths.relative !== false && !state.prerendering?.fallback) {
-		const segments = event.url.pathname.slice(paths.base.length).split('/');
+		const segments = event.url.pathname.slice(paths.base.length).split('/').slice(2);
 
-		if (segments.length === 1 && paths.base !== '') {
-			// if we're on `/my-base-path`, relative links need to start `./my-base-path` rather than `.`
-			base = `./${paths.base.split('/').at(-1)}`;
+		base = segments.map(() => '..').join('/') || '.';
 
-			base_expression = `new URL(${s(base)}, location).pathname`;
-		} else {
-			base =
-				segments
-					.slice(2)
-					.map(() => '..')
-					.join('/') || '.';
-
-			// resolve e.g. '../..' against current location, then remove trailing slash
-			base_expression = `new URL(${s(base)}, location).pathname.slice(0, -1)`;
-		}
+		// resolve e.g. '../..' against current location, then remove trailing slash
+		base_expression = `new URL(${s(base)}, location).pathname.slice(0, -1)`;
 
 		if (!paths.assets || (paths.assets[0] === '/' && paths.assets !== SVELTE_KIT_ASSETS)) {
 			assets = base;
@@ -162,13 +152,13 @@ export async function render_response({
 			const fetch = globalThis.fetch;
 			let warned = false;
 			globalThis.fetch = (info, init) => {
-				if (typeof info === 'string' && !/^\w+:\/\//.test(info)) {
+				if (typeof info === 'string' && !SCHEME.test(info)) {
 					throw new Error(
 						`Cannot call \`fetch\` eagerly during server side rendering with relative URL (${info}) — put your \`fetch\` calls inside \`onMount\` or a \`load\` function instead`
 					);
 				} else if (!warned) {
 					console.warn(
-						`Avoid calling \`fetch\` eagerly during server side rendering — put your \`fetch\` calls inside \`onMount\` or a \`load\` function instead`
+						'Avoid calling `fetch` eagerly during server side rendering — put your `fetch` calls inside `onMount` or a `load` function instead'
 					);
 					warned = true;
 				}
@@ -268,7 +258,7 @@ export async function render_response({
 		}
 	}
 
-	const global = __SVELTEKIT_DEV__ ? `__sveltekit_dev` : `__sveltekit_${options.version_hash}`;
+	const global = __SVELTEKIT_DEV__ ? '__sveltekit_dev' : `__sveltekit_${options.version_hash}`;
 
 	const { data, chunks } = get_data(
 		event,
@@ -303,14 +293,13 @@ export async function render_response({
 		const blocks = [];
 
 		const properties = [
-			`env: ${s(public_env)}`,
 			paths.assets && `assets: ${s(paths.assets)}`,
 			`base: ${base_expression}`,
-			`element: document.currentScript.parentElement`
+			`env: ${s(public_env)}`
 		].filter(Boolean);
 
 		if (chunks) {
-			blocks.push(`const deferred = new Map();`);
+			blocks.push('const deferred = new Map();');
 
 			properties.push(`defer: (id) => new Promise((fulfil, reject) => {
 							deferred.set(id, { fulfil, reject });
@@ -329,7 +318,9 @@ export async function render_response({
 						${properties.join(',\n\t\t\t\t\t\t')}
 					};`);
 
-		const args = [`app`, `${global}.element`];
+		const args = ['app', 'element'];
+
+		blocks.push('const element = document.currentScript.parentElement;');
 
 		if (page_config.ssr) {
 			const serialized = { form: 'null', error: 'null' };
@@ -349,7 +340,7 @@ export async function render_response({
 
 			const hydrate = [
 				`node_ids: [${branch.map(({ node }) => node.index).join(', ')}]`,
-				`data`,
+				'data',
 				`form: ${serialized.form}`,
 				`error: ${serialized.error}`
 			];
@@ -366,14 +357,14 @@ export async function render_response({
 		}
 
 		blocks.push(`Promise.all([
-						import(${s(prefixed(client.start.file))}),
-						import(${s(prefixed(client.app.file))})
+						import(${s(prefixed(client.start))}),
+						import(${s(prefixed(client.app))})
 					]).then(([kit, app]) => {
 						kit.start(${args.join(', ')});
 					});`);
 
 		if (options.service_worker) {
-			const opts = __SVELTEKIT_DEV__ ? `, { type: 'module' }` : '';
+			const opts = __SVELTEKIT_DEV__ ? ", { type: 'module' }" : '';
 
 			// we use an anonymous function instead of an arrow function to support
 			// older browsers (https://github.com/sveltejs/kit/pull/5417)
@@ -500,7 +491,7 @@ export async function render_response({
 /**
  * If the serialized data contains promises, `chunks` will be an
  * async iterable containing their resolutions
- * @param {import('types').RequestEvent} event
+ * @param {import('@sveltejs/kit').RequestEvent} event
  * @param {import('types').SSROptions} options
  * @param {Array<import('types').ServerDataNode | null>} nodes
  * @param {string} global

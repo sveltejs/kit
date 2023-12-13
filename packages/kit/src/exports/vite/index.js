@@ -5,7 +5,7 @@ import { svelte } from '@sveltejs/vite-plugin-svelte';
 import colors from 'kleur';
 import * as vite from 'vite';
 
-import { mkdirp, posixify, read, resolve_entry, rimraf } from '../../utils/filesystem.js';
+import { copy, mkdirp, posixify, read, resolve_entry, rimraf } from '../../utils/filesystem.js';
 import { create_static_module, create_dynamic_module } from '../../core/env.js';
 import * as sync from '../../core/sync/sync.js';
 import { create_assets } from '../../core/sync/create_manifest_data/index.js';
@@ -14,23 +14,23 @@ import { load_config } from '../../core/config/index.js';
 import { generate_manifest } from '../../core/generate_manifest/index.js';
 import { build_server_nodes } from './build/build_server.js';
 import { build_service_worker } from './build/build_service_worker.js';
-import { find_deps } from './build/utils.js';
+import { assets_base, find_deps } from './build/utils.js';
 import { dev } from './dev/index.js';
 import { is_illegal, module_guard, normalize_id } from './graph_analysis/index.js';
 import { preview } from './preview/index.js';
-import { get_config_aliases, get_env } from './utils.js';
+import { get_config_aliases, get_env, strip_virtual_prefix } from './utils.js';
 import { write_client_manifest } from '../../core/sync/write_client_manifest.js';
 import prerender from '../../core/postbuild/prerender.js';
 import analyse from '../../core/postbuild/analyse.js';
 import { s } from '../../utils/misc.js';
 import { hash } from '../../runtime/hash.js';
-import { dedent } from '../../core/sync/utils.js';
+import { dedent, isSvelte5Plus } from '../../core/sync/utils.js';
 
 export { vitePreprocess } from '@sveltejs/vite-plugin-svelte';
 
 const cwd = process.cwd();
 
-/** @type {import('./types').EnforcedConfig} */
+/** @type {import('./types.js').EnforcedConfig} */
 const enforced_config = {
 	appType: true,
 	base: true,
@@ -101,7 +101,7 @@ const warning_preprocessor = {
 		if (basename.startsWith('+layout.') && !content.includes('<slot')) {
 			const message =
 				`\n${colors.bold().red(path.relative('.', filename))}\n` +
-				`\`<slot />\` missing — inner content will not be rendered`;
+				'`<slot />` missing — inner content will not be rendered';
 
 			if (!warned.has(message)) {
 				console.log(message);
@@ -111,7 +111,10 @@ const warning_preprocessor = {
 	}
 };
 
-/** @return {Promise<import('vite').Plugin[]>} */
+/**
+ * Returns the SvelteKit Vite plugins.
+ * @returns {Promise<import('vite').Plugin[]>}
+ */
 export async function sveltekit() {
 	const svelte_config = await load_config();
 
@@ -133,7 +136,7 @@ export async function sveltekit() {
 		onwarn: svelte_config.onwarn,
 		compilerOptions: {
 			// @ts-expect-error SvelteKit requires hydratable true by default
-			hydratable: true,
+			hydratable: isSvelte5Plus() ? undefined : true,
 			...svelte_config.compilerOptions
 		},
 		...svelte_config.vitePlugin
@@ -188,6 +191,9 @@ function kit({ svelte_config }) {
 
 	const service_worker_entry_file = resolve_entry(kit.files.serviceWorker);
 
+	const sourcemapIgnoreList = /** @param {string} relative_path */ (relative_path) =>
+		relative_path.includes('node_modules') || relative_path.includes(kit.outDir);
+
 	/** @type {import('vite').Plugin} */
 	const plugin_setup = {
 		name: 'vite-plugin-sveltekit-setup',
@@ -231,16 +237,17 @@ function kit({ svelte_config }) {
 				},
 				root: cwd,
 				server: {
+					cors: { preflightContinue: true },
 					fs: {
 						allow: [...allow]
 					},
+					sourcemapIgnoreList,
 					watch: {
 						ignored: [
 							// Ignore all siblings of config.kit.outDir/generated
 							`${posixify(kit.outDir)}/!(generated)`
 						]
-					},
-					cors: { preflightContinue: true }
+					}
 				},
 				preview: {
 					cors: { preflightContinue: true }
@@ -329,7 +336,7 @@ function kit({ svelte_config }) {
 		async resolveId(id) {
 			// treat $env/static/[public|private] as virtual
 			if (id.startsWith('$env/') || id.startsWith('__sveltekit/') || id === '$service-worker') {
-				return `\0${id}`;
+				return `\0virtual:${id}`;
 			}
 		},
 
@@ -338,7 +345,7 @@ function kit({ svelte_config }) {
 
 			const global = is_build
 				? `globalThis.__sveltekit_${version_hash}`
-				: `globalThis.__sveltekit_dev`;
+				: 'globalThis.__sveltekit_dev';
 
 			if (options?.ssr === false && process.env.TEST !== 'true') {
 				const normalized_cwd = vite.normalizePath(cwd);
@@ -351,24 +358,24 @@ function kit({ svelte_config }) {
 					})
 				) {
 					const relative = normalize_id(id, normalized_lib, normalized_cwd);
-					throw new Error(`Cannot import ${relative} into client-side code`);
+					throw new Error(`Cannot import ${strip_virtual_prefix(relative)} into client-side code`);
 				}
 			}
 
 			switch (id) {
-				case '\0$env/static/private':
+				case '\0virtual:$env/static/private':
 					return create_static_module('$env/static/private', env.private);
 
-				case '\0$env/static/public':
+				case '\0virtual:$env/static/public':
 					return create_static_module('$env/static/public', env.public);
 
-				case '\0$env/dynamic/private':
+				case '\0virtual:$env/dynamic/private':
 					return create_dynamic_module(
 						'private',
 						vite_config_env.command === 'serve' ? env.private : undefined
 					);
 
-				case '\0$env/dynamic/public':
+				case '\0virtual:$env/dynamic/public':
 					// populate `$env/dynamic/public` from `window`
 					if (browser) {
 						return `export const env = ${global}.env;`;
@@ -379,12 +386,12 @@ function kit({ svelte_config }) {
 						vite_config_env.command === 'serve' ? env.public : undefined
 					);
 
-				case '\0$service-worker':
+				case '\0virtual:$service-worker':
 					return create_service_worker_module(svelte_config);
 
 				// for internal use only. it's published as $app/paths externally
 				// we use this alias so that we won't collide with user aliases
-				case '\0__sveltekit/paths':
+				case '\0virtual:__sveltekit/paths': {
 					const { assets, base } = svelte_config.kit.paths;
 
 					// use the values defined in `global`, but fall back to hard-coded values
@@ -420,8 +427,9 @@ function kit({ svelte_config }) {
 							assets = initial.assets = path;
 						}
 					`;
+				}
 
-				case '\0__sveltekit/environment':
+				case '\0virtual:__sveltekit/environment': {
 					const { version } = svelte_config.kit;
 
 					return dedent`
@@ -432,6 +440,7 @@ function kit({ svelte_config }) {
 							building = true;
 						}
 					`;
+				}
 			}
 		}
 	};
@@ -522,35 +531,31 @@ function kit({ svelte_config }) {
 					input['entry/start'] = `${runtime_directory}/client/start.js`;
 					input['entry/app'] = `${kit.outDir}/generated/client-optimized/app.js`;
 
-					/**
-					 * @param {string | undefined} file
-					 */
-					function add_input(file) {
-						if (!file) return;
-
-						const resolved = path.resolve(file);
-						const relative = decodeURIComponent(path.relative(kit.files.routes, resolved));
-
-						const name = relative.startsWith('..')
-							? path.basename(file).replace(/^\+/, '')
-							: relative.replace(/(\\|\/)\+/g, '-').replace(/[\\/]/g, '-');
-
-						input[`entry/${name}`] = resolved;
-					}
-
-					for (const node of manifest_data.nodes) {
-						add_input(node.component);
-						add_input(node.universal);
-					}
+					manifest_data.nodes.forEach((node, i) => {
+						if (node.component || node.universal) {
+							input[`nodes/${i}`] = `${kit.outDir}/generated/client-optimized/nodes/${i}.js`;
+						}
+					});
 				}
 
 				// see the kit.output.preloadStrategy option for details on why we have multiple options here
 				const ext = kit.output.preloadStrategy === 'preload-mjs' ? 'mjs' : 'js';
 
+				// We could always use a relative asset base path here, but it's better for performance not to.
+				// E.g. Vite generates `new URL('/asset.png', import.meta).href` for a relative path vs just '/asset.png'.
+				// That's larger and takes longer to run and also causes an HTML diff between SSR and client
+				// causing us to do a more expensive hydration check.
+				const client_base =
+					kit.paths.relative !== false || kit.paths.assets ? './' : kit.paths.base || '/';
+
 				new_config = {
-					base: ssr ? `${kit.paths.assets || kit.paths.base || '.'}/` : './',
+					base: ssr ? assets_base(kit) : client_base,
 					build: {
+						copyPublicDir: !ssr,
 						cssCodeSplit: true,
+						cssMinify: initial_config.build?.minify == null ? true : !!initial_config.build.minify,
+						// don't use the default name to avoid collisions with 'static/manifest.json'
+						manifest: '.vite/manifest.json', // TODO: remove this after bumping peer dep to vite 5
 						outDir: `${out}/${ssr ? 'server' : 'client'}`,
 						rollupOptions: {
 							input,
@@ -559,15 +564,13 @@ function kit({ svelte_config }) {
 								entryFileNames: ssr ? '[name].js' : `${prefix}/[name].[hash].${ext}`,
 								chunkFileNames: ssr ? 'chunks/[name].js' : `${prefix}/chunks/[name].[hash].${ext}`,
 								assetFileNames: `${prefix}/assets/[name].[hash][extname]`,
-								hoistTransitiveImports: false
+								hoistTransitiveImports: false,
+								sourcemapIgnoreList
 							},
 							preserveEntrySignatures: 'strict'
 						},
 						ssrEmitAssets: true,
-						copyPublicDir: !ssr,
-						target: ssr ? 'node16.14' : undefined,
-						// don't use the default name to avoid collisions with 'static/manifest.json'
-						manifest: 'vite-manifest.json'
+						target: ssr ? 'node16.14' : undefined
 					},
 					publicDir: kit.files.assets,
 					worker: {
@@ -662,7 +665,7 @@ function kit({ svelte_config }) {
 					app_dir: kit.appDir,
 					app_path: `${kit.paths.base.slice(1)}${kit.paths.base ? '/' : ''}${kit.appDir}`,
 					manifest_data,
-					service_worker: !!service_worker_entry_file ? 'service-worker.js' : null, // TODO make file configurable?
+					service_worker: service_worker_entry_file ? 'service-worker.js' : null, // TODO make file configurable?
 					client: null,
 					server_manifest
 				};
@@ -699,7 +702,7 @@ function kit({ svelte_config }) {
 
 				secondary_build_started = true;
 
-				const { output } = /** @type {import('rollup').RollupOutput} */ (
+				const { output } = /** @type {import('vite').Rollup.RollupOutput} */ (
 					await vite.build({
 						configFile: vite_config.configFile,
 						// CLI args
@@ -717,24 +720,29 @@ function kit({ svelte_config }) {
 					})
 				);
 
+				copy(
+					`${out}/server/${kit.appDir}/immutable/assets`,
+					`${out}/client/${kit.appDir}/immutable/assets`
+				);
+
 				/** @type {import('vite').Manifest} */
 				const client_manifest = JSON.parse(read(`${out}/client/${vite_config.build.manifest}`));
 
+				const deps_of = /** @param {string} f */ (f) =>
+					find_deps(client_manifest, posixify(path.relative('.', f)), false);
+				const start = deps_of(`${runtime_directory}/client/start.js`);
+				const app = deps_of(`${kit.outDir}/generated/client-optimized/app.js`);
+
 				build_data.client = {
-					start: find_deps(
-						client_manifest,
-						posixify(path.relative('.', `${runtime_directory}/client/start.js`)),
-						false
-					),
-					app: find_deps(
-						client_manifest,
-						posixify(path.relative('.', `${kit.outDir}/generated/client-optimized/app.js`)),
-						false
-					)
+					start: start.file,
+					app: app.file,
+					imports: [...start.imports, ...app.imports],
+					stylesheets: [...start.stylesheets, ...app.stylesheets],
+					fonts: [...start.fonts, ...app.fonts]
 				};
 
 				const css = output.filter(
-					/** @type {(value: any) => value is import('rollup').OutputAsset} */
+					/** @type {(value: any) => value is import('vite').Rollup.OutputAsset} */
 					(value) => value.type === 'asset' && value.fileName.endsWith('.css')
 				);
 
@@ -797,13 +805,17 @@ function kit({ svelte_config }) {
 							.cyan('npm run preview')} to preview your production build locally.`
 					);
 
-					// avoid making the manifest available to users
-					fs.unlinkSync(`${out}/client/${vite_config.build.manifest}`);
-					fs.unlinkSync(`${out}/server/${vite_config.build.manifest}`);
-
 					if (kit.adapter) {
 						const { adapt } = await import('../../core/adapt/index.js');
-						await adapt(svelte_config, build_data, metadata, prerendered, prerender_map, log);
+						await adapt(
+							svelte_config,
+							build_data,
+							metadata,
+							prerendered,
+							prerender_map,
+							log,
+							vite_config
+						);
 					} else {
 						console.log(colors.bold().yellow('\nNo adapter specified'));
 
@@ -851,7 +863,7 @@ function warn_overridden_config(config, resolved_config) {
 /**
  * @param {Record<string, any>} config
  * @param {Record<string, any>} resolved_config
- * @param {import('./types').EnforcedConfig} enforced_config
+ * @param {import('./types.js').EnforcedConfig} enforced_config
  * @param {string} path
  * @param {string[]} out used locally to compute the return value
  */

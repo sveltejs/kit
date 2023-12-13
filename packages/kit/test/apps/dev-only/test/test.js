@@ -11,7 +11,7 @@ test.describe.serial('Illegal imports', () => {
 			wait_for_started: false
 		});
 		expect(await page.textContent('.message-body')).toBe(
-			'Cannot import \0$env/dynamic/private into client-side code'
+			'Cannot import $env/dynamic/private into client-side code'
 		);
 	});
 
@@ -20,7 +20,7 @@ test.describe.serial('Illegal imports', () => {
 			wait_for_started: false
 		});
 		expect(await page.textContent('.message-body')).toBe(
-			'Cannot import \0$env/dynamic/private into client-side code'
+			'Cannot import $env/dynamic/private into client-side code'
 		);
 	});
 
@@ -29,7 +29,7 @@ test.describe.serial('Illegal imports', () => {
 			wait_for_started: false
 		});
 		expect(await page.textContent('.message-body')).toBe(
-			'Cannot import \0$env/static/private into client-side code'
+			'Cannot import $env/static/private into client-side code'
 		);
 	});
 
@@ -38,7 +38,7 @@ test.describe.serial('Illegal imports', () => {
 			wait_for_started: false
 		});
 		expect(await page.textContent('.message-body')).toBe(
-			'Cannot import \0$env/static/private into client-side code'
+			'Cannot import $env/static/private into client-side code'
 		);
 	});
 
@@ -65,7 +65,7 @@ test.describe.serial('Illegal imports', () => {
 			wait_for_started: false
 		});
 		expect(await page.textContent('.message-body')).toBe(
-			'Cannot import $lib/server/blah/test.js into client-side code'
+			'Cannot import $lib/server/blah/private.js into client-side code'
 		);
 	});
 
@@ -74,7 +74,7 @@ test.describe.serial('Illegal imports', () => {
 			wait_for_started: false
 		});
 		expect(await page.textContent('.message-body')).toBe(
-			'Cannot import $lib/server/blah/test.js into client-side code'
+			'Cannot import $lib/server/blah/private.js into client-side code'
 		);
 	});
 });

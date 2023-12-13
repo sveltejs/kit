@@ -43,7 +43,7 @@ export async function load({ params }) {
 This tells SvelteKit to set the response status code to 404 and render an [`+error.svelte`](routing#error) component, where `$page.error` is the object provided as the second argument to `error(...)`.
 
 ```svelte
-/// file: src/routes/+error.svelte
+<!--- file: src/routes/+error.svelte --->
 <script>
 	import { page } from '$app/stores';
 </script>
@@ -83,21 +83,21 @@ Unexpected errors will go through the [`handleError`](hooks#shared-hooks-handlee
 /// file: src/hooks.server.js
 // @errors: 2322 1360 2571 2339
 // @filename: ambient.d.ts
-declare module '@sentry/node' {
+declare module '@sentry/sveltekit' {
 	export const init: (opts: any) => void;
 	export const captureException: (error: any, opts: any) => void;
 }
 
 // @filename: index.js
 // ---cut---
-import * as Sentry from '@sentry/node';
+import * as Sentry from '@sentry/sveltekit';
 
 Sentry.init({/*...*/})
 
 /** @type {import('@sveltejs/kit').HandleServerError} */
 export function handleError({ error, event }) {
 	// example integration with https://sentry.io/
-	Sentry.captureException(error, { event });
+	Sentry.captureException(error, { extra: { event } });
 
 	return {
 		message: 'Whoops!',

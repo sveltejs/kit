@@ -1,7 +1,8 @@
 import fs from 'node:fs';
 import path from 'node:path';
-import mime from 'mime';
-import { runtime_directory } from '../../utils.js';
+import colors from 'kleur';
+import { lookup } from 'mrmime';
+import { list_files, runtime_directory } from '../../utils.js';
 import { posixify } from '../../../utils/filesystem.js';
 import { parse_route_id } from '../../../utils/routing.js';
 import { sort_routes } from './sort.js';
@@ -47,7 +48,7 @@ export function create_assets(config) {
 	return list_files(config.kit.files.assets).map((file) => ({
 		file,
 		size: fs.statSync(path.resolve(config.kit.files.assets, file)).size,
-		type: mime.getType(file)
+		type: lookup(file) || null
 	}));
 }
 
@@ -201,8 +202,31 @@ function create_routes_and_nodes(cwd, config, fallback) {
 			// process files first
 			for (const file of files) {
 				if (file.is_dir) continue;
-				if (!file.name.startsWith('+')) continue;
-				if (!valid_extensions.find((ext) => file.name.endsWith(ext))) continue;
+
+				const ext = valid_extensions.find((ext) => file.name.endsWith(ext));
+				if (!ext) continue;
+
+				if (!file.name.startsWith('+')) {
+					const name = file.name.slice(0, -ext.length);
+					// check if it is a valid route filename but missing the + prefix
+					const typo =
+						/^(?:(page(?:@(.*))?)|(layout(?:@(.*))?)|(error))$/.test(name) ||
+						/^(?:(server)|(page(?:(@[a-zA-Z0-9_-]*))?(\.server)?)|(layout(?:(@[a-zA-Z0-9_-]*))?(\.server)?))$/.test(
+							name
+						);
+					if (typo) {
+						console.log(
+							colors
+								.bold()
+								.yellow(
+									`Missing route file prefix. Did you mean +${file.name}?` +
+										` at ${path.join(dir, file.name)}`
+								)
+						);
+					}
+
+					continue;
+				}
 
 				if (file.name.endsWith('.d.ts')) {
 					let name = file.name.slice(0, -5);
@@ -227,6 +251,18 @@ function create_routes_and_nodes(cwd, config, fallback) {
 					config.kit.moduleExtensions
 				);
 
+				/**
+				 * @param {string} type
+				 * @param {string} existing_file
+				 */
+				function duplicate_files_error(type, existing_file) {
+					return new Error(
+						`Multiple ${type} files found in ${routes_base}${route.id} : ${path.basename(
+							existing_file
+						)} and ${file.name}`
+					);
+				}
+
 				if (item.kind === 'component') {
 					if (item.is_error) {
 						route.error = {
@@ -234,21 +270,51 @@ function create_routes_and_nodes(cwd, config, fallback) {
 							component: project_relative
 						};
 					} else if (item.is_layout) {
-						if (!route.layout) route.layout = { depth, child_pages: [] };
+						if (!route.layout) {
+							route.layout = { depth, child_pages: [] };
+						} else if (route.layout.component) {
+							throw duplicate_files_error('layout component', route.layout.component);
+						}
+
 						route.layout.component = project_relative;
 						if (item.uses_layout !== undefined) route.layout.parent_id = item.uses_layout;
 					} else {
-						if (!route.leaf) route.leaf = { depth };
+						if (!route.leaf) {
+							route.leaf = { depth };
+						} else if (route.leaf.component) {
+							throw duplicate_files_error('page component', route.leaf.component);
+						}
+
 						route.leaf.component = project_relative;
 						if (item.uses_layout !== undefined) route.leaf.parent_id = item.uses_layout;
 					}
 				} else if (item.is_layout) {
-					if (!route.layout) route.layout = { depth, child_pages: [] };
+					if (!route.layout) {
+						route.layout = { depth, child_pages: [] };
+					} else if (route.layout[item.kind]) {
+						throw duplicate_files_error(
+							item.kind + ' layout module',
+							/** @type {string} */ (route.layout[item.kind])
+						);
+					}
+
 					route.layout[item.kind] = project_relative;
 				} else if (item.is_page) {
-					if (!route.leaf) route.leaf = { depth };
+					if (!route.leaf) {
+						route.leaf = { depth };
+					} else if (route.leaf[item.kind]) {
+						throw duplicate_files_error(
+							item.kind + ' page module',
+							/** @type {string} */ (route.leaf[item.kind])
+						);
+					}
+
 					route.leaf[item.kind] = project_relative;
 				} else {
+					if (route.endpoint) {
+						throw duplicate_files_error('endpoint', route.endpoint.file);
+					}
+
 					route.endpoint = {
 						file: project_relative
 					};
@@ -378,7 +444,7 @@ function create_routes_and_nodes(cwd, config, fallback) {
  * @param {string} file
  * @param {string[]} component_extensions
  * @param {string[]} module_extensions
- * @returns {import('./types').RouteFile}
+ * @returns {import('./types.js').RouteFile}
  */
 function analyze(project_relative, file, component_extensions, module_extensions) {
 	const component_extension = component_extensions.find((ext) => file.endsWith(ext));
@@ -414,7 +480,7 @@ function analyze(project_relative, file, component_extensions, module_extensions
 			);
 		}
 
-		const kind = !!(match[1] || match[4] || match[7]) ? 'server' : 'universal';
+		const kind = match[1] || match[4] || match[7] ? 'server' : 'universal';
 
 		return {
 			kind,
@@ -424,28 +490,6 @@ function analyze(project_relative, file, component_extensions, module_extensions
 	}
 
 	throw new Error(`Files and directories prefixed with + are reserved (saw ${project_relative})`);
-}
-
-/** @param {string} dir */
-function list_files(dir) {
-	/** @type {string[]} */
-	const files = [];
-
-	/** @param {string} current */
-	function walk(current) {
-		for (const file of fs.readdirSync(path.resolve(dir, current))) {
-			const child = path.posix.join(current, file);
-			if (fs.statSync(path.resolve(dir, child)).isDirectory()) {
-				walk(child);
-			} else {
-				files.push(child);
-			}
-		}
-	}
-
-	if (fs.existsSync(dir)) walk('');
-
-	return files;
 }
 
 /**
@@ -471,7 +515,7 @@ function prevent_conflicts(routes) {
 		const normalized = normalize_route_id(route.id);
 
 		// find all permutations created by optional parameters
-		const split = normalized.split(/<\?(.+?)\>/g);
+		const split = normalized.split(/<\?(.+?)>/g);
 
 		let permutations = [/** @type {string} */ (split[0])];
 

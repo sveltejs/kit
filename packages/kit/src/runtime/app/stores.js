@@ -3,32 +3,48 @@ import { browser } from './environment.js';
 import { stores as browser_stores } from '../client/singletons.js';
 
 /**
- * @type {import('$app/stores').getStores}
+ * A function that returns all of the contextual stores. On the server, this must be called during component initialization.
+ * Only use this if you need to defer store subscription until after the component has mounted, for some reason.
  */
 export const getStores = () => {
 	const stores = browser ? browser_stores : getContext('__svelte__');
 
 	return {
+		/** @type {typeof page} */
 		page: {
 			subscribe: stores.page.subscribe
 		},
+		/** @type {typeof navigating} */
 		navigating: {
 			subscribe: stores.navigating.subscribe
 		},
+		/** @type {typeof updated} */
 		updated: stores.updated
 	};
 };
 
-/** @type {typeof import('$app/stores').page} */
+/**
+ * A readable store whose value contains page data.
+ *
+ * On the server, this store can only be subscribed to during component initialization. In the browser, it can be subscribed to at any time.
+ *
+ * @type {import('svelte/store').Readable<import('@sveltejs/kit').Page>}
+ */
 export const page = {
-	/** @param {(value: any) => void} fn */
 	subscribe(fn) {
 		const store = __SVELTEKIT_DEV__ ? get_store('page') : getStores().page;
 		return store.subscribe(fn);
 	}
 };
 
-/** @type {typeof import('$app/stores').navigating} */
+/**
+ * A readable store.
+ * When navigating starts, its value is a `Navigation` object with `from`, `to`, `type` and (if `type === 'popstate'`) `delta` properties.
+ * When navigating finishes, its value reverts to `null`.
+ *
+ * On the server, this store can only be subscribed to during component initialization. In the browser, it can be subscribed to at any time.
+ * @type {import('svelte/store').Readable<import('@sveltejs/kit').Navigation | null>}
+ */
 export const navigating = {
 	subscribe(fn) {
 		const store = __SVELTEKIT_DEV__ ? get_store('navigating') : getStores().navigating;
@@ -36,7 +52,12 @@ export const navigating = {
 	}
 };
 
-/** @type {typeof import('$app/stores').updated} */
+/**
+ * A readable store whose initial value is `false`. If [`version.pollInterval`](https://kit.svelte.dev/docs/configuration#version) is a non-zero value, SvelteKit will poll for new versions of the app and update the store value to `true` when it detects one. `updated.check()` will force an immediate check, regardless of polling.
+ *
+ * On the server, this store can only be subscribed to during component initialization. In the browser, it can be subscribed to at any time.
+ * @type {import('svelte/store').Readable<boolean> & { check(): Promise<boolean> }}
+ */
 export const updated = {
 	subscribe(fn) {
 		const store = __SVELTEKIT_DEV__ ? get_store('updated') : getStores().updated;
@@ -50,8 +71,8 @@ export const updated = {
 	check: () => {
 		throw new Error(
 			browser
-				? `Cannot check updated store before subscribing`
-				: `Can only check updated store in browser`
+				? 'Cannot check updated store before subscribing'
+				: 'Can only check updated store in browser'
 		);
 	}
 };

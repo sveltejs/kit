@@ -6,44 +6,33 @@ import { test } from '../../../../utils.js';
 test.describe.configure({ mode: 'parallel' });
 
 test.describe('CSS', () => {
-	test('applies imported styles', async ({ page }) => {
+	test('applies styles correctly', async ({ page, get_computed_style }) => {
 		await page.goto('/css');
 
-		expect(
-			await page.evaluate(() => {
-				const el = document.querySelector('.styled');
-				return el && getComputedStyle(el).color;
-			})
-		).toBe('rgb(255, 0, 0)');
+		test.step('applies imported styles', async () => {
+			expect(await get_computed_style('.styled', 'color')).toBe('rgb(255, 0, 0)');
+		});
+
+		test.step('applies imported styles in the correct order', async () => {
+			expect(await get_computed_style('.overridden', 'color')).toBe('rgb(0, 128, 0)');
+		});
+
+		test.step('applies layout styles', async () => {
+			expect(await get_computed_style('footer', 'color')).toBe('rgb(128, 0, 128)');
+		});
+
+		test.step('applies local styles', async () => {
+			expect(await get_computed_style('.also-styled', 'color')).toBe('rgb(0, 0, 255)');
+		});
+
+		test.step('does not apply raw and url', async () => {
+			expect(await get_computed_style('.not', 'color')).toBe('rgb(0, 0, 0)');
+		});
 	});
 
-	test('applies layout styles', async ({ page }) => {
-		await page.goto('/css');
-
-		expect(
-			await page.evaluate(() => {
-				const el = document.querySelector('footer');
-				return el && getComputedStyle(el).color;
-			})
-		).toBe('rgb(128, 0, 128)');
-	});
-
-	test('applies local styles', async ({ page }) => {
-		await page.goto('/css');
-
-		expect(
-			await page.evaluate(() => {
-				const el = document.querySelector('.also-styled');
-				return el && getComputedStyle(el).color;
-			})
-		).toBe('rgb(0, 0, 255)');
-	});
-
-	test('applies imported styles in the correct order', async ({ page }) => {
-		await page.goto('/css');
-
-		const color = await page.$eval('.overridden', (el) => getComputedStyle(el).color);
-		expect(color).toBe('rgb(0, 128, 0)');
+	test('loads styles on routes with encoded characters', async ({ page, get_computed_style }) => {
+		await page.goto('/css/encöded');
+		expect(await get_computed_style('h1', 'color')).toBe('rgb(128, 0, 128)');
 	});
 });
 
@@ -247,8 +236,13 @@ test.describe('Errors', () => {
 			}
 
 			expect(await page.textContent('footer')).toBe('Custom layout');
+
+			const details = javaScriptEnabled
+				? "related to route '/errors/invalid-load-response'"
+				: 'in src/routes/errors/invalid-load-response/+page.js';
+
 			expect(await page.textContent('#message')).toBe(
-				'This is your custom error page saying: "a load function related to route \'/errors/invalid-load-response\' returned an array, but must return a plain object at the top level (i.e. `return {...}`)"'
+				`This is your custom error page saying: "a load function ${details} returned an array, but must return a plain object at the top level (i.e. \`return {...}\`)"`
 			);
 		});
 
@@ -265,13 +259,14 @@ test.describe('Errors', () => {
 			}
 
 			expect(await page.textContent('footer')).toBe('Custom layout');
+
 			expect(await page.textContent('#message')).toBe(
-				'This is your custom error page saying: "a load function related to route \'/errors/invalid-server-load-response\' returned an array, but must return a plain object at the top level (i.e. `return {...}`)"'
+				'This is your custom error page saying: "a load function in src/routes/errors/invalid-server-load-response/+page.server.js returned an array, but must return a plain object at the top level (i.e. `return {...}`)"'
 			);
 		});
 	}
 
-	test('server-side load errors', async ({ page }) => {
+	test('server-side load errors', async ({ page, get_computed_style }) => {
 		await page.goto('/errors/load-server');
 
 		expect(await page.textContent('footer')).toBe('Custom layout');
@@ -279,12 +274,7 @@ test.describe('Errors', () => {
 			'This is your custom error page saying: "Crashing now"'
 		);
 
-		expect(
-			await page.evaluate(() => {
-				const el = document.querySelector('h1');
-				return el && getComputedStyle(el).color;
-			})
-		).toBe('rgb(255, 0, 0)');
+		expect(await get_computed_style('h1', 'color')).toBe('rgb(255, 0, 0)');
 	});
 
 	test('404', async ({ page }) => {
@@ -595,7 +585,7 @@ test.describe('Redirects', () => {
 			const [, response] = await Promise.all([
 				app.goto('/redirect/in-handle?throw&cookies'),
 				page.waitForResponse((request) =>
-					request.url().endsWith('in-handle/__data.json?throw=&cookies=&x-sveltekit-invalidated=_1')
+					request.url().endsWith('in-handle/__data.json?throw=&cookies=&x-sveltekit-invalidated=01')
 				)
 			]);
 			expect((await response.allHeaders())['set-cookie']).toBeDefined();
@@ -763,19 +753,6 @@ test.describe('Routing', () => {
 		expect(await page.textContent('h1')).toBe('Great success!');
 	});
 
-	test('back button returns to previous route when previous route has been navigated to via hash anchor', async ({
-		page,
-		clicknav
-	}) => {
-		await page.goto('/routing/hashes/a');
-
-		await page.locator('[href="#hash-target"]').click();
-		await clicknav('[href="/routing/hashes/b"]');
-
-		await page.goBack();
-		expect(await page.textContent('h1')).toBe('a');
-	});
-
 	test('focus works if page load has hash', async ({ page, browserName }) => {
 		await page.goto('/routing/hashes/target#p2');
 
@@ -800,23 +777,14 @@ test.describe('Routing', () => {
 	});
 
 	test(':target pseudo-selector works when navigating to a hash on the same page', async ({
-		page
+		page,
+		get_computed_style
 	}) => {
 		await page.goto('/routing/hashes/target#p1');
 
-		expect(
-			await page.evaluate(() => {
-				const el = document.getElementById('p1');
-				return el && getComputedStyle(el).color;
-			})
-		).toBe('rgb(255, 0, 0)');
+		expect(await get_computed_style('#p1', 'color')).toBe('rgb(255, 0, 0)');
 		await page.click('[href="#p2"]');
-		expect(
-			await page.evaluate(() => {
-				const el = document.getElementById('p2');
-				return el && getComputedStyle(el).color;
-			})
-		).toBe('rgb(255, 0, 0)');
+		expect(await get_computed_style('#p2', 'color')).toBe('rgb(255, 0, 0)');
 	});
 
 	test('last parameter in a segment wins in cases of ambiguity', async ({ page, clicknav }) => {
@@ -962,6 +930,56 @@ test.describe('Routing', () => {
 			expect(await page.textContent('h1')).toBe('symlinked');
 		});
 	}
+
+	test('trailing slash server with config always', async ({ page, clicknav }) => {
+		await page.goto('/routing/trailing-slash-server');
+		await clicknav('[href="/routing/trailing-slash-server/always"]');
+		expect(await page.textContent('[data-test-id="pathname-store"]')).toBe(
+			'/routing/trailing-slash-server/always/'
+		);
+		expect(await page.textContent('[data-test-id="pathname-data"]')).toBe(
+			'/routing/trailing-slash-server/always/'
+		);
+	});
+
+	test('trailing slash server with config ignore and no trailing slash in URL', async ({
+		page,
+		clicknav
+	}) => {
+		await page.goto('/routing/trailing-slash-server');
+		await clicknav('[href="/routing/trailing-slash-server/ignore"]');
+		expect(await page.textContent('[data-test-id="pathname-store"]')).toBe(
+			'/routing/trailing-slash-server/ignore'
+		);
+		expect(await page.textContent('[data-test-id="pathname-data"]')).toBe(
+			'/routing/trailing-slash-server/ignore'
+		);
+	});
+
+	test('trailing slash server with config ignore and trailing slash in URL', async ({
+		page,
+		clicknav
+	}) => {
+		await page.goto('/routing/trailing-slash-server');
+		await clicknav('[href="/routing/trailing-slash-server/ignore/"]');
+		expect(await page.textContent('[data-test-id="pathname-store"]')).toBe(
+			'/routing/trailing-slash-server/ignore/'
+		);
+		expect(await page.textContent('[data-test-id="pathname-data"]')).toBe(
+			'/routing/trailing-slash-server/ignore/'
+		);
+	});
+
+	test('trailing slash server with config never', async ({ page, clicknav }) => {
+		await page.goto('/routing/trailing-slash-server');
+		await clicknav('[href="/routing/trailing-slash-server/never/"]');
+		expect(await page.textContent('[data-test-id="pathname-store"]')).toBe(
+			'/routing/trailing-slash-server/never'
+		);
+		expect(await page.textContent('[data-test-id="pathname-data"]')).toBe(
+			'/routing/trailing-slash-server/never'
+		);
+	});
 });
 
 test.describe('XSS', () => {

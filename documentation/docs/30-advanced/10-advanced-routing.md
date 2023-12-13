@@ -170,7 +170,7 @@ By default, the _layout hierarchy_ mirrors the _route hierarchy_. In some cases,
 
 ### (group)
 
-Perhaps you have some routes that are 'app' routes that should have one layout (e.g. `/dashboard` or `/item`), and others that are 'marketing' routes that should have a different layout (`/blog` or `/testimonials`). We can group these routes with a directory whose name is wrapped in parentheses — unlike normal directories, `(app)` and `(marketing)` do not affect the URL pathname of the routes inside them:
+Perhaps you have some routes that are 'app' routes that should have one layout (e.g. `/dashboard` or `/item`), and others that are 'marketing' routes that should have a different layout (`/about` or `/testimonials`). We can group these routes with a directory whose name is wrapped in parentheses — unlike normal directories, `(app)` and `(marketing)` do not affect the URL pathname of the routes inside them:
 
 ```diff
 src/routes/
@@ -254,7 +254,7 @@ src/routes/
 Not all use cases are suited for layout grouping, nor should you feel compelled to use them. It might be that your use case would result in complex `(group)` nesting, or that you don't want to introduce a `(group)` for a single outlier. It's perfectly fine to use other means such as composition (reusable `load` functions or Svelte components) or if-statements to achieve what you want. The following example shows a layout that rewinds to the root layout and reuses components and functions that other layouts can also use:
 
 ```svelte
-/// file: src/routes/nested/route/+layout@.svelte
+<!--- file: src/routes/nested/route/+layout@.svelte --->
 <script>
 	import ReusableLayout from '$lib/ReusableLayout.svelte';
 	export let data;

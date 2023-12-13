@@ -22,7 +22,7 @@ export default {
 			// these options are set automatically — see below
 			pages: 'build',
 			assets: 'build',
-			fallback: null,
+			fallback: undefined,
 			precompress: false,
 			strict: true
 		})
@@ -38,7 +38,7 @@ export default {
 export const prerender = true;
 ```
 
-> You must ensure SvelteKit's [`trailingSlash`](page-options#trailingslash) option is set appropriately for your environment. If your host does not render `/a.html` upon receiving a request for `/a` then you will need to set `trailingSlash: 'always'` to create `/a/index.html` instead.
+> You must ensure SvelteKit's [`trailingSlash`](page-options#trailingslash) option is set appropriately for your environment. If your host does not render `/a.html` upon receiving a request for `/a` then you will need to set `trailingSlash: 'always'` in your root layout to create `/a/index.html` instead.
 
 ## Zero-config support
 
@@ -82,26 +82,90 @@ By default, `adapter-static` checks that either all pages and endpoints (if any)
 
 ## GitHub Pages
 
-When building for GitHub Pages, make sure to update [`paths.base`](configuration#paths) to match your repo name, since the site will be served from <https://your-username.github.io/your-repo-name> rather than from the root.
+When building for [GitHub Pages](https://docs.github.com/en/pages/getting-started-with-github-pages/about-github-pages), if your repo name is not equivalent to `your-username.github.io`, make sure to update [`config.kit.paths.base`](configuration#paths) to match your repo name. This is because the site will be served from `https://your-username.github.io/your-repo-name` rather than from the root.
 
-You will have to prevent GitHub's provided Jekyll from managing your site by putting an empty `.nojekyll` file in your `static` folder.
+You'll also want to generate a fallback `404.html` page to replace the default 404 page shown by GitHub Pages.
 
 A config for GitHub Pages might look like the following:
 
 ```js
-// @errors: 2307
+// @errors: 2307 2322
 /// file: svelte.config.js
 import adapter from '@sveltejs/adapter-static';
-
-const dev = process.argv.includes('dev');
 
 /** @type {import('@sveltejs/kit').Config} */
 const config = {
 	kit: {
-		adapter: adapter(),
+		adapter: adapter({
+			fallback: '404.html'
+		}),
 		paths: {
-			base: dev ? '' : '/your-repo-name',
+			base: process.argv.includes('dev') ? '' : process.env.BASE_PATH
 		}
 	}
 };
+
+export default config;
+```
+
+You can use GitHub actions to automatically deploy your site to GitHub Pages when you make a change. Here's an example workflow:
+
+```yaml
+### file: .github/workflows/deploy.yml
+name: Deploy to GitHub Pages
+
+on:
+  push:
+    branches: 'main'
+
+jobs:
+  build_site:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      # If you're using pnpm, add this step then change the commands and cache key below to use `pnpm`
+      # - name: Install pnpm
+      #   uses: pnpm/action-setup@v2
+      #   with:
+      #     version: 8
+
+      - name: Install Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: 18
+          cache: npm
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: build
+        env:
+          BASE_PATH: '/${{ github.event.repository.name }}'
+        run: |
+          npm run build
+
+      - name: Upload Artifacts
+        uses: actions/upload-pages-artifact@v2
+        with:
+          # this should match the `pages` option in your adapter-static options
+          path: 'build/'
+
+  deploy:
+    needs: build_site
+    runs-on: ubuntu-latest
+
+    permissions:
+      pages: write
+      id-token: write
+
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+
+    steps:
+      - name: Deploy
+        id: deployment
+        uses: actions/deploy-pages@v2
 ```

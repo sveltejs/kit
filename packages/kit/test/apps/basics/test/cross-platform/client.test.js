@@ -111,19 +111,19 @@ test.describe('a11y', () => {
 	});
 });
 
-test.describe('beforeNavigate', () => {
-	test('prevents navigation triggered by link click', async ({ page, baseURL }) => {
-		await page.goto('/before-navigate/prevent-navigation');
+test.describe('Navigation lifecycle functions', () => {
+	test('beforeNavigate prevents navigation triggered by link click', async ({ page, baseURL }) => {
+		await page.goto('/navigation-lifecycle/before-navigate/prevent-navigation');
 
-		await page.click('[href="/before-navigate/a"]');
+		await page.click('[href="/navigation-lifecycle/before-navigate/a"]');
 		await page.waitForLoadState('networkidle');
 
-		expect(page.url()).toBe(baseURL + '/before-navigate/prevent-navigation');
+		expect(page.url()).toBe(baseURL + '/navigation-lifecycle/before-navigate/prevent-navigation');
 		expect(await page.innerHTML('pre')).toBe('1 false link');
 	});
 
-	test('prevents navigation to external', async ({ page, baseURL }) => {
-		await page.goto('/before-navigate/prevent-navigation');
+	test('beforeNavigate prevents navigation to external', async ({ page, baseURL }) => {
+		await page.goto('/navigation-lifecycle/before-navigate/prevent-navigation');
 		await page.click('h1'); // The browsers block attempts to prevent navigation on a frame that's never had a user gesture.
 
 		page.on('dialog', (dialog) => dialog.dismiss());
@@ -131,35 +131,43 @@ test.describe('beforeNavigate', () => {
 		page.click('a[href="https://google.de"]'); // do NOT await this, promise only resolves after successful navigation, which never happens
 		await page.waitForTimeout(500);
 		await expect(page.locator('pre')).toHaveText('1 true link');
-		expect(page.url()).toBe(baseURL + '/before-navigate/prevent-navigation');
+		expect(page.url()).toBe(baseURL + '/navigation-lifecycle/before-navigate/prevent-navigation');
 	});
 
-	test('prevents navigation triggered by goto', async ({ page, app, baseURL }) => {
-		await page.goto('/before-navigate/prevent-navigation');
-		await app.goto('/before-navigate/a');
-		expect(page.url()).toBe(baseURL + '/before-navigate/prevent-navigation');
+	test('beforeNavigate prevents navigation triggered by goto', async ({ page, app, baseURL }) => {
+		await page.goto('/navigation-lifecycle/before-navigate/prevent-navigation');
+		await app.goto('/navigation-lifecycle/before-navigate/a');
+		expect(page.url()).toBe(baseURL + '/navigation-lifecycle/before-navigate/prevent-navigation');
 		expect(await page.innerHTML('pre')).toBe('1 false goto');
 	});
 
-	test('prevents external navigation triggered by goto', async ({ page, app, baseURL }) => {
-		await page.goto('/before-navigate/prevent-navigation');
+	test('beforeNavigate prevents external navigation triggered by goto', async ({
+		page,
+		app,
+		baseURL
+	}) => {
+		await page.goto('/navigation-lifecycle/before-navigate/prevent-navigation');
 		await app.goto('https://google.de');
-		expect(page.url()).toBe(baseURL + '/before-navigate/prevent-navigation');
+		expect(page.url()).toBe(baseURL + '/navigation-lifecycle/before-navigate/prevent-navigation');
 		expect(await page.innerHTML('pre')).toBe('1 true goto');
 	});
 
-	test('prevents navigation triggered by back button', async ({ page, app, baseURL }) => {
-		await page.goto('/before-navigate/a');
-		await app.goto('/before-navigate/prevent-navigation');
+	test('beforeNavigate prevents navigation triggered by back button', async ({
+		page,
+		app,
+		baseURL
+	}) => {
+		await page.goto('/navigation-lifecycle/before-navigate/a');
+		await app.goto('/navigation-lifecycle/before-navigate/prevent-navigation');
 		await page.click('h1'); // The browsers block attempts to prevent navigation on a frame that's never had a user gesture.
 
 		await page.goBack();
 		expect(await page.innerHTML('pre')).toBe('1 false popstate');
-		expect(page.url()).toBe(baseURL + '/before-navigate/prevent-navigation');
+		expect(page.url()).toBe(baseURL + '/navigation-lifecycle/before-navigate/prevent-navigation');
 	});
 
-	test('prevents unload', async ({ page }) => {
-		await page.goto('/before-navigate/prevent-navigation');
+	test('beforeNavigate prevents unload', async ({ page }) => {
+		await page.goto('/navigation-lifecycle/before-navigate/prevent-navigation');
 		await page.click('h1'); // The browsers block attempts to prevent navigation on a frame that's never had a user gesture.
 		const type = new Promise((fulfil) => {
 			page.on('dialog', async (dialog) => {
@@ -173,45 +181,79 @@ test.describe('beforeNavigate', () => {
 		expect(await page.innerHTML('pre')).toBe('1 true leave');
 	});
 
-	test('is not triggered on redirect', async ({ page, baseURL }) => {
-		await page.goto('/before-navigate/prevent-navigation');
+	test('beforeNavigate is not triggered on redirect', async ({ page, baseURL }) => {
+		await page.goto('/navigation-lifecycle/before-navigate/prevent-navigation');
 
-		await page.click('[href="/before-navigate/redirect"]');
+		await page.click('[href="/navigation-lifecycle/before-navigate/redirect"]');
 		await page.waitForLoadState('networkidle');
 
-		expect(page.url()).toBe(baseURL + '/before-navigate/prevent-navigation');
+		expect(page.url()).toBe(baseURL + '/navigation-lifecycle/before-navigate/prevent-navigation');
 		expect(await page.innerHTML('pre')).toBe('1 false link');
 	});
 
-	test('is not triggered on target=_blank', async ({ page, baseURL }) => {
-		await page.goto('/before-navigate/prevent-navigation');
+	test('beforeNavigate is not triggered on target=_blank', async ({ page, baseURL }) => {
+		await page.goto('/navigation-lifecycle/before-navigate/prevent-navigation');
 
 		await page.click('a[href="https://google.com"]');
 		await page.waitForTimeout(500);
 
-		expect(page.url()).toBe(baseURL + '/before-navigate/prevent-navigation');
+		expect(page.url()).toBe(baseURL + '/navigation-lifecycle/before-navigate/prevent-navigation');
 		expect(await page.innerHTML('pre')).toBe('0 false undefined');
 	});
 
-	test('is not triggered on click or popstate for hash links', async ({ page }) => {
-		await page.goto('/before-navigate/hash-links');
+	test('beforeNavigate is not triggered on click or popstate for hash links', async ({ page }) => {
+		await page.goto('/navigation-lifecycle/before-navigate/hash-links');
 
 		await page.click('a[href="#x"]');
 		await page.goBack();
 		expect(await page.textContent('h1')).toBe('before_navigate_ran: false');
 	});
 
-	test('cancel() on an unloading navigation does not prevent subsequent beforeNavigate callbacks', async ({
+	test('beforeNavigate cancel() on an unloading navigation does not prevent subsequent beforeNavigate callbacks', async ({
 		page,
 		app
 	}) => {
-		await page.goto('/before-navigate/prevent-navigation');
+		await page.goto('/navigation-lifecycle/before-navigate/prevent-navigation');
 		await page.click('h1'); // The browsers block attempts to prevent navigation on a frame that's never had a user gesture.
 
 		await app.goto('https://google.de');
-		await app.goto('/before-navigate/prevent-navigation?x=1');
+		await app.goto('/navigation-lifecycle/before-navigate/prevent-navigation?x=1');
 
 		expect(await page.innerHTML('pre')).toBe('2 false goto');
+	});
+
+	test('beforeNavigate is triggered after clicking a download link', async ({ page, baseURL }) => {
+		await page.goto('/navigation-lifecycle/before-navigate/prevent-navigation');
+
+		await page.click('a[download]');
+		expect(await page.innerHTML('pre')).toBe('0 false undefined');
+
+		await page.click('a[href="/navigation-lifecycle/before-navigate/a"]');
+
+		expect(page.url()).toBe(baseURL + '/navigation-lifecycle/before-navigate/prevent-navigation');
+		expect(await page.innerHTML('pre')).toBe('1 false link');
+	});
+
+	test('afterNavigate calls callback', async ({ page, clicknav }) => {
+		await page.goto('/navigation-lifecycle/after-navigate/a');
+		expect(await page.textContent('h1')).toBe(
+			'undefined -> /navigation-lifecycle/after-navigate/a'
+		);
+
+		await clicknav('[href="/navigation-lifecycle/after-navigate/b"]');
+		expect(await page.textContent('h1')).toBe(
+			'/navigation-lifecycle/after-navigate/a -> /navigation-lifecycle/after-navigate/b'
+		);
+	});
+
+	test('onNavigate calls callback', async ({ page, clicknav }) => {
+		await page.goto('/navigation-lifecycle/on-navigate/a');
+		expect(await page.textContent('h1')).toBe('undefined -> undefined (...)');
+
+		await clicknav('[href="/navigation-lifecycle/on-navigate/b"]');
+		expect(await page.textContent('h1')).toBe(
+			'/navigation-lifecycle/on-navigate/a -> /navigation-lifecycle/on-navigate/b (link)'
+		);
 	});
 });
 
@@ -263,7 +305,7 @@ test.describe('Scrolling', () => {
 	}) => {
 		await page.goto('/anchor');
 		await clicknav('#third-anchor');
-		expect(await page.evaluate(() => scrollY === 0)).toBeTruthy();
+		expect(await page.evaluate(() => scrollY)).toBe(0);
 	});
 
 	test('url-supplied anchor works when navigated from bottom of page', async ({
@@ -282,7 +324,7 @@ test.describe('Scrolling', () => {
 	}) => {
 		await page.goto('/anchor');
 		await clicknav('#last-anchor-2');
-		expect(await page.evaluate(() => scrollY === 0)).toBeTruthy();
+		expect(await page.evaluate(() => scrollY)).toBe(0);
 	});
 
 	test('scroll is restored after hitting the back button', async ({ baseURL, clicknav, page }) => {
@@ -404,27 +446,16 @@ test.describe('Scrolling', () => {
 	});
 });
 
-test.describe('afterNavigate', () => {
-	test('calls callback', async ({ page, clicknav }) => {
-		await page.goto('/after-navigate/a');
-		expect(await page.textContent('h1')).toBe('undefined -> /after-navigate/a');
-
-		await clicknav('[href="/after-navigate/b"]');
-		expect(await page.textContent('h1')).toBe('/after-navigate/a -> /after-navigate/b');
-	});
-});
-
 test.describe('CSS', () => {
-	test('applies generated component styles (hides announcer)', async ({ page, clicknav }) => {
+	test('applies generated component styles (hides announcer)', async ({
+		page,
+		clicknav,
+		get_computed_style
+	}) => {
 		await page.goto('/css');
 		await clicknav('[href="/css/other"]');
 
-		expect(
-			await page.evaluate(() => {
-				const el = document.querySelector('#svelte-announcer');
-				return el && getComputedStyle(el).position;
-			})
-		).toBe('absolute');
+		expect(await get_computed_style('#svelte-announcer', 'position')).toBe('absolute');
 	});
 });
 
@@ -610,6 +641,36 @@ test.describe('Routing', () => {
 		await page.locator('[href="/routing/hashes/pagestore"]').click();
 		await expect(page.locator('#window-hash')).toHaveText('#target'); // hashchange doesn't fire for these
 		await expect(page.locator('#page-url-hash')).toHaveText('');
+		await page.goBack();
+		expect(await page.textContent('#window-hash')).toBe('#target');
+		expect(await page.textContent('#page-url-hash')).toBe('#target');
+	});
+
+	test('back button returns to previous route when previous route has been navigated to via hash anchor', async ({
+		page,
+		clicknav
+	}) => {
+		await page.goto('/routing/hashes/a');
+
+		await page.locator('[href="#hash-target"]').click();
+		await clicknav('[href="/routing/hashes/b"]');
+
+		await page.goBack();
+		expect(await page.textContent('h1')).toBe('a');
+	});
+
+	test('replaces state if the data-sveltekit-replacestate router option is specified for the hash link', async ({
+		page,
+		clicknav,
+		baseURL
+	}) => {
+		await page.goto('/routing/hashes/a');
+
+		await clicknav('[href="#hash-target"]');
+		await clicknav('[href="#replace-state"]');
+
+		await page.goBack();
+		expect(await page.url()).toBe(`${baseURL}/routing/hashes/a`);
 	});
 
 	test('does not normalize external path', async ({ page, start_server }) => {
@@ -741,4 +802,25 @@ test.describe('Interactivity', () => {
 
 		expect(errored).toBe(false);
 	});
+});
+
+test.describe('Load', () => {
+	if (process.env.DEV) {
+		test('using window.fetch does not cause false-positive warning', async ({ page, baseURL }) => {
+			/** @type {string[]} */
+			const warnings = [];
+			page.on('console', (msg) => {
+				if (msg.type() === 'warning') {
+					warnings.push(msg.text());
+				}
+			});
+
+			await page.goto('/load/window-fetch/outside-load');
+			expect(await page.textContent('h1')).toBe('42');
+
+			expect(warnings).not.toContain(
+				`Loading ${baseURL}/load/window-fetch/data.json using \`window.fetch\`. For best results, use the \`fetch\` that is passed to your \`load\` function: https://kit.svelte.dev/docs/load#making-fetch-requests`
+			);
+		});
+	}
 });

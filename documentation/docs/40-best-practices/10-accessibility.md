@@ -17,7 +17,7 @@ Since navigation between pages in SvelteKit happens without reloading the page (
 Because of this behavior, every page in your app should have a unique, descriptive title. In SvelteKit, you can do this by placing a `<svelte:head>` element on each page:
 
 ```svelte
-/// file: src/routes/+page.svelte
+<!--- file: src/routes/+page.svelte --->
 <svelte:head>
 	<title>Todo List</title>
 </svelte:head>

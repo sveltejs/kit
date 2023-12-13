@@ -1,6 +1,6 @@
 import { join } from 'node:path';
 
-/** @typedef {import('./types').Validator} Validator */
+/** @typedef {import('./types.js').Validator} Validator */
 
 const directives = object({
 	'child-src': string_array(),
@@ -111,11 +111,17 @@ const options = object(
 				checkOrigin: boolean(true)
 			}),
 
+			dangerZone: object({
+				// TODO 2.0: Remove this
+				trackServerFetches: boolean(false)
+			}),
+
 			embedded: boolean(false),
 
 			env: object({
 				dir: string(process.cwd()),
-				publicPrefix: string('PUBLIC_')
+				publicPrefix: string('PUBLIC_'),
+				privatePrefix: string('')
 			}),
 
 			files: object({
@@ -201,17 +207,47 @@ const options = object(
 					return input;
 				}),
 
-				handleHttpError: validate('fail', (input, keypath) => {
-					if (typeof input === 'function') return input;
-					if (['fail', 'warn', 'ignore'].includes(input)) return input;
-					throw new Error(`${keypath} should be "fail", "warn", "ignore" or a custom function`);
-				}),
+				handleHttpError: validate(
+					(/** @type {any} */ { message }) => {
+						throw new Error(
+							message +
+								'\nTo suppress or handle this error, implement `handleHttpError` in https://kit.svelte.dev/docs/configuration#prerender'
+						);
+					},
+					(input, keypath) => {
+						if (typeof input === 'function') return input;
+						if (['fail', 'warn', 'ignore'].includes(input)) return input;
+						throw new Error(`${keypath} should be "fail", "warn", "ignore" or a custom function`);
+					}
+				),
 
-				handleMissingId: validate('fail', (input, keypath) => {
-					if (typeof input === 'function') return input;
-					if (['fail', 'warn', 'ignore'].includes(input)) return input;
-					throw new Error(`${keypath} should be "fail", "warn", "ignore" or a custom function`);
-				}),
+				handleMissingId: validate(
+					(/** @type {any} */ { message }) => {
+						throw new Error(
+							message +
+								'\nTo suppress or handle this error, implement `handleMissingId` in https://kit.svelte.dev/docs/configuration#prerender'
+						);
+					},
+					(input, keypath) => {
+						if (typeof input === 'function') return input;
+						if (['fail', 'warn', 'ignore'].includes(input)) return input;
+						throw new Error(`${keypath} should be "fail", "warn", "ignore" or a custom function`);
+					}
+				),
+
+				handleEntryGeneratorMismatch: validate(
+					(/** @type {any} */ { message }) => {
+						throw new Error(
+							message +
+								'\nTo suppress or handle this error, implement `handleEntryGeneratorMismatch` in https://kit.svelte.dev/docs/configuration#prerender'
+						);
+					},
+					(input, keypath) => {
+						if (typeof input === 'function') return input;
+						if (['fail', 'warn', 'ignore'].includes(input)) return input;
+						throw new Error(`${keypath} should be "fail", "warn", "ignore" or a custom function`);
+					}
+				),
 
 				origin: validate('http://sveltekit-prerender', (input, keypath) => {
 					assert_string(input, keypath);

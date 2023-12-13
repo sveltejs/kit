@@ -1,8 +1,7 @@
 import { sveltekit } from '@sveltejs/kit/vite';
-import * as path from 'path';
-import { imagetools } from 'vite-imagetools';
-
-const supportedExtensions = ['.png', '.jpg', '.jpeg'];
+import { enhancedImages } from '@sveltejs/enhanced-img';
+import browserslist from 'browserslist';
+import { browserslistToTargets } from 'lightningcss';
 
 /** @type {import('vite').UserConfig} */
 const config = {
@@ -10,21 +9,17 @@ const config = {
 
 	logLevel: 'info',
 
-	plugins: [
-		imagetools({
-			defaultDirectives: (url) => {
-				const extension = path.extname(url.pathname);
-				if (supportedExtensions.includes(extension)) {
-					return new URLSearchParams({
-						format: 'avif;webp;' + extension.slice(1),
-						picture: true
-					});
-				}
-				return new URLSearchParams();
-			}
-		}),
-		sveltekit()
-	],
+	css: {
+		transformer: 'lightningcss',
+		lightningcss: {
+			targets: browserslistToTargets(browserslist(['>0.2%', 'not dead']))
+		}
+	},
+	build: {
+		cssMinify: 'lightningcss'
+	},
+
+	plugins: [enhancedImages(), sveltekit()],
 
 	ssr: {
 		noExternal: ['@sveltejs/site-kit']

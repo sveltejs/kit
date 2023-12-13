@@ -58,15 +58,28 @@ test.describe('Cookies', () => {
 
 test.describe('CSRF', () => {
 	test('Blocks requests with incorrect origin', async ({ baseURL }) => {
-		const res = await fetch(`${baseURL}/csrf`, {
-			method: 'POST',
-			headers: {
-				'content-type': 'application/x-www-form-urlencoded'
+		const content_types = [
+			'application/x-www-form-urlencoded',
+			'multipart/form-data',
+			'text/plain',
+			'text/plaiN'
+		];
+		const methods = ['POST', 'PUT', 'PATCH', 'DELETE'];
+		for (const method of methods) {
+			for (const content_type of content_types) {
+				const res = await fetch(`${baseURL}/csrf`, {
+					method,
+					headers: {
+						'content-type': content_type
+					}
+				});
+				const message = `request method: ${method}, content-type: ${content_type}`;
+				expect(res.status, message).toBe(403);
+				expect(await res.text(), message).toBe(
+					`Cross-site ${method} form submissions are forbidden`
+				);
 			}
-		});
-
-		expect(res.status).toBe(403);
-		expect(await res.text()).toBe('Cross-site POST form submissions are forbidden');
+		}
 	});
 });
 
@@ -112,7 +125,10 @@ test.describe('Endpoints', () => {
 		const response = await request.post('/endpoint-output/body');
 
 		expect(response.status()).toBe(405);
-		expect(response.headers()['allow'].includes('GET'));
+
+		const allow_header = response.headers()['allow'];
+		expect(allow_header).toMatch(/\bGET\b/);
+		expect(allow_header).toMatch(/\bHEAD\b/);
 	});
 
 	// TODO all the remaining tests in this section are really only testing
@@ -164,15 +180,75 @@ test.describe('Endpoints', () => {
 		expect(await response.text()).toEqual(digest);
 	});
 
-	test('OPTIONS handler', async ({ request }) => {
-		const url = '/endpoint-output/options';
+	// TODO see above
+	test('invalid headers return a 500', async ({ request }) => {
+		const response = await request.get('/endpoint-output/head-write-error');
+		expect(response.status()).toBe(500);
+		expect(await response.text()).toMatch(
+			'TypeError [ERR_INVALID_CHAR]: Invalid character in header content ["x-test"]'
+		);
+	});
 
-		var response = await request.fetch(url, {
+	test('OPTIONS handler', async ({ request }) => {
+		const url = '/endpoint-output';
+
+		const response = await request.fetch(url, {
 			method: 'OPTIONS'
 		});
 
 		expect(response.status()).toBe(200);
 		expect(await response.text()).toBe('ok');
+	});
+
+	test('HEAD handler', async ({ request }) => {
+		const url = '/endpoint-output/head-handler';
+
+		const page_response = await request.fetch(url, {
+			method: 'HEAD',
+			headers: {
+				accept: 'text/html'
+			}
+		});
+
+		expect(page_response.status()).toBe(200);
+		expect(await page_response.text()).toBe('');
+		expect(page_response.headers()['x-sveltekit-page']).toBe('true');
+
+		const endpoint_response = await request.fetch(url, {
+			method: 'HEAD',
+			headers: {
+				accept: 'application/json'
+			}
+		});
+
+		expect(endpoint_response.status()).toBe(200);
+		expect(await endpoint_response.text()).toBe('');
+		expect(endpoint_response.headers()['x-sveltekit-head-endpoint']).toBe('true');
+	});
+
+	test('catch-all handler', async ({ request }) => {
+		const url = '/endpoint-output/fallback';
+
+		let response = await request.fetch(url, {
+			method: 'GET'
+		});
+
+		expect(response.status()).toBe(200);
+		expect(await response.text()).toBe('ok');
+
+		response = await request.fetch(url, {
+			method: 'MOVE' // also works with arcane methods
+		});
+
+		expect(response.status()).toBe(200);
+		expect(await response.text()).toBe('catch-all');
+
+		response = await request.fetch(url, {
+			method: 'OPTIONS'
+		});
+
+		expect(response.status()).toBe(200);
+		expect(await response.text()).toBe('catch-all');
 	});
 });
 
@@ -387,6 +463,27 @@ test.describe('Load', () => {
 		await page.goto(`/load/fetch-origin-external?port=${port}`);
 		expect(await page.textContent('h1')).toBe(`origin: ${new URL(baseURL).origin}`);
 	});
+
+	test('does not run when using invalid request methods', async ({ request }) => {
+		const load_url = '/load';
+
+		let response = await request.fetch(load_url, {
+			method: 'OPTIONS'
+		});
+
+		expect(response.status()).toBe(204);
+		expect(await response.text()).toBe('');
+		expect(response.headers()['allow']).toBe('GET, HEAD, OPTIONS');
+
+		const actions_url = '/actions/enhance';
+		response = await request.fetch(actions_url, {
+			method: 'OPTIONS'
+		});
+
+		expect(response.status()).toBe(204);
+		expect(await response.text()).toBe('');
+		expect(response.headers()['allow']).toBe('GET, HEAD, OPTIONS, POST');
+	});
 });
 
 test.describe('Routing', () => {
@@ -404,6 +501,21 @@ test.describe('Routing', () => {
 
 		const data = await response.json();
 		expect(data).toEqual({ surprise: 'lol' });
+	});
+
+	test('Vite trailing slash redirect for prerendered pages retains URL query string', async ({
+		request
+	}) => {
+		if (process.env.DEV) return;
+
+		let response = await request.get('/routing/prerendered/trailing-slash/always?a=1');
+		expect(new URL(response.url()).search).toBe('?a=1');
+
+		response = await request.get('/routing/prerendered/trailing-slash/never/?a=1');
+		expect(new URL(response.url()).search).toBe('?a=1');
+
+		response = await request.get('/routing/prerendered/trailing-slash/ignore/?a=1');
+		expect(new URL(response.url()).search).toBe('?a=1');
 	});
 });
 
@@ -442,13 +554,13 @@ test.describe('Static files', () => {
 	});
 
 	test('Vite serves assets in allowed directories', async ({ page, request }) => {
-		await page.goto('/assets');
-		const path = await page.textContent('h1');
+		await page.goto('/asset-import');
+		const path = await page.getAttribute('img[alt=potatoes]', 'src');
 		if (!path) throw new Error('Could not determine path');
 
 		const r1 = await request.get(path);
 		expect(r1.status()).toBe(200);
-		expect(await r1.text()).toContain('http://www.w3.org/2000/svg');
+		expect(await r1.text()).toBeTruthy();
 
 		// check that we can fetch a route which overlaps with the name of a file
 		const r2 = await request.get('/package.json');
@@ -471,8 +583,10 @@ test.describe('Static files', () => {
 test.describe('setHeaders', () => {
 	test('allows multiple set-cookie headers with different values', async ({ page }) => {
 		const response = await page.goto('/headers/set-cookie/sub');
-		const cookies = (await response?.allHeaders())['set-cookie'];
-		expect(cookies.includes('cookie1=value1') && cookies.includes('cookie2=value2')).toBe(true);
+		const cookies = (await response.allHeaders())['set-cookie'];
+
+		expect(cookies).toMatch('cookie1=value1');
+		expect(cookies).toMatch('cookie2=value2');
 	});
 });
 
@@ -480,11 +594,10 @@ test.describe('cookies', () => {
 	test('cookie.serialize created correct cookie header string', async ({ page }) => {
 		const response = await page.goto('/cookies/serialize');
 		const cookies = await response.headerValue('set-cookie');
-		expect(
-			cookies.includes('before=before') &&
-				cookies.includes('after=after') &&
-				cookies.includes('endpoint=endpoint')
-		).toBe(true);
+
+		expect(cookies).toMatch('before=before');
+		expect(cookies).toMatch('after=after');
+		expect(cookies).toMatch('endpoint=endpoint');
 	});
 });
 
@@ -495,5 +608,11 @@ test.describe('Miscellaneous', () => {
 		const response = await request.get('/_app/version.json');
 		const headers = response.headers();
 		expect(headers['cache-control'] || '').not.toContain('immutable');
+	});
+
+	test('handles responses with immutable headers', async ({ request }) => {
+		const response = await request.get('/immutable-headers');
+		expect(response.status()).toBe(200);
+		expect(await response.text()).toBe('foo');
 	});
 });

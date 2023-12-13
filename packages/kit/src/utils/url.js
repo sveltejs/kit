@@ -1,14 +1,19 @@
 import { BROWSER } from 'esm-env';
 
+/**
+ * Matches a URI scheme. See https://www.rfc-editor.org/rfc/rfc3986#section-3.1
+ * @type {RegExp}
+ */
+export const SCHEME = /^[a-z][a-z\d+\-.]+:/i;
+
 const absolute = /^([a-z]+:)?\/?\//;
-const scheme = /^[a-z]+:/;
 
 /**
  * @param {string} base
  * @param {string} path
  */
 export function resolve(base, path) {
-	if (scheme.test(path)) return path;
+	if (SCHEME.test(path)) return path;
 	if (path[0] === '#') return base + path;
 
 	const base_match = absolute.exec(base);
@@ -93,9 +98,15 @@ export function decode_uri(uri) {
 /**
  * URL properties that could change during the lifetime of the page,
  * which excludes things like `origin`
- * @type {Array<keyof URL>}
  */
-const tracked_url_properties = ['href', 'pathname', 'search', 'searchParams', 'toString', 'toJSON'];
+const tracked_url_properties = /** @type {const} */ ([
+	'href',
+	'pathname',
+	'search',
+	'searchParams',
+	'toString',
+	'toJSON'
+]);
 
 /**
  * @param {URL} url
@@ -105,12 +116,10 @@ export function make_trackable(url, callback) {
 	const tracked = new URL(url);
 
 	for (const property of tracked_url_properties) {
-		let value = tracked[property];
-
 		Object.defineProperty(tracked, property, {
 			get() {
 				callback();
-				return value;
+				return url[property];
 			},
 
 			enumerable: true,
@@ -135,6 +144,8 @@ export function make_trackable(url, callback) {
  * @param {URL} url
  */
 export function disable_hash(url) {
+	allow_nodejs_console_log(url);
+
 	Object.defineProperty(url, 'hash', {
 		get() {
 			throw new Error(
@@ -149,12 +160,27 @@ export function disable_hash(url) {
  * @param {URL} url
  */
 export function disable_search(url) {
+	allow_nodejs_console_log(url);
+
 	for (const property of ['search', 'searchParams']) {
 		Object.defineProperty(url, property, {
 			get() {
 				throw new Error(`Cannot access url.${property} on a page with prerendering enabled`);
 			}
 		});
+	}
+}
+
+/**
+ * Allow URL to be console logged, bypassing disabled properties.
+ * @param {URL} url
+ */
+function allow_nodejs_console_log(url) {
+	if (!BROWSER) {
+		// @ts-ignore
+		url[Symbol.for('nodejs.util.inspect.custom')] = (depth, opts, inspect) => {
+			return inspect(new URL(url), opts);
+		};
 	}
 }
 

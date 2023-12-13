@@ -4,19 +4,21 @@ import * as paths from '__sveltekit/paths';
 
 /**
  * @param {{
- *   event: import('types').RequestEvent;
+ *   event: import('@sveltejs/kit').RequestEvent;
  *   options: import('types').SSROptions;
- *   manifest: import('types').SSRManifest;
+ *   manifest: import('@sveltejs/kit').SSRManifest;
  *   state: import('types').SSRState;
  *   get_cookie_header: (url: URL, header: string | null) => string;
+ *   set_internal: (name: string, value: string, opts: import('cookie').CookieSerializeOptions) => void;
  * }} opts
  * @returns {typeof fetch}
  */
-export function create_fetch({ event, options, manifest, state, get_cookie_header }) {
-	return async (info, init) => {
+export function create_fetch({ event, options, manifest, state, get_cookie_header, set_internal }) {
+	/**
+	 * @type {typeof fetch}
+	 */
+	const server_fetch = async (info, init) => {
 		const original_request = normalize_fetch_input(info, init, event.url);
-
-		const request_body = init?.body;
 
 		// some runtimes (e.g. Cloudflare) error if you access `request.mode`,
 		// annoyingly, so we need to read the value from the `init` object instead
@@ -24,7 +26,7 @@ export function create_fetch({ event, options, manifest, state, get_cookie_heade
 		let credentials =
 			(info instanceof Request ? info.credentials : init?.credentials) ?? 'same-origin';
 
-		return await options.hooks.handleFetch({
+		return options.hooks.handleFetch({
 			event,
 			request: original_request,
 			fetch: async (info, init) => {
@@ -52,7 +54,7 @@ export function create_fetch({ event, options, manifest, state, get_cookie_heade
 				}
 
 				if (url.origin !== event.url.origin) {
-					// allow cookie passthrough for "same-origin"
+					// Allow cookie passthrough for "credentials: same-origin" and "credentials: include"
 					// if SvelteKit is serving my.domain.com:
 					// -        domain.com WILL NOT receive cookies
 					// -     my.domain.com WILL receive cookies
@@ -60,6 +62,8 @@ export function create_fetch({ event, options, manifest, state, get_cookie_heade
 					// - sub.my.domain.com WILL receive cookies
 					// ports do not affect the resolution
 					// leading dot prevents mydomain.com matching domain.com
+					// Do not forward other cookies for "credentials: include" because we don't know
+					// which cookie belongs to which domain (browser does not pass this info)
 					if (`.${url.hostname}`.endsWith(`.${event.url.hostname}`) && credentials !== 'omit') {
 						const cookie = get_cookie_header(url, request.headers.get('cookie'));
 						if (cookie) request.headers.set('cookie', cookie);
@@ -67,9 +71,6 @@ export function create_fetch({ event, options, manifest, state, get_cookie_heade
 
 					return fetch(request);
 				}
-
-				/** @type {Response} */
-				let response;
 
 				// handle fetch requests for static assets. e.g. prebaked data, etc.
 				// we need to support everything the browser's fetch supports
@@ -111,15 +112,6 @@ export function create_fetch({ event, options, manifest, state, get_cookie_heade
 					}
 				}
 
-				if (request_body && typeof request_body !== 'string' && !ArrayBuffer.isView(request_body)) {
-					// TODO is this still necessary? we just bail out below
-					// per https://developer.mozilla.org/en-US/docs/Web/API/Request/Request, this can be a
-					// Blob, BufferSource, FormData, URLSearchParams, USVString, or ReadableStream object.
-					// non-string bodies are irksome to deal with, but luckily aren't particularly useful
-					// in this context anyway, so we take the easy route and ban them
-					throw new Error('Request body must be a string or TypedArray');
-				}
-
 				if (!request.headers.has('accept')) {
 					request.headers.set('accept', '*/*');
 				}
@@ -131,7 +123,8 @@ export function create_fetch({ event, options, manifest, state, get_cookie_heade
 					);
 				}
 
-				response = await respond(request, options, manifest, {
+				/** @type {Response} */
+				const response = await respond(request, options, manifest, {
 					...state,
 					depth: state.depth + 1
 				});
@@ -142,7 +135,7 @@ export function create_fetch({ event, options, manifest, state, get_cookie_heade
 						const { name, value, ...options } = set_cookie_parser.parseString(str);
 
 						// options.sameSite is string, something more specific is required - type cast is safe
-						event.cookies.set(
+						set_internal(
 							name,
 							value,
 							/** @type {import('cookie').CookieSerializeOptions} */ (options)
@@ -153,6 +146,15 @@ export function create_fetch({ event, options, manifest, state, get_cookie_heade
 				return response;
 			}
 		});
+	};
+
+	// Don't make this function `async`! Otherwise, the user has to `catch` promises they use for streaming responses or else
+	// it will be an unhandled rejection. Instead, we add a `.catch(() => {})` ourselves below to this from happening.
+	return (input, init) => {
+		// See docs in fetch.js for why we need to do this
+		const response = server_fetch(input, init);
+		response.catch(() => {});
+		return response;
 	};
 }
 

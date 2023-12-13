@@ -4,22 +4,24 @@
 		"checkJs": true,
 		"noEmit": true,
 		"strict": true,
-		"target": "es2020",
-		"module": "es2022",
-		"moduleResolution": "node",
+		"target": "es2022",
+		"module": "node16",
+		"moduleResolution": "node16",
 		"allowSyntheticDefaultImports": true,
 		"paths": {
-			"@sveltejs/kit": ["./types/index"],
+			"@sveltejs/kit": ["./src/exports/public.d.ts"],
+			"@sveltejs/kit/node": ["./src/exports/node/index.js"],
 			// internal use only
-			"types": ["./types/internal"]
+			"types": ["./src/types/internal.d.ts"]
 		},
 		"noUnusedLocals": true,
 		"noUnusedParameters": true
 	},
 	"include": [
+		"postinstall.js",
 		"scripts/**/*",
 		"src/**/*",
-		"types/**/*",
+		"src/types/**/*",
 		"../../sites/kit.svelte.dev/scripts/extract-types.js"
 	],
 	"exclude": ["./**/write_types/test/**"]

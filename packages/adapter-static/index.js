@@ -1,14 +1,15 @@
 import path from 'node:path';
 import { platforms } from './platforms.js';
 
-/** @type {import('.').default} */
+/** @type {import('./index.js').default} */
 export default function (options) {
 	return {
 		name: '@sveltejs/adapter-static',
 
 		async adapt(builder) {
 			if (!options?.fallback) {
-				if (builder.routes.some((route) => route.prerender !== true) && options?.strict !== false) {
+				const dynamic_routes = builder.routes.filter((route) => route.prerender !== true);
+				if (dynamic_routes.length > 0 && options?.strict !== false) {
 					const prefix = path.relative('.', builder.config.kit.files.routes);
 					const has_param_routes = builder.routes.some((route) => route.id.includes('['));
 					const config_option =
@@ -22,10 +23,10 @@ export default function (options) {
 
 					builder.log.error(
 						`@sveltejs/adapter-static: all routes must be fully prerenderable, but found the following routes that are dynamic:
-${builder.routes.map((route) => `  - ${path.posix.join(prefix, route.id)}`).join('\n')}
+${dynamic_routes.map((route) => `  - ${path.posix.join(prefix, route.id)}`).join('\n')}
 
 You have the following options:
-  - set the \`fallback\` option — see https://github.com/sveltejs/kit/tree/master/packages/adapter-static#spa-mode for more info.
+  - set the \`fallback\` option — see https://kit.svelte.dev/docs/single-page-apps#usage for more info.
   - add \`export const prerender = true\` to your root \`+layout.js/.ts\` or \`+layout.server.js/.ts\` file. This will try to prerender all pages.
   - add \`export const prerender = true\` to any \`+server.js/ts\` files that are not fetched by page \`load\` functions.
 ${config_option}
@@ -55,7 +56,7 @@ See https://kit.svelte.dev/docs/page-options#prerender for more details`
 				assets = pages,
 				fallback,
 				precompress
-			} = options ?? platform?.defaults ?? /** @type {import('./index').AdapterOptions} */ ({});
+			} = options ?? platform?.defaults ?? /** @type {import('./index.js').AdapterOptions} */ ({});
 
 			builder.rimraf(assets);
 			builder.rimraf(pages);

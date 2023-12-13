@@ -19,7 +19,7 @@ export function error_to_pojo(error) {
 		};
 	}
 
-	const { name, message, stack, cause, ...custom } = error;
+	const { name, message, stack, ...custom } = error;
 	return { name, message, stack, ...custom };
 }
 
@@ -53,6 +53,15 @@ export const handle = sequence(
 			throw new Error(
 				'__data.json requests should have the suffix stripped from the URL and isDataRequest set to true'
 			);
+		}
+		return resolve(event);
+	},
+	({ event, resolve }) => {
+		if (
+			event.request.headers.has('host') &&
+			!event.request.headers.has('user-agent') !== event.isSubRequest
+		) {
+			throw new Error('SSR API sub-requests should have isSubRequest set to true');
 		}
 		return resolve(event);
 	},
@@ -112,6 +121,19 @@ export const handle = sequence(
 			return event.fetch('/prerendering/prerendered-endpoint/api');
 		}
 
+		return resolve(event);
+	},
+	async ({ event, resolve }) => {
+		if (event.url.pathname === '/actions/redirect-in-handle' && event.request.method === 'POST') {
+			throw redirect(303, '/actions/enhance');
+		}
+
+		return resolve(event);
+	},
+	async ({ event, resolve }) => {
+		if (['/non-existent-route', '/non-existent-route-loop'].includes(event.url.pathname)) {
+			event.locals.url = new URL(event.request.url);
+		}
 		return resolve(event);
 	}
 );

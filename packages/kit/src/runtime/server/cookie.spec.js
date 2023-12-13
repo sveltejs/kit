@@ -1,5 +1,4 @@
-import { test } from 'uvu';
-import * as assert from 'uvu/assert';
+import { assert, expect, test } from 'vitest';
 import { domain_matches, path_matches, get_cookies } from './cookie.js';
 import { installPolyfills } from '../../exports/node/polyfills.js';
 
@@ -41,7 +40,7 @@ paths.positive.forEach(([path, constraint]) => {
 
 paths.negative.forEach(([path, constraint]) => {
 	test(`! ${path} / ${constraint}`, () => {
-		assert.ok(!path_matches(path, constraint));
+		assert.isFalse(path_matches(path, constraint));
 	});
 });
 
@@ -59,15 +58,15 @@ const cookies_setup = ({ href, headers } = {}) => {
 
 test('a cookie should not be present after it is deleted', () => {
 	const { cookies } = cookies_setup();
-	cookies.set('a', 'b');
-	assert.equal(cookies.get('a'), 'b');
-	cookies.delete('a');
-	assert.not(cookies.get('a'));
+	cookies.set('a', 'b', { path: '/' });
+	expect(cookies.get('a')).toEqual('b');
+	cookies.delete('a', { path: '/' });
+	assert.isNotOk(cookies.get('a'));
 });
 
 test('default values when set is called', () => {
 	const { cookies, new_cookies } = cookies_setup();
-	cookies.set('a', 'b');
+	cookies.set('a', 'b', { path: '/' });
 	const opts = new_cookies['a']?.options;
 	assert.equal(opts?.secure, true);
 	assert.equal(opts?.httpOnly, true);
@@ -87,7 +86,7 @@ test('default values when set is called on sub path', () => {
 
 test('default values when on localhost', () => {
 	const { cookies, new_cookies } = cookies_setup({ href: 'http://localhost:1234' });
-	cookies.set('a', 'b');
+	cookies.set('a', 'b', { path: '/' });
 	const opts = new_cookies['a']?.options;
 	assert.equal(opts?.secure, false);
 });
@@ -104,7 +103,7 @@ test('overridden defaults when set is called', () => {
 
 test('default values when delete is called', () => {
 	const { cookies, new_cookies } = cookies_setup();
-	cookies.delete('a');
+	cookies.delete('a', { path: '/' });
 	const opts = new_cookies['a']?.options;
 	assert.equal(opts?.secure, true);
 	assert.equal(opts?.httpOnly, true);
@@ -126,15 +125,15 @@ test('overridden defaults when delete is called', () => {
 
 test('cannot override maxAge on delete', () => {
 	const { cookies, new_cookies } = cookies_setup();
-	cookies.delete('a', { maxAge: 1234 });
+	cookies.delete('a', { path: '/', maxAge: 1234 });
 	const opts = new_cookies['a']?.options;
 	assert.equal(opts?.maxAge, 0);
 });
 
 test('last cookie set with the same name wins', () => {
 	const { cookies, new_cookies } = cookies_setup();
-	cookies.set('a', 'foo');
-	cookies.set('a', 'bar');
+	cookies.set('a', 'foo', { path: '/' });
+	cookies.set('a', 'bar', { path: '/' });
 	const entry = new_cookies['a'];
 	assert.equal(entry?.value, 'bar');
 });
@@ -142,8 +141,8 @@ test('last cookie set with the same name wins', () => {
 test('cookie names are case sensitive', () => {
 	const { cookies, new_cookies } = cookies_setup();
 	// not that one should do this, but we follow the spec...
-	cookies.set('a', 'foo');
-	cookies.set('A', 'bar');
+	cookies.set('a', 'foo', { path: '/' });
+	cookies.set('A', 'bar', { path: '/' });
 	const entrya = new_cookies['a'];
 	const entryA = new_cookies['A'];
 	assert.equal(entrya?.value, 'foo');
@@ -158,8 +157,8 @@ test('serialized cookie header should be url-encoded', () => {
 			cookie: 'a=f%C3%BC; b=foo+bar' // a=fü
 		}
 	});
-	cookies.set('c', 'fö'); // should use default encoding
-	cookies.set('d', 'fö', { encode: () => 'öf' }); // should respect `encode`
+	cookies.set('c', 'fö', { path: '/' }); // should use default encoding
+	cookies.set('d', 'fö', { path: '/', encode: () => 'öf' }); // should respect `encode`
 	const header = get_cookie_header(new URL(href), 'e=f%C3%A4; f=foo+bar');
 	assert.equal(header, 'a=f%C3%BC; b=foo+bar; c=f%C3%B6; d=öf; e=f%C3%A4; f=foo+bar');
 });
@@ -170,29 +169,45 @@ test('warns if cookie exceeds 4,129 bytes', () => {
 
 	try {
 		const { cookies } = cookies_setup();
-		cookies.set('a', 'a'.repeat(4097));
+		cookies.set('a', 'a'.repeat(4097), { path: '/' });
 	} catch (e) {
 		const error = /** @type {Error} */ (e);
 
-		assert.equal(error.message, `Cookie "a" is too large, and will be discarded by the browser`);
+		assert.equal(error.message, 'Cookie "a" is too large, and will be discarded by the browser');
+	} finally {
+		// @ts-expect-error
+		globalThis.__SVELTEKIT_DEV__ = false;
 	}
-
-	// @ts-expect-error
-	globalThis.__SVELTEKIT_DEV__ = false;
 });
 
 test('get all cookies from header and set calls', () => {
 	const { cookies } = cookies_setup();
-	assert.equal(cookies.getAll(), [{ name: 'a', value: 'b' }]);
+	expect(cookies.getAll()).toEqual([{ name: 'a', value: 'b' }]);
 
-	cookies.set('a', 'foo');
-	cookies.set('a', 'bar');
-	cookies.set('b', 'baz');
+	cookies.set('a', 'foo', { path: '/' });
+	cookies.set('a', 'bar', { path: '/' });
+	cookies.set('b', 'baz', { path: '/' });
 
-	assert.equal(cookies.getAll(), [
+	expect(cookies.getAll()).toEqual([
 		{ name: 'a', value: 'bar' },
 		{ name: 'b', value: 'baz' }
 	]);
 });
 
-test.run();
+test("set_internal isn't affected by defaults", () => {
+	const { cookies, new_cookies, set_internal } = cookies_setup({
+		href: 'https://example.com/a/b/c'
+	});
+
+	const options = /** @type {const} */ ({
+		secure: false,
+		httpOnly: false,
+		sameSite: 'none',
+		path: '/a/b/c'
+	});
+
+	set_internal('test', 'foo', options);
+
+	expect(cookies.get('test')).toEqual('foo');
+	expect(new_cookies['test']?.options).toEqual(options);
+});
