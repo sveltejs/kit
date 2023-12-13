@@ -50,20 +50,6 @@ export function deserialize(result) {
 }
 
 /**
- * @param {string} old_name
- * @param {string} new_name
- * @param {string} call_location
- * @returns void
- */
-function warn_on_access(old_name, new_name, call_location) {
-	if (!DEV) return;
-	// TODO 2.0: Remove this code
-	console.warn(
-		`\`${old_name}\` has been deprecated in favor of \`${new_name}\`. \`${old_name}\` will be removed in a future version. (Called from ${call_location})`
-	);
-}
-
-/**
  * Shallow clone an element, so that we can access e.g. `form.action` without worrying
  * that someone has added an `<input name="action">` (https://github.com/sveltejs/kit/issues/7593)
  * @template {HTMLElement} T
@@ -182,15 +168,7 @@ export function enhance(form_element, submit = () => {}) {
 				action,
 				cancel,
 				controller,
-				get data() {
-					warn_on_access('data', 'formData', 'use:enhance submit function');
-					return form_data;
-				},
 				formData: form_data,
-				get form() {
-					warn_on_access('form', 'formElement', 'use:enhance submit function');
-					return form_element;
-				},
 				formElement: form_element,
 				submitter: event.submitter
 			})) ?? fallback_callback;
@@ -220,15 +198,7 @@ export function enhance(form_element, submit = () => {}) {
 
 		callback({
 			action,
-			get data() {
-				warn_on_access('data', 'formData', 'callback returned from use:enhance submit function');
-				return form_data;
-			},
 			formData: form_data,
-			get form() {
-				warn_on_access('form', 'formElement', 'callback returned from use:enhance submit function');
-				return form_element;
-			},
 			formElement: form_element,
 			update: (opts) =>
 				fallback_callback({
