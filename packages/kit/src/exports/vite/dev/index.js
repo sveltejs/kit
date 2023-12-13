@@ -220,7 +220,7 @@ export async function dev(vite, vite_config, svelte_config) {
 								? async () => {
 										const url = path.resolve(cwd, endpoint.file);
 										return await loud_ssr_load_module(url);
-								  }
+									}
 								: null,
 							endpoint_id: endpoint?.file
 						};
