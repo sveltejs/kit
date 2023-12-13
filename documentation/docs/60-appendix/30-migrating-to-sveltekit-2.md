@@ -133,6 +133,12 @@ If a form contains an `<input type="file">` but does not have an `enctype="multi
 
 Previously, the generated `tsconfig.json` was trying its best to still produce a somewhat valid config when your `tsconfig.json` included `paths` or `baseUrl`. In SvelteKit 2, the validation is more strict and will warn when you use either `paths` or `baseUrl` in your `tsconfig.json`. These settings are used to generate path aliases and you should use [the `alias` config](configuration#alias) option in your `svelte.config.js` instead, to also create a corresponding alias for the bundler.
 
+## `getRequest` no longer throws errors
+
+The `@sveltejs/kit/node` module exports helper functions for use in Node environments, including `getRequest` which turns a Node [`ClientRequest`](https://nodejs.org/api/http.html#class-httpclientrequest) into a standard [`Request`](https://developer.mozilla.org/en-US/docs/Web/API/Request) object.
+
+In SvelteKit 1, `getRequest` could throw if the `Content-Length` header exceeded the specified size limit. In SvelteKit 2, the error will not be thrown until later, when the request body (if any) is being read. This enables better diagnostics and simpler code.
+
 ## `vitePreprocess` is no longer exported from `@sveltejs/kit/vite`
 
 Since `@sveltejs/vite-plugin-svelte` is now a peer dependency, SvelteKit 2 no longer re-exports `vitePreprocess`. You should import it directly from `@svelte/vite-plugin-svelte`.
