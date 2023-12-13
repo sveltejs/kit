@@ -1972,10 +1972,12 @@ declare module '$app/navigation' {
 	export const preloadCode: (url: string) => Promise<void>;
 	/**
 	 * A navigation interceptor that triggers before we navigate to a new URL, whether by clicking a link, calling `goto(...)`, or using the browser back/forward controls.
-	 * Calling `cancel()` will prevent the navigation from completing. If the navigation would have directly unloaded the current page, calling `cancel` will trigger the native
-	 * browser unload confirmation dialog. In these cases, `navigation.willUnload` is `true`.
 	 *
-	 * When a navigation isn't client side, `navigation.to.route.id` will be `null`.
+	 * Calling `cancel()` will prevent the navigation from completing. If `navigation.type === 'leave'` — meaning the user is navigating away from the app (or closing the tab) — calling `cancel` will trigger the native browser unload confirmation dialog. In this case, the navigation may or may not be cancelled depending on the user's response.
+	 *
+	 * When a navigation isn't to a SvelteKit-owned route (and therefore controlled by SvelteKit's client-side router), `navigation.to.route.id` will be `null`.
+	 *
+	 * If the navigation will (if not cancelled) cause the document to unload — in other words `'leave'` navigations and `'link'` navigations where `navigation.to.route === null` — `navigation.willUnload` is `true`.
 	 *
 	 * `beforeNavigate` must be called during a component initialization. It remains active as long as the component is mounted.
 	 * */
