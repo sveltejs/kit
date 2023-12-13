@@ -1,4 +1,4 @@
-import { base, build, files, prerendered, version } from '$service-worker';
+import { base, build, version } from '$service-worker';
 import src from './image.jpg?url';
 
 self.base = base;
