@@ -96,20 +96,17 @@ Sentry.init({/*...*/})
 
 /** @type {import('@sveltejs/kit').HandleServerError} */
 export function handleError({ error, event, status, message }) {
-	if (status !== 500) {
-		return {
-			message, // safe to forward
-			code: 'UNKNOWN'
-		};
-	} else {
-		// example integration with https://sentry.io/
-		Sentry.captureException(error, { extra: { event } });
+	// example integration with https://sentry.io/
+	// `error.message` contains diagnostic information which, in general,
+	// should not be shown to users
+	Sentry.captureException(error, {
+		extra: { event, status }
+	});
 
-		return {
-			message: 'Whoops!',
-			code: error?.code ?? 'UNKNOWN'
-		};
-	}
+	return {
+		message, // safe to expose to users
+		code: error?.code ?? 'UNKNOWN'
+	};
 }
 ```
 
