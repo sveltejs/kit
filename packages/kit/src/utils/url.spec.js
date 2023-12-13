@@ -61,6 +61,10 @@ describe('resolve', (test) => {
 	test('resolves empty string', () => {
 		assert.equal(resolve('/a/b/c', ''), '/a/b/c');
 	});
+
+	test('resolves .', () => {
+		assert.equal(resolve('/a/b/c', '.'), '/a/b/');
+	});
 });
 
 describe('normalize_path', (test) => {

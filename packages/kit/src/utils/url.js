@@ -6,39 +6,20 @@ import { BROWSER } from 'esm-env';
  */
 export const SCHEME = /^[a-z][a-z\d+\-.]+:/i;
 
-const absolute = /^([a-z]+:)?\/?\//;
+const internal = new URL('sveltekit-internal://');
 
 /**
  * @param {string} base
  * @param {string} path
  */
 export function resolve(base, path) {
-	if (SCHEME.test(path)) return path;
-	if (path[0] === '#') return base + path;
-	if (path === '') return base;
+	// special case
+	if (path[0] === '/' && path[1] === '/') return path;
 
-	const base_match = absolute.exec(base);
-	const path_match = absolute.exec(path);
+	let url = new URL(base, internal);
+	url = new URL(path, url);
 
-	if (!base_match) {
-		throw new Error(`bad base path: "${base}"`);
-	}
-
-	const baseparts = path_match ? [] : base.slice(base_match[0].length).split('/');
-	const pathparts = path_match ? path.slice(path_match[0].length).split('/') : path.split('/');
-
-	baseparts.pop();
-
-	for (let i = 0; i < pathparts.length; i += 1) {
-		const part = pathparts[i];
-		if (part === '.') continue;
-		else if (part === '..') baseparts.pop();
-		else baseparts.push(part);
-	}
-
-	const prefix = (path_match && path_match[0]) || (base_match && base_match[0]) || '';
-
-	return `${prefix}${baseparts.join('/')}`;
+	return url.protocol === internal.protocol ? url.pathname + url.search + url.hash : url.href;
 }
 
 /** @param {string} path */
