@@ -107,9 +107,9 @@ As such, SvelteKit 2 replaces `resolvePath` with a (slightly better named) funct
 
 ## Improved error handling
 
-Some errors are handled internally by SvelteKit, but they are not unexpected. They were handled either by using the `error` function or throwing a regular `Error` on a case-by-case basis. This meant it's a) not easy to distinguish between real unexpected errors and others such as someone calling your action endpoint with the wrong content type and b) introduces a potential bug where properties that may be required due to a custom `App.Error` interface are missing.
+Errors are handled inconsistently in SvelteKit 1. Some errors trigger the `handleError` hook but there is no good way to discern their status (for example, the only way to tell a 404 from a 500 is by seeing if `event.route.id` is `null`), while others (such as 405 errors for `POST` requests to pages without actions) don't trigger `handleError` at all, but should. In the latter case, the resulting `$page.error` will deviate from the [`App.Error`](/docs/types#app-error) type, if it is specified.
 
-SvelteKit 2 cleans this up by providing two new properties to `handleError`: `status` and `message`. For unforseen errors, the `status` is 500 and the `message` just `"Internal Error"`, for internal but handleable errors a more specific status code and message is provided, one which is still safe to show to the user.
+SvelteKit 2 cleans this up by calling `handleError` hooks with two new properties: `status` and `message`. For errors thrown from your code (or library code called by your code) the status will be `500` and the message will be `Internal Error`. While `error.message` may contain sensitive information that should not be exposed to users, `message` is safe.
 
 ## Dynamic environment variables cannot be used during prerendering
 
