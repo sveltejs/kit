@@ -1,5 +1,13 @@
 # @sveltejs/kit
 
+## 1.30.1
+
+### Patch Changes
+
+- fix: prerendered root page with `paths.base` config uses correct trailing slash option ([#10763](https://github.com/sveltejs/kit/pull/10763))
+
+- fix: correctly return 404 when a form action is not found ([#11278](https://github.com/sveltejs/kit/pull/11278))
+
 ## 1.30.0
 
 ### Minor Changes
