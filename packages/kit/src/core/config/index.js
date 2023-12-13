@@ -72,9 +72,11 @@ export async function load_config({ cwd = process.cwd() } = {}) {
 	try {
 		return process_config(config.default, { cwd });
 	} catch (e) {
+		const error = /** @type {Error} */ (e);
+
 		// redact the stack trace — it's not helpful to users
-		e.stack = `Could not load svelte.config.js: ${e.message}\n`;
-		throw e;
+		error.stack = `Could not load svelte.config.js: ${error.message}\n`;
+		throw error;
 	}
 }
 
