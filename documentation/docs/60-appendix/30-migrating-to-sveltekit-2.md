@@ -127,6 +127,10 @@ If a form contains an `<input type="file">` but does not have an `enctype="multi
 
 Previously, the generated `tsconfig.json` was trying its best to still produce a somewhat valid config when your `tsconfig.json` included `paths` or `baseUrl`. In SvelteKit 2, the validation is more strict and will warn when you use either `paths` or `baseUrl` in your `tsconfig.json`. These settings are used to generate path aliases and you should use [the `alias` config](configuration#alias) option in your `svelte.config.js` instead, to also create a corresponding alias for the bundler.
 
+## `vitePreprocess` is no longer exported from `@sveltejs/kit/vite`
+
+Since `@sveltejs/vite-plugin-svelte` is now a peer dependency, SvelteKit 2 no longer re-exports `vitePreprocess`. You should import it directly from `@svelte/vite-plugin-svelte`.
+
 ## Updated dependency requirements
 
 SvelteKit 2 requires Node `18.13` or higher, and the following minimum dependency versions:
