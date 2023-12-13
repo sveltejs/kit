@@ -1,9 +1,11 @@
 import * as fs from 'node:fs';
 import * as path from 'node:path';
 import { createRequire } from 'node:module';
+import semver from 'semver';
 import { posixify, mkdirp, rimraf, walk } from './filesystem.js';
 import { resolve_aliases, write } from './utils.js';
 import { emitDts } from 'svelte2tsx';
+import { load_pkg_json } from './config.js';
 
 /**
  * Generates d.ts files by invoking TypeScript's "emit d.ts files from input files".
@@ -14,7 +16,7 @@ import { emitDts } from 'svelte2tsx';
  * @param {string} output
  * @param {string} cwd
  * @param {Record<string, string>} alias
- * @param {import('./types').File[]} files
+ * @param {import('./types.js').File[]} files
  */
 export async function emit_dts(input, output, cwd, alias, files) {
 	const tmp = `${output}/__package_types_tmp__`;
@@ -22,9 +24,14 @@ export async function emit_dts(input, output, cwd, alias, files) {
 	mkdirp(tmp);
 
 	const require = createRequire(import.meta.url);
+	const pkg = load_pkg_json(cwd);
+	const svelte_dep = pkg.peerDependencies?.svelte || pkg.dependencies?.svelte || '3.0';
+	const no_svelte_3 = !semver.intersects(svelte_dep, '^3.0.0');
 	await emitDts({
 		libRoot: input,
-		svelteShimsPath: require.resolve('svelte2tsx/svelte-shims.d.ts'),
+		svelteShimsPath: no_svelte_3
+			? require.resolve('svelte2tsx/svelte-shims-v4.d.ts')
+			: require.resolve('svelte2tsx/svelte-shims.d.ts'),
 		declarationDir: path.relative(cwd, tmp)
 	});
 
@@ -60,8 +67,15 @@ export async function emit_dts(input, output, cwd, alias, files) {
  */
 export async function transpile_ts(filename, source) {
 	const ts = await try_load_ts();
+	const options = load_tsconfig(filename, ts);
+	// transpileModule treats NodeNext as CommonJS because it doesn't read the package.json. Therefore we need to override it.
+	// Also see https://github.com/microsoft/TypeScript/issues/53022 (the filename workaround doesn't work).
 	return ts.transpileModule(source, {
-		compilerOptions: load_tsconfig(filename, ts),
+		compilerOptions: {
+			...options,
+			module: ts.ModuleKind.ESNext,
+			moduleResolution: ts.ModuleResolutionKind.NodeJs // switch this to bundler in the next major, although it probably doesn't make a difference
+		},
 		fileName: filename
 	}).outputText;
 }

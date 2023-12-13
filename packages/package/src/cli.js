@@ -31,13 +31,13 @@ prog
 			// @ts-expect-error
 			if (config.package) {
 				throw new Error(
-					`config.package is no longer supported. See https://github.com/sveltejs/kit/pull/8922 for more information and how to migrate.`
+					'config.package is no longer supported. See https://github.com/sveltejs/kit/pull/8922 for more information and how to migrate.'
 				);
 			}
 
 			const packaging = await import('./index.js');
 
-			/** @type {import('./types').Options} */
+			/** @type {import('./types.js').Options} */
 			const options = {
 				cwd: process.cwd(),
 				input: args.input ?? config.kit?.files?.lib ?? 'src/lib',

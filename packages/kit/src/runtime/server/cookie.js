@@ -1,5 +1,6 @@
 import { parse, serialize } from 'cookie';
-import { normalize_path } from '../../utils/url.js';
+import { normalize_path, resolve } from '../../utils/url.js';
+import { warn_with_callsite } from './utils.js';
 
 /**
  * Tracks all cookies set during dev mode so we can emit warnings
@@ -15,6 +16,27 @@ const cookie_paths = {};
 const MAX_COOKIE_SIZE = 4129;
 
 /**
+ *
+ * @param {import('cookie').CookieSerializeOptions} opts
+ * @param {'set' | 'delete' | 'serialize'} method
+ */
+function deprecate_missing_path(opts, method) {
+	if (opts.path === undefined) {
+		warn_with_callsite(
+			`Calling \`cookies.${method}(...)\` without specifying a \`path\` is deprecated, and will be disallowed in SvelteKit 2.0. Relative paths can be used`,
+			1
+		);
+	}
+
+	if (opts.path === '') {
+		warn_with_callsite(
+			`Calling \`cookies.${method}(...)\` with \`path: ''\` will behave differently in SvelteKit 2.0. Instead of using the browser default behaviour, it will set the cookie path to the current pathname`,
+			1
+		);
+	}
+}
+
+/**
  * @param {Request} request
  * @param {URL} url
  * @param {import('types').TrailingSlash} trailing_slash
@@ -27,7 +49,7 @@ export function get_cookies(request, url, trailing_slash) {
 	// Emulate browser-behavior: if the cookie is set at '/foo/bar', its path is '/foo'
 	const default_path = normalized_url.split('/').slice(0, -1).join('/') || '/';
 
-	/** @type {Record<string, import('./page/types').Cookie>} */
+	/** @type {Record<string, import('./page/types.js').Cookie>} */
 	const new_cookies = {};
 
 	/** @type {import('cookie').CookieSerializeOptions} */
@@ -37,11 +59,11 @@ export function get_cookies(request, url, trailing_slash) {
 		secure: url.hostname === 'localhost' && url.protocol === 'http:' ? false : true
 	};
 
-	/** @type {import('types').Cookies} */
+	/** @type {import('@sveltejs/kit').Cookies} */
 	const cookies = {
 		// The JSDoc param annotations appearing below for get, set and delete
 		// are necessary to expose the `cookie` library types to
-		// typescript users. `@type {import('types').Cookies}` above is not
+		// typescript users. `@type {import('@sveltejs/kit').Cookies}` above is not
 		// sufficient to do so.
 
 		/**
@@ -107,32 +129,8 @@ export function get_cookies(request, url, trailing_slash) {
 		 * @param {import('cookie').CookieSerializeOptions} opts
 		 */
 		set(name, value, opts = {}) {
-			let path = opts.path ?? default_path;
-
-			new_cookies[name] = {
-				name,
-				value,
-				options: {
-					...defaults,
-					...opts,
-					path
-				}
-			};
-
-			if (__SVELTEKIT_DEV__) {
-				const serialized = serialize(name, value, new_cookies[name].options);
-				if (new TextEncoder().encode(serialized).byteLength > MAX_COOKIE_SIZE) {
-					throw new Error(`Cookie "${name}" is too large, and will be discarded by the browser`);
-				}
-
-				cookie_paths[name] ??= new Set();
-
-				if (!value) {
-					cookie_paths[name].delete(path);
-				} else {
-					cookie_paths[name].add(path);
-				}
-			}
+			deprecate_missing_path(opts, 'set');
+			set_internal(name, value, { ...defaults, ...opts });
 		},
 
 		/**
@@ -140,7 +138,10 @@ export function get_cookies(request, url, trailing_slash) {
 		 * @param {import('cookie').CookieSerializeOptions} opts
 		 */
 		delete(name, opts = {}) {
+			deprecate_missing_path(opts, 'delete');
+
 			cookies.set(name, '', {
+				path: default_path, // TODO 2.0 remove this
 				...opts,
 				maxAge: 0
 			});
@@ -151,7 +152,9 @@ export function get_cookies(request, url, trailing_slash) {
 		 * @param {string} value
 		 * @param {import('cookie').CookieSerializeOptions} opts
 		 */
-		serialize(name, value, opts) {
+		serialize(name, value, opts = {}) {
+			deprecate_missing_path(opts, 'serialize');
+
 			return serialize(name, value, {
 				...defaults,
 				...opts
@@ -193,7 +196,50 @@ export function get_cookies(request, url, trailing_slash) {
 			.join('; ');
 	}
 
-	return { cookies, new_cookies, get_cookie_header };
+	/**
+	 * @param {string} name
+	 * @param {string} value
+	 * @param {import('cookie').CookieSerializeOptions} opts
+	 */
+	function set_internal(name, value, opts) {
+		let path = opts.path;
+
+		if (!opts.domain || opts.domain === url.hostname) {
+			if (path) {
+				if (path[0] === '.') path = resolve(url.pathname, path);
+			} else {
+				path = default_path;
+			}
+		}
+
+		new_cookies[name] = {
+			name,
+			value,
+			options: {
+				...opts,
+				path
+			}
+		};
+
+		if (__SVELTEKIT_DEV__) {
+			const serialized = serialize(name, value, new_cookies[name].options);
+			if (new TextEncoder().encode(serialized).byteLength > MAX_COOKIE_SIZE) {
+				throw new Error(`Cookie "${name}" is too large, and will be discarded by the browser`);
+			}
+
+			cookie_paths[name] ??= new Set();
+
+			if (!value) {
+				// @ts-expect-error temporary
+				cookie_paths[name].delete(path);
+			} else {
+				// @ts-expect-error temporary
+				cookie_paths[name].add(path);
+			}
+		}
+	}
+
+	return { cookies, new_cookies, get_cookie_header, set_internal };
 }
 
 /**
@@ -224,7 +270,7 @@ export function path_matches(path, constraint) {
 
 /**
  * @param {Headers} headers
- * @param {import('./page/types').Cookie[]} cookies
+ * @param {import('./page/types.js').Cookie[]} cookies
  */
 export function add_cookies_to_headers(headers, cookies) {
 	for (const new_cookie of cookies) {

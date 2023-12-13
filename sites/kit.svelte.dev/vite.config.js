@@ -1,18 +1,7 @@
 import { sveltekit } from '@sveltejs/kit/vite';
-import * as path from 'path';
-import { imagetools } from 'vite-imagetools';
-
-const fallback = {
-	'.heic': 'jpg',
-	'.heif': 'jpg',
-	'.avif': 'png',
-	'.jpeg': 'jpg',
-	'.jpg':  'jpg',
-	'.png':  'png',
-	'.tiff': 'jpg',
-	'.webp': 'png',
-	'.gif':  'gif'
-};
+import { enhancedImages } from '@sveltejs/enhanced-img';
+import browserslist from 'browserslist';
+import { browserslistToTargets } from 'lightningcss';
 
 /** @type {import('vite').UserConfig} */
 const config = {
@@ -20,20 +9,17 @@ const config = {
 
 	logLevel: 'info',
 
-	plugins: [
-		imagetools({
-			defaultDirectives: (url) => {
-				const ext = path.extname(url.pathname);
-				const params = new URLSearchParams();
-				params.set('format', 'avif;webp;' + fallback[ext]);
-				if (!params.has('meta') && !params.has('metadata') && !params.has('source') && !params.has('srcset') && !params.has('url')) {
-					params.set('picture', true);
-				}
-				return params;
-			}
-		}),
-		sveltekit()
-	],
+	css: {
+		transformer: 'lightningcss',
+		lightningcss: {
+			targets: browserslistToTargets(browserslist(['>0.2%', 'not dead']))
+		}
+	},
+	build: {
+		cssMinify: 'lightningcss'
+	},
+
+	plugins: [enhancedImages(), sveltekit()],
 
 	ssr: {
 		noExternal: ['@sveltejs/site-kit']

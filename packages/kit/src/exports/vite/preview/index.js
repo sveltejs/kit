@@ -1,6 +1,7 @@
 import fs from 'node:fs';
 import { join } from 'node:path';
 import { pathToFileURL } from 'node:url';
+import { lookup } from 'mrmime';
 import sirv from 'sirv';
 import { loadEnv, normalizePath } from 'vite';
 import { getRequest, setResponse } from '../../../exports/node/index.js';
@@ -14,10 +15,7 @@ import { not_found } from '../utils.js';
 /** @typedef {(req: Req, res: Res, next: () => void) => void} Handler */
 
 /**
- * @param {{
- *   middlewares: import('connect').Server;
- *   httpServer: import('http').Server;
- * }} vite
+ * @param {{ middlewares: import('connect').Server }} vite
  * @param {import('vite').ResolvedConfig} vite_config
  * @param {import('types').ValidatedConfig} svelte_config
  */
@@ -35,6 +33,10 @@ export async function preview(vite, vite_config, svelte_config) {
 	const etag = `"${Date.now()}"`;
 
 	const dir = join(svelte_config.kit.outDir, 'output/server');
+
+	if (!fs.existsSync(dir)) {
+		throw new Error(`Server files not found at ${dir}, did you run \`build\` first?`);
+	}
 
 	/** @type {import('types').ServerInternalModule} */
 	const { set_assets } = await import(pathToFileURL(join(dir, 'internal.js')).href);
@@ -69,7 +71,19 @@ export async function preview(vite, vite_config, svelte_config) {
 
 		vite.middlewares.use((req, res, next) => {
 			const original_url = /** @type {string} */ (req.url);
-			const { pathname } = new URL(original_url, 'http://dummy');
+			const { pathname, search } = new URL(original_url, 'http://dummy');
+
+			// if `paths.base === '/a/b/c`, then the root route is `/a/b/c/`,
+			// regardless of the `trailingSlash` route option
+			if (base.length > 1 && pathname === base) {
+				let location = base + '/';
+				if (search) location += search;
+				res.writeHead(307, {
+					location
+				});
+				res.end();
+				return;
+			}
 
 			if (pathname.startsWith(base)) {
 				next();
@@ -100,7 +114,7 @@ export async function preview(vite, vite_config, svelte_config) {
 					return;
 				}
 
-				const { pathname } = new URL(/** @type {string} */ (req.url), 'http://dummy');
+				const { pathname, search } = new URL(/** @type {string} */ (req.url), 'http://dummy');
 
 				let filename = normalizePath(
 					join(svelte_config.kit.outDir, 'output/prerendered/pages' + pathname)
@@ -111,6 +125,7 @@ export async function preview(vite, vite_config, svelte_config) {
 					const has_trailing_slash = pathname.endsWith('/');
 					const html_filename = `${filename}${has_trailing_slash ? 'index.html' : '.html'}`;
 
+					/** @type {string | undefined} */
 					let redirect;
 
 					if (is_file(html_filename)) {
@@ -125,6 +140,7 @@ export async function preview(vite, vite_config, svelte_config) {
 					}
 
 					if (redirect) {
+						if (search) redirect += search;
 						res.writeHead(307, {
 							location: redirect
 						});
@@ -137,7 +153,7 @@ export async function preview(vite, vite_config, svelte_config) {
 
 				if (prerendered) {
 					res.writeHead(200, {
-						'content-type': 'text/html',
+						'content-type': lookup(pathname) || 'text/html',
 						etag
 					});
 

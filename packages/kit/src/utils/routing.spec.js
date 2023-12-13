@@ -1,6 +1,5 @@
-import { test } from 'uvu';
-import * as assert from 'uvu/assert';
-import { exec, parse_route_id, resolve_entry } from './routing.js';
+import { assert, expect, test } from 'vitest';
+import { exec, parse_route_id } from './routing.js';
 
 const tests = {
 	'/': {
@@ -57,8 +56,8 @@ for (const [key, expected] of Object.entries(tests)) {
 	test(`parse_route_id: "${key}"`, () => {
 		const actual = parse_route_id(key);
 
-		assert.equal(actual.pattern.toString(), expected.pattern.toString());
-		assert.equal(actual.params, expected.params);
+		expect(actual.pattern.toString()).toEqual(expected.pattern.toString());
+		expect(actual.params).toEqual(expected.params);
 	});
 }
 
@@ -199,7 +198,47 @@ const exec_tests = [
 		expected: { slug2: 'b', slug3: 'c' }
 	},
 	{
+		route: '/[[slug1=doesntmatch]]/[[slug2=matches]]/[[slug3=matches]]',
+		path: '/b/c',
+		expected: { slug2: 'b', slug3: 'c' }
+	},
+	{
+		route: '/[slug1]/[[lang=doesntmatch]]/[[page=matches]]',
+		path: '/a/2',
+		expected: { slug1: 'a', lang: undefined, page: '2' }
+	},
+	{
 		route: '/[[slug1=doesntmatch]]/[slug2=matches]/[slug3]',
+		path: '/a/b/c',
+		expected: undefined
+	},
+	{
+		route: '/[[lang=doesntmatch]]/[asset=matches]/[[categoryType]]/[...categories]',
+		path: '/music',
+		expected: { asset: 'music', categories: '' }
+	},
+	{
+		route: '/[[lang=doesntmatch]]/[asset=matches]/[[categoryType]]/[...categories]',
+		path: '/music/genre',
+		expected: { asset: 'music', categoryType: 'genre', categories: '' }
+	},
+	{
+		route: '/[[lang=doesntmatch]]/[asset=matches]/[[categoryType]]/[...categories]',
+		path: '/music/genre/rock',
+		expected: { asset: 'music', categoryType: 'genre', categories: 'rock' }
+	},
+	{
+		route: '/[[lang=doesntmatch]]/[asset=matches]/[[categoryType]]/[...categories]',
+		path: '/sfx/category/car/crash',
+		expected: { asset: 'sfx', categoryType: 'category', categories: 'car/crash' }
+	},
+	{
+		route: '/[[lang=matches]]/[asset=matches]/[[categoryType]]/[...categories]',
+		path: '/es/sfx/category/car/crash',
+		expected: { lang: 'es', asset: 'sfx', categoryType: 'category', categories: 'car/crash' }
+	},
+	{
+		route: '/[[slug1=doesntmatch]]/[...slug2=doesntmatch]',
 		path: '/a/b/c',
 		expected: undefined
 	}
@@ -214,7 +253,7 @@ for (const { path, route, expected } of exec_tests) {
 			matches: () => true,
 			doesntmatch: () => false
 		});
-		assert.equal(actual, expected);
+		expect(actual).toEqual(expected);
 	});
 }
 
@@ -222,48 +261,3 @@ test('parse_route_id errors on bad param name', () => {
 	assert.throws(() => parse_route_id('abc/[b-c]'), /Invalid param: b-c/);
 	assert.throws(() => parse_route_id('abc/[bc=d-e]'), /Invalid param: bc=d-e/);
 });
-
-const from_entry_tests = [
-	{
-		route: '/blog/[one]/[two]',
-		entry: { one: 'one', two: 'two' },
-		expected: '/blog/one/two'
-	},
-	{
-		route: '/blog/[one=matcher]/[...two]',
-		entry: { one: 'one', two: 'two/three' },
-		expected: '/blog/one/two/three'
-	},
-	{
-		route: '/blog/[one=matcher]/[[two]]',
-		entry: { one: 'one' },
-		expected: '/blog/one'
-	}
-];
-
-for (const { route, entry, expected } of from_entry_tests) {
-	test(`resolve_entry generates correct path for ${route}`, () => {
-		const result = resolve_entry(route, entry);
-		assert.equal(result, expected);
-	});
-}
-
-test('resolve_entry errors on missing entry for required param', () => {
-	assert.throws(
-		() => resolve_entry('/blog/[one]/[two]', { one: 'one' }),
-		"Missing param 'two' in route /blog/[one]/[two]"
-	);
-});
-
-test('resolve_entry errors on entry values starting or ending with slashes', () => {
-	assert.throws(
-		() => resolve_entry('/blog/[one]/[two]', { one: 'one', two: '/two' }),
-		"Parameter 'two' in route /blog/[one]/[two] cannot start or end with a slash -- this would cause an invalid route like foo//bar"
-	);
-	assert.throws(
-		() => resolve_entry('/blog/[one]/[two]', { one: 'one', two: 'two/' }),
-		"Parameter 'two' in route /blog/[one]/[two] cannot start or end with a slash -- this would cause an invalid route like foo//bar"
-	);
-});
-
-test.run();

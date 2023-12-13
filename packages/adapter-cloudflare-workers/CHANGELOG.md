@@ -1,5 +1,62 @@
 # @sveltejs/adapter-cloudflare-workers
 
+## 1.2.3
+
+### Patch Changes
+
+- fix: correctly map prerendered pages when base path is set ([#11245](https://github.com/sveltejs/kit/pull/11245))
+
+- Updated dependencies [[`bd383f576`](https://github.com/sveltejs/kit/commit/bd383f576592948a2a96b357118cdc7598a8b61c), [`b6a0be712`](https://github.com/sveltejs/kit/commit/b6a0be712644bca4bbd7bec194c1bff682e39d71), [`ded16305b`](https://github.com/sveltejs/kit/commit/ded16305b4c180a697c457ca1b2bec249b4b38fb), [`15422d21d`](https://github.com/sveltejs/kit/commit/15422d21d08a1484f92490da5dd4b77ca7332c23)]:
+  - @sveltejs/kit@1.28.0
+
+## 1.2.2
+
+### Patch Changes
+
+- fix: retain URL query string for trailing slash redirects to prerendered pages ([#11142](https://github.com/sveltejs/kit/pull/11142))
+
+- Updated dependencies [[`a7f8bdcfa`](https://github.com/sveltejs/kit/commit/a7f8bdcfabce5cda85dd073a21d0afb6138a7a08), [`a4d91304e`](https://github.com/sveltejs/kit/commit/a4d91304eebc08bf2e748d83a46d3548a546e3ab)]:
+  - @sveltejs/kit@1.27.7
+
+## 1.2.1
+
+### Patch Changes
+
+- fix: correctly check url pathnames for trailing slashes ([#10968](https://github.com/sveltejs/kit/pull/10968))
+
+## 1.2.0
+
+### Minor Changes
+
+- feat: add cloudflare's `request.cf` object to the `event.platform` property ([#10873](https://github.com/sveltejs/kit/pull/10873))
+
+## 1.1.4
+
+### Patch Changes
+
+- fix: mark `cloudflare:` packages as external ([#10404](https://github.com/sveltejs/kit/pull/10404))
+
+- Updated dependencies [[`0f0049810`](https://github.com/sveltejs/kit/commit/0f00498100361ef0a4ea8b0b4e8465e442fa22a6), [`6f36aefe1`](https://github.com/sveltejs/kit/commit/6f36aefe13bf55cfaef14166c60ecee989061ddd)]:
+  - @sveltejs/kit@1.22.4
+
+## 1.1.3
+
+### Patch Changes
+
+- chore: upgrade to esbuild 0.18.11 ([#10330](https://github.com/sveltejs/kit/pull/10330))
+
+- Updated dependencies [[`23d1df702`](https://github.com/sveltejs/kit/commit/23d1df702f0fd77983040404352d8d83fd1dd8a1), [`486a971fe`](https://github.com/sveltejs/kit/commit/486a971fe7c375aae1585f1fa2505e28f86f4b8e)]:
+  - @sveltejs/kit@1.22.2
+
+## 1.1.2
+
+### Patch Changes
+
+- fix: Copy .wasm files during build ([#9940](https://github.com/sveltejs/kit/pull/9940))
+
+- Updated dependencies [[`50acb22ca`](https://github.com/sveltejs/kit/commit/50acb22caf2901283e044cdfda36db6f07b3e0ae), [`2e6da9496`](https://github.com/sveltejs/kit/commit/2e6da9496bdace2c65040b9d1845c44801ca868c), [`a81106b3a`](https://github.com/sveltejs/kit/commit/a81106b3a817829c41e048207d6253e63988c58c), [`a6338a0b1`](https://github.com/sveltejs/kit/commit/a6338a0b124f54bda7ba3fe64be1d6173e118d00), [`4a85b7f08`](https://github.com/sveltejs/kit/commit/4a85b7f0820d35c7830c00afe1df3c94fcbf8c3d), [`26d2b7f8f`](https://github.com/sveltejs/kit/commit/26d2b7f8f5ca29c60ef61b936ff86deaeb1636ce), [`bc70b4e63`](https://github.com/sveltejs/kit/commit/bc70b4e636fcbd9593356996bf737e014ff8c238), [`ab9f57721`](https://github.com/sveltejs/kit/commit/ab9f57721fca146af7c4eb41f4875fafa5dfc0d2)]:
+  - @sveltejs/kit@1.17.0
+
 ## 1.1.1
 
 ### Patch Changes

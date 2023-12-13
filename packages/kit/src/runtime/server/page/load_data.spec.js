@@ -1,9 +1,8 @@
-import { test } from 'uvu';
-import * as assert from 'uvu/assert';
+import { assert, expect, test } from 'vitest';
 import { create_universal_fetch } from './load_data.js';
 
 /**
- * @param {Partial<Pick<import('types').RequestEvent, 'fetch' | 'url' | 'request' | 'route'>>} event
+ * @param {Partial<Pick<import('@sveltejs/kit').RequestEvent, 'fetch' | 'url' | 'request' | 'route'>>} event
  */
 function create_fetch(event) {
 	event.fetch = event.fetch || (async () => new Response('foo'));
@@ -11,7 +10,7 @@ function create_fetch(event) {
 	event.route = event.route || { id: 'foo' };
 	event.url = event.url || new URL('https://domain-a.com');
 	return create_universal_fetch(
-		/** @type {Pick<import('types').RequestEvent, 'fetch' | 'url' | 'request' | 'route'>} */ (
+		/** @type {Pick<import('@sveltejs/kit').RequestEvent, 'fetch' | 'url' | 'request' | 'route'>} */ (
 			event
 		),
 		{ getClientAddress: () => '', error: false, depth: 0 },
@@ -48,17 +47,13 @@ test('succeeds when acao header present on cors', async () => {
 
 test('errors when no acao header present on cors', async () => {
 	const fetch = create_fetch({});
-	try {
+
+	expect(async () => {
 		const response = await fetch('https://domain-b.com');
 		await response.text();
-		assert.unreachable('should have thrown cors error');
-	} catch (e) {
-		assert.ok(e instanceof Error);
-		assert.match(
-			e.message,
-			/CORS error: No 'Access-Control-Allow-Origin' header is present on the requested resource/
-		);
-	}
+	}).rejects.toThrowError(
+		"CORS error: No 'Access-Control-Allow-Origin' header is present on the requested resource"
+	);
 });
 
 test('errors when trying to access non-serialized request headers on the server', async () => {
@@ -69,5 +64,3 @@ test('errors when trying to access non-serialized request headers on the server'
 		/Failed to get response header "content-type" — it must be included by the `filterSerializedResponseHeaders` option/
 	);
 });
-
-test.run();

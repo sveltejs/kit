@@ -5,17 +5,16 @@ import { nodeFileTrace } from '@vercel/nft';
 import esbuild from 'esbuild';
 import { get_pathname } from './utils.js';
 
-const VALID_RUNTIMES = ['edge', 'nodejs16.x', 'nodejs18.x'];
-
 const DEFAULT_FUNCTION_NAME = 'fn';
 
 const get_default_runtime = () => {
 	const major = process.version.slice(1).split('.')[0];
 	if (major === '16') return 'nodejs16.x';
 	if (major === '18') return 'nodejs18.x';
+	if (major === '20') return 'nodejs20.x';
 
 	throw new Error(
-		`Unsupported Node.js version: ${process.version}. Please use Node 16 or Node 18 to build your project, or explicitly specify a runtime in your adapter configuration.`
+		`Unsupported Node.js version: ${process.version}. Please use Node 16, Node 18 or Node 20 to build your project, or explicitly specify a runtime in your adapter configuration.`
 	);
 };
 
@@ -96,13 +95,6 @@ const plugin = function (defaults = {}) {
 				const tmp = builder.getBuildDirectory(`vercel-tmp/${name}`);
 				const relativePath = path.posix.relative(tmp, builder.getServerDirectory());
 
-				const envVarsInUse = new Set();
-				routes.forEach((route) => {
-					route.config?.envVarsInUse?.forEach((x) => {
-						envVarsInUse.add(x);
-					});
-				});
-
 				builder.copy(`${files}/edge.js`, `${tmp}/edge.js`, {
 					replace: {
 						SERVER: `${relativePath}/index.js`,
@@ -124,7 +116,10 @@ const plugin = function (defaults = {}) {
 					format: 'esm',
 					external: config.external,
 					sourcemap: 'linked',
-					banner: { js: 'globalThis.global = globalThis;' }
+					banner: { js: 'globalThis.global = globalThis;' },
+					loader: {
+						'.wasm': 'copy'
+					}
 				});
 
 				write(
@@ -133,7 +128,6 @@ const plugin = function (defaults = {}) {
 						{
 							runtime: config.runtime,
 							regions: config.regions,
-							envVarsInUse: [...envVarsInUse],
 							entrypoint: 'index.js'
 						},
 						null,
@@ -169,20 +163,20 @@ const plugin = function (defaults = {}) {
 					continue;
 				}
 
-				if (runtime && !VALID_RUNTIMES.includes(runtime)) {
+				const node_runtime = /nodejs([0-9]+)\.x/.exec(runtime);
+				if (runtime !== 'edge' && (!node_runtime || node_runtime[1] < 16)) {
 					throw new Error(
-						`Invalid runtime '${runtime}' for route ${
-							route.id
-						}. Valid runtimes are ${VALID_RUNTIMES.join(', ')}`
+						`Invalid runtime '${runtime}' for route ${route.id}. Valid runtimes are 'edge' and 'nodejs16.x' or higher ` +
+							'(see the Node.js Version section in your Vercel project settings for info on the currently supported versions).'
 					);
 				}
 
 				if (config.isr) {
 					const directory = path.relative('.', builder.config.kit.files.routes + route.id);
 
-					if (runtime !== 'nodejs16.x' && runtime !== 'nodejs18.x') {
+					if (!runtime.startsWith('nodejs')) {
 						throw new Error(
-							`${directory}: Routes using \`isr\` must use either \`runtime: 'nodejs16.x'\` or \`runtime: 'nodejs18.x'\``
+							`${directory}: Routes using \`isr\` must use a Node.js runtime (for example 'nodejs20.x')`
 						);
 					}
 
@@ -229,7 +223,7 @@ const plugin = function (defaults = {}) {
 
 			if (ignored_isr.size) {
 				builder.log.warn(
-					`\nWarning: The following routes have an ISR config which is ignored because the route is prerendered:`
+					'\nWarning: The following routes have an ISR config which is ignored because the route is prerendered:'
 				);
 
 				for (const ignored of ignored_isr) {
@@ -580,18 +574,14 @@ function validate_vercel_json(builder, vercel_config) {
 			continue;
 		}
 
-		for (const route of valid_routes) {
-			if (route.pattern.test(path)) {
-				continue;
-			}
+		if (!valid_routes.some((route) => route.pattern.test(path))) {
+			unmatched_paths.push(path);
 		}
-
-		unmatched_paths.push(path);
 	}
 
 	if (unmatched_paths.length) {
 		builder.log.warn(
-			`\nWarning: vercel.json defines cron tasks that use paths that do not correspond to an API route with a GET handler (ignore this if the request is handled in your \`handle\` hook):`
+			'\nWarning: vercel.json defines cron tasks that use paths that do not correspond to an API route with a GET handler (ignore this if the request is handled in your `handle` hook):'
 		);
 
 		for (const path of unmatched_paths) {

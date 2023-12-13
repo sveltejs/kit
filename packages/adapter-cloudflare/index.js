@@ -3,7 +3,7 @@ import * as path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import * as esbuild from 'esbuild';
 
-/** @type {import('.').default} */
+/** @type {import('./index.js').default} */
 export default function (options = {}) {
 	return {
 		name: '@sveltejs/adapter-cloudflare',
@@ -36,7 +36,7 @@ export default function (options = {}) {
 				JSON.stringify(get_routes_json(builder, written_files, options.routes ?? {}), null, '\t')
 			);
 
-			writeFileSync(`${dest}/_headers`, generate_headers(builder.config.kit.appDir), { flag: 'a' });
+			writeFileSync(`${dest}/_headers`, generate_headers(builder.getAppPath()), { flag: 'a' });
 
 			builder.copy(`${files}/worker.js`, `${tmp}/_worker.js`, {
 				replace: {
@@ -54,7 +54,11 @@ export default function (options = {}) {
 				outfile: `${dest}/_worker.js`,
 				allowOverwrite: true,
 				format: 'esm',
-				bundle: true
+				bundle: true,
+				loader: {
+					'.wasm': 'copy'
+				},
+				external: ['cloudflare:*']
 			});
 		}
 	};
@@ -63,27 +67,27 @@ export default function (options = {}) {
 /**
  * @param {import('@sveltejs/kit').Builder} builder
  * @param {string[]} assets
- * @param {import('./index').AdapterOptions['routes']} routes
- * @returns {import('.').RoutesJSONSpec}
+ * @param {import('./index.js').AdapterOptions['routes']} routes
+ * @returns {import('./index.js').RoutesJSONSpec}
  */
 function get_routes_json(builder, assets, { include = ['/*'], exclude = ['<all>'] }) {
 	if (!Array.isArray(include) || !Array.isArray(exclude)) {
-		throw new Error(`routes.include and routes.exclude must be arrays`);
+		throw new Error('routes.include and routes.exclude must be arrays');
 	}
 
 	if (include.length === 0) {
-		throw new Error(`routes.include must contain at least one route`);
+		throw new Error('routes.include must contain at least one route');
 	}
 
 	if (include.length > 100) {
-		throw new Error(`routes.include must contain 100 or fewer routes`);
+		throw new Error('routes.include must contain 100 or fewer routes');
 	}
 
 	exclude = exclude
 		.flatMap((rule) => (rule === '<all>' ? ['<build>', '<files>', '<prerendered>'] : rule))
 		.flatMap((rule) => {
 			if (rule === '<build>') {
-				return `/${builder.config.kit.appDir}/*`;
+				return `/${builder.getAppPath()}/*`;
 			}
 
 			if (rule === '<files>') {

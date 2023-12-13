@@ -1,5 +1,4 @@
-import { test } from 'uvu';
-import * as assert from 'uvu/assert';
+import { expect, test } from 'vitest';
 import { update_pkg_json } from './migrate_pkg.js';
 
 test('Updates package.json', () => {
@@ -61,7 +60,7 @@ test('Updates package.json', () => {
 			}
 		]
 	);
-	assert.equal(JSON.parse(JSON.stringify(result)), {
+	expect(JSON.parse(JSON.stringify(result))).toEqual({
 		name: 'foo',
 		version: '1.0.0',
 		type: 'module',
@@ -95,7 +94,7 @@ test('Updates package.json', () => {
 		svelte: './package/index.js',
 		typesVersions: {
 			'>4.0': {
-				index: ['./package/index.d.ts'],
+				'index.d.ts': ['./package/index.d.ts'],
 				'foo/Bar.svelte': ['./package/foo/Bar.svelte.d.ts'],
 				baz: ['./package/baz.d.ts'],
 				bar: ['./package/bar/index.d.ts'],
@@ -136,7 +135,7 @@ test('Updates package.json #2', () => {
 			}
 		]
 	);
-	assert.equal(JSON.parse(JSON.stringify(result)), {
+	expect(JSON.parse(JSON.stringify(result))).toEqual({
 		name: 'foo',
 		version: '1.0.0',
 		type: 'module',
@@ -156,5 +155,3 @@ test('Updates package.json #2', () => {
 		svelte: './dist/index.js'
 	});
 });
-
-test.run();

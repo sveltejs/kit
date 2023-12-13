@@ -2,8 +2,9 @@ import { DEV } from 'esm-env';
 import { json, text } from '../../exports/index.js';
 import { coalesce_to_error } from '../../utils/error.js';
 import { negotiate } from '../../utils/http.js';
-import { HttpError } from '../control.js';
+import { HttpError, NotFound } from '../control.js';
 import { fix_stack_trace } from '../shared-server.js';
+import { ENDPOINT_METHODS } from '../../constants.js';
 
 /** @param {any} body */
 export function is_pojo(body) {
@@ -34,9 +35,7 @@ export function method_not_allowed(mod, method) {
 
 /** @param {Partial<Record<import('types').HttpMethod, any>>} mod */
 export function allowed_methods(mod) {
-	const allowed = ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'].filter(
-		(method) => method in mod
-	);
+	const allowed = ENDPOINT_METHODS.filter((method) => method in mod);
 
 	if ('GET' in mod || 'HEAD' in mod) allowed.push('HEAD');
 
@@ -65,7 +64,7 @@ export function static_error_page(options, status, message) {
 }
 
 /**
- * @param {import('types').RequestEvent} event
+ * @param {import('@sveltejs/kit').RequestEvent} event
  * @param {import('types').SSROptions} options
  * @param {unknown} error
  */
@@ -74,7 +73,7 @@ export async function handle_fatal_error(event, options, error) {
 	const status = error instanceof HttpError ? error.status : 500;
 	const body = await handle_error_and_jsonify(event, options, error);
 
-	// ideally we'd use sec-fetch-dest instead, but Safari — quelle surprise — doesn't support it
+	// ideally we'd use sec-fetch-dest instead, but Safari — quelle surprise — doesn't support it
 	const type = negotiate(event.request.headers.get('accept') || 'text/html', [
 		'application/json',
 		'text/html'
@@ -90,7 +89,7 @@ export async function handle_fatal_error(event, options, error) {
 }
 
 /**
- * @param {import('types').RequestEvent} event
+ * @param {import('@sveltejs/kit').RequestEvent} event
  * @param {import('types').SSROptions} options
  * @param {any} error
  * @returns {Promise<App.Error>}
@@ -98,25 +97,17 @@ export async function handle_fatal_error(event, options, error) {
 export async function handle_error_and_jsonify(event, options, error) {
 	if (error instanceof HttpError) {
 		return error.body;
-	} else {
-		if (__SVELTEKIT_DEV__ && typeof error == 'object') {
-			error = new Proxy(error, {
-				get: (target, property) => {
-					if (property === 'stack') {
-						return fix_stack_trace(target.stack);
-					}
-
-					return Reflect.get(target, property, target);
-				}
-			});
-		}
-
-		return (
-			(await options.hooks.handleError({ error, event })) ?? {
-				message: event.route.id != null ? 'Internal Error' : 'Not Found'
-			}
-		);
 	}
+
+	if (__SVELTEKIT_DEV__ && typeof error == 'object') {
+		fix_stack_trace(error);
+	}
+
+	return (
+		(await options.hooks.handleError({ error, event })) ?? {
+			message: event.route.id === null && error instanceof NotFound ? 'Not Found' : 'Internal Error'
+		}
+	);
 }
 
 /**
@@ -132,7 +123,7 @@ export function redirect_response(status, location) {
 }
 
 /**
- * @param {import('types').RequestEvent} event
+ * @param {import('@sveltejs/kit').RequestEvent} event
  * @param {Error & { path: string }} error
  */
 export function clarify_devalue_error(event, error) {
@@ -162,9 +153,23 @@ export function stringify_uses(node) {
 		uses.push(`"params":${JSON.stringify(Array.from(node.uses.params))}`);
 	}
 
-	if (node.uses?.parent) uses.push(`"parent":1`);
-	if (node.uses?.route) uses.push(`"route":1`);
-	if (node.uses?.url) uses.push(`"url":1`);
+	if (node.uses?.parent) uses.push('"parent":1');
+	if (node.uses?.route) uses.push('"route":1');
+	if (node.uses?.url) uses.push('"url":1');
 
 	return `"uses":{${uses.join(',')}}`;
+}
+
+/**
+ * @param {string} message
+ * @param {number} offset
+ */
+export function warn_with_callsite(message, offset = 0) {
+	if (DEV) {
+		const stack = fix_stack_trace(new Error()).split('\n');
+		const line = stack.at(3 + offset);
+		message += `\n${line}`;
+	}
+
+	console.warn(message);
 }

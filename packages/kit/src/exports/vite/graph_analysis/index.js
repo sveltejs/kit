@@ -1,7 +1,11 @@
 import path from 'node:path';
 import { posixify } from '../../../utils/filesystem.js';
+import { strip_virtual_prefix } from '../utils.js';
 
-const ILLEGAL_IMPORTS = new Set(['\0$env/dynamic/private', '\0$env/static/private']);
+const ILLEGAL_IMPORTS = new Set([
+	'\0virtual:$env/dynamic/private',
+	'\0virtual:$env/static/private'
+]);
 const ILLEGAL_MODULE_NAME_PATTERN = /.*\.server\..+/;
 
 /**
@@ -21,7 +25,7 @@ export function is_illegal(id, dirs) {
 
 /**
  * Creates a guard that checks that no id imports a module that is not allowed to be imported into client-side code.
- * @param {import('rollup').PluginContext} context
+ * @param {import('vite').Rollup.PluginContext} context
  * @param {{ cwd: string; lib: string }} paths
  */
 export function module_guard(context, { cwd, lib }) {
@@ -51,10 +55,14 @@ export function module_guard(context, { cwd, lib }) {
 				chain.map(({ id, dynamic }, i) => {
 					id = normalize_id(id, lib, cwd);
 
-					return `${' '.repeat(i * 2)}- ${id} ${dynamic ? 'dynamically imports' : 'imports'}\n`;
-				}) + `${' '.repeat(chain.length)}- ${id}`;
+					return `${' '.repeat(i * 2)}- ${strip_virtual_prefix(id)} ${
+						dynamic ? 'dynamically imports' : 'imports'
+					}\n`;
+				}) + `${' '.repeat(chain.length)}- ${strip_virtual_prefix(id)}`;
 
-			const message = `Cannot import ${id} into client-side code:\n${pyramid}`;
+			const message = `Cannot import ${strip_virtual_prefix(
+				id
+			)} into client-side code:\n${pyramid}`;
 
 			throw new Error(message);
 		}

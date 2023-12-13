@@ -1,22 +1,12 @@
-import fs from 'fs';
-import { read_file } from '$lib/docs/server';
+import { get_docs_data, get_parsed_docs } from '$lib/server/docs/index.js';
 import { error } from '@sveltejs/kit';
 
-const base = '../../documentation/docs';
+export const prerender = true;
 
-/** @type {import('./$types').PageServerLoad} */
 export async function load({ params }) {
-	for (const subdir of fs.readdirSync(base)) {
-		if (!fs.statSync(`${base}/${subdir}`).isDirectory()) continue;
+	const processed_page = await get_parsed_docs(await get_docs_data(), params.slug);
 
-		for (const file of fs.readdirSync(`${base}/${subdir}`)) {
-			if (file.slice(3, -3) === params.slug) {
-				return {
-					page: await read_file(`docs/${subdir}/${file}`)
-				};
-			}
-		}
-	}
+	if (!processed_page) throw error(404);
 
-	throw error(404);
+	return { page: processed_page };
 }

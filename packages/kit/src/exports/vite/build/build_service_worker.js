@@ -3,7 +3,6 @@ import * as vite from 'vite';
 import { dedent } from '../../../core/sync/utils.js';
 import { s } from '../../../utils/misc.js';
 import { get_config_aliases } from '../utils.js';
-import { assets_base } from './utils.js';
 
 /**
  * @param {string} out
@@ -35,7 +34,7 @@ export async function build_service_worker(
 
 	// in a service worker, `location` is the location of the service worker itself,
 	// which is guaranteed to be `<base>/service-worker.js`
-	const base = `location.pathname.split('/').slice(0, -1).join('/')`;
+	const base = "location.pathname.split('/').slice(0, -1).join('/')";
 
 	fs.writeFileSync(
 		service_worker,
@@ -64,25 +63,33 @@ export async function build_service_worker(
 	);
 
 	await vite.build({
-		base: assets_base(kit),
 		build: {
-			lib: {
-				entry: /** @type {string} */ (service_worker_entry_file),
-				name: 'app',
-				formats: ['es']
-			},
+			modulePreload: false,
 			rollupOptions: {
+				input: {
+					'service-worker': service_worker_entry_file
+				},
 				output: {
-					entryFileNames: 'service-worker.js'
+					entryFileNames: '[name].js',
+					assetFileNames: `${kit.appDir}/immutable/assets/[name].[hash][extname]`,
+					inlineDynamicImports: true
 				}
 			},
 			outDir: `${out}/client`,
 			emptyOutDir: false
 		},
-		define: vite_config.define,
 		configFile: false,
+		define: vite_config.define,
+		publicDir: false,
 		resolve: {
 			alias: [...get_config_aliases(kit), { find: '$service-worker', replacement: service_worker }]
+		},
+		experimental: {
+			renderBuiltUrl(filename) {
+				return {
+					runtime: `new URL(${JSON.stringify(filename)}, location.href).pathname`
+				};
+			}
 		}
 	});
 }

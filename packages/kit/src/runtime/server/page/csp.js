@@ -178,8 +178,13 @@ class BaseProvider {
 
 class CspProvider extends BaseProvider {
 	get_meta() {
-		const content = escape_html_attr(this.get_header(true));
-		return `<meta http-equiv="content-security-policy" content=${content}>`;
+		const content = this.get_header(true);
+
+		if (!content) {
+			return;
+		}
+
+		return `<meta http-equiv="content-security-policy" content=${escape_html_attr(content)}>`;
 	}
 }
 
@@ -218,8 +223,8 @@ export class Csp {
 	report_only_provider;
 
 	/**
-	 * @param {import('./types').CspConfig} config
-	 * @param {import('./types').CspOpts} opts
+	 * @param {import('./types.js').CspConfig} config
+	 * @param {import('./types.js').CspOpts} opts
 	 */
 	constructor({ mode, directives, reportOnly }, { prerender }) {
 		const use_hashes = mode === 'hash' || (mode === 'auto' && prerender);

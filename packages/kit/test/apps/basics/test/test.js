@@ -29,7 +29,7 @@ test.describe('Imports', () => {
 			]);
 		} else {
 			expect(sources[0].startsWith('data:image/png;base64,')).toBeTruthy();
-			expect(sources[1]).toBe(`${baseURL}/_app/immutable/assets/large.3183867c.jpg`);
+			expect(sources[1]).toMatch(/\/_app\/immutable\/assets\/large\.[\w-]+\.jpg/);
 		}
 	});
 });
@@ -264,14 +264,36 @@ test.describe('Load', () => {
 			const payload_b = '{"status":200,"statusText":"","headers":{},"body":"Y"}';
 			// by the time JS has run, hydration will have nuked these scripts
 			const script_contents_a = await page.innerHTML(
-				'script[data-sveltekit-fetched][data-url="/load/serialization-post.json"][data-hash="3t25"]'
+				'script[data-sveltekit-fetched][data-url="/load/serialization-post.json"][data-hash="1vn6nlx"]'
 			);
 			const script_contents_b = await page.innerHTML(
-				'script[data-sveltekit-fetched][data-url="/load/serialization-post.json"][data-hash="3t24"]'
+				'script[data-sveltekit-fetched][data-url="/load/serialization-post.json"][data-hash="1vn6nlw"]'
 			);
 
 			expect(script_contents_a).toBe(payload_a);
 			expect(script_contents_b).toBe(payload_b);
+		}
+	});
+
+	test('fetches using an arraybuffer serialized with b64', async ({ page, javaScriptEnabled }) => {
+		await page.goto('/load/fetch-arraybuffer-b64');
+
+		expect(await page.textContent('.test-content')).toBe('[1,2,3,4]');
+
+		if (!javaScriptEnabled) {
+			const payload = '{"status":200,"statusText":"","headers":{},"body":"AQIDBA=="}';
+			const post_payload =
+				'{"status":200,"statusText":"","headers":{},"body":"AAECAwQFBgcICQoLDA0ODxAREhMUFRYXGBkaGxwdHh8gISIjJCUmJygpKissLS4vMDEyMzQ1Njc4OTo7PD0+P0BBQkNERUZHSElKS0xNTk9QUVJTVFVWV1hZWltcXV5fYGFiY2RlZmdoaWprbG1ub3BxcnN0dXZ3eHl6e3x9fn+AgYKDhIWGh4iJiouMjY6PkJGSk5SVlpeYmZqbnJ2en6ChoqOkpaanqKmqq6ytrq+wsbKztLW2t7i5uru8vb6/wMHCw8TFxsfIycrLzM3Oz9DR0tPU1dbX2Nna29zd3t/g4eLj5OXm5+jp6uvs7e7v8PHy8/T19vf4+fr7/P3+/w=="}';
+
+			const script_content = await page.innerHTML(
+				'script[data-sveltekit-fetched][data-b64][data-url="/load/fetch-arraybuffer-b64/data"]'
+			);
+			const post_script_content = await page.innerHTML(
+				'script[data-sveltekit-fetched][data-b64][data-url="/load/fetch-arraybuffer-b64/data"][data-hash="16h3sp1"]'
+			);
+
+			expect(script_content).toBe(payload);
+			expect(post_script_content).toBe(post_payload);
 		}
 	});
 
@@ -509,6 +531,22 @@ test.describe('Load', () => {
 			'{"message":"Im prerendered and called from a non-prerendered +page.server.js"}'
 		);
 	});
+
+	test('Logging $page.url during prerendering works', async ({ page }) => {
+		await page.goto('/prerendering/log-url');
+
+		expect(await page.textContent('p')).toBe('error: false');
+	});
+
+	test('404 and root layout load fetch to prerendered endpoint works', async ({ page }) => {
+		await page.goto('/non-existent-route');
+
+		expect(await page.textContent('h1')).toBe('404');
+
+		await page.goto('/non-existent-route-loop');
+
+		expect(await page.textContent('h1')).toBe('404');
+	});
 });
 
 test.describe('Nested layouts', () => {
@@ -605,6 +643,16 @@ test.describe('Page options', () => {
 	test('transformPageChunk can change the html output', async ({ page }) => {
 		await page.goto('/transform-page-chunk');
 		expect(await page.getAttribute('meta[name="transform-page"]', 'content')).toBe('Worked!');
+	});
+
+	test('prerenders page that uses browser globals with ssr=false', async ({
+		page,
+		javaScriptEnabled
+	}) => {
+		test.skip(process.env.DEV, 'skip when in dev mode');
+		test.skip(!javaScriptEnabled, 'skip when JavaScript is disabled');
+		await page.goto('/prerendering/no-ssr');
+		await expect(page.getByText('Hello world!')).toBeVisible();
 	});
 });
 
@@ -760,6 +808,30 @@ test.describe('$app/stores', () => {
 			expect(await page.textContent('#nav-status')).toBe('not currently navigating');
 		}
 	});
+
+	test('should update page store when URL hash is changed through the address bar', async ({
+		baseURL,
+		page,
+		javaScriptEnabled
+	}) => {
+		const href = `${baseURL}/store/data/zzz`;
+		await page.goto(href);
+
+		expect(await page.textContent('#url-hash')).toBe('');
+
+		if (javaScriptEnabled) {
+			for (const urlHash of ['#1', '#2', '#5', '#8']) {
+				await page.evaluate(
+					({ href, urlHash }) => {
+						location.href = `${href}${urlHash}`;
+					},
+					{ href, urlHash }
+				);
+
+				expect(await page.textContent('#url-hash')).toBe(urlHash);
+			}
+		}
+	});
 });
 
 test.describe('searchParams', () => {
@@ -828,6 +900,95 @@ test.describe('Matchers', () => {
 });
 
 test.describe('Actions', () => {
+	test("invalidateAll = false doesn't invalidate all", async ({ page, javaScriptEnabled }) => {
+		await page.goto('/actions/invalidate-all?invalidate_all=false');
+		const preSubmitContent = await page.locator('pre').textContent();
+		await page.click('button');
+		// The value that should not change is time-based and might not have the granularity to change
+		// if we don't give it time to
+		await page.waitForTimeout(1000);
+		const postSubmitContent = await page.locator('pre').textContent();
+		if (!javaScriptEnabled) {
+			expect(preSubmitContent).not.toBe(postSubmitContent);
+		} else {
+			expect(preSubmitContent).toBe(postSubmitContent);
+		}
+	});
+
+	test('invalidateAll = true does invalidate all', async ({ page }) => {
+		await page.goto('/actions/invalidate-all?invalidate_all=true');
+		const preSubmitContent = await page.locator('pre').textContent();
+		await page.click('button');
+		// The value that should not change is time-based and might not have the granularity to change
+		// if we don't give it time to
+		await page.waitForTimeout(1000);
+		const postSubmitContent = await page.locator('pre').textContent();
+		expect(preSubmitContent).not.toBe(postSubmitContent);
+	});
+
+	test('Submitting a form with a file input but no enctype="multipart/form-data" logs a warning', async ({
+		page,
+		javaScriptEnabled
+	}) => {
+		test.skip(!javaScriptEnabled, 'Skip when JavaScript is disabled');
+		test.skip(!process.env.DEV, 'Skip when not in dev mode');
+		await page.goto('/actions/file-without-enctype');
+		const log_promise = page.waitForEvent('console');
+		await page.click('button');
+		const log = await log_promise;
+		expect(log.text()).toBe(
+			'Your form contains <input type="file"> fields, but is missing the `enctype="multipart/form-data"` attribute. This will lead to inconsistent behavior between enhanced and native forms. For more details, see https://github.com/sveltejs/kit/issues/9819. This will be upgraded to an error in v2.0.'
+		);
+	});
+
+	test('Accessing v2 deprecated properties results in a warning log', async ({
+		page,
+		javaScriptEnabled
+	}) => {
+		test.skip(!javaScriptEnabled, 'skip when js is disabled');
+		test.skip(!process.env.DEV, 'skip when not in dev mode');
+		await page.goto('/actions/enhance/old-property-access');
+
+		for (const { id, old_name, new_name, call_location } of [
+			{
+				id: 'access-form-in-submit',
+				old_name: 'form',
+				new_name: 'formElement',
+				call_location: 'use:enhance submit function'
+			},
+			{
+				id: 'access-form-in-callback',
+				old_name: 'form',
+				new_name: 'formElement',
+				call_location: 'callback returned from use:enhance submit function'
+			},
+			{
+				id: 'access-data-in-submit',
+				old_name: 'data',
+				new_name: 'formData',
+				call_location: 'use:enhance submit function'
+			},
+			{
+				id: 'access-data-in-callback',
+				old_name: 'data',
+				new_name: 'formData',
+				call_location: 'callback returned from use:enhance submit function'
+			}
+		]) {
+			await test.step(id, async () => {
+				const log_promise = page.waitForEvent('console');
+				const button = page.locator(`#${id}`);
+				await button.click();
+				await expect(button).toHaveAttribute('data-processed', 'true');
+				const log = await log_promise;
+				expect(log.text()).toBe(
+					`\`${old_name}\` has been deprecated in favor of \`${new_name}\`. \`${old_name}\` will be removed in a future version. (Called from ${call_location})`
+				);
+				expect(log.type()).toBe('warning');
+			});
+		}
+	});
+
 	test('Error props are returned', async ({ page, javaScriptEnabled }) => {
 		await page.goto('/actions/form-errors');
 		await page.click('button');
@@ -980,6 +1141,14 @@ test.describe('Actions', () => {
 		);
 	});
 
+	test('use:enhance button with formAction dialog', async ({ page }) => {
+		await page.goto('/actions/enhance');
+
+		await page.locator('button[formmethod="dialog"]').click();
+
+		await expect(page.locator('button[formmethod="dialog"]')).not.toBeVisible();
+	});
+
 	test('use:enhance button with name', async ({ page }) => {
 		await page.goto('/actions/enhance');
 
@@ -1056,7 +1225,7 @@ test.describe('Actions', () => {
 		expect(page.url()).toContain('/actions/enhance');
 	});
 
-	test('$page.status reflects error status', async ({ page, app }) => {
+	test('$page.status reflects error status', async ({ page }) => {
 		await page.goto('/actions/enhance');
 
 		await Promise.all([
@@ -1129,7 +1298,7 @@ test.describe.serial('Cookies API', () => {
 
 	test('works with basic enhance', async ({ page }) => {
 		await page.goto('/cookies/enhanced/basic');
-		let span = page.locator('#cookie-value');
+		const span = page.locator('#cookie-value');
 		expect(await span.innerText()).toContain('undefined');
 
 		await page.locator('button#teapot').click();

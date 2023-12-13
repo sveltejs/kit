@@ -5,14 +5,10 @@ const config = {
 	kit: {
 		adapter: adapter({
 			runtime: 'edge'
-		})
-	},
+		}),
 
-	vitePlugin: {
-		experimental: {
-			inspector: {
-				holdMode: true
-			}
+		paths: {
+			relative: true
 		}
 	}
 };
