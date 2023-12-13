@@ -141,7 +141,11 @@ export async function handle_action_request(event, server) {
 		});
 		return {
 			type: 'error',
-			error: new SvelteKitError(405, 'Method Not Allowed', 'POST method not allowed. No actions exist for this page')
+			error: new SvelteKitError(
+				405,
+				'Method Not Allowed',
+				'POST method not allowed. No actions exist for this page'
+			)
 		};
 	}
 
@@ -225,7 +229,9 @@ async function call_action(event, actions) {
 		throw new SvelteKitError(
 			415,
 			'Unsupported Media Type',
-			`Form actions expect form-encoded data — received ${event.request.headers.get('content-type')}`
+			`Form actions expect form-encoded data — received ${event.request.headers.get(
+				'content-type'
+			)}`
 		);
 	}
 
