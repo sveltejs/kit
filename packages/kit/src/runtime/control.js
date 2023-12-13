@@ -30,15 +30,20 @@ export class Redirect {
 	}
 }
 
-export class NotFound extends Error {
+/**
+ * An error that was thrown from within the SvelteKit runtime that is not fatal and doesn't result in a 500, such as a 404.
+ * `NonFatalError` goes through `handleError` and you can distinguish it from other errors using `instanceof NonFatalError`.
+ */
+export class NonFatalError extends Error {
 	/**
-	 * @param {string} pathname
+	 * @param {number} status
+	 * @param {string} message
+	 * @param {string} [context]
 	 */
-	constructor(pathname) {
-		super();
-
-		this.status = 404;
-		this.message = `Not found: ${pathname}`;
+	constructor(status, message, context) {
+		super(message);
+		this.status = status;
+		this.context = context;
 	}
 }
 
@@ -66,6 +71,7 @@ export class ActionFailure {
  *   ActionFailure: typeof ActionFailure;
  *   HttpError: typeof HttpError;
  *   Redirect: typeof Redirect;
+ *   NonFatalError: typeof NonFatalError;
  * }} implementations
  */
 export function replace_implementations(implementations) {
@@ -75,4 +81,6 @@ export function replace_implementations(implementations) {
 	HttpError = implementations.HttpError; // eslint-disable-line no-class-assign
 	// @ts-expect-error
 	Redirect = implementations.Redirect; // eslint-disable-line no-class-assign
+	// @ts-expect-error
+	NonFatalError = implementations.NonFatalError; // eslint-disable-line no-class-assign
 }

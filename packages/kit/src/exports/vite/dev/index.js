@@ -220,7 +220,7 @@ export async function dev(vite, vite_config, svelte_config) {
 								? async () => {
 										const url = path.resolve(cwd, endpoint.file);
 										return await loud_ssr_load_module(url);
-									}
+								  }
 								: null,
 							endpoint_id: endpoint?.file
 						};
@@ -354,7 +354,8 @@ export async function dev(vite, vite_config, svelte_config) {
 		control_module_node.replace_implementations({
 			ActionFailure: control_module_vite.ActionFailure,
 			HttpError: control_module_vite.HttpError,
-			Redirect: control_module_vite.Redirect
+			Redirect: control_module_vite.Redirect,
+			NonFatalError: control_module_vite.NonFatalError
 		});
 	}
 	align_exports();

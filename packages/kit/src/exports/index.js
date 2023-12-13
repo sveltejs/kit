@@ -1,7 +1,8 @@
-import { HttpError, Redirect, ActionFailure } from '../runtime/control.js';
+import { HttpError, Redirect, ActionFailure, NonFatalError } from '../runtime/control.js';
 import { BROWSER, DEV } from 'esm-env';
 
 export { VERSION } from '../version.js';
+export { NonFatalError };
 
 /**
  * @template {number} TNumber

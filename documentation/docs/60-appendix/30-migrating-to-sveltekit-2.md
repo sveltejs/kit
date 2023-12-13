@@ -105,6 +105,12 @@ As such, SvelteKit 2 replaces `resolvePath` with a (slightly better named) funct
 
 `svelte-migrate` will do the method replacement for you, though if you later prepend the result with `base`, you need to remove that yourself.
 
+## Error handling was slightly altered
+
+Some errors are handled internally by SvelteKit, but they are not unexpected. They were handled either by using the `error` function or throwing a regular `Error` on a case-by-case basis. This meant it's a) not easy to distinguish between real unexpected errors and others such as someone calling your action endpoint with the wrong content type and b) introduces a potential bug where properties that may be required due to a custom `App.Error` interface are missing.
+
+SvelteKit 2 cleans this up by introducing a new `NonFatalError` object which extends `Error` and is thrown by all internal code paths were applicable. As a consequence, `handleError` may be called more often now than before. You can distinguish these non-fatal errors by doing an `instanceof NonFatalError` check inside `handleError`.
+
 ## Updated dependency requirements
 
 SvelteKit requires Node `18.13` or higher, Vite `^5.0`, vite-plugin-svelte `^3.0`, TypeScript `^5.0` and Svelte version 4 or higher. `svelte-migrate` will do the `package.json` bumps for you.

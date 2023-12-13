@@ -1,3 +1,5 @@
+import { HttpError, NonFatalError } from '../runtime/control.js';
+
 /**
  * @param {unknown} err
  * @return {Error}
@@ -16,7 +18,14 @@ export function coalesce_to_error(err) {
  * @param {unknown} error
  */
 export function normalize_error(error) {
-	return /** @type {import('../runtime/control.js').Redirect | import('../runtime/control.js').HttpError | Error} */ (
+	return /** @type {import('../runtime/control.js').Redirect | HttpError | NonFatalError | Error} */ (
 		error
 	);
+}
+
+/**
+ * @param {unknown} error
+ */
+export function get_status(error) {
+	return error instanceof HttpError || error instanceof NonFatalError ? error.status : 500;
 }

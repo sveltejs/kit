@@ -1,8 +1,8 @@
 import { text } from '../../../exports/index.js';
 import { compact } from '../../../utils/array.js';
-import { normalize_error } from '../../../utils/error.js';
+import { get_status, normalize_error } from '../../../utils/error.js';
 import { add_data_suffix } from '../../../utils/url.js';
-import { HttpError, Redirect } from '../../control.js';
+import { Redirect } from '../../control.js';
 import { redirect_response, static_error_page, handle_error_and_jsonify } from '../utils.js';
 import {
 	handle_action_json_request,
@@ -65,8 +65,7 @@ export async function render_page(event, page, options, manifest, state, resolve
 				return redirect_response(action_result.status, action_result.location);
 			}
 			if (action_result?.type === 'error') {
-				const error = action_result.error;
-				status = error instanceof HttpError ? error.status : 500;
+				status = get_status(action_result.error);
 			}
 			if (action_result?.type === 'failure') {
 				status = action_result.status;
@@ -221,7 +220,7 @@ export async function render_page(event, page, options, manifest, state, resolve
 						return redirect_response(err.status, err.location);
 					}
 
-					const status = err instanceof HttpError ? err.status : 500;
+					const status = get_status(err);
 					const error = await handle_error_and_jsonify(event, options, err);
 
 					while (i--) {

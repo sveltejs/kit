@@ -106,6 +106,43 @@ export function handleError({ error, event }) {
 }
 ```
 
+SvelteKit may handle certain errors as non-fatal. In these cases, it throws a `NonFatalError` which contains a non-sensitive message and the status code. Examples for this are 404s (page not found) or 415s for actions (wrong content-type). These go through `handleError` as well, and you can distinguish them from other unexpected errors via an `instanceof` check.
+
+```js
+/// file: src/hooks.server.js
+// @errors: 2322 1360 2571 2339 2353
+// @filename: ambient.d.ts
+declare module '@sentry/sveltekit' {
+	export const init: (opts: any) => void;
+	export const captureException: (error: any, opts: any) => void;
+}
+
+// @filename: index.js
+// ---cut---
+import * as Sentry from '@sentry/sveltekit';
+import { NonFatalError } from '@sveltejs/kit';
+
+Sentry.init({/*...*/})
+
+/** @type {import('@sveltejs/kit').HandleServerError} */
+export function handleError({ error, event }) {
+	if (error instanceof NonFatalError) {
+		return {
+			message: error.message, // safe to forward
+			code: 'UNKNOWN'
+		};
+	} else {
+		// example integration with https://sentry.io/
+		Sentry.captureException(error, { extra: { event } });
+
+		return {
+			message: 'Whoops!',
+			code: error?.code ?? 'UNKNOWN'
+		};
+	}
+}
+```
+
 > Make sure that `handleError` _never_ throws an error
 
 ## Responses
