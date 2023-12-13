@@ -2,7 +2,7 @@ import * as devalue from 'devalue';
 import { json } from '../../../exports/index.js';
 import { get_status, normalize_error } from '../../../utils/error.js';
 import { is_form_content_type, negotiate } from '../../../utils/http.js';
-import { HttpError, Redirect, ActionFailure, NonFatalError } from '../../control.js';
+import { HttpError, Redirect, ActionFailure, SvelteKitError } from '../../control.js';
 import { handle_error_and_jsonify } from '../utils.js';
 
 /** @param {import('@sveltejs/kit').RequestEvent} event */
@@ -24,7 +24,7 @@ export async function handle_action_json_request(event, options, server) {
 	const actions = server?.actions;
 
 	if (!actions) {
-		const no_actions_error = new NonFatalError(
+		const no_actions_error = new SvelteKitError(
 			405,
 			'POST method not allowed. No actions exist for this page'
 		);
@@ -141,7 +141,7 @@ export async function handle_action_request(event, server) {
 		});
 		return {
 			type: 'error',
-			error: new NonFatalError(405, 'POST method not allowed. No actions exist for this page')
+			error: new SvelteKitError(405, 'POST method not allowed. No actions exist for this page')
 		};
 	}
 
@@ -200,7 +200,7 @@ function check_named_default_separate(actions) {
 /**
  * @param {import('@sveltejs/kit').RequestEvent} event
  * @param {NonNullable<import('types').SSRNode['server']['actions']>} actions
- * @throws {Redirect | HttpError | NonFatalError | Error}
+ * @throws {Redirect | HttpError | SvelteKitError | Error}
  */
 async function call_action(event, actions) {
 	const url = new URL(event.request.url);
@@ -218,11 +218,11 @@ async function call_action(event, actions) {
 
 	const action = actions[name];
 	if (!action) {
-		throw new NonFatalError(404, `No action with name '${name}' found`);
+		throw new SvelteKitError(404, `No action with name '${name}' found`);
 	}
 
 	if (!is_form_content_type(event.request)) {
-		throw new NonFatalError(
+		throw new SvelteKitError(
 			415,
 			'Actions expect form-encoded data',
 			`Received ${event.request.headers.get('content-type')}`

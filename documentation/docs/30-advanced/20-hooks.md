@@ -139,10 +139,10 @@ The following can be added to `src/hooks.server.js` _and_ `src/hooks.client.js`:
 
 ### handleError
 
-If an unexpected error is thrown during loading or rendering, this function will be called with the `error` and the `event`. This allows for two things:
+If an unexpected error is thrown during loading or rendering, this function will be called with the `error`, the `event`, a `status` code and a `message`. This allows for two things:
 
 - you can log the error
-- you can generate a custom representation of the error that is safe to show to users, omitting sensitive details like messages and stack traces. The returned value becomes the value of `$page.error`. It defaults to the message of `NonFatalError` for non-fatal errors within SvelteKit (such as `{ message: 'Not Found' }` in case of a 404) and to `{ message: 'Internal Error' }` for everything else. To make this type-safe, you can customize the expected shape by declaring an `App.Error` interface (which must include `message: string`, to guarantee sensible fallback behavior).
+- you can generate a custom representation of the error that is safe to show to users, omitting sensitive details like messages and stack traces. The returned value becomes the value of `$page.error`. It defaults to the `message` passed in to `handleError`, which doesn't reveal any sensitive information and will be `{ message: 'Internal Error' }` for most errors. To make this type-safe, you can customize the expected shape by declaring an `App.Error` interface (which must include `message: string`, to guarantee sensible fallback behavior).
 
 The following code shows an example of typing the error shape as `{ message: string; errorId: string }` and returning it accordingly from the `handleError` functions:
 

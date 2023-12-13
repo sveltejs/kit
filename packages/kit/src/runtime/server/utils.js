@@ -1,8 +1,8 @@
 import { DEV } from 'esm-env';
 import { json, text } from '../../exports/index.js';
-import { coalesce_to_error, get_status } from '../../utils/error.js';
+import { coalesce_to_error, get_message, get_status } from '../../utils/error.js';
 import { negotiate } from '../../utils/http.js';
-import { HttpError, NonFatalError } from '../control.js';
+import { HttpError } from '../control.js';
 import { fix_stack_trace } from '../shared-server.js';
 import { ENDPOINT_METHODS } from '../../constants.js';
 
@@ -103,10 +103,11 @@ export async function handle_error_and_jsonify(event, options, error) {
 		fix_stack_trace(error);
 	}
 
+	const message = get_message(error);
+
 	return (
-		(await options.hooks.handleError({ error, event })) ?? {
-			message:
-				event.route.id === null && error instanceof NonFatalError ? error.message : 'Internal Error'
+		(await options.hooks.handleError({ error, event, status: get_status(error), message })) ?? {
+			message
 		}
 	);
 }

@@ -356,7 +356,7 @@ export async function dev(vite, vite_config, svelte_config) {
 			ActionFailure: control_module_vite.ActionFailure,
 			HttpError: control_module_vite.HttpError,
 			Redirect: control_module_vite.Redirect,
-			NonFatalError: control_module_vite.NonFatalError
+			SvelteKitError: control_module_vite.SvelteKitError
 		});
 	}
 	align_exports();

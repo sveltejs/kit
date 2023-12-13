@@ -639,6 +639,8 @@ declare module '@sveltejs/kit' {
 	export type HandleServerError = (input: {
 		error: unknown;
 		event: RequestEvent;
+		status: number;
+		message: string;
 	}) => MaybePromise<void | App.Error>;
 
 	/**
@@ -650,6 +652,8 @@ declare module '@sveltejs/kit' {
 	export type HandleClientError = (input: {
 		error: unknown;
 		event: NavigationEvent;
+		status: number;
+		message: string;
 	}) => MaybePromise<void | App.Error>;
 
 	/**
@@ -1743,16 +1747,6 @@ declare module '@sveltejs/kit' {
 		constructor(status: 300 | 301 | 302 | 303 | 304 | 305 | 306 | 307 | 308, location: string);
 		status: 301 | 302 | 303 | 307 | 308 | 300 | 304 | 305 | 306;
 		location: string;
-	}
-	/**
-	 * An error that was thrown from within the SvelteKit runtime that is not fatal and doesn't result in a 500, such as a 404.
-	 * `NonFatalError` goes through `handleError` and you can distinguish it from other errors using `instanceof NonFatalError`.
-	 */
-	export class NonFatalError extends Error {
-		
-		constructor(status: number, message: string, context?: string | undefined);
-		status: number;
-		context: string | undefined;
 	}
 }
 

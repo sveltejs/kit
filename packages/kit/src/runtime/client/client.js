@@ -30,11 +30,11 @@ import { base } from '__sveltekit/paths';
 import * as devalue from 'devalue';
 import { compact } from '../../utils/array.js';
 import { validate_page_exports } from '../../utils/exports.js';
-import { HttpError, Redirect, NonFatalError } from '../control.js';
+import { HttpError, Redirect, SvelteKitError } from '../control.js';
 import { INVALIDATED_PARAM, TRAILING_SLASH_PARAM, validate_depends } from '../shared.js';
 import { INDEX_KEY, PRELOAD_PRIORITIES, SCROLL_KEY, SNAPSHOT_KEY } from './constants.js';
 import { stores } from './singletons.js';
-import { get_status } from '../../utils/error.js';
+import { get_message, get_status } from '../../utils/error.js';
 
 let errored = false;
 
@@ -1060,7 +1060,7 @@ export function create_client(app, target) {
 			navigation_result = await server_fallback(
 				url,
 				{ id: null },
-				await handle_error(new NonFatalError(404, 'Not Found', `Not found: ${url.pathname}`), {
+				await handle_error(new SvelteKitError(404, 'Not Found', `Not found: ${url.pathname}`), {
 					url,
 					params: {},
 					route: { id: null }
@@ -1377,10 +1377,17 @@ export function create_client(app, target) {
 			console.warn('The next HMR update will cause the page to reload');
 		}
 
+		const message = get_message(error);
+
 		return (
-			app.hooks.handleError({ error, event }) ??
+			app.hooks.handleError({
+				error,
+				event,
+				status: get_status(error),
+				message
+			}) ??
 			/** @type {any} */ ({
-				message: error instanceof NonFatalError ? error.message : 'Internal Error'
+				message
 			})
 		);
 	}

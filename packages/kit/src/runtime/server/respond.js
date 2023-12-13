@@ -18,7 +18,7 @@ import { exec } from '../../utils/routing.js';
 import { redirect_json_response, render_data } from './data/index.js';
 import { add_cookies_to_headers, get_cookies } from './cookie.js';
 import { create_fetch } from './fetch.js';
-import { HttpError, Redirect, NonFatalError } from '../control.js';
+import { HttpError, Redirect, SvelteKitError } from '../control.js';
 import {
 	validate_layout_exports,
 	validate_layout_server_exports,
@@ -482,7 +482,7 @@ export async function respond(request, options, manifest, state) {
 					manifest,
 					state,
 					status: 404,
-					error: new NonFatalError(404, 'Not Found', `Not found: ${event.url.pathname}`),
+					error: new SvelteKitError(404, 'Not Found', `Not found: ${event.url.pathname}`),
 					resolve_opts
 				});
 			}

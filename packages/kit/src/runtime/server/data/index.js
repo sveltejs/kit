@@ -1,4 +1,4 @@
-import { HttpError, NonFatalError, Redirect } from '../../control.js';
+import { HttpError, SvelteKitError, Redirect } from '../../control.js';
 import { normalize_error } from '../../../utils/error.js';
 import { once } from '../../../utils/functions.js';
 import { load_server_data } from '../page/load_data.js';
@@ -110,7 +110,7 @@ export async function render_data(
 						type: 'error',
 						error: await handle_error_and_jsonify(event, options, error),
 						status:
-							error instanceof HttpError || error instanceof NonFatalError
+							error instanceof HttpError || error instanceof SvelteKitError
 								? error.status
 								: undefined
 					});

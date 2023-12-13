@@ -1,4 +1,4 @@
-import { HttpError, NonFatalError } from '../runtime/control.js';
+import { HttpError, SvelteKitError } from '../runtime/control.js';
 
 /**
  * @param {unknown} err
@@ -18,7 +18,7 @@ export function coalesce_to_error(err) {
  * @param {unknown} error
  */
 export function normalize_error(error) {
-	return /** @type {import('../runtime/control.js').Redirect | HttpError | NonFatalError | Error} */ (
+	return /** @type {import('../runtime/control.js').Redirect | HttpError | SvelteKitError | Error} */ (
 		error
 	);
 }
@@ -27,5 +27,12 @@ export function normalize_error(error) {
  * @param {unknown} error
  */
 export function get_status(error) {
-	return error instanceof HttpError || error instanceof NonFatalError ? error.status : 500;
+	return error instanceof HttpError || error instanceof SvelteKitError ? error.status : 500;
+}
+
+/**
+ * @param {unknown} error
+ */
+export function get_message(error) {
+	return error instanceof SvelteKitError ? error.message : 'Internal Error';
 }

@@ -107,9 +107,9 @@ As such, SvelteKit 2 replaces `resolvePath` with a (slightly better named) funct
 
 ## Improved error handling
 
-Some errors are handled internally by SvelteKit, but they are not unexpected. In SvelteKit 1 they were all handled by throwing a regular `Error` on a case-by-case basis. This meant it's not easy to distinguish between real unexpected errors and others such as someone calling your action endpoint with the wrong content type.
+Some errors are handled internally by SvelteKit, but they are not unexpected. They were handled either by using the `error` function or throwing a regular `Error` on a case-by-case basis. This meant it's a) not easy to distinguish between real unexpected errors and others such as someone calling your action endpoint with the wrong content type and b) introduces a potential bug where properties that may be required due to a custom `App.Error` interface are missing.
 
-SvelteKit 2 cleans this up by introducing a new `NonFatalError` object which extends `Error` and is thrown by all internal code paths were applicable. You can distinguish these non-fatal errors by doing an `instanceof NonFatalError` check inside `handleError`.
+SvelteKit 2 cleans this up by providing two new properties to `handleError`: `status` and `message`. For unforseen errors, the `status` is 500 and the `message` just `"Internal Error"`, for internal but handleable errors a more specific status code and message is provided, one which is still safe to show to the user.
 
 ## Dynamic environment variables cannot be used during prerendering
 
