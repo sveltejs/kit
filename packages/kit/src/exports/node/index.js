@@ -1,4 +1,5 @@
 import * as set_cookie_parser from 'set-cookie-parser';
+import { SvelteKitError } from '../../runtime/control.js';
 
 /**
  * @param {import('http').IncomingMessage} req
@@ -61,12 +62,13 @@ function get_raw_body(req, body_size_limit) {
 				size += chunk.length;
 				if (size > length) {
 					cancelled = true;
-					controller.error({
-						status: 413,
-						message: `request body size exceeded ${
-							content_length ? "'content-length'" : 'BODY_SIZE_LIMIT'
-						} of ${length}`
-					});
+
+					const constraint = content_length ? 'content-length' : 'BODY_SIZE_LIMIT';
+					const message = `request body size exceeded ${constraint} of ${length}`;
+
+					const error = new SvelteKitError(413, 'Payload Too Large', message);
+					controller.error(error);
+
 					return;
 				}
 
