@@ -66,6 +66,12 @@ export function update_tsconfig_content(content) {
 		);
 	}
 
+	if (content.includes('"paths":') || content.includes('"baseUrl":')) {
+		log_migration(
+			'`paths` and/or `baseUrl` detected in your tsconfig.json - remove it and use `kit.alias` instead: https://kit.svelte.dev/docs/v2-migration-guide#generated-tsconfigjson-is-more-strict'
+		);
+	}
+
 	return updated;
 }
 
