@@ -216,12 +216,11 @@ async function call_action(event, actions) {
 
 	const action = actions[name];
 	if (!action) {
-		throw error(404, `No action with name '${name}' found`);
+		throw new Error(`No action with name '${name}' found`);
 	}
 
 	if (!is_form_content_type(event.request)) {
-		throw error(
-			415,
+		throw new Error(
 			`Actions expect form-encoded data (received ${event.request.headers.get('content-type')})`
 		);
 	}
