@@ -1218,7 +1218,7 @@ test.describe('Actions', () => {
 		});
 		const { type, error } = await response.json();
 		expect(type).toBe('error');
-		expect(error.message).toBe(`Not Found`);
+		expect(error.message).toBe('Not Found');
 		expect(response.status()).toBe(404);
 	});
 });
