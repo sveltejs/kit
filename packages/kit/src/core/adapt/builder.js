@@ -157,7 +157,7 @@ export function create_builder({
 		},
 
 		generateEnvModule() {
-			const dest = `${config.kit.outDir}/output/prerendered/pages/${config.kit.env.publicModule}`;
+			const dest = `${config.kit.outDir}/output/prerendered/dependencies/${config.kit.appDir}/env.js`;
 			const env = get_env(config.kit.env, vite_config.mode);
 
 			write(dest, `export const env=${JSON.stringify(env.public)}`);

@@ -277,7 +277,7 @@ export async function render_response({
 
 	if (page_config.csr) {
 		if (client.uses_env_dynamic_public && state.prerendering) {
-			modulepreloads.add(options.env_public_module);
+			modulepreloads.add(`${options.app_dir}/env.js`);
 		}
 
 		const included_modulepreloads = Array.from(modulepreloads, (dep) => prefixed(dep)).filter(

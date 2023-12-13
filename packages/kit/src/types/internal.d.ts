@@ -332,11 +332,11 @@ export interface SSRNode {
 export type SSRNodeLoader = () => Promise<SSRNode>;
 
 export interface SSROptions {
+	app_dir: string;
 	app_template_contains_nonce: boolean;
 	csp: ValidatedConfig['kit']['csp'];
 	csrf_check_origin: boolean;
 	embedded: boolean;
-	env_public_module: string;
 	env_public_prefix: string;
 	env_private_prefix: string;
 	hooks: ServerHooks;

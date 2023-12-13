@@ -72,7 +72,6 @@ const get_defaults = (prefix = '') => ({
 		embedded: false,
 		env: {
 			dir: process.cwd(),
-			publicModule: '_env.js',
 			publicPrefix: 'PUBLIC_',
 			privatePrefix: ''
 		},

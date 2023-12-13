@@ -31,11 +31,11 @@ import { set_assets } from '__sveltekit/paths';
 import { set_private_env, set_public_env, set_safe_public_env } from '${runtime_directory}/shared-server.js';
 
 export const options = {
+	app_dir: ${s(config.kit.appDir)},
 	app_template_contains_nonce: ${template.includes('%sveltekit.nonce%')},
 	csp: ${s(config.kit.csp)},
 	csrf_check_origin: ${s(config.kit.csrf.checkOrigin)},
 	embedded: ${config.kit.embedded},
-	env_public_module: '${config.kit.env.publicModule}',
 	env_public_prefix: '${config.kit.env.publicPrefix}',
 	env_private_prefix: '${config.kit.env.privatePrefix}',
 	hooks: null, // added lazily, via \`get_hooks\`
