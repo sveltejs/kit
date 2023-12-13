@@ -123,6 +123,10 @@ In SvelteKit 1, those properties included `form` and `data`. These were deprecat
 
 If a form contains an `<input type="file">` but does not have an `enctype="multipart/form-data"` attribute, non-JS submissions will omit the file. SvelteKit 2 will throw an error if it encounters a form like this during a `use:enhance` submission to ensure that your forms work correctly when JavaScript is not present.
 
+## Generated `tsconfig.json` is more strict
+
+Previously, the generated `tsconfig.json` was trying its best to still produce a somewhat valid config when your `tsconfig.json` included `paths` or `baseUrl`. In SvelteKit 2, the validation is more strict and will warn when you use either `paths` or `baseUrl` in your `tsconfig.json`. These settings are used to generate path aliases and you should use [the `alias` config](configuration#alias) option in your `svelte.config.js` instead, to also create a corresponding alias for the bundler.
+
 ## Updated dependency requirements
 
 SvelteKit 2 requires Node `18.13` or higher, and the following minimum dependency versions:
