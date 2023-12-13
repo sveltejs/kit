@@ -69,7 +69,13 @@ export async function load_config({ cwd = process.cwd() } = {}) {
 
 	const config = await import(`${url.pathToFileURL(config_file).href}?ts=${Date.now()}`);
 
-	return process_config(config.default, { cwd });
+	try {
+		return process_config(config.default, { cwd });
+	} catch (e) {
+		// redact the stack trace — it's not helpful to users
+		e.stack = `Could not load svelte.config.js: ${e.message}\n`;
+		throw e;
+	}
 }
 
 /**
