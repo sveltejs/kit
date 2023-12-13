@@ -224,7 +224,7 @@ async function call_action(event, actions) {
 	if (!is_form_content_type(event.request)) {
 		throw new NonFatalError(
 			415,
-			`Actions expect form-encoded data`,
+			'Actions expect form-encoded data',
 			`Received ${event.request.headers.get('content-type')}`
 		);
 	}
