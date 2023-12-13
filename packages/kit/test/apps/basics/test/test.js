@@ -1260,6 +1260,24 @@ test.describe('Actions', () => {
 		expect(error.message).toBe('Actions expect form-encoded data (received application/json)');
 		expect(response.status()).toBe(415);
 	});
+
+	test('submitting to a form action that does not exists, should return http status code 404', async ({
+		baseURL,
+		page
+	}) => {
+		const randomActionName = 'some-random-action';
+		const response = await page.request.fetch(`${baseURL}/actions/enhance?/${randomActionName}`, {
+			method: 'POST',
+			body: 'irrelevant',
+			headers: {
+				Origin: `${baseURL}`
+			}
+		});
+		const { type, error } = await response.json();
+		expect(type).toBe('error');
+		expect(error.message).toBe(`No action with name '${randomActionName}' found`);
+		expect(response.status()).toBe(404);
+	});
 });
 
 // Run in serial to not pollute the log with (correct) cookie warnings
