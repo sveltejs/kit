@@ -2,4 +2,4 @@
 '@sveltejs/kit': minor
 ---
 
-feat: Response.arrayBuffer() now is inlined during ssr
+feat: inline `response.arrayBuffer()` during ssr
