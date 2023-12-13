@@ -566,7 +566,12 @@ export function create_client(app, target) {
 			server: server_data_node,
 			universal: node.universal?.load ? { type: 'data', data, uses } : null,
 			data: data ?? server_data_node?.data ?? null,
-			slash: node.universal?.trailingSlash ?? server_data_node?.slash
+			// if `paths.base === '/a/b/c`, then the root route is `/a/b/c/`,
+			// regardless of the `trailingSlash` route option
+			slash:
+				url.pathname === base || url.pathname === base + '/'
+					? 'always'
+					: node.universal?.trailingSlash ?? server_data_node?.slash
 		};
 	}
 
