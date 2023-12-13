@@ -404,11 +404,15 @@ export function load({ locals }) {
 }
 ```
 
+`error` throws, making it more ergonomic to stop execution within nested logic.
+
 If an _unexpected_ error is thrown, SvelteKit will invoke [`handleError`](hooks#shared-hooks-handleerror) and treat it as a 500 Internal Error.
+
+> [In SvelteKit 1.x](migrating-to-sveltekit-2#redirect-and-error-are-no-longer-thrown-by-you) you had to `throw` the `error` yourself
 
 ## Redirects
 
-To redirect users, use the `redirect` helper from `@sveltejs/kit` to specify the location to which they should be redirected alongside a `3xx` status code.
+To redirect users, use the `redirect` helper from `@sveltejs/kit` to specify the location to which they should be redirected alongside a `3xx` status code. `redirect` throws, making it more ergonomic to stop execution within nested logic.
 
 ```js
 /// file: src/routes/user/+layout.server.js
@@ -437,24 +441,23 @@ export function load({ locals }) {
 
 In the browser, you can also navigate programmatically outside of a `load` function using [`goto`](modules#$app-navigation-goto) from [`$app.navigation`](modules#$app-navigation).
 
+> [In SvelteKit 1.x](migrating-to-sveltekit-2#redirect-and-error-are-no-longer-thrown-by-you) you had to `throw` the `redirect` yourself
+
 ## Streaming with promises
 
-Promises at the _top level_ of the returned object will be awaited, making it easy to return multiple promises without creating a waterfall. When using a server `load`, _nested_ promises will be streamed to the browser as they resolve. This is useful if you have slow, non-essential data, since you can start rendering the page before all the data is available:
+When using a server `load`, promises will be streamed to the browser as they resolve. This is useful if you have slow, non-essential data, since you can start rendering the page before all the data is available:
 
 ```js
 /// file: src/routes/+page.server.js
 /** @type {import('./$types').PageServerLoad} */
 export function load() {
 	return {
-		one: Promise.resolve(1),
-		two: Promise.resolve(2),
-		streamed: {
-			three: new Promise((fulfil) => {
-				setTimeout(() => {
-					fulfil(3)
-				}, 1000);
-			})
-		}
+		streamed: new Promise((fulfil) => {
+			setTimeout(() => {
+				fulfil(2)
+			}, 1000);
+		}),
+		eager: wait Promise.resolve(1)
 	};
 }
 ```
@@ -496,20 +499,20 @@ export function load({ fetch }) {
 	ok_manual.catch(() => {});
 
 	return {
-		streamed: {
-			ok_manual,
-			ok_fetch: fetch('/fetch/that/could/fail'),
-			dangerous_unhandled: Promise.reject()
-		}
+		ok_manual,
+		ok_fetch: fetch('/fetch/that/could/fail'),
+		dangerous_unhandled: Promise.reject()
 	};
 }
 ```
 
 > On platforms that do not support streaming, such as AWS Lambda, responses will be buffered. This means the page will only render once all promises resolve. If you are using a proxy (e.g. NGINX), make sure it does not buffer responses from the proxied server.
 
-> Streaming data will only work when JavaScript is enabled. You should avoid returning nested promises from a universal `load` function if the page is server rendered, as these are _not_ streamed — instead, the promise is recreated when the function reruns in the browser.
+> Streaming data will only work when JavaScript is enabled. You should avoid returning promises from a universal `load` function if the page is server rendered, as these are _not_ streamed — instead, the promise is recreated when the function reruns in the browser.
 
 > The headers and status code of a response cannot be changed once the response has started streaming, therefore you cannot `setHeaders` or throw redirects inside a streamed promise.
+
+> [In SvelteKit 1.x](migrating-to-sveltekit-2#top-level-promises-are-no-longer-awaited) top-level promises were automatically awaited, only nested promises were streamed.
 
 ## Parallel loading
 
