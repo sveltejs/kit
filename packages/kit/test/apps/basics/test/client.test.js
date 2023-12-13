@@ -339,7 +339,7 @@ test.describe('SPA mode / no SSR', () => {
 	}) => {
 		await page.goto('/no-ssr/ssr-page-config/layout/overwrite');
 		await expect(page.locator('p')).toHaveText(
-			'This is your custom error page saying: "document is not defined"'
+			'This is your custom error page saying: "document is not defined (500 Internal Error)"'
 		);
 	});
 });
@@ -800,7 +800,9 @@ test.describe('Streaming', () => {
 		expect(page.locator('p.loadingfail')).toBeVisible();
 
 		await expect(page.locator('p.success', { timeout: 15000 })).toHaveText('success');
-		await expect(page.locator('p.fail', { timeout: 15000 })).toHaveText('fail');
+		await expect(page.locator('p.fail', { timeout: 15000 })).toHaveText(
+			'fail (500 Internal Error)'
+		);
 		expect(page.locator('p.loadingsuccess')).toBeHidden();
 		expect(page.locator('p.loadingfail')).toBeHidden();
 	});
@@ -850,7 +852,7 @@ test.describe('Streaming', () => {
 			expect(page.locator('p.loadingfail')).toBeVisible();
 
 			await expect(page.locator('p.success')).toHaveText('success');
-			await expect(page.locator('p.fail')).toHaveText('fail');
+			await expect(page.locator('p.fail')).toHaveText('fail (500 Internal Error)');
 			expect(page.locator('p.loadingsuccess')).toBeHidden();
 			expect(page.locator('p.loadingfail')).toBeHidden();
 		});

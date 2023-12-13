@@ -24,7 +24,7 @@ export function error_to_pojo(error) {
 }
 
 /** @type {import('@sveltejs/kit').HandleServerError} */
-export const handleError = ({ event, error: e }) => {
+export const handleError = ({ event, error: e, status, message }) => {
 	const error = /** @type {Error} */ (e);
 	// TODO we do this because there's no other way (that i'm aware of)
 	// to communicate errors back to the test suite. even if we could
@@ -35,7 +35,10 @@ export const handleError = ({ event, error: e }) => {
 		: {};
 	errors[event.url.pathname] = error_to_pojo(error);
 	fs.writeFileSync('test/errors.json', JSON.stringify(errors));
-	return event.url.pathname.endsWith('404-fallback') ? undefined : { message: error.message };
+
+	return event.url.pathname.endsWith('404-fallback')
+		? undefined
+		: { message: `${error.message} (${status} ${message})` };
 };
 
 export const handle = sequence(

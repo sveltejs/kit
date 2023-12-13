@@ -289,13 +289,13 @@ test.describe('Errors', () => {
 	test('stack traces are not fixed twice', async ({ page }) => {
 		await page.goto('/errors/stack-trace');
 		expect(await page.textContent('#message')).toBe(
-			'This is your custom error page saying: "Cannot read properties of undefined (reading \'toUpperCase\')"'
+			'This is your custom error page saying: "Cannot read properties of undefined (reading \'toUpperCase\') (500 Internal Error)"'
 		);
 
 		// check the stack wasn't mutated
 		await page.goto('/errors/stack-trace');
 		expect(await page.textContent('#message')).toBe(
-			'This is your custom error page saying: "Cannot read properties of undefined (reading \'toUpperCase\')"'
+			'This is your custom error page saying: "Cannot read properties of undefined (reading \'toUpperCase\') (500 Internal Error)"'
 		);
 	});
 
@@ -358,7 +358,7 @@ test.describe('Errors', () => {
 		expect(await res_json.json()).toEqual({
 			type: 'error',
 			error: {
-				message: 'POST method not allowed. No actions exist for this page'
+				message: 'POST method not allowed. No actions exist for this page (405 Method Not Allowed)'
 			}
 		});
 	});
@@ -389,7 +389,7 @@ test.describe('Errors', () => {
 			expect(error.stack).toBe(undefined);
 			expect(res.status()).toBe(500);
 			expect(error).toEqual({
-				message: 'Error in handle'
+				message: 'Error in handle (500 Internal Error)'
 			});
 		}
 	});

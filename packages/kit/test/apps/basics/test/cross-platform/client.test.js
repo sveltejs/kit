@@ -496,7 +496,7 @@ test.describe.serial('Errors', () => {
 
 		expect(await page.textContent('h1')).toBe('Error - 500');
 		expect(await page.textContent('p')).toBe(
-			'This is the static error page with the following message: Failed to load'
+			'This is the static error page with the following message: Failed to load (500 Internal Error)'
 		);
 	});
 

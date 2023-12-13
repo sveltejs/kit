@@ -586,7 +586,9 @@ test.describe('Nested layouts', () => {
 		expect(await page.$('p#nested')).not.toBeNull();
 		expect(await page.$('p#nested-foo')).not.toBeNull();
 		expect(await page.$('p#nested-bar')).not.toBeNull();
-		expect(await page.textContent('#nested-error-message')).toBe('error.message: nope');
+		expect(await page.textContent('#nested-error-message')).toBe(
+			'error.message: nope (500 Internal Error)'
+		);
 	});
 
 	test('resets layout', async ({ page }) => {
@@ -604,7 +606,9 @@ test.describe('Nested layouts', () => {
 
 		expect(await page.textContent('h1')).toBe('Nested error page');
 		expect(await page.textContent('#nested-error-status')).toBe('status: 500');
-		expect(await page.textContent('#nested-error-message')).toBe('error.message: nope');
+		expect(await page.textContent('#nested-error-message')).toBe(
+			'error.message: nope (500 Internal Error)'
+		);
 	});
 });
 
@@ -1201,7 +1205,9 @@ test.describe('Actions', () => {
 		});
 		const { type, error } = await response.json();
 		expect(type).toBe('error');
-		expect(error.message).toBe('Unsupported Media Type');
+		expect(error.message).toBe(
+			'Form actions expect form-encoded data — received application/json (415 Unsupported Media Type)'
+		);
 		expect(response.status()).toBe(415);
 	});
 
@@ -1218,7 +1224,7 @@ test.describe('Actions', () => {
 		});
 		const { type, error } = await response.json();
 		expect(type).toBe('error');
-		expect(error.message).toBe('Not Found');
+		expect(error.message).toBe("No action with name 'doesnt-exist' found (404 Not Found)");
 		expect(response.status()).toBe(404);
 	});
 });
