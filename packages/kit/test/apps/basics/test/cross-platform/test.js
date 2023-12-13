@@ -482,7 +482,7 @@ test.describe('Redirects', () => {
 			expect(page.url()).toBe(`${baseURL}/redirect/loopy/a`);
 			expect(await page.textContent('h1')).toBe('500');
 			expect(await page.textContent('#message')).toBe(
-				'This is your custom error page saying: "Redirect loop"'
+				'This is your custom error page saying: "Redirect loop (500 Internal Error)"'
 			);
 		} else {
 			// there's not a lot we can do to handle server-side redirect loops

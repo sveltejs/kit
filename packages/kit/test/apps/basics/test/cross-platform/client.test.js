@@ -457,7 +457,7 @@ test.describe.serial('Errors', () => {
 
 		expect(await page.textContent('footer')).toBe('Custom layout');
 		expect(await page.textContent('#message')).toBe(
-			'This is your custom error page saying: "Crashing now"'
+			'This is your custom error page saying: "Crashing now (500 Internal Error)"'
 		);
 	});
 
