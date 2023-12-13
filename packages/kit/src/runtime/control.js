@@ -38,12 +38,12 @@ export class SvelteKitError extends Error {
 	/**
 	 * @param {number} status
 	 * @param {string} message
-	 * @param {string} [context]
+	 * @param {string} [details]
 	 */
-	constructor(status, message, context) {
+	constructor(status, message, details) {
 		super(message);
 		this.status = status;
-		this.context = context;
+		this.details = details;
 	}
 }
 

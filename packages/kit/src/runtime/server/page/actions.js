@@ -141,7 +141,7 @@ export async function handle_action_request(event, server) {
 		});
 		return {
 			type: 'error',
-			error: new SvelteKitError(405, 'POST method not allowed. No actions exist for this page')
+			error: new SvelteKitError(405, 'Method Not Allowed', 'POST method not allowed. No actions exist for this page')
 		};
 	}
 
@@ -218,14 +218,14 @@ async function call_action(event, actions) {
 
 	const action = actions[name];
 	if (!action) {
-		throw new SvelteKitError(404, `No action with name '${name}' found`);
+		throw new SvelteKitError(404, 'Not Found', `No action with name '${name}' found`);
 	}
 
 	if (!is_form_content_type(event.request)) {
 		throw new SvelteKitError(
 			415,
-			'Actions expect form-encoded data',
-			`Received ${event.request.headers.get('content-type')}`
+			'Unsupported Media Type',
+			`Form actions expect form-encoded data — received ${event.request.headers.get('content-type')}`
 		);
 	}
 

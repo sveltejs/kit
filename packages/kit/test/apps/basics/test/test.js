@@ -1201,7 +1201,7 @@ test.describe('Actions', () => {
 		});
 		const { type, error } = await response.json();
 		expect(type).toBe('error');
-		expect(error.message).toBe('Actions expect form-encoded data');
+		expect(error.message).toBe('Unsupported Media Type');
 		expect(response.status()).toBe(415);
 	});
 
@@ -1209,8 +1209,7 @@ test.describe('Actions', () => {
 		baseURL,
 		page
 	}) => {
-		const randomActionName = 'some-random-action';
-		const response = await page.request.fetch(`${baseURL}/actions/enhance?/${randomActionName}`, {
+		const response = await page.request.fetch(`${baseURL}/actions/enhance?/doesnt-exist`, {
 			method: 'POST',
 			body: 'irrelevant',
 			headers: {
@@ -1219,7 +1218,7 @@ test.describe('Actions', () => {
 		});
 		const { type, error } = await response.json();
 		expect(type).toBe('error');
-		expect(error.message).toBe(`No action with name '${randomActionName}' found`);
+		expect(error.message).toBe(`Not Found`);
 		expect(response.status()).toBe(404);
 	});
 });
