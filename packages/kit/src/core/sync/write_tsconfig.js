@@ -41,46 +41,16 @@ export function write_tsconfig(kit, cwd = process.cwd()) {
 	const out = path.join(kit.outDir, 'tsconfig.json');
 
 	const user_config = load_user_tsconfig(cwd);
-	if (user_config) validate_user_config(kit, cwd, out, user_config);
+	if (user_config) validate_user_config(cwd, out, user_config);
 
-	// only specify baseUrl if a) the user doesn't specify their own baseUrl
-	// and b) they have non-relative paths. this causes problems with auto-imports,
-	// so we print a suggestion that they use relative paths instead
-	// TODO(v2): never include base URL, and skip the check below
-	let include_base_url = false;
-
-	if (user_config && !user_config.options.compilerOptions?.baseUrl) {
-		const non_relative_paths = new Set();
-		for (const paths of Object.values(user_config?.options.compilerOptions?.paths || {})) {
-			for (const path of paths) {
-				if (!path.startsWith('.')) non_relative_paths.add(path);
-			}
-		}
-
-		if (non_relative_paths.size) {
-			include_base_url = true;
-
-			console.log(colors.bold().yellow('Please replace non-relative compilerOptions.paths:\n'));
-
-			for (const path of non_relative_paths) {
-				console.log(`  - "${path}" -> "./${path}"`);
-			}
-
-			console.log(
-				'\nDoing so allows us to omit "baseUrl" — which causes problems with imports — from the generated tsconfig.json. See https://github.com/sveltejs/kit/pull/8437 for more information.'
-			);
-		}
-	}
-
-	write_if_changed(out, JSON.stringify(get_tsconfig(kit, include_base_url), null, '\t'));
+	write_if_changed(out, JSON.stringify(get_tsconfig(kit), null, '\t'));
 }
 
 /**
  * Generates the tsconfig that the user's tsconfig inherits from.
  * @param {import('types').ValidatedKitConfig} kit
- * @param {boolean} include_base_url
  */
-export function get_tsconfig(kit, include_base_url) {
+export function get_tsconfig(kit) {
 	/** @param {string} file */
 	const config_relative = (file) => posixify(path.relative(kit.outDir, file));
 
@@ -122,8 +92,7 @@ export function get_tsconfig(kit, include_base_url) {
 	const config = {
 		compilerOptions: {
 			// generated options
-			baseUrl: include_base_url ? config_relative('.') : undefined,
-			paths: get_tsconfig_paths(kit, include_base_url),
+			paths: get_tsconfig_paths(kit),
 			rootDirs: [config_relative('.'), './types'],
 
 			// essential options
@@ -166,12 +135,11 @@ function load_user_tsconfig(cwd) {
 }
 
 /**
- * @param {import('types').ValidatedKitConfig} kit
  * @param {string} cwd
  * @param {string} out
  * @param {{ kind: string, options: any }} config
  */
-function validate_user_config(kit, cwd, out, config) {
+function validate_user_config(cwd, out, config) {
 	// we need to check that the user's tsconfig extends the framework config
 	const extend = config.options.extends;
 	const extends_framework_config =
@@ -184,29 +152,17 @@ function validate_user_config(kit, cwd, out, config) {
 	const options = config.options.compilerOptions || {};
 
 	if (extends_framework_config) {
-		const { paths: user_paths } = options;
+		const { paths, baseUrl } = options;
 
-		if (user_paths && fs.existsSync(kit.files.lib)) {
-			/** @type {string[]} */
-			const lib = user_paths['$lib'] || [];
-			/** @type {string[]} */
-			const lib_ = user_paths['$lib/*'] || [];
-
-			// TODO(v2): check needs to be adjusted when we remove the base path
-			const missing_lib_paths =
-				!lib.some((relative) => path.resolve(cwd, relative) === kit.files.lib) ||
-				!lib_.some((relative) => path.resolve(cwd, relative) === path.join(kit.files.lib, '/*'));
-
-			if (missing_lib_paths) {
-				console.warn(
-					colors
-						.bold()
-						.yellow(`Your compilerOptions.paths in ${config.kind} should include the following:`)
-				);
-				let relative = posixify(path.relative('.', kit.files.lib));
-				if (!relative.startsWith('.')) relative = `./${relative}`;
-				console.warn(`{\n  "$lib":["${relative}"],\n  "$lib/*":["${relative}/*"]\n}`);
-			}
+		if (baseUrl || paths) {
+			console.warn(
+				colors
+					.bold()
+					.yellow(
+						`You have specified a baseUrl and/or paths in your ${config.kind} which interferes with SvelteKit's auto-generated tsconfig.json. ` +
+							'Remove it to avoid problems with intellisense. For path aliases, use `kit.alias` instead: https://kit.svelte.dev/docs/configuration#alias'
+					)
+			);
 		}
 	} else {
 		let relative = posixify(path.relative('.', out));
@@ -231,9 +187,8 @@ const value_regex = /^(.*?)((\/\*)|(\.\w+))?$/;
  * Related to vite alias creation.
  *
  * @param {import('types').ValidatedKitConfig} config
- * @param {boolean} include_base_url
  */
-function get_tsconfig_paths(config, include_base_url) {
+function get_tsconfig_paths(config) {
 	/** @param {string} file */
 	const config_relative = (file) => posixify(path.relative(config.outDir, file));
 
@@ -252,9 +207,7 @@ function get_tsconfig_paths(config, include_base_url) {
 		const value_match = value_regex.exec(value);
 		if (!value_match) throw new Error(`Invalid alias value: ${value}`);
 
-		const rel_path = (include_base_url ? project_relative : config_relative)(
-			remove_trailing_slashstar(value)
-		);
+		const rel_path = config_relative(remove_trailing_slashstar(value));
 		const slashstar = key_match[2];
 
 		if (slashstar) {
