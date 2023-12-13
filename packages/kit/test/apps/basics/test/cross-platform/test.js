@@ -282,7 +282,7 @@ test.describe('Errors', () => {
 
 		expect(await page.textContent('footer')).toBe('Custom layout');
 		expect(await page.textContent('#message')).toBe(
-			'This is your custom error page saying: "Not found: /why/would/anyone/fetch/this/url"'
+			'This is your custom error page saying: "Not Found"'
 		);
 		expect(/** @type {Response} */ (response).status()).toBe(404);
 	});

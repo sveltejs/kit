@@ -1249,7 +1249,7 @@ test.describe('Actions', () => {
 		});
 		const { type, error } = await response.json();
 		expect(type).toBe('error');
-		expect(error.message).toBe('Actions expect form-encoded data (received application/json)');
+		expect(error.message).toBe('Actions expect form-encoded data');
 		expect(response.status()).toBe(415);
 	});
 
