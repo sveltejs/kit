@@ -355,7 +355,8 @@ export async function dev(vite, vite_config, svelte_config) {
 		control_module_node.replace_implementations({
 			ActionFailure: control_module_vite.ActionFailure,
 			HttpError: control_module_vite.HttpError,
-			Redirect: control_module_vite.Redirect
+			Redirect: control_module_vite.Redirect,
+			SvelteKitError: control_module_vite.SvelteKitError
 		});
 	}
 	align_exports();
@@ -471,17 +472,10 @@ export async function dev(vite, vite_config, svelte_config) {
 
 				await server.init({ env });
 
-				let request;
-
-				try {
-					request = await getRequest({
-						base,
-						request: req
-					});
-				} catch (/** @type {any} */ err) {
-					res.statusCode = err.status || 400;
-					return res.end('Invalid request body');
-				}
+				const request = await getRequest({
+					base,
+					request: req
+				});
 
 				if (manifest_error) {
 					console.error(colors.bold().red(manifest_error.message));

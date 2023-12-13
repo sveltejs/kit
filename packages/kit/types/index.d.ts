@@ -639,6 +639,8 @@ declare module '@sveltejs/kit' {
 	export type HandleServerError = (input: {
 		error: unknown;
 		event: RequestEvent;
+		status: number;
+		message: string;
 	}) => MaybePromise<void | App.Error>;
 
 	/**
@@ -650,6 +652,8 @@ declare module '@sveltejs/kit' {
 	export type HandleClientError = (input: {
 		error: unknown;
 		event: NavigationEvent;
+		status: number;
+		message: string;
 	}) => MaybePromise<void | App.Error>;
 
 	/**

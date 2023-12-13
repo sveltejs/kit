@@ -105,6 +105,12 @@ As such, SvelteKit 2 replaces `resolvePath` with a (slightly better named) funct
 
 `svelte-migrate` will do the method replacement for you, though if you later prepend the result with `base`, you need to remove that yourself.
 
+## Improved error handling
+
+Errors are handled inconsistently in SvelteKit 1. Some errors trigger the `handleError` hook but there is no good way to discern their status (for example, the only way to tell a 404 from a 500 is by seeing if `event.route.id` is `null`), while others (such as 405 errors for `POST` requests to pages without actions) don't trigger `handleError` at all, but should. In the latter case, the resulting `$page.error` will deviate from the [`App.Error`](/docs/types#app-error) type, if it is specified.
+
+SvelteKit 2 cleans this up by calling `handleError` hooks with two new properties: `status` and `message`. For errors thrown from your code (or library code called by your code) the status will be `500` and the message will be `Internal Error`. While `error.message` may contain sensitive information that should not be exposed to users, `message` is safe.
+
 ## Dynamic environment variables cannot be used during prerendering
 
 The `$env/dynamic/public` and `$env/dynamic/private` modules provide access to _run time_ environment variables, as opposed to the _build time_ environment variables exposed by `$env/static/public` and `$env/static/private`.
@@ -126,6 +132,12 @@ If a form contains an `<input type="file">` but does not have an `enctype="multi
 ## Generated `tsconfig.json` is more strict
 
 Previously, the generated `tsconfig.json` was trying its best to still produce a somewhat valid config when your `tsconfig.json` included `paths` or `baseUrl`. In SvelteKit 2, the validation is more strict and will warn when you use either `paths` or `baseUrl` in your `tsconfig.json`. These settings are used to generate path aliases and you should use [the `alias` config](configuration#alias) option in your `svelte.config.js` instead, to also create a corresponding alias for the bundler.
+
+## `getRequest` no longer throws errors
+
+The `@sveltejs/kit/node` module exports helper functions for use in Node environments, including `getRequest` which turns a Node [`ClientRequest`](https://nodejs.org/api/http.html#class-httpclientrequest) into a standard [`Request`](https://developer.mozilla.org/en-US/docs/Web/API/Request) object.
+
+In SvelteKit 1, `getRequest` could throw if the `Content-Length` header exceeded the specified size limit. In SvelteKit 2, the error will not be thrown until later, when the request body (if any) is being read. This enables better diagnostics and simpler code.
 
 ## `vitePreprocess` is no longer exported from `@sveltejs/kit/vite`
 

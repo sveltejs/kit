@@ -1,5 +1,5 @@
 import * as set_cookie_parser from 'set-cookie-parser';
-import { error } from '../index.js';
+import { SvelteKitError } from '../../runtime/control.js';
 
 /**
  * @param {import('http').IncomingMessage} req
@@ -22,19 +22,6 @@ function get_raw_body(req, body_size_limit) {
 		return null;
 	}
 
-	let length = content_length;
-
-	if (body_size_limit) {
-		if (!length) {
-			length = body_size_limit;
-		} else if (length > body_size_limit) {
-			error(
-				413,
-				`Received content-length of ${length}, but only accept up to ${body_size_limit} bytes.`
-			);
-		}
-	}
-
 	if (req.destroyed) {
 		const readable = new ReadableStream();
 		readable.cancel();
@@ -46,6 +33,17 @@ function get_raw_body(req, body_size_limit) {
 
 	return new ReadableStream({
 		start(controller) {
+			if (body_size_limit !== undefined && content_length > body_size_limit) {
+				const error = new SvelteKitError(
+					413,
+					'Payload Too Large',
+					`Content-length of ${content_length} exceeds limit of ${body_size_limit} bytes.`
+				);
+
+				controller.error(error);
+				return;
+			}
+
 			req.on('error', (error) => {
 				cancelled = true;
 				controller.error(error);
@@ -60,16 +58,15 @@ function get_raw_body(req, body_size_limit) {
 				if (cancelled) return;
 
 				size += chunk.length;
-				if (size > length) {
+				if (size > content_length) {
 					cancelled = true;
-					controller.error(
-						error(
-							413,
-							`request body size exceeded ${
-								content_length ? "'content-length'" : 'BODY_SIZE_LIMIT'
-							} of ${length}`
-						)
-					);
+
+					const constraint = content_length ? 'content-length' : 'BODY_SIZE_LIMIT';
+					const message = `request body size exceeded ${constraint} of ${content_length}`;
+
+					const error = new SvelteKitError(413, 'Payload Too Large', message);
+					controller.error(error);
+
 					return;
 				}
 

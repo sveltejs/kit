@@ -18,7 +18,7 @@ import { exec } from '../../utils/routing.js';
 import { redirect_json_response, render_data } from './data/index.js';
 import { add_cookies_to_headers, get_cookies } from './cookie.js';
 import { create_fetch } from './fetch.js';
-import { HttpError, Redirect, NotFound } from '../control.js';
+import { HttpError, Redirect, SvelteKitError } from '../control.js';
 import {
 	validate_layout_exports,
 	validate_layout_server_exports,
@@ -364,12 +364,6 @@ export async function respond(request, options, manifest, state) {
 	async function resolve(event, opts) {
 		try {
 			if (opts) {
-				if ('ssr' in opts) {
-					throw new Error(
-						'ssr has been removed, set it in the appropriate +layout.js instead. See the PR for more information: https://github.com/sveltejs/kit/pull/6197'
-					);
-				}
-
 				resolve_opts = {
 					transformPageChunk: opts.transformPageChunk || default_transform,
 					filterSerializedResponseHeaders: opts.filterSerializedResponseHeaders || default_filter,
@@ -488,7 +482,7 @@ export async function respond(request, options, manifest, state) {
 					manifest,
 					state,
 					status: 404,
-					error: new NotFound(event.url.pathname),
+					error: new SvelteKitError(404, 'Not Found', `Not found: ${event.url.pathname}`),
 					resolve_opts
 				});
 			}

@@ -77,36 +77,7 @@ By default, unexpected errors are printed to the console (or, in production, you
 { "message": "Internal Error" }
 ```
 
-Unexpected errors will go through the [`handleError`](hooks#shared-hooks-handleerror) hook, where you can add your own error handling — for example, sending errors to a reporting service, or returning a custom error object.
-
-```js
-/// file: src/hooks.server.js
-// @errors: 2322 1360 2571 2339 2353
-// @filename: ambient.d.ts
-declare module '@sentry/sveltekit' {
-	export const init: (opts: any) => void;
-	export const captureException: (error: any, opts: any) => void;
-}
-
-// @filename: index.js
-// ---cut---
-import * as Sentry from '@sentry/sveltekit';
-
-Sentry.init({/*...*/})
-
-/** @type {import('@sveltejs/kit').HandleServerError} */
-export function handleError({ error, event }) {
-	// example integration with https://sentry.io/
-	Sentry.captureException(error, { extra: { event } });
-
-	return {
-		message: 'Whoops!',
-		code: error?.code ?? 'UNKNOWN'
-	};
-}
-```
-
-> Make sure that `handleError` _never_ throws an error
+Unexpected errors will go through the [`handleError`](hooks#shared-hooks-handleerror) hook, where you can add your own error handling — for example, sending errors to a reporting service, or returning a custom error object which becomes `$page.error`.
 
 ## Responses
 

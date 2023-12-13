@@ -81,13 +81,6 @@ export class Server {
 	 * @param {import('types').RequestOptions} options
 	 */
 	async respond(request, options) {
-		// TODO this should probably have been removed for 1.0 — i think we can get rid of it?
-		if (!(request instanceof Request)) {
-			throw new Error(
-				'The first argument to server.respond must be a Request object. See https://github.com/sveltejs/kit/pull/3384 for details'
-			);
-		}
-
 		return respond(request, this.#options, this.#manifest, {
 			...options,
 			error: false,

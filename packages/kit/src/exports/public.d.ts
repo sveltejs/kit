@@ -657,6 +657,8 @@ export type Handle = (input: {
 export type HandleServerError = (input: {
 	error: unknown;
 	event: RequestEvent;
+	status: number;
+	message: string;
 }) => MaybePromise<void | App.Error>;
 
 /**
@@ -668,6 +670,8 @@ export type HandleServerError = (input: {
 export type HandleClientError = (input: {
 	error: unknown;
 	event: NavigationEvent;
+	status: number;
+	message: string;
 }) => MaybePromise<void | App.Error>;
 
 /**

@@ -586,7 +586,9 @@ test.describe('Nested layouts', () => {
 		expect(await page.$('p#nested')).not.toBeNull();
 		expect(await page.$('p#nested-foo')).not.toBeNull();
 		expect(await page.$('p#nested-bar')).not.toBeNull();
-		expect(await page.textContent('#nested-error-message')).toBe('error.message: nope');
+		expect(await page.textContent('#nested-error-message')).toBe(
+			'error.message: nope (500 Internal Error)'
+		);
 	});
 
 	test('resets layout', async ({ page }) => {
@@ -604,7 +606,9 @@ test.describe('Nested layouts', () => {
 
 		expect(await page.textContent('h1')).toBe('Nested error page');
 		expect(await page.textContent('#nested-error-status')).toBe('status: 500');
-		expect(await page.textContent('#nested-error-message')).toBe('error.message: nope');
+		expect(await page.textContent('#nested-error-message')).toBe(
+			'error.message: nope (500 Internal Error)'
+		);
 	});
 });
 
@@ -1185,6 +1189,43 @@ test.describe('Actions', () => {
 		await page.locator('button').click();
 
 		await expect(page.locator('pre')).toHaveText('something went wrong');
+	});
+
+	test('submitting application/json should return http status code 415', async ({
+		baseURL,
+		page
+	}) => {
+		const response = await page.request.fetch(`${baseURL}/actions/form-errors`, {
+			method: 'POST',
+			body: JSON.stringify({ foo: 'bar' }),
+			headers: {
+				'Content-Type': 'application/json',
+				Origin: `${baseURL}`
+			}
+		});
+		const { type, error } = await response.json();
+		expect(type).toBe('error');
+		expect(error.message).toBe(
+			'Form actions expect form-encoded data — received application/json (415 Unsupported Media Type)'
+		);
+		expect(response.status()).toBe(415);
+	});
+
+	test('submitting to a form action that does not exists, should return http status code 404', async ({
+		baseURL,
+		page
+	}) => {
+		const response = await page.request.fetch(`${baseURL}/actions/enhance?/doesnt-exist`, {
+			method: 'POST',
+			body: 'irrelevant',
+			headers: {
+				Origin: `${baseURL}`
+			}
+		});
+		const { type, error } = await response.json();
+		expect(type).toBe('error');
+		expect(error.message).toBe("No action with name 'doesnt-exist' found (404 Not Found)");
+		expect(response.status()).toBe(404);
 	});
 });
 

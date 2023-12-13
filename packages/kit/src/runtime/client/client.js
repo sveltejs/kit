@@ -30,10 +30,11 @@ import { base } from '__sveltekit/paths';
 import * as devalue from 'devalue';
 import { compact } from '../../utils/array.js';
 import { validate_page_exports } from '../../utils/exports.js';
-import { HttpError, Redirect, NotFound } from '../control.js';
+import { HttpError, Redirect, SvelteKitError } from '../control.js';
 import { INVALIDATED_PARAM, TRAILING_SLASH_PARAM, validate_depends } from '../shared.js';
 import { INDEX_KEY, PRELOAD_PRIORITIES, SCROLL_KEY, SNAPSHOT_KEY } from './constants.js';
 import { stores } from './singletons.js';
+import { get_message, get_status } from '../../utils/error.js';
 
 let errored = false;
 
@@ -704,7 +705,7 @@ export function create_client(app, target) {
 				server_data = await load_data(url, invalid_server_nodes);
 			} catch (error) {
 				return load_root_error_page({
-					status: error instanceof HttpError ? error.status : 500,
+					status: get_status(error),
 					error: await handle_error(error, { url, params, route: { id: route.id } }),
 					url,
 					route
@@ -788,7 +789,7 @@ export function create_client(app, target) {
 						};
 					}
 
-					let status = 500;
+					let status = get_status(err);
 					/** @type {App.Error} */
 					let error;
 
@@ -798,7 +799,6 @@ export function create_client(app, target) {
 						status = /** @type {import('types').ServerErrorNode} */ (err).status ?? status;
 						error = /** @type {import('types').ServerErrorNode} */ (err).error;
 					} else if (err instanceof HttpError) {
-						status = err.status;
 						error = err.body;
 					} else {
 						// Referenced node could have been removed due to redeploy, check
@@ -1060,7 +1060,7 @@ export function create_client(app, target) {
 			navigation_result = await server_fallback(
 				url,
 				{ id: null },
-				await handle_error(new Error(`Not found: ${url.pathname}`), {
+				await handle_error(new SvelteKitError(404, 'Not Found', `Not found: ${url.pathname}`), {
 					url,
 					params: {},
 					route: { id: null }
@@ -1377,12 +1377,11 @@ export function create_client(app, target) {
 			console.warn('The next HMR update will cause the page to reload');
 		}
 
+		const status = get_status(error);
+		const message = get_message(error);
+
 		return (
-			app.hooks.handleError({ error, event }) ??
-			/** @type {any} */ ({
-				message:
-					event.route.id === null && error instanceof NotFound ? 'Not Found' : 'Internal Error'
-			})
+			app.hooks.handleError({ error, event, status, message }) ?? /** @type {any} */ ({ message })
 		);
 	}
 
@@ -1908,7 +1907,7 @@ export function create_client(app, target) {
 				}
 
 				result = await load_root_error_page({
-					status: error instanceof HttpError ? error.status : 500,
+					status: get_status(error),
 					error: await handle_error(error, { url, params, route }),
 					url,
 					route
