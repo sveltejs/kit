@@ -911,54 +911,6 @@ test.describe('Actions', () => {
 		);
 	});
 
-	test('Accessing v2 deprecated properties results in a warning log', async ({
-		page,
-		javaScriptEnabled
-	}) => {
-		test.skip(!javaScriptEnabled, 'skip when js is disabled');
-		test.skip(!process.env.DEV, 'skip when not in dev mode');
-		await page.goto('/actions/enhance/old-property-access');
-
-		for (const { id, old_name, new_name, call_location } of [
-			{
-				id: 'access-form-in-submit',
-				old_name: 'form',
-				new_name: 'formElement',
-				call_location: 'use:enhance submit function'
-			},
-			{
-				id: 'access-form-in-callback',
-				old_name: 'form',
-				new_name: 'formElement',
-				call_location: 'callback returned from use:enhance submit function'
-			},
-			{
-				id: 'access-data-in-submit',
-				old_name: 'data',
-				new_name: 'formData',
-				call_location: 'use:enhance submit function'
-			},
-			{
-				id: 'access-data-in-callback',
-				old_name: 'data',
-				new_name: 'formData',
-				call_location: 'callback returned from use:enhance submit function'
-			}
-		]) {
-			await test.step(id, async () => {
-				const log_promise = page.waitForEvent('console');
-				const button = page.locator(`#${id}`);
-				await button.click();
-				await expect(button).toHaveAttribute('data-processed', 'true');
-				const log = await log_promise;
-				expect(log.text()).toBe(
-					`\`${old_name}\` has been deprecated in favor of \`${new_name}\`. \`${old_name}\` will be removed in a future version. (Called from ${call_location})`
-				);
-				expect(log.type()).toBe('warning');
-			});
-		}
-	});
-
 	test('Error props are returned', async ({ page, javaScriptEnabled }) => {
 		await page.goto('/actions/form-errors');
 		await page.click('button');
