@@ -1837,7 +1837,6 @@ declare module '@sveltejs/kit/node/polyfills' {
 }
 
 declare module '@sveltejs/kit/vite' {
-	export { vitePreprocess } from '@sveltejs/vite-plugin-svelte';
 	/**
 	 * Returns the SvelteKit Vite plugins.
 	 * */
