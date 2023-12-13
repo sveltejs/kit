@@ -105,6 +105,16 @@ As such, SvelteKit 2 replaces `resolvePath` with a (slightly better named) funct
 
 `svelte-migrate` will do the method replacement for you, though if you later prepend the result with `base`, you need to remove that yourself.
 
+## `form` and `data` have been removed from `use:enhance` callbacks
+
+If you provide a callback to [`use:enhance`](/docs/form-actions#progressive-enhancement-use-enhance), it will be called with an object containing various useful properties.
+
+In SvelteKit 1, those properties included `form` and `data`. These were deprecated some time ago in favour of `formElement` and `formData`, and have been removed altogether in SvelteKit 2.
+
+## Forms containing file inputs must use `multipart/form-data`
+
+If a form contains an `<input type="file">` but does not have an `enctype="multipart/form-data"` attribute, non-JS submissions will omit the file. SvelteKit 2 will throw an error if it encounters a form like this during a `use:enhance` submission to ensure that your forms work correctly when JavaScript is not present.
+
 ## Updated dependency requirements
 
 SvelteKit requires Node `18.13` or higher, Vite `^5.0`, vite-plugin-svelte `^3.0`, TypeScript `^5.0` and Svelte version 4 or higher. `svelte-migrate` will do the `package.json` bumps for you.
