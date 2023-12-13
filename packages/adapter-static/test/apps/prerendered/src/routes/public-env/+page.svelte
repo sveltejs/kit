@@ -1,5 +1,5 @@
 <script>
-	import { env } from '$env/dynamic/public';
+	import { PUBLIC_ANSWER } from '$env/static/public';
 </script>
 
-<h1>The answer is {env.PUBLIC_ANSWER}</h1>
+<h1>The answer is {PUBLIC_ANSWER}</h1>
