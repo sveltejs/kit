@@ -105,6 +105,14 @@ As such, SvelteKit 2 replaces `resolvePath` with a (slightly better named) funct
 
 `svelte-migrate` will do the method replacement for you, though if you later prepend the result with `base`, you need to remove that yourself.
 
+## Dynamic environment variables cannot be used during prerendering
+
+The `$env/dynamic/public` and `$env/dynamic/private` modules provide access to _run time_ environment variables, as opposed to the _build time_ environment variables exposed by `$env/static/public` and `$env/static/private`.
+
+During prerendering in SvelteKit 1, they are one and the same. As such, prerendered pages that make use of 'dynamic' environment variables are really 'baking in' build time values, which is incorrect. Worse, `$env/dynamic/public` is populated in the browser with these stale values if the user happens to land on a prerendered page before navigating to dynamically-rendered pages.
+
+Because of this, dynamic environment variables can no longer be read during prerendering in SvelteKit 2 — you should use the `static` modules instead. If the user lands on a prerendered page, SvelteKit will request up-to-date values for `$env/dynamic/public` from the server (by default from a module called `_env.js` — this can be configured with `config.kit.env.publicModule`) instead of reading them from the server-rendered HTML.
+
 ## Updated dependency requirements
 
 SvelteKit requires Node `18.13` or higher, Vite `^5.0`, vite-plugin-svelte `^3.0`, TypeScript `^5.0` and Svelte version 4 or higher. `svelte-migrate` will do the `package.json` bumps for you.
