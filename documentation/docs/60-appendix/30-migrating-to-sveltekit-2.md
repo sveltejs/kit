@@ -115,6 +115,16 @@ Because of this, dynamic environment variables can no longer be read during prer
 
 ## Updated dependency requirements
 
-SvelteKit requires Node `18.13` or higher, Vite `^5.0`, vite-plugin-svelte `^3.0`, TypeScript `^5.0` and Svelte version 4 or higher. `svelte-migrate` will do the `package.json` bumps for you.
+SvelteKit 2 requires Node `18.13` or higher, and the following minimum dependency versions:
+
+- `svelte@4`
+- `vite@5`
+- `typescript@5`
+- `@sveltejs/adapter-static@3` (if you're using it)
+- `@sveltejs/vite-plugin-svelte@3` (this is now required as a `peerDependency` of SvelteKit — previously it was directly depended upon)
+
+`svelte-migrate` will update your `package.json` for you.
 
 As part of the TypeScript upgrade, the generated `tsconfig.json` (the one your `tsconfig.json` extends from) now uses `"moduleResolution": "bundler"` (which is recommended by the TypeScript team, as it properly resolves types from packages with an `exports` map in package.json) and `verbatimModuleSyntax` (which replaces the existing `importsNotUsedAsValues ` and `preserveValueImports` flags — if you have those in your `tsconfig.json`, remove them. `svelte-migrate` will do this for you).
+
+SvelteKit 2 uses ES2022 features, which are supported in all modern browsers.
