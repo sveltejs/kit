@@ -918,67 +918,19 @@ test.describe('Actions', () => {
 		expect(preSubmitContent).not.toBe(postSubmitContent);
 	});
 
-	test('Submitting a form with a file input but no enctype="multipart/form-data" logs a warning', async ({
+	test('Submitting a form with a file input but no enctype="multipart/form-data" throws an error', async ({
 		page,
 		javaScriptEnabled
 	}) => {
 		test.skip(!javaScriptEnabled, 'Skip when JavaScript is disabled');
 		test.skip(!process.env.DEV, 'Skip when not in dev mode');
 		await page.goto('/actions/file-without-enctype');
-		const log_promise = page.waitForEvent('console');
+		const error_promise = page.waitForEvent('pageerror');
 		await page.click('button');
-		const log = await log_promise;
-		expect(log.text()).toBe(
-			'Your form contains <input type="file"> fields, but is missing the `enctype="multipart/form-data"` attribute. This will lead to inconsistent behavior between enhanced and native forms. For more details, see https://github.com/sveltejs/kit/issues/9819. This will be upgraded to an error in v2.0.'
+		const error = await error_promise;
+		expect(error.message).toBe(
+			'Your form contains <input type="file"> fields, but is missing the necessary `enctype="multipart/form-data"` attribute. This will lead to inconsistent behavior between enhanced and native forms. For more details, see https://github.com/sveltejs/kit/issues/9819.'
 		);
-	});
-
-	test('Accessing v2 deprecated properties results in a warning log', async ({
-		page,
-		javaScriptEnabled
-	}) => {
-		test.skip(!javaScriptEnabled, 'skip when js is disabled');
-		test.skip(!process.env.DEV, 'skip when not in dev mode');
-		await page.goto('/actions/enhance/old-property-access');
-
-		for (const { id, old_name, new_name, call_location } of [
-			{
-				id: 'access-form-in-submit',
-				old_name: 'form',
-				new_name: 'formElement',
-				call_location: 'use:enhance submit function'
-			},
-			{
-				id: 'access-form-in-callback',
-				old_name: 'form',
-				new_name: 'formElement',
-				call_location: 'callback returned from use:enhance submit function'
-			},
-			{
-				id: 'access-data-in-submit',
-				old_name: 'data',
-				new_name: 'formData',
-				call_location: 'use:enhance submit function'
-			},
-			{
-				id: 'access-data-in-callback',
-				old_name: 'data',
-				new_name: 'formData',
-				call_location: 'callback returned from use:enhance submit function'
-			}
-		]) {
-			await test.step(id, async () => {
-				const log_promise = page.waitForEvent('console');
-				const button = page.locator(`#${id}`);
-				await button.click();
-				await expect(button).toHaveAttribute('data-processed', 'true');
-				const log = await log_promise;
-				expect(log.text()).toBe(
-					`\`${old_name}\` has been deprecated in favor of \`${new_name}\`. \`${old_name}\` will be removed in a future version. (Called from ${call_location})`
-				);
-				expect(log.type()).toBe('warning');
-			});
-		}
 	});
 
 	test('Error props are returned', async ({ page, javaScriptEnabled }) => {
