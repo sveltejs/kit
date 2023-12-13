@@ -18,7 +18,7 @@ export default function (options) {
 									has_param_routes
 										? '(routes with parameters are not part of entry points by default)'
 										: ''
-							  } — see https://kit.svelte.dev/docs/configuration#prerender for more info.`
+								} — see https://kit.svelte.dev/docs/configuration#prerender for more info.`
 							: '';
 
 					builder.log.error(

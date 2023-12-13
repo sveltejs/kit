@@ -40,8 +40,8 @@ export interface Adapter {
 export type LoadProperties<input extends Record<string, any> | void> = input extends void
 	? undefined // needs to be undefined, because void will break intellisense
 	: input extends Record<string, any>
-	  ? input
-	  : unknown;
+		? input
+		: unknown;
 
 export type AwaitedActions<T extends Record<string, (...args: any) => any>> = OptionalUnion<
 	{
@@ -67,8 +67,8 @@ export interface ActionFailure<T extends Record<string, unknown> | undefined = u
 type UnpackValidationError<T> = T extends ActionFailure<infer X>
 	? X
 	: T extends void
-	  ? undefined // needs to be undefined, because void will corrupt union type
-	  : T;
+		? undefined // needs to be undefined, because void will corrupt union type
+		: T;
 
 /**
  * This object is passed to the `adapt` function of adapters.
@@ -1254,17 +1254,7 @@ export type SubmitFunction<
 	Failure extends Record<string, unknown> | undefined = Record<string, any>
 > = (input: {
 	action: URL;
-	/**
-	 * use `formData` instead of `data`
-	 * @deprecated
-	 */
-	data: FormData;
 	formData: FormData;
-	/**
-	 * use `formElement` instead of `form`
-	 * @deprecated
-	 */
-	form: HTMLFormElement;
 	formElement: HTMLFormElement;
 	controller: AbortController;
 	submitter: HTMLElement | null;
@@ -1272,17 +1262,7 @@ export type SubmitFunction<
 }) => MaybePromise<
 	| void
 	| ((opts: {
-			/**
-			 * use `formData` instead of `data`
-			 * @deprecated
-			 */
-			data: FormData;
 			formData: FormData;
-			/**
-			 * use `formElement` instead of `form`
-			 * @deprecated
-			 */
-			form: HTMLFormElement;
 			formElement: HTMLFormElement;
 			action: URL;
 			result: ActionResult<Success, Failure>;

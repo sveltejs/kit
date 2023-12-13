@@ -31,9 +31,9 @@
 	},
 	"devDependencies": {
 		"@sveltejs/kit": "workspace:^",
-		"@sveltejs/vite-plugin-svelte": "^3.0.0",
-		"@types/node": "^18.19.1",
-		"typescript": "^5.3.2"
+		"@sveltejs/vite-plugin-svelte": "^3.0.1",
+		"@types/node": "^18.19.3",
+		"typescript": "^5.3.3"
 	},
 	"dependencies": {
 		"import-meta-resolve": "^4.0.0"

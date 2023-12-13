@@ -471,7 +471,7 @@ export async function render_response({
 		? text(transformed, {
 				status,
 				headers
-		  })
+			})
 		: new Response(
 				new ReadableStream({
 					async start(controller) {
@@ -489,7 +489,7 @@ export async function render_response({
 						'content-type': 'text/html'
 					}
 				}
-		  );
+			);
 }
 
 /**

@@ -65,7 +65,7 @@ If you are still encountering issues we recommend searching both [the Vite issue
 
 ## How do I use the view transitions API with SvelteKit?
 
-While SvelteKit does not have any specific integration with [view transitions](https://developer.chrome.com/docs/web-platform/view-transitions/), you can call `document.startViewTransition` in [`onNavigate`](/docs/modules#$app-navigation-onnavigate) to trigger a view transition on every navigation.
+While SvelteKit does not have any specific integration with [view transitions](https://developer.chrome.com/docs/web-platform/view-transitions/), you can call `document.startViewTransition` in [`onNavigate`](/docs/modules#$app-navigation-onnavigate) to trigger a view transition on every client-side navigation.
 
 ```js
 // @errors: 2339 2810

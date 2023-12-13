@@ -32,14 +32,14 @@
 		"prepublishOnly": "pnpm build"
 	},
 	"dependencies": {
-		"@cloudflare/workers-types": "^4.20230404.0",
-		"esbuild": "^0.19.3",
+		"@cloudflare/workers-types": "^4.20231121.0",
+		"esbuild": "^0.19.9",
 		"worktop": "0.8.0-next.15"
 	},
 	"devDependencies": {
-		"@types/node": "^18.19.1",
-		"@types/ws": "^8.5.3",
-		"typescript": "^5.3.2"
+		"@types/node": "^18.19.3",
+		"@types/ws": "^8.5.10",
+		"typescript": "^5.3.3"
 	},
 	"peerDependencies": {
 		"@sveltejs/kit": "^1.0.0 || ^2.0.0"

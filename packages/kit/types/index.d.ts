@@ -22,8 +22,8 @@ declare module '@sveltejs/kit' {
 	export type LoadProperties<input extends Record<string, any> | void> = input extends void
 		? undefined // needs to be undefined, because void will break intellisense
 		: input extends Record<string, any>
-		  ? input
-		  : unknown;
+			? input
+			: unknown;
 
 	export type AwaitedActions<T extends Record<string, (...args: any) => any>> = OptionalUnion<
 		{
@@ -49,8 +49,8 @@ declare module '@sveltejs/kit' {
 	type UnpackValidationError<T> = T extends ActionFailure<infer X>
 		? X
 		: T extends void
-		  ? undefined // needs to be undefined, because void will corrupt union type
-		  : T;
+			? undefined // needs to be undefined, because void will corrupt union type
+			: T;
 
 	/**
 	 * This object is passed to the `adapt` function of adapters.
@@ -1239,17 +1239,7 @@ declare module '@sveltejs/kit' {
 		Failure extends Record<string, unknown> | undefined = Record<string, any>
 	> = (input: {
 		action: URL;
-		/**
-		 * use `formData` instead of `data`
-		 * @deprecated
-		 */
-		data: FormData;
 		formData: FormData;
-		/**
-		 * use `formElement` instead of `form`
-		 * @deprecated
-		 */
-		form: HTMLFormElement;
 		formElement: HTMLFormElement;
 		controller: AbortController;
 		submitter: HTMLElement | null;
@@ -1257,17 +1247,7 @@ declare module '@sveltejs/kit' {
 	}) => MaybePromise<
 		| void
 		| ((opts: {
-				/**
-				 * use `formData` instead of `data`
-				 * @deprecated
-				 */
-				data: FormData;
 				formData: FormData;
-				/**
-				 * use `formElement` instead of `form`
-				 * @deprecated
-				 */
-				form: HTMLFormElement;
 				formElement: HTMLFormElement;
 				action: URL;
 				result: ActionResult<Success, Failure>;
@@ -2005,7 +1985,7 @@ declare module '$app/navigation' {
 	 * */
 	export const beforeNavigate: (callback: (navigation: import('@sveltejs/kit').BeforeNavigate) => void) => void;
 	/**
-	 * A lifecycle function that runs the supplied `callback` immediately before we navigate to a new URL.
+	 * A lifecycle function that runs the supplied `callback` immediately before we navigate to a new URL except during full-page navigations.
 	 *
 	 * If you return a `Promise`, SvelteKit will wait for it to resolve before completing the navigation. This allows you to — for example — use `document.startViewTransition`. Avoid promises that are slow to resolve, since navigation will appear stalled to the user.
 	 *
@@ -2176,7 +2156,7 @@ declare module '__sveltekit/paths' {
 	 * > If a value for `config.kit.paths.assets` is specified, it will be replaced with `'/_svelte_kit_assets'` during `vite dev` or `vite preview`, since the assets don't yet live at their eventual URL.
 	 */
 	export let assets: '' | `https://${string}` | `http://${string}` | '/_svelte_kit_assets';
-	export let relative: boolean | undefined; // TODO in 2.0, make this a `boolean` that defaults to `true`
+	export let relative: boolean;
 	export function reset(): void;
 	export function override(paths: { base: string; assets: string }): void;
 	export function set_assets(path: string): void;
