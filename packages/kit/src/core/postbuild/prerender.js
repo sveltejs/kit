@@ -150,6 +150,7 @@ async function prerender({ out, manifest_path, metadata, verbose, env }) {
 	}
 
 	const files = new Set(walk(`${out}/client`).map(posixify));
+	files.add(config.env.publicModule);
 
 	const immutable = `${config.appDir}/immutable`;
 	if (existsSync(`${out}/server/${immutable}`)) {

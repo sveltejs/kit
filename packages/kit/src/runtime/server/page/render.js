@@ -276,6 +276,10 @@ export async function render_response({
 	}
 
 	if (page_config.csr) {
+		if (client.uses_env_dynamic_public && state.prerendering) {
+			modulepreloads.add(options.env_public_module);
+		}
+
 		const included_modulepreloads = Array.from(modulepreloads, (dep) => prefixed(dep)).filter(
 			(path) => resolve_opts.preload({ type: 'js', path })
 		);
@@ -296,7 +300,7 @@ export async function render_response({
 		const properties = [
 			paths.assets && `assets: ${s(paths.assets)}`,
 			`base: ${base_expression}`,
-			`env: ${state.prerendering ? null : s(public_env)}`
+			`env: ${!client.uses_env_dynamic_public || state.prerendering ? null : s(public_env)}`
 		].filter(Boolean);
 
 		if (chunks) {

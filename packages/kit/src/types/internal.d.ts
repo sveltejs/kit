@@ -60,6 +60,7 @@ export interface BuildData {
 		imports: string[];
 		stylesheets: string[];
 		fonts: string[];
+		uses_env_dynamic_public: boolean;
 	} | null;
 	server_manifest: import('vite').Manifest;
 }
