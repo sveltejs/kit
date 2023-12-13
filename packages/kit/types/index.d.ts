@@ -1229,17 +1229,7 @@ declare module '@sveltejs/kit' {
 		Failure extends Record<string, unknown> | undefined = Record<string, any>
 	> = (input: {
 		action: URL;
-		/**
-		 * use `formData` instead of `data`
-		 * @deprecated
-		 */
-		data: FormData;
 		formData: FormData;
-		/**
-		 * use `formElement` instead of `form`
-		 * @deprecated
-		 */
-		form: HTMLFormElement;
 		formElement: HTMLFormElement;
 		controller: AbortController;
 		submitter: HTMLElement | null;
@@ -1247,17 +1237,7 @@ declare module '@sveltejs/kit' {
 	}) => MaybePromise<
 		| void
 		| ((opts: {
-				/**
-				 * use `formData` instead of `data`
-				 * @deprecated
-				 */
-				data: FormData;
 				formData: FormData;
-				/**
-				 * use `formElement` instead of `form`
-				 * @deprecated
-				 */
-				form: HTMLFormElement;
 				formElement: HTMLFormElement;
 				action: URL;
 				result: ActionResult<Success, Failure>;
