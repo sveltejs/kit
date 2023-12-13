@@ -160,7 +160,6 @@ export function enhance(form_element, submit = () => {}) {
 		let cancelled = false;
 		const cancel = () => (cancelled = true);
 
-		// TODO 2.0: Remove `data` and `form`
 		const callback =
 			(await submit({
 				action,
