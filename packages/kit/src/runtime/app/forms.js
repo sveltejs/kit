@@ -143,11 +143,9 @@ export function enhance(form_element, submit = () => {}) {
 		if (DEV && clone(form_element).enctype !== 'multipart/form-data') {
 			for (const value of form_data.values()) {
 				if (value instanceof File) {
-					// TODO 2.0: Upgrade to `throw Error`
-					console.warn(
-						'Your form contains <input type="file"> fields, but is missing the `enctype="multipart/form-data"` attribute. This will lead to inconsistent behavior between enhanced and native forms. For more details, see https://github.com/sveltejs/kit/issues/9819. This will be upgraded to an error in v2.0.'
+					throw new Error(
+						'Your form contains <input type="file"> fields, but is missing the necessary `enctype="multipart/form-data"` attribute. This will lead to inconsistent behavior between enhanced and native forms. For more details, see https://github.com/sveltejs/kit/issues/9819.'
 					);
-					break;
 				}
 			}
 		}
