@@ -1,5 +1,11 @@
 # @sveltejs/kit
 
+## 1.30.2
+
+### Patch Changes
+
+- fix: revert recent 'correctly return 415' and 'correctly return 404' changes ([#11295](https://github.com/sveltejs/kit/pull/11295))
+
 ## 1.30.1
 
 ### Patch Changes
