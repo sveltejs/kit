@@ -1,5 +1,11 @@
 # @sveltejs/kit
 
+## 1.30.3
+
+### Patch Changes
+
+- fix: correct documentation for beforeNavigate ([#11300](https://github.com/sveltejs/kit/pull/11300))
+
 ## 1.30.2
 
 ### Patch Changes
