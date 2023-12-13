@@ -7,15 +7,10 @@ import {
 	invalidate,
 	invalidateAll,
 	preloadCode,
-<<<<<<< HEAD
 	preloadData,
 	pushState,
 	replaceState
-} from '$app/navigation';
-=======
-	preloadData
 } from '../app/navigation.js';
->>>>>>> master
 import { SvelteComponent } from 'svelte';
 import { ClientHooks, CSRPageNode, CSRPageNodeLoader, CSRRoute, TrailingSlash, Uses } from 'types';
 import { Page, ParamMatcher } from '@sveltejs/kit';
@@ -99,14 +94,9 @@ export type NavigationFinished = {
 	type: 'loaded';
 	state: NavigationState;
 	props: {
-<<<<<<< HEAD
+		constructors: Array<typeof SvelteComponent>;
 		components: Array<typeof SvelteComponent>;
 		page: Page;
-=======
-		constructors: Array<typeof SvelteComponent>;
-		components?: Array<SvelteComponent>;
-		page?: Page;
->>>>>>> master
 		form?: Record<string, any> | null;
 		[key: `data_${number}`]: Record<string, any>;
 	};
