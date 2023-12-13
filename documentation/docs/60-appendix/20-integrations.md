@@ -8,11 +8,11 @@ Preprocessors transform your `.svelte` files before passing them to the compiler
 
 ### `vitePreprocess`
 
-`vite-plugin-svelte` offers a [`vitePreprocess`](https://github.com/sveltejs/vite-plugin-svelte/blob/main/docs/preprocess.md) feature which utilizes Vite for preprocessing. It is capable of handling the language flavors Vite handles: TypeScript, PostCSS, SCSS, Less, Stylus, and SugarSS. For convenience, it is re-exported from the `@sveltejs/kit/vite` package. If you set your project up with TypeScript it will be included by default:
+`vite-plugin-svelte` offers a [`vitePreprocess`](https://github.com/sveltejs/vite-plugin-svelte/blob/main/docs/preprocess.md) feature which utilizes Vite for preprocessing. It is capable of handling the language flavors Vite handles: TypeScript, PostCSS, SCSS, Less, Stylus, and SugarSS. If you set your project up with TypeScript it will be included by default:
 
 ```js
 // svelte.config.js
-import { vitePreprocess } from '@sveltejs/kit/vite';
+import { vitePreprocess } from '@sveltejs/vite-plugin-svelte';
 
 export default {
   preprocess: [vitePreprocess()]
