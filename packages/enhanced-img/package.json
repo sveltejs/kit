@@ -26,18 +26,18 @@
 	},
 	"types": "types/index.d.ts",
 	"dependencies": {
-		"magic-string": "^0.30.0",
-		"svelte-parse-markup": "^0.1.1",
+		"magic-string": "^0.30.5",
+		"svelte-parse-markup": "^0.1.2",
 		"vite-imagetools": "^6.2.7"
 	},
 	"devDependencies": {
-		"@types/estree": "^1.0.2",
-		"@types/node": "^18.19.1",
+		"@types/estree": "^1.0.5",
+		"@types/node": "^18.19.3",
 		"estree-walker": "^3.0.3",
-		"rollup": "^4.2.0",
-		"svelte": "^4.2.7",
-		"typescript": "^5.3.2",
-		"vite": "^5.0.4",
-		"vitest": "^1.0.0"
+		"rollup": "^4.8.0",
+		"svelte": "^4.2.8",
+		"typescript": "^5.3.3",
+		"vite": "^5.0.8",
+		"vitest": "^1.0.4"
 	}
 }
