@@ -639,6 +639,12 @@ declare module '@sveltejs/kit' {
 			 */
 			pollInterval?: number;
 		};
+		/**
+		 * Platform object to be used during development, allowing the simulation of a production platform during local development.
+		 *
+		 * @default undefined
+		 */
+		devPlatform?: unknown;
 	}
 
 	/**
