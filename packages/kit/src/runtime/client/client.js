@@ -46,7 +46,7 @@ import { get_message, get_status } from '../../utils/error.js';
 
 let errored = false;
 
-/** @typedef {{ x: number, y: number }} ScrollPosition */
+/** @typedef {{ x: number; y: number }} ScrollPosition */
 
 // We track the scroll position associated with each history entry in sessionStorage,
 // rather than on history.state itself, because when navigation is driven by

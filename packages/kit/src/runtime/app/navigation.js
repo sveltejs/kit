@@ -61,7 +61,7 @@ export const invalidateAll = /* @__PURE__ */ client_method('invalidate_all');
  *
  * @type {(href: string) => Promise<Record<string, any>>}
  * @param {string} href Page to preload
- * @returns {Promise<{ type: 'loaded', status: number, data: Record<string, any> } | { type: 'redirect', location: string }>}
+ * @returns {Promise<{ type: 'loaded'; status: number; data: Record<string, any> } | { type: 'redirect'; location: string }>}
  */
 export const preloadData = /* @__PURE__ */ client_method('preload_data');
 
@@ -123,7 +123,7 @@ export const afterNavigate = /* @__PURE__ */ client_method('after_navigate');
 /**
  * Programmatically create a new history entry with the given `$page.state`. To use the current URL, you can pass `''` as the first argument. Used for [shallow routing](https://kit.svelte.dev/docs/shallow-routing).
  *
- * @type {(url: string | URL, state: App.PageState) => void}
+ * @type {(url: string | URL; state: App.PageState) => void}
  * @param {string | URL} url
  * @param {App.PageState} state
  * @returns {void}
@@ -133,7 +133,7 @@ export const pushState = /* @__PURE__ */ client_method('push_state');
 /**
  * Programmatically replace the current history entry with the given `$page.state`. To use the current URL, you can pass `''` as the first argument. Used for [shallow routing](https://kit.svelte.dev/docs/shallow-routing).
  *
- * @type {(url: string | URL, state: App.PageState) => void}
+ * @type {(url: string | URL; state: App.PageState) => void}
  * @param {string | URL} url
  * @param {App.PageState} state
  * @returns {void}
