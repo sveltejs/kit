@@ -192,6 +192,8 @@ export function create_client(app, target) {
 	let updating = false;
 	let navigating = false;
 	let hash_navigating = false;
+	/** True as soon as there happened one client-side navigation */
+	let has_navigated = false;
 
 	let force_invalidation = false;
 
@@ -204,8 +206,6 @@ export function create_client(app, target) {
 
 	/** @type {number} */
 	let current_navigation_index = history.state?.[NAVIGATION_INDEX];
-
-	let has_navigated = false;
 
 	if (!current_history_index) {
 		// we use Date.now() as an offset so that cross-document navigations
@@ -295,7 +295,6 @@ export function create_client(app, target) {
 
 		capture_snapshot(current_navigation_index);
 		storage.set(SNAPSHOT_KEY, snapshots);
-
 		storage.set(STATES_KEY, states, devalue.stringify);
 	}
 
@@ -1183,7 +1182,7 @@ export function create_client(app, target) {
 
 		// ensure the url pathname matches the page's trailing slash option
 		if (navigation_result.props.page.url.pathname !== url.pathname) {
-			url.pathname = navigation_result.props.page?.url.pathname;
+			url.pathname = navigation_result.props.page.url.pathname;
 		}
 
 		const state = popped ? popped.state : {};
@@ -1878,9 +1877,7 @@ export function create_client(app, target) {
 					const scroll = scroll_positions[history_index];
 					const state = states[history_index] ?? {};
 					const url = new URL(event.state[PAGE_URL_KEY] ?? location.href);
-
 					const navigation_index = event.state[NAVIGATION_INDEX];
-
 					const is_hash_change = location.href.split('#')[0] === current.url.href.split('#')[0];
 					const shallow =
 						navigation_index === current_navigation_index && (has_navigated || is_hash_change);
