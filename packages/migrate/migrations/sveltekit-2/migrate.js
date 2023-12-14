@@ -36,13 +36,6 @@ export function update_pkg_json_content(content) {
 	]);
 }
 
-export function update_tsconfig() {
-	fs.writeFileSync(
-		'tsconfig.json',
-		update_tsconfig_content(fs.readFileSync('tsconfig.json', 'utf8'))
-	);
-}
-
 /** @param {string} content */
 export function update_tsconfig_content(content) {
 	if (!content.includes('"extends"')) {
