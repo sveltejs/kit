@@ -1805,17 +1805,16 @@ export function create_client(app, target) {
 
 					// hashchange event shouldn't occur if the router is replacing state.
 					hash_navigating = false;
-					event.preventDefault();
 				}
+
+				event.preventDefault();
 
 				navigate({
 					type: 'link',
 					url,
 					keepfocus: options.keepfocus,
 					noscroll: options.noscroll,
-					replace_state: options.replace_state ?? url.href === location.href,
-					accept: () => event.preventDefault(),
-					block: () => event.preventDefault()
+					replace_state: options.replace_state ?? url.href === location.href
 				});
 			});
 
