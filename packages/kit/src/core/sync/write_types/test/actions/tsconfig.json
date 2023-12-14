@@ -10,8 +10,8 @@
 		"allowSyntheticDefaultImports": true,
 		"baseUrl": ".",
 		"paths": {
-			"@sveltejs/kit": ["../../../../exports/public"],
-			"types": ["../../../../types/internal"]
+			"@sveltejs/kit": ["../../../../../exports/public"],
+			"types": ["../../../../../types/internal"]
 		}
 	},
 	"include": ["./**/*.js"],
