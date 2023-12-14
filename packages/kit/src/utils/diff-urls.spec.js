@@ -42,6 +42,17 @@ describe('getHrefBetween', () => {
 		expect(new URL(href, from).href).toBe(to.href);
 	});
 
+	test("child page, no trailing slash", () => {
+		const from = new URL("http://localhost:5173/en")
+		const to = new URL("http://localhost:5173/en/about")
+
+		const href = getHrefBetween(from, to)
+
+		expect(href).toBe("en/about")
+		expect(new URL(href, from).href).toBe(to.href)
+	})
+
+
 	test.concurrent('two identical urls with different hosts', () => {
 		const from = new URL('http://localhost:3000');
 		const to = new URL('http://localhost:3001');
@@ -152,7 +163,6 @@ describe('getHrefBetween', () => {
 		expect(href).toBe('//user:pass@localhost:3000/about');
 		expect(new URL(href, from).href).toBe(to.href);
 	})
-
 
 	test.concurrent("same credentials, different protocol", () => {
 		const from = new URL('https://user:pass@localhost:3000/');

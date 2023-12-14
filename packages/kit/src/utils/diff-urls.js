@@ -27,11 +27,11 @@ export function getHrefBetween(from, to) {
 	}
 
 	//If the pathnames are different, we need to find the shortest path between them
-	const relativePath = getRelativePath(from.pathname, to.pathname);
+	//const relativePath = getRelativePath(from.pathname, to.pathname);
 	const absolutePath = to.pathname;
 
 	// use the shortest path - use absolute path if they are the same length
-	const path = absolutePath.length <= relativePath.length ? absolutePath : relativePath;
+	const path = absolutePath //.length <= relativePath.length ? absolutePath : relativePath;
 	return path + to.search + to.hash;
 }
 
