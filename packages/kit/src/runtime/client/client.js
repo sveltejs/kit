@@ -983,10 +983,8 @@ export function create_client(app, target) {
 		accepted,
 		blocked
 	}) {
-		console.log('client: navigate', url.href);
 		const originalURL = new URL(url);
 		const rewrittenURL = app.hooks.rewriteURL(new URL(url));
-		console.log('client: rewrittenURL', rewrittenURL.href);
 
 		//This should be used to resolve the route, but not to determine the base path
 		const rewrittenIntent = get_navigation_intent(rewrittenURL, false);
@@ -1011,9 +1009,15 @@ export function create_client(app, target) {
 		}
 
 		token = nav_token;
-		let navigation_result = rewrittenIntent && (await load_route(rewrittenIntent));
+		
+		let navigation_result;
+		if (rewrittenIntent) {
 
-		console.log('client: navigation_result', navigation_result);
+			//Make sure to use the correct url for the route
+			rewrittenIntent.url = url;
+			navigation_result = await load_route(rewrittenIntent);
+		}
+		
 
 		if (!navigation_result) {
 			if (is_external_url(rewrittenURL, base)) {
@@ -1076,6 +1080,7 @@ export function create_client(app, target) {
 		capture_snapshot(previous_history_index);
 
 		// ensure the url pathname matches the page's trailing slash option
+		navigation_result.state.url = url;
 		if (
 			navigation_result.props.page?.url &&
 			navigation_result.props.page.url.pathname !== originalURL.pathname
