@@ -143,7 +143,7 @@ export async function migrate() {
 
 	const tasks = [
 		use_git && cyan('git commit -m "migration to SvelteKit 2"'),
-		'Review the migration guide at https://kit.svelte.dev/docs/v2-migration-guide',
+		'Review the migration guide at https://kit.svelte.dev/docs/migrating-to-sveltekit-2',
 		'Read the updated docs at https://kit.svelte.dev/docs'
 	].filter(Boolean);
 
