@@ -7,6 +7,7 @@
  * 		// interface Error {}
  * 		// interface Locals {}
  * 		// interface PageData {}
+ * 		// interface PageState {}
  * 		// interface Platform {}
  * 	}
  * }
@@ -38,6 +39,11 @@ declare namespace App {
 	 * Use optional properties for data that is only present on specific pages. Do not add an index signature (`[key: string]: any`).
 	 */
 	export interface PageData {}
+
+	/**
+	 * The shape of the `$page.state` object, which can be manipulated using the [`pushState`](https://kit.svelte.dev/docs/modules#$app-navigation-pushstate) and [`replaceState`](https://kit.svelte.dev/docs/modules#$app-navigation-replacestate) functions from `$app/navigation`.
+	 */
+	export interface PageState {}
 
 	/**
 	 * If your adapter provides [platform-specific context](https://kit.svelte.dev/docs/adapters#platform-specific-context) via `event.platform`, you can specify it here.
