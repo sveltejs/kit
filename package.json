@@ -29,6 +29,7 @@
 		"eslint-plugin-unicorn": "^49.0.0",
 		"playwright": "1.30.0",
 		"prettier": "^3.1.1",
+		"rollup": "^3.29.4",
 		"svelte": "^4.2.8",
 		"typescript": "^5.3.3"
 	},

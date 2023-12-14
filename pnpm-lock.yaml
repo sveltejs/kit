@@ -38,6 +38,9 @@ importers:
       prettier:
         specifier: ^3.1.1
         version: 3.1.1
+      rollup:
+        specifier: ^3.29.4
+        version: 3.29.4
       svelte:
         specifier: ^4.2.8
         version: 4.2.8
@@ -5330,6 +5333,14 @@ packages:
     hasBin: true
     dependencies:
       glob: 7.2.3
+
+  /rollup@3.29.4:
+    resolution: {integrity: sha512-oWzmBZwvYrU0iJHtDmhsm662rC15FRXmcjCk1xD771dFDx5jJ02ufAQQTn0etB2emNk4J9EZg/yWKpsn9BWGRw==}
+    engines: {node: '>=14.18.0', npm: '>=8.0.0'}
+    hasBin: true
+    optionalDependencies:
+      fsevents: 2.3.3
+    dev: true
 
   /rollup@4.8.0:
     resolution: {integrity: sha512-NpsklK2fach5CdI+PScmlE5R4Ao/FSWtF7LkoIrHDxPACY/xshNasPsbpG0VVHxUTbf74tJbVT4PrP8JsJ6ZDA==}

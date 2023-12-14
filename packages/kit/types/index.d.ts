@@ -22,8 +22,22 @@ declare module '@sveltejs/kit' {
 	export type LoadProperties<input extends Record<string, any> | void> = input extends void
 		? undefined // needs to be undefined, because void will break intellisense
 		: input extends Record<string, any>
+	<<<<<<< HEAD
 			? input
 			: unknown;
+	=======
+			? {
+					[key in keyof input]: Awaited<input[key]>;
+				}
+			: {} extends input // handles the any case
+				? input
+				: unknown;
+
+	export type AwaitedProperties<input extends Record<string, any> | void> =
+		AwaitedPropertiesUnion<input> extends Record<string, any>
+			? OptionalUnion<AwaitedPropertiesUnion<input>>
+			: AwaitedPropertiesUnion<input>;
+	>>>>>>> master
 
 	export type AwaitedActions<T extends Record<string, (...args: any) => any>> = OptionalUnion<
 		{
