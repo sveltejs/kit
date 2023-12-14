@@ -773,6 +773,20 @@ declare module '@sveltejs/kit' {
 		 * ```
 		 */
 		depends(...deps: Array<`${string}:${string}`>): void;
+		/**
+		 * Use this function to opt out of dependency tracking for everything that is synchronously called within the callback. Example:
+		 *
+		 * ```js
+		 * /// file: src/routes/+page.server.js
+		 * export async function load({ untrack, url }) {
+		 * 	// Untrack url.pathname so that path changes don't trigger a rerun
+		 * 	if (untrack(() => url.pathname === '/')) {
+		 * 		return { message: 'Welcome!' };
+		 * 	}
+		 * }
+		 * ```
+		 */
+		untrack<T>(fn: () => T): T;
 	}
 
 	export interface NavigationEvent<
@@ -1178,6 +1192,20 @@ declare module '@sveltejs/kit' {
 		 * ```
 		 */
 		depends(...deps: string[]): void;
+		/**
+		 * Use this function to opt out of dependency tracking for everything that is synchronously called within the callback. Example:
+		 *
+		 * ```js
+		 * /// file: src/routes/+page.js
+		 * export async function load({ untrack, url }) {
+		 * 	// Untrack url.pathname so that path changes don't trigger a rerun
+		 * 	if (untrack(() => url.pathname === '/')) {
+		 * 		return { message: 'Welcome!' };
+		 * 	}
+		 * }
+		 * ```
+		 */
+		untrack<T>(fn: () => T): T;
 	}
 
 	/**

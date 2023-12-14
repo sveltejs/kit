@@ -501,6 +501,8 @@ export function create_client(app, target) {
 		/** @type {Record<string, any> | null} */
 		let data = null;
 
+		let is_tracking = true;
+
 		/** @type {import('types').Uses} */
 		const uses = {
 			dependencies: new Set(),
@@ -532,21 +534,33 @@ export function create_client(app, target) {
 			const load_input = {
 				route: new Proxy(route, {
 					get: (target, key) => {
-						uses.route = true;
+						if (is_tracking) {
+							uses.route = true;
+						}
 						return target[/** @type {'id'} */ (key)];
 					}
 				}),
 				params: new Proxy(params, {
 					get: (target, key) => {
-						uses.params.add(/** @type {string} */ (key));
+						if (is_tracking) {
+							uses.params.add(/** @type {string} */ (key));
+						}
 						return target[/** @type {string} */ (key)];
 					}
 				}),
 				data: server_data_node?.data ?? null,
 				url: make_trackable(
 					url,
-					() => (uses.url = true),
-					(param) => uses.search_params.add(param)
+					() => {
+						if (is_tracking) {
+							uses.url = true;
+						}
+					},
+					(param) => {
+						if (is_tracking) {
+							uses.search_params.add(param);
+						}
+					}
 				),
 				async fetch(resource, init) {
 					/** @type {URL | string} */
@@ -583,7 +597,9 @@ export function create_client(app, target) {
 
 					// we must fixup relative urls so they are resolved from the target page
 					const resolved = new URL(requested, url);
-					depends(resolved.href);
+					if (is_tracking) {
+						depends(resolved.href);
+					}
 
 					// match ssr serialized data url, which is important to find cached responses
 					if (resolved.origin === url.origin) {
@@ -598,8 +614,18 @@ export function create_client(app, target) {
 				setHeaders: () => {}, // noop
 				depends,
 				parent() {
-					uses.parent = true;
+					if (is_tracking) {
+						uses.parent = true;
+					}
 					return parent();
+				},
+				untrack(fn) {
+					is_tracking = false;
+					try {
+						return fn();
+					} finally {
+						is_tracking = true;
+					}
 				}
 			};
 
