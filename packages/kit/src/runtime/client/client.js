@@ -539,7 +539,9 @@ export function create_client(app, target) {
 			if (DEV) {
 				try {
 					lock_fetch();
-					data = (await node.universal.load.call(null, load_input)) ?? null;
+					data =
+						(await app.hooks.handleLoad({ event: load_input, resolve: node.universal.load })) ??
+						null;
 					if (data != null && Object.getPrototypeOf(data) !== Object.prototype) {
 						throw new Error(
 							`a load function related to route '${route.id}' returned ${
@@ -557,7 +559,8 @@ export function create_client(app, target) {
 					unlock_fetch();
 				}
 			} else {
-				data = (await node.universal.load.call(null, load_input)) ?? null;
+				data =
+					(await app.hooks.handleLoad({ event: load_input, resolve: node.universal.load })) ?? null;
 			}
 		}
 

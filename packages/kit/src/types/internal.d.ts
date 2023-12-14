@@ -12,7 +12,9 @@ import {
 	ServerInitOptions,
 	HandleFetch,
 	Actions,
-	HandleClientError
+	HandleClientError,
+	HandleLoad,
+	HandleServerLoad
 } from '@sveltejs/kit';
 import {
 	HttpMethod,
@@ -98,10 +100,13 @@ export interface ServerHooks {
 	handleFetch: HandleFetch;
 	handle: Handle;
 	handleError: HandleServerError;
+	handleLoad: HandleLoad;
+	handleServerLoad: HandleServerLoad;
 }
 
 export interface ClientHooks {
 	handleError: HandleClientError;
+	handleLoad: HandleLoad;
 }
 
 export interface Env {

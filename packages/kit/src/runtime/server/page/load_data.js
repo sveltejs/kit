@@ -9,10 +9,11 @@ import { validate_depends } from '../../shared.js';
  *   state: import('types').SSRState;
  *   node: import('types').SSRNode | undefined;
  *   parent: () => Promise<Record<string, any>>;
+ *   handle_load: import('@sveltejs/kit').HandleServerLoad
  * }} opts
  * @returns {Promise<import('types').ServerDataNode | null>}
  */
-export async function load_server_data({ event, state, node, parent }) {
+export async function load_server_data({ event, state, node, parent, handle_load }) {
 	if (!node?.server) return null;
 
 	let done = false;
@@ -52,7 +53,8 @@ export async function load_server_data({ event, state, node, parent }) {
 		disable_search(url);
 	}
 
-	const result = await node.server.load?.call(null, {
+	/** @type {import('@sveltejs/kit').ServerLoadEvent} */
+	const load_input = {
 		...event,
 		fetch: (info, init) => {
 			const url = new URL(info instanceof Request ? info.url : info, event.url);
@@ -122,7 +124,11 @@ export async function load_server_data({ event, state, node, parent }) {
 			}
 		}),
 		url
-	});
+	};
+
+	const result = node.server.load
+		? await handle_load({ event: load_input, resolve: node.server.load })
+		: null;
 
 	if (__SVELTEKIT_DEV__) {
 		validate_load_response(result, node.server_id);
@@ -148,6 +154,7 @@ export async function load_server_data({ event, state, node, parent }) {
  *   resolve_opts: import('types').RequiredResolveOptions;
  *   server_data_promise: Promise<import('types').ServerDataNode | null>;
  *   state: import('types').SSRState;
+ *   handle_load: import('@sveltejs/kit').HandleLoad
  *   csr: boolean;
  * }} opts
  * @returns {Promise<Record<string, any | Promise<any>> | null>}
@@ -160,6 +167,7 @@ export async function load_data({
 	server_data_promise,
 	state,
 	resolve_opts,
+	handle_load,
 	csr
 }) {
 	const server_data_node = await server_data_promise;
@@ -168,15 +176,18 @@ export async function load_data({
 		return server_data_node?.data ?? null;
 	}
 
-	const result = await node.universal.load.call(null, {
-		url: event.url,
-		params: event.params,
-		data: server_data_node?.data ?? null,
-		route: event.route,
-		fetch: create_universal_fetch(event, state, fetched, csr, resolve_opts),
-		setHeaders: event.setHeaders,
-		depends: () => {},
-		parent
+	const result = await handle_load({
+		event: {
+			url: event.url,
+			params: event.params,
+			data: server_data_node?.data ?? null,
+			route: event.route,
+			fetch: create_universal_fetch(event, state, fetched, csr, resolve_opts),
+			setHeaders: event.setHeaders,
+			depends: () => {},
+			parent
+		},
+		resolve: node.universal.load
 	});
 
 	if (__SVELTEKIT_DEV__) {

@@ -155,3 +155,39 @@ export async function handleFetch({ request, fetch }) {
 
 	return fetch(request);
 }
+
+/** @type {import("@sveltejs/kit").HandleLoad} */
+export async function handleLoad({ event, resolve }) {
+	if (event.url.pathname.endsWith('/handle-load/bypass')) {
+		return {
+			from: 'handleLoad',
+			foo: { bar: 'needed for root layout ' }
+		};
+	} else if (event.url.pathname.endsWith('/handle-load/enrich')) {
+		const result = await resolve(event);
+		return {
+			from: 'handleLoad and ' + /** @type {any} */ (result).from,
+			foo: { bar: 'needed for root layout ' }
+		};
+	} else {
+		return resolve(event);
+	}
+}
+
+/** @type {import("@sveltejs/kit").HandleServerLoad} */
+export async function handleServerLoad({ event, resolve }) {
+	if (event.url.pathname.endsWith('/handle-server-load/bypass')) {
+		return {
+			from: 'handleServerLoad',
+			foo: { bar: 'needed for root layout ' }
+		};
+	} else if (event.url.pathname.endsWith('/handle-server-load/enrich')) {
+		const result = await resolve(event);
+		return {
+			from: 'handleServerLoad and ' + /** @type {any} */ (result).from,
+			foo: { bar: 'needed for root layout ' }
+		};
+	} else {
+		return resolve(event);
+	}
+}

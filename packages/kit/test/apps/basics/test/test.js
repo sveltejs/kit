@@ -1306,3 +1306,75 @@ test.describe.serial('Cookies API', () => {
 		expect(await span.innerText()).toContain('undefined');
 	});
 });
+
+test.describe('handleLoad', () => {
+	test('Bypasses user-defined load function (direct hit)', async ({ page }) => {
+		await page.goto('/handle-load/bypass');
+		expect(await page.textContent('p')).toBe('handleLoad');
+	});
+
+	test('Enriches user-defined load function (direct hit)', async ({ page }) => {
+		await page.goto('/handle-load/enrich');
+		expect(await page.textContent('p')).toBe('handleLoad and load');
+	});
+
+	test('Bypasses user-defined load function (client nav)', async ({
+		javaScriptEnabled,
+		page,
+		app
+	}) => {
+		if (!javaScriptEnabled) return;
+
+		await page.goto('/');
+		await app.goto('/handle-load/bypass');
+		expect(await page.textContent('p')).toBe('handleLoad');
+	});
+
+	test('Enriches user-defined load function (client nav)', async ({
+		javaScriptEnabled,
+		page,
+		app
+	}) => {
+		if (!javaScriptEnabled) return;
+
+		await page.goto('/');
+		await app.goto('/handle-load/enrich');
+		expect(await page.textContent('p')).toBe('handleLoad and load');
+	});
+});
+
+test.describe('handleServerLoad', () => {
+	test('Bypasses user-defined load function (direct hit)', async ({ page }) => {
+		await page.goto('/handle-server-load/bypass');
+		expect(await page.textContent('p')).toBe('handleServerLoad');
+	});
+
+	test('Enriches user-defined load function (direct hit)', async ({ page }) => {
+		await page.goto('/handle-server-load/enrich');
+		expect(await page.textContent('p')).toBe('handleServerLoad and serverload');
+	});
+
+	test('Bypasses user-defined load function (client nav)', async ({
+		javaScriptEnabled,
+		page,
+		app
+	}) => {
+		if (!javaScriptEnabled) return;
+
+		await page.goto('/');
+		await app.goto('/handle-server-load/bypass');
+		expect(await page.textContent('p')).toBe('handleServerLoad');
+	});
+
+	test('Enriches user-defined load function (client nav)', async ({
+		javaScriptEnabled,
+		page,
+		app
+	}) => {
+		if (!javaScriptEnabled) return;
+
+		await page.goto('/');
+		await app.goto('/handle-server-load/enrich');
+		expect(await page.textContent('p')).toBe('handleServerLoad and serverload');
+	});
+});

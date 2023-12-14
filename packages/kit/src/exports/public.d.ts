@@ -684,6 +684,22 @@ export type HandleFetch = (input: {
 }) => MaybePromise<Response>;
 
 /**
+ * The `handleLoad` hook runs every time a universal `load` function (for example from +page.js) is called.
+ * This hook can be registered on the client as well as on the server side.
+ * This hook provides the load `event` and a `resolve` function to call the actual hook with the event.
+ */
+export type HandleLoad = (input: { event: LoadEvent; resolve: Load }) => ReturnType<Load>;
+
+/**
+ * The `handleServerLoad` hook runs every time a server-only `load` function (for example from +page.server.js) is called on the server.
+ * This hook provides the server load `event` and a `resolve` function to call the actual hook with the event.
+ */
+export type HandleServerLoad = (input: {
+	event: ServerLoadEvent;
+	resolve: ServerLoad;
+}) => ReturnType<ServerLoad>;
+
+/**
  * The generic form of `PageLoad` and `LayoutLoad`. You should import those from `./$types` (see [generated types](https://kit.svelte.dev/docs/types#generated-types))
  * rather than using `Load` directly.
  */

@@ -141,6 +141,9 @@ export function write_client_manifest(kit, manifest_data, output, metadata) {
 				handleError: ${
 					hooks_file ? 'client_hooks.handleError || ' : ''
 				}(({ error }) => { console.error(error) }),
+				handleLoad: ${
+					hooks_file ? 'client_hooks.handleLoad || ' : ''
+				}(({ event, resolve }) => resolve(event)),
 			};
 
 			export { default as root } from '../root.${isSvelte5Plus() ? 'js' : 'svelte'}';
