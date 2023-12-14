@@ -35,11 +35,12 @@
 		"esbuild": "^0.19.9"
 	},
 	"devDependencies": {
+		"@sveltejs/kit": "workspace:^",
 		"@cloudflare/kv-asset-handler": "^0.3.0",
 		"@types/node": "^18.19.3",
 		"typescript": "^5.3.3"
 	},
 	"peerDependencies": {
-		"@sveltejs/kit": "^1.0.0 || ^2.0.0"
+		"@sveltejs/kit": "^2.0.0"
 	}
 }
