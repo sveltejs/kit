@@ -57,7 +57,7 @@ export const invalidateAll = /* @__PURE__ */ client_method('invalidate_all');
  *
  * This is the same behaviour that SvelteKit triggers when the user taps or mouses over an `<a>` element with `data-sveltekit-preload-data`.
  * If the next navigation is to `href`, the values returned from load will be used, making navigation instantaneous.
- * Returns a Promise that resolves when the preload is complete.
+ * Returns a Promise that resolves with the new `$page.data` when the preload is complete.
  *
  * @type {(href: string) => Promise<Record<string, any>>}
  * @param {string} href Page to preload

@@ -1961,7 +1961,7 @@ declare module '$app/navigation' {
 	 *
 	 * This is the same behaviour that SvelteKit triggers when the user taps or mouses over an `<a>` element with `data-sveltekit-preload-data`.
 	 * If the next navigation is to `href`, the values returned from load will be used, making navigation instantaneous.
-	 * Returns a Promise that resolves when the preload is complete.
+	 * Returns a Promise that resolves with the new `$page.data` when the preload is complete.
 	 *
 	 * @param href Page to preload
 	 * */
