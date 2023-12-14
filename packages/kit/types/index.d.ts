@@ -827,6 +827,13 @@ declare module '@sveltejs/kit' {
 	 */
 	export type NavigationType = 'enter' | 'form' | 'leave' | 'link' | 'goto' | 'popstate';
 
+	export interface NavigationOptions {
+		replaceState?: boolean;
+		noScroll?: boolean;
+		keepFocus?: boolean;
+		invalidateAll?: boolean;
+	}
+
 	export interface Navigation {
 		/**
 		 * Where navigation was triggered from
@@ -1926,13 +1933,7 @@ declare module '$app/navigation' {
 	 * @param url Where to navigate to. Note that if you've set [`config.kit.paths.base`](https://kit.svelte.dev/docs/configuration#paths) and the URL is root-relative, you need to prepend the base path if you want to navigate within the app.
 	 * @param {Object} opts Options related to the navigation
 	 * */
-	export const goto: (url: string | URL, opts?: {
-		replaceState?: boolean;
-		noScroll?: boolean;
-		keepFocus?: boolean;
-		invalidateAll?: boolean;
-		state?: any;
-	}) => Promise<void>;
+	export const goto: (url: string | URL, opts?: import('@sveltejs/kit').NavigationOptions) => Promise<void>;
 	/**
 	 * Causes any `load` functions belonging to the currently active page to re-run if they depend on the `url` in question, via `fetch` or `depends`. Returns a `Promise` that resolves when the page is subsequently updated.
 	 *
@@ -2007,12 +2008,12 @@ declare module '$app/navigation' {
 	 * */
 	export const afterNavigate: (callback: (navigation: import('@sveltejs/kit').AfterNavigate) => void) => void;
 	/**
-	 * Programmatically create a new history entry with the given `$page.state`. To use the current URL, you can pass `''` as the first argument.
+	 * Programmatically create a new history entry with the given `$page.state`. To use the current URL, you can pass `''` as the first argument. Used for [shallow routing](https://kit.svelte.dev/docs/shallow-routing).
 	 *
 	 * */
 	export const pushState: (url: string | URL, state: App.PageState) => void;
 	/**
-	 * Programmatically replace the current history entry with the given `$page.state`. To use the current URL, you can pass `''` as the first argument.
+	 * Programmatically replace the current history entry with the given `$page.state`. To use the current URL, you can pass `''` as the first argument. Used for [shallow routing](https://kit.svelte.dev/docs/shallow-routing).
 	 *
 	 * */
 	export const replaceState: (url: string | URL, state: App.PageState) => void;
