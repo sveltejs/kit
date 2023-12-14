@@ -550,10 +550,10 @@ export function create_client(app, target) {
 								typeof data !== 'object'
 									? `a ${typeof data}`
 									: data instanceof Response
-									  ? 'a Response object'
-									  : Array.isArray(data)
-									    ? 'an array'
-									    : 'a non-plain object'
+										? 'a Response object'
+										: Array.isArray(data)
+											? 'an array'
+											: 'a non-plain object'
 							}, but must return a plain object at the top level (i.e. \`return {...}\`)`
 						);
 					}

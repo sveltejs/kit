@@ -22,12 +22,12 @@ declare module '@sveltejs/kit' {
 	type AwaitedPropertiesUnion<input extends Record<string, any> | void> = input extends void
 		? undefined // needs to be undefined, because void will break intellisense
 		: input extends Record<string, any>
-		  ? {
+			? {
 					[key in keyof input]: Awaited<input[key]>;
-		    }
-		  : {} extends input // handles the any case
-		    ? input
-		    : unknown;
+				}
+			: {} extends input // handles the any case
+				? input
+				: unknown;
 
 	export type AwaitedProperties<input extends Record<string, any> | void> =
 		AwaitedPropertiesUnion<input> extends Record<string, any>
@@ -50,8 +50,8 @@ declare module '@sveltejs/kit' {
 	type UnpackValidationError<T> = T extends ActionFailure<infer X>
 		? X
 		: T extends void
-		  ? undefined // needs to be undefined, because void will corrupt union type
-		  : T;
+			? undefined // needs to be undefined, because void will corrupt union type
+			: T;
 
 	/**
 	 * This object is passed to the `adapt` function of adapters.

@@ -182,8 +182,8 @@ function validate_user_config(kit, cwd, out, config) {
 		typeof extend === 'string'
 			? path.resolve(cwd, extend) === out
 			: Array.isArray(extend)
-			  ? extend.some((e) => path.resolve(cwd, e) === out)
-			  : false;
+				? extend.some((e) => path.resolve(cwd, e) === out)
+				: false;
 
 	const options = config.options.compilerOptions || {};
 
