@@ -214,7 +214,8 @@ export function create_client(app, target) {
 		current_history_index = current_navigation_index = Date.now();
 
 		// create initial history entry, so we can return here
-		original_replace_state(
+		original_replace_state.call(
+			history,
 			{
 				...history.state,
 				[HISTORY_INDEX]: current_history_index,
@@ -1937,7 +1938,8 @@ export function create_client(app, target) {
 				// we need to update history, otherwise we have to leave it alone
 				if (hash_navigating) {
 					hash_navigating = false;
-					original_replace_state(
+					original_replace_state.call(
+						history,
 						{
 							...history.state,
 							[HISTORY_INDEX]: ++current_history_index,
