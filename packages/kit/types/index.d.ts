@@ -378,6 +378,12 @@ declare module '@sveltejs/kit' {
 				 * @default "src/hooks.server"
 				 */
 				server?: string;
+
+				/**
+				 * The location of your router hooks.
+				 * @default "src/hooks.router"
+				 */
+				router?: string;
 			};
 			/**
 			 * your app's internal library, accessible throughout the codebase as `$lib`
@@ -644,6 +650,11 @@ declare module '@sveltejs/kit' {
 		error: unknown;
 		event: NavigationEvent;
 	}) => MaybePromise<void | App.Error>;
+
+	/**
+	 * Maps an href value to a destination
+	 */
+	export type ResolveDestination = (event: { from: URL; to: URL }) => URL;
 
 	/**
 	 * The [`handleFetch`](https://kit.svelte.dev/docs/hooks#server-hooks-handlefetch) hook allows you to modify (or replace) a `fetch` request that happens inside a `load` function that runs on the server (or during pre-rendering)
