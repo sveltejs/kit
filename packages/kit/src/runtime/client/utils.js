@@ -220,12 +220,6 @@ export function notifiable_store(value) {
 		store.set(new_value);
 	}
 
-	/** @param {(value: any) => any} fn */
-	function update(fn) {
-		ready = false;
-		store.update(fn);
-	}
-
 	/** @param {(value: any) => void} run */
 	function subscribe(run) {
 		/** @type {any} */
@@ -237,7 +231,7 @@ export function notifiable_store(value) {
 		});
 	}
 
-	return { notify, set, update, subscribe };
+	return { notify, set, subscribe };
 }
 
 export function create_updated_store() {
