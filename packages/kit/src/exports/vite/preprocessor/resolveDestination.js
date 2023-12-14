@@ -2,10 +2,9 @@ import { parse } from 'svelte/compiler';
 import MagicString from 'magic-string';
 import { dedent } from '../../../core/sync/utils.js';
 import { fileURLToPath } from 'node:url';
-import { resolve } from 'node:path';
+import { metaUrl } from '../../../utils/diff-urls.js';
 
-const filename = fileURLToPath(import.meta.url);
-const diffUrlUtilFile = resolve(filename, "../../../../utils/diff-urls.js");
+const diffUrlUtilFile = fileURLToPath(metaUrl)
 
 const rewritten_attributes = [
 	['a', 'href'],

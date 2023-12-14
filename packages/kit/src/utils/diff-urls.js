@@ -1,3 +1,5 @@
+export const metaUrl = import.meta.url;
+
 /**
  * Get's the shortest href that gets from `from` to `to`
  *
