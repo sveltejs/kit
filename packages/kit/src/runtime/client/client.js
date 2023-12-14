@@ -638,7 +638,7 @@ export function create_client(app, target) {
 		/** @type {import('types').ServerNodesResponse | import('types').ServerRedirectNode | null} */
 		let server_data = null;
 
-		const url_changed = current.url ? id !== current.url.pathname + current.url.search : false;
+		const url_changed = current.url ? url.pathname  + url.search !== current.url.pathname + current.url.search : false;
 		const route_changed = current.route ? route.id !== current.route.id : false;
 
 		let parent_invalid = false;
