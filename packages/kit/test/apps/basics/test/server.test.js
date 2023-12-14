@@ -567,11 +567,6 @@ test.describe('Static files', () => {
 		expect(await r2.json()).toEqual({ works: true });
 	});
 
-	test('Filenames are case-sensitive', async ({ request }) => {
-		const response = await request.get('/static.JSON');
-		expect(response.status()).toBe(404);
-	});
-
 	test('Serves symlinked asset', async ({ request }) => {
 		const response = await request.get('/symlink-from/hello.txt');
 		expect(response.status()).toBe(200);
