@@ -1,5 +1,11 @@
 # svelte-migrate
 
+## 1.3.1
+
+### Patch Changes
+
+- chore: fix broken migration links ([#11320](https://github.com/sveltejs/kit/pull/11320))
+
 ## 1.3.0
 
 ### Minor Changes
