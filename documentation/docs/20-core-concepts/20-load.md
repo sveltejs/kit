@@ -580,6 +580,7 @@ In rare cases, you may wish to exclude something from the dependency tracking me
 
 ```js
 /// file: src/routes/+page.js
+/** @type {import('./$types').PageLoad} */
 export async function load({ untrack, url }) {
 	// Untrack url.pathname so that path changes don't trigger a rerun
 	if (untrack(() => url.pathname === '/')) {
