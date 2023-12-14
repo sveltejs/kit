@@ -141,7 +141,7 @@ In SvelteKit 1, `getRequest` could throw if the `Content-Length` header exceeded
 
 ## `vitePreprocess` is no longer exported from `@sveltejs/kit/vite`
 
-Since `@sveltejs/vite-plugin-svelte` is now a peer dependency, SvelteKit 2 no longer re-exports `vitePreprocess`. You should import it directly from `@svelte/vite-plugin-svelte`.
+Since `@sveltejs/vite-plugin-svelte` is now a peer dependency, SvelteKit 2 no longer re-exports `vitePreprocess`. You should import it directly from `@sveltejs/vite-plugin-svelte`.
 
 ## Updated dependency requirements
 
