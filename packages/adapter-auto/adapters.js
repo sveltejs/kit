@@ -5,7 +5,7 @@ export const adapters = [
 		name: 'Vercel',
 		test: () => !!process.env.VERCEL,
 		module: '@sveltejs/adapter-vercel',
-		version: '2'
+		version: '4'
 	},
 	{
 		name: 'Cloudflare Pages',
