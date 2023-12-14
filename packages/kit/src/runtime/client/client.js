@@ -4,6 +4,7 @@ import {
 	add_data_suffix,
 	decode_params,
 	decode_pathname,
+	strip_hash,
 	make_trackable,
 	normalize_path
 } from '../../utils/url.js';
@@ -1782,7 +1783,7 @@ export function create_client(app, target) {
 				// This will ensure the `hashchange` event is fired
 				// Removing the hash does a full page navigation in the browser, so make sure a hash is present
 				const [nonhash, hash] = url.href.split('#');
-				if (hash !== undefined && nonhash === location.href.split('#')[0]) {
+				if (hash !== undefined && nonhash === strip_hash(location)) {
 					// If we are trying to navigate to the same hash, we should only
 					// attempt to scroll to that element and avoid any history changes.
 					// Otherwise, this can cause Firefox to incorrectly assign a null
@@ -1878,7 +1879,7 @@ export function create_client(app, target) {
 					const state = states[history_index] ?? {};
 					const url = new URL(event.state[PAGE_URL_KEY] ?? location.href);
 					const navigation_index = event.state[NAVIGATION_INDEX];
-					const is_hash_change = location.href.split('#')[0] === current.url.href.split('#')[0];
+					const is_hash_change = strip_hash(location) === strip_hash(current.url);
 					const shallow =
 						navigation_index === current_navigation_index && (has_navigated || is_hash_change);
 
