@@ -374,7 +374,7 @@ export async function load({ params, parent }) {
 
 ## Errors
 
-If an error is thrown during `load`, the nearest [`+error.svelte`](routing#error) will be rendered. For _expected_ errors, use the `error` helper from `@sveltejs/kit` to specify the HTTP status code and an optional message:
+If an error is thrown during `load`, the nearest [`+error.svelte`](routing#error) will be rendered. For [_expected_](/docs/errors#expected-errors) errors, use the `error` helper from `@sveltejs/kit` to specify the HTTP status code and an optional message:
 
 ```js
 /// file: src/routes/admin/+layout.server.js
@@ -404,15 +404,15 @@ export function load({ locals }) {
 }
 ```
 
-`error` throws, making it more ergonomic to stop execution within nested logic.
+Calling `error(...)` will throw an exception, making it easy to stop execution from inside helper functions.
 
-If an _unexpected_ error is thrown, SvelteKit will invoke [`handleError`](hooks#shared-hooks-handleerror) and treat it as a 500 Internal Error.
+If an [_unexpected_](/docs/errors#unexpected-errors) error is thrown, SvelteKit will invoke [`handleError`](hooks#shared-hooks-handleerror) and treat it as a 500 Internal Error.
 
-> [In SvelteKit 1.x](migrating-to-sveltekit-2#redirect-and-error-are-no-longer-thrown-by-you) you had to `throw` the `error` yourself
+> [In SvelteKit 1.x](migrating-to-sveltekit-2#redirect-and-error-are-no-longer-thrown-by-you) you had to `throw` the error yourself
 
 ## Redirects
 
-To redirect users, use the `redirect` helper from `@sveltejs/kit` to specify the location to which they should be redirected alongside a `3xx` status code. `redirect` throws, making it more ergonomic to stop execution within nested logic.
+To redirect users, use the `redirect` helper from `@sveltejs/kit` to specify the location to which they should be redirected alongside a `3xx` status code. Like `error(...)`, calling `redirect(...)` will throw an exception, making it easy to stop execution from inside helper functions.
 
 ```js
 /// file: src/routes/user/+layout.server.js
@@ -448,16 +448,24 @@ In the browser, you can also navigate programmatically outside of a `load` funct
 When using a server `load`, promises will be streamed to the browser as they resolve. This is useful if you have slow, non-essential data, since you can start rendering the page before all the data is available:
 
 ```js
-/// file: src/routes/+page.server.js
+/// file: src/routes/blog/[slug]/+page.server.js
+// @filename: ambient.d.ts
+declare global {
+	const loadPost: (slug: string) => Promise<{ title: string, content: string }>;
+	const loadComments: (slug: string) => Promise<{ content: string }>;
+}
+
+export {};
+
+// @filename: index.js
+// ---cut---
 /** @type {import('./$types').PageServerLoad} */
-export function load() {
+export async function load({ params }) {
 	return {
-		streamed: new Promise((fulfil) => {
-			setTimeout(() => {
-				fulfil(2)
-			}, 1000);
-		}),
-		eager: await Promise.resolve(1)
+		// make sure the `await` happens at the end, otherwise we
+		// can't start loading comments until we've loaded the post
+		comments: loadComments(params.slug),
+		post: await loadPost(params.slug)
 	};
 }
 ```
@@ -465,28 +473,24 @@ export function load() {
 This is useful for creating skeleton loading states, for example:
 
 ```svelte
-<!--- file: src/routes/+page.svelte --->
+<!--- file: src/routes/blog/[slug]/+page.svelte --->
 <script>
 	/** @type {import('./$types').PageData} */
 	export let data;
 </script>
 
-<p>
-	one: {data.one}
-</p>
-<p>
-	two: {data.two}
-</p>
-<p>
-	three:
-	{#await data.streamed.three}
-		Loading...
-	{:then value}
-		{value}
-	{:catch error}
-		{error.message}
-	{/await}
-</p>
+<h1>{data.post.title}</h1>
+<div>{@html data.post.content}</div>
+
+{#await data.comments}
+	Loading comments...
+{:then comments}
+	{#each comments as comment}
+		<p>{comment.content}</p>
+	{/each}
+{:catch error}
+	<p>error loading comments: {error.message}</p>
+{/await}
 ```
 
 When streaming data, be careful to handle promise rejections correctly. More specifically, the server could crash with an "unhandled promise rejection" error if a lazy-loaded promise fails before rendering starts (at which point it's caught) and isn't handling the error in some way. When using SvelteKit's `fetch` directly in the `load` function, SvelteKit will handle this case for you. For other promises, it is enough to attach a noop-`catch` to the promise to mark it as handled.
