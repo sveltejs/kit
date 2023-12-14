@@ -96,7 +96,6 @@ function clear_onward_history(current_history_index, current_navigation_index) {
 }
 
 /**
- * @param {import('./types.js').SvelteKitApp} app
  * Loads `href` the old-fashioned way, with a full page reload.
  * Returns a `Promise` that never resolves (to prevent any
  * subsequent work, e.g. history manipulation, from happening)
