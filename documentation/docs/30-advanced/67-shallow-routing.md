@@ -37,36 +37,57 @@ The second argument is the new page state, which can be accessed via the [page s
 
 To set page state without creating a new history entry, use `replaceState` instead of `pushState`.
 
-## Loading data from a route
+## Loading data for a route
 
-When doing a shallow navigation you might want to show a reduced version of a page in a modal, for which you need the data of that page. You can retrieve it by calling `preloadData` with the desired page URL and use its result to populate the component. This will call the load function(s) associated with that route and give you back the result.
+When shallow routing, you may want to render another `+page.svelte` inside the current page. For example, clicking on a photo thumbnail could pop up the detail view without navigating to the photo page.
+
+For this to work, you need to load the data that the `+page.svelte` expects. A convenient way to do this is to use [`preloadData`](/docs/modules#$app-navigation-preloaddata) inside the `click` handler of an `<a>` element. If the element (or a parent) uses [`data-sveltekit-preload-data`](/docs/link-options#data-sveltekit-preload-data), the data will have already been requested, and `preloadData` will reuse that request.
 
 ```svelte
-<!--- file: Model.svelte --->
+<!--- file: src/routes/photos/+page.svelte --->
 <script>
-	import { preloadData, goto } from '$app/navigation';
+	import { preloadData, pushState, goto } from '$app/navigation';
+	import Modal from './Modal.svelte';
+	import PhotoPage from './[id]/+page.svelte';
 
-	export let close;
-
-	const data = preloadData('/path/to/page/this/modal/represents').then(result => {
-		if (result.type === 'loaded' && result.status === 200) {
-			return result.data;
-		} else {
-			// Something went wrong, navigate to page directly
-			goto('/path/to/page/this/modal/represents');
-		}
-	});
+	export let data;
 </script>
 
-<dialog open>
-	{#await data}
-		<!-- add your loading UI here -->
-	{:then }
-		<h1>{data.title}</h1>
-		<p>{data.content}</p>
-	{/await}
-	<button on:click={close}>Close</button>
-</dialog>
+{#each data.thumbnails as thumbnail}
+	<a
+		href="/photos/{thumbnail.id}"
+		on:click={async (e) => {
+			// bail if opening a new tab, or we're on too small a screen
+			if (e.metaKey || innerWidth < 640) return;
+
+			// prevent navigation
+			e.preventDefault();
+
+			const { href } = e.currentTarget;
+
+			// run `load` functions (or rather, get the result of the `load` functions
+			// that are already running because of `data-sveltekit-preload-data`)
+			const result = await preloadData(href);
+
+			if (result.type === 'loaded' && result.status === 200) {
+				pushState(href, { selected: result.data });
+			} else {
+				// something bad happened! try navigating
+				goto(href);
+			}
+		}}
+	>
+		<img alt={thumbnail.alt} src={thumbnail.src} />
+	</a>
+{/each}
+
+{#if $page.state.selected}
+	<Modal on:close={() => history.goBack()}>
+		<!-- pass page data to the +page.svelte component,
+		     just like SvelteKit would on navigation -->
+		<PhotoPage data={$page.state.selected} />
+	</Modal>
+{/if}
 ```
 
 ## Caveats
