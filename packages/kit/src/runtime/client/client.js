@@ -300,22 +300,18 @@ export function create_client(app, target) {
 
 	/**
 	 * @param {string | URL} url
-	 * @param {{ noScroll?: boolean; replaceState?: boolean; keepFocus?: boolean; state?: any; invalidateAll?: boolean }} opts
+	 * @param {{ noScroll?: boolean; replaceState?: boolean; keepFocus?: boolean; invalidateAll?: boolean }} opts
 	 * @param {number} redirect_count
 	 * @param {{}} [nav_token]
 	 */
 	async function goto(
 		url,
-		{
-			noScroll = false,
-			replaceState = false,
-			keepFocus = false,
-			state = {},
-			invalidateAll = false
-		},
+		{ noScroll = false, replaceState = false, keepFocus = false, invalidateAll = false },
 		redirect_count,
 		nav_token
 	) {
+		const state = {};
+
 		return navigate({
 			url: resolve_url(url),
 			scroll: noScroll ? scroll_state() : null,
@@ -1513,6 +1509,13 @@ export function create_client(app, target) {
 
 		goto: (url, opts = {}) => {
 			url = resolve_url(url);
+
+			if (DEV && opts.state) {
+				// TOOD 3.0 remove
+				throw new Error(
+					'Passing `state` to `goto` is no longer supported. Use `pushState` and `replaceState` from `$app/navigation` instead.'
+				);
+			}
 
 			if (url.origin !== origin) {
 				return Promise.reject(
