@@ -70,6 +70,32 @@ const states = storage.get(STATES_KEY, devalue.parse) ?? {};
  */
 const snapshots = storage.get(SNAPSHOT_KEY) ?? {};
 
+const original_push_state = history.pushState;
+const original_replace_state = history.replaceState;
+
+if (DEV) {
+	let warned = false;
+
+	const warn = () => {
+		if (warned) return;
+		warned = true;
+
+		console.warn(
+			"Avoid using `history.pushState(...)` and `history.replaceState(...)` as these will conflict with SvelteKit's router. Use the `pushState` and `replaceState` imports from `$app/navigation` instead."
+		);
+	};
+
+	history.pushState = (...args) => {
+		warn();
+		return original_push_state.apply(history, args);
+	};
+
+	history.replaceState = (...args) => {
+		warn();
+		return original_replace_state.apply(history, args);
+	};
+}
+
 /** @param {number} index */
 function update_scroll_positions(index) {
 	scroll_positions[index] = scroll_state();
@@ -1180,7 +1206,9 @@ export function create_client(app, target) {
 			const change = details.replaceState ? 0 : 1;
 			details.state[HISTORY_INDEX] = current_history_index += change;
 			details.state[NAVIGATION_INDEX] = current_navigation_index += change;
-			history[details.replaceState ? 'replaceState' : 'pushState'](details.state, '', url);
+
+			const fn = details.replaceState ? original_replace_state : original_push_state;
+			fn.call(history, details.state, '', url);
 
 			if (!details.replaceState) {
 				clear_onward_history(current_history_index, current_navigation_index);
@@ -1561,15 +1589,13 @@ export function create_client(app, target) {
 				}
 			}
 
-			history.pushState(
-				{
-					[HISTORY_INDEX]: (current_history_index += 1),
-					[NAVIGATION_INDEX]: current_navigation_index,
-					[PAGE_URL_KEY]: page.url.href
-				},
-				'',
-				new URL(url).href
-			);
+			const opts = {
+				[HISTORY_INDEX]: (current_history_index += 1),
+				[NAVIGATION_INDEX]: current_navigation_index,
+				[PAGE_URL_KEY]: page.url.href
+			};
+
+			original_push_state.call(history, opts, '', new URL(url).href);
 
 			page = { ...page, state };
 			root.$set({ page });
@@ -1588,15 +1614,13 @@ export function create_client(app, target) {
 				}
 			}
 
-			history.replaceState(
-				{
-					[HISTORY_INDEX]: current_history_index,
-					[NAVIGATION_INDEX]: current_navigation_index,
-					[PAGE_URL_KEY]: page.url.href
-				},
-				'',
-				new URL(url).href
-			);
+			const opts = {
+				[HISTORY_INDEX]: current_history_index,
+				[NAVIGATION_INDEX]: current_navigation_index,
+				[PAGE_URL_KEY]: page.url.href
+			};
+
+			original_replace_state.call(history, opts, '', new URL(url).href);
 
 			page = { ...page, state };
 			root.$set({ page });
