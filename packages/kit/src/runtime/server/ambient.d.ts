@@ -5,5 +5,6 @@ declare module '__SERVER__/internal.js' {
 		handleError?: import('@sveltejs/kit').HandleServerError;
 		handleFetch?: import('@sveltejs/kit').HandleFetch;
 		resolveDestination?: import('@sveltejs/kit').ResolveDestination;
+		remapURL: import('@sveltejs/kit').RemapURL;
 	}>;
 }

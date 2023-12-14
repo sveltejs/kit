@@ -49,7 +49,8 @@ export class Server {
 					handle: module.handle || (({ event, resolve }) => resolve(event)),
 					handleError: module.handleError || (({ error }) => console.error(error)),
 					handleFetch: module.handleFetch || (({ request, fetch }) => fetch(request)),
-					resolveDestination: module.resolveDestination || ((event) => event.to)
+					resolveDestination: module.resolveDestination || ((event) => event.to),
+					remapURL: module.remapURL || ((url) => url)
 				};
 			} catch (error) {
 				if (DEV) {
@@ -59,7 +60,8 @@ export class Server {
 						},
 						handleError: ({ error }) => console.error(error),
 						handleFetch: ({ request, fetch }) => fetch(request),
-						resolveDestination: (event) => event.to
+						resolveDestination: (event) => event.to,
+						remapURL: (url) => url
 					};
 				} else {
 					throw error;

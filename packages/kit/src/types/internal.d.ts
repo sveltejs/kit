@@ -13,7 +13,8 @@ import {
 	HandleFetch,
 	Actions,
 	HandleClientError,
-	ResolveDestination
+	ResolveDestination,
+	RemapURL
 } from '@sveltejs/kit';
 import {
 	HttpMethod,
@@ -98,11 +99,13 @@ export interface ServerHooks {
 	handle: Handle;
 	handleError: HandleServerError;
 	resolveDestination: ResolveDestination;
+	remapURL: RemapURL;
 }
 
 export interface ClientHooks {
 	handleError: HandleClientError;
 	resolveDestination: ResolveDestination;
+	remapURL: RemapURL
 }
 
 export interface Env {
