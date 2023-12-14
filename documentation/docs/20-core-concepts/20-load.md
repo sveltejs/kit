@@ -172,7 +172,7 @@ A `load` function is invoked at runtime, unless you [prerender](page-options#pre
 
 ### Input
 
-Both universal and server `load` functions have access to properties describing the request (`params`, `route` and `url`) and various functions (`fetch`, `setHeaders`, `parent` and `depends`). These are described in the following sections.
+Both universal and server `load` functions have access to properties describing the request (`params`, `route` and `url`) and various functions (`fetch`, `setHeaders`, `parent`, `depends` and `untrack`). These are described in the following sections.
 
 Server `load` functions are called with a `ServerLoadEvent`, which inherits `clientAddress`, `cookies`, `locals`, `platform` and `request` from `RequestEvent`.
 
@@ -573,6 +573,21 @@ A `load` function that calls `await parent()` will also rerun if a parent `load`
 Dependency tracking does not apply _after_ the `load` function has returned — for example, accessing `params.x` inside a nested [promise](#streaming-with-promises) will not cause the function to rerun when `params.x` changes. (Don't worry, you'll get a warning in development if you accidentally do this.) Instead, access the parameter in the main body of your `load` function.
 
 Search parameters are tracked independently from the rest of the url. For example, accessing `event.url.searchParams.get("x")` inside a `load` function will make that `load` function re-run when navigating from `?x=1` to `?x=2`, but not when navigating from `?x=1&y=1` to `?x=1&y=2`.
+
+### Untracking dependencies
+
+In rare cases, you may wish to exclude something from the dependency tracking mechanism. You can do this with the provided `untrack` function:
+
+```js
+/// file: src/routes/+page.js
+/** @type {import('./$types').PageLoad} */
+export async function load({ untrack, url }) {
+	// Untrack url.pathname so that path changes don't trigger a rerun
+	if (untrack(() => url.pathname === '/')) {
+		return { message: 'Welcome!' };
+	}
+}
+```
 
 ### Manual invalidation
 

@@ -807,6 +807,20 @@ export interface LoadEvent<
 	 * ```
 	 */
 	depends(...deps: Array<`${string}:${string}`>): void;
+	/**
+	 * Use this function to opt out of dependency tracking for everything that is synchronously called within the callback. Example:
+	 *
+	 * ```js
+	 * /// file: src/routes/+page.server.js
+	 * export async function load({ untrack, url }) {
+	 * 	// Untrack url.pathname so that path changes don't trigger a rerun
+	 * 	if (untrack(() => url.pathname === '/')) {
+	 * 		return { message: 'Welcome!' };
+	 * 	}
+	 * }
+	 * ```
+	 */
+	untrack<T>(fn: () => T): T;
 }
 
 export interface NavigationEvent<
@@ -977,6 +991,10 @@ export interface Page<
 	 * The merged result of all data from all `load` functions on the current page. You can type a common denominator through `App.PageData`.
 	 */
 	data: App.PageData & Record<string, any>;
+	/**
+	 * The page state, which can be manipulated using the [`pushState`](https://kit.svelte.dev/docs/modules#$app-navigation-pushstate) and [`replaceState`](https://kit.svelte.dev/docs/modules#$app-navigation-replacestate) functions from `$app/navigation`.
+	 */
+	state: App.PageState;
 	/**
 	 * Filled only after a form submission. See [form actions](https://kit.svelte.dev/docs/form-actions) for more info.
 	 */
@@ -1208,6 +1226,20 @@ export interface ServerLoadEvent<
 	 * ```
 	 */
 	depends(...deps: string[]): void;
+	/**
+	 * Use this function to opt out of dependency tracking for everything that is synchronously called within the callback. Example:
+	 *
+	 * ```js
+	 * /// file: src/routes/+page.js
+	 * export async function load({ untrack, url }) {
+	 * 	// Untrack url.pathname so that path changes don't trigger a rerun
+	 * 	if (untrack(() => url.pathname === '/')) {
+	 * 		return { message: 'Welcome!' };
+	 * 	}
+	 * }
+	 * ```
+	 */
+	untrack<T>(fn: () => T): T;
 }
 
 /**

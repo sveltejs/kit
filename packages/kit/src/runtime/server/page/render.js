@@ -141,7 +141,8 @@ export async function render_response({
 			status,
 			url: event.url,
 			data,
-			form: form_value
+			form: form_value,
+			state: {}
 		};
 
 		// use relative paths during rendering, so that the resulting HTML is as

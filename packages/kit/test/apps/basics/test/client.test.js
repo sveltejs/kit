@@ -913,3 +913,111 @@ test.describe('goto', () => {
 		await expect(page.locator('p')).toHaveText(message);
 	});
 });
+
+test.describe('untrack', () => {
+	test('untracks server load function', async ({ page }) => {
+		await page.goto('/untrack/server/1');
+		expect(await page.textContent('p.url')).toBe('/untrack/server/1');
+		const id = await page.textContent('p.id');
+		await page.click('a[href="/untrack/server/2"]');
+		expect(await page.textContent('p.url')).toBe('/untrack/server/2');
+		expect(await page.textContent('p.id')).toBe(id);
+	});
+
+	test('untracks universal load function', async ({ page }) => {
+		await page.goto('/untrack/universal/1');
+		expect(await page.textContent('p.url')).toBe('/untrack/universal/1');
+		const id = await page.textContent('p.id');
+		await page.click('a[href="/untrack/universal/2"]');
+		expect(await page.textContent('p.url')).toBe('/untrack/universal/2');
+		expect(await page.textContent('p.id')).toBe(id);
+	});
+});
+
+test.describe('Shallow routing', () => {
+	test('Pushes state to the current URL', async ({ page }) => {
+		await page.goto('/shallow-routing/push-state');
+		await expect(page.locator('p')).toHaveText('active: false');
+
+		await page.locator('[data-id="one"]').click();
+		await expect(page.locator('p')).toHaveText('active: true');
+
+		await page.goBack();
+		await expect(page.locator('p')).toHaveText('active: false');
+	});
+
+	test('Pushes state to a new URL', async ({ baseURL, page }) => {
+		await page.goto('/shallow-routing/push-state');
+		await expect(page.locator('p')).toHaveText('active: false');
+
+		await page.locator('[data-id="two"]').click();
+		expect(page.url()).toBe(`${baseURL}/shallow-routing/push-state/a`);
+		await expect(page.locator('h1')).toHaveText('parent');
+		await expect(page.locator('p')).toHaveText('active: true');
+
+		await page.reload();
+		await expect(page.locator('h1')).toHaveText('a');
+		await expect(page.locator('p')).toHaveText('active: false');
+
+		await page.goBack();
+		expect(page.url()).toBe(`${baseURL}/shallow-routing/push-state`);
+		await expect(page.locator('h1')).toHaveText('parent');
+		await expect(page.locator('p')).toHaveText('active: false');
+
+		await page.goForward();
+		expect(page.url()).toBe(`${baseURL}/shallow-routing/push-state/a`);
+		await expect(page.locator('h1')).toHaveText('parent');
+		await expect(page.locator('p')).toHaveText('active: true');
+	});
+
+	test('Invalidates the correct route after pushing state to a new URL', async ({
+		baseURL,
+		page
+	}) => {
+		await page.goto('/shallow-routing/push-state');
+		await expect(page.locator('p')).toHaveText('active: false');
+
+		const now = await page.locator('span').textContent();
+
+		await page.locator('[data-id="two"]').click();
+		expect(page.url()).toBe(`${baseURL}/shallow-routing/push-state/a`);
+
+		await page.locator('[data-id="invalidate"]').click();
+		await expect(page.locator('h1')).toHaveText('parent');
+		await expect(page.locator('span')).not.toHaveText(now);
+	});
+
+	test('Replaces state on the current URL', async ({ baseURL, page, clicknav }) => {
+		await page.goto('/shallow-routing/replace-state/b');
+		await clicknav('[href="/shallow-routing/replace-state"]');
+
+		await page.locator('[data-id="one"]').click();
+		await expect(page.locator('p')).toHaveText('active: true');
+
+		await page.goBack();
+		expect(page.url()).toBe(`${baseURL}/shallow-routing/replace-state/b`);
+		await expect(page.locator('h1')).toHaveText('b');
+
+		await page.goForward();
+		expect(page.url()).toBe(`${baseURL}/shallow-routing/replace-state`);
+		await expect(page.locator('h1')).toHaveText('parent');
+		await expect(page.locator('p')).toHaveText('active: true');
+	});
+
+	test('Replaces state on a new URL', async ({ baseURL, page, clicknav }) => {
+		await page.goto('/shallow-routing/replace-state/b');
+		await clicknav('[href="/shallow-routing/replace-state"]');
+
+		await page.locator('[data-id="two"]').click();
+		await expect(page.locator('p')).toHaveText('active: true');
+
+		await page.goBack();
+		expect(page.url()).toBe(`${baseURL}/shallow-routing/replace-state/b`);
+		await expect(page.locator('h1')).toHaveText('b');
+
+		await page.goForward();
+		expect(page.url()).toBe(`${baseURL}/shallow-routing/replace-state/a`);
+		await expect(page.locator('h1')).toHaveText('parent');
+		await expect(page.locator('p')).toHaveText('active: true');
+	});
+});

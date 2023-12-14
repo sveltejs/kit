@@ -789,6 +789,20 @@ declare module '@sveltejs/kit' {
 		 * ```
 		 */
 		depends(...deps: Array<`${string}:${string}`>): void;
+		/**
+		 * Use this function to opt out of dependency tracking for everything that is synchronously called within the callback. Example:
+		 *
+		 * ```js
+		 * /// file: src/routes/+page.server.js
+		 * export async function load({ untrack, url }) {
+		 * 	// Untrack url.pathname so that path changes don't trigger a rerun
+		 * 	if (untrack(() => url.pathname === '/')) {
+		 * 		return { message: 'Welcome!' };
+		 * 	}
+		 * }
+		 * ```
+		 */
+		untrack<T>(fn: () => T): T;
 	}
 
 	export interface NavigationEvent<
@@ -959,6 +973,10 @@ declare module '@sveltejs/kit' {
 		 * The merged result of all data from all `load` functions on the current page. You can type a common denominator through `App.PageData`.
 		 */
 		data: App.PageData & Record<string, any>;
+		/**
+		 * The page state, which can be manipulated using the [`pushState`](https://kit.svelte.dev/docs/modules#$app-navigation-pushstate) and [`replaceState`](https://kit.svelte.dev/docs/modules#$app-navigation-replacestate) functions from `$app/navigation`.
+		 */
+		state: App.PageState;
 		/**
 		 * Filled only after a form submission. See [form actions](https://kit.svelte.dev/docs/form-actions) for more info.
 		 */
@@ -1190,6 +1208,20 @@ declare module '@sveltejs/kit' {
 		 * ```
 		 */
 		depends(...deps: string[]): void;
+		/**
+		 * Use this function to opt out of dependency tracking for everything that is synchronously called within the callback. Example:
+		 *
+		 * ```js
+		 * /// file: src/routes/+page.js
+		 * export async function load({ untrack, url }) {
+		 * 	// Untrack url.pathname so that path changes don't trigger a rerun
+		 * 	if (untrack(() => url.pathname === '/')) {
+		 * 		return { message: 'Welcome!' };
+		 * 	}
+		 * }
+		 * ```
+		 */
+		untrack<T>(fn: () => T): T;
 	}
 
 	/**
@@ -1943,7 +1975,6 @@ declare module '$app/navigation' {
 		noScroll?: boolean;
 		keepFocus?: boolean;
 		invalidateAll?: boolean;
-		state?: any;
 	}) => Promise<void>;
 	/**
 	 * Causes any `load` functions belonging to the currently active page to re-run if they depend on the `url` in question, via `fetch` or `depends`. Returns a `Promise` that resolves when the page is subsequently updated.
@@ -1974,11 +2005,11 @@ declare module '$app/navigation' {
 	 *
 	 * This is the same behaviour that SvelteKit triggers when the user taps or mouses over an `<a>` element with `data-sveltekit-preload-data`.
 	 * If the next navigation is to `href`, the values returned from load will be used, making navigation instantaneous.
-	 * Returns a Promise that resolves when the preload is complete.
+	 * Returns a Promise that resolves with the result of running the new route's `load` functions once the preload is complete.
 	 *
 	 * @param href Page to preload
 	 * */
-	export const preloadData: (href: string) => Promise<void>;
+	export const preloadData: (href: string) => Promise<Record<string, any>>;
 	/**
 	 * Programmatically imports the code for routes that haven't yet been fetched.
 	 * Typically, you might call this to speed up subsequent navigation.
@@ -2018,6 +2049,16 @@ declare module '$app/navigation' {
 	 * `afterNavigate` must be called during a component initialization. It remains active as long as the component is mounted.
 	 * */
 	export const afterNavigate: (callback: (navigation: import('@sveltejs/kit').AfterNavigate) => void) => void;
+	/**
+	 * Programmatically create a new history entry with the given `$page.state`. To use the current URL, you can pass `''` as the first argument. Used for [shallow routing](https://kit.svelte.dev/docs/shallow-routing).
+	 *
+	 * */
+	export const pushState: (url: string | URL, state: App.PageState) => void;
+	/**
+	 * Programmatically replace the current history entry with the given `$page.state`. To use the current URL, you can pass `''` as the first argument. Used for [shallow routing](https://kit.svelte.dev/docs/shallow-routing).
+	 *
+	 * */
+	export const replaceState: (url: string | URL, state: App.PageState) => void;
 	type MaybePromise<T> = T | Promise<T>;
 }
 
@@ -2080,6 +2121,7 @@ declare module '$app/stores' {
  * 		// interface Error {}
  * 		// interface Locals {}
  * 		// interface PageData {}
+ * 		// interface PageState {}
  * 		// interface Platform {}
  * 	}
  * }
@@ -2111,6 +2153,11 @@ declare namespace App {
 	 * Use optional properties for data that is only present on specific pages. Do not add an index signature (`[key: string]: any`).
 	 */
 	export interface PageData {}
+
+	/**
+	 * The shape of the `$page.state` object, which can be manipulated using the [`pushState`](https://kit.svelte.dev/docs/modules#$app-navigation-pushstate) and [`replaceState`](https://kit.svelte.dev/docs/modules#$app-navigation-replacestate) functions from `$app/navigation`.
+	 */
+	export interface PageState {}
 
 	/**
 	 * If your adapter provides [platform-specific context](https://kit.svelte.dev/docs/adapters#platform-specific-context) via `event.platform`, you can specify it here.

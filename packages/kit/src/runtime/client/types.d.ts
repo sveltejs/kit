@@ -7,7 +7,9 @@ import {
 	invalidate,
 	invalidateAll,
 	preloadCode,
-	preloadData
+	preloadData,
+	pushState,
+	replaceState
 } from '../app/navigation.js';
 import { SvelteComponent } from 'svelte';
 import { ClientHooks, CSRPageNode, CSRPageNodeLoader, CSRRoute, TrailingSlash, Uses } from 'types';
@@ -51,6 +53,8 @@ export interface Client {
 	invalidate_all: typeof invalidateAll;
 	preload_code: typeof preloadCode;
 	preload_data: typeof preloadData;
+	push_state: typeof pushState;
+	replace_state: typeof replaceState;
 	apply_action: typeof applyAction;
 
 	// private API
@@ -92,7 +96,7 @@ export type NavigationFinished = {
 	props: {
 		constructors: Array<typeof SvelteComponent>;
 		components?: Array<SvelteComponent>;
-		page?: Page;
+		page: Page;
 		form?: Record<string, any> | null;
 		[key: `data_${number}`]: Record<string, any>;
 	};

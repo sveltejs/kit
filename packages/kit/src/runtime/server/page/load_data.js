@@ -17,6 +17,7 @@ export async function load_server_data({ event, state, node, parent, handle_load
 	if (!node?.server) return null;
 
 	let done = false;
+	let is_tracking = true;
 
 	const uses = {
 		dependencies: new Set(),
@@ -36,7 +37,9 @@ export async function load_server_data({ event, state, node, parent, handle_load
 				);
 			}
 
-			uses.url = true;
+			if (is_tracking) {
+				uses.url = true;
+			}
 		},
 		(param) => {
 			if (DEV && done && !uses.search_params.has(param)) {
@@ -45,7 +48,9 @@ export async function load_server_data({ event, state, node, parent, handle_load
 				);
 			}
 
-			uses.search_params.add(param);
+			if (is_tracking) {
+				uses.search_params.add(param);
+			}
 		}
 	);
 
@@ -65,6 +70,7 @@ export async function load_server_data({ event, state, node, parent, handle_load
 				);
 			}
 
+			// Note: server fetches are not added to uses.depends due to security concerns
 			return event.fetch(info, init);
 		},
 		/** @param {string[]} deps */
@@ -95,7 +101,9 @@ export async function load_server_data({ event, state, node, parent, handle_load
 					);
 				}
 
-				uses.params.add(key);
+				if (is_tracking) {
+					uses.params.add(key);
+				}
 				return target[/** @type {string} */ (key)];
 			}
 		}),
@@ -106,7 +114,9 @@ export async function load_server_data({ event, state, node, parent, handle_load
 				);
 			}
 
-			uses.parent = true;
+			if (is_tracking) {
+				uses.parent = true;
+			}
 			return parent();
 		},
 		route: new Proxy(event.route, {
@@ -119,11 +129,21 @@ export async function load_server_data({ event, state, node, parent, handle_load
 					);
 				}
 
-				uses.route = true;
+				if (is_tracking) {
+					uses.route = true;
+				}
 				return target[/** @type {'id'} */ (key)];
 			}
 		}),
-		url
+		url,
+		untrack(fn) {
+			is_tracking = false;
+			try {
+				return fn();
+			} finally {
+				is_tracking = true;
+			}
+		}
 	};
 
 	const result = node.server.load
@@ -185,7 +205,8 @@ export async function load_data({
 			fetch: create_universal_fetch(event, state, fetched, csr, resolve_opts),
 			setHeaders: event.setHeaders,
 			depends: () => {},
-			parent
+			parent,
+			untrack: (fn) => fn()
 		},
 		resolve: node.universal.load
 	});
