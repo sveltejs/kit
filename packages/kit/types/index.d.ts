@@ -827,13 +827,6 @@ declare module '@sveltejs/kit' {
 	 */
 	export type NavigationType = 'enter' | 'form' | 'leave' | 'link' | 'goto' | 'popstate';
 
-	export interface NavigationOptions {
-		replaceState?: boolean;
-		noScroll?: boolean;
-		keepFocus?: boolean;
-		invalidateAll?: boolean;
-	}
-
 	export interface Navigation {
 		/**
 		 * Where navigation was triggered from
@@ -951,7 +944,7 @@ declare module '@sveltejs/kit' {
 		 */
 		data: App.PageData & Record<string, any>;
 		/**
-		 * The page state, which can be manipulated using the `pushState` and `replaceState` functions from `$app/navigation`.
+		 * The page state, which can be manipulated using the [`pushState`](https://kit.svelte.dev/docs/modules#$app-navigation-pushstate) and [`replaceState`](https://kit.svelte.dev/docs/modules#$app-navigation-replacestate) functions from `$app/navigation`.
 		 */
 		state: App.PageState;
 		/**
@@ -1933,7 +1926,12 @@ declare module '$app/navigation' {
 	 * @param url Where to navigate to. Note that if you've set [`config.kit.paths.base`](https://kit.svelte.dev/docs/configuration#paths) and the URL is root-relative, you need to prepend the base path if you want to navigate within the app.
 	 * @param {Object} opts Options related to the navigation
 	 * */
-	export const goto: (url: string | URL, opts?: import('@sveltejs/kit').NavigationOptions) => Promise<void>;
+	export const goto: (url: string | URL, opts?: {
+		replaceState?: boolean;
+		noScroll?: boolean;
+		keepFocus?: boolean;
+		invalidateAll?: boolean;
+	}) => Promise<void>;
 	/**
 	 * Causes any `load` functions belonging to the currently active page to re-run if they depend on the `url` in question, via `fetch` or `depends`. Returns a `Promise` that resolves when the page is subsequently updated.
 	 *
@@ -2113,7 +2111,7 @@ declare namespace App {
 	export interface PageData {}
 
 	/**
-	 * The shape of the `$page.state` object, which can be manipulated using the `pushState` and `replaceState` functions from `$app/navigation`.
+	 * The shape of the `$page.state` object, which can be manipulated using the [`pushState`](https://kit.svelte.dev/docs/modules#$app-navigation-pushstate) and [`replaceState`](https://kit.svelte.dev/docs/modules#$app-navigation-replacestate) functions from `$app/navigation`.
 	 */
 	export interface PageState {}
 
