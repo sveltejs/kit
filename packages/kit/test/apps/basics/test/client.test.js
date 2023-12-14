@@ -913,3 +913,23 @@ test.describe('goto', () => {
 		await expect(page.locator('p')).toHaveText(message);
 	});
 });
+
+test.describe('untrack', () => {
+	test('untracks server load function', async ({ page }) => {
+		await page.goto('/untrack/server/1');
+		expect(await page.textContent('p.url')).toBe('/untrack/server/1');
+		const id = await page.textContent('p.id');
+		await page.click('a[href="/untrack/server/2"]');
+		expect(await page.textContent('p.url')).toBe('/untrack/server/2');
+		expect(await page.textContent('p.id')).toBe(id);
+	});
+
+	test('untracks universal load function', async ({ page }) => {
+		await page.goto('/untrack/universal/1');
+		expect(await page.textContent('p.url')).toBe('/untrack/universal/1');
+		const id = await page.textContent('p.id');
+		await page.click('a[href="/untrack/universal/2"]');
+		expect(await page.textContent('p.url')).toBe('/untrack/universal/2');
+		expect(await page.textContent('p.id')).toBe(id);
+	});
+});
