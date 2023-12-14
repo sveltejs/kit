@@ -1,6 +1,5 @@
-import { disable_search, make_trackable } from '../../../utils/url.js';
-import { unwrap_promises } from '../../../utils/promises.js';
 import { DEV } from 'esm-env';
+import { disable_search, make_trackable } from '../../../utils/url.js';
 import { validate_depends } from '../../shared.js';
 
 /**
@@ -10,39 +9,49 @@ import { validate_depends } from '../../shared.js';
  *   state: import('types').SSRState;
  *   node: import('types').SSRNode | undefined;
  *   parent: () => Promise<Record<string, any>>;
- *   track_server_fetches: boolean;
  * }} opts
  * @returns {Promise<import('types').ServerDataNode | null>}
  */
-export async function load_server_data({
-	event,
-	state,
-	node,
-	parent,
-	// TODO 2.0: Remove this
-	track_server_fetches
-}) {
+export async function load_server_data({ event, state, node, parent }) {
 	if (!node?.server) return null;
 
 	let done = false;
+	let is_tracking = true;
 
 	const uses = {
 		dependencies: new Set(),
 		params: new Set(),
 		parent: false,
 		route: false,
-		url: false
+		url: false,
+		search_params: new Set()
 	};
 
-	const url = make_trackable(event.url, () => {
-		if (DEV && done && !uses.url) {
-			console.warn(
-				`${node.server_id}: Accessing URL properties in a promise handler after \`load(...)\` has returned will not cause the function to re-run when the URL changes`
-			);
-		}
+	const url = make_trackable(
+		event.url,
+		() => {
+			if (DEV && done && !uses.url) {
+				console.warn(
+					`${node.server_id}: Accessing URL properties in a promise handler after \`load(...)\` has returned will not cause the function to re-run when the URL changes`
+				);
+			}
 
-		uses.url = true;
-	});
+			if (is_tracking) {
+				uses.url = true;
+			}
+		},
+		(param) => {
+			if (DEV && done && !uses.search_params.has(param)) {
+				console.warn(
+					`${node.server_id}: Accessing URL properties in a promise handler after \`load(...)\` has returned will not cause the function to re-run when the URL changes`
+				);
+			}
+
+			if (is_tracking) {
+				uses.search_params.add(param);
+			}
+		}
+	);
 
 	if (state.prerendering) {
 		disable_search(url);
@@ -59,11 +68,7 @@ export async function load_server_data({
 				);
 			}
 
-			// TODO 2.0: Remove this
-			if (track_server_fetches) {
-				uses.dependencies.add(url.href);
-			}
-
+			// Note: server fetches are not added to uses.depends due to security concerns
 			return event.fetch(info, init);
 		},
 		/** @param {string[]} deps */
@@ -94,7 +99,9 @@ export async function load_server_data({
 					);
 				}
 
-				uses.params.add(key);
+				if (is_tracking) {
+					uses.params.add(key);
+				}
 				return target[/** @type {string} */ (key)];
 			}
 		}),
@@ -105,7 +112,9 @@ export async function load_server_data({
 				);
 			}
 
-			uses.parent = true;
+			if (is_tracking) {
+				uses.parent = true;
+			}
 			return parent();
 		},
 		route: new Proxy(event.route, {
@@ -118,23 +127,32 @@ export async function load_server_data({
 					);
 				}
 
-				uses.route = true;
+				if (is_tracking) {
+					uses.route = true;
+				}
 				return target[/** @type {'id'} */ (key)];
 			}
 		}),
-		url
+		url,
+		untrack(fn) {
+			is_tracking = false;
+			try {
+				return fn();
+			} finally {
+				is_tracking = true;
+			}
+		}
 	});
 
-	const data = result ? await unwrap_promises(result, node.server_id) : null;
 	if (__SVELTEKIT_DEV__) {
-		validate_load_response(data, node.server_id);
+		validate_load_response(result, node.server_id);
 	}
 
 	done = true;
 
 	return {
 		type: 'data',
-		data,
+		data: result ?? null,
 		uses,
 		slash: node.server.trailingSlash
 	};
@@ -178,15 +196,15 @@ export async function load_data({
 		fetch: create_universal_fetch(event, state, fetched, csr, resolve_opts),
 		setHeaders: event.setHeaders,
 		depends: () => {},
-		parent
+		parent,
+		untrack: (fn) => fn()
 	});
 
-	const data = result ? await unwrap_promises(result, node.universal_id) : null;
 	if (__SVELTEKIT_DEV__) {
-		validate_load_response(data, node.universal_id);
+		validate_load_response(result, node.universal_id);
 	}
 
-	return data;
+	return result ?? null;
 }
 
 /**

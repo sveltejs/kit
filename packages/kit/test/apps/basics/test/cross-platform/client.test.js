@@ -141,17 +141,6 @@ test.describe('Navigation lifecycle functions', () => {
 		expect(await page.innerHTML('pre')).toBe('1 false goto');
 	});
 
-	test('beforeNavigate prevents external navigation triggered by goto', async ({
-		page,
-		app,
-		baseURL
-	}) => {
-		await page.goto('/navigation-lifecycle/before-navigate/prevent-navigation');
-		await app.goto('https://google.de');
-		expect(page.url()).toBe(baseURL + '/navigation-lifecycle/before-navigate/prevent-navigation');
-		expect(await page.innerHTML('pre')).toBe('1 true goto');
-	});
-
 	test('beforeNavigate prevents navigation triggered by back button', async ({
 		page,
 		app,
@@ -215,8 +204,11 @@ test.describe('Navigation lifecycle functions', () => {
 	}) => {
 		await page.goto('/navigation-lifecycle/before-navigate/prevent-navigation');
 		await page.click('h1'); // The browsers block attempts to prevent navigation on a frame that's never had a user gesture.
-
-		await app.goto('https://google.de');
+		page.on('dialog', async (dialog) => {
+			await dialog.dismiss();
+		});
+		await page.close({ runBeforeUnload: true });
+		await page.waitForTimeout(100);
 		await app.goto('/navigation-lifecycle/before-navigate/prevent-navigation?x=1');
 
 		expect(await page.innerHTML('pre')).toBe('2 false goto');
@@ -465,7 +457,7 @@ test.describe.serial('Errors', () => {
 
 		expect(await page.textContent('footer')).toBe('Custom layout');
 		expect(await page.textContent('#message')).toBe(
-			'This is your custom error page saying: "Crashing now"'
+			'This is your custom error page saying: "Crashing now (500 Internal Error)"'
 		);
 	});
 
@@ -474,7 +466,7 @@ test.describe.serial('Errors', () => {
 
 		expect(await page.textContent('footer')).toBe('Custom layout');
 		expect(await page.textContent('#message')).toBe(
-			'This is your custom error page saying: "Crashing now"'
+			'This is your custom error page saying: "Crashing now (500 Internal Error)"'
 		);
 	});
 
@@ -504,7 +496,7 @@ test.describe.serial('Errors', () => {
 
 		expect(await page.textContent('h1')).toBe('Error - 500');
 		expect(await page.textContent('p')).toBe(
-			'This is the static error page with the following message: Failed to load'
+			'This is the static error page with the following message: Failed to load (500 Internal Error)'
 		);
 	});
 

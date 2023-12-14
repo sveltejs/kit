@@ -1,5 +1,5 @@
 import fs from 'node:fs';
-import path from 'node:path';
+import path, { join } from 'node:path';
 
 import { svelte } from '@sveltejs/vite-plugin-svelte';
 import colors from 'kleur';
@@ -19,14 +19,23 @@ import { dev } from './dev/index.js';
 import { is_illegal, module_guard, normalize_id } from './graph_analysis/index.js';
 import { preview } from './preview/index.js';
 import { get_config_aliases, get_env, strip_virtual_prefix } from './utils.js';
+import { SVELTE_KIT_ASSETS } from '../../constants.js';
 import { write_client_manifest } from '../../core/sync/write_client_manifest.js';
 import prerender from '../../core/postbuild/prerender.js';
 import analyse from '../../core/postbuild/analyse.js';
 import { s } from '../../utils/misc.js';
 import { hash } from '../../runtime/hash.js';
 import { dedent, isSvelte5Plus } from '../../core/sync/utils.js';
-
-export { vitePreprocess } from '@sveltejs/vite-plugin-svelte';
+import sirv from 'sirv';
+import {
+	env_dynamic_private,
+	env_dynamic_public,
+	env_static_private,
+	env_static_public,
+	service_worker,
+	sveltekit_environment,
+	sveltekit_paths
+} from './module_ids.js';
 
 const cwd = process.cwd();
 
@@ -72,7 +81,7 @@ const options_regex = /(export\s+const\s+(prerender|csr|ssr|trailingSlash))\s*=/
 /** @type {Set<string>} */
 const warned = new Set();
 
-/** @type {import('@sveltejs/vite-plugin-svelte').PreprocessorGroup} */
+/** @type {import('svelte/compiler').PreprocessorGroup} */
 const warning_preprocessor = {
 	script: ({ content, filename }) => {
 		if (!filename) return;
@@ -363,22 +372,22 @@ function kit({ svelte_config }) {
 			}
 
 			switch (id) {
-				case '\0virtual:$env/static/private':
+				case env_static_private:
 					return create_static_module('$env/static/private', env.private);
 
-				case '\0virtual:$env/static/public':
+				case env_static_public:
 					return create_static_module('$env/static/public', env.public);
 
-				case '\0virtual:$env/dynamic/private':
+				case env_dynamic_private:
 					return create_dynamic_module(
 						'private',
 						vite_config_env.command === 'serve' ? env.private : undefined
 					);
 
-				case '\0virtual:$env/dynamic/public':
+				case env_dynamic_public:
 					// populate `$env/dynamic/public` from `window`
 					if (browser) {
-						return `export const env = ${global}.env;`;
+						return `export const env = ${global}.env ?? (await import(/* @vite-ignore */ ${global}.base + '/' + '${kit.appDir}/env.js')).env;`;
 					}
 
 					return create_dynamic_module(
@@ -386,12 +395,12 @@ function kit({ svelte_config }) {
 						vite_config_env.command === 'serve' ? env.public : undefined
 					);
 
-				case '\0virtual:$service-worker':
+				case service_worker:
 					return create_service_worker_module(svelte_config);
 
 				// for internal use only. it's published as $app/paths externally
 				// we use this alias so that we won't collide with user aliases
-				case '\0virtual:__sveltekit/paths': {
+				case sveltekit_paths: {
 					const { assets, base } = svelte_config.kit.paths;
 
 					// use the values defined in `global`, but fall back to hard-coded values
@@ -429,7 +438,7 @@ function kit({ svelte_config }) {
 					`;
 				}
 
-				case '\0virtual:__sveltekit/environment': {
+				case sveltekit_environment: {
 					const { version } = svelte_config.kit;
 
 					return dedent`
@@ -570,7 +579,7 @@ function kit({ svelte_config }) {
 							preserveEntrySignatures: 'strict'
 						},
 						ssrEmitAssets: true,
-						target: ssr ? 'node16.14' : undefined
+						target: ssr ? 'node18.13' : 'es2022'
 					},
 					publicDir: kit.files.assets,
 					worker: {
@@ -617,6 +626,31 @@ function kit({ svelte_config }) {
 		 * @see https://vitejs.dev/guide/api-plugin.html#configurepreviewserver
 		 */
 		configurePreviewServer(vite) {
+			// generated client assets and the contents of `static`
+			// should we use Vite's built-in asset server for this?
+			// we would need to set the outDir to do so
+			const { paths } = svelte_config.kit;
+			const assets = paths.assets ? SVELTE_KIT_ASSETS : paths.base;
+			vite.middlewares.use(
+				scoped(
+					assets,
+					sirv(join(svelte_config.kit.outDir, 'output/client'), {
+						setHeaders: (res, pathname) => {
+							if (pathname.startsWith(`/${svelte_config.kit.appDir}/immutable`)) {
+								res.setHeader('cache-control', 'public,max-age=31536000,immutable');
+							}
+							if (vite_config.preview.cors) {
+								res.setHeader('Access-Control-Allow-Origin', '*');
+								res.setHeader(
+									'Access-Control-Allow-Headers',
+									'Origin, Content-Type, Accept, Range'
+								);
+							}
+						}
+					})
+				)
+			);
+
 			return preview(vite, vite_config, svelte_config);
 		},
 
@@ -738,7 +772,10 @@ function kit({ svelte_config }) {
 					app: app.file,
 					imports: [...start.imports, ...app.imports],
 					stylesheets: [...start.stylesheets, ...app.stylesheets],
-					fonts: [...start.fonts, ...app.fonts]
+					fonts: [...start.fonts, ...app.fonts],
+					uses_env_dynamic_public: output.some(
+						(chunk) => chunk.type === 'chunk' && chunk.modules[env_dynamic_public]
+					)
 				};
 
 				const css = output.filter(
@@ -906,3 +943,25 @@ const create_service_worker_module = (config) => dedent`
 	export const prerendered = [];
 	export const version = ${s(config.kit.version.name)};
 `;
+
+/**
+ * @param {string} scope
+ * @param {(req: import('http').IncomingMessage, res: import('http').ServerResponse, next: () => void) => void} handler
+ * @returns {(req: import('http').IncomingMessage, res: import('http').ServerResponse, next: () => void) => void}
+ */
+function scoped(scope, handler) {
+	if (scope === '') return handler;
+
+	return (req, res, next) => {
+		if (req.url?.startsWith(scope)) {
+			const original_url = req.url;
+			req.url = req.url.slice(scope.length);
+			handler(req, res, () => {
+				req.url = original_url;
+				next();
+			});
+		} else {
+			next();
+		}
+	};
+}

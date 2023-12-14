@@ -7,7 +7,7 @@ export async function load({ fetch }) {
 	});
 
 	return {
-		data: res.arrayBuffer(),
-		data_long: l.arrayBuffer()
+		data: await res.arrayBuffer(),
+		data_long: await l.arrayBuffer()
 	};
 }

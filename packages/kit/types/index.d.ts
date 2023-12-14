@@ -2,7 +2,7 @@
 /// <reference types="vite/client" />
 
 declare module '@sveltejs/kit' {
-	import type { CompileOptions } from 'svelte/types/compiler/interfaces';
+	import type { CompileOptions } from 'svelte/compiler';
 	import type { PluginOptions } from '@sveltejs/vite-plugin-svelte';
 	/**
 	 * [Adapters](https://kit.svelte.dev/docs/adapters) are responsible for taking the production build and turning it into something that can be deployed to a platform of your choosing.
@@ -19,20 +19,11 @@ declare module '@sveltejs/kit' {
 		adapt(builder: Builder): MaybePromise<void>;
 	}
 
-	type AwaitedPropertiesUnion<input extends Record<string, any> | void> = input extends void
+	export type LoadProperties<input extends Record<string, any> | void> = input extends void
 		? undefined // needs to be undefined, because void will break intellisense
 		: input extends Record<string, any>
-			? {
-					[key in keyof input]: Awaited<input[key]>;
-				}
-			: {} extends input // handles the any case
-				? input
-				: unknown;
-
-	export type AwaitedProperties<input extends Record<string, any> | void> =
-		AwaitedPropertiesUnion<input> extends Record<string, any>
-			? OptionalUnion<AwaitedPropertiesUnion<input>>
-			: AwaitedPropertiesUnion<input>;
+			? input
+			: unknown;
 
 	export type AwaitedActions<T extends Record<string, (...args: any) => any>> = OptionalUnion<
 		{
@@ -46,6 +37,14 @@ declare module '@sveltejs/kit' {
 		U extends Record<string, any>, // not unknown, else interfaces don't satisfy this constraint
 		A extends keyof U = U extends U ? keyof U : never
 	> = U extends unknown ? { [P in Exclude<A, keyof U>]?: never } & U : never;
+
+	const uniqueSymbol: unique symbol;
+
+	export interface ActionFailure<T extends Record<string, unknown> | undefined = undefined> {
+		status: number;
+		data: T;
+		[uniqueSymbol]: true; // necessary or else UnpackValidationError could wrongly unpack objects with the same shape as ActionFailure
+	}
 
 	type UnpackValidationError<T> = T extends ActionFailure<infer X>
 		? X
@@ -83,6 +82,11 @@ declare module '@sveltejs/kit' {
 		 * Generate a fallback page for a static webserver to use when no route is matched. Useful for single-page apps.
 		 */
 		generateFallback(dest: string): Promise<void>;
+
+		/**
+		 * Generate a module exposing build-time environment variables as `$env/dynamic/public`.
+		 */
+		generateEnvModule(): void;
 
 		/**
 		 * Generate a server-side manifest to initialise the SvelteKit [server](https://kit.svelte.dev/docs/types#public-types-server) with.
@@ -192,34 +196,42 @@ declare module '@sveltejs/kit' {
 		 *
 		 * The `httpOnly` and `secure` options are `true` by default (except on http://localhost, where `secure` is `false`), and must be explicitly disabled if you want cookies to be readable by client-side JavaScript and/or transmitted over HTTP. The `sameSite` option defaults to `lax`.
 		 *
-		 * By default, the `path` of a cookie is the 'directory' of the current pathname. In most cases you should explicitly set `path: '/'` to make the cookie available throughout your app.
+		 * You must specify a `path` for the cookie. In most cases you should explicitly set `path: '/'` to make the cookie available throughout your app. You can use relative paths, or set `path: ''` to make the cookie only available on the current path and its children
 		 * @param name the name of the cookie
 		 * @param value the cookie value
 		 * @param opts the options, passed directly to `cookie.serialize`. See documentation [here](https://github.com/jshttp/cookie#cookieserializename-value-options)
 		 */
-		set(name: string, value: string, opts?: import('cookie').CookieSerializeOptions): void;
+		set(
+			name: string,
+			value: string,
+			opts: import('cookie').CookieSerializeOptions & { path: string }
+		): void;
 
 		/**
 		 * Deletes a cookie by setting its value to an empty string and setting the expiry date in the past.
 		 *
-		 * By default, the `path` of a cookie is the 'directory' of the current pathname. In most cases you should explicitly set `path: '/'` to make the cookie available throughout your app.
+		 * You must specify a `path` for the cookie. In most cases you should explicitly set `path: '/'` to make the cookie available throughout your app. You can use relative paths, or set `path: ''` to make the cookie only available on the current path and its children
 		 * @param name the name of the cookie
 		 * @param opts the options, passed directly to `cookie.serialize`. The `path` must match the path of the cookie you want to delete. See documentation [here](https://github.com/jshttp/cookie#cookieserializename-value-options)
 		 */
-		delete(name: string, opts?: import('cookie').CookieSerializeOptions): void;
+		delete(name: string, opts: import('cookie').CookieSerializeOptions & { path: string }): void;
 
 		/**
 		 * Serialize a cookie name-value pair into a `Set-Cookie` header string, but don't apply it to the response.
 		 *
 		 * The `httpOnly` and `secure` options are `true` by default (except on http://localhost, where `secure` is `false`), and must be explicitly disabled if you want cookies to be readable by client-side JavaScript and/or transmitted over HTTP. The `sameSite` option defaults to `lax`.
 		 *
-		 * By default, the `path` of a cookie is the current pathname. In most cases you should explicitly set `path: '/'` to make the cookie available throughout your app.
+		 * You must specify a `path` for the cookie. In most cases you should explicitly set `path: '/'` to make the cookie available throughout your app. You can use relative paths, or set `path: ''` to make the cookie only available on the current path and its children
 		 *
 		 * @param name the name of the cookie
 		 * @param value the cookie value
 		 * @param opts the options, passed directly to `cookie.serialize`. See documentation [here](https://github.com/jshttp/cookie#cookieserializename-value-options)
 		 */
-		serialize(name: string, value: string, opts?: import('cookie').CookieSerializeOptions): string;
+		serialize(
+			name: string,
+			value: string,
+			opts: import('cookie').CookieSerializeOptions & { path: string }
+		): string;
 	}
 
 	export interface KitConfig {
@@ -259,7 +271,9 @@ declare module '@sveltejs/kit' {
 		 */
 		alias?: Record<string, string>;
 		/**
-		 * The directory relative to `paths.assets` where the built JS and CSS (and imported assets) are served from. (The filenames therein contain content-based hashes, meaning they can be cached indefinitely). Must not start or end with `/`.
+		 * The directory where SvelteKit keeps its stuff, including static assets (such as JS and CSS) and internally-used routes.
+		 *
+		 * If `paths.assets` is specified, there will be two app directories — `${paths.assets}/${appDir}` and `${paths.base}/${appDir}`.
 		 * @default "_app"
 		 */
 		appDir?: string;
@@ -322,16 +336,6 @@ declare module '@sveltejs/kit' {
 			 * @default true
 			 */
 			checkOrigin?: boolean;
-		};
-		/**
-		 * Here be dragons. Enable at your peril.
-		 */
-		dangerZone?: {
-			/**
-			 * Automatically add server-side `fetch`ed URLs to the `dependencies` map of `load` functions. This will expose secrets
-			 * to the client if your URL contains them.
-			 */
-			trackServerFetches?: boolean;
 		};
 		/**
 		 * Whether or not the app is embedded inside a larger app. If `true`, SvelteKit will add its event listeners related to navigation etc on the parent of `%sveltekit.body%` instead of `window`, and will pass `params` from the server rather than inferring them from `location.pathname`.
@@ -453,17 +457,20 @@ declare module '@sveltejs/kit' {
 			 */
 			base?: '' | `/${string}`;
 			/**
-			 * Whether to use relative asset paths. By default, if `paths.assets` is not external, SvelteKit will replace `%sveltekit.assets%` with a relative path and use relative paths to reference build artifacts, but `base` and `assets` imported from `$app/paths` will be as specified in your config.
+			 * Whether to use relative asset paths.
 			 *
-			 * If `true`, `base` and `assets` imported from `$app/paths` will be replaced with relative asset paths during server-side rendering, resulting in portable HTML.
+			 * If `true`, `base` and `assets` imported from `$app/paths` will be replaced with relative asset paths during server-side rendering, resulting in more portable HTML.
 			 * If `false`, `%sveltekit.assets%` and references to build artifacts will always be root-relative paths, unless `paths.assets` is an external URL
 			 *
 			 * [Single-page app](https://kit.svelte.dev/docs/single-page-apps) fallback pages will always use absolute paths, regardless of this setting.
 			 *
 			 * If your app uses a `<base>` element, you should set this to `false`, otherwise asset URLs will incorrectly be resolved against the `<base>` URL rather than the current page.
-			 * @default undefined
+			 *
+			 * In 1.0, `undefined` was a valid value, which was set by default. In that case, if `paths.assets` was not external, SvelteKit would replace `%sveltekit.assets%` with a relative path and use relative paths to reference build artifacts, but `base` and `assets` imported from `$app/paths` would be as specified in your config.
+			 *
+			 * @default true
 			 */
-			relative?: boolean | undefined;
+			relative?: boolean;
 		};
 		/**
 		 * See [Prerendering](https://kit.svelte.dev/docs/page-options#prerender).
@@ -480,7 +487,7 @@ declare module '@sveltejs/kit' {
 			 */
 			crawl?: boolean;
 			/**
-			 * An array of pages to prerender, or start crawling from (if `crawl: true`). The `*` string includes all non-dynamic routes (i.e. pages with no `[parameters]`, because SvelteKit doesn't know what value the parameters should have).
+			 * An array of pages to prerender, or start crawling from (if `crawl: true`). The `*` string includes all routes containing no required `[parameters]`  with optional parameters included as being empty (since SvelteKit doesn't know what value any parameters should have).
 			 * @default ["*"]
 			 */
 			entries?: Array<'*' | `/${string}`>;
@@ -632,6 +639,8 @@ declare module '@sveltejs/kit' {
 	export type HandleServerError = (input: {
 		error: unknown;
 		event: RequestEvent;
+		status: number;
+		message: string;
 	}) => MaybePromise<void | App.Error>;
 
 	/**
@@ -643,6 +652,8 @@ declare module '@sveltejs/kit' {
 	export type HandleClientError = (input: {
 		error: unknown;
 		event: NavigationEvent;
+		status: number;
+		message: string;
 	}) => MaybePromise<void | App.Error>;
 
 	/**
@@ -761,7 +772,21 @@ declare module '@sveltejs/kit' {
 		 * <button on:click={increase}>Increase Count</button>
 		 * ```
 		 */
-		depends(...deps: string[]): void;
+		depends(...deps: Array<`${string}:${string}`>): void;
+		/**
+		 * Use this function to opt out of dependency tracking for everything that is synchronously called within the callback. Example:
+		 *
+		 * ```js
+		 * /// file: src/routes/+page.server.js
+		 * export async function load({ untrack, url }) {
+		 * 	// Untrack url.pathname so that path changes don't trigger a rerun
+		 * 	if (untrack(() => url.pathname === '/')) {
+		 * 		return { message: 'Welcome!' };
+		 * 	}
+		 * }
+		 * ```
+		 */
+		untrack<T>(fn: () => T): T;
 	}
 
 	export interface NavigationEvent<
@@ -828,7 +853,7 @@ declare module '@sveltejs/kit' {
 		/**
 		 * The type of navigation:
 		 * - `form`: The user submitted a `<form>`
-		 * - `leave`: The user is leaving the app by closing the tab or using the back/forward buttons to go to a different document
+		 * - `leave`: The app is being left either because the tab is being closed or a navigation to a different document is occurring
 		 * - `link`: Navigation was triggered by a link click
 		 * - `goto`: Navigation was triggered by a `goto(...)` call or a redirect
 		 * - `popstate`: Navigation was triggered by back/forward navigation
@@ -932,6 +957,10 @@ declare module '@sveltejs/kit' {
 		 * The merged result of all data from all `load` functions on the current page. You can type a common denominator through `App.PageData`.
 		 */
 		data: App.PageData & Record<string, any>;
+		/**
+		 * The page state, which can be manipulated using the [`pushState`](https://kit.svelte.dev/docs/modules#$app-navigation-pushstate) and [`replaceState`](https://kit.svelte.dev/docs/modules#$app-navigation-replacestate) functions from `$app/navigation`.
+		 */
+		state: App.PageState;
 		/**
 		 * Filled only after a form submission. See [form actions](https://kit.svelte.dev/docs/form-actions) for more info.
 		 */
@@ -1163,6 +1192,20 @@ declare module '@sveltejs/kit' {
 		 * ```
 		 */
 		depends(...deps: string[]): void;
+		/**
+		 * Use this function to opt out of dependency tracking for everything that is synchronously called within the callback. Example:
+		 *
+		 * ```js
+		 * /// file: src/routes/+page.js
+		 * export async function load({ untrack, url }) {
+		 * 	// Untrack url.pathname so that path changes don't trigger a rerun
+		 * 	if (untrack(() => url.pathname === '/')) {
+		 * 		return { message: 'Welcome!' };
+		 * 	}
+		 * }
+		 * ```
+		 */
+		untrack<T>(fn: () => T): T;
 	}
 
 	/**
@@ -1229,17 +1272,7 @@ declare module '@sveltejs/kit' {
 		Failure extends Record<string, unknown> | undefined = Record<string, any>
 	> = (input: {
 		action: URL;
-		/**
-		 * use `formData` instead of `data`
-		 * @deprecated
-		 */
-		data: FormData;
 		formData: FormData;
-		/**
-		 * use `formElement` instead of `form`
-		 * @deprecated
-		 */
-		form: HTMLFormElement;
 		formElement: HTMLFormElement;
 		controller: AbortController;
 		submitter: HTMLElement | null;
@@ -1247,17 +1280,7 @@ declare module '@sveltejs/kit' {
 	}) => MaybePromise<
 		| void
 		| ((opts: {
-				/**
-				 * use `formData` instead of `data`
-				 * @deprecated
-				 */
-				data: FormData;
 				formData: FormData;
-				/**
-				 * use `formElement` instead of `form`
-				 * @deprecated
-				 */
-				form: HTMLFormElement;
 				formElement: HTMLFormElement;
 				action: URL;
 				result: ActionResult<Success, Failure>;
@@ -1504,28 +1527,6 @@ declare module '@sveltejs/kit' {
 	}
 
 	type TrailingSlash = 'never' | 'always' | 'ignore';
-	class HttpError_1 {
-		
-		constructor(status: number, body: {
-			message: string;
-		} extends App.Error ? (App.Error | string | undefined) : App.Error);
-		status: number;
-		body: App.Error;
-		toString(): string;
-	}
-	class Redirect_1 {
-		
-		constructor(status: 300 | 301 | 302 | 303 | 304 | 305 | 306 | 307 | 308, location: string);
-		status: 300 | 301 | 302 | 303 | 304 | 305 | 306 | 307 | 308;
-		location: string;
-	}
-
-	export class ActionFailure<T extends Record<string, unknown> | undefined = undefined> {
-		
-		constructor(status: number, data?: T | undefined);
-		status: number;
-		data: T | undefined;
-	}
 	interface Asset {
 		file: string;
 		size: number;
@@ -1543,6 +1544,7 @@ declare module '@sveltejs/kit' {
 			imports: string[];
 			stylesheets: string[];
 			fonts: string[];
+			uses_env_dynamic_public: boolean;
 		} | null;
 		server_manifest: import('vite').Manifest;
 	}
@@ -1692,17 +1694,51 @@ declare module '@sveltejs/kit' {
 	}
 
 	type ValidatedConfig = RecursiveRequired<Config>;
-	export function error(status: number, body: App.Error): HttpError_1;
-	export function error(status: number, body?: {
-		message: string;
-	} extends App.Error ? App.Error | string | undefined : never): HttpError_1;
 	/**
-	 * Create a `Redirect` object. If thrown during request handling, SvelteKit will return a redirect response.
+	 * Throws an error with a HTTP status code and an optional message.
+	 * When called during request handling, this will cause SvelteKit to
+	 * return an error response without invoking `handleError`.
+	 * Make sure you're not catching the thrown error, which would prevent SvelteKit from handling it.
+	 * @param status The [HTTP status code](https://developer.mozilla.org/en-US/docs/Web/HTTP/Status#client_error_responses). Must be in the range 400-599.
+	 * @param body An object that conforms to the App.Error type. If a string is passed, it will be used as the message property.
+	 * @throws {HttpError} This error instructs SvelteKit to initiate HTTP error handling.
+	 * @throws {Error} If the provided status is invalid (not between 400 and 599).
+	 */
+	export function error(status: NumericRange<400, 599>, body: App.Error): never;
+	/**
+	 * Throws an error with a HTTP status code and an optional message.
+	 * When called during request handling, this will cause SvelteKit to
+	 * return an error response without invoking `handleError`.
+	 * Make sure you're not catching the thrown error, which would prevent SvelteKit from handling it.
+	 * @param status The [HTTP status code](https://developer.mozilla.org/en-US/docs/Web/HTTP/Status#client_error_responses). Must be in the range 400-599.
+	 * @param body An object that conforms to the App.Error type. If a string is passed, it will be used as the message property.
+	 * @throws {HttpError} This error instructs SvelteKit to initiate HTTP error handling.
+	 * @throws {Error} If the provided status is invalid (not between 400 and 599).
+	 */
+	export function error(status: NumericRange<400, 599>, body?: {
+		message: string;
+	} extends App.Error ? App.Error | string | undefined : never): never;
+	/**
+	 * Checks whether this is an error thrown by {@link error}.
+	 * @param status The status to filter for.
+	 * */
+	export function isHttpError<T extends number>(e: unknown, status?: T | undefined): e is HttpError_1 & {
+		status: T extends undefined ? never : T;
+	};
+	/**
+	 * Redirect a request. When called during request handling, SvelteKit will return a redirect response.
 	 * Make sure you're not catching the thrown redirect, which would prevent SvelteKit from handling it.
 	 * @param status The [HTTP status code](https://developer.mozilla.org/en-US/docs/Web/HTTP/Status#redirection_messages). Must be in the range 300-308.
 	 * @param location The location to redirect to.
-	 */
-	export function redirect(status: 300 | 301 | 302 | 303 | 304 | 305 | 306 | 307 | 308, location: string | URL): Redirect_1;
+	 * @throws {Redirect} This error instructs SvelteKit to redirect to the specified location.
+	 * @throws {Error} If the provided status is invalid.
+	 * */
+	export function redirect(status: NumericRange<300, 308>, location: string | URL): never;
+	/**
+	 * Checks whether this is a redirect thrown by {@link redirect}.
+	 * @param e The object to check.
+	 * */
+	export function isRedirect(e: unknown): e is Redirect_1;
 	/**
 	 * Create a JSON `Response` object from the supplied data.
 	 * @param data The value that will be serialized as JSON.
@@ -1718,26 +1754,32 @@ declare module '@sveltejs/kit' {
 	/**
 	 * Create an `ActionFailure` object.
 	 * @param status The [HTTP status code](https://developer.mozilla.org/en-US/docs/Web/HTTP/Status#client_error_responses). Must be in the range 400-599.
+	 * */
+	export function fail(status: number): ActionFailure<undefined>;
+	/**
+	 * Create an `ActionFailure` object.
+	 * @param status The [HTTP status code](https://developer.mozilla.org/en-US/docs/Web/HTTP/Status#client_error_responses). Must be in the range 400-599.
 	 * @param data Data associated with the failure (e.g. validation errors)
 	 * */
-	export function fail<T extends Record<string, unknown> | undefined = undefined>(status: number, data?: T | undefined): ActionFailure<T>;
-	/**
-	 * @deprecated Use `resolveRoute` from `$app/paths` instead.
-	 *
-	 * Populate a route ID with params to resolve a pathname.
-	 * @example
-	 * ```js
-	 * resolvePath(
-	 *   `/blog/[slug]/[...somethingElse]`,
-	 *   {
-	 *     slug: 'hello-world',
-	 *     somethingElse: 'something/else'
-	 *   }
-	 * ); // `/blog/hello-world/something/else`
-	 * ```
-	 * */
-	export function resolvePath(id: string, params: Record<string, string | undefined>): string;
+	export function fail<T extends Record<string, unknown> | undefined = undefined>(status: number, data: T): ActionFailure<T>;
+	export type LessThan<TNumber extends number, TArray extends any[] = []> = TNumber extends TArray['length'] ? TArray[number] : LessThan<TNumber, [...TArray, TArray['length']]>;
+	export type NumericRange<TStart extends number, TEnd extends number> = Exclude<TEnd | LessThan<TEnd>, LessThan<TStart>>;
 	export const VERSION: string;
+	class HttpError_1 {
+		
+		constructor(status: number, body: {
+			message: string;
+		} extends App.Error ? (App.Error | string | undefined) : App.Error);
+		status: number;
+		body: App.Error;
+		toString(): string;
+	}
+	class Redirect_1 {
+		
+		constructor(status: 300 | 301 | 302 | 303 | 304 | 305 | 306 | 307 | 308, location: string);
+		status: 301 | 302 | 303 | 307 | 308 | 300 | 304 | 305 | 306;
+		location: string;
+	}
 }
 
 declare module '@sveltejs/kit/hooks' {
@@ -1825,16 +1867,12 @@ declare module '@sveltejs/kit/node/polyfills' {
 	/**
 	 * Make various web APIs available as globals:
 	 * - `crypto`
-	 * - `fetch` (only in node < 18.11)
-	 * - `Headers` (only in node < 18.11)
-	 * - `Request` (only in node < 18.11)
-	 * - `Response` (only in node < 18.11)
+	 * - `File`
 	 */
 	export function installPolyfills(): void;
 }
 
 declare module '@sveltejs/kit/vite' {
-	export { vitePreprocess } from '@sveltejs/vite-plugin-svelte';
 	/**
 	 * Returns the SvelteKit Vite plugins.
 	 * */
@@ -1915,15 +1953,12 @@ declare module '$app/navigation' {
 	 *
 	 * @param url Where to navigate to. Note that if you've set [`config.kit.paths.base`](https://kit.svelte.dev/docs/configuration#paths) and the URL is root-relative, you need to prepend the base path if you want to navigate within the app.
 	 * @param {Object} opts Options related to the navigation
-	 * @param invalidateAll If `true`, all `load` functions of the page will be rerun. See https://kit.svelte.dev/docs/load#rerunning-load-functions for more info on invalidation.
-	 * @param opts.state The state of the new/updated history entry
 	 * */
 	export const goto: (url: string | URL, opts?: {
 		replaceState?: boolean;
 		noScroll?: boolean;
 		keepFocus?: boolean;
 		invalidateAll?: boolean;
-		state?: any;
 	}) => Promise<void>;
 	/**
 	 * Causes any `load` functions belonging to the currently active page to re-run if they depend on the `url` in question, via `fetch` or `depends`. Returns a `Promise` that resolves when the page is subsequently updated.
@@ -1954,11 +1989,11 @@ declare module '$app/navigation' {
 	 *
 	 * This is the same behaviour that SvelteKit triggers when the user taps or mouses over an `<a>` element with `data-sveltekit-preload-data`.
 	 * If the next navigation is to `href`, the values returned from load will be used, making navigation instantaneous.
-	 * Returns a Promise that resolves when the preload is complete.
+	 * Returns a Promise that resolves with the result of running the new route's `load` functions once the preload is complete.
 	 *
 	 * @param href Page to preload
 	 * */
-	export const preloadData: (href: string) => Promise<void>;
+	export const preloadData: (href: string) => Promise<Record<string, any>>;
 	/**
 	 * Programmatically imports the code for routes that haven't yet been fetched.
 	 * Typically, you might call this to speed up subsequent navigation.
@@ -1969,7 +2004,7 @@ declare module '$app/navigation' {
 	 * Returns a Promise that resolves when the modules have been imported.
 	 *
 	 * */
-	export const preloadCode: (...urls: string[]) => Promise<void>;
+	export const preloadCode: (url: string) => Promise<void>;
 	/**
 	 * A navigation interceptor that triggers before we navigate to a new URL, whether by clicking a link, calling `goto(...)`, or using the browser back/forward controls.
 	 *
@@ -1998,6 +2033,16 @@ declare module '$app/navigation' {
 	 * `afterNavigate` must be called during a component initialization. It remains active as long as the component is mounted.
 	 * */
 	export const afterNavigate: (callback: (navigation: import('@sveltejs/kit').AfterNavigate) => void) => void;
+	/**
+	 * Programmatically create a new history entry with the given `$page.state`. To use the current URL, you can pass `''` as the first argument. Used for [shallow routing](https://kit.svelte.dev/docs/shallow-routing).
+	 *
+	 * */
+	export const pushState: (url: string | URL, state: App.PageState) => void;
+	/**
+	 * Programmatically replace the current history entry with the given `$page.state`. To use the current URL, you can pass `''` as the first argument. Used for [shallow routing](https://kit.svelte.dev/docs/shallow-routing).
+	 *
+	 * */
+	export const replaceState: (url: string | URL, state: App.PageState) => void;
 	type MaybePromise<T> = T | Promise<T>;
 }
 
@@ -2060,6 +2105,7 @@ declare module '$app/stores' {
  * 		// interface Error {}
  * 		// interface Locals {}
  * 		// interface PageData {}
+ * 		// interface PageState {}
  * 		// interface Platform {}
  * 	}
  * }
@@ -2091,6 +2137,11 @@ declare namespace App {
 	 * Use optional properties for data that is only present on specific pages. Do not add an index signature (`[key: string]: any`).
 	 */
 	export interface PageData {}
+
+	/**
+	 * The shape of the `$page.state` object, which can be manipulated using the [`pushState`](https://kit.svelte.dev/docs/modules#$app-navigation-pushstate) and [`replaceState`](https://kit.svelte.dev/docs/modules#$app-navigation-replacestate) functions from `$app/navigation`.
+	 */
+	export interface PageState {}
 
 	/**
 	 * If your adapter provides [platform-specific context](https://kit.svelte.dev/docs/adapters#platform-specific-context) via `event.platform`, you can specify it here.
@@ -2154,7 +2205,7 @@ declare module '__sveltekit/paths' {
 	 * > If a value for `config.kit.paths.assets` is specified, it will be replaced with `'/_svelte_kit_assets'` during `vite dev` or `vite preview`, since the assets don't yet live at their eventual URL.
 	 */
 	export let assets: '' | `https://${string}` | `http://${string}` | '/_svelte_kit_assets';
-	export let relative: boolean | undefined; // TODO in 2.0, make this a `boolean` that defaults to `true`
+	export let relative: boolean;
 	export function reset(): void;
 	export function override(paths: { base: string; assets: string }): void;
 	export function set_assets(path: string): void;

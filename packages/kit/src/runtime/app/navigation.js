@@ -11,20 +11,13 @@ export const disableScrollHandling = /* @__PURE__ */ client_method('disable_scro
  * Returns a Promise that resolves when SvelteKit navigates (or fails to navigate, in which case the promise rejects) to the specified `url`.
  * For external URLs, use `window.location = url` instead of calling `goto(url)`.
  *
- * @type {(url: string | URL, opts?: {
- *   replaceState?: boolean;
- *   noScroll?: boolean;
- *   keepFocus?: boolean;
- *   invalidateAll?: boolean;
- *   state?: any
- * }) => Promise<void>}
+ * @type {(url: string | URL, opts?: { replaceState?: boolean; noScroll?: boolean; keepFocus?: boolean; invalidateAll?: boolean; }) => Promise<void>}
  * @param {string | URL} url Where to navigate to. Note that if you've set [`config.kit.paths.base`](https://kit.svelte.dev/docs/configuration#paths) and the URL is root-relative, you need to prepend the base path if you want to navigate within the app.
  * @param {Object} [opts] Options related to the navigation
  * @param {boolean} [opts.replaceState] If `true`, will replace the current `history` entry rather than creating a new one with `pushState`
  * @param {boolean} [opts.noScroll] If `true`, the browser will maintain its scroll position rather than scrolling to the top of the page after navigation
  * @param {boolean} [opts.keepFocus] If `true`, the currently focused element will retain focus after navigation. Otherwise, focus will be reset to the body
- * @param {boolean} [invalidateAll] If `true`, all `load` functions of the page will be rerun. See https://kit.svelte.dev/docs/load#rerunning-load-functions for more info on invalidation.
- * @param {any} [opts.state] The state of the new/updated history entry
+ * @param {boolean} [opts.invalidateAll] If `true`, all `load` functions of the page will be rerun. See https://kit.svelte.dev/docs/load#rerunning-load-functions for more info on invalidation.
  * @returns {Promise<void>}
  */
 export const goto = /* @__PURE__ */ client_method('goto');
@@ -64,11 +57,11 @@ export const invalidateAll = /* @__PURE__ */ client_method('invalidate_all');
  *
  * This is the same behaviour that SvelteKit triggers when the user taps or mouses over an `<a>` element with `data-sveltekit-preload-data`.
  * If the next navigation is to `href`, the values returned from load will be used, making navigation instantaneous.
- * Returns a Promise that resolves when the preload is complete.
+ * Returns a Promise that resolves with the result of running the new route's `load` functions once the preload is complete.
  *
- * @type {(href: string) => Promise<void>}
+ * @type {(href: string) => Promise<Record<string, any>>}
  * @param {string} href Page to preload
- * @returns {Promise<void>}
+ * @returns {Promise<{ type: 'loaded'; status: number; data: Record<string, any> } | { type: 'redirect'; location: string }>}
  */
 export const preloadData = /* @__PURE__ */ client_method('preload_data');
 
@@ -81,8 +74,8 @@ export const preloadData = /* @__PURE__ */ client_method('preload_data');
  * Unlike `preloadData`, this won't call `load` functions.
  * Returns a Promise that resolves when the modules have been imported.
  *
- * @type {(...urls: string[]) => Promise<void>}
- * @param {...string[]} urls
+ * @type {(url: string) => Promise<void>}
+ * @param {string} url
  * @returns {Promise<void>}
  */
 export const preloadCode = /* @__PURE__ */ client_method('preload_code');
@@ -111,7 +104,7 @@ export const beforeNavigate = /* @__PURE__ */ client_method('before_navigate');
  * If a function (or a `Promise` that resolves to a function) is returned from the callback, it will be called once the DOM has updated.
  *
  * `onNavigate` must be called during a component initialization. It remains active as long as the component is mounted.
- * @type {(callback: (navigation: import('@sveltejs/kit').OnNavigate) => import('../../types/internal.js').MaybePromise<(() => void) | void>) => void}
+ * @type {(callback: (navigation: import('@sveltejs/kit').OnNavigate) => import('types').MaybePromise<(() => void) | void>) => void}
  * @param {(navigation: import('@sveltejs/kit').OnNavigate) => void} callback
  * @returns {void}
  */
@@ -126,3 +119,23 @@ export const onNavigate = /* @__PURE__ */ client_method('on_navigate');
  * @returns {void}
  */
 export const afterNavigate = /* @__PURE__ */ client_method('after_navigate');
+
+/**
+ * Programmatically create a new history entry with the given `$page.state`. To use the current URL, you can pass `''` as the first argument. Used for [shallow routing](https://kit.svelte.dev/docs/shallow-routing).
+ *
+ * @type {(url: string | URL, state: App.PageState) => void}
+ * @param {string | URL} url
+ * @param {App.PageState} state
+ * @returns {void}
+ */
+export const pushState = /* @__PURE__ */ client_method('push_state');
+
+/**
+ * Programmatically replace the current history entry with the given `$page.state`. To use the current URL, you can pass `''` as the first argument. Used for [shallow routing](https://kit.svelte.dev/docs/shallow-routing).
+ *
+ * @type {(url: string | URL, state: App.PageState) => void}
+ * @param {string | URL} url
+ * @param {App.PageState} state
+ * @returns {void}
+ */
+export const replaceState = /* @__PURE__ */ client_method('replace_state');

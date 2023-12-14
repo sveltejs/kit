@@ -1,8 +1,8 @@
 import fs from 'node:fs';
-import path from 'node:path';
 import http from 'node:http';
-import { test as base, devices } from '@playwright/test';
+import path from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { test as base, devices } from '@playwright/test';
 
 export const test = base.extend({
 	app: async ({ page }, use) => {
@@ -73,7 +73,7 @@ export const test = base.extend({
 		/** @param {string} selector */
 		async function in_view(selector) {
 			const box = await page.locator(selector).boundingBox();
-			const view = await page.viewportSize();
+			const view = page.viewportSize();
 			return box && view && box.y < view.height && box.y + box.height > 0;
 		}
 

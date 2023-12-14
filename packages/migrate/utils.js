@@ -4,6 +4,7 @@ import colors from 'kleur';
 import ts from 'typescript';
 import MagicString from 'magic-string';
 import { execFileSync, execSync } from 'node:child_process';
+import semver from 'semver';
 
 /** @param {string} message */
 export function bail(message) {
@@ -197,4 +198,147 @@ export function walk(cwd, dirs = false) {
 /** @param {string} str */
 export function posixify(str) {
 	return str.replace(/\\/g, '/');
+}
+
+/**
+ * @param {string} content
+ * @param {Array<[string, string, string?, ('dependencies' | 'devDependencies')?]>} updates
+ */
+export function update_pkg(content, updates) {
+	const indent = content.split('\n')[1].match(/^\s+/)?.[0] || '  ';
+	const pkg = JSON.parse(content);
+
+	/**
+	 * @param {string} name
+	 * @param {string} version
+	 * @param {string} [additional]
+	 * @param {'dependencies' | 'devDependencies' | undefined} [insert]
+	 */
+	function update_pkg(name, version, additional = '', insert) {
+		if (pkg.dependencies?.[name]) {
+			const existing_range = pkg.dependencies[name];
+
+			if (semver.validRange(existing_range) && !semver.subset(existing_range, version)) {
+				log_migration(`Updated ${name} to ${version} ${additional}`);
+				pkg.dependencies[name] = version;
+			}
+		}
+
+		if (pkg.devDependencies?.[name]) {
+			const existing_range = pkg.devDependencies[name];
+
+			if (semver.validRange(existing_range) && !semver.subset(existing_range, version)) {
+				log_migration(`Updated ${name} to ${version} ${additional}`);
+				pkg.devDependencies[name] = version;
+			}
+		}
+
+		if (insert && !pkg[insert]?.[name]) {
+			if (!pkg[insert]) pkg[insert] = {};
+			pkg[insert][name] = version;
+			log_migration(`Added ${name} version ${version} ${additional}`);
+		}
+	}
+
+	for (const update of updates) {
+		update_pkg(...update);
+	}
+
+	return JSON.stringify(pkg, null, indent);
+}
+
+const logged_migrations = new Set();
+
+/**
+ * @param {import('ts-morph').SourceFile} source
+ * @param {string} text
+ */
+export function log_on_ts_modification(source, text) {
+	let logged = false;
+	const log = () => {
+		if (!logged) {
+			logged = true;
+			log_migration(text);
+		}
+	};
+	source.onModified(log);
+	return () => source.onModified(log, false);
+}
+
+/** @param {string} text */
+export function log_migration(text) {
+	if (logged_migrations.has(text)) return;
+	console.log(text);
+	logged_migrations.add(text);
+}
+
+/**
+ * Parses the scripts contents and invoked `transform_script_code` with it, then runs the result through `transform_svelte_code`.
+ * The result is written back to disk.
+ * @param {string} file_path
+ * @param {(code: string, is_ts: boolean, file_path: string) => string} transform_script_code
+ * @param {(code: string, file_path: string) => string} transform_svelte_code
+ */
+export function update_svelte_file(file_path, transform_script_code, transform_svelte_code) {
+	try {
+		const content = fs.readFileSync(file_path, 'utf-8');
+		const updated = content.replace(
+			/<script([^]*?)>([^]+?)<\/script>(\n*)/g,
+			(_match, attrs, contents, whitespace) => {
+				return `<script${attrs}>${transform_script_code(
+					contents,
+					(attrs.includes('lang=') || attrs.includes('type=')) &&
+						(attrs.includes('ts') || attrs.includes('typescript')),
+					file_path
+				)}</script>${whitespace}`;
+			}
+		);
+		fs.writeFileSync(file_path, transform_svelte_code(updated, file_path), 'utf-8');
+	} catch (e) {
+		console.error(`Error updating ${file_path}:`, e);
+	}
+}
+
+/**
+ * Reads the file and invokes `transform_code` with its contents. The result is written back to disk.
+ * @param {string} file_path
+ * @param {(code: string, is_ts: boolean, file_path: string) => string} transform_code
+ */
+export function update_js_file(file_path, transform_code) {
+	try {
+		const content = fs.readFileSync(file_path, 'utf-8');
+		const updated = transform_code(content, file_path.endsWith('.ts'), file_path);
+		fs.writeFileSync(file_path, updated, 'utf-8');
+	} catch (e) {
+		console.error(`Error updating ${file_path}:`, e);
+	}
+}
+
+/** @param {string | URL} test_file */
+export function read_samples(test_file) {
+	const markdown = fs.readFileSync(test_file, 'utf8').replaceAll('\r\n', '\n');
+	const samples = markdown
+		.split(/^##/gm)
+		.slice(1)
+		.map((block) => {
+			const description = block.split('\n')[0];
+			const before = /```(js|ts|svelte) before\n([^]*?)\n```/.exec(block);
+			const after = /```(js|ts|svelte) after\n([^]*?)\n```/.exec(block);
+
+			const match = /> file: (.+)/.exec(block);
+
+			return {
+				description,
+				before: before ? before[2] : '',
+				after: after ? after[2] : '',
+				filename: match?.[1],
+				solo: block.includes('> solo')
+			};
+		});
+
+	if (samples.some((sample) => sample.solo)) {
+		return samples.filter((sample) => sample.solo);
+	}
+
+	return samples;
 }

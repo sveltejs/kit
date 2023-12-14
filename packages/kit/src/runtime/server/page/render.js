@@ -8,7 +8,7 @@ import { s } from '../../../utils/misc.js';
 import { Csp } from './csp.js';
 import { uneval_action_response } from './actions.js';
 import { clarify_devalue_error, stringify_uses, handle_error_and_jsonify } from '../utils.js';
-import { public_env } from '../../shared-server.js';
+import { public_env, safe_public_env } from '../../shared-server.js';
 import { text } from '../../../exports/index.js';
 import { create_async_iterator } from '../../../utils/streaming.js';
 import { SVELTE_KIT_ASSETS } from '../../../constants.js';
@@ -95,7 +95,7 @@ export async function render_response({
 	let base_expression = s(paths.base);
 
 	// if appropriate, use relative paths for greater portability
-	if (paths.relative !== false && !state.prerendering?.fallback) {
+	if (paths.relative && !state.prerendering?.fallback) {
 		const segments = event.url.pathname.slice(paths.base.length).split('/').slice(2);
 
 		base = segments.map(() => '..').join('/') || '.';
@@ -141,7 +141,8 @@ export async function render_response({
 			status,
 			url: event.url,
 			data,
-			form: form_value
+			form: form_value,
+			state: {}
 		};
 
 		// use relative paths during rendering, so that the resulting HTML is as
@@ -276,6 +277,10 @@ export async function render_response({
 	}
 
 	if (page_config.csr) {
+		if (client.uses_env_dynamic_public && state.prerendering) {
+			modulepreloads.add(`${options.app_dir}/env.js`);
+		}
+
 		const included_modulepreloads = Array.from(modulepreloads, (dep) => prefixed(dep)).filter(
 			(path) => resolve_opts.preload({ type: 'js', path })
 		);
@@ -295,7 +300,7 @@ export async function render_response({
 		const properties = [
 			paths.assets && `assets: ${s(paths.assets)}`,
 			`base: ${base_expression}`,
-			`env: ${s(public_env)}`
+			`env: ${!client.uses_env_dynamic_public || state.prerendering ? null : s(public_env)}`
 		].filter(Boolean);
 
 		if (chunks) {
@@ -431,7 +436,7 @@ export async function render_response({
 		body,
 		assets,
 		nonce: /** @type {string} */ (csp.nonce),
-		env: public_env
+		env: safe_public_env
 	});
 
 	// TODO flush chunks as early as we can

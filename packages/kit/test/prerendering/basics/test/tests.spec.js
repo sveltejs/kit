@@ -205,12 +205,8 @@ test('$env - includes environment variables', () => {
 		content,
 		/.*PRIVATE_STATIC: accessible to server-side code\/replaced at build time.*/gs
 	);
-	assert.match(
-		content,
-		/.*PRIVATE_DYNAMIC: accessible to server-side code\/evaluated at run time.*/gs
-	);
+
 	assert.match(content, /.*PUBLIC_STATIC: accessible anywhere\/replaced at build time.*/gs);
-	assert.match(content, /.*PUBLIC_DYNAMIC: accessible anywhere\/evaluated at run time.*/gs);
 });
 
 test('prerenders a page in a (group)', () => {
@@ -243,4 +239,9 @@ test('prerendered.paths omits trailing slashes for endpoints', () => {
 test('prerenders responses with immutable Headers', () => {
 	const content = read('immutable-headers');
 	expect(content).toMatch('foo');
+});
+
+test('prerenders paths with optional parameters with empty values', () => {
+	const content = read('optional-params.html');
+	expect(content).includes('Path with Value');
 });
