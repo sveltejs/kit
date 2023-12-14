@@ -14,8 +14,8 @@ export function getHrefBetween(from, to) {
 		return to.href;
 	}
 
-	//If the credentials are different, inherit the protocol and use the rest of the url
-	if (from.password !== to.password || from.username !== to.username) {
+	//If the credentials are included, we always need to include them
+	if (to.password || to.username) {
 		const credentials = [to.username, to.password].filter(Boolean).join(':');
 		return '//' + credentials + '@' + to.host + to.pathname + to.search + to.hash;
 	}
