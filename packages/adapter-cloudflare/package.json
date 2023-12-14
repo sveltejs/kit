@@ -37,6 +37,7 @@
 		"worktop": "0.8.0-next.15"
 	},
 	"devDependencies": {
+		"@sveltejs/kit": "workspace:^",
 		"@types/node": "^18.19.3",
 		"@types/ws": "^8.5.10",
 		"typescript": "^5.3.3"

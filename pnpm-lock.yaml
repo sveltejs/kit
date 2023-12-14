@@ -72,9 +72,6 @@ importers:
       '@cloudflare/workers-types':
         specifier: ^4.20231121.0
         version: 4.20231121.0
-      '@sveltejs/kit':
-        specifier: ^1.0.0 || ^2.0.0
-        version: link:../kit
       esbuild:
         specifier: ^0.19.9
         version: 0.19.9
@@ -82,6 +79,9 @@ importers:
         specifier: 0.8.0-next.15
         version: 0.8.0-next.15
     devDependencies:
+      '@sveltejs/kit':
+        specifier: workspace:^
+        version: link:../kit
       '@types/node':
         specifier: ^18.19.3
         version: 18.19.3
@@ -100,9 +100,6 @@ importers:
       '@iarna/toml':
         specifier: ^2.2.5
         version: 2.2.5
-      '@sveltejs/kit':
-        specifier: ^1.0.0 || ^2.0.0
-        version: link:../kit
       esbuild:
         specifier: ^0.19.9
         version: 0.19.9
@@ -110,6 +107,9 @@ importers:
       '@cloudflare/kv-asset-handler':
         specifier: ^0.3.0
         version: 0.3.0
+      '@sveltejs/kit':
+        specifier: workspace:^
+        version: link:../kit
       '@types/node':
         specifier: ^18.19.3
         version: 18.19.3
