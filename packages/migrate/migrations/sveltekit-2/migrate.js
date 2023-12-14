@@ -59,7 +59,7 @@ export function update_tsconfig_content(content) {
 	if (updated !== content) {
 		log_migration(
 			'Removed deprecated `importsNotUsedAsValues` and `preserveValueImports`' +
-				' from tsconfig.json: https://kit.svelte.dev/docs/v2-migration-guide#updated-dependency-requirements'
+				' from tsconfig.json: https://kit.svelte.dev/docs/migrating-to-sveltekit-2#updated-dependency-requirements'
 		);
 	}
 
@@ -68,13 +68,13 @@ export function update_tsconfig_content(content) {
 	if (updated !== content) {
 		log_migration(
 			'Updated `moduleResolution` to `bundler`' +
-				' in tsconfig.json: https://kit.svelte.dev/docs/v2-migration-guide#updated-dependency-requirements'
+				' in tsconfig.json: https://kit.svelte.dev/docs/migrating-to-sveltekit-2#updated-dependency-requirements'
 		);
 	}
 
 	if (content.includes('"paths":') || content.includes('"baseUrl":')) {
 		log_migration(
-			'`paths` and/or `baseUrl` detected in your tsconfig.json - remove it and use `kit.alias` instead: https://kit.svelte.dev/docs/v2-migration-guide#generated-tsconfigjson-is-more-strict'
+			'`paths` and/or `baseUrl` detected in your tsconfig.json - remove it and use `kit.alias` instead: https://kit.svelte.dev/docs/migrating-to-sveltekit-2#generated-tsconfigjson-is-more-strict'
 		);
 	}
 
@@ -96,7 +96,7 @@ export function update_svelte_config_content(code) {
 	const result = code.replace(regex, '');
 	if (result !== code) {
 		log_migration(
-			'Removed `dangerZone` from svelte.config.js: https://kit.svelte.dev/docs/v2-migration-guide#server-fetches-are-not-trackable-anymore'
+			'Removed `dangerZone` from svelte.config.js: https://kit.svelte.dev/docs/migrating-to-sveltekit-2#server-fetches-are-not-trackable-anymore'
 		);
 	}
 
@@ -108,7 +108,7 @@ export function update_svelte_config_content(code) {
 
 	const logger = log_on_ts_modification(
 		source,
-		'Changed `vitePreprocess` import: https://kit.svelte.dev/docs/v2-migration-guide#vitepreprocess-is-no-longer-exported-from-sveltejs-kit-vite'
+		'Changed `vitePreprocess` import: https://kit.svelte.dev/docs/migrating-to-sveltekit-2#vitepreprocess-is-no-longer-exported-from-sveltejs-kit-vite'
 	);
 
 	if (namedImport.getParent().getParent().getNamedImports().length === 1) {
@@ -157,7 +157,7 @@ export function transform_code(code, _is_ts, file_path) {
 function remove_throws(source) {
 	const logger = log_on_ts_modification(
 		source,
-		'Removed `throw` from redirect/error functions: https://kit.svelte.dev/docs/v2-migration-guide#redirect-and-error-are-no-longer-thrown-by-you'
+		'Removed `throw` from redirect/error functions: https://kit.svelte.dev/docs/migrating-to-sveltekit-2#redirect-and-error-are-no-longer-thrown-by-you'
 	);
 
 	/** @param {string} id */
@@ -204,7 +204,7 @@ function add_cookie_note(file_path, source) {
 
 	const logger = log_on_ts_modification(
 		source,
-		'Remember to add the `path` option to `cookies.set/delete/serialize` calls: https://kit.svelte.dev/docs/v2-migration-guide#path-is-now-a-required-option-for-cookies'
+		'Remember to add the `path` option to `cookies.set/delete/serialize` calls: https://kit.svelte.dev/docs/migrating-to-sveltekit-2#path-is-now-a-required-option-for-cookies'
 	);
 
 	const calls = [];
@@ -282,7 +282,7 @@ function replace_resolve_path(source) {
 
 	const logger = log_on_ts_modification(
 		source,
-		'Replaced `resolvePath` with `resolveRoute`: https://kit.svelte.dev/docs/v2-migration-guide#resolvePath-has-been-removed'
+		'Replaced `resolvePath` with `resolveRoute`: https://kit.svelte.dev/docs/migrating-to-sveltekit-2#resolvePath-has-been-removed'
 	);
 
 	for (const id of namedImport.getNameNode().findReferencesAsNodes()) {
