@@ -1,5 +1,11 @@
 # create-svelte
 
+## 5.3.4
+
+### Patch Changes
+
+- chore: upgrade to prettier 3.1.1 ([#11304](https://github.com/sveltejs/kit/pull/11304))
+
 ## 5.3.3
 
 ### Patch Changes
