@@ -314,6 +314,21 @@ export function update_js_file(file_path, transform_code) {
 	}
 }
 
+/**
+ * Updates the tsconfig/jsconfig.json file with the provided function.
+ * @param {(content: string) => string} update_tsconfig_content
+ */
+export function update_tsconfig(update_tsconfig_content) {
+	const file = fs.existsSync('tsconfig.json')
+		? 'tsconfig.json'
+		: fs.existsSync('jsconfig.json')
+			? 'jsconfig.json'
+			: null;
+	if (file) {
+		fs.writeFileSync(file, update_tsconfig_content(fs.readFileSync(file, 'utf8')));
+	}
+}
+
 /** @param {string | URL} test_file */
 export function read_samples(test_file) {
 	const markdown = fs.readFileSync(test_file, 'utf8').replaceAll('\r\n', '\n');
