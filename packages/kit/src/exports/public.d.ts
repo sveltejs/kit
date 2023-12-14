@@ -685,8 +685,8 @@ export type HandleClientError = (input: {
 export type ResolveDestination = (event: { from: URL; to: URL }) => URL;
 
 /**
- * Remap an incoming URL to a different URL. 
- * 
+ * Remap an incoming URL to a different URL.
+ *
  * @example
  * ```js
  * export const rewriteURL = (url) => {

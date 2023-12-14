@@ -42,16 +42,15 @@ describe('getHrefBetween', () => {
 		expect(new URL(href, from).href).toBe(to.href);
 	});
 
-	test("child page, no trailing slash", () => {
-		const from = new URL("http://localhost:5173/en")
-		const to = new URL("http://localhost:5173/en/about")
+	test('child page, no trailing slash', () => {
+		const from = new URL('http://localhost:5173/en');
+		const to = new URL('http://localhost:5173/en/about');
 
-		const href = getHrefBetween(from, to)
+		const href = getHrefBetween(from, to);
 
-		expect(href).toBe("/en/about")
-		expect(new URL(href, from).href).toBe(to.href)
-	})
-
+		expect(href).toBe('/en/about');
+		expect(new URL(href, from).href).toBe(to.href);
+	});
 
 	test.concurrent('two identical urls with different hosts', () => {
 		const from = new URL('http://localhost:3000');
@@ -123,7 +122,6 @@ describe('getHrefBetween', () => {
 		expect(new URL(href, from).href).toBe(to.href);
 	});
 
-
 	test.concurrent('absolute path is shorter than relative path', () => {
 		const from = new URL('https://example.com/foo/bar/some-page');
 		const to = new URL('https://example.com/');
@@ -144,8 +142,7 @@ describe('getHrefBetween', () => {
 		expect(new URL(href, from).href).toBe(to.href);
 	});
 
-
-	test.concurrent("same credentials, different host", () => {
+	test.concurrent('same credentials, different host', () => {
 		const from = new URL('https://user:pass@localhost:3000');
 		const to = new URL('https://user:pass@localhost:3001');
 
@@ -153,9 +150,9 @@ describe('getHrefBetween', () => {
 
 		expect(href).toBe('//user:pass@localhost:3001/');
 		expect(new URL(href, from).href).toBe(to.href);
-	})
+	});
 
-	test.concurrent("same credentials, different path", () => {
+	test.concurrent('same credentials, different path', () => {
 		const from = new URL('https://user:pass@localhost:3000/');
 		const to = new URL('https://user:pass@localhost:3000/about');
 
@@ -163,9 +160,9 @@ describe('getHrefBetween', () => {
 
 		expect(href).toBe('//user:pass@localhost:3000/about');
 		expect(new URL(href, from).href).toBe(to.href);
-	})
+	});
 
-	test.concurrent("same credentials, different protocol", () => {
+	test.concurrent('same credentials, different protocol', () => {
 		const from = new URL('https://user:pass@localhost:3000/');
 		const to = new URL('http://user:pass@localhost:3000/');
 
@@ -175,7 +172,7 @@ describe('getHrefBetween', () => {
 		expect(new URL(href, from).href).toBe(to.href);
 	});
 
-	test.concurrent("only username", () => {
+	test.concurrent('only username', () => {
 		const from = new URL('https://user@localhost:3000/');
 		const to = new URL('https://user@localhost:3001/');
 

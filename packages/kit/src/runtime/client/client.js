@@ -638,7 +638,9 @@ export function create_client(app, target) {
 		/** @type {import('types').ServerNodesResponse | import('types').ServerRedirectNode | null} */
 		let server_data = null;
 
-		const url_changed = current.url ? url.pathname  + url.search !== current.url.pathname + current.url.search : false;
+		const url_changed = current.url
+			? url.pathname + url.search !== current.url.pathname + current.url.search
+			: false;
 		const route_changed = current.route ? route.id !== current.route.id : false;
 
 		let parent_invalid = false;
@@ -1009,15 +1011,13 @@ export function create_client(app, target) {
 		}
 
 		token = nav_token;
-		
+
 		let navigation_result;
 		if (rewrittenIntent) {
-
 			//Make sure to use the correct url for the route
 			rewrittenIntent.url = url;
 			navigation_result = await load_route(rewrittenIntent);
 		}
-		
 
 		if (!navigation_result) {
 			if (is_external_url(rewrittenURL, base)) {
@@ -1085,7 +1085,7 @@ export function create_client(app, target) {
 			navigation_result.props.page?.url &&
 			navigation_result.props.page.url.pathname !== originalURL.pathname
 		) {
-			url.pathname = originalURL.pathname //navigation_result.props.page?.url.pathname;
+			url.pathname = originalURL.pathname; //navigation_result.props.page?.url.pathname;
 		}
 
 		if (details) {
@@ -1137,7 +1137,6 @@ export function create_client(app, target) {
 				// @ts-ignore
 				callbacks.after_navigate.push(...after_navigate);
 			}
-
 
 			root.$set(navigation_result.props);
 		} else {

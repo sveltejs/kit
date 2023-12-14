@@ -25,7 +25,6 @@ export function getHrefBetween(from, to) {
 		//since they have the same protocol, we can omit the protocol
 		return '//' + to.host + to.pathname + to.search + to.hash;
 	}
-	
+
 	return to.pathname + to.search + to.hash;
 }
-

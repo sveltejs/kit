@@ -52,7 +52,6 @@ export async function render_response({
 	resolve_opts,
 	action_result
 }) {
-
 	if (state.prerendering) {
 		if (options.csp.mode === 'nonce') {
 			throw new Error('Cannot use prerendering if config.kit.csp.mode === "nonce"');

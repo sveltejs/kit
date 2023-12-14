@@ -60,7 +60,7 @@ export async function respond(request, options, manifest, state) {
 
 	//If the URL has been rewritten to a different origin, return a redirect
 	if (rewrittenURL.origin !== originalURL.origin) {
-		return new Response("", {
+		return new Response('', {
 			status: 301,
 			headers: {
 				location: rewrittenURL.href

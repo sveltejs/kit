@@ -105,7 +105,7 @@ export interface ServerHooks {
 export interface ClientHooks {
 	handleError: HandleClientError;
 	resolveDestination: ResolveDestination;
-	rewriteURL: RewriteURL
+	rewriteURL: RewriteURL;
 }
 
 export interface Env {
