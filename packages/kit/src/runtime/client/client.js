@@ -239,7 +239,7 @@ export function create_client(app, target) {
 			url = new URL(url, get_base_uri(document));
 		}
 
-		url = app.hooks.resolveDestination({ from: new URL(location.href), to: url });
+		url = app.hooks.resolveDestination({ from: new URL(location.href), to: new URL(url) });
 
 		return navigate({
 			url,
@@ -983,7 +983,13 @@ export function create_client(app, target) {
 		accepted,
 		blocked
 	}) {
-		url = app.hooks.remapURL(new URL(url));
+		console.log('client: navigate', url.href);
+		const originalURL = new URL(url);
+		const rewrittenURL = app.hooks.remapURL(new URL(url));
+		console.log('client: rewrittenURL', rewrittenURL.href);
+
+		//This should be used to resolve the route, but not to determine the base path
+		const rewrittenIntent = get_navigation_intent(rewrittenURL, false);
 
 		const intent = get_navigation_intent(url, false);
 		const nav = before_navigate({ url, type, delta, intent });
@@ -1005,11 +1011,13 @@ export function create_client(app, target) {
 		}
 
 		token = nav_token;
-		let navigation_result = intent && (await load_route(intent));
+		let navigation_result = rewrittenIntent && (await load_route(rewrittenIntent));
+
+		console.log('client: navigation_result', navigation_result);
 
 		if (!navigation_result) {
-			if (is_external_url(url, base)) {
-				return await native_navigation(url);
+			if (is_external_url(rewrittenURL, base)) {
+				return await native_navigation(rewrittenURL);
 			}
 			navigation_result = await server_fallback(
 				url,
@@ -1070,9 +1078,9 @@ export function create_client(app, target) {
 		// ensure the url pathname matches the page's trailing slash option
 		if (
 			navigation_result.props.page?.url &&
-			navigation_result.props.page.url.pathname !== url.pathname
+			navigation_result.props.page.url.pathname !== originalURL.pathname
 		) {
-			url.pathname = navigation_result.props.page?.url.pathname;
+			url.pathname = originalURL.pathname //navigation_result.props.page?.url.pathname;
 		}
 
 		if (details) {
@@ -1124,6 +1132,7 @@ export function create_client(app, target) {
 				// @ts-ignore
 				callbacks.after_navigate.push(...after_navigate);
 			}
+
 
 			root.$set(navigation_result.props);
 		} else {

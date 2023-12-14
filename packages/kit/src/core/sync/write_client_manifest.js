@@ -155,6 +155,10 @@ export function write_client_manifest(kit, manifest_data, output, metadata) {
 				resolveDestination: ${
 					router_hooks_file ? 'router_hooks.resolveDestination || ' : ''
 				}((event) => event.to),
+
+				remapURL: ${
+					router_hooks_file ? 'router_hooks.remapURL || ' : ''
+				}((url) => url)
 			};
 
 			export { default as root } from '../root.${isSvelte5Plus() ? 'js' : 'svelte'}';

@@ -14,7 +14,7 @@ export function getHrefBetween(from, to) {
 		return to.href;
 	}
 
-	//If the credentials are included, we always need to include them
+	//If the credentials are included, we always need to include them - so there is no point in diffing further
 	if (to.password || to.username) {
 		const credentials = [to.username, to.password].filter(Boolean).join(':');
 		return '//' + credentials + '@' + to.host + to.pathname + to.search + to.hash;

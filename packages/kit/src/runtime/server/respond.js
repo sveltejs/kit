@@ -58,6 +58,16 @@ export async function respond(request, options, manifest, state) {
 	const originalURL = new URL(request.url);
 	const rewrittenURL = options.hooks.remapURL(new URL(originalURL));
 
+	//If the URL has been rewritten to a different origin, return a redirect
+	if (rewrittenURL.origin !== originalURL.origin) {
+		return new Response("", {
+			status: 301,
+			headers: {
+				location: rewrittenURL.href
+			}
+		});
+	}
+
 	if (options.csrf_check_origin) {
 		const forbidden =
 			is_form_content_type(request) &&
