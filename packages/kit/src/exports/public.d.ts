@@ -845,13 +845,6 @@ export interface NavigationTarget {
  */
 export type NavigationType = 'enter' | 'form' | 'leave' | 'link' | 'goto' | 'popstate';
 
-export interface NavigationOptions {
-	replaceState?: boolean;
-	noScroll?: boolean;
-	keepFocus?: boolean;
-	invalidateAll?: boolean;
-}
-
 export interface Navigation {
 	/**
 	 * Where navigation was triggered from

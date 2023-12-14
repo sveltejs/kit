@@ -301,7 +301,7 @@ export function create_client(app, target) {
 
 	/**
 	 * @param {string | URL} url
-	 * @param {import('@sveltejs/kit').NavigationOptions} options
+	 * @param {{ replaceState?: boolean; noScroll?: boolean; keepFocus?: boolean; invalidateAll?: boolean; }} options
 	 * @param {number} redirect_count
 	 * @param {{}} [nav_token]
 	 */
