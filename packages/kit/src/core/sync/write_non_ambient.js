@@ -26,7 +26,7 @@ declare module "svelte/elements" {
 			| null;
 		'data-sveltekit-preload-data'?: true | '' | 'hover' | 'tap' | 'off' | undefined | null;
 		'data-sveltekit-reload'?: true | '' | 'off' | undefined | null;
-		'data-sveltekit-replacestate'?: true | '' | 'off' | undefined | null;
+		'data-sveltekit-replace_state'?: true | '' | 'off' | undefined | null;
 	}
 }
 

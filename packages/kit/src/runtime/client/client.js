@@ -310,12 +310,12 @@ export function create_client(app, target) {
 		return navigate({
 			type: 'goto',
 			url: resolve_url(url),
-			keep_focus: options.keepFocus,
-			no_scroll: options.noScroll,
+			keepfocus: options.keepFocus,
+			noscroll: options.noScroll,
 			replace_state: options.replaceState,
 			redirect_count,
 			nav_token,
-			accepted: () => {
+			accept: () => {
 				if (options.invalidateAll) {
 					force_invalidation = true;
 				}
@@ -1078,40 +1078,40 @@ export function create_client(app, target) {
 	 *     scroll: { x: number, y: number };
 	 *     delta: number;
 	 *   };
-	 *   keep_focus?: boolean;
-	 *   no_scroll?: boolean;
+	 *   keepfocus?: boolean;
+	 *   noscroll?: boolean;
 	 *   replace_state?: boolean;
 	 *   redirect_count?: number;
 	 *   nav_token?: {};
-	 *   accepted?: () => void;
-	 *   blocked?: () => void;
+	 *   accept?: () => void;
+	 *   block?: () => void;
 	 * }} opts
 	 */
 	async function navigate({
 		type,
 		url,
 		popped,
-		keep_focus,
-		no_scroll,
+		keepfocus,
+		noscroll,
 		replace_state,
 		redirect_count = 0,
 		nav_token = {},
-		accepted = noop,
-		blocked = noop
+		accept = noop,
+		block = noop
 	}) {
 		const intent = get_navigation_intent(url, false);
 		const nav = before_navigate({ url, type, delta: popped?.delta, intent });
 
 		if (!nav) {
-			blocked();
+			block();
 			return;
 		}
 
-		// store this before calling `accepted()`, which may change the index
+		// store this before calling `accept()`, which may change the index
 		const previous_history_index = current_history_index;
 		const previous_navigation_index = current_navigation_index;
 
-		accepted();
+		accept();
 
 		navigating = true;
 
@@ -1254,7 +1254,7 @@ export function create_client(app, target) {
 		await tick();
 
 		// we reset scroll before dealing with focus, to avoid a flash of unscrolled content
-		const scroll = popped ? popped.scroll : no_scroll ? scroll_state() : null;
+		const scroll = popped ? popped.scroll : noscroll ? scroll_state() : null;
 
 		if (autoscroll) {
 			const deep_linked =
@@ -1278,7 +1278,7 @@ export function create_client(app, target) {
 			// focus event might not have been fired on it yet
 			document.activeElement !== document.body;
 
-		if (!keep_focus && !changed_focus) {
+		if (!keepfocus && !changed_focus) {
 			reset_focus();
 		}
 
@@ -1812,11 +1812,11 @@ export function create_client(app, target) {
 				navigate({
 					type: 'link',
 					url,
-					keep_focus: options.keep_focus ?? false,
-					no_scroll: options.noscroll ?? false,
+					keepfocus: options.keepfocus,
+					noscroll: options.noscroll,
 					replace_state: options.replace_state ?? url.href === location.href,
-					accepted: () => event.preventDefault(),
-					blocked: () => event.preventDefault()
+					accept: () => event.preventDefault(),
+					block: () => event.preventDefault()
 				});
 			});
 
@@ -1843,8 +1843,8 @@ export function create_client(app, target) {
 
 				const event_form = /** @type {HTMLFormElement} */ (event.target);
 
-				const { keep_focus, noscroll, reload, replace_state } = get_router_options(event_form);
-				if (reload) return;
+				const options = get_router_options(event_form);
+				if (options.reload) return;
 
 				event.preventDefault();
 				event.stopPropagation();
@@ -1862,9 +1862,9 @@ export function create_client(app, target) {
 				navigate({
 					type: 'form',
 					url,
-					keep_focus: keep_focus ?? false,
-					no_scroll: noscroll ?? false,
-					replace_state: replace_state ?? url.href === location.href
+					keepfocus: options.keepfocus,
+					noscroll: options.noscroll,
+					replace_state: options.replace_state ?? url.href === location.href
 				});
 			});
 
@@ -1916,11 +1916,11 @@ export function create_client(app, target) {
 							scroll,
 							delta
 						},
-						accepted: () => {
+						accept: () => {
 							current_history_index = history_index;
 							current_navigation_index = navigation_index;
 						},
-						blocked: () => {
+						block: () => {
 							history.go(-delta);
 						},
 						nav_token: token
