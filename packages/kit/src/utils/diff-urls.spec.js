@@ -8,7 +8,7 @@ describe('getHrefBetween', () => {
 
 		const href = getHrefBetween(from, to);
 
-		expect(href).toBe('?foo=bar');
+		expect(href).toBe('/?foo=bar');
 		expect(new URL(href, from).href).toBe(to.href);
 	});
 
@@ -18,7 +18,7 @@ describe('getHrefBetween', () => {
 
 		const href = getHrefBetween(from, to);
 
-		expect(href).toBe('#some-fragment');
+		expect(href).toBe('/#some-fragment');
 		expect(new URL(href, from).href).toBe(to.href);
 	});
 
@@ -28,7 +28,7 @@ describe('getHrefBetween', () => {
 
 		const href = getHrefBetween(from, to);
 
-		expect(href).toBe('?foo=bar#some-fragment');
+		expect(href).toBe('/?foo=bar#some-fragment');
 		expect(new URL(href, from).href).toBe(to.href);
 	});
 
@@ -48,7 +48,7 @@ describe('getHrefBetween', () => {
 
 		const href = getHrefBetween(from, to)
 
-		expect(href).toBe("en/about")
+		expect(href).toBe("/en/about")
 		expect(new URL(href, from).href).toBe(to.href)
 	})
 
@@ -79,7 +79,7 @@ describe('getHrefBetween', () => {
 
 		const href = getHrefBetween(from, to);
 
-		expect(href).toBe('.');
+		expect(href).toBe('/foo/');
 		expect(new URL(href, from).href).toBe(to.href);
 	});
 
@@ -89,17 +89,17 @@ describe('getHrefBetween', () => {
 
 		const href = getHrefBetween(from, to);
 
-		expect(href).toBe('..');
+		expect(href).toBe('/foo/');
 		expect(new URL(href, from).href).toBe(to.href);
 	});
 
 	test.concurrent('get to child page', () => {
 		const from = new URL('https://example.com/foo/');
-		const to = new URL('https://example.com/foo/some-page');
+		const to = new URL('https://example.com/foo/some-page/');
 
 		const href = getHrefBetween(from, to);
 
-		expect(href).toBe('some-page');
+		expect(href).toBe('/foo/some-page/');
 		expect(new URL(href, from).href).toBe(to.href);
 	});
 
@@ -109,19 +109,20 @@ describe('getHrefBetween', () => {
 
 		const href = getHrefBetween(from, to);
 
-		expect(href).toBe('bar/some-page');
+		expect(href).toBe('/foo/bar/some-page');
 		expect(new URL(href, from).href).toBe(to.href);
 	});
 
-	test.concurrent('get to sibling page', () => {
-		const from = new URL('https://example.com/foo/bar/some-page');
-		const to = new URL('https://example.com/foo/bar/another-page');
+	test.concurrent('get to sibling page, with trailing slash', () => {
+		const from = new URL('https://example.com/foo/bar/some-page/');
+		const to = new URL('https://example.com/foo/bar/another-page/');
 
 		const href = getHrefBetween(from, to);
 
-		expect(href).toBe('another-page');
+		expect(href).toBe('/foo/bar/another-page/');
 		expect(new URL(href, from).href).toBe(to.href);
 	});
+
 
 	test.concurrent('absolute path is shorter than relative path', () => {
 		const from = new URL('https://example.com/foo/bar/some-page');
