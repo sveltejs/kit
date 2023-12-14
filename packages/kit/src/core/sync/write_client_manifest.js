@@ -156,8 +156,8 @@ export function write_client_manifest(kit, manifest_data, output, metadata) {
 					router_hooks_file ? 'router_hooks.resolveDestination || ' : ''
 				}((event) => event.to),
 
-				remapURL: ${
-					router_hooks_file ? 'router_hooks.remapURL || ' : ''
+				rewriteURL: ${
+					router_hooks_file ? 'router_hooks.rewriteURL || ' : ''
 				}((url) => url)
 			};
 

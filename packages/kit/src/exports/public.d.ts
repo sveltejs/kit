@@ -689,12 +689,12 @@ export type ResolveDestination = (event: { from: URL; to: URL }) => URL;
  * 
  * @example
  * ```js
- * export const remapURL = (url) => {
+ * export const rewriteURL = (url) => {
  *   return urlWithoutLanguage(url);
  * }
  * ```
  */
-export type RemapURL = (url: URL) => URL;
+export type RewriteURL = (url: URL) => URL;
 
 /**
  * The [`handleFetch`](https://kit.svelte.dev/docs/hooks#server-hooks-handlefetch) hook allows you to modify (or replace) a `fetch` request that happens inside a `load` function that runs on the server (or during pre-rendering)

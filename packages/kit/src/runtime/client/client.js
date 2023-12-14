@@ -985,7 +985,7 @@ export function create_client(app, target) {
 	}) {
 		console.log('client: navigate', url.href);
 		const originalURL = new URL(url);
-		const rewrittenURL = app.hooks.remapURL(new URL(url));
+		const rewrittenURL = app.hooks.rewriteURL(new URL(url));
 		console.log('client: rewrittenURL', rewrittenURL.href);
 
 		//This should be used to resolve the route, but not to determine the base path
