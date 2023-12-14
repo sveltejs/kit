@@ -49,7 +49,7 @@ export async function migrate() {
 		bail('Please install Svelte before continuing');
 	}
 
-	if (semver.gtr('4.0.0', svelte_dep)) {
+	if (semver.validRange(svelte_dep) && semver.gtr('4.0.0', svelte_dep)) {
 		console.log(
 			colors
 				.bold()
