@@ -66,9 +66,9 @@ export const invalidateAll = /* @__PURE__ */ client_method('invalidate_all');
  * If the next navigation is to `href`, the values returned from load will be used, making navigation instantaneous.
  * Returns a Promise that resolves when the preload is complete.
  *
- * @type {(href: string) => Promise<void>}
+ * @type {(href: string) => Promise<Record<string, any>>}
  * @param {string} href Page to preload
- * @returns {Promise<void>}
+ * @returns {Promise<Record<string, any>>}
  */
 export const preloadData = /* @__PURE__ */ client_method('preload_data');
 
@@ -127,6 +127,22 @@ export const onNavigate = /* @__PURE__ */ client_method('on_navigate');
  */
 export const afterNavigate = /* @__PURE__ */ client_method('after_navigate');
 
+/**
+ * Programmatically create a new history entry with the given `$page.state`.
+ *
+ * @type {(state: App.PageState, url?: string | URL) => void}
+ * @param {App.PageState} state
+ * @param {string | URL} [url]
+ * @returns {void}
+ */
 export const pushState = /* @__PURE__ */ client_method('push_state');
 
+/**
+ * Programmatically replace the current history entry with the given `$page.state`.
+ *
+ * @type {(state: App.PageState, url?: string | URL) => void}
+ * @param {App.PageState} state
+ * @param {string | URL} [url]
+ * @returns {void}
+ */
 export const replaceState = /* @__PURE__ */ client_method('replace_state');

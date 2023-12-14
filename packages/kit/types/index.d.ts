@@ -944,6 +944,10 @@ declare module '@sveltejs/kit' {
 		 */
 		data: App.PageData & Record<string, any>;
 		/**
+		 * The page state, which can be manipulated using the `pushState` and `replaceState` functions from `$app/navigation`.
+		 */
+		state: App.PageState;
+		/**
 		 * Filled only after a form submission. See [form actions](https://kit.svelte.dev/docs/form-actions) for more info.
 		 */
 		form: any;
@@ -1662,27 +1666,7 @@ declare module '@sveltejs/kit' {
 	}
 
 	type ValidatedConfig = RecursiveRequired<Config>;
-	/**
-	 * Throws an error with a HTTP status code and an optional message.
-	 * When called during request handling, this will cause SvelteKit to
-	 * return an error response without invoking `handleError`.
-	 * Make sure you're not catching the thrown error, which would prevent SvelteKit from handling it.
-	 * @param status The [HTTP status code](https://developer.mozilla.org/en-US/docs/Web/HTTP/Status#client_error_responses). Must be in the range 400-599.
-	 * @param body An object that conforms to the App.Error type. If a string is passed, it will be used as the message property.
-	 * @throws {HttpError} This error instructs SvelteKit to initiate HTTP error handling.
-	 * @throws {Error} If the provided status is invalid (not between 400 and 599).
-	 */
 	export function error(status: NumericRange<400, 599>, body: App.Error): never;
-	/**
-	 * Throws an error with a HTTP status code and an optional message.
-	 * When called during request handling, this will cause SvelteKit to
-	 * return an error response without invoking `handleError`.
-	 * Make sure you're not catching the thrown error, which would prevent SvelteKit from handling it.
-	 * @param status The [HTTP status code](https://developer.mozilla.org/en-US/docs/Web/HTTP/Status#client_error_responses). Must be in the range 400-599.
-	 * @param body An object that conforms to the App.Error type. If a string is passed, it will be used as the message property.
-	 * @throws {HttpError} This error instructs SvelteKit to initiate HTTP error handling.
-	 * @throws {Error} If the provided status is invalid (not between 400 and 599).
-	 */
 	export function error(status: NumericRange<400, 599>, body?: {
 		message: string;
 	} extends App.Error ? App.Error | string | undefined : never): never;
@@ -1698,8 +1682,8 @@ declare module '@sveltejs/kit' {
 	 * Make sure you're not catching the thrown redirect, which would prevent SvelteKit from handling it.
 	 * @param status The [HTTP status code](https://developer.mozilla.org/en-US/docs/Web/HTTP/Status#redirection_messages). Must be in the range 300-308.
 	 * @param location The location to redirect to.
-	 * @throws {Redirect} This error instructs SvelteKit to redirect to the specified location.
-	 * @throws {Error} If the provided status is invalid.
+	 * @throws This error instructs SvelteKit to redirect to the specified location.
+	 * @throws If the provided status is invalid.
 	 * */
 	export function redirect(status: NumericRange<300, 308>, location: string | URL): never;
 	/**
@@ -1719,16 +1703,7 @@ declare module '@sveltejs/kit' {
 	 * @param init Options such as `status` and `headers` that will be added to the response. A `Content-Length` header will be added automatically.
 	 */
 	export function text(body: string, init?: ResponseInit | undefined): Response;
-	/**
-	 * Create an `ActionFailure` object.
-	 * @param status The [HTTP status code](https://developer.mozilla.org/en-US/docs/Web/HTTP/Status#client_error_responses). Must be in the range 400-599.
-	 * */
 	export function fail(status: number): ActionFailure<undefined>;
-	/**
-	 * Create an `ActionFailure` object.
-	 * @param status The [HTTP status code](https://developer.mozilla.org/en-US/docs/Web/HTTP/Status#client_error_responses). Must be in the range 400-599.
-	 * @param data Data associated with the failure (e.g. validation errors)
-	 * */
 	export function fail<T extends Record<string, unknown> | undefined = undefined>(status: number, data: T): ActionFailure<T>;
 	export type LessThan<TNumber extends number, TArray extends any[] = []> = TNumber extends TArray['length'] ? TArray[number] : LessThan<TNumber, [...TArray, TArray['length']]>;
 	export type NumericRange<TStart extends number, TEnd extends number> = Exclude<TEnd | LessThan<TEnd>, LessThan<TStart>>;
@@ -1745,7 +1720,7 @@ declare module '@sveltejs/kit' {
 	class Redirect_1 {
 		
 		constructor(status: 300 | 301 | 302 | 303 | 304 | 305 | 306 | 307 | 308, location: string);
-		status: 301 | 302 | 303 | 307 | 308 | 300 | 304 | 305 | 306;
+		status: 300 | 301 | 302 | 303 | 304 | 305 | 306 | 307 | 308;
 		location: string;
 	}
 }
@@ -1962,7 +1937,7 @@ declare module '$app/navigation' {
 	 *
 	 * @param href Page to preload
 	 * */
-	export const preloadData: (href: string) => Promise<void>;
+	export const preloadData: (href: string) => Promise<Record<string, any>>;
 	/**
 	 * Programmatically imports the code for routes that haven't yet been fetched.
 	 * Typically, you might call this to speed up subsequent navigation.
@@ -1995,13 +1970,23 @@ declare module '$app/navigation' {
 	 *
 	 * `onNavigate` must be called during a component initialization. It remains active as long as the component is mounted.
 	 * */
-	export const onNavigate: (callback: (navigation: import('@sveltejs/kit').OnNavigate) => MaybePromise<(() => void) | void>) => void;
+	export const onNavigate: (callback: (navigation: import('@sveltejs/kit').OnNavigate) => import('types').MaybePromise<(() => void) | void>) => void;
 	/**
 	 * A lifecycle function that runs the supplied `callback` when the current component mounts, and also whenever we navigate to a new URL.
 	 *
 	 * `afterNavigate` must be called during a component initialization. It remains active as long as the component is mounted.
 	 * */
 	export const afterNavigate: (callback: (navigation: import('@sveltejs/kit').AfterNavigate) => void) => void;
+	/**
+	 * Programmatically create a new history entry with the given `$page.state`.
+	 *
+	 * */
+	export const pushState: (state: App.PageState, url?: string | URL) => void;
+	/**
+	 * Programmatically replace the current history entry with the given `$page.state`.
+	 *
+	 * */
+	export const replaceState: (state: App.PageState, url?: string | URL) => void;
 	type MaybePromise<T> = T | Promise<T>;
 }
 
@@ -2064,6 +2049,7 @@ declare module '$app/stores' {
  * 		// interface Error {}
  * 		// interface Locals {}
  * 		// interface PageData {}
+ * 		// interface PageState {}
  * 		// interface Platform {}
  * 	}
  * }
@@ -2095,6 +2081,11 @@ declare namespace App {
 	 * Use optional properties for data that is only present on specific pages. Do not add an index signature (`[key: string]: any`).
 	 */
 	export interface PageData {}
+
+	/**
+	 * The shape of the `$page.state` object, which can be manipulated using the `pushState` and `replaceState` functions from `$app/navigation`.
+	 */
+	export interface PageState {}
 
 	/**
 	 * If your adapter provides [platform-specific context](https://kit.svelte.dev/docs/adapters#platform-specific-context) via `event.platform`, you can specify it here.
