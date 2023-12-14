@@ -962,6 +962,10 @@ export interface Page<
 	 */
 	data: App.PageData & Record<string, any>;
 	/**
+	 * The page state, which can be manipulated using the [`pushState`](https://kit.svelte.dev/docs/modules#$app-navigation-pushstate) and [`replaceState`](https://kit.svelte.dev/docs/modules#$app-navigation-replacestate) functions from `$app/navigation`.
+	 */
+	state: App.PageState;
+	/**
 	 * Filled only after a form submission. See [form actions](https://kit.svelte.dev/docs/form-actions) for more info.
 	 */
 	form: any;

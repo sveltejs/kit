@@ -66,9 +66,9 @@ export function load({ fetch }) {
 }
 ```
 
-## goto(...) no longer accepts external URLs
+## goto(...) changes
 
-To navigate to an external URL, use `window.location = url`.
+`goto(...)` no longer accepts external URLs. To navigate to an external URL, use `window.location = url`. The `state` option was removed in favor of [shallow routing](shallow-routing).
 
 ## paths are now relative by default
 

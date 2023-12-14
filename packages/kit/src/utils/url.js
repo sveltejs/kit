@@ -78,6 +78,14 @@ export function decode_uri(uri) {
 }
 
 /**
+ * Returns everything up to the first `#` in a URL
+ * @param {{href: string}} url_like
+ */
+export function strip_hash({ href }) {
+	return href.split('#')[0];
+}
+
+/**
  * URL properties that could change during the lifetime of the page,
  * which excludes things like `origin`
  */

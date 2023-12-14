@@ -4,6 +4,7 @@ import {
 	add_data_suffix,
 	decode_params,
 	decode_pathname,
+	strip_hash,
 	make_trackable,
 	normalize_path
 } from '../../utils/url.js';
@@ -28,31 +29,97 @@ import {
 
 import { base } from '__sveltekit/paths';
 import * as devalue from 'devalue';
-import { compact } from '../../utils/array.js';
+import {
+	HISTORY_INDEX,
+	NAVIGATION_INDEX,
+	PRELOAD_PRIORITIES,
+	SCROLL_KEY,
+	STATES_KEY,
+	SNAPSHOT_KEY,
+	PAGE_URL_KEY
+} from './constants.js';
 import { validate_page_exports } from '../../utils/exports.js';
+import { compact } from '../../utils/array.js';
 import { HttpError, Redirect, SvelteKitError } from '../control.js';
 import { INVALIDATED_PARAM, TRAILING_SLASH_PARAM, validate_depends } from '../shared.js';
-import { INDEX_KEY, PRELOAD_PRIORITIES, SCROLL_KEY, SNAPSHOT_KEY } from './constants.js';
 import { stores } from './singletons.js';
 import { get_message, get_status } from '../../utils/error.js';
 
 let errored = false;
 
+/** @typedef {{ x: number; y: number }} ScrollPosition */
+
 // We track the scroll position associated with each history entry in sessionStorage,
 // rather than on history.state itself, because when navigation is driven by
 // popstate it's too late to update the scroll position associated with the
 // state we're navigating from
-
-/** @typedef {{ x: number, y: number }} ScrollPosition */
-/** @type {Record<number, ScrollPosition>} */
+/**
+ * history index -> { x, y }
+ * @type {Record<number, ScrollPosition>}
+ */
 const scroll_positions = storage.get(SCROLL_KEY) ?? {};
 
-/** @type {Record<string, any[]>} */
+/**
+ * history index -> any
+ * @type {Record<string, Record<string, any>>}
+ */
+const states = storage.get(STATES_KEY, devalue.parse) ?? {};
+
+/**
+ * navigation index -> any
+ * @type {Record<string, any[]>}
+ */
 const snapshots = storage.get(SNAPSHOT_KEY) ?? {};
+
+const original_push_state = history.pushState;
+const original_replace_state = history.replaceState;
+
+if (DEV) {
+	let warned = false;
+
+	const warn = () => {
+		if (warned) return;
+		warned = true;
+
+		console.warn(
+			"Avoid using `history.pushState(...)` and `history.replaceState(...)` as these will conflict with SvelteKit's router. Use the `pushState` and `replaceState` imports from `$app/navigation` instead."
+		);
+	};
+
+	history.pushState = (...args) => {
+		warn();
+		return original_push_state.apply(history, args);
+	};
+
+	history.replaceState = (...args) => {
+		warn();
+		return original_replace_state.apply(history, args);
+	};
+}
 
 /** @param {number} index */
 function update_scroll_positions(index) {
 	scroll_positions[index] = scroll_state();
+}
+
+/**
+ * @param {number} current_history_index
+ * @param {number} current_navigation_index
+ */
+function clear_onward_history(current_history_index, current_navigation_index) {
+	// if we navigated back, then pushed a new state, we can
+	// release memory by pruning the scroll/snapshot lookup
+	let i = current_history_index + 1;
+	while (scroll_positions[i]) {
+		delete scroll_positions[i];
+		i += 1;
+	}
+
+	i = current_navigation_index + 1;
+	while (snapshots[i]) {
+		delete snapshots[i];
+		i += 1;
+	}
 }
 
 /**
@@ -65,6 +132,8 @@ function native_navigation(url) {
 	location.href = url.href;
 	return new Promise(() => {});
 }
+
+function noop() {}
 
 /**
  * @param {import('./types.js').SvelteKitApp} app
@@ -124,6 +193,8 @@ export function create_client(app, target) {
 	let updating = false;
 	let navigating = false;
 	let hash_navigating = false;
+	/** True as soon as there happened one client-side navigation (excluding the SvelteKit-initialized initial one when in SPA mode) */
+	let has_navigated = false;
 
 	let force_invalidation = false;
 
@@ -131,16 +202,25 @@ export function create_client(app, target) {
 	let root;
 
 	// keeping track of the history index in order to prevent popstate navigation events if needed
-	let current_history_index = history.state?.[INDEX_KEY];
+	/** @type {number} */
+	let current_history_index = history.state?.[HISTORY_INDEX];
+
+	/** @type {number} */
+	let current_navigation_index = history.state?.[NAVIGATION_INDEX];
 
 	if (!current_history_index) {
 		// we use Date.now() as an offset so that cross-document navigations
 		// within the app don't result in data loss
-		current_history_index = Date.now();
+		current_history_index = current_navigation_index = Date.now();
 
 		// create initial history entry, so we can return here
-		history.replaceState(
-			{ ...history.state, [INDEX_KEY]: current_history_index },
+		original_replace_state.call(
+			history,
+			{
+				...history.state,
+				[HISTORY_INDEX]: current_history_index,
+				[NAVIGATION_INDEX]: current_navigation_index
+			},
 			'',
 			location.href
 		);
@@ -171,8 +251,7 @@ export function create_client(app, target) {
 		if (!pending_invalidate) return;
 		pending_invalidate = null;
 
-		const url = new URL(location.href);
-		const intent = get_navigation_intent(url, true);
+		const intent = get_navigation_intent(current.url, true);
 
 		// Clear preload, it might be affected by the invalidation.
 		// Also solves an edge case where a preload is triggered, the navigation for it
@@ -186,7 +265,7 @@ export function create_client(app, target) {
 
 		if (navigation_result) {
 			if (navigation_result.type === 'redirect') {
-				await goto(new URL(navigation_result.location, url).href, {}, 1, nav_token);
+				await goto(new URL(navigation_result.location, current.url).href, {}, 1, nav_token);
 			} else {
 				if (navigation_result.props.page !== undefined) {
 					page = navigation_result.props.page;
@@ -216,45 +295,31 @@ export function create_client(app, target) {
 		update_scroll_positions(current_history_index);
 		storage.set(SCROLL_KEY, scroll_positions);
 
-		capture_snapshot(current_history_index);
+		capture_snapshot(current_navigation_index);
 		storage.set(SNAPSHOT_KEY, snapshots);
+		storage.set(STATES_KEY, states, devalue.stringify);
 	}
 
 	/**
 	 * @param {string | URL} url
-	 * @param {{ noScroll?: boolean; replaceState?: boolean; keepFocus?: boolean; state?: any; invalidateAll?: boolean }} opts
+	 * @param {{ replaceState?: boolean; noScroll?: boolean; keepFocus?: boolean; invalidateAll?: boolean; }} options
 	 * @param {number} redirect_count
 	 * @param {{}} [nav_token]
 	 */
-	async function goto(
-		url,
-		{
-			noScroll = false,
-			replaceState = false,
-			keepFocus = false,
-			state = {},
-			invalidateAll = false
-		},
-		redirect_count,
-		nav_token
-	) {
+	async function goto(url, options, redirect_count, nav_token) {
 		return navigate({
+			type: 'goto',
 			url: resolve_url(url),
-			scroll: noScroll ? scroll_state() : null,
-			keepfocus: keepFocus,
+			keepfocus: options.keepFocus,
+			noscroll: options.noScroll,
+			replace_state: options.replaceState,
 			redirect_count,
-			details: {
-				state,
-				replaceState
-			},
 			nav_token,
-			accepted: () => {
-				if (invalidateAll) {
+			accept: () => {
+				if (options.invalidateAll) {
 					force_invalidation = true;
 				}
-			},
-			blocked: () => {},
-			type: 'goto'
+			}
 		});
 	}
 
@@ -300,7 +365,7 @@ export function create_client(app, target) {
 			hydrate: true
 		});
 
-		restore_snapshot(current_history_index);
+		restore_snapshot(current_navigation_index);
 
 		/** @type {import('@sveltejs/kit').AfterNavigate} */
 		const navigation = {
@@ -361,7 +426,8 @@ export function create_client(app, target) {
 			},
 			props: {
 				// @ts-ignore Somehow it's getting SvelteComponent and SvelteComponentDev mixed up
-				constructors: compact(branch).map((branch_node) => branch_node.node.component)
+				constructors: compact(branch).map((branch_node) => branch_node.node.component),
+				page
 			}
 		};
 
@@ -405,6 +471,7 @@ export function create_client(app, target) {
 				route: {
 					id: route?.id ?? null
 				},
+				state: {},
 				status,
 				url: new URL(url),
 				form: form ?? null,
@@ -1004,45 +1071,47 @@ export function create_client(app, target) {
 
 	/**
 	 * @param {{
-	 *   url: URL;
-	 *   scroll: { x: number, y: number } | null;
-	 *   keepfocus: boolean;
-	 *   redirect_count: number;
-	 *   details: {
-	 *     replaceState: boolean;
-	 *     state: any;
-	 *   } | null;
 	 *   type: import('@sveltejs/kit').Navigation["type"];
-	 *   delta?: number;
+	 *   url: URL;
+	 *   popped?: {
+	 *     state: Record<string, any>;
+	 *     scroll: { x: number, y: number };
+	 *     delta: number;
+	 *   };
+	 *   keepfocus?: boolean;
+	 *   noscroll?: boolean;
+	 *   replace_state?: boolean;
+	 *   redirect_count?: number;
 	 *   nav_token?: {};
-	 *   accepted: () => void;
-	 *   blocked: () => void;
+	 *   accept?: () => void;
+	 *   block?: () => void;
 	 * }} opts
 	 */
 	async function navigate({
-		url,
-		scroll,
-		keepfocus,
-		redirect_count,
-		details,
 		type,
-		delta,
+		url,
+		popped,
+		keepfocus,
+		noscroll,
+		replace_state,
+		redirect_count = 0,
 		nav_token = {},
-		accepted,
-		blocked
+		accept = noop,
+		block = noop
 	}) {
 		const intent = get_navigation_intent(url, false);
-		const nav = before_navigate({ url, type, delta, intent });
+		const nav = before_navigate({ url, type, delta: popped?.delta, intent });
 
 		if (!nav) {
-			blocked();
+			block();
 			return;
 		}
 
-		// store this before calling `accepted()`, which may change the index
+		// store this before calling `accept()`, which may change the index
 		const previous_history_index = current_history_index;
+		const previous_navigation_index = current_navigation_index;
 
-		accepted();
+		accept();
 
 		navigating = true;
 
@@ -1096,7 +1165,7 @@ export function create_client(app, target) {
 				goto(new URL(navigation_result.location, url).href, {}, redirect_count + 1, nav_token);
 				return false;
 			}
-		} else if (/** @type {number} */ (navigation_result.props.page?.status) >= 400) {
+		} else if (/** @type {number} */ (navigation_result.props.page.status) >= 400) {
 			const updated = await stores.updated.check();
 			if (updated) {
 				await native_navigation(url);
@@ -1111,35 +1180,38 @@ export function create_client(app, target) {
 		updating = true;
 
 		update_scroll_positions(previous_history_index);
-		capture_snapshot(previous_history_index);
+		capture_snapshot(previous_navigation_index);
 
 		// ensure the url pathname matches the page's trailing slash option
-		if (
-			navigation_result.props.page?.url &&
-			navigation_result.props.page.url.pathname !== url.pathname
-		) {
-			url.pathname = navigation_result.props.page?.url.pathname;
+		if (navigation_result.props.page.url.pathname !== url.pathname) {
+			url.pathname = navigation_result.props.page.url.pathname;
 		}
 
-		if (details) {
-			const change = details.replaceState ? 0 : 1;
-			details.state[INDEX_KEY] = current_history_index += change;
-			history[details.replaceState ? 'replaceState' : 'pushState'](details.state, '', url);
+		const state = popped ? popped.state : {};
 
-			if (!details.replaceState) {
-				// if we navigated back, then pushed a new state, we can
-				// release memory by pruning the scroll/snapshot lookup
-				let i = current_history_index + 1;
-				while (snapshots[i] || scroll_positions[i]) {
-					delete snapshots[i];
-					delete scroll_positions[i];
-					i += 1;
-				}
+		if (!popped) {
+			// this is a new navigation, rather than a popstate
+			const change = replace_state ? 0 : 1;
+
+			const entry = {
+				[HISTORY_INDEX]: (current_history_index += change),
+				[NAVIGATION_INDEX]: (current_navigation_index += change)
+			};
+
+			const fn = replace_state ? original_replace_state : original_push_state;
+			fn.call(history, entry, '', url);
+
+			if (!replace_state) {
+				clear_onward_history(current_history_index, current_navigation_index);
 			}
 		}
 
+		states[current_history_index] = state;
+
 		// reset preload synchronously after the history state has been set to avoid race conditions
 		load_cache = null;
+
+		navigation_result.props.page.state = state;
 
 		if (started) {
 			current = navigation_result.state;
@@ -1172,6 +1244,7 @@ export function create_client(app, target) {
 			}
 
 			root.$set(navigation_result.props);
+			has_navigated = true;
 		} else {
 			initialize(navigation_result);
 		}
@@ -1182,6 +1255,8 @@ export function create_client(app, target) {
 		await tick();
 
 		// we reset scroll before dealing with focus, to avoid a flash of unscrolled content
+		const scroll = popped ? popped.scroll : noscroll ? scroll_state() : null;
+
 		if (autoscroll) {
 			const deep_linked =
 				url.hash && document.getElementById(decodeURIComponent(url.hash.slice(1)));
@@ -1217,7 +1292,7 @@ export function create_client(app, target) {
 		navigating = false;
 
 		if (type === 'popstate') {
-			restore_snapshot(current_history_index);
+			restore_snapshot(current_navigation_index);
 		}
 
 		nav.fulfil(undefined);
@@ -1432,6 +1507,14 @@ export function create_client(app, target) {
 		goto: (url, opts = {}) => {
 			url = resolve_url(url);
 
+			// @ts-expect-error
+			if (DEV && opts.state) {
+				// TOOD 3.0 remove
+				throw new Error(
+					'Passing `state` to `goto` is no longer supported. Use `pushState` and `replaceState` from `$app/navigation` instead.'
+				);
+			}
+
 			if (url.origin !== origin) {
 				return Promise.reject(
 					new Error(
@@ -1469,7 +1552,16 @@ export function create_client(app, target) {
 				throw new Error(`Attempted to preload a URL that does not belong to this app: ${url}`);
 			}
 
-			await preload_data(intent);
+			const result = await preload_data(intent);
+			if (result.type === 'redirect') {
+				return {
+					type: result.type,
+					location: result.location
+				};
+			}
+
+			const { status, data } = result.props.page ?? page;
+			return { type: result.type, status, data };
 		},
 
 		preload_code: (pathname) => {
@@ -1486,6 +1578,55 @@ export function create_client(app, target) {
 			}
 
 			return preload_code(pathname);
+		},
+
+		push_state: (url, state) => {
+			if (DEV) {
+				try {
+					devalue.stringify(state);
+				} catch (error) {
+					// @ts-expect-error
+					throw new Error(`Could not serialize state${error.path}`);
+				}
+			}
+
+			const opts = {
+				[HISTORY_INDEX]: (current_history_index += 1),
+				[NAVIGATION_INDEX]: current_navigation_index,
+				[PAGE_URL_KEY]: page.url.href
+			};
+
+			original_push_state.call(history, opts, '', resolve_url(url));
+
+			page = { ...page, state };
+			root.$set({ page });
+
+			states[current_history_index] = state;
+			clear_onward_history(current_history_index, current_navigation_index);
+		},
+
+		replace_state: (url, state) => {
+			if (DEV) {
+				try {
+					devalue.stringify(state);
+				} catch (error) {
+					// @ts-expect-error
+					throw new Error(`Could not serialize state${error.path}`);
+				}
+			}
+
+			const opts = {
+				[HISTORY_INDEX]: current_history_index,
+				[NAVIGATION_INDEX]: current_navigation_index,
+				[PAGE_URL_KEY]: page.url.href
+			};
+
+			original_replace_state.call(history, opts, '', resolve_url(url));
+
+			page = { ...page, state };
+			root.$set({ page });
+
+			states[current_history_index] = state;
 		},
 
 		apply_action: async (result) => {
@@ -1643,7 +1784,7 @@ export function create_client(app, target) {
 				// This will ensure the `hashchange` event is fired
 				// Removing the hash does a full page navigation in the browser, so make sure a hash is present
 				const [nonhash, hash] = url.href.split('#');
-				if (hash !== undefined && nonhash === location.href.split('#')[0]) {
+				if (hash !== undefined && nonhash === strip_hash(location)) {
 					// If we are trying to navigate to the same hash, we should only
 					// attempt to scroll to that element and avoid any history changes.
 					// Otherwise, this can cause Firefox to incorrectly assign a null
@@ -1665,21 +1806,16 @@ export function create_client(app, target) {
 
 					// hashchange event shouldn't occur if the router is replacing state.
 					hash_navigating = false;
-					event.preventDefault();
 				}
 
+				event.preventDefault();
+
 				navigate({
+					type: 'link',
 					url,
-					scroll: options.noscroll ? scroll_state() : null,
-					keepfocus: options.keep_focus ?? false,
-					redirect_count: 0,
-					details: {
-						state: {},
-						replaceState: options.replace_state ?? url.href === location.href
-					},
-					accepted: () => event.preventDefault(),
-					blocked: () => event.preventDefault(),
-					type: 'link'
+					keepfocus: options.keepfocus,
+					noscroll: options.noscroll,
+					replace_state: options.replace_state ?? url.href === location.href
 				});
 			});
 
@@ -1706,8 +1842,8 @@ export function create_client(app, target) {
 
 				const event_form = /** @type {HTMLFormElement} */ (event.target);
 
-				const { keep_focus, noscroll, reload, replace_state } = get_router_options(event_form);
-				if (reload) return;
+				const options = get_router_options(event_form);
+				if (options.reload) return;
 
 				event.preventDefault();
 				event.stopPropagation();
@@ -1723,57 +1859,67 @@ export function create_client(app, target) {
 				url.search = new URLSearchParams(data).toString();
 
 				navigate({
+					type: 'form',
 					url,
-					scroll: noscroll ? scroll_state() : null,
-					keepfocus: keep_focus ?? false,
-					redirect_count: 0,
-					details: {
-						state: {},
-						replaceState: replace_state ?? url.href === location.href
-					},
-					nav_token: {},
-					accepted: () => {},
-					blocked: () => {},
-					type: 'form'
+					keepfocus: options.keepfocus,
+					noscroll: options.noscroll,
+					replace_state: options.replace_state ?? url.href === location.href
 				});
 			});
 
 			addEventListener('popstate', async (event) => {
-				token = {};
-				if (event.state?.[INDEX_KEY]) {
+				if (event.state?.[HISTORY_INDEX]) {
+					const history_index = event.state[HISTORY_INDEX];
+					token = {};
+
 					// if a popstate-driven navigation is cancelled, we need to counteract it
 					// with history.go, which means we end up back here, hence this check
-					if (event.state[INDEX_KEY] === current_history_index) return;
+					if (history_index === current_history_index) return;
 
-					const scroll = scroll_positions[event.state[INDEX_KEY]];
-					const url = new URL(location.href);
+					const scroll = scroll_positions[history_index];
+					const state = states[history_index] ?? {};
+					const url = new URL(event.state[PAGE_URL_KEY] ?? location.href);
+					const navigation_index = event.state[NAVIGATION_INDEX];
+					const is_hash_change = strip_hash(location) === strip_hash(current.url);
+					const shallow =
+						navigation_index === current_navigation_index && (has_navigated || is_hash_change);
 
-					// if the only change is the hash, we don't need to do anything (see https://github.com/sveltejs/kit/pull/10636 for why we need to do `url?.`)...
-					if (current.url?.href.split('#')[0] === location.href.split('#')[0]) {
-						// ...except update our internal URL tracking and handle scroll
+					if (shallow) {
+						// We don't need to navigate, we just need to update scroll and/or state.
+						// This happens with hash links and `pushState`/`replaceState`. The
+						// exception is if we haven't navigated yet, since we could have
+						// got here after a modal navigation then a reload
 						update_url(url);
+
 						scroll_positions[current_history_index] = scroll_state();
-						current_history_index = event.state[INDEX_KEY];
-						scrollTo(scroll.x, scroll.y);
+						if (scroll) scrollTo(scroll.x, scroll.y);
+
+						if (state !== page.state) {
+							page = { ...page, state };
+							root.$set({ page });
+						}
+
+						current_history_index = history_index;
 						return;
 					}
 
-					const delta = event.state[INDEX_KEY] - current_history_index;
+					const delta = history_index - current_history_index;
 
 					await navigate({
+						type: 'popstate',
 						url,
-						scroll,
-						keepfocus: false,
-						redirect_count: 0,
-						details: null,
-						accepted: () => {
-							current_history_index = event.state[INDEX_KEY];
+						popped: {
+							state,
+							scroll,
+							delta
 						},
-						blocked: () => {
+						accept: () => {
+							current_history_index = history_index;
+							current_navigation_index = navigation_index;
+						},
+						block: () => {
 							history.go(-delta);
 						},
-						type: 'popstate',
-						delta,
 						nav_token: token
 					});
 				} else {
@@ -1792,8 +1938,13 @@ export function create_client(app, target) {
 				// we need to update history, otherwise we have to leave it alone
 				if (hash_navigating) {
 					hash_navigating = false;
-					history.replaceState(
-						{ ...history.state, [INDEX_KEY]: ++current_history_index },
+					original_replace_state.call(
+						history,
+						{
+							...history.state,
+							[HISTORY_INDEX]: ++current_history_index,
+							[NAVIGATION_INDEX]: current_navigation_index
+						},
 						'',
 						location.href
 					);
@@ -1912,6 +2063,10 @@ export function create_client(app, target) {
 					url,
 					route
 				});
+			}
+
+			if (result.props.page) {
+				result.props.page.state = {};
 			}
 
 			initialize(result);

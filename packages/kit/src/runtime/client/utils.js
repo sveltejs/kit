@@ -149,7 +149,7 @@ export function get_link_info(a, base) {
  */
 export function get_router_options(element) {
 	/** @type {ValidLinkOptions<'keepfocus'> | null} */
-	let keep_focus = null;
+	let keepfocus = null;
 
 	/** @type {ValidLinkOptions<'noscroll'> | null} */
 	let noscroll = null;
@@ -172,7 +172,7 @@ export function get_router_options(element) {
 	while (el && el !== document.documentElement) {
 		if (preload_code === null) preload_code = link_option(el, 'preload-code');
 		if (preload_data === null) preload_data = link_option(el, 'preload-data');
-		if (keep_focus === null) keep_focus = link_option(el, 'keepfocus');
+		if (keepfocus === null) keepfocus = link_option(el, 'keepfocus');
 		if (noscroll === null) noscroll = link_option(el, 'noscroll');
 		if (reload === null) reload = link_option(el, 'reload');
 		if (replace_state === null) replace_state = link_option(el, 'replacestate');
@@ -190,14 +190,14 @@ export function get_router_options(element) {
 			case 'false':
 				return false;
 			default:
-				return null;
+				return undefined;
 		}
 	}
 
 	return {
 		preload_code: levels[preload_code ?? 'off'],
 		preload_data: levels[preload_data ?? 'off'],
-		keep_focus: get_option_state(keep_focus),
+		keepfocus: get_option_state(keepfocus),
 		noscroll: get_option_state(noscroll),
 		reload: get_option_state(reload),
 		replace_state: get_option_state(replace_state)
