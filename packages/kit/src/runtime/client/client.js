@@ -300,7 +300,7 @@ export function create_client(app, target) {
 
 	/**
 	 * @param {string | URL} url
-	 * @param {{ noScroll?: boolean; replaceState?: boolean; keepFocus?: boolean; invalidateAll?: boolean }} opts
+	 * @param {import('@sveltejs/kit').NavigationOptions} opts
 	 * @param {number} redirect_count
 	 * @param {{}} [nav_token]
 	 */
@@ -310,16 +310,13 @@ export function create_client(app, target) {
 		redirect_count,
 		nav_token
 	) {
-		const state = {};
-
 		return navigate({
 			url: resolve_url(url),
 			scroll: noScroll ? scroll_state() : null,
-			state,
+			state: {},
 			keepfocus: keepFocus,
 			redirect_count,
 			details: {
-				state,
 				replaceState
 			},
 			nav_token,
@@ -1088,7 +1085,6 @@ export function create_client(app, target) {
 	 *   redirect_count: number;
 	 *   details: {
 	 *     replaceState: boolean;
-	 *     state: any;
 	 *   } | null;
 	 *   type: import('@sveltejs/kit').Navigation["type"];
 	 *   delta?: number;
@@ -1199,12 +1195,16 @@ export function create_client(app, target) {
 		}
 
 		if (details) {
+			// this is a new navigation, rather than a popstate
 			const change = details.replaceState ? 0 : 1;
-			details.state[HISTORY_INDEX] = current_history_index += change;
-			details.state[NAVIGATION_INDEX] = current_navigation_index += change;
+
+			const entry = {
+				[HISTORY_INDEX]: (current_history_index += change),
+				[NAVIGATION_INDEX]: (current_navigation_index += change)
+			};
 
 			const fn = details.replaceState ? original_replace_state : original_push_state;
-			fn.call(history, details.state, '', url);
+			fn.call(history, entry, '', url);
 
 			if (!details.replaceState) {
 				clear_onward_history(current_history_index, current_navigation_index);
@@ -1818,7 +1818,6 @@ export function create_client(app, target) {
 					keepfocus: options.keep_focus ?? false,
 					redirect_count: 0,
 					details: {
-						state: {},
 						replaceState: options.replace_state ?? url.href === location.href
 					},
 					accepted: () => event.preventDefault(),
@@ -1873,7 +1872,6 @@ export function create_client(app, target) {
 					keepfocus: keep_focus ?? false,
 					redirect_count: 0,
 					details: {
-						state: {},
 						replaceState: replace_state ?? url.href === location.href
 					},
 					nav_token: {},
