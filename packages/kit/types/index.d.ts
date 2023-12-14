@@ -2007,15 +2007,15 @@ declare module '$app/navigation' {
 	 * */
 	export const afterNavigate: (callback: (navigation: import('@sveltejs/kit').AfterNavigate) => void) => void;
 	/**
-	 * Programmatically create a new history entry with the given `$page.state`.
+	 * Programmatically create a new history entry with the given `$page.state`. To use the current URL, you can pass `''` as the first argument.
 	 *
 	 * */
-	export const pushState: (state: App.PageState, url?: string | URL) => void;
+	export const pushState: (url: string | URL, state: App.PageState) => void;
 	/**
-	 * Programmatically replace the current history entry with the given `$page.state`.
+	 * Programmatically replace the current history entry with the given `$page.state`. To use the current URL, you can pass `''` as the first argument.
 	 *
 	 * */
-	export const replaceState: (state: App.PageState, url?: string | URL) => void;
+	export const replaceState: (url: string | URL, state: App.PageState) => void;
 	type MaybePromise<T> = T | Promise<T>;
 }
 

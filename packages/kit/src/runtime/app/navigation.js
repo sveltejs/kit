@@ -128,21 +128,21 @@ export const onNavigate = /* @__PURE__ */ client_method('on_navigate');
 export const afterNavigate = /* @__PURE__ */ client_method('after_navigate');
 
 /**
- * Programmatically create a new history entry with the given `$page.state`.
+ * Programmatically create a new history entry with the given `$page.state`. To use the current URL, you can pass `''` as the first argument.
  *
- * @type {(state: App.PageState, url?: string | URL) => void}
+ * @type {(url: string | URL, state: App.PageState) => void}
+ * @param {string | URL} url
  * @param {App.PageState} state
- * @param {string | URL} [url]
  * @returns {void}
  */
 export const pushState = /* @__PURE__ */ client_method('push_state');
 
 /**
- * Programmatically replace the current history entry with the given `$page.state`.
+ * Programmatically replace the current history entry with the given `$page.state`. To use the current URL, you can pass `''` as the first argument.
  *
- * @type {(state: App.PageState, url?: string | URL) => void}
+ * @type {(url: string | URL, state: App.PageState) => void}
+ * @param {string | URL} url
  * @param {App.PageState} state
- * @param {string | URL} [url]
  * @returns {void}
  */
 export const replaceState = /* @__PURE__ */ client_method('replace_state');

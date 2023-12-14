@@ -1579,7 +1579,7 @@ export function create_client(app, target) {
 			return preload_code(pathname);
 		},
 
-		push_state: (state, url = current.url) => {
+		push_state: (url, state) => {
 			if (DEV) {
 				try {
 					devalue.stringify(state);
@@ -1595,7 +1595,7 @@ export function create_client(app, target) {
 				[PAGE_URL_KEY]: page.url.href
 			};
 
-			original_push_state.call(history, opts, '', new URL(url).href);
+			original_push_state.call(history, opts, '', resolve_url(url));
 
 			page = { ...page, state };
 			root.$set({ page });
@@ -1604,7 +1604,7 @@ export function create_client(app, target) {
 			clear_onward_history(current_history_index, current_navigation_index);
 		},
 
-		replace_state: (state, url = current.url) => {
+		replace_state: (url, state) => {
 			if (DEV) {
 				try {
 					devalue.stringify(state);
@@ -1620,7 +1620,7 @@ export function create_client(app, target) {
 				[PAGE_URL_KEY]: page.url.href
 			};
 
-			original_replace_state.call(history, opts, '', new URL(url).href);
+			original_replace_state.call(history, opts, '', resolve_url(url));
 
 			page = { ...page, state };
 			root.$set({ page });
