@@ -4,13 +4,13 @@ import { dedent } from '../../../core/sync/utils.js';
 import { fileURLToPath } from 'node:url';
 import { metaUrl } from '../../../utils/diff-urls.js';
 
-const diffUrlUtilFile = fileURLToPath(metaUrl)
+const diffUrlUtilFile = fileURLToPath(metaUrl);
 
 const rewritten_attributes = [
-	['a', 'href'],
-	['form', 'action'],
-	['button', 'formaction']
-]
+	{ element: 'a', attribute: 'href' },
+	{ element: 'form', attribute: 'action' },
+	{ element: 'button', attribute: 'formaction' }
+];
 
 /**
  * Rewrites every single href attribute in the markup, so that it's wrapped
@@ -27,28 +27,26 @@ const rewritten_attributes = [
  */
 export const resolve_destination_preprocessor = ({ router_hook_entry }) => ({
 	markup({ content }) {
-
 		//Do some quick checks to see if we need to do anything
 		// keep trach of the tag_name - attribute_name pairs that may be present
 		const matchedAttributeIndexes = [];
 		for (let i = 0; i < rewritten_attributes.length; i++) {
-			const [_tag_name, attribute_name] = rewritten_attributes[i];
-			if(content.includes(attribute_name)) matchedAttributeIndexes.push(i);
+			const { attribute: attribute_name } = rewritten_attributes[i];
+			if (content.includes(attribute_name)) matchedAttributeIndexes.push(i);
 		}
 
 		//If none of the attributes are present, skip parsing & processing
-		if (matchedAttributeIndexes.length === 0 ) return;
-		
+		if (matchedAttributeIndexes.length === 0) return;
+
 		const ast = parse(content);
 		const s = new MagicString(content);
-
 
 		let rewroteAttribute = false;
 
 		//For all the matched attributes, find all the elements and rewrite the attributes
 		for (const index of matchedAttributeIndexes) {
-			const [tag_name, attribute_name] = rewritten_attributes[index];
-			const elements = getElements(ast, tag_name);
+			const { element: element_name, attribute: attribute_name } = rewritten_attributes[index];
+			const elements = getElements(ast, element_name);
 			if (!elements.length) continue;
 
 			for (const element of elements) {
@@ -67,7 +65,7 @@ export const resolve_destination_preprocessor = ({ router_hook_entry }) => ({
 		}
 
 		//If none of the attributes were rewritten, skip adding the code
-		if(!rewroteAttribute) return;
+		if (!rewroteAttribute) return;
 
 		addCodeToScript(
 			ast,
@@ -91,8 +89,10 @@ export const resolve_destination_preprocessor = ({ router_hook_entry }) => ({
 				const from = $${i('page')}.url;
 				const to = new URL(href, from);
 
-				const resolved = resolve_destination({ from, to });
-				return ${i('getHrefBetween')}(from, resolved);
+				const resolved = resolve_destination({ from: new URL(from), to: new URL(to) });
+				return resolved.href === to.href
+					? href
+					: ${i('getHrefBetween')}(from, resolved);
 			}
         	`
 		);

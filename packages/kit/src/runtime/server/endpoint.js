@@ -68,8 +68,13 @@ export async function render_endpoint(event, mod, state, options) {
 		if (e instanceof Redirect) {
 			const from = event.url;
 			const to = new URL(e.location, event.url);
-			const resolvedUrl = options.hooks.resolveDestination({ from, to });
-			const resolvedLocation = getHrefBetween(from, resolvedUrl);
+			const resolvedUrl = options.hooks.resolveDestination({
+				from: new URL(from),
+				to: new URL(to)
+			});
+
+			const resolvedLocation =
+				resolvedUrl.href === to.href ? e.location : getHrefBetween(from, resolvedUrl);
 
 			return new Response(undefined, {
 				status: e.status,
