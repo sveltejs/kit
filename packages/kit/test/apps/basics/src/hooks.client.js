@@ -11,12 +11,14 @@ export function handleError({ error, event, status, message }) {
 
 /** @type {import("@sveltejs/kit").HandleLoad} */
 export async function handleLoad({ event, resolve }) {
-	if (event.url.pathname.endsWith('/handle-load/bypass')) {
+	const { untrack, url } = event;
+
+	if (untrack(() => url.pathname.endsWith('/handle-load/bypass'))) {
 		return {
 			from: 'handleLoad',
 			foo: { bar: 'needed for root layout ' }
 		};
-	} else if (event.url.pathname.endsWith('/handle-load/enrich')) {
+	} else if (untrack(() => url.pathname.endsWith('/handle-load/enrich'))) {
 		const result = await resolve(event);
 		return {
 			from: 'handleLoad and ' + /** @type {any} */ (result).from,

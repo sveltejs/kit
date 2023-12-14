@@ -140,18 +140,20 @@ This function allows you to wrap server `load` functions with custom behavior. I
 ```js
 /** @type {import("@sveltejs/kit").HandleServerLoad} */
 export async function handleServerLoad({ event, resolve }) {
-	if (event.url.pathname.endsWith('/bypass')) {
+	const { untrack, url, parent } = event;
+
+	if (untrack(() => url.pathname.endsWith('/bypass'))) {
 		// Do not call load function at all
 		return {
 			from: 'handleServerLoad'
 		};
-	} else if (event.url.pathname.endsWith('/enrich')) {
+	} else if (untrack(() => url.pathname.endsWith('/enrich'))) {
 		// Call load function with modified inputs and adjust result
 		const result = await resolve({
 			...event,
 			parent: () => {
 				console.log('called parent');
-				return event.parent();
+				return parent();
 			}
 		});
 		return {
@@ -164,6 +166,8 @@ export async function handleServerLoad({ event, resolve }) {
 }
 ```
 
+Not how we're using `untrack` to avoid rerunning all load functions on any URL change because of accessing `url.pathname`.
+
 ## Shared hooks
 
 The following can be added to `src/hooks.server.js` _and_ `src/hooks.client.js`:
@@ -175,18 +179,20 @@ This function allows you to wrap universal `load` functions with custom behavior
 ```js
 /** @type {import("@sveltejs/kit").HandleLoad} */
 export async function handleLoad({ event, resolve }) {
-	if (event.url.pathname.endsWith('/bypass')) {
+	const { untrack, url, parent } = event;
+
+	if (untrack(() => url.pathname.endsWith('/bypass'))) {
 		// Do not call load function at all
 		return {
 			from: 'handleLoad'
 		};
-	} else if (event.url.pathname.endsWith('/enrich')) {
+	} else if (untrack(() => url.pathname.endsWith('/enrich'))) {
 		// Call load function with modified inputs and adjust result
 		const result = await resolve({
 			...event,
 			parent: () => {
 				console.log('called parent');
-				return event.parent();
+				return parent();
 			}
 		});
 		return {
@@ -198,6 +204,8 @@ export async function handleLoad({ event, resolve }) {
 	}
 }
 ```
+
+Not how we're using `untrack` to avoid rerunning all load functions on any URL change because of accessing `url.pathname`.
 
 ### handleError
 

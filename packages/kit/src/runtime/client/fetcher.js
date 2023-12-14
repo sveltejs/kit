@@ -41,7 +41,8 @@ if (DEV) {
 		const stack = stack_array.slice(0, cutoff + 2).join('\n');
 
 		const in_load_heuristic = can_inspect_stack_trace
-			? stack.includes('src/runtime/client/client.js')
+			? // app.js if people have no handleLoad hook, else hooks.client.js
+				stack.includes('generated/client/app.js') || stack.includes('src/hooks.client.js')
 			: loading;
 
 		// This flag is set in initial_fetch and subsequent_fetch

@@ -176,12 +176,14 @@ export async function handleLoad({ event, resolve }) {
 
 /** @type {import("@sveltejs/kit").HandleServerLoad} */
 export async function handleServerLoad({ event, resolve }) {
-	if (event.url.pathname.endsWith('/handle-server-load/bypass')) {
+	const { untrack, url } = event;
+
+	if (untrack(() => url.pathname.endsWith('/handle-server-load/bypass'))) {
 		return {
 			from: 'handleServerLoad',
 			foo: { bar: 'needed for root layout ' }
 		};
-	} else if (event.url.pathname.endsWith('/handle-server-load/enrich')) {
+	} else if (untrack(() => url.pathname.endsWith('/handle-server-load/enrich'))) {
 		const result = await resolve(event);
 		return {
 			from: 'handleServerLoad and ' + /** @type {any} */ (result).from,
