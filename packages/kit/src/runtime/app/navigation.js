@@ -126,3 +126,7 @@ export const onNavigate = /* @__PURE__ */ client_method('on_navigate');
  * @returns {void}
  */
 export const afterNavigate = /* @__PURE__ */ client_method('after_navigate');
+
+export const pushState = /* @__PURE__ */ client_method('push_state');
+
+export const replaceState = /* @__PURE__ */ client_method('replace_state');
