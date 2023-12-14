@@ -91,7 +91,7 @@ export function parse_route_id(id) {
 							return '/' + result;
 						})
 						.join('')}/?$`
-			  );
+				);
 
 	return { pattern, params };
 }
