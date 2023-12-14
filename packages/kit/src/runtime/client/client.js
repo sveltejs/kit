@@ -983,6 +983,8 @@ export function create_client(app, target) {
 		accepted,
 		blocked
 	}) {
+		url = app.hooks.remapURL(new URL(url));
+
 		const intent = get_navigation_intent(url, false);
 		const nav = before_navigate({ url, type, delta, intent });
 

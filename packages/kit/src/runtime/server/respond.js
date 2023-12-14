@@ -55,7 +55,8 @@ const allowed_page_methods = new Set(['GET', 'HEAD', 'OPTIONS']);
  */
 export async function respond(request, options, manifest, state) {
 	/** URL but stripped from the potential `/__data.json` suffix and its search param  */
-	const url = new URL(request.url);
+	const originalURL = new URL(request.url);
+	const rewrittenURL = options.hooks.remapURL(new URL(originalURL));
 
 	if (options.csrf_check_origin) {
 		const forbidden =
@@ -64,7 +65,7 @@ export async function respond(request, options, manifest, state) {
 				request.method === 'PUT' ||
 				request.method === 'PATCH' ||
 				request.method === 'DELETE') &&
-			request.headers.get('origin') !== url.origin;
+			request.headers.get('origin') !== originalURL.origin;
 
 		if (forbidden) {
 			const csrf_error = error(403, `Cross-site ${request.method} form submissions are forbidden`);
@@ -77,7 +78,7 @@ export async function respond(request, options, manifest, state) {
 
 	let decoded;
 	try {
-		decoded = decode_pathname(url.pathname);
+		decoded = decode_pathname(rewrittenURL.pathname);
 	} catch {
 		return text('Malformed URI', { status: 400 });
 	}
@@ -100,15 +101,15 @@ export async function respond(request, options, manifest, state) {
 	let invalidated_data_nodes;
 	if (is_data_request) {
 		decoded = strip_data_suffix(decoded) || '/';
-		url.pathname =
-			strip_data_suffix(url.pathname) +
-				(url.searchParams.get(TRAILING_SLASH_PARAM) === '1' ? '/' : '') || '/';
-		url.searchParams.delete(TRAILING_SLASH_PARAM);
-		invalidated_data_nodes = url.searchParams
+		originalURL.pathname =
+			strip_data_suffix(originalURL.pathname) +
+				(originalURL.searchParams.get(TRAILING_SLASH_PARAM) === '1' ? '/' : '') || '/';
+		originalURL.searchParams.delete(TRAILING_SLASH_PARAM);
+		invalidated_data_nodes = originalURL.searchParams
 			.get(INVALIDATED_PARAM)
 			?.split('')
 			.map((node) => node === '1');
-		url.searchParams.delete(INVALIDATED_PARAM);
+		originalURL.searchParams.delete(INVALIDATED_PARAM);
 	}
 
 	if (!state.prerendering?.fallback) {
@@ -175,7 +176,7 @@ export async function respond(request, options, manifest, state) {
 				}
 			}
 		},
-		url,
+		url: originalURL,
 		isDataRequest: is_data_request,
 		isSubRequest: state.depth > 0
 	};
@@ -192,7 +193,7 @@ export async function respond(request, options, manifest, state) {
 		if (route) {
 			// if `paths.base === '/a/b/c`, then the root route is `/a/b/c/`,
 			// regardless of the `trailingSlash` route option
-			if (url.pathname === base || url.pathname === base + '/') {
+			if (originalURL.pathname === base || originalURL.pathname === base + '/') {
 				trailing_slash = 'always';
 			} else if (route.page) {
 				const nodes = await Promise.all([
@@ -235,17 +236,17 @@ export async function respond(request, options, manifest, state) {
 			}
 
 			if (!is_data_request) {
-				const normalized = normalize_path(url.pathname, trailing_slash ?? 'never');
+				const normalized = normalize_path(originalURL.pathname, trailing_slash ?? 'never');
 
-				if (normalized !== url.pathname && !state.prerendering?.fallback) {
+				if (normalized !== originalURL.pathname && !state.prerendering?.fallback) {
 					return new Response(undefined, {
 						status: 308,
 						headers: {
 							'x-sveltekit-normalize': '1',
 							location:
 								// ensure paths starting with '//' are not treated as protocol-relative
-								(normalized.startsWith('//') ? url.origin + normalized : normalized) +
-								(url.search === '?' ? '' : url.search)
+								(normalized.startsWith('//') ? originalURL.origin + normalized : normalized) +
+								(originalURL.search === '?' ? '' : originalURL.search)
 						}
 					});
 				}
@@ -254,7 +255,7 @@ export async function respond(request, options, manifest, state) {
 
 		const { cookies, new_cookies, get_cookie_header, set_internal } = get_cookies(
 			request,
-			url,
+			originalURL,
 			trailing_slash ?? 'never'
 		);
 
@@ -269,7 +270,7 @@ export async function respond(request, options, manifest, state) {
 			set_internal
 		});
 
-		if (state.prerendering && !state.prerendering.fallback) disable_search(url);
+		if (state.prerendering && !state.prerendering.fallback) disable_search(originalURL);
 
 		const response = await options.hooks.handle({
 			event,

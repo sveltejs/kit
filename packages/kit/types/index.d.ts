@@ -653,8 +653,28 @@ declare module '@sveltejs/kit' {
 
 	/**
 	 * Maps an href value to a destination
+	 * @example
+	 * ```js
+	 * export const resolveDestination = ({ from, to })  => {
+	 *   if(to.host !== from.host) return to; //Don't remap external links
+	 *   const lang = getLanguageFromURL(from);
+	 *   return applyLanguage(to, lang);
+	 * }
+	 * ```
 	 */
 	export type ResolveDestination = (event: { from: URL; to: URL }) => URL;
+
+	/**
+	 * Remap an incoming URL to a different URL. 
+	 * 
+	 * @example
+	 * ```js
+	 * export const remapURL = (url) => {
+	 *   return urlWithoutLanguage(url);
+	 * }
+	 * ```
+	 */
+	export type RemapURL = (url: URL) => URL;
 
 	/**
 	 * The [`handleFetch`](https://kit.svelte.dev/docs/hooks#server-hooks-handlefetch) hook allows you to modify (or replace) a `fetch` request that happens inside a `load` function that runs on the server (or during pre-rendering)

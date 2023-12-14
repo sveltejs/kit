@@ -219,8 +219,6 @@ export async function render_page(event, page, options, manifest, state, resolve
 						const resolvedLocation =
 							resolvedUrl.href === to.href ? err.location : getHrefBetween(from, resolvedUrl);
 
-						console.log('RESOLVED LOCATION', resolvedLocation);
-
 						if (state.prerendering && should_prerender_data) {
 							const body = JSON.stringify({
 								type: 'redirect',
