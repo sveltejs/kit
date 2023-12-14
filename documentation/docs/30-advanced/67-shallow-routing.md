@@ -47,6 +47,7 @@ For this to work, you need to load the data that the `+page.svelte` expects. A c
 <!--- file: src/routes/photos/+page.svelte --->
 <script>
 	import { preloadData, pushState, goto } from '$app/navigation';
+	import { page } from '$app/stores';
 	import Modal from './Modal.svelte';
 	import PhotoPage from './[id]/+page.svelte';
 
@@ -82,7 +83,7 @@ For this to work, you need to load the data that the `+page.svelte` expects. A c
 {/each}
 
 {#if $page.state.selected}
-	<Modal on:close={() => history.goBack()}>
+	<Modal on:close={() => history.back()}>
 		<!-- pass page data to the +page.svelte component,
 		     just like SvelteKit would on navigation -->
 		<PhotoPage data={$page.state.selected} />
