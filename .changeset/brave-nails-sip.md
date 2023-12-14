@@ -2,4 +2,4 @@
 "svelte-migrate": patch
 ---
 
-chore: fixing broken migration links
+chore: fix broken migration links
