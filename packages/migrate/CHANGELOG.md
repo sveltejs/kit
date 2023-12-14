@@ -1,5 +1,11 @@
 # svelte-migrate
 
+## 1.3.2
+
+### Patch Changes
+
+- fix: handle jsconfig.json ([#11325](https://github.com/sveltejs/kit/pull/11325))
+
 ## 1.3.1
 
 ### Patch Changes
