@@ -193,7 +193,7 @@ export function create_client(app, target) {
 	let updating = false;
 	let navigating = false;
 	let hash_navigating = false;
-	/** True as soon as there happened one client-side navigation */
+	/** True as soon as there happened one client-side navigation (excluding the SvelteKit-initialized initial one when in SPA mode) */
 	let has_navigated = false;
 
 	let force_invalidation = false;
@@ -1244,6 +1244,7 @@ export function create_client(app, target) {
 			}
 
 			root.$set(navigation_result.props);
+			has_navigated = true;
 		} else {
 			initialize(navigation_result);
 		}
@@ -1302,7 +1303,6 @@ export function create_client(app, target) {
 		stores.navigating.set(null);
 
 		updating = false;
-		has_navigated = true;
 	}
 
 	/**
