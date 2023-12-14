@@ -132,6 +132,8 @@ function native_navigation(url) {
 	return new Promise(() => {});
 }
 
+function noop() {}
+
 /**
  * @param {import('./types.js').SvelteKitApp} app
  * @param {HTMLElement} target
@@ -300,33 +302,24 @@ export function create_client(app, target) {
 
 	/**
 	 * @param {string | URL} url
-	 * @param {import('@sveltejs/kit').NavigationOptions} opts
+	 * @param {import('@sveltejs/kit').NavigationOptions} options
 	 * @param {number} redirect_count
 	 * @param {{}} [nav_token]
 	 */
-	async function goto(
-		url,
-		{ noScroll = false, replaceState = false, keepFocus = false, invalidateAll = false },
-		redirect_count,
-		nav_token
-	) {
+	async function goto(url, options, redirect_count, nav_token) {
 		return navigate({
+			type: 'goto',
 			url: resolve_url(url),
-			scroll: noScroll ? scroll_state() : null,
-			state: {},
-			keepfocus: keepFocus,
+			keep_focus: options.keepFocus,
+			no_scroll: options.noScroll,
+			replace_state: options.replaceState,
 			redirect_count,
-			details: {
-				replaceState
-			},
 			nav_token,
 			accepted: () => {
-				if (invalidateAll) {
+				if (options.invalidateAll) {
 					force_invalidation = true;
 				}
-			},
-			blocked: () => {},
-			type: 'goto'
+			}
 		});
 	}
 
@@ -1078,36 +1071,36 @@ export function create_client(app, target) {
 
 	/**
 	 * @param {{
-	 *   url: URL;
-	 *   scroll: { x: number, y: number } | null;
-	 *   state: Record<string, any>;
-	 *   keepfocus: boolean;
-	 *   redirect_count: number;
-	 *   details: {
-	 *     replaceState: boolean;
-	 *   } | null;
 	 *   type: import('@sveltejs/kit').Navigation["type"];
-	 *   delta?: number;
+	 *   url: URL;
+	 *   popped?: {
+	 *     state: Record<string, any>;
+	 *     scroll: { x: number, y: number };
+	 *     delta: number;
+	 *   };
+	 *   keep_focus?: boolean;
+	 *   no_scroll?: boolean;
+	 *   replace_state?: boolean;
+	 *   redirect_count?: number;
 	 *   nav_token?: {};
-	 *   accepted: () => void;
-	 *   blocked: () => void;
+	 *   accepted?: () => void;
+	 *   blocked?: () => void;
 	 * }} opts
 	 */
 	async function navigate({
-		url,
-		scroll,
-		state,
-		keepfocus,
-		redirect_count,
-		details,
 		type,
-		delta,
+		url,
+		popped,
+		keep_focus,
+		no_scroll,
+		replace_state,
+		redirect_count = 0,
 		nav_token = {},
-		accepted,
-		blocked
+		accepted = noop,
+		blocked = noop
 	}) {
 		const intent = get_navigation_intent(url, false);
-		const nav = before_navigate({ url, type, delta, intent });
+		const nav = before_navigate({ url, type, delta: popped?.delta, intent });
 
 		if (!nav) {
 			blocked();
@@ -1194,19 +1187,21 @@ export function create_client(app, target) {
 			url.pathname = navigation_result.props.page?.url.pathname;
 		}
 
-		if (details) {
+		const state = popped ? popped.state : {};
+
+		if (!popped) {
 			// this is a new navigation, rather than a popstate
-			const change = details.replaceState ? 0 : 1;
+			const change = replace_state ? 0 : 1;
 
 			const entry = {
 				[HISTORY_INDEX]: (current_history_index += change),
 				[NAVIGATION_INDEX]: (current_navigation_index += change)
 			};
 
-			const fn = details.replaceState ? original_replace_state : original_push_state;
+			const fn = replace_state ? original_replace_state : original_push_state;
 			fn.call(history, entry, '', url);
 
-			if (!details.replaceState) {
+			if (!replace_state) {
 				clear_onward_history(current_history_index, current_navigation_index);
 			}
 		}
@@ -1259,6 +1254,8 @@ export function create_client(app, target) {
 		await tick();
 
 		// we reset scroll before dealing with focus, to avoid a flash of unscrolled content
+		const scroll = popped ? popped.scroll : no_scroll ? scroll_state() : null;
+
 		if (autoscroll) {
 			const deep_linked =
 				url.hash && document.getElementById(decodeURIComponent(url.hash.slice(1)));
@@ -1281,7 +1278,7 @@ export function create_client(app, target) {
 			// focus event might not have been fired on it yet
 			document.activeElement !== document.body;
 
-		if (!keepfocus && !changed_focus) {
+		if (!keep_focus && !changed_focus) {
 			reset_focus();
 		}
 
@@ -1510,6 +1507,7 @@ export function create_client(app, target) {
 		goto: (url, opts = {}) => {
 			url = resolve_url(url);
 
+			// @ts-expect-error
 			if (DEV && opts.state) {
 				// TOOD 3.0 remove
 				throw new Error(
@@ -1812,17 +1810,13 @@ export function create_client(app, target) {
 				}
 
 				navigate({
+					type: 'link',
 					url,
-					scroll: options.noscroll ? scroll_state() : null,
-					state: {},
-					keepfocus: options.keep_focus ?? false,
-					redirect_count: 0,
-					details: {
-						replaceState: options.replace_state ?? url.href === location.href
-					},
+					keep_focus: options.keep_focus ?? false,
+					no_scroll: options.noscroll ?? false,
+					replace_state: options.replace_state ?? url.href === location.href,
 					accepted: () => event.preventDefault(),
-					blocked: () => event.preventDefault(),
-					type: 'link'
+					blocked: () => event.preventDefault()
 				});
 			});
 
@@ -1866,18 +1860,11 @@ export function create_client(app, target) {
 				url.search = new URLSearchParams(data).toString();
 
 				navigate({
+					type: 'form',
 					url,
-					scroll: noscroll ? scroll_state() : null,
-					state: {},
-					keepfocus: keep_focus ?? false,
-					redirect_count: 0,
-					details: {
-						replaceState: replace_state ?? url.href === location.href
-					},
-					nav_token: {},
-					accepted: () => {},
-					blocked: () => {},
-					type: 'form'
+					keep_focus: keep_focus ?? false,
+					no_scroll: noscroll ?? false,
+					replace_state: replace_state ?? url.href === location.href
 				});
 			});
 
@@ -1922,12 +1909,13 @@ export function create_client(app, target) {
 					const delta = history_index - current_history_index;
 
 					await navigate({
+						type: 'popstate',
 						url,
-						scroll,
-						state,
-						keepfocus: false,
-						redirect_count: 0,
-						details: null,
+						popped: {
+							state,
+							scroll,
+							delta
+						},
 						accepted: () => {
 							current_history_index = history_index;
 							current_navigation_index = navigation_index;
@@ -1935,8 +1923,6 @@ export function create_client(app, target) {
 						blocked: () => {
 							history.go(-delta);
 						},
-						type: 'popstate',
-						delta,
 						nav_token: token
 					});
 				} else {
