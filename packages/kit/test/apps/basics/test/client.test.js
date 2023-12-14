@@ -950,6 +950,23 @@ test.describe('Shallow routing', () => {
 		await expect(page.locator('p')).toHaveText('active: true');
 	});
 
+	test('Invalidates the correct route after pushing state to a new URL', async ({
+		baseURL,
+		page
+	}) => {
+		await page.goto('/shallow-routing/push-state');
+		await expect(page.locator('p')).toHaveText('active: false');
+
+		const now = await page.locator('span').textContent();
+
+		await page.locator('[data-id="two"]').click();
+		expect(page.url()).toBe(`${baseURL}/shallow-routing/push-state/a`);
+
+		await page.locator('[data-id="invalidate"]').click();
+		await expect(page.locator('h1')).toHaveText('parent');
+		await expect(page.locator('span')).not.toHaveText(now);
+	});
+
 	test('Replaces state on the current URL', async ({ baseURL, page, clicknav }) => {
 		await page.goto('/shallow-routing/replace-state/b');
 		await clicknav('[href="/shallow-routing/replace-state"]');

@@ -249,8 +249,7 @@ export function create_client(app, target) {
 		if (!pending_invalidate) return;
 		pending_invalidate = null;
 
-		const url = new URL(location.href);
-		const intent = get_navigation_intent(url, true);
+		const intent = get_navigation_intent(current.url, true);
 
 		// Clear preload, it might be affected by the invalidation.
 		// Also solves an edge case where a preload is triggered, the navigation for it
@@ -264,7 +263,7 @@ export function create_client(app, target) {
 
 		if (navigation_result) {
 			if (navigation_result.type === 'redirect') {
-				await goto(new URL(navigation_result.location, url).href, {}, 1, nav_token);
+				await goto(new URL(navigation_result.location, current.url).href, {}, 1, nav_token);
 			} else {
 				if (navigation_result.props.page !== undefined) {
 					page = navigation_result.props.page;
