@@ -162,7 +162,10 @@ function remove_throws(source) {
 			const call_expression = id.getParent();
 			const throw_stmt = call_expression?.getParent();
 			if (Node.isCallExpression(call_expression) && Node.isThrowStatement(throw_stmt)) {
-				throw_stmt.replaceWithText(call_expression.getText() + ';');
+				throw_stmt.replaceWithText((writer) => {
+					writer.setIndentationLevel(0);
+					writer.write(call_expression.getText() + ';');
+				});
 			}
 		}
 	}
