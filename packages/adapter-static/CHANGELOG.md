@@ -1,5 +1,11 @@
 # @sveltejs/adapter-static
 
+## 3.0.0
+
+### Major Changes
+
+- breaking: update SvelteKit peer dependency to version 2 ([#11277](https://github.com/sveltejs/kit/pull/11277))
+
 ## 2.0.3
 
 ### Patch Changes

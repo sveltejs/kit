@@ -1,5 +1,11 @@
 # svelte-migrate
 
+## 1.3.0
+
+### Minor Changes
+
+- feat: add sveltekit v2 migration ([#11294](https://github.com/sveltejs/kit/pull/11294))
+
 ## 1.2.8
 
 ### Patch Changes

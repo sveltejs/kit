@@ -1,5 +1,17 @@
 # @sveltejs/adapter-cloudflare-workers
 
+## 2.0.0
+
+### Major Changes
+
+- breaking: require SvelteKit 2 ([#11316](https://github.com/sveltejs/kit/pull/11316))
+
+- chore: upgrade esbuild ([#11122](https://github.com/sveltejs/kit/pull/11122))
+
+### Patch Changes
+
+- fix: declare the adapter plugin options as optional ([#11246](https://github.com/sveltejs/kit/pull/11246))
+
 ## 1.2.3
 
 ### Patch Changes

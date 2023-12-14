@@ -1,5 +1,85 @@
 # @sveltejs/kit
 
+## 2.0.0
+
+### Major Changes
+
+- breaking: remove top-level promise awaiting ([#11176](https://github.com/sveltejs/kit/pull/11176))
+
+- breaking: prevent use of dynamic env vars during prerendering, serve env vars dynamically ([#11277](https://github.com/sveltejs/kit/pull/11277))
+
+- breaking: remove deprecated `use:enhance` callback values ([#11282](https://github.com/sveltejs/kit/pull/11282))
+
+- breaking: turn `error` and `redirect` into commands ([#11165](https://github.com/sveltejs/kit/pull/11165))
+
+- breaking: the type for `depends` now requires a `:` as part of the string ([#11201](https://github.com/sveltejs/kit/pull/11201))
+
+- breaking: remove baseUrl fallback from generated tsconfig ([#11294](https://github.com/sveltejs/kit/pull/11294))
+
+- breaking: fail if route with +page and +server is marked prerenderable ([#11256](https://github.com/sveltejs/kit/pull/11256))
+
+- breaking: remove `resolvePath` in favour of `resolveRoute` from `$app/paths` ([#11265](https://github.com/sveltejs/kit/pull/11265))
+
+- breaking: drop support for Svelte 3 ([#11168](https://github.com/sveltejs/kit/pull/11168))
+
+- breaking: require Vite 5.0.3+ ([#11122](https://github.com/sveltejs/kit/pull/11122))
+
+- breaking: generate `__data.json` files as sibling to `.html` files ([#11269](https://github.com/sveltejs/kit/pull/11269))
+
+- breaking: fail if +page and +server have mismatched config ([#11256](https://github.com/sveltejs/kit/pull/11256))
+
+- breaking: error if form without multipart/form-data enctype contains a file input ([#11282](https://github.com/sveltejs/kit/pull/11282))
+
+- breaking: require paths pass to preloadCode to be prefixed with basepath ([#11259](https://github.com/sveltejs/kit/pull/11259))
+
+- breaking: `@sveltejs/vite-plugin-svelte` is now a peer dependency and will need to be installed in each project using SvelteKit ([#11184](https://github.com/sveltejs/kit/pull/11184))
+
+- breaking: stop re-exporting vitePreprocess ([#11297](https://github.com/sveltejs/kit/pull/11297))
+
+- breaking: require path option when setting/deleting/serializing cookies ([#11240](https://github.com/sveltejs/kit/pull/11240))
+
+- breaking: tighten up error handling ([#11289](https://github.com/sveltejs/kit/pull/11289))
+
+- breaking: remove state option from goto in favor of shallow routing ([#11307](https://github.com/sveltejs/kit/pull/11307))
+
+- breaking: disallow external navigation with `goto` ([#11207](https://github.com/sveltejs/kit/pull/11207))
+
+- breaking: upgrade to TypeScript 5. Default `moduleResolution` to `bundler` in user projects to be permissive in consuming and `NodeNext` when running `package` to be strict in distributing ([#11160](https://github.com/sveltejs/kit/pull/11160))
+
+- breaking: undefined is no longer a valid value for paths.relative ([#11185](https://github.com/sveltejs/kit/pull/11185))
+
+- breaking: require Node 18.13 or newer ([#11172](https://github.com/sveltejs/kit/pull/11172))
+
+- breaking: fix path resolution ([#11276](https://github.com/sveltejs/kit/pull/11276))
+
+- breaking: remove `dangerZone.trackServerFetches` ([#11235](https://github.com/sveltejs/kit/pull/11235))
+
+### Minor Changes
+
+- feat: add untrack to load ([#11311](https://github.com/sveltejs/kit/pull/11311))
+
+- feat: implement shallow routing ([#11307](https://github.com/sveltejs/kit/pull/11307))
+
+- feat: provide SvelteKit html typings ([#11222](https://github.com/sveltejs/kit/pull/11222))
+
+- feat: redact internal stack trace when reporting config errors ([#11292](https://github.com/sveltejs/kit/pull/11292))
+
+- feat: allow for fine grained invalidation of search params ([#11258](https://github.com/sveltejs/kit/pull/11258))
+
+### Patch Changes
+
+- fix: prerender optional parameters as empty when `entries` contains `'*'` ([#11178](https://github.com/sveltejs/kit/pull/11178))
+
+- fix: resolve route config correctly ([#11256](https://github.com/sveltejs/kit/pull/11256))
+
+- fix: import Svelte types from svelte/compiler ([#11188](https://github.com/sveltejs/kit/pull/11188))
+
+- fix: reset invalid resources after a successful invalidation ([#11268](https://github.com/sveltejs/kit/pull/11268))
+
+- fix: Adjust fail method and ActionFailure type ([#11260](https://github.com/sveltejs/kit/pull/11260))
+
+- chore(deps): upgrade cookies dependency ([#11189](https://github.com/sveltejs/kit/pull/11189))
+
 ## 1.30.3
 
 ### Patch Changes

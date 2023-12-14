@@ -1,5 +1,17 @@
 # create-svelte
 
+## 6.0.0
+
+### Major Changes
+
+- feat: create projects with SvelteKit 2 ([#11236](https://github.com/sveltejs/kit/pull/11236))
+
+- breaking: require Node 18.13 or newer ([#11172](https://github.com/sveltejs/kit/pull/11172))
+
+### Minor Changes
+
+- feat: update vitest to 1.0 ([#11196](https://github.com/sveltejs/kit/pull/11196))
+
 ## 5.3.4
 
 ### Patch Changes

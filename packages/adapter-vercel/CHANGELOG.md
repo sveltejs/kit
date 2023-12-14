@@ -1,5 +1,17 @@
 # @sveltejs/adapter-vercel
 
+## 4.0.0
+
+### Major Changes
+
+- breaking: require SvelteKit 2 peer dependency ([#11289](https://github.com/sveltejs/kit/pull/11289))
+
+- chore: upgrade esbuild ([#11122](https://github.com/sveltejs/kit/pull/11122))
+
+### Minor Changes
+
+- feat: expose vercel image optimization config in adapter config ([#8667](https://github.com/sveltejs/kit/pull/8667))
+
 ## 3.1.0
 
 ### Minor Changes
