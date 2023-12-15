@@ -1,10 +1,10 @@
-import fs from 'node:fs';
-import path from 'node:path';
 import colors from 'kleur';
-import ts from 'typescript';
 import MagicString from 'magic-string';
 import { execFileSync, execSync } from 'node:child_process';
+import fs from 'node:fs';
+import path from 'node:path';
 import semver from 'semver';
+import ts from 'typescript';
 
 /** @param {string} message */
 export function bail(message) {
@@ -244,6 +244,10 @@ export function update_pkg(content, updates) {
 		update_pkg(...update);
 	}
 
+	['dependencies', 'devDependencies'].forEach((key) => {
+		if (key in pkg) pkg[key] = Object.fromEntries(Object.entries(pkg[key]).sort());
+	});
+
 	return JSON.stringify(pkg, null, indent);
 }
 
@@ -322,8 +326,8 @@ export function update_tsconfig(update_tsconfig_content) {
 	const file = fs.existsSync('tsconfig.json')
 		? 'tsconfig.json'
 		: fs.existsSync('jsconfig.json')
-			? 'jsconfig.json'
-			: null;
+		  ? 'jsconfig.json'
+		  : null;
 	if (file) {
 		fs.writeFileSync(file, update_tsconfig_content(fs.readFileSync(file, 'utf8')));
 	}
