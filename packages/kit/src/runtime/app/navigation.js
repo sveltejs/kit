@@ -1,11 +1,36 @@
-import { client_method } from '../client/singletons.js';
+import { BROWSER } from 'esm-env';
+import {
+	disable_scroll_handling,
+	goto as client_goto,
+	invalidate as client_invalidate,
+	invalidate_all,
+	preload_data,
+	preload_code,
+	before_navigate,
+	on_navigate,
+	after_navigate,
+	push_state,
+	replace_state
+} from '../client/client.js';
+
+/** @param {string} name */
+function guard(name) {
+	return () => {
+		throw new Error(`Cannot call ${name}(...) on the server`);
+	};
+}
+
+function noop() {}
 
 /**
  * If called when the page is being updated following a navigation (in `onMount` or `afterNavigate` or an action, for example), this disables SvelteKit's built-in scroll handling.
  * This is generally discouraged, since it breaks user expectations.
+ * @type {() => void}
  * @returns {void}
  */
-export const disableScrollHandling = /* @__PURE__ */ client_method('disable_scroll_handling');
+export const disableScrollHandling = /* @__PURE__ */ BROWSER
+	? disable_scroll_handling
+	: guard('disableScrollHandling');
 
 /**
  * Returns a Promise that resolves when SvelteKit navigates (or fails to navigate, in which case the promise rejects) to the specified `url`.
@@ -20,7 +45,7 @@ export const disableScrollHandling = /* @__PURE__ */ client_method('disable_scro
  * @param {boolean} [opts.invalidateAll] If `true`, all `load` functions of the page will be rerun. See https://kit.svelte.dev/docs/load#rerunning-load-functions for more info on invalidation.
  * @returns {Promise<void>}
  */
-export const goto = /* @__PURE__ */ client_method('goto');
+export const goto = /* @__PURE__ */ BROWSER ? client_goto : guard('goto');
 
 /**
  * Causes any `load` functions belonging to the currently active page to re-run if they depend on the `url` in question, via `fetch` or `depends`. Returns a `Promise` that resolves when the page is subsequently updated.
@@ -41,14 +66,14 @@ export const goto = /* @__PURE__ */ client_method('goto');
  * @param {string | URL | ((url: URL) => boolean)} url The invalidated URL
  * @returns {Promise<void>}
  */
-export const invalidate = /* @__PURE__ */ client_method('invalidate');
+export const invalidate = /* @__PURE__ */ BROWSER ? client_invalidate : guard('invalidate');
 
 /**
  * Causes all `load` functions belonging to the currently active page to re-run. Returns a `Promise` that resolves when the page is subsequently updated.
  * @type {() => Promise<void>}
  * @returns {Promise<void>}
  */
-export const invalidateAll = /* @__PURE__ */ client_method('invalidate_all');
+export const invalidateAll = /* @__PURE__ */ BROWSER ? invalidate_all : guard('invalidateAll');
 
 /**
  * Programmatically preloads the given page, which means
@@ -63,7 +88,7 @@ export const invalidateAll = /* @__PURE__ */ client_method('invalidate_all');
  * @param {string} href Page to preload
  * @returns {Promise<{ type: 'loaded'; status: number; data: Record<string, any> } | { type: 'redirect'; location: string }>}
  */
-export const preloadData = /* @__PURE__ */ client_method('preload_data');
+export const preloadData = /* @__PURE__ */ BROWSER ? preload_data : guard('preloadData');
 
 /**
  * Programmatically imports the code for routes that haven't yet been fetched.
@@ -78,7 +103,7 @@ export const preloadData = /* @__PURE__ */ client_method('preload_data');
  * @param {string} url
  * @returns {Promise<void>}
  */
-export const preloadCode = /* @__PURE__ */ client_method('preload_code');
+export const preloadCode = /* @__PURE__ */ BROWSER ? preload_code : guard('preloadCode');
 
 /**
  * A navigation interceptor that triggers before we navigate to a new URL, whether by clicking a link, calling `goto(...)`, or using the browser back/forward controls.
@@ -94,7 +119,7 @@ export const preloadCode = /* @__PURE__ */ client_method('preload_code');
  * @param {(navigation: import('@sveltejs/kit').BeforeNavigate) => void} callback
  * @returns {void}
  */
-export const beforeNavigate = /* @__PURE__ */ client_method('before_navigate');
+export const beforeNavigate = /* @__PURE__ */ BROWSER ? before_navigate : noop;
 
 /**
  * A lifecycle function that runs the supplied `callback` immediately before we navigate to a new URL except during full-page navigations.
@@ -108,7 +133,7 @@ export const beforeNavigate = /* @__PURE__ */ client_method('before_navigate');
  * @param {(navigation: import('@sveltejs/kit').OnNavigate) => void} callback
  * @returns {void}
  */
-export const onNavigate = /* @__PURE__ */ client_method('on_navigate');
+export const onNavigate = /* @__PURE__ */ BROWSER ? on_navigate : noop;
 
 /**
  * A lifecycle function that runs the supplied `callback` when the current component mounts, and also whenever we navigate to a new URL.
@@ -118,7 +143,7 @@ export const onNavigate = /* @__PURE__ */ client_method('on_navigate');
  * @param {(navigation: import('@sveltejs/kit').AfterNavigate) => void} callback
  * @returns {void}
  */
-export const afterNavigate = /* @__PURE__ */ client_method('after_navigate');
+export const afterNavigate = /* @__PURE__ */ BROWSER ? after_navigate : noop;
 
 /**
  * Programmatically create a new history entry with the given `$page.state`. To use the current URL, you can pass `''` as the first argument. Used for [shallow routing](https://kit.svelte.dev/docs/shallow-routing).
@@ -128,7 +153,7 @@ export const afterNavigate = /* @__PURE__ */ client_method('after_navigate');
  * @param {App.PageState} state
  * @returns {void}
  */
-export const pushState = /* @__PURE__ */ client_method('push_state');
+export const pushState = /* @__PURE__ */ BROWSER ? push_state : guard('pushState');
 
 /**
  * Programmatically replace the current history entry with the given `$page.state`. To use the current URL, you can pass `''` as the first argument. Used for [shallow routing](https://kit.svelte.dev/docs/shallow-routing).
@@ -138,4 +163,4 @@ export const pushState = /* @__PURE__ */ client_method('push_state');
  * @param {App.PageState} state
  * @returns {void}
  */
-export const replaceState = /* @__PURE__ */ client_method('replace_state');
+export const replaceState = /* @__PURE__ */ BROWSER ? replace_state : guard('replaceState');

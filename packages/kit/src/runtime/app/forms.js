@@ -1,7 +1,7 @@
 import * as devalue from 'devalue';
 import { BROWSER, DEV } from 'esm-env';
-import { client } from '../client/singletons.js';
 import { invalidateAll } from './navigation.js';
+import { apply_action } from '../client/client.js';
 
 /**
  * This action updates the `form` property of the current page with the given data and updates `$page.status`.
@@ -13,7 +13,7 @@ import { invalidateAll } from './navigation.js';
  */
 export function applyAction(result) {
 	if (BROWSER) {
-		return client.apply_action(result);
+		return apply_action(result);
 	} else {
 		throw new Error('Cannot call applyAction(...) on the server');
 	}

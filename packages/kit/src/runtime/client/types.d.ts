@@ -42,34 +42,6 @@ export interface SvelteKitApp {
 	root: typeof SvelteComponent;
 }
 
-export interface Client {
-	// public API, exposed via $app/navigation
-	after_navigate: typeof afterNavigate;
-	before_navigate: typeof beforeNavigate;
-	on_navigate: typeof onNavigate;
-	disable_scroll_handling(): void;
-	goto: typeof goto;
-	invalidate: typeof invalidate;
-	invalidate_all: typeof invalidateAll;
-	preload_code: typeof preloadCode;
-	preload_data: typeof preloadData;
-	push_state: typeof pushState;
-	replace_state: typeof replaceState;
-	apply_action: typeof applyAction;
-
-	// private API
-	_hydrate(opts: {
-		status: number;
-		error: App.Error | null;
-		node_ids: number[];
-		params: Record<string, string>;
-		route: { id: string | null };
-		data: Array<import('types').ServerDataNode | null>;
-		form: Record<string, any> | null;
-	}): Promise<void>;
-	_start_router(): void;
-}
-
 export type NavigationIntent = {
 	/** `url.pathname + url.search`  */
 	id: string;

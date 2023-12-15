@@ -1,11 +1,10 @@
 import { DEV } from 'esm-env';
-import { create_client } from './client.js';
-import { init } from './singletons.js';
+import { _hydrate, _start_router, create_client, goto } from './client.js';
 
 /**
  * @param {import('./types.js').SvelteKitApp} app
  * @param {HTMLElement} target
- * @param {Parameters<import('./types.js').Client['_hydrate']>[0]} [hydrate]
+ * @param {Parameters<import('./client.js')._hydrate>[0]} [hydrate]
  */
 export async function start(app, target, hydrate) {
 	if (DEV && target === document.body) {
@@ -14,15 +13,13 @@ export async function start(app, target, hydrate) {
 		);
 	}
 
-	const client = create_client(app, target);
-
-	init({ client });
+	create_client(app, target);
 
 	if (hydrate) {
-		await client._hydrate(hydrate);
+		await _hydrate(hydrate);
 	} else {
-		client.goto(location.href, { replaceState: true });
+		goto(location.href, { replaceState: true });
 	}
 
-	client._start_router();
+	_start_router();
 }
