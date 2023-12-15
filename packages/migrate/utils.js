@@ -1,10 +1,10 @@
-import fs from 'node:fs';
-import path from 'node:path';
 import colors from 'kleur';
-import ts from 'typescript';
 import MagicString from 'magic-string';
 import { execFileSync, execSync } from 'node:child_process';
+import fs from 'node:fs';
+import path from 'node:path';
 import semver from 'semver';
+import ts from 'typescript';
 
 /** @param {string} message */
 export function bail(message) {
@@ -235,7 +235,15 @@ export function update_pkg(content, updates) {
 
 		if (insert && !pkg[insert]?.[name]) {
 			if (!pkg[insert]) pkg[insert] = {};
-			pkg[insert][name] = version;
+
+			// Insert the property in sorted position without adjusting other positions so diffs are easier to read
+			const sorted_keys = Object.keys(pkg[insert]).sort();
+			const index = sorted_keys.findIndex((key) => name.localeCompare(key) === -1);
+			const insert_index = index !== -1 ? index : sorted_keys.length;
+			const new_properties = Object.entries(pkg[insert]);
+			new_properties.splice(insert_index, 0, [name, version]);
+			pkg[insert] = Object.fromEntries(new_properties);
+
 			log_migration(`Added ${name} version ${version} ${additional}`);
 		}
 	}
