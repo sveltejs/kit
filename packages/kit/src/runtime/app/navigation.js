@@ -28,9 +28,9 @@ function noop() {}
  * @type {() => void}
  * @returns {void}
  */
-export const disableScrollHandling = /* @__PURE__ */ BROWSER
+export const disableScrollHandling = BROWSER
 	? disable_scroll_handling
-	: guard('disableScrollHandling');
+	: /* @__PURE__ */ guard('disableScrollHandling');
 
 /**
  * Returns a Promise that resolves when SvelteKit navigates (or fails to navigate, in which case the promise rejects) to the specified `url`.
@@ -45,7 +45,7 @@ export const disableScrollHandling = /* @__PURE__ */ BROWSER
  * @param {boolean} [opts.invalidateAll] If `true`, all `load` functions of the page will be rerun. See https://kit.svelte.dev/docs/load#rerunning-load-functions for more info on invalidation.
  * @returns {Promise<void>}
  */
-export const goto = /* @__PURE__ */ BROWSER ? client_goto : guard('goto');
+export const goto = BROWSER ? client_goto : /* @__PURE__ */ guard('goto');
 
 /**
  * Causes any `load` functions belonging to the currently active page to re-run if they depend on the `url` in question, via `fetch` or `depends`. Returns a `Promise` that resolves when the page is subsequently updated.
@@ -66,14 +66,14 @@ export const goto = /* @__PURE__ */ BROWSER ? client_goto : guard('goto');
  * @param {string | URL | ((url: URL) => boolean)} url The invalidated URL
  * @returns {Promise<void>}
  */
-export const invalidate = /* @__PURE__ */ BROWSER ? client_invalidate : guard('invalidate');
+export const invalidate = BROWSER ? client_invalidate : /* @__PURE__ */ guard('invalidate');
 
 /**
  * Causes all `load` functions belonging to the currently active page to re-run. Returns a `Promise` that resolves when the page is subsequently updated.
  * @type {() => Promise<void>}
  * @returns {Promise<void>}
  */
-export const invalidateAll = /* @__PURE__ */ BROWSER ? invalidate_all : guard('invalidateAll');
+export const invalidateAll = BROWSER ? invalidate_all : /* @__PURE__ */ guard('invalidateAll');
 
 /**
  * Programmatically preloads the given page, which means
@@ -88,7 +88,7 @@ export const invalidateAll = /* @__PURE__ */ BROWSER ? invalidate_all : guard('i
  * @param {string} href Page to preload
  * @returns {Promise<{ type: 'loaded'; status: number; data: Record<string, any> } | { type: 'redirect'; location: string }>}
  */
-export const preloadData = /* @__PURE__ */ BROWSER ? preload_data : guard('preloadData');
+export const preloadData = BROWSER ? preload_data : /* @__PURE__ */ guard('preloadData');
 
 /**
  * Programmatically imports the code for routes that haven't yet been fetched.
@@ -103,7 +103,7 @@ export const preloadData = /* @__PURE__ */ BROWSER ? preload_data : guard('prelo
  * @param {string} url
  * @returns {Promise<void>}
  */
-export const preloadCode = /* @__PURE__ */ BROWSER ? preload_code : guard('preloadCode');
+export const preloadCode = BROWSER ? preload_code : /* @__PURE__ */ guard('preloadCode');
 
 /**
  * A navigation interceptor that triggers before we navigate to a new URL, whether by clicking a link, calling `goto(...)`, or using the browser back/forward controls.
@@ -119,7 +119,7 @@ export const preloadCode = /* @__PURE__ */ BROWSER ? preload_code : guard('prelo
  * @param {(navigation: import('@sveltejs/kit').BeforeNavigate) => void} callback
  * @returns {void}
  */
-export const beforeNavigate = /* @__PURE__ */ BROWSER ? before_navigate : noop;
+export const beforeNavigate = BROWSER ? before_navigate : noop;
 
 /**
  * A lifecycle function that runs the supplied `callback` immediately before we navigate to a new URL except during full-page navigations.
@@ -133,7 +133,7 @@ export const beforeNavigate = /* @__PURE__ */ BROWSER ? before_navigate : noop;
  * @param {(navigation: import('@sveltejs/kit').OnNavigate) => void} callback
  * @returns {void}
  */
-export const onNavigate = /* @__PURE__ */ BROWSER ? on_navigate : noop;
+export const onNavigate = BROWSER ? on_navigate : noop;
 
 /**
  * A lifecycle function that runs the supplied `callback` when the current component mounts, and also whenever we navigate to a new URL.
@@ -143,7 +143,7 @@ export const onNavigate = /* @__PURE__ */ BROWSER ? on_navigate : noop;
  * @param {(navigation: import('@sveltejs/kit').AfterNavigate) => void} callback
  * @returns {void}
  */
-export const afterNavigate = /* @__PURE__ */ BROWSER ? after_navigate : noop;
+export const afterNavigate = BROWSER ? after_navigate : noop;
 
 /**
  * Programmatically create a new history entry with the given `$page.state`. To use the current URL, you can pass `''` as the first argument. Used for [shallow routing](https://kit.svelte.dev/docs/shallow-routing).
@@ -153,7 +153,7 @@ export const afterNavigate = /* @__PURE__ */ BROWSER ? after_navigate : noop;
  * @param {App.PageState} state
  * @returns {void}
  */
-export const pushState = /* @__PURE__ */ BROWSER ? push_state : guard('pushState');
+export const pushState = BROWSER ? push_state : /* @__PURE__ */ guard('pushState');
 
 /**
  * Programmatically replace the current history entry with the given `$page.state`. To use the current URL, you can pass `''` as the first argument. Used for [shallow routing](https://kit.svelte.dev/docs/shallow-routing).
@@ -163,4 +163,4 @@ export const pushState = /* @__PURE__ */ BROWSER ? push_state : guard('pushState
  * @param {App.PageState} state
  * @returns {void}
  */
-export const replaceState = /* @__PURE__ */ BROWSER ? replace_state : guard('replaceState');
+export const replaceState = BROWSER ? replace_state : /* @__PURE__ */ guard('replaceState');
