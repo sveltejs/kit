@@ -10,13 +10,13 @@ import {
 	update_svelte_file,
 	update_tsconfig
 } from '../../utils.js';
+import { migrate as migrate_svelte_4 } from '../svelte-4/index.js';
 import {
 	transform_code,
 	update_pkg_json,
 	update_svelte_config,
 	update_tsconfig_content
 } from './migrate.js';
-import { migrate as migrate_svelte_4 } from '../svelte-4/index.js';
 
 export async function migrate() {
 	if (!fs.existsSync('package.json')) {
@@ -148,6 +148,7 @@ export async function migrate() {
 	const cyan = colors.bold().cyan;
 
 	const tasks = [
+		'Run npm install (or the corresponding installation command of your package manager)',
 		use_git && cyan('git commit -m "migration to SvelteKit 2"'),
 		'Review the migration guide at https://kit.svelte.dev/docs/migrating-to-sveltekit-2',
 		'Read the updated docs at https://kit.svelte.dev/docs'
