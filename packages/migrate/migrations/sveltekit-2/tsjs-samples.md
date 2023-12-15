@@ -101,6 +101,10 @@ export function foo(event) {
 	x.cookies.set('foo', 'bar');
 }
 
+export function bar(event) {
+	event.x.set('foo', 'bar');
+}
+
 cookies.set('foo', 'bar');
 ```
 
@@ -111,6 +115,10 @@ export function load({ cookies }) {
 
 export function foo(event) {
 	x.cookies.set('foo', 'bar');
+}
+
+export function bar(event) {
+	event.x.set('foo', 'bar');
 }
 
 cookies.set('foo', 'bar');

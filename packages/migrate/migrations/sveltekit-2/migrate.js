@@ -197,7 +197,7 @@ function add_cookie_note(file_path, source) {
 
 	const logger = log_on_ts_modification(
 		source,
-		'Remember to add the `path` option to `cookies.set/delete/serialize` calls: https://kit.svelte.dev/docs/migrating-to-sveltekit-2#path-is-now-a-required-option-for-cookies'
+		'Search codebase for `@migration` and manually add the `path` option to `cookies.set/delete/serialize` calls: https://kit.svelte.dev/docs/migrating-to-sveltekit-2#path-is-now-a-required-option-for-cookies'
 	);
 
 	const calls = [];
@@ -240,6 +240,7 @@ function add_cookie_note(file_path, source) {
 		if (
 			expression_text !== 'cookies' &&
 			(!expression_text.includes('.') ||
+				expression_text.split('.').pop() !== 'cookies' ||
 				!parent_function.getParameter(expression_text.split('.')[0]))
 		) {
 			continue;

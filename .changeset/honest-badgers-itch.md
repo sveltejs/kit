@@ -2,4 +2,4 @@
 'svelte-migrate': patch
 ---
 
-chore: inform @migration comments
+fix: adjust cookie migration logic, note installation

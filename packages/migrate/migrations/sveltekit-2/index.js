@@ -148,9 +148,9 @@ export async function migrate() {
 	const cyan = colors.bold().cyan;
 
 	const tasks = [
+		'Run npm install (or the corresponding installation command of your package manager)',
 		use_git && cyan('git commit -m "migration to SvelteKit 2"'),
 		'Review the migration guide at https://kit.svelte.dev/docs/migrating-to-sveltekit-2',
-		`Search codebase for ${cyan('"@migration"')} and manually complete migration tasks`,
 		'Read the updated docs at https://kit.svelte.dev/docs'
 	].filter(Boolean);
 
