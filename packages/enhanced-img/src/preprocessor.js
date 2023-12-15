@@ -1,3 +1,6 @@
+import { existsSync } from 'node:fs';
+import * as path from 'node:path';
+
 import MagicString from 'magic-string';
 import { asyncWalk } from 'estree-walker';
 import { parse } from 'svelte-parse-markup';
@@ -72,7 +75,17 @@ export function image(opts) {
 						// need any logic blocks
 						image = await resolve(opts, url, filename);
 						if (!image) {
-							return;
+							const file_path = url.substring(0, url.indexOf('?'));
+							// TODO: use kit.files.assets from the Svelte config or the Vite publicDir
+							// this is good enough for now since it's purely a nicety and most people won't have changed it
+							if (existsSync(path.resolve('static', file_path))) {
+								throw new Error(
+									`Could not locate ${file_path}. Please move it to be located relative to the page in the routes directory or reference beginning with /static/. See https://vitejs.dev/guide/assets for more details on referencing assets.`
+								);
+							}
+							throw new Error(
+								`Could not locate ${file_path}. See https://vitejs.dev/guide/assets for more details on referencing assets.`
+							);
 						}
 						images.set(url, image);
 					}
