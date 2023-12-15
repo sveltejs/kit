@@ -166,7 +166,7 @@ export async function handleServerLoad({ event, resolve }) {
 }
 ```
 
-Not how we're using `untrack` to avoid rerunning all load functions on any URL change because of accessing `url.pathname`.
+Note how we're using `untrack` to avoid rerunning all load functions on any URL change because of accessing `url.pathname`.
 
 ## Shared hooks
 
@@ -205,7 +205,7 @@ export async function handleLoad({ event, resolve }) {
 }
 ```
 
-Not how we're using `untrack` to avoid rerunning all load functions on any URL change because of accessing `url.pathname`.
+Note how we're using `untrack` to avoid rerunning all load functions on any URL change because of accessing `url.pathname`.
 
 ### handleError
 
