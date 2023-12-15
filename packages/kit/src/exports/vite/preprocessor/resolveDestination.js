@@ -9,7 +9,9 @@ const diffUrlUtilFile = fileURLToPath(metaUrl);
 const rewritten_attributes = [
 	{ element: 'a', attribute: 'href' },
 	{ element: 'form', attribute: 'action' },
-	{ element: 'button', attribute: 'formaction' }
+	{ element: 'button', attribute: 'formaction' },
+	{ element: 'img', attribute: 'src' },
+	{ element: 'link', attribute: 'href' },
 ];
 
 /**

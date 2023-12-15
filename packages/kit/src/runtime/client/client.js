@@ -1636,7 +1636,13 @@ export function create_client(app, target) {
 				[PAGE_URL_KEY]: page.url.href
 			};
 
-			original_push_state.call(history, opts, '', resolve_url(url));
+
+			const resolvedURL = app.hooks.resolveDestination({
+				from: new URL(page.url),
+				to: new URL(resolve_url(url))
+			})
+
+			original_push_state.call(history, opts, '', resolvedURL);
 
 			page = { ...page, state };
 			root.$set({ page });
@@ -1661,7 +1667,14 @@ export function create_client(app, target) {
 				[PAGE_URL_KEY]: page.url.href
 			};
 
-			original_replace_state.call(history, opts, '', resolve_url(url));
+
+			const resolvedURL = app.hooks.resolveDestination({
+				from: new URL(page.url),
+				to: new URL(resolve_url(url))
+			})
+
+
+			original_replace_state.call(history, opts, '', resolvedURL);
 
 			page = { ...page, state };
 			root.$set({ page });
