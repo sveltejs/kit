@@ -1,5 +1,11 @@
 # @sveltejs/adapter-vercel
 
+## 4.0.2
+
+### Patch Changes
+
+- fix: remove broken node 16 support ([#11328](https://github.com/sveltejs/kit/pull/11328))
+
 ## 4.0.1
 
 ### Patch Changes
