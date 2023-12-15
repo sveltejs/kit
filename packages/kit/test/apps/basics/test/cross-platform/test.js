@@ -575,7 +575,7 @@ test.describe('Redirects', () => {
 	});
 
 	test('sets cookies when redirect in handle hook', async ({ page, app, javaScriptEnabled }) => {
-		await page.goto('/cookies/set');
+		await page.goto('/cookies/set');:
 		let span = page.locator('#cookie-value');
 		expect(await span.innerText()).toContain('teapot');
 

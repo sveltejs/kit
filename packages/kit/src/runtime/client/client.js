@@ -1048,7 +1048,7 @@ export function create_client(app, target) {
 		if (!originalURL) return;
 
 		//Apply the rewrite rules to the url
-		const rewrittenURL = app.hooks.rewriteURL(new URL(originalURL));
+		const rewrittenURL = app.hooks.rewriteURL({ url: new URL(originalURL)});
 		if (is_external_url(rewrittenURL, base)) return;
 
 		const path = get_url_path(rewrittenURL.pathname);
@@ -1134,7 +1134,7 @@ export function create_client(app, target) {
 		block = noop
 	}) {
 		const originalURL = new URL(url);
-		const rewrittenURL = app.hooks.rewriteURL(new URL(originalURL));
+		const rewrittenURL = app.hooks.rewriteURL({ url: new URL(originalURL)});
 
 		const intent = get_navigation_intent(url, false);
 		const nav = before_navigate({ url, type, delta: popped?.delta, intent });
