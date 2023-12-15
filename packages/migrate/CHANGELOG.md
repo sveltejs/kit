@@ -1,5 +1,13 @@
 # svelte-migrate
 
+## 1.3.3
+
+### Patch Changes
+
+- chore: insert package at sorted position ([#11332](https://github.com/sveltejs/kit/pull/11332))
+
+- fix: adjust cookie migration logic, note installation ([#11331](https://github.com/sveltejs/kit/pull/11331))
+
 ## 1.3.2
 
 ### Patch Changes
