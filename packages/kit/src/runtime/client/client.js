@@ -295,7 +295,6 @@ export function create_client(app, target) {
 	/** @param {import('./types.js').NavigationFinished} result */
 	function initialize(result) {
 		if (DEV && result.state.error && document.querySelector('vite-error-overlay')) return;
-
 		current = result.state;
 
 		const style = document.querySelector('style[data-sveltekit]');
@@ -592,7 +591,7 @@ export function create_client(app, target) {
 
 		if (uses.parent && parent_changed) return true;
 		if (uses.route && route_changed) return true;
-		if (uses.url && url_changed) return true;
+		if (url_changed) return true;
 
 		for (const param of uses.params) {
 			if (params[param] !== current.params[param]) return true;
@@ -632,8 +631,8 @@ export function create_client(app, target) {
 		// preload modules to avoid waterfall, but handle rejections
 		// so they don't get reported to Sentry et al (we don't need
 		// to act on the failures at this point)
-		errors.forEach((loader) => loader?.().catch(() => {}));
-		loaders.forEach((loader) => loader?.[1]().catch(() => {}));
+		errors.forEach((loader) => loader?.().catch(() => { }));
+		loaders.forEach((loader) => loader?.[1]().catch(() => { }));
 
 		/** @type {import('types').ServerNodesResponse | import('types').ServerRedirectNode | null} */
 		let server_data = null;
@@ -898,21 +897,25 @@ export function create_client(app, target) {
 	}
 
 	/**
-	 * @param {URL} url
+	 * @param {URL | undefined} originalURL
 	 * @param {boolean} invalidating
 	 */
-	function get_navigation_intent(url, invalidating) {
-		if (is_external_url(url, base)) return;
+	function get_navigation_intent(originalURL, invalidating) {
+		if (!originalURL) return;
 
-		const path = get_url_path(url);
+		//Apply the rewrite rules to the url
+		const rewrittenURL = app.hooks.rewriteURL(new URL(originalURL));
+		if (is_external_url(rewrittenURL, base)) return;
+
+		const path = get_url_path(rewrittenURL);
 
 		for (const route of routes) {
 			const params = route.exec(path);
 
 			if (params) {
-				const id = url.pathname + url.search;
+				const id = originalURL.pathname + originalURL.search;
 				/** @type {import('./types.js').NavigationIntent} */
-				const intent = { id, invalidating, route, params: decode_params(params), url };
+				const intent = { id, invalidating, route, params: decode_params(params), url: originalURL };
 				return intent;
 			}
 		}
@@ -986,10 +989,7 @@ export function create_client(app, target) {
 		blocked
 	}) {
 		const originalURL = new URL(url);
-		const rewrittenURL = app.hooks.rewriteURL(new URL(url));
-
-		//This should be used to resolve the route, but not to determine the base path
-		const rewrittenIntent = get_navigation_intent(rewrittenURL, false);
+		const rewrittenURL = app.hooks.rewriteURL(new URL(originalURL));
 
 		const intent = get_navigation_intent(url, false);
 		const nav = before_navigate({ url, type, delta, intent });
@@ -1013,11 +1013,9 @@ export function create_client(app, target) {
 		token = nav_token;
 
 		let navigation_result;
-		if (rewrittenIntent) {
-			//Make sure to use the correct url for the route
-			rewrittenIntent.url = url;
-			navigation_result = await load_route(rewrittenIntent);
-		}
+		if (intent) {
+			navigation_result = await load_route(intent);
+		} 
 
 		if (!navigation_result) {
 			if (is_external_url(rewrittenURL, base)) {
@@ -1035,9 +1033,7 @@ export function create_client(app, target) {
 			);
 		}
 
-		// if this is an internal navigation intent, use the normalized
-		// URL for the rest of the function
-		url = intent?.url || url;
+		url = originalURL;
 
 		// abort if user navigated during update
 		if (token !== nav_token) {

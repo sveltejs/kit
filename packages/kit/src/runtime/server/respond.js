@@ -56,7 +56,7 @@ const allowed_page_methods = new Set(['GET', 'HEAD', 'OPTIONS']);
 export async function respond(request, options, manifest, state) {
 	/** URL but stripped from the potential `/__data.json` suffix and its search param  */
 	const originalURL = new URL(request.url);
-	const rewrittenURL = options.hooks.rewriteURL(new URL(originalURL));
+	const rewrittenURL = options.hooks.rewriteURL(new URL(request.url));
 
 	//If the URL has been rewritten to a different origin, return a redirect
 	if (rewrittenURL.origin !== originalURL.origin) {
@@ -92,6 +92,9 @@ export async function respond(request, options, manifest, state) {
 	} catch {
 		return text('Malformed URI', { status: 400 });
 	}
+
+
+	console.log('decoded', decoded);
 
 	/** @type {import('types').SSRRoute | null} */
 	let route = null;
