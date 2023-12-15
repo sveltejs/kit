@@ -116,7 +116,9 @@ export async function dev(vite, vite_config, svelte_config) {
 			mimeTypes: get_mime_lookup(manifest_data),
 			_: {
 				client: {
-					start: `${runtime_base}/client/start.js`,
+					start: svelte_config.kit.embedded
+						? `${runtime_base}/client/start_embedded.js`
+						: `${runtime_base}/client/start.js`,
 					app: `${to_fs(svelte_config.kit.outDir)}/generated/client/app.js`,
 					imports: [],
 					stylesheets: [],
