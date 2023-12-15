@@ -1,9 +1,15 @@
 # svelte-migrate
 
-A CLI for migrating Svelte(Kit) codebase.
+A CLI for migrating Svelte(Kit) codebases.
 
+Run it using
 ```
 npx svelte-migrate [migration]
+```
+
+Or if you're using `pnpm`:
+
+```
 pnpm dlx svelte-migrate [migration]
 ```
 
@@ -16,7 +22,7 @@ pnpm dlx svelte-migrate [migration]
 | `package`     | `@sveltejs/package@1` | `@sveltejs/package@2` | [#8922](https://github.com/sveltejs/kit/pull/8922)              |
 | `routes`      | SvelteKit pre-1.0     | SvelteKit 1.0         | [#5774](https://github.com/sveltejs/kit/discussions/5774)       |
 
-After running the CLI, annotate your codebase with tasks for completion that you can find by searching for `@migration`.
+Some migrations may annotate your codebase with tasks for completion that you can find by searching for `@migration`.
 
 ## Changelog
 
