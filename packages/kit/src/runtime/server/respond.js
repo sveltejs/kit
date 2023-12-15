@@ -97,7 +97,6 @@ export async function respond(request, options, manifest, state) {
 		return text('Malformed URI', { status: 400 });
 	}
 
-
 	console.log('decoded', decoded);
 
 	/** @type {import('types').SSRRoute | null} */

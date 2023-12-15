@@ -306,21 +306,15 @@ export function create_client(app, target) {
 	 * @param {number} redirect_count
 	 * @param {{}} [nav_token]
 	 */
-	async function goto(
-		url,
-		options,
-		redirect_count,
-		nav_token
-	) {
-		if (typeof url === 'string') {
-			url = new URL(url, get_base_uri(document));
-		}
-
-		url = app.hooks.resolveDestination({ from: new URL(location.href), to: new URL(url) });
+	async function goto(url, options, redirect_count, nav_token) {
+		const resolved_url = app.hooks.resolveDestination({
+			from: new URL(location.href),
+			to: resolve_url(url)
+		});
 
 		return navigate({
 			type: 'goto',
-			url: resolve_url(url),
+			url: resolved_url,
 			keepfocus: options.keepFocus,
 			noscroll: options.noScroll,
 			replace_state: options.replaceState,
@@ -770,8 +764,8 @@ export function create_client(app, target) {
 		// preload modules to avoid waterfall, but handle rejections
 		// so they don't get reported to Sentry et al (we don't need
 		// to act on the failures at this point)
-		errors.forEach((loader) => loader?.().catch(() => { }));
-		loaders.forEach((loader) => loader?.[1]().catch(() => { }));
+		errors.forEach((loader) => loader?.().catch(() => {}));
+		loaders.forEach((loader) => loader?.[1]().catch(() => {}));
 
 		/** @type {import('types').ServerNodesResponse | import('types').ServerRedirectNode | null} */
 		let server_data = null;
@@ -1167,7 +1161,7 @@ export function create_client(app, target) {
 		let navigation_result;
 		if (intent) {
 			navigation_result = await load_route(intent);
-		} 
+		}
 
 		if (!navigation_result) {
 			if (is_external_url(rewrittenURL, base)) {
@@ -1229,9 +1223,7 @@ export function create_client(app, target) {
 
 		// ensure the url pathname matches the page's trailing slash option
 		navigation_result.state.url = url;
-		if (
-			navigation_result.props.page.url.pathname !== originalURL.pathname
-		) {
+		if (navigation_result.props.page.url.pathname !== originalURL.pathname) {
 			url.pathname = originalURL.pathname; //navigation_result.props.page?.url.pathname;
 		}
 
