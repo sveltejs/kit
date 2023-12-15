@@ -2,4 +2,4 @@
 'svelte-migrate': patch
 ---
 
-chore: sort packages after insert
+chore: insert package at sorted position
