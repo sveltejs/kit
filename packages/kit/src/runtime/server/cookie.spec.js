@@ -76,11 +76,11 @@ test('default values when set is called', () => {
 
 test('default values when set is called on sub path', () => {
 	const { cookies, new_cookies } = cookies_setup({ href: 'https://example.com/foo/bar' });
-	cookies.set('a', 'b');
+	cookies.set('a', 'b', { path: '' });
 	const opts = new_cookies['a']?.options;
 	assert.equal(opts?.secure, true);
 	assert.equal(opts?.httpOnly, true);
-	assert.equal(opts?.path, '/foo');
+	assert.equal(opts?.path, '/foo/bar');
 	assert.equal(opts?.sameSite, 'lax');
 });
 
@@ -199,12 +199,12 @@ test("set_internal isn't affected by defaults", () => {
 		href: 'https://example.com/a/b/c'
 	});
 
-	const options = /** @type {const} */ ({
+	const options = {
 		secure: false,
 		httpOnly: false,
-		sameSite: 'none',
+		sameSite: /** @type {const} */ ('none'),
 		path: '/a/b/c'
-	});
+	};
 
 	set_internal('test', 'foo', options);
 

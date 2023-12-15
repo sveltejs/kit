@@ -172,7 +172,7 @@ A `load` function is invoked at runtime, unless you [prerender](page-options#pre
 
 ### Input
 
-Both universal and server `load` functions have access to properties describing the request (`params`, `route` and `url`) and various functions (`fetch`, `setHeaders`, `parent` and `depends`). These are described in the following sections.
+Both universal and server `load` functions have access to properties describing the request (`params`, `route` and `url`) and various functions (`fetch`, `setHeaders`, `parent`, `depends` and `untrack`). These are described in the following sections.
 
 Server `load` functions are called with a `ServerLoadEvent`, which inherits `clientAddress`, `cookies`, `locals`, `platform` and `request` from `RequestEvent`.
 
@@ -283,8 +283,6 @@ For example, if SvelteKit is serving my.domain.com:
 
 Other cookies will not be passed when `credentials: 'include'` is set, because SvelteKit does not know which domain which cookie belongs to (the browser does not pass this information along), so it's not safe to forward any of them. Use the [handleFetch hook](hooks#server-hooks-handlefetch) to work around it.
 
-> When setting cookies, be aware of the `path` property. By default, the `path` of a cookie is the current pathname. If you for example set a cookie at page `admin/user`, the cookie will only be available within the `admin` pages by default. In most cases you likely want to set `path` to `'/'` to make the cookie available throughout your app.
-
 ## Headers
 
 Both server and universal `load` functions have access to a `setHeaders` function that, when running on the server, can set headers for the response. (When running in the browser, `setHeaders` has no effect.) This is useful if you want the page to be cached, for example:
@@ -376,7 +374,7 @@ export async function load({ params, parent }) {
 
 ## Errors
 
-If an error is thrown during `load`, the nearest [`+error.svelte`](routing#error) will be rendered. For _expected_ errors, use the `error` helper from `@sveltejs/kit` to specify the HTTP status code and an optional message:
+If an error is thrown during `load`, the nearest [`+error.svelte`](routing#error) will be rendered. For [_expected_](/docs/errors#expected-errors) errors, use the `error` helper from `@sveltejs/kit` to specify the HTTP status code and an optional message:
 
 ```js
 /// file: src/routes/admin/+layout.server.js
@@ -397,20 +395,24 @@ import { error } from '@sveltejs/kit';
 /** @type {import('./$types').LayoutServerLoad} */
 export function load({ locals }) {
 	if (!locals.user) {
-		throw error(401, 'not logged in');
+		error(401, 'not logged in');
 	}
 
 	if (!locals.user.isAdmin) {
-		throw error(403, 'not an admin');
+		error(403, 'not an admin');
 	}
 }
 ```
 
-If an _unexpected_ error is thrown, SvelteKit will invoke [`handleError`](hooks#shared-hooks-handleerror) and treat it as a 500 Internal Error.
+Calling `error(...)` will throw an exception, making it easy to stop execution from inside helper functions.
+
+If an [_unexpected_](/docs/errors#unexpected-errors) error is thrown, SvelteKit will invoke [`handleError`](hooks#shared-hooks-handleerror) and treat it as a 500 Internal Error.
+
+> [In SvelteKit 1.x](migrating-to-sveltekit-2#redirect-and-error-are-no-longer-thrown-by-you) you had to `throw` the error yourself
 
 ## Redirects
 
-To redirect users, use the `redirect` helper from `@sveltejs/kit` to specify the location to which they should be redirected alongside a `3xx` status code.
+To redirect users, use the `redirect` helper from `@sveltejs/kit` to specify the location to which they should be redirected alongside a `3xx` status code. Like `error(...)`, calling `redirect(...)` will throw an exception, making it easy to stop execution from inside helper functions.
 
 ```js
 /// file: src/routes/user/+layout.server.js
@@ -430,33 +432,40 @@ import { redirect } from '@sveltejs/kit';
 /** @type {import('./$types').LayoutServerLoad} */
 export function load({ locals }) {
 	if (!locals.user) {
-		throw redirect(307, '/login');
+		redirect(307, '/login');
 	}
 }
 ```
 
-> Don't use `throw redirect()` from within a try-catch block, as the redirect will immediately trigger the catch statement.
+> Don't use `redirect()` inside a `try {...}` block, as the redirect will immediately trigger the catch statement.
 
 In the browser, you can also navigate programmatically outside of a `load` function using [`goto`](modules#$app-navigation-goto) from [`$app.navigation`](modules#$app-navigation).
 
+> [In SvelteKit 1.x](migrating-to-sveltekit-2#redirect-and-error-are-no-longer-thrown-by-you) you had to `throw` the `redirect` yourself
+
 ## Streaming with promises
 
-Promises at the _top level_ of the returned object will be awaited, making it easy to return multiple promises without creating a waterfall. When using a server `load`, _nested_ promises will be streamed to the browser as they resolve. This is useful if you have slow, non-essential data, since you can start rendering the page before all the data is available:
+When using a server `load`, promises will be streamed to the browser as they resolve. This is useful if you have slow, non-essential data, since you can start rendering the page before all the data is available:
 
 ```js
-/// file: src/routes/+page.server.js
+/// file: src/routes/blog/[slug]/+page.server.js
+// @filename: ambient.d.ts
+declare global {
+	const loadPost: (slug: string) => Promise<{ title: string, content: string }>;
+	const loadComments: (slug: string) => Promise<{ content: string }>;
+}
+
+export {};
+
+// @filename: index.js
+// ---cut---
 /** @type {import('./$types').PageServerLoad} */
-export function load() {
+export async function load({ params }) {
 	return {
-		one: Promise.resolve(1),
-		two: Promise.resolve(2),
-		streamed: {
-			three: new Promise((fulfil) => {
-				setTimeout(() => {
-					fulfil(3)
-				}, 1000);
-			})
-		}
+		// make sure the `await` happens at the end, otherwise we
+		// can't start loading comments until we've loaded the post
+		comments: loadComments(params.slug),
+		post: await loadPost(params.slug)
 	};
 }
 ```
@@ -464,28 +473,24 @@ export function load() {
 This is useful for creating skeleton loading states, for example:
 
 ```svelte
-<!--- file: src/routes/+page.svelte --->
+<!--- file: src/routes/blog/[slug]/+page.svelte --->
 <script>
 	/** @type {import('./$types').PageData} */
 	export let data;
 </script>
 
-<p>
-	one: {data.one}
-</p>
-<p>
-	two: {data.two}
-</p>
-<p>
-	three:
-	{#await data.streamed.three}
-		Loading...
-	{:then value}
-		{value}
-	{:catch error}
-		{error.message}
-	{/await}
-</p>
+<h1>{data.post.title}</h1>
+<div>{@html data.post.content}</div>
+
+{#await data.comments}
+	Loading comments...
+{:then comments}
+	{#each comments as comment}
+		<p>{comment.content}</p>
+	{/each}
+{:catch error}
+	<p>error loading comments: {error.message}</p>
+{/await}
 ```
 
 When streaming data, be careful to handle promise rejections correctly. More specifically, the server could crash with an "unhandled promise rejection" error if a lazy-loaded promise fails before rendering starts (at which point it's caught) and isn't handling the error in some way. When using SvelteKit's `fetch` directly in the `load` function, SvelteKit will handle this case for you. For other promises, it is enough to attach a noop-`catch` to the promise to mark it as handled.
@@ -498,20 +503,20 @@ export function load({ fetch }) {
 	ok_manual.catch(() => {});
 
 	return {
-		streamed: {
-			ok_manual,
-			ok_fetch: fetch('/fetch/that/could/fail'),
-			dangerous_unhandled: Promise.reject()
-		}
+		ok_manual,
+		ok_fetch: fetch('/fetch/that/could/fail'),
+		dangerous_unhandled: Promise.reject()
 	};
 }
 ```
 
 > On platforms that do not support streaming, such as AWS Lambda, responses will be buffered. This means the page will only render once all promises resolve. If you are using a proxy (e.g. NGINX), make sure it does not buffer responses from the proxied server.
 
-> Streaming data will only work when JavaScript is enabled. You should avoid returning nested promises from a universal `load` function if the page is server rendered, as these are _not_ streamed — instead, the promise is recreated when the function reruns in the browser.
+> Streaming data will only work when JavaScript is enabled. You should avoid returning promises from a universal `load` function if the page is server rendered, as these are _not_ streamed — instead, the promise is recreated when the function reruns in the browser.
 
 > The headers and status code of a response cannot be changed once the response has started streaming, therefore you cannot `setHeaders` or throw redirects inside a streamed promise.
+
+> [In SvelteKit 1.x](migrating-to-sveltekit-2#top-level-promises-are-no-longer-awaited) top-level promises were automatically awaited, only nested promises were streamed.
 
 ## Parallel loading
 
@@ -567,6 +572,23 @@ A `load` function that calls `await parent()` will also rerun if a parent `load`
 
 Dependency tracking does not apply _after_ the `load` function has returned — for example, accessing `params.x` inside a nested [promise](#streaming-with-promises) will not cause the function to rerun when `params.x` changes. (Don't worry, you'll get a warning in development if you accidentally do this.) Instead, access the parameter in the main body of your `load` function.
 
+Search parameters are tracked independently from the rest of the url. For example, accessing `event.url.searchParams.get("x")` inside a `load` function will make that `load` function re-run when navigating from `?x=1` to `?x=2`, but not when navigating from `?x=1&y=1` to `?x=1&y=2`.
+
+### Untracking dependencies
+
+In rare cases, you may wish to exclude something from the dependency tracking mechanism. You can do this with the provided `untrack` function:
+
+```js
+/// file: src/routes/+page.js
+/** @type {import('./$types').PageLoad} */
+export async function load({ untrack, url }) {
+	// Untrack url.pathname so that path changes don't trigger a rerun
+	if (untrack(() => url.pathname === '/')) {
+		return { message: 'Welcome!' };
+	}
+}
+```
+
 ### Manual invalidation
 
 You can also rerun `load` functions that apply to the current page using [`invalidate(url)`](modules#$app-navigation-invalidate), which reruns all `load` functions that depend on `url`, and [`invalidateAll()`](modules#$app-navigation-invalidateall), which reruns every `load` function. Server load functions will never automatically depend on a fetched `url` to avoid leaking secrets to the client.
@@ -616,6 +638,7 @@ To summarize, a `load` function will rerun in the following situations:
 
 - It references a property of `params` whose value has changed
 - It references a property of `url` (such as `url.pathname` or `url.search`) whose value has changed. Properties in `request.url` are _not_ tracked
+- It calls `url.searchParams.get(...)`, `url.searchParams.getAll(...)` or `url.searchParams.has(...)` and the parameter in question changes. Accessing other properties of `url.searchParams` will have the same effect as accessing `url.search`.
 - It calls `await parent()` and a parent `load` function reran
 - It declared a dependency on a specific URL via [`fetch`](#making-fetch-requests) (universal load only) or [`depends`](types#public-types-loadevent), and that URL was marked invalid with [`invalidate(url)`](modules#$app-navigation-invalidate)
 - All active `load` functions were forcibly rerun with [`invalidateAll()`](modules#$app-navigation-invalidateall)

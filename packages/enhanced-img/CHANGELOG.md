@@ -1,5 +1,11 @@
 # @sveltejs/enhanced-img
 
+## 0.1.6
+
+### Patch Changes
+
+- chore: upgrade vite-imagetools ([#11122](https://github.com/sveltejs/kit/pull/11122))
+
 ## 0.1.5
 
 ### Patch Changes

@@ -8,6 +8,10 @@ declare global {
 			url?: URL;
 		}
 
+		interface PageState {
+			active: boolean;
+		}
+
 		interface Platform {}
 	}
 }

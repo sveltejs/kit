@@ -1,6 +1,5 @@
 import { expect } from '@playwright/test';
 import { test } from '../../../utils.js';
-import { fetch } from 'undici';
 import { createHash, randomBytes } from 'node:crypto';
 
 /** @typedef {import('@playwright/test').Response} Response */
@@ -290,17 +289,17 @@ test.describe('Errors', () => {
 	test('stack traces are not fixed twice', async ({ page }) => {
 		await page.goto('/errors/stack-trace');
 		expect(await page.textContent('#message')).toBe(
-			'This is your custom error page saying: "Cannot read properties of undefined (reading \'toUpperCase\')"'
+			'This is your custom error page saying: "Cannot read properties of undefined (reading \'toUpperCase\') (500 Internal Error)"'
 		);
 
 		// check the stack wasn't mutated
 		await page.goto('/errors/stack-trace');
 		expect(await page.textContent('#message')).toBe(
-			'This is your custom error page saying: "Cannot read properties of undefined (reading \'toUpperCase\')"'
+			'This is your custom error page saying: "Cannot read properties of undefined (reading \'toUpperCase\') (500 Internal Error)"'
 		);
 	});
 
-	test('throw error(...) in endpoint', async ({ request, read_errors }) => {
+	test('error(...) in endpoint', async ({ request, read_errors }) => {
 		// HTML
 		{
 			const res = await request.get('/errors/endpoint-throw-error', {
@@ -332,7 +331,7 @@ test.describe('Errors', () => {
 		}
 	});
 
-	test('throw redirect(...) in endpoint', async ({ page, read_errors }) => {
+	test('redirect(...) in endpoint', async ({ page, read_errors }) => {
 		const res = await page.goto('/errors/endpoint-throw-redirect');
 		expect(res?.status()).toBe(200); // redirects are opaque to the browser
 
@@ -359,7 +358,7 @@ test.describe('Errors', () => {
 		expect(await res_json.json()).toEqual({
 			type: 'error',
 			error: {
-				message: 'POST method not allowed. No actions exist for this page'
+				message: 'POST method not allowed. No actions exist for this page (405 Method Not Allowed)'
 			}
 		});
 	});
@@ -390,7 +389,7 @@ test.describe('Errors', () => {
 			expect(error.stack).toBe(undefined);
 			expect(res.status()).toBe(500);
 			expect(error).toEqual({
-				message: 'Error in handle'
+				message: 'Error in handle (500 Internal Error)'
 			});
 		}
 	});
@@ -566,11 +565,6 @@ test.describe('Static files', () => {
 		const r2 = await request.get('/package.json');
 		expect(r2.status()).toBe(200);
 		expect(await r2.json()).toEqual({ works: true });
-	});
-
-	test('Filenames are case-sensitive', async ({ request }) => {
-		const response = await request.get('/static.JSON');
-		expect(response.status()).toBe(404);
 	});
 
 	test('Serves symlinked asset', async ({ request }) => {

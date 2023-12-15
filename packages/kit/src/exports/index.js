@@ -1,51 +1,106 @@
 import { HttpError, Redirect, ActionFailure } from '../runtime/control.js';
 import { BROWSER, DEV } from 'esm-env';
-import { get_route_segments } from '../utils/routing.js';
 
 export { VERSION } from '../version.js';
 
 /**
- * @overload
- * @param {number} status
- * @param {App.Error} body
- * @return {HttpError}
+ * @template {number} TNumber
+ * @template {any[]} [TArray=[]]
+ * @typedef {TNumber extends TArray['length'] ? TArray[number] : LessThan<TNumber, [...TArray, TArray['length']]>} LessThan
  */
 
 /**
- * @overload
- * @param {number} status
- * @param {{ message: string } extends App.Error ? App.Error | string | undefined : never} [body]
- * @return {HttpError}
+ * @template {number} TStart
+ * @template {number} TEnd
+ * @typedef {Exclude<TEnd | LessThan<TEnd>, LessThan<TStart>>} NumericRange
  */
 
+// we have to repeat the JSDoc because the display for function overloads is broken
+// see https://github.com/microsoft/TypeScript/issues/55056
+
 /**
- * Creates an `HttpError` object with an HTTP status code and an optional message.
- * This object, if thrown during request handling, will cause SvelteKit to
+ * Throws an error with a HTTP status code and an optional message.
+ * When called during request handling, this will cause SvelteKit to
  * return an error response without invoking `handleError`.
  * Make sure you're not catching the thrown error, which would prevent SvelteKit from handling it.
- * @param {number} status The [HTTP status code](https://developer.mozilla.org/en-US/docs/Web/HTTP/Status#client_error_responses). Must be in the range 400-599.
+ * @param {NumericRange<400, 599>} status The [HTTP status code](https://developer.mozilla.org/en-US/docs/Web/HTTP/Status#client_error_responses). Must be in the range 400-599.
+ * @param {App.Error} body An object that conforms to the App.Error type. If a string is passed, it will be used as the message property.
+ * @overload
+ * @param {NumericRange<400, 599>} status
+ * @param {App.Error} body
+ * @return {never}
+ * @throws {HttpError} This error instructs SvelteKit to initiate HTTP error handling.
+ * @throws {Error} If the provided status is invalid (not between 400 and 599).
+ */
+/**
+ * Throws an error with a HTTP status code and an optional message.
+ * When called during request handling, this will cause SvelteKit to
+ * return an error response without invoking `handleError`.
+ * Make sure you're not catching the thrown error, which would prevent SvelteKit from handling it.
+ * @param {NumericRange<400, 599>} status The [HTTP status code](https://developer.mozilla.org/en-US/docs/Web/HTTP/Status#client_error_responses). Must be in the range 400-599.
+ * @param {{ message: string } extends App.Error ? App.Error | string | undefined : never} [body] An object that conforms to the App.Error type. If a string is passed, it will be used as the message property.
+ * @overload
+ * @param {NumericRange<400, 599>} status
+ * @param {{ message: string } extends App.Error ? App.Error | string | undefined : never} [body]
+ * @return {never}
+ * @throws {HttpError} This error instructs SvelteKit to initiate HTTP error handling.
+ * @throws {Error} If the provided status is invalid (not between 400 and 599).
+ */
+/**
+ * Throws an error with a HTTP status code and an optional message.
+ * When called during request handling, this will cause SvelteKit to
+ * return an error response without invoking `handleError`.
+ * Make sure you're not catching the thrown error, which would prevent SvelteKit from handling it.
+ * @param {NumericRange<400, 599>} status The [HTTP status code](https://developer.mozilla.org/en-US/docs/Web/HTTP/Status#client_error_responses). Must be in the range 400-599.
  * @param {{ message: string } extends App.Error ? App.Error | string | undefined : never} body An object that conforms to the App.Error type. If a string is passed, it will be used as the message property.
+ * @return {never}
+ * @throws {HttpError} This error instructs SvelteKit to initiate HTTP error handling.
+ * @throws {Error} If the provided status is invalid (not between 400 and 599).
  */
 export function error(status, body) {
 	if ((!BROWSER || DEV) && (isNaN(status) || status < 400 || status > 599)) {
 		throw new Error(`HTTP error status codes must be between 400 and 599 — ${status} is invalid`);
 	}
 
-	return new HttpError(status, body);
+	throw new HttpError(status, body);
 }
 
 /**
- * Create a `Redirect` object. If thrown during request handling, SvelteKit will return a redirect response.
+ * Checks whether this is an error thrown by {@link error}.
+ * @template {number} T
+ * @param {unknown} e
+ * @param {T} [status] The status to filter for.
+ * @return {e is (HttpError & { status: T extends undefined ? never : T })}
+ */
+export function isHttpError(e, status) {
+	if (!(e instanceof HttpError)) return false;
+	return !status || e.status === status;
+}
+
+/**
+ * Redirect a request. When called during request handling, SvelteKit will return a redirect response.
  * Make sure you're not catching the thrown redirect, which would prevent SvelteKit from handling it.
- * @param {300 | 301 | 302 | 303 | 304 | 305 | 306 | 307 | 308} status The [HTTP status code](https://developer.mozilla.org/en-US/docs/Web/HTTP/Status#redirection_messages). Must be in the range 300-308.
+ * @param {NumericRange<300, 308>} status The [HTTP status code](https://developer.mozilla.org/en-US/docs/Web/HTTP/Status#redirection_messages). Must be in the range 300-308.
  * @param {string | URL} location The location to redirect to.
+ * @throws {Redirect} This error instructs SvelteKit to redirect to the specified location.
+ * @throws {Error} If the provided status is invalid.
+ * @return {never}
  */
 export function redirect(status, location) {
 	if ((!BROWSER || DEV) && (isNaN(status) || status < 300 || status > 308)) {
 		throw new Error('Invalid status code');
 	}
 
-	return new Redirect(status, location.toString());
+	throw new Redirect(status, location.toString());
+}
+
+/**
+ * Checks whether this is a redirect thrown by {@link redirect}.
+ * @param {unknown} e The object to check.
+ * @return {e is Redirect}
+ */
+export function isRedirect(e) {
+	return e instanceof Redirect;
 }
 
 /**
@@ -102,66 +157,28 @@ export function text(body, init) {
 
 /**
  * Create an `ActionFailure` object.
+ * @param {number} status The [HTTP status code](https://developer.mozilla.org/en-US/docs/Web/HTTP/Status#client_error_responses). Must be in the range 400-599.
+ * @overload
+ * @param {number} status
+ * @returns {import('./public.js').ActionFailure<undefined>}
+ */
+/**
+ * Create an `ActionFailure` object.
  * @template {Record<string, unknown> | undefined} [T=undefined]
  * @param {number} status The [HTTP status code](https://developer.mozilla.org/en-US/docs/Web/HTTP/Status#client_error_responses). Must be in the range 400-599.
- * @param {T} [data] Data associated with the failure (e.g. validation errors)
- * @returns {ActionFailure<T>}
+ * @param {T} data Data associated with the failure (e.g. validation errors)
+ * @overload
+ * @param {number} status
+ * @param {T} data
+ * @returns {import('./public.js').ActionFailure<T>}
+ */
+/**
+ * Create an `ActionFailure` object.
+ * @param {number} status
+ * @param {any} [data]
+ * @returns {import('./public.js').ActionFailure<any>}
  */
 export function fail(status, data) {
+	// @ts-expect-error unique symbol missing
 	return new ActionFailure(status, data);
-}
-
-const basic_param_pattern = /\[(\[)?(\.\.\.)?(\w+?)(?:=(\w+))?\]\]?/g;
-
-let warned = false;
-
-/**
- * @deprecated Use `resolveRoute` from `$app/paths` instead.
- *
- * Populate a route ID with params to resolve a pathname.
- * @example
- * ```js
- * resolvePath(
- *   `/blog/[slug]/[...somethingElse]`,
- *   {
- *     slug: 'hello-world',
- *     somethingElse: 'something/else'
- *   }
- * ); // `/blog/hello-world/something/else`
- * ```
- * @param {string} id
- * @param {Record<string, string | undefined>} params
- * @returns {string}
- */
-export function resolvePath(id, params) {
-	if (!warned) {
-		console.warn('`resolvePath` is deprecated. Use `resolveRoute` from `$app/paths` instead.');
-		warned = true;
-	}
-
-	const segments = get_route_segments(id);
-	return (
-		'/' +
-		segments
-			.map((segment) =>
-				segment.replace(basic_param_pattern, (_, optional, rest, name) => {
-					const param_value = params[name];
-
-					// This is nested so TS correctly narrows the type
-					if (!param_value) {
-						if (optional) return '';
-						if (rest && param_value !== undefined) return '';
-						throw new Error(`Missing parameter '${name}' in route ${id}`);
-					}
-
-					if (param_value.startsWith('/') || param_value.endsWith('/'))
-						throw new Error(
-							`Parameter '${name}' in route ${id} cannot start or end with a slash -- this would cause an invalid route like foo//bar`
-						);
-					return param_value;
-				})
-			)
-			.filter(Boolean)
-			.join('/')
-	);
 }
