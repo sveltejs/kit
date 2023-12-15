@@ -2120,7 +2120,7 @@ async function load_data(url, invalid) {
 
 	// if `__data.json` doesn't exist or the server has an internal error,
 	// fallback to native navigation so we avoid parsing the HTML error page as a JSON
-	if (res.headers.get('content-type')?.includes('text/html')) {
+	if (res.headers.get('x-sveltekit-page')?.includes('true')) {
 		await native_navigation(url);
 	}
 
