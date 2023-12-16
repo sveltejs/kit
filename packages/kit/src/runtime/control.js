@@ -33,6 +33,7 @@ export class Redirect {
 /**
  * An error that was thrown from within the SvelteKit runtime that is not fatal and doesn't result in a 500, such as a 404.
  * `SvelteKitError` goes through `handleError`.
+ * @extends Error
  */
 export class SvelteKitError extends Error {
 	/**
