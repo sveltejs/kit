@@ -6,3 +6,5 @@
 </script>
 
 <h1>the answer is {data.answer}</h1>
+
+<a href="/routing/trailing-slash/never/">trailing slash</a>

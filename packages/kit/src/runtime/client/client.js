@@ -663,7 +663,7 @@ export function create_client(app, target) {
 			// if `paths.base === '/a/b/c`, then the root route is `/a/b/c/`,
 			// regardless of the `trailingSlash` route option
 			slash:
-				url.pathname === base || url.pathname === base + '/'
+				base && (url.pathname === base || url.pathname === base + '/')
 					? 'always'
 					: node.universal?.trailingSlash ?? server_data_node?.slash
 		};
