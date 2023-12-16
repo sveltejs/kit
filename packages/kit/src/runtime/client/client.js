@@ -696,7 +696,7 @@ export function create_client(app, target) {
 
 		if (uses.parent && parent_changed) return true;
 		if (uses.route && route_changed) return true;
-		if (url_changed) return true;
+		if (uses.url && url_changed) return true;
 
 		for (const tracked_params of uses.search_params) {
 			if (search_params_changed.has(tracked_params)) return true;
