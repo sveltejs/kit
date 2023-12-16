@@ -468,6 +468,7 @@ export function create_client(app, target) {
 			(form !== undefined && form !== page.form) ||
 			data_changed;
 
+	
 		if (page_changed) {
 			result.props.page = {
 				error,
@@ -1211,6 +1212,10 @@ export function create_client(app, target) {
 			}
 		}
 
+		// navigation_result.state.url has been normalized with the trailing slash option
+		url = navigation_result.state.url;
+		//console.log('url', url.href);
+
 		// reset invalidation only after a finished navigation. If there are redirects or
 		// additional invalidations, they should get the same invalidation treatment
 		invalidated.length = 0;
@@ -1220,12 +1225,6 @@ export function create_client(app, target) {
 
 		update_scroll_positions(previous_history_index);
 		capture_snapshot(previous_navigation_index);
-
-		// ensure the url pathname matches the page's trailing slash option
-		navigation_result.state.url = url;
-		if (navigation_result.props.page.url.pathname !== originalURL.pathname) {
-			url.pathname = originalURL.pathname; //navigation_result.props.page?.url.pathname;
-		}
 
 		const state = popped ? popped.state : {};
 
