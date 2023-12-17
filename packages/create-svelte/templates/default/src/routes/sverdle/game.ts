@@ -33,7 +33,7 @@ export class Game {
 	 */
 	enter(letters: string[]) {
 		const word = letters.join('');
-		const valid = allowed.has(word);
+		const valid = allowed.has(word) && this.isGoodInput(letters);
 
 		if (!valid) return false;
 
@@ -73,5 +73,14 @@ export class Game {
 	 */
 	toString() {
 		return `${this.index}-${this.guesses.join(' ')}-${this.answers.join(' ')}`;
+	}
+
+	isGoodInput(letters: string[]) {
+		const wrongLetters: string[] = [];
+		for (const guess of this.guesses) {
+			wrongLetters.push(...guess.split('').filter((l) => !this.answer.includes(l)));
+		}
+		const badInput = letters.every((l) => wrongLetters.includes(l));
+		return !badInput;
 	}
 }
