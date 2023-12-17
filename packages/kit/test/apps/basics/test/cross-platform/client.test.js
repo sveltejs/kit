@@ -743,7 +743,7 @@ test.describe('Routing', () => {
 		await expect(page.locator('p')).toHaveText('/routing/trailing-slash/ignore/');
 	});
 
-	test('trailing slash redirect not is preserved when navigating from root page', async ({
+	test('trailing slash redirect works when navigating from root page', async ({
 		page,
 		clicknav
 	}) => {
