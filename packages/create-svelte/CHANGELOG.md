@@ -1,5 +1,11 @@
 # create-svelte
 
+## 6.0.1
+
+### Patch Changes
+
+- chore: simplify `.prettierignore` ([#11349](https://github.com/sveltejs/kit/pull/11349))
+
 ## 6.0.0
 
 ### Major Changes
