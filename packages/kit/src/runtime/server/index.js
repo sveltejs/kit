@@ -60,7 +60,7 @@ export class Server {
 					handleError: module.handleError || (({ error }) => console.error(error)),
 					handleFetch: module.handleFetch || (({ request, fetch }) => fetch(request)),
 					resolveDestination: module.resolveDestination || ((event) => event.to),
-					rewriteURL: module.rewriteURL || (({url}) => url)
+					rewriteURL: module.rewriteURL || (({ url }) => url)
 				};
 			} catch (error) {
 				if (DEV) {
@@ -71,7 +71,7 @@ export class Server {
 						handleError: ({ error }) => console.error(error),
 						handleFetch: ({ request, fetch }) => fetch(request),
 						resolveDestination: (event) => event.to,
-						rewriteURL: ({url}) => url
+						rewriteURL: ({ url }) => url
 					};
 				} else {
 					throw error;

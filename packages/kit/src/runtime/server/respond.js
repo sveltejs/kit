@@ -57,7 +57,7 @@ const allowed_page_methods = new Set(['GET', 'HEAD', 'OPTIONS']);
 export async function respond(request, options, manifest, state) {
 	/** URL but stripped from the potential `/__data.json` suffix and its search param  */
 	const originalURL = new URL(request.url);
-	const rewrittenURL = options.hooks.rewriteURL({url: new URL(request.url)});
+	const rewrittenURL = options.hooks.rewriteURL({ url: new URL(request.url) });
 
 	//If the URL has been rewritten to a different origin, return a redirect
 	if (rewrittenURL.origin !== originalURL.origin) {

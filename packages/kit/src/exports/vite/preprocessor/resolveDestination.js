@@ -11,7 +11,7 @@ const rewritten_attributes = [
 	{ element: 'form', attribute: 'action' },
 	{ element: 'button', attribute: 'formaction' },
 	{ element: 'img', attribute: 'src' },
-	{ element: 'link', attribute: 'href' },
+	{ element: 'link', attribute: 'href' }
 ];
 
 /**

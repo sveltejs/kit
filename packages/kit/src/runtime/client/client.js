@@ -468,7 +468,6 @@ export function create_client(app, target) {
 			(form !== undefined && form !== page.form) ||
 			data_changed;
 
-	
 		if (page_changed) {
 			result.props.page = {
 				error,
@@ -754,6 +753,7 @@ export function create_client(app, target) {
 	 * @returns {Promise<import('./types.js').NavigationResult>}
 	 */
 	async function load_route({ id, invalidating, url, params, route }) {
+		console.log('[client] loading route', id);
 		if (load_cache?.id === id) {
 			return load_cache.promise;
 		}
@@ -1049,7 +1049,7 @@ export function create_client(app, target) {
 		if (!originalURL) return;
 
 		//Apply the rewrite rules to the url
-		const rewrittenURL = app.hooks.rewriteURL({ url: new URL(originalURL)});
+		const rewrittenURL = app.hooks.rewriteURL({ url: new URL(originalURL) });
 		if (is_external_url(rewrittenURL, base)) return;
 
 		const path = get_url_path(rewrittenURL.pathname);
@@ -1134,9 +1134,6 @@ export function create_client(app, target) {
 		accept = noop,
 		block = noop
 	}) {
-		const originalURL = new URL(url);
-		const rewrittenURL = app.hooks.rewriteURL({ url: new URL(originalURL)});
-
 		const intent = get_navigation_intent(url, false);
 		const nav = before_navigate({ url, type, delta: popped?.delta, intent });
 
@@ -1159,14 +1156,11 @@ export function create_client(app, target) {
 
 		token = nav_token;
 
-		let navigation_result;
-		if (intent) {
-			navigation_result = await load_route(intent);
-		}
+		let navigation_result = intent && (await load_route(intent));
 
 		if (!navigation_result) {
-			if (is_external_url(rewrittenURL, base)) {
-				return await native_navigation(rewrittenURL);
+			if (is_external_url(url, base)) {
+				return await native_navigation(url);
 			}
 			navigation_result = await server_fallback(
 				url,
@@ -1180,7 +1174,7 @@ export function create_client(app, target) {
 			);
 		}
 
-		url = originalURL;
+		url = intent?.url || url;
 
 		// abort if user navigated during update
 		if (token !== nav_token) {
@@ -1225,6 +1219,11 @@ export function create_client(app, target) {
 
 		update_scroll_positions(previous_history_index);
 		capture_snapshot(previous_navigation_index);
+
+		// ensure the url pathname matches the page's trailing slash option
+		if (navigation_result.props.page.url.pathname !== url.pathname) {
+			url.pathname = navigation_result.props.page.url.pathname;
+		}
 
 		const state = popped ? popped.state : {};
 
@@ -1635,11 +1634,10 @@ export function create_client(app, target) {
 				[PAGE_URL_KEY]: page.url.href
 			};
 
-
 			const resolvedURL = app.hooks.resolveDestination({
 				from: new URL(page.url),
 				to: new URL(resolve_url(url))
-			})
+			});
 
 			original_push_state.call(history, opts, '', resolvedURL);
 
@@ -1666,12 +1664,10 @@ export function create_client(app, target) {
 				[PAGE_URL_KEY]: page.url.href
 			};
 
-
 			const resolvedURL = app.hooks.resolveDestination({
 				from: new URL(page.url),
 				to: new URL(resolve_url(url))
-			})
-
+			});
 
 			original_replace_state.call(history, opts, '', resolvedURL);
 
