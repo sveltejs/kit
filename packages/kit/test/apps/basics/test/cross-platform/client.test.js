@@ -742,6 +742,16 @@ test.describe('Routing', () => {
 		expect(new URL(page.url()).pathname).toBe('/routing/trailing-slash/ignore/');
 		await expect(page.locator('p')).toHaveText('/routing/trailing-slash/ignore/');
 	});
+
+	test('trailing slash redirect works when navigating from root page', async ({
+		page,
+		clicknav
+	}) => {
+		await page.goto('/');
+		await clicknav('a[href="/routing/trailing-slash/never/"]');
+		expect(new URL(page.url()).pathname).toBe('/routing/trailing-slash/never');
+		await expect(page.locator('p')).toHaveText('/routing/trailing-slash/never');
+	});
 });
 
 test.describe('Shadow DOM', () => {

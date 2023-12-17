@@ -50,7 +50,7 @@ export const config = {
 
 The following options apply to all functions:
 
-- `runtime`: `'edge'`, `'nodejs16.x'` or `'nodejs18.x'`. By default, the adapter will select `'nodejs16.x'` or `'nodejs18.x'` depending on the Node version your project is configured to use on the Vercel dashboard
+- `runtime`: `'edge'`, `'nodejs18.x'` or `'nodejs20.x'`. By default, the adapter will select the `'nodejs<version>.x'` corresponding to the Node version your project is configured to use on the Vercel dashboard
 - `regions`: an array of [edge network regions](https://vercel.com/docs/concepts/edge-network/regions) (defaulting to `["iad1"]` for serverless functions) or `'all'` if `runtime` is `edge` (its default). Note that multiple regions for serverless functions are only supported on Enterprise plans
 - `split`: if `true`, causes a route to be deployed as an individual function. If `split` is set to `true` at the adapter level, all routes will be deployed as individual functions
 
@@ -151,7 +151,7 @@ If you have Vercel functions contained in the `api` directory at the project's r
 
 ### Node version
 
-Projects created before a certain date will default to using Node 14, while SvelteKit requires Node 16 or later. You can [change the Node version in your project settings](https://vercel.com/docs/concepts/functions/serverless-functions/runtimes/node-js#node.js-version).
+Projects created before a certain date may default to using an older Node version than what SvelteKit currently requires. You can [change the Node version in your project settings](https://vercel.com/docs/concepts/functions/serverless-functions/runtimes/node-js#node.js-version).
 
 ## Troubleshooting
 

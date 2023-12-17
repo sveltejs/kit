@@ -1,5 +1,11 @@
 # @sveltejs/kit
 
+## 2.0.1
+
+### Patch Changes
+
+- fix: correctly handle trailing slash redirect when navigating from the root page ([#11357](https://github.com/sveltejs/kit/pull/11357))
+
 ## 2.0.0
 
 ### Major Changes
