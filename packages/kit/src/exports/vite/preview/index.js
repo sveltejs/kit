@@ -54,8 +54,8 @@ export async function preview(vite, vite_config, svelte_config) {
 		// Remove the base middleware. It screws with the URL.
 		// It also only lets through requests beginning with the base path, so that requests beginning
 		// with the assets URL never reach us. We could serve assets separately before the base
-		// middleware, but we'd need that to occur after the compression middleware, so would need to
-		// insert it manually into the stack, which would be at least as bad as doing this.
+		// middleware, but we'd need that to occur after the compression and cors middlewares, so would
+		// need to insert it manually into the stack, which would be at least as bad as doing this.
 		for (let i = vite.middlewares.stack.length - 1; i > 0; i--) {
 			// @ts-expect-error using internals
 			if (vite.middlewares.stack[i].handle.name === 'viteBaseMiddleware') {
