@@ -1,1 +1,5 @@
-<h1>Successfully Resolved</h1>
+<script>
+    export let form;
+</script>
+
+<h1>{form.text}</h1>

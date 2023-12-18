@@ -25,6 +25,13 @@ test.describe("resolveDestination", () => {
 		await page.goto('/resolveDestination/redirect');
 		await expect(page.locator('h1')).toHaveText('Successfully Resolved');
 	});
+
+	test("resolves form actions correctly", async ({ page, clicknav }) => {
+		await page.goto('/resolveDestination/form');
+		await page.locator('button').click();
+
+		await expect(page.locator('h1')).toHaveText('Successfully Resolved');
+	});
 });
 
 /*
