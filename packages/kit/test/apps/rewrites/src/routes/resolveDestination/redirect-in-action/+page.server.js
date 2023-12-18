@@ -1,7 +1,7 @@
-import { redirect } from '@sveltejs/kit'
+import { redirect } from '@sveltejs/kit';
 
 export const actions = {
-    default: ({ url}) => {
-       redirect(307, "/resolveDestination/redirect-in-action/from")
-    }
-}
+	default: () => {
+		redirect(307, '/resolveDestination/redirect-in-action/from');
+	}
+};

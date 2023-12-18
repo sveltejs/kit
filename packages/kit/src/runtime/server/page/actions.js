@@ -75,7 +75,7 @@ export async function handle_action_json_request(event, options, server) {
 		const err = normalize_error(e);
 
 		if (err instanceof Redirect) {
-			console.log("caught a redirect in action route...", err);
+			console.log('caught a redirect in action route...', err);
 			return action_json_redirect(err);
 		}
 

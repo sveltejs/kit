@@ -360,16 +360,16 @@ export async function respond(request, options, manifest, state) {
 	} catch (e) {
 		if (e instanceof Redirect) {
 			const originalDestination = new URL(e.location, originalURL);
-			
+
 			const resolvedDestination = options.hooks.resolveDestination({
 				from: new URL(originalURL),
 				to: new URL(originalDestination)
 			});
 
-			e.location = resolvedDestination.href === originalDestination.href
-				? e.location
-				: getHrefBetween(originalURL, resolvedDestination);
-
+			e.location =
+				resolvedDestination.href === originalDestination.href
+					? e.location
+					: getHrefBetween(originalURL, resolvedDestination);
 
 			const response = is_data_request
 				? redirect_json_response(e)

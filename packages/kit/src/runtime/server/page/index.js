@@ -63,16 +63,15 @@ export async function render_page(event, page, options, manifest, state, resolve
 			// (this also determines status code)
 			action_result = await handle_action_request(event, leaf_node.server);
 			if (action_result?.type === 'redirect') {
-
 				//apply resolveDestination
 				const from = new URL(event.url);
 				const to = new URL(action_result.location, from);
-				const resolvedUrl = options.hooks.resolveDestination({ from: new URL(from), to: new URL(to) });
+				const resolvedUrl = options.hooks.resolveDestination({
+					from: new URL(from),
+					to: new URL(to)
+				});
 				action_result.location =
-					resolvedUrl.href === to.href
-						? action_result.location
-						: getHrefBetween(from, resolvedUrl);
-				
+					resolvedUrl.href === to.href ? action_result.location : getHrefBetween(from, resolvedUrl);
 
 				return redirect_response(action_result.status, action_result.location);
 			}

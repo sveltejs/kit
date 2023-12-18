@@ -1,8 +1,7 @@
 export const actions = {
-    
-    default: () => {
-        return { 
-            text:"Successfully Resolved"
-        }
-    }
-}
+	default: () => {
+		return {
+			text: 'Successfully Resolved'
+		};
+	}
+};
