@@ -3,7 +3,7 @@ const config = {
 	kit: {
 		prerender: {
 			handleHttpError: 'warn'
-		},
+		}
 	}
 };
 

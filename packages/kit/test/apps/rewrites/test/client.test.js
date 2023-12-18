@@ -5,11 +5,11 @@ test.describe.configure({ mode: 'parallel' });
 
 test.skip(({ javaScriptEnabled }) => !!javaScriptEnabled);
 
-test.describe("Rewrites", () => {
-	test("rewrites url during client navigation", async ({ page, clicknav }) => {
-		await page.goto("/rewrites");
+test.describe('Rewrites', () => {
+	test('rewrites url during client navigation', async ({ page, clicknav }) => {
+		await page.goto('/rewrites');
 		await clicknav("a[href='/rewrites/from']");
-		await expect(page.locator("h1")).toHaveText("Successfully rewritten");
+		await expect(page.locator('h1')).toHaveText('Successfully rewritten');
 	});
 });
 /*
