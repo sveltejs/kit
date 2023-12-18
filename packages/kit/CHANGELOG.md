@@ -1,5 +1,11 @@
 # @sveltejs/kit
 
+## 2.0.2
+
+### Patch Changes
+
+- fix: prevent endless SPA 404 loop ([#11354](https://github.com/sveltejs/kit/pull/11354))
+
 ## 2.0.1
 
 ### Patch Changes

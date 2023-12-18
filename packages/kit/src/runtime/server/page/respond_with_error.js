@@ -86,7 +86,7 @@ export async function respond_with_error({
 			state,
 			page_config: {
 				ssr,
-				csr: get_option([default_layout], 'csr') ?? true
+				csr
 			},
 			status,
 			error: await handle_error_and_jsonify(event, options, error),

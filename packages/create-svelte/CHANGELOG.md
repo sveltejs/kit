@@ -1,5 +1,11 @@
 # create-svelte
 
+## 6.0.2
+
+### Patch Changes
+
+- fix: use vitest 1.0 in playwright + vitest template ([#11376](https://github.com/sveltejs/kit/pull/11376))
+
 ## 6.0.1
 
 ### Patch Changes
