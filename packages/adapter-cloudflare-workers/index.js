@@ -45,13 +45,20 @@ export default function ({ config = 'wrangler.toml' } = {}) {
 				}
 			});
 
+			let prerendered_entries = Array.from(builder.prerendered.pages.entries());
+
+			if (builder.config.kit.paths.base) {
+				prerendered_entries = prerendered_entries.map(([path, { file }]) => [
+					path,
+					{ file: `${builder.config.kit.paths.base}/${file}` }
+				]);
+			}
+
 			writeFileSync(
 				`${tmp}/manifest.js`,
 				`export const manifest = ${builder.generateManifest({
 					relativePath
-				})};\n\nexport const prerendered = new Map(${JSON.stringify(
-					Array.from(builder.prerendered.pages.entries())
-				)});\n`
+				})};\n\nexport const prerendered = new Map(${JSON.stringify(prerendered_entries)});\n`
 			);
 
 			await esbuild.build({

@@ -1,5 +1,47 @@
 # create-svelte
 
+## 6.0.3
+
+### Patch Changes
+
+- fix: remove unnecessary @types/cookie package ([#11375](https://github.com/sveltejs/kit/pull/11375))
+
+## 6.0.2
+
+### Patch Changes
+
+- fix: use vitest 1.0 in playwright + vitest template ([#11376](https://github.com/sveltejs/kit/pull/11376))
+
+## 6.0.1
+
+### Patch Changes
+
+- chore: simplify `.prettierignore` ([#11349](https://github.com/sveltejs/kit/pull/11349))
+
+## 6.0.0
+
+### Major Changes
+
+- feat: create projects with SvelteKit 2 ([#11236](https://github.com/sveltejs/kit/pull/11236))
+
+- breaking: require Node 18.13 or newer ([#11172](https://github.com/sveltejs/kit/pull/11172))
+
+### Minor Changes
+
+- feat: update vitest to 1.0 ([#11196](https://github.com/sveltejs/kit/pull/11196))
+
+## 5.3.4
+
+### Patch Changes
+
+- chore: upgrade to prettier 3.1.1 ([#11304](https://github.com/sveltejs/kit/pull/11304))
+
+## 5.3.3
+
+### Patch Changes
+
+- fix: call Svelte 5 an alpha rather than beta ([#11119](https://github.com/sveltejs/kit/pull/11119))
+
 ## 5.3.2
 
 ### Patch Changes

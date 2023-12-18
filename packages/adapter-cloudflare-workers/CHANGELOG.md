@@ -1,5 +1,35 @@
 # @sveltejs/adapter-cloudflare-workers
 
+## 2.0.0
+
+### Major Changes
+
+- breaking: require SvelteKit 2 ([#11316](https://github.com/sveltejs/kit/pull/11316))
+
+- chore: upgrade esbuild ([#11122](https://github.com/sveltejs/kit/pull/11122))
+
+### Patch Changes
+
+- fix: declare the adapter plugin options as optional ([#11246](https://github.com/sveltejs/kit/pull/11246))
+
+## 1.2.3
+
+### Patch Changes
+
+- fix: correctly map prerendered pages when base path is set ([#11245](https://github.com/sveltejs/kit/pull/11245))
+
+- Updated dependencies [[`bd383f576`](https://github.com/sveltejs/kit/commit/bd383f576592948a2a96b357118cdc7598a8b61c), [`b6a0be712`](https://github.com/sveltejs/kit/commit/b6a0be712644bca4bbd7bec194c1bff682e39d71), [`ded16305b`](https://github.com/sveltejs/kit/commit/ded16305b4c180a697c457ca1b2bec249b4b38fb), [`15422d21d`](https://github.com/sveltejs/kit/commit/15422d21d08a1484f92490da5dd4b77ca7332c23)]:
+  - @sveltejs/kit@1.28.0
+
+## 1.2.2
+
+### Patch Changes
+
+- fix: retain URL query string for trailing slash redirects to prerendered pages ([#11142](https://github.com/sveltejs/kit/pull/11142))
+
+- Updated dependencies [[`a7f8bdcfa`](https://github.com/sveltejs/kit/commit/a7f8bdcfabce5cda85dd073a21d0afb6138a7a08), [`a4d91304e`](https://github.com/sveltejs/kit/commit/a4d91304eebc08bf2e748d83a46d3548a546e3ab)]:
+  - @sveltejs/kit@1.27.7
+
 ## 1.2.1
 
 ### Patch Changes

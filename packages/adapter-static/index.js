@@ -18,7 +18,7 @@ export default function (options) {
 									has_param_routes
 										? '(routes with parameters are not part of entry points by default)'
 										: ''
-							  } — see https://kit.svelte.dev/docs/configuration#prerender for more info.`
+								} — see https://kit.svelte.dev/docs/configuration#prerender for more info.`
 							: '';
 
 					builder.log.error(
@@ -52,6 +52,7 @@ See https://kit.svelte.dev/docs/page-options#prerender for more details`
 			}
 
 			const {
+				// @ts-ignore
 				pages = 'build',
 				assets = pages,
 				fallback,
@@ -61,6 +62,7 @@ See https://kit.svelte.dev/docs/page-options#prerender for more details`
 			builder.rimraf(assets);
 			builder.rimraf(pages);
 
+			builder.generateEnvModule();
 			builder.writeClient(assets);
 			builder.writePrerendered(pages);
 

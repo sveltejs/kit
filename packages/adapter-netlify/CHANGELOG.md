@@ -1,5 +1,13 @@
 # @sveltejs/adapter-netlify
 
+## 3.0.0
+
+### Major Changes
+
+- breaking: require SvelteKit 2 ([#11316](https://github.com/sveltejs/kit/pull/11316))
+
+- chore: upgrade esbuild ([#11122](https://github.com/sveltejs/kit/pull/11122))
+
 ## 2.0.8
 
 ### Patch Changes

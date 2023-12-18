@@ -44,7 +44,7 @@ If the `netlify.toml` file or the `build.publish` value is missing, a default va
 
 ### Node version
 
-New projects will use Node 16 by default. However, if you're upgrading a project you created a while ago it may be stuck on an older version. See [the Netlify docs](https://docs.netlify.com/configure-builds/manage-dependencies/#node-js-and-javascript) for details on manually specifying Node 16 or newer.
+New projects will use the current Node LTS version by default. However, if you're upgrading a project you created a while ago it may be stuck on an older version. See [the Netlify docs](https://docs.netlify.com/configure-builds/manage-dependencies/#node-js-and-javascript) for details on manually specifying a current Node version.
 
 ## Netlify Edge Functions
 

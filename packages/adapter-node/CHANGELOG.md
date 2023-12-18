@@ -1,5 +1,15 @@
 # @sveltejs/adapter-node
 
+## 2.0.0
+
+### Major Changes
+
+- breaking: require SvelteKit 2 peer dependency ([#11289](https://github.com/sveltejs/kit/pull/11289))
+
+- breaking: remove polyfill option. fetch APIs will now always come from the platform being used. File and crypto APIs will be polyfilled if not available ([#11172](https://github.com/sveltejs/kit/pull/11172))
+
+- chore: upgrade rollup ([#11122](https://github.com/sveltejs/kit/pull/11122))
+
 ## 1.3.1
 
 ### Patch Changes
