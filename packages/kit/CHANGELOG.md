@@ -1,5 +1,11 @@
 # @sveltejs/kit
 
+## 2.0.3
+
+### Patch Changes
+
+- fix: reinstantiate state parameter for goto ([#11342](https://github.com/sveltejs/kit/pull/11342))
+
 ## 2.0.2
 
 ### Patch Changes

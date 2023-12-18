@@ -1,5 +1,11 @@
 # create-svelte
 
+## 6.0.3
+
+### Patch Changes
+
+- fix: remove unnecessary @types/cookie package ([#11375](https://github.com/sveltejs/kit/pull/11375))
+
 ## 6.0.2
 
 ### Patch Changes
