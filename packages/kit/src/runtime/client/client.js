@@ -2118,16 +2118,21 @@ async function load_data(url, invalid) {
 
 	const res = await native_fetch(data_url.href);
 
-	// if `__data.json` doesn't exist or the server has an internal error,
-	// fallback to native navigation so we avoid parsing the HTML error page as a JSON
-	if (res.headers.get('content-type')?.includes('text/html')) {
-		await native_navigation(url);
-	}
-
 	if (!res.ok) {
 		// error message is a JSON-stringified string which devalue can't handle at the top level
 		// turn it into a HttpError to not call handleError on the client again (was already handled on the server)
-		throw new HttpError(res.status, await res.json());
+		// if `__data.json` doesn't exist or the server has an internal error,
+		// avoid parsing the HTML error page as a JSON
+		/** @type {string | undefined} */
+		let message;
+		if (res.headers.get('content-type')?.includes('application/json')) {
+			message = await res.json();
+		} else if (res.status === 404) {
+			message = 'Not Found';
+		} else if (res.status === 500) {
+			message = 'Internal Error';
+		}
+		throw new HttpError(res.status, message);
 	}
 
 	// TODO: fix eslint error / figure out if it actually applies to our situation
