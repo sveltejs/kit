@@ -407,8 +407,14 @@ export function create_client(app, target) {
 	}) {
 		/** @type {import('types').TrailingSlash} */
 		let slash = 'never';
-		for (const node of branch) {
-			if (node?.slash !== undefined) slash = node.slash;
+		// if `paths.base === '/a/b/c`, then the root route is always `/a/b/c/`, regardless of
+		// the `trailingSlash` route option, so that relative paths to JS and CSS work
+		if (base && (url.pathname === base || url.pathname === base + '/')) {
+			slash = 'always';
+		} else {
+			for (const node of branch) {
+				if (node?.slash !== undefined) slash = node.slash;
+			}
 		}
 		url.pathname = normalize_path(url.pathname, slash);
 		// eslint-disable-next-line
@@ -660,12 +666,7 @@ export function create_client(app, target) {
 			server: server_data_node,
 			universal: node.universal?.load ? { type: 'data', data, uses } : null,
 			data: data ?? server_data_node?.data ?? null,
-			// if `paths.base === '/a/b/c`, then the root route is always `/a/b/c/`, regardless of
-			// the `trailingSlash` route option, so that relative paths to JS and CSS work
-			slash:
-				base && (url.pathname === base || url.pathname === base + '/')
-					? 'always'
-					: node.universal?.trailingSlash ?? server_data_node?.slash
+			slash: node.universal?.trailingSlash ?? server_data_node?.slash
 		};
 	}
 
