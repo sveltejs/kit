@@ -31,6 +31,7 @@ import { json, text } from '../../exports/index.js';
 import { action_json_redirect, is_action_json_request } from './page/actions.js';
 import { INVALIDATED_PARAM, TRAILING_SLASH_PARAM } from '../shared.js';
 import { get_public_env } from './env_module.js';
+import { getHrefBetween } from '../../utils/diff-urls.js';
 
 /* global __SVELTEKIT_ADAPTER_NAME__ */
 
@@ -358,12 +359,16 @@ export async function respond(request, options, manifest, state) {
 		return response;
 	} catch (e) {
 		if (e instanceof Redirect) {
+			const originalDestination = new URL(e.location, originalURL);
+			
 			const resolvedDestination = options.hooks.resolveDestination({
 				from: new URL(originalURL),
-				to: new URL(e.location, originalURL)
+				to: new URL(originalDestination)
 			});
 
-			e.location = resolvedDestination.href;
+			e.location = resolvedDestination.href === originalDestination.href
+				? e.location
+				: getHrefBetween(originalURL, resolvedDestination);
 
 
 			const response = is_data_request
