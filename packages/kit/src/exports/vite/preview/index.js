@@ -177,17 +177,10 @@ export async function preview(vite, vite_config, svelte_config) {
 		vite.middlewares.use(async (req, res) => {
 			const host = req.headers['host'];
 
-			let request;
-
-			try {
-				request = await getRequest({
-					base: `${protocol}://${host}`,
-					request: req
-				});
-			} catch (/** @type {any} */ err) {
-				res.statusCode = err.status || 400;
-				return res.end('Invalid request body');
-			}
+			const request = await getRequest({
+				base: `${protocol}://${host}`,
+				request: req
+			});
 
 			setResponse(
 				res,
