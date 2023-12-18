@@ -331,10 +331,6 @@ function kit({ svelte_config }) {
 		 */
 		configResolved(config) {
 			vite_config = config;
-
-			// This is a hack to prevent Vite from nuking useful logs,
-			// pending https://github.com/vitejs/vite/issues/9378
-			config.logger.warn('');
 		}
 	};
 
