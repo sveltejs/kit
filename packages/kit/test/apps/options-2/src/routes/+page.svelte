@@ -6,3 +6,5 @@
 
 <p data-testid="base">base: {base}</p>
 <p data-testid="assets">assets: {assets}</p>
+
+<a href="{base}/hello">Go to /hello</a>
