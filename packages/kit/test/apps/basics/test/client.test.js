@@ -920,8 +920,8 @@ test.describe('untrack', () => {
 		expect(await page.textContent('p.url')).toBe('/untrack/server/1');
 		const id = await page.textContent('p.id');
 		await page.click('a[href="/untrack/server/2"]');
-		expect(await page.textContent('p.url')).toBe('/untrack/server/2');
 		expect(await page.textContent('p.id')).toBe(id);
+		expect(await page.textContent('p.url')).toBe('/untrack/server/2');
 	});
 
 	test('untracks universal load function', async ({ page }) => {
