@@ -1,5 +1,11 @@
 # svelte-migrate
 
+## 1.3.4
+
+### Patch Changes
+
+- suggest running migrate command with latest if migration does not exist ([#11362](https://github.com/sveltejs/kit/pull/11362))
+
 ## 1.3.3
 
 ### Patch Changes
