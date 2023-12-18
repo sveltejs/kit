@@ -49,6 +49,29 @@ export async function preview(vite, vite_config, svelte_config) {
 	});
 
 	return () => {
+		// generated client assets and the contents of `static`
+		// should we use Vite's built-in asset server for this?
+		// we would need to set the outDir to do so
+		vite.middlewares.use(
+			scoped(
+				assets,
+				sirv(join(svelte_config.kit.outDir, 'output/client'), {
+					setHeaders: (res, pathname) => {
+						if (pathname.startsWith(`/${svelte_config.kit.appDir}/immutable`)) {
+							res.setHeader('cache-control', 'public,max-age=31536000,immutable');
+						}
+						if (vite_config.preview.cors) {
+							res.setHeader('Access-Control-Allow-Origin', '*');
+							res.setHeader(
+								'Access-Control-Allow-Headers',
+								'Origin, Content-Type, Accept, Range'
+							);
+						}
+					}
+				})
+			)
+		);
+
 		// prerendered dependencies
 		vite.middlewares.use(
 			mutable(join(svelte_config.kit.outDir, 'output/prerendered/dependencies'))
@@ -158,4 +181,26 @@ const mutable = (dir) =>
 /** @param {string} path */
 function is_file(path) {
 	return fs.existsSync(path) && !fs.statSync(path).isDirectory();
+}
+
+/**
+ * @param {string} scope
+ * @param {(req: import('http').IncomingMessage, res: import('http').ServerResponse, next: () => void) => void} handler
+ * @returns {(req: import('http').IncomingMessage, res: import('http').ServerResponse, next: () => void) => void}
+ */
+function scoped(scope, handler) {
+	if (scope === '') return handler;
+
+	return (req, res, next) => {
+		if (req.url?.startsWith(scope)) {
+			const original_url = req.url;
+			req.url = req.url.slice(scope.length);
+			handler(req, res, () => {
+				req.url = original_url;
+				next();
+			});
+		} else {
+			next();
+		}
+	};
 }

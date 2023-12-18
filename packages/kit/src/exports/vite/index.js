@@ -626,31 +626,6 @@ function kit({ svelte_config }) {
 		 * @see https://vitejs.dev/guide/api-plugin.html#configurepreviewserver
 		 */
 		configurePreviewServer(vite) {
-			// generated client assets and the contents of `static`
-			// should we use Vite's built-in asset server for this?
-			// we would need to set the outDir to do so
-			const { paths } = svelte_config.kit;
-			const assets = paths.assets ? SVELTE_KIT_ASSETS : paths.base;
-			vite.middlewares.use(
-				scoped(
-					assets,
-					sirv(join(svelte_config.kit.outDir, 'output/client'), {
-						setHeaders: (res, pathname) => {
-							if (pathname.startsWith(`/${svelte_config.kit.appDir}/immutable`)) {
-								res.setHeader('cache-control', 'public,max-age=31536000,immutable');
-							}
-							if (vite_config.preview.cors) {
-								res.setHeader('Access-Control-Allow-Origin', '*');
-								res.setHeader(
-									'Access-Control-Allow-Headers',
-									'Origin, Content-Type, Accept, Range'
-								);
-							}
-						}
-					})
-				)
-			);
-
 			return preview(vite, vite_config, svelte_config);
 		},
 
