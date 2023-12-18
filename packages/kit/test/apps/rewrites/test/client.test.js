@@ -12,6 +12,21 @@ test.describe('Rewrites', () => {
 		await expect(page.locator('h1')).toHaveText('Successfully rewritten');
 	});
 });
+
+
+test.describe("resolveDestination", () => {
+	test("a tags should be rewritten", async ({ page, clicknav }) => {
+		await page.goto('/resolveDestination/a');
+		await clicknav("a:has-text('Follow me')");
+		await expect(page.locator('h1')).toHaveText('Successfully Resolved');
+	});
+
+	test("redirects in load functions should be rewritten", async ({ page, clicknav }) => {
+		await page.goto('/resolveDestination/redirect');
+		await expect(page.locator('h1')).toHaveText('Successfully Resolved');
+	});
+});
+
 /*
 test.describe('Caching', () => {
 	test('caches __data.json requests with invalidated search param', async ({ page, app }) => {

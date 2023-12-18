@@ -1,0 +1,1 @@
+<a href="/resolveDestination/a/from">Follow Me</a>
