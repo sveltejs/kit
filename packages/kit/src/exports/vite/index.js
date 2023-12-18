@@ -107,14 +107,10 @@ const warning_preprocessor = {
 		if (!filename) return;
 
 		const basename = path.basename(filename);
-		if (
-			basename.startsWith('+layout.') &&
-			!content.includes(isSvelte5Plus() ? '{@render children(' : '<slot')
-		) {
+		if (basename.startsWith('+layout.') && !content.includes('<slot')) {
 			const message =
 				`\n${colors.bold().red(path.relative('.', filename))}\n` +
-				`\`${isSvelte5Plus() ? '{@render children()' : '<slot />'}\`` +
-				' missing — inner content will not be rendered';
+				'`<slot />` missing — inner content will not be rendered';
 
 			if (!warned.has(message)) {
 				console.log(message);
