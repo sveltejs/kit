@@ -809,7 +809,7 @@ test.describe('Streaming', () => {
 
 	test('Catches fetch errors from server load functions (client nav)', async ({ page }) => {
 		await page.goto('/streaming');
-		page.click('[href="/streaming/server-error"]');
+		await page.click('[href="/streaming/server-error"]');
 
 		await expect(page.locator('p.eager')).toHaveText('eager');
 		expect(page.locator('p.fail')).toBeVisible();
