@@ -4,12 +4,13 @@ title: Hooks
 
 'Hooks' are app-wide functions you declare that SvelteKit will call in response to specific events, giving you fine-grained control over the framework's behaviour.
 
-There are two hooks files, both optional:
+There are three hooks files, all optional:
 
 - `src/hooks.server.js` — your app's server hooks
 - `src/hooks.client.js` — your app's client hooks
+- `src/hooks.router.js` — your app's router hooks
 
-Code in these modules will run when the application starts up, making them useful for initializing database clients and so on.
+Code in the client & server modules will run when the application starts up, making them useful for initializing database clients and so on.
 
 > You can configure the location of these files with [`config.kit.files.hooks`](configuration#files).
 
@@ -231,6 +232,60 @@ This function is not called for _expected_ errors (those thrown with the [`error
 During development, if an error occurs because of a syntax error in your Svelte code, the passed in error has a `frame` property appended highlighting the location of the error.
 
 > Make sure that `handleError` _never_ throws an error
+
+## Router hooks
+
+The following can be added to `src/hooks.router.js`. Router hooks run both on the server and the client.
+
+### rewriteURL
+
+This function allows you to rewrite URLs before they are processed by SvelteKit. It receives a `url` object and should return a `URL` object.
+
+```js
+/// file: src/hooks.router.js
+// @errors: 2345
+// @errors: 2304
+/** @type {import('@sveltejs/kit').RewriteURL} */
+export function rewriteURL({ url }) {
+	//Process requests to '/<lang>/about' as if they were to '/about'
+	const language = getLanguageFromPath(url.pathname);
+	if(language) url.pathname = url.pathname.slice(language.length + 1);
+
+	return url;
+}
+```
+
+Rewrites happen in place, and are completely invisible to the user. For example, if you rewrite `/about` to `/about-us`, the user will still see `/about` in their browser's address bar. Only the server will know that the URL has been rewritten.
+
+### resolveDestination
+
+This function allows you to change the destination of an outgoing navigation event, such as:
+- A link click
+- A `goto` call
+- A `redirect` call
+
+It receives the current url, and the destination url, and should return a `URL` object.
+
+```js
+/// file: src/hooks.router.js
+// @errors: 2345
+// @errors: 2304
+/** @type {import('@sveltejs/kit').ResolveDestination} */
+export function resolveDestination({ from, to }) {
+	if(from.origin !== to.origin) return to; //Ignore cross-origin navigations
+
+ 	//If the destination-path already includes a language, leave it
+	const destinationLanguage = getLanguageFromPath(to.pathname);
+	if(destinationLanguage) return to;
+
+	//Otherwise, add the language from the current page
+	const language = getLanguageFromPath(from.pathname) ?? defaultLanguage;
+	to.pathname = `/${language}${to.pathname}`;
+	return to;
+}
+```
+
+The `resolveDestination` hook is applied to all links and forms during prerendering and SSR, so it can safely be used even when JavaScript is disabled.
 
 ## Further reading
 
