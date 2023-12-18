@@ -357,8 +357,15 @@ export async function respond(request, options, manifest, state) {
 
 		return response;
 	} catch (e) {
-		console.error(e);
 		if (e instanceof Redirect) {
+			const resolvedDestination = options.hooks.resolveDestination({
+				from: new URL(originalURL),
+				to: new URL(e.location, originalURL)
+			});
+
+			e.location = resolvedDestination.href;
+
+
 			const response = is_data_request
 				? redirect_json_response(e)
 				: route?.page && is_action_json_request(event)
