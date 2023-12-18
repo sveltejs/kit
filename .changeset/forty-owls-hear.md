@@ -2,4 +2,4 @@
 "create-svelte": patch
 ---
 
-fix: use correct vitest version in playwright + vitest template
+fix: use vitest 1.0 in playwright + vitest template
