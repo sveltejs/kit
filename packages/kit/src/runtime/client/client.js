@@ -1207,8 +1207,7 @@ export function create_client(app, target) {
 		}
 
 		// navigation_result.state.url has been normalized with the trailing slash option
-		url = navigation_result.state.url;
-		//console.log('url', url.href);
+		//url = navigation_result.state.url;
 
 		// reset invalidation only after a finished navigation. If there are redirects or
 		// additional invalidations, they should get the same invalidation treatment
@@ -2110,7 +2109,7 @@ export function create_client(app, target) {
 						to
 					});
 
-					await native_navigation(new URL(destination, location.href));
+					await native_navigation(destination);
 					return;
 				}
 
