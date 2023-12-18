@@ -70,6 +70,9 @@ export async function build_service_worker(
 					'service-worker': service_worker_entry_file
 				},
 				output: {
+					// default 'es' format would be nicer
+					// iife is workaround for https://github.com/vitejs/vite/issues/15379
+					format: 'iife',
 					entryFileNames: '[name].js',
 					assetFileNames: `${kit.appDir}/immutable/assets/[name].[hash][extname]`,
 					inlineDynamicImports: true
