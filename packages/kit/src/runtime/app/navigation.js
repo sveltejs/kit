@@ -11,7 +11,7 @@ export const disableScrollHandling = /* @__PURE__ */ client_method('disable_scro
  * Returns a Promise that resolves when SvelteKit navigates (or fails to navigate, in which case the promise rejects) to the specified `url`.
  * For external URLs, use `window.location = url` instead of calling `goto(url)`.
  *
- * @type {(url: string | URL, opts?: { replaceState?: boolean; noScroll?: boolean; keepFocus?: boolean; invalidateAll?: boolean; }) => Promise<void>}
+ * @type {(url: string | URL, opts?: { replaceState?: boolean; noScroll?: boolean; keepFocus?: boolean; invalidateAll?: boolean; state?: App.PageState }) => Promise<void>}
  * @param {string | URL} url Where to navigate to. Note that if you've set [`config.kit.paths.base`](https://kit.svelte.dev/docs/configuration#paths) and the URL is root-relative, you need to prepend the base path if you want to navigate within the app.
  * @param {Object} [opts] Options related to the navigation
  * @param {boolean} [opts.replaceState] If `true`, will replace the current `history` entry rather than creating a new one with `pushState`
