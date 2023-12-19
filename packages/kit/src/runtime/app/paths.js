@@ -14,9 +14,7 @@ import { resolve_route } from '../../utils/routing.js';
  *   }
  * ); // `/blog/hello-world/something/else`
  * ```
- * @param {string} id
- * @param {Record<string, string | undefined>} params
- * @returns {string}
+ * @type {import('types').ResolveRoute}
  */
 export function resolveRoute(id, params) {
 	return base + resolve_route(id, params);

@@ -419,3 +419,17 @@ export type ValidatedKitConfig = RecursiveRequired<KitConfig>;
 
 export * from '../exports/index.js';
 export * from './private.js';
+
+type RouteIds = {};
+type RouteWithParams = {
+	[K in keyof RouteIds]: RouteIds[K] extends never ? never : K;
+}[keyof RouteIds];
+type RouteWithoutParams = {
+	[K in keyof RouteIds]: RouteIds[K] extends never ? K : never;
+}[keyof RouteIds];
+
+export interface ResolveRoute {
+	// (id: string, params: Record<string, string | undefined>): string;
+	<K extends RouteWithParams>(id: K, params: RouteIds[K]): string;
+	<K extends RouteWithoutParams>(id: K): string;
+}
