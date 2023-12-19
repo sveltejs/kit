@@ -27,7 +27,8 @@
 				"packages/package/test/watch/expected/**/*",
 				"packages/package/test/watch/package/**/*",
 				"packages/kit/src/core/postbuild/fixtures/**/*",
-				"packages/migrate/migrations/routes/*/samples.md"
+				"packages/migrate/migrations/routes/*/samples.md",
+				"**/vite.config.js.timestamp-*"
 			],
 			"options": {
 				"requirePragma": true
