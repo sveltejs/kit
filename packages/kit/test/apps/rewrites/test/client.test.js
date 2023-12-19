@@ -56,3 +56,18 @@ test.describe("chained", () => {
 		await expect(page.locator('h1')).toHaveText('Successfully Chained');
 	});
 })
+
+
+
+test.describe("once", () => { 
+	// There is some potential for an easy bug where `href` get's run through resolveDestination twice
+	// 1. During the initial render
+	// 2. During the client side navigation
+
+	test("the rewrites on links should only be applied once", async ({ page, clicknav }) => {
+		await page.goto('/once');
+		await clicknav("a");
+
+		await expect(page.locator('h1')).toHaveText('1');
+	});
+})

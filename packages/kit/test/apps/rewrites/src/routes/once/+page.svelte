@@ -1,0 +1,1 @@
+<a href="once/0">The href should be resolved to "/once/1"</a>

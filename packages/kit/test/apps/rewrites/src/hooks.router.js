@@ -31,5 +31,15 @@ export const resolveDestination = ({ to }) => {
 		return to;
 	}
 
+	//If it matches the pattern /once/<int> then redirect to /once/<int+1>
+	if (to.pathname.startsWith("/once")) {
+		const match = to.pathname.match(/\/once\/(\d+)/);
+		if (match) {
+			const num = parseInt(match[1]);
+			to.pathname = `/once/${num + 1}`;
+		}
+		return to;
+	}
+
 	return to;
 };
