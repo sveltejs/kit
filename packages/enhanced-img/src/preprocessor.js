@@ -79,7 +79,7 @@ export function image(opts) {
 							const file_path = url.substring(0, url.indexOf('?'));
 							if (existsSync(path.resolve(opts.vite_config.publicDir, file_path))) {
 								throw new Error(
-									`Could not locate ${file_path}. Please move it to be located relative to the page in the routes directory or reference beginning with /static/. See https://vitejs.dev/guide/assets for more details on referencing assets.`
+									`Could not locate ${file_path}. Please move it to be located relative to the page in the routes directory or reference it beginning with /static/. See https://vitejs.dev/guide/assets for more details on referencing assets.`
 								);
 							}
 							throw new Error(
