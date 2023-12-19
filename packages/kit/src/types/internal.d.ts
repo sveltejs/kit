@@ -420,11 +420,11 @@ export type ValidatedKitConfig = RecursiveRequired<KitConfig>;
 export * from '../exports/index.js';
 export * from './private.js';
 
-type RouteIds = {};
-type RouteWithParams = {
+export type RouteIds = {};
+export type RouteWithParams = {
 	[K in keyof RouteIds]: RouteIds[K] extends never ? never : K;
 }[keyof RouteIds];
-type RouteWithoutParams = {
+export type RouteWithoutParams = {
 	[K in keyof RouteIds]: RouteIds[K] extends never ? K : never;
 }[keyof RouteIds];
 
