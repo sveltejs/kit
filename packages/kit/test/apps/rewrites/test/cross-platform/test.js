@@ -5,6 +5,6 @@ import { test } from '../../../../utils.js';
 
 test.describe.configure({ mode: 'parallel' });
 
-test("placeholder", async () => {
+test('placeholder', async () => {
 	expect(1).toBe(1);
 });

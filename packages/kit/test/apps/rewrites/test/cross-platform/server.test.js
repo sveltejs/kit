@@ -7,6 +7,6 @@ test.skip(({ javaScriptEnabled }) => !!javaScriptEnabled);
 
 test.describe.configure({ mode: 'parallel' });
 
-test("placeholder", async () => {
+test('placeholder', async () => {
 	expect(1).toBe(1);
 });
