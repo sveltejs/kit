@@ -1,5 +1,15 @@
 # @sveltejs/kit
 
+## 2.0.4
+
+### Patch Changes
+
+- fix: goto type include state ([#11398](https://github.com/sveltejs/kit/pull/11398))
+
+- fix: ensure assets are served gzip in preview ([#11377](https://github.com/sveltejs/kit/pull/11377))
+
+- fix: build service workers in IIFE format ([#11129](https://github.com/sveltejs/kit/pull/11129))
+
 ## 2.0.3
 
 ### Patch Changes
