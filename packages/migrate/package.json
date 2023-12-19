@@ -1,6 +1,6 @@
 {
 	"name": "svelte-migrate",
-	"version": "1.3.5",
+	"version": "1.3.6",
 	"description": "A CLI for migrating Svelte(Kit) codebases",
 	"repository": {
 		"type": "git",
