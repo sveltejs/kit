@@ -57,6 +57,7 @@ export function get_tsconfig(kit) {
 	const include = new Set([
 		'ambient.d.ts',
 		'non-ambient.d.ts',
+		'./types/routeIds.d.ts',
 		'./types/**/$types.d.ts',
 		config_relative('vite.config.js'),
 		config_relative('vite.config.ts')

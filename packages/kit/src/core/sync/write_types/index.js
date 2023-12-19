@@ -123,6 +123,45 @@ export async function write_all_types(config, manifest_data) {
 		}
 	}
 
+	/** @type {string[]} */
+	const route_ids = [];
+	routes_map.forEach((route_info) => {
+		// defaults to never if no params needed
+		let params = 'never';
+
+		// default type
+		const default_type = 'string';
+
+		// If we have some params, let's handle them
+		if (route_info.route.params.length > 0) {
+			params = `{ ${route_info.route.params
+				.map((param) => {
+					/** @param {string} matcher */
+					const path_to_matcher = (matcher) =>
+						posixify(path.relative(`${types_dir}`, path.join(config.kit.files.params, matcher)));
+
+					const type = param.matcher
+						? `MatcherParam<typeof import('${path_to_matcher(param.matcher)}').match>`
+						: default_type;
+
+					return `${param.name}${param.optional ? '?' : ''}: ${type}${param.rest ? '[]' : ''}`;
+				})
+				.join(', ')} }`;
+		}
+
+		route_ids.push(`'${route_info.route.id}': ${params}`);
+	});
+
+	fs.writeFileSync(
+		`${types_dir}/routeIds.d.ts`,
+		`import type { MatcherParam } from './src/routes/$types'
+		
+declare module '$app/paths' {
+	export type RouteIds = { 
+		${route_ids.join(',\n\t\t')}
+	} 
+}`
+	);
 	fs.writeFileSync(meta_data_file, JSON.stringify(meta_data, null, '\t'));
 }
 

@@ -892,6 +892,9 @@ test.describe('Matchers', () => {
 
 		await clicknav('[href="/routing/matched/everything-else"]');
 		expect(await page.textContent('h1')).toBe('fallback: everything-else');
+
+		await clicknav('[href="/routing/matched/sziaaa/withOption"]');
+		expect(await page.textContent('h1')).toBe('with option: sziaaa');
 	});
 });
 
