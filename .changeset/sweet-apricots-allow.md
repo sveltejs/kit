@@ -1,5 +1,5 @@
 ---
-"@sveltejs/kit": patch
+'@sveltejs/kit': patch
 ---
 
-add types to `resolveRoute` (id & params)
+feat: add types to `resolveRoute` (id & params)
