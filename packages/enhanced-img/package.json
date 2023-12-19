@@ -1,6 +1,6 @@
 {
 	"name": "@sveltejs/enhanced-img",
-	"version": "0.1.6",
+	"version": "0.1.7",
 	"description": "Image optimization for your Svelte apps",
 	"repository": {
 		"type": "git",
