@@ -70,10 +70,8 @@ export async function build_service_worker(
 					'service-worker': service_worker_entry_file
 				},
 				output: {
-					// default 'es' format would be nicer
-					// iife is workaround for https://github.com/vitejs/vite/issues/15379
-					format: 'iife',
-					entryFileNames: '[name].js',
+					// .mjs so that esbuild doesn't incorrectly inject `export` https://github.com/vitejs/vite/issues/15379
+					entryFileNames: 'service-worker.mjs',
 					assetFileNames: `${kit.appDir}/immutable/assets/[name].[hash][extname]`,
 					inlineDynamicImports: true
 				}
@@ -95,4 +93,7 @@ export async function build_service_worker(
 			}
 		}
 	});
+
+	// rename .mjs to .js to avoid incorrect MIME types with ancient webservers
+	fs.renameSync(`${out}/client/service-worker.mjs`, `${out}/client/service-worker.js`);
 }
