@@ -753,7 +753,6 @@ export function create_client(app, target) {
 	 * @returns {Promise<import('./types.js').NavigationResult>}
 	 */
 	async function load_route({ id, invalidating, url, params, route }) {
-		console.log('[client] loading route', id);
 		if (load_cache?.id === id) {
 			return load_cache.promise;
 		}
