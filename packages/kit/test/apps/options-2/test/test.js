@@ -49,7 +49,7 @@ test.describe('paths', () => {
 	}) => {
 		await page.goto('/basepath');
 		expect(new URL(page.url()).pathname).toBe('/basepath/');
-		await clicknav('[href="/basepath/hello"]');
+		await clicknav('[data-testid="link"]');
 		expect(new URL(page.url()).pathname).toBe('/basepath/hello');
 	});
 });
