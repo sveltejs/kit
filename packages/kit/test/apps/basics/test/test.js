@@ -881,7 +881,6 @@ test.describe('Matchers', () => {
 	test('Matches parameters', async ({ page, clicknav }) => {
 		await page.goto('/routing/matched');
 
-		// in SSR, href is relative to the current page!
 		await clicknav('[href*="/routing/matched/a"]');
 		expect(await page.textContent('h1')).toBe('lowercase: a');
 
