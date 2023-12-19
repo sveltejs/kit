@@ -1,5 +1,11 @@
 # svelte-migrate
 
+## 1.3.6
+
+### Patch Changes
+
+- fix: correct link to docs ([#11407](https://github.com/sveltejs/kit/pull/11407))
+
 ## 1.3.5
 
 ### Patch Changes
