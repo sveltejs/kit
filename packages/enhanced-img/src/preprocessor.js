@@ -13,6 +13,7 @@ const OPTIMIZABLE = /^[^?]+\.(avif|heif|gif|jpeg|jpg|png|tiff|webp)(\?.*)?$/;
 /**
  * @param {{
  *   plugin_context: import('vite').Rollup.PluginContext
+ *   vite_config: import('vite').ResolvedConfig
  *   imagetools_plugin: import('vite').Plugin
  * }} opts
  * @returns {import('svelte/types/compiler/preprocess').PreprocessorGroup}
@@ -76,9 +77,7 @@ export function image(opts) {
 						image = await resolve(opts, url, filename);
 						if (!image) {
 							const file_path = url.substring(0, url.indexOf('?'));
-							// TODO: use kit.files.assets from the Svelte config or the Vite publicDir
-							// this is good enough for now since it's purely a nicety and most people won't have changed it
-							if (existsSync(path.resolve('static', file_path))) {
+							if (existsSync(path.resolve(opts.vite_config.publicDir, file_path))) {
 								throw new Error(
 									`Could not locate ${file_path}. Please move it to be located relative to the page in the routes directory or reference beginning with /static/. See https://vitejs.dev/guide/assets for more details on referencing assets.`
 								);
