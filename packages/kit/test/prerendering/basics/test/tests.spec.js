@@ -245,3 +245,9 @@ test('prerenders paths with optional parameters with empty values', () => {
 	const content = read('optional-params.html');
 	expect(content).includes('Path with Value');
 });
+
+
+test('applies resolveDestination during prerendering', () => {
+	const content = read('resolve-destination.html');
+	expect(content).includes('href="/"');
+});
