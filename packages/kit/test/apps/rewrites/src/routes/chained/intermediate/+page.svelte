@@ -1,0 +1,1 @@
+<h1>Only resolvedDestination, but no rewrite</h1>

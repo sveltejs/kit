@@ -46,3 +46,13 @@ test.describe('resolveDestination', () => {
 		await expect(page.locator('h1')).toHaveText('Successfully Resolved');
 	});
 });
+
+
+test.describe("chained", () => { 
+	test("client side navigation applies resolveDestination and rewrites", async ({ page, clicknav }) => {
+		await page.goto('/chained');
+		await clicknav("a");
+
+		await expect(page.locator('h1')).toHaveText('Successfully Chained');
+	});
+})

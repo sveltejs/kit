@@ -8,6 +8,12 @@ export const rewriteURL = ({ url }) => {
 		return url;
 	}
 
+
+	if(url.pathname.startsWith("/chained/intermediate")) {
+		url.pathname = "/chained/to"
+		return url;
+	}
+
 	return url;
 };
 
@@ -17,6 +23,11 @@ export const rewriteURL = ({ url }) => {
 export const resolveDestination = ({ to }) => {
 	if (to.pathname.startsWith('/resolveDestination') && to.pathname.endsWith('from')) {
 		to.pathname = to.pathname.replace('from', 'to');
+		return to;
+	}
+
+	if (to.pathname === "/chained/from") {
+		to.pathname = "/chained/intermediate"
 		return to;
 	}
 
