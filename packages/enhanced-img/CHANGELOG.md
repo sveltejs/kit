@@ -1,5 +1,15 @@
 # @sveltejs/enhanced-img
 
+## 0.1.7
+
+### Patch Changes
+
+- chore: update primary branch from master to main ([`47779436c5f6c4d50011d0ef8b2709a07c0fec5d`](https://github.com/sveltejs/kit/commit/47779436c5f6c4d50011d0ef8b2709a07c0fec5d))
+
+- fix: throw an error if image cannot be resolved ([#11346](https://github.com/sveltejs/kit/pull/11346))
+
+- fix: attempt to address issues accessing images on filesystem ([#11403](https://github.com/sveltejs/kit/pull/11403))
+
 ## 0.1.6
 
 ### Patch Changes

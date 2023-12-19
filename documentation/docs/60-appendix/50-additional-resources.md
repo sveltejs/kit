@@ -13,8 +13,9 @@ The [Svelte FAQ](https://svelte.dev/faq) and [`vite-plugin-svelte` FAQ](https://
 We've written and published a few different SvelteKit sites as examples:
 
 - [`sveltejs/realworld`](https://github.com/sveltejs/realworld) contains an example blog site
-- [The `sites/kit.svelte.dev` directory](https://github.com/sveltejs/kit/tree/master/sites/kit.svelte.dev) contains the code for this site
-- [`sveltejs/sites`](https://github.com/sveltejs/sites) contains the code for [svelte.dev](https://github.com/sveltejs/sites/tree/master/sites/svelte.dev) and for a [HackerNews clone](https://github.com/sveltejs/sites/tree/master/sites/hn.svelte.dev)
+- [A HackerNews clone](https://github.com/sveltejs/sites/tree/master/sites/hn.svelte.dev)
+- [`kit.svelte.dev`](https://github.com/sveltejs/kit/tree/main/sites/kit.svelte.dev)
+- [`svelte.dev`](https://github.com/sveltejs/svelte/tree/main/sites/svelte.dev)
 
 SvelteKit users have also published plenty of examples on GitHub, under the [#sveltekit](https://github.com/topics/sveltekit) and [#sveltekit-template](https://github.com/topics/sveltekit-template) topics, as well as on [the Svelte Society site](https://sveltesociety.dev/templates#svelte-kit). Note that these have not been vetted by the maintainers and may not be up to date.
 

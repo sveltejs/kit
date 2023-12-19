@@ -2,7 +2,7 @@ import { assert, test } from 'vitest';
 import { decode } from './entities.js';
 
 /*
-Test cases shamelessly stolen from https://github.com/fb55/entities/blob/master/src/decode.spec.ts
+Test cases shamelessly stolen from https://github.com/fb55/entities/blob/main/src/decode.spec.ts
 Reproduced under BSD 2 license
 ---
 Copyright (c) Felix Böhm
