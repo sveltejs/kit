@@ -107,7 +107,8 @@ const warning_preprocessor = {
 		if (!filename) return;
 
 		const basename = path.basename(filename);
-		const has_children = content.includes('<slot') || (isSvelte5Plus() && content.includes('{@render'));
+		const has_children =
+			content.includes('<slot') || (isSvelte5Plus() && content.includes('{@render'));
 
 		if (basename.startsWith('+layout.') && !has_children) {
 			const message =
