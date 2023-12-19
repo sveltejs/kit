@@ -881,19 +881,20 @@ test.describe('Matchers', () => {
 	test('Matches parameters', async ({ page, clicknav }) => {
 		await page.goto('/routing/matched');
 
-		await clicknav('[href="/routing/matched/a"]');
+		// in SSR, href is relative to the current page!
+		await clicknav('[href*="/routing/matched/a"]');
 		expect(await page.textContent('h1')).toBe('lowercase: a');
 
-		await clicknav('[href="/routing/matched/B"]');
+		await clicknav('[href*="/routing/matched/B"]');
 		expect(await page.textContent('h1')).toBe('uppercase: B');
 
-		await clicknav('[href="/routing/matched/1"]');
+		await clicknav('[href*="/routing/matched/1"]');
 		expect(await page.textContent('h1')).toBe('number: 1');
 
-		await clicknav('[href="/routing/matched/everything-else"]');
+		await clicknav('[href*="/routing/matched/everything-else"]');
 		expect(await page.textContent('h1')).toBe('fallback: everything-else');
 
-		await clicknav('[href="/routing/matched/sziaaa/withOption"]');
+		await clicknav('[href*="/routing/matched/sziaaa/withOption"]');
 		expect(await page.textContent('h1')).toBe('with option: sziaaa');
 	});
 });
