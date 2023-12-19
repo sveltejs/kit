@@ -8,9 +8,8 @@ export const rewriteURL = ({ url }) => {
 		return url;
 	}
 
-
-	if(url.pathname.startsWith("/chained/intermediate")) {
-		url.pathname = "/chained/to"
+	if (url.pathname.startsWith('/chained/intermediate')) {
+		url.pathname = '/chained/to';
 		return url;
 	}
 
@@ -26,13 +25,13 @@ export const resolveDestination = ({ to }) => {
 		return to;
 	}
 
-	if (to.pathname === "/chained/from") {
-		to.pathname = "/chained/intermediate"
+	if (to.pathname === '/chained/from') {
+		to.pathname = '/chained/intermediate';
 		return to;
 	}
 
 	//If it matches the pattern /once/<int> then redirect to /once/<int+1>
-	if (to.pathname.startsWith("/once")) {
+	if (to.pathname.startsWith('/once')) {
 		const match = to.pathname.match(/\/once\/(\d+)/);
 		if (match) {
 			const num = parseInt(match[1]);
