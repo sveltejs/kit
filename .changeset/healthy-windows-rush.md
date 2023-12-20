@@ -2,4 +2,4 @@
 "@sveltejs/kit": patch
 ---
 
-Capture scroll position when using `pushState`
+fix: capture scroll position when using `pushState`
