@@ -1611,6 +1611,7 @@ export function create_client(app, target) {
 				}
 			}
 
+			update_scroll_positions(current_history_index);
 			const opts = {
 				[HISTORY_INDEX]: (current_history_index += 1),
 				[NAVIGATION_INDEX]: current_navigation_index,
