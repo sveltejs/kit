@@ -1306,3 +1306,25 @@ test.describe.serial('Cookies API', () => {
 		expect(await span.innerText()).toContain('undefined');
 	});
 });
+
+test.describe('Scroll position', () => {
+	test('Scroll position is correct after going back from a shallow route', async ({ page, clicknav, javaScriptEnabled }) => {
+		if (!javaScriptEnabled) return;
+
+		await page.goto('/scroll/push-state');
+		await page.locator('#subpage-link').click();
+		await page.locator('#back-button').click();
+
+		const prevScrollTop = await page.evaluate(() => {
+			/** @type {Element} */ (document.scrollingElement).scrollTo(0, 9999);
+			return /** @type {Element} */ (document.scrollingElement).scrollTop;
+		});
+		expect(prevScrollTop).toBeGreaterThan(0);
+
+		await page.locator('#shallow-button').click();
+		await page.locator('#back-button').click();
+
+		const currentScrollTop = await page.evaluate(() => /** @type {Element} */ (document.scrollingElement).scrollTop);
+		expect(currentScrollTop).toBe(prevScrollTop);
+	})
+});
