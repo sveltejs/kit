@@ -34,7 +34,7 @@
 			<a
 				target="_blank"
 				rel="noreferrer"
-				href="https://github.com/sveltejs/kit/tree/master/packages/adapter-static"
+				href="https://github.com/sveltejs/kit/tree/main/packages/adapter-static"
 				class="invert"
 			>
 				<img src={html5} alt="" />
@@ -43,7 +43,7 @@
 			<a
 				target="_blank"
 				rel="noreferrer"
-				href="https://github.com/sveltejs/kit/tree/master/packages/adapter-node"
+				href="https://github.com/sveltejs/kit/tree/main/packages/adapter-node"
 				class="invert"
 			>
 				<img src={node} alt="" />
@@ -61,7 +61,7 @@
 			<a
 				target="_blank"
 				rel="noreferrer"
-				href="https://github.com/sveltejs/kit/tree/master/packages/adapter-netlify"
+				href="https://github.com/sveltejs/kit/tree/main/packages/adapter-netlify"
 			>
 				<img src={netlify} alt="" />
 				<span>Netlify</span>
@@ -69,7 +69,7 @@
 			<a
 				target="_blank"
 				rel="noreferrer"
-				href="https://github.com/sveltejs/kit/tree/master/packages/adapter-cloudflare"
+				href="https://github.com/sveltejs/kit/tree/main/packages/adapter-cloudflare"
 			>
 				<img src={cloudflare} alt="" />
 				<span>Cloudflare</span>
