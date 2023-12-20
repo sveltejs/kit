@@ -76,28 +76,11 @@ function serve_prerendered() {
 
 /** @type {import('polka').Middleware} */
 const ssr = async (req, res) => {
-	/** @type {Request | undefined} */
-	let request;
-
-	try {
-		request = await getRequest({
-			base: origin || get_origin(req.headers),
-			request: req,
-			bodySizeLimit: body_size_limit
-		});
-	} catch (err) {
-		res.statusCode = err.status || 400;
-		res.end('Invalid request body');
-		return;
-	}
-
-	if (address_header && !(address_header in req.headers)) {
-		throw new Error(
-			`Address header was specified with ${
-				ENV_PREFIX + 'ADDRESS_HEADER'
-			}=${address_header} but is absent from request`
-		);
-	}
+	const request = await getRequest({
+		base: origin || get_origin(req.headers),
+		request: req,
+		bodySizeLimit: body_size_limit
+	});
 
 	setResponse(
 		res,
@@ -105,6 +88,14 @@ const ssr = async (req, res) => {
 			platform: { req },
 			getClientAddress: () => {
 				if (address_header) {
+					if (!(address_header in req.headers)) {
+						throw new Error(
+							`Address header was specified with ${
+								ENV_PREFIX + 'ADDRESS_HEADER'
+							}=${address_header} but is absent from request`
+						);
+					}
+
 					const value = /** @type {string} */ (req.headers[address_header]) || '';
 
 					if (address_header === 'x-forwarded-for') {

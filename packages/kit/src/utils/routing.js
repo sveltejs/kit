@@ -91,7 +91,7 @@ export function parse_route_id(id) {
 							return '/' + result;
 						})
 						.join('')}/?$`
-			  );
+				);
 
 	return { pattern, params };
 }
@@ -136,6 +136,7 @@ export function exec(match, params, matchers) {
 	const result = {};
 
 	const values = match.slice(1);
+	const values_needing_match = values.filter((value) => value !== undefined);
 
 	let buffered = 0;
 
@@ -170,6 +171,15 @@ export function exec(match, params, matchers) {
 			if (next_param && !next_param.rest && next_param.optional && next_value && param.chained) {
 				buffered = 0;
 			}
+
+			// There are no more params and no more values, but all non-empty values have been matched
+			if (
+				!next_param &&
+				!next_value &&
+				Object.keys(result).length === values_needing_match.length
+			) {
+				buffered = 0;
+			}
 			continue;
 		}
 
@@ -202,5 +212,51 @@ function escape(str) {
 			.replace(/#/g, '%23')
 			// escape characters that have special meaning in regex
 			.replace(/[.*+?^${}()|\\]/g, '\\$&')
+	);
+}
+
+const basic_param_pattern = /\[(\[)?(\.\.\.)?(\w+?)(?:=(\w+))?\]\]?/g;
+
+/**
+ * Populate a route ID with params to resolve a pathname.
+ * @example
+ * ```js
+ * resolveRoute(
+ *   `/blog/[slug]/[...somethingElse]`,
+ *   {
+ *     slug: 'hello-world',
+ *     somethingElse: 'something/else'
+ *   }
+ * ); // `/blog/hello-world/something/else`
+ * ```
+ * @param {string} id
+ * @param {Record<string, string | undefined>} params
+ * @returns {string}
+ */
+export function resolve_route(id, params) {
+	const segments = get_route_segments(id);
+	return (
+		'/' +
+		segments
+			.map((segment) =>
+				segment.replace(basic_param_pattern, (_, optional, rest, name) => {
+					const param_value = params[name];
+
+					// This is nested so TS correctly narrows the type
+					if (!param_value) {
+						if (optional) return '';
+						if (rest && param_value !== undefined) return '';
+						throw new Error(`Missing parameter '${name}' in route ${id}`);
+					}
+
+					if (param_value.startsWith('/') || param_value.endsWith('/'))
+						throw new Error(
+							`Parameter '${name}' in route ${id} cannot start or end with a slash -- this would cause an invalid route like foo//bar`
+						);
+					return param_value;
+				})
+			)
+			.filter(Boolean)
+			.join('/')
 	);
 }

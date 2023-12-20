@@ -31,8 +31,9 @@ export interface ServerInternalModule {
 	set_assets(path: string): void;
 	set_private_env(environment: Record<string, string>): void;
 	set_public_env(environment: Record<string, string>): void;
+	set_safe_public_env(environment: Record<string, string>): void;
 	set_version(version: string): void;
-	set_fix_stack_trace(fix_stack_trace: (stack: string) => string): void;
+	set_fix_stack_trace(fix_stack_trace: (error: unknown) => string): void;
 }
 
 export interface Asset {
@@ -59,6 +60,7 @@ export interface BuildData {
 		imports: string[];
 		stylesheets: string[];
 		fonts: string[];
+		uses_env_dynamic_public: boolean;
 	} | null;
 	server_manifest: import('vite').Manifest;
 }
@@ -259,14 +261,14 @@ export interface ServerErrorNode {
 export interface ServerMetadataRoute {
 	config: any;
 	api: {
-		methods: HttpMethod[];
+		methods: Array<HttpMethod | '*'>;
 	};
 	page: {
 		methods: Array<'GET' | 'POST'>;
 	};
-	methods: HttpMethod[];
+	methods: Array<HttpMethod | '*'>;
 	prerender: PrerenderOption | undefined;
-	entries: Array<string> | undefined;
+	entries: string[] | undefined;
 }
 
 export interface ServerMetadata {
@@ -330,10 +332,10 @@ export interface SSRNode {
 export type SSRNodeLoader = () => Promise<SSRNode>;
 
 export interface SSROptions {
+	app_dir: string;
 	app_template_contains_nonce: boolean;
 	csp: ValidatedConfig['kit']['csp'];
 	csrf_check_origin: boolean;
-	track_server_fetches: boolean;
 	embedded: boolean;
 	env_public_prefix: string;
 	env_private_prefix: string;
@@ -367,6 +369,7 @@ export type SSREndpoint = Partial<Record<HttpMethod, RequestHandler>> & {
 	trailingSlash?: TrailingSlash;
 	config?: any;
 	entries?: PrerenderEntryGenerator;
+	fallback?: RequestHandler;
 };
 
 export interface SSRRoute {
@@ -407,11 +410,12 @@ export interface Uses {
 	parent: boolean;
 	route: boolean;
 	url: boolean;
+	search_params: Set<string>;
 }
 
 export type ValidatedConfig = RecursiveRequired<Config>;
 
 export type ValidatedKitConfig = RecursiveRequired<KitConfig>;
 
-export * from '../exports/index';
+export * from '../exports/index.js';
 export * from './private.js';

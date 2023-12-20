@@ -1,5 +1,58 @@
 # @sveltejs/adapter-cloudflare
 
+## 3.0.1
+
+### Patch Changes
+
+- chore: update primary branch from master to main ([`47779436c5f6c4d50011d0ef8b2709a07c0fec5d`](https://github.com/sveltejs/kit/commit/47779436c5f6c4d50011d0ef8b2709a07c0fec5d))
+
+- Updated dependencies [[`47779436c5f6c4d50011d0ef8b2709a07c0fec5d`](https://github.com/sveltejs/kit/commit/47779436c5f6c4d50011d0ef8b2709a07c0fec5d), [`16961e8cd3fa6a7f382153b1ff056bc2aae9b31b`](https://github.com/sveltejs/kit/commit/16961e8cd3fa6a7f382153b1ff056bc2aae9b31b), [`197e01f95652f511160f38b37b9da73a124ecd48`](https://github.com/sveltejs/kit/commit/197e01f95652f511160f38b37b9da73a124ecd48), [`102e4a5ae5b29624302163faf5a20c94a64a5b2c`](https://github.com/sveltejs/kit/commit/102e4a5ae5b29624302163faf5a20c94a64a5b2c), [`f8e3d8b9728c9f1ab63389342c31d7246b6f9db6`](https://github.com/sveltejs/kit/commit/f8e3d8b9728c9f1ab63389342c31d7246b6f9db6)]:
+  - @sveltejs/kit@2.0.4
+
+## 3.0.0
+
+### Major Changes
+
+- breaking: require SvelteKit 2 ([#11316](https://github.com/sveltejs/kit/pull/11316))
+
+- chore: upgrade esbuild ([#11122](https://github.com/sveltejs/kit/pull/11122))
+
+## 2.3.4
+
+### Patch Changes
+
+- fix: retain URL query string for trailing slash redirects to prerendered pages ([#11142](https://github.com/sveltejs/kit/pull/11142))
+
+- Updated dependencies [[`a7f8bdcfa`](https://github.com/sveltejs/kit/commit/a7f8bdcfabce5cda85dd073a21d0afb6138a7a08), [`a4d91304e`](https://github.com/sveltejs/kit/commit/a4d91304eebc08bf2e748d83a46d3548a546e3ab)]:
+  - @sveltejs/kit@1.27.7
+
+## 2.3.3
+
+### Patch Changes
+
+- fix: correctly include `config.kit.paths.base` ([#10604](https://github.com/sveltejs/kit/pull/10604))
+
+- Updated dependencies [[`7c37a2fb3`](https://github.com/sveltejs/kit/commit/7c37a2fb3bff0f47f817bc8049b454abe591b8a0), [`998fe2f19`](https://github.com/sveltejs/kit/commit/998fe2f19833df4ffc08f29e924cc8e1591f7734), [`23721d1fb`](https://github.com/sveltejs/kit/commit/23721d1fbed04083069f07c068289282819ff4cb), [`32afba695`](https://github.com/sveltejs/kit/commit/32afba695088b946aefe96da75b36de9b0667fbe)]:
+  - @sveltejs/kit@1.23.0
+
+## 2.3.2
+
+### Patch Changes
+
+- fix: mark `cloudflare:` packages as external ([#10404](https://github.com/sveltejs/kit/pull/10404))
+
+- Updated dependencies [[`0f0049810`](https://github.com/sveltejs/kit/commit/0f00498100361ef0a4ea8b0b4e8465e442fa22a6), [`6f36aefe1`](https://github.com/sveltejs/kit/commit/6f36aefe13bf55cfaef14166c60ecee989061ddd)]:
+  - @sveltejs/kit@1.22.4
+
+## 2.3.1
+
+### Patch Changes
+
+- chore: upgrade to esbuild 0.18.11 ([#10330](https://github.com/sveltejs/kit/pull/10330))
+
+- Updated dependencies [[`23d1df702`](https://github.com/sveltejs/kit/commit/23d1df702f0fd77983040404352d8d83fd1dd8a1), [`486a971fe`](https://github.com/sveltejs/kit/commit/486a971fe7c375aae1585f1fa2505e28f86f4b8e)]:
+  - @sveltejs/kit@1.22.2
+
 ## 2.3.0
 
 ### Minor Changes

@@ -2,8 +2,11 @@ import { webcrypto } from 'node:crypto';
 import { assert, beforeAll, test } from 'vitest';
 import { Csp } from './csp.js';
 
-// @ts-expect-error
-globalThis.crypto = webcrypto;
+// TODO: remove after bumping peer dependency to require Node 20
+if (!globalThis.crypto) {
+	// @ts-expect-error
+	globalThis.crypto = webcrypto;
+}
 
 beforeAll(() => {
 	// @ts-expect-error

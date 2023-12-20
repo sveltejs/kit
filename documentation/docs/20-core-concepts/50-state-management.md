@@ -36,7 +36,7 @@ export const actions = {
 
 The `user` variable is shared by everyone who connects to this server. If Alice submitted an embarrassing secret, and Bob visited the page after her, Bob would know Alice's secret. In addition, when Alice returns to the site later in the day, the server may have restarted, losing her data.
 
-Instead, you should _authenticate_ the user using [`cookies`](load#cookies-and-headers) and persist the data to a database.
+Instead, you should _authenticate_ the user using [`cookies`](load#cookies) and persist the data to a database.
 
 ## No side-effects in load
 
@@ -84,7 +84,7 @@ If you're not using SSR, then there's no risk of accidentally exposing one user'
 You might wonder how we're able to use `$page.data` and other [app stores](modules#$app-stores) if we can't use our own stores. The answer is that app stores on the server use Svelte's [context API](https://learn.svelte.dev/tutorial/context-api) — the store is attached to the component tree with `setContext`, and when you subscribe you retrieve it with `getContext`. We can do the same thing with our own stores:
 
 ```svelte
-/// file: src/routes/+layout.svelte
+<!--- file: src/routes/+layout.svelte --->
 <script>
 	import { setContext } from 'svelte';
 	import { writable } from 'svelte/store';
@@ -102,7 +102,7 @@ You might wonder how we're able to use `$page.data` and other [app stores](modul
 ```
 
 ```svelte
-/// file: src/routes/user/+page.svelte
+<!--- file: src/routes/user/+page.svelte --->
 <script>
 	import { getContext } from 'svelte';
 
@@ -117,12 +117,12 @@ Updating the context-based store value in deeper-level pages or components will 
 
 If you're not using SSR (and can guarantee that you won't need to use SSR in future) then you can safely keep state in a shared module, without using the context API.
 
-## Component state is preserved
+## Component and page state is preserved
 
 When you navigate around your application, SvelteKit reuses existing layout and page components. For example, if you have a route like this...
 
 ```svelte
-/// file: src/routes/blog/[slug]/+page.svelte
+<!--- file: src/routes/blog/[slug]/+page.svelte --->
 <script>
 	/** @type {import('./$types').PageData} */
 	export let data;
@@ -140,7 +140,7 @@ When you navigate around your application, SvelteKit reuses existing layout and 
 <div>{@html data.content}</div>
 ```
 
-...then navigating from `/blog/my-short-post` to `/blog/my-long-post` won't cause the component to be destroyed and recreated. The `data` prop (and by extension `data.title` and `data.content`) will change, but because the code isn't re-running, `estimatedReadingTime` won't be recalculated.
+...then navigating from `/blog/my-short-post` to `/blog/my-long-post` won't cause the layout, page and any other components within to be destroyed and recreated. Instead the `data` prop (and by extension `data.title` and `data.content`) will update (as it would with any other Svelte component) and, because the code isn't rerunning, lifecycle methods like `onMount` and `onDestroy` won't rerun and `estimatedReadingTime` won't be recalculated.
 
 Instead, we need to make the value [_reactive_](https://learn.svelte.dev/tutorial/reactive-assignments):
 
@@ -155,7 +155,9 @@ Instead, we need to make the value [_reactive_](https://learn.svelte.dev/tutoria
 </script>
 ```
 
-Reusing components like this means that things like sidebar scroll state are preserved, and you can easily animate between changing values. However, if you do need to completely destroy and remount a component on navigation, you can use this pattern:
+> If your code in `onMount` and `onDestroy` has to run again after navigation you can use [afterNavigate](modules#$app-navigation-afternavigate) and [beforeNavigate](modules#$app-navigation-beforenavigate) respectively.
+
+Reusing components like this means that things like sidebar scroll state are preserved, and you can easily animate between changing values. In the case that you do need to completely destroy and remount a component on navigation, you can use this pattern:
 
 ```svelte
 {#key $page.url.pathname}

@@ -31,12 +31,30 @@ export class Redirect {
 }
 
 /**
+ * An error that was thrown from within the SvelteKit runtime that is not fatal and doesn't result in a 500, such as a 404.
+ * `SvelteKitError` goes through `handleError`.
+ * @extends Error
+ */
+export class SvelteKitError extends Error {
+	/**
+	 * @param {number} status
+	 * @param {string} text
+	 * @param {string} message
+	 */
+	constructor(status, text, message) {
+		super(message);
+		this.status = status;
+		this.text = text;
+	}
+}
+
+/**
  * @template {Record<string, unknown> | undefined} [T=undefined]
  */
 export class ActionFailure {
 	/**
 	 * @param {number} status
-	 * @param {T} [data]
+	 * @param {T} data
 	 */
 	constructor(status, data) {
 		this.status = status;
@@ -54,6 +72,7 @@ export class ActionFailure {
  *   ActionFailure: typeof ActionFailure;
  *   HttpError: typeof HttpError;
  *   Redirect: typeof Redirect;
+ *   SvelteKitError: typeof SvelteKitError;
  * }} implementations
  */
 export function replace_implementations(implementations) {
@@ -63,4 +82,6 @@ export function replace_implementations(implementations) {
 	HttpError = implementations.HttpError; // eslint-disable-line no-class-assign
 	// @ts-expect-error
 	Redirect = implementations.Redirect; // eslint-disable-line no-class-assign
+	// @ts-expect-error
+	SvelteKitError = implementations.SvelteKitError; // eslint-disable-line no-class-assign
 }

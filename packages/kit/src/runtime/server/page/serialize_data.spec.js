@@ -81,7 +81,7 @@ test('computes ttl using cache-control and age headers', () => {
 	);
 });
 
-test('doesnt compute ttl when vary header is present', () => {
+test('doesnt compute ttl when vary * header is present', () => {
 	const raw = 'an "attr" & a \ud800';
 	const escaped = 'an &quot;attr&quot; &amp; a &#55296;';
 	const response_body = '';
@@ -93,7 +93,7 @@ test('doesnt compute ttl when vary header is present', () => {
 				request_body: null,
 				response_body,
 				response: new Response(response_body, {
-					headers: { 'cache-control': 'max-age=10', vary: 'accept-encoding' }
+					headers: { 'cache-control': 'max-age=10', vary: '*' }
 				})
 			},
 			() => false

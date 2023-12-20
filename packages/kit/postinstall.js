@@ -1,8 +1,7 @@
-import fs from 'node:fs';
-import path from 'node:path';
 import { load_config } from './src/core/config/index.js';
-import { list_files } from './src/core/utils.js';
 import * as sync from './src/core/sync/sync.js';
+import glob from 'tiny-glob/sync.js';
+import fs from 'node:fs';
 
 try {
 	const cwd = process.env.INIT_CWD ?? process.cwd();
@@ -11,20 +10,26 @@ try {
 	if (fs.existsSync('package.json')) {
 		const pkg = JSON.parse(fs.readFileSync('package.json', 'utf8'));
 
-		const directories = [];
+		const workspaces = [];
 
 		if (pkg.workspaces) {
-			// we have to do this because of https://classic.yarnpkg.com/blog/2018/02/15/nohoist/
-			const packages = Array.isArray(pkg.workspaces) ? pkg.workspaces : pkg.workspaces.packages;
+			// Find all npm and Yarn workspace glob patterns
+			// https://classic.yarnpkg.com/blog/2018/02/15/nohoist/
+			// https://docs.npmjs.com/cli/v9/configuring-npm/package-json#workspaces
+			const patterns = Array.isArray(pkg.workspaces) ? pkg.workspaces : pkg.workspaces.packages;
 
-			for (const directory of packages) {
-				directories.push(...list_files(directory).map((dir) => path.resolve(cwd, dir)));
+			for (const pattern of patterns) {
+				workspaces.push(
+					...glob(pattern, { cwd, absolute: true }).filter((path) =>
+						fs.statSync(path).isDirectory()
+					)
+				);
 			}
 		} else {
-			directories.push(cwd);
+			workspaces.push(cwd);
 		}
 
-		for (const cwd of directories) {
+		for (const cwd of workspaces) {
 			process.chdir(cwd);
 
 			if (!fs.existsSync('package.json')) continue;

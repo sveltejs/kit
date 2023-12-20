@@ -1,7 +1,6 @@
 <script>
 	import { SearchResults } from '@sveltejs/site-kit/search';
 
-	/** @type {import('./$types').PageData} */
 	export let data;
 </script>
 
@@ -12,7 +11,14 @@
 <main>
 	<h1>Search</h1>
 	<form>
-		<input name="q" value={data.query} placeholder="Search" spellcheck="false" />
+		<input
+			name="q"
+			value={data.query}
+			type="search"
+			aria-label="Search"
+			placeholder="Search"
+			spellcheck="false"
+		/>
 	</form>
 
 	<SearchResults results={data.results} query={data.query} />

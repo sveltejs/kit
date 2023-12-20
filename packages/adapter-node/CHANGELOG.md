@@ -1,5 +1,45 @@
 # @sveltejs/adapter-node
 
+## 2.0.1
+
+### Patch Changes
+
+- chore: update primary branch from master to main ([`47779436c5f6c4d50011d0ef8b2709a07c0fec5d`](https://github.com/sveltejs/kit/commit/47779436c5f6c4d50011d0ef8b2709a07c0fec5d))
+
+- Updated dependencies [[`47779436c5f6c4d50011d0ef8b2709a07c0fec5d`](https://github.com/sveltejs/kit/commit/47779436c5f6c4d50011d0ef8b2709a07c0fec5d), [`16961e8cd3fa6a7f382153b1ff056bc2aae9b31b`](https://github.com/sveltejs/kit/commit/16961e8cd3fa6a7f382153b1ff056bc2aae9b31b), [`197e01f95652f511160f38b37b9da73a124ecd48`](https://github.com/sveltejs/kit/commit/197e01f95652f511160f38b37b9da73a124ecd48), [`102e4a5ae5b29624302163faf5a20c94a64a5b2c`](https://github.com/sveltejs/kit/commit/102e4a5ae5b29624302163faf5a20c94a64a5b2c), [`f8e3d8b9728c9f1ab63389342c31d7246b6f9db6`](https://github.com/sveltejs/kit/commit/f8e3d8b9728c9f1ab63389342c31d7246b6f9db6)]:
+  - @sveltejs/kit@2.0.4
+
+## 2.0.0
+
+### Major Changes
+
+- breaking: require SvelteKit 2 peer dependency ([#11289](https://github.com/sveltejs/kit/pull/11289))
+
+- breaking: remove polyfill option. fetch APIs will now always come from the platform being used. File and crypto APIs will be polyfilled if not available ([#11172](https://github.com/sveltejs/kit/pull/11172))
+
+- chore: upgrade rollup ([#11122](https://github.com/sveltejs/kit/pull/11122))
+
+## 1.3.1
+
+### Patch Changes
+
+- fix: build output stuck on top level await ([#10314](https://github.com/sveltejs/kit/pull/10314))
+
+- Updated dependencies [[`c1ad5b2f8`](https://github.com/sveltejs/kit/commit/c1ad5b2f84762a34adb327a0e309792603b405b3), [`67a0d869b`](https://github.com/sveltejs/kit/commit/67a0d869b3221925c3f456127205a4aee0b28e85), [`4d7f38fa1`](https://github.com/sveltejs/kit/commit/4d7f38fa18c75991bca3f723cdc50d8a67036f83), [`42c9b935e`](https://github.com/sveltejs/kit/commit/42c9b935e49fbbeff7065d1b2a31986c0b814956), [`42c9b935e`](https://github.com/sveltejs/kit/commit/42c9b935e49fbbeff7065d1b2a31986c0b814956)]:
+  - @sveltejs/kit@1.22.0
+
+## 1.3.0
+
+### Minor Changes
+
+- chore: remove build step for adapter node ([#10041](https://github.com/sveltejs/kit/pull/10041))
+
+- feat: load sourcemaps so that they can be merged to point to original sourcefiles ([#10041](https://github.com/sveltejs/kit/pull/10041))
+
+### Patch Changes
+
+- fix: do not crash server if specified `ADDRESS_HEADER` is missing from a request ([#10285](https://github.com/sveltejs/kit/pull/10285))
+
 ## 1.2.4
 
 ### Patch Changes

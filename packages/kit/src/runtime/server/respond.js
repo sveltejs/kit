@@ -5,7 +5,7 @@ import { render_page } from './page/index.js';
 import { render_response } from './page/render.js';
 import { respond_with_error } from './page/respond_with_error.js';
 import { is_form_content_type } from '../../utils/http.js';
-import { handle_fatal_error, redirect_response } from './utils.js';
+import { handle_fatal_error, method_not_allowed, redirect_response } from './utils.js';
 import {
 	decode_pathname,
 	decode_params,
@@ -18,7 +18,7 @@ import { exec } from '../../utils/routing.js';
 import { redirect_json_response, render_data } from './data/index.js';
 import { add_cookies_to_headers, get_cookies } from './cookie.js';
 import { create_fetch } from './fetch.js';
-import { Redirect } from '../control.js';
+import { HttpError, Redirect, SvelteKitError } from '../control.js';
 import {
 	validate_layout_exports,
 	validate_layout_server_exports,
@@ -27,9 +27,10 @@ import {
 	validate_server_exports
 } from '../../utils/exports.js';
 import { get_option } from '../../utils/options.js';
-import { error, json, text } from '../../exports/index.js';
+import { json, text } from '../../exports/index.js';
 import { action_json_redirect, is_action_json_request } from './page/actions.js';
-import { INVALIDATED_PARAM } from '../shared.js';
+import { INVALIDATED_PARAM, TRAILING_SLASH_PARAM } from '../shared.js';
+import { get_public_env } from './env_module.js';
 
 /* global __SVELTEKIT_ADAPTER_NAME__ */
 
@@ -41,6 +42,10 @@ const default_filter = () => false;
 
 /** @type {import('types').RequiredResolveOptions['preload']} */
 const default_preload = ({ type }) => type === 'js' || type === 'css';
+
+const page_methods = new Set(['GET', 'HEAD', 'POST']);
+
+const allowed_page_methods = new Set(['GET', 'HEAD', 'OPTIONS']);
 
 /**
  * @param {Request} request
@@ -63,7 +68,10 @@ export async function respond(request, options, manifest, state) {
 			request.headers.get('origin') !== url.origin;
 
 		if (forbidden) {
-			const csrf_error = error(403, `Cross-site ${request.method} form submissions are forbidden`);
+			const csrf_error = new HttpError(
+				403,
+				`Cross-site ${request.method} form submissions are forbidden`
+			);
 			if (request.headers.get('accept') === 'application/json') {
 				return json(csrf_error.body, { status: csrf_error.status });
 			}
@@ -91,12 +99,19 @@ export async function respond(request, options, manifest, state) {
 		decoded = decoded.slice(base.length) || '/';
 	}
 
+	if (decoded === `/${options.app_dir}/env.js`) {
+		return get_public_env(request);
+	}
+
 	const is_data_request = has_data_suffix(decoded);
 	/** @type {boolean[] | undefined} */
 	let invalidated_data_nodes;
 	if (is_data_request) {
 		decoded = strip_data_suffix(decoded) || '/';
-		url.pathname = strip_data_suffix(url.pathname) || '/';
+		url.pathname =
+			strip_data_suffix(url.pathname) +
+				(url.searchParams.get(TRAILING_SLASH_PARAM) === '1' ? '/' : '') || '/';
+		url.searchParams.delete(TRAILING_SLASH_PARAM);
 		invalidated_data_nodes = url.searchParams
 			.get(INVALIDATED_PARAM)
 			?.split('')
@@ -127,7 +142,7 @@ export async function respond(request, options, manifest, state) {
 	/** @type {Record<string, string>} */
 	const headers = {};
 
-	/** @type {Record<string, import('./page/types').Cookie>} */
+	/** @type {Record<string, import('./page/types.js').Cookie>} */
 	let cookies_to_add = {};
 
 	/** @type {import('@sveltejs/kit').RequestEvent} */
@@ -334,8 +349,8 @@ export async function respond(request, options, manifest, state) {
 			const response = is_data_request
 				? redirect_json_response(e)
 				: route?.page && is_action_json_request(event)
-				? action_json_redirect(e)
-				: redirect_response(e.status, e.location);
+					? action_json_redirect(e)
+					: redirect_response(e.status, e.location);
 			add_cookies_to_headers(response.headers, Object.values(cookies_to_add));
 			return response;
 		}
@@ -343,19 +358,12 @@ export async function respond(request, options, manifest, state) {
 	}
 
 	/**
-	 *
 	 * @param {import('@sveltejs/kit').RequestEvent} event
 	 * @param {import('@sveltejs/kit').ResolveOptions} [opts]
 	 */
 	async function resolve(event, opts) {
 		try {
 			if (opts) {
-				if ('ssr' in opts) {
-					throw new Error(
-						'ssr has been removed, set it in the appropriate +layout.js instead. See the PR for more information: https://github.com/sveltejs/kit/pull/6197'
-					);
-				}
-
 				resolve_opts = {
 					transformPageChunk: opts.transformPageChunk || default_transform,
 					filterSerializedResponseHeaders: opts.filterSerializedResponseHeaders || default_filter,
@@ -379,6 +387,8 @@ export async function respond(request, options, manifest, state) {
 			}
 
 			if (route) {
+				const method = /** @type {import('types').HttpMethod} */ (event.request.method);
+
 				/** @type {Response} */
 				let response;
 
@@ -395,14 +405,66 @@ export async function respond(request, options, manifest, state) {
 				} else if (route.endpoint && (!route.page || is_endpoint_request(event))) {
 					response = await render_endpoint(event, await route.endpoint(), state);
 				} else if (route.page) {
-					response = await render_page(event, route.page, options, manifest, state, resolve_opts);
+					if (page_methods.has(method)) {
+						response = await render_page(event, route.page, options, manifest, state, resolve_opts);
+					} else {
+						const allowed_methods = new Set(allowed_page_methods);
+						const node = await manifest._.nodes[route.page.leaf]();
+						if (node?.server?.actions) {
+							allowed_methods.add('POST');
+						}
+
+						if (method === 'OPTIONS') {
+							// This will deny CORS preflight requests implicitly because we don't
+							// add the required CORS headers to the response.
+							response = new Response(null, {
+								status: 204,
+								headers: {
+									allow: Array.from(allowed_methods.values()).join(', ')
+								}
+							});
+						} else {
+							const mod = [...allowed_methods].reduce((acc, curr) => {
+								acc[curr] = true;
+								return acc;
+							}, /** @type {Record<string, any>} */ ({}));
+							response = method_not_allowed(mod, method);
+						}
+					}
 				} else {
 					// a route will always have a page or an endpoint, but TypeScript
 					// doesn't know that
 					throw new Error('This should never happen');
 				}
 
+				// If the route contains a page and an endpoint, we need to add a
+				// `Vary: Accept` header to the response because of browser caching
+				if (request.method === 'GET' && route.page && route.endpoint) {
+					const vary = response.headers
+						.get('vary')
+						?.split(',')
+						?.map((v) => v.trim().toLowerCase());
+					if (!(vary?.includes('accept') || vary?.includes('*'))) {
+						// the returned response might have immutable headers,
+						// so we have to clone them before trying to mutate them
+						response = new Response(response.body, {
+							status: response.status,
+							statusText: response.statusText,
+							headers: new Headers(response.headers)
+						});
+						response.headers.append('Vary', 'Accept');
+					}
+				}
+
 				return response;
+			}
+
+			if (state.error && event.isSubRequest) {
+				return await fetch(request, {
+					headers: {
+						'x-sveltekit-error': 'true'
+					}
+				});
 			}
 
 			if (state.error) {
@@ -420,7 +482,7 @@ export async function respond(request, options, manifest, state) {
 					manifest,
 					state,
 					status: 404,
-					error: new Error(`Not found: ${event.url.pathname}`),
+					error: new SvelteKitError(404, 'Not Found', `Not found: ${event.url.pathname}`),
 					resolve_opts
 				});
 			}

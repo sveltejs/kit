@@ -1,5 +1,35 @@
 # @sveltejs/package
 
+## 2.2.4
+
+### Patch Changes
+
+- chore: update primary branch from master to main ([`47779436c5f6c4d50011d0ef8b2709a07c0fec5d`](https://github.com/sveltejs/kit/commit/47779436c5f6c4d50011d0ef8b2709a07c0fec5d))
+
+## 2.2.3
+
+### Patch Changes
+
+- fix: overwrite nodenext option when transpiling ([#11092](https://github.com/sveltejs/kit/pull/11092))
+
+## 2.2.2
+
+### Patch Changes
+
+- fix: prevent crash on errors in watch mode ([#10628](https://github.com/sveltejs/kit/pull/10628))
+
+## 2.2.1
+
+### Patch Changes
+
+- fix: delay emptying `dist/` folder ([#10514](https://github.com/sveltejs/kit/pull/10514))
+
+## 2.2.0
+
+### Minor Changes
+
+- feat: use Svelte 4 typings when packaging if dependencies allow it ([#10328](https://github.com/sveltejs/kit/pull/10328))
+
 ## 2.1.0
 
 ### Minor Changes
