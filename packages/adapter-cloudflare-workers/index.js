@@ -14,7 +14,7 @@ import { fileURLToPath } from 'node:url';
  * }} WranglerConfig
  */
 
-/** @type {import('.').default} */
+/** @type {import('./index.js').default} */
 export default function ({ config = 'wrangler.toml' } = {}) {
 	return {
 		name: '@sveltejs/adapter-cloudflare-workers',
@@ -45,13 +45,20 @@ export default function ({ config = 'wrangler.toml' } = {}) {
 				}
 			});
 
+			let prerendered_entries = Array.from(builder.prerendered.pages.entries());
+
+			if (builder.config.kit.paths.base) {
+				prerendered_entries = prerendered_entries.map(([path, { file }]) => [
+					path,
+					{ file: `${builder.config.kit.paths.base}/${file}` }
+				]);
+			}
+
 			writeFileSync(
 				`${tmp}/manifest.js`,
 				`export const manifest = ${builder.generateManifest({
 					relativePath
-				})};\n\nexport const prerendered = new Map(${JSON.stringify(
-					Array.from(builder.prerendered.pages.entries())
-				)});\n`
+				})};\n\nexport const prerendered = new Map(${JSON.stringify(prerendered_entries)});\n`
 			);
 
 			await esbuild.build({
@@ -104,7 +111,7 @@ function validate_config(builder, config_file) {
 
 		if (!wrangler_config.main) {
 			throw new Error(
-				`You must specify main option in ${config_file}. Consult https://github.com/sveltejs/kit/tree/master/packages/adapter-cloudflare-workers`
+				`You must specify main option in ${config_file}. Consult https://github.com/sveltejs/kit/tree/main/packages/adapter-cloudflare-workers`
 			);
 		}
 

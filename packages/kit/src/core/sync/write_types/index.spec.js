@@ -18,7 +18,7 @@ async function run_test(dir) {
 	const initial = options({}, 'config');
 
 	initial.kit.files.assets = path.resolve(cwd, 'static');
-	initial.kit.files.params = path.resolve(cwd, 'params');
+	initial.kit.files.params = path.resolve(cwd, dir, 'params');
 	initial.kit.files.routes = path.resolve(cwd, dir);
 	initial.kit.outDir = path.resolve(cwd, path.join(dir, '.svelte-kit'));
 
@@ -40,6 +40,7 @@ test('Creates correct $types', async () => {
 	await run_test('layout-advanced');
 	await run_test('slugs');
 	await run_test('slugs-layout-not-all-pages-have-load');
+	await run_test('param-type-inference');
 	try {
 		execSync('pnpm testtypes', { cwd });
 	} catch (e) {

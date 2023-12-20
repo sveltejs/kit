@@ -3,7 +3,6 @@ import * as vite from 'vite';
 import { dedent } from '../../../core/sync/utils.js';
 import { s } from '../../../utils/misc.js';
 import { get_config_aliases } from '../utils.js';
-import { assets_base } from './utils.js';
 
 /**
  * @param {string} out
@@ -64,16 +63,17 @@ export async function build_service_worker(
 	);
 
 	await vite.build({
-		base: assets_base(kit),
 		build: {
-			lib: {
-				entry: /** @type {string} */ (service_worker_entry_file),
-				name: 'app',
-				formats: ['es']
-			},
+			modulePreload: false,
 			rollupOptions: {
+				input: {
+					'service-worker': service_worker_entry_file
+				},
 				output: {
-					entryFileNames: 'service-worker.js'
+					// .mjs so that esbuild doesn't incorrectly inject `export` https://github.com/vitejs/vite/issues/15379
+					entryFileNames: 'service-worker.mjs',
+					assetFileNames: `${kit.appDir}/immutable/assets/[name].[hash][extname]`,
+					inlineDynamicImports: true
 				}
 			},
 			outDir: `${out}/client`,
@@ -84,6 +84,16 @@ export async function build_service_worker(
 		publicDir: false,
 		resolve: {
 			alias: [...get_config_aliases(kit), { find: '$service-worker', replacement: service_worker }]
+		},
+		experimental: {
+			renderBuiltUrl(filename) {
+				return {
+					runtime: `new URL(${JSON.stringify(filename)}, location.href).pathname`
+				};
+			}
 		}
 	});
+
+	// rename .mjs to .js to avoid incorrect MIME types with ancient webservers
+	fs.renameSync(`${out}/client/service-worker.mjs`, `${out}/client/service-worker.js`);
 }

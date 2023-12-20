@@ -4,16 +4,17 @@
 	"private": true,
 	"scripts": {
 		"dev": "vite dev",
-		"build": "vite build",
+		"build": "vite build --mode staging",
 		"preview": "sirv -p 5173 -s 200.html build",
 		"test": "playwright test"
 	},
 	"devDependencies": {
 		"@sveltejs/adapter-node": "workspace:^",
 		"@sveltejs/kit": "workspace:^",
+		"@sveltejs/vite-plugin-svelte": "^3.0.1",
 		"sirv-cli": "^2.0.2",
-		"svelte": "^4.0.5",
-		"vite": "^4.4.9"
+		"svelte": "^4.2.8",
+		"vite": "^5.0.8"
 	},
 	"type": "module"
 }

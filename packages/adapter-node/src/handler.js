@@ -76,20 +76,11 @@ function serve_prerendered() {
 
 /** @type {import('polka').Middleware} */
 const ssr = async (req, res) => {
-	/** @type {Request | undefined} */
-	let request;
-
-	try {
-		request = await getRequest({
-			base: origin || get_origin(req.headers),
-			request: req,
-			bodySizeLimit: body_size_limit
-		});
-	} catch (err) {
-		res.statusCode = err.status || 400;
-		res.end('Invalid request body');
-		return;
-	}
+	const request = await getRequest({
+		base: origin || get_origin(req.headers),
+		request: req,
+		bodySizeLimit: body_size_limit
+	});
 
 	setResponse(
 		res,

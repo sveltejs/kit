@@ -4,7 +4,7 @@ import { posixify, resolve_entry } from '../../utils/filesystem.js';
 import { s } from '../../utils/misc.js';
 import { load_error_page, load_template } from '../config/index.js';
 import { runtime_directory } from '../utils.js';
-import { write_if_changed } from './utils.js';
+import { isSvelte5Plus, write_if_changed } from './utils.js';
 import colors from 'kleur';
 
 /**
@@ -25,16 +25,16 @@ const server_template = ({
 	template,
 	error_page
 }) => `
-import root from '../root.svelte';
+import root from '../root.${isSvelte5Plus() ? 'js' : 'svelte'}';
 import { set_building } from '__sveltekit/environment';
 import { set_assets } from '__sveltekit/paths';
-import { set_private_env, set_public_env } from '${runtime_directory}/shared-server.js';
+import { set_private_env, set_public_env, set_safe_public_env } from '${runtime_directory}/shared-server.js';
 
 export const options = {
+	app_dir: ${s(config.kit.appDir)},
 	app_template_contains_nonce: ${template.includes('%sveltekit.nonce%')},
 	csp: ${s(config.kit.csp)},
 	csrf_check_origin: ${s(config.kit.csrf.checkOrigin)},
-	track_server_fetches: ${s(config.kit.dangerZone.trackServerFetches)},
 	embedded: ${config.kit.embedded},
 	env_public_prefix: '${config.kit.env.publicPrefix}',
 	env_private_prefix: '${config.kit.env.privatePrefix}',
@@ -63,7 +63,7 @@ export function get_hooks() {
 	return ${hooks ? `import(${s(hooks)})` : '{}'};
 }
 
-export { set_assets, set_building, set_private_env, set_public_env };
+export { set_assets, set_building, set_private_env, set_public_env, set_safe_public_env };
 `;
 
 // TODO need to re-run this whenever src/app.html or src/error.html are

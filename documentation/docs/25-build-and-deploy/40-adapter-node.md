@@ -2,7 +2,7 @@
 title: Node servers
 ---
 
-To generate a standalone Node server, use [`adapter-node`](https://github.com/sveltejs/kit/tree/master/packages/adapter-node).
+To generate a standalone Node server, use [`adapter-node`](https://github.com/sveltejs/kit/tree/main/packages/adapter-node).
 
 ## Usage
 
@@ -131,8 +131,7 @@ export default {
 			// default options are shown
 			out: 'build',
 			precompress: false,
-			envPrefix: '',
-			polyfill: true
+			envPrefix: ''
 		})
 	}
 };
@@ -161,17 +160,11 @@ MY_CUSTOM_ORIGIN=https://my.site \
 node build
 ```
 
-### polyfill
-
-Controls whether your build will load polyfills for missing modules. It defaults to `true`, and should only be disabled when using Node 18.11 or greater.
-
-Note: to use Node's built-in `crypto` global with Node 18 you will need to use the `--experimental-global-webcrypto` flag. This flag is not required with Node 20.
-
 ## Custom server
 
 The adapter creates two files in your build directory — `index.js` and `handler.js`. Running `index.js` — e.g. `node build`, if you use the default build directory — will start a server on the configured port.
 
-Alternatively, you can import the `handler.js` file, which exports a handler suitable for use with [Express](https://github.com/expressjs/expressjs.com), [Connect](https://github.com/senchalabs/connect) or [Polka](https://github.com/lukeed/polka) (or even just the built-in [`http.createServer`](https://nodejs.org/dist/latest/docs/api/http.html#httpcreateserveroptions-requestlistener)) and set up your own server:
+Alternatively, you can import the `handler.js` file, which exports a handler suitable for use with [Express](https://github.com/expressjs/express), [Connect](https://github.com/senchalabs/connect) or [Polka](https://github.com/lukeed/polka) (or even just the built-in [`http.createServer`](https://nodejs.org/dist/latest/docs/api/http.html#httpcreateserveroptions-requestlistener)) and set up your own server:
 
 ```js
 // @errors: 2307 7006

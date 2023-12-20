@@ -4,4 +4,4 @@
 <a href="/routing/rest/path/four">four</a>
 <a href="/routing/rest/path/five">five</a>
 
-<slot></slot>
+<slot />

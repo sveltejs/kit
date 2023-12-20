@@ -9,12 +9,15 @@ import * as paths from '__sveltekit/paths';
  *   manifest: import('@sveltejs/kit').SSRManifest;
  *   state: import('types').SSRState;
  *   get_cookie_header: (url: URL, header: string | null) => string;
- *   set_internal: (name: string, value: string, opts: import('cookie').CookieSerializeOptions) => void;
+ *   set_internal: (name: string, value: string, opts: import('./page/types.js').Cookie['options']) => void;
  * }} opts
  * @returns {typeof fetch}
  */
 export function create_fetch({ event, options, manifest, state, get_cookie_header, set_internal }) {
-	return async (info, init) => {
+	/**
+	 * @type {typeof fetch}
+	 */
+	const server_fetch = async (info, init) => {
 		const original_request = normalize_fetch_input(info, init, event.url);
 
 		// some runtimes (e.g. Cloudflare) error if you access `request.mode`,
@@ -23,7 +26,7 @@ export function create_fetch({ event, options, manifest, state, get_cookie_heade
 		let credentials =
 			(info instanceof Request ? info.credentials : init?.credentials) ?? 'same-origin';
 
-		return await options.hooks.handleFetch({
+		return options.hooks.handleFetch({
 			event,
 			request: original_request,
 			fetch: async (info, init) => {
@@ -131,18 +134,28 @@ export function create_fetch({ event, options, manifest, state, get_cookie_heade
 					for (const str of set_cookie_parser.splitCookiesString(set_cookie)) {
 						const { name, value, ...options } = set_cookie_parser.parseString(str);
 
+						const path = options.path ?? (url.pathname.split('/').slice(0, -1).join('/') || '/');
+
 						// options.sameSite is string, something more specific is required - type cast is safe
-						set_internal(
-							name,
-							value,
-							/** @type {import('cookie').CookieSerializeOptions} */ (options)
-						);
+						set_internal(name, value, {
+							path,
+							.../** @type {import('cookie').CookieSerializeOptions} */ (options)
+						});
 					}
 				}
 
 				return response;
 			}
 		});
+	};
+
+	// Don't make this function `async`! Otherwise, the user has to `catch` promises they use for streaming responses or else
+	// it will be an unhandled rejection. Instead, we add a `.catch(() => {})` ourselves below to this from happening.
+	return (input, init) => {
+		// See docs in fetch.js for why we need to do this
+		const response = server_fetch(input, init);
+		response.catch(() => {});
+		return response;
 	};
 }
 

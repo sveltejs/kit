@@ -4,6 +4,7 @@
 		"allowJs": true,
 		"checkJs": true,
 		"allowSyntheticDefaultImports": true,
+		"module": "es2022",
 		"moduleResolution": "bundler",
 		"outDir": "build"
 	}

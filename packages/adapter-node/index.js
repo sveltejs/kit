@@ -7,9 +7,9 @@ import json from '@rollup/plugin-json';
 
 const files = fileURLToPath(new URL('./files', import.meta.url).href);
 
-/** @type {import('.').default} */
+/** @type {import('./index.js').default} */
 export default function (opts = {}) {
-	const { out = 'build', precompress, envPrefix = '', polyfill = true } = opts;
+	const { out = 'build', precompress, envPrefix = '' } = opts;
 
 	return {
 		name: '@sveltejs/adapter-node',
@@ -62,7 +62,9 @@ export default function (opts = {}) {
 						preferBuiltins: true,
 						exportConditions: ['node']
 					}),
+					// @ts-ignore https://github.com/rollup/plugins/issues/1329
 					commonjs({ strictRequires: true }),
+					// @ts-ignore https://github.com/rollup/plugins/issues/1329
 					json()
 				]
 			});
@@ -84,11 +86,6 @@ export default function (opts = {}) {
 					ENV_PREFIX: JSON.stringify(envPrefix)
 				}
 			});
-
-			// If polyfills aren't wanted then clear the file
-			if (!polyfill) {
-				writeFileSync(`${out}/shims.js`, '', 'utf-8');
-			}
 		}
 	};
 }

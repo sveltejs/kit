@@ -10,14 +10,14 @@ If the number of route segments is unknown, you can use rest syntax — for exam
 /[org]/[repo]/tree/[branch]/[...file]
 ```
 
-...in which case a request for `/sveltejs/kit/tree/master/documentation/docs/04-advanced-routing.md` would result in the following parameters being available to the page:
+...in which case a request for `/sveltejs/kit/tree/main/documentation/docs/04-advanced-routing.md` would result in the following parameters being available to the page:
 
 ```js
 // @noErrors
 {
 	org: 'sveltejs',
 	repo: 'kit',
-	branch: 'master',
+	branch: 'main',
 	file: 'documentation/docs/04-advanced-routing.md'
 }
 ```
@@ -57,7 +57,7 @@ import { error } from '@sveltejs/kit';
 
 /** @type {import('./$types').PageLoad} */
 export function load(event) {
-	throw error(404, 'Not Found');
+	error(404, 'Not Found');
 }
 ```
 

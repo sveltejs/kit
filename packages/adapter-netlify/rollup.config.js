@@ -12,6 +12,7 @@ const config = {
 		dir: 'files/esm',
 		format: 'esm'
 	},
+	// @ts-ignore https://github.com/rollup/plugins/issues/1329
 	plugins: [nodeResolve({ preferBuiltins: true }), commonjs(), json()],
 	external: (id) => id === '0SERVER' || id.startsWith('node:'),
 	preserveEntrySignatures: 'exports-only'

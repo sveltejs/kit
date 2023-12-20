@@ -1,0 +1,16 @@
+{
+	"name": "typescript",
+	"private": true,
+	"version": "1.0.0",
+	"description": "typescript package using esnext",
+	"type": "module",
+	"peerDependencies": {
+		"svelte": "^4.0.0"
+	},
+	"exports": {
+		".": {
+			"types": "./dist/index.d.ts",
+			"svelte": "./dist/index.js"
+		}
+	}
+}

@@ -1,5 +1,81 @@
 # create-svelte
 
+## 6.0.4
+
+### Patch Changes
+
+- chore: update primary branch from master to main ([`47779436c5f6c4d50011d0ef8b2709a07c0fec5d`](https://github.com/sveltejs/kit/commit/47779436c5f6c4d50011d0ef8b2709a07c0fec5d))
+
+## 6.0.3
+
+### Patch Changes
+
+- fix: remove unnecessary @types/cookie package ([#11375](https://github.com/sveltejs/kit/pull/11375))
+
+## 6.0.2
+
+### Patch Changes
+
+- fix: use vitest 1.0 in playwright + vitest template ([#11376](https://github.com/sveltejs/kit/pull/11376))
+
+## 6.0.1
+
+### Patch Changes
+
+- chore: simplify `.prettierignore` ([#11349](https://github.com/sveltejs/kit/pull/11349))
+
+## 6.0.0
+
+### Major Changes
+
+- feat: create projects with SvelteKit 2 ([#11236](https://github.com/sveltejs/kit/pull/11236))
+
+- breaking: require Node 18.13 or newer ([#11172](https://github.com/sveltejs/kit/pull/11172))
+
+### Minor Changes
+
+- feat: update vitest to 1.0 ([#11196](https://github.com/sveltejs/kit/pull/11196))
+
+## 5.3.4
+
+### Patch Changes
+
+- chore: upgrade to prettier 3.1.1 ([#11304](https://github.com/sveltejs/kit/pull/11304))
+
+## 5.3.3
+
+### Patch Changes
+
+- fix: call Svelte 5 an alpha rather than beta ([#11119](https://github.com/sveltejs/kit/pull/11119))
+
+## 5.3.2
+
+### Patch Changes
+
+- chore: add type declaration to `.eslintrc.cjs` files ([#11091](https://github.com/sveltejs/kit/pull/11091))
+
+## 5.3.1
+
+### Patch Changes
+
+- chore: upgrade eslint-config-prettier ([#11037](https://github.com/sveltejs/kit/pull/11037))
+
+## 5.3.0
+
+### Minor Changes
+
+- feat: upgrade to prettier 3 and prettier-plugin-svelte 3 ([#10410](https://github.com/sveltejs/kit/pull/10410))
+
+### Patch Changes
+
+- fix: correctly configure `module` and `noEmit` tsconfig and jsconfig properties ([#11029](https://github.com/sveltejs/kit/pull/11029))
+
+## 5.2.0
+
+### Minor Changes
+
+- feat: add option to try out Svelte 5 beta ([#11026](https://github.com/sveltejs/kit/pull/11026))
+
 ## 5.1.1
 
 ### Patch Changes

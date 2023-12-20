@@ -1,4 +1,4 @@
-import { applyAction } from '../app/forms';
+import { applyAction } from '../app/forms.js';
 import {
 	afterNavigate,
 	beforeNavigate,
@@ -7,8 +7,10 @@ import {
 	invalidate,
 	invalidateAll,
 	preloadCode,
-	preloadData
-} from '../app/navigation';
+	preloadData,
+	pushState,
+	replaceState
+} from '../app/navigation.js';
 import { SvelteComponent } from 'svelte';
 import { ClientHooks, CSRPageNode, CSRPageNodeLoader, CSRRoute, TrailingSlash, Uses } from 'types';
 import { Page, ParamMatcher } from '@sveltejs/kit';
@@ -51,6 +53,8 @@ export interface Client {
 	invalidate_all: typeof invalidateAll;
 	preload_code: typeof preloadCode;
 	preload_data: typeof preloadData;
+	push_state: typeof pushState;
+	replace_state: typeof replaceState;
 	apply_action: typeof applyAction;
 
 	// private API
@@ -90,8 +94,9 @@ export type NavigationFinished = {
 	type: 'loaded';
 	state: NavigationState;
 	props: {
-		components: Array<typeof SvelteComponent>;
-		page?: Page;
+		constructors: Array<typeof SvelteComponent>;
+		components?: Array<SvelteComponent>;
+		page: Page;
 		form?: Record<string, any> | null;
 		[key: `data_${number}`]: Record<string, any>;
 	};
