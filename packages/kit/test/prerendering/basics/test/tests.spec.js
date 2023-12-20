@@ -61,7 +61,7 @@ test('renders a relative redirect', () => {
 });
 
 test('renders a shell when SSR is turned off and there is no server data', () => {
-	const content = read('redirect-no-ssr.html');
+	const content = read('spa-shell.html');
 	assert.match(
 		content,
 		/<!doctype html>\n<html lang="en">([\s]*?)<head>([\s]*?)<meta charset="utf-8" \/>([\s]*?)<meta name="viewport" content="width=device-width, initial-scale=1" \/>([\s\S]*?)<\/head>\n([\s]*?)<body>([\s]*?)<script>([\s\S]*?)<\/script>([\s]*?)<\/body>\n<\/html>/g
