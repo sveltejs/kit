@@ -1308,23 +1308,28 @@ test.describe.serial('Cookies API', () => {
 });
 
 test.describe('Scroll position', () => {
-	test('Scroll position is correct after going back from a shallow route', async ({ page, clicknav, javaScriptEnabled }) => {
+	test('Scroll position is correct after going back from a shallow route', async ({
+		page,
+		javaScriptEnabled
+	}) => {
 		if (!javaScriptEnabled) return;
 
 		await page.goto('/scroll/push-state');
 		await page.locator('#subpage-link').click();
 		await page.locator('#back-button').click();
 
-		const prevScrollTop = await page.evaluate(() => {
+		const prev_scroll_top = await page.evaluate(() => {
 			/** @type {Element} */ (document.scrollingElement).scrollTo(0, 9999);
 			return /** @type {Element} */ (document.scrollingElement).scrollTop;
 		});
-		expect(prevScrollTop).toBeGreaterThan(0);
+		expect(prev_scroll_top).toBeGreaterThan(0);
 
 		await page.locator('#shallow-button').click();
 		await page.locator('#back-button').click();
 
-		const currentScrollTop = await page.evaluate(() => /** @type {Element} */ (document.scrollingElement).scrollTop);
-		expect(currentScrollTop).toBe(prevScrollTop);
-	})
+		const current_scroll_top = await page.evaluate(
+			() => /** @type {Element} */ (document.scrollingElement).scrollTop
+		);
+		expect(current_scroll_top).toBe(prev_scroll_top);
+	});
 });
