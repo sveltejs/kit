@@ -1,5 +1,11 @@
 # create-svelte
 
+## 6.0.4
+
+### Patch Changes
+
+- chore: update primary branch from master to main ([`47779436c5f6c4d50011d0ef8b2709a07c0fec5d`](https://github.com/sveltejs/kit/commit/47779436c5f6c4d50011d0ef8b2709a07c0fec5d))
+
 ## 6.0.3
 
 ### Patch Changes

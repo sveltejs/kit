@@ -1,3 +1,6 @@
+import { existsSync } from 'node:fs';
+import * as path from 'node:path';
+
 import MagicString from 'magic-string';
 import { asyncWalk } from 'estree-walker';
 import { parse } from 'svelte-parse-markup';
@@ -10,6 +13,7 @@ const OPTIMIZABLE = /^[^?]+\.(avif|heif|gif|jpeg|jpg|png|tiff|webp)(\?.*)?$/;
 /**
  * @param {{
  *   plugin_context: import('vite').Rollup.PluginContext
+ *   vite_config: import('vite').ResolvedConfig
  *   imagetools_plugin: import('vite').Plugin
  * }} opts
  * @returns {import('svelte/types/compiler/preprocess').PreprocessorGroup}
@@ -72,7 +76,15 @@ export function image(opts) {
 						// need any logic blocks
 						image = await resolve(opts, url, filename);
 						if (!image) {
-							return;
+							const file_path = url.substring(0, url.indexOf('?'));
+							if (existsSync(path.resolve(opts.vite_config.publicDir, file_path))) {
+								throw new Error(
+									`Could not locate ${file_path}. Please move it to be located relative to the page in the routes directory or reference it beginning with /static/. See https://vitejs.dev/guide/assets for more details on referencing assets.`
+								);
+							}
+							throw new Error(
+								`Could not locate ${file_path}. See https://vitejs.dev/guide/assets for more details on referencing assets.`
+							);
 						}
 						images.set(url, image);
 					}
