@@ -98,6 +98,9 @@ export async function render_page(event, page, options, manifest, state, resolve
 		/** @type {import('./types.js').Fetched[]} */
 		const fetched = [];
 
+		// renders an empty 'shell' page if SSR is turned off and if there is
+		// no server data to prerender. As a result, the load functions and rendering
+		// only occur client-side.
 		if (get_option(nodes, 'ssr') === false && !(state.prerendering && should_prerender_data)) {
 			return await render_response({
 				branch: [],
