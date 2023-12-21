@@ -41,7 +41,7 @@ Video are very large files and so extra care should be taken to ensure that they
 
 ### Svelte version
 
-We recommend running the latest version of Svelte. Svelte 4 is significantly smaller and faster than Svelte 3 and Svelte 5 is very significantly smaller and faster than Svelte 4.
+We recommend running the latest version of Svelte. Svelte 4 is significantly smaller and faster than Svelte 3. The Svelte 5 preview is very significantly smaller and faster than Svelte 4 — though we don't recommend users upgrade to this version yet as it's not currently production ready.
 
 ### Packages
 
@@ -65,6 +65,6 @@ Ensure your host uses HTTP/2 or newer. Vite's code splitting creates numerous sm
 
 ## Further reading
 
-For the most part, building an performant SvelteKit app is the same as building any performant web app. You should be able to apply information from the following general performance resources to any web experience you build:
+For the most part, building a performant SvelteKit app is the same as building any performant web app. You should be able to apply information from the following general performance resources to any web experience you build:
 
 - [Core Web Vitals](https://web.dev/explore/learn-core-web-vitals)
