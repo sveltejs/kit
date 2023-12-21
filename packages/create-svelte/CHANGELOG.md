@@ -1,5 +1,29 @@
 # create-svelte
 
+## 6.0.4
+
+### Patch Changes
+
+- chore: update primary branch from master to main ([`47779436c5f6c4d50011d0ef8b2709a07c0fec5d`](https://github.com/sveltejs/kit/commit/47779436c5f6c4d50011d0ef8b2709a07c0fec5d))
+
+## 6.0.3
+
+### Patch Changes
+
+- fix: remove unnecessary @types/cookie package ([#11375](https://github.com/sveltejs/kit/pull/11375))
+
+## 6.0.2
+
+### Patch Changes
+
+- fix: use vitest 1.0 in playwright + vitest template ([#11376](https://github.com/sveltejs/kit/pull/11376))
+
+## 6.0.1
+
+### Patch Changes
+
+- chore: simplify `.prettierignore` ([#11349](https://github.com/sveltejs/kit/pull/11349))
+
 ## 6.0.0
 
 ### Major Changes

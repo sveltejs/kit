@@ -43,13 +43,13 @@ If you want to test against an existing project, you can use [pnpm `overrides`](
 
 Entry points to be aware of are:
 
-- [`packages/create-svelte`](https://github.com/sveltejs/kit/tree/master/packages/create-svelte) - code that's run when you create a new project with `npm create svelte@latest`
-- [`packages/package`](https://github.com/sveltejs/kit/tree/master/packages/package) - for the `svelte-package` command
-- [`packages/kit/src/core`](https://github.com/sveltejs/kit/tree/master/packages/kit/src/core) - code that's called at dev/build-time
-- [`packages/kit/src/core/sync`](https://github.com/sveltejs/kit/tree/master/packages/kit/src/core/sync) - for `svelte-kit sync`, which regenerates routing info and type definitions
-- [`packages/kit/src/runtime`](https://github.com/sveltejs/kit/tree/master/packages/kit/src/runtime) - code that's called at runtime
-- [`packages/kit/src/exports/vite`](https://github.com/sveltejs/kit/tree/master/packages/kit/src/exports/vite) - for all the Vite plugin related stuff
-- [`packages/adapter-[platform]`](https://github.com/sveltejs/kit/tree/master/packages) - for the various SvelteKit-provided adapters
+- [`packages/create-svelte`](https://github.com/sveltejs/kit/tree/main/packages/create-svelte) - code that's run when you create a new project with `npm create svelte@latest`
+- [`packages/package`](https://github.com/sveltejs/kit/tree/main/packages/package) - for the `svelte-package` command
+- [`packages/kit/src/core`](https://github.com/sveltejs/kit/tree/main/packages/kit/src/core) - code that's called at dev/build-time
+- [`packages/kit/src/core/sync`](https://github.com/sveltejs/kit/tree/main/packages/kit/src/core/sync) - for `svelte-kit sync`, which regenerates routing info and type definitions
+- [`packages/kit/src/runtime`](https://github.com/sveltejs/kit/tree/main/packages/kit/src/runtime) - code that's called at runtime
+- [`packages/kit/src/exports/vite`](https://github.com/sveltejs/kit/tree/main/packages/kit/src/exports/vite) - for all the Vite plugin related stuff
+- [`packages/adapter-[platform]`](https://github.com/sveltejs/kit/tree/main/packages) - for the various SvelteKit-provided adapters
 
 ## Good first issues
 
@@ -101,7 +101,7 @@ If you would like to test local changes to Vite or another dependency, you can b
 
 ## Documentation changes
 
-All documentation for SvelteKit is in the [`documentation` directory](https://github.com/sveltejs/kit/tree/master/documentation), and any improvements should be made as a Pull Request to this repository. The site itself is located in the [`sites/kit.svelte.dev` directory](https://github.com/sveltejs/kit/tree/master/sites/kit.svelte.dev) and can be run locally to preview changes.
+All documentation for SvelteKit is in the [`documentation` directory](https://github.com/sveltejs/kit/tree/main/documentation), and any improvements should be made as a Pull Request to this repository. The site itself is located in the [`sites/kit.svelte.dev` directory](https://github.com/sveltejs/kit/tree/main/sites/kit.svelte.dev) and can be run locally to preview changes.
 
 ## Sending PRs
 

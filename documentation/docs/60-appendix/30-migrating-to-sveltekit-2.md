@@ -2,7 +2,7 @@
 title: Migrating to SvelteKit v2
 ---
 
-Upgrading from SvelteKit version 1 to version 2 should be mostly seamless. There are a few breaking changes to note, which are listed here. You can use `npx svelte-migrate sveltekit-2` to migrate some of these changes automatically.
+Upgrading from SvelteKit version 1 to version 2 should be mostly seamless. There are a few breaking changes to note, which are listed here. You can use `npx svelte-migrate@latest sveltekit-2` to migrate some of these changes automatically.
 
 We highly recommend upgrading to the most recent 1.x version before upgrading to 2.0, so that you can take advantage of targeted deprecation warnings. We also recommend [updating to Svelte 4](https://svelte.dev/docs/v4-migration-guide) first: Later versions of SvelteKit 1.x support it, and SvelteKit 2.0 requires it.
 
@@ -68,7 +68,7 @@ export function load({ fetch }) {
 
 ## goto(...) changes
 
-`goto(...)` no longer accepts external URLs. To navigate to an external URL, use `window.location = url`. The `state` option was removed in favor of [shallow routing](shallow-routing).
+`goto(...)` no longer accepts external URLs. To navigate to an external URL, use `window.location = url`. The `state` object now determines `$page.state` and must adhere to the `App.PageState` interface, if declared. See [shallow routing](shallow-routing) for more details.
 
 ## paths are now relative by default
 
@@ -150,8 +150,13 @@ SvelteKit 2 requires Node `18.13` or higher, and the following minimum dependenc
 - `svelte@4`
 - `vite@5`
 - `typescript@5`
-- `@sveltejs/adapter-static@3` (if you're using it)
 - `@sveltejs/vite-plugin-svelte@3` (this is now required as a `peerDependency` of SvelteKit — previously it was directly depended upon)
+- `@sveltejs/adapter-cloudflare@3` (if you're using these adapters)
+- `@sveltejs/adapter-cloudflare-workers@2`
+- `@sveltejs/adapter-netlify@3`
+- `@sveltejs/adapter-node@2`
+- `@sveltejs/adapter-static@3`
+- `@sveltejs/adapter-vercel@4`
 
 `svelte-migrate` will update your `package.json` for you.
 

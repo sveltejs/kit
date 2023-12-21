@@ -21,6 +21,7 @@
 		{
 			"files": [
 				"**/CHANGELOG.md",
+				"**/vite.config.js.timestamp-*",
 				"**/.svelte-kit/**",
 				"documentation/**/*.md",
 				"packages/package/test/fixtures/**/expected/**/*",

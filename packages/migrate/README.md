@@ -26,4 +26,4 @@ Some migrations may annotate your codebase with tasks for completion that you ca
 
 ## Changelog
 
-[The Changelog for this package is available on GitHub](https://github.com/sveltejs/kit/blob/master/packages/migrate/CHANGELOG.md).
+[The Changelog for this package is available on GitHub](https://github.com/sveltejs/kit/blob/main/packages/migrate/CHANGELOG.md).

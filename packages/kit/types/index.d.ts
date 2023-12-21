@@ -1959,6 +1959,7 @@ declare module '$app/navigation' {
 		noScroll?: boolean;
 		keepFocus?: boolean;
 		invalidateAll?: boolean;
+		state?: App.PageState;
 	}) => Promise<void>;
 	/**
 	 * Causes any `load` functions belonging to the currently active page to re-run if they depend on the `url` in question, via `fetch` or `depends`. Returns a `Promise` that resolves when the page is subsequently updated.

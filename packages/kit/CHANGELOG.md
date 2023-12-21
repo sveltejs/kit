@@ -1,5 +1,45 @@
 # @sveltejs/kit
 
+## 2.0.5
+
+### Patch Changes
+
+- fix: render SPA shell when SSR is turned off and there is no server data ([#11405](https://github.com/sveltejs/kit/pull/11405))
+
+- fix: upgrade `sirv` and `mrmime` to modernize javascript mime type ([#11419](https://github.com/sveltejs/kit/pull/11419))
+
+## 2.0.4
+
+### Patch Changes
+
+- chore: update primary branch from master to main ([`47779436c5f6c4d50011d0ef8b2709a07c0fec5d`](https://github.com/sveltejs/kit/commit/47779436c5f6c4d50011d0ef8b2709a07c0fec5d))
+
+- fix: adjust missing inner content warning ([#11394](https://github.com/sveltejs/kit/pull/11394))
+
+- fix: prevent esbuild adding phantom exports to service worker ([#11400](https://github.com/sveltejs/kit/pull/11400))
+
+- fix: goto type include state ([#11398](https://github.com/sveltejs/kit/pull/11398))
+
+- fix: ensure assets are served gzip in preview ([#11377](https://github.com/sveltejs/kit/pull/11377))
+
+## 2.0.3
+
+### Patch Changes
+
+- fix: reinstantiate state parameter for goto ([#11342](https://github.com/sveltejs/kit/pull/11342))
+
+## 2.0.2
+
+### Patch Changes
+
+- fix: prevent endless SPA 404 loop ([#11354](https://github.com/sveltejs/kit/pull/11354))
+
+## 2.0.1
+
+### Patch Changes
+
+- fix: correctly handle trailing slash redirect when navigating from the root page ([#11357](https://github.com/sveltejs/kit/pull/11357))
+
 ## 2.0.0
 
 ### Major Changes

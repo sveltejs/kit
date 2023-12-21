@@ -316,7 +316,7 @@ function persist_state() {
 
 /**
  * @param {string | URL} url
- * @param {{ replaceState?: boolean; noScroll?: boolean; keepFocus?: boolean; invalidateAll?: boolean; }} options
+ * @param {{ replaceState?: boolean; noScroll?: boolean; keepFocus?: boolean; invalidateAll?: boolean; state?: Record<string, any> }} options
  * @param {number} redirect_count
  * @param {{}} [nav_token]
  */
@@ -327,6 +327,7 @@ async function _goto(url, options, redirect_count, nav_token) {
 		keepfocus: options.keepFocus,
 		noscroll: options.noScroll,
 		replace_state: options.replaceState,
+		state: options.state,
 		redirect_count,
 		nav_token,
 		accept: () => {
@@ -674,10 +675,10 @@ async function load_node({ loader, parent, url, params, route, server_data_node 
 		server: server_data_node,
 		universal: node.universal?.load ? { type: 'data', data, uses } : null,
 		data: data ?? server_data_node?.data ?? null,
-		// if `paths.base === '/a/b/c`, then the root route is `/a/b/c/`,
-		// regardless of the `trailingSlash` route option
+		// if `paths.base === '/a/b/c`, then the root route is always `/a/b/c/`, regardless of
+		// the `trailingSlash` route option, so that relative paths to JS and CSS work
 		slash:
-			url.pathname === base || url.pathname === base + '/'
+			base && (url.pathname === base || url.pathname === base + '/')
 				? 'always'
 				: node.universal?.trailingSlash ?? server_data_node?.slash
 	};
@@ -1121,6 +1122,7 @@ function _before_navigate({ url, type, intent, delta }) {
  *   keepfocus?: boolean;
  *   noscroll?: boolean;
  *   replace_state?: boolean;
+ *   state?: Record<string, any>;
  *   redirect_count?: number;
  *   nav_token?: {};
  *   accept?: () => void;
@@ -1134,6 +1136,7 @@ async function navigate({
 	keepfocus,
 	noscroll,
 	replace_state,
+	state = {},
 	redirect_count = 0,
 	nav_token = {},
 	accept = noop,
@@ -1227,7 +1230,7 @@ async function navigate({
 		url.pathname = navigation_result.props.page.url.pathname;
 	}
 
-	const state = popped ? popped.state : {};
+	state = popped ? popped.state : state;
 
 	if (!popped) {
 		// this is a new navigation, rather than a popstate
@@ -1549,14 +1552,6 @@ export function disable_scroll_handling() {
 /** @type {typeof import('../app/navigation.js').goto} */
 export function goto(url, opts = {}) {
 	url = resolve_url(url);
-
-	// @ts-expect-error
-	if (DEV && opts.state) {
-		// TOOD 3.0 remove
-		throw new Error(
-			'Passing `state` to `goto` is no longer supported. Use `pushState` and `replaceState` from `$app/navigation` instead.'
-		);
-	}
 
 	if (url.origin !== origin) {
 		return Promise.reject(
@@ -2031,7 +2026,7 @@ export function _start_router() {
 		route: { id: string | null };
 		data: Array<import('types').ServerDataNode | null>;
 		form: Record<string, any> | null;
-	}} opts 
+	}} opts
  */
 export async function _hydrate({
 	status = 200,
@@ -2145,16 +2140,21 @@ async function load_data(url, invalid) {
 
 	const res = await native_fetch(data_url.href);
 
-	// if `__data.json` doesn't exist or the server has an internal error,
-	// fallback to native navigation so we avoid parsing the HTML error page as a JSON
-	if (res.headers.get('content-type')?.includes('text/html')) {
-		await native_navigation(url);
-	}
-
 	if (!res.ok) {
 		// error message is a JSON-stringified string which devalue can't handle at the top level
 		// turn it into a HttpError to not call handleError on the client again (was already handled on the server)
-		throw new HttpError(res.status, await res.json());
+		// if `__data.json` doesn't exist or the server has an internal error,
+		// avoid parsing the HTML error page as a JSON
+		/** @type {string | undefined} */
+		let message;
+		if (res.headers.get('content-type')?.includes('application/json')) {
+			message = await res.json();
+		} else if (res.status === 404) {
+			message = 'Not Found';
+		} else if (res.status === 500) {
+			message = 'Internal Error';
+		}
+		throw new HttpError(res.status, message);
 	}
 
 	// TODO: fix eslint error / figure out if it actually applies to our situation

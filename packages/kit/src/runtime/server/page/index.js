@@ -72,7 +72,7 @@ export async function render_page(event, page, options, manifest, state, resolve
 			}
 		}
 
-		const should_prerender_data = nodes.some((node) => node?.server);
+		const should_prerender_data = nodes.some((node) => node?.server?.load);
 		const data_pathname = add_data_suffix(event.url.pathname);
 
 		// it's crucial that we do this before returning the non-SSR response, otherwise
@@ -98,7 +98,10 @@ export async function render_page(event, page, options, manifest, state, resolve
 		/** @type {import('./types.js').Fetched[]} */
 		const fetched = [];
 
-		if (get_option(nodes, 'ssr') === false && !state.prerendering) {
+		// renders an empty 'shell' page if SSR is turned off and if there is
+		// no server data to prerender. As a result, the load functions and rendering
+		// only occur client-side.
+		if (get_option(nodes, 'ssr') === false && !(state.prerendering && should_prerender_data)) {
 			return await render_response({
 				branch: [],
 				fetched,
@@ -281,6 +284,8 @@ export async function render_page(event, page, options, manifest, state, resolve
 			});
 		}
 
+		const ssr = get_option(nodes, 'ssr') ?? true;
+
 		return await render_response({
 			event,
 			options,
@@ -289,11 +294,11 @@ export async function render_page(event, page, options, manifest, state, resolve
 			resolve_opts,
 			page_config: {
 				csr: get_option(nodes, 'csr') ?? true,
-				ssr: get_option(nodes, 'ssr') ?? true
+				ssr
 			},
 			status,
 			error: null,
-			branch: compact(branch),
+			branch: ssr === false ? [] : compact(branch),
 			action_result,
 			fetched
 		});
