@@ -59,6 +59,10 @@ You also may consider running third-party scripts in a webworker with [Partytown
 
 Code imported via static import will be automatically bundled into your page's code. If there is a piece of code you need only when some condition is met, use a [dynamic import](https://vitejs.dev/guide/features#dynamic-import).
 
+### Prefetching
+
+You can fetch [data](link-options#data-sveltekit-preload-data) and [code](link-options#data-sveltekit-preload-code) before a page is actually loaded when the user hovers over or begins to click a link with the appropriate [link options](link-options).
+
 ### Lazy loading
 
 You can use a placeholder on intial page load and then swap that out with real contents after the page is loaded. For images, you can do this with [the `loading` attribute](https://developer.mozilla.org/en-US/docs/Web/Performance/Lazy_loading). To lazy load data, you can use [streaming with promises](load#streaming-with-promises).
