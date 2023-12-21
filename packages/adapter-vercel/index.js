@@ -164,7 +164,7 @@ const plugin = function (defaults = {}) {
 				}
 
 				const node_runtime = /nodejs([0-9]+)\.x/.exec(runtime);
-				if (runtime !== 'edge' && (!node_runtime || node_runtime[1] < 18)) {
+				if (runtime !== 'edge' && (!node_runtime || +node_runtime[1] < 18)) {
 					throw new Error(
 						`Invalid runtime '${runtime}' for route ${route.id}. Valid runtimes are 'edge' and 'nodejs18.x' or higher ` +
 							'(see the Node.js Version section in your Vercel project settings for info on the currently supported versions).'
@@ -369,7 +369,7 @@ function write(file, data) {
 // This function is duplicated in adapter-static
 /**
  * @param {import('@sveltejs/kit').Builder} builder
- * @param {import('.').Config} config
+ * @param {import('index.js').Config} config
  */
 function static_vercel_config(builder, config) {
 	/** @type {any[]} */
@@ -378,8 +378,11 @@ function static_vercel_config(builder, config) {
 	/** @type {Record<string, { path: string }>} */
 	const overrides = {};
 
-	/** @type {import('./index').ImagesConfig} */
-	const images = config.images;
+	/** @type {import('./index.js').ImagesConfig | undefined} */
+	let images;
+	if (config.runtime !== 'edge') {
+		images = /** @type {import('./index.js').ServerlessConfig} */ (config).images;
+	}
 
 	for (const [src, redirect] of builder.prerendered.redirects) {
 		prerendered_redirects.push({
