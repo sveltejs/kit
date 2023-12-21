@@ -197,7 +197,7 @@ test.describe('Shadowed pages', () => {
 
 			expect(await page.textContent('h1')).toBe('500');
 			expect(await page.textContent('#message')).toBe(
-				'This is your custom error page saying: "Data returned from `load` while rendering /shadowed/serialization is not serializable: Cannot stringify arbitrary non-POJOs (data.nope)"'
+				'This is your custom error page saying: "Data returned from `load` while rendering /shadowed/serialization is not serializable: Cannot stringify arbitrary non-POJOs (data.nope) (500 Internal Error)"'
 			);
 		});
 	}
@@ -212,7 +212,7 @@ test.describe('Errors', () => {
 
 			expect(await page.textContent('footer')).toBe('Custom layout');
 			expect(await page.textContent('#message')).toBe(
-				'This is your custom error page saying: "Crashing now"'
+				'This is your custom error page saying: "Crashing now (500 Internal Error)"'
 			);
 		});
 
@@ -236,8 +236,13 @@ test.describe('Errors', () => {
 			}
 
 			expect(await page.textContent('footer')).toBe('Custom layout');
+
+			const details = javaScriptEnabled
+				? "related to route '/errors/invalid-load-response'"
+				: 'in src/routes/errors/invalid-load-response/+page.js';
+
 			expect(await page.textContent('#message')).toBe(
-				'This is your custom error page saying: "a load function related to route \'/errors/invalid-load-response\' returned an array, but must return a plain object at the top level (i.e. `return {...}`)"'
+				`This is your custom error page saying: "a load function ${details} returned an array, but must return a plain object at the top level (i.e. \`return {...}\`) (500 Internal Error)"`
 			);
 		});
 
@@ -254,8 +259,9 @@ test.describe('Errors', () => {
 			}
 
 			expect(await page.textContent('footer')).toBe('Custom layout');
+
 			expect(await page.textContent('#message')).toBe(
-				'This is your custom error page saying: "a load function related to route \'/errors/invalid-server-load-response\' returned an array, but must return a plain object at the top level (i.e. `return {...}`)"'
+				'This is your custom error page saying: "a load function in src/routes/errors/invalid-server-load-response/+page.server.js returned an array, but must return a plain object at the top level (i.e. `return {...}`) (500 Internal Error)"'
 			);
 		});
 	}
@@ -265,7 +271,7 @@ test.describe('Errors', () => {
 
 		expect(await page.textContent('footer')).toBe('Custom layout');
 		expect(await page.textContent('#message')).toBe(
-			'This is your custom error page saying: "Crashing now"'
+			'This is your custom error page saying: "Crashing now (500 Internal Error)"'
 		);
 
 		expect(await get_computed_style('h1', 'color')).toBe('rgb(255, 0, 0)');
@@ -276,7 +282,7 @@ test.describe('Errors', () => {
 
 		expect(await page.textContent('footer')).toBe('Custom layout');
 		expect(await page.textContent('#message')).toBe(
-			'This is your custom error page saying: "Not found: /why/would/anyone/fetch/this/url"'
+			'This is your custom error page saying: "Not found: /why/would/anyone/fetch/this/url (404 Not Found)"'
 		);
 		expect(/** @type {Response} */ (response).status()).toBe(404);
 	});
@@ -313,7 +319,9 @@ test.describe('Errors', () => {
 		}
 
 		expect(res && res.status()).toBe(500);
-		expect(await page.textContent('#message')).toBe('This is your custom error page saying: "500"');
+		expect(await page.textContent('#message')).toBe(
+			'This is your custom error page saying: "500 (500 Internal Error)"'
+		);
 	});
 
 	test('error in shadow endpoint', async ({ page, read_errors }) => {
@@ -329,7 +337,7 @@ test.describe('Errors', () => {
 
 		expect(res && res.status()).toBe(500);
 		expect(await page.textContent('#message')).toBe(
-			'This is your custom error page saying: "nope"'
+			'This is your custom error page saying: "nope (500 Internal Error)"'
 		);
 	});
 
@@ -351,7 +359,7 @@ test.describe('Errors', () => {
 		expect(await page.textContent('h1')).toBe('500');
 
 		expect(await page.textContent('#message')).toBe(
-			'This is your custom error page saying: "Cannot prerender pages with actions"'
+			'This is your custom error page saying: "Cannot prerender pages with actions (500 Internal Error)"'
 		);
 	});
 
@@ -364,7 +372,7 @@ test.describe('Errors', () => {
 		await clicknav('#get-implicit');
 
 		expect(await page.textContent('pre')).toBe(
-			JSON.stringify({ status: 500, message: 'oops' }, null, '  ')
+			JSON.stringify({ status: 500, message: 'oops (500 Internal Error)' }, null, '  ')
 		);
 
 		const { status, name, message, stack, fancy } = read_errors(
@@ -407,7 +415,7 @@ test.describe('Errors', () => {
 		await clicknav('#post-implicit');
 
 		expect(await page.textContent('pre')).toBe(
-			JSON.stringify({ status: 500, message: 'oops' }, null, '  ')
+			JSON.stringify({ status: 500, message: 'oops (500 Internal Error)' }, null, '  ')
 		);
 
 		const { status, name, message, stack, fancy } = read_errors(
@@ -474,7 +482,7 @@ test.describe('Redirects', () => {
 			expect(page.url()).toBe(`${baseURL}/redirect/loopy/a`);
 			expect(await page.textContent('h1')).toBe('500');
 			expect(await page.textContent('#message')).toBe(
-				'This is your custom error page saying: "Redirect loop"'
+				'This is your custom error page saying: "Redirect loop (500 Internal Error)"'
 			);
 		} else {
 			// there's not a lot we can do to handle server-side redirect loops
@@ -502,7 +510,7 @@ test.describe('Redirects', () => {
 		expect(page.url()).toBe(`${baseURL}/redirect/missing-status/a`);
 		expect(await page.textContent('h1')).toBe('500');
 		expect(await page.textContent('#message')).toBe(
-			`This is your custom error page saying: "${message}"`
+			`This is your custom error page saying: "${message} (500 Internal Error)"`
 		);
 
 		if (!javaScriptEnabled) {
@@ -522,7 +530,7 @@ test.describe('Redirects', () => {
 		expect(page.url()).toBe(`${baseURL}/redirect/missing-status/b`);
 		expect(await page.textContent('h1')).toBe('500');
 		expect(await page.textContent('#message')).toBe(
-			`This is your custom error page saying: "${message}"`
+			`This is your custom error page saying: "${message} (500 Internal Error)"`
 		);
 	});
 
@@ -553,7 +561,7 @@ test.describe('Redirects', () => {
 		expect(page.url()).toBe(`${baseURL}/redirect`);
 	});
 
-	test('throw redirect in handle hook', async ({ baseURL, clicknav, page }) => {
+	test('redirect in handle hook', async ({ baseURL, clicknav, page }) => {
 		await page.goto('/redirect');
 
 		await clicknav('[href="/redirect/in-handle?throw"]');
@@ -566,11 +574,7 @@ test.describe('Redirects', () => {
 		expect(page.url()).toBe(`${baseURL}/redirect`);
 	});
 
-	test('sets cookies when throw redirect in handle hook', async ({
-		page,
-		app,
-		javaScriptEnabled
-	}) => {
+	test('sets cookies when redirect in handle hook', async ({ page, app, javaScriptEnabled }) => {
 		await page.goto('/cookies/set');
 		let span = page.locator('#cookie-value');
 		expect(await span.innerText()).toContain('teapot');

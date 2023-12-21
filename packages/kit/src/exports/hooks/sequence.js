@@ -111,7 +111,7 @@ export function sequence(...handlers) {
 								transformPageChunk,
 								filterSerializedResponseHeaders,
 								preload
-						  })
+							})
 						: resolve(event, { transformPageChunk, filterSerializedResponseHeaders, preload });
 				}
 			});

@@ -2,7 +2,7 @@
 title: Cloudflare Workers
 ---
 
-To deploy to [Cloudflare Workers](https://workers.cloudflare.com/), use [`adapter-cloudflare-workers`](https://github.com/sveltejs/kit/tree/master/packages/adapter-cloudflare-workers).
+To deploy to [Cloudflare Workers](https://workers.cloudflare.com/), use [`adapter-cloudflare-workers`](https://github.com/sveltejs/kit/tree/main/packages/adapter-cloudflare-workers).
 
 > Unless you have a specific reason to use `adapter-cloudflare-workers`, it's recommended that you use `adapter-cloudflare` instead. Both adapters have equivalent functionality, but Cloudflare Pages offers features like GitHub integration with automatic builds and deploys, preview deployments, instant rollback and so on.
 
@@ -58,7 +58,7 @@ wrangler login
 Then, you can build your app and deploy it:
 
 ```sh
-wrangler publish
+wrangler deploy
 ```
 
 ## Custom config

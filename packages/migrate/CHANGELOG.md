@@ -1,5 +1,55 @@
 # svelte-migrate
 
+## 1.3.6
+
+### Patch Changes
+
+- fix: correct link to docs ([#11407](https://github.com/sveltejs/kit/pull/11407))
+
+## 1.3.5
+
+### Patch Changes
+
+- chore: update primary branch from master to main ([`47779436c5f6c4d50011d0ef8b2709a07c0fec5d`](https://github.com/sveltejs/kit/commit/47779436c5f6c4d50011d0ef8b2709a07c0fec5d))
+
+## 1.3.4
+
+### Patch Changes
+
+- suggest running migrate command with latest if migration does not exist ([#11362](https://github.com/sveltejs/kit/pull/11362))
+
+## 1.3.3
+
+### Patch Changes
+
+- chore: insert package at sorted position ([#11332](https://github.com/sveltejs/kit/pull/11332))
+
+- fix: adjust cookie migration logic, note installation ([#11331](https://github.com/sveltejs/kit/pull/11331))
+
+## 1.3.2
+
+### Patch Changes
+
+- fix: handle jsconfig.json ([#11325](https://github.com/sveltejs/kit/pull/11325))
+
+## 1.3.1
+
+### Patch Changes
+
+- chore: fix broken migration links ([#11320](https://github.com/sveltejs/kit/pull/11320))
+
+## 1.3.0
+
+### Minor Changes
+
+- feat: add sveltekit v2 migration ([#11294](https://github.com/sveltejs/kit/pull/11294))
+
+## 1.2.8
+
+### Patch Changes
+
+- chore(deps): update dependency ts-morph to v21 ([#11181](https://github.com/sveltejs/kit/pull/11181))
+
 ## 1.2.7
 
 ### Patch Changes

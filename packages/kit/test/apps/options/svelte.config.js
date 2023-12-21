@@ -9,9 +9,6 @@ const config = {
 				'require-trusted-types-for': ['script']
 			}
 		},
-		dangerZone: {
-			trackServerFetches: true
-		},
 		files: {
 			assets: 'public',
 			lib: 'source/components',

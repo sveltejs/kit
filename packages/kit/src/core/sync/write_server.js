@@ -28,13 +28,13 @@ const server_template = ({
 import root from '../root.${isSvelte5Plus() ? 'js' : 'svelte'}';
 import { set_building } from '__sveltekit/environment';
 import { set_assets } from '__sveltekit/paths';
-import { set_private_env, set_public_env } from '${runtime_directory}/shared-server.js';
+import { set_private_env, set_public_env, set_safe_public_env } from '${runtime_directory}/shared-server.js';
 
 export const options = {
+	app_dir: ${s(config.kit.appDir)},
 	app_template_contains_nonce: ${template.includes('%sveltekit.nonce%')},
 	csp: ${s(config.kit.csp)},
 	csrf_check_origin: ${s(config.kit.csrf.checkOrigin)},
-	track_server_fetches: ${s(config.kit.dangerZone.trackServerFetches)},
 	embedded: ${config.kit.embedded},
 	env_public_prefix: '${config.kit.env.publicPrefix}',
 	env_private_prefix: '${config.kit.env.privatePrefix}',
@@ -63,7 +63,7 @@ export function get_hooks() {
 	return ${hooks ? `import(${s(hooks)})` : '{}'};
 }
 
-export { set_assets, set_building, set_private_env, set_public_env };
+export { set_assets, set_building, set_private_env, set_public_env, set_safe_public_env };
 `;
 
 // TODO need to re-run this whenever src/app.html or src/error.html are
