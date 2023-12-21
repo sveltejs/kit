@@ -425,6 +425,9 @@ importers:
       esm-env:
         specifier: ^1.0.0
         version: 1.0.0
+      import-meta-resolve:
+        specifier: ^4.0.0
+        version: 4.0.0
       kleur:
         specifier: ^4.1.5
         version: 4.1.5
@@ -468,9 +471,6 @@ importers:
       dts-buddy:
         specifier: ^0.4.3
         version: 0.4.3(typescript@5.3.3)
-      import-meta-resolve:
-        specifier: ^4.0.0
-        version: 4.0.0
       rollup:
         specifier: ^4.8.0
         version: 4.8.0
@@ -4099,6 +4099,7 @@ packages:
 
   /import-meta-resolve@4.0.0:
     resolution: {integrity: sha512-okYUR7ZQPH+efeuMJGlq4f8ubUgO50kByRPyt/Cy1Io4PSRsPjxME+YlVaCOx+NIToW7hCsZNFJyTPFFKepRSA==}
+    dev: false
 
   /imurmurhash@0.1.4:
     resolution: {integrity: sha512-JmXMZ6wuvDmLiHEml9ykzqO6lwFbof0GG4IkcGaENdCRDDmMVnny7s5HsIgHCbaq0w2MyPhDqkhTUgS2LU2PHA==}
