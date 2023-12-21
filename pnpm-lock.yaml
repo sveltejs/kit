@@ -76,8 +76,8 @@ importers:
         specifier: ^0.19.9
         version: 0.19.9
       worktop:
-        specifier: 0.8.0-next.15
-        version: 0.8.0-next.15
+        specifier: 0.8.0-next.16
+        version: 0.8.0-next.16
     devDependencies:
       '@sveltejs/kit':
         specifier: workspace:^
@@ -4789,11 +4789,6 @@ packages:
     resolution: {integrity: sha512-tzzskb3bG8LvYGFF/mDTpq3jpI6Q9wc3LEmBaghu+DdCssd1FakN7Bc0hVNmEyGq1bq3RgfkCb3cmQLpNPOroA==}
     engines: {node: '>=4'}
 
-  /mrmime@1.0.1:
-    resolution: {integrity: sha512-hzzEagAgDyoU1Q6yg5uI+AorQgdvMCur3FcKf7NhMKWsaYg+RnbTyHRa/9IlLF9rf455MOCtcqqrQQ83pPP7Uw==}
-    engines: {node: '>=10'}
-    dev: false
-
   /mrmime@2.0.0:
     resolution: {integrity: sha512-eu38+hdgojoyq63s+yTpN4XMBdt5l8HhMhc4VKLO9KM5caLIBvUm4thi7fFaxyTmCKeNnXZ5pAlBwCUnhA09uw==}
     engines: {node: '>=10'}
@@ -6491,11 +6486,11 @@ packages:
       string-width: 4.2.3
     dev: false
 
-  /worktop@0.8.0-next.15:
-    resolution: {integrity: sha512-0ycNO52P6nVwsjr1y20zuf0nqJatAb8L7MODBfQIxbxndHV5O4s50oZZMHWhJG1RLpHwbK0Epq8aaQK4E2GlgQ==}
+  /worktop@0.8.0-next.16:
+    resolution: {integrity: sha512-T/2AQoOONDNvGQUX+gwvFPhpej3BAVy3tA35oS0KfYWMiyvReOLh3WN0Iq67Y0rszuC96KVis9SD1S0H0t4hrw==}
     engines: {node: '>=12'}
     dependencies:
-      mrmime: 1.0.1
+      mrmime: 2.0.0
       regexparam: 2.0.2
     dev: false
 
