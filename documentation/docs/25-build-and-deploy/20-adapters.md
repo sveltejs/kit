@@ -13,7 +13,7 @@ Official adapters exist for a variety of platforms — these are documented on t
 - [`@sveltejs/adapter-static`](adapter-static) for static site generation (SSG)
 - [`@sveltejs/adapter-vercel`](adapter-vercel) for Vercel
 
-Additional [community-provided adapters](https://sveltesociety.dev/components#adapters) exist for other platforms.
+Additional [community-provided adapters](https://sveltesociety.dev/packages#svelte-kit-adapters) exist for other platforms.
 
 ## Using adapters
 

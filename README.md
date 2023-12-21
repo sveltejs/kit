@@ -22,7 +22,7 @@ Web development, streamlined. Read the [documentation](https://kit.svelte.dev/do
 | [create-svelte](packages/create-svelte)                                     | [Changelog](packages/create-svelte/CHANGELOG.md)              |
 | [svelte-migrate](packages/migrate)                                          | [Changelog](packages/migrate/CHANGELOG.md)                    |
 
-[Additional adapters](<(https://sveltesociety.dev/components#adapters)>) are maintained by the community.
+[Additional adapters](<(https://sveltesociety.dev/packages#svelte-kit-adapters)>) are maintained by the community.
 
 ## Bug reporting
 
