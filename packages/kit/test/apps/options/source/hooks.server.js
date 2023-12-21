@@ -1,3 +1,9 @@
+import { env } from '$env/dynamic/private';
+
+// this verifies that dynamic env vars can be read during analysis phase
+// (it would fail if this app contained prerendered routes)
+const FOO = env.FOO;
+
 /** @type {import('@sveltejs/kit').Handle} */
 export function handle({ event, resolve }) {
 	return resolve(event, {
