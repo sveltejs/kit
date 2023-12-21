@@ -1,5 +1,11 @@
 # @sveltejs/kit
 
+## 2.0.6
+
+### Patch Changes
+
+- fix: allow dynamic env access when building but not prerendering ([#11436](https://github.com/sveltejs/kit/pull/11436))
+
 ## 2.0.5
 
 ### Patch Changes
