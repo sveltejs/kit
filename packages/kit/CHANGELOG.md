@@ -1,5 +1,13 @@
 # @sveltejs/kit
 
+## 2.0.5
+
+### Patch Changes
+
+- fix: render SPA shell when SSR is turned off and there is no server data ([#11405](https://github.com/sveltejs/kit/pull/11405))
+
+- fix: upgrade `sirv` and `mrmime` to modernize javascript mime type ([#11419](https://github.com/sveltejs/kit/pull/11419))
+
 ## 2.0.4
 
 ### Patch Changes
