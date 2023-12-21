@@ -39,7 +39,7 @@ async function analyse({ manifest_path, env }) {
 
 	// configure `import { building } from '$app/environment'` —
 	// essential we do this before analysing the code
-	internal.set_building(true);
+	internal.set_building();
 
 	// set env, in case it's used in initialisation
 	const { publicPrefix: public_prefix, privatePrefix: private_prefix } = config.env;
