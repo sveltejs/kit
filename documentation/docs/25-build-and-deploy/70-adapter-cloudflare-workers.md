@@ -25,7 +25,6 @@ export default {
 This adapter expects to find a [wrangler.toml](https://developers.cloudflare.com/workers/platform/sites/configuration) file in the project root. It should look something like this:
 
 ```toml
-/// file: wrangler.toml
 name = "<your-service-name>"
 account_id = "<your-account-id>"
 
