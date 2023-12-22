@@ -11,8 +11,6 @@ To deploy to [Cloudflare Workers](https://workers.cloudflare.com/), use [`adapte
 Install with `npm i -D @sveltejs/adapter-cloudflare-workers`, then add the adapter to your `svelte.config.js`:
 
 ```js
-// @errors: 2307
-/// file: svelte.config.js
 import adapter from '@sveltejs/adapter-cloudflare-workers';
 
 export default {
