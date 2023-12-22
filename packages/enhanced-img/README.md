@@ -10,7 +10,7 @@ A Vite plugin which runs a Svelte preprocessor to locate images and then transfo
 
 ## Changelog
 
-[The Changelog for this package is available on GitHub](https://github.com/sveltejs/kit/blob/master/packages/enhanced-img/CHANGELOG.md).
+[The Changelog for this package is available on GitHub](https://github.com/sveltejs/kit/blob/main/packages/enhanced-img/CHANGELOG.md).
 
 ## Acknowledgements
 

@@ -87,10 +87,15 @@ declare module '__sveltekit/environment' {
 	 */
 	export const building: boolean;
 	/**
+	 * True during prerendering, false otherwise.
+	 */
+	export const prerendering: boolean;
+	/**
 	 * The value of `config.kit.version.name`.
 	 */
 	export const version: string;
 	export function set_building(): void;
+	export function set_prerendering(): void;
 }
 
 /** Internal version of $app/paths */

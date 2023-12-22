@@ -2,7 +2,7 @@
 title: Node servers
 ---
 
-To generate a standalone Node server, use [`adapter-node`](https://github.com/sveltejs/kit/tree/master/packages/adapter-node).
+To generate a standalone Node server, use [`adapter-node`](https://github.com/sveltejs/kit/tree/main/packages/adapter-node).
 
 ## Usage
 

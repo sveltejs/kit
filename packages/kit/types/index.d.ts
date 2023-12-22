@@ -1990,6 +1990,7 @@ declare module '$app/navigation' {
 		noScroll?: boolean;
 		keepFocus?: boolean;
 		invalidateAll?: boolean;
+		state?: App.PageState;
 	}) => Promise<void>;
 	/**
 	 * Causes any `load` functions belonging to the currently active page to re-run if they depend on the `url` in question, via `fetch` or `depends`. Returns a `Promise` that resolves when the page is subsequently updated.
@@ -2216,10 +2217,15 @@ declare module '__sveltekit/environment' {
 	 */
 	export const building: boolean;
 	/**
+	 * True during prerendering, false otherwise.
+	 */
+	export const prerendering: boolean;
+	/**
 	 * The value of `config.kit.version.name`.
 	 */
 	export const version: string;
 	export function set_building(): void;
+	export function set_prerendering(): void;
 }
 
 /** Internal version of $app/paths */
