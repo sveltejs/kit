@@ -16,7 +16,9 @@
 		"precommit": "pnpm format && pnpm lint",
 		"changeset:version": "changeset version && pnpm -r generate:version && git add --all",
 		"changeset:release": "changeset publish",
-		"start": "cd sites/kit.svelte.dev && npm run dev"
+		"start": "cd sites/kit.svelte.dev && npm run dev",
+		"changeset": "npx changeset"
+
 	},
 	"devDependencies": {
 		"@changesets/cli": "^2.27.1",
