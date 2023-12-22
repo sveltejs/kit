@@ -49,12 +49,12 @@
 
 				<Separator />
 
-				<a href="https://svelte.dev/chat" rel="external" title="Discord Chat">
+				<a target="_blank" rel="noopener noreferrer" href="https://svelte.dev/chat" rel="external" title="Discord Chat">
 					<span class="small">Discord</span>
 					<span class="large"><Icon name="discord" /></span>
 				</a>
 
-				<a href="https://github.com/sveltejs/kit" title="GitHub Repo">
+				<a target="_blank" rel="noopener noreferrer" href="https://github.com/sveltejs/kit" title="GitHub Repo">
 					<span class="small">GitHub</span>
 					<span class="large"><Icon name="github" /></span>
 				</a>
