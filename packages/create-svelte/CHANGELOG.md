@@ -1,5 +1,11 @@
 # create-svelte
 
+## 6.0.5
+
+### Patch Changes
+
+- fix: set the correct type for the ESLint config object ([#11453](https://github.com/sveltejs/kit/pull/11453))
+
 ## 6.0.4
 
 ### Patch Changes
