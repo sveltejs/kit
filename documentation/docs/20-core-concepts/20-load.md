@@ -168,6 +168,8 @@ Server `load` functions _always_ run on the server.
 
 By default, universal `load` functions run on the server during SSR when the user first visits your page. They will then run again during hydration, reusing any responses from [fetch requests](#making-fetch-requests). All subsequent invocations of universal `load` functions happen in the browser. You can customize the behavior through [page options](page-options). If you disable [server side rendering](page-options#ssr), you'll get an SPA and universal `load` functions _always_ run on the client.
 
+If a route contains both a universal `load` and server `load`, the server `load` will always run first; then the universal `load` runs immediately after.
+
 A `load` function is invoked at runtime, unless you [prerender](page-options#prerender) the page — in that case, it's invoked at build time.
 
 ### Input
@@ -183,6 +185,35 @@ Universal `load` functions are called with a `LoadEvent`, which has a `data` pro
 A universal `load` function can return an object containing any values, including things like custom classes and component constructors.
 
 A server `load` function must return data that can be serialized with [devalue](https://github.com/rich-harris/devalue) — anything that can be represented as JSON plus things like `BigInt`, `Date`, `Map`, `Set` and `RegExp`, or repeated/cyclical references — so that it can be transported over the network. Your data can include [promises](#streaming-with-promises), in which case it will be streamed to browsers.
+
+When using both a universal and server `load` on the same route, only the data returned in the universal `load` will be returned to the page. You can combine server and universal `load` returned data by spreading the universal `load`'s `data` property:
+
+```js
+/// file: src/routes/+page.server.js
+/** @type {import('./$types').PageServerLoad} */
+export async function load({ fetch }) {
+	const response = await fetch('https://example.com/posts')
+	const posts = await response.json()
+
+	return { posts }
+}
+```
+
+```js
+/// file: src/routes/+page.js
+import { browser } from '$app/environment'
+
+/** @type {import('./$types').PageLoad} */
+export function load({ data }) {
+	let theme = 'system'
+
+	if (browser) {
+		theme = localStorage.getItem("theme") ?? 'system';
+	}
+
+	return { ...data, theme } // { posts: [/* ... */], theme: 'system' }
+}
+```
 
 ### When to use which
 
