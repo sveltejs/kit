@@ -1,5 +1,11 @@
 # @sveltejs/package
 
+## 2.2.5
+
+### Patch Changes
+
+- fix: improve warning when encountering import.meta.env ([#11440](https://github.com/sveltejs/kit/pull/11440))
+
 ## 2.2.4
 
 ### Patch Changes
