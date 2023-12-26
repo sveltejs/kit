@@ -43,8 +43,8 @@ Reducing the size of image files is often one of the most impactful changes you 
 
 Video files can be very large, so extra care should be taken to ensure that they're optimized:
 
-- Compress videos with tools such as [Handbrake](https://handbrake.fr/). Consider converting the videos to HTML5 video formats such as WebM or MP4.
-- [Lazy load](https://developer.mozilla.org/en-US/docs/Web/Performance/Lazy_loading) videos located below the fold.
+- Compress videos with tools such as [Handbrake](https://handbrake.fr/). Consider converting the videos to web-friendly formats such as `.webm` or `.mp4`.
+- You can [lazy-load videos](https://web.dev/articles/lazy-loading-video) located below the fold with `preload="none"` (though note that this will slow down playback when the user _does_ initiate it).
 - Strip the audio track out of muted videos using a tool like [FFmpeg](https://ffmpeg.org/).
 
 ### Fonts
