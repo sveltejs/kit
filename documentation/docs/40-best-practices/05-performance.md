@@ -61,13 +61,13 @@ We recommend running the latest version of Svelte. Svelte 4 is smaller and faste
 
 ### Packages
 
-[`rollup-plugin-visualizer`](https://www.npmjs.com/package/rollup-plugin-visualizer) can be helpful for identifying which packages are contributing the most to the size of your site. You may also find areas of opportunity manually inspecting the build output with [`build: { minify: false }`](https://vitejs.dev/config/build-options.html#build-minify), or via the network tab of your browser's devtools.
+[`rollup-plugin-visualizer`](https://www.npmjs.com/package/rollup-plugin-visualizer) can be helpful for identifying which packages are contributing the most to the size of your site. You may also find opportunities to remove code by manually inspecting the build output (use `build: { minify: false }` in your [Vite config](https://vitejs.dev/config/build-options.html#build-minify) to make the output readable, but remember to undo that before deploying your app), or via the network tab of your browser's devtools.
 
 ### External scripts
 
-Try to minimize the number of third-party scripts running in the browser. For example, instead of using JavaScript-based analytics you may wish to use server-side implementations. Many hosting providers with SvelteKit adapters offer such functionality such as [Cloudflare](https://www.cloudflare.com/web-analytics/), [Netlify](https://docs.netlify.com/monitor-sites/site-analytics/), and [Vercel](https://vercel.com/docs/analytics).
+Try to minimize the number of third-party scripts running in the browser. For example, instead of using JavaScript-based analytics consider using server-side implementations, such as those offered by many platforms with SvelteKit adapters including [Cloudflare](https://www.cloudflare.com/web-analytics/), [Netlify](https://docs.netlify.com/monitor-sites/site-analytics/), and [Vercel](https://vercel.com/docs/analytics).
 
-You also may consider running third-party scripts in a web worker with [Partytown's SvelteKit integration](https://partytown.builder.io/sveltekit).
+To run third party scripts in a web worker (which avoids blocking the main thread), use [Partytown's SvelteKit integration](https://partytown.builder.io/sveltekit).
 
 ### Selective loading
 
@@ -75,13 +75,13 @@ Code imported with static `import` declarations will be automatically bundled wi
 
 ## Navigation
 
-### Prefetching
+### Preloading
 
-You can fetch [data](link-options#data-sveltekit-preload-data) and [code](link-options#data-sveltekit-preload-code) before a page is actually loaded when the user hovers over (or begins to click) a link with the appropriate [link options](link-options). This is configured by default on the `<body>` element when you create a new SvelteKit app.
+You can speed up client-side navigations by eagerly preloading the necessary code and data, using [link options](link-options). This is configured by default on the `<body>` element when you create a new SvelteKit app.
 
 ### Non-essential data
 
-For slow-loading data that isn't needed immediately, the object returned from your `load` function can contain a promise rather than the data itself. For server `load` functions, this will cause the data to [stream](load#streaming-with-promises) in after the navigation (or initial page load).
+For slow-loading data that isn't needed immediately, the object returned from your `load` function can contain promises rather than the data itself. For server `load` functions, this will cause the data to [stream](load#streaming-with-promises) in after the navigation (or initial page load).
 
 ### Preventing waterfalls
 
@@ -93,12 +93,10 @@ One of the biggest performance killers is what is referred to as a _waterfall_, 
 
 ## Hosting
 
-Your frontend should be located in the same data center as your backend to minimize latency. For sites with no central backend, many SvelteKit adapters support deploying to the _edge_, which means handling each user's requests from a nearby server. This can reduce load times significantly. Some adapters even support [configuring deployment on a per-page basis](https://kit.svelte.dev/docs/page-options#config). You should also consider serving images from a CDN (which are typically edge networks) — the hosts for many adapters offered by SvelteKit will do this automatically.
+Your frontend should be located in the same data center as your backend to minimize latency. For sites with no central backend, many SvelteKit adapters support deploying to the _edge_, which means handling each user's requests from a nearby server. This can reduce load times significantly. Some adapters even support [configuring deployment on a per-route basis](https://kit.svelte.dev/docs/page-options#config). You should also consider serving images from a CDN (which are typically edge networks) — the hosts for many SvelteKit adapters will do this automatically.
 
 Ensure your host uses HTTP/2 or newer. Vite's code splitting creates numerous small files for improved cacheability, which results in excellent performance, but this does assume that your files can be loaded in parallel with HTTP/2.
 
 ## Further reading
 
-For the most part, building a performant SvelteKit app is the same as building any performant web app. You should be able to apply information from the following general performance resources to any web experience you build:
-
-- [Core Web Vitals](https://web.dev/explore/learn-core-web-vitals)
+For the most part, building a performant SvelteKit app is the same as building any performant web app. You should be able to apply information from general performance resources such as [Core Web Vitals](https://web.dev/explore/learn-core-web-vitals) to any web experience you build.
