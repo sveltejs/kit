@@ -37,7 +37,7 @@ If you see in the network tab of your browser that an API call is taking a long 
 
 ### Images
 
-Images are often one of the most impactful areas of opportunity for optimization. Svelte provides an offically-supported image optimization package. Please see the [images](images) page for more details. Additionally, Lighthouse is great for identifying which images on your site are the most problematic / in need of optimizations.
+Reducing the size of image files is often one of the most impactful changes you can make to a site's performance. Svelte provides the `@sveltejs/enhanced-image` package, detailed on the [images](images) page, for making this easier. Additionally, Lighthouse is useful for identifying the worst offenders.
 
 ### Videos
 
