@@ -1,5 +1,14 @@
 # @sveltejs/adapter-node
 
+## 2.0.2
+
+### Patch Changes
+
+- fix: upgrade `sirv` and `mrmime` to modernize javascript mime type ([#11419](https://github.com/sveltejs/kit/pull/11419))
+
+- Updated dependencies [[`b999cfdea24e72043505e032ed9d621590896263`](https://github.com/sveltejs/kit/commit/b999cfdea24e72043505e032ed9d621590896263), [`2a091dcbbdf7d2a70a38316638e16761bd1b9b59`](https://github.com/sveltejs/kit/commit/2a091dcbbdf7d2a70a38316638e16761bd1b9b59)]:
+  - @sveltejs/kit@2.0.5
+
 ## 2.0.1
 
 ### Patch Changes

@@ -3,7 +3,7 @@ import { set_private_env, set_public_env, set_safe_public_env } from '../shared-
 import { options, get_hooks } from '__SERVER__/internal.js';
 import { DEV } from 'esm-env';
 import { filter_private_env, filter_public_env } from '../../utils/env.js';
-import { building } from '../app/environment.js';
+import { prerendering } from '__sveltekit/environment';
 
 /** @type {ProxyHandler<{ type: 'public' | 'private' }>} */
 const prerender_env_handler = {
@@ -47,8 +47,12 @@ export class Server {
 		const private_env = filter_private_env(env, prefixes);
 		const public_env = filter_public_env(env, prefixes);
 
-		set_private_env(building ? new Proxy({ type: 'private' }, prerender_env_handler) : private_env);
-		set_public_env(building ? new Proxy({ type: 'public' }, prerender_env_handler) : public_env);
+		set_private_env(
+			prerendering ? new Proxy({ type: 'private' }, prerender_env_handler) : private_env
+		);
+		set_public_env(
+			prerendering ? new Proxy({ type: 'public' }, prerender_env_handler) : public_env
+		);
 		set_safe_public_env(public_env);
 
 		if (!this.#options.hooks) {

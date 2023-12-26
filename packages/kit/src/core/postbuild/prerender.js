@@ -36,7 +36,8 @@ async function prerender({ out, manifest_path, metadata, verbose, env }) {
 
 	// configure `import { building } from '$app/environment'` —
 	// essential we do this before analysing the code
-	internal.set_building(true);
+	internal.set_building();
+	internal.set_prerendering();
 
 	/**
 	 * @template {{message: string}} T
@@ -97,9 +98,6 @@ async function prerender({ out, manifest_path, metadata, verbose, env }) {
 
 	/** @type {Map<string, string>} */
 	const saved = new Map();
-
-	const server = new Server(manifest);
-	await server.init({ env });
 
 	const handle_http_error = normalise_error_handler(
 		log,
@@ -413,15 +411,26 @@ async function prerender({ out, manifest_path, metadata, verbose, env }) {
 		}
 	}
 
-	if (
-		config.prerender.entries.length > 1 ||
-		config.prerender.entries[0] !== '*' ||
-		route_level_entries.length > 0 ||
-		prerender_map.size > 0
-	) {
-		// Only log if we're actually going to do something to not confuse users
-		log.info('Prerendering');
+	let has_prerenderable_routes = false;
+
+	for (const value of prerender_map.values()) {
+		if (value) {
+			has_prerenderable_routes = true;
+			break;
+		}
 	}
+
+	if (
+		(config.prerender.entries.length === 0 && route_level_entries.length === 0) ||
+		!has_prerenderable_routes
+	) {
+		return { prerendered, prerender_map };
+	}
+
+	log.info('Prerendering');
+
+	const server = new Server(manifest);
+	await server.init({ env });
 
 	for (const entry of config.prerender.entries) {
 		if (entry === '*') {

@@ -30,7 +30,7 @@ async function generate_fallback({ manifest_path, env }) {
 	/** @type {import('@sveltejs/kit').SSRManifest} */
 	const manifest = (await import(pathToFileURL(manifest_path).href)).manifest;
 
-	set_building(true);
+	set_building();
 
 	const server = new Server(manifest);
 	await server.init({ env });

@@ -4,7 +4,7 @@ title: Integrations
 
 ## Preprocessors
 
-Preprocessors transform your `.svelte` files before passing them to the compiler. For example, if your `.svelte` file uses TypeScript and PostCSS, it must first be transformed into JavaScript and CSS so that the Svelte compiler can handle it. There are many [available preprocessors](https://sveltesociety.dev/tools#preprocessors). The Svelte team maintains two official ones discussed below.
+Preprocessors transform your `.svelte` files before passing them to the compiler. For example, if your `.svelte` file uses TypeScript and PostCSS, it must first be transformed into JavaScript and CSS so that the Svelte compiler can handle it. There are many [available preprocessors](https://sveltesociety.dev/packages#preprocessors). The Svelte team maintains two official ones discussed below.
 
 ### `vitePreprocess`
 
