@@ -2,17 +2,28 @@
 title: Performance
 ---
 
-SvelteKit apps provide highly performant experiences by default, but it's always good to invest time to ensure your code is as performant as it can be. Here are some tips to help you get the most out of your SvelteKit app.
+Out of the box, SvelteKit does a lot of work to make your applications as performant as possible:
+
+- Code-splitting, so that only the code you need for the current page is loaded
+- Asset preloading, so that 'waterfalls' (of files requesting other files) are prevented
+- File hashing, so that your assets can be cached forever
+- Request coalescing, so that data fetched from separate server `load` functions is grouped into a single HTTP request
+- Parallel loading, so that separate universal `load` functions fetch data simultaneously
+- Data inlining, so that requests made with `fetch` during server rendering can be replayed in the browser without issuing a new request
+- Prerendering (configurable on a per-route basis, if necessary) so that pages without dynamic data can be served instantaneously
+- Link preloading, so that data and code requirements for a client-side navigation are eagerly anticipated
+
+Nevertheless, we can't (yet) eliminate all sources of slowness. To eke out maximum performance, you should be mindful of the following tips.
 
 ## Measuring
 
-For deployed sites, you can measure your page's performance with [Google's PageSpeed Insights](https://pagespeed.web.dev/). More advanced users may also like to use [WebPageTest](https://www.webpagetest.org/).
+You can measure the performance of a deployed app with Google's [PageSpeed Insights](https://pagespeed.web.dev/) or, for more advanced analysis, [WebPageTest](https://www.webpagetest.org/).
 
 You can also use your browser's developer tools to evaluate your page's performance and identify areas of opportunity. Check out some of the resources below if you're not already familiar with your browser's developer tools:
 
-* Chrome - [Lighthouse](https://developer.chrome.com/docs/lighthouse/overview#devtools), [Network](https://developer.chrome.com/docs/devtools/network), and [Performance](https://developer.chrome.com/docs/devtools/performance) tabs in the developer tools
-* Firefox - [Network](https://firefox-source-docs.mozilla.org/devtools-user/network_monitor/) and [Performance](https://hacks.mozilla.org/2022/03/performance-tool-in-firefox-devtools-reloaded/) tabs in the developer tools
-* Edge - [Lighthouse](https://learn.microsoft.com/en-us/microsoft-edge/devtools-guide-chromium/lighthouse/lighthouse-tool), [Network](https://learn.microsoft.com/en-us/microsoft-edge/devtools-guide-chromium/network/), and [Performance](https://learn.microsoft.com/en-us/microsoft-edge/devtools-guide-chromium/evaluate-performance/) tabs in the developer tools
+* Chrome - [Lighthouse](https://developer.chrome.com/docs/lighthouse/overview#devtools), [Network](https://developer.chrome.com/docs/devtools/network), and [Performance](https://developer.chrome.com/docs/devtools/performance) devtools
+* Edge - [Lighthouse](https://learn.microsoft.com/en-us/microsoft-edge/devtools-guide-chromium/lighthouse/lighthouse-tool), [Network](https://learn.microsoft.com/en-us/microsoft-edge/devtools-guide-chromium/network/), and [Performance](https://learn.microsoft.com/en-us/microsoft-edge/devtools-guide-chromium/evaluate-performance/) devtools
+* Firefox - [Network](https://firefox-source-docs.mozilla.org/devtools-user/network_monitor/) and [Performance](https://hacks.mozilla.org/2022/03/performance-tool-in-firefox-devtools-reloaded/) devtools
 * Safari - [enhancing the performance of your webpage](https://developer.apple.com/library/archive/documentation/NetworkingInternetWeb/Conceptual/Web_Inspector_Tutorial/EnhancingyourWebpagesPerformance/EnhancingyourWebpagesPerformance.html)
 
 ### Instrumenting
