@@ -49,7 +49,9 @@ Video files can be very large, so extra care should be taken to ensure that they
 
 ### Fonts
 
-When possible, preload fonts by calling `resolve` with the appropriate `preload` option in your [`handle`](hooks#server-hooks-handle) hook, and ensure you've set the [`font-display`](https://developer.mozilla.org/en-US/docs/Web/CSS/@font-face/font-display) option in your CSS. To reduce the size of font files, utilize [subsetting](https://fonts.google.com/knowledge/glossary/subsetting).
+SvelteKit automatically preloads critical `.js` and `.css` files when the user visits a page, but it does _not_ preload fonts by default, since this may cause unnecessary files (such as font weights that are referenced by your CSS but not actually used on the current page) to be downloaded. Having said that, preloading fonts correctly can make a big difference to how fast your site feels. In your [`handle`](hooks#server-hooks-handle) hook, you can call `resolve` with a `preload` filter that includes your fonts.
+
+You can reduce the size of font files by [subsetting](https://web.dev/learn/performance/optimize-web-fonts#subset_your_web_fonts) your fonts.
 
 ## Reducing code size
 
