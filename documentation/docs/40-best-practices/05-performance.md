@@ -2,7 +2,7 @@
 title: Performance
 ---
 
-SvelteKit strives to provide a highly performant experience by default. However, when building any web application you will always need to put in some effort to maintain fast speeds. Some tips are included below.
+SvelteKit apps provide highly performant experiences by default, but it's always good to invest time to ensure your code is as performant as it can be. Here are some tips to help you get the most out of your SvelteKit app.
 
 ## Measuring
 
@@ -25,15 +25,15 @@ If you see in the network tab of your browser that an API call is taking a long 
 
 #### Images
 
-Typically the most impactful area of opportunity is optimizing your images. Svelte provides an offically-supported image optimization package. Please see the [images](images) page for more details. Additionally, you may use Lighthouse for identifying images needing optimization.
+Images are often one of the most impactful areas of opportunity for optimization. Svelte provides an offically-supported image optimization package. Please see the [images](images) page for more details. Additionally, Lighthouse is great for identifying which images on your site are the most problematic / in need of optimizations.
 
 #### Fonts
 
-Preload fonts when possible with the appropriate by calling `resolve` with the appropriate `preload` option value in the [`handle`](hooks#server-hooks-handle) hook. Also ensure you've set the [`font-display`](https://developer.mozilla.org/en-US/docs/Web/CSS/@font-face/font-display) option appropriately in your CSS. Additionally, you may reduce the size of font files with [subsetting](https://fonts.google.com/knowledge/glossary/subsetting).
+When possible, preload fonts by calling `resolve` with the appropriate `preload` option in your [`handle`](hooks#server-hooks-handle) hook, and ensure you've set the [`font-display`](https://developer.mozilla.org/en-US/docs/Web/CSS/@font-face/font-display) option in your CSS. To reduce the size of font files, utilize [subsetting](https://fonts.google.com/knowledge/glossary/subsetting).
 
 #### Videos
 
-Video are very large files and so extra care should be taken to ensure that they're optimized:
+Video files can be very large, so extra care should be taken to ensure that they're optimized:
 
 - Compress videos with tools such as [Handbrake](https://handbrake.fr/). Consider converting the videos to HTML5 video formats such as WebM or MP4.
 - [Lazy load](https://developer.mozilla.org/en-US/docs/Web/Performance/Lazy_loading) videos located below the fold.
@@ -43,11 +43,11 @@ Video are very large files and so extra care should be taken to ensure that they
 
 #### Svelte version
 
-We recommend running the latest version of Svelte. Svelte 4 is significantly smaller and faster than Svelte 3. The Svelte 5 preview is very significantly smaller and faster than Svelte 4 — though we don't recommend users upgrade to this version yet as it's not currently production ready.
+We recommend running the latest version of Svelte. Svelte 4 is significantly smaller and faster than Svelte 3. The Svelte 5 preview is _much_ smaller and faster than Svelte 4 — though we don't recommend users upgrade to this version until it's production ready.
 
 #### Packages
 
-[`rollup-plugin-visualizer`](https://www.npmjs.com/package/rollup-plugin-visualizer) can be helpful for identifying which packages are adding the most size to your site. You may also find areas of opportunity manually inspecting the build output with [`build: { minify: false }`](https://vitejs.dev/config/build-options.html#build-minify) or via the network tab of your browser's developer tools.
+[`rollup-plugin-visualizer`](https://www.npmjs.com/package/rollup-plugin-visualizer) can be helpful for identifying which packages are contributing the most to the size of your site. You may also find areas of opportunity manually inspecting the build output with [`build: { minify: false }`](https://vitejs.dev/config/build-options.html#build-minify), or via the network tab of your browser's developer tools.
 
 #### External scripts
 
@@ -57,27 +57,27 @@ You also may consider running third-party scripts in a webworker with [Partytown
 
 #### Selective loading
 
-Code imported via static import will be automatically bundled into your page's code. If there is a piece of code you need only when some condition is met, use a [dynamic import](https://vitejs.dev/guide/features#dynamic-import).
+Code imported via static imports will be automatically bundled into your page's code. If there is a piece of code you need only when some condition is met, use a [dynamic import](https://vitejs.dev/guide/features#dynamic-import).
 
 ### Prefetching
 
-You can fetch [data](link-options#data-sveltekit-preload-data) and [code](link-options#data-sveltekit-preload-code) before a page is actually loaded when the user hovers over or begins to click a link with the appropriate [link options](link-options).
+You can fetch [data](link-options#data-sveltekit-preload-data) and [code](link-options#data-sveltekit-preload-code) before a page is actually loaded when the user hovers over (or begins to click) a link with the appropriate [link options](link-options).
 
 ### Lazy loading
 
-You can use a placeholder on intial page load and then swap that out with real contents after the page is loaded. For images, you can do this with [the `loading` attribute](https://developer.mozilla.org/en-US/docs/Web/Performance/Lazy_loading). To lazy load data, you can use [streaming with promises](load#streaming-with-promises).
+You can use a placeholder on the intial page load, then swap it out with real contents after the page is loaded. For images, you can do this with [the `loading` attribute](https://developer.mozilla.org/en-US/docs/Web/Performance/Lazy_loading). To lazy load data, you can use [streaming with promises](load#streaming-with-promises).
 
 ### Hosting
 
-Your frontend should be located in the same data center as your backend for minimal latency. For sites with no backend, many SvelteKit adapters support deploying to "the edge", which means your code will be distributed globally so it can run next to your users. Some adapters even support [configuring deployment on a per-page basis](https://kit.svelte.dev/docs/page-options#config). You should also consider serving images from a CDN — the hosts for many adapters offered by SvelteKit will do this automatically.
+Your frontend should be located in the same data center as your backend to minimize latency. For sites with no central backend, many SvelteKit adapters support deploying to the _edge_, which means handling each user's requests from a nearby server. This can reduce load times significantly. Some adapters even support [configuring deployment on a per-page basis](https://kit.svelte.dev/docs/page-options#config). You should also consider serving images from a CDN (which are typically edge networks) — the hosts for many adapters offered by SvelteKit will do this automatically.
 
 Ensure your host uses HTTP/2 or newer. Vite's code splitting creates numerous small files for improved cacheability, which results in excellent performance, but this does assume that your files can be loaded in parallel with HTTP/2.
 
-## Common Issues
+## Common issues
 
 ### Waterfalls
 
-One of the biggest performance killers is what is referred to as a waterfall, which is a series of requests that is made sequentially. This can occur on the the fontend or backend of your application.
+One of the biggest performance killers is what is referred to as a waterfall, which is a series of requests that is made sequentially. This can occur on the frontend or backend of your application.
 
 #### Frontend asset waterfall
 
