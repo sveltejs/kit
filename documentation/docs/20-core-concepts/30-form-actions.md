@@ -108,8 +108,6 @@ Each action receives a `RequestEvent` object, allowing you to read the data with
 ```js
 // @errors: 2304
 /// file: src/routes/login/+page.server.js
-import { base } from '$app/paths';
-
 /** @type {import('./$types').PageServerLoad} */
 export async function load({ cookies }) {
 	const user = await db.getUserFromSession(cookies.get('sessionid'));
@@ -124,7 +122,7 @@ export const actions = {
 		const password = data.get('password');
 
 		const user = await db.getUser(email);
-		cookies.set('sessionid', await db.createSession(user), { path: base});
+		cookies.set('sessionid', await db.createSession(user), { path: '/' });
 
 		return { success: true };
 	},
@@ -158,7 +156,6 @@ If the request couldn't be processed because of invalid data, you can return val
 ```diff
 /// file: src/routes/login/+page.server.js
 +import { fail } from '@sveltejs/kit';
-import { base } from '$app/paths';
 
 /** @type {import('./$types').Actions} */
 export const actions = {
@@ -177,7 +174,7 @@ export const actions = {
 +			return fail(400, { email, incorrect: true });
 +		}
 
-		cookies.set('sessionid', await db.createSession(user), { path: base });
+		cookies.set('sessionid', await db.createSession(user), { path: '/' });
 
 		return { success: true };
 	},
@@ -217,7 +214,6 @@ Redirects (and errors) work exactly the same as in [`load`](load#redirects):
 ```diff
 /// file: src/routes/login/+page.server.js
 +import { fail, redirect } from '@sveltejs/kit';
-import { base } from '$app/paths';
 
 /** @type {import('./$types').Actions} */
 export const actions = {
@@ -235,7 +231,7 @@ export const actions = {
 			return fail(400, { email, incorrect: true });
 		}
 
-		cookies.set('sessionid', await db.createSession(user), { path: base });
+		cookies.set('sessionid', await db.createSession(user), { path: '/' });
 
 +		if (url.searchParams.has('redirectTo')) {
 +			redirect(303, url.searchParams.get('redirectTo'));
@@ -297,8 +293,6 @@ declare namespace App {
 
 // @filename: index.js
 // ---cut---
-import { base } from '$app/paths';
-
 /** @type {import('./$types').PageServerLoad} */
 export function load(event) {
 	return {
@@ -309,7 +303,7 @@ export function load(event) {
 /** @type {import('./$types').Actions} */
 export const actions = {
 	logout: async (event) => {
-		event.cookies.delete('sessionid', { path: base });
+		event.cookies.delete('sessionid', { path: '/' });
 		event.locals.user = null;
 	}
 };
