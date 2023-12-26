@@ -27,7 +27,7 @@ Your browser also includes useful developer tools for analysing your site, wheth
 * Firefox - [Network](https://firefox-source-docs.mozilla.org/devtools-user/network_monitor/) and [Performance](https://hacks.mozilla.org/2022/03/performance-tool-in-firefox-devtools-reloaded/) devtools
 * Safari - [enhancing the performance of your webpage](https://developer.apple.com/library/archive/documentation/NetworkingInternetWeb/Conceptual/Web_Inspector_Tutorial/EnhancingyourWebpagesPerformance/EnhancingyourWebpagesPerformance.html)
 
-Note that your site running locally in `dev` mode will exhibit slightly different behaviour to your production app, which you can [preview](/docs/building-your-app#preview-your-app) after building.
+Note that your site running locally in `dev` mode will exhibit different behaviour than your production app, so you should do performance testing in [preview](/docs/building-your-app#preview-your-app) mode after building.
 
 ### Instrumenting
 
@@ -37,14 +37,14 @@ If you see in the network tab of your browser that an API call is taking a long 
 
 ### Images
 
-Images are often one of the most impactful areas of opportunity for optimization. Svelte provides an offically-supported image optimization package. Please see the [images](images) page for more details. Additionally, Lighthouse is great for identifying which images on your site are the most problematic / in need of optimizations.
+Reducing the size of image files is often one of the most impactful changes you can make to a site's performance. Svelte provides the `@sveltejs/enhanced-image` package, detailed on the [images](images) page, for making this easier. Additionally, Lighthouse is useful for identifying the worst offenders.
 
 ### Videos
 
 Video files can be very large, so extra care should be taken to ensure that they're optimized:
 
-- Compress videos with tools such as [Handbrake](https://handbrake.fr/). Consider converting the videos to HTML5 video formats such as WebM or MP4.
-- [Lazy load](https://developer.mozilla.org/en-US/docs/Web/Performance/Lazy_loading) videos located below the fold.
+- Compress videos with tools such as [Handbrake](https://handbrake.fr/). Consider converting the videos to web-friendly formats such as `.webm` or `.mp4`.
+- You can [lazy-load videos](https://web.dev/articles/lazy-loading-video) located below the fold with `preload="none"` (though note that this will slow down playback when the user _does_ initiate it).
 - Strip the audio track out of muted videos using a tool like [FFmpeg](https://ffmpeg.org/).
 
 ### Fonts
