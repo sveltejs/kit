@@ -294,6 +294,36 @@ export function create_universal_fetch(event, state, fetched, csr, resolve_opts)
 					});
 				}
 
+				if (key === 'body') {
+					const body = response.body;
+					if (!body) return body;
+					const [a, b] = body.tee();
+					let buffer = new Uint8Array();
+					const reader = a.getReader();
+					/**
+					 * @param {{
+					 * 	done: boolean
+					 * 	value?: Uint8Array
+					 * }} opts
+					 */
+					function buffer_to_fetched({ done, value }) {
+						if (done) {
+							if (dependency) {
+								dependency.body = new Uint8Array(buffer);
+							}
+							push_fetched(b64_encode(buffer), true);
+						} else if (value) {
+							const newBuffer = new Uint8Array(buffer.length + value.length);
+							newBuffer.set(buffer, 0);
+							newBuffer.set(value, buffer.length);
+							buffer = newBuffer;
+							reader.read().then(buffer_to_fetched);
+						}
+					}
+					reader.read().then(buffer_to_fetched);
+					return b;
+				}
+
 				if (key === 'arrayBuffer') {
 					return async () => {
 						const buffer = await response.arrayBuffer();
