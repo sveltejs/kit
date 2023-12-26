@@ -27,7 +27,7 @@ Your browser also includes useful developer tools for analysing your site, wheth
 * Firefox - [Network](https://firefox-source-docs.mozilla.org/devtools-user/network_monitor/) and [Performance](https://hacks.mozilla.org/2022/03/performance-tool-in-firefox-devtools-reloaded/) devtools
 * Safari - [enhancing the performance of your webpage](https://developer.apple.com/library/archive/documentation/NetworkingInternetWeb/Conceptual/Web_Inspector_Tutorial/EnhancingyourWebpagesPerformance/EnhancingyourWebpagesPerformance.html)
 
-Note that your site running locally in `dev` mode will exhibit slightly different behaviour to your production app, which you can [preview](/docs/building-your-app#preview-your-app) after building.
+Note that your site running locally in `dev` mode will exhibit different behaviour than your production app, so you should do performance testing in [preview](/docs/building-your-app#preview-your-app) mode after building.
 
 ### Instrumenting
 
