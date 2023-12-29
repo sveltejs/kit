@@ -75,8 +75,8 @@ class BaseProvider {
 		const effective_script_src = d['script-src'] || d['default-src'];
 		const script_src_elem = d['script-src-elem'];
 		const effective_style_src = d['style-src'] || d['default-src'];
-		const style_src_elem = d['style-src-elem'];
 		const style_src_attr = d['style-src-attr'];
+		const style_src_elem = d['style-src-elem'];
 
 		if (__SVELTEKIT_DEV__) {
 			// remove strict-dynamic in dev...
