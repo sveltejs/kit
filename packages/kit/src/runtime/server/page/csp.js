@@ -129,7 +129,7 @@ class BaseProvider {
 	add_script(content) {
 		if (this.#script_needs_csp) {
 			if (this.#use_hashes) {
-				const hash = `sha256-${sha256(content)}`;
+				const hash = sha256(content)
 
 				this.#script_src.push(`sha256-${hash}`);
 
@@ -151,7 +151,7 @@ class BaseProvider {
 	add_style(content) {
 		if (this.#style_needs_csp) {
 			if (this.#use_hashes) {
-				const hash = `sha256-${sha256(content)}`;
+				const hash = sha256(content);
 
 				this.#style_src.push(`sha256-${hash}`);
 
