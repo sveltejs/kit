@@ -240,7 +240,7 @@ test('uses hashes when prerendering', () => {
 
 	assert.equal(
 		csp.report_only_provider.get_header(),
-		"script-src 'self' 'sha256-47DEQpj8HBSa+/TImW+5JCeuQeRkm5NMpJWZG3hSuFU='; script-src-elem 'sha256-47DEQpj8HBSa+/TImW+5JCeuQeRkm5NMpJWZG3hSuFU='; report-uri /"
+		"script-src 'self' 'sha256-47DEQpj8HBSa+/TImW+5JCeuQeRkm5NMpJWZG3hSuFU='; report-uri /; script-src-elem 'sha256-47DEQpj8HBSa+/TImW+5JCeuQeRkm5NMpJWZG3hSuFU='"
 	);
 });
 
