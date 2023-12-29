@@ -41,6 +41,9 @@ class BaseProvider {
 	#script_src;
 
 	/** @type {import('types').Csp.Source[]} */
+	#script_src_elem;
+
+	/** @type {import('types').Csp.Source[]} */
 	#style_src;
 
 	/** @type {string} */
@@ -79,6 +82,7 @@ class BaseProvider {
 		}
 
 		this.#script_src = [];
+		this.#script_src_elem = [];
 		this.#style_src = [];
 
 		const effective_script_src = d['script-src'] || d['default-src'];
@@ -103,8 +107,13 @@ class BaseProvider {
 		if (this.#script_needs_csp) {
 			if (this.#use_hashes) {
 				this.#script_src.push(`sha256-${sha256(content)}`);
-			} else if (this.#script_src.length === 0) {
-				this.#script_src.push(`nonce-${this.#nonce}`);
+			} else {
+				if (this.#script_src.length === 0) {
+					this.#script_src.push(`nonce-${this.#nonce}`);
+				}
+				if (this.#script_src_elem.length === 0) {
+					this.#script_src_elem.push(`nonce-${this.#nonce}`);
+				}
 			}
 		}
 	}
@@ -143,6 +152,13 @@ class BaseProvider {
 			directives['script-src'] = [
 				...(directives['script-src'] || directives['default-src'] || []),
 				...this.#script_src
+			];
+		}
+
+		if (this.#script_src_elem.length > 0) {
+			directives['script-src-elem'] = [
+				...(directives['script-src-elem'] || []),
+				...this.#script_src_elem
 			];
 		}
 
