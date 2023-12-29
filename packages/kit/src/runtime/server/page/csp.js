@@ -46,6 +46,12 @@ class BaseProvider {
 	/** @type {import('types').Csp.Source[]} */
 	#style_src;
 
+	/** @type {import('types').Csp.Source[]} */
+	#style_src_attr;
+
+	/** @type {import('types').Csp.Source[]} */
+	#style_src_elem;
+
 	/** @type {string} */
 	#nonce;
 
@@ -60,6 +66,18 @@ class BaseProvider {
 
 		const d = this.#directives;
 
+		this.#script_src = [];
+		this.#script_src_elem = [];
+		this.#style_src = [];
+		this.#style_src_attr = [];
+		this.#style_src_elem = [];
+
+		const effective_script_src = d['script-src'] || d['default-src'];
+		const script_src_elem = d['script-src-elem'];
+		const effective_style_src = d['style-src'] || d['default-src'];
+		const style_src_elem = d['style-src-elem'];
+		const style_src_attr = d['style-src-attr'];
+
 		if (__SVELTEKIT_DEV__) {
 			// remove strict-dynamic in dev...
 			// TODO reinstate this if we can figure out how to make strict-dynamic work
@@ -73,29 +91,34 @@ class BaseProvider {
 			// 	if (d['script-src'].length === 0) delete d['script-src'];
 			// }
 
-			const effective_style_src = d['style-src'] || d['default-src'];
-
 			// ...and add unsafe-inline so we can inject <style> elements
 			if (effective_style_src && !effective_style_src.includes('unsafe-inline')) {
 				d['style-src'] = [...effective_style_src, 'unsafe-inline'];
 			}
+
+			if (style_src_attr && !style_src_attr.includes('unsafe-inline')) {
+				d['style-src-elem'] = [...style_src_attr, 'unsafe-inline'];
+			}
+
+			if (style_src_elem && !style_src_elem.includes('unsafe-inline')) {
+				d['style-src-elem'] = [...style_src_elem, 'unsafe-inline'];
+			}
 		}
 
-		this.#script_src = [];
-		this.#script_src_elem = [];
-		this.#style_src = [];
-
-		const effective_script_src = d['script-src'] || d['default-src'];
-		const effective_style_src = d['style-src'] || d['default-src'];
-
 		this.#script_needs_csp =
-			!!effective_script_src &&
-			effective_script_src.filter((value) => value !== 'unsafe-inline').length > 0;
+			(!!effective_script_src &&
+				effective_script_src.filter((value) => value !== 'unsafe-inline').length > 0) ||
+			(!!script_src_elem &&
+				script_src_elem.filter((value) => value !== 'unsafe-inline').length > 0);
 
 		this.#style_needs_csp =
 			!__SVELTEKIT_DEV__ &&
-			!!effective_style_src &&
-			effective_style_src.filter((value) => value !== 'unsafe-inline').length > 0;
+			((!!effective_style_src &&
+				effective_style_src.filter((value) => value !== 'unsafe-inline').length > 0) ||
+				(!!style_src_attr &&
+					style_src_attr.filter((value) => value !== 'unsafe-inline').length > 0) ||
+				(!!style_src_elem &&
+					style_src_elem.filter((value) => value !== 'unsafe-inline').length > 0));
 
 		this.script_needs_nonce = this.#script_needs_csp && !this.#use_hashes;
 		this.style_needs_nonce = this.#style_needs_csp && !this.#use_hashes;
@@ -106,7 +129,13 @@ class BaseProvider {
 	add_script(content) {
 		if (this.#script_needs_csp) {
 			if (this.#use_hashes) {
-				this.#script_src.push(`sha256-${sha256(content)}`);
+				const hash = `sha256-${sha256(content)}`;
+
+				this.#script_src.push(`sha256-${hash}`);
+
+				if (this.#script_src_elem.length === 0) {
+					this.#script_src_elem.push(`sha256-${hash}`);
+				}
 			} else {
 				if (this.#script_src.length === 0) {
 					this.#script_src.push(`nonce-${this.#nonce}`);
@@ -122,9 +151,26 @@ class BaseProvider {
 	add_style(content) {
 		if (this.#style_needs_csp) {
 			if (this.#use_hashes) {
-				this.#style_src.push(`sha256-${sha256(content)}`);
-			} else if (this.#style_src.length === 0) {
-				this.#style_src.push(`nonce-${this.#nonce}`);
+				const hash = `sha256-${sha256(content)}`;
+
+				this.#style_src.push(`sha256-${hash}`);
+
+				if (this.#style_src_attr.length === 0) {
+					this.#style_src_attr.push(`sha256-${hash}`);
+				}
+				if (this.#style_src_elem.length === 0) {
+					this.#style_src_elem.push(`sha256-${hash}`);
+				}
+			} else {
+				if (this.#style_src.length === 0) {
+					this.#style_src.push(`nonce-${this.#nonce}`);
+				}
+				if (this.#style_src_attr.length === 0) {
+					this.#style_src_attr.push(`nonce-${this.#nonce}`);
+				}
+				if (this.#style_src_elem.length === 0) {
+					this.#style_src_elem.push(`nonce-${this.#nonce}`);
+				}
 			}
 		}
 	}
@@ -145,6 +191,20 @@ class BaseProvider {
 			directives['style-src'] = [
 				...(directives['style-src'] || directives['default-src'] || []),
 				...this.#style_src
+			];
+		}
+
+		if (this.#style_src_attr.length > 0) {
+			directives['style-src-attr'] = [
+				...(directives['style-src-attr'] || []),
+				...this.#style_src_attr
+			];
+		}
+
+		if (this.#style_src_elem.length > 0) {
+			directives['style-src-elem'] = [
+				...(directives['style-src-elem'] || []),
+				...this.#style_src_elem
 			];
 		}
 
