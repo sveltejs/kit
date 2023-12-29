@@ -97,7 +97,7 @@ class BaseProvider {
 			}
 
 			if (style_src_attr && !style_src_attr.includes('unsafe-inline')) {
-				d['style-src-elem'] = [...style_src_attr, 'unsafe-inline'];
+				d['style-src-attr'] = [...style_src_attr, 'unsafe-inline'];
 			}
 
 			if (style_src_elem && !style_src_elem.includes('unsafe-inline')) {
