@@ -128,19 +128,21 @@ class BaseProvider {
 	/** @param {string} content */
 	add_script(content) {
 		if (this.#script_needs_csp) {
+			const d = this.#directives;
+
 			if (this.#use_hashes) {
-				const hash = sha256(content)
+				const hash = sha256(content);
 
 				this.#script_src.push(`sha256-${hash}`);
 
-				if (this.#script_src_elem.length === 0) {
+				if (d['script-src-elem']?.length) {
 					this.#script_src_elem.push(`sha256-${hash}`);
 				}
 			} else {
 				if (this.#script_src.length === 0) {
 					this.#script_src.push(`nonce-${this.#nonce}`);
 				}
-				if (this.#script_src_elem.length === 0) {
+				if (d['script-src-elem']?.length) {
 					this.#script_src_elem.push(`nonce-${this.#nonce}`);
 				}
 			}
@@ -150,25 +152,27 @@ class BaseProvider {
 	/** @param {string} content */
 	add_style(content) {
 		if (this.#style_needs_csp) {
+			const d = this.#directives;
+
 			if (this.#use_hashes) {
 				const hash = sha256(content);
 
 				this.#style_src.push(`sha256-${hash}`);
 
-				if (this.#style_src_attr.length === 0) {
+				if (d['style-src-attr']?.length) {
 					this.#style_src_attr.push(`sha256-${hash}`);
 				}
-				if (this.#style_src_elem.length === 0) {
+				if (d['style-src-elem']?.length) {
 					this.#style_src_elem.push(`sha256-${hash}`);
 				}
 			} else {
 				if (this.#style_src.length === 0) {
 					this.#style_src.push(`nonce-${this.#nonce}`);
 				}
-				if (this.#style_src_attr.length === 0) {
+				if (d['style-src-attr']?.length) {
 					this.#style_src_attr.push(`nonce-${this.#nonce}`);
 				}
-				if (this.#style_src_elem.length === 0) {
+				if (d['style-src-elem']?.length) {
 					this.#style_src_elem.push(`nonce-${this.#nonce}`);
 				}
 			}
