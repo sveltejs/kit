@@ -275,8 +275,8 @@ importers:
   packages/adapter-vercel:
     dependencies:
       '@vercel/nft':
-        specifier: ^0.26.0
-        version: 0.26.0
+        specifier: ^0.26.1
+        version: 0.26.1
       esbuild:
         specifier: ^0.19.9
         version: 0.19.9
@@ -2557,8 +2557,8 @@ packages:
     resolution: {integrity: sha512-zuVdFrMJiuCDQUMCzQaD6KL28MjnqqN8XnAqiEq9PNm/hCPTSGfrXCOfwj1ow4LFb/tNymJPwsNbVePc1xFqrQ==}
     dev: true
 
-  /@vercel/nft@0.26.0:
-    resolution: {integrity: sha512-4JoDL1jMPoPb9PpilQx7IQwxDUYCSwnonN8GrR6bP2BVJR390toF/tJe20tcI+wDWPkJKJqNloipfaeQfTeU2w==}
+  /@vercel/nft@0.26.1:
+    resolution: {integrity: sha512-SdYX2qfw657niCQ2ZYTp72Cs3zI+tAm6DGyQEZnyGwjkVSPd1Tl3KIYLy/5NJKNoLI/uxMnHasECFJEnJ8Fb1A==}
     engines: {node: '>=18'}
     hasBin: true
     dependencies:

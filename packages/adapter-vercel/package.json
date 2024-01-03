@@ -31,7 +31,7 @@
 		"test": "vitest run"
 	},
 	"dependencies": {
-		"@vercel/nft": "^0.26.0",
+		"@vercel/nft": "^0.26.1",
 		"esbuild": "^0.19.9"
 	},
 	"devDependencies": {
