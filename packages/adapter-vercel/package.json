@@ -31,7 +31,7 @@
 		"test": "vitest run & pnpm -r --workspace-concurrency 1 --filter=\"./test/**\" test"
 	},
 	"dependencies": {
-		"@vercel/nft": "^0.26.0",
+		"@vercel/nft": "^0.26.1",
 		"esbuild": "^0.19.9"
 	},
 	"devDependencies": {
