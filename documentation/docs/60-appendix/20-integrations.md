@@ -27,7 +27,7 @@ You will need to install `svelte-preprocess` with `npm install --save-dev svelte
 
 ## Adders
 
-[Svelte Adders](https://sveltesociety.dev/templates?tag=svelte-add) allow you to setup many different complex integrations like Tailwind, PostCSS, Storybook, Firebase, GraphQL, mdsvex, and more with a single command. Please see [sveltesociety.dev](https://sveltesociety.dev/) for a full listing of templates, components, and tools available for use with Svelte and SvelteKit.
+[Svelte Adders](https://sveltesociety.dev/templates?category=svelte-add) allow you to setup many different complex integrations like Tailwind, PostCSS, Storybook, Firebase, GraphQL, mdsvex, and more with a single command. Please see [sveltesociety.dev](https://sveltesociety.dev/) for a full listing of templates, components, and tools available for use with Svelte and SvelteKit.
 
 ## Vite plugins
 
