@@ -327,10 +327,6 @@ export async function render_response({
 
 		blocks.push('const element = document.currentScript.parentElement;');
 
-		if (__SVELTEKIT_EMBEDDED__) {
-			args.push(String(Math.random())); // TODO stable identifier that is different between instances
-		}
-
 		if (page_config.ssr) {
 			const serialized = { form: 'null', error: 'null' };
 
