@@ -179,14 +179,6 @@ export interface Config {
 	extensions?: string[];
 	/** SvelteKit options */
 	kit?: KitConfig;
-	/** [`@sveltejs/package`](/docs/packaging) options. */
-	package?: {
-		source?: string;
-		dir?: string;
-		emitTypes?: boolean;
-		exports?(filepath: string): boolean;
-		files?(filepath: string): boolean;
-	};
 	/** Preprocessor options, if any. Preprocessing can alternatively also be done through Vite's preprocessor capabilities. */
 	preprocess?: any;
 	/** `vite-plugin-svelte` plugin options. */
