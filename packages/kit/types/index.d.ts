@@ -161,14 +161,6 @@ declare module '@sveltejs/kit' {
 		extensions?: string[];
 		/** SvelteKit options */
 		kit?: KitConfig;
-		/** [`@sveltejs/package`](/docs/packaging) options. */
-		package?: {
-			source?: string;
-			dir?: string;
-			emitTypes?: boolean;
-			exports?(filepath: string): boolean;
-			files?(filepath: string): boolean;
-		};
 		/** Preprocessor options, if any. Preprocessing can alternatively also be done through Vite's preprocessor capabilities. */
 		preprocess?: any;
 		/** `vite-plugin-svelte` plugin options. */
@@ -2186,10 +2178,15 @@ declare module '__sveltekit/environment' {
 	 */
 	export const building: boolean;
 	/**
+	 * True during prerendering, false otherwise.
+	 */
+	export const prerendering: boolean;
+	/**
 	 * The value of `config.kit.version.name`.
 	 */
 	export const version: string;
 	export function set_building(): void;
+	export function set_prerendering(): void;
 }
 
 /** Internal version of $app/paths */

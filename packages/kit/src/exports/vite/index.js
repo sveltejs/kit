@@ -442,9 +442,14 @@ function kit({ svelte_config }) {
 					return dedent`
 						export const version = ${s(version.name)};
 						export let building = false;
+						export let prerendering = false;
 
 						export function set_building() {
 							building = true;
+						}
+
+						export function set_prerendering() {
+							prerendering = true;
 						}
 					`;
 				}
