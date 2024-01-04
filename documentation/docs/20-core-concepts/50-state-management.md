@@ -113,7 +113,7 @@ You might wonder how we're able to use `$page.data` and other [app stores](modul
 <p>Welcome {$user.name}</p>
 ```
 
-Updating the context-based store value in deeper-level pages or components will not affect the value in the parent component when the page is rendered via SSR: The parent component has already been rendered by the time the store value is updated. To avoid values 'flashing' during state updates during hydration, it is generally recommended to pass state down into components rather than up.
+Updating the value of a context-based store in deeper-level pages or components will not affect the value in the parent component while the page is being rendered via SSR as the parent component has already been rendered by the time the store value is updated. Once CSR kicks in (if enabled), the value will be propagated and components, pages, and layouts higher in the hierarchy will react to the new value. To avoid values 'flashing' during state updates during hydration, it is generally recommended to pass state down into components rather than up.
 
 If you're not using SSR (and can guarantee that you won't need to use SSR in future) then you can safely keep state in a shared module, without using the context API.
 
