@@ -13,7 +13,7 @@ const client_url = match[1];
 /**
  * @param {import('./types.js').SvelteKitApp} app
  * @param {HTMLElement} target
- * @param {Parameters<import('./client.js')._hydrate>[0]} [hydrate]
+ * @param {any} [hydrate] (see _hydrate in client.js for the type)
  */
 export async function start(app, target, hydrate) {
 	if (DEV && target === document.body) {

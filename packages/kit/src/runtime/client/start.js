@@ -4,7 +4,7 @@ import { create_client } from './client.js';
 /**
  * @param {import('./types.js').SvelteKitApp} app
  * @param {HTMLElement} target
- * @param {Parameters<import('./client.js')._hydrate>[0]} [hydrate]
+ * @param {any} [hydrate] (see _hydrate in client.js for the type)
  */
 export function start(app, target, hydrate) {
 	if (DEV && target === document.body) {
