@@ -1,7 +1,13 @@
 import { DEV } from 'esm-env';
-import client_url from './client.js?url';
 
 let instance_id = -1;
+
+// This is a hack to get the client module url while making sure Vite compiles it correctly.
+const modules = import.meta.glob('./client.js');
+const importPathRegex = /import\(['"]([^'"]+)['"]\)/;
+const importStatement = Object.values(modules)[0].toString();
+const match = /** @type {RegExpMatchArray } */ (importStatement.match(importPathRegex));
+const client_url = match[1];
 
 /**
  * @param {import('./types.js').SvelteKitApp} app
@@ -21,9 +27,11 @@ export async function start(app, target, hydrate) {
 	// Note that this will not make SvelteKit instances completely isolated because things like beforeNavigate
 	// are still shared, but it's good enough for now / backwards compatible.
 	instance_id++;
-	const { _hydrate, _start_router, create_client, goto } = await import(
-		/* @vite-ignore */ `${client_url}?${instance_id}`
-	);
+	const { _hydrate, _start_router, create_client, goto } =
+		// ensures that the first embedded instance uses the preloaded module / the one that files like app/navigation.js also use
+		instance_id === 0
+			? await Object.values(modules)[0]()
+			: await import(/* @vite-ignore */ `${client_url}?${instance_id}`);
 	create_client(app, target);
 
 	if (hydrate) {
