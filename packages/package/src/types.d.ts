@@ -1,3 +1,4 @@
+import { CompileOptions } from 'svelte/types/compiler/interfaces';
 import { PreprocessorGroup } from 'svelte/types/compiler/preprocess';
 
 export interface Options {
@@ -15,6 +16,7 @@ export interface Options {
 			outDir?: string;
 		};
 		preprocess?: PreprocessorGroup;
+		compilerOptions?: CompileOptions;
 	};
 }
 

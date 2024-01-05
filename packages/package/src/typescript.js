@@ -6,6 +6,7 @@ import { posixify, mkdirp, rimraf, walk } from './filesystem.js';
 import { resolve_aliases, write } from './utils.js';
 import { emitDts } from 'svelte2tsx';
 import { load_pkg_json } from './config.js';
+import { resolve_sourcemap } from './sourcemap.js';
 
 /**
  * Generates d.ts files by invoking TypeScript's "emit d.ts files from input files".
@@ -53,7 +54,18 @@ export async function emit_dts(input, output, cwd, alias, files) {
 		}
 
 		const source = fs.readFileSync(path.join(tmp, normalized), 'utf8');
-		write(path.join(output, normalized), resolve_aliases(input, normalized, source, alias));
+
+		let content;
+		if (file.endsWith('.d.ts.map')) {
+			content = resolve_sourcemap(
+				path.join(tmp, normalized),
+				path.join(output, normalized),
+				source
+			);
+		} else {
+			content = resolve_aliases(input, normalized, source, alias);
+		}
+		write(path.join(output, normalized), content);
 	}
 
 	rimraf(tmp);
@@ -77,7 +89,7 @@ export async function transpile_ts(filename, source) {
 			moduleResolution: ts.ModuleResolutionKind.NodeNext
 		},
 		fileName: filename
-	}).outputText;
+	});
 }
 
 async function try_load_ts() {
@@ -133,7 +145,7 @@ function load_tsconfig(filename, ts) {
 		config,
 		ts.sys,
 		path.dirname(config_filename),
-		{ sourceMap: false },
+		{},
 		config_filename
 	);
 	return options;

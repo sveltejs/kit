@@ -6,6 +6,9 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.join(__filename, '..');
 
 export default {
+	compilerOptions: {
+		enableSourcemap: false
+	},
 	preprocess: vitePreprocess(),
 	kit: {
 		alias: {

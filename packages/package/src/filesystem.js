@@ -54,6 +54,7 @@ export function walk(cwd, dirs = false) {
  * @param {string} target
  * @param {{
  *   filter?: (basename: string) => boolean;
+ *   transform?: (from: string, to: string, content: Buffer) => Buffer;
  *   replace?: Record<string, string>;
  * }} opts
  */
@@ -85,7 +86,10 @@ export function copy(source, target, opts = {}) {
 		} else {
 			mkdirp(path.dirname(to));
 
-			if (opts.replace) {
+			if (opts.transform) {
+				const content = fs.readFileSync(from);
+				fs.writeFileSync(to, opts.transform(from, to, content));
+			} else if (opts.replace) {
 				const data = fs.readFileSync(from, 'utf-8');
 				fs.writeFileSync(
 					to,

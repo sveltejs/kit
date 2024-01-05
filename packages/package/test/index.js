@@ -135,6 +135,10 @@ test('create package and assets are not tampered', async () => {
 	await test_make_package('assets');
 });
 
+test('create package with sourcemaps', async () => {
+	await test_make_package('sourcemaps');
+});
+
 test('create package with emitTypes settings disabled', async () => {
 	await test_make_package('emitTypes-false', { types: false });
 });

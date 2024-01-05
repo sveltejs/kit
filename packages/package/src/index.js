@@ -7,6 +7,7 @@ import { copy, mkdirp, rimraf } from './filesystem.js';
 import { analyze, resolve_aliases, scan, strip_lang_tags, write } from './utils.js';
 import { emit_dts, transpile_ts } from './typescript.js';
 import { create_validator } from './validate.js';
+import { resolve_sourcemap, should_generate_sourcemap } from './sourcemap.js';
 
 /**
  * @param {import('./types.js').Options} options
@@ -18,12 +19,28 @@ export async function build(options) {
 }
 
 /**
+ * copies files from temp to output, fixing the relative paths of source and declaration maps
+ * @param {string} temp
+ * @param {string} output
+ * @returns
+ */
+function copy_artifacts(temp, output) {
+	return copy(temp, output, {
+		transform: (from, to, content) => {
+			if (!from.endsWith('.map')) {
+				return content;
+			}
+			return Buffer.from(resolve_sourcemap(from, to, content.toString('utf-8')), 'utf-8');
+		}
+	});
+}
+
+/**
  * @param {import('./types.js').Options} options
  * @param {(name: string, code: string) => void} analyse_code
  */
 async function do_build(options, analyse_code) {
 	const { input, output, temp, extensions, alias } = normalize_options(options);
-
 	if (!fs.existsSync(input)) {
 		throw new Error(`${path.relative('.', input)} does not exist`);
 	}
@@ -38,12 +55,20 @@ async function do_build(options, analyse_code) {
 	}
 
 	for (const file of files) {
-		await process_file(input, temp, file, options.config.preprocess, alias, analyse_code);
+		await process_file(
+			input,
+			temp,
+			file,
+			options.config.preprocess,
+			alias,
+			analyse_code,
+			should_generate_sourcemap(options.config)
+		);
 	}
 
 	rimraf(output);
 	mkdirp(output);
-	copy(temp, output);
+	copy_artifacts(temp, output);
 
 	console.log(
 		colors
@@ -119,7 +144,15 @@ export async function watch(options) {
 				if (type === 'add' || type === 'change') {
 					console.log(`Processing ${file.name}`);
 					try {
-						await process_file(input, output, file, options.config.preprocess, alias, analyse_code);
+						await process_file(
+							input,
+							output,
+							file,
+							options.config.preprocess,
+							alias,
+							analyse_code,
+							should_generate_sourcemap(options.config)
+						);
 					} catch (e) {
 						errored = true;
 						console.error(e);
@@ -192,8 +225,9 @@ function normalize_options(options) {
  * @param {import('svelte/types/compiler/preprocess').PreprocessorGroup | undefined} preprocessor
  * @param {Record<string, string>} aliases
  * @param {(name: string, code: string) => void} analyse_code
+ * @param {boolean} source_maps
  */
-async function process_file(input, output, file, preprocessor, aliases, analyse_code) {
+async function process_file(input, output, file, preprocessor, aliases, analyse_code, source_maps) {
 	const filename = path.join(input, file.name);
 	const dest = path.join(output, file.dest);
 
@@ -202,19 +236,32 @@ async function process_file(input, output, file, preprocessor, aliases, analyse_
 
 		if (file.is_svelte) {
 			if (preprocessor) {
-				const preprocessed = (await preprocess(contents, preprocessor, { filename })).code;
-				contents = strip_lang_tags(preprocessed);
+				const preprocessed = await preprocess(contents, preprocessor, { filename });
+				const { code, map } = preprocessed;
+				if (source_maps) {
+					const sourcemap = typeof map === 'string' ? JSON.parse(map) : map;
+					sourcemap.sources = [filename];
+					const output = JSON.stringify(sourcemap);
+					contents += `\n//# sourceMappingURL=${file.dest}.map`;
+					write(`${dest}.map`, output);
+				}
+				contents = strip_lang_tags(code);
 			}
 		}
 
 		if (file.name.endsWith('.ts') && !file.name.endsWith('.d.ts')) {
-			contents = await transpile_ts(filename, contents);
+			const { outputText, sourceMapText } = await transpile_ts(filename, contents);
+			contents = outputText;
+			if (sourceMapText) {
+				const sourceMap = JSON.parse(sourceMapText);
+				sourceMap.sources = [filename];
+				write(`${dest}.map`, JSON.stringify(sourceMap));
+			}
 		}
-
 		contents = resolve_aliases(input, file.name, contents, aliases);
 		analyse_code(file.name, contents);
 		write(dest, contents);
 	} else {
-		copy(filename, dest);
+		copy_artifacts(filename, dest);
 	}
 }

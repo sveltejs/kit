@@ -2,9 +2,9 @@ import preprocess from 'svelte-preprocess';
 
 export default {
 	compilerOptions: {
-		enableSourcemap: false
+		enableSourcemap: true
 	},
 	preprocess: preprocess({
-		preserve: ['ld+json']
+		sourceMap: true
 	})
 };
