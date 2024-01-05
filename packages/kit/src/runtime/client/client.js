@@ -1810,9 +1810,19 @@ export function create_client(app, target) {
 					// attempt to scroll to that element and avoid any history changes.
 					// Otherwise, this can cause Firefox to incorrectly assign a null
 					// history state value without any signal that we can detect.
-					if (current.url.hash === url.hash) {
+					const [_, current_hash] = current.url.href.split('#');
+					if (current_hash === hash) {
 						event.preventDefault();
-						a.ownerDocument.getElementById(hash)?.scrollIntoView();
+
+						// We're already on /# and click on a link that goes to /#, or we're on
+						// /#top and click on a link that goes to /#top. In those cases just go to
+						// the top of the page, and avoid a history change.
+						if (hash === '' || (hash === 'top' && a.ownerDocument.getElementById('top') === null)) {
+							window.scrollTo({ top: 0 });
+						} else {
+							a.ownerDocument.getElementById(hash)?.scrollIntoView();
+						}
+
 						return;
 					}
 					// set this flag to distinguish between navigations triggered by
