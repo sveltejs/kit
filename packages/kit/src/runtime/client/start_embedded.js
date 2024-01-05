@@ -5,7 +5,8 @@ let instance_id = -1;
 // This is a hack to get the client module url while making sure Vite compiles it correctly.
 const modules = import.meta.glob('./client.js');
 const importPathRegex = /import\(['"]([^'"]+)['"]\)/;
-const importStatement = Object.values(modules)[0].toString();
+const client_import = Object.values(modules)[0];
+const importStatement = client_import.toString();
 const match = /** @type {RegExpMatchArray } */ (importStatement.match(importPathRegex));
 const client_url = match[1];
 
@@ -30,7 +31,7 @@ export async function start(app, target, hydrate) {
 	const { _hydrate, _start_router, create_client, goto } =
 		// ensures that the first embedded instance uses the preloaded module / the one that files like app/navigation.js also use
 		instance_id === 0
-			? await Object.values(modules)[0]()
+			? await client_import()
 			: await import(/* @vite-ignore */ `${client_url}?${instance_id}`);
 	create_client(app, target);
 
