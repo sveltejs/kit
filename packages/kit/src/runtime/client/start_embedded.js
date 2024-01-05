@@ -28,18 +28,11 @@ export async function start(app, target, hydrate) {
 	// Note that this will not make SvelteKit instances completely isolated because things like beforeNavigate
 	// are still shared, but it's good enough for now / backwards compatible.
 	instance_id++;
-	const { _hydrate, _start_router, create_client, goto } =
+	const { create_client } =
 		// ensures that the first embedded instance uses the preloaded module / the one that files like app/navigation.js also use
 		instance_id === 0
 			? await client_import()
 			: await import(/* @vite-ignore */ `${client_url}?${instance_id}`);
-	create_client(app, target);
 
-	if (hydrate) {
-		await _hydrate(hydrate);
-	} else {
-		goto(location.href, { replaceState: true });
-	}
-
-	_start_router();
+	create_client(app, target, hydrate);
 }

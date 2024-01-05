@@ -213,8 +213,9 @@ let pending_invalidate;
 /**
  * @param {import('./types.js').SvelteKitApp} _app
  * @param {HTMLElement} _target
+ * @param {Parameters<typeof _hydrate>[0]} [hydrate]
  */
-export function create_client(_app, _target) {
+export async function create_client(_app, _target, hydrate) {
 	app = _app;
 	routes = parse(_app);
 	container = __SVELTEKIT_EMBEDDED__ ? _target : document.documentElement;
@@ -255,6 +256,14 @@ export function create_client(_app, _target) {
 		history.scrollRestoration = 'manual';
 		scrollTo(scroll.x, scroll.y);
 	}
+
+	if (hydrate) {
+		await _hydrate(hydrate);
+	} else {
+		goto(location.href, { replaceState: true });
+	}
+
+	_start_router();
 }
 
 async function _invalidate() {
