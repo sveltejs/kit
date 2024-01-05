@@ -1810,7 +1810,7 @@ export function create_client(app, target) {
 					// attempt to scroll to that element and avoid any history changes.
 					// Otherwise, this can cause Firefox to incorrectly assign a null
 					// history state value without any signal that we can detect.
-					const [_, current_hash] = current.url.href.split('#');
+					const [, current_hash] = current.url.href.split('#');
 					if (current_hash === hash) {
 						event.preventDefault();
 
