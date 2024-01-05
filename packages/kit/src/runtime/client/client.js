@@ -1728,7 +1728,7 @@ export async function apply_action(result) {
 	}
 }
 
-export function _start_router() {
+function _start_router() {
 	history.scrollRestoration = 'manual';
 
 	// Adopted from Nuxt.js
@@ -2037,7 +2037,7 @@ export function _start_router() {
 		form: Record<string, any> | null;
 	}} opts
  */
-export async function _hydrate({
+async function _hydrate({
 	status = 200,
 	error,
 	node_ids,
