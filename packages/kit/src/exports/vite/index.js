@@ -385,7 +385,7 @@ function kit({ svelte_config }) {
 				case env_dynamic_public:
 					// populate `$env/dynamic/public` from `window`
 					if (browser) {
-						return `export const env = ${global}.env ?? (await import(/* @vite-ignore */ ${global}.base + '/' + '${kit.appDir}/env.js')).env;`;
+						return `export const env = ${global}.env`;
 					}
 
 					return create_dynamic_module(
