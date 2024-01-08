@@ -45,3 +45,12 @@ test('rewriteUrl does not get applied to external URLs', async ({ page }) => {
 	const newURL = new URL(page.url());
 	expect(currentURL.origin).not.toEqual(newURL.origin);
 });
+
+test('Falls back to native navigation if rewrite fails on the client', async ({ page }) => {
+	await page.goto('/error-handling');
+
+	//click the link with the text External URL
+	await page.click('a#client-error');
+
+	expect(await page.textContent('h1')).toContain('Full Navigation');
+});

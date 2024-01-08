@@ -17,3 +17,8 @@ test('Rewrites to external URL should always 404', async ({ page }) => {
 	const response = await page.goto('/external/rewritten', { waitUntil: 'networkidle' });
 	expect(response?.status()).toBe(404);
 });
+
+test('Returns a 500 response if the rewrite throws an error on the server', async ({ page }) => {
+	const response = await page.goto('/error-handling/server-error', { waitUntil: 'networkidle' });
+	expect(response?.status()).toBe(500);
+});

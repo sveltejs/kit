@@ -59,7 +59,16 @@ export async function respond(request, options, manifest, state) {
 	const originalURL = new URL(request.url);
 
 	// rewriteUrl could alter the given URL, so we pass a copy
-	const rewrittenURL = options.hooks.rewriteUrl({ url: new URL(originalURL) });
+	let rewrittenURL;
+	try {
+		rewrittenURL = options.hooks.rewriteUrl({ url: new URL(originalURL) });
+	} catch (e) {
+		const internal_error = new HttpError(500, 'An error occurred while rewriting the URL');
+		if (request.headers.get('accept') === 'application/json') {
+			return json(internal_error.body, { status: internal_error.status });
+		}
+		return text(internal_error.body.message, { status: internal_error.status });
+	}
 
 	//If the origin changed during the rewrite, always return a 404
 	if (rewrittenURL.origin !== originalURL.origin) {

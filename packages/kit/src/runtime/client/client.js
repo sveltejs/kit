@@ -1045,7 +1045,12 @@ export function create_client(app, target) {
 		if (!originalUrl) return undefined;
 
 		// rewriteUrl could alter the given URL, so we pass a copy
-		const rewrittenUrl = app.hooks.rewriteUrl({ url: new URL(originalUrl) });
+		let rewrittenUrl;
+		try {
+			rewrittenUrl = app.hooks.rewriteUrl({ url: new URL(originalUrl) });
+		} catch (e) {
+			return undefined;
+		}
 
 		if (is_external_url(rewrittenUrl, base)) return;
 

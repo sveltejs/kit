@@ -13,6 +13,18 @@ export const rewriteUrl = ({ url }) => {
 		return new URL('/', new URL(window.location.href));
 	}
 
+	if (url.pathname === '/error-handling/client-error') {
+		if (browser) {
+			throw new Error('Client Error');
+		} else {
+			url.pathname = '/error-handling/client-error-rewritten';
+		}
+	}
+
+	if (url.pathname === '/error-handling/server-error') {
+		throw new Error('Server Error - Should trigger 500 response');
+	}
+
 	url.pathname = mapping[url.pathname] || url.pathname;
 
 	if (url.pathname === '/external/rewritten') {
