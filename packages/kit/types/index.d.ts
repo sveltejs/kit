@@ -378,7 +378,7 @@ declare module '@sveltejs/kit' {
 				 * The location of your isomorphic [hooks](https://kit.svelte.dev/docs/hooks).
 				 * @default "src/hooks"
 				 */
-				router?: string;
+				isomorphic?: string;
 			};
 			/**
 			 * your app's internal library, accessible throughout the codebase as `$lib`
