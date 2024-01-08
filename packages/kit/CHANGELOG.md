@@ -1,5 +1,11 @@
 # @sveltejs/kit
 
+## 2.0.7
+
+### Patch Changes
+
+- chore: removed deprecated config.package type ([#11462](https://github.com/sveltejs/kit/pull/11462))
+
 ## 2.0.6
 
 ### Patch Changes
