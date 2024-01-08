@@ -93,6 +93,6 @@ For this to work, you need to load the data that the `+page.svelte` expects. A c
 
 ## Caveats
 
-During server-side rendering, `$page.state` is always an empty object. The same is true for the first page the user lands on — if the user reloads the page, state will _not_ be applied until they navigate.
+During server-side rendering, `$page.state` is always an empty object. The same is true for the first page the user lands on — if the user reloads the page (or returns from another document), state will _not_ be applied until they navigate.
 
 Shallow routing is a feature that requires JavaScript to work. Be mindful when using it and try to think of sensible fallback behavior in case JavaScript isn't available.

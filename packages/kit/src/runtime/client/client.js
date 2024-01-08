@@ -59,12 +59,6 @@ let errored = false;
 const scroll_positions = storage.get(SCROLL_KEY) ?? {};
 
 /**
- * history index -> any
- * @type {Record<string, Record<string, any>>}
- */
-const states = storage.get(STATES_KEY, devalue.parse) ?? {};
-
-/**
  * navigation index -> any
  * @type {Record<string, any[]>}
  */
@@ -320,7 +314,6 @@ function persist_state() {
 
 	capture_snapshot(current_navigation_index);
 	storage.set(SNAPSHOT_KEY, snapshots);
-	storage.set(STATES_KEY, states, devalue.stringify);
 }
 
 /**
@@ -1247,7 +1240,8 @@ async function navigate({
 
 		const entry = {
 			[HISTORY_INDEX]: (current_history_index += change),
-			[NAVIGATION_INDEX]: (current_navigation_index += change)
+			[NAVIGATION_INDEX]: (current_navigation_index += change),
+			[STATES_KEY]: state
 		};
 
 		const fn = replace_state ? original_replace_state : original_push_state;
@@ -1257,8 +1251,6 @@ async function navigate({
 			clear_onward_history(current_history_index, current_navigation_index);
 		}
 	}
-
-	states[current_history_index] = state;
 
 	// reset preload synchronously after the history state has been set to avoid race conditions
 	load_cache = null;
@@ -1635,6 +1627,7 @@ export function preload_code(pathname) {
 export function push_state(url, state) {
 	if (DEV) {
 		try {
+			// use `devalue.stringify` as a convenient way to ensure we exclude values that can't be properly rehydrated, such as custom class instances
 			devalue.stringify(state);
 		} catch (error) {
 			// @ts-expect-error
@@ -1645,7 +1638,8 @@ export function push_state(url, state) {
 	const opts = {
 		[HISTORY_INDEX]: (current_history_index += 1),
 		[NAVIGATION_INDEX]: current_navigation_index,
-		[PAGE_URL_KEY]: page.url.href
+		[PAGE_URL_KEY]: page.url.href,
+		[STATES_KEY]: state
 	};
 
 	original_push_state.call(history, opts, '', resolve_url(url));
@@ -1653,7 +1647,6 @@ export function push_state(url, state) {
 	page = { ...page, state };
 	root.$set({ page });
 
-	states[current_history_index] = state;
 	clear_onward_history(current_history_index, current_navigation_index);
 }
 
@@ -1661,6 +1654,7 @@ export function push_state(url, state) {
 export function replace_state(url, state) {
 	if (DEV) {
 		try {
+			// use `devalue.stringify` as a convenient way to ensure we exclude values that can't be properly rehydrated, such as custom class instances
 			devalue.stringify(state);
 		} catch (error) {
 			// @ts-expect-error
@@ -1671,15 +1665,14 @@ export function replace_state(url, state) {
 	const opts = {
 		[HISTORY_INDEX]: current_history_index,
 		[NAVIGATION_INDEX]: current_navigation_index,
-		[PAGE_URL_KEY]: page.url.href
+		[PAGE_URL_KEY]: page.url.href,
+		[STATES_KEY]: state
 	};
 
 	original_replace_state.call(history, opts, '', resolve_url(url));
 
 	page = { ...page, state };
 	root.$set({ page });
-
-	states[current_history_index] = state;
 }
 
 /** @type {typeof import('../app/forms.js').applyAction} */
@@ -1925,7 +1918,7 @@ function _start_router() {
 			if (history_index === current_history_index) return;
 
 			const scroll = scroll_positions[history_index];
-			const state = states[history_index] ?? {};
+			const state = event.state[STATES_KEY] ?? {};
 			const url = new URL(event.state[PAGE_URL_KEY] ?? location.href);
 			const navigation_index = event.state[NAVIGATION_INDEX];
 			const is_hash_change = strip_hash(location) === strip_hash(current.url);
