@@ -3,6 +3,7 @@ import { DEV } from 'esm-env';
 let instance_id = -1;
 
 // This is a hack to get the client module url while making sure Vite compiles it correctly.
+// https://github.com/vitejs/vite/issues/6757
 const modules = import.meta.glob('./client.js');
 const importPathRegex = /import\(['"]([^'"]+)['"]\)/;
 const client_import = Object.values(modules)[0];
