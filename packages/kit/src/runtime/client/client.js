@@ -1574,7 +1574,7 @@ export function onNavigate(callback) {
  */
 export function disableScrollHandling() {
 	if (!BROWSER) {
-		throw new Error(`Cannot call disableScrollHandling() on the server`);
+		throw new Error('Cannot call disableScrollHandling() on the server');
 	}
 
 	if (DEV && started && !updating) {
@@ -1601,7 +1601,7 @@ export function disableScrollHandling() {
  */
 export function goto(url, opts = {}) {
 	if (!BROWSER) {
-		throw new Error(`Cannot call goto(...) on the server`);
+		throw new Error('Cannot call goto(...) on the server');
 	}
 
 	url = resolve_url(url);
@@ -1639,7 +1639,7 @@ export function goto(url, opts = {}) {
  */
 export function invalidate(resource) {
 	if (!BROWSER) {
-		throw new Error(`Cannot call invalidate(...) on the server`);
+		throw new Error('Cannot call invalidate(...) on the server');
 	}
 
 	if (typeof resource === 'function') {
@@ -1658,7 +1658,7 @@ export function invalidate(resource) {
  */
 export function invalidateAll() {
 	if (!BROWSER) {
-		throw new Error(`Cannot call invalidateAll() on the server`);
+		throw new Error('Cannot call invalidateAll() on the server');
 	}
 
 	force_invalidation = true;
@@ -1679,7 +1679,7 @@ export function invalidateAll() {
  */
 export async function preloadData(href) {
 	if (!BROWSER) {
-		throw new Error(`Cannot call preloadData(...) on the server`);
+		throw new Error('Cannot call preloadData(...) on the server');
 	}
 
 	const url = resolve_url(href);
@@ -1715,7 +1715,7 @@ export async function preloadData(href) {
  */
 export function preloadCode(pathname) {
 	if (!BROWSER) {
-		throw new Error(`Cannot call preloadCode(...) on the server`);
+		throw new Error('Cannot call preloadCode(...) on the server');
 	}
 
 	if (DEV) {
@@ -1742,7 +1742,7 @@ export function preloadCode(pathname) {
  */
 export function pushState(url, state) {
 	if (!BROWSER) {
-		throw new Error(`Cannot call pushState(...) on the server`);
+		throw new Error('Cannot call pushState(...) on the server');
 	}
 
 	if (DEV) {
@@ -1781,7 +1781,7 @@ export function pushState(url, state) {
  */
 export function replaceState(url, state) {
 	if (!BROWSER) {
-		throw new Error(`Cannot call replaceState(...) on the server`);
+		throw new Error('Cannot call replaceState(...) on the server');
 	}
 
 	if (DEV) {
