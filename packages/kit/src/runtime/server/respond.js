@@ -61,12 +61,10 @@ export async function respond(request, options, manifest, state) {
 	// rewriteUrl could alter the given URL, so we pass a copy
 	const rewrittenURL = options.hooks.rewriteUrl({ url: new URL(originalURL) });
 
-
 	//If the origin changed during the rewrite, always return a 404
 	if (rewrittenURL.origin !== originalURL.origin) {
 		return text('Not found', { status: 404 });
 	}
-
 
 	if (options.csrf_check_origin) {
 		const forbidden =

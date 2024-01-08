@@ -1,7 +1,7 @@
 <script>
-	import { setup } from "../../../../../setup";
+	import { setup } from '../../../../../setup';
 
-    setup();
+	setup();
 </script>
 
 <a href="/external/rewritten">Go to rewritten page</a>

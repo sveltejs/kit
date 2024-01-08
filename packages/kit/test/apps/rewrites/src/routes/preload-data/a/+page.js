@@ -1,5 +1,5 @@
 export async function load() {
-    return {
-        success: false
-    }
+	return {
+		success: false
+	};
 }
