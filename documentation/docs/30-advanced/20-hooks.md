@@ -261,6 +261,7 @@ export function rewriteUrl({ url }) {
 }
 ```
 
+> `rewriteUrl` is not applied recursively
 
 
 ## Further reading
