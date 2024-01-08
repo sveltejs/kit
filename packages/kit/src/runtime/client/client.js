@@ -1503,44 +1503,80 @@ function handle_error(error, event) {
 	);
 }
 
-/** @type {typeof import('../app/navigation.js').afterNavigate} */
-export function after_navigate(fn) {
+/**
+ * A lifecycle function that runs the supplied `callback` when the current component mounts, and also whenever we navigate to a new URL.
+ *
+ * `afterNavigate` must be called during a component initialization. It remains active as long as the component is mounted.
+ * @param {(navigation: import('@sveltejs/kit').AfterNavigate) => void} callback
+ * @returns {void}
+ */
+export function afterNavigate(callback) {
 	onMount(() => {
-		callbacks.after_navigate.push(fn);
+		callbacks.after_navigate.push(callback);
 
 		return () => {
-			const i = callbacks.after_navigate.indexOf(fn);
+			const i = callbacks.after_navigate.indexOf(callback);
 			callbacks.after_navigate.splice(i, 1);
 		};
 	});
 }
 
-/** @type {typeof import('../app/navigation.js').beforeNavigate} */
-export function before_navigate(fn) {
+/**
+ * A navigation interceptor that triggers before we navigate to a new URL, whether by clicking a link, calling `goto(...)`, or using the browser back/forward controls.
+ *
+ * Calling `cancel()` will prevent the navigation from completing. If `navigation.type === 'leave'` — meaning the user is navigating away from the app (or closing the tab) — calling `cancel` will trigger the native browser unload confirmation dialog. In this case, the navigation may or may not be cancelled depending on the user's response.
+ *
+ * When a navigation isn't to a SvelteKit-owned route (and therefore controlled by SvelteKit's client-side router), `navigation.to.route.id` will be `null`.
+ *
+ * If the navigation will (if not cancelled) cause the document to unload — in other words `'leave'` navigations and `'link'` navigations where `navigation.to.route === null` — `navigation.willUnload` is `true`.
+ *
+ * `beforeNavigate` must be called during a component initialization. It remains active as long as the component is mounted.
+ * @param {(navigation: import('@sveltejs/kit').BeforeNavigate) => void} callback
+ * @returns {void}
+ */
+export function beforeNavigate(callback) {
 	onMount(() => {
-		callbacks.before_navigate.push(fn);
+		callbacks.before_navigate.push(callback);
 
 		return () => {
-			const i = callbacks.before_navigate.indexOf(fn);
+			const i = callbacks.before_navigate.indexOf(callback);
 			callbacks.before_navigate.splice(i, 1);
 		};
 	});
 }
 
-/** @type {typeof import('../app/navigation.js').onNavigate} */
-export function on_navigate(fn) {
+/**
+ * A lifecycle function that runs the supplied `callback` immediately before we navigate to a new URL except during full-page navigations.
+ *
+ * If you return a `Promise`, SvelteKit will wait for it to resolve before completing the navigation. This allows you to — for example — use `document.startViewTransition`. Avoid promises that are slow to resolve, since navigation will appear stalled to the user.
+ *
+ * If a function (or a `Promise` that resolves to a function) is returned from the callback, it will be called once the DOM has updated.
+ *
+ * `onNavigate` must be called during a component initialization. It remains active as long as the component is mounted.
+ * @param {(navigation: import('@sveltejs/kit').OnNavigate) => import('types').MaybePromise<void>} callback
+ * @returns {void}
+ */
+export function onNavigate(callback) {
 	onMount(() => {
-		callbacks.on_navigate.push(fn);
+		callbacks.on_navigate.push(callback);
 
 		return () => {
-			const i = callbacks.on_navigate.indexOf(fn);
+			const i = callbacks.on_navigate.indexOf(callback);
 			callbacks.on_navigate.splice(i, 1);
 		};
 	});
 }
 
-/** @type {typeof import('../app/navigation.js').disableScrollHandling} */
-export function disable_scroll_handling() {
+/**
+ * If called when the page is being updated following a navigation (in `onMount` or `afterNavigate` or an action, for example), this disables SvelteKit's built-in scroll handling.
+ * This is generally discouraged, since it breaks user expectations.
+ * @returns {void}
+ */
+export function disableScrollHandling() {
+	if (!BROWSER) {
+		throw new Error('Cannot call disableScrollHandling() on the server');
+	}
+
 	if (DEV && started && !updating) {
 		throw new Error('Can only disable scroll handling during navigation');
 	}
@@ -1550,8 +1586,24 @@ export function disable_scroll_handling() {
 	}
 }
 
-/** @type {typeof import('../app/navigation.js').goto} */
+/**
+ * Returns a Promise that resolves when SvelteKit navigates (or fails to navigate, in which case the promise rejects) to the specified `url`.
+ * For external URLs, use `window.location = url` instead of calling `goto(url)`.
+ *
+ * @param {string | URL} url Where to navigate to. Note that if you've set [`config.kit.paths.base`](https://kit.svelte.dev/docs/configuration#paths) and the URL is root-relative, you need to prepend the base path if you want to navigate within the app.
+ * @param {Object} [opts] Options related to the navigation
+ * @param {boolean} [opts.replaceState] If `true`, will replace the current `history` entry rather than creating a new one with `pushState`
+ * @param {boolean} [opts.noScroll] If `true`, the browser will maintain its scroll position rather than scrolling to the top of the page after navigation
+ * @param {boolean} [opts.keepFocus] If `true`, the currently focused element will retain focus after navigation. Otherwise, focus will be reset to the body
+ * @param {boolean} [opts.invalidateAll] If `true`, all `load` functions of the page will be rerun. See https://kit.svelte.dev/docs/load#rerunning-load-functions for more info on invalidation.
+ * @param {App.PageState} [opts.state] An optional object that will be available on the `$page.state` store
+ * @returns {Promise<void>}
+ */
 export function goto(url, opts = {}) {
+	if (!BROWSER) {
+		throw new Error('Cannot call goto(...) on the server');
+	}
+
 	url = resolve_url(url);
 
 	if (url.origin !== origin) {
@@ -1567,8 +1619,29 @@ export function goto(url, opts = {}) {
 	return _goto(url, opts, 0);
 }
 
-/** @type {typeof import('../app/navigation.js').invalidate} */
+/**
+ * Causes any `load` functions belonging to the currently active page to re-run if they depend on the `url` in question, via `fetch` or `depends`. Returns a `Promise` that resolves when the page is subsequently updated.
+ *
+ * If the argument is given as a `string` or `URL`, it must resolve to the same URL that was passed to `fetch` or `depends` (including query parameters).
+ * To create a custom identifier, use a string beginning with `[a-z]+:` (e.g. `custom:state`) — this is a valid URL.
+ *
+ * The `function` argument can be used define a custom predicate. It receives the full `URL` and causes `load` to rerun if `true` is returned.
+ * This can be useful if you want to invalidate based on a pattern instead of a exact match.
+ *
+ * ```ts
+ * // Example: Match '/path' regardless of the query parameters
+ * import { invalidate } from '$app/navigation';
+ *
+ * invalidate((url) => url.pathname === '/path');
+ * ```
+ * @param {string | URL | ((url: URL) => boolean)} resource The invalidated URL
+ * @returns {Promise<void>}
+ */
 export function invalidate(resource) {
+	if (!BROWSER) {
+		throw new Error('Cannot call invalidate(...) on the server');
+	}
+
 	if (typeof resource === 'function') {
 		invalidated.push(resource);
 	} else {
@@ -1579,14 +1652,36 @@ export function invalidate(resource) {
 	return _invalidate();
 }
 
-/** @type {typeof import('../app/navigation.js').invalidateAll} */
-export function invalidate_all() {
+/**
+ * Causes all `load` functions belonging to the currently active page to re-run. Returns a `Promise` that resolves when the page is subsequently updated.
+ * @returns {Promise<void>}
+ */
+export function invalidateAll() {
+	if (!BROWSER) {
+		throw new Error('Cannot call invalidateAll() on the server');
+	}
+
 	force_invalidation = true;
 	return _invalidate();
 }
 
-/** @type {typeof import('../app/navigation.js').preloadData} */
-export async function preload_data(href) {
+/**
+ * Programmatically preloads the given page, which means
+ *  1. ensuring that the code for the page is loaded, and
+ *  2. calling the page's load function with the appropriate options.
+ *
+ * This is the same behaviour that SvelteKit triggers when the user taps or mouses over an `<a>` element with `data-sveltekit-preload-data`.
+ * If the next navigation is to `href`, the values returned from load will be used, making navigation instantaneous.
+ * Returns a Promise that resolves with the result of running the new route's `load` functions once the preload is complete.
+ *
+ * @param {string} href Page to preload
+ * @returns {Promise<{ type: 'loaded'; status: number; data: Record<string, any> } | { type: 'redirect'; location: string }>}
+ */
+export async function preloadData(href) {
+	if (!BROWSER) {
+		throw new Error('Cannot call preloadData(...) on the server');
+	}
+
 	const url = resolve_url(href);
 	const intent = get_navigation_intent(url, false);
 
@@ -1606,8 +1701,23 @@ export async function preload_data(href) {
 	return { type: result.type, status, data };
 }
 
-/** @type {typeof import('../app/navigation.js').preloadCode} */
-export function preload_code(pathname) {
+/**
+ * Programmatically imports the code for routes that haven't yet been fetched.
+ * Typically, you might call this to speed up subsequent navigation.
+ *
+ * You can specify routes by any matching pathname such as `/about` (to match `src/routes/about/+page.svelte`) or `/blog/*` (to match `src/routes/blog/[slug]/+page.svelte`).
+ *
+ * Unlike `preloadData`, this won't call `load` functions.
+ * Returns a Promise that resolves when the modules have been imported.
+ *
+ * @param {string} pathname
+ * @returns {Promise<void>}
+ */
+export function preloadCode(pathname) {
+	if (!BROWSER) {
+		throw new Error('Cannot call preloadCode(...) on the server');
+	}
+
 	if (DEV) {
 		if (!pathname.startsWith(base)) {
 			throw new Error(
@@ -1623,8 +1733,18 @@ export function preload_code(pathname) {
 	return _preload_code(pathname);
 }
 
-/** @type {typeof import('../app/navigation.js').pushState} */
-export function push_state(url, state) {
+/**
+ * Programmatically create a new history entry with the given `$page.state`. To use the current URL, you can pass `''` as the first argument. Used for [shallow routing](https://kit.svelte.dev/docs/shallow-routing).
+ *
+ * @param {string | URL} url
+ * @param {App.PageState} state
+ * @returns {void}
+ */
+export function pushState(url, state) {
+	if (!BROWSER) {
+		throw new Error('Cannot call pushState(...) on the server');
+	}
+
 	if (DEV) {
 		try {
 			// use `devalue.stringify` as a convenient way to ensure we exclude values that can't be properly rehydrated, such as custom class instances
@@ -1652,8 +1772,18 @@ export function push_state(url, state) {
 	clear_onward_history(current_history_index, current_navigation_index);
 }
 
-/** @type {typeof import('../app/navigation.js').replaceState} */
-export function replace_state(url, state) {
+/**
+ * Programmatically replace the current history entry with the given `$page.state`. To use the current URL, you can pass `''` as the first argument. Used for [shallow routing](https://kit.svelte.dev/docs/shallow-routing).
+ *
+ * @param {string | URL} url
+ * @param {App.PageState} state
+ * @returns {void}
+ */
+export function replaceState(url, state) {
+	if (!BROWSER) {
+		throw new Error('Cannot call replaceState(...) on the server');
+	}
+
 	if (DEV) {
 		try {
 			// use `devalue.stringify` as a convenient way to ensure we exclude values that can't be properly rehydrated, such as custom class instances
