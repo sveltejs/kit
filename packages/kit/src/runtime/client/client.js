@@ -1574,7 +1574,7 @@ export function onNavigate(callback) {
  */
 export function disableScrollHandling() {
 	if (!BROWSER) {
-		throw new Error(`Cannot call disableScrollHandling(...) on the server`);
+		throw new Error(`Cannot call disableScrollHandling() on the server`);
 	}
 
 	if (DEV && started && !updating) {
@@ -1658,7 +1658,7 @@ export function invalidate(resource) {
  */
 export function invalidateAll() {
 	if (!BROWSER) {
-		throw new Error(`Cannot call invalidateAll(...) on the server`);
+		throw new Error(`Cannot call invalidateAll() on the server`);
 	}
 
 	force_invalidation = true;
