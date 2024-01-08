@@ -436,6 +436,20 @@ test.describe('Scrolling', () => {
 		await page.reload();
 		expect(await page.evaluate(() => window.scrollY)).toBe(0);
 	});
+
+	test('clicking # or #top takes you to the top of the current page', async ({ page }) => {
+		await page.goto('/scroll/top');
+
+		for (const href of ['#', '#top']) {
+			await page.evaluate(() => window.scrollTo(0, 1000));
+			await page.click(`a[href="${href}"]`);
+			expect(await page.evaluate(() => window.scrollY)).toBe(0);
+
+			await page.evaluate(() => window.scrollTo(0, 1000));
+			await page.click(`a[href="${href}"]`);
+			expect(await page.evaluate(() => window.scrollY)).toBe(0);
+		}
+	});
 });
 
 test.describe('CSS', () => {
