@@ -260,7 +260,7 @@ export function rewriteUrl({ url }) {
 }
 ```
 
-> `rewriteUrl` is not applied recursively
+> `rewriteUrl` is not applied to the returned URL
 
 
 ## Further reading
