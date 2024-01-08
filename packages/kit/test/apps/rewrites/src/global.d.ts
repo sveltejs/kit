@@ -1,0 +1,5 @@
+declare global {
+	
+}
+
+export {};
