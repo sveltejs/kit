@@ -451,10 +451,7 @@ test.describe('Scrolling', () => {
 		}
 	});
 
-	test('Scroll position is correct after going back from a shallow route', async ({
-		page,
-		javaScriptEnabled
-	}) => {
+	test('Scroll position is correct after going back from a shallow route', async ({ page }) => {
 		await page.goto('/scroll/push-state');
 		await page.locator('#subpage-link').click();
 		await page.locator('#back-button').click();
