@@ -252,7 +252,7 @@ export async function create_client(_app, _target, hydrate) {
 	}
 
 	if (hydrate) {
-		await _hydrate(hydrate);
+		await _hydrate(target, hydrate);
 	} else {
 		goto(location.href, { replaceState: true });
 	}
@@ -365,8 +365,11 @@ async function _preload_code(pathname) {
 	}
 }
 
-/** @param {import('./types.js').NavigationFinished} result */
-function initialize(result) {
+/**
+ * @param {import('./types.js').NavigationFinished} result
+ * @param {HTMLElement} target
+ */
+function initialize(result, target) {
 	if (DEV && result.state.error && document.querySelector('vite-error-overlay')) return;
 
 	current = result.state;
@@ -1290,7 +1293,7 @@ async function navigate({
 		root.$set(navigation_result.props);
 		has_navigated = true;
 	} else {
-		initialize(navigation_result);
+		initialize(navigation_result, target);
 	}
 
 	const { activeElement } = document;
@@ -2032,25 +2035,21 @@ function _start_router() {
 }
 
 /**
+ * @param {HTMLElement} target
  * @param {{
-		status: number;
-		error: App.Error | null;
-		node_ids: number[];
-		params: Record<string, string>;
-		route: { id: string | null };
-		data: Array<import('types').ServerDataNode | null>;
-		form: Record<string, any> | null;
-	}} opts
+ *   status: number;
+ *   error: App.Error | null;
+ *   node_ids: number[];
+ *   params: Record<string, string>;
+ *   route: { id: string | null };
+ *   data: Array<import('types').ServerDataNode | null>;
+ *   form: Record<string, any> | null;
+ * }} opts
  */
-async function _hydrate({
-	status = 200,
-	error,
-	node_ids,
-	params,
-	route,
-	data: server_data_nodes,
-	form
-}) {
+async function _hydrate(
+	target,
+	{ status = 200, error, node_ids, params, route, data: server_data_nodes, form }
+) {
 	hydrated = true;
 
 	const url = new URL(location.href);
@@ -2133,7 +2132,7 @@ async function _hydrate({
 		result.props.page.state = {};
 	}
 
-	initialize(result);
+	initialize(result, target);
 }
 
 /**

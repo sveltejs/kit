@@ -501,9 +501,7 @@ async function kit({ svelte_config }) {
 		}
 	};
 
-	const client_start_file = svelte_config.kit.embedded
-		? `${runtime_directory}/client/start_embedded.js`
-		: `${runtime_directory}/client/start.js`;
+	const client_start_file = `${runtime_directory}/client/start.js`;
 
 	/** @type {import('vite').Plugin} */
 	const plugin_compile = {
