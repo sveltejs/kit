@@ -30,3 +30,10 @@ test("Apply rewrites to preload data", async ({ page, context }) => {
 	//Check that the <pre> element contains the expected text
 	expect(await page.textContent("pre")).toContain('"success": true');
 });
+
+test("Rewrites to external URL should always 404 - After client-side navigation", async ({ page, context }) => {
+	await page.goto("/external")
+	await page.click("a[href='/external/rewritten']")
+
+	expect(await page.textContent("body")).toContain("Not found");
+})
