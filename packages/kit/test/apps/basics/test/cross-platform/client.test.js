@@ -450,6 +450,22 @@ test.describe('Scrolling', () => {
 			expect(await page.evaluate(() => window.scrollY)).toBe(0);
 		}
 	});
+
+	test('Scroll position is correct after going back from a shallow route', async ({ page }) => {
+		await page.goto('/scroll/push-state');
+		await page.locator('#subpage-link').click();
+		await page.locator('#back-button').click();
+
+		await page.evaluate(() => window.scrollTo(0, 9999));
+
+		const scroll = await page.evaluate(() => window.scrollY);
+		expect(scroll).toBeGreaterThan(0);
+
+		await page.locator('#shallow-button').click();
+		await page.locator('#back-button').click();
+
+		expect(await page.evaluate(() => window.scrollY)).toBe(scroll);
+	});
 });
 
 test.describe('CSS', () => {
