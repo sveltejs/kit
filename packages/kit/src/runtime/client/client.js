@@ -1062,7 +1062,13 @@ export function create_client(app, target) {
 			if (params) {
 				const id = original_url.pathname + original_url.search;
 				/** @type {import('./types.js').NavigationIntent} */
-				const intent = { id, invalidating, route, params: decode_params(params), url: original_url };
+				const intent = {
+					id,
+					invalidating,
+					route,
+					params: decode_params(params),
+					url: original_url
+				};
 				return intent;
 			}
 		}
