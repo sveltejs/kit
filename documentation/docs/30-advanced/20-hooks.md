@@ -246,12 +246,17 @@ This function allows you to rewrite URLs before SvelteKit uses them to determine
 /// file: src/hooks.router.js
 // @errors: 2345
 // @errors: 2304
+
+/** @type {Record<string, string>} */
+const mapping = {
+	"/en/about": "/en/about",
+	"/de/ueber-uns": "/de/about",
+	"/fr/a-propos": "/fr/about",
+}
+
 /** @type {import('@sveltejs/kit').RewriteUrl} */
 export function rewriteUrl({ url }) {
-	//Process requests to '/<lang>/about' as if they were to '/about'
-	const language = getLanguageFromPath(url.pathname);
-	if(language) url.pathname = url.pathname.slice(language.length + 1);
-
+	url.pathname = mapping[url.pathname] ?? url.pathname;
 	return url;
 }
 ```
