@@ -207,7 +207,7 @@ let pending_invalidate;
 /**
  * @param {import('./types.js').SvelteKitApp} _app
  * @param {HTMLElement} _target
- * @param {Parameters<typeof _hydrate>[0]} [hydrate]
+ * @param {Parameters<typeof _hydrate>[1]} [hydrate]
  */
 export async function create_client(_app, _target, hydrate) {
 	app = _app;
