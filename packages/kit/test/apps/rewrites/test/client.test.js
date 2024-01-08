@@ -33,3 +33,15 @@ test('Rewrites to external URL should always 404 - After client-side navigation'
 
 	expect(await page.textContent('body')).toContain('Not found');
 });
+
+test('rewriteUrl does not get applied to external URLs', async ({ page }) => {
+	await page.goto('/external');
+	const currentURL = new URL(page.url());
+
+	//click the link with the text External URL
+	await page.click("a[data-test='external-url']");
+
+	//The URl should not have the same origin as the current URL
+	const newURL = new URL(page.url());
+	expect(currentURL.origin).not.toEqual(newURL.origin);
+});

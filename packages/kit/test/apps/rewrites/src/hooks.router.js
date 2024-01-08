@@ -1,3 +1,5 @@
+import { browser } from '$app/environment';
+
 const mapping = {
 	'/basic/a': '/basic/b',
 	'/client-only-redirect/a': '/client-only-redirect/b',
@@ -6,6 +8,11 @@ const mapping = {
 
 /** @type {import("@sveltejs/kit").RewriteUrl} */
 export const rewriteUrl = ({ url }) => {
+	//Try to rewrite external URLs to the homepage - This should not work
+	if (browser && url.origin !== window.location.origin) {
+		return new URL('/', new URL(window.location.href));
+	}
+
 	url.pathname = mapping[url.pathname] || url.pathname;
 
 	if (url.pathname === '/external/rewritten') {
