@@ -1,5 +1,19 @@
 # @sveltejs/kit
 
+## 2.0.8
+
+### Patch Changes
+
+- fix: always scroll to top when clicking a # or #top link ([`099608c428a49504785eab3afe3b2e76a9317bdf`](https://github.com/sveltejs/kit/commit/099608c428a49504785eab3afe3b2e76a9317bdf))
+
+- fix: add nonce or hash to "script-src-elem", "style-src-attr" and "style-src-elem" if defined in CSP config ([#11485](https://github.com/sveltejs/kit/pull/11485))
+
+- fix: decode server data with `stream: true` during client-side navigation ([#11409](https://github.com/sveltejs/kit/pull/11409))
+
+- fix: capture scroll position when using `pushState` ([#11540](https://github.com/sveltejs/kit/pull/11540))
+
+- chore: use peer dependencies when linked ([#11433](https://github.com/sveltejs/kit/pull/11433))
+
 ## 2.0.7
 
 ### Patch Changes
