@@ -501,8 +501,6 @@ async function kit({ svelte_config }) {
 		}
 	};
 
-	const client_start_file = `${runtime_directory}/client/start.js`;
-
 	/** @type {import('vite').Plugin} */
 	const plugin_compile = {
 		name: 'vite-plugin-sveltekit-compile',
@@ -557,7 +555,7 @@ async function kit({ svelte_config }) {
 						input[name] = path.resolve(file);
 					});
 				} else {
-					input['entry/start'] = client_start_file;
+					input['entry/start'] = `${runtime_directory}/client/start.js`;
 					input['entry/app'] = `${kit.outDir}/generated/client-optimized/app.js`;
 
 					manifest_data.nodes.forEach((node, i) => {
@@ -621,7 +619,7 @@ async function kit({ svelte_config }) {
 						rollupOptions: {
 							// Vite dependency crawler needs an explicit JS entry point
 							// eventhough server otherwise works without it
-							input: client_start_file
+							input: `${runtime_directory}/client/start.js`
 						}
 					},
 					publicDir: kit.files.assets
@@ -759,7 +757,7 @@ async function kit({ svelte_config }) {
 
 				const deps_of = /** @param {string} f */ (f) =>
 					find_deps(client_manifest, posixify(path.relative('.', f)), false);
-				const start = deps_of(client_start_file);
+				const start = deps_of(`${runtime_directory}/client/start.js`);
 				const app = deps_of(`${kit.outDir}/generated/client-optimized/app.js`);
 
 				build_data.client = {
