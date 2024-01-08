@@ -186,42 +186,35 @@ A universal `load` function can return an object containing any values, includin
 
 A server `load` function must return data that can be serialized with [devalue](https://github.com/rich-harris/devalue) — anything that can be represented as JSON plus things like `BigInt`, `Date`, `Map`, `Set` and `RegExp`, or repeated/cyclical references — so that it can be transported over the network. Your data can include [promises](#streaming-with-promises), in which case it will be streamed to browsers.
 
-When using both a universal and server `load` on the same route, only the data returned in the universal `load` will be returned to the page. You can combine server and universal `load` returned data by spreading the universal `load`'s `data` property:
-
-```js
-/// file: src/routes/+page.server.js
-/** @type {import('./$types').PageServerLoad} */
-export async function load({ fetch }) {
-	const response = await fetch('https://example.com/posts')
-	const posts = await response.json()
-
-	return { posts }
-}
-```
-
-```js
-/// file: src/routes/+page.js
-import { browser } from '$app/environment'
-
-/** @type {import('./$types').PageLoad} */
-export function load({ data }) {
-	let theme = 'system'
-
-	if (browser) {
-		theme = localStorage.getItem("theme") ?? 'system';
-	}
-
-	return { ...data, theme } // { posts: [/* ... */], theme: 'system' }
-}
-```
-
 ### When to use which
 
 Server `load` functions are convenient when you need to access data directly from a database or filesystem, or need to use private environment variables.
 
 Universal `load` functions are useful when you need to `fetch` data from an external API and don't need private credentials, since SvelteKit can get the data directly from the API rather than going via your server. They are also useful when you need to return something that can't be serialized, such as a Svelte component constructor.
 
-In rare cases, you might need to use both together — for example, you might need to return an instance of a custom class that was initialised with data from your server.
+In rare cases, you might need to use both together — for example, you might need to return an instance of a custom class that was initialised with data from your server. When using both, the server `load` return value is _not_ passed directly to the page, but to the universal `load` function (as the `data` property):
+
+```js
+/// file: src/routes/+page.server.js
+/** @type {import('./$types').PageServerLoad} */
+export async function load() {
+	return {
+		serverMessage: 'hello from server load function'
+	};
+}
+```
+
+```js
+/// file: src/routes/+page.js
+// @errors: 18047
+/** @type {import('./$types').PageLoad} */
+export async function load({ data }) {
+	return {
+		serverMessage: data.serverMessage,
+		universalMessage: 'hello from universal load function'
+	};
+}
+```
 
 ## Using URL data
 
