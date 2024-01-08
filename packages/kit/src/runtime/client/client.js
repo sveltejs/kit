@@ -1627,7 +1627,7 @@ export function preload_code(pathname) {
 export function push_state(url, state) {
 	if (DEV) {
 		try {
-			// The browser history state's serialization capabilities are roughly equal to devalue.stringify
+			// use `devalue.stringify` as a convenient way to ensure we exclude values that can't be properly rehydrated, such as custom class instances
 			devalue.stringify(state);
 		} catch (error) {
 			// @ts-expect-error
@@ -1654,7 +1654,7 @@ export function push_state(url, state) {
 export function replace_state(url, state) {
 	if (DEV) {
 		try {
-			// The browser history state's serialization capabilities are roughly equal to devalue.stringify
+			// use `devalue.stringify` as a convenient way to ensure we exclude values that can't be properly rehydrated, such as custom class instances
 			devalue.stringify(state);
 		} catch (error) {
 			// @ts-expect-error
