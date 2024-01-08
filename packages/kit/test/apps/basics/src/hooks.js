@@ -8,8 +8,8 @@ const mapping = {
 
 /** @type {import("@sveltejs/kit").RewriteUrl} */
 export const rewriteUrl = ({ url }) => {
-	//Try to rewrite external URLs to the homepage - This should not work
-	if (browser && url.origin !== window.location.origin) {
+	//Try to rewrite the external url used in /rewrites/external to the homepage - This should not work
+	if (browser && url.href.startsWith("https://expired.badssl.com")) {
 		return new URL('/', new URL(window.location.href));
 	}
 
