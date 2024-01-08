@@ -1635,6 +1635,8 @@ export function push_state(url, state) {
 		}
 	}
 
+	update_scroll_positions(current_history_index);
+
 	const opts = {
 		[HISTORY_INDEX]: (current_history_index += 1),
 		[NAVIGATION_INDEX]: current_navigation_index,
@@ -1832,9 +1834,19 @@ function _start_router() {
 			// attempt to scroll to that element and avoid any history changes.
 			// Otherwise, this can cause Firefox to incorrectly assign a null
 			// history state value without any signal that we can detect.
-			if (current.url.hash === url.hash) {
+			const [, current_hash] = current.url.href.split('#');
+			if (current_hash === hash) {
 				event.preventDefault();
-				a.ownerDocument.getElementById(hash)?.scrollIntoView();
+
+				// We're already on /# and click on a link that goes to /#, or we're on
+				// /#top and click on a link that goes to /#top. In those cases just go to
+				// the top of the page, and avoid a history change.
+				if (hash === '' || (hash === 'top' && a.ownerDocument.getElementById('top') === null)) {
+					window.scrollTo({ top: 0 });
+				} else {
+					a.ownerDocument.getElementById(hash)?.scrollIntoView();
+				}
+
 				return;
 			}
 			// set this flag to distinguish between navigations triggered by
@@ -2190,7 +2202,7 @@ async function load_data(url, invalid) {
 			const { done, value } = await reader.read();
 			if (done && !text) break;
 
-			text += !value && text ? '\n' : decoder.decode(value); // no value -> final chunk -> add a new line to trigger the last parse
+			text += !value && text ? '\n' : decoder.decode(value, { stream: true }); // no value -> final chunk -> add a new line to trigger the last parse
 
 			while (true) {
 				const split = text.indexOf('\n');

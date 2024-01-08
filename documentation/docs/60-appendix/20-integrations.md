@@ -4,7 +4,7 @@ title: Integrations
 
 ## Preprocessors
 
-Preprocessors transform your `.svelte` files before passing them to the compiler. For example, if your `.svelte` file uses TypeScript and PostCSS, it must first be transformed into JavaScript and CSS so that the Svelte compiler can handle it. There are many [available preprocessors](https://sveltesociety.dev/packages#preprocessors). The Svelte team maintains two official ones discussed below.
+Preprocessors transform your `.svelte` files before passing them to the compiler. For example, if your `.svelte` file uses TypeScript and PostCSS, it must first be transformed into JavaScript and CSS so that the Svelte compiler can handle it. There are many [available preprocessors](https://sveltesociety.dev/packages?category=preprocessors). The Svelte team maintains two official ones discussed below.
 
 ### `vitePreprocess`
 
@@ -27,7 +27,7 @@ You will need to install `svelte-preprocess` with `npm install --save-dev svelte
 
 ## Adders
 
-[Svelte Adders](https://sveltesociety.dev/templates#adders) allow you to setup many different complex integrations like Tailwind, PostCSS, Storybook, Firebase, GraphQL, mdsvex, and more with a single command. Please see [sveltesociety.dev](https://sveltesociety.dev/) for a full listing of templates, components, and tools available for use with Svelte and SvelteKit.
+[Svelte Adders](https://sveltesociety.dev/templates?category=svelte-add) allow you to setup many different complex integrations like Tailwind, PostCSS, Storybook, Firebase, GraphQL, mdsvex, and more with a single command. Please see [sveltesociety.dev](https://sveltesociety.dev/) for a full listing of templates, components, and tools available for use with Svelte and SvelteKit.
 
 ## Vite plugins
 

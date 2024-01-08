@@ -1,9 +1,8 @@
 import fs from 'node:fs';
 import path from 'node:path';
 
-import { svelte } from '@sveltejs/vite-plugin-svelte';
+import * as imr from 'import-meta-resolve';
 import colors from 'kleur';
-import * as vite from 'vite';
 
 import { copy, mkdirp, posixify, read, resolve_entry, rimraf } from '../../utils/filesystem.js';
 import { create_static_module, create_dynamic_module } from '../../core/env.js';
@@ -34,6 +33,7 @@ import {
 	sveltekit_environment,
 	sveltekit_paths
 } from './module_ids.js';
+import { pathToFileURL } from 'node:url';
 
 const cwd = process.cwd();
 
@@ -123,6 +123,17 @@ const warning_preprocessor = {
 };
 
 /**
+ * Resolve a dependency relative to the current working directory,
+ * rather than relative to this package
+ * @param {string} dependency
+ */
+async function resolve_peer_dependency(dependency) {
+	// @ts-expect-error the types are wrong
+	const resolved = await imr.resolve(dependency, pathToFileURL(process.cwd() + '/dummy.js'));
+	return import(resolved);
+}
+
+/**
  * Returns the SvelteKit Vite plugins.
  * @returns {Promise<import('vite').Plugin[]>}
  */
@@ -153,7 +164,9 @@ export async function sveltekit() {
 		...svelte_config.vitePlugin
 	};
 
-	return [...svelte(vite_plugin_svelte_options), ...kit({ svelte_config })];
+	const { svelte } = await resolve_peer_dependency('@sveltejs/vite-plugin-svelte');
+
+	return [...svelte(vite_plugin_svelte_options), ...(await kit({ svelte_config }))];
 }
 
 // These variables live outside the `kit()` function because it is re-invoked by each Vite build
@@ -174,9 +187,11 @@ let manifest_data;
  * - https://rollupjs.org/guide/en/#output-generation-hooks
  *
  * @param {{ svelte_config: import('types').ValidatedConfig }} options
- * @return {import('vite').Plugin[]}
+ * @return {Promise<import('vite').Plugin[]>}
  */
-function kit({ svelte_config }) {
+async function kit({ svelte_config }) {
+	const vite = await resolve_peer_dependency('vite');
+
 	const { kit } = svelte_config;
 	const out = `${kit.outDir}/output`;
 
