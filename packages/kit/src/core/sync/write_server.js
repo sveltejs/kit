@@ -10,7 +10,7 @@ import colors from 'kleur';
 /**
  * @param {{
  *   server_hooks: string | null;
- *   router_hooks: string | null;
+ *   isomorphic_hooks: string | null;
  *   config: import('types').ValidatedConfig;
  *   has_service_worker: boolean;
  *   runtime_directory: string;
@@ -21,7 +21,7 @@ import colors from 'kleur';
 const server_template = ({
 	config,
 	server_hooks,
-	router_hooks,
+	isomorphic_hooks,
 	has_service_worker,
 	runtime_directory,
 	template,
@@ -64,7 +64,7 @@ export const options = {
 export async function get_hooks() {
 	return {
 		${server_hooks ? `...(await import(${s(server_hooks)})),` : ''}
-		${router_hooks ? `...(await import(${s(router_hooks)})),` : ''}
+		${isomorphic_hooks ? `...(await import(${s(isomorphic_hooks)})),` : ''}
 	};
 }
 
@@ -106,7 +106,7 @@ export function write_server(config, output) {
 		server_template({
 			config,
 			server_hooks: server_hooks_file ? relative(server_hooks_file) : null,
-			router_hooks: isomorphic_hooks_file ? relative(isomorphic_hooks_file) : null,
+			isomorphic_hooks: isomorphic_hooks_file ? relative(isomorphic_hooks_file) : null,
 			has_service_worker:
 				config.kit.serviceWorker.register && !!resolve_entry(config.kit.files.serviceWorker),
 			runtime_directory: relative(runtime_directory),

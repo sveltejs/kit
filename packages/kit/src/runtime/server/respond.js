@@ -56,12 +56,12 @@ const allowed_page_methods = new Set(['GET', 'HEAD', 'OPTIONS']);
  */
 export async function respond(request, options, manifest, state) {
 	/** URL but stripped from the potential `/__data.json` suffix and its search param  */
-	const originalURL = new URL(request.url);
+	const original_url = new URL(request.url);
 
 	// rewriteUrl could alter the given URL, so we pass a copy
-	let rewrittenURL;
+	let rewritten_url;
 	try {
-		rewrittenURL = options.hooks.rewriteUrl({ url: new URL(originalURL) });
+		rewritten_url = options.hooks.rewriteUrl({ url: new URL(original_url) });
 	} catch (e) {
 		return text('Internal Server Error', {
 			status: 500
@@ -69,7 +69,7 @@ export async function respond(request, options, manifest, state) {
 	}
 
 	//If the origin changed during the rewrite, always return a 404
-	if (rewrittenURL.origin !== originalURL.origin) {
+	if (rewritten_url.origin !== original_url.origin) {
 		return text('Not found', { status: 404 });
 	}
 
@@ -80,7 +80,7 @@ export async function respond(request, options, manifest, state) {
 				request.method === 'PUT' ||
 				request.method === 'PATCH' ||
 				request.method === 'DELETE') &&
-			request.headers.get('origin') !== originalURL.origin;
+			request.headers.get('origin') !== original_url.origin;
 
 		if (forbidden) {
 			const csrf_error = new HttpError(
@@ -96,7 +96,7 @@ export async function respond(request, options, manifest, state) {
 
 	let decoded;
 	try {
-		decoded = decode_pathname(rewrittenURL.pathname);
+		decoded = decode_pathname(rewritten_url.pathname);
 	} catch {
 		return text('Malformed URI', { status: 400 });
 	}
@@ -123,15 +123,15 @@ export async function respond(request, options, manifest, state) {
 	let invalidated_data_nodes;
 	if (is_data_request) {
 		decoded = strip_data_suffix(decoded) || '/';
-		originalURL.pathname =
-			strip_data_suffix(originalURL.pathname) +
-				(originalURL.searchParams.get(TRAILING_SLASH_PARAM) === '1' ? '/' : '') || '/';
-		originalURL.searchParams.delete(TRAILING_SLASH_PARAM);
-		invalidated_data_nodes = originalURL.searchParams
+		original_url.pathname =
+			strip_data_suffix(original_url.pathname) +
+				(original_url.searchParams.get(TRAILING_SLASH_PARAM) === '1' ? '/' : '') || '/';
+		original_url.searchParams.delete(TRAILING_SLASH_PARAM);
+		invalidated_data_nodes = original_url.searchParams
 			.get(INVALIDATED_PARAM)
 			?.split('')
 			.map((node) => node === '1');
-		originalURL.searchParams.delete(INVALIDATED_PARAM);
+		original_url.searchParams.delete(INVALIDATED_PARAM);
 	}
 
 	if (!state.prerendering?.fallback) {
@@ -198,7 +198,7 @@ export async function respond(request, options, manifest, state) {
 				}
 			}
 		},
-		url: originalURL,
+		url: original_url,
 		isDataRequest: is_data_request,
 		isSubRequest: state.depth > 0
 	};
@@ -215,7 +215,7 @@ export async function respond(request, options, manifest, state) {
 		if (route) {
 			// if `paths.base === '/a/b/c`, then the root route is `/a/b/c/`,
 			// regardless of the `trailingSlash` route option
-			if (originalURL.pathname === base || originalURL.pathname === base + '/') {
+			if (original_url.pathname === base || original_url.pathname === base + '/') {
 				trailing_slash = 'always';
 			} else if (route.page) {
 				const nodes = await Promise.all([
@@ -258,17 +258,17 @@ export async function respond(request, options, manifest, state) {
 			}
 
 			if (!is_data_request) {
-				const normalized = normalize_path(originalURL.pathname, trailing_slash ?? 'never');
+				const normalized = normalize_path(original_url.pathname, trailing_slash ?? 'never');
 
-				if (normalized !== originalURL.pathname && !state.prerendering?.fallback) {
+				if (normalized !== original_url.pathname && !state.prerendering?.fallback) {
 					return new Response(undefined, {
 						status: 308,
 						headers: {
 							'x-sveltekit-normalize': '1',
 							location:
 								// ensure paths starting with '//' are not treated as protocol-relative
-								(normalized.startsWith('//') ? originalURL.origin + normalized : normalized) +
-								(originalURL.search === '?' ? '' : originalURL.search)
+								(normalized.startsWith('//') ? original_url.origin + normalized : normalized) +
+								(original_url.search === '?' ? '' : original_url.search)
 						}
 					});
 				}
@@ -277,7 +277,7 @@ export async function respond(request, options, manifest, state) {
 
 		const { cookies, new_cookies, get_cookie_header, set_internal } = get_cookies(
 			request,
-			originalURL,
+			original_url,
 			trailing_slash ?? 'never'
 		);
 
@@ -292,7 +292,7 @@ export async function respond(request, options, manifest, state) {
 			set_internal
 		});
 
-		if (state.prerendering && !state.prerendering.fallback) disable_search(originalURL);
+		if (state.prerendering && !state.prerendering.fallback) disable_search(original_url);
 
 		const response = await options.hooks.handle({
 			event,

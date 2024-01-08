@@ -1038,31 +1038,31 @@ export function create_client(app, target) {
 	}
 
 	/**
-	 * @param {URL | undefined} originalUrl
+	 * @param {URL | undefined} original_url
 	 * @param {boolean} invalidating
 	 */
-	function get_navigation_intent(originalUrl, invalidating) {
-		if (!originalUrl) return undefined;
+	function get_navigation_intent(original_url, invalidating) {
+		if (!original_url) return undefined;
 
 		// rewriteUrl could alter the given URL, so we pass a copy
-		let rewrittenUrl;
+		let rewritten_url;
 		try {
-			rewrittenUrl = app.hooks.rewriteUrl({ url: new URL(originalUrl) });
+			rewritten_url = app.hooks.rewriteUrl({ url: new URL(original_url) });
 		} catch (e) {
 			return undefined;
 		}
 
-		if (is_external_url(rewrittenUrl, base)) return;
+		if (is_external_url(rewritten_url, base)) return;
 
-		const path = get_url_path(rewrittenUrl.pathname);
+		const path = get_url_path(rewritten_url.pathname);
 
 		for (const route of routes) {
 			const params = route.exec(path);
 
 			if (params) {
-				const id = originalUrl.pathname + originalUrl.search;
+				const id = original_url.pathname + original_url.search;
 				/** @type {import('./types.js').NavigationIntent} */
-				const intent = { id, invalidating, route, params: decode_params(params), url: originalUrl };
+				const intent = { id, invalidating, route, params: decode_params(params), url: original_url };
 				return intent;
 			}
 		}
