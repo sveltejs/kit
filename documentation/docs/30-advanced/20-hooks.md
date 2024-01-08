@@ -4,12 +4,13 @@ title: Hooks
 
 'Hooks' are app-wide functions you declare that SvelteKit will call in response to specific events, giving you fine-grained control over the framework's behaviour.
 
-There are two hooks files, both optional:
+There are three hooks files, all optional:
 
 - `src/hooks.server.js` — your app's server hooks
 - `src/hooks.client.js` — your app's client hooks
+- `src/hooks.router.js` — your app's router hooks
 
-Code in these modules will run when the application starts up, making them useful for initializing database clients and so on.
+Code in the client & server modules will run when the application starts up, making them useful for initializing database clients and so on.
 
 > You can configure the location of these files with [`config.kit.files.hooks`](configuration#files).
 
@@ -231,6 +232,31 @@ This function is not called for _expected_ errors (those thrown with the [`error
 During development, if an error occurs because of a syntax error in your Svelte code, the passed in error has a `frame` property appended highlighting the location of the error.
 
 > Make sure that `handleError` _never_ throws an error
+
+## Router hooks
+
+The following can be added to `src/hooks.router.js`. Router hooks run both on the server and the client.
+
+
+### rewriteUrl
+
+This function allows you to rewrite URLs before SvelteKit uses them to determine which route to render. It will not change the URL in the browser's address bar, or the value of `event.url`. Only the route matching logic is affected.
+
+```js
+/// file: src/hooks.router.js
+// @errors: 2345
+// @errors: 2304
+/** @type {import('@sveltejs/kit').RewriteUrl} */
+export function rewriteUrl({ url }) {
+	//Process requests to '/<lang>/about' as if they were to '/about'
+	const language = getLanguageFromPath(url.pathname);
+	if(language) url.pathname = url.pathname.slice(language.length + 1);
+
+	return url;
+}
+```
+
+
 
 ## Further reading
 
