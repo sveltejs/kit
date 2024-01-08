@@ -82,7 +82,7 @@ export { set_assets, set_building, set_prerendering, set_private_env, set_public
  */
 export function write_server(config, output) {
 	const server_hooks_file = resolve_entry(config.kit.files.hooks.server);
-	const router_hooks_file = resolve_entry(config.kit.files.hooks.router);
+	const isomorphic_hooks_file = resolve_entry(config.kit.files.hooks.isomorphic);
 
 	const typo = resolve_entry('src/+hooks.server');
 	if (typo) {
@@ -106,7 +106,7 @@ export function write_server(config, output) {
 		server_template({
 			config,
 			server_hooks: server_hooks_file ? relative(server_hooks_file) : null,
-			router_hooks: router_hooks_file ? relative(router_hooks_file) : null,
+			router_hooks: isomorphic_hooks_file ? relative(isomorphic_hooks_file) : null,
 			has_service_worker:
 				config.kit.serviceWorker.register && !!resolve_entry(config.kit.files.serviceWorker),
 			runtime_directory: relative(runtime_directory),

@@ -124,7 +124,7 @@ const options = object(
 				hooks: object({
 					client: string(join('src', 'hooks.client')),
 					server: string(join('src', 'hooks.server')),
-					router: string(join('src', 'hooks.router'))
+					isomorphic: string(join('src', 'hooks'))
 				}),
 				lib: string(join('src', 'lib')),
 				params: string(join('src', 'params')),

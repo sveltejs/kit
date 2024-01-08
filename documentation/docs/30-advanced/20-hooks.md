@@ -8,7 +8,7 @@ There are three hooks files, all optional:
 
 - `src/hooks.server.js` — your app's server hooks
 - `src/hooks.client.js` — your app's client hooks
-- `src/hooks.router.js` — your app's router hooks
+- `src/hooks.js` — your app's isomorphic hooks
 
 Code in the client & server modules will run when the application starts up, making them useful for initializing database clients and so on.
 
@@ -233,10 +233,9 @@ During development, if an error occurs because of a syntax error in your Svelte 
 
 > Make sure that `handleError` _never_ throws an error
 
-## Router hooks
+## Isomorphic hooks
 
-The following can be added to `src/hooks.router.js`. Router hooks run both on the server and the client.
-
+The following can be added to `src/hooks.js`. Isomorphic hooks share the same implementation on the server and the client. This is not to be confused with shared hooks, which use separate implementations. 
 
 ### rewriteUrl
 

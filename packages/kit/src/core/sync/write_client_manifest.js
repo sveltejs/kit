@@ -109,7 +109,7 @@ export function write_client_manifest(kit, manifest_data, output, metadata) {
 	`;
 
 	const client_hooks_file = resolve_entry(kit.files.hooks.client);
-	const router_hooks_file = resolve_entry(kit.files.hooks.router);
+	const isomorphic_hooks_file = resolve_entry(kit.files.hooks.isomorphic);
 
 	const typo = resolve_entry('src/+hooks.client');
 	if (typo) {
@@ -132,8 +132,8 @@ export function write_client_manifest(kit, manifest_data, output, metadata) {
 					: ''
 			}
 			${
-				router_hooks_file
-					? `import * as router_hooks from '${relative_path(output, router_hooks_file)}';`
+				isomorphic_hooks_file
+					? `import * as router_hooks from '${relative_path(output, isomorphic_hooks_file)}';`
 					: ''
 			}
 
@@ -152,7 +152,7 @@ export function write_client_manifest(kit, manifest_data, output, metadata) {
 					client_hooks_file ? 'client_hooks.handleError || ' : ''
 				}(({ error }) => { console.error(error) }),
 
-				rewriteUrl: ${router_hooks_file ? 'router_hooks.rewriteUrl || ' : ''}(({url}) => url)
+				rewriteUrl: ${isomorphic_hooks_file ? 'router_hooks.rewriteUrl || ' : ''}(({url}) => url)
 			};
 
 			export { default as root } from '../root.${isSvelte5Plus() ? 'js' : 'svelte'}';
