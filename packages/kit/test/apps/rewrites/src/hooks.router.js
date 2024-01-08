@@ -1,5 +1,7 @@
 const mapping = {
     "/basic/a": "/basic/b",
+    "/client-only-redirect/a": "/client-only-redirect/b",
+    "/preload-data/a": "/preload-data/b",
 }
 
 /** @type {import("@sveltejs/kit").RewriteUrl} */

@@ -1,0 +1,1 @@
+<h1>Should have been rewritten to <code>/redirect/b</code></h1>
