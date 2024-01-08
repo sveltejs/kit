@@ -2172,7 +2172,7 @@ async function load_data(url, invalid) {
 			const { done, value } = await reader.read();
 			if (done && !text) break;
 
-			text += !value && text ? '\n' : decoder.decode(value); // no value -> final chunk -> add a new line to trigger the last parse
+			text += !value && text ? '\n' : decoder.decode(value, { stream: true }); // no value -> final chunk -> add a new line to trigger the last parse
 
 			while (true) {
 				const split = text.indexOf('\n');
