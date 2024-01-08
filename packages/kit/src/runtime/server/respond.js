@@ -63,11 +63,9 @@ export async function respond(request, options, manifest, state) {
 	try {
 		rewrittenURL = options.hooks.rewriteUrl({ url: new URL(originalURL) });
 	} catch (e) {
-		const internal_error = new HttpError(500, 'An error occurred while rewriting the URL');
-		if (request.headers.get('accept') === 'application/json') {
-			return json(internal_error.body, { status: internal_error.status });
-		}
-		return text(internal_error.body.message, { status: internal_error.status });
+		return text('Internal Server Error', {
+			status: 500
+		});
 	}
 
 	//If the origin changed during the rewrite, always return a 404
