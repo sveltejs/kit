@@ -1,10 +1,10 @@
 <script>
 	import { preloadData } from '$app/navigation';
-	import { setup } from '../../../../../setup';
+	import { setup } from '../../../../../../setup';
 	let data = null;
 
 	async function onClick() {
-		const result = await preloadData('/preload-data/a');
+		const result = await preloadData('/rewrites/preload-data/a');
 		data = result.data;
 	}
 

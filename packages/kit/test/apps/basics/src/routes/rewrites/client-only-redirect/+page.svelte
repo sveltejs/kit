@@ -3,4 +3,4 @@
 	setup();
 </script>
 
-<h1>Successfully rewritten</h1>
+<h1>Should be redirected</h1>

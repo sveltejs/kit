@@ -1021,3 +1021,51 @@ test.describe('Shallow routing', () => {
 		await expect(page.locator('p')).toHaveText('active: true');
 	});
 });
+
+test('Apply rewrites during client side navigation', async ({ page }) => {
+	await page.goto('/rewrites/basic');
+	await page.click("a[href='/rewrites/basic/a']");
+	expect(await page.textContent('h1')).toContain('Successfully rewritten');
+});
+
+test('Apply rewrites after client-only redirects', async ({ page }) => {
+	await page.goto('/rewrites/client-only-redirect');
+	expect(await page.textContent('h1')).toContain('Successfully rewritten');
+});
+
+test('Apply rewrites to preload data', async ({ page }) => {
+	await page.goto('/rewrites/preload-data');
+	await page.click('button');
+	await page.waitForSelector('pre');
+	expect(await page.textContent('pre')).toContain('"success": true');
+});
+
+test('Rewrites to external URL should always 404 - After client-side navigation', async ({
+	page
+}) => {
+	await page.goto('/rewrites/external');
+	await page.click("a[href='/rewrites/external/rewritten']");
+
+	expect(await page.textContent('body')).toContain('Not found');
+});
+
+test('rewriteUrl does not get applied to external URLs', async ({ page }) => {
+	await page.goto('/rewrites/external');
+	const currentURL = new URL(page.url());
+
+	//click the link with the text External URL
+	await page.click("a[data-test='external-url']");
+
+	//The URl should not have the same origin as the current URL
+	const newURL = new URL(page.url());
+	expect(currentURL.origin).not.toEqual(newURL.origin);
+});
+
+test('Falls back to native navigation if rewrite fails on the client', async ({ page }) => {
+	await page.goto('/rewrites/error-handling');
+
+	//click the link with the text External URL
+	await page.click('a#client-error');
+
+	expect(await page.textContent('h1')).toContain('Full Navigation');
+});

@@ -3,7 +3,7 @@ import { redirect } from '@sveltejs/kit';
 
 export async function load() {
 	if (browser) {
-		redirect(302, '/client-only-redirect/a');
+		redirect(302, '/rewrites/client-only-redirect/a');
 	}
 
 	return {};
