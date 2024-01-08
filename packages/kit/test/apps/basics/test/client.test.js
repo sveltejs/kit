@@ -1022,7 +1022,7 @@ test.describe('Shallow routing', () => {
 	});
 });
 
-test.describe("Rewrites", () => {
+test.describe('Rewrites', () => {
 	test('Apply rewrites during client side navigation', async ({ page }) => {
 		await page.goto('/rewrites/basic');
 		await page.click("a[href='/rewrites/basic/a']");

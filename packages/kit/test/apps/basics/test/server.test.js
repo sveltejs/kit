@@ -611,7 +611,7 @@ test.describe('Miscellaneous', () => {
 	});
 });
 
-test.describe("Rewrites", () => {
+test.describe('Rewrites', () => {
 	test('Apply rewrites when directly accessing a page', async ({ page }) => {
 		await page.goto('/rewrites/basic/a');
 		expect(await page.textContent('h1')).toContain('Successfully rewritten');
