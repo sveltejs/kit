@@ -4,6 +4,7 @@ import { dedent } from '../../../core/sync/utils.js';
 import { s } from '../../../utils/misc.js';
 import { get_config_aliases, strip_virtual_prefix, get_env } from '../utils.js';
 import { create_static_module } from '../../../core/env.js';
+import { env_static_public, service_worker } from '../module_ids.js';
 
 /**
  * @param {string} out
@@ -35,7 +36,7 @@ export async function build_service_worker(
 	// which is guaranteed to be `<base>/service-worker.js`
 	const base = "location.pathname.split('/').slice(0, -1).join('/')";
 
-	const $serviceWorkerCode = dedent`
+	const service_worker_code = dedent`
 		export const base = /*@__PURE__*/ ${base};
 
 		export const build = [
@@ -74,18 +75,17 @@ export async function build_service_worker(
 		async load(id) {
 			if (!id.startsWith('\0virtual:')) return;
 
-			if (id === '\0virtual:$service-worker') {
-				return $serviceWorkerCode;
+			if (id === service_worker) {
+				return service_worker_code;
 			}
 
-			if (id === '\0virtual:$env/static/public') {
+			if (id === env_static_public) {
 				return create_static_module('$env/static/public', env.public);
 			}
 
+			const stripped = strip_virtual_prefix(id);
 			throw new Error(
-				`Cannot import ${strip_virtual_prefix(
-					id
-				)} into service-worker code. Only the modules $service-worker and $env/static/public are available in service workers.`
+				`Cannot import ${stripped} into service-worker code. Only the modules $service-worker and $env/static/public are available in service workers.`
 			);
 		}
 	};
