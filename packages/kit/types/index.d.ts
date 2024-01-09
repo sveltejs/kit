@@ -1885,11 +1885,6 @@ declare module '$app/environment' {
 
 declare module '$app/forms' {
 	/**
-	 * This action updates the `form` property of the current page with the given data and updates `$page.status`.
-	 * In case of an error, it redirects to the nearest error page.
-	 * */
-	export function applyAction<Success extends Record<string, unknown> | undefined, Failure extends Record<string, unknown> | undefined>(result: import("@sveltejs/kit").ActionResult<Success, Failure>): Promise<void>;
-	/**
 	 * Use this function to deserialize the response from a form submission.
 	 * Usage:
 	 *
@@ -1931,6 +1926,11 @@ declare module '$app/forms' {
 	export function enhance<Success extends Record<string, unknown> | undefined, Failure extends Record<string, unknown> | undefined>(form_element: HTMLFormElement, submit?: import("@sveltejs/kit").SubmitFunction<Success, Failure>): {
 		destroy(): void;
 	};
+	/**
+	 * This action updates the `form` property of the current page with the given data and updates `$page.status`.
+	 * In case of an error, it redirects to the nearest error page.
+	 * */
+	export function applyAction<Success extends Record<string, unknown> | undefined, Failure extends Record<string, unknown> | undefined>(result: import("@sveltejs/kit").ActionResult<Success, Failure>): Promise<void>;
 }
 
 declare module '$app/navigation' {
