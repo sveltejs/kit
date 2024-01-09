@@ -207,7 +207,13 @@ let pending_invalidate;
  * @param {HTMLElement} _target
  * @param {Parameters<typeof _hydrate>[1]} [hydrate]
  */
-export async function create_client(_app, _target, hydrate) {
+export async function start(_app, _target, hydrate) {
+	if (DEV && _target === document.body) {
+		console.warn(
+			'Placing %sveltekit.body% directly inside <body> is not recommended, as your app may break for users who have certain browser extensions installed.\n\nConsider wrapping it in an element:\n\n<div style="display: contents">\n  %sveltekit.body%\n</div>'
+		);
+	}
+
 	app = _app;
 	routes = parse(_app);
 	container = __SVELTEKIT_EMBEDDED__ ? _target : document.documentElement;
