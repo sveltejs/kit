@@ -223,6 +223,14 @@ export async function start(_app, _target, hydrate) {
 		);
 	}
 
+	// detect basic auth credentials in the current URL
+	// https://github.com/sveltejs/kit/pull/11179
+	// if so, refresh the page without credentials
+	if (document.URL !== location.href) {
+		// eslint-disable-next-line no-self-assign
+		location.href = location.href;
+	}
+
 	app = _app;
 	routes = parse(_app);
 	container = __SVELTEKIT_EMBEDDED__ ? _target : document.documentElement;
@@ -251,8 +259,7 @@ export async function start(_app, _target, hydrate) {
 				[HISTORY_INDEX]: current_history_index,
 				[NAVIGATION_INDEX]: current_navigation_index
 			},
-			'',
-			location.href
+			''
 		);
 	}
 
