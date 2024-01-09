@@ -227,7 +227,8 @@ export async function start(_app, _target, hydrate) {
 	// https://github.com/sveltejs/kit/pull/11179
 	// if so, refresh the page without credentials
 	if (document.URL !== location.href) {
-		location.href = `${location.href}`;
+		// eslint-disable-next-line no-self-assign
+		location.href = location.href;
 	}
 
 	app = _app;
