@@ -1,5 +1,13 @@
 # @sveltejs/kit
 
+## 2.1.1
+
+### Patch Changes
+
+- fix: respect the trailing slash option when navigating from the basepath root page ([#11388](https://github.com/sveltejs/kit/pull/11388))
+
+- chore: shrink error messages shipped to client ([#11551](https://github.com/sveltejs/kit/pull/11551))
+
 ## 2.1.0
 
 ### Minor Changes
