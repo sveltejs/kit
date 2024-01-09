@@ -80,7 +80,7 @@ export function get_tsconfig(kit) {
 	include.add(config_relative(`${test_folder}/**/*.ts`));
 	include.add(config_relative(`${test_folder}/**/*.svelte`));
 
-	const exclude = [config_relative('node_modules/**'), './[!ambient.d.ts]**'];
+	const exclude = [config_relative('node_modules/**')];
 
 	const config = {
 		compilerOptions: {
