@@ -1,18 +1,14 @@
 import path from 'node:path';
+import { imagetools } from 'vite-imagetools';
 import { image } from './preprocessor.js';
 
 /**
  * @returns {Promise<import('vite').Plugin[]>}
  */
 export async function enhancedImages() {
-	const imagetools_plugin = await imagetools();
-	if (!imagetools_plugin) {
-		console.error(
-			'@sveltejs/enhanced-img: vite-imagetools is not installed. Skipping build-time optimizations'
-		);
-	}
-	return imagetools_plugin && !process.versions.webcontainer
-		? [image_plugin(imagetools_plugin), imagetools_plugin]
+	const imagetools_instance = await imagetools_plugin();
+	return !process.versions.webcontainer
+		? [image_plugin(imagetools_instance), imagetools_instance]
 		: [];
 }
 
@@ -64,15 +60,7 @@ const fallback = {
 	'.webp': 'png'
 };
 
-async function imagetools() {
-	/** @type {typeof import('vite-imagetools').imagetools} */
-	let imagetools;
-	try {
-		({ imagetools } = await import('vite-imagetools'));
-	} catch (err) {
-		return;
-	}
-
+async function imagetools_plugin() {
 	/** @type {Partial<import('vite-imagetools').VitePluginOptions>} */
 	const imagetools_opts = {
 		defaultDirectives: async ({ pathname, searchParams: qs }, metadata) => {
