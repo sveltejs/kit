@@ -1,5 +1,15 @@
 # @sveltejs/kit
 
+## 2.2.0
+
+### Minor Changes
+
+- feat: expose `$env/static/public` in service workers ([#10994](https://github.com/sveltejs/kit/pull/10994))
+
+### Patch Changes
+
+- fix: reload page on startup if `document.URL` contains credentials ([#11179](https://github.com/sveltejs/kit/pull/11179))
+
 ## 2.1.2
 
 ### Patch Changes
