@@ -223,6 +223,13 @@ export async function start(_app, _target, hydrate) {
 		);
 	}
 
+	// detect basic auth credentials in the current URL
+	// https://github.com/sveltejs/kit/pull/11179
+	// if so, refresh the page without credentials
+	if (document.URL !== location.href) {
+		location.href = `${location.href}`;
+	}
+
 	app = _app;
 	routes = parse(_app);
 	container = __SVELTEKIT_EMBEDDED__ ? _target : document.documentElement;
@@ -244,26 +251,15 @@ export async function start(_app, _target, hydrate) {
 		current_history_index = current_navigation_index = Date.now();
 
 		// create initial history entry, so we can return here
-		try {
-			original_replace_state.call(
-				history,
-				{
-					...history.state,
-					[HISTORY_INDEX]: current_history_index,
-					[NAVIGATION_INDEX]: current_navigation_index
-				},
-				''
-			);
-		} catch (error) {
-			// detect if the issue has been created by basic auth credentials in the current URL
-			// https://github.com/sveltejs/kit/issues/10522
-			// if so, refresh the page without credentials
-			const url = new URL(document.URL);
-			if (!(url.username || url.password)) {
-				throw error;
-			}
-			location.href = `${location.href}`;
-		}
+		original_replace_state.call(
+			history,
+			{
+				...history.state,
+				[HISTORY_INDEX]: current_history_index,
+				[NAVIGATION_INDEX]: current_navigation_index
+			},
+			''
+		);
 	}
 
 	// if we reload the page, or Cmd-Shift-T back to it,
@@ -692,10 +688,10 @@ async function load_node({ loader, parent, url, params, route, server_data_node 
 							typeof data !== 'object'
 								? `a ${typeof data}`
 								: data instanceof Response
-								  ? 'a Response object'
-								  : Array.isArray(data)
-								    ? 'an array'
-								    : 'a non-plain object'
+									? 'a Response object'
+									: Array.isArray(data)
+										? 'an array'
+										: 'a non-plain object'
 						}, but must return a plain object at the top level (i.e. \`return {...}\`)`
 					);
 				}
