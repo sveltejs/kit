@@ -3,7 +3,7 @@ import { extname, resolve } from 'node:path';
 import { pipeline } from 'node:stream';
 import { promisify } from 'node:util';
 import zlib from 'node:zlib';
-import { copy, rimraf, mkdirp } from '../../utils/filesystem.js';
+import { copy, rimraf, mkdirp, resolve_entry } from '../../utils/filesystem.js';
 import { generate_manifest } from '../generate_manifest/index.js';
 import { get_route_segments } from '../../utils/routing.js';
 import { get_env } from '../../exports/vite/utils.js';
@@ -72,10 +72,14 @@ export function create_builder({
 		return facade;
 	});
 
-	/** @type {Map<string, string[]> | undefined} */
-	let serverAssets;
-	/** @type {string[] | undefined} */
-	let rootErrorPageAssets;
+	/**
+	 * @type {{
+	 * 	routes: Map<string, string[]>;
+	 * 	root_error_page: string[];
+	 * 	hooks: string[] | undefined;
+	 * } | undefined}
+	 */
+	let server_assets;
 
 	return {
 		log,
@@ -196,10 +200,11 @@ export function create_builder({
 		},
 
 		getServerAssets() {
-			if (serverAssets && rootErrorPageAssets) {
+			if (server_assets) {
 				return {
-					serverAssets,
-					rootErrorPageAssets
+					routes: server_assets.routes,
+					hooks: server_assets.hooks,
+					rootErrorPage: server_assets.root_error_page
 				};
 			}
 
@@ -322,12 +327,18 @@ export function create_builder({
 				routes.set(route.id, Array.from(server_assets));
 			});
 
-			serverAssets = routes;
-			rootErrorPageAssets = get_root_error_page_assets();
+			const server_hooks_file = resolve_entry(config.kit.files.hooks.server);
+
+			server_assets = {
+				routes,
+				hooks: server_hooks_file ? [...get_server_assets(server_hooks_file)] : undefined,
+				root_error_page: get_root_error_page_assets()
+			};
 
 			return {
-				serverAssets,
-				rootErrorPageAssets
+				routes: server_assets.routes,
+				hooks: server_assets.hooks,
+				rootErrorPage: server_assets.root_error_page
 			};
 		},
 

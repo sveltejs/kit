@@ -108,9 +108,11 @@ declare module '@sveltejs/kit' {
 		/** Get the asset paths imported by server-side code. */
 		getServerAssets(): {
 			/** A map of route IDs and its array of assets paths imported by server-side code. */
-			serverAssets: Map<string, string[]>;
+			routes: Map<string, string[]>;
 			/** An array of asset paths imported by the root [default error page](https://kit.svelte.dev/docs/routing#error). */
-			rootErrorPageAssets: string[];
+			rootErrorPage: string[];
+			/** An array of asset paths imported by the [server hooks](https://kit.svelte.dev/docs/hooks#server-hooks). */
+			hooks?: string[];
 		};
 
 		/**

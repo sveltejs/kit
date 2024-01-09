@@ -549,18 +549,22 @@ async function create_function_bundle(builder, entry, dir, config, routes) {
 		)
 	);
 
-	const { serverAssets, rootErrorPageAssets } = builder.getServerAssets();
-	const routes_assets = new Set(rootErrorPageAssets);
+	const server_assets = builder.getServerAssets();
+	let routes_assets = new Set(server_assets.rootErrorPage);
 
 	const routes_length = routes.length;
 	for (let i = 0; i < routes_length; i++) {
-		const assets = serverAssets.get(routes[i].id);
+		const assets = server_assets.routes.get(routes[i].id);
 		if (assets) {
 			const assets_length = assets.length;
 			for (let j = 0; j < assets_length; j++) {
 				routes_assets.add(assets[j]);
 			}
 		}
+	}
+
+	if (server_assets.hooks) {
+		routes_assets = new Set([...routes_assets, ...server_assets.hooks]);
 	}
 
 	for (const asset of routes_assets) {
