@@ -1,7 +1,9 @@
 import * as devalue from 'devalue';
 import { DEV } from 'esm-env';
 import { invalidateAll } from './navigation.js';
-export { applyAction } from '../client/client.js';
+import { applyAction } from '../client/client.js';
+
+export { applyAction };
 
 /**
  * Use this function to deserialize the response from a form submission.
