@@ -1,5 +1,11 @@
 # @sveltejs/kit
 
+## 2.1.2
+
+### Patch Changes
+
+- fix: restore invalid route error message during build process ([#11559](https://github.com/sveltejs/kit/pull/11559))
+
 ## 2.1.1
 
 ### Patch Changes
