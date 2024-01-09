@@ -1467,7 +1467,7 @@ function setup_preload() {
 
 		if (!options.reload) {
 			if (priority <= options.preload_data) {
-				const intent = get_navigation_intent(/** @type {URL} */ (url), false);
+				const intent = get_navigation_intent(url, false);
 				if (intent) {
 					if (DEV) {
 						_preload_data(intent).then((result) => {
