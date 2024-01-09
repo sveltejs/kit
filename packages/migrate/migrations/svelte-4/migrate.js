@@ -1,6 +1,6 @@
 import fs from 'node:fs';
 import { Project, ts, Node } from 'ts-morph';
-import semver from 'semver';
+import { log_migration, log_on_ts_modification, update_pkg } from '../../utils.js';
 
 export function update_pkg_json() {
 	fs.writeFileSync(
@@ -13,93 +13,31 @@ export function update_pkg_json() {
  * @param {string} content
  */
 export function update_pkg_json_content(content) {
-	const indent = content.split('\n')[1].match(/^\s+/)?.[0] || '  ';
-	const pkg = JSON.parse(content);
-
-	/**
-	 * @param {string} name
-	 * @param {string} version
-	 * @param {string} [additional]
-	 */
-	function update_pkg(name, version, additional = '') {
-		if (pkg.dependencies?.[name]) {
-			const existing_range = pkg.dependencies[name];
-
-			if (semver.validRange(existing_range) && !semver.subset(existing_range, version)) {
-				log_migration(`Updated ${name} to ${version} ${additional}`);
-				pkg.dependencies[name] = version;
-			}
-		}
-
-		if (pkg.devDependencies?.[name]) {
-			const existing_range = pkg.devDependencies[name];
-
-			if (semver.validRange(existing_range) && !semver.subset(existing_range, version)) {
-				log_migration(`Updated ${name} to ${version} ${additional}`);
-				pkg.devDependencies[name] = version;
-			}
-		}
-	}
-
-	update_pkg('svelte', '^4.0.0');
-	update_pkg('svelte-check', '^3.4.3');
-	update_pkg('svelte-preprocess', '^5.0.3');
-	update_pkg('@sveltejs/kit', '^1.20.4');
-	update_pkg('@sveltejs/vite-plugin-svelte', '^2.4.1');
-	update_pkg(
-		'svelte-loader',
-		'^3.1.8',
-		' (if you are still on webpack 4, you need to update to webpack 5)'
-	);
-	update_pkg('rollup-plugin-svelte', '^7.1.5');
-	update_pkg('prettier-plugin-svelte', '^2.10.1');
-	update_pkg('eslint-plugin-svelte', '^2.30.0');
-	update_pkg(
-		'eslint-plugin-svelte3',
-		'^4.0.0',
-		' (this package is deprecated, use eslint-plugin-svelte instead. More info: https://svelte.dev/docs/v4-migration-guide#new-eslint-package)'
-	);
-	update_pkg(
-		'typescript',
-		'^5.0.0',
-		' (this might introduce new type errors due to breaking changes within TypeScript)'
-	);
-
-	return JSON.stringify(pkg, null, indent);
-}
-
-/**
- * @param {string} file_path
- * @param {boolean} migrate_transition
- */
-export function update_svelte_file(file_path, migrate_transition) {
-	try {
-		const content = fs.readFileSync(file_path, 'utf-8');
-		const updated = content.replace(
-			/<script([^]*?)>([^]+?)<\/script>(\n*)/g,
-			(_match, attrs, contents, whitespace) => {
-				return `<script${attrs}>${transform_code(
-					contents,
-					(attrs.includes('lang=') || attrs.includes('type=')) &&
-						(attrs.includes('ts') || attrs.includes('typescript'))
-				)}</script>${whitespace}`;
-			}
-		);
-		fs.writeFileSync(file_path, transform_svelte_code(updated, migrate_transition), 'utf-8');
-	} catch (e) {
-		console.error(`Error updating ${file_path}:`, e);
-	}
-}
-
-/** @param {string} file_path */
-export function update_js_file(file_path) {
-	try {
-		const content = fs.readFileSync(file_path, 'utf-8');
-		const updated = transform_code(content, file_path.endsWith('.ts'));
-		fs.writeFileSync(file_path, updated, 'utf-8');
-	} catch (e) {
-		console.error(`Error updating ${file_path}:`, e);
-	}
+	return update_pkg(content, [
+		['svelte', '^4.0.0'],
+		['svelte-check', '^3.4.3'],
+		['svelte-preprocess', '^5.0.3'],
+		['@sveltejs/kit', '^1.20.4'],
+		['@sveltejs/vite-plugin-svelte', '^2.4.1'],
+		[
+			'svelte-loader',
+			'^3.1.8',
+			' (if you are still on webpack 4, you need to update to webpack 5)'
+		],
+		['rollup-plugin-svelte', '^7.1.5'],
+		['prettier-plugin-svelte', '^2.10.1'],
+		['eslint-plugin-svelte', '^2.30.0'],
+		[
+			'eslint-plugin-svelte3',
+			'^4.0.0',
+			' (this package is deprecated, use eslint-plugin-svelte instead. More info: https://svelte.dev/docs/v4-migration-guide#new-eslint-package)'
+		],
+		[
+			'typescript',
+			'^5.0.0',
+			' (this might introduce new type errors due to breaking changes within TypeScript)'
+		]
+	]);
 }
 
 /**
@@ -400,29 +338,4 @@ function replaceInJsDoc(source, replacer) {
 			);
 		}
 	});
-}
-
-const logged_migrations = new Set();
-
-/**
- * @param {import('ts-morph').SourceFile} source
- * @param {string} text
- */
-function log_on_ts_modification(source, text) {
-	let logged = false;
-	const log = () => {
-		if (!logged) {
-			logged = true;
-			log_migration(text);
-		}
-	};
-	source.onModified(log);
-	return () => source.onModified(log, false);
-}
-
-/** @param {string} text */
-function log_migration(text) {
-	if (logged_migrations.has(text)) return;
-	console.log(text);
-	logged_migrations.add(text);
 }

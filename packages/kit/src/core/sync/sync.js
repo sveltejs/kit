@@ -5,6 +5,7 @@ import { write_root } from './write_root.js';
 import { write_tsconfig } from './write_tsconfig.js';
 import { write_types, write_all_types } from './write_types/index.js';
 import { write_ambient } from './write_ambient.js';
+import { write_non_ambient } from './write_non_ambient.js';
 import { write_server } from './write_server.js';
 
 /**
@@ -15,6 +16,7 @@ import { write_server } from './write_server.js';
 export function init(config, mode) {
 	write_tsconfig(config.kit);
 	write_ambient(config.kit, mode);
+	write_non_ambient(config.kit);
 }
 
 /**

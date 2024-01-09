@@ -1,8 +1,8 @@
 import * as devalue from 'devalue';
-import { error, json } from '../../../exports/index.js';
-import { normalize_error } from '../../../utils/error.js';
+import { json } from '../../../exports/index.js';
+import { get_status, normalize_error } from '../../../utils/error.js';
 import { is_form_content_type, negotiate } from '../../../utils/http.js';
-import { HttpError, Redirect, ActionFailure } from '../../control.js';
+import { HttpError, Redirect, ActionFailure, SvelteKitError } from '../../control.js';
 import { handle_error_and_jsonify } from '../utils.js';
 
 /** @param {import('@sveltejs/kit').RequestEvent} event */
@@ -24,8 +24,11 @@ export async function handle_action_json_request(event, options, server) {
 	const actions = server?.actions;
 
 	if (!actions) {
-		// TODO should this be a different error altogether?
-		const no_actions_error = error(405, 'POST method not allowed. No actions exist for this page');
+		const no_actions_error = new SvelteKitError(
+			405,
+			'Method Not Allowed',
+			'POST method not allowed. No actions exist for this page'
+		);
 		return action_json(
 			{
 				type: 'error',
@@ -81,7 +84,7 @@ export async function handle_action_json_request(event, options, server) {
 				error: await handle_error_and_jsonify(event, options, check_incorrect_fail_use(err))
 			},
 			{
-				status: err instanceof HttpError ? err.status : 500
+				status: get_status(err)
 			}
 		);
 	}
@@ -139,7 +142,11 @@ export async function handle_action_request(event, server) {
 		});
 		return {
 			type: 'error',
-			error: error(405, 'POST method not allowed. No actions exist for this page')
+			error: new SvelteKitError(
+				405,
+				'Method Not Allowed',
+				'POST method not allowed. No actions exist for this page'
+			)
 		};
 	}
 
@@ -198,7 +205,7 @@ function check_named_default_separate(actions) {
 /**
  * @param {import('@sveltejs/kit').RequestEvent} event
  * @param {NonNullable<import('types').SSRNode['server']['actions']>} actions
- * @throws {Redirect | ActionFailure | HttpError | Error}
+ * @throws {Redirect | HttpError | SvelteKitError | Error}
  */
 async function call_action(event, actions) {
 	const url = new URL(event.request.url);
@@ -216,12 +223,16 @@ async function call_action(event, actions) {
 
 	const action = actions[name];
 	if (!action) {
-		throw new Error(`No action with name '${name}' found`);
+		throw new SvelteKitError(404, 'Not Found', `No action with name '${name}' found`);
 	}
 
 	if (!is_form_content_type(event.request)) {
-		throw new Error(
-			`Actions expect form-encoded data (received ${event.request.headers.get('content-type')})`
+		throw new SvelteKitError(
+			415,
+			'Unsupported Media Type',
+			`Form actions expect form-encoded data — received ${event.request.headers.get(
+				'content-type'
+			)}`
 		);
 	}
 
@@ -231,13 +242,11 @@ async function call_action(event, actions) {
 /** @param {any} data */
 function validate_action_return(data) {
 	if (data instanceof Redirect) {
-		throw new Error('Cannot `return redirect(...)` — use `throw redirect(...)` instead');
+		throw new Error('Cannot `return redirect(...)` — use `redirect(...)` instead');
 	}
 
 	if (data instanceof HttpError) {
-		throw new Error(
-			'Cannot `return error(...)` — use `throw error(...)` or `return fail(...)` instead'
-		);
+		throw new Error('Cannot `return error(...)` — use `error(...)` or `return fail(...)` instead');
 	}
 }
 

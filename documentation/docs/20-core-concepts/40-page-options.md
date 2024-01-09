@@ -31,7 +31,7 @@ Routes with `prerender = true` will be excluded from manifests used for dynamic 
 export const prerender = 'auto';
 ```
 
-> If your entire app is suitable for prerendering, you can use [`adapter-static`](https://github.com/sveltejs/kit/tree/master/packages/adapter-static), which will output files suitable for use with any static webserver.
+> If your entire app is suitable for prerendering, you can use [`adapter-static`](https://github.com/sveltejs/kit/tree/main/packages/adapter-static), which will output files suitable for use with any static webserver.
 
 The prerenderer will start at the root of your app and generate files for any prerenderable pages or `+server.js` routes it finds. Each page is scanned for `<a>` elements that point to other pages that are candidates for prerendering — because of this, you generally don't need to specify which pages should be accessed. If you _do_ need to specify which pages should be accessed by the prerenderer, you can do so with [`config.kit.prerender.entries`](configuration#prerender), or by exporting an [`entries`](#entries) function from your dynamic route.
 
@@ -39,7 +39,7 @@ While prerendering, the value of `building` imported from [`$app/environment`](m
 
 ### Prerendering server routes
 
-Unlike the other page options, `prerender` also applies to `+server.js` files. These files are _not_ affected from layouts, but will inherit default values from the pages that fetch data from them, if any. For example if a `+page.js` contains this `load` function...
+Unlike the other page options, `prerender` also applies to `+server.js` files. These files are _not_ affected by layouts, but will inherit default values from the pages that fetch data from them, if any. For example if a `+page.js` contains this `load` function...
 
 ```js
 /// file: +page.js
@@ -121,6 +121,7 @@ Normally, SvelteKit renders your page on the server first and sends that HTML to
 ```js
 /// file: +page.js
 export const ssr = false;
+// If both `ssr` and `csr` are `false`, nothing will be rendered!
 ```
 
 If you add `export const ssr = false` to your root `+layout.js`, your entire app will only be rendered on the client — which essentially means you turn your app into an SPA.
@@ -132,9 +133,15 @@ Ordinarily, SvelteKit [hydrates](glossary#hydration) your server-rendered HTML i
 ```js
 /// file: +page.js
 export const csr = false;
+// If both `csr` and `ssr` are `false`, nothing will be rendered!
 ```
 
-> If both `ssr` and `csr` are `false`, nothing will be rendered!
+Disabling CSR does not ship any JavaScript to the client. This means:
+
+* The webpage should work with HTML and CSS only.
+* `<script>` tags inside all Svelte components are removed.
+* `<form>` elements cannot be [progressively enhanced](form-actions#progressive-enhancement).
+* Links are handled by the browser with a full-page navigation.
 
 ## trailingSlash
 

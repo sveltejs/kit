@@ -1,9 +1,8 @@
 import fs from 'node:fs';
 import path from 'node:path';
 
-import { svelte } from '@sveltejs/vite-plugin-svelte';
+import * as imr from 'import-meta-resolve';
 import colors from 'kleur';
-import * as vite from 'vite';
 
 import { copy, mkdirp, posixify, read, resolve_entry, rimraf } from '../../utils/filesystem.js';
 import { create_static_module, create_dynamic_module } from '../../core/env.js';
@@ -25,8 +24,16 @@ import analyse from '../../core/postbuild/analyse.js';
 import { s } from '../../utils/misc.js';
 import { hash } from '../../runtime/hash.js';
 import { dedent, isSvelte5Plus } from '../../core/sync/utils.js';
-
-export { vitePreprocess } from '@sveltejs/vite-plugin-svelte';
+import {
+	env_dynamic_private,
+	env_dynamic_public,
+	env_static_private,
+	env_static_public,
+	service_worker,
+	sveltekit_environment,
+	sveltekit_paths
+} from './module_ids.js';
+import { pathToFileURL } from 'node:url';
 
 const cwd = process.cwd();
 
@@ -72,7 +79,7 @@ const options_regex = /(export\s+const\s+(prerender|csr|ssr|trailingSlash))\s*=/
 /** @type {Set<string>} */
 const warned = new Set();
 
-/** @type {import('@sveltejs/vite-plugin-svelte').PreprocessorGroup} */
+/** @type {import('svelte/compiler').PreprocessorGroup} */
 const warning_preprocessor = {
 	script: ({ content, filename }) => {
 		if (!filename) return;
@@ -98,10 +105,14 @@ const warning_preprocessor = {
 		if (!filename) return;
 
 		const basename = path.basename(filename);
-		if (basename.startsWith('+layout.') && !content.includes('<slot')) {
+		const has_children =
+			content.includes('<slot') || (isSvelte5Plus() && content.includes('{@render'));
+
+		if (basename.startsWith('+layout.') && !has_children) {
 			const message =
 				`\n${colors.bold().red(path.relative('.', filename))}\n` +
-				'`<slot />` missing — inner content will not be rendered';
+				`\`<slot />\`${isSvelte5Plus() ? ' or `{@render ...}` tag' : ''}` +
+				' missing — inner content will not be rendered';
 
 			if (!warned.has(message)) {
 				console.log(message);
@@ -110,6 +121,17 @@ const warning_preprocessor = {
 		}
 	}
 };
+
+/**
+ * Resolve a dependency relative to the current working directory,
+ * rather than relative to this package
+ * @param {string} dependency
+ */
+async function resolve_peer_dependency(dependency) {
+	// @ts-expect-error the types are wrong
+	const resolved = await imr.resolve(dependency, pathToFileURL(process.cwd() + '/dummy.js'));
+	return import(resolved);
+}
 
 /**
  * Returns the SvelteKit Vite plugins.
@@ -142,7 +164,9 @@ export async function sveltekit() {
 		...svelte_config.vitePlugin
 	};
 
-	return [...svelte(vite_plugin_svelte_options), ...kit({ svelte_config })];
+	const { svelte } = await resolve_peer_dependency('@sveltejs/vite-plugin-svelte');
+
+	return [...svelte(vite_plugin_svelte_options), ...(await kit({ svelte_config }))];
 }
 
 // These variables live outside the `kit()` function because it is re-invoked by each Vite build
@@ -163,9 +187,11 @@ let manifest_data;
  * - https://rollupjs.org/guide/en/#output-generation-hooks
  *
  * @param {{ svelte_config: import('types').ValidatedConfig }} options
- * @return {import('vite').Plugin[]}
+ * @return {Promise<import('vite').Plugin[]>}
  */
-function kit({ svelte_config }) {
+async function kit({ svelte_config }) {
+	const vite = await resolve_peer_dependency('vite');
+
 	const { kit } = svelte_config;
 	const out = `${kit.outDir}/output`;
 
@@ -322,10 +348,6 @@ function kit({ svelte_config }) {
 		 */
 		configResolved(config) {
 			vite_config = config;
-
-			// This is a hack to prevent Vite from nuking useful logs,
-			// pending https://github.com/vitejs/vite/issues/9378
-			config.logger.warn('');
 		}
 	};
 
@@ -363,22 +385,22 @@ function kit({ svelte_config }) {
 			}
 
 			switch (id) {
-				case '\0virtual:$env/static/private':
+				case env_static_private:
 					return create_static_module('$env/static/private', env.private);
 
-				case '\0virtual:$env/static/public':
+				case env_static_public:
 					return create_static_module('$env/static/public', env.public);
 
-				case '\0virtual:$env/dynamic/private':
+				case env_dynamic_private:
 					return create_dynamic_module(
 						'private',
 						vite_config_env.command === 'serve' ? env.private : undefined
 					);
 
-				case '\0virtual:$env/dynamic/public':
+				case env_dynamic_public:
 					// populate `$env/dynamic/public` from `window`
 					if (browser) {
-						return `export const env = ${global}.env;`;
+						return `export const env = ${global}.env ?? (await import(/* @vite-ignore */ ${global}.base + '/' + '${kit.appDir}/env.js')).env;`;
 					}
 
 					return create_dynamic_module(
@@ -386,12 +408,12 @@ function kit({ svelte_config }) {
 						vite_config_env.command === 'serve' ? env.public : undefined
 					);
 
-				case '\0virtual:$service-worker':
+				case service_worker:
 					return create_service_worker_module(svelte_config);
 
 				// for internal use only. it's published as $app/paths externally
 				// we use this alias so that we won't collide with user aliases
-				case '\0virtual:__sveltekit/paths': {
+				case sveltekit_paths: {
 					const { assets, base } = svelte_config.kit.paths;
 
 					// use the values defined in `global`, but fall back to hard-coded values
@@ -429,15 +451,20 @@ function kit({ svelte_config }) {
 					`;
 				}
 
-				case '\0virtual:__sveltekit/environment': {
+				case sveltekit_environment: {
 					const { version } = svelte_config.kit;
 
 					return dedent`
 						export const version = ${s(version.name)};
 						export let building = false;
+						export let prerendering = false;
 
 						export function set_building() {
 							building = true;
+						}
+
+						export function set_prerendering() {
+							prerendering = true;
 						}
 					`;
 				}
@@ -528,7 +555,7 @@ function kit({ svelte_config }) {
 						input[name] = path.resolve(file);
 					});
 				} else {
-					input['entry/start'] = `${runtime_directory}/client/start.js`;
+					input['entry/start'] = `${runtime_directory}/client/entry.js`;
 					input['entry/app'] = `${kit.outDir}/generated/client-optimized/app.js`;
 
 					manifest_data.nodes.forEach((node, i) => {
@@ -570,7 +597,7 @@ function kit({ svelte_config }) {
 							preserveEntrySignatures: 'strict'
 						},
 						ssrEmitAssets: true,
-						target: ssr ? 'node16.14' : undefined
+						target: ssr ? 'node18.13' : 'es2022'
 					},
 					publicDir: kit.files.assets,
 					worker: {
@@ -592,7 +619,7 @@ function kit({ svelte_config }) {
 						rollupOptions: {
 							// Vite dependency crawler needs an explicit JS entry point
 							// eventhough server otherwise works without it
-							input: `${runtime_directory}/client/start.js`
+							input: `${runtime_directory}/client/entry.js`
 						}
 					},
 					publicDir: kit.files.assets
@@ -730,7 +757,7 @@ function kit({ svelte_config }) {
 
 				const deps_of = /** @param {string} f */ (f) =>
 					find_deps(client_manifest, posixify(path.relative('.', f)), false);
-				const start = deps_of(`${runtime_directory}/client/start.js`);
+				const start = deps_of(`${runtime_directory}/client/entry.js`);
 				const app = deps_of(`${kit.outDir}/generated/client-optimized/app.js`);
 
 				build_data.client = {
@@ -738,7 +765,10 @@ function kit({ svelte_config }) {
 					app: app.file,
 					imports: [...start.imports, ...app.imports],
 					stylesheets: [...start.stylesheets, ...app.stylesheets],
-					fonts: [...start.fonts, ...app.fonts]
+					fonts: [...start.fonts, ...app.fonts],
+					uses_env_dynamic_public: output.some(
+						(chunk) => chunk.type === 'chunk' && chunk.modules[env_dynamic_public]
+					)
 				};
 
 				const css = output.filter(
