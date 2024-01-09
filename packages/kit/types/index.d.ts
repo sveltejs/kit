@@ -331,6 +331,7 @@ declare module '@sveltejs/kit' {
 		};
 		/**
 		 * Whether or not the app is embedded inside a larger app. If `true`, SvelteKit will add its event listeners related to navigation etc on the parent of `%sveltekit.body%` instead of `window`, and will pass `params` from the server rather than inferring them from `location.pathname`.
+		 * Note that it is generally not supported to embed multiple SvelteKit apps on the same page and use client-side SvelteKit features within them (things such as pushing to the history state assume a single instance).
 		 * @default false
 		 */
 		embedded?: boolean;
