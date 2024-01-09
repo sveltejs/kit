@@ -37,12 +37,27 @@ test.describe('paths', () => {
 		expect(await page.textContent('[data-testid="base"]')).toBe(`base: ${base}`);
 		expect(await page.textContent('[data-testid="assets"]')).toBe(`assets: ${base}`);
 	});
+
+	test('serves /basepath with trailing slash always', async ({ page }) => {
+		await page.goto('/basepath');
+		expect(new URL(page.url()).pathname).toBe('/basepath/');
+	});
+
+	test('respects trailing slash option when navigating from /basepath', async ({
+		page,
+		clicknav
+	}) => {
+		await page.goto('/basepath');
+		expect(new URL(page.url()).pathname).toBe('/basepath/');
+		await clicknav('[data-testid="link"]');
+		expect(new URL(page.url()).pathname).toBe('/basepath/hello');
+	});
 });
 
 test.describe('Service worker', () => {
 	if (process.env.DEV) return;
 
-	test('build /basepath/service-worker.js', async ({ request }) => {
+	test('build /basepath/service-worker.js', async ({ baseURL, request }) => {
 		const response = await request.get('/basepath/service-worker.js');
 		const content = await response.text();
 
@@ -54,12 +69,16 @@ test.describe('Service worker', () => {
 			build: null
 		};
 
+		const pathname = '/basepath/service-worker.js';
+
 		fn(self, {
-			pathname: '/basepath/service-worker.js'
+			href: baseURL + pathname,
+			pathname
 		});
 
 		expect(self.base).toBe('/basepath');
 		expect(self.build[0]).toMatch(/\/basepath\/_app\/immutable\/entry\/start\.[\w-]+\.js/);
+		expect(self.image_src).toMatch(/\/basepath\/_app\/immutable\/assets\/image\.[\w-]+\.jpg/);
 	});
 
 	test('does not register /basepath/service-worker.js', async ({ page }) => {

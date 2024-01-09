@@ -10,4 +10,4 @@ SvelteKit adapter that creates a Cloudflare Workers site using a function for dy
 
 ## Changelog
 
-[The Changelog for this package is available on GitHub](https://github.com/sveltejs/kit/blob/master/packages/adapter-cloudflare-workers/CHANGELOG.md).
+[The Changelog for this package is available on GitHub](https://github.com/sveltejs/kit/blob/main/packages/adapter-cloudflare-workers/CHANGELOG.md).

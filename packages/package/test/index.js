@@ -117,14 +117,18 @@ for (const dir of fs.readdirSync(join(__dirname, 'errors'))) {
 	});
 }
 
-test('create standard package with javascript', async () => {
+test('create package with javascript', async () => {
 	// should also preserve filename casing
 	// should also correctly handle nested folders
 	await test_make_package('javascript');
 });
 
-test('create standard package with typescript', async () => {
-	await test_make_package('typescript');
+test('create package with typescript using esnext', async () => {
+	await test_make_package('typescript-esnext');
+});
+
+test('create package with typescript using nodenext', async () => {
+	await test_make_package('typescript-nodenext');
 });
 
 test('create package and assets are not tampered', async () => {

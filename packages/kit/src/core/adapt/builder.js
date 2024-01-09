@@ -156,6 +156,13 @@ export function create_builder({
 			write(dest, fallback);
 		},
 
+		generateEnvModule() {
+			const dest = `${config.kit.outDir}/output/prerendered/dependencies/${config.kit.appDir}/env.js`;
+			const env = get_env(config.kit.env, vite_config.mode);
+
+			write(dest, `export const env=${JSON.stringify(env.public)}`);
+		},
+
 		generateManifest({ relativePath, routes: subset }) {
 			return generate_manifest({
 				build_data,
@@ -213,7 +220,7 @@ async function compress_file(file, format = 'gz') {
 						[zlib.constants.BROTLI_PARAM_QUALITY]: zlib.constants.BROTLI_MAX_QUALITY,
 						[zlib.constants.BROTLI_PARAM_SIZE_HINT]: statSync(file).size
 					}
-			  })
+				})
 			: zlib.createGzip({ level: zlib.constants.Z_BEST_COMPRESSION });
 
 	const source = createReadStream(file);

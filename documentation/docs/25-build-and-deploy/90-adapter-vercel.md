@@ -2,7 +2,7 @@
 title: Vercel
 ---
 
-To deploy to Vercel, use [`adapter-vercel`](https://github.com/sveltejs/kit/tree/master/packages/adapter-vercel).
+To deploy to Vercel, use [`adapter-vercel`](https://github.com/sveltejs/kit/tree/main/packages/adapter-vercel).
 
 This adapter will be installed by default when you use [`adapter-auto`](adapter-auto), but adding it to your project allows you to specify Vercel-specific options.
 
@@ -18,7 +18,7 @@ import adapter from '@sveltejs/adapter-vercel';
 export default {
 	kit: {
 		adapter: adapter({
-			// see the 'Deployment configuration' section below
+			// see below for options that can be set here
 		})
 	}
 };
@@ -50,7 +50,7 @@ export const config = {
 
 The following options apply to all functions:
 
-- `runtime`: `'edge'`, `'nodejs16.x'` or `'nodejs18.x'`. By default, the adapter will select `'nodejs16.x'` or `'nodejs18.x'` depending on the Node version your project is configured to use on the Vercel dashboard
+- `runtime`: `'edge'`, `'nodejs18.x'` or `'nodejs20.x'`. By default, the adapter will select the `'nodejs<version>.x'` corresponding to the Node version your project is configured to use on the Vercel dashboard
 - `regions`: an array of [edge network regions](https://vercel.com/docs/concepts/edge-network/regions) (defaulting to `["iad1"]` for serverless functions) or `'all'` if `runtime` is `edge` (its default). Note that multiple regions for serverless functions are only supported on Enterprise plans
 - `split`: if `true`, causes a route to be deployed as an individual function. If `split` is set to `true` at the adapter level, all routes will be deployed as individual functions
 
@@ -63,6 +63,18 @@ And the following option apply to serverless functions:
 - `isr`: configuration Incremental Static Regeneration, described below
 
 If your functions need to access data in a specific region, it's recommended that they be deployed in the same region (or close to it) for optimal performance.
+
+## Image Optimization
+
+You may set the `images` config to control how Vercel builds your images. See the [image configuration reference](https://vercel.com/docs/build-output-api/v3/configuration#images) for full details. As an example, you may set:
+
+```
+{
+	sizes: [640, 828, 1200, 1920, 3840],
+	formats: ['image/avif', 'image/webp'],
+	minimumCacheTTL: 300
+}
+```
 
 ## Incremental Static Regeneration
 
@@ -139,7 +151,7 @@ If you have Vercel functions contained in the `api` directory at the project's r
 
 ### Node version
 
-Projects created before a certain date will default to using Node 14, while SvelteKit requires Node 16 or later. You can [change the Node version in your project settings](https://vercel.com/docs/concepts/functions/serverless-functions/runtimes/node-js#node.js-version).
+Projects created before a certain date may default to using an older Node version than what SvelteKit currently requires. You can [change the Node version in your project settings](https://vercel.com/docs/concepts/functions/serverless-functions/runtimes/node-js#node.js-version).
 
 ## Troubleshooting
 

@@ -40,7 +40,7 @@ export default {
 			});
 		}
 
-		let { pathname } = url;
+		let { pathname, search } = url;
 		try {
 			pathname = decodeURIComponent(pathname);
 		} catch {
@@ -57,7 +57,7 @@ export default {
 				manifest.assets.has(filename) || manifest.assets.has(filename + '/index.html');
 		}
 
-		const location = pathname.at(-1) === '/' ? stripped_pathname : pathname + '/';
+		let location = pathname.at(-1) === '/' ? stripped_pathname : pathname + '/';
 
 		if (is_static_asset || prerendered.has(pathname)) {
 			return get_asset_from_kv(req, env, context, (request, options) => {
@@ -69,6 +69,7 @@ export default {
 				return mapRequestToAsset(request, options);
 			});
 		} else if (location && prerendered.has(location)) {
+			if (search) location += search;
 			return new Response('', {
 				status: 308,
 				headers: {

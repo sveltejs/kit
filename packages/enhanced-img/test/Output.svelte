@@ -1,5 +1,5 @@
 <script lang="ts">
-	import ___ASSET___6 from "./foo.svg";
+	import ___ASSET___0 from "./foo.svg";
 	
 	import manual_image1 from './no.png';
 	
@@ -14,23 +14,23 @@
 
 <img src="./foo.png" alt="non-enhanced test" />
 
-<picture><source srcset="/1 1440w, /2 960w" type="image/avif" /><source srcset="/3 1440w, /4 960w" type="image/webp" /><source srcset="5 1440w, /6 960w" type="image/png" /><img src=/7 alt="basic test" width=1440 height=1440 /></picture>
+<picture><source srcset={"/1 1440w, /2 960w"} type="image/avif" /><source srcset={"/3 1440w, /4 960w"} type="image/webp" /><source srcset={"5 1440w, /6 960w"} type="image/png" /><img src="/7" alt="basic test" width=1440 height=1440 /></picture>
 
-<picture><source srcset="/1 1440w, /2 960w" type="image/avif" /><source srcset="/3 1440w, /4 960w" type="image/webp" /><source srcset="5 1440w, /6 960w" type="image/png" /><img src=/7 width="5" height="10" alt="dimensions test" width=1440 height=1440 /></picture>
+<picture><source srcset={"/1 1440w, /2 960w"} type="image/avif" /><source srcset={"/3 1440w, /4 960w"} type="image/webp" /><source srcset={"5 1440w, /6 960w"} type="image/png" /><img src="/7" width="5" height="10" alt="dimensions test" width=1440 height=1440 /></picture>
 
-<picture><source srcset="/1 1440w, /2 960w" type="image/avif" /><source srcset="/3 1440w, /4 960w" type="image/webp" /><source srcset="5 1440w, /6 960w" type="image/png" /><img src=/7 alt="directive test" width=1440 height=1440 /></picture>
+<picture><source srcset={"/1 1440w, /2 960w"} type="image/avif" /><source srcset={"/3 1440w, /4 960w"} type="image/webp" /><source srcset={"5 1440w, /6 960w"} type="image/png" /><img src="/7" alt="directive test" width=1440 height=1440 /></picture>
 
-<picture><source srcset="/1 1440w, /2 960w" type="image/avif" /><source srcset="/3 1440w, /4 960w" type="image/webp" /><source srcset="5 1440w, /6 960w" type="image/png" /><img src=/7 {...{ foo }} alt="spread attributes test" width=1440 height=1440 /></picture>
+<picture><source srcset={"/1 1440w, /2 960w"} type="image/avif" /><source srcset={"/3 1440w, /4 960w"} type="image/webp" /><source srcset={"5 1440w, /6 960w"} type="image/png" /><img src="/7" {...{ foo }} alt="spread attributes test" width=1440 height=1440 /></picture>
 
-<picture><source srcset="/1 1440w, /2 960w" sizes="(min-width: 60rem) 80vw, (min-width: 40rem) 90vw, 100vw" type="image/avif" /><source srcset="/3 1440w, /4 960w" sizes="(min-width: 60rem) 80vw, (min-width: 40rem) 90vw, 100vw" type="image/webp" /><source srcset="5 1440w, /6 960w" sizes="(min-width: 60rem) 80vw, (min-width: 40rem) 90vw, 100vw" type="image/png" /><img src=/7 alt="sizes test" width=1440 height=1440 /></picture>
+<picture><source srcset={"/1 1440w, /2 960w"} sizes="(min-width: 60rem) 80vw, (min-width: 40rem) 90vw, 100vw" type="image/avif" /><source srcset={"/3 1440w, /4 960w"} sizes="(min-width: 60rem) 80vw, (min-width: 40rem) 90vw, 100vw" type="image/webp" /><source srcset={"5 1440w, /6 960w"} sizes="(min-width: 60rem) 80vw, (min-width: 40rem) 90vw, 100vw" type="image/png" /><img src="/7" alt="sizes test" width=1440 height=1440 /></picture>
 
-<picture><source srcset="/1 1440w, /2 960w" type="image/avif" /><source srcset="/3 1440w, /4 960w" type="image/webp" /><source srcset="5 1440w, /6 960w" type="image/png" /><img src=/7 on:click={(foo = 'clicked an image!')} alt="event handler test" width=1440 height=1440 /></picture>
+<picture><source srcset={"/1 1440w, /2 960w"} type="image/avif" /><source srcset={"/3 1440w, /4 960w"} type="image/webp" /><source srcset={"5 1440w, /6 960w"} type="image/png" /><img src="/7" on:click={(foo = 'clicked an image!')} alt="event handler test" width=1440 height=1440 /></picture>
 
-<picture><source srcset="/1 1440w, /2 960w" type="image/avif" /><source srcset="/3 1440w, /4 960w" type="image/webp" /><source srcset="5 1440w, /6 960w" type="image/png" /><img src=/7 alt="alias test" width=1440 height=1440 /></picture>
+<picture><source srcset={"/1 1440w, /2 960w"} type="image/avif" /><source srcset={"/3 1440w, /4 960w"} type="image/webp" /><source srcset={"5 1440w, /6 960w"} type="image/png" /><img src="/7" alt="alias test" width=1440 height=1440 /></picture>
 
-<picture><source srcset="/1 1440w, /2 960w" type="image/avif" /><source srcset="/3 1440w, /4 960w" type="image/webp" /><source srcset="5 1440w, /6 960w" type="image/png" /><img src=/7 alt="absolute path test" width=1440 height=1440 /></picture>
+<picture><source srcset={"/1 1440w, /2 960w"} type="image/avif" /><source srcset={"/3 1440w, /4 960w"} type="image/webp" /><source srcset={"5 1440w, /6 960w"} type="image/png" /><img src="/7" alt="absolute path test" width=1440 height=1440 /></picture>
 
-<img src={___ASSET___6} alt="svg test" />
+<img src={___ASSET___0} alt="svg test" />
 
 {#each images as image}
 	{#if typeof image === 'string'}

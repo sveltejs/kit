@@ -7,7 +7,6 @@ import { loadEnv, normalizePath } from 'vite';
 import { getRequest, setResponse } from '../../../exports/node/index.js';
 import { installPolyfills } from '../../../exports/node/polyfills.js';
 import { SVELTE_KIT_ASSETS } from '../../../constants.js';
-import { should_polyfill } from '../../../utils/platform.js';
 import { not_found } from '../utils.js';
 
 /** @typedef {import('http').IncomingMessage} Req */
@@ -20,9 +19,7 @@ import { not_found } from '../utils.js';
  * @param {import('types').ValidatedConfig} svelte_config
  */
 export async function preview(vite, vite_config, svelte_config) {
-	if (should_polyfill) {
-		installPolyfills();
-	}
+	installPolyfills();
 
 	const { paths } = svelte_config.kit;
 	const base = paths.base;
@@ -54,6 +51,18 @@ export async function preview(vite, vite_config, svelte_config) {
 	});
 
 	return () => {
+		// Remove the base middleware. It screws with the URL.
+		// It also only lets through requests beginning with the base path, so that requests beginning
+		// with the assets URL never reach us. We could serve assets separately before the base
+		// middleware, but we'd need that to occur after the compression and cors middlewares, so would
+		// need to insert it manually into the stack, which would be at least as bad as doing this.
+		for (let i = vite.middlewares.stack.length - 1; i > 0; i--) {
+			// @ts-expect-error using internals
+			if (vite.middlewares.stack[i].handle.name === 'viteBaseMiddleware') {
+				vite.middlewares.stack.splice(i, 1);
+			}
+		}
+
 		// generated client assets and the contents of `static`
 		vite.middlewares.use(
 			scoped(
@@ -71,7 +80,19 @@ export async function preview(vite, vite_config, svelte_config) {
 
 		vite.middlewares.use((req, res, next) => {
 			const original_url = /** @type {string} */ (req.url);
-			const { pathname } = new URL(original_url, 'http://dummy');
+			const { pathname, search } = new URL(original_url, 'http://dummy');
+
+			// if `paths.base === '/a/b/c`, then the root route is `/a/b/c/`,
+			// regardless of the `trailingSlash` route option
+			if (base.length > 1 && pathname === base) {
+				let location = base + '/';
+				if (search) location += search;
+				res.writeHead(307, {
+					location
+				});
+				res.end();
+				return;
+			}
 
 			if (pathname.startsWith(base)) {
 				next();
@@ -102,7 +123,7 @@ export async function preview(vite, vite_config, svelte_config) {
 					return;
 				}
 
-				const { pathname } = new URL(/** @type {string} */ (req.url), 'http://dummy');
+				const { pathname, search } = new URL(/** @type {string} */ (req.url), 'http://dummy');
 
 				let filename = normalizePath(
 					join(svelte_config.kit.outDir, 'output/prerendered/pages' + pathname)
@@ -113,6 +134,7 @@ export async function preview(vite, vite_config, svelte_config) {
 					const has_trailing_slash = pathname.endsWith('/');
 					const html_filename = `${filename}${has_trailing_slash ? 'index.html' : '.html'}`;
 
+					/** @type {string | undefined} */
 					let redirect;
 
 					if (is_file(html_filename)) {
@@ -127,6 +149,7 @@ export async function preview(vite, vite_config, svelte_config) {
 					}
 
 					if (redirect) {
+						if (search) redirect += search;
 						res.writeHead(307, {
 							location: redirect
 						});
@@ -154,17 +177,10 @@ export async function preview(vite, vite_config, svelte_config) {
 		vite.middlewares.use(async (req, res) => {
 			const host = req.headers['host'];
 
-			let request;
-
-			try {
-				request = await getRequest({
-					base: `${protocol}://${host}`,
-					request: req
-				});
-			} catch (/** @type {any} */ err) {
-				res.statusCode = err.status || 400;
-				return res.end('Invalid request body');
-			}
+			const request = await getRequest({
+				base: `${protocol}://${host}`,
+				request: req
+			});
 
 			setResponse(
 				res,
@@ -190,7 +206,7 @@ const mutable = (dir) =>
 		? sirv(dir, {
 				etag: true,
 				maxAge: 0
-		  })
+			})
 		: (_req, _res, next) => next();
 
 /**

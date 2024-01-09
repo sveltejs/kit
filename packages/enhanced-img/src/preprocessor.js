@@ -1,3 +1,6 @@
+import { existsSync } from 'node:fs';
+import * as path from 'node:path';
+
 import MagicString from 'magic-string';
 import { asyncWalk } from 'estree-walker';
 import { parse } from 'svelte-parse-markup';
@@ -9,7 +12,8 @@ const OPTIMIZABLE = /^[^?]+\.(avif|heif|gif|jpeg|jpg|png|tiff|webp)(\?.*)?$/;
 
 /**
  * @param {{
- *   plugin_context: import('rollup').PluginContext
+ *   plugin_context: import('vite').Rollup.PluginContext
+ *   vite_config: import('vite').ResolvedConfig
  *   imagetools_plugin: import('vite').Plugin
  * }} opts
  * @returns {import('svelte/types/compiler/preprocess').PreprocessorGroup}
@@ -18,7 +22,7 @@ export function image(opts) {
 	// TODO: clear this map in dev mode to avoid memory leak
 	/**
 	 * URL to image details
-	 * @type {Map<string, { image: import('vite-imagetools').Picture, name: string }>}
+	 * @type {Map<string, import('vite-imagetools').Picture>}
 	 */
 	const images = new Map();
 
@@ -65,32 +69,39 @@ export function image(opts) {
 				}
 				url += 'enhanced';
 
-				let details = images.get(url);
-				if (!details) {
-					// resolves the import so that we can build the entire picture template string and don't
-					// need any logic blocks
-					const image = await resolve(opts, url, filename);
-					if (!image) {
-						return;
-					}
-					details = images.get(url) || { name: ASSET_PREFIX + images.size, image };
-					images.set(url, details);
-				}
-
 				if (OPTIMIZABLE.test(url)) {
-					s.update(node.start, node.end, img_to_picture(content, node, details));
+					let image = images.get(url);
+					if (!image) {
+						// resolves the import so that we can build the entire picture template string and don't
+						// need any logic blocks
+						image = await resolve(opts, url, filename);
+						if (!image) {
+							const file_path = url.substring(0, url.indexOf('?'));
+							if (existsSync(path.resolve(opts.vite_config.publicDir, file_path))) {
+								throw new Error(
+									`Could not locate ${file_path}. Please move it to be located relative to the page in the routes directory or reference it beginning with /static/. See https://vitejs.dev/guide/assets for more details on referencing assets.`
+								);
+							}
+							throw new Error(
+								`Could not locate ${file_path}. See https://vitejs.dev/guide/assets for more details on referencing assets.`
+							);
+						}
+						images.set(url, image);
+					}
+					s.update(node.start, node.end, img_to_picture(content, node, image));
 				} else {
 					// e.g. <img src="./foo.svg" /> => <img src={___ASSET___0} />
+					const name = ASSET_PREFIX + imports.size;
 					const { start, end } = src_attribute;
 					// update src with reference to imported asset
 					s.update(
 						is_quote(content, start - 1) ? start - 1 : start,
 						is_quote(content, end) ? end + 1 : end,
-						`{${details.name}}`
+						`{${name}}`
 					);
 					// update `enhanced:img` to `img`
 					s.update(node.start + 1, node.start + 1 + 'enhanced:img'.length, 'img');
-					imports.set(original_url, details.name);
+					imports.set(original_url, name);
 				}
 			}
 
@@ -145,7 +156,7 @@ function is_quote(content, index) {
 
 /**
  * @param {{
- *   plugin_context: import('rollup').PluginContext
+ *   plugin_context: import('vite').Rollup.PluginContext
  *   imagetools_plugin: import('vite').Plugin
  * }} opts
  * @param {string} url
@@ -255,9 +266,9 @@ function stringToNumber(param) {
 /**
  * @param {string} content
  * @param {import('svelte/types/compiler/interfaces').TemplateNode} node
- * @param {{ image: import('vite-imagetools').Picture, name: string }} details
+ * @param {import('vite-imagetools').Picture} image
  */
-function img_to_picture(content, node, details) {
+function img_to_picture(content, node, image) {
 	/** @type {Array<import('svelte/types/compiler/interfaces').BaseDirective | import('svelte/types/compiler/interfaces').Attribute | import('svelte/types/compiler/interfaces').SpreadAttribute>} attributes */
 	const attributes = node.attributes;
 	const index = attributes.findIndex((attribute) => attribute.name === 'sizes');
@@ -268,13 +279,19 @@ function img_to_picture(content, node, details) {
 	}
 
 	let res = '<picture>';
-	for (const [format, srcset] of Object.entries(details.image.sources)) {
-		res += `<source srcset="${srcset}"${sizes_string} type="image/${format}" />`;
+	for (const [format, srcset] of Object.entries(image.sources)) {
+		res += `<source srcset={"${srcset}"}${sizes_string} type="image/${format}" />`;
 	}
+	// Need to handle src differently when using either Vite's renderBuiltUrl or relative base path in Vite.
+	// See https://github.com/vitejs/vite/blob/b93dfe3e08f56cafe2e549efd80285a12a3dc2f0/packages/vite/src/node/plugins/asset.ts#L132
+	const src =
+		image.img.src.startsWith('"+') && image.img.src.endsWith('+"')
+			? `{"${image.img.src.substring(2, image.img.src.length - 2)}"}`
+			: `"${image.img.src}"`;
 	res += `<img ${img_attributes_to_markdown(content, attributes, {
-		src: details.image.img.src,
-		width: details.image.img.w,
-		height: details.image.img.h
+		src,
+		width: image.img.w,
+		height: image.img.h
 	})} />`;
 	res += '</picture>';
 	return res;
