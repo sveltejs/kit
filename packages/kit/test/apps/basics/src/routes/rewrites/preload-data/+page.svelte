@@ -5,7 +5,9 @@
 
 	async function onClick() {
 		const result = await preloadData('/rewrites/preload-data/a');
-		data = result.data;
+		if (result.type === 'loaded') {
+			data = result.data;
+		}
 	}
 
 	setup();
