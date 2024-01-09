@@ -370,6 +370,7 @@ export interface KitConfig {
 		/**
 		 * A prefix that signals that an environment variable is unsafe to expose to client-side code. Environment variables matching neither the public nor the private prefix will be discarded completely. See [`$env/static/private`](/docs/modules#$env-static-private) and [`$env/dynamic/private`](/docs/modules#$env-dynamic-private).
 		 * @default ""
+		 * @since 1.21.0
 		 */
 		privatePrefix?: string;
 	};
@@ -453,6 +454,7 @@ export interface KitConfig {
 		 * - `preload-js` - uses `<link rel="preload">`. Prevents waterfalls in Chromium and Safari, but Chromium will parse each module twice (once as a script, once as a module). Causes modules to be requested twice in Firefox. This is a good setting if you want to maximise performance for users on iOS devices at the cost of a very slight degradation for Chromium users.
 		 * - `preload-mjs` - uses `<link rel="preload">` but with the `.mjs` extension which prevents double-parsing in Chromium. Some static webservers will fail to serve .mjs files with a `Content-Type: application/javascript` header, which will cause your application to break. If that doesn't apply to you, this is the option that will deliver the best performance for the largest number of users, until `modulepreload` is more widely supported.
 		 * @default "modulepreload"
+		 * @since 1.8.4
 		 */
 		preloadStrategy?: 'modulepreload' | 'preload-js' | 'preload-mjs';
 	};
@@ -480,6 +482,7 @@ export interface KitConfig {
 		 * In 1.0, `undefined` was a valid value, which was set by default. In that case, if `paths.assets` was not external, SvelteKit would replace `%sveltekit.assets%` with a relative path and use relative paths to reference build artifacts, but `base` and `assets` imported from `$app/paths` would be as specified in your config.
 		 *
 		 * @default true
+		 * @since 1.9.0
 		 */
 		relative?: boolean;
 	};
@@ -531,6 +534,7 @@ export interface KitConfig {
 		 * ```
 		 *
 		 * @default "fail"
+		 * @since 1.15.7
 		 */
 		handleHttpError?: PrerenderHttpErrorHandlerValue;
 		/**
@@ -542,6 +546,7 @@ export interface KitConfig {
 		 * - `(details) => void` — a custom error handler that takes a `details` object with `path`, `id`, `referrers` and `message` properties. If you `throw` from this function, the build will fail
 		 *
 		 * @default "fail"
+		 * @since 1.15.7
 		 */
 		handleMissingId?: PrerenderMissingIdHandlerValue;
 		/**
@@ -553,6 +558,7 @@ export interface KitConfig {
 		 * - `(details) => void` — a custom error handler that takes a `details` object with `generatedFromId`, `entry`, `matchedId` and `message` properties. If you `throw` from this function, the build will fail
 		 *
 		 * @default "fail"
+		 * @since 1.16.0
 		 */
 		handleEntryGeneratorMismatch?: PrerenderEntryGeneratorMismatchHandlerValue;
 		/**
@@ -578,6 +584,7 @@ export interface KitConfig {
 		 * A function that allows you to edit the generated `tsconfig.json`. You can mutate the config (recommended) or return a new one.
 		 * This is useful for extending a shared `tsconfig.json` in a monorepo root, for example.
 		 * @default (config) => config
+		 * @since 1.3.0
 		 */
 		config?: (config: Record<string, any>) => Record<string, any> | void;
 	};
