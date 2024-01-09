@@ -2,4 +2,4 @@
 "@sveltejs/kit": patch
 ---
 
-fix: Do not automatically add a nonce to the `style-src` directive in the Content Security Policy when the `style-src` directive already contains `unsafe-inline`.
+fix: only add nonce to `style-src` CSP directive when `unsafe-inline` is not present
