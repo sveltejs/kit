@@ -155,16 +155,14 @@ const components = [];
 /** @type {{id: string, promise: Promise<import('./types.js').NavigationResult>} | null} */
 let load_cache = null;
 
-const callbacks = {
-	/** @type {Array<(navigation: import('@sveltejs/kit').BeforeNavigate) => void>} */
-	before_navigate: [],
+/** @type {Array<(navigation: import('@sveltejs/kit').BeforeNavigate) => void>} */
+const before_navigate_callbacks = [];
 
-	/** @type {Array<(navigation: import('@sveltejs/kit').OnNavigate) => import('types').MaybePromise<(() => void) | void>>} */
-	on_navigate: [],
+/** @type {Array<(navigation: import('@sveltejs/kit').OnNavigate) => import('types').MaybePromise<(() => void) | void>>} */
+const on_navigate_callbacks = [];
 
-	/** @type {Array<(navigation: import('@sveltejs/kit').AfterNavigate) => void>} */
-	after_navigate: []
-};
+/** @type {Array<(navigation: import('@sveltejs/kit').AfterNavigate) => void>} */
+let after_navigate_callbacks = [];
 
 /** @type {import('./types.js').NavigationState} */
 let current = {
@@ -399,7 +397,8 @@ function initialize(result, target) {
 		type: 'enter',
 		complete: Promise.resolve()
 	};
-	callbacks.after_navigate.forEach((fn) => fn(navigation));
+
+	after_navigate_callbacks.forEach((fn) => fn(navigation));
 
 	started = true;
 }
@@ -1109,7 +1108,7 @@ function _before_navigate({ url, type, intent, delta }) {
 
 	if (!navigating) {
 		// Don't run the event during redirects
-		callbacks.before_navigate.forEach((fn) => fn(cancellable));
+		before_navigate_callbacks.forEach((fn) => fn(cancellable));
 	}
 
 	return should_block ? null : nav;
@@ -1270,7 +1269,7 @@ async function navigate({
 
 		const after_navigate = (
 			await Promise.all(
-				callbacks.on_navigate.map((fn) =>
+				on_navigate_callbacks.map((fn) =>
 					fn(/** @type {import('@sveltejs/kit').OnNavigate} */ (nav.navigation))
 				)
 			)
@@ -1278,7 +1277,7 @@ async function navigate({
 
 		if (after_navigate.length > 0) {
 			function cleanup() {
-				callbacks.after_navigate = callbacks.after_navigate.filter(
+				after_navigate_callbacks = after_navigate_callbacks.filter(
 					// @ts-ignore
 					(fn) => !after_navigate.includes(fn)
 				);
@@ -1343,9 +1342,10 @@ async function navigate({
 
 	nav.fulfil(undefined);
 
-	callbacks.after_navigate.forEach((fn) =>
+	after_navigate_callbacks.forEach((fn) =>
 		fn(/** @type {import('@sveltejs/kit').AfterNavigate} */ (nav.navigation))
 	);
+
 	stores.navigating.set(null);
 
 	updating = false;
@@ -1479,7 +1479,7 @@ function setup_preload() {
 		}
 	}
 
-	callbacks.after_navigate.push(after_navigate);
+	after_navigate_callbacks.push(after_navigate);
 	after_navigate();
 }
 
@@ -1507,6 +1507,22 @@ function handle_error(error, event) {
 }
 
 /**
+ * @template {Function} T
+ * @param {T[]} callbacks
+ * @param {T} callback
+ */
+function add_navigation_callback(callbacks, callback) {
+	onMount(() => {
+		callbacks.push(callback);
+
+		return () => {
+			const i = callbacks.indexOf(callback);
+			callbacks.splice(i, 1);
+		};
+	});
+}
+
+/**
  * A lifecycle function that runs the supplied `callback` when the current component mounts, and also whenever we navigate to a new URL.
  *
  * `afterNavigate` must be called during a component initialization. It remains active as long as the component is mounted.
@@ -1514,14 +1530,7 @@ function handle_error(error, event) {
  * @returns {void}
  */
 export function afterNavigate(callback) {
-	onMount(() => {
-		callbacks.after_navigate.push(callback);
-
-		return () => {
-			const i = callbacks.after_navigate.indexOf(callback);
-			callbacks.after_navigate.splice(i, 1);
-		};
-	});
+	add_navigation_callback(after_navigate_callbacks, callback);
 }
 
 /**
@@ -1538,14 +1547,7 @@ export function afterNavigate(callback) {
  * @returns {void}
  */
 export function beforeNavigate(callback) {
-	onMount(() => {
-		callbacks.before_navigate.push(callback);
-
-		return () => {
-			const i = callbacks.before_navigate.indexOf(callback);
-			callbacks.before_navigate.splice(i, 1);
-		};
-	});
+	add_navigation_callback(before_navigate_callbacks, callback);
 }
 
 /**
@@ -1560,14 +1562,7 @@ export function beforeNavigate(callback) {
  * @returns {void}
  */
 export function onNavigate(callback) {
-	onMount(() => {
-		callbacks.on_navigate.push(callback);
-
-		return () => {
-			const i = callbacks.on_navigate.indexOf(callback);
-			callbacks.on_navigate.splice(i, 1);
-		};
-	});
+	add_navigation_callback(on_navigate_callbacks, callback);
 }
 
 /**
@@ -1882,7 +1877,7 @@ function _start_router() {
 				}
 			};
 
-			callbacks.before_navigate.forEach((fn) => fn(navigation));
+			before_navigate_callbacks.forEach((fn) => fn(navigation));
 		}
 
 		if (should_block) {
