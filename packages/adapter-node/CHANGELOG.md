@@ -1,5 +1,16 @@
 # @sveltejs/adapter-node
 
+## 2.1.0
+
+### Minor Changes
+
+- feat: add `PORT_HEADER` env var for reverse proxies with non-standard ports ([#11249](https://github.com/sveltejs/kit/pull/11249))
+
+### Patch Changes
+
+- Updated dependencies [[`9556abae4ba28c02ba468735beb9eb868876a9a1`](https://github.com/sveltejs/kit/commit/9556abae4ba28c02ba468735beb9eb868876a9a1), [`8468af597c6240f7a3687ef1ed3873990b944f8c`](https://github.com/sveltejs/kit/commit/8468af597c6240f7a3687ef1ed3873990b944f8c)]:
+  - @sveltejs/kit@2.1.1
+
 ## 2.0.2
 
 ### Patch Changes
