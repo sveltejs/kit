@@ -62,12 +62,9 @@ export function parse_route_id(id) {
 											);
 										}
 
-										const match = param_pattern.exec(content);
-										if (!match) {
-											throw new Error(
-												`Invalid param: ${content}. Params and matcher names can only have underscores and alphanumeric characters.`
-											);
-										}
+										// We know the match cannot be null because manifest generation would have
+										// if we hit an invalid param/matcher name with non-alphanumeric character.
+										const match = /** @type {RegExpExecArray} */ (param_pattern.exec(content));
 
 										const [, is_optional, is_rest, name, matcher] = match;
 										// It's assumed that the following invalid route id cases are already checked

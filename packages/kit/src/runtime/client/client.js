@@ -1121,7 +1121,7 @@ function _before_navigate({ url, type, intent, delta }) {
 		...nav.navigation,
 		cancel: () => {
 			should_block = true;
-			nav.reject(new Error('navigation was cancelled'));
+			nav.reject(new Error('navigation cancelled'));
 		}
 	};
 
@@ -1210,7 +1210,7 @@ async function navigate({
 
 	// abort if user navigated during update
 	if (token !== nav_token) {
-		nav.reject(new Error('navigation was aborted'));
+		nav.reject(new Error('navigation aborted'));
 		return false;
 	}
 
@@ -1903,7 +1903,7 @@ function _start_router() {
 				...nav.navigation,
 				cancel: () => {
 					should_block = true;
-					nav.reject(new Error('navigation was cancelled'));
+					nav.reject(new Error('navigation cancelled'));
 				}
 			};
 
