@@ -86,7 +86,9 @@ When building for [GitHub Pages](https://docs.github.com/en/pages/getting-starte
 
 You'll also want to generate a fallback `404.html` page to replace the default 404 page shown by GitHub Pages.
 
-A config for GitHub Pages might look like the following:
+
+
+A config for GitHub Pages might look like the following. Please note: you will have to prevent GitHub's provided Jekyll from managing your site. If you are not using the following GitHub config page, then you must put `.nojekyll` file in your `static` folder.
 
 ```js
 // @errors: 2307 2322
