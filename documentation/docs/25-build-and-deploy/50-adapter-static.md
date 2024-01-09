@@ -88,7 +88,7 @@ You'll also want to generate a fallback `404.html` page to replace the default 4
 
 
 
-A config for GitHub Pages might look like the following. Please note: you will have to prevent GitHub's provided Jekyll from managing your site. If you are not using the following GitHub config page, then you must put `.nojekyll` file in your `static` folder.
+A config for GitHub Pages might look like the following:
 
 ```js
 // @errors: 2307 2322
@@ -110,7 +110,7 @@ const config = {
 export default config;
 ```
 
-You can use GitHub actions to automatically deploy your site to GitHub Pages when you make a change. Here's an example workflow:
+You can use GitHub actions to automatically deploy your site to GitHub Pages when you make a change. Please note: you will have to prevent GitHub's provided Jekyll from managing your site. If you are not using the following workflow, then you must put `.nojekyll` file in your `static` folder. Here's an example workflow:
 
 ```yaml
 ### file: .github/workflows/deploy.yml
