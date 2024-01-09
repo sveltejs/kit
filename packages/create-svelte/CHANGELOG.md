@@ -1,5 +1,29 @@
 # create-svelte
 
+## 6.0.6
+
+### Patch Changes
+
+- fix: set path: '/' in demo ([#11495](https://github.com/sveltejs/kit/pull/11495))
+
+## 6.0.5
+
+### Patch Changes
+
+- fix: set the correct type for the ESLint config object ([#11453](https://github.com/sveltejs/kit/pull/11453))
+
+## 6.0.4
+
+### Patch Changes
+
+- chore: update primary branch from master to main ([`47779436c5f6c4d50011d0ef8b2709a07c0fec5d`](https://github.com/sveltejs/kit/commit/47779436c5f6c4d50011d0ef8b2709a07c0fec5d))
+
+## 6.0.3
+
+### Patch Changes
+
+- fix: remove unnecessary @types/cookie package ([#11375](https://github.com/sveltejs/kit/pull/11375))
+
 ## 6.0.2
 
 ### Patch Changes

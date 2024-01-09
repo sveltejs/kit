@@ -1,9 +1,8 @@
 import fs from 'node:fs';
-import path, { join } from 'node:path';
+import path from 'node:path';
 
-import { svelte } from '@sveltejs/vite-plugin-svelte';
+import * as imr from 'import-meta-resolve';
 import colors from 'kleur';
-import * as vite from 'vite';
 
 import { copy, mkdirp, posixify, read, resolve_entry, rimraf } from '../../utils/filesystem.js';
 import { create_static_module, create_dynamic_module } from '../../core/env.js';
@@ -19,14 +18,12 @@ import { dev } from './dev/index.js';
 import { is_illegal, module_guard, normalize_id } from './graph_analysis/index.js';
 import { preview } from './preview/index.js';
 import { get_config_aliases, get_env, strip_virtual_prefix } from './utils.js';
-import { SVELTE_KIT_ASSETS } from '../../constants.js';
 import { write_client_manifest } from '../../core/sync/write_client_manifest.js';
 import prerender from '../../core/postbuild/prerender.js';
 import analyse from '../../core/postbuild/analyse.js';
 import { s } from '../../utils/misc.js';
 import { hash } from '../../runtime/hash.js';
 import { dedent, isSvelte5Plus } from '../../core/sync/utils.js';
-import sirv from 'sirv';
 import {
 	env_dynamic_private,
 	env_dynamic_public,
@@ -36,6 +33,7 @@ import {
 	sveltekit_environment,
 	sveltekit_paths
 } from './module_ids.js';
+import { pathToFileURL } from 'node:url';
 
 const cwd = process.cwd();
 
@@ -107,13 +105,13 @@ const warning_preprocessor = {
 		if (!filename) return;
 
 		const basename = path.basename(filename);
-		if (
-			basename.startsWith('+layout.') &&
-			!content.includes(isSvelte5Plus() ? '{@render children(' : '<slot')
-		) {
+		const has_children =
+			content.includes('<slot') || (isSvelte5Plus() && content.includes('{@render'));
+
+		if (basename.startsWith('+layout.') && !has_children) {
 			const message =
 				`\n${colors.bold().red(path.relative('.', filename))}\n` +
-				`\`${isSvelte5Plus() ? '{@render children()' : '<slot />'}\`` +
+				`\`<slot />\`${isSvelte5Plus() ? ' or `{@render ...}` tag' : ''}` +
 				' missing — inner content will not be rendered';
 
 			if (!warned.has(message)) {
@@ -123,6 +121,17 @@ const warning_preprocessor = {
 		}
 	}
 };
+
+/**
+ * Resolve a dependency relative to the current working directory,
+ * rather than relative to this package
+ * @param {string} dependency
+ */
+async function resolve_peer_dependency(dependency) {
+	// @ts-expect-error the types are wrong
+	const resolved = await imr.resolve(dependency, pathToFileURL(process.cwd() + '/dummy.js'));
+	return import(resolved);
+}
 
 /**
  * Returns the SvelteKit Vite plugins.
@@ -155,7 +164,9 @@ export async function sveltekit() {
 		...svelte_config.vitePlugin
 	};
 
-	return [...svelte(vite_plugin_svelte_options), ...kit({ svelte_config })];
+	const { svelte } = await resolve_peer_dependency('@sveltejs/vite-plugin-svelte');
+
+	return [...svelte(vite_plugin_svelte_options), ...(await kit({ svelte_config }))];
 }
 
 // These variables live outside the `kit()` function because it is re-invoked by each Vite build
@@ -176,9 +187,11 @@ let manifest_data;
  * - https://rollupjs.org/guide/en/#output-generation-hooks
  *
  * @param {{ svelte_config: import('types').ValidatedConfig }} options
- * @return {import('vite').Plugin[]}
+ * @return {Promise<import('vite').Plugin[]>}
  */
-function kit({ svelte_config }) {
+async function kit({ svelte_config }) {
+	const vite = await resolve_peer_dependency('vite');
+
 	const { kit } = svelte_config;
 	const out = `${kit.outDir}/output`;
 
@@ -335,10 +348,6 @@ function kit({ svelte_config }) {
 		 */
 		configResolved(config) {
 			vite_config = config;
-
-			// This is a hack to prevent Vite from nuking useful logs,
-			// pending https://github.com/vitejs/vite/issues/9378
-			config.logger.warn('');
 		}
 	};
 
@@ -448,9 +457,14 @@ function kit({ svelte_config }) {
 					return dedent`
 						export const version = ${s(version.name)};
 						export let building = false;
+						export let prerendering = false;
 
 						export function set_building() {
 							building = true;
+						}
+
+						export function set_prerendering() {
+							prerendering = true;
 						}
 					`;
 				}
@@ -541,7 +555,7 @@ function kit({ svelte_config }) {
 						input[name] = path.resolve(file);
 					});
 				} else {
-					input['entry/start'] = `${runtime_directory}/client/start.js`;
+					input['entry/start'] = `${runtime_directory}/client/entry.js`;
 					input['entry/app'] = `${kit.outDir}/generated/client-optimized/app.js`;
 
 					manifest_data.nodes.forEach((node, i) => {
@@ -605,7 +619,7 @@ function kit({ svelte_config }) {
 						rollupOptions: {
 							// Vite dependency crawler needs an explicit JS entry point
 							// eventhough server otherwise works without it
-							input: `${runtime_directory}/client/start.js`
+							input: `${runtime_directory}/client/entry.js`
 						}
 					},
 					publicDir: kit.files.assets
@@ -630,31 +644,6 @@ function kit({ svelte_config }) {
 		 * @see https://vitejs.dev/guide/api-plugin.html#configurepreviewserver
 		 */
 		configurePreviewServer(vite) {
-			// generated client assets and the contents of `static`
-			// should we use Vite's built-in asset server for this?
-			// we would need to set the outDir to do so
-			const { paths } = svelte_config.kit;
-			const assets = paths.assets ? SVELTE_KIT_ASSETS : paths.base;
-			vite.middlewares.use(
-				scoped(
-					assets,
-					sirv(join(svelte_config.kit.outDir, 'output/client'), {
-						setHeaders: (res, pathname) => {
-							if (pathname.startsWith(`/${svelte_config.kit.appDir}/immutable`)) {
-								res.setHeader('cache-control', 'public,max-age=31536000,immutable');
-							}
-							if (vite_config.preview.cors) {
-								res.setHeader('Access-Control-Allow-Origin', '*');
-								res.setHeader(
-									'Access-Control-Allow-Headers',
-									'Origin, Content-Type, Accept, Range'
-								);
-							}
-						}
-					})
-				)
-			);
-
 			return preview(vite, vite_config, svelte_config);
 		},
 
@@ -768,7 +757,7 @@ function kit({ svelte_config }) {
 
 				const deps_of = /** @param {string} f */ (f) =>
 					find_deps(client_manifest, posixify(path.relative('.', f)), false);
-				const start = deps_of(`${runtime_directory}/client/start.js`);
+				const start = deps_of(`${runtime_directory}/client/entry.js`);
 				const app = deps_of(`${kit.outDir}/generated/client-optimized/app.js`);
 
 				build_data.client = {
@@ -947,25 +936,3 @@ const create_service_worker_module = (config) => dedent`
 	export const prerendered = [];
 	export const version = ${s(config.kit.version.name)};
 `;
-
-/**
- * @param {string} scope
- * @param {(req: import('http').IncomingMessage, res: import('http').ServerResponse, next: () => void) => void} handler
- * @returns {(req: import('http').IncomingMessage, res: import('http').ServerResponse, next: () => void) => void}
- */
-function scoped(scope, handler) {
-	if (scope === '') return handler;
-
-	return (req, res, next) => {
-		if (req.url?.startsWith(scope)) {
-			const original_url = req.url;
-			req.url = req.url.slice(scope.length);
-			handler(req, res, () => {
-				req.url = original_url;
-				next();
-			});
-		} else {
-			next();
-		}
-	};
-}

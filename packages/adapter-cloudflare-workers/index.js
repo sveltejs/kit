@@ -111,7 +111,7 @@ function validate_config(builder, config_file) {
 
 		if (!wrangler_config.main) {
 			throw new Error(
-				`You must specify main option in ${config_file}. Consult https://github.com/sveltejs/kit/tree/master/packages/adapter-cloudflare-workers`
+				`You must specify main option in ${config_file}. Consult https://github.com/sveltejs/kit/tree/main/packages/adapter-cloudflare-workers`
 			);
 		}
 
