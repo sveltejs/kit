@@ -92,16 +92,32 @@ class BaseProvider {
 			// }
 
 			// ...and add unsafe-inline so we can inject <style> elements
+			// Note that 'unsafe-inline' is ignored if either a hash or nonce value is present in the source list, so we remove those during dev when injecting unsafe-inline
 			if (effective_style_src && !effective_style_src.includes('unsafe-inline')) {
-				d['style-src'] = [...effective_style_src, 'unsafe-inline'];
+				d['style-src'] = [
+					...effective_style_src.filter(
+						(value) => !(value.startsWith('sha256-') || value.startsWith('nonce-'))
+					),
+					'unsafe-inline'
+				];
 			}
 
 			if (style_src_attr && !style_src_attr.includes('unsafe-inline')) {
-				d['style-src-attr'] = [...style_src_attr, 'unsafe-inline'];
+				d['style-src-attr'] = [
+					...style_src_attr.filter(
+						(value) => !(value.startsWith('sha256-') || value.startsWith('nonce-'))
+					),
+					'unsafe-inline'
+				];
 			}
 
 			if (style_src_elem && !style_src_elem.includes('unsafe-inline')) {
-				d['style-src-elem'] = [...style_src_elem, 'unsafe-inline'];
+				d['style-src-elem'] = [
+					...style_src_elem.filter(
+						(value) => !(value.startsWith('sha256-') || value.startsWith('nonce-'))
+					),
+					'unsafe-inline'
+				];
 			}
 		}
 
@@ -152,6 +168,11 @@ class BaseProvider {
 	/** @param {string} content */
 	add_style(content) {
 		if (this.#style_needs_csp) {
+			// this is the hash for "/* empty */"
+			// adding it so that svelte does not break csp
+			// see https://github.com/sveltejs/svelte/pull/7800
+			const empty_comment_hash = '9OlNO0DNEeaVzHL4RZwCLsBHA8WBQ8toBp/4F5XV2nc=';
+
 			const d = this.#directives;
 
 			if (this.#use_hashes) {
@@ -163,6 +184,13 @@ class BaseProvider {
 					this.#style_src_attr.push(`sha256-${hash}`);
 				}
 				if (d['style-src-elem']?.length) {
+					if (
+						hash !== empty_comment_hash &&
+						!d['style-src-elem'].includes(`sha256-${empty_comment_hash}`)
+					) {
+						this.#style_src_elem.push(`sha256-${empty_comment_hash}`);
+					}
+
 					this.#style_src_elem.push(`sha256-${hash}`);
 				}
 			} else {
@@ -173,6 +201,10 @@ class BaseProvider {
 					this.#style_src_attr.push(`nonce-${this.#nonce}`);
 				}
 				if (d['style-src-elem']?.length) {
+					if (!d['style-src-elem'].includes(`sha256-${empty_comment_hash}`)) {
+						this.#style_src_elem.push(`sha256-${empty_comment_hash}`);
+					}
+
 					this.#style_src_elem.push(`nonce-${this.#nonce}`);
 				}
 			}
