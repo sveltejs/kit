@@ -1,5 +1,15 @@
 # @sveltejs/kit
 
+## 2.1.0
+
+### Minor Changes
+
+- feat: make client router treeshakeable ([#11340](https://github.com/sveltejs/kit/pull/11340))
+
+### Patch Changes
+
+- chore: reduce client bundle size ([#11547](https://github.com/sveltejs/kit/pull/11547))
+
 ## 2.0.8
 
 ### Patch Changes
