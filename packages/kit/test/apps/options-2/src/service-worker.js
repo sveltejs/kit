@@ -5,6 +5,7 @@ import src from './image.jpg?url';
 self.base = base;
 //@ts-ignore
 self.build = build;
+//@ts-ignore
 self.image_src = src;
 
 const name = `cache-${version}`;
