@@ -252,8 +252,7 @@ export async function start(_app, _target, hydrate) {
 					[HISTORY_INDEX]: current_history_index,
 					[NAVIGATION_INDEX]: current_navigation_index
 				},
-				'',
-				location.href
+				''
 			);
 		} catch (error) {
 			// detect if the issue has been created by basic auth credentials in the current URL
