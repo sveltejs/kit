@@ -175,7 +175,11 @@ test('adds nonce to script-src-elem, style-src-attr and style-src-elem if necess
 	const csp_header = csp.csp_provider.get_header();
 	assert.ok(csp_header.includes("script-src-elem 'self' 'nonce-"));
 	assert.ok(csp_header.includes("style-src-attr 'self' 'nonce-"));
-	assert.ok(csp_header.includes("style-src-elem 'self' 'nonce-"));
+	assert.ok(
+		csp_header.includes(
+			"style-src-elem 'self' 'sha256-9OlNO0DNEeaVzHL4RZwCLsBHA8WBQ8toBp/4F5XV2nc=' 'nonce-"
+		)
+	);
 });
 
 test('adds hash to script-src-elem, style-src-attr and style-src-elem if necessary during prerendering', () => {
@@ -210,7 +214,7 @@ test('adds hash to script-src-elem, style-src-attr and style-src-elem if necessa
 	);
 	assert.ok(
 		csp_header.includes(
-			"style-src-elem 'self' 'sha256-47DEQpj8HBSa+/TImW+5JCeuQeRkm5NMpJWZG3hSuFU='"
+			"style-src-elem 'self' 'sha256-9OlNO0DNEeaVzHL4RZwCLsBHA8WBQ8toBp/4F5XV2nc=' 'sha256-47DEQpj8HBSa+/TImW+5JCeuQeRkm5NMpJWZG3hSuFU='"
 		)
 	);
 });
@@ -224,8 +228,8 @@ test('adds unsafe-inline styles in dev', () => {
 			mode: 'hash',
 			directives: {
 				'default-src': ['self'],
-				'style-src-attr': ['self'],
-				'style-src-elem': ['self']
+				'style-src-attr': ['self', 'sha256-9OlNO0DNEeaVzHL4RZwCLsBHA8WBQ8toBp/4F5XV2nc='],
+				'style-src-elem': ['self', 'sha256-9OlNO0DNEeaVzHL4RZwCLsBHA8WBQ8toBp/4F5XV2nc=']
 			},
 			reportOnly: {
 				'default-src': ['self'],
