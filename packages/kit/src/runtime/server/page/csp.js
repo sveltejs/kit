@@ -153,6 +153,11 @@ class BaseProvider {
 	/** @param {string} content */
 	add_style(content) {
 		if (this.#style_needs_csp) {
+			// this is the hash for "/* empty */"
+			// adding it so that svelte does not break csp
+			// see https://github.com/sveltejs/svelte/pull/7800
+			const empty_comment_hash = 'sha256-9OlNO0DNEeaVzHL4RZwCLsBHA8WBQ8toBp/4F5XV2nc='
+
 			const d = this.#directives;
 
 			if (this.#use_hashes) {
@@ -164,6 +169,10 @@ class BaseProvider {
 					this.#style_src_attr.push(`sha256-${hash}`);
 				}
 				if (d['style-src-elem']?.length) {
+					if(!d['style-src-elem'].includes(empty_comment_hash))  {
+						this.#style_src_elem.push(empty_comment_hash)
+					}
+
 					this.#style_src_elem.push(`sha256-${hash}`);
 				}
 			} else {
@@ -174,6 +183,10 @@ class BaseProvider {
 					this.#style_src_attr.push(`nonce-${this.#nonce}`);
 				}
 				if (d['style-src-elem']?.length) {
+					if(!d['style-src-elem'].includes(empty_comment_hash))  {
+						this.#style_src_elem.push(empty_comment_hash)
+					}
+
 					this.#style_src_elem.push(`nonce-${this.#nonce}`);
 				}
 			}
