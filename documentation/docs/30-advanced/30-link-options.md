@@ -122,8 +122,8 @@ To disable any of these options inside an element where they have been enabled, 
 </div>
 ```
 
-To apply an attribute to an element conditionally, do this (`"true"` and `"false"` are both accepted values):
+To apply an attribute to an element conditionally, do this:
 
-```html
-<div data-sveltekit-reload={shouldReload}>
+```svelte
+<div data-sveltekit-preload-data={condition ? 'hover' : false}>
 ```

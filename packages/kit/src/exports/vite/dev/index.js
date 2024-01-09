@@ -8,7 +8,6 @@ import { getRequest, setResponse } from '../../../exports/node/index.js';
 import { installPolyfills } from '../../../exports/node/polyfills.js';
 import { coalesce_to_error } from '../../../utils/error.js';
 import { posixify, resolve_entry, to_fs } from '../../../utils/filesystem.js';
-import { should_polyfill } from '../../../utils/platform.js';
 import { load_error_page } from '../../../core/config/index.js';
 import { SVELTE_KIT_ASSETS } from '../../../constants.js';
 import * as sync from '../../../core/sync/sync.js';
@@ -26,9 +25,7 @@ const cwd = process.cwd();
  * @return {Promise<Promise<() => void>>}
  */
 export async function dev(vite, vite_config, svelte_config) {
-	if (should_polyfill) {
-		installPolyfills();
-	}
+	installPolyfills();
 
 	const fetch = globalThis.fetch;
 	globalThis.fetch = (info, init) => {
@@ -119,11 +116,12 @@ export async function dev(vite, vite_config, svelte_config) {
 			mimeTypes: get_mime_lookup(manifest_data),
 			_: {
 				client: {
-					start: `${runtime_base}/client/start.js`,
+					start: `${runtime_base}/client/entry.js`,
 					app: `${to_fs(svelte_config.kit.outDir)}/generated/client/app.js`,
 					imports: [],
 					stylesheets: [],
-					fonts: []
+					fonts: [],
+					uses_env_dynamic_public: true
 				},
 				nodes: manifest_data.nodes.map((node, index) => {
 					return async () => {
@@ -223,7 +221,7 @@ export async function dev(vite, vite_config, svelte_config) {
 								? async () => {
 										const url = path.resolve(cwd, endpoint.file);
 										return await loud_ssr_load_module(url);
-								  }
+									}
 								: null,
 							endpoint_id: endpoint?.file
 						};
@@ -357,7 +355,8 @@ export async function dev(vite, vite_config, svelte_config) {
 		control_module_node.replace_implementations({
 			ActionFailure: control_module_vite.ActionFailure,
 			HttpError: control_module_vite.HttpError,
-			Redirect: control_module_vite.Redirect
+			Redirect: control_module_vite.Redirect,
+			SvelteKitError: control_module_vite.SvelteKitError
 		});
 	}
 	align_exports();
@@ -473,17 +472,10 @@ export async function dev(vite, vite_config, svelte_config) {
 
 				await server.init({ env });
 
-				let request;
-
-				try {
-					request = await getRequest({
-						base,
-						request: req
-					});
-				} catch (/** @type {any} */ err) {
-					res.statusCode = err.status || 400;
-					return res.end('Invalid request body');
-				}
+				const request = await getRequest({
+					base,
+					request: req
+				});
 
 				if (manifest_error) {
 					console.error(colors.bold().red(manifest_error.message));
@@ -537,7 +529,7 @@ export async function dev(vite, vite_config, svelte_config) {
  * @param {import('connect').Server} server
  */
 function remove_static_middlewares(server) {
-	const static_middlewares = ['viteServeStaticMiddleware'];
+	const static_middlewares = ['viteServeStaticMiddleware', 'viteServePublicMiddleware'];
 	for (let i = server.stack.length - 1; i > 0; i--) {
 		// @ts-expect-error using internals
 		if (static_middlewares.includes(server.stack[i].handle.name)) {

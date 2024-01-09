@@ -9,7 +9,7 @@
 	"programmingLanguage": ["JavaScript", "TypeScript"],
 	"image": "https://raw.githubusercontent.com/sveltejs/branding/master/svelte-logo.svg",
 	"sameAs": ["https://github.com/sveltejs/kit", "https://www.npmjs.com/package/@sveltejs/kit"],
-	"license": "https://github.com/sveltejs/kit/blob/master/LICENSE",
+	"license": "https://github.com/sveltejs/kit/blob/main/LICENSE",
 	"releasedEvent": {
 		"@type": "PublicationEvent",
 		"startDate": "2022-12-14T17:00:00",

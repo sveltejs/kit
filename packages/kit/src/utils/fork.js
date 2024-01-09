@@ -32,7 +32,7 @@ export function forked(module, callback) {
 	 * @param {T} opts
 	 * @returns {Promise<U>}
 	 */
-	const fn = function (opts) {
+	return function (opts) {
 		return new Promise((fulfil, reject) => {
 			const worker = new Worker(fileURLToPath(module), {
 				env: {
@@ -53,7 +53,7 @@ export function forked(module, callback) {
 					}
 
 					if (data?.type === 'result' && data.module === module) {
-						worker.terminate();
+						worker.unref();
 						fulfil(data.payload);
 					}
 				}
@@ -66,6 +66,4 @@ export function forked(module, callback) {
 			});
 		});
 	};
-
-	return fn;
 }
