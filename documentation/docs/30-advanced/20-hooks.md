@@ -233,9 +233,9 @@ During development, if an error occurs because of a syntax error in your Svelte 
 
 > Make sure that `handleError` _never_ throws an error
 
-## Isomorphic hooks
+## Universal hooks
 
-The following can be added to `src/hooks.js`. Isomorphic hooks share the same implementation on the server and the client. This is not to be confused with shared hooks, which use separate implementations. 
+The following can be added to `src/hooks.js`. Universal hooks share the same implementation on the server and the client. This is not to be confused with shared hooks, which use separate implementations.
 
 ### rewriteUrl
 

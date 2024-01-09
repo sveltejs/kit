@@ -80,7 +80,7 @@ const get_defaults = (prefix = '') => ({
 			hooks: {
 				client: join(prefix, 'src/hooks.client'),
 				server: join(prefix, 'src/hooks.server'),
-				isomorphic: join(prefix, 'src/hooks')
+				universal: join(prefix, 'src/hooks')
 			},
 			lib: join(prefix, 'src/lib'),
 			params: join(prefix, 'src/params'),
