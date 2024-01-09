@@ -1,4 +1,4 @@
-import { BROWSER } from 'esm-env';
+import { BROWSER, DEV } from 'esm-env';
 
 /**
  * Matches a URI scheme. See https://www.rfc-editor.org/rfc/rfc3986#section-3.1
@@ -146,7 +146,9 @@ export function make_trackable(url, callback, search_params_callback) {
 		};
 	}
 
-	disable_hash(tracked);
+	if (DEV || !BROWSER) {
+		disable_hash(tracked);
+	}
 
 	return tracked;
 }
@@ -155,7 +157,7 @@ export function make_trackable(url, callback, search_params_callback) {
  * Disallow access to `url.hash` on the server and in `load`
  * @param {URL} url
  */
-export function disable_hash(url) {
+function disable_hash(url) {
 	allow_nodejs_console_log(url);
 
 	Object.defineProperty(url, 'hash', {

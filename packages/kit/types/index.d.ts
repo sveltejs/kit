@@ -161,14 +161,6 @@ declare module '@sveltejs/kit' {
 		extensions?: string[];
 		/** SvelteKit options */
 		kit?: KitConfig;
-		/** [`@sveltejs/package`](/docs/packaging) options. */
-		package?: {
-			source?: string;
-			dir?: string;
-			emitTypes?: boolean;
-			exports?(filepath: string): boolean;
-			files?(filepath: string): boolean;
-		};
 		/** Preprocessor options, if any. Preprocessing can alternatively also be done through Vite's preprocessor capabilities. */
 		preprocess?: any;
 		/** `vite-plugin-svelte` plugin options. */
@@ -339,6 +331,7 @@ declare module '@sveltejs/kit' {
 		};
 		/**
 		 * Whether or not the app is embedded inside a larger app. If `true`, SvelteKit will add its event listeners related to navigation etc on the parent of `%sveltekit.body%` instead of `window`, and will pass `params` from the server rather than inferring them from `location.pathname`.
+		 * Note that it is generally not supported to embed multiple SvelteKit apps on the same page and use client-side SvelteKit features within them (things such as pushing to the history state assume a single instance).
 		 * @default false
 		 */
 		embedded?: boolean;
@@ -1893,11 +1886,6 @@ declare module '$app/environment' {
 
 declare module '$app/forms' {
 	/**
-	 * This action updates the `form` property of the current page with the given data and updates `$page.status`.
-	 * In case of an error, it redirects to the nearest error page.
-	 * */
-	export function applyAction<Success extends Record<string, unknown> | undefined, Failure extends Record<string, unknown> | undefined>(result: import("@sveltejs/kit").ActionResult<Success, Failure>): Promise<void>;
-	/**
 	 * Use this function to deserialize the response from a form submission.
 	 * Usage:
 	 *
@@ -1939,14 +1927,47 @@ declare module '$app/forms' {
 	export function enhance<Success extends Record<string, unknown> | undefined, Failure extends Record<string, unknown> | undefined>(form_element: HTMLFormElement, submit?: import("@sveltejs/kit").SubmitFunction<Success, Failure>): {
 		destroy(): void;
 	};
+	/**
+	 * This action updates the `form` property of the current page with the given data and updates `$page.status`.
+	 * In case of an error, it redirects to the nearest error page.
+	 * */
+	export function applyAction<Success extends Record<string, unknown> | undefined, Failure extends Record<string, unknown> | undefined>(result: import("@sveltejs/kit").ActionResult<Success, Failure>): Promise<void>;
 }
 
 declare module '$app/navigation' {
 	/**
+	 * A lifecycle function that runs the supplied `callback` when the current component mounts, and also whenever we navigate to a new URL.
+	 *
+	 * `afterNavigate` must be called during a component initialization. It remains active as long as the component is mounted.
+	 * */
+	export function afterNavigate(callback: (navigation: import('@sveltejs/kit').AfterNavigate) => void): void;
+	/**
+	 * A navigation interceptor that triggers before we navigate to a new URL, whether by clicking a link, calling `goto(...)`, or using the browser back/forward controls.
+	 *
+	 * Calling `cancel()` will prevent the navigation from completing. If `navigation.type === 'leave'` — meaning the user is navigating away from the app (or closing the tab) — calling `cancel` will trigger the native browser unload confirmation dialog. In this case, the navigation may or may not be cancelled depending on the user's response.
+	 *
+	 * When a navigation isn't to a SvelteKit-owned route (and therefore controlled by SvelteKit's client-side router), `navigation.to.route.id` will be `null`.
+	 *
+	 * If the navigation will (if not cancelled) cause the document to unload — in other words `'leave'` navigations and `'link'` navigations where `navigation.to.route === null` — `navigation.willUnload` is `true`.
+	 *
+	 * `beforeNavigate` must be called during a component initialization. It remains active as long as the component is mounted.
+	 * */
+	export function beforeNavigate(callback: (navigation: import('@sveltejs/kit').BeforeNavigate) => void): void;
+	/**
+	 * A lifecycle function that runs the supplied `callback` immediately before we navigate to a new URL except during full-page navigations.
+	 *
+	 * If you return a `Promise`, SvelteKit will wait for it to resolve before completing the navigation. This allows you to — for example — use `document.startViewTransition`. Avoid promises that are slow to resolve, since navigation will appear stalled to the user.
+	 *
+	 * If a function (or a `Promise` that resolves to a function) is returned from the callback, it will be called once the DOM has updated.
+	 *
+	 * `onNavigate` must be called during a component initialization. It remains active as long as the component is mounted.
+	 * */
+	export function onNavigate(callback: (navigation: import('@sveltejs/kit').OnNavigate) => MaybePromise<void>): void;
+	/**
 	 * If called when the page is being updated following a navigation (in `onMount` or `afterNavigate` or an action, for example), this disables SvelteKit's built-in scroll handling.
 	 * This is generally discouraged, since it breaks user expectations.
 	 * */
-	export const disableScrollHandling: () => void;
+	export function disableScrollHandling(): void;
 	/**
 	 * Returns a Promise that resolves when SvelteKit navigates (or fails to navigate, in which case the promise rejects) to the specified `url`.
 	 * For external URLs, use `window.location = url` instead of calling `goto(url)`.
@@ -1954,13 +1975,13 @@ declare module '$app/navigation' {
 	 * @param url Where to navigate to. Note that if you've set [`config.kit.paths.base`](https://kit.svelte.dev/docs/configuration#paths) and the URL is root-relative, you need to prepend the base path if you want to navigate within the app.
 	 * @param {Object} opts Options related to the navigation
 	 * */
-	export const goto: (url: string | URL, opts?: {
-		replaceState?: boolean;
-		noScroll?: boolean;
-		keepFocus?: boolean;
-		invalidateAll?: boolean;
-		state?: App.PageState;
-	}) => Promise<void>;
+	export function goto(url: string | URL, opts?: {
+		replaceState?: boolean | undefined;
+		noScroll?: boolean | undefined;
+		keepFocus?: boolean | undefined;
+		invalidateAll?: boolean | undefined;
+		state?: App.PageState | undefined;
+	} | undefined): Promise<void>;
 	/**
 	 * Causes any `load` functions belonging to the currently active page to re-run if they depend on the `url` in question, via `fetch` or `depends`. Returns a `Promise` that resolves when the page is subsequently updated.
 	 *
@@ -1976,13 +1997,13 @@ declare module '$app/navigation' {
 	 *
 	 * invalidate((url) => url.pathname === '/path');
 	 * ```
-	 * @param url The invalidated URL
+	 * @param resource The invalidated URL
 	 * */
-	export const invalidate: (url: string | URL | ((url: URL) => boolean)) => Promise<void>;
+	export function invalidate(resource: string | URL | ((url: URL) => boolean)): Promise<void>;
 	/**
 	 * Causes all `load` functions belonging to the currently active page to re-run. Returns a `Promise` that resolves when the page is subsequently updated.
 	 * */
-	export const invalidateAll: () => Promise<void>;
+	export function invalidateAll(): Promise<void>;
 	/**
 	 * Programmatically preloads the given page, which means
 	 *  1. ensuring that the code for the page is loaded, and
@@ -1994,7 +2015,14 @@ declare module '$app/navigation' {
 	 *
 	 * @param href Page to preload
 	 * */
-	export const preloadData: (href: string) => Promise<Record<string, any>>;
+	export function preloadData(href: string): Promise<{
+		type: 'loaded';
+		status: number;
+		data: Record<string, any>;
+	} | {
+		type: 'redirect';
+		location: string;
+	}>;
 	/**
 	 * Programmatically imports the code for routes that haven't yet been fetched.
 	 * Typically, you might call this to speed up subsequent navigation.
@@ -2005,45 +2033,17 @@ declare module '$app/navigation' {
 	 * Returns a Promise that resolves when the modules have been imported.
 	 *
 	 * */
-	export const preloadCode: (url: string) => Promise<void>;
-	/**
-	 * A navigation interceptor that triggers before we navigate to a new URL, whether by clicking a link, calling `goto(...)`, or using the browser back/forward controls.
-	 *
-	 * Calling `cancel()` will prevent the navigation from completing. If `navigation.type === 'leave'` — meaning the user is navigating away from the app (or closing the tab) — calling `cancel` will trigger the native browser unload confirmation dialog. In this case, the navigation may or may not be cancelled depending on the user's response.
-	 *
-	 * When a navigation isn't to a SvelteKit-owned route (and therefore controlled by SvelteKit's client-side router), `navigation.to.route.id` will be `null`.
-	 *
-	 * If the navigation will (if not cancelled) cause the document to unload — in other words `'leave'` navigations and `'link'` navigations where `navigation.to.route === null` — `navigation.willUnload` is `true`.
-	 *
-	 * `beforeNavigate` must be called during a component initialization. It remains active as long as the component is mounted.
-	 * */
-	export const beforeNavigate: (callback: (navigation: import('@sveltejs/kit').BeforeNavigate) => void) => void;
-	/**
-	 * A lifecycle function that runs the supplied `callback` immediately before we navigate to a new URL except during full-page navigations.
-	 *
-	 * If you return a `Promise`, SvelteKit will wait for it to resolve before completing the navigation. This allows you to — for example — use `document.startViewTransition`. Avoid promises that are slow to resolve, since navigation will appear stalled to the user.
-	 *
-	 * If a function (or a `Promise` that resolves to a function) is returned from the callback, it will be called once the DOM has updated.
-	 *
-	 * `onNavigate` must be called during a component initialization. It remains active as long as the component is mounted.
-	 * */
-	export const onNavigate: (callback: (navigation: import('@sveltejs/kit').OnNavigate) => MaybePromise<(() => void) | void>) => void;
-	/**
-	 * A lifecycle function that runs the supplied `callback` when the current component mounts, and also whenever we navigate to a new URL.
-	 *
-	 * `afterNavigate` must be called during a component initialization. It remains active as long as the component is mounted.
-	 * */
-	export const afterNavigate: (callback: (navigation: import('@sveltejs/kit').AfterNavigate) => void) => void;
+	export function preloadCode(pathname: string): Promise<void>;
 	/**
 	 * Programmatically create a new history entry with the given `$page.state`. To use the current URL, you can pass `''` as the first argument. Used for [shallow routing](https://kit.svelte.dev/docs/shallow-routing).
 	 *
 	 * */
-	export const pushState: (url: string | URL, state: App.PageState) => void;
+	export function pushState(url: string | URL, state: App.PageState): void;
 	/**
 	 * Programmatically replace the current history entry with the given `$page.state`. To use the current URL, you can pass `''` as the first argument. Used for [shallow routing](https://kit.svelte.dev/docs/shallow-routing).
 	 *
 	 * */
-	export const replaceState: (url: string | URL, state: App.PageState) => void;
+	export function replaceState(url: string | URL, state: App.PageState): void;
 	type MaybePromise<T> = T | Promise<T>;
 }
 

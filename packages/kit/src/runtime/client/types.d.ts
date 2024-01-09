@@ -1,16 +1,3 @@
-import { applyAction } from '../app/forms.js';
-import {
-	afterNavigate,
-	beforeNavigate,
-	onNavigate,
-	goto,
-	invalidate,
-	invalidateAll,
-	preloadCode,
-	preloadData,
-	pushState,
-	replaceState
-} from '../app/navigation.js';
 import { SvelteComponent } from 'svelte';
 import { ClientHooks, CSRPageNode, CSRPageNodeLoader, CSRRoute, TrailingSlash, Uses } from 'types';
 import { Page, ParamMatcher } from '@sveltejs/kit';
@@ -40,34 +27,6 @@ export interface SvelteKitApp {
 	hooks: ClientHooks;
 
 	root: typeof SvelteComponent;
-}
-
-export interface Client {
-	// public API, exposed via $app/navigation
-	after_navigate: typeof afterNavigate;
-	before_navigate: typeof beforeNavigate;
-	on_navigate: typeof onNavigate;
-	disable_scroll_handling(): void;
-	goto: typeof goto;
-	invalidate: typeof invalidate;
-	invalidate_all: typeof invalidateAll;
-	preload_code: typeof preloadCode;
-	preload_data: typeof preloadData;
-	push_state: typeof pushState;
-	replace_state: typeof replaceState;
-	apply_action: typeof applyAction;
-
-	// private API
-	_hydrate(opts: {
-		status: number;
-		error: App.Error | null;
-		node_ids: number[];
-		params: Record<string, string>;
-		route: { id: string | null };
-		data: Array<import('types').ServerDataNode | null>;
-		form: Record<string, any> | null;
-	}): Promise<void>;
-	_start_router(): void;
 }
 
 export type NavigationIntent = {

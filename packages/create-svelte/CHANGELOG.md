@@ -1,5 +1,11 @@
 # create-svelte
 
+## 6.0.6
+
+### Patch Changes
+
+- fix: set path: '/' in demo ([#11495](https://github.com/sveltejs/kit/pull/11495))
+
 ## 6.0.5
 
 ### Patch Changes

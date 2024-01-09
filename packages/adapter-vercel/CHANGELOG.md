@@ -1,5 +1,11 @@
 # @sveltejs/adapter-vercel
 
+## 4.0.4
+
+### Patch Changes
+
+- fix: update @vercel/nft to 0.26.1 ([#11508](https://github.com/sveltejs/kit/pull/11508))
+
 ## 4.0.3
 
 ### Patch Changes
