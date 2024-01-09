@@ -216,6 +216,7 @@ async function kit({ svelte_config }) {
 	let initial_config;
 
 	const service_worker_entry_file = resolve_entry(kit.files.serviceWorker);
+	const parsed_service_worker = path.parse(kit.files.serviceWorker);
 
 	const sourcemapIgnoreList = /** @param {string} relative_path */ (relative_path) =>
 		relative_path.includes('node_modules') || relative_path.includes(kit.outDir);
@@ -360,14 +361,13 @@ async function kit({ svelte_config }) {
 			// This check won't catch transitive imports, but it will warn when the import comes from a service-worker directly.
 			// Transitive imports will be caught during the build.
 			if (importer) {
-				const parsedImporter = path.parse(importer);
-				const parsedServiceWorker = path.parse(kit.files.serviceWorker);
+				const parsed_importer = path.parse(importer);
 
-				const importerIsServiceWorker =
-					parsedImporter.dir === parsedServiceWorker.dir &&
-					parsedImporter.name === parsedServiceWorker.name;
+				const importer_is_service_worker =
+					parsed_importer.dir === parsed_service_worker.dir &&
+					parsed_importer.name === parsed_service_worker.name;
 
-				if (importerIsServiceWorker && id !== '$service-worker' && id !== '$env/static/public') {
+				if (importer_is_service_worker && id !== '$service-worker' && id !== '$env/static/public') {
 					throw new Error(
 						`Cannot import ${id} into service-worker code. Only the modules $service-worker and $env/static/public are available in service workers.`
 					);
