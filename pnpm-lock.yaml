@@ -943,6 +943,48 @@ importers:
         specifier: ^5.0.8
         version: 5.0.8(@types/node@18.19.3)(lightningcss@1.22.1)
 
+  packages/kit/test/build-errors/apps/service-worker-dynamic-public-env:
+    devDependencies:
+      '@sveltejs/kit':
+        specifier: workspace:^
+        version: link:../../../..
+      '@sveltejs/vite-plugin-svelte':
+        specifier: ^3.0.1
+        version: 3.0.1(svelte@4.2.8)(vite@5.0.8)
+      svelte:
+        specifier: ^4.2.8
+        version: 4.2.8
+      svelte-check:
+        specifier: ^3.6.2
+        version: 3.6.2(postcss@8.4.32)(svelte@4.2.8)
+      typescript:
+        specifier: ^5.3.3
+        version: 5.3.3
+      vite:
+        specifier: ^5.0.8
+        version: 5.0.8(@types/node@18.19.3)(lightningcss@1.22.1)
+
+  packages/kit/test/build-errors/apps/service-worker-private-env:
+    devDependencies:
+      '@sveltejs/kit':
+        specifier: workspace:^
+        version: link:../../../..
+      '@sveltejs/vite-plugin-svelte':
+        specifier: ^3.0.1
+        version: 3.0.1(svelte@4.2.8)(vite@5.0.8)
+      svelte:
+        specifier: ^4.2.8
+        version: 4.2.8
+      svelte-check:
+        specifier: ^3.6.2
+        version: 3.6.2(postcss@8.4.32)(svelte@4.2.8)
+      typescript:
+        specifier: ^5.3.3
+        version: 5.3.3
+      vite:
+        specifier: ^5.0.8
+        version: 5.0.8(@types/node@18.19.3)(lightningcss@1.22.1)
+
   packages/kit/test/build-errors/apps/syntax-error:
     devDependencies:
       '@sveltejs/kit':
