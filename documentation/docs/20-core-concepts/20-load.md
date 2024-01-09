@@ -168,6 +168,8 @@ Server `load` functions _always_ run on the server.
 
 By default, universal `load` functions run on the server during SSR when the user first visits your page. They will then run again during hydration, reusing any responses from [fetch requests](#making-fetch-requests). All subsequent invocations of universal `load` functions happen in the browser. You can customize the behavior through [page options](page-options). If you disable [server side rendering](page-options#ssr), you'll get an SPA and universal `load` functions _always_ run on the client.
 
+If a route contains both universal and server `load` functions, the server `load` runs first.
+
 A `load` function is invoked at runtime, unless you [prerender](page-options#prerender) the page — in that case, it's invoked at build time.
 
 ### Input
@@ -190,7 +192,29 @@ Server `load` functions are convenient when you need to access data directly fro
 
 Universal `load` functions are useful when you need to `fetch` data from an external API and don't need private credentials, since SvelteKit can get the data directly from the API rather than going via your server. They are also useful when you need to return something that can't be serialized, such as a Svelte component constructor.
 
-In rare cases, you might need to use both together — for example, you might need to return an instance of a custom class that was initialised with data from your server.
+In rare cases, you might need to use both together — for example, you might need to return an instance of a custom class that was initialised with data from your server. When using both, the server `load` return value is _not_ passed directly to the page, but to the universal `load` function (as the `data` property):
+
+```js
+/// file: src/routes/+page.server.js
+/** @type {import('./$types').PageServerLoad} */
+export async function load() {
+	return {
+		serverMessage: 'hello from server load function'
+	};
+}
+```
+
+```js
+/// file: src/routes/+page.js
+// @errors: 18047
+/** @type {import('./$types').PageLoad} */
+export async function load({ data }) {
+	return {
+		serverMessage: data.serverMessage,
+		universalMessage: 'hello from universal load function'
+	};
+}
+```
 
 ## Using URL data
 

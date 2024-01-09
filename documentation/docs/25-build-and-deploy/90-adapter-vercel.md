@@ -2,7 +2,7 @@
 title: Vercel
 ---
 
-To deploy to Vercel, use [`adapter-vercel`](https://github.com/sveltejs/kit/tree/master/packages/adapter-vercel).
+To deploy to Vercel, use [`adapter-vercel`](https://github.com/sveltejs/kit/tree/main/packages/adapter-vercel).
 
 This adapter will be installed by default when you use [`adapter-auto`](adapter-auto), but adding it to your project allows you to specify Vercel-specific options.
 

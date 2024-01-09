@@ -1,5 +1,23 @@
 # svelte-migrate
 
+## 1.3.6
+
+### Patch Changes
+
+- fix: correct link to docs ([#11407](https://github.com/sveltejs/kit/pull/11407))
+
+## 1.3.5
+
+### Patch Changes
+
+- chore: update primary branch from master to main ([`47779436c5f6c4d50011d0ef8b2709a07c0fec5d`](https://github.com/sveltejs/kit/commit/47779436c5f6c4d50011d0ef8b2709a07c0fec5d))
+
+## 1.3.4
+
+### Patch Changes
+
+- suggest running migrate command with latest if migration does not exist ([#11362](https://github.com/sveltejs/kit/pull/11362))
+
 ## 1.3.3
 
 ### Patch Changes

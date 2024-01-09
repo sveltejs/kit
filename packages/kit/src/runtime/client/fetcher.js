@@ -1,9 +1,10 @@
-import { DEV } from 'esm-env';
+import { BROWSER, DEV } from 'esm-env';
 import { hash } from '../hash.js';
 
 let loading = 0;
 
-export const native_fetch = window.fetch;
+/** @type {typeof fetch} */
+export const native_fetch = BROWSER ? window.fetch : /** @type {any} */ (() => {});
 
 export function lock_fetch() {
 	loading += 1;
@@ -13,7 +14,7 @@ export function unlock_fetch() {
 	loading -= 1;
 }
 
-if (DEV) {
+if (DEV && BROWSER) {
 	let can_inspect_stack_trace = false;
 
 	const check_stack_trace = async () => {
@@ -61,7 +62,7 @@ if (DEV) {
 
 		return native_fetch(input, init);
 	};
-} else {
+} else if (BROWSER) {
 	window.fetch = (input, init) => {
 		const method = input instanceof Request ? input.method : init?.method || 'GET';
 

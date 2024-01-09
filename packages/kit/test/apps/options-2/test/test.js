@@ -37,6 +37,21 @@ test.describe('paths', () => {
 		expect(await page.textContent('[data-testid="base"]')).toBe(`base: ${base}`);
 		expect(await page.textContent('[data-testid="assets"]')).toBe(`assets: ${base}`);
 	});
+
+	test('serves /basepath with trailing slash always', async ({ page }) => {
+		await page.goto('/basepath');
+		expect(new URL(page.url()).pathname).toBe('/basepath/');
+	});
+
+	test('respects trailing slash option when navigating from /basepath', async ({
+		page,
+		clicknav
+	}) => {
+		await page.goto('/basepath');
+		expect(new URL(page.url()).pathname).toBe('/basepath/');
+		await clicknav('[data-testid="link"]');
+		expect(new URL(page.url()).pathname).toBe('/basepath/hello');
+	});
 });
 
 test.describe('Service worker', () => {

@@ -2,7 +2,9 @@ import fs from 'node:fs';
 import * as vite from 'vite';
 import { dedent } from '../../../core/sync/utils.js';
 import { s } from '../../../utils/misc.js';
-import { get_config_aliases } from '../utils.js';
+import { get_config_aliases, strip_virtual_prefix, get_env } from '../utils.js';
+import { create_static_module } from '../../../core/env.js';
+import { env_static_public, service_worker } from '../module_ids.js';
 
 /**
  * @param {string} out
@@ -30,37 +32,63 @@ export async function build_service_worker(
 		assets.forEach((file) => build.add(file));
 	}
 
-	const service_worker = `${kit.outDir}/generated/service-worker.js`;
-
 	// in a service worker, `location` is the location of the service worker itself,
 	// which is guaranteed to be `<base>/service-worker.js`
 	const base = "location.pathname.split('/').slice(0, -1).join('/')";
 
-	fs.writeFileSync(
-		service_worker,
-		dedent`
-			export const base = /*@__PURE__*/ ${base};
+	const service_worker_code = dedent`
+		export const base = /*@__PURE__*/ ${base};
 
-			export const build = [
-				${Array.from(build)
-					.map((file) => `base + ${s(`/${file}`)}`)
-					.join(',\n')}
-			];
+		export const build = [
+			${Array.from(build)
+				.map((file) => `base + ${s(`/${file}`)}`)
+				.join(',\n')}
+		];
 
-			export const files = [
-				${manifest_data.assets
-					.filter((asset) => kit.serviceWorker.files(asset.file))
-					.map((asset) => `base + ${s(`/${asset.file}`)}`)
-					.join(',\n')}
-			];
+		export const files = [
+			${manifest_data.assets
+				.filter((asset) => kit.serviceWorker.files(asset.file))
+				.map((asset) => `base + ${s(`/${asset.file}`)}`)
+				.join(',\n')}
+		];
 
-			export const prerendered = [
-				${prerendered.paths.map((path) => `base + ${s(path.replace(kit.paths.base, ''))}`).join(',\n')}
-			];
+		export const prerendered = [
+			${prerendered.paths.map((path) => `base + ${s(path.replace(kit.paths.base, ''))}`).join(',\n')}
+		];
 
-			export const version = ${s(kit.version.name)};
-		`
-	);
+		export const version = ${s(kit.version.name)};
+	`;
+
+	const env = get_env(kit.env, vite_config.mode);
+
+	/**
+	 * @type {import('vite').Plugin}
+	 */
+	const sw_virtual_modules = {
+		name: 'service-worker-build-virtual-modules',
+		async resolveId(id) {
+			if (id.startsWith('$env/') || id.startsWith('$app/') || id === '$service-worker') {
+				return `\0virtual:${id}`;
+			}
+		},
+
+		async load(id) {
+			if (!id.startsWith('\0virtual:')) return;
+
+			if (id === service_worker) {
+				return service_worker_code;
+			}
+
+			if (id === env_static_public) {
+				return create_static_module('$env/static/public', env.public);
+			}
+
+			const stripped = strip_virtual_prefix(id);
+			throw new Error(
+				`Cannot import ${stripped} into service-worker code. Only the modules $service-worker and $env/static/public are available in service workers.`
+			);
+		}
+	};
 
 	await vite.build({
 		build: {
@@ -70,7 +98,8 @@ export async function build_service_worker(
 					'service-worker': service_worker_entry_file
 				},
 				output: {
-					entryFileNames: '[name].js',
+					// .mjs so that esbuild doesn't incorrectly inject `export` https://github.com/vitejs/vite/issues/15379
+					entryFileNames: 'service-worker.mjs',
 					assetFileNames: `${kit.appDir}/immutable/assets/[name].[hash][extname]`,
 					inlineDynamicImports: true
 				}
@@ -81,8 +110,9 @@ export async function build_service_worker(
 		configFile: false,
 		define: vite_config.define,
 		publicDir: false,
+		plugins: [sw_virtual_modules],
 		resolve: {
-			alias: [...get_config_aliases(kit), { find: '$service-worker', replacement: service_worker }]
+			alias: [...get_config_aliases(kit)]
 		},
 		experimental: {
 			renderBuiltUrl(filename) {
@@ -92,4 +122,7 @@ export async function build_service_worker(
 			}
 		}
 	});
+
+	// rename .mjs to .js to avoid incorrect MIME types with ancient webservers
+	fs.renameSync(`${out}/client/service-worker.mjs`, `${out}/client/service-worker.js`);
 }

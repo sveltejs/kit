@@ -153,6 +153,68 @@ test('skips frame-ancestors, report-uri, sandbox from meta tags', () => {
 	);
 });
 
+test('adds nonce to script-src-elem, style-src-attr and style-src-elem if necessary', () => {
+	const csp = new Csp(
+		{
+			mode: 'auto',
+			directives: {
+				'script-src-elem': ['self'],
+				'style-src-attr': ['self'],
+				'style-src-elem': ['self']
+			},
+			reportOnly: {}
+		},
+		{
+			prerender: false
+		}
+	);
+
+	csp.add_script('');
+	csp.add_style('');
+
+	const csp_header = csp.csp_provider.get_header();
+	assert.ok(csp_header.includes("script-src-elem 'self' 'nonce-"));
+	assert.ok(csp_header.includes("style-src-attr 'self' 'nonce-"));
+	assert.ok(csp_header.includes("style-src-elem 'self' 'nonce-"));
+});
+
+test('adds hash to script-src-elem, style-src-attr and style-src-elem if necessary during prerendering', () => {
+	const csp = new Csp(
+		{
+			mode: 'auto',
+			directives: {
+				'script-src-elem': ['self'],
+				'style-src-attr': ['self'],
+				'style-src-elem': ['self']
+			},
+			reportOnly: {}
+		},
+		{
+			prerender: true
+		}
+	);
+
+	csp.add_script('');
+	csp.add_style('');
+
+	const csp_header = csp.csp_provider.get_header();
+	assert.ok(
+		csp_header.includes(
+			"script-src-elem 'self' 'sha256-47DEQpj8HBSa+/TImW+5JCeuQeRkm5NMpJWZG3hSuFU='"
+		)
+	);
+	assert.ok(
+		csp_header.includes(
+			"style-src-attr 'self' 'sha256-47DEQpj8HBSa+/TImW+5JCeuQeRkm5NMpJWZG3hSuFU='"
+		)
+	);
+	assert.ok(
+		csp_header.includes(
+			"style-src-elem 'self' 'sha256-47DEQpj8HBSa+/TImW+5JCeuQeRkm5NMpJWZG3hSuFU='"
+		)
+	);
+});
+
 test('adds unsafe-inline styles in dev', () => {
 	// @ts-expect-error
 	globalThis.__SVELTEKIT_DEV__ = true;
@@ -161,10 +223,14 @@ test('adds unsafe-inline styles in dev', () => {
 		{
 			mode: 'hash',
 			directives: {
-				'default-src': ['self']
+				'default-src': ['self'],
+				'style-src-attr': ['self'],
+				'style-src-elem': ['self']
 			},
 			reportOnly: {
 				'default-src': ['self'],
+				'style-src-attr': ['self'],
+				'style-src-elem': ['self'],
 				'report-uri': ['/']
 			}
 		},
@@ -177,12 +243,12 @@ test('adds unsafe-inline styles in dev', () => {
 
 	assert.equal(
 		csp.csp_provider.get_header(),
-		"default-src 'self'; style-src 'self' 'unsafe-inline'"
+		"default-src 'self'; style-src-attr 'self' 'unsafe-inline'; style-src-elem 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'"
 	);
 
 	assert.equal(
 		csp.report_only_provider.get_header(),
-		"default-src 'self'; report-uri /; style-src 'self' 'unsafe-inline'"
+		"default-src 'self'; style-src-attr 'self' 'unsafe-inline'; style-src-elem 'self' 'unsafe-inline'; report-uri /; style-src 'self' 'unsafe-inline'"
 	);
 });
 
