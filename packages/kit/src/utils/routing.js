@@ -1,4 +1,4 @@
-import { BROWSER, DEV } from 'esm-env'
+import { BROWSER, DEV } from 'esm-env';
 
 const param_pattern = /^(\[)?(\.\.\.)?(\w+)(?:=(\w+))?(\])?$/;
 
@@ -67,7 +67,9 @@ export function parse_route_id(id) {
 										const match = param_pattern.exec(content);
 										if (!match) {
 											throw new Error(
-												DEV || !BROWSER ? `Invalid param: ${content}. Params and matcher names can only have underscores and alphanumeric characters.` : 'Invalid param'
+												DEV || !BROWSER
+													? `Invalid param: ${content}. Params and matcher names can only have underscores and alphanumeric characters.`
+													: 'Invalid param'
 											);
 										}
 
