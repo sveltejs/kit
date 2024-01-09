@@ -5,10 +5,10 @@
 		"noEmit": true,
 		"noImplicitAny": true,
 		"target": "es2022",
-		"module": "es2022",
-		// `@netlify/function` > `@netlify/serverless-functions-api` types are not compatible,
-		// so using this moduleResolution for now
-		"moduleResolution": "node",
+		"module": "node16",
+		"moduleResolution": "node16",
+		// https://github.com/netlify/functions/issues/447
+		"skipLibCheck": true,
 		"allowSyntheticDefaultImports": true,
 		"baseUrl": ".",
 		"paths": {

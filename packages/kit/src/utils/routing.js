@@ -1,3 +1,5 @@
+import { BROWSER } from 'esm-env';
+
 const param_pattern = /^(\[)?(\.\.\.)?(\w+)(?:=(\w+))?(\])?$/;
 
 /**
@@ -62,8 +64,11 @@ export function parse_route_id(id) {
 											);
 										}
 
-										const match = param_pattern.exec(content);
-										if (!match) {
+										// We know the match cannot be null in the browser because manifest generation
+										// would have invoked this during build and failed if we hit an invalid
+										// param/matcher name with non-alphanumeric character.
+										const match = /** @type {RegExpExecArray} */ (param_pattern.exec(content));
+										if (!BROWSER && !match) {
 											throw new Error(
 												`Invalid param: ${content}. Params and matcher names can only have underscores and alphanumeric characters.`
 											);
@@ -91,7 +96,7 @@ export function parse_route_id(id) {
 							return '/' + result;
 						})
 						.join('')}/?$`
-			  );
+				);
 
 	return { pattern, params };
 }
@@ -212,5 +217,51 @@ function escape(str) {
 			.replace(/#/g, '%23')
 			// escape characters that have special meaning in regex
 			.replace(/[.*+?^${}()|\\]/g, '\\$&')
+	);
+}
+
+const basic_param_pattern = /\[(\[)?(\.\.\.)?(\w+?)(?:=(\w+))?\]\]?/g;
+
+/**
+ * Populate a route ID with params to resolve a pathname.
+ * @example
+ * ```js
+ * resolveRoute(
+ *   `/blog/[slug]/[...somethingElse]`,
+ *   {
+ *     slug: 'hello-world',
+ *     somethingElse: 'something/else'
+ *   }
+ * ); // `/blog/hello-world/something/else`
+ * ```
+ * @param {string} id
+ * @param {Record<string, string | undefined>} params
+ * @returns {string}
+ */
+export function resolve_route(id, params) {
+	const segments = get_route_segments(id);
+	return (
+		'/' +
+		segments
+			.map((segment) =>
+				segment.replace(basic_param_pattern, (_, optional, rest, name) => {
+					const param_value = params[name];
+
+					// This is nested so TS correctly narrows the type
+					if (!param_value) {
+						if (optional) return '';
+						if (rest && param_value !== undefined) return '';
+						throw new Error(`Missing parameter '${name}' in route ${id}`);
+					}
+
+					if (param_value.startsWith('/') || param_value.endsWith('/'))
+						throw new Error(
+							`Parameter '${name}' in route ${id} cannot start or end with a slash -- this would cause an invalid route like foo//bar`
+						);
+					return param_value;
+				})
+			)
+			.filter(Boolean)
+			.join('/')
 	);
 }

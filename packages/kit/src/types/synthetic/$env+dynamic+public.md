@@ -2,6 +2,8 @@ Similar to [`$env/dynamic/private`](https://kit.svelte.dev/docs/modules#$env-dyn
 
 Note that public dynamic environment variables must all be sent from the server to the client, causing larger network requests — when possible, use `$env/static/public` instead.
 
+Dynamic environment variables cannot be used during prerendering.
+
 ```ts
 import { env } from '$env/dynamic/public';
 console.log(env.PUBLIC_DEPLOYMENT_SPECIFIC_VARIABLE);

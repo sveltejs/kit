@@ -22,7 +22,7 @@ Web development, streamlined. Read the [documentation](https://kit.svelte.dev/do
 | [create-svelte](packages/create-svelte)                                     | [Changelog](packages/create-svelte/CHANGELOG.md)              |
 | [svelte-migrate](packages/migrate)                                          | [Changelog](packages/migrate/CHANGELOG.md)                    |
 
-[Additional adapters](<(https://sveltesociety.dev/components#adapters)>) are maintained by the community.
+[Additional adapters](https://sveltesociety.dev/packages?category=sveltekit-adapters) are maintained by the community.
 
 ## Bug reporting
 
@@ -44,4 +44,4 @@ Funds donated via Open Collective will be used for compensating expenses related
 
 ## License
 
-[MIT](https://github.com/sveltejs/kit/blob/master/LICENSE)
+[MIT](https://github.com/sveltejs/kit/blob/main/LICENSE)

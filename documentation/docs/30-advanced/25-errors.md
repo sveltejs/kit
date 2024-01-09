@@ -31,7 +31,7 @@ export async function load({ params }) {
 	const post = await db.getPost(params.slug);
 
 	if (!post) {
-		throw error(404, {
+		error(404, {
 			message: 'Not found'
 		});
 	}
@@ -40,7 +40,7 @@ export async function load({ params }) {
 }
 ```
 
-This tells SvelteKit to set the response status code to 404 and render an [`+error.svelte`](routing#error) component, where `$page.error` is the object provided as the second argument to `error(...)`.
+This throws an exception that SvelteKit catches, causing it to set the response status code to 404 and render an [`+error.svelte`](routing#error) component, where `$page.error` is the object provided as the second argument to `error(...)`.
 
 ```svelte
 <!--- file: src/routes/+error.svelte --->
@@ -54,7 +54,7 @@ This tells SvelteKit to set the response status code to 404 and render an [`+err
 You can add extra properties to the error object if needed...
 
 ```diff
-throw error(404, {
+error(404, {
 	message: 'Not found',
 +	code: 'NOT_FOUND'
 });
@@ -63,9 +63,11 @@ throw error(404, {
 ...otherwise, for convenience, you can pass a string as the second argument:
 
 ```diff
--throw error(404, { message: 'Not found' });
-+throw error(404, 'Not found');
+-error(404, { message: 'Not found' });
++error(404, 'Not found');
 ```
+
+> [In SvelteKit 1.x](migrating-to-sveltekit-2#redirect-and-error-are-no-longer-thrown-by-you) you had to `throw` the `error` yourself
 
 ## Unexpected errors
 
@@ -77,36 +79,7 @@ By default, unexpected errors are printed to the console (or, in production, you
 { "message": "Internal Error" }
 ```
 
-Unexpected errors will go through the [`handleError`](hooks#shared-hooks-handleerror) hook, where you can add your own error handling — for example, sending errors to a reporting service, or returning a custom error object.
-
-```js
-/// file: src/hooks.server.js
-// @errors: 2322 1360 2571 2339
-// @filename: ambient.d.ts
-declare module '@sentry/node' {
-	export const init: (opts: any) => void;
-	export const captureException: (error: any, opts: any) => void;
-}
-
-// @filename: index.js
-// ---cut---
-import * as Sentry from '@sentry/node';
-
-Sentry.init({/*...*/})
-
-/** @type {import('@sveltejs/kit').HandleServerError} */
-export function handleError({ error, event }) {
-	// example integration with https://sentry.io/
-	Sentry.captureException(error, { extra: { event } });
-
-	return {
-		message: 'Whoops!',
-		code: error?.code ?? 'UNKNOWN'
-	};
-}
-```
-
-> Make sure that `handleError` _never_ throws an error
+Unexpected errors will go through the [`handleError`](hooks#shared-hooks-handleerror) hook, where you can add your own error handling — for example, sending errors to a reporting service, or returning a custom error object which becomes `$page.error`.
 
 ## Responses
 

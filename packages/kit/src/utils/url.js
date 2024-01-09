@@ -1,4 +1,4 @@
-import { BROWSER } from 'esm-env';
+import { BROWSER, DEV } from 'esm-env';
 
 /**
  * Matches a URI scheme. See https://www.rfc-editor.org/rfc/rfc3986#section-3.1
@@ -6,38 +6,20 @@ import { BROWSER } from 'esm-env';
  */
 export const SCHEME = /^[a-z][a-z\d+\-.]+:/i;
 
-const absolute = /^([a-z]+:)?\/?\//;
+const internal = new URL('sveltekit-internal://');
 
 /**
  * @param {string} base
  * @param {string} path
  */
 export function resolve(base, path) {
-	if (SCHEME.test(path)) return path;
-	if (path[0] === '#') return base + path;
+	// special case
+	if (path[0] === '/' && path[1] === '/') return path;
 
-	const base_match = absolute.exec(base);
-	const path_match = absolute.exec(path);
+	let url = new URL(base, internal);
+	url = new URL(path, url);
 
-	if (!base_match) {
-		throw new Error(`bad base path: "${base}"`);
-	}
-
-	const baseparts = path_match ? [] : base.slice(base_match[0].length).split('/');
-	const pathparts = path_match ? path.slice(path_match[0].length).split('/') : path.split('/');
-
-	baseparts.pop();
-
-	for (let i = 0; i < pathparts.length; i += 1) {
-		const part = pathparts[i];
-		if (part === '.') continue;
-		else if (part === '..') baseparts.pop();
-		else baseparts.push(part);
-	}
-
-	const prefix = (path_match && path_match[0]) || (base_match && base_match[0]) || '';
-
-	return `${prefix}${baseparts.join('/')}`;
+	return url.protocol === internal.protocol ? url.pathname + url.search + url.hash : url.href;
 }
 
 /** @param {string} path */
@@ -96,6 +78,14 @@ export function decode_uri(uri) {
 }
 
 /**
+ * Returns everything up to the first `#` in a URL
+ * @param {{href: string}} url_like
+ */
+export function strip_hash({ href }) {
+	return href.split('#')[0];
+}
+
+/**
  * URL properties that could change during the lifetime of the page,
  * which excludes things like `origin`
  */
@@ -103,7 +93,6 @@ const tracked_url_properties = /** @type {const} */ ([
 	'href',
 	'pathname',
 	'search',
-	'searchParams',
 	'toString',
 	'toJSON'
 ]);
@@ -111,9 +100,32 @@ const tracked_url_properties = /** @type {const} */ ([
 /**
  * @param {URL} url
  * @param {() => void} callback
+ * @param {(search_param: string) => void} search_params_callback
  */
-export function make_trackable(url, callback) {
+export function make_trackable(url, callback, search_params_callback) {
 	const tracked = new URL(url);
+
+	Object.defineProperty(tracked, 'searchParams', {
+		value: new Proxy(tracked.searchParams, {
+			get(obj, key) {
+				if (key === 'get' || key === 'getAll' || key === 'has') {
+					return (/**@type {string}*/ param) => {
+						search_params_callback(param);
+						return obj[key](param);
+					};
+				}
+
+				// if they try to access something different from what is in `tracked_search_params_properties`
+				// we track the whole url (entries, values, keys etc)
+				callback();
+
+				const value = Reflect.get(obj, key);
+				return typeof value === 'function' ? value.bind(obj) : value;
+			}
+		}),
+		enumerable: true,
+		configurable: true
+	});
 
 	for (const property of tracked_url_properties) {
 		Object.defineProperty(tracked, property, {
@@ -134,7 +146,9 @@ export function make_trackable(url, callback) {
 		};
 	}
 
-	disable_hash(tracked);
+	if (DEV || !BROWSER) {
+		disable_hash(tracked);
+	}
 
 	return tracked;
 }
@@ -143,7 +157,7 @@ export function make_trackable(url, callback) {
  * Disallow access to `url.hash` on the server and in `load`
  * @param {URL} url
  */
-export function disable_hash(url) {
+function disable_hash(url) {
 	allow_nodejs_console_log(url);
 
 	Object.defineProperty(url, 'hash', {
@@ -185,18 +199,24 @@ function allow_nodejs_console_log(url) {
 }
 
 const DATA_SUFFIX = '/__data.json';
+const HTML_DATA_SUFFIX = '.html__data.json';
 
 /** @param {string} pathname */
 export function has_data_suffix(pathname) {
-	return pathname.endsWith(DATA_SUFFIX);
+	return pathname.endsWith(DATA_SUFFIX) || pathname.endsWith(HTML_DATA_SUFFIX);
 }
 
 /** @param {string} pathname */
 export function add_data_suffix(pathname) {
+	if (pathname.endsWith('.html')) return pathname.replace(/\.html$/, HTML_DATA_SUFFIX);
 	return pathname.replace(/\/$/, '') + DATA_SUFFIX;
 }
 
 /** @param {string} pathname */
 export function strip_data_suffix(pathname) {
+	if (pathname.endsWith(HTML_DATA_SUFFIX)) {
+		return pathname.slice(0, -HTML_DATA_SUFFIX.length) + '.html';
+	}
+
 	return pathname.slice(0, -DATA_SUFFIX.length);
 }
