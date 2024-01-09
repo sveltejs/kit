@@ -24,7 +24,9 @@ import {
 	get_router_options,
 	is_external_url,
 	origin,
-	scroll_state
+	scroll_state,
+	notifiable_store,
+	create_updated_store
 } from './utils.js';
 import { base } from '__sveltekit/paths';
 import * as devalue from 'devalue';
@@ -41,12 +43,10 @@ import { validate_page_exports } from '../../utils/exports.js';
 import { compact } from '../../utils/array.js';
 import { HttpError, Redirect, SvelteKitError } from '../control.js';
 import { INVALIDATED_PARAM, TRAILING_SLASH_PARAM, validate_depends } from '../shared.js';
-import { stores } from './singletons.js';
 import { get_message, get_status } from '../../utils/error.js';
+import { writable } from 'svelte/store';
 
 let errored = false;
-
-/** @typedef {{ x: number; y: number }} ScrollPosition */
 
 // We track the scroll position associated with each history entry in sessionStorage,
 // rather than on history.state itself, because when navigation is driven by
@@ -54,7 +54,7 @@ let errored = false;
 // state we're navigating from
 /**
  * history index -> { x, y }
- * @type {Record<number, ScrollPosition>}
+ * @type {Record<number, { x: number; y: number }>}
  */
 const scroll_positions = storage.get(SCROLL_KEY) ?? {};
 
@@ -89,6 +89,15 @@ if (DEV && BROWSER) {
 		return original_replace_state.apply(history, args);
 	};
 }
+
+export const stores = {
+	url: /* @__PURE__ */ notifiable_store({}),
+	page: /* @__PURE__ */ notifiable_store({}),
+	navigating: /* @__PURE__ */ writable(
+		/** @type {import('@sveltejs/kit').Navigation | null} */ (null)
+	),
+	updated: /* @__PURE__ */ create_updated_store()
+};
 
 /** @param {number} index */
 function update_scroll_positions(index) {
@@ -207,7 +216,13 @@ let pending_invalidate;
  * @param {HTMLElement} _target
  * @param {Parameters<typeof _hydrate>[1]} [hydrate]
  */
-export async function create_client(_app, _target, hydrate) {
+export async function start(_app, _target, hydrate) {
+	if (DEV && _target === document.body) {
+		console.warn(
+			'Placing %sveltekit.body% directly inside <body> is not recommended, as your app may break for users who have certain browser extensions installed.\n\nConsider wrapping it in an element:\n\n<div style="display: contents">\n  %sveltekit.body%\n</div>'
+		);
+	}
+
 	app = _app;
 	routes = parse(_app);
 	container = __SVELTEKIT_EMBEDDED__ ? _target : document.documentElement;
