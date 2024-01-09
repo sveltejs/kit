@@ -224,8 +224,8 @@ test('adds unsafe-inline styles in dev', () => {
 			mode: 'hash',
 			directives: {
 				'default-src': ['self'],
-				'style-src-attr': ['self'],
-				'style-src-elem': ['self']
+				'style-src-attr': ['self', 'sha256-9OlNO0DNEeaVzHL4RZwCLsBHA8WBQ8toBp/4F5XV2nc='],
+				'style-src-elem': ['self', 'sha256-9OlNO0DNEeaVzHL4RZwCLsBHA8WBQ8toBp/4F5XV2nc=']
 			},
 			reportOnly: {
 				'default-src': ['self'],
