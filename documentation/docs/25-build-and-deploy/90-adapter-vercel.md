@@ -189,3 +189,5 @@ export async function POST({ url }) {
   });
 }
 ```
+
+> Only imported assets in `+page.server`, `+layout.server` and `+server` files are included in the Serverless Function bundle.

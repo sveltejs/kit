@@ -231,6 +231,7 @@ export function create_builder({
 						imports.filter((file) => asset_chunks.has(file))
 					);
 				}
+
 				if (assets) {
 					server_assets = concat(server_assets, assets);
 				}
@@ -247,16 +248,16 @@ export function create_builder({
 			 * }} node
 			 * @returns
 			 */
-			function get_page_node_assets({ component, server, universal, parent }) {
+			function get_server_load_assets({ server, parent }) {
 				let server_assets = concat(
 					/** @type {Set<string>}*/ (new Set()),
-					get_server_assets(component),
-					get_server_assets(server),
-					get_server_assets(universal)
+					get_server_assets(server)
 				);
+
 				if (parent) {
-					server_assets = concat(server_assets, get_page_node_assets(parent));
+					server_assets = concat(server_assets, get_server_load_assets(parent));
 				}
+
 				return server_assets;
 			}
 
@@ -269,6 +270,7 @@ export function create_builder({
 				/** @type {Set<string>} */
 				let server_assets = new Set();
 				let route_id = route.id;
+
 				do {
 					server_assets = concat(
 						server_assets,
@@ -278,6 +280,7 @@ export function create_builder({
 					);
 					route_id = route_id.split('/').slice(0, -1).join('/');
 				} while (route_id);
+
 				return server_assets;
 			}
 
@@ -291,7 +294,7 @@ export function create_builder({
 
 				let layout = route.leaf.parent;
 				while (layout) {
-					assets = concat(assets, get_page_node_assets(layout));
+					assets = concat(assets, get_server_load_assets(layout));
 					layout = layout.parent;
 				}
 
@@ -303,13 +306,15 @@ export function create_builder({
 			route_data.forEach((route) => {
 				/** @type {Set<string>} */
 				let server_assets = new Set();
+
 				if (route.leaf) {
 					server_assets = concat(
 						server_assets,
-						get_page_node_assets(route.leaf),
+						get_server_load_assets(route.leaf),
 						get_default_error_page_assets(route)
 					);
 				}
+
 				if (route.endpoint) {
 					server_assets = concat(server_assets, get_server_assets(route.endpoint.file));
 				}
