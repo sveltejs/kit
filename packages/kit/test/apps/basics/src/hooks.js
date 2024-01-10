@@ -10,7 +10,7 @@ const mapping = {
 export const reroute = ({ url }) => {
 	//Try to rewrite the external url used in /reroute/external to the homepage - This should not work
 	if (browser && url.href.startsWith('https://expired.badssl.com')) {
-		return "/"
+		return '/';
 	}
 
 	if (url.pathname === '/reroute/error-handling/client-error') {

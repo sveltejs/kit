@@ -1078,7 +1078,6 @@ function get_navigation_intent(url, invalidating) {
 	if (!url) return undefined;
 	if (is_external_url(url, base)) return;
 
-
 	// reroute could alter the given URL, so we pass a copy
 	let rerouted_path;
 	try {
@@ -1086,7 +1085,6 @@ function get_navigation_intent(url, invalidating) {
 	} catch (e) {
 		return undefined;
 	}
-
 
 	const path = get_url_path(rerouted_path);
 
@@ -1101,7 +1099,7 @@ function get_navigation_intent(url, invalidating) {
 				invalidating,
 				route,
 				params: decode_params(params),
-				url: url
+				url
 			};
 			return intent;
 		}
