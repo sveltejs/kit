@@ -19,7 +19,7 @@ export default function (options = {}) {
 			builder.mkdirp(tmp);
 
 			// generate plaintext 404.html first which can then be overridden by prerendering, if the user defined such a page
-			writeFileSync(`${dest}/404.html`, `Not Found`);
+			writeFileSync(`${dest}/404.html`, 'Not Found');
 
 			const dest_dir = `${dest}${builder.config.kit.paths.base}`;
 			const written_files = builder.writeClient(dest_dir);
