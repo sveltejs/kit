@@ -17,7 +17,7 @@ We've written and published a few different SvelteKit sites as examples:
 - [`kit.svelte.dev`](https://github.com/sveltejs/kit/tree/main/sites/kit.svelte.dev)
 - [`svelte.dev`](https://github.com/sveltejs/svelte/tree/main/sites/svelte.dev)
 
-SvelteKit users have also published plenty of examples on GitHub, under the [#sveltekit](https://github.com/topics/sveltekit) and [#sveltekit-template](https://github.com/topics/sveltekit-template) topics, as well as on [the Svelte Society site](https://sveltesociety.dev/templates#svelte-kit). Note that these have not been vetted by the maintainers and may not be up to date.
+SvelteKit users have also published plenty of examples on GitHub, under the [#sveltekit](https://github.com/topics/sveltekit) and [#sveltekit-template](https://github.com/topics/sveltekit-template) topics, as well as on [the Svelte Society site](https://sveltesociety.dev/templates?category=sveltekit). Note that these have not been vetted by the maintainers and may not be up to date.
 
 ## Support
 

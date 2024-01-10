@@ -18,7 +18,8 @@ const xff_depth = parseInt(env('XFF_DEPTH', '1'));
 const address_header = env('ADDRESS_HEADER', '').toLowerCase();
 const protocol_header = env('PROTOCOL_HEADER', '').toLowerCase();
 const host_header = env('HOST_HEADER', 'host').toLowerCase();
-const body_size_limit = parseInt(env('BODY_SIZE_LIMIT', '524288'));
+const port_header = env('PORT_HEADER', '').toLowerCase();
+const body_size_limit = parseInt(env('BODY_SIZE_LIMIT', '524288')) || undefined;
 
 const dir = path.dirname(fileURLToPath(import.meta.url));
 
@@ -158,7 +159,12 @@ function sequence(handlers) {
 function get_origin(headers) {
 	const protocol = (protocol_header && headers[protocol_header]) || 'https';
 	const host = headers[host_header];
-	return `${protocol}://${host}`;
+	const port = port_header && headers[port_header];
+	if (port) {
+		return `${protocol}://${host}:${port}`;
+	} else {
+		return `${protocol}://${host}`;
+	}
 }
 
 export const handler = sequence(

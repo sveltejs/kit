@@ -1,3 +1,5 @@
+import { BROWSER } from 'esm-env';
+
 const param_pattern = /^(\[)?(\.\.\.)?(\w+)(?:=(\w+))?(\])?$/;
 
 /**
@@ -62,8 +64,11 @@ export function parse_route_id(id) {
 											);
 										}
 
-										const match = param_pattern.exec(content);
-										if (!match) {
+										// We know the match cannot be null in the browser because manifest generation
+										// would have invoked this during build and failed if we hit an invalid
+										// param/matcher name with non-alphanumeric character.
+										const match = /** @type {RegExpExecArray} */ (param_pattern.exec(content));
+										if (!BROWSER && !match) {
 											throw new Error(
 												`Invalid param: ${content}. Params and matcher names can only have underscores and alphanumeric characters.`
 											);

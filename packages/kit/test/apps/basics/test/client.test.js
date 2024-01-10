@@ -80,12 +80,14 @@ test.describe('Load', () => {
 		expect(await page.textContent('h2')).toBe('x: b: 4');
 	});
 
-	test('accessing url.hash from load errors and suggests using page store', async ({ page }) => {
-		await page.goto('/load/url-hash#please-dont-send-me-to-load');
-		expect(await page.textContent('#message')).toBe(
-			'This is your custom error page saying: "Cannot access event.url.hash. Consider using `$page.url.hash` inside a component instead (500 Internal Error)"'
-		);
-	});
+	if (process.env.DEV) {
+		test('accessing url.hash from load errors and suggests using page store', async ({ page }) => {
+			await page.goto('/load/url-hash#please-dont-send-me-to-load');
+			expect(await page.textContent('#message')).toBe(
+				'This is your custom error page saying: "Cannot access event.url.hash. Consider using `$page.url.hash` inside a component instead (500 Internal Error)"'
+			);
+		});
+	}
 
 	test('url instance methods work in load', async ({ page }) => {
 		await page.goto('/load/url-to-string');
@@ -1025,5 +1027,46 @@ test.describe('Shallow routing', () => {
 		expect(page.url()).toBe(`${baseURL}/shallow-routing/replace-state/a`);
 		await expect(page.locator('h1')).toHaveText('parent');
 		await expect(page.locator('p')).toHaveText('active: true');
+	});
+});
+
+test.describe('reroute', () => {
+	test('Apply reroute during client side navigation', async ({ page }) => {
+		await page.goto('/reroute/basic');
+		await page.click("a[href='/reroute/basic/a']");
+		expect(await page.textContent('h1')).toContain('Successfully rewritten');
+	});
+
+	test('Apply reroute after client-only redirects', async ({ page }) => {
+		await page.goto('/reroute/client-only-redirect');
+		expect(await page.textContent('h1')).toContain('Successfully rewritten');
+	});
+
+	test('Apply reroute to preload data', async ({ page }) => {
+		await page.goto('/reroute/preload-data');
+		await page.click('button');
+		await page.waitForSelector('pre');
+		expect(await page.textContent('pre')).toContain('"success": true');
+	});
+
+	test('reroute does not get applied to external URLs', async ({ page }) => {
+		await page.goto('/reroute/external');
+		const current_url = new URL(page.url());
+
+		//click the link with the text External URL
+		await page.click("a[data-test='external-url']");
+
+		//The URl should not have the same origin as the current URL
+		const new_url = new URL(page.url());
+		expect(current_url.origin).not.toEqual(new_url.origin);
+	});
+
+	test('Falls back to native navigation if reroute throws on the client', async ({ page }) => {
+		await page.goto('/reroute/error-handling');
+
+		//click the link with the text External URL
+		await page.click('a#client-error');
+
+		expect(await page.textContent('h1')).toContain('Full Navigation');
 	});
 });

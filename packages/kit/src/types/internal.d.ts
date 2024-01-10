@@ -12,7 +12,8 @@ import {
 	ServerInitOptions,
 	HandleFetch,
 	Actions,
-	HandleClientError
+	HandleClientError,
+	Reroute
 } from '@sveltejs/kit';
 import {
 	HttpMethod,
@@ -27,8 +28,9 @@ export interface ServerModule {
 }
 
 export interface ServerInternalModule {
-	set_building(building: boolean): void;
 	set_assets(path: string): void;
+	set_building(): void;
+	set_prerendering(): void;
 	set_private_env(environment: Record<string, string>): void;
 	set_public_env(environment: Record<string, string>): void;
 	set_safe_public_env(environment: Record<string, string>): void;
@@ -98,10 +100,12 @@ export interface ServerHooks {
 	handleFetch: HandleFetch;
 	handle: Handle;
 	handleError: HandleServerError;
+	reroute: Reroute;
 }
 
 export interface ClientHooks {
 	handleError: HandleClientError;
+	reroute: Reroute;
 }
 
 export interface Env {

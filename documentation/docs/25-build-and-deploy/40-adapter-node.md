@@ -63,7 +63,7 @@ Alternatively, the server can be configured to accept connections on a specified
 SOCKET_PATH=/tmp/socket node build
 ```
 
-### `ORIGIN`, `PROTOCOL_HEADER` and `HOST_HEADER`
+### `ORIGIN`, `PROTOCOL_HEADER`, `HOST_HEADER`, and `PORT_HEADER`
 
 HTTP doesn't give SvelteKit a reliable way to know the URL that is currently being requested. The simplest way to tell SvelteKit where the app is being served is to set the `ORIGIN` environment variable:
 
@@ -81,6 +81,8 @@ PROTOCOL_HEADER=x-forwarded-proto HOST_HEADER=x-forwarded-host node build
 ```
 
 > [`x-forwarded-proto`](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/X-Forwarded-Proto) and [`x-forwarded-host`](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/X-Forwarded-Host) are de facto standard headers that forward the original protocol and host if you're using a reverse proxy (think load balancers and CDNs). You should only set these variables if your server is behind a trusted reverse proxy; otherwise, it'd be possible for clients to spoof these headers.
+>
+> If you're hosting your proxy on a non-standard port and your reverse proxy supports `x-forwarded-port`, you can also set `PORT_HEADER=x-forwarded-port`.
 
 If `adapter-node` can't correctly determine the URL of your deployment, you may experience this error when using [form actions](form-actions):
 

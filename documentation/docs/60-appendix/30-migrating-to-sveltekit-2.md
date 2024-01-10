@@ -150,8 +150,13 @@ SvelteKit 2 requires Node `18.13` or higher, and the following minimum dependenc
 - `svelte@4`
 - `vite@5`
 - `typescript@5`
-- `@sveltejs/adapter-static@3` (if you're using it)
 - `@sveltejs/vite-plugin-svelte@3` (this is now required as a `peerDependency` of SvelteKit — previously it was directly depended upon)
+- `@sveltejs/adapter-cloudflare@3` (if you're using these adapters)
+- `@sveltejs/adapter-cloudflare-workers@2`
+- `@sveltejs/adapter-netlify@3`
+- `@sveltejs/adapter-node@2`
+- `@sveltejs/adapter-static@3`
+- `@sveltejs/adapter-vercel@4`
 
 `svelte-migrate` will update your `package.json` for you.
 

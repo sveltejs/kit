@@ -79,9 +79,19 @@ export async function respond(request, options, manifest, state) {
 		}
 	}
 
+	// reroute could alter the given URL, so we pass a copy
+	let rerouted_path;
+	try {
+		rerouted_path = options.hooks.reroute({ url: new URL(url) }) ?? url.pathname;
+	} catch (e) {
+		return text('Internal Server Error', {
+			status: 500
+		});
+	}
+
 	let decoded;
 	try {
-		decoded = decode_pathname(url.pathname);
+		decoded = decode_pathname(rerouted_path);
 	} catch {
 		return text('Malformed URI', { status: 400 });
 	}
