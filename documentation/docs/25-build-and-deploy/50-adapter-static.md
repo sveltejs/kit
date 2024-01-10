@@ -108,7 +108,7 @@ const config = {
 export default config;
 ```
 
-You can use GitHub actions to automatically deploy your site to GitHub Pages when you make a change. Please note: you will have to prevent GitHub's provided Jekyll from managing your site. If you are not using the following workflow, then you must put `.nojekyll` file in your `static` folder. Here's an example workflow:
+You can use GitHub actions to automatically deploy your site to GitHub Pages when you make a change. Here's an example workflow:
 
 ```yaml
 ### file: .github/workflows/deploy.yml
@@ -169,3 +169,5 @@ jobs:
         id: deployment
         uses: actions/deploy-pages@v2
 ```
+
+If you're not using GitHub actions to deploy your site (for example, you're pushing the built site to its own repo), add an empty `.nojekyll` file in your `static` directory to prevent Jekyll from interfering.
