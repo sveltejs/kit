@@ -223,6 +223,14 @@ export async function start(_app, _target, hydrate) {
 		);
 	}
 
+	// detect basic auth credentials in the current URL
+	// https://github.com/sveltejs/kit/pull/11179
+	// if so, refresh the page without credentials
+	if (document.URL !== location.href) {
+		// eslint-disable-next-line no-self-assign
+		location.href = location.href;
+	}
+
 	app = _app;
 	routes = parse(_app);
 	container = __SVELTEKIT_EMBEDDED__ ? _target : document.documentElement;
@@ -251,8 +259,7 @@ export async function start(_app, _target, hydrate) {
 				[HISTORY_INDEX]: current_history_index,
 				[NAVIGATION_INDEX]: current_navigation_index
 			},
-			'',
-			location.href
+			''
 		);
 	}
 
@@ -441,10 +448,19 @@ async function get_navigation_result_from_branch({
 }) {
 	/** @type {import('types').TrailingSlash} */
 	let slash = 'never';
-	for (const node of branch) {
-		if (node?.slash !== undefined) slash = node.slash;
+
+	// if `paths.base === '/a/b/c`, then the root route is always `/a/b/c/`, regardless of
+	// the `trailingSlash` route option, so that relative paths to JS and CSS work
+	if (base && (url.pathname === base || url.pathname === base + '/')) {
+		slash = 'always';
+	} else {
+		for (const node of branch) {
+			if (node?.slash !== undefined) slash = node.slash;
+		}
 	}
+
 	url.pathname = normalize_path(url.pathname, slash);
+
 	// eslint-disable-next-line
 	url.search = url.search; // turn `/?` into `/`
 
@@ -694,12 +710,7 @@ async function load_node({ loader, parent, url, params, route, server_data_node 
 		server: server_data_node,
 		universal: node.universal?.load ? { type: 'data', data, uses } : null,
 		data: data ?? server_data_node?.data ?? null,
-		// if `paths.base === '/a/b/c`, then the root route is always `/a/b/c/`, regardless of
-		// the `trailingSlash` route option, so that relative paths to JS and CSS work
-		slash:
-			base && (url.pathname === base || url.pathname === base + '/')
-				? 'always'
-				: node.universal?.trailingSlash ?? server_data_node?.slash
+		slash: node.universal?.trailingSlash ?? server_data_node?.slash
 	};
 }
 
@@ -1141,7 +1152,7 @@ function _before_navigate({ url, type, intent, delta }) {
 		...nav.navigation,
 		cancel: () => {
 			should_block = true;
-			nav.reject(new Error('navigation was cancelled'));
+			nav.reject(new Error('navigation cancelled'));
 		}
 	};
 
@@ -1230,7 +1241,7 @@ async function navigate({
 
 	// abort if user navigated during update
 	if (token !== nav_token) {
-		nav.reject(new Error('navigation was aborted'));
+		nav.reject(new Error('navigation aborted'));
 		return false;
 	}
 
@@ -1923,7 +1934,7 @@ function _start_router() {
 				...nav.navigation,
 				cancel: () => {
 					should_block = true;
-					nav.reject(new Error('navigation was cancelled'));
+					nav.reject(new Error('navigation cancelled'));
 				}
 			};
 

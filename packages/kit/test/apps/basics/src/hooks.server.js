@@ -1,7 +1,6 @@
 import fs from 'node:fs';
 import { sequence } from '@sveltejs/kit/hooks';
-import { HttpError } from '../../../../src/runtime/control';
-import { error, redirect } from '@sveltejs/kit';
+import { error, isHttpError, redirect } from '@sveltejs/kit';
 import { COOKIE_NAME } from './routes/cookies/shared';
 
 /**
@@ -9,10 +8,10 @@ import { COOKIE_NAME } from './routes/cookies/shared';
  * and (in dev) `stack`, plus any custom properties, plus recursively
  * serialized `cause` properties.
  *
- * @param {HttpError | Error } error
+ * @param {Error} error
  */
 export function error_to_pojo(error) {
-	if (error instanceof HttpError) {
+	if (isHttpError(error)) {
 		return {
 			status: error.status,
 			...error.body

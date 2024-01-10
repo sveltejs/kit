@@ -1,5 +1,43 @@
 # @sveltejs/kit
 
+## 2.2.2
+
+### Patch Changes
+
+- fix: only add nonce to `style-src` CSP directive when `unsafe-inline` is not present ([#11575](https://github.com/sveltejs/kit/pull/11575))
+
+## 2.2.1
+
+### Patch Changes
+
+- feat: add CSP support for style-src-elem ([#11562](https://github.com/sveltejs/kit/pull/11562))
+
+- fix: address CSP conflicts with sha/nonce during dev ([#11562](https://github.com/sveltejs/kit/pull/11562))
+
+## 2.2.0
+
+### Minor Changes
+
+- feat: expose `$env/static/public` in service workers ([#10994](https://github.com/sveltejs/kit/pull/10994))
+
+### Patch Changes
+
+- fix: reload page on startup if `document.URL` contains credentials ([#11179](https://github.com/sveltejs/kit/pull/11179))
+
+## 2.1.2
+
+### Patch Changes
+
+- fix: restore invalid route error message during build process ([#11559](https://github.com/sveltejs/kit/pull/11559))
+
+## 2.1.1
+
+### Patch Changes
+
+- fix: respect the trailing slash option when navigating from the basepath root page ([#11388](https://github.com/sveltejs/kit/pull/11388))
+
+- chore: shrink error messages shipped to client ([#11551](https://github.com/sveltejs/kit/pull/11551))
+
 ## 2.1.0
 
 ### Minor Changes

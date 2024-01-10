@@ -9,6 +9,7 @@ const expected = new Set([
 	'ADDRESS_HEADER',
 	'PROTOCOL_HEADER',
 	'HOST_HEADER',
+	'PORT_HEADER',
 	'BODY_SIZE_LIMIT'
 ]);
 
