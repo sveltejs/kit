@@ -393,10 +393,10 @@ export interface KitConfig {
 			 */
 			server?: string;
 			/**
-			 * The location of your isomorphic [hooks](https://kit.svelte.dev/docs/hooks).
+			 * The location of your universal [hooks](https://kit.svelte.dev/docs/hooks).
 			 * @default "src/hooks"
 			 */
-			isomorphic?: string;
+			universal?: string;
 		};
 		/**
 		 * your app's internal library, accessible throughout the codebase as `$lib`

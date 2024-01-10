@@ -1,6 +1,5 @@
 <script>
 	import { preloadData } from '$app/navigation';
-	import { setup } from '../../../../../../setup';
 	let data = null;
 
 	async function onClick() {
@@ -9,8 +8,6 @@
 			data = result.data;
 		}
 	}
-
-	setup();
 </script>
 
 <button on:click={onClick}>Preload</button>
