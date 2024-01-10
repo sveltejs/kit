@@ -1,5 +1,13 @@
 # @sveltejs/kit
 
+## 2.2.1
+
+### Patch Changes
+
+- feat: add CSP support for style-src-elem ([#11562](https://github.com/sveltejs/kit/pull/11562))
+
+- fix: address CSP conflicts with sha/nonce during dev ([#11562](https://github.com/sveltejs/kit/pull/11562))
+
 ## 2.2.0
 
 ### Minor Changes
