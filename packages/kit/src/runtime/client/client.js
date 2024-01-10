@@ -1082,13 +1082,31 @@ async function load_root_error_page({ status, error, url, route }) {
 }
 
 /**
- * @param {URL} url
+ * @param {URL | undefined} url
  * @param {boolean} invalidating
  */
 function get_navigation_intent(url, invalidating) {
+	if (!url) return undefined;
 	if (is_external_url(url, base)) return;
 
-	const path = get_url_path(url.pathname);
+	// reroute could alter the given URL, so we pass a copy
+	let rerouted;
+	try {
+		rerouted = app.hooks.reroute({ url: new URL(url) }) ?? url.pathname;
+	} catch (e) {
+		if (DEV) {
+			// in development, print the error...
+			console.error(e);
+
+			// ...and pause execution, since otherwise we will immediately reload the page
+			debugger; // eslint-disable-line
+		}
+
+		// fall back to native navigation
+		return undefined;
+	}
+
+	const path = get_url_path(rerouted);
 
 	for (const route of routes) {
 		const params = route.exec(path);
@@ -1096,7 +1114,13 @@ function get_navigation_intent(url, invalidating) {
 		if (params) {
 			const id = url.pathname + url.search;
 			/** @type {import('./types.js').NavigationIntent} */
-			const intent = { id, invalidating, route, params: decode_params(params), url };
+			const intent = {
+				id,
+				invalidating,
+				route,
+				params: decode_params(params),
+				url
+			};
 			return intent;
 		}
 	}
@@ -1462,7 +1486,7 @@ function setup_preload() {
 
 		if (!options.reload) {
 			if (priority <= options.preload_data) {
-				const intent = get_navigation_intent(/** @type {URL} */ (url), false);
+				const intent = get_navigation_intent(url, false);
 				if (intent) {
 					if (DEV) {
 						_preload_data(intent).then((result) => {

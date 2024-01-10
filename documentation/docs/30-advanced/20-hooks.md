@@ -4,10 +4,11 @@ title: Hooks
 
 'Hooks' are app-wide functions you declare that SvelteKit will call in response to specific events, giving you fine-grained control over the framework's behaviour.
 
-There are two hooks files, both optional:
+There are three hooks files, all optional:
 
 - `src/hooks.server.js` — your app's server hooks
 - `src/hooks.client.js` — your app's client hooks
+- `src/hooks.js` — your app's hooks that run on both the client and server
 
 Code in these modules will run when the application starts up, making them useful for initializing database clients and so on.
 
@@ -231,6 +232,41 @@ This function is not called for _expected_ errors (those thrown with the [`error
 During development, if an error occurs because of a syntax error in your Svelte code, the passed in error has a `frame` property appended highlighting the location of the error.
 
 > Make sure that `handleError` _never_ throws an error
+
+## Universal hooks
+
+The following can be added to `src/hooks.js`. Universal hooks run on both server and client (not to be confused with shared hooks, which are environment-specific). 
+
+### reroute
+
+This function allows you to change how URLs are translated into routes. The returned pathname (which defaults to `url.pathname`) is used to select the route and its parameters.
+
+For example, you might have a `src/routes/[[lang]]/about/+page.svelte` page, which should be accessible as `/en/about` or `/de/ueber-uns` or `/fr/a-propos`. You could implement this with `reroute`:
+
+```js
+/// file: src/hooks.router.js
+// @errors: 2345
+// @errors: 2304
+
+/** @type {Record<string, string>} */
+const translated = {
+	'/en/about': '/en/about',
+	'/de/ueber-uns': '/de/about',
+	'/fr/a-propos': '/fr/about',
+};
+
+/** @type {import('@sveltejs/kit').Reroute} */
+export function reroute({ url }) {
+	if (url.pathname in translated) {
+		return translated[url.pathname];
+	}
+}
+```
+
+The `lang` parameter will be correctly derived from the returned pathname.
+
+Using `reroute` will _not_ change the contents of the browser's address bar, or the value of `event.url`.
+
 
 ## Further reading
 

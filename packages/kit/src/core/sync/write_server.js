@@ -9,7 +9,8 @@ import colors from 'kleur';
 
 /**
  * @param {{
- *   hooks: string | null;
+ *   server_hooks: string | null;
+ *   universal_hooks: string | null;
  *   config: import('types').ValidatedConfig;
  *   has_service_worker: boolean;
  *   runtime_directory: string;
@@ -19,7 +20,8 @@ import colors from 'kleur';
  */
 const server_template = ({
 	config,
-	hooks,
+	server_hooks,
+	universal_hooks,
 	has_service_worker,
 	runtime_directory,
 	template,
@@ -59,8 +61,11 @@ export const options = {
 	version_hash: ${s(hash(config.kit.version.name))}
 };
 
-export function get_hooks() {
-	return ${hooks ? `import(${s(hooks)})` : '{}'};
+export async function get_hooks() {
+	return {
+		${server_hooks ? `...(await import(${s(server_hooks)})),` : ''}
+		${universal_hooks ? `...(await import(${s(universal_hooks)})),` : ''}
+	};
 }
 
 export { set_assets, set_building, set_prerendering, set_private_env, set_public_env, set_safe_public_env };
@@ -76,7 +81,8 @@ export { set_assets, set_building, set_prerendering, set_private_env, set_public
  * @param {string} output
  */
 export function write_server(config, output) {
-	const hooks_file = resolve_entry(config.kit.files.hooks.server);
+	const server_hooks_file = resolve_entry(config.kit.files.hooks.server);
+	const universal_hooks_file = resolve_entry(config.kit.files.hooks.universal);
 
 	const typo = resolve_entry('src/+hooks.server');
 	if (typo) {
@@ -99,7 +105,8 @@ export function write_server(config, output) {
 		`${output}/server/internal.js`,
 		server_template({
 			config,
-			hooks: hooks_file ? relative(hooks_file) : null,
+			server_hooks: server_hooks_file ? relative(server_hooks_file) : null,
+			universal_hooks: universal_hooks_file ? relative(universal_hooks_file) : null,
 			has_service_worker:
 				config.kit.serviceWorker.register && !!resolve_entry(config.kit.files.serviceWorker),
 			runtime_directory: relative(runtime_directory),
