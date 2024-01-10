@@ -20,7 +20,9 @@ const protocol_header = env('PROTOCOL_HEADER', '').toLowerCase();
 const host_header = env('HOST_HEADER', 'host').toLowerCase();
 const port_header = env('PORT_HEADER', '').toLowerCase();
 const body_size_limit = parseFloat(env('BODY_SIZE_LIMIT', '524288')) || undefined;
-
+if (isNaN(body_size_limit)) {
+    throw new Error(`Invalid BODY_SIZE_LIMIT: '${env('BODY_SIZE_LIMIT')}'. Please provide a numeric value.`);
+}
 const dir = path.dirname(fileURLToPath(import.meta.url));
 
 /**
