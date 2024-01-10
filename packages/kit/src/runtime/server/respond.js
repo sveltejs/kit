@@ -58,16 +58,6 @@ export async function respond(request, options, manifest, state) {
 	/** URL but stripped from the potential `/__data.json` suffix and its search param  */
 	const url = new URL(request.url);
 
-	// reroute could alter the given URL, so we pass a copy
-	let rerouted_path;
-	try {
-		rerouted_path = options.hooks.reroute({ url: new URL(url) });
-	} catch (e) {
-		return text('Internal Server Error', {
-			status: 500
-		});
-	}
-
 	if (options.csrf_check_origin) {
 		const forbidden =
 			is_form_content_type(request) &&
@@ -87,6 +77,16 @@ export async function respond(request, options, manifest, state) {
 			}
 			return text(csrf_error.body.message, { status: csrf_error.status });
 		}
+	}
+
+	// reroute could alter the given URL, so we pass a copy
+	let rerouted_path;
+	try {
+		rerouted_path = options.hooks.reroute({ url: new URL(url) }) ?? url.pathname;
+	} catch (e) {
+		return text('Internal Server Error', {
+			status: 500
+		});
 	}
 
 	let decoded;

@@ -25,5 +25,7 @@ export const reroute = ({ url }) => {
 		throw new Error('Server Error - Should trigger 500 response');
 	}
 
- 	return mapping[url.pathname] || url.pathname;
+	if (url.pathname in mapping) {
+		return mapping[url.pathname];
+	}
 };

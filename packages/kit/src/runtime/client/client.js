@@ -1082,7 +1082,7 @@ function get_navigation_intent(url, invalidating) {
 	// reroute could alter the given URL, so we pass a copy
 	let rerouted_path;
 	try {
-		rerouted_path = app.hooks.reroute({ url: new URL(url) });
+		rerouted_path = app.hooks.reroute({ url: new URL(url) }) ?? url.pathname;
 	} catch (e) {
 		return undefined;
 	}
