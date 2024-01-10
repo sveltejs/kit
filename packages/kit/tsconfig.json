@@ -4,15 +4,15 @@
 		"checkJs": true,
 		"noEmit": true,
 		"strict": true,
-		"target": "es2020",
-		"module": "es2022",
-		"moduleResolution": "node",
+		"target": "es2022",
+		"module": "node16",
+		"moduleResolution": "node16",
 		"allowSyntheticDefaultImports": true,
 		"paths": {
 			"@sveltejs/kit": ["./src/exports/public.d.ts"],
 			"@sveltejs/kit/node": ["./src/exports/node/index.js"],
 			// internal use only
-			"types": ["./src/types/internal"]
+			"types": ["./src/types/internal.d.ts"]
 		},
 		"noUnusedLocals": true,
 		"noUnusedParameters": true

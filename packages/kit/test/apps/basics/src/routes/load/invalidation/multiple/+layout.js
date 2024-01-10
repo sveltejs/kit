@@ -8,7 +8,7 @@ export function load({ depends }) {
 
 	if (get(redirect_state) === 'running') {
 		redirect_state.set('done');
-		throw redirect(307, '/load/invalidation/multiple/redirect');
+		redirect(307, '/load/invalidation/multiple/redirect');
 	}
 
 	return new Promise((resolve) =>

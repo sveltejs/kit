@@ -1,6 +1,5 @@
-import { disable_search, make_trackable } from '../../../utils/url.js';
-import { unwrap_promises } from '../../../utils/promises.js';
 import { DEV } from 'esm-env';
+import { disable_search, make_trackable } from '../../../utils/url.js';
 import { validate_depends } from '../../shared.js';
 
 /**
@@ -10,39 +9,49 @@ import { validate_depends } from '../../shared.js';
  *   state: import('types').SSRState;
  *   node: import('types').SSRNode | undefined;
  *   parent: () => Promise<Record<string, any>>;
- *   track_server_fetches: boolean;
  * }} opts
  * @returns {Promise<import('types').ServerDataNode | null>}
  */
-export async function load_server_data({
-	event,
-	state,
-	node,
-	parent,
-	// TODO 2.0: Remove this
-	track_server_fetches
-}) {
+export async function load_server_data({ event, state, node, parent }) {
 	if (!node?.server) return null;
 
 	let done = false;
+	let is_tracking = true;
 
 	const uses = {
 		dependencies: new Set(),
 		params: new Set(),
 		parent: false,
 		route: false,
-		url: false
+		url: false,
+		search_params: new Set()
 	};
 
-	const url = make_trackable(event.url, () => {
-		if (DEV && done && !uses.url) {
-			console.warn(
-				`${node.server_id}: Accessing URL properties in a promise handler after \`load(...)\` has returned will not cause the function to re-run when the URL changes`
-			);
-		}
+	const url = make_trackable(
+		event.url,
+		() => {
+			if (DEV && done && !uses.url) {
+				console.warn(
+					`${node.server_id}: Accessing URL properties in a promise handler after \`load(...)\` has returned will not cause the function to re-run when the URL changes`
+				);
+			}
 
-		uses.url = true;
-	});
+			if (is_tracking) {
+				uses.url = true;
+			}
+		},
+		(param) => {
+			if (DEV && done && !uses.search_params.has(param)) {
+				console.warn(
+					`${node.server_id}: Accessing URL properties in a promise handler after \`load(...)\` has returned will not cause the function to re-run when the URL changes`
+				);
+			}
+
+			if (is_tracking) {
+				uses.search_params.add(param);
+			}
+		}
+	);
 
 	if (state.prerendering) {
 		disable_search(url);
@@ -59,11 +68,7 @@ export async function load_server_data({
 				);
 			}
 
-			// TODO 2.0: Remove this
-			if (track_server_fetches) {
-				uses.dependencies.add(url.href);
-			}
-
+			// Note: server fetches are not added to uses.depends due to security concerns
 			return event.fetch(info, init);
 		},
 		/** @param {string[]} deps */
@@ -94,7 +99,9 @@ export async function load_server_data({
 					);
 				}
 
-				uses.params.add(key);
+				if (is_tracking) {
+					uses.params.add(key);
+				}
 				return target[/** @type {string} */ (key)];
 			}
 		}),
@@ -105,7 +112,9 @@ export async function load_server_data({
 				);
 			}
 
-			uses.parent = true;
+			if (is_tracking) {
+				uses.parent = true;
+			}
 			return parent();
 		},
 		route: new Proxy(event.route, {
@@ -118,23 +127,32 @@ export async function load_server_data({
 					);
 				}
 
-				uses.route = true;
+				if (is_tracking) {
+					uses.route = true;
+				}
 				return target[/** @type {'id'} */ (key)];
 			}
 		}),
-		url
+		url,
+		untrack(fn) {
+			is_tracking = false;
+			try {
+				return fn();
+			} finally {
+				is_tracking = true;
+			}
+		}
 	});
 
-	const data = result ? await unwrap_promises(result) : null;
 	if (__SVELTEKIT_DEV__) {
-		validate_load_response(data, /** @type {string} */ (event.route.id));
+		validate_load_response(result, node.server_id);
 	}
 
 	done = true;
 
 	return {
 		type: 'data',
-		data,
+		data: result ?? null,
 		uses,
 		slash: node.server.trailingSlash
 	};
@@ -144,7 +162,7 @@ export async function load_server_data({
  * Calls the user's `load` function.
  * @param {{
  *   event: import('@sveltejs/kit').RequestEvent;
- *   fetched: import('./types').Fetched[];
+ *   fetched: import('./types.js').Fetched[];
  *   node: import('types').SSRNode | undefined;
  *   parent: () => Promise<Record<string, any>>;
  *   resolve_opts: import('types').RequiredResolveOptions;
@@ -178,30 +196,50 @@ export async function load_data({
 		fetch: create_universal_fetch(event, state, fetched, csr, resolve_opts),
 		setHeaders: event.setHeaders,
 		depends: () => {},
-		parent
+		parent,
+		untrack: (fn) => fn()
 	});
 
-	const data = result ? await unwrap_promises(result) : null;
 	if (__SVELTEKIT_DEV__) {
-		validate_load_response(data, /** @type {string} */ (event.route.id));
+		validate_load_response(result, node.universal_id);
 	}
 
-	return data;
+	return result ?? null;
+}
+
+/**
+ * @param {ArrayBuffer} buffer
+ * @returns {string}
+ */
+function b64_encode(buffer) {
+	if (globalThis.Buffer) {
+		return Buffer.from(buffer).toString('base64');
+	}
+
+	const little_endian = new Uint8Array(new Uint16Array([1]).buffer)[0] > 0;
+
+	// The Uint16Array(Uint8Array(...)) ensures the code points are padded with 0's
+	return btoa(
+		new TextDecoder(little_endian ? 'utf-16le' : 'utf-16be').decode(
+			new Uint16Array(new Uint8Array(buffer))
+		)
+	);
 }
 
 /**
  * @param {Pick<import('@sveltejs/kit').RequestEvent, 'fetch' | 'url' | 'request' | 'route'>} event
  * @param {import('types').SSRState} state
- * @param {import('./types').Fetched[]} fetched
+ * @param {import('./types.js').Fetched[]} fetched
  * @param {boolean} csr
  * @param {Pick<Required<import('@sveltejs/kit').ResolveOptions>, 'filterSerializedResponseHeaders'>} resolve_opts
+ * @returns {typeof fetch}
  */
 export function create_universal_fetch(event, state, fetched, csr, resolve_opts) {
 	/**
 	 * @param {URL | RequestInfo} input
 	 * @param {RequestInit} [init]
 	 */
-	return async (input, init) => {
+	const universal_fetch = async (input, init) => {
 		const cloned_body = input instanceof Request && input.body ? input.clone().body : null;
 
 		const cloned_headers =
@@ -245,38 +283,33 @@ export function create_universal_fetch(event, state, fetched, csr, resolve_opts)
 
 		const proxy = new Proxy(response, {
 			get(response, key, _receiver) {
-				async function text() {
-					const body = await response.text();
-
-					if (!body || typeof body === 'string') {
-						const status_number = Number(response.status);
-						if (isNaN(status_number)) {
-							throw new Error(
-								`response.status is not a number. value: "${
-									response.status
-								}" type: ${typeof response.status}`
-							);
-						}
-
-						fetched.push({
-							url: same_origin ? url.href.slice(event.url.origin.length) : url.href,
-							method: event.request.method,
-							request_body: /** @type {string | ArrayBufferView | undefined} */ (
-								input instanceof Request && cloned_body
-									? await stream_to_string(cloned_body)
-									: init?.body
-							),
-							request_headers: cloned_headers,
-							response_body: body,
-							response
-						});
+				/**
+				 * @param {string} body
+				 * @param {boolean} is_b64
+				 */
+				async function push_fetched(body, is_b64) {
+					const status_number = Number(response.status);
+					if (isNaN(status_number)) {
+						throw new Error(
+							`response.status is not a number. value: "${
+								response.status
+							}" type: ${typeof response.status}`
+						);
 					}
 
-					if (dependency) {
-						dependency.body = body;
-					}
-
-					return body;
+					fetched.push({
+						url: same_origin ? url.href.slice(event.url.origin.length) : url.href,
+						method: event.request.method,
+						request_body: /** @type {string | ArrayBufferView | undefined} */ (
+							input instanceof Request && cloned_body
+								? await stream_to_string(cloned_body)
+								: init?.body
+						),
+						request_headers: cloned_headers,
+						response_body: body,
+						response,
+						is_b64
+					});
 				}
 
 				if (key === 'arrayBuffer') {
@@ -287,11 +320,26 @@ export function create_universal_fetch(event, state, fetched, csr, resolve_opts)
 							dependency.body = new Uint8Array(buffer);
 						}
 
-						// TODO should buffer be inlined into the page (albeit base64'd)?
-						// any conditions in which it shouldn't be?
+						if (buffer instanceof ArrayBuffer) {
+							await push_fetched(b64_encode(buffer), true);
+						}
 
 						return buffer;
 					};
+				}
+
+				async function text() {
+					const body = await response.text();
+
+					if (!body || typeof body === 'string') {
+						await push_fetched(body, false);
+					}
+
+					if (dependency) {
+						dependency.body = body;
+					}
+
+					return body;
 				}
 
 				if (key === 'text') {
@@ -329,6 +377,15 @@ export function create_universal_fetch(event, state, fetched, csr, resolve_opts)
 
 		return proxy;
 	};
+
+	// Don't make this function `async`! Otherwise, the user has to `catch` promises they use for streaming responses or else
+	// it will be an unhandled rejection. Instead, we add a `.catch(() => {})` ourselves below to this from happening.
+	return (input, init) => {
+		// See docs in fetch.js for why we need to do this
+		const response = universal_fetch(input, init);
+		response.catch(() => {});
+		return response;
+	};
 }
 
 /**
@@ -350,19 +407,19 @@ async function stream_to_string(stream) {
 
 /**
  * @param {any} data
- * @param {string} [routeId]
+ * @param {string} [id]
  */
-function validate_load_response(data, routeId) {
+function validate_load_response(data, id) {
 	if (data != null && Object.getPrototypeOf(data) !== Object.prototype) {
 		throw new Error(
-			`a load function related to route '${routeId}' returned ${
+			`a load function in ${id} returned ${
 				typeof data !== 'object'
 					? `a ${typeof data}`
 					: data instanceof Response
-					? 'a Response object'
-					: Array.isArray(data)
-					? 'an array'
-					: 'a non-plain object'
+						? 'a Response object'
+						: Array.isArray(data)
+							? 'an array'
+							: 'a non-plain object'
 			}, but must return a plain object at the top level (i.e. \`return {...}\`)`
 		);
 	}

@@ -2,11 +2,10 @@
 
 This README isn't part of the template; it is ignored, and replaced with [the shared README](../../shared/README.md) when a project is created.
 
-The default template is automatically deployed to Cloudflare Pages, Netlify and Vercel on every commit. Commits to `master` will update production deployments:
+The default template is automatically deployed to Cloudflare Pages and Vercel on every commit. Commits to `main` will update production deployments:
 
 - https://cloudflare.demo.svelte.dev
-- https://kit-demo.netlify.app
-- https://kit-demo.vercel.app
+- https://kit-default-template-svelte.vercel.app/
 
 ## Cloudflare Pages settings
 

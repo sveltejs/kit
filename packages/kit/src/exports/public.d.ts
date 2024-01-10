@@ -2,7 +2,7 @@ import 'svelte'; // pick up `declare module "*.svelte"`
 import 'vite/client'; // pick up `declare module "*.jpg"`, etc.
 import '../types/ambient.js';
 
-import { CompileOptions } from 'svelte/types/compiler/interfaces';
+import { CompileOptions } from 'svelte/compiler';
 import {
 	AdapterEntry,
 	CspDirectives,
@@ -17,12 +17,10 @@ import {
 	RequestOptions,
 	RouteSegment
 } from '../types/private.js';
-import { ActionFailure } from '../runtime/control.js';
 import { BuildData, SSRNodeLoader, SSRRoute, ValidatedConfig } from 'types';
 import type { PluginOptions } from '@sveltejs/vite-plugin-svelte';
 
 export { PrerenderOption } from '../types/private.js';
-export { ActionFailure };
 
 /**
  * [Adapters](https://kit.svelte.dev/docs/adapters) are responsible for taking the production build and turning it into something that can be deployed to a platform of your choosing.
@@ -39,20 +37,11 @@ export interface Adapter {
 	adapt(builder: Builder): MaybePromise<void>;
 }
 
-type AwaitedPropertiesUnion<input extends Record<string, any> | void> = input extends void
+export type LoadProperties<input extends Record<string, any> | void> = input extends void
 	? undefined // needs to be undefined, because void will break intellisense
 	: input extends Record<string, any>
-	? {
-			[key in keyof input]: Awaited<input[key]>;
-	  }
-	: {} extends input // handles the any case
-	? input
-	: unknown;
-
-export type AwaitedProperties<input extends Record<string, any> | void> =
-	AwaitedPropertiesUnion<input> extends Record<string, any>
-		? OptionalUnion<AwaitedPropertiesUnion<input>>
-		: AwaitedPropertiesUnion<input>;
+		? input
+		: unknown;
 
 export type AwaitedActions<T extends Record<string, (...args: any) => any>> = OptionalUnion<
 	{
@@ -67,11 +56,19 @@ type OptionalUnion<
 	A extends keyof U = U extends U ? keyof U : never
 > = U extends unknown ? { [P in Exclude<A, keyof U>]?: never } & U : never;
 
+declare const uniqueSymbol: unique symbol;
+
+export interface ActionFailure<T extends Record<string, unknown> | undefined = undefined> {
+	status: number;
+	data: T;
+	[uniqueSymbol]: true; // necessary or else UnpackValidationError could wrongly unpack objects with the same shape as ActionFailure
+}
+
 type UnpackValidationError<T> = T extends ActionFailure<infer X>
 	? X
 	: T extends void
-	? undefined // needs to be undefined, because void will corrupt union type
-	: T;
+		? undefined // needs to be undefined, because void will corrupt union type
+		: T;
 
 /**
  * This object is passed to the `adapt` function of adapters.
@@ -108,6 +105,11 @@ export interface Builder {
 	generateFallback(dest: string): Promise<void>;
 
 	/**
+	 * Generate a module exposing build-time environment variables as `$env/dynamic/public`.
+	 */
+	generateEnvModule(): void;
+
+	/**
 	 * Generate a server-side manifest to initialise the SvelteKit [server](https://kit.svelte.dev/docs/types#public-types-server) with.
 	 * @param opts a relative path to the base directory of the app and optionally in which format (esm or cjs) the manifest should be generated
 	 */
@@ -122,7 +124,7 @@ export interface Builder {
 	getClientDirectory(): string;
 	/** Get the fully resolved path to the directory containing server-side code. */
 	getServerDirectory(): string;
-	/** Get the application path including any configured `base` path, e.g. `/my-base-path/_app`. */
+	/** Get the application path including any configured `base` path, e.g. `my-base-path/_app`. */
 	getAppPath(): string;
 
 	/**
@@ -180,14 +182,6 @@ export interface Config {
 	extensions?: string[];
 	/** SvelteKit options */
 	kit?: KitConfig;
-	/** [`@sveltejs/package`](/docs/packaging) options. */
-	package?: {
-		source?: string;
-		dir?: string;
-		emitTypes?: boolean;
-		exports?(filepath: string): boolean;
-		files?(filepath: string): boolean;
-	};
 	/** Preprocessor options, if any. Preprocessing can alternatively also be done through Vite's preprocessor capabilities. */
 	preprocess?: any;
 	/** `vite-plugin-svelte` plugin options. */
@@ -206,7 +200,7 @@ export interface Cookies {
 
 	/**
 	 * Gets all cookies that were previously set with `cookies.set`, or from the request headers.
-	 * @param opts the options, passed directily to `cookie.parse`. See documentation [here](https://github.com/jshttp/cookie#cookieparsestr-options)
+	 * @param opts the options, passed directly to `cookie.parse`. See documentation [here](https://github.com/jshttp/cookie#cookieparsestr-options)
 	 */
 	getAll(opts?: import('cookie').CookieParseOptions): Array<{ name: string; value: string }>;
 
@@ -215,34 +209,42 @@ export interface Cookies {
 	 *
 	 * The `httpOnly` and `secure` options are `true` by default (except on http://localhost, where `secure` is `false`), and must be explicitly disabled if you want cookies to be readable by client-side JavaScript and/or transmitted over HTTP. The `sameSite` option defaults to `lax`.
 	 *
-	 * By default, the `path` of a cookie is the 'directory' of the current pathname. In most cases you should explicitly set `path: '/'` to make the cookie available throughout your app.
+	 * You must specify a `path` for the cookie. In most cases you should explicitly set `path: '/'` to make the cookie available throughout your app. You can use relative paths, or set `path: ''` to make the cookie only available on the current path and its children
 	 * @param name the name of the cookie
 	 * @param value the cookie value
-	 * @param opts the options, passed directory to `cookie.serialize`. See documentation [here](https://github.com/jshttp/cookie#cookieserializename-value-options)
+	 * @param opts the options, passed directly to `cookie.serialize`. See documentation [here](https://github.com/jshttp/cookie#cookieserializename-value-options)
 	 */
-	set(name: string, value: string, opts?: import('cookie').CookieSerializeOptions): void;
+	set(
+		name: string,
+		value: string,
+		opts: import('cookie').CookieSerializeOptions & { path: string }
+	): void;
 
 	/**
 	 * Deletes a cookie by setting its value to an empty string and setting the expiry date in the past.
 	 *
-	 * By default, the `path` of a cookie is the 'directory' of the current pathname. In most cases you should explicitly set `path: '/'` to make the cookie available throughout your app.
+	 * You must specify a `path` for the cookie. In most cases you should explicitly set `path: '/'` to make the cookie available throughout your app. You can use relative paths, or set `path: ''` to make the cookie only available on the current path and its children
 	 * @param name the name of the cookie
-	 * @param opts the options, passed directory to `cookie.serialize`. The `path` must match the path of the cookie you want to delete. See documentation [here](https://github.com/jshttp/cookie#cookieserializename-value-options)
+	 * @param opts the options, passed directly to `cookie.serialize`. The `path` must match the path of the cookie you want to delete. See documentation [here](https://github.com/jshttp/cookie#cookieserializename-value-options)
 	 */
-	delete(name: string, opts?: import('cookie').CookieSerializeOptions): void;
+	delete(name: string, opts: import('cookie').CookieSerializeOptions & { path: string }): void;
 
 	/**
 	 * Serialize a cookie name-value pair into a `Set-Cookie` header string, but don't apply it to the response.
 	 *
 	 * The `httpOnly` and `secure` options are `true` by default (except on http://localhost, where `secure` is `false`), and must be explicitly disabled if you want cookies to be readable by client-side JavaScript and/or transmitted over HTTP. The `sameSite` option defaults to `lax`.
 	 *
-	 * By default, the `path` of a cookie is the current pathname. In most cases you should explicitly set `path: '/'` to make the cookie available throughout your app.
+	 * You must specify a `path` for the cookie. In most cases you should explicitly set `path: '/'` to make the cookie available throughout your app. You can use relative paths, or set `path: ''` to make the cookie only available on the current path and its children
 	 *
 	 * @param name the name of the cookie
 	 * @param value the cookie value
-	 * @param opts the options, passed directory to `cookie.serialize`. See documentation [here](https://github.com/jshttp/cookie#cookieserializename-value-options)
+	 * @param opts the options, passed directly to `cookie.serialize`. See documentation [here](https://github.com/jshttp/cookie#cookieserializename-value-options)
 	 */
-	serialize(name: string, value: string, opts?: import('cookie').CookieSerializeOptions): string;
+	serialize(
+		name: string,
+		value: string,
+		opts: import('cookie').CookieSerializeOptions & { path: string }
+	): string;
 }
 
 export interface KitConfig {
@@ -282,7 +284,9 @@ export interface KitConfig {
 	 */
 	alias?: Record<string, string>;
 	/**
-	 * The directory relative to `paths.assets` where the built JS and CSS (and imported assets) are served from. (The filenames therein contain content-based hashes, meaning they can be cached indefinitely). Must not start or end with `/`.
+	 * The directory where SvelteKit keeps its stuff, including static assets (such as JS and CSS) and internally-used routes.
+	 *
+	 * If `paths.assets` is specified, there will be two app directories — `${paths.assets}/${appDir}` and `${paths.base}/${appDir}`.
 	 * @default "_app"
 	 */
 	appDir?: string;
@@ -347,17 +351,8 @@ export interface KitConfig {
 		checkOrigin?: boolean;
 	};
 	/**
-	 * Here be dragons. Enable at your peril.
-	 */
-	dangerZone?: {
-		/**
-		 * Automatically add server-side `fetch`ed URLs to the `dependencies` map of `load` functions. This will expose secrets
-		 * to the client if your URL contains them.
-		 */
-		trackServerFetches?: boolean;
-	};
-	/**
 	 * Whether or not the app is embedded inside a larger app. If `true`, SvelteKit will add its event listeners related to navigation etc on the parent of `%sveltekit.body%` instead of `window`, and will pass `params` from the server rather than inferring them from `location.pathname`.
+	 * Note that it is generally not supported to embed multiple SvelteKit apps on the same page and use client-side SvelteKit features within them (things such as pushing to the history state assume a single instance).
 	 * @default false
 	 */
 	embedded?: boolean;
@@ -378,6 +373,7 @@ export interface KitConfig {
 		/**
 		 * A prefix that signals that an environment variable is unsafe to expose to client-side code. Environment variables matching neither the public nor the private prefix will be discarded completely. See [`$env/static/private`](/docs/modules#$env-static-private) and [`$env/dynamic/private`](/docs/modules#$env-dynamic-private).
 		 * @default ""
+		 * @since 1.21.0
 		 */
 		privatePrefix?: string;
 	};
@@ -401,6 +397,12 @@ export interface KitConfig {
 			 * @default "src/hooks.server"
 			 */
 			server?: string;
+			/**
+			 * The location of your universal [hooks](https://kit.svelte.dev/docs/hooks).
+			 * @default "src/hooks"
+			 * @since 2.3.0
+			 */
+			universal?: string;
 		};
 		/**
 		 * your app's internal library, accessible throughout the codebase as `$lib`
@@ -461,6 +463,7 @@ export interface KitConfig {
 		 * - `preload-js` - uses `<link rel="preload">`. Prevents waterfalls in Chromium and Safari, but Chromium will parse each module twice (once as a script, once as a module). Causes modules to be requested twice in Firefox. This is a good setting if you want to maximise performance for users on iOS devices at the cost of a very slight degradation for Chromium users.
 		 * - `preload-mjs` - uses `<link rel="preload">` but with the `.mjs` extension which prevents double-parsing in Chromium. Some static webservers will fail to serve .mjs files with a `Content-Type: application/javascript` header, which will cause your application to break. If that doesn't apply to you, this is the option that will deliver the best performance for the largest number of users, until `modulepreload` is more widely supported.
 		 * @default "modulepreload"
+		 * @since 1.8.4
 		 */
 		preloadStrategy?: 'modulepreload' | 'preload-js' | 'preload-mjs';
 	};
@@ -476,15 +479,21 @@ export interface KitConfig {
 		 */
 		base?: '' | `/${string}`;
 		/**
-		 * Whether to use relative asset paths. By default, if `paths.assets` is not external, SvelteKit will replace `%sveltekit.assets%` with a relative path and use relative paths to reference build artifacts, but `base` and `assets` imported from `$app/paths` will be as specified in your config.
+		 * Whether to use relative asset paths.
 		 *
-		 * If `true`, `base` and `assets` imported from `$app/paths` will be replaced with relative asset paths during server-side rendering, resulting in portable HTML.
+		 * If `true`, `base` and `assets` imported from `$app/paths` will be replaced with relative asset paths during server-side rendering, resulting in more portable HTML.
 		 * If `false`, `%sveltekit.assets%` and references to build artifacts will always be root-relative paths, unless `paths.assets` is an external URL
 		 *
+		 * [Single-page app](https://kit.svelte.dev/docs/single-page-apps) fallback pages will always use absolute paths, regardless of this setting.
+		 *
 		 * If your app uses a `<base>` element, you should set this to `false`, otherwise asset URLs will incorrectly be resolved against the `<base>` URL rather than the current page.
-		 * @default undefined
+		 *
+		 * In 1.0, `undefined` was a valid value, which was set by default. In that case, if `paths.assets` was not external, SvelteKit would replace `%sveltekit.assets%` with a relative path and use relative paths to reference build artifacts, but `base` and `assets` imported from `$app/paths` would be as specified in your config.
+		 *
+		 * @default true
+		 * @since 1.9.0
 		 */
-		relative?: boolean | undefined;
+		relative?: boolean;
 	};
 	/**
 	 * See [Prerendering](https://kit.svelte.dev/docs/page-options#prerender).
@@ -501,7 +510,7 @@ export interface KitConfig {
 		 */
 		crawl?: boolean;
 		/**
-		 * An array of pages to prerender, or start crawling from (if `crawl: true`). The `*` string includes all non-dynamic routes (i.e. pages with no `[parameters]`, because SvelteKit doesn't know what value the parameters should have).
+		 * An array of pages to prerender, or start crawling from (if `crawl: true`). The `*` string includes all routes containing no required `[parameters]`  with optional parameters included as being empty (since SvelteKit doesn't know what value any parameters should have).
 		 * @default ["*"]
 		 */
 		entries?: Array<'*' | `/${string}`>;
@@ -534,6 +543,7 @@ export interface KitConfig {
 		 * ```
 		 *
 		 * @default "fail"
+		 * @since 1.15.7
 		 */
 		handleHttpError?: PrerenderHttpErrorHandlerValue;
 		/**
@@ -545,6 +555,7 @@ export interface KitConfig {
 		 * - `(details) => void` — a custom error handler that takes a `details` object with `path`, `id`, `referrers` and `message` properties. If you `throw` from this function, the build will fail
 		 *
 		 * @default "fail"
+		 * @since 1.15.7
 		 */
 		handleMissingId?: PrerenderMissingIdHandlerValue;
 		/**
@@ -556,6 +567,7 @@ export interface KitConfig {
 		 * - `(details) => void` — a custom error handler that takes a `details` object with `generatedFromId`, `entry`, `matchedId` and `message` properties. If you `throw` from this function, the build will fail
 		 *
 		 * @default "fail"
+		 * @since 1.16.0
 		 */
 		handleEntryGeneratorMismatch?: PrerenderEntryGeneratorMismatchHandlerValue;
 		/**
@@ -581,6 +593,7 @@ export interface KitConfig {
 		 * A function that allows you to edit the generated `tsconfig.json`. You can mutate the config (recommended) or return a new one.
 		 * This is useful for extending a shared `tsconfig.json` in a monorepo root, for example.
 		 * @default (config) => config
+		 * @since 1.3.0
 		 */
 		config?: (config: Record<string, any>) => Record<string, any> | void;
 	};
@@ -653,6 +666,8 @@ export type Handle = (input: {
 export type HandleServerError = (input: {
 	error: unknown;
 	event: RequestEvent;
+	status: number;
+	message: string;
 }) => MaybePromise<void | App.Error>;
 
 /**
@@ -664,6 +679,8 @@ export type HandleServerError = (input: {
 export type HandleClientError = (input: {
 	error: unknown;
 	event: NavigationEvent;
+	status: number;
+	message: string;
 }) => MaybePromise<void | App.Error>;
 
 /**
@@ -674,6 +691,12 @@ export type HandleFetch = (input: {
 	request: Request;
 	fetch: typeof fetch;
 }) => MaybePromise<Response>;
+
+/**
+ * The [`reroute`](https://kit.svelte.dev/docs/hooks#universal-hooks-reroute) hook allows you to modify the URL before it is used to determine which route to render.
+ * @since 2.3.0
+ */
+export type Reroute = (event: { url: URL }) => void | string;
 
 /**
  * The generic form of `PageLoad` and `LayoutLoad`. You should import those from `./$types` (see [generated types](https://kit.svelte.dev/docs/types#generated-types))
@@ -733,7 +756,7 @@ export interface LoadEvent<
 	 *
 	 * Setting the same header multiple times (even in separate `load` functions) is an error — you can only set a given header once.
 	 *
-	 * You cannot add a `set-cookie` header with `setHeaders` — use the [`cookies`](https://kit.svelte.dev/docs/types#public-types-cookies) API in a server-only `load` function instead.
+	 * You cannot add a `set-cookie` header with `setHeaders` — use the [`cookies`](https://kit.svelte.dev/docs/types#public-types-cookies) API in a server-only `load` function instead.
 	 *
 	 * `setHeaders` has no effect when a `load` function runs in the browser.
 	 */
@@ -782,7 +805,21 @@ export interface LoadEvent<
 	 * <button on:click={increase}>Increase Count</button>
 	 * ```
 	 */
-	depends(...deps: string[]): void;
+	depends(...deps: Array<`${string}:${string}`>): void;
+	/**
+	 * Use this function to opt out of dependency tracking for everything that is synchronously called within the callback. Example:
+	 *
+	 * ```js
+	 * /// file: src/routes/+page.server.js
+	 * export async function load({ untrack, url }) {
+	 * 	// Untrack url.pathname so that path changes don't trigger a rerun
+	 * 	if (untrack(() => url.pathname === '/')) {
+	 * 		return { message: 'Welcome!' };
+	 * 	}
+	 * }
+	 * ```
+	 */
+	untrack<T>(fn: () => T): T;
 }
 
 export interface NavigationEvent<
@@ -849,12 +886,12 @@ export interface Navigation {
 	/**
 	 * The type of navigation:
 	 * - `form`: The user submitted a `<form>`
-	 * - `leave`: The user is leaving the app by closing the tab or using the back/forward buttons to go to a different document
+	 * - `leave`: The app is being left either because the tab is being closed or a navigation to a different document is occurring
 	 * - `link`: Navigation was triggered by a link click
 	 * - `goto`: Navigation was triggered by a `goto(...)` call or a redirect
 	 * - `popstate`: Navigation was triggered by back/forward navigation
 	 */
-	type: Omit<NavigationType, 'enter'>;
+	type: Exclude<NavigationType, 'enter'>;
 	/**
 	 * Whether or not the navigation will result in the page being unloaded (i.e. not a client-side navigation)
 	 */
@@ -863,6 +900,11 @@ export interface Navigation {
 	 * In case of a history back/forward navigation, the number of steps to go back/forward
 	 */
 	delta?: number;
+	/**
+	 * A promise that resolves once the navigation is complete, and rejects if the navigation
+	 * fails or is aborted. In the case of a `willUnload` navigation, the promise will never resolve
+	 */
+	complete: Promise<void>;
 }
 
 /**
@@ -876,9 +918,27 @@ export interface BeforeNavigate extends Navigation {
 }
 
 /**
+ * The argument passed to [`onNavigate`](https://kit.svelte.dev/docs/modules#$app-navigation-onnavigate) callbacks.
+ */
+export interface OnNavigate extends Navigation {
+	/**
+	 * The type of navigation:
+	 * - `form`: The user submitted a `<form>`
+	 * - `link`: Navigation was triggered by a link click
+	 * - `goto`: Navigation was triggered by a `goto(...)` call or a redirect
+	 * - `popstate`: Navigation was triggered by back/forward navigation
+	 */
+	type: Exclude<NavigationType, 'enter' | 'leave'>;
+	/**
+	 * Since `onNavigate` callbacks are called immediately before a client-side navigation, they will never be called with a navigation that unloads the page.
+	 */
+	willUnload: false;
+}
+
+/**
  * The argument passed to [`afterNavigate`](https://kit.svelte.dev/docs/modules#$app-navigation-afternavigate) callbacks.
  */
-export interface AfterNavigate extends Navigation {
+export interface AfterNavigate extends Omit<Navigation, 'type'> {
 	/**
 	 * The type of navigation:
 	 * - `enter`: The app has hydrated
@@ -887,9 +947,9 @@ export interface AfterNavigate extends Navigation {
 	 * - `goto`: Navigation was triggered by a `goto(...)` call or a redirect
 	 * - `popstate`: Navigation was triggered by back/forward navigation
 	 */
-	type: Omit<NavigationType, 'leave'>;
+	type: Exclude<NavigationType, 'leave'>;
 	/**
-	 * Since `afterNavigate` is called after a navigation completes, it will never be called with a navigation that unloads the page.
+	 * Since `afterNavigate` callbacks are called after a navigation completes, they will never be called with a navigation that unloads the page.
 	 */
 	willUnload: false;
 }
@@ -930,6 +990,10 @@ export interface Page<
 	 * The merged result of all data from all `load` functions on the current page. You can type a common denominator through `App.PageData`.
 	 */
 	data: App.PageData & Record<string, any>;
+	/**
+	 * The page state, which can be manipulated using the [`pushState`](https://kit.svelte.dev/docs/modules#$app-navigation-pushstate) and [`replaceState`](https://kit.svelte.dev/docs/modules#$app-navigation-replacestate) functions from `$app/navigation`.
+	 */
+	state: App.PageState;
 	/**
 	 * Filled only after a form submission. See [form actions](https://kit.svelte.dev/docs/form-actions) for more info.
 	 */
@@ -1010,7 +1074,7 @@ export interface RequestEvent<
 	 *
 	 * Setting the same header multiple times (even in separate `load` functions) is an error — you can only set a given header once.
 	 *
-	 * You cannot add a `set-cookie` header with `setHeaders` — use the [`cookies`](https://kit.svelte.dev/docs/types#public-types-cookies) API instead.
+	 * You cannot add a `set-cookie` header with `setHeaders` — use the [`cookies`](https://kit.svelte.dev/docs/types#public-types-cookies) API instead.
 	 */
 	setHeaders(headers: Record<string, string>): void;
 	/**
@@ -1064,15 +1128,15 @@ export interface ResolveOptions {
 export interface RouteDefinition<Config = any> {
 	id: string;
 	api: {
-		methods: HttpMethod[];
+		methods: Array<HttpMethod | '*'>;
 	};
 	page: {
-		methods: Extract<HttpMethod, 'GET' | 'POST'>[];
+		methods: Array<Extract<HttpMethod, 'GET' | 'POST'>>;
 	};
 	pattern: RegExp;
 	prerender: PrerenderOption;
 	segments: RouteSegment[];
-	methods: HttpMethod[];
+	methods: Array<HttpMethod | '*'>;
 	config: Config;
 }
 
@@ -1161,6 +1225,20 @@ export interface ServerLoadEvent<
 	 * ```
 	 */
 	depends(...deps: string[]): void;
+	/**
+	 * Use this function to opt out of dependency tracking for everything that is synchronously called within the callback. Example:
+	 *
+	 * ```js
+	 * /// file: src/routes/+page.js
+	 * export async function load({ untrack, url }) {
+	 * 	// Untrack url.pathname so that path changes don't trigger a rerun
+	 * 	if (untrack(() => url.pathname === '/')) {
+	 * 		return { message: 'Welcome!' };
+	 * 	}
+	 * }
+	 * ```
+	 */
+	untrack<T>(fn: () => T): T;
 }
 
 /**
@@ -1227,17 +1305,7 @@ export type SubmitFunction<
 	Failure extends Record<string, unknown> | undefined = Record<string, any>
 > = (input: {
 	action: URL;
-	/**
-	 * use `formData` instead of `data`
-	 * @deprecated
-	 */
-	data: FormData;
 	formData: FormData;
-	/**
-	 * use `formElement` instead of `form`
-	 * @deprecated
-	 */
-	form: HTMLFormElement;
 	formElement: HTMLFormElement;
 	controller: AbortController;
 	submitter: HTMLElement | null;
@@ -1245,25 +1313,16 @@ export type SubmitFunction<
 }) => MaybePromise<
 	| void
 	| ((opts: {
-			/**
-			 * use `formData` instead of `data`
-			 * @deprecated
-			 */
-			data: FormData;
 			formData: FormData;
-			/**
-			 * use `formElement` instead of `form`
-			 * @deprecated
-			 */
-			form: HTMLFormElement;
 			formElement: HTMLFormElement;
 			action: URL;
 			result: ActionResult<Success, Failure>;
 			/**
 			 * Call this to get the default behavior of a form submission response.
 			 * @param options Set `reset: false` if you don't want the `<form>` values to be reset after a successful submission.
+			 * @param invalidateAll Set `invalidateAll: false` if you don't want the action to call `invalidateAll` after submission.
 			 */
-			update(options?: { reset: boolean }): Promise<void>;
+			update(options?: { reset?: boolean; invalidateAll?: boolean }): Promise<void>;
 	  }) => void)
 >;
 

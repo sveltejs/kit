@@ -1,6 +1,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
-import mime from 'mime';
+import colors from 'kleur';
+import { lookup } from 'mrmime';
 import { list_files, runtime_directory } from '../../utils.js';
 import { posixify } from '../../../utils/filesystem.js';
 import { parse_route_id } from '../../../utils/routing.js';
@@ -47,7 +48,7 @@ export function create_assets(config) {
 	return list_files(config.kit.files.assets).map((file) => ({
 		file,
 		size: fs.statSync(path.resolve(config.kit.files.assets, file)).size,
-		type: mime.getType(file)
+		type: lookup(file) || null
 	}));
 }
 
@@ -201,8 +202,31 @@ function create_routes_and_nodes(cwd, config, fallback) {
 			// process files first
 			for (const file of files) {
 				if (file.is_dir) continue;
-				if (!file.name.startsWith('+')) continue;
-				if (!valid_extensions.find((ext) => file.name.endsWith(ext))) continue;
+
+				const ext = valid_extensions.find((ext) => file.name.endsWith(ext));
+				if (!ext) continue;
+
+				if (!file.name.startsWith('+')) {
+					const name = file.name.slice(0, -ext.length);
+					// check if it is a valid route filename but missing the + prefix
+					const typo =
+						/^(?:(page(?:@(.*))?)|(layout(?:@(.*))?)|(error))$/.test(name) ||
+						/^(?:(server)|(page(?:(@[a-zA-Z0-9_-]*))?(\.server)?)|(layout(?:(@[a-zA-Z0-9_-]*))?(\.server)?))$/.test(
+							name
+						);
+					if (typo) {
+						console.log(
+							colors
+								.bold()
+								.yellow(
+									`Missing route file prefix. Did you mean +${file.name}?` +
+										` at ${path.join(dir, file.name)}`
+								)
+						);
+					}
+
+					continue;
+				}
 
 				if (file.name.endsWith('.d.ts')) {
 					let name = file.name.slice(0, -5);
@@ -420,7 +444,7 @@ function create_routes_and_nodes(cwd, config, fallback) {
  * @param {string} file
  * @param {string[]} component_extensions
  * @param {string[]} module_extensions
- * @returns {import('./types').RouteFile}
+ * @returns {import('./types.js').RouteFile}
  */
 function analyze(project_relative, file, component_extensions, module_extensions) {
 	const component_extension = component_extensions.find((ext) => file.endsWith(ext));

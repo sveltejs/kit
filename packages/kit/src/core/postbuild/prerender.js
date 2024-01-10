@@ -3,7 +3,6 @@ import { dirname, join } from 'node:path';
 import { pathToFileURL } from 'node:url';
 import { installPolyfills } from '../../exports/node/polyfills.js';
 import { mkdirp, posixify, walk } from '../../utils/filesystem.js';
-import { should_polyfill } from '../../utils/platform.js';
 import { decode_uri, is_root_relative, resolve } from '../../utils/url.js';
 import { escape_html_attr } from '../../utils/escape.js';
 import { logger } from '../utils.js';
@@ -37,7 +36,8 @@ async function prerender({ out, manifest_path, metadata, verbose, env }) {
 
 	// configure `import { building } from '$app/environment'` —
 	// essential we do this before analysing the code
-	internal.set_building(true);
+	internal.set_building();
+	internal.set_prerendering();
 
 	/**
 	 * @template {{message: string}} T
@@ -94,15 +94,10 @@ async function prerender({ out, manifest_path, metadata, verbose, env }) {
 	/** @type {import('types').Logger} */
 	const log = logger({ verbose });
 
-	if (should_polyfill) {
-		installPolyfills();
-	}
+	installPolyfills();
 
 	/** @type {Map<string, string>} */
 	const saved = new Map();
-
-	const server = new Server(manifest);
-	await server.init({ env });
 
 	const handle_http_error = normalise_error_handler(
 		log,
@@ -153,6 +148,7 @@ async function prerender({ out, manifest_path, metadata, verbose, env }) {
 	}
 
 	const files = new Set(walk(`${out}/client`).map(posixify));
+	files.add(`${config.appDir}/env.js`);
 
 	const immutable = `${config.appDir}/immutable`;
 	if (existsSync(`${out}/server/${immutable}`)) {
@@ -415,22 +411,37 @@ async function prerender({ out, manifest_path, metadata, verbose, env }) {
 		}
 	}
 
-	if (
-		config.prerender.entries.length > 1 ||
-		config.prerender.entries[0] !== '*' ||
-		route_level_entries.length > 0 ||
-		prerender_map.size > 0
-	) {
-		// Only log if we're actually going to do something to not confuse users
-		log.info('Prerendering');
+	let has_prerenderable_routes = false;
+
+	for (const value of prerender_map.values()) {
+		if (value) {
+			has_prerenderable_routes = true;
+			break;
+		}
 	}
+
+	if (
+		(config.prerender.entries.length === 0 && route_level_entries.length === 0) ||
+		!has_prerenderable_routes
+	) {
+		return { prerendered, prerender_map };
+	}
+
+	log.info('Prerendering');
+
+	const server = new Server(manifest);
+	await server.init({ env });
 
 	for (const entry of config.prerender.entries) {
 		if (entry === '*') {
 			for (const [id, prerender] of prerender_map) {
 				if (prerender) {
-					if (id.includes('[')) continue;
-					const path = `/${get_route_segments(id).join('/')}`;
+					// remove optional parameters from the route
+					const segments = get_route_segments(id).filter((segment) => !segment.startsWith('[['));
+					const processed_id = '/' + segments.join('/');
+
+					if (processed_id.includes('[')) continue;
+					const path = `/${get_route_segments(processed_id).join('/')}`;
 					enqueue(null, config.paths.base + path);
 				}
 			}
@@ -472,10 +483,10 @@ async function prerender({ out, manifest_path, metadata, verbose, env }) {
 	}
 
 	if (not_prerendered.length > 0) {
+		const list = not_prerendered.map((id) => `  - ${id}`).join('\n');
+
 		throw new Error(
-			`The following routes were marked as prerenderable, but were not prerendered because they were not found while crawling your app:\n${not_prerendered.map(
-				(id) => `  - ${id}`
-			)}\n\nSee https://kit.svelte.dev/docs/page-options#prerender-troubleshooting for info on how to solve this`
+			`The following routes were marked as prerenderable, but were not prerendered because they were not found while crawling your app:\n${list}\n\nSee https://kit.svelte.dev/docs/page-options#prerender-troubleshooting for info on how to solve this`
 		);
 	}
 

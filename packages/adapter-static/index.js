@@ -1,7 +1,7 @@
 import path from 'node:path';
 import { platforms } from './platforms.js';
 
-/** @type {import('.').default} */
+/** @type {import('./index.js').default} */
 export default function (options) {
 	return {
 		name: '@sveltejs/adapter-static',
@@ -18,7 +18,7 @@ export default function (options) {
 									has_param_routes
 										? '(routes with parameters are not part of entry points by default)'
 										: ''
-							  } — see https://kit.svelte.dev/docs/configuration#prerender for more info.`
+								} — see https://kit.svelte.dev/docs/configuration#prerender for more info.`
 							: '';
 
 					builder.log.error(
@@ -30,7 +30,7 @@ You have the following options:
   - add \`export const prerender = true\` to your root \`+layout.js/.ts\` or \`+layout.server.js/.ts\` file. This will try to prerender all pages.
   - add \`export const prerender = true\` to any \`+server.js/ts\` files that are not fetched by page \`load\` functions.
 ${config_option}
-  - pass \`strict: false\` to \`adapter-static\` to ignore this error. Only do this if you are sure you don't need the routes in question in your final app, as they will be unavailable. See https://github.com/sveltejs/kit/tree/master/packages/adapter-static#strict for more info.
+  - pass \`strict: false\` to \`adapter-static\` to ignore this error. Only do this if you are sure you don't need the routes in question in your final app, as they will be unavailable. See https://github.com/sveltejs/kit/tree/main/packages/adapter-static#strict for more info.
 
 If this doesn't help, you may need to use a different adapter. @sveltejs/adapter-static can only be used for sites that don't need a server for dynamic rendering, and can run on just a static file server.
 See https://kit.svelte.dev/docs/page-options#prerender for more details`
@@ -52,15 +52,17 @@ See https://kit.svelte.dev/docs/page-options#prerender for more details`
 			}
 
 			const {
+				// @ts-ignore
 				pages = 'build',
 				assets = pages,
 				fallback,
 				precompress
-			} = options ?? platform?.defaults ?? /** @type {import('./index').AdapterOptions} */ ({});
+			} = options ?? platform?.defaults ?? /** @type {import('./index.js').AdapterOptions} */ ({});
 
 			builder.rimraf(assets);
 			builder.rimraf(pages);
 
+			builder.generateEnvModule();
 			builder.writeClient(assets);
 			builder.writePrerendered(pages);
 

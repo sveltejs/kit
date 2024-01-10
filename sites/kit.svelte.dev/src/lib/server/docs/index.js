@@ -13,7 +13,7 @@ import { CONTENT_BASE_PATHS } from '../../../constants.js';
 import { render_content } from '../renderer';
 
 /**
- * @param {import('./types').DocsData} docs_data
+ * @param {import('./types.js').DocsData} docs_data
  * @param {string} slug
  */
 export async function get_parsed_docs(docs_data, slug) {
@@ -29,9 +29,9 @@ export async function get_parsed_docs(docs_data, slug) {
 	}
 }
 
-/** @return {Promise<import('./types').DocsData>} */
+/** @return {Promise<import('./types.js').DocsData>} */
 export async function get_docs_data(base = CONTENT_BASE_PATHS.DOCS) {
-	/** @type {import('./types').DocsData} */
+	/** @type {import('./types.js').DocsData} */
 	const docs_data = [];
 
 	for (const category_dir of await readdir(base)) {
@@ -47,7 +47,7 @@ export async function get_docs_data(base = CONTENT_BASE_PATHS.DOCS) {
 
 		if (draft === 'true') continue;
 
-		/** @type {import('./types').Category} */
+		/** @type {import('./types.js').Category} */
 		const category = {
 			title: category_title,
 			slug: category_slug,
@@ -76,7 +76,7 @@ export async function get_docs_data(base = CONTENT_BASE_PATHS.DOCS) {
 				slug: page_slug,
 				content: page_content,
 				category: category_title,
-				sections: get_sections(page_content),
+				sections: await get_sections(page_content),
 				path: `${app_base}/docs/${page_slug}`,
 				file: `${category_dir}/${page_md}`
 			});
@@ -88,7 +88,7 @@ export async function get_docs_data(base = CONTENT_BASE_PATHS.DOCS) {
 	return docs_data;
 }
 
-/** @param {import('./types').DocsData} docs_data */
+/** @param {import('./types.js').DocsData} docs_data */
 export function get_docs_list(docs_data) {
 	return docs_data.map((category) => ({
 		title: category.title,
@@ -100,20 +100,18 @@ export function get_docs_list(docs_data) {
 }
 
 /** @param {string} markdown */
-function get_sections(markdown) {
+async function get_sections(markdown) {
 	const headingRegex = /^##\s+(.*)$/gm;
-	/** @type {import('./types').Section[]} */
+	/** @type {import('./types.js').Section[]} */
 	const secondLevelHeadings = [];
 	let match;
 
-	const placeholders_rendered = replaceExportTypePlaceholders(markdown, modules);
+	const placeholders_rendered = await replaceExportTypePlaceholders(markdown, modules);
 
 	while ((match = headingRegex.exec(placeholders_rendered)) !== null) {
-		const unTYPED = match[1].startsWith('[TYPE]:') ? match[1].replace('[TYPE]: ', '') : match[1];
-
 		secondLevelHeadings.push({
 			title: removeMarkdown(
-				escape(markedTransform(unTYPED, { paragraph: (txt) => txt }))
+				escape(await markedTransform(match[1], { paragraph: (txt) => txt }))
 					.replace(/<\/?code>/g, '')
 					.replace(/&#39;/g, "'")
 					.replace(/&quot;/g, '"')
@@ -121,7 +119,7 @@ function get_sections(markdown) {
 					.replace(/&gt;/g, '>')
 					.replace(/<(\/)?(em|b|strong|code)>/g, '')
 			),
-			slug: normalizeSlugify(unTYPED)
+			slug: normalizeSlugify(match[1])
 		});
 	}
 

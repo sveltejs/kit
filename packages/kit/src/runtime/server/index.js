@@ -1,8 +1,18 @@
 import { respond } from './respond.js';
-import { set_private_env, set_public_env } from '../shared-server.js';
+import { set_private_env, set_public_env, set_safe_public_env } from '../shared-server.js';
 import { options, get_hooks } from '__SERVER__/internal.js';
 import { DEV } from 'esm-env';
 import { filter_private_env, filter_public_env } from '../../utils/env.js';
+import { prerendering } from '__sveltekit/environment';
+
+/** @type {ProxyHandler<{ type: 'public' | 'private' }>} */
+const prerender_env_handler = {
+	get({ type }, prop) {
+		throw new Error(
+			`Cannot read values from $env/dynamic/${type} while prerendering (attempted to read env.${prop.toString()}). Use $env/static/${type} instead`
+		);
+	}
+};
 
 export class Server {
 	/** @type {import('types').SSROptions} */
@@ -27,19 +37,23 @@ export class Server {
 		// Take care: Some adapters may have to call `Server.init` per-request to set env vars,
 		// so anything that shouldn't be rerun should be wrapped in an `if` block to make sure it hasn't
 		// been done already.
+
 		// set env, in case it's used in initialisation
+		const prefixes = {
+			public_prefix: this.#options.env_public_prefix,
+			private_prefix: this.#options.env_private_prefix
+		};
+
+		const private_env = filter_private_env(env, prefixes);
+		const public_env = filter_public_env(env, prefixes);
+
 		set_private_env(
-			filter_private_env(env, {
-				public_prefix: this.#options.env_public_prefix,
-				private_prefix: this.#options.env_private_prefix
-			})
+			prerendering ? new Proxy({ type: 'private' }, prerender_env_handler) : private_env
 		);
 		set_public_env(
-			filter_public_env(env, {
-				public_prefix: this.#options.env_public_prefix,
-				private_prefix: this.#options.env_private_prefix
-			})
+			prerendering ? new Proxy({ type: 'public' }, prerender_env_handler) : public_env
 		);
+		set_safe_public_env(public_env);
 
 		if (!this.#options.hooks) {
 			try {
@@ -48,7 +62,8 @@ export class Server {
 				this.#options.hooks = {
 					handle: module.handle || (({ event, resolve }) => resolve(event)),
 					handleError: module.handleError || (({ error }) => console.error(error)),
-					handleFetch: module.handleFetch || (({ request, fetch }) => fetch(request))
+					handleFetch: module.handleFetch || (({ request, fetch }) => fetch(request)),
+					reroute: module.reroute || (() => {})
 				};
 			} catch (error) {
 				if (DEV) {
@@ -57,7 +72,8 @@ export class Server {
 							throw error;
 						},
 						handleError: ({ error }) => console.error(error),
-						handleFetch: ({ request, fetch }) => fetch(request)
+						handleFetch: ({ request, fetch }) => fetch(request),
+						reroute: () => {}
 					};
 				} else {
 					throw error;
@@ -71,13 +87,6 @@ export class Server {
 	 * @param {import('types').RequestOptions} options
 	 */
 	async respond(request, options) {
-		// TODO this should probably have been removed for 1.0 — i think we can get rid of it?
-		if (!(request instanceof Request)) {
-			throw new Error(
-				'The first argument to server.respond must be a Request object. See https://github.com/sveltejs/kit/pull/3384 for details'
-			);
-		}
-
 		return respond(request, this.#options, this.#manifest, {
 			...options,
 			error: false,

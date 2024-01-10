@@ -1,14 +1,13 @@
 <script>
-	import Image from '$lib/Image.svelte';
 	import { Section } from '@sveltejs/site-kit/components';
-	import pudding from './showcase/pudding.png';
-	import pocketbase from './showcase/pocketbase.png';
-	import pronauns from './showcase/pronauns.png';
-	import pausly from './showcase/pausly.png';
-	import asmeditor from './showcase/asmeditor.png';
-	import monogram from './showcase/monogram.png';
-	import raster from './showcase/raster.png';
-	import tradingstrategy from './showcase/tradingstrategy.png';
+	import pudding from './showcase/pudding.png?enhanced';
+	import pocketbase from './showcase/pocketbase.png?enhanced';
+	import pronauns from './showcase/pronauns.png?enhanced';
+	import pausly from './showcase/pausly.png?enhanced';
+	import asmeditor from './showcase/asmeditor.png?enhanced';
+	import monogram from './showcase/monogram.png?enhanced';
+	import raster from './showcase/raster.png?enhanced';
+	import tradingstrategy from './showcase/tradingstrategy.png?enhanced';
 
 	const showcase = [
 		{ url: 'pudding.cool', image: pudding },
@@ -28,7 +27,7 @@
 	<div class="showcase">
 		{#each showcase as { url, image }}
 			<a href="https://{url}" target="_blank" rel="noreferrer">
-				<Image src={image} alt="" style="width:100%; height:100%; object-fit:cover" />
+				<enhanced:img src={image} alt="" style="width:100%; height:100%; object-fit:cover" />
 				<span>{url}</span>
 			</a>
 		{/each}
