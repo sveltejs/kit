@@ -1071,36 +1071,37 @@ async function load_root_error_page({ status, error, url, route }) {
 }
 
 /**
- * @param {URL | undefined} original_url
+ * @param {URL | undefined} url
  * @param {boolean} invalidating
  */
-function get_navigation_intent(original_url, invalidating) {
-	if (!original_url) return undefined;
+function get_navigation_intent(url, invalidating) {
+	if (!url) return undefined;
+	if (is_external_url(url, base)) return;
+
 
 	// reroute could alter the given URL, so we pass a copy
-	let rewritten_url;
+	let rerouted_path;
 	try {
-		rewritten_url = app.hooks.reroute({ url: new URL(original_url) });
+		rerouted_path = app.hooks.reroute({ url: new URL(url) });
 	} catch (e) {
 		return undefined;
 	}
 
-	if (is_external_url(rewritten_url, base)) return;
 
-	const path = get_url_path(rewritten_url.pathname);
+	const path = get_url_path(rerouted_path);
 
 	for (const route of routes) {
 		const params = route.exec(path);
 
 		if (params) {
-			const id = original_url.pathname + original_url.search;
+			const id = url.pathname + url.search;
 			/** @type {import('./types.js').NavigationIntent} */
 			const intent = {
 				id,
 				invalidating,
 				route,
 				params: decode_params(params),
-				url: original_url
+				url: url
 			};
 			return intent;
 		}
