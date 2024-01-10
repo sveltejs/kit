@@ -169,3 +169,5 @@ jobs:
         id: deployment
         uses: actions/deploy-pages@v2
 ```
+
+If you're not using GitHub actions to deploy your site (for example, you're pushing the built site to its own repo), add an empty `.nojekyll` file in your `static` directory to prevent Jekyll from interfering.
