@@ -1,5 +1,5 @@
 ---
-"@sveltejs/adapter-node": minor
+"@sveltejs/adapter-node": major
 ---
 
-Updated the parsing of the BODY_SIZE_LIMIT environment variable from parseInt to parseFloat.
+breaking: allow any numeric value for `BODY_SIZE_LIMIT`, and interpret literally. Use `Infinity` rather than `0` for unrestricted body sizes
