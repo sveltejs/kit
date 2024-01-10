@@ -1,5 +1,11 @@
 # @sveltejs/kit
 
+## 2.3.0
+
+### Minor Changes
+
+- feat: add `reroute` hook ([#11537](https://github.com/sveltejs/kit/pull/11537))
+
 ## 2.2.2
 
 ### Patch Changes
