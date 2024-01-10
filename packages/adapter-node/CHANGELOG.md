@@ -1,5 +1,11 @@
 # @sveltejs/adapter-node
 
+## 2.1.1
+
+### Patch Changes
+
+- fix: correctly handle BODY_SIZE_LIMIT=0 ([#11574](https://github.com/sveltejs/kit/pull/11574))
+
 ## 2.1.0
 
 ### Minor Changes
