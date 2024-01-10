@@ -239,7 +239,9 @@ The following can be added to `src/hooks.js`. Universal hooks run on both server
 
 ### reroute
 
-This function allows you to change which route get's rendered. By returning a different path from it, that new path will be used to determine the route that needs to be rendered. It will not change the URL in the browser's address bar, or the value of `event.url`. Only the route matching logic is affected.
+This function allows you to change how URLs are translated into routes. The returned pathname (which defaults to `url.pathname`) is used to select the route and its parameters.
+
+For example, you might have a `src/routes/[[lang]]/about/+page.svelte` page, which should be accessible as `/en/about` or `/de/ueber-uns` or `/fr/a-propos`. You could implement this with `reroute`:
 
 ```js
 /// file: src/hooks.router.js
@@ -247,21 +249,23 @@ This function allows you to change which route get's rendered. By returning a di
 // @errors: 2304
 
 /** @type {Record<string, string>} */
-const mapping = {
-	"/en/about": "/en/about",
-	"/de/ueber-uns": "/de/about",
-	"/fr/a-propos": "/fr/about",
-}
+const translated = {
+	'/en/about': '/en/about',
+	'/de/ueber-uns': '/de/about',
+	'/fr/a-propos': '/fr/about',
+};
 
 /** @type {import('@sveltejs/kit').Reroute} */
 export function reroute({ url }) {
-	if(url.pathname in mapping) {
-		return mapping[url.pathname];
+	if (url.pathname in translated) {
+		return translated[url.pathname];
 	}
 }
 ```
 
-> `rewriteUrl` is not applied to the returned URL
+The `lang` parameter will be correctly derived from the returned pathname.
+
+Using `reroute` will _not_ change the contents of the browser's address bar, or the value of `event.url`.
 
 
 ## Further reading
