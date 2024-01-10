@@ -14,6 +14,8 @@ export default function (options = {}) {
 
 			builder.rimraf(dest);
 			builder.rimraf(tmp);
+
+			builder.mkdirp(dest);
 			builder.mkdirp(tmp);
 
 			// generate plaintext 404.html first which can then be overridden by prerendering, if the user defined such a page
