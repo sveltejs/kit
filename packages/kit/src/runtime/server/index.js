@@ -63,7 +63,7 @@ export class Server {
 					handle: module.handle || (({ event, resolve }) => resolve(event)),
 					handleError: module.handleError || (({ error }) => console.error(error)),
 					handleFetch: module.handleFetch || (({ request, fetch }) => fetch(request)),
-					rewriteUrl: module.rewriteUrl || (({ url }) => url)
+					reroute: module.reroute || (({ url }) => url)
 				};
 			} catch (error) {
 				if (DEV) {
@@ -73,7 +73,7 @@ export class Server {
 						},
 						handleError: ({ error }) => console.error(error),
 						handleFetch: ({ request, fetch }) => fetch(request),
-						rewriteUrl: ({ url }) => url
+						reroute: ({ url }) => url
 					};
 				} else {
 					throw error;

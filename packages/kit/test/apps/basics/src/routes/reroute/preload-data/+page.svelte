@@ -4,7 +4,7 @@
 	let data = null;
 
 	async function onClick() {
-		const result = await preloadData('/rewrites/preload-data/a');
+		const result = await preloadData('/reroute/preload-data/a');
 		if (result.type === 'loaded') {
 			data = result.data;
 		}

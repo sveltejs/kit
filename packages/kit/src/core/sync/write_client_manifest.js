@@ -152,7 +152,7 @@ export function write_client_manifest(kit, manifest_data, output, metadata) {
 					client_hooks_file ? 'client_hooks.handleError || ' : ''
 				}(({ error }) => { console.error(error) }),
 
-				rewriteUrl: ${isomorphic_hooks_file ? 'isomorphic_hooks.rewriteUrl || ' : ''}(({url}) => url)
+				reroute: ${isomorphic_hooks_file ? 'isomorphic_hooks.reroute || ' : ''}(({url}) => url)
 			};
 
 			export { default as root } from '../root.${isSvelte5Plus() ? 'js' : 'svelte'}';

@@ -663,9 +663,9 @@ declare module '@sveltejs/kit' {
 	}) => MaybePromise<Response>;
 
 	/**
-	 * The [`rewriteUrl`](#) hook allows you to modify the URL before it is used to determine which route to render.
+	 * The [`reroute`](#) hook allows you to modify the URL before it is used to determine which route to render.
 	 */
-	export type RewriteUrl = (event: { url: URL }) => URL;
+	export type Reroute = (event: { url: URL }) => URL;
 
 	/**
 	 * The generic form of `PageLoad` and `LayoutLoad`. You should import those from `./$types` (see [generated types](https://kit.svelte.dev/docs/types#generated-types))

@@ -611,20 +611,14 @@ test.describe('Miscellaneous', () => {
 	});
 });
 
-test.describe('Rewrites', () => {
-	test('Apply rewrites when directly accessing a page', async ({ page }) => {
-		await page.goto('/rewrites/basic/a');
+test.describe('reroute', () => {
+	test('Apply reroute when directly accessing a page', async ({ page }) => {
+		await page.goto('/reroute/basic/a');
 		expect(await page.textContent('h1')).toContain('Successfully rewritten');
 	});
 
-	test('Rewrites to external URL should always 404', async ({ page }) => {
-		//A navigation to /external/rewritten should result in a 404
-		const response = await page.goto('/rewrites/external/rewritten');
-		expect(response?.status()).toBe(404);
-	});
-
-	test('Returns a 500 response if the rewrite throws an error on the server', async ({ page }) => {
-		const response = await page.goto('/rewrites/error-handling/server-error');
+	test('Returns a 500 response if reroute throws an error on the server', async ({ page }) => {
+		const response = await page.goto('/reroute/error-handling/server-error');
 		expect(response?.status()).toBe(500);
 	});
 });

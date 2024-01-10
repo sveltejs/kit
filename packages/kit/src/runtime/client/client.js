@@ -1077,10 +1077,10 @@ async function load_root_error_page({ status, error, url, route }) {
 function get_navigation_intent(original_url, invalidating) {
 	if (!original_url) return undefined;
 
-	// rewriteUrl could alter the given URL, so we pass a copy
+	// reroute could alter the given URL, so we pass a copy
 	let rewritten_url;
 	try {
-		rewritten_url = app.hooks.rewriteUrl({ url: new URL(original_url) });
+		rewritten_url = app.hooks.reroute({ url: new URL(original_url) });
 	} catch (e) {
 		return undefined;
 	}

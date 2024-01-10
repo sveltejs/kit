@@ -13,7 +13,7 @@ import {
 	HandleFetch,
 	Actions,
 	HandleClientError,
-	RewriteUrl
+	Reroute
 } from '@sveltejs/kit';
 import {
 	HttpMethod,
@@ -100,12 +100,12 @@ export interface ServerHooks {
 	handleFetch: HandleFetch;
 	handle: Handle;
 	handleError: HandleServerError;
-	rewriteUrl: RewriteUrl;
+	reroute: Reroute;
 }
 
 export interface ClientHooks {
 	handleError: HandleClientError;
-	rewriteUrl: RewriteUrl;
+	reroute: Reroute;
 }
 
 export interface Env {

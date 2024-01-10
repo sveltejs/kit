@@ -58,10 +58,10 @@ export async function respond(request, options, manifest, state) {
 	/** URL but stripped from the potential `/__data.json` suffix and its search param  */
 	const original_url = new URL(request.url);
 
-	// rewriteUrl could alter the given URL, so we pass a copy
+	// reroute could alter the given URL, so we pass a copy
 	let rewritten_url;
 	try {
-		rewritten_url = options.hooks.rewriteUrl({ url: new URL(original_url) });
+		rewritten_url = options.hooks.reroute({ url: new URL(original_url) });
 	} catch (e) {
 		return text('Internal Server Error', {
 			status: 500

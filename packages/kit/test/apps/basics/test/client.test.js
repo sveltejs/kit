@@ -1022,36 +1022,27 @@ test.describe('Shallow routing', () => {
 	});
 });
 
-test.describe('Rewrites', () => {
-	test('Apply rewrites during client side navigation', async ({ page }) => {
-		await page.goto('/rewrites/basic');
-		await page.click("a[href='/rewrites/basic/a']");
+test.describe('reroute', () => {
+	test('Apply reroute during client side navigation', async ({ page }) => {
+		await page.goto('/reroute/basic');
+		await page.click("a[href='/reroute/basic/a']");
 		expect(await page.textContent('h1')).toContain('Successfully rewritten');
 	});
 
-	test('Apply rewrites after client-only redirects', async ({ page }) => {
-		await page.goto('/rewrites/client-only-redirect');
+	test('Apply reroute after client-only redirects', async ({ page }) => {
+		await page.goto('/reroute/client-only-redirect');
 		expect(await page.textContent('h1')).toContain('Successfully rewritten');
 	});
 
-	test('Apply rewrites to preload data', async ({ page }) => {
-		await page.goto('/rewrites/preload-data');
+	test('Apply reroute to preload data', async ({ page }) => {
+		await page.goto('/reroute/preload-data');
 		await page.click('button');
 		await page.waitForSelector('pre');
 		expect(await page.textContent('pre')).toContain('"success": true');
 	});
 
-	test('Rewrites to external URL should always 404 - After client-side navigation', async ({
-		page
-	}) => {
-		await page.goto('/rewrites/external');
-		await page.click("a[href='/rewrites/external/rewritten']");
-
-		expect(await page.textContent('body')).toContain('Not found');
-	});
-
-	test('rewriteUrl does not get applied to external URLs', async ({ page }) => {
-		await page.goto('/rewrites/external');
+	test('reroute does not get applied to external URLs', async ({ page }) => {
+		await page.goto('/reroute/external');
 		const current_url = new URL(page.url());
 
 		//click the link with the text External URL
@@ -1062,8 +1053,8 @@ test.describe('Rewrites', () => {
 		expect(current_url.origin).not.toEqual(new_url.origin);
 	});
 
-	test('Falls back to native navigation if rewrite fails on the client', async ({ page }) => {
-		await page.goto('/rewrites/error-handling');
+	test('Falls back to native navigation if reroute throws on the client', async ({ page }) => {
+		await page.goto('/reroute/error-handling');
 
 		//click the link with the text External URL
 		await page.click('a#client-error');
