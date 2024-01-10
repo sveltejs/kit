@@ -1,5 +1,5 @@
 import { existsSync, statSync, createReadStream, createWriteStream } from 'node:fs';
-import { extname, join, resolve } from 'node:path';
+import { extname, resolve } from 'node:path';
 import { pipeline } from 'node:stream';
 import { promisify } from 'node:util';
 import zlib from 'node:zlib';
@@ -24,6 +24,7 @@ const extensions = ['.html', '.js', '.mjs', '.json', '.css', '.svg', '.xml', '.w
  *   prerendered: import('types').Prerendered;
  *   prerender_map: import('types').PrerenderMap;
  *   log: import('types').Logger;
+ *   vite_config: import('vite').ResolvedConfig;
  * }} opts
  * @returns {import('@sveltejs/kit').Builder}
  */
@@ -34,7 +35,8 @@ export function create_builder({
 	route_data,
 	prerendered,
 	prerender_map,
-	log
+	log,
+	vite_config
 }) {
 	/** @type {Map<import('@sveltejs/kit').RouteDefinition, import('types').RouteData>} */
 	const lookup = new Map();
@@ -144,7 +146,7 @@ export function create_builder({
 
 		async generateFallback(dest) {
 			const manifest_path = `${config.kit.outDir}/output/server/manifest-full.js`;
-			const env = get_env(config.kit.env, 'production');
+			const env = get_env(config.kit.env, vite_config.mode);
 
 			const fallback = await generate_fallback({
 				manifest_path,
@@ -152,6 +154,13 @@ export function create_builder({
 			});
 
 			write(dest, fallback);
+		},
+
+		generateEnvModule() {
+			const dest = `${config.kit.outDir}/output/prerendered/dependencies/${config.kit.appDir}/env.js`;
+			const env = get_env(config.kit.env, vite_config.mode);
+
+			write(dest, `export const env=${JSON.stringify(env.public)}`);
 		},
 
 		generateManifest({ relativePath, routes: subset }) {
@@ -181,12 +190,10 @@ export function create_builder({
 		},
 
 		writeClient(dest) {
-			const server_assets = copy(
-				`${config.kit.outDir}/output/server/${config.kit.appDir}/immutable/assets`,
-				join(dest, config.kit.appDir, 'immutable/assets')
-			).map((filename) => join(config.kit.appDir, 'immutable/assets', filename));
-			const client_assets = copy(`${config.kit.outDir}/output/client`, dest);
-			return Array.from(new Set([...server_assets, ...client_assets]));
+			return copy(`${config.kit.outDir}/output/client`, dest, {
+				// avoid making vite build artefacts public
+				filter: (basename) => basename !== '.vite'
+			});
 		},
 
 		writePrerendered(dest) {
@@ -213,7 +220,7 @@ async function compress_file(file, format = 'gz') {
 						[zlib.constants.BROTLI_PARAM_QUALITY]: zlib.constants.BROTLI_MAX_QUALITY,
 						[zlib.constants.BROTLI_PARAM_SIZE_HINT]: statSync(file).size
 					}
-			  })
+				})
 			: zlib.createGzip({ level: zlib.constants.Z_BEST_COMPRESSION });
 
 	const source = createReadStream(file);

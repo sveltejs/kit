@@ -1,5 +1,5 @@
 <script>
-	import {marked} from 'marked';
+	import { marked } from 'marked';
 </script>
 
 <main>{@html marked('this is some **markdown**')}</main>

@@ -1,55 +1,71 @@
 <script>
-	import { browser } from '$app/environment';
-	import { base } from '$app/paths';
-	import { page } from '$app/stores';
-	import { Icon, Nav, NavItem, Separator, Shell } from '@sveltejs/site-kit/components';
-	import { Search, SearchBox } from '@sveltejs/site-kit/search';
 	import '@sveltejs/site-kit/styles/index.css';
+
+	import { browser } from '$app/environment';
+	import { page } from '$app/stores';
+	import { Banners, Icon, Shell } from '@sveltejs/site-kit/components';
+	import { Nav, Separator } from '@sveltejs/site-kit/nav';
+	import { Search, SearchBox } from '@sveltejs/site-kit/search';
+
+	export let data;
+
+	/** @type {import('@sveltejs/kit').Snapshot<number>} */
+	let shell_snapshot;
+
+	/** @type {import('@sveltejs/kit').Snapshot<{shell: number}>} */
+	export const snapshot = {
+		capture() {
+			return {
+				shell: shell_snapshot?.capture()
+			};
+		},
+		restore(data) {
+			shell_snapshot?.restore(data.shell);
+		}
+	};
 </script>
 
-<Shell>
-	<Nav slot="top-nav">
-		<svelte:fragment slot="home">
-			<span><strong>kit</strong>.svelte.dev</span>
-		</svelte:fragment>
+<div style:display={$page.url.pathname !== '/docs' ? 'contents' : 'none'}>
+	<Shell nav_visible={$page.url.pathname !== '/repl/embed'} bind:snapshot={shell_snapshot}>
+		<Nav slot="top-nav" title={data.nav_title} links={data.nav_links}>
+			<svelte:fragment slot="home-large">
+				<strong>kit</strong>.svelte.dev
+			</svelte:fragment>
 
-		<svelte:fragment slot="nav-center">
-			{#if $page.url.pathname !== '/search'}
-				<li><Search /></li>
-			{/if}
-		</svelte:fragment>
+			<svelte:fragment slot="home-small">
+				<strong>kit</strong>
+			</svelte:fragment>
 
-		<svelte:fragment slot="nav-right">
-			<NavItem
-				selected={$page.url.pathname.startsWith(`${base}/docs`) || undefined}
-				href="{base}/docs">Docs</NavItem
-			>
-			
-			<NavItem external="https://learn.svelte.dev/tutorial/introducing-sveltekit">Tutorial</NavItem>
-			
-			<NavItem
-				selected={$page.url.pathname.startsWith(`${base}/faq`) || undefined}
-				href="{base}/faq">FAQ</NavItem
-			>
+			<svelte:fragment slot="search">
+				{#if $page.url.pathname !== '/search'}
+					<Search />
+				{/if}
+			</svelte:fragment>
 
-			<Separator />
+			<svelte:fragment slot="external-links">
+				<a href="https://learn.svelte.dev/tutorial/introducing-sveltekit" rel="external">Tutorial</a
+				>
+				<a href="https://svelte.dev">Svelte</a>
 
-			<NavItem external="https://svelte.dev">Svelte</NavItem>
+				<Separator />
 
-			<NavItem external="https://svelte.dev/chat" title="Discord Chat">
-				<span slot="small">Discord</span>
-				<Icon name="message-square" />
-			</NavItem>
+				<a href="https://svelte.dev/chat" rel="external" title="Discord Chat">
+					<span class="small">Discord</span>
+					<span class="large"><Icon name="discord" /></span>
+				</a>
 
-			<NavItem external="https://github.com/sveltejs/kit" title="GitHub Repo">
-				<span slot="small">GitHub</span>
-				<Icon name="github" />
-			</NavItem>
-		</svelte:fragment>
-	</Nav>
+				<a href="https://github.com/sveltejs/kit" title="GitHub Repo">
+					<span class="small">GitHub</span>
+					<span class="large"><Icon name="github" /></span>
+				</a>
+			</svelte:fragment>
+		</Nav>
 
-	<slot />
-</Shell>
+		<slot />
+
+		<Banners slot="banner-bottom" data={data.banner} />
+	</Shell>
+</div>
 
 {#if browser}
 	<SearchBox />
@@ -72,11 +88,6 @@
 		.large {
 			display: inline;
 		}
-	}
-
-	li {
-		display: flex;
-		align-items: center;
 	}
 
 	:global(.examples-container, .repl-outer, .tutorial-outer) {

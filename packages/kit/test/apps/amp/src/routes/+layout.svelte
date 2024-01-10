@@ -1,4 +1,4 @@
-<slot></slot>
+<slot />
 <footer>footer</footer>
 
 <style>

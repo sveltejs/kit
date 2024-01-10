@@ -32,15 +32,7 @@ export default async (req, res) => {
 		}
 	}
 
-	/** @type {Request} */
-	let request;
-
-	try {
-		request = await getRequest({ base: `https://${req.headers.host}`, request: req });
-	} catch (err) {
-		res.statusCode = /** @type {any} */ (err).status || 400;
-		return res.end('Invalid request body');
-	}
+	const request = await getRequest({ base: `https://${req.headers.host}`, request: req });
 
 	setResponse(
 		res,

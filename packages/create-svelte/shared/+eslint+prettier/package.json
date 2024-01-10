@@ -1,9 +1,9 @@
 {
 	"devDependencies": {
-		"eslint-config-prettier": "^8.5.0"
+		"eslint-config-prettier": "^9.1.0"
 	},
 	"scripts": {
-		"lint": "prettier --plugin-search-dir . --check . && eslint .",
-		"format": "prettier --plugin-search-dir . --write ."
+		"lint": "prettier --check . && eslint .",
+		"format": "prettier --write ."
 	}
 }

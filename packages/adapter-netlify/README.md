@@ -8,4 +8,4 @@ A SvelteKit adapter that creates a Netlify app.
 
 ## Changelog
 
-[The Changelog for this package is available on GitHub](https://github.com/sveltejs/kit/blob/master/packages/adapter-netlify/CHANGELOG.md).
+[The Changelog for this package is available on GitHub](https://github.com/sveltejs/kit/blob/main/packages/adapter-netlify/CHANGELOG.md).

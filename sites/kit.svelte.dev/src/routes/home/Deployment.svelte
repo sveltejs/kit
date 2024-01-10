@@ -1,16 +1,18 @@
 <script>
-	import { Section, theme } from '@sveltejs/site-kit/components';
+	import { Section } from '@sveltejs/site-kit/components';
+	import { theme } from '@sveltejs/site-kit/stores';
+
+	import { base } from '$app/paths';
+	import plus from '$lib/icons/plus.svg';
+	import azure from './logos/azure.svg';
+	import cloudflare from './logos/cloudflare.svg';
+	import deno from './logos/deno.svg';
+	import firebase from './logos/firebase.svg';
 	import html5 from './logos/html5.svg';
+	import lambda from './logos/lambda.svg';
+	import netlify from './logos/netlify.svg';
 	import node from './logos/node.svg';
 	import vercel from './logos/vercel.svg';
-	import netlify from './logos/netlify.svg';
-	import cloudflare from './logos/cloudflare.svg';
-	import firebase from './logos/firebase.svg';
-	import deno from './logos/deno.svg';
-	import lambda from './logos/lambda.svg';
-	import azure from './logos/azure.svg';
-	import plus from '$lib/icons/plus.svg';
-	import { base } from '$app/paths';
 </script>
 
 <Section --background="var(--background-1)">
@@ -32,7 +34,7 @@
 			<a
 				target="_blank"
 				rel="noreferrer"
-				href="https://github.com/sveltejs/kit/tree/master/packages/adapter-static"
+				href="https://github.com/sveltejs/kit/tree/main/packages/adapter-static"
 				class="invert"
 			>
 				<img src={html5} alt="" />
@@ -41,7 +43,7 @@
 			<a
 				target="_blank"
 				rel="noreferrer"
-				href="https://github.com/sveltejs/kit/tree/master/packages/adapter-node"
+				href="https://github.com/sveltejs/kit/tree/main/packages/adapter-node"
 				class="invert"
 			>
 				<img src={node} alt="" />
@@ -59,7 +61,7 @@
 			<a
 				target="_blank"
 				rel="noreferrer"
-				href="https://github.com/sveltejs/kit/tree/master/packages/adapter-netlify"
+				href="https://github.com/sveltejs/kit/tree/main/packages/adapter-netlify"
 			>
 				<img src={netlify} alt="" />
 				<span>Netlify</span>
@@ -67,7 +69,7 @@
 			<a
 				target="_blank"
 				rel="noreferrer"
-				href="https://github.com/sveltejs/kit/tree/master/packages/adapter-cloudflare"
+				href="https://github.com/sveltejs/kit/tree/main/packages/adapter-cloudflare"
 			>
 				<img src={cloudflare} alt="" />
 				<span>Cloudflare</span>

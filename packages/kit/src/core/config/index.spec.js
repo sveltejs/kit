@@ -69,9 +69,6 @@ const get_defaults = (prefix = '') => ({
 		csrf: {
 			checkOrigin: true
 		},
-		dangerZone: {
-			trackServerFetches: false
-		},
 		embedded: false,
 		env: {
 			dir: process.cwd(),
@@ -82,7 +79,8 @@ const get_defaults = (prefix = '') => ({
 			assets: join(prefix, 'static'),
 			hooks: {
 				client: join(prefix, 'src/hooks.client'),
-				server: join(prefix, 'src/hooks.server')
+				server: join(prefix, 'src/hooks.server'),
+				universal: join(prefix, 'src/hooks')
 			},
 			lib: join(prefix, 'src/lib'),
 			params: join(prefix, 'src/params'),
@@ -102,7 +100,7 @@ const get_defaults = (prefix = '') => ({
 		paths: {
 			base: '',
 			assets: '',
-			relative: undefined
+			relative: true
 		},
 		prerender: {
 			concurrency: 1,
@@ -321,7 +319,7 @@ validate_paths(
 	{
 		base: '/path/to/base',
 		assets: '',
-		relative: undefined
+		relative: true
 	}
 );
 
@@ -333,7 +331,7 @@ validate_paths(
 	{
 		base: '',
 		assets: 'https://cdn.example.com',
-		relative: undefined
+		relative: true
 	}
 );
 
@@ -346,7 +344,7 @@ validate_paths(
 	{
 		base: '/path/to/base',
 		assets: 'https://cdn.example.com',
-		relative: undefined
+		relative: true
 	}
 );
 

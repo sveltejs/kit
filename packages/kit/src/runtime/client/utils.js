@@ -6,16 +6,20 @@ import { PRELOAD_PRIORITIES } from './constants.js';
 
 /* global __SVELTEKIT_APP_VERSION_FILE__, __SVELTEKIT_APP_VERSION_POLL_INTERVAL__ */
 
-/** @param {HTMLDocument} doc */
-export function get_base_uri(doc) {
-	let baseURI = doc.baseURI;
+export const origin = BROWSER ? location.origin : '';
+
+/** @param {string | URL} url */
+export function resolve_url(url) {
+	if (url instanceof URL) return url;
+
+	let baseURI = document.baseURI;
 
 	if (!baseURI) {
-		const baseTags = doc.getElementsByTagName('base');
-		baseURI = baseTags.length ? baseTags[0].href : doc.URL;
+		const baseTags = document.getElementsByTagName('base');
+		baseURI = baseTags.length ? baseTags[0].href : document.URL;
 	}
 
-	return baseURI;
+	return new URL(url, baseURI);
 }
 
 export function scroll_state() {
@@ -30,8 +34,8 @@ const warned = new WeakSet();
 /** @typedef {keyof typeof valid_link_options} LinkOptionName */
 
 const valid_link_options = /** @type {const} */ ({
-	'preload-code': ['', 'off', 'tap', 'hover', 'viewport', 'eager'],
-	'preload-data': ['', 'off', 'tap', 'hover'],
+	'preload-code': ['', 'off', 'false', 'tap', 'hover', 'viewport', 'eager'],
+	'preload-data': ['', 'off', 'false', 'tap', 'hover'],
 	keepfocus: ['', 'true', 'off', 'false'],
 	noscroll: ['', 'true', 'off', 'false'],
 	reload: ['', 'true', 'off', 'false'],
@@ -135,7 +139,7 @@ export function get_link_info(a, base) {
 		is_external_url(url, base) ||
 		(a.getAttribute('rel') || '').split(/\s+/).includes('external');
 
-	const download = url?.origin === location.origin && a.hasAttribute('download');
+	const download = url?.origin === origin && a.hasAttribute('download');
 
 	return { url, external, target, download };
 }
@@ -145,7 +149,7 @@ export function get_link_info(a, base) {
  */
 export function get_router_options(element) {
 	/** @type {ValidLinkOptions<'keepfocus'> | null} */
-	let keep_focus = null;
+	let keepfocus = null;
 
 	/** @type {ValidLinkOptions<'noscroll'> | null} */
 	let noscroll = null;
@@ -168,7 +172,7 @@ export function get_router_options(element) {
 	while (el && el !== document.documentElement) {
 		if (preload_code === null) preload_code = link_option(el, 'preload-code');
 		if (preload_data === null) preload_data = link_option(el, 'preload-data');
-		if (keep_focus === null) keep_focus = link_option(el, 'keepfocus');
+		if (keepfocus === null) keepfocus = link_option(el, 'keepfocus');
 		if (noscroll === null) noscroll = link_option(el, 'noscroll');
 		if (reload === null) reload = link_option(el, 'reload');
 		if (replace_state === null) replace_state = link_option(el, 'replacestate');
@@ -186,14 +190,14 @@ export function get_router_options(element) {
 			case 'false':
 				return false;
 			default:
-				return null;
+				return undefined;
 		}
 	}
 
 	return {
 		preload_code: levels[preload_code ?? 'off'],
 		preload_data: levels[preload_data ?? 'off'],
-		keep_focus: get_option_state(keep_focus),
+		keepfocus: get_option_state(keepfocus),
 		noscroll: get_option_state(noscroll),
 		reload: get_option_state(reload),
 		replace_state: get_option_state(replace_state)
@@ -290,5 +294,5 @@ export function create_updated_store() {
  * @param {string} base
  */
 export function is_external_url(url, base) {
-	return url.origin !== location.origin || !url.pathname.startsWith(base);
+	return url.origin !== origin || !url.pathname.startsWith(base);
 }

@@ -15,6 +15,12 @@ if (migrations.includes(migration)) {
 	migrate();
 } else {
 	console.error(
-		colors.bold().red(`You must specify one of the following migrations: ${migrations.join(', ')}`)
+		colors
+			.bold()
+			.red(
+				`You must specify one of the following migrations: ${migrations.join(', ')}\n` +
+					'If you expected this to work, try re-running the command with the latest svelte-migrate version:\n' +
+					`  npx svelte-migrate@latest ${migration}`
+			)
 	);
 }

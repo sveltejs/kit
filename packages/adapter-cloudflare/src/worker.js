@@ -14,7 +14,7 @@ const worker = {
 		let res = !pragma.includes('no-cache') && (await Cache.lookup(req));
 		if (res) return res;
 
-		let { pathname } = new URL(req.url);
+		let { pathname, search } = new URL(req.url);
 		try {
 			pathname = decodeURIComponent(pathname);
 		} catch {
@@ -31,11 +31,12 @@ const worker = {
 				manifest.assets.has(filename) || manifest.assets.has(filename + '/index.html');
 		}
 
-		const location = pathname.at(-1) === '/' ? stripped_pathname : pathname + '/';
+		let location = pathname.at(-1) === '/' ? stripped_pathname : pathname + '/';
 
 		if (is_static_asset || prerendered.has(pathname)) {
 			res = await env.ASSETS.fetch(req);
 		} else if (location && prerendered.has(location)) {
+			if (search) location += search;
 			res = new Response('', {
 				status: 308,
 				headers: {

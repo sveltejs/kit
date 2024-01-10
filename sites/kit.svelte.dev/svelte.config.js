@@ -10,14 +10,6 @@ const config = {
 		paths: {
 			relative: true
 		}
-	},
-
-	vitePlugin: {
-		experimental: {
-			inspector: {
-				holdMode: true
-			}
-		}
 	}
 };
 

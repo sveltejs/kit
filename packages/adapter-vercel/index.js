@@ -5,17 +5,15 @@ import { nodeFileTrace } from '@vercel/nft';
 import esbuild from 'esbuild';
 import { get_pathname } from './utils.js';
 
-const VALID_RUNTIMES = ['edge', 'nodejs16.x', 'nodejs18.x'];
-
 const DEFAULT_FUNCTION_NAME = 'fn';
 
 const get_default_runtime = () => {
 	const major = process.version.slice(1).split('.')[0];
-	if (major === '16') return 'nodejs16.x';
 	if (major === '18') return 'nodejs18.x';
+	if (major === '20') return 'nodejs20.x';
 
 	throw new Error(
-		`Unsupported Node.js version: ${process.version}. Please use Node 16 or Node 18 to build your project, or explicitly specify a runtime in your adapter configuration.`
+		`Unsupported Node.js version: ${process.version}. Please use Node 18 or Node 20 to build your project, or explicitly specify a runtime in your adapter configuration.`
 	);
 };
 
@@ -55,7 +53,7 @@ const plugin = function (defaults = {}) {
 				functions: `${dir}/functions`
 			};
 
-			const static_config = static_vercel_config(builder);
+			const static_config = static_vercel_config(builder, defaults);
 
 			builder.log.minor('Generating serverless function...');
 
@@ -164,20 +162,20 @@ const plugin = function (defaults = {}) {
 					continue;
 				}
 
-				if (runtime && !VALID_RUNTIMES.includes(runtime)) {
+				const node_runtime = /nodejs([0-9]+)\.x/.exec(runtime);
+				if (runtime !== 'edge' && (!node_runtime || node_runtime[1] < 18)) {
 					throw new Error(
-						`Invalid runtime '${runtime}' for route ${
-							route.id
-						}. Valid runtimes are ${VALID_RUNTIMES.join(', ')}`
+						`Invalid runtime '${runtime}' for route ${route.id}. Valid runtimes are 'edge' and 'nodejs18.x' or higher ` +
+							'(see the Node.js Version section in your Vercel project settings for info on the currently supported versions).'
 					);
 				}
 
 				if (config.isr) {
 					const directory = path.relative('.', builder.config.kit.files.routes + route.id);
 
-					if (runtime !== 'nodejs16.x' && runtime !== 'nodejs18.x') {
+					if (!runtime.startsWith('nodejs')) {
 						throw new Error(
-							`${directory}: Routes using \`isr\` must use either \`runtime: 'nodejs16.x'\` or \`runtime: 'nodejs18.x'\``
+							`${directory}: Routes using \`isr\` must use a Node.js runtime (for example 'nodejs20.x')`
 						);
 					}
 
@@ -368,13 +366,19 @@ function write(file, data) {
 }
 
 // This function is duplicated in adapter-static
-/** @param {import('@sveltejs/kit').Builder} builder */
-function static_vercel_config(builder) {
+/**
+ * @param {import('@sveltejs/kit').Builder} builder
+ * @param {import('.').Config} config
+ */
+function static_vercel_config(builder, config) {
 	/** @type {any[]} */
 	const prerendered_redirects = [];
 
 	/** @type {Record<string, { path: string }>} */
 	const overrides = {};
+
+	/** @type {import('./index').ImagesConfig} */
+	const images = config.images;
 
 	for (const [src, redirect] of builder.prerendered.redirects) {
 		prerendered_redirects.push({
@@ -421,7 +425,8 @@ function static_vercel_config(builder) {
 				handle: 'filesystem'
 			}
 		],
-		overrides
+		overrides,
+		images
 	};
 }
 
