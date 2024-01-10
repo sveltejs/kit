@@ -194,7 +194,7 @@ class BaseProvider {
 					this.#style_src_elem.push(`sha256-${hash}`);
 				}
 			} else {
-				if (this.#style_src.length === 0) {
+				if (this.#style_src.length === 0 && !d['style-src']?.includes('unsafe-inline')) {
 					this.#style_src.push(`nonce-${this.#nonce}`);
 				}
 				if (d['style-src-attr']?.length) {
