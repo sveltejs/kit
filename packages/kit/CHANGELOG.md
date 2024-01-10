@@ -1,5 +1,11 @@
 # @sveltejs/kit
 
+## 2.2.2
+
+### Patch Changes
+
+- fix: only add nonce to `style-src` CSP directive when `unsafe-inline` is not present ([#11575](https://github.com/sveltejs/kit/pull/11575))
+
 ## 2.2.1
 
 ### Patch Changes
