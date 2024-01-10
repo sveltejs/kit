@@ -1079,14 +1079,23 @@ function get_navigation_intent(url, invalidating) {
 	if (is_external_url(url, base)) return;
 
 	// reroute could alter the given URL, so we pass a copy
-	let rerouted_path;
+	let rerouted;
 	try {
-		rerouted_path = app.hooks.reroute({ url: new URL(url) }) ?? url.pathname;
+		rerouted = app.hooks.reroute({ url: new URL(url) }) ?? url.pathname;
 	} catch (e) {
+		if (DEV) {
+			// in development, print the error...
+			console.error(e);
+
+			// ...and pause execution, since otherwise we will immediately reload the page
+			debugger; // eslint-disable-line
+		}
+
+		// fall back to native navigation
 		return undefined;
 	}
 
-	const path = get_url_path(rerouted_path);
+	const path = get_url_path(rerouted);
 
 	for (const route of routes) {
 		const params = route.exec(path);
