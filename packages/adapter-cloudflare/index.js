@@ -28,7 +28,8 @@ export default function (options = {}) {
 			writeFileSync(
 				`${tmp}/manifest.js`,
 				`export const manifest = ${builder.generateManifest({ relativePath })};\n\n` +
-					`export const prerendered = new Set(${JSON.stringify(builder.prerendered.paths)});\n`
+					`export const prerendered = new Set(${JSON.stringify(builder.prerendered.paths)});\n\n` +
+					`export const app_path = ${JSON.stringify(builder.getAppPath())};\n`
 			);
 
 			writeFileSync(
