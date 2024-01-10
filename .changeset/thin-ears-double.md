@@ -2,4 +2,4 @@
 "@sveltejs/kit": minor
 ---
 
-feat: add `rewriteUrl` hook
+feat: add `reroute` hook
