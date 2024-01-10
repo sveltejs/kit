@@ -10,7 +10,7 @@ There are three hooks files, all optional:
 - `src/hooks.client.js` — your app's client hooks
 - `src/hooks.js` — your app's hooks that run on both the client and server
 
-Code in the client and server modules will run when the application starts up, making them useful for initializing database clients and so on.
+Code in these modules will run when the application starts up, making them useful for initializing database clients and so on.
 
 > You can configure the location of these files with [`config.kit.files.hooks`](configuration#files).
 
@@ -237,9 +237,9 @@ During development, if an error occurs because of a syntax error in your Svelte 
 
 The following can be added to `src/hooks.js`. Isomorphic hooks share the same implementation on the server and the client. This is not to be confused with shared hooks, which use separate implementations. 
 
-### rewriteUrl
+### reroute
 
-This function allows you to rewrite URLs before SvelteKit uses them to determine which route to render. It will not change the URL in the browser's address bar, or the value of `event.url`. Only the route matching logic is affected.
+This function allows you to change which route get's rendered. By returning a different path from it, that new path will be used to determine the route that needs to be rendered. It will not change the URL in the browser's address bar, or the value of `event.url`. Only the route matching logic is affected.
 
 ```js
 /// file: src/hooks.router.js
@@ -253,10 +253,11 @@ const mapping = {
 	"/fr/a-propos": "/fr/about",
 }
 
-/** @type {import('@sveltejs/kit').RewriteUrl} */
-export function rewriteUrl({ url }) {
-	url.pathname = mapping[url.pathname] ?? url.pathname;
-	return url;
+/** @type {import('@sveltejs/kit').Reroute} */
+export function reroute({ url }) {
+	if(url.pathname in mapping) {
+		return mapping[url.pathname];
+	}
 }
 ```
 
