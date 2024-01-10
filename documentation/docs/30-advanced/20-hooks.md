@@ -244,7 +244,7 @@ This function allows you to change how URLs are translated into routes. The retu
 For example, you might have a `src/routes/[[lang]]/about/+page.svelte` page, which should be accessible as `/en/about` or `/de/ueber-uns` or `/fr/a-propos`. You could implement this with `reroute`:
 
 ```js
-/// file: src/hooks.router.js
+/// file: src/hooks.js
 // @errors: 2345
 // @errors: 2304
 
