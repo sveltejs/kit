@@ -10,7 +10,7 @@ There are three hooks files, all optional:
 - `src/hooks.client.js` — your app's client hooks
 - `src/hooks.js` — your app's hooks that run on both the client and server
 
-Code in the client and server modules will run when the application starts up, making them useful for initializing database clients and so on.
+Code in these modules will run when the application starts up, making them useful for initializing database clients and so on.
 
 > You can configure the location of these files with [`config.kit.files.hooks`](configuration#files).
 
