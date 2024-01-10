@@ -379,6 +379,7 @@ declare module '@sveltejs/kit' {
 				/**
 				 * The location of your universal [hooks](https://kit.svelte.dev/docs/hooks).
 				 * @default "src/hooks"
+				 * @since 2.3.0
 				 */
 				universal?: string;
 			};
@@ -671,7 +672,8 @@ declare module '@sveltejs/kit' {
 	}) => MaybePromise<Response>;
 
 	/**
-	 * The [`reroute`](#) hook allows you to modify the URL before it is used to determine which route to render.
+	 * The [`reroute`](https://kit.svelte.dev/docs/hooks#universal-hooks-reroute) hook allows you to modify the URL before it is used to determine which route to render.
+	 * @since 2.3.0
 	 */
 	export type Reroute = (event: { url: URL }) => void | string;
 
