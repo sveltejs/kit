@@ -113,6 +113,10 @@ export async function respond(request, options, manifest, state) {
 		return get_public_env(request);
 	}
 
+	if (decoded.startsWith(`/${options.app_dir}`)) {
+		return text('Not found', { status: 404 });
+	}
+
 	const is_data_request = has_data_suffix(decoded);
 	/** @type {boolean[] | undefined} */
 	let invalidated_data_nodes;
