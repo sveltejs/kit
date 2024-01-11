@@ -1,5 +1,5 @@
 <script>
-	import asset from '$lib/component1.txt';
+	import asset from '$lib/+layout.svelte.txt';
 </script>
 
 <p>{asset}</p>

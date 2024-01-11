@@ -1,6 +1,5 @@
-import layout2 from '$lib/layout2.txt';
+import layout from '$lib/+layout.js.txt';
 
-/** @type {import('./$types').LayoutLoad} */
-export function load({ data }) {
-	return { ...data, layout2 };
+export function load() {
+	return { layout };
 }

@@ -266,36 +266,13 @@ export function create_builder({
 				return server_assets;
 			}
 
-			const route_dir = config.kit.files.routes.slice(process.cwd().length + 1);
-
-			/**
-			 * @param {import('types').RouteData} route
-			 */
-			function get_default_error_page_assets(route) {
-				/** @type {Set<string>} */
-				let server_assets = new Set();
-				let route_id = route.id;
-
-				do {
-					server_assets = concat(
-						server_assets,
-						get_server_assets(
-							`${route_dir}${route_id === '/' ? route_id : route_id + '/'}+error.svelte`
-						)
-					);
-					route_id = route_id.split('/').slice(0, -1).join('/');
-				} while (route_id);
-
-				return server_assets;
-			}
-
 			function get_root_error_page_assets() {
 				const route = route_data.find((route) => route.leaf);
 				if (!route || !route.leaf) {
 					return /** @type {string[]}*/ ([]);
 				}
 
-				let assets = new Set(get_server_assets(`${route_dir}/+error.svelte`));
+				let assets = new Set();
 
 				let layout = route.leaf.parent;
 				while (layout) {
@@ -313,11 +290,7 @@ export function create_builder({
 				let server_assets = new Set();
 
 				if (route.leaf) {
-					server_assets = concat(
-						server_assets,
-						get_server_load_assets(route.leaf),
-						get_default_error_page_assets(route)
-					);
+					server_assets = concat(server_assets, get_server_load_assets(route.leaf));
 				}
 
 				if (route.endpoint) {
