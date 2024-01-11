@@ -327,6 +327,11 @@ export async function render_response({
 						}`);
 		}
 
+		// create this before declaring `data`, which may contain references to `${global}`
+		blocks.push(`${global} = {
+						${properties.join(',\n\t\t\t\t\t\t')}
+					};`);
+
 		const args = ['app', 'element'];
 
 		blocks.push('const element = document.currentScript.parentElement;');
@@ -368,9 +373,7 @@ export async function render_response({
 
 		if (load_env_eagerly) {
 			blocks.push(`import(${s(`${base}/${options.app_dir}/env.js`)}).then(({ env }) => {
-						${global} = {
-							${properties.join(',\n\t\t\t\t\t\t\t')}
-						};
+						${global}.env = env;
 
 						Promise.all([
 							import(${s(prefixed(client.start))}),
@@ -380,10 +383,6 @@ export async function render_response({
 						});
 					});`);
 		} else {
-			blocks.push(`${global} = {
-						${properties.join(',\n\t\t\t\t\t\t')}
-					};`);
-
 			blocks.push(`Promise.all([
 						import(${s(prefixed(client.start))}),
 						import(${s(prefixed(client.app))})
