@@ -164,14 +164,14 @@ class BaseProvider {
 		if (!this.#script_needs_csp) return;
 
 		/** @type {`nonce-${string}` | `sha256-${string}`} */
-		const value = this.#use_hashes ? `sha256-${sha256(content)}` : `nonce-${this.#nonce}`;
+		const source = this.#use_hashes ? `sha256-${sha256(content)}` : `nonce-${this.#nonce}`;
 
 		if (this.#script_src_needs_csp) {
-			this.#script_src.push(value);
+			this.#script_src.push(source);
 		}
 
 		if (this.#script_src_elem_needs_csp) {
-			this.#script_src_elem.push(value);
+			this.#script_src_elem.push(source);
 		}
 	}
 
@@ -180,18 +180,18 @@ class BaseProvider {
 		if (!this.#style_needs_csp) return;
 
 		/** @type {`nonce-${string}` | `sha256-${string}`} */
-		const value = this.#use_hashes ? `sha256-${sha256(content)}` : `nonce-${this.#nonce}`;
+		const source = this.#use_hashes ? `sha256-${sha256(content)}` : `nonce-${this.#nonce}`;
 
 		if (this.#style_src_needs_csp) {
-			this.#style_src.push(value);
+			this.#style_src.push(source);
 		}
 
 		if (this.#style_src_needs_csp) {
-			this.#style_src.push(value);
+			this.#style_src.push(source);
 		}
 
 		if (this.#style_src_attr_needs_csp) {
-			this.#style_src_attr.push(value);
+			this.#style_src_attr.push(source);
 		}
 
 		if (this.#style_src_elem_needs_csp) {
@@ -208,7 +208,7 @@ class BaseProvider {
 				this.#style_src_elem.push(sha256_empty_comment_hash);
 			}
 
-			this.#style_src_elem.push(value);
+			this.#style_src_elem.push(source);
 		}
 	}
 
