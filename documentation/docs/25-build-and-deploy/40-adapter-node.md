@@ -193,7 +193,7 @@ app.listen(3000, () => {
 
 ### Is there a hook for cleaning up before the server exits?
 
-There's nothing built-in to SvelteKit for this, because such a cleanup hook depends highly on the execution environment you're on. For Node, you can use its built-in `process.on(..)` to implement a callback that runs before the server exits:
+There's nothing built-in to SvelteKit for this, because such a cleanup hook depends highly on the execution environment you're on. For Node, you can use its built-in `process.on(...)` to implement a callback that runs before the server exits:
 
 ```js
 // @errors: 2304 2580

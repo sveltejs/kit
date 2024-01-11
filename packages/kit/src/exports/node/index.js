@@ -34,11 +34,15 @@ function get_raw_body(req, body_size_limit) {
 	return new ReadableStream({
 		start(controller) {
 			if (body_size_limit !== undefined && content_length > body_size_limit) {
-				const error = new SvelteKitError(
-					413,
-					'Payload Too Large',
-					`Content-length of ${content_length} exceeds limit of ${body_size_limit} bytes.`
-				);
+				let message = `Content-length of ${content_length} exceeds limit of ${body_size_limit} bytes.`;
+
+				if (body_size_limit === 0) {
+					// https://github.com/sveltejs/kit/pull/11589
+					// TODO this exists to aid migration — remove in a future version
+					message += ' To disable body size limits, specify Infinity rather than 0.';
+				}
+
+				const error = new SvelteKitError(413, 'Payload Too Large', message);
 
 				controller.error(error);
 				return;

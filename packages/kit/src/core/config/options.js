@@ -123,7 +123,8 @@ const options = object(
 				assets: string('static'),
 				hooks: object({
 					client: string(join('src', 'hooks.client')),
-					server: string(join('src', 'hooks.server'))
+					server: string(join('src', 'hooks.server')),
+					universal: string(join('src', 'hooks'))
 				}),
 				lib: string(join('src', 'lib')),
 				params: string(join('src', 'params')),

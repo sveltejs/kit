@@ -81,13 +81,6 @@ export function get_tsconfig(kit) {
 	include.add(config_relative(`${test_folder}/**/*.svelte`));
 
 	const exclude = [config_relative('node_modules/**')];
-	if (path.extname(kit.files.serviceWorker)) {
-		exclude.push(config_relative(kit.files.serviceWorker));
-	} else {
-		exclude.push(config_relative(`${kit.files.serviceWorker}.js`));
-		exclude.push(config_relative(`${kit.files.serviceWorker}.ts`));
-		exclude.push(config_relative(`${kit.files.serviceWorker}.d.ts`));
-	}
 
 	const config = {
 		compilerOptions: {

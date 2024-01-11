@@ -1,5 +1,43 @@
 # @sveltejs/kit
 
+## 2.3.1
+
+### Patch Changes
+
+- fix: amend onNavigate type ([#11599](https://github.com/sveltejs/kit/pull/11599))
+
+- fix: better error message when peer dependency cannot be found ([#11598](https://github.com/sveltejs/kit/pull/11598))
+
+## 2.3.0
+
+### Minor Changes
+
+- feat: add `reroute` hook ([#11537](https://github.com/sveltejs/kit/pull/11537))
+
+## 2.2.2
+
+### Patch Changes
+
+- fix: only add nonce to `style-src` CSP directive when `unsafe-inline` is not present ([#11575](https://github.com/sveltejs/kit/pull/11575))
+
+## 2.2.1
+
+### Patch Changes
+
+- feat: add CSP support for style-src-elem ([#11562](https://github.com/sveltejs/kit/pull/11562))
+
+- fix: address CSP conflicts with sha/nonce during dev ([#11562](https://github.com/sveltejs/kit/pull/11562))
+
+## 2.2.0
+
+### Minor Changes
+
+- feat: expose `$env/static/public` in service workers ([#10994](https://github.com/sveltejs/kit/pull/10994))
+
+### Patch Changes
+
+- fix: reload page on startup if `document.URL` contains credentials ([#11179](https://github.com/sveltejs/kit/pull/11179))
+
 ## 2.1.2
 
 ### Patch Changes

@@ -70,23 +70,25 @@ export function image(opts) {
 				url += 'enhanced';
 
 				if (OPTIMIZABLE.test(url)) {
-					let image = images.get(url);
-					if (!image) {
-						// resolves the import so that we can build the entire picture template string and don't
-						// need any logic blocks
-						image = await resolve(opts, url, filename);
-						if (!image) {
-							const file_path = url.substring(0, url.indexOf('?'));
-							if (existsSync(path.resolve(opts.vite_config.publicDir, file_path))) {
-								throw new Error(
-									`Could not locate ${file_path}. Please move it to be located relative to the page in the routes directory or reference it beginning with /static/. See https://vitejs.dev/guide/assets for more details on referencing assets.`
-								);
-							}
+					// resolves the import so that we can build the entire picture template string and don't
+					// need any logic blocks
+					const resolved_id = (await opts.plugin_context.resolve(url, filename))?.id;
+					if (!resolved_id) {
+						const file_path = url.substring(0, url.indexOf('?'));
+						if (existsSync(path.resolve(opts.vite_config.publicDir, file_path))) {
 							throw new Error(
-								`Could not locate ${file_path}. See https://vitejs.dev/guide/assets for more details on referencing assets.`
+								`Could not locate ${file_path}. Please move it to be located relative to the page in the routes directory or reference it beginning with /static/. See https://vitejs.dev/guide/assets for more details on referencing assets.`
 							);
 						}
-						images.set(url, image);
+						throw new Error(
+							`Could not locate ${file_path}. See https://vitejs.dev/guide/assets for more details on referencing assets.`
+						);
+					}
+
+					let image = images.get(resolved_id);
+					if (!image) {
+						image = await process(resolved_id, opts);
+						images.set(resolved_id, image);
 					}
 					s.update(node.start, node.end, img_to_picture(content, node, image));
 				} else {
@@ -155,28 +157,22 @@ function is_quote(content, index) {
 }
 
 /**
+ * @param {string} resolved_id
  * @param {{
  *   plugin_context: import('vite').Rollup.PluginContext
  *   imagetools_plugin: import('vite').Plugin
  * }} opts
- * @param {string} url
- * @param {string | undefined} importer
- * @returns {Promise<import('vite-imagetools').Picture | undefined>}
+ * @returns {Promise<import('vite-imagetools').Picture>}
  */
-async function resolve(opts, url, importer) {
-	const resolved = await opts.plugin_context.resolve(url, importer);
-	const id = resolved?.id;
-	if (!id) {
-		return;
-	}
+async function process(resolved_id, opts) {
 	if (!opts.imagetools_plugin.load) {
 		throw new Error('Invalid instance of vite-imagetools. Could not find load method.');
 	}
 	const hook = opts.imagetools_plugin.load;
 	const handler = typeof hook === 'object' ? hook.handler : hook;
-	const module_info = await handler.call(opts.plugin_context, id);
+	const module_info = await handler.call(opts.plugin_context, resolved_id);
 	if (!module_info) {
-		throw new Error(`Could not load ${id}`);
+		throw new Error(`Could not load ${resolved_id}`);
 	}
 	const code = typeof module_info === 'string' ? module_info : module_info.code;
 	return parseObject(code.replace('export default', '').replace(/;$/, '').trim());

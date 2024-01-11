@@ -223,6 +223,14 @@ export async function start(_app, _target, hydrate) {
 		);
 	}
 
+	// detect basic auth credentials in the current URL
+	// https://github.com/sveltejs/kit/pull/11179
+	// if so, refresh the page without credentials
+	if (document.URL !== location.href) {
+		// eslint-disable-next-line no-self-assign
+		location.href = location.href;
+	}
+
 	app = _app;
 	routes = parse(_app);
 	container = __SVELTEKIT_EMBEDDED__ ? _target : document.documentElement;
@@ -251,8 +259,7 @@ export async function start(_app, _target, hydrate) {
 				[HISTORY_INDEX]: current_history_index,
 				[NAVIGATION_INDEX]: current_navigation_index
 			},
-			'',
-			location.href
+			''
 		);
 	}
 
@@ -1075,13 +1082,31 @@ async function load_root_error_page({ status, error, url, route }) {
 }
 
 /**
- * @param {URL} url
+ * @param {URL | undefined} url
  * @param {boolean} invalidating
  */
 function get_navigation_intent(url, invalidating) {
+	if (!url) return undefined;
 	if (is_external_url(url, base)) return;
 
-	const path = get_url_path(url.pathname);
+	// reroute could alter the given URL, so we pass a copy
+	let rerouted;
+	try {
+		rerouted = app.hooks.reroute({ url: new URL(url) }) ?? url.pathname;
+	} catch (e) {
+		if (DEV) {
+			// in development, print the error...
+			console.error(e);
+
+			// ...and pause execution, since otherwise we will immediately reload the page
+			debugger; // eslint-disable-line
+		}
+
+		// fall back to native navigation
+		return undefined;
+	}
+
+	const path = get_url_path(rerouted);
 
 	for (const route of routes) {
 		const params = route.exec(path);
@@ -1089,7 +1114,13 @@ function get_navigation_intent(url, invalidating) {
 		if (params) {
 			const id = url.pathname + url.search;
 			/** @type {import('./types.js').NavigationIntent} */
-			const intent = { id, invalidating, route, params: decode_params(params), url };
+			const intent = {
+				id,
+				invalidating,
+				route,
+				params: decode_params(params),
+				url
+			};
 			return intent;
 		}
 	}
@@ -1455,7 +1486,7 @@ function setup_preload() {
 
 		if (!options.reload) {
 			if (priority <= options.preload_data) {
-				const intent = get_navigation_intent(/** @type {URL} */ (url), false);
+				const intent = get_navigation_intent(url, false);
 				if (intent) {
 					if (DEV) {
 						_preload_data(intent).then((result) => {
@@ -1577,7 +1608,7 @@ export function beforeNavigate(callback) {
  * If a function (or a `Promise` that resolves to a function) is returned from the callback, it will be called once the DOM has updated.
  *
  * `onNavigate` must be called during a component initialization. It remains active as long as the component is mounted.
- * @param {(navigation: import('@sveltejs/kit').OnNavigate) => import('types').MaybePromise<void>} callback
+ * @param {(navigation: import('@sveltejs/kit').OnNavigate) => import('types').MaybePromise<(() => void) | void>} callback
  * @returns {void}
  */
 export function onNavigate(callback) {
