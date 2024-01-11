@@ -297,10 +297,14 @@ export async function render_response({
 
 		const blocks = [];
 
+		// when serving a prerendered page in an app that uses $env/dynamic/public, we must
+		// import the env.js module so that it evaluates before any user code can evaluate
+		const load_env_eagerly = client.uses_env_dynamic_public && state.prerendering;
+
 		const properties = [
 			paths.assets && `assets: ${s(paths.assets)}`,
 			`base: ${base_expression}`,
-			`env: ${!client.uses_env_dynamic_public || state.prerendering ? null : s(public_env)}`
+			load_env_eagerly ? 'env' : `env: ${s(public_env)}`
 		].filter(Boolean);
 
 		if (chunks) {
@@ -318,10 +322,6 @@ export async function render_response({
 							else fulfil(data);
 						}`);
 		}
-
-		blocks.push(`${global} = {
-						${properties.join(',\n\t\t\t\t\t\t')}
-					};`);
 
 		const args = ['app', 'element'];
 
@@ -358,19 +358,28 @@ export async function render_response({
 				hydrate.push(`params: ${devalue.uneval(event.params)}`, `route: ${s(event.route)}`);
 			}
 
-			args.push(`{\n\t\t\t\t\t\t\t${hydrate.join(',\n\t\t\t\t\t\t\t')}\n\t\t\t\t\t\t}`);
+			const indent = load_env_eagerly ? '\t\t\t\t\t\t\t' : '\t\t\t\t\t\t';
+			args.push(`{\n${indent}\t${hydrate.join(`,\n${indent}\t`)}\n${indent}}`);
 		}
 
-		if (client.uses_env_dynamic_public && state.prerendering) {
-			blocks.push(`Promise.all([
-						import(${s(prefixed(client.start))}),
-						import(${s(prefixed(client.app))}),
-						import(${s(`${base}/${options.app_dir}/env.js`)})
-					]).then(([kit, app, { env }]) => {
-						${global}.env = env;
-						kit.start(${args.join(', ')});
+		if (load_env_eagerly) {
+			blocks.push(`import(${s(`${base}/${options.app_dir}/env.js`)}).then(({ env }) => {
+						${global} = {
+							${properties.join(',\n\t\t\t\t\t\t\t')}
+						};
+
+						Promise.all([
+							import(${s(prefixed(client.start))}),
+							import(${s(prefixed(client.app))})
+						]).then(([kit, app]) => {
+							kit.start(${args.join(', ')});
+						});
 					});`);
 		} else {
+			blocks.push(`${global} = {
+						${properties.join(',\n\t\t\t\t\t\t')}
+					};`);
+
 			blocks.push(`Promise.all([
 						import(${s(prefixed(client.start))}),
 						import(${s(prefixed(client.app))})
