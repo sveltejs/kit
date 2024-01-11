@@ -129,22 +129,11 @@ export async function write_all_types(config, manifest_data) {
 		// defaults to never if no params needed
 		let params = 'never';
 
-		// default type
-		const default_type = 'string';
-
 		// If we have some params, let's handle them
 		if (route_info.route.params.length > 0) {
 			params = `{ ${route_info.route.params
 				.map((param) => {
-					/** @param {string} matcher */
-					const path_to_matcher = (matcher) =>
-						posixify(path.relative(`${types_dir}`, path.join(config.kit.files.params, matcher)));
-
-					const type = param.matcher
-						? `MatcherParam<typeof import('${path_to_matcher(param.matcher)}').match>`
-						: default_type;
-
-					return `${param.name}${param.optional ? '?' : ''}: ${type}${param.rest ? '[]' : ''}`;
+					return `${param.name}${param.optional ? '?' : ''}: string${param.rest ? '[]' : ''}`;
 				})
 				.join(', ')} }`;
 		}
@@ -154,9 +143,7 @@ export async function write_all_types(config, manifest_data) {
 
 	fs.writeFileSync(
 		`${types_dir}/route_ids.d.ts`,
-		`import type { MatcherParam } from './src/routes/$types'
-
-declare module '$types' {
+		`declare module '$types' {
 	export type RouteIds = {
 		${route_ids.join(',\n\t\t')}
 	};
