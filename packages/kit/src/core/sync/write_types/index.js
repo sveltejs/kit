@@ -153,13 +153,13 @@ export async function write_all_types(config, manifest_data) {
 	});
 
 	fs.writeFileSync(
-		`${types_dir}/routeIds.d.ts`,
+		`${types_dir}/route_ids.d.ts`,
 		`import type { MatcherParam } from './src/routes/$types'
-		
-declare module '$app/paths' {
-	export type RouteIds = { 
+
+declare module '$types' {
+	export type RouteIds = {
 		${route_ids.join(',\n\t\t')}
-	} 
+	};
 }`
 	);
 	fs.writeFileSync(meta_data_file, JSON.stringify(meta_data, null, '\t'));

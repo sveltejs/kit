@@ -1,7 +1,3 @@
-export { base, assets } from '__sveltekit/paths';
-import { base } from '__sveltekit/paths';
-import { resolve_route } from '../../utils/routing.js';
-
 /**
  * Populate a route ID with params to resolve a pathname.
  * @example
@@ -14,8 +10,10 @@ import { resolve_route } from '../../utils/routing.js';
  *   }
  * ); // `/blog/hello-world/something/else`
  * ```
- * @type {import('types').ResolveRoute}
+ * @param {string} id
+ * @param {any} [params]
+ * @returns {string}
  */
-export function resolveRoute(id, params) {
-	return base + resolve_route(id, params);
-}
+export function resolveRoute(id: string, params?: any): string;
+export { base, assets } from "__sveltekit/paths";
+//# sourceMappingURL=index.d.ts.map

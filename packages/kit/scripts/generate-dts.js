@@ -1,6 +1,11 @@
 import { createBundle } from 'dts-buddy';
 
 createBundle({
+	compilerOptions: {
+		paths: {
+			$types: []
+		}
+	},
 	output: 'types/index.d.ts',
 	modules: {
 		'@sveltejs/kit': 'src/exports/public.d.ts',
@@ -11,7 +16,7 @@ createBundle({
 		'$app/environment': 'src/runtime/app/environment.js',
 		'$app/forms': 'src/runtime/app/forms.js',
 		'$app/navigation': 'src/runtime/app/navigation.js',
-		'$app/paths': 'src/runtime/app/paths.js',
+		'$app/paths': 'src/runtime/app/paths/types.d.ts',
 		'$app/stores': 'src/runtime/app/stores.js'
 	},
 	include: ['src']

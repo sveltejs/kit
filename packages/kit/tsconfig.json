@@ -12,7 +12,8 @@
 			"@sveltejs/kit": ["./src/exports/public.d.ts"],
 			"@sveltejs/kit/node": ["./src/exports/node/index.js"],
 			// internal use only
-			"types": ["./src/types/internal.d.ts"]
+			"types": ["./src/types/internal.d.ts"],
+			"$types": ["./src/types/generated.d.ts"]
 		},
 		"noUnusedLocals": true,
 		"noUnusedParameters": true
