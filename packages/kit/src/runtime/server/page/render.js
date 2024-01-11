@@ -298,7 +298,9 @@ export async function render_response({
 		const blocks = [];
 
 		// when serving a prerendered page in an app that uses $env/dynamic/public, we must
-		// import the env.js module so that it evaluates before any user code can evaluate
+		// import the env.js module so that it evaluates before any user code can evaluate.
+		// TODO revert to using top-level await once https://bugs.webkit.org/show_bug.cgi?id=242740 is fixed
+		// https://github.com/sveltejs/kit/pull/11601
 		const load_env_eagerly = client.uses_env_dynamic_public && state.prerendering;
 
 		const properties = [`base: ${base_expression}`];
@@ -367,7 +369,7 @@ export async function render_response({
 				hydrate.push(`params: ${devalue.uneval(event.params)}`, `route: ${s(event.route)}`);
 			}
 
-			const indent = load_env_eagerly ? '\t\t\t\t\t\t\t' : '\t\t\t\t\t\t';
+			const indent = '\t'.repeat(load_env_eagerly ? 7 : 6);
 			args.push(`{\n${indent}\t${hydrate.join(`,\n${indent}\t`)}\n${indent}}`);
 		}
 
