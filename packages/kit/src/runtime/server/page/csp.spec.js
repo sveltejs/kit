@@ -169,7 +169,7 @@ test('skips frame-ancestors, report-uri, sandbox from meta tags', () => {
 	);
 });
 
-test('adds nonce to script-src-elem, style-src-attr and style-src-elem if necessary', () => {
+test('adds nonce style-src-attr and style-src-elem and nonce + sha to script-src-elem if necessary', () => {
 	const csp = new Csp(
 		{
 			mode: 'auto',
