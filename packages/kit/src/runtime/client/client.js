@@ -1608,7 +1608,7 @@ export function beforeNavigate(callback) {
  * If a function (or a `Promise` that resolves to a function) is returned from the callback, it will be called once the DOM has updated.
  *
  * `onNavigate` must be called during a component initialization. It remains active as long as the component is mounted.
- * @param {(navigation: import('@sveltejs/kit').OnNavigate) => import('types').MaybePromise<void>} callback
+ * @param {(navigation: import('@sveltejs/kit').OnNavigate) => import('types').MaybePromise<(() => void) | void>} callback
  * @returns {void}
  */
 export function onNavigate(callback) {

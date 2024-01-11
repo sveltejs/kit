@@ -1981,7 +1981,7 @@ declare module '$app/navigation' {
 	 *
 	 * `onNavigate` must be called during a component initialization. It remains active as long as the component is mounted.
 	 * */
-	export function onNavigate(callback: (navigation: import('@sveltejs/kit').OnNavigate) => MaybePromise<void>): void;
+	export function onNavigate(callback: (navigation: import('@sveltejs/kit').OnNavigate) => MaybePromise<(() => void) | void>): void;
 	/**
 	 * If called when the page is being updated following a navigation (in `onMount` or `afterNavigate` or an action, for example), this disables SvelteKit's built-in scroll handling.
 	 * This is generally discouraged, since it breaks user expectations.
