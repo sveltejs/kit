@@ -5,11 +5,11 @@
 	"private": true,
 	"type": "module",
 	"scripts": {
-		"test": "pnpm test -r --filter=./packages/* --filter=!./packages/create-svelte",
+		"test:kit": "pnpm run --dir packages/kit test",
 		"test:cross-platform:dev": "pnpm run --dir packages/kit test:cross-platform:dev",
 		"test:cross-platform:build": "pnpm run --dir packages/kit test:cross-platform:build",
 		"test:vite-ecosystem-ci": "pnpm test --dir packages/kit",
-		"test:create-svelte": "pnpm run --dir packages/create-svelte test",
+		"test:others": "pnpm test -r --filter=./packages/* --filter=!./packages/kit/ --workspace-concurrency=1",
 		"check": "pnpm -r prepublishOnly && pnpm -r check",
 		"lint": "pnpm -r lint && eslint --cache --cache-location node_modules/.eslintcache 'packages/**/*.js'",
 		"format": "pnpm -r format",
