@@ -134,5 +134,6 @@ jobs:
           node-version: 18
           cache: pnpm
       - run: pnpm install --frozen-lockfile
+      - run: pnpm playwright install chromium
       - run: cd packages/kit && pnpm prepublishOnly
       - run: pnpm run test:others
