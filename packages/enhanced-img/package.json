@@ -14,7 +14,7 @@
 		"lint": "prettier --check .",
 		"check": "tsc",
 		"format": "prettier --write .",
-		"test": "vitest"
+		"test": "vitest run"
 	},
 	"files": [
 		"src",

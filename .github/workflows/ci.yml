@@ -19,7 +19,7 @@ permissions:
   contents: read # to fetch code (actions/checkout)
 
 jobs:
-  Lint:
+  lint-all:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -32,7 +32,7 @@ jobs:
       - run: pnpm run lint
       - run: cd packages/kit && pnpm prepublishOnly && { [ "`git status --porcelain=v1`" == "" ] || (echo "Generated types have changed — please run prepublishOnly locally and commit the changes after you have reviewed them"; git diff; exit 1); }
       - run: pnpm run check
-  Tests:
+  test-kit:
     runs-on: ${{ matrix.os }}
     timeout-minutes: 30
     strategy:
@@ -57,7 +57,7 @@ jobs:
           cache: pnpm
       - run: pnpm install --frozen-lockfile
       - run: pnpm playwright install ${{ matrix.e2e-browser }}
-      - run: pnpm test
+      - run: pnpm test:kit
       - name: Archive test results
         if: failure()
         shell: bash
@@ -69,7 +69,7 @@ jobs:
           retention-days: 3
           name: test-failure-${{ github.run_id }}-${{ matrix.os }}-${{ matrix.node-version }}-${{ matrix.e2e-browser }}
           path: test-results.tar.gz
-  Cross-browser-test:
+  test-kit-cross-browser:
     runs-on: ${{ matrix.os }}
     timeout-minutes: 30
     strategy:
@@ -124,7 +124,7 @@ jobs:
           retention-days: 3
           name: test-failure-cross-platform-${{ matrix.mode }}-${{ github.run_id }}-${{ matrix.os }}-${{ matrix.node-version }}-${{ matrix.e2e-browser }}
           path: test-results-cross-platform-${{ matrix.mode }}.tar.gz
-  Test-create-svelte:
+  test-others:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -134,5 +134,6 @@ jobs:
           node-version: 18
           cache: pnpm
       - run: pnpm install --frozen-lockfile
+      - run: pnpm playwright install chromium
       - run: cd packages/kit && pnpm prepublishOnly
-      - run: pnpm run test:create-svelte
+      - run: pnpm run test:others
