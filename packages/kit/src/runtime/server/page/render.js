@@ -308,7 +308,7 @@ export async function render_response({
 		}
 
 		if (client.uses_env_dynamic_public) {
-			properties.push(load_env_eagerly ? 'env' : `env: ${s(public_env)}`);
+			properties.push(`env: ${load_env_eagerly ? 'null' : s(public_env)}`);
 		}
 
 		if (chunks) {
