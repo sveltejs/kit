@@ -917,11 +917,11 @@ test.describe('goto', () => {
 });
 
 test.describe('untrack', () => {
-	test('untracks server load function', async ({ page }) => {
+	test('untracks server load function', async ({ page, clicknav }) => {
 		await page.goto('/untrack/server/1');
 		expect(await page.textContent('p.url')).toBe('/untrack/server/1');
 		const id = await page.textContent('p.id');
-		await page.click('a[href="/untrack/server/2"]');
+		await clicknav('a[href="/untrack/server/2"]');
 		expect(await page.textContent('p.url')).toBe('/untrack/server/2');
 		expect(await page.textContent('p.id')).toBe(id);
 	});
