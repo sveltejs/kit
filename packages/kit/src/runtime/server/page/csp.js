@@ -200,6 +200,7 @@ class BaseProvider {
 			// see https://github.com/sveltejs/svelte/pull/7800
 			const sha256_empty_comment_hash = 'sha256-9OlNO0DNEeaVzHL4RZwCLsBHA8WBQ8toBp/4F5XV2nc=';
 			const d = this.#directives;
+
 			if (
 				d['style-src-elem'] &&
 				!d['style-src-elem'].includes(sha256_empty_comment_hash) &&
@@ -208,7 +209,9 @@ class BaseProvider {
 				this.#style_src_elem.push(sha256_empty_comment_hash);
 			}
 
-			this.#style_src_elem.push(source);
+			if (source !== sha256_empty_comment_hash) {
+				this.#style_src_elem.push(source);
+			}
 		}
 	}
 
