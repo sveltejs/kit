@@ -301,11 +301,15 @@ export async function render_response({
 		// import the env.js module so that it evaluates before any user code can evaluate
 		const load_env_eagerly = client.uses_env_dynamic_public && state.prerendering;
 
-		const properties = [
-			paths.assets && `assets: ${s(paths.assets)}`,
-			`base: ${base_expression}`,
-			load_env_eagerly ? 'env' : `env: ${s(public_env)}`
-		].filter(Boolean);
+		const properties = [`base: ${base_expression}`];
+
+		if (paths.assets) {
+			properties.push(`assets: ${s(paths.assets)}`);
+		}
+
+		if (client.uses_env_dynamic_public) {
+			properties.push(load_env_eagerly ? 'env' : `env: ${s(public_env)}`);
+		}
 
 		if (chunks) {
 			blocks.push('const deferred = new Map();');
