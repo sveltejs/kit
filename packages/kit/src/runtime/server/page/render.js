@@ -361,12 +361,23 @@ export async function render_response({
 			args.push(`{\n\t\t\t\t\t\t\t${hydrate.join(',\n\t\t\t\t\t\t\t')}\n\t\t\t\t\t\t}`);
 		}
 
-		blocks.push(`Promise.all([
+		if (client.uses_env_dynamic_public && state.prerendering) {
+			blocks.push(`Promise.all([
+						import(${s(prefixed(client.start))}),
+						import(${s(prefixed(client.app))}),
+						import(${s(`${base}/${options.app_dir}/env.js`)})
+					]).then(([kit, app, { env }]) => {
+						${global}.env = env;
+						kit.start(${args.join(', ')});
+					});`);
+		} else {
+			blocks.push(`Promise.all([
 						import(${s(prefixed(client.start))}),
 						import(${s(prefixed(client.app))})
 					]).then(([kit, app]) => {
 						kit.start(${args.join(', ')});
 					});`);
+		}
 
 		if (options.service_worker) {
 			const opts = __SVELTEKIT_DEV__ ? ", { type: 'module' }" : '';
