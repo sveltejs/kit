@@ -163,24 +163,15 @@ class BaseProvider {
 	add_script(content) {
 		if (!this.#script_needs_csp) return;
 
-		if (this.#use_hashes) {
-			const hash = sha256(content);
+		/** @type {`nonce-${string}` | `sha256-${string}`} */
+		const value = this.#use_hashes ? `sha256-${sha256(content)}` : `nonce-${this.#nonce}`;
 
-			if (this.#script_src_needs_csp) {
-				this.#script_src.push(`sha256-${hash}`);
-			}
+		if (this.#script_src_needs_csp) {
+			this.#script_src.push(value);
+		}
 
-			if (this.#script_src_elem_needs_csp) {
-				this.#script_src_elem.push(`sha256-${hash}`);
-			}
-		} else if (this.script_needs_nonce) {
-			if (this.#script_src_needs_csp) {
-				this.#script_src.push(`nonce-${this.#nonce}`);
-			}
-
-			if (this.#script_src_elem_needs_csp) {
-				this.#script_src_elem.push(`nonce-${this.#nonce}`);
-			}
+		if (this.#script_src_elem_needs_csp) {
+			this.#script_src_elem.push(value);
 		}
 	}
 
@@ -188,54 +179,36 @@ class BaseProvider {
 	add_style(content) {
 		if (!this.#style_needs_csp) return;
 
-		// this is the hash for "/* empty */"
-		// adding it so that svelte does not break csp
-		// see https://github.com/sveltejs/svelte/pull/7800
-		const empty_comment_hash = '9OlNO0DNEeaVzHL4RZwCLsBHA8WBQ8toBp/4F5XV2nc=';
-		const d = this.#directives;
+		/** @type {`nonce-${string}` | `sha256-${string}`} */
+		const value = this.#use_hashes ? `sha256-${sha256(content)}` : `nonce-${this.#nonce}`;
 
-		if (this.#use_hashes) {
-			const hash = sha256(content);
+		if (this.#style_src_needs_csp) {
+			this.#style_src.push(value);
+		}
 
-			if (this.#style_src_needs_csp) {
-				this.#style_src.push(`sha256-${hash}`);
+		if (this.#style_src_needs_csp) {
+			this.#style_src.push(value);
+		}
+
+		if (this.#style_src_attr_needs_csp) {
+			this.#style_src_attr.push(value);
+		}
+
+		if (this.#style_src_elem_needs_csp) {
+			// this is the sha256 hash for the string "/* empty */"
+			// adding it so that svelte does not break csp
+			// see https://github.com/sveltejs/svelte/pull/7800
+			const sha256_empty_comment_hash = 'sha256-9OlNO0DNEeaVzHL4RZwCLsBHA8WBQ8toBp/4F5XV2nc=';
+			const d = this.#directives;
+			if (
+				d['style-src-elem'] &&
+				!d['style-src-elem'].includes(sha256_empty_comment_hash) &&
+				!this.#style_src_elem.includes(sha256_empty_comment_hash)
+			) {
+				this.#style_src_elem.push(sha256_empty_comment_hash);
 			}
 
-			if (this.#style_src_attr_needs_csp) {
-				this.#style_src_attr.push(`sha256-${hash}`);
-			}
-
-			if (this.#style_src_elem_needs_csp) {
-				if (
-					d['style-src-elem'] &&
-					!d['style-src-elem'].includes(`sha256-${empty_comment_hash}`) &&
-					!this.#style_src_elem.includes(`sha256-${empty_comment_hash}`)
-				) {
-					this.#style_src_elem.push(`sha256-${empty_comment_hash}`);
-				}
-
-				this.#style_src_elem.push(`sha256-${hash}`);
-			}
-		} else if (this.style_needs_nonce) {
-			if (this.#style_src_needs_csp) {
-				this.#style_src.push(`nonce-${this.#nonce}`);
-			}
-
-			if (this.#style_src_attr_needs_csp) {
-				this.#style_src_attr.push(`nonce-${this.#nonce}`);
-			}
-
-			if (this.#style_src_elem_needs_csp) {
-				if (
-					d['style-src-elem'] &&
-					!d['style-src-elem'].includes(`sha256-${empty_comment_hash}`) &&
-					!this.#style_src_elem.includes(`sha256-${empty_comment_hash}`)
-				) {
-					this.#style_src_elem.push(`sha256-${empty_comment_hash}`);
-				}
-
-				this.#style_src_elem.push(`nonce-${this.#nonce}`);
-			}
+			this.#style_src_elem.push(value);
 		}
 	}
 
