@@ -17,7 +17,8 @@
 		"changeset:version": "changeset version && pnpm -r generate:version && git add --all",
 		"changeset:release": "changeset publish",
 		"start": "cd sites/kit.svelte.dev && npm run dev",
-		"build": "pnpm --filter @sveltejs/* -r build"
+		"build": "pnpm --filter @sveltejs/* -r build",
+		"sync-all": "node scripts/sync-all.js"
 	},
 	"devDependencies": {
 		"@changesets/cli": "^2.27.1",
