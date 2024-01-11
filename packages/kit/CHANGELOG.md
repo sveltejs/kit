@@ -1,5 +1,13 @@
 # @sveltejs/kit
 
+## 2.3.2
+
+### Patch Changes
+
+- fix: return plaintext 404 for anything under appDir ([#11597](https://github.com/sveltejs/kit/pull/11597))
+
+- fix: populate dynamic public env without using top-level await, which fails in Safari ([#11601](https://github.com/sveltejs/kit/pull/11601))
+
 ## 2.3.1
 
 ### Patch Changes
