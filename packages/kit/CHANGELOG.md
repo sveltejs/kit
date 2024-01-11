@@ -1,5 +1,13 @@
 # @sveltejs/kit
 
+## 2.3.1
+
+### Patch Changes
+
+- fix: amend onNavigate type ([#11599](https://github.com/sveltejs/kit/pull/11599))
+
+- fix: better error message when peer dependency cannot be found ([#11598](https://github.com/sveltejs/kit/pull/11598))
+
 ## 2.3.0
 
 ### Minor Changes
