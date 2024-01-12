@@ -614,8 +614,16 @@ async function kit({ svelte_config }) {
 							input,
 							output: {
 								format: 'esm',
-								entryFileNames: ssr ? '[name].js' : `${prefix}/[name].${ext}`,
-								chunkFileNames: ssr ? 'chunks/[name].js' : `${prefix}/chunks/[name].${ext}`,
+								entryFileNames: ssr
+									? '[name].js'
+									: kit.importMap.enabled
+										? `${prefix}/[name].${ext}`
+										: `${prefix}/[name].[hash].${ext}`,
+								chunkFileNames: ssr
+									? 'chunks/[name].js'
+									: kit.importMap.enabled
+										? `${prefix}/chunks/[name].${ext}`
+										: `${prefix}/chunks/[name].[hash].${ext}`,
 								assetFileNames: `${prefix}/assets/[name].[hash][extname]`,
 								hoistTransitiveImports: false,
 								sourcemapIgnoreList
@@ -869,12 +877,20 @@ async function kit({ svelte_config }) {
 					`${out}/client/${kit.appDir}/immutable/assets`
 				);
 
+				/** @type {Array<[string, string]>} */
+				let import_map_lookup = [];
+
 				/** @type {import('vite').Manifest} */
 				const client_manifest = JSON.parse(read(`${out}/client/${vite_config.build.manifest}`));
-				const hash_data = JSON.parse(read(hash_data_file));
 
-				for (const chunk of Object.values(client_manifest)) {
-					chunk.file = hash_data.renames[chunk.file];
+				if (fs.existsSync(hash_data_file)) {
+					const hash_data = JSON.parse(read(hash_data_file));
+
+					for (const chunk of Object.values(client_manifest)) {
+						chunk.file = hash_data.renames[chunk.file];
+					}
+
+					import_map_lookup = Object.entries(hash_data.lookup);
 				}
 
 				const deps_of = /** @param {string} f */ (f) =>
@@ -891,7 +907,7 @@ async function kit({ svelte_config }) {
 					uses_env_dynamic_public: output.some(
 						(chunk) => chunk.type === 'chunk' && chunk.modules[env_dynamic_public]
 					),
-					import_map_lookup: Object.entries(hash_data.lookup)
+					import_map_lookup
 				};
 
 				const css = output.filter(
