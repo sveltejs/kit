@@ -1,6 +1,7 @@
 import { createBundle } from 'dts-buddy';
+import { readFileSync } from 'fs';
 
-createBundle({
+await createBundle({
 	output: 'types/index.d.ts',
 	modules: {
 		'@sveltejs/kit': 'src/exports/public.d.ts',
@@ -16,3 +17,12 @@ createBundle({
 	},
 	include: ['src']
 });
+
+// dts-buddy doesn't inline imports of module declaration in ambient-private.d.ts but also doesn't include them, resulting in broken types - guard against that
+const types = readFileSync('./types/index.d.ts', 'utf-8');
+if (types.includes('__sveltekit/')) {
+	throw new Error(
+		'Found __sveltekit/ in types/index.d.ts - make sure to hide internal modules by not just reexporting them. Contents:\n\n' +
+			types
+	);
+}

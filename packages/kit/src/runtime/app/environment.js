@@ -1,5 +1,15 @@
 import { BROWSER, DEV } from 'esm-env';
-export { building, version } from '__sveltekit/environment';
+import { building as _building, version as _version } from '__sveltekit/environment';
+
+/**
+ * SvelteKit analyses your app during the `build` step by running it. During this process, `building` is `true`. This also applies during prerendering.
+ */
+export const building = _building;
+
+/**
+ * The value of `config.kit.version.name`.
+ */
+export const version = _version;
 
 /**
  * `true` if the app is running in the browser.
