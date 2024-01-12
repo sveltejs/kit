@@ -700,7 +700,7 @@ async function kit({ svelte_config }) {
 			if (!has_placeholder(code)) return;
 
 			return {
-				code: code.replace(/(from |import\()'(.+?)'/g, (m, prefix, id) => {
+				code: code.replace(/(from |import |import\()'(.+?)'/g, (m, prefix, id) => {
 					if (has_placeholder(id)) {
 						const from = chunk.fileName.split('/').slice(0, -1);
 						const to = id.split('/');
