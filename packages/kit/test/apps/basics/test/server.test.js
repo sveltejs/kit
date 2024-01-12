@@ -1,6 +1,6 @@
 import { expect } from '@playwright/test';
-import { test } from '../../../utils.js';
 import { createHash, randomBytes } from 'node:crypto';
+import { test } from '../../../utils.js';
 
 /** @typedef {import('@playwright/test').Response} Response */
 
@@ -431,7 +431,7 @@ test.describe('Load', () => {
 		request
 	}) => {
 		const response = await request.get('/errors/error-in-layout');
-		expect(await response.text()).toContain('Error: 404');
+		expect(await response.text()).toContain('Not Found');
 	});
 
 	test('fetch does not load a file with a # character', async ({ request }) => {

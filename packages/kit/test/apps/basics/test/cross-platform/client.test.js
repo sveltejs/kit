@@ -515,7 +515,7 @@ test.describe.serial('Errors', () => {
 
 		expect(await page.textContent('footer')).toBe('Custom layout');
 		expect(await page.textContent('#message')).toBe(
-			'This is your custom error page saying: "Error: 401"'
+			'This is your custom error page saying: "Unauthorized"'
 		);
 		expect(await page.innerHTML('h1')).toBe('401');
 	});

@@ -348,7 +348,7 @@ test.describe('Errors', () => {
 
 		expect(res && res.status()).toBe(555);
 		expect(await page.textContent('#message')).toBe(
-			'This is your custom error page saying: "Error: 555"'
+			'This is your custom error page saying: "Unknown Error"'
 		);
 	});
 
