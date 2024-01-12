@@ -283,7 +283,7 @@ export async function render_response({
 				"imports": {
 					${client.import_map_lookup
 						.map(([key, value]) => `${s(key)}: ${s(prefixed(value))}`)
-						.join('\n\t\t\t\t\t')}
+						.join(',\n\t\t\t\t\t')}
 				}
 			},
 		</script>`;
