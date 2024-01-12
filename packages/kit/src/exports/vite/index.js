@@ -525,7 +525,7 @@ async function kit({ svelte_config }) {
 		}
 	};
 
-	const import_map_lookup_file = `${kit.outDir}/output/import-map-lookup.json`;
+	const hash_data_file = `${kit.outDir}/output/hash-data.json`;
 
 	/** @type {import('vite').Plugin} */
 	const plugin_compile = {
@@ -614,8 +614,8 @@ async function kit({ svelte_config }) {
 							input,
 							output: {
 								format: 'esm',
-								entryFileNames: ssr ? '[name].js' : `${prefix}/[name].[hash].${ext}`,
-								chunkFileNames: ssr ? 'chunks/[name].js' : `${prefix}/chunks/[name].[hash].${ext}`,
+								entryFileNames: ssr ? '[name].js' : `${prefix}/[name].${ext}`,
+								chunkFileNames: ssr ? 'chunks/[name].js' : `${prefix}/chunks/[name].${ext}`,
 								assetFileNames: `${prefix}/assets/[name].[hash][extname]`,
 								hoistTransitiveImports: false,
 								sourcemapIgnoreList
@@ -710,49 +710,56 @@ async function kit({ svelte_config }) {
 						const length = `${svelte_config.kit.appDir}/immutable/`.length;
 
 						/** @type {Record<string, string>} */
+						const renames = {};
+
+						/** @type {Record<string, string>} */
 						const replacements = {};
 
 						for (const chunk of Object.values(bundle)) {
 							if (chunk.type === 'chunk') {
-								replacements[chunk.fileName] = chunk.preliminaryFileName
-									.replace('!~{', '')
-									.replace('}~', '')
-									.replace(/\.\w+$/, '')
-									.slice(length);
+								const h = hash(chunk.code);
+
+								renames[chunk.fileName] = chunk.fileName.replace(/\.\w+$/, (m) => `.${h}${m}`);
+								replacements[chunk.fileName] = chunk.fileName.replace(/\.\w+$/, '').slice(length);
 							}
 						}
 
 						/** @type {Record<string, string>} */
-						const used = {};
+						const lookup = {};
 
 						for (const chunk of Object.values(bundle)) {
 							if (chunk.type !== 'chunk') continue;
 
-							let changed = false;
+							/** @type {string[]} */
+							const relative_imports = [];
+
+							/** @param {string} relative */
+							const resolve = (relative) => {
+								const from = chunk.fileName.split('/').slice(0, -1);
+								const to = relative.split('/');
+
+								while (to[0] === '..') {
+									to.shift();
+									from.pop();
+								}
+
+								if (to[0] === '.') to.shift();
+
+								return [...from, ...to].join('/');
+							};
 
 							// we do the replace here, instead of in renderChunk, so that it happens after
 							// other Vite transformations (especially the removal of empty CSS chunks, and
 							// replacement of __VITE_PRELOAD__ inserts)
-							const code = chunk.code.replace(
+							let code = chunk.code.replace(
 								/(from ?|import ?|import\()"(.+?)"/g,
-								(m, prefix, id) => {
-									const from = chunk.fileName.split('/').slice(0, -1);
-									const to = id.split('/');
-
-									while (to[0] === '..') {
-										to.shift();
-										from.pop();
-									}
-
-									if (to[0] === '.') to.shift();
-
-									const resolved = [...from, ...to].join('/');
+								(m, prefix, relative) => {
+									const resolved = resolve(relative);
 									const replacement = replacements[resolved];
 
 									if (replacement) {
-										changed = true;
-
-										used[replacement] = resolved;
+										relative_imports.push(relative);
+										lookup[replacement] = renames[resolved];
 										return `${prefix}'${replacement}'`;
 									}
 
@@ -760,16 +767,32 @@ async function kit({ svelte_config }) {
 								}
 							);
 
-							if (changed) {
-								fs.writeFileSync(`${options.dir}/${chunk.fileName}`, code);
+							// this part is super hacky!
+							if (code.includes('__vite__mapDeps')) {
+								code = code.replace(/__vite__mapDeps\.viteFileDeps = (\[.+\])/, (_, deps) => {
+									const mapped = /** @type {string[]} */ (JSON.parse(deps))
+										.map((dep) => {
+											const resolved = resolve(dep);
+											const renamed = renames[resolved];
+
+											if (renamed) {
+												return `"${path.relative(path.dirname(chunk.fileName), renamed)}"`;
+											}
+
+											return `"${dep}"`;
+										})
+										.join(', ');
+
+									return `__vite__mapDeps.viteFileDeps = [${mapped}]`;
+								});
 							}
+
+							fs.writeFileSync(`${options.dir}/${renames[chunk.fileName]}`, code);
+							fs.unlinkSync(`${options.dir}/${chunk.fileName}`);
 						}
 
-						// write metadata to disk, so that it can be used to generate import maps at render time
-						fs.writeFileSync(
-							import_map_lookup_file,
-							JSON.stringify(Object.entries(used).sort((a, b) => (a < b ? -1 : 1)))
-						);
+						// write metadata to disk, so that it can be used to generate import maps at render time etc
+						fs.writeFileSync(hash_data_file, JSON.stringify({ renames, lookup }));
 					}
 
 					return; // only run this once, for the client build
@@ -848,11 +871,11 @@ async function kit({ svelte_config }) {
 
 				/** @type {import('vite').Manifest} */
 				const client_manifest = JSON.parse(read(`${out}/client/${vite_config.build.manifest}`));
+				const hash_data = JSON.parse(read(hash_data_file));
 
-				/** @type {Array<[string, string]>} */
-				const import_map_lookup = fs.existsSync(import_map_lookup_file)
-					? JSON.parse(read(import_map_lookup_file))
-					: [];
+				for (const chunk of Object.values(client_manifest)) {
+					chunk.file = hash_data.renames[chunk.file];
+				}
 
 				const deps_of = /** @param {string} f */ (f) =>
 					find_deps(client_manifest, posixify(path.relative('.', f)), false);
@@ -868,7 +891,7 @@ async function kit({ svelte_config }) {
 					uses_env_dynamic_public: output.some(
 						(chunk) => chunk.type === 'chunk' && chunk.modules[env_dynamic_public]
 					),
-					import_map_lookup
+					import_map_lookup: Object.entries(hash_data.lookup)
 				};
 
 				const css = output.filter(
