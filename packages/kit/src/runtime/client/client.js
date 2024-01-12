@@ -350,6 +350,7 @@ async function _goto(url, options, redirect_count, nav_token) {
 		noscroll: options.noScroll,
 		replace_state: options.replaceState,
 		state: options.state,
+		invalidate_all: options.invalidateAll,
 		redirect_count,
 		nav_token,
 		accept: () => {
@@ -1137,12 +1138,13 @@ function get_url_path(pathname) {
  *   type: import('@sveltejs/kit').Navigation["type"];
  *   intent?: import('./types.js').NavigationIntent;
  *   delta?: number;
+ *   options?: import('@sveltejs/kit').NavigationOptions;
  * }} opts
  */
-function _before_navigate({ url, type, intent, delta }) {
+function _before_navigate({ url, type, intent, delta, options }) {
 	let should_block = false;
 
-	const nav = create_navigation(current, intent, url, type);
+	const nav = create_navigation(current, intent, url, type, options);
 
 	if (delta !== undefined) {
 		nav.navigation.delta = delta;
@@ -1176,6 +1178,7 @@ function _before_navigate({ url, type, intent, delta }) {
  *   keepfocus?: boolean;
  *   noscroll?: boolean;
  *   replace_state?: boolean;
+ *   invalidate_all?: boolean;
  *   state?: Record<string, any>;
  *   redirect_count?: number;
  *   nav_token?: {};
@@ -1187,9 +1190,10 @@ async function navigate({
 	type,
 	url,
 	popped,
-	keepfocus,
-	noscroll,
-	replace_state,
+	keepfocus = false,
+	noscroll = false,
+	replace_state = false,
+	invalidate_all = false,
 	state = {},
 	redirect_count = 0,
 	nav_token = {},
@@ -1197,7 +1201,19 @@ async function navigate({
 	block = noop
 }) {
 	const intent = get_navigation_intent(url, false);
-	const nav = _before_navigate({ url, type, delta: popped?.delta, intent });
+	const nav = _before_navigate({
+		url,
+		type,
+		delta: popped?.delta,
+		intent,
+		options: {
+			state,
+			noScroll: noscroll,
+			keepFocus: keepfocus,
+			replaceState: replace_state,
+			invalidateAll: invalidate_all
+		}
+	});
 
 	if (!nav) {
 		block();
@@ -1639,12 +1655,7 @@ export function disableScrollHandling() {
  * For external URLs, use `window.location = url` instead of calling `goto(url)`.
  *
  * @param {string | URL} url Where to navigate to. Note that if you've set [`config.kit.paths.base`](https://kit.svelte.dev/docs/configuration#paths) and the URL is root-relative, you need to prepend the base path if you want to navigate within the app.
- * @param {Object} [opts] Options related to the navigation
- * @param {boolean} [opts.replaceState] If `true`, will replace the current `history` entry rather than creating a new one with `pushState`
- * @param {boolean} [opts.noScroll] If `true`, the browser will maintain its scroll position rather than scrolling to the top of the page after navigation
- * @param {boolean} [opts.keepFocus] If `true`, the currently focused element will retain focus after navigation. Otherwise, focus will be reset to the body
- * @param {boolean} [opts.invalidateAll] If `true`, all `load` functions of the page will be rerun. See https://kit.svelte.dev/docs/load#rerunning-load-functions for more info on invalidation.
- * @param {App.PageState} [opts.state] An optional object that will be available on the `$page.state` store
+ * @param {Partial<import('@sveltejs/kit').NavigationOptions>} [opts] Options related to the navigation
  * @returns {Promise<void>}
  */
 export function goto(url, opts = {}) {
@@ -1925,7 +1936,7 @@ function _start_router() {
 		persist_state();
 
 		if (!navigating) {
-			const nav = create_navigation(current, undefined, null, 'leave');
+			const nav = create_navigation(current, undefined, null, 'leave', undefined);
 
 			// If we're navigating, beforeNavigate was already called. If we end up in here during navigation,
 			// it's due to an external or full-page-reload link, for which we don't want to call the hook again.
@@ -2517,8 +2528,9 @@ function reset_focus() {
  * @param {import('./types.js').NavigationIntent | undefined} intent
  * @param {URL | null} url
  * @param {Exclude<import('@sveltejs/kit').NavigationType, 'enter'>} type
+ * @param {import('@sveltejs/kit').NavigationOptions | undefined} options
  */
-function create_navigation(current, intent, url, type) {
+function create_navigation(current, intent, url, type, options) {
 	/** @type {(value: any) => void} */
 	let fulfil;
 
@@ -2547,7 +2559,8 @@ function create_navigation(current, intent, url, type) {
 		},
 		willUnload: !intent,
 		type,
-		complete
+		complete,
+		options
 	};
 
 	return {

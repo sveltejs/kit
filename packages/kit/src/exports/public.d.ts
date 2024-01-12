@@ -871,6 +871,20 @@ export interface NavigationTarget {
  */
 export type NavigationType = 'enter' | 'form' | 'leave' | 'link' | 'goto' | 'popstate';
 
+/** Navigation options that are defined when using `goto(..., options)` or link options. See https://kit.svelte.dev/docs/link-options for the equivalent HTML attributes. */
+export interface NavigationOptions {
+	/** If `true`, will replace the current `history` entry rather than creating a new one with `pushState`. */
+	replaceState: boolean;
+	/** If `true`, the browser will maintain its scroll position rather than scrolling to the top of the page after navigation. */
+	noScroll: boolean;
+	/** If `true`, the currently focused element will retain focus after navigation. Otherwise, focus will be reset to the body. */
+	keepFocus: boolean;
+	/** If `true`, all `load` functions of the page will be rerun. See https://kit.svelte.dev/docs/load#rerunning-load-functions for more info on invalidation. */
+	invalidateAll: boolean;
+	/** An optional object that will be available on the `$page.state` store. */
+	state: App.PageState;
+}
+
 export interface Navigation {
 	/**
 	 * Where navigation was triggered from
@@ -902,6 +916,11 @@ export interface Navigation {
 	 * fails or is aborted. In the case of a `willUnload` navigation, the promise will never resolve
 	 */
 	complete: Promise<void>;
+	/**
+	 * Navigation options defined using `goto(..., options)` or inferred from the link that was clicked.
+	 * Only defined for `link` and `goto` navigations.
+	 */
+	options?: NavigationOptions;
 }
 
 /**

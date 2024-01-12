@@ -853,6 +853,20 @@ declare module '@sveltejs/kit' {
 	 */
 	export type NavigationType = 'enter' | 'form' | 'leave' | 'link' | 'goto' | 'popstate';
 
+	/** Navigation options that are defined when using `goto(..., options)` or link options. See https://kit.svelte.dev/docs/link-options for the equivalent HTML attributes. */
+	export interface NavigationOptions {
+		/** If `true`, will replace the current `history` entry rather than creating a new one with `pushState`. */
+		replaceState: boolean;
+		/** If `true`, the browser will maintain its scroll position rather than scrolling to the top of the page after navigation. */
+		noScroll: boolean;
+		/** If `true`, the currently focused element will retain focus after navigation. Otherwise, focus will be reset to the body. */
+		keepFocus: boolean;
+		/** If `true`, all `load` functions of the page will be rerun. See https://kit.svelte.dev/docs/load#rerunning-load-functions for more info on invalidation. */
+		invalidateAll: boolean;
+		/** An optional object that will be available on the `$page.state` store. */
+		state: App.PageState;
+	}
+
 	export interface Navigation {
 		/**
 		 * Where navigation was triggered from
@@ -884,6 +898,11 @@ declare module '@sveltejs/kit' {
 		 * fails or is aborted. In the case of a `willUnload` navigation, the promise will never resolve
 		 */
 		complete: Promise<void>;
+		/**
+		 * Navigation options defined using `goto(..., options)` or inferred from the link that was clicked.
+		 * Only defined for `link` and `goto` navigations.
+		 */
+		options?: NavigationOptions;
 	}
 
 	/**
@@ -1992,15 +2011,9 @@ declare module '$app/navigation' {
 	 * For external URLs, use `window.location = url` instead of calling `goto(url)`.
 	 *
 	 * @param url Where to navigate to. Note that if you've set [`config.kit.paths.base`](https://kit.svelte.dev/docs/configuration#paths) and the URL is root-relative, you need to prepend the base path if you want to navigate within the app.
-	 * @param {Object} opts Options related to the navigation
+	 * @param opts Options related to the navigation
 	 * */
-	export function goto(url: string | URL, opts?: {
-		replaceState?: boolean | undefined;
-		noScroll?: boolean | undefined;
-		keepFocus?: boolean | undefined;
-		invalidateAll?: boolean | undefined;
-		state?: App.PageState | undefined;
-	} | undefined): Promise<void>;
+	export function goto(url: string | URL, opts?: Partial<import("@sveltejs/kit").NavigationOptions> | undefined): Promise<void>;
 	/**
 	 * Causes any `load` functions belonging to the currently active page to re-run if they depend on the `url` in question, via `fetch` or `depends`. Returns a `Promise` that resolves when the page is subsequently updated.
 	 *
