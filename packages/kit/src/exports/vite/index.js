@@ -183,11 +183,6 @@ let secondary_build_started = false;
 let manifest_data;
 
 /** @param {string} name */
-function has_placeholder(name) {
-	return name.includes('.!~{');
-}
-
-/** @param {string} name */
 function sanitize_chunk_name(name) {
 	return name.replace('!~{', '').replace('}~', '');
 }
@@ -535,6 +530,8 @@ async function kit({ svelte_config }) {
 		}
 	};
 
+	const import_map_lookup_file = `${kit.outDir}/output/import-map-lookup.json`;
+
 	/** @type {import('vite').Plugin} */
 	const plugin_compile = {
 		name: 'vite-plugin-sveltekit-compile',
@@ -695,67 +692,13 @@ async function kit({ svelte_config }) {
 			}
 		},
 
-		renderChunk(code, chunk) {
-			if (!is_build || vite_config.build.ssr || !svelte_config.kit.importMap.enabled) return;
-			if (!has_placeholder(code)) return;
-
-			return {
-				code: code.replace(/(from |import |import\()'(.+?)'/g, (m, prefix, id) => {
-					if (has_placeholder(id)) {
-						const from = chunk.fileName.split('/').slice(0, -1);
-						const to = id.split('/');
-
-						while (to[0] === '..') {
-							to.shift();
-							from.pop();
-						}
-
-						if (to[0] === '.') to.shift();
-
-						const resolved = [...from, ...to]
-							.join('/')
-							.replace(`${svelte_config.kit.appDir}/immutable/`, '');
-
-						return `${prefix}'${sanitize_chunk_name(resolved)}'`;
-					}
-
-					return m;
-				}),
-				map: null
-			};
-		},
-
-		generateBundle(_options, bundle) {
+		generateBundle() {
 			if (vite_config.build.ssr) return;
 
 			this.emitFile({
 				type: 'asset',
 				fileName: `${kit.appDir}/version.json`,
 				source: s({ version: kit.version.name })
-			});
-
-			/** @type {Array<[string, string]>} */
-			const import_map_lookup = [];
-
-			if (svelte_config.kit.importMap.enabled) {
-				for (const chunk of Object.values(bundle)) {
-					if (chunk.type === 'chunk') {
-						const key = sanitize_chunk_name(chunk.preliminaryFileName).replace(
-							`${svelte_config.kit.appDir}/immutable/`,
-							''
-						);
-
-						import_map_lookup.push([key, chunk.fileName]);
-					}
-				}
-
-				import_map_lookup.sort((a, b) => (a < b ? -1 : 1));
-			}
-
-			this.emitFile({
-				type: 'asset',
-				fileName: 'import-map-lookup.json',
-				source: JSON.stringify(import_map_lookup, null, '\t')
 			});
 		},
 
@@ -766,8 +709,75 @@ async function kit({ svelte_config }) {
 		 */
 		writeBundle: {
 			sequential: true,
-			async handler(_options) {
-				if (secondary_build_started) return; // only run this once
+			async handler(options, bundle) {
+				if (secondary_build_started) {
+					if (svelte_config.kit.importMap.enabled) {
+						const length = `${svelte_config.kit.appDir}/immutable/`.length;
+
+						/** @type {Record<string, string>} */
+						const replacements = {};
+
+						for (const chunk of Object.values(bundle)) {
+							if (chunk.type === 'chunk') {
+								replacements[chunk.fileName] = chunk.preliminaryFileName
+									.replace('!~{', '')
+									.replace('}~', '')
+									.slice(length);
+							}
+						}
+
+						/** @type {Record<string, string>} */
+						const used = {};
+
+						for (const chunk of Object.values(bundle)) {
+							if (chunk.type !== 'chunk') continue;
+
+							let changed = false;
+
+							// we do the replace here, instead of in renderChunk, so that it happens after
+							// other Vite transformations (especially the removal of empty CSS chunks, and
+							// replacement of __VITE_PRELOAD__ inserts)
+							const code = chunk.code.replace(
+								/(from ?|import ?|import\()"(.+?)"/g,
+								(m, prefix, id) => {
+									const from = chunk.fileName.split('/').slice(0, -1);
+									const to = id.split('/');
+
+									while (to[0] === '..') {
+										to.shift();
+										from.pop();
+									}
+
+									if (to[0] === '.') to.shift();
+
+									const resolved = [...from, ...to].join('/');
+									const replacement = replacements[resolved];
+
+									if (replacement) {
+										changed = true;
+
+										used[replacement] = resolved;
+										return `${prefix}'${replacement}'`;
+									}
+
+									return m;
+								}
+							);
+
+							if (changed) {
+								fs.writeFileSync(`${options.dir}/${chunk.fileName}`, code);
+							}
+						}
+
+						// write metadata to disk, so that it can be used to generate import maps at render time
+						fs.writeFileSync(
+							import_map_lookup_file,
+							JSON.stringify(Object.entries(used).sort((a, b) => (a < b ? -1 : 1)))
+						);
+					}
+
+					return; // only run this once, for the client build
+				}
 
 				const verbose = vite_config.logLevel === 'info';
 				const log = logger({ verbose });
@@ -844,7 +854,9 @@ async function kit({ svelte_config }) {
 				const client_manifest = JSON.parse(read(`${out}/client/${vite_config.build.manifest}`));
 
 				/** @type {Array<[string, string]>} */
-				const import_map_lookup = JSON.parse(read(`${out}/client/import-map-lookup.json`));
+				const import_map_lookup = fs.existsSync(import_map_lookup_file)
+					? JSON.parse(read(import_map_lookup_file))
+					: [];
 
 				const deps_of = /** @param {string} f */ (f) =>
 					find_deps(client_manifest, posixify(path.relative('.', f)), false);

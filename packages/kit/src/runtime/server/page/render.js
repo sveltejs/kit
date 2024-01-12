@@ -278,7 +278,8 @@ export async function render_response({
 
 	if (page_config.csr) {
 		if (options.import_map_enabled) {
-			head += `<script type="importmap">
+			head += `
+		<script type="importmap">
 			{
 				"imports": {
 					${client.import_map_lookup
