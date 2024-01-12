@@ -696,7 +696,7 @@ async function kit({ svelte_config }) {
 		},
 
 		renderChunk(code, chunk) {
-			if (!is_build || vite_config.build.ssr) return;
+			if (!is_build || vite_config.build.ssr || !svelte_config.kit.importMap.enabled) return;
 			if (!has_placeholder(code)) return;
 
 			return {
@@ -737,18 +737,20 @@ async function kit({ svelte_config }) {
 			/** @type {Array<[string, string]>} */
 			const import_map_lookup = [];
 
-			for (const chunk of Object.values(bundle)) {
-				if (chunk.type === 'chunk') {
-					const key = sanitize_chunk_name(chunk.preliminaryFileName).replace(
-						`${svelte_config.kit.appDir}/immutable/`,
-						''
-					);
+			if (svelte_config.kit.importMap.enabled) {
+				for (const chunk of Object.values(bundle)) {
+					if (chunk.type === 'chunk') {
+						const key = sanitize_chunk_name(chunk.preliminaryFileName).replace(
+							`${svelte_config.kit.appDir}/immutable/`,
+							''
+						);
 
-					import_map_lookup.push([key, chunk.fileName]);
+						import_map_lookup.push([key, chunk.fileName]);
+					}
 				}
-			}
 
-			import_map_lookup.sort((a, b) => (a < b ? -1 : 1));
+				import_map_lookup.sort((a, b) => (a < b ? -1 : 1));
+			}
 
 			this.emitFile({
 				type: 'asset',
