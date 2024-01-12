@@ -717,6 +717,7 @@ async function kit({ svelte_config }) {
 								replacements[chunk.fileName] = chunk.preliminaryFileName
 									.replace('!~{', '')
 									.replace('}~', '')
+									.replace(/\.\w+$/, '')
 									.slice(length);
 							}
 						}

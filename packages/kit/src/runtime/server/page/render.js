@@ -277,9 +277,8 @@ export async function render_response({
 	}
 
 	if (page_config.csr) {
-		if (options.import_map_enabled) {
-			head += `
-		<script type="importmap">
+		if (options.import_map_enabled && !__SVELTEKIT_DEV__) {
+			const import_map = `
 			{
 				"imports": {
 					${client.import_map_lookup
@@ -287,7 +286,14 @@ export async function render_response({
 						.join(',\n\t\t\t\t\t')}
 				}
 			}
-		</script>`;
+		`;
+			csp.add_script(import_map);
+
+			let attrs = 'type="importmap"';
+			if (csp.script_needs_nonce) attrs += ` nonce="${csp.nonce}"`;
+
+			head += `
+		<script ${attrs}>${import_map}</script>`;
 		}
 
 		if (client.uses_env_dynamic_public && state.prerendering) {
