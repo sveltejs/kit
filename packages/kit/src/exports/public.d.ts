@@ -437,6 +437,7 @@ export interface KitConfig {
 		 * Whether to generate import maps. This will result in better long term cacheability, as changes to a single module will no longer invalidate all its dependents.
 		 * However, it will increase the size of the HTML document, and force `modulepreload` links to be part of the document rather than being added as HTTP headers.
 		 * @default false;
+		 * @since 2.4.0
 		 */
 		enabled?: boolean;
 	};
