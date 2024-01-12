@@ -1,5 +1,5 @@
 import { createBundle } from 'dts-buddy';
-import { readFileSync } from 'fs';
+import { readFileSync } from 'node:fs';
 
 await createBundle({
 	output: 'types/index.d.ts',
