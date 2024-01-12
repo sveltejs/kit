@@ -15,7 +15,7 @@
 		"kleur": "^4.1.5",
 		"sade": "^1.8.1",
 		"semver": "^7.5.4",
-		"svelte2tsx": "~0.6.27"
+		"svelte2tsx": "~0.7.0"
 	},
 	"devDependencies": {
 		"@sveltejs/vite-plugin-svelte": "^3.0.1",
