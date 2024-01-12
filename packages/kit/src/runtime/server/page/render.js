@@ -285,7 +285,7 @@ export async function render_response({
 						.map(([key, value]) => `${s(key)}: ${s(prefixed(value))}`)
 						.join(',\n\t\t\t\t\t')}
 				}
-			},
+			}
 		</script>`;
 		}
 
