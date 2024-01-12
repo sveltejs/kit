@@ -46,7 +46,7 @@
 		"@sveltejs/vite-plugin-svelte": "^3.0.1",
 		"@types/node": "^18.19.3",
 		"@types/set-cookie-parser": "^2.4.7",
-		"rollup": "^4.8.0",
+		"rollup": "^4.9.5",
 		"typescript": "^5.3.3",
 		"vitest": "^1.0.4"
 	},

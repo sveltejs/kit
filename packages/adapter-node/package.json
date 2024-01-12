@@ -47,7 +47,7 @@
 		"@rollup/plugin-commonjs": "^25.0.7",
 		"@rollup/plugin-json": "^6.1.0",
 		"@rollup/plugin-node-resolve": "^15.2.3",
-		"rollup": "^4.8.0"
+		"rollup": "^4.9.5"
 	},
 	"peerDependencies": {
 		"@sveltejs/kit": "^2.0.0"
