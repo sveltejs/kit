@@ -438,7 +438,7 @@ export interface KitConfig {
 		 * However, it will increase the size of the HTML document, and force `modulepreload` links to be part of the document rather than being added as HTTP headers.
 		 * @default false;
 		 */
-		enabled?: false;
+		enabled?: boolean;
 	};
 	/**
 	 * Inline CSS inside a `<style>` block at the head of the HTML. This option is a number that specifies the maximum length of a CSS file in UTF-16 code units, as specified by the [String.length](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/String/length) property, to be inlined. All CSS files needed for the page and smaller than this value are merged and inlined in a `<style>` block.
