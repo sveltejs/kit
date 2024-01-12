@@ -1,2 +1,2 @@
 export const foo = 'bar';
-export { x } from "./runes.svelte.js";
+export { x } from './runes.svelte.js';
