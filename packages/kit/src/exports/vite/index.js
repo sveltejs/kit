@@ -182,11 +182,6 @@ let secondary_build_started = false;
 /** @type {import('types').ManifestData} */
 let manifest_data;
 
-/** @param {string} name */
-function sanitize_chunk_name(name) {
-	return name.replace('!~{', '').replace('}~', '');
-}
-
 /**
  * Returns the SvelteKit Vite plugin. Vite executes Rollup hooks as well as some of its own.
  * Background reading is available at:
