@@ -9,10 +9,10 @@ await createBundle({
 		'@sveltejs/kit/node': 'src/exports/node/index.js',
 		'@sveltejs/kit/node/polyfills': 'src/exports/node/polyfills.js',
 		'@sveltejs/kit/vite': 'src/exports/vite/index.js',
-		'$app/environment': 'src/runtime/app/environment.js',
+		'$app/environment': 'src/runtime/app/environment/types.d.ts',
 		'$app/forms': 'src/runtime/app/forms.js',
 		'$app/navigation': 'src/runtime/app/navigation.js',
-		'$app/paths': 'src/runtime/app/paths.js',
+		'$app/paths': 'src/runtime/app/paths/types.d.ts',
 		'$app/stores': 'src/runtime/app/stores.js'
 	},
 	include: ['src']

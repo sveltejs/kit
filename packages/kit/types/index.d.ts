@@ -1893,21 +1893,24 @@ declare module '@sveltejs/kit/vite' {
 
 declare module '$app/environment' {
 	/**
-	 * SvelteKit analyses your app during the `build` step by running it. During this process, `building` is `true`. This also applies during prerendering.
-	 */
-	export const building: boolean;
-	/**
-	 * The value of `config.kit.version.name`.
-	 */
-	export const version: string;
-	/**
 	 * `true` if the app is running in the browser.
 	 */
 	export const browser: boolean;
+
 	/**
 	 * Whether the dev server is running. This is not guaranteed to correspond to `NODE_ENV` or `MODE`.
 	 */
 	export const dev: boolean;
+
+	/**
+	 * SvelteKit analyses your app during the `build` step by running it. During this process, `building` is `true`. This also applies during prerendering.
+	 */
+	export const building: boolean;
+
+	/**
+	 * The value of `config.kit.version.name`.
+	 */
+	export const version: string;
 }
 
 declare module '$app/forms' {
@@ -2075,6 +2078,20 @@ declare module '$app/navigation' {
 
 declare module '$app/paths' {
 	/**
+	 * A string that matches [`config.kit.paths.base`](https://kit.svelte.dev/docs/configuration#paths).
+	 *
+	 * Example usage: `<a href="{base}/your-page">Link</a>`
+	 */
+	export let base: '' | `/${string}`;
+
+	/**
+	 * An absolute path that matches [`config.kit.paths.assets`](https://kit.svelte.dev/docs/configuration#paths).
+	 *
+	 * > If a value for `config.kit.paths.assets` is specified, it will be replaced with `'/_svelte_kit_assets'` during `vite dev` or `vite preview`, since the assets don't yet live at their eventual URL.
+	 */
+	export let assets: '' | `https://${string}` | `http://${string}` | '/_svelte_kit_assets';
+
+	/**
 	 * Populate a route ID with params to resolve a pathname.
 	 * @example
 	 * ```js
@@ -2086,20 +2103,8 @@ declare module '$app/paths' {
 	 *   }
 	 * ); // `/blog/hello-world/something/else`
 	 * ```
-	 * */
+	 */
 	export function resolveRoute(id: string, params: Record<string, string | undefined>): string;
-	/**
-	 * An absolute path that matches [`config.kit.paths.assets`](https://kit.svelte.dev/docs/configuration#paths).
-	 *
-	 * > If a value for `config.kit.paths.assets` is specified, it will be replaced with `'/_svelte_kit_assets'` during `vite dev` or `vite preview`, since the assets don't yet live at their eventual URL.
-	 * */
-	export const assets: '' | `https://${string}` | `http://${string}` | '/_svelte_kit_assets';
-	/**
-	 * A string that matches [`config.kit.paths.base`](https://kit.svelte.dev/docs/configuration#paths).
-	 *
-	 * Example usage: `<a href="{base}/your-page">Link</a>`
-	 * */
-	export const base: '' | `/${string}`;
 }
 
 declare module '$app/stores' {
