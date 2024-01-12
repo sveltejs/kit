@@ -1133,8 +1133,8 @@ importers:
         specifier: ^7.5.4
         version: 7.5.4
       svelte2tsx:
-        specifier: ~0.6.27
-        version: 0.6.27(svelte@4.2.8)(typescript@5.3.3)
+        specifier: ~0.7.0
+        version: 0.7.0(svelte@4.2.8)(typescript@5.3.3)
     devDependencies:
       '@sveltejs/vite-plugin-svelte':
         specifier: ^3.0.1
@@ -6049,8 +6049,8 @@ packages:
       typescript: 5.3.3
     dev: true
 
-  /svelte2tsx@0.6.27(svelte@4.2.8)(typescript@5.3.3):
-    resolution: {integrity: sha512-E1uPW1o6VsbRz+nUk3fznZ2lSmCITAJoNu8AYefWSvIwE2pSB01i5sId4RMbWNzfcwCQl1DcgGShCPcldl4rvg==}
+  /svelte2tsx@0.7.0(svelte@4.2.8)(typescript@5.3.3):
+    resolution: {integrity: sha512-qAelcydnmuiDvD1HsrWi23RWx24RZTKRv6n4JaGC/pkoJfbLkJPQT2wa1qN0ZyfKTNLSyoj2FW9z62l/AUzUNA==}
     peerDependencies:
       svelte: ^3.55 || ^4.0.0-next.0 || ^4.0 || ^5.0.0-next.0
       typescript: ^4.9.4 || ^5.0.0
