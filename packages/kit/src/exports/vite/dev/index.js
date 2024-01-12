@@ -121,7 +121,8 @@ export async function dev(vite, vite_config, svelte_config) {
 					imports: [],
 					stylesheets: [],
 					fonts: [],
-					uses_env_dynamic_public: true
+					uses_env_dynamic_public: true,
+					import_map_lookup: []
 				},
 				nodes: manifest_data.nodes.map((node, index) => {
 					return async () => {

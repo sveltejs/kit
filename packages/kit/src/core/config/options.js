@@ -134,6 +134,10 @@ const options = object(
 				errorTemplate: string(join('src', 'error.html'))
 			}),
 
+			importMap: object({
+				enabled: boolean(false)
+			}),
+
 			inlineStyleThreshold: number(0),
 
 			moduleExtensions: string_array(['.js', '.ts']),

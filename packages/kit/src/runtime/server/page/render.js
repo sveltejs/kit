@@ -277,6 +277,18 @@ export async function render_response({
 	}
 
 	if (page_config.csr) {
+		if (options.import_map_enabled) {
+			head += `<script type="importmap">
+			{
+				"imports": {
+					${client.import_map_lookup
+						.map(([key, value]) => `${s(key)}: ${s(prefixed(value))}`)
+						.join('\n\t\t\t\t\t')}
+				}
+			},
+		</script>`;
+		}
+
 		if (client.uses_env_dynamic_public && state.prerendering) {
 			modulepreloads.add(`${options.app_dir}/env.js`);
 		}
@@ -290,7 +302,7 @@ export async function render_response({
 			link_header_preloads.add(`<${encodeURI(path)}>; rel="modulepreload"; nopush`);
 			if (options.preload_strategy !== 'modulepreload') {
 				head += `\n\t\t<link rel="preload" as="script" crossorigin="anonymous" href="${path}">`;
-			} else if (state.prerendering) {
+			} else if (state.prerendering || options.import_map_enabled) {
 				head += `\n\t\t<link rel="modulepreload" href="${path}">`;
 			}
 		}
@@ -448,7 +460,7 @@ export async function render_response({
 			headers.set('content-security-policy-report-only', report_only_header);
 		}
 
-		if (link_header_preloads.size) {
+		if (link_header_preloads.size && !options.import_map_enabled) {
 			headers.set('link', Array.from(link_header_preloads).join(', '));
 		}
 	}

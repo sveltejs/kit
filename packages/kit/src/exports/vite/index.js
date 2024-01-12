@@ -182,6 +182,16 @@ let secondary_build_started = false;
 /** @type {import('types').ManifestData} */
 let manifest_data;
 
+/** @param {string} name */
+function has_placeholder(name) {
+	return name.includes('.!~{');
+}
+
+/** @param {string} name */
+function sanitize_chunk_name(name) {
+	return name.replace('!~{', '').replace('}~', '');
+}
+
 /**
  * Returns the SvelteKit Vite plugin. Vite executes Rollup hooks as well as some of its own.
  * Background reading is available at:
@@ -685,13 +695,65 @@ async function kit({ svelte_config }) {
 			}
 		},
 
-		generateBundle() {
+		renderChunk(code, chunk) {
+			if (!is_build || vite_config.build.ssr) return;
+			if (!has_placeholder(code)) return;
+
+			return {
+				code: code.replace(/(from |import\()'(.+?)'/g, (m, prefix, id) => {
+					if (has_placeholder(id)) {
+						const from = chunk.fileName.split('/').slice(0, -1);
+						const to = id.split('/');
+
+						while (to[0] === '..') {
+							to.shift();
+							from.pop();
+						}
+
+						if (to[0] === '.') to.shift();
+
+						const resolved = [...from, ...to]
+							.join('/')
+							.replace(`${svelte_config.kit.appDir}/immutable/`, '');
+
+						return `${prefix}'${sanitize_chunk_name(resolved)}'`;
+					}
+
+					return m;
+				}),
+				map: null
+			};
+		},
+
+		generateBundle(_options, bundle) {
 			if (vite_config.build.ssr) return;
 
 			this.emitFile({
 				type: 'asset',
 				fileName: `${kit.appDir}/version.json`,
 				source: s({ version: kit.version.name })
+			});
+
+			/** @type {Array<[string, string]>} */
+			const import_map_lookup = [];
+
+			for (const chunk of Object.values(bundle)) {
+				if (chunk.type === 'chunk') {
+					const key = sanitize_chunk_name(chunk.preliminaryFileName).replace(
+						`${svelte_config.kit.appDir}/immutable/`,
+						''
+					);
+
+					import_map_lookup.push([key, chunk.fileName]);
+				}
+			}
+
+			import_map_lookup.sort((a, b) => (a < b ? -1 : 1));
+
+			this.emitFile({
+				type: 'asset',
+				fileName: 'import-map-lookup.json',
+				source: JSON.stringify(import_map_lookup, null, '\t')
 			});
 		},
 
@@ -779,6 +841,9 @@ async function kit({ svelte_config }) {
 				/** @type {import('vite').Manifest} */
 				const client_manifest = JSON.parse(read(`${out}/client/${vite_config.build.manifest}`));
 
+				/** @type {Array<[string, string]>} */
+				const import_map_lookup = JSON.parse(read(`${out}/client/import-map-lookup.json`));
+
 				const deps_of = /** @param {string} f */ (f) =>
 					find_deps(client_manifest, posixify(path.relative('.', f)), false);
 				const start = deps_of(`${runtime_directory}/client/entry.js`);
@@ -792,7 +857,8 @@ async function kit({ svelte_config }) {
 					fonts: [...start.fonts, ...app.fonts],
 					uses_env_dynamic_public: output.some(
 						(chunk) => chunk.type === 'chunk' && chunk.modules[env_dynamic_public]
-					)
+					),
+					import_map_lookup
 				};
 
 				const css = output.filter(
