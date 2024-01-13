@@ -112,7 +112,7 @@ declare module '@sveltejs/kit' {
 			/** An array of asset paths imported by the root [default error page](https://kit.svelte.dev/docs/routing#error). */
 			rootErrorPage: string[];
 			/** An array of asset paths imported by the [server hooks](https://kit.svelte.dev/docs/hooks#server-hooks). */
-			hooks?: string[];
+			hooks: string[];
 		};
 
 		/**

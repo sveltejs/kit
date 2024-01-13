@@ -76,7 +76,7 @@ export function create_builder({
 	 * @type {{
 	 * 	routes: Map<string, string[]>;
 	 * 	root_error_page: string[];
-	 * 	hooks: string[] | undefined;
+	 * 	hooks: string[];
 	 * } | undefined}
 	 */
 	let server_assets;
@@ -300,11 +300,13 @@ export function create_builder({
 				routes.set(route.id, Array.from(server_assets));
 			});
 
-			const server_hooks_file = resolve_entry(config.kit.files.hooks.server);
+			const server_hooks_path = resolve_entry(config.kit.files.hooks.server)?.slice(
+				process.cwd().length + 1
+			);
 
 			server_assets = {
 				routes,
-				hooks: server_hooks_file ? [...get_server_assets(server_hooks_file)] : undefined,
+				hooks: [...get_server_assets(server_hooks_path)],
 				root_error_page: get_root_error_page_assets()
 			};
 
