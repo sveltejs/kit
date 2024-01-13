@@ -1,5 +1,14 @@
 # @sveltejs/adapter-cloudflare
 
+## 3.0.2
+
+### Patch Changes
+
+- fix: serve static files in `_app` from function, if not already handled ([#11593](https://github.com/sveltejs/kit/pull/11593))
+
+- Updated dependencies [[`553e14c8320ad9c6ebb3c554c35f1482755c9555`](https://github.com/sveltejs/kit/commit/553e14c8320ad9c6ebb3c554c35f1482755c9555), [`48576de0dc8b1fbbab7954113004540ea4e76935`](https://github.com/sveltejs/kit/commit/48576de0dc8b1fbbab7954113004540ea4e76935)]:
+  - @sveltejs/kit@2.3.2
+
 ## 3.0.1
 
 ### Patch Changes

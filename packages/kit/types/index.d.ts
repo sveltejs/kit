@@ -361,6 +361,7 @@ declare module '@sveltejs/kit' {
 			/**
 			 * A prefix that signals that an environment variable is unsafe to expose to client-side code. Environment variables matching neither the public nor the private prefix will be discarded completely. See [`$env/static/private`](/docs/modules#$env-static-private) and [`$env/dynamic/private`](/docs/modules#$env-dynamic-private).
 			 * @default ""
+			 * @since 1.21.0
 			 */
 			privatePrefix?: string;
 		};
@@ -384,6 +385,12 @@ declare module '@sveltejs/kit' {
 				 * @default "src/hooks.server"
 				 */
 				server?: string;
+				/**
+				 * The location of your universal [hooks](https://kit.svelte.dev/docs/hooks).
+				 * @default "src/hooks"
+				 * @since 2.3.0
+				 */
+				universal?: string;
 			};
 			/**
 			 * your app's internal library, accessible throughout the codebase as `$lib`
@@ -444,6 +451,7 @@ declare module '@sveltejs/kit' {
 			 * - `preload-js` - uses `<link rel="preload">`. Prevents waterfalls in Chromium and Safari, but Chromium will parse each module twice (once as a script, once as a module). Causes modules to be requested twice in Firefox. This is a good setting if you want to maximise performance for users on iOS devices at the cost of a very slight degradation for Chromium users.
 			 * - `preload-mjs` - uses `<link rel="preload">` but with the `.mjs` extension which prevents double-parsing in Chromium. Some static webservers will fail to serve .mjs files with a `Content-Type: application/javascript` header, which will cause your application to break. If that doesn't apply to you, this is the option that will deliver the best performance for the largest number of users, until `modulepreload` is more widely supported.
 			 * @default "modulepreload"
+			 * @since 1.8.4
 			 */
 			preloadStrategy?: 'modulepreload' | 'preload-js' | 'preload-mjs';
 		};
@@ -471,6 +479,7 @@ declare module '@sveltejs/kit' {
 			 * In 1.0, `undefined` was a valid value, which was set by default. In that case, if `paths.assets` was not external, SvelteKit would replace `%sveltekit.assets%` with a relative path and use relative paths to reference build artifacts, but `base` and `assets` imported from `$app/paths` would be as specified in your config.
 			 *
 			 * @default true
+			 * @since 1.9.0
 			 */
 			relative?: boolean;
 		};
@@ -522,6 +531,7 @@ declare module '@sveltejs/kit' {
 			 * ```
 			 *
 			 * @default "fail"
+			 * @since 1.15.7
 			 */
 			handleHttpError?: PrerenderHttpErrorHandlerValue;
 			/**
@@ -533,6 +543,7 @@ declare module '@sveltejs/kit' {
 			 * - `(details) => void` — a custom error handler that takes a `details` object with `path`, `id`, `referrers` and `message` properties. If you `throw` from this function, the build will fail
 			 *
 			 * @default "fail"
+			 * @since 1.15.7
 			 */
 			handleMissingId?: PrerenderMissingIdHandlerValue;
 			/**
@@ -544,6 +555,7 @@ declare module '@sveltejs/kit' {
 			 * - `(details) => void` — a custom error handler that takes a `details` object with `generatedFromId`, `entry`, `matchedId` and `message` properties. If you `throw` from this function, the build will fail
 			 *
 			 * @default "fail"
+			 * @since 1.16.0
 			 */
 			handleEntryGeneratorMismatch?: PrerenderEntryGeneratorMismatchHandlerValue;
 			/**
@@ -569,6 +581,7 @@ declare module '@sveltejs/kit' {
 			 * A function that allows you to edit the generated `tsconfig.json`. You can mutate the config (recommended) or return a new one.
 			 * This is useful for extending a shared `tsconfig.json` in a monorepo root, for example.
 			 * @default (config) => config
+			 * @since 1.3.0
 			 */
 			config?: (config: Record<string, any>) => Record<string, any> | void;
 		};
@@ -666,6 +679,12 @@ declare module '@sveltejs/kit' {
 		request: Request;
 		fetch: typeof fetch;
 	}) => MaybePromise<Response>;
+
+	/**
+	 * The [`reroute`](https://kit.svelte.dev/docs/hooks#universal-hooks-reroute) hook allows you to modify the URL before it is used to determine which route to render.
+	 * @since 2.3.0
+	 */
+	export type Reroute = (event: { url: URL }) => void | string;
 
 	/**
 	 * The generic form of `PageLoad` and `LayoutLoad`. You should import those from `./$types` (see [generated types](https://kit.svelte.dev/docs/types#generated-types))
@@ -1882,15 +1901,25 @@ declare module '@sveltejs/kit/vite' {
 }
 
 declare module '$app/environment' {
-	export { building, version } from '__sveltekit/environment';
 	/**
 	 * `true` if the app is running in the browser.
 	 */
 	export const browser: boolean;
+
 	/**
 	 * Whether the dev server is running. This is not guaranteed to correspond to `NODE_ENV` or `MODE`.
 	 */
 	export const dev: boolean;
+
+	/**
+	 * SvelteKit analyses your app during the `build` step by running it. During this process, `building` is `true`. This also applies during prerendering.
+	 */
+	export const building: boolean;
+
+	/**
+	 * The value of `config.kit.version.name`.
+	 */
+	export const version: string;
 }
 
 declare module '$app/forms' {
@@ -1971,7 +2000,7 @@ declare module '$app/navigation' {
 	 *
 	 * `onNavigate` must be called during a component initialization. It remains active as long as the component is mounted.
 	 * */
-	export function onNavigate(callback: (navigation: import('@sveltejs/kit').OnNavigate) => MaybePromise<void>): void;
+	export function onNavigate(callback: (navigation: import('@sveltejs/kit').OnNavigate) => MaybePromise<(() => void) | void>): void;
 	/**
 	 * If called when the page is being updated following a navigation (in `onMount` or `afterNavigate` or an action, for example), this disables SvelteKit's built-in scroll handling.
 	 * This is generally discouraged, since it breaks user expectations.
@@ -2057,7 +2086,20 @@ declare module '$app/navigation' {
 }
 
 declare module '$app/paths' {
-	export { base, assets } from '__sveltekit/paths';
+	/**
+	 * A string that matches [`config.kit.paths.base`](https://kit.svelte.dev/docs/configuration#paths).
+	 *
+	 * Example usage: `<a href="{base}/your-page">Link</a>`
+	 */
+	export let base: '' | `/${string}`;
+
+	/**
+	 * An absolute path that matches [`config.kit.paths.assets`](https://kit.svelte.dev/docs/configuration#paths).
+	 *
+	 * > If a value for `config.kit.paths.assets` is specified, it will be replaced with `'/_svelte_kit_assets'` during `vite dev` or `vite preview`, since the assets don't yet live at their eventual URL.
+	 */
+	export let assets: '' | `https://${string}` | `http://${string}` | '/_svelte_kit_assets';
+
 	/**
 	 * Populate a route ID with params to resolve a pathname.
 	 * @example
@@ -2070,7 +2112,7 @@ declare module '$app/paths' {
 	 *   }
 	 * ); // `/blog/hello-world/something/else`
 	 * ```
-	 * */
+	 */
 	export function resolveRoute(id: string, params: Record<string, string | undefined>): string;
 }
 
@@ -2186,44 +2228,6 @@ declare module '$service-worker' {
 	 * See [`config.kit.version`](https://kit.svelte.dev/docs/configuration#version). It's useful for generating unique cache names inside your service worker, so that a later deployment of your app can invalidate old caches.
 	 */
 	export const version: string;
-}
-
-/** Internal version of $app/environment */
-declare module '__sveltekit/environment' {
-	/**
-	 * SvelteKit analyses your app during the `build` step by running it. During this process, `building` is `true`. This also applies during prerendering.
-	 */
-	export const building: boolean;
-	/**
-	 * True during prerendering, false otherwise.
-	 */
-	export const prerendering: boolean;
-	/**
-	 * The value of `config.kit.version.name`.
-	 */
-	export const version: string;
-	export function set_building(): void;
-	export function set_prerendering(): void;
-}
-
-/** Internal version of $app/paths */
-declare module '__sveltekit/paths' {
-	/**
-	 * A string that matches [`config.kit.paths.base`](https://kit.svelte.dev/docs/configuration#paths).
-	 *
-	 * Example usage: `<a href="{base}/your-page">Link</a>`
-	 */
-	export let base: '' | `/${string}`;
-	/**
-	 * An absolute path that matches [`config.kit.paths.assets`](https://kit.svelte.dev/docs/configuration#paths).
-	 *
-	 * > If a value for `config.kit.paths.assets` is specified, it will be replaced with `'/_svelte_kit_assets'` during `vite dev` or `vite preview`, since the assets don't yet live at their eventual URL.
-	 */
-	export let assets: '' | `https://${string}` | `http://${string}` | '/_svelte_kit_assets';
-	export let relative: boolean;
-	export function reset(): void;
-	export function override(paths: { base: string; assets: string }): void;
-	export function set_assets(path: string): void;
 }
 
 //# sourceMappingURL=index.d.ts.map

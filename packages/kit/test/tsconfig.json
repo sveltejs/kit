@@ -7,11 +7,6 @@
 		"target": "esnext",
 		"module": "esnext",
 		"moduleResolution": "node",
-		"allowSyntheticDefaultImports": true,
-		"paths": {
-			"@sveltejs/kit": ["../types/index"],
-			// internal use only
-			"types": ["../types/internal"]
-		}
+		"allowSyntheticDefaultImports": true
 	}
 }

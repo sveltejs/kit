@@ -1,5 +1,11 @@
 # @sveltejs/enhanced-img
 
+## 0.1.8
+
+### Patch Changes
+
+- fix: correct images cache key to avoid collisions when images have same name ([#11602](https://github.com/sveltejs/kit/pull/11602))
+
 ## 0.1.7
 
 ### Patch Changes

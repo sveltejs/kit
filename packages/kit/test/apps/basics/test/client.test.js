@@ -917,11 +917,11 @@ test.describe('goto', () => {
 });
 
 test.describe('untrack', () => {
-	test('untracks server load function', async ({ page }) => {
+	test('untracks server load function', async ({ page, clicknav }) => {
 		await page.goto('/untrack/server/1');
 		expect(await page.textContent('p.url')).toBe('/untrack/server/1');
 		const id = await page.textContent('p.id');
-		await page.click('a[href="/untrack/server/2"]');
+		await clicknav('a[href="/untrack/server/2"]');
 		expect(await page.textContent('p.url')).toBe('/untrack/server/2');
 		expect(await page.textContent('p.id')).toBe(id);
 	});
@@ -1021,5 +1021,46 @@ test.describe('Shallow routing', () => {
 		expect(page.url()).toBe(`${baseURL}/shallow-routing/replace-state/a`);
 		await expect(page.locator('h1')).toHaveText('parent');
 		await expect(page.locator('p')).toHaveText('active: true');
+	});
+});
+
+test.describe('reroute', () => {
+	test('Apply reroute during client side navigation', async ({ page }) => {
+		await page.goto('/reroute/basic');
+		await page.click("a[href='/reroute/basic/a']");
+		expect(await page.textContent('h1')).toContain('Successfully rewritten');
+	});
+
+	test('Apply reroute after client-only redirects', async ({ page }) => {
+		await page.goto('/reroute/client-only-redirect');
+		expect(await page.textContent('h1')).toContain('Successfully rewritten');
+	});
+
+	test('Apply reroute to preload data', async ({ page }) => {
+		await page.goto('/reroute/preload-data');
+		await page.click('button');
+		await page.waitForSelector('pre');
+		expect(await page.textContent('pre')).toContain('"success": true');
+	});
+
+	test('reroute does not get applied to external URLs', async ({ page }) => {
+		await page.goto('/reroute/external');
+		const current_url = new URL(page.url());
+
+		//click the link with the text External URL
+		await page.click("a[data-test='external-url']");
+
+		//The URl should not have the same origin as the current URL
+		const new_url = new URL(page.url());
+		expect(current_url.origin).not.toEqual(new_url.origin);
+	});
+
+	test('Falls back to native navigation if reroute throws on the client', async ({ page }) => {
+		await page.goto('/reroute/error-handling');
+
+		//click the link with the text External URL
+		await page.click('a#client-error');
+
+		expect(await page.textContent('h1')).toContain('Full Navigation');
 	});
 });

@@ -1,11 +1,18 @@
-declare global {
-	const __SVELTEKIT_ADAPTER_NAME__: string;
-	const __SVELTEKIT_APP_VERSION_FILE__: string;
-	const __SVELTEKIT_APP_VERSION_POLL_INTERVAL__: number;
-	const __SVELTEKIT_DEV__: boolean;
-	const __SVELTEKIT_EMBEDDED__: boolean;
-	var Bun: object;
-	var Deno: object;
+/** Internal version of $app/environment */
+declare module '__sveltekit/environment' {
+	export const building: boolean;
+	export const prerendering: boolean;
+	export const version: string;
+	export function set_building(): void;
+	export function set_prerendering(): void;
 }
 
-export {};
+/** Internal version of $app/paths */
+declare module '__sveltekit/paths' {
+	export let base: '' | `/${string}`;
+	export let assets: '' | `https://${string}` | `http://${string}` | '/_svelte_kit_assets';
+	export let relative: boolean;
+	export function reset(): void;
+	export function override(paths: { base: string; assets: string }): void;
+	export function set_assets(path: string): void;
+}
