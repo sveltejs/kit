@@ -6,8 +6,16 @@ const vercel = `${cwd}/.vercel/output/functions`;
 const assets = '_app/immutable/assets';
 const serverless_functions = ['fn-0', 'fn-1', 'fn-2', 'fn'];
 
-test('includes server assets from pages', () => {
-	expect(fs.existsSync(`${vercel}/fn-2.func/${assets}/_page.js.9fbd6c4c.txt`)).toBeTruthy();
+test('includes server assets from page server load functions', () => {
+	expect(fs.existsSync(`${vercel}/fn-2.func/${assets}/_page.server.js.63084e6e.txt`)).toBeTruthy();
+});
+
+test('includes server assets from layout server load functions', () => {
+	for (const fn of serverless_functions) {
+		expect(
+			fs.existsSync(`${vercel}/${fn}.func/${assets}/_layout.server.js.c7c8c528.txt`)
+		).toBeTruthy();
+	}
 });
 
 test('includes server assets from endpoints', () => {
@@ -27,10 +35,25 @@ test('includes server assets of the default error page for every function', () =
 });
 
 test('only includes relevant server assets for split functions', () => {
-	expect(fs.existsSync(`${vercel}/fn-0.func/${assets}/_server.js.8663e12c.txt`)).toBeFalsy();
-	expect(fs.existsSync(`${vercel}/fn-1.func/${assets}/_server.js.8663e12c.txt`)).toBeTruthy();
-	expect(fs.existsSync(`${vercel}/fn-2.func/${assets}/_server.js.8663e12c.txt`)).toBeFalsy();
-	expect(fs.existsSync(`${vercel}/fn.func/${assets}/_server.js.8663e12c.txt`)).toBeFalsy();
+	for (const fn of serverless_functions) {
+		const file_exists = fs.existsSync(`${vercel}/${fn}.func/${assets}/_server.js.8663e12c.txt`);
+		if (fn === 'fn-1') {
+			expect(file_exists).toBeTruthy();
+		} else {
+			expect(file_exists).toBeFalsy();
+		}
+	}
+
+	for (const fn of serverless_functions) {
+		const file_exists = fs.existsSync(
+			`${vercel}/${fn}.func/${assets}/_page.server.js.63084e6e.txt`
+		);
+		if (fn === 'fn-2') {
+			expect(file_exists).toBeTruthy();
+		} else {
+			expect(file_exists).toBeFalsy();
+		}
+	}
 });
 
 test('excludes server assets from universal load functions', () => {
