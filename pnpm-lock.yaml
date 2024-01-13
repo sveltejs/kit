@@ -308,6 +308,9 @@ importers:
       svelte:
         specifier: ^4.2.8
         version: 4.2.8
+      typescript:
+        specifier: ^5.3.3
+        version: 5.3.3
       vite:
         specifier: ^5.0.8
         version: 5.0.11(@types/node@18.19.6)(lightningcss@1.22.1)
