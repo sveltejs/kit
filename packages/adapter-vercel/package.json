@@ -32,14 +32,14 @@
 	},
 	"dependencies": {
 		"@vercel/nft": "^0.26.1",
-		"esbuild": "^0.19.9"
+		"esbuild": "^0.19.11"
 	},
 	"devDependencies": {
 		"@sveltejs/kit": "workspace:^",
 		"@sveltejs/vite-plugin-svelte": "^3.0.1",
 		"@types/node": "^18.19.3",
 		"typescript": "^5.3.3",
-		"vitest": "^1.0.4"
+		"vitest": "^1.2.0"
 	},
 	"peerDependencies": {
 		"@sveltejs/kit": "^2.0.0"
