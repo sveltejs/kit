@@ -174,4 +174,4 @@ export async function GET() {
 }
 ```
 
-> Only assets that are imported or transitively imported in `+page.server`, `+layout.server`, and `+server` files are included in the Serverless Function bundle.
+> Only assets that are imported or transitively imported in `+page.server`, `+layout.server` and `+server` files are included in the Serverless Function bundle.

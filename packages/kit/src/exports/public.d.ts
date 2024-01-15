@@ -124,7 +124,7 @@ export interface Builder {
 	getServerDirectory(): string;
 	/** Get the application path including any configured `base` path, e.g. `my-base-path/_app`. */
 	getAppPath(): string;
-	/** Get the assets paths imported by server-side code for each route and the root [default error page](https://kit.svelte.dev/docs/routing#error). */
+	/** Get the asset paths imported by server-side code for each route and the root [default error page](https://kit.svelte.dev/docs/routing#error). */
 	getServerAssets(): {
 		/** A map of route IDs and its array of assets paths imported by server-side code. */
 		routes: Map<string, string[]>;
