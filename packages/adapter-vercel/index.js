@@ -17,7 +17,7 @@ const get_default_runtime = () => {
 	);
 };
 
-/** @type {import('./index.js').default} **/
+/** @type {import('.').default} **/
 const plugin = function (defaults = {}) {
 	if ('edge' in defaults) {
 		throw new Error("{ edge: true } has been removed in favour of { runtime: 'edge' }");
@@ -340,7 +340,7 @@ const plugin = function (defaults = {}) {
 	};
 };
 
-/** @param {import('./index.js').EdgeConfig & import('./index.js').ServerlessConfig} config */
+/** @param {import('.').EdgeConfig & import('.').ServerlessConfig} config */
 function hash_config(config) {
 	return [
 		config.runtime ?? '',
