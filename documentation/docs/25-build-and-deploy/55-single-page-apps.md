@@ -9,7 +9,9 @@ You can turn any SvelteKit app, using any adapter, into a fully client-rendered 
 export const ssr = false;
 ```
 
-> In most situations this is not recommended: it harms SEO, tends to slow down perceived performance, and makes your app inaccessible to users if JavaScript fails or is disabled (which happens [more often than you probably think](https://kryogenix.org/code/browser/everyonehasjs.html)).
+> SPA mode is highly discouraged: it destroys performance by forcing two network round trips before rendering can begin; harms SEO by downranking your page which is likely to fail core web vitals, excluding engines that don't render JS, and receiving less frequent updates from those that do; and it makes your app inaccessible to users if JavaScript fails or is disabled (which happens [more often than you probably think](https://kryogenix.org/code/browser/everyonehasjs.html)).
+>
+> You can avoid these drawbacks on a given page by [prerendering it](#prerendering-individual-pages). You should thus prerender as many pages as possible when using SPA mode — especially your homepage.
 
 If you don't have any server-side logic (i.e. `+page.server.js`, `+layout.server.js` or `+server.js` files) you can use [`adapter-static`](adapter-static) to create your SPA by adding a _fallback page_.
 
@@ -37,6 +39,16 @@ On some hosts it may be `index.html` or something else entirely — consult your
 
 > Note that the fallback page will always contain absolute asset paths (i.e. beginning with `/` rather than `.`) regardless of the value of [`paths.relative`](/docs/configuration#paths), since it is used to respond to requests for arbitrary paths.
 
+## Prerendering individual pages
+
+If you want certain pages to be prerendered, you can re-enable `ssr` alongside `prerender` for just those parts of your app:
+
+```js
+/// file: src/routes/my-prerendered-page/+page.js
+export const prerender = true;
+export const ssr = true;
+```
+
 ## Apache
 
 To run an SPA on [Apache](https://httpd.apache.org/), you should add a `static/.htaccess` file to route requests to the fallback page:
@@ -50,14 +62,4 @@ To run an SPA on [Apache](https://httpd.apache.org/), you should add a `static/.
 	RewriteCond %{REQUEST_FILENAME} !-d
 	RewriteRule . /200.html [L]
 </IfModule>
-```
-
-## Prerendering individual pages
-
-If you want certain pages to be prerendered, you can re-enable `ssr` alongside `prerender` for just those parts of your app:
-
-```js
-/// file: src/routes/my-prerendered-page/+page.js
-export const prerender = true;
-export const ssr = true;
 ```
