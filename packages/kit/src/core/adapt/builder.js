@@ -72,8 +72,13 @@ export function create_builder({
 		return facade;
 	});
 
-	/** @type {Map<string, string[]> | undefined} */
-	let routes_with_server_assets;
+	/**
+	 * @type {{
+	 * 	routes: Map<string, string[]>;
+	 *  root_error_page: string[];
+	 * } | undefined}
+	 */
+	let server_assets;
 
 	return {
 		log,
@@ -194,7 +199,12 @@ export function create_builder({
 		},
 
 		getServerAssets() {
-			if (routes_with_server_assets) return routes_with_server_assets;
+			if (server_assets) {
+				return {
+					routes: server_assets.routes,
+					rootErrorPage: server_assets.root_error_page
+				};
+			}
 
 			/** @type {Set<string>} */
 			let asset_chunks = new Set();
@@ -275,18 +285,19 @@ export function create_builder({
 				return assets;
 			}
 
-			routes_with_server_assets = new Map();
+			const routes = new Map();
 
 			const server_hooks_path = resolve_entry(config.kit.files.hooks.server)?.slice(
 				process.cwd().length + 1
 			);
-			const server_hooks_assets = get_server_assets(server_hooks_path);
-
-			const root_error_page_assets = get_root_error_page_assets();
+			const root_error_page_assets = [
+				...get_root_error_page_assets(),
+				...get_server_assets(server_hooks_path)
+			];
 
 			for (const route of route_data) {
 				/** @type {Set<string>} */
-				let server_assets = new Set([...server_hooks_assets, ...root_error_page_assets]);
+				let server_assets = new Set(root_error_page_assets);
 
 				if (route.leaf) {
 					server_assets = concat(server_assets, get_server_load_assets(route.leaf));
@@ -296,10 +307,18 @@ export function create_builder({
 					server_assets = concat(server_assets, get_server_assets(route.endpoint.file));
 				}
 
-				routes_with_server_assets.set(route.id, Array.from(server_assets));
+				routes.set(route.id, Array.from(server_assets));
 			}
 
-			return routes_with_server_assets;
+			server_assets = {
+				routes,
+				root_error_page: root_error_page_assets
+			};
+
+			return {
+				routes,
+				rootErrorPage: server_assets.root_error_page
+			};
 		},
 
 		writeClient(dest) {

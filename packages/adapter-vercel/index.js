@@ -551,14 +551,14 @@ async function create_function_bundle(builder, entry, dir, config, routes) {
 
 	// TODO: remove this check when @sveltejs/kit peer dep is bumped to 2.4+
 	if (builder.getServerAssets) {
-		const server_assets_map = builder.getServerAssets();
+		const server_assets = builder.getServerAssets();
 		/** @type {Set<string>} */
-		let routes_assets = new Set();
+		let routes_assets = new Set(server_assets.rootErrorPage);
 
 		for (const route of routes) {
-			const server_assets = server_assets_map.get(route.id);
-			if (server_assets) {
-				routes_assets = new Set([...routes_assets, ...server_assets]);
+			const assets = server_assets.routes.get(route.id);
+			if (assets) {
+				routes_assets = new Set([...routes_assets, ...assets]);
 			}
 		}
 
