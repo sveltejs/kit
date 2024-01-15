@@ -162,32 +162,16 @@ You can [use files in Serverless Functions on Vercel](https://vercel.com/guides/
 /// file: api/pdf/+server.js
 import fs from "node:fs";
 import path from "node:path";
-import { json } from '@sveltejs/kit';
-import PDFDocument from "pdfkit";
+
+// importing a static asset will return the resolved path in the production build
 import PalatinoBoldFont from "$lib/fonts/PalatinoBold.ttf";
 
-const font = path.join(process.cwd(), PalatinoBoldFont);
+const pathToFile = path.join(process.cwd(), PalatinoBoldFont);
 
-export async function POST({ url }) {
-	const title = url.searchParams.get('title');
-	const filename = url.searchParams.get('filename');
-
-  const doc = new PDFDocument();
-  // use the tmp serverless function folder to create the write stream for the pdf
-  const file = `/tmp/${filename}.pdf`;
-  let writeStream = fs.createWriteStream(file);
-  doc.pipe(writeStream);
-  doc.font(font).fontSize(25).text(title, 100, 100);
-  doc.end();
-
-  writeStream.on("finish", () => {
-    const fileContent = fs.readFileSync(file);
-
-    // upload file to storage bucket
-
-    return json({ response: `File ${filename} saved` });
-  });
+export async function GET() {
+	const file = fs.readFileSync(pathToFile);
+	// ...
 }
 ```
 
-> Only imported assets in `+page.server`, `+layout.server` and `+server` files are included in the Serverless Function bundle.
+> Only assets that are imported in `+page.server`, `+layout.server` and `+server` files are included in the Serverless Function bundle.

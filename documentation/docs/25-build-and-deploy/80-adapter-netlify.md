@@ -113,36 +113,23 @@ You can [use files in Netlify Serverless Functions](https://www.netlify.com/blog
 
 ```js
 // @errors: 2307 7031
-/// file: api/pdf/+server.js
+/// file: +server.js
 import fs from "node:fs";
 import path from "node:path";
-import { json } from '@sveltejs/kit';
 import { dev } from '$app/environment';
-import PDFDocument from "pdfkit";
+
+// importing a static asset will return the resolved path in the production build
 import PalatinoBoldFont from "$lib/fonts/PalatinoBold.ttf";
 
+const cwd = process.cwd();
+
 // server assets live in `.netlify/server` when deployed to Netlify
-const dir = dev ? process.cwd() : path.join(process.cwd(), '.netlify/server');
+const dir = dev ? cwd : path.join(cwd, '.netlify/server');
 
-const font = path.join(dir, PalatinoBoldFont);
+const pathToFile = path.join(dir, PalatinoBoldFont);
 
-export async function GET({ url }) {
-	const title = url.searchParams.get('title');
-	const filename = url.searchParams.get('filename');
-
-  const doc = new PDFDocument();
-  const file = `/tmp/${filename}.pdf`;
-  let writeStream = fs.createWriteStream(file);
-  doc.pipe(writeStream);
-  doc.font(font).fontSize(25).text(title, 100, 100);
-  doc.end();
-
-  writeStream.on("finish", () => {
-    const fileContent = fs.readFileSync(file);
-
-    // upload file to storage bucket
-
-    return json({ response: `File ${filename} saved` });
-  });
+export async function GET() {
+  const file = fs.readFileSync(pathToFile);
+	// ...
 }
 ```
