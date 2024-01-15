@@ -549,22 +549,25 @@ async function create_function_bundle(builder, entry, dir, config, routes) {
 		)
 	);
 
-	const server_assets = builder.getServerAssets();
-	let routes_assets = new Set(server_assets.rootErrorPage);
+	// TODO: remove this check when @sveltejs/kit peer dep is bumped to 2.4+
+	if (builder.getServerAssets) {
+		const server_assets = builder.getServerAssets();
+		let routes_assets = new Set(server_assets.rootErrorPage);
 
-	for (const route of routes) {
-		const assets = server_assets.routes.get(route.id);
-		if (assets) {
-			routes_assets = new Set([...routes_assets, ...assets]);
+		for (const route of routes) {
+			const assets = server_assets.routes.get(route.id);
+			if (assets) {
+				routes_assets = new Set([...routes_assets, ...assets]);
+			}
 		}
-	}
 
-	if (server_assets.hooks) {
-		routes_assets = new Set([...routes_assets, ...server_assets.hooks]);
-	}
+		if (server_assets.hooks) {
+			routes_assets = new Set([...routes_assets, ...server_assets.hooks]);
+		}
 
-	for (const asset of routes_assets) {
-		builder.copy(path.join(builder.getServerDirectory(), asset), path.join(dir, asset));
+		for (const asset of routes_assets) {
+			builder.copy(path.join(builder.getServerDirectory(), asset), path.join(dir, asset));
+		}
 	}
 
 	write(`${dir}/package.json`, JSON.stringify({ type: 'module' }));
