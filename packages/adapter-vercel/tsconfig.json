@@ -14,5 +14,6 @@
 			"@sveltejs/kit": ["../kit/types/index"]
 		}
 	},
-	"include": ["**/*.js", "index.d.ts", "internal.d.ts"]
+	"include": ["**/*.js", "index.d.ts", "internal.d.ts"],
+	"exclude": ["test/apps"]
 }
