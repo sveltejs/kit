@@ -9,9 +9,9 @@ You can turn any SvelteKit app, using any adapter, into a fully client-rendered 
 export const ssr = false;
 ```
 
-> SPA mode is highly discouraged: it destroys performance by forcing two network round trips before rendering can begin; harms SEO by downranking your page which is likely to fail core web vitals, excluding engines that don't render JS, and receiving less frequent updates from those that do; and it makes your app inaccessible to users if JavaScript fails or is disabled (which happens [more often than you probably think](https://kryogenix.org/code/browser/everyonehasjs.html)).
+> SPA mode is highly discouraged: it destroys performance by forcing two network round trips before rendering can begin; harms SEO by downranking your page which is likely to fail core web vitals, excluding search engines that don't render JS, and causing your site to receive less frequent updates from those that do; and, finally, it makes your app inaccessible to users if JavaScript fails or is disabled (which happens [more often than you probably think](https://kryogenix.org/code/browser/everyonehasjs.html)).
 >
-> You can avoid these drawbacks on a given page by [prerendering it](#prerendering-individual-pages). You should thus prerender as many pages as possible when using SPA mode — especially your homepage.
+> You can avoid these drawbacks on a given page by [prerendering it](#prerendering-individual-pages). You should thus prerender as many pages as possible when using SPA mode — especially your homepage. If you can prerender all pages, you can simply use [static site generation](adapter-static) rather than a SPA. If you cannot, you should strongly consider using a different adapter.
 
 If you don't have any server-side logic (i.e. `+page.server.js`, `+layout.server.js` or `+server.js` files) you can use [`adapter-static`](adapter-static) to create your SPA by adding a _fallback page_.
 
