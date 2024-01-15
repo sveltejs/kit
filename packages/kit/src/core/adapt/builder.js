@@ -72,14 +72,8 @@ export function create_builder({
 		return facade;
 	});
 
-	/**
-	 * @type {{
-	 * 	routes: Map<string, string[]>;
-	 * 	root_error_page: string[];
-	 * 	hooks: string[];
-	 * } | undefined}
-	 */
-	let server_assets;
+	/** @type {Map<string, string[]> | undefined} */
+	let routes_with_server_assets;
 
 	return {
 		log,
@@ -200,13 +194,7 @@ export function create_builder({
 		},
 
 		getServerAssets() {
-			if (server_assets) {
-				return {
-					routes: server_assets.routes,
-					hooks: server_assets.hooks,
-					rootErrorPage: server_assets.root_error_page
-				};
-			}
+			if (routes_with_server_assets) return routes_with_server_assets;
 
 			/** @type {Set<string>} */
 			let asset_chunks = new Set();
@@ -266,12 +254,16 @@ export function create_builder({
 				return server_assets;
 			}
 
+			/**
+			 * @returns {Set<string>}
+			 */
 			function get_root_error_page_assets() {
 				const route = route_data.find((route) => route.leaf);
 				if (!route || !route.leaf) {
-					return /** @type {string[]}*/ ([]);
+					return new Set();
 				}
 
+				/** @type {Set<string>} */
 				let assets = new Set();
 
 				let layout = route.leaf.parent;
@@ -280,14 +272,21 @@ export function create_builder({
 					layout = layout.parent;
 				}
 
-				return [...assets];
+				return assets;
 			}
 
-			/** @type {Map<string, string[]>} */
-			const routes = new Map();
-			route_data.forEach((route) => {
+			routes_with_server_assets = new Map();
+
+			const server_hooks_path = resolve_entry(config.kit.files.hooks.server)?.slice(
+				process.cwd().length + 1
+			);
+			const server_hooks_assets = get_server_assets(server_hooks_path);
+
+			const root_error_page_assets = get_root_error_page_assets();
+
+			for (const route of route_data) {
 				/** @type {Set<string>} */
-				let server_assets = new Set();
+				let server_assets = new Set([...server_hooks_assets, ...root_error_page_assets]);
 
 				if (route.leaf) {
 					server_assets = concat(server_assets, get_server_load_assets(route.leaf));
@@ -297,24 +296,10 @@ export function create_builder({
 					server_assets = concat(server_assets, get_server_assets(route.endpoint.file));
 				}
 
-				routes.set(route.id, Array.from(server_assets));
-			});
+				routes_with_server_assets.set(route.id, Array.from(server_assets));
+			}
 
-			const server_hooks_path = resolve_entry(config.kit.files.hooks.server)?.slice(
-				process.cwd().length + 1
-			);
-
-			server_assets = {
-				routes,
-				hooks: [...get_server_assets(server_hooks_path)],
-				root_error_page: get_root_error_page_assets()
-			};
-
-			return {
-				routes: server_assets.routes,
-				hooks: server_assets.hooks,
-				rootErrorPage: server_assets.root_error_page
-			};
+			return routes_with_server_assets;
 		},
 
 		writeClient(dest) {
