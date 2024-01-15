@@ -369,7 +369,7 @@ function write(file, data) {
 // This function is duplicated in adapter-static
 /**
  * @param {import('@sveltejs/kit').Builder} builder
- * @param {import('index.js').Config} config
+ * @param {import('.').Config} config
  */
 function static_vercel_config(builder, config) {
 	/** @type {any[]} */
