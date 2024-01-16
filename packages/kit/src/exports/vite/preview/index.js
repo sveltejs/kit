@@ -1,10 +1,11 @@
 import fs from 'node:fs';
 import { join } from 'node:path';
 import { pathToFileURL } from 'node:url';
+import { Readable } from 'node:stream';
 import { lookup } from 'mrmime';
 import sirv from 'sirv';
 import { loadEnv, normalizePath } from 'vite';
-import { getRequest, readFile, setResponse } from '../../../exports/node/index.js';
+import { getRequest, setResponse } from '../../../exports/node/index.js';
 import { installPolyfills } from '../../../exports/node/polyfills.js';
 import { SVELTE_KIT_ASSETS } from '../../../constants.js';
 import { not_found } from '../utils.js';
@@ -48,7 +49,8 @@ export async function preview(vite, vite_config, svelte_config) {
 	const server = new Server(manifest);
 	await server.init({
 		env: loadEnv(vite_config.mode, svelte_config.kit.env.dir, ''),
-		readAsset: (file) => readFile(dir + file)
+		// @ts-expect-error the types are wrong
+		readAsset: (file) => Readable.toWeb(fs.createReadStream(dir + file))
 	});
 
 	return () => {

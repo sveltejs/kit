@@ -1,10 +1,12 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { URL } from 'node:url';
+import { Readable } from 'node:stream';
 import colors from 'kleur';
 import sirv from 'sirv';
+import * as mime from 'mrmime';
 import { isCSSRequest, loadEnv, buildErrorMessage } from 'vite';
-import { getRequest, readFile, setResponse } from '../../../exports/node/index.js';
+import { getRequest, setResponse } from '../../../exports/node/index.js';
 import { installPolyfills } from '../../../exports/node/polyfills.js';
 import { coalesce_to_error } from '../../../utils/error.js';
 import { posixify, resolve_entry, to_fs } from '../../../utils/filesystem.js';
@@ -123,6 +125,15 @@ export async function dev(vite, vite_config, svelte_config) {
 					fonts: [],
 					uses_env_dynamic_public: true
 				},
+				files: new Proxy(
+					{},
+					{
+						get: (_, /** @type {string} */ file) => {
+							const stats = fs.statSync('.' + file);
+							return [stats.size, mime.lookup(file)];
+						}
+					}
+				),
 				nodes: manifest_data.nodes.map((node, index) => {
 					return async () => {
 						/** @type {import('types').SSRNode} */
@@ -472,7 +483,8 @@ export async function dev(vite, vite_config, svelte_config) {
 
 				await server.init({
 					env,
-					readAsset: (file) => readFile(`.${file}`)
+					// @ts-expect-error the types are wrong
+					readAsset: (file) => Readable.toWeb(fs.createReadStream('.' + file))
 				});
 
 				const request = await getRequest({

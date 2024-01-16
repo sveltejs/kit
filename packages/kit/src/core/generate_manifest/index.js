@@ -1,3 +1,6 @@
+import fs from 'fs';
+import path from 'path';
+import * as mime from 'mrmime';
 import { s } from '../../utils/misc.js';
 import { get_mime_lookup } from '../utils.js';
 import { resolve_symlinks } from '../../exports/vite/build/utils.js';
@@ -63,6 +66,18 @@ export function generate_manifest({ build_data, relative_path, routes }) {
 		return `[${string},]`;
 	}
 
+	// TODO only include assets that are referenced by the current routes
+	/** @type {Record<string, [length: number, type: string]>} */
+	const files = {};
+	for (const chunk of Object.values(build_data.server_manifest)) {
+		if (chunk.assets) {
+			for (const asset of chunk.assets) {
+				const stats = fs.statSync(path.join(build_data.out_dir, 'server', asset));
+				files['/' + asset] = [stats.size, mime.lookup(asset) || ''];
+			}
+		}
+	}
+
 	// prettier-ignore
 	// String representation of
 	/** @template {import('@sveltejs/kit').SSRManifest} T */
@@ -74,13 +89,14 @@ export function generate_manifest({ build_data, relative_path, routes }) {
 			mimeTypes: ${s(get_mime_lookup(build_data.manifest_data))},
 			_: {
 				client: ${s(build_data.client)},
+				files: ${s(files)},
 				nodes: [
 					${(node_paths).map(loader).join(',\n')}
 				],
 				routes: [
 					${routes.map(route => {
 						if (!route.page && !route.endpoint) return;
-						
+
 						route.params.forEach(param => {
 							if (param.matcher) matchers.add(param.matcher);
 						});
@@ -98,7 +114,7 @@ export function generate_manifest({ build_data, relative_path, routes }) {
 				],
 				matchers: async () => {
 					${Array.from(
-						matchers, 
+						matchers,
 						type => `const { match: ${type} } = await import ('${(join_relative(relative_path, `/entries/matchers/${type}.js`))}')`
 					).join('\n')}
 					return { ${Array.from(matchers).join(', ')} };

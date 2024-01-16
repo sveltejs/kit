@@ -4,7 +4,7 @@ import { options, get_hooks } from '__SERVER__/internal.js';
 import { DEV } from 'esm-env';
 import { filter_private_env, filter_public_env } from '../../utils/env.js';
 import { prerendering } from '__sveltekit/environment';
-import { set_read_asset } from '__sveltekit/server';
+import { set_read_asset, set_manifest } from '__sveltekit/server';
 
 /** @type {ProxyHandler<{ type: 'public' | 'private' }>} */
 const prerender_env_handler = {
@@ -27,12 +27,14 @@ export class Server {
 		/** @type {import('types').SSROptions} */
 		this.#options = options;
 		this.#manifest = manifest;
+
+		set_manifest(manifest);
 	}
 
 	/**
 	 * @param {{
 	 *   env: Record<string, string>;
-	 *   readAsset?: (file: string) => Response;
+	 *   readAsset?: (file: string) => ReadableStream;
 	 * }} opts
 	 */
 	async init({ env, readAsset }) {

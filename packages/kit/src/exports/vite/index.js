@@ -498,8 +498,14 @@ async function kit({ svelte_config }) {
 					return dedent`
 						export let read_asset = null;
 
+						export let manifest = null;
+
 						export function set_read_asset(fn) {
 							read_asset = fn;
+						}
+
+						export function set_manifest(_) {
+							manifest = _;
 						}
 					`;
 				}
@@ -727,6 +733,7 @@ async function kit({ svelte_config }) {
 					app_dir: kit.appDir,
 					app_path: `${kit.paths.base.slice(1)}${kit.paths.base ? '/' : ''}${kit.appDir}`,
 					manifest_data,
+					out_dir: out,
 					service_worker: service_worker_entry_file ? 'service-worker.js' : null, // TODO make file configurable?
 					client: null,
 					server_manifest

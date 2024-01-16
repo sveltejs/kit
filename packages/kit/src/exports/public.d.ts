@@ -1145,7 +1145,7 @@ export class Server {
 
 export interface ServerInitOptions {
 	env: Record<string, string>;
-	readAsset?: (file: string) => Response;
+	readAsset?: (file: string) => ReadableStream;
 }
 
 export interface SSRManifest {
@@ -1157,6 +1157,7 @@ export interface SSRManifest {
 	/** private fields */
 	_: {
 		client: NonNullable<BuildData['client']>;
+		files: Record<string, [length: number, type: string]>;
 		nodes: SSRNodeLoader[];
 		routes: SSRRoute[];
 		matchers(): Promise<Record<string, ParamMatcher>>;

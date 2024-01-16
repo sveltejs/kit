@@ -1,4 +1,4 @@
-import { read_asset } from '__sveltekit/server';
+import { read_asset, manifest } from '__sveltekit/server';
 
 /**
  * TODO docs
@@ -21,12 +21,22 @@ export function readAsset(file) {
 
 		return new Response(decoded, {
 			headers: {
-				'Content-Type': type,
-				'Content-Length': decoded.length.toString()
+				'Content-Length': decoded.length.toString(),
+				'Content-Type': type
 			}
 		});
 	}
 
-	// for everything else, delegate to adapter
-	return read_asset(file);
+	let info = manifest._.files[file];
+
+	if (!info) {
+		throw new Error(`Asset does not exist in deployment: ${file}`);
+	}
+
+	return new Response(read_asset(file), {
+		headers: {
+			'Content-Length': '' + info[0],
+			'Content-Type': info[1]
+		}
+	});
 }

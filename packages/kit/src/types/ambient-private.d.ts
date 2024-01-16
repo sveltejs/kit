@@ -19,6 +19,10 @@ declare module '__sveltekit/paths' {
 
 /** Internal version of $app/server */
 declare module '__sveltekit/server' {
-	export function read_asset(path: string): Response;
-	export function set_read_asset(fn: (path: string) => Response): void;
+	import { SSRManifest } from '@sveltejs/kit';
+
+	export let manifest: SSRManifest;
+	export function read_asset(path: string): ReadableStream;
+	export function set_manifest(manifest: SSRManifest): void;
+	export function set_read_asset(fn: (path: string) => ReadableStream): void;
 }

@@ -33,7 +33,7 @@ export interface ServerInternalModule {
 	set_prerendering(): void;
 	set_private_env(environment: Record<string, string>): void;
 	set_public_env(environment: Record<string, string>): void;
-	set_read_asset(implementation: (path: string) => Response): void;
+	set_read_asset(implementation: (path: string) => ReadableStream): void;
 	set_safe_public_env(environment: Record<string, string>): void;
 	set_version(version: string): void;
 	set_fix_stack_trace(fix_stack_trace: (error: unknown) => string): void;
@@ -56,6 +56,7 @@ export interface BuildData {
 	app_dir: string;
 	app_path: string;
 	manifest_data: ManifestData;
+	out_dir: string;
 	service_worker: string | null;
 	client: {
 		start: string;
