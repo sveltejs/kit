@@ -1127,7 +1127,7 @@ declare module '@sveltejs/kit' {
 
 	export interface ServerInitOptions {
 		env: Record<string, string>;
-		readAsset?: (file: string) => Response;
+		readAsset?: (file: string) => ReadableStream;
 	}
 
 	export interface SSRManifest {
@@ -1139,6 +1139,7 @@ declare module '@sveltejs/kit' {
 		/** private fields */
 		_: {
 			client: NonNullable<BuildData['client']>;
+			files: Record<string, [length: number, type: string]>;
 			nodes: SSRNodeLoader[];
 			routes: SSRRoute[];
 			matchers(): Promise<Record<string, ParamMatcher>>;
@@ -1550,6 +1551,7 @@ declare module '@sveltejs/kit' {
 		app_dir: string;
 		app_path: string;
 		manifest_data: ManifestData;
+		out_dir: string;
 		service_worker: string | null;
 		client: {
 			start: string;
@@ -1874,10 +1876,6 @@ declare module '@sveltejs/kit/node' {
 	}): Promise<Request>;
 
 	export function setResponse(res: import('http').ServerResponse, response: Response): Promise<void>;
-	/**
-	 * TODO
-	 * */
-	export function readFile(file: string): Response;
 }
 
 declare module '@sveltejs/kit/node/polyfills' {
