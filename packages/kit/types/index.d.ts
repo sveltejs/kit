@@ -46,12 +46,11 @@ declare module '@sveltejs/kit' {
 		[uniqueSymbol]: true; // necessary or else UnpackValidationError could wrongly unpack objects with the same shape as ActionFailure
 	}
 
-	type UnpackValidationError<T> =
-		T extends ActionFailure<infer X>
-			? X
-			: T extends void
-				? undefined // needs to be undefined, because void will corrupt union type
-				: T;
+	type UnpackValidationError<T> = T extends ActionFailure<infer X>
+		? X
+		: T extends void
+			? undefined // needs to be undefined, because void will corrupt union type
+			: T;
 
 	/**
 	 * This object is passed to the `adapt` function of adapters.
@@ -106,15 +105,6 @@ declare module '@sveltejs/kit' {
 		getServerDirectory(): string;
 		/** Get the application path including any configured `base` path, e.g. `my-base-path/_app`. */
 		getAppPath(): string;
-		/** Get the asset paths imported by server-side code. */
-		getServerAssets(): {
-			/** A map of route IDs and its array of assets paths imported by server-side code. */
-			routes: Map<string, string[]>;
-			/** An array of asset paths imported by the root [default error page](https://kit.svelte.dev/docs/routing#error). */
-			rootErrorPage: string[];
-			/** An array of asset paths imported by the [server hooks](https://kit.svelte.dev/docs/hooks#server-hooks). */
-			hooks: string[];
-		};
 
 		/**
 		 * Write client assets to `dest`.

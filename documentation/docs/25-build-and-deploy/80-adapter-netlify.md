@@ -107,29 +107,8 @@ Additionally, you can add your own Netlify functions by creating a directory for
 	directory = "functions"
 ```
 
+## Troubleshooting
+
 ### Accessing the file system
 
-You can [use files in Netlify Serverless Functions](https://www.netlify.com/blog/2021/08/12/how-to-include-files-in-netlify-serverless-functions/).
-
-```js
-// @errors: 2307 7031
-/// file: +server.js
-import fs from "node:fs";
-import path from "node:path";
-import { dev } from '$app/environment';
-
-// importing a static asset will return the resolved path in the production build
-import PalatinoBoldFont from "$lib/fonts/PalatinoBold.ttf";
-
-const cwd = process.cwd();
-
-// server assets live in `.netlify/server` when deployed to Netlify
-const dir = dev ? cwd : path.join(cwd, '.netlify/server');
-
-const pathToFile = path.join(dir, PalatinoBoldFont);
-
-export async function GET() {
-  const file = fs.readFileSync(pathToFile);
-	// ...
-}
-```
+You can't access the file system through methods like `fs.readFileSync` in Serverless/Edge environments. If you need to access files that way, do that during building the app through [prerendering](https://kit.svelte.dev/docs/page-options#prerender). If you have a blog for example and don't want to manage your content through a CMS, then you need to prerender the content (or prerender the endpoint from which you get it) and redeploy your blog everytime you add new content.
