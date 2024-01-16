@@ -2092,6 +2092,20 @@ declare module '$app/paths' {
 	export let assets: '' | `https://${string}` | `http://${string}` | '/_svelte_kit_assets';
 
 	/**
+	 * The directory containing assets imported by files on the server. On Node-based platforms, this allows you to read assets from the filesystem.
+	 *
+	 * @example
+	 * ```js
+	 * import fs from 'node:fs';
+	 * import somefile from './somefile.txt';
+	 * import { serverAssets } from '$app/paths';
+	 *
+	 * const data = fs.readFileSync(`${serverAssets}/${somefile}`, 'utf-8');
+	 * ```
+	 */
+	export let serverAssets: string;
+
+	/**
 	 * Populate a route ID with params to resolve a pathname.
 	 * @example
 	 * ```js
