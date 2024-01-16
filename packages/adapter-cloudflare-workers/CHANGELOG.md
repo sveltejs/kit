@@ -1,5 +1,11 @@
 # @sveltejs/adapter-cloudflare-workers
 
+## 2.0.3
+
+### Patch Changes
+
+- chore: upgrade esbuild to 0.19.11 ([#11632](https://github.com/sveltejs/kit/pull/11632))
+
 ## 2.0.2
 
 ### Patch Changes
