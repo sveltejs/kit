@@ -1,5 +1,11 @@
 # @sveltejs/kit
 
+## 2.3.3
+
+### Patch Changes
+
+- fix: remove internal `__sveltekit/` module declarations from types ([#11620](https://github.com/sveltejs/kit/pull/11620))
+
 ## 2.3.2
 
 ### Patch Changes

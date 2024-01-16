@@ -1,5 +1,11 @@
 # @sveltejs/package
 
+## 2.2.6
+
+### Patch Changes
+
+- chore: bump svelte2tsx dependency to support generating types for `.svelte.js/ts` files ([#11619](https://github.com/sveltejs/kit/pull/11619))
+
 ## 2.2.5
 
 ### Patch Changes
