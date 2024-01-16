@@ -1,3 +1,6 @@
+import fs from 'node:fs';
+import { Readable } from 'node:stream';
+import * as mime from 'mrmime';
 import * as set_cookie_parser from 'set-cookie-parser';
 import { SvelteKitError } from '../../runtime/control.js';
 
@@ -188,4 +191,23 @@ export async function setResponse(res, response) {
 			cancel(error instanceof Error ? error : new Error(String(error)));
 		}
 	}
+}
+
+/**
+ * TODO
+ * @param {string} file
+ */
+export function readFile(file) {
+	const stats = fs.statSync(file);
+	const body = Readable.toWeb(fs.createReadStream(file));
+
+	// @ts-expect-error I think the types are wrong
+	const response = new Response(body, {
+		headers: {
+			'Content-Length': stats.size,
+			'Content-Type': mime.lookup(file) ?? 'application/octet-stream'
+		}
+	});
+
+	return response;
 }

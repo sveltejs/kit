@@ -31,7 +31,8 @@ import {
 	env_static_public,
 	service_worker,
 	sveltekit_environment,
-	sveltekit_paths
+	sveltekit_paths,
+	sveltekit_server
 } from './module_ids.js';
 import { pathToFileURL } from 'node:url';
 
@@ -489,6 +490,16 @@ async function kit({ svelte_config }) {
 
 						export function set_prerendering() {
 							prerendering = true;
+						}
+					`;
+				}
+
+				case sveltekit_server: {
+					return dedent`
+						export let read_asset = null;
+
+						export function set_read_asset(fn) {
+							read_asset = fn;
 						}
 					`;
 				}

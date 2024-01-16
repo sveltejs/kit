@@ -4,7 +4,7 @@ import path from 'node:path';
 import sirv from 'sirv';
 import { fileURLToPath } from 'node:url';
 import { parse as polka_url_parser } from '@polka/url';
-import { getRequest, setResponse } from '@sveltejs/kit/node';
+import { getRequest, setResponse, readFile } from '@sveltejs/kit/node';
 import { Server } from 'SERVER';
 import { manifest, prerendered } from 'MANIFEST';
 import { env } from 'ENV';
@@ -12,7 +12,12 @@ import { env } from 'ENV';
 /* global ENV_PREFIX */
 
 const server = new Server(manifest);
-await server.init({ env: process.env });
+
+await server.init({
+	env: process.env,
+	readAsset: (file) => readFile(path.join(dir, 'client', file))
+});
+
 const origin = env('ORIGIN', undefined);
 const xff_depth = parseInt(env('XFF_DEPTH', '1'));
 const address_header = env('ADDRESS_HEADER', '').toLowerCase();

@@ -16,3 +16,9 @@ declare module '__sveltekit/paths' {
 	export function override(paths: { base: string; assets: string }): void;
 	export function set_assets(path: string): void;
 }
+
+/** Internal version of $app/server */
+declare module '__sveltekit/server' {
+	export function read_asset(path: string): Response;
+	export function set_read_asset(fn: (path: string) => Response): void;
+}

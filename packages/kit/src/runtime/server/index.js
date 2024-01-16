@@ -4,6 +4,7 @@ import { options, get_hooks } from '__SERVER__/internal.js';
 import { DEV } from 'esm-env';
 import { filter_private_env, filter_public_env } from '../../utils/env.js';
 import { prerendering } from '__sveltekit/environment';
+import { set_read_asset } from '__sveltekit/server';
 
 /** @type {ProxyHandler<{ type: 'public' | 'private' }>} */
 const prerender_env_handler = {
@@ -30,10 +31,11 @@ export class Server {
 
 	/**
 	 * @param {{
-	 *   env: Record<string, string>
+	 *   env: Record<string, string>;
+	 *   readAsset?: (file: string) => Response;
 	 * }} opts
 	 */
-	async init({ env }) {
+	async init({ env, readAsset }) {
 		// Take care: Some adapters may have to call `Server.init` per-request to set env vars,
 		// so anything that shouldn't be rerun should be wrapped in an `if` block to make sure it hasn't
 		// been done already.
@@ -54,6 +56,10 @@ export class Server {
 			prerendering ? new Proxy({ type: 'public' }, prerender_env_handler) : public_env
 		);
 		set_safe_public_env(public_env);
+
+		if (readAsset) {
+			set_read_asset(readAsset);
+		}
 
 		if (!this.#options.hooks) {
 			try {

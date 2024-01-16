@@ -4,7 +4,7 @@ import { URL } from 'node:url';
 import colors from 'kleur';
 import sirv from 'sirv';
 import { isCSSRequest, loadEnv, buildErrorMessage } from 'vite';
-import { getRequest, setResponse } from '../../../exports/node/index.js';
+import { getRequest, readFile, setResponse } from '../../../exports/node/index.js';
 import { installPolyfills } from '../../../exports/node/polyfills.js';
 import { coalesce_to_error } from '../../../utils/error.js';
 import { posixify, resolve_entry, to_fs } from '../../../utils/filesystem.js';
@@ -470,7 +470,10 @@ export async function dev(vite, vite_config, svelte_config) {
 
 				const server = new Server(manifest);
 
-				await server.init({ env });
+				await server.init({
+					env,
+					readAsset: (file) => readFile(`.${file}`)
+				});
 
 				const request = await getRequest({
 					base,

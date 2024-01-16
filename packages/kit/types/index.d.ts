@@ -1127,6 +1127,7 @@ declare module '@sveltejs/kit' {
 
 	export interface ServerInitOptions {
 		env: Record<string, string>;
+		readAsset?: (file: string) => Response;
 	}
 
 	export interface SSRManifest {
@@ -1873,6 +1874,10 @@ declare module '@sveltejs/kit/node' {
 	}): Promise<Request>;
 
 	export function setResponse(res: import('http').ServerResponse, response: Response): Promise<void>;
+	/**
+	 * TODO
+	 * */
+	export function readFile(file: string): Response;
 }
 
 declare module '@sveltejs/kit/node/polyfills' {
@@ -2105,6 +2110,13 @@ declare module '$app/paths' {
 	 * ```
 	 */
 	export function resolveRoute(id: string, params: Record<string, string | undefined>): string;
+}
+
+declare module '$app/server' {
+	/**
+	 * TODO docs
+	 * */
+	export function readAsset(file: string): Response;
 }
 
 declare module '$app/stores' {
