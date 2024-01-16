@@ -153,25 +153,8 @@ If you have Vercel functions contained in the `api` directory at the project's r
 
 Projects created before a certain date may default to using an older Node version than what SvelteKit currently requires. You can [change the Node version in your project settings](https://vercel.com/docs/concepts/functions/serverless-functions/runtimes/node-js#node.js-version).
 
+## Troubleshooting
+
 ### Accessing the file system
 
-You can [use files in Serverless Functions on Vercel](https://vercel.com/guides/how-can-i-use-files-in-serverless-functions).
-
-```js
-// @errors: 2307 7031
-/// file: api/pdf/+server.js
-import fs from "node:fs";
-import path from "node:path";
-
-// importing a static asset will return the resolved path in the production build
-import PalatinoBoldFont from "$lib/fonts/PalatinoBold.ttf";
-
-const pathToFile = path.join(process.cwd(), PalatinoBoldFont);
-
-export async function GET() {
-	const file = fs.readFileSync(pathToFile);
-	// ...
-}
-```
-
-> Only assets that are imported in `+page.server`, `+layout.server` and `+server` files are included in the Serverless Function bundle.
+You can't access the file system through methods like `fs.readFileSync` in Serverless/Edge environments. If you need to access files that way, do that during building the app through [prerendering](https://kit.svelte.dev/docs/page-options#prerender). If you have a blog for example and don't want to manage your content through a CMS, then you need to prerender the content (or prerender the endpoint from which you get it) and redeploy your blog everytime you add new content.
