@@ -8,7 +8,7 @@ import { read_asset } from '__sveltekit/server';
 export function readAsset(file) {
 	if (!read_asset) {
 		throw new Error(
-			`No readAsset implementation was provided. Please ensure that your adapter is up to date and supports this feature`
+			'No readAsset implementation was provided. Please ensure that your adapter is up to date and supports this feature'
 		);
 	}
 
@@ -21,7 +21,8 @@ export function readAsset(file) {
 
 		return new Response(decoded, {
 			headers: {
-				'content-type': type
+				'Content-Type': type,
+				'Content-Length': decoded.length.toString()
 			}
 		});
 	}

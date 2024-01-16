@@ -204,7 +204,7 @@ export function readFile(file) {
 	// @ts-expect-error I think the types are wrong
 	const response = new Response(body, {
 		headers: {
-			'Content-Length': stats.size,
+			'Content-Length': stats.size.toString(),
 			'Content-Type': mime.lookup(file) ?? 'application/octet-stream'
 		}
 	});
