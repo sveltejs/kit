@@ -12,6 +12,7 @@ export function init(manifest) {
 
 	let init_promise = server.init({
 		env: process.env,
+		// @ts-expect-error the types are wrong
 		readAsset: (file) => Readable.toWeb(fs.createReadStream('.netlify/server' + file))
 	});
 
