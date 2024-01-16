@@ -33,7 +33,7 @@
 	},
 	"dependencies": {
 		"@cloudflare/workers-types": "^4.20231121.0",
-		"esbuild": "^0.19.9",
+		"esbuild": "^0.19.11",
 		"worktop": "0.8.0-next.16"
 	},
 	"devDependencies": {

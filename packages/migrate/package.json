@@ -37,7 +37,7 @@
 		"@types/prompts": "^2.4.9",
 		"@types/semver": "^7.5.6",
 		"prettier": "^3.1.1",
-		"vitest": "^1.0.4"
+		"vitest": "^1.2.0"
 	},
 	"scripts": {
 		"test": "vitest run --silent",
