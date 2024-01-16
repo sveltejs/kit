@@ -1,6 +1,7 @@
 import './shims';
 import { Server } from '0SERVER';
 import { split_headers } from './headers.js';
+import { readFile } from '@sveltejs/kit/node';
 
 /**
  * @param {import('@sveltejs/kit').SSRManifest} manifest
@@ -10,7 +11,8 @@ export function init(manifest) {
 	const server = new Server(manifest);
 
 	let init_promise = server.init({
-		env: process.env
+		env: process.env,
+		readAsset: (file) => readFile('.netlify/server' + file)
 	});
 
 	return async (event, context) => {
