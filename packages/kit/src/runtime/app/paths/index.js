@@ -1,4 +1,4 @@
-export { base, assets } from '__sveltekit/paths';
+export { base, assets, serverAssets } from '__sveltekit/paths';
 import { base } from '__sveltekit/paths';
 import { resolve_route } from '../../../utils/routing.js';
 

@@ -465,8 +465,9 @@ export async function dev(vite, vite_config, svelte_config) {
 				);
 				set_fix_stack_trace(fix_stack_trace);
 
-				const { set_assets } = await vite.ssrLoadModule('__sveltekit/paths');
+				const { set_assets, set_server_assets } = await vite.ssrLoadModule('__sveltekit/paths');
 				set_assets(assets);
+				set_server_assets(process.cwd());
 
 				const server = new Server(manifest);
 

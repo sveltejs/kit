@@ -447,12 +447,14 @@ async function kit({ svelte_config }) {
 						return dedent`
 							export const base = ${global}?.base ?? ${s(base)};
 							export const assets = ${global}?.assets ?? ${assets ? s(assets) : 'base'};
+							export let serverAssets = '';
 						`;
 					}
 
 					return dedent`
 						export let base = ${s(base)};
 						export let assets = ${assets ? s(assets) : 'base'};
+						export let serverAssets = '';
 
 						export const relative = ${svelte_config.kit.paths.relative};
 
@@ -471,6 +473,11 @@ async function kit({ svelte_config }) {
 						/** @param {string} path */
 						export function set_assets(path) {
 							assets = initial.assets = path;
+						}
+
+						/** @param {string} path */
+						export function set_server_assets(path) {
+							serverAssets = path;
 						}
 					`;
 				}

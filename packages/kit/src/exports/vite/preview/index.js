@@ -36,7 +36,9 @@ export async function preview(vite, vite_config, svelte_config) {
 	}
 
 	/** @type {import('types').ServerInternalModule} */
-	const { set_assets } = await import(pathToFileURL(join(dir, 'internal.js')).href);
+	const { set_assets, set_server_assets } = await import(
+		pathToFileURL(join(dir, 'internal.js')).href
+	);
 
 	/** @type {import('types').ServerModule} */
 	const { Server } = await import(pathToFileURL(join(dir, 'index.js')).href);
@@ -44,6 +46,7 @@ export async function preview(vite, vite_config, svelte_config) {
 	const { manifest } = await import(pathToFileURL(join(dir, 'manifest.js')).href);
 
 	set_assets(assets);
+	set_server_assets(dir);
 
 	const server = new Server(manifest);
 	await server.init({
