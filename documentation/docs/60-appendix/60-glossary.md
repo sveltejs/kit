@@ -34,7 +34,7 @@ In SvelteKit, client-side routing will be used by default, but you can skip it w
 
 ## SPA
 
-A single-page app (SPA) is an application in which all requests to the server load a single HTML file which then does client-side rendering of the requested contents based on the requested URL. All navigation is handled on the client-side in a process called client-side routing with per-page contents being updated and common layout elements remaining largely unchanged. SPAs are highly discouraged as they have much worse performance characteristics and harm SEO.
+A single-page app (SPA) is an application in which all requests to the server load a single HTML file which then does client-side rendering of the requested contents based on the requested URL. All navigation is handled on the client-side in a process called client-side routing with per-page contents being updated and common layout elements remaining largely unchanged. SPA mode is highly discouraged for public-facing websites (i.e. not behind a login or only used internally at a company). It has a large performance impact by forcing two network round trips before rendering can begin. This may be acceptable if you are serving a corporate application from the local network where the network round trip is very fast, but probably is not for most websites on the internet especially when considering the latency of mobile devices.
 
 In SvelteKit, you can [build SPAs with `adapter-static`](single-page-apps).
 
