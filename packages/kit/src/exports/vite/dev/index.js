@@ -131,6 +131,9 @@ export async function dev(vite, vite_config, svelte_config) {
 						get: (_, /** @type {string} */ file) => {
 							const stats = fs.statSync('.' + file);
 							return [stats.size, mime.lookup(file)];
+						},
+						has: (_, /** @type {string} */ file) => {
+							return fs.existsSync('.' + file);
 						}
 					}
 				),

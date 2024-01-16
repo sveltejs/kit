@@ -1,5 +1,5 @@
-import fs from 'fs';
-import path from 'path';
+import fs from 'node:fs';
+import path from 'node:path';
 import * as mime from 'mrmime';
 import { s } from '../../utils/misc.js';
 import { get_mime_lookup } from '../utils.js';

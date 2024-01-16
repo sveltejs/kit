@@ -27,16 +27,16 @@ export function readAsset(file) {
 		});
 	}
 
-	let info = manifest._.files[file];
+	if (file in manifest._.files) {
+		const [length, type] = manifest._.files[file];
 
-	if (!info) {
-		throw new Error(`Asset does not exist in deployment: ${file}`);
+		return new Response(read_asset(file), {
+			headers: {
+				'Content-Length': '' + length,
+				'Content-Type': type
+			}
+		});
 	}
 
-	return new Response(read_asset(file), {
-		headers: {
-			'Content-Length': '' + info[0],
-			'Content-Type': info[1]
-		}
-	});
+	throw new Error(`Asset does not exist: ${file}`);
 }
