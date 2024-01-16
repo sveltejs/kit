@@ -1,5 +1,11 @@
 # @sveltejs/adapter-vercel
 
+## 4.0.5
+
+### Patch Changes
+
+- chore: upgrade esbuild to 0.19.11 ([#11632](https://github.com/sveltejs/kit/pull/11632))
+
 ## 4.0.4
 
 ### Patch Changes
