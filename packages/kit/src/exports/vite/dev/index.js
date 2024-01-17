@@ -1,10 +1,8 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { URL } from 'node:url';
-import { Readable } from 'node:stream';
 import colors from 'kleur';
 import sirv from 'sirv';
-import * as mime from 'mrmime';
 import { isCSSRequest, loadEnv, buildErrorMessage } from 'vite';
 import { createReadable, getRequest, setResponse } from '../../../exports/node/index.js';
 import { installPolyfills } from '../../../exports/node/polyfills.js';

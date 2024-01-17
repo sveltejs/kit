@@ -1,7 +1,6 @@
 import fs from 'node:fs';
 import { join } from 'node:path';
 import { pathToFileURL } from 'node:url';
-import { Readable } from 'node:stream';
 import { lookup } from 'mrmime';
 import sirv from 'sirv';
 import { loadEnv, normalizePath } from 'vite';
