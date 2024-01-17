@@ -1164,10 +1164,11 @@ export interface SSRManifest {
 	/** private fields */
 	_: {
 		client: NonNullable<BuildData['client']>;
-		files: Record<string, [length: number, type: string]>;
 		nodes: SSRNodeLoader[];
 		routes: SSRRoute[];
 		matchers(): Promise<Record<string, ParamMatcher>>;
+		/** A `[file]: size` map of all assets imported by server code */
+		server_assets: Record<string, number>;
 	};
 }
 

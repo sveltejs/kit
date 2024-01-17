@@ -125,7 +125,7 @@ export async function dev(vite, vite_config, svelte_config) {
 					fonts: [],
 					uses_env_dynamic_public: true
 				},
-				files: new Proxy(
+				server_assets: new Proxy(
 					{},
 					{
 						get: (_, /** @type {string} */ file) => {

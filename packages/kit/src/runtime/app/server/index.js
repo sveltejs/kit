@@ -27,8 +27,8 @@ export function readAsset(file) {
 		});
 	}
 
-	if (file in manifest._.files) {
-		const length = manifest._.files[file];
+	if (file in manifest._.server_assets) {
+		const length = manifest._.server_assets[file];
 		const type = manifest.mimeTypes[file.slice(file.lastIndexOf('.'))];
 
 		return new Response(read_asset(file), {
