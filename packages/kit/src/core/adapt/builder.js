@@ -1,4 +1,5 @@
-import { existsSync, statSync, createReadStream, createWriteStream } from 'node:fs';
+import colors from 'kleur';
+import { createReadStream, createWriteStream, existsSync, statSync } from 'node:fs';
 import { extname, resolve } from 'node:path';
 import { pipeline } from 'node:stream';
 import { promisify } from 'node:util';
@@ -152,6 +153,16 @@ export function create_builder({
 				manifest_path,
 				env: { ...env.private, ...env.public }
 			});
+
+			if (existsSync(dest)) {
+				console.log(
+					colors
+						.bold()
+						.yellow(
+							`Overwriting ${dest} with fallback page. Consider using a different name for the fallback.`
+						)
+				);
+			}
 
 			write(dest, fallback);
 		},
