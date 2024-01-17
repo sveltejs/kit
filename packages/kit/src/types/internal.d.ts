@@ -13,7 +13,8 @@ import {
 	HandleFetch,
 	Actions,
 	HandleClientError,
-	Reroute
+	Reroute,
+	RequestEvent
 } from '@sveltejs/kit';
 import {
 	HttpMethod,
@@ -123,6 +124,7 @@ export class InternalServer extends Server {
 		options: RequestOptions & {
 			prerendering?: PrerenderOptions;
 			read: (file: string) => Buffer;
+			before_handle?: (event: RequestEvent, config: any) => void;
 		}
 	): Promise<Response>;
 }
@@ -407,6 +409,7 @@ export interface SSRState {
 	 */
 	prerender_default?: PrerenderOption;
 	read?: (file: string) => Buffer;
+	before_handle?: (event: RequestEvent, config: any) => void;
 }
 
 export type StrictBody = string | ArrayBufferView;

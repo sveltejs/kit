@@ -15,6 +15,8 @@ import { base } from '__sveltekit/paths';
  * @returns {Response}
  */
 export function read(asset) {
+	__SVELTEKIT_TRACK__('$app/server:read');
+
 	if (!read_implementation) {
 		throw new Error(
 			'No `read` implementation was provided. Please ensure that your adapter is up to date and supports this feature'

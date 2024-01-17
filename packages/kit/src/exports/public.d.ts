@@ -35,6 +35,16 @@ export interface Adapter {
 	 * @param builder An object provided by SvelteKit that contains methods for adapting the app
 	 */
 	adapt(builder: Builder): MaybePromise<void>;
+	/**
+	 * Functions called during dev and build to determine whether specific features will work in production with this adapter
+	 */
+	supports?: {
+		/**
+		 * Test support for `read` from `$app/server`
+		 * @param config The merged route config
+		 */
+		read?: (details: { config: any; route: { id: string } }) => boolean;
+	};
 }
 
 export type LoadProperties<input extends Record<string, any> | void> = input extends void

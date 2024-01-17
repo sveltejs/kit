@@ -1,6 +1,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { URL } from 'node:url';
+import { AsyncLocalStorage } from 'node:async_hooks';
 import colors from 'kleur';
 import sirv from 'sirv';
 import { isCSSRequest, loadEnv, buildErrorMessage } from 'vite';
@@ -26,6 +27,33 @@ const cwd = process.cwd();
  */
 export async function dev(vite, vite_config, svelte_config) {
 	installPolyfills();
+
+	const async_local_storage = new AsyncLocalStorage();
+
+	globalThis.__SVELTEKIT_TRACK__ = (label) => {
+		switch (label) {
+			case '$app/server:read': {
+				const { event, config } = async_local_storage.getStore();
+				if (!event) return;
+
+				const { adapter } = svelte_config.kit;
+				if (!adapter) return;
+
+				const supported = adapter.supports?.read?.({
+					route: event.route,
+					config
+				});
+
+				if (!supported) {
+					throw new Error(
+						`Cannot use \`read\` from \`$app/server\` in ${event.route.id} when using ${adapter.name}. Upgrading may fix this error`
+					);
+				}
+
+				return;
+			}
+		}
+	};
 
 	const fetch = globalThis.fetch;
 	globalThis.fetch = (info, init) => {
@@ -515,7 +543,10 @@ export async function dev(vite, vite_config, svelte_config) {
 						if (remoteAddress) return remoteAddress;
 						throw new Error('Could not determine clientAddress');
 					},
-					read: (file) => fs.readFileSync(path.join(svelte_config.kit.files.assets, file))
+					read: (file) => fs.readFileSync(path.join(svelte_config.kit.files.assets, file)),
+					before_handle: (event, config) => {
+						async_local_storage.enterWith({ event, config });
+					}
 				});
 
 				if (rendered.status === 404) {

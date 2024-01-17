@@ -15,6 +15,7 @@ import { render_response } from './render.js';
 import { respond_with_error } from './respond_with_error.js';
 import { get_option } from '../../../utils/options.js';
 import { get_data_json } from '../data/index.js';
+import { load_page_nodes } from './load_page_nodes.js';
 
 /**
  * The maximum request depth permitted before assuming we're stuck in an infinite loop
@@ -44,11 +45,7 @@ export async function render_page(event, page, options, manifest, state, resolve
 	}
 
 	try {
-		const nodes = await Promise.all([
-			// we use == here rather than === because [undefined] serializes as "[null]"
-			...page.layouts.map((n) => (n == undefined ? n : manifest._.nodes[n]())),
-			manifest._.nodes[page.leaf]()
-		]);
+		const nodes = await load_page_nodes(page, manifest);
 
 		const leaf_node = /** @type {import('types').SSRNode} */ (nodes.at(-1));
 

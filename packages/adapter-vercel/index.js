@@ -5,6 +5,7 @@ import { nodeFileTrace } from '@vercel/nft';
 import esbuild from 'esbuild';
 import { get_pathname } from './utils.js';
 
+const name = '@sveltejs/adapter-vercel';
 const DEFAULT_FUNCTION_NAME = 'fn';
 
 const get_default_runtime = () => {
@@ -24,7 +25,7 @@ const plugin = function (defaults = {}) {
 	}
 
 	return {
-		name: '@sveltejs/adapter-vercel',
+		name,
 
 		async adapt(builder) {
 			if (!builder.routes) {
@@ -340,6 +341,21 @@ const plugin = function (defaults = {}) {
 			builder.log.minor('Writing routes...');
 
 			write(`${dir}/config.json`, JSON.stringify(static_config, null, '\t'));
+		},
+
+		supports: {
+			// reading from the filesystem only works in serverless functions
+			read: ({ config, route }) => {
+				const runtime = config.runtime ?? defaults.runtime;
+
+				if (runtime === 'edge') {
+					throw new Error(
+						`${name}: Cannot use \`read\` from \`$app/server\` in a route configured with \`runtime: 'edge'\``
+					);
+				}
+
+				return true;
+			}
 		}
 	};
 };

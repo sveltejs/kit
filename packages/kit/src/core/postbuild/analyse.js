@@ -14,6 +14,7 @@ import { installPolyfills } from '../../exports/node/polyfills.js';
 import { ENDPOINT_METHODS } from '../../constants.js';
 import { filter_private_env, filter_public_env } from '../../utils/env.js';
 import { resolve_route } from '../../utils/routing.js';
+import { get_page_config } from '../../utils/route_config.js';
 
 export default forked(import.meta.url, analyse);
 
@@ -163,30 +164,9 @@ function analyse_page(layouts, leaf) {
 	validate_page_exports(leaf.universal, leaf.universal_id);
 
 	return {
-		config: get_config([...layouts, leaf]),
+		config: get_page_config([...layouts, leaf]),
 		entries: leaf.universal?.entries ?? leaf.server?.entries,
 		methods,
 		prerender: get_option([...layouts, leaf], 'prerender') ?? false
 	};
-}
-
-/**
- * Do a shallow merge (first level) of the config object
- * @param {Array<import('types').SSRNode | undefined>} nodes
- */
-function get_config(nodes) {
-	/** @type {any} */
-	let current = {};
-
-	for (const node of nodes) {
-		if (!node?.universal?.config && !node?.server?.config) continue;
-
-		current = {
-			...current,
-			...node?.universal?.config,
-			...node?.server?.config
-		};
-	}
-
-	return Object.keys(current).length ? current : undefined;
 }
