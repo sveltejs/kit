@@ -10,7 +10,10 @@ const expected = new Set([
 	'PROTOCOL_HEADER',
 	'HOST_HEADER',
 	'PORT_HEADER',
-	'BODY_SIZE_LIMIT'
+	'BODY_SIZE_LIMIT',
+	'LISTEN_PID',
+	'LISTEN_FDS',
+	'TIMEOUT'
 ]);
 
 if (ENV_PREFIX) {

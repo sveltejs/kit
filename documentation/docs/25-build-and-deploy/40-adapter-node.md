@@ -162,6 +162,44 @@ MY_CUSTOM_ORIGIN=https://my.site \
 node build
 ```
 
+## Socket Activation
+
+Most Linux operating systems today use a modern process manager called systemd to start the server and run and manage services. You can configure your server to allocate a socket and start and scale your app on demand. This is called [socket activation](http://0pointer.de/blog/projects/socket-activated-containers.html). In this case the OS will pass two environment variables to your app — `LISTEN_PID` and `LISTEN_FDS`. The adapter will verify that these variables are correct and then listen on file descriptor 3 which refers to a socket unit that you will have to create.
+
+To take advantage of socket activation make sure your app is running as a systemd service. It can either run directly on the host system or inside a container (using Docker or a systemd portable service for example).
+
+```ini
+# /etc/systemd/system/myapp.service
+
+[Service]
+Environment=NODE_ENV=production
+ExecStart=/usr/bin/node /usr/bin/myapp/build
+```
+
+Then create an accompanying [socket unit](https://www.freedesktop.org/software/systemd/man/latest/systemd.socket.html). The adapter only accepts a single socket.
+
+```ini
+# /etc/systemd/system/myapp.socket
+
+[Socket]
+ListenStream=3000
+
+[Install]
+WantedBy=sockets.target
+```
+
+Make sure systemd has recognised both units by running `sudo systemctl daemon-reload`. Then enable the socket on boot and start it immediately using `sudo systemctl enable --now myapp.socket`.
+
+The app will then automatically start once the first request is made to `localhost:3000`. Additionally, if you pass a `TIMEOUT=x` environment variable to your app the adapter will terminate it after receiving no requests for `x` seconds.
+
+```ini
+[Service]
+Environment=NODE_ENV=production TIMEOUT=60
+ExecStart=/usr/bin/node /usr/bin/myapp/build
+```
+
+If `myapp.socket` later again receives requests it will automatically trigger your `myapp.service` again and hand over the requests to your SvelteKit app.
+
 ## Custom server
 
 The adapter creates two files in your build directory — `index.js` and `handler.js`. Running `index.js` — e.g. `node build`, if you use the default build directory — will start a server on the configured port.
