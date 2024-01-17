@@ -1,5 +1,4 @@
 import fs from 'node:fs';
-import path from 'node:path';
 import { Readable } from 'node:stream';
 import { installPolyfills } from '@sveltejs/kit/node/polyfills';
 import { getRequest, setResponse } from '@sveltejs/kit/node';

@@ -3,7 +3,7 @@ import path from 'node:path';
 import * as mime from 'mrmime';
 import { s } from '../../utils/misc.js';
 import { get_mime_lookup } from '../utils.js';
-import { find_deps, resolve_symlinks } from '../../exports/vite/build/utils.js';
+import { resolve_symlinks } from '../../exports/vite/build/utils.js';
 import { compact } from '../../utils/array.js';
 import { join_relative } from '../../utils/filesystem.js';
 import { dedent } from '../sync/utils.js';
