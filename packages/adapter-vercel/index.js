@@ -520,7 +520,9 @@ async function create_function_bundle(builder, entry, dir, config) {
 			// do nothing
 		}
 
-		fs.symlinkSync(path.relative(path.dirname(dest), realpath), dest, is_dir ? 'dir' : 'file');
+		if (!is_dir) {
+			fs.linkSync(realpath, dest, is_dir ? 'dir' : 'file');
+		}
 	}
 
 	write(
