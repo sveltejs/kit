@@ -46,6 +46,7 @@ export interface Asset {
 }
 
 export interface AssetDependencies {
+	assets: string[];
 	file: string;
 	imports: string[];
 	stylesheets: string[];

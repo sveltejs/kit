@@ -3,7 +3,7 @@ import path from 'node:path';
 import * as mime from 'mrmime';
 import { s } from '../../utils/misc.js';
 import { get_mime_lookup } from '../utils.js';
-import { resolve_symlinks } from '../../exports/vite/build/utils.js';
+import { find_deps, resolve_symlinks } from '../../exports/vite/build/utils.js';
 import { compact } from '../../utils/array.js';
 import { join_relative } from '../../utils/filesystem.js';
 import { dedent } from '../sync/utils.js';
@@ -29,12 +29,33 @@ export function generate_manifest({ build_data, relative_path, routes }) {
 	 */
 	const used_nodes = new Set([0, 1]);
 
+	// TODO add hooks.server.js asset imports
+	/** @type {Set<string>} */
+	const server_assets = new Set();
+
+	/** @param {string} id */
+	function add_assets(id) {
+		const deps = find_deps(build_data.server_manifest, id, false);
+		for (const asset of deps.assets) {
+			server_assets.add(asset);
+		}
+	}
+
 	for (const route of routes) {
 		if (route.page) {
 			for (const i of route.page.layouts) used_nodes.add(i);
 			for (const i of route.page.errors) used_nodes.add(i);
 			used_nodes.add(route.page.leaf);
 		}
+
+		if (route.endpoint) {
+			add_assets(route.endpoint.file);
+		}
+	}
+
+	for (const n of used_nodes) {
+		const node = build_data.manifest_data.nodes[n];
+		if (node.server) add_assets(node.server);
 	}
 
 	const node_paths = compact(
@@ -66,16 +87,15 @@ export function generate_manifest({ build_data, relative_path, routes }) {
 		return `[${string},]`;
 	}
 
-	// TODO only include assets that are referenced by the current routes
-	/** @type {Record<string, [length: number, type: string]>} */
+	const mime_types = get_mime_lookup(build_data.manifest_data);
+
+	/** @type {Record<string, number>} */
 	const files = {};
-	for (const chunk of Object.values(build_data.server_manifest)) {
-		if (chunk.assets) {
-			for (const asset of chunk.assets) {
-				const stats = fs.statSync(path.join(build_data.out_dir, 'server', asset));
-				files['/' + asset] = [stats.size, mime.lookup(asset) || ''];
-			}
-		}
+	for (const asset of server_assets) {
+		files[asset] = fs.statSync(path.resolve(build_data.out_dir, 'server', asset)).size;
+
+		const ext = path.extname(asset);
+		mime_types[ext] ??= mime.lookup(ext) || '';
 	}
 
 	// prettier-ignore
@@ -86,7 +106,7 @@ export function generate_manifest({ build_data, relative_path, routes }) {
 			appDir: ${s(build_data.app_dir)},
 			appPath: ${s(build_data.app_path)},
 			assets: new Set(${s(assets)}),
-			mimeTypes: ${s(get_mime_lookup(build_data.manifest_data))},
+			mimeTypes: ${s(mime_types)},
 			_: {
 				client: ${s(build_data.client)},
 				files: ${s(files)},
