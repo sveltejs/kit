@@ -221,5 +221,11 @@ function list_features(route, manifest_data, server_manifest, tracked_features) 
 		visit(route_data.endpoint.file);
 	}
 
+	if (manifest_data.hooks.server) {
+		// TODO if hooks.server.js imports `read`, it will be in the entry chunk
+		// we don't currently account for that case
+		visit(manifest_data.hooks.server);
+	}
+
 	return Array.from(features);
 }

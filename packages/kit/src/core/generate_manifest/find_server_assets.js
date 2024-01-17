@@ -43,5 +43,9 @@ export function find_server_assets(build_data, routes) {
 		if (node?.server) add_assets(node.server);
 	}
 
+	if (build_data.manifest_data.hooks.server) {
+		add_assets(build_data.manifest_data.hooks.server);
+	}
+
 	return Array.from(server_assets);
 }
