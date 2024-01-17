@@ -12,7 +12,7 @@ export function init(manifest) {
 
 	let init_promise = server.init({
 		env: process.env,
-		readAsset: (file) => createReadable('.netlify/server' + file)
+		readAsset: (file) => createReadable(`.netlify/server/${file}`)
 	});
 
 	return async (event, context) => {

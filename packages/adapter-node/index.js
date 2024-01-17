@@ -39,8 +39,11 @@ export default function (opts = {}) {
 
 			writeFileSync(
 				`${tmp}/manifest.js`,
-				`export const manifest = ${builder.generateManifest({ relativePath: './' })};\n\n` +
-					`export const prerendered = new Set(${JSON.stringify(builder.prerendered.paths)});\n`
+				[
+					`export const manifest = ${builder.generateManifest({ relativePath: './' })};`,
+					`export const prerendered = new Set(${JSON.stringify(builder.prerendered.paths)});`,
+					`export const base = ${JSON.stringify(builder.config.kit.paths.base)};`
+				].join('\n\n')
 			);
 
 			const pkg = JSON.parse(readFileSync('package.json', 'utf8'));

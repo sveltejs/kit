@@ -128,13 +128,8 @@ export async function dev(vite, vite_config, svelte_config) {
 				server_assets: new Proxy(
 					{},
 					{
-						get: (_, /** @type {string} */ file) => {
-							const stats = fs.statSync('.' + file);
-							return [stats.size, mime.lookup(file)];
-						},
-						has: (_, /** @type {string} */ file) => {
-							return fs.existsSync('.' + file);
-						}
+						has: (_, /** @type {string} */ file) => fs.existsSync(file),
+						get: (_, /** @type {string} */ file) => fs.statSync(file).size
 					}
 				),
 				nodes: manifest_data.nodes.map((node, index) => {
@@ -486,7 +481,7 @@ export async function dev(vite, vite_config, svelte_config) {
 
 				await server.init({
 					env,
-					readAsset: (file) => createReadable('.' + file)
+					readAsset: createReadable
 				});
 
 				const request = await getRequest({

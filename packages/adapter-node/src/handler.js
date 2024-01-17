@@ -6,17 +6,12 @@ import { fileURLToPath } from 'node:url';
 import { parse as polka_url_parser } from '@polka/url';
 import { getRequest, setResponse, createReadable } from '@sveltejs/kit/node';
 import { Server } from 'SERVER';
-import { manifest, prerendered } from 'MANIFEST';
+import { manifest, prerendered, base } from 'MANIFEST';
 import { env } from 'ENV';
 
 /* global ENV_PREFIX */
 
 const server = new Server(manifest);
-
-await server.init({
-	env: process.env,
-	readAsset: (file) => createReadable(path.join(dir, 'client', file))
-});
 
 const origin = env('ORIGIN', undefined);
 const xff_depth = parseInt(env('XFF_DEPTH', '1'));
@@ -33,6 +28,13 @@ if (isNaN(body_size_limit)) {
 }
 
 const dir = path.dirname(fileURLToPath(import.meta.url));
+
+const asset_dir = `${dir}/client${base}`;
+
+await server.init({
+	env: process.env,
+	readAsset: (file) => createReadable(`${asset_dir}/${file}`)
+});
 
 /**
  * @param {string} path

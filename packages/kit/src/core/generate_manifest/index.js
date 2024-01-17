@@ -73,10 +73,10 @@ export function generate_manifest({ build_data, relative_path, routes }) {
 
 	/** @type {Record<string, number>} */
 	const files = {};
-	for (const asset of server_assets) {
-		files['/' + asset] = fs.statSync(path.resolve(build_data.out_dir, 'server', asset)).size;
+	for (const file of server_assets) {
+		files[file] = fs.statSync(path.resolve(build_data.out_dir, 'server', file)).size;
 
-		const ext = path.extname(asset);
+		const ext = path.extname(file);
 		mime_types[ext] ??= mime.lookup(ext) || '';
 	}
 
@@ -91,7 +91,6 @@ export function generate_manifest({ build_data, relative_path, routes }) {
 			mimeTypes: ${s(mime_types)},
 			_: {
 				client: ${s(build_data.client)},
-				files: ${s(files)},
 				nodes: [
 					${(node_paths).map(loader).join(',\n')}
 				],
@@ -120,7 +119,8 @@ export function generate_manifest({ build_data, relative_path, routes }) {
 						type => `const { match: ${type} } = await import ('${(join_relative(relative_path, `/entries/matchers/${type}.js`))}')`
 					).join('\n')}
 					return { ${Array.from(matchers).join(', ')} };
-				}
+				},
+				server_assets: ${s(files)}
 			}
 		}
 	`;

@@ -1,11 +1,12 @@
 import { read_asset, manifest } from '__sveltekit/server';
+import { base } from '__sveltekit/paths';
 
 /**
  * TODO docs
- * @param {string} file
+ * @param {string} asset
  * @returns {Response}
  */
-export function readAsset(file) {
+export function readAsset(asset) {
 	if (!read_asset) {
 		throw new Error(
 			'No readAsset implementation was provided. Please ensure that your adapter is up to date and supports this feature'
@@ -13,8 +14,8 @@ export function readAsset(file) {
 	}
 
 	// handle inline assets internally
-	if (file.startsWith('data:')) {
-		const [prelude, data] = file.split(';');
+	if (asset.startsWith('data:')) {
+		const [prelude, data] = asset.split(';');
 		const type = prelude.slice(5) || 'application/octet-stream';
 
 		const decoded = data.startsWith('base64,') ? atob(data.slice(7)) : decodeURIComponent(data);
@@ -26,6 +27,8 @@ export function readAsset(file) {
 			}
 		});
 	}
+
+	const file = asset.slice(base.length + 1);
 
 	if (file in manifest._.server_assets) {
 		const length = manifest._.server_assets[file];
