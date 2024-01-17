@@ -708,7 +708,7 @@ async function kit({ svelte_config }) {
 		renderChunk(code, chunk) {
 			if (code.includes('__SVELTEKIT_TRACK__')) {
 				return {
-					code: code.replace(/__SVELTEKIT_TRACK__\('(.+?)'\)/g, (m, label) => {
+					code: code.replace(/__SVELTEKIT_TRACK__\('(.+?)'\)/g, (_, label) => {
 						(tracked_features[chunk.name + '.js'] ??= []).push(label);
 						return `/* track ${label}            */`;
 					}),
