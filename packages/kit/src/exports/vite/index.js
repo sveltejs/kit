@@ -496,12 +496,12 @@ async function kit({ svelte_config }) {
 
 				case sveltekit_server: {
 					return dedent`
-						export let read_asset = null;
+						export let read_implementation = null;
 
 						export let manifest = null;
 
-						export function set_read_asset(fn) {
-							read_asset = fn;
+						export function set_read_implementation(fn) {
+							read_implementation = fn;
 						}
 
 						export function set_manifest(_) {

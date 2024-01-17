@@ -1,4 +1,4 @@
-import { read_asset, manifest } from '__sveltekit/server';
+import { read_implementation, manifest } from '__sveltekit/server';
 import { base } from '__sveltekit/paths';
 
 /**
@@ -15,7 +15,7 @@ import { base } from '__sveltekit/paths';
  * @returns {Response}
  */
 export function read(asset) {
-	if (!read_asset) {
+	if (!read_implementation) {
 		throw new Error(
 			'No `read` implementation was provided. Please ensure that your adapter is up to date and supports this feature'
 		);
@@ -42,7 +42,7 @@ export function read(asset) {
 		const length = manifest._.server_assets[file];
 		const type = manifest.mimeTypes[file.slice(file.lastIndexOf('.'))];
 
-		return new Response(read_asset(file), {
+		return new Response(read_implementation(file), {
 			headers: {
 				'Content-Length': '' + length,
 				'Content-Type': type

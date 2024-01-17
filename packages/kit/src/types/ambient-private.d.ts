@@ -22,7 +22,7 @@ declare module '__sveltekit/server' {
 	import { SSRManifest } from '@sveltejs/kit';
 
 	export let manifest: SSRManifest;
-	export function read_asset(path: string): ReadableStream;
+	export function read_implementation(path: string): ReadableStream;
 	export function set_manifest(manifest: SSRManifest): void;
-	export function set_read_asset(fn: (path: string) => ReadableStream): void;
+	export function set_read_implementation(fn: (path: string) => ReadableStream): void;
 }
