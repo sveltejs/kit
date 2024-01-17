@@ -515,7 +515,7 @@ async function kit({ svelte_config }) {
 
 	/**
 	 * Ensures that client-side code can't accidentally import server-side code,
-	 * whether in `*.server.js` files, `$lib/server`, or `$env/[static|dynamic]/private`
+	 * whether in `*.server.js` files, `$app/server`, `$lib/server`, or `$env/[static|dynamic]/private`
 	 * @type {import('vite').Plugin}
 	 */
 	const plugin_guard = {
