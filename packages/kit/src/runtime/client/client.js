@@ -70,13 +70,13 @@ if (DEV && BROWSER) {
 	const warn = () => {
 		if (warned) return;
 
-		// Avoid stashing away the original history methods which prevents monkeypatching by other libs,
-		// instead inspect the stack trace to see if we're being called from within SvelteKit.
+		// Rather than saving a pointer to the original history methods, which would prevent monkeypatching by other libs,
+		// inspect the stack trace to see if we're being called from within SvelteKit.
 		let stack = new Error().stack?.split('\n');
 		if (!stack) return;
 		if (!stack[0].includes('https:') && !stack[0].includes('http:')) stack = stack.slice(1); // Chrome includes the error message in the stack
 		stack = stack.slice(2); // remove `warn` and the place where `warn` was called
-		if (stack[0].includes('src/runtime/client/client.js')) return;
+		if (stack[0].includes(import.meta.url)) return;
 
 		warned = true;
 
