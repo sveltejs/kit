@@ -16,6 +16,7 @@ import { get_mime_lookup, runtime_base } from '../../../core/utils.js';
 import { compact } from '../../../utils/array.js';
 import { not_found } from '../utils.js';
 import { SCHEME } from '../../../utils/url.js';
+import { check_feature } from '../../../utils/features.js';
 
 const cwd = process.cwd();
 
@@ -31,28 +32,10 @@ export async function dev(vite, vite_config, svelte_config) {
 	const async_local_storage = new AsyncLocalStorage();
 
 	globalThis.__SVELTEKIT_TRACK__ = (label) => {
-		switch (label) {
-			case '$app/server:read': {
-				const { event, config } = async_local_storage.getStore();
-				if (!event) return;
+		const { event, config } = async_local_storage.getStore();
+		if (!event) return;
 
-				const { adapter } = svelte_config.kit;
-				if (!adapter) return;
-
-				const supported = adapter.supports?.read?.({
-					route: event.route,
-					config
-				});
-
-				if (!supported) {
-					throw new Error(
-						`Cannot use \`read\` from \`$app/server\` in ${event.route.id} when using ${adapter.name}. Upgrading may fix this error`
-					);
-				}
-
-				return;
-			}
-		}
+		check_feature(event.route.id, config, label, svelte_config.kit.adapter);
 	};
 
 	const fetch = globalThis.fetch;

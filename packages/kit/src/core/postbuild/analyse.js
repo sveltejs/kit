@@ -15,16 +15,20 @@ import { ENDPOINT_METHODS } from '../../constants.js';
 import { filter_private_env, filter_public_env } from '../../utils/env.js';
 import { resolve_route } from '../../utils/routing.js';
 import { get_page_config } from '../../utils/route_config.js';
+import { check_feature } from '../../utils/features.js';
 
 export default forked(import.meta.url, analyse);
 
 /**
  * @param {{
  *   manifest_path: string;
+ *   manifest_data: import('types').ManifestData;
+ *   server_manifest: import('vite').Manifest;
+ *   tracked_features: Record<string, string[]>;
  *   env: Record<string, string>
  * }} opts
  */
-async function analyse({ manifest_path, env }) {
+async function analyse({ manifest_path, manifest_data, server_manifest, tracked_features, env }) {
 	/** @type {import('@sveltejs/kit').SSRManifest} */
 	const manifest = (await import(pathToFileURL(manifest_path).href)).manifest;
 
@@ -90,12 +94,18 @@ async function analyse({ manifest_path, env }) {
 			}
 		}
 
+		const route_config = page?.config ?? endpoint?.config;
+
+		for (const feature of list_features(route, manifest_data, server_manifest, tracked_features)) {
+			check_feature(route.id, route_config, feature, config.adapter);
+		}
+
 		const page_methods = page?.methods ?? [];
 		const api_methods = endpoint?.methods ?? [];
 		const entries = page?.entries ?? endpoint?.entries;
 
 		metadata.routes.set(route.id, {
-			config: page?.config ?? endpoint?.config,
+			config: route_config,
 			methods: Array.from(new Set([...page_methods, ...api_methods])),
 			page: {
 				methods: page_methods
@@ -169,4 +179,47 @@ function analyse_page(layouts, leaf) {
 		methods,
 		prerender: get_option([...layouts, leaf], 'prerender') ?? false
 	};
+}
+
+/**
+ * @param {import('types').SSRRoute} route
+ * @param {import('types').ManifestData} manifest_data
+ * @param {import('vite').Manifest} server_manifest
+ * @param {Record<string, string[]>} tracked_features
+ */
+function list_features(route, manifest_data, server_manifest, tracked_features) {
+	const features = new Set();
+
+	const route_data = /** @type {import('types').RouteData} */ (
+		manifest_data.routes.find((r) => r.id === route.id)
+	);
+
+	/** @param {string} id */
+	function visit(id) {
+		const chunk = server_manifest[id];
+
+		if (chunk.file in tracked_features) {
+			for (const feature of tracked_features[chunk.file]) {
+				features.add(feature);
+			}
+		}
+
+		if (chunk.imports) {
+			for (const id of chunk.imports) {
+				visit(id);
+			}
+		}
+	}
+
+	let page_node = route_data?.leaf;
+	while (page_node) {
+		if (page_node.server) visit(page_node.server);
+		page_node = page_node.parent ?? null;
+	}
+
+	if (route_data.endpoint) {
+		visit(route_data.endpoint.file);
+	}
+
+	return Array.from(features);
 }

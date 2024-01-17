@@ -225,6 +225,9 @@ async function kit({ svelte_config }) {
 	const service_worker_entry_file = resolve_entry(kit.files.serviceWorker);
 	const parsed_service_worker = path.parse(kit.files.serviceWorker);
 
+	/** @type {Record<string, string[]>} */
+	const tracked_features = {};
+
 	const sourcemapIgnoreList = /** @param {string} relative_path */ (relative_path) =>
 		relative_path.includes('node_modules') || relative_path.includes(kit.outDir);
 
@@ -702,6 +705,18 @@ async function kit({ svelte_config }) {
 			}
 		},
 
+		renderChunk(code, chunk) {
+			if (code.includes('__SVELTEKIT_TRACK__')) {
+				return {
+					code: code.replace(/__SVELTEKIT_TRACK__\('(.+?)'\)/g, (m, label) => {
+						(tracked_features[chunk.name + '.js'] ??= []).push(label);
+						return `/* track ${label}            */`;
+					}),
+					map: null // TODO we may need to generate a sourcemap in future
+				};
+			}
+		},
+
 		generateBundle() {
 			if (vite_config.build.ssr) return;
 
@@ -719,7 +734,7 @@ async function kit({ svelte_config }) {
 		 */
 		writeBundle: {
 			sequential: true,
-			async handler(_options, bundle) {
+			async handler(_options) {
 				if (secondary_build_started) return; // only run this once
 
 				const verbose = vite_config.logLevel === 'info';
@@ -756,6 +771,9 @@ async function kit({ svelte_config }) {
 
 				const metadata = await analyse({
 					manifest_path,
+					manifest_data,
+					server_manifest,
+					tracked_features,
 					env: { ...env.private, ...env.public }
 				});
 
