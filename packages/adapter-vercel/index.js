@@ -350,7 +350,7 @@ const plugin = function (defaults = {}) {
 
 				if (runtime === 'edge') {
 					throw new Error(
-						`${name}: Cannot use \`read\` from \`$app/server\` in a route configured with \`runtime: 'edge'\``
+						`${name}: Cannot use \`read\` from \`$app/server\` in route \`${route.id}\` configured with \`runtime: 'edge'\``
 					);
 				}
 
