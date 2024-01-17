@@ -15,7 +15,7 @@ const server = polka().use(handler);
 if (process.pid === listen_pid && listen_fds === 1) {
 	// systemd socket activation
 	server.listen({ fd: 3 }, () => {
-		console.log(`Listening on file descriptor 3`);
+		console.log('Listening on file descriptor 3');
 	});
 
 	if (timeout) {
