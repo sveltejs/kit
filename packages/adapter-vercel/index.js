@@ -63,6 +63,7 @@ const plugin = function (defaults = {}) {
 			 * @param {import('@sveltejs/kit').RouteDefinition<import('.').Config>[]} routes
 			 */
 			async function generate_serverless_function(name, config, routes) {
+				const tmp = builder.getBuildDirectory(`vercel-tmp/${name}`);
 				const relativePath = path.posix.relative(tmp, builder.getServerDirectory());
 
 				builder.copy(`${files}/serverless.js`, `${tmp}/index.js`, {
@@ -519,12 +520,7 @@ async function create_function_bundle(builder, entry, dir, config) {
 			// do nothing
 		}
 
-		if (source !== realpath) {
-			const realdest = path.join(dir, path.relative(ancestor, realpath));
-			fs.symlinkSync(path.relative(path.dirname(dest), realdest), dest, is_dir ? 'dir' : 'file');
-		} else if (!is_dir) {
-			fs.copyFileSync(source, dest);
-		}
+		fs.symlinkSync(path.relative(path.dirname(dest), realpath), dest, is_dir ? 'dir' : 'file');
 	}
 
 	write(
