@@ -1585,6 +1585,11 @@ declare module '@sveltejs/kit' {
 
 	interface ManifestData {
 		assets: Asset[];
+		hooks: {
+			client: string | null;
+			server: string | null;
+			universal: string | null;
+		};
 		nodes: PageNode[];
 		routes: RouteData[];
 		matchers: Record<string, string>;
