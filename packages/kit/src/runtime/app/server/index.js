@@ -2,7 +2,7 @@ import { read_implementation, manifest } from '__sveltekit/server';
 import { base } from '__sveltekit/paths';
 
 /**
- * Read the contents of an imported asset
+ * Read the contents of an imported asset from the filesystem
  * @example
  * ```js
  * import { read } from '$app/server';

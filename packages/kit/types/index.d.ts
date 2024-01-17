@@ -71,6 +71,7 @@ declare module '@sveltejs/kit' {
 		/** An array of all routes (including prerendered) */
 		routes: RouteDefinition[];
 
+		// TODO 3.0 remove this method
 		/**
 		 * Create separate functions that map to one or more routes of your app.
 		 * @param fn A function that groups a set of routes into an entry point
@@ -2124,7 +2125,7 @@ declare module '$app/paths' {
 
 declare module '$app/server' {
 	/**
-	 * Read the contents of an imported asset
+	 * Read the contents of an imported asset from the filesystem
 	 * @example
 	 * ```js
 	 * import { read } from '$app/server';
