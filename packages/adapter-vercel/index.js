@@ -81,7 +81,7 @@ const plugin = function (defaults = {}) {
 
 				await create_function_bundle(builder, `${tmp}/index.js`, dir, config);
 
-				builder.writeServerAssets(dir, routes);
+				builder.writeServerAssets?.(dir, routes); // TODO remove optional chaining once peer dep contains a minimum SvelteKit version that has the method
 			}
 
 			/**
