@@ -16,6 +16,7 @@ const server = new Server(manifest);
 
 await server.init({
 	env: process.env,
+	// @ts-expect-error the types are wrong
 	readAsset: (file) => Readable.toWeb(fs.createReadStream(path.join(dir, 'client', file)))
 });
 
