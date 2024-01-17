@@ -1151,7 +1151,7 @@ export class Server {
 
 export interface ServerInitOptions {
 	env: Record<string, string>;
-	readAsset?: (file: string) => ReadableStream;
+	read?: (file: string) => ReadableStream;
 }
 
 export interface SSRManifest {

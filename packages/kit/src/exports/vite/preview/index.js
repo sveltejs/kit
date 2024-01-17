@@ -48,7 +48,7 @@ export async function preview(vite, vite_config, svelte_config) {
 	const server = new Server(manifest);
 	await server.init({
 		env: loadEnv(vite_config.mode, svelte_config.kit.env.dir, ''),
-		readAsset: (file) => createReadable(`${dir}/${file}`)
+		read: (file) => createReadable(`${dir}/${file}`)
 	});
 
 	return () => {

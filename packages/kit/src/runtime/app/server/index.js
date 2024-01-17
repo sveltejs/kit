@@ -2,14 +2,22 @@ import { read_asset, manifest } from '__sveltekit/server';
 import { base } from '__sveltekit/paths';
 
 /**
- * TODO docs
+ * Read the contents of an imported asset
+ * @example
+ * ```js
+ * import { read } from '$app/server';
+ * import somefile from './somefile.txt';
+ *
+ * const asset = read(somefile);
+ * const text = await asset.text();
+ * ```
  * @param {string} asset
  * @returns {Response}
  */
-export function readAsset(asset) {
+export function read(asset) {
 	if (!read_asset) {
 		throw new Error(
-			'No readAsset implementation was provided. Please ensure that your adapter is up to date and supports this feature'
+			'No `read` implementation was provided. Please ensure that your adapter is up to date and supports this feature'
 		);
 	}
 

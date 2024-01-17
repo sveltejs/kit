@@ -479,7 +479,7 @@ export async function dev(vite, vite_config, svelte_config) {
 
 				await server.init({
 					env,
-					readAsset: createReadable
+					read: createReadable
 				});
 
 				const request = await getRequest({

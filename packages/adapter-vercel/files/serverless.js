@@ -9,7 +9,7 @@ const server = new Server(manifest);
 
 await server.init({
 	env: /** @type {Record<string, string>} */ (process.env),
-	readAsset: createReadable
+	read: createReadable
 });
 
 const DATA_SUFFIX = '/__data.json';

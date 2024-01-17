@@ -34,10 +34,10 @@ export class Server {
 	/**
 	 * @param {{
 	 *   env: Record<string, string>;
-	 *   readAsset?: (file: string) => ReadableStream;
+	 *   read?: (file: string) => ReadableStream;
 	 * }} opts
 	 */
-	async init({ env, readAsset }) {
+	async init({ env, read }) {
 		// Take care: Some adapters may have to call `Server.init` per-request to set env vars,
 		// so anything that shouldn't be rerun should be wrapped in an `if` block to make sure it hasn't
 		// been done already.
@@ -59,8 +59,8 @@ export class Server {
 		);
 		set_safe_public_env(public_env);
 
-		if (readAsset) {
-			set_read_asset(readAsset);
+		if (read) {
+			set_read_asset(read);
 		}
 
 		if (!this.#options.hooks) {

@@ -33,7 +33,7 @@ const asset_dir = `${dir}/client${base}`;
 
 await server.init({
 	env: process.env,
-	readAsset: (file) => createReadable(`${asset_dir}/${file}`)
+	read: (file) => createReadable(`${asset_dir}/${file}`)
 });
 
 /**

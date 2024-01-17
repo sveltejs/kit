@@ -1132,7 +1132,7 @@ declare module '@sveltejs/kit' {
 
 	export interface ServerInitOptions {
 		env: Record<string, string>;
-		readAsset?: (file: string) => ReadableStream;
+		read?: (file: string) => ReadableStream;
 	}
 
 	export interface SSRManifest {
@@ -2122,9 +2122,17 @@ declare module '$app/paths' {
 
 declare module '$app/server' {
 	/**
-	 * TODO docs
+	 * Read the contents of an imported asset
+	 * @example
+	 * ```js
+	 * import { read } from '$app/server';
+	 * import somefile from './somefile.txt';
+	 *
+	 * const asset = read(somefile);
+	 * const text = await asset.text();
+	 * ```
 	 * */
-	export function readAsset(file: string): Response;
+	export function read(asset: string): Response;
 }
 
 declare module '$app/stores' {
