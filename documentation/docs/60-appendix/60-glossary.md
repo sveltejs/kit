@@ -10,6 +10,10 @@ Client-side rendering (CSR) is the generation of the page contents in the web br
 
 In SvelteKit, client-side rendering will be used by default, but you can turn off JavaScript with [the `csr = false` page option](page-options#csr).
 
+## Hybrid app
+
+SvelteKit uses a hybrid rendering mode by default where it loads the initial HTML from the server (SSR) and the updates the page contents on subsequent navigations via client-side rendering (CSR).
+
 ## Hydration
 
 Svelte components store some state and update the DOM when the state is updated. When fetching data during SSR, by default SvelteKit will store this data and transmit it to the client along with the server-rendered HTML. The components can then be initialized on the client with that data without having to call the same API endpoints again. Svelte will then check that the DOM is in the expected state and attach event listeners in a process called hydration. Once the components are fully hydrated, they can react to changes to their properties just like any newly created Svelte component.
@@ -34,7 +38,7 @@ In SvelteKit, client-side routing will be used by default, but you can skip it w
 
 ## SPA
 
-A single-page app (SPA) is an application in which all requests to the server load a single HTML file which then does client-side rendering of the requested contents based on the requested URL. All navigation is handled on the client-side in a process called client-side routing with per-page contents being updated and common layout elements remaining largely unchanged. SPA mode is highly discouraged for public-facing websites (i.e. not behind a login or only used internally at a company). It has a large performance impact by forcing two network round trips before rendering can begin. This may be acceptable if you are serving a corporate application from the local network where the network round trip is very fast, but probably is not for most websites on the internet especially when considering the latency of mobile devices.
+A single-page app (SPA) is an application in which all requests to the server load a single HTML file which then does client-side rendering based on the requested URL. All navigation is handled on the client-side in a process called client-side routing with per-page contents being updated and common layout elements remaining largely unchanged. Throughout this site, when we refer to a SPA we use this definition where a SPA simply serves an empty shell on the initial request. It should not be confused with a [hybrid app](#hybrid-app), which serves HTML on the initial request. SPA mode is highly discouraged for public-facing websites (i.e. not behind a login or only used internally at a company). It has a large performance impact by forcing two network round trips before rendering can begin. This may be acceptable if you are serving a corporate application from the local network where the network round trip is very fast, but probably is not for most websites on the internet especially when considering the latency of mobile devices.
 
 In SvelteKit, you can [build SPAs with `adapter-static`](single-page-apps).
 
