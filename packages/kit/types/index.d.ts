@@ -80,7 +80,7 @@ declare module '@sveltejs/kit' {
 
 		/**
 		 * Find all the assets imported by server files belonging to `routes`
-		 * */
+		 */
 		findServerAssets(routes: RouteDefinition[]): string[];
 
 		/**
@@ -1886,7 +1886,7 @@ declare module '@sveltejs/kit/node' {
 	export function setResponse(res: import('http').ServerResponse, response: Response): Promise<void>;
 	/**
 	 * Converts a file on disk to a readable stream
-	 * */
+	 */
 	export function createReadable(file: string): ReadableStream;
 }
 
@@ -2133,7 +2133,7 @@ declare module '$app/server' {
 	 * const asset = read(somefile);
 	 * const text = await asset.text();
 	 * ```
-	 * */
+	 */
 	export function read(asset: string): Response;
 }
 
