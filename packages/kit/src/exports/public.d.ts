@@ -89,6 +89,7 @@ export interface Builder {
 	/** An array of all routes (including prerendered) */
 	routes: RouteDefinition[];
 
+	// TODO 3.0 remove this method
 	/**
 	 * Create separate functions that map to one or more routes of your app.
 	 * @param fn A function that groups a set of routes into an entry point

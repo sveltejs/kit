@@ -96,7 +96,6 @@ export function create_builder({
 			);
 		},
 
-		// TODO this appears to be unused and should probably be deprecated (and removed in 3.0)
 		async createEntries(fn) {
 			const seen = new Set();
 
