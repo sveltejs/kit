@@ -81,7 +81,13 @@ const plugin = function (defaults = {}) {
 
 				await create_function_bundle(builder, `${tmp}/index.js`, dir, config);
 
-				builder.writeServerAssets?.(dir, routes); // TODO remove optional chaining once peer dep contains a minimum SvelteKit version that has the method
+				// TODO remove `if` once peer dep contains a minimum SvelteKit version that has the method
+				if (builder.findServerAssets) {
+					for (const asset of builder.findServerAssets(routes)) {
+						// TODO use symlinks, once Build Output API supports doing so
+						builder.copy(`${builder.getServerDirectory()}/${asset}`, `${dir}/${asset}`);
+					}
+				}
 			}
 
 			/**

@@ -146,6 +146,13 @@ export function create_builder({
 			}
 		},
 
+		findServerAssets(route_data) {
+			return find_server_assets(
+				build_data,
+				route_data.map((route) => /** @type {import('types').RouteData} */ (lookup.get(route)))
+			);
+		},
+
 		async generateFallback(dest) {
 			const manifest_path = `${config.kit.outDir}/output/server/manifest-full.js`;
 			const env = get_env(config.kit.env, vite_config.mode);
@@ -205,20 +212,6 @@ export function create_builder({
 
 		writeServer(dest) {
 			return copy(`${config.kit.outDir}/output/server`, dest);
-		},
-
-		writeServerAssets(dest, subset) {
-			const routes = subset
-				? subset.map((route) => /** @type {import('types').RouteData} */ (lookup.get(route)))
-				: route_data.filter((route) => prerender_map.get(route.id) !== true);
-
-			const server_assets = find_server_assets(build_data, routes);
-
-			for (const file of server_assets) {
-				copy(`${config.kit.outDir}/output/server/${file}`, `${dest}/${file}`);
-			}
-
-			return server_assets;
 		}
 	};
 }

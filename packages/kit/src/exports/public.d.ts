@@ -97,6 +97,12 @@ export interface Builder {
 	createEntries(fn: (route: RouteDefinition) => AdapterEntry): Promise<void>;
 
 	/**
+	 * Find all the assets imported by server files belonging to `routes`
+	 * @param routes
+	 */
+	findServerAssets(routes: RouteDefinition[]): string[];
+
+	/**
 	 * Generate a fallback page for a static webserver to use when no route is matched. Useful for single-page apps.
 	 */
 	generateFallback(dest: string): Promise<void>;
@@ -142,13 +148,6 @@ export interface Builder {
 	 * @returns an array of files written to `dest`
 	 */
 	writeServer(dest: string): string[];
-	/**
-	 * Copy any assets imported by server code to `dest`.
-	 * @param dest the destination folder
-	 * @param routes an array of routes to find asset dependencies for
-	 * @returns an array of files written to `dest`
-	 */
-	writeServerAssets(dest: string, routes?: RouteDefinition[]): string[];
 	/**
 	 * Copy a file or directory.
 	 * @param from the source file or directory
