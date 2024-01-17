@@ -7,6 +7,7 @@ import { find_deps, resolve_symlinks } from '../../exports/vite/build/utils.js';
 import { compact } from '../../utils/array.js';
 import { join_relative } from '../../utils/filesystem.js';
 import { dedent } from '../sync/utils.js';
+import { find_server_assets } from './find_server_assets.js';
 
 /**
  * Generates the data used to write the server-side manifest.js file. This data is used in the Vite
@@ -29,17 +30,7 @@ export function generate_manifest({ build_data, relative_path, routes }) {
 	 */
 	const used_nodes = new Set([0, 1]);
 
-	// TODO add hooks.server.js asset imports
-	/** @type {Set<string>} */
-	const server_assets = new Set();
-
-	/** @param {string} id */
-	function add_assets(id) {
-		const deps = find_deps(build_data.server_manifest, id, false);
-		for (const asset of deps.assets) {
-			server_assets.add(asset);
-		}
-	}
+	const server_assets = find_server_assets(build_data, routes);
 
 	for (const route of routes) {
 		if (route.page) {
@@ -47,15 +38,6 @@ export function generate_manifest({ build_data, relative_path, routes }) {
 			for (const i of route.page.errors) used_nodes.add(i);
 			used_nodes.add(route.page.leaf);
 		}
-
-		if (route.endpoint) {
-			add_assets(route.endpoint.file);
-		}
-	}
-
-	for (const n of used_nodes) {
-		const node = build_data.manifest_data.nodes[n];
-		if (node.server) add_assets(node.server);
 	}
 
 	const node_paths = compact(
@@ -92,7 +74,7 @@ export function generate_manifest({ build_data, relative_path, routes }) {
 	/** @type {Record<string, number>} */
 	const files = {};
 	for (const asset of server_assets) {
-		files[asset] = fs.statSync(path.resolve(build_data.out_dir, 'server', asset)).size;
+		files['/' + asset] = fs.statSync(path.resolve(build_data.out_dir, 'server', asset)).size;
 
 		const ext = path.extname(asset);
 		mime_types[ext] ??= mime.lookup(ext) || '';

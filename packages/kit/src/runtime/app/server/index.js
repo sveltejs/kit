@@ -28,7 +28,8 @@ export function readAsset(file) {
 	}
 
 	if (file in manifest._.files) {
-		const [length, type] = manifest._.files[file];
+		const length = manifest._.files[file];
+		const type = manifest.mimeTypes[file.slice(file.lastIndexOf('.'))];
 
 		return new Response(read_asset(file), {
 			headers: {

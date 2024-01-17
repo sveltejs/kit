@@ -10,6 +10,7 @@ import { get_env } from '../../exports/vite/utils.js';
 import generate_fallback from '../postbuild/fallback.js';
 import { write } from '../sync/utils.js';
 import { list_files } from '../utils.js';
+import { find_server_assets } from '../generate_manifest/find_server_assets.js';
 
 const pipe = promisify(pipeline);
 const extensions = ['.html', '.js', '.mjs', '.json', '.css', '.svg', '.xml', '.wasm'];
@@ -204,6 +205,20 @@ export function create_builder({
 
 		writeServer(dest) {
 			return copy(`${config.kit.outDir}/output/server`, dest);
+		},
+
+		writeServerAssets(dest, subset) {
+			const routes = subset
+				? subset.map((route) => /** @type {import('types').RouteData} */ (lookup.get(route)))
+				: route_data.filter((route) => prerender_map.get(route.id) !== true);
+
+			const server_assets = find_server_assets(build_data, routes);
+
+			for (const file of server_assets) {
+				copy(`${config.kit.outDir}/output/server/${file}`, `${dest}/${file}`);
+			}
+
+			return server_assets;
 		}
 	};
 }

@@ -1,3 +1,6 @@
+import fs from 'node:fs';
+import path from 'node:path';
+import { Readable } from 'node:stream';
 import { installPolyfills } from '@sveltejs/kit/node/polyfills';
 import { getRequest, setResponse } from '@sveltejs/kit/node';
 import { Server } from 'SERVER';
@@ -8,7 +11,9 @@ installPolyfills();
 const server = new Server(manifest);
 
 await server.init({
-	env: /** @type {Record<string, string>} */ (process.env)
+	env: /** @type {Record<string, string>} */ (process.env),
+	// @ts-expect-error the types are wrong
+	readAsset: (file) => Readable.toWeb(fs.createReadStream('.' + file))
 });
 
 const DATA_SUFFIX = '/__data.json';

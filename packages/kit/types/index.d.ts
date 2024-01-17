@@ -125,6 +125,13 @@ declare module '@sveltejs/kit' {
 		 */
 		writeServer(dest: string): string[];
 		/**
+		 * Copy any assets imported by server code to `dest`.
+		 * @param dest the destination folder
+		 * @param routes an array of routes to find asset dependencies for
+		 * @returns an array of files written to `dest`
+		 */
+		writeServerAssets(dest: string, routes?: RouteDefinition[]): string[];
+		/**
 		 * Copy a file or directory.
 		 * @param from the source file or directory
 		 * @param to the destination file or directory

@@ -63,6 +63,8 @@ const plugin = function (defaults = {}) {
 			 * @param {import('@sveltejs/kit').RouteDefinition<import('.').Config>[]} routes
 			 */
 			async function generate_serverless_function(name, config, routes) {
+				const dir = `${dirs.functions}/${name}.func`;
+
 				const relativePath = path.posix.relative(tmp, builder.getServerDirectory());
 
 				builder.copy(`${files}/serverless.js`, `${tmp}/index.js`, {
@@ -77,12 +79,9 @@ const plugin = function (defaults = {}) {
 					`export const manifest = ${builder.generateManifest({ relativePath, routes })};\n`
 				);
 
-				await create_function_bundle(
-					builder,
-					`${tmp}/index.js`,
-					`${dirs.functions}/${name}.func`,
-					config
-				);
+				await create_function_bundle(builder, `${tmp}/index.js`, dir, config);
+
+				builder.writeServerAssets(dir, routes);
 			}
 
 			/**
