@@ -6,7 +6,7 @@ import colors from 'kleur';
 import sirv from 'sirv';
 import * as mime from 'mrmime';
 import { isCSSRequest, loadEnv, buildErrorMessage } from 'vite';
-import { getRequest, setResponse } from '../../../exports/node/index.js';
+import { createReadable, getRequest, setResponse } from '../../../exports/node/index.js';
 import { installPolyfills } from '../../../exports/node/polyfills.js';
 import { coalesce_to_error } from '../../../utils/error.js';
 import { posixify, resolve_entry, to_fs } from '../../../utils/filesystem.js';
@@ -486,8 +486,7 @@ export async function dev(vite, vite_config, svelte_config) {
 
 				await server.init({
 					env,
-					// @ts-expect-error the types are wrong
-					readAsset: (file) => Readable.toWeb(fs.createReadStream('.' + file))
+					readAsset: (file) => createReadable('.' + file)
 				});
 
 				const request = await getRequest({

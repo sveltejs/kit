@@ -1146,10 +1146,11 @@ declare module '@sveltejs/kit' {
 		/** private fields */
 		_: {
 			client: NonNullable<BuildData['client']>;
-			files: Record<string, [length: number, type: string]>;
 			nodes: SSRNodeLoader[];
 			routes: SSRRoute[];
 			matchers(): Promise<Record<string, ParamMatcher>>;
+			/** A `[file]: size` map of all assets imported by server code */
+			server_assets: Record<string, number>;
 		};
 	}
 
@@ -1883,6 +1884,10 @@ declare module '@sveltejs/kit/node' {
 	}): Promise<Request>;
 
 	export function setResponse(res: import('http').ServerResponse, response: Response): Promise<void>;
+	/**
+	 * Converts a file on disk to a readable stream
+	 * */
+	export function createReadable(file: string): ReadableStream;
 }
 
 declare module '@sveltejs/kit/node/polyfills' {

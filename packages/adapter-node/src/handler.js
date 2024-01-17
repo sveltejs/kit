@@ -3,9 +3,8 @@ import fs from 'node:fs';
 import path from 'node:path';
 import sirv from 'sirv';
 import { fileURLToPath } from 'node:url';
-import { Readable } from 'node:stream';
 import { parse as polka_url_parser } from '@polka/url';
-import { getRequest, setResponse } from '@sveltejs/kit/node';
+import { getRequest, setResponse, createReadable } from '@sveltejs/kit/node';
 import { Server } from 'SERVER';
 import { manifest, prerendered } from 'MANIFEST';
 import { env } from 'ENV';
@@ -16,8 +15,7 @@ const server = new Server(manifest);
 
 await server.init({
 	env: process.env,
-	// @ts-expect-error the types are wrong
-	readAsset: (file) => Readable.toWeb(fs.createReadStream(path.join(dir, 'client', file)))
+	readAsset: (file) => createReadable(path.join(dir, 'client', file))
 });
 
 const origin = env('ORIGIN', undefined);

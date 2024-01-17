@@ -1,7 +1,7 @@
 import './shims';
 import { Server } from '0SERVER';
 import { split_headers } from './headers.js';
-import { Readable } from 'node:stream';
+import { createReadable } from '@sveltejs/kit/node';
 
 /**
  * @param {import('@sveltejs/kit').SSRManifest} manifest
@@ -12,8 +12,7 @@ export function init(manifest) {
 
 	let init_promise = server.init({
 		env: process.env,
-		// @ts-expect-error the types are wrong
-		readAsset: (file) => Readable.toWeb(fs.createReadStream('.netlify/server' + file))
+		readAsset: (file) => createReadable('.netlify/server' + file)
 	});
 
 	return async (event, context) => {
