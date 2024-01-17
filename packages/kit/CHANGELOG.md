@@ -1,5 +1,11 @@
 # @sveltejs/kit
 
+## 2.3.4
+
+### Patch Changes
+
+- fix: don't stash away original `history` methods so other libs can monkeypatch it ([#11657](https://github.com/sveltejs/kit/pull/11657))
+
 ## 2.3.3
 
 ### Patch Changes
