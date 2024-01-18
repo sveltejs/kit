@@ -13,6 +13,7 @@ import { base } from '__sveltekit/paths';
  * ```
  * @param {string} asset
  * @returns {Response}
+ * @since 2.4.0
  */
 export function read(asset) {
 	__SVELTEKIT_TRACK__('$app/server:read');

@@ -196,6 +196,7 @@ export async function setResponse(res, response) {
  * Converts a file on disk to a readable stream
  * @param {string} file
  * @returns {ReadableStream}
+ * @since 2.4.0
  */
 export function createReadableStream(file) {
 	return /** @type {ReadableStream} */ (Readable.toWeb(createReadStream(file)));

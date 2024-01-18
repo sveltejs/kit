@@ -7,6 +7,7 @@ If an adapter for your preferred environment doesn't yet exist, you can build yo
 Adapters packages must implement the following API, which creates an `Adapter`:
 
 ```js
+// @errors: 2322
 // @filename: ambient.d.ts
 type AdapterSpecificOptions = any;
 
