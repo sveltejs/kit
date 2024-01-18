@@ -115,11 +115,9 @@ export default function ({ config = 'wrangler.toml' } = {}) {
 							/The package "(.+)" wasn't found on the file system but is built into node/.exec(
 								node.text
 							);
-						if (match) {
-							let id = match[1];
-							if (!id.startsWith('node:')) id = `node:${id}`;
 
-							node.text = `Cannot use "${id}" when deploying to Cloudflare.`;
+						if (match) {
+							node.text = `Cannot use "${match[1]}" when deploying to Cloudflare.`;
 						}
 					}
 				}
