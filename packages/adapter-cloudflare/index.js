@@ -53,22 +53,20 @@ export default function (options = {}) {
 				}
 			});
 
-			const external = ['cloudflare:*'];
-			if (options.nodeCompat) {
-				external.push(
-					'node:assert',
-					'node:async_hooks',
-					'node:buffer',
-					'node:crypto',
-					'node:diagnostics_channel',
-					'node:events',
-					'node:path',
-					'node:process',
-					'node:stream',
-					'node:string_decoder',
-					'node:util'
-				);
-			}
+			const external = [
+				'cloudflare:*',
+				'node:assert',
+				'node:async_hooks',
+				'node:buffer',
+				'node:crypto',
+				'node:diagnostics_channel',
+				'node:events',
+				'node:path',
+				'node:process',
+				'node:stream',
+				'node:string_decoder',
+				'node:util'
+			];
 
 			await esbuild.build({
 				platform: 'browser',

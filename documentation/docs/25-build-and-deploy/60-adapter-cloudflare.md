@@ -28,8 +28,7 @@ export default {
 			routes: {
 				include: ['/*'],
 				exclude: ['<all>']
-			},
-			nodeCompat: undefined
+			}
 		})
 	}
 };
@@ -45,8 +44,6 @@ The `routes` option allows you to customise the [`_routes.json`](https://develop
 	- `<files>` contains the contents of your `static` directory
 	- `<prerendered>` contains a list of prerendered pages
 	- `<all>` (the default) contains all of the above
-
-The `nodeCompat` option allows you to enable [Node.js compatibility](https://developers.cloudflare.com/workers/runtime-apis/nodejs/), and defaults to `undefined` mean `disabled`. If `nodeCompat` is `true`, you will also need to [Enable Node.js from the Cloudflare dashboard](https://developers.cloudflare.com/workers/runtime-apis/nodejs/#enable-nodejs-from-the-cloudflare-dashboard).
 
 You can have up to 100 `include` and `exclude` rules combined. Generally you can omit the `routes` options, but if (for example) your `<prerendered>` paths exceed that limit, you may find it helpful to manually create an `exclude` list that includes `'/articles/*'` instead of the auto-generated `['/articles/foo', '/articles/bar', '/articles/baz', ...]`.
 
