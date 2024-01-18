@@ -15,6 +15,21 @@ import { fileURLToPath } from 'node:url';
  * }} WranglerConfig
  */
 
+// list from https://developers.cloudflare.com/workers/runtime-apis/nodejs/
+const compatible_node_modules = [
+	'assert',
+	'async_hooks',
+	'buffer',
+	'crypto',
+	'diagnostics_channel',
+	'events',
+	'path',
+	'process',
+	'stream',
+	'string_decoder',
+	'util'
+];
+
 /** @type {import('./index.js').default} */
 export default function ({ config = 'wrangler.toml' } = {}) {
 	return {
@@ -64,19 +79,7 @@ export default function ({ config = 'wrangler.toml' } = {}) {
 
 			const external = ['__STATIC_CONTENT_MANIFEST', 'cloudflare:*'];
 			if (compatibility_flags && compatibility_flags.includes('nodejs_compat')) {
-				external.push(
-					'node:assert',
-					'node:async_hooks',
-					'node:buffer',
-					'node:crypto',
-					'node:diagnostics_channel',
-					'node:events',
-					'node:path',
-					'node:process',
-					'node:stream',
-					'node:string_decoder',
-					'node:util'
-				);
+				external.push(...compatible_node_modules.map((id) => `node:${id}`));
 			}
 
 			await esbuild.build({
@@ -88,6 +91,7 @@ export default function ({ config = 'wrangler.toml' } = {}) {
 				outfile: main,
 				bundle: true,
 				external,
+				alias: Object.fromEntries(compatible_node_modules.map((id) => [id, `node:${id}`])),
 				format: 'esm',
 				loader: {
 					'.wasm': 'copy'

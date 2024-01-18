@@ -3,6 +3,21 @@ import * as path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import * as esbuild from 'esbuild';
 
+// list from https://developers.cloudflare.com/workers/runtime-apis/nodejs/
+const compatible_node_modules = [
+	'assert',
+	'async_hooks',
+	'buffer',
+	'crypto',
+	'diagnostics_channel',
+	'events',
+	'path',
+	'process',
+	'stream',
+	'string_decoder',
+	'util'
+];
+
 /** @type {import('./index.js').default} */
 export default function (options = {}) {
 	return {
@@ -53,20 +68,7 @@ export default function (options = {}) {
 				}
 			});
 
-			const external = [
-				'cloudflare:*',
-				'node:assert',
-				'node:async_hooks',
-				'node:buffer',
-				'node:crypto',
-				'node:diagnostics_channel',
-				'node:events',
-				'node:path',
-				'node:process',
-				'node:stream',
-				'node:string_decoder',
-				'node:util'
-			];
+			const external = ['cloudflare:*', ...compatible_node_modules.map((id) => `node:${id}`)];
 
 			await esbuild.build({
 				platform: 'browser',
@@ -81,7 +83,8 @@ export default function (options = {}) {
 				loader: {
 					'.wasm': 'copy'
 				},
-				external
+				external,
+				alias: Object.fromEntries(compatible_node_modules.map((id) => [id, `node:${id}`]))
 			});
 		}
 	};
