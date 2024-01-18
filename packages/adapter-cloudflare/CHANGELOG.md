@@ -1,5 +1,11 @@
 # @sveltejs/adapter-cloudflare
 
+## 4.0.2
+
+### Patch Changes
+
+- chore(deps): update dependency worktop to v0.8.0-next.18 ([#11618](https://github.com/sveltejs/kit/pull/11618))
+
 ## 4.0.1
 
 ### Patch Changes
