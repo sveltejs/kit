@@ -1,3 +1,4 @@
+import { read } from '$app/server';
 import { modules } from '$lib/generated/type-info.js';
 import {
 	extractFrontmatter,
@@ -5,9 +6,6 @@ import {
 	replaceExportTypePlaceholders,
 	slugify
 } from '@sveltejs/site-kit/markdown';
-import { readFile } from 'node:fs/promises';
-import path from 'node:path';
-import glob from 'tiny-glob';
 
 const categories = [
 	{
@@ -18,6 +16,11 @@ const categories = [
 	}
 ];
 
+const files = import.meta.glob('../../../../../documentation/*/*/*.md', {
+	as: 'url',
+	eager: true
+});
+
 export async function content() {
 	/** @type {import('@sveltejs/site-kit/search').Block[]} */
 	const blocks = [];
@@ -25,18 +28,10 @@ export async function content() {
 	for (const category of categories) {
 		const breadcrumbs = category.label ? [category.label] : [];
 
-		for (const file of await glob('**/*.md', { cwd: `../../documentation/${category.slug}` })) {
-			const basename = path.basename(file);
-			const match = /\d{2}-(.+)\.md/.exec(basename);
-			if (!match) continue;
+		for (const [file, asset] of Object.entries(files)) {
+			const slug = /\/\d{2}-(.+)\.md$/.exec(file)[1];
 
-			const slug = match[1];
-
-			const filepath = `../../documentation/${category.slug}/${file}`;
-			const markdown = await replaceExportTypePlaceholders(
-				await readFile(filepath, 'utf-8'),
-				modules
-			);
+			const markdown = await replaceExportTypePlaceholders(await read(asset).text(), modules);
 
 			const { body, metadata } = extractFrontmatter(markdown);
 
