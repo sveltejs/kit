@@ -77,21 +77,12 @@ export default {
 };
 ```
 
-If you would like to enable [Node.js compatibility](https://developers.cloudflare.com/workers/runtime-apis/nodejs/#enable-nodejs-from-the-cloudflare-dashboard), you can do like so:
+If you would like to enable [Node.js compatibility](https://developers.cloudflare.com/workers/runtime-apis/nodejs/#enable-nodejs-from-the-cloudflare-dashboard), you can add "nodejs_compat" flag to `wrangler.toml`:
 
-```js
-// @errors: 2307
-/// file: svelte.config.js
-import adapter from '@sveltejs/adapter-cloudflare-workers';
-
-export default {
-	kit: {
-		adapter: adapter({ nodeCompat: true })
-	}
-};
+```toml
+/// file: wrangler.toml
+compatibility_flags = [ "nodejs_compat" ]
 ```
-
-You will also need to [enable Node.js with Workers](https://developers.cloudflare.com/workers/runtime-apis/nodejs/#enable-nodejs-with-workers).
 
 ## Bindings
 

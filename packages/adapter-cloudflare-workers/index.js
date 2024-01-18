@@ -11,6 +11,7 @@ import { fileURLToPath } from 'node:url';
  *   site: {
  *     bucket: string;
  *   }
+ *   compatibility_flags?: string[];
  * }} WranglerConfig
  */
 
@@ -20,7 +21,7 @@ export default function (options = { config: 'wrangler.toml' }) {
 		name: '@sveltejs/adapter-cloudflare-workers',
 
 		async adapt(builder) {
-			const { main, site } = validate_config(builder, options.config);
+			const { main, site, compatibility_flags } = validate_config(builder, options.config);
 
 			const files = fileURLToPath(new URL('./files', import.meta.url).href);
 			const tmp = builder.getBuildDirectory('cloudflare-workers-tmp');
@@ -62,7 +63,7 @@ export default function (options = { config: 'wrangler.toml' }) {
 			);
 
 			const external = ['__STATIC_CONTENT_MANIFEST', 'cloudflare:*'];
-			if (options.nodeCompat) {
+			if (compatibility_flags && compatibility_flags.includes('nodejs_compat')) {
 				external.push(
 					'node:assert',
 					'node:async_hooks',
