@@ -91,7 +91,7 @@ export default {
 };
 ```
 
-You will also need to [Enable Node.js with Workers](https://developers.cloudflare.com/workers/runtime-apis/nodejs/#enable-nodejs-with-workers).
+You will also need to [enable Node.js with Workers](https://developers.cloudflare.com/workers/runtime-apis/nodejs/#enable-nodejs-with-workers).
 
 ## Bindings
 
