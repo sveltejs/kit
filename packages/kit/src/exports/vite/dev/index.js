@@ -32,8 +32,8 @@ export async function dev(vite, vite_config, svelte_config) {
 	const async_local_storage = new AsyncLocalStorage();
 
 	globalThis.__SVELTEKIT_TRACK__ = (label) => {
-		const { event, config } = async_local_storage.getStore();
-		if (!event) return;
+		const { event, config, prerender } = async_local_storage.getStore();
+		if (!event || prerender === true) return;
 
 		check_feature(event.route.id, config, label, svelte_config.kit.adapter);
 	};
@@ -137,8 +137,8 @@ export async function dev(vite, vite_config, svelte_config) {
 				server_assets: new Proxy(
 					{},
 					{
-						has: (_, /** @type {string} */ file) => fs.existsSync(file),
-						get: (_, /** @type {string} */ file) => fs.statSync(file).size
+						has: (_, /** @type {string} */ file) => fs.existsSync(file.replace(/^\/@fs/, '')),
+						get: (_, /** @type {string} */ file) => fs.statSync(file.replace(/^\/@fs/, '')).size
 					}
 				),
 				nodes: manifest_data.nodes.map((node, index) => {
@@ -490,7 +490,7 @@ export async function dev(vite, vite_config, svelte_config) {
 
 				await server.init({
 					env,
-					read: createReadableStream
+					read: (file) => createReadableStream(file.replace(/^\/@fs/, ''))
 				});
 
 				const request = await getRequest({
@@ -527,8 +527,8 @@ export async function dev(vite, vite_config, svelte_config) {
 						throw new Error('Could not determine clientAddress');
 					},
 					read: (file) => fs.readFileSync(path.join(svelte_config.kit.files.assets, file)),
-					before_handle: (event, config) => {
-						async_local_storage.enterWith({ event, config });
+					before_handle: (event, config, prerender) => {
+						async_local_storage.enterWith({ event, config, prerender });
 					}
 				});
 

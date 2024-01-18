@@ -1,5 +1,6 @@
 import { read_implementation, manifest } from '__sveltekit/server';
 import { base } from '__sveltekit/paths';
+import { DEV } from 'esm-env';
 
 /**
  * Read the contents of an imported asset from the filesystem
@@ -39,7 +40,7 @@ export function read(asset) {
 		});
 	}
 
-	const file = asset.slice(base.length + 1);
+	const file = DEV && asset.startsWith('/@fs') ? asset : asset.slice(base.length + 1);
 
 	if (file in manifest._.server_assets) {
 		const length = manifest._.server_assets[file];

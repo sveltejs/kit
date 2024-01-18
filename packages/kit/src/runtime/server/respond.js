@@ -274,15 +274,20 @@ export async function respond(request, options, manifest, state) {
 			if (DEV && state.before_handle) {
 				let config = {};
 
+				/** @type {import('types').PrerenderOption} */
+				let prerender = false;
+
 				if (route.endpoint) {
 					const node = await route.endpoint();
-					config = node.config;
+					config = node.config ?? config;
+					prerender = node.prerender ?? prerender;
 				} else if (route.page) {
 					const nodes = await load_page_nodes(route.page, manifest);
 					config = get_page_config(nodes);
+					prerender = get_option(nodes, 'prerender') ?? false;
 				}
 
-				state.before_handle(event, config);
+				state.before_handle(event, config, prerender);
 			}
 		}
 

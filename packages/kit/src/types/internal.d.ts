@@ -124,7 +124,7 @@ export class InternalServer extends Server {
 		options: RequestOptions & {
 			prerendering?: PrerenderOptions;
 			read: (file: string) => Buffer;
-			before_handle?: (event: RequestEvent, config: any) => void;
+			before_handle?: (event: RequestEvent, config: any, prerender: PrerenderOption) => void;
 		}
 	): Promise<Response>;
 }
@@ -414,7 +414,7 @@ export interface SSRState {
 	 */
 	prerender_default?: PrerenderOption;
 	read?: (file: string) => Buffer;
-	before_handle?: (event: RequestEvent, config: any) => void;
+	before_handle?: (event: RequestEvent, config: any, prerender: PrerenderOption) => void;
 }
 
 export type StrictBody = string | ArrayBufferView;
