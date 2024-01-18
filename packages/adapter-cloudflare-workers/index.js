@@ -61,6 +61,23 @@ export default function (options = { config: 'wrangler.toml' }) {
 				})};\n\nexport const prerendered = new Map(${JSON.stringify(prerendered_entries)});\n`
 			);
 
+			const external = ['__STATIC_CONTENT_MANIFEST', 'cloudflare:*'];
+			if (options.nodeCompat) {
+				external.push(
+					'node:assert',
+					'node:async_hooks',
+					'node:buffer',
+					'node:crypto',
+					'node:diagnostics_channel',
+					'node:events',
+					'node:path',
+					'node:process',
+					'node:stream',
+					'node:string_decoder',
+					'node:util'
+				);
+			}
+
 			await esbuild.build({
 				platform: 'browser',
 				conditions: ['worker', 'browser'],
@@ -69,11 +86,7 @@ export default function (options = { config: 'wrangler.toml' }) {
 				entryPoints: [`${tmp}/entry.js`],
 				outfile: main,
 				bundle: true,
-				external: [
-					'__STATIC_CONTENT_MANIFEST',
-					'cloudflare:*',
-					...(options.nodeCompat ? ['node:*'] : [])
-				],
+				external,
 				format: 'esm',
 				loader: {
 					'.wasm': 'copy'
