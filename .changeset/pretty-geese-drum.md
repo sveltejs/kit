@@ -1,6 +1,6 @@
 ---
-'@sveltejs/adapter-cloudflare-workers': patch
-'@sveltejs/adapter-cloudflare': patch
+'@sveltejs/adapter-cloudflare-workers': minor
+'@sveltejs/adapter-cloudflare': minor
 ---
 
-fix: Add Node.js compatibility to adapter-cloudflare and adapter-cloudflare-workers
+feat: Add Node.js compatibility
