@@ -1903,7 +1903,7 @@ declare module '@sveltejs/kit/node' {
 	/**
 	 * Converts a file on disk to a readable stream
 	 * */
-	export function createReadable(file: string): ReadableStream;
+	export function createReadableStream(file: string): ReadableStream;
 }
 
 declare module '@sveltejs/kit/node/polyfills' {

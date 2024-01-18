@@ -36,7 +36,7 @@ export interface Adapter {
 	 */
 	adapt(builder: Builder): MaybePromise<void>;
 	/**
-	 * Functions called during dev and build to determine whether specific features will work in production with this adapter
+	 * Checks called during dev and build to determine whether specific features will work in production with this adapter
 	 */
 	supports?: {
 		/**
@@ -109,7 +109,6 @@ export interface Builder {
 
 	/**
 	 * Find all the assets imported by server files belonging to `routes`
-	 * @param routes
 	 */
 	findServerAssets(routes: RouteDefinition[]): string[];
 
