@@ -11,6 +11,7 @@ import { get_env } from '../../exports/vite/utils.js';
 import generate_fallback from '../postbuild/fallback.js';
 import { write } from '../sync/utils.js';
 import { list_files } from '../utils.js';
+import { find_server_assets } from '../generate_manifest/find_server_assets.js';
 
 const pipe = promisify(pipeline);
 const extensions = ['.html', '.js', '.mjs', '.json', '.css', '.svg', '.xml', '.wasm'];
@@ -143,6 +144,13 @@ export function create_builder({
 					});
 				}
 			}
+		},
+
+		findServerAssets(route_data) {
+			return find_server_assets(
+				build_data,
+				route_data.map((route) => /** @type {import('types').RouteData} */ (lookup.get(route)))
+			);
 		},
 
 		async generateFallback(dest) {

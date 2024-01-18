@@ -16,3 +16,13 @@ declare module '__sveltekit/paths' {
 	export function override(paths: { base: string; assets: string }): void;
 	export function set_assets(path: string): void;
 }
+
+/** Internal version of $app/server */
+declare module '__sveltekit/server' {
+	import { SSRManifest } from '@sveltejs/kit';
+
+	export let manifest: SSRManifest;
+	export function read_implementation(path: string): ReadableStream;
+	export function set_manifest(manifest: SSRManifest): void;
+	export function set_read_implementation(fn: (path: string) => ReadableStream): void;
+}

@@ -1,4 +1,4 @@
-import { base as app_base } from '$app/paths';
+import { base } from '$app/paths';
 import { modules } from '$lib/generated/type-info.js';
 import {
 	escape,
@@ -8,108 +8,97 @@ import {
 	removeMarkdown,
 	replaceExportTypePlaceholders
 } from '@sveltejs/site-kit/markdown';
-import { readFile, readdir } from 'node:fs/promises';
-import { CONTENT_BASE_PATHS } from '../../../constants.js';
 import { render_content } from '../renderer';
+import { read } from '$app/server';
+import { error } from '@sveltejs/kit';
 
-/**
- * @param {import('./types.js').DocsData} docs_data
- * @param {string} slug
- */
-export async function get_parsed_docs(docs_data, slug) {
-	for (const { pages } of docs_data) {
-		for (const page of pages) {
-			if (page.slug === slug) {
-				return {
-					...page,
-					content: await render_content(page.file, page.content)
-				};
-			}
-		}
-	}
+const meta = import.meta.glob('../../../../../../documentation/docs/*/meta.json', {
+	as: 'url',
+	eager: true
+});
+
+const markdown = import.meta.glob('../../../../../../documentation/docs/*/*.md', {
+	as: 'url',
+	eager: true
+});
+
+export const categories = {};
+export const pages = {};
+
+for (const [file, asset] of Object.entries(meta)) {
+	const slug = /\/\d{2}-(.+)\/meta\.json$/.exec(file)[1];
+
+	const { title, draft } = await read(asset).json();
+
+	if (draft) continue;
+
+	categories[slug] = {
+		title,
+		pages: []
+	};
 }
 
-/** @return {Promise<import('./types.js').DocsData>} */
-export async function get_docs_data(base = CONTENT_BASE_PATHS.DOCS) {
-	/** @type {import('./types.js').DocsData} */
-	const docs_data = [];
+for (const [file, asset] of Object.entries(markdown)) {
+	const [, category_dir, basename] = /\/(\d{2}-.+?)\/(\d{2}-.+\.md)$/.exec(file);
+	const category_slug = category_dir.slice(3);
+	const slug = basename.slice(3, -3); // strip the number prefix and .md suffix
 
-	for (const category_dir of await readdir(base)) {
-		const match = /\d{2}-(.+)/.exec(category_dir);
-		if (!match) continue;
+	const category = categories[category_slug];
+	if (!category) continue; // draft
 
-		const category_slug = match[1];
+	const {
+		metadata: { draft, title, rank },
+		body
+	} = extractFrontmatter(await read(asset).text());
 
-		// Read the meta.json
-		const { title: category_title, draft = 'false' } = JSON.parse(
-			await readFile(`${base}/${category_dir}/meta.json`, 'utf-8')
-		);
+	if (draft === 'true') continue;
 
-		if (draft === 'true') continue;
+	category.pages.push({
+		title,
+		path: `${base}/docs/${slug}`
+	});
 
-		/** @type {import('./types.js').Category} */
-		const category = {
-			title: category_title,
-			slug: category_slug,
-			pages: []
-		};
-
-		for (const page_md of (await readdir(`${base}/${category_dir}`)).filter(
-			(filename) => filename !== 'meta.json'
-		)) {
-			const match = /\d{2}-(.+)/.exec(page_md);
-			if (!match) continue;
-
-			const page_slug = match[1].replace('.md', '');
-
-			const page_data = extractFrontmatter(
-				await readFile(`${base}/${category_dir}/${page_md}`, 'utf-8')
-			);
-
-			if (page_data.metadata.draft === 'true') continue;
-
-			const page_title = page_data.metadata.title;
-			const page_content = page_data.body;
-
-			category.pages.push({
-				title: page_title,
-				slug: page_slug,
-				content: page_content,
-				category: category_title,
-				sections: await get_sections(page_content),
-				path: `${app_base}/docs/${page_slug}`,
-				file: `${category_dir}/${page_md}`
-			});
-		}
-
-		docs_data.push(category);
-	}
-
-	return docs_data;
+	pages[slug] = {
+		rank: +rank || undefined,
+		category: category.title,
+		title,
+		file: `${category_dir}/${basename}`,
+		sections: await get_sections(body),
+		body
+	};
 }
 
-/** @param {import('./types.js').DocsData} docs_data */
-export function get_docs_list(docs_data) {
-	return docs_data.map((category) => ({
-		title: category.title,
-		pages: category.pages.map((page) => ({
-			title: page.title,
-			path: page.path
-		}))
-	}));
+/** @param {string} slug */
+export async function get_parsed_docs(slug) {
+	const page = pages[slug];
+	if (!page) error(404);
+
+	// TODO this should probably use a type from site-kit
+	return {
+		category: page.category,
+		title: page.title,
+		file: page.file,
+		sections: page.sections,
+		content: await render_content(page.file, page.body)
+	};
+}
+
+export function get_docs_list() {
+	return Object.values(categories);
 }
 
 /** @param {string} markdown */
 async function get_sections(markdown) {
-	const headingRegex = /^##\s+(.*)$/gm;
 	/** @type {import('./types.js').Section[]} */
-	const secondLevelHeadings = [];
+	const second_level_headings = [];
+
+	const pattern = /^##\s+(.*)$/gm;
 	let match;
 
 	const placeholders_rendered = await replaceExportTypePlaceholders(markdown, modules);
 
-	while ((match = headingRegex.exec(placeholders_rendered)) !== null) {
-		secondLevelHeadings.push({
+	while ((match = pattern.exec(placeholders_rendered)) !== null) {
+		second_level_headings.push({
 			title: removeMarkdown(
 				escape(await markedTransform(match[1], { paragraph: (txt) => txt }))
 					.replace(/<\/?code>/g, '')
@@ -123,5 +112,5 @@ async function get_sections(markdown) {
 		});
 	}
 
-	return secondLevelHeadings;
+	return second_level_headings;
 }

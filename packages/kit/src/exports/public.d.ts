@@ -35,6 +35,16 @@ export interface Adapter {
 	 * @param builder An object provided by SvelteKit that contains methods for adapting the app
 	 */
 	adapt(builder: Builder): MaybePromise<void>;
+	/**
+	 * Checks called during dev and build to determine whether specific features will work in production with this adapter
+	 */
+	supports?: {
+		/**
+		 * Test support for `read` from `$app/server`
+		 * @param config The merged route config
+		 */
+		read?: (details: { config: any; route: { id: string } }) => boolean;
+	};
 }
 
 export type LoadProperties<input extends Record<string, any> | void> = input extends void
@@ -89,12 +99,18 @@ export interface Builder {
 	/** An array of all routes (including prerendered) */
 	routes: RouteDefinition[];
 
+	// TODO 3.0 remove this method
 	/**
 	 * Create separate functions that map to one or more routes of your app.
 	 * @param fn A function that groups a set of routes into an entry point
 	 * @deprecated Use `builder.routes` instead
 	 */
 	createEntries(fn: (route: RouteDefinition) => AdapterEntry): Promise<void>;
+
+	/**
+	 * Find all the assets imported by server files belonging to `routes`
+	 */
+	findServerAssets(routes: RouteDefinition[]): string[];
 
 	/**
 	 * Generate a fallback page for a static webserver to use when no route is matched. Useful for single-page apps.
@@ -1144,7 +1160,10 @@ export class Server {
 }
 
 export interface ServerInitOptions {
+	/** A map of environment variables */
 	env: Record<string, string>;
+	/** A function that turns an asset filename into a `ReadableStream`. Required for the `read` export from `$app/server` to work */
+	read?: (file: string) => ReadableStream;
 }
 
 export interface SSRManifest {
@@ -1159,6 +1178,8 @@ export interface SSRManifest {
 		nodes: SSRNodeLoader[];
 		routes: SSRRoute[];
 		matchers(): Promise<Record<string, ParamMatcher>>;
+		/** A `[file]: size` map of all assets imported by server code */
+		server_assets: Record<string, number>;
 	};
 }
 

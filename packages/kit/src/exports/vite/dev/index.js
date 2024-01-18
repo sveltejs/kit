@@ -1,10 +1,11 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { URL } from 'node:url';
+import { AsyncLocalStorage } from 'node:async_hooks';
 import colors from 'kleur';
 import sirv from 'sirv';
 import { isCSSRequest, loadEnv, buildErrorMessage } from 'vite';
-import { getRequest, setResponse } from '../../../exports/node/index.js';
+import { createReadableStream, getRequest, setResponse } from '../../../exports/node/index.js';
 import { installPolyfills } from '../../../exports/node/polyfills.js';
 import { coalesce_to_error } from '../../../utils/error.js';
 import { posixify, resolve_entry, to_fs } from '../../../utils/filesystem.js';
@@ -15,6 +16,7 @@ import { get_mime_lookup, runtime_base } from '../../../core/utils.js';
 import { compact } from '../../../utils/array.js';
 import { not_found } from '../utils.js';
 import { SCHEME } from '../../../utils/url.js';
+import { check_feature } from '../../../utils/features.js';
 
 const cwd = process.cwd();
 
@@ -26,6 +28,15 @@ const cwd = process.cwd();
  */
 export async function dev(vite, vite_config, svelte_config) {
 	installPolyfills();
+
+	const async_local_storage = new AsyncLocalStorage();
+
+	globalThis.__SVELTEKIT_TRACK__ = (label) => {
+		const context = async_local_storage.getStore();
+		if (!context || context.prerender === true) return;
+
+		check_feature(context.event.route.id, context.config, label, svelte_config.kit.adapter);
+	};
 
 	const fetch = globalThis.fetch;
 	globalThis.fetch = (info, init) => {
@@ -123,6 +134,13 @@ export async function dev(vite, vite_config, svelte_config) {
 					fonts: [],
 					uses_env_dynamic_public: true
 				},
+				server_assets: new Proxy(
+					{},
+					{
+						has: (_, /** @type {string} */ file) => fs.existsSync(file.replace(/^\/@fs/, '')),
+						get: (_, /** @type {string} */ file) => fs.statSync(file.replace(/^\/@fs/, '')).size
+					}
+				),
 				nodes: manifest_data.nodes.map((node, index) => {
 					return async () => {
 						/** @type {import('types').SSRNode} */
@@ -470,7 +488,10 @@ export async function dev(vite, vite_config, svelte_config) {
 
 				const server = new Server(manifest);
 
-				await server.init({ env });
+				await server.init({
+					env,
+					read: (file) => createReadableStream(file.replace(/^\/@fs/, ''))
+				});
 
 				const request = await getRequest({
 					base,
@@ -505,7 +526,10 @@ export async function dev(vite, vite_config, svelte_config) {
 						if (remoteAddress) return remoteAddress;
 						throw new Error('Could not determine clientAddress');
 					},
-					read: (file) => fs.readFileSync(path.join(svelte_config.kit.files.assets, file))
+					read: (file) => fs.readFileSync(path.join(svelte_config.kit.files.assets, file)),
+					before_handle: (event, config, prerender) => {
+						async_local_storage.enterWith({ event, config, prerender });
+					}
 				});
 
 				if (rendered.status === 404) {

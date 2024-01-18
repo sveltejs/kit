@@ -3,7 +3,7 @@ import { fetchBanner } from '@sveltejs/site-kit/components';
 export const prerender = true;
 
 export const load = async ({ url, fetch }) => {
-	const nav_links = fetch('/nav.json').then((r) => r.json());
+	const nav_links = fetch('/nav.json').then((r) => r.json()); // TODO why is this behind a `fetch`? does `nav.json` need to be exposed publicly?
 	const banner = fetchBanner('kit.svelte.dev', fetch);
 
 	return {

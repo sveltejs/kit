@@ -50,6 +50,6 @@
 		"rollup": "^4.9.5"
 	},
 	"peerDependencies": {
-		"@sveltejs/kit": "^2.0.0"
+		"@sveltejs/kit": "^2.4.0"
 	}
 }

@@ -12,6 +12,7 @@ import { queue } from './queue.js';
 import { crawl } from './crawl.js';
 import { forked } from '../../utils/fork.js';
 import * as devalue from 'devalue';
+import { createReadableStream } from '@sveltejs/kit/node';
 
 export default forked(import.meta.url, prerender);
 
@@ -430,7 +431,10 @@ async function prerender({ out, manifest_path, metadata, verbose, env }) {
 	log.info('Prerendering');
 
 	const server = new Server(manifest);
-	await server.init({ env });
+	await server.init({
+		env,
+		read: (file) => createReadableStream(`${config.outDir}/output/server/${file}`)
+	});
 
 	for (const entry of config.prerender.entries) {
 		if (entry === '*') {
