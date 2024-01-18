@@ -1,5 +1,20 @@
 # @sveltejs/adapter-cloudflare
 
+## 4.1.0
+
+### Minor Changes
+
+- feat: more helpful errors when using incompatible Node modules ([#11673](https://github.com/sveltejs/kit/pull/11673))
+
+- feat: support compatible node modules without prefixes ([#11672](https://github.com/sveltejs/kit/pull/11672))
+
+- feat: Add Node.js compatibility ([#10544](https://github.com/sveltejs/kit/pull/10544))
+
+### Patch Changes
+
+- Updated dependencies [[`288f731c8a5b20cadb9e219f9583f3f16bf8c7b8`](https://github.com/sveltejs/kit/commit/288f731c8a5b20cadb9e219f9583f3f16bf8c7b8)]:
+  - @sveltejs/kit@2.4.0
+
 ## 4.0.2
 
 ### Patch Changes

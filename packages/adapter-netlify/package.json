@@ -1,6 +1,6 @@
 {
 	"name": "@sveltejs/adapter-netlify",
-	"version": "3.0.2",
+	"version": "4.0.0",
 	"description": "A SvelteKit adapter that creates a Netlify app",
 	"repository": {
 		"type": "git",

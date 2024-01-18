@@ -1,5 +1,11 @@
 # @sveltejs/kit
 
+## 2.4.0
+
+### Minor Changes
+
+- feat: add `$app/server` module with `read` function for reading assets from filesystem ([#11649](https://github.com/sveltejs/kit/pull/11649))
+
 ## 2.3.5
 
 ### Patch Changes
