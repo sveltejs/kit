@@ -88,15 +88,16 @@ export function get_docs_list() {
 
 /** @param {string} markdown */
 async function get_sections(markdown) {
-	const headingRegex = /^##\s+(.*)$/gm;
 	/** @type {import('./types.js').Section[]} */
-	const secondLevelHeadings = [];
+	const second_level_headings = [];
+
+	const pattern = /^##\s+(.*)$/gm;
 	let match;
 
 	const placeholders_rendered = await replaceExportTypePlaceholders(markdown, modules);
 
-	while ((match = headingRegex.exec(placeholders_rendered)) !== null) {
-		secondLevelHeadings.push({
+	while ((match = pattern.exec(placeholders_rendered)) !== null) {
+		second_level_headings.push({
 			title: removeMarkdown(
 				escape(await markedTransform(match[1], { paragraph: (txt) => txt }))
 					.replace(/<\/?code>/g, '')
@@ -110,5 +111,5 @@ async function get_sections(markdown) {
 		});
 	}
 
-	return secondLevelHeadings;
+	return second_level_headings;
 }
