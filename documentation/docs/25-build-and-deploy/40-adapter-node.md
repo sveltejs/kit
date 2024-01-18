@@ -118,6 +118,8 @@ We instead read from the _right_, accounting for the number of trusted proxies. 
 
 The maximum request body size to accept in bytes including while streaming. Defaults to 512kb. You can disable this option with a value of 0 and implement a custom check in [`handle`](hooks#server-hooks-handle) if you need something more advanced.
 
+The body size variable can also specify unit suffixes for kilobytes (`K`), megabytes (`M`), and gigabytes (`G`). For example `512K` and `1M`
+
 ## Options
 
 The adapter can be configured with various options:
