@@ -3,4 +3,4 @@
 '@sveltejs/adapter-cloudflare': patch
 ---
 
-fix: add `options.nodeCompat` to allow Node.js compatibility
+fix: Add Node.js compatibility to adapter-cloudflare and adapter-cloudflare-workers
