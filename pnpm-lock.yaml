@@ -64,8 +64,8 @@ importers:
         specifier: ^0.19.11
         version: 0.19.11
       worktop:
-        specifier: 0.8.0-next.16
-        version: 0.8.0-next.16
+        specifier: 0.8.0-next.18
+        version: 0.8.0-next.18
     devDependencies:
       '@sveltejs/kit':
         specifier: workspace:^
@@ -5445,15 +5445,9 @@ packages:
       set-function-name: 2.0.1
     dev: true
 
-  /regexparam@2.0.2:
-    resolution: {integrity: sha512-A1PeDEYMrkLrfyOwv2jwihXbo9qxdGD3atBYQA9JJgreAx8/7rC6IUkWOw2NQlOxLp2wL0ifQbh1HuidDfYA6w==}
-    engines: {node: '>=8'}
-    dev: false
-
   /regexparam@3.0.0:
     resolution: {integrity: sha512-RSYAtP31mvYLkAHrOlh25pCNQ5hWnT106VukGaaFfuJrZFkGRX5GhUAdPqpSDXxOhA2c4akmRuplv1mRqnBn6Q==}
     engines: {node: '>=8'}
-    dev: true
 
   /regjsparser@0.10.0:
     resolution: {integrity: sha512-qx+xQGZVsy55CH0a1hiVwHmqjLryfh7wQyF5HO07XJ9f7dQMY/gPQHhlyDkIzJKC+x2fUCpCcUODUUUFrm7SHA==}
@@ -6602,12 +6596,12 @@ packages:
       string-width: 4.2.3
     dev: false
 
-  /worktop@0.8.0-next.16:
-    resolution: {integrity: sha512-T/2AQoOONDNvGQUX+gwvFPhpej3BAVy3tA35oS0KfYWMiyvReOLh3WN0Iq67Y0rszuC96KVis9SD1S0H0t4hrw==}
+  /worktop@0.8.0-next.18:
+    resolution: {integrity: sha512-+TvsA6VAVoMC3XDKR5MoC/qlLqDixEfOBysDEKnPIPou/NvoPWCAuXHXMsswwlvmEuvX56lQjvELLyLuzTKvRw==}
     engines: {node: '>=12'}
     dependencies:
       mrmime: 2.0.0
-      regexparam: 2.0.2
+      regexparam: 3.0.0
     dev: false
 
   /wrap-ansi@6.2.0:
