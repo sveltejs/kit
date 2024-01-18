@@ -225,7 +225,11 @@ async function kit({ svelte_config }) {
 	const service_worker_entry_file = resolve_entry(kit.files.serviceWorker);
 	const parsed_service_worker = path.parse(kit.files.serviceWorker);
 
-	/** @type {Record<string, string[]>} */
+	/**
+	 * A map showing which features (such as `$app/server:read`) are defined
+	 * in which chunks, so that we can later determine which routes use which features
+	 * @type {Record<string, string[]>}
+	 */
 	const tracked_features = {};
 
 	const sourcemapIgnoreList = /** @param {string} relative_path */ (relative_path) =>
