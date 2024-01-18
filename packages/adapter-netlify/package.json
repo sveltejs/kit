@@ -51,6 +51,6 @@
 		"vitest": "^1.2.0"
 	},
 	"peerDependencies": {
-		"@sveltejs/kit": "^2.0.0"
+		"@sveltejs/kit": "^2.4.0"
 	}
 }

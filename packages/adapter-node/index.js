@@ -89,6 +89,10 @@ export default function (opts = {}) {
 					ENV_PREFIX: JSON.stringify(envPrefix)
 				}
 			});
+		},
+
+		supports: {
+			read: () => true
 		}
 	};
 }
