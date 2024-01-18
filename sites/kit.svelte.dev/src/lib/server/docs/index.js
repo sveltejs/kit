@@ -43,20 +43,23 @@ for (const [file, asset] of Object.entries(markdown)) {
 	const category_slug = category_dir.slice(3);
 	const slug = basename.slice(3, -3); // strip the number prefix and .md suffix
 
+	const category = categories[category_slug];
+	if (!category) continue; // draft
+
 	const {
 		metadata: { draft, title },
 		body
 	} = extractFrontmatter(await read(asset).text());
 
-	// skip draft pages/categories
-	if (draft === 'true' && !(category_slug in categories)) continue;
+	if (draft === 'true') continue;
 
-	categories[category_slug].pages.push({
+	category.pages.push({
 		title,
 		path: `${base}/docs/${slug}`
 	});
 
 	pages[slug] = {
+		category: category.title,
 		title,
 		file: `${category_dir}/${basename}`,
 		sections: await get_sections(body),
@@ -71,6 +74,7 @@ export async function get_parsed_docs(slug) {
 
 	// TODO this should probably use a type from site-kit
 	return {
+		category: page.category,
 		title: page.title,
 		file: page.file,
 		sections: page.sections,
