@@ -1902,7 +1902,8 @@ declare module '@sveltejs/kit/node' {
 	export function setResponse(res: import('http').ServerResponse, response: Response): Promise<void>;
 	/**
 	 * Converts a file on disk to a readable stream
-	 * */
+	 * @since 2.4.0
+	 */
 	export function createReadableStream(file: string): ReadableStream;
 }
 
@@ -2149,7 +2150,8 @@ declare module '$app/server' {
 	 * const asset = read(somefile);
 	 * const text = await asset.text();
 	 * ```
-	 * */
+	 * @since 2.4.0
+	 */
 	export function read(asset: string): Response;
 }
 
