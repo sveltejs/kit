@@ -1,8 +1,7 @@
 import { find_deps } from '../../exports/vite/build/utils.js';
 
 /**
- * Generates the data used to write the server-side manifest.js file. This data is used in the Vite
- * build process, to power routing, etc.
+ * Finds all the assets that are imported by server files associated with `routes`
  * @param {import('types').BuildData} build_data
  * @param {import('types').RouteData[]} routes
  */
