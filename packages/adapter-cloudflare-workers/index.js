@@ -11,6 +11,7 @@ import { fileURLToPath } from 'node:url';
  *   site: {
  *     bucket: string;
  *   }
+ *   compatibility_flags?: string[];
  * }} WranglerConfig
  */
 
@@ -20,7 +21,7 @@ export default function ({ config = 'wrangler.toml' } = {}) {
 		name: '@sveltejs/adapter-cloudflare-workers',
 
 		async adapt(builder) {
-			const { main, site } = validate_config(builder, config);
+			const { main, site, compatibility_flags } = validate_config(builder, config);
 
 			const files = fileURLToPath(new URL('./files', import.meta.url).href);
 			const tmp = builder.getBuildDirectory('cloudflare-workers-tmp');
@@ -61,6 +62,23 @@ export default function ({ config = 'wrangler.toml' } = {}) {
 				})};\n\nexport const prerendered = new Map(${JSON.stringify(prerendered_entries)});\n`
 			);
 
+			const external = ['__STATIC_CONTENT_MANIFEST', 'cloudflare:*'];
+			if (compatibility_flags && compatibility_flags.includes('nodejs_compat')) {
+				external.push(
+					'node:assert',
+					'node:async_hooks',
+					'node:buffer',
+					'node:crypto',
+					'node:diagnostics_channel',
+					'node:events',
+					'node:path',
+					'node:process',
+					'node:stream',
+					'node:string_decoder',
+					'node:util'
+				);
+			}
+
 			await esbuild.build({
 				platform: 'browser',
 				conditions: ['worker', 'browser'],
@@ -69,7 +87,7 @@ export default function ({ config = 'wrangler.toml' } = {}) {
 				entryPoints: [`${tmp}/entry.js`],
 				outfile: main,
 				bundle: true,
-				external: ['__STATIC_CONTENT_MANIFEST', 'cloudflare:*'],
+				external,
 				format: 'esm',
 				loader: {
 					'.wasm': 'copy'

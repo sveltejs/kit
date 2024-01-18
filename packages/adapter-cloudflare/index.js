@@ -53,6 +53,21 @@ export default function (options = {}) {
 				}
 			});
 
+			const external = [
+				'cloudflare:*',
+				'node:assert',
+				'node:async_hooks',
+				'node:buffer',
+				'node:crypto',
+				'node:diagnostics_channel',
+				'node:events',
+				'node:path',
+				'node:process',
+				'node:stream',
+				'node:string_decoder',
+				'node:util'
+			];
+
 			await esbuild.build({
 				platform: 'browser',
 				conditions: ['worker', 'browser'],
@@ -66,7 +81,7 @@ export default function (options = {}) {
 				loader: {
 					'.wasm': 'copy'
 				},
-				external: ['cloudflare:*']
+				external
 			});
 		}
 	};
