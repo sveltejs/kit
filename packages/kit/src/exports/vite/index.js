@@ -714,6 +714,7 @@ async function kit({ svelte_config }) {
 				return {
 					code: code.replace(/__SVELTEKIT_TRACK__\('(.+?)'\)/g, (_, label) => {
 						(tracked_features[chunk.name + '.js'] ??= []).push(label);
+						// put extra whitespace at the end of the comment to preserve the source size and avoid interfering with source maps
 						return `/* track ${label}            */`;
 					}),
 					map: null // TODO we may need to generate a sourcemap in future

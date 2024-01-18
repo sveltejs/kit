@@ -24,7 +24,7 @@ export default function (options) {
 		supports: {
 			read: ({ config, route }) => {
 				// Return `true` if the route with the given `config` can use `read`
-				// from `$app/server` in production, return `false`` if it can't.
+				// from `$app/server` in production, return `false` if it can't.
 				// Or throw a descriptive error describing how to configure the deployment
 			}
 		}
