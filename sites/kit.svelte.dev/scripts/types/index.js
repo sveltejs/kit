@@ -310,22 +310,6 @@ for (const file of await readdir(dir)) {
 	}
 }
 
-// need to do some unfortunate finagling here, hopefully we can remove this one day
-const app_paths = modules.find((module) => module.name === '$app/paths');
-const app_environment = modules.find((module) => module.name === '$app/environment');
-const __sveltekit_paths = modules.find((module) => module.name === '__sveltekit/paths');
-const __sveltekit_environment = modules.find((module) => module.name === '__sveltekit/environment');
-
-app_paths?.exports.push(
-	__sveltekit_paths.exports.find((e) => e.name === 'assets'),
-	__sveltekit_paths.exports.find((e) => e.name === 'base')
-);
-
-app_environment?.exports.push(
-	__sveltekit_environment.exports.find((e) => e.name === 'building'),
-	__sveltekit_environment.exports.find((e) => e.name === 'version')
-);
-
 modules.sort((a, b) => (a.name < b.name ? -1 : 1));
 
 mkdirp('src/lib/generated');

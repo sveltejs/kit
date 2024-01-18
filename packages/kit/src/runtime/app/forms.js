@@ -1,23 +1,9 @@
 import * as devalue from 'devalue';
-import { BROWSER, DEV } from 'esm-env';
-import { client } from '../client/singletons.js';
+import { DEV } from 'esm-env';
 import { invalidateAll } from './navigation.js';
+import { applyAction } from '../client/client.js';
 
-/**
- * This action updates the `form` property of the current page with the given data and updates `$page.status`.
- * In case of an error, it redirects to the nearest error page.
- * @template {Record<string, unknown> | undefined} Success
- * @template {Record<string, unknown> | undefined} Failure
- * @param {import('@sveltejs/kit').ActionResult<Success, Failure>} result
- * @returns {Promise<void>}
- */
-export function applyAction(result) {
-	if (BROWSER) {
-		return client.apply_action(result);
-	} else {
-		throw new Error('Cannot call applyAction(...) on the server');
-	}
-}
+export { applyAction };
 
 /**
  * Use this function to deserialize the response from a form submission.

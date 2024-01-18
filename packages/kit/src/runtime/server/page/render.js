@@ -297,11 +297,21 @@ export async function render_response({
 
 		const blocks = [];
 
-		const properties = [
-			paths.assets && `assets: ${s(paths.assets)}`,
-			`base: ${base_expression}`,
-			`env: ${!client.uses_env_dynamic_public || state.prerendering ? null : s(public_env)}`
-		].filter(Boolean);
+		// when serving a prerendered page in an app that uses $env/dynamic/public, we must
+		// import the env.js module so that it evaluates before any user code can evaluate.
+		// TODO revert to using top-level await once https://bugs.webkit.org/show_bug.cgi?id=242740 is fixed
+		// https://github.com/sveltejs/kit/pull/11601
+		const load_env_eagerly = client.uses_env_dynamic_public && state.prerendering;
+
+		const properties = [`base: ${base_expression}`];
+
+		if (paths.assets) {
+			properties.push(`assets: ${s(paths.assets)}`);
+		}
+
+		if (client.uses_env_dynamic_public) {
+			properties.push(`env: ${load_env_eagerly ? 'null' : s(public_env)}`);
+		}
 
 		if (chunks) {
 			blocks.push('const deferred = new Map();');
@@ -319,6 +329,7 @@ export async function render_response({
 						}`);
 		}
 
+		// create this before declaring `data`, which may contain references to `${global}`
 		blocks.push(`${global} = {
 						${properties.join(',\n\t\t\t\t\t\t')}
 					};`);
@@ -358,15 +369,29 @@ export async function render_response({
 				hydrate.push(`params: ${devalue.uneval(event.params)}`, `route: ${s(event.route)}`);
 			}
 
-			args.push(`{\n\t\t\t\t\t\t\t${hydrate.join(',\n\t\t\t\t\t\t\t')}\n\t\t\t\t\t\t}`);
+			const indent = '\t'.repeat(load_env_eagerly ? 7 : 6);
+			args.push(`{\n${indent}\t${hydrate.join(`,\n${indent}\t`)}\n${indent}}`);
 		}
 
-		blocks.push(`Promise.all([
+		if (load_env_eagerly) {
+			blocks.push(`import(${s(`${base}/${options.app_dir}/env.js`)}).then(({ env }) => {
+						${global}.env = env;
+
+						Promise.all([
+							import(${s(prefixed(client.start))}),
+							import(${s(prefixed(client.app))})
+						]).then(([kit, app]) => {
+							kit.start(${args.join(', ')});
+						});
+					});`);
+		} else {
+			blocks.push(`Promise.all([
 						import(${s(prefixed(client.start))}),
 						import(${s(prefixed(client.app))})
 					]).then(([kit, app]) => {
 						kit.start(${args.join(', ')});
 					});`);
+		}
 
 		if (options.service_worker) {
 			const opts = __SVELTEKIT_DEV__ ? ", { type: 'module' }" : '';

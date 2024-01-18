@@ -7,4 +7,5 @@ declare module 'MANIFEST' {
 
 	export const manifest: SSRManifest;
 	export const prerendered: Set<string>;
+	export const app_path: string;
 }

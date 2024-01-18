@@ -1,5 +1,11 @@
 # @sveltejs/adapter-auto
 
+## 3.1.0
+
+### Minor Changes
+
+- feat: bump Azure adapter version ([#11496](https://github.com/sveltejs/kit/pull/11496))
+
 ## 3.0.1
 
 ### Patch Changes

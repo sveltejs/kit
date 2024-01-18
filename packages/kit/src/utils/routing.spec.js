@@ -61,11 +61,6 @@ describe('parse_route_id', () => {
 			expect(actual.params).toEqual(expected.params);
 		});
 	}
-
-	test('errors on bad param name', () => {
-		assert.throws(() => parse_route_id('abc/[b-c]'), /Invalid param: b-c/);
-		assert.throws(() => parse_route_id('abc/[bc=d-e]'), /Invalid param: bc=d-e/);
-	});
 });
 
 describe('exec', () => {

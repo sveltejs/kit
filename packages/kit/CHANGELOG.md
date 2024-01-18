@@ -1,5 +1,113 @@
 # @sveltejs/kit
 
+## 2.3.5
+
+### Patch Changes
+
+- fix: log a warning if fallback page overwrites prerendered page ([#11661](https://github.com/sveltejs/kit/pull/11661))
+
+## 2.3.4
+
+### Patch Changes
+
+- fix: don't stash away original `history` methods so other libs can monkeypatch it ([#11657](https://github.com/sveltejs/kit/pull/11657))
+
+## 2.3.3
+
+### Patch Changes
+
+- fix: remove internal `__sveltekit/` module declarations from types ([#11620](https://github.com/sveltejs/kit/pull/11620))
+
+## 2.3.2
+
+### Patch Changes
+
+- fix: return plaintext 404 for anything under appDir ([#11597](https://github.com/sveltejs/kit/pull/11597))
+
+- fix: populate dynamic public env without using top-level await, which fails in Safari ([#11601](https://github.com/sveltejs/kit/pull/11601))
+
+## 2.3.1
+
+### Patch Changes
+
+- fix: amend onNavigate type ([#11599](https://github.com/sveltejs/kit/pull/11599))
+
+- fix: better error message when peer dependency cannot be found ([#11598](https://github.com/sveltejs/kit/pull/11598))
+
+## 2.3.0
+
+### Minor Changes
+
+- feat: add `reroute` hook ([#11537](https://github.com/sveltejs/kit/pull/11537))
+
+## 2.2.2
+
+### Patch Changes
+
+- fix: only add nonce to `style-src` CSP directive when `unsafe-inline` is not present ([#11575](https://github.com/sveltejs/kit/pull/11575))
+
+## 2.2.1
+
+### Patch Changes
+
+- feat: add CSP support for style-src-elem ([#11562](https://github.com/sveltejs/kit/pull/11562))
+
+- fix: address CSP conflicts with sha/nonce during dev ([#11562](https://github.com/sveltejs/kit/pull/11562))
+
+## 2.2.0
+
+### Minor Changes
+
+- feat: expose `$env/static/public` in service workers ([#10994](https://github.com/sveltejs/kit/pull/10994))
+
+### Patch Changes
+
+- fix: reload page on startup if `document.URL` contains credentials ([#11179](https://github.com/sveltejs/kit/pull/11179))
+
+## 2.1.2
+
+### Patch Changes
+
+- fix: restore invalid route error message during build process ([#11559](https://github.com/sveltejs/kit/pull/11559))
+
+## 2.1.1
+
+### Patch Changes
+
+- fix: respect the trailing slash option when navigating from the basepath root page ([#11388](https://github.com/sveltejs/kit/pull/11388))
+
+- chore: shrink error messages shipped to client ([#11551](https://github.com/sveltejs/kit/pull/11551))
+
+## 2.1.0
+
+### Minor Changes
+
+- feat: make client router treeshakeable ([#11340](https://github.com/sveltejs/kit/pull/11340))
+
+### Patch Changes
+
+- chore: reduce client bundle size ([#11547](https://github.com/sveltejs/kit/pull/11547))
+
+## 2.0.8
+
+### Patch Changes
+
+- fix: always scroll to top when clicking a # or #top link ([`099608c428a49504785eab3afe3b2e76a9317bdf`](https://github.com/sveltejs/kit/commit/099608c428a49504785eab3afe3b2e76a9317bdf))
+
+- fix: add nonce or hash to "script-src-elem", "style-src-attr" and "style-src-elem" if defined in CSP config ([#11485](https://github.com/sveltejs/kit/pull/11485))
+
+- fix: decode server data with `stream: true` during client-side navigation ([#11409](https://github.com/sveltejs/kit/pull/11409))
+
+- fix: capture scroll position when using `pushState` ([#11540](https://github.com/sveltejs/kit/pull/11540))
+
+- chore: use peer dependencies when linked ([#11433](https://github.com/sveltejs/kit/pull/11433))
+
+## 2.0.7
+
+### Patch Changes
+
+- chore: removed deprecated config.package type ([#11462](https://github.com/sveltejs/kit/pull/11462))
+
 ## 2.0.6
 
 ### Patch Changes

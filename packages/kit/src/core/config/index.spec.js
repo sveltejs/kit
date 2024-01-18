@@ -79,7 +79,8 @@ const get_defaults = (prefix = '') => ({
 			assets: join(prefix, 'static'),
 			hooks: {
 				client: join(prefix, 'src/hooks.client'),
-				server: join(prefix, 'src/hooks.server')
+				server: join(prefix, 'src/hooks.server'),
+				universal: join(prefix, 'src/hooks')
 			},
 			lib: join(prefix, 'src/lib'),
 			params: join(prefix, 'src/params'),

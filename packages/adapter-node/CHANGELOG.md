@@ -1,5 +1,34 @@
 # @sveltejs/adapter-node
 
+## 3.0.1
+
+### Patch Changes
+
+- chore: upgrade rollup to 4.9.5 ([#11632](https://github.com/sveltejs/kit/pull/11632))
+
+## 3.0.0
+
+### Major Changes
+
+- breaking: allow any numeric value for `BODY_SIZE_LIMIT`, and interpret literally. Use `Infinity` rather than `0` for unrestricted body sizes ([#11589](https://github.com/sveltejs/kit/pull/11589))
+
+## 2.1.1
+
+### Patch Changes
+
+- fix: correctly handle BODY_SIZE_LIMIT=0 ([#11574](https://github.com/sveltejs/kit/pull/11574))
+
+## 2.1.0
+
+### Minor Changes
+
+- feat: add `PORT_HEADER` env var for reverse proxies with non-standard ports ([#11249](https://github.com/sveltejs/kit/pull/11249))
+
+### Patch Changes
+
+- Updated dependencies [[`9556abae4ba28c02ba468735beb9eb868876a9a1`](https://github.com/sveltejs/kit/commit/9556abae4ba28c02ba468735beb9eb868876a9a1), [`8468af597c6240f7a3687ef1ed3873990b944f8c`](https://github.com/sveltejs/kit/commit/8468af597c6240f7a3687ef1ed3873990b944f8c)]:
+  - @sveltejs/kit@2.1.1
+
 ## 2.0.2
 
 ### Patch Changes
