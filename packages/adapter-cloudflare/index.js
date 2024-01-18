@@ -3,6 +3,7 @@ import * as path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import * as esbuild from 'esbuild';
 
+// list from https://developers.cloudflare.com/workers/runtime-apis/nodejs/
 const compatible_node_modules = [
 	'assert',
 	'async_hooks',

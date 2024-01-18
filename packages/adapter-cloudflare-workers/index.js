@@ -15,6 +15,7 @@ import { fileURLToPath } from 'node:url';
  * }} WranglerConfig
  */
 
+// list from https://developers.cloudflare.com/workers/runtime-apis/nodejs/
 const compatible_node_modules = [
 	'assert',
 	'async_hooks',
