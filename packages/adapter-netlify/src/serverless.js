@@ -1,7 +1,7 @@
 import './shims';
 import { Server } from '0SERVER';
 import { split_headers } from './headers.js';
-import { createReadable } from '@sveltejs/kit/node';
+import { createReadableStream } from '@sveltejs/kit/node';
 
 /**
  * @param {import('@sveltejs/kit').SSRManifest} manifest
@@ -12,7 +12,7 @@ export function init(manifest) {
 
 	let init_promise = server.init({
 		env: process.env,
-		read: (file) => createReadable(`.netlify/server/${file}`)
+		read: (file) => createReadableStream(`.netlify/server/${file}`)
 	});
 
 	return async (event, context) => {

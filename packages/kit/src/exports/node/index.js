@@ -197,6 +197,6 @@ export async function setResponse(res, response) {
  * @param {string} file
  * @returns {ReadableStream}
  */
-export function createReadable(file) {
+export function createReadableStream(file) {
 	return /** @type {ReadableStream} */ (Readable.toWeb(createReadStream(file)));
 }

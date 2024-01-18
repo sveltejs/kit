@@ -4,7 +4,7 @@ import path from 'node:path';
 import sirv from 'sirv';
 import { fileURLToPath } from 'node:url';
 import { parse as polka_url_parser } from '@polka/url';
-import { getRequest, setResponse, createReadable } from '@sveltejs/kit/node';
+import { getRequest, setResponse, createReadableStream } from '@sveltejs/kit/node';
 import { Server } from 'SERVER';
 import { manifest, prerendered, base } from 'MANIFEST';
 import { env } from 'ENV';
@@ -33,7 +33,7 @@ const asset_dir = `${dir}/client${base}`;
 
 await server.init({
 	env: process.env,
-	read: (file) => createReadable(`${asset_dir}/${file}`)
+	read: (file) => createReadableStream(`${asset_dir}/${file}`)
 });
 
 /**

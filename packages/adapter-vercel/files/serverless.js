@@ -1,5 +1,5 @@
 import { installPolyfills } from '@sveltejs/kit/node/polyfills';
-import { getRequest, setResponse, createReadable } from '@sveltejs/kit/node';
+import { getRequest, setResponse, createReadableStream } from '@sveltejs/kit/node';
 import { Server } from 'SERVER';
 import { manifest } from 'MANIFEST';
 
@@ -9,7 +9,7 @@ const server = new Server(manifest);
 
 await server.init({
 	env: /** @type {Record<string, string>} */ (process.env),
-	read: createReadable
+	read: createReadableStream
 });
 
 const DATA_SUFFIX = '/__data.json';

@@ -4,7 +4,7 @@ import { pathToFileURL } from 'node:url';
 import { lookup } from 'mrmime';
 import sirv from 'sirv';
 import { loadEnv, normalizePath } from 'vite';
-import { createReadable, getRequest, setResponse } from '../../../exports/node/index.js';
+import { createReadableStream, getRequest, setResponse } from '../../../exports/node/index.js';
 import { installPolyfills } from '../../../exports/node/polyfills.js';
 import { SVELTE_KIT_ASSETS } from '../../../constants.js';
 import { not_found } from '../utils.js';
@@ -48,7 +48,7 @@ export async function preview(vite, vite_config, svelte_config) {
 	const server = new Server(manifest);
 	await server.init({
 		env: loadEnv(vite_config.mode, svelte_config.kit.env.dir, ''),
-		read: (file) => createReadable(`${dir}/${file}`)
+		read: (file) => createReadableStream(`${dir}/${file}`)
 	});
 
 	return () => {
