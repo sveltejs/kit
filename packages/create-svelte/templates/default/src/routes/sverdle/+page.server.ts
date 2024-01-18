@@ -45,7 +45,7 @@ export const actions = {
 			game.guesses[i] += key;
 		}
 
-		cookies.set('sverdle', game.toString());
+		cookies.set('sverdle', game.toString(), { path: '/' });
 	},
 
 	/**
@@ -62,10 +62,10 @@ export const actions = {
 			return fail(400, { badGuess: true });
 		}
 
-		cookies.set('sverdle', game.toString());
+		cookies.set('sverdle', game.toString(), { path: '/' });
 	},
 
 	restart: async ({ cookies }) => {
-		cookies.delete('sverdle');
+		cookies.delete('sverdle', { path: '/' });
 	}
 } satisfies Actions;

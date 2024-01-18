@@ -10,14 +10,14 @@ If the number of route segments is unknown, you can use rest syntax — for exam
 /[org]/[repo]/tree/[branch]/[...file]
 ```
 
-...in which case a request for `/sveltejs/kit/tree/master/documentation/docs/04-advanced-routing.md` would result in the following parameters being available to the page:
+...in which case a request for `/sveltejs/kit/tree/main/documentation/docs/04-advanced-routing.md` would result in the following parameters being available to the page:
 
 ```js
 // @noErrors
 {
 	org: 'sveltejs',
 	repo: 'kit',
-	branch: 'master',
+	branch: 'main',
 	file: 'documentation/docs/04-advanced-routing.md'
 }
 ```
@@ -57,7 +57,7 @@ import { error } from '@sveltejs/kit';
 
 /** @type {import('./$types').PageLoad} */
 export function load(event) {
-	throw error(404, 'Not Found');
+	error(404, 'Not Found');
 }
 ```
 
@@ -170,7 +170,7 @@ By default, the _layout hierarchy_ mirrors the _route hierarchy_. In some cases,
 
 ### (group)
 
-Perhaps you have some routes that are 'app' routes that should have one layout (e.g. `/dashboard` or `/item`), and others that are 'marketing' routes that should have a different layout (`/blog` or `/testimonials`). We can group these routes with a directory whose name is wrapped in parentheses — unlike normal directories, `(app)` and `(marketing)` do not affect the URL pathname of the routes inside them:
+Perhaps you have some routes that are 'app' routes that should have one layout (e.g. `/dashboard` or `/item`), and others that are 'marketing' routes that should have a different layout (`/about` or `/testimonials`). We can group these routes with a directory whose name is wrapped in parentheses — unlike normal directories, `(app)` and `(marketing)` do not affect the URL pathname of the routes inside them:
 
 ```diff
 src/routes/

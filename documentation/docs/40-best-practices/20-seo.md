@@ -14,7 +14,7 @@ While search engines have got better in recent years at indexing content that wa
 
 ### Performance
 
-Signals such as [Core Web Vitals](https://web.dev/vitals/#core-web-vitals) impact search engine ranking. Because Svelte and SvelteKit introduce minimal overhead, it's easier to build high performance sites. You can test your site's performance using Google's [PageSpeed Insights](https://pagespeed.web.dev/) or [Lighthouse](https://developers.google.com/web/tools/lighthouse).
+Signals such as [Core Web Vitals](https://web.dev/vitals/#core-web-vitals) impact search engine ranking. Because Svelte and SvelteKit introduce minimal overhead, it's easier to build high performance sites. You can test your site's performance using Google's [PageSpeed Insights](https://pagespeed.web.dev/) or [Lighthouse](https://developers.google.com/web/tools/lighthouse). Read [the performance page](performance) for more details.
 
 ### Normalized URLs
 
@@ -27,30 +27,6 @@ SvelteKit redirects pathnames with trailing slashes to ones without (or vice ver
 Every page should have well-written and unique `<title>` and `<meta name="description">` elements inside a [`<svelte:head>`](https://svelte.dev/docs#template-syntax-svelte-head). Guidance on how to write descriptive titles and descriptions, along with other suggestions on making content understandable by search engines, can be found on Google's [Lighthouse SEO audits](https://web.dev/lighthouse-seo/) documentation.
 
 > A common pattern is to return SEO-related `data` from page [`load`](load) functions, then use it (as [`$page.data`](modules#$app-stores)) in a `<svelte:head>` in your root [layout](routing#layout).
-
-### Structured data
-
-[Structured data](https://developers.google.com/search/docs/advanced/structured-data/intro-structured-data) helps search engines understand the content of a page. If you're using structured data alongside [`svelte-preprocess`](https://github.com/sveltejs/svelte-preprocess), you will need to explicitly preserve `ld+json` data (this [may change in future](https://github.com/sveltejs/svelte-preprocess/issues/305)):
-
-```js
-/// file: svelte.config.js
-// @filename: ambient.d.ts
-declare module 'svelte-preprocess';
-
-// @filename: index.js
-// ---cut---
-import preprocess from 'svelte-preprocess';
-
-/** @type {import('@sveltejs/kit').Config} */
-const config = {
-	preprocess: preprocess({
-		preserve: ['ld+json']
-		// ...
-	})
-};
-
-export default config;
-```
 
 ### Sitemaps
 
@@ -106,21 +82,64 @@ export default config;
 export const csr = false;
 ```
 
+...adding `amp` to your `app.html`
+
+```html
+<html amp>
+...
+```
+
 ...and transforming the HTML using `transformPageChunk` along with `transform` imported from `@sveltejs/amp`:
 
 ```js
+/// file: src/hooks.server.js
 import * as amp from '@sveltejs/amp';
 
 /** @type {import('@sveltejs/kit').Handle} */
 export async function handle({ event, resolve }) {
 	let buffer = '';
-	return resolve(event, {
+	return await resolve(event, {
 		transformPageChunk: ({ html, done }) => {
 			buffer += html;
-			if (done) return amp.transform(html);
+			if (done) return amp.transform(buffer);
 		}
 	});
 }
+```
+
+To prevent shipping any unused CSS as a result of transforming the page to amp, we can use [`dropcss`](https://www.npmjs.com/package/dropcss):
+
+```js
+/// file: src/hooks.server.js
+// @errors: 2307
+import * as amp from '@sveltejs/amp';
+import dropcss from 'dropcss';
+
+/** @type {import('@sveltejs/kit').Handle} */
+export async function handle({ event, resolve }) {
+	let buffer = '';
+
+	return await resolve(event, {
+		transformPageChunk: ({ html, done }) => {
+			buffer += html;
+
+			if (done) {
+				let css = '';
+				const markup = amp
+					.transform(buffer)
+					.replace('⚡', 'amp') // dropcss can't handle this character
+					.replace(/<style amp-custom([^>]*?)>([^]+?)<\/style>/, (match, attributes, contents) => {
+						css = contents;
+						return `<style amp-custom${attributes}></style>`;
+					});
+
+				css = dropcss({ css, html: markup }).css;
+				return markup.replace('</style>', `${css}</style>`);
+			}
+		}
+	});
+}
+
 ```
 
 > It's a good idea to use the `handle` hook to validate the transformed HTML using `amphtml-validator`, but only if you're prerendering pages since it's very slow.

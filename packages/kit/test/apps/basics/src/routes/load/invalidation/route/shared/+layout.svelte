@@ -10,5 +10,7 @@
 <a href="/load/invalidation/route/shared/a">/load/invalidation/route/shared/a</a>
 <a href="/load/invalidation/route/shared/b">/load/invalidation/route/shared/b</a>
 
-<a href="/load/invalidation/route/shared/unchanged-x">/load/invalidation/route/shared/unchanged-x</a>
-<a href="/load/invalidation/route/shared/unchanged-y">/load/invalidation/route/shared/unchanged-y</a>
+<a href="/load/invalidation/route/shared/unchanged-x">/load/invalidation/route/shared/unchanged-x</a
+>
+<a href="/load/invalidation/route/shared/unchanged-y">/load/invalidation/route/shared/unchanged-y</a
+>

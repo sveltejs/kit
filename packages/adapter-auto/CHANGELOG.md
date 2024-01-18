@@ -1,5 +1,35 @@
 # @sveltejs/adapter-auto
 
+## 3.1.0
+
+### Minor Changes
+
+- feat: bump Azure adapter version ([#11496](https://github.com/sveltejs/kit/pull/11496))
+
+## 3.0.1
+
+### Patch Changes
+
+- chore: update primary branch from master to main ([`47779436c5f6c4d50011d0ef8b2709a07c0fec5d`](https://github.com/sveltejs/kit/commit/47779436c5f6c4d50011d0ef8b2709a07c0fec5d))
+
+- Updated dependencies [[`47779436c5f6c4d50011d0ef8b2709a07c0fec5d`](https://github.com/sveltejs/kit/commit/47779436c5f6c4d50011d0ef8b2709a07c0fec5d), [`16961e8cd3fa6a7f382153b1ff056bc2aae9b31b`](https://github.com/sveltejs/kit/commit/16961e8cd3fa6a7f382153b1ff056bc2aae9b31b), [`197e01f95652f511160f38b37b9da73a124ecd48`](https://github.com/sveltejs/kit/commit/197e01f95652f511160f38b37b9da73a124ecd48), [`102e4a5ae5b29624302163faf5a20c94a64a5b2c`](https://github.com/sveltejs/kit/commit/102e4a5ae5b29624302163faf5a20c94a64a5b2c), [`f8e3d8b9728c9f1ab63389342c31d7246b6f9db6`](https://github.com/sveltejs/kit/commit/f8e3d8b9728c9f1ab63389342c31d7246b6f9db6)]:
+  - @sveltejs/kit@2.0.4
+
+## 3.0.0
+
+### Major Changes
+
+- breaking: require SvelteKit 2 ([#11316](https://github.com/sveltejs/kit/pull/11316))
+
+## 2.1.1
+
+### Patch Changes
+
+- chore(deps): update dependency `import-meta-resolve` to v4 ([#10970](https://github.com/sveltejs/kit/pull/10970))
+
+- Updated dependencies [[`072430ec5`](https://github.com/sveltejs/kit/commit/072430ec5c64782cd25c750f40534fea9cab4b40)]:
+  - @sveltejs/kit@1.27.3
+
 ## 2.1.0
 
 ### Minor Changes

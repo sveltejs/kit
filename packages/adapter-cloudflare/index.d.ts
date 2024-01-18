@@ -5,6 +5,18 @@ export default function plugin(options?: AdapterOptions): Adapter;
 
 export interface AdapterOptions {
 	/**
+	 * Whether to render a plaintext 404.html page, or a rendered SPA fallback page. This page will
+	 * only be served when a request that matches an entry in `routes.exclude` fails to match an asset.
+	 *
+	 * Most of the time `plaintext` is sufficient, but if you are using `routes.exclude` to manually
+	 * exclude a set of prerendered pages without exceeding the 100 route limit, you may wish to
+	 * use `spa` instead to avoid showing an unstyled 404 page to users.
+	 *
+	 * @default 'plaintext'
+	 */
+	fallback?: 'plaintext' | 'spa';
+
+	/**
 	 * Customize the automatically-generated `_routes.json` file
 	 * https://developers.cloudflare.com/pages/platform/functions/routing/#create-a-_routesjson-file
 	 */

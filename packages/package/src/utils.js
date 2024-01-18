@@ -63,7 +63,7 @@ export function write(file, contents) {
 /**
  * @param {string} input
  * @param {string[]} extensions
- * @returns {import('./types').File[]}
+ * @returns {import('./types.js').File[]}
  */
 export function scan(input, extensions) {
 	return walk(input).map((file) => analyze(file, extensions));
@@ -72,7 +72,7 @@ export function scan(input, extensions) {
 /**
  * @param {string} file
  * @param {string[]} extensions
- * @returns {import('./types').File}
+ * @returns {import('./types.js').File}
  */
 export function analyze(file, extensions) {
 	const name = posixify(file);
@@ -84,10 +84,10 @@ export function analyze(file, extensions) {
 	const dest = svelte_extension
 		? name.slice(0, -svelte_extension.length) + '.svelte'
 		: name.endsWith('.d.ts')
-		? name
-		: name.endsWith('.ts')
-		? name.slice(0, -3) + '.js'
-		: name;
+			? name
+			: name.endsWith('.ts')
+				? name.slice(0, -3) + '.js'
+				: name;
 
 	return {
 		name,

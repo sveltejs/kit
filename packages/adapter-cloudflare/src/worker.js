@@ -1,8 +1,11 @@
 import { Server } from 'SERVER';
-import { manifest, prerendered } from 'MANIFEST';
+import { manifest, prerendered, app_path } from 'MANIFEST';
 import * as Cache from 'worktop/cfw.cache';
 
 const server = new Server(manifest);
+
+const immutable = `/${app_path}/immutable/`;
+const version_file = `/${app_path}/version.json`;
 
 /** @type {import('worktop/cfw').Module.Worker<{ ASSETS: import('worktop/cfw.durable').Durable.Object }>} */
 const worker = {
@@ -14,7 +17,7 @@ const worker = {
 		let res = !pragma.includes('no-cache') && (await Cache.lookup(req));
 		if (res) return res;
 
-		let { pathname } = new URL(req.url);
+		let { pathname, search } = new URL(req.url);
 		try {
 			pathname = decodeURIComponent(pathname);
 		} catch {
@@ -31,11 +34,17 @@ const worker = {
 				manifest.assets.has(filename) || manifest.assets.has(filename + '/index.html');
 		}
 
-		const location = pathname.at(-1) === '/' ? stripped_pathname : pathname + '/';
+		let location = pathname.at(-1) === '/' ? stripped_pathname : pathname + '/';
 
-		if (is_static_asset || prerendered.has(pathname)) {
+		if (
+			is_static_asset ||
+			prerendered.has(pathname) ||
+			pathname === version_file ||
+			pathname.startsWith(immutable)
+		) {
 			res = await env.ASSETS.fetch(req);
 		} else if (location && prerendered.has(location)) {
+			if (search) location += search;
 			res = new Response('', {
 				status: 308,
 				headers: {

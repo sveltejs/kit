@@ -4,12 +4,13 @@
 		"checkJs": true,
 		"noEmit": true,
 		"noImplicitAny": true,
-		"module": "es2020",
-		"moduleResolution": "node",
+		"target": "es2022",
+		"module": "node16",
+		"moduleResolution": "node16",
 		"baseUrl": ".",
 		"paths": {
 			"@sveltejs/kit": ["../kit/types/index"]
 		}
 	},
-	"include": ["index.js", "placeholders.ts", "src/worker.js"]
+	"include": ["index.js", "placeholders.d.ts", "src/worker.js"]
 }

@@ -1,8 +1,8 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en" class="no-js">
 	<head>
 		<meta charset="utf-8" />
-		<meta name="viewport" content="width=device-width" />
+		<meta name="viewport" content="width=device-width, initial-scale=1" />
 		<meta name="theme-color" content="#ff3e00" />
 		<meta name="color-scheme" content="dark light" />
 
@@ -15,6 +15,13 @@
 		<meta name="twitter:image" content="/images/twitter-thumbnail.jpg" />
 		<meta name="og:image" content="/images/twitter-thumbnail.jpg" />
 
+		<link
+			rel="search"
+			type="application/opensearchdescription+xml"
+			href="/opensearch.xml"
+			title="SvelteKit"
+		/>
+
 		<!-- add inline style and blocking script to prevent content flash/jump -->
 		<style>
 			.ts-version {
@@ -24,7 +31,7 @@
 				display: none;
 			}
 			body.prefers-ts .ts-version {
-				display: inline;
+				display: block;
 			}
 			.no-js .ts-toggle {
 				display: none;

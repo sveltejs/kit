@@ -1,5 +1,56 @@
 # @sveltejs/adapter-vercel
 
+## 4.0.5
+
+### Patch Changes
+
+- chore: upgrade esbuild to 0.19.11 ([#11632](https://github.com/sveltejs/kit/pull/11632))
+
+## 4.0.4
+
+### Patch Changes
+
+- fix: update @vercel/nft to 0.26.1 ([#11508](https://github.com/sveltejs/kit/pull/11508))
+
+## 4.0.3
+
+### Patch Changes
+
+- chore: update primary branch from master to main ([`47779436c5f6c4d50011d0ef8b2709a07c0fec5d`](https://github.com/sveltejs/kit/commit/47779436c5f6c4d50011d0ef8b2709a07c0fec5d))
+
+- Updated dependencies [[`47779436c5f6c4d50011d0ef8b2709a07c0fec5d`](https://github.com/sveltejs/kit/commit/47779436c5f6c4d50011d0ef8b2709a07c0fec5d), [`16961e8cd3fa6a7f382153b1ff056bc2aae9b31b`](https://github.com/sveltejs/kit/commit/16961e8cd3fa6a7f382153b1ff056bc2aae9b31b), [`197e01f95652f511160f38b37b9da73a124ecd48`](https://github.com/sveltejs/kit/commit/197e01f95652f511160f38b37b9da73a124ecd48), [`102e4a5ae5b29624302163faf5a20c94a64a5b2c`](https://github.com/sveltejs/kit/commit/102e4a5ae5b29624302163faf5a20c94a64a5b2c), [`f8e3d8b9728c9f1ab63389342c31d7246b6f9db6`](https://github.com/sveltejs/kit/commit/f8e3d8b9728c9f1ab63389342c31d7246b6f9db6)]:
+  - @sveltejs/kit@2.0.4
+
+## 4.0.2
+
+### Patch Changes
+
+- fix: remove broken node 16 support ([#11328](https://github.com/sveltejs/kit/pull/11328))
+
+## 4.0.1
+
+### Patch Changes
+
+- chore(deps): update `@vercel/nft` ([#11281](https://github.com/sveltejs/kit/pull/11281))
+
+## 4.0.0
+
+### Major Changes
+
+- breaking: require SvelteKit 2 peer dependency ([#11289](https://github.com/sveltejs/kit/pull/11289))
+
+- chore: upgrade esbuild ([#11122](https://github.com/sveltejs/kit/pull/11122))
+
+### Minor Changes
+
+- feat: expose vercel image optimization config in adapter config ([#8667](https://github.com/sveltejs/kit/pull/8667))
+
+## 3.1.0
+
+### Minor Changes
+
+- feat: add support for nodejs20.x ([#11067](https://github.com/sveltejs/kit/pull/11067))
+
 ## 3.0.3
 
 ### Patch Changes

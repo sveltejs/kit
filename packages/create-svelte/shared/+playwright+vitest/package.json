@@ -1,7 +1,7 @@
 {
 	"devDependencies": {
 		"@playwright/test": "^1.28.1",
-		"vitest": "^0.32.2"
+		"vitest": "^1.2.0"
 	},
 	"scripts": {
 		"test:integration": "playwright test",

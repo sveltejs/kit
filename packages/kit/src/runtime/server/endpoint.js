@@ -12,9 +12,9 @@ import { method_not_allowed } from './utils.js';
 export async function render_endpoint(event, mod, state) {
 	const method = /** @type {import('types').HttpMethod} */ (event.request.method);
 
-	let handler = mod[method];
+	let handler = mod[method] || mod.fallback;
 
-	if (!handler && method === 'HEAD') {
+	if (method === 'HEAD' && mod.GET && !mod.HEAD) {
 		handler = mod.GET;
 	}
 
@@ -81,7 +81,7 @@ export function is_endpoint_request(event) {
 	const { method, headers } = event.request;
 
 	// These methods exist exclusively for endpoints
-	if (ENDPOINT_METHODS.has(method) && !PAGE_METHODS.has(method)) {
+	if (ENDPOINT_METHODS.includes(method) && !PAGE_METHODS.includes(method)) {
 		return true;
 	}
 

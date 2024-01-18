@@ -8,13 +8,13 @@ import { getRequest, setResponse } from '../../../exports/node/index.js';
 import { installPolyfills } from '../../../exports/node/polyfills.js';
 import { coalesce_to_error } from '../../../utils/error.js';
 import { posixify, resolve_entry, to_fs } from '../../../utils/filesystem.js';
-import { should_polyfill } from '../../../utils/platform.js';
 import { load_error_page } from '../../../core/config/index.js';
 import { SVELTE_KIT_ASSETS } from '../../../constants.js';
 import * as sync from '../../../core/sync/sync.js';
 import { get_mime_lookup, runtime_base } from '../../../core/utils.js';
 import { compact } from '../../../utils/array.js';
 import { not_found } from '../utils.js';
+import { SCHEME } from '../../../utils/url.js';
 
 const cwd = process.cwd();
 
@@ -25,13 +25,11 @@ const cwd = process.cwd();
  * @return {Promise<Promise<() => void>>}
  */
 export async function dev(vite, vite_config, svelte_config) {
-	if (should_polyfill) {
-		installPolyfills();
-	}
+	installPolyfills();
 
 	const fetch = globalThis.fetch;
 	globalThis.fetch = (info, init) => {
-		if (typeof info === 'string' && !/^\w+:\/\//.test(info)) {
+		if (typeof info === 'string' && !SCHEME.test(info)) {
 			throw new Error(
 				`Cannot use relative URL (${info}) with global fetch — use \`event.fetch\` instead: https://kit.svelte.dev/docs/web-standards#fetch-apis`
 			);
@@ -53,11 +51,14 @@ export async function dev(vite, vite_config, svelte_config) {
 	/** @param {string} url */
 	async function loud_ssr_load_module(url) {
 		try {
-			return await vite.ssrLoadModule(url);
+			return await vite.ssrLoadModule(url, { fixStacktrace: true });
 		} catch (/** @type {any} */ err) {
 			const msg = buildErrorMessage(err, [colors.red(`Internal server error: ${err.message}`)]);
 
-			vite.config.logger.error(msg, { error: err });
+			if (!vite.config.logger.hasErrorLogged(err)) {
+				vite.config.logger.error(msg, { error: err });
+			}
+
 			vite.ws.send({
 				type: 'error',
 				err: {
@@ -115,11 +116,12 @@ export async function dev(vite, vite_config, svelte_config) {
 			mimeTypes: get_mime_lookup(manifest_data),
 			_: {
 				client: {
-					start: `${runtime_base}/client/start.js`,
+					start: `${runtime_base}/client/entry.js`,
 					app: `${to_fs(svelte_config.kit.outDir)}/generated/client/app.js`,
 					imports: [],
 					stylesheets: [],
-					fonts: []
+					fonts: [],
+					uses_env_dynamic_public: true
 				},
 				nodes: manifest_data.nodes.map((node, index) => {
 					return async () => {
@@ -219,7 +221,7 @@ export async function dev(vite, vite_config, svelte_config) {
 								? async () => {
 										const url = path.resolve(cwd, endpoint.file);
 										return await loud_ssr_load_module(url);
-								  }
+									}
 								: null,
 							endpoint_id: endpoint?.file
 						};
@@ -232,7 +234,7 @@ export async function dev(vite, vite_config, svelte_config) {
 					for (const key in manifest_data.matchers) {
 						const file = manifest_data.matchers[key];
 						const url = path.resolve(cwd, file);
-						const module = await vite.ssrLoadModule(url);
+						const module = await vite.ssrLoadModule(url, { fixStacktrace: true });
 
 						if (module.match) {
 							matchers[key] = module.match;
@@ -247,9 +249,10 @@ export async function dev(vite, vite_config, svelte_config) {
 		};
 	}
 
-	/** @param {string} stack */
-	function fix_stack_trace(stack) {
-		return stack ? vite.ssrRewriteStacktrace(stack) : stack;
+	/** @param {Error} error */
+	function fix_stack_trace(error) {
+		vite.ssrFixStacktrace(error);
+		return error.stack;
 	}
 
 	await update_manifest();
@@ -352,7 +355,8 @@ export async function dev(vite, vite_config, svelte_config) {
 		control_module_node.replace_implementations({
 			ActionFailure: control_module_vite.ActionFailure,
 			HttpError: control_module_vite.HttpError,
-			Redirect: control_module_vite.Redirect
+			Redirect: control_module_vite.Redirect,
+			SvelteKitError: control_module_vite.SvelteKitError
 		});
 	}
 	align_exports();
@@ -392,7 +396,7 @@ export async function dev(vite, vite_config, svelte_config) {
 		} catch (e) {
 			const error = coalesce_to_error(e);
 			res.statusCode = 500;
-			res.end(fix_stack_trace(/** @type {string} */ (error.stack)));
+			res.end(fix_stack_trace(error));
 		}
 	});
 
@@ -453,7 +457,7 @@ export async function dev(vite, vite_config, svelte_config) {
 
 				// we have to import `Server` before calling `set_assets`
 				const { Server } = /** @type {import('types').ServerModule} */ (
-					await vite.ssrLoadModule(`${runtime_base}/server/index.js`)
+					await vite.ssrLoadModule(`${runtime_base}/server/index.js`, { fixStacktrace: true })
 				);
 
 				const { set_fix_stack_trace } = await vite.ssrLoadModule(
@@ -468,17 +472,10 @@ export async function dev(vite, vite_config, svelte_config) {
 
 				await server.init({ env });
 
-				let request;
-
-				try {
-					request = await getRequest({
-						base,
-						request: req
-					});
-				} catch (/** @type {any} */ err) {
-					res.statusCode = err.status || 400;
-					return res.end('Invalid request body');
-				}
+				const request = await getRequest({
+					base,
+					request: req
+				});
 
 				if (manifest_error) {
 					console.error(colors.bold().red(manifest_error.message));
@@ -522,7 +519,7 @@ export async function dev(vite, vite_config, svelte_config) {
 			} catch (e) {
 				const error = coalesce_to_error(e);
 				res.statusCode = 500;
-				res.end(fix_stack_trace(/** @type {string} */ (error.stack)));
+				res.end(fix_stack_trace(error));
 			}
 		});
 	};
@@ -532,7 +529,7 @@ export async function dev(vite, vite_config, svelte_config) {
  * @param {import('connect').Server} server
  */
 function remove_static_middlewares(server) {
-	const static_middlewares = ['viteServeStaticMiddleware'];
+	const static_middlewares = ['viteServeStaticMiddleware', 'viteServePublicMiddleware'];
 	for (let i = server.stack.length - 1; i > 0; i--) {
 		// @ts-expect-error using internals
 		if (static_middlewares.includes(server.stack[i].handle.name)) {

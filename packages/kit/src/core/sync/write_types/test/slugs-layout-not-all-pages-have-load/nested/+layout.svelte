@@ -1,1 +1,1 @@
-export function load() {}
+export function load() &lcub;&rcub;

@@ -1,5 +1,62 @@
 # @sveltejs/adapter-node
 
+## 3.0.1
+
+### Patch Changes
+
+- chore: upgrade rollup to 4.9.5 ([#11632](https://github.com/sveltejs/kit/pull/11632))
+
+## 3.0.0
+
+### Major Changes
+
+- breaking: allow any numeric value for `BODY_SIZE_LIMIT`, and interpret literally. Use `Infinity` rather than `0` for unrestricted body sizes ([#11589](https://github.com/sveltejs/kit/pull/11589))
+
+## 2.1.1
+
+### Patch Changes
+
+- fix: correctly handle BODY_SIZE_LIMIT=0 ([#11574](https://github.com/sveltejs/kit/pull/11574))
+
+## 2.1.0
+
+### Minor Changes
+
+- feat: add `PORT_HEADER` env var for reverse proxies with non-standard ports ([#11249](https://github.com/sveltejs/kit/pull/11249))
+
+### Patch Changes
+
+- Updated dependencies [[`9556abae4ba28c02ba468735beb9eb868876a9a1`](https://github.com/sveltejs/kit/commit/9556abae4ba28c02ba468735beb9eb868876a9a1), [`8468af597c6240f7a3687ef1ed3873990b944f8c`](https://github.com/sveltejs/kit/commit/8468af597c6240f7a3687ef1ed3873990b944f8c)]:
+  - @sveltejs/kit@2.1.1
+
+## 2.0.2
+
+### Patch Changes
+
+- fix: upgrade `sirv` and `mrmime` to modernize javascript mime type ([#11419](https://github.com/sveltejs/kit/pull/11419))
+
+- Updated dependencies [[`b999cfdea24e72043505e032ed9d621590896263`](https://github.com/sveltejs/kit/commit/b999cfdea24e72043505e032ed9d621590896263), [`2a091dcbbdf7d2a70a38316638e16761bd1b9b59`](https://github.com/sveltejs/kit/commit/2a091dcbbdf7d2a70a38316638e16761bd1b9b59)]:
+  - @sveltejs/kit@2.0.5
+
+## 2.0.1
+
+### Patch Changes
+
+- chore: update primary branch from master to main ([`47779436c5f6c4d50011d0ef8b2709a07c0fec5d`](https://github.com/sveltejs/kit/commit/47779436c5f6c4d50011d0ef8b2709a07c0fec5d))
+
+- Updated dependencies [[`47779436c5f6c4d50011d0ef8b2709a07c0fec5d`](https://github.com/sveltejs/kit/commit/47779436c5f6c4d50011d0ef8b2709a07c0fec5d), [`16961e8cd3fa6a7f382153b1ff056bc2aae9b31b`](https://github.com/sveltejs/kit/commit/16961e8cd3fa6a7f382153b1ff056bc2aae9b31b), [`197e01f95652f511160f38b37b9da73a124ecd48`](https://github.com/sveltejs/kit/commit/197e01f95652f511160f38b37b9da73a124ecd48), [`102e4a5ae5b29624302163faf5a20c94a64a5b2c`](https://github.com/sveltejs/kit/commit/102e4a5ae5b29624302163faf5a20c94a64a5b2c), [`f8e3d8b9728c9f1ab63389342c31d7246b6f9db6`](https://github.com/sveltejs/kit/commit/f8e3d8b9728c9f1ab63389342c31d7246b6f9db6)]:
+  - @sveltejs/kit@2.0.4
+
+## 2.0.0
+
+### Major Changes
+
+- breaking: require SvelteKit 2 peer dependency ([#11289](https://github.com/sveltejs/kit/pull/11289))
+
+- breaking: remove polyfill option. fetch APIs will now always come from the platform being used. File and crypto APIs will be polyfilled if not available ([#11172](https://github.com/sveltejs/kit/pull/11172))
+
+- chore: upgrade rollup ([#11122](https://github.com/sveltejs/kit/pull/11122))
+
 ## 1.3.1
 
 ### Patch Changes

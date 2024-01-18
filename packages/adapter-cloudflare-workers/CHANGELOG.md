@@ -1,5 +1,71 @@
 # @sveltejs/adapter-cloudflare-workers
 
+## 2.0.3
+
+### Patch Changes
+
+- chore: upgrade esbuild to 0.19.11 ([#11632](https://github.com/sveltejs/kit/pull/11632))
+
+## 2.0.2
+
+### Patch Changes
+
+- fix: serve static files in `_app` from function, if not already handled ([#11593](https://github.com/sveltejs/kit/pull/11593))
+
+- Updated dependencies [[`553e14c8320ad9c6ebb3c554c35f1482755c9555`](https://github.com/sveltejs/kit/commit/553e14c8320ad9c6ebb3c554c35f1482755c9555), [`48576de0dc8b1fbbab7954113004540ea4e76935`](https://github.com/sveltejs/kit/commit/48576de0dc8b1fbbab7954113004540ea4e76935)]:
+  - @sveltejs/kit@2.3.2
+
+## 2.0.1
+
+### Patch Changes
+
+- chore: update primary branch from master to main ([`47779436c5f6c4d50011d0ef8b2709a07c0fec5d`](https://github.com/sveltejs/kit/commit/47779436c5f6c4d50011d0ef8b2709a07c0fec5d))
+
+- Updated dependencies [[`47779436c5f6c4d50011d0ef8b2709a07c0fec5d`](https://github.com/sveltejs/kit/commit/47779436c5f6c4d50011d0ef8b2709a07c0fec5d), [`16961e8cd3fa6a7f382153b1ff056bc2aae9b31b`](https://github.com/sveltejs/kit/commit/16961e8cd3fa6a7f382153b1ff056bc2aae9b31b), [`197e01f95652f511160f38b37b9da73a124ecd48`](https://github.com/sveltejs/kit/commit/197e01f95652f511160f38b37b9da73a124ecd48), [`102e4a5ae5b29624302163faf5a20c94a64a5b2c`](https://github.com/sveltejs/kit/commit/102e4a5ae5b29624302163faf5a20c94a64a5b2c), [`f8e3d8b9728c9f1ab63389342c31d7246b6f9db6`](https://github.com/sveltejs/kit/commit/f8e3d8b9728c9f1ab63389342c31d7246b6f9db6)]:
+  - @sveltejs/kit@2.0.4
+
+## 2.0.0
+
+### Major Changes
+
+- breaking: require SvelteKit 2 ([#11316](https://github.com/sveltejs/kit/pull/11316))
+
+- chore: upgrade esbuild ([#11122](https://github.com/sveltejs/kit/pull/11122))
+
+### Patch Changes
+
+- fix: declare the adapter plugin options as optional ([#11246](https://github.com/sveltejs/kit/pull/11246))
+
+## 1.2.3
+
+### Patch Changes
+
+- fix: correctly map prerendered pages when base path is set ([#11245](https://github.com/sveltejs/kit/pull/11245))
+
+- Updated dependencies [[`bd383f576`](https://github.com/sveltejs/kit/commit/bd383f576592948a2a96b357118cdc7598a8b61c), [`b6a0be712`](https://github.com/sveltejs/kit/commit/b6a0be712644bca4bbd7bec194c1bff682e39d71), [`ded16305b`](https://github.com/sveltejs/kit/commit/ded16305b4c180a697c457ca1b2bec249b4b38fb), [`15422d21d`](https://github.com/sveltejs/kit/commit/15422d21d08a1484f92490da5dd4b77ca7332c23)]:
+  - @sveltejs/kit@1.28.0
+
+## 1.2.2
+
+### Patch Changes
+
+- fix: retain URL query string for trailing slash redirects to prerendered pages ([#11142](https://github.com/sveltejs/kit/pull/11142))
+
+- Updated dependencies [[`a7f8bdcfa`](https://github.com/sveltejs/kit/commit/a7f8bdcfabce5cda85dd073a21d0afb6138a7a08), [`a4d91304e`](https://github.com/sveltejs/kit/commit/a4d91304eebc08bf2e748d83a46d3548a546e3ab)]:
+  - @sveltejs/kit@1.27.7
+
+## 1.2.1
+
+### Patch Changes
+
+- fix: correctly check url pathnames for trailing slashes ([#10968](https://github.com/sveltejs/kit/pull/10968))
+
+## 1.2.0
+
+### Minor Changes
+
+- feat: add cloudflare's `request.cf` object to the `event.platform` property ([#10873](https://github.com/sveltejs/kit/pull/10873))
+
 ## 1.1.4
 
 ### Patch Changes

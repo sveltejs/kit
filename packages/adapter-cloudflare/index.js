@@ -3,7 +3,7 @@ import * as path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import * as esbuild from 'esbuild';
 
-/** @type {import('.').default} */
+/** @type {import('./index.js').default} */
 export default function (options = {}) {
 	return {
 		name: '@sveltejs/adapter-cloudflare',
@@ -14,10 +14,17 @@ export default function (options = {}) {
 
 			builder.rimraf(dest);
 			builder.rimraf(tmp);
+
+			builder.mkdirp(dest);
 			builder.mkdirp(tmp);
 
-			// generate 404.html first which can then be overridden by prerendering, if the user defined such a page
-			await builder.generateFallback(path.join(dest, '404.html'));
+			// generate plaintext 404.html first which can then be overridden by prerendering, if the user defined such a page
+			const fallback = path.join(dest, '404.html');
+			if (options.fallback === 'spa') {
+				await builder.generateFallback(fallback);
+			} else {
+				writeFileSync(fallback, 'Not Found');
+			}
 
 			const dest_dir = `${dest}${builder.config.kit.paths.base}`;
 			const written_files = builder.writeClient(dest_dir);
@@ -28,7 +35,8 @@ export default function (options = {}) {
 			writeFileSync(
 				`${tmp}/manifest.js`,
 				`export const manifest = ${builder.generateManifest({ relativePath })};\n\n` +
-					`export const prerendered = new Set(${JSON.stringify(builder.prerendered.paths)});\n`
+					`export const prerendered = new Set(${JSON.stringify(builder.prerendered.paths)});\n\n` +
+					`export const app_path = ${JSON.stringify(builder.getAppPath())};\n`
 			);
 
 			writeFileSync(
@@ -36,7 +44,7 @@ export default function (options = {}) {
 				JSON.stringify(get_routes_json(builder, written_files, options.routes ?? {}), null, '\t')
 			);
 
-			writeFileSync(`${dest}/_headers`, generate_headers(builder.config.kit.appDir), { flag: 'a' });
+			writeFileSync(`${dest}/_headers`, generate_headers(builder.getAppPath()), { flag: 'a' });
 
 			builder.copy(`${files}/worker.js`, `${tmp}/_worker.js`, {
 				replace: {
@@ -67,8 +75,8 @@ export default function (options = {}) {
 /**
  * @param {import('@sveltejs/kit').Builder} builder
  * @param {string[]} assets
- * @param {import('./index').AdapterOptions['routes']} routes
- * @returns {import('.').RoutesJSONSpec}
+ * @param {import('./index.js').AdapterOptions['routes']} routes
+ * @returns {import('./index.js').RoutesJSONSpec}
  */
 function get_routes_json(builder, assets, { include = ['/*'], exclude = ['<all>'] }) {
 	if (!Array.isArray(include) || !Array.isArray(exclude)) {
@@ -87,7 +95,7 @@ function get_routes_json(builder, assets, { include = ['/*'], exclude = ['<all>'
 		.flatMap((rule) => (rule === '<all>' ? ['<build>', '<files>', '<prerendered>'] : rule))
 		.flatMap((rule) => {
 			if (rule === '<build>') {
-				return `/${builder.config.kit.appDir}/*`;
+				return `/${builder.getAppPath()}/*`;
 			}
 
 			if (rule === '<files>') {

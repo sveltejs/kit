@@ -4,9 +4,9 @@
 		"checkJs": true,
 		"noEmit": true,
 		"noImplicitAny": true,
-		"module": "es2022",
 		"target": "es2022",
-		"moduleResolution": "node",
+		"module": "node16",
+		"moduleResolution": "node16",
 		"allowSyntheticDefaultImports": true,
 		"baseUrl": ".",
 		"paths": {

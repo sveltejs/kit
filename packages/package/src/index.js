@@ -9,7 +9,7 @@ import { emit_dts, transpile_ts } from './typescript.js';
 import { create_validator } from './validate.js';
 
 /**
- * @param {import('./types').Options} options
+ * @param {import('./types.js').Options} options
  */
 export async function build(options) {
 	const { analyse_code, validate } = create_validator(options);
@@ -18,7 +18,7 @@ export async function build(options) {
 }
 
 /**
- * @param {import('./types').Options} options
+ * @param {import('./types.js').Options} options
  * @param {(name: string, code: string) => void} analyse_code
  */
 async function do_build(options, analyse_code) {
@@ -53,7 +53,7 @@ async function do_build(options, analyse_code) {
 }
 
 /**
- * @param {import('./types').Options} options
+ * @param {import('./types.js').Options} options
  */
 export async function watch(options) {
 	const { analyse_code, validate } = create_validator(options);
@@ -68,7 +68,7 @@ export async function watch(options) {
 
 	console.log(message);
 
-	/** @type {Array<{ file: import('./types').File, type: string }>} */
+	/** @type {Array<{ file: import('./types.js').File, type: string }>} */
 	const pending = [];
 
 	/** @type {Array<(value?: any) => void>} */
@@ -91,6 +91,8 @@ export async function watch(options) {
 
 			const events = pending.slice();
 			pending.length = 0;
+
+			let errored = false;
 
 			for (const { file, type } of events) {
 				if (type === 'unlink') {
@@ -116,14 +118,27 @@ export async function watch(options) {
 
 				if (type === 'add' || type === 'change') {
 					console.log(`Processing ${file.name}`);
-					await process_file(input, output, file, options.config.preprocess, alias, analyse_code);
-					validate();
+					try {
+						await process_file(input, output, file, options.config.preprocess, alias, analyse_code);
+					} catch (e) {
+						errored = true;
+						console.error(e);
+					}
 				}
 			}
 
-			if (options.types) {
-				await emit_dts(input, output, options.cwd, alias, files);
-				console.log('Updated .d.ts files');
+			if (!errored && options.types) {
+				try {
+					await emit_dts(input, output, options.cwd, alias, files);
+					console.log('Updated .d.ts files');
+				} catch (e) {
+					errored = true;
+					console.error(e);
+				}
+			}
+
+			if (!errored) {
+				validate();
 			}
 
 			console.log(message);
@@ -144,7 +159,7 @@ export async function watch(options) {
 }
 
 /**
- * @param {import('./types').Options} options
+ * @param {import('./types.js').Options} options
  */
 function normalize_options(options) {
 	const input = path.resolve(options.cwd, options.input);
@@ -173,7 +188,7 @@ function normalize_options(options) {
 /**
  * @param {string} input
  * @param {string} output
- * @param {import('./types').File} file
+ * @param {import('./types.js').File} file
  * @param {import('svelte/types/compiler/preprocess').PreprocessorGroup | undefined} preprocessor
  * @param {Record<string, string>} aliases
  * @param {(name: string, code: string) => void} analyse_code
