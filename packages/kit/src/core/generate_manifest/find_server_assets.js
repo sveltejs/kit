@@ -20,9 +20,11 @@ export function find_server_assets(build_data, routes) {
 
 	/** @param {string} id */
 	function add_assets(id) {
-		const deps = find_deps(build_data.server_manifest, id, false);
-		for (const asset of deps.assets) {
-			server_assets.add(asset);
+		if (id in build_data.server_manifest) {
+			const deps = find_deps(build_data.server_manifest, id, false);
+			for (const asset of deps.assets) {
+				server_assets.add(asset);
+			}
 		}
 	}
 

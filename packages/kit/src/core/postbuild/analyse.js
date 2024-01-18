@@ -197,6 +197,7 @@ function list_features(route, manifest_data, server_manifest, tracked_features) 
 	/** @param {string} id */
 	function visit(id) {
 		const chunk = server_manifest[id];
+		if (!chunk) return;
 
 		if (chunk.file in tracked_features) {
 			for (const feature of tracked_features[chunk.file]) {
