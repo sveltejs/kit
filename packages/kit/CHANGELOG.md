@@ -1,5 +1,11 @@
 # @sveltejs/kit
 
+## 2.3.5
+
+### Patch Changes
+
+- fix: log a warning if fallback page overwrites prerendered page ([#11661](https://github.com/sveltejs/kit/pull/11661))
+
 ## 2.3.4
 
 ### Patch Changes
