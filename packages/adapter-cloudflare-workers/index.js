@@ -16,12 +16,12 @@ import { fileURLToPath } from 'node:url';
  */
 
 /** @type {import('./index.js').default} */
-export default function (options = { config: 'wrangler.toml' }) {
+export default function ({ config = 'wrangler.toml' } = {}) {
 	return {
 		name: '@sveltejs/adapter-cloudflare-workers',
 
 		async adapt(builder) {
-			const { main, site, compatibility_flags } = validate_config(builder, options.config);
+			const { main, site, compatibility_flags } = validate_config(builder, config);
 
 			const files = fileURLToPath(new URL('./files', import.meta.url).href);
 			const tmp = builder.getBuildDirectory('cloudflare-workers-tmp');
