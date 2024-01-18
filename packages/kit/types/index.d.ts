@@ -18,7 +18,7 @@ declare module '@sveltejs/kit' {
 		 */
 		adapt(builder: Builder): MaybePromise<void>;
 		/**
-		 * Functions called during dev and build to determine whether specific features will work in production with this adapter
+		 * Checks called during dev and build to determine whether specific features will work in production with this adapter
 		 */
 		supports?: {
 			/**
@@ -91,7 +91,7 @@ declare module '@sveltejs/kit' {
 
 		/**
 		 * Find all the assets imported by server files belonging to `routes`
-		 * */
+		 */
 		findServerAssets(routes: RouteDefinition[]): string[];
 
 		/**
