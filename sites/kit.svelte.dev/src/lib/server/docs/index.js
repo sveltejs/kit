@@ -9,7 +9,6 @@ import {
 	replaceExportTypePlaceholders
 } from '@sveltejs/site-kit/markdown';
 import { readFile, readdir } from 'node:fs/promises';
-import { CONTENT_BASE_PATHS } from '../../../constants.js';
 import { render_content } from '../renderer';
 
 /**
@@ -29,8 +28,10 @@ export async function get_parsed_docs(docs_data, slug) {
 	}
 }
 
+const base = '../../documentation/docs';
+
 /** @return {Promise<import('./types.js').DocsData>} */
-export async function get_docs_data(base = CONTENT_BASE_PATHS.DOCS) {
+export async function get_docs_data() {
 	/** @type {import('./types.js').DocsData} */
 	const docs_data = [];
 
