@@ -95,9 +95,17 @@ async function analyse({ manifest_path, manifest_data, server_manifest, tracked_
 		}
 
 		const route_config = page?.config ?? endpoint?.config;
+		const prerender = page?.prerender ?? endpoint?.prerender;
 
-		for (const feature of list_features(route, manifest_data, server_manifest, tracked_features)) {
-			check_feature(route.id, route_config, feature, config.adapter);
+		if (prerender !== true) {
+			for (const feature of list_features(
+				route,
+				manifest_data,
+				server_manifest,
+				tracked_features
+			)) {
+				check_feature(route.id, route_config, feature, config.adapter);
+			}
 		}
 
 		const page_methods = page?.methods ?? [];
@@ -113,7 +121,7 @@ async function analyse({ manifest_path, manifest_data, server_manifest, tracked_
 			api: {
 				methods: api_methods
 			},
-			prerender: page?.prerender ?? endpoint?.prerender,
+			prerender,
 			entries:
 				entries && (await entries()).map((entry_object) => resolve_route(route.id, entry_object))
 		});
