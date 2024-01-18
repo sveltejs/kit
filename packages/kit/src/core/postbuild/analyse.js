@@ -16,6 +16,7 @@ import { filter_private_env, filter_public_env } from '../../utils/env.js';
 import { resolve_route } from '../../utils/routing.js';
 import { get_page_config } from '../../utils/route_config.js';
 import { check_feature } from '../../utils/features.js';
+import { createReadableStream } from '@sveltejs/kit/node';
 
 export default forked(import.meta.url, analyse);
 
@@ -53,6 +54,8 @@ async function analyse({ manifest_path, manifest_data, server_manifest, tracked_
 	internal.set_private_env(private_env);
 	internal.set_public_env(public_env);
 	internal.set_safe_public_env(public_env);
+	internal.set_manifest(manifest);
+	internal.set_read_implementation((file) => createReadableStream(`${server_root}/server/${file}`));
 
 	/** @type {import('types').ServerMetadata} */
 	const metadata = {

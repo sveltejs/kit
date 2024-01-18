@@ -32,10 +32,10 @@ export async function dev(vite, vite_config, svelte_config) {
 	const async_local_storage = new AsyncLocalStorage();
 
 	globalThis.__SVELTEKIT_TRACK__ = (label) => {
-		const { event, config, prerender } = async_local_storage.getStore();
-		if (!event || prerender === true) return;
+		const context = async_local_storage.getStore();
+		if (!context || context.prerender === true) return;
 
-		check_feature(event.route.id, config, label, svelte_config.kit.adapter);
+		check_feature(context.event.route.id, context.config, label, svelte_config.kit.adapter);
 	};
 
 	const fetch = globalThis.fetch;
