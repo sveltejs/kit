@@ -47,7 +47,7 @@ for (const [file, asset] of Object.entries(markdown)) {
 	if (!category) continue; // draft
 
 	const {
-		metadata: { draft, title },
+		metadata: { draft, title, rank },
 		body
 	} = extractFrontmatter(await read(asset).text());
 
@@ -59,6 +59,7 @@ for (const [file, asset] of Object.entries(markdown)) {
 	});
 
 	pages[slug] = {
+		rank: +rank || undefined,
 		category: category.title,
 		title,
 		file: `${category_dir}/${basename}`,

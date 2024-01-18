@@ -1,7 +1,6 @@
-import { read } from '$app/server';
 import { modules } from '$lib/generated/type-info.js';
+import { pages } from '$lib/server/docs/index.js';
 import {
-	extractFrontmatter,
 	markedTransform,
 	replaceExportTypePlaceholders,
 	slugify
@@ -16,11 +15,6 @@ const categories = [
 	}
 ];
 
-const files = import.meta.glob('../../../../../documentation/*/*/*.md', {
-	as: 'url',
-	eager: true
-});
-
 export async function content() {
 	/** @type {import('@sveltejs/site-kit/search').Block[]} */
 	const blocks = [];
@@ -28,19 +22,15 @@ export async function content() {
 	for (const category of categories) {
 		const breadcrumbs = category.label ? [category.label] : [];
 
-		for (const [file, asset] of Object.entries(files)) {
-			const slug = /\/\d{2}-(.+)\.md$/.exec(file)[1];
-
-			const markdown = await replaceExportTypePlaceholders(await read(asset).text(), modules);
-
-			const { body, metadata } = extractFrontmatter(markdown);
+		for (const [slug, page] of Object.entries(pages)) {
+			const body = await replaceExportTypePlaceholders(page.body, modules);
 
 			const sections = body.trim().split(/^## /m);
 			const intro = sections.shift().trim();
-			const rank = +metadata.rank || undefined;
+			const rank = page.rank;
 
 			blocks.push({
-				breadcrumbs: [...breadcrumbs, metadata.title],
+				breadcrumbs: [...breadcrumbs, page.title],
 				href: category.href([slug]),
 				content: await plaintext(intro),
 				rank
@@ -56,7 +46,7 @@ export async function content() {
 				const intro = subsections.shift().trim();
 
 				blocks.push({
-					breadcrumbs: [...breadcrumbs, metadata.title, h3],
+					breadcrumbs: [...breadcrumbs, page.title, h3],
 					href: category.href([slug, slugify(h3)]),
 					content: await plaintext(intro),
 					rank
@@ -67,7 +57,7 @@ export async function content() {
 					const h4 = lines.shift();
 
 					blocks.push({
-						breadcrumbs: [...breadcrumbs, metadata.title, h3, h4],
+						breadcrumbs: [...breadcrumbs, page.title, h3, h4],
 						href: category.href([slug, slugify(h3), slugify(h4)]),
 						content: await plaintext(lines.join('\n').trim()),
 						rank
