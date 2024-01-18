@@ -82,21 +82,59 @@ export default function ({ config = 'wrangler.toml' } = {}) {
 				external.push(...compatible_node_modules.map((id) => `node:${id}`));
 			}
 
-			await esbuild.build({
-				platform: 'browser',
-				conditions: ['worker', 'browser'],
-				sourcemap: 'linked',
-				target: 'es2022',
-				entryPoints: [`${tmp}/entry.js`],
-				outfile: main,
-				bundle: true,
-				external,
-				alias: Object.fromEntries(compatible_node_modules.map((id) => [id, `node:${id}`])),
-				format: 'esm',
-				loader: {
-					'.wasm': 'copy'
+			try {
+				const result = await esbuild.build({
+					platform: 'browser',
+					conditions: ['worker', 'browser'],
+					sourcemap: 'linked',
+					target: 'es2022',
+					entryPoints: [`${tmp}/entry.js`],
+					outfile: main,
+					bundle: true,
+					external,
+					alias: Object.fromEntries(compatible_node_modules.map((id) => [id, `node:${id}`])),
+					format: 'esm',
+					loader: {
+						'.wasm': 'copy'
+					},
+					logLevel: 'silent'
+				});
+
+				if (result.warnings.length > 0) {
+					const formatted = await esbuild.formatMessages(result.warnings, {
+						kind: 'warning',
+						color: true
+					});
+
+					console.error(formatted.join('\n'));
 				}
-			});
+			} catch (error) {
+				for (const e of error.errors) {
+					for (const node of e.notes) {
+						const match =
+							/The package "(.+)" wasn't found on the file system but is built into node/.exec(
+								node.text
+							);
+
+						if (match) {
+							node.text = `Cannot use "${match[1]}" when deploying to Cloudflare.`;
+						}
+					}
+				}
+
+				const formatted = await esbuild.formatMessages(error.errors, {
+					kind: 'error',
+					color: true
+				});
+
+				console.error(formatted.join('\n'));
+
+				throw new Error(
+					`Bundling with esbuild failed with ${error.errors.length} ${
+						error.errors.length === 1 ? 'error' : 'errors'
+					}`
+				);
+			}
 
 			builder.log.minor('Copying assets...');
 			const bucket_dir = `${site.bucket}${builder.config.kit.paths.base}`;
