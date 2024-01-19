@@ -9,7 +9,8 @@ export const port = env('PORT', !path && '3000');
 const listen_pid = parseInt(env('LISTEN_PID', '0'));
 const listen_fds = parseInt(env('LISTEN_FDS', '0'));
 const idle_timeout = parseInt(env('IDLE_TIMEOUT', '0'));
-const LISTEN_FD = 3;
+// https://www.freedesktop.org/software/systemd/man/latest/sd_listen_fds.html
+const SD_LISTEN_FDS_START = 3;
 
 const server = polka().use(handler);
 
@@ -20,8 +21,8 @@ function close() {
 }
 
 if (listen_pid === process.pid && listen_fds === 1) {
-	server.listen({ fd: LISTEN_FD }, () => {
-		console.log(`Listening on file descriptor ${LISTEN_FD}`);
+	server.listen({ fd: SD_LISTEN_FDS_START }, () => {
+		console.log(`Listening on file descriptor ${SD_LISTEN_FDS_START}`);
 	});
 
 	if (idle_timeout) {
