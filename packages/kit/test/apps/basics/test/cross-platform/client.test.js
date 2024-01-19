@@ -425,7 +425,7 @@ test.describe('Scrolling', () => {
 
 		await page.reload();
     if (browserName === 'firefox') {
-			// Firefox pushed new history entry history after reload
+			// Firefox with Playwright pushed new history entry history after reload
 			// See https://github.com/microsoft/playwright/issues/22640
 			await page.goBack()
 		}
