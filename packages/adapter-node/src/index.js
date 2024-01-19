@@ -57,5 +57,6 @@ if (listen_pid === process.pid && listen_fds === 1) {
 }
 
 process.on('SIGTERM', close);
+process.on('SIGINT', close);
 
 export { server };
