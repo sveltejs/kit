@@ -1,5 +1,3 @@
-You may use these playgrounds to experiment with your changes to SvelteKit.
+You may use these playgrounds to experiment with your changes to SvelteKit. Make sure you don't check in any changes to this folder.
 
-To prevent any changes you make in this directory from being accidentally committed, run `git update-index --skip-worktree ./**/*.*` in this directory.
-
-If you would actually like to make some changes to the files here for everyone then run `git update-index --no-skip-worktree ./**/*.*` before committing.
+Alternatively, clone the [kit-sandbox](https://github.com/sveltejs/kit-sandbox) repo next to the `kit` repo, and use `pnpm link` to link your dependencies. This way you can have multiple different sandbox projects in different branches, and you never need to worry about accidentally committing throwaway code.
