@@ -118,6 +118,10 @@ We instead read from the _right_, accounting for the number of trusted proxies. 
 
 The maximum request body size to accept in bytes including while streaming. Defaults to 512kb. You can disable this option with a value of 0 and implement a custom check in [`handle`](hooks#server-hooks-handle) if you need something more advanced.
 
+### `TIMEOUT`
+
+Number of seconds after which the app should automatically shutdown when receving no requests and using systemd socket activation. See [Socket Activation](#socket-activation) for how to enable it.
+
 ## Options
 
 The adapter can be configured with various options:
@@ -164,9 +168,11 @@ node build
 
 ## Socket Activation
 
-Most Linux operating systems today use a modern process manager called systemd to start the server and run and manage services. You can configure your server to allocate a socket and start and scale your app on demand. This is called [socket activation](http://0pointer.de/blog/projects/socket-activated-containers.html). In this case the OS will pass two environment variables to your app — `LISTEN_PID` and `LISTEN_FDS`. The adapter will verify that these variables are correct and then listen on file descriptor 3 which refers to a socket unit that you will have to create.
+Most Linux operating systems today use a modern process manager called systemd to start the server and run and manage services. You can configure your server to allocate a socket and start and scale your app on demand. This is called [socket activation](http://0pointer.de/blog/projects/socket-activated-containers.html). In this case the OS will pass two environment variables to your app — `LISTEN_PID` and `LISTEN_FDS`. The adapter will verify that these variables are correct and then listen on file descriptor 3 which refers to a systemd socket unit that you will have to create.
 
-To take advantage of socket activation make sure your app is running as a systemd service. It can either run directly on the host system or inside a container (using Docker or a systemd portable service for example).
+To take advantage of socket activation follow these steps.
+
+1. Run your app as a [systemd service](https://www.freedesktop.org/software/systemd/man/latest/systemd.service.html). It can either run directly on the host system or inside a container (using Docker or a systemd portable service for example).
 
 ```ini
 # /etc/systemd/system/myapp.service
@@ -176,7 +182,7 @@ Environment=NODE_ENV=production
 ExecStart=/usr/bin/node /usr/bin/myapp/build
 ```
 
-Then create an accompanying [socket unit](https://www.freedesktop.org/software/systemd/man/latest/systemd.socket.html). The adapter only accepts a single socket.
+2. Create an accompanying [socket unit](https://www.freedesktop.org/software/systemd/man/latest/systemd.socket.html). The adapter only accepts a single socket.
 
 ```ini
 # /etc/systemd/system/myapp.socket
@@ -188,9 +194,9 @@ ListenStream=3000
 WantedBy=sockets.target
 ```
 
-Make sure systemd has recognised both units by running `sudo systemctl daemon-reload`. Then enable the socket on boot and start it immediately using `sudo systemctl enable --now myapp.socket`.
+3. Make sure systemd has recognised both units by running `sudo systemctl daemon-reload`. Then enable the socket on boot and start it immediately using `sudo systemctl enable --now myapp.socket`.
 
-The app will then automatically start once the first request is made to `localhost:3000`. Additionally, if you pass a `TIMEOUT=x` environment variable to your app the adapter will terminate it after receiving no requests for `x` seconds.
+The app will then automatically start once the first request is made to `localhost:3000`. Additionally, if you pass a `TIMEOUT` environment variable to your app the adapter will terminate it after receiving no requests for `TIMEOUT` seconds.
 
 ```ini
 [Service]
