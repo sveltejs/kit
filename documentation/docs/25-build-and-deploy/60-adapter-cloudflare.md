@@ -108,4 +108,4 @@ You may wish to refer to [Cloudflare's documentation for deploying a SvelteKit s
 
 ### Accessing the file system
 
-You can't use `fs` in workers — you must [prerender](https://kit.svelte.dev/docs/page-options#prerender) the routes in question.
+You can't use `fs` in Cloudflare Workers — you must [prerender](https://kit.svelte.dev/docs/page-options#prerender) the routes in question.
