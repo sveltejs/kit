@@ -14,6 +14,7 @@ const systemd_socket_fd = 3;
 const server = polka().use(handler);
 
 function close() {
+	// @ts-expect-error this was added in 18.2.0 but is not reflected in the types
 	server.server.closeIdleConnections();
 	server.server.close();
 }
