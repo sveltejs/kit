@@ -108,4 +108,4 @@ You may wish to refer to [Cloudflare's documentation for deploying a SvelteKit s
 
 ### Accessing the file system
 
-You can't access the file system through methods like `fs.readFileSync` in Serverless/Edge environments. If you need to access files that way, do that during building the app through [prerendering](https://kit.svelte.dev/docs/page-options#prerender). If you have a blog for example and don't want to manage your content through a CMS, then you need to prerender the content (or prerender the endpoint from which you get it) and redeploy your blog everytime you add new content.
+You can't use `fs` in Cloudflare Workers — you must [prerender](https://kit.svelte.dev/docs/page-options#prerender) the routes in question.
