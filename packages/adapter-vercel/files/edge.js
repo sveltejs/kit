@@ -12,7 +12,7 @@ const initialized = server.init({
 		return new ReadableStream({
 			async start(controller) {
 				try {
-					const response = await fetch(manifest.appPath + file, { signal });
+					const response = await fetch(`https://${process.env.VERCEL_URL}/${file}`, { signal });
 					const reader = /** @type {ReadableStream} */ (response.body).getReader();
 
 					while (true) {
