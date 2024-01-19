@@ -1,5 +1,5 @@
 ---
-"@sveltejs/kit": minor
+"@sveltejs/kit": patch
 ---
 
-fix: remove runtime errors when `onNavigate` callback returns a function
+fix: handle `onNavigate` callbacks correctly

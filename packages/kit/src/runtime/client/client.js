@@ -1330,7 +1330,7 @@ async function navigate({
 					fn(/** @type {import('@sveltejs/kit').OnNavigate} */ (nav.navigation))
 				)
 			)
-		).filter((value) => typeof value === 'function');
+		).filter(/** @returns {value is () => void} */ (value) => typeof value === 'function');
 
 		if (after_navigate.length > 0) {
 			function cleanup() {
@@ -1341,8 +1341,6 @@ async function navigate({
 			}
 
 			after_navigate.push(cleanup);
-
-			// @ts-ignore
 			after_navigate_callbacks.push(...after_navigate);
 		}
 
