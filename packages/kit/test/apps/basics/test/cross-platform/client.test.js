@@ -106,7 +106,7 @@ test.describe('a11y', () => {
 		await page.goto('/accessibility/autofocus/a');
 		await clicknav('[href="/"]');
 
-		expect(await page.evaluate(() => (window.active || {}).nodeName)).toBe('BODY');
+		expect(await page.evaluate(() => (globalThis.active || {}).nodeName)).toBe('BODY');
 		expect(await page.evaluate(() => (document.activeElement || {}).nodeName)).toBe('BODY');
 	});
 });
@@ -417,13 +417,18 @@ test.describe('Scrolling', () => {
 		await expect(page.locator('input')).toBeFocused();
 	});
 
-	test('scroll positions are recovered on reloading the page', async ({ page, app }) => {
+	test('scroll positions are recovered on reloading the page', async ({ page, app, browserName }) => {
 		await page.goto('/anchor');
 		await page.evaluate(() => window.scrollTo(0, 1000));
 		await app.goto('/anchor/anchor');
 		await page.evaluate(() => window.scrollTo(0, 1000));
 
 		await page.reload();
+    if (browserName === 'firefox') {
+			// Firefox pushed new history entry history after reload
+			// See https://github.com/microsoft/playwright/issues/22640
+			await page.goBack()
+		}
 		expect(await page.evaluate(() => window.scrollY)).toBe(1000);
 
 		await page.goBack();
