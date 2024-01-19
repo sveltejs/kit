@@ -645,7 +645,7 @@ async function kit({ svelte_config }) {
 							preserveEntrySignatures: 'strict'
 						},
 						ssrEmitAssets: true,
-						target: ssr ? 'node18.13' : 'es2022'
+						target: ssr ? 'node18.13' : undefined
 					},
 					publicDir: kit.files.assets,
 					worker: {
