@@ -1,6 +1,7 @@
 import { appendFileSync, existsSync, readdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { dirname, join, resolve, posix } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { builtinModules } from 'node:module';
 import esbuild from 'esbuild';
 import toml from '@iarna/toml';
 
@@ -165,7 +166,12 @@ async function generate_edge_functions({ builder }) {
 		format: 'esm',
 		platform: 'browser',
 		sourcemap: 'linked',
-		target: 'es2020'
+		target: 'es2020',
+
+		// Node built-ins are allowed, but must be prefixed with `node:`
+		// https://docs.netlify.com/edge-functions/api/#runtime-environment
+		external: builtinModules.map((id) => `node:${id}`),
+		alias: Object.fromEntries(builtinModules.map((id) => [id, `node:${id}`]))
 	});
 
 	writeFileSync('.netlify/edge-functions/manifest.json', JSON.stringify(edge_manifest));
