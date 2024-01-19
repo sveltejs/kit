@@ -120,7 +120,7 @@ The maximum request body size to accept in bytes including while streaming. Defa
 
 ### `TIMEOUT`
 
-Number of seconds after which the app should automatically shutdown when receving no requests and using systemd socket activation. See [Socket Activation](#socket-activation) for how to enable it.
+When using systemd socket activation specifies the number of seconds after which the app is automatically put to sleep when receiving no requests. If not set, the app runs continously. See [Socket Activation](#socket-activation) for more details.
 
 ## Options
 
@@ -175,8 +175,7 @@ To take advantage of socket activation follow these steps.
 1. Run your app as a [systemd service](https://www.freedesktop.org/software/systemd/man/latest/systemd.service.html). It can either run directly on the host system or inside a container (using Docker or a systemd portable service for example).
 
 ```ini
-# /etc/systemd/system/myapp.service
-
+/// file: /etc/systemd/system/myapp.service
 [Service]
 Environment=NODE_ENV=production
 ExecStart=/usr/bin/node /usr/bin/myapp/build
@@ -185,8 +184,7 @@ ExecStart=/usr/bin/node /usr/bin/myapp/build
 2. Create an accompanying [socket unit](https://www.freedesktop.org/software/systemd/man/latest/systemd.socket.html). The adapter only accepts a single socket.
 
 ```ini
-# /etc/systemd/system/myapp.socket
-
+/// file: /etc/systemd/system/myapp.socket
 [Socket]
 ListenStream=3000
 
@@ -199,6 +197,7 @@ WantedBy=sockets.target
 The app will then automatically start once the first request is made to `localhost:3000`. Additionally, if you pass a `TIMEOUT` environment variable to your app the adapter will terminate it after receiving no requests for `TIMEOUT` seconds.
 
 ```ini
+/// file: /etc/systemd/system/myapp.service
 [Service]
 Environment=NODE_ENV=production TIMEOUT=60
 ExecStart=/usr/bin/node /usr/bin/myapp/build
