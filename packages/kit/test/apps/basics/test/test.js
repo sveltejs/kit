@@ -713,8 +713,9 @@ test.describe('$app/server', () => {
 		const auto = await page.textContent('[data-testid="auto"]');
 		const url = await page.textContent('[data-testid="url"]');
 
-		expect(auto.trim()).toBe('Imported without ?url');
-		expect(url.trim()).toBe('Imported with ?url');
+		// the emoji is there to check that base64 decoding works correctly
+		expect(auto.trim()).toBe('Imported without ?url 😎');
+		expect(url.trim()).toBe('Imported with ?url 😎');
 	});
 });
 
