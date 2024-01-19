@@ -7,6 +7,8 @@ export const config = {
 
 export const prerender = false;
 
-export function GET() {
-	return read(file);
+export async function GET() {
+	const text = await read(file).text();
+
+	return `${text} at ${new Date()}`;
 }
