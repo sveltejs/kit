@@ -1,5 +1,17 @@
 # @sveltejs/kit
 
+## 2.4.1
+
+### Patch Changes
+
+- fix: use Vite's default value for `build.target` and respect override supplied by user ([#11688](https://github.com/sveltejs/kit/pull/11688))
+
+- fix: properly decode base64 strings inside `read` ([#11682](https://github.com/sveltejs/kit/pull/11682))
+
+- fix: default route config to `{}` for feature checking ([#11685](https://github.com/sveltejs/kit/pull/11685))
+
+- fix: handle `onNavigate` callbacks correctly ([#11678](https://github.com/sveltejs/kit/pull/11678))
+
 ## 2.4.0
 
 ### Minor Changes

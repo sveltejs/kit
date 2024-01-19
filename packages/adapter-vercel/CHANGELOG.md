@@ -1,5 +1,16 @@
 # @sveltejs/adapter-vercel
 
+## 5.1.0
+
+### Minor Changes
+
+- feat: allow compatible subset of Node.js built-in modules when targeting edge functions ([#11675](https://github.com/sveltejs/kit/pull/11675))
+
+### Patch Changes
+
+- Updated dependencies [[`36dc54ac740b8b4c6a2b904a1d0aadd8923a875c`](https://github.com/sveltejs/kit/commit/36dc54ac740b8b4c6a2b904a1d0aadd8923a875c), [`5dae3676b8cc6f8ee0def57340e6a6e591bafecd`](https://github.com/sveltejs/kit/commit/5dae3676b8cc6f8ee0def57340e6a6e591bafecd), [`ada595908b5501b8f4ac30c89c0d6314f364fde3`](https://github.com/sveltejs/kit/commit/ada595908b5501b8f4ac30c89c0d6314f364fde3), [`e228f8997840b89c6248e1c5df6f3108008a06be`](https://github.com/sveltejs/kit/commit/e228f8997840b89c6248e1c5df6f3108008a06be)]:
+  - @sveltejs/kit@2.4.1
+
 ## 5.0.0
 
 ### Major Changes
