@@ -29,7 +29,7 @@
 		"eslint-config-prettier": "^9.1.0",
 		"eslint-plugin-svelte": "^2.35.1",
 		"eslint-plugin-unicorn": "^50.0.0",
-		"playwright": "1.30.0"
+		"playwright": "^1.41.0"
 	},
 	"packageManager": "pnpm@8.14.1",
 	"engines": {

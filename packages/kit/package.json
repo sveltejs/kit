@@ -25,7 +25,7 @@
 		"tiny-glob": "^0.2.9"
 	},
 	"devDependencies": {
-		"@playwright/test": "1.30.0",
+		"@playwright/test": "^1.41.0",
 		"@sveltejs/vite-plugin-svelte": "^3.0.1",
 		"@types/connect": "^3.4.38",
 		"@types/node": "^18.19.3",
