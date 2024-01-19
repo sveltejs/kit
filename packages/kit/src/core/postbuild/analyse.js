@@ -97,7 +97,7 @@ async function analyse({ manifest_path, manifest_data, server_manifest, tracked_
 			}
 		}
 
-		const route_config = page?.config ?? endpoint?.config;
+		const route_config = page?.config ?? endpoint?.config ?? {};
 		const prerender = page?.prerender ?? endpoint?.prerender;
 
 		if (prerender !== true) {
