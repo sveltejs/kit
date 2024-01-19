@@ -240,11 +240,11 @@ test.describe('Navigation lifecycle functions', () => {
 
 	test('onNavigate calls callback', async ({ page, clicknav }) => {
 		await page.goto('/navigation-lifecycle/on-navigate/a');
-		expect(await page.textContent('h1')).toBe('undefined -> undefined (...)');
+		expect(await page.textContent('h1')).toBe('undefined -> undefined (...) false');
 
 		await clicknav('[href="/navigation-lifecycle/on-navigate/b"]');
 		expect(await page.textContent('h1')).toBe(
-			'/navigation-lifecycle/on-navigate/a -> /navigation-lifecycle/on-navigate/b (link)'
+			'/navigation-lifecycle/on-navigate/a -> /navigation-lifecycle/on-navigate/b (link) true'
 		);
 	});
 });
