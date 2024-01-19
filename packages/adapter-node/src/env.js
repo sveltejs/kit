@@ -13,7 +13,7 @@ const expected = new Set([
 	'BODY_SIZE_LIMIT',
 	'LISTEN_PID',
 	'LISTEN_FDS',
-	'TIMEOUT'
+	'IDLE_TIMEOUT'
 ]);
 
 if (ENV_PREFIX) {

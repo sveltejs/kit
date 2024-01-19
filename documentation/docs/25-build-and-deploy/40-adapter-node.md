@@ -118,9 +118,9 @@ We instead read from the _right_, accounting for the number of trusted proxies. 
 
 The maximum request body size to accept in bytes including while streaming. Defaults to 512kb. You can disable this option with a value of 0 and implement a custom check in [`handle`](hooks#server-hooks-handle) if you need something more advanced.
 
-### `TIMEOUT`
+### `IDLE_TIMEOUT`
 
-When using systemd socket activation specifies the number of seconds after which the app is automatically put to sleep when receiving no requests. If not set, the app runs continously. See [Socket Activation](#socket-activation) for more details.
+When using systemd socket activation specifies the number of seconds after which the app is automatically put to sleep when receiving no requests. If not set, the app runs continously. See [Socket activation](#socket-activation) for more details.
 
 ## Options
 
@@ -166,7 +166,7 @@ MY_CUSTOM_ORIGIN=https://my.site \
 node build
 ```
 
-## Socket Activation
+## Socket activation
 
 Most Linux operating systems today use a modern process manager called systemd to start the server and run and manage services. You can configure your server to allocate a socket and start and scale your app on demand. This is called [socket activation](http://0pointer.de/blog/projects/socket-activated-containers.html). In this case the OS will pass two environment variables to your app — `LISTEN_PID` and `LISTEN_FDS`. The adapter will verify that these variables are correct and then listen on file descriptor 3 which refers to a systemd socket unit that you will have to create.
 
@@ -194,12 +194,12 @@ WantedBy=sockets.target
 
 3. Make sure systemd has recognised both units by running `sudo systemctl daemon-reload`. Then enable the socket on boot and start it immediately using `sudo systemctl enable --now myapp.socket`.
 
-The app will then automatically start once the first request is made to `localhost:3000`. Additionally, if you pass a `TIMEOUT` environment variable to your app the adapter will terminate it after receiving no requests for `TIMEOUT` seconds.
+The app will then automatically start once the first request is made to `localhost:3000`. Additionally, if you pass a `IDLE_TIMEOUT` environment variable to your app the adapter will terminate it after receiving no requests for `IDLE_TIMEOUT` seconds.
 
 ```ini
 /// file: /etc/systemd/system/myapp.service
 [Service]
-Environment=NODE_ENV=production TIMEOUT=60
+Environment=NODE_ENV=production IDLE_TIMEOUT=60
 ExecStart=/usr/bin/node /usr/bin/myapp/build
 ```
 
