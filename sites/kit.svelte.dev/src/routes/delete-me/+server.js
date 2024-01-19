@@ -10,5 +10,5 @@ export const prerender = false;
 export async function GET() {
 	const text = await read(file).text();
 
-	return `${text} at ${new Date()}`;
+	return new Response(`${text} at ${new Date()}`);
 }
