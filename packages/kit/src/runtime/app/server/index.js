@@ -1,6 +1,7 @@
 import { read_implementation, manifest } from '__sveltekit/server';
 import { base } from '__sveltekit/paths';
 import { DEV } from 'esm-env';
+import { b64_decode } from '../../utils.js';
 
 /**
  * Read the contents of an imported asset from the filesystem
@@ -30,7 +31,18 @@ export function read(asset) {
 		const [prelude, data] = asset.split(';');
 		const type = prelude.slice(5) || 'application/octet-stream';
 
-		const decoded = data.startsWith('base64,') ? atob(data.slice(7)) : decodeURIComponent(data);
+		if (data.startsWith('base64,')) {
+			const decoded = b64_decode(data.slice(7));
+
+			return new Response(decoded, {
+				headers: {
+					'Content-Length': decoded.byteLength.toString(),
+					'Content-Type': type
+				}
+			});
+		}
+
+		const decoded = decodeURIComponent(data);
 
 		return new Response(decoded, {
 			headers: {
