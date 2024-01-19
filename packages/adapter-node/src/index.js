@@ -9,7 +9,7 @@ export const port = env('PORT', !path && '3000');
 const listen_pid = parseInt(env('LISTEN_PID', '-1'));
 const listen_fds = parseInt(env('LISTEN_FDS', '-1'));
 const timeout = parseInt(env('TIMEOUT', '-1'));
-const systemd_socket_fd = 3;
+const listen_fd = 3;
 
 const server = polka().use(handler);
 
@@ -20,8 +20,8 @@ function close() {
 }
 
 if (listen_pid === process.pid && listen_fds === 1) {
-	server.listen({ fd: systemd_socket_fd }, () => {
-		console.log('Listening on file descriptor 3');
+	server.listen({ fd: listen_fd }, () => {
+		console.log(`Listening on file descriptor ${listen_fd}`);
 	});
 
 	if (timeout) {
