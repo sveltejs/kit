@@ -6,9 +6,9 @@ export const path = env('SOCKET_PATH', false);
 export const host = env('HOST', '0.0.0.0');
 export const port = env('PORT', !path && '3000');
 
-const listen_pid = parseInt(env('LISTEN_PID', '-1'));
-const listen_fds = parseInt(env('LISTEN_FDS', '-1'));
-const timeout = parseInt(env('TIMEOUT', '-1'));
+const listen_pid = parseInt(env('LISTEN_PID', '0'));
+const listen_fds = parseInt(env('LISTEN_FDS', '0'));
+const timeout = parseInt(env('TIMEOUT', '0'));
 const listen_fd = 3;
 
 const server = polka().use(handler);
