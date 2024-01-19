@@ -30,7 +30,7 @@
 		"test": "pnpm -r --workspace-concurrency 1 --filter=\"./test/**\" test"
 	},
 	"devDependencies": {
-		"@playwright/test": "1.30.0",
+		"@playwright/test": "^1.41.0",
 		"@sveltejs/kit": "workspace:^",
 		"@sveltejs/vite-plugin-svelte": "^3.0.1",
 		"@types/node": "^18.19.3",

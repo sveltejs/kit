@@ -10,10 +10,8 @@
 		"enabled": false
 	},
 	"ignoreDeps": [
-		"@playwright/test",
 		"@types/node",
 		"esbuild",
-		"playwright",
 		"rollup",
 		"typescript"
 	],
