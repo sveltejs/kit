@@ -417,17 +417,21 @@ test.describe('Scrolling', () => {
 		await expect(page.locator('input')).toBeFocused();
 	});
 
-	test('scroll positions are recovered on reloading the page', async ({ page, app, browserName }) => {
+	test('scroll positions are recovered on reloading the page', async ({
+		page,
+		app,
+		browserName
+	}) => {
 		await page.goto('/anchor');
 		await page.evaluate(() => window.scrollTo(0, 1000));
 		await app.goto('/anchor/anchor');
 		await page.evaluate(() => window.scrollTo(0, 1000));
 
 		await page.reload();
-    if (browserName === 'firefox') {
+		if (browserName === 'firefox') {
 			// Firefox with Playwright pushed new history entry history after reload
 			// See https://github.com/microsoft/playwright/issues/22640
-			await page.goBack()
+			await page.goBack();
 		}
 		expect(await page.evaluate(() => window.scrollY)).toBe(1000);
 
