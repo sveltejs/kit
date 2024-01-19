@@ -1343,7 +1343,7 @@ async function navigate({
 			after_navigate.push(cleanup);
 
 			// @ts-ignore
-			callbacks.after_navigate.push(...after_navigate);
+			after_navigate_callbacks.push(...after_navigate);
 		}
 
 		root.$set(navigation_result.props);
