@@ -423,9 +423,8 @@ test.describe('Scrolling', () => {
 		browserName
 	}) => {
 		// No idea why the workaround below works only in dev mode
-		// Firefox needs to fix their shit
-		// We could probably also work around it by setting fission.webContentIsolationStrategy: 1
-		// in the Firefox preferences but I'm not quite sure how to do that
+		// A better solution would probably be to set fission.webContentIsolationStrategy: 1
+		// in the Firefox preferences but the Playwright API to do so is incomprehensible
 		if (!process.env.DEV && browserName === 'firefox') {
 			return;
 		}
@@ -436,7 +435,7 @@ test.describe('Scrolling', () => {
 		await page.evaluate(() => window.scrollTo(0, 1000));
 
 		await page.reload();
-		if (process.env.DEV && browserName === 'firefox') {
+		if (browserName === 'firefox') {
 			// Firefox with Playwright pushed new history entry history after reload
 			// See https://github.com/microsoft/playwright/issues/22640
 			await page.goBack();
