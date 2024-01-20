@@ -2,6 +2,9 @@ import { writeFileSync } from 'node:fs';
 import * as path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import * as esbuild from 'esbuild';
+import { getBindingsProxy } from 'wrangler';
+
+const bindingsProxy = getBindingsProxy();
 
 // list from https://developers.cloudflare.com/workers/runtime-apis/nodejs/
 const compatible_node_modules = [
@@ -124,6 +127,13 @@ export default function (options = {}) {
 					}`
 				);
 			}
+		},
+		async emulatePlatform() {
+			/** @type {any} */
+			const platform = {
+				env: (await bindingsProxy).bindings
+			};
+			return platform;
 		}
 	};
 }
