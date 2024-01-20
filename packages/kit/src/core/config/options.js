@@ -270,9 +270,7 @@ const options = object(
 			version: object({
 				name: string(Date.now().toString()),
 				pollInterval: number(0)
-			}),
-
-			devPlatform: object({}, true),
+			})
 		})
 	},
 	true

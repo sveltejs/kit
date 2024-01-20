@@ -529,8 +529,7 @@ export async function dev(vite, vite_config, svelte_config) {
 					read: (file) => fs.readFileSync(path.join(svelte_config.kit.files.assets, file)),
 					before_handle: (event, config, prerender) => {
 						async_local_storage.enterWith({ event, config, prerender });
-					},
-					platform: svelte_config.kit.devPlatform,
+					}
 				});
 
 				if (rendered.status === 404) {
