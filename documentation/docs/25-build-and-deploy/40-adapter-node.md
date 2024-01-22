@@ -238,7 +238,7 @@ app.listen(3000, () => {
 });
 ```
 
-## Gracful shutdown
+## Graceful shutdown
 
 `adapter-node` will by default gracefully shutdown the HTTP server when a `SIGTERM` or `SIGINT` signal is received. It does this by calling [`server.close`](https://nodejs.org/api/http.html#serverclosecallback), [`server.closeIdleConnections`](https://nodejs.org/api/http.html#servercloseidleconnections) and [`server.closeAllConnections`](https://nodejs.org/api/http.html#servercloseallconnections) under the hood. This will
 
