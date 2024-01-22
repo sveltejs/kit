@@ -3,6 +3,21 @@ import * as path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import * as esbuild from 'esbuild';
 
+// list from https://developers.cloudflare.com/workers/runtime-apis/nodejs/
+const compatible_node_modules = [
+	'assert',
+	'async_hooks',
+	'buffer',
+	'crypto',
+	'diagnostics_channel',
+	'events',
+	'path',
+	'process',
+	'stream',
+	'string_decoder',
+	'util'
+];
+
 /** @type {import('./index.js').default} */
 export default function (options = {}) {
 	return {
@@ -53,21 +68,62 @@ export default function (options = {}) {
 				}
 			});
 
-			await esbuild.build({
-				platform: 'browser',
-				conditions: ['worker', 'browser'],
-				sourcemap: 'linked',
-				target: 'es2022',
-				entryPoints: [`${tmp}/_worker.js`],
-				outfile: `${dest}/_worker.js`,
-				allowOverwrite: true,
-				format: 'esm',
-				bundle: true,
-				loader: {
-					'.wasm': 'copy'
-				},
-				external: ['cloudflare:*']
-			});
+			const external = ['cloudflare:*', ...compatible_node_modules.map((id) => `node:${id}`)];
+
+			try {
+				const result = await esbuild.build({
+					platform: 'browser',
+					conditions: ['worker', 'browser'],
+					sourcemap: 'linked',
+					target: 'es2022',
+					entryPoints: [`${tmp}/_worker.js`],
+					outfile: `${dest}/_worker.js`,
+					allowOverwrite: true,
+					format: 'esm',
+					bundle: true,
+					loader: {
+						'.wasm': 'copy'
+					},
+					external,
+					alias: Object.fromEntries(compatible_node_modules.map((id) => [id, `node:${id}`])),
+					logLevel: 'silent'
+				});
+
+				if (result.warnings.length > 0) {
+					const formatted = await esbuild.formatMessages(result.warnings, {
+						kind: 'warning',
+						color: true
+					});
+
+					console.error(formatted.join('\n'));
+				}
+			} catch (error) {
+				for (const e of error.errors) {
+					for (const node of e.notes) {
+						const match =
+							/The package "(.+)" wasn't found on the file system but is built into node/.exec(
+								node.text
+							);
+
+						if (match) {
+							node.text = `Cannot use "${match[1]}" when deploying to Cloudflare.`;
+						}
+					}
+				}
+
+				const formatted = await esbuild.formatMessages(error.errors, {
+					kind: 'error',
+					color: true
+				});
+
+				console.error(formatted.join('\n'));
+
+				throw new Error(
+					`Bundling with esbuild failed with ${error.errors.length} ${
+						error.errors.length === 1 ? 'error' : 'errors'
+					}`
+				);
+			}
 		}
 	};
 }

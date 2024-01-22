@@ -17,6 +17,16 @@ declare module '@sveltejs/kit' {
 		 * @param builder An object provided by SvelteKit that contains methods for adapting the app
 		 */
 		adapt(builder: Builder): MaybePromise<void>;
+		/**
+		 * Checks called during dev and build to determine whether specific features will work in production with this adapter
+		 */
+		supports?: {
+			/**
+			 * Test support for `read` from `$app/server`
+			 * @param config The merged route config
+			 */
+			read?: (details: { config: any; route: { id: string } }) => boolean;
+		};
 	}
 
 	export type LoadProperties<input extends Record<string, any> | void> = input extends void
@@ -46,12 +56,11 @@ declare module '@sveltejs/kit' {
 		[uniqueSymbol]: true; // necessary or else UnpackValidationError could wrongly unpack objects with the same shape as ActionFailure
 	}
 
-	type UnpackValidationError<T> =
-		T extends ActionFailure<infer X>
-			? X
-			: T extends void
-				? undefined // needs to be undefined, because void will corrupt union type
-				: T;
+	type UnpackValidationError<T> = T extends ActionFailure<infer X>
+		? X
+		: T extends void
+			? undefined // needs to be undefined, because void will corrupt union type
+			: T;
 
 	/**
 	 * This object is passed to the `adapt` function of adapters.
@@ -72,12 +81,18 @@ declare module '@sveltejs/kit' {
 		/** An array of all routes (including prerendered) */
 		routes: RouteDefinition[];
 
+		// TODO 3.0 remove this method
 		/**
 		 * Create separate functions that map to one or more routes of your app.
 		 * @param fn A function that groups a set of routes into an entry point
 		 * @deprecated Use `builder.routes` instead
 		 */
 		createEntries(fn: (route: RouteDefinition) => AdapterEntry): Promise<void>;
+
+		/**
+		 * Find all the assets imported by server files belonging to `routes`
+		 */
+		findServerAssets(routes: RouteDefinition[]): string[];
 
 		/**
 		 * Generate a fallback page for a static webserver to use when no route is matched. Useful for single-page apps.
@@ -106,15 +121,6 @@ declare module '@sveltejs/kit' {
 		getServerDirectory(): string;
 		/** Get the application path including any configured `base` path, e.g. `my-base-path/_app`. */
 		getAppPath(): string;
-		/** Get the asset paths imported by server-side code. */
-		getServerAssets(): {
-			/** A map of route IDs and its array of assets paths imported by server-side code. */
-			routes: Map<string, string[]>;
-			/** An array of asset paths imported by the root [default error page](https://kit.svelte.dev/docs/routing#error). */
-			rootErrorPage: string[];
-			/** An array of asset paths imported by the [server hooks](https://kit.svelte.dev/docs/hooks#server-hooks). */
-			hooks: string[];
-		};
 
 		/**
 		 * Write client assets to `dest`.
@@ -1136,7 +1142,10 @@ declare module '@sveltejs/kit' {
 	}
 
 	export interface ServerInitOptions {
+		/** A map of environment variables */
 		env: Record<string, string>;
+		/** A function that turns an asset filename into a `ReadableStream`. Required for the `read` export from `$app/server` to work */
+		read?: (file: string) => ReadableStream;
 	}
 
 	export interface SSRManifest {
@@ -1151,6 +1160,8 @@ declare module '@sveltejs/kit' {
 			nodes: SSRNodeLoader[];
 			routes: SSRRoute[];
 			matchers(): Promise<Record<string, ParamMatcher>>;
+			/** A `[file]: size` map of all assets imported by server code */
+			server_assets: Record<string, number>;
 		};
 	}
 
@@ -1559,6 +1570,7 @@ declare module '@sveltejs/kit' {
 		app_dir: string;
 		app_path: string;
 		manifest_data: ManifestData;
+		out_dir: string;
 		service_worker: string | null;
 		client: {
 			start: string;
@@ -1573,6 +1585,11 @@ declare module '@sveltejs/kit' {
 
 	interface ManifestData {
 		assets: Asset[];
+		hooks: {
+			client: string | null;
+			server: string | null;
+			universal: string | null;
+		};
 		nodes: PageNode[];
 		routes: RouteData[];
 		matchers: Record<string, string>;
@@ -1883,6 +1900,11 @@ declare module '@sveltejs/kit/node' {
 	}): Promise<Request>;
 
 	export function setResponse(res: import('http').ServerResponse, response: Response): Promise<void>;
+	/**
+	 * Converts a file on disk to a readable stream
+	 * @since 2.4.0
+	 */
+	export function createReadableStream(file: string): ReadableStream;
 }
 
 declare module '@sveltejs/kit/node/polyfills' {
@@ -2115,6 +2137,22 @@ declare module '$app/paths' {
 	 * ```
 	 */
 	export function resolveRoute(id: string, params: Record<string, string | undefined>): string;
+}
+
+declare module '$app/server' {
+	/**
+	 * Read the contents of an imported asset from the filesystem
+	 * @example
+	 * ```js
+	 * import { read } from '$app/server';
+	 * import somefile from './somefile.txt';
+	 *
+	 * const asset = read(somefile);
+	 * const text = await asset.text();
+	 * ```
+	 * @since 2.4.0
+	 */
+	export function read(asset: string): Response;
 }
 
 declare module '$app/stores' {

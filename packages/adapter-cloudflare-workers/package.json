@@ -1,6 +1,6 @@
 {
 	"name": "@sveltejs/adapter-cloudflare-workers",
-	"version": "2.0.2",
+	"version": "2.1.0",
 	"description": "SvelteKit adapter that creates a Cloudflare Workers site using a function for dynamic server rendering",
 	"repository": {
 		"type": "git",
@@ -32,11 +32,11 @@
 	"dependencies": {
 		"@cloudflare/workers-types": "^4.20231121.0",
 		"@iarna/toml": "^2.2.5",
-		"esbuild": "^0.19.9"
+		"esbuild": "^0.19.11"
 	},
 	"devDependencies": {
-		"@sveltejs/kit": "workspace:^",
 		"@cloudflare/kv-asset-handler": "^0.3.0",
+		"@sveltejs/kit": "workspace:^",
 		"@types/node": "^18.19.3",
 		"typescript": "^5.3.3"
 	},

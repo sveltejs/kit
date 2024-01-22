@@ -1,3 +1,5 @@
+import { createReadStream } from 'node:fs';
+import { Readable } from 'node:stream';
 import * as set_cookie_parser from 'set-cookie-parser';
 import { SvelteKitError } from '../../runtime/control.js';
 
@@ -188,4 +190,14 @@ export async function setResponse(res, response) {
 			cancel(error instanceof Error ? error : new Error(String(error)));
 		}
 	}
+}
+
+/**
+ * Converts a file on disk to a readable stream
+ * @param {string} file
+ * @returns {ReadableStream}
+ * @since 2.4.0
+ */
+export function createReadableStream(file) {
+	return /** @type {ReadableStream} */ (Readable.toWeb(createReadStream(file)));
 }

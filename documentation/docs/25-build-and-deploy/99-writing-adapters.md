@@ -7,6 +7,7 @@ If an adapter for your preferred environment doesn't yet exist, you can build yo
 Adapters packages must implement the following API, which creates an `Adapter`:
 
 ```js
+// @errors: 2322
 // @filename: ambient.d.ts
 type AdapterSpecificOptions = any;
 
@@ -19,6 +20,13 @@ export default function (options) {
 		name: 'adapter-package-name',
 		async adapt(builder) {
 			// adapter implementation
+		},
+		supports: {
+			read: ({ config, route }) => {
+				// Return `true` if the route with the given `config` can use `read`
+				// from `$app/server` in production, return `false` if it can't.
+				// Or throw a descriptive error describing how to configure the deployment
+			}
 		}
 	};
 

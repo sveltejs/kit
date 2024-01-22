@@ -31,6 +31,8 @@ import { json, text } from '../../exports/index.js';
 import { action_json_redirect, is_action_json_request } from './page/actions.js';
 import { INVALIDATED_PARAM, TRAILING_SLASH_PARAM } from '../shared.js';
 import { get_public_env } from './env_module.js';
+import { load_page_nodes } from './page/load_page_nodes.js';
+import { get_page_config } from '../../utils/route_config.js';
 
 /* global __SVELTEKIT_ADAPTER_NAME__ */
 
@@ -217,11 +219,7 @@ export async function respond(request, options, manifest, state) {
 			if (url.pathname === base || url.pathname === base + '/') {
 				trailing_slash = 'always';
 			} else if (route.page) {
-				const nodes = await Promise.all([
-					// we use == here rather than === because [undefined] serializes as "[null]"
-					...route.page.layouts.map((n) => (n == undefined ? n : manifest._.nodes[n]())),
-					manifest._.nodes[route.page.leaf]()
-				]);
+				const nodes = await load_page_nodes(route.page, manifest);
 
 				if (DEV) {
 					const layouts = nodes.slice(0, -1);
@@ -271,6 +269,25 @@ export async function respond(request, options, manifest, state) {
 						}
 					});
 				}
+			}
+
+			if (DEV && state.before_handle) {
+				let config = {};
+
+				/** @type {import('types').PrerenderOption} */
+				let prerender = false;
+
+				if (route.endpoint) {
+					const node = await route.endpoint();
+					config = node.config ?? config;
+					prerender = node.prerender ?? prerender;
+				} else if (route.page) {
+					const nodes = await load_page_nodes(route.page, manifest);
+					config = get_page_config(nodes);
+					prerender = get_option(nodes, 'prerender') ?? false;
+				}
+
+				state.before_handle(event, config, prerender);
 			}
 		}
 

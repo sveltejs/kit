@@ -64,14 +64,20 @@ const scroll_positions = storage.get(SCROLL_KEY) ?? {};
  */
 const snapshots = storage.get(SNAPSHOT_KEY) ?? {};
 
-const original_push_state = BROWSER ? history.pushState : () => {};
-const original_replace_state = BROWSER ? history.replaceState : () => {};
-
 if (DEV && BROWSER) {
 	let warned = false;
 
 	const warn = () => {
 		if (warned) return;
+
+		// Rather than saving a pointer to the original history methods, which would prevent monkeypatching by other libs,
+		// inspect the stack trace to see if we're being called from within SvelteKit.
+		let stack = new Error().stack?.split('\n');
+		if (!stack) return;
+		if (!stack[0].includes('https:') && !stack[0].includes('http:')) stack = stack.slice(1); // Chrome includes the error message in the stack
+		stack = stack.slice(2); // remove `warn` and the place where `warn` was called
+		if (stack[0].includes(import.meta.url)) return;
+
 		warned = true;
 
 		console.warn(
@@ -79,14 +85,16 @@ if (DEV && BROWSER) {
 		);
 	};
 
+	const push_state = history.pushState;
 	history.pushState = (...args) => {
 		warn();
-		return original_push_state.apply(history, args);
+		return push_state.apply(history, args);
 	};
 
+	const replace_state = history.replaceState;
 	history.replaceState = (...args) => {
 		warn();
-		return original_replace_state.apply(history, args);
+		return replace_state.apply(history, args);
 	};
 }
 
@@ -252,8 +260,7 @@ export async function start(_app, _target, hydrate) {
 		current_history_index = current_navigation_index = Date.now();
 
 		// create initial history entry, so we can return here
-		original_replace_state.call(
-			history,
+		history.replaceState(
 			{
 				...history.state,
 				[HISTORY_INDEX]: current_history_index,
@@ -1296,7 +1303,7 @@ async function navigate({
 			[STATES_KEY]: state
 		};
 
-		const fn = replace_state ? original_replace_state : original_push_state;
+		const fn = replace_state ? history.replaceState : history.pushState;
 		fn.call(history, entry, '', url);
 
 		if (!replace_state) {
@@ -1323,7 +1330,7 @@ async function navigate({
 					fn(/** @type {import('@sveltejs/kit').OnNavigate} */ (nav.navigation))
 				)
 			)
-		).filter((value) => typeof value === 'function');
+		).filter(/** @returns {value is () => void} */ (value) => typeof value === 'function');
 
 		if (after_navigate.length > 0) {
 			function cleanup() {
@@ -1334,9 +1341,7 @@ async function navigate({
 			}
 
 			after_navigate.push(cleanup);
-
-			// @ts-ignore
-			callbacks.after_navigate.push(...after_navigate);
+			after_navigate_callbacks.push(...after_navigate);
 		}
 
 		root.$set(navigation_result.props);
@@ -1812,7 +1817,7 @@ export function pushState(url, state) {
 		[STATES_KEY]: state
 	};
 
-	original_push_state.call(history, opts, '', resolve_url(url));
+	history.pushState(opts, '', resolve_url(url));
 
 	page = { ...page, state };
 	root.$set({ page });
@@ -1849,7 +1854,7 @@ export function replaceState(url, state) {
 		[STATES_KEY]: state
 	};
 
-	original_replace_state.call(history, opts, '', resolve_url(url));
+	history.replaceState(opts, '', resolve_url(url));
 
 	page = { ...page, state };
 	root.$set({ page });
@@ -2180,8 +2185,7 @@ function _start_router() {
 		// we need to update history, otherwise we have to leave it alone
 		if (hash_navigating) {
 			hash_navigating = false;
-			original_replace_state.call(
-				history,
+			history.replaceState(
 				{
 					...history.state,
 					[HISTORY_INDEX]: ++current_history_index,

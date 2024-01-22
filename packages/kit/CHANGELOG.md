@@ -1,5 +1,41 @@
 # @sveltejs/kit
 
+## 2.4.1
+
+### Patch Changes
+
+- fix: use Vite's default value for `build.target` and respect override supplied by user ([#11688](https://github.com/sveltejs/kit/pull/11688))
+
+- fix: properly decode base64 strings inside `read` ([#11682](https://github.com/sveltejs/kit/pull/11682))
+
+- fix: default route config to `{}` for feature checking ([#11685](https://github.com/sveltejs/kit/pull/11685))
+
+- fix: handle `onNavigate` callbacks correctly ([#11678](https://github.com/sveltejs/kit/pull/11678))
+
+## 2.4.0
+
+### Minor Changes
+
+- feat: add `$app/server` module with `read` function for reading assets from filesystem ([#11649](https://github.com/sveltejs/kit/pull/11649))
+
+## 2.3.5
+
+### Patch Changes
+
+- fix: log a warning if fallback page overwrites prerendered page ([#11661](https://github.com/sveltejs/kit/pull/11661))
+
+## 2.3.4
+
+### Patch Changes
+
+- fix: don't stash away original `history` methods so other libs can monkeypatch it ([#11657](https://github.com/sveltejs/kit/pull/11657))
+
+## 2.3.3
+
+### Patch Changes
+
+- fix: remove internal `__sveltekit/` module declarations from types ([#11620](https://github.com/sveltejs/kit/pull/11620))
+
 ## 2.3.2
 
 ### Patch Changes

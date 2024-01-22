@@ -107,29 +107,12 @@ Additionally, you can add your own Netlify functions by creating a directory for
 	directory = "functions"
 ```
 
+## Troubleshooting
+
 ### Accessing the file system
 
-You can [use files in Netlify Serverless Functions](https://www.netlify.com/blog/2021/08/12/how-to-include-files-in-netlify-serverless-functions/).
+You can't use `fs` in edge deployments.
 
-```js
-// @errors: 2307 7031
-/// file: +server.js
-import fs from "node:fs";
-import path from "node:path";
-import { dev } from '$app/environment';
+You _can_ use it in serverless deployments, but it won't work as expected, since files are not copied from your project into your deployment. Instead, use the `read` function from `$app/server` to access your files. `read` does not work inside edge deployments (this may change in future).
 
-// importing a static asset will return the resolved path in the production build
-import PalatinoBoldFont from "$lib/fonts/PalatinoBold.ttf";
-
-const cwd = process.cwd();
-
-// server assets live in `.netlify/server` when deployed to Netlify
-const dir = dev ? cwd : path.join(cwd, '.netlify/server');
-
-const pathToFile = path.join(dir, PalatinoBoldFont);
-
-export async function GET() {
-  const file = fs.readFileSync(pathToFile);
-	// ...
-}
-```
+Alternatively, you can [prerender](https://kit.svelte.dev/docs/page-options#prerender) the routes in question.

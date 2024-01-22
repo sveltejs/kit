@@ -1,16 +1,17 @@
-import { existsSync, statSync, createReadStream, createWriteStream } from 'node:fs';
+import colors from 'kleur';
+import { createReadStream, createWriteStream, existsSync, statSync } from 'node:fs';
 import { extname, resolve } from 'node:path';
 import { pipeline } from 'node:stream';
 import { promisify } from 'node:util';
 import zlib from 'node:zlib';
-import { copy, rimraf, mkdirp, resolve_entry } from '../../utils/filesystem.js';
+import { copy, rimraf, mkdirp } from '../../utils/filesystem.js';
 import { generate_manifest } from '../generate_manifest/index.js';
 import { get_route_segments } from '../../utils/routing.js';
 import { get_env } from '../../exports/vite/utils.js';
 import generate_fallback from '../postbuild/fallback.js';
 import { write } from '../sync/utils.js';
 import { list_files } from '../utils.js';
-import { concat } from '../../utils/set.js';
+import { find_server_assets } from '../generate_manifest/find_server_assets.js';
 
 const pipe = promisify(pipeline);
 const extensions = ['.html', '.js', '.mjs', '.json', '.css', '.svg', '.xml', '.wasm'];
@@ -71,15 +72,6 @@ export function create_builder({
 
 		return facade;
 	});
-
-	/**
-	 * @type {{
-	 * 	routes: Map<string, string[]>;
-	 * 	root_error_page: string[];
-	 * 	hooks: string[];
-	 * } | undefined}
-	 */
-	let server_assets;
 
 	return {
 		log,
@@ -154,6 +146,13 @@ export function create_builder({
 			}
 		},
 
+		findServerAssets(route_data) {
+			return find_server_assets(
+				build_data,
+				route_data.map((route) => /** @type {import('types').RouteData} */ (lookup.get(route)))
+			);
+		},
+
 		async generateFallback(dest) {
 			const manifest_path = `${config.kit.outDir}/output/server/manifest-full.js`;
 			const env = get_env(config.kit.env, vite_config.mode);
@@ -162,6 +161,16 @@ export function create_builder({
 				manifest_path,
 				env: { ...env.private, ...env.public }
 			});
+
+			if (existsSync(dest)) {
+				console.log(
+					colors
+						.bold()
+						.yellow(
+							`Overwriting ${dest} with fallback page. Consider using a different name for the fallback.`
+						)
+				);
+			}
 
 			write(dest, fallback);
 		},
@@ -197,124 +206,6 @@ export function create_builder({
 
 		getAppPath() {
 			return build_data.app_path;
-		},
-
-		getServerAssets() {
-			if (server_assets) {
-				return {
-					routes: server_assets.routes,
-					hooks: server_assets.hooks,
-					rootErrorPage: server_assets.root_error_page
-				};
-			}
-
-			/** @type {Set<string>} */
-			let asset_chunks = new Set();
-
-			for (const [filename, meta] of Object.entries(build_data.server_manifest)) {
-				if (filename.startsWith('_') && meta.assets) {
-					asset_chunks = concat(asset_chunks, meta.assets);
-				}
-			}
-
-			/**
-			 * @param {string | undefined} filename
-			 * @returns {Set<string>}
-			 */
-			function get_server_assets(filename) {
-				if (!filename || !build_data.server_manifest[filename]) {
-					return /** @type {Set<string>} */ (new Set());
-				}
-				const { imports, assets } = build_data.server_manifest[filename];
-
-				/** @type {Set<string>} */
-				let server_assets = new Set();
-
-				if (imports) {
-					server_assets = concat(
-						server_assets,
-						imports.filter((file) => asset_chunks.has(file))
-					);
-				}
-
-				if (assets) {
-					server_assets = concat(server_assets, assets);
-				}
-
-				return server_assets;
-			}
-
-			/**
-			 * @param {{
-			 *   component?: string;
-			 *   server?: string;
-			 *   universal?: string;
-			 *   parent?: import('types').PageNode;
-			 * }} node
-			 * @returns
-			 */
-			function get_server_load_assets({ server, parent }) {
-				let server_assets = concat(
-					/** @type {Set<string>}*/ (new Set()),
-					get_server_assets(server)
-				);
-
-				if (parent) {
-					server_assets = concat(server_assets, get_server_load_assets(parent));
-				}
-
-				return server_assets;
-			}
-
-			function get_root_error_page_assets() {
-				const route = route_data.find((route) => route.leaf);
-				if (!route || !route.leaf) {
-					return /** @type {string[]}*/ ([]);
-				}
-
-				let assets = new Set();
-
-				let layout = route.leaf.parent;
-				while (layout) {
-					assets = concat(assets, get_server_load_assets(layout));
-					layout = layout.parent;
-				}
-
-				return [...assets];
-			}
-
-			/** @type {Map<string, string[]>} */
-			const routes = new Map();
-			route_data.forEach((route) => {
-				/** @type {Set<string>} */
-				let server_assets = new Set();
-
-				if (route.leaf) {
-					server_assets = concat(server_assets, get_server_load_assets(route.leaf));
-				}
-
-				if (route.endpoint) {
-					server_assets = concat(server_assets, get_server_assets(route.endpoint.file));
-				}
-
-				routes.set(route.id, Array.from(server_assets));
-			});
-
-			const server_hooks_path = resolve_entry(config.kit.files.hooks.server)?.slice(
-				process.cwd().length + 1
-			);
-
-			server_assets = {
-				routes,
-				hooks: [...get_server_assets(server_hooks_path)],
-				root_error_page: get_root_error_page_assets()
-			};
-
-			return {
-				routes: server_assets.routes,
-				hooks: server_assets.hooks,
-				rootErrorPage: server_assets.root_error_page
-			};
 		},
 
 		writeClient(dest) {

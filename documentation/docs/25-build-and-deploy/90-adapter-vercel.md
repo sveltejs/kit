@@ -153,25 +153,12 @@ If you have Vercel functions contained in the `api` directory at the project's r
 
 Projects created before a certain date may default to using an older Node version than what SvelteKit currently requires. You can [change the Node version in your project settings](https://vercel.com/docs/concepts/functions/serverless-functions/runtimes/node-js#node.js-version).
 
+## Troubleshooting
+
 ### Accessing the file system
 
-You can [use files in Serverless Functions on Vercel](https://vercel.com/guides/how-can-i-use-files-in-serverless-functions).
+You can't use `fs` in edge functions.
 
-```js
-// @errors: 2307 7031
-/// file: api/pdf/+server.js
-import fs from "node:fs";
-import path from "node:path";
+You _can_ use it in serverless functions, but it won't work as expected, since files are not copied from your project into your deployment. Instead, use the `read` function from `$app/server` to access your files. `read` does not work inside routes deployed as edge functions (this may change in future).
 
-// importing a static asset will return the resolved path in the production build
-import PalatinoBoldFont from "$lib/fonts/PalatinoBold.ttf";
-
-const pathToFile = path.join(process.cwd(), PalatinoBoldFont);
-
-export async function GET() {
-	const file = fs.readFileSync(pathToFile);
-	// ...
-}
-```
-
-> Only assets that are imported in `+page.server`, `+layout.server` and `+server` files are included in the Serverless Function bundle.
+Alternatively, you can [prerender](https://kit.svelte.dev/docs/page-options#prerender) the routes in question.

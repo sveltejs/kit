@@ -1,5 +1,17 @@
 # create-svelte
 
+## 6.0.8
+
+### Patch Changes
+
+- chore: upgrade to vite 5.0.11 and vitest 1.2.0 ([#11632](https://github.com/sveltejs/kit/pull/11632))
+
+## 6.0.7
+
+### Patch Changes
+
+- fix: install eslint-plugin-svelte@next for svelte5 ([#11627](https://github.com/sveltejs/kit/pull/11627))
+
 ## 6.0.6
 
 ### Patch Changes

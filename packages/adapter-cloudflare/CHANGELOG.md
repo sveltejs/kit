@@ -1,5 +1,43 @@
 # @sveltejs/adapter-cloudflare
 
+## 4.1.0
+
+### Minor Changes
+
+- feat: more helpful errors when using incompatible Node modules ([#11673](https://github.com/sveltejs/kit/pull/11673))
+
+- feat: support compatible node modules without prefixes ([#11672](https://github.com/sveltejs/kit/pull/11672))
+
+- feat: Add Node.js compatibility ([#10544](https://github.com/sveltejs/kit/pull/10544))
+
+### Patch Changes
+
+- Updated dependencies [[`288f731c8a5b20cadb9e219f9583f3f16bf8c7b8`](https://github.com/sveltejs/kit/commit/288f731c8a5b20cadb9e219f9583f3f16bf8c7b8)]:
+  - @sveltejs/kit@2.4.0
+
+## 4.0.2
+
+### Patch Changes
+
+- chore(deps): update dependency worktop to v0.8.0-next.18 ([#11618](https://github.com/sveltejs/kit/pull/11618))
+
+## 4.0.1
+
+### Patch Changes
+
+- chore: upgrade esbuild to 0.19.11 ([#11632](https://github.com/sveltejs/kit/pull/11632))
+
+## 4.0.0
+
+### Major Changes
+
+- breaking: generate plaintext 404.html instead of SPA-style fallback page ([#11596](https://github.com/sveltejs/kit/pull/11596))
+
+### Patch Changes
+
+- Updated dependencies [[`2137717ea8592c310ada93490feabbd9eea125ea`](https://github.com/sveltejs/kit/commit/2137717ea8592c310ada93490feabbd9eea125ea)]:
+  - @sveltejs/kit@2.3.3
+
 ## 3.0.2
 
 ### Patch Changes

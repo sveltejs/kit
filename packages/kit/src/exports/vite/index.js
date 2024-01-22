@@ -31,7 +31,8 @@ import {
 	env_static_public,
 	service_worker,
 	sveltekit_environment,
-	sveltekit_paths
+	sveltekit_paths,
+	sveltekit_server
 } from './module_ids.js';
 import { pathToFileURL } from 'node:url';
 
@@ -223,6 +224,13 @@ async function kit({ svelte_config }) {
 
 	const service_worker_entry_file = resolve_entry(kit.files.serviceWorker);
 	const parsed_service_worker = path.parse(kit.files.serviceWorker);
+
+	/**
+	 * A map showing which features (such as `$app/server:read`) are defined
+	 * in which chunks, so that we can later determine which routes use which features
+	 * @type {Record<string, string[]>}
+	 */
+	const tracked_features = {};
 
 	const sourcemapIgnoreList = /** @param {string} relative_path */ (relative_path) =>
 		relative_path.includes('node_modules') || relative_path.includes(kit.outDir);
@@ -492,13 +500,29 @@ async function kit({ svelte_config }) {
 						}
 					`;
 				}
+
+				case sveltekit_server: {
+					return dedent`
+						export let read_implementation = null;
+
+						export let manifest = null;
+
+						export function set_read_implementation(fn) {
+							read_implementation = fn;
+						}
+
+						export function set_manifest(_) {
+							manifest = _;
+						}
+					`;
+				}
 			}
 		}
 	};
 
 	/**
 	 * Ensures that client-side code can't accidentally import server-side code,
-	 * whether in `*.server.js` files, `$lib/server`, or `$env/[static|dynamic]/private`
+	 * whether in `*.server.js` files, `$app/server`, `$lib/server`, or `$env/[static|dynamic]/private`
 	 * @type {import('vite').Plugin}
 	 */
 	const plugin_guard = {
@@ -621,7 +645,7 @@ async function kit({ svelte_config }) {
 							preserveEntrySignatures: 'strict'
 						},
 						ssrEmitAssets: true,
-						target: ssr ? 'node18.13' : 'es2022'
+						target: ssr ? 'node18.13' : undefined
 					},
 					publicDir: kit.files.assets,
 					worker: {
@@ -685,6 +709,19 @@ async function kit({ svelte_config }) {
 			}
 		},
 
+		renderChunk(code, chunk) {
+			if (code.includes('__SVELTEKIT_TRACK__')) {
+				return {
+					code: code.replace(/__SVELTEKIT_TRACK__\('(.+?)'\)/g, (_, label) => {
+						(tracked_features[chunk.name + '.js'] ??= []).push(label);
+						// put extra whitespace at the end of the comment to preserve the source size and avoid interfering with source maps
+						return `/* track ${label}            */`;
+					}),
+					map: null // TODO we may need to generate a sourcemap in future
+				};
+			}
+		},
+
 		generateBundle() {
 			if (vite_config.build.ssr) return;
 
@@ -716,6 +753,7 @@ async function kit({ svelte_config }) {
 					app_dir: kit.appDir,
 					app_path: `${kit.paths.base.slice(1)}${kit.paths.base ? '/' : ''}${kit.appDir}`,
 					manifest_data,
+					out_dir: out,
 					service_worker: service_worker_entry_file ? 'service-worker.js' : null, // TODO make file configurable?
 					client: null,
 					server_manifest
@@ -738,6 +776,9 @@ async function kit({ svelte_config }) {
 
 				const metadata = await analyse({
 					manifest_path,
+					manifest_data,
+					server_manifest,
+					tracked_features,
 					env: { ...env.private, ...env.public }
 				});
 

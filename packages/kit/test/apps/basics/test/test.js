@@ -706,6 +706,19 @@ test.describe('$app/paths', () => {
 	});
 });
 
+test.describe('$app/server', () => {
+	test('can read a file', async ({ page }) => {
+		await page.goto('/read-file');
+
+		const auto = await page.textContent('[data-testid="auto"]');
+		const url = await page.textContent('[data-testid="url"]');
+
+		// the emoji is there to check that base64 decoding works correctly
+		expect(auto.trim()).toBe('Imported without ?url 😎');
+		expect(url.trim()).toBe('Imported with ?url 😎');
+	});
+});
+
 test.describe('$app/stores', () => {
 	test('can access page.url', async ({ baseURL, page }) => {
 		await page.goto('/origin');

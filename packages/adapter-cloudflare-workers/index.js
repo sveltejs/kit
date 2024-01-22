@@ -11,8 +11,24 @@ import { fileURLToPath } from 'node:url';
  *   site: {
  *     bucket: string;
  *   }
+ *   compatibility_flags?: string[];
  * }} WranglerConfig
  */
+
+// list from https://developers.cloudflare.com/workers/runtime-apis/nodejs/
+const compatible_node_modules = [
+	'assert',
+	'async_hooks',
+	'buffer',
+	'crypto',
+	'diagnostics_channel',
+	'events',
+	'path',
+	'process',
+	'stream',
+	'string_decoder',
+	'util'
+];
 
 /** @type {import('./index.js').default} */
 export default function ({ config = 'wrangler.toml' } = {}) {
@@ -20,7 +36,7 @@ export default function ({ config = 'wrangler.toml' } = {}) {
 		name: '@sveltejs/adapter-cloudflare-workers',
 
 		async adapt(builder) {
-			const { main, site } = validate_config(builder, config);
+			const { main, site, compatibility_flags } = validate_config(builder, config);
 
 			const files = fileURLToPath(new URL('./files', import.meta.url).href);
 			const tmp = builder.getBuildDirectory('cloudflare-workers-tmp');
@@ -61,20 +77,64 @@ export default function ({ config = 'wrangler.toml' } = {}) {
 				})};\n\nexport const prerendered = new Map(${JSON.stringify(prerendered_entries)});\n`
 			);
 
-			await esbuild.build({
-				platform: 'browser',
-				conditions: ['worker', 'browser'],
-				sourcemap: 'linked',
-				target: 'es2022',
-				entryPoints: [`${tmp}/entry.js`],
-				outfile: main,
-				bundle: true,
-				external: ['__STATIC_CONTENT_MANIFEST', 'cloudflare:*'],
-				format: 'esm',
-				loader: {
-					'.wasm': 'copy'
+			const external = ['__STATIC_CONTENT_MANIFEST', 'cloudflare:*'];
+			if (compatibility_flags && compatibility_flags.includes('nodejs_compat')) {
+				external.push(...compatible_node_modules.map((id) => `node:${id}`));
+			}
+
+			try {
+				const result = await esbuild.build({
+					platform: 'browser',
+					conditions: ['worker', 'browser'],
+					sourcemap: 'linked',
+					target: 'es2022',
+					entryPoints: [`${tmp}/entry.js`],
+					outfile: main,
+					bundle: true,
+					external,
+					alias: Object.fromEntries(compatible_node_modules.map((id) => [id, `node:${id}`])),
+					format: 'esm',
+					loader: {
+						'.wasm': 'copy'
+					},
+					logLevel: 'silent'
+				});
+
+				if (result.warnings.length > 0) {
+					const formatted = await esbuild.formatMessages(result.warnings, {
+						kind: 'warning',
+						color: true
+					});
+
+					console.error(formatted.join('\n'));
 				}
-			});
+			} catch (error) {
+				for (const e of error.errors) {
+					for (const node of e.notes) {
+						const match =
+							/The package "(.+)" wasn't found on the file system but is built into node/.exec(
+								node.text
+							);
+
+						if (match) {
+							node.text = `Cannot use "${match[1]}" when deploying to Cloudflare.`;
+						}
+					}
+				}
+
+				const formatted = await esbuild.formatMessages(error.errors, {
+					kind: 'error',
+					color: true
+				});
+
+				console.error(formatted.join('\n'));
+
+				throw new Error(
+					`Bundling with esbuild failed with ${error.errors.length} ${
+						error.errors.length === 1 ? 'error' : 'errors'
+					}`
+				);
+			}
 
 			builder.log.minor('Copying assets...');
 			const bucket_dir = `${site.bucket}${builder.config.kit.paths.base}`;

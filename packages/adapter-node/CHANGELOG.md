@@ -1,5 +1,26 @@
 # @sveltejs/adapter-node
 
+## 4.0.0
+
+### Major Changes
+
+- breaking: update peer dependency on `@sveltejs/kit` ([#11649](https://github.com/sveltejs/kit/pull/11649))
+
+### Minor Changes
+
+- feat: support `read` from `$app/server` ([#11649](https://github.com/sveltejs/kit/pull/11649))
+
+### Patch Changes
+
+- Updated dependencies [[`288f731c8a5b20cadb9e219f9583f3f16bf8c7b8`](https://github.com/sveltejs/kit/commit/288f731c8a5b20cadb9e219f9583f3f16bf8c7b8)]:
+  - @sveltejs/kit@2.4.0
+
+## 3.0.1
+
+### Patch Changes
+
+- chore: upgrade rollup to 4.9.5 ([#11632](https://github.com/sveltejs/kit/pull/11632))
+
 ## 3.0.0
 
 ### Major Changes

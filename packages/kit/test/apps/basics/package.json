@@ -19,9 +19,9 @@
 		"cross-env": "^7.0.3",
 		"marked": "^11.1.0",
 		"svelte": "^4.2.8",
-		"svelte-check": "^3.6.2",
+		"svelte-check": "^3.6.3",
 		"typescript": "^5.3.3",
-		"vite": "^5.0.8"
+		"vite": "^5.0.11"
 	},
 	"type": "module"
 }
