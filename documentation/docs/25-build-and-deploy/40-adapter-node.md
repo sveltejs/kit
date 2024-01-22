@@ -238,11 +238,22 @@ app.listen(3000, () => {
 });
 ```
 
+## Gracful shutdown
+
+`adapter-node` will by default gracefully shutdown the HTTP server when a `SIGTERM` or `SIGINT` signal is received. It does this by calling [`server.close`](https://nodejs.org/api/http.html#serverclosecallback), [`server.closeIdleConnections`](https://nodejs.org/api/http.html#servercloseidleconnections) and [`server.closeAllConnections`](https://nodejs.org/api/http.html#servercloseallconnections) under the hood. This will
+
+1. finish requests that have already been made but not received a response yet
+2. reject new requests
+3. close connections once they become idle
+4. finally close any remaining connection that are still active after `SHUTDOWN_TIMEOUT` seconds
+
+> If you want to customize this shutdown logic you can use a [custom server](#custom-server).
+
 ## Troubleshooting
 
-### Is there a hook for cleaning up before the server exits?
+### Is there a hook for cleaning up before the app exits?
 
-There's nothing built-in to SvelteKit for this, because such a cleanup hook depends highly on the execution environment you're on. For Node, you can use its built-in `process.on(...)` to implement a callback that runs before the server exits:
+There's nothing built-in to SvelteKit for this, because such a cleanup hook depends highly on the execution environment you're on. For Node, you can use its built-in `process.on(...)` to implement a callback that runs before the app exits:
 
 ```js
 // @errors: 2304 2580
@@ -251,6 +262,5 @@ function shutdownGracefully() {
 	db.shutdown();
 }
 
-process.on('SIGINT', shutdownGracefully);
-process.on('SIGTERM', shutdownGracefully);
+process.on('exit', shutdownGracefully);
 ```
