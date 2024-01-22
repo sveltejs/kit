@@ -110,9 +110,9 @@ export async function getRequest({ request, base, bodySizeLimit }) {
 		method: request.method,
 		headers: /** @type {Record<string, string>} */ (request.headers),
 		body:
-			request.method === 'POST' || request.method === 'PUT' || request.method === 'PATCH'
-				? get_raw_body(request, bodySizeLimit)
-				: undefined
+			request.method === 'GET' || request.method === 'HEAD'
+				? undefined
+				: get_raw_body(request, bodySizeLimit)
 	});
 }
 
