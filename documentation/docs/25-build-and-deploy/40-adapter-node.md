@@ -172,6 +172,17 @@ node build
 
 > [Socket activation](#socket-activation) does not work when a prefix is specified because `LISTEN_PID` and `LISTEN_FDS` are set by the OS and cannot be renamed.
 
+## Graceful shutdown
+
+`adapter-node` by default gracefully shuts down the the internal node:http server when a `SIGTERM` or `SIGINT` signal is received. It does this by calling [`server.close`](https://nodejs.org/api/http.html#serverclosecallback), [`server.closeIdleConnections`](https://nodejs.org/api/http.html#servercloseidleconnections) and [`server.closeAllConnections`](https://nodejs.org/api/http.html#servercloseallconnections) under the hood. This will
+
+1. wait for requests that have already been made but not received a response yet to finish
+2. reject new requests
+3. close connections once they become idle
+4. and finally, close any remaining connection that are still active after [`SHUTDOWN_TIMEOUT`](#shutdown_timeout) seconds.
+
+> If you want to customize this behaviour you can use a [custom server](#custom-server).
+
 ## Socket activation
 
 Most Linux operating systems today use a modern process manager called systemd to start the server and run and manage services. You can configure your server to allocate a socket and start and scale your app on demand. This is called [socket activation](http://0pointer.de/blog/projects/socket-activated-containers.html). In this case the OS will pass two environment variables to your app — `LISTEN_PID` and `LISTEN_FDS`. The adapter will verify that these variables are correct and then listen on file descriptor 3 which refers to a systemd socket unit that you will have to create.
@@ -237,17 +248,6 @@ app.listen(3000, () => {
 	console.log('listening on port 3000');
 });
 ```
-
-## Graceful shutdown
-
-`adapter-node` will by default gracefully shutdown the HTTP server when a `SIGTERM` or `SIGINT` signal is received. It does this by calling [`server.close`](https://nodejs.org/api/http.html#serverclosecallback), [`server.closeIdleConnections`](https://nodejs.org/api/http.html#servercloseidleconnections) and [`server.closeAllConnections`](https://nodejs.org/api/http.html#servercloseallconnections) under the hood. This will
-
-1. finish requests that have already been made but not received a response yet
-2. reject new requests
-3. close connections once they become idle
-4. finally close any remaining connection that are still active after `SHUTDOWN_TIMEOUT` seconds
-
-> If you want to customize this behaviour you can use a [custom server](#custom-server).
 
 ## Troubleshooting
 
