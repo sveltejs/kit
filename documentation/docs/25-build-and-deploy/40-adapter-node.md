@@ -179,7 +179,7 @@ node build
 1. wait for requests that have already been made but not received a response yet to finish
 2. reject new requests
 3. close connections once they become idle
-4. and finally, close any remaining connection that are still active after [`SHUTDOWN_TIMEOUT`](#shutdown_timeout) seconds.
+4. and finally, close any remaining connections that are still active after [`SHUTDOWN_TIMEOUT`](#shutdown_timeout) seconds.
 
 > If you want to customize this behaviour you can use a [custom server](#custom-server).
 
