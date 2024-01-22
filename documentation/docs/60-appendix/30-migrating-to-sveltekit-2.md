@@ -68,7 +68,7 @@ export function load({ fetch }) {
 
 ## goto(...) changes
 
-`goto(...)` no longer accepts external URLs. To navigate to an external URL, use `window.location = url`. The `state` object now determines `$page.state` and must adhere to the `App.PageState` interface, if declared. See [shallow routing](shallow-routing) for more details.
+`goto(...)` no longer accepts external URLs. To navigate to an external URL, use `window.location.href = url`. The `state` object now determines `$page.state` and must adhere to the `App.PageState` interface, if declared. See [shallow routing](shallow-routing) for more details.
 
 ## paths are now relative by default
 
