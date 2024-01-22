@@ -215,6 +215,32 @@ export function update_pkg(content, updates) {
 	 * @param {'dependencies' | 'devDependencies' | undefined} [insert]
 	 */
 	function update_pkg(name, version, additional = '', insert) {
+		let existing_version;
+
+		if (pkg.dependencies?.[name]) {
+			existing_version = pkg.dependencies[name];
+		} else if (pkg.devDependencies?.[name]) {
+			existing_version = pkg.devDependencies[name];
+		}
+
+		// Handle version ranges
+		if (existing_version) {
+			// Find the max version that satisfies the existing version range
+			const maxExistingVersion = semver.maxSatisfying([existing_version], existing_version);
+
+			// Find the max version that satisfies the provided version range
+			const maxProvidedVersion = semver.maxSatisfying([version], version);
+
+			// Skip if the max existing version is greater than or equal to the max provided version
+			if (
+				maxExistingVersion &&
+				maxProvidedVersion &&
+				semver.gte(maxExistingVersion, maxProvidedVersion)
+			) {
+				return;
+			}
+		}
+
 		if (pkg.dependencies?.[name]) {
 			const existing_range = pkg.dependencies[name];
 
