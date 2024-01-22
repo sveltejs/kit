@@ -36,6 +36,8 @@ function shutdown() {
 		if (idle_timeout_id) {
 			idle_timeout_id = clearTimeout(idle_timeout_id);
 		}
+
+		process.exit();
 	});
 
 	shutdown_timeout_id = setTimeout(
