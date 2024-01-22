@@ -1,6 +1,6 @@
 {
 	"name": "@sveltejs/adapter-node",
-	"version": "4.0.0",
+	"version": "4.0.1",
 	"description": "Adapter for SvelteKit apps that generates a standalone Node server",
 	"repository": {
 		"type": "git",

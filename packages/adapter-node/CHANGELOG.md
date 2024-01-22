@@ -1,5 +1,14 @@
 # @sveltejs/adapter-node
 
+## 4.0.1
+
+### Patch Changes
+
+- fix: return 400 response if request construction fails ([#11713](https://github.com/sveltejs/kit/pull/11713))
+
+- Updated dependencies [[`f56781fa47a0f958b228e4a51bb3cbf173854f12`](https://github.com/sveltejs/kit/commit/f56781fa47a0f958b228e4a51bb3cbf173854f12)]:
+  - @sveltejs/kit@2.4.3
+
 ## 4.0.0
 
 ### Major Changes

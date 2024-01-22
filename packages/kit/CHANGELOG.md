@@ -1,5 +1,11 @@
 # @sveltejs/kit
 
+## 2.4.3
+
+### Patch Changes
+
+- fix: only disallow body with GET/HEAD ([#11710](https://github.com/sveltejs/kit/pull/11710))
+
 ## 2.4.2
 
 ### Patch Changes
