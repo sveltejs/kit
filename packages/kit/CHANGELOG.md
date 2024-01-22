@@ -1,5 +1,11 @@
 # @sveltejs/kit
 
+## 2.4.2
+
+### Patch Changes
+
+- fix: ignore bodies sent with non-PUT/PATCH/POST requests ([#11708](https://github.com/sveltejs/kit/pull/11708))
+
 ## 2.4.1
 
 ### Patch Changes
