@@ -247,7 +247,7 @@ app.listen(3000, () => {
 3. close connections once they become idle
 4. finally close any remaining connection that are still active after `SHUTDOWN_TIMEOUT` seconds
 
-> If you want to customize this shutdown logic you can use a [custom server](#custom-server).
+> If you want to customize this behaviour you can use a [custom server](#custom-server).
 
 ## Troubleshooting
 
