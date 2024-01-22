@@ -3,6 +3,13 @@ import { manifest } from 'MANIFEST';
 
 const server = new Server(manifest);
 
+/**
+ * We don't know the origin until we receive a request, but
+ * that's guaranteed to happen before we call `read`
+ * @type {string}
+ */
+let origin;
+
 const initialized = server.init({
 	env: /** @type {Record<string, string>} */ (process.env),
 	read: (file) => {
@@ -12,7 +19,7 @@ const initialized = server.init({
 		return new ReadableStream({
 			async start(controller) {
 				try {
-					const response = await fetch(`https://${process.env.VERCEL_URL}/${file}`, { signal });
+					const response = await fetch(`${origin}/${file}`, { signal });
 					const reader = /** @type {ReadableStream} */ (response.body).getReader();
 
 					while (true) {
@@ -38,7 +45,11 @@ const initialized = server.init({
  * @param {import('../index.js').RequestContext} context
  */
 export default async (request, context) => {
-	await initialized;
+	if (!origin) {
+		origin = new URL(request.url).origin;
+		await initialized;
+	}
+
 	return server.respond(request, {
 		getClientAddress() {
 			return /** @type {string} */ (request.headers.get('x-forwarded-for'));
