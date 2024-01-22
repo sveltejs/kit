@@ -47,31 +47,30 @@ function shutdown() {
 	);
 }
 
-/** @param {import('node:http').IncomingMessage} req */
-function on_request(req) {
-	requests++;
+server.server.on(
+	'request',
+	/** @param {import('node:http').IncomingMessage} req */
+	(req) => {
+		requests++;
 
-	if (socket_activation && idle_timeout_id) {
-		idle_timeout_id = clearTimeout(idle_timeout_id);
+		if (socket_activation && idle_timeout_id) {
+			idle_timeout_id = clearTimeout(idle_timeout_id);
+		}
+
+		req.on('close', () => {
+			requests--;
+
+			if (shutdown_timeout_id) {
+				// when the request is done, close the connection, so the app shuts down without delay
+				// @ts-expect-error this was added in 18.2.0 but is not reflected in the types
+				server.closeIdleConnections();
+			}
+			if (socket_activation && idle_timeout && requests === 0) {
+				idle_timeout_id = setTimeout(shutdown, idle_timeout * 1000);
+			}
+		});
 	}
-
-	req.on('close', on_request_close);
-}
-
-function on_request_close() {
-	requests--;
-
-	if (shutdown_timeout_id) {
-		// when the request is done, close the connection, so the app shuts down without delay
-		// @ts-expect-error this was added in 18.2.0 but is not reflected in the types
-		server.closeIdleConnections();
-	}
-	if (socket_activation && idle_timeout && requests === 0) {
-		idle_timeout_id = setTimeout(shutdown, idle_timeout * 1000);
-	}
-}
-
-server.server.on('request', on_request);
+);
 
 if (socket_activation) {
 	server.listen({ fd: SD_LISTEN_FDS_START }, () => {
