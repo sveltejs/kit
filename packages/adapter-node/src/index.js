@@ -63,7 +63,6 @@ function on_request_close() {
 		// @ts-expect-error this was added in 18.2.0 but is not reflected in the types
 		server.closeIdleConnections();
 	}
-
 	if (socket_activation && idle_timeout && requests === 0) {
 		idle_timeout_id = setTimeout(shutdown, idle_timeout * 1000);
 	}
