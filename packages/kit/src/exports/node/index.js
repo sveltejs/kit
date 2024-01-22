@@ -95,6 +95,8 @@ function get_raw_body(req, body_size_limit) {
 	});
 }
 
+const can_have_body = ['POST', 'PUT', 'PATCH'];
+
 /**
  * @param {{
  *   request: import('http').IncomingMessage;
@@ -109,7 +111,9 @@ export async function getRequest({ request, base, bodySizeLimit }) {
 		duplex: 'half',
 		method: request.method,
 		headers: /** @type {Record<string, string>} */ (request.headers),
-		body: get_raw_body(request, bodySizeLimit)
+		body: can_have_body.includes(request.method ?? '')
+			? get_raw_body(request, bodySizeLimit)
+			: undefined
 	});
 }
 
