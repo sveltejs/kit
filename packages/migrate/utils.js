@@ -226,8 +226,11 @@ export function update_pkg(content, updates) {
 				semver.validRange(existingRange) &&
 				!semver.subset(existingRange, version)
 			) {
-				log_migration(`Updated ${name} to ${version}`);
-				pkg[type][name] = version;
+				// Check if the new version range is an upgrade
+				if (semver.gt(semver.minVersion(version), semver.minVersion(existingRange))) {
+					log_migration(`Updated ${name} to ${version}`);
+					pkg[type][name] = version;
+				}
 			}
 		};
 
