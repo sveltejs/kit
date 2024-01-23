@@ -24,6 +24,18 @@
 - Updated dependencies [[`288f731c8a5b20cadb9e219f9583f3f16bf8c7b8`](https://github.com/sveltejs/kit/commit/288f731c8a5b20cadb9e219f9583f3f16bf8c7b8)]:
   - @sveltejs/kit@2.4.0
 
+## 3.0.3
+
+### Patch Changes
+
+- fix: return 400 response if request construction fails
+
+## 3.0.2
+
+### Patch Changes
+
+- fix: return 400 response if request construction fails
+
 ## 3.0.1
 
 ### Patch Changes
@@ -35,6 +47,12 @@
 ### Major Changes
 
 - breaking: allow any numeric value for `BODY_SIZE_LIMIT`, and interpret literally. Use `Infinity` rather than `0` for unrestricted body sizes ([#11589](https://github.com/sveltejs/kit/pull/11589))
+
+## 2.1.2
+
+### Patch Changes
+
+- fix: return 400 response if request construction fails
 
 ## 2.1.1
 
