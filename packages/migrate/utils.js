@@ -215,49 +215,24 @@ export function update_pkg(content, updates) {
 	 * @param {'dependencies' | 'devDependencies' | undefined} [insert]
 	 */
 	function update_pkg(name, version, additional = '', insert) {
-		let existing_version;
+		/**
+		 * @param {string} type
+		 */
+		const updateVersion = (type) => {
+			const existingRange = pkg[type]?.[name];
 
-		if (pkg.dependencies?.[name]) {
-			existing_version = pkg.dependencies[name];
-		} else if (pkg.devDependencies?.[name]) {
-			existing_version = pkg.devDependencies[name];
-		}
-
-		// Handle version ranges
-		if (existing_version) {
-			// Find the max version that satisfies the existing version range
-			const maxExistingVersion = semver.maxSatisfying([existing_version], existing_version);
-
-			// Find the max version that satisfies the provided version range
-			const maxProvidedVersion = semver.maxSatisfying([version], version);
-
-			// Skip if the max existing version is greater than or equal to the max provided version
 			if (
-				maxExistingVersion &&
-				maxProvidedVersion &&
-				semver.gte(maxExistingVersion, maxProvidedVersion)
+				existingRange &&
+				semver.validRange(existingRange) &&
+				!semver.subset(existingRange, version)
 			) {
-				return;
+				log_migration(`Updated ${name} to ${version}`);
+				pkg[type][name] = version;
 			}
-		}
+		};
 
-		if (pkg.dependencies?.[name]) {
-			const existing_range = pkg.dependencies[name];
-
-			if (semver.validRange(existing_range) && !semver.subset(existing_range, version)) {
-				log_migration(`Updated ${name} to ${version} ${additional}`);
-				pkg.dependencies[name] = version;
-			}
-		}
-
-		if (pkg.devDependencies?.[name]) {
-			const existing_range = pkg.devDependencies[name];
-
-			if (semver.validRange(existing_range) && !semver.subset(existing_range, version)) {
-				log_migration(`Updated ${name} to ${version} ${additional}`);
-				pkg.devDependencies[name] = version;
-			}
-		}
+		updateVersion('dependencies');
+		updateVersion('devDependencies');
 
 		if (insert && !pkg[insert]?.[name]) {
 			if (!pkg[insert]) pkg[insert] = {};
