@@ -31,9 +31,7 @@ declare module '@sveltejs/kit' {
 		 * This function is used to allow the adapter to emulate the platform object during dev and
 		 * preview
 		 */
-		emulate?(): MaybePromise<{
-			platform(details: { config: any }): MaybePromise<App.Platform>;
-		}>;
+		emulate?(): MaybePromise<Emulator>;
 	}
 
 	export type LoadProperties<input extends Record<string, any> | void> = input extends void
@@ -1589,6 +1587,10 @@ declare module '@sveltejs/kit' {
 			uses_env_dynamic_public: boolean;
 		} | null;
 		server_manifest: import('vite').Manifest;
+	}
+
+	class Emulator {
+		platform(details: { config: any }): MaybePromise<App.Platform>;
 	}
 
 	interface ManifestData {
