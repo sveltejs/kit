@@ -4,7 +4,6 @@ import { execSync } from 'node:child_process';
 import esbuild from 'esbuild';
 import toml from '@iarna/toml';
 import { fileURLToPath } from 'node:url';
-import { getBindingsProxy } from 'wrangler';
 
 /**
  * @typedef {{
@@ -141,17 +140,6 @@ export default function ({ config = 'wrangler.toml' } = {}) {
 			const bucket_dir = `${site.bucket}${builder.config.kit.paths.base}`;
 			builder.writeClient(bucket_dir);
 			builder.writePrerendered(bucket_dir);
-		},
-
-		async emulate() {
-			const proxy = await getBindingsProxy();
-
-			// TODO this also needs `context` and `caches`
-			const platform = /** @type {App.Platform} */ ({ env: proxy.bindings });
-
-			return {
-				platform: () => platform
-			};
 		}
 	};
 }
