@@ -51,6 +51,9 @@ export async function preview(vite, vite_config, svelte_config) {
 		read: (file) => createReadableStream(`${dir}/${file}`)
 	});
 
+	// TODO because of `RecursiveRequired`, TypeScript thinks this is guaranteed to exist, but it isn't
+	const emulator = await svelte_config.kit.adapter?.emulate?.();
+
 	return () => {
 		// Remove the base middleware. It screws with the URL.
 		// It also only lets through requests beginning with the base path, so that requests beginning
@@ -191,7 +194,8 @@ export async function preview(vite, vite_config, svelte_config) {
 						if (remoteAddress) return remoteAddress;
 						throw new Error('Could not determine clientAddress');
 					},
-					read: (file) => fs.readFileSync(join(svelte_config.kit.files.assets, file))
+					read: (file) => fs.readFileSync(join(svelte_config.kit.files.assets, file)),
+					emulator
 				})
 			);
 		});

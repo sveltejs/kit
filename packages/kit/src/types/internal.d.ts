@@ -15,7 +15,8 @@ import {
 	HandleClientError,
 	Reroute,
 	RequestEvent,
-	SSRManifest
+	SSRManifest,
+	Emulator
 } from '@sveltejs/kit';
 import {
 	HttpMethod,
@@ -128,6 +129,7 @@ export class InternalServer extends Server {
 			read: (file: string) => Buffer;
 			/** A hook called before `handle` during dev, so that `AsyncLocalStorage` can be populated */
 			before_handle?: (event: RequestEvent, config: any, prerender: PrerenderOption) => void;
+			emulator?: Emulator;
 		}
 	): Promise<Response>;
 }
@@ -418,6 +420,7 @@ export interface SSRState {
 	prerender_default?: PrerenderOption;
 	read?: (file: string) => Buffer;
 	before_handle?: (event: RequestEvent, config: any, prerender: PrerenderOption) => void;
+	emulator?: Emulator;
 }
 
 export type StrictBody = string | ArrayBufferView;

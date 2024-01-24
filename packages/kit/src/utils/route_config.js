@@ -16,5 +16,6 @@ export function get_page_config(nodes) {
 		};
 	}
 
+	// TODO 3.0 always return `current`? then we can get rid of `?? {}` in other places
 	return Object.keys(current).length ? current : undefined;
 }

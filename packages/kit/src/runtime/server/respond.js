@@ -271,7 +271,7 @@ export async function respond(request, options, manifest, state) {
 				}
 			}
 
-			if (DEV && state.before_handle) {
+			if (state.before_handle || state.emulator?.platform) {
 				let config = {};
 
 				/** @type {import('types').PrerenderOption} */
@@ -283,11 +283,17 @@ export async function respond(request, options, manifest, state) {
 					prerender = node.prerender ?? prerender;
 				} else if (route.page) {
 					const nodes = await load_page_nodes(route.page, manifest);
-					config = get_page_config(nodes);
+					config = get_page_config(nodes) ?? config;
 					prerender = get_option(nodes, 'prerender') ?? false;
 				}
 
-				state.before_handle(event, config, prerender);
+				if (state.before_handle) {
+					state.before_handle(event, config, prerender);
+				}
+
+				if (state.emulator?.platform) {
+					event.platform = await state.emulator.platform({ config, prerender });
+				}
 			}
 		}
 

@@ -7,6 +7,32 @@ test.skip(() => process.env.KIT_E2E_BROWSER === 'webkit');
 
 test.describe.configure({ mode: 'parallel' });
 
+test.describe('adapter', () => {
+	test('populates event.platform for dynamic SSR', async ({ page }) => {
+		await page.goto('/adapter/dynamic');
+		const json = JSON.parse(await page.textContent('pre'));
+
+		expect(json).toEqual({
+			config: {
+				message: 'hello from dynamic page'
+			},
+			prerender: false
+		});
+	});
+
+	test('populates event.platform for prerendered page', async ({ page }) => {
+		await page.goto('/adapter/prerendered');
+		const json = JSON.parse(await page.textContent('pre'));
+
+		expect(json).toEqual({
+			config: {
+				message: 'hello from prerendered page'
+			},
+			prerender: true
+		});
+	});
+});
+
 test.describe('Imports', () => {
 	test('imports from node_modules', async ({ page, clicknav }) => {
 		await page.goto('/imports');
