@@ -149,6 +149,19 @@ export function to_fs(str) {
 }
 
 /**
+ * Removes `/@fs` prefix from given path and posixifies it
+ * @param {string} str
+ */
+export function from_fs(str) {
+	str = posixify(str);
+	if (!str.startsWith('/@fs')) return str;
+
+	str = str.slice(4);
+	// Windows/Linux separation - Windows starts with a drive letter, we need to strip the additional / here
+	return str[2] === ':' && /[A-Z]/.test(str[1]) ? str.slice(1) : str;
+}
+
+/**
  * Given an entry point like [cwd]/src/hooks, returns a filename like [cwd]/src/hooks.js or [cwd]/src/hooks/index.js
  * @param {string} entry
  * @returns {string|null}
