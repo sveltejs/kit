@@ -14,15 +14,15 @@ Each route directory contains one or more _route files_, which can be identified
 
 Summary of the routing files:
 
-| File name         | Role                                                                | Propagates to sub-dirs | SSR | CSR |
+| File name         | Role                                                                | Propagates to sub-dirs | Runs on server | Runs on client |
 |-------------------|---------------------------------------------------------------------|:----------------------:|:---:|:---:|
-| +page.svelte      | Create an HTML page                                                 |           ❌            |  ✅  |  ✅  |
-| +error.svelte     | Create an HTML page to render HTTP errors                           |           ✅            |  ✅  |  ✅  |
-| +layout.svelte    | Create an HTML layout                                               |           ✅            |  ✅  |  ✅  |
-| +page.js          | Provide data for the **page** via the `load()` function             |           ❌            |  ✅  |  ✅  |
+| +page.svelte      | Creates an HTML page                                                |           ❌            |  ✅  |  ✅  |
+| +error.svelte     | Creates an HTML page to render HTTP errors                          |           ✅            |  ✅  |  ✅  |
+| +layout.svelte    | Creates an HTML layout                                              |           ✅            |  ✅  |  ✅  |
+| +page.js          | Provides data for the **page** via the `load()` function            |           ❌            |  ✅  |  ✅  |
 | +page.server.js   | API endpoint for this **page**, automatically called at page load   |           ❌            |  ✅  |  ❌  |
-| +server.js        | API endpoint for this **page**, to be manually called via `fetch()` |           ❌            |  ✅  |  ❌  |
-| +layout.js        | Provide data for the **layout** via the `load()` function           |           ✅            |  ✅  |  ✅  |
+| +server.js        | API endpoint                                                     |           ❌            |  ✅  |  ❌  |
+| +layout.js        | Provides data for the **layout** via the `load()` function           |           ✅            |  ✅  |  ✅  |
 | +layout.server.js | API endpoint for this **layout**, automatically called at page load |           ✅            |  ✅  |  ❌  |
 
 ## +page
