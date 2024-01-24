@@ -28,8 +28,8 @@ declare module '@sveltejs/kit' {
 			read?: (details: { config: any; route: { id: string } }) => boolean;
 		};
 		/**
-		 * This function is used to allow the adapter to emulate the platform object during dev and
-		 * preview
+		 * Creates an `Emulator`, which allows the adapter to influence the environment
+		 * during dev, build and prerendering
 		 */
 		emulate?(): MaybePromise<Emulator>;
 	}
@@ -246,6 +246,17 @@ declare module '@sveltejs/kit' {
 			value: string,
 			opts: import('cookie').CookieSerializeOptions & { path: string }
 		): string;
+	}
+
+	/**
+	 * A collection of functions that influence the environment during dev, build and prerendering
+	 */
+	export class Emulator {
+		/**
+		 * A function that is called with the current route `config` and `prerender` option
+		 * and returns an `App.Platform` object
+		 */
+		platform?(details: { config: any; prerender: PrerenderOption }): MaybePromise<App.Platform>;
 	}
 
 	export interface KitConfig {
@@ -1587,10 +1598,6 @@ declare module '@sveltejs/kit' {
 			uses_env_dynamic_public: boolean;
 		} | null;
 		server_manifest: import('vite').Manifest;
-	}
-
-	class Emulator {
-		platform(details: { config: any; prerender: PrerenderOption }): MaybePromise<App.Platform>;
 	}
 
 	interface ManifestData {
