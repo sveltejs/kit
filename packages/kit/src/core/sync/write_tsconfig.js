@@ -55,7 +55,7 @@ export function get_tsconfig(kit) {
 	const config_relative = (file) => posixify(path.relative(kit.outDir, file));
 
 	const include = new Set([
-		'ambient.d.ts',
+		'ambient.d.ts', // careful: changing this name would be a breaking change, because it's referenced in the service-workers documentation
 		'non-ambient.d.ts',
 		'./types/**/$types.d.ts',
 		config_relative('vite.config.js'),
@@ -81,6 +81,15 @@ export function get_tsconfig(kit) {
 	include.add(config_relative(`${test_folder}/**/*.svelte`));
 
 	const exclude = [config_relative('node_modules/**')];
+	// Add service worker to exclude list so that worker types references in it don't spill over into the rest of the app
+	// (i.e. suddenly ServiceWorkerGlobalScope would be available throughout the app, and some types might even clash)
+	if (path.extname(kit.files.serviceWorker)) {
+		exclude.push(config_relative(kit.files.serviceWorker));
+	} else {
+		exclude.push(config_relative(`${kit.files.serviceWorker}.js`));
+		exclude.push(config_relative(`${kit.files.serviceWorker}.ts`));
+		exclude.push(config_relative(`${kit.files.serviceWorker}.d.ts`));
+	}
 
 	const config = {
 		compilerOptions: {
