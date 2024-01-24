@@ -43,7 +43,8 @@
 		"typescript": "^5.3.3"
 	},
 	"peerDependencies": {
-		"@sveltejs/kit": "^2.0.0"
+		"@sveltejs/kit": "^2.0.0",
+		"wrangler": "^3.24.0"
 	},
 	"publishConfig": {
 		"access": "public"
