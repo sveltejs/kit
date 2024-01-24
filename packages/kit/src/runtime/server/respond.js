@@ -271,7 +271,7 @@ export async function respond(request, options, manifest, state) {
 				}
 			}
 
-			if (state.before_handle || state.emulator) {
+			if (state.before_handle || state.emulator?.platform) {
 				let config = {};
 
 				/** @type {import('types').PrerenderOption} */
@@ -291,7 +291,7 @@ export async function respond(request, options, manifest, state) {
 					state.before_handle(event, config, prerender);
 				}
 
-				if (state.emulator) {
+				if (state.emulator?.platform) {
 					event.platform = await state.emulator.platform({ config, prerender });
 				}
 			}

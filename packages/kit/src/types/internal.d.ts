@@ -15,7 +15,8 @@ import {
 	HandleClientError,
 	Reroute,
 	RequestEvent,
-	SSRManifest
+	SSRManifest,
+	Emulator
 } from '@sveltejs/kit';
 import {
 	HttpMethod,
@@ -117,10 +118,6 @@ export interface ClientHooks {
 export interface Env {
 	private: Record<string, string>;
 	public: Record<string, string>;
-}
-
-export class Emulator {
-	platform(details: { config: any; prerender: PrerenderOption }): MaybePromise<App.Platform>;
 }
 
 export class InternalServer extends Server {

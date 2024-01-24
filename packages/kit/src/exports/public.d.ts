@@ -17,7 +17,7 @@ import {
 	RequestOptions,
 	RouteSegment
 } from '../types/private.js';
-import { BuildData, Emulator, SSRNodeLoader, SSRRoute, ValidatedConfig } from 'types';
+import { BuildData, SSRNodeLoader, SSRRoute, ValidatedConfig } from 'types';
 import type { PluginOptions } from '@sveltejs/vite-plugin-svelte';
 
 export { PrerenderOption } from '../types/private.js';
@@ -46,8 +46,8 @@ export interface Adapter {
 		read?: (details: { config: any; route: { id: string } }) => boolean;
 	};
 	/**
-	 * This function is used to allow the adapter to emulate the platform object during dev and
-	 * preview
+	 * Creates an `Emulator`, which allows the adapter to influence the environment
+	 * during dev, build and prerendering
 	 */
 	emulate?(): MaybePromise<Emulator>;
 }
@@ -264,6 +264,17 @@ export interface Cookies {
 		value: string,
 		opts: import('cookie').CookieSerializeOptions & { path: string }
 	): string;
+}
+
+/**
+ * A collection of functions that influence the environment during dev, build and prerendering
+ */
+export class Emulator {
+	/**
+	 * A function that is called with the current route `config` and `prerender` option
+	 * and returns an `App.Platform` object
+	 */
+	platform?(details: { config: any; prerender: PrerenderOption }): MaybePromise<App.Platform>;
 }
 
 export interface KitConfig {
