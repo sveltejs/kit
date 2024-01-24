@@ -12,9 +12,9 @@
 		"@sveltejs/adapter-auto": "workspace:*",
 		"@sveltejs/kit": "workspace:*",
 		"@sveltejs/vite-plugin-svelte": "^3.0.0",
-		"svelte": "^4.2.8",
+		"svelte": "^4.2.9",
 		"typescript": "^5.3.3",
-		"vite": "^5.0.11"
+		"vite": "^5.0.12"
 	},
 	"type": "module",
 	"dependencies": {
