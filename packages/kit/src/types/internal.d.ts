@@ -120,7 +120,7 @@ export interface Env {
 }
 
 export class Emulator {
-	platform(details: { config: any }): MaybePromise<App.Platform>;
+	platform(details: { config: any; prerender: PrerenderOption }): MaybePromise<App.Platform>;
 }
 
 export class InternalServer extends Server {

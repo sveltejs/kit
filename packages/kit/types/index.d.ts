@@ -1590,7 +1590,7 @@ declare module '@sveltejs/kit' {
 	}
 
 	class Emulator {
-		platform(details: { config: any }): MaybePromise<App.Platform>;
+		platform(details: { config: any; prerender: PrerenderOption }): MaybePromise<App.Platform>;
 	}
 
 	interface ManifestData {
