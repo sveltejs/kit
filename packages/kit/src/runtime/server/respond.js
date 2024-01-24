@@ -291,8 +291,8 @@ export async function respond(request, options, manifest, state) {
 					state.before_handle(event, config, prerender);
 				}
 
-				if (state.emulator && !prerender) {
-					event.platform = await state.emulator.platform({ config });
+				if (state.emulator) {
+					event.platform = await state.emulator.platform({ config, prerender });
 				}
 			}
 		}
