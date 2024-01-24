@@ -4,8 +4,6 @@ import { fileURLToPath } from 'node:url';
 import * as esbuild from 'esbuild';
 import { getBindingsProxy } from 'wrangler';
 
-const bindingsProxy = getBindingsProxy();
-
 // list from https://developers.cloudflare.com/workers/runtime-apis/nodejs/
 const compatible_node_modules = [
 	'assert',
@@ -128,12 +126,13 @@ export default function (options = {}) {
 				);
 			}
 		},
-		async emulatePlatform() {
-			/** @type {any} */
-			const platform = {
-				env: (await bindingsProxy).bindings
+		async emulate() {
+			const proxy = await getBindingsProxy();
+			const platform = /** @type {App.Platform} */ ({ env: proxy.bindings });
+
+			return {
+				platform: () => platform
 			};
-			return platform;
 		}
 	};
 }

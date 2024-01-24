@@ -31,7 +31,9 @@ declare module '@sveltejs/kit' {
 		 * This function is used to allow the adapter to emulate the platform object during dev and
 		 * preview
 		 */
-		emulatePlatform?(svelteKitConfig: KitConfig): MaybePromise<App.Platform>;
+		emulate?(): MaybePromise<{
+			platform(details: { config: any }): MaybePromise<App.Platform>;
+		}>;
 	}
 
 	export type LoadProperties<input extends Record<string, any> | void> = input extends void

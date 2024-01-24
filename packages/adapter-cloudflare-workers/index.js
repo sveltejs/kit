@@ -6,8 +6,6 @@ import toml from '@iarna/toml';
 import { fileURLToPath } from 'node:url';
 import { getBindingsProxy } from 'wrangler';
 
-const bindingsProxy = getBindingsProxy();
-
 /**
  * @typedef {{
  *   main: string;
@@ -145,12 +143,15 @@ export default function ({ config = 'wrangler.toml' } = {}) {
 			builder.writePrerendered(bucket_dir);
 		},
 
-		async emulatePlatform() {
-			/** @type {any} */
-			const platform = {
-				env: (await bindingsProxy).bindings
+		async emulate() {
+			const proxy = await getBindingsProxy();
+
+			// TODO this also needs `context` and `caches`
+			const platform = /** @type {App.Platform} */ ({ env: proxy.bindings });
+
+			return {
+				platform: () => platform
 			};
-			return platform;
 		}
 	};
 }

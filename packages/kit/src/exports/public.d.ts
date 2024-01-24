@@ -17,7 +17,7 @@ import {
 	RequestOptions,
 	RouteSegment
 } from '../types/private.js';
-import { BuildData, SSRNodeLoader, SSRRoute, ValidatedConfig } from 'types';
+import { BuildData, Emulator, SSRNodeLoader, SSRRoute, ValidatedConfig } from 'types';
 import type { PluginOptions } from '@sveltejs/vite-plugin-svelte';
 
 export { PrerenderOption } from '../types/private.js';
@@ -49,7 +49,7 @@ export interface Adapter {
 	 * This function is used to allow the adapter to emulate the platform object during dev and
 	 * preview
 	 */
-	emulatePlatform?(svelteKitConfig: KitConfig): MaybePromise<App.Platform>;
+	emulate?(): MaybePromise<Emulator>;
 }
 
 export type LoadProperties<input extends Record<string, any> | void> = input extends void

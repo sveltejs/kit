@@ -420,6 +420,9 @@ export async function dev(vite, vite_config, svelte_config) {
 
 	const env = loadEnv(vite_config.mode, svelte_config.kit.env.dir, '');
 
+	// TODO because of `RecursiveRequired`, TypeScript thinks this is guaranteed to exist, but it isn't
+	const emulator = await svelte_config.kit.adapter.emulate?.();
+
 	return () => {
 		const serve_static_middleware = vite.middlewares.stack.find(
 			(middleware) =>
@@ -530,7 +533,7 @@ export async function dev(vite, vite_config, svelte_config) {
 					before_handle: (event, config, prerender) => {
 						async_local_storage.enterWith({ event, config, prerender });
 					},
-					platform: await svelte_config.kit.adapter?.emulatePlatform?.(svelte_config.kit)
+					emulator
 				});
 
 				if (rendered.status === 404) {
