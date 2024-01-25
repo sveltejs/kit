@@ -189,12 +189,12 @@ Most Linux operating systems today use a modern process manager called systemd t
 
 To take advantage of socket activation follow these steps.
 
-1. Run your app as a [systemd service](https://www.freedesktop.org/software/systemd/man/latest/systemd.service.html). It can either run directly on the host system or inside a container (using Docker or a systemd portable service for example).
+1. Run your app as a [systemd service](https://www.freedesktop.org/software/systemd/man/latest/systemd.service.html). It can either run directly on the host system or inside a container (using Docker or a systemd portable service for example). If you additionally pass an [`IDLE_TIMEOUT`](#idle_timeout) environment variable your app it will gracefully shutdown if there are no requests for `IDLE_TIMEOUT` seconds. systemd will automatically start your app again when new requests are coming in.
 
 ```ini
 /// file: /etc/systemd/system/myapp.service
 [Service]
-Environment=NODE_ENV=production
+Environment=NODE_ENV=production IDLE_TIMEOUT=60
 ExecStart=/usr/bin/node /usr/bin/myapp/build
 ```
 
@@ -209,18 +209,7 @@ ListenStream=3000
 WantedBy=sockets.target
 ```
 
-3. Make sure systemd has recognised both units by running `sudo systemctl daemon-reload`. Then enable the socket on boot and start it immediately using `sudo systemctl enable --now myapp.socket`.
-
-The app will then automatically start once the first request is made to `localhost:3000`. Additionally, if you pass an `IDLE_TIMEOUT` environment variable to your app the adapter will terminate it after receiving no requests for `IDLE_TIMEOUT` seconds.
-
-```ini
-/// file: /etc/systemd/system/myapp.service
-[Service]
-Environment=NODE_ENV=production IDLE_TIMEOUT=60
-ExecStart=/usr/bin/node /usr/bin/myapp/build
-```
-
-If `myapp.socket` later again receives requests it will automatically trigger your `myapp.service` again and hand over the requests to your SvelteKit app.
+3. Make sure systemd has recognised both units by running `sudo systemctl daemon-reload`. Then enable the socket on boot and start it immediately using `sudo systemctl enable --now myapp.socket`. The app will then automatically start once the first request is made to `localhost:3000`.
 
 ## Custom server
 
