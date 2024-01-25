@@ -124,7 +124,7 @@ The number of seconds to wait before forcefully closing any remaining connection
 
 ### `IDLE_TIMEOUT`
 
-When using systemd socket activation specifies the number of seconds after which the app is automatically put to sleep when receiving no requests. If not set, the app runs continously. See [Socket activation](#socket-activation) for more details.
+When using systemd socket activation, `IDLE_TIMEOUT` specifies the number of seconds after which the app is automatically put to sleep when receiving no requests. If not set, the app runs continuously. See [Socket activation](#socket-activation) for more details.
 
 ## Options
 
