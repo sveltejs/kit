@@ -2,5 +2,4 @@
 "@sveltejs/adapter-node": minor
 ---
 
-feat: add graceful shutdown
-feat: add systemd socket activation
+feat: add graceful shutdown and systemd socket activation
