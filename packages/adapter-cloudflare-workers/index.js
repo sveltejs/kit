@@ -145,12 +145,25 @@ export default function ({ config = 'wrangler.toml' } = {}) {
 
 		async emulate() {
 			const proxy = await getBindingsProxy();
-
 			// TODO this also needs `context` and `caches`
 			const platform = /** @type {App.Platform} */ ({ env: proxy.bindings });
 
+			/** @type {Record<string, any>} */
+			const env = {};
+			const prerender_platform = /** @type {App.Platform} */ ({ env });
+
+			for (const key in proxy.bindings) {
+				Object.defineProperty(env, key, {
+					get: () => {
+						throw new Error(`Cannot access platform.env.${key} in a prerenderable route`);
+					}
+				});
+			}
+
 			return {
-				platform: () => platform
+				platform: ({ prerender }) => {
+					return prerender ? prerender_platform : platform;
+				}
 			};
 		}
 	};
