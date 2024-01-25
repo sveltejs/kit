@@ -437,7 +437,7 @@ export interface Uses {
 
 export type ValidatedConfig = Config & {
 	kit: ValidatedKitConfig;
-	extensions: Required<Config['extensions']>;
+	extensions: string[];
 };
 
 export type ValidatedKitConfig = Omit<RecursiveRequired<KitConfig>, 'adapter'> & {

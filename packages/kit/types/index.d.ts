@@ -1750,7 +1750,7 @@ declare module '@sveltejs/kit' {
 
 	type ValidatedConfig = Config & {
 		kit: ValidatedKitConfig;
-		extensions: Required<Config['extensions']>;
+		extensions: string[];
 	};
 
 	type ValidatedKitConfig = Omit<RecursiveRequired<KitConfig>, 'adapter'> & {
