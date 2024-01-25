@@ -3,6 +3,7 @@
 A CLI for migrating Svelte(Kit) codebases.
 
 Run it using
+
 ```
 npx svelte-migrate [migration]
 ```

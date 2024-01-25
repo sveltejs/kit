@@ -41,6 +41,8 @@
 	},
 	"scripts": {
 		"test": "vitest run --silent",
-		"check": "tsc"
+		"check": "tsc",
+		"lint": "prettier --check .",
+		"format": "pnpm lint --write"
 	}
 }
