@@ -1748,7 +1748,10 @@ declare module '@sveltejs/kit' {
 		endpoint_id?: string;
 	}
 
-	type ValidatedConfig = Omit<RecursiveRequired<Config>, 'kit'> & { kit: ValidatedKitConfig };
+	type ValidatedConfig = Config & {
+		kit: ValidatedKitConfig;
+		extensions: Required<Config['extensions']>;
+	};
 
 	type ValidatedKitConfig = Omit<RecursiveRequired<KitConfig>, 'adapter'> & {
 		adapter?: Adapter;

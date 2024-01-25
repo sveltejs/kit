@@ -435,7 +435,10 @@ export interface Uses {
 	search_params: Set<string>;
 }
 
-export type ValidatedConfig = Omit<RecursiveRequired<Config>, 'kit'> & { kit: ValidatedKitConfig };
+export type ValidatedConfig = Config & {
+	kit: ValidatedKitConfig;
+	extensions: Required<Config['extensions']>;
+};
 
 export type ValidatedKitConfig = Omit<RecursiveRequired<KitConfig>, 'adapter'> & {
 	adapter?: Adapter;
