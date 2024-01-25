@@ -250,7 +250,7 @@ declare module '@sveltejs/kit' {
 	/**
 	 * A collection of functions that influence the environment during dev, build and prerendering
 	 */
-	export class Emulator {
+	export interface Emulator {
 		/**
 		 * A function that is called with the current route `config` and `prerender` option
 		 * and returns an `App.Platform` object
@@ -1748,7 +1748,14 @@ declare module '@sveltejs/kit' {
 		endpoint_id?: string;
 	}
 
-	type ValidatedConfig = RecursiveRequired<Config>;
+	type ValidatedConfig = Config & {
+		kit: ValidatedKitConfig;
+		extensions: string[];
+	};
+
+	type ValidatedKitConfig = Omit<RecursiveRequired<KitConfig>, 'adapter'> & {
+		adapter?: Adapter;
+	};
 	/**
 	 * Throws an error with a HTTP status code and an optional message.
 	 * When called during request handling, this will cause SvelteKit to

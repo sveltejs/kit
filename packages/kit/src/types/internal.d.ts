@@ -16,7 +16,8 @@ import {
 	Reroute,
 	RequestEvent,
 	SSRManifest,
-	Emulator
+	Emulator,
+	Adapter
 } from '@sveltejs/kit';
 import {
 	HttpMethod,
@@ -434,9 +435,14 @@ export interface Uses {
 	search_params: Set<string>;
 }
 
-export type ValidatedConfig = RecursiveRequired<Config>;
+export type ValidatedConfig = Config & {
+	kit: ValidatedKitConfig;
+	extensions: string[];
+};
 
-export type ValidatedKitConfig = RecursiveRequired<KitConfig>;
+export type ValidatedKitConfig = Omit<RecursiveRequired<KitConfig>, 'adapter'> & {
+	adapter?: Adapter;
+};
 
 export * from '../exports/index.js';
 export * from './private.js';
