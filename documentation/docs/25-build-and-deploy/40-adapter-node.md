@@ -189,7 +189,7 @@ Most Linux operating systems today use a modern process manager called systemd t
 
 To take advantage of socket activation follow these steps.
 
-1. Run your app as a [systemd service](https://www.freedesktop.org/software/systemd/man/latest/systemd.service.html). It can either run directly on the host system or inside a container (using Docker or a systemd portable service for example). If you additionally pass an [`IDLE_TIMEOUT`](#idle_timeout) environment variable your app it will gracefully shutdown if there are no requests for `IDLE_TIMEOUT` seconds. systemd will automatically start your app again when new requests are coming in.
+1. Run your app as a [systemd service](https://www.freedesktop.org/software/systemd/man/latest/systemd.service.html). It can either run directly on the host system or inside a container (using Docker or a systemd portable service for example). If you additionally pass an [`IDLE_TIMEOUT`](#idle_timeout) environment variable to your app it will gracefully shutdown if there are no requests for `IDLE_TIMEOUT` seconds. systemd will automatically start your app again when new requests are coming in.
 
 ```ini
 /// file: /etc/systemd/system/myapp.service
