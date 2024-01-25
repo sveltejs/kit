@@ -7,6 +7,32 @@ test.skip(() => process.env.KIT_E2E_BROWSER === 'webkit');
 
 test.describe.configure({ mode: 'parallel' });
 
+test.describe('adapter', () => {
+	test('populates event.platform for dynamic SSR', async ({ page }) => {
+		await page.goto('/adapter/dynamic');
+		const json = JSON.parse(await page.textContent('pre'));
+
+		expect(json).toEqual({
+			config: {
+				message: 'hello from dynamic page'
+			},
+			prerender: false
+		});
+	});
+
+	test('populates event.platform for prerendered page', async ({ page }) => {
+		await page.goto('/adapter/prerendered');
+		const json = JSON.parse(await page.textContent('pre'));
+
+		expect(json).toEqual({
+			config: {
+				message: 'hello from prerendered page'
+			},
+			prerender: true
+		});
+	});
+});
+
 test.describe('Imports', () => {
 	test('imports from node_modules', async ({ page, clicknav }) => {
 		await page.goto('/imports');
@@ -703,19 +729,6 @@ test.describe('$app/paths', () => {
 		expect(await page.getAttribute('link[rel=icon]', 'href')).toBe(
 			javaScriptEnabled ? absolute : '../../../../favicon.png'
 		);
-	});
-});
-
-test.describe('$app/server', () => {
-	test('can read a file', async ({ page }) => {
-		await page.goto('/read-file');
-
-		const auto = await page.textContent('[data-testid="auto"]');
-		const url = await page.textContent('[data-testid="url"]');
-
-		// the emoji is there to check that base64 decoding works correctly
-		expect(auto.trim()).toBe('Imported without ?url 😎');
-		expect(url.trim()).toBe('Imported with ?url 😎');
 	});
 });
 

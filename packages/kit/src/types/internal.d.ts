@@ -15,7 +15,9 @@ import {
 	HandleClientError,
 	Reroute,
 	RequestEvent,
-	SSRManifest
+	SSRManifest,
+	Emulator,
+	Adapter
 } from '@sveltejs/kit';
 import {
 	HttpMethod,
@@ -128,6 +130,7 @@ export class InternalServer extends Server {
 			read: (file: string) => Buffer;
 			/** A hook called before `handle` during dev, so that `AsyncLocalStorage` can be populated */
 			before_handle?: (event: RequestEvent, config: any, prerender: PrerenderOption) => void;
+			emulator?: Emulator;
 		}
 	): Promise<Response>;
 }
@@ -418,6 +421,7 @@ export interface SSRState {
 	prerender_default?: PrerenderOption;
 	read?: (file: string) => Buffer;
 	before_handle?: (event: RequestEvent, config: any, prerender: PrerenderOption) => void;
+	emulator?: Emulator;
 }
 
 export type StrictBody = string | ArrayBufferView;
@@ -431,9 +435,14 @@ export interface Uses {
 	search_params: Set<string>;
 }
 
-export type ValidatedConfig = RecursiveRequired<Config>;
+export type ValidatedConfig = Config & {
+	kit: ValidatedKitConfig;
+	extensions: string[];
+};
 
-export type ValidatedKitConfig = RecursiveRequired<KitConfig>;
+export type ValidatedKitConfig = Omit<RecursiveRequired<KitConfig>, 'adapter'> & {
+	adapter?: Adapter;
+};
 
 export * from '../exports/index.js';
 export * from './private.js';

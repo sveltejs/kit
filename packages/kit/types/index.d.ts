@@ -27,6 +27,11 @@ declare module '@sveltejs/kit' {
 			 */
 			read?: (details: { config: any; route: { id: string } }) => boolean;
 		};
+		/**
+		 * Creates an `Emulator`, which allows the adapter to influence the environment
+		 * during dev, build and prerendering
+		 */
+		emulate?(): MaybePromise<Emulator>;
 	}
 
 	export type LoadProperties<input extends Record<string, any> | void> = input extends void
@@ -240,6 +245,17 @@ declare module '@sveltejs/kit' {
 			value: string,
 			opts: import('cookie').CookieSerializeOptions & { path: string }
 		): string;
+	}
+
+	/**
+	 * A collection of functions that influence the environment during dev, build and prerendering
+	 */
+	export interface Emulator {
+		/**
+		 * A function that is called with the current route `config` and `prerender` option
+		 * and returns an `App.Platform` object
+		 */
+		platform?(details: { config: any; prerender: PrerenderOption }): MaybePromise<App.Platform>;
 	}
 
 	export interface KitConfig {
@@ -1732,7 +1748,14 @@ declare module '@sveltejs/kit' {
 		endpoint_id?: string;
 	}
 
-	type ValidatedConfig = RecursiveRequired<Config>;
+	type ValidatedConfig = Config & {
+		kit: ValidatedKitConfig;
+		extensions: string[];
+	};
+
+	type ValidatedKitConfig = Omit<RecursiveRequired<KitConfig>, 'adapter'> & {
+		adapter?: Adapter;
+	};
 	/**
 	 * Throws an error with a HTTP status code and an optional message.
 	 * When called during request handling, this will cause SvelteKit to

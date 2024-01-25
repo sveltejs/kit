@@ -1033,3 +1033,20 @@ test.describe('XSS', () => {
 		);
 	});
 });
+
+test.describe('$app/server', () => {
+	test('can read a file', async ({ page }) => {
+		await page.goto('/read-file');
+
+		const auto = await page.textContent('[data-testid="auto"]');
+		const url = await page.textContent('[data-testid="url"]');
+		const glob = await page.textContent('[data-testid="glob"]');
+
+		// the emoji is there to check that base64 decoding works correctly
+		expect(auto.trim()).toBe('Imported without ?url 😎');
+		expect(url.trim()).toBe('Imported with ?url 😎');
+		expect(glob.trim()).toBe(
+			'Imported with url glob from the read-file test in basics. Placed here outside the app folder to force a /@fs prefix 😎'
+		);
+	});
+});

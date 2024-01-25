@@ -4,3 +4,4 @@
 
 <p data-testid="auto">{data.auto}</p>
 <p data-testid="url">{data.url}</p>
+<p data-testid="glob">{data.glob}</p>
