@@ -19,7 +19,8 @@ export async function adapt(
 	log,
 	vite_config
 ) {
-	const { name, adapt } = config.kit.adapter;
+	// This is only called when adapter is truthy, so the cast is safe
+	const { name, adapt } = /** @type {import('@sveltejs/kit').Adapter} */ (config.kit.adapter);
 
 	console.log(colors.bold().cyan(`\n> Using ${name}`));
 

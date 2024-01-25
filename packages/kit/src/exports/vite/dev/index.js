@@ -419,8 +419,6 @@ export async function dev(vite, vite_config, svelte_config) {
 	});
 
 	const env = loadEnv(vite_config.mode, svelte_config.kit.env.dir, '');
-
-	// TODO because of `RecursiveRequired`, TypeScript thinks this is guaranteed to exist, but it isn't
 	const emulator = await svelte_config.kit.adapter?.emulate?.();
 
 	return () => {

@@ -268,7 +268,7 @@ export interface Cookies {
 /**
  * A collection of functions that influence the environment during dev, build and prerendering
  */
-export class Emulator {
+export interface Emulator {
 	/**
 	 * A function that is called with the current route `config` and `prerender` option
 	 * and returns an `App.Platform` object

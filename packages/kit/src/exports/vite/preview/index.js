@@ -51,7 +51,6 @@ export async function preview(vite, vite_config, svelte_config) {
 		read: (file) => createReadableStream(`${dir}/${file}`)
 	});
 
-	// TODO because of `RecursiveRequired`, TypeScript thinks this is guaranteed to exist, but it isn't
 	const emulator = await svelte_config.kit.adapter?.emulate?.();
 
 	return () => {
