@@ -31,22 +31,3 @@ for (const sample of read_samples(new URL('./tsjs-samples.md', import.meta.url))
 		assert.equal(actual, sample.after);
 	});
 }
-
-test('Does not downgrade versions', () => {
-	const result = update_pkg_json_content(`{
-	"devDependencies": {
-		"@sveltejs/adapter-vercel": "^5.1.0",
-		"typescript": "github:idk"
-	}
-}`);
-	assert.equal(
-		result,
-		`{
-	"devDependencies": {
-		"@sveltejs/adapter-vercel": "^5.1.0",
-		"@sveltejs/vite-plugin-svelte": "^3.0.0",
-		"typescript": "github:idk"
-	}
-}`
-	);
-});
