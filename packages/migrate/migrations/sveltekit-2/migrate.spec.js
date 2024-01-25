@@ -2,8 +2,7 @@ import { assert, test } from 'vitest';
 import {
 	transform_code,
 	update_svelte_config_content,
-	update_tsconfig_content,
-	update_pkg_json_content
+	update_tsconfig_content
 } from './migrate.js';
 import { read_samples } from '../../utils.js';
 
