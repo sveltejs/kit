@@ -70,7 +70,7 @@ server.server.on(
 			if (shutdown_timeout_id) {
 				// when the request is done, close the connection, so the app shuts down without delay
 				// @ts-expect-error this was added in 18.2.0 but is not reflected in the types
-				server.closeIdleConnections();
+				server.server.closeIdleConnections();
 			}
 			if (socket_activation && idle_timeout && requests === 0) {
 				idle_timeout_id = setTimeout(shutdown, idle_timeout * 1000);
