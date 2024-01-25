@@ -67,7 +67,7 @@ server.server.on(
 		req.on('close', () => {
 			requests--;
 
-			if (shutdown_timeout_id) {
+			if (shutdown_timeout_id && requests === 0) {
 				// when the request is done, close the connection, so the app shuts down without delay
 				// @ts-expect-error this was added in 18.2.0 but is not reflected in the types
 				server.server.closeIdleConnections();
