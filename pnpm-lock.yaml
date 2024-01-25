@@ -365,6 +365,12 @@ importers:
         specifier: workspace:*
         version: link:../../../adapter-auto
 
+  packages/create-svelte/templates/skeleton-tailwind:
+    devDependencies:
+      '@sveltejs/adapter-auto':
+        specifier: workspace:*
+        version: link:../../../adapter-auto
+
   packages/enhanced-img:
     dependencies:
       magic-string:
