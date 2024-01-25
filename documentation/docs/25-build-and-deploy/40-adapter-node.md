@@ -174,12 +174,11 @@ node build
 
 ## Graceful shutdown
 
-By default `adapter-node` gracefully shuts down the HTTP server when a `SIGTERM` or `SIGINT` signal is received. It does this by calling [`server.close`](https://nodejs.org/api/http.html#serverclosecallback), [`server.closeIdleConnections`](https://nodejs.org/api/http.html#servercloseidleconnections) and [`server.closeAllConnections`](https://nodejs.org/api/http.html#servercloseallconnections) under the hood. This will
+By default `adapter-node` gracefully shuts down the HTTP server when a `SIGTERM` or `SIGINT` signal is received. It will:
 
-1. wait for requests that have already been made but not received a response yet to finish
-2. reject new requests
-3. close connections once they become idle
-4. and finally, close any remaining connections that are still active after [`SHUTDOWN_TIMEOUT`](#shutdown_timeout) seconds.
+1. reject new requests ([`server.close`](https://nodejs.org/api/http.html#serverclosecallback))
+2. wait for requests that have already been made but not received a response yet to finish and close connections once they become idle ([`server.closeIdleConnections`](https://nodejs.org/api/http.html#servercloseidleconnections))
+3. and finally, close any remaining connections that are still active after [`SHUTDOWN_TIMEOUT`](#shutdown_timeout) seconds. ([`server.closeAllConnections`](https://nodejs.org/api/http.html#servercloseallconnections))
 
 > If you want to customize this behaviour you can use a [custom server](#custom-server).
 
