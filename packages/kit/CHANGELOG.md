@@ -1,5 +1,15 @@
 # @sveltejs/kit
 
+## 2.5.0
+
+### Minor Changes
+
+- feat: dev/preview/prerender platform emulation ([#11730](https://github.com/sveltejs/kit/pull/11730))
+
+### Patch Changes
+
+- fix: strip `/@fs` prefix correctly on Windows when invoking `read()` in dev mode ([#11728](https://github.com/sveltejs/kit/pull/11728))
+
 ## 2.4.3
 
 ### Patch Changes
