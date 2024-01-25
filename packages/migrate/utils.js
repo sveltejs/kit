@@ -205,65 +205,61 @@ export function posixify(str) {
  * @param {Array<[string, string, string?, ('dependencies' | 'devDependencies')?]>} updates
  */
 export function update_pkg(content, updates) {
-    const indent = content.split('\n')[1].match(/^\s+/)?.[0] || '  ';
-    const pkg = JSON.parse(content);
+	const indent = content.split('\n')[1].match(/^\s+/)?.[0] || '  ';
+	const pkg = JSON.parse(content);
 
-    /**
-     * @param {string} name
-     * @param {string} version
-     * @param {string} [additional]
-     * @param {'dependencies' | 'devDependencies' | undefined} [insert]
-     */
-    function update_pkg(name, version, additional = '', insert) {
-        /**
-         * @param {string} type
-         */
-        const updateVersion = (type) => {
-            const existingRange = pkg[type]?.[name];
+	/**
+	 * @param {string} name
+	 * @param {string} version
+	 * @param {string} [additional]
+	 * @param {'dependencies' | 'devDependencies' | undefined} [insert]
+	 */
+	function update_pkg(name, version, additional = '', insert) {
+		/**
+		 * @param {string} type
+		 */
+		const updateVersion = (type) => {
+			const existingRange = pkg[type]?.[name];
 
-            if (
-                existingRange &&
-                semver.validRange(existingRange) &&
-                !semver.subset(existingRange, version)
-            ) {
-                // Check if the new version range is an upgrade
-                const minExistingVersion = semver.minVersion(existingRange);
-                const minNewVersion = semver.minVersion(version);
+			if (
+				existingRange &&
+				semver.validRange(existingRange) &&
+				!semver.subset(existingRange, version)
+			) {
+				// Check if the new version range is an upgrade
+				const minExistingVersion = semver.minVersion(existingRange);
+				const minNewVersion = semver.minVersion(version);
 
-                if (
-                    minExistingVersion &&
-                    minNewVersion &&
-                    semver.gt(minNewVersion, minExistingVersion)
-                ) {
-                    log_migration(`Updated ${name} to ${version}`);
-                    pkg[type][name] = version;
-                }
-            }
-        };
+				if (minExistingVersion && minNewVersion && semver.gt(minNewVersion, minExistingVersion)) {
+					log_migration(`Updated ${name} to ${version}`);
+					pkg[type][name] = version;
+				}
+			}
+		};
 
-        updateVersion('dependencies');
-        updateVersion('devDependencies');
+		updateVersion('dependencies');
+		updateVersion('devDependencies');
 
-        if (insert && !pkg[insert]?.[name]) {
-            if (!pkg[insert]) pkg[insert] = {};
+		if (insert && !pkg[insert]?.[name]) {
+			if (!pkg[insert]) pkg[insert] = {};
 
-            // Insert the property in sorted position without adjusting other positions so diffs are easier to read
-            const sorted_keys = Object.keys(pkg[insert]).sort();
-            const index = sorted_keys.findIndex((key) => name.localeCompare(key) === -1);
-            const insert_index = index !== -1 ? index : sorted_keys.length;
-            const new_properties = Object.entries(pkg[insert]);
-            new_properties.splice(insert_index, 0, [name, version]);
-            pkg[insert] = Object.fromEntries(new_properties);
+			// Insert the property in sorted position without adjusting other positions so diffs are easier to read
+			const sorted_keys = Object.keys(pkg[insert]).sort();
+			const index = sorted_keys.findIndex((key) => name.localeCompare(key) === -1);
+			const insert_index = index !== -1 ? index : sorted_keys.length;
+			const new_properties = Object.entries(pkg[insert]);
+			new_properties.splice(insert_index, 0, [name, version]);
+			pkg[insert] = Object.fromEntries(new_properties);
 
-            log_migration(`Added ${name} version ${version} ${additional}`);
-        }
-    }
+			log_migration(`Added ${name} version ${version} ${additional}`);
+		}
+	}
 
-    for (const update of updates) {
-        update_pkg(...update);
-    }
+	for (const update of updates) {
+		update_pkg(...update);
+	}
 
-    return JSON.stringify(pkg, null, indent);
+	return JSON.stringify(pkg, null, indent);
 }
 
 const logged_migrations = new Set();
