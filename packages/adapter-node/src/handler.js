@@ -90,11 +90,20 @@ function serve_prerendered() {
 
 /** @type {import('polka').Middleware} */
 const ssr = async (req, res) => {
-	const request = await getRequest({
-		base: origin || get_origin(req.headers),
-		request: req,
-		bodySizeLimit: body_size_limit
-	});
+	/** @type {Request} */
+	let request;
+
+	try {
+		request = await getRequest({
+			base: origin || get_origin(req.headers),
+			request: req,
+			bodySizeLimit: body_size_limit
+		});
+	} catch {
+		res.statusCode = 400;
+		res.end('Bad Request');
+		return;
+	}
 
 	setResponse(
 		res,

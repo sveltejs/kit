@@ -8,7 +8,7 @@ import { isCSSRequest, loadEnv, buildErrorMessage } from 'vite';
 import { createReadableStream, getRequest, setResponse } from '../../../exports/node/index.js';
 import { installPolyfills } from '../../../exports/node/polyfills.js';
 import { coalesce_to_error } from '../../../utils/error.js';
-import { posixify, resolve_entry, to_fs } from '../../../utils/filesystem.js';
+import { from_fs, posixify, resolve_entry, to_fs } from '../../../utils/filesystem.js';
 import { load_error_page } from '../../../core/config/index.js';
 import { SVELTE_KIT_ASSETS } from '../../../constants.js';
 import * as sync from '../../../core/sync/sync.js';
@@ -87,7 +87,7 @@ export async function dev(vite, vite_config, svelte_config) {
 
 	/** @param {string} id */
 	async function resolve(id) {
-		const url = id.startsWith('..') ? `/@fs${path.posix.resolve(id)}` : `/${id}`;
+		const url = id.startsWith('..') ? to_fs(path.posix.resolve(id)) : `/${id}`;
 
 		const module = await loud_ssr_load_module(url);
 
@@ -137,8 +137,8 @@ export async function dev(vite, vite_config, svelte_config) {
 				server_assets: new Proxy(
 					{},
 					{
-						has: (_, /** @type {string} */ file) => fs.existsSync(file.replace(/^\/@fs/, '')),
-						get: (_, /** @type {string} */ file) => fs.statSync(file.replace(/^\/@fs/, '')).size
+						has: (_, /** @type {string} */ file) => fs.existsSync(from_fs(file)),
+						get: (_, /** @type {string} */ file) => fs.statSync(from_fs(file)).size
 					}
 				),
 				nodes: manifest_data.nodes.map((node, index) => {
@@ -420,6 +420,9 @@ export async function dev(vite, vite_config, svelte_config) {
 
 	const env = loadEnv(vite_config.mode, svelte_config.kit.env.dir, '');
 
+	// TODO because of `RecursiveRequired`, TypeScript thinks this is guaranteed to exist, but it isn't
+	const emulator = await svelte_config.kit.adapter?.emulate?.();
+
 	return () => {
 		const serve_static_middleware = vite.middlewares.stack.find(
 			(middleware) =>
@@ -490,7 +493,7 @@ export async function dev(vite, vite_config, svelte_config) {
 
 				await server.init({
 					env,
-					read: (file) => createReadableStream(file.replace(/^\/@fs/, ''))
+					read: (file) => createReadableStream(from_fs(file))
 				});
 
 				const request = await getRequest({
@@ -529,7 +532,8 @@ export async function dev(vite, vite_config, svelte_config) {
 					read: (file) => fs.readFileSync(path.join(svelte_config.kit.files.assets, file)),
 					before_handle: (event, config, prerender) => {
 						async_local_storage.enterWith({ event, config, prerender });
-					}
+					},
+					emulator
 				});
 
 				if (rendered.status === 404) {
