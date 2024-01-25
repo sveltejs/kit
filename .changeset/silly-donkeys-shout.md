@@ -1,5 +1,5 @@
 ---
-"svelte-migrate": minor
+"svelte-migrate": patch
 ---
 
-fix: version range handling in update_pkg function
+fix: don't downgrade versions when bumping dependencies
