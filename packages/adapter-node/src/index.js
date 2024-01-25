@@ -13,6 +13,15 @@ const listen_fds = parseInt(env('LISTEN_FDS', '0'));
 // https://www.freedesktop.org/software/systemd/man/latest/sd_listen_fds.html
 const SD_LISTEN_FDS_START = 3;
 
+if (listen_pid !== 0 && listen_pid !== process.pid) {
+	throw new Error(`received LISTEN_PID ${listen_pid} but current process id is ${process.pid}`);
+}
+if (listen_fds > 1) {
+	throw new Error(
+		`only one socket is allowed for socket activation, but LISTEN_FDS was set to ${listen_fds}`
+	);
+}
+
 const socket_activation = listen_pid === process.pid && listen_fds === 1;
 
 let requests = 0;
