@@ -67,12 +67,12 @@ server.server.on(
 		req.on('close', () => {
 			requests--;
 
-			if (shutdown_timeout_id && requests === 0) {
+			if (requests === 0 && shutdown_timeout_id) {
 				// when all requests are done, close the connections, so the app shuts down without delay
 				// @ts-expect-error this was added in 18.2.0 but is not reflected in the types
 				server.server.closeIdleConnections();
 			}
-			if (socket_activation && idle_timeout && requests === 0) {
+			if (requests === 0 && socket_activation && idle_timeout) {
 				idle_timeout_id = setTimeout(shutdown, idle_timeout * 1000);
 			}
 		});
