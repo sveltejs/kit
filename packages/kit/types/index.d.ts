@@ -17,6 +17,21 @@ declare module '@sveltejs/kit' {
 		 * @param builder An object provided by SvelteKit that contains methods for adapting the app
 		 */
 		adapt(builder: Builder): MaybePromise<void>;
+		/**
+		 * Checks called during dev and build to determine whether specific features will work in production with this adapter
+		 */
+		supports?: {
+			/**
+			 * Test support for `read` from `$app/server`
+			 * @param config The merged route config
+			 */
+			read?: (details: { config: any; route: { id: string } }) => boolean;
+		};
+		/**
+		 * Creates an `Emulator`, which allows the adapter to influence the environment
+		 * during dev, build and prerendering
+		 */
+		emulate?(): MaybePromise<Emulator>;
 	}
 
 	export type LoadProperties<input extends Record<string, any> | void> = input extends void
@@ -71,12 +86,18 @@ declare module '@sveltejs/kit' {
 		/** An array of all routes (including prerendered) */
 		routes: RouteDefinition[];
 
+		// TODO 3.0 remove this method
 		/**
 		 * Create separate functions that map to one or more routes of your app.
 		 * @param fn A function that groups a set of routes into an entry point
 		 * @deprecated Use `builder.routes` instead
 		 */
 		createEntries(fn: (route: RouteDefinition) => AdapterEntry): Promise<void>;
+
+		/**
+		 * Find all the assets imported by server files belonging to `routes`
+		 */
+		findServerAssets(routes: RouteDefinition[]): string[];
 
 		/**
 		 * Generate a fallback page for a static webserver to use when no route is matched. Useful for single-page apps.
@@ -224,6 +245,17 @@ declare module '@sveltejs/kit' {
 			value: string,
 			opts: import('cookie').CookieSerializeOptions & { path: string }
 		): string;
+	}
+
+	/**
+	 * A collection of functions that influence the environment during dev, build and prerendering
+	 */
+	export interface Emulator {
+		/**
+		 * A function that is called with the current route `config` and `prerender` option
+		 * and returns an `App.Platform` object
+		 */
+		platform?(details: { config: any; prerender: PrerenderOption }): MaybePromise<App.Platform>;
 	}
 
 	export interface KitConfig {
@@ -1126,7 +1158,10 @@ declare module '@sveltejs/kit' {
 	}
 
 	export interface ServerInitOptions {
+		/** A map of environment variables */
 		env: Record<string, string>;
+		/** A function that turns an asset filename into a `ReadableStream`. Required for the `read` export from `$app/server` to work */
+		read?: (file: string) => ReadableStream;
 	}
 
 	export interface SSRManifest {
@@ -1141,6 +1176,8 @@ declare module '@sveltejs/kit' {
 			nodes: SSRNodeLoader[];
 			routes: SSRRoute[];
 			matchers(): Promise<Record<string, ParamMatcher>>;
+			/** A `[file]: size` map of all assets imported by server code */
+			server_assets: Record<string, number>;
 		};
 	}
 
@@ -1549,6 +1586,7 @@ declare module '@sveltejs/kit' {
 		app_dir: string;
 		app_path: string;
 		manifest_data: ManifestData;
+		out_dir: string;
 		service_worker: string | null;
 		client: {
 			start: string;
@@ -1563,6 +1601,11 @@ declare module '@sveltejs/kit' {
 
 	interface ManifestData {
 		assets: Asset[];
+		hooks: {
+			client: string | null;
+			server: string | null;
+			universal: string | null;
+		};
 		nodes: PageNode[];
 		routes: RouteData[];
 		matchers: Record<string, string>;
@@ -1705,7 +1748,14 @@ declare module '@sveltejs/kit' {
 		endpoint_id?: string;
 	}
 
-	type ValidatedConfig = RecursiveRequired<Config>;
+	type ValidatedConfig = Config & {
+		kit: ValidatedKitConfig;
+		extensions: string[];
+	};
+
+	type ValidatedKitConfig = Omit<RecursiveRequired<KitConfig>, 'adapter'> & {
+		adapter?: Adapter;
+	};
 	/**
 	 * Throws an error with a HTTP status code and an optional message.
 	 * When called during request handling, this will cause SvelteKit to
@@ -1873,6 +1923,11 @@ declare module '@sveltejs/kit/node' {
 	}): Promise<Request>;
 
 	export function setResponse(res: import('http').ServerResponse, response: Response): Promise<void>;
+	/**
+	 * Converts a file on disk to a readable stream
+	 * @since 2.4.0
+	 */
+	export function createReadableStream(file: string): ReadableStream;
 }
 
 declare module '@sveltejs/kit/node/polyfills' {
@@ -2105,6 +2160,22 @@ declare module '$app/paths' {
 	 * ```
 	 */
 	export function resolveRoute(id: string, params: Record<string, string | undefined>): string;
+}
+
+declare module '$app/server' {
+	/**
+	 * Read the contents of an imported asset from the filesystem
+	 * @example
+	 * ```js
+	 * import { read } from '$app/server';
+	 * import somefile from './somefile.txt';
+	 *
+	 * const asset = read(somefile);
+	 * const text = await asset.text();
+	 * ```
+	 * @since 2.4.0
+	 */
+	export function read(asset: string): Response;
 }
 
 declare module '$app/stores' {

@@ -1,5 +1,41 @@
 # @sveltejs/adapter-node
 
+## 4.0.1
+
+### Patch Changes
+
+- fix: return 400 response if request construction fails ([#11713](https://github.com/sveltejs/kit/pull/11713))
+
+- Updated dependencies [[`f56781fa47a0f958b228e4a51bb3cbf173854f12`](https://github.com/sveltejs/kit/commit/f56781fa47a0f958b228e4a51bb3cbf173854f12)]:
+  - @sveltejs/kit@2.4.3
+
+## 4.0.0
+
+### Major Changes
+
+- breaking: update peer dependency on `@sveltejs/kit` ([#11649](https://github.com/sveltejs/kit/pull/11649))
+
+### Minor Changes
+
+- feat: support `read` from `$app/server` ([#11649](https://github.com/sveltejs/kit/pull/11649))
+
+### Patch Changes
+
+- Updated dependencies [[`288f731c8a5b20cadb9e219f9583f3f16bf8c7b8`](https://github.com/sveltejs/kit/commit/288f731c8a5b20cadb9e219f9583f3f16bf8c7b8)]:
+  - @sveltejs/kit@2.4.0
+
+## 3.0.3
+
+### Patch Changes
+
+- fix: return 400 response if request construction fails
+
+## 3.0.2
+
+### Patch Changes
+
+- fix: return 400 response if request construction fails
+
 ## 3.0.1
 
 ### Patch Changes
@@ -11,6 +47,12 @@
 ### Major Changes
 
 - breaking: allow any numeric value for `BODY_SIZE_LIMIT`, and interpret literally. Use `Infinity` rather than `0` for unrestricted body sizes ([#11589](https://github.com/sveltejs/kit/pull/11589))
+
+## 2.1.2
+
+### Patch Changes
+
+- fix: return 400 response if request construction fails
 
 ## 2.1.1
 

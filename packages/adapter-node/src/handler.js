@@ -4,15 +4,15 @@ import path from 'node:path';
 import sirv from 'sirv';
 import { fileURLToPath } from 'node:url';
 import { parse as polka_url_parser } from '@polka/url';
-import { getRequest, setResponse } from '@sveltejs/kit/node';
+import { getRequest, setResponse, createReadableStream } from '@sveltejs/kit/node';
 import { Server } from 'SERVER';
-import { manifest, prerendered } from 'MANIFEST';
+import { manifest, prerendered, base } from 'MANIFEST';
 import { env } from 'ENV';
 
 /* global ENV_PREFIX */
 
 const server = new Server(manifest);
-await server.init({ env: process.env });
+
 const origin = env('ORIGIN', undefined);
 const xff_depth = parseInt(env('XFF_DEPTH', '1'));
 const address_header = env('ADDRESS_HEADER', '').toLowerCase();
@@ -28,6 +28,13 @@ if (isNaN(body_size_limit)) {
 }
 
 const dir = path.dirname(fileURLToPath(import.meta.url));
+
+const asset_dir = `${dir}/client${base}`;
+
+await server.init({
+	env: process.env,
+	read: (file) => createReadableStream(`${asset_dir}/${file}`)
+});
 
 /**
  * @param {string} path
@@ -83,11 +90,20 @@ function serve_prerendered() {
 
 /** @type {import('polka').Middleware} */
 const ssr = async (req, res) => {
-	const request = await getRequest({
-		base: origin || get_origin(req.headers),
-		request: req,
-		bodySizeLimit: body_size_limit
-	});
+	/** @type {Request} */
+	let request;
+
+	try {
+		request = await getRequest({
+			base: origin || get_origin(req.headers),
+			request: req,
+			bodySizeLimit: body_size_limit
+		});
+	} catch {
+		res.statusCode = 400;
+		res.end('Bad Request');
+		return;
+	}
 
 	setResponse(
 		res,

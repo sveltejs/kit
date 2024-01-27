@@ -1,5 +1,11 @@
 # @sveltejs/adapter-auto
 
+## 3.1.1
+
+### Patch Changes
+
+- fix: better error message when using `read` ([#11689](https://github.com/sveltejs/kit/pull/11689))
+
 ## 3.1.0
 
 ### Minor Changes

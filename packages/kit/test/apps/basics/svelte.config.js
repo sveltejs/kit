@@ -1,6 +1,21 @@
 /** @type {import('@sveltejs/kit').Config} */
 const config = {
 	kit: {
+		adapter: {
+			name: 'test-adapter',
+			adapt() {},
+			emulate() {
+				return {
+					platform({ config, prerender }) {
+						return { config, prerender };
+					}
+				};
+			},
+			supports: {
+				read: () => true
+			}
+		},
+
 		prerender: {
 			entries: [
 				'*',

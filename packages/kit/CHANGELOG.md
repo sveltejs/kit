@@ -1,5 +1,45 @@
 # @sveltejs/kit
 
+## 2.5.0
+
+### Minor Changes
+
+- feat: dev/preview/prerender platform emulation ([#11730](https://github.com/sveltejs/kit/pull/11730))
+
+### Patch Changes
+
+- fix: strip `/@fs` prefix correctly on Windows when invoking `read()` in dev mode ([#11728](https://github.com/sveltejs/kit/pull/11728))
+
+## 2.4.3
+
+### Patch Changes
+
+- fix: only disallow body with GET/HEAD ([#11710](https://github.com/sveltejs/kit/pull/11710))
+
+## 2.4.2
+
+### Patch Changes
+
+- fix: ignore bodies sent with non-PUT/PATCH/POST requests ([#11708](https://github.com/sveltejs/kit/pull/11708))
+
+## 2.4.1
+
+### Patch Changes
+
+- fix: use Vite's default value for `build.target` and respect override supplied by user ([#11688](https://github.com/sveltejs/kit/pull/11688))
+
+- fix: properly decode base64 strings inside `read` ([#11682](https://github.com/sveltejs/kit/pull/11682))
+
+- fix: default route config to `{}` for feature checking ([#11685](https://github.com/sveltejs/kit/pull/11685))
+
+- fix: handle `onNavigate` callbacks correctly ([#11678](https://github.com/sveltejs/kit/pull/11678))
+
+## 2.4.0
+
+### Minor Changes
+
+- feat: add `$app/server` module with `read` function for reading assets from filesystem ([#11649](https://github.com/sveltejs/kit/pull/11649))
+
 ## 2.3.5
 
 ### Patch Changes

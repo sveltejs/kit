@@ -5,6 +5,7 @@ import { nodeFileTrace } from '@vercel/nft';
 import esbuild from 'esbuild';
 import { get_pathname } from './utils.js';
 
+const name = '@sveltejs/adapter-vercel';
 const DEFAULT_FUNCTION_NAME = 'fn';
 
 const get_default_runtime = () => {
@@ -17,6 +18,9 @@ const get_default_runtime = () => {
 	);
 };
 
+// https://vercel.com/docs/functions/edge-functions/edge-runtime#compatible-node.js-modules
+const compatible_node_modules = ['async_hooks', 'events', 'buffer', 'assert', 'util'];
+
 /** @type {import('.').default} **/
 const plugin = function (defaults = {}) {
 	if ('edge' in defaults) {
@@ -24,7 +28,7 @@ const plugin = function (defaults = {}) {
 	}
 
 	return {
-		name: '@sveltejs/adapter-vercel',
+		name,
 
 		async adapt(builder) {
 			if (!builder.routes) {
@@ -63,6 +67,8 @@ const plugin = function (defaults = {}) {
 			 * @param {import('@sveltejs/kit').RouteDefinition<import('.').Config>[]} routes
 			 */
 			async function generate_serverless_function(name, config, routes) {
+				const dir = `${dirs.functions}/${name}.func`;
+
 				const relativePath = path.posix.relative(tmp, builder.getServerDirectory());
 
 				builder.copy(`${files}/serverless.js`, `${tmp}/index.js`, {
@@ -77,12 +83,12 @@ const plugin = function (defaults = {}) {
 					`export const manifest = ${builder.generateManifest({ relativePath, routes })};\n`
 				);
 
-				await create_function_bundle(
-					builder,
-					`${tmp}/index.js`,
-					`${dirs.functions}/${name}.func`,
-					config
-				);
+				await create_function_bundle(builder, `${tmp}/index.js`, dir, config);
+
+				for (const asset of builder.findServerAssets(routes)) {
+					// TODO use symlinks, once Build Output API supports doing so
+					builder.copy(`${builder.getServerDirectory()}/${asset}`, `${dir}/${asset}`);
+				}
 			}
 
 			/**
@@ -106,20 +112,61 @@ const plugin = function (defaults = {}) {
 					`export const manifest = ${builder.generateManifest({ relativePath, routes })};\n`
 				);
 
-				await esbuild.build({
-					entryPoints: [`${tmp}/edge.js`],
-					outfile: `${dirs.functions}/${name}.func/index.js`,
-					target: 'es2020', // TODO verify what the edge runtime supports
-					bundle: true,
-					platform: 'browser',
-					format: 'esm',
-					external: config.external,
-					sourcemap: 'linked',
-					banner: { js: 'globalThis.global = globalThis;' },
-					loader: {
-						'.wasm': 'copy'
+				try {
+					const result = await esbuild.build({
+						entryPoints: [`${tmp}/edge.js`],
+						outfile: `${dirs.functions}/${name}.func/index.js`,
+						target: 'es2020', // TODO verify what the edge runtime supports
+						bundle: true,
+						platform: 'browser',
+						format: 'esm',
+						external: [
+							...compatible_node_modules,
+							...compatible_node_modules.map((id) => `node:${id}`),
+							...(config.external || [])
+						],
+						sourcemap: 'linked',
+						banner: { js: 'globalThis.global = globalThis;' },
+						loader: {
+							'.wasm': 'copy'
+						}
+					});
+
+					if (result.warnings.length > 0) {
+						const formatted = await esbuild.formatMessages(result.warnings, {
+							kind: 'warning',
+							color: true
+						});
+
+						console.error(formatted.join('\n'));
 					}
-				});
+				} catch (error) {
+					for (const e of error.errors) {
+						for (const node of e.notes) {
+							const match =
+								/The package "(.+)" wasn't found on the file system but is built into node/.exec(
+									node.text
+								);
+
+							if (match) {
+								node.text = `Cannot use "${match[1]}" when deploying to Vercel Edge Functions.`;
+							}
+						}
+					}
+
+					const formatted = await esbuild.formatMessages(error.errors, {
+						kind: 'error',
+						color: true
+					});
+
+					console.error(formatted.join('\n'));
+
+					throw new Error(
+						`Bundling with esbuild failed with ${error.errors.length} ${
+							error.errors.length === 1 ? 'error' : 'errors'
+						}`
+					);
+				}
 
 				write(
 					`${dirs.functions}/${name}.func/.vc-config.json`,
@@ -335,6 +382,21 @@ const plugin = function (defaults = {}) {
 			builder.log.minor('Writing routes...');
 
 			write(`${dir}/config.json`, JSON.stringify(static_config, null, '\t'));
+		},
+
+		supports: {
+			// reading from the filesystem only works in serverless functions
+			read: ({ config, route }) => {
+				const runtime = config.runtime ?? defaults.runtime;
+
+				if (runtime === 'edge') {
+					throw new Error(
+						`${name}: Cannot use \`read\` from \`$app/server\` in route \`${route.id}\` configured with \`runtime: 'edge'\``
+					);
+				}
+
+				return true;
+			}
 		}
 	};
 };
