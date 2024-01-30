@@ -1,5 +1,5 @@
 ---
-"@sveltejs/adapter-node": minor
+"@sveltejs/adapter-node": major
 ---
 
-feat: add graceful shutdown
+breaking: add graceful shutdown
