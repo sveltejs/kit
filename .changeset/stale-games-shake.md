@@ -2,4 +2,4 @@
 "@sveltejs/kit": patch
 ---
 
-Ensure shallow routes are treated as such
+Fix: ensure shallow routes are treated as such
