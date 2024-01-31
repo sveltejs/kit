@@ -989,6 +989,17 @@ test.describe('Shallow routing', () => {
 		await expect(page.locator('span')).not.toHaveText(now);
 	});
 
+	test('Does not navigate when going back to shallow route', async ({ baseURL, page }) => {
+		await page.goto('/shallow-routing/push-state');
+		await page.locator('[data-id="two"]').click();
+		await page.goBack();
+		await page.goForward();
+
+		expect(page.url()).toBe(`${baseURL}/shallow-routing/push-state/a`);
+		await expect(page.locator('h1')).toHaveText('parent');
+		await expect(page.locator('p')).toHaveText('active: true');
+	});
+
 	test('Replaces state on the current URL', async ({ baseURL, page, clicknav }) => {
 		await page.goto('/shallow-routing/replace-state/b');
 		await clicknav('[href="/shallow-routing/replace-state"]');
