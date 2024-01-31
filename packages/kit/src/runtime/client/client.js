@@ -1818,6 +1818,7 @@ export function pushState(url, state) {
 	};
 
 	history.pushState(opts, '', resolve_url(url));
+	has_navigated = true;
 
 	page = { ...page, state };
 	root.$set({ page });
