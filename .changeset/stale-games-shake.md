@@ -2,4 +2,4 @@
 "@sveltejs/kit": patch
 ---
 
-Fix: treated shallow are as such
+fix: `popstate` navigations take `pushState` navigations into account
