@@ -1060,15 +1060,6 @@ async function load_root_error_page({ status, error, url, route }) {
 		}
 	}
 
-	const root_layout = await load_node({
-		loader: default_layout_loader,
-		url,
-		params,
-		route,
-		parent: () => Promise.resolve({}),
-		server_data_node: create_data_node(server_data_node)
-	});
-
 	/** @type {import('./types.js').BranchNode} */
 	const root_error = {
 		node: await default_error_loader(),
@@ -1078,10 +1069,26 @@ async function load_root_error_page({ status, error, url, route }) {
 		data: null
 	};
 
+	const branch = [];
+	if (Object.keys(params).length == 0) {
+		branch.push(root_error);
+	} else {
+		const root_layout = await load_node({
+			loader: default_layout_loader,
+			url,
+			params,
+			route,
+			parent: () => Promise.resolve({}),
+			server_data_node: create_data_node(server_data_node)
+		});
+
+		branch.push(root_layout, root_error);
+	}
+
 	return await get_navigation_result_from_branch({
 		url,
 		params,
-		branch: [root_layout, root_error],
+		branch,
 		status,
 		error,
 		route: null
