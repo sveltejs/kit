@@ -10,7 +10,6 @@ A `+page.svelte` file can have a sibling `+page.js` that exports a `load` functi
 
 ```js
 /// file: src/routes/blog/[slug]/+page.js
-/** @type {import('./$types').PageLoad} */
 export function load({ params }) {
 	return {
 		post: {
@@ -24,7 +23,6 @@ export function load({ params }) {
 ```svelte
 <!--- file: src/routes/blog/[slug]/+page.svelte --->
 <script>
-	/** @type {import('./$types').PageData} */
 	export let data;
 </script>
 
@@ -32,7 +30,7 @@ export function load({ params }) {
 <div>{@html data.post.content}</div>
 ```
 
-Thanks to the generated `$types` module, we get full type safety.
+Thanks to [generated types](https://svelte.dev/blog/zero-config-type-safety), we get full type safety.
 
 A `load` function in a `+page.js` file runs both on the server and in the browser (unless combined with `export const ssr = false`, in which case it will [only run in the browser](https://kit.svelte.dev/docs/page-options#ssr)). If your `load` function should _always_ run on the server (because it uses private environment variables, for example, or accesses a database) then it would go in a `+page.server.js` instead.
 
@@ -49,7 +47,6 @@ declare module '$lib/server/database' {
 // ---cut---
 import * as db from '$lib/server/database';
 
-/** @type {import('./$types').PageServerLoad} */
 export async function load({ params }) {
 	return {
 		post: await db.getPost(params.slug)
@@ -74,7 +71,6 @@ declare module '$lib/server/database' {
 // ---cut---
 import * as db from '$lib/server/database';
 
-/** @type {import('./$types').LayoutServerLoad} */
 export async function load() {
 	return {
 		posts: await db.getPostSummaries()
@@ -85,7 +81,6 @@ export async function load() {
 ```svelte
 <!--- file: src/routes/blog/[slug]/+layout.svelte --->
 <script>
-	/** @type {import('./$types').LayoutData} */
 	export let data;
 </script>
 
@@ -115,7 +110,6 @@ Data returned from layout `load` functions is available to child `+layout.svelte
 <script>
 +	import { page } from '$app/stores';
 
-	/** @type {import('./$types').PageData} */
 	export let data;
 
 +	// we can access `data.posts` because it's returned from
@@ -196,7 +190,6 @@ In rare cases, you might need to use both together — for example, you might ne
 
 ```js
 /// file: src/routes/+page.server.js
-/** @type {import('./$types').PageServerLoad} */
 export async function load() {
 	return {
 		serverMessage: 'hello from server load function'
@@ -207,7 +200,6 @@ export async function load() {
 ```js
 /// file: src/routes/+page.js
 // @errors: 18047
-/** @type {import('./$types').PageLoad} */
 export async function load({ data }) {
 	return {
 		serverMessage: data.serverMessage,
@@ -232,7 +224,6 @@ Contains the name of the current route directory, relative to `src/routes`:
 
 ```js
 /// file: src/routes/a/[b]/[...c]/+page.js
-/** @type {import('./$types').PageLoad} */
 export function load({ route }) {
 	console.log(route.id); // '/a/[b]/[...c]'
 }
@@ -263,7 +254,6 @@ To get data from an external API or a `+server.js` handler, you can use the prov
 
 ```js
 /// file: src/routes/items/[id]/+page.js
-/** @type {import('./$types').PageLoad} */
 export async function load({ fetch, params }) {
 	const res = await fetch(`/api/items/${params.id}`);
 	const item = await res.json();
@@ -287,7 +277,6 @@ declare module '$lib/server/database' {
 // ---cut---
 import * as db from '$lib/server/database';
 
-/** @type {import('./$types').LayoutServerLoad} */
 export async function load({ cookies }) {
 	const sessionid = cookies.get('sessionid');
 
@@ -314,7 +303,6 @@ Both server and universal `load` functions have access to a `setHeaders` functio
 ```js
 // @errors: 2322 1360
 /// file: src/routes/products/+page.js
-/** @type {import('./$types').PageLoad} */
 export async function load({ fetch, setHeaders }) {
 	const url = `https://cms.example.com/products.json`;
 	const response = await fetch(url);
@@ -338,7 +326,6 @@ Occasionally it's useful for a `load` function to access data from a parent `loa
 
 ```js
 /// file: src/routes/+layout.js
-/** @type {import('./$types').LayoutLoad} */
 export function load() {
 	return { a: 1 };
 }
@@ -346,7 +333,6 @@ export function load() {
 
 ```js
 /// file: src/routes/abc/+layout.js
-/** @type {import('./$types').LayoutLoad} */
 export async function load({ parent }) {
 	const { a } = await parent();
 	return { b: a + 1 };
@@ -355,7 +341,6 @@ export async function load({ parent }) {
 
 ```js
 /// file: src/routes/abc/+page.js
-/** @type {import('./$types').PageLoad} */
 export async function load({ parent }) {
 	const { a, b } = await parent();
 	return { c: a + b };
@@ -365,7 +350,6 @@ export async function load({ parent }) {
 ```svelte
 <!--- file: src/routes/abc/+page.svelte --->
 <script>
-	/** @type {import('./$types').PageData} */
 	export let data;
 </script>
 
@@ -383,7 +367,6 @@ Take care not to introduce waterfalls when using `await parent()`. Here, for exa
 
 ```diff
 /// file: +page.js
-/** @type {import('./$types').PageLoad} */
 export async function load({ params, parent }) {
 -	const parentData = await parent();
 	const data = await getData(params);
@@ -416,7 +399,6 @@ declare namespace App {
 // ---cut---
 import { error } from '@sveltejs/kit';
 
-/** @type {import('./$types').LayoutServerLoad} */
 export function load({ locals }) {
 	if (!locals.user) {
 		error(401, 'not logged in');
@@ -453,7 +435,6 @@ declare namespace App {
 // ---cut---
 import { redirect } from '@sveltejs/kit';
 
-/** @type {import('./$types').LayoutServerLoad} */
 export function load({ locals }) {
 	if (!locals.user) {
 		redirect(307, '/login');
@@ -483,7 +464,6 @@ export {};
 
 // @filename: index.js
 // ---cut---
-/** @type {import('./$types').PageServerLoad} */
 export async function load({ params }) {
 	return {
 		// make sure the `await` happens at the end, otherwise we
@@ -499,7 +479,6 @@ This is useful for creating skeleton loading states, for example:
 ```svelte
 <!--- file: src/routes/blog/[slug]/+page.svelte --->
 <script>
-	/** @type {import('./$types').PageData} */
 	export let data;
 </script>
 
@@ -521,7 +500,6 @@ When streaming data, be careful to handle promise rejections correctly. More spe
 
 ```js
 /// file: src/routes/+page.server.js
-/** @type {import('./$types').PageServerLoad} */
 export function load({ fetch }) {
 	const ok_manual = Promise.reject();
 	ok_manual.catch(() => {});
@@ -563,7 +541,6 @@ declare module '$lib/server/database' {
 // ---cut---
 import * as db from '$lib/server/database';
 
-/** @type {import('./$types').PageServerLoad} */
 export async function load({ params }) {
 	return {
 		post: await db.getPost(params.slug)
@@ -582,7 +559,6 @@ declare module '$lib/server/database' {
 // ---cut---
 import * as db from '$lib/server/database';
 
-/** @type {import('./$types').LayoutServerLoad} */
 export async function load() {
 	return {
 		posts: await db.getPostSummaries()
@@ -604,7 +580,6 @@ In rare cases, you may wish to exclude something from the dependency tracking me
 
 ```js
 /// file: src/routes/+page.js
-/** @type {import('./$types').PageLoad} */
 export async function load({ untrack, url }) {
 	// Untrack url.pathname so that path changes don't trigger a rerun
 	if (untrack(() => url.pathname === '/')) {
@@ -621,7 +596,6 @@ A `load` function depends on `url` if it calls `fetch(url)` or `depends(url)`. N
 
 ```js
 /// file: src/routes/random-number/+page.js
-/** @type {import('./$types').PageLoad} */
 export async function load({ fetch, depends }) {
 	// load reruns when `invalidate('https://api.example.com/random-number')` is called...
 	const response = await fetch('https://api.example.com/random-number');
@@ -640,7 +614,6 @@ export async function load({ fetch, depends }) {
 <script>
 	import { invalidate, invalidateAll } from '$app/navigation';
 
-	/** @type {import('./$types').PageData} */
 	export let data;
 
 	function rerunLoadFunction() {
