@@ -2,6 +2,7 @@ import { writeFileSync } from 'node:fs';
 import * as path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import * as esbuild from 'esbuild';
+import { Miniflare } from 'miniflare';
 
 // list from https://developers.cloudflare.com/workers/runtime-apis/nodejs/
 const compatible_node_modules = [
@@ -20,6 +21,19 @@ const compatible_node_modules = [
 
 /** @type {import('./index.js').default} */
 export default function (options = {}) {
+	const persistTo = options.persistTo || '.wrangler';
+	const mf = new Miniflare({
+		script: 'export default{fetch({cf:e}){return Response.json(e)}}',
+		modules: true,
+		kvNamespaces: options.bindings?.kvNamespaces,
+		kvPersist: persistTo,
+		r2Buckets: options.bindings?.r2Buckets,
+		r2Persist: persistTo,
+		durableObjects: options.bindings?.durableObjects,
+		durableObjectsPersist: persistTo,
+		bindings: options.bindings?.vars,
+		cachePersist: persistTo
+	});
 	return {
 		name: '@sveltejs/adapter-cloudflare',
 		async adapt(builder) {
@@ -124,6 +138,23 @@ export default function (options = {}) {
 					}`
 				);
 			}
+		},
+		async emulate() {
+			/** @type {import('@cloudflare/workers-types').CacheStorage} */
+			const caches = /** @type {any} */ (await mf.getCaches());
+			/** @type {import('@cloudflare/workers-types').IncomingRequestCfProperties} */
+			const cf = /** @type {any} */ (await (await mf.dispatchFetch('http://svelte.kit')).json());
+			const env = await mf.getBindings();
+			return {
+				platform: () => ({
+					context: {
+						waitUntil: (prom) => prom
+					},
+					caches,
+					cf,
+					env
+				})
+			};
 		}
 	};
 }

@@ -3,11 +3,11 @@ import { Cache, CacheStorage, IncomingRequestCfProperties } from '@cloudflare/wo
 declare global {
 	namespace App {
 		export interface Platform {
-			context?: {
+			context: {
 				waitUntil(promise: Promise<any>): void;
 			};
-			caches?: CacheStorage & { default: Cache };
-			cf?: IncomingRequestCfProperties;
+			caches: CacheStorage;
+			cf: IncomingRequestCfProperties;
 		}
 	}
 }

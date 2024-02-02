@@ -34,7 +34,8 @@
 	"dependencies": {
 		"@cloudflare/workers-types": "^4.20231121.0",
 		"esbuild": "^0.19.11",
-		"worktop": "0.8.0-next.18"
+		"worktop": "0.8.0-next.18",
+		"miniflare": "^3.20240129.0"
 	},
 	"devDependencies": {
 		"@sveltejs/kit": "workspace:^",

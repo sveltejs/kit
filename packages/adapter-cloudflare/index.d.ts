@@ -42,6 +42,32 @@ export interface AdapterOptions {
 		 */
 		exclude?: string[];
 	};
+
+	/**
+	 * What bindings will be emulated in local development. This does not sync with your setup
+	 * on the Cloudflare Dashboard automatically.
+	 */
+	bindings?: {
+		kvNamespaces?: string[] | Record<string, string>;
+		r2Buckets?: string[] | Record<string, string>;
+		d1Databases?: string[] | Record<string, string>;
+		/**
+		 * Durable Object Bindings. Separate Worker required for Durable Object definition.
+		 */
+		durableObjects: Record<
+			string,
+			{
+				className: string;
+				scriptName: string;
+			}
+		>;
+		vars?: Record<string, string>;
+	};
+
+	/**
+	 * Where to persist Cloudflare-related data. Defaults to `.wrangler`
+	 */
+	persistTo?: string;
 }
 
 export interface RoutesJSONSpec {
