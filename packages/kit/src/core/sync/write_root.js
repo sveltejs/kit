@@ -21,16 +21,22 @@ export function write_root(manifest_data, output) {
 
 	let l = max_depth;
 
-	let pyramid = `<svelte:component this={constructors[${l}]} bind:this={components[${l}]} data={data_${l}} {form} />`;
+	let pyramid = `<svelte:component this={constructors[${l}]} bind:this={components[${l}]} ${
+		isSvelte5Plus() ? `bind:data={data_${l}} bind:form` : `data={data_${l}} {form}`
+	} />`;
 
 	while (l--) {
 		pyramid = dedent`
 			{#if constructors[${l + 1}]}
-				<svelte:component this={constructors[${l}]} bind:this={components[${l}]} data={data_${l}}>
+				<svelte:component this={constructors[${l}]} bind:this={components[${l}]} ${
+					isSvelte5Plus() ? `bind:data={data_${l}}` : `data={data_${l}}`
+				}>
 					${pyramid}
 				</svelte:component>
 			{:else}
-				<svelte:component this={constructors[${l}]} bind:this={components[${l}]} data={data_${l}} {form} />
+				<svelte:component this={constructors[${l}]} bind:this={components[${l}]} ${
+					isSvelte5Plus() ? `bind:data={data_${l}} bind:form` : `data={data_${l}} {form}`
+				} />
 			{/if}
 		`;
 	}
