@@ -312,6 +312,7 @@ async function _invalidate() {
 			await _goto(new URL(navigation_result.location, current.url).href, {}, 1, nav_token);
 		} else {
 			if (navigation_result.props.page !== undefined) {
+				navigation_result.props.page.state = page.state;
 				page = navigation_result.props.page;
 			}
 			root.$set(navigation_result.props);
