@@ -14,11 +14,12 @@ import { load_pkg_json } from './config.js';
  *
  * @param {string} input
  * @param {string} output
+ * @param {string} final_output
  * @param {string} cwd
  * @param {Record<string, string>} alias
  * @param {import('./types.js').File[]} files
  */
-export async function emit_dts(input, output, cwd, alias, files) {
+export async function emit_dts(input, output, final_output, cwd, alias, files) {
 	const tmp = `${output}/__package_types_tmp__`;
 	rimraf(tmp);
 	mkdirp(tmp);
@@ -52,8 +53,25 @@ export async function emit_dts(input, output, cwd, alias, files) {
 			console.warn(`Using $lib/${normalized} instead of generated .d.ts file`);
 		}
 
-		const source = fs.readFileSync(path.join(tmp, normalized), 'utf8');
-		write(path.join(output, normalized), resolve_aliases(input, normalized, source, alias));
+		let source = fs.readFileSync(path.join(tmp, normalized), 'utf8');
+		if (file.endsWith('.d.ts.map')) {
+			// Because we put the .d.ts files in a temporary directory, the relative path needs to be adjusted
+			source = source.replace(/("sources":\[")(.+?)("\])/, (_, prefix, source_path, suffix) => {
+				const new_sourcepath = posixify(
+					path.join(
+						path.relative(
+							path.dirname(path.join(final_output, normalized)),
+							path.dirname(path.join(input, normalized))
+						),
+						path.basename(source_path)
+					)
+				);
+				return prefix + new_sourcepath + suffix;
+			});
+		} else {
+			source = resolve_aliases(input, normalized, source, alias);
+		}
+		write(path.join(output, normalized), source);
 	}
 
 	rimraf(tmp);
