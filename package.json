@@ -24,11 +24,11 @@
 		"@changesets/cli": "^2.27.1",
 		"@sveltejs/eslint-config": "^6.0.4",
 		"@svitejs/changesets-changelog-github-compact": "^1.1.0",
-		"@typescript-eslint/eslint-plugin": "^6.19.1",
+		"@typescript-eslint/eslint-plugin": "^6.21.0",
 		"eslint": "^8.56.0",
 		"eslint-config-prettier": "^9.1.0",
 		"eslint-plugin-svelte": "^2.35.1",
-		"eslint-plugin-unicorn": "^50.0.0",
+		"eslint-plugin-unicorn": "^51.0.1",
 		"playwright": "^1.41.0"
 	},
 	"packageManager": "pnpm@8.15.1",

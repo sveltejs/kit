@@ -30,9 +30,9 @@
 		"prism-svelte": "^0.5.0",
 		"prismjs": "^1.29.0",
 		"shiki-twoslash": "^3.1.2",
-		"svelte": "^4.2.9",
+		"svelte": "^4.2.10",
 		"typescript": "5.0.4",
-		"vite": "^5.0.12",
+		"vite": "^5.1.0",
 		"vitest": "^1.2.0"
 	},
 	"type": "module",

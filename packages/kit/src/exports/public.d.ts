@@ -79,11 +79,12 @@ export interface ActionFailure<T extends Record<string, unknown> | undefined = u
 	[uniqueSymbol]: true; // necessary or else UnpackValidationError could wrongly unpack objects with the same shape as ActionFailure
 }
 
-type UnpackValidationError<T> = T extends ActionFailure<infer X>
-	? X
-	: T extends void
-		? undefined // needs to be undefined, because void will corrupt union type
-		: T;
+type UnpackValidationError<T> =
+	T extends ActionFailure<infer X>
+		? X
+		: T extends void
+			? undefined // needs to be undefined, because void will corrupt union type
+			: T;
 
 /**
  * This object is passed to the `adapt` function of adapters.
