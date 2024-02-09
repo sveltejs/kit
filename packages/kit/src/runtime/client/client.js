@@ -318,7 +318,6 @@ async function _invalidate() {
 		}
 	}
 
-	invalidated.length = 0;
 }
 
 /** @param {number} index */
@@ -753,8 +752,10 @@ function has_changed(
 		if (params[param] !== current.params[param]) return true;
 	}
 
-	for (const href of uses.dependencies) {
-		if (invalidated.some((fn) => fn(new URL(href)))) return true;
+	if (!parent_changed) {
+		for (const href of uses.dependencies) {
+			if (invalidated.some((fn) => fn(new URL(href)))) return true;
+		}
 	}
 
 	return false;
