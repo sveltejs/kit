@@ -63,6 +63,8 @@ for (const [file, asset] of Object.entries(markdown)) {
 		category: category.title,
 		title,
 		file: `${category_dir}/${basename}`,
+		slug,
+		path: slug,
 		sections: await get_sections(body),
 		body
 	};
@@ -78,6 +80,8 @@ export async function get_parsed_docs(slug) {
 		category: page.category,
 		title: page.title,
 		file: page.file,
+		path: page.path,
+		slug: page.slug,
 		sections: page.sections,
 		content: await render_content(page.file, page.body)
 	};
