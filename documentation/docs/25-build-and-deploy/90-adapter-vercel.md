@@ -69,11 +69,21 @@ If your functions need to access data in a specific region, it's recommended tha
 You may set the `images` config to control how Vercel builds your images. See the [image configuration reference](https://vercel.com/docs/build-output-api/v3/configuration#images) for full details. As an example, you may set:
 
 ```
-{
-	sizes: [640, 828, 1200, 1920, 3840],
-	formats: ['image/avif', 'image/webp'],
-	minimumCacheTTL: 300
-}
+/// file: svelte.config.js
+import adapter from '@sveltejs/adapter-vercel';
+
+export default {
+	kit: {
+		adapter({
+			images: {
+				sizes: [640, 828, 1200, 1920, 3840],
+				formats: ['image/avif', 'image/webp'],
+				minimumCacheTTL: 300,
+				domains: ['example-app.vercel.app'],
+			}
+		})
+	}
+};
 ```
 
 ## Incremental Static Regeneration
