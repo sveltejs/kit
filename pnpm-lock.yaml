@@ -432,8 +432,8 @@ importers:
         specifier: ^0.2.9
         version: 0.2.9
       undici:
-        specifier: ~5.26.2
-        version: 5.26.3
+        specifier: ^5.28.3
+        version: 5.28.3
     devDependencies:
       '@playwright/test':
         specifier: 1.30.0
@@ -6237,8 +6237,8 @@ packages:
       which-boxed-primitive: 1.0.2
     dev: true
 
-  /undici@5.26.3:
-    resolution: {integrity: sha512-H7n2zmKEWgOllKkIUkLvFmsJQj062lSm3uA4EYApG8gLuiOM0/go9bIoC3HVaSnfg4xunowDE2i9p8drkXuvDw==}
+  /undici@5.28.3:
+    resolution: {integrity: sha512-3ItfzbrhDlINjaP0duwnNsKpDQk3acHI3gVJ1z4fmwMK31k5G9OVIAMLSIaP6w4FaGkaAkN6zaQO9LUvZ1t7VA==}
     engines: {node: '>=14.0'}
     dependencies:
       '@fastify/busboy': 2.0.0
