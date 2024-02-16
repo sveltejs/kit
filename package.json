@@ -15,7 +15,7 @@
 		"format": "pnpm -r format",
 		"precommit": "pnpm format && pnpm lint",
 		"changeset:version": "changeset version && pnpm -r generate:version && git add --all",
-		"changeset:release": "changeset publish",
+		"changeset:release": "changeset publish --tag version-1",
 		"start": "cd sites/kit.svelte.dev && npm run dev"
 	},
 	"devDependencies": {
