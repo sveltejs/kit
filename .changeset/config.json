@@ -4,7 +4,7 @@
 	"commit": false,
 	"linked": [],
 	"access": "public",
-	"baseBranch": "master",
+	"baseBranch": "version-1",
 	"bumpVersionsWithWorkspaceProtocolOnly": true,
 	"ignore": ["!(@sveltejs/*|create-svelte|svelte-migrate)"]
 }
