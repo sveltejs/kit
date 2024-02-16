@@ -1,5 +1,11 @@
 # @sveltejs/kit
 
+## 1.30.4
+
+### Patch Changes
+
+- chore(deps): upgrade and unpin undici ([#11860](https://github.com/sveltejs/kit/pull/11860))
+
 ## 1.30.3
 
 ### Patch Changes
