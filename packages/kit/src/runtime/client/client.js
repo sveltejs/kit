@@ -78,7 +78,7 @@ if (DEV && BROWSER) {
 		if (!stack) return;
 		if (!stack[0].includes('https:') && !stack[0].includes('http:')) stack = stack.slice(1); // Chrome includes the error message in the stack
 		stack = stack.slice(2); // remove `warn` and the place where `warn` was called
-		if (!stack[0] || stack[0].includes(current_module_url)) return;
+		if (stack[0]?.includes(current_module_url)) return;
 
 		warned = true;
 
