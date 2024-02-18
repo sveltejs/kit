@@ -70,7 +70,15 @@ export function list_files(dir, filter) {
 	function walk(current) {
 		for (const file of fs.readdirSync(path.resolve(dir, current))) {
 			const child = path.posix.join(current, file);
-			if (fs.statSync(path.resolve(dir, child)).isDirectory()) {
+			let stat;
+			try {
+				stat = fs.statSync(path.resolve(dir, child));
+			} catch (e) {
+				console.warn(`Error calling stat on ${child}:`, e);
+				continue;
+			}
+
+			if (stat && stat.isDirectory()) {
 				walk(child);
 			} else {
 				if (!filter || filter(child)) {
