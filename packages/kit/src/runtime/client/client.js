@@ -67,6 +67,8 @@ const snapshots = storage.get(SNAPSHOT_KEY) ?? {};
 if (DEV && BROWSER) {
 	let warned = false;
 
+	const current_module_url = import.meta.url.split('?')[0]; // remove query params that vite adds to the URL when it is loaded from node_modules
+
 	const warn = () => {
 		if (warned) return;
 
@@ -76,7 +78,8 @@ if (DEV && BROWSER) {
 		if (!stack) return;
 		if (!stack[0].includes('https:') && !stack[0].includes('http:')) stack = stack.slice(1); // Chrome includes the error message in the stack
 		stack = stack.slice(2); // remove `warn` and the place where `warn` was called
-		if (stack[0].includes(import.meta.url)) return;
+		// Can be falsy if was called directly from an anonymous function
+		if (stack[0]?.includes(current_module_url)) return;
 
 		warned = true;
 
