@@ -320,6 +320,7 @@ async function _invalidate() {
 		}
 		current = navigation_result.state;
 		invalidated.length = 0;
+		force_invalidation = false;
 		root.$set(navigation_result.props);
 	}
 }
