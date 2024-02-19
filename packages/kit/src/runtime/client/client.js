@@ -308,20 +308,18 @@ async function _invalidate() {
 
 	const nav_token = (token = {});
 	const navigation_result = intent && (await load_route(intent));
-	if (nav_token !== token) return;
+	if (!navigation_result || nav_token !== token) return;
 
-	if (navigation_result) {
-		if (navigation_result.type === 'redirect') {
-			return _goto(new URL(navigation_result.location, current.url).href, {}, 1, nav_token);
-		}
-
-		if (navigation_result.props.page) {
-			page = navigation_result.props.page;
-		}
-		current = navigation_result.state;
-		reset_invalidation();
-		root.$set(navigation_result.props);
+	if (navigation_result.type === 'redirect') {
+		return _goto(new URL(navigation_result.location, current.url).href, {}, 1, nav_token);
 	}
+
+	if (navigation_result.props.page) {
+		page = navigation_result.props.page;
+	}
+	current = navigation_result.state;
+	reset_invalidation();
+	root.$set(navigation_result.props);
 }
 
 function reset_invalidation() {
