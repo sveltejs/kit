@@ -1,4 +1,4 @@
-/** @type {import('./$types').PageLoad} */
+/** @type {import('./$types').LayoutServerLoad} */
 export function load({ depends }) {
 	depends('invalidate-depends:goto');
 	return {
