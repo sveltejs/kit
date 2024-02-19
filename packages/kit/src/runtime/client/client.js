@@ -312,16 +312,16 @@ async function _invalidate() {
 
 	if (navigation_result) {
 		if (navigation_result.type === 'redirect') {
-			await _goto(new URL(navigation_result.location, current.url).href, {}, 1, nav_token);
-		} else {
-			if (navigation_result.props.page !== undefined) {
-				page = navigation_result.props.page;
-			}
-			root.$set(navigation_result.props);
+			return _goto(new URL(navigation_result.location, current.url).href, {}, 1, nav_token);
 		}
-	}
 
-	invalidated.length = 0;
+		if (navigation_result.props.page) {
+			page = navigation_result.props.page;
+		}
+		current = navigation_result.state;
+		invalidated.length = 0;
+		root.$set(navigation_result.props);
+	}
 }
 
 /** @param {number} index */
