@@ -45,6 +45,7 @@ import { HttpError, Redirect, SvelteKitError } from '../control.js';
 import { INVALIDATED_PARAM, TRAILING_SLASH_PARAM, validate_depends } from '../shared.js';
 import { get_message, get_status } from '../../utils/error.js';
 import { writable } from 'svelte/store';
+import { get_cookies } from './cookie.js';
 
 let errored = false;
 
@@ -592,6 +593,7 @@ async function load_node({ loader, parent, url, params, route, server_data_node 
 
 		/** @type {import('@sveltejs/kit').LoadEvent} */
 		const load_input = {
+			cookies: get_cookies(url),
 			route: new Proxy(route, {
 				get: (target, key) => {
 					if (is_tracking) {

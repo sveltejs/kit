@@ -26,6 +26,7 @@ import {
 	RequestOptions,
 	TrailingSlash
 } from './private.js';
+import { CookieSerializeOptions } from 'cookie';
 
 export interface ServerModule {
 	Server: typeof InternalServer;
@@ -443,6 +444,12 @@ export type ValidatedConfig = Config & {
 export type ValidatedKitConfig = Omit<RecursiveRequired<KitConfig>, 'adapter'> & {
 	adapter?: Adapter;
 };
+
+export interface Cookie {
+	name: string;
+	value: string;
+	options: CookieSerializeOptions & { path: string };
+}
 
 export * from '../exports/index.js';
 export * from './private.js';

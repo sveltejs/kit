@@ -9,7 +9,7 @@ import * as paths from '__sveltekit/paths';
  *   manifest: import('@sveltejs/kit').SSRManifest;
  *   state: import('types').SSRState;
  *   get_cookie_header: (url: URL, header: string | null) => string;
- *   set_internal: (name: string, value: string, opts: import('./page/types.js').Cookie['options']) => void;
+ *   set_internal: (name: string, value: string, opts: import('../..//types/internal.js').Cookie['options']) => void;
  * }} opts
  * @returns {typeof fetch}
  */

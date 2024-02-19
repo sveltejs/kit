@@ -158,7 +158,7 @@ export async function respond(request, options, manifest, state) {
 	/** @type {Record<string, string>} */
 	const headers = {};
 
-	/** @type {Record<string, import('./page/types.js').Cookie>} */
+	/** @type {Record<string, import('../../types/internal.js').Cookie>} */
 	let cookies_to_add = {};
 
 	/** @type {import('@sveltejs/kit').RequestEvent} */
