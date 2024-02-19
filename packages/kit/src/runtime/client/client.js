@@ -319,10 +319,14 @@ async function _invalidate() {
 			page = navigation_result.props.page;
 		}
 		current = navigation_result.state;
-		invalidated.length = 0;
-		force_invalidation = false;
+		reset_invalidation();
 		root.$set(navigation_result.props);
 	}
+}
+
+function reset_invalidation() {
+	invalidated.length = 0;
+	force_invalidation = false;
 }
 
 /** @param {number} index */
@@ -1282,8 +1286,7 @@ async function navigate({
 
 	// reset invalidation only after a finished navigation. If there are redirects or
 	// additional invalidations, they should get the same invalidation treatment
-	invalidated.length = 0;
-	force_invalidation = false;
+	reset_invalidation();
 
 	updating = true;
 
