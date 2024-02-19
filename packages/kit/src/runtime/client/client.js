@@ -1069,10 +1069,7 @@ async function load_root_error_page({ status, error, url, route }) {
 		data: null
 	};
 
-	const branch = [];
-	if (Object.keys(params).length == 0) {
-		branch.push(root_error);
-	} else {
+	try {
 		const root_layout = await load_node({
 			loader: default_layout_loader,
 			url,
@@ -1082,17 +1079,24 @@ async function load_root_error_page({ status, error, url, route }) {
 			server_data_node: create_data_node(server_data_node)
 		});
 
-		branch.push(root_layout, root_error);
+		return await get_navigation_result_from_branch({
+			url,
+			params,
+			branch: [root_layout, root_error],
+			status,
+			error,
+			route: null
+		});
+	} catch (err) {
+		return await get_navigation_result_from_branch({
+			url,
+			params,
+			branch: [root_error],
+			status,
+			error,
+			route: null
+		});
 	}
-
-	return await get_navigation_result_from_branch({
-		url,
-		params,
-		branch,
-		status,
-		error,
-		route: null
-	});
 }
 
 /**
