@@ -1095,6 +1095,9 @@ async function load_root_error_page({ status, error, url, route }) {
 }
 
 /**
+ * Resolve the full info (which route, params, etc.) for a client-side navigation from the URL,
+ * taking the reroute hook into account. If this isn't a client-side-navigation (or the URL is undefined),
+ * returns undefined.
  * @param {URL | undefined} url
  * @param {boolean} invalidating
  */
