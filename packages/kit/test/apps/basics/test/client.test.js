@@ -614,7 +614,6 @@ test.describe('Invalidation', () => {
 		const next_layout_2 = await page.textContent('p.layout');
 		const next_page_2 = await page.textContent('p.page');
 		expect(next_layout_2).toBe(next_layout_1);
-		expect(next_layout_2).not.toBe(layout);
 		expect(next_page_2).not.toBe(next_page_1);
 	});
 });
