@@ -308,20 +308,23 @@ async function _invalidate() {
 
 	const nav_token = (token = {});
 	const navigation_result = intent && (await load_route(intent));
-	if (nav_token !== token) return;
+	if (!navigation_result || nav_token !== token) return;
 
-	if (navigation_result) {
-		if (navigation_result.type === 'redirect') {
-			await _goto(new URL(navigation_result.location, current.url).href, {}, 1, nav_token);
-		} else {
-			if (navigation_result.props.page !== undefined) {
-				page = navigation_result.props.page;
-			}
-			root.$set(navigation_result.props);
-		}
+	if (navigation_result.type === 'redirect') {
+		return _goto(new URL(navigation_result.location, current.url).href, {}, 1, nav_token);
 	}
 
+	if (navigation_result.props.page) {
+		page = navigation_result.props.page;
+	}
+	current = navigation_result.state;
+	reset_invalidation();
+	root.$set(navigation_result.props);
+}
+
+function reset_invalidation() {
 	invalidated.length = 0;
+	force_invalidation = false;
 }
 
 /** @param {number} index */
@@ -1092,6 +1095,9 @@ async function load_root_error_page({ status, error, url, route }) {
 }
 
 /**
+ * Resolve the full info (which route, params, etc.) for a client-side navigation from the URL,
+ * taking the reroute hook into account. If this isn't a client-side-navigation (or the URL is undefined),
+ * returns undefined.
  * @param {URL | undefined} url
  * @param {boolean} invalidating
  */
@@ -1281,8 +1287,7 @@ async function navigate({
 
 	// reset invalidation only after a finished navigation. If there are redirects or
 	// additional invalidations, they should get the same invalidation treatment
-	invalidated.length = 0;
-	force_invalidation = false;
+	reset_invalidation();
 
 	updating = true;
 
