@@ -50,3 +50,16 @@
 	<source srcset="./foo.avif 500v ./bar.avif 100v" />
 	<source srcset="./foo.avif, ./bar.avif 1v" />
 </picture>
+
+{#each images as src}
+	{#if typeof src === 'string'}
+	<img src={src.img.src} alt="opt-in test" width={src.img.w} height={src.img.h} />
+{:else}
+	<picture>
+		{#each Object.entries(src.sources) as [format, srcset]}
+			<source {srcset} type={'image/' + format} />
+		{/each}
+		<img src={src.img.src} alt="opt-in test" width={src.img.w} height={src.img.h} />
+	</picture>
+{/if}
+{/each}

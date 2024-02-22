@@ -42,3 +42,7 @@
 	<source srcset="./foo.avif 500v ./bar.avif 100v" />
 	<source srcset="./foo.avif, ./bar.avif 1v" />
 </picture>
+
+{#each images as src}
+	<enhanced:img {src} alt="opt-in test" />
+{/each}
