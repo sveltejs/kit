@@ -10,6 +10,63 @@ const ASSET_PREFIX = '___ASSET___';
 // TODO: expose this in vite-imagetools rather than duplicating it
 const OPTIMIZABLE = /^[^?]+\.(avif|heif|gif|jpeg|jpg|png|tiff|webp)(\?.*)?$/;
 
+function bodyDataToMap(text) {
+	const result = {};
+	const lines = text.split('\n');
+
+	lines.forEach(line => {
+		let match;
+
+		// Match const, let, or var assignments
+		match = line.match(/(?:const|let|var)\s+([a-zA-Z_$][0-9a-zA-Z_$]*)\s*=\s*(["'`])(.*?)\2;/);
+		if (match) {
+			result[match[1]] = match[3];
+		}
+
+		// Match import statements
+		match = line.match(/import\s+([a-zA-Z_$][0-9a-zA-Z_$]*)\s+from\s+["'`](.*?)["'`];/);
+		if (match) {
+			result[match[1]] = match[2];
+		}
+
+		// Match template literals separately if needed
+		match = line.match(/(?:const|let|var)\s+([a-zA-Z_$][0-9a-zA-Z_$]*)\s*=\s*`([^`]*)`;/);
+		if (match && match[2].includes('${')) {
+			result[match[1]] = match[2];
+		}
+	});
+
+	return result;
+}
+
+function resolveTemplateLiteral(key, keyValueObject) {
+	// Retrieve the initial value for the provided key from the object
+	let value = keyValueObject[key];
+	if (!value) return null; // Key not found in the object
+
+	// Function to recursively replace template literals in the value
+	function replaceTemplateLiterals(value) {
+		let modified = true; // Flag to check if modifications were made
+
+		// Continue replacing as long as modifications are being made
+		while (modified) {
+			modified = false; // Reset flag for each iteration
+
+			value = value.replace(/\$\{([^}]+)\}/g, (match, innerKey) => {
+				if (keyValueObject.hasOwnProperty(innerKey)) {
+					modified = true; // Indicate a replacement was made, which may require further replacements
+					return keyValueObject[innerKey];
+				}
+				return match; // No replacement made, return original match
+			});
+		}
+
+		return value;
+	}
+
+	return replaceTemplateLiterals(value);
+}
+
 /**
  * @param {{
  *   plugin_context: import('vite').Rollup.PluginContext
@@ -34,6 +91,7 @@ export function image(opts) {
 
 			const s = new MagicString(content);
 			const ast = parse(content, { filename });
+			const variables = bodyDataToMap(ast.instance?.content?.body[0]?.data);
 
 			// Import path to import name
 			// e.g. ./foo.png => ___ASSET___0
@@ -46,9 +104,16 @@ export function image(opts) {
 			 * @returns {Promise<void>}
 			 */
 			async function update_element(node, src_attribute) {
-				const { expression } = src_attribute;
+				let new_src = null;
+				const expression = src_attribute.expression.name || src_attribute.expression.expressions.map(expression => expression.name).join('');
+				if (variables[expression]) {
+					const value = resolveTemplateLiteral(expression, variables);
+					if (value && !value.includes('?enhanced')) {
+						new_src = value;
+					}
+				}
 				// TODO: this will become ExpressionTag in Svelte 5
-				if (src_attribute.type === 'MustacheTag' && expression.type !== 'Literal' && expression.type !== 'TemplateLiteral') {
+				if (src_attribute.type === 'MustacheTag' && !new_src) {
 					const src_var_name = content
 						.substring(src_attribute.start + 1, src_attribute.end - 1)
 						.trim();
@@ -56,17 +121,7 @@ export function image(opts) {
 					return;
 				}
 
-				let original_url = '';
-				if (src_attribute.type === 'Text') {
-					original_url = src_attribute.raw.trim();
-				} else if (expression.type === 'Literal') {
-					original_url = expression.value.trim();
-				} else if (expression.type === 'TemplateLiteral') {
-					throw new Error(`Template literals are not supported in src attributes. Please use a string literal or a dynamically imported image.`);
-				} else {
-					throw new Error(`Could not locate image. Please ensure that the src attribute contains a dynamically imported image or a string literal pointing to one.`);
-				}
-
+				const original_url = new_src || src_attribute.raw.trim();
 				let url = original_url;
 
 				const sizes = get_attr_value(node, 'sizes');
@@ -210,7 +265,7 @@ export function parseObject(str) {
  */
 function get_attr_value(node, attr) {
 	const attribute = node.attributes.find(
-		/** @param {any} v */ (v) => v.type === 'Attribute' && v.name === attr
+		/** @param {any} v */(v) => v.type === 'Attribute' && v.name === attr
 	);
 
 	if (!attribute) return;
