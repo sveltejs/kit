@@ -311,7 +311,7 @@ async function _invalidate() {
 	if (!navigation_result || nav_token !== token) return;
 
 	if (navigation_result.type === 'redirect') {
-		return _goto(new URL(navigation_result.location, current.url).href, {}, 1, nav_token);
+		return _goto(new URL(navigation_result.location, current.url).href, { replaceState: true }, 1, nav_token);
 	}
 
 	if (navigation_result.props.page) {
@@ -1275,7 +1275,7 @@ async function navigate({
 				route: { id: null }
 			});
 		} else {
-			_goto(new URL(navigation_result.location, url).href, {}, redirect_count + 1, nav_token);
+			_goto(new URL(navigation_result.location, url).href, { replaceState: replace_state }, redirect_count + 1, nav_token);
 			return false;
 		}
 	} else if (/** @type {number} */ (navigation_result.props.page.status) >= 400) {
