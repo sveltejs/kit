@@ -205,6 +205,8 @@ We can create a layout that only applies to pages below `/settings` (while inher
 <slot></slot>
 ```
 
+Note that if you want to leverage an `#each` block to dynamically build the nav menu in the code above, you will need to define the _sections_ array.  See `+layout.js` below for the matching example.
+
 By default, each layout inherits the layout above it. Sometimes that isn't what you want - in this case, [advanced layouts](advanced-routing#advanced-layouts) can help you.
 
 ### +layout.js
