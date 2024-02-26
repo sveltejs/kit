@@ -1,5 +1,11 @@
 # @sveltejs/kit
 
+## 2.5.2
+
+### Patch Changes
+
+- fix: tsconfig includes should cover svelte.config.js ([#11886](https://github.com/sveltejs/kit/pull/11886))
+
 ## 2.5.1
 
 ### Patch Changes
