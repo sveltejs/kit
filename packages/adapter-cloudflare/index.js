@@ -127,7 +127,7 @@ export default function (options = {}) {
 			}
 		},
 		async emulate() {
-			const proxy = await getBindingsProxy();
+			const proxy = await getPlatformProxy();
 			const platform = /** @type {App.Platform} */ ({ env: proxy.bindings });
 
 			/** @type {Record<string, any>} */
