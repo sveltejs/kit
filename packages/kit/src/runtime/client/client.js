@@ -67,6 +67,8 @@ const snapshots = storage.get(SNAPSHOT_KEY) ?? {};
 if (DEV && BROWSER) {
 	let warned = false;
 
+	const current_module_url = import.meta.url.split('?')[0]; // remove query params that vite adds to the URL when it is loaded from node_modules
+
 	const warn = () => {
 		if (warned) return;
 
@@ -76,7 +78,8 @@ if (DEV && BROWSER) {
 		if (!stack) return;
 		if (!stack[0].includes('https:') && !stack[0].includes('http:')) stack = stack.slice(1); // Chrome includes the error message in the stack
 		stack = stack.slice(2); // remove `warn` and the place where `warn` was called
-		if (stack[0].includes(import.meta.url)) return;
+		// Can be falsy if was called directly from an anonymous function
+		if (stack[0]?.includes(current_module_url)) return;
 
 		warned = true;
 
@@ -305,20 +308,23 @@ async function _invalidate() {
 
 	const nav_token = (token = {});
 	const navigation_result = intent && (await load_route(intent));
-	if (nav_token !== token) return;
+	if (!navigation_result || nav_token !== token) return;
 
-	if (navigation_result) {
-		if (navigation_result.type === 'redirect') {
-			await _goto(new URL(navigation_result.location, current.url).href, {}, 1, nav_token);
-		} else {
-			if (navigation_result.props.page !== undefined) {
-				page = navigation_result.props.page;
-			}
-			root.$set(navigation_result.props);
-		}
+	if (navigation_result.type === 'redirect') {
+		return _goto(new URL(navigation_result.location, current.url).href, {}, 1, nav_token);
 	}
 
+	if (navigation_result.props.page) {
+		page = navigation_result.props.page;
+	}
+	current = navigation_result.state;
+	reset_invalidation();
+	root.$set(navigation_result.props);
+}
+
+function reset_invalidation() {
 	invalidated.length = 0;
+	force_invalidation = false;
 }
 
 /** @param {number} index */
@@ -1089,6 +1095,9 @@ async function load_root_error_page({ status, error, url, route }) {
 }
 
 /**
+ * Resolve the full info (which route, params, etc.) for a client-side navigation from the URL,
+ * taking the reroute hook into account. If this isn't a client-side-navigation (or the URL is undefined),
+ * returns undefined.
  * @param {URL | undefined} url
  * @param {boolean} invalidating
  */
@@ -1278,8 +1287,7 @@ async function navigate({
 
 	// reset invalidation only after a finished navigation. If there are redirects or
 	// additional invalidations, they should get the same invalidation treatment
-	invalidated.length = 0;
-	force_invalidation = false;
+	reset_invalidation();
 
 	updating = true;
 
@@ -1818,6 +1826,7 @@ export function pushState(url, state) {
 	};
 
 	history.pushState(opts, '', resolve_url(url));
+	has_navigated = true;
 
 	page = { ...page, state };
 	root.$set({ page });

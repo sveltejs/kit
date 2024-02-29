@@ -1,5 +1,11 @@
 # svelte-migrate
 
+## 1.3.7
+
+### Patch Changes
+
+- fix: don't downgrade versions when bumping dependencies ([#11716](https://github.com/sveltejs/kit/pull/11716))
+
 ## 1.3.6
 
 ### Patch Changes

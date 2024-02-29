@@ -594,6 +594,28 @@ test.describe('Invalidation', () => {
 		await page.locator('button').click();
 		await expect(page.getByText('updated')).toBeVisible();
 	});
+
+	test('goto after invalidation does not reset state', async ({ page }) => {
+		await page.goto('/load/invalidation/invalidate-then-goto');
+		const layout = await page.textContent('p.layout');
+		const _page = await page.textContent('p.page');
+		expect(layout).toBeDefined();
+		expect(_page).toBeDefined();
+
+		await page.click('button.invalidate');
+		await page.evaluate(() => window.promise);
+		const next_layout_1 = await page.textContent('p.layout');
+		const next_page_1 = await page.textContent('p.page');
+		expect(next_layout_1).not.toBe(layout);
+		expect(next_page_1).toBe(_page);
+
+		await page.click('button.goto');
+		await page.evaluate(() => window.promise);
+		const next_layout_2 = await page.textContent('p.layout');
+		const next_page_2 = await page.textContent('p.page');
+		expect(next_layout_2).toBe(next_layout_1);
+		expect(next_page_2).not.toBe(next_page_1);
+	});
 });
 
 test.describe('data-sveltekit attributes', () => {
@@ -987,6 +1009,17 @@ test.describe('Shallow routing', () => {
 		await page.locator('[data-id="invalidate"]').click();
 		await expect(page.locator('h1')).toHaveText('parent');
 		await expect(page.locator('span')).not.toHaveText(now);
+	});
+
+	test('Does not navigate when going back to shallow route', async ({ baseURL, page }) => {
+		await page.goto('/shallow-routing/push-state');
+		await page.locator('[data-id="two"]').click();
+		await page.goBack();
+		await page.goForward();
+
+		expect(page.url()).toBe(`${baseURL}/shallow-routing/push-state/a`);
+		await expect(page.locator('h1')).toHaveText('parent');
+		await expect(page.locator('p')).toHaveText('active: true');
 	});
 
 	test('Replaces state on the current URL', async ({ baseURL, page, clicknav }) => {
