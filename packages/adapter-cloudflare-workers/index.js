@@ -4,7 +4,7 @@ import { execSync } from 'node:child_process';
 import esbuild from 'esbuild';
 import toml from '@iarna/toml';
 import { fileURLToPath } from 'node:url';
-import { getBindingsProxy } from 'wrangler';
+import { getPlatformProxy } from 'wrangler';
 
 /**
  * @typedef {{
