@@ -2,7 +2,7 @@ import { writeFileSync } from 'node:fs';
 import * as path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import * as esbuild from 'esbuild';
-import { getBindingsProxy } from 'wrangler';
+import { getPlatformProxy } from 'wrangler';
 
 // list from https://developers.cloudflare.com/workers/runtime-apis/nodejs/
 const compatible_node_modules = [
