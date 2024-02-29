@@ -152,7 +152,7 @@ export default function ({ config = 'wrangler.toml' } = {}) {
 			const env = {};
 			const prerender_platform = /** @type {App.Platform} */ ({ env });
 
-			for (const key in proxy.bindings) {
+			for (const key in proxy.env) {
 				Object.defineProperty(env, key, {
 					get: () => {
 						throw new Error(`Cannot access platform.env.${key} in a prerenderable route`);
