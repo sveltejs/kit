@@ -145,7 +145,6 @@ export default function ({ config = 'wrangler.toml' } = {}) {
 
 		async emulate() {
 			const proxy = await getPlatformProxy();
-			// TODO this also needs `context` and `caches`
 			const platform = /** @type {App.Platform} */ ({ env: proxy.bindings });
 
 			/** @type {Record<string, any>} */
