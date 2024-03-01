@@ -85,7 +85,7 @@ test('get_pathname for route with required and optional parameter', () => {
 	);
 });
 
-test.only('get_pathname for route with required and optional parameter', () => {
+test('get_pathname for route with required and optional parameter', () => {
 	run_get_pathname_test(
 		[
 			{ content: '[foo]', dynamic: true, rest: false },
