@@ -128,7 +128,12 @@ export default function (options = {}) {
 		},
 		async emulate() {
 			const proxy = await getPlatformProxy();
-			const platform = /** @type {App.Platform} */ ({ env: proxy.bindings });
+			const platform = /** @type {App.Platform} */ ({
+				env: proxy.env,
+				context: proxy.ctx,
+				caches: proxy.caches,
+				cf: proxy.cf
+			});
 
 			/** @type {Record<string, any>} */
 			const env = {};
