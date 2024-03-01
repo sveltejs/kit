@@ -57,7 +57,7 @@ export function pattern_to_src(pattern) {
 		src = '^/?';
 	}
 
-	// Move non-captouring groups that swallow slashes into their following capturing groups.
+	// Move non-capturing groups that swallow slashes into their following capturing groups.
 	// This is necessary because during ISR we're using the regex to construct the __pathname
 	// query parameter: In case of a route like [required]/[...rest] we need to turn them
 	// into $1$2 and not $1/$2, because if [...rest] is empty, we don't want to have a trailing
