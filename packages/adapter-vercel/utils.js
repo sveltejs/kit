@@ -43,7 +43,7 @@ export function get_pathname(route) {
 
 /**
  * Adjusts the stringified route regex for Vercel's routing system
- * @param {string} pattern Stringified route regex
+ * @param {string} pattern stringified route regex
  */
 export function pattern_to_src(pattern) {
 	let src = pattern
