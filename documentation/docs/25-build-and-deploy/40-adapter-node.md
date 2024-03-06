@@ -132,7 +132,7 @@ export default {
 		adapter: adapter({
 			// default options are shown
 			out: 'build',
-			precompress: false,
+			precompress: true,
 			envPrefix: ''
 		})
 	}
@@ -145,7 +145,7 @@ The directory to build the server to. It defaults to `build` — i.e. `node buil
 
 ### precompress
 
-Enables precompressing using gzip and brotli for assets and prerendered pages. It defaults to `false`.
+Enables precompressing using gzip and brotli for assets and prerendered pages. It defaults to `true`.
 
 ### envPrefix
 
