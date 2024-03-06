@@ -2086,7 +2086,7 @@ function _start_router() {
 
 		const submitter = /** @type {HTMLButtonElement | HTMLInputElement | null} */ (event.submitter);
 
-		const target = (submitter?.hasAttribute('formtarget') && submitter?.formTarget) || form.target;
+		const target = submitter?.formTarget || form.target;
 
 		if (target === '_blank') return;
 
