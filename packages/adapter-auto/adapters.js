@@ -30,5 +30,11 @@ export const adapters = [
 		test: () => !!process.env.SST,
 		module: 'svelte-kit-sst',
 		version: '2'
+	},
+	{
+		name: 'Zeabur',
+		test: () => !!process.env.ZEABUR,
+		module: '@zeabur/svelte-adapter',
+		version: '1'
 	}
 ];
