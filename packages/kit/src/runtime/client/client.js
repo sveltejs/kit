@@ -377,7 +377,7 @@ async function _goto(url, options, redirect_count, nav_token) {
 async function _preload_data(intent) {
 	load_cache = {
 		id: intent.id,
-		promise: load_route({...intent, preload: true }).then((result) => {
+		promise: load_route({ ...intent, preload: true }).then((result) => {
 			if (result.type === 'loaded' && result.state.error) {
 				// Don't cache errors, because they might be transient
 				load_cache = null;

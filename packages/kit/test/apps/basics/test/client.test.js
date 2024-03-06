@@ -665,7 +665,10 @@ test.describe('data-sveltekit attributes', () => {
 		expect(requests.length).toBe(0);
 	});
 
-	test('data-sveltekit-preload-data network failure does not cause navigation', async ({ page, context }) => {
+	test('data-sveltekit-preload-data network failure does not cause navigation', async ({
+		page,
+		context
+	}) => {
 		await page.goto('/data-sveltekit/preload-data/offline');
 
 		await context.setOffline(true);
