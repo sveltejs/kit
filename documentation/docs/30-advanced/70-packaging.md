@@ -197,6 +197,7 @@ You should think carefully about whether or not the changes you make to your pac
 - `-i`/`--input` — the input directory which contains all the files of the package. Defaults to `src/lib`
 - `-o`/`--o` — the output directory where the processed files are written to. Your `package.json`'s `exports` should point to files inside there, and the `files` array should include that folder. Defaults to `dist`
 - `-t`/`--types` — whether or not to create type definitions (`d.ts` files). We strongly recommend doing this as it fosters ecosystem library quality. Defaults to `true`
+- `--tsconfig` - the path to a tsconfig or jsconfig. When not provided, searches for the next upper tsconfig/jsconfig in the workspace path.
 
 ## Publishing
 
