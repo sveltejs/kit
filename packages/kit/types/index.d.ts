@@ -61,11 +61,12 @@ declare module '@sveltejs/kit' {
 		[uniqueSymbol]: true; // necessary or else UnpackValidationError could wrongly unpack objects with the same shape as ActionFailure
 	}
 
-	type UnpackValidationError<T> = T extends ActionFailure<infer X>
-		? X
-		: T extends void
-			? undefined // needs to be undefined, because void will corrupt union type
-			: T;
+	type UnpackValidationError<T> =
+		T extends ActionFailure<infer X>
+			? X
+			: T extends void
+				? undefined // needs to be undefined, because void will corrupt union type
+				: T;
 
 	/**
 	 * This object is passed to the `adapt` function of adapters.
@@ -1418,7 +1419,6 @@ declare module '@sveltejs/kit' {
 		type SchemeSource = 'http:' | 'https:' | 'data:' | 'mediastream:' | 'blob:' | 'filesystem:';
 		type Source = HostSource | SchemeSource | CryptoSource | BaseSource;
 		type Sources = Source[];
-		type UriPath = `${HttpDelineator}${string}`;
 	}
 
 	interface CspDirectives {
@@ -1458,7 +1458,7 @@ declare module '@sveltejs/kit' {
 		'form-action'?: Array<Csp.Source | Csp.ActionSource>;
 		'frame-ancestors'?: Array<Csp.HostSource | Csp.SchemeSource | Csp.FrameSource>;
 		'navigate-to'?: Array<Csp.Source | Csp.ActionSource>;
-		'report-uri'?: Csp.UriPath[];
+		'report-uri'?: string[];
 		'report-to'?: string[];
 
 		'require-trusted-types-for'?: Array<'script'>;

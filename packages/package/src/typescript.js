@@ -62,12 +62,13 @@ export async function emit_dts(input, output, cwd, alias, files) {
 /**
  * TS -> JS
  *
+ * @param {string | undefined} tsconfig
  * @param {string} filename
  * @param {string} source
  */
-export async function transpile_ts(filename, source) {
+export async function transpile_ts(tsconfig, filename, source) {
 	const ts = await try_load_ts();
-	const options = load_tsconfig(filename, ts);
+	const options = load_tsconfig(tsconfig, filename, ts);
 	// transpileModule treats NodeNext as CommonJS because it doesn't read the package.json. Therefore we need to override it.
 	// Also see https://github.com/microsoft/TypeScript/issues/53022 (the filename workaround doesn't work).
 	return ts.transpileModule(source, {
@@ -91,28 +92,37 @@ async function try_load_ts() {
 }
 
 /**
+ * @param {string | undefined} tsconfig
  * @param {string} filename
  * @param {import('typescript')} ts
  */
-function load_tsconfig(filename, ts) {
+function load_tsconfig(tsconfig, filename, ts) {
 	let config_filename;
 
-	// ts.findConfigFile is broken (it will favour a distant tsconfig
-	// over a near jsconfig, and then only when you call it twice)
-	// so we implement it ourselves
-	let dir = filename;
-	while (dir !== (dir = path.dirname(dir))) {
-		const tsconfig = path.join(dir, 'tsconfig.json');
-		const jsconfig = path.join(dir, 'jsconfig.json');
-
+	if (tsconfig) {
 		if (fs.existsSync(tsconfig)) {
 			config_filename = tsconfig;
-			break;
+		} else {
+			throw new Error('Failed to locate provided tsconfig or jsconfig');
 		}
+	} else {
+		// ts.findConfigFile is broken (it will favour a distant tsconfig
+		// over a near jsconfig, and then only when you call it twice)
+		// so we implement it ourselves
+		let dir = filename;
+		while (dir !== (dir = path.dirname(dir))) {
+			const tsconfig = path.join(dir, 'tsconfig.json');
+			const jsconfig = path.join(dir, 'jsconfig.json');
 
-		if (fs.existsSync(jsconfig)) {
-			config_filename = jsconfig;
-			break;
+			if (fs.existsSync(tsconfig)) {
+				config_filename = tsconfig;
+				break;
+			}
+
+			if (fs.existsSync(jsconfig)) {
+				config_filename = jsconfig;
+				break;
+			}
 		}
 	}
 

@@ -1,5 +1,11 @@
 # create-svelte
 
+## 6.0.9
+
+### Patch Changes
+
+- chore: bump typescript-eslint to v7 ([#11845](https://github.com/sveltejs/kit/pull/11845))
+
 ## 6.0.8
 
 ### Patch Changes

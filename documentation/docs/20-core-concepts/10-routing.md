@@ -205,6 +205,8 @@ We can create a layout that only applies to pages below `/settings` (while inher
 <slot></slot>
 ```
 
+You can see how `data` is populated by looking at the `+layout.js` example in the next section just below.
+
 By default, each layout inherits the layout above it. Sometimes that isn't what you want - in this case, [advanced layouts](advanced-routing#advanced-layouts) can help you.
 
 ### +layout.js
