@@ -682,7 +682,7 @@ test.describe('data-sveltekit attributes', () => {
 		expect(page).toHaveURL('/data-sveltekit/preload-data/offline');
 	});
 
-	test('data-sveltekit-preload-data network failure still navigates on click', async ({
+	test('data-sveltekit-preload-data network failure does not block click navigation', async ({
 		page,
 		context
 	}) => {
@@ -695,6 +695,8 @@ test.describe('data-sveltekit attributes', () => {
 			page.waitForTimeout(100), // wait for preloading to start
 			page.waitForLoadState('networkidle') // wait for preloading to finish
 		]);
+
+		expect(page).toHaveURL('/data-sveltekit/preload-data/offline');
 
 		await page.click('#one');
 		await page.waitForLoadState('networkidle');

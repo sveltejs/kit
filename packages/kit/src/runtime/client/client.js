@@ -808,8 +808,6 @@ function diff_search_params(old_url, new_url) {
  * @returns {Promise<import('./types.js').NavigationResult>}
  */
 async function load_route({ id, invalidating, url, params, route, preload_token }) {
-	// TODO: if we're still preloading and the user clicks on a link, make sure this
-	// doesn't return cached data.
 	if (load_cache?.id === id) {
 		return load_cache.promise;
 	}
@@ -953,14 +951,12 @@ async function load_route({ id, invalidating, url, params, route, preload_token 
 			try {
 				branch.push(await branch_promises[i]);
 			} catch (err) {
-				// TODO: if preloading and error, just empty cache; don't try to navigate anywhere
-
 				if (preload_token && preload_token === token) {
 					load_cache = null;
 					return {
 						type: 'loaded',
 						state: {
-							error: new Error(),
+							error: await handle_error(err, { params, url, route: { id: route.id } }),
 							url,
 							route,
 							params,
