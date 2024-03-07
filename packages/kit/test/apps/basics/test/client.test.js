@@ -682,6 +682,26 @@ test.describe('data-sveltekit attributes', () => {
 		expect(page).toHaveURL('/data-sveltekit/preload-data/offline');
 	});
 
+	test('data-sveltekit-preload-data network failure still navigates on click', async ({
+		page,
+		context
+	}) => {
+		await page.goto('/data-sveltekit/preload-data/offline');
+
+		await context.setOffline(true);
+
+		await page.locator('#one').dispatchEvent('mousemove');
+		await Promise.all([
+			page.waitForTimeout(100), // wait for preloading to start
+			page.waitForLoadState('networkidle') // wait for preloading to finish
+		]);
+
+		await page.click('#one');
+		await page.waitForLoadState('networkidle');
+
+		expect(page).toHaveURL('/data-sveltekit/preload-data/offline/target');
+	});
+
 	test('data-sveltekit-reload', async ({ baseURL, page, clicknav }) => {
 		/** @type {string[]} */
 		const requests = [];
