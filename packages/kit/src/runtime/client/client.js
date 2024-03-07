@@ -375,9 +375,10 @@ async function _goto(url, options, redirect_count, nav_token) {
 
 /** @param {import('./types.js').NavigationIntent} intent */
 async function _preload_data(intent) {
+	const preload_token = (token = {});
 	load_cache = {
 		id: intent.id,
-		promise: load_route({ ...intent, preload: true }).then((result) => {
+		promise: load_route({ ...intent, preload_token }).then((result) => {
 			if (result.type === 'loaded' && result.state.error) {
 				// Don't cache errors, because they might be transient
 				load_cache = null;
@@ -803,10 +804,12 @@ function diff_search_params(old_url, new_url) {
 }
 
 /**
- * @param {import('./types.js').NavigationIntent & { preload?: boolean }} intent
+ * @param {import('./types.js').NavigationIntent & { preload_token?: {} }} intent
  * @returns {Promise<import('./types.js').NavigationResult>}
  */
-async function load_route({ id, invalidating, url, params, route, preload }) {
+async function load_route({ id, invalidating, url, params, route, preload_token }) {
+	// TODO: if we're still preloading and the user clicks on a link, make sure this
+	// doesn't return cached data.
 	if (load_cache?.id === id) {
 		return load_cache.promise;
 	}
@@ -857,7 +860,8 @@ async function load_route({ id, invalidating, url, params, route, preload }) {
 		} catch (error) {
 			const handled_error = await handle_error(error, { url, params, route: { id } });
 
-			if (preload) {
+			if (preload_token && preload_token === token) {
+				load_cache = null;
 				return {
 					type: 'loaded',
 					state: {
@@ -949,6 +953,23 @@ async function load_route({ id, invalidating, url, params, route, preload }) {
 			try {
 				branch.push(await branch_promises[i]);
 			} catch (err) {
+				// TODO: if preloading and error, just empty cache; don't try to navigate anywhere
+
+				if (preload_token && preload_token === token) {
+					load_cache = null;
+					return {
+						type: 'loaded',
+						state: {
+							error: new Error(),
+							url,
+							route,
+							params,
+							branch: []
+						},
+						props: { page, constructors: [] }
+					};
+				}
+
 				if (err instanceof Redirect) {
 					return {
 						type: 'redirect',
@@ -988,8 +1009,6 @@ async function load_route({ id, invalidating, url, params, route, preload }) {
 						route
 					});
 				} else {
-					// if we get here, it's because the root `load` function failed,
-					// and we need to fall back to the server
 					return await server_fallback(url, { id: route.id }, error, status);
 				}
 			}
