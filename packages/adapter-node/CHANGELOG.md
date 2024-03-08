@@ -1,5 +1,11 @@
 # @sveltejs/adapter-node
 
+## 5.0.1
+
+### Patch Changes
+
+- fix: regression preventing built application from starting ([#11960](https://github.com/sveltejs/kit/pull/11960))
+
 ## 5.0.0
 
 ### Major Changes
