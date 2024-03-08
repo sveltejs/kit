@@ -1,5 +1,22 @@
 # @sveltejs/adapter-node
 
+## 5.0.0
+
+### Major Changes
+
+- breaking: add graceful shutdown ([#11653](https://github.com/sveltejs/kit/pull/11653))
+
+- breaking: change default value of `precompress` option to true to serve precompressed assets by default ([#11945](https://github.com/sveltejs/kit/pull/11945))
+
+### Minor Changes
+
+- feat: add systemd socket activation ([#11653](https://github.com/sveltejs/kit/pull/11653))
+
+### Patch Changes
+
+- Updated dependencies [[`873a09eac86817d1cbb53bf3f9c8842d7346d20d`](https://github.com/sveltejs/kit/commit/873a09eac86817d1cbb53bf3f9c8842d7346d20d), [`30c78f223a4f9e6c4547d087338a8b8cc477ba55`](https://github.com/sveltejs/kit/commit/30c78f223a4f9e6c4547d087338a8b8cc477ba55)]:
+  - @sveltejs/kit@2.5.3
+
 ## 4.0.1
 
 ### Patch Changes
