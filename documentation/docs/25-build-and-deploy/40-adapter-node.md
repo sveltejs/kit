@@ -34,7 +34,9 @@ Development dependencies will be bundled into your app using [Rollup](https://ro
 
 ### Compressing responses
 
-You will typically want to compress responses coming from the server. You will often deploy your server behind a load balancer or reverse proxy. Since Node.js is single-threaded, it typically results in better performance to handle compression at that layer rather than directly in the server. If you build a [#custom-server](custom server) and do want to add a compression middleware there, note that we would recommend using `@polka/compression` since SvelteKit streams responses and the `compression` package does not support streaming and may error when used.
+You will typically want to compress responses coming from the server. If you are already deploying your server behind a reverse proxy for SSL or load balancing, it typically results in better performance to also handle compression at that layer since Node.js is single-threaded.
+
+However, if you're building a [#custom-server](custom server) and do want to add a compression middleware there, note that we would recommend using [`@polka/compression`](https://www.npmjs.com/package/@polka/compression) since SvelteKit streams responses and the more popular [`compression`](https://www.npmjs.com/package/compression) package does not support streaming and may cause errors when used.
 
 ## Environment variables
 
