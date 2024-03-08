@@ -31,9 +31,10 @@ export const adapters = [
 		module: 'svelte-kit-sst',
 		version: '2'
 	},
+	// Add Node last since it might be present in other environments
 	{
-		name: 'Google Cloud Run',
-		test: () => process.env.CLOUD_RUN_TIMEOUT_SECONDS,
+		name: 'Node',
+		test: () => !!process.env.NODE_ENV,
 		module: '@sveltejs/adapter-node',
 		version: '4'
 	}
