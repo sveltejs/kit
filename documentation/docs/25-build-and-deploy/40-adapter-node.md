@@ -32,6 +32,10 @@ node build
 
 Development dependencies will be bundled into your app using [Rollup](https://rollupjs.org). To control whether a given package is bundled or externalised, place it in `devDependencies` or `dependencies` respectively in your `package.json`.
 
+### Compressing responses
+
+You will typically want to compress responses coming from the server. You will often deploy your server behind a load balancer or reverse proxy. Since Node.js is single-threaded, it typically results in better performance to handle compression at that layer rather than directly in the server. If you build a [#custom-server](custom server) and do want to add a compression middleware there, note that we would recommend using `@polka/compression` since SvelteKit streams responses and the `compression` package does not support streaming and may error when used.
+
 ## Environment variables
 
 In `dev` and `preview`, SvelteKit will read environment variables from your `.env` file (or `.env.local`, or `.env.[mode]`, [as determined by Vite](https://vitejs.dev/guide/env-and-mode.html#env-files).)
