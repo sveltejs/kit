@@ -118,6 +118,14 @@ We instead read from the _right_, accounting for the number of trusted proxies. 
 
 The maximum request body size to accept in bytes including while streaming. Defaults to 512kb. You can disable this option with a value of `Infinity` (0 in older versions of the adapter) and implement a custom check in [`handle`](hooks#server-hooks-handle) if you need something more advanced.
 
+### `SHUTDOWN_TIMEOUT`
+
+The number of seconds to wait before forcefully closing any remaining connections after receiving a `SIGTERM` or `SIGINT` signal. Defaults to `30`. Internally the adapter calls [`closeAllConnections`](https://nodejs.org/api/http.html#servercloseallconnections). See [Graceful shutdown](#graceful-shutdown) for more details.
+
+### `IDLE_TIMEOUT`
+
+When using systemd socket activation, `IDLE_TIMEOUT` specifies the number of seconds after which the app is automatically put to sleep when receiving no requests. If not set, the app runs continuously. See [Socket activation](#socket-activation) for more details.
+
 ## Options
 
 The adapter can be configured with various options:
@@ -162,6 +170,46 @@ MY_CUSTOM_ORIGIN=https://my.site \
 node build
 ```
 
+## Graceful shutdown
+
+By default `adapter-node` gracefully shuts down the HTTP server when a `SIGTERM` or `SIGINT` signal is received. It will:
+
+1. reject new requests ([`server.close`](https://nodejs.org/api/http.html#serverclosecallback))
+2. wait for requests that have already been made but not received a response yet to finish and close connections once they become idle ([`server.closeIdleConnections`](https://nodejs.org/api/http.html#servercloseidleconnections))
+3. and finally, close any remaining connections that are still active after [`SHUTDOWN_TIMEOUT`](#environment-variables-shutdown-timeout) seconds. ([`server.closeAllConnections`](https://nodejs.org/api/http.html#servercloseallconnections))
+
+> If you want to customize this behaviour you can use a [custom server](#custom-server).
+
+## Socket activation
+
+Most Linux operating systems today use a modern process manager called systemd to start the server and run and manage services. You can configure your server to allocate a socket and start and scale your app on demand. This is called [socket activation](http://0pointer.de/blog/projects/socket-activated-containers.html). In this case, the OS will pass two environment variables to your app — `LISTEN_PID` and `LISTEN_FDS`. The adapter will then listen on file descriptor 3 which refers to a systemd socket unit that you will have to create.
+
+> You can still use [`envPrefix`](#options-envprefix) with systemd socket activation. `LISTEN_PID` and `LISTEN_FDS` are always read without a prefix.
+
+To take advantage of socket activation follow these steps.
+
+1. Run your app as a [systemd service](https://www.freedesktop.org/software/systemd/man/latest/systemd.service.html). It can either run directly on the host system or inside a container (using Docker or a systemd portable service for example). If you additionally pass an [`IDLE_TIMEOUT`](#environment-variables-idle-timeout) environment variable to your app it will gracefully shutdown if there are no requests for `IDLE_TIMEOUT` seconds. systemd will automatically start your app again when new requests are coming in.
+
+```ini
+/// file: /etc/systemd/system/myapp.service
+[Service]
+Environment=NODE_ENV=production IDLE_TIMEOUT=60
+ExecStart=/usr/bin/node /usr/bin/myapp/build
+```
+
+2. Create an accompanying [socket unit](https://www.freedesktop.org/software/systemd/man/latest/systemd.socket.html). The adapter only accepts a single socket.
+
+```ini
+/// file: /etc/systemd/system/myapp.socket
+[Socket]
+ListenStream=3000
+
+[Install]
+WantedBy=sockets.target
+```
+
+3. Make sure systemd has recognised both units by running `sudo systemctl daemon-reload`. Then enable the socket on boot and start it immediately using `sudo systemctl enable --now myapp.socket`. The app will then automatically start once the first request is made to `localhost:3000`.
+
 ## Custom server
 
 The adapter creates two files in your build directory — `index.js` and `handler.js`. Running `index.js` — e.g. `node build`, if you use the default build directory — will start a server on the configured port.
@@ -191,9 +239,9 @@ app.listen(3000, () => {
 
 ## Troubleshooting
 
-### Is there a hook for cleaning up before the server exits?
+### Is there a hook for cleaning up before the app exits?
 
-There's nothing built-in to SvelteKit for this, because such a cleanup hook depends highly on the execution environment you're on. For Node, you can use its built-in `process.on(...)` to implement a callback that runs before the server exits:
+There's nothing built-in to SvelteKit for this, because such a cleanup hook depends highly on the execution environment you're on. For Node, you can use its built-in `process.on(...)` to implement a callback that runs before the app exits:
 
 ```js
 // @errors: 2304 2580
@@ -202,6 +250,5 @@ function shutdownGracefully() {
 	db.shutdown();
 }
 
-process.on('SIGINT', shutdownGracefully);
-process.on('SIGTERM', shutdownGracefully);
+process.on('exit', shutdownGracefully);
 ```
