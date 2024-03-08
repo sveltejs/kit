@@ -32,6 +32,16 @@ let idle_timeout_id;
 
 const server = polka().use(handler);
 
+if (socket_activation) {
+	server.listen({ fd: SD_LISTEN_FDS_START }, () => {
+		console.log(`Listening on file descriptor ${SD_LISTEN_FDS_START}`);
+	});
+} else {
+	server.listen({ path, host, port }, () => {
+		console.log(`Listening on ${path ? path : host + ':' + port}`);
+	});
+}
+
 function shutdown() {
 	if (shutdown_timeout_id) return;
 
@@ -78,16 +88,6 @@ server.server.on(
 		});
 	}
 );
-
-if (socket_activation) {
-	server.listen({ fd: SD_LISTEN_FDS_START }, () => {
-		console.log(`Listening on file descriptor ${SD_LISTEN_FDS_START}`);
-	});
-} else {
-	server.listen({ path, host, port }, () => {
-		console.log(`Listening on ${path ? path : host + ':' + port}`);
-	});
-}
 
 process.on('SIGTERM', shutdown);
 process.on('SIGINT', shutdown);
