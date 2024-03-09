@@ -682,6 +682,7 @@ test.describe('data-sveltekit attributes', () => {
 
 		let offline_url = /\/data-sveltekit\/preload-data\/offline/;
 		if (browserName === 'chromium') {
+			// it's chrome-error://chromewebdata/ on ubuntu but not on windows
 			offline_url = /chrome-error:\/\/chromewebdata\/|\/data-sveltekit\/preload-data\/offline/;
 		}
 		expect(page).toHaveURL(offline_url);
@@ -710,6 +711,7 @@ test.describe('data-sveltekit attributes', () => {
 
 		let offline_url = /\/data-sveltekit\/preload-data\/offline/;
 		if (browserName === 'chromium') {
+			// it's chrome-error://chromewebdata/ on ubuntu but not on windows
 			offline_url = /chrome-error:\/\/chromewebdata\/|\/data-sveltekit\/preload-data\/offline/;
 		}
 		expect(page).toHaveURL(offline_url);
