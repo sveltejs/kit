@@ -5,3 +5,8 @@ node_modules
 /.svelte-kit
 /build
 /dist
+
+# Lockfiles
+package-lock.json
+pnpm-lock.yaml
+yarn.lock
