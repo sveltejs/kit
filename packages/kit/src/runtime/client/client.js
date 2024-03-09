@@ -833,6 +833,10 @@ async function load_route({ id, invalidating, url, params, route, preload }) {
 		return load_cache.promise;
 	}
 
+	if (preload_token && preload !== preload_token) {
+		preload_token = {};
+	}
+
 	const { errors, layouts, leaf } = route;
 
 	const loaders = [...layouts, leaf];
@@ -879,7 +883,7 @@ async function load_route({ id, invalidating, url, params, route, preload }) {
 		} catch (error) {
 			const handled_error = await handle_error(error, { url, params, route: { id } });
 
-			if (preload === preload_token) {
+			if (preload && preload === preload_token) {
 				return preload_error({ error: handled_error, url, params, route });
 			}
 
@@ -968,7 +972,7 @@ async function load_route({ id, invalidating, url, params, route, preload }) {
 					};
 				}
 
-				if (preload === preload_token) {
+				if (preload && preload === preload_token) {
 					return preload_error({
 						error: await handle_error(err, { params, url, route: { id: route.id } }),
 						url,
