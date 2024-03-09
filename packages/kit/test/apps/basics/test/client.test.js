@@ -700,8 +700,8 @@ test.describe('data-sveltekit attributes', () => {
 		expect(page).toHaveURL('/data-sveltekit/preload-data/offline');
 
 		await page.locator('#one').dispatchEvent('click');
+		await page.waitForTimeout(100); // wait for navigation to start
 		await page.waitForLoadState('networkidle');
-		await page.waitForTimeout(100);
 
 		expect(page).toHaveURL(
 			'/data-sveltekit/preload-data/offline/target' ||
@@ -716,7 +716,7 @@ test.describe('data-sveltekit attributes', () => {
 		await page.goto('/data-sveltekit/preload-data/offline');
 
 		await page.locator('#slow-navigation').dispatchEvent('click');
-		await page.waitForTimeout(100);
+		await page.waitForTimeout(100); // wait for navigation to start
 		await page.locator('#slow-navigation').dispatchEvent('mousemove');
 		await Promise.all([
 			page.waitForTimeout(100), // wait for preloading to start
