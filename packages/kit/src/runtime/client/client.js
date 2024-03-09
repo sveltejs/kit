@@ -219,6 +219,9 @@ let page;
 /** @type {{}} */
 let token;
 
+/** @type {{}} */
+let preload_token;
+
 /** @type {Promise<void> | null} */
 let pending_invalidate;
 
@@ -375,10 +378,10 @@ async function _goto(url, options, redirect_count, nav_token) {
 
 /** @param {import('./types.js').NavigationIntent} intent */
 async function _preload_data(intent) {
-	const preload_token = (token = {});
+	const preload = (preload_token = {});
 	load_cache = {
 		id: intent.id,
-		promise: load_route({ ...intent, preload_token }).then((result) => {
+		promise: load_route({ ...intent, preload }).then((result) => {
 			if (result.type === 'loaded' && result.state.error) {
 				// Don't cache errors, because they might be transient
 				load_cache = null;
@@ -804,10 +807,28 @@ function diff_search_params(old_url, new_url) {
 }
 
 /**
- * @param {import('./types.js').NavigationIntent & { preload_token?: {} }} intent
+ * @param {Omit<import('./types.js').NavigationFinished['state'], 'branch'> & { error: App.Error }} opts
+ * @returns {import('./types.js').NavigationFinished}
+ */
+function preload_error({ error, url, route, params }) {
+	return {
+		type: 'loaded',
+		state: {
+			error,
+			url,
+			route,
+			params,
+			branch: []
+		},
+		props: { page, constructors: [] }
+	};
+}
+
+/**
+ * @param {import('./types.js').NavigationIntent & { preload?: {} }} intent
  * @returns {Promise<import('./types.js').NavigationResult>}
  */
-async function load_route({ id, invalidating, url, params, route, preload_token }) {
+async function load_route({ id, invalidating, url, params, route, preload }) {
 	if (load_cache?.id === id) {
 		return load_cache.promise;
 	}
@@ -858,19 +879,8 @@ async function load_route({ id, invalidating, url, params, route, preload_token 
 		} catch (error) {
 			const handled_error = await handle_error(error, { url, params, route: { id } });
 
-			if (preload_token && preload_token === token) {
-				load_cache = null;
-				return {
-					type: 'loaded',
-					state: {
-						error: handled_error,
-						url,
-						route,
-						params,
-						branch: []
-					},
-					props: { page, constructors: [] }
-				};
+			if (preload === preload_token) {
+				return preload_error({ error: handled_error, url, params, route });
 			}
 
 			return load_root_error_page({
@@ -951,26 +961,20 @@ async function load_route({ id, invalidating, url, params, route, preload_token 
 			try {
 				branch.push(await branch_promises[i]);
 			} catch (err) {
-				if (preload_token && preload_token === token) {
-					load_cache = null;
-					return {
-						type: 'loaded',
-						state: {
-							error: await handle_error(err, { params, url, route: { id: route.id } }),
-							url,
-							route,
-							params,
-							branch: []
-						},
-						props: { page, constructors: [] }
-					};
-				}
-
 				if (err instanceof Redirect) {
 					return {
 						type: 'redirect',
 						location: err.location
 					};
+				}
+
+				if (preload === preload_token) {
+					return preload_error({
+						error: await handle_error(err, { params, url, route: { id: route.id } }),
+						url,
+						params,
+						route
+					});
 				}
 
 				let status = get_status(err);

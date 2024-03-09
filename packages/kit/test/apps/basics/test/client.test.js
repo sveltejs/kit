@@ -665,7 +665,7 @@ test.describe('data-sveltekit attributes', () => {
 		expect(requests.length).toBe(0);
 	});
 
-	test('data-sveltekit-preload-data network failure does not cause navigation', async ({
+	test('data-sveltekit-preload-data network failure does not trigger navigation', async ({
 		page,
 		context
 	}) => {
@@ -682,9 +682,10 @@ test.describe('data-sveltekit attributes', () => {
 		expect(page).toHaveURL('/data-sveltekit/preload-data/offline');
 	});
 
-	test('data-sveltekit-preload-data network failure does not block click navigation', async ({
+	test('data-sveltekit-preload-data error does not block user navigation', async ({
 		page,
-		context
+		context,
+		browserName
 	}) => {
 		await page.goto('/data-sveltekit/preload-data/offline');
 
@@ -698,10 +699,34 @@ test.describe('data-sveltekit attributes', () => {
 
 		expect(page).toHaveURL('/data-sveltekit/preload-data/offline');
 
-		await page.click('#one');
+		await page.locator('#one').dispatchEvent('click');
 		await page.waitForLoadState('networkidle');
+		await page.waitForTimeout(100);
 
-		expect(page).toHaveURL('/data-sveltekit/preload-data/offline/target');
+		expect(page).toHaveURL(
+			'/data-sveltekit/preload-data/offline/target' ||
+				(browserName === 'chromium' && 'chrome-error://chromewebdata/')
+		);
+	});
+
+	test('data-sveltekit-preload does not abort ongoing navigation', async ({
+		page,
+		browserName
+	}) => {
+		await page.goto('/data-sveltekit/preload-data/offline');
+
+		await page.locator('#slow-navigation').dispatchEvent('click');
+		await page.waitForTimeout(100);
+		await page.locator('#slow-navigation').dispatchEvent('mousemove');
+		await Promise.all([
+			page.waitForTimeout(100), // wait for preloading to start
+			page.waitForLoadState('networkidle') // wait for preloading to finish
+		]);
+
+		expect(page).toHaveURL(
+			'/data-sveltekit/preload-data/offline/slow-navigation' ||
+				(browserName === 'chromium' && 'chrome-error://chromewebdata/')
+		);
 	});
 
 	test('data-sveltekit-reload', async ({ baseURL, page, clicknav }) => {
