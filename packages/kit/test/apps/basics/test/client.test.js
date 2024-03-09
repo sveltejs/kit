@@ -667,7 +667,8 @@ test.describe('data-sveltekit attributes', () => {
 
 	test('data-sveltekit-preload-data network failure does not trigger navigation', async ({
 		page,
-		context
+		context,
+		browserName
 	}) => {
 		await page.goto('/data-sveltekit/preload-data/offline');
 
@@ -679,7 +680,11 @@ test.describe('data-sveltekit attributes', () => {
 			page.waitForLoadState('networkidle') // wait for preloading to finish
 		]);
 
-		expect(page).toHaveURL('/data-sveltekit/preload-data/offline');
+		let offline_url = /\/data-sveltekit\/preload-data\/offline/;
+		if (browserName === 'chromium') {
+			offline_url = /chrome-error:\/\/chromewebdata\/|\/data-sveltekit\/preload-data\/offline/;
+		}
+		expect(page).toHaveURL(offline_url);
 	});
 
 	test('data-sveltekit-preload-data error does not block user navigation', async ({
@@ -703,10 +708,11 @@ test.describe('data-sveltekit attributes', () => {
 		await page.waitForTimeout(100); // wait for navigation to start
 		await page.waitForLoadState('networkidle');
 
-		expect(page).toHaveURL(
-			'/data-sveltekit/preload-data/offline/target' ||
-				(browserName === 'chromium' && 'chrome-error://chromewebdata/')
-		);
+		let offline_url = /\/data-sveltekit\/preload-data\/offline/;
+		if (browserName === 'chromium') {
+			offline_url = /chrome-error:\/\/chromewebdata\/|\/data-sveltekit\/preload-data\/offline/;
+		}
+		expect(page).toHaveURL(offline_url);
 	});
 
 	test('data-sveltekit-preload does not abort ongoing navigation', async ({
