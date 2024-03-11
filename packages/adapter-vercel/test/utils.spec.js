@@ -1,6 +1,8 @@
 import { assert, test } from 'vitest';
 import { get_pathname, pattern_to_src } from '../utils.js';
-import { parse_route_id } from '../../kit/src/utils/routing.js';
+
+// workaround so that TypeScript doesn't follow that import which makes it pick up that file and then error on missing import aliases
+const { parse_route_id } = await import('../../kit/src/' + 'utils/routing.js');
 
 /**
  * @param {import('@sveltejs/kit').RouteDefinition<any>['segments']} segments
