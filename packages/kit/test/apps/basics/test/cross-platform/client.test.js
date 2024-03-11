@@ -226,6 +226,16 @@ test.describe('Navigation lifecycle functions', () => {
 		expect(await page.innerHTML('pre')).toBe('1 false link');
 	});
 
+	test('beforeNavigate has an option object', async ({ page }) => {
+		await page.goto('/navigation-lifecycle/before-navigate/options');
+
+		await page.click('button');
+		expect(await page.innerHTML('p')).toBe('goto true true true true {"active":true}');
+
+		await page.click('a');
+		expect(await page.innerHTML('p')).toBe('link true true true false {}');
+	});
+
 	test('afterNavigate calls callback', async ({ page, clicknav }) => {
 		await page.goto('/navigation-lifecycle/after-navigate/a');
 		expect(await page.textContent('h1')).toBe(
