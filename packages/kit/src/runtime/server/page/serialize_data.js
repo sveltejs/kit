@@ -82,7 +82,22 @@ export function serialize_data(fetched, filter, prerendering = false) {
 		const values = [];
 
 		if (fetched.request_headers) {
-			values.push([...new Headers(fetched.request_headers)].join(','));
+			const headers = new Headers(fetched.request_headers);
+			// @ts-ignore
+			if (fetched.request_headers.delete) {
+				// @ts-ignore
+				fetched.request_headers.delete('sveltekit-ignore');
+			} else {
+				// @ts-ignore
+				delete fetched.request_headers['sveltekit-ignore'];
+			}
+
+			const ignores = headers.get('sveltekit-ignore')?.split(',') || [];
+			headers.delete('sveltekit-ignore');
+
+			ignores.forEach((key) => headers.delete(key));
+
+			values.push([...headers].join(','));
 		}
 
 		if (fetched.request_body) {
