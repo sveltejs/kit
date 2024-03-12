@@ -225,7 +225,7 @@ let token;
  * If a preload token is in the set and the preload errors, the error
  * handling logic (for example reloading) is skipped.
  */
-let preload_tokens = new Set();
+const preload_tokens = new Set();
 
 /** @type {Promise<void> | null} */
 let pending_invalidate;
