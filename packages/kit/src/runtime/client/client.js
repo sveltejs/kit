@@ -172,7 +172,7 @@ const invalidated = [];
  */
 const components = [];
 
-/** @type {{id: string, promise: Promise<import('./types.js').NavigationResult>} | null} */
+/** @type {{id: string, token: {}, promise: Promise<import('./types.js').NavigationResult>} | null} */
 let load_cache = null;
 
 /** @type {Array<(navigation: import('@sveltejs/kit').BeforeNavigate) => void>} */
@@ -219,8 +219,13 @@ let page;
 /** @type {{}} */
 let token;
 
-/** @type {{}} */
-let preload_token;
+/**
+ * A set of tokens which are associated to current preloads.
+ * If a preload becomes a real navigation, it's removed from the set.
+ * If a preload token is in the set and the preload errors, the error
+ * handling logic (for example reloading) is skipped.
+ */
+let preload_tokens = new Set();
 
 /** @type {Promise<void> | null} */
 let pending_invalidate;
@@ -378,17 +383,26 @@ async function _goto(url, options, redirect_count, nav_token) {
 
 /** @param {import('./types.js').NavigationIntent} intent */
 async function _preload_data(intent) {
-	const preload = (preload_token = {});
-	load_cache = {
-		id: intent.id,
-		promise: load_route({ ...intent, preload }).then((result) => {
-			if (result.type === 'loaded' && result.state.error) {
-				// Don't cache errors, because they might be transient
-				load_cache = null;
-			}
-			return result;
-		})
-	};
+	// Reuse the existing pending preload if it's for the same navigation.
+	// Prevents an edge case where same preload is triggered multiple times,
+	// then a later one is becoming the real navigation and the preload tokens
+	// get out of sync.
+	if (intent.id !== load_cache?.id) {
+		const preload = {};
+		preload_tokens.add(preload);
+		load_cache = {
+			id: intent.id,
+			token: preload,
+			promise: load_route({ ...intent, preload }).then((result) => {
+				preload_tokens.delete(preload);
+				if (result.type === 'loaded' && result.state.error) {
+					// Don't cache errors, because they might be transient
+					load_cache = null;
+				}
+				return result;
+			})
+		};
+	}
 
 	return load_cache.promise;
 }
@@ -830,11 +844,9 @@ function preload_error({ error, url, route, params }) {
  */
 async function load_route({ id, invalidating, url, params, route, preload }) {
 	if (load_cache?.id === id) {
+		// the preload becomes the real navigation
+		preload_tokens.delete(load_cache.token);
 		return load_cache.promise;
-	}
-
-	if (preload_token && preload !== preload_token) {
-		preload_token = {};
 	}
 
 	const { errors, layouts, leaf } = route;
@@ -883,7 +895,7 @@ async function load_route({ id, invalidating, url, params, route, preload }) {
 		} catch (error) {
 			const handled_error = await handle_error(error, { url, params, route: { id } });
 
-			if (preload && preload === preload_token) {
+			if (preload_tokens.has(preload)) {
 				return preload_error({ error: handled_error, url, params, route });
 			}
 
@@ -972,7 +984,7 @@ async function load_route({ id, invalidating, url, params, route, preload }) {
 					};
 				}
 
-				if (preload && preload === preload_token) {
+				if (preload_tokens.has(preload)) {
 					return preload_error({
 						error: await handle_error(err, { params, url, route: { id: route.id } }),
 						url,
