@@ -1,5 +1,11 @@
 # @sveltejs/kit
 
+## 2.5.4
+
+### Patch Changes
+
+- fix: prevent navigation when `data-sveltekit-preload-data` fails to fetch due to network error ([#11944](https://github.com/sveltejs/kit/pull/11944))
+
 ## 2.5.3
 
 ### Patch Changes
