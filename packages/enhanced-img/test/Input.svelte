@@ -2,6 +2,7 @@
 	import manual_image1 from './no.png';
 	import manual_image2 from './no.svg';
 
+	const src = manual_image1;
 	const images = [manual_image1, manual_image2];
 
 	let foo: string = 'bar';
@@ -31,6 +32,8 @@
 
 <enhanced:img src="/src/foo.png" alt="absolute path test" />
 
+<enhanced:img {src} alt="attribute shorthand test" />
+
 <enhanced:img src="./foo.svg" alt="svg test" />
 
 {#each images as image}
@@ -42,7 +45,3 @@
 	<source srcset="./foo.avif 500v ./bar.avif 100v" />
 	<source srcset="./foo.avif, ./bar.avif 1v" />
 </picture>
-
-{#each images as src}
-	<enhanced:img {src} alt="opt-in test" />
-{/each}

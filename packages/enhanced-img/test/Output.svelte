@@ -5,6 +5,7 @@
 	
 	import manual_image2 from './no.svg';
 
+	const src = manual_image1;
 	const images = [manual_image1, manual_image2];
 
 	let foo: string = 'bar';
@@ -30,6 +31,17 @@
 
 <picture><source srcset={"/1 1440w, /2 960w"} type="image/avif" /><source srcset={"/3 1440w, /4 960w"} type="image/webp" /><source srcset={"5 1440w, /6 960w"} type="image/png" /><img src="/7" alt="absolute path test" width=1440 height=1440 /></picture>
 
+{#if typeof src === 'string'}
+	<img src={src.img.src} alt="attribute shorthand test" width={src.img.w} height={src.img.h} />
+{:else}
+	<picture>
+		{#each Object.entries(src.sources) as [format, srcset]}
+			<source {srcset} type={'image/' + format} />
+		{/each}
+		<img src={src.img.src} alt="attribute shorthand test" width={src.img.w} height={src.img.h} />
+	</picture>
+{/if}
+
 <img src={___ASSET___0} alt="svg test" />
 
 {#each images as image}
@@ -50,16 +62,3 @@
 	<source srcset="./foo.avif 500v ./bar.avif 100v" />
 	<source srcset="./foo.avif, ./bar.avif 1v" />
 </picture>
-
-{#each images as src}
-	{#if typeof src === 'string'}
-	<img src={src.img.src} alt="opt-in test" width={src.img.w} height={src.img.h} />
-{:else}
-	<picture>
-		{#each Object.entries(src.sources) as [format, srcset]}
-			<source {srcset} type={'image/' + format} />
-		{/each}
-		<img src={src.img.src} alt="opt-in test" width={src.img.w} height={src.img.h} />
-	</picture>
-{/if}
-{/each}
