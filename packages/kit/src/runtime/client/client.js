@@ -2517,22 +2517,33 @@ function reset_focus() {
 		autofocus.focus();
 	} else {
 		// Reset page selection and focus
-		// We try to mimic browsers' behaviour as closely as possible by targeting the
-		// first scrollable region, but unfortunately it's not a perfect match — e.g.
-		// shift-tabbing won't immediately cycle up from the end of the page on Chromium
-		// See https://html.spec.whatwg.org/multipage/interaction.html#get-the-focusable-area
-		const root = document.body;
-		const tabindex = root.getAttribute('tabindex');
-
-		root.tabIndex = -1;
-		// @ts-expect-error
-		root.focus({ preventScroll: true, focusVisible: false });
-
-		// restore `tabindex` as to prevent `root` from stealing input from elements
-		if (tabindex !== null) {
-			root.setAttribute('tabindex', tabindex);
+		if (location.hash && document.querySelector(location.hash)) {
+			// scroll management has already happened earlier so we need to make sure
+			// the scroll position stays the same after setting the sequential focus navigation starting point
+			const { x, y } = scroll_state();
+			// mimic browsers' behaviour and set the sequential focus navigation starting point
+			// to the fragment identifier
+			location.replace(location.hash);
+			scrollTo(x, y);
 		} else {
-			root.removeAttribute('tabindex');
+			// We try to mimic browsers' behaviour as closely as possible by targeting the
+			// first scrollable region, but unfortunately it's not a perfect match — e.g.
+			// shift-tabbing won't immediately cycle up from the end of the page on Chromium
+			// See https://html.spec.whatwg.org/multipage/interaction.html#get-the-focusable-area
+			const root = document.body;
+			const tabindex = root.getAttribute('tabindex');
+
+			root.tabIndex = -1;
+			// @ts-expect-error options.focusVisible is only supported in Firefox
+			// See https://developer.mozilla.org/en-US/docs/Web/API/HTMLElement/focus#browser_compatibility
+			root.focus({ preventScroll: true, focusVisible: false });
+
+			// restore `tabindex` as to prevent `root` from stealing input from elements
+			if (tabindex !== null) {
+				root.setAttribute('tabindex', tabindex);
+			} else {
+				root.removeAttribute('tabindex');
+			}
 		}
 
 		// capture current selection, so we can compare the state after
