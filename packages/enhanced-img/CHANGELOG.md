@@ -1,5 +1,11 @@
 # @sveltejs/enhanced-img
 
+## 0.1.9
+
+### Patch Changes
+
+- fix: support shorthand attribute syntax ([#11884](https://github.com/sveltejs/kit/pull/11884))
+
 ## 0.1.8
 
 ### Patch Changes
