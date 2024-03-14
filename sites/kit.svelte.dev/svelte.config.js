@@ -4,7 +4,13 @@ import adapter from '@sveltejs/adapter-vercel';
 const config = {
 	kit: {
 		adapter: adapter({
-			runtime: 'edge'
+			runtime: 'edge',
+			images: {
+			  minimumCacheTTL: 300,
+			  formats: ['image/avif', 'image/webp'],
+			  sizes: [480, 1024, 1920, 2560],
+			  domains: []
+			}
 		}),
 
 		paths: {

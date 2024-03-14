@@ -16,7 +16,7 @@
 
 		<div class="hero-image-wrapper">
 			<enhanced:img
-				src="./svelte-kit-machine.webp?w=1440;1080;768;640"
+				src="./svelte-kit-machine.webp?cdn=vercel&tint=ffaa22"
 				sizes="(min-width: 768px) min(100vw, 108rem), 64rem"
 				class="hero-image"
 				alt="SvelteKit illustration"

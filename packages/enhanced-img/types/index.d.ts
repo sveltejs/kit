@@ -9,4 +9,4 @@ declare module 'svelte/elements' {
 	}
 }
 
-export function enhancedImages(): Promise<Plugin[]>;
+export function enhancedImages(options: { vercel_sizes: number[] }): Promise<Plugin[]>;

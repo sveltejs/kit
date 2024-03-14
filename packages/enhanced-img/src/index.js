@@ -3,26 +3,29 @@ import { imagetools } from 'vite-imagetools';
 import { image } from './preprocessor.js';
 
 /**
+ * @param {Object} options
  * @returns {Promise<import('vite').Plugin[]>}
  */
-export async function enhancedImages() {
+export async function enhancedImages(options) {
 	const imagetools_instance = await imagetools_plugin();
 	return !process.versions.webcontainer
-		? [image_plugin(imagetools_instance), imagetools_instance]
+		? [image_plugin(imagetools_instance, options), imagetools_instance]
 		: [];
 }
 
 /**
  * Creates the Svelte image plugin which provides the preprocessor.
  * @param {import('vite').Plugin} imagetools_plugin
+ * @param {{vercel_sizes: number[]}} options
  * @returns {import('vite').Plugin}
  */
-function image_plugin(imagetools_plugin) {
+function image_plugin(imagetools_plugin, options) {
 	/**
 	 * @type {{
 	 *   plugin_context: import('vite').Rollup.PluginContext
 	 *   vite_config: import('vite').ResolvedConfig
 	 *   imagetools_plugin: import('vite').Plugin
+	 *   vercel_sizes: number[]
 	 * }}
 	 */
 	const opts = {
@@ -30,7 +33,8 @@ function image_plugin(imagetools_plugin) {
 		plugin_context: undefined,
 		// @ts-expect-error populated when build starts so we cheat on type
 		vite_config: undefined,
-		imagetools_plugin
+		imagetools_plugin,
+		vercel_sizes: options.vercel_sizes
 	};
 	const preprocessor = image(opts);
 
@@ -73,13 +77,21 @@ async function imagetools_plugin() {
 				return new URLSearchParams();
 			}
 
-			const { widths, kind } = get_widths(width, qs.get('imgSizes'));
-			return new URLSearchParams({
-				as: 'picture',
-				format: `avif;webp;${fallback[path.extname(pathname)] ?? 'png'}`,
-				w: widths.join(';'),
-				...(kind === 'x' && !qs.has('w') && { basePixels: widths[0].toString() })
-			});
+			if (qs.get('cdn')) {
+				return new URLSearchParams({
+					as: 'picture',
+					format: `${fallback[path.extname(pathname)] ?? 'png'}`,
+					w: width.toString()
+				});
+			} else {
+				const { widths, kind } = get_widths(width, qs.get('imgSizes'));
+				return new URLSearchParams({
+					as: 'picture',
+					format: `avif;webp;${fallback[path.extname(pathname)] ?? 'png'}`,
+					w: widths.join(';'),
+					...(kind === 'x' && !qs.has('w') && { basePixels: widths[0].toString() })
+				});
+			}
 		},
 		namedExports: false
 	};

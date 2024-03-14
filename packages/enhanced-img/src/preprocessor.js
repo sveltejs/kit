@@ -15,6 +15,7 @@ const OPTIMIZABLE = /^[^?]+\.(avif|heif|gif|jpeg|jpg|png|tiff|webp)(\?.*)?$/;
  *   plugin_context: import('vite').Rollup.PluginContext
  *   vite_config: import('vite').ResolvedConfig
  *   imagetools_plugin: import('vite').Plugin
+ *   vercel_sizes: number[]
  * }} opts
  * @returns {import('svelte/types/compiler/preprocess').PreprocessorGroup}
  */
@@ -90,7 +91,13 @@ export function image(opts) {
 						image = await process(resolved_id, opts);
 						images.set(resolved_id, image);
 					}
-					s.update(node.start, node.end, img_to_picture(content, node, image));
+					s.update(
+						node.start,
+						node.end,
+						url.includes('cdn=vercel')
+							? img_to_vercel(content, node, image, opts.vercel_sizes, opts.vite_config.env.DEV)
+							: img_to_picture(content, node, image)
+					);
 				} else {
 					// e.g. <img src="./foo.svg" /> => <img src={___ASSET___0} />
 					const name = ASSET_PREFIX + imports.size;
@@ -175,7 +182,9 @@ async function process(resolved_id, opts) {
 		throw new Error(`Could not load ${resolved_id}`);
 	}
 	const code = typeof module_info === 'string' ? module_info : module_info.code;
-	return parseObject(code.replace('export default', '').replace(/;$/, '').trim());
+	return parseObject(
+		code.replace('export default', '').replace('sources:{},', '').replace(/;$/, '').trim()
+	);
 }
 
 /**
@@ -291,6 +300,54 @@ function img_to_picture(content, node, image) {
 	})} />`;
 	res += '</picture>';
 	return res;
+}
+
+/**
+ * @param {string} content
+ * @param {import('svelte/types/compiler/interfaces').TemplateNode} node
+ * @param {import('vite-imagetools').Picture} image
+ * @param {number[]} sizes
+ * @param {boolean} isDev
+ */
+function img_to_vercel(content, node, image, sizes, isDev) {
+	/** @type {Array<import('svelte/types/compiler/interfaces').BaseDirective | import('svelte/types/compiler/interfaces').Attribute | import('svelte/types/compiler/interfaces').SpreadAttribute>} attributes */
+	const attributes = node.attributes;
+
+	let res = '';
+	// Need to handle src differently when using either Vite's renderBuiltUrl or relative base path in Vite.
+	// See https://github.com/vitejs/vite/blob/b93dfe3e08f56cafe2e549efd80285a12a3dc2f0/packages/vite/src/node/plugins/asset.ts#L132
+	const src =
+		image.img.src.startsWith('"+') && image.img.src.endsWith('+"')
+			? `{"${image.img.src.substring(2, image.img.src.length - 2)}"}` // @TODO: Does this affect us???
+			: `"${image.img.src}"`;
+
+	res += `<img srcset="${srcset_vercel(image.img.src, sizes, 99, isDev)}"
+		${img_attributes_to_markdown(content, attributes, {
+			src,
+			width: image.img.w,
+			height: image.img.h
+		})}
+		${
+			isDev &&
+			'title="NOTE(dev mode): The srcset image URLs will be more like /_vercel/image?url=...?w=&q= in production."'
+		}
+		/>`;
+
+	return res;
+}
+
+/**
+ * @param {number[]} widths
+ */
+function srcset_vercel(src = '', widths, quality = 100, isDev = false) {
+	return widths
+		.slice()
+		.sort((a, b) => a - b)
+		.map((width) => {
+			let url = `/_vercel/image?url=${encodeURIComponent(src)}&w=${width}&q=${quality}`;
+			return `${isDev ? src : url} ${width}w`;
+		})
+		.join(', ');
 }
 
 /**

@@ -19,7 +19,9 @@ const config = {
 		cssMinify: 'lightningcss'
 	},
 
-	plugins: [enhancedImages(), sveltekit()],
+	plugins: [enhancedImages({
+		vercel_sizes: [480, 1024, 1920, 2560]
+	}), sveltekit()],
 
 	ssr: {
 		noExternal: ['@sveltejs/site-kit']
