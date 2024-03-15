@@ -488,7 +488,7 @@ function static_vercel_config(builder, config) {
 				}
 			],
 			headers: {
-				'Set-Cookie': `__vdpl=${process.env.VERCEL_DEPLOYMENT_ID}; Path=/${builder.config.kit.paths.base}; SameSite=Strict; Secure; HttpOnly`
+				'Set-Cookie': `__vdpl=${process.env.VERCEL_DEPLOYMENT_ID}; Path=${builder.config.kit.paths.base}/; SameSite=Strict; Secure; HttpOnly`
 			},
 			continue: true
 		});
