@@ -480,11 +480,13 @@ function static_vercel_config(builder, config) {
 	if (process.env.VERCEL_SKEW_PROTECTION_ENABLED) {
 		routes.push({
 			src: '/.*',
-			has: {
-				type: 'header',
-				key: 'Sec-Fetch-Dest',
-				value: 'document'
-			},
+			has: [
+				{
+					type: 'header',
+					key: 'Sec-Fetch-Dest',
+					value: 'document'
+				}
+			],
 			headers: {
 				'Set-Cookie': `__vdpl=${process.env.VERCEL_DEPLOYMENT_ID}; Path=/${builder.config.kit.paths.base}; SameSite=Strict; Secure; HttpOnly`
 			},
