@@ -2,4 +2,4 @@
 '@sveltejs/adapter-vercel': minor
 ---
 
-feat: implement skew protection
+feat: implement version skew protection
