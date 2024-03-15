@@ -63,20 +63,6 @@ const plugin = function (defaults = {}) {
 			builder.log.minor('Generating serverless function...');
 
 			/**
-			 * @param {string} tmp
-			 * @param {import('@sveltejs/kit').RouteDefinition<import('.').Config>[]} routes
-			 */
-			function generate_manifest(tmp, routes) {
-				const relativePath = path.posix.relative(tmp, builder.getServerDirectory());
-
-				// TODO this is messy
-				write(
-					`${tmp}/manifest.js`,
-					`export const manifest = ${builder.generateManifest({ relativePath, routes })};\n`
-				);
-			}
-
-			/**
 			 * @param {string} name
 			 * @param {import('.').ServerlessConfig} config
 			 * @param {import('@sveltejs/kit').RouteDefinition<import('.').Config>[]} routes
@@ -93,7 +79,10 @@ const plugin = function (defaults = {}) {
 					}
 				});
 
-				generate_manifest(tmp, routes);
+				write(
+					`${tmp}/manifest.js`,
+					`export const manifest = ${builder.generateManifest({ relativePath, routes })};\n`
+				);
 
 				await create_function_bundle(builder, `${tmp}/index.js`, dir, config);
 
@@ -119,7 +108,10 @@ const plugin = function (defaults = {}) {
 					}
 				});
 
-				generate_manifest(tmp, routes);
+				write(
+					`${tmp}/manifest.js`,
+					`export const manifest = ${builder.generateManifest({ relativePath, routes })};\n`
+				);
 
 				try {
 					const result = await esbuild.build({
