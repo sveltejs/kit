@@ -22,7 +22,7 @@ export default async (request, context) => {
 		}
 	});
 
-	if (skew_protection) {
+	if (skew_protection && request.headers.get('Sec-Fetch-Dest') === 'document') {
 		response.headers.set(
 			'Set-Cookie',
 			`__vdpl=${deployment_id}; Path=${base}; SameSite=Strict; Secure; HttpOnly`
