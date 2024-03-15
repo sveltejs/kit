@@ -72,13 +72,7 @@ const plugin = function (defaults = {}) {
 				// TODO this is messy
 				write(
 					`${tmp}/manifest.js`,
-					`export const manifest = ${builder.generateManifest({ relativePath, routes })};\n` +
-						`export const base = ${JSON.stringify(`/${builder.config.kit.paths.base}`)};\n` +
-						`export const version_file = ${JSON.stringify(
-							`/${builder.getAppPath()}/version.json`
-						)};\n` +
-						`export const skew_protection = ${JSON.stringify(!!process.env.VERCEL_SKEW_PROTECTION_ENABLED)};\n` +
-						`export const deployment_id = ${JSON.stringify(process.env.VERCEL_DEPLOYMENT_ID)};\n`
+					`export const manifest = ${builder.generateManifest({ relativePath, routes })};\n`
 				);
 			}
 
@@ -481,20 +475,38 @@ function static_vercel_config(builder, config) {
 		overrides[page.file] = { path: overrides_path };
 	}
 
+	const routes = [
+		...prerendered_redirects,
+		{
+			src: `/${builder.getAppPath()}/immutable/.+`,
+			headers: {
+				'cache-control': 'public, immutable, max-age=31536000'
+			}
+		}
+	];
+
+	if (process.env.VERCEL_SKEW_PROTECTION_ENABLED) {
+		routes.push({
+			src: '/.*',
+			has: {
+				type: 'header',
+				key: 'Sec-Fetch-Dest',
+				value: 'document'
+			},
+			headers: {
+				'Set-Cookie': `__vdpl=${process.env.VERCEL_DEPLOYMENT_ID}; Path=/${builder.config.kit.paths.base}; SameSite=Strict; Secure; HttpOnly`
+			},
+			continue: true
+		});
+	}
+
+	routes.push({
+		handle: 'filesystem'
+	});
+
 	return {
 		version: 3,
-		routes: [
-			...prerendered_redirects,
-			{
-				src: `/${builder.getAppPath()}/immutable/.+`,
-				headers: {
-					'cache-control': 'public, immutable, max-age=31536000'
-				}
-			},
-			{
-				handle: 'filesystem'
-			}
-		],
+		routes,
 		overrides,
 		images
 	};
