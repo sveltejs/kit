@@ -5,8 +5,4 @@ declare module 'SERVER' {
 declare module 'MANIFEST' {
 	import { SSRManifest } from '@sveltejs/kit';
 	export const manifest: SSRManifest;
-	export const base: string;
-	export const deployment_id: string;
-	export const skew_protection: boolean;
-	export const version_file: string;
 }
