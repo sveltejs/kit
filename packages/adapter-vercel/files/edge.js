@@ -23,8 +23,15 @@ export default async (request, context) => {
 	});
 
 	if (skew_protection) {
-		response.headers.set('Set-Cookie', `__vdpl=${deployment_id}; Path=${base}; SameSite=Lax; Secure; HttpOnly`);
-		response.headers.set('Set-Cookie', `__vdpl=; Path=${version_file}; SameSite=Lax; Secure; HttpOnly`);
+		response.headers.set(
+			'Set-Cookie',
+			`__vdpl=${deployment_id}; Path=${base}; SameSite=Lax; Secure; HttpOnly`
+		);
+
+		response.headers.set(
+			'Set-Cookie',
+			`__vdpl=; Path=${version_file}; SameSite=Lax; Secure; HttpOnly`
+		);
 	}
 
 	return response;

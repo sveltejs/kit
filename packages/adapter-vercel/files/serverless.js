@@ -42,8 +42,15 @@ export default async (req, res) => {
 	});
 
 	if (skew_protection) {
-		response.headers.set('Set-Cookie', `__vdpl=${deployment_id}; Path=${base}; SameSite=Lax; Secure; HttpOnly`);
-		response.headers.set('Set-Cookie', `__vdpl=; Path=${version_file}; SameSite=Lax; Secure; HttpOnly`);
+		response.headers.set(
+			'Set-Cookie',
+			`__vdpl=${deployment_id}; Path=${base}; SameSite=Lax; Secure; HttpOnly`
+		);
+
+		response.headers.set(
+			'Set-Cookie',
+			`__vdpl=; Path=${version_file}; SameSite=Lax; Secure; HttpOnly`
+		);
 	}
 
 	setResponse(res, response);
