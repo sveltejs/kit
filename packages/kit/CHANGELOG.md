@@ -1,5 +1,37 @@
 # @sveltejs/kit
 
+## 2.5.4
+
+### Patch Changes
+
+- fix: prevent navigation when `data-sveltekit-preload-data` fails to fetch due to network error ([#11944](https://github.com/sveltejs/kit/pull/11944))
+
+## 2.5.3
+
+### Patch Changes
+
+- fix: revert tsconfig change that includes svelte.config.js ([#11908](https://github.com/sveltejs/kit/pull/11908))
+
+- fix: exclude server worker from tsconfig again ([#11727](https://github.com/sveltejs/kit/pull/11727))
+
+## 2.5.2
+
+### Patch Changes
+
+- fix: tsconfig includes should cover svelte.config.js ([#11886](https://github.com/sveltejs/kit/pull/11886))
+
+## 2.5.1
+
+### Patch Changes
+
+- fix: prevent stale values after invalidation ([#11870](https://github.com/sveltejs/kit/pull/11870))
+
+- fix: prevent false positive `history.pushState` and `history.replaceState` warnings ([#11858](https://github.com/sveltejs/kit/pull/11858))
+
+- fix: relax status code types ([#11781](https://github.com/sveltejs/kit/pull/11781))
+
+- fix: `popstate` navigations take `pushState` navigations into account ([#11765](https://github.com/sveltejs/kit/pull/11765))
+
 ## 2.5.0
 
 ### Minor Changes

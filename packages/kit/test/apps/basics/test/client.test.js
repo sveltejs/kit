@@ -594,6 +594,28 @@ test.describe('Invalidation', () => {
 		await page.locator('button').click();
 		await expect(page.getByText('updated')).toBeVisible();
 	});
+
+	test('goto after invalidation does not reset state', async ({ page }) => {
+		await page.goto('/load/invalidation/invalidate-then-goto');
+		const layout = await page.textContent('p.layout');
+		const _page = await page.textContent('p.page');
+		expect(layout).toBeDefined();
+		expect(_page).toBeDefined();
+
+		await page.click('button.invalidate');
+		await page.evaluate(() => window.promise);
+		const next_layout_1 = await page.textContent('p.layout');
+		const next_page_1 = await page.textContent('p.page');
+		expect(next_layout_1).not.toBe(layout);
+		expect(next_page_1).toBe(_page);
+
+		await page.click('button.goto');
+		await page.evaluate(() => window.promise);
+		const next_layout_2 = await page.textContent('p.layout');
+		const next_page_2 = await page.textContent('p.page');
+		expect(next_layout_2).toBe(next_layout_1);
+		expect(next_page_2).not.toBe(next_page_1);
+	});
 });
 
 test.describe('data-sveltekit attributes', () => {
@@ -641,6 +663,78 @@ test.describe('data-sveltekit attributes', () => {
 			page.waitForLoadState('networkidle') // wait for preloading to finish
 		]);
 		expect(requests.length).toBe(0);
+	});
+
+	test('data-sveltekit-preload-data network failure does not trigger navigation', async ({
+		page,
+		context,
+		browserName
+	}) => {
+		await page.goto('/data-sveltekit/preload-data/offline');
+
+		await context.setOffline(true);
+
+		await page.locator('#one').dispatchEvent('mousemove');
+		await Promise.all([
+			page.waitForTimeout(100), // wait for preloading to start
+			page.waitForLoadState('networkidle') // wait for preloading to finish
+		]);
+
+		let offline_url = /\/data-sveltekit\/preload-data\/offline/;
+		if (browserName === 'chromium') {
+			// it's chrome-error://chromewebdata/ on ubuntu but not on windows
+			offline_url = /chrome-error:\/\/chromewebdata\/|\/data-sveltekit\/preload-data\/offline/;
+		}
+		expect(page).toHaveURL(offline_url);
+	});
+
+	test('data-sveltekit-preload-data error does not block user navigation', async ({
+		page,
+		context,
+		browserName
+	}) => {
+		await page.goto('/data-sveltekit/preload-data/offline');
+
+		await context.setOffline(true);
+
+		await page.locator('#one').dispatchEvent('mousemove');
+		await Promise.all([
+			page.waitForTimeout(100), // wait for preloading to start
+			page.waitForLoadState('networkidle') // wait for preloading to finish
+		]);
+
+		expect(page).toHaveURL('/data-sveltekit/preload-data/offline');
+
+		await page.locator('#one').dispatchEvent('click');
+		await page.waitForTimeout(100); // wait for navigation to start
+		await page.waitForLoadState('networkidle');
+
+		let offline_url = /\/data-sveltekit\/preload-data\/offline/;
+		if (browserName === 'chromium') {
+			// it's chrome-error://chromewebdata/ on ubuntu but not on windows
+			offline_url = /chrome-error:\/\/chromewebdata\/|\/data-sveltekit\/preload-data\/offline/;
+		}
+		expect(page).toHaveURL(offline_url);
+	});
+
+	test('data-sveltekit-preload does not abort ongoing navigation', async ({
+		page,
+		browserName
+	}) => {
+		await page.goto('/data-sveltekit/preload-data/offline');
+
+		await page.locator('#slow-navigation').dispatchEvent('click');
+		await page.waitForTimeout(100); // wait for navigation to start
+		await page.locator('#slow-navigation').dispatchEvent('mousemove');
+		await Promise.all([
+			page.waitForTimeout(100), // wait for preloading to start
+			page.waitForLoadState('networkidle') // wait for preloading to finish
+		]);
+
+		expect(page).toHaveURL(
+			'/data-sveltekit/preload-data/offline/slow-navigation' ||
+				(browserName === 'chromium' && 'chrome-error://chromewebdata/')
+		);
 	});
 
 	test('data-sveltekit-reload', async ({ baseURL, page, clicknav }) => {

@@ -1,0 +1,6 @@
+{
+	"compilerOptions": {
+		"target": "ESNext",
+		"module": "ESNext"
+	}
+}

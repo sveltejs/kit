@@ -3,7 +3,7 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { nodeFileTrace } from '@vercel/nft';
 import esbuild from 'esbuild';
-import { get_pathname } from './utils.js';
+import { get_pathname, pattern_to_src } from './utils.js';
 import { VERSION } from '@sveltejs/kit';
 
 const name = '@sveltejs/adapter-vercel';
@@ -310,18 +310,7 @@ const plugin = function (defaults = {}) {
 				if (is_prerendered(route)) continue;
 
 				const pattern = route.pattern.toString();
-
-				let src = pattern
-					// remove leading / and trailing $/
-					.slice(1, -2)
-					// replace escaped \/ with /
-					.replace(/\\\//g, '/');
-
-				// replace the root route "^/" with "^/?"
-				if (src === '^/') {
-					src = '^/?';
-				}
-
+				const src = pattern_to_src(pattern);
 				const name = functions.get(pattern) ?? 'fn-0';
 
 				const isr = isr_config.get(route);

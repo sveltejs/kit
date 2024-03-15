@@ -1,5 +1,11 @@
 # @sveltejs/adapter-vercel
 
+## 5.1.1
+
+### Patch Changes
+
+- fix: handle optional and rest routes for incremental static regeneration (ISR) correctly ([#11928](https://github.com/sveltejs/kit/pull/11928))
+
 ## 5.1.0
 
 ### Minor Changes

@@ -1,5 +1,17 @@
 # @sveltejs/package
 
+## 2.3.0
+
+### Minor Changes
+
+- feat: add option to specify the tsconfig/jsconfig ([#11698](https://github.com/sveltejs/kit/pull/11698))
+
+## 2.2.7
+
+### Patch Changes
+
+- chore: update chokidar to 3.6.0 ([#11811](https://github.com/sveltejs/kit/pull/11811))
+
 ## 2.2.6
 
 ### Patch Changes

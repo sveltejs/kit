@@ -4,7 +4,7 @@ title: Cloudflare Pages
 
 To deploy to [Cloudflare Pages](https://developers.cloudflare.com/pages/), use [`adapter-cloudflare`](https://github.com/sveltejs/kit/tree/main/packages/adapter-cloudflare).
 
-This adapter will be installed by default when you use [`adapter-auto`](adapter-auto). If you plan on staying with Cloudflare Pages you can switch from [`adapter-auto`](adapter-auto) to using this adapter directly so that type declarations will be automatically applied and you can set Cloudflare-specific options.
+This adapter will be installed by default when you use [`adapter-auto`](adapter-auto). If you plan on staying with Cloudflare Pages, you can switch from [`adapter-auto`](adapter-auto) to using this adapter directly so that values specific to Cloudflare Workers are emulated during local development, type declarations are automatically applied, and the ability to set Cloudflare-specific options is provided.
 
 ## Comparisons
 
@@ -57,9 +57,9 @@ When configuring your project settings, you must use the following settings:
 - **Build command** – `npm run build` or `vite build`
 - **Build output directory** – `.svelte-kit/cloudflare`
 
-## Bindings
+## Runtime APIs
 
-The [`env`](https://developers.cloudflare.com/workers/runtime-apis/fetch-event#parameters) object contains your project's [bindings](https://developers.cloudflare.com/pages/platform/functions/bindings/), which consist of KV/DO namespaces, etc. It is passed to SvelteKit via the `platform` property, along with `context` and `caches`, meaning that you can access it in hooks and endpoints:
+The [`env`](https://developers.cloudflare.com/workers/runtime-apis/fetch-event#parameters) object contains your project's [bindings](https://developers.cloudflare.com/pages/platform/functions/bindings/), which consist of KV/DO namespaces, etc. It is passed to SvelteKit via the `platform` property, along with [`context`](https://developers.cloudflare.com/workers/runtime-apis/handlers/fetch/#contextwaituntil), [`caches`](https://developers.cloudflare.com/workers/runtime-apis/cache/), and [`cf`](https://developers.cloudflare.com/workers/runtime-apis/request/#the-cf-property-requestinitcfproperties), meaning that you can access it in hooks and endpoints:
 
 ```js
 // @errors: 7031
@@ -70,7 +70,7 @@ export async function POST({ request, platform }) {
 
 > SvelteKit's built-in `$env` module should be preferred for environment variables.
 
-To make these types available to your app, reference them in your `src/app.d.ts`:
+To include type declarations for your bindings, reference them in your `src/app.d.ts`:
 
 ```diff
 /// file: src/app.d.ts
@@ -90,7 +90,9 @@ export {};
 
 ### Testing Locally
 
-`platform.env` is only available in the final build and not in dev mode. For testing the build, you can use [wrangler](https://developers.cloudflare.com/workers/cli-wrangler) **version 3**. Once you have built your site, run `wrangler pages dev .svelte-kit/cloudflare`. Ensure you have your [bindings](https://developers.cloudflare.com/workers/wrangler/configuration/#bindings) in your `wrangler.toml`.
+Cloudflare Workers specific values in the `platform` property are emulated during dev and preview modes. The [bindings](https://developers.cloudflare.com/workers/wrangler/configuration/#bindings) in your `wrangler.toml` will be used to populate `platform.env` during local development.
+
+For testing the build, you should use [wrangler](https://developers.cloudflare.com/workers/cli-wrangler) **version 3**. Once you have built your site, run `wrangler pages dev .svelte-kit/cloudflare`.
 
 ## Notes
 
