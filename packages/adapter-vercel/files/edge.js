@@ -25,12 +25,12 @@ export default async (request, context) => {
 	if (skew_protection) {
 		response.headers.set(
 			'Set-Cookie',
-			`__vdpl=${deployment_id}; Path=${base}; SameSite=Lax; Secure; HttpOnly`
+			`__vdpl=${deployment_id}; Path=${base}; SameSite=Strict; Secure; HttpOnly`
 		);
 
 		response.headers.set(
 			'Set-Cookie',
-			`__vdpl=; Path=${version_file}; SameSite=Lax; Secure; HttpOnly`
+			`__vdpl=; Path=${version_file}; SameSite=Strict; Secure; HttpOnly`
 		);
 	}
 
