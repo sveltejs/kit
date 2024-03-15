@@ -4,6 +4,7 @@ import { fileURLToPath } from 'node:url';
 import { nodeFileTrace } from '@vercel/nft';
 import esbuild from 'esbuild';
 import { get_pathname, pattern_to_src } from './utils.js';
+import { VERSION } from '@sveltejs/kit';
 
 const name = '@sveltejs/adapter-vercel';
 const DEFAULT_FUNCTION_NAME = 'fn';
@@ -174,7 +175,11 @@ const plugin = function (defaults = {}) {
 						{
 							runtime: config.runtime,
 							regions: config.regions,
-							entrypoint: 'index.js'
+							entrypoint: 'index.js',
+							framework: {
+								slug: 'sveltekit',
+								version: VERSION
+							}
 						},
 						null,
 						'\t'
@@ -588,7 +593,11 @@ async function create_function_bundle(builder, entry, dir, config) {
 				maxDuration: config.maxDuration,
 				handler: path.relative(base + ancestor, entry),
 				launcherType: 'Nodejs',
-				experimentalResponseStreaming: !config.isr
+				experimentalResponseStreaming: !config.isr,
+				framework: {
+					slug: 'sveltekit',
+					version: VERSION
+				}
 			},
 			null,
 			'\t'
