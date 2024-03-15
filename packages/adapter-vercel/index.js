@@ -477,6 +477,7 @@ function static_vercel_config(builder, config) {
 		}
 	];
 
+	// https://vercel.com/docs/deployments/skew-protection
 	if (process.env.VERCEL_SKEW_PROTECTION_ENABLED) {
 		routes.push({
 			src: '/.*',
