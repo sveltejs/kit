@@ -1,7 +1,7 @@
 import { installPolyfills } from '@sveltejs/kit/node/polyfills';
 import { getRequest, setResponse, createReadableStream } from '@sveltejs/kit/node';
 import { Server } from 'SERVER';
-import { manifest } from 'MANIFEST';
+import { manifest, base, version_file, skew_protection, deployment_id } from 'MANIFEST';
 
 installPolyfills();
 
@@ -35,12 +35,16 @@ export default async (req, res) => {
 
 	const request = await getRequest({ base: `https://${req.headers.host}`, request: req });
 
-	setResponse(
-		res,
-		await server.respond(request, {
-			getClientAddress() {
-				return /** @type {string} */ (request.headers.get('x-forwarded-for'));
-			}
-		})
-	);
+	const response = await server.respond(request, {
+		getClientAddress() {
+			return /** @type {string} */ (request.headers.get('x-forwarded-for'));
+		}
+	});
+
+	if (skew_protection) {
+		response.headers.set('Set-Cookie', `__vdpl=${deployment_id}; Path=${base}; SameSite=Lax; Secure; HttpOnly`);
+		response.headers.set('Set-Cookie', `__vdpl=; Path=${version_file}; SameSite=Lax; Secure; HttpOnly`);
+	}
+
+	setResponse(res, response);
 };

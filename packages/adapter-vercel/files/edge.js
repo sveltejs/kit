@@ -1,5 +1,5 @@
 import { Server } from 'SERVER';
-import { manifest } from 'MANIFEST';
+import { manifest, base, version_file, skew_protection, deployment_id } from 'MANIFEST';
 
 const server = new Server(manifest);
 const initialized = server.init({
@@ -12,7 +12,8 @@ const initialized = server.init({
  */
 export default async (request, context) => {
 	await initialized;
-	return server.respond(request, {
+
+	const response = await server.respond(request, {
 		getClientAddress() {
 			return /** @type {string} */ (request.headers.get('x-forwarded-for'));
 		},
@@ -20,4 +21,11 @@ export default async (request, context) => {
 			context
 		}
 	});
+
+	if (skew_protection) {
+		response.headers.set('Set-Cookie', `__vdpl=${deployment_id}; Path=${base}; SameSite=Lax; Secure; HttpOnly`);
+		response.headers.set('Set-Cookie', `__vdpl=; Path=${version_file}; SameSite=Lax; Secure; HttpOnly`);
+	}
+
+	return response;
 };
