@@ -85,6 +85,7 @@ const plugin = function (defaults = {}) {
 			/**
 			 * @param {string} name
 			 * @param {import('.').ServerlessConfig} config
+			 * @param {import('@sveltejs/kit').RouteDefinition<import('.').Config>[]} routes
 			 */
 			async function generate_serverless_function(name, config, routes) {
 				const dir = `${dirs.functions}/${name}.func`;
