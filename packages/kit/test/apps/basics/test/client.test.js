@@ -1045,11 +1045,15 @@ test.describe('Shallow routing', () => {
 	test('Pushes state to a new URL', async ({ baseURL, page }) => {
 		await page.goto('/shallow-routing/push-state');
 		await expect(page.locator('p')).toHaveText('active: false');
+		await expect(page.locator('div.route_id')).toHaveText('route.id: /shallow-routing/push-state');
 
 		await page.locator('[data-id="two"]').click();
 		expect(page.url()).toBe(`${baseURL}/shallow-routing/push-state/a`);
 		await expect(page.locator('h1')).toHaveText('parent');
 		await expect(page.locator('p')).toHaveText('active: true');
+		await expect(page.locator('div.route_id')).toHaveText(
+			'route.id: /shallow-routing/push-state/a'
+		);
 
 		await page.reload();
 		await expect(page.locator('h1')).toHaveText('a');
