@@ -117,7 +117,7 @@ export {};
 
 ### Testing Locally
 
-Cloudflare Workers specific values in the `platform` property are emulated during dev and preview modes. The [bindings](https://developers.cloudflare.com/workers/wrangler/configuration/#bindings) in your `wrangler.toml` will be used to populate `platform.env` during local development.
+Cloudflare Workers specific values in the `platform` property are emulated during dev and preview modes. Local [bindings](https://developers.cloudflare.com/workers/wrangler/configuration/#bindings) are created based on the configuration in your `wrangler.toml` file and are used to populate `platform.env` during development.
 
 For testing the build, you should use [wrangler](https://developers.cloudflare.com/workers/cli-wrangler) **version 3**. Once you have built your site, run `wrangler dev`.
 
