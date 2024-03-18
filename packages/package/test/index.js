@@ -67,7 +67,7 @@ async function test_make_package(path, options) {
  * @param {string} content
  */
 async function format(file, content) {
-  if (file.endsWith('.map')) {
+	if (file.endsWith('.map')) {
 		return content;
 	}
 
