@@ -17,3 +17,4 @@
 <button data-id="two" on:click={two}>replace state on child page</button>
 
 <p>active: {$page.state.active ?? false}</p>
+<div class="route_id">route.id: {$page.route.id}</div>

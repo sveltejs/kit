@@ -1119,8 +1119,14 @@ test.describe('Shallow routing', () => {
 		await page.goto('/shallow-routing/replace-state/b');
 		await clicknav('[href="/shallow-routing/replace-state"]');
 
+		await expect(page.locator('div.route_id')).toHaveText(
+			'route.id: /shallow-routing/replace-state'
+		);
 		await page.locator('[data-id="two"]').click();
 		await expect(page.locator('p')).toHaveText('active: true');
+		await expect(page.locator('div.route_id')).toHaveText(
+			'route.id: /shallow-routing/replace-state/a'
+		);
 
 		await page.goBack();
 		expect(page.url()).toBe(`${baseURL}/shallow-routing/replace-state/b`);
