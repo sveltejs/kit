@@ -58,7 +58,12 @@ const plugin = function (defaults = {}) {
 				functions: `${dir}/functions`
 			};
 
-			const static_config = static_vercel_config(builder, defaults);
+			builder.log.minor('Copying assets...');
+
+			builder.writeClient(dirs.static);
+			builder.writePrerendered(dirs.static);
+
+			const static_config = static_vercel_config(builder, defaults, dirs.static);
 
 			builder.log.minor('Generating serverless function...');
 
@@ -368,11 +373,6 @@ const plugin = function (defaults = {}) {
 			// including ISR aliases if there is only one function
 			static_config.routes.push({ src: '/.*', dest: `/${DEFAULT_FUNCTION_NAME}` });
 
-			builder.log.minor('Copying assets...');
-
-			builder.writeClient(dirs.static);
-			builder.writePrerendered(dirs.static);
-
 			builder.log.minor('Writing routes...');
 
 			write(`${dir}/config.json`, JSON.stringify(static_config, null, '\t'));
@@ -425,8 +425,9 @@ function write(file, data) {
 /**
  * @param {import('@sveltejs/kit').Builder} builder
  * @param {import('.').Config} config
+ * @param {string} dir
  */
-function static_vercel_config(builder, config) {
+function static_vercel_config(builder, config, dir) {
 	/** @type {any[]} */
 	const prerendered_redirects = [];
 
@@ -467,20 +468,60 @@ function static_vercel_config(builder, config) {
 		overrides[page.file] = { path: overrides_path };
 	}
 
+	const routes = [
+		...prerendered_redirects,
+		{
+			src: `/${builder.getAppPath()}/immutable/.+`,
+			headers: {
+				'cache-control': 'public, immutable, max-age=31536000'
+			}
+		}
+	];
+
+	// https://vercel.com/docs/deployments/skew-protection
+	if (process.env.VERCEL_SKEW_PROTECTION_ENABLED) {
+		routes.push({
+			src: '/.*',
+			has: [
+				{
+					type: 'header',
+					key: 'Sec-Fetch-Dest',
+					value: 'document'
+				}
+			],
+			headers: {
+				'Set-Cookie': `__vdpl=${process.env.VERCEL_DEPLOYMENT_ID}; Path=${builder.config.kit.paths.base}/; SameSite=Strict; Secure; HttpOnly`
+			},
+			continue: true
+		});
+
+		// this is a dreadful hack that is necessary until the Vercel Build Output API
+		// allows you to set multiple cookies for a single route. essentially, since we
+		// know that the entry file will be requested immediately, we can set the second
+		// cookie in _that_ response rather than the document response
+		const base = `${dir}/${builder.config.kit.appDir}/immutable/entry`;
+		const entry = fs.readdirSync(base).find((file) => file.startsWith('start.'));
+
+		if (!entry) {
+			throw new Error('Could not find entry point');
+		}
+
+		routes.splice(-2, 0, {
+			src: `/${builder.getAppPath()}/immutable/entry/${entry}`,
+			headers: {
+				'Set-Cookie': `__vdpl=; Path=/${builder.getAppPath()}/version.json; SameSite=Strict; Secure; HttpOnly`
+			},
+			continue: true
+		});
+	}
+
+	routes.push({
+		handle: 'filesystem'
+	});
+
 	return {
 		version: 3,
-		routes: [
-			...prerendered_redirects,
-			{
-				src: `/${builder.getAppPath()}/immutable/.+`,
-				headers: {
-					'cache-control': 'public, immutable, max-age=31536000'
-				}
-			},
-			{
-				handle: 'filesystem'
-			}
-		],
+		routes,
 		overrides,
 		images
 	};
