@@ -12,7 +12,9 @@ test('navigating to a non-existent route renders the default error page', async 
 	expect(await page.textContent('h1')).toBe('404');
 });
 
-test('navigating to a non-existent route redirects if redirect in the root layout', async ({ page }) => {
+test('navigating to a non-existent route redirects if redirect in the root layout', async ({
+	page
+}) => {
 	await page.goto('/redirect');
 	expect(await page.textContent('h1')).toBe('home');
 });
