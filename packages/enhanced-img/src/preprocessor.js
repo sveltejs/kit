@@ -53,6 +53,10 @@ export function image(opts) {
 						.trim();
 					s.update(node.start, node.end, dynamic_img_to_picture(content, node, src_var_name));
 					return;
+				} else if (src_attribute.type === 'AttributeShorthand') {
+					const src_var_name = content.substring(src_attribute.start, src_attribute.end).trim();
+					s.update(node.start, node.end, dynamic_img_to_picture(content, node, src_var_name));
+					return;
 				}
 
 				const original_url = src_attribute.raw.trim();

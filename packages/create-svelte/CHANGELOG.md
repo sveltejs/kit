@@ -1,5 +1,11 @@
 # create-svelte
 
+## 6.0.10
+
+### Patch Changes
+
+- docs: update comment about path aliases ([#11788](https://github.com/sveltejs/kit/pull/11788))
+
 ## 6.0.9
 
 ### Patch Changes

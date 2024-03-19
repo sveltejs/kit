@@ -2,6 +2,7 @@
 	import manual_image1 from './no.png';
 	import manual_image2 from './no.svg';
 
+	const src = manual_image1;
 	const images = [manual_image1, manual_image2];
 
 	let foo: string = 'bar';
@@ -30,6 +31,8 @@
 <enhanced:img src="$lib/foo.png" alt="alias test" />
 
 <enhanced:img src="/src/foo.png" alt="absolute path test" />
+
+<enhanced:img {src} alt="attribute shorthand test" />
 
 <enhanced:img src="./foo.svg" alt="svg test" />
 
