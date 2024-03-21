@@ -121,6 +121,8 @@ Cloudflare Workers specific values in the `platform` property are emulated durin
 
 For testing the build, you should use [wrangler](https://developers.cloudflare.com/workers/cli-wrangler) **version 3**. Once you have built your site, run `wrangler dev`.
 
+Under the hood, `adapter-cloudflare-workers` uses [getPlatformProxy](https://developers.cloudflare.com/workers/wrangler/api/#getplatformproxy) from Wrangler API for `platform` emulation. Further configuration can be passed to `getPlatformProxy` via the `platformProxy` option in your adapter config.
+
 ## Troubleshooting
 
 ### Worker size limits

@@ -94,6 +94,8 @@ Cloudflare Workers specific values in the `platform` property are emulated durin
 
 For testing the build, you should use [wrangler](https://developers.cloudflare.com/workers/cli-wrangler) **version 3**. Once you have built your site, run `wrangler pages dev .svelte-kit/cloudflare`.
 
+Under the hood, `adapter-cloudflare` uses [getPlatformProxy](https://developers.cloudflare.com/workers/wrangler/api/#getplatformproxy) from Wrangler API for `platform` emulation. Further configuration can be passed to `getPlatformProxy` via the `platformProxy` option in your adapter config.
+
 ## Notes
 
 Functions contained in the `/functions` directory at the project's root will _not_ be included in the deployment, which is compiled to a [single `_worker.js` file](https://developers.cloudflare.com/pages/platform/functions/#advanced-mode). Functions should be implemented as [server endpoints](https://kit.svelte.dev/docs/routing#server) in your SvelteKit app.
