@@ -31,11 +31,10 @@ export const adapters = [
 		module: 'svelte-kit-sst',
 		version: '2'
 	},
-	// Add Node last since it might be present in other environments
 	{
-		name: 'Node',
-		test: () => !!process.env.NODE_ENV,
+		name: 'Google Cloud Buildpacks',
+		test: () => !!process.env.GCP_BUILDPACKS,
 		module: '@sveltejs/adapter-node',
-		version: '4'
+		version: '5'
 	}
 ];
