@@ -32,7 +32,7 @@ export const adapters = [
 		version: '2'
 	},
 	{
-		name: 'Google Cloud Buildpacks',
+		name: 'Google Cloud Run',
 		test: () => !!process.env.GCP_BUILDPACKS,
 		module: '@sveltejs/adapter-node',
 		version: '5'
