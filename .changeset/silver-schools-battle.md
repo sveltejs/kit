@@ -2,4 +2,4 @@
 "@sveltejs/kit": patch
 ---
 
-fix: handle redirects from the universal root layout for client-side navigations to a non-existent page
+fix: hhandle redirect thrown from root layout load when client-side navigating to a non-existent page
