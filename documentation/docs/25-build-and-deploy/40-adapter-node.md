@@ -132,6 +132,8 @@ The number of seconds to wait before forcefully closing any remaining connection
 
 When using systemd socket activation, `IDLE_TIMEOUT` specifies the number of seconds after which the app is automatically put to sleep when receiving no requests. If not set, the app runs continuously. See [Socket activation](#socket-activation) for more details.
 
+The body size variable can also specify unit suffixes for kilobytes (`K`), megabytes (`M`), and gigabytes (`G`). For example `512K` and `1M`
+
 ## Options
 
 The adapter can be configured with various options:
