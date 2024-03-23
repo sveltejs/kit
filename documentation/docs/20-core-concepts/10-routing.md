@@ -12,6 +12,19 @@ At the heart of SvelteKit is a _filesystem-based router_. The routes of your app
 
 Each route directory contains one or more _route files_, which can be identified by their `+` prefix.
 
+Summary of the routing files:
+
+| File name         | Role                                                            | Propagates to subdirectories | Runs on server | Runs on client |
+|-------------------|-----------------------------------------------------------------|:----------------------------:|:--------------:|:--------------:|
+| +page.svelte      | Creates an HTML page                                            |              ❌               |       ✅        |       ✅        |
+| +error.svelte     | Creates an HTML page to render HTTP errors                      |              ✅               |       ✅        |       ✅        |
+| +layout.svelte    | Creates an HTML layout                                          |              ✅               |       ✅        |       ✅        |
+| +page.js          | Provides data for the page via the `load()` function            |              ❌               |       ✅        |       ✅        |
+| +page.server.js   | API endpoint for this page, automatically called at page load   |              ❌               |       ✅        |       ❌        |
+| +server.js        | API endpoint                                                    |              ❌               |       ✅        |       ❌        |
+| +layout.js        | Provides data for the layout via the `load()` function          |              ✅               |       ✅        |       ✅        |
+| +layout.server.js | API endpoint for this layout, automatically called at page load |              ✅               |       ✅        |       ❌        |
+
 ## +page
 
 ### +page.svelte
