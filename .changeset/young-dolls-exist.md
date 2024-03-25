@@ -2,4 +2,4 @@
 "@sveltejs/adapter-auto": minor
 ---
 
-add Google Cloud Run to adapter-auto
+feat: add support for Google Cloud Run to adapter-auto
