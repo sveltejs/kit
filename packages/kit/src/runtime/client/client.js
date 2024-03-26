@@ -105,7 +105,7 @@ export const stores = {
 	url: /* @__PURE__ */ notifiable_store({}),
 	page: /* @__PURE__ */ notifiable_store({}),
 	navigating: /* @__PURE__ */ writable(
-		/** @type {import('@sveltejs/kit').Navigation | null} */ (null)
+		/** @type {import('@sveltejs/kit').Navigation | null} */(null)
 	),
 	updated: /* @__PURE__ */ create_updated_store()
 };
@@ -143,10 +143,10 @@ function clear_onward_history(current_history_index, current_navigation_index) {
  */
 function native_navigation(url) {
 	location.href = url.href;
-	return new Promise(() => {});
+	return new Promise(() => { });
 }
 
-function noop() {}
+function noop() { }
 
 /** @type {import('types').CSRRoute[]} */
 let routes;
@@ -302,7 +302,7 @@ async function _invalidate() {
 	// Accept all invalidations as they come, don't swallow any while another invalidation
 	// is running because subsequent invalidations may make earlier ones outdated,
 	// but batch multiple synchronous invalidations.
-	await (pending_invalidate ||= Promise.resolve());
+	await (pending_invalidate || Promise.resolve());
 	if (!pending_invalidate) return;
 	pending_invalidate = null;
 
@@ -604,7 +604,7 @@ async function load_node({ loader, parent, url, params, route, server_data_node 
 		/** @param {string[]} deps */
 		function depends(...deps) {
 			for (const dep of deps) {
-				if (DEV) validate_depends(/** @type {string} */ (route.id), dep);
+				if (DEV) validate_depends(/** @type {string} */(route.id), dep);
 
 				const { href } = new URL(dep, url);
 				uses.dependencies.add(href);
@@ -624,7 +624,7 @@ async function load_node({ loader, parent, url, params, route, server_data_node 
 			params: new Proxy(params, {
 				get: (target, key) => {
 					if (is_tracking) {
-						uses.params.add(/** @type {string} */ (key));
+						uses.params.add(/** @type {string} */(key));
 					}
 					return target[/** @type {string} */ (key)];
 				}
@@ -692,7 +692,7 @@ async function load_node({ loader, parent, url, params, route, server_data_node 
 					? subsequent_fetch(requested, resolved.href, init)
 					: initial_fetch(requested, init);
 			},
-			setHeaders: () => {}, // noop
+			setHeaders: () => { }, // noop
 			depends,
 			parent() {
 				if (is_tracking) {
@@ -716,14 +716,13 @@ async function load_node({ loader, parent, url, params, route, server_data_node 
 				data = (await node.universal.load.call(null, load_input)) ?? null;
 				if (data != null && Object.getPrototypeOf(data) !== Object.prototype) {
 					throw new Error(
-						`a load function related to route '${route.id}' returned ${
-							typeof data !== 'object'
-								? `a ${typeof data}`
-								: data instanceof Response
-									? 'a Response object'
-									: Array.isArray(data)
-										? 'an array'
-										: 'a non-plain object'
+						`a load function related to route '${route.id}' returned ${typeof data !== 'object'
+							? `a ${typeof data}`
+							: data instanceof Response
+								? 'a Response object'
+								: Array.isArray(data)
+									? 'an array'
+									: 'a non-plain object'
 						}, but must return a plain object at the top level (i.e. \`return {...}\`)`
 					);
 				}
@@ -856,8 +855,8 @@ async function load_route({ id, invalidating, url, params, route, preload }) {
 	// preload modules to avoid waterfall, but handle rejections
 	// so they don't get reported to Sentry et al (we don't need
 	// to act on the failures at this point)
-	errors.forEach((loader) => loader?.().catch(() => {}));
-	loaders.forEach((loader) => loader?.[1]().catch(() => {}));
+	errors.forEach((loader) => loader?.().catch(() => { }));
+	loaders.forEach((loader) => loader?.[1]().catch(() => { }));
 
 	/** @type {import('types').ServerNodesResponse | import('types').ServerRedirectNode | null} */
 	let server_data = null;
@@ -967,7 +966,7 @@ async function load_route({ id, invalidating, url, params, route, preload }) {
 	});
 
 	// if we don't do this, rejections will be unhandled
-	for (const p of branch_promises) p.catch(() => {});
+	for (const p of branch_promises) p.catch(() => { });
 
 	/** @type {Array<import('./types.js').BranchNode | undefined>} */
 	const branch = [];
@@ -997,7 +996,7 @@ async function load_route({ id, invalidating, url, params, route, preload }) {
 				/** @type {App.Error} */
 				let error;
 
-				if (server_data_nodes?.includes(/** @type {import('types').ServerErrorNode} */ (err))) {
+				if (server_data_nodes?.includes(/** @type {import('types').ServerErrorNode} */(err))) {
 					// this is the server error rethrown above, reconstruct but don't invoke
 					// the client error handler; it should've already been handled on the server
 					status = /** @type {import('types').ServerErrorNode} */ (err).status ?? status;
@@ -1386,10 +1385,10 @@ async function navigate({
 		const after_navigate = (
 			await Promise.all(
 				on_navigate_callbacks.map((fn) =>
-					fn(/** @type {import('@sveltejs/kit').OnNavigate} */ (nav.navigation))
+					fn(/** @type {import('@sveltejs/kit').OnNavigate} */(nav.navigation))
 				)
 			)
-		).filter(/** @returns {value is () => void} */ (value) => typeof value === 'function');
+		).filter(/** @returns {value is () => void} */(value) => typeof value === 'function');
 
 		if (after_navigate.length > 0) {
 			function cleanup() {
@@ -1457,7 +1456,7 @@ async function navigate({
 	nav.fulfil(undefined);
 
 	after_navigate_callbacks.forEach((fn) =>
-		fn(/** @type {import('@sveltejs/kit').AfterNavigate} */ (nav.navigation))
+		fn(/** @type {import('@sveltejs/kit').AfterNavigate} */(nav.navigation))
 	);
 
 	stores.navigating.set(null);
@@ -1517,7 +1516,7 @@ function setup_preload() {
 
 	/** @param {Event} event */
 	function tap(event) {
-		preload(/** @type {Element} */ (event.composedPath()[0]), 1);
+		preload(/** @type {Element} */(event.composedPath()[0]), 1);
 	}
 
 	container.addEventListener('mousedown', tap);
@@ -1527,7 +1526,7 @@ function setup_preload() {
 		(entries) => {
 			for (const entry of entries) {
 				if (entry.isIntersecting) {
-					_preload_code(/** @type {HTMLAnchorElement} */ (entry.target).href);
+					_preload_code(/** @type {HTMLAnchorElement} */(entry.target).href);
 					observer.unobserve(entry.target);
 				}
 			}
@@ -1557,9 +1556,9 @@ function setup_preload() {
 							if (result.type === 'loaded' && result.state.error) {
 								console.warn(
 									`Preloading data for ${intent.url.pathname} failed with the following error: ${result.state.error.message}\n` +
-										'If this error is transient, you can ignore it. Otherwise, consider disabling preloading for this route. ' +
-										'This route was preloaded due to a data-sveltekit-preload-data attribute. ' +
-										'See https://kit.svelte.dev/docs/link-options for more info'
+									'If this error is transient, you can ignore it. Otherwise, consider disabling preloading for this route. ' +
+									'This route was preloaded due to a data-sveltekit-preload-data attribute. ' +
+									'See https://kit.svelte.dev/docs/link-options for more info'
 								);
 							}
 						});
@@ -1568,7 +1567,7 @@ function setup_preload() {
 					}
 				}
 			} else if (priority <= options.preload_code) {
-				_preload_code(/** @type {URL} */ (url).pathname);
+				_preload_code(/** @type {URL} */(url).pathname);
 			}
 		}
 	}
@@ -1588,7 +1587,7 @@ function setup_preload() {
 			}
 
 			if (options.preload_code === PRELOAD_PRIORITIES.eager) {
-				_preload_code(/** @type {URL} */ (url).pathname);
+				_preload_code(/** @type {URL} */(url).pathname);
 			}
 		}
 	}
@@ -2033,7 +2032,7 @@ function _start_router() {
 		if (event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
 		if (event.defaultPrevented) return;
 
-		const a = find_anchor(/** @type {Element} */ (event.composedPath()[0]), container);
+		const a = find_anchor(/** @type {Element} */(event.composedPath()[0]), container);
 		if (!a) return;
 
 		const { url, external, target, download } = get_link_info(a, base);
@@ -2595,7 +2594,7 @@ function create_navigation(current, intent, url, type) {
 	});
 
 	// Handle any errors off-chain so that it doesn't show up as an unhandled rejection
-	complete.catch(() => {});
+	complete.catch(() => { });
 
 	/** @type {import('@sveltejs/kit').Navigation} */
 	const navigation = {
