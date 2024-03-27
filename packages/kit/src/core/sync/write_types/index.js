@@ -4,6 +4,7 @@ import MagicString from 'magic-string';
 import { posixify, rimraf, walk } from '../../../utils/filesystem.js';
 import { compact } from '../../../utils/array.js';
 import { ts } from '../ts.js';
+import { dedent } from '../utils.js';
 
 /**
  *  @typedef {{
@@ -335,7 +336,41 @@ function update_types(config, routes, route, to_delete = new Set()) {
 	}
 
 	if (route.endpoint) {
+		// get the from/to for the proxy
+		const from = path_to_original(outdir, route.endpoint.file);
+		// We have to find out which methods are available/exported on the endpoint.
+		const proxy = createProxy(route.endpoint.file, 'endpoint');
+
+		if(proxy) {
+			// For each exported method, we create a type that represents the function signature.
+			exports.push('export type APIReturnType<T = any> = T extends (...args: any[]) => Promise<TypedResponse<infer O>> ? Promise<O> : never;');
+
+			exports.push(dedent`
+				declare module '$api' {
+					${proxy.exports.map((method) => dedent`
+					export function api_fetch(
+						url: RouteId,
+						options: FetchOptions<RouteParams, "${method}">
+					): APIReturnType<typeof import('${from}').${method}>;`
+				).join('\n')}
+				}`);
+		}
+
+
 		exports.push('export type RequestHandler = Kit.RequestHandler<RouteParams, RouteId>;');
+		exports.push(dedent`
+			interface TypedResponse<O> extends Response {
+				json(): Promise<O>;
+			}
+			type Methods = "GET" | "POST" | "PUT" | "DELETE" | "HEAD" | "OPTIONS" | "PATCH";
+			type FetchOptions<
+				Params = never,
+				Method extends Methods = Methods
+			> = Parameters<typeof fetch>[1] & {
+					params: Params,
+					method: Method
+				}
+		`)
 	}
 
 	if (route.leaf?.server || route.layout?.server || route.endpoint) {
@@ -502,21 +537,21 @@ function process_node(node, outdir, is_page, proxies, all_pages_have_load = true
  */
 function ensureProxies(node, proxies) {
 	if (node.server && !proxies.server) {
-		proxies.server = createProxy(node.server, true);
+		proxies.server = createProxy(node.server, 'page.server');
 	}
 
 	if (node.universal && !proxies.universal) {
-		proxies.universal = createProxy(node.universal, false);
+		proxies.universal = createProxy(node.universal, 'page');
 	}
 }
 
 /**
  * @param {string} file_path
- * @param {boolean} is_server
+ * @param {"page.server" | "page" | "endpoint"} type
  * @returns {Proxy}
  */
-function createProxy(file_path, is_server) {
-	const proxy = tweak_types(fs.readFileSync(file_path, 'utf8'), is_server);
+function createProxy(file_path, type) {
+	const proxy = tweak_types(fs.readFileSync(file_path, 'utf8'), type);
 	if (proxy) {
 		return {
 			...proxy,
@@ -600,11 +635,24 @@ function generate_params_type(params, outdir, config) {
 
 /**
  * @param {string} content
- * @param {boolean} is_server
+ * @param {"page" | "page.server" | "endpoint"} type
  * @returns {Omit<NonNullable<Proxy>, 'file_name'> | null}
  */
-export function tweak_types(content, is_server) {
-	const names = new Set(is_server ? ['load', 'actions'] : ['load']);
+export function tweak_types(content, type) {
+	/** @type {Set<string>} */
+	let names;
+
+	switch (type) {
+		case 'page.server':
+			names = new Set(['load', 'actions']);
+			break;
+		case 'page':
+			names = new Set(['load']);
+			break;
+		case 'endpoint':
+			names = new Set(['GET', 'POST', 'PUT', 'DELETE', 'HEAD', 'OPTIONS', 'PATCH']);
+			break;
+	}
 
 	try {
 		let modified = false;
@@ -754,7 +802,7 @@ export function tweak_types(content, is_server) {
 							modified = true;
 						}
 					} else if (
-						is_server &&
+						type === 'page.server' &&
 						ts.isIdentifier(declaration.name) &&
 						declaration.name?.text === 'actions' &&
 						declaration.initializer
