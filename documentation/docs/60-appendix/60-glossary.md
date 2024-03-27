@@ -10,6 +10,10 @@ Client-side rendering (CSR) is the generation of the page contents in the web br
 
 In SvelteKit, client-side rendering will be used by default, but you can turn off JavaScript with [the `csr = false` page option](page-options#csr).
 
+## Hybrid app
+
+SvelteKit uses a hybrid rendering mode by default where it loads the initial HTML from the server (SSR) and the updates the page contents on subsequent navigations via client-side rendering (CSR).
+
 ## Hydration
 
 Svelte components store some state and update the DOM when the state is updated. When fetching data during SSR, by default SvelteKit will store this data and transmit it to the client along with the server-rendered HTML. The components can then be initialized on the client with that data without having to call the same API endpoints again. Svelte will then check that the DOM is in the expected state and attach event listeners in a process called hydration. Once the components are fully hydrated, they can react to changes to their properties just like any newly created Svelte component.
@@ -34,9 +38,9 @@ In SvelteKit, client-side routing will be used by default, but you can skip it w
 
 ## SPA
 
-A single-page app (SPA) is an application in which all requests to the server load a single HTML file which then does client-side rendering of the requested contents based on the requested URL. All navigation is handled on the client-side in a process called client-side routing with per-page contents being updated and common layout elements remaining largely unchanged. SPAs do not provide SSR, which has the shortcoming described above. However, some applications are not greatly impacted by these shortcomings such as a complex business application behind a login where SEO would not be important and it is known that users will be accessing the application from a consistent computing environment.
+A single-page app (SPA) is an application in which all requests to the server load a single HTML file which then does client-side rendering based on the requested URL. All navigation is handled on the client-side in a process called client-side routing with per-page contents being updated and common layout elements remaining largely unchanged. Throughout this site, when we refer to a SPA we use this definition where a SPA simply serves an empty shell on the initial request. It should not be confused with a [hybrid app](#hybrid-app), which serves HTML on the initial request. It has a large performance impact by forcing two network round trips before rendering can begin. Because SPA mode has large negative performance and SEO impacts, it is recommended only in very limited circumstances such as when being wrapped in a mobile app.
 
-In SvelteKit, you can [build an SPA with `adapter-static`](single-page-apps).
+In SvelteKit, you can [build SPAs with `adapter-static`](single-page-apps).
 
 ## SSG
 
@@ -46,6 +50,6 @@ In SvelteKit, you can do static site generation by using [`adapter-static`](adap
 
 ## SSR
 
-Server-side rendering (SSR) is the generation of the page contents on the server. SSR is generally preferred for SEO. While some search engines can index content that is dynamically generated on the client-side it may take longer even in these cases. It also tends to improve perceived performance and makes your app accessible to users if JavaScript fails or is disabled (which happens [more often than you probably think](https://kryogenix.org/code/browser/everyonehasjs.html)).
+Server-side rendering (SSR) is the generation of the page contents on the server. Returning the page contents from the server via SSR (including with prerendering) is highly preferred for performance and SEO. It drastically improves performance by avoiding the introduction of an extra round trip necessary in a SPA and makes your app accessible to users if JavaScript fails or is disabled (which happens [more often than you probably think](https://kryogenix.org/code/browser/everyonehasjs.html)). While some search engines can index content that is dynamically generated on the client-side it is likely to take longer even in these cases.
 
 In SvelteKit, pages are server-side rendered by default. You can disable SSR with [the `ssr` page option](https://kit.svelte.dev/docs/page-options#ssr).
