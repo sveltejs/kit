@@ -1,12 +1,11 @@
-/package
-node_modules
-
 # Output
 /.svelte-kit
 /build
 /dist
+/package
 
-# Lockfiles
+# Package Managers
+node_modules
 package-lock.json
 pnpm-lock.yaml
 yarn.lock
