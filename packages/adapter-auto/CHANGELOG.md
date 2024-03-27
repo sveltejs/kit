@@ -1,5 +1,11 @@
 # @sveltejs/adapter-auto
 
+## 3.2.0
+
+### Minor Changes
+
+- feat: add support for Google Cloud Run ([#12015](https://github.com/sveltejs/kit/pull/12015))
+
 ## 3.1.1
 
 ### Patch Changes
