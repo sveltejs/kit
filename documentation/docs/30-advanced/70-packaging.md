@@ -126,6 +126,31 @@ This is a legacy field that enabled tooling to recognise Svelte component librar
 }
 ```
 
+### sideEffects
+
+The `sideEffects` option is used by bundlers to determine if a module may contain code that has side effects. A module is considered to have "side effects" if it makes changes that are observable from other scripts outside the module when it's imported; such as modifying global variables or the prototype of built-in JavaScript objects. Because a side effect could potentially affect the behavior of other parts of the application, these files/modules will be included in the final bundle regardless of whether their exports are used in the application.
+
+By adding `"sideEffects": false` in `package.json`, you're signaling to the bundler that your package doesn't include any modules with side effects. This information can help the bundler to be more aggressive in eliminating unused exports from the final bundle, a process known as tree-shaking. This results in smaller and more efficient bundles. 
+
+> In the case of a Svelte component library, this prevents CSS from components that are not being used from being included in the final build.
+
+```json
+/// file: package.json
+{
+	"sideEffects": false
+}
+
+Make sure that `"sideEffects"` is correctly set. If a file with side effects is incorrectly marked as having no side effects, it can result in broken functionality. If your package has files with side effects, you can specify them in an array:
+
+```json
+/// file: package.json
+{
+    "sideEffects": ["./src/sideEffectfulFile.js"]
+}
+```
+
+This will treat only the specified files as having side effects.
+
 ## TypeScript
 
 You should ship type definitions for your library even if you don't use TypeScript yourself so that people who do get proper intellisense when using your library. `@sveltejs/package` makes the process of generating types mostly opaque to you. By default, when packaging your library, type definitions are auto-generated for JavaScript, TypeScript and Svelte files. All you need to ensure is that the `types` condition in the [exports](#anatomy-of-a-package-json-exports) map points to the correct files. When initialising a library project through `npm create svelte@latest`, this is automatically setup for the root export.
