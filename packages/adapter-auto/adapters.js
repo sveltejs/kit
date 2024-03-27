@@ -30,5 +30,11 @@ export const adapters = [
 		test: () => !!process.env.SST,
 		module: 'svelte-kit-sst',
 		version: '2'
+	},
+	{
+		name: 'Google Cloud Run',
+		test: () => !!process.env.GCP_BUILDPACKS,
+		module: '@sveltejs/adapter-node',
+		version: '5'
 	}
 ];
