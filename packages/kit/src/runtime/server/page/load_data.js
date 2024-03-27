@@ -263,6 +263,9 @@ export function create_universal_fetch(event, state, fetched, csr, resolve_opts)
 			}
 		}
 
+		/** @type {ReadableStream<Uint8Array>} */
+		let teed_body;
+
 		const proxy = new Proxy(response, {
 			get(response, key, _receiver) {
 				/**
@@ -292,6 +295,37 @@ export function create_universal_fetch(event, state, fetched, csr, resolve_opts)
 						response,
 						is_b64
 					});
+				}
+
+				if (key === 'body') {
+					if (teed_body) return teed_body;
+					const body = response.body;
+					if (!body) return body;
+					const [a, b] = body.tee();
+					let buffer = new Uint8Array();
+					const reader = a.getReader();
+					/**
+					 * @param {{
+					 * 	done: boolean
+					 * 	value?: Uint8Array
+					 * }} opts
+					 */
+					function buffer_to_fetched({ done, value }) {
+						if (done) {
+							if (dependency) {
+								dependency.body = new Uint8Array(buffer);
+							}
+							push_fetched(b64_encode(buffer), true);
+						} else if (value) {
+							const newBuffer = new Uint8Array(buffer.length + value.length);
+							newBuffer.set(buffer, 0);
+							newBuffer.set(value, buffer.length);
+							buffer = newBuffer;
+							reader.read().then(buffer_to_fetched);
+						}
+					}
+					reader.read().then(buffer_to_fetched);
+					return (teed_body = b);
 				}
 
 				if (key === 'arrayBuffer') {
