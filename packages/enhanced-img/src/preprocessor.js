@@ -46,8 +46,9 @@ export function image(opts) {
 			 * @returns {Promise<void>}
 			 */
 			async function update_element(node, src_attribute) {
+				const { expression } = src_attribute;
 				// TODO: this will become ExpressionTag in Svelte 5
-				if (src_attribute.type === 'MustacheTag') {
+				if (src_attribute.type === 'MustacheTag' && expression.type !== 'Literal' && expression.type !== 'TemplateLiteral') {
 					const src_var_name = content
 						.substring(src_attribute.start + 1, src_attribute.end - 1)
 						.trim();
@@ -59,7 +60,17 @@ export function image(opts) {
 					return;
 				}
 
-				const original_url = src_attribute.raw.trim();
+				let original_url = '';
+				if (src_attribute.type === 'Text') {
+					original_url = src_attribute.raw.trim();
+				} else if (expression.type === 'Literal') {
+					original_url = expression.value.trim();
+				} else if (expression.type === 'TemplateLiteral') {
+					throw new Error(`Template literals are not supported in src attributes. Please use a string literal or a dynamically imported image.`);
+				} else {
+					throw new Error(`Could not locate image. Please ensure that the src attribute contains a dynamically imported image or a string literal pointing to one.`);
+				}
+
 				let url = original_url;
 
 				const sizes = get_attr_value(node, 'sizes');

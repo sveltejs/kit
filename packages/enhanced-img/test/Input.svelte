@@ -6,6 +6,9 @@
 	const images = [manual_image1, manual_image2];
 
 	let foo: string = 'bar';
+	let imagePath: string = './foo.png';
+	let imageName: string = 'foo';
+	let imageExt: string = 'png';
 </script>
 
 {foo}
@@ -13,6 +16,15 @@
 <img src="./foo.png" alt="non-enhanced test" />
 
 <enhanced:img src="./foo.png" alt="basic test" />
+
+<enhanced:img src={'./foo.png'} alt="basic test passing src as literal" />
+
+<enhanced:img src={imagePath} alt="basic test passing src by variable" />
+
+<enhanced:img
+	src={`./${imageName}.${imageExt}`}
+	alt="basic test passing src using template literal"
+/>
 
 <enhanced:img src="./foo.png" width="5" height="10" alt="dimensions test" />
 
