@@ -71,21 +71,25 @@ Note that an optional route parameter cannot follow a rest parameter (`[...rest]
 
 ## Matching
 
-A route like `src/routes/archive/[page]` would match `/archive/3`, but it would also match `/archive/potato`. We don't want that. You can ensure that route parameters are well-formed by adding a _matcher_ — which takes the parameter string (`"3"` or `"potato"`) and returns `true` if it is valid — to your [`params`](configuration#files) directory...
+A route like `src/routes/fruits/[page]` would match `/fruits/apple`, but it would also match `/fruits/carrot`. We don't want that. You can ensure that route parameters are well-formed by adding a _matcher_ — which takes the parameter string (`"apple"` or `"carrot"`) and returns `true` if it is valid — to your [`params`](configuration#files) directory...
 
 ```js
-/// file: src/params/integer.js
-/** @type {import('@sveltejs/kit').ParamMatcher} */
+/// file: src/params/fruit.js
+/**
+ * @param {string} param
+ * @return {param is ('apple' | 'orange')}
+ * @satisfies {import('@sveltejs/kit').ParamMatcher}
+ */
 export function match(param) {
-	return /^\d+$/.test(param);
+	return param === 'apple' || param === 'orange';
 }
 ```
 
 ...and augmenting your routes:
 
 ```diff
--src/routes/archive/[page]
-+src/routes/archive/[page=integer]
+-src/routes/fruits/[page]
++src/routes/fruits/[page=fruit]
 ```
 
 If the pathname doesn't match, SvelteKit will try to match other routes (using the sort order specified below), before eventually returning a 404.
