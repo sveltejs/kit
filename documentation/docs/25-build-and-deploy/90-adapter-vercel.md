@@ -90,7 +90,7 @@ export default {
 
 Vercel supports [Incremental Static Regeneration](https://vercel.com/docs/concepts/incremental-static-regeneration/overview) (ISR), which provides the performance and cost advantages of prerendered content with the flexibility of dynamically rendered content.
 
-To add ISR to a route, include the `isr` property in your `config` object:
+To add ISR to a `*.server` route, include the `isr` property in your `config` object:
 
 ```js
 /// file: blog/[slug]/+page.server.js
@@ -123,6 +123,28 @@ export const config = {
 ```
 
 The `expiration` property is required; all others are optional.
+
+Note that the `BYPASS_TOKEN` string must be at least 32 characters long and can be tested using `curl` from a command line like so:
+
+```console
+$ curl -i -H "x-prerender-revalidate: some_unique_32+_character_string" https://yourapp.vercel.app/someroute
+```
+
+For the token value, you could generate a random 32 character string using the JavaScript console like so:
+
+```console
+btoa(Math.random().toString()).substring(0,32);
+```
+
+Set this string as an environment variable on Vercel by logging in and going to your project then Settings > Environment Variables. For "Key" put `BYPASS_TOKEN` and for "value" use the string generated above, then hit "Save".
+
+To get this key known about for local development, you can use the [Vercel CLI](https://vercel.com/docs/cli/env) by running the `vercel env pull` command locally like so:
+
+```console
+$ vercel env pull .env.development.local
+```
+
+Note that for routes that ISR enabled, that the `export const prerender = false;` will have no effect; the route will always be prerendered at deploy time and `load` functions will not rerun until a subsquent deploy (to prerender that route again) or until that route is hit with the correct `x-prerender-revalidate` header or `__prerender_bypass` cookie set to the unique string value set for the `BYPASS_TOKEN`.
 
 ## Environment variables
 
