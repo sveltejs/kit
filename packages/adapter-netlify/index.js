@@ -128,7 +128,9 @@ async function generate_edge_functions({ builder }) {
 	const path = '/*';
 	const excludedPath = [
 		// Contains static files
-		`/${builder.getAppPath()}/*`
+		`/${builder.getAppPath()}/*`,
+		// Should not be served by SvelteKit at all
+		'/.netlify/*'
 	];
 
 	/** @type {HandlerManifest} */
