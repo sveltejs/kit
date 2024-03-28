@@ -20,4 +20,5 @@
 <button data-id="invalidate" on:click={invalidateAll}>invalidate all</button>
 
 <p>active: {$page.state.active ?? false}</p>
+<div class="route_id">route.id: {$page.route.id}</div>
 <span>{data.now}</span>

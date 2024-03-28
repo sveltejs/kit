@@ -1877,10 +1877,12 @@ export function pushState(url, state) {
 		[STATES_KEY]: state
 	};
 
-	history.pushState(opts, '', resolve_url(url));
+	const url_object = resolve_url(url);
+
+	history.pushState(opts, '', url_object);
 	has_navigated = true;
 
-	page = { ...page, state };
+	page = { ...page, state, url: url_object, route: { id: url_object.pathname } };
 	root.$set({ page });
 
 	clear_onward_history(current_history_index, current_navigation_index);
@@ -1915,9 +1917,11 @@ export function replaceState(url, state) {
 		[STATES_KEY]: state
 	};
 
-	history.replaceState(opts, '', resolve_url(url));
+	const url_object = resolve_url(url);
 
-	page = { ...page, state };
+	history.replaceState(opts, '', url_object);
+
+	page = { ...page, state, url: url_object, route: { id: url_object.pathname } };
 	root.$set({ page });
 }
 
