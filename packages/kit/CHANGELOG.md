@@ -1,5 +1,11 @@
 # @sveltejs/kit
 
+## 2.5.5
+
+### Patch Changes
+
+- fix: only hydrate when page is server-rendered ([#12050](https://github.com/sveltejs/kit/pull/12050))
+
 ## 2.5.4
 
 ### Patch Changes
