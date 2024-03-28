@@ -22,6 +22,9 @@ const config = {
 			serviceWorker: 'source/service-worker'
 		},
 		appDir: '_wheee',
+		importMap: {
+			enabled: true
+		},
 		inlineStyleThreshold: 1024,
 		outDir: '.custom-out-dir',
 		output: {

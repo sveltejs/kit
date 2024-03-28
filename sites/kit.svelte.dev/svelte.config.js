@@ -7,6 +7,10 @@ const config = {
 			runtime: 'edge'
 		}),
 
+		importMap: {
+			enabled: true
+		},
+
 		paths: {
 			relative: true
 		}

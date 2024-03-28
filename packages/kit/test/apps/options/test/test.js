@@ -312,3 +312,30 @@ test.describe('Routing', () => {
 		await expect(page.locator('h2')).toHaveText('target: 0');
 	});
 });
+
+test.describe('import maps', () => {
+	test('generates an import map', async ({ page, request }) => {
+		await page.goto('/path-base');
+
+		if (process.env.DEV) {
+			expect(await page.locator('script[type="importmap"]').count()).toBe(0);
+		} else {
+			const json = await page.locator('script[type="importmap"]').first().textContent();
+			expect(json).toContain('"imports"');
+
+			const map = JSON.parse(json);
+			for (const pathname of Object.values(map.imports)) {
+				const response = await request.get(pathname);
+				const js = await response.text();
+
+				// check that imports are not relative
+				const pattern = /(from ?|import ?|import\()(['"])(.+?)\2/g;
+				let match;
+				while ((match = pattern.exec(js))) {
+					const [, , , path] = match;
+					expect(path).not.toMatch(/^\./);
+				}
+			}
+		}
+	});
+});
