@@ -51,6 +51,8 @@ export default defineConfig({
 });
 ```
 
+Building will take longer on the first build due to the computational expense of transforming images. However, the build output will be cached in `./node_modules/.cache/imagetools` so that subsequent builds will be fast.
+
 ### Basic usage
 
 Use in your `.svelte` components by using `<enhanced:img>` rather than `<img>` and referencing the image file with a [Vite asset import](https://vitejs.dev/guide/assets.html#static-asset-handling) path:
@@ -151,4 +153,3 @@ CDNs can generally be used without any need for a library. However, there are a 
 - Give the image a container or styling so that it is constrained and does not jump around while the page is loading affecting your [cumulative layout shift (CLS)](https://web.dev/articles/cls). `width` and `height` help the browser to reserve space while the image is still loading, so `@sveltejs/enhanced-img` will add a `width` and `height` for you.
 - Always provide a good `alt` text. The Svelte compiler will warn you if you don't do this.
 - Do not use `em` or `rem` in `sizes` and change the default size of these measures. When used in `sizes` or `@media` queries, `em` and `rem` are both defined to mean the user's default `font-size`. For a `sizes` declaration like `sizes="(min-width: 768px) min(100vw, 108rem), 64rem"`, the actual `em` or `rem` that controls how the image is laid out on the page can be different if changed by CSS. For example, do not do something like `html { font-size: 62.5%; }` as the slot reserved by the browser preloader will now end up being larger than the actual slot of the CSS object model once it has been created.
-
