@@ -419,8 +419,9 @@ async function _preload_code(pathname) {
 /**
  * @param {import('./types.js').NavigationFinished} result
  * @param {HTMLElement} target
+ * @param {boolean} hydrate
  */
-function initialize(result, target) {
+function initialize(result, target, hydrate) {
 	if (DEV && result.state.error && document.querySelector('vite-error-overlay')) return;
 
 	current = result.state;
@@ -433,7 +434,7 @@ function initialize(result, target) {
 	root = new app.root({
 		target,
 		props: { ...result.props, stores, components },
-		hydrate: true
+		hydrate
 	});
 
 	restore_snapshot(current_navigation_index);
@@ -1406,7 +1407,7 @@ async function navigate({
 		root.$set(navigation_result.props);
 		has_navigated = true;
 	} else {
-		initialize(navigation_result, target);
+		initialize(navigation_result, target, false);
 	}
 
 	const { activeElement } = document;
@@ -2382,7 +2383,7 @@ async function _hydrate(
 		result.props.page.state = {};
 	}
 
-	initialize(result, target);
+	initialize(result, target, true);
 }
 
 /**
