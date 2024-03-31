@@ -1,5 +1,11 @@
 # @sveltejs/enhanced-img
 
+## 0.2.0
+
+### Minor Changes
+
+- feat: upgrade vite-imagetools to v7. caches build output by default ([#12055](https://github.com/sveltejs/kit/pull/12055))
+
 ## 0.1.9
 
 ### Patch Changes
