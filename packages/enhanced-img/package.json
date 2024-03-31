@@ -28,7 +28,7 @@
 	"dependencies": {
 		"magic-string": "^0.30.5",
 		"svelte-parse-markup": "^0.1.2",
-		"vite-imagetools": "^7.0.0"
+		"vite-imagetools": "^7.0.1"
 	},
 	"devDependencies": {
 		"@types/estree": "^1.0.5",

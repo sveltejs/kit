@@ -380,8 +380,8 @@ importers:
         specifier: ^0.1.2
         version: 0.1.2(svelte@4.2.10)
       vite-imagetools:
-        specifier: ^7.0.0
-        version: 7.0.0(rollup@4.9.6)
+        specifier: ^7.0.1
+        version: 7.0.1(rollup@4.9.6)
     devDependencies:
       '@types/estree':
         specifier: ^1.0.5
@@ -6936,8 +6936,8 @@ packages:
       spdx-expression-parse: 3.0.1
     dev: true
 
-  /vite-imagetools@7.0.0(rollup@4.9.6):
-    resolution: {integrity: sha512-RNCW15Z/m5Y6HJROH8F7yQsqAy1//aJwIQI4Rffaf5rXJCrx/YPO0FV71w95rH6rmNW0S40gttXnd+zPx4m3rQ==}
+  /vite-imagetools@7.0.1(rollup@4.9.6):
+    resolution: {integrity: sha512-23jnLhkTH0HR9Vd9LxMYnajOLeo0RJNEAHhtlsQP6kfPuOBoTzt54rWbEWB9jmhEXAOflLQpM+FrmilVPAoyGA==}
     engines: {node: '>=18.0.0'}
     dependencies:
       '@rollup/pluginutils': 5.1.0(rollup@4.9.6)

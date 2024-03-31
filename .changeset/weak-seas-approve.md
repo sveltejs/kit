@@ -2,4 +2,4 @@
 "@sveltejs/enhanced-img": minor
 ---
 
-chore(deps): upgrade vite-imagetools to v7
+feat: upgrade vite-imagetools to v7. caches build output by default
