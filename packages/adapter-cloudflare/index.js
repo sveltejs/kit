@@ -74,7 +74,7 @@ export default function (options = {}) {
 			try {
 				const result = await esbuild.build({
 					platform: 'browser',
-					conditions: ['worker', 'browser'],
+					conditions: ['workerd', 'worker', 'browser'],
 					sourcemap: 'linked',
 					target: 'es2022',
 					entryPoints: [`${tmp}/_worker.js`],
