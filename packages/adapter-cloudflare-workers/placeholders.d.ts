@@ -7,6 +7,7 @@ declare module 'MANIFEST' {
 
 	export const manifest: SSRManifest;
 	export const prerendered: Map<string, { file: string }>;
+	export const base_path: string;
 }
 
 declare module '__STATIC_CONTENT_MANIFEST' {

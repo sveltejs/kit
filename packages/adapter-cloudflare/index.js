@@ -52,7 +52,7 @@ export default function (options = {}) {
 				`${tmp}/manifest.js`,
 				`export const manifest = ${builder.generateManifest({ relativePath })};\n\n` +
 					`export const prerendered = new Set(${JSON.stringify(builder.prerendered.paths)});\n\n` +
-					`export const app_path = ${JSON.stringify(builder.getAppPath())};\n`
+					`export const base_path = ${JSON.stringify(builder.config.kit.paths.base)};\n`
 			);
 
 			writeFileSync(
@@ -193,7 +193,7 @@ function get_routes_json(builder, assets, { include = ['/*'], exclude = ['<all>'
 								file === '_redirects'
 							)
 					)
-					.map((file) => `/${file}`);
+					.map((file) => `${builder.config.kit.paths.base}/${file}`);
 			}
 
 			if (rule === '<prerendered>') {
