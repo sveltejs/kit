@@ -3,4 +3,4 @@
 "@sveltejs/adapter-cloudflare": patch
 ---
 
-add `workerd` condition to cloudflare worker file build
+fix: add `workerd` to esbuild conditions
