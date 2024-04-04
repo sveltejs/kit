@@ -51,10 +51,10 @@ export function strip_lang_tags(content) {
 			// Things like application/ld+json should be kept as-is. Preprocessed languages are "ts" etc.
 			// Svelte 5 deals with TypeScript natively, and in the template, too, therefore keep it in.
 			// Not removing it would mean Svelte parses without its TS plugin and then runs into errors.
-			(match, s1, s2, _, s4) =>
-				s4?.startsWith('application/') || (is_svelte_5_plus && s4 === 'ts')
+			(match, comment, tag_open, _, type) =>
+				type?.startsWith('application/') || (is_svelte_5_plus && type === 'ts')
 					? match
-					: (s1 ?? '') + (s2 ?? '')
+					: (comment ?? '') + (tag_open ?? '')
 		)
 		.replace(/(<!--[^]*?-->)|(<style[^>]*?)\s(?:type|lang)=(["']).*?\3/g, '$1$2');
 }
