@@ -1,5 +1,11 @@
 # @sveltejs/adapter-cloudflare-workers
 
+## 2.2.1
+
+### Patch Changes
+
+- fix: add `workerd` to esbuild conditions ([#12069](https://github.com/sveltejs/kit/pull/12069))
+
 ## 2.2.0
 
 ### Minor Changes

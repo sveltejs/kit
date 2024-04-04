@@ -1,5 +1,11 @@
 # @sveltejs/package
 
+## 2.3.1
+
+### Patch Changes
+
+- fix: don't strip `lang="ts"` tag in Svelte 5 ([#12080](https://github.com/sveltejs/kit/pull/12080))
+
 ## 2.3.0
 
 ### Minor Changes
