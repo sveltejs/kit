@@ -1,4 +1,4 @@
-/// <reference types="@cloudflare/workers-types" />
+import { CacheStorage, IncomingRequestCfProperties } from '@cloudflare/workers-types';
 
 declare global {
 	namespace App {
