@@ -15,5 +15,8 @@ export default [
 				...globals.node
 			}
 		}
+	},
+	{
+		ignores: ['build/', '.svelte-kit/', 'package/', 'vite.config.ts.*']
 	}
 ];

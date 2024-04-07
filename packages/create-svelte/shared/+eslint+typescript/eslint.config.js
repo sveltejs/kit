@@ -25,5 +25,8 @@ export default [
 				parser: ts.parser
 			}
 		}
+	},
+	{
+		ignores: ['build/', '.svelte-kit/', 'package/', 'vite.config.ts.*']
 	}
 ];
