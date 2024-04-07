@@ -1,5 +1,23 @@
 # @sveltejs/adapter-auto
 
+## 3.2.0
+
+### Minor Changes
+
+- feat: add support for Google Cloud Run ([#12015](https://github.com/sveltejs/kit/pull/12015))
+
+## 3.1.1
+
+### Patch Changes
+
+- fix: better error message when using `read` ([#11689](https://github.com/sveltejs/kit/pull/11689))
+
+## 3.1.0
+
+### Minor Changes
+
+- feat: bump Azure adapter version ([#11496](https://github.com/sveltejs/kit/pull/11496))
+
 ## 3.0.1
 
 ### Patch Changes

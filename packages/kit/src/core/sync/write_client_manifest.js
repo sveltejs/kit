@@ -108,7 +108,8 @@ export function write_client_manifest(kit, manifest_data, output, metadata) {
 		}
 	`;
 
-	const hooks_file = resolve_entry(kit.files.hooks.client);
+	const client_hooks_file = resolve_entry(kit.files.hooks.client);
+	const universal_hooks_file = resolve_entry(kit.files.hooks.universal);
 
 	const typo = resolve_entry('src/+hooks.client');
 	if (typo) {
@@ -125,7 +126,16 @@ export function write_client_manifest(kit, manifest_data, output, metadata) {
 	write_if_changed(
 		`${output}/app.js`,
 		dedent`
-			${hooks_file ? `import * as client_hooks from '${relative_path(output, hooks_file)}';` : ''}
+			${
+				client_hooks_file
+					? `import * as client_hooks from '${relative_path(output, client_hooks_file)}';`
+					: ''
+			}
+			${
+				universal_hooks_file
+					? `import * as universal_hooks from '${relative_path(output, universal_hooks_file)}';`
+					: ''
+			}
 
 			export { matchers } from './matchers.js';
 
@@ -139,8 +149,10 @@ export function write_client_manifest(kit, manifest_data, output, metadata) {
 
 			export const hooks = {
 				handleError: ${
-					hooks_file ? 'client_hooks.handleError || ' : ''
+					client_hooks_file ? 'client_hooks.handleError || ' : ''
 				}(({ error }) => { console.error(error) }),
+
+				reroute: ${universal_hooks_file ? 'universal_hooks.reroute || ' : ''}(() => {})
 			};
 
 			export { default as root } from '../root.${isSvelte5Plus() ? 'js' : 'svelte'}';

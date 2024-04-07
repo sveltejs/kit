@@ -68,7 +68,7 @@ export function load({ fetch }) {
 
 ## goto(...) changes
 
-`goto(...)` no longer accepts external URLs. To navigate to an external URL, use `window.location = url`. The `state` object now determines `$page.state` and must adhere to the `App.PageState` interface, if declared. See [shallow routing](shallow-routing) for more details.
+`goto(...)` no longer accepts external URLs. To navigate to an external URL, use `window.location.href = url`. The `state` object now determines `$page.state` and must adhere to the `App.PageState` interface, if declared. See [shallow routing](shallow-routing) for more details.
 
 ## paths are now relative by default
 
@@ -150,11 +150,14 @@ SvelteKit 2 requires Node `18.13` or higher, and the following minimum dependenc
 - `svelte@4`
 - `vite@5`
 - `typescript@5`
-- `@sveltejs/adapter-static@3` (if you're using it)
 - `@sveltejs/vite-plugin-svelte@3` (this is now required as a `peerDependency` of SvelteKit — previously it was directly depended upon)
+- `@sveltejs/adapter-cloudflare@3` (if you're using these adapters)
+- `@sveltejs/adapter-cloudflare-workers@2`
+- `@sveltejs/adapter-netlify@3`
+- `@sveltejs/adapter-node@2`
+- `@sveltejs/adapter-static@3`
+- `@sveltejs/adapter-vercel@4`
 
 `svelte-migrate` will update your `package.json` for you.
 
 As part of the TypeScript upgrade, the generated `tsconfig.json` (the one your `tsconfig.json` extends from) now uses `"moduleResolution": "bundler"` (which is recommended by the TypeScript team, as it properly resolves types from packages with an `exports` map in package.json) and `verbatimModuleSyntax` (which replaces the existing `importsNotUsedAsValues ` and `preserveValueImports` flags — if you have those in your `tsconfig.json`, remove them. `svelte-migrate` will do this for you).
-
-SvelteKit 2 uses ES2022 features, which are supported in all modern browsers.

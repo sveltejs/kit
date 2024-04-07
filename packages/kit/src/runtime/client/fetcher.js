@@ -1,9 +1,11 @@
-import { DEV } from 'esm-env';
+import { BROWSER, DEV } from 'esm-env';
 import { hash } from '../hash.js';
+import { b64_decode } from '../utils.js';
 
 let loading = 0;
 
-export const native_fetch = window.fetch;
+/** @type {typeof fetch} */
+export const native_fetch = BROWSER ? window.fetch : /** @type {any} */ (() => {});
 
 export function lock_fetch() {
 	loading += 1;
@@ -13,9 +15,10 @@ export function unlock_fetch() {
 	loading -= 1;
 }
 
-if (DEV) {
+if (DEV && BROWSER) {
 	let can_inspect_stack_trace = false;
 
+	// detect whether async stack traces work
 	const check_stack_trace = async () => {
 		const stack = /** @type {string} */ (new Error().stack);
 		can_inspect_stack_trace = stack.includes('check_stack_trace');
@@ -61,7 +64,7 @@ if (DEV) {
 
 		return native_fetch(input, init);
 	};
-} else {
+} else if (BROWSER) {
 	window.fetch = (input, init) => {
 		const method = input instanceof Request ? input.method : init?.method || 'GET';
 
@@ -74,22 +77,6 @@ if (DEV) {
 }
 
 const cache = new Map();
-
-/**
- * @param {string} text
- * @returns {ArrayBufferLike}
- */
-function b64_decode(text) {
-	const d = atob(text);
-
-	const u8 = new Uint8Array(d.length);
-
-	for (let i = 0; i < d.length; i++) {
-		u8[i] = d.charCodeAt(i);
-	}
-
-	return u8.buffer;
-}
 
 /**
  * Should be called on the initial run of load functions that hydrate the page.

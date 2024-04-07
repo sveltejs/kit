@@ -159,6 +159,10 @@ test('create package with declaration map', async () => {
 	await test_make_package('typescript-declaration-map');
 });
 
+test('create package with tsconfig specified', async () => {
+	await test_make_package('tsconfig-specified', { tsconfig: 'tsconfig.build.json' });
+});
+
 // chokidar doesn't fire events in github actions :shrug:
 if (!process.env.CI) {
 	test('watches for changes', async () => {

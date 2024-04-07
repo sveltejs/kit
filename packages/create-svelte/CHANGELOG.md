@@ -1,5 +1,41 @@
 # create-svelte
 
+## 6.0.10
+
+### Patch Changes
+
+- docs: update comment about path aliases ([#11788](https://github.com/sveltejs/kit/pull/11788))
+
+## 6.0.9
+
+### Patch Changes
+
+- chore: bump typescript-eslint to v7 ([#11845](https://github.com/sveltejs/kit/pull/11845))
+
+## 6.0.8
+
+### Patch Changes
+
+- chore: upgrade to vite 5.0.11 and vitest 1.2.0 ([#11632](https://github.com/sveltejs/kit/pull/11632))
+
+## 6.0.7
+
+### Patch Changes
+
+- fix: install eslint-plugin-svelte@next for svelte5 ([#11627](https://github.com/sveltejs/kit/pull/11627))
+
+## 6.0.6
+
+### Patch Changes
+
+- fix: set path: '/' in demo ([#11495](https://github.com/sveltejs/kit/pull/11495))
+
+## 6.0.5
+
+### Patch Changes
+
+- fix: set the correct type for the ESLint config object ([#11453](https://github.com/sveltejs/kit/pull/11453))
+
 ## 6.0.4
 
 ### Patch Changes

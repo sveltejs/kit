@@ -1,6 +1,7 @@
 import { appendFileSync, existsSync, readdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { dirname, join, resolve, posix } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { builtinModules } from 'node:module';
 import esbuild from 'esbuild';
 import toml from '@iarna/toml';
 
@@ -27,6 +28,7 @@ import toml from '@iarna/toml';
  *	 }} HandlerManifest
  */
 
+const name = '@sveltejs/adapter-netlify';
 const files = fileURLToPath(new URL('./files', import.meta.url).href);
 
 const edge_set_in_env_var =
@@ -38,7 +40,7 @@ const FUNCTION_PREFIX = 'sveltekit-';
 /** @type {import('./index.js').default} */
 export default function ({ split = false, edge = edge_set_in_env_var } = {}) {
 	return {
-		name: '@sveltejs/adapter-netlify',
+		name,
 
 		async adapt(builder) {
 			if (!builder.routes) {
@@ -91,6 +93,19 @@ export default function ({ split = false, edge = edge_set_in_env_var } = {}) {
 				await generate_edge_functions({ builder });
 			} else {
 				await generate_lambda_functions({ builder, split, publish });
+			}
+		},
+
+		supports: {
+			// reading from the filesystem only works in serverless functions
+			read: ({ route }) => {
+				if (edge) {
+					throw new Error(
+						`${name}: Cannot use \`read\` from \`$app/server\` in route \`${route.id}\` when using edge functions`
+					);
+				}
+
+				return true;
 			}
 		}
 	};
@@ -151,7 +166,12 @@ async function generate_edge_functions({ builder }) {
 		format: 'esm',
 		platform: 'browser',
 		sourcemap: 'linked',
-		target: 'es2020'
+		target: 'es2020',
+
+		// Node built-ins are allowed, but must be prefixed with `node:`
+		// https://docs.netlify.com/edge-functions/api/#runtime-environment
+		external: builtinModules.map((id) => `node:${id}`),
+		alias: Object.fromEntries(builtinModules.map((id) => [id, `node:${id}`]))
 	});
 
 	writeFileSync('.netlify/edge-functions/manifest.json', JSON.stringify(edge_manifest));

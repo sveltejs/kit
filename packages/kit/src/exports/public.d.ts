@@ -35,6 +35,21 @@ export interface Adapter {
 	 * @param builder An object provided by SvelteKit that contains methods for adapting the app
 	 */
 	adapt(builder: Builder): MaybePromise<void>;
+	/**
+	 * Checks called during dev and build to determine whether specific features will work in production with this adapter
+	 */
+	supports?: {
+		/**
+		 * Test support for `read` from `$app/server`
+		 * @param config The merged route config
+		 */
+		read?: (details: { config: any; route: { id: string } }) => boolean;
+	};
+	/**
+	 * Creates an `Emulator`, which allows the adapter to influence the environment
+	 * during dev, build and prerendering
+	 */
+	emulate?(): MaybePromise<Emulator>;
 }
 
 export type LoadProperties<input extends Record<string, any> | void> = input extends void
@@ -64,11 +79,12 @@ export interface ActionFailure<T extends Record<string, unknown> | undefined = u
 	[uniqueSymbol]: true; // necessary or else UnpackValidationError could wrongly unpack objects with the same shape as ActionFailure
 }
 
-type UnpackValidationError<T> = T extends ActionFailure<infer X>
-	? X
-	: T extends void
-		? undefined // needs to be undefined, because void will corrupt union type
-		: T;
+type UnpackValidationError<T> =
+	T extends ActionFailure<infer X>
+		? X
+		: T extends void
+			? undefined // needs to be undefined, because void will corrupt union type
+			: T;
 
 /**
  * This object is passed to the `adapt` function of adapters.
@@ -89,12 +105,18 @@ export interface Builder {
 	/** An array of all routes (including prerendered) */
 	routes: RouteDefinition[];
 
+	// TODO 3.0 remove this method
 	/**
 	 * Create separate functions that map to one or more routes of your app.
 	 * @param fn A function that groups a set of routes into an entry point
 	 * @deprecated Use `builder.routes` instead
 	 */
 	createEntries(fn: (route: RouteDefinition) => AdapterEntry): Promise<void>;
+
+	/**
+	 * Find all the assets imported by server files belonging to `routes`
+	 */
+	findServerAssets(routes: RouteDefinition[]): string[];
 
 	/**
 	 * Generate a fallback page for a static webserver to use when no route is matched. Useful for single-page apps.
@@ -179,14 +201,6 @@ export interface Config {
 	extensions?: string[];
 	/** SvelteKit options */
 	kit?: KitConfig;
-	/** [`@sveltejs/package`](/docs/packaging) options. */
-	package?: {
-		source?: string;
-		dir?: string;
-		emitTypes?: boolean;
-		exports?(filepath: string): boolean;
-		files?(filepath: string): boolean;
-	};
 	/** Preprocessor options, if any. Preprocessing can alternatively also be done through Vite's preprocessor capabilities. */
 	preprocess?: any;
 	/** `vite-plugin-svelte` plugin options. */
@@ -250,6 +264,17 @@ export interface Cookies {
 		value: string,
 		opts: import('cookie').CookieSerializeOptions & { path: string }
 	): string;
+}
+
+/**
+ * A collection of functions that influence the environment during dev, build and prerendering
+ */
+export interface Emulator {
+	/**
+	 * A function that is called with the current route `config` and `prerender` option
+	 * and returns an `App.Platform` object
+	 */
+	platform?(details: { config: any; prerender: PrerenderOption }): MaybePromise<App.Platform>;
 }
 
 export interface KitConfig {
@@ -357,6 +382,7 @@ export interface KitConfig {
 	};
 	/**
 	 * Whether or not the app is embedded inside a larger app. If `true`, SvelteKit will add its event listeners related to navigation etc on the parent of `%sveltekit.body%` instead of `window`, and will pass `params` from the server rather than inferring them from `location.pathname`.
+	 * Note that it is generally not supported to embed multiple SvelteKit apps on the same page and use client-side SvelteKit features within them (things such as pushing to the history state assume a single instance).
 	 * @default false
 	 */
 	embedded?: boolean;
@@ -377,6 +403,7 @@ export interface KitConfig {
 		/**
 		 * A prefix that signals that an environment variable is unsafe to expose to client-side code. Environment variables matching neither the public nor the private prefix will be discarded completely. See [`$env/static/private`](/docs/modules#$env-static-private) and [`$env/dynamic/private`](/docs/modules#$env-dynamic-private).
 		 * @default ""
+		 * @since 1.21.0
 		 */
 		privatePrefix?: string;
 	};
@@ -400,6 +427,12 @@ export interface KitConfig {
 			 * @default "src/hooks.server"
 			 */
 			server?: string;
+			/**
+			 * The location of your universal [hooks](https://kit.svelte.dev/docs/hooks).
+			 * @default "src/hooks"
+			 * @since 2.3.0
+			 */
+			universal?: string;
 		};
 		/**
 		 * your app's internal library, accessible throughout the codebase as `$lib`
@@ -460,6 +493,7 @@ export interface KitConfig {
 		 * - `preload-js` - uses `<link rel="preload">`. Prevents waterfalls in Chromium and Safari, but Chromium will parse each module twice (once as a script, once as a module). Causes modules to be requested twice in Firefox. This is a good setting if you want to maximise performance for users on iOS devices at the cost of a very slight degradation for Chromium users.
 		 * - `preload-mjs` - uses `<link rel="preload">` but with the `.mjs` extension which prevents double-parsing in Chromium. Some static webservers will fail to serve .mjs files with a `Content-Type: application/javascript` header, which will cause your application to break. If that doesn't apply to you, this is the option that will deliver the best performance for the largest number of users, until `modulepreload` is more widely supported.
 		 * @default "modulepreload"
+		 * @since 1.8.4
 		 */
 		preloadStrategy?: 'modulepreload' | 'preload-js' | 'preload-mjs';
 	};
@@ -487,6 +521,7 @@ export interface KitConfig {
 		 * In 1.0, `undefined` was a valid value, which was set by default. In that case, if `paths.assets` was not external, SvelteKit would replace `%sveltekit.assets%` with a relative path and use relative paths to reference build artifacts, but `base` and `assets` imported from `$app/paths` would be as specified in your config.
 		 *
 		 * @default true
+		 * @since 1.9.0
 		 */
 		relative?: boolean;
 	};
@@ -538,6 +573,7 @@ export interface KitConfig {
 		 * ```
 		 *
 		 * @default "fail"
+		 * @since 1.15.7
 		 */
 		handleHttpError?: PrerenderHttpErrorHandlerValue;
 		/**
@@ -549,6 +585,7 @@ export interface KitConfig {
 		 * - `(details) => void` — a custom error handler that takes a `details` object with `path`, `id`, `referrers` and `message` properties. If you `throw` from this function, the build will fail
 		 *
 		 * @default "fail"
+		 * @since 1.15.7
 		 */
 		handleMissingId?: PrerenderMissingIdHandlerValue;
 		/**
@@ -560,6 +597,7 @@ export interface KitConfig {
 		 * - `(details) => void` — a custom error handler that takes a `details` object with `generatedFromId`, `entry`, `matchedId` and `message` properties. If you `throw` from this function, the build will fail
 		 *
 		 * @default "fail"
+		 * @since 1.16.0
 		 */
 		handleEntryGeneratorMismatch?: PrerenderEntryGeneratorMismatchHandlerValue;
 		/**
@@ -585,6 +623,7 @@ export interface KitConfig {
 		 * A function that allows you to edit the generated `tsconfig.json`. You can mutate the config (recommended) or return a new one.
 		 * This is useful for extending a shared `tsconfig.json` in a monorepo root, for example.
 		 * @default (config) => config
+		 * @since 1.3.0
 		 */
 		config?: (config: Record<string, any>) => Record<string, any> | void;
 	};
@@ -682,6 +721,12 @@ export type HandleFetch = (input: {
 	request: Request;
 	fetch: typeof fetch;
 }) => MaybePromise<Response>;
+
+/**
+ * The [`reroute`](https://kit.svelte.dev/docs/hooks#universal-hooks-reroute) hook allows you to modify the URL before it is used to determine which route to render.
+ * @since 2.3.0
+ */
+export type Reroute = (event: { url: URL }) => void | string;
 
 /**
  * The generic form of `PageLoad` and `LayoutLoad`. You should import those from `./$types` (see [generated types](https://kit.svelte.dev/docs/types#generated-types))
@@ -1132,7 +1177,10 @@ export class Server {
 }
 
 export interface ServerInitOptions {
+	/** A map of environment variables */
 	env: Record<string, string>;
+	/** A function that turns an asset filename into a `ReadableStream`. Required for the `read` export from `$app/server` to work */
+	read?: (file: string) => ReadableStream;
 }
 
 export interface SSRManifest {
@@ -1147,6 +1195,8 @@ export interface SSRManifest {
 		nodes: SSRNodeLoader[];
 		routes: SSRRoute[];
 		matchers(): Promise<Record<string, ParamMatcher>>;
+		/** A `[file]: size` map of all assets imported by server code */
+		server_assets: Record<string, number>;
 	};
 }
 

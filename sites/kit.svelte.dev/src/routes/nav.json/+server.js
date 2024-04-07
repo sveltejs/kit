@@ -1,23 +1,13 @@
-import { get_docs_data, get_docs_list } from '$lib/server/docs/index.js';
+import { get_docs_list } from '$lib/server/docs/index.js';
 import { json } from '@sveltejs/kit';
 
 export const prerender = true;
 
 export const GET = async () => {
-	return json(await get_nav_list());
-};
+	const docs_list = get_docs_list();
 
-/**
- * @returns {Promise<import('@sveltejs/site-kit').NavigationLink[]>}
- */
-async function get_nav_list() {
-	const docs_list = get_docs_list(await get_docs_data());
-	const processed_docs_list = docs_list.map(({ title, pages }) => ({
-		title,
-		sections: pages.map(({ title, path }) => ({ title, path }))
-	}));
-
-	return [
+	/** @type {import('@sveltejs/site-kit').NavigationLink[]} */
+	const nav_list = [
 		{
 			title: 'Docs',
 			prefix: 'docs',
@@ -25,9 +15,14 @@ async function get_nav_list() {
 			sections: [
 				{
 					title: 'DOCS',
-					sections: processed_docs_list
+					sections: docs_list.map(({ title, pages }) => ({
+						title,
+						sections: pages.map(({ title, path }) => ({ title, path }))
+					}))
 				}
 			]
 		}
 	];
-}
+
+	return json(nav_list);
+};

@@ -23,12 +23,18 @@ export const adapters = [
 		name: 'Azure Static Web Apps',
 		test: () => process.env.GITHUB_ACTION_REPOSITORY === 'Azure/static-web-apps-deploy',
 		module: 'svelte-adapter-azure-swa',
-		version: '0.13'
+		version: '0.20'
 	},
 	{
 		name: 'AWS via SST',
 		test: () => !!process.env.SST,
 		module: 'svelte-kit-sst',
 		version: '2'
+	},
+	{
+		name: 'Google Cloud Run',
+		test: () => !!process.env.GCP_BUILDPACKS,
+		module: '@sveltejs/adapter-node',
+		version: '5'
 	}
 ];

@@ -1,6 +1,6 @@
 {
 	"name": "@sveltejs/adapter-cloudflare",
-	"version": "3.0.1",
+	"version": "4.2.1",
 	"description": "Adapter for building SvelteKit applications on Cloudflare Pages with Workers integration",
 	"repository": {
 		"type": "git",
@@ -33,8 +33,8 @@
 	},
 	"dependencies": {
 		"@cloudflare/workers-types": "^4.20231121.0",
-		"esbuild": "^0.19.9",
-		"worktop": "0.8.0-next.15"
+		"esbuild": "^0.19.11",
+		"worktop": "0.8.0-next.18"
 	},
 	"devDependencies": {
 		"@sveltejs/kit": "workspace:^",
@@ -43,7 +43,8 @@
 		"typescript": "^5.3.3"
 	},
 	"peerDependencies": {
-		"@sveltejs/kit": "^2.0.0"
+		"@sveltejs/kit": "^2.0.0",
+		"wrangler": "^3.28.4"
 	},
 	"publishConfig": {
 		"access": "public"

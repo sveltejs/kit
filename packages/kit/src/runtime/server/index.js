@@ -3,7 +3,8 @@ import { set_private_env, set_public_env, set_safe_public_env } from '../shared-
 import { options, get_hooks } from '__SERVER__/internal.js';
 import { DEV } from 'esm-env';
 import { filter_private_env, filter_public_env } from '../../utils/env.js';
-import { building } from '../app/environment.js';
+import { prerendering } from '__sveltekit/environment';
+import { set_read_implementation, set_manifest } from '__sveltekit/server';
 
 /** @type {ProxyHandler<{ type: 'public' | 'private' }>} */
 const prerender_env_handler = {
@@ -26,14 +27,17 @@ export class Server {
 		/** @type {import('types').SSROptions} */
 		this.#options = options;
 		this.#manifest = manifest;
+
+		set_manifest(manifest);
 	}
 
 	/**
 	 * @param {{
-	 *   env: Record<string, string>
+	 *   env: Record<string, string>;
+	 *   read?: (file: string) => ReadableStream;
 	 * }} opts
 	 */
-	async init({ env }) {
+	async init({ env, read }) {
 		// Take care: Some adapters may have to call `Server.init` per-request to set env vars,
 		// so anything that shouldn't be rerun should be wrapped in an `if` block to make sure it hasn't
 		// been done already.
@@ -47,9 +51,17 @@ export class Server {
 		const private_env = filter_private_env(env, prefixes);
 		const public_env = filter_public_env(env, prefixes);
 
-		set_private_env(building ? new Proxy({ type: 'private' }, prerender_env_handler) : private_env);
-		set_public_env(building ? new Proxy({ type: 'public' }, prerender_env_handler) : public_env);
+		set_private_env(
+			prerendering ? new Proxy({ type: 'private' }, prerender_env_handler) : private_env
+		);
+		set_public_env(
+			prerendering ? new Proxy({ type: 'public' }, prerender_env_handler) : public_env
+		);
 		set_safe_public_env(public_env);
+
+		if (read) {
+			set_read_implementation(read);
+		}
 
 		if (!this.#options.hooks) {
 			try {
@@ -58,7 +70,8 @@ export class Server {
 				this.#options.hooks = {
 					handle: module.handle || (({ event, resolve }) => resolve(event)),
 					handleError: module.handleError || (({ error }) => console.error(error)),
-					handleFetch: module.handleFetch || (({ request, fetch }) => fetch(request))
+					handleFetch: module.handleFetch || (({ request, fetch }) => fetch(request)),
+					reroute: module.reroute || (() => {})
 				};
 			} catch (error) {
 				if (DEV) {
@@ -67,7 +80,8 @@ export class Server {
 							throw error;
 						},
 						handleError: ({ error }) => console.error(error),
-						handleFetch: ({ request, fetch }) => fetch(request)
+						handleFetch: ({ request, fetch }) => fetch(request),
+						reroute: () => {}
 					};
 				} else {
 					throw error;
