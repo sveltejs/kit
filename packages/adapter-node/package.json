@@ -21,7 +21,8 @@
 	"files": [
 		"files",
 		"index.js",
-		"index.d.ts"
+		"index.d.ts",
+		"ambient.d.ts"
 	],
 	"scripts": {
 		"dev": "node -e \"fs.rmSync('files', { force: true, recursive: true })\" && rollup -cw",

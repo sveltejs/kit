@@ -22,7 +22,8 @@
 		"files",
 		"index.js",
 		"utils.js",
-		"index.d.ts"
+		"index.d.ts",
+		"ambient.d.ts"
 	],
 	"scripts": {
 		"lint": "prettier --check .",
