@@ -8,7 +8,6 @@ export default [
 	...svelte.configs['flat/recommended'],
 	{
 		languageOptions: {
-			ecmaVersion: 2020,
 			globals: {
 				...globals.browser,
 				...globals.node

@@ -10,7 +10,6 @@ export default [
 	prettier,
 	{
 		languageOptions: {
-			ecmaVersion: 2020,
 			globals: {
 				...globals.browser,
 				...globals.node
