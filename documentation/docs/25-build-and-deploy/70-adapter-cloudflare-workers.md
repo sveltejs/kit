@@ -78,7 +78,7 @@ wrangler deploy
 
 ## Custom config
 
-If you would like to use a config file other than `wrangler.toml` you can specify so using the [`config` option](#config).
+If you would like to use a config file other than `wrangler.toml` you can specify so using the [`config` option](#options-config).
 
 If you would like to enable [Node.js compatibility](https://developers.cloudflare.com/workers/runtime-apis/nodejs/#enable-nodejs-from-the-cloudflare-dashboard), you can add "nodejs_compat" flag to `wrangler.toml`:
 
