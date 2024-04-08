@@ -56,11 +56,8 @@ test('errors when no acao header present on cors', async () => {
 	);
 });
 
-test('errors when trying to access non-serialized request headers on the server', async () => {
+test('returns null when trying to access non-serialized request headers on the server', async () => {
 	const fetch = create_fetch({});
 	const response = await fetch('https://domain-a.com');
-	assert.throws(
-		() => response.headers.get('content-type'),
-		/Failed to get response header "content-type" — it must be included by the `filterSerializedResponseHeaders` option/
-	);
+	assert.equal(response.headers.get('content-type'), null);
 });

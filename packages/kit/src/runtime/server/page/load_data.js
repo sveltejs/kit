@@ -347,9 +347,11 @@ export function create_universal_fetch(event, state, fetched, csr, resolve_opts)
 				if (value && !lower.startsWith('x-sveltekit-')) {
 					const included = resolve_opts.filterSerializedResponseHeaders(lower, value);
 					if (!included) {
-						throw new Error(
+						console.error(
 							`Failed to get response header "${lower}" — it must be included by the \`filterSerializedResponseHeaders\` option: https://kit.svelte.dev/docs/hooks#server-hooks-handle (at ${event.route.id})`
 						);
+
+						return null;
 					}
 				}
 
