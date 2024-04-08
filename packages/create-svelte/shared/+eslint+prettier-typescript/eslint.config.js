@@ -18,6 +18,6 @@ export default [
 		}
 	},
 	{
-		ignores: ['build/', '.svelte-kit/', 'package/', 'vite.config.ts.*']
+		ignores: ['build/', '.svelte-kit/', 'package/', 'vite.config.[jt]s.timestamp-*']
 	}
 ];
