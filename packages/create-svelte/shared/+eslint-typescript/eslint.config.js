@@ -11,7 +11,6 @@ export default [
 			ecmaVersion: 2020,
 			globals: {
 				...globals.browser,
-				...globals.es2017,
 				...globals.node
 			}
 		}
