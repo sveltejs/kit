@@ -30,7 +30,7 @@ export default {
 				exclude: ['<all>']
 			},
       platformProxy: {
-        
+        persist: './your-custom-path'
       }
 		})
 	}
