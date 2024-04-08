@@ -8,7 +8,7 @@ export interface AdapterOptions {
 	config?: string;
 	/**
 	 * Config object passed to {@link https://developers.cloudflare.com/workers/wrangler/api/#getplatformproxy | getPlatformProxy}
-	 * during development & preview
+	 * during development and preview.
 	 */
 	platformProxy?: GetPlatformProxyOptions;
 }
