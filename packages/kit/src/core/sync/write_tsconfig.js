@@ -58,6 +58,7 @@ export function get_tsconfig(kit) {
 		'ambient.d.ts', // careful: changing this name would be a breaking change, because it's referenced in the service-workers documentation
 		'non-ambient.d.ts',
 		'./types/**/$types.d.ts',
+		config_relative('svelte.config.js'),
 		config_relative('vite.config.js'),
 		config_relative('vite.config.ts')
 	]);
