@@ -18,7 +18,7 @@ export interface AdapterOptions {
 	fallback?: 'plaintext' | 'spa';
 
 	/**
-	 * Customize the automatically-generated `_routes.json` file
+	 * Customize the automatically-generated `_routes.json` file.
 	 * https://developers.cloudflare.com/pages/platform/functions/routing/#create-a-_routesjson-file
 	 */
 	routes?: {
@@ -46,7 +46,7 @@ export interface AdapterOptions {
 
 	/**
 	 * Config object passed to {@link https://developers.cloudflare.com/workers/wrangler/api/#getplatformproxy | getPlatformProxy}
-	 * during dev & preview
+	 * during development and preview.
 	 */
 	platformProxy?: GetPlatformProxyOptions;
 }
