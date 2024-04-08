@@ -17,10 +17,25 @@ import adapter from '@sveltejs/adapter-cloudflare-workers';
 
 export default {
 	kit: {
-		adapter: adapter()
+		adapter: adapter({
+      config: '<your-wrangler-name>.toml',
+      platformProxy: {
+        persist: './your-custom-path'
+      }
+    })
 	}
 };
 ```
+
+## Options
+
+### config
+
+Path to your custom `wrangler.toml` config file.
+
+### platformProxy
+
+Preferences for the emulated `platform.env` local bindings. See the [getPlatformProxy](https://developers.cloudflare.com/workers/wrangler/api/#syntax) Wrangler API documentation for a full list of options.
 
 ## Basic Configuration
 
@@ -63,19 +78,7 @@ wrangler deploy
 
 ## Custom config
 
-If you would like to use a config file other than `wrangler.toml`, you can do like so:
-
-```js
-// @errors: 2307
-/// file: svelte.config.js
-import adapter from '@sveltejs/adapter-cloudflare-workers';
-
-export default {
-	kit: {
-		adapter: adapter({ config: '<your-wrangler-name>.toml' })
-	}
-};
-```
+If you would like to use a config file other than `wrangler.toml` you can specify so using the [`config` option](#options-config).
 
 If you would like to enable [Node.js compatibility](https://developers.cloudflare.com/workers/runtime-apis/nodejs/#enable-nodejs-from-the-cloudflare-dashboard), you can add "nodejs_compat" flag to `wrangler.toml`:
 
@@ -117,7 +120,7 @@ export {};
 
 ### Testing Locally
 
-Cloudflare Workers specific values in the `platform` property are emulated during dev and preview modes. Local [bindings](https://developers.cloudflare.com/workers/wrangler/configuration/#bindings) are created based on the configuration in your `wrangler.toml` file and are used to populate `platform.env` during development.
+Cloudflare Workers specific values in the `platform` property are emulated during dev and preview modes. Local [bindings](https://developers.cloudflare.com/workers/wrangler/configuration/#bindings) are created based on the configuration in your `wrangler.toml` file and are used to populate `platform.env` during development and preview. Use the adapter config [`platformProxy` option](#options-platformproxy) to change your preferences for the bindings.
 
 For testing the build, you should use [wrangler](https://developers.cloudflare.com/workers/cli-wrangler) **version 3**. Once you have built your site, run `wrangler dev`.
 

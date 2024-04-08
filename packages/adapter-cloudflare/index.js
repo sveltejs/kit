@@ -128,7 +128,7 @@ export default function (options = {}) {
 			}
 		},
 		async emulate() {
-			const proxy = await getPlatformProxy();
+			const proxy = await getPlatformProxy(options.platformProxy);
 			const platform = /** @type {App.Platform} */ ({
 				env: proxy.env,
 				context: proxy.ctx,
