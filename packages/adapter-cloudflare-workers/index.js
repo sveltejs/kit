@@ -32,7 +32,7 @@ const compatible_node_modules = [
 ];
 
 /** @type {import('./index.js').default} */
-export default function ({ config = 'wrangler.toml', platformProxy = undefined } = {}) {
+export default function ({ config = 'wrangler.toml', platformProxy = {} } = {}) {
 	return {
 		name: '@sveltejs/adapter-cloudflare-workers',
 
