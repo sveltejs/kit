@@ -1,5 +1,5 @@
 import { BROWSER, DEV } from 'esm-env';
-import { onMount, tick } from 'svelte';
+import * as svelte from 'svelte';
 import {
 	add_data_suffix,
 	decode_params,
@@ -45,6 +45,9 @@ import { HttpError, Redirect, SvelteKitError } from '../control.js';
 import { INVALIDATED_PARAM, TRAILING_SLASH_PARAM, validate_depends } from '../shared.js';
 import { get_message, get_status } from '../../utils/error.js';
 import { writable } from 'svelte/store';
+import { VERSION } from 'svelte/compiler';
+
+const is_svelte_5 = VERSION.startsWith('5.');
 
 let errored = false;
 
@@ -1413,7 +1416,7 @@ async function navigate({
 	const { activeElement } = document;
 
 	// need to render the DOM before we can scroll to the rendered elements and do focus management
-	await tick();
+	await svelte.tick();
 
 	// we reset scroll before dealing with focus, to avoid a flash of unscrolled content
 	const scroll = popped ? popped.scroll : noscroll ? scroll_state() : null;
@@ -1627,7 +1630,7 @@ function handle_error(error, event) {
  * @param {T} callback
  */
 function add_navigation_callback(callbacks, callback) {
-	onMount(() => {
+	svelte.onMount(() => {
 		callbacks.push(callback);
 
 		return () => {
@@ -1861,7 +1864,12 @@ export function pushState(url, state) {
 	if (DEV) {
 		try {
 			// use `devalue.stringify` as a convenient way to ensure we exclude values that can't be properly rehydrated, such as custom class instances
-			devalue.stringify(state);
+			devalue.stringify(
+				is_svelte_5
+					? // @ts-expect-error
+						svelte.unstate(state)
+					: state
+			);
 		} catch (error) {
 			// @ts-expect-error
 			throw new Error(`Could not serialize state${error.path}`);
@@ -1901,7 +1909,12 @@ export function replaceState(url, state) {
 	if (DEV) {
 		try {
 			// use `devalue.stringify` as a convenient way to ensure we exclude values that can't be properly rehydrated, such as custom class instances
-			devalue.stringify(state);
+			devalue.stringify(
+				is_svelte_5
+					? // @ts-expect-error
+						svelte.unstate(state)
+					: state
+			);
 		} catch (error) {
 			// @ts-expect-error
 			throw new Error(`Could not serialize state${error.path}`);
@@ -1955,7 +1968,7 @@ export async function applyAction(result) {
 
 			root.$set(navigation_result.props);
 
-			tick().then(reset_focus);
+			svelte.tick().then(reset_focus);
 		}
 	} else if (result.type === 'redirect') {
 		_goto(result.location, { invalidateAll: true }, 0);
@@ -1969,7 +1982,7 @@ export async function applyAction(result) {
 		});
 
 		// ...so that setting the `form` prop takes effect and isn't ignored
-		await tick();
+		await svelte.tick();
 		root.$set({ form: result.data });
 
 		if (result.type === 'success') {
