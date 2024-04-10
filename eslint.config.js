@@ -1,8 +1,8 @@
-import svelteConfig from '@sveltejs/eslint-config';
+import svelte_config from '@sveltejs/eslint-config';
 
 /** @type {import('eslint').Linter.FlatConfig[]} */
 export default [
-	...svelteConfig,
+	...svelte_config,
 	{
 		rules: {
 			'no-undef': 'off'
