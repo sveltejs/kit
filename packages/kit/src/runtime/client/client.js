@@ -47,7 +47,7 @@ import { get_message, get_status } from '../../utils/error.js';
 import { writable } from 'svelte/store';
 import { VERSION } from 'svelte/compiler';
 
-const is_svelte_5 = VERSION.startsWith('5.');
+const is_svelte_5 = +VERSION.split('.')[0] >= 5;
 
 let errored = false;
 
