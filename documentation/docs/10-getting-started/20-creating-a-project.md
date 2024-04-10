@@ -4,12 +4,37 @@ title: Creating a project
 
 The easiest way to start building a SvelteKit app is to run `npm create`:
 
-```bash
+::: code-group
+
+```bash [NPM]
 npm create svelte@latest my-app
 cd my-app
 npm install
 npm run dev
 ```
+
+```bash [PNPM]
+pnpm create svelte@latest my-app
+cd my-app
+pnpm install
+pnpm run dev
+```
+
+```bash [Yarn]
+yarn create svelte my-app
+cd my-app
+yarn install
+yarn run dev
+```
+
+```bash [Bun]
+bun create svelte my-app
+cd my-app
+bun install
+bun run dev
+```
+
+:::
 
 The first command will scaffold a new project in the `my-app` directory asking you if you'd like to set up some basic tooling such as TypeScript. See [integrations](./integrations) for pointers on setting up additional tooling. The subsequent commands will then install its dependencies and start a server on [localhost:5173](http://localhost:5173).
 
