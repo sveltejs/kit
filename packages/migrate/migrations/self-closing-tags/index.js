@@ -3,8 +3,6 @@ import fs from 'node:fs';
 import prompts from 'prompts';
 import glob from 'tiny-glob/sync.js';
 import { remove_self_closing_tags } from './migrate.js';
-// import { update_js_file, update_svelte_file } from '../../utils.js';
-// import { transform_code, transform_svelte_code } from './migrate.js';
 
 export async function migrate() {
 	console.log(
@@ -27,7 +25,6 @@ export async function migrate() {
 		.filter((file) => !file.includes('/node_modules/'));
 
 	for (const file of files) {
-		// replace all occurrences of e.g. `<div />` with `<div></div>`, preserving attributes etc
 		const code = remove_self_closing_tags(fs.readFileSync(file, 'utf-8'));
 		fs.writeFileSync(file, code);
 	}
