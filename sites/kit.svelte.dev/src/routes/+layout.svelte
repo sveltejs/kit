@@ -61,7 +61,7 @@
 			</svelte:fragment>
 		</Nav>
 
-		<slot />
+		<slot></slot>
 
 		<Banners slot="banner-bottom" data={data.banner} />
 	</Shell>

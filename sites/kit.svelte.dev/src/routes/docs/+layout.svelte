@@ -12,7 +12,7 @@
 		{#if category}
 			<p class="category">{category}</p>
 		{/if}
-		<slot />
+		<slot></slot>
 	</div>
 
 	<div class="toc-container">

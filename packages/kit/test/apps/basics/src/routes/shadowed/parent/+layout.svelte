@@ -6,4 +6,4 @@
 <a href="/shadowed/parent?test">Reload</a>
 <a href="/shadowed/parent/sub">Sub</a>
 
-<slot />
+<slot></slot>

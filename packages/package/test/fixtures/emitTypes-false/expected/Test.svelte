@@ -9,4 +9,4 @@
 	dispatch('event', true);
 </script>
 
-<slot {astring} />
+<slot {astring}></slot>

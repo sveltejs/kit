@@ -18,4 +18,4 @@
 	{/if}
 </div>
 
-<slot />
+<slot></slot>

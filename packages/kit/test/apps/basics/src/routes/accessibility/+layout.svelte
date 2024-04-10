@@ -7,4 +7,4 @@
 	<a href="/accessibility/autofocus/b">autofocus/b</a>
 </nav>
 
-<slot />
+<slot></slot>

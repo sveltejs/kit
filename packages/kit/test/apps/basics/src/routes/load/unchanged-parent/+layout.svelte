@@ -1,5 +1,5 @@
 <!-- TODO remove this file post-https://github.com/sveltejs/kit/issues/5967 -->
-<slot />
+<slot></slot>
 
 <ul>
 	<li><a href="/load/unchanged-parent/isolated/a">/load/unchanged-parent/isolated/a</a></li>

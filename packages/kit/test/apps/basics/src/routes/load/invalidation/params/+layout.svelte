@@ -3,7 +3,7 @@
 	export let data;
 </script>
 
-<slot />
+<slot></slot>
 
 <pre>{JSON.stringify({
 		a: data.a,

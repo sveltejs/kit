@@ -26,4 +26,4 @@
 
 <p>layout: {$page.data.count_layout}, page: {$page.data.count_page}</p>
 
-<slot />
+<slot></slot>

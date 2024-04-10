@@ -3,7 +3,7 @@
 </script>
 
 <h1>{decodeURIComponent($page.url.pathname.split('/').pop())}</h1>
-<slot />
+<slot></slot>
 
 <a href="/encoded/escape-sequences/:-)">:-)</a>
 <a href="/encoded/escape-sequences/%23">#</a>

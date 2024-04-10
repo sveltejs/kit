@@ -2,4 +2,4 @@
 <a href="/snapshot/b">b</a>
 <a href="/snapshot/c" data-sveltekit-reload>c</a>
 
-<slot />
+<slot></slot>

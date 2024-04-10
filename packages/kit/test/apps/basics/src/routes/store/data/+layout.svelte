@@ -11,4 +11,4 @@
 	<a href="/store/data/zzz">zzz</a> <a href="/store/data/foo">foo</a>
 </nav>
 
-<slot />
+<slot></slot>

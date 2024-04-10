@@ -10,4 +10,4 @@
 
 <p>{$page.url.pathname}</p>
 
-<slot />
+<slot></slot>

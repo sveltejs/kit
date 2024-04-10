@@ -2,4 +2,4 @@
 <a href="/shallow-routing/replace-state/a">a</a>
 <a href="/shallow-routing/replace-state/b">b</a>
 
-<slot />
+<slot></slot>

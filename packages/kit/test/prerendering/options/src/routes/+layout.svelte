@@ -2,4 +2,4 @@
 	<link rel="alternate" href="/path-base/rss.xml" />
 </svelte:head>
 
-<slot />
+<slot></slot>

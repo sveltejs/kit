@@ -4,4 +4,4 @@
 	setup();
 </script>
 
-<slot />
+<slot></slot>

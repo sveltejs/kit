@@ -7,7 +7,7 @@
 	setup();
 </script>
 
-<slot />
+<slot></slot>
 
 <footer>{data.foo.bar}</footer>
 

@@ -14,4 +14,4 @@
 <p data-test-id="pathname-store">{$page.url.pathname}</p>
 <p data-test-id="pathname-data">{data.pathname}</p>
 
-<slot />
+<slot></slot>
