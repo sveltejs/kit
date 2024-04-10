@@ -11,7 +11,6 @@ export default [
 	{
 		ignores: [
 			'**/.svelte-kit',
-			'packages/kit/test/prerendering/*/build',
 			'packages/adapter-static/test/apps/*/build',
 			'packages/adapter-cloudflare/files',
 			'packages/adapter-netlify/files',
