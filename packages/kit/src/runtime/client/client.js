@@ -1866,7 +1866,7 @@ export function pushState(url, state) {
 			// use `devalue.stringify` as a convenient way to ensure we exclude values that can't be properly rehydrated, such as custom class instances
 			devalue.stringify(
 				is_svelte_5
-					? // @ts-expect-error
+					? // @ts-expect-error This package has a dev dependency on Svelte 4, but `svelte.unstate` only exists in Svelte 5
 						svelte.unstate(state)
 					: state
 			);
