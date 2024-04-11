@@ -133,10 +133,7 @@ for (const template of templates) {
 
 		for (const script of scripts_to_test) {
 			const tests = script_test_map.get(script) ?? [];
-			tests.push([
-				`${template}-${types}`,
-				() => exec_async(`ESLINT_USE_FLAT_CONFIG=false pnpm ${script}`, { cwd })
-			]);
+			tests.push([`${template}-${types}`, () => exec_async(`pnpm ${script}`, { cwd })]);
 			script_test_map.set(script, tests);
 		}
 	}
