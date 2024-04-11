@@ -1,5 +1,11 @@
 # @sveltejs/adapter-cloudflare-workers
 
+## 2.3.0
+
+### Minor Changes
+
+- feat: support platform emulation configuration via the `platformProxy` adapter option ([#12011](https://github.com/sveltejs/kit/pull/12011))
+
 ## 2.2.1
 
 ### Patch Changes
