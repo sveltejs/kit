@@ -30,4 +30,5 @@ export async function migrate() {
 	}
 
 	console.log(colors.bold().green('✔ Your project has been updated'));
+	console.log('  If using Prettier, please upgrade to the latest prettier-plugin-svelte version');
 }
