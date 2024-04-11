@@ -717,10 +717,7 @@ test.describe('data-sveltekit attributes', () => {
 		expect(page).toHaveURL(offline_url);
 	});
 
-	test('data-sveltekit-preload does not abort ongoing navigation', async ({
-		page,
-		browserName
-	}) => {
+	test('data-sveltekit-preload does not abort ongoing navigation', async ({ page }) => {
 		await page.goto('/data-sveltekit/preload-data/offline');
 
 		await page.locator('#slow-navigation').dispatchEvent('click');
@@ -731,10 +728,7 @@ test.describe('data-sveltekit attributes', () => {
 			page.waitForLoadState('networkidle') // wait for preloading to finish
 		]);
 
-		expect(page).toHaveURL(
-			'/data-sveltekit/preload-data/offline/slow-navigation' ||
-				(browserName === 'chromium' && 'chrome-error://chromewebdata/')
-		);
+		expect(page).toHaveURL('/data-sveltekit/preload-data/offline/slow-navigation');
 	});
 
 	test('data-sveltekit-reload', async ({ baseURL, page, clicknav }) => {
