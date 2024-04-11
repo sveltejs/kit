@@ -7,6 +7,7 @@ const tests = {
 	'<div />': '<div></div>',
 	'<div class="foo"/>': '<div class="foo"></div>',
 	'<div class="foo" />': '<div class="foo"></div>',
+	'\t<div\n\t\tonclick={blah}\n\t/>': '\t<div\n\t\tonclick={blah}\n\t></div>',
 	'<foo-bar/>': '<foo-bar></foo-bar>',
 	'<link/>': '<link/>',
 	'<link />': '<link />',

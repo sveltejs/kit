@@ -110,7 +110,7 @@ const SVGElements = [
  * @param {string} code
  */
 export function remove_self_closing_tags(code) {
-	return code.replace(/<([a-z-]+)(\s[^>]+?)?\s?\/>/g, (match, name, attributes = '') => {
+	return code.replace(/<([a-z-]+)(\s[^>]+?)? ?\/>/g, (match, name, attributes = '') => {
 		if (VoidElements.includes(name) || SVGElements.includes(name)) return match;
 		return `<${name}${attributes}></${name}>`;
 	});
