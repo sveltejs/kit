@@ -6,7 +6,8 @@
 <svelte:head>
 	<script type="application/ld+json">
 		{
-			JSON.stringify(jsonLd);
+			"foo":
+			"bar"
 		}
 	</script>
 </svelte:head>
