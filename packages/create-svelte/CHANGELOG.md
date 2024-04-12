@@ -1,5 +1,17 @@
 # create-svelte
 
+## 6.1.0
+
+### Minor Changes
+
+- feat: upgrade eslint to v9 ([#12089](https://github.com/sveltejs/kit/pull/12089))
+
+## 6.0.10
+
+### Patch Changes
+
+- docs: update comment about path aliases ([#11788](https://github.com/sveltejs/kit/pull/11788))
+
 ## 6.0.9
 
 ### Patch Changes

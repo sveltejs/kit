@@ -5,6 +5,7 @@ export interface Options {
 	input: string;
 	output: string;
 	types: boolean;
+	tsconfig?: string;
 	config: {
 		extensions?: string[];
 		kit?: {

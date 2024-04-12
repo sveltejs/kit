@@ -1,5 +1,25 @@
 # @sveltejs/kit
 
+## 2.5.5
+
+### Patch Changes
+
+- fix: only hydrate when page is server-rendered ([#12050](https://github.com/sveltejs/kit/pull/12050))
+
+## 2.5.4
+
+### Patch Changes
+
+- fix: prevent navigation when `data-sveltekit-preload-data` fails to fetch due to network error ([#11944](https://github.com/sveltejs/kit/pull/11944))
+
+## 2.5.3
+
+### Patch Changes
+
+- fix: revert tsconfig change that includes svelte.config.js ([#11908](https://github.com/sveltejs/kit/pull/11908))
+
+- fix: exclude server worker from tsconfig again ([#11727](https://github.com/sveltejs/kit/pull/11727))
+
 ## 2.5.2
 
 ### Patch Changes

@@ -1,5 +1,28 @@
 # @sveltejs/adapter-cloudflare-workers
 
+## 2.3.0
+
+### Minor Changes
+
+- feat: support platform emulation configuration via the `platformProxy` adapter option ([#12011](https://github.com/sveltejs/kit/pull/12011))
+
+## 2.2.1
+
+### Patch Changes
+
+- fix: add `workerd` to esbuild conditions ([#12069](https://github.com/sveltejs/kit/pull/12069))
+
+## 2.2.0
+
+### Minor Changes
+
+- feat: emulate Cloudflare Workers bindings and incoming request properties in `event.platform` for `dev` and `preview` ([#11974](https://github.com/sveltejs/kit/pull/11974))
+
+### Patch Changes
+
+- Updated dependencies [[`4562275ed42964148df03c79434172024897c08c`](https://github.com/sveltejs/kit/commit/4562275ed42964148df03c79434172024897c08c)]:
+  - @sveltejs/kit@2.5.4
+
 ## 2.1.0
 
 ### Minor Changes

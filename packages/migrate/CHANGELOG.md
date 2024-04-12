@@ -1,5 +1,11 @@
 # svelte-migrate
 
+## 1.3.8
+
+### Patch Changes
+
+- chore(deps): update dependency ts-morph to v22 ([`4447269e979f2b5be18e0fded0b5843a6258542d`](https://github.com/sveltejs/kit/commit/4447269e979f2b5be18e0fded0b5843a6258542d))
+
 ## 1.3.7
 
 ### Patch Changes
