@@ -20,7 +20,7 @@ export async function migrate() {
 		process.exit(1);
 	}
 
-	const files = glob(`**/*.svelte`)
+	const files = glob('**/*.svelte')
 		.map((file) => file.replace(/\\/g, '/'))
 		.filter((file) => !file.includes('/node_modules/'));
 
