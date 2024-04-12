@@ -6,8 +6,7 @@
 <svelte:head>
 	<script type="application/ld+json">
 		{
-			"foo":
-			"bar"
+			"foo": "bar"
 		}
 	</script>
 </svelte:head>
