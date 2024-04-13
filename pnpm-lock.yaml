@@ -466,8 +466,8 @@ importers:
         specifier: ^2.4.7
         version: 2.4.7
       dts-buddy:
-        specifier: ^0.4.3
-        version: 0.4.7(typescript@5.4.5)
+        specifier: 0.4.6
+        version: 0.4.6(typescript@5.4.5)
       rollup:
         specifier: ^4.14.2
         version: 4.14.2
@@ -3810,8 +3810,8 @@ packages:
     resolution: {integrity: sha512-QgA6BUh2SoBYE/dSuMmeGhNdoGtGewt3Rn66xKyXoGNyjrKRXf163wuM+xeQ83p87l/3ALoB6Il1dgKyGS5pEw==}
     dev: true
 
-  /dts-buddy@0.4.7(typescript@5.4.5):
-    resolution: {integrity: sha512-trSY5EWkWWKov9uf9nTPjmEoiIcrYPpNEVCu75drPX9Fus3OwQzN/WNXyO+w7cMteBrUqSoExAAud1KCzYv0SQ==}
+  /dts-buddy@0.4.6(typescript@5.4.5):
+    resolution: {integrity: sha512-0gccY0vIuVCwbx4F9X5soE6ABKyjev2XVgwX2PYBx5hXfnrTeCBZwpf5F7MlVxzLo0pHfO9yNNo21cjZQZD/aw==}
     hasBin: true
     peerDependencies:
       typescript: '>=5.0.4 <5.5'
