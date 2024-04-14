@@ -8,6 +8,6 @@
 	},
 	"type": "module",
 	"devDependencies": {
-		"vitest": "^1.2.0"
+		"vitest": "^1.5.0"
 	}
 }
