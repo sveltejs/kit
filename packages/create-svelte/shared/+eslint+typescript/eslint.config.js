@@ -1,12 +1,13 @@
 import js from '@eslint/js';
-import ts from 'typescript-eslint';
+// add this once typescript-eslint supports eslint 9
+// import ts from 'typescript-eslint';
 import svelte from 'eslint-plugin-svelte';
 import globals from 'globals';
 
 /** @type {import('eslint').Linter.FlatConfig[]} */
 export default [
 	js.configs.recommended,
-	...ts.configs.recommended,
+	// ...ts.configs.recommended,
 	...svelte.configs['flat/recommended'],
 	{
 		languageOptions: {
@@ -16,14 +17,14 @@ export default [
 			}
 		}
 	},
-	{
-		files: ['**/*.svelte'],
-		languageOptions: {
-			parserOptions: {
-				parser: ts.parser
-			}
-		}
-	},
+	// {
+	// 	files: ['**/*.svelte'],
+	// 	languageOptions: {
+	// 		parserOptions: {
+	// 			parser: ts.parser
+	// 		}
+	// 	}
+	// },
 	{
 		ignores: ['build/', '.svelte-kit/', 'dist/']
 	}
