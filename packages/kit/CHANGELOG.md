@@ -1,5 +1,11 @@
 # @sveltejs/kit
 
+## 2.5.6
+
+### Patch Changes
+
+- fix: avoid incorrectly un- and re-escaping cookies collected during a server-side `fetch` ([#11904](https://github.com/sveltejs/kit/pull/11904))
+
 ## 2.5.5
 
 ### Patch Changes

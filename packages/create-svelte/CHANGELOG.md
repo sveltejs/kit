@@ -1,5 +1,11 @@
 # create-svelte
 
+## 6.1.1
+
+### Patch Changes
+
+- fix: go back to eslint 8 until typescript-eslint supports eslint 9 ([#12110](https://github.com/sveltejs/kit/pull/12110))
+
 ## 6.1.0
 
 ### Minor Changes
