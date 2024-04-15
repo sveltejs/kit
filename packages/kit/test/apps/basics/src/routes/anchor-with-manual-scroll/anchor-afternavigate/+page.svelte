@@ -12,6 +12,6 @@
 	<p id="go-to-element">The browser scrolls to me</p>
 </div>
 <p id="abcde" style="height: 180vh; background-color: hotpink;">I take precedence</p>
-<div />
+<div></div>
 
 <a href="/anchor-with-manual-scroll/anchor-afternavigate?x=y#go-to-element">reload me</a>

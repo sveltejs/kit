@@ -12,4 +12,4 @@
 
 <a href="/routing/b" data-sveltekit-reload>b</a>
 
-<div class="hydrate-test" />
+<div class="hydrate-test"></div>

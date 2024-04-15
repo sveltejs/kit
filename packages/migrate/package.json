@@ -28,6 +28,7 @@
 		"magic-string": "^0.30.5",
 		"prompts": "^2.4.2",
 		"semver": "^7.5.4",
+		"svelte": "^4.0.0",
 		"tiny-glob": "^0.2.9",
 		"ts-morph": "^22.0.0",
 		"typescript": "^5.3.3"

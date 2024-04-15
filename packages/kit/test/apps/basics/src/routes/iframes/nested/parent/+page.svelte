@@ -1,1 +1,1 @@
-<iframe title="Child content" src="./child" />
+<iframe title="Child content" src="./child"></iframe>
