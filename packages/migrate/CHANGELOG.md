@@ -1,5 +1,11 @@
 # svelte-migrate
 
+## 1.4.0
+
+### Minor Changes
+
+- feat: add self-closing-tags migration ([#12128](https://github.com/sveltejs/kit/pull/12128))
+
 ## 1.3.8
 
 ### Patch Changes
