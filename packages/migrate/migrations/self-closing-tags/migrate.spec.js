@@ -1,4 +1,5 @@
 import { assert, test } from 'vitest';
+import * as compiler from 'svelte/compiler';
 import { remove_self_closing_tags } from './migrate.js';
 
 /** @type {Record<string, string>} */
@@ -25,6 +26,6 @@ const tests = {
 for (const input in tests) {
 	test(input, async () => {
 		const output = tests[input];
-		assert.equal(await remove_self_closing_tags(input), output);
+		assert.equal(await remove_self_closing_tags(compiler, input), output);
 	});
 }

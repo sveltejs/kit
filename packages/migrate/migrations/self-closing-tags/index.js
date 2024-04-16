@@ -3,8 +3,18 @@ import fs from 'node:fs';
 import prompts from 'prompts';
 import glob from 'tiny-glob/sync.js';
 import { remove_self_closing_tags } from './migrate.js';
+import { pathToFileURL } from 'node:url';
+import { resolve } from 'import-meta-resolve';
 
 export async function migrate() {
+	let compiler;
+	try {
+		compiler = await import_from_cwd('svelte/compiler');
+	} catch (e) {
+		console.log(colors.bold().red('❌ Could not find a local Svelte installation.'));
+		return;
+	}
+
 	console.log(
 		colors.bold().yellow('\nThis will update .svelte files inside the current directory\n')
 	);
@@ -26,7 +36,7 @@ export async function migrate() {
 
 	for (const file of files) {
 		try {
-			const code = await remove_self_closing_tags(fs.readFileSync(file, 'utf-8'));
+			const code = await remove_self_closing_tags(compiler, fs.readFileSync(file, 'utf-8'));
 			fs.writeFileSync(file, code);
 		} catch (e) {
 			// continue
@@ -35,4 +45,12 @@ export async function migrate() {
 
 	console.log(colors.bold().green('✔ Your project has been updated'));
 	console.log('  If using Prettier, please upgrade to the latest prettier-plugin-svelte version');
+}
+
+/** @param {string} name */
+async function import_from_cwd(name) {
+	const cwd = pathToFileURL(process.cwd()).href;
+	const url = await resolve(name, cwd + '/x.js');
+
+	return import(url);
 }

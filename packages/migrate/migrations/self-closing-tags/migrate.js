@@ -1,5 +1,5 @@
 import MagicString from 'magic-string';
-import { parse, preprocess, walk } from 'svelte/compiler';
+import { walk } from 'zimmerframe';
 
 const VoidElements = [
 	'area',
@@ -109,15 +109,20 @@ const SVGElements = [
 	'vkern'
 ];
 
-/** @param {string} source */
-export async function remove_self_closing_tags(source) {
+/**
+ * @param {{ preprocess: any, parse: any }} svelte_compiler
+ * @param {string} source
+ */
+export async function remove_self_closing_tags({ preprocess, parse }, source) {
 	const preprocessed = await preprocess(source, {
+		/** @param {{ content: string }} input */
 		script: ({ content }) => ({
 			code: content
 				.split('\n')
 				.map((line) => ' '.repeat(line.length))
 				.join('\n')
 		}),
+		/** @param {{ content: string }} input */
 		style: ({ content }) => ({
 			code: content
 				.split('\n')
@@ -132,9 +137,8 @@ export async function remove_self_closing_tags(source) {
 	let is_foreign = false;
 	let is_custom_element = false;
 
-	walk(/** @type {any} */ (ast.html), {
-		/** @param {Record<string, any>} node */
-		enter(node) {
+	walk(ast.html, null, {
+		_(node, { next, stop }) {
 			if (node.type === 'Options') {
 				const namespace = node.attributes.find(
 					/** @param {any} a */
@@ -142,6 +146,7 @@ export async function remove_self_closing_tags(source) {
 				);
 				if (namespace?.value[0].data === 'foreign') {
 					is_foreign = true;
+					stop();
 					return;
 				}
 
@@ -172,6 +177,8 @@ export async function remove_self_closing_tags(source) {
 					}
 				});
 			}
+
+			next();
 		}
 	});
 
