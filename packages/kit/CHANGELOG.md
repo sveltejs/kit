@@ -1,5 +1,11 @@
 # @sveltejs/kit
 
+## 2.5.7
+
+### Patch Changes
+
+- chore(deps): update devalue to v5 ignore non-enumerable symbols during serialization ([#12141](https://github.com/sveltejs/kit/pull/12141))
+
 ## 2.5.6
 
 ### Patch Changes
