@@ -42,19 +42,25 @@ if (socket_activation) {
 	});
 }
 
-function shutdown() {
+/** @param {'SIGINT' | 'SIGTERM' | 'IDLE'} reason */
+function shutdown(reason) {
 	if (shutdown_timeout_id) return;
 
 	// @ts-expect-error this was added in 18.2.0 but is not reflected in the types
 	server.server.closeIdleConnections();
 
-	server.server.close(() => {
+	server.server.close((error) => {
+		if (error) return
+
 		if (shutdown_timeout_id) {
 			shutdown_timeout_id = clearTimeout(shutdown_timeout_id);
 		}
 		if (idle_timeout_id) {
 			idle_timeout_id = clearTimeout(idle_timeout_id);
 		}
+
+		// @ts-expect-error Custom events cannot be typed
+		process.emit('sveltekit:shutdown', reason);
 	});
 
 	shutdown_timeout_id = setTimeout(
@@ -83,7 +89,7 @@ server.server.on(
 				server.server.closeIdleConnections();
 			}
 			if (requests === 0 && socket_activation && idle_timeout) {
-				idle_timeout_id = setTimeout(shutdown, idle_timeout * 1000);
+				idle_timeout_id = setTimeout(() => shutdown('IDLE'), idle_timeout * 1000);
 			}
 		});
 	}
