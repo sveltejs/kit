@@ -1,5 +1,6 @@
 import { assert, test } from 'vitest';
 import { module_guard } from './index.js';
+import * as module_ids from '../module_ids.js';
 
 /**
  *
@@ -100,6 +101,13 @@ test('throws an error when dynamically importing $env/dynamic/private', () => {
 		 - $env/dynamic/private`
 	);
 });
+
+test('":$" is not in virtual module ids', () => {
+	assert.notInclude(
+		Object.values(module_ids).join(''),
+		':$'
+	)
+})
 
 test('throws an error when importing a .server.js module', () => {
 	check(
