@@ -103,11 +103,8 @@ test('throws an error when dynamically importing $env/dynamic/private', () => {
 });
 
 test('":$" is not in virtual module ids', () => {
-	assert.notInclude(
-		Object.values(module_ids).join(''),
-		':$'
-	)
-})
+	assert.notInclude(Object.values(module_ids).join(''), ':$');
+});
 
 test('throws an error when importing a .server.js module', () => {
 	check(
