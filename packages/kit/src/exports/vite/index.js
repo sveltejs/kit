@@ -388,7 +388,11 @@ async function kit({ svelte_config }) {
 			}
 
 			// treat $env/static/[public|private] as virtual
-			if (id.startsWith('$env/') || id.startsWith('__sveltekit/') || id === '$service-worker') {
+			if (id.startsWith('$env/') || id === '$service-worker') {
+				// ids with :$ don't work with reverse proxies like nginx
+				return `\0virtual:${id.substring(1)}`;
+			}
+			if (id.startsWith('__sveltekit/')) {
 				return `\0virtual:${id}`;
 			}
 		},

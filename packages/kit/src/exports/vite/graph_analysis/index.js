@@ -105,5 +105,13 @@ export function normalize_id(id, lib, cwd) {
 		return '$app/server';
 	}
 
+	if (id === env_static_private) {
+		return '$env/static/private';
+	}
+
+	if (id === env_dynamic_private) {
+		return '$env/dynamic/private';
+	}
+
 	return posixify(id);
 }

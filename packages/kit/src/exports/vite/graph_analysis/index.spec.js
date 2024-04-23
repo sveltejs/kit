@@ -44,7 +44,7 @@ test('throws an error when importing $env/static/private', () => {
 				importedIds: ['~/src/routes/+page.svelte']
 			},
 			'~/src/routes/+page.svelte': {
-				importedIds: ['\0virtual:$env/static/private']
+				importedIds: ['\0virtual:env/static/private']
 			}
 		},
 		`Cannot import $env/static/private into client-side code:
@@ -60,7 +60,7 @@ test('throws an error when dynamically importing $env/static/private', () => {
 				importedIds: ['~/src/routes/+page.svelte']
 			},
 			'~/src/routes/+page.svelte': {
-				dynamicallyImportedIds: ['\0virtual:$env/static/private']
+				dynamicallyImportedIds: ['\0virtual:env/static/private']
 			}
 		},
 		`Cannot import $env/static/private into client-side code:
@@ -76,7 +76,7 @@ test('throws an error when importing $env/dynamic/private', () => {
 				importedIds: ['~/src/routes/+page.svelte']
 			},
 			'~/src/routes/+page.svelte': {
-				importedIds: ['\0virtual:$env/dynamic/private']
+				importedIds: ['\0virtual:env/dynamic/private']
 			}
 		},
 		`Cannot import $env/dynamic/private into client-side code:
@@ -92,7 +92,7 @@ test('throws an error when dynamically importing $env/dynamic/private', () => {
 				importedIds: ['~/src/routes/+page.svelte']
 			},
 			'~/src/routes/+page.svelte': {
-				dynamicallyImportedIds: ['\0virtual:$env/dynamic/private']
+				dynamicallyImportedIds: ['\0virtual:env/dynamic/private']
 			}
 		},
 		`Cannot import $env/dynamic/private into client-side code:
