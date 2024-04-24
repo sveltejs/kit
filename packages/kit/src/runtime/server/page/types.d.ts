@@ -32,5 +32,5 @@ export interface CspOpts {
 export interface Cookie {
 	name: string;
 	value: string;
-	options: CookieSerializeOptions & { path: string };
+	options: CookieSerializeOptions & { path: string | undefined };
 }
