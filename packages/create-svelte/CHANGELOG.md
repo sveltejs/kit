@@ -1,5 +1,11 @@
 # create-svelte
 
+## 6.1.2
+
+### Patch Changes
+
+- fix: set peerDependencies based on chosen Svelte version ([#12117](https://github.com/sveltejs/kit/pull/12117))
+
 ## 6.1.1
 
 ### Patch Changes
