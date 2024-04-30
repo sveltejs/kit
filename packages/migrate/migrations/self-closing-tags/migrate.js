@@ -164,6 +164,7 @@ export async function remove_self_closing_tags({ preprocess, parse }, source) {
 					SVGElements.includes(node.name) ||
 					!/^[a-z0-9_-]+$/.test(node.name)
 				) {
+					next();
 					return;
 				}
 
