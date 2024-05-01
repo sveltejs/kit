@@ -5,7 +5,6 @@
 	import pronauns from './showcase/pronauns.png?enhanced';
 	import pausly from './showcase/pausly.png?enhanced';
 	import asmeditor from './showcase/asmeditor.png?enhanced';
-	import monogram from './showcase/monogram.png?enhanced';
 	import raster from './showcase/raster.png?enhanced';
 	import tradingstrategy from './showcase/tradingstrategy.png?enhanced';
 
@@ -16,7 +15,6 @@
 		{ url: 'asm-editor.specy.app', image: asmeditor },
 		{ url: 'raster.app', image: raster },
 		{ url: 'pocketbase.io', image: pocketbase },
-		{ url: 'monogram.io', image: monogram },
 		{ url: 'tradingstrategy.ai', image: tradingstrategy }
 	];
 </script>
