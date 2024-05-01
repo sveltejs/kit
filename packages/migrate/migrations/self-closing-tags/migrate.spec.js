@@ -20,7 +20,8 @@ const tests = {
 	'<svelte:options namespace="foreign" /><foo />': '<svelte:options namespace="foreign" /><foo />',
 	'<script>console.log("<div />")</script>': '<script>console.log("<div />")</script>',
 	'<script lang="ts">let a: string = ""</script><div />':
-		'<script lang="ts">let a: string = ""</script><div></div>'
+		'<script lang="ts">let a: string = ""</script><div></div>',
+	'<div><i/></div>': '<div><i></i></div>'
 };
 
 for (const input in tests) {
