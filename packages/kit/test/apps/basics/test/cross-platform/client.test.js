@@ -877,3 +877,16 @@ test.describe('Load', () => {
 		});
 	}
 });
+
+test.describe('Vite', () => {
+	if (process.env.DEV) {
+		test('optimizes dependencies', async ({ page }) => {
+			let load_count = 0;
+			page.on('load', () => {
+				load_count++;
+			});
+			await page.goto('/optimize-deps', { waitUntil: 'load' });
+			expect(load_count).toBe(1);
+		});
+	}
+});

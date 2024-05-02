@@ -299,6 +299,12 @@ async function kit({ svelte_config }) {
 						// this does not affect app code, just handling of imported libraries that use $app or $env
 						'$app',
 						'$env'
+					],
+					include: [
+						`${kit.files.hooks.client}.{js,ts}`,
+						`${kit.files.hooks.universal}.{js,ts}`,
+						`${kit.files.routes}/**/*.{svelte,js,ts}`,
+						...(config?.optimizeDeps?.include || [])
 					]
 				},
 				ssr: {
