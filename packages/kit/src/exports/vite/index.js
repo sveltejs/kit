@@ -293,18 +293,18 @@ async function kit({ svelte_config }) {
 					cors: { preflightContinue: true }
 				},
 				optimizeDeps: {
+					entries: [
+						`${kit.files.hooks.client}.{js,ts}`,
+						`${kit.files.hooks.universal}.{js,ts}`,
+						`${kit.files.routes}/**/*.{svelte,js,ts}`,
+						...(config?.optimizeDeps?.entries || [])
+					],
 					exclude: [
 						'@sveltejs/kit',
 						// exclude kit features so that libraries using them work even when they are prebundled
 						// this does not affect app code, just handling of imported libraries that use $app or $env
 						'$app',
 						'$env'
-					],
-					include: [
-						`${kit.files.hooks.client}.{js,ts}`,
-						`${kit.files.hooks.universal}.{js,ts}`,
-						`${kit.files.routes}/**/*.{svelte,js,ts}`,
-						...(config?.optimizeDeps?.include || [])
 					]
 				},
 				ssr: {
