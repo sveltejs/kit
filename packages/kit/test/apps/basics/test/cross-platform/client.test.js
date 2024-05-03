@@ -881,13 +881,16 @@ test.describe('Load', () => {
 test.describe('Vite', () => {
 	if (process.env.DEV) {
 		test('optimizes dependencies', async ({ page }) => {
-			// wait for Vite to optimize dependencies (otherwise the test fails for Ubuntu firefox)
-			await page.waitForTimeout(1000);
+			// wait for the browser to load the home page
+			await page.goto('/');
 			let load_count = 0;
-			page.on('load', () => {
+			page.on('domcontentloaded', () => {
 				load_count++;
 			});
-			await page.goto('/optimize-deps', { waitUntil: 'load' });
+			expect(load_count).toBe(0);
+			// then navigate to the page that has a client-side dependency and expect
+			// no re-optimisation to happen
+			await page.goto('/optimize-deps');
 			expect(load_count).toBe(1);
 		});
 	}
