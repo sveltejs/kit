@@ -881,6 +881,8 @@ test.describe('Load', () => {
 test.describe('Vite', () => {
 	if (process.env.DEV) {
 		test('optimizes dependencies', async ({ page }) => {
+			// wait for Vite to optimize dependencies (otherwise the test fails for Ubuntu firefox)
+			await page.waitForTimeout(1000);
 			let load_count = 0;
 			page.on('load', () => {
 				load_count++;
