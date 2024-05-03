@@ -296,8 +296,7 @@ async function kit({ svelte_config }) {
 					entries: [
 						`${kit.files.hooks.client}.{js,ts}`,
 						`${kit.files.hooks.universal}.{js,ts}`,
-						`${kit.files.routes}/**/*.{svelte,js,ts}`,
-						...(config?.optimizeDeps?.entries || [])
+						`${kit.files.routes}/**/+*.{svelte,js,ts}`
 					],
 					exclude: [
 						'@sveltejs/kit',
