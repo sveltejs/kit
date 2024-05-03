@@ -888,8 +888,8 @@ test.describe('Vite', () => {
 				load_count++;
 			});
 			expect(load_count).toBe(0);
-			// then navigate to the page that has a client-side dependency and expect
-			// no re-optimisation to happen
+			// then navigate to the page that has introduces a new dependency and expect
+			// Vite not to re-optimise
 			await page.goto('/optimize-deps');
 			expect(load_count).toBe(1);
 		});
