@@ -877,21 +877,3 @@ test.describe('Load', () => {
 		});
 	}
 });
-
-test.describe('Vite', () => {
-	if (process.env.DEV) {
-		test('optimizes dependencies', async ({ page }) => {
-			// wait for the browser to load the home page
-			await page.goto('/');
-			let load_count = 0;
-			page.on('domcontentloaded', () => {
-				load_count++;
-			});
-			expect(load_count).toBe(0);
-			// then navigate to the page that has introduces a new dependency and expect
-			// Vite not to re-optimise
-			await page.goto('/optimize-deps');
-			expect(load_count).toBe(1);
-		});
-	}
-});

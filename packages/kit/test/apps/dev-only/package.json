@@ -13,6 +13,7 @@
 		"@sveltejs/kit": "workspace:^",
 		"@sveltejs/vite-plugin-svelte": "^3.0.1",
 		"cross-env": "^7.0.3",
+    "e2e-test-dep-cjs-only": "file:./_test_dependencies/cjs-only",
 		"svelte": "^4.2.10",
 		"svelte-check": "^3.6.3",
 		"typescript": "^5.3.3",
