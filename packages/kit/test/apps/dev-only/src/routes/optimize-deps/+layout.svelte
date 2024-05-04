@@ -3,6 +3,6 @@
 	cjs.cjs();
 </script>
 
-<slot></slot>
+<slot />
 
 <p>this layout uses a new dependency</p>

@@ -91,8 +91,6 @@ test.describe('Vite', () => {
 		await page.goto('/');
 		await page.getByText('hello world!').waitFor();
 
-
-
 		const manifest_path = path.join(__dirname, '../node_modules/.vite/deps/_metadata.json');
 		const manifest = JSON.parse(fs.readFileSync(manifest_path, 'utf-8'));
 
@@ -103,8 +101,6 @@ test.describe('Vite', () => {
 		await page.goto('/');
 		await page.getByText('hello world!').waitFor();
 
-
-
 		const manifest_path = path.join(__dirname, '../node_modules/.vite/deps/_metadata.json');
 		const manifest = JSON.parse(fs.readFileSync(manifest_path, 'utf-8'));
 
@@ -114,8 +110,6 @@ test.describe('Vite', () => {
 	test('optimizes +page.server.js dependencies', async ({ page }) => {
 		await page.goto('/');
 		await page.getByText('hello world!').waitFor();
-
-
 
 		const manifest_path = path.join(__dirname, '../node_modules/.vite/deps/_metadata.json');
 		const manifest = JSON.parse(fs.readFileSync(manifest_path, 'utf-8'));

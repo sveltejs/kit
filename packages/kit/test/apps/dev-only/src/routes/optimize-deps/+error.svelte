@@ -3,6 +3,6 @@
 	cjs.cjs();
 </script>
 
-<slot></slot>
+<slot />
 
 <p>this error page uses a new dependency</p>
