@@ -1,5 +1,5 @@
 <script>
-	import cjs from 'e2e-test-dep-cjs-only';
+	import cjs from 'e2e-test-dep-page-svelte';
 	cjs.cjs();
 </script>
 

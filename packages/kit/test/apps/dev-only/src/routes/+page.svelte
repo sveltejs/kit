@@ -9,3 +9,5 @@
 </script>
 
 <p>{message}</p>
+
+<a href="/optimize-deps">Go to /optimize-deps</a>

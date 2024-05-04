@@ -87,13 +87,99 @@ test.describe.serial('Illegal imports', () => {
 test.describe('Vite', () => {
 	test.skip(({ javaScriptEnabled }) => !process.env.DEV || !javaScriptEnabled);
 
-	test('optimizes dependencies', async ({ page }) => {
+	test('optimizes +page.svelte dependencies', async ({ page }) => {
 		await page.goto('/');
-		expect(page.locator('p')).toHaveText('hello world!');
+		await page.getByText('hello world!').waitFor();
+
+
 
 		const manifest_path = path.join(__dirname, '../node_modules/.vite/deps/_metadata.json');
 		const manifest = JSON.parse(fs.readFileSync(manifest_path, 'utf-8'));
 
-		expect(manifest).toHaveProperty('optimized.e2e-test-dep-cjs-only');
+		expect(manifest).toHaveProperty('optimized.e2e-test-dep-page-svelte');
+	});
+
+	test('optimizes +page.js dependencies', async ({ page }) => {
+		await page.goto('/');
+		await page.getByText('hello world!').waitFor();
+
+
+
+		const manifest_path = path.join(__dirname, '../node_modules/.vite/deps/_metadata.json');
+		const manifest = JSON.parse(fs.readFileSync(manifest_path, 'utf-8'));
+
+		expect(manifest).toHaveProperty('optimized.e2e-test-dep-page-universal');
+	});
+
+	test('optimizes +page.server.js dependencies', async ({ page }) => {
+		await page.goto('/');
+		await page.getByText('hello world!').waitFor();
+
+
+
+		const manifest_path = path.join(__dirname, '../node_modules/.vite/deps/_metadata.json');
+		const manifest = JSON.parse(fs.readFileSync(manifest_path, 'utf-8'));
+
+		expect(manifest).toHaveProperty('optimized.e2e-test-dep-page-server');
+	});
+
+	test('optimizes +layout.svelte dependencies', async ({ page }) => {
+		await page.goto('/');
+		await page.getByText('hello world!').waitFor();
+
+		const manifest_path = path.join(__dirname, '../node_modules/.vite/deps/_metadata.json');
+		const manifest = JSON.parse(fs.readFileSync(manifest_path, 'utf-8'));
+
+		expect(manifest).toHaveProperty('optimized.e2e-test-dep-layout-svelte');
+	});
+
+	test('optimizes +layout.js dependencies', async ({ page }) => {
+		await page.goto('/');
+		await page.getByText('hello world!').waitFor();
+
+		const manifest_path = path.join(__dirname, '../node_modules/.vite/deps/_metadata.json');
+		const manifest = JSON.parse(fs.readFileSync(manifest_path, 'utf-8'));
+
+		expect(manifest).toHaveProperty('optimized.e2e-test-dep-layout-universal');
+	});
+
+	test('optimizes +layout.server.js dependencies', async ({ page }) => {
+		await page.goto('/');
+		await page.getByText('hello world!').waitFor();
+
+		const manifest_path = path.join(__dirname, '../node_modules/.vite/deps/_metadata.json');
+		const manifest = JSON.parse(fs.readFileSync(manifest_path, 'utf-8'));
+
+		expect(manifest).toHaveProperty('optimized.e2e-test-dep-layout-server');
+	});
+
+	test('optimizes +error.svelte dependencies', async ({ page }) => {
+		await page.goto('/');
+		await page.getByText('hello world!').waitFor();
+
+		const manifest_path = path.join(__dirname, '../node_modules/.vite/deps/_metadata.json');
+		const manifest = JSON.parse(fs.readFileSync(manifest_path, 'utf-8'));
+
+		expect(manifest).toHaveProperty('optimized.e2e-test-dep-error');
+	});
+
+	test('optimizes hooks.client.js dependencies', async ({ page }) => {
+		await page.goto('/');
+		await page.getByText('hello world!').waitFor();
+
+		const manifest_path = path.join(__dirname, '../node_modules/.vite/deps/_metadata.json');
+		const manifest = JSON.parse(fs.readFileSync(manifest_path, 'utf-8'));
+
+		expect(manifest).toHaveProperty('optimized.e2e-test-dep-hooks-client');
+	});
+
+	test('optimizes hooks.js dependencies', async ({ page }) => {
+		await page.goto('/');
+		await page.getByText('hello world!').waitFor();
+
+		const manifest_path = path.join(__dirname, '../node_modules/.vite/deps/_metadata.json');
+		const manifest = JSON.parse(fs.readFileSync(manifest_path, 'utf-8'));
+
+		expect(manifest).toHaveProperty('optimized.e2e-test-dep-hooks');
 	});
 });
