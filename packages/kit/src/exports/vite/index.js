@@ -293,6 +293,7 @@ async function kit({ svelte_config }) {
 					cors: { preflightContinue: true }
 				},
 				optimizeDeps: {
+					entries: [`${kit.files.routes}/**/+*.{svelte,js,ts}`],
 					exclude: [
 						'@sveltejs/kit',
 						// exclude kit features so that libraries using them work even when they are prebundled

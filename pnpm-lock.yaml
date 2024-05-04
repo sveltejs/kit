@@ -555,6 +555,36 @@ importers:
       cross-env:
         specifier: ^7.0.3
         version: 7.0.3
+      e2e-test-dep-error:
+        specifier: file:./_test_dependencies/cjs-only
+        version: file:packages/kit/test/apps/dev-only/_test_dependencies/cjs-only
+      e2e-test-dep-hooks:
+        specifier: file:./_test_dependencies/cjs-only
+        version: file:packages/kit/test/apps/dev-only/_test_dependencies/cjs-only
+      e2e-test-dep-hooks-client:
+        specifier: file:./_test_dependencies/cjs-only
+        version: file:packages/kit/test/apps/dev-only/_test_dependencies/cjs-only
+      e2e-test-dep-layout-server:
+        specifier: file:./_test_dependencies/cjs-only
+        version: file:packages/kit/test/apps/dev-only/_test_dependencies/cjs-only
+      e2e-test-dep-layout-svelte:
+        specifier: file:./_test_dependencies/cjs-only
+        version: file:packages/kit/test/apps/dev-only/_test_dependencies/cjs-only
+      e2e-test-dep-layout-universal:
+        specifier: file:./_test_dependencies/cjs-only
+        version: file:packages/kit/test/apps/dev-only/_test_dependencies/cjs-only
+      e2e-test-dep-page-server:
+        specifier: file:./_test_dependencies/cjs-only
+        version: file:packages/kit/test/apps/dev-only/_test_dependencies/cjs-only
+      e2e-test-dep-page-svelte:
+        specifier: file:./_test_dependencies/cjs-only
+        version: file:packages/kit/test/apps/dev-only/_test_dependencies/cjs-only
+      e2e-test-dep-page-universal:
+        specifier: file:./_test_dependencies/cjs-only
+        version: file:packages/kit/test/apps/dev-only/_test_dependencies/cjs-only
+      e2e-test-dep-server:
+        specifier: file:./_test_dependencies/cjs-only
+        version: file:packages/kit/test/apps/dev-only/_test_dependencies/cjs-only
       svelte:
         specifier: ^4.2.10
         version: 4.2.14
@@ -7473,3 +7503,8 @@ packages:
   /zod@3.22.4:
     resolution: {integrity: sha512-iC+8Io04lddc+mVqQ9AZ7OQ2MrUKGN+oIQyq1vemgt46jwCwLfhq7/pwnBnNXXXZb8VTVLKwp9EDkx+ryxIWmg==}
     dev: false
+
+  file:packages/kit/test/apps/dev-only/_test_dependencies/cjs-only:
+    resolution: {directory: packages/kit/test/apps/dev-only/_test_dependencies/cjs-only, type: directory}
+    name: e2e-test-dep-cjs-only
+    dev: true
