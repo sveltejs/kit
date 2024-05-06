@@ -123,7 +123,6 @@ export function create_fetch({ event, options, manifest, state, get_cookie_heade
 					);
 				}
 
-				/** @type {Response} */
 				const response = await respond(request, options, manifest, {
 					...state,
 					depth: state.depth + 1
@@ -153,7 +152,7 @@ export function create_fetch({ event, options, manifest, state, get_cookie_heade
 	};
 
 	// Don't make this function `async`! Otherwise, the user has to `catch` promises they use for streaming responses or else
-	// it will be an unhandled rejection. Instead, we add a `.catch(() => {})` ourselves below to this from happening.
+	// it will be an unhandled rejection. Instead, we add a `.catch(() => {})` ourselves below to prevent this from happening.
 	return (input, init) => {
 		// See docs in fetch.js for why we need to do this
 		const response = server_fetch(input, init);
