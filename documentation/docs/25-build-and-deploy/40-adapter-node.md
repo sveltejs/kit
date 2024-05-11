@@ -60,7 +60,7 @@ If you use Node.js v20.6+, you can use the [`--env-file`](https://nodejs.org/en/
 node +++--env-file=.env+++ build
 ```
 
-### `PORT`, `HOST` and `SOCKET_PATH`
+### `PORT`, `HOST`, `SOCKET_PATH` and `SOCKET_PATH_IS_WRITABLE`
 
 By default, the server will accept connections on `0.0.0.0` using port 3000. These can be customised with the `PORT` and `HOST` environment variables:
 
@@ -73,6 +73,13 @@ Alternatively, the server can be configured to accept connections on a specified
 ```
 SOCKET_PATH=/tmp/socket node build
 ```
+
+By default, node will create a socket based on the `umask` (commonly `0022`, resulting in `0755`). When `SOCKET_PATH_IS_WRITABLE` is set to `1`, the socket will be created with `0777`.
+
+```
+SOCKET_PATH_IS_WRITABLE=1 SOCKET_PATH=/tmp/socket node build
+```
+
 
 ### `ORIGIN`, `PROTOCOL_HEADER`, `HOST_HEADER`, and `PORT_HEADER`
 
