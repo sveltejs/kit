@@ -92,3 +92,83 @@ function get_store(name) {
 		);
 	}
 }
+
+/**
+ * @template {keyof Stores}
+ */
+class ClientStores {
+	constructor() {
+		this.store = {}
+	}
+
+	getStore() {
+		return this.store
+	}
+}
+
+
+/** @typedef {Record<string, any>} Stores */
+
+const local_stores = new ClientStores();
+
+/** @type {{ getStore: () => Stores }}} */
+// eslint-disable-next-line prefer-const
+export const stores_object = {
+	getStore() {
+		return local_stores.getStore()
+	}
+}
+
+let store_counter = 0;
+
+/**
+ * @param {any} initialValue
+ */
+export const unshared_writable = (initialValue) => {
+	console.log('unshared_writable');
+	store_counter++;
+
+	/** @param {any} newValue */
+	function set(newValue) {
+		const stores = stores_object.getStore();
+		if (!stores) throw new Error('AsyncLocalStorage is not available');
+
+		stores[store_counter] ??= { value: initialValue, subscribers: [] };
+		stores[store_counter].value = newValue;
+
+		for (const fn of stores[store_counter].subscribers) {
+			fn(newValue);
+		}
+	}
+
+	/** @param {(value: any) => any} fn */
+	async function update(fn) {
+		const store = stores_object.getStore();
+		if (!store) throw new Error('AsyncLocalStorage is not available');
+		store[store_counter] ??= { value: initialValue, subscribers: [] };
+		set(fn(store[store_counter].value));
+	}
+
+	/** @param {(value: any) => void} fn */
+	function subscribe(fn) {
+		const stores = stores_object.getStore();
+		if (!stores) throw new Error('AsyncLocalStorage is not available');
+		stores[store_counter] ??= { value: initialValue, subscribers: [] };
+		stores[store_counter].subscribers.push(fn);
+
+		fn(stores[store_counter].value);
+
+		return () => {
+			const index = stores[store_counter].subscribers.indexOf(fn);
+			if (index !== -1) {
+				stores[store_counter].subscribers.splice(index, 1);
+			}
+		};
+	}
+
+	return {
+		subscribe,
+		set,
+		update
+	};
+}
