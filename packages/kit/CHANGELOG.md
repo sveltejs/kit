@@ -1,5 +1,11 @@
 # @sveltejs/kit
 
+## 2.5.8
+
+### Patch Changes
+
+- fix: prevent excessive Vite dependency optimizations on navigation ([#12182](https://github.com/sveltejs/kit/pull/12182))
+
 ## 2.5.7
 
 ### Patch Changes
