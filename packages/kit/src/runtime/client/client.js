@@ -1147,20 +1147,15 @@ async function load_root_error_page({ status, error, url, route }) {
 }
 
 /**
- * Resolve the full info (which route, params, etc.) for a client-side navigation from the URL,
- * taking the reroute hook into account. If this isn't a client-side-navigation (or the URL is undefined),
- * returns undefined.
- * @param {URL | undefined} url
- * @param {boolean} invalidating
+ * Resolve the relative rerouted URL for a client-side navigation from the URL
+ * @param {URL} url
  */
-function get_navigation_intent(url, invalidating) {
-	if (!url) return undefined;
-	if (is_external_url(url, base)) return;
-
+function get_navigation_url(url) {
 	// reroute could alter the given URL, so we pass a copy
 	let rerouted;
 	try {
 		rerouted = app.hooks.reroute({ url: new URL(url) }) ?? url.pathname;
+		return rerouted;
 	} catch (e) {
 		if (DEV) {
 			// in development, print the error...
@@ -1173,6 +1168,20 @@ function get_navigation_intent(url, invalidating) {
 		// fall back to native navigation
 		return undefined;
 	}
+}
+
+/**
+ * Resolve the full info (which route, params, etc.) for a client-side navigation from the URL,
+ * taking the reroute hook into account. If this isn't a client-side-navigation (or the URL is undefined),
+ * returns undefined.
+ * @param {URL | undefined} url
+ * @param {boolean} invalidating
+ */
+function get_navigation_intent(url, invalidating) {
+	if (!url) return undefined;
+	if (is_external_url(url, base)) return;
+
+	const rerouted = get_navigation_url(url);
 
 	const path = get_url_path(rerouted);
 
@@ -1528,7 +1537,11 @@ function setup_preload() {
 		(entries) => {
 			for (const entry of entries) {
 				if (entry.isIntersecting) {
-					_preload_code(/** @type {HTMLAnchorElement} */ (entry.target).href);
+					const href = /** @type {HTMLAnchorElement} */ (entry.target).href;
+					const pathname = get_navigation_url(resolve_url(href));
+					if (pathname) {
+						_preload_code(pathname);
+					}
 					observer.unobserve(entry.target);
 				}
 			}
