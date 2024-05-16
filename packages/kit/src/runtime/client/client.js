@@ -1182,6 +1182,7 @@ function get_navigation_intent(url, invalidating) {
 	if (is_external_url(url, base)) return;
 
 	const rerouted = get_navigation_url(url);
+	if (!rerouted) return undefined;
 
 	const path = get_url_path(rerouted);
 
