@@ -44,10 +44,9 @@ if (fs.existsSync(cwd)) {
 
 const options = await p.group(
 	{
-		template: () =>
+		template: (_) =>
 			p.select({
 				message: 'Which Svelte app template?',
-				// @ts-expect-error i have no idea what is going on here
 				options: fs.readdirSync(dist('templates')).map((dir) => {
 					const meta_file = dist(`templates/${dir}/meta.json`);
 					const { title, description } = JSON.parse(fs.readFileSync(meta_file, 'utf8'));
