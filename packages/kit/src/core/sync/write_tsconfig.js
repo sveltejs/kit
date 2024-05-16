@@ -192,7 +192,7 @@ const value_regex = /^(.*?)((\/\*)|(\.\w+))?$/;
  */
 function get_tsconfig_paths(config) {
 	/** @param {string} file */
-	const config_relative = (file) => posixify(path.relative(config.outDir, file));
+	const config_relative = (file) => posixify('./' + path.relative(config.outDir, file));
 
 	const alias = { ...config.alias };
 	if (fs.existsSync(project_relative(config.files.lib))) {
