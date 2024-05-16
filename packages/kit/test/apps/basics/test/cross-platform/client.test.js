@@ -564,7 +564,39 @@ test.describe.serial('Errors', () => {
 });
 
 test.describe('Prefetching', () => {
-	test('prefetches programmatically', async ({ baseURL, page, app }) => {
+	test('prefetches code programmatically', async ({ page, app }) => {
+		await page.goto('/routing/a');
+
+		/** @type {string[]} */
+		const requests = [];
+		page.on('request', (r) => {
+			requests.push(r.url());
+		});
+
+		await app.preloadCode('/routing/b');
+
+		// svelte request made is environment dependent
+		if (process.env.DEV) {
+			expect(requests.filter((req) => req.endsWith('routing/b/+page.js')).length).toBe(1);
+			expect(requests.filter((req) => req.endsWith('routing/b/+page.svelte')).length).toBe(1);
+		} else {
+			// request should match "routing/b/[node].js"
+			expect(
+				requests.filter((req) => /.*?\/routing\/b\/\d+\.js$/.test(req)).length
+			).toBeGreaterThan(1);
+		}
+
+		if (process.env.DEV) {
+			try {
+				await app.preloadCode('https://example.com');
+				throw new Error('Error was not thrown');
+			} catch (/** @type {any} */ e) {
+				expect(e.message).toMatch("'https://example.com' did not match any routes");
+			}
+		}
+	});
+
+	test('prefetches data programmatically', async ({ baseURL, page, app }) => {
 		await page.goto('/routing/a');
 
 		/** @type {string[]} */
