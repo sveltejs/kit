@@ -9,7 +9,8 @@ test('Creates tsconfig path aliases from kit.alias', () => {
 				simpleKey: 'simple/value',
 				key: 'value',
 				'key/*': 'some/other/value/*',
-				keyToFile: 'path/to/file.ts'
+				keyToFile: 'path/to/file.ts',
+				$routes: '.svelte-kit/types/src/routes'
 			}
 		}
 	});
@@ -23,7 +24,9 @@ test('Creates tsconfig path aliases from kit.alias', () => {
 		'simpleKey/*': ['../simple/value/*'],
 		key: ['../value'],
 		'key/*': ['../some/other/value/*'],
-		keyToFile: ['../path/to/file.ts']
+		keyToFile: ['../path/to/file.ts'],
+		$routes: ['./types/src/routes'],
+		'$routes/*': ['./types/src/routes/*']
 	});
 });
 
