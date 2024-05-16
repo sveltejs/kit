@@ -6,14 +6,8 @@
 		"esModuleInterop": true,
 		"forceConsistentCasingInFileNames": true,
 		"resolveJsonModule": true,
-		"skipLibCheck": true,
 		"sourceMap": true,
 		"strict": true,
-		"noEmit": true,
-		"paths": {
-			"types": ["../../../../types/internal"],
-			"$lib": ["./src/lib"],
-			"$lib/*": ["./src/lib/*"]
-		}
+		"noEmit": true
 	}
 }

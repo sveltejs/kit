@@ -60,6 +60,14 @@ test('renders a relative redirect', () => {
 	);
 });
 
+test('renders a shell when SSR is turned off and there is no server data', () => {
+	const content = read('spa-shell.html');
+	assert.match(
+		content,
+		/<!doctype html>\n<html lang="en">([\s]*?)<head>([\s]*?)<meta charset="utf-8" \/>([\s]*?)<meta name="viewport" content="width=device-width, initial-scale=1" \/>([\s\S]*?)<\/head>\n([\s]*?)<body>([\s]*?)<script>([\s\S]*?)<\/script>([\s]*?)<\/body>\n<\/html>/g
+	);
+});
+
 test('inserts http-equiv tag for cache-control headers', () => {
 	const content = read('max-age.html');
 	expect(content).toMatch('<meta http-equiv="cache-control" content="max-age=300">');
@@ -101,6 +109,21 @@ test('generates __data.json file for shadow endpoints', () => {
 	});
 
 	data = JSON.parse(read('shadowed-get/__data.json'));
+	expect(data).toEqual({
+		type: 'data',
+		nodes: [
+			null,
+			{
+				type: 'data',
+				data: [{ answer: 1 }, 42],
+				uses: {}
+			}
+		]
+	});
+});
+
+test('generates __data.json file for shadow endpoints with ssr turned off', () => {
+	const data = JSON.parse(read('shadowed-get/ssr-off/__data.json'));
 	expect(data).toEqual({
 		type: 'data',
 		nodes: [
@@ -190,12 +213,8 @@ test('$env - includes environment variables', () => {
 		content,
 		/.*PRIVATE_STATIC: accessible to server-side code\/replaced at build time.*/gs
 	);
-	assert.match(
-		content,
-		/.*PRIVATE_DYNAMIC: accessible to server-side code\/evaluated at run time.*/gs
-	);
+
 	assert.match(content, /.*PUBLIC_STATIC: accessible anywhere\/replaced at build time.*/gs);
-	assert.match(content, /.*PUBLIC_DYNAMIC: accessible anywhere\/evaluated at run time.*/gs);
 });
 
 test('prerenders a page in a (group)', () => {
@@ -228,4 +247,9 @@ test('prerendered.paths omits trailing slashes for endpoints', () => {
 test('prerenders responses with immutable Headers', () => {
 	const content = read('immutable-headers');
 	expect(content).toMatch('foo');
+});
+
+test('prerenders paths with optional parameters with empty values', () => {
+	const content = read('optional-params.html');
+	expect(content).includes('Path with Value');
 });

@@ -1,9 +1,9 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import colors from 'kleur';
-import mime from 'mime';
+import { lookup } from 'mrmime';
 import { list_files, runtime_directory } from '../../utils.js';
-import { posixify } from '../../../utils/filesystem.js';
+import { posixify, resolve_entry } from '../../../utils/filesystem.js';
 import { parse_route_id } from '../../../utils/routing.js';
 import { sort_routes } from './sort.js';
 
@@ -22,6 +22,7 @@ export default function create_manifest_data({
 	cwd = process.cwd()
 }) {
 	const assets = create_assets(config);
+	const hooks = create_hooks(config, cwd);
 	const matchers = create_matchers(config, cwd);
 	const { nodes, routes } = create_routes_and_nodes(cwd, config, fallback);
 
@@ -35,6 +36,7 @@ export default function create_manifest_data({
 
 	return {
 		assets,
+		hooks,
 		matchers,
 		nodes,
 		routes
@@ -48,8 +50,24 @@ export function create_assets(config) {
 	return list_files(config.kit.files.assets).map((file) => ({
 		file,
 		size: fs.statSync(path.resolve(config.kit.files.assets, file)).size,
-		type: mime.getType(file)
+		type: lookup(file) || null
 	}));
+}
+
+/**
+ * @param {import('types').ValidatedConfig} config
+ * @param {string} cwd
+ */
+function create_hooks(config, cwd) {
+	const client = resolve_entry(config.kit.files.hooks.client);
+	const server = resolve_entry(config.kit.files.hooks.server);
+	const universal = resolve_entry(config.kit.files.hooks.universal);
+
+	return {
+		client: client && posixify(path.relative(cwd, client)),
+		server: server && posixify(path.relative(cwd, server)),
+		universal: universal && posixify(path.relative(cwd, universal))
+	};
 }
 
 /**
@@ -444,7 +462,7 @@ function create_routes_and_nodes(cwd, config, fallback) {
  * @param {string} file
  * @param {string[]} component_extensions
  * @param {string[]} module_extensions
- * @returns {import('./types').RouteFile}
+ * @returns {import('./types.js').RouteFile}
  */
 function analyze(project_relative, file, component_extensions, module_extensions) {
 	const component_extension = component_extensions.find((ext) => file.endsWith(ext));

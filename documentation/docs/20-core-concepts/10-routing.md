@@ -61,7 +61,7 @@ export function load({ params }) {
 		};
 	}
 
-	throw error(404, 'Not found');
+	error(404, 'Not found');
 }
 ```
 
@@ -104,7 +104,7 @@ export async function load({ params }) {
 		return post;
 	}
 
-	throw error(404, 'Not found');
+	error(404, 'Not found');
 }
 ```
 
@@ -205,6 +205,8 @@ We can create a layout that only applies to pages below `/settings` (while inher
 <slot></slot>
 ```
 
+You can see how `data` is populated by looking at the `+layout.js` example in the next section just below.
+
 By default, each layout inherits the layout above it. Sometimes that isn't what you want - in this case, [advanced layouts](advanced-routing#advanced-layouts) can help you.
 
 ### +layout.js
@@ -264,7 +266,7 @@ export function GET({ url }) {
 	const d = max - min;
 
 	if (isNaN(d) || d < 0) {
-		throw error(400, 'min and max must be numbers, and min must be less than max');
+		error(400, 'min and max must be numbers, and min must be less than max');
 	}
 
 	const random = min + Math.random() * d;
@@ -277,7 +279,7 @@ The first argument to `Response` can be a [`ReadableStream`](https://developer.m
 
 You can use the [`error`](modules#sveltejs-kit-error), [`redirect`](modules#sveltejs-kit-redirect) and [`json`](modules#sveltejs-kit-json) methods from `@sveltejs/kit` for convenience (but you don't have to).
 
-If an error is thrown (either `throw error(...)` or an unexpected error), the response will be a JSON representation of the error or a fallback error page — which can be customised via `src/error.html` — depending on the `Accept` header. The [`+error.svelte`](#error) component will _not_ be rendered in this case. You can read more about error handling [here](errors).
+If an error is thrown (either `error(...)` or an unexpected error), the response will be a JSON representation of the error or a fallback error page — which can be customised via `src/error.html` — depending on the `Accept` header. The [`+error.svelte`](#error) component will _not_ be rendered in this case. You can read more about error handling [here](errors).
 
 > When creating an `OPTIONS` handler, note that Vite will inject `Access-Control-Allow-Origin` and `Access-Control-Allow-Methods` headers — these will not be present in production unless you add them.
 

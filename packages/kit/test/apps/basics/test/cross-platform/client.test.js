@@ -141,17 +141,6 @@ test.describe('Navigation lifecycle functions', () => {
 		expect(await page.innerHTML('pre')).toBe('1 false goto');
 	});
 
-	test('beforeNavigate prevents external navigation triggered by goto', async ({
-		page,
-		app,
-		baseURL
-	}) => {
-		await page.goto('/navigation-lifecycle/before-navigate/prevent-navigation');
-		await app.goto('https://google.de');
-		expect(page.url()).toBe(baseURL + '/navigation-lifecycle/before-navigate/prevent-navigation');
-		expect(await page.innerHTML('pre')).toBe('1 true goto');
-	});
-
 	test('beforeNavigate prevents navigation triggered by back button', async ({
 		page,
 		app,
@@ -215,8 +204,11 @@ test.describe('Navigation lifecycle functions', () => {
 	}) => {
 		await page.goto('/navigation-lifecycle/before-navigate/prevent-navigation');
 		await page.click('h1'); // The browsers block attempts to prevent navigation on a frame that's never had a user gesture.
-
-		await app.goto('https://google.de');
+		page.on('dialog', async (dialog) => {
+			await dialog.dismiss();
+		});
+		await page.close({ runBeforeUnload: true });
+		await page.waitForTimeout(100);
 		await app.goto('/navigation-lifecycle/before-navigate/prevent-navigation?x=1');
 
 		expect(await page.innerHTML('pre')).toBe('2 false goto');
@@ -248,11 +240,11 @@ test.describe('Navigation lifecycle functions', () => {
 
 	test('onNavigate calls callback', async ({ page, clicknav }) => {
 		await page.goto('/navigation-lifecycle/on-navigate/a');
-		expect(await page.textContent('h1')).toBe('undefined -> undefined (...)');
+		expect(await page.textContent('h1')).toBe('undefined -> undefined (...) false');
 
 		await clicknav('[href="/navigation-lifecycle/on-navigate/b"]');
 		expect(await page.textContent('h1')).toBe(
-			'/navigation-lifecycle/on-navigate/a -> /navigation-lifecycle/on-navigate/b (link)'
+			'/navigation-lifecycle/on-navigate/a -> /navigation-lifecycle/on-navigate/b (link) true'
 		);
 	});
 });
@@ -425,13 +417,29 @@ test.describe('Scrolling', () => {
 		await expect(page.locator('input')).toBeFocused();
 	});
 
-	test('scroll positions are recovered on reloading the page', async ({ page, app }) => {
+	test('scroll positions are recovered on reloading the page', async ({
+		page,
+		app,
+		browserName
+	}) => {
+		// No idea why the workaround below works only in dev mode
+		// A better solution would probably be to set fission.webContentIsolationStrategy: 1
+		// in the Firefox preferences but the Playwright API to do so is incomprehensible
+		if (!process.env.DEV && browserName === 'firefox') {
+			return;
+		}
+
 		await page.goto('/anchor');
 		await page.evaluate(() => window.scrollTo(0, 1000));
 		await app.goto('/anchor/anchor');
 		await page.evaluate(() => window.scrollTo(0, 1000));
 
 		await page.reload();
+		if (browserName === 'firefox') {
+			// Firefox with Playwright pushed new history entry history after reload
+			// See https://github.com/microsoft/playwright/issues/22640
+			await page.goBack();
+		}
 		expect(await page.evaluate(() => window.scrollY)).toBe(1000);
 
 		await page.goBack();
@@ -443,6 +451,36 @@ test.describe('Scrolling', () => {
 		expect(await page.evaluate(() => window.scrollY)).toBe(0);
 		await page.reload();
 		expect(await page.evaluate(() => window.scrollY)).toBe(0);
+	});
+
+	test('clicking # or #top takes you to the top of the current page', async ({ page }) => {
+		await page.goto('/scroll/top');
+
+		for (const href of ['#', '#top']) {
+			await page.evaluate(() => window.scrollTo(0, 1000));
+			await page.click(`a[href="${href}"]`);
+			expect(await page.evaluate(() => window.scrollY)).toBe(0);
+
+			await page.evaluate(() => window.scrollTo(0, 1000));
+			await page.click(`a[href="${href}"]`);
+			expect(await page.evaluate(() => window.scrollY)).toBe(0);
+		}
+	});
+
+	test('Scroll position is correct after going back from a shallow route', async ({ page }) => {
+		await page.goto('/scroll/push-state');
+		await page.locator('#subpage-link').click();
+		await page.locator('#back-button').click();
+
+		await page.evaluate(() => window.scrollTo(0, 9999));
+
+		const scroll = await page.evaluate(() => window.scrollY);
+		expect(scroll).toBeGreaterThan(0);
+
+		await page.locator('#shallow-button').click();
+		await page.locator('#back-button').click();
+
+		expect(await page.evaluate(() => window.scrollY)).toBe(scroll);
 	});
 });
 
@@ -465,7 +503,7 @@ test.describe.serial('Errors', () => {
 
 		expect(await page.textContent('footer')).toBe('Custom layout');
 		expect(await page.textContent('#message')).toBe(
-			'This is your custom error page saying: "Crashing now"'
+			'This is your custom error page saying: "Crashing now (500 Internal Error)"'
 		);
 	});
 
@@ -474,7 +512,7 @@ test.describe.serial('Errors', () => {
 
 		expect(await page.textContent('footer')).toBe('Custom layout');
 		expect(await page.textContent('#message')).toBe(
-			'This is your custom error page saying: "Crashing now"'
+			'This is your custom error page saying: "Crashing now (500 Internal Error)"'
 		);
 	});
 
@@ -504,7 +542,7 @@ test.describe.serial('Errors', () => {
 
 		expect(await page.textContent('h1')).toBe('Error - 500');
 		expect(await page.textContent('p')).toBe(
-			'This is the static error page with the following message: Failed to load'
+			'This is the static error page with the following message: Failed to load (500 Internal Error)'
 		);
 	});
 
@@ -763,6 +801,16 @@ test.describe('Routing', () => {
 		expect(new URL(page.url()).pathname).toBe('/routing/trailing-slash/ignore/');
 		await expect(page.locator('p')).toHaveText('/routing/trailing-slash/ignore/');
 	});
+
+	test('trailing slash redirect works when navigating from root page', async ({
+		page,
+		clicknav
+	}) => {
+		await page.goto('/');
+		await clicknav('a[href="/routing/trailing-slash/never/"]');
+		expect(new URL(page.url()).pathname).toBe('/routing/trailing-slash/never');
+		await expect(page.locator('p')).toHaveText('/routing/trailing-slash/never');
+	});
 });
 
 test.describe('Shadow DOM', () => {
@@ -791,6 +839,11 @@ test.describe('cookies', () => {
 		await expect(page.locator('p')).toHaveText('foo=bar');
 		await page.locator('button').click();
 		await expect(page.locator('p')).toHaveText('foo=bar');
+	});
+
+	test("fetch during SSR doesn't un- and re-escape cookies", async ({ page }) => {
+		await page.goto('/cookies/collect-without-re-escaping');
+		await expect(page.locator('p')).toHaveText('cookie-special-characters="foo"');
 	});
 });
 

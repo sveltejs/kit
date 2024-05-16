@@ -18,7 +18,7 @@ import { exec } from '../../utils/routing.js';
 import { redirect_json_response, render_data } from './data/index.js';
 import { add_cookies_to_headers, get_cookies } from './cookie.js';
 import { create_fetch } from './fetch.js';
-import { Redirect } from '../control.js';
+import { HttpError, Redirect, SvelteKitError } from '../control.js';
 import {
 	validate_layout_exports,
 	validate_layout_server_exports,
@@ -27,9 +27,12 @@ import {
 	validate_server_exports
 } from '../../utils/exports.js';
 import { get_option } from '../../utils/options.js';
-import { error, json, text } from '../../exports/index.js';
+import { json, text } from '../../exports/index.js';
 import { action_json_redirect, is_action_json_request } from './page/actions.js';
 import { INVALIDATED_PARAM, TRAILING_SLASH_PARAM } from '../shared.js';
+import { get_public_env } from './env_module.js';
+import { load_page_nodes } from './page/load_page_nodes.js';
+import { get_page_config } from '../../utils/route_config.js';
 
 /* global __SVELTEKIT_ADAPTER_NAME__ */
 
@@ -67,7 +70,10 @@ export async function respond(request, options, manifest, state) {
 			request.headers.get('origin') !== url.origin;
 
 		if (forbidden) {
-			const csrf_error = error(403, `Cross-site ${request.method} form submissions are forbidden`);
+			const csrf_error = new HttpError(
+				403,
+				`Cross-site ${request.method} form submissions are forbidden`
+			);
 			if (request.headers.get('accept') === 'application/json') {
 				return json(csrf_error.body, { status: csrf_error.status });
 			}
@@ -75,9 +81,19 @@ export async function respond(request, options, manifest, state) {
 		}
 	}
 
+	// reroute could alter the given URL, so we pass a copy
+	let rerouted_path;
+	try {
+		rerouted_path = options.hooks.reroute({ url: new URL(url) }) ?? url.pathname;
+	} catch (e) {
+		return text('Internal Server Error', {
+			status: 500
+		});
+	}
+
 	let decoded;
 	try {
-		decoded = decode_pathname(url.pathname);
+		decoded = decode_pathname(rerouted_path);
 	} catch {
 		return text('Malformed URI', { status: 400 });
 	}
@@ -93,6 +109,14 @@ export async function respond(request, options, manifest, state) {
 			return text('Not found', { status: 404 });
 		}
 		decoded = decoded.slice(base.length) || '/';
+	}
+
+	if (decoded === `/${options.app_dir}/env.js`) {
+		return get_public_env(request);
+	}
+
+	if (decoded.startsWith(`/${options.app_dir}`)) {
+		return text('Not found', { status: 404 });
 	}
 
 	const is_data_request = has_data_suffix(decoded);
@@ -134,7 +158,7 @@ export async function respond(request, options, manifest, state) {
 	/** @type {Record<string, string>} */
 	const headers = {};
 
-	/** @type {Record<string, import('./page/types').Cookie>} */
+	/** @type {Record<string, import('./page/types.js').Cookie>} */
 	let cookies_to_add = {};
 
 	/** @type {import('@sveltejs/kit').RequestEvent} */
@@ -195,11 +219,7 @@ export async function respond(request, options, manifest, state) {
 			if (url.pathname === base || url.pathname === base + '/') {
 				trailing_slash = 'always';
 			} else if (route.page) {
-				const nodes = await Promise.all([
-					// we use == here rather than === because [undefined] serializes as "[null]"
-					...route.page.layouts.map((n) => (n == undefined ? n : manifest._.nodes[n]())),
-					manifest._.nodes[route.page.leaf]()
-				]);
+				const nodes = await load_page_nodes(route.page, manifest);
 
 				if (DEV) {
 					const layouts = nodes.slice(0, -1);
@@ -248,6 +268,31 @@ export async function respond(request, options, manifest, state) {
 								(url.search === '?' ? '' : url.search)
 						}
 					});
+				}
+			}
+
+			if (state.before_handle || state.emulator?.platform) {
+				let config = {};
+
+				/** @type {import('types').PrerenderOption} */
+				let prerender = false;
+
+				if (route.endpoint) {
+					const node = await route.endpoint();
+					config = node.config ?? config;
+					prerender = node.prerender ?? prerender;
+				} else if (route.page) {
+					const nodes = await load_page_nodes(route.page, manifest);
+					config = get_page_config(nodes) ?? config;
+					prerender = get_option(nodes, 'prerender') ?? false;
+				}
+
+				if (state.before_handle) {
+					state.before_handle(event, config, prerender);
+				}
+
+				if (state.emulator?.platform) {
+					event.platform = await state.emulator.platform({ config, prerender });
 				}
 			}
 		}
@@ -341,8 +386,8 @@ export async function respond(request, options, manifest, state) {
 			const response = is_data_request
 				? redirect_json_response(e)
 				: route?.page && is_action_json_request(event)
-				? action_json_redirect(e)
-				: redirect_response(e.status, e.location);
+					? action_json_redirect(e)
+					: redirect_response(e.status, e.location);
 			add_cookies_to_headers(response.headers, Object.values(cookies_to_add));
 			return response;
 		}
@@ -356,12 +401,6 @@ export async function respond(request, options, manifest, state) {
 	async function resolve(event, opts) {
 		try {
 			if (opts) {
-				if ('ssr' in opts) {
-					throw new Error(
-						'ssr has been removed, set it in the appropriate +layout.js instead. See the PR for more information: https://github.com/sveltejs/kit/pull/6197'
-					);
-				}
-
 				resolve_opts = {
 					transformPageChunk: opts.transformPageChunk || default_transform,
 					filterSerializedResponseHeaders: opts.filterSerializedResponseHeaders || default_filter,
@@ -480,7 +519,7 @@ export async function respond(request, options, manifest, state) {
 					manifest,
 					state,
 					status: 404,
-					error: new Error(`Not found: ${event.url.pathname}`),
+					error: new SvelteKitError(404, 'Not Found', `Not found: ${event.url.pathname}`),
 					resolve_opts
 				});
 			}

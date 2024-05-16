@@ -44,10 +44,9 @@ if (fs.existsSync(cwd)) {
 
 const options = await p.group(
 	{
-		template: () =>
+		template: (_) =>
 			p.select({
 				message: 'Which Svelte app template?',
-				// @ts-expect-error i have no idea what is going on here
 				options: fs.readdirSync(dist('templates')).map((dir) => {
 					const meta_file = dist(`templates/${dir}/meta.json`);
 					const { title, description } = JSON.parse(fs.readFileSync(meta_file, 'utf8'));
@@ -97,6 +96,10 @@ const options = await p.group(
 					{
 						value: 'vitest',
 						label: 'Add Vitest for unit testing'
+					},
+					{
+						value: 'svelte5',
+						label: 'Try the Svelte 5 preview (unstable!)'
 					}
 				]
 			})
@@ -111,7 +114,8 @@ await create(cwd, {
 	prettier: options.features.includes('prettier'),
 	eslint: options.features.includes('eslint'),
 	playwright: options.features.includes('playwright'),
-	vitest: options.features.includes('vitest')
+	vitest: options.features.includes('vitest'),
+	svelte5: options.features.includes('svelte5')
 });
 
 p.outro('Your project is ready!');

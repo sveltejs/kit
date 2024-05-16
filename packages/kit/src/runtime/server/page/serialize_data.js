@@ -73,6 +73,10 @@ export function serialize_data(fetched, filter, prerendering = false) {
 		`data-url=${escape_html_attr(fetched.url)}`
 	];
 
+	if (fetched.is_b64) {
+		attrs.push('data-b64');
+	}
+
 	if (fetched.request_headers || fetched.request_body) {
 		/** @type {import('types').StrictBody[]} */
 		const values = [];

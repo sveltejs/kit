@@ -1,5 +1,11 @@
 # @sveltejs/amp
 
+## 1.1.0
+
+### Minor Changes
+
+- feat: allow SvelteKit 2 as peer dependency ([#11233](https://github.com/sveltejs/kit/pull/11233))
+
 ## 1.0.2
 
 ### Patch Changes

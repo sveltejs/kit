@@ -1,9 +1,11 @@
-import { DEV } from 'esm-env';
+import { BROWSER, DEV } from 'esm-env';
 import { hash } from '../hash.js';
+import { b64_decode } from '../utils.js';
 
 let loading = 0;
 
-export const native_fetch = window.fetch;
+/** @type {typeof fetch} */
+export const native_fetch = BROWSER ? window.fetch : /** @type {any} */ (() => {});
 
 export function lock_fetch() {
 	loading += 1;
@@ -13,9 +15,10 @@ export function unlock_fetch() {
 	loading -= 1;
 }
 
-if (DEV) {
+if (DEV && BROWSER) {
 	let can_inspect_stack_trace = false;
 
+	// detect whether async stack traces work
 	const check_stack_trace = async () => {
 		const stack = /** @type {string} */ (new Error().stack);
 		can_inspect_stack_trace = stack.includes('check_stack_trace');
@@ -61,7 +64,7 @@ if (DEV) {
 
 		return native_fetch(input, init);
 	};
-} else {
+} else if (BROWSER) {
 	window.fetch = (input, init) => {
 		const method = input instanceof Request ? input.method : init?.method || 'GET';
 
@@ -86,10 +89,16 @@ export function initial_fetch(resource, opts) {
 
 	const script = document.querySelector(selector);
 	if (script?.textContent) {
-		const { body, ...init } = JSON.parse(script.textContent);
+		let { body, ...init } = JSON.parse(script.textContent);
 
 		const ttl = script.getAttribute('data-ttl');
 		if (ttl) cache.set(selector, { body, init, ttl: 1000 * Number(ttl) });
+		const b64 = script.getAttribute('data-b64');
+		if (b64 !== null) {
+			// Can't use native_fetch('data:...;base64,${body}')
+			// csp can block the request
+			body = b64_decode(body);
+		}
 
 		return Promise.resolve(new Response(body, init));
 	}

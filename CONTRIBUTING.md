@@ -28,14 +28,14 @@ If you want to test against an existing project, you can use [pnpm `overrides`](
 
 ```jsonc
 {
-  // ...
-  "pnpm": {
-    "overrides": {
-      "@sveltejs/kit": "link:../path/to/svelte-kit/packages/kit",
-      // additionally/optional the adapter you're using
-      "@sveltejs/adapter-auto": "link:../path/to/svelte-kit/packages/adapter-auto"
-    }
-  }
+	// ...
+	"pnpm": {
+		"overrides": {
+			"@sveltejs/kit": "link:../path/to/svelte-kit/packages/kit",
+			// additionally/optional the adapter you're using
+			"@sveltejs/adapter-auto": "link:../path/to/svelte-kit/packages/adapter-auto"
+		}
+	}
 }
 ```
 
@@ -43,13 +43,13 @@ If you want to test against an existing project, you can use [pnpm `overrides`](
 
 Entry points to be aware of are:
 
-- [`packages/create-svelte`](https://github.com/sveltejs/kit/tree/master/packages/create-svelte) - code that's run when you create a new project with `npm create svelte@latest`
-- [`packages/package`](https://github.com/sveltejs/kit/tree/master/packages/package) - for the `svelte-package` command
-- [`packages/kit/src/core`](https://github.com/sveltejs/kit/tree/master/packages/kit/src/core) - code that's called at dev/build-time
-- [`packages/kit/src/core/sync`](https://github.com/sveltejs/kit/tree/master/packages/kit/src/core/sync) - for `svelte-kit sync`, which regenerates routing info and type definitions
-- [`packages/kit/src/runtime`](https://github.com/sveltejs/kit/tree/master/packages/kit/src/runtime) - code that's called at runtime
-- [`packages/kit/src/exports/vite`](https://github.com/sveltejs/kit/tree/master/packages/kit/src/exports/vite) - for all the Vite plugin related stuff
-- [`packages/adapter-[platform]`](https://github.com/sveltejs/kit/tree/master/packages) - for the various SvelteKit-provided adapters
+- [`packages/create-svelte`](https://github.com/sveltejs/kit/tree/main/packages/create-svelte) - code that's run when you create a new project with `npm create svelte@latest`
+- [`packages/package`](https://github.com/sveltejs/kit/tree/main/packages/package) - for the `svelte-package` command
+- [`packages/kit/src/core`](https://github.com/sveltejs/kit/tree/main/packages/kit/src/core) - code that's called at dev/build-time
+- [`packages/kit/src/core/sync`](https://github.com/sveltejs/kit/tree/main/packages/kit/src/core/sync) - for `svelte-kit sync`, which regenerates routing info and type definitions
+- [`packages/kit/src/runtime`](https://github.com/sveltejs/kit/tree/main/packages/kit/src/runtime) - code that's called at runtime
+- [`packages/kit/src/exports/vite`](https://github.com/sveltejs/kit/tree/main/packages/kit/src/exports/vite) - for all the Vite plugin related stuff
+- [`packages/adapter-[platform]`](https://github.com/sveltejs/kit/tree/main/packages) - for the various SvelteKit-provided adapters
 
 ## Good first issues
 
@@ -87,21 +87,21 @@ If you would like to test local changes to Vite or another dependency, you can b
 
 ```jsonc
 {
-  // ...
-  "dependencies": {
-    "vite": "^4.0.0"
-  },
-  "pnpm": {
-    "overrides": {
-      "vite": "link:../path/to/vite/packages/vite"
-    }
-  }
+	// ...
+	"dependencies": {
+		"vite": "^4.0.0"
+	},
+	"pnpm": {
+		"overrides": {
+			"vite": "link:../path/to/vite/packages/vite"
+		}
+	}
 }
 ```
 
 ## Documentation changes
 
-All documentation for SvelteKit is in the [`documentation` directory](https://github.com/sveltejs/kit/tree/master/documentation), and any improvements should be made as a Pull Request to this repository. The site itself is located in the [`sites/kit.svelte.dev` directory](https://github.com/sveltejs/kit/tree/master/sites/kit.svelte.dev) and can be run locally to preview changes.
+All documentation for SvelteKit is in the [`documentation` directory](https://github.com/sveltejs/kit/tree/main/documentation), and any improvements should be made as a Pull Request to this repository. The site itself is located in the [`sites/kit.svelte.dev` directory](https://github.com/sveltejs/kit/tree/main/sites/kit.svelte.dev) and can be run locally to preview changes.
 
 ## Sending PRs
 
@@ -123,6 +123,10 @@ git config core.hookspath .githooks
 ### Generating changelogs
 
 For changes to be reflected in package changelogs, run `pnpm changeset` and follow the prompts.
+
+### Type changes
+
+If your PR changes the generated types of SvelteKit, run `pnpm generate:types` inside `packages/kit` and commit the new output (don't format it with Prettier!). Review the changes carefully to ensure there are no unwanted changes. If you don't commit type changes, CI will fail.
 
 ## Releases
 

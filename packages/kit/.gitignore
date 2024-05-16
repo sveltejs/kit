@@ -7,7 +7,7 @@
 !/src/core/adapt/fixtures/*/.svelte-kit
 !/test/node_modules
 /test/apps/basics/test/errors.json
-/types
+/types/*.map
 .custom-out-dir
 
 # these are already ignored by the top level .gitignore

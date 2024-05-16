@@ -12,7 +12,12 @@ import {
 	ServerInitOptions,
 	HandleFetch,
 	Actions,
-	HandleClientError
+	HandleClientError,
+	Reroute,
+	RequestEvent,
+	SSRManifest,
+	Emulator,
+	Adapter
 } from '@sveltejs/kit';
 import {
 	HttpMethod,
@@ -27,10 +32,14 @@ export interface ServerModule {
 }
 
 export interface ServerInternalModule {
-	set_building(building: boolean): void;
 	set_assets(path: string): void;
+	set_building(): void;
+	set_manifest(manifest: SSRManifest): void;
+	set_prerendering(): void;
 	set_private_env(environment: Record<string, string>): void;
 	set_public_env(environment: Record<string, string>): void;
+	set_read_implementation(implementation: (path: string) => ReadableStream): void;
+	set_safe_public_env(environment: Record<string, string>): void;
 	set_version(version: string): void;
 	set_fix_stack_trace(fix_stack_trace: (error: unknown) => string): void;
 }
@@ -42,6 +51,7 @@ export interface Asset {
 }
 
 export interface AssetDependencies {
+	assets: string[];
 	file: string;
 	imports: string[];
 	stylesheets: string[];
@@ -52,6 +62,7 @@ export interface BuildData {
 	app_dir: string;
 	app_path: string;
 	manifest_data: ManifestData;
+	out_dir: string;
 	service_worker: string | null;
 	client: {
 		start: string;
@@ -59,6 +70,7 @@ export interface BuildData {
 		imports: string[];
 		stylesheets: string[];
 		fonts: string[];
+		uses_env_dynamic_public: boolean;
 	} | null;
 	server_manifest: import('vite').Manifest;
 }
@@ -96,10 +108,12 @@ export interface ServerHooks {
 	handleFetch: HandleFetch;
 	handle: Handle;
 	handleError: HandleServerError;
+	reroute: Reroute;
 }
 
 export interface ClientHooks {
 	handleError: HandleClientError;
+	reroute: Reroute;
 }
 
 export interface Env {
@@ -114,12 +128,20 @@ export class InternalServer extends Server {
 		options: RequestOptions & {
 			prerendering?: PrerenderOptions;
 			read: (file: string) => Buffer;
+			/** A hook called before `handle` during dev, so that `AsyncLocalStorage` can be populated */
+			before_handle?: (event: RequestEvent, config: any, prerender: PrerenderOption) => void;
+			emulator?: Emulator;
 		}
 	): Promise<Response>;
 }
 
 export interface ManifestData {
 	assets: Asset[];
+	hooks: {
+		client: string | null;
+		server: string | null;
+		universal: string | null;
+	};
 	nodes: PageNode[];
 	routes: RouteData[];
 	matchers: Record<string, string>;
@@ -330,10 +352,10 @@ export interface SSRNode {
 export type SSRNodeLoader = () => Promise<SSRNode>;
 
 export interface SSROptions {
+	app_dir: string;
 	app_template_contains_nonce: boolean;
 	csp: ValidatedConfig['kit']['csp'];
 	csrf_check_origin: boolean;
-	track_server_fetches: boolean;
 	embedded: boolean;
 	env_public_prefix: string;
 	env_private_prefix: string;
@@ -398,6 +420,8 @@ export interface SSRState {
 	 */
 	prerender_default?: PrerenderOption;
 	read?: (file: string) => Buffer;
+	before_handle?: (event: RequestEvent, config: any, prerender: PrerenderOption) => void;
+	emulator?: Emulator;
 }
 
 export type StrictBody = string | ArrayBufferView;
@@ -408,11 +432,17 @@ export interface Uses {
 	parent: boolean;
 	route: boolean;
 	url: boolean;
+	search_params: Set<string>;
 }
 
-export type ValidatedConfig = RecursiveRequired<Config>;
+export type ValidatedConfig = Config & {
+	kit: ValidatedKitConfig;
+	extensions: string[];
+};
 
-export type ValidatedKitConfig = RecursiveRequired<KitConfig>;
+export type ValidatedKitConfig = Omit<RecursiveRequired<KitConfig>, 'adapter'> & {
+	adapter?: Adapter;
+};
 
-export * from '../exports/index';
+export * from '../exports/index.js';
 export * from './private.js';

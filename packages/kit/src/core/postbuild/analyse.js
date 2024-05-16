@@ -10,21 +10,26 @@ import {
 } from '../../utils/exports.js';
 import { load_config } from '../config/index.js';
 import { forked } from '../../utils/fork.js';
-import { should_polyfill } from '../../utils/platform.js';
 import { installPolyfills } from '../../exports/node/polyfills.js';
-import { resolvePath } from '../../exports/index.js';
 import { ENDPOINT_METHODS } from '../../constants.js';
 import { filter_private_env, filter_public_env } from '../../utils/env.js';
+import { resolve_route } from '../../utils/routing.js';
+import { get_page_config } from '../../utils/route_config.js';
+import { check_feature } from '../../utils/features.js';
+import { createReadableStream } from '@sveltejs/kit/node';
 
 export default forked(import.meta.url, analyse);
 
 /**
  * @param {{
  *   manifest_path: string;
+ *   manifest_data: import('types').ManifestData;
+ *   server_manifest: import('vite').Manifest;
+ *   tracked_features: Record<string, string[]>;
  *   env: Record<string, string>
  * }} opts
  */
-async function analyse({ manifest_path, env }) {
+async function analyse({ manifest_path, manifest_data, server_manifest, tracked_features, env }) {
 	/** @type {import('@sveltejs/kit').SSRManifest} */
 	const manifest = (await import(pathToFileURL(manifest_path).href)).manifest;
 
@@ -36,18 +41,21 @@ async function analyse({ manifest_path, env }) {
 	/** @type {import('types').ServerInternalModule} */
 	const internal = await import(pathToFileURL(`${server_root}/server/internal.js`).href);
 
-	if (should_polyfill) {
-		installPolyfills();
-	}
+	installPolyfills();
 
 	// configure `import { building } from '$app/environment'` —
 	// essential we do this before analysing the code
-	internal.set_building(true);
+	internal.set_building();
 
 	// set env, in case it's used in initialisation
 	const { publicPrefix: public_prefix, privatePrefix: private_prefix } = config.env;
-	internal.set_private_env(filter_private_env(env, { public_prefix, private_prefix }));
-	internal.set_public_env(filter_public_env(env, { public_prefix, private_prefix }));
+	const private_env = filter_private_env(env, { public_prefix, private_prefix });
+	const public_env = filter_public_env(env, { public_prefix, private_prefix });
+	internal.set_private_env(private_env);
+	internal.set_public_env(public_env);
+	internal.set_safe_public_env(public_env);
+	internal.set_manifest(manifest);
+	internal.set_read_implementation((file) => createReadableStream(`${server_root}/server/${file}`));
 
 	/** @type {import('types').ServerMetadata} */
 	const metadata = {
@@ -55,10 +63,10 @@ async function analyse({ manifest_path, env }) {
 		routes: new Map()
 	};
 
-	// analyse nodes
-	for (const loader of manifest._.nodes) {
-		const node = await loader();
+	const nodes = await Promise.all(manifest._.nodes.map((loader) => loader()));
 
+	// analyse nodes
+	for (const node of nodes) {
 		metadata.nodes[node.index] = {
 			has_server_load: node.server?.load !== undefined || node.server?.trailingSlash !== undefined
 		};
@@ -66,78 +74,49 @@ async function analyse({ manifest_path, env }) {
 
 	// analyse routes
 	for (const route of manifest._.routes) {
-		/** @type {Array<'GET' | 'POST'>} */
-		const page_methods = [];
-
-		/** @type {(import('types').HttpMethod | '*')[]} */
-		const api_methods = [];
-
-		/** @type {import('types').PrerenderOption | undefined} */
-		let prerender = undefined;
-		/** @type {any} */
-		let config = undefined;
-		/** @type {import('types').PrerenderEntryGenerator | undefined} */
-		let entries = undefined;
-
-		if (route.endpoint) {
-			const mod = await route.endpoint();
-			if (mod.prerender !== undefined) {
-				validate_server_exports(mod, route.id);
-
-				if (mod.prerender && (mod.POST || mod.PATCH || mod.PUT || mod.DELETE)) {
-					throw new Error(
-						`Cannot prerender a +server file with POST, PATCH, PUT, or DELETE (${route.id})`
-					);
-				}
-
-				prerender = mod.prerender;
-			}
-
-			Object.values(mod).forEach((/** @type {import('types').HttpMethod} */ method) => {
-				if (mod[method] && ENDPOINT_METHODS.has(method)) {
-					api_methods.push(method);
-				} else if (mod.fallback) {
-					api_methods.push('*');
-				}
-			});
-
-			config = mod.config;
-			entries = mod.entries;
-		}
-
-		if (route.page) {
-			const nodes = await Promise.all(
-				[...route.page.layouts, route.page.leaf].map((n) => {
-					if (n !== undefined) return manifest._.nodes[n]();
-				})
+		const page =
+			route.page &&
+			analyse_page(
+				route.page.layouts.map((n) => (n === undefined ? n : nodes[n])),
+				nodes[route.page.leaf]
 			);
 
-			const layouts = nodes.slice(0, -1);
-			const page = nodes.at(-1);
+		const endpoint = route.endpoint && analyse_endpoint(route, await route.endpoint());
 
-			for (const layout of layouts) {
-				if (layout) {
-					validate_layout_server_exports(layout.server, layout.server_id);
-					validate_layout_exports(layout.universal, layout.universal_id);
-				}
-			}
-
-			if (page) {
-				page_methods.push('GET');
-				if (page.server?.actions) page_methods.push('POST');
-
-				validate_page_server_exports(page.server, page.server_id);
-				validate_page_exports(page.universal, page.universal_id);
-			}
-
-			prerender = get_option(nodes, 'prerender') ?? false;
-
-			config = get_config(nodes);
-			entries ??= get_option(nodes, 'entries');
+		if (page?.prerender && endpoint?.prerender) {
+			throw new Error(`Cannot prerender a route with both +page and +server files (${route.id})`);
 		}
 
+		if (page?.config && endpoint?.config) {
+			for (const key in { ...page.config, ...endpoint.config }) {
+				if (JSON.stringify(page.config[key]) !== JSON.stringify(endpoint.config[key])) {
+					throw new Error(
+						`Mismatched route config for ${route.id} — the +page and +server files must export the same config, if any`
+					);
+				}
+			}
+		}
+
+		const route_config = page?.config ?? endpoint?.config ?? {};
+		const prerender = page?.prerender ?? endpoint?.prerender;
+
+		if (prerender !== true) {
+			for (const feature of list_features(
+				route,
+				manifest_data,
+				server_manifest,
+				tracked_features
+			)) {
+				check_feature(route.id, route_config, feature, config.adapter);
+			}
+		}
+
+		const page_methods = page?.methods ?? [];
+		const api_methods = endpoint?.methods ?? [];
+		const entries = page?.entries ?? endpoint?.entries;
+
 		metadata.routes.set(route.id, {
-			config,
+			config: route_config,
 			methods: Array.from(new Set([...page_methods, ...api_methods])),
 			page: {
 				methods: page_methods
@@ -147,7 +126,7 @@ async function analyse({ manifest_path, env }) {
 			},
 			prerender,
 			entries:
-				entries && (await entries()).map((entry_object) => resolvePath(route.id, entry_object))
+				entries && (await entries()).map((entry_object) => resolve_route(route.id, entry_object))
 		});
 	}
 
@@ -155,20 +134,110 @@ async function analyse({ manifest_path, env }) {
 }
 
 /**
- * Do a shallow merge (first level) of the config object
- * @param {Array<import('types').SSRNode | undefined>} nodes
+ * @param {import('types').SSRRoute} route
+ * @param {import('types').SSREndpoint} mod
  */
-function get_config(nodes) {
-	let current = {};
-	for (const node of nodes) {
-		const config = node?.universal?.config ?? node?.server?.config;
-		if (config) {
-			current = {
-				...current,
-				...config
-			};
+function analyse_endpoint(route, mod) {
+	validate_server_exports(mod, route.id);
+
+	if (mod.prerender && (mod.POST || mod.PATCH || mod.PUT || mod.DELETE)) {
+		throw new Error(
+			`Cannot prerender a +server file with POST, PATCH, PUT, or DELETE (${route.id})`
+		);
+	}
+
+	/** @type {Array<import('types').HttpMethod | '*'>} */
+	const methods = [];
+
+	for (const method of /** @type {import('types').HttpMethod[]} */ (ENDPOINT_METHODS)) {
+		if (mod[method]) methods.push(method);
+	}
+
+	if (mod.fallback) {
+		methods.push('*');
+	}
+
+	return {
+		config: mod.config,
+		entries: mod.entries,
+		methods,
+		prerender: mod.prerender ?? false
+	};
+}
+
+/**
+ * @param {Array<import('types').SSRNode | undefined>} layouts
+ * @param {import('types').SSRNode} leaf
+ */
+function analyse_page(layouts, leaf) {
+	for (const layout of layouts) {
+		if (layout) {
+			validate_layout_server_exports(layout.server, layout.server_id);
+			validate_layout_exports(layout.universal, layout.universal_id);
 		}
 	}
 
-	return Object.keys(current).length ? current : undefined;
+	/** @type {Array<'GET' | 'POST'>} */
+	const methods = ['GET'];
+	if (leaf.server?.actions) methods.push('POST');
+
+	validate_page_server_exports(leaf.server, leaf.server_id);
+	validate_page_exports(leaf.universal, leaf.universal_id);
+
+	return {
+		config: get_page_config([...layouts, leaf]),
+		entries: leaf.universal?.entries ?? leaf.server?.entries,
+		methods,
+		prerender: get_option([...layouts, leaf], 'prerender') ?? false
+	};
+}
+
+/**
+ * @param {import('types').SSRRoute} route
+ * @param {import('types').ManifestData} manifest_data
+ * @param {import('vite').Manifest} server_manifest
+ * @param {Record<string, string[]>} tracked_features
+ */
+function list_features(route, manifest_data, server_manifest, tracked_features) {
+	const features = new Set();
+
+	const route_data = /** @type {import('types').RouteData} */ (
+		manifest_data.routes.find((r) => r.id === route.id)
+	);
+
+	/** @param {string} id */
+	function visit(id) {
+		const chunk = server_manifest[id];
+		if (!chunk) return;
+
+		if (chunk.file in tracked_features) {
+			for (const feature of tracked_features[chunk.file]) {
+				features.add(feature);
+			}
+		}
+
+		if (chunk.imports) {
+			for (const id of chunk.imports) {
+				visit(id);
+			}
+		}
+	}
+
+	let page_node = route_data?.leaf;
+	while (page_node) {
+		if (page_node.server) visit(page_node.server);
+		page_node = page_node.parent ?? null;
+	}
+
+	if (route_data.endpoint) {
+		visit(route_data.endpoint.file);
+	}
+
+	if (manifest_data.hooks.server) {
+		// TODO if hooks.server.js imports `read`, it will be in the entry chunk
+		// we don't currently account for that case
+		visit(manifest_data.hooks.server);
+	}
+
+	return Array.from(features);
 }
