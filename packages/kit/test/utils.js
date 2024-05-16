@@ -39,10 +39,11 @@ export const test = base.extend({
 			afterNavigate: () => page.evaluate(() => afterNavigate(() => {})),
 
 			/**
-			 * @param {string[]} urls
+			 * @param {string} pathname
 			 * @returns {Promise<void>}
 			 */
-			preloadCode: (...urls) => page.evaluate((urls) => preloadCode(...urls), urls),
+			preloadCode: (pathname) =>
+				page.evaluate((/** @type {string} */ pathname) => preloadCode(pathname), pathname),
 
 			/**
 			 * @param {string} url
