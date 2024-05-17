@@ -2120,6 +2120,16 @@ function _start_router() {
 
 		event.preventDefault();
 
+		// allow the browser to repaint before navigating —
+		// this prevents INP scores being penalised
+		new Promise((fulfil) => {
+			requestAnimationFrame(() => {
+				setTimeout(fulfil, 0);
+			});
+
+			setTimeout(fulfil, 100); // fallback for edge case where rAF doesn't fire because e.g. tab was backgrounded
+		});
+
 		navigate({
 			type: 'link',
 			url,
