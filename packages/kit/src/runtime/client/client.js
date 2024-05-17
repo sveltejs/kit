@@ -2122,7 +2122,7 @@ function _start_router() {
 
 		// allow the browser to repaint before navigating —
 		// this prevents INP scores being penalised
-		new Promise((fulfil) => {
+		await new Promise((fulfil) => {
 			requestAnimationFrame(() => {
 				setTimeout(fulfil, 0);
 			});
