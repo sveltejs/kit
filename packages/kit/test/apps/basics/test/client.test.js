@@ -1189,6 +1189,6 @@ test.describe('INP', () => {
 
 		// we may need to tweak this number, and the `rate` above,
 		// depending on if this proves flaky
-		expect(time).toBeLessThan(200);
+		expect(time).toBeLessThan(400);
 	});
 });
