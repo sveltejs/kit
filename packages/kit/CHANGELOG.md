@@ -1,5 +1,13 @@
 # @sveltejs/kit
 
+## 2.5.9
+
+### Patch Changes
+
+- fix: yield main thread before navigating ([#12225](https://github.com/sveltejs/kit/pull/12225))
+
+- fix: correctly handle aliases to files in the `.svelte-kit` directory ([#12220](https://github.com/sveltejs/kit/pull/12220))
+
 ## 2.5.8
 
 ### Patch Changes
