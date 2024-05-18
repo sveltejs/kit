@@ -1,7 +1,7 @@
 <script>
 	import { beforeNavigate } from '$app/navigation';
 
-	const download_url = '/before-navigate/download';
+	const download_url = '/navigation-lifecycle/before-navigate/download';
 
 	let times_triggered = 0;
 	let unload = false;
@@ -28,7 +28,7 @@
 <a href="/navigation-lifecycle/before-navigate/prevent-navigation?x=1">self</a>
 <a href="https://google.com" target="_blank" rel="noreferrer">_blank</a>
 <a href="https://google.de">external</a>
-<a download href="/before-navigate/prevent-navigation">explicit download</a>
+<a download href="/">explicit download</a>
 <a href={download_url}>implicit download</a>
 <!-- svelte-ignore a11y-invalid-attribute -->
 <a download href="">external</a>

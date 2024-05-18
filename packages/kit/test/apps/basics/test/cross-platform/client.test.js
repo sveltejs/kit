@@ -215,9 +215,10 @@ test.describe('Navigation lifecycle functions', () => {
 	});
 
 	test('is triggered after clicking an explicit download link', async ({ page, baseURL }) => {
-		await page.goto('/before-navigate/prevent-navigation');
+		await page.goto('/navigation-lifecycle/before-navigate/prevent-navigation');
 
-		await page.click('a[download]');
+		await page.locator('a[download]', { hasText: 'explicit download' }).click();
+		expect(page.url()).toBe(baseURL + '/navigation-lifecycle/before-navigate/prevent-navigation');
 		expect(await page.innerHTML('pre')).toBe('0 false undefined');
 
 		await page.click('a[href="/navigation-lifecycle/before-navigate/a"]');
@@ -227,16 +228,19 @@ test.describe('Navigation lifecycle functions', () => {
 	});
 
 	test('is triggered after clicking an implicit download link', async ({ page, baseURL }) => {
-		await page.goto('/before-navigate/prevent-navigation');
+		await page.goto('/navigation-lifecycle/before-navigate/prevent-navigation');
 
-		await page.click('a[href="/before-navigate/download"]');
-
-		expect(page.url()).toBe(baseURL + '/before-navigate/prevent-navigation');
+		await page
+			.locator('a[href="/navigation-lifecycle/before-navigate/download"]', {
+				hasText: 'implicit download'
+			})
+			.click();
+		expect(page.url()).toBe(baseURL + '/navigation-lifecycle/before-navigate/prevent-navigation');
 		expect(await page.innerHTML('pre')).toBe('1 true link');
 
-		await page.click('a[href="/before-navigate/a"]');
+		await page.click('a[href="/navigation-lifecycle/before-navigate/a"]');
 
-		expect(page.url()).toBe(baseURL + '/before-navigate/prevent-navigation');
+		expect(page.url()).toBe(baseURL + '/navigation-lifecycle/before-navigate/prevent-navigation');
 		expect(await page.innerHTML('pre')).toBe('2 false link');
 	});
 
