@@ -111,11 +111,6 @@ const options = object(
 				checkOrigin: boolean(true)
 			}),
 
-			dangerZone: object({
-				// TODO 2.0: Remove this
-				trackServerFetches: boolean(false)
-			}),
-
 			embedded: boolean(false),
 
 			env: object({
@@ -128,7 +123,8 @@ const options = object(
 				assets: string('static'),
 				hooks: object({
 					client: string(join('src', 'hooks.client')),
-					server: string(join('src', 'hooks.server'))
+					server: string(join('src', 'hooks.server')),
+					universal: string(join('src', 'hooks'))
 				}),
 				lib: string(join('src', 'lib')),
 				params: string(join('src', 'params')),
@@ -179,13 +175,7 @@ const options = object(
 
 					return input;
 				}),
-				relative: validate(undefined, (input, keypath) => {
-					if (typeof input !== 'boolean') {
-						throw new Error(`${keypath} option must be a boolean or undefined`);
-					}
-
-					return input;
-				})
+				relative: boolean(true)
 			}),
 
 			prerender: object({

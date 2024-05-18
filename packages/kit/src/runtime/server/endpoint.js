@@ -81,7 +81,7 @@ export function is_endpoint_request(event) {
 	const { method, headers } = event.request;
 
 	// These methods exist exclusively for endpoints
-	if (ENDPOINT_METHODS.has(method) && !PAGE_METHODS.has(method)) {
+	if (ENDPOINT_METHODS.includes(method) && !PAGE_METHODS.includes(method)) {
 		return true;
 	}
 

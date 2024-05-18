@@ -7,6 +7,7 @@
  * 		// interface Error {}
  * 		// interface Locals {}
  * 		// interface PageData {}
+ * 		// interface PageState {}
  * 		// interface Platform {}
  * 	}
  * }
@@ -38,6 +39,11 @@ declare namespace App {
 	 * Use optional properties for data that is only present on specific pages. Do not add an index signature (`[key: string]: any`).
 	 */
 	export interface PageData {}
+
+	/**
+	 * The shape of the `$page.state` object, which can be manipulated using the [`pushState`](https://kit.svelte.dev/docs/modules#$app-navigation-pushstate) and [`replaceState`](https://kit.svelte.dev/docs/modules#$app-navigation-replacestate) functions from `$app/navigation`.
+	 */
+	export interface PageState {}
 
 	/**
 	 * If your adapter provides [platform-specific context](https://kit.svelte.dev/docs/adapters#platform-specific-context) via `event.platform`, you can specify it here.
@@ -72,37 +78,4 @@ declare module '$service-worker' {
 	 * See [`config.kit.version`](https://kit.svelte.dev/docs/configuration#version). It's useful for generating unique cache names inside your service worker, so that a later deployment of your app can invalidate old caches.
 	 */
 	export const version: string;
-}
-
-/** Internal version of $app/environment */
-declare module '__sveltekit/environment' {
-	/**
-	 * SvelteKit analyses your app during the `build` step by running it. During this process, `building` is `true`. This also applies during prerendering.
-	 */
-	export const building: boolean;
-	/**
-	 * The value of `config.kit.version.name`.
-	 */
-	export const version: string;
-	export function set_building(): void;
-}
-
-/** Internal version of $app/paths */
-declare module '__sveltekit/paths' {
-	/**
-	 * A string that matches [`config.kit.paths.base`](https://kit.svelte.dev/docs/configuration#paths).
-	 *
-	 * Example usage: `<a href="{base}/your-page">Link</a>`
-	 */
-	export let base: '' | `/${string}`;
-	/**
-	 * An absolute path that matches [`config.kit.paths.assets`](https://kit.svelte.dev/docs/configuration#paths).
-	 *
-	 * > If a value for `config.kit.paths.assets` is specified, it will be replaced with `'/_svelte_kit_assets'` during `vite dev` or `vite preview`, since the assets don't yet live at their eventual URL.
-	 */
-	export let assets: '' | `https://${string}` | `http://${string}` | '/_svelte_kit_assets';
-	export let relative: boolean | undefined; // TODO in 2.0, make this a `boolean` that defaults to `true`
-	export function reset(): void;
-	export function override(paths: { base: string; assets: string }): void;
-	export function set_assets(path: string): void;
 }

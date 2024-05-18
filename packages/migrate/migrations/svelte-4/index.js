@@ -2,8 +2,8 @@ import colors from 'kleur';
 import fs from 'node:fs';
 import prompts from 'prompts';
 import glob from 'tiny-glob/sync.js';
-import { bail, check_git } from '../../utils.js';
-import { update_js_file, update_pkg_json, update_svelte_file } from './migrate.js';
+import { bail, check_git, update_js_file, update_svelte_file } from '../../utils.js';
+import { transform_code, transform_svelte_code, update_pkg_json } from './migrate.js';
 
 export async function migrate() {
 	if (!fs.existsSync('package.json')) {
@@ -78,9 +78,11 @@ export async function migrate() {
 	for (const file of files) {
 		if (extensions.some((ext) => file.endsWith(ext))) {
 			if (svelte_extensions.some((ext) => file.endsWith(ext))) {
-				update_svelte_file(file, migrate_transition.value);
+				update_svelte_file(file, transform_code, (code) =>
+					transform_svelte_code(code, migrate_transition.value)
+				);
 			} else {
-				update_js_file(file);
+				update_js_file(file, transform_code);
 			}
 		}
 	}

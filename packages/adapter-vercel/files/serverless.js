@@ -1,5 +1,5 @@
 import { installPolyfills } from '@sveltejs/kit/node/polyfills';
-import { getRequest, setResponse } from '@sveltejs/kit/node';
+import { getRequest, setResponse, createReadableStream } from '@sveltejs/kit/node';
 import { Server } from 'SERVER';
 import { manifest } from 'MANIFEST';
 
@@ -8,7 +8,8 @@ installPolyfills();
 const server = new Server(manifest);
 
 await server.init({
-	env: /** @type {Record<string, string>} */ (process.env)
+	env: /** @type {Record<string, string>} */ (process.env),
+	read: createReadableStream
 });
 
 const DATA_SUFFIX = '/__data.json';
@@ -32,15 +33,7 @@ export default async (req, res) => {
 		}
 	}
 
-	/** @type {Request} */
-	let request;
-
-	try {
-		request = await getRequest({ base: `https://${req.headers.host}`, request: req });
-	} catch (err) {
-		res.statusCode = /** @type {any} */ (err).status || 400;
-		return res.end('Invalid request body');
-	}
+	const request = await getRequest({ base: `https://${req.headers.host}`, request: req });
 
 	setResponse(
 		res,

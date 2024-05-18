@@ -66,7 +66,11 @@ self.addEventListener('fetch', (event) => {
 
 		// `build`/`files` can always be served from the cache
 		if (ASSETS.includes(url.pathname)) {
-			return cache.match(url.pathname);
+			const response = await cache.match(url.pathname);
+
+			if (response) {
+				return response;
+			}
 		}
 
 		// for everything else, try the network first, but
@@ -74,13 +78,27 @@ self.addEventListener('fetch', (event) => {
 		try {
 			const response = await fetch(event.request);
 
+			// if we're offline, fetch can return a value that is not a Response
+			// instead of throwing - and we can't pass this non-Response to respondWith
+			if (!(response instanceof Response)) {
+				throw new Error('invalid response from fetch');
+			}
+
 			if (response.status === 200) {
 				cache.put(event.request, response.clone());
 			}
 
 			return response;
-		} catch {
-			return cache.match(event.request);
+		} catch (err) {
+			const response = await cache.match(event.request);
+
+			if (response) {
+				return response;
+			}
+
+			// if there's no cache, then just error out
+			// as there is nothing we can do to respond to this request
+			throw err;
 		}
 	}
 
@@ -125,8 +143,8 @@ const sw = /** @type {ServiceWorkerGlobalScope} */ (/** @type {unknown} */ (self
 const sw = self as unknown as ServiceWorkerGlobalScope;
 ```
 
-This disables access to DOM typings like `HTMLElement` which are not available inside a service worker and instantiates the correct globals. The reassignment of `self` to `sw` allows you to type cast it in the process (there are a couple of ways to do this, but the easiest that requires no additional files). Use `sw` instead of `self` in the rest of the file. The reference to the SvelteKit types ensures that the `$service-worker` import has proper type definitions.
+This disables access to DOM typings like `HTMLElement` which are not available inside a service worker and instantiates the correct globals. The reassignment of `self` to `sw` allows you to type cast it in the process (there are a couple of ways to do this, but this is the easiest that requires no additional files). Use `sw` instead of `self` in the rest of the file. The reference to the SvelteKit types ensures that the `$service-worker` import has proper type definitions. If you import `$env/static/public` you either have to `// @ts-ignore` the import or add `/// <reference types="../.svelte-kit/ambient.d.ts" />` to the reference types.
 
 ## Other solutions
 
-SvelteKit's service worker implementation is deliberately low-level. If you need a more full-flegded but also more opinionated solution, we recommend looking at solutions like [Vite PWA plugin](https://vite-pwa-org.netlify.app/frameworks/sveltekit.html), which uses [Workbox](https://web.dev/learn/pwa/workbox). For more general information on service workers, we recommend [the MDN web docs](https://developer.mozilla.org/en-US/docs/Web/API/Service_Worker_API/Using_Service_Workers).
+SvelteKit's service worker implementation is deliberately low-level. If you need a more full-fledged but also more opinionated solution, we recommend looking at solutions like [Vite PWA plugin](https://vite-pwa-org.netlify.app/frameworks/sveltekit.html), which uses [Workbox](https://web.dev/learn/pwa/workbox). For more general information on service workers, we recommend [the MDN web docs](https://developer.mozilla.org/en-US/docs/Web/API/Service_Worker_API/Using_Service_Workers).

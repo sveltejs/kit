@@ -1,5 +1,41 @@
 # @sveltejs/package
 
+## 2.3.1
+
+### Patch Changes
+
+- fix: don't strip `lang="ts"` tag in Svelte 5 ([#12080](https://github.com/sveltejs/kit/pull/12080))
+
+## 2.3.0
+
+### Minor Changes
+
+- feat: add option to specify the tsconfig/jsconfig ([#11698](https://github.com/sveltejs/kit/pull/11698))
+
+## 2.2.7
+
+### Patch Changes
+
+- chore: update chokidar to 3.6.0 ([#11811](https://github.com/sveltejs/kit/pull/11811))
+
+## 2.2.6
+
+### Patch Changes
+
+- chore: bump svelte2tsx dependency to support generating types for `.svelte.js/ts` files ([#11619](https://github.com/sveltejs/kit/pull/11619))
+
+## 2.2.5
+
+### Patch Changes
+
+- fix: improve warning when encountering import.meta.env ([#11440](https://github.com/sveltejs/kit/pull/11440))
+
+## 2.2.4
+
+### Patch Changes
+
+- chore: update primary branch from master to main ([`47779436c5f6c4d50011d0ef8b2709a07c0fec5d`](https://github.com/sveltejs/kit/commit/47779436c5f6c4d50011d0ef8b2709a07c0fec5d))
+
 ## 2.2.3
 
 ### Patch Changes

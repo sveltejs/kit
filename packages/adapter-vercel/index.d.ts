@@ -28,6 +28,12 @@ export interface ServerlessConfig {
 	 * If `true`, this route will always be deployed as its own separate function
 	 */
 	split?: boolean;
+
+	/**
+	 * https://vercel.com/docs/build-output-api/v3/configuration#images
+	 */
+	images?: ImagesConfig;
+
 	/**
 	 * [Incremental Static Regeneration](https://vercel.com/docs/concepts/incremental-static-regeneration/overview) configuration.
 	 * Serverless only.
@@ -52,6 +58,26 @@ export interface ServerlessConfig {
 		  }
 		| false;
 }
+
+type ImageFormat = 'image/avif' | 'image/webp';
+
+type RemotePattern = {
+	protocol?: 'http' | 'https';
+	hostname: string;
+	port?: string;
+	pathname?: string;
+};
+
+type ImagesConfig = {
+	sizes: number[];
+	domains: string[];
+	remotePatterns?: RemotePattern[];
+	minimumCacheTTL?: number; // seconds
+	formats?: ImageFormat[];
+	dangerouslyAllowSVG?: boolean;
+	contentSecurityPolicy?: string;
+	contentDispositionType?: string;
+};
 
 export interface EdgeConfig {
 	/**

@@ -1,4 +1,3 @@
-import fs from 'node:fs';
 import ts from 'typescript';
 import MagicString from 'magic-string';
 import { comment, indent_at_line } from '../../utils.js';
@@ -306,35 +305,6 @@ export function parse(content) {
 	} catch {
 		return null;
 	}
-}
-
-/** @param {string} test_file */
-export function read_samples(test_file) {
-	const markdown = fs.readFileSync(new URL('./samples.md', test_file), 'utf8');
-	const samples = markdown
-		.split(/^##/gm)
-		.slice(1)
-		.map((block) => {
-			const description = block.split('\n')[0];
-			const before = /```(js|ts|svelte) before\n([^]*?)\n```/.exec(block);
-			const after = /```(js|ts|svelte) after\n([^]*?)\n```/.exec(block);
-
-			const match = /> file: (.+)/.exec(block);
-
-			return {
-				description,
-				before: before ? before[2] : '',
-				after: after ? after[2] : '',
-				filename: match?.[1],
-				solo: block.includes('> solo')
-			};
-		});
-
-	if (samples.some((sample) => sample.solo)) {
-		return samples.filter((sample) => sample.solo);
-	}
-
-	return samples;
 }
 
 /**

@@ -2,7 +2,7 @@
 title: Node servers
 ---
 
-To generate a standalone Node server, use [`adapter-node`](https://github.com/sveltejs/kit/tree/master/packages/adapter-node).
+To generate a standalone Node server, use [`adapter-node`](https://github.com/sveltejs/kit/tree/main/packages/adapter-node).
 
 ## Usage
 
@@ -31,6 +31,12 @@ node build
 ```
 
 Development dependencies will be bundled into your app using [Rollup](https://rollupjs.org). To control whether a given package is bundled or externalised, place it in `devDependencies` or `dependencies` respectively in your `package.json`.
+
+### Compressing responses
+
+You will typically want to compress responses coming from the server. If you are already deploying your server behind a reverse proxy for SSL or load balancing, it typically results in better performance to also handle compression at that layer since Node.js is single-threaded.
+
+However, if you're building a [custom server](#custom-server) and do want to add a compression middleware there, note that we would recommend using [`@polka/compression`](https://www.npmjs.com/package/@polka/compression) since SvelteKit streams responses and the more popular `compression` package does not support streaming and may cause errors when used.
 
 ## Environment variables
 
@@ -63,7 +69,7 @@ Alternatively, the server can be configured to accept connections on a specified
 SOCKET_PATH=/tmp/socket node build
 ```
 
-### `ORIGIN`, `PROTOCOL_HEADER` and `HOST_HEADER`
+### `ORIGIN`, `PROTOCOL_HEADER`, `HOST_HEADER`, and `PORT_HEADER`
 
 HTTP doesn't give SvelteKit a reliable way to know the URL that is currently being requested. The simplest way to tell SvelteKit where the app is being served is to set the `ORIGIN` environment variable:
 
@@ -81,6 +87,8 @@ PROTOCOL_HEADER=x-forwarded-proto HOST_HEADER=x-forwarded-host node build
 ```
 
 > [`x-forwarded-proto`](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/X-Forwarded-Proto) and [`x-forwarded-host`](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/X-Forwarded-Host) are de facto standard headers that forward the original protocol and host if you're using a reverse proxy (think load balancers and CDNs). You should only set these variables if your server is behind a trusted reverse proxy; otherwise, it'd be possible for clients to spoof these headers.
+>
+> If you're hosting your proxy on a non-standard port and your reverse proxy supports `x-forwarded-port`, you can also set `PORT_HEADER=x-forwarded-port`.
 
 If `adapter-node` can't correctly determine the URL of your deployment, you may experience this error when using [form actions](form-actions):
 
@@ -114,7 +122,15 @@ We instead read from the _right_, accounting for the number of trusted proxies. 
 
 ### `BODY_SIZE_LIMIT`
 
-The maximum request body size to accept in bytes including while streaming. Defaults to 512kb. You can disable this option with a value of 0 and implement a custom check in [`handle`](hooks#server-hooks-handle) if you need something more advanced.
+The maximum request body size to accept in bytes including while streaming. Defaults to 512kb. You can disable this option with a value of `Infinity` (0 in older versions of the adapter) and implement a custom check in [`handle`](hooks#server-hooks-handle) if you need something more advanced.
+
+### `SHUTDOWN_TIMEOUT`
+
+The number of seconds to wait before forcefully closing any remaining connections after receiving a `SIGTERM` or `SIGINT` signal. Defaults to `30`. Internally the adapter calls [`closeAllConnections`](https://nodejs.org/api/http.html#servercloseallconnections). See [Graceful shutdown](#graceful-shutdown) for more details.
+
+### `IDLE_TIMEOUT`
+
+When using systemd socket activation, `IDLE_TIMEOUT` specifies the number of seconds after which the app is automatically put to sleep when receiving no requests. If not set, the app runs continuously. See [Socket activation](#socket-activation) for more details.
 
 ## Options
 
@@ -130,9 +146,8 @@ export default {
 		adapter: adapter({
 			// default options are shown
 			out: 'build',
-			precompress: false,
-			envPrefix: '',
-			polyfill: true
+			precompress: true,
+			envPrefix: ''
 		})
 	}
 };
@@ -144,7 +159,7 @@ The directory to build the server to. It defaults to `build` — i.e. `node buil
 
 ### precompress
 
-Enables precompressing using gzip and brotli for assets and prerendered pages. It defaults to `false`.
+Enables precompressing using gzip and brotli for assets and prerendered pages. It defaults to `true`.
 
 ### envPrefix
 
@@ -161,11 +176,45 @@ MY_CUSTOM_ORIGIN=https://my.site \
 node build
 ```
 
-### polyfill
+## Graceful shutdown
 
-Controls whether your build will load polyfills for missing modules. It defaults to `true`, and should only be disabled when using Node 18.11 or greater.
+By default `adapter-node` gracefully shuts down the HTTP server when a `SIGTERM` or `SIGINT` signal is received. It will:
 
-Note: to use Node's built-in `crypto` global with Node 18 you will need to use the `--experimental-global-webcrypto` flag. This flag is not required with Node 20.
+1. reject new requests ([`server.close`](https://nodejs.org/api/http.html#serverclosecallback))
+2. wait for requests that have already been made but not received a response yet to finish and close connections once they become idle ([`server.closeIdleConnections`](https://nodejs.org/api/http.html#servercloseidleconnections))
+3. and finally, close any remaining connections that are still active after [`SHUTDOWN_TIMEOUT`](#environment-variables-shutdown-timeout) seconds. ([`server.closeAllConnections`](https://nodejs.org/api/http.html#servercloseallconnections))
+
+> If you want to customize this behaviour you can use a [custom server](#custom-server).
+
+## Socket activation
+
+Most Linux operating systems today use a modern process manager called systemd to start the server and run and manage services. You can configure your server to allocate a socket and start and scale your app on demand. This is called [socket activation](http://0pointer.de/blog/projects/socket-activated-containers.html). In this case, the OS will pass two environment variables to your app — `LISTEN_PID` and `LISTEN_FDS`. The adapter will then listen on file descriptor 3 which refers to a systemd socket unit that you will have to create.
+
+> You can still use [`envPrefix`](#options-envprefix) with systemd socket activation. `LISTEN_PID` and `LISTEN_FDS` are always read without a prefix.
+
+To take advantage of socket activation follow these steps.
+
+1. Run your app as a [systemd service](https://www.freedesktop.org/software/systemd/man/latest/systemd.service.html). It can either run directly on the host system or inside a container (using Docker or a systemd portable service for example). If you additionally pass an [`IDLE_TIMEOUT`](#environment-variables-idle-timeout) environment variable to your app it will gracefully shutdown if there are no requests for `IDLE_TIMEOUT` seconds. systemd will automatically start your app again when new requests are coming in.
+
+```ini
+/// file: /etc/systemd/system/myapp.service
+[Service]
+Environment=NODE_ENV=production IDLE_TIMEOUT=60
+ExecStart=/usr/bin/node /usr/bin/myapp/build
+```
+
+2. Create an accompanying [socket unit](https://www.freedesktop.org/software/systemd/man/latest/systemd.socket.html). The adapter only accepts a single socket.
+
+```ini
+/// file: /etc/systemd/system/myapp.socket
+[Socket]
+ListenStream=3000
+
+[Install]
+WantedBy=sockets.target
+```
+
+3. Make sure systemd has recognised both units by running `sudo systemctl daemon-reload`. Then enable the socket on boot and start it immediately using `sudo systemctl enable --now myapp.socket`. The app will then automatically start once the first request is made to `localhost:3000`.
 
 ## Custom server
 
@@ -196,9 +245,9 @@ app.listen(3000, () => {
 
 ## Troubleshooting
 
-### Is there a hook for cleaning up before the server exits?
+### Is there a hook for cleaning up before the app exits?
 
-There's nothing built-in to SvelteKit for this, because such a cleanup hook depends highly on the execution environment you're on. For Node, you can use its built-in `process.on(..)` to implement a callback that runs before the server exits:
+There's nothing built-in to SvelteKit for this, because such a cleanup hook depends highly on the execution environment you're on. For Node, you can use its built-in `process.on(...)` to implement a callback that runs before the app exits:
 
 ```js
 // @errors: 2304 2580
@@ -207,6 +256,5 @@ function shutdownGracefully() {
 	db.shutdown();
 }
 
-process.on('SIGINT', shutdownGracefully);
-process.on('SIGTERM', shutdownGracefully);
+process.on('exit', shutdownGracefully);
 ```

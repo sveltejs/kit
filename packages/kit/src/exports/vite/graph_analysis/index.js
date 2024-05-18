@@ -1,11 +1,9 @@
 import path from 'node:path';
 import { posixify } from '../../../utils/filesystem.js';
 import { strip_virtual_prefix } from '../utils.js';
+import { app_server, env_dynamic_private, env_static_private } from '../module_ids.js';
 
-const ILLEGAL_IMPORTS = new Set([
-	'\0virtual:$env/dynamic/private',
-	'\0virtual:$env/static/private'
-]);
+const ILLEGAL_IMPORTS = new Set([env_dynamic_private, env_static_private, app_server]);
 const ILLEGAL_MODULE_NAME_PATTERN = /.*\.server\..+/;
 
 /**
@@ -101,6 +99,10 @@ export function normalize_id(id, lib, cwd) {
 
 	if (id.startsWith(cwd)) {
 		id = path.relative(cwd, id);
+	}
+
+	if (id === app_server) {
+		return '$app/server';
 	}
 
 	return posixify(id);

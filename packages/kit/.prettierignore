@@ -1,1 +1,2 @@
 test/build-errors/apps/syntax-error/src/routes/+page.svelte
+/types

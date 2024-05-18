@@ -1,14 +1,14 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { URL } from 'node:url';
+import { AsyncLocalStorage } from 'node:async_hooks';
 import colors from 'kleur';
 import sirv from 'sirv';
 import { isCSSRequest, loadEnv, buildErrorMessage } from 'vite';
-import { getRequest, setResponse } from '../../../exports/node/index.js';
+import { createReadableStream, getRequest, setResponse } from '../../../exports/node/index.js';
 import { installPolyfills } from '../../../exports/node/polyfills.js';
 import { coalesce_to_error } from '../../../utils/error.js';
-import { posixify, resolve_entry, to_fs } from '../../../utils/filesystem.js';
-import { should_polyfill } from '../../../utils/platform.js';
+import { from_fs, posixify, resolve_entry, to_fs } from '../../../utils/filesystem.js';
 import { load_error_page } from '../../../core/config/index.js';
 import { SVELTE_KIT_ASSETS } from '../../../constants.js';
 import * as sync from '../../../core/sync/sync.js';
@@ -16,6 +16,7 @@ import { get_mime_lookup, runtime_base } from '../../../core/utils.js';
 import { compact } from '../../../utils/array.js';
 import { not_found } from '../utils.js';
 import { SCHEME } from '../../../utils/url.js';
+import { check_feature } from '../../../utils/features.js';
 
 const cwd = process.cwd();
 
@@ -26,9 +27,16 @@ const cwd = process.cwd();
  * @return {Promise<Promise<() => void>>}
  */
 export async function dev(vite, vite_config, svelte_config) {
-	if (should_polyfill) {
-		installPolyfills();
-	}
+	installPolyfills();
+
+	const async_local_storage = new AsyncLocalStorage();
+
+	globalThis.__SVELTEKIT_TRACK__ = (label) => {
+		const context = async_local_storage.getStore();
+		if (!context || context.prerender === true) return;
+
+		check_feature(context.event.route.id, context.config, label, svelte_config.kit.adapter);
+	};
 
 	const fetch = globalThis.fetch;
 	globalThis.fetch = (info, init) => {
@@ -79,7 +87,7 @@ export async function dev(vite, vite_config, svelte_config) {
 
 	/** @param {string} id */
 	async function resolve(id) {
-		const url = id.startsWith('..') ? `/@fs${path.posix.resolve(id)}` : `/${id}`;
+		const url = id.startsWith('..') ? to_fs(path.posix.resolve(id)) : `/${id}`;
 
 		const module = await loud_ssr_load_module(url);
 
@@ -119,12 +127,20 @@ export async function dev(vite, vite_config, svelte_config) {
 			mimeTypes: get_mime_lookup(manifest_data),
 			_: {
 				client: {
-					start: `${runtime_base}/client/start.js`,
+					start: `${runtime_base}/client/entry.js`,
 					app: `${to_fs(svelte_config.kit.outDir)}/generated/client/app.js`,
 					imports: [],
 					stylesheets: [],
-					fonts: []
+					fonts: [],
+					uses_env_dynamic_public: true
 				},
+				server_assets: new Proxy(
+					{},
+					{
+						has: (_, /** @type {string} */ file) => fs.existsSync(from_fs(file)),
+						get: (_, /** @type {string} */ file) => fs.statSync(from_fs(file)).size
+					}
+				),
 				nodes: manifest_data.nodes.map((node, index) => {
 					return async () => {
 						/** @type {import('types').SSRNode} */
@@ -223,7 +239,7 @@ export async function dev(vite, vite_config, svelte_config) {
 								? async () => {
 										const url = path.resolve(cwd, endpoint.file);
 										return await loud_ssr_load_module(url);
-								  }
+									}
 								: null,
 							endpoint_id: endpoint?.file
 						};
@@ -357,7 +373,8 @@ export async function dev(vite, vite_config, svelte_config) {
 		control_module_node.replace_implementations({
 			ActionFailure: control_module_vite.ActionFailure,
 			HttpError: control_module_vite.HttpError,
-			Redirect: control_module_vite.Redirect
+			Redirect: control_module_vite.Redirect,
+			SvelteKitError: control_module_vite.SvelteKitError
 		});
 	}
 	align_exports();
@@ -402,6 +419,7 @@ export async function dev(vite, vite_config, svelte_config) {
 	});
 
 	const env = loadEnv(vite_config.mode, svelte_config.kit.env.dir, '');
+	const emulator = await svelte_config.kit.adapter?.emulate?.();
 
 	return () => {
 		const serve_static_middleware = vite.middlewares.stack.find(
@@ -471,19 +489,15 @@ export async function dev(vite, vite_config, svelte_config) {
 
 				const server = new Server(manifest);
 
-				await server.init({ env });
+				await server.init({
+					env,
+					read: (file) => createReadableStream(from_fs(file))
+				});
 
-				let request;
-
-				try {
-					request = await getRequest({
-						base,
-						request: req
-					});
-				} catch (/** @type {any} */ err) {
-					res.statusCode = err.status || 400;
-					return res.end('Invalid request body');
-				}
+				const request = await getRequest({
+					base,
+					request: req
+				});
 
 				if (manifest_error) {
 					console.error(colors.bold().red(manifest_error.message));
@@ -513,7 +527,11 @@ export async function dev(vite, vite_config, svelte_config) {
 						if (remoteAddress) return remoteAddress;
 						throw new Error('Could not determine clientAddress');
 					},
-					read: (file) => fs.readFileSync(path.join(svelte_config.kit.files.assets, file))
+					read: (file) => fs.readFileSync(path.join(svelte_config.kit.files.assets, file)),
+					before_handle: (event, config, prerender) => {
+						async_local_storage.enterWith({ event, config, prerender });
+					},
+					emulator
 				});
 
 				if (rendered.status === 404) {
@@ -537,7 +555,7 @@ export async function dev(vite, vite_config, svelte_config) {
  * @param {import('connect').Server} server
  */
 function remove_static_middlewares(server) {
-	const static_middlewares = ['viteServeStaticMiddleware'];
+	const static_middlewares = ['viteServeStaticMiddleware', 'viteServePublicMiddleware'];
 	for (let i = server.stack.length - 1; i > 0; i--) {
 		// @ts-expect-error using internals
 		if (static_middlewares.includes(server.stack[i].handle.name)) {

@@ -1,4 +1,5 @@
-import { existsSync, statSync, createReadStream, createWriteStream } from 'node:fs';
+import colors from 'kleur';
+import { createReadStream, createWriteStream, existsSync, statSync } from 'node:fs';
 import { extname, resolve } from 'node:path';
 import { pipeline } from 'node:stream';
 import { promisify } from 'node:util';
@@ -10,6 +11,7 @@ import { get_env } from '../../exports/vite/utils.js';
 import generate_fallback from '../postbuild/fallback.js';
 import { write } from '../sync/utils.js';
 import { list_files } from '../utils.js';
+import { find_server_assets } from '../generate_manifest/find_server_assets.js';
 
 const pipe = promisify(pipeline);
 const extensions = ['.html', '.js', '.mjs', '.json', '.css', '.svg', '.xml', '.wasm'];
@@ -144,6 +146,13 @@ export function create_builder({
 			}
 		},
 
+		findServerAssets(route_data) {
+			return find_server_assets(
+				build_data,
+				route_data.map((route) => /** @type {import('types').RouteData} */ (lookup.get(route)))
+			);
+		},
+
 		async generateFallback(dest) {
 			const manifest_path = `${config.kit.outDir}/output/server/manifest-full.js`;
 			const env = get_env(config.kit.env, vite_config.mode);
@@ -153,7 +162,24 @@ export function create_builder({
 				env: { ...env.private, ...env.public }
 			});
 
+			if (existsSync(dest)) {
+				console.log(
+					colors
+						.bold()
+						.yellow(
+							`Overwriting ${dest} with fallback page. Consider using a different name for the fallback.`
+						)
+				);
+			}
+
 			write(dest, fallback);
+		},
+
+		generateEnvModule() {
+			const dest = `${config.kit.outDir}/output/prerendered/dependencies/${config.kit.appDir}/env.js`;
+			const env = get_env(config.kit.env, vite_config.mode);
+
+			write(dest, `export const env=${JSON.stringify(env.public)}`);
 		},
 
 		generateManifest({ relativePath, routes: subset }) {
@@ -213,7 +239,7 @@ async function compress_file(file, format = 'gz') {
 						[zlib.constants.BROTLI_PARAM_QUALITY]: zlib.constants.BROTLI_MAX_QUALITY,
 						[zlib.constants.BROTLI_PARAM_SIZE_HINT]: statSync(file).size
 					}
-			  })
+				})
 			: zlib.createGzip({ level: zlib.constants.Z_BEST_COMPRESSION });
 
 	const source = createReadStream(file);

@@ -1,5 +1,65 @@
 # @sveltejs/adapter-netlify
 
+## 4.2.0
+
+### Minor Changes
+
+- chore(deps): upgrade esbuild ([#12118](https://github.com/sveltejs/kit/pull/12118))
+
+### Patch Changes
+
+- Updated dependencies [[`bbab296f6fcc05af6b999182798bcdedabbaa4c9`](https://github.com/sveltejs/kit/commit/bbab296f6fcc05af6b999182798bcdedabbaa4c9)]:
+  - @sveltejs/kit@2.5.6
+
+## 4.1.0
+
+### Minor Changes
+
+- feat: allow Node.js built-in modules when targeting edge functions ([#11675](https://github.com/sveltejs/kit/pull/11675))
+
+### Patch Changes
+
+- Updated dependencies [[`36dc54ac740b8b4c6a2b904a1d0aadd8923a875c`](https://github.com/sveltejs/kit/commit/36dc54ac740b8b4c6a2b904a1d0aadd8923a875c), [`5dae3676b8cc6f8ee0def57340e6a6e591bafecd`](https://github.com/sveltejs/kit/commit/5dae3676b8cc6f8ee0def57340e6a6e591bafecd), [`ada595908b5501b8f4ac30c89c0d6314f364fde3`](https://github.com/sveltejs/kit/commit/ada595908b5501b8f4ac30c89c0d6314f364fde3), [`e228f8997840b89c6248e1c5df6f3108008a06be`](https://github.com/sveltejs/kit/commit/e228f8997840b89c6248e1c5df6f3108008a06be)]:
+  - @sveltejs/kit@2.4.1
+
+## 4.0.0
+
+### Major Changes
+
+- breaking: update peer dependency on `@sveltejs/kit` ([#11649](https://github.com/sveltejs/kit/pull/11649))
+
+### Minor Changes
+
+- feat: support `read` from `$app/server` ([#11649](https://github.com/sveltejs/kit/pull/11649))
+
+### Patch Changes
+
+- Updated dependencies [[`288f731c8a5b20cadb9e219f9583f3f16bf8c7b8`](https://github.com/sveltejs/kit/commit/288f731c8a5b20cadb9e219f9583f3f16bf8c7b8)]:
+  - @sveltejs/kit@2.4.0
+
+## 3.0.2
+
+### Patch Changes
+
+- chore: upgrade esbuild to 0.19.11 ([#11632](https://github.com/sveltejs/kit/pull/11632))
+
+## 3.0.1
+
+### Patch Changes
+
+- chore: update primary branch from master to main ([`47779436c5f6c4d50011d0ef8b2709a07c0fec5d`](https://github.com/sveltejs/kit/commit/47779436c5f6c4d50011d0ef8b2709a07c0fec5d))
+
+- Updated dependencies [[`47779436c5f6c4d50011d0ef8b2709a07c0fec5d`](https://github.com/sveltejs/kit/commit/47779436c5f6c4d50011d0ef8b2709a07c0fec5d), [`16961e8cd3fa6a7f382153b1ff056bc2aae9b31b`](https://github.com/sveltejs/kit/commit/16961e8cd3fa6a7f382153b1ff056bc2aae9b31b), [`197e01f95652f511160f38b37b9da73a124ecd48`](https://github.com/sveltejs/kit/commit/197e01f95652f511160f38b37b9da73a124ecd48), [`102e4a5ae5b29624302163faf5a20c94a64a5b2c`](https://github.com/sveltejs/kit/commit/102e4a5ae5b29624302163faf5a20c94a64a5b2c), [`f8e3d8b9728c9f1ab63389342c31d7246b6f9db6`](https://github.com/sveltejs/kit/commit/f8e3d8b9728c9f1ab63389342c31d7246b6f9db6)]:
+  - @sveltejs/kit@2.0.4
+
+## 3.0.0
+
+### Major Changes
+
+- breaking: require SvelteKit 2 ([#11316](https://github.com/sveltejs/kit/pull/11316))
+
+- chore: upgrade esbuild ([#11122](https://github.com/sveltejs/kit/pull/11122))
+
 ## 2.0.8
 
 ### Patch Changes

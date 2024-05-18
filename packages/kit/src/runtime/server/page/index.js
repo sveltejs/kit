@@ -1,8 +1,8 @@
 import { text } from '../../../exports/index.js';
 import { compact } from '../../../utils/array.js';
-import { normalize_error } from '../../../utils/error.js';
+import { get_status, normalize_error } from '../../../utils/error.js';
 import { add_data_suffix } from '../../../utils/url.js';
-import { HttpError, Redirect } from '../../control.js';
+import { Redirect } from '../../control.js';
 import { redirect_response, static_error_page, handle_error_and_jsonify } from '../utils.js';
 import {
 	handle_action_json_request,
@@ -15,6 +15,7 @@ import { render_response } from './render.js';
 import { respond_with_error } from './respond_with_error.js';
 import { get_option } from '../../../utils/options.js';
 import { get_data_json } from '../data/index.js';
+import { load_page_nodes } from './load_page_nodes.js';
 
 /**
  * The maximum request depth permitted before assuming we're stuck in an infinite loop
@@ -44,11 +45,7 @@ export async function render_page(event, page, options, manifest, state, resolve
 	}
 
 	try {
-		const nodes = await Promise.all([
-			// we use == here rather than === because [undefined] serializes as "[null]"
-			...page.layouts.map((n) => (n == undefined ? n : manifest._.nodes[n]())),
-			manifest._.nodes[page.leaf]()
-		]);
+		const nodes = await load_page_nodes(page, manifest);
 
 		const leaf_node = /** @type {import('types').SSRNode} */ (nodes.at(-1));
 
@@ -65,20 +62,19 @@ export async function render_page(event, page, options, manifest, state, resolve
 				return redirect_response(action_result.status, action_result.location);
 			}
 			if (action_result?.type === 'error') {
-				const error = action_result.error;
-				status = error instanceof HttpError ? error.status : 500;
+				status = get_status(action_result.error);
 			}
 			if (action_result?.type === 'failure') {
 				status = action_result.status;
 			}
 		}
 
-		const should_prerender_data = nodes.some((node) => node?.server);
+		const should_prerender_data = nodes.some((node) => node?.server?.load);
 		const data_pathname = add_data_suffix(event.url.pathname);
 
 		// it's crucial that we do this before returning the non-SSR response, otherwise
 		// SvelteKit will erroneously believe that the path has been prerendered,
-		// causing functions to be omitted from the manifesst generated later
+		// causing functions to be omitted from the manifest generated later
 		const should_prerender = get_option(nodes, 'prerender') ?? false;
 		if (should_prerender) {
 			const mod = leaf_node.server;
@@ -99,7 +95,10 @@ export async function render_page(event, page, options, manifest, state, resolve
 		/** @type {import('./types.js').Fetched[]} */
 		const fetched = [];
 
-		if (get_option(nodes, 'ssr') === false && !state.prerendering) {
+		// renders an empty 'shell' page if SSR is turned off and if there is
+		// no server data to prerender. As a result, the load functions and rendering
+		// only occur client-side.
+		if (get_option(nodes, 'ssr') === false && !(state.prerendering && should_prerender_data)) {
 			return await render_response({
 				branch: [],
 				fetched,
@@ -150,8 +149,7 @@ export async function render_page(event, page, options, manifest, state, resolve
 								if (parent) Object.assign(data, await parent.data);
 							}
 							return data;
-						},
-						track_server_fetches: options.track_server_fetches
+						}
 					});
 				} catch (e) {
 					load_error = /** @type {Error} */ (e);
@@ -222,7 +220,7 @@ export async function render_page(event, page, options, manifest, state, resolve
 						return redirect_response(err.status, err.location);
 					}
 
-					const status = err instanceof HttpError ? err.status : 500;
+					const status = get_status(err);
 					const error = await handle_error_and_jsonify(event, options, err);
 
 					while (i--) {
@@ -283,6 +281,8 @@ export async function render_page(event, page, options, manifest, state, resolve
 			});
 		}
 
+		const ssr = get_option(nodes, 'ssr') ?? true;
+
 		return await render_response({
 			event,
 			options,
@@ -291,11 +291,11 @@ export async function render_page(event, page, options, manifest, state, resolve
 			resolve_opts,
 			page_config: {
 				csr: get_option(nodes, 'csr') ?? true,
-				ssr: get_option(nodes, 'ssr') ?? true
+				ssr
 			},
 			status,
 			error: null,
-			branch: compact(branch),
+			branch: ssr === false ? [] : compact(branch),
 			action_result,
 			fetched
 		});

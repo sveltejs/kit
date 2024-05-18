@@ -9,7 +9,8 @@ import colors from 'kleur';
 
 /**
  * @param {{
- *   hooks: string | null;
+ *   server_hooks: string | null;
+ *   universal_hooks: string | null;
  *   config: import('types').ValidatedConfig;
  *   has_service_worker: boolean;
  *   runtime_directory: string;
@@ -19,22 +20,24 @@ import colors from 'kleur';
  */
 const server_template = ({
 	config,
-	hooks,
+	server_hooks,
+	universal_hooks,
 	has_service_worker,
 	runtime_directory,
 	template,
 	error_page
 }) => `
 import root from '../root.${isSvelte5Plus() ? 'js' : 'svelte'}';
-import { set_building } from '__sveltekit/environment';
+import { set_building, set_prerendering } from '__sveltekit/environment';
 import { set_assets } from '__sveltekit/paths';
-import { set_private_env, set_public_env } from '${runtime_directory}/shared-server.js';
+import { set_manifest, set_read_implementation } from '__sveltekit/server';
+import { set_private_env, set_public_env, set_safe_public_env } from '${runtime_directory}/shared-server.js';
 
 export const options = {
+	app_dir: ${s(config.kit.appDir)},
 	app_template_contains_nonce: ${template.includes('%sveltekit.nonce%')},
 	csp: ${s(config.kit.csp)},
 	csrf_check_origin: ${s(config.kit.csrf.checkOrigin)},
-	track_server_fetches: ${s(config.kit.dangerZone.trackServerFetches)},
 	embedded: ${config.kit.embedded},
 	env_public_prefix: '${config.kit.env.publicPrefix}',
 	env_private_prefix: '${config.kit.env.privatePrefix}',
@@ -59,11 +62,14 @@ export const options = {
 	version_hash: ${s(hash(config.kit.version.name))}
 };
 
-export function get_hooks() {
-	return ${hooks ? `import(${s(hooks)})` : '{}'};
+export async function get_hooks() {
+	return {
+		${server_hooks ? `...(await import(${s(server_hooks)})),` : ''}
+		${universal_hooks ? `...(await import(${s(universal_hooks)})),` : ''}
+	};
 }
 
-export { set_assets, set_building, set_private_env, set_public_env };
+export { set_assets, set_building, set_manifest, set_prerendering, set_private_env, set_public_env, set_read_implementation, set_safe_public_env };
 `;
 
 // TODO need to re-run this whenever src/app.html or src/error.html are
@@ -76,7 +82,8 @@ export { set_assets, set_building, set_private_env, set_public_env };
  * @param {string} output
  */
 export function write_server(config, output) {
-	const hooks_file = resolve_entry(config.kit.files.hooks.server);
+	const server_hooks_file = resolve_entry(config.kit.files.hooks.server);
+	const universal_hooks_file = resolve_entry(config.kit.files.hooks.universal);
 
 	const typo = resolve_entry('src/+hooks.server');
 	if (typo) {
@@ -99,7 +106,8 @@ export function write_server(config, output) {
 		`${output}/server/internal.js`,
 		server_template({
 			config,
-			hooks: hooks_file ? relative(hooks_file) : null,
+			server_hooks: server_hooks_file ? relative(server_hooks_file) : null,
+			universal_hooks: universal_hooks_file ? relative(universal_hooks_file) : null,
 			has_service_worker:
 				config.kit.serviceWorker.register && !!resolve_entry(config.kit.files.serviceWorker),
 			runtime_directory: relative(runtime_directory),

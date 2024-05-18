@@ -2,7 +2,7 @@
 title: Netlify
 ---
 
-To deploy to Netlify, use [`adapter-netlify`](https://github.com/sveltejs/kit/tree/master/packages/adapter-netlify).
+To deploy to Netlify, use [`adapter-netlify`](https://github.com/sveltejs/kit/tree/main/packages/adapter-netlify).
 
 This adapter will be installed by default when you use [`adapter-auto`](adapter-auto), but adding it to your project allows you to specify Netlify-specific options.
 
@@ -44,7 +44,7 @@ If the `netlify.toml` file or the `build.publish` value is missing, a default va
 
 ### Node version
 
-New projects will use Node 16 by default. However, if you're upgrading a project you created a while ago it may be stuck on an older version. See [the Netlify docs](https://docs.netlify.com/configure-builds/manage-dependencies/#node-js-and-javascript) for details on manually specifying Node 16 or newer.
+New projects will use the current Node LTS version by default. However, if you're upgrading a project you created a while ago it may be stuck on an older version. See [the Netlify docs](https://docs.netlify.com/configure-builds/manage-dependencies/#node-js-and-javascript) for details on manually specifying a current Node version.
 
 ## Netlify Edge Functions
 
@@ -111,4 +111,8 @@ Additionally, you can add your own Netlify functions by creating a directory for
 
 ### Accessing the file system
 
-You can't access the file system through methods like `fs.readFileSync` in Serverless/Edge environments. If you need to access files that way, do that during building the app through [prerendering](https://kit.svelte.dev/docs/page-options#prerender). If you have a blog for example and don't want to manage your content through a CMS, then you need to prerender the content (or prerender the endpoint from which you get it) and redeploy your blog everytime you add new content.
+You can't use `fs` in edge deployments.
+
+You _can_ use it in serverless deployments, but it won't work as expected, since files are not copied from your project into your deployment. Instead, use the `read` function from `$app/server` to access your files. `read` does not work inside edge deployments (this may change in future).
+
+Alternatively, you can [prerender](https://kit.svelte.dev/docs/page-options#prerender) the routes in question.

@@ -92,6 +92,13 @@ test.describe('base path', () => {
 		await clicknav('[href="/path-base/base/two"]');
 		expect(await page.textContent('h2')).toBe('two');
 	});
+
+	test('resolveRoute accounts for base path', async ({ baseURL, page, clicknav }) => {
+		await page.goto('/path-base/resolve-route');
+		await clicknav('[data-id=target]');
+		expect(page.url()).toBe(`${baseURL}/path-base/resolve-route/resolved/`);
+		expect(await page.textContent('h2')).toBe('resolved');
+	});
 });
 
 test.describe('assets path', () => {
@@ -232,7 +239,7 @@ test.describe('trailingSlash', () => {
 
 		// also wait for network processing to complete, see
 		// https://playwright.dev/docs/network#network-events
-		await app.preloadData('/path-base/preloading/preloaded');
+		await app.preloadCode('/path-base/preloading/preloaded');
 
 		// svelte request made is environment dependent
 		if (process.env.DEV) {
@@ -240,6 +247,9 @@ test.describe('trailingSlash', () => {
 		} else {
 			expect(requests.filter((req) => req.endsWith('.mjs')).length).toBeGreaterThan(0);
 		}
+
+		requests = [];
+		await app.preloadData('/path-base/preloading/preloaded');
 
 		expect(requests.includes('/path-base/preloading/preloaded/__data.json')).toBe(true);
 
@@ -300,24 +310,5 @@ test.describe('Routing', () => {
 
 		await page.click('[href="/path-base/routing/link-outside-app-target/target/"]');
 		await expect(page.locator('h2')).toHaveText('target: 0');
-	});
-});
-
-test.describe('load', () => {
-	// TODO 2.0: Remove this test
-	test('fetch in server load can be invalidated when `dangerZone.trackServerFetches` is set', async ({
-		page,
-		app,
-		request,
-		javaScriptEnabled
-	}) => {
-		test.skip(!javaScriptEnabled, 'JavaScript is disabled');
-		await request.get('/path-base/server-fetch-invalidate/count.json?reset');
-		await page.goto('/path-base/server-fetch-invalidate');
-		const selector = '[data-testid="count"]';
-
-		expect(await page.textContent(selector)).toBe('1');
-		await app.invalidate('/path-base/server-fetch-invalidate/count.json');
-		expect(await page.textContent(selector)).toBe('2');
 	});
 });

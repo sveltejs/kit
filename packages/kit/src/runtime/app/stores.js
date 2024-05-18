@@ -1,13 +1,13 @@
 import { getContext } from 'svelte';
-import { browser } from './environment.js';
-import { stores as browser_stores } from '../client/singletons.js';
+import { BROWSER } from 'esm-env';
+import { stores as browser_stores } from '../client/client.js';
 
 /**
  * A function that returns all of the contextual stores. On the server, this must be called during component initialization.
  * Only use this if you need to defer store subscription until after the component has mounted, for some reason.
  */
 export const getStores = () => {
-	const stores = browser ? browser_stores : getContext('__svelte__');
+	const stores = BROWSER ? browser_stores : getContext('__svelte__');
 
 	return {
 		/** @type {typeof page} */
@@ -62,7 +62,7 @@ export const updated = {
 	subscribe(fn) {
 		const store = __SVELTEKIT_DEV__ ? get_store('updated') : getStores().updated;
 
-		if (browser) {
+		if (BROWSER) {
 			updated.check = store.check;
 		}
 
@@ -70,7 +70,7 @@ export const updated = {
 	},
 	check: () => {
 		throw new Error(
-			browser
+			BROWSER
 				? 'Cannot check updated store before subscribing'
 				: 'Can only check updated store in browser'
 		);

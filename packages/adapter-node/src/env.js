@@ -9,8 +9,13 @@ const expected = new Set([
 	'ADDRESS_HEADER',
 	'PROTOCOL_HEADER',
 	'HOST_HEADER',
-	'BODY_SIZE_LIMIT'
+	'PORT_HEADER',
+	'BODY_SIZE_LIMIT',
+	'SHUTDOWN_TIMEOUT',
+	'IDLE_TIMEOUT'
 ]);
+
+const expected_unprefixed = new Set(['LISTEN_PID', 'LISTEN_FDS']);
 
 if (ENV_PREFIX) {
 	for (const name in process.env) {
@@ -30,6 +35,7 @@ if (ENV_PREFIX) {
  * @param {any} fallback
  */
 export function env(name, fallback) {
-	const prefixed = ENV_PREFIX + name;
+	const prefix = expected_unprefixed.has(name) ? '' : ENV_PREFIX;
+	const prefixed = prefix + name;
 	return prefixed in process.env ? process.env[prefixed] : fallback;
 }

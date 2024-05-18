@@ -4,8 +4,7 @@
 
 	export let data;
 
-	$: pageData = $page.data.page;
-	$: category = pageData?.category;
+	$: category = $page.data.page?.category;
 </script>
 
 <div class="container">
@@ -56,8 +55,7 @@
 			position: fixed;
 			left: 0;
 			top: var(--sk-nav-height);
-			overflow-x: hidden;
-			overflow-y: auto;
+			overflow: hidden;
 		}
 
 		.toc-container::before {
