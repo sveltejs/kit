@@ -218,7 +218,9 @@ test.describe('Navigation lifecycle functions', () => {
 		await page.goto('/navigation-lifecycle/before-navigate/prevent-navigation');
 
 		await page.locator('a[download]', { hasText: 'explicit download' }).click();
+
 		expect(page.url()).toBe(baseURL + '/navigation-lifecycle/before-navigate/prevent-navigation');
+		await page.waitForLoadState('networkidle');
 		expect(await page.innerHTML('pre')).toBe('0 false undefined');
 
 		await page.click('a[href="/navigation-lifecycle/before-navigate/a"]');
@@ -235,7 +237,9 @@ test.describe('Navigation lifecycle functions', () => {
 				hasText: 'implicit download'
 			})
 			.click();
+
 		expect(page.url()).toBe(baseURL + '/navigation-lifecycle/before-navigate/prevent-navigation');
+		await page.waitForLoadState('networkidle');
 		expect(await page.innerHTML('pre')).toBe('1 true link');
 
 		await page.click('a[href="/navigation-lifecycle/before-navigate/a"]');
