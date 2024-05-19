@@ -218,15 +218,17 @@ test.describe('Navigation lifecycle functions', () => {
 		await page.goto('/navigation-lifecycle/before-navigate/prevent-navigation');
 
 		await page.locator('a[download]', { hasText: 'explicit download' }).click();
-
-		expect(page.url()).toBe(baseURL + '/navigation-lifecycle/before-navigate/prevent-navigation');
 		await page.waitForLoadState('networkidle');
-		expect(await page.innerHTML('pre')).toBe('0 false undefined');
+
+		const current_url = baseURL + '/navigation-lifecycle/before-navigate/prevent-navigation';
+
+		expect(page.url()).toBe(current_url);
+		expect(await page.locator('pre').innerText()).toBe('0 false undefined');
 
 		await page.click('a[href="/navigation-lifecycle/before-navigate/a"]');
 
-		expect(page.url()).toBe(baseURL + '/navigation-lifecycle/before-navigate/prevent-navigation');
-		expect(await page.innerHTML('pre')).toBe('1 false link');
+		expect(page.url()).toBe(current_url);
+		expect(await page.locator('pre').innerText()).toBe('1 false link');
 	});
 
 	test('is triggered after clicking an implicit download link', async ({ page, baseURL }) => {
@@ -237,15 +239,17 @@ test.describe('Navigation lifecycle functions', () => {
 				hasText: 'implicit download'
 			})
 			.click();
-
-		expect(page.url()).toBe(baseURL + '/navigation-lifecycle/before-navigate/prevent-navigation');
 		await page.waitForLoadState('networkidle');
-		expect(await page.innerHTML('pre')).toBe('1 true link');
+
+		const current_url = baseURL + '/navigation-lifecycle/before-navigate/prevent-navigation';
+
+		expect(page.url()).toBe(current_url);
+		expect(await page.locator('pre').innerText()).toBe('1 true link');
 
 		await page.click('a[href="/navigation-lifecycle/before-navigate/a"]');
 
-		expect(page.url()).toBe(baseURL + '/navigation-lifecycle/before-navigate/prevent-navigation');
-		expect(await page.innerHTML('pre')).toBe('2 false link');
+		expect(page.url()).toBe(current_url);
+		expect(await page.locator('pre').innerText()).toBe('2 false link');
 	});
 
 	test('afterNavigate calls callback', async ({ page, clicknav }) => {
