@@ -573,6 +573,11 @@ test.describe('Load', () => {
 
 		expect(await page.textContent('h1')).toBe('404');
 	});
+
+	test('data is not mutated by universal load', async ({ page }) => {
+		await page.goto('/load/mutated-server-data');
+		expect(await page.textContent('p')).toBe('hello world');
+	});
 });
 
 test.describe('Nested layouts', () => {

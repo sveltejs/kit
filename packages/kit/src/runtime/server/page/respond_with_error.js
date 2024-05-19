@@ -1,4 +1,4 @@
-import { render_response } from './render.js';
+import { get_data, render_response } from './render.js';
 import { load_data, load_server_data } from './load_data.js';
 import { handle_error_and_jsonify, static_error_page, redirect_response } from '../utils.js';
 import { get_option } from '../../../utils/options.js';
@@ -37,6 +37,9 @@ export async function respond_with_error({
 	/** @type {import('./types.js').Fetched[]} */
 	const fetched = [];
 
+	/** @type {{ data: string; chunks: AsyncIterable<string> | null } | undefined} */
+	let serialized;
+
 	try {
 		const branch = [];
 		const default_layout = await manifest._.nodes[0](); // 0 is always the root layout
@@ -54,6 +57,10 @@ export async function respond_with_error({
 			});
 
 			const server_data = await server_data_promise;
+
+			const global = __SVELTEKIT_DEV__ ? '__sveltekit_dev' : `__sveltekit_${options.version_hash}`;
+
+			serialized = get_data(event, options, [server_data, null], global);
 
 			const data = await load_data({
 				event,
@@ -93,7 +100,8 @@ export async function respond_with_error({
 			branch,
 			fetched,
 			event,
-			resolve_opts
+			resolve_opts,
+			serialized
 		});
 	} catch (e) {
 		// Edge case: If route is a 404 and the user redirects to somewhere from the root layout,

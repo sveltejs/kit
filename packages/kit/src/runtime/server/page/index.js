@@ -11,7 +11,7 @@ import {
 	is_action_request
 } from './actions.js';
 import { load_data, load_server_data } from './load_data.js';
-import { render_response } from './render.js';
+import { get_data, render_response } from './render.js';
 import { respond_with_error } from './respond_with_error.js';
 import { get_option } from '../../../utils/options.js';
 import { get_data_json } from '../data/index.js';
@@ -158,6 +158,28 @@ export async function render_page(event, page, options, manifest, state, resolve
 			});
 		});
 
+		const server_data = await Promise.all(server_promises);
+
+		if (state.prerendering && should_prerender_data) {
+			// ndjson format
+			let { data, chunks } = get_data_json(event, options, server_data);
+
+			if (chunks) {
+				for await (const chunk of chunks) {
+					data += chunk;
+				}
+			}
+
+			state.prerendering.dependencies.set(data_pathname, {
+				response: text(data),
+				body: data
+			});
+		}
+
+		const global = __SVELTEKIT_DEV__ ? '__sveltekit_dev' : `__sveltekit_${options.version_hash}`;
+
+		const serialized = get_data(event, options, server_data, global);
+
 		const csr = get_option(nodes, 'csr') ?? true;
 
 		/** @type {Array<Promise<Record<string, any> | null>>} */
@@ -261,26 +283,6 @@ export async function render_page(event, page, options, manifest, state, resolve
 			}
 		}
 
-		if (state.prerendering && should_prerender_data) {
-			// ndjson format
-			let { data, chunks } = get_data_json(
-				event,
-				options,
-				branch.map((node) => node?.server_data)
-			);
-
-			if (chunks) {
-				for await (const chunk of chunks) {
-					data += chunk;
-				}
-			}
-
-			state.prerendering.dependencies.set(data_pathname, {
-				response: text(data),
-				body: data
-			});
-		}
-
 		const ssr = get_option(nodes, 'ssr') ?? true;
 
 		return await render_response({
@@ -297,7 +299,8 @@ export async function render_page(event, page, options, manifest, state, resolve
 			error: null,
 			branch: ssr === false ? [] : compact(branch),
 			action_result,
-			fetched
+			fetched,
+			serialized
 		});
 	} catch (e) {
 		// if we end up here, it means the data loaded successfully

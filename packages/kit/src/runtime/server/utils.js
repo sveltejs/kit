@@ -6,18 +6,6 @@ import { HttpError } from '../control.js';
 import { fix_stack_trace } from '../shared-server.js';
 import { ENDPOINT_METHODS } from '../../constants.js';
 
-/** @param {any} body */
-export function is_pojo(body) {
-	if (typeof body !== 'object') return false;
-
-	if (body) {
-		if (body instanceof Uint8Array) return false;
-		if (body instanceof ReadableStream) return false;
-	}
-
-	return true;
-}
-
 /**
  * @param {Partial<Record<import('types').HttpMethod, any>>} mod
  * @param {import('types').HttpMethod} method
