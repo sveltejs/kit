@@ -407,9 +407,14 @@ async function _preload_data(intent) {
 	return load_cache.promise;
 }
 
-/** @param {string} pathname */
-async function _preload_code(pathname) {
-	const route = routes.find((route) => route.exec(get_url_path(pathname)));
+/** @param {string} href */
+async function _preload_code(href) {
+	const url = get_navigation_url(resolve_url(href));
+	if (!url) return;
+
+	const pathname = get_url_path(url);
+
+	const route = routes.find((route) => route.exec(pathname));
 
 	if (route) {
 		await Promise.all([...route.layouts, route.leaf].map((load) => load?.[1]()));
@@ -1538,11 +1543,7 @@ function setup_preload() {
 		(entries) => {
 			for (const entry of entries) {
 				if (entry.isIntersecting) {
-					const href = /** @type {HTMLAnchorElement} */ (entry.target).href;
-					const pathname = get_navigation_url(resolve_url(href));
-					if (pathname) {
-						_preload_code(pathname);
-					}
+					_preload_code(/** @type {HTMLAnchorElement} */ (entry.target).href);
 					observer.unobserve(entry.target);
 				}
 			}
