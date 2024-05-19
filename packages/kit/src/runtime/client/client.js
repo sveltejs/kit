@@ -1157,10 +1157,8 @@ async function load_root_error_page({ status, error, url, route }) {
  */
 function get_navigation_url(url) {
 	// reroute could alter the given URL, so we pass a copy
-	let rerouted;
 	try {
-		rerouted = app.hooks.reroute({ url: new URL(url) }) ?? url.pathname;
-		return rerouted;
+		return app.hooks.reroute({ url: new URL(url) }) ?? url.pathname;
 	} catch (e) {
 		if (DEV) {
 			// in development, print the error...
