@@ -1,0 +1,1 @@
+before running the test make sure to rename .env.test to .env

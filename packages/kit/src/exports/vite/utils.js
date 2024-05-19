@@ -67,6 +67,36 @@ export function get_env(env_config, mode) {
 }
 
 /**
+ * Sort wrangler.toml environment variables into public and private envs
+ * @param {Record<string, string>} env
+ * @param {import('types').ValidatedKitConfig['env']} env_config
+ */
+export async function get_wrangler_env(env, env_config) {
+	const { publicPrefix, privatePrefix } = env_config;
+	if (env) {
+		const public_env = Object.fromEntries(
+			Object.entries(env).filter(
+				([k]) =>
+					k.startsWith(publicPrefix) && (privatePrefix === '' || !k.startsWith(privatePrefix))
+			)
+		);
+
+		const private_env = Object.fromEntries(
+			Object.entries(env).filter(
+				([k]) => k.startsWith(privatePrefix) && (publicPrefix === '' || !k.startsWith(publicPrefix))
+			)
+		);
+
+		return {
+			public: public_env,
+			private: private_env
+		};
+	} else {
+		return { public: {}, private: {} };
+	}
+}
+
+/**
  * @param {import('http').IncomingMessage} req
  * @param {import('http').ServerResponse} res
  * @param {string} base

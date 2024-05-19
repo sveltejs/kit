@@ -13,9 +13,9 @@ import { write_server } from './write_server.js';
  * @param {import('types').ValidatedConfig} config
  * @param {string} mode
  */
-export function init(config, mode) {
+export async function init(config, mode) {
 	write_tsconfig(config.kit);
-	write_ambient(config.kit, mode);
+	await write_ambient(config.kit, mode);
 	write_non_ambient(config.kit);
 }
 
@@ -56,7 +56,7 @@ export async function update(config, manifest_data, file) {
  * @param {string} mode The Vite mode
  */
 export async function all(config, mode) {
-	init(config, mode);
+	await init(config, mode);
 	return await create(config);
 }
 
@@ -66,7 +66,7 @@ export async function all(config, mode) {
  * @param {string} mode The Vite mode
  */
 export async function all_types(config, mode) {
-	init(config, mode);
+	await init(config, mode);
 	const manifest_data = create_manifest_data({ config });
 	await write_all_types(config, manifest_data);
 }
