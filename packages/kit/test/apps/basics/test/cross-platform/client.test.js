@@ -226,6 +226,7 @@ test.describe('Navigation lifecycle functions', () => {
 		expect(await page.locator('pre').innerText()).toBe('0 false undefined');
 
 		await page.click('a[href="/navigation-lifecycle/before-navigate/a"]');
+		await page.waitForLoadState('networkidle');
 
 		expect(page.url()).toBe(current_url);
 		expect(await page.locator('pre').innerText()).toBe('1 false link');
@@ -247,6 +248,7 @@ test.describe('Navigation lifecycle functions', () => {
 		expect(await page.locator('pre').innerText()).toBe('1 true link');
 
 		await page.click('a[href="/navigation-lifecycle/before-navigate/a"]');
+		await page.waitForLoadState('networkidle');
 
 		expect(page.url()).toBe(current_url);
 		expect(await page.locator('pre').innerText()).toBe('2 false link');
