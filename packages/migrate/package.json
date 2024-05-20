@@ -24,7 +24,7 @@
 		"!migrations/**/samples.md"
 	],
 	"dependencies": {
-		"import-meta-resolve": "^4.0.0",
+		"import-meta-resolve": "^4.1.0",
 		"kleur": "^4.1.5",
 		"magic-string": "^0.30.5",
 		"prompts": "^2.4.2",
