@@ -17,7 +17,7 @@ import { assets_base, find_deps } from './build/utils.js';
 import { dev } from './dev/index.js';
 import { is_illegal, module_guard, normalize_id } from './graph_analysis/index.js';
 import { preview } from './preview/index.js';
-import { get_config_aliases, get_env, get_wrangler_env, strip_virtual_prefix } from './utils.js';
+import { get_config_aliases, get_env, split_env_vars, strip_virtual_prefix } from './utils.js';
 import { write_client_manifest } from '../../core/sync/write_client_manifest.js';
 import prerender from '../../core/postbuild/prerender.js';
 import analyse from '../../core/postbuild/analyse.js';
@@ -216,7 +216,7 @@ async function kit({ svelte_config }) {
 	let env;
 
 	/** @type {{ public: Record<string, string>; private: Record<string, string> }} */
-	let wrangler_env;
+	let platform_env;
 
 	/** @type {() => Promise<void>} */
 	let finalise;
@@ -253,8 +253,7 @@ async function kit({ svelte_config }) {
 			env = get_env(kit.env, vite_config_env.mode);
 			const emulator = await svelte_config.kit.adapter?.emulate?.();
 			//@ts-ignore
-			const platform_env = emulator?.platform?.(false)?.env;
-			wrangler_env = await get_wrangler_env(platform_env, kit.env);
+			platform_env = split_env_vars(emulator?.platform?.(false)?.env, kit.env);
 			const allow = new Set([
 				kit.files.lib,
 				kit.files.routes,
@@ -426,13 +425,13 @@ async function kit({ svelte_config }) {
 				case env_static_private:
 					return create_static_module('$env/static/private', {
 						...env.private,
-						...wrangler_env.private
+						...platform_env.private
 					});
 
 				case env_static_public:
 					return create_static_module('$env/static/public', {
 						...env.public,
-						...wrangler_env.public
+						...platform_env.public
 					});
 
 				case env_dynamic_private:

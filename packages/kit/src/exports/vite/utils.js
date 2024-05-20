@@ -71,7 +71,7 @@ export function get_env(env_config, mode) {
  * @param {Record<string, string>} env
  * @param {import('types').ValidatedKitConfig['env']} env_config
  */
-export async function get_wrangler_env(env, env_config) {
+export function split_env_vars(env, env_config) {
 	const { publicPrefix, privatePrefix } = env_config;
 	if (env) {
 		const public_env = Object.fromEntries(

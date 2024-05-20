@@ -15,7 +15,3 @@ export function getDynamicPublicEnv() {
 export function getDynamicPrivateEnv() {
 	return env4.env;
 }
-// console.log("env static public",env["PUBLIC_MY_FIRST"],env["PUBLIC_MY_LAST"]);
-// console.log("env dynamic public",env2.env["PUBLIC_MY_FIRST"],env2.env["PUBLIC_MY_LAST"]);
-// console.log("env static private",env3["PRIVATE_MY_KEY"],env3["PRIVATE_MY_PASS"]);
-// console.log("env2 dynamic private",env4.env["PRIVATE_MY_KEY"],env4.env["PRIVATE_MY_PASS"]);

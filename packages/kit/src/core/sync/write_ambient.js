@@ -1,7 +1,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { get_env, get_wrangler_env } from '../../exports/vite/utils.js';
+import { get_env, split_env_vars } from '../../exports/vite/utils.js';
 import { GENERATED_COMMENT } from '../../constants.js';
 import { create_dynamic_types, create_static_types } from '../env.js';
 import { write_if_changed } from './utils.js';
@@ -56,15 +56,15 @@ export async function write_ambient(config, mode) {
 	const env = get_env(config.env, mode);
 	const { publicPrefix: public_prefix, privatePrefix: private_prefix } = config.env;
 	const emulator = await config.adapter?.emulate?.();
+	/** @type {{ public: Record<string, string>; private: Record<string, string> }} */
 	//@ts-ignore
-	const platform_env = emulator?.platform?.(false)?.env;
-	const wrangler_env = await get_wrangler_env(platform_env, config.env);
+	const platform_env = split_env_vars(emulator?.platform?.(false)?.env, config.env);
 	write_if_changed(
 		path.join(config.outDir, 'ambient.d.ts'),
 		template(
 			{
-				public: { ...env.public, ...wrangler_env.public },
-				private: { ...env.private, ...wrangler_env.private }
+				public: { ...env.public, ...platform_env.public },
+				private: { ...env.private, ...platform_env.private }
 			},
 			{ public_prefix, private_prefix }
 		)
