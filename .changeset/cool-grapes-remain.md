@@ -1,5 +1,5 @@
 ---
-"@sveltejs/enhanced-img": patch
+'@sveltejs/enhanced-img': patch
 ---
 
-Use correct type for '\*?enhanced' imports
+fix: use correct type for `*?enhanced` imports
