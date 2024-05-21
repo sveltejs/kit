@@ -32,4 +32,3 @@
 <a href={implicit_download_url}>implicit download</a>
 
 <pre>{times_triggered} {unload} {navigation_type}</pre>
-
