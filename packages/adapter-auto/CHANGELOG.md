@@ -1,5 +1,14 @@
 # @sveltejs/adapter-auto
 
+## 3.2.1
+
+### Patch Changes
+
+- fix: bump import-meta-resolve to remove deprecation warnings ([#12240](https://github.com/sveltejs/kit/pull/12240))
+
+- Updated dependencies [[`460d4526c80358958e58a2451fe1b663fdc656e9`](https://github.com/sveltejs/kit/commit/460d4526c80358958e58a2451fe1b663fdc656e9), [`16cd900c304e0cf0f16b484aa61a5ba0531d8751`](https://github.com/sveltejs/kit/commit/16cd900c304e0cf0f16b484aa61a5ba0531d8751)]:
+  - @sveltejs/kit@2.5.10
+
 ## 3.2.0
 
 ### Minor Changes
