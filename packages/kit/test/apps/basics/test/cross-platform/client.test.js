@@ -221,7 +221,7 @@ test.describe('Navigation lifecycle functions', () => {
 		await page.goto('/navigation-lifecycle/before-navigate/prevent-navigation');
 
 		await page.locator('a[download]', { hasText: 'explicit download' }).click();
-		(await page.waitForEvent('download')).path();
+		await page.waitForEvent('download');
 
 		const current_url = baseURL + '/navigation-lifecycle/before-navigate/prevent-navigation';
 
@@ -246,7 +246,7 @@ test.describe('Navigation lifecycle functions', () => {
 				hasText: 'implicit download'
 			})
 			.click();
-		(await page.waitForEvent('download')).path();
+		await page.waitForEvent('download');
 
 		const current_url = baseURL + '/navigation-lifecycle/before-navigate/prevent-navigation';
 
