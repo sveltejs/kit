@@ -1,6 +1,5 @@
 <script>
 	import { beforeNavigate } from '$app/navigation';
-	import { navigating } from '$app/stores';
 
 	const implicit_download_url = '/navigation-lifecycle/before-navigate/download';
 
@@ -31,6 +30,6 @@
 <a href="https://google.de">external</a>
 <a download href="/">explicit download</a>
 <a href={implicit_download_url}>implicit download</a>
-{#await $navigating?.complete then _}
-	<pre>{times_triggered} {unload} {navigation_type}</pre>
-{/await}
+
+<pre>{times_triggered} {unload} {navigation_type}</pre>
+
