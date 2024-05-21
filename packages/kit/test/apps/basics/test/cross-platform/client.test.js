@@ -220,8 +220,9 @@ test.describe('Navigation lifecycle functions', () => {
 	}) => {
 		await page.goto('/navigation-lifecycle/before-navigate/prevent-navigation');
 
-		await page.locator('a[download]', { hasText: 'explicit download' }).click();
-		await (await page.waitForEvent('download')).cancel();
+		const download = page.waitForEvent('download', { timeout: 3000 });
+		await page.locator('a[download]').click();
+		await (await download).cancel();
 
 		const current_url = baseURL + '/navigation-lifecycle/before-navigate/prevent-navigation';
 
@@ -241,12 +242,9 @@ test.describe('Navigation lifecycle functions', () => {
 	}) => {
 		await page.goto('/navigation-lifecycle/before-navigate/prevent-navigation');
 
-		await page
-			.locator('a[href="/navigation-lifecycle/before-navigate/download"]', {
-				hasText: 'implicit download'
-			})
-			.click();
-		await (await page.waitForEvent('download')).cancel();
+		const download = page.waitForEvent('download', { timeout: 3000 });
+		await page.locator('a[href="/navigation-lifecycle/before-navigate/download"]').click();
+		await (await download).cancel();
 
 		const current_url = baseURL + '/navigation-lifecycle/before-navigate/prevent-navigation';
 
