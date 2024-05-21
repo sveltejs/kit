@@ -1,5 +1,13 @@
 # @sveltejs/kit
 
+## 2.5.10
+
+### Patch Changes
+
+- fix: exclude server files from optimizeDeps.entries ([#12242](https://github.com/sveltejs/kit/pull/12242))
+
+- fix: bump import-meta-resolve to remove deprecation warnings ([#12240](https://github.com/sveltejs/kit/pull/12240))
+
 ## 2.5.9
 
 ### Patch Changes

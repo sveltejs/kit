@@ -1,5 +1,11 @@
 # create-svelte
 
+## 6.2.0
+
+### Minor Changes
+
+- feat: make TypeScript the default for apps ([#12186](https://github.com/sveltejs/kit/pull/12186))
+
 ## 6.1.2
 
 ### Patch Changes
