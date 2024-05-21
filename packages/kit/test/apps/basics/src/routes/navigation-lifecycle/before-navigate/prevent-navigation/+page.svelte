@@ -30,6 +30,4 @@
 <a href="https://google.de">external</a>
 <a download href="/">explicit download</a>
 <a href={download_url}>implicit download</a>
-<!-- svelte-ignore a11y-invalid-attribute -->
-<a download href="">external</a>
 <pre>{times_triggered} {unload} {navigation_type}</pre>
