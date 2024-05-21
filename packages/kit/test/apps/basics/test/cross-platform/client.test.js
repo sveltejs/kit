@@ -214,11 +214,13 @@ test.describe('Navigation lifecycle functions', () => {
 		expect(await page.innerHTML('pre')).toBe('2 false goto');
 	});
 
-	test('beforeNavigate is triggered after clicking an explicit download link', async ({ page, baseURL }) => {
+	test('beforeNavigate is triggered after clicking an explicit download link', async ({
+		page,
+		baseURL
+	}) => {
 		await page.goto('/navigation-lifecycle/before-navigate/prevent-navigation');
 
 		await page.locator('a[download]', { hasText: 'explicit download' }).click();
-		await page.waitForLoadState('networkidle');
 
 		const current_url = baseURL + '/navigation-lifecycle/before-navigate/prevent-navigation';
 
@@ -226,13 +228,15 @@ test.describe('Navigation lifecycle functions', () => {
 		expect(await page.locator('pre').innerText()).toBe('0 false undefined');
 
 		await page.click('a[href="/navigation-lifecycle/before-navigate/a"]');
-		await page.waitForLoadState('networkidle');
 
 		expect(page.url()).toBe(current_url);
 		expect(await page.locator('pre').innerText()).toBe('1 false link');
 	});
 
-	test('beforeNavigate is triggered after clicking an implicit download link', async ({ page, baseURL }) => {
+	test('beforeNavigate is triggered after clicking an implicit download link', async ({
+		page,
+		baseURL
+	}) => {
 		await page.goto('/navigation-lifecycle/before-navigate/prevent-navigation');
 
 		await page
@@ -240,7 +244,6 @@ test.describe('Navigation lifecycle functions', () => {
 				hasText: 'implicit download'
 			})
 			.click();
-		await page.waitForLoadState('networkidle');
 
 		const current_url = baseURL + '/navigation-lifecycle/before-navigate/prevent-navigation';
 
@@ -248,7 +251,6 @@ test.describe('Navigation lifecycle functions', () => {
 		expect(await page.locator('pre').innerText()).toBe('1 true link');
 
 		await page.click('a[href="/navigation-lifecycle/before-navigate/a"]');
-		await page.waitForLoadState('networkidle');
 
 		expect(page.url()).toBe(current_url);
 		expect(await page.locator('pre').innerText()).toBe('2 false link');

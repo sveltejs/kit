@@ -1,7 +1,8 @@
 <script>
 	import { beforeNavigate } from '$app/navigation';
+	import { navigating } from '$app/stores';
 
-	const download_url = '/navigation-lifecycle/before-navigate/download';
+	const implicit_download_url = '/navigation-lifecycle/before-navigate/download';
 
 	let times_triggered = 0;
 	let unload = false;
@@ -14,7 +15,7 @@
 
 		// we don't cancel the `beforeunload` event for the implicit download link
 		// because it's needed for the download to occur.
-		if (to?.url.pathname === download_url) return;
+		if (to?.url.pathname === implicit_download_url) return;
 
 		if (!to?.route.id?.includes('redirect')) {
 			cancel();
@@ -29,5 +30,7 @@
 <a href="https://google.com" target="_blank" rel="noreferrer">_blank</a>
 <a href="https://google.de">external</a>
 <a download href="/">explicit download</a>
-<a href={download_url}>implicit download</a>
-<pre>{times_triggered} {unload} {navigation_type}</pre>
+<a href={implicit_download_url}>implicit download</a>
+{#await $navigating?.complete then _}
+	<pre>{times_triggered} {unload} {navigation_type}</pre>
+{/await}
