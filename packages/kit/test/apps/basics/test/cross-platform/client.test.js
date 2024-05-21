@@ -214,7 +214,7 @@ test.describe('Navigation lifecycle functions', () => {
 		expect(await page.innerHTML('pre')).toBe('2 false goto');
 	});
 
-	test('is triggered after clicking an explicit download link', async ({ page, baseURL }) => {
+	test('beforeNavigate is triggered after clicking an explicit download link', async ({ page, baseURL }) => {
 		await page.goto('/navigation-lifecycle/before-navigate/prevent-navigation');
 
 		await page.locator('a[download]', { hasText: 'explicit download' }).click();
@@ -232,7 +232,7 @@ test.describe('Navigation lifecycle functions', () => {
 		expect(await page.locator('pre').innerText()).toBe('1 false link');
 	});
 
-	test('is triggered after clicking an implicit download link', async ({ page, baseURL }) => {
+	test('beforeNavigate is triggered after clicking an implicit download link', async ({ page, baseURL }) => {
 		await page.goto('/navigation-lifecycle/before-navigate/prevent-navigation');
 
 		await page
