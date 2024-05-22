@@ -697,14 +697,18 @@ test.describe('Routing', () => {
 		await expect(page.locator('#button3')).toBeFocused();
 	});
 
-	test('back button returns to previous route when previous route has been navigated to via hash anchor', async ({
+	test('back button returns to previous route when previous route was navigated to via hash anchor', async ({
 		page,
-		clicknav
+		clicknav,
+		baseURL
 	}) => {
 		await page.goto('/routing/hashes/a');
 
 		await page.locator('[href="#hash-target"]').click();
+		expect(page.url()).toBe(`${baseURL}/routing/hashes/a#hash-target`);
+
 		await clicknav('[href="/routing/hashes/b"]');
+		expect(await page.textContent('h1')).toBe('b');
 
 		await page.goBack();
 		expect(await page.textContent('h1')).toBe('a');
@@ -718,10 +722,13 @@ test.describe('Routing', () => {
 		await page.goto('/routing/hashes/a');
 
 		await clicknav('[href="#hash-target"]');
+		expect(page.url()).toBe(`${baseURL}/routing/hashes/a#hash-target`);
+
 		await clicknav('[href="#replace-state"]');
+		expect(page.url()).toBe(`${baseURL}/routing/hashes/a#replace-state`);
 
 		await page.goBack();
-		expect(await page.url()).toBe(`${baseURL}/routing/hashes/a`);
+		expect(page.url()).toBe(`${baseURL}/routing/hashes/a`);
 	});
 
 	test('does not normalize external path', async ({ page, start_server }) => {
