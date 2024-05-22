@@ -41,6 +41,7 @@ export const options = {
 	embedded: ${config.kit.embedded},
 	env_public_prefix: '${config.kit.env.publicPrefix}',
 	env_private_prefix: '${config.kit.env.privatePrefix}',
+	generate_css_preload_tags: ${config.kit.prerender.generateCssPreloadTags},
 	hooks: null, // added lazily, via \`get_hooks\`
 	preload_strategy: ${s(config.kit.output.preloadStrategy)},
 	root,

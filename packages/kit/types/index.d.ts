@@ -527,6 +527,13 @@ declare module '@sveltejs/kit' {
 			 */
 			entries?: Array<'*' | `/${string}`>;
 			/**
+			 * Whether SvelteKit should generate `<link rel="preload">` tags for stylesheets.
+			 * This is useful for Cloudflare Pages's [Early Hints](https://developers.cloudflare.com/pages/configuration/early-hints/) feature, which looks for these tags to automatically generate Link headers.
+			 *
+			 * @default false
+			 */
+			generateCssPreloadTags?: boolean;
+			/**
 			 * How to respond to HTTP errors encountered while prerendering the app.
 			 *
 			 * - `'fail'` — fail the build

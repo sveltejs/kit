@@ -106,6 +106,7 @@ const get_defaults = (prefix = '') => ({
 			concurrency: 1,
 			crawl: true,
 			entries: ['*'],
+			generateCssPreloadTags: false,
 			origin: 'http://sveltekit-prerender'
 		},
 		version: {

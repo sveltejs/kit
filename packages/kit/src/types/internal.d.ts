@@ -360,6 +360,7 @@ export interface SSROptions {
 	embedded: boolean;
 	env_public_prefix: string;
 	env_private_prefix: string;
+	generate_css_preload_tags: boolean;
 	hooks: ServerHooks;
 	preload_strategy: ValidatedConfig['kit']['output']['preloadStrategy'];
 	root: SSRComponent['default'];
