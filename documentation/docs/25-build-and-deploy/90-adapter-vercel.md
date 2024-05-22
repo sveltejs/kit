@@ -88,7 +88,7 @@ export default {
 
 ## Incremental Static Regeneration
 
-Vercel supports [Incremental Static Regeneration](https://vercel.com/docs/concepts/incremental-static-regeneration/overview) (ISR), which provides the performance and cost advantages of prerendered content with the flexibility of dynamically rendered content.
+Vercel supports [Incremental Static Regeneration](https://vercel.com/docs/incremental-static-regeneration) (ISR), which provides the performance and cost advantages of prerendered content with the flexibility of dynamically rendered content.
 
 To add ISR to a route, include the `isr` property in your `config` object:
 

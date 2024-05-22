@@ -2027,7 +2027,7 @@ function _start_router() {
 	}
 
 	/** @param {MouseEvent} event */
-	container.addEventListener('click', (event) => {
+	container.addEventListener('click', async (event) => {
 		// Adapted from https://github.com/visionmedia/page.js
 		// MIT license https://github.com/visionmedia/page.js#license
 		if (event.button || event.which !== 1) return;
@@ -2119,6 +2119,16 @@ function _start_router() {
 		}
 
 		event.preventDefault();
+
+		// allow the browser to repaint before navigating —
+		// this prevents INP scores being penalised
+		await new Promise((fulfil) => {
+			requestAnimationFrame(() => {
+				setTimeout(fulfil, 0);
+			});
+
+			setTimeout(fulfil, 100); // fallback for edge case where rAF doesn't fire because e.g. tab was backgrounded
+		});
 
 		navigate({
 			type: 'link',
