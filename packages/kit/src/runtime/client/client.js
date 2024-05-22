@@ -2529,22 +2529,22 @@ function reset_focus() {
 	} else {
 		// Reset page selection and focus
 		if (location.hash && document.querySelector(location.hash)) {
-			// scroll management has already happened earlier so we need to make sure
-			// the scroll position stays the same after setting the sequential focus navigation starting point
 			const { x, y } = scroll_state();
 
 			setTimeout(() => {
 				const history_state = history.state;
 				// Mimic the browsers' behaviour and set the sequential focus navigation
-				// starting point to the fragment identifier...
+				// starting point to the fragment identifier
 				location.replace(location.hash);
-				// ...but Firefox has a bug that sets the history state as null so we
+				// but Firefox has a bug that sets the history state as null so we
 				// need to restore the history state
-				// see https://bugzilla.mozilla.org/show_bug.cgi?id=1199924
+				// See https://bugzilla.mozilla.org/show_bug.cgi?id=1199924
 				history.replaceState(history_state, '', location.hash);
-			});
 
-			scrollTo(x, y);
+				// Scroll management has already happened earlier so we need to restore
+				// the scroll position after setting the sequential focus navigation starting point
+				scrollTo(x, y);
+			});
 		} else {
 			// We try to mimic browsers' behaviour as closely as possible by targeting the
 			// first scrollable region, but unfortunately it's not a perfect match — e.g.
