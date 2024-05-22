@@ -2522,9 +2522,18 @@ function reset_focus() {
 			// scroll management has already happened earlier so we need to make sure
 			// the scroll position stays the same after setting the sequential focus navigation starting point
 			const { x, y } = scroll_state();
-			// mimic browsers' behaviour and set the sequential focus navigation starting point
-			// to the fragment identifier
-			location.replace(location.hash);
+
+			setTimeout(() => {
+				const history_state = history.state;
+				// Mimic the browsers' behaviour and set the sequential focus navigation
+				// starting point to the fragment identifier...
+				location.replace(location.hash);
+				// ...but Firefox has a bug that sets the history state as null so we
+				// need to restore the history state
+				// see https://bugzilla.mozilla.org/show_bug.cgi?id=1199924
+				history.replaceState(history_state, '', location.hash);
+			});
+
 			scrollTo(x, y);
 		} else {
 			// We try to mimic browsers' behaviour as closely as possible by targeting the
