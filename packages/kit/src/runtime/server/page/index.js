@@ -158,6 +158,9 @@ export async function render_page(event, page, options, manifest, state, resolve
 			});
 		});
 
+		// if we don't do this, rejections will be unhandled
+		for (const p of server_promises) p.catch(() => {});
+
 		const server_data = await Promise.all(server_promises);
 
 		if (state.prerendering && should_prerender_data) {
@@ -211,7 +214,6 @@ export async function render_page(event, page, options, manifest, state, resolve
 		});
 
 		// if we don't do this, rejections will be unhandled
-		for (const p of server_promises) p.catch(() => {});
 		for (const p of load_promises) p.catch(() => {});
 
 		for (let i = 0; i < nodes.length; i += 1) {
