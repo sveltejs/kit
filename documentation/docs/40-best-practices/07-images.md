@@ -78,20 +78,27 @@ You can also manually import an image asset and pass it to an `<enhanced:img>`. 
 	import MyImage from './path/to/your/image.jpg?enhanced';
 </script>
 
-<enhanced:img src={MyImage} alt="Some alt text" />
+<enhanced:img src={MyImage} alt="some alt text" />
 ```
 
 You can also use [Vite's `import.meta.glob`](https://vitejs.dev/guide/features.html#glob-import). Note that you will have to specify `enhanced` via a [custom query](https://vitejs.dev/guide/features.html#custom-queries):
 
-```js
-const pictures = import.meta.glob(
-	'/path/to/assets/*.{avif,gif,heif,jpeg,jpg,png,tiff,webp}',
-	{
-		query: {
-			enhanced: true
+```svelte
+<script>
+	const imageModules = import.meta.glob(
+		'/path/to/assets/*.{avif,gif,heif,jpeg,jpg,png,tiff,webp,svg}',
+		{
+			eager: true,
+			query: {
+				enhanced: true
+			}
 		}
-	}
-);
+	)
+</script>
+
+{#each Object.entries(imageModules) as [_path, module]}
+	<enhanced:img src={module.default} alt="some alt text" />
+{/each}
 ```
 
 ### Intrinsic Dimensions
