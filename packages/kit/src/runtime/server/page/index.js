@@ -161,7 +161,67 @@ export async function render_page(event, page, options, manifest, state, resolve
 		// if we don't do this, rejections will be unhandled
 		for (const p of server_promises) p.catch(() => {});
 
-		const server_data = await Promise.all(server_promises);
+		/** @type {(import('types').ServerDataNode | null)[]} */
+		const server_data = [];
+
+		for (let i = 0; i < nodes.length; i += 1) {
+			try {
+				const data = await server_promises[i];
+				server_data.push(data);
+			} catch (e) {
+				const err = normalize_error(e);
+
+				if (err instanceof Redirect) {
+					if (state.prerendering && should_prerender_data) {
+						const body = JSON.stringify({
+							type: 'redirect',
+							location: err.location
+						});
+
+						state.prerendering.dependencies.set(data_pathname, {
+							response: text(body),
+							body
+						});
+					}
+
+					return redirect_response(err.status, err.location);
+				}
+
+				const status = get_status(err);
+				const error = await handle_error_and_jsonify(event, options, err);
+
+				while (i--) {
+					if (page.errors[i]) {
+						const index = /** @type {number} */ (page.errors[i]);
+						const node = await manifest._.nodes[index]();
+
+						let j = i;
+						while (!branch[j]) j -= 1;
+
+						return await render_response({
+							event,
+							options,
+							manifest,
+							state,
+							resolve_opts,
+							page_config: { ssr: true, csr: true },
+							status,
+							error,
+							branch: compact(branch.slice(0, j + 1)).concat({
+								node,
+								data: null,
+								server_data: null
+							}),
+							fetched
+						});
+					}
+				}
+
+				// if we're still here, it means the error happened in the root layout,
+				// which means we have to fall back to error.html
+				return static_error_page(options, status, error.message);
+			}
+		}
 
 		if (state.prerendering && should_prerender_data) {
 			// ndjson format
