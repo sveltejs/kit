@@ -57,3 +57,15 @@
 		<button formmethod="dialog">Cancel</button>
 	</form>
 </dialog>
+
+<form action="?/login_2" enctype="application/x-www-form-urlencoded" method="post" use:enhance>
+	<input name="username_2" type="text" />
+
+	<button class="form-enctype-submit">Submit</button>
+</form>
+
+<form action="?/send_file" method="post" use:enhance>
+	<input type="file" name="file" class="form-file-input" />
+
+	<button class="form-file-submit" formenctype="multipart/form-data" type="submit">Submit</button>
+</form>

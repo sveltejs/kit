@@ -18,6 +18,12 @@ export const actions = {
 			result: fields.get('username')
 		};
 	},
+	login_2: async ({ request }) => {
+		const fields = await request.formData();
+		return {
+			result: fields.get('username_2')
+		};
+	},
 	register: async ({ request }) => {
 		const fields = await request.formData();
 		return {
@@ -53,5 +59,16 @@ export const actions = {
 		});
 
 		return {};
+	},
+	send_file: async ({ request }) => {
+		const data = await request.formData();
+		const file = data.get('file');
+
+		console.log('file', file);
+
+		return {
+			// @ts-expect-error
+			result: 'file name:' + file.name
+		};
 	}
 };
