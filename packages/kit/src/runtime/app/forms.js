@@ -124,9 +124,13 @@ export function enhance(form_element, submit = () => {}) {
 				: clone(form_element).action
 		);
 
+		const enctype = event.submitter?.hasAttribute('formenctype')
+			? /** @type {HTMLButtonElement | HTMLInputElement} */ (event.submitter).formEnctype
+			: clone(form_element).enctype;
+
 		const form_data = new FormData(form_element);
 
-		if (DEV && clone(form_element).enctype !== 'multipart/form-data') {
+		if (DEV && enctype !== 'multipart/form-data') {
 			for (const value of form_data.values()) {
 				if (value instanceof File) {
 					throw new Error(
@@ -161,14 +165,29 @@ export function enhance(form_element, submit = () => {}) {
 		let result;
 
 		try {
+			const is_valid_enctype = enctype?.match(
+				/application\/x-www-form-urlencoded|multipart\/form|text\/plain/
+			);
+
+			const headers = {
+				accept: 'application/json',
+				'Content-Type': is_valid_enctype ? enctype : 'application/x-www-form-urlencoded',
+				'x-sveltekit-action': 'true'
+			};
+
+			// @ts-expect-error
+			const body = enctype === 'multipart/form-data' ? form_data : new URLSearchParams(form_data);
+
+			if (enctype === 'multipart/form-data' && headers['Content-Type']) {
+				// @ts-expect-error
+				delete headers['Content-Type'];
+			}
+
 			const response = await fetch(action, {
 				method: 'POST',
-				headers: {
-					accept: 'application/json',
-					'x-sveltekit-action': 'true'
-				},
+				headers,
 				cache: 'no-store',
-				body: form_data,
+				body,
 				signal: controller.signal
 			});
 
