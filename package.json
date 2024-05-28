@@ -31,8 +31,8 @@
 		"eslint-plugin-unicorn": "^53.0.0",
 		"playwright": "^1.41.0"
 	},
-	"packageManager": "pnpm@8.15.7",
+	"packageManager": "pnpm@9.0.4",
 	"engines": {
-		"pnpm": "^8.0.0"
+		"pnpm": "^9.0.0"
 	}
 }
