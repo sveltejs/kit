@@ -1,5 +1,11 @@
 # @sveltejs/enhanced-img
 
+## 0.2.1
+
+### Patch Changes
+
+- fix: use correct type for `*?enhanced` imports ([#12224](https://github.com/sveltejs/kit/pull/12224))
+
 ## 0.2.0
 
 ### Minor Changes

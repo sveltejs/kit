@@ -1,5 +1,11 @@
 # create-svelte
 
+## 6.2.1
+
+### Patch Changes
+
+- fix: update default playwright test case for lib-project ([#12261](https://github.com/sveltejs/kit/pull/12261))
+
 ## 6.2.0
 
 ### Minor Changes
