@@ -166,7 +166,7 @@ export function enhance(form_element, submit = () => {}) {
 
 		try {
 			const is_valid_enctype = enctype?.match(
-				/application\/x-www-form-urlencoded|multipart\/form|text\/plain/
+				/application\/x-www-form-urlencoded|multipart\/form-data|text\/plain/
 			);
 
 			const headers = {
