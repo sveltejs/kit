@@ -169,18 +169,17 @@ export function enhance(form_element, submit = () => {}) {
 				/application\/x-www-form-urlencoded|multipart\/form-data|text\/plain/
 			);
 
-			const headers = {
+			const headers = new Headers({
 				accept: 'application/json',
 				'Content-Type': is_valid_enctype ? enctype : 'application/x-www-form-urlencoded',
 				'x-sveltekit-action': 'true'
-			};
+			});
 
 			// @ts-expect-error
 			const body = enctype === 'multipart/form-data' ? form_data : new URLSearchParams(form_data);
 
-			if (enctype === 'multipart/form-data' && headers['Content-Type']) {
-				// @ts-expect-error
-				delete headers['Content-Type'];
+			if (enctype === 'multipart/form-data' && headers.get('Content-Type')) {
+				headers.delete('Content-Type');
 			}
 
 			const response = await fetch(action, {
