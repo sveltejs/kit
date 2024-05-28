@@ -5,6 +5,7 @@ export default [
 	...svelte_config,
 	{
 		rules: {
+			'@typescript-eslint/no-unused-expressions': 'off',
 			'no-undef': 'off'
 		}
 	},
