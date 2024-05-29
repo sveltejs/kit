@@ -1,5 +1,11 @@
 # create-svelte
 
+## 6.3.0
+
+### Minor Changes
+
+- feat: upgrade eslint to v9 ([#12268](https://github.com/sveltejs/kit/pull/12268))
+
 ## 6.2.1
 
 ### Patch Changes
