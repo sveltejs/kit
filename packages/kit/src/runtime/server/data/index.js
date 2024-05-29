@@ -219,7 +219,7 @@ export function get_data_json(event, options, nodes) {
 							let str;
 							try {
 								str = devalue.stringify(value, reducers);
-							} catch (e) {
+							} catch {
 								const error = await handle_error_and_jsonify(
 									event,
 									options,

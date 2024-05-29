@@ -1070,7 +1070,7 @@ async function load_nearest_error_page(i, branch, errors) {
 						universal: null
 					}
 				};
-			} catch (e) {
+			} catch {
 				continue;
 			}
 		}
