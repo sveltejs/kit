@@ -13,6 +13,6 @@
 			"types": ["./types/index"]
 		}
 	},
-	"include": ["src/**/*", "test/index.js", "types/**/*"],
-	"exclude": ["src/test/fixtures/**/*", "src/test/watch/**/*"]
+	"include": ["*.js", "src/**/*", "test/index.js", "types/**/*"],
+	"exclude": ["test/fixtures/**/*"]
 }

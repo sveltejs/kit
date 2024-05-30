@@ -5,7 +5,11 @@ export default defineConfig({
 	test: {
 		// shave a couple seconds off the tests
 		isolate: false,
-		singleThread: true,
+		poolOptions: {
+			threads: {
+				singleThread: true
+			}
+		},
 		include: ['src/**/*.spec.js'],
 		exclude: [
 			'**/node_modules/**',
