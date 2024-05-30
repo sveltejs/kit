@@ -296,6 +296,10 @@ importers:
       '@sveltejs/kit':
         specifier: ^1.0.0 || ^2.0.0
         version: link:../kit
+    devDependencies:
+      typescript:
+        specifier: ^5.3.3
+        version: 5.4.5
 
   packages/create-svelte:
     dependencies:
