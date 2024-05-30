@@ -28,7 +28,7 @@
 
 ### Patch Changes
 
-- fix: go back to eslint 8 until typescript-eslint supports eslint 9 ([#12110](https://github.com/sveltejs/kit/pull/12110))
+- fix: go back to eslint 8 until typescript-eslint supports eslint 9 ([#12124](https://github.com/sveltejs/kit/pull/12124))
 
 ## 6.1.0
 
