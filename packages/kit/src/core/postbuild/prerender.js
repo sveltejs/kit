@@ -282,9 +282,8 @@ async function prerender({ out, manifest_path, metadata, verbose, env }) {
 					if (href === config.prerender.origin) return '/';
 					if (href.at(config.prerender.origin.length) !== '/') return href;
 					return href.slice(config.prerender.origin.length);
-				} else {
-					return href;
 				}
+				return href;
 			};
 
 			for (const href of hrefs.map(removePrerenderOrigin)) {
