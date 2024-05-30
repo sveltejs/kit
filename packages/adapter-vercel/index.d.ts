@@ -98,6 +98,10 @@ export interface EdgeConfig {
 	 * If `true`, this route will always be deployed as its own separate function
 	 */
 	split?: boolean;
+	/**
+	 * https://vercel.com/docs/build-output-api/v3/configuration#images
+	 */
+	images?: ImagesConfig;
 }
 
 export type Config = EdgeConfig | ServerlessConfig;
