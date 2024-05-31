@@ -168,14 +168,14 @@ export async function render_response({
 			};
 
 			try {
-				rendered = options.root.render(props);
+				rendered = options.root.render(props, { context: event.context });
 			} finally {
 				globalThis.fetch = fetch;
 				paths.reset();
 			}
 		} else {
 			try {
-				rendered = options.root.render(props);
+				rendered = options.root.render(props, { context: event.context });
 			} finally {
 				paths.reset();
 			}

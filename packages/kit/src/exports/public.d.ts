@@ -1037,12 +1037,17 @@ export type ParamMatcher = (param: string) => boolean;
 
 export interface RequestEvent<
 	Params extends Partial<Record<string, string>> = Partial<Record<string, string>>,
-	RouteId extends string | null = string | null
+	RouteId extends string | null = string | null,
+	Context extends Map<unknown, unknown> = Map<unknown, unknown>
 > {
 	/**
 	 * Get or set cookies related to the current request
 	 */
 	cookies: Cookies;
+	/**
+	 * Provide server context during SSR.
+	 */
+	context: Context;
 	/**
 	 * `fetch` is equivalent to the [native `fetch` web API](https://developer.mozilla.org/en-US/docs/Web/API/fetch), with a few additional features:
 	 *
