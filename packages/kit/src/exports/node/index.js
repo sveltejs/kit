@@ -101,9 +101,9 @@ function get_raw_body(req, body_size_limit) {
  *   base: string;
  *   bodySizeLimit?: number;
  * }} options
- * @returns {Promise<Request>}
+ * @returns {Request}
  */
-export async function getRequest({ request, base, bodySizeLimit }) {
+export function getRequest({ request, base, bodySizeLimit }) {
 	return new Request(base + request.url, {
 		// @ts-expect-error
 		duplex: 'half',
@@ -119,9 +119,9 @@ export async function getRequest({ request, base, bodySizeLimit }) {
 /**
  * @param {import('http').ServerResponse} res
  * @param {Response} response
- * @returns {Promise<void>}
+ * @returns {void}
  */
-export async function setResponse(res, response) {
+export function setResponse(res, response) {
 	for (const [key, value] of response.headers) {
 		try {
 			res.setHeader(

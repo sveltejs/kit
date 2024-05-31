@@ -50,7 +50,7 @@ export async function respond_with_error({
 				event,
 				state,
 				node: default_layout,
-				parent: async () => ({})
+				parent: () => ({})
 			});
 
 			const server_data = await server_data_promise;
@@ -59,7 +59,7 @@ export async function respond_with_error({
 				event,
 				fetched,
 				node: default_layout,
-				parent: async () => ({}),
+				parent: () => ({}),
 				resolve_opts,
 				server_data_promise,
 				state,

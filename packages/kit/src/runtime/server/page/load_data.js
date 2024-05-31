@@ -9,7 +9,7 @@ import { b64_encode } from '../../utils.js';
  *   event: import('@sveltejs/kit').RequestEvent;
  *   state: import('types').SSRState;
  *   node: import('types').SSRNode | undefined;
- *   parent: () => Promise<Record<string, any>>;
+ *   parent: () => Record<string, any> | Promise<Record<string, any>>;
  * }} opts
  * @returns {Promise<import('types').ServerDataNode | null>}
  */
@@ -165,7 +165,7 @@ export async function load_server_data({ event, state, node, parent }) {
  *   event: import('@sveltejs/kit').RequestEvent;
  *   fetched: import('./types.js').Fetched[];
  *   node: import('types').SSRNode | undefined;
- *   parent: () => Promise<Record<string, any>>;
+ *   parent: () => Record<string, any> | Promise<Record<string, any>>;
  *   resolve_opts: import('types').RequiredResolveOptions;
  *   server_data_promise: Promise<import('types').ServerDataNode | null>;
  *   state: import('types').SSRState;

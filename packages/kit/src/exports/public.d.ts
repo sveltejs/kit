@@ -797,7 +797,7 @@ export interface LoadEvent<
 	 *
 	 * Be careful not to introduce accidental waterfalls when using `await parent()`. If for example you only want to merge parent data into the returned output, call it _after_ fetching your other data.
 	 */
-	parent(): Promise<ParentData>;
+	parent(): MaybePromise<ParentData>;
 	/**
 	 * This function declares that the `load` function has a _dependency_ on one or more URLs or custom identifiers, which can subsequently be used with [`invalidate()`](/docs/modules#$app-navigation-invalidate) to cause `load` to rerun.
 	 *

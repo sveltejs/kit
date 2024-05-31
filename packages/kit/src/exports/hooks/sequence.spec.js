@@ -120,7 +120,7 @@ test('uses first defined preload option', async () => {
 	const event = /** @type {import('@sveltejs/kit').RequestEvent} */ ({});
 	const response = await handler({
 		event,
-		resolve: async (_event, opts = {}) => {
+		resolve: (_event, opts = {}) => {
 			let html = '';
 
 			const { preload = () => false } = opts;
@@ -153,7 +153,7 @@ test('uses first defined filterSerializedResponseHeaders option', async () => {
 	const event = /** @type {import('@sveltejs/kit').RequestEvent} */ ({});
 	const response = await handler({
 		event,
-		resolve: async (_event, opts = {}) => {
+		resolve: (_event, opts = {}) => {
 			let html = '';
 
 			const { filterSerializedResponseHeaders = () => false } = opts;

@@ -3,7 +3,7 @@ import path from 'node:path';
 import { mkdirp, copy, dist } from './utils.js';
 
 /** @type {import('./types/index.js').create} */
-export async function create(cwd, options) {
+export function create(cwd, options) {
 	mkdirp(cwd);
 
 	write_template_files(options.template, options.types, options.name, cwd);

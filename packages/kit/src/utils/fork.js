@@ -14,12 +14,12 @@ export function forked(module, callback) {
 	if (process.env.SVELTEKIT_FORK && parentPort) {
 		parentPort.on(
 			'message',
-			/** @param {any} data */ async (data) => {
+			/** @param {any} data */ (data) => {
 				if (data?.type === 'args' && data.module === module) {
 					parentPort?.postMessage({
 						type: 'result',
 						module,
-						payload: await callback(data.payload)
+						payload: callback(data.payload)
 					});
 				}
 			}
