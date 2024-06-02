@@ -9,7 +9,7 @@ export function negotiate(accept, types) {
 	const parts = [];
 
 	accept.split(',').forEach((str, i) => {
-		const match = /([^/]+)\/([^;]+)(?:;q=([0-9.]+))?/.exec(str);
+		const match = /([^/ \t]+)\/([^; \t]+)[ \t]*(?:;[ \t]*q=([0-9.]+))?/.exec(str);
 
 		// no match equals invalid header — ignore
 		if (match) {
