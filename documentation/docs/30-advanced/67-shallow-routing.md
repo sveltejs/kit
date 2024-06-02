@@ -59,7 +59,7 @@ For this to work, you need to load the data that the `+page.svelte` expects. A c
 		href="/photos/{thumbnail.id}"
 		on:click={async (e) => {
 			// bail if opening a new tab, or we're on too small a screen
-			if (e.metaKey || innerWidth < 640) return;
+			if (e.metaKey || e.ctrlKey || innerWidth < 640) return;
 
 			// prevent navigation
 			e.preventDefault();
