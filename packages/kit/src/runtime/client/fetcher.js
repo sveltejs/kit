@@ -19,7 +19,7 @@ if (DEV && BROWSER) {
 	let can_inspect_stack_trace = false;
 
 	// detect whether async stack traces work
-	const check_stack_trace = () => {
+	const check_stack_trace = async () => {
 		const stack = /** @type {string} */ (new Error().stack);
 		can_inspect_stack_trace = stack.includes('check_stack_trace');
 	};
