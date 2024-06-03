@@ -494,7 +494,7 @@ export async function dev(vite, vite_config, svelte_config) {
 					read: (file) => createReadableStream(from_fs(file))
 				});
 
-				const request = getRequest({
+				const request = await getRequest({
 					base,
 					request: req
 				});

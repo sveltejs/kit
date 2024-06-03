@@ -180,7 +180,7 @@ export async function preview(vite, vite_config, svelte_config) {
 		vite.middlewares.use(async (req, res) => {
 			const host = req.headers['host'];
 
-			const request = getRequest({
+			const request = await getRequest({
 				base: `${protocol}://${host}`,
 				request: req
 			});

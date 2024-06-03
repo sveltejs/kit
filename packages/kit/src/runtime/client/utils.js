@@ -240,7 +240,7 @@ export function create_updated_store() {
 	if (DEV || !BROWSER) {
 		return {
 			subscribe,
-			check: () => false
+			check: async () => false
 		};
 	}
 

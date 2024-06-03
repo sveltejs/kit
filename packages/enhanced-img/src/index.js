@@ -3,9 +3,9 @@ import { imagetools } from 'vite-imagetools';
 import { image } from './preprocessor.js';
 
 /**
- * @returns {import('vite').Plugin[]}
+ * @returns {Promise<import('vite').Plugin[]>}
  */
-export function enhancedImages() {
+export async function enhancedImages() {
 	const imagetools_instance = imagetools_plugin();
 	return !process.versions.webcontainer
 		? [image_plugin(imagetools_instance), imagetools_instance]

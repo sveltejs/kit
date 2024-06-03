@@ -5,4 +5,4 @@ import { Options } from './internal.js';
  * @param {string} cwd - Path to the directory to create
  * @param {import('./internal').Options} options
  */
-export function create(cwd: string, options: Options): void;
+export function create(cwd: string, options: Options): Promise<void>;
