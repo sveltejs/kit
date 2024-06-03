@@ -103,6 +103,7 @@ function get_raw_body(req, body_size_limit) {
  * }} options
  * @returns {Promise<Request>}
  */
+// eslint-disable-next-line @typescript-eslint/require-await
 export async function getRequest({ request, base, bodySizeLimit }) {
 	return new Request(base + request.url, {
 		// @ts-expect-error
@@ -121,6 +122,7 @@ export async function getRequest({ request, base, bodySizeLimit }) {
  * @param {Response} response
  * @returns {Promise<void>}
  */
+// eslint-disable-next-line @typescript-eslint/require-await
 export async function setResponse(res, response) {
 	for (const [key, value] of response.headers) {
 		try {

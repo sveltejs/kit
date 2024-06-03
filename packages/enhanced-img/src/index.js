@@ -5,6 +5,7 @@ import { image } from './preprocessor.js';
 /**
  * @returns {Promise<import('vite').Plugin[]>}
  */
+// eslint-disable-next-line @typescript-eslint/require-await
 export async function enhancedImages() {
 	const imagetools_instance = imagetools_plugin();
 	return !process.versions.webcontainer
