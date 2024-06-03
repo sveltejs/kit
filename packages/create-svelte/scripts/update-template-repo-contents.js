@@ -13,7 +13,7 @@ fs.readdirSync(repo).forEach((file) => {
 	}
 });
 
-create(repo, {
+await create(repo, {
 	name: 'kit-template-default',
 	template: 'default',
 	eslint: false,

@@ -109,7 +109,7 @@ const options = await p.group(
 	{ onCancel: () => process.exit(1) }
 );
 
-create(cwd, {
+await create(cwd, {
 	name: path.basename(path.resolve(cwd)),
 	template: /** @type {'default' | 'skeleton' | 'skeletonlib'} */ (options.template),
 	types: /** @type {'checkjs' | 'typescript' | null} */ (options.types),
