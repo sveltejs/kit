@@ -5,7 +5,7 @@ import { reroute } from 'HOOKS';
 
 /**
  * https://github.com/vercel/vercel/blob/4337ea0654c4ee2c91c4464540f879d43da6696f/packages/edge/src/middleware-helpers.ts#L38-L55
- * @param {*} init
+ * @param {import('index.js').ExtraResponseInit | undefined} init
  * @param {Headers} headers
  */
 function handleMiddlewareField(init, headers) {
@@ -41,10 +41,27 @@ export function rewrite(destination) {
 }
 
 /**
+ *
+ * @param {import('index.js').ExtraResponseInit=} init
+ * @returns {Response}
+ */
+export function next(init) {
+	const headers = new Headers(init?.headers ?? {});
+	headers.set('x-middleware-next', '1');
+
+	handleMiddlewareField(init, headers);
+
+	return new Response(null, {
+		...init,
+		headers
+	});
+}
+
+/**
  * @param {Request} request
  * @returns {Response}
  */
 export default function middleware(request) {
 	const pathname = reroute({ url: new URL(request.url) });
-	return rewrite(new URL(pathname, request.url));
+	return pathname ? rewrite(pathname) : next(request);
 }

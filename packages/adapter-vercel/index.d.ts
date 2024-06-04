@@ -157,3 +157,40 @@ export interface RequestContext {
 		 */ promise: Promise<unknown>
 	): void;
 }
+
+export interface ModifiedRequest {
+	/**
+	 * If set, overwrites the incoming headers to the origin request.
+	 *
+	 * This is useful when you want to pass data between a Middleware and a
+	 * Serverless or Edge Function.
+	 *
+	 * @example
+	 * <caption>Add a `x-user-id` header and remove the `Authorization` header</caption>
+	 *
+	 * ```ts
+	 * import { rewrite } from '@vercel/edge';
+	 * export default async function middleware(request: Request): Promise<Response> {
+	 *   const newHeaders = new Headers(request.headers);
+	 *   newHeaders.set('x-user-id', 'user_123');
+	 *   newHeaders.delete('authorization');
+	 *   return rewrite(request.url, {
+	 *     request: { headers: newHeaders }
+	 *   })
+	 * }
+	 * ```
+	 */
+	headers?: Headers;
+}
+
+export interface ExtraResponseInit extends Omit<ResponseInit, 'headers'> {
+	/**
+	 * These headers will be sent to the user response
+	 * along with the response headers from the origin.
+	 */
+	headers?: HeadersInit;
+	/**
+	 * Fields to rewrite for the upstream request.
+	 */
+	request?: ModifiedRequest;
+}
