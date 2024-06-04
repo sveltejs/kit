@@ -25,7 +25,8 @@ async function run_test(dir) {
 	const manifest = create_manifest_data({
 		config: /** @type {import('types').ValidatedConfig} */ (initial)
 	});
-	await write_all_types(initial, manifest);
+
+	write_all_types(initial, manifest);
 }
 
 test('Creates correct $types', async () => {
