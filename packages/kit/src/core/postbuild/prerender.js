@@ -449,6 +449,7 @@ async function prerender({ out, manifest_path, metadata, verbose, env }) {
 		read: (file) => createReadableStream(`${config.outDir}/output/server/${file}`)
 	});
 
+	const paths_to_enqueue = []
 	for (const entry of config.prerender.entries) {
 		if (entry === '*') {
 			for (const [id, prerender] of prerender_map) {
@@ -459,19 +460,21 @@ async function prerender({ out, manifest_path, metadata, verbose, env }) {
 
 					if (processed_id.includes('[')) continue;
 					const path = `/${get_route_segments(processed_id).join('/')}`;
-					await enqueue(null, config.paths.base + path);
+					paths_to_enqueue.push(config.paths.base + path);
 				}
 			}
 		} else {
-			await enqueue(null, config.paths.base + entry);
+			paths_to_enqueue.push(config.paths.base + entry);
 		}
 	}
 
 	for (const { id, entries } of route_level_entries) {
 		for (const entry of entries) {
-			await enqueue(null, config.paths.base + entry, undefined, id);
+			paths_to_enqueue.push(config.paths.base + entry, undefined, id);
 		}
 	}
+
+	await Promise.all(paths_to_enqueue);
 
 	await q.done();
 
