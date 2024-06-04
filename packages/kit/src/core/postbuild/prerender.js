@@ -449,7 +449,7 @@ async function prerender({ out, manifest_path, metadata, verbose, env }) {
 		read: (file) => createReadableStream(`${config.outDir}/output/server/${file}`)
 	});
 
-	const paths_to_enqueue = [];
+	const entries_to_enqueue = [];
 	for (const entry of config.prerender.entries) {
 		if (entry === '*') {
 			for (const [id, prerender] of prerender_map) {
@@ -460,21 +460,20 @@ async function prerender({ out, manifest_path, metadata, verbose, env }) {
 
 					if (processed_id.includes('[')) continue;
 					const path = `/${get_route_segments(processed_id).join('/')}`;
-					paths_to_enqueue.push(config.paths.base + path);
+					entries_to_enqueue.push({ path: config.paths.base + path });
 				}
 			}
 		} else {
-			paths_to_enqueue.push(config.paths.base + entry);
+			entries_to_enqueue.push({ path: config.paths.base + entry });
 		}
 	}
 
 	for (const { id, entries } of route_level_entries) {
 		for (const entry of entries) {
-			paths_to_enqueue.push(config.paths.base + entry, undefined, id);
+			entries_to_enqueue.push({ path: config.paths.base + entry, id });
 		}
 	}
-
-	await Promise.all(paths_to_enqueue);
+	await Promise.all(entries_to_enqueue.map(({ path, id }) => enqueue(null, path, undefined, id)));
 
 	await q.done();
 
