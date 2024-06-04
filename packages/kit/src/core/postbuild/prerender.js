@@ -449,7 +449,7 @@ async function prerender({ out, manifest_path, metadata, verbose, env }) {
 		read: (file) => createReadableStream(`${config.outDir}/output/server/${file}`)
 	});
 
-	const paths_to_enqueue = []
+	const paths_to_enqueue = [];
 	for (const entry of config.prerender.entries) {
 		if (entry === '*') {
 			for (const [id, prerender] of prerender_map) {
