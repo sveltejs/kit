@@ -305,4 +305,4 @@ async function main() {
 	await generate_templates(shared);
 }
 
-main();
+await main();

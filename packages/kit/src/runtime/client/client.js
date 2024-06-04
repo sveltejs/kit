@@ -259,8 +259,8 @@ export async function start(_app, _target, hydrate) {
 	// connectivity errors after initialisation don't nuke the app
 	default_layout_loader = _app.nodes[0];
 	default_error_loader = _app.nodes[1];
-	default_layout_loader();
-	default_error_loader();
+	await default_layout_loader();
+	await default_error_loader();
 
 	current_history_index = history.state?.[HISTORY_INDEX];
 	current_navigation_index = history.state?.[NAVIGATION_INDEX];
@@ -292,7 +292,7 @@ export async function start(_app, _target, hydrate) {
 	if (hydrate) {
 		await _hydrate(target, hydrate);
 	} else {
-		goto(location.href, { replaceState: true });
+		await goto(location.href, { replaceState: true });
 	}
 
 	_start_router();
@@ -1319,7 +1319,7 @@ async function navigate({
 				route: { id: null }
 			});
 		} else {
-			_goto(new URL(navigation_result.location, url).href, {}, redirect_count + 1, nav_token);
+			await _goto(new URL(navigation_result.location, url).href, {}, redirect_count + 1, nav_token);
 			return false;
 		}
 	} else if (/** @type {number} */ (navigation_result.props.page.status) >= 400) {
@@ -1517,10 +1517,10 @@ function setup_preload() {
 	container.addEventListener('touchstart', tap, { passive: true });
 
 	const observer = new IntersectionObserver(
-		(entries) => {
+		async (entries) => {
 			for (const entry of entries) {
 				if (entry.isIntersecting) {
-					_preload_code(/** @type {HTMLAnchorElement} */ (entry.target).href);
+					await _preload_code(/** @type {HTMLAnchorElement} */ (entry.target).href);
 					observer.unobserve(entry.target);
 				}
 			}
@@ -1950,7 +1950,7 @@ export async function applyAction(result) {
 			tick().then(reset_focus);
 		}
 	} else if (result.type === 'redirect') {
-		_goto(result.location, { invalidateAll: true }, 0);
+		await _goto(result.location, { invalidateAll: true }, 0);
 	} else {
 		/** @type {Record<string, any>} */
 		root.$set({
@@ -2122,7 +2122,7 @@ function _start_router() {
 			setTimeout(fulfil, 100); // fallback for edge case where rAF doesn't fire because e.g. tab was backgrounded
 		});
 
-		navigate({
+		await navigate({
 			type: 'link',
 			url,
 			keepfocus: options.keepfocus,

@@ -377,7 +377,7 @@ export async function dev(vite, vite_config, svelte_config) {
 			SvelteKitError: control_module_vite.SvelteKitError
 		});
 	}
-	align_exports();
+	await align_exports();
 	const ws_send = vite.ws.send;
 	/** @param {any} args */
 	vite.ws.send = function (...args) {
@@ -540,7 +540,7 @@ export async function dev(vite, vite_config, svelte_config) {
 						setResponse(res, rendered);
 					});
 				} else {
-					setResponse(res, rendered);
+					await setResponse(res, rendered);
 				}
 			} catch (e) {
 				const error = coalesce_to_error(e);

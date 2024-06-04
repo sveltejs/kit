@@ -233,7 +233,7 @@ async function prerender({ out, manifest_path, metadata, verbose, env }) {
 
 		const body = Buffer.from(await response.arrayBuffer());
 
-		save('pages', response, body, decoded, encoded, referrer, 'linked');
+		await save('pages', response, body, decoded, encoded, referrer, 'linked');
 
 		for (const [dependency_path, result] of dependencies) {
 			// this seems circuitous, but using new URL allows us to not care
@@ -257,7 +257,7 @@ async function prerender({ out, manifest_path, metadata, verbose, env }) {
 
 			const body = result.body ?? new Uint8Array(await result.response.arrayBuffer());
 
-			save(
+			await save(
 				'dependencies',
 				result.response,
 				body,
@@ -305,7 +305,7 @@ async function prerender({ out, manifest_path, metadata, verbose, env }) {
 					/** @type {Set<string>} */ (expected_hashlinks.get(key)).add(decoded);
 				}
 
-				enqueue(decoded, decode_uri(pathname), pathname);
+				await enqueue(decoded, decode_uri(pathname), pathname);
 			}
 		}
 	}
@@ -319,7 +319,7 @@ async function prerender({ out, manifest_path, metadata, verbose, env }) {
 	 * @param {string | null} referrer
 	 * @param {'linked' | 'fetched'} referenceType
 	 */
-	function save(category, response, body, decoded, encoded, referrer, referenceType) {
+	async function save(category, response, body, decoded, encoded, referrer, referenceType) {
 		const response_type = Math.floor(response.status / 100);
 		const headers = Object.fromEntries(response.headers);
 
@@ -341,7 +341,7 @@ async function prerender({ out, manifest_path, metadata, verbose, env }) {
 			if (location) {
 				const resolved = resolve(encoded, location);
 				if (is_root_relative(resolved)) {
-					enqueue(decoded, decode_uri(resolved), resolved);
+					await enqueue(decoded, decode_uri(resolved), resolved);
 				}
 
 				if (!headers['x-sveltekit-normalize']) {
@@ -459,17 +459,17 @@ async function prerender({ out, manifest_path, metadata, verbose, env }) {
 
 					if (processed_id.includes('[')) continue;
 					const path = `/${get_route_segments(processed_id).join('/')}`;
-					enqueue(null, config.paths.base + path);
+					await enqueue(null, config.paths.base + path);
 				}
 			}
 		} else {
-			enqueue(null, config.paths.base + entry);
+			await enqueue(null, config.paths.base + entry);
 		}
 	}
 
 	for (const { id, entries } of route_level_entries) {
 		for (const entry of entries) {
-			enqueue(null, config.paths.base + entry, undefined, id);
+			await enqueue(null, config.paths.base + entry, undefined, id);
 		}
 	}
 

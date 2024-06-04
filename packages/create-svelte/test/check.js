@@ -108,7 +108,7 @@ for (const template of templates) {
 		const cwd = path.join(test_workspace_dir, `${template}-${types}`);
 		fs.rmSync(cwd, { recursive: true, force: true });
 
-		create(cwd, {
+		await create(cwd, {
 			name: `create-svelte-test-${template}-${types}`,
 			template,
 			types,

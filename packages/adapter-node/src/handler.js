@@ -105,7 +105,7 @@ const ssr = async (req, res) => {
 		return;
 	}
 
-	setResponse(
+	await setResponse(
 		res,
 		await server.respond(request, {
 			platform: { req },
