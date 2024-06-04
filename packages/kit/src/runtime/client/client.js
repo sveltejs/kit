@@ -255,13 +255,6 @@ export async function start(_app, _target, hydrate) {
 	container = __SVELTEKIT_EMBEDDED__ ? _target : document.documentElement;
 	target = _target;
 
-	// we import the root layout/error nodes eagerly, so that
-	// connectivity errors after initialisation don't nuke the app
-	default_layout_loader = _app.nodes[0];
-	default_error_loader = _app.nodes[1];
-	await default_layout_loader();
-	await default_error_loader();
-
 	current_history_index = history.state?.[HISTORY_INDEX];
 	current_navigation_index = history.state?.[NAVIGATION_INDEX];
 
@@ -289,11 +282,15 @@ export async function start(_app, _target, hydrate) {
 		scrollTo(scroll.x, scroll.y);
 	}
 
-	if (hydrate) {
-		await _hydrate(target, hydrate);
-	} else {
-		await goto(location.href, { replaceState: true });
-	}
+	// we import the root layout/error nodes eagerly, so that
+	// connectivity errors after initialisation don't nuke the app
+	default_layout_loader = _app.nodes[0];
+	default_error_loader = _app.nodes[1];
+	await Promise.allSettled([
+		default_layout_loader(),
+		default_error_loader(),
+		hydrate ? _hydrate(target, hydrate) : goto(location.href, { replaceState: true })
+	]);
 
 	_start_router();
 }
