@@ -35,7 +35,7 @@ prog
 		try {
 			const config = await load_config();
 			const sync = await import('./core/sync/sync.js');
-			await sync.all_types(config, mode);
+			sync.all_types(config, mode);
 		} catch (error) {
 			handle_error(error);
 		}

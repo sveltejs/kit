@@ -242,7 +242,7 @@ async function kit({ svelte_config }) {
 		 * Build the SvelteKit-provided Vite config to be merged with the user's vite.config.js file.
 		 * @see https://vitejs.dev/guide/api-plugin.html#config
 		 */
-		async config(config, config_env) {
+		config(config, config_env) {
 			initial_config = config;
 			vite_config_env = config_env;
 			is_build = config_env.command === 'build';
@@ -339,7 +339,7 @@ async function kit({ svelte_config }) {
 				};
 
 				if (!secondary_build_started) {
-					manifest_data = (await sync.all(svelte_config, config_env.mode)).manifest_data;
+					manifest_data = sync.all(svelte_config, config_env.mode).manifest_data;
 				}
 			} else {
 				new_config.define = {

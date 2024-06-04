@@ -97,9 +97,9 @@ export async function dev(vite, vite_config, svelte_config) {
 		return { module, module_node, url };
 	}
 
-	async function update_manifest() {
+	function update_manifest() {
 		try {
-			({ manifest_data } = await sync.create(svelte_config));
+			({ manifest_data } = sync.create(svelte_config));
 
 			if (manifest_error) {
 				manifest_error = null;
@@ -273,7 +273,7 @@ export async function dev(vite, vite_config, svelte_config) {
 		return error.stack;
 	}
 
-	await update_manifest();
+	update_manifest();
 
 	/**
 	 * @param {string} event
