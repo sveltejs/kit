@@ -5,8 +5,10 @@ import { image } from './preprocessor.js';
 /**
  * @returns {Promise<import('vite').Plugin[]>}
  */
+// TODO make the signature synchronous in the next major?
+// eslint-disable-next-line @typescript-eslint/require-await
 export async function enhancedImages() {
-	const imagetools_instance = await imagetools_plugin();
+	const imagetools_instance = imagetools_plugin();
 	return !process.versions.webcontainer
 		? [image_plugin(imagetools_instance), imagetools_instance]
 		: [];
@@ -60,7 +62,7 @@ const fallback = {
 	'.webp': 'png'
 };
 
-async function imagetools_plugin() {
+function imagetools_plugin() {
 	/** @type {Partial<import('vite-imagetools').VitePluginOptions>} */
 	const imagetools_opts = {
 		defaultDirectives: async ({ pathname, searchParams: qs }, metadata) => {

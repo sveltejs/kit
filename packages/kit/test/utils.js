@@ -5,7 +5,7 @@ import { fileURLToPath } from 'node:url';
 import { test as base, devices } from '@playwright/test';
 
 export const test = base.extend({
-	app: async ({ page }, use) => {
+	app: ({ page }, use) => {
 		// these are assumed to have been put in the global scope by the layout
 		use({
 			/**
@@ -52,7 +52,7 @@ export const test = base.extend({
 		});
 	},
 
-	clicknav: async ({ page, javaScriptEnabled }, use) => {
+	clicknav: ({ page, javaScriptEnabled }, use) => {
 		/**
 		 * @param {string} selector
 		 * @param {{ timeout: number }} options
@@ -69,7 +69,7 @@ export const test = base.extend({
 		use(clicknav);
 	},
 
-	in_view: async ({ page }, use) => {
+	in_view: ({ page }, use) => {
 		/** @param {string} selector */
 		async function in_view(selector) {
 			const box = await page.locator(selector).boundingBox();
@@ -85,7 +85,7 @@ export const test = base.extend({
 		 * @param {string} selector
 		 * @param {string} prop
 		 */
-		async function get_computed_style(selector, prop) {
+		function get_computed_style(selector, prop) {
 			return page.$eval(
 				selector,
 				(node, prop) => window.getComputedStyle(node).getPropertyValue(prop),

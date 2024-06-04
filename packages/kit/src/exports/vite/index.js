@@ -131,7 +131,7 @@ const warning_preprocessor = {
 async function resolve_peer_dependency(dependency) {
 	try {
 		// @ts-expect-error the types are wrong
-		const resolved = await imr.resolve(dependency, pathToFileURL(process.cwd() + '/dummy.js'));
+		const resolved = imr.resolve(dependency, pathToFileURL(process.cwd() + '/dummy.js'));
 		return import(resolved);
 	} catch {
 		throw new Error(
@@ -373,7 +373,7 @@ async function kit({ svelte_config }) {
 	const plugin_virtual_modules = {
 		name: 'vite-plugin-sveltekit-virtual-modules',
 
-		async resolveId(id, importer) {
+		resolveId(id, importer) {
 			// If importing from a service-worker, only allow $service-worker & $env/static/public, but none of the other virtual modules.
 			// This check won't catch transitive imports, but it will warn when the import comes from a service-worker directly.
 			// Transitive imports will be caught during the build.
@@ -397,7 +397,7 @@ async function kit({ svelte_config }) {
 			}
 		},
 
-		async load(id, options) {
+		load(id, options) {
 			const browser = !options?.ssr;
 
 			const global = is_build
@@ -533,7 +533,7 @@ async function kit({ svelte_config }) {
 
 		writeBundle: {
 			sequential: true,
-			async handler(_options) {
+			handler(_options) {
 				if (vite_config.build.ssr) return;
 
 				const guard = module_guard(this, {
@@ -560,7 +560,7 @@ async function kit({ svelte_config }) {
 		 * Build the SvelteKit-provided Vite config to be merged with the user's vite.config.js file.
 		 * @see https://vitejs.dev/guide/api-plugin.html#config
 		 */
-		async config(config) {
+		config(config) {
 			/** @type {import('vite').UserConfig} */
 			let new_config;
 

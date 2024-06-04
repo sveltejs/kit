@@ -389,7 +389,7 @@ export async function dev(vite, vite_config, svelte_config) {
 		return ws_send.apply(vite.ws, args);
 	};
 
-	vite.middlewares.use(async (req, res, next) => {
+	vite.middlewares.use((req, res, next) => {
 		try {
 			const base = `${vite.config.server.https ? 'https' : 'http'}://${
 				req.headers[':authority'] || req.headers.host
