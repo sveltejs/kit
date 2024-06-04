@@ -220,7 +220,7 @@ const plugin = function (defaults = {}) {
 				}
 
 				const node_runtime = /nodejs([0-9]+)\.x/.exec(runtime);
-				if (runtime !== 'edge' && (!node_runtime || node_runtime[1] < 18)) {
+				if (runtime !== 'edge' && (!node_runtime || +node_runtime[1] < 18)) {
 					throw new Error(
 						`Invalid runtime '${runtime}' for route ${route.id}. Valid runtimes are 'edge' and 'nodejs18.x' or higher ` +
 							'(see the Node.js Version section in your Vercel project settings for info on the currently supported versions).'
@@ -292,6 +292,107 @@ const plugin = function (defaults = {}) {
 			}
 
 			const singular = groups.size === 1;
+
+			const hooks_filename = builder.config.kit.files.hooks.universal.split('/').at(-1);
+			const hooks_output_path = `${builder.getServerDirectory()}/chunks/${hooks_filename}.js`;
+
+			if (!singular && hooks_output_path) {
+				/**
+				 * @param {string} name
+				 * @param {import('.').EdgeConfig} config
+				 */
+				async function generate_middleware(name, config) {
+					const tmp = builder.getBuildDirectory(`vercel-tmp/${name}`);
+					const relativePath = path.posix.relative(tmp, hooks_output_path);
+
+					builder.copy(`${files}/${name}.js`, `${tmp}/${name}.js`, {
+						replace: {
+							HOOKS: relativePath
+						}
+					});
+
+					try {
+						const result = await esbuild.build({
+							entryPoints: [`${tmp}/${name}.js`],
+							outfile: `${dirs.functions}/${name}.func/index.js`,
+							target: 'es2020', // TODO verify what the edge runtime supports
+							bundle: true,
+							platform: 'browser',
+							format: 'esm',
+							external: [
+								...compatible_node_modules,
+								...compatible_node_modules.map((id) => `node:${id}`),
+								...(config.external || [])
+							],
+							sourcemap: 'linked',
+							banner: { js: 'globalThis.global = globalThis;' },
+							loader: {
+								'.wasm': 'copy'
+							}
+						});
+
+						if (result.warnings.length > 0) {
+							const formatted = await esbuild.formatMessages(result.warnings, {
+								kind: 'warning',
+								color: true
+							});
+
+							console.error(formatted.join('\n'));
+						}
+					} catch (error) {
+						for (const e of error.errors) {
+							for (const node of e.notes) {
+								const match =
+									/The package "(.+)" wasn't found on the file system but is built into node/.exec(
+										node.text
+									);
+
+								if (match) {
+									node.text = `Cannot use "${match[1]}" when deploying to Vercel Edge Functions.`;
+								}
+							}
+						}
+
+						const formatted = await esbuild.formatMessages(error.errors, {
+							kind: 'error',
+							color: true
+						});
+
+						console.error(formatted.join('\n'));
+
+						throw new Error(
+							`Bundling with esbuild failed with ${error.errors.length} ${
+								error.errors.length === 1 ? 'error' : 'errors'
+							}`
+						);
+					}
+
+					write(
+						`${dirs.functions}/${name}.func/.vc-config.json`,
+						JSON.stringify(
+							{
+								runtime: 'edge',
+								regions: config.regions,
+								entrypoint: 'index.js',
+								framework: {
+									slug: 'sveltekit',
+									version: VERSION
+								}
+							},
+							null,
+							'\t'
+						)
+					);
+				}
+
+				static_config.routes.push({
+					src: '/.*',
+					middlewarePath: 'reroute',
+					continue: true
+				});
+
+				await generate_middleware('reroute', { external: defaults?.external });
+			}
 
 			for (const group of groups.values()) {
 				const generate_function =
