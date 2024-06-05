@@ -4,8 +4,15 @@ import svelte_config from '@sveltejs/eslint-config';
 export default [
 	...svelte_config,
 	{
+		languageOptions: {
+			parserOptions: {
+				project: true
+			}
+		},
 		rules: {
+			'@typescript-eslint/await-thenable': 'error',
 			'@typescript-eslint/no-unused-expressions': 'off',
+			'@typescript-eslint/require-await': 'error',
 			'no-undef': 'off'
 		}
 	},
@@ -15,7 +22,19 @@ export default [
 			'packages/adapter-static/test/apps/*/build',
 			'packages/adapter-cloudflare/files',
 			'packages/adapter-netlify/files',
-			'packages/adapter-node/files'
+			'packages/adapter-node/files',
+			// TODO: figure out if we can ignore these only for @typescript-eslint
+			'packages/adapter-node/rollup.config.js',
+			'packages/adapter-node/tests/smoke.spec.js',
+			'packages/adapter-static/test/apps',
+			'packages/create-svelte/shared',
+			'packages/create-svelte/templates',
+			'packages/kit/src/core/sync/create_manifest_data/test/samples',
+			'packages/kit/test/apps',
+			'packages/kit/test/build-errors',
+			'packages/kit/test/prerendering',
+			'packages/package/test/errors',
+			'packages/package/test/fixtures'
 		]
 	}
 ];

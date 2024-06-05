@@ -240,6 +240,7 @@ export function create_updated_store() {
 	if (DEV || !BROWSER) {
 		return {
 			subscribe,
+			// eslint-disable-next-line @typescript-eslint/require-await
 			check: async () => false
 		};
 	}
