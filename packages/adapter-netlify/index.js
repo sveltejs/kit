@@ -17,10 +17,12 @@ import toml from '@iarna/toml';
  *	 functions: Array<
  *		 | {
  *				 function: string;
+ *         name?: string;
  *				 path: string;
  *		   }
  *		 | {
  *				 function: string;
+ *         name?: string;
  *				 pattern: string;
  *		   }
  *	 >;
@@ -93,6 +95,13 @@ export default function ({ split = false, edge = edge_set_in_env_var } = {}) {
 				await generate_edge_functions({ builder });
 			} else {
 				await generate_lambda_functions({ builder, split, publish });
+
+				const hooks_filename = builder.config.kit.files.hooks.universal.split('/').at(-1);
+				const hooks_output_path = `${builder.getServerDirectory()}/chunks/${hooks_filename}.js`;
+
+				if (split && hooks_output_path) {
+					await generate_reroute_middleware({ builder, hooks_output_path });
+				}
 			}
 		},
 
@@ -110,6 +119,7 @@ export default function ({ split = false, edge = edge_set_in_env_var } = {}) {
 		}
 	};
 }
+
 /**
  * @param { object } params
  * @param {import('@sveltejs/kit').Builder} params.builder
@@ -176,6 +186,66 @@ async function generate_edge_functions({ builder }) {
 
 	writeFileSync('.netlify/edge-functions/manifest.json', JSON.stringify(edge_manifest));
 }
+
+/**
+ * @param {object} params
+ * @param {import('@sveltejs/kit').Builder} params.builder
+ * @param {string} params.hooks_output_path
+ */
+async function generate_reroute_middleware({ builder, hooks_output_path }) {
+	const tmp = builder.getBuildDirectory('netlify-tmp');
+	builder.rimraf(tmp);
+	builder.mkdirp(tmp);
+
+	builder.mkdirp('.netlify/edge-functions');
+
+	// Don't match the static directory
+	const pattern = '^/.*$';
+
+	// Go doesn't support lookarounds, so we can't do this
+	// const pattern = appDir ? `^/(?!${escapeStringRegexp(appDir)}).*$` : '^/.*$';
+
+	/** @type {HandlerManifest} */
+	const edge_manifest = {
+		functions: [
+			{
+				function: 'reroute',
+				pattern
+			},
+			{
+				function: 'render',
+				pattern
+			}
+		],
+		version: 1
+	};
+
+	builder.log.minor('Generating Reroute Edge Function...');
+
+	builder.copy(`${files}/reroute.js`, `${tmp}/entry.js`);
+
+	await esbuild.build({
+		entryPoints: [`${tmp}/entry.js`],
+		//
+		outfile: '.netlify/edge-functions/reroute.js',
+		bundle: true,
+		format: 'esm',
+		platform: 'browser',
+		sourcemap: 'linked',
+		target: 'es2020',
+
+		// Node built-ins are allowed, but must be prefixed with `node:`
+		// https://docs.netlify.com/edge-functions/api/#runtime-environment
+		external: builtinModules.map((id) => `node:${id}`),
+		alias: {
+			...Object.fromEntries(builtinModules.map((id) => [id, `node:${id}`])),
+			__HOOKS__: hooks_output_path
+		}
+	});
+
+	writeFileSync('.netlify/edge-functions/manifest.json', JSON.stringify(edge_manifest));
+}
+
 /**
  * @param { object } params
  * @param {import('@sveltejs/kit').Builder} params.builder
