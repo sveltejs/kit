@@ -303,13 +303,8 @@ const plugin = function (defaults = {}) {
 				 */
 				async function generate_middleware(name, config) {
 					const tmp = builder.getBuildDirectory(`vercel-tmp/${name}`);
-					const relativePath = path.posix.relative(tmp, hooks_output_path);
 
-					builder.copy(`${files}/${name}.js`, `${tmp}/${name}.js`, {
-						replace: {
-							HOOKS: relativePath
-						}
-					});
+					builder.copy(`${files}/${name}.js`, `${tmp}/${name}.js`);
 
 					try {
 						const result = await esbuild.build({
@@ -328,6 +323,9 @@ const plugin = function (defaults = {}) {
 							banner: { js: 'globalThis.global = globalThis;' },
 							loader: {
 								'.wasm': 'copy'
+							},
+							alias: {
+								__HOOKS__: hooks_output_path
 							}
 						});
 

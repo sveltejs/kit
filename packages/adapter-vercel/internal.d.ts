@@ -7,7 +7,7 @@ declare module 'MANIFEST' {
 	export const manifest: SSRManifest;
 }
 
-declare module 'HOOKS' {
+declare module '__HOOKS__' {
 	import { Reroute } from '@sveltejs/kit';
 	export const reroute: Reroute;
 }

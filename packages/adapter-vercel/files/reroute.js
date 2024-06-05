@@ -1,4 +1,4 @@
-import { reroute } from 'HOOKS';
+import { reroute } from '__HOOKS__';
 
 // we copy the rewrite function from `@vercel/edge` because that package can't co-exist with `@types/node`.
 // see https://github.com/sveltejs/kit/pull/9280#issuecomment-1452110035
