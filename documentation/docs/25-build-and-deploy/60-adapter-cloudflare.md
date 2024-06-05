@@ -30,7 +30,7 @@ export default {
 				exclude: ['<all>']
 			},
       platformProxy: {
-        persist: './your-custom-path'
+         persist: { path: './your-custom-path' } // or just "persist: true"
       }
 		})
 	}
@@ -55,6 +55,10 @@ You can have up to 100 `include` and `exclude` rules combined. Generally you can
 ### platformProxy
 
 Preferences for the emulated `platform.env` local bindings. See the [getPlatformProxy](https://developers.cloudflare.com/workers/wrangler/api/#syntax) Wrangler API documentation for a full list of options.
+
+#### persist
+
+Indicates if and where to persist the bindings data. If not present or true, defaults to the same location used by Wrangler, so data can be shared between it and the caller. If false, no data is persisted to or read from the filesystem.
 
 ## Deployment
 
