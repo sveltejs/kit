@@ -210,6 +210,14 @@ const plugin = function (defaults = {}) {
 
 			// group routes by config
 			for (const route of builder.routes) {
+				if (route.config?.images) {
+					// we need this because previous versions incorrectly put `images` on `ServerlessConfig` —
+					// it's unlikely anyone actually used it that way, but belt and braces
+					throw new Error(
+						`\`images\` configuration can only be specified in your adapter options, not in individual routes (${route.id})`
+					);
+				}
+
 				const runtime = route.config?.runtime ?? defaults?.runtime ?? get_default_runtime();
 				const config = { runtime, ...defaults, ...route.config };
 
