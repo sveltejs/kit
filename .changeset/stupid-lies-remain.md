@@ -1,5 +1,5 @@
 ---
-"@sveltejs/adapter-vercel": patch
+'@sveltejs/adapter-vercel': major
 ---
 
-fix: add images to edge config types
+breaking: remove `images` from route-level config
