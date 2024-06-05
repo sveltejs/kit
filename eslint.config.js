@@ -23,6 +23,7 @@ export default [
 			'packages/adapter-cloudflare/files',
 			'packages/adapter-netlify/files',
 			'packages/adapter-node/files',
+			// TODO: figure out if we can ignore these only for @typescript-eslint
 			'packages/adapter-node/rollup.config.js',
 			'packages/adapter-node/tests/smoke.spec.js',
 			'packages/adapter-static/test/apps',
