@@ -3,11 +3,9 @@ import { imagetools } from 'vite-imagetools';
 import { image } from './preprocessor.js';
 
 /**
- * @returns {Promise<import('vite').Plugin[]>}
+ * @returns {import('vite').Plugin[]}
  */
-// TODO make the signature synchronous in the next major?
-// eslint-disable-next-line @typescript-eslint/require-await
-export async function enhancedImages() {
+export function enhancedImages() {
 	const imagetools_instance = imagetools_plugin();
 	return !process.versions.webcontainer
 		? [image_plugin(imagetools_instance), imagetools_instance]
