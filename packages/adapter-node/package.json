@@ -44,7 +44,7 @@
 		"vitest": "^1.5.0"
 	},
 	"dependencies": {
-		"@rollup/plugin-commonjs": "^25.0.7",
+		"@rollup/plugin-commonjs": "^25.0.8",
 		"@rollup/plugin-json": "^6.1.0",
 		"@rollup/plugin-node-resolve": "^15.2.3",
 		"rollup": "^4.9.5"
