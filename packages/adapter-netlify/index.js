@@ -17,12 +17,10 @@ import toml from '@iarna/toml';
  *	 functions: Array<
  *		 | {
  *				 function: string;
- *         name?: string;
  *				 path: string;
  *		   }
  *		 | {
  *				 function: string;
- *         name?: string;
  *				 pattern: string;
  *		   }
  *	 >;
@@ -210,10 +208,6 @@ async function generate_reroute_middleware({ builder, hooks_output_path }) {
 		functions: [
 			{
 				function: 'reroute',
-				pattern
-			},
-			{
-				function: 'render',
 				pattern
 			}
 		],
