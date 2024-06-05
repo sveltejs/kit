@@ -4,21 +4,6 @@ import svelte_config from '@sveltejs/eslint-config';
 export default [
 	...svelte_config,
 	{
-		rules: {
-			'no-undef': 'off'
-		}
-	},
-	{
-		// global ignores. must be specified alone
-		ignores: [
-			'**/.svelte-kit',
-			'packages/adapter-static/test/apps/*/build',
-			'packages/adapter-cloudflare/files',
-			'packages/adapter-netlify/files',
-			'packages/adapter-node/files'
-		]
-	},
-	{
 		languageOptions: {
 			parserOptions: {
 				project: true
@@ -28,8 +13,16 @@ export default [
 			'@typescript-eslint/await-thenable': 'error',
 			'@typescript-eslint/no-unused-expressions': 'off',
 			'@typescript-eslint/require-await': 'error',
-		},
+			'no-undef': 'off'
+		}
+	},
+	{
 		ignores: [
+			'**/.svelte-kit',
+			'packages/adapter-static/test/apps/*/build',
+			'packages/adapter-cloudflare/files',
+			'packages/adapter-netlify/files',
+			'packages/adapter-node/files',
 			'packages/adapter-node/rollup.config.js',
 			'packages/adapter-node/tests/smoke.spec.js',
 			'packages/adapter-static/test/apps',
