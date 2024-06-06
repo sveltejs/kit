@@ -18,7 +18,7 @@ import adapter from '@sveltejs/adapter-cloudflare-workers';
 export default {
 	kit: {
 		adapter: adapter({
-      config: '<your-wrangler-name>.toml',
+      config: 'wrangler.toml',
 			platformProxy: {
 				configPath: 'wrangler.toml',
 				environment: undefined,
