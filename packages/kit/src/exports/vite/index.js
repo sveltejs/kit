@@ -687,7 +687,7 @@ async function kit({ svelte_config }) {
 		 * @see https://vitejs.dev/guide/api-plugin.html#configureserver
 		 */
 		configureServer(vite) {
-			dev(vite, vite_config, svelte_config);
+			return dev(vite, vite_config, svelte_config);
 		},
 
 		/**
