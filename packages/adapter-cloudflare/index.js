@@ -62,13 +62,12 @@ export default function (options = {}) {
 
 			writeFileSync(`${dest}/_headers`, generate_headers(builder.getAppPath()), { flag: 'a' });
 
-			const out = builder.copy(`${files}/worker.js`, `${tmp}/_worker.js`, {
+			builder.copy(`${files}/worker.js`, `${tmp}/_worker.js`, {
 				replace: {
 					SERVER: `${relativePath}/index.js`,
 					MANIFEST: './manifest.js'
 				}
 			});
-			console.log(`${files}/worker.js -> ${tmp}/_worker.js (${out})`);
 
 			const external = ['cloudflare:*', ...compatible_node_modules.map((id) => `node:${id}`)];
 
