@@ -686,8 +686,8 @@ async function kit({ svelte_config }) {
 		 * Adds the SvelteKit middleware to do SSR in dev mode.
 		 * @see https://vitejs.dev/guide/api-plugin.html#configureserver
 		 */
-		async configureServer(vite) {
-			return await dev(vite, vite_config, svelte_config);
+		configureServer(vite) {
+			dev(vite, vite_config, svelte_config);
 		},
 
 		/**

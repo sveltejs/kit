@@ -24,9 +24,9 @@ const cwd = process.cwd();
  * @param {import('vite').ViteDevServer} vite
  * @param {import('vite').ResolvedConfig} vite_config
  * @param {import('types').ValidatedConfig} svelte_config
- * @return {Promise<Promise<() => void>>}
+ * @return {() => void}
  */
-export async function dev(vite, vite_config, svelte_config) {
+export function dev(vite, vite_config, svelte_config) {
 	installPolyfills();
 
 	const async_local_storage = new AsyncLocalStorage();
