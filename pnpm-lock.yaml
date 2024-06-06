@@ -154,8 +154,8 @@ importers:
         specifier: ^5.3.3
         version: 5.4.5
       vitest:
-        specifier: ^1.5.0
-        version: 1.5.0(@types/node@18.19.31)(lightningcss@1.24.1)
+        specifier: ^1.6.0
+        version: 1.6.0(@types/node@18.19.31)(lightningcss@1.24.1)
 
   packages/adapter-node:
     dependencies:
@@ -197,8 +197,8 @@ importers:
         specifier: ^5.3.3
         version: 5.4.5
       vitest:
-        specifier: ^1.5.0
-        version: 1.5.0(@types/node@18.19.31)(lightningcss@1.24.1)
+        specifier: ^1.6.0
+        version: 1.6.0(@types/node@18.19.31)(lightningcss@1.24.1)
 
   packages/adapter-static:
     devDependencies:
@@ -288,8 +288,8 @@ importers:
         specifier: ^5.3.3
         version: 5.4.5
       vitest:
-        specifier: ^1.5.0
-        version: 1.5.0(@types/node@18.19.31)(lightningcss@1.24.1)
+        specifier: ^1.6.0
+        version: 1.6.0(@types/node@18.19.31)(lightningcss@1.24.1)
 
   packages/amp:
     dependencies:
@@ -338,8 +338,8 @@ importers:
         specifier: ^5.3.3
         version: 5.4.5
       vitest:
-        specifier: ^1.5.0
-        version: 1.5.0(@types/node@18.19.31)(lightningcss@1.24.1)
+        specifier: ^1.6.0
+        version: 1.6.0(@types/node@18.19.31)(lightningcss@1.24.1)
 
   packages/create-svelte/templates/default:
     dependencies:
@@ -409,8 +409,8 @@ importers:
         specifier: ^5.2.8
         version: 5.2.8(@types/node@18.19.31)(lightningcss@1.24.1)
       vitest:
-        specifier: ^1.5.0
-        version: 1.5.0(@types/node@18.19.31)(lightningcss@1.24.1)
+        specifier: ^1.6.0
+        version: 1.6.0(@types/node@18.19.31)(lightningcss@1.24.1)
 
   packages/kit:
     dependencies:
@@ -488,8 +488,8 @@ importers:
         specifier: ^5.2.8
         version: 5.2.8(@types/node@18.19.31)(lightningcss@1.24.1)
       vitest:
-        specifier: ^1.5.0
-        version: 1.5.0(@types/node@18.19.31)(lightningcss@1.24.1)
+        specifier: ^1.6.0
+        version: 1.6.0(@types/node@18.19.31)(lightningcss@1.24.1)
 
   packages/kit/test/apps/amp:
     devDependencies:
@@ -728,8 +728,8 @@ importers:
   packages/kit/test/build-errors:
     devDependencies:
       vitest:
-        specifier: ^1.5.0
-        version: 1.5.0(@types/node@18.19.31)(lightningcss@1.24.1)
+        specifier: ^1.6.0
+        version: 1.6.0(@types/node@18.19.31)(lightningcss@1.24.1)
 
   packages/kit/test/build-errors/apps/prerender-entry-generator-mismatch:
     devDependencies:
@@ -1058,8 +1058,8 @@ importers:
         specifier: ^5.2.8
         version: 5.2.8(@types/node@18.19.31)(lightningcss@1.24.1)
       vitest:
-        specifier: ^1.5.0
-        version: 1.5.0(@types/node@18.19.31)(lightningcss@1.24.1)
+        specifier: ^1.6.0
+        version: 1.6.0(@types/node@18.19.31)(lightningcss@1.24.1)
 
   packages/kit/test/prerendering/options:
     devDependencies:
@@ -1082,8 +1082,8 @@ importers:
         specifier: ^5.2.8
         version: 5.2.8(@types/node@18.19.31)(lightningcss@1.24.1)
       vitest:
-        specifier: ^1.5.0
-        version: 1.5.0(@types/node@18.19.31)(lightningcss@1.24.1)
+        specifier: ^1.6.0
+        version: 1.6.0(@types/node@18.19.31)(lightningcss@1.24.1)
 
   packages/kit/test/prerendering/paths-base:
     devDependencies:
@@ -1106,8 +1106,8 @@ importers:
         specifier: ^5.2.8
         version: 5.2.8(@types/node@18.19.31)(lightningcss@1.24.1)
       vitest:
-        specifier: ^1.5.0
-        version: 1.5.0(@types/node@18.19.31)(lightningcss@1.24.1)
+        specifier: ^1.6.0
+        version: 1.6.0(@types/node@18.19.31)(lightningcss@1.24.1)
 
   packages/migrate:
     dependencies:
@@ -1155,8 +1155,8 @@ importers:
         specifier: ^4.2.10
         version: 4.2.14
       vitest:
-        specifier: ^1.5.0
-        version: 1.5.0(@types/node@18.19.31)(lightningcss@1.24.1)
+        specifier: ^1.6.0
+        version: 1.6.0(@types/node@18.19.31)(lightningcss@1.24.1)
 
   packages/package:
     dependencies:
@@ -1325,8 +1325,8 @@ importers:
         specifier: ^5.2.8
         version: 5.2.8(@types/node@18.19.31)(lightningcss@1.24.1)
       vitest:
-        specifier: ^1.5.0
-        version: 1.5.0(@types/node@18.19.31)(lightningcss@1.24.1)
+        specifier: ^1.6.0
+        version: 1.6.0(@types/node@18.19.31)(lightningcss@1.24.1)
 
 packages:
 
@@ -2389,20 +2389,20 @@ packages:
       vue-router:
         optional: true
 
-  '@vitest/expect@1.5.0':
-    resolution: {integrity: sha512-0pzuCI6KYi2SIC3LQezmxujU9RK/vwC1U9R0rLuGlNGcOuDWxqWKu6nUdFsX9tH1WU0SXtAxToOsEjeUn1s3hA==}
+  '@vitest/expect@1.6.0':
+    resolution: {integrity: sha512-ixEvFVQjycy/oNgHjqsL6AZCDduC+tflRluaHIzKIsdbzkLn2U/iBnVeJwB6HsIjQBdfMR8Z0tRxKUsvFJEeWQ==}
 
-  '@vitest/runner@1.5.0':
-    resolution: {integrity: sha512-7HWwdxXP5yDoe7DTpbif9l6ZmDwCzcSIK38kTSIt6CFEpMjX4EpCgT6wUmS0xTXqMI6E/ONmfgRKmaujpabjZQ==}
+  '@vitest/runner@1.6.0':
+    resolution: {integrity: sha512-P4xgwPjwesuBiHisAVz/LSSZtDjOTPYZVmNAnpHHSR6ONrf8eCJOFRvUwdHn30F5M1fxhqtl7QZQUk2dprIXAg==}
 
-  '@vitest/snapshot@1.5.0':
-    resolution: {integrity: sha512-qpv3fSEuNrhAO3FpH6YYRdaECnnRjg9VxbhdtPwPRnzSfHVXnNzzrpX4cJxqiwgRMo7uRMWDFBlsBq4Cr+rO3A==}
+  '@vitest/snapshot@1.6.0':
+    resolution: {integrity: sha512-+Hx43f8Chus+DCmygqqfetcAZrDJwvTj0ymqjQq4CvmpKFSTVteEOBzCusu1x2tt4OJcvBflyHUE0DZSLgEMtQ==}
 
-  '@vitest/spy@1.5.0':
-    resolution: {integrity: sha512-vu6vi6ew5N5MMHJjD5PoakMRKYdmIrNJmyfkhRpQt5d9Ewhw9nZ5Aqynbi3N61bvk9UvZ5UysMT6ayIrZ8GA9w==}
+  '@vitest/spy@1.6.0':
+    resolution: {integrity: sha512-leUTap6B/cqi/bQkXUu6bQV5TZPx7pmMBKBQiI0rJA8c3pB56ZsaTbREnF7CJfmvAS4V2cXIBAh/3rVwrrCYgw==}
 
-  '@vitest/utils@1.5.0':
-    resolution: {integrity: sha512-BDU0GNL8MWkRkSRdNFvCUCAVOeHaUlVJ9Tx0TYBZyXaaOTmGtUFObzchCivIBrIwKzvZA7A9sCejVhXM2aY98A==}
+  '@vitest/utils@1.6.0':
+    resolution: {integrity: sha512-21cPiuGMoMZwiOHa2i4LXkMkMkCGzA+MVFV70jRwHo95dL4x/ts5GZhML1QWuy7yfp3WzK3lRvZi3JnXTYqrBw==}
 
   abbrev@1.1.1:
     resolution: {integrity: sha512-nne9/IiQ/hzIhY6pdDnbBtz7DjPTKrY00P/zvPSm5pOFkl6xuGrGnXn/VtTNNfNtAfZ9/1RtehkszU9qcTii0Q==}
@@ -4114,8 +4114,8 @@ packages:
     resolution: {integrity: sha512-ARhCpm70fzdcvNQfPoy49IaanKkTlRWF2JMzqhcJbhSFRZv7nPTvZJdcY7301IPmvW+/p0RgIWnQDLJxifsQ7g==}
     engines: {node: '>=8'}
 
-  react-is@18.2.0:
-    resolution: {integrity: sha512-xWGDIW6x921xtzPkhiULtthJHoJvBbF3q26fzloPCK0hsvxtPVelvftw3zjbHWSkR2km9Z+4uxbDDK/6Zw9B8w==}
+  react-is@18.3.1:
+    resolution: {integrity: sha512-/LLMVyas0ljjAtoYiPqYiL8VWXzUUdThrmU5+n20DZv+a+ClRoevUzw5JxU+Ieh5/c87ytoTBV9G1FiKfNJdmg==}
 
   read-pkg-up@7.0.1:
     resolution: {integrity: sha512-zK0TB7Xd6JpCLmlLmufqykGE+/TlOePD6qKClNW7hHDKFh/J7/7gCWGR7joEQEW1bKq3a3yUZSObOoWLFQ4ohg==}
@@ -4744,8 +4744,8 @@ packages:
     resolution: {integrity: sha512-23jnLhkTH0HR9Vd9LxMYnajOLeo0RJNEAHhtlsQP6kfPuOBoTzt54rWbEWB9jmhEXAOflLQpM+FrmilVPAoyGA==}
     engines: {node: '>=18.0.0'}
 
-  vite-node@1.5.0:
-    resolution: {integrity: sha512-tV8h6gMj6vPzVCa7l+VGq9lwoJjW8Y79vst8QZZGiuRAfijU+EEWuc0kFpmndQrWhMMhet1jdSF+40KSZUqIIw==}
+  vite-node@1.6.0:
+    resolution: {integrity: sha512-de6HJgzC+TFzOu0NTC4RAIsyf/DY/ibWDYQUcuEA84EMHhcefTUGkjFHKKEJhQN4A+6I0u++kr3l36ZF2d7XRw==}
     engines: {node: ^18.0.0 || >=20.0.0}
     hasBin: true
 
@@ -4813,15 +4813,15 @@ packages:
       vite:
         optional: true
 
-  vitest@1.5.0:
-    resolution: {integrity: sha512-d8UKgR0m2kjdxDWX6911uwxout6GHS0XaGH1cksSIVVG8kRlE7G7aBw7myKQCvDI5dT4j7ZMa+l706BIORMDLw==}
+  vitest@1.6.0:
+    resolution: {integrity: sha512-H5r/dN06swuFnzNFhq/dnz37bPXnq8xB2xB5JOVk8K09rUtoeNN+LHWkoQ0A/i3hvbUKKcCei9KpbxqHMLhLLA==}
     engines: {node: ^18.0.0 || >=20.0.0}
     hasBin: true
     peerDependencies:
       '@edge-runtime/vm': '*'
       '@types/node': ^18.0.0 || >=20.0.0
-      '@vitest/browser': 1.5.0
-      '@vitest/ui': 1.5.0
+      '@vitest/browser': 1.6.0
+      '@vitest/ui': 1.6.0
       happy-dom: '*'
       jsdom: '*'
     peerDependenciesMeta:
@@ -6023,29 +6023,29 @@ snapshots:
       '@sveltejs/kit': link:packages/kit
       svelte: 4.2.14
 
-  '@vitest/expect@1.5.0':
+  '@vitest/expect@1.6.0':
     dependencies:
-      '@vitest/spy': 1.5.0
-      '@vitest/utils': 1.5.0
+      '@vitest/spy': 1.6.0
+      '@vitest/utils': 1.6.0
       chai: 4.4.1
 
-  '@vitest/runner@1.5.0':
+  '@vitest/runner@1.6.0':
     dependencies:
-      '@vitest/utils': 1.5.0
+      '@vitest/utils': 1.6.0
       p-limit: 5.0.0
       pathe: 1.1.2
 
-  '@vitest/snapshot@1.5.0':
+  '@vitest/snapshot@1.6.0':
     dependencies:
       magic-string: 0.30.9
       pathe: 1.1.2
       pretty-format: 29.7.0
 
-  '@vitest/spy@1.5.0':
+  '@vitest/spy@1.6.0':
     dependencies:
       tinyspy: 2.2.1
 
-  '@vitest/utils@1.5.0':
+  '@vitest/utils@1.6.0':
     dependencies:
       diff-sequences: 29.6.3
       estree-walker: 3.0.3
@@ -7778,7 +7778,7 @@ snapshots:
     dependencies:
       '@jest/schemas': 29.6.3
       ansi-styles: 5.2.0
-      react-is: 18.2.0
+      react-is: 18.3.1
 
   printable-characters@1.0.42: {}
 
@@ -7805,7 +7805,7 @@ snapshots:
 
   quick-lru@4.0.1: {}
 
-  react-is@18.2.0: {}
+  react-is@18.3.1: {}
 
   read-pkg-up@7.0.1:
     dependencies:
@@ -8552,7 +8552,7 @@ snapshots:
     transitivePeerDependencies:
       - rollup
 
-  vite-node@1.5.0(@types/node@18.19.31)(lightningcss@1.24.1):
+  vite-node@1.6.0(@types/node@18.19.31)(lightningcss@1.24.1):
     dependencies:
       cac: 6.7.14
       debug: 4.3.4
@@ -8597,13 +8597,13 @@ snapshots:
     optionalDependencies:
       vite: 5.2.8(@types/node@18.19.31)(lightningcss@1.24.1)
 
-  vitest@1.5.0(@types/node@18.19.31)(lightningcss@1.24.1):
+  vitest@1.6.0(@types/node@18.19.31)(lightningcss@1.24.1):
     dependencies:
-      '@vitest/expect': 1.5.0
-      '@vitest/runner': 1.5.0
-      '@vitest/snapshot': 1.5.0
-      '@vitest/spy': 1.5.0
-      '@vitest/utils': 1.5.0
+      '@vitest/expect': 1.6.0
+      '@vitest/runner': 1.6.0
+      '@vitest/snapshot': 1.6.0
+      '@vitest/spy': 1.6.0
+      '@vitest/utils': 1.6.0
       acorn-walk: 8.3.2
       chai: 4.4.1
       debug: 4.3.4
@@ -8617,7 +8617,7 @@ snapshots:
       tinybench: 2.6.0
       tinypool: 0.8.3
       vite: 5.2.8(@types/node@18.19.31)(lightningcss@1.24.1)
-      vite-node: 1.5.0(@types/node@18.19.31)(lightningcss@1.24.1)
+      vite-node: 1.6.0(@types/node@18.19.31)(lightningcss@1.24.1)
       why-is-node-running: 2.2.2
     optionalDependencies:
       '@types/node': 18.19.31

@@ -40,7 +40,7 @@
 		"@types/semver": "^7.5.6",
 		"prettier": "^3.1.1",
 		"svelte": "^4.2.10",
-		"vitest": "^1.5.0"
+		"vitest": "^1.6.0"
 	},
 	"scripts": {
 		"test": "vitest run --silent",
