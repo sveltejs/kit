@@ -56,10 +56,6 @@ You can have up to 100 `include` and `exclude` rules combined. Generally you can
 
 Preferences for the emulated `platform.env` local bindings. See the [getPlatformProxy](https://developers.cloudflare.com/workers/wrangler/api/#syntax) Wrangler API documentation for a full list of options.
 
-#### persist
-
-Indicates if and where to persist the bindings data. If not present or true, defaults to the same location used by Wrangler, so data can be shared between it and the caller. If false, no data is persisted to or read from the filesystem.
-
 ## Deployment
 
 Please follow the [Get Started Guide](https://developers.cloudflare.com/pages/get-started) for Cloudflare Pages to begin.
