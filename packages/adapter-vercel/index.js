@@ -98,29 +98,15 @@ const plugin = function (defaults = {}) {
 			}
 
 			/**
+			 * @param {string} file
 			 * @param {string} name
-			 * @param {import('./index.js').EdgeConfig} config
-			 * @param {import('@sveltejs/kit').RouteDefinition<import('./index.js').EdgeConfig>[]} routes
+			 * @param {import('./index.js').Config} config
+			 * @param {import('esbuild').BuildOptions=} esbuild_options
 			 */
-			async function generate_edge_function(name, config, routes) {
-				const tmp = builder.getBuildDirectory(`vercel-tmp/${name}`);
-				const relativePath = path.posix.relative(tmp, builder.getServerDirectory());
-
-				builder.copy(`${files}/edge.js`, `${tmp}/edge.js`, {
-					replace: {
-						SERVER: `${relativePath}/index.js`,
-						MANIFEST: './manifest.js'
-					}
-				});
-
-				write(
-					`${tmp}/manifest.js`,
-					`export const manifest = ${builder.generateManifest({ relativePath, routes })};\n`
-				);
-
+			async function bundle_edge_function(file, name, config, esbuild_options) {
 				try {
 					const result = await esbuild.build({
-						entryPoints: [`${tmp}/edge.js`],
+						entryPoints: [`${tmp}/${file}.js`],
 						outfile: `${dirs.functions}/${name}.func/index.js`,
 						target: 'es2020', // TODO verify what the edge runtime supports
 						bundle: true,
@@ -129,13 +115,14 @@ const plugin = function (defaults = {}) {
 						external: [
 							...compatible_node_modules,
 							...compatible_node_modules.map((id) => `node:${id}`),
-							...(config.external || [])
+							...((config.runtime === 'edge' && config.external) || [])
 						],
 						sourcemap: 'linked',
 						banner: { js: 'globalThis.global = globalThis;' },
 						loader: {
 							'.wasm': 'copy'
-						}
+						},
+						...(esbuild_options || {})
 					});
 
 					if (result.warnings.length > 0) {
@@ -179,7 +166,7 @@ const plugin = function (defaults = {}) {
 					`${dirs.functions}/${name}.func/.vc-config.json`,
 					JSON.stringify(
 						{
-							runtime: config.runtime,
+							runtime: 'edge',
 							regions: config.regions,
 							entrypoint: 'index.js',
 							framework: {
@@ -191,6 +178,46 @@ const plugin = function (defaults = {}) {
 						'\t'
 					)
 				);
+			}
+
+			/**
+			 * @param {string} name
+			 * @param {import('./index.js').EdgeConfig} config
+			 * @param {import('@sveltejs/kit').RouteDefinition<import('./index.js').EdgeConfig>[]} routes
+			 */
+			async function generate_edge_function(name, config, routes) {
+				const tmp = builder.getBuildDirectory(`vercel-tmp/${name}`);
+				const relativePath = path.posix.relative(tmp, builder.getServerDirectory());
+
+				builder.copy(`${files}/edge.js`, `${tmp}/edge.js`, {
+					replace: {
+						SERVER: `${relativePath}/index.js`,
+						MANIFEST: './manifest.js'
+					}
+				});
+
+				write(
+					`${tmp}/manifest.js`,
+					`export const manifest = ${builder.generateManifest({ relativePath, routes })};\n`
+				);
+
+				await bundle_edge_function('edge', name, config);
+			}
+
+			/**
+			 * @param {string} name
+			 * @param {import('index.js').Config} config
+			 */
+			async function generate_edge_middleware(name, config) {
+				const tmp = builder.getBuildDirectory(`vercel-tmp/${name}`);
+
+				builder.copy(`${files}/${name}.js`, `${tmp}/${name}.js`);
+
+				await bundle_edge_function(name, name, config, {
+					alias: {
+						__HOOKS__: hooks_output_path
+					}
+				});
 			}
 
 			/** @type {Map<string, { i: number, config: import('./index.js').Config, routes: import('@sveltejs/kit').RouteDefinition<import('./index.js').Config>[] }>} */
@@ -298,99 +325,13 @@ const plugin = function (defaults = {}) {
 			const hooks_output_path = `${builder.getServerDirectory()}/chunks/${hooks_filename}.js`;
 
 			if (!singular && hooks_output_path) {
-				/**
-				 * @param {string} name
-				 * @param {import('.').EdgeConfig} config
-				 */
-				async function generate_middleware(name, config) {
-					const tmp = builder.getBuildDirectory(`vercel-tmp/${name}`);
-
-					builder.copy(`${files}/${name}.js`, `${tmp}/${name}.js`);
-
-					try {
-						const result = await esbuild.build({
-							entryPoints: [`${tmp}/${name}.js`],
-							outfile: `${dirs.functions}/${name}.func/index.js`,
-							target: 'es2020', // TODO verify what the edge runtime supports
-							bundle: true,
-							platform: 'browser',
-							format: 'esm',
-							external: [
-								...compatible_node_modules,
-								...compatible_node_modules.map((id) => `node:${id}`),
-								...(config.external || [])
-							],
-							sourcemap: 'linked',
-							banner: { js: 'globalThis.global = globalThis;' },
-							loader: {
-								'.wasm': 'copy'
-							},
-							alias: {
-								__HOOKS__: hooks_output_path
-							}
-						});
-
-						if (result.warnings.length > 0) {
-							const formatted = await esbuild.formatMessages(result.warnings, {
-								kind: 'warning',
-								color: true
-							});
-
-							console.error(formatted.join('\n'));
-						}
-					} catch (error) {
-						for (const e of error.errors) {
-							for (const node of e.notes) {
-								const match =
-									/The package "(.+)" wasn't found on the file system but is built into node/.exec(
-										node.text
-									);
-
-								if (match) {
-									node.text = `Cannot use "${match[1]}" when deploying to Vercel Edge Functions.`;
-								}
-							}
-						}
-
-						const formatted = await esbuild.formatMessages(error.errors, {
-							kind: 'error',
-							color: true
-						});
-
-						console.error(formatted.join('\n'));
-
-						throw new Error(
-							`Bundling with esbuild failed with ${error.errors.length} ${
-								error.errors.length === 1 ? 'error' : 'errors'
-							}`
-						);
-					}
-
-					write(
-						`${dirs.functions}/${name}.func/.vc-config.json`,
-						JSON.stringify(
-							{
-								runtime: 'edge',
-								regions: config.regions,
-								entrypoint: 'index.js',
-								framework: {
-									slug: 'sveltekit',
-									version: VERSION
-								}
-							},
-							null,
-							'\t'
-						)
-					);
-				}
-
 				static_config.routes.push({
 					src: '/.*',
 					middlewarePath: 'reroute',
 					continue: true
 				});
 
-				await generate_middleware('reroute', { external: defaults?.external });
+				await generate_edge_middleware('reroute', defaults);
 			}
 
 			for (const group of groups.values()) {
