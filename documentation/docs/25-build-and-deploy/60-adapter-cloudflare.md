@@ -29,9 +29,9 @@ export default {
 				include: ['/*'],
 				exclude: ['<all>']
 			},
-      platformProxy: {
-         persist: { path: './your-custom-path' } // or just "persist: true"
-      }
+			platformProxy: {
+				persist: { path: './your-custom-path' } // or just "persist: true"
+			}
 		})
 	}
 };
