@@ -92,7 +92,7 @@ export default function ({ split = false, edge = edge_set_in_env_var } = {}) {
 
 				await generate_edge_functions({ builder });
 			} else {
-				await generate_lambda_functions({ builder, split, publish });
+				generate_lambda_functions({ builder, split, publish });
 
 				const hooks_filename = builder.config.kit.files.hooks.universal.split('/').at(-1);
 				const hooks_output_path = `${builder.getServerDirectory()}/chunks/${hooks_filename}.js`;
@@ -246,7 +246,7 @@ async function generate_reroute_middleware({ builder, hooks_output_path }) {
  * @param { string } params.publish
  * @param { boolean } params.split
  */
-async function generate_lambda_functions({ builder, publish, split }) {
+function generate_lambda_functions({ builder, publish, split }) {
 	builder.mkdirp('.netlify/functions-internal/.svelte-kit');
 
 	/** @type {string[]} */

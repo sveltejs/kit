@@ -40,7 +40,7 @@ try {
 
 			try {
 				const config = await load_config();
-				await sync.all(config, 'development');
+				sync.all(config, 'development');
 			} catch (error) {
 				console.error('Error while trying to sync SvelteKit config');
 				console.error(error);

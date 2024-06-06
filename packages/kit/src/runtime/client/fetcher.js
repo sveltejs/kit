@@ -19,6 +19,7 @@ if (DEV && BROWSER) {
 	let can_inspect_stack_trace = false;
 
 	// detect whether async stack traces work
+	// eslint-disable-next-line @typescript-eslint/require-await
 	const check_stack_trace = async () => {
 		const stack = /** @type {string} */ (new Error().stack);
 		can_inspect_stack_trace = stack.includes('check_stack_trace');

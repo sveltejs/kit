@@ -66,13 +66,13 @@ export async function build_service_worker(
 	 */
 	const sw_virtual_modules = {
 		name: 'service-worker-build-virtual-modules',
-		async resolveId(id) {
+		resolveId(id) {
 			if (id.startsWith('$env/') || id.startsWith('$app/') || id === '$service-worker') {
 				return `\0virtual:${id}`;
 			}
 		},
 
-		async load(id) {
+		load(id) {
 			if (!id.startsWith('\0virtual:')) return;
 
 			if (id === service_worker) {
