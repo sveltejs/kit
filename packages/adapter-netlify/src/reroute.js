@@ -2,9 +2,9 @@ import { reroute } from '__HOOKS__';
 
 /**
  * @param {Request} request
- * @returns {Promise<URL | undefined>}
+ * @returns {URL | undefined}
  */
-export default async function middleware(request) {
+export default function middleware(request) {
 	const url = new URL(request.url);
 	const pathname = reroute({ url });
 
