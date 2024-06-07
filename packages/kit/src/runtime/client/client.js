@@ -1545,9 +1545,9 @@ function setup_preload() {
 				const intent = get_navigation_intent(url, false);
 				if (intent) {
 					if (DEV) {
-					// let errors fetching js/css go to the browser console like any network error
-					// eslint-disable-next-line @typescript-eslint/no-floating-promises
-					_preload_data(intent).then((result) => {
+						// let errors fetching js/css go to the browser console like any network error
+						// eslint-disable-next-line @typescript-eslint/no-floating-promises
+						_preload_data(intent).then((result) => {
 							if (result.type === 'loaded' && result.state.error) {
 								console.warn(
 									`Preloading data for ${intent.url.pathname} failed with the following error: ${result.state.error.message}\n` +
@@ -1558,12 +1558,12 @@ function setup_preload() {
 							}
 						});
 					} else {
-					  // let errors fetching js/css go to the browser console like any network error.
+						// let errors fetching js/css go to the browser console like any network error.
 						// we ignore errors fetching the data itself rather than handling as in DEV above.
 						// we could potentially invoke handle_error, but that will be invoked upon actually
 						// navigating to the page and it's unclear if we need extra bytes to do it here as well
-					  // eslint-disable-next-line @typescript-eslint/no-floating-promises
-					  _preload_data(intent);
+						// eslint-disable-next-line @typescript-eslint/no-floating-promises
+						_preload_data(intent);
 					}
 				}
 			} else if (priority <= options.preload_code) {
