@@ -98,15 +98,15 @@ const plugin = function (defaults = {}) {
 			}
 
 			/**
-			 * @param {string} file
+			 * @param {string} entry_point
 			 * @param {string} name
 			 * @param {import('./index.js').Config} config
 			 * @param {import('esbuild').BuildOptions=} esbuild_options
 			 */
-			async function bundle_edge_function(file, name, config, esbuild_options) {
+			async function bundle_edge_function(entry_point, name, config, esbuild_options) {
 				try {
 					const result = await esbuild.build({
-						entryPoints: [`${tmp}/${file}.js`],
+						entryPoints: [entry_point],
 						outfile: `${dirs.functions}/${name}.func/index.js`,
 						target: 'es2020', // TODO verify what the edge runtime supports
 						bundle: true,
@@ -189,7 +189,9 @@ const plugin = function (defaults = {}) {
 				const tmp = builder.getBuildDirectory(`vercel-tmp/${name}`);
 				const relativePath = path.posix.relative(tmp, builder.getServerDirectory());
 
-				builder.copy(`${files}/edge.js`, `${tmp}/edge.js`, {
+				const dest = `${tmp}/edge.js`;
+
+				builder.copy(`${files}/edge.js`, dest, {
 					replace: {
 						SERVER: `${relativePath}/index.js`,
 						MANIFEST: './manifest.js'
@@ -201,7 +203,7 @@ const plugin = function (defaults = {}) {
 					`export const manifest = ${builder.generateManifest({ relativePath, routes })};\n`
 				);
 
-				await bundle_edge_function('edge', name, config);
+				await bundle_edge_function(dest, name, config);
 			}
 
 			/**
@@ -211,9 +213,11 @@ const plugin = function (defaults = {}) {
 			async function generate_edge_middleware(name, config) {
 				const tmp = builder.getBuildDirectory(`vercel-tmp/${name}`);
 
-				builder.copy(`${files}/${name}.js`, `${tmp}/${name}.js`);
+				const dest = `${tmp}/${name}.js`;
 
-				await bundle_edge_function(name, name, config, {
+				builder.copy(`${files}/${name}.js`, dest);
+
+				await bundle_edge_function(dest, name, config, {
 					alias: {
 						__HOOKS__: hooks_output_path
 					}
