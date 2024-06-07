@@ -5,10 +5,7 @@ import { HttpError, SvelteKitError } from '../runtime/control.js';
  * @return {Error}
  */
 export function coalesce_to_error(err) {
-	return err instanceof Error ||
-		(err && /** @type {any} */ (err).name && /** @type {any} */ (err).message)
-		? /** @type {Error} */ (err)
-		: new Error(JSON.stringify(err));
+	return err instanceof Error ? /** @type {Error} */ (err) : new Error(JSON.stringify(err));
 }
 
 /**
