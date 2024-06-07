@@ -497,7 +497,6 @@ function get_navigation_result_from_branch({ url, params, branch, status, error,
 			route
 		},
 		props: {
-			// @ts-ignore Somehow it's getting SvelteComponent and SvelteComponentDev mixed up
 			constructors: compact(branch).map((branch_node) => branch_node.node.component),
 			page
 		}
