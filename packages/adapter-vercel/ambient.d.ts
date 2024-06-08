@@ -1,4 +1,5 @@
-import { RequestContext } from './index.js';
+import 'ambient-fix.js';
+import type { RequestContext } from '@vercel/edge';
 
 declare global {
 	namespace App {

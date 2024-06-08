@@ -284,6 +284,9 @@ importers:
       '@types/node':
         specifier: ^18.19.3
         version: 18.19.31
+      '@vercel/edge':
+        specifier: ^1.1.1
+        version: 1.1.1
       typescript:
         specifier: ^5.3.3
         version: 5.4.5
@@ -2360,6 +2363,9 @@ packages:
 
   '@typescript/vfs@1.3.5':
     resolution: {integrity: sha512-pI8Saqjupf9MfLw7w2+og+fmb0fZS0J6vsKXXrp4/PDXEFvntgzXmChCXC/KefZZS0YGS6AT8e0hGAJcTsdJlg==}
+
+  '@vercel/edge@1.1.1':
+    resolution: {integrity: sha512-NtKiIbn9Cq6HWGy+qRudz28mz5nxfOJWls5Pnckjw1yCfSX8rhXdvY/il3Sy3Zd5n/sKCM2h7VSCCpJF/oaDrQ==}
 
   '@vercel/nft@0.27.1':
     resolution: {integrity: sha512-K6upzYHCV1cq2gP83r1o8uNV1vwvAlozvMqp7CEjYWxo0CMI8/4jKcDkVjlypVhrfZ54SXwh9QbH0ZIk/vQCsw==}
@@ -5999,6 +6005,8 @@ snapshots:
       debug: 4.3.4
     transitivePeerDependencies:
       - supports-color
+
+  '@vercel/edge@1.1.1': {}
 
   '@vercel/nft@0.27.1':
     dependencies:

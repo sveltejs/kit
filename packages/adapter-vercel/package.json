@@ -38,6 +38,7 @@
 		"@sveltejs/kit": "workspace:^",
 		"@sveltejs/vite-plugin-svelte": "^3.0.1",
 		"@types/node": "^18.19.3",
+		"@vercel/edge": "^1.1.1",
 		"typescript": "^5.3.3",
 		"vitest": "^1.5.0"
 	},
