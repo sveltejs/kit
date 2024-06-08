@@ -8,7 +8,7 @@ const initialized = server.init({
 
 /**
  * @param {Request} request
- * @param {import('../index.js').RequestContext} context
+ * @param {import('@vercel/edge').RequestContext} context
  */
 export default async (request, context) => {
 	await initialized;

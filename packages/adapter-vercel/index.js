@@ -191,7 +191,7 @@ const plugin = function (defaults = {}) {
 
 				const dest = `${tmp}/edge.js`;
 
-				builder.copy(`${files}/edge.js`, dest, {
+				builder.copy(`${files}/edge/edge.js`, dest, {
 					replace: {
 						SERVER: `${relativePath}/index.js`,
 						MANIFEST: './manifest.js'
@@ -208,14 +208,14 @@ const plugin = function (defaults = {}) {
 
 			/**
 			 * @param {string} name
-			 * @param {import('index.js').Config} config
+			 * @param {import('./index.js').Config} config
 			 */
 			async function generate_edge_middleware(name, config) {
 				const tmp = builder.getBuildDirectory(`vercel-tmp/${name}`);
 
 				const dest = `${tmp}/${name}.js`;
 
-				builder.copy(`${files}/${name}.js`, dest);
+				builder.copy(`${files}/edge/${name}.js`, dest);
 
 				await bundle_edge_function(dest, name, config, {
 					alias: {

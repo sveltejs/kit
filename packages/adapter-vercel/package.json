@@ -20,6 +20,7 @@
 	"types": "index.d.ts",
 	"files": [
 		"files",
+		"!files/edge/tsconfig.json",
 		"index.js",
 		"utils.js",
 		"index.d.ts"
@@ -31,6 +32,7 @@
 		"test": "vitest run"
 	},
 	"dependencies": {
+		"@vercel/edge": "^1.1.1",
 		"@vercel/nft": "^0.27.1",
 		"esbuild": "^0.20.2"
 	},
@@ -38,7 +40,6 @@
 		"@sveltejs/kit": "workspace:^",
 		"@sveltejs/vite-plugin-svelte": "^3.0.1",
 		"@types/node": "^18.19.3",
-		"@vercel/edge": "^1.1.1",
 		"typescript": "^5.3.3",
 		"vitest": "^1.5.0"
 	},

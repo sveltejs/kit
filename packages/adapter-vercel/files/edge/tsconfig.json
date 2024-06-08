@@ -6,13 +6,10 @@
 		"noEmit": true,
 		"noImplicitAny": true,
 		"target": "es2022",
-		"module": "node16",
-		"moduleResolution": "node16",
+		"module": "es2022",
+		"moduleResolution": "bundler",
 		"allowSyntheticDefaultImports": true,
-		"baseUrl": ".",
-		"paths": {
-			"@sveltejs/kit": ["../kit/types/index"]
-		}
+		"baseUrl": "."
 	},
-	"exclude": ["files/edge"]
+	"include": ["*.js", "../../internal.d.ts"]
 }
