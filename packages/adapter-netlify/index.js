@@ -95,10 +95,10 @@ export default function ({ split = false, edge = edge_set_in_env_var } = {}) {
 				generate_lambda_functions({ builder, split, publish });
 
 				const hooks_filename = builder.config.kit.files.hooks.universal.split('/').at(-1);
-				const hooks_output_path = `${builder.getServerDirectory()}/chunks/${hooks_filename}.js`;
+				const hooks_path = `${builder.getServerDirectory()}/chunks/${hooks_filename}.js`;
 
-				if (split && hooks_output_path) {
-					await generate_reroute_middleware({ builder, hooks_output_path });
+				if (split && hooks_path) {
+					await generate_reroute_middleware({ builder, hooks_path });
 				}
 			}
 		},
@@ -129,24 +129,8 @@ async function generate_edge_functions({ builder }) {
 
 	builder.mkdirp('.netlify/edge-functions');
 
-	// Don't match the static directory
-	const pattern = '^/.*$';
-
-	// Go doesn't support lookarounds, so we can't do this
-	// const pattern = appDir ? `^/(?!${escapeStringRegexp(appDir)}).*$` : '^/.*$';
-
-	/** @type {HandlerManifest} */
-	const edge_manifest = {
-		functions: [
-			{
-				function: 'render',
-				pattern
-			}
-		],
-		version: 1
-	};
-
 	builder.log.minor('Generating Edge Function...');
+
 	const relativePath = posix.relative(tmp, builder.getServerDirectory());
 
 	builder.copy(`${files}/edge.js`, `${tmp}/entry.js`, {
@@ -167,9 +151,44 @@ async function generate_edge_functions({ builder }) {
 		)});\n`
 	);
 
+	await bundle_edge_function({ builder, name: 'render' });
+}
+
+/**
+ * @param {object} params
+ * @param {import('@sveltejs/kit').Builder} params.builder
+ * @param {string} params.hooks_path
+ */
+async function generate_reroute_middleware({ builder, hooks_path }) {
+	const tmp = builder.getBuildDirectory('netlify-tmp');
+	builder.rimraf(tmp);
+	builder.mkdirp(tmp);
+
+	builder.mkdirp('.netlify/edge-functions');
+
+	builder.log.minor('Generating Reroute Edge Function...');
+
+	builder.copy(`${files}/reroute.js`, `${tmp}/entry.js`, {
+		replace: {
+			__HOOKS__: hooks_path
+		}
+	});
+
+	await bundle_edge_function({ builder, name: 'reroute' });
+}
+
+/**
+ *
+ * @param {object} params
+ * @param {import('@sveltejs/kit').Builder} params.builder
+ * @param {string} params.name
+ */
+async function bundle_edge_function({ builder, name }) {
+	const tmp = builder.getBuildDirectory('netlify-tmp');
+
 	await esbuild.build({
 		entryPoints: [`${tmp}/entry.js`],
-		outfile: '.netlify/edge-functions/render.js',
+		outfile: `.netlify/edge-functions/${name}.js`,
 		bundle: true,
 		format: 'esm',
 		platform: 'browser',
@@ -182,21 +201,6 @@ async function generate_edge_functions({ builder }) {
 		alias: Object.fromEntries(builtinModules.map((id) => [id, `node:${id}`]))
 	});
 
-	writeFileSync('.netlify/edge-functions/manifest.json', JSON.stringify(edge_manifest));
-}
-
-/**
- * @param {object} params
- * @param {import('@sveltejs/kit').Builder} params.builder
- * @param {string} params.hooks_output_path
- */
-async function generate_reroute_middleware({ builder, hooks_output_path }) {
-	const tmp = builder.getBuildDirectory('netlify-tmp');
-	builder.rimraf(tmp);
-	builder.mkdirp(tmp);
-
-	builder.mkdirp('.netlify/edge-functions');
-
 	// Don't match the static directory
 	const pattern = '^/.*$';
 
@@ -207,35 +211,12 @@ async function generate_reroute_middleware({ builder, hooks_output_path }) {
 	const edge_manifest = {
 		functions: [
 			{
-				function: 'reroute',
+				function: name,
 				pattern
 			}
 		],
 		version: 1
 	};
-
-	builder.log.minor('Generating Reroute Edge Function...');
-
-	builder.copy(`${files}/reroute.js`, `${tmp}/entry.js`);
-
-	await esbuild.build({
-		entryPoints: [`${tmp}/entry.js`],
-		//
-		outfile: '.netlify/edge-functions/reroute.js',
-		bundle: true,
-		format: 'esm',
-		platform: 'browser',
-		sourcemap: 'linked',
-		target: 'es2020',
-
-		// Node built-ins are allowed, but must be prefixed with `node:`
-		// https://docs.netlify.com/edge-functions/api/#runtime-environment
-		external: builtinModules.map((id) => `node:${id}`),
-		alias: {
-			...Object.fromEntries(builtinModules.map((id) => [id, `node:${id}`])),
-			__HOOKS__: hooks_output_path
-		}
-	});
 
 	writeFileSync('.netlify/edge-functions/manifest.json', JSON.stringify(edge_manifest));
 }

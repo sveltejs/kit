@@ -98,15 +98,13 @@ const plugin = function (defaults = {}) {
 			}
 
 			/**
-			 * @param {string} entry_point
+			 * @param {import('esbuild').BuildOptions & Required<Pick<import('esbuild').BuildOptions, 'entryPoints'>>} esbuild_options
 			 * @param {string} name
-			 * @param {import('./index.js').Config} config
-			 * @param {import('esbuild').BuildOptions=} esbuild_options
+			 * @param {import('./index.js').Config} adapter_config
 			 */
-			async function bundle_edge_function(entry_point, name, config, esbuild_options) {
+			async function bundle_edge_function(esbuild_options, name, adapter_config) {
 				try {
 					const result = await esbuild.build({
-						entryPoints: [entry_point],
 						outfile: `${dirs.functions}/${name}.func/index.js`,
 						target: 'es2020', // TODO verify what the edge runtime supports
 						bundle: true,
@@ -115,7 +113,7 @@ const plugin = function (defaults = {}) {
 						external: [
 							...compatible_node_modules,
 							...compatible_node_modules.map((id) => `node:${id}`),
-							...((config.runtime === 'edge' && config.external) || [])
+							...((adapter_config.runtime === 'edge' && adapter_config.external) || [])
 						],
 						sourcemap: 'linked',
 						banner: { js: 'globalThis.global = globalThis;' },
@@ -167,7 +165,7 @@ const plugin = function (defaults = {}) {
 					JSON.stringify(
 						{
 							runtime: 'edge',
-							regions: config.regions,
+							regions: adapter_config.regions,
 							entrypoint: 'index.js',
 							framework: {
 								slug: 'sveltekit',
@@ -203,7 +201,7 @@ const plugin = function (defaults = {}) {
 					`export const manifest = ${builder.generateManifest({ relativePath, routes })};\n`
 				);
 
-				await bundle_edge_function(dest, name, config);
+				await bundle_edge_function({ entryPoints: [dest] }, name, config);
 			}
 
 			/**
@@ -217,11 +215,16 @@ const plugin = function (defaults = {}) {
 
 				builder.copy(`${files}/edge/${name}.js`, dest);
 
-				await bundle_edge_function(dest, name, config, {
-					alias: {
-						__HOOKS__: hooks_output_path
-					}
-				});
+				await bundle_edge_function(
+					{
+						entryPoints: [dest],
+						alias: {
+							__HOOKS__: hooks_output_path
+						}
+					},
+					name,
+					config
+				);
 			}
 
 			/** @type {Map<string, { i: number, config: import('./index.js').Config, routes: import('@sveltejs/kit').RouteDefinition<import('./index.js').Config>[] }>} */
