@@ -37,7 +37,7 @@
 		"@sveltejs/kit": "workspace:^",
 		"@sveltejs/vite-plugin-svelte": "^3.0.1",
 		"@types/node": "^18.19.3",
-		"c8": "^9.0.0",
+		"c8": "^10.0.0",
 		"polka": "1.0.0-next.25",
 		"sirv": "^2.0.4",
 		"typescript": "^5.3.3",
