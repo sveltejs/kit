@@ -50,7 +50,7 @@ function shutdown(reason) {
 	server.server.closeIdleConnections();
 
 	server.server.close((error) => {
-		if (error) return
+		if (error) return;
 
 		if (shutdown_timeout_id) {
 			shutdown_timeout_id = clearTimeout(shutdown_timeout_id);
