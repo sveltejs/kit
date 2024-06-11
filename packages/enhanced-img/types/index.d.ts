@@ -1,11 +1,14 @@
+import type { HTMLImgAttributes } from 'svelte/elements';
 import type { Plugin } from 'vite';
+import type { Picture } from 'vite-imagetools';
 import './ambient.js';
-import { HTMLImgAttributes } from 'svelte/elements';
+
+type EnhancedImgAttributes = Omit<HTMLImgAttributes, 'src'> & { src: string | Picture };
 
 // https://svelte.dev/docs/typescript#enhancing-built-in-dom-types
 declare module 'svelte/elements' {
 	export interface SvelteHTMLElements {
-		'enhanced:img': HTMLImgAttributes;
+		'enhanced:img': EnhancedImgAttributes;
 	}
 }
 

@@ -44,10 +44,9 @@ if (fs.existsSync(cwd)) {
 
 const options = await p.group(
 	{
-		template: () =>
+		template: (_) =>
 			p.select({
 				message: 'Which Svelte app template?',
-				// @ts-expect-error i have no idea what is going on here
 				options: fs.readdirSync(dist('templates')).map((dir) => {
 					const meta_file = dist(`templates/${dir}/meta.json`);
 					const { title, description } = JSON.parse(fs.readFileSync(meta_file, 'utf8'));
@@ -60,18 +59,20 @@ const options = await p.group(
 				})
 			}),
 
-		types: () =>
+		types: ({ results }) =>
 			p.select({
 				message: 'Add type checking with TypeScript?',
-				initialValue: /** @type {'checkjs' | 'typescript' | null} */ ('checkjs'),
+				initialValue: /** @type {'checkjs' | 'typescript' | null} */ (
+					results.template === 'skeletonlib' ? 'checkjs' : 'typescript'
+				),
 				options: [
-					{
-						label: 'Yes, using JavaScript with JSDoc comments',
-						value: 'checkjs'
-					},
 					{
 						label: 'Yes, using TypeScript syntax',
 						value: 'typescript'
+					},
+					{
+						label: 'Yes, using JavaScript with JSDoc comments',
+						value: 'checkjs'
 					},
 					{ label: 'No', value: null }
 				]
@@ -111,7 +112,7 @@ const options = await p.group(
 await create(cwd, {
 	name: path.basename(path.resolve(cwd)),
 	template: /** @type {'default' | 'skeleton' | 'skeletonlib'} */ (options.template),
-	types: options.types,
+	types: /** @type {'checkjs' | 'typescript' | null} */ (options.types),
 	prettier: options.features.includes('prettier'),
 	eslint: options.features.includes('eslint'),
 	playwright: options.features.includes('playwright'),

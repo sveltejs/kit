@@ -1163,3 +1163,32 @@ test.describe('reroute', () => {
 		expect(await page.textContent('h1')).toContain('Full Navigation');
 	});
 });
+
+test.describe('INP', () => {
+	test('does not block next paint', async ({ page }) => {
+		// Thanks to https://publishing-project.rivendellweb.net/measuring-performance-tasks-with-playwright/#interaction-to-next-paint-inp
+		async function measureInteractionToPaint(selector) {
+			return page.evaluate(async (selector) => {
+				return new Promise((resolve) => {
+					const startTime = performance.now();
+					document.querySelector(selector).click();
+					requestAnimationFrame(() => {
+						const endTime = performance.now();
+						resolve(endTime - startTime);
+					});
+				});
+			}, selector);
+		}
+
+		await page.goto('/routing');
+
+		const client = await page.context().newCDPSession(page);
+		await client.send('Emulation.setCPUThrottlingRate', { rate: 100 });
+
+		const time = await measureInteractionToPaint('a[href="/routing/next-paint"]');
+
+		// we may need to tweak this number, and the `rate` above,
+		// depending on if this proves flaky
+		expect(time).toBeLessThan(400);
+	});
+});

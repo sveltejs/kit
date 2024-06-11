@@ -23,8 +23,12 @@
 		"index.d.ts"
 	],
 	"scripts": {
+		"check": "tsc",
 		"lint": "prettier --check .",
 		"format": "pnpm lint --write"
+	},
+	"devDependencies": {
+		"typescript": "^5.3.3"
 	},
 	"peerDependencies": {
 		"@sveltejs/kit": "^1.0.0 || ^2.0.0"

@@ -1,6 +1,6 @@
 {
 	"name": "@sveltejs/adapter-auto",
-	"version": "3.2.0",
+	"version": "3.2.1",
 	"description": "Automatically chooses the SvelteKit adapter for your current environment, if possible.",
 	"repository": {
 		"type": "git",
@@ -36,7 +36,7 @@
 		"typescript": "^5.3.3"
 	},
 	"dependencies": {
-		"import-meta-resolve": "^4.0.0"
+		"import-meta-resolve": "^4.1.0"
 	},
 	"peerDependencies": {
 		"@sveltejs/kit": "^2.0.0"

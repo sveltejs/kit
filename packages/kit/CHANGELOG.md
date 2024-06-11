@@ -1,5 +1,39 @@
 # @sveltejs/kit
 
+## 2.5.10
+
+### Patch Changes
+
+- fix: exclude server files from optimizeDeps.entries ([#12242](https://github.com/sveltejs/kit/pull/12242))
+
+- fix: bump import-meta-resolve to remove deprecation warnings ([#12240](https://github.com/sveltejs/kit/pull/12240))
+
+## 2.5.9
+
+### Patch Changes
+
+- fix: yield main thread before navigating ([#12225](https://github.com/sveltejs/kit/pull/12225))
+
+- fix: correctly handle aliases to files in the `.svelte-kit` directory ([#12220](https://github.com/sveltejs/kit/pull/12220))
+
+## 2.5.8
+
+### Patch Changes
+
+- fix: prevent excessive Vite dependency optimizations on navigation ([#12182](https://github.com/sveltejs/kit/pull/12182))
+
+## 2.5.7
+
+### Patch Changes
+
+- chore(deps): update devalue to v5 ignore non-enumerable symbols during serialization ([#12141](https://github.com/sveltejs/kit/pull/12141))
+
+## 2.5.6
+
+### Patch Changes
+
+- fix: avoid incorrectly un- and re-escaping cookies collected during a server-side `fetch` ([#11904](https://github.com/sveltejs/kit/pull/11904))
+
 ## 2.5.5
 
 ### Patch Changes

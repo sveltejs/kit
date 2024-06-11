@@ -85,7 +85,7 @@ export const updated = {
 function get_store(name) {
 	try {
 		return getStores()[name];
-	} catch (e) {
+	} catch {
 		throw new Error(
 			`Cannot subscribe to '${name}' store on the server outside of a Svelte component, as it is bound to the current request via component context. This prevents state from leaking between users.` +
 				'For more information, see https://kit.svelte.dev/docs/state-management#avoid-shared-state-on-the-server'

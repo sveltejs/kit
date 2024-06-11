@@ -192,7 +192,7 @@ export function parseObject(str) {
 		.replaceAll(/,(\n\s*)?([^ ])/g, ',"$2');
 	try {
 		return JSON.parse(updated);
-	} catch (err) {
+	} catch {
 		throw new Error(`Failed parsing string to object: ${str}`);
 	}
 }
