@@ -42,16 +42,23 @@ However, if you're building a [custom server](#custom-server) and do want to add
 
 In `dev` and `preview`, SvelteKit will read environment variables from your `.env` file (or `.env.local`, or `.env.[mode]`, [as determined by Vite](https://vitejs.dev/guide/env-and-mode.html#env-files).)
 
-In production, `.env` files are _not_ automatically loaded. Use the [`dotenv`](https://www.npmjs.com/package/dotenv) package or the [`--env-file`](https://nodejs.org/en/learn/command-line/how-to-read-environment-variables-from-nodejs) flag:
+In production, `.env` files are _not_ automatically loaded. To do so, install `dotenv` in your project...
+
+```bash
+npm install dotenv
+```
+
+...and invoke it before running the built app:
 
 ```diff
 - node build
-
-# Requires the dotenv package to be installed.
 + node -r dotenv/config build
+```
 
-# Requires Node.js v20.6.0 or later.
-# You can pass multiple --env-file arguments.
+If you use Node.js v20.6+, you can use the [`--env-file`](https://nodejs.org/en/learn/command-line/how-to-read-environment-variables-from-nodejs) flag instead:
+
+```diff
+- node build
 + node --env-file=.env --env-file=.env.production build
 ```
 
