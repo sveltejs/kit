@@ -1,5 +1,15 @@
 # @sveltejs/kit
 
+## 2.5.11
+
+### Patch Changes
+
+- fix: hrefs that start with `config.prerender.origin` are now crawled ([#12277](https://github.com/sveltejs/kit/pull/12277))
+
+- chore: add keywords for discovery in npm search ([#12330](https://github.com/sveltejs/kit/pull/12330))
+
+- fix: handle whitespace in HTTP Accept header ([#12292](https://github.com/sveltejs/kit/pull/12292))
+
 ## 2.5.10
 
 ### Patch Changes
