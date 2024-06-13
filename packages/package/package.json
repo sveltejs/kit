@@ -7,6 +7,15 @@
 		"url": "https://github.com/sveltejs/kit",
 		"directory": "packages/package"
 	},
+	"keywords": [
+		"build",
+		"bundle",
+		"component",
+		"library",
+		"packaging",
+		"svelte",
+		"tool"
+	],
 	"license": "MIT",
 	"homepage": "https://kit.svelte.dev",
 	"type": "module",

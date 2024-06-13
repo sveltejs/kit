@@ -2,6 +2,14 @@
 	"name": "@sveltejs/adapter-node",
 	"version": "5.0.1",
 	"description": "Adapter for SvelteKit apps that generates a standalone Node server",
+	"keywords": [
+		"adapter",
+		"deploy",
+		"hosting",
+		"node.js",
+		"svelte",
+		"sveltekit"
+	],
 	"repository": {
 		"type": "git",
 		"url": "https://github.com/sveltejs/kit",
