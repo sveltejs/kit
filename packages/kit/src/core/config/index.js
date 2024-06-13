@@ -61,12 +61,21 @@ export function load_error_page(config) {
  * @returns {Promise<import('types').ValidatedConfig>}
  */
 export async function load_config({ cwd = process.cwd() } = {}) {
-	const config_file = path.join(cwd, 'svelte.config.js');
+	const config_files = ['svelte.config.js', 'svelte.config.mjs', 'svelte.config.cjs']
+		.map((file) => path.join(cwd, file))
+		.filter((file) => fs.existsSync(file));
 
-	if (!fs.existsSync(config_file)) {
+	if (config_files.length > 1) {
+		throw new Error(
+			`Found multiple config files: ${config_files.join(
+				', '
+			)}. Please keep only one of these files.`
+		);
+	} else if (config_files.length === 0) {
 		return process_config({}, { cwd });
 	}
 
+	const config_file = config_files[0];
 	const config = await import(`${url.pathToFileURL(config_file).href}?ts=${Date.now()}`);
 
 	try {
