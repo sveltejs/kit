@@ -46,6 +46,8 @@ if (socket_activation) {
 function graceful_shutdown(reason) {
 	if (shutdown_timeout_id) return;
 
+	// If a connection was opened with a keep-alive header close() will wait for the connection to
+	// time out rather than close it even if it is not handling any requests, so call this first
 	// @ts-expect-error this was added in 18.2.0 but is not reflected in the types
 	server.server.closeIdleConnections();
 
@@ -85,7 +87,7 @@ server.server.on(
 			requests--;
 
 			if (shutdown_timeout_id) {
-				// close connections as soon as they become idle, so the app shuts down without delay
+				// close connections as soon as they become idle, so they don't accept new requests
 				// @ts-expect-error this was added in 18.2.0 but is not reflected in the types
 				server.server.closeIdleConnections();
 			}
