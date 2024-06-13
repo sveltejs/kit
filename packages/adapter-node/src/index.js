@@ -43,7 +43,7 @@ if (socket_activation) {
 }
 
 /** @param {'SIGINT' | 'SIGTERM' | 'IDLE'} reason */
-function shutdown(reason) {
+function graceful_shutdown(reason) {
 	if (shutdown_timeout_id) return;
 
 	// @ts-expect-error this was added in 18.2.0 but is not reflected in the types
@@ -90,13 +90,13 @@ server.server.on(
 				server.server.closeIdleConnections();
 			}
 			if (requests === 0 && socket_activation && idle_timeout) {
-				idle_timeout_id = setTimeout(() => shutdown('IDLE'), idle_timeout * 1000);
+				idle_timeout_id = setTimeout(() => graceful_shutdown('IDLE'), idle_timeout * 1000);
 			}
 		});
 	}
 );
 
-process.on('SIGTERM', shutdown);
-process.on('SIGINT', shutdown);
+process.on('SIGTERM', graceful_shutdown);
+process.on('SIGINT', graceful_shutdown);
 
 export { server };
