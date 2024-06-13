@@ -59,7 +59,7 @@ function shutdown(reason) {
 			idle_timeout_id = clearTimeout(idle_timeout_id);
 		}
 
-		// @ts-expect-error Custom events cannot be typed
+		// @ts-expect-error custom events cannot be typed
 		process.emit('sveltekit:shutdown', reason);
 	});
 
