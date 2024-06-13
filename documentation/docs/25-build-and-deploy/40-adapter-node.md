@@ -186,7 +186,7 @@ By default `adapter-node` gracefully shuts down the HTTP server when a `SIGTERM`
 
 > If you want to customize this behaviour you can use a [custom server](#custom-server).
 
-You can listen to the `sveltekit:shutdown` event which is emitted after the HTTP server has finished shutting down. Unlike Node's `exit` event, the `sveltekit:shutdown` event is always emitted when a shutdown is triggered and also supports handling asynchronous code.
+You can listen to the `sveltekit:shutdown` event which is emitted after the HTTP server has closed all connections. Unlike Node's `exit` event, the `sveltekit:shutdown` event supports asynchronous operations and is always emitted when all connections are closed even if the server has dangling work such as open database connections.
 
 ```js
 process.on('sveltekit:shutdown', async (reason) => {
