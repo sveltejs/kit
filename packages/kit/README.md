@@ -8,7 +8,7 @@ The quickest way to get started is via the [create-svelte](https://github.com/sv
 npm create svelte@latest my-app
 cd my-app
 npm install
-npm run dev -- --open
+npm run dev
 ```
 
 See the [documentation](https://kit.svelte.dev/docs) to learn more.
