@@ -50,6 +50,7 @@ function shutdown(reason) {
 	server.server.closeIdleConnections();
 
 	server.server.close((error) => {
+		// occurs if the server is already closed
 		if (error) return;
 
 		if (shutdown_timeout_id) {
