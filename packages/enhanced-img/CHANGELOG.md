@@ -1,5 +1,15 @@
 # @sveltejs/enhanced-img
 
+## 0.3.0
+
+### Minor Changes
+
+- breaking: return plugin synchronously from `enhancedImages()` ([#12297](https://github.com/sveltejs/kit/pull/12297))
+
+### Patch Changes
+
+- chore: add keywords for discovery in npm search ([#12330](https://github.com/sveltejs/kit/pull/12330))
+
 ## 0.2.1
 
 ### Patch Changes

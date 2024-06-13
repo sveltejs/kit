@@ -1,5 +1,13 @@
 # create-svelte
 
+## 6.3.1
+
+### Patch Changes
+
+- chore: overhaul ignore configs ([#11938](https://github.com/sveltejs/kit/pull/11938))
+
+- chore: add keywords for discovery in npm search ([#12330](https://github.com/sveltejs/kit/pull/12330))
+
 ## 6.3.0
 
 ### Minor Changes
