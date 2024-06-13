@@ -2,4 +2,4 @@
 "@sveltejs/adapter-node": minor
 ---
 
-add shutdown event
+feat: add shutdown event
