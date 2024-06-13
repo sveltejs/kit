@@ -192,7 +192,6 @@ You can listen to the `sveltekit:shutdown` event which is emitted after the HTTP
 process.on('sveltekit:shutdown', async (reason) => {
   await db.close();
   await jobs.stop();
-  process.exit();
 });
 ```
 
