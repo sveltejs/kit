@@ -1,5 +1,15 @@
 # @sveltejs/adapter-node
 
+## 5.1.0
+
+### Minor Changes
+
+- feat: add shutdown event ([#12153](https://github.com/sveltejs/kit/pull/12153))
+
+### Patch Changes
+
+- fix: close keep-alive connections as soon as possible during graceful shutdown rather than accepting new requests ([#12153](https://github.com/sveltejs/kit/pull/12153))
+
 ## 5.0.2
 
 ### Patch Changes
