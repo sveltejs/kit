@@ -1,7 +1,15 @@
 import fs from 'node:fs';
 import path from 'node:path';
-import { VERSION } from 'svelte/compiler';
+import { pathToFileURL } from 'node:url';
+import * as imr from 'import-meta-resolve';
 import { mkdirp } from '../../utils/filesystem.js';
+
+// ensure that we load the peer dependency rather than the dev dependency,
+// even when SvelteKit is linked rather than locally installed in the current project
+const { VERSION } = await import(
+	// @ts-expect-error the types are wrong
+	imr.resolve('svelte/compiler', pathToFileURL(process.cwd() + '/dummy.js'))
+);
 
 /** @type {Map<string, string>} */
 const previous_contents = new Map();

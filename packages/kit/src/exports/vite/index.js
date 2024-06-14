@@ -128,7 +128,7 @@ const warning_preprocessor = {
  * rather than relative to this package
  * @param {string} dependency
  */
-async function resolve_peer_dependency(dependency) {
+function resolve_peer_dependency(dependency) {
 	try {
 		// @ts-expect-error the types are wrong
 		const resolved = imr.resolve(dependency, pathToFileURL(process.cwd() + '/dummy.js'));
