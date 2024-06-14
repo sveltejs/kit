@@ -1,5 +1,11 @@
 # @sveltejs/kit
 
+## 2.5.14
+
+### Patch Changes
+
+- fix: read non-encoded data URIs ([#12347](https://github.com/sveltejs/kit/pull/12347))
+
 ## 2.5.13
 
 ### Patch Changes
