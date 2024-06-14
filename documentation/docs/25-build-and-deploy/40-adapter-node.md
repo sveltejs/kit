@@ -189,6 +189,7 @@ By default `adapter-node` gracefully shuts down the HTTP server when a `SIGTERM`
 You can listen to the `sveltekit:shutdown` event which is emitted after the HTTP server has closed all connections. Unlike Node's `exit` event, the `sveltekit:shutdown` event supports asynchronous operations and is always emitted when all connections are closed even if the server has dangling work such as open database connections.
 
 ```js
+// @errors: 2304
 process.on('sveltekit:shutdown', async (reason) => {
   await jobs.stop();
   await db.close();
