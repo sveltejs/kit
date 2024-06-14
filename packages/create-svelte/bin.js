@@ -156,8 +156,8 @@ if (options.features.includes('vitest')) {
 	console.log(cyan('  https://vitest.dev\n'));
 }
 
-console.log('Install community-maintained integrations:');
-console.log(cyan('  https://github.com/svelte-add/svelte-add'));
+console.log('Install more integrations with:');
+console.log(bold(cyan('  npx svelte-add')));
 
 console.log('\nNext steps:');
 let i = 1;
