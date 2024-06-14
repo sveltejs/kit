@@ -1,7 +1,6 @@
 import fs from 'node:fs';
 import path from 'node:path';
 
-import * as imr from 'import-meta-resolve';
 import colors from 'kleur';
 
 import { copy, mkdirp, posixify, read, resolve_entry, rimraf } from '../../utils/filesystem.js';
@@ -34,7 +33,6 @@ import {
 	sveltekit_paths,
 	sveltekit_server
 } from './module_ids.js';
-import { pathToFileURL } from 'node:url';
 import { resolve_peer_dependency } from '../../utils/import.js';
 
 const cwd = process.cwd();
