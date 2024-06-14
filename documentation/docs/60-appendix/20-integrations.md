@@ -17,7 +17,11 @@ export default {
 
 ## Adders
 
-Run `npx svelte-add` to setup many different complex integrations like Tailwind, Bootstrap, Storybook, mdsvex (i.e. markdown), and more with a single command.
+Run `npx svelte-add` to setup many different complex integrations with a single command including:
+- CSS - Tailwind, Bootstrap, Bulma
+- database - Drizzle ORM
+- markdown - mdsvex
+- Storybook
 
 ## Directory
 
