@@ -9,6 +9,7 @@ let VERSION;
 try {
 	({ VERSION } = await resolve_peer_dependency('svelte/compiler'));
 } catch {
+	// we can end up here from e.g. unit tests. this is the simplest fix
 	({ VERSION } = await import('svelte/compiler'));
 }
 

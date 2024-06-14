@@ -1,5 +1,5 @@
 import * as imr from 'import-meta-resolve';
-import { pathToFileURL } from 'url';
+import { pathToFileURL } from 'node:url';
 
 /**
  * Resolve a dependency relative to the current working directory,
