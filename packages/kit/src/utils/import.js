@@ -1,3 +1,6 @@
+import * as imr from 'import-meta-resolve';
+import { pathToFileURL } from 'url';
+
 /**
  * Resolve a dependency relative to the current working directory,
  * rather than relative to this package
