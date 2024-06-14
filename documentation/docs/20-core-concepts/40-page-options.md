@@ -144,7 +144,7 @@ Disabling CSR does not ship any JavaScript to the client. This means:
 * Links are handled by the browser with a full-page navigation.
 * Hot Module Replacement (HMR) will be disabled.
 
-Setting the value of `csr` to [dev](modules#$app-environment-dev) will enable HMR during development.
+You can enable `csr` during development (for example to take advantage of HMR) like so:
 
 ```js
 /// file: +page.js
