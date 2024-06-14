@@ -1,5 +1,11 @@
 # create-svelte
 
+## 6.3.2
+
+### Patch Changes
+
+- chore: update text about svelte-add ([#12337](https://github.com/sveltejs/kit/pull/12337))
+
 ## 6.3.1
 
 ### Patch Changes
