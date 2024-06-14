@@ -52,7 +52,8 @@ export function read(asset) {
 		});
 	}
 
-	const file = DEV && asset.startsWith('/@fs') ? asset : asset.slice(base.length + 1);
+	const file =
+		DEV && asset.startsWith('/@fs') ? decodeURIComponent(asset) : asset.slice(base.length + 1);
 
 	if (file in manifest._.server_assets) {
 		const length = manifest._.server_assets[file];
