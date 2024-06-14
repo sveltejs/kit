@@ -142,6 +142,16 @@ Disabling CSR does not ship any JavaScript to the client. This means:
 * `<script>` tags inside all Svelte components are removed.
 * `<form>` elements cannot be [progressively enhanced](form-actions#progressive-enhancement).
 * Links are handled by the browser with a full-page navigation.
+* Hot Module Replacement (HMR) will be disabled.
+
+Setting the value of `csr` to [dev](modules#$app-environment-dev) will enable HMR during development.
+
+```js
+/// file: +page.js
+import { dev } from '$app/environment';
+
+export const csr = dev;
+```
 
 ## trailingSlash
 
