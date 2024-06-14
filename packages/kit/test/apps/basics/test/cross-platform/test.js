@@ -1042,6 +1042,7 @@ test.describe('$app/server', () => {
 		const url = await page.textContent('[data-testid="url"]');
 		const local_glob = await page.textContent('[data-testid="local_glob"]');
 		const external_glob = await page.textContent('[data-testid="external_glob"]');
+		const svg = await page.innerHTML('[data-testid="svg"]');
 
 		// the emoji is there to check that base64 decoding works correctly
 		expect(auto.trim()).toBe('Imported without ?url 😎');
@@ -1050,5 +1051,6 @@ test.describe('$app/server', () => {
 		expect(external_glob.trim()).toBe(
 			'Imported with url glob from the read-file test in basics. Placed here outside the app folder to force a /@fs prefix 😎'
 		);
+		expect(svg).toContain('<rect width="24" height="24" rx="2" fill="#ff3e00"></rect>');
 	});
 });

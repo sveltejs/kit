@@ -27,12 +27,12 @@ export function read(asset) {
 	}
 
 	// handle inline assets internally
-	if (asset.startsWith('data:')) {
-		const [prelude, data] = asset.split(';');
-		const type = prelude.slice(5) || 'application/octet-stream';
+	const match = /^data:(.+?)?(;base64)?,(.*)$/.exec(asset);
+	if (match) {
+		const type = match[1] ?? 'application/octet-stream';
 
-		if (data.startsWith('base64,')) {
-			const decoded = b64_decode(data.slice(7));
+		if (match[2] !== undefined) {
+			const decoded = b64_decode(match[3]);
 
 			return new Response(decoded, {
 				headers: {
@@ -42,7 +42,7 @@ export function read(asset) {
 			});
 		}
 
-		const decoded = decodeURIComponent(data);
+		const decoded = decodeURIComponent(match[3]);
 
 		return new Response(decoded, {
 			headers: {
