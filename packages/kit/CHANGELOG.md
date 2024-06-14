@@ -1,5 +1,11 @@
 # @sveltejs/kit
 
+## 2.5.13
+
+### Patch Changes
+
+- fix: decode asset URLs in dev when reading them, but for real this time ([#12344](https://github.com/sveltejs/kit/pull/12344))
+
 ## 2.5.12
 
 ### Patch Changes
