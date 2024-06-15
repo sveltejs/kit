@@ -27,7 +27,7 @@ export function read(asset) {
 	}
 
 	// handle inline assets internally
-	const match = /^data:([^;,]+)?(;base64)?,/.exec(asset);
+	const match = /^data:([^;,*?)?(;base64)?,/.exec(asset);
 	if (match) {
 		const type = match[1] ?? 'application/octet-stream';
 		const data = asset.slice(match[0].length);
