@@ -1129,14 +1129,22 @@ async function load_root_error_page({ status, error, url, route }) {
 			data: null
 		};
 
-	return get_navigation_result_from_branch({
-		url,
-		params,
-		branch: [root_layout, root_error],
-		status,
-		error,
-		route: null
-	});
+		return get_navigation_result_from_branch({
+			url,
+			params,
+			branch: [root_layout, root_error],
+			status,
+			error,
+			route: null
+		});
+	} catch (error) {
+		if (error instanceof Redirect) {
+			return _goto(new URL(error.location, location.href), {}, 0);
+		}
+
+		// TODO: display static fallback page
+		throw error;
+	}
 }
 
 /**
