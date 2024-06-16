@@ -13,12 +13,14 @@ import { read } from '$app/server';
 import { error } from '@sveltejs/kit';
 
 const meta = import.meta.glob('../../../../../../documentation/docs/*/meta.json', {
-	as: 'url',
+	query: '?url',
+	import: 'default',
 	eager: true
 });
 
 const markdown = import.meta.glob('../../../../../../documentation/docs/*/*.md', {
-	as: 'url',
+	query: '?url',
+	import: 'default',
 	eager: true
 });
 

@@ -717,10 +717,7 @@ test.describe('data-sveltekit attributes', () => {
 		expect(page).toHaveURL(offline_url);
 	});
 
-	test('data-sveltekit-preload does not abort ongoing navigation', async ({
-		page,
-		browserName
-	}) => {
+	test('data-sveltekit-preload does not abort ongoing navigation', async ({ page }) => {
 		await page.goto('/data-sveltekit/preload-data/offline');
 
 		await page.locator('#slow-navigation').dispatchEvent('click');
@@ -731,10 +728,7 @@ test.describe('data-sveltekit attributes', () => {
 			page.waitForLoadState('networkidle') // wait for preloading to finish
 		]);
 
-		expect(page).toHaveURL(
-			'/data-sveltekit/preload-data/offline/slow-navigation' ||
-				(browserName === 'chromium' && 'chrome-error://chromewebdata/')
-		);
+		expect(page).toHaveURL('/data-sveltekit/preload-data/offline/slow-navigation');
 	});
 
 	test('data-sveltekit-reload', async ({ baseURL, page, clicknav }) => {
@@ -1167,5 +1161,34 @@ test.describe('reroute', () => {
 		await page.click('a#client-error');
 
 		expect(await page.textContent('h1')).toContain('Full Navigation');
+	});
+});
+
+test.describe('INP', () => {
+	test('does not block next paint', async ({ page }) => {
+		// Thanks to https://publishing-project.rivendellweb.net/measuring-performance-tasks-with-playwright/#interaction-to-next-paint-inp
+		async function measureInteractionToPaint(selector) {
+			return page.evaluate(async (selector) => {
+				return new Promise((resolve) => {
+					const startTime = performance.now();
+					document.querySelector(selector).click();
+					requestAnimationFrame(() => {
+						const endTime = performance.now();
+						resolve(endTime - startTime);
+					});
+				});
+			}, selector);
+		}
+
+		await page.goto('/routing');
+
+		const client = await page.context().newCDPSession(page);
+		await client.send('Emulation.setCPUThrottlingRate', { rate: 100 });
+
+		const time = await measureInteractionToPaint('a[href="/routing/next-paint"]');
+
+		// we may need to tweak this number, and the `rate` above,
+		// depending on if this proves flaky
+		expect(time).toBeLessThan(400);
 	});
 });

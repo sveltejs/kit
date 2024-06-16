@@ -1,5 +1,6 @@
 import { Adapter } from '@sveltejs/kit';
 import './ambient.js';
+import { GetPlatformProxyOptions } from 'wrangler';
 
 export default function plugin(options?: AdapterOptions): Adapter;
 
@@ -17,7 +18,7 @@ export interface AdapterOptions {
 	fallback?: 'plaintext' | 'spa';
 
 	/**
-	 * Customize the automatically-generated `_routes.json` file
+	 * Customize the automatically-generated `_routes.json` file.
 	 * https://developers.cloudflare.com/pages/platform/functions/routing/#create-a-_routesjson-file
 	 */
 	routes?: {
@@ -42,6 +43,12 @@ export interface AdapterOptions {
 		 */
 		exclude?: string[];
 	};
+
+	/**
+	 * Config object passed to {@link https://developers.cloudflare.com/workers/wrangler/api/#getplatformproxy | getPlatformProxy}
+	 * during development and preview.
+	 */
+	platformProxy?: GetPlatformProxyOptions;
 }
 
 export interface RoutesJSONSpec {

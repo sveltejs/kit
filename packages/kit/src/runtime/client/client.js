@@ -419,8 +419,9 @@ async function _preload_code(pathname) {
 /**
  * @param {import('./types.js').NavigationFinished} result
  * @param {HTMLElement} target
+ * @param {boolean} hydrate
  */
-function initialize(result, target) {
+function initialize(result, target, hydrate) {
 	if (DEV && result.state.error && document.querySelector('vite-error-overlay')) return;
 
 	current = result.state;
@@ -433,7 +434,7 @@ function initialize(result, target) {
 	root = new app.root({
 		target,
 		props: { ...result.props, stores, components },
-		hydrate: true
+		hydrate
 	});
 
 	restore_snapshot(current_navigation_index);
@@ -468,15 +469,7 @@ function initialize(result, target) {
  *   form?: Record<string, any> | null;
  * }} opts
  */
-async function get_navigation_result_from_branch({
-	url,
-	params,
-	branch,
-	status,
-	error,
-	route,
-	form
-}) {
+function get_navigation_result_from_branch({ url, params, branch, status, error, route, form }) {
 	/** @type {import('types').TrailingSlash} */
 	let slash = 'never';
 
@@ -1016,7 +1009,7 @@ async function load_route({ id, invalidating, url, params, route, preload }) {
 
 				const error_load = await load_nearest_error_page(i, branch, errors);
 				if (error_load) {
-					return await get_navigation_result_from_branch({
+					return get_navigation_result_from_branch({
 						url,
 						params,
 						branch: branch.slice(0, error_load.idx).concat(error_load.node),
@@ -1035,7 +1028,7 @@ async function load_route({ id, invalidating, url, params, route, preload }) {
 		}
 	}
 
-	return await get_navigation_result_from_branch({
+	return get_navigation_result_from_branch({
 		url,
 		params,
 		branch,
@@ -1069,7 +1062,7 @@ async function load_nearest_error_page(i, branch, errors) {
 						universal: null
 					}
 				};
-			} catch (e) {
+			} catch {
 				continue;
 			}
 		}
@@ -1136,22 +1129,14 @@ async function load_root_error_page({ status, error, url, route }) {
 			data: null
 		};
 
-		return await get_navigation_result_from_branch({
-			url,
-			params,
-			branch: [root_layout, root_error],
-			status,
-			error,
-			route: null
-		});
-	} catch (error) {
-		if (error instanceof Redirect) {
-			return _goto(new URL(error.location, location.href), {}, 0);
-		}
-
-		// TODO: display static fallback page
-		throw error;
-	}
+	return get_navigation_result_from_branch({
+		url,
+		params,
+		branch: [root_layout, root_error],
+		status,
+		error,
+		route: null
+	});
 }
 
 /**
@@ -1415,7 +1400,7 @@ async function navigate({
 		root.$set(navigation_result.props);
 		has_navigated = true;
 	} else {
-		initialize(navigation_result, target);
+		initialize(navigation_result, target, false);
 	}
 
 	const { activeElement } = document;
@@ -1950,7 +1935,7 @@ export async function applyAction(result) {
 
 		const error_load = await load_nearest_error_page(current.branch.length, branch, route.errors);
 		if (error_load) {
-			const navigation_result = await get_navigation_result_from_branch({
+			const navigation_result = get_navigation_result_from_branch({
 				url,
 				params: current.params,
 				branch: branch.slice(0, error_load.idx).concat(error_load.node),
@@ -2035,7 +2020,7 @@ function _start_router() {
 	}
 
 	/** @param {MouseEvent} event */
-	container.addEventListener('click', (event) => {
+	container.addEventListener('click', async (event) => {
 		// Adapted from https://github.com/visionmedia/page.js
 		// MIT license https://github.com/visionmedia/page.js#license
 		if (event.button || event.which !== 1) return;
@@ -2127,6 +2112,16 @@ function _start_router() {
 		}
 
 		event.preventDefault();
+
+		// allow the browser to repaint before navigating —
+		// this prevents INP scores being penalised
+		await new Promise((fulfil) => {
+			requestAnimationFrame(() => {
+				setTimeout(fulfil, 0);
+			});
+
+			setTimeout(fulfil, 100); // fallback for edge case where rAF doesn't fire because e.g. tab was backgrounded
+		});
 
 		navigate({
 			type: 'link',
@@ -2362,7 +2357,7 @@ async function _hydrate(
 			}
 		}
 
-		result = await get_navigation_result_from_branch({
+		result = get_navigation_result_from_branch({
 			url,
 			params,
 			branch,
@@ -2391,7 +2386,7 @@ async function _hydrate(
 		result.props.page.state = {};
 	}
 
-	initialize(result, target);
+	initialize(result, target, true);
 }
 
 /**

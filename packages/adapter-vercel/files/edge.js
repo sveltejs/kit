@@ -12,6 +12,7 @@ const initialized = server.init({
  */
 export default async (request, context) => {
 	await initialized;
+
 	return server.respond(request, {
 		getClientAddress() {
 			return /** @type {string} */ (request.headers.get('x-forwarded-for'));

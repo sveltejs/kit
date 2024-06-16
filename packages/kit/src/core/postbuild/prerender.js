@@ -276,7 +276,17 @@ async function prerender({ out, manifest_path, metadata, verbose, env }) {
 
 			actual_hashlinks.set(decoded, ids);
 
-			for (const href of hrefs) {
+			/** @param {string} href */
+			const removePrerenderOrigin = (href) => {
+				if (href.startsWith(config.prerender.origin)) {
+					if (href === config.prerender.origin) return '/';
+					if (href.at(config.prerender.origin.length) !== '/') return href;
+					return href.slice(config.prerender.origin.length);
+				}
+				return href;
+			};
+
+			for (const href of hrefs.map(removePrerenderOrigin)) {
 				if (!is_root_relative(href)) continue;
 
 				const { pathname, search, hash } = new URL(href, 'http://localhost');

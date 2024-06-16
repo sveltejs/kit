@@ -1613,14 +1613,15 @@ declare module '@sveltejs/kit' {
 
 	interface PageNode {
 		depth: number;
+		/** The +page.svelte */
 		component?: string; // TODO supply default component if it's missing (bit of an edge case)
+		/** The +page.js/.ts */
 		universal?: string;
+		/** The +page.server.js/ts */
 		server?: string;
 		parent_id?: string;
 		parent?: PageNode;
-		/**
-		 * Filled with the pages that reference this layout (if this is a layout)
-		 */
+		/** Filled with the pages that reference this layout (if this is a layout) */
 		child_pages?: PageNode[];
 	}
 

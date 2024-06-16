@@ -32,7 +32,7 @@ const compatible_node_modules = [
 ];
 
 /** @type {import('./index.js').default} */
-export default function ({ config = 'wrangler.toml' } = {}) {
+export default function ({ config = 'wrangler.toml', platformProxy = {} } = {}) {
 	return {
 		name: '@sveltejs/adapter-cloudflare-workers',
 
@@ -86,7 +86,8 @@ export default function ({ config = 'wrangler.toml' } = {}) {
 			try {
 				const result = await esbuild.build({
 					platform: 'browser',
-					conditions: ['worker', 'browser'],
+					// https://github.com/cloudflare/workers-sdk/blob/a12b2786ce745f24475174bcec994ad691e65b0f/packages/wrangler/src/deployment-bundle/bundle.ts#L35-L36
+					conditions: ['workerd', 'worker', 'browser'],
 					sourcemap: 'linked',
 					target: 'es2022',
 					entryPoints: [`${tmp}/entry.js`],
@@ -144,7 +145,7 @@ export default function ({ config = 'wrangler.toml' } = {}) {
 		},
 
 		async emulate() {
-			const proxy = await getPlatformProxy();
+			const proxy = await getPlatformProxy(platformProxy);
 			const platform = /** @type {App.Platform} */ ({
 				env: proxy.env,
 				context: proxy.ctx,
