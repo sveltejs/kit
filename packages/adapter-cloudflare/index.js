@@ -1,4 +1,4 @@
-import { writeFileSync } from 'node:fs';
+import { existsSync, writeFileSync } from 'node:fs';
 import * as path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import * as esbuild from 'esbuild';
@@ -24,6 +24,15 @@ export default function (options = {}) {
 	return {
 		name: '@sveltejs/adapter-cloudflare',
 		async adapt(builder) {
+			const has_routes_json = existsSync('_routes.json');
+
+			// if there are no routes inside svelte config, and _routes.json exists, user is expecting to configure cloudflare routes in the wrong way.
+			if (!options.routes && has_routes_json) {
+				throw new Error(
+					'Cloudflare routes should be configured inside svelte config, not in _routes.json'
+				);
+			}
+
 			const files = fileURLToPath(new URL('./files', import.meta.url).href);
 			const dest = builder.getBuildDirectory('cloudflare');
 			const tmp = builder.getBuildDirectory('cloudflare-tmp');
