@@ -56,10 +56,10 @@ function graceful_shutdown(reason) {
 		if (error) return;
 
 		if (shutdown_timeout_id) {
-			shutdown_timeout_id = clearTimeout(shutdown_timeout_id);
+			clearTimeout(shutdown_timeout_id);
 		}
 		if (idle_timeout_id) {
-			idle_timeout_id = clearTimeout(idle_timeout_id);
+			clearTimeout(idle_timeout_id);
 		}
 
 		// @ts-expect-error custom events cannot be typed
