@@ -1,5 +1,14 @@
 # @sveltejs/adapter-node
 
+## 5.1.1
+
+### Patch Changes
+
+- fix: do not create more than one shutdown timeout ([#12359](https://github.com/sveltejs/kit/pull/12359))
+
+- Updated dependencies [[`835ebf6ce9979203992cca30f434b3785afae818`](https://github.com/sveltejs/kit/commit/835ebf6ce9979203992cca30f434b3785afae818)]:
+  - @sveltejs/kit@2.5.16
+
 ## 5.1.0
 
 ### Minor Changes
