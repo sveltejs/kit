@@ -1,7 +1,13 @@
 {
 	"name": "@sveltejs/amp",
-	"version": "1.1.0",
+	"version": "1.1.1",
 	"description": "AMP integration for SvelteKit",
+	"keywords": [
+		"accelerated mobile pages",
+		"amp",
+		"svelte",
+		"sveltekit"
+	],
 	"repository": {
 		"type": "git",
 		"url": "https://github.com/sveltejs/kit",
@@ -23,8 +29,12 @@
 		"index.d.ts"
 	],
 	"scripts": {
+		"check": "tsc",
 		"lint": "prettier --check .",
 		"format": "pnpm lint --write"
+	},
+	"devDependencies": {
+		"typescript": "^5.3.3"
 	},
 	"peerDependencies": {
 		"@sveltejs/kit": "^1.0.0 || ^2.0.0"

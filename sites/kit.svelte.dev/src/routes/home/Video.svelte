@@ -120,7 +120,7 @@
 	</video>
 
 	{#if d}
-		<div class="progress-bar" style={`width: ${(t / d) * 100}%`} />
+		<div class="progress-bar" style={`width: ${(t / d) * 100}%`}></div>
 	{/if}
 
 	<div class="top-controls">

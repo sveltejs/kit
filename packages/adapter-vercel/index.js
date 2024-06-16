@@ -3,7 +3,8 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { nodeFileTrace } from '@vercel/nft';
 import esbuild from 'esbuild';
-import { get_pathname } from './utils.js';
+import { get_pathname, pattern_to_src } from './utils.js';
+import { VERSION } from '@sveltejs/kit';
 
 const name = '@sveltejs/adapter-vercel';
 const DEFAULT_FUNCTION_NAME = 'fn';
@@ -21,7 +22,7 @@ const get_default_runtime = () => {
 // https://vercel.com/docs/functions/edge-functions/edge-runtime#compatible-node.js-modules
 const compatible_node_modules = ['async_hooks', 'events', 'buffer', 'assert', 'util'];
 
-/** @type {import('.').default} **/
+/** @type {import('./index.js').default} **/
 const plugin = function (defaults = {}) {
 	if ('edge' in defaults) {
 		throw new Error("{ edge: true } has been removed in favour of { runtime: 'edge' }");
@@ -57,14 +58,19 @@ const plugin = function (defaults = {}) {
 				functions: `${dir}/functions`
 			};
 
-			const static_config = static_vercel_config(builder, defaults);
+			builder.log.minor('Copying assets...');
+
+			builder.writeClient(dirs.static);
+			builder.writePrerendered(dirs.static);
+
+			const static_config = static_vercel_config(builder, defaults, dirs.static);
 
 			builder.log.minor('Generating serverless function...');
 
 			/**
 			 * @param {string} name
-			 * @param {import('.').ServerlessConfig} config
-			 * @param {import('@sveltejs/kit').RouteDefinition<import('.').Config>[]} routes
+			 * @param {import('./index.js').ServerlessConfig} config
+			 * @param {import('@sveltejs/kit').RouteDefinition<import('./index.js').Config>[]} routes
 			 */
 			async function generate_serverless_function(name, config, routes) {
 				const dir = `${dirs.functions}/${name}.func`;
@@ -93,8 +99,8 @@ const plugin = function (defaults = {}) {
 
 			/**
 			 * @param {string} name
-			 * @param {import('.').EdgeConfig} config
-			 * @param {import('@sveltejs/kit').RouteDefinition<import('.').EdgeConfig>[]} routes
+			 * @param {import('./index.js').EdgeConfig} config
+			 * @param {import('@sveltejs/kit').RouteDefinition<import('./index.js').EdgeConfig>[]} routes
 			 */
 			async function generate_edge_function(name, config, routes) {
 				const tmp = builder.getBuildDirectory(`vercel-tmp/${name}`);
@@ -140,7 +146,8 @@ const plugin = function (defaults = {}) {
 
 						console.error(formatted.join('\n'));
 					}
-				} catch (error) {
+				} catch (err) {
+					const error = /** @type {import('esbuild').BuildFailure} */ (err);
 					for (const e of error.errors) {
 						for (const node of e.notes) {
 							const match =
@@ -174,7 +181,11 @@ const plugin = function (defaults = {}) {
 						{
 							runtime: config.runtime,
 							regions: config.regions,
-							entrypoint: 'index.js'
+							entrypoint: 'index.js',
+							framework: {
+								slug: 'sveltekit',
+								version: VERSION
+							}
 						},
 						null,
 						'\t'
@@ -182,7 +193,7 @@ const plugin = function (defaults = {}) {
 				);
 			}
 
-			/** @type {Map<string, { i: number, config: import('.').Config, routes: import('@sveltejs/kit').RouteDefinition<import('.').Config>[] }>} */
+			/** @type {Map<string, { i: number, config: import('./index.js').Config, routes: import('@sveltejs/kit').RouteDefinition<import('./index.js').Config>[] }>} */
 			const groups = new Map();
 
 			/** @type {Map<string, { hash: string, route_id: string }>} */
@@ -191,7 +202,7 @@ const plugin = function (defaults = {}) {
 			/** @type {Map<string, string>} */
 			const functions = new Map();
 
-			/** @type {Map<import('@sveltejs/kit').RouteDefinition<import('.').Config>, { expiration: number | false, bypassToken: string | undefined, allowQuery: string[], group: number, passQuery: true }>} */
+			/** @type {Map<import('@sveltejs/kit').RouteDefinition<import('./index.js').Config>, { expiration: number | false, bypassToken: string | undefined, allowQuery: string[], group: number, passQuery: true }>} */
 			const isr_config = new Map();
 
 			/** @type {Set<string>} */
@@ -210,7 +221,7 @@ const plugin = function (defaults = {}) {
 				}
 
 				const node_runtime = /nodejs([0-9]+)\.x/.exec(runtime);
-				if (runtime !== 'edge' && (!node_runtime || node_runtime[1] < 18)) {
+				if (runtime !== 'edge' && (!node_runtime || parseInt(node_runtime[1]) < 18)) {
 					throw new Error(
 						`Invalid runtime '${runtime}' for route ${route.id}. Valid runtimes are 'edge' and 'nodejs18.x' or higher ` +
 							'(see the Node.js Version section in your Vercel project settings for info on the currently supported versions).'
@@ -305,18 +316,7 @@ const plugin = function (defaults = {}) {
 				if (is_prerendered(route)) continue;
 
 				const pattern = route.pattern.toString();
-
-				let src = pattern
-					// remove leading / and trailing $/
-					.slice(1, -2)
-					// replace escaped \/ with /
-					.replace(/\\\//g, '/');
-
-				// replace the root route "^/" with "^/?"
-				if (src === '^/') {
-					src = '^/?';
-				}
-
+				const src = pattern_to_src(pattern);
 				const name = functions.get(pattern) ?? 'fn-0';
 
 				const isr = isr_config.get(route);
@@ -374,11 +374,6 @@ const plugin = function (defaults = {}) {
 			// including ISR aliases if there is only one function
 			static_config.routes.push({ src: '/.*', dest: `/${DEFAULT_FUNCTION_NAME}` });
 
-			builder.log.minor('Copying assets...');
-
-			builder.writeClient(dirs.static);
-			builder.writePrerendered(dirs.static);
-
 			builder.log.minor('Writing routes...');
 
 			write(`${dir}/config.json`, JSON.stringify(static_config, null, '\t'));
@@ -401,7 +396,7 @@ const plugin = function (defaults = {}) {
 	};
 };
 
-/** @param {import('.').EdgeConfig & import('.').ServerlessConfig} config */
+/** @param {import('./index.js').EdgeConfig & import('./index.js').ServerlessConfig} config */
 function hash_config(config) {
 	return [
 		config.runtime ?? '',
@@ -430,16 +425,17 @@ function write(file, data) {
 // This function is duplicated in adapter-static
 /**
  * @param {import('@sveltejs/kit').Builder} builder
- * @param {import('.').Config} config
+ * @param {import('./index.js').Config} config
+ * @param {string} dir
  */
-function static_vercel_config(builder, config) {
+function static_vercel_config(builder, config, dir) {
 	/** @type {any[]} */
 	const prerendered_redirects = [];
 
 	/** @type {Record<string, { path: string }>} */
 	const overrides = {};
 
-	/** @type {import('./index').ImagesConfig} */
+	/** @type {import('./index.js').ImagesConfig | undefined} */
 	const images = config.images;
 
 	for (const [src, redirect] of builder.prerendered.redirects) {
@@ -473,20 +469,60 @@ function static_vercel_config(builder, config) {
 		overrides[page.file] = { path: overrides_path };
 	}
 
+	const routes = [
+		...prerendered_redirects,
+		{
+			src: `/${builder.getAppPath()}/immutable/.+`,
+			headers: {
+				'cache-control': 'public, immutable, max-age=31536000'
+			}
+		}
+	];
+
+	// https://vercel.com/docs/deployments/skew-protection
+	if (process.env.VERCEL_SKEW_PROTECTION_ENABLED) {
+		routes.push({
+			src: '/.*',
+			has: [
+				{
+					type: 'header',
+					key: 'Sec-Fetch-Dest',
+					value: 'document'
+				}
+			],
+			headers: {
+				'Set-Cookie': `__vdpl=${process.env.VERCEL_DEPLOYMENT_ID}; Path=${builder.config.kit.paths.base}/; SameSite=Strict; Secure; HttpOnly`
+			},
+			continue: true
+		});
+
+		// this is a dreadful hack that is necessary until the Vercel Build Output API
+		// allows you to set multiple cookies for a single route. essentially, since we
+		// know that the entry file will be requested immediately, we can set the second
+		// cookie in _that_ response rather than the document response
+		const base = `${dir}/${builder.config.kit.appDir}/immutable/entry`;
+		const entry = fs.readdirSync(base).find((file) => file.startsWith('start.'));
+
+		if (!entry) {
+			throw new Error('Could not find entry point');
+		}
+
+		routes.splice(-2, 0, {
+			src: `/${builder.getAppPath()}/immutable/entry/${entry}`,
+			headers: {
+				'Set-Cookie': `__vdpl=; Path=/${builder.getAppPath()}/version.json; SameSite=Strict; Secure; HttpOnly`
+			},
+			continue: true
+		});
+	}
+
+	routes.push({
+		handle: 'filesystem'
+	});
+
 	return {
 		version: 3,
-		routes: [
-			...prerendered_redirects,
-			{
-				src: `/${builder.getAppPath()}/immutable/.+`,
-				headers: {
-					'cache-control': 'public, immutable, max-age=31536000'
-				}
-			},
-			{
-				handle: 'filesystem'
-			}
-		],
+		routes,
 		overrides,
 		images
 	};
@@ -496,7 +532,7 @@ function static_vercel_config(builder, config) {
  * @param {import('@sveltejs/kit').Builder} builder
  * @param {string} entry
  * @param {string} dir
- * @param {import('.').ServerlessConfig} config
+ * @param {import('./index.js').ServerlessConfig} config
  */
 async function create_function_bundle(builder, entry, dir, config) {
 	fs.rmSync(dir, { force: true, recursive: true });
@@ -599,7 +635,11 @@ async function create_function_bundle(builder, entry, dir, config) {
 				maxDuration: config.maxDuration,
 				handler: path.relative(base + ancestor, entry),
 				launcherType: 'Nodejs',
-				experimentalResponseStreaming: !config.isr
+				experimentalResponseStreaming: !config.isr,
+				framework: {
+					slug: 'sveltekit',
+					version: VERSION
+				}
 			},
 			null,
 			'\t'

@@ -1,5 +1,23 @@
 # @sveltejs/package
 
+## 2.3.2
+
+### Patch Changes
+
+- chore: add keywords for discovery in npm search ([#12330](https://github.com/sveltejs/kit/pull/12330))
+
+## 2.3.1
+
+### Patch Changes
+
+- fix: don't strip `lang="ts"` tag in Svelte 5 ([#12080](https://github.com/sveltejs/kit/pull/12080))
+
+## 2.3.0
+
+### Minor Changes
+
+- feat: add option to specify the tsconfig/jsconfig ([#11698](https://github.com/sveltejs/kit/pull/11698))
+
 ## 2.2.7
 
 ### Patch Changes

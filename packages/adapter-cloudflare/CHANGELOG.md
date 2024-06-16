@@ -1,5 +1,48 @@
 # @sveltejs/adapter-cloudflare
 
+## 4.4.1
+
+### Patch Changes
+
+- chore: add keywords for discovery in npm search ([#12330](https://github.com/sveltejs/kit/pull/12330))
+
+- Updated dependencies [[`25acb1d9fce998dccd8050b93cf4142c2b082611`](https://github.com/sveltejs/kit/commit/25acb1d9fce998dccd8050b93cf4142c2b082611), [`642c4a4aff4351b786fe6274aa2f0bf7d905faf9`](https://github.com/sveltejs/kit/commit/642c4a4aff4351b786fe6274aa2f0bf7d905faf9), [`0a0e9aa897123ebec50af08e9385b2ca4fc5bb28`](https://github.com/sveltejs/kit/commit/0a0e9aa897123ebec50af08e9385b2ca4fc5bb28)]:
+  - @sveltejs/kit@2.5.11
+
+## 4.4.0
+
+### Minor Changes
+
+- chore(deps): upgrade esbuild ([#12118](https://github.com/sveltejs/kit/pull/12118))
+
+### Patch Changes
+
+- Updated dependencies [[`bbab296f6fcc05af6b999182798bcdedabbaa4c9`](https://github.com/sveltejs/kit/commit/bbab296f6fcc05af6b999182798bcdedabbaa4c9)]:
+  - @sveltejs/kit@2.5.6
+
+## 4.3.0
+
+### Minor Changes
+
+- feat: support platform emulation configuration via the `platformProxy` adapter option ([#12011](https://github.com/sveltejs/kit/pull/12011))
+
+## 4.2.1
+
+### Patch Changes
+
+- fix: add `workerd` to esbuild conditions ([#12069](https://github.com/sveltejs/kit/pull/12069))
+
+## 4.2.0
+
+### Minor Changes
+
+- feat: emulate Cloudflare Workers bindings and incoming request properties in `event.platform` for `dev` and `preview` ([#11974](https://github.com/sveltejs/kit/pull/11974))
+
+### Patch Changes
+
+- Updated dependencies [[`4562275ed42964148df03c79434172024897c08c`](https://github.com/sveltejs/kit/commit/4562275ed42964148df03c79434172024897c08c)]:
+  - @sveltejs/kit@2.5.4
+
 ## 4.1.0
 
 ### Minor Changes

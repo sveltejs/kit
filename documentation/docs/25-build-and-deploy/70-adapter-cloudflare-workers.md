@@ -17,10 +17,28 @@ import adapter from '@sveltejs/adapter-cloudflare-workers';
 
 export default {
 	kit: {
-		adapter: adapter()
+		adapter: adapter({
+      config: 'wrangler.toml',
+			platformProxy: {
+				configPath: 'wrangler.toml',
+				environment: undefined,
+				experimentalJsonConfig: false,
+				persist: false
+			}
+    })
 	}
 };
 ```
+
+## Options
+
+### config
+
+Path to your custom `wrangler.toml` config file.
+
+### platformProxy
+
+Preferences for the emulated `platform.env` local bindings. See the [getPlatformProxy](https://developers.cloudflare.com/workers/wrangler/api/#syntax) Wrangler API documentation for a full list of options.
 
 ## Basic Configuration
 
@@ -63,19 +81,7 @@ wrangler deploy
 
 ## Custom config
 
-If you would like to use a config file other than `wrangler.toml`, you can do like so:
-
-```js
-// @errors: 2307
-/// file: svelte.config.js
-import adapter from '@sveltejs/adapter-cloudflare-workers';
-
-export default {
-	kit: {
-		adapter: adapter({ config: '<your-wrangler-name>.toml' })
-	}
-};
-```
+If you would like to use a config file other than `wrangler.toml` you can specify so using the [`config` option](#options-config).
 
 If you would like to enable [Node.js compatibility](https://developers.cloudflare.com/workers/runtime-apis/nodejs/#enable-nodejs-from-the-cloudflare-dashboard), you can add "nodejs_compat" flag to `wrangler.toml`:
 
@@ -84,9 +90,9 @@ If you would like to enable [Node.js compatibility](https://developers.cloudflar
 compatibility_flags = [ "nodejs_compat" ]
 ```
 
-## Bindings
+## Runtime APIs
 
-The [`env`](https://developers.cloudflare.com/workers/runtime-apis/fetch-event#parameters) object contains your project's [bindings](https://developers.cloudflare.com/workers/platform/environment-variables/), which consist of KV/DO namespaces, etc. It is passed to SvelteKit via the `platform` property, along with `context` and `caches`, meaning that you can access it in hooks and endpoints:
+The [`env`](https://developers.cloudflare.com/workers/runtime-apis/fetch-event#parameters) object contains your project's [bindings](https://developers.cloudflare.com/pages/platform/functions/bindings/), which consist of KV/DO namespaces, etc. It is passed to SvelteKit via the `platform` property, along with [`context`](https://developers.cloudflare.com/workers/runtime-apis/handlers/fetch/#contextwaituntil), [`caches`](https://developers.cloudflare.com/workers/runtime-apis/cache/), and [`cf`](https://developers.cloudflare.com/workers/runtime-apis/request/#the-cf-property-requestinitcfproperties), meaning that you can access it in hooks and endpoints:
 
 ```js
 // @errors: 7031
@@ -97,7 +103,7 @@ export async function POST({ request, platform }) {
 
 > SvelteKit's built-in `$env` module should be preferred for environment variables.
 
-To make these types available to your app, reference them in your `src/app.d.ts`:
+To include type declarations for your bindings, reference them in your `src/app.d.ts`:
 
 ```diff
 /// file: src/app.d.ts
@@ -117,7 +123,9 @@ export {};
 
 ### Testing Locally
 
-`platform.env` is only available in the final build and not in dev mode. For testing the build, you can use [wrangler](https://developers.cloudflare.com/workers/cli-wrangler). Once you have built your site, run `wrangler dev`. Ensure you have your [bindings](https://developers.cloudflare.com/workers/wrangler/configuration/#bindings) in your `wrangler.toml`. Wrangler version 3 is recommended.
+Cloudflare Workers specific values in the `platform` property are emulated during dev and preview modes. Local [bindings](https://developers.cloudflare.com/workers/wrangler/configuration/#bindings) are created based on the configuration in your `wrangler.toml` file and are used to populate `platform.env` during development and preview. Use the adapter config [`platformProxy` option](#options-platformproxy) to change your preferences for the bindings.
+
+For testing the build, you should use [wrangler](https://developers.cloudflare.com/workers/cli-wrangler) **version 3**. Once you have built your site, run `wrangler dev`.
 
 ## Troubleshooting
 
