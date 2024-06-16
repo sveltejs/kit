@@ -1,5 +1,11 @@
 # @sveltejs/kit
 
+## 2.5.16
+
+### Patch Changes
+
+- fix: determine local Svelte version more reliably ([#12350](https://github.com/sveltejs/kit/pull/12350))
+
 ## 2.5.15
 
 ### Patch Changes
