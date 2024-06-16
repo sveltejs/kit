@@ -68,7 +68,7 @@ If your functions need to access data in a specific region, it's recommended tha
 
 You may set the `images` config to control how Vercel builds your images. See the [image configuration reference](https://vercel.com/docs/build-output-api/v3/configuration#images) for full details. As an example, you may set:
 
-```
+```js
 /// file: svelte.config.js
 import adapter from '@sveltejs/adapter-vercel';
 
