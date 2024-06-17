@@ -24,12 +24,9 @@ export default function (options = {}) {
 	return {
 		name: '@sveltejs/adapter-cloudflare',
 		async adapt(builder) {
-			const has_routes_json = existsSync('_routes.json');
-
-			// if there are no routes inside svelte config, and _routes.json exists, user is expecting to configure cloudflare routes in the wrong way.
-			if (!options.routes && has_routes_json) {
+			if (!options.routes && existsSync('_routes.json')) {
 				throw new Error(
-					'Cloudflare routes should be configured inside svelte config, not in _routes.json'
+					'Cloudflare routes should be configured in svelte.config.js rather than _routes.json'
 				);
 			}
 
