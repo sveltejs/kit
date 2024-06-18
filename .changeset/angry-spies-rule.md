@@ -1,5 +1,5 @@
 ---
-"@sveltejs/adapter-cloudflare": patch
+"@sveltejs/adapter-cloudflare": minor
 ---
 
-chore: throw an error if `_routes.json` is detected
+feat: validate that no `_routes.json` is present to avoid overwriting it
