@@ -59,7 +59,7 @@ If you use Node.js v20.6+, you can use the [`--env-file`](https://nodejs.org/en/
 
 ```diff
 - node build
-+ node --env-file=.env --env-file=.env.production build
++ node --env-file=.env build
 ```
 
 ### `PORT`, `HOST` and `SOCKET_PATH`
