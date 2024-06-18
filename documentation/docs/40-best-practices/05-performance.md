@@ -85,7 +85,7 @@ For slow-loading data that isn't needed immediately, the object returned from yo
 
 ### Preventing waterfalls
 
-One of the biggest performance killers is what is referred to as a _waterfall_, which is a series of requests that is made sequentially. This can happen on the server or in the browser, but is especially costly when dealing with data that has to travel further or across slower networks such as a mobile user making a call to far away server.
+One of the biggest performance killers is what is referred to as a _waterfall_, which is a series of requests that is made sequentially. This can happen on the server or in the browser, but is especially costly when dealing with data that has to travel further or across slower networks such as a mobile user making a call to a far away server.
 
 In the browser, waterfalls can occur when your HTML kicks off request chains such as requesting JS which requests CSS which requests a background image and web font. SvelteKit will largely solve this class of problems for you by adding [`modulepreload`](https://developer.mozilla.org/en-US/docs/Web/HTML/Attributes/rel/modulepreload) tags or headers, but you should view [the network tab in your devtools](#diagnosing-issues) to check whether additional resources need to be preloaded.
 - Pay special attention to this if you use web [fonts](#optimizing-assets-fonts) since they need to be handled manually.
