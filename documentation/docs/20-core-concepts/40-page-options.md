@@ -76,7 +76,7 @@ For _pages_, we skirt around this problem by writing `foo/index.html` instead of
 
 ### Troubleshooting
 
-If you encounter an error like 'The following routes were marked as prerenderable, but were not prerendered' it's because the route in question (or a parent layout, if it's a page) has `export const prerender = true` but the page wasn't actually prerendered, because it wasn't reached by the prerendering crawler.
+If you encounter an error like 'The following routes were marked as prerenderable, but were not prerendered' it's because the route in question (or a parent layout, if it's a page) has `export const prerender = true` but the page wasn't reached by the prerendering crawler and thus wasn't prerendered.
 
 Since these routes cannot be dynamically server-rendered, this will cause errors when people try to access the route in question. There are three ways to fix it:
 
