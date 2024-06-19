@@ -139,6 +139,7 @@ Different bundlers handle `sideEffects` different. While not necessary for Vite,
 {
 	"sideEffects": ["**/*.css"]
 }
+```
 
 Make sure that `"sideEffects"` is correctly set. If a file with side effects is incorrectly marked as having no side effects, it can result in broken functionality. If your package has files with side effects, you can specify them in an array:
 
@@ -147,6 +148,7 @@ Make sure that `"sideEffects"` is correctly set. If a file with side effects is 
 {
     "sideEffects": ["**/*.css", "./src/sideEffectfulFile.js"]
 }
+```
 
 This will treat only the specified files as having side effects.
 
