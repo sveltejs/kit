@@ -16,7 +16,7 @@ We'll introduce these files in a moment in more detail, but here are a few simpl
 
 * All files can run on the server
 * All files run on the client except `+server` files
-* `+layout` and `+error` files affect the rendering of routes in subdirectories
+* `+layout` and `+error` files apply to subdirectories as well as the directory they live in
 
 ## +page
 
