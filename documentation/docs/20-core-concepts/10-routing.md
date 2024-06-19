@@ -14,9 +14,9 @@ Each route directory contains one or more _route files_, which can be identified
 
 Here are a few simple rules to help you remember how SvelteKit's routing works:
 
-* All files can run on the **server**
-* Files run on the **client**, except `+server` files
-* `+layout` and `+error` files affect routes in subdirectories
+* All files can run on the server
+* All files run on the client except `+server` files
+* `+layout` and `+error` files affect the rendering of routes in subdirectories
 
 ## +page
 
