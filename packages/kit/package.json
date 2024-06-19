@@ -1,7 +1,7 @@
 {
 	"name": "@sveltejs/kit",
 	"version": "2.5.1",
-	"description": "SvelteKit - the fastest way to build Svelte apps",
+	"description": "SvelteKit is the fastest way to build Svelte apps",
 	"repository": {
 		"type": "git",
 		"url": "https://github.com/sveltejs/kit",
