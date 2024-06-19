@@ -1,5 +1,16 @@
 # @sveltejs/adapter-node
 
+## 5.2.0
+
+### Minor Changes
+
+- feat: add unit suffixes to the `BODY_SIZE_LIMIT` environment variable ([#11680](https://github.com/sveltejs/kit/pull/11680))
+
+### Patch Changes
+
+- Updated dependencies [[`121836fcbf6c615fd18c79a12203613ddbe49acf`](https://github.com/sveltejs/kit/commit/121836fcbf6c615fd18c79a12203613ddbe49acf)]:
+  - @sveltejs/kit@2.5.17
+
 ## 5.1.1
 
 ### Patch Changes

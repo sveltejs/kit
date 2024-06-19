@@ -1,5 +1,11 @@
 # @sveltejs/kit
 
+## 2.5.17
+
+### Patch Changes
+
+- chore: update package description ([#11846](https://github.com/sveltejs/kit/pull/11846))
+
 ## 2.5.16
 
 ### Patch Changes
