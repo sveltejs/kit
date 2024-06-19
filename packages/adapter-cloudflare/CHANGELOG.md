@@ -1,5 +1,16 @@
 # @sveltejs/adapter-cloudflare
 
+## 4.5.0
+
+### Minor Changes
+
+- feat: validate that no `_routes.json` is present to avoid overwriting it ([#12360](https://github.com/sveltejs/kit/pull/12360))
+
+### Patch Changes
+
+- Updated dependencies [[`121836fcbf6c615fd18c79a12203613ddbe49acf`](https://github.com/sveltejs/kit/commit/121836fcbf6c615fd18c79a12203613ddbe49acf)]:
+  - @sveltejs/kit@2.5.17
+
 ## 4.4.1
 
 ### Patch Changes
