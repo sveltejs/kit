@@ -1,5 +1,47 @@
 # @sveltejs/adapter-vercel
 
+## 5.3.2
+
+### Patch Changes
+
+- fix: remove `images` from route-level config ([#12280](https://github.com/sveltejs/kit/pull/12280))
+
+- chore: add keywords for discovery in npm search ([#12330](https://github.com/sveltejs/kit/pull/12330))
+
+- Updated dependencies [[`25acb1d9fce998dccd8050b93cf4142c2b082611`](https://github.com/sveltejs/kit/commit/25acb1d9fce998dccd8050b93cf4142c2b082611), [`642c4a4aff4351b786fe6274aa2f0bf7d905faf9`](https://github.com/sveltejs/kit/commit/642c4a4aff4351b786fe6274aa2f0bf7d905faf9), [`0a0e9aa897123ebec50af08e9385b2ca4fc5bb28`](https://github.com/sveltejs/kit/commit/0a0e9aa897123ebec50af08e9385b2ca4fc5bb28)]:
+  - @sveltejs/kit@2.5.11
+
+## 5.3.1
+
+### Patch Changes
+
+- chore(deps): upgrade to `@vercel/nft` version 0.27.1 ([#12274](https://github.com/sveltejs/kit/pull/12274))
+
+## 5.3.0
+
+### Minor Changes
+
+- chore(deps): upgrade esbuild ([#12118](https://github.com/sveltejs/kit/pull/12118))
+
+### Patch Changes
+
+- Updated dependencies [[`bbab296f6fcc05af6b999182798bcdedabbaa4c9`](https://github.com/sveltejs/kit/commit/bbab296f6fcc05af6b999182798bcdedabbaa4c9)]:
+  - @sveltejs/kit@2.5.6
+
+## 5.2.0
+
+### Minor Changes
+
+- feat: add framework metadata in Vercel build output files ([#11800](https://github.com/sveltejs/kit/pull/11800))
+
+- feat: implement version skew protection ([#11987](https://github.com/sveltejs/kit/pull/11987))
+
+## 5.1.1
+
+### Patch Changes
+
+- fix: handle optional and rest routes for incremental static regeneration (ISR) correctly ([#11928](https://github.com/sveltejs/kit/pull/11928))
+
 ## 5.1.0
 
 ### Minor Changes

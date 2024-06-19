@@ -1,5 +1,60 @@
 # @sveltejs/adapter-node
 
+## 5.1.1
+
+### Patch Changes
+
+- fix: do not create more than one shutdown timeout ([#12359](https://github.com/sveltejs/kit/pull/12359))
+
+- Updated dependencies [[`835ebf6ce9979203992cca30f434b3785afae818`](https://github.com/sveltejs/kit/commit/835ebf6ce9979203992cca30f434b3785afae818)]:
+  - @sveltejs/kit@2.5.16
+
+## 5.1.0
+
+### Minor Changes
+
+- feat: add shutdown event ([#12153](https://github.com/sveltejs/kit/pull/12153))
+
+### Patch Changes
+
+- fix: close keep-alive connections as soon as possible during graceful shutdown rather than accepting new requests ([#12153](https://github.com/sveltejs/kit/pull/12153))
+
+## 5.0.2
+
+### Patch Changes
+
+- chore: update to @rollup/plugin-commonjs@26 ([#12326](https://github.com/sveltejs/kit/pull/12326))
+
+- chore(deps): update dependency @rollup/plugin-commonjs to v26 ([`9aa59db67080248eb22fd227e7a491102b011c47`](https://github.com/sveltejs/kit/commit/9aa59db67080248eb22fd227e7a491102b011c47))
+
+- chore: add keywords for discovery in npm search ([#12330](https://github.com/sveltejs/kit/pull/12330))
+
+- Updated dependencies [[`25acb1d9fce998dccd8050b93cf4142c2b082611`](https://github.com/sveltejs/kit/commit/25acb1d9fce998dccd8050b93cf4142c2b082611), [`642c4a4aff4351b786fe6274aa2f0bf7d905faf9`](https://github.com/sveltejs/kit/commit/642c4a4aff4351b786fe6274aa2f0bf7d905faf9), [`0a0e9aa897123ebec50af08e9385b2ca4fc5bb28`](https://github.com/sveltejs/kit/commit/0a0e9aa897123ebec50af08e9385b2ca4fc5bb28)]:
+  - @sveltejs/kit@2.5.11
+
+## 5.0.1
+
+### Patch Changes
+
+- fix: regression preventing built application from starting ([#11960](https://github.com/sveltejs/kit/pull/11960))
+
+## 5.0.0
+
+### Major Changes
+
+- breaking: add graceful shutdown ([#11653](https://github.com/sveltejs/kit/pull/11653))
+
+- breaking: change default value of `precompress` option to true to serve precompressed assets by default ([#11945](https://github.com/sveltejs/kit/pull/11945))
+
+### Minor Changes
+
+- feat: add systemd socket activation ([#11653](https://github.com/sveltejs/kit/pull/11653))
+
+### Patch Changes
+
+- Updated dependencies [[`873a09eac86817d1cbb53bf3f9c8842d7346d20d`](https://github.com/sveltejs/kit/commit/873a09eac86817d1cbb53bf3f9c8842d7346d20d), [`30c78f223a4f9e6c4547d087338a8b8cc477ba55`](https://github.com/sveltejs/kit/commit/30c78f223a4f9e6c4547d087338a8b8cc477ba55)]:
+  - @sveltejs/kit@2.5.3
+
 ## 4.0.1
 
 ### Patch Changes

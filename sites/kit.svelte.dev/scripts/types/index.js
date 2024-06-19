@@ -162,7 +162,7 @@ function munge_type_element(member, depth = 1) {
 	/** @type {string[]} */
 	const children = [];
 
-	const name = member.name?.escapedText;
+	const name = member.name?.escapedText ?? member.name?.getText() ?? 'unknown';
 	let snippet = member.getText();
 
 	for (let i = -1; i < depth; i += 1) {
@@ -192,31 +192,31 @@ function munge_type_element(member, depth = 1) {
 
 		switch (tag.tagName.escapedText) {
 			case 'private':
-				bullets.push(`- <span class="tag">private</span> ${tag.comment}`);
+				bullets.push(`- <span class="tag">private</span> ${tag.comment || ''}`);
 				break;
 
 			case 'readonly':
-				bullets.push(`- <span class="tag">readonly</span> ${tag.comment}`);
+				bullets.push(`- <span class="tag">readonly</span> ${tag.comment || ''}`);
 				break;
 
 			case 'param':
-				bullets.push(`- \`${tag.name.getText()}\` ${tag.comment}`);
+				bullets.push(`- \`${tag.name.getText()}\` ${tag.comment || ''}`);
 				break;
 
 			case 'default':
-				bullets.push(`- <span class="tag">default</span> \`${tag.comment}\``);
+				bullets.push(`- <span class="tag">default</span> \`${tag.comment || ''}\``);
 				break;
 
 			case 'returns':
-				bullets.push(`- <span class="tag">returns</span> ${tag.comment}`);
+				bullets.push(`- <span class="tag">returns</span> ${tag.comment || ''}`);
 				break;
 
 			case 'deprecated':
-				bullets.push(`- <span class="tag deprecated">deprecated</span> ${tag.comment}`);
+				bullets.push(`- <span class="tag deprecated">deprecated</span> ${tag.comment || ''}`);
 				break;
 
 			default:
-				console.log(`unhandled JSDoc tag: ${type}`); // TODO indicate deprecated stuff
+				console.log(`unhandled JSDoc tag: ${type}`);
 		}
 	}
 

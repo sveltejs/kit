@@ -85,7 +85,7 @@ export async function respond(request, options, manifest, state) {
 	let rerouted_path;
 	try {
 		rerouted_path = options.hooks.reroute({ url: new URL(url) }) ?? url.pathname;
-	} catch (e) {
+	} catch {
 		return text('Internal Server Error', {
 			status: 500
 		});

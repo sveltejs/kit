@@ -827,6 +827,11 @@ test.describe('cookies', () => {
 		await page.locator('button').click();
 		await expect(page.locator('p')).toHaveText('foo=bar');
 	});
+
+	test("fetch during SSR doesn't un- and re-escape cookies", async ({ page }) => {
+		await page.goto('/cookies/collect-without-re-escaping');
+		await expect(page.locator('p')).toHaveText('cookie-special-characters="foo"');
+	});
 });
 
 test.describe('Interactivity', () => {
