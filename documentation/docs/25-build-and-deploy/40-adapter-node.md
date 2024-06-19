@@ -129,7 +129,7 @@ We instead read from the _right_, accounting for the number of trusted proxies. 
 
 ### `BODY_SIZE_LIMIT`
 
-The maximum request body size to accept in bytes including while streaming. Defaults to 512kb. You can disable this option with a value of `Infinity` (0 in older versions of the adapter) and implement a custom check in [`handle`](hooks#server-hooks-handle) if you need something more advanced.
+The maximum request body size to accept in bytes including while streaming. The body size can also be specified with a unit suffix for kilobytes (`K`), megabytes (`M`), or gigabytes (`G`). For example, `512K` or `1M`. Defaults to 512kb. You can disable this option with a value of `Infinity` (0 in older versions of the adapter) and implement a custom check in [`handle`](hooks#server-hooks-handle) if you need something more advanced.
 
 ### `SHUTDOWN_TIMEOUT`
 
@@ -138,8 +138,6 @@ The number of seconds to wait before forcefully closing any remaining connection
 ### `IDLE_TIMEOUT`
 
 When using systemd socket activation, `IDLE_TIMEOUT` specifies the number of seconds after which the app is automatically put to sleep when receiving no requests. If not set, the app runs continuously. See [Socket activation](#socket-activation) for more details.
-
-The body size variable can also specify unit suffixes for kilobytes (`K`), megabytes (`M`), and gigabytes (`G`). For example `512K` and `1M`
 
 ## Options
 
