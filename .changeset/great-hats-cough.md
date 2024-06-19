@@ -2,4 +2,4 @@
 "@sveltejs/adapter-node": minor
 ---
 
-feat: Add unit suffixes to BODY_SIZE_LIMIT environment variable
+feat: add unit suffixes to the `BODY_SIZE_LIMIT` environment variable
