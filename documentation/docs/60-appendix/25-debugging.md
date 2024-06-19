@@ -45,7 +45,7 @@ Further reading: <https://code.visualstudio.com/docs/editor/debugging>.
 
 ## Other Editors
 
-While it's not feasible to provide guides to debugging svelte in other editors here, we've compiled a few community resources that might help if Visual Studio Code is not your preferred IDE:
+If you use a different editor, these community guides might be useful for you:
 
 - [WebStorm Svelte: Debug Your Application](https://www.jetbrains.com/help/webstorm/svelte.html#ws_svelte_debug)
 - [Debugging JavaScript Frameworks in Neovim](https://theosteiner.de/debugging-javascript-frameworks-in-neovim)
