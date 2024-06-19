@@ -43,6 +43,13 @@ Here's an example `launch.json`:
 
 Further reading: <https://code.visualstudio.com/docs/editor/debugging>.
 
+## Other Editors
+
+If you use a different editor, these community guides might be useful for you:
+
+- [WebStorm Svelte: Debug Your Application](https://www.jetbrains.com/help/webstorm/svelte.html#ws_svelte_debug)
+- [Debugging JavaScript Frameworks in Neovim](https://theosteiner.de/debugging-javascript-frameworks-in-neovim)
+
 ## Google Chrome and Microsoft Edge Developer Tools
 
 It's possible to debug Node.js applications using a browser-based debugger.
