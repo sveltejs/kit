@@ -1587,6 +1587,7 @@ declare module '@sveltejs/kit' {
 		app_path: string;
 		manifest_data: ManifestData;
 		out_dir: string;
+		asset_prefix: string;
 		service_worker: string | null;
 		client: {
 			start: string;
