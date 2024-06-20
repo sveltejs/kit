@@ -13,6 +13,7 @@ import {
 	PrerenderEntryGeneratorMismatchHandlerValue,
 	PrerenderHttpErrorHandlerValue,
 	PrerenderMissingIdHandlerValue,
+	PrerenderMissingRoutesHandlerValue,
 	PrerenderOption,
 	RequestOptions,
 	RouteSegment
@@ -600,6 +601,18 @@ export interface KitConfig {
 		 * @since 1.16.0
 		 */
 		handleEntryGeneratorMismatch?: PrerenderEntryGeneratorMismatchHandlerValue;
+		/**
+		 * How to respond when a route is marked as prerenderable but has not been prerendered.
+		 *
+		 * - `'fail'` — fail the build
+		 * - `'ignore'` - silently ignore the failure and continue
+		 * - `'warn'` — continue, but print a warning
+		 * - `(details) => void` — a custom error handler that takes a `details` object with `notPrerenderedRoutes` property. If you `throw` from this function, the build will fail
+		 *
+		 * @default "fail"
+		 * @since 2.5.0
+		 */
+		handleNotPrerenderedRoutes?: PrerenderMissingRoutesHandlerValue;
 		/**
 		 * The value of `url.origin` during prerendering; useful if it is included in rendered content.
 		 * @default "http://sveltekit-prerender"
