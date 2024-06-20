@@ -29,9 +29,12 @@ export default {
 				include: ['/*'],
 				exclude: ['<all>']
 			},
-      platformProxy: {
-        persist: './your-custom-path'
-      }
+			platformProxy: {
+				configPath: 'wrangler.toml',
+				environment: undefined,
+				experimentalJsonConfig: false,
+				persist: false
+			}
 		})
 	}
 };

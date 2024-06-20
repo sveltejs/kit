@@ -30,11 +30,6 @@ export interface ServerlessConfig {
 	split?: boolean;
 
 	/**
-	 * https://vercel.com/docs/build-output-api/v3/configuration#images
-	 */
-	images?: ImagesConfig;
-
-	/**
 	 * [Incremental Static Regeneration](https://vercel.com/docs/concepts/incremental-static-regeneration/overview) configuration.
 	 * Serverless only.
 	 */
@@ -100,7 +95,12 @@ export interface EdgeConfig {
 	split?: boolean;
 }
 
-export type Config = EdgeConfig | ServerlessConfig;
+export type Config = (EdgeConfig | ServerlessConfig) & {
+	/**
+	 * https://vercel.com/docs/build-output-api/v3/configuration#images
+	 */
+	images?: ImagesConfig;
+};
 
 // we copy the RequestContext interface from `@vercel/edge` because that package can't co-exist with `@types/node`.
 // see https://github.com/sveltejs/kit/pull/9280#issuecomment-1452110035

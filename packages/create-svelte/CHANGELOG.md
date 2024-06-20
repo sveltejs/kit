@@ -1,5 +1,37 @@
 # create-svelte
 
+## 6.3.2
+
+### Patch Changes
+
+- chore: update text about svelte-add ([#12337](https://github.com/sveltejs/kit/pull/12337))
+
+## 6.3.1
+
+### Patch Changes
+
+- chore: overhaul ignore configs ([#11938](https://github.com/sveltejs/kit/pull/11938))
+
+- chore: add keywords for discovery in npm search ([#12330](https://github.com/sveltejs/kit/pull/12330))
+
+## 6.3.0
+
+### Minor Changes
+
+- feat: upgrade eslint to v9 ([#12268](https://github.com/sveltejs/kit/pull/12268))
+
+## 6.2.1
+
+### Patch Changes
+
+- fix: update default playwright test case for lib-project ([#12261](https://github.com/sveltejs/kit/pull/12261))
+
+## 6.2.0
+
+### Minor Changes
+
+- feat: make TypeScript the default for apps ([#12186](https://github.com/sveltejs/kit/pull/12186))
+
 ## 6.1.2
 
 ### Patch Changes
@@ -10,7 +42,7 @@
 
 ### Patch Changes
 
-- fix: go back to eslint 8 until typescript-eslint supports eslint 9 ([#12110](https://github.com/sveltejs/kit/pull/12110))
+- fix: go back to eslint 8 until typescript-eslint supports eslint 9 ([#12124](https://github.com/sveltejs/kit/pull/12124))
 
 ## 6.1.0
 

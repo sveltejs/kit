@@ -12,6 +12,12 @@ At the heart of SvelteKit is a _filesystem-based router_. The routes of your app
 
 Each route directory contains one or more _route files_, which can be identified by their `+` prefix.
 
+We'll introduce these files in a moment in more detail, but here are a few simple rules to help you remember how SvelteKit's routing works:
+
+* All files can run on the server
+* All files run on the client except `+server` files
+* `+layout` and `+error` files apply to subdirectories as well as the directory they live in
+
 ## +page
 
 ### +page.svelte
