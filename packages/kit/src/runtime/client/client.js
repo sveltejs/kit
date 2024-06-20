@@ -1173,11 +1173,11 @@ function get_navigation_url(url) {
  * @param {boolean} invalidating
  */
 function get_navigation_intent(url, invalidating) {
-	if (!url) return undefined;
+	if (!url) return;
 	if (is_external_url(url, base)) return;
 
 	const rerouted = get_navigation_url(url);
-	if (!rerouted) return undefined;
+	if (!rerouted) return;
 
 	const path = get_url_path(rerouted);
 
