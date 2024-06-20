@@ -2,4 +2,4 @@
 "@sveltejs/kit": patch
 ---
 
-Fix data-sveltekit-preload-code="viewport" attempting to preload absolute URLs
+fix: support absolute URLs with `data-sveltekit-preload-code="viewport"`
