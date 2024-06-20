@@ -33,7 +33,7 @@ export function resolve_aliases(input, file, content, aliases) {
 		return match;
 	};
 
-	content = content.replace(/from\s+('|")([^"';,]+?)\1/g, replace_import_path);
+	content = content.replace(/(?:import|from)\s*('|")([^"';,]+?)\1/g, replace_import_path);
 	content = content.replace(/import\s*\(\s*('|")([^"';,]+?)\1\s*\)/g, replace_import_path);
 	return content;
 }
