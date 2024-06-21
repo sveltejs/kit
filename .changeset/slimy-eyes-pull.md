@@ -2,4 +2,4 @@
 "@sveltejs/kit": patch
 ---
 
-fix hooks.server code triggering a client import error
+fix: prevent client import error when a `hooks.server` file imports a private environment variable
