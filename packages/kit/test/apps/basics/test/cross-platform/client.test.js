@@ -214,16 +214,48 @@ test.describe('Navigation lifecycle functions', () => {
 		expect(await page.innerHTML('pre')).toBe('2 false goto');
 	});
 
-	test('beforeNavigate is triggered after clicking a download link', async ({ page, baseURL }) => {
+	test('beforeNavigate is triggered after clicking an explicit download link', async ({
+		page,
+		baseURL
+	}) => {
 		await page.goto('/navigation-lifecycle/before-navigate/prevent-navigation');
 
-		await page.click('a[download]');
-		expect(await page.innerHTML('pre')).toBe('0 false undefined');
+		const download = page.waitForEvent('download', { timeout: 3000 });
+		await page.locator('a[download]').click();
+		await (await download).cancel();
+
+		const current_url = baseURL + '/navigation-lifecycle/before-navigate/prevent-navigation';
+
+		expect(page.url()).toBe(current_url);
+		expect(await page.locator('pre').innerText()).toBe('0 false undefined');
 
 		await page.click('a[href="/navigation-lifecycle/before-navigate/a"]');
+		await page.waitForLoadState('networkidle');
 
-		expect(page.url()).toBe(baseURL + '/navigation-lifecycle/before-navigate/prevent-navigation');
-		expect(await page.innerHTML('pre')).toBe('1 false link');
+		expect(page.url()).toBe(current_url);
+		expect(await page.locator('pre').innerText()).toBe('1 false link');
+	});
+
+	test('beforeNavigate is triggered after clicking an implicit download link', async ({
+		page,
+		baseURL
+	}) => {
+		await page.goto('/navigation-lifecycle/before-navigate/prevent-navigation');
+
+		const download = page.waitForEvent('download', { timeout: 3000 });
+		await page.locator('a[href="/navigation-lifecycle/before-navigate/download"]').click();
+		await (await download).cancel();
+
+		const current_url = baseURL + '/navigation-lifecycle/before-navigate/prevent-navigation';
+
+		expect(page.url()).toBe(current_url);
+		expect(await page.locator('pre').innerText()).toBe('1 true link');
+
+		await page.click('a[href="/navigation-lifecycle/before-navigate/a"]');
+		await page.waitForLoadState('networkidle');
+
+		expect(page.url()).toBe(current_url);
+		expect(await page.locator('pre').innerText()).toBe('2 false link');
 	});
 
 	test('afterNavigate calls callback', async ({ page, clicknav }) => {
