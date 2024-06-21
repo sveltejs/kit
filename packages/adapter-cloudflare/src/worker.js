@@ -1,11 +1,13 @@
 import { Server } from 'SERVER';
-import { manifest, prerendered, app_path } from 'MANIFEST';
+import { manifest, prerendered, base_path } from 'MANIFEST';
 import * as Cache from 'worktop/cfw.cache';
 
 const server = new Server(manifest);
 
-const immutable = `/${app_path}/immutable/`;
-const version_file = `/${app_path}/version.json`;
+const app_path = `/${manifest.appPath}`;
+
+const immutable = `${app_path}/immutable/`;
+const version_file = `${app_path}/version.json`;
 
 /** @type {import('worktop/cfw').Module.Worker<{ ASSETS: import('worktop/cfw.durable').Durable.Object }>} */
 const worker = {
@@ -28,7 +30,7 @@ const worker = {
 
 		// prerendered pages and /static files
 		let is_static_asset = false;
-		const filename = stripped_pathname.substring(1);
+		const filename = stripped_pathname.slice(base_path.length + 1);
 		if (filename) {
 			is_static_asset =
 				manifest.assets.has(filename) || manifest.assets.has(filename + '/index.html');
