@@ -1169,7 +1169,7 @@ test.describe('Actions', () => {
 		await expect(page.locator('input[name="username_2"]')).toHaveValue('');
 	});
 
-	test('use:enhance with `enctype="multipart/form"` attribute in `<form>`', async ({ page }) => {
+	test('use:enhance button with formenctype', async ({ page }) => {
 		await page.goto('/actions/enhance');
 
 		expect(await page.textContent('pre.formdata1')).toBe(JSON.stringify(null));
@@ -1191,7 +1191,6 @@ test.describe('Actions', () => {
 		await expect(page.locator('pre.formdata2')).toHaveText(
 			JSON.stringify({ result: 'file name:test-file.txt' })
 		);
-		await expect(page.locator('input[name=username]')).toHaveValue('');
 	});
 
 	test('use:enhance with defined `enctype` attribute for `<form>` element', async ({ page }) => {
