@@ -1,5 +1,51 @@
 # @sveltejs/kit
 
+## 2.5.17
+
+### Patch Changes
+
+- chore: update package description ([#11846](https://github.com/sveltejs/kit/pull/11846))
+
+## 2.5.16
+
+### Patch Changes
+
+- fix: determine local Svelte version more reliably ([#12350](https://github.com/sveltejs/kit/pull/12350))
+
+## 2.5.15
+
+### Patch Changes
+
+- fix: always decode asset URLs ([#12352](https://github.com/sveltejs/kit/pull/12352))
+
+## 2.5.14
+
+### Patch Changes
+
+- fix: read non-encoded data URIs ([#12347](https://github.com/sveltejs/kit/pull/12347))
+
+## 2.5.13
+
+### Patch Changes
+
+- fix: decode asset URLs in dev when reading them, but for real this time ([#12344](https://github.com/sveltejs/kit/pull/12344))
+
+## 2.5.12
+
+### Patch Changes
+
+- fix: decode asset URLs in dev when reading them ([#12341](https://github.com/sveltejs/kit/pull/12341))
+
+## 2.5.11
+
+### Patch Changes
+
+- fix: hrefs that start with `config.prerender.origin` are now crawled ([#12277](https://github.com/sveltejs/kit/pull/12277))
+
+- chore: add keywords for discovery in npm search ([#12330](https://github.com/sveltejs/kit/pull/12330))
+
+- fix: handle whitespace in HTTP Accept header ([#12292](https://github.com/sveltejs/kit/pull/12292))
+
 ## 2.5.10
 
 ### Patch Changes

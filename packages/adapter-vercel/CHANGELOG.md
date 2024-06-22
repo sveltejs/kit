@@ -1,5 +1,22 @@
 # @sveltejs/adapter-vercel
 
+## 5.3.2
+
+### Patch Changes
+
+- fix: remove `images` from route-level config ([#12280](https://github.com/sveltejs/kit/pull/12280))
+
+- chore: add keywords for discovery in npm search ([#12330](https://github.com/sveltejs/kit/pull/12330))
+
+- Updated dependencies [[`25acb1d9fce998dccd8050b93cf4142c2b082611`](https://github.com/sveltejs/kit/commit/25acb1d9fce998dccd8050b93cf4142c2b082611), [`642c4a4aff4351b786fe6274aa2f0bf7d905faf9`](https://github.com/sveltejs/kit/commit/642c4a4aff4351b786fe6274aa2f0bf7d905faf9), [`0a0e9aa897123ebec50af08e9385b2ca4fc5bb28`](https://github.com/sveltejs/kit/commit/0a0e9aa897123ebec50af08e9385b2ca4fc5bb28)]:
+  - @sveltejs/kit@2.5.11
+
+## 5.3.1
+
+### Patch Changes
+
+- chore(deps): upgrade to `@vercel/nft` version 0.27.1 ([#12274](https://github.com/sveltejs/kit/pull/12274))
+
 ## 5.3.0
 
 ### Minor Changes

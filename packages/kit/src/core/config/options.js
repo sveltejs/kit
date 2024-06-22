@@ -246,7 +246,7 @@ const options = object(
 
 					try {
 						origin = new URL(input).origin;
-					} catch (e) {
+					} catch {
 						throw new Error(`${keypath} must be a valid origin`);
 					}
 

@@ -22,17 +22,17 @@
 	},
 	"devDependencies": {
 		"@changesets/cli": "^2.27.1",
-		"@sveltejs/eslint-config": "^6.0.4",
+		"@sveltejs/eslint-config": "^7.0.1",
 		"@svitejs/changesets-changelog-github-compact": "^1.1.0",
-		"@typescript-eslint/eslint-plugin": "^7.0.0",
-		"eslint": "^8.56.0",
+		"eslint": "^9.0.0",
 		"eslint-config-prettier": "^9.1.0",
-		"eslint-plugin-svelte": "^2.35.1",
-		"eslint-plugin-unicorn": "^53.0.0",
-		"playwright": "^1.41.0"
+		"eslint-plugin-svelte": "^2.36.0",
+		"eslint-plugin-unicorn": "^54.0.0",
+		"playwright": "^1.44.1",
+		"typescript-eslint": "^8.0.0-alpha.20"
 	},
-	"packageManager": "pnpm@8.15.7",
+	"packageManager": "pnpm@9.4.0",
 	"engines": {
-		"pnpm": "^8.0.0"
+		"pnpm": "^9.0.0"
 	}
 }

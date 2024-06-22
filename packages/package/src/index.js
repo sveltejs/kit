@@ -80,7 +80,7 @@ export async function watch(options) {
 	const watcher = chokidar.watch(input, { ignoreInitial: true });
 	const ready = new Promise((resolve) => watcher.on('ready', resolve));
 
-	watcher.on('all', async (type, filepath) => {
+	watcher.on('all', (type, filepath) => {
 		const file = analyze(path.relative(input, filepath), extensions);
 
 		pending.push({ file, type });

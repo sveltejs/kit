@@ -36,9 +36,9 @@ function detect_package_manager() {
 }
 
 /** @param {string} name */
-async function import_from_cwd(name) {
+function import_from_cwd(name) {
 	const cwd = pathToFileURL(process.cwd()).href;
-	const url = await resolve(name, cwd + '/x.js');
+	const url = resolve(name, cwd + '/x.js');
 
 	return import(url);
 }
