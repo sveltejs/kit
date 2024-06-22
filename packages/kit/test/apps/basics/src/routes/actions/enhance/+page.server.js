@@ -64,7 +64,6 @@ export const actions = {
 		const data = await request.formData();
 		const file = data.get('file');
 
-		console.log('file', file);
 
 		return {
 			// @ts-expect-error
