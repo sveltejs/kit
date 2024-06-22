@@ -175,7 +175,7 @@ export function enhance(form_element, submit = () => {}) {
 				'x-sveltekit-action': 'true'
 			});
 
-      // @ts-expect-error `URLSearchParams(form_data)` is kosher, but typescript doesn't know that
+			// @ts-expect-error `URLSearchParams(form_data)` is kosher, but typescript doesn't know that
 			const body = enctype === 'multipart/form-data' ? form_data : new URLSearchParams(form_data);
 
 			if (enctype === 'multipart/form-data' && headers.get('Content-Type')) {
