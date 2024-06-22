@@ -175,7 +175,10 @@ export function enhance(form_element, submit = () => {}) {
 			});
 
 			if (enctype !== 'multipart/form-data') {
-				headers.set('Content-Type', is_valid_enctype ? enctype : 'application/x-www-form-urlencoded');
+				headers.set(
+					'Content-Type',
+					is_valid_enctype ? enctype : 'application/x-www-form-urlencoded'
+				);
 			}
 
 			// @ts-expect-error `URLSearchParams(form_data)` is kosher, but typescript doesn't know that

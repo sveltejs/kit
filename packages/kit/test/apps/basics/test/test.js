@@ -1168,7 +1168,7 @@ test.describe('Actions', () => {
 
 		const [request] = await Promise.all([
 			page.waitForRequest('/actions/enhance?/login'),
-			page.locator('button.form1').click(),
+			page.locator('button.form1').click()
 		]);
 
 		const requestHeaders = await request.allHeaders();
