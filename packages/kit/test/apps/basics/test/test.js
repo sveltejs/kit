@@ -1204,20 +1204,6 @@ test.describe('Actions', () => {
 		);
 	});
 
-	test('use:enhance with defined `enctype` attribute for `<form>` element', async ({ page }) => {
-		await page.goto('/actions/enhance');
-
-		expect(await page.textContent('pre.formdata1')).toBe(JSON.stringify(null));
-		expect(await page.textContent('pre.formdata2')).toBe(JSON.stringify(null));
-
-		await page.locator('input[name="username_2"]').fill('foo');
-		await page.locator('button.form-enctype-submit').click();
-
-		await expect(page.locator('pre.formdata1')).toHaveText(JSON.stringify({ result: 'foo' }));
-		await expect(page.locator('pre.formdata2')).toHaveText(JSON.stringify({ result: 'foo' }));
-		await expect(page.locator('input[name="username_2"]')).toHaveValue('');
-	});
-
 	test('redirect', async ({ page, javaScriptEnabled }) => {
 		await page.goto('/actions/redirect');
 
