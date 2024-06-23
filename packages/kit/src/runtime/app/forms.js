@@ -165,19 +165,20 @@ export function enhance(form_element, submit = () => {}) {
 		let result;
 
 		try {
-			const is_valid_enctype = enctype?.match(
-				/application\/x-www-form-urlencoded|multipart\/form-data|text\/plain/
-			);
-
 			const headers = new Headers({
 				accept: 'application/json',
 				'x-sveltekit-action': 'true'
 			});
 
+			// do not explicitly set the `Content-Type` header when sending `FormData`
+			// or else it will interfere with the browser's header setting
+			// see https://developer.mozilla.org/en-US/docs/Web/API/XMLHttpRequest_API/Using_FormData_Objects#sect4
 			if (enctype !== 'multipart/form-data') {
 				headers.set(
 					'Content-Type',
-					is_valid_enctype ? enctype : 'application/x-www-form-urlencoded'
+					/^(:?application\/x-www-form-urlencoded|text\/plain)$/.test(enctype)
+						? enctype
+						: 'application/x-www-form-urlencoded'
 				);
 			}
 
