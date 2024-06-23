@@ -1138,19 +1138,28 @@ test.describe('Actions', () => {
 		);
 	});
 
-	test('use:enhance does not clear form on second submit', async ({ page }) => {
+	test('use:enhance button with formenctype', async ({ page }) => {
 		await page.goto('/actions/enhance');
 
-		await page.locator('input[name="message"]').fill('hello');
+		expect(await page.textContent('pre.formdata1')).toBe(JSON.stringify(null));
+		expect(await page.textContent('pre.formdata2')).toBe(JSON.stringify(null));
 
-		await page.locator('.form3').click();
-		await expect(page.locator('pre.formdata1')).toHaveText(JSON.stringify({ message: 'hello' }));
-		await expect(page.locator('pre.formdata2')).toHaveText(JSON.stringify({ message: 'hello' }));
+		const fileInput = page.locator('input[type="file"].form-file-input');
 
-		await page.locator('.form3').click();
-		await page.waitForTimeout(0); // wait for next tick
-		await expect(page.locator('pre.formdata1')).toHaveText(JSON.stringify({ message: 'hello' }));
-		await expect(page.locator('pre.formdata2')).toHaveText(JSON.stringify({ message: 'hello' }));
+		await fileInput.setInputFiles({
+			name: 'test-file.txt',
+			mimeType: 'text/plain',
+			buffer: Buffer.from('this is test')
+		});
+
+		await page.locator('button.form-file-submit').click();
+
+		await expect(page.locator('pre.formdata1')).toHaveText(
+			JSON.stringify({ result: 'file name:test-file.txt' })
+		);
+		await expect(page.locator('pre.formdata2')).toHaveText(
+			JSON.stringify({ result: 'file name:test-file.txt' })
+		);
 	});
 
 	test('use:enhance has `application/x-www-form-urlencoded` as default value for `ContentType` request header', async ({
@@ -1180,28 +1189,19 @@ test.describe('Actions', () => {
 		await expect(page.locator('input[name="username"]')).toHaveValue('');
 	});
 
-	test('use:enhance button with formenctype', async ({ page }) => {
+	test('use:enhance does not clear form on second submit', async ({ page }) => {
 		await page.goto('/actions/enhance');
 
-		expect(await page.textContent('pre.formdata1')).toBe(JSON.stringify(null));
-		expect(await page.textContent('pre.formdata2')).toBe(JSON.stringify(null));
+		await page.locator('input[name="message"]').fill('hello');
 
-		const fileInput = page.locator('input[type="file"].form-file-input');
+		await page.locator('.form3').click();
+		await expect(page.locator('pre.formdata1')).toHaveText(JSON.stringify({ message: 'hello' }));
+		await expect(page.locator('pre.formdata2')).toHaveText(JSON.stringify({ message: 'hello' }));
 
-		await fileInput.setInputFiles({
-			name: 'test-file.txt',
-			mimeType: 'text/plain',
-			buffer: Buffer.from('this is test')
-		});
-
-		await page.locator('button.form-file-submit').click();
-
-		await expect(page.locator('pre.formdata1')).toHaveText(
-			JSON.stringify({ result: 'file name:test-file.txt' })
-		);
-		await expect(page.locator('pre.formdata2')).toHaveText(
-			JSON.stringify({ result: 'file name:test-file.txt' })
-		);
+		await page.locator('.form3').click();
+		await page.waitForTimeout(0); // wait for next tick
+		await expect(page.locator('pre.formdata1')).toHaveText(JSON.stringify({ message: 'hello' }));
+		await expect(page.locator('pre.formdata2')).toHaveText(JSON.stringify({ message: 'hello' }));
 	});
 
 	test('redirect', async ({ page, javaScriptEnabled }) => {
