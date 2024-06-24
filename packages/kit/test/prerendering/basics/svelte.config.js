@@ -1,5 +1,5 @@
 import adapter from '../../../../adapter-static/index.js';
-import { writeFileSync } from 'fs';
+import { writeFileSync } from 'node:fs';
 
 /** @type {import('@sveltejs/kit').Config} */
 const config = {
