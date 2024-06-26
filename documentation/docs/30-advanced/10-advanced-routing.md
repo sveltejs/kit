@@ -71,7 +71,7 @@ Note that an optional route parameter cannot follow a rest parameter (`[...rest]
 
 ## Matching
 
-A route like `src/routes/fruits/[page]` would match `/fruits/apple`, but it would also match `/fruits/rocketship`. We don't want that. You can ensure that route parameters are well-formed by adding a _matcher_ — which takes the parameter string (`"apple"` or `"rocketship"`) and returns `true` if it is valid — to your [`params`](configuration#files) directory...
+A route like `src/routes/fruits/[page]` would match `/fruits/apple`, but it would also match `/fruits/rocketship`. We don't want that. You can ensure that route parameters are well-formed by adding a _matcher_ — which takes the parameter string (`"apple"` or `"orange"`) and returns `true` if it is valid — to your [`params`](configuration#files) directory...
 
 ```js
 /// file: src/params/fruit.js
