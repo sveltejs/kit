@@ -124,10 +124,11 @@ const warning_preprocessor = {
 
 /**
  * Returns the SvelteKit Vite plugins.
+ * @param {{ cwd?: string }} options
  * @returns {Promise<import('vite').Plugin[]>}
  */
-export async function sveltekit() {
-	const svelte_config = await load_config();
+export async function sveltekit(options = {}) {
+	const svelte_config = await load_config(options);
 
 	/** @type {import('@sveltejs/vite-plugin-svelte').Options['preprocess']} */
 	let preprocess = svelte_config.preprocess;
@@ -838,7 +839,6 @@ async function kit({ svelte_config }) {
 
 				// regenerate nodes with the client manifest...
 				build_server_nodes(out, kit, manifest_data, server_manifest, client_manifest, css);
-
 				// ...and prerender
 				const { prerendered, prerender_map } = await prerender({
 					out,

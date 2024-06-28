@@ -90,7 +90,11 @@ async function prerender({ out, manifest_path, metadata, verbose, env }) {
 	const prerendered_routes = new Set();
 
 	/** @type {import('types').ValidatedKitConfig} */
-	const config = (await load_config()).kit;
+	const config = (
+		await load_config({
+			cwd: out
+		})
+	).kit;
 
 	const emulator = await config.adapter?.emulate?.();
 
@@ -327,7 +331,7 @@ async function prerender({ out, manifest_path, metadata, verbose, env }) {
 		const is_html = response_type === REDIRECT || type === 'text/html';
 
 		const file = output_filename(decoded, is_html);
-		const dest = `${config.outDir}/output/prerendered/${category}/${file}`;
+		const dest = `${out}/prerendered/${category}/${file}`;
 
 		if (written.has(file)) return;
 

@@ -1,4 +1,4 @@
-import { join } from 'node:path';
+import { join, dirname } from 'node:path';
 import { pathToFileURL } from 'node:url';
 import { get_option } from '../../utils/options.js';
 import {
@@ -33,13 +33,15 @@ async function analyse({ manifest_path, manifest_data, server_manifest, tracked_
 	/** @type {import('@sveltejs/kit').SSRManifest} */
 	const manifest = (await import(pathToFileURL(manifest_path).href)).manifest;
 
+	const internalPath = join(dirname(manifest_path), 'internal.js');
+
 	/** @type {import('types').ValidatedKitConfig} */
 	const config = (await load_config()).kit;
 
-	const server_root = join(config.outDir, 'output');
+	const server_root = join(dirname(dirname(manifest_path)));
 
 	/** @type {import('types').ServerInternalModule} */
-	const internal = await import(pathToFileURL(`${server_root}/server/internal.js`).href);
+	const internal = await import(pathToFileURL(internalPath).href);
 
 	installPolyfills();
 
