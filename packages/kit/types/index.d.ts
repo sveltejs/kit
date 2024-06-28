@@ -1944,7 +1944,9 @@ declare module '@sveltejs/kit/vite' {
 	/**
 	 * Returns the SvelteKit Vite plugins.
 	 * */
-	export function sveltekit(): Promise<import('vite').Plugin[]>;
+	export function sveltekit({ cwd }?: {
+		cwd?: string | undefined;
+	}): Promise<import('vite').Plugin[]>;
 }
 
 declare module '$app/environment' {
