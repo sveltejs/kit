@@ -292,7 +292,7 @@ export async function start(_app, _target, hydrate) {
 	if (hydrate) {
 		await _hydrate(target, hydrate);
 	} else {
-		goto(location.href, { replaceState: true });
+		goto(location.href, { replaceState: true, state: { ...history.state?.[STATES_KEY] } });
 	}
 
 	_start_router();
