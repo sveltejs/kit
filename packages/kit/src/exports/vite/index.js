@@ -35,8 +35,6 @@ import {
 } from './module_ids.js';
 import { resolve_peer_dependency } from '../../utils/import.js';
 
-const cwd = process.cwd();
-
 /** @type {import('./types.js').EnforcedConfig} */
 const enforced_config = {
 	appType: true,
@@ -126,8 +124,8 @@ const warning_preprocessor = {
  * Returns the SvelteKit Vite plugins.
  * @returns {Promise<import('vite').Plugin[]>}
  */
-export async function sveltekit() {
-	const svelte_config = await load_config();
+export async function sveltekit({ cwd = process.cwd() } = {}) {
+	const svelte_config = await load_config({ cwd });
 
 	/** @type {import('@sveltejs/vite-plugin-svelte').Options['preprocess']} */
 	let preprocess = svelte_config.preprocess;
@@ -154,7 +152,7 @@ export async function sveltekit() {
 
 	const { svelte } = await resolve_peer_dependency('@sveltejs/vite-plugin-svelte');
 
-	return [...svelte(vite_plugin_svelte_options), ...(await kit({ svelte_config }))];
+	return [...svelte(vite_plugin_svelte_options), ...(await kit({ svelte_config }, cwd))];
 }
 
 // These variables live outside the `kit()` function because it is re-invoked by each Vite build
@@ -177,7 +175,7 @@ let manifest_data;
  * @param {{ svelte_config: import('types').ValidatedConfig }} options
  * @return {Promise<import('vite').Plugin[]>}
  */
-async function kit({ svelte_config }) {
+async function kit({ svelte_config }, cwd = process.cwd()) {
 	const vite = await resolve_peer_dependency('vite');
 
 	const { kit } = svelte_config;
@@ -519,7 +517,7 @@ async function kit({ svelte_config }) {
 				if (vite_config.build.ssr) return;
 
 				const guard = module_guard(this, {
-					cwd: vite.normalizePath(process.cwd()),
+					cwd: vite.normalizePath(cwd),
 					lib: vite.normalizePath(kit.files.lib)
 				});
 
@@ -935,7 +933,7 @@ function warn_overridden_config(config, resolved_config) {
 	if (overridden.length > 0) {
 		console.error(
 			colors.bold().red('The following Vite config options will be overridden by SvelteKit:') +
-				overridden.map((key) => `\n  - ${key}`).join('')
+			overridden.map((key) => `\n  - ${key}`).join('')
 		);
 	}
 }
@@ -979,9 +977,9 @@ const create_service_worker_module = (config) => dedent`
 	export const build = [];
 	export const files = [
 		${create_assets(config)
-			.filter((asset) => config.kit.serviceWorker.files(asset.file))
-			.map((asset) => `${s(`${config.kit.paths.base}/${asset.file}`)}`)
-			.join(',\n')}
+		.filter((asset) => config.kit.serviceWorker.files(asset.file))
+		.map((asset) => `${s(`${config.kit.paths.base}/${asset.file}`)}`)
+		.join(',\n')}
 	];
 	export const prerendered = [];
 	export const version = ${s(config.kit.version.name)};
