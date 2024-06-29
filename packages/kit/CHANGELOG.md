@@ -1,5 +1,17 @@
 # @sveltejs/kit
 
+## 2.5.18
+### Patch Changes
+
+
+- fix: respect HTML attributes `enctype` and `formenctype` for forms with `use:enhance` ([#12198](https://github.com/sveltejs/kit/pull/12198))
+
+
+- fix: prevent client import error when a `hooks.server` file imports a private environment variable ([#12195](https://github.com/sveltejs/kit/pull/12195))
+
+
+- fix: set default `Content-Type` header to `application/x-www-form-urlencoded` for `POST` form submissions with `use:enhance` to align with native form behaviour ([#12198](https://github.com/sveltejs/kit/pull/12198))
+
 ## 2.5.17
 
 ### Patch Changes
