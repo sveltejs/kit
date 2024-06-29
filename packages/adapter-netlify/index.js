@@ -93,6 +93,13 @@ export default function ({ split = false, edge = edge_set_in_env_var } = {}) {
 				await generate_edge_functions({ builder });
 			} else {
 				generate_lambda_functions({ builder, split, publish });
+
+				const hooks_filename = builder.config.kit.files.hooks.universal.split('/').at(-1);
+				const hooks_path = `${builder.getServerDirectory()}/chunks/${hooks_filename}.js`;
+
+				if (split && hooks_path) {
+					await generate_reroute_middleware({ builder, hooks_path });
+				}
 			}
 		},
 
@@ -110,6 +117,7 @@ export default function ({ split = false, edge = edge_set_in_env_var } = {}) {
 		}
 	};
 }
+
 /**
  * @param { object } params
  * @param {import('@sveltejs/kit').Builder} params.builder
@@ -121,24 +129,8 @@ async function generate_edge_functions({ builder }) {
 
 	builder.mkdirp('.netlify/edge-functions');
 
-	// Don't match the static directory
-	const pattern = '^/.*$';
-
-	// Go doesn't support lookarounds, so we can't do this
-	// const pattern = appDir ? `^/(?!${escapeStringRegexp(appDir)}).*$` : '^/.*$';
-
-	/** @type {HandlerManifest} */
-	const edge_manifest = {
-		functions: [
-			{
-				function: 'render',
-				pattern
-			}
-		],
-		version: 1
-	};
-
 	builder.log.minor('Generating Edge Function...');
+
 	const relativePath = posix.relative(tmp, builder.getServerDirectory());
 
 	builder.copy(`${files}/edge.js`, `${tmp}/entry.js`, {
@@ -159,9 +151,44 @@ async function generate_edge_functions({ builder }) {
 		)});\n`
 	);
 
+	await bundle_edge_function({ builder, name: 'render' });
+}
+
+/**
+ * @param {object} params
+ * @param {import('@sveltejs/kit').Builder} params.builder
+ * @param {string} params.hooks_path
+ */
+async function generate_reroute_middleware({ builder, hooks_path }) {
+	const tmp = builder.getBuildDirectory('netlify-tmp');
+	builder.rimraf(tmp);
+	builder.mkdirp(tmp);
+
+	builder.mkdirp('.netlify/edge-functions');
+
+	builder.log.minor('Generating Reroute Edge Function...');
+
+	builder.copy(`${files}/reroute.js`, `${tmp}/entry.js`, {
+		replace: {
+			__HOOKS__: hooks_path
+		}
+	});
+
+	await bundle_edge_function({ builder, name: 'reroute' });
+}
+
+/**
+ *
+ * @param {object} params
+ * @param {import('@sveltejs/kit').Builder} params.builder
+ * @param {string} params.name
+ */
+async function bundle_edge_function({ builder, name }) {
+	const tmp = builder.getBuildDirectory('netlify-tmp');
+
 	await esbuild.build({
 		entryPoints: [`${tmp}/entry.js`],
-		outfile: '.netlify/edge-functions/render.js',
+		outfile: `.netlify/edge-functions/${name}.js`,
 		bundle: true,
 		format: 'esm',
 		platform: 'browser',
@@ -174,8 +201,26 @@ async function generate_edge_functions({ builder }) {
 		alias: Object.fromEntries(builtinModules.map((id) => [id, `node:${id}`]))
 	});
 
+	// Don't match the static directory
+	const pattern = '^/.*$';
+
+	// Go doesn't support lookarounds, so we can't do this
+	// const pattern = appDir ? `^/(?!${escapeStringRegexp(appDir)}).*$` : '^/.*$';
+
+	/** @type {HandlerManifest} */
+	const edge_manifest = {
+		functions: [
+			{
+				function: name,
+				pattern
+			}
+		],
+		version: 1
+	};
+
 	writeFileSync('.netlify/edge-functions/manifest.json', JSON.stringify(edge_manifest));
 }
+
 /**
  * @param { object } params
  * @param {import('@sveltejs/kit').Builder} params.builder
