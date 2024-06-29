@@ -5,6 +5,10 @@ import { DEV } from 'esm-env';
 import { filter_private_env, filter_public_env } from '../../utils/env.js';
 import { prerendering } from '__sveltekit/environment';
 import { set_read_implementation, set_manifest } from '__sveltekit/server';
+import { AsyncLocalStorage } from 'node:async_hooks';
+import { stores_object } from '../app/stores.js';
+
+const local_stores = new AsyncLocalStorage();
 
 /** @type {ProxyHandler<{ type: 'public' | 'private' }>} */
 const prerender_env_handler = {
@@ -95,10 +99,14 @@ export class Server {
 	 * @param {import('types').RequestOptions} options
 	 */
 	async respond(request, options) {
-		return respond(request, this.#options, this.#manifest, {
-			...options,
-			error: false,
-			depth: 0
+		return local_stores.run({}, async () => {
+			stores_object.getStore = () => local_stores.getStore()
+
+			return respond(request, this.#options, this.#manifest, {
+				...options,
+				error: false,
+				depth: 0
+			});
 		});
 	}
 }

@@ -1829,7 +1829,7 @@ declare module '@sveltejs/kit' {
 	export type NumericRange<TStart extends number, TEnd extends number> = Exclude<TEnd | LessThan<TEnd>, LessThan<TStart>>;
 	export const VERSION: string;
 	class HttpError_1 {
-		
+
 		constructor(status: number, body: {
 			message: string;
 		} extends App.Error ? (App.Error | string | undefined) : App.Error);
@@ -1838,7 +1838,7 @@ declare module '@sveltejs/kit' {
 		toString(): string;
 	}
 	class Redirect_1 {
-		
+
 		constructor(status: 300 | 301 | 302 | 303 | 304 | 305 | 306 | 307 | 308, location: string);
 		status: 301 | 302 | 303 | 307 | 308 | 300 | 304 | 305 | 306;
 		location: string;
@@ -2181,11 +2181,11 @@ declare module '$app/server' {
 
 declare module '$app/stores' {
 	export function getStores(): {
-		
+
 		page: typeof page;
-		
+
 		navigating: typeof navigating;
-		
+
 		updated: typeof updated;
 	};
 	/**
@@ -2211,6 +2211,8 @@ declare module '$app/stores' {
 	export const updated: import('svelte/store').Readable<boolean> & {
 		check(): Promise<boolean>;
 	};
+
+	export const unshared_writable: (initialValue: any) => import('svelte/store').Writable<any>;
 }/**
  * It's possible to tell SvelteKit how to type objects inside your app by declaring the `App` namespace. By default, a new project will have a file called `src/app.d.ts` containing the following:
  *
