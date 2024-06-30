@@ -1088,6 +1088,13 @@ test.describe('Shallow routing', () => {
 		await expect(page.locator('p')).toHaveText('active: true');
 	});
 
+	test('Preserve state when invalidating', async ({ page, app }) => {
+		await page.goto('/shallow-routing/push-state');
+		await page.locator('[data-id="one"]').click();
+		await app.invalidateAll();
+		await expect(page.locator('p')).toHaveText('active: true');
+	});
+
 	test('Replaces state on the current URL', async ({ baseURL, page, clicknav }) => {
 		await page.goto('/shallow-routing/replace-state/b');
 		await clicknav('[href="/shallow-routing/replace-state"]');
