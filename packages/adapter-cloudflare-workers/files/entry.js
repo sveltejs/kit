@@ -57,7 +57,10 @@ export default {
 		const filename = stripped_pathname.substring(1);
 		if (filename) {
 			is_static_asset =
-				manifest.assets.has(filename) || manifest.assets.has(filename + '/index.html');
+				manifest.assets.has(filename) ||
+				manifest.assets.has(filename + '/index.html') ||
+				Object.prototype.hasOwnProperty.call(manifest._.server_assets, filename) ||
+				Object.prototype.hasOwnProperty.call(manifest._.server_assets, filename + '/index.html');
 		}
 
 		let location = pathname.at(-1) === '/' ? stripped_pathname : pathname + '/';

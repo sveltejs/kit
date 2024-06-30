@@ -54,6 +54,8 @@ function is_static_file(request) {
 	return (
 		manifest.assets.has(file) ||
 		manifest.assets.has(file + '/index.html') ||
+		Object.prototype.hasOwnProperty.call(manifest._.server_assets, file) ||
+		Object.prototype.hasOwnProperty.call(manifest._.server_assets, file + '/index.html') ||
 		prerendered.has(pathname || '/')
 	);
 }
