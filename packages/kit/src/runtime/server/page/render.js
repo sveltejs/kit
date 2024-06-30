@@ -511,9 +511,7 @@ export async function render_response({
 					type: 'bytes'
 				}),
 				{
-					headers: {
-						'content-type': 'text/html'
-					}
+					headers
 				}
 			);
 }
