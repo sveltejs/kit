@@ -447,6 +447,15 @@ declare module '@sveltejs/kit' {
 			 */
 			errorTemplate?: string;
 		};
+		importMap?: {
+			/**
+			 * Whether to generate import maps. This will result in better long term cacheability, as changes to a single module will no longer invalidate all its dependents.
+			 * However, it will increase the size of the HTML document, and force `modulepreload` links to be part of the document rather than being added as HTTP headers.
+			 * @default false;
+			 * @since 2.4.0
+			 */
+			enabled?: boolean;
+		};
 		/**
 		 * Inline CSS inside a `<style>` block at the head of the HTML. This option is a number that specifies the maximum length of a CSS file in UTF-16 code units, as specified by the [String.length](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/String/length) property, to be inlined. All CSS files needed for the page and smaller than this value are merged and inlined in a `<style>` block.
 		 *
@@ -1595,6 +1604,7 @@ declare module '@sveltejs/kit' {
 			stylesheets: string[];
 			fonts: string[];
 			uses_env_dynamic_public: boolean;
+			import_map_lookup: Array<[string, string]>;
 		} | null;
 		server_manifest: import('vite').Manifest;
 	}
