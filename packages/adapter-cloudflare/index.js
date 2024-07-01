@@ -199,14 +199,7 @@ function get_routes_json(builder, assets, { include = ['/*'], exclude = ['<all>'
 			}
 
 			if (rule === '<prerendered>') {
-				const prerendered = [];
-				for (const path of builder.prerendered.paths) {
-					if (!builder.prerendered.redirects.has(path)) {
-						prerendered.push(path);
-					}
-				}
-
-				return prerendered;
+				return builder.prerendered.paths;
 			}
 
 			return rule;
