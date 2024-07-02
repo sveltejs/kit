@@ -451,9 +451,6 @@ importers:
       '@types/node':
         specifier: ^18.19.3
         version: 18.19.31
-      '@types/sade':
-        specifier: ^1.7.8
-        version: 1.8.0
       '@types/set-cookie-parser':
         specifier: ^2.4.7
         version: 2.4.7
@@ -2166,10 +2163,6 @@ packages:
 
   '@types/resolve@1.20.2':
     resolution: {integrity: sha512-60BCwRFOZCQhDncwQdxxeOEEkbc5dIMccYLwbxsS4TUNeVECQ/pBJ0j09mrHOl/JJvpRPGwO9SvE4nR2Nb/a4Q==}
-
-  '@types/sade@1.8.0':
-    resolution: {integrity: sha512-AaEFFSbi9xUFPVmsmlo0X8gXpdUJxoT6Ve36Qqorqb/wxagc5v4W44mCPeiw5HqWjwypJ1X1qNL7lmofqX5C7g==}
-    deprecated: This is a stub types definition. sade provides its own type definitions, so you do not need this installed.
 
   '@types/semver@7.5.8':
     resolution: {integrity: sha512-I8EUhyrgfLrcTkzV3TSsGyl1tSuPrEDzr0yd5m90UgNxQkyDXULk3b6MlQqTCpZpNtWe1K0hzclnZkTcLBe2UQ==}
@@ -5131,10 +5124,6 @@ snapshots:
   '@types/pug@2.0.10': {}
 
   '@types/resolve@1.20.2': {}
-
-  '@types/sade@1.8.0':
-    dependencies:
-      sade: 1.8.1
 
   '@types/semver@7.5.8': {}
 
