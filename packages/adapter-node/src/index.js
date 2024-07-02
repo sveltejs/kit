@@ -3,6 +3,7 @@ import { env } from 'ENV';
 import polka from 'polka';
 
 export const path = env('SOCKET_PATH', false);
+const writableAll = parseInt(env('SOCKET_PATH_IS_WRITABLE', 0)) === 1;
 export const host = env('HOST', '0.0.0.0');
 export const port = env('PORT', !path && '3000');
 
@@ -37,7 +38,7 @@ if (socket_activation) {
 		console.log(`Listening on file descriptor ${SD_LISTEN_FDS_START}`);
 	});
 } else {
-	server.listen({ path, host, port }, () => {
+	server.listen({ path, host, port, writableAll }, () => {
 		console.log(`Listening on ${path ? path : host + ':' + port}`);
 	});
 }
