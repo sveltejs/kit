@@ -7,7 +7,7 @@ declare module '@sveltejs/kit' {
 	/**
 	 * [Adapters](https://kit.svelte.dev/docs/adapters) are responsible for taking the production build and turning it into something that can be deployed to a platform of your choosing.
 	 */
-	export interface Adapter {
+	interface Adapter {
 		/**
 		 * The name of the adapter, using for logging. Will typically correspond to the package name.
 		 */
@@ -34,13 +34,13 @@ declare module '@sveltejs/kit' {
 		emulate?(): MaybePromise<Emulator>;
 	}
 
-	export type LoadProperties<input extends Record<string, any> | void> = input extends void
+	type LoadProperties<input extends Record<string, any> | void> = input extends void
 		? undefined // needs to be undefined, because void will break intellisense
 		: input extends Record<string, any>
 			? input
 			: unknown;
 
-	export type AwaitedActions<T extends Record<string, (...args: any) => any>> = OptionalUnion<
+	type AwaitedActions<T extends Record<string, (...args: any) => any>> = OptionalUnion<
 		{
 			[Key in keyof T]: UnpackValidationError<Awaited<ReturnType<T[Key]>>>;
 		}[keyof T]
@@ -55,7 +55,7 @@ declare module '@sveltejs/kit' {
 
 	const uniqueSymbol: unique symbol;
 
-	export interface ActionFailure<T extends Record<string, unknown> | undefined = undefined> {
+	interface ActionFailure<T extends Record<string, unknown> | undefined = undefined> {
 		status: number;
 		data: T;
 		[uniqueSymbol]: true; // necessary or else UnpackValidationError could wrongly unpack objects with the same shape as ActionFailure
@@ -72,7 +72,7 @@ declare module '@sveltejs/kit' {
 	 * This object is passed to the `adapt` function of adapters.
 	 * It contains various methods and properties that are useful for adapting the app.
 	 */
-	export interface Builder {
+	interface Builder {
 		/** Print messages to the console. `log.info` and `log.minor` are silent unless Vite's `logLevel` is `info`. */
 		log: Logger;
 		/** Remove `dir` and all its contents. */
@@ -170,7 +170,7 @@ declare module '@sveltejs/kit' {
 		compress(directory: string): Promise<void>;
 	}
 
-	export interface Config {
+	interface Config {
 		/**
 		 * Options passed to [`svelte.compile`](https://svelte.dev/docs#compile-time-svelte-compile).
 		 * @default {}
@@ -191,7 +191,7 @@ declare module '@sveltejs/kit' {
 		[key: string]: any;
 	}
 
-	export interface Cookies {
+	interface Cookies {
 		/**
 		 * Gets a cookie that was previously set with `cookies.set`, or from the request headers.
 		 * @param name the name of the cookie
@@ -251,7 +251,7 @@ declare module '@sveltejs/kit' {
 	/**
 	 * A collection of functions that influence the environment during dev, build and prerendering
 	 */
-	export interface Emulator {
+	interface Emulator {
 		/**
 		 * A function that is called with the current route `config` and `prerender` option
 		 * and returns an `App.Platform` object
@@ -259,7 +259,7 @@ declare module '@sveltejs/kit' {
 		platform?(details: { config: any; prerender: PrerenderOption }): MaybePromise<App.Platform>;
 	}
 
-	export interface KitConfig {
+	interface KitConfig {
 		/**
 		 * Your [adapter](https://kit.svelte.dev/docs/adapters) is run when executing `vite build`. It determines how the output is converted for different platforms.
 		 * @default undefined
@@ -664,7 +664,7 @@ declare module '@sveltejs/kit' {
 	 * It receives an `event` object representing the request and a function called `resolve`, which renders the route and generates a `Response`.
 	 * This allows you to modify response headers or bodies, or bypass SvelteKit entirely (for implementing routes programmatically, for example).
 	 */
-	export type Handle = (input: {
+	type Handle = (input: {
 		event: RequestEvent;
 		resolve(event: RequestEvent, opts?: ResolveOptions): MaybePromise<Response>;
 	}) => MaybePromise<Response>;
@@ -675,7 +675,7 @@ declare module '@sveltejs/kit' {
 	 * If an unexpected error is thrown during loading or rendering, this function will be called with the error and the event.
 	 * Make sure that this function _never_ throws an error.
 	 */
-	export type HandleServerError = (input: {
+	type HandleServerError = (input: {
 		error: unknown;
 		event: RequestEvent;
 		status: number;
@@ -688,7 +688,7 @@ declare module '@sveltejs/kit' {
 	 * If an unexpected error is thrown during loading or the following render, this function will be called with the error and the event.
 	 * Make sure that this function _never_ throws an error.
 	 */
-	export type HandleClientError = (input: {
+	type HandleClientError = (input: {
 		error: unknown;
 		event: NavigationEvent;
 		status: number;
@@ -698,7 +698,7 @@ declare module '@sveltejs/kit' {
 	/**
 	 * The [`handleFetch`](https://kit.svelte.dev/docs/hooks#server-hooks-handlefetch) hook allows you to modify (or replace) a `fetch` request that happens inside a `load` function that runs on the server (or during pre-rendering)
 	 */
-	export type HandleFetch = (input: {
+	type HandleFetch = (input: {
 		event: RequestEvent;
 		request: Request;
 		fetch: typeof fetch;
@@ -708,13 +708,13 @@ declare module '@sveltejs/kit' {
 	 * The [`reroute`](https://kit.svelte.dev/docs/hooks#universal-hooks-reroute) hook allows you to modify the URL before it is used to determine which route to render.
 	 * @since 2.3.0
 	 */
-	export type Reroute = (event: { url: URL }) => void | string;
+	type Reroute = (event: { url: URL }) => void | string;
 
 	/**
 	 * The generic form of `PageLoad` and `LayoutLoad`. You should import those from `./$types` (see [generated types](https://kit.svelte.dev/docs/types#generated-types))
 	 * rather than using `Load` directly.
 	 */
-	export type Load<
+	type Load<
 		Params extends Partial<Record<string, string>> = Partial<Record<string, string>>,
 		InputData extends Record<string, unknown> | null = Record<string, any> | null,
 		ParentData extends Record<string, unknown> = Record<string, any>,
@@ -726,7 +726,7 @@ declare module '@sveltejs/kit' {
 	 * The generic form of `PageLoadEvent` and `LayoutLoadEvent`. You should import those from `./$types` (see [generated types](https://kit.svelte.dev/docs/types#generated-types))
 	 * rather than using `LoadEvent` directly.
 	 */
-	export interface LoadEvent<
+	interface LoadEvent<
 		Params extends Partial<Record<string, string>> = Partial<Record<string, string>>,
 		Data extends Record<string, unknown> | null = Record<string, any> | null,
 		ParentData extends Record<string, unknown> = Record<string, any>,
@@ -834,7 +834,7 @@ declare module '@sveltejs/kit' {
 		untrack<T>(fn: () => T): T;
 	}
 
-	export interface NavigationEvent<
+	interface NavigationEvent<
 		Params extends Partial<Record<string, string>> = Partial<Record<string, string>>,
 		RouteId extends string | null = string | null
 	> {
@@ -860,7 +860,7 @@ declare module '@sveltejs/kit' {
 	/**
 	 * Information about the target of a specific navigation.
 	 */
-	export interface NavigationTarget {
+	interface NavigationTarget {
 		/**
 		 * Parameters of the target page - e.g. for a route like `/blog/[slug]`, a `{ slug: string }` object.
 		 * Is `null` if the target is not part of the SvelteKit app (could not be resolved to a route).
@@ -884,9 +884,9 @@ declare module '@sveltejs/kit' {
 	 * - `goto`: Navigation was triggered by a `goto(...)` call or a redirect
 	 * - `popstate`: Navigation was triggered by back/forward navigation
 	 */
-	export type NavigationType = 'enter' | 'form' | 'leave' | 'link' | 'goto' | 'popstate';
+	type NavigationType = 'enter' | 'form' | 'leave' | 'link' | 'goto' | 'popstate';
 
-	export interface Navigation {
+	interface Navigation {
 		/**
 		 * Where navigation was triggered from
 		 */
@@ -922,7 +922,7 @@ declare module '@sveltejs/kit' {
 	/**
 	 * The argument passed to [`beforeNavigate`](https://kit.svelte.dev/docs/modules#$app-navigation-beforenavigate) callbacks.
 	 */
-	export interface BeforeNavigate extends Navigation {
+	interface BeforeNavigate extends Navigation {
 		/**
 		 * Call this to prevent the navigation from starting.
 		 */
@@ -932,7 +932,7 @@ declare module '@sveltejs/kit' {
 	/**
 	 * The argument passed to [`onNavigate`](https://kit.svelte.dev/docs/modules#$app-navigation-onnavigate) callbacks.
 	 */
-	export interface OnNavigate extends Navigation {
+	interface OnNavigate extends Navigation {
 		/**
 		 * The type of navigation:
 		 * - `form`: The user submitted a `<form>`
@@ -950,7 +950,7 @@ declare module '@sveltejs/kit' {
 	/**
 	 * The argument passed to [`afterNavigate`](https://kit.svelte.dev/docs/modules#$app-navigation-afternavigate) callbacks.
 	 */
-	export interface AfterNavigate extends Omit<Navigation, 'type'> {
+	interface AfterNavigate extends Omit<Navigation, 'type'> {
 		/**
 		 * The type of navigation:
 		 * - `enter`: The app has hydrated
@@ -969,7 +969,7 @@ declare module '@sveltejs/kit' {
 	/**
 	 * The shape of the `$page` store
 	 */
-	export interface Page<
+	interface Page<
 		Params extends Record<string, string> = Record<string, string>,
 		RouteId extends string | null = string | null
 	> {
@@ -1015,9 +1015,9 @@ declare module '@sveltejs/kit' {
 	/**
 	 * The shape of a param matcher. See [matching](https://kit.svelte.dev/docs/advanced-routing#matching) for more info.
 	 */
-	export type ParamMatcher = (param: string) => boolean;
+	type ParamMatcher = (param: string) => boolean;
 
-	export interface RequestEvent<
+	interface RequestEvent<
 		Params extends Partial<Record<string, string>> = Partial<Record<string, string>>,
 		RouteId extends string | null = string | null
 	> {
@@ -1109,12 +1109,12 @@ declare module '@sveltejs/kit' {
 	 *
 	 * It receives `Params` as the first generic argument, which you can skip by using [generated types](https://kit.svelte.dev/docs/types#generated-types) instead.
 	 */
-	export type RequestHandler<
+	type RequestHandler<
 		Params extends Partial<Record<string, string>> = Partial<Record<string, string>>,
 		RouteId extends string | null = string | null
 	> = (event: RequestEvent<Params, RouteId>) => MaybePromise<Response>;
 
-	export interface ResolveOptions {
+	interface ResolveOptions {
 		/**
 		 * Applies custom transforms to HTML. If `done` is true, it's the final chunk. Chunks are not guaranteed to be well-formed HTML
 		 * (they could include an element's opening tag but not its closing tag, for example)
@@ -1137,7 +1137,7 @@ declare module '@sveltejs/kit' {
 		preload?(input: { type: 'font' | 'css' | 'js' | 'asset'; path: string }): boolean;
 	}
 
-	export interface RouteDefinition<Config = any> {
+	interface RouteDefinition<Config = any> {
 		id: string;
 		api: {
 			methods: Array<HttpMethod | '*'>;
@@ -1152,20 +1152,20 @@ declare module '@sveltejs/kit' {
 		config: Config;
 	}
 
-	export class Server {
+	class Server {
 		constructor(manifest: SSRManifest);
 		init(options: ServerInitOptions): Promise<void>;
 		respond(request: Request, options: RequestOptions): Promise<Response>;
 	}
 
-	export interface ServerInitOptions {
+	interface ServerInitOptions {
 		/** A map of environment variables */
 		env: Record<string, string>;
 		/** A function that turns an asset filename into a `ReadableStream`. Required for the `read` export from `$app/server` to work */
 		read?: (file: string) => ReadableStream;
 	}
 
-	export interface SSRManifest {
+	interface SSRManifest {
 		appDir: string;
 		appPath: string;
 		assets: Set<string>;
@@ -1186,14 +1186,14 @@ declare module '@sveltejs/kit' {
 	 * The generic form of `PageServerLoad` and `LayoutServerLoad`. You should import those from `./$types` (see [generated types](https://kit.svelte.dev/docs/types#generated-types))
 	 * rather than using `ServerLoad` directly.
 	 */
-	export type ServerLoad<
+	type ServerLoad<
 		Params extends Partial<Record<string, string>> = Partial<Record<string, string>>,
 		ParentData extends Record<string, any> = Record<string, any>,
 		OutputData extends Record<string, any> | void = Record<string, any> | void,
 		RouteId extends string | null = string | null
 	> = (event: ServerLoadEvent<Params, ParentData, RouteId>) => MaybePromise<OutputData>;
 
-	export interface ServerLoadEvent<
+	interface ServerLoadEvent<
 		Params extends Partial<Record<string, string>> = Partial<Record<string, string>>,
 		ParentData extends Record<string, any> = Record<string, any>,
 		RouteId extends string | null = string | null
@@ -1262,7 +1262,7 @@ declare module '@sveltejs/kit' {
 	 * Shape of a form action method that is part of `export const actions = {..}` in `+page.server.js`.
 	 * See [form actions](https://kit.svelte.dev/docs/form-actions) for more information.
 	 */
-	export type Action<
+	type Action<
 		Params extends Partial<Record<string, string>> = Partial<Record<string, string>>,
 		OutputData extends Record<string, any> | void = Record<string, any> | void,
 		RouteId extends string | null = string | null
@@ -1272,7 +1272,7 @@ declare module '@sveltejs/kit' {
 	 * Shape of the `export const actions = {..}` object in `+page.server.js`.
 	 * See [form actions](https://kit.svelte.dev/docs/form-actions) for more information.
 	 */
-	export type Actions<
+	type Actions<
 		Params extends Partial<Record<string, string>> = Partial<Record<string, string>>,
 		OutputData extends Record<string, any> | void = Record<string, any> | void,
 		RouteId extends string | null = string | null
@@ -1288,7 +1288,7 @@ declare module '@sveltejs/kit' {
 	 * }}
 	 * ```
 	 */
-	export type ActionResult<
+	type ActionResult<
 		Success extends Record<string, unknown> | undefined = Record<string, any>,
 		Failure extends Record<string, unknown> | undefined = Record<string, any>
 	> =
@@ -1300,7 +1300,7 @@ declare module '@sveltejs/kit' {
 	/**
 	 * The object returned by the [`error`](https://kit.svelte.dev/docs/modules#sveltejs-kit-error) function.
 	 */
-	export interface HttpError {
+	interface HttpError {
 		/** The [HTTP status code](https://developer.mozilla.org/en-US/docs/Web/HTTP/Status#client_error_responses), in the range 400-599. */
 		status: number;
 		/** The content of the error. */
@@ -1310,14 +1310,14 @@ declare module '@sveltejs/kit' {
 	/**
 	 * The object returned by the [`redirect`](https://kit.svelte.dev/docs/modules#sveltejs-kit-redirect) function
 	 */
-	export interface Redirect {
+	interface Redirect {
 		/** The [HTTP status code](https://developer.mozilla.org/en-US/docs/Web/HTTP/Status#redirection_messages), in the range 300-308. */
 		status: 300 | 301 | 302 | 303 | 304 | 305 | 306 | 307 | 308;
 		/** The location to redirect to. */
 		location: string;
 	}
 
-	export type SubmitFunction<
+	type SubmitFunction<
 		Success extends Record<string, unknown> | undefined = Record<string, any>,
 		Failure extends Record<string, unknown> | undefined = Record<string, any>
 	> = (input: {
@@ -1346,7 +1346,7 @@ declare module '@sveltejs/kit' {
 	/**
 	 * The type of `export const snapshot` exported from a page or layout component.
 	 */
-	export interface Snapshot<T = any> {
+	interface Snapshot<T = any> {
 		capture: () => T;
 		restore: (snapshot: T) => void;
 	}
@@ -1562,7 +1562,7 @@ declare module '@sveltejs/kit' {
 		| 'ignore'
 		| PrerenderEntryGeneratorMismatchHandler;
 
-	export type PrerenderOption = boolean | 'auto';
+	type PrerenderOption = boolean | 'auto';
 
 	interface RequestOptions {
 		getClientAddress(): string;
@@ -1767,7 +1767,7 @@ declare module '@sveltejs/kit' {
 	 * @throws {HttpError} This error instructs SvelteKit to initiate HTTP error handling.
 	 * @throws {Error} If the provided status is invalid (not between 400 and 599).
 	 */
-	export function error(status: number, body: App.Error): never;
+	function error_1(status: number, body: App.Error): never;
 	/**
 	 * Throws an error with a HTTP status code and an optional message.
 	 * When called during request handling, this will cause SvelteKit to
@@ -1778,14 +1778,14 @@ declare module '@sveltejs/kit' {
 	 * @throws {HttpError} This error instructs SvelteKit to initiate HTTP error handling.
 	 * @throws {Error} If the provided status is invalid (not between 400 and 599).
 	 */
-	export function error(status: number, body?: {
+	function error_1(status: number, body?: {
 		message: string;
 	} extends App.Error ? App.Error | string | undefined : never): never;
 	/**
 	 * Checks whether this is an error thrown by {@link error}.
 	 * @param status The status to filter for.
 	 * */
-	export function isHttpError<T extends number>(e: unknown, status?: T | undefined): e is HttpError_1 & {
+	function isHttpError<T extends number>(e: unknown, status?: T | undefined): e is HttpError_1 & {
 		status: T extends undefined ? never : T;
 	};
 	/**
@@ -1796,38 +1796,38 @@ declare module '@sveltejs/kit' {
 	 * @throws {Redirect} This error instructs SvelteKit to redirect to the specified location.
 	 * @throws {Error} If the provided status is invalid.
 	 * */
-	export function redirect(status: 300 | 301 | 302 | 303 | 304 | 305 | 306 | 307 | 308 | ({} & number), location: string | URL): never;
+	function redirect(status: 300 | 301 | 302 | 303 | 304 | 305 | 306 | 307 | 308 | ({} & number), location: string | URL): never;
 	/**
 	 * Checks whether this is a redirect thrown by {@link redirect}.
 	 * @param e The object to check.
 	 * */
-	export function isRedirect(e: unknown): e is Redirect_1;
+	function isRedirect(e: unknown): e is Redirect_1;
 	/**
 	 * Create a JSON `Response` object from the supplied data.
 	 * @param data The value that will be serialized as JSON.
 	 * @param init Options such as `status` and `headers` that will be added to the response. `Content-Type: application/json` and `Content-Length` headers will be added automatically.
 	 */
-	export function json(data: any, init?: ResponseInit | undefined): Response;
+	function json(data: any, init?: ResponseInit | undefined): Response;
 	/**
 	 * Create a `Response` object from the supplied body.
 	 * @param body The value that will be used as-is.
 	 * @param init Options such as `status` and `headers` that will be added to the response. A `Content-Length` header will be added automatically.
 	 */
-	export function text(body: string, init?: ResponseInit | undefined): Response;
+	function text(body: string, init?: ResponseInit | undefined): Response;
 	/**
 	 * Create an `ActionFailure` object.
 	 * @param status The [HTTP status code](https://developer.mozilla.org/en-US/docs/Web/HTTP/Status#client_error_responses). Must be in the range 400-599.
 	 * */
-	export function fail(status: number): ActionFailure<undefined>;
+	function fail(status: number): ActionFailure<undefined>;
 	/**
 	 * Create an `ActionFailure` object.
 	 * @param status The [HTTP status code](https://developer.mozilla.org/en-US/docs/Web/HTTP/Status#client_error_responses). Must be in the range 400-599.
 	 * @param data Data associated with the failure (e.g. validation errors)
 	 * */
-	export function fail<T extends Record<string, unknown> | undefined = undefined>(status: number, data: T): ActionFailure<T>;
-	export type LessThan<TNumber extends number, TArray extends any[] = []> = TNumber extends TArray['length'] ? TArray[number] : LessThan<TNumber, [...TArray, TArray['length']]>;
-	export type NumericRange<TStart extends number, TEnd extends number> = Exclude<TEnd | LessThan<TEnd>, LessThan<TStart>>;
-	export const VERSION: string;
+	function fail<T extends Record<string, unknown> | undefined = undefined>(status: number, data: T): ActionFailure<T>;
+	type LessThan<TNumber extends number, TArray extends any[] = []> = TNumber extends TArray['length'] ? TArray[number] : LessThan<TNumber, [...TArray, TArray['length']]>;
+	type NumericRange<TStart extends number, TEnd extends number> = Exclude<TEnd | LessThan<TEnd>, LessThan<TStart>>;
+	const VERSION: string;
 	class HttpError_1 {
 		
 		constructor(status: number, body: {
@@ -1843,6 +1843,8 @@ declare module '@sveltejs/kit' {
 		status: 301 | 302 | 303 | 307 | 308 | 300 | 304 | 305 | 306;
 		location: string;
 	}
+
+	export { Adapter, LoadProperties, AwaitedActions, ActionFailure, Builder, Config, Cookies, Emulator, KitConfig, Handle, HandleServerError, HandleClientError, HandleFetch, Reroute, Load, LoadEvent, NavigationEvent, NavigationTarget, NavigationType, Navigation, BeforeNavigate, OnNavigate, AfterNavigate, Page, ParamMatcher, RequestEvent, RequestHandler, ResolveOptions, RouteDefinition, Server, ServerInitOptions, SSRManifest, ServerLoad, ServerLoadEvent, Action, Actions, ActionResult, HttpError, Redirect, SubmitFunction, Snapshot, PrerenderOption, error_1 as error, isHttpError, redirect, isRedirect, json, text, fail, LessThan, NumericRange, VERSION };
 }
 
 declare module '@sveltejs/kit/hooks' {
@@ -1913,22 +1915,26 @@ declare module '@sveltejs/kit/hooks' {
 	 *
 	 * @param handlers The chain of `handle` functions
 	 * */
-	export function sequence(...handlers: import('@sveltejs/kit').Handle[]): import('@sveltejs/kit').Handle;
+	function sequence(...handlers: import('@sveltejs/kit').Handle[]): import('@sveltejs/kit').Handle;
+
+	export { sequence };
 }
 
 declare module '@sveltejs/kit/node' {
-	export function getRequest({ request, base, bodySizeLimit }: {
+	function getRequest({ request, base, bodySizeLimit }: {
 		request: import('http').IncomingMessage;
 		base: string;
 		bodySizeLimit?: number;
 	}): Promise<Request>;
 
-	export function setResponse(res: import('http').ServerResponse, response: Response): Promise<void>;
+	function setResponse(res: import('http').ServerResponse, response: Response): Promise<void>;
 	/**
 	 * Converts a file on disk to a readable stream
 	 * @since 2.4.0
 	 */
-	export function createReadableStream(file: string): ReadableStream;
+	function createReadableStream(file: string): ReadableStream;
+
+	export { getRequest, setResponse, createReadableStream };
 }
 
 declare module '@sveltejs/kit/node/polyfills' {
@@ -1937,36 +1943,42 @@ declare module '@sveltejs/kit/node/polyfills' {
 	 * - `crypto`
 	 * - `File`
 	 */
-	export function installPolyfills(): void;
+	function installPolyfills(): void;
+
+	export { installPolyfills };
 }
 
 declare module '@sveltejs/kit/vite' {
 	/**
 	 * Returns the SvelteKit Vite plugins.
 	 * */
-	export function sveltekit(): Promise<import('vite').Plugin[]>;
+	function sveltekit(): Promise<import('vite').Plugin[]>;
+
+	export { sveltekit };
 }
 
 declare module '$app/environment' {
 	/**
 	 * `true` if the app is running in the browser.
 	 */
-	export const browser: boolean;
+	const browser: boolean;
 
 	/**
 	 * Whether the dev server is running. This is not guaranteed to correspond to `NODE_ENV` or `MODE`.
 	 */
-	export const dev: boolean;
+	const dev: boolean;
 
 	/**
 	 * SvelteKit analyses your app during the `build` step by running it. During this process, `building` is `true`. This also applies during prerendering.
 	 */
-	export const building: boolean;
+	const building: boolean;
 
 	/**
 	 * The value of `config.kit.version.name`.
 	 */
-	export const version: string;
+	const version: string;
+
+	export { browser, dev, building, version };
 }
 
 declare module '$app/forms' {
@@ -1988,7 +2000,7 @@ declare module '$app/forms' {
 	 * }
 	 * ```
 	 * */
-	export function deserialize<Success extends Record<string, unknown> | undefined, Failure extends Record<string, unknown> | undefined>(result: string): import("@sveltejs/kit").ActionResult<Success, Failure>;
+	function deserialize<Success extends Record<string, unknown> | undefined, Failure extends Record<string, unknown> | undefined>(result: string): import("@sveltejs/kit").ActionResult<Success, Failure>;
 	/**
 	 * This action enhances a `<form>` element that otherwise would work without JavaScript.
 	 *
@@ -2009,14 +2021,16 @@ declare module '$app/forms' {
 	 * @param form_element The form element
 	 * @param submit Submit callback
 	 */
-	export function enhance<Success extends Record<string, unknown> | undefined, Failure extends Record<string, unknown> | undefined>(form_element: HTMLFormElement, submit?: import("@sveltejs/kit").SubmitFunction<Success, Failure>): {
+	function enhance<Success extends Record<string, unknown> | undefined, Failure extends Record<string, unknown> | undefined>(form_element: HTMLFormElement, submit?: import("@sveltejs/kit").SubmitFunction<Success, Failure>): {
 		destroy(): void;
 	};
 	/**
 	 * This action updates the `form` property of the current page with the given data and updates `$page.status`.
 	 * In case of an error, it redirects to the nearest error page.
 	 * */
-	export function applyAction<Success extends Record<string, unknown> | undefined, Failure extends Record<string, unknown> | undefined>(result: import("@sveltejs/kit").ActionResult<Success, Failure>): Promise<void>;
+	function applyAction<Success extends Record<string, unknown> | undefined, Failure extends Record<string, unknown> | undefined>(result: import("@sveltejs/kit").ActionResult<Success, Failure>): Promise<void>;
+
+	export { deserialize, enhance, applyAction };
 }
 
 declare module '$app/navigation' {
@@ -2025,7 +2039,7 @@ declare module '$app/navigation' {
 	 *
 	 * `afterNavigate` must be called during a component initialization. It remains active as long as the component is mounted.
 	 * */
-	export function afterNavigate(callback: (navigation: import('@sveltejs/kit').AfterNavigate) => void): void;
+	function afterNavigate(callback: (navigation: import('@sveltejs/kit').AfterNavigate) => void): void;
 	/**
 	 * A navigation interceptor that triggers before we navigate to a new URL, whether by clicking a link, calling `goto(...)`, or using the browser back/forward controls.
 	 *
@@ -2037,7 +2051,7 @@ declare module '$app/navigation' {
 	 *
 	 * `beforeNavigate` must be called during a component initialization. It remains active as long as the component is mounted.
 	 * */
-	export function beforeNavigate(callback: (navigation: import('@sveltejs/kit').BeforeNavigate) => void): void;
+	function beforeNavigate(callback: (navigation: import('@sveltejs/kit').BeforeNavigate) => void): void;
 	/**
 	 * A lifecycle function that runs the supplied `callback` immediately before we navigate to a new URL except during full-page navigations.
 	 *
@@ -2047,12 +2061,12 @@ declare module '$app/navigation' {
 	 *
 	 * `onNavigate` must be called during a component initialization. It remains active as long as the component is mounted.
 	 * */
-	export function onNavigate(callback: (navigation: import('@sveltejs/kit').OnNavigate) => MaybePromise<(() => void) | void>): void;
+	function onNavigate(callback: (navigation: import('@sveltejs/kit').OnNavigate) => MaybePromise<(() => void) | void>): void;
 	/**
 	 * If called when the page is being updated following a navigation (in `onMount` or `afterNavigate` or an action, for example), this disables SvelteKit's built-in scroll handling.
 	 * This is generally discouraged, since it breaks user expectations.
 	 * */
-	export function disableScrollHandling(): void;
+	function disableScrollHandling(): void;
 	/**
 	 * Returns a Promise that resolves when SvelteKit navigates (or fails to navigate, in which case the promise rejects) to the specified `url`.
 	 * For external URLs, use `window.location = url` instead of calling `goto(url)`.
@@ -2060,7 +2074,7 @@ declare module '$app/navigation' {
 	 * @param url Where to navigate to. Note that if you've set [`config.kit.paths.base`](https://kit.svelte.dev/docs/configuration#paths) and the URL is root-relative, you need to prepend the base path if you want to navigate within the app.
 	 * @param {Object} opts Options related to the navigation
 	 * */
-	export function goto(url: string | URL, opts?: {
+	function goto(url: string | URL, opts?: {
 		replaceState?: boolean | undefined;
 		noScroll?: boolean | undefined;
 		keepFocus?: boolean | undefined;
@@ -2084,11 +2098,11 @@ declare module '$app/navigation' {
 	 * ```
 	 * @param resource The invalidated URL
 	 * */
-	export function invalidate(resource: string | URL | ((url: URL) => boolean)): Promise<void>;
+	function invalidate(resource: string | URL | ((url: URL) => boolean)): Promise<void>;
 	/**
 	 * Causes all `load` functions belonging to the currently active page to re-run. Returns a `Promise` that resolves when the page is subsequently updated.
 	 * */
-	export function invalidateAll(): Promise<void>;
+	function invalidateAll(): Promise<void>;
 	/**
 	 * Programmatically preloads the given page, which means
 	 *  1. ensuring that the code for the page is loaded, and
@@ -2100,7 +2114,7 @@ declare module '$app/navigation' {
 	 *
 	 * @param href Page to preload
 	 * */
-	export function preloadData(href: string): Promise<{
+	function preloadData(href: string): Promise<{
 		type: 'loaded';
 		status: number;
 		data: Record<string, any>;
@@ -2118,18 +2132,20 @@ declare module '$app/navigation' {
 	 * Returns a Promise that resolves when the modules have been imported.
 	 *
 	 * */
-	export function preloadCode(pathname: string): Promise<void>;
+	function preloadCode(pathname: string): Promise<void>;
 	/**
 	 * Programmatically create a new history entry with the given `$page.state`. To use the current URL, you can pass `''` as the first argument. Used for [shallow routing](https://kit.svelte.dev/docs/shallow-routing).
 	 *
 	 * */
-	export function pushState(url: string | URL, state: App.PageState): void;
+	function pushState(url: string | URL, state: App.PageState): void;
 	/**
 	 * Programmatically replace the current history entry with the given `$page.state`. To use the current URL, you can pass `''` as the first argument. Used for [shallow routing](https://kit.svelte.dev/docs/shallow-routing).
 	 *
 	 * */
-	export function replaceState(url: string | URL, state: App.PageState): void;
+	function replaceState(url: string | URL, state: App.PageState): void;
 	type MaybePromise<T> = T | Promise<T>;
+
+	export { afterNavigate, beforeNavigate, disableScrollHandling, goto, invalidate, invalidateAll, onNavigate, preloadCode, preloadData, pushState, replaceState };
 }
 
 declare module '$app/paths' {
@@ -2138,14 +2154,14 @@ declare module '$app/paths' {
 	 *
 	 * Example usage: `<a href="{base}/your-page">Link</a>`
 	 */
-	export let base: '' | `/${string}`;
+	let base: '' | `/${string}`;
 
 	/**
 	 * An absolute path that matches [`config.kit.paths.assets`](https://kit.svelte.dev/docs/configuration#paths).
 	 *
 	 * > If a value for `config.kit.paths.assets` is specified, it will be replaced with `'/_svelte_kit_assets'` during `vite dev` or `vite preview`, since the assets don't yet live at their eventual URL.
 	 */
-	export let assets: '' | `https://${string}` | `http://${string}` | '/_svelte_kit_assets';
+	let assets: '' | `https://${string}` | `http://${string}` | '/_svelte_kit_assets';
 
 	/**
 	 * Populate a route ID with params to resolve a pathname.
@@ -2160,7 +2176,9 @@ declare module '$app/paths' {
 	 * ); // `/blog/hello-world/something/else`
 	 * ```
 	 */
-	export function resolveRoute(id: string, params: Record<string, string | undefined>): string;
+	function resolveRoute(id: string, params: Record<string, string | undefined>): string;
+
+	export { base, assets, resolveRoute };
 }
 
 declare module '$app/server' {
@@ -2176,11 +2194,13 @@ declare module '$app/server' {
 	 * ```
 	 * @since 2.4.0
 	 */
-	export function read(asset: string): Response;
+	function read(asset: string): Response;
+
+	export { read };
 }
 
 declare module '$app/stores' {
-	export function getStores(): {
+	function getStores(): {
 		
 		page: typeof page;
 		
@@ -2194,7 +2214,7 @@ declare module '$app/stores' {
 	 * On the server, this store can only be subscribed to during component initialization. In the browser, it can be subscribed to at any time.
 	 *
 	 * */
-	export const page: import('svelte/store').Readable<import('@sveltejs/kit').Page>;
+	const page: import('svelte/store').Readable<import('@sveltejs/kit').Page>;
 	/**
 	 * A readable store.
 	 * When navigating starts, its value is a `Navigation` object with `from`, `to`, `type` and (if `type === 'popstate'`) `delta` properties.
@@ -2202,15 +2222,17 @@ declare module '$app/stores' {
 	 *
 	 * On the server, this store can only be subscribed to during component initialization. In the browser, it can be subscribed to at any time.
 	 * */
-	export const navigating: import('svelte/store').Readable<import('@sveltejs/kit').Navigation | null>;
+	const navigating: import('svelte/store').Readable<import('@sveltejs/kit').Navigation | null>;
 	/**
 	 * A readable store whose initial value is `false`. If [`version.pollInterval`](https://kit.svelte.dev/docs/configuration#version) is a non-zero value, SvelteKit will poll for new versions of the app and update the store value to `true` when it detects one. `updated.check()` will force an immediate check, regardless of polling.
 	 *
 	 * On the server, this store can only be subscribed to during component initialization. In the browser, it can be subscribed to at any time.
 	 * */
-	export const updated: import('svelte/store').Readable<boolean> & {
+	const updated: import('svelte/store').Readable<boolean> & {
 		check(): Promise<boolean>;
 	};
+
+	export { getStores, page, navigating, updated };
 }/**
  * It's possible to tell SvelteKit how to type objects inside your app by declaring the `App` namespace. By default, a new project will have a file called `src/app.d.ts` containing the following:
  *
