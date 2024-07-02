@@ -14,6 +14,7 @@
 			"svelte": "./dist/index.js"
 		}
 	},
+	"sideEffects": ["**/*.css"],
 	"files": ["dist", "!dist/**/*.test.*", "!dist/**/*.spec.*"],
 	"peerDependencies": {
 		"svelte": "^4.0.0"
