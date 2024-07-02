@@ -1851,6 +1851,10 @@ export function pushState(url, state) {
 	}
 
 	if (DEV) {
+		if (!started) {
+			throw new Error('Cannot call pushState(...) before router is initialized');
+		}
+
 		try {
 			// use `devalue.stringify` as a convenient way to ensure we exclude values that can't be properly rehydrated, such as custom class instances
 			devalue.stringify(state);
@@ -1891,6 +1895,10 @@ export function replaceState(url, state) {
 	}
 
 	if (DEV) {
+		if (!started) {
+			throw new Error('Cannot call replaceState(...) before router is initialized');
+		}
+
 		try {
 			// use `devalue.stringify` as a convenient way to ensure we exclude values that can't be properly rehydrated, such as custom class instances
 			devalue.stringify(state);
