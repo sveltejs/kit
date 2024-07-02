@@ -29,7 +29,8 @@ import toml from '@iarna/toml';
  */
 
 const name = '@sveltejs/adapter-netlify';
-const files = fileURLToPath(new URL('./files', import.meta.url).href);
+const files = fileURLToPath(new URL('./files', import.meta.url).href).replace('files', 'src');
+console.log('files', files);
 
 const edge_set_in_env_var =
 	process.env.NETLIFY_SVELTEKIT_USE_EDGE === 'true' ||
@@ -89,10 +90,32 @@ export default function ({ split = false, edge = edge_set_in_env_var } = {}) {
 				if (split) {
 					throw new Error('Cannot use `split: true` alongside `edge: true`');
 				}
+			}
+
+			let hasEdge;
+			let hasLambda;
+			const mutatedRoutes = { edge: [], lamdba: [] };
+			for (let i = 0; i < builder.routes.length; i++) {
+				const route = builder.routes[i];
+				const isEdge = route?.config?.runtime == 'edge' || edge || false;
+				if (isEdge) {
+					hasEdge = true;
+					mutatedRoutes.edge.push(route);
+				} else if (!isEdge) {
+					hasLambda = true;
+					mutatedRoutes.lamdba.push(route);
+				}
+			}
+
+			// generate edge
+			if (hasEdge) {
+				builder.routes = mutatedRoutes.edge;
 
 				await generate_edge_functions({ builder });
-			} else {
-				generate_lambda_functions({ builder, split, publish });
+			}
+			if (hasLambda) {
+				builder.routes = mutatedRoutes.lamdba;
+				generate_lambda_functions({ builder, publish, split });
 			}
 		},
 
@@ -166,7 +189,6 @@ async function generate_edge_functions({ builder }) {
 		format: 'esm',
 		platform: 'browser',
 		sourcemap: 'linked',
-		target: 'es2020',
 
 		// Node built-ins are allowed, but must be prefixed with `node:`
 		// https://docs.netlify.com/edge-functions/api/#runtime-environment
@@ -196,7 +218,10 @@ function generate_lambda_functions({ builder, publish, split }) {
 	builder.copy(`${files}/esm`, '.netlify', { replace });
 
 	// Configuring the function to use ESM as the output format.
-	const fn_config = JSON.stringify({ config: { nodeModuleFormat: 'esm' }, version: 1 });
+	const fn_config = JSON.stringify({
+		config: { nodeModuleFormat: 'esm' },
+		version: 1
+	});
 
 	builder.log.minor('Generating serverless functions...');
 
