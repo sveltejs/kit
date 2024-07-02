@@ -216,6 +216,8 @@ export async function load({ data }) {
 }
 ```
 
+> It's important to not modify `data` to include any non-serializable objects since it will be processed by the **server** `load` after the **universal** `load` returns.
+
 ## Using URL data
 
 Often the `load` function depends on the URL in one way or another. For this, the `load` function provides you with `url`, `route` and `params`.
