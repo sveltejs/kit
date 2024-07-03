@@ -2,7 +2,7 @@ import { existsSync } from 'node:fs';
 import * as path from 'node:path';
 
 import MagicString from 'magic-string';
-import { asyncWalk } from 'estree-walker';
+import { walk } from 'zimmerframe';
 import { parse } from 'svelte-parse-markup';
 
 const ASSET_PREFIX = '___ASSET___';
@@ -27,7 +27,7 @@ export function image(opts) {
 	const images = new Map();
 
 	return {
-		async markup({ content, filename }) {
+		markup({ content, filename }) {
 			if (!content.includes('<enhanced:img')) {
 				return;
 			}
@@ -111,20 +111,15 @@ export function image(opts) {
 				}
 			}
 
-			// TODO: switch to zimmerframe with Svelte 5
-			// @ts-ignore
-			await asyncWalk(ast.html, {
+			walk(ast.html, {}, {
 				/**
 				 * @param {import('svelte/types/compiler/interfaces').TemplateNode} node
 				 */
-				async enter(node) {
-					if (node.type === 'Element') {
-						// Compare node tag match
-						if (node.name === 'enhanced:img') {
-							const src = get_attr_value(node, 'src');
-							if (!src) return;
-							await update_element(node, src);
-						}
+				Element(node) {
+					if (node.name === 'enhanced:img') {
+						const src = get_attr_value(node, 'src');
+						if (!src) return;
+						update_element(node, src);
 					}
 				}
 			});
