@@ -1,5 +1,11 @@
 # create-svelte
 
+## 6.3.3
+### Patch Changes
+
+
+- chore: rename styles.css to app.css ([#12426](https://github.com/sveltejs/kit/pull/12426))
+
 ## 6.3.2
 
 ### Patch Changes
