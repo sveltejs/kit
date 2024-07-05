@@ -5,4 +5,4 @@
 '@sveltejs/adapter-vercel': patch
 ---
 
-fix: copy `.woff` and `.ttf` font files when bundling
+fix: copy `.woff`, `woff2`, and `.ttf` font files when bundling
