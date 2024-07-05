@@ -62,7 +62,9 @@ export default function (options = {}) {
 
 			writeFileSync(`${dest}/_headers`, generate_headers(builder.getAppPath()), { flag: 'a' });
 
-			writeFileSync(`${dest}/_redirects`, generate_redirects(builder), { flag: 'a' });
+			if (builder.prerendered.redirects.size > 0) {
+				writeFileSync(`${dest}/_redirects`, generate_redirects(builder.prerendered.redirects), { flag: 'a' });
+			}
 
 			builder.copy(`${files}/worker.js`, `${tmp}/_worker.js`, {
 				replace: {
@@ -235,10 +237,10 @@ function generate_headers(app_dir) {
 `.trimEnd();
 }
 
-/** @param {import('@sveltejs/kit').Builder} builder */
-function generate_redirects(builder) {
+/** @param {Map<string, { status: number; location: string }>} redirects */
+function generate_redirects(redirects) {
 	const rules = Array.from(
-		builder.prerendered.redirects.entries(),
+		redirects.entries(),
 		([path, redirect]) => `${path} ${redirect.location} ${redirect.status}`
 	).join('\n');
 
