@@ -167,7 +167,12 @@ async function generate_edge_functions({ builder }) {
 		platform: 'browser',
 		sourcemap: 'linked',
 		target: 'es2020',
-
+		loader: {
+			'.wasm': 'copy',
+			'.woff': 'copy',
+			'.ttf': 'copy'
+		},
+		assetNames: '[name]',
 		// Node built-ins are allowed, but must be prefixed with `node:`
 		// https://docs.netlify.com/edge-functions/api/#runtime-environment
 		external: builtinModules.map((id) => `node:${id}`),

@@ -90,8 +90,11 @@ export default function (options = {}) {
 					format: 'esm',
 					bundle: true,
 					loader: {
-						'.wasm': 'copy'
+						'.wasm': 'copy',
+						'.woff': 'copy',
+						'.ttf': 'copy'
 					},
+					assetNames: '[name]',
 					external,
 					alias: Object.fromEntries(compatible_node_modules.map((id) => [id, `node:${id}`])),
 					logLevel: 'silent'
