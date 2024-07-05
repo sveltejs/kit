@@ -1,4 +1,5 @@
 import { SvelteComponent } from 'svelte';
+import './css/global.css';
 declare const __propDef: {
 	props: {
 		bar?: import('./sub/foo').Foo;
