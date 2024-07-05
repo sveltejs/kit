@@ -137,8 +137,7 @@ const plugin = function (defaults = {}) {
 							'.wasm': 'copy',
 							'.woff': 'copy',
 							'.ttf': 'copy'
-						},
-						assetNames: '[name]'
+						}
 					});
 
 					if (result.warnings.length > 0) {

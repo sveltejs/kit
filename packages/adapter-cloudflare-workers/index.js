@@ -101,7 +101,6 @@ export default function ({ config = 'wrangler.toml', platformProxy = {} } = {}) 
 						'.woff': 'copy',
 						'.ttf': 'copy'
 					},
-					assetNames: '[name]',
 					logLevel: 'silent'
 				});
 

@@ -94,7 +94,6 @@ export default function (options = {}) {
 						'.woff': 'copy',
 						'.ttf': 'copy'
 					},
-					assetNames: '[name]',
 					external,
 					alias: Object.fromEntries(compatible_node_modules.map((id) => [id, `node:${id}`])),
 					logLevel: 'silent'
