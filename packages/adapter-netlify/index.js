@@ -170,6 +170,7 @@ async function generate_edge_functions({ builder }) {
 		loader: {
 			'.wasm': 'copy',
 			'.woff': 'copy',
+			'.woff2': 'copy',
 			'.ttf': 'copy'
 		},
 		// Node built-ins are allowed, but must be prefixed with `node:`

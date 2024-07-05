@@ -92,6 +92,7 @@ export default function (options = {}) {
 					loader: {
 						'.wasm': 'copy',
 						'.woff': 'copy',
+						'.woff2': 'copy',
 						'.ttf': 'copy'
 					},
 					external,

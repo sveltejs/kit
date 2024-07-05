@@ -136,6 +136,7 @@ const plugin = function (defaults = {}) {
 						loader: {
 							'.wasm': 'copy',
 							'.woff': 'copy',
+							'.woff2': 'copy',
 							'.ttf': 'copy'
 						}
 					});

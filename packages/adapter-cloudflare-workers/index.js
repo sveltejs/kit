@@ -99,6 +99,7 @@ export default function ({ config = 'wrangler.toml', platformProxy = {} } = {}) 
 					loader: {
 						'.wasm': 'copy',
 						'.woff': 'copy',
+						'.woff2': 'copy',
 						'.ttf': 'copy'
 					},
 					logLevel: 'silent'
