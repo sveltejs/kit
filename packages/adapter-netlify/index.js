@@ -172,7 +172,7 @@ async function generate_edge_functions({ builder }) {
 			'.woff': 'copy',
 			'.woff2': 'copy',
 			'.ttf': 'copy',
-			'.eof': 'copy',
+			'.eot': 'copy',
 			'.otf': 'copy'
 		},
 		// Node built-ins are allowed, but must be prefixed with `node:`

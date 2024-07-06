@@ -101,7 +101,7 @@ export default function ({ config = 'wrangler.toml', platformProxy = {} } = {}) 
 						'.woff': 'copy',
 						'.woff2': 'copy',
 						'.ttf': 'copy',
-						'.eof': 'copy',
+						'.eot': 'copy',
 						'.otf': 'copy'
 					},
 					logLevel: 'silent'

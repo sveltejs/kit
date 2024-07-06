@@ -94,7 +94,7 @@ export default function (options = {}) {
 						'.woff': 'copy',
 						'.woff2': 'copy',
 						'.ttf': 'copy',
-						'.eof': 'copy',
+						'.eot': 'copy',
 						'.otf': 'copy'
 					},
 					external,
