@@ -134,7 +134,12 @@ const plugin = function (defaults = {}) {
 						sourcemap: 'linked',
 						banner: { js: 'globalThis.global = globalThis;' },
 						loader: {
-							'.wasm': 'copy'
+							'.wasm': 'copy',
+							'.woff': 'copy',
+							'.woff2': 'copy',
+							'.ttf': 'copy',
+							'.eot': 'copy',
+							'.otf': 'copy'
 						}
 					});
 

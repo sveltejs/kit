@@ -90,7 +90,12 @@ export default function (options = {}) {
 					format: 'esm',
 					bundle: true,
 					loader: {
-						'.wasm': 'copy'
+						'.wasm': 'copy',
+						'.woff': 'copy',
+						'.woff2': 'copy',
+						'.ttf': 'copy',
+						'.eot': 'copy',
+						'.otf': 'copy'
 					},
 					external,
 					alias: Object.fromEntries(compatible_node_modules.map((id) => [id, `node:${id}`])),
