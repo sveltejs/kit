@@ -1,5 +1,11 @@
 # @sveltejs/adapter-netlify
 
+## 4.3.1
+### Patch Changes
+
+
+- fix: copy `.eot`, `.otf`, `.ttf`, `.woff`, and `woff2` font files when bundling ([#12439](https://github.com/sveltejs/kit/pull/12439))
+
 ## 4.3.0
 ### Minor Changes
 
