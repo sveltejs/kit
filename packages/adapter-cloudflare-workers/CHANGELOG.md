@@ -1,5 +1,11 @@
 # @sveltejs/adapter-cloudflare-workers
 
+## 2.5.1
+### Patch Changes
+
+
+- fix: copy `.eot`, `.otf`, `.ttf`, `.woff`, and `woff2` font files when bundling ([#12439](https://github.com/sveltejs/kit/pull/12439))
+
 ## 2.5.0
 ### Minor Changes
 
