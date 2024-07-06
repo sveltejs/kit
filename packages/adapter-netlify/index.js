@@ -171,7 +171,9 @@ async function generate_edge_functions({ builder }) {
 			'.wasm': 'copy',
 			'.woff': 'copy',
 			'.woff2': 'copy',
-			'.ttf': 'copy'
+			'.ttf': 'copy',
+			'.eof': 'copy',
+			'.otf': 'copy'
 		},
 		// Node built-ins are allowed, but must be prefixed with `node:`
 		// https://docs.netlify.com/edge-functions/api/#runtime-environment

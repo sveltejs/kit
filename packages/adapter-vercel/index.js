@@ -137,7 +137,9 @@ const plugin = function (defaults = {}) {
 							'.wasm': 'copy',
 							'.woff': 'copy',
 							'.woff2': 'copy',
-							'.ttf': 'copy'
+							'.ttf': 'copy',
+							'.eof': 'copy',
+							'.otf': 'copy'
 						}
 					});
 

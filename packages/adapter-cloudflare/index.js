@@ -93,7 +93,9 @@ export default function (options = {}) {
 						'.wasm': 'copy',
 						'.woff': 'copy',
 						'.woff2': 'copy',
-						'.ttf': 'copy'
+						'.ttf': 'copy',
+						'.eof': 'copy',
+						'.otf': 'copy'
 					},
 					external,
 					alias: Object.fromEntries(compatible_node_modules.map((id) => [id, `node:${id}`])),
