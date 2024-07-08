@@ -24,7 +24,7 @@ const overrides = { ...existing_workspace_overrides };
 
 for (const pkg_path of glob(resolve_path('../../../packages/*/package.json'))) {
 	const name = JSON.parse(fs.readFileSync(pkg_path, 'utf-8')).name;
-	// use `file:` protocol for opting into stricter resolve logic which catches more bugs,
+	// use `file:` protocol for opting into stricter resolve logic which catches more bugs
 	overrides[name] = `file:${path.dirname(path.resolve(pkg_path))}`;
 }
 
