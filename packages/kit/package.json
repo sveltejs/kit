@@ -43,7 +43,7 @@
 		"svelte-preprocess": "^6.0.0",
 		"typescript": "^5.3.3",
 		"vite": "^5.3.2",
-		"vitest": "^1.6.0"
+		"vitest": "^2.0.0"
 	},
 	"peerDependencies": {
 		"@sveltejs/vite-plugin-svelte": "^3.0.0",
