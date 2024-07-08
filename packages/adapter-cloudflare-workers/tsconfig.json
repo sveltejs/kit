@@ -13,5 +13,5 @@
 			"@sveltejs/kit": ["../kit/types/index"]
 		}
 	},
-	"include": ["*.js", "src/*.js", "*.d.ts"]
+	"include": ["*.js", "*.d.ts"]
 }
