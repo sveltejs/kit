@@ -34,7 +34,10 @@ declare class CacheStorage_2 {
 /**
  * Result of the `getPlatformProxy` utility
  */
-export declare type PlatformProxy<Env = Record<string, unknown>, CfProperties extends Record<string, unknown> = IncomingRequestCfProperties> = {
+export declare type PlatformProxy<
+	Env = Record<string, unknown>,
+	CfProperties extends Record<string, unknown> = IncomingRequestCfProperties
+> = {
 	/**
 	 * Environment object containing the various Cloudflare bindings
 	 */
@@ -65,44 +68,49 @@ export declare type PlatformProxy<Env = Record<string, unknown>, CfProperties ex
  * @param options The various options that can tweak this function's behavior
  * @returns An Object containing the generated proxies alongside other related utilities
  */
-export declare function getPlatformProxy<Env = Record<string, unknown>, CfProperties extends Record<string, unknown> = IncomingRequestCfProperties>(options?: GetPlatformProxyOptions): Promise<PlatformProxy<Env, CfProperties>>;
+export declare function getPlatformProxy<
+	Env = Record<string, unknown>,
+	CfProperties extends Record<string, unknown> = IncomingRequestCfProperties
+>(options?: GetPlatformProxyOptions): Promise<PlatformProxy<Env, CfProperties>>;
 
 /**
  * Options for the `getPlatformProxy` utility
  */
 export declare type GetPlatformProxyOptions = {
-    /**
-     * The name of the environment to use
-     */
-    environment?: string;
-    /**
-     * The path to the config file to use.
-     * If no path is specified the default behavior is to search from the
-     * current directory up the filesystem for a `wrangler.toml` to use.
-     *
-     * Note: this field is optional but if a path is specified it must
-     *       point to a valid file on the filesystem
-     */
-    configPath?: string;
-    /**
-     * Flag to indicate the utility to read a json config file (`wrangler.json`)
-     * instead of the toml one (`wrangler.toml`)
-     *
-     * Note: this feature is experimental
-     */
-    experimentalJsonConfig?: boolean;
-    /**
-     * Indicates if and where to persist the bindings data, if not present or `true` it defaults to the same location
-     * used by wrangler v3: `.wrangler/state/v3` (so that the same data can be easily used by the caller and wrangler).
-     * If `false` is specified no data is persisted on the filesystem.
-     */
-    persist?: boolean | {
-        path: string;
-    };
-    /**
-     * Use the experimental file-based dev registry for service discovery
-     *
-     * Note: this feature is experimental
-     */
-    experimentalRegistry?: boolean;
+	/**
+	 * The name of the environment to use
+	 */
+	environment?: string;
+	/**
+	 * The path to the config file to use.
+	 * If no path is specified the default behavior is to search from the
+	 * current directory up the filesystem for a `wrangler.toml` to use.
+	 *
+	 * Note: this field is optional but if a path is specified it must
+	 *       point to a valid file on the filesystem
+	 */
+	configPath?: string;
+	/**
+	 * Flag to indicate the utility to read a json config file (`wrangler.json`)
+	 * instead of the toml one (`wrangler.toml`)
+	 *
+	 * Note: this feature is experimental
+	 */
+	experimentalJsonConfig?: boolean;
+	/**
+	 * Indicates if and where to persist the bindings data, if not present or `true` it defaults to the same location
+	 * used by wrangler v3: `.wrangler/state/v3` (so that the same data can be easily used by the caller and wrangler).
+	 * If `false` is specified no data is persisted on the filesystem.
+	 */
+	persist?:
+		| boolean
+		| {
+				path: string;
+		  };
+	/**
+	 * Use the experimental file-based dev registry for service discovery
+	 *
+	 * Note: this feature is experimental
+	 */
+	experimentalRegistry?: boolean;
 };
