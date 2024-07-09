@@ -475,15 +475,7 @@ function initialize(result, target, hydrate) {
  *   form?: Record<string, any> | null;
  * }} opts
  */
-async function get_navigation_result_from_branch({
-	url,
-	params,
-	branch,
-	status,
-	error,
-	route,
-	form
-}) {
+function get_navigation_result_from_branch({ url, params, branch, status, error, route, form }) {
 	/** @type {import('types').TrailingSlash} */
 	let slash = 'never';
 
@@ -1023,7 +1015,7 @@ async function load_route({ id, invalidating, url, params, route, preload }) {
 
 				const error_load = await load_nearest_error_page(i, branch, errors);
 				if (error_load) {
-					return await get_navigation_result_from_branch({
+					return get_navigation_result_from_branch({
 						url,
 						params,
 						branch: branch.slice(0, error_load.idx).concat(error_load.node),
@@ -1042,7 +1034,7 @@ async function load_route({ id, invalidating, url, params, route, preload }) {
 		}
 	}
 
-	return await get_navigation_result_from_branch({
+	return get_navigation_result_from_branch({
 		url,
 		params,
 		branch,
@@ -1076,7 +1068,7 @@ async function load_nearest_error_page(i, branch, errors) {
 						universal: null
 					}
 				};
-			} catch (e) {
+			} catch {
 				continue;
 			}
 		}
@@ -1142,7 +1134,7 @@ async function load_root_error_page({ status, error, url, route }) {
 		data: null
 	};
 
-	return await get_navigation_result_from_branch({
+	return get_navigation_result_from_branch({
 		url,
 		params,
 		branch: [root_layout, root_error],
@@ -1955,7 +1947,7 @@ export async function applyAction(result) {
 
 		const error_load = await load_nearest_error_page(current.branch.length, branch, route.errors);
 		if (error_load) {
-			const navigation_result = await get_navigation_result_from_branch({
+			const navigation_result = get_navigation_result_from_branch({
 				url,
 				params: current.params,
 				branch: branch.slice(0, error_load.idx).concat(error_load.node),
@@ -2380,7 +2372,7 @@ async function _hydrate(
 			}
 		}
 
-		result = await get_navigation_result_from_branch({
+		result = get_navigation_result_from_branch({
 			url,
 			params,
 			branch,

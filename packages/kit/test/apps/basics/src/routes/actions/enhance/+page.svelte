@@ -57,3 +57,9 @@
 		<button formmethod="dialog">Cancel</button>
 	</form>
 </dialog>
+
+<form action="?/send_file" method="post" use:enhance>
+	<input type="file" name="file" class="form-file-input" />
+
+	<button class="form-file-submit" formenctype="multipart/form-data" type="submit">Submit</button>
+</form>

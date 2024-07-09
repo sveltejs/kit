@@ -10,7 +10,7 @@ export async function migrate() {
 	let compiler;
 	try {
 		compiler = await import_from_cwd('svelte/compiler');
-	} catch (e) {
+	} catch {
 		console.log(colors.bold().red('❌ Could not find a local Svelte installation.'));
 		return;
 	}
@@ -38,7 +38,7 @@ export async function migrate() {
 		try {
 			const code = await remove_self_closing_tags(compiler, fs.readFileSync(file, 'utf-8'));
 			fs.writeFileSync(file, code);
-		} catch (e) {
+		} catch {
 			// continue
 		}
 	}
@@ -48,9 +48,9 @@ export async function migrate() {
 }
 
 /** @param {string} name */
-async function import_from_cwd(name) {
+function import_from_cwd(name) {
 	const cwd = pathToFileURL(process.cwd()).href;
-	const url = await resolve(name, cwd + '/x.js');
+	const url = resolve(name, cwd + '/x.js');
 
 	return import(url);
 }

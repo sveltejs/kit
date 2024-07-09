@@ -13,13 +13,15 @@ permissions:
 
 jobs:
   Audit:
+    # prevents this action from running on forks
+    if: github.repository == 'sveltejs/kit'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
       - uses: pnpm/action-setup@v4.0.0
       - uses: actions/setup-node@v4
         with:
-          node-version: '20.x'
+          node-version: '22.x'
           cache: pnpm
       - run: pnpm install --frozen-lockfile
       # check prod dependencies as these would affect users

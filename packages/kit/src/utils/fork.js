@@ -7,7 +7,7 @@ import { Worker, parentPort } from 'node:worker_threads';
  * @template T
  * @template U
  * @param {string} module `import.meta.url` of the file
- * @param {(opts: T) => U} callback The function that is invoked in the subprocess
+ * @param {(opts: T) => Promise<U>} callback The function that is invoked in the subprocess
  * @returns {(opts: T) => Promise<U>} A function that when called starts the subprocess
  */
 export function forked(module, callback) {

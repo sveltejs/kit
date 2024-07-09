@@ -84,7 +84,7 @@ export async function transpile_ts(tsconfig, filename, source) {
 async function try_load_ts() {
 	try {
 		return (await import('typescript')).default;
-	} catch (e) {
+	} catch {
 		throw new Error(
 			'You need to install TypeScript if you want to transpile TypeScript files and/or generate type definitions'
 		);

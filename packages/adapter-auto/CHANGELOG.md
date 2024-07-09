@@ -1,5 +1,23 @@
 # @sveltejs/adapter-auto
 
+## 3.2.2
+
+### Patch Changes
+
+- chore: add keywords for discovery in npm search ([#12330](https://github.com/sveltejs/kit/pull/12330))
+
+- Updated dependencies [[`25acb1d9fce998dccd8050b93cf4142c2b082611`](https://github.com/sveltejs/kit/commit/25acb1d9fce998dccd8050b93cf4142c2b082611), [`642c4a4aff4351b786fe6274aa2f0bf7d905faf9`](https://github.com/sveltejs/kit/commit/642c4a4aff4351b786fe6274aa2f0bf7d905faf9), [`0a0e9aa897123ebec50af08e9385b2ca4fc5bb28`](https://github.com/sveltejs/kit/commit/0a0e9aa897123ebec50af08e9385b2ca4fc5bb28)]:
+  - @sveltejs/kit@2.5.11
+
+## 3.2.1
+
+### Patch Changes
+
+- fix: bump import-meta-resolve to remove deprecation warnings ([#12240](https://github.com/sveltejs/kit/pull/12240))
+
+- Updated dependencies [[`460d4526c80358958e58a2451fe1b663fdc656e9`](https://github.com/sveltejs/kit/commit/460d4526c80358958e58a2451fe1b663fdc656e9), [`16cd900c304e0cf0f16b484aa61a5ba0531d8751`](https://github.com/sveltejs/kit/commit/16cd900c304e0cf0f16b484aa61a5ba0531d8751)]:
+  - @sveltejs/kit@2.5.10
+
 ## 3.2.0
 
 ### Minor Changes
