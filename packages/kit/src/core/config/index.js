@@ -72,8 +72,7 @@ export async function load_config({ cwd = process.cwd() } = {}) {
 
 	if (fs.existsSync(ts_config_file)) {
 		const config = await load_ts_config(ts_config_file);
-		console.log(config);
-		return process_config(config, { cwd });
+		return process_config(config.default, { cwd });
 	}
 
 	return process_config({}, { cwd });
@@ -94,7 +93,7 @@ async function load_ts_config(ts_config_file) {
 		const config = await import(
 			`data:text/javascript;base64,${Buffer.from(js_code).toString('base64')}`
 		);
-		return config.default;
+		return config;
 	} catch (e) {
 		const error = /** @type {Error} */ (e);
 
