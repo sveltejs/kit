@@ -360,6 +360,18 @@ test('load default config (esm)', async () => {
 	expect(config).toEqual(defaults);
 });
 
+test('load default typescript config (esm)', async () => {
+	const cwd = join(__dirname, 'fixtures/typescript');
+
+	const config = await load_config({ cwd });
+	remove_keys(config, ([, v]) => typeof v === 'function');
+
+	const defaults = get_defaults(cwd + '/');
+	defaults.kit.version.name = config.kit.version.name;
+
+	expect(config).toEqual(defaults);
+});
+
 test('errors on loading config with incorrect default export', async () => {
 	let message = null;
 
@@ -372,6 +384,6 @@ test('errors on loading config with incorrect default export', async () => {
 
 	assert.equal(
 		message,
-		'svelte.config.js must have a configuration object as its default export. See https://kit.svelte.dev/docs/configuration'
+		'svelte.config.js or svelte.config.ts must have a configuration object as its default export. See https://kit.svelte.dev/docs/configuration'
 	);
 });

@@ -2,6 +2,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import * as url from 'node:url';
 import options from './options.js';
+import { transpileModule } from 'typescript';
 
 /**
  * Loads the template (src/app.html by default) and validates that it has the
@@ -56,26 +57,49 @@ export function load_error_page(config) {
 }
 
 /**
- * Loads and validates svelte.config.js
+ * Loads and validates svelte.config.js or svelte.config.ts
  * @param {{ cwd?: string }} options
  * @returns {Promise<import('types').ValidatedConfig>}
  */
 export async function load_config({ cwd = process.cwd() } = {}) {
-	const config_file = path.join(cwd, 'svelte.config.js');
+	const js_config_file = path.join(cwd, 'svelte.config.js');
+	const ts_config_file = path.join(cwd, 'svelte.config.ts');
 
-	if (!fs.existsSync(config_file)) {
-		return process_config({}, { cwd });
+	if (fs.existsSync(js_config_file)) {
+		const config = await import(`${url.pathToFileURL(js_config_file).href}?ts=${Date.now()}`);
+		return process_config(config.default, { cwd });
 	}
 
-	const config = await import(`${url.pathToFileURL(config_file).href}?ts=${Date.now()}`);
+	if (fs.existsSync(ts_config_file)) {
+		const config = await load_ts_config(ts_config_file);
+		console.log(config);
+		return process_config(config, { cwd });
+	}
 
+	return process_config({}, { cwd });
+}
+
+/**
+ * Loads and transpiles the TypeScript configuration file
+ * @param {string} ts_config_file
+ * @returns {Promise<import('@sveltejs/kit').Config>}
+ */
+async function load_ts_config(ts_config_file) {
 	try {
-		return process_config(config.default, { cwd });
+		const ts_code = fs.readFileSync(ts_config_file, 'utf-8');
+		const js_code = transpileModule(ts_code, {
+			compilerOptions: { module: 99, target: 99 }
+		}).outputText;
+
+		const config = await import(
+			`data:text/javascript;base64,${Buffer.from(js_code).toString('base64')}`
+		);
+		return config.default;
 	} catch (e) {
 		const error = /** @type {Error} */ (e);
 
 		// redact the stack trace — it's not helpful to users
-		error.stack = `Could not load svelte.config.js: ${error.message}\n`;
+		error.stack = `Could not load svelte.config.ts: ${error.message}\n`;
 		throw error;
 	}
 }
@@ -110,7 +134,7 @@ function process_config(config, { cwd = process.cwd() } = {}) {
 export function validate_config(config) {
 	if (typeof config !== 'object') {
 		throw new Error(
-			'svelte.config.js must have a configuration object as its default export. See https://kit.svelte.dev/docs/configuration'
+			'svelte.config.js or svelte.config.ts must have a configuration object as its default export. See https://kit.svelte.dev/docs/configuration'
 		);
 	}
 
