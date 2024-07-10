@@ -1,5 +1,25 @@
 # create-svelte
 
+## 6.3.3
+### Patch Changes
+
+
+- chore: rename styles.css to app.css ([#12426](https://github.com/sveltejs/kit/pull/12426))
+
+## 6.3.2
+
+### Patch Changes
+
+- chore: update text about svelte-add ([#12337](https://github.com/sveltejs/kit/pull/12337))
+
+## 6.3.1
+
+### Patch Changes
+
+- chore: overhaul ignore configs ([#11938](https://github.com/sveltejs/kit/pull/11938))
+
+- chore: add keywords for discovery in npm search ([#12330](https://github.com/sveltejs/kit/pull/12330))
+
 ## 6.3.0
 
 ### Minor Changes

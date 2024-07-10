@@ -1,5 +1,11 @@
 # svelte-migrate
 
+## 1.4.3
+
+### Patch Changes
+
+- chore: add keywords for discovery in npm search ([#12330](https://github.com/sveltejs/kit/pull/12330))
+
 ## 1.4.2
 
 ### Patch Changes
