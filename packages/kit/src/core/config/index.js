@@ -2,7 +2,8 @@ import fs from 'node:fs';
 import path from 'node:path';
 import * as url from 'node:url';
 import options from './options.js';
-import { transpileModule } from 'typescript';
+import pkg from 'typescript';
+const { transpileModule } = pkg;
 
 /**
  * Loads the template (src/app.html by default) and validates that it has the
