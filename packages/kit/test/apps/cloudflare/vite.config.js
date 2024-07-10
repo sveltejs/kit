@@ -6,8 +6,6 @@ export default defineConfig({
 	plugins: [sveltekit()],
 	test: {
 		include: ['src/**/*.{test,spec}.{js,ts}'],
-		// https://github.com/sveltejs/kit/issues/12305
-		teardownTimeout: 100
 	},
 	server: {
 		fs: {
