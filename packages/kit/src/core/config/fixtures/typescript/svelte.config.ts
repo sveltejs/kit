@@ -1,5 +1,1 @@
-export default {
-	preprocess: [],
-	extensions: ['.svelte'],
-	kit: {}
-};
+export default {};
