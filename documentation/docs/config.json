@@ -1,0 +1,83 @@
+{
+	"sidebar": [
+		{
+			"text": "Getting Started",
+			"items": [
+				{ "file": "10-getting-started/10-introduction.md" },
+				{ "file": "10-getting-started/20-creating-a-project.md" },
+				{ "file": "10-getting-started/30-project-structure.md" },
+				{ "file": "10-getting-started/40-web-standards.md" }
+			]
+		},
+		{
+			"text": "Core Concepts",
+			"items": [
+				{ "file": "20-core-concepts/10-routing.md" },
+				{ "file": "20-core-concepts/20-load.md" },
+				{ "file": "20-core-concepts/30-form-actions.md" },
+				{ "file": "20-core-concepts/40-page-options.md" },
+				{ "file": "20-core-concepts/50-state-management.md" }
+			]
+		},
+		{
+			"text": "Build and Deploy",
+			"items": [
+				{ "file": "25-build-and-deploy/10-building-your-app.md" },
+				{ "file": "25-build-and-deploy/20-adapters.md" },
+				{ "file": "25-build-and-deploy/30-adapter-auto.md" },
+				{ "file": "25-build-and-deploy/40-adapter-node.md" },
+				{ "file": "25-build-and-deploy/50-adapter-static.md" },
+				{ "file": "25-build-and-deploy/55-single-page-apps.md" },
+				{ "file": "25-build-and-deploy/60-adapter-cloudflare.md" },
+				{ "file": "25-build-and-deploy/70-adapter-cloudflare-workers.md" },
+				{ "file": "25-build-and-deploy/80-adapter-netlify.md" },
+				{ "file": "25-build-and-deploy/90-adapter-vercel.md" },
+				{ "file": "25-build-and-deploy/99-writing-adapters.md" },
+			]
+		},
+		{
+			"text": "Advanced",
+			"items": [
+				{ "file": "30-advanced/10-advanced-routing.md" },
+				{ "file": "30-advanced/20-hooks.md" },
+				{ "file": "30-advanced/25-errors.md" },
+				{ "file": "30-advanced/30-link-options.md" },
+				{ "file": "30-advanced/40-service-workers.md" },
+				{ "file": "30-advanced/50-server-only-modules.md" },
+				{ "file": "30-advanced/65-snapshots.md" },
+				{ "file": "30-advanced/67-shallow-routing.md" },
+				{ "file": "30-advanced/70-packaging.md" },
+			]
+		},
+		{
+			"text": "Best Practices",
+			"items": [
+				{ "file": "40-best-practices/05-performance.md" },
+				{ "file": "40-best-practices/07-images.md" },
+				{ "file": "40-best-practices/10-accessibility.md" },
+				{ "file": "40-best-practices/20-seo.md" }
+			]
+		},
+		{
+			"text": "Reference",
+			"items": [
+				{ "file": "50-reference/10-configuration.md" },
+				{ "file": "50-reference/20-cli.md" },
+				{ "file": "50-reference/30-modules.md" },
+				{ "file": "50-reference/40-types.md" }
+			]
+		},
+		{
+			"text": "Appendix",
+			"items": [
+				{ "file": "60-appendix/10-faq.md" },
+				{ "file": "60-appendix/20-integrations.md" },
+				{ "file": "60-appendix/25-debugging.md" },
+				{ "file": "60-appendix/30-migrating-to-sveltekit-2.md" },
+				{ "file": "60-appendix/40-migrating.md" },
+				{ "file": "60-appendix/50-additional-resources.md" },
+				{ "file": "60-appendix/60-glossary.md" }
+			]
+		}
+	]
+}
