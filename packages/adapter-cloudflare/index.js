@@ -63,7 +63,9 @@ export default function (options = {}) {
 			writeFileSync(`${dest}/_headers`, generate_headers(builder.getAppPath()), { flag: 'a' });
 
 			if (builder.prerendered.redirects.size > 0) {
-				writeFileSync(`${dest}/_redirects`, generate_redirects(builder.prerendered.redirects), { flag: 'a' });
+				writeFileSync(`${dest}/_redirects`, generate_redirects(builder.prerendered.redirects), {
+					flag: 'a'
+				});
 			}
 
 			builder.copy(`${files}/worker.js`, `${tmp}/_worker.js`, {
