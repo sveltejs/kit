@@ -52,7 +52,7 @@ export const test = base.extend({
 		});
 	},
 
-	clicknav: ({ page, javaScriptEnabled }, use) => {
+	clicknav: async ({ page, javaScriptEnabled }, use) => {
 		/**
 		 * @param {string} selector
 		 * @param {{ timeout: number }} options
@@ -69,7 +69,7 @@ export const test = base.extend({
 		await use(clicknav);
 	},
 
-	in_view: ({ page }, use) => {
+	in_view: async ({ page }, use) => {
 		/** @param {string} selector */
 		async function in_view(selector) {
 			const box = await page.locator(selector).boundingBox();
@@ -77,7 +77,7 @@ export const test = base.extend({
 			return box && view && box.y < view.height && box.y + box.height > 0;
 		}
 
-		use(in_view);
+		await use(in_view);
 	},
 
 	get_computed_style: async ({ page }, use) => {
@@ -131,7 +131,7 @@ export const test = base.extend({
 	},
 
 	// eslint-disable-next-line no-empty-pattern
-	read_errors: ({}, use) => {
+	read_errors: async ({}, use) => {
 		/** @param {string} path */
 		function read_errors(path) {
 			const errors =
@@ -140,7 +140,7 @@ export const test = base.extend({
 			return errors[path];
 		}
 
-		use(read_errors);
+		await use(read_errors);
 	},
 
 	// eslint-disable-next-line no-empty-pattern
