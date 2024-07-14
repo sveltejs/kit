@@ -48,7 +48,7 @@
 		"polka": "1.0.0-next.25",
 		"sirv": "^2.0.4",
 		"typescript": "^5.3.3",
-		"vitest": "^1.6.0"
+		"vitest": "^2.0.1"
 	},
 	"dependencies": {
 		"@rollup/plugin-commonjs": "^26.0.1",
