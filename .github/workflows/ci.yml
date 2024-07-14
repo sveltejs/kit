@@ -9,7 +9,6 @@ on:
 env:
   # we call `pnpm playwright install` instead
   PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD: '1'
-  PW_DISABLE_TS_ESM: '1'
 
 # cancel in-progress runs on new commits to same PR (gitub.event.number)
 concurrency:
