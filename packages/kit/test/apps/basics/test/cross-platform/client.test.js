@@ -75,9 +75,7 @@ test.describe('a11y', () => {
 			})
 		).toBe(1);
 
-		await clicknav('[href="/selection/b"]', {
-			waitUntil: 'networkidle'
-		});
+		await clicknav('0[href="/selection/b"]');
 
 		expect(
 			await page.evaluate(() => {
@@ -571,9 +569,7 @@ test.describe.serial('Errors', () => {
 
 test.describe('Prefetching', () => {
 	test('prefetches programmatically', async ({ baseURL, page, app }) => {
-		// wait for all initial requests to complete otherwise the check for no requests
-		// below may fail
-		await page.goto('/routing/a', { waitUntil: 'networkidle' });
+		await page.goto('/routing/a');
 
 		/** @type {string[]} */
 		let requests = [];
@@ -751,11 +747,7 @@ test.describe('Routing', () => {
 	});
 
 	test('responds to <form method="GET"> submission without reload', async ({ page }) => {
-		// Wait until all initial requests have been resolved otherwise
-		// the check for no requests might fail.
-		await page.goto('/routing/form-get', {
-			waitUntil: 'networkidle'
-		});
+		await page.goto('/routing/form-get');
 
 		expect(await page.textContent('h1')).toBe('...');
 		expect(await page.textContent('h2')).toBe('enter');

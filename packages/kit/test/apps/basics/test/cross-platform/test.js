@@ -746,13 +746,12 @@ test.describe('Routing', () => {
 		await page.goto('/routing');
 		await clicknav('[href="/routing/a"]');
 
-		await page.goBack({ waitUntil: 'networkidle' });
+		await page.goBack();
 		expect(await page.textContent('h1')).toBe('Great success!');
 	});
 
 	test('focus works if page load has hash', async ({ page, browserName }) => {
-		// wait until networkidle otherwise the keypress will get lost
-		await page.goto('/routing/hashes/target#p2', { waitUntil: 'networkidle' });
+		await page.goto('/routing/hashes/target#p2');
 
 		await page.keyboard.press(browserName === 'webkit' ? 'Alt+Tab' : 'Tab');
 
