@@ -548,7 +548,7 @@ test.describe('Load', () => {
 	}) => {
 		if (javaScriptEnabled) {
 			await page.goto('/prerendering/prerendered-endpoint');
-			await page.click('a', { noWaitAfter: true });
+			await page.click('a');
 		} else {
 			await page.goto('/prerendering/prerendered-endpoint/from-handle-hook');
 		}
