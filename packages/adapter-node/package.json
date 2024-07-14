@@ -1,7 +1,15 @@
 {
 	"name": "@sveltejs/adapter-node",
-	"version": "2.1.1",
+	"version": "5.2.0",
 	"description": "Adapter for SvelteKit apps that generates a standalone Node server",
+	"keywords": [
+		"adapter",
+		"deploy",
+		"hosting",
+		"node.js",
+		"svelte",
+		"sveltekit"
+	],
 	"repository": {
 		"type": "git",
 		"url": "https://github.com/sveltejs/kit",
@@ -26,30 +34,29 @@
 	"scripts": {
 		"dev": "node -e \"fs.rmSync('files', { force: true, recursive: true })\" && rollup -cw",
 		"build": "node -e \"fs.rmSync('files', { force: true, recursive: true })\" && rollup -c",
-		"test": "echo \"tests temporarily disabled\" # c8 vitest run",
+		"test": "echo \"tests temporarily disabled\" # vitest run",
 		"check": "tsc",
 		"lint": "prettier --check .",
 		"format": "pnpm lint --write",
 		"prepublishOnly": "pnpm build"
 	},
 	"devDependencies": {
-		"@polka/url": "1.0.0-next.24",
+		"@polka/url": "1.0.0-next.25",
 		"@sveltejs/kit": "workspace:^",
 		"@sveltejs/vite-plugin-svelte": "^3.0.1",
 		"@types/node": "^18.19.3",
-		"c8": "^9.0.0",
-		"polka": "1.0.0-next.24",
+		"polka": "1.0.0-next.25",
 		"sirv": "^2.0.4",
 		"typescript": "^5.3.3",
-		"vitest": "^1.0.4"
+		"vitest": "^2.0.1"
 	},
 	"dependencies": {
-		"@rollup/plugin-commonjs": "^25.0.7",
+		"@rollup/plugin-commonjs": "^26.0.1",
 		"@rollup/plugin-json": "^6.1.0",
 		"@rollup/plugin-node-resolve": "^15.2.3",
-		"rollup": "^4.8.0"
+		"rollup": "^4.9.5"
 	},
 	"peerDependencies": {
-		"@sveltejs/kit": "^2.0.0"
+		"@sveltejs/kit": "^2.4.0"
 	}
 }

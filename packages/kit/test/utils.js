@@ -5,7 +5,7 @@ import { fileURLToPath } from 'node:url';
 import { test as base, devices } from '@playwright/test';
 
 export const test = base.extend({
-	app: async ({ page }, use) => {
+	app: ({ page }, use) => {
 		// these are assumed to have been put in the global scope by the layout
 		use({
 			/**
@@ -52,7 +52,7 @@ export const test = base.extend({
 		});
 	},
 
-	clicknav: async ({ page, javaScriptEnabled }, use) => {
+	clicknav: ({ page, javaScriptEnabled }, use) => {
 		/**
 		 * @param {string} selector
 		 * @param {{ timeout: number }} options
@@ -69,7 +69,7 @@ export const test = base.extend({
 		await use(clicknav);
 	},
 
-	in_view: async ({ page }, use) => {
+	in_view: ({ page }, use) => {
 		/** @param {string} selector */
 		async function in_view(selector) {
 			const box = await page.locator(selector).boundingBox();
@@ -85,7 +85,7 @@ export const test = base.extend({
 		 * @param {string} selector
 		 * @param {string} prop
 		 */
-		async function get_computed_style(selector, prop) {
+		function get_computed_style(selector, prop) {
 			return page.$eval(
 				selector,
 				(node, prop) => window.getComputedStyle(node).getPropertyValue(prop),
@@ -254,7 +254,7 @@ export const config = {
 	// generous timeouts on CI
 	timeout: process.env.CI ? 45000 : 15000,
 	webServer: {
-		command: process.env.DEV ? 'pnpm dev' : 'pnpm build && pnpm preview',
+		command: process.env.DEV ? 'pnpm dev --force' : 'pnpm build && pnpm preview',
 		port: process.env.DEV ? 5173 : 4173
 	},
 	retries: process.env.CI ? 2 : 0,

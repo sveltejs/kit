@@ -13,7 +13,11 @@ import {
 	HandleFetch,
 	Actions,
 	HandleClientError,
-	Reroute
+	Reroute,
+	RequestEvent,
+	SSRManifest,
+	Emulator,
+	Adapter
 } from '@sveltejs/kit';
 import {
 	HttpMethod,
@@ -30,9 +34,11 @@ export interface ServerModule {
 export interface ServerInternalModule {
 	set_assets(path: string): void;
 	set_building(): void;
+	set_manifest(manifest: SSRManifest): void;
 	set_prerendering(): void;
 	set_private_env(environment: Record<string, string>): void;
 	set_public_env(environment: Record<string, string>): void;
+	set_read_implementation(implementation: (path: string) => ReadableStream): void;
 	set_safe_public_env(environment: Record<string, string>): void;
 	set_version(version: string): void;
 	set_fix_stack_trace(fix_stack_trace: (error: unknown) => string): void;
@@ -45,6 +51,7 @@ export interface Asset {
 }
 
 export interface AssetDependencies {
+	assets: string[];
 	file: string;
 	imports: string[];
 	stylesheets: string[];
@@ -55,6 +62,7 @@ export interface BuildData {
 	app_dir: string;
 	app_path: string;
 	manifest_data: ManifestData;
+	out_dir: string;
 	service_worker: string | null;
 	client: {
 		start: string;
@@ -120,12 +128,20 @@ export class InternalServer extends Server {
 		options: RequestOptions & {
 			prerendering?: PrerenderOptions;
 			read: (file: string) => Buffer;
+			/** A hook called before `handle` during dev, so that `AsyncLocalStorage` can be populated */
+			before_handle?: (event: RequestEvent, config: any, prerender: PrerenderOption) => void;
+			emulator?: Emulator;
 		}
 	): Promise<Response>;
 }
 
 export interface ManifestData {
 	assets: Asset[];
+	hooks: {
+		client: string | null;
+		server: string | null;
+		universal: string | null;
+	};
 	nodes: PageNode[];
 	routes: RouteData[];
 	matchers: Record<string, string>;
@@ -133,14 +149,15 @@ export interface ManifestData {
 
 export interface PageNode {
 	depth: number;
+	/** The +page.svelte */
 	component?: string; // TODO supply default component if it's missing (bit of an edge case)
+	/** The +page.js/.ts */
 	universal?: string;
+	/** The +page.server.js/ts */
 	server?: string;
 	parent_id?: string;
 	parent?: PageNode;
-	/**
-	 * Filled with the pages that reference this layout (if this is a layout)
-	 */
+	/** Filled with the pages that reference this layout (if this is a layout) */
 	child_pages?: PageNode[];
 }
 
@@ -404,6 +421,8 @@ export interface SSRState {
 	 */
 	prerender_default?: PrerenderOption;
 	read?: (file: string) => Buffer;
+	before_handle?: (event: RequestEvent, config: any, prerender: PrerenderOption) => void;
+	emulator?: Emulator;
 }
 
 export type StrictBody = string | ArrayBufferView;
@@ -417,9 +436,14 @@ export interface Uses {
 	search_params: Set<string>;
 }
 
-export type ValidatedConfig = RecursiveRequired<Config>;
+export type ValidatedConfig = Config & {
+	kit: ValidatedKitConfig;
+	extensions: string[];
+};
 
-export type ValidatedKitConfig = RecursiveRequired<KitConfig>;
+export type ValidatedKitConfig = Omit<RecursiveRequired<KitConfig>, 'adapter'> & {
+	adapter?: Adapter;
+};
 
 export * from '../exports/index.js';
 export * from './private.js';

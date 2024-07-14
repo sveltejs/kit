@@ -8,9 +8,6 @@
 		"resolveJsonModule": true,
 		"sourceMap": true,
 		"strict": true,
-		"noEmit": true,
-		"paths": {
-			"types": ["../../../../types/internal"]
-		}
+		"noEmit": true
 	}
 }

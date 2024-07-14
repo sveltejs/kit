@@ -30,6 +30,7 @@ const server_template = ({
 import root from '../root.${isSvelte5Plus() ? 'js' : 'svelte'}';
 import { set_building, set_prerendering } from '__sveltekit/environment';
 import { set_assets } from '__sveltekit/paths';
+import { set_manifest, set_read_implementation } from '__sveltekit/server';
 import { set_private_env, set_public_env, set_safe_public_env } from '${runtime_directory}/shared-server.js';
 
 export const options = {
@@ -68,7 +69,7 @@ export async function get_hooks() {
 	};
 }
 
-export { set_assets, set_building, set_prerendering, set_private_env, set_public_env, set_safe_public_env };
+export { set_assets, set_building, set_manifest, set_prerendering, set_private_env, set_public_env, set_read_implementation, set_safe_public_env };
 `;
 
 // TODO need to re-run this whenever src/app.html or src/error.html are

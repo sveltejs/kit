@@ -1,5 +1,124 @@
 # @sveltejs/adapter-cloudflare
 
+## 4.6.1
+### Patch Changes
+
+
+- fix: copy `.eot`, `.otf`, `.ttf`, `.woff`, and `woff2` font files when bundling ([#12439](https://github.com/sveltejs/kit/pull/12439))
+
+## 4.6.0
+### Minor Changes
+
+
+- chore(deps): upgrade to esbuild 0.21 ([#12415](https://github.com/sveltejs/kit/pull/12415))
+
+
+### Patch Changes
+
+- Updated dependencies [[`84298477a014ec471839adf7a4448d91bc7949e4`](https://github.com/sveltejs/kit/commit/84298477a014ec471839adf7a4448d91bc7949e4), [`5645614f497931f587b7cb8b3c885fce892a6a72`](https://github.com/sveltejs/kit/commit/5645614f497931f587b7cb8b3c885fce892a6a72), [`84298477a014ec471839adf7a4448d91bc7949e4`](https://github.com/sveltejs/kit/commit/84298477a014ec471839adf7a4448d91bc7949e4)]:
+  - @sveltejs/kit@2.5.18
+
+## 4.5.0
+
+### Minor Changes
+
+- feat: validate that no `_routes.json` is present to avoid overwriting it ([#12360](https://github.com/sveltejs/kit/pull/12360))
+
+### Patch Changes
+
+- Updated dependencies [[`121836fcbf6c615fd18c79a12203613ddbe49acf`](https://github.com/sveltejs/kit/commit/121836fcbf6c615fd18c79a12203613ddbe49acf)]:
+  - @sveltejs/kit@2.5.17
+
+## 4.4.1
+
+### Patch Changes
+
+- chore: add keywords for discovery in npm search ([#12330](https://github.com/sveltejs/kit/pull/12330))
+
+- Updated dependencies [[`25acb1d9fce998dccd8050b93cf4142c2b082611`](https://github.com/sveltejs/kit/commit/25acb1d9fce998dccd8050b93cf4142c2b082611), [`642c4a4aff4351b786fe6274aa2f0bf7d905faf9`](https://github.com/sveltejs/kit/commit/642c4a4aff4351b786fe6274aa2f0bf7d905faf9), [`0a0e9aa897123ebec50af08e9385b2ca4fc5bb28`](https://github.com/sveltejs/kit/commit/0a0e9aa897123ebec50af08e9385b2ca4fc5bb28)]:
+  - @sveltejs/kit@2.5.11
+
+## 4.4.0
+
+### Minor Changes
+
+- chore(deps): upgrade esbuild ([#12118](https://github.com/sveltejs/kit/pull/12118))
+
+### Patch Changes
+
+- Updated dependencies [[`bbab296f6fcc05af6b999182798bcdedabbaa4c9`](https://github.com/sveltejs/kit/commit/bbab296f6fcc05af6b999182798bcdedabbaa4c9)]:
+  - @sveltejs/kit@2.5.6
+
+## 4.3.0
+
+### Minor Changes
+
+- feat: support platform emulation configuration via the `platformProxy` adapter option ([#12011](https://github.com/sveltejs/kit/pull/12011))
+
+## 4.2.1
+
+### Patch Changes
+
+- fix: add `workerd` to esbuild conditions ([#12069](https://github.com/sveltejs/kit/pull/12069))
+
+## 4.2.0
+
+### Minor Changes
+
+- feat: emulate Cloudflare Workers bindings and incoming request properties in `event.platform` for `dev` and `preview` ([#11974](https://github.com/sveltejs/kit/pull/11974))
+
+### Patch Changes
+
+- Updated dependencies [[`4562275ed42964148df03c79434172024897c08c`](https://github.com/sveltejs/kit/commit/4562275ed42964148df03c79434172024897c08c)]:
+  - @sveltejs/kit@2.5.4
+
+## 4.1.0
+
+### Minor Changes
+
+- feat: more helpful errors when using incompatible Node modules ([#11673](https://github.com/sveltejs/kit/pull/11673))
+
+- feat: support compatible node modules without prefixes ([#11672](https://github.com/sveltejs/kit/pull/11672))
+
+- feat: Add Node.js compatibility ([#10544](https://github.com/sveltejs/kit/pull/10544))
+
+### Patch Changes
+
+- Updated dependencies [[`288f731c8a5b20cadb9e219f9583f3f16bf8c7b8`](https://github.com/sveltejs/kit/commit/288f731c8a5b20cadb9e219f9583f3f16bf8c7b8)]:
+  - @sveltejs/kit@2.4.0
+
+## 4.0.2
+
+### Patch Changes
+
+- chore(deps): update dependency worktop to v0.8.0-next.18 ([#11618](https://github.com/sveltejs/kit/pull/11618))
+
+## 4.0.1
+
+### Patch Changes
+
+- chore: upgrade esbuild to 0.19.11 ([#11632](https://github.com/sveltejs/kit/pull/11632))
+
+## 4.0.0
+
+### Major Changes
+
+- breaking: generate plaintext 404.html instead of SPA-style fallback page ([#11596](https://github.com/sveltejs/kit/pull/11596))
+
+### Patch Changes
+
+- Updated dependencies [[`2137717ea8592c310ada93490feabbd9eea125ea`](https://github.com/sveltejs/kit/commit/2137717ea8592c310ada93490feabbd9eea125ea)]:
+  - @sveltejs/kit@2.3.3
+
+## 3.0.2
+
+### Patch Changes
+
+- fix: serve static files in `_app` from function, if not already handled ([#11593](https://github.com/sveltejs/kit/pull/11593))
+
+- Updated dependencies [[`553e14c8320ad9c6ebb3c554c35f1482755c9555`](https://github.com/sveltejs/kit/commit/553e14c8320ad9c6ebb3c554c35f1482755c9555), [`48576de0dc8b1fbbab7954113004540ea4e76935`](https://github.com/sveltejs/kit/commit/48576de0dc8b1fbbab7954113004540ea4e76935)]:
+  - @sveltejs/kit@2.3.2
+
 ## 3.0.1
 
 ### Patch Changes

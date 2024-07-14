@@ -12,6 +12,7 @@ import { queue } from './queue.js';
 import { crawl } from './crawl.js';
 import { forked } from '../../utils/fork.js';
 import * as devalue from 'devalue';
+import { createReadableStream } from '@sveltejs/kit/node';
 
 export default forked(import.meta.url, prerender);
 
@@ -90,6 +91,8 @@ async function prerender({ out, manifest_path, metadata, verbose, env }) {
 
 	/** @type {import('types').ValidatedKitConfig} */
 	const config = (await load_config()).kit;
+
+	const emulator = await config.adapter?.emulate?.();
 
 	/** @type {import('types').Logger} */
 	const log = logger({ verbose });
@@ -210,7 +213,8 @@ async function prerender({ out, manifest_path, metadata, verbose, env }) {
 
 				// stuff in `static`
 				return readFileSync(join(config.files.assets, file));
-			}
+			},
+			emulator
 		});
 
 		const encoded_id = response.headers.get('x-sveltekit-routeid');
@@ -272,7 +276,17 @@ async function prerender({ out, manifest_path, metadata, verbose, env }) {
 
 			actual_hashlinks.set(decoded, ids);
 
-			for (const href of hrefs) {
+			/** @param {string} href */
+			const removePrerenderOrigin = (href) => {
+				if (href.startsWith(config.prerender.origin)) {
+					if (href === config.prerender.origin) return '/';
+					if (href.at(config.prerender.origin.length) !== '/') return href;
+					return href.slice(config.prerender.origin.length);
+				}
+				return href;
+			};
+
+			for (const href of hrefs.map(removePrerenderOrigin)) {
 				if (!is_root_relative(href)) continue;
 
 				const { pathname, search, hash } = new URL(href, 'http://localhost');
@@ -430,7 +444,10 @@ async function prerender({ out, manifest_path, metadata, verbose, env }) {
 	log.info('Prerendering');
 
 	const server = new Server(manifest);
-	await server.init({ env });
+	await server.init({
+		env,
+		read: (file) => createReadableStream(`${config.outDir}/output/server/${file}`)
+	});
 
 	for (const entry of config.prerender.entries) {
 		if (entry === '*') {

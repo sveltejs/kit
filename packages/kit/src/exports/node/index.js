@@ -1,3 +1,5 @@
+import { createReadStream } from 'node:fs';
+import { Readable } from 'node:stream';
 import * as set_cookie_parser from 'set-cookie-parser';
 import { SvelteKitError } from '../../runtime/control.js';
 
@@ -34,11 +36,15 @@ function get_raw_body(req, body_size_limit) {
 	return new ReadableStream({
 		start(controller) {
 			if (body_size_limit !== undefined && content_length > body_size_limit) {
-				const error = new SvelteKitError(
-					413,
-					'Payload Too Large',
-					`Content-length of ${content_length} exceeds limit of ${body_size_limit} bytes.`
-				);
+				let message = `Content-length of ${content_length} exceeds limit of ${body_size_limit} bytes.`;
+
+				if (body_size_limit === 0) {
+					// https://github.com/sveltejs/kit/pull/11589
+					// TODO this exists to aid migration — remove in a future version
+					message += ' To disable body size limits, specify Infinity rather than 0.';
+				}
+
+				const error = new SvelteKitError(413, 'Payload Too Large', message);
 
 				controller.error(error);
 				return;
@@ -97,13 +103,18 @@ function get_raw_body(req, body_size_limit) {
  * }} options
  * @returns {Promise<Request>}
  */
+// TODO 3.0 make the signature synchronous?
+// eslint-disable-next-line @typescript-eslint/require-await
 export async function getRequest({ request, base, bodySizeLimit }) {
 	return new Request(base + request.url, {
 		// @ts-expect-error
 		duplex: 'half',
 		method: request.method,
 		headers: /** @type {Record<string, string>} */ (request.headers),
-		body: get_raw_body(request, bodySizeLimit)
+		body:
+			request.method === 'GET' || request.method === 'HEAD'
+				? undefined
+				: get_raw_body(request, bodySizeLimit)
 	});
 }
 
@@ -112,6 +123,8 @@ export async function getRequest({ request, base, bodySizeLimit }) {
  * @param {Response} response
  * @returns {Promise<void>}
  */
+// TODO 3.0 make the signature synchronous?
+// eslint-disable-next-line @typescript-eslint/require-await
 export async function setResponse(res, response) {
 	for (const [key, value] of response.headers) {
 		try {
@@ -184,4 +197,14 @@ export async function setResponse(res, response) {
 			cancel(error instanceof Error ? error : new Error(String(error)));
 		}
 	}
+}
+
+/**
+ * Converts a file on disk to a readable stream
+ * @param {string} file
+ * @returns {ReadableStream}
+ * @since 2.4.0
+ */
+export function createReadableStream(file) {
+	return /** @type {ReadableStream} */ (Readable.toWeb(createReadStream(file)));
 }

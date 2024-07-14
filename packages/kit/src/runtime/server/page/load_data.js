@@ -1,6 +1,7 @@
 import { DEV } from 'esm-env';
 import { disable_search, make_trackable } from '../../../utils/url.js';
 import { validate_depends } from '../../shared.js';
+import { b64_encode } from '../../utils.js';
 
 /**
  * Calls the user's server `load` function.
@@ -205,25 +206,6 @@ export async function load_data({
 	}
 
 	return result ?? null;
-}
-
-/**
- * @param {ArrayBuffer} buffer
- * @returns {string}
- */
-function b64_encode(buffer) {
-	if (globalThis.Buffer) {
-		return Buffer.from(buffer).toString('base64');
-	}
-
-	const little_endian = new Uint8Array(new Uint16Array([1]).buffer)[0] > 0;
-
-	// The Uint16Array(Uint8Array(...)) ensures the code points are padded with 0's
-	return btoa(
-		new TextDecoder(little_endian ? 'utf-16le' : 'utf-16be').decode(
-			new Uint16Array(new Uint8Array(buffer))
-		)
-	);
 }
 
 /**

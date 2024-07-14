@@ -4,10 +4,6 @@
 		"checkJs": true,
 		"esModuleInterop": true,
 		"noEmit": true,
-		"paths": {
-			"@sveltejs/kit": ["../../../types"],
-			"types": ["../../../types/internal"]
-		},
 		"resolveJsonModule": true
 	},
 	"extends": "./.svelte-kit/tsconfig.json"

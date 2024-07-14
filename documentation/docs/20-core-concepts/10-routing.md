@@ -12,6 +12,12 @@ At the heart of SvelteKit is a _filesystem-based router_. The routes of your app
 
 Each route directory contains one or more _route files_, which can be identified by their `+` prefix.
 
+We'll introduce these files in a moment in more detail, but here are a few simple rules to help you remember how SvelteKit's routing works:
+
+* All files can run on the server
+* All files run on the client except `+server` files
+* `+layout` and `+error` files apply to subdirectories as well as the directory they live in
+
 ## +page
 
 ### +page.svelte
@@ -204,6 +210,8 @@ We can create a layout that only applies to pages below `/settings` (while inher
 
 <slot></slot>
 ```
+
+You can see how `data` is populated by looking at the `+layout.js` example in the next section just below.
 
 By default, each layout inherits the layout above it. Sometimes that isn't what you want - in this case, [advanced layouts](advanced-routing#advanced-layouts) can help you.
 

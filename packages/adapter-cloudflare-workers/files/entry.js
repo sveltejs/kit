@@ -6,7 +6,10 @@ const static_asset_manifest = JSON.parse(static_asset_manifest_json);
 
 const server = new Server(manifest);
 
-const app_path = `/${manifest.appPath}/`;
+const app_path = `/${manifest.appPath}`;
+
+const immutable = `${app_path}/immutable/`;
+const version_file = `${app_path}/version.json`;
 
 export default {
 	/**
@@ -25,7 +28,7 @@ export default {
 			const res = await get_asset_from_kv(req, env, context);
 			if (is_error(res.status)) return res;
 
-			const cache_control = url.pathname.startsWith(app_path + 'immutable/')
+			const cache_control = url.pathname.startsWith(immutable)
 				? 'public, immutable, max-age=31536000'
 				: 'no-cache';
 
@@ -59,7 +62,12 @@ export default {
 
 		let location = pathname.at(-1) === '/' ? stripped_pathname : pathname + '/';
 
-		if (is_static_asset || prerendered.has(pathname)) {
+		if (
+			is_static_asset ||
+			prerendered.has(pathname) ||
+			pathname === version_file ||
+			pathname.startsWith(immutable)
+		) {
 			return get_asset_from_kv(req, env, context, (request, options) => {
 				if (prerendered.has(pathname)) {
 					url.pathname = '/' + prerendered.get(pathname).file;
