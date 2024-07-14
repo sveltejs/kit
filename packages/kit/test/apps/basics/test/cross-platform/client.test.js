@@ -75,7 +75,7 @@ test.describe('a11y', () => {
 			})
 		).toBe(1);
 
-		await clicknav('0[href="/selection/b"]');
+		await clicknav('[href="/selection/b"]');
 
 		expect(
 			await page.evaluate(() => {
