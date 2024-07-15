@@ -145,35 +145,41 @@ test.describe('Load', () => {
 	});
 
 	test('load does not call fetch if max-age allows it', async ({ page }) => {
-		page.addInitScript(`
+		await page.addInitScript(`
 			window.now = 0;
 			window.performance.now = () => now;
 		`);
 
 		await page.goto('/load/cache-control/default');
-		await expect(page.getByText('Count is 0')).toBeVisible();
-		await page.locator('button').click();
-		await page.waitForLoadState('networkidle');
-		await expect(page.getByText('Count is 0')).toBeVisible();
 
-		await page.evaluate(() => (window.now = 2500));
+		const button = page.locator('button');
+		const p = page.locator('p.counter');
 
-		await page.locator('button').click();
-		await expect(page.getByText('Count is 2')).toBeVisible();
+		await button.click();
+		await expect(button).toHaveAttribute('data-ticker', '2');
+		await expect(p).toHaveText('Count is 0');
+
+		await page.evaluate('window.now = 2500');
+
+		await button.click();
+		await expect(button).toHaveAttribute('data-ticker', '4');
+		await expect(p).toHaveText('Count is 2');
 	});
 
 	test('load does ignore ttl if fetch cache options says so', async ({ page }) => {
 		await page.goto('/load/cache-control/force');
-		await expect(page.getByText('Count is 0')).toBeVisible();
+		const p = page.locator('p.counter');
+		await expect(p).toHaveText('Count is 0');
 		await page.locator('button').click();
-		await expect(page.getByText('Count is 1')).toBeVisible();
+		await expect(p).toHaveText('Count is 1');
 	});
 
 	test('load busts cache if non-GET request to resource is made', async ({ page }) => {
 		await page.goto('/load/cache-control/bust');
-		await expect(page.getByText('Count is 0')).toBeVisible();
+		const p = page.locator('p.counter');
+		await expect(p).toHaveText('Count is 0');
 		await page.locator('button').click();
-		await expect(page.getByText('Count is 1')).toBeVisible();
+		await expect(p).toHaveText('Count is 1');
 	});
 
 	test('__data.json has cache-control: private, no-store', async ({ page, clicknav }) => {
@@ -594,6 +600,28 @@ test.describe('Invalidation', () => {
 		await page.locator('button').click();
 		await expect(page.getByText('updated')).toBeVisible();
 	});
+
+	test('goto after invalidation does not reset state', async ({ page }) => {
+		await page.goto('/load/invalidation/invalidate-then-goto');
+		const layout = await page.textContent('p.layout');
+		const _page = await page.textContent('p.page');
+		expect(layout).toBeDefined();
+		expect(_page).toBeDefined();
+
+		await page.click('button.invalidate');
+		await page.evaluate(() => window.promise);
+		const next_layout_1 = await page.textContent('p.layout');
+		const next_page_1 = await page.textContent('p.page');
+		expect(next_layout_1).not.toBe(layout);
+		expect(next_page_1).toBe(_page);
+
+		await page.click('button.goto');
+		await page.evaluate(() => window.promise);
+		const next_layout_2 = await page.textContent('p.layout');
+		const next_page_2 = await page.textContent('p.page');
+		expect(next_layout_2).toBe(next_layout_1);
+		expect(next_page_2).not.toBe(next_page_1);
+	});
 });
 
 test.describe('data-sveltekit attributes', () => {
@@ -641,6 +669,72 @@ test.describe('data-sveltekit attributes', () => {
 			page.waitForLoadState('networkidle') // wait for preloading to finish
 		]);
 		expect(requests.length).toBe(0);
+	});
+
+	test('data-sveltekit-preload-data network failure does not trigger navigation', async ({
+		page,
+		context,
+		browserName
+	}) => {
+		await page.goto('/data-sveltekit/preload-data/offline');
+
+		await context.setOffline(true);
+
+		await page.locator('#one').dispatchEvent('mousemove');
+		await Promise.all([
+			page.waitForTimeout(100), // wait for preloading to start
+			page.waitForLoadState('networkidle') // wait for preloading to finish
+		]);
+
+		let offline_url = /\/data-sveltekit\/preload-data\/offline/;
+		if (browserName === 'chromium') {
+			// it's chrome-error://chromewebdata/ on ubuntu but not on windows
+			offline_url = /chrome-error:\/\/chromewebdata\/|\/data-sveltekit\/preload-data\/offline/;
+		}
+		expect(page).toHaveURL(offline_url);
+	});
+
+	test('data-sveltekit-preload-data error does not block user navigation', async ({
+		page,
+		context,
+		browserName
+	}) => {
+		await page.goto('/data-sveltekit/preload-data/offline');
+
+		await context.setOffline(true);
+
+		await page.locator('#one').dispatchEvent('mousemove');
+		await Promise.all([
+			page.waitForTimeout(100), // wait for preloading to start
+			page.waitForLoadState('networkidle') // wait for preloading to finish
+		]);
+
+		expect(page).toHaveURL('/data-sveltekit/preload-data/offline');
+
+		await page.locator('#one').dispatchEvent('click');
+		await page.waitForTimeout(100); // wait for navigation to start
+		await page.waitForLoadState('networkidle');
+
+		let offline_url = /\/data-sveltekit\/preload-data\/offline/;
+		if (browserName === 'chromium') {
+			// it's chrome-error://chromewebdata/ on ubuntu but not on windows
+			offline_url = /chrome-error:\/\/chromewebdata\/|\/data-sveltekit\/preload-data\/offline/;
+		}
+		expect(page).toHaveURL(offline_url);
+	});
+
+	test('data-sveltekit-preload does not abort ongoing navigation', async ({ page }) => {
+		await page.goto('/data-sveltekit/preload-data/offline');
+
+		await page.locator('#slow-navigation').dispatchEvent('click');
+		await page.waitForTimeout(100); // wait for navigation to start
+		await page.locator('#slow-navigation').dispatchEvent('mousemove');
+		await Promise.all([
+			page.waitForTimeout(100), // wait for preloading to start
+			page.waitForLoadState('networkidle') // wait for preloading to finish
+		]);
+
+		expect(page).toHaveURL('/data-sveltekit/preload-data/offline/slow-navigation');
 	});
 
 	test('data-sveltekit-reload', async ({ baseURL, page, clicknav }) => {
@@ -989,6 +1083,17 @@ test.describe('Shallow routing', () => {
 		await expect(page.locator('span')).not.toHaveText(now);
 	});
 
+	test('Does not navigate when going back to shallow route', async ({ baseURL, page }) => {
+		await page.goto('/shallow-routing/push-state');
+		await page.locator('[data-id="two"]').click();
+		await page.goBack();
+		await page.goForward();
+
+		expect(page.url()).toBe(`${baseURL}/shallow-routing/push-state/a`);
+		await expect(page.locator('h1')).toHaveText('parent');
+		await expect(page.locator('p')).toHaveText('active: true');
+	});
+
 	test('Replaces state on the current URL', async ({ baseURL, page, clicknav }) => {
 		await page.goto('/shallow-routing/replace-state/b');
 		await clicknav('[href="/shallow-routing/replace-state"]');
@@ -1062,5 +1167,34 @@ test.describe('reroute', () => {
 		await page.click('a#client-error');
 
 		expect(await page.textContent('h1')).toContain('Full Navigation');
+	});
+});
+
+test.describe('INP', () => {
+	test('does not block next paint', async ({ page }) => {
+		// Thanks to https://publishing-project.rivendellweb.net/measuring-performance-tasks-with-playwright/#interaction-to-next-paint-inp
+		async function measureInteractionToPaint(selector) {
+			return page.evaluate(async (selector) => {
+				return new Promise((resolve) => {
+					const startTime = performance.now();
+					document.querySelector(selector).click();
+					requestAnimationFrame(() => {
+						const endTime = performance.now();
+						resolve(endTime - startTime);
+					});
+				});
+			}, selector);
+		}
+
+		await page.goto('/routing');
+
+		const client = await page.context().newCDPSession(page);
+		await client.send('Emulation.setCPUThrottlingRate', { rate: 100 });
+
+		const time = await measureInteractionToPaint('a[href="/routing/next-paint"]');
+
+		// we may need to tweak this number, and the `rate` above,
+		// depending on if this proves flaky
+		expect(time).toBeLessThan(400);
 	});
 });

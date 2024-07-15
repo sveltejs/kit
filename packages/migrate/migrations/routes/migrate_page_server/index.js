@@ -46,8 +46,8 @@ export function migrate_page_server(content, filename) {
 	const load_name = match?.[3]
 		? `LayoutServerLoad.${match[3]}`
 		: match?.[2]
-		? 'LayoutServerLoad'
-		: 'PageServerLoad';
+			? 'LayoutServerLoad'
+			: 'PageServerLoad';
 
 	const has_load = file.exports.map.has('GET');
 	const has_action = non_get_methods.some((method) => file.exports.map.has(method));

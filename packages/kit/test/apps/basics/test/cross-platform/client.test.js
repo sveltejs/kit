@@ -76,6 +76,7 @@ test.describe('a11y', () => {
 		).toBe(1);
 
 		await clicknav('[href="/selection/b"]');
+
 		expect(
 			await page.evaluate(() => {
 				const selection = getSelection();
@@ -98,7 +99,7 @@ test.describe('a11y', () => {
 	});
 
 	test('autofocus from previous page is ignored', async ({ page, clicknav }) => {
-		page.addInitScript(`
+		await page.addInitScript(`
 			window.active = null;
 			window.addEventListener('focusin', () => window.active = document.activeElement);
 		`);
@@ -106,8 +107,13 @@ test.describe('a11y', () => {
 		await page.goto('/accessibility/autofocus/a');
 		await clicknav('[href="/"]');
 
-		expect(await page.evaluate(() => (window.active || {}).nodeName)).toBe('BODY');
-		expect(await page.evaluate(() => (document.activeElement || {}).nodeName)).toBe('BODY');
+		expect(
+			await page.evaluate(
+				// @ts-expect-error
+				() => window.active?.nodeName
+			)
+		).toBe('BODY');
+		expect(await page.evaluate(() => document.activeElement?.nodeName)).toBe('BODY');
 	});
 });
 
@@ -240,11 +246,11 @@ test.describe('Navigation lifecycle functions', () => {
 
 	test('onNavigate calls callback', async ({ page, clicknav }) => {
 		await page.goto('/navigation-lifecycle/on-navigate/a');
-		expect(await page.textContent('h1')).toBe('undefined -> undefined (...)');
+		expect(await page.textContent('h1')).toBe('undefined -> undefined (...) false');
 
 		await clicknav('[href="/navigation-lifecycle/on-navigate/b"]');
 		expect(await page.textContent('h1')).toBe(
-			'/navigation-lifecycle/on-navigate/a -> /navigation-lifecycle/on-navigate/b (link)'
+			'/navigation-lifecycle/on-navigate/a -> /navigation-lifecycle/on-navigate/b (link) true'
 		);
 	});
 });
@@ -319,20 +325,18 @@ test.describe('Scrolling', () => {
 		expect(await page.evaluate(() => scrollY)).toBe(0);
 	});
 
-	test('scroll is restored after hitting the back button', async ({ baseURL, clicknav, page }) => {
+	test('scroll is restored after hitting the back button', async ({ clicknav, page }) => {
 		await page.goto('/anchor');
 		await page.locator('#scroll-anchor').click();
 		const originalScrollY = /** @type {number} */ (await page.evaluate(() => scrollY));
 		await clicknav('#routing-page');
 		await page.goBack();
-		await page.waitForLoadState('networkidle');
-		expect(page.url()).toBe(baseURL + '/anchor#last-anchor-2');
+
+		await expect(page).toHaveURL('/anchor#last-anchor-2');
 		expect(await page.evaluate(() => scrollY)).toEqual(originalScrollY);
 
 		await page.goBack();
-		await page.waitForLoadState('networkidle');
-
-		expect(page.url()).toBe(baseURL + '/anchor');
+		await expect(page).toHaveURL('/anchor');
 		expect(await page.evaluate(() => scrollY)).toEqual(0);
 	});
 
@@ -417,13 +421,29 @@ test.describe('Scrolling', () => {
 		await expect(page.locator('input')).toBeFocused();
 	});
 
-	test('scroll positions are recovered on reloading the page', async ({ page, app }) => {
+	test('scroll positions are recovered on reloading the page', async ({
+		page,
+		app,
+		browserName
+	}) => {
+		// No idea why the workaround below works only in dev mode
+		// A better solution would probably be to set fission.webContentIsolationStrategy: 1
+		// in the Firefox preferences but the Playwright API to do so is incomprehensible
+		if (!process.env.DEV && browserName === 'firefox') {
+			return;
+		}
+
 		await page.goto('/anchor');
 		await page.evaluate(() => window.scrollTo(0, 1000));
 		await app.goto('/anchor/anchor');
 		await page.evaluate(() => window.scrollTo(0, 1000));
 
 		await page.reload();
+		if (browserName === 'firefox') {
+			// Firefox with Playwright pushed new history entry history after reload
+			// See https://github.com/microsoft/playwright/issues/22640
+			await page.goBack();
+		}
 		expect(await page.evaluate(() => window.scrollY)).toBe(1000);
 
 		await page.goBack();
@@ -571,18 +591,15 @@ test.describe('Prefetching', () => {
 			expect(requests.filter((req) => req.endsWith('.js')).length).toBeGreaterThan(0);
 		}
 
-		expect(requests.includes(`${baseURL}/routing/preloading/preloaded.json`)).toBe(true);
+		expect(requests).toContain(`${baseURL}/routing/preloading/preloaded.json`);
 
 		requests = [];
 		await app.goto('/routing/preloading/preloaded');
 		expect(requests).toEqual([]);
 
-		try {
-			await app.preloadData('https://example.com');
-			throw new Error('Error was not thrown');
-		} catch (/** @type {any} */ e) {
-			expect(e.message).toMatch('Attempted to preload a URL that does not belong to this app');
-		}
+		await expect(app.preloadData('https://example.com')).rejects.toThrowError(
+			'Attempted to preload a URL that does not belong to this app'
+		);
 	});
 
 	test('chooses correct route when hash route is preloaded but regular route is clicked', async ({
@@ -677,8 +694,9 @@ test.describe('Routing', () => {
 		await page.locator('[href="#hash-target"]').click();
 		await clicknav('[href="/routing/hashes/b"]');
 
+		await expect(page.locator('h1')).toHaveText('b');
 		await page.goBack();
-		expect(await page.textContent('h1')).toBe('a');
+		await expect(page.locator('h1')).toHaveText('a');
 	});
 
 	test('replaces state if the data-sveltekit-replacestate router option is specified for the hash link', async ({
@@ -730,6 +748,7 @@ test.describe('Routing', () => {
 
 	test('responds to <form method="GET"> submission without reload', async ({ page }) => {
 		await page.goto('/routing/form-get');
+
 		expect(await page.textContent('h1')).toBe('...');
 		expect(await page.textContent('h2')).toBe('enter');
 		expect(await page.textContent('h3')).toBe('...');
@@ -810,6 +829,11 @@ test.describe('cookies', () => {
 		await expect(page.locator('p')).toHaveText('foo=bar');
 		await page.locator('button').click();
 		await expect(page.locator('p')).toHaveText('foo=bar');
+	});
+
+	test("fetch during SSR doesn't un- and re-escape cookies", async ({ page }) => {
+		await page.goto('/cookies/collect-without-re-escaping');
+		await expect(page.locator('p')).toHaveText('cookie-special-characters="foo"');
 	});
 });
 

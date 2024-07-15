@@ -12,23 +12,30 @@ import { render_content } from '../renderer';
 import { read } from '$app/server';
 import { error } from '@sveltejs/kit';
 
-const meta = import.meta.glob('../../../../../../documentation/docs/*/meta.json', {
-	as: 'url',
+const meta = import.meta.glob('../../../../../../documentation/docs/*/index.md', {
+	query: '?url',
+	import: 'default',
 	eager: true
 });
 
-const markdown = import.meta.glob('../../../../../../documentation/docs/*/*.md', {
-	as: 'url',
-	eager: true
-});
+const markdown = import.meta.glob(
+	'../../../../../../documentation/docs/*/[[:digit:]][[:digit:]]-*.md',
+	{
+		query: '?url',
+		import: 'default',
+		eager: true
+	}
+);
 
 export const categories = {};
 export const pages = {};
 
 for (const [file, asset] of Object.entries(meta)) {
-	const slug = /\/\d{2}-(.+)\/meta\.json$/.exec(file)[1];
+	const slug = /\/\d{2}-(.+)\/index\.md$/.exec(file)[1];
 
-	const { title, draft } = await read(asset).json();
+	const {
+		metadata: { title, draft }
+	} = extractFrontmatter(await read(asset).text());
 
 	if (draft) continue;
 
@@ -63,6 +70,8 @@ for (const [file, asset] of Object.entries(markdown)) {
 		category: category.title,
 		title,
 		file: `${category_dir}/${basename}`,
+		slug,
+		path: slug,
 		sections: await get_sections(body),
 		body
 	};
@@ -78,6 +87,8 @@ export async function get_parsed_docs(slug) {
 		category: page.category,
 		title: page.title,
 		file: page.file,
+		path: page.path,
+		slug: page.slug,
 		sections: page.sections,
 		content: await render_content(page.file, page.body)
 	};

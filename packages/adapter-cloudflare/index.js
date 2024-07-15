@@ -1,7 +1,8 @@
-import { writeFileSync } from 'node:fs';
+import { existsSync, writeFileSync } from 'node:fs';
 import * as path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import * as esbuild from 'esbuild';
+import { getPlatformProxy } from 'wrangler';
 
 // list from https://developers.cloudflare.com/workers/runtime-apis/nodejs/
 const compatible_node_modules = [
@@ -23,6 +24,12 @@ export default function (options = {}) {
 	return {
 		name: '@sveltejs/adapter-cloudflare',
 		async adapt(builder) {
+			if (existsSync('_routes.json')) {
+				throw new Error(
+					'Cloudflare routes should be configured in svelte.config.js rather than _routes.json'
+				);
+			}
+
 			const files = fileURLToPath(new URL('./files', import.meta.url).href);
 			const dest = builder.getBuildDirectory('cloudflare');
 			const tmp = builder.getBuildDirectory('cloudflare-tmp');
@@ -73,7 +80,8 @@ export default function (options = {}) {
 			try {
 				const result = await esbuild.build({
 					platform: 'browser',
-					conditions: ['worker', 'browser'],
+					// https://github.com/cloudflare/workers-sdk/blob/a12b2786ce745f24475174bcec994ad691e65b0f/packages/wrangler/src/deployment-bundle/bundle.ts#L35-L36
+					conditions: ['workerd', 'worker', 'browser'],
 					sourcemap: 'linked',
 					target: 'es2022',
 					entryPoints: [`${tmp}/_worker.js`],
@@ -82,7 +90,12 @@ export default function (options = {}) {
 					format: 'esm',
 					bundle: true,
 					loader: {
-						'.wasm': 'copy'
+						'.wasm': 'copy',
+						'.woff': 'copy',
+						'.woff2': 'copy',
+						'.ttf': 'copy',
+						'.eot': 'copy',
+						'.otf': 'copy'
 					},
 					external,
 					alias: Object.fromEntries(compatible_node_modules.map((id) => [id, `node:${id}`])),
@@ -124,6 +137,33 @@ export default function (options = {}) {
 					}`
 				);
 			}
+		},
+		async emulate() {
+			const proxy = await getPlatformProxy(options.platformProxy);
+			const platform = /** @type {App.Platform} */ ({
+				env: proxy.env,
+				context: proxy.ctx,
+				caches: proxy.caches,
+				cf: proxy.cf
+			});
+
+			/** @type {Record<string, any>} */
+			const env = {};
+			const prerender_platform = /** @type {App.Platform} */ (/** @type {unknown} */ ({ env }));
+
+			for (const key in proxy.env) {
+				Object.defineProperty(env, key, {
+					get: () => {
+						throw new Error(`Cannot access platform.env.${key} in a prerenderable route`);
+					}
+				});
+			}
+
+			return {
+				platform: ({ prerender }) => {
+					return prerender ? prerender_platform : platform;
+				}
+			};
 		}
 	};
 }

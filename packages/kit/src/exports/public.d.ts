@@ -45,6 +45,11 @@ export interface Adapter {
 		 */
 		read?: (details: { config: any; route: { id: string } }) => boolean;
 	};
+	/**
+	 * Creates an `Emulator`, which allows the adapter to influence the environment
+	 * during dev, build and prerendering
+	 */
+	emulate?(): MaybePromise<Emulator>;
 }
 
 export type LoadProperties<input extends Record<string, any> | void> = input extends void
@@ -74,11 +79,12 @@ export interface ActionFailure<T extends Record<string, unknown> | undefined = u
 	[uniqueSymbol]: true; // necessary or else UnpackValidationError could wrongly unpack objects with the same shape as ActionFailure
 }
 
-type UnpackValidationError<T> = T extends ActionFailure<infer X>
-	? X
-	: T extends void
-		? undefined // needs to be undefined, because void will corrupt union type
-		: T;
+type UnpackValidationError<T> =
+	T extends ActionFailure<infer X>
+		? X
+		: T extends void
+			? undefined // needs to be undefined, because void will corrupt union type
+			: T;
 
 /**
  * This object is passed to the `adapt` function of adapters.
@@ -258,6 +264,17 @@ export interface Cookies {
 		value: string,
 		opts: import('cookie').CookieSerializeOptions & { path: string }
 	): string;
+}
+
+/**
+ * A collection of functions that influence the environment during dev, build and prerendering
+ */
+export interface Emulator {
+	/**
+	 * A function that is called with the current route `config` and `prerender` option
+	 * and returns an `App.Platform` object
+	 */
+	platform?(details: { config: any; prerender: PrerenderOption }): MaybePromise<App.Platform>;
 }
 
 export interface KitConfig {

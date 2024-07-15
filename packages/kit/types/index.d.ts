@@ -27,6 +27,11 @@ declare module '@sveltejs/kit' {
 			 */
 			read?: (details: { config: any; route: { id: string } }) => boolean;
 		};
+		/**
+		 * Creates an `Emulator`, which allows the adapter to influence the environment
+		 * during dev, build and prerendering
+		 */
+		emulate?(): MaybePromise<Emulator>;
 	}
 
 	export type LoadProperties<input extends Record<string, any> | void> = input extends void
@@ -56,11 +61,12 @@ declare module '@sveltejs/kit' {
 		[uniqueSymbol]: true; // necessary or else UnpackValidationError could wrongly unpack objects with the same shape as ActionFailure
 	}
 
-	type UnpackValidationError<T> = T extends ActionFailure<infer X>
-		? X
-		: T extends void
-			? undefined // needs to be undefined, because void will corrupt union type
-			: T;
+	type UnpackValidationError<T> =
+		T extends ActionFailure<infer X>
+			? X
+			: T extends void
+				? undefined // needs to be undefined, because void will corrupt union type
+				: T;
 
 	/**
 	 * This object is passed to the `adapt` function of adapters.
@@ -240,6 +246,17 @@ declare module '@sveltejs/kit' {
 			value: string,
 			opts: import('cookie').CookieSerializeOptions & { path: string }
 		): string;
+	}
+
+	/**
+	 * A collection of functions that influence the environment during dev, build and prerendering
+	 */
+	export interface Emulator {
+		/**
+		 * A function that is called with the current route `config` and `prerender` option
+		 * and returns an `App.Platform` object
+		 */
+		platform?(details: { config: any; prerender: PrerenderOption }): MaybePromise<App.Platform>;
 	}
 
 	export interface KitConfig {
@@ -1402,7 +1419,6 @@ declare module '@sveltejs/kit' {
 		type SchemeSource = 'http:' | 'https:' | 'data:' | 'mediastream:' | 'blob:' | 'filesystem:';
 		type Source = HostSource | SchemeSource | CryptoSource | BaseSource;
 		type Sources = Source[];
-		type UriPath = `${HttpDelineator}${string}`;
 	}
 
 	interface CspDirectives {
@@ -1442,7 +1458,7 @@ declare module '@sveltejs/kit' {
 		'form-action'?: Array<Csp.Source | Csp.ActionSource>;
 		'frame-ancestors'?: Array<Csp.HostSource | Csp.SchemeSource | Csp.FrameSource>;
 		'navigate-to'?: Array<Csp.Source | Csp.ActionSource>;
-		'report-uri'?: Csp.UriPath[];
+		'report-uri'?: string[];
 		'report-to'?: string[];
 
 		'require-trusted-types-for'?: Array<'script'>;
@@ -1597,14 +1613,15 @@ declare module '@sveltejs/kit' {
 
 	interface PageNode {
 		depth: number;
+		/** The +page.svelte */
 		component?: string; // TODO supply default component if it's missing (bit of an edge case)
+		/** The +page.js/.ts */
 		universal?: string;
+		/** The +page.server.js/ts */
 		server?: string;
 		parent_id?: string;
 		parent?: PageNode;
-		/**
-		 * Filled with the pages that reference this layout (if this is a layout)
-		 */
+		/** Filled with the pages that reference this layout (if this is a layout) */
 		child_pages?: PageNode[];
 	}
 
@@ -1732,7 +1749,14 @@ declare module '@sveltejs/kit' {
 		endpoint_id?: string;
 	}
 
-	type ValidatedConfig = RecursiveRequired<Config>;
+	type ValidatedConfig = Config & {
+		kit: ValidatedKitConfig;
+		extensions: string[];
+	};
+
+	type ValidatedKitConfig = Omit<RecursiveRequired<KitConfig>, 'adapter'> & {
+		adapter?: Adapter;
+	};
 	/**
 	 * Throws an error with a HTTP status code and an optional message.
 	 * When called during request handling, this will cause SvelteKit to
@@ -1743,7 +1767,7 @@ declare module '@sveltejs/kit' {
 	 * @throws {HttpError} This error instructs SvelteKit to initiate HTTP error handling.
 	 * @throws {Error} If the provided status is invalid (not between 400 and 599).
 	 */
-	export function error(status: NumericRange<400, 599>, body: App.Error): never;
+	export function error(status: number, body: App.Error): never;
 	/**
 	 * Throws an error with a HTTP status code and an optional message.
 	 * When called during request handling, this will cause SvelteKit to
@@ -1754,7 +1778,7 @@ declare module '@sveltejs/kit' {
 	 * @throws {HttpError} This error instructs SvelteKit to initiate HTTP error handling.
 	 * @throws {Error} If the provided status is invalid (not between 400 and 599).
 	 */
-	export function error(status: NumericRange<400, 599>, body?: {
+	export function error(status: number, body?: {
 		message: string;
 	} extends App.Error ? App.Error | string | undefined : never): never;
 	/**
@@ -1772,7 +1796,7 @@ declare module '@sveltejs/kit' {
 	 * @throws {Redirect} This error instructs SvelteKit to redirect to the specified location.
 	 * @throws {Error} If the provided status is invalid.
 	 * */
-	export function redirect(status: NumericRange<300, 308>, location: string | URL): never;
+	export function redirect(status: 300 | 301 | 302 | 303 | 304 | 305 | 306 | 307 | 308 | ({} & number), location: string | URL): never;
 	/**
 	 * Checks whether this is a redirect thrown by {@link redirect}.
 	 * @param e The object to check.
@@ -1975,7 +1999,7 @@ declare module '$app/forms' {
 	 * If nothing is returned, the fallback will be used.
 	 *
 	 * If this function or its return value isn't set, it
-	 * - falls back to updating the `form` prop with the returned data if the action is one same page as the form
+	 * - falls back to updating the `form` prop with the returned data if the action is on the same page as the form
 	 * - updates `$page.status`
 	 * - resets the `<form>` element and invalidates all data in case of successful submission with no redirect response
 	 * - redirects in case of a redirect response

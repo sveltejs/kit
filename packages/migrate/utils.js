@@ -215,23 +215,30 @@ export function update_pkg(content, updates) {
 	 * @param {'dependencies' | 'devDependencies' | undefined} [insert]
 	 */
 	function update_pkg(name, version, additional = '', insert) {
-		if (pkg.dependencies?.[name]) {
-			const existing_range = pkg.dependencies[name];
+		/**
+		 * @param {string} type
+		 */
+		const updateVersion = (type) => {
+			const existingRange = pkg[type]?.[name];
 
-			if (semver.validRange(existing_range) && !semver.subset(existing_range, version)) {
-				log_migration(`Updated ${name} to ${version} ${additional}`);
-				pkg.dependencies[name] = version;
+			if (
+				existingRange &&
+				semver.validRange(existingRange) &&
+				!semver.subset(existingRange, version)
+			) {
+				// Check if the new version range is an upgrade
+				const minExistingVersion = semver.minVersion(existingRange);
+				const minNewVersion = semver.minVersion(version);
+
+				if (minExistingVersion && minNewVersion && semver.gt(minNewVersion, minExistingVersion)) {
+					log_migration(`Updated ${name} to ${version}`);
+					pkg[type][name] = version;
+				}
 			}
-		}
+		};
 
-		if (pkg.devDependencies?.[name]) {
-			const existing_range = pkg.devDependencies[name];
-
-			if (semver.validRange(existing_range) && !semver.subset(existing_range, version)) {
-				log_migration(`Updated ${name} to ${version} ${additional}`);
-				pkg.devDependencies[name] = version;
-			}
-		}
+		updateVersion('dependencies');
+		updateVersion('devDependencies');
 
 		if (insert && !pkg[insert]?.[name]) {
 			if (!pkg[insert]) pkg[insert] = {};

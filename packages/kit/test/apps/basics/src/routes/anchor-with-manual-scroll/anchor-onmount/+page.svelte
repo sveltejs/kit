@@ -13,4 +13,4 @@
 	<p id="go-to-element">The browser scrolls to me</p>
 </div>
 <p id="abcde" style="height: 180vh; background-color: hotpink;">I take precedence</p>
-<div />
+<div></div>

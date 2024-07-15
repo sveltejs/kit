@@ -36,9 +36,9 @@ function detect_package_manager() {
 }
 
 /** @param {string} name */
-async function import_from_cwd(name) {
+function import_from_cwd(name) {
 	const cwd = pathToFileURL(process.cwd()).href;
-	const url = await resolve(name, cwd + '/x.js');
+	const url = resolve(name, cwd + '/x.js');
 
 	return import(url);
 }
@@ -116,5 +116,12 @@ export default () => ({
 		builder.log.warn(
 			'Could not detect a supported production environment. See https://kit.svelte.dev/docs/adapters to learn how to configure your app to run on the platform of your choosing'
 		);
+	},
+	supports: {
+		read: () => {
+			throw new Error(
+				"The read function imported from $app/server only works in certain environments. Since you're using @sveltejs/adapter-auto, SvelteKit cannot determine whether it will work when your app is deployed. Please replace it with an adapter tailored to your target environment."
+			);
+		}
 	}
 });

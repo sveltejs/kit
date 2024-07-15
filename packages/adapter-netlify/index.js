@@ -1,6 +1,7 @@
 import { appendFileSync, existsSync, readdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { dirname, join, resolve, posix } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { builtinModules } from 'node:module';
 import esbuild from 'esbuild';
 import toml from '@iarna/toml';
 
@@ -91,7 +92,7 @@ export default function ({ split = false, edge = edge_set_in_env_var } = {}) {
 
 				await generate_edge_functions({ builder });
 			} else {
-				await generate_lambda_functions({ builder, split, publish });
+				generate_lambda_functions({ builder, split, publish });
 			}
 		},
 
@@ -165,7 +166,19 @@ async function generate_edge_functions({ builder }) {
 		format: 'esm',
 		platform: 'browser',
 		sourcemap: 'linked',
-		target: 'es2020'
+		target: 'es2020',
+		loader: {
+			'.wasm': 'copy',
+			'.woff': 'copy',
+			'.woff2': 'copy',
+			'.ttf': 'copy',
+			'.eot': 'copy',
+			'.otf': 'copy'
+		},
+		// Node built-ins are allowed, but must be prefixed with `node:`
+		// https://docs.netlify.com/edge-functions/api/#runtime-environment
+		external: builtinModules.map((id) => `node:${id}`),
+		alias: Object.fromEntries(builtinModules.map((id) => [id, `node:${id}`]))
 	});
 
 	writeFileSync('.netlify/edge-functions/manifest.json', JSON.stringify(edge_manifest));
@@ -176,7 +189,7 @@ async function generate_edge_functions({ builder }) {
  * @param { string } params.publish
  * @param { boolean } params.split
  */
-async function generate_lambda_functions({ builder, publish, split }) {
+function generate_lambda_functions({ builder, publish, split }) {
 	builder.mkdirp('.netlify/functions-internal/.svelte-kit');
 
 	/** @type {string[]} */

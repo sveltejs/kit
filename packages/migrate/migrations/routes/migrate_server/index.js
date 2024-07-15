@@ -147,7 +147,7 @@ export function migrate_server(content) {
 								init.length > 0
 									? `new Response(${body}, {${join_whitespace}${init.join(
 											`,${join_whitespace}`
-									  )}${end_whitespace}})`
+										)}${end_whitespace}})`
 									: `new Response(${body})`;
 
 							if (safe_body) {

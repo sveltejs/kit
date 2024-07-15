@@ -1,6 +1,7 @@
 import { read_implementation, manifest } from '__sveltekit/server';
 import { base } from '__sveltekit/paths';
 import { DEV } from 'esm-env';
+import { b64_decode } from '../../utils.js';
 
 /**
  * Read the contents of an imported asset from the filesystem
@@ -26,11 +27,23 @@ export function read(asset) {
 	}
 
 	// handle inline assets internally
-	if (asset.startsWith('data:')) {
-		const [prelude, data] = asset.split(';');
-		const type = prelude.slice(5) || 'application/octet-stream';
+	const match = /^data:([^;,]+)?(;base64)?,/.exec(asset);
+	if (match) {
+		const type = match[1] ?? 'application/octet-stream';
+		const data = asset.slice(match[0].length);
 
-		const decoded = data.startsWith('base64,') ? atob(data.slice(7)) : decodeURIComponent(data);
+		if (match[2] !== undefined) {
+			const decoded = b64_decode(data);
+
+			return new Response(decoded, {
+				headers: {
+					'Content-Length': decoded.byteLength.toString(),
+					'Content-Type': type
+				}
+			});
+		}
+
+		const decoded = decodeURIComponent(data);
 
 		return new Response(decoded, {
 			headers: {
@@ -40,7 +53,9 @@ export function read(asset) {
 		});
 	}
 
-	const file = DEV && asset.startsWith('/@fs') ? asset : asset.slice(base.length + 1);
+	const file = decodeURIComponent(
+		DEV && asset.startsWith('/@fs') ? asset : asset.slice(base.length + 1)
+	);
 
 	if (file in manifest._.server_assets) {
 		const length = manifest._.server_assets[file];

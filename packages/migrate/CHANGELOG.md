@@ -1,5 +1,41 @@
 # svelte-migrate
 
+## 1.4.3
+
+### Patch Changes
+
+- chore: add keywords for discovery in npm search ([#12330](https://github.com/sveltejs/kit/pull/12330))
+
+## 1.4.2
+
+### Patch Changes
+
+- fix: bump import-meta-resolve to remove deprecation warnings ([#12240](https://github.com/sveltejs/kit/pull/12240))
+
+## 1.4.1
+
+### Patch Changes
+
+- fix: continue traversing the children of non-self-closing elements ([#12175](https://github.com/sveltejs/kit/pull/12175))
+
+## 1.4.0
+
+### Minor Changes
+
+- feat: add self-closing-tags migration ([#12128](https://github.com/sveltejs/kit/pull/12128))
+
+## 1.3.8
+
+### Patch Changes
+
+- chore(deps): update dependency ts-morph to v22 ([`4447269e979f2b5be18e0fded0b5843a6258542d`](https://github.com/sveltejs/kit/commit/4447269e979f2b5be18e0fded0b5843a6258542d))
+
+## 1.3.7
+
+### Patch Changes
+
+- fix: don't downgrade versions when bumping dependencies ([#11716](https://github.com/sveltejs/kit/pull/11716))
+
 ## 1.3.6
 
 ### Patch Changes
