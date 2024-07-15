@@ -313,16 +313,19 @@ Both server and universal `load` functions have access to a `setHeaders` functio
 
 ```js
 // @errors: 2322 1360
-/// file: src/routes/products/+page.js
-/** @type {import('./$types').PageLoad} */
+/// file: src/routes/products/+page.server.js
+/** @type {import('./$types').PageServerLoad} */
 export async function load({ fetch, setHeaders }) {
 	const url = `https://cms.example.com/products.json`;
 	const response = await fetch(url);
 
-	// cache the page for the same length of time
-	// as the underlying data
+	// following headers will be set on:
+	// the HTML response in server-side rendering
+	// the __data.json response in client-side rendering
 	setHeaders({
 		age: response.headers.get('age'),
+		// the server response will be cached
+		// for the same length of time as the CMS response
 		'cache-control': response.headers.get('cache-control')
 	});
 
