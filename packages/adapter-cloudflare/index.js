@@ -2,7 +2,11 @@ import { existsSync, writeFileSync } from 'node:fs';
 import * as path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import * as esbuild from 'esbuild';
-import { getPlatformProxy } from 'wrangler';
+
+let wrangler;
+try {
+	wrangler = await import('wrangler');
+} catch {}
 
 // list from https://developers.cloudflare.com/workers/runtime-apis/nodejs/
 const compatible_node_modules = [
@@ -138,33 +142,35 @@ export default function (options = {}) {
 				);
 			}
 		},
-		async emulate() {
-			const proxy = await getPlatformProxy(options.platformProxy);
-			const platform = /** @type {App.Platform} */ ({
-				env: proxy.env,
-				context: proxy.ctx,
-				caches: proxy.caches,
-				cf: proxy.cf
-			});
+		emulate: !wrangler
+			? undefined
+			: async function () {
+					const proxy = await wrangler.getPlatformProxy(options.platformProxy);
+					const platform = /** @type {App.Platform} */ ({
+						env: proxy.env,
+						context: proxy.ctx,
+						caches: proxy.caches,
+						cf: proxy.cf
+					});
 
-			/** @type {Record<string, any>} */
-			const env = {};
-			const prerender_platform = /** @type {App.Platform} */ (/** @type {unknown} */ ({ env }));
+					/** @type {Record<string, any>} */
+					const env = {};
+					const prerender_platform = /** @type {App.Platform} */ (/** @type {unknown} */ ({ env }));
 
-			for (const key in proxy.env) {
-				Object.defineProperty(env, key, {
-					get: () => {
-						throw new Error(`Cannot access platform.env.${key} in a prerenderable route`);
+					for (const key in proxy.env) {
+						Object.defineProperty(env, key, {
+							get: () => {
+								throw new Error(`Cannot access platform.env.${key} in a prerenderable route`);
+							}
+						});
 					}
-				});
-			}
 
-			return {
-				platform: ({ prerender }) => {
-					return prerender ? prerender_platform : platform;
+					return {
+						platform: ({ prerender }) => {
+							return prerender ? prerender_platform : platform;
+						}
+					};
 				}
-			};
-		}
 	};
 }
 

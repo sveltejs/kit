@@ -4,7 +4,11 @@ import { execSync } from 'node:child_process';
 import esbuild from 'esbuild';
 import toml from '@iarna/toml';
 import { fileURLToPath } from 'node:url';
-import { getPlatformProxy } from 'wrangler';
+
+let wrangler;
+try {
+	wrangler = await import('wrangler');
+} catch {}
 
 /**
  * @typedef {{
@@ -149,33 +153,35 @@ export default function ({ config = 'wrangler.toml', platformProxy = {} } = {}) 
 			builder.writePrerendered(bucket_dir);
 		},
 
-		async emulate() {
-			const proxy = await getPlatformProxy(platformProxy);
-			const platform = /** @type {App.Platform} */ ({
-				env: proxy.env,
-				context: proxy.ctx,
-				caches: proxy.caches,
-				cf: proxy.cf
-			});
+		emulate: !wrangler
+			? undefined
+			: async function () {
+					const proxy = await getPlatformProxy(platformProxy);
+					const platform = /** @type {App.Platform} */ ({
+						env: proxy.env,
+						context: proxy.ctx,
+						caches: proxy.caches,
+						cf: proxy.cf
+					});
 
-			/** @type {Record<string, any>} */
-			const env = {};
-			const prerender_platform = /** @type {App.Platform} */ (/** @type {unknown} */ ({ env }));
+					/** @type {Record<string, any>} */
+					const env = {};
+					const prerender_platform = /** @type {App.Platform} */ (/** @type {unknown} */ ({ env }));
 
-			for (const key in proxy.env) {
-				Object.defineProperty(env, key, {
-					get: () => {
-						throw new Error(`Cannot access platform.env.${key} in a prerenderable route`);
+					for (const key in proxy.env) {
+						Object.defineProperty(env, key, {
+							get: () => {
+								throw new Error(`Cannot access platform.env.${key} in a prerenderable route`);
+							}
+						});
 					}
-				});
-			}
 
-			return {
-				platform: ({ prerender }) => {
-					return prerender ? prerender_platform : platform;
+					return {
+						platform: ({ prerender }) => {
+							return prerender ? prerender_platform : platform;
+						}
+					};
 				}
-			};
-		}
 	};
 }
 
