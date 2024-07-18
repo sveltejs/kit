@@ -432,12 +432,6 @@ declare module '@sveltejs/kit' {
 			 */
 			routes?: string;
 			/**
-			 * An array of paths and functions that must not be imported to client side code. This is useful for preventing sensitive information from being exposed to the client.
-			 * Items must be type of string, RegExp or a function that takes the filename and returns a boolean. If the function returns true, the file must not be imported to client side code.
-			 * @default []
-			 */
-			serverProtectedPaths?: (string|RegExp|((id:string)=>boolean))[];
-			/**
 			 * the location of your service worker's entry point (see [Service workers](https://kit.svelte.dev/docs/service-workers))
 			 * @default "src/service-worker"
 			 */
@@ -594,6 +588,12 @@ declare module '@sveltejs/kit' {
 			 */
 			origin?: string;
 		};
+		/**
+		 * An array of paths and functions that must not be imported to client side code. This is useful for preventing sensitive information from being exposed to the client.
+		 * Items must be type of string, RegExp or a function that takes the filename and returns a boolean. If the function returns true, the file must not be imported to client side code.
+		 * @default []
+		 */
+		serverProtectedPaths?: (string|RegExp|((id:string)=>boolean))[];
 		serviceWorker?: {
 			/**
 			 * Whether to automatically register the service worker, if it exists.
@@ -1835,7 +1835,7 @@ declare module '@sveltejs/kit' {
 	export type NumericRange<TStart extends number, TEnd extends number> = Exclude<TEnd | LessThan<TEnd>, LessThan<TStart>>;
 	export const VERSION: string;
 	class HttpError_1 {
-
+		
 		constructor(status: number, body: {
 			message: string;
 		} extends App.Error ? (App.Error | string | undefined) : App.Error);
@@ -1844,7 +1844,7 @@ declare module '@sveltejs/kit' {
 		toString(): string;
 	}
 	class Redirect_1 {
-
+		
 		constructor(status: 300 | 301 | 302 | 303 | 304 | 305 | 306 | 307 | 308, location: string);
 		status: 301 | 302 | 303 | 307 | 308 | 300 | 304 | 305 | 306;
 		location: string;
@@ -2187,11 +2187,11 @@ declare module '$app/server' {
 
 declare module '$app/stores' {
 	export function getStores(): {
-
+		
 		page: typeof page;
-
+		
 		navigating: typeof navigating;
-
+		
 		updated: typeof updated;
 	};
 	/**
