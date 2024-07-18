@@ -1,4 +1,4 @@
----
+**---
 title: Server-only modules
 ---
 
@@ -14,10 +14,25 @@ The [`$app/server`](/docs/modules#$app-server) module, which contains a `read` f
 
 ## Your modules
 
-You can make your own modules server-only in two ways:
+You can make your own modules server-only in three ways:
 
 - adding `.server` to the filename, e.g. `secrets.server.js`
 - placing them in `$lib/server`, e.g. `$lib/server/secrets.js`
+- set an array of string, regexp and functions to svelte.config.js to define custom rules
+  ```js
+  /// file: svelte.config.js
+  /** @type {import('@sveltejs/kit').Config} */
+  const config = {
+        ...,
+        kit: {
+          serverProtectedPaths: [
+            '/home/user/app/src/lib/components/server',
+            /\/server\//,
+            (path) => path.includes('/server/')
+	         ]
+     }
+  };
+  ```
 
 ## How it works
 
@@ -61,4 +76,4 @@ This feature also works with dynamic imports, even interpolated ones like ``awai
 
 ## Further reading
 
-- [Tutorial: Environment variables](https://learn.svelte.dev/tutorial/env-static-private)
+- [Tutorial: Environment variables](https://learn.svelte.dev/tutorial/env-static-private)**
