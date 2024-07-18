@@ -606,6 +606,12 @@ export interface KitConfig {
 		 */
 		origin?: string;
 	};
+	/**
+	 * An array of paths and functions that must not be imported to client side code. This is useful for preventing sensitive information from being exposed to the client.
+	 * Items must be type of string, RegExp or a function that takes the filename and returns a boolean. If the function returns true, the file must not be imported to client side code.
+	 * @default []
+	 */
+	serverProtectedPaths?: (string|RegExp|((id:string)=>boolean))[];
 	serviceWorker?: {
 		/**
 		 * Whether to automatically register the service worker, if it exists.

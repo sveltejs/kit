@@ -2,7 +2,9 @@ import path from 'node:path';
 import { posixify } from '../../../utils/filesystem.js';
 import { strip_virtual_prefix } from '../utils.js';
 import { app_server, env_dynamic_private, env_static_private } from '../module_ids.js';
+import { load_config } from '../../../core/config/index.js';
 
+const svelte_config = await load_config();
 const ILLEGAL_IMPORTS = new Set([env_dynamic_private, env_static_private, app_server]);
 const ILLEGAL_MODULE_NAME_PATTERN = /.*\.server\..+/;
 
@@ -13,9 +15,21 @@ const ILLEGAL_MODULE_NAME_PATTERN = /.*\.server\..+/;
  *   cwd: string;
  *   node_modules: string;
  *   server: string;
+ *   svelte_config: (string|RegExp|Function)[];
  * }} dirs
  */
 export function is_illegal(id, dirs) {
+	//svelte_config is processed as first, so the function rule can make exceptions
+	for(let configRule of dirs.svelte_config) {
+		if(typeof configRule === 'string') {
+			if(id.startsWith(configRule)) return true;
+		}
+		else if(configRule instanceof RegExp) {
+			if(configRule.test(id)) return true
+		} else if(typeof configRule === 'function') {
+			return configRule(id); //always return to allow exceptions
+		}
+	}
 	if (ILLEGAL_IMPORTS.has(id)) return true;
 	if (!id.startsWith(dirs.cwd) || id.startsWith(dirs.node_modules)) return false;
 	return ILLEGAL_MODULE_NAME_PATTERN.test(path.basename(id)) || id.startsWith(dirs.server);
@@ -34,7 +48,8 @@ export function module_guard(context, { cwd, lib }) {
 		// ids will be posixified, so we need to posixify these, too
 		cwd: posixify(cwd),
 		node_modules: posixify(path.join(cwd, 'node_modules')),
-		server: posixify(path.join(lib, 'server'))
+		server: posixify(path.join(lib, 'server')),
+		svelte_config: svelte_config.kit.serverProtectedPaths ?? []
 	};
 
 	/**
