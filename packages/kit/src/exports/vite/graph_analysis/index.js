@@ -15,19 +15,20 @@ const ILLEGAL_MODULE_NAME_PATTERN = /.*\.server\..+/;
  *   cwd: string;
  *   node_modules: string;
  *   server: string;
- *   svelte_config: (string|RegExp|Function)[];
+ *   svelte_config: (string|RegExp|((filename: string)=>undefined|boolean))[];
  * }} dirs
  */
 export function is_illegal(id, dirs) {
 	//svelte_config is processed as first, so the function rule can make exceptions
-	for(let configRule of dirs.svelte_config) {
+	for(const configRule of dirs.svelte_config) {
 		if(typeof configRule === 'string') {
 			if(id.startsWith(configRule)) return true;
 		}
 		else if(configRule instanceof RegExp) {
 			if(configRule.test(id)) return true
 		} else if(typeof configRule === 'function') {
-			return configRule(id); //always return to allow exceptions
+			const check = configRule(id);
+			if(typeof check === 'boolean') return check; //always return the boolean to allow exceptions, if its undefined continue to allow multiple rules
 		}
 	}
 	if (ILLEGAL_IMPORTS.has(id)) return true;
