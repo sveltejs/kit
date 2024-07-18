@@ -53,7 +53,7 @@ function write_common_files(cwd, options, name) {
 	sort_files(files).forEach((file) => {
 		const include = file.include.every((condition) => matches_condition(condition, options));
 		const exclude = file.exclude.some((condition) => matches_condition(condition, options));
-	
+
 		if (exclude || !include) return;
 
 		if (file.name === 'package.json') {
