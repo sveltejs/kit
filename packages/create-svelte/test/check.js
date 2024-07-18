@@ -117,7 +117,8 @@ for (const template of templates) {
 			eslint: true,
 			playwright: false,
 			vitest: false,
-			svelte5: false
+			svelte5: false,
+			editor: null
 		});
 
 		const pkg = JSON.parse(fs.readFileSync(path.join(cwd, 'package.json'), 'utf-8'));

@@ -21,7 +21,8 @@ await create(repo, {
 	prettier: true,
 	playwright: false,
 	vitest: false,
-	svelte5: false
+	svelte5: false,
+	editor: null
 });
 
 // Remove the Sverdle from the template because it doesn't work within Stackblitz (cookies not set)

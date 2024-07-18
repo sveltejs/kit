@@ -7,6 +7,7 @@ export type Options = {
 	playwright: boolean;
 	vitest: boolean;
 	svelte5?: boolean; // optional to not introduce a breaking change to the `create` API
+	editor: null | 'vscode';
 };
 
 export type File = {
@@ -24,7 +25,8 @@ export type Condition =
 	| 'skeleton'
 	| 'default'
 	| 'skeletonlib'
-	| 'svelte5';
+	| 'svelte5'
+	| 'vscode';
 
 export type Common = {
 	files: Array<{

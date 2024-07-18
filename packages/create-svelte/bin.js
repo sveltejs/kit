@@ -104,6 +104,23 @@ const options = await p.group(
 						label: 'Try the Svelte 5 preview (unstable!)'
 					}
 				]
+			}),
+		editor: () =>
+			p.select({
+				message:
+					'Would you like to add reccomended configuration files for your preferred code editor?',
+				/** @type {'vscode' | null } */
+				initialValue: null,
+				options: [
+					{
+						value: 'vscode',
+						label: 'Yes, Visual Studio Code'
+					},
+					{
+						value: null,
+						label: 'No'
+					}
+				]
 			})
 	},
 	{ onCancel: () => process.exit(1) }
@@ -117,7 +134,8 @@ await create(cwd, {
 	eslint: options.features.includes('eslint'),
 	playwright: options.features.includes('playwright'),
 	vitest: options.features.includes('vitest'),
-	svelte5: options.features.includes('svelte5')
+	svelte5: options.features.includes('svelte5'),
+	editor: /** @type {'vscode' | null } */ (options.editor)
 });
 
 p.outro('Your project is ready!');
