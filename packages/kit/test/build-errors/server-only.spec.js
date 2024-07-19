@@ -69,3 +69,54 @@ test('$lib/server/* is not dynamically importable from the client', () => {
 	}
 	throw new Error();
 });
+
+test('serverProtectedPaths string is not importable from the client', () => {
+	try {
+		execSync('pnpm build', {
+			cwd: path.join(process.cwd(), 'apps/server-only-module-config-string'),
+			stdio: 'pipe',
+			timeout: 60000
+		});
+	} catch (err) {
+		assert.ok(
+			err.message.includes('Cannot import src/private-boom/test.server.js into client-side code'),
+			`received unexpected exception message ${err.message}`
+		);
+		return;
+	}
+	throw new Error();
+});
+
+test('serverProtectedPaths RegExp is not importable from the client', () => {
+	try {
+		execSync('pnpm build', {
+			cwd: path.join(process.cwd(), 'apps/server-only-module-config-regexp'),
+			stdio: 'pipe',
+			timeout: 60000
+		});
+	} catch (err) {
+		assert.ok(
+			err.message.includes('Cannot import src/private-boom/test.server.js into client-side code'),
+			`received unexpected exception message ${err.message}`
+		);
+		return;
+	}
+	throw new Error();
+});
+
+test('serverProtectedPaths function is not importable from the client', () => {
+	try {
+		execSync('pnpm build', {
+			cwd: path.join(process.cwd(), 'apps/server-only-module-config-function'),
+			stdio: 'pipe',
+			timeout: 60000
+		});
+	} catch (err) {
+		assert.ok(
+			err.message.includes('Cannot import src/private-boom/test.server.js into client-side code'),
+			`received unexpected exception message ${err.message}`
+		);
+		return;
+	}
+	throw new Error();
+});
