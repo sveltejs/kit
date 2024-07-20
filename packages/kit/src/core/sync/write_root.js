@@ -48,7 +48,7 @@ export function write_root(manifest_data, output) {
 				${
 					isSvelte5Plus()
 						? dedent`
-							let { stores, page, constructors, components = [], form, ${levels
+							let { stores, page, constructors, components = $bindable([]), form, ${levels
 								.map((l) => `data_${l} = null`)
 								.join(', ')} } = $props();
 						`

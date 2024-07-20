@@ -1198,3 +1198,19 @@ test.describe('INP', () => {
 		expect(time).toBeLessThan(400);
 	});
 });
+
+test.describe('binding_property_non_reactive warn', () => {
+	test('warning is not thrown from the root of svelte', async ({ page }) => {
+		let is_warning_thrown = false;
+		page.on('console', (m) => {
+			if (
+				m.type() === 'warn' &&
+				m.text().includes('binding_property_non_reactive `bind:this={components[0]}`')
+			) {
+				is_warning_thrown = true;
+			}
+		});
+		await page.goto('/');
+		expect(is_warning_thrown).toBeFalsy();
+	});
+});
