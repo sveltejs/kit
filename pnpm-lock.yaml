@@ -938,6 +938,69 @@ importers:
         specifier: ^5.3.2
         version: 5.3.3(@types/node@18.19.31)(lightningcss@1.24.1)
 
+  packages/kit/test/build-errors/apps/server-only-module-config-function:
+    devDependencies:
+      '@sveltejs/kit':
+        specifier: workspace:^
+        version: link:../../../..
+      '@sveltejs/vite-plugin-svelte':
+        specifier: ^3.0.1
+        version: 3.1.0(svelte@4.2.17)(vite@5.3.3(@types/node@18.19.31)(lightningcss@1.24.1))
+      svelte:
+        specifier: ^4.2.10
+        version: 4.2.17
+      svelte-check:
+        specifier: ^3.6.3
+        version: 3.6.9(postcss-load-config@3.1.4(postcss@8.4.39))(postcss@8.4.39)(svelte@4.2.17)
+      typescript:
+        specifier: ^5.3.3
+        version: 5.4.5
+      vite:
+        specifier: ^5.3.2
+        version: 5.3.3(@types/node@18.19.31)(lightningcss@1.24.1)
+
+  packages/kit/test/build-errors/apps/server-only-module-config-regexp:
+    devDependencies:
+      '@sveltejs/kit':
+        specifier: workspace:^
+        version: link:../../../..
+      '@sveltejs/vite-plugin-svelte':
+        specifier: ^3.0.1
+        version: 3.1.0(svelte@4.2.17)(vite@5.3.3(@types/node@18.19.31)(lightningcss@1.24.1))
+      svelte:
+        specifier: ^4.2.10
+        version: 4.2.17
+      svelte-check:
+        specifier: ^3.6.3
+        version: 3.6.9(postcss-load-config@3.1.4(postcss@8.4.39))(postcss@8.4.39)(svelte@4.2.17)
+      typescript:
+        specifier: ^5.3.3
+        version: 5.4.5
+      vite:
+        specifier: ^5.3.2
+        version: 5.3.3(@types/node@18.19.31)(lightningcss@1.24.1)
+
+  packages/kit/test/build-errors/apps/server-only-module-config-string:
+    devDependencies:
+      '@sveltejs/kit':
+        specifier: workspace:^
+        version: link:../../../..
+      '@sveltejs/vite-plugin-svelte':
+        specifier: ^3.0.1
+        version: 3.1.0(svelte@4.2.17)(vite@5.3.3(@types/node@18.19.31)(lightningcss@1.24.1))
+      svelte:
+        specifier: ^4.2.10
+        version: 4.2.17
+      svelte-check:
+        specifier: ^3.6.3
+        version: 3.6.9(postcss-load-config@3.1.4(postcss@8.4.39))(postcss@8.4.39)(svelte@4.2.17)
+      typescript:
+        specifier: ^5.3.3
+        version: 5.4.5
+      vite:
+        specifier: ^5.3.2
+        version: 5.3.3(@types/node@18.19.31)(lightningcss@1.24.1)
+
   packages/kit/test/build-errors/apps/server-only-module-dynamic-import:
     devDependencies:
       '@sveltejs/kit':

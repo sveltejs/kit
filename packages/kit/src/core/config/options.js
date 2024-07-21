@@ -263,7 +263,7 @@ const options = object(
 					throw new Error(`${keypath} must be an array of strings, regexp or functions`);
 				}
 				for (let i = 0; i < input.length; i++) {
-					let item = input[i];
+					const item = input[i];
 					if (typeof item !== 'string' && !(item instanceof RegExp) && typeof item !== 'function') {
 						throw new Error(
 							`${keypath} must be an array of strings, regexp or functions. Item ${i} is of type ${typeof item}`
