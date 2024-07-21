@@ -4,7 +4,7 @@ import { fileURLToPath } from 'node:url';
 /** @type {import('@sveltejs/kit').Config} */
 const config = {
 	kit: {
-		serverProtectedPaths: [/\/private-boom\//]
+		serverOnlyPaths: [/\/private-boom\//]
 	}
 };
 

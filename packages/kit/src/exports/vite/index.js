@@ -394,7 +394,7 @@ async function kit({ svelte_config }) {
 						cwd: normalized_cwd,
 						node_modules: vite.normalizePath(path.resolve('node_modules')),
 						server: vite.normalizePath(path.join(normalized_lib, 'server')),
-						svelte_config: svelte_config.kit.serverProtectedPaths ?? []
+						svelte_config: svelte_config.kit.serverOnlyPaths ?? []
 					})
 				) {
 					const relative = normalize_id(id, normalized_lib, normalized_cwd);

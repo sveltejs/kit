@@ -25,7 +25,7 @@ You can make your own modules server-only in three ways:
   const config = {
         ...,
         kit: {
-          serverProtectedPaths: [
+          serverOnlyPaths: [
             '/home/user/app/src/lib/components/server',
             /\/server\//,
             (path) => path.includes('/server/')

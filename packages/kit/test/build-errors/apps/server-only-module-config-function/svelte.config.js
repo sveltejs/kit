@@ -7,7 +7,7 @@ const __dirname = path.dirname(__filename);
 /** @type {import('@sveltejs/kit').Config} */
 const config = {
 	kit: {
-		serverProtectedPaths: [() => undefined, (filename) => filename.includes('/private-boom/')]
+		serverOnlyPaths: [() => undefined, (filename) => filename.includes('/private-boom/')]
 	}
 };
 

@@ -611,7 +611,7 @@ export interface KitConfig {
 	 * Items must be type of string, RegExp or a function that takes the filename and returns a boolean. If the function returns true, the file must not be imported to client side code.
 	 * @default []
 	 */
-	serverProtectedPaths?: (string | RegExp | ((id: string) => boolean | undefined))[];
+	serverOnlyPaths?: (string | RegExp | ((id: string) => boolean | undefined))[];
 	serviceWorker?: {
 		/**
 		 * Whether to automatically register the service worker, if it exists.

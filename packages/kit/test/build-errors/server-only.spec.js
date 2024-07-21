@@ -70,7 +70,7 @@ test('$lib/server/* is not dynamically importable from the client', () => {
 	throw new Error();
 });
 
-test('serverProtectedPaths string is not importable from the client', () => {
+test('serverOnlyPaths string is not importable from the client', () => {
 	try {
 		execSync('pnpm build', {
 			cwd: path.join(process.cwd(), 'apps/server-only-module-config-string'),
@@ -87,7 +87,7 @@ test('serverProtectedPaths string is not importable from the client', () => {
 	throw new Error();
 });
 
-test('serverProtectedPaths RegExp is not importable from the client', () => {
+test('serverOnlyPaths RegExp is not importable from the client', () => {
 	try {
 		execSync('pnpm build', {
 			cwd: path.join(process.cwd(), 'apps/server-only-module-config-regexp'),
@@ -104,7 +104,7 @@ test('serverProtectedPaths RegExp is not importable from the client', () => {
 	throw new Error();
 });
 
-test('serverProtectedPaths function is not importable from the client', () => {
+test('serverOnlyPaths function is not importable from the client', () => {
 	try {
 		execSync('pnpm build', {
 			cwd: path.join(process.cwd(), 'apps/server-only-module-config-function'),

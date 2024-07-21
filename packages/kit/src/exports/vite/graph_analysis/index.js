@@ -49,7 +49,7 @@ export function module_guard(context, { cwd, lib }) {
 		cwd: posixify(cwd),
 		node_modules: posixify(path.join(cwd, 'node_modules')),
 		server: posixify(path.join(lib, 'server')),
-		svelte_config: svelte_config.kit.serverProtectedPaths ?? []
+		svelte_config: svelte_config.kit.serverOnlyPaths ?? []
 	};
 
 	/**

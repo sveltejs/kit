@@ -258,7 +258,7 @@ const options = object(
 				})
 			}),
 
-			serverProtectedPaths: validate([], (input, keypath) => {
+			serverOnlyPaths: validate([], (input, keypath) => {
 				if (!Array.isArray(input)) {
 					throw new Error(`${keypath} must be an array of strings, regexp or functions`);
 				}
