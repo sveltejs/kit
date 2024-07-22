@@ -4,10 +4,10 @@
 	"version": "0.0.2-next.0",
 	"scripts": {
 		"dev": "vite dev",
-		"build": "vite build",
+		"build": "rm -rf ./missing_ids && mkdir ./missing_ids && vite build",
 		"preview": "vite preview",
 		"check": "svelte-kit sync && tsc && svelte-check",
-		"test": "rm -f ./missing_ids/index.jsonl && svelte-kit sync && pnpm build && vitest run",
+		"test": "vitest run",
 		"test:cross-platform": "pnpm test"
 	},
 	"devDependencies": {
