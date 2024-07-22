@@ -21,17 +21,14 @@
 		"sync-all": "node scripts/sync-all.js"
 	},
 	"devDependencies": {
-		"@changesets/cli": "^2.27.1",
-		"@sveltejs/eslint-config": "^7.0.1",
+		"@changesets/cli": "^2.27.6",
+		"@sveltejs/eslint-config": "^8.0.1",
 		"@svitejs/changesets-changelog-github-compact": "^1.1.0",
-		"eslint": "^9.0.0",
-		"eslint-config-prettier": "^9.1.0",
-		"eslint-plugin-svelte": "^2.36.0",
-		"eslint-plugin-unicorn": "^54.0.0",
+		"eslint": "^9.6.0",
 		"playwright": "^1.44.1",
 		"typescript-eslint": "^8.0.0-alpha.20"
 	},
-	"packageManager": "pnpm@9.4.0",
+	"packageManager": "pnpm@9.5.0",
 	"engines": {
 		"pnpm": "^9.0.0"
 	}

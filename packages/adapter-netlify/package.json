@@ -1,6 +1,6 @@
 {
 	"name": "@sveltejs/adapter-netlify",
-	"version": "4.2.1",
+	"version": "4.3.1",
 	"description": "A SvelteKit adapter that creates a Netlify app",
 	"keywords": [
 		"adapter",
@@ -33,7 +33,7 @@
 	],
 	"scripts": {
 		"dev": "node -e \"fs.rmSync('files', { force: true, recursive: true })\" && rollup -cw",
-		"build": "node -e \"fs.rmSync('files', { force: true, recursive: true })\" && rollup -c && cp src/edge.js files/edge.js",
+		"build": "node -e \"fs.rmSync('files', { force: true, recursive: true })\" && rollup -c && node -e \"fs.cpSync('src/edge.js', 'files/edge.js')\"",
 		"test": "vitest run",
 		"check": "tsc",
 		"lint": "prettier --check .",
@@ -42,7 +42,7 @@
 	},
 	"dependencies": {
 		"@iarna/toml": "^2.2.5",
-		"esbuild": "^0.20.2",
+		"esbuild": "^0.21.5",
 		"set-cookie-parser": "^2.6.0"
 	},
 	"devDependencies": {
@@ -56,7 +56,7 @@
 		"@types/set-cookie-parser": "^2.4.7",
 		"rollup": "^4.14.2",
 		"typescript": "^5.3.3",
-		"vitest": "^1.6.0"
+		"vitest": "^2.0.1"
 	},
 	"peerDependencies": {
 		"@sveltejs/kit": "^2.4.0"

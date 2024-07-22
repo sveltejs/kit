@@ -97,7 +97,12 @@ export default function ({ config = 'wrangler.toml', platformProxy = {} } = {}) 
 					alias: Object.fromEntries(compatible_node_modules.map((id) => [id, `node:${id}`])),
 					format: 'esm',
 					loader: {
-						'.wasm': 'copy'
+						'.wasm': 'copy',
+						'.woff': 'copy',
+						'.woff2': 'copy',
+						'.ttf': 'copy',
+						'.eot': 'copy',
+						'.otf': 'copy'
 					},
 					logLevel: 'silent'
 				});

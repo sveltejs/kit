@@ -1,5 +1,23 @@
 # @sveltejs/adapter-cloudflare-workers
 
+## 2.5.1
+### Patch Changes
+
+
+- fix: copy `.eot`, `.otf`, `.ttf`, `.woff`, and `woff2` font files when bundling ([#12439](https://github.com/sveltejs/kit/pull/12439))
+
+## 2.5.0
+### Minor Changes
+
+
+- chore(deps): upgrade to esbuild 0.21 ([#12415](https://github.com/sveltejs/kit/pull/12415))
+
+
+### Patch Changes
+
+- Updated dependencies [[`84298477a014ec471839adf7a4448d91bc7949e4`](https://github.com/sveltejs/kit/commit/84298477a014ec471839adf7a4448d91bc7949e4), [`5645614f497931f587b7cb8b3c885fce892a6a72`](https://github.com/sveltejs/kit/commit/5645614f497931f587b7cb8b3c885fce892a6a72), [`84298477a014ec471839adf7a4448d91bc7949e4`](https://github.com/sveltejs/kit/commit/84298477a014ec471839adf7a4448d91bc7949e4)]:
+  - @sveltejs/kit@2.5.18
+
 ## 2.4.1
 
 ### Patch Changes
