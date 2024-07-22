@@ -1020,11 +1020,11 @@ test.describe('untrack', () => {
 		expect(await page.textContent('p.id')).toBe(id);
 	});
 
-	test('untracks universal load function', async ({ page }) => {
+	test('untracks universal load function', async ({ page, clicknav }) => {
 		await page.goto('/untrack/universal/1');
 		expect(await page.textContent('p.url')).toBe('/untrack/universal/1');
 		const id = await page.textContent('p.id');
-		await page.click('a[href="/untrack/universal/2"]');
+		await clicknav('a[href="/untrack/universal/2"]');
 		expect(await page.textContent('p.url')).toBe('/untrack/universal/2');
 		expect(await page.textContent('p.id')).toBe(id);
 	});
