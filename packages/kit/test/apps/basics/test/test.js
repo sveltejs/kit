@@ -549,7 +549,7 @@ test.describe('Load', () => {
 	}) => {
 		if (javaScriptEnabled) {
 			await page.goto('/prerendering/prerendered-endpoint');
-			await clicknav('a');
+			await clicknav('a[href="/prerendering/prerendered-endpoint/from-handle-hook"]');
 		} else {
 			await page.goto('/prerendering/prerendered-endpoint/from-handle-hook');
 		}
