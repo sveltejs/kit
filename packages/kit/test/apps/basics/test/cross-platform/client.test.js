@@ -223,7 +223,6 @@ test.describe('Navigation lifecycle functions', () => {
 	test('beforeNavigate is triggered after clicking a download link', async ({
 		page,
 		baseURL,
-		clicknav
 	}) => {
 		const pathname = '/navigation-lifecycle/before-navigate/prevent-navigation';
 
@@ -238,7 +237,7 @@ test.describe('Navigation lifecycle functions', () => {
 		expect(page.url()).toBe(current_url);
 		expect(await page.locator('pre').innerText()).toBe('0 false undefined');
 
-		await clicknav('a[href="/navigation-lifecycle/before-navigate/a"]');
+		await page.locator('a[href="/navigation-lifecycle/before-navigate/a"]').click();
 
 		expect(page.url()).toBe(current_url);
 		expect(await page.locator('pre').innerText()).toBe('1 false link');
