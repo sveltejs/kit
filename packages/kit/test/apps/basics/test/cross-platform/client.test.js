@@ -220,26 +220,22 @@ test.describe('Navigation lifecycle functions', () => {
 		expect(await page.innerHTML('pre')).toBe('2 false goto');
 	});
 
-	test('beforeNavigate is triggered after clicking a download link', async ({
-		page,
-		baseURL,
-	}) => {
+	test('beforeNavigate is triggered after clicking a download link', async ({ page, baseURL }) => {
 		const pathname = '/navigation-lifecycle/before-navigate/prevent-navigation';
+		const current_url = baseURL + pathname;
 
 		await page.goto(pathname);
 
 		const download = page.waitForEvent('download');
 		await page.locator('a[download]').click();
+		await page.waitForURL(current_url);
 		await (await download).cancel();
 
-		const current_url = baseURL + pathname;
-
-		expect(page.url()).toBe(current_url);
 		expect(await page.locator('pre').innerText()).toBe('0 false undefined');
 
 		await page.locator('a[href="/navigation-lifecycle/before-navigate/a"]').click();
+		await page.waitForURL(current_url);
 
-		expect(page.url()).toBe(current_url);
 		expect(await page.locator('pre').innerText()).toBe('1 false link');
 	});
 
