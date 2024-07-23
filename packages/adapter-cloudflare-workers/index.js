@@ -32,7 +32,7 @@ const compatible_node_modules = [
 ];
 
 /** @type {import('./index.js').default} */
-export default function ({ config = 'wrangler.toml' } = {}) {
+export default function ({ config = 'wrangler.toml', platformProxy = {} } = {}) {
 	return {
 		name: '@sveltejs/adapter-cloudflare-workers',
 
@@ -73,9 +73,9 @@ export default function ({ config = 'wrangler.toml' } = {}) {
 
 			writeFileSync(
 				`${tmp}/manifest.js`,
-				`export const manifest = ${builder.generateManifest({
-					relativePath
-				})};\n\nexport const prerendered = new Map(${JSON.stringify(prerendered_entries)});\n`
+				`export const manifest = ${builder.generateManifest({ relativePath })};\n\n` +
+					`export const prerendered = new Map(${JSON.stringify(prerendered_entries)});\n\n` +
+					`export const base_path = ${JSON.stringify(builder.config.kit.paths.base)};\n`
 			);
 
 			const external = ['__STATIC_CONTENT_MANIFEST', 'cloudflare:*'];
@@ -97,7 +97,12 @@ export default function ({ config = 'wrangler.toml' } = {}) {
 					alias: Object.fromEntries(compatible_node_modules.map((id) => [id, `node:${id}`])),
 					format: 'esm',
 					loader: {
-						'.wasm': 'copy'
+						'.wasm': 'copy',
+						'.woff': 'copy',
+						'.woff2': 'copy',
+						'.ttf': 'copy',
+						'.eot': 'copy',
+						'.otf': 'copy'
 					},
 					logLevel: 'silent'
 				});
@@ -145,7 +150,7 @@ export default function ({ config = 'wrangler.toml' } = {}) {
 		},
 
 		async emulate() {
-			const proxy = await getPlatformProxy();
+			const proxy = await getPlatformProxy(platformProxy);
 			const platform = /** @type {App.Platform} */ ({
 				env: proxy.env,
 				context: proxy.ctx,

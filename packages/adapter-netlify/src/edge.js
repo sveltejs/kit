@@ -47,7 +47,7 @@ function is_static_file(request) {
 
 	try {
 		file = decodeURIComponent(file);
-	} catch (err) {
+	} catch {
 		// ignore
 	}
 

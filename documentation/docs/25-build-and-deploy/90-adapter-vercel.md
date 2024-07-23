@@ -68,7 +68,8 @@ If your functions need to access data in a specific region, it's recommended tha
 
 You may set the `images` config to control how Vercel builds your images. See the [image configuration reference](https://vercel.com/docs/build-output-api/v3/configuration#images) for full details. As an example, you may set:
 
-```
+```js
+// @errors: 2300 2842 7031 1181 1005 1136 1128
 /// file: svelte.config.js
 import adapter from '@sveltejs/adapter-vercel';
 
@@ -88,7 +89,7 @@ export default {
 
 ## Incremental Static Regeneration
 
-Vercel supports [Incremental Static Regeneration](https://vercel.com/docs/concepts/incremental-static-regeneration/overview) (ISR), which provides the performance and cost advantages of prerendered content with the flexibility of dynamically rendered content.
+Vercel supports [Incremental Static Regeneration](https://vercel.com/docs/incremental-static-regeneration) (ISR), which provides the performance and cost advantages of prerendered content with the flexibility of dynamically rendered content.
 
 To add ISR to a route, include the `isr` property in your `config` object:
 

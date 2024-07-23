@@ -7,7 +7,7 @@ const config = {
 
 		prerender: {
 			handleHttpError: 'warn',
-			origin: 'http://example.com'
+			origin: 'http://prerender.origin'
 		}
 	}
 };

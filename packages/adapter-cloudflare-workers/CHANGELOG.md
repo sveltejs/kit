@@ -1,5 +1,49 @@
 # @sveltejs/adapter-cloudflare-workers
 
+## 2.5.1
+### Patch Changes
+
+
+- fix: copy `.eot`, `.otf`, `.ttf`, `.woff`, and `woff2` font files when bundling ([#12439](https://github.com/sveltejs/kit/pull/12439))
+
+## 2.5.0
+### Minor Changes
+
+
+- chore(deps): upgrade to esbuild 0.21 ([#12415](https://github.com/sveltejs/kit/pull/12415))
+
+
+### Patch Changes
+
+- Updated dependencies [[`84298477a014ec471839adf7a4448d91bc7949e4`](https://github.com/sveltejs/kit/commit/84298477a014ec471839adf7a4448d91bc7949e4), [`5645614f497931f587b7cb8b3c885fce892a6a72`](https://github.com/sveltejs/kit/commit/5645614f497931f587b7cb8b3c885fce892a6a72), [`84298477a014ec471839adf7a4448d91bc7949e4`](https://github.com/sveltejs/kit/commit/84298477a014ec471839adf7a4448d91bc7949e4)]:
+  - @sveltejs/kit@2.5.18
+
+## 2.4.1
+
+### Patch Changes
+
+- chore: add keywords for discovery in npm search ([#12330](https://github.com/sveltejs/kit/pull/12330))
+
+- Updated dependencies [[`25acb1d9fce998dccd8050b93cf4142c2b082611`](https://github.com/sveltejs/kit/commit/25acb1d9fce998dccd8050b93cf4142c2b082611), [`642c4a4aff4351b786fe6274aa2f0bf7d905faf9`](https://github.com/sveltejs/kit/commit/642c4a4aff4351b786fe6274aa2f0bf7d905faf9), [`0a0e9aa897123ebec50af08e9385b2ca4fc5bb28`](https://github.com/sveltejs/kit/commit/0a0e9aa897123ebec50af08e9385b2ca4fc5bb28)]:
+  - @sveltejs/kit@2.5.11
+
+## 2.4.0
+
+### Minor Changes
+
+- chore(deps): upgrade esbuild ([#12118](https://github.com/sveltejs/kit/pull/12118))
+
+### Patch Changes
+
+- Updated dependencies [[`bbab296f6fcc05af6b999182798bcdedabbaa4c9`](https://github.com/sveltejs/kit/commit/bbab296f6fcc05af6b999182798bcdedabbaa4c9)]:
+  - @sveltejs/kit@2.5.6
+
+## 2.3.0
+
+### Minor Changes
+
+- feat: support platform emulation configuration via the `platformProxy` adapter option ([#12011](https://github.com/sveltejs/kit/pull/12011))
+
 ## 2.2.1
 
 ### Patch Changes

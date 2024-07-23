@@ -556,7 +556,7 @@ function get_data(event, options, nodes, global) {
 						let str;
 						try {
 							str = devalue.uneval({ id, data, error }, replacer);
-						} catch (e) {
+						} catch {
 							error = await handle_error_and_jsonify(
 								event,
 								options,

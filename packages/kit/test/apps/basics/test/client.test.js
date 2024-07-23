@@ -145,35 +145,41 @@ test.describe('Load', () => {
 	});
 
 	test('load does not call fetch if max-age allows it', async ({ page }) => {
-		page.addInitScript(`
+		await page.addInitScript(`
 			window.now = 0;
 			window.performance.now = () => now;
 		`);
 
 		await page.goto('/load/cache-control/default');
-		await expect(page.getByText('Count is 0')).toBeVisible();
-		await page.locator('button').click();
-		await page.waitForLoadState('networkidle');
-		await expect(page.getByText('Count is 0')).toBeVisible();
 
-		await page.evaluate(() => (window.now = 2500));
+		const button = page.locator('button');
+		const p = page.locator('p.counter');
 
-		await page.locator('button').click();
-		await expect(page.getByText('Count is 2')).toBeVisible();
+		await button.click();
+		await expect(button).toHaveAttribute('data-ticker', '2');
+		await expect(p).toHaveText('Count is 0');
+
+		await page.evaluate('window.now = 2500');
+
+		await button.click();
+		await expect(button).toHaveAttribute('data-ticker', '4');
+		await expect(p).toHaveText('Count is 2');
 	});
 
 	test('load does ignore ttl if fetch cache options says so', async ({ page }) => {
 		await page.goto('/load/cache-control/force');
-		await expect(page.getByText('Count is 0')).toBeVisible();
+		const p = page.locator('p.counter');
+		await expect(p).toHaveText('Count is 0');
 		await page.locator('button').click();
-		await expect(page.getByText('Count is 1')).toBeVisible();
+		await expect(p).toHaveText('Count is 1');
 	});
 
 	test('load busts cache if non-GET request to resource is made', async ({ page }) => {
 		await page.goto('/load/cache-control/bust');
-		await expect(page.getByText('Count is 0')).toBeVisible();
+		const p = page.locator('p.counter');
+		await expect(p).toHaveText('Count is 0');
 		await page.locator('button').click();
-		await expect(page.getByText('Count is 1')).toBeVisible();
+		await expect(p).toHaveText('Count is 1');
 	});
 
 	test('__data.json has cache-control: private, no-store', async ({ page, clicknav }) => {
@@ -717,10 +723,7 @@ test.describe('data-sveltekit attributes', () => {
 		expect(page).toHaveURL(offline_url);
 	});
 
-	test('data-sveltekit-preload does not abort ongoing navigation', async ({
-		page,
-		browserName
-	}) => {
+	test('data-sveltekit-preload does not abort ongoing navigation', async ({ page }) => {
 		await page.goto('/data-sveltekit/preload-data/offline');
 
 		await page.locator('#slow-navigation').dispatchEvent('click');
@@ -731,10 +734,7 @@ test.describe('data-sveltekit attributes', () => {
 			page.waitForLoadState('networkidle') // wait for preloading to finish
 		]);
 
-		expect(page).toHaveURL(
-			'/data-sveltekit/preload-data/offline/slow-navigation' ||
-				(browserName === 'chromium' && 'chrome-error://chromewebdata/')
-		);
+		expect(page).toHaveURL('/data-sveltekit/preload-data/offline/slow-navigation');
 	});
 
 	test('data-sveltekit-reload', async ({ baseURL, page, clicknav }) => {
@@ -1020,11 +1020,11 @@ test.describe('untrack', () => {
 		expect(await page.textContent('p.id')).toBe(id);
 	});
 
-	test('untracks universal load function', async ({ page }) => {
+	test('untracks universal load function', async ({ page, clicknav }) => {
 		await page.goto('/untrack/universal/1');
 		expect(await page.textContent('p.url')).toBe('/untrack/universal/1');
 		const id = await page.textContent('p.id');
-		await page.click('a[href="/untrack/universal/2"]');
+		await clicknav('a[href="/untrack/universal/2"]');
 		expect(await page.textContent('p.url')).toBe('/untrack/universal/2');
 		expect(await page.textContent('p.id')).toBe(id);
 	});
@@ -1167,5 +1167,34 @@ test.describe('reroute', () => {
 		await page.click('a#client-error');
 
 		expect(await page.textContent('h1')).toContain('Full Navigation');
+	});
+});
+
+test.describe('INP', () => {
+	test('does not block next paint', async ({ page }) => {
+		// Thanks to https://publishing-project.rivendellweb.net/measuring-performance-tasks-with-playwright/#interaction-to-next-paint-inp
+		async function measureInteractionToPaint(selector) {
+			return page.evaluate(async (selector) => {
+				return new Promise((resolve) => {
+					const startTime = performance.now();
+					document.querySelector(selector).click();
+					requestAnimationFrame(() => {
+						const endTime = performance.now();
+						resolve(endTime - startTime);
+					});
+				});
+			}, selector);
+		}
+
+		await page.goto('/routing');
+
+		const client = await page.context().newCDPSession(page);
+		await client.send('Emulation.setCPUThrottlingRate', { rate: 100 });
+
+		const time = await measureInteractionToPaint('a[href="/routing/next-paint"]');
+
+		// we may need to tweak this number, and the `rate` above,
+		// depending on if this proves flaky
+		expect(time).toBeLessThan(400);
 	});
 });

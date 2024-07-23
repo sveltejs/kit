@@ -1,4 +1,4 @@
-import { writeFileSync } from 'node:fs';
+import { existsSync, writeFileSync } from 'node:fs';
 import * as path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import * as esbuild from 'esbuild';
@@ -24,6 +24,12 @@ export default function (options = {}) {
 	return {
 		name: '@sveltejs/adapter-cloudflare',
 		async adapt(builder) {
+			if (existsSync('_routes.json')) {
+				throw new Error(
+					'Cloudflare routes should be configured in svelte.config.js rather than _routes.json'
+				);
+			}
+
 			const files = fileURLToPath(new URL('./files', import.meta.url).href);
 			const dest = builder.getBuildDirectory('cloudflare');
 			const tmp = builder.getBuildDirectory('cloudflare-tmp');
@@ -52,7 +58,7 @@ export default function (options = {}) {
 				`${tmp}/manifest.js`,
 				`export const manifest = ${builder.generateManifest({ relativePath })};\n\n` +
 					`export const prerendered = new Set(${JSON.stringify(builder.prerendered.paths)});\n\n` +
-					`export const app_path = ${JSON.stringify(builder.getAppPath())};\n`
+					`export const base_path = ${JSON.stringify(builder.config.kit.paths.base)};\n`
 			);
 
 			writeFileSync(
@@ -84,7 +90,12 @@ export default function (options = {}) {
 					format: 'esm',
 					bundle: true,
 					loader: {
-						'.wasm': 'copy'
+						'.wasm': 'copy',
+						'.woff': 'copy',
+						'.woff2': 'copy',
+						'.ttf': 'copy',
+						'.eot': 'copy',
+						'.otf': 'copy'
 					},
 					external,
 					alias: Object.fromEntries(compatible_node_modules.map((id) => [id, `node:${id}`])),
@@ -128,7 +139,7 @@ export default function (options = {}) {
 			}
 		},
 		async emulate() {
-			const proxy = await getPlatformProxy();
+			const proxy = await getPlatformProxy(options.platformProxy);
 			const platform = /** @type {App.Platform} */ ({
 				env: proxy.env,
 				context: proxy.ctx,
@@ -193,7 +204,7 @@ function get_routes_json(builder, assets, { include = ['/*'], exclude = ['<all>'
 								file === '_redirects'
 							)
 					)
-					.map((file) => `/${file}`);
+					.map((file) => `${builder.config.kit.paths.base}/${file}`);
 			}
 
 			if (rule === '<prerendered>') {

@@ -146,7 +146,7 @@ export async function render_page(event, page, options, manifest, state, resolve
 							const data = {};
 							for (let j = 0; j < i; j += 1) {
 								const parent = await server_promises[j];
-								if (parent) Object.assign(data, await parent.data);
+								if (parent) Object.assign(data, parent.data);
 							}
 							return data;
 						}
