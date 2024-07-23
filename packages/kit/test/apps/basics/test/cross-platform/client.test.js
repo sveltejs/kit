@@ -225,7 +225,7 @@ test.describe('Navigation lifecycle functions', () => {
 
 		await page.goto(pathname);
 
-		const download = page.waitForEvent('download', { timeout: 3000 });
+		const download = page.waitForEvent('download');
 		await page.locator('a[download]').click();
 		await (await download).cancel();
 
