@@ -230,7 +230,7 @@ test.describe('Navigation lifecycle functions', () => {
 		await page.goto(pathname);
 
 		const download = page.waitForEvent('download');
-		await clicknav('a[download]');
+		await page.locator('a[download]').click();
 		await (await download).cancel();
 
 		const current_url = baseURL + pathname;
