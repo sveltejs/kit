@@ -543,12 +543,13 @@ test.describe('Load', () => {
 	});
 
 	test('Prerendered +server.js called from a non-prerendered handle hook works', async ({
+		clicknav,
 		page,
 		javaScriptEnabled
 	}) => {
 		if (javaScriptEnabled) {
 			await page.goto('/prerendering/prerendered-endpoint');
-			await page.click('a', { noWaitAfter: true });
+			await clicknav('a[href="/prerendering/prerendered-endpoint/from-handle-hook"]');
 		} else {
 			await page.goto('/prerendering/prerendered-endpoint/from-handle-hook');
 		}
