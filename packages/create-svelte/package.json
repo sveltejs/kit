@@ -1,6 +1,6 @@
 {
 	"name": "create-svelte",
-	"version": "6.3.2",
+	"version": "6.3.3",
 	"description": "A CLI for creating new SvelteKit projects",
 	"keywords": [
 		"create",
@@ -35,7 +35,7 @@
 		"svelte": "^4.2.10",
 		"tiny-glob": "^0.2.9",
 		"typescript": "^5.3.3",
-		"vitest": "^1.6.0"
+		"vitest": "^2.0.1"
 	},
 	"scripts": {
 		"build": "node scripts/build-templates",

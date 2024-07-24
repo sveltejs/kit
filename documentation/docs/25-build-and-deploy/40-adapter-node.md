@@ -51,8 +51,15 @@ npm install dotenv
 ...and invoke it before running the built app:
 
 ```diff
--node build
-+node -r dotenv/config build
+- node build
++ node -r dotenv/config build
+```
+
+If you use Node.js v20.6+, you can use the [`--env-file`](https://nodejs.org/en/learn/command-line/how-to-read-environment-variables-from-nodejs) flag instead:
+
+```diff
+- node build
++ node --env-file=.env build
 ```
 
 ### `PORT`, `HOST` and `SOCKET_PATH`
@@ -122,7 +129,7 @@ We instead read from the _right_, accounting for the number of trusted proxies. 
 
 ### `BODY_SIZE_LIMIT`
 
-The maximum request body size to accept in bytes including while streaming. Defaults to 512kb. You can disable this option with a value of `Infinity` (0 in older versions of the adapter) and implement a custom check in [`handle`](hooks#server-hooks-handle) if you need something more advanced.
+The maximum request body size to accept in bytes including while streaming. The body size can also be specified with a unit suffix for kilobytes (`K`), megabytes (`M`), or gigabytes (`G`). For example, `512K` or `1M`. Defaults to 512kb. You can disable this option with a value of `Infinity` (0 in older versions of the adapter) and implement a custom check in [`handle`](hooks#server-hooks-handle) if you need something more advanced.
 
 ### `SHUTDOWN_TIMEOUT`
 
