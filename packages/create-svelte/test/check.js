@@ -24,10 +24,8 @@ const overrides = { ...existing_workspace_overrides };
 
 for (const pkg_path of glob(resolve_path('../../../packages/*/package.json'))) {
 	const name = JSON.parse(fs.readFileSync(pkg_path, 'utf-8')).name;
-	// use `file:` protocol for opting into stricter resolve logic which catches more bugs,
-	// but only on CI because it doesn't work locally for some reason
-	const protocol = process.env.CI ? 'file:' : '';
-	overrides[name] = `${protocol}${path.dirname(path.resolve(pkg_path))}`;
+	// use `file:` protocol for opting into stricter resolve logic which catches more bugs
+	overrides[name] = `file:${path.dirname(path.resolve(pkg_path))}`;
 }
 
 try {
@@ -48,7 +46,10 @@ const workspace = {
 	private: true,
 	version: '0.0.0',
 	pnpm: { overrides },
-	devDependencies: overrides
+	// convert override query "@foo/bar@>x <y" to package name @foo/bar
+	devDependencies: Object.fromEntries(
+		Object.entries(overrides).map(([query, range]) => [query.replace(/(@?[^@]+)@.*$/, '$1'), range])
+	)
 };
 
 fs.writeFileSync(

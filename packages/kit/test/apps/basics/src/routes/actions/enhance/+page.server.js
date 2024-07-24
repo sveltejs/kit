@@ -53,5 +53,16 @@ export const actions = {
 		});
 
 		return {};
+	},
+	send_file: async ({ request }) => {
+		const data = await request.formData();
+		const file = data.get('file');
+
+		if (file instanceof File) {
+			return {
+				result: 'file name:' + file.name
+			};
+		}
+		return {};
 	}
 };

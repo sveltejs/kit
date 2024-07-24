@@ -1,7 +1,14 @@
 {
 	"name": "svelte-migrate",
-	"version": "1.4.2",
+	"version": "1.4.3",
 	"description": "A CLI for migrating Svelte(Kit) codebases",
+	"keywords": [
+		"migration",
+		"upgrade",
+		"svelte",
+		"sveltekit",
+		"tool"
+	],
 	"repository": {
 		"type": "git",
 		"url": "https://github.com/sveltejs/kit",
@@ -40,7 +47,7 @@
 		"@types/semver": "^7.5.6",
 		"prettier": "^3.1.1",
 		"svelte": "^4.2.10",
-		"vitest": "^1.5.0"
+		"vitest": "^2.0.1"
 	},
 	"scripts": {
 		"test": "vitest run --silent",
