@@ -1,5 +1,17 @@
 # @sveltejs/adapter-cloudflare
 
+## 4.7.0
+### Minor Changes
+
+
+- feat: generate static `_redirects` for Cloudflare Pages ([#12199](https://github.com/sveltejs/kit/pull/12199))
+
+
+### Patch Changes
+
+
+- fix: correctly return static assets if base path is set ([#12075](https://github.com/sveltejs/kit/pull/12075))
+
 ## 4.6.1
 ### Patch Changes
 
