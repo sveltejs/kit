@@ -332,12 +332,12 @@ importers:
   packages/create-svelte/templates/default:
     dependencies:
       '@fontsource/fira-mono':
-        specifier: ^5.0.8
+        specifier: ^5.0.0
         version: 5.0.12
     devDependencies:
       '@neoconfetti/svelte':
-        specifier: ^1.0.0
-        version: 1.0.0
+        specifier: ^2.0.0
+        version: 2.2.1
       '@sveltejs/adapter-auto':
         specifier: workspace:*
         version: link:../../../adapter-auto
@@ -1916,8 +1916,8 @@ packages:
     resolution: {integrity: sha512-Yhlar6v9WQgUp/He7BdgzOz8lqMQ8sU+jkCq7Wx8Myc5YFJLbEe7lgui/V7G1qB1DJykHSGwreceSaD60Y0PUQ==}
     hasBin: true
 
-  '@neoconfetti/svelte@1.0.0':
-    resolution: {integrity: sha512-SmksyaJAdSlMa9cTidVSIqYo1qti+WTsviNDwgjNVm+KQ3DRP2Df9umDIzC4vCcpEYY+chQe0i2IKnLw03AT8Q==}
+  '@neoconfetti/svelte@2.2.1':
+    resolution: {integrity: sha512-2Ts0Rxaf6clW2qG+AKhTwpl01AAyZEAe03XeuQ7Vp+qYIaM3ycuI94j546fmEkUxwACwGI3Zl2cZ/pncTuNcJg==}
 
   '@netlify/functions@2.6.0':
     resolution: {integrity: sha512-vU20tij0fb4nRGACqb+5SQvKd50JYyTyEhQetCMHdakcJFzjLDivvRR16u1G2Oy4A7xNAtGJF1uz8reeOtTVcQ==}
@@ -4869,7 +4869,7 @@ snapshots:
       - encoding
       - supports-color
 
-  '@neoconfetti/svelte@1.0.0': {}
+  '@neoconfetti/svelte@2.2.1': {}
 
   '@netlify/functions@2.6.0':
     dependencies:
