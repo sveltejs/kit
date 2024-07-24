@@ -1,5 +1,5 @@
 import { Server } from 'SERVER';
-import { manifest, prerendered } from 'MANIFEST';
+import { manifest, prerendered, base_path } from 'MANIFEST';
 import { getAssetFromKV, mapRequestToAsset } from '@cloudflare/kv-asset-handler';
 import static_asset_manifest_json from '__STATIC_CONTENT_MANIFEST';
 const static_asset_manifest = JSON.parse(static_asset_manifest_json);
@@ -54,7 +54,7 @@ export default {
 
 		// prerendered pages and /static files
 		let is_static_asset = false;
-		const filename = stripped_pathname.substring(1);
+		const filename = stripped_pathname.slice(base_path.length + 1);
 		if (filename) {
 			is_static_asset =
 				manifest.assets.has(filename) || manifest.assets.has(filename + '/index.html');
