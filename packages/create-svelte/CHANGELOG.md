@@ -1,5 +1,17 @@
 # create-svelte
 
+## 6.3.4
+### Patch Changes
+
+
+- chore: upgrade to vitest 2 ([#12462](https://github.com/sveltejs/kit/pull/12462))
+
+
+- fix: remove unnecessary `tslib` dependency ([#12453](https://github.com/sveltejs/kit/pull/12453))
+
+
+- chore: bump @types/eslint to v9 ([#12496](https://github.com/sveltejs/kit/pull/12496))
+
 ## 6.3.3
 ### Patch Changes
 

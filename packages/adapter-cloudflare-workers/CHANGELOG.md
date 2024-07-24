@@ -1,5 +1,11 @@
 # @sveltejs/adapter-cloudflare-workers
 
+## 2.5.2
+### Patch Changes
+
+
+- fix: correctly return static assets if base path is set ([#12075](https://github.com/sveltejs/kit/pull/12075))
+
 ## 2.5.1
 ### Patch Changes
 

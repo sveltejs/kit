@@ -1,5 +1,11 @@
 # @sveltejs/enhanced-img
 
+## 0.3.1
+### Patch Changes
+
+
+- fix: make `*?enhanced` imports available in the ambient context ([#12363](https://github.com/sveltejs/kit/pull/12363))
+
 ## 0.3.0
 
 ### Minor Changes
