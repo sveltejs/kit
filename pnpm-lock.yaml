@@ -330,11 +330,10 @@ importers:
         version: 2.0.1(@types/node@18.19.31)(lightningcss@1.24.1)
 
   packages/create-svelte/templates/default:
-    dependencies:
+    devDependencies:
       '@fontsource/fira-mono':
         specifier: ^5.0.0
         version: 5.0.12
-    devDependencies:
       '@neoconfetti/svelte':
         specifier: ^2.0.0
         version: 2.2.1
