@@ -29,15 +29,15 @@ Here's an example `launch.json`:
 
 ```json
 {
-	"version": "0.2.0",
-	"configurations": [
-		{
-			"command": "npm run dev",
-			"name": "Run development server",
-			"request": "launch",
-			"type": "node-terminal"
-		}
-	]
+  "version": "0.2.0",
+    "configurations": [
+      {
+        "command": "npm run dev",
+        "name": "Run development server",
+        "request": "launch",
+        "type": "node-terminal"
+      }
+   ]
 }
 ```
 
@@ -54,12 +54,13 @@ If you use a different editor, these community guides might be useful for you:
 
 It's possible to debug Node.js applications using a browser-based debugger.
 
-> Note this only works with debugging client-side SvelteKit source maps.
-
-1. Run the `--inspect` flag when starting the Vite server with Node.js. For instance: `NODE_OPTIONS="--inspect" npm run dev`
-2. Open your site in a new tab. Typically at `localhost:5173`.
-3. Open your browser's dev tools, and click on the "Open dedicated DevTools for Node.js" icon near the top-left. It should display the Node.js logo.
-4. Set up breakpoints and debug your application.
+1. TBD
+2. Run the `--enable-source-maps` and `--inspect` flags when starting the Vite
+  server with Node.js. For instance: `NODE_OPTIONS='--enable-source-maps
+  --inspect' vite dev` (these flags may also be passed before running `vite preview`)
+3. Open your site in a new tab. Typically at `localhost:5173`.
+4. Open your browser's dev tools, and click on the "Open dedicated DevTools for Node.js" icon near the top-left. It should display the Node.js logo.
+5. Set up breakpoints and debug your application.
 
 You may alternatively open the debugger devtools by navigating to `chrome://inspect` in Google Chrome, or `edge://inspect` in Microsoft Edge.
 
