@@ -297,6 +297,10 @@ export async function respond(request, options, manifest, state) {
 			}
 		}
 
+		if (!event.platform && DEV && state.emulator?.platform) {
+			event.platform = await state.emulator.platform({ config: {}, prerender: false });
+		}
+
 		const { cookies, new_cookies, get_cookie_header, set_internal } = get_cookies(
 			request,
 			url,
