@@ -1,5 +1,5 @@
 import fs from 'node:fs';
-import { Project, ts, Node, ObjectLiteralExpression } from 'ts-morph';
+import { Project, ts, Node } from 'ts-morph';
 import { log_on_ts_modification, update_pkg } from '../../utils.js';
 
 export function update_pkg_json() {
@@ -94,7 +94,9 @@ function update_component_instantiation(source) {
 							: 'mount';
 
 					if (method === 'hydrate') {
-						/** @type {ObjectLiteralExpression} */ (args[0]).getProperty('hydrate')?.remove();
+						/** @type {import('ts-morph').ObjectLiteralExpression} */ (args[0])
+							.getProperty('hydrate')
+							?.remove();
 					}
 
 					if (source.getImportDeclaration('svelte')) {

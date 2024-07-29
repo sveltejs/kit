@@ -54,7 +54,7 @@ export async function migrate() {
 	try {
 		try {
 			({ migrate } = await import_from_cwd('svelte/compiler'));
-		} catch (e) {
+		} catch {
 			execSync('npm install svelte@5', { stdio: 'inherit', cwd: import.meta.url });
 			const url = resolve('svelte/compiler', import.meta.url);
 			({ migrate } = await import(url));

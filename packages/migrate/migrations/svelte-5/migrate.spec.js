@@ -1,9 +1,5 @@
 import { assert, test } from 'vitest';
-import {
-	transform_module_code,
-	transform_svelte_code,
-	update_pkg_json_content
-} from './migrate.js';
+import { transform_module_code, update_pkg_json_content } from './migrate.js';
 
 test('Updates component creation #1', () => {
 	const result = transform_module_code(
