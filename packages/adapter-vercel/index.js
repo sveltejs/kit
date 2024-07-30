@@ -477,7 +477,11 @@ function static_vercel_config(builder, config, dir) {
 	const routes = [
 		...prerendered_redirects,
 		{
-			src: `/${builder.getAppPath()}/immutable/.+`
+			src: `/${builder.getAppPath()}/immutable/.+`,
+			status: 200,
+			headers: {
+				'Cache-Control': 'public, max-age=6000, immutable'
+			}
 		}
 	];
 
