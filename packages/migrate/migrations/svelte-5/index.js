@@ -1,14 +1,15 @@
+import { resolve } from 'import-meta-resolve';
 import colors from 'kleur';
-import fs from 'node:fs';
 import { execSync } from 'node:child_process';
+import fs from 'node:fs';
+import { dirname } from 'node:path';
+import { fileURLToPath, pathToFileURL } from 'node:url';
 import prompts from 'prompts';
 import semver from 'semver';
 import glob from 'tiny-glob/sync.js';
-import { resolve } from 'import-meta-resolve';
 import { bail, check_git, update_js_file } from '../../utils.js';
-import { transform_module_code, transform_svelte_code, update_pkg_json } from './migrate.js';
 import { migrate as migrate_svelte_4 } from '../svelte-4/index.js';
-import { pathToFileURL } from 'node:url';
+import { transform_module_code, transform_svelte_code, update_pkg_json } from './migrate.js';
 
 export async function migrate() {
 	if (!fs.existsSync('package.json')) {
@@ -54,12 +55,17 @@ export async function migrate() {
 	try {
 		try {
 			({ migrate } = await import_from_cwd('svelte/compiler'));
+			if (!migrate) throw new Error('found Svelte 4');
 		} catch {
-			execSync('npm install svelte@5', { stdio: 'inherit', cwd: import.meta.url });
+			execSync('npm install svelte@5 --no-save', {
+				stdio: 'inherit',
+				cwd: dirname(fileURLToPath(import.meta.url))
+			});
 			const url = resolve('svelte/compiler', import.meta.url);
 			({ migrate } = await import(url));
 		}
-	} catch {
+	} catch (e) {
+		console.log(e);
 		console.log(
 			colors
 				.bold()
@@ -144,9 +150,9 @@ export async function migrate() {
 	const cyan = colors.bold().cyan;
 
 	const tasks = [
-		use_git && cyan('git commit -m "migration to Svelte 4"'),
-		'Review the migration guide at https://svelte.dev/docs/v4-migration-guide',
-		'Read the updated docs at https://svelte.dev/docs'
+		use_git && cyan('git commit -m "migration to Svelte 5"'),
+		'Review the migration guide at https://svelte.dev/docs/svelte/v5-migration-guide',
+		'Read the updated docs at https://svelte.dev/docs/svelte'
 	].filter(Boolean);
 
 	tasks.forEach((task, i) => {

@@ -25,6 +25,7 @@ export function update_pkg_json_content(content) {
 			' (if you are still on webpack 4, you need to update to webpack 5)'
 		],
 		['rollup-plugin-svelte', '^7.2.2'],
+		['prettier', '^3.1.0'],
 		['prettier-plugin-svelte', '^3.2.6'],
 		['eslint-plugin-svelte', '^2.43.0'],
 		[
