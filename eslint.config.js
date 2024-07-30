@@ -13,6 +13,7 @@ export default [
 			'**/.svelte-kit',
 			'packages/adapter-static/test/apps/*/build',
 			'packages/adapter-cloudflare/files',
+			'packages/adapter-cloudflare-workers/files',
 			'packages/adapter-netlify/files',
 			'packages/adapter-node/files',
 		]
@@ -29,6 +30,8 @@ export default [
 			'@typescript-eslint/require-await': 'error',
 		},
 		ignores: [
+			'packages/adapter-cloudflare/index.js',
+			'packages/adapter-cloudflare-workers/index.js',
 			'packages/adapter-node/rollup.config.js',
 			'packages/adapter-node/tests/smoke.spec.js',
 			'packages/adapter-static/test/apps/**/*',
