@@ -478,10 +478,10 @@ function static_vercel_config(builder, config, dir) {
 		...prerendered_redirects,
 		{
 			src: `/${builder.getAppPath()}/immutable/.+`,
-			status: 200,
 			headers: {
-				'Cache-Control': 'public, max-age=21536000, immutable'
-			}
+				'Cache-Control': 'public, max-age=31536000, immutable'
+			},
+			continue: true
 		}
 	];
 
