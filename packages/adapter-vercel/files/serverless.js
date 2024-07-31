@@ -42,24 +42,12 @@ export default async (req, res) => {
 		}
 	});
 
-	// Check if the response status is 404
-	if (response.status === 404) {
-		// Modify the Cache-Control header for 404 responses
-		const newHeaders = new Headers(response.headers);
-		newHeaders.set('cache-control', 'no-store');
-		
-		// Create a new response object with modified headers
-		const modifiedResponse = new Response(response.body, {
-			status: response.status,
-			statusText: response.statusText,
-			headers: newHeaders
-		});
-		
-		// Set the modified response
-		setResponse(res, modifiedResponse);
-	} else {
-		// Set the response normally if not 404
-		setResponse(res, response);
+	// Only apply cache headers to 200 responses
+	if (pathname?.startsWith(`/${manifest.appPath}/immutable/`) && response.statusCode === 200) {
+		response.headers.set('cache-control', 'public,max-age=31536000,immutable');
 	}
+	
+	// Set the response normally if not 404
+	setResponse(res, response);
 
 };
