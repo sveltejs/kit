@@ -479,9 +479,8 @@ function static_vercel_config(builder, config, dir) {
 		{
 			src: `/${builder.getAppPath()}/immutable/.+`,
 			headers: {
-				'Cache-Control': 'public, max-age=31536000, immutable'
-			},
-			continue: true
+				'cache-control': 'public, immutable, max-age=31536000'
+			}
 		}
 	];
 

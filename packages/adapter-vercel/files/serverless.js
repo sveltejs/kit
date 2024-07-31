@@ -35,12 +35,31 @@ export default async (req, res) => {
 
 	const request = await getRequest({ base: `https://${req.headers.host}`, request: req });
 
-	setResponse(
-		res,
-		await server.respond(request, {
-			getClientAddress() {
-				return /** @type {string} */ (request.headers.get('x-forwarded-for'));
-			}
-		})
-	);
+	// Get the response from the server
+	const response = await server.respond(request, {
+		getClientAddress() {
+			return /** @type {string} */ (request.headers.get('x-forwarded-for'));
+		}
+	});
+
+	// Check if the response status is 404
+	if (response.status === 404) {
+		// Modify the Cache-Control header for 404 responses
+		const newHeaders = new Headers(response.headers);
+		newHeaders.set('cache-control', 'no-store');
+		
+		// Create a new response object with modified headers
+		const modifiedResponse = new Response(response.body, {
+			status: response.status,
+			statusText: response.statusText,
+			headers: newHeaders
+		});
+		
+		// Set the modified response
+		setResponse(res, modifiedResponse);
+	} else {
+		// Set the response normally if not 404
+		setResponse(res, response);
+	}
+
 };
