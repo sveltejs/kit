@@ -42,25 +42,34 @@ export default async (req, res) => {
 		}
 	});
 
-	// Only apply cache headers to 200 responses
-	console.warn('Response Object:', response);
-	console.warn(req.url);
-	console.warn(manifest.appPath);
-	console.warn(response.statusCode);
-	console.warn(response.status);
-	console.warn("CALLED");
-	if (req.url?.startsWith(`/${manifest.appPath}/immutable/`)) {
-		console.log("IMMUTABLE");
-		if (response.status === 200) {
-			response.headers.set('cache-control', 'public,max-age=31536000,immutable');
-			console.warn("setting headers for 200")
-		} else if (response.status === 404) {
+	if (req.url?.startsWith(`/${manifest.appPath}/immutable/`) && response.status !== 200) {
 			response.headers.set('cache-control', 'no-store');
-			console.warn("404 response")
-		}
 	}
-	console.log("Response Headers:", response.headers);
-	// Set the response normally if not 404
+
 	setResponse(res, response);
 
 };
+
+
+// Check if the response status is 404
+if (pathname.startsWith(`/${manifest.appPath}/immutable/`) && res.statusCode === 200) {
+	res.setHeader('cache-control', 'public,max-age=31536000,immutable');
+}
+if (pathname.startsWith()response.status === 404) {
+// Modify the Cache-Control header for 404 responses
+const newHeaders = new Headers(response.headers);
+newHeaders.set('cache-control', 'no-store');
+
+// Create a new response object with modified headers
+const modifiedResponse = new Response(response.body, {
+status: response.status,
+statusText: response.statusText,
+headers: newHeaders
+});
+
+// Set the modified response
+setResponse(res, modifiedResponse);
+} else {
+// Set the response normally if not 404
+setResponse(res, response);
+}

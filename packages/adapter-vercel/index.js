@@ -476,7 +476,12 @@ function static_vercel_config(builder, config, dir) {
 
 	const routes = [
 		...prerendered_redirects,
-		{ src: `/${builder.getAppPath()}/immutable/.+` }
+		{
+			src: `/${builder.getAppPath()}/immutable/.+`,
+			headers: {
+				'cache-control': 'public, immutable, max-age=31536000'
+			}
+		}
 	];
 
 	// https://vercel.com/docs/deployments/skew-protection
