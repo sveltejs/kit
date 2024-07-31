@@ -49,27 +49,3 @@ export default async (req, res) => {
 	setResponse(res, response);
 
 };
-
-
-// Check if the response status is 404
-if (pathname.startsWith(`/${manifest.appPath}/immutable/`) && res.statusCode === 200) {
-	res.setHeader('cache-control', 'public,max-age=31536000,immutable');
-}
-if (pathname.startsWith()response.status === 404) {
-// Modify the Cache-Control header for 404 responses
-const newHeaders = new Headers(response.headers);
-newHeaders.set('cache-control', 'no-store');
-
-// Create a new response object with modified headers
-const modifiedResponse = new Response(response.body, {
-status: response.status,
-statusText: response.statusText,
-headers: newHeaders
-});
-
-// Set the modified response
-setResponse(res, modifiedResponse);
-} else {
-// Set the response normally if not 404
-setResponse(res, response);
-}
