@@ -53,11 +53,9 @@ export default async (req, res) => {
 		console.log("IMMUTABLE");
 		if (response.status === 200) {
 			response.headers.set('cache-control', 'public,max-age=31536000,immutable');
-			response.setHeader('cache-control', 'public,max-age=31536000,immutable');
 			console.warn("setting headers for 200")
 		} else if (response.status === 404) {
 			response.headers.set('cache-control', 'no-store');
-			response.setHeader('cache-control', 'no-store');
 			console.warn("404 response")
 		}
 	}
