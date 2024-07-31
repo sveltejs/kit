@@ -43,9 +43,8 @@ export default async (req, res) => {
 	});
 
 	if (req.url?.startsWith(`/${manifest.appPath}/immutable/`) && response.status !== 200) {
-			response.headers.set('cache-control', 'no-store');
+		response.headers.set('cache-control', 'no-store');
 	}
 
 	setResponse(res, response);
-
 };
