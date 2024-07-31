@@ -43,10 +43,9 @@ export default async (req, res) => {
 	});
 
 	// Only apply cache headers to 200 responses
-	if (pathname?.startsWith(`/${manifest.appPath}/immutable/`) && response.statusCode === 200) {
+	if (req.url?.startsWith(`/${manifest.appPath}/immutable/`) && response.statusCode === 200) {
 		response.headers.set('cache-control', 'public,max-age=31536000,immutable');
 	}
-	
 	// Set the response normally if not 404
 	setResponse(res, response);
 
