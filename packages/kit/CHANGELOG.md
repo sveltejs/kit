@@ -1,5 +1,11 @@
 # @sveltejs/kit
 
+## 2.5.19
+### Patch Changes
+
+
+- fix: Svelte 5 - ignore `binding_non_reactive` warning in generated root component (you also need to update to `svelte@5.0.0-next.204`) ([#12524](https://github.com/sveltejs/kit/pull/12524))
+
 ## 2.5.18
 ### Patch Changes
 
