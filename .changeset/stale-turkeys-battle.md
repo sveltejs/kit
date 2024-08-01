@@ -2,4 +2,4 @@
 '@sveltejs/adapter-vercel': patch
 ---
 
-no-store cache-control for immmutable assets without 200 response.
+fix: ensure immutable assets without 200 response are not cached
