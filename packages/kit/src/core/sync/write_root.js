@@ -21,15 +21,20 @@ export function write_root(manifest_data, output) {
 
 	let l = max_depth;
 
-	let pyramid = `<svelte:component this={constructors[${l}]} bind:this={components[${l}]} data={data_${l}} {form} />`;
+	let pyramid = dedent`
+	${isSvelte5Plus() ? '<!-- svelte-ignore binding_property_non_reactive -->' : ''}
+	<svelte:component this={constructors[${l}]} bind:this={components[${l}]} data={data_${l}} {form} />
+	`;
 
 	while (l--) {
 		pyramid = dedent`
 			{#if constructors[${l + 1}]}
+				${isSvelte5Plus() ? '<!-- svelte-ignore binding_property_non_reactive -->' : ''}
 				<svelte:component this={constructors[${l}]} bind:this={components[${l}]} data={data_${l}}>
 					${pyramid}
 				</svelte:component>
 			{:else}
+				${isSvelte5Plus() ? '<!-- svelte-ignore binding_property_non_reactive -->' : ''}
 				<svelte:component this={constructors[${l}]} bind:this={components[${l}]} data={data_${l}} {form} />
 			{/if}
 		`;
