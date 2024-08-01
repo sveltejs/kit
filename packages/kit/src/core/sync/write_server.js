@@ -51,6 +51,7 @@ export const options = {
 			.replace('%sveltekit.body%', '" + body + "')
 			.replace(/%sveltekit\.assets%/g, '" + assets + "')
 			.replace(/%sveltekit\.nonce%/g, '" + nonce + "')
+			.replace(/%sveltekit\.version%/g, config.kit.version.name)
 			.replace(
 				/%sveltekit\.env\.([^%]+)%/g,
 				(_match, capture) => `" + (env[${s(capture)}] ?? "") + "`
