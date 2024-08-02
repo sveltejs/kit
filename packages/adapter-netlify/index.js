@@ -13,15 +13,19 @@ import toml from '@iarna/toml';
  */
 
 /**
+ * TODO(serhalp) Replace this custom type with an import from `@netlify/edge-functions`,
+ * once that type is fixed to include `excludedPath` and `function`.
  * @typedef {{
  *	 functions: Array<
  *		 | {
  *				 function: string;
  *				 path: string;
+ *				 excludedPath?: string | string[];
  *		   }
  *		 | {
  *				 function: string;
  *				 pattern: string;
+ *				 excludedPattern?: string | string[];
  *		   }
  *	 >;
  *	 version: 1;
@@ -121,18 +125,21 @@ async function generate_edge_functions({ builder }) {
 
 	builder.mkdirp('.netlify/edge-functions');
 
-	// Don't match the static directory
-	const pattern = '^/.*$';
-
-	// Go doesn't support lookarounds, so we can't do this
-	// const pattern = appDir ? `^/(?!${escapeStringRegexp(appDir)}).*$` : '^/.*$';
+	const path = '/*';
+	const excludedPath = [
+		// Contains static files
+		`/${builder.getAppPath()}/*`,
+		// Should not be served by SvelteKit at all
+		'/.netlify/*'
+	];
 
 	/** @type {HandlerManifest} */
 	const edge_manifest = {
 		functions: [
 			{
 				function: 'render',
-				pattern
+				path,
+				excludedPath
 			}
 		],
 		version: 1

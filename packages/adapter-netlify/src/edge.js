@@ -37,6 +37,7 @@ function is_static_file(request) {
 	const url = new URL(request.url);
 
 	// Assets in the app dir
+	// TODO(serhalp) We no longer run the edge function on these at all. Can we remove this check?
 	if (url.pathname.startsWith(prefix)) {
 		return true;
 	}
@@ -51,6 +52,7 @@ function is_static_file(request) {
 		// ignore
 	}
 
+	// TODO(serhalp) Now that edge function config supports `excludedPath`, could we replace all these checks?
 	return (
 		manifest.assets.has(file) ||
 		manifest.assets.has(file + '/index.html') ||
