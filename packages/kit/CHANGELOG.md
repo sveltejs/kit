@@ -1,5 +1,11 @@
 # @sveltejs/kit
 
+## 2.5.20
+### Patch Changes
+
+
+- fix: set revalidate cache header on 404'd static assets ([#12530](https://github.com/sveltejs/kit/pull/12530))
+
 ## 2.5.19
 ### Patch Changes
 
