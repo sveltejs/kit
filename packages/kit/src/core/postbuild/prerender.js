@@ -92,8 +92,6 @@ async function prerender({ out, manifest_path, metadata, verbose, env }) {
 	/** @type {import('types').ValidatedKitConfig} */
 	const config = (await load_config()).kit;
 
-	const emulator = await config.adapter?.emulate?.();
-
 	/** @type {import('types').Logger} */
 	const log = logger({ verbose });
 
@@ -199,6 +197,7 @@ async function prerender({ out, manifest_path, metadata, verbose, env }) {
 		/** @type {Map<string, import('types').PrerenderDependency>} */
 		const dependencies = new Map();
 
+		const emulator = await config.adapter?.emulate?.();
 		const response = await server.respond(new Request(config.prerender.origin + encoded), {
 			getClientAddress() {
 				throw new Error('Cannot read clientAddress during prerendering');

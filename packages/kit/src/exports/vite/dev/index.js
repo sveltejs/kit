@@ -24,9 +24,9 @@ const cwd = process.cwd();
  * @param {import('vite').ViteDevServer} vite
  * @param {import('vite').ResolvedConfig} vite_config
  * @param {import('types').ValidatedConfig} svelte_config
- * @return {Promise<Promise<() => void>>}
+ * @return {() => void}
  */
-export async function dev(vite, vite_config, svelte_config) {
+export function dev(vite, vite_config, svelte_config) {
 	installPolyfills();
 
 	const async_local_storage = new AsyncLocalStorage();
@@ -419,7 +419,6 @@ export async function dev(vite, vite_config, svelte_config) {
 	});
 
 	const env = loadEnv(vite_config.mode, svelte_config.kit.env.dir, '');
-	const emulator = await svelte_config.kit.adapter?.emulate?.();
 
 	return () => {
 		const serve_static_middleware = vite.middlewares.stack.find(
@@ -521,6 +520,7 @@ export async function dev(vite, vite_config, svelte_config) {
 					return;
 				}
 
+				const emulator = await svelte_config.kit.adapter?.emulate?.();
 				const rendered = await server.respond(request, {
 					getClientAddress: () => {
 						const { remoteAddress } = req.socket;
