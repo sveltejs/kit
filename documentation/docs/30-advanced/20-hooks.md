@@ -61,7 +61,14 @@ export async function handle({ event, resolve }) {
 	event.locals.user = await getUserInformation(event.cookies.get('sessionid'));
 
 	const response = await resolve(event);
-	response.headers.set('x-custom-header', 'potato');
+
+	try {
+		response.headers.set('x-custom-header', 'potato');
+	} catch {
+		// Response objects can have immutable headers.
+		// Modifying immutable headers throws a TypeError.
+		// e.g. Response.redirect() returned from an endpoint.
+	}
 
 	return response;
 }
