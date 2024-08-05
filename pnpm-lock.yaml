@@ -294,9 +294,6 @@ importers:
       '@clack/prompts':
         specifier: ^0.7.0
         version: 0.7.0
-      kleur:
-        specifier: ^4.1.5
-        version: 4.1.5
     devDependencies:
       '@playwright/test':
         specifier: ^1.44.1
@@ -416,9 +413,6 @@ importers:
       import-meta-resolve:
         specifier: ^4.1.0
         version: 4.1.0
-      kleur:
-        specifier: ^4.1.5
-        version: 4.1.5
       magic-string:
         specifier: ^0.30.5
         version: 0.30.10
@@ -1098,9 +1092,6 @@ importers:
       import-meta-resolve:
         specifier: ^4.1.0
         version: 4.1.0
-      kleur:
-        specifier: ^4.1.5
-        version: 4.1.5
       magic-string:
         specifier: ^0.30.5
         version: 0.30.10
@@ -1147,9 +1138,6 @@ importers:
       chokidar:
         specifier: ^3.6.0
         version: 3.6.0
-      kleur:
-        specifier: ^4.1.5
-        version: 4.1.5
       sade:
         specifier: ^1.8.1
         version: 1.8.1

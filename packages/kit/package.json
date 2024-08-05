@@ -23,7 +23,6 @@
 		"devalue": "^5.0.0",
 		"esm-env": "^1.0.0",
 		"import-meta-resolve": "^4.1.0",
-		"kleur": "^4.1.5",
 		"magic-string": "^0.30.5",
 		"mrmime": "^2.0.0",
 		"sade": "^1.8.1",
