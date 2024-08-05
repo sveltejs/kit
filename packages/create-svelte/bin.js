@@ -1,8 +1,8 @@
 #!/usr/bin/env node
+import * as p from '@clack/prompts';
 import fs from 'node:fs';
 import path from 'node:path';
-import * as p from '@clack/prompts';
-import { bold, cyan, grey, yellow } from 'kleur/colors';
+import { styleText } from 'node:util';
 import { create } from './index.js';
 import { dist, package_manager } from './utils.js';
 
@@ -10,7 +10,7 @@ const { version } = JSON.parse(fs.readFileSync(new URL('package.json', import.me
 let cwd = process.argv[2] || '.';
 
 console.log(`
-${grey(`create-svelte version ${version}`)}
+${styleText('grey', `create-svelte version ${version}`)}
 `);
 
 p.intro('Welcome to SvelteKit!');
@@ -123,27 +123,27 @@ await create(cwd, {
 p.outro('Your project is ready!');
 
 if (!options.types && options.template === 'skeletonlib') {
-	const warning = yellow('▲');
+	const warning = styleText('yellow', '▲');
 	console.log(
 		`${warning} You chose to not add type checking, but TypeScript will still be installed in order to generate type definitions when building the library\n`
 	);
 }
 
 console.log('Install more integrations with:');
-console.log(bold(cyan('  npx svelte-add')));
+console.log(styleText(['bold', 'cyan'], '  npx svelte-add'));
 
 console.log('\nNext steps:');
 let i = 1;
 
 const relative = path.relative(process.cwd(), cwd);
 if (relative !== '') {
-	console.log(`  ${i++}: ${bold(cyan(`cd ${relative}`))}`);
+	console.log(`  ${i++}: ${styleText(['bold', 'cyan'], `cd ${relative}`)}`);
 }
 
-console.log(`  ${i++}: ${bold(cyan(`${package_manager} install`))}`);
+console.log(`  ${i++}: ${styleText(['bold', 'cyan'], `${package_manager} install`)}`);
 // prettier-ignore
-console.log(`  ${i++}: ${bold(cyan('git init && git add -A && git commit -m "Initial commit"'))} (optional)`);
-console.log(`  ${i++}: ${bold(cyan(`${package_manager} run dev -- --open`))}`);
+console.log(`  ${i++}: ${styleText(['bold', 'cyan'],'git init && git add -A && git commit -m "Initial commit"')} (optional)`);
+console.log(`  ${i++}: ${styleText(['bold', 'cyan'], `${package_manager} run dev -- --open`)}`);
 
-console.log(`\nTo close the dev server, hit ${bold(cyan('Ctrl-C'))}`);
-console.log(`\nStuck? Visit us at ${cyan('https://svelte.dev/chat')}`);
+console.log(`\nTo close the dev server, hit ${styleText(['bold', 'cyan'], 'Ctrl-C')}`);
+console.log(`\nStuck? Visit us at ${styleText('cyan', 'https://svelte.dev/chat')}`);

@@ -1,8 +1,6 @@
 import fs from 'node:fs';
 import path from 'node:path';
-
-import colors from 'kleur';
-
+import { styleText } from 'node:util';
 import { copy, mkdirp, posixify, read, resolve_entry, rimraf } from '../../utils/filesystem.js';
 import { create_static_module, create_dynamic_module } from '../../core/env.js';
 import * as sync from '../../core/sync/sync.js';
@@ -91,7 +89,7 @@ const warning_preprocessor = {
 				const fixed = basename.replace('.svelte', '(.server).js/ts');
 
 				const message =
-					`\n${colors.bold().red(path.relative('.', filename))}\n` +
+					`\n${styleText(['bold', 'red'], path.relative('.', filename))}\n` +
 					`\`${match[1]}\` will be ignored — move it to ${fixed} instead. See https://kit.svelte.dev/docs/page-options for more information.`;
 
 				if (!warned.has(message)) {
@@ -110,7 +108,7 @@ const warning_preprocessor = {
 
 		if (basename.startsWith('+layout.') && !has_children) {
 			const message =
-				`\n${colors.bold().red(path.relative('.', filename))}\n` +
+				`\n${styleText(['bold', 'red'], path.relative('.', filename))}\n` +
 				`\`<slot />\`${isSvelte5Plus() ? ' or `{@render ...}` tag' : ''}` +
 				' missing — inner content will not be rendered';
 
@@ -630,7 +628,7 @@ async function kit({ svelte_config }) {
 							preserveEntrySignatures: 'strict'
 						},
 						ssrEmitAssets: true,
-						target: ssr ? 'node18.13' : undefined
+						target: ssr ? 'node20.13' : undefined
 					},
 					publicDir: kit.files.assets,
 					worker: {
@@ -880,9 +878,7 @@ async function kit({ svelte_config }) {
 				// created by other Vite plugins
 				finalise = async () => {
 					console.log(
-						`\nRun ${colors
-							.bold()
-							.cyan('npm run preview')} to preview your production build locally.`
+						`\nRun ${styleText(['bold', 'cyan'], 'npm run preview')} to preview your production build locally.`
 					);
 
 					if (kit.adapter) {
@@ -897,9 +893,9 @@ async function kit({ svelte_config }) {
 							vite_config
 						);
 					} else {
-						console.log(colors.bold().yellow('\nNo adapter specified'));
+						console.log(styleText(['bold', 'yellow'], '\nNo adapter specified'));
 
-						const link = colors.bold().cyan('https://kit.svelte.dev/docs/adapters');
+						const link = styleText(['bold', 'cyan'], 'https://kit.svelte.dev/docs/adapters');
 						console.log(
 							`See ${link} to learn how to configure your app to run on the platform of your choosing`
 						);
@@ -934,8 +930,10 @@ function warn_overridden_config(config, resolved_config) {
 
 	if (overridden.length > 0) {
 		console.error(
-			colors.bold().red('The following Vite config options will be overridden by SvelteKit:') +
-				overridden.map((key) => `\n  - ${key}`).join('')
+			styleText(
+				['bold', 'red'],
+				'The following Vite config options will be overridden by SvelteKit:'
+			) + overridden.map((key) => `\n  - ${key}`).join('')
 		);
 	}
 }

@@ -5,7 +5,7 @@ import { s } from '../../utils/misc.js';
 import { load_error_page, load_template } from '../config/index.js';
 import { runtime_directory } from '../utils.js';
 import { isSvelte5Plus, write_if_changed } from './utils.js';
-import colors from 'kleur';
+import { styleText } from 'node:util';
 
 /**
  * @param {{
@@ -88,12 +88,11 @@ export function write_server(config, output) {
 	const typo = resolve_entry('src/+hooks.server');
 	if (typo) {
 		console.log(
-			colors
-				.bold()
-				.yellow(
-					`Unexpected + prefix. Did you mean ${typo.split('/').at(-1)?.slice(1)}?` +
-						` at ${path.resolve(typo)}`
-				)
+			styleText(
+				['bold', 'yellow'],
+				`Unexpected + prefix. Did you mean ${typo.split('/').at(-1)?.slice(1)}?` +
+					` at ${path.resolve(typo)}`
+			)
 		);
 	}
 

@@ -1,5 +1,5 @@
 import fs from 'node:fs';
-import colors from 'kleur';
+import { styleText } from 'node:util';
 import path from 'node:path';
 import prompts from 'prompts';
 import { pathToFileURL } from 'node:url';
@@ -16,11 +16,10 @@ export async function migrate() {
 	}
 
 	console.log(
-		colors
-			.bold()
-			.yellow(
-				'\nThis will update your svelte.config.js and package.json in the current directory\n'
-			)
+		styleText(
+			['bold', 'yellow'],
+			'\nThis will update your svelte.config.js and package.json in the current directory\n'
+		)
 	);
 
 	const use_git = check_git();
@@ -56,11 +55,11 @@ export async function migrate() {
 		migrate_config();
 	}
 
-	console.log(colors.bold().green('✔ Your project has been migrated'));
+	console.log(styleText(['bold', 'green'], '✔ Your project has been migrated'));
 
 	console.log('\nRecommended next steps:\n');
 
-	const cyan = colors.bold().cyan;
+	const cyan = (/** @type {string} */ text) => styleText(['bold', 'cyan'], text);
 
 	const tasks = [
 		use_git && cyan('git commit -m "migration to @sveltejs/package v2"'),

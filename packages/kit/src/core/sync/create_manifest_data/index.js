@@ -1,6 +1,6 @@
 import fs from 'node:fs';
 import path from 'node:path';
-import colors from 'kleur';
+import { styleText } from 'node:util';
 import { lookup } from 'mrmime';
 import { list_files, runtime_directory } from '../../utils.js';
 import { posixify, resolve_entry } from '../../../utils/filesystem.js';
@@ -234,12 +234,11 @@ function create_routes_and_nodes(cwd, config, fallback) {
 						);
 					if (typo) {
 						console.log(
-							colors
-								.bold()
-								.yellow(
-									`Missing route file prefix. Did you mean +${file.name}?` +
-										` at ${path.join(dir, file.name)}`
-								)
+							styleText(
+								['bold', 'yellow'],
+								`Missing route file prefix. Did you mean +${file.name}?` +
+									` at ${path.join(dir, file.name)}`
+							)
 						);
 					}
 

@@ -1,4 +1,4 @@
-import colors from 'kleur';
+import { styleText } from 'node:util';
 import fs from 'node:fs';
 import prompts from 'prompts';
 import glob from 'tiny-glob/sync.js';
@@ -11,12 +11,12 @@ export async function migrate() {
 	try {
 		compiler = await import_from_cwd('svelte/compiler');
 	} catch {
-		console.log(colors.bold().red('❌ Could not find a local Svelte installation.'));
+		console.log(styleText(['bold', 'red'], '❌ Could not find a local Svelte installation.'));
 		return;
 	}
 
 	console.log(
-		colors.bold().yellow('\nThis will update .svelte files inside the current directory\n')
+		styleText(['bold', 'yellow'], '\nThis will update .svelte files inside the current directory\n')
 	);
 
 	const response = await prompts({
@@ -43,7 +43,7 @@ export async function migrate() {
 		}
 	}
 
-	console.log(colors.bold().green('✔ Your project has been updated'));
+	console.log(styleText(['bold', 'green'], '✔ Your project has been updated'));
 	console.log('  If using Prettier, please upgrade to the latest prettier-plugin-svelte version');
 }
 
