@@ -42,7 +42,7 @@
 		"zimmerframe": "^1.1.2"
 	},
 	"devDependencies": {
-		"@types/node": "^18.19.3",
+		"@types/node": "^20.13.0",
 		"@types/prompts": "^2.4.9",
 		"@types/semver": "^7.5.6",
 		"prettier": "^3.1.1",
