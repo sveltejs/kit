@@ -26,7 +26,7 @@ jobs:
       - uses: pnpm/action-setup@v4.0.0
       - uses: actions/setup-node@v4
         with:
-          node-version: '18.x'
+          node-version: '20.x'
           cache: pnpm
       - run: pnpm install --frozen-lockfile
       - run: pnpm run lint
@@ -39,10 +39,10 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - node-version: 18
+          - node-version: 20
             os: ubuntu-latest
             e2e-browser: 'chromium'
-          - node-version: 20
+          - node-version: 22
             os: ubuntu-latest
             e2e-browser: 'chromium'
     env:
@@ -79,27 +79,27 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - node-version: 18
+          - node-version: 20
             os: windows-2019 # slowness reported on newer versions https://github.com/actions/runner-images/issues/5166
             e2e-browser: 'chromium'
             mode: 'dev'
-          - node-version: 18
+          - node-version: 20
             os: ubuntu-latest
             e2e-browser: 'firefox'
             mode: 'dev'
-          - node-version: 18
+          - node-version: 20
             os: macOS-latest
             e2e-browser: 'webkit'
             mode: 'dev'
-          - node-version: 18
+          - node-version: 20
             os: windows-2019 # slowness reported on newer versions https://github.com/actions/runner-images/issues/5166
             e2e-browser: 'chromium'
             mode: 'build'
-          - node-version: 18
+          - node-version: 20
             os: ubuntu-latest
             e2e-browser: 'firefox'
             mode: 'build'
-          - node-version: 18
+          - node-version: 20
             os: macOS-latest
             e2e-browser: 'webkit'
             mode: 'build'
@@ -137,7 +137,7 @@ jobs:
       - uses: pnpm/action-setup@v4.0.0
       - uses: actions/setup-node@v4
         with:
-          node-version: 18
+          node-version: 20
           cache: pnpm
       - run: pnpm install --frozen-lockfile
       - run: pnpm playwright install chromium
