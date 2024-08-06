@@ -223,7 +223,7 @@ function get_attr_value(node, attr) {
 function img_attributes_to_markdown(content, attributes, details) {
 	const attribute_strings = attributes.map((attribute) => {
 		if (attribute.name === 'src') {
-			return `src=${details.src}`;
+			return `src={${details.src}}`;
 		}
 		return content.substring(attribute.start, attribute.end);
 	});
