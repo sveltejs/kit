@@ -223,7 +223,7 @@ function get_attr_value(node, attr) {
 function serialize_img_attributes(content, attributes, details) {
 	const attribute_strings = attributes.map((attribute) => {
 		if (attribute.name === 'src') {
-			return `src={${details.src}}`;
+			return `src={"${details.src}"}`;
 		}
 		return content.substring(attribute.start, attribute.end);
 	});
@@ -286,8 +286,8 @@ function img_to_picture(content, node, image) {
 	// See https://github.com/vitejs/vite/blob/b93dfe3e08f56cafe2e549efd80285a12a3dc2f0/packages/vite/src/node/plugins/asset.ts#L132
 	const src =
 		image.img.src.startsWith('"+') && image.img.src.endsWith('+"')
-			? `{"${image.img.src.substring(2, image.img.src.length - 2)}"}`
-			: `"${image.img.src}"`;
+			? image.img.src.substring(2, image.img.src.length - 2)
+			: image.img.src
 	res += `<img ${serialize_img_attributes(content, attributes, {
 		src,
 		width: image.img.w,
