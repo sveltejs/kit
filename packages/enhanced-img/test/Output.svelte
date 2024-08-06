@@ -32,13 +32,13 @@
 <picture><source srcset={"/1 1440w, /2 960w"} type="image/avif" /><source srcset={"/3 1440w, /4 960w"} type="image/webp" /><source srcset={"5 1440w, /6 960w"} type="image/png" /><img src={"/7"} alt="absolute path test" width=1440 height=1440 /></picture>
 
 {#if typeof src === 'string'}
-	<img src={{src.img.src}} alt="attribute shorthand test" width={src.img.w} height={src.img.h} />
+	<img src={"{src.img.src}"} alt="attribute shorthand test" width={src.img.w} height={src.img.h} />
 {:else}
 	<picture>
 		{#each Object.entries(src.sources) as [format, srcset]}
 			<source {srcset} type={'image/' + format} />
 		{/each}
-		<img src={{src.img.src}} alt="attribute shorthand test" width={src.img.w} height={src.img.h} />
+		<img src={"{src.img.src}"} alt="attribute shorthand test" width={src.img.w} height={src.img.h} />
 	</picture>
 {/if}
 
@@ -46,13 +46,13 @@
 
 {#each images as image}
 	{#if typeof image === 'string'}
-	<img src={{image.img.src}} alt="opt-in test" width={image.img.w} height={image.img.h} />
+	<img src={"{image.img.src}"} alt="opt-in test" width={image.img.w} height={image.img.h} />
 {:else}
 	<picture>
 		{#each Object.entries(image.sources) as [format, srcset]}
 			<source {srcset} type={'image/' + format} />
 		{/each}
-		<img src={{image.img.src}} alt="opt-in test" width={image.img.w} height={image.img.h} />
+		<img src={"{image.img.src}"} alt="opt-in test" width={image.img.w} height={image.img.h} />
 	</picture>
 {/if}
 {/each}
