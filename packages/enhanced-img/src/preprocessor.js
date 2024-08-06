@@ -220,7 +220,7 @@ function get_attr_value(node, attr) {
  *   height: string | number
  * }} details
  */
-function img_attributes_to_markdown(content, attributes, details) {
+function serialize_img_attributes(content, attributes, details) {
 	const attribute_strings = attributes.map((attribute) => {
 		if (attribute.name === 'src') {
 			return `src={${details.src}}`;
@@ -288,7 +288,7 @@ function img_to_picture(content, node, image) {
 		image.img.src.startsWith('"+') && image.img.src.endsWith('+"')
 			? `{"${image.img.src.substring(2, image.img.src.length - 2)}"}`
 			: `"${image.img.src}"`;
-	res += `<img ${img_attributes_to_markdown(content, attributes, {
+	res += `<img ${serialize_img_attributes(content, attributes, {
 		src,
 		width: image.img.w,
 		height: image.img.h
@@ -320,13 +320,13 @@ function dynamic_img_to_picture(content, node, src_var_name) {
 	};
 
 	return `{#if typeof ${src_var_name} === 'string'}
-	<img ${img_attributes_to_markdown(content, node.attributes, details)} />
+	<img ${serialize_img_attributes(content, node.attributes, details)} />
 {:else}
 	<picture>
 		{#each Object.entries(${src_var_name}.sources) as [format, srcset]}
 			<source {srcset}${sizes_string} type={'image/' + format} />
 		{/each}
-		<img ${img_attributes_to_markdown(content, attributes, details)} />
+		<img ${serialize_img_attributes(content, attributes, details)} />
 	</picture>
 {/if}`;
 }
