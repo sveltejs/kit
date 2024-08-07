@@ -1,4 +1,4 @@
-import colors from 'kleur';
+import { styleText } from 'node:util';
 import fs from 'node:fs';
 import prompts from 'prompts';
 import semver from 'semver';
@@ -28,12 +28,11 @@ export async function migrate() {
 	}
 
 	console.log(
-		colors
-			.bold()
-			.yellow(
-				'\nThis will update files in the current directory\n' +
-					"If you're inside a monorepo, run this in individual project directories rather than the workspace root.\n"
-			)
+		styleText(
+			['bold', 'yellow'],
+			'\nThis will update files in the current directory\n' +
+				"If you're inside a monorepo, run this in individual project directories rather than the workspace root.\n"
+		)
 	);
 
 	const use_git = check_git();
@@ -57,11 +56,10 @@ export async function migrate() {
 
 	if (semver.validRange(svelte_dep) && semver.gtr('4.0.0', svelte_dep)) {
 		console.log(
-			colors
-				.bold()
-				.yellow(
-					'\nSvelteKit 2 requires Svelte 4 or newer. We recommend running the `svelte-4` migration first (`npx svelte-migrate svelte-4`).\n'
-				)
+			styleText(
+				['bold', 'yellow'],
+				'\nSvelteKit 2 requires Svelte 4 or newer. We recommend running the `svelte-4` migration first (`npx svelte-migrate svelte-4`).\n'
+			)
 		);
 		const response = await prompts({
 			type: 'confirm',
@@ -74,9 +72,10 @@ export async function migrate() {
 		} else {
 			await migrate_svelte_4();
 			console.log(
-				colors
-					.bold()
-					.green('`svelte-4` migration complete. Continue with `sveltekit-2` migration?\n')
+				styleText(
+					['bold', 'green'],
+					'`svelte-4` migration complete. Continue with `sveltekit-2` migration?\n'
+				)
 			);
 			const response = await prompts({
 				type: 'confirm',
@@ -141,11 +140,11 @@ export async function migrate() {
 		}
 	}
 
-	console.log(colors.bold().green('✔ Your project has been migrated'));
+	console.log(styleText(['bold', 'green'], '✔ Your project has been migrated'));
 
 	console.log('\nRecommended next steps:\n');
 
-	const cyan = colors.bold().cyan;
+	const cyan = (/** @type {string} */ text) => styleText(['bold', 'cyan'], text);
 
 	const tasks = [
 		'Run npm install (or the corresponding installation command of your package manager)',

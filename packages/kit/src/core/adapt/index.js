@@ -1,4 +1,4 @@
-import colors from 'kleur';
+import { styleText } from 'node:util';
 import { create_builder } from './builder.js';
 
 /**
@@ -22,7 +22,7 @@ export async function adapt(
 	// This is only called when adapter is truthy, so the cast is safe
 	const { name, adapt } = /** @type {import('@sveltejs/kit').Adapter} */ (config.kit.adapter);
 
-	console.log(colors.bold().cyan(`\n> Using ${name}`));
+	console.log(styleText(['bold', 'cyan'], `\n> Using ${name}`));
 
 	const builder = create_builder({
 		config,
