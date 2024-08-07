@@ -140,10 +140,16 @@ function clear_onward_history(current_history_index, current_navigation_index) {
  * Returns a `Promise` that never resolves (to prevent any
  * subsequent work, e.g. history manipulation, from happening)
  * @param {URL} url
+ * @returns {Promise<any>}
  */
 function native_navigation(url) {
 	location.href = url.href;
-	return new Promise(() => {});
+	return new Promise((resolve) => {
+		// if we're still on the same page, it was probably a download
+		if (location.href !== url.href) {
+			resolve(undefined);
+		}
+	});
 }
 
 function noop() {}
@@ -1293,6 +1299,13 @@ async function navigate({
 			}),
 			404
 		);
+
+		// do nothing if we downloaded a file and are still on the same page
+		if (!navigation_result) {
+			stores.navigating.set(null);
+			nav.fulfil(undefined);
+			return;
+		}
 	}
 
 	// if this is an internal navigation intent, use the normalized
@@ -1998,6 +2011,9 @@ function _start_router() {
 
 			before_navigate_callbacks.forEach((fn) => fn(navigation));
 		}
+		// We need to reset the flag manually here because clicking on an
+		// implicit download link does not reset it for the next navigation.
+		navigating = false;
 
 		if (should_block) {
 			e.preventDefault();
