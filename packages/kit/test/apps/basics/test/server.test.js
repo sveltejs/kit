@@ -249,6 +249,18 @@ test.describe('Endpoints', () => {
 		expect(response.status()).toBe(200);
 		expect(await response.text()).toBe('catch-all');
 	});
+
+	test('can get assets using absolute path', async ({ request }) => {
+		const response = await request.get('/endpoint-output/fetch-asset/absolute');
+		expect(response.status()).toBe(200);
+		expect(response.headers()['content-type']).toBe('image/png');
+	});
+
+	test('can get assets using relative path', async ({ request }) => {
+		const response = await request.get('/endpoint-output/fetch-asset/relative');
+		expect(response.status()).toBe(200);
+		expect(response.headers()['content-type']).toBe('image/png');
+	});
 });
 
 test.describe('Errors', () => {
