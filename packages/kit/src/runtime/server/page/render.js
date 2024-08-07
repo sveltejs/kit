@@ -236,6 +236,9 @@ export async function render_response({
 			if (resolve_opts.preload({ type: 'css', path })) {
 				const preload_atts = ['rel="preload"', 'as="style"'];
 				link_header_preloads.add(`<${encodeURI(path)}>; ${preload_atts.join(';')}; nopush`);
+				if (state.prerendering) {
+					head += `\n\t\t<link href="${path}" ${preload_atts.join(' ')}>`;
+				}
 			}
 		}
 
