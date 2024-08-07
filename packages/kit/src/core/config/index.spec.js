@@ -93,6 +93,7 @@ const get_defaults = (prefix = '') => ({
 		moduleExtensions: ['.js', '.ts'],
 		output: { preloadStrategy: 'modulepreload' },
 		outDir: join(prefix, '.svelte-kit'),
+		serverOnlyPaths: [],
 		serviceWorker: {
 			register: true
 		},
