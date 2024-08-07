@@ -28,7 +28,7 @@
 		"playwright": "^1.44.1",
 		"typescript-eslint": "^8.0.0"
 	},
-	"packageManager": "pnpm@9.5.0",
+	"packageManager": "pnpm@9.7.0",
 	"engines": {
 		"pnpm": "^9.0.0"
 	}

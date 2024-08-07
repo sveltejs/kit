@@ -454,8 +454,8 @@ importers:
         specifier: ^2.4.7
         version: 2.4.7
       dts-buddy:
-        specifier: 0.4.6
-        version: 0.4.6(typescript@5.4.5)
+        specifier: 0.5.1
+        version: 0.5.1(typescript@5.4.5)
       rollup:
         specifier: ^4.14.2
         version: 4.18.0
@@ -2509,7 +2509,7 @@ packages:
     resolution: {integrity: sha512-W9pAhw0ja1Edb5GVdIF1mjZw/ASI0AlShXM83UUGe2DVr5TdAPEA1OA8m/g8zWp9x6On7gqufY+FatDbC3MDQg==}
 
   concat-map@0.0.1:
-    resolution: {integrity: sha1-2Klr13/Wjfd5OnMDajug1UBdR3s=}
+    resolution: {integrity: sha512-/Srv4dswyQNBfohGpz9o6Yb3Gz3SrUDqBH5rTuhGR7ahtlbYKnVxw2bCFMRljaA7EXHaXZ8wsHdodFvbkhKmqg==}
 
   consola@3.2.3:
     resolution: {integrity: sha512-I5qxpzLv+sJhTVEoLYNcTW+bThDCPsit0vLNKShZx6rLtpilNpmmeTPaeqJb9ZE9dV3DGaeby6Vuhrw38WjeyQ==}
@@ -2641,11 +2641,11 @@ packages:
   dropcss@1.0.16:
     resolution: {integrity: sha512-QgA6BUh2SoBYE/dSuMmeGhNdoGtGewt3Rn66xKyXoGNyjrKRXf163wuM+xeQ83p87l/3ALoB6Il1dgKyGS5pEw==}
 
-  dts-buddy@0.4.6:
-    resolution: {integrity: sha512-0gccY0vIuVCwbx4F9X5soE6ABKyjev2XVgwX2PYBx5hXfnrTeCBZwpf5F7MlVxzLo0pHfO9yNNo21cjZQZD/aw==}
+  dts-buddy@0.5.1:
+    resolution: {integrity: sha512-naiM3F8hSlBIrMl+WyU9KQsC+Vd0i9jVBeksQ5IsH9Rfzpqx27TmSCftlsY9UxFxAWxoGcf5EB3p1xi0JxWzPw==}
     hasBin: true
     peerDependencies:
-      typescript: '>=5.0.4 <5.5'
+      typescript: '>=5.0.4 <5.6'
 
   e2e-test-dep-cjs-only@file:packages/kit/test/apps/dev-only/_test_dependencies/cjs-only:
     resolution: {directory: packages/kit/test/apps/dev-only/_test_dependencies/cjs-only, type: directory}
@@ -5568,7 +5568,7 @@ snapshots:
 
   dropcss@1.0.16: {}
 
-  dts-buddy@0.4.6(typescript@5.4.5):
+  dts-buddy@0.5.1(typescript@5.4.5):
     dependencies:
       '@jridgewell/source-map': 0.3.6
       '@jridgewell/sourcemap-codec': 1.5.0
