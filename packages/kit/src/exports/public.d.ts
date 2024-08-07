@@ -751,6 +751,10 @@ export interface LoadEvent<
 	RouteId extends string | null = string | null
 > extends NavigationEvent<Params, RouteId> {
 	/**
+	 * Get or set cookies related to the current request
+	 */
+	cookies: Cookies;
+	/**
 	 * `fetch` is equivalent to the [native `fetch` web API](https://developer.mozilla.org/en-US/docs/Web/API/fetch), with a few additional features:
 	 *
 	 * - It can be used to make credentialed requests on the server, as it inherits the `cookie` and `authorization` headers for the page request.
