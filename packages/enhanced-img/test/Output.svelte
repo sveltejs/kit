@@ -9,6 +9,7 @@
 	const images = [manual_image1, manual_image2];
 
 	let foo: string = 'bar';
+	let imagePath: string = './foo.png';
 </script>
 
 {foo}
@@ -16,6 +17,12 @@
 <img src="./foo.png" alt="non-enhanced test" />
 
 <picture><source srcset={"/1 1440w, /2 960w"} type="image/avif" /><source srcset={"/3 1440w, /4 960w"} type="image/webp" /><source srcset={"5 1440w, /6 960w"} type="image/png" /><img src="/7" alt="basic test" width=1440 height=1440 /></picture>
+
+<picture><source srcset={"/1 1440w, /2 960w"} type="image/avif" /><source srcset={"/3 1440w, /4 960w"} type="image/webp" /><source srcset={"5 1440w, /6 960w"} type="image/png" /><img src="/7" alt="basic test passing src as literal" width=1440 height=1440 /></picture>
+
+<picture><source srcset={"/1 1440w, /2 960w"} type="image/avif" /><source srcset={"/3 1440w, /4 960w"} type="image/webp" /><source srcset={"5 1440w, /6 960w"} type="image/png" /><img src="/7" alt="basic test passing src by variable" width=1440 height=1440 /></picture>
+
+<picture><source srcset={"/1 1440w, /2 960w"} type="image/avif" /><source srcset={"/3 1440w, /4 960w"} type="image/webp" /><source srcset={"5 1440w, /6 960w"} type="image/png" /><img src="/7" alt="basic test passing src using template literal" width=1440 height=1440 /></picture>
 
 <picture><source srcset={"/1 1440w, /2 960w"} type="image/avif" /><source srcset={"/3 1440w, /4 960w"} type="image/webp" /><source srcset={"5 1440w, /6 960w"} type="image/png" /><img src="/7" width="5" height="10" alt="dimensions test" width=1440 height=1440 /></picture>
 
