@@ -71,6 +71,7 @@ export interface BuildData {
 		stylesheets: string[];
 		fonts: string[];
 		uses_env_dynamic_public: boolean;
+		import_map_lookup: Array<[string, string]>;
 	} | null;
 	server_manifest: import('vite').Manifest;
 }
@@ -361,6 +362,7 @@ export interface SSROptions {
 	env_public_prefix: string;
 	env_private_prefix: string;
 	hooks: ServerHooks;
+	import_map_enabled: boolean;
 	preload_strategy: ValidatedConfig['kit']['output']['preloadStrategy'];
 	root: SSRComponent['default'];
 	service_worker: boolean;
