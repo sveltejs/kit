@@ -1,5 +1,11 @@
 # create-svelte
 
+## 6.3.6
+### Patch Changes
+
+
+- chore: package provenance ([#12567](https://github.com/sveltejs/kit/pull/12567))
+
 ## 6.3.5
 ### Patch Changes
 

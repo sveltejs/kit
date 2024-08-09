@@ -1,5 +1,11 @@
 # @sveltejs/kit
 
+## 2.5.21
+### Patch Changes
+
+
+- chore: package provenance ([#12567](https://github.com/sveltejs/kit/pull/12567))
+
 ## 2.5.20
 ### Patch Changes
 
