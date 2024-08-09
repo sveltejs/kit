@@ -54,5 +54,8 @@
 		"check": "tsc",
 		"lint": "prettier --check .",
 		"format": "pnpm lint --write"
+	},
+	"publishConfig": {
+		"provenance": true
 	}
 }

@@ -54,5 +54,8 @@
 		"types"
 	],
 	"types": "types/index.d.ts",
-	"type": "module"
+	"type": "module",
+	"publishConfig": {
+		"provenance": true
+	}
 }
