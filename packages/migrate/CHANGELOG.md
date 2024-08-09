@@ -1,5 +1,11 @@
 # svelte-migrate
 
+## 1.4.4
+### Patch Changes
+
+
+- chore: package provenance ([#12567](https://github.com/sveltejs/kit/pull/12567))
+
 ## 1.4.3
 
 ### Patch Changes
