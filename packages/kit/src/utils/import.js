@@ -10,7 +10,7 @@ export function resolve_peer_dependency(dependency) {
 	const [major, minor] = process.versions.node.split('.').map(Number);
 	try {
 		const resolved = (() => {
-			if (major >= 20 && minor >= 6) {
+			if (major > 20 || (major == 20 && minor >= 6)) {
 				// @ts-expect-error the types are wrong
 				return import.meta.resolve(dependency);
 			}
