@@ -1,5 +1,11 @@
 # @sveltejs/enhanced-img
 
+## 0.3.3
+### Patch Changes
+
+
+- chore: configure provenance in a simpler manner ([#12570](https://github.com/sveltejs/kit/pull/12570))
+
 ## 0.3.2
 ### Patch Changes
 

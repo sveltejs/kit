@@ -1,5 +1,14 @@
 # @sveltejs/adapter-static
 
+## 3.0.4
+### Patch Changes
+
+
+- chore: configure provenance in a simpler manner ([#12570](https://github.com/sveltejs/kit/pull/12570))
+
+- Updated dependencies [[`087a43d391fc38b8c008fb39a804dc6988974101`](https://github.com/sveltejs/kit/commit/087a43d391fc38b8c008fb39a804dc6988974101)]:
+  - @sveltejs/kit@2.5.22
+
 ## 3.0.3
 ### Patch Changes
 
