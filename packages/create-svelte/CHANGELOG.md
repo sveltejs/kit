@@ -1,5 +1,11 @@
 # create-svelte
 
+## 6.3.7
+### Patch Changes
+
+
+- chore: configure provenance in a simpler manner ([#12570](https://github.com/sveltejs/kit/pull/12570))
+
 ## 6.3.6
 ### Patch Changes
 
