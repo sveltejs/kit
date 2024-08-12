@@ -61,8 +61,5 @@
 	"types": "types/index.d.ts",
 	"engines": {
 		"node": "^16.14 || >=18"
-	},
-	"publishConfig": {
-		"provenance": true
 	}
 }
