@@ -51,8 +51,5 @@
 	},
 	"peerDependencies": {
 		"@sveltejs/kit": "^2.4.0"
-	},
-	"publishConfig": {
-		"provenance": true
 	}
 }

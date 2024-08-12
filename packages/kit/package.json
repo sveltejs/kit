@@ -103,8 +103,5 @@
 	"types": "types/index.d.ts",
 	"engines": {
 		"node": ">=18.13"
-	},
-	"publishConfig": {
-		"provenance": true
 	}
 }

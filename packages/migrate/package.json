@@ -16,9 +16,6 @@
 	},
 	"license": "MIT",
 	"homepage": "https://kit.svelte.dev",
-	"publishConfig": {
-		"provenance": true
-	},
 	"type": "module",
 	"bin": {
 		"svelte-migrate": "./bin.js"
