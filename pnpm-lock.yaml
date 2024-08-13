@@ -517,8 +517,8 @@ importers:
         specifier: ^7.0.3
         version: 7.0.3
       marked:
-        specifier: ^13.0.0
-        version: 13.0.0
+        specifier: ^14.0.0
+        version: 14.0.0
       svelte:
         specifier: ^4.2.10
         version: 4.2.17
@@ -3254,8 +3254,8 @@ packages:
     engines: {node: '>= 18'}
     hasBin: true
 
-  marked@13.0.0:
-    resolution: {integrity: sha512-VTeDCd9txf4KLLljUZ0nljE/Incb9SrWuueE44QVuU0pkOdh4sfCeW1Z6lPcxyDRSVY6rm8db/0OPaN75RNUmw==}
+  marked@14.0.0:
+    resolution: {integrity: sha512-uIj4+faQ+MgHgwUW1l2PsPglZLOLOT1uErt06dAPtx2kjteLAkbsd/0FiYg/MGS+i7ZKLb7w2WClxHkzOOuryQ==}
     engines: {node: '>= 18'}
     hasBin: true
 
@@ -6228,7 +6228,7 @@ snapshots:
 
   marked@12.0.1: {}
 
-  marked@13.0.0: {}
+  marked@14.0.0: {}
 
   mdn-data@2.0.30: {}
 
