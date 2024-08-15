@@ -1780,7 +1780,7 @@ export function invalidateAll() {
  * Returns a Promise that resolves with the result of running the new route's `load` functions once the preload is complete.
  *
  * @param {string} href Page to preload
- * @returns {Promise<{ type: 'loaded'; status: number; data: Record<string, any> } | { type: 'redirect'; location: string } | { type: 'error'; status: number; error: App.Error }>}
+ * @returns {Promise<{ type: 'loaded'; status: number; data: Record<string, any> } | { type: 'redirect'; location: string } | { type: 'error'; error: App.Error }>}
  */
 export async function preloadData(href) {
 	if (!BROWSER) {
@@ -1807,7 +1807,6 @@ export async function preloadData(href) {
 	if (result.type === 'loaded' && result.state.error) {
 		return {
 			type: 'error',
-			status,
 			error: result.state.error
 		};
 	}
