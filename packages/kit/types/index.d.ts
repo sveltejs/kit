@@ -2107,6 +2107,10 @@ declare module '$app/navigation' {
 	} | {
 		type: 'redirect';
 		location: string;
+	} | {
+		type: 'error';
+		status: number;
+		error: App.Error;
 	}>;
 	/**
 	 * Programmatically imports the code for routes that haven't yet been fetched.
