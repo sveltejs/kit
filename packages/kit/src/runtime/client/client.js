@@ -828,12 +828,11 @@ function preload_error({ error, status, url, route, params }) {
 			branch: []
 		},
 		props: {
+			// we skipped loading the error page, so we need to use the current page's
+			// page store, but we still pass the updated status to the preloadData function
 			page: {
 				...page,
-				url,
-				params,
-				status,
-				error
+				status
 			},
 			constructors: []
 		}
