@@ -1802,8 +1802,6 @@ export async function preloadData(href) {
 		};
 	}
 
-	const { status, data } = result.props.page ?? page;
-
 	if (result.type === 'loaded' && result.state.error) {
 		return {
 			type: 'error',
@@ -1811,6 +1809,7 @@ export async function preloadData(href) {
 		};
 	}
 
+	const { status, data } = result.props.page ?? page;
 	return { type: result.type, status, data };
 }
 
