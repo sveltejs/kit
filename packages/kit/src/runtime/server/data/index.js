@@ -178,6 +178,7 @@ function json_response(json, status = 200) {
 export function redirect_json_response(redirect) {
 	return json_response({
 		type: 'redirect',
+		status: redirect.status,
 		location: redirect.location
 	});
 }
