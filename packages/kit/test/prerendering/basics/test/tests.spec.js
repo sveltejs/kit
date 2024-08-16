@@ -32,6 +32,7 @@ test('renders a server-side redirect', () => {
 
 	expect(data).toEqual({
 		type: 'redirect',
+		status: 301,
 		location: 'https://example.com/redirected'
 	});
 });
