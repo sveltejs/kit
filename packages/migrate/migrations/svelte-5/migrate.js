@@ -56,12 +56,7 @@ export function transform_module_code(code) {
  * @param {(source: code) => { code: string }} transform_code
  */
 export function transform_svelte_code(code, transform_code) {
-	try {
-		return transform_code(code).code;
-	} catch (e) {
-		console.log(e);
-		return code;
-	}
+	return transform_code(code).code;
 }
 
 /**
