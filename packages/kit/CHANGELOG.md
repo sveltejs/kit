@@ -1,5 +1,11 @@
 # @sveltejs/kit
 
+## 2.5.23
+### Patch Changes
+
+
+- fix: use dynamic components in `root.svelte` instead of `svelte:component` for svelte 5 ([#12584](https://github.com/sveltejs/kit/pull/12584))
+
 ## 2.5.22
 ### Patch Changes
 
