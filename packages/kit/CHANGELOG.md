@@ -1,5 +1,11 @@
 # @sveltejs/kit
 
+## 2.5.24
+### Patch Changes
+
+
+- extend peer dependency range for @sveltejs/vite-plugin-svelte to include 4.0.0-next for improved svelte5 support ([#12593](https://github.com/sveltejs/kit/pull/12593))
+
 ## 2.5.23
 ### Patch Changes
 
