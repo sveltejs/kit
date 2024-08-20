@@ -1289,6 +1289,9 @@ importers:
 
   playgrounds/vite-workerd-environment:
     devDependencies:
+      '@dario-hacking/vite-6-alpha-environment-provider-workerd':
+        specifier: ^0.0.5
+        version: 0.0.5(miniflare@3.20240701.0)(vite@6.0.0-alpha.18(@types/node@18.19.31)(lightningcss@1.24.1))(wrangler@3.63.1)
       '@sveltejs/adapter-auto':
         specifier: workspace:*
         version: link:../../packages/adapter-auto
@@ -1537,6 +1540,13 @@ packages:
   '@cspotcode/source-map-support@0.8.1':
     resolution: {integrity: sha512-IchNf6dN4tHoMFIn/7OE8LWZ19Y6q/67Bmf6vnGREv8RSbBVb9LPJxEcnwrcwX6ixSvaiGoomAUvu4YSxXrVgw==}
     engines: {node: '>=12'}
+
+  '@dario-hacking/vite-6-alpha-environment-provider-workerd@0.0.5':
+    resolution: {integrity: sha512-9SXOJDE4IGszLG0cRzU38OLSXyJhKkmnzoeNYPua142bvb5XCeL9zNGqXk4sjQfVd7Dhh+iut89a3ubROhkPwg==}
+    peerDependencies:
+      miniflare: ^3.20240129.3
+      vite: 6.0.0-alpha.18
+      wrangler: ^3.57.2
 
   '@emnapi/runtime@1.2.0':
     resolution: {integrity: sha512-bV21/9LQmcQeCPEg3BDFtvwL6cwiTMksYNWQQ4KOxCZikEGalWtenoZ0wCiukJINlGCIi2KXx01g4FoH/LxpzQ==}
@@ -2578,6 +2588,9 @@ packages:
     resolution: {integrity: sha512-NIxF55hv4nSqQswkAeiOi1r83xy8JldOFDTWiug55KBu9Jnblncd2U6ViHmYgHf01TPZS77NJBhBMKdWj9HQMQ==}
     engines: {node: '>=8'}
 
+  cjs-module-lexer@1.3.1:
+    resolution: {integrity: sha512-a3KdPAANPbNE4ZUv9h6LckSl9zLsYOP4MBmhIPkRaeyybt+r4UghLvq+xw/YwUcC1gqylCkL4rdVs3Lwupjm4Q==}
+
   code-block-writer@13.0.1:
     resolution: {integrity: sha512-c5or4P6erEA69TxaxTNcHUNcIn+oyxSRTOWV+pSYF+z4epXqNvwvJ70XPGjPNgue83oAFAPBRQYwpAJ/Hpe/Sg==}
 
@@ -2623,7 +2636,7 @@ packages:
     resolution: {integrity: sha512-W9pAhw0ja1Edb5GVdIF1mjZw/ASI0AlShXM83UUGe2DVr5TdAPEA1OA8m/g8zWp9x6On7gqufY+FatDbC3MDQg==}
 
   concat-map@0.0.1:
-    resolution: {integrity: sha1-2Klr13/Wjfd5OnMDajug1UBdR3s=}
+    resolution: {integrity: sha512-/Srv4dswyQNBfohGpz9o6Yb3Gz3SrUDqBH5rTuhGR7ahtlbYKnVxw2bCFMRljaA7EXHaXZ8wsHdodFvbkhKmqg==}
 
   consola@3.2.3:
     resolution: {integrity: sha512-I5qxpzLv+sJhTVEoLYNcTW+bThDCPsit0vLNKShZx6rLtpilNpmmeTPaeqJb9ZE9dV3DGaeby6Vuhrw38WjeyQ==}
@@ -4643,6 +4656,13 @@ snapshots:
     dependencies:
       '@jridgewell/trace-mapping': 0.3.9
 
+  '@dario-hacking/vite-6-alpha-environment-provider-workerd@0.0.5(miniflare@3.20240701.0)(vite@6.0.0-alpha.18(@types/node@18.19.31)(lightningcss@1.24.1))(wrangler@3.63.1)':
+    dependencies:
+      cjs-module-lexer: 1.3.1
+      miniflare: 3.20240701.0
+      vite: 6.0.0-alpha.18(@types/node@18.19.31)(lightningcss@1.24.1)
+      wrangler: 3.63.1(@cloudflare/workers-types@4.20240405.0)
+
   '@emnapi/runtime@1.2.0':
     dependencies:
       tslib: 2.6.2
@@ -5564,6 +5584,8 @@ snapshots:
   chownr@2.0.0: {}
 
   ci-info@3.9.0: {}
+
+  cjs-module-lexer@1.3.1: {}
 
   code-block-writer@13.0.1: {}
 

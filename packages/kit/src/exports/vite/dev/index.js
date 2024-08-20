@@ -1,6 +1,6 @@
 import fs from 'node:fs';
 import path from 'node:path';
-import { URL } from 'node:url';
+import { fileURLToPath, URL } from 'node:url';
 import { AsyncLocalStorage } from 'node:async_hooks';
 import colors from 'kleur';
 import sirv from 'sirv';
@@ -19,6 +19,8 @@ import { SCHEME } from '../../../utils/url.js';
 import { check_feature } from '../../../utils/features.js';
 
 const cwd = process.cwd();
+
+const WORKERD_DEV_ENV_NAME = 'vite-plugin-cloudflare-workerd-env';
 
 /**
  * @param {import('vite').ViteDevServer} vite
@@ -521,18 +523,33 @@ export async function dev(vite, vite_config, svelte_config) {
 					return;
 				}
 
-				const rendered = await server.respond(request, {
-					getClientAddress: () => {
-						const { remoteAddress } = req.socket;
-						if (remoteAddress) return remoteAddress;
-						throw new Error('Could not determine clientAddress');
-					},
-					read: (file) => fs.readFileSync(path.join(svelte_config.kit.files.assets, file)),
-					before_handle: (event, config, prerender) => {
-						async_local_storage.enterWith({ event, config, prerender });
-					},
-					emulator
+				/** @type {{ api: { getHandler: (opts: { entrypoint: string }) => Promise<(req: Request) => Promise<Response>> }}} */
+				const devEnv = vite.environments[WORKERD_DEV_ENV_NAME];
+
+				if (!devEnv) {
+					throw new Error('No Cloudflare dev environment is present');
+				}
+
+				const __dirname = fileURLToPath(new URL('.', import.meta.url));
+
+				const handler = await devEnv.api.getHandler({
+					entrypoint: path.join(__dirname, 'workerd-dev-entrypoint.ts')
 				});
+
+				const rendered = await handler(request);
+
+				// const rendered = await server.respond(request, {
+				// 	getClientAddress: () => {
+				// 		const { remoteAddress } = req.socket;
+				// 		if (remoteAddress) return remoteAddress;
+				// 		throw new Error('Could not determine clientAddress');
+				// 	},
+				// 	read: (file) => fs.readFileSync(path.join(svelte_config.kit.files.assets, file)),
+				// 	before_handle: (event, config, prerender) => {
+				// 		async_local_storage.enterWith({ event, config, prerender });
+				// 	},
+				// 	emulator
+				// });
 
 				if (rendered.status === 404) {
 					// @ts-expect-error

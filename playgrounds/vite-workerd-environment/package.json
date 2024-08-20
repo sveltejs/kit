@@ -9,9 +9,11 @@
 		"package": "svelte-kit sync && svelte-package && publint",
 		"prepublishOnly": "npm run package",
 		"check": "svelte-kit sync && svelte-check --tsconfig ./jsconfig.json",
-		"check:watch": "svelte-kit sync && svelte-check --tsconfig ./jsconfig.json --watch"
+		"check:watch": "svelte-kit sync && svelte-check --tsconfig ./jsconfig.json --watch",
+		"typegen": "wrangler types"
 	},
 	"devDependencies": {
+		"@dario-hacking/vite-6-alpha-environment-provider-workerd": "^0.0.5",
 		"@sveltejs/adapter-auto": "workspace:*",
 		"@sveltejs/adapter-cloudflare": "workspace:*",
 		"@sveltejs/adapter-cloudflare-workers": "workspace:*",
