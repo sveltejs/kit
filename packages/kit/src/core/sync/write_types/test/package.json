@@ -1,7 +1,0 @@
-{
-	"private": true,
-	"type": "module",
-	"scripts": {
-		"testtypes": "tsc"
-	}
-}

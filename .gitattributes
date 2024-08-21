@@ -1,3 +1,0 @@
-* text=auto eol=lf
-/packages/**/test/** -linguist-detectable
-/packages/**/fixtures/** -linguist-detectable

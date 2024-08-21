@@ -1,9 +1,0 @@
-{
-	"compilerOptions": {
-		"target": "ESNext",
-		"module": "ESNext",
-		"allowJs": true,
-		"checkJs": true,
-		"newLine": "lf"
-	}
-}
