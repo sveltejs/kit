@@ -4,6 +4,7 @@ export type Options = {
 	types: 'typescript' | 'checkjs' | null;
 	prettier: boolean;
 	eslint: boolean;
+	tailwindcss: boolean;
 	playwright: boolean;
 	vitest: boolean;
 	svelte5?: boolean; // optional to not introduce a breaking change to the `create` API

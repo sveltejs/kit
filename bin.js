@@ -92,6 +92,10 @@ const options = await p.group(
 						label: 'Add Prettier for code formatting'
 					},
 					{
+						value: 'tailwindcss',
+						label: 'Add Tailwind CSS for styling'
+					},
+					{
 						value: 'playwright',
 						label: 'Add Playwright for browser testing'
 					},
@@ -115,6 +119,7 @@ await create(cwd, {
 	types: /** @type {'checkjs' | 'typescript' | null} */ (options.types),
 	prettier: options.features.includes('prettier'),
 	eslint: options.features.includes('eslint'),
+	tailwindcss: options.features.includes('tailwindcss'),
 	playwright: options.features.includes('playwright'),
 	vitest: options.features.includes('vitest'),
 	svelte5: options.features.includes('svelte5')

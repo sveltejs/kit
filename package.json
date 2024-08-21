@@ -1,7 +1,7 @@
 {
-	"name": "create-svelte",
-	"version": "6.3.8",
-	"description": "A CLI for creating new SvelteKit projects",
+	"name": "skittle",
+	"version": "0.0.1",
+	"description": "A powerful create-svelte fork",
 	"keywords": [
 		"create",
 		"new",
