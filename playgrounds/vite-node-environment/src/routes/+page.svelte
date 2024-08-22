@@ -5,7 +5,7 @@
 </script>
 
 <div>
-	<h1>Svelte Kit with Vite Node VM Environment</h1>
+	<h1>Svelte Kit with Vite Node Environment</h1>
 	<hr />
 	<h2>{data.userAgentText}</h2>
 	<form method="POST">

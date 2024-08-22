@@ -1236,7 +1236,7 @@ importers:
         specifier: 6.0.0-alpha.18
         version: 6.0.0-alpha.18(@types/node@18.19.31)(lightningcss@1.24.1)
 
-  playgrounds/vite-node-vm-environment:
+  playgrounds/vite-node-environment:
     devDependencies:
       '@sveltejs/adapter-auto':
         specifier: workspace:*

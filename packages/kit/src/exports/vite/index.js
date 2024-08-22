@@ -35,6 +35,8 @@ import {
 } from './module_ids.js';
 import { resolve_peer_dependency } from '../../utils/import.js';
 
+// import * as vite from 'vite'
+
 const cwd = process.cwd();
 
 /** @type {import('./types.js').EnforcedConfig} */
@@ -250,6 +252,13 @@ async function kit({ svelte_config }) {
 			// dev and preview config can be shared
 			/** @type {import('vite').UserConfig} */
 			const new_config = {
+				environments: {
+					node: {
+						dev: {
+							createEnvironment: vite.createNodeEnvironment
+						}
+					}
+				},
 				resolve: {
 					alias: [
 						{ find: '__SERVER__', replacement: `${generated}/server` },

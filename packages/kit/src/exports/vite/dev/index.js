@@ -18,9 +18,9 @@ import { not_found } from '../utils.js';
 import { SCHEME } from '../../../utils/url.js';
 import { check_feature } from '../../../utils/features.js';
 
-const cwd = process.cwd();
+import { createServerModuleRunner } from 'vite';
 
-const WORKERD_DEV_ENV_NAME = 'vite-plugin-cloudflare-workerd-env';
+const cwd = process.cwd();
 
 /**
  * @param {import('vite').ViteDevServer} vite
@@ -523,20 +523,18 @@ export async function dev(vite, vite_config, svelte_config) {
 					return;
 				}
 
-				/** @type {{ api: { getHandler: (opts: { entrypoint: string }) => Promise<(req: Request) => Promise<Response>> }}} */
-				const devEnv = vite.environments[WORKERD_DEV_ENV_NAME];
-
-				if (!devEnv) {
-					throw new Error('No Cloudflare dev environment is present');
-				}
-
+				const module_runner = createServerModuleRunner(vite.environments.node);
 				const __dirname = fileURLToPath(new URL('.', import.meta.url));
+				const entrypoint = await module_runner.import(path.join(__dirname, 'node_entrypoint.js'));
+				const handler = entrypoint.default.fetch;
 
-				const handler = await devEnv.api.getHandler({
-					entrypoint: path.join(__dirname, 'workerd-dev-entrypoint.ts')
-				});
+				const rendered = await handler();
 
-				const rendered = await handler(request);
+				// const handler = await devEnv.api.getHandler({
+				// 	entrypoint: path.join(__dirname, 'workerd-dev-entrypoint.ts')
+				// });
+
+				// const rendered = await handler(request);
 
 				// const rendered = await server.respond(request, {
 				// 	getClientAddress: () => {
@@ -544,11 +542,11 @@ export async function dev(vite, vite_config, svelte_config) {
 				// 		if (remoteAddress) return remoteAddress;
 				// 		throw new Error('Could not determine clientAddress');
 				// 	},
-				// 	read: (file) => fs.readFileSync(path.join(svelte_config.kit.files.assets, file)),
-				// 	before_handle: (event, config, prerender) => {
-				// 		async_local_storage.enterWith({ event, config, prerender });
-				// 	},
-				// 	emulator
+				// 	read: (file) => fs.readFileSync(path.join(svelte_config.kit.files.assets, file))
+				// 	// before_handle: (event, config, prerender) => {
+				// 	// 	async_local_storage.enterWith({ event, config, prerender });
+				// 	// },
+				// 	// emulator
 				// });
 
 				if (rendered.status === 404) {
