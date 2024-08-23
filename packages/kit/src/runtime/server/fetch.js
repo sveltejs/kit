@@ -85,17 +85,17 @@ export function create_fetch({ event, options, manifest, state, get_cookie_heade
 				const is_asset_html = manifest.assets.has(filename_html);
 
 				if (is_asset || is_asset_html) {
-					const file = is_asset ? filename : filename_html;
+					// const file = is_asset ? filename : filename_html;
 
-					if (state.read) {
-						const type = is_asset
-							? manifest.mimeTypes[filename.slice(filename.lastIndexOf('.'))]
-							: 'text/html';
+					// if (state.read) {
+					// 	const type = is_asset
+					// 		? manifest.mimeTypes[filename.slice(filename.lastIndexOf('.'))]
+					// 		: 'text/html';
 
-						return new Response(state.read(file), {
-							headers: type ? { 'content-type': type } : {}
-						});
-					}
+					// 	return new Response(state.read(file), {
+					// 		headers: type ? { 'content-type': type } : {}
+					// 	});
+					// }
 
 					return await fetch(request);
 				}
