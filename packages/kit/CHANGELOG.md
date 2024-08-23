@@ -1,5 +1,41 @@
 # @sveltejs/kit
 
+## 2.5.24
+### Patch Changes
+
+
+- extend peer dependency range for @sveltejs/vite-plugin-svelte to include 4.0.0-next for improved svelte5 support ([#12593](https://github.com/sveltejs/kit/pull/12593))
+
+## 2.5.23
+### Patch Changes
+
+
+- fix: use dynamic components in `root.svelte` instead of `svelte:component` for svelte 5 ([#12584](https://github.com/sveltejs/kit/pull/12584))
+
+## 2.5.22
+### Patch Changes
+
+
+- chore: configure provenance in a simpler manner ([#12570](https://github.com/sveltejs/kit/pull/12570))
+
+## 2.5.21
+### Patch Changes
+
+
+- chore: package provenance ([#12567](https://github.com/sveltejs/kit/pull/12567))
+
+## 2.5.20
+### Patch Changes
+
+
+- fix: set revalidate cache header on 404'd static assets ([#12530](https://github.com/sveltejs/kit/pull/12530))
+
+## 2.5.19
+### Patch Changes
+
+
+- fix: Svelte 5 - ignore `binding_non_reactive` warning in generated root component (you also need to update to `svelte@5.0.0-next.204`) ([#12524](https://github.com/sveltejs/kit/pull/12524))
+
 ## 2.5.18
 ### Patch Changes
 

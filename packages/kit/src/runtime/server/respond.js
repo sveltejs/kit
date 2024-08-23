@@ -116,7 +116,10 @@ export async function respond(request, options, manifest, state) {
 	}
 
 	if (decoded.startsWith(`/${options.app_dir}`)) {
-		return text('Not found', { status: 404 });
+		// Ensure that 404'd static assets are not cached - some adapters might apply caching by default
+		const headers = new Headers();
+		headers.set('cache-control', 'public, max-age=0, must-revalidate');
+		return text('Not found', { status: 404, headers });
 	}
 
 	const is_data_request = has_data_suffix(decoded);

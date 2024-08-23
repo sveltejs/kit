@@ -1,6 +1,6 @@
 {
 	"name": "@sveltejs/adapter-static",
-	"version": "3.0.2",
+	"version": "3.0.4",
 	"description": "Adapter for SvelteKit apps that prerenders your entire site as a collection of static files",
 	"keywords": [
 		"adapter",

@@ -220,7 +220,7 @@ function get_attr_value(node, attr) {
  *   height: string | number
  * }} details
  */
-function img_attributes_to_markdown(content, attributes, details) {
+function serialize_img_attributes(content, attributes, details) {
 	const attribute_strings = attributes.map((attribute) => {
 		if (attribute.name === 'src') {
 			return `src=${details.src}`;
@@ -279,22 +279,18 @@ function img_to_picture(content, node, image) {
 	}
 
 	let res = '<picture>';
+
 	for (const [format, srcset] of Object.entries(image.sources)) {
 		res += `<source srcset={"${srcset}"}${sizes_string} type="image/${format}" />`;
 	}
-	// Need to handle src differently when using either Vite's renderBuiltUrl or relative base path in Vite.
-	// See https://github.com/vitejs/vite/blob/b93dfe3e08f56cafe2e549efd80285a12a3dc2f0/packages/vite/src/node/plugins/asset.ts#L132
-	const src =
-		image.img.src.startsWith('"+') && image.img.src.endsWith('+"')
-			? `{"${image.img.src.substring(2, image.img.src.length - 2)}"}`
-			: `"${image.img.src}"`;
-	res += `<img ${img_attributes_to_markdown(content, attributes, {
-		src,
+
+	res += `<img ${serialize_img_attributes(content, attributes, {
+		src: image.img.src.startsWith('__VITE_ASSET__') ? `{"${image.img.src}"}` : `"${image.img.src}"`,
 		width: image.img.w,
 		height: image.img.h
 	})} />`;
-	res += '</picture>';
-	return res;
+
+	return (res += '</picture>');
 }
 
 /**
@@ -320,13 +316,13 @@ function dynamic_img_to_picture(content, node, src_var_name) {
 	};
 
 	return `{#if typeof ${src_var_name} === 'string'}
-	<img ${img_attributes_to_markdown(content, node.attributes, details)} />
+	<img ${serialize_img_attributes(content, node.attributes, details)} />
 {:else}
 	<picture>
 		{#each Object.entries(${src_var_name}.sources) as [format, srcset]}
 			<source {srcset}${sizes_string} type={'image/' + format} />
 		{/each}
-		<img ${img_attributes_to_markdown(content, attributes, details)} />
+		<img ${serialize_img_attributes(content, attributes, details)} />
 	</picture>
 {/if}`;
 }

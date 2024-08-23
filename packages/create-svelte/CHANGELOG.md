@@ -1,5 +1,23 @@
 # create-svelte
 
+## 6.3.8
+### Patch Changes
+
+
+- fix: use `vite-plugin-svelte` v4 pre-release when Svelte 5 is chosen ([#12586](https://github.com/sveltejs/kit/pull/12586))
+
+## 6.3.7
+### Patch Changes
+
+
+- chore: configure provenance in a simpler manner ([#12570](https://github.com/sveltejs/kit/pull/12570))
+
+## 6.3.6
+### Patch Changes
+
+
+- chore: package provenance ([#12567](https://github.com/sveltejs/kit/pull/12567))
+
 ## 6.3.5
 ### Patch Changes
 

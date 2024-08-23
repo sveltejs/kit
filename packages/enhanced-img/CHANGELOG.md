@@ -1,5 +1,20 @@
 # @sveltejs/enhanced-img
 
+## 0.3.3
+### Patch Changes
+
+
+- chore: configure provenance in a simpler manner ([#12570](https://github.com/sveltejs/kit/pull/12570))
+
+## 0.3.2
+### Patch Changes
+
+
+- chore: package provenance ([#12567](https://github.com/sveltejs/kit/pull/12567))
+
+
+- fix: ensure src attribute is properly formed ([`65931f276ac2102032e3032c864a472eee19b7bb`](https://github.com/sveltejs/kit/commit/65931f276ac2102032e3032c864a472eee19b7bb))
+
 ## 0.3.1
 ### Patch Changes
 
