@@ -4,7 +4,7 @@ import { fileURLToPath, URL } from 'node:url';
 import { AsyncLocalStorage } from 'node:async_hooks';
 import colors from 'kleur';
 import sirv from 'sirv';
-import { isCSSRequest, loadEnv, buildErrorMessage } from 'vite';
+import { isCSSRequest, loadEnv, buildErrorMessage, createServerModuleRunner } from 'vite';
 import { createReadableStream, getRequest, setResponse } from '../../../exports/node/index.js';
 import { installPolyfills } from '../../../exports/node/polyfills.js';
 import { coalesce_to_error } from '../../../utils/error.js';
@@ -18,17 +18,16 @@ import { not_found } from '../utils.js';
 import { SCHEME } from '../../../utils/url.js';
 import { check_feature } from '../../../utils/features.js';
 
-import { createServerModuleRunner } from 'vite';
-
 const cwd = process.cwd();
 
 /**
  * @param {import('vite').ViteDevServer} vite
  * @param {import('vite').ResolvedConfig} vite_config
  * @param {import('types').ValidatedConfig} svelte_config
+ * @param {any} environment_context
  * @return {Promise<Promise<() => void>>}
  */
-export async function dev(vite, vite_config, svelte_config) {
+export async function dev(vite, vite_config, svelte_config, environment_context) {
 	installPolyfills();
 
 	const async_local_storage = new AsyncLocalStorage();
@@ -94,6 +93,9 @@ export async function dev(vite, vite_config, svelte_config) {
 		const module = await loud_ssr_load_module(url);
 
 		const module_node = await vite.moduleGraph.getModuleByUrl(url);
+
+		vite.environments.node.moduleGraph.getModuleByUrl;
+
 		if (!module_node) throw new Error(`Could not find node for ${url}`);
 
 		return { module, module_node, url };
@@ -421,7 +423,7 @@ export async function dev(vite, vite_config, svelte_config) {
 	});
 
 	const env = loadEnv(vite_config.mode, svelte_config.kit.env.dir, '');
-	const emulator = await svelte_config.kit.adapter?.emulate?.();
+	// const emulator = await svelte_config.kit.adapter?.emulate?.();
 
 	return () => {
 		const serve_static_middleware = vite.middlewares.stack.find(
@@ -432,6 +434,8 @@ export async function dev(vite, vite_config, svelte_config) {
 		// Vite will give a 403 on URLs like /test, /static, and /package.json preventing us from
 		// serving routes with those names. See https://github.com/vitejs/vite/issues/7363
 		remove_static_middlewares(vite.middlewares);
+
+		const module_runner = createServerModuleRunner(vite.environments.node);
 
 		vite.middlewares.use(async (req, res) => {
 			// Vite's base middleware strips out the base path. Restore it
@@ -523,18 +527,15 @@ export async function dev(vite, vite_config, svelte_config) {
 					return;
 				}
 
-				const module_runner = createServerModuleRunner(vite.environments.node);
+				environment_context.manifest_data = manifest_data;
+				environment_context.env = env;
+				environment_context.remote_address = req.socket.remoteAddress;
+
 				const __dirname = fileURLToPath(new URL('.', import.meta.url));
 				const entrypoint = await module_runner.import(path.join(__dirname, 'node_entrypoint.js'));
 				const handler = entrypoint.default.fetch;
 
-				const rendered = await handler();
-
-				// const handler = await devEnv.api.getHandler({
-				// 	entrypoint: path.join(__dirname, 'workerd-dev-entrypoint.ts')
-				// });
-
-				// const rendered = await handler(request);
+				const rendered = await handler(request);
 
 				// const rendered = await server.respond(request, {
 				// 	getClientAddress: () => {

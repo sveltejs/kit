@@ -1,4 +1,4 @@
-import type { Actions } from './$types';
+import type { Actions, PageServerLoad } from './$types';
 
 function getUserAgentText(): string {
 	if (typeof navigator === 'undefined') {
@@ -9,9 +9,11 @@ function getUserAgentText(): string {
 	}
 }
 
-export function load() {
+export const load: PageServerLoad = async ({ fetch }) => {
+	const res = await fetch('favicon.png');
+	console.log(res);
 	return { userAgentText: getUserAgentText() };
-}
+};
 
 export const actions = {
 	default: () => {

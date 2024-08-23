@@ -3,11 +3,19 @@ import path from 'node:path';
 
 import colors from 'kleur';
 
-import { copy, mkdirp, posixify, read, resolve_entry, rimraf } from '../../utils/filesystem.js';
+import {
+	copy,
+	mkdirp,
+	posixify,
+	read,
+	resolve_entry,
+	rimraf,
+	to_fs
+} from '../../utils/filesystem.js';
 import { create_static_module, create_dynamic_module } from '../../core/env.js';
 import * as sync from '../../core/sync/sync.js';
 import { create_assets } from '../../core/sync/create_manifest_data/index.js';
-import { runtime_directory, logger } from '../../core/utils.js';
+import { runtime_directory, logger, get_mime_lookup, runtime_base } from '../../core/utils.js';
 import { load_config } from '../../core/config/index.js';
 import { generate_manifest } from '../../core/generate_manifest/index.js';
 import { build_server_nodes } from './build/build_server.js';
@@ -31,11 +39,13 @@ import {
 	service_worker,
 	sveltekit_environment,
 	sveltekit_paths,
-	sveltekit_server
+	sveltekit_server,
+	sveltekit_environment_context
 } from './module_ids.js';
 import { resolve_peer_dependency } from '../../utils/import.js';
 
-// import * as vite from 'vite'
+/** @type {{ manifest_data: import('types').ManifestData, env: Record<string, string>, remote_address: string | undefined }} */
+const environment_context = {};
 
 const cwd = process.cwd();
 
@@ -510,6 +520,146 @@ async function kit({ svelte_config }) {
 						}
 					`;
 				}
+
+				case sveltekit_environment_context: {
+					const { manifest_data, env, remote_address } = environment_context;
+
+					return dedent`
+						import path from 'node:path';
+						import fs from 'node:fs';
+						import { to_fs, from_fs } from '../../packages/kit/src/utils/filesystem.js';
+						import { compact } from '../../packages/kit/src/utils/array.js';
+
+						export const cwd = process.cwd();
+
+						async function loud_ssr_load_module(url) {
+							return await import(/* @vite-ignore */ url);
+						}
+
+						async function resolve(id) {
+							const url = id.startsWith('..') ? to_fs(path.posix.resolve(id)) : \`/\${id}\`;
+
+							const module = await loud_ssr_load_module(url);
+
+							return { module, url };
+						}
+
+						export let manifest = {
+							appDir: ${JSON.stringify(svelte_config.kit.appDir)},
+							appPath: ${JSON.stringify(svelte_config.kit.appDir)},
+							assets: new Set(${JSON.stringify(manifest_data.assets.map((asset) => asset.file))}),
+							mimeTypes: ${JSON.stringify(get_mime_lookup(manifest_data))},
+							_: {
+								client: {
+									start: ${JSON.stringify(`${runtime_base}/client/entry.js`)},
+									app: ${JSON.stringify(`${to_fs(svelte_config.kit.outDir)}/generated/client/app.js`)},
+									imports: [],
+									stylesheets: [],
+									fonts: [],
+									uses_env_dynamic_public: true
+								},
+								server_assets: {},
+								nodes: ${JSON.stringify(manifest_data.nodes, (key, value) => {
+									if (['depth', 'parent', 'child_pages'].includes(key)) return;
+
+									return value;
+								})}.map((node, index) => {
+									return async () => {
+										/** @type {import('types').SSRNode} */
+										const result = {};
+
+										/** @type {import('vite').ModuleNode[]} */
+										const module_nodes = [];
+
+										result.index = index;
+
+										// these are unused in dev, it's easier to include them
+										result.imports = [];
+										result.stylesheets = [];
+										result.fonts = [];
+
+										if (node.component) {
+											result.component = async () => {
+												const { module } = await resolve(
+													/** @type {string} */ (node.component)
+												);
+
+												return module.default;
+											};
+										}
+
+										if (node.universal) {
+											const { module } = await resolve(node.universal);
+
+											result.universal = module;
+											result.universal_id = node.universal;
+										}
+
+										if (node.server) {
+											const { module } = await resolve(node.server);
+
+											result.server = module;
+											result.server_id = node.server;
+										}
+
+										return result;
+									};
+								}),
+								routes: compact(
+									${JSON.stringify(manifest_data.routes, (key, value) => {
+										if (['parent'].includes(key)) return;
+
+										if (key === 'pattern') return value.toString();
+
+										return value;
+									})}.map((route) => {
+										if (!route.page && !route.endpoint) return null;
+
+										const endpoint = route.endpoint;
+
+										return {
+											id: route.id,
+											pattern: /^\\/$/,
+											params: route.params,
+											page: route.page,
+											endpoint: endpoint
+												? async () => {
+														const url = path.resolve(cwd, endpoint.file);
+														return await loud_ssr_load_module(url);
+													}
+												: null,
+											endpoint_id: endpoint?.file
+										};
+									})
+								),
+								matchers: async () => {
+									/** @type {Record<string, import('@sveltejs/kit').ParamMatcher>} */
+									const matchers = {};
+
+									for (const key in ${JSON.stringify(manifest_data.matchers)}) {
+										const file = ${JSON.stringify(manifest_data.matchers)}[key];
+										const url = path.resolve(cwd, file);
+										const module = await import(/* @vite-ignore */ url);
+
+										if (module.match) {
+											matchers[key] = module.match;
+										} else {
+										 throw new Error(\`\${file} does not export a 'match' function\`);
+										}
+									}
+
+									return matchers;
+								}
+							}
+						};
+
+						export let env = ${JSON.stringify(env)}
+
+						export let remote_address = ${JSON.stringify(remote_address)}
+
+						export let assets_directory = ${JSON.stringify(svelte_config.kit.files.assets)}
+					`;
+				}
 			}
 		}
 	};
@@ -678,7 +828,7 @@ async function kit({ svelte_config }) {
 		 * @see https://vitejs.dev/guide/api-plugin.html#configureserver
 		 */
 		async configureServer(vite) {
-			return await dev(vite, vite_config, svelte_config);
+			return await dev(vite, vite_config, svelte_config, environment_context);
 		},
 
 		/**
