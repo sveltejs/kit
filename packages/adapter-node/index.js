@@ -9,7 +9,7 @@ const files = fileURLToPath(new URL('./files', import.meta.url).href);
 
 /** @type {import('./index.js').default} */
 export default function (opts = {}) {
-	const { out = 'build', precompress = true, envPrefix = '' } = opts;
+	const { out = 'build', precompress = true, envPrefix = '', external = null } = opts;
 
 	return {
 		name: '@sveltejs/adapter-node',
@@ -48,6 +48,16 @@ export default function (opts = {}) {
 
 			const pkg = JSON.parse(readFileSync('package.json', 'utf8'));
 
+			let rollupExternal;
+			if (!external) {
+				rollupExternal = [
+					// dependencies could have deep exports, so we need a regex
+					...Object.keys(pkg.dependencies || {}).map((d) => new RegExp(`^${d}(\\/.*)?$`))
+				];
+			} else {
+				rollupExternal = external;
+			}
+
 			// we bundle the Vite output so that deployments only need
 			// their production dependencies. Anything in devDependencies
 			// will get included in the bundled code
@@ -56,10 +66,7 @@ export default function (opts = {}) {
 					index: `${tmp}/index.js`,
 					manifest: `${tmp}/manifest.js`
 				},
-				external: [
-					// dependencies could have deep exports, so we need a regex
-					...Object.keys(pkg.dependencies || {}).map((d) => new RegExp(`^${d}(\\/.*)?$`))
-				],
+				external: rollupExternal,
 				plugins: [
 					nodeResolve({
 						preferBuiltins: true,
