@@ -22,5 +22,7 @@ declare const __propDef: {
 		[evt: string]: CustomEvent<any>;
 	};
 	slots: {};
+	exports?: {};
+	bindings?: string;
 };
 export {};
