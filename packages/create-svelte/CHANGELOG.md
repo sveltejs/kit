@@ -1,5 +1,11 @@
 # create-svelte
 
+## 6.3.9
+### Patch Changes
+
+
+- chore: bump publint to v0.2 ([#12602](https://github.com/sveltejs/kit/pull/12602))
+
 ## 6.3.8
 ### Patch Changes
 

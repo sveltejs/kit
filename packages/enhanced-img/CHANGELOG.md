@@ -1,5 +1,11 @@
 # @sveltejs/enhanced-img
 
+## 0.3.4
+### Patch Changes
+
+
+- perf: apply performance optimization to dev srcset ([#12621](https://github.com/sveltejs/kit/pull/12621))
+
 ## 0.3.3
 ### Patch Changes
 
