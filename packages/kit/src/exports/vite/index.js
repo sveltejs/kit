@@ -524,7 +524,7 @@ async function kit({ svelte_config }) {
 				case sveltekit_environment_context: {
 					const { manifest_data, env, remote_address } = environment_context;
 
-					return dedent`
+					const manifest = dedent`
 							import path from 'node:path';
 							import fs from 'node:fs';
 							import { to_fs, from_fs } from '../../packages/kit/src/utils/filesystem.js';
@@ -559,51 +559,55 @@ async function kit({ svelte_config }) {
 										uses_env_dynamic_public: true
 									},
 									server_assets: {},
-									nodes: ${s(manifest_data.nodes, (key, value) => {
-										if (['depth', 'parent_id', 'parent', 'child_pages'].includes(key)) return;
-										return value;
-									})}.map((node, index) => {
-										return async () => {
-											/** @type {import('types').SSRNode} */
-											const result = {};
+									nodes: [
+										${manifest_data.nodes
+											.map((node, i) => {
+												const index = s(i);
+												const component = s(node.component);
+												const universal = s(node.universal);
+												const server = s(node.server);
 
-											/** @type {import('vite').ModuleNode[]} */
-											const module_nodes = [];
+												return dedent`
+												async () => {
+													/** @type {import('types').SSRNode} */
+													const result = {};
 
-											result.index = index;
+													/** @type {import('vite').ModuleNode[]} */
+													const module_nodes = [];
 
-											// these are unused in dev, it's easier to include them
-											result.imports = [];
-											result.stylesheets = [];
-											result.fonts = [];
+													result.index = ${index};
 
-											if (node.component) {
-												result.component = async () => {
-													const { module } = await resolve(
-														/** @type {string} */ (node.component)
-													);
+													// these are unused in dev, it's easier to include them
+													result.imports = [];
+													result.stylesheets = [];
+													result.fonts = [];
 
-													return module.default;
-												};
-											}
+													if (${component}) {
+														result.component = async () => {
+															const { module } = await resolve(${component});
+														}
+													}
 
-											if (node.universal) {
-												const { module } = await resolve(node.universal);
+													if (${universal}) {
+														const { module } = await resolve(${universal});
 
-												result.universal = module;
-												result.universal_id = node.universal;
-											}
+														result.universal = module;
+														result.universal_id = ${universal};
+													}
+													
+													if (${server}) {
+														const { module } = await resolve(${server});
 
-											if (node.server) {
-												const { module } = await resolve(node.server);
+														result.server = module;
+														result.server_id = ${server};
+													}
 
-												result.server = module;
-												result.server_id = node.server;
-											}
-
-											return result;
-										};
-									}),
+													return result;
+												}
+											`;
+											})
+											.join(',\n')}
+									],
 									routes: [
 										${manifest_data.routes
 											.map((route) => {
@@ -660,6 +664,8 @@ async function kit({ svelte_config }) {
 
 							export let assets_directory = ${s(svelte_config.kit.files.assets)}
 						`;
+
+					return manifest;
 
 					// 	return dedent`
 					// 		import path from 'node:path';
