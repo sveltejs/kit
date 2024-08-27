@@ -9,9 +9,7 @@ function getUserAgentText(): string {
 	}
 }
 
-export const load: PageServerLoad = async ({ fetch }) => {
-	const res = await fetch('favicon.png');
-	console.log(res);
+export const load: PageServerLoad = () => {
 	return { userAgentText: getUserAgentText() };
 };
 

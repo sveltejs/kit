@@ -525,140 +525,276 @@ async function kit({ svelte_config }) {
 					const { manifest_data, env, remote_address } = environment_context;
 
 					return dedent`
-						import path from 'node:path';
-						import fs from 'node:fs';
-						import { to_fs, from_fs } from '../../packages/kit/src/utils/filesystem.js';
-						import { compact } from '../../packages/kit/src/utils/array.js';
+							import path from 'node:path';
+							import fs from 'node:fs';
+							import { to_fs, from_fs } from '../../packages/kit/src/utils/filesystem.js';
+							import { compact } from '../../packages/kit/src/utils/array.js';
 
-						export const cwd = process.cwd();
+							export const cwd = process.cwd();
 
-						async function loud_ssr_load_module(url) {
-							return await import(/* @vite-ignore */ url);
-						}
-
-						async function resolve(id) {
-							const url = id.startsWith('..') ? to_fs(path.posix.resolve(id)) : \`/\${id}\`;
-
-							const module = await loud_ssr_load_module(url);
-
-							return { module, url };
-						}
-
-						export let manifest = {
-							appDir: ${JSON.stringify(svelte_config.kit.appDir)},
-							appPath: ${JSON.stringify(svelte_config.kit.appDir)},
-							assets: new Set(${JSON.stringify(manifest_data.assets.map((asset) => asset.file))}),
-							mimeTypes: ${JSON.stringify(get_mime_lookup(manifest_data))},
-							_: {
-								client: {
-									start: ${JSON.stringify(`${runtime_base}/client/entry.js`)},
-									app: ${JSON.stringify(`${to_fs(svelte_config.kit.outDir)}/generated/client/app.js`)},
-									imports: [],
-									stylesheets: [],
-									fonts: [],
-									uses_env_dynamic_public: true
-								},
-								server_assets: {},
-								nodes: ${JSON.stringify(manifest_data.nodes, (key, value) => {
-									if (['depth', 'parent', 'child_pages'].includes(key)) return;
-
-									return value;
-								})}.map((node, index) => {
-									return async () => {
-										/** @type {import('types').SSRNode} */
-										const result = {};
-
-										/** @type {import('vite').ModuleNode[]} */
-										const module_nodes = [];
-
-										result.index = index;
-
-										// these are unused in dev, it's easier to include them
-										result.imports = [];
-										result.stylesheets = [];
-										result.fonts = [];
-
-										if (node.component) {
-											result.component = async () => {
-												const { module } = await resolve(
-													/** @type {string} */ (node.component)
-												);
-
-												return module.default;
-											};
-										}
-
-										if (node.universal) {
-											const { module } = await resolve(node.universal);
-
-											result.universal = module;
-											result.universal_id = node.universal;
-										}
-
-										if (node.server) {
-											const { module } = await resolve(node.server);
-
-											result.server = module;
-											result.server_id = node.server;
-										}
-
-										return result;
-									};
-								}),
-								routes: compact(
-									${JSON.stringify(manifest_data.routes, (key, value) => {
-										if (['parent'].includes(key)) return;
-
-										if (key === 'pattern') return value.toString();
-
-										return value;
-									})}.map((route) => {
-										if (!route.page && !route.endpoint) return null;
-
-										const endpoint = route.endpoint;
-
-										return {
-											id: route.id,
-											pattern: /^\\/$/,
-											params: route.params,
-											page: route.page,
-											endpoint: endpoint
-												? async () => {
-														const url = path.resolve(cwd, endpoint.file);
-														return await loud_ssr_load_module(url);
-													}
-												: null,
-											endpoint_id: endpoint?.file
-										};
-									})
-								),
-								matchers: async () => {
-									/** @type {Record<string, import('@sveltejs/kit').ParamMatcher>} */
-									const matchers = {};
-
-									for (const key in ${JSON.stringify(manifest_data.matchers)}) {
-										const file = ${JSON.stringify(manifest_data.matchers)}[key];
-										const url = path.resolve(cwd, file);
-										const module = await import(/* @vite-ignore */ url);
-
-										if (module.match) {
-											matchers[key] = module.match;
-										} else {
-										 throw new Error(\`\${file} does not export a 'match' function\`);
-										}
-									}
-
-									return matchers;
-								}
+							async function loud_ssr_load_module(url) {
+								return await import(/* @vite-ignore */ url);
 							}
-						};
 
-						export let env = ${JSON.stringify(env)}
+							async function resolve(id) {
+								const url = id.startsWith('..') ? to_fs(path.posix.resolve(id)) : \`/\${id}\`;
 
-						export let remote_address = ${JSON.stringify(remote_address)}
+								const module = await loud_ssr_load_module(url);
 
-						export let assets_directory = ${JSON.stringify(svelte_config.kit.files.assets)}
-					`;
+								return { module, url };
+							}
+
+							export let manifest = {
+								appDir: ${s(svelte_config.kit.appDir)},
+								appPath: ${s(svelte_config.kit.appDir)},
+								assets: new Set(${s(manifest_data.assets.map((asset) => asset.file))}),
+								mimeTypes: ${s(get_mime_lookup(manifest_data))},
+								_: {
+									client: {
+										start: ${s(`${runtime_base}/client/entry.js`)},
+										app: ${s(`${to_fs(svelte_config.kit.outDir)}/generated/client/app.js`)},
+										imports: [],
+										stylesheets: [],
+										fonts: [],
+										uses_env_dynamic_public: true
+									},
+									server_assets: {},
+									nodes: ${s(manifest_data.nodes, (key, value) => {
+										if (['depth', 'parent_id', 'parent', 'child_pages'].includes(key)) return;
+										return value;
+									})}.map((node, index) => {
+										return async () => {
+											/** @type {import('types').SSRNode} */
+											const result = {};
+
+											/** @type {import('vite').ModuleNode[]} */
+											const module_nodes = [];
+
+											result.index = index;
+
+											// these are unused in dev, it's easier to include them
+											result.imports = [];
+											result.stylesheets = [];
+											result.fonts = [];
+
+											if (node.component) {
+												result.component = async () => {
+													const { module } = await resolve(
+														/** @type {string} */ (node.component)
+													);
+
+													return module.default;
+												};
+											}
+
+											if (node.universal) {
+												const { module } = await resolve(node.universal);
+
+												result.universal = module;
+												result.universal_id = node.universal;
+											}
+
+											if (node.server) {
+												const { module } = await resolve(node.server);
+
+												result.server = module;
+												result.server_id = node.server;
+											}
+
+											return result;
+										};
+									}),
+									routes: [
+										${manifest_data.routes
+											.map((route) => {
+												if (!route.page && !route.endpoint) return;
+
+												const endpoint = route.endpoint;
+
+												return dedent`
+												{
+											 		id: ${s(route.id)},
+													pattern: ${route.pattern},
+													params: ${s(route.params)},
+													page: ${s(route.page)},
+													endpoint: ${s(
+														endpoint
+															? `
+																async () => {
+																	const url = path.resolve(cwd, endpoint.file);
+																	return await loud_ssr_load_module(url);
+																}
+															`
+															: 'null'
+													)}
+												}
+											`;
+											})
+											.filter(Boolean)
+											.join(',\n')}
+									],
+									matchers: async () => {
+										/** @type {Record<string, import('@sveltejs/kit').ParamMatcher>} */
+										const matchers = {};
+
+										for (const key in ${s(manifest_data.matchers)}) {
+											const file = ${s(manifest_data.matchers)}[key];
+											const url = path.resolve(cwd, file);
+											const module = await import(/* @vite-ignore */ url);
+
+											if (module.match) {
+												matchers[key] = module.match;
+											} else {
+											 throw new Error(\`\${file} does not export a 'match' function\`);
+											}
+										}
+
+										return matchers;
+									}
+								}
+							};
+
+							export let env = ${s(env)}
+
+							export let remote_address = ${s(remote_address)}
+
+							export let assets_directory = ${s(svelte_config.kit.files.assets)}
+						`;
+
+					// 	return dedent`
+					// 		import path from 'node:path';
+					// 		import fs from 'node:fs';
+					// 		import { to_fs, from_fs } from '../../packages/kit/src/utils/filesystem.js';
+					// 		import { compact } from '../../packages/kit/src/utils/array.js';
+
+					// 		export const cwd = process.cwd();
+
+					// 		async function loud_ssr_load_module(url) {
+					// 			return await import(/* @vite-ignore */ url);
+					// 		}
+
+					// 		async function resolve(id) {
+					// 			const url = id.startsWith('..') ? to_fs(path.posix.resolve(id)) : \`/\${id}\`;
+
+					// 			const module = await loud_ssr_load_module(url);
+
+					// 			return { module, url };
+					// 		}
+
+					// 		export let manifest = {
+					// 			appDir: ${s(svelte_config.kit.appDir)},
+					// 			appPath: ${s(svelte_config.kit.appDir)},
+					// 			assets: new Set(${s(manifest_data.assets.map((asset) => asset.file))}),
+					// 			mimeTypes: ${s(get_mime_lookup(manifest_data))},
+					// 			_: {
+					// 				client: {
+					// 					start: ${s(`${runtime_base}/client/entry.js`)},
+					// 					app: ${s(`${to_fs(svelte_config.kit.outDir)}/generated/client/app.js`)},
+					// 					imports: [],
+					// 					stylesheets: [],
+					// 					fonts: [],
+					// 					uses_env_dynamic_public: true
+					// 				},
+					// 				server_assets: {},
+					// 				nodes: ${s(manifest_data.nodes, (key, value) => {
+					// 					if (['depth', 'parent_id', 'parent', 'child_pages'].includes(key)) return;
+					// 					return value;
+					// 				})}.map((node, index) => {
+					// 					return async () => {
+					// 						/** @type {import('types').SSRNode} */
+					// 						const result = {};
+
+					// 						/** @type {import('vite').ModuleNode[]} */
+					// 						const module_nodes = [];
+
+					// 						result.index = index;
+
+					// 						// these are unused in dev, it's easier to include them
+					// 						result.imports = [];
+					// 						result.stylesheets = [];
+					// 						result.fonts = [];
+
+					// 						if (node.component) {
+					// 							result.component = async () => {
+					// 								const { module } = await resolve(
+					// 									/** @type {string} */ (node.component)
+					// 								);
+
+					// 								return module.default;
+					// 							};
+					// 						}
+
+					// 						if (node.universal) {
+					// 							const { module } = await resolve(node.universal);
+
+					// 							result.universal = module;
+					// 							result.universal_id = node.universal;
+					// 						}
+
+					// 						if (node.server) {
+					// 							const { module } = await resolve(node.server);
+
+					// 							result.server = module;
+					// 							result.server_id = node.server;
+					// 						}
+
+					// 						return result;
+					// 					};
+					// 				}),
+					// 				routes: compact(
+					// 					${s(manifest_data.routes, (key, value) => {
+					// 						if (['parent'].includes(key)) return;
+
+					// 						if (key === 'pattern') return value.toString();
+
+					// 						return value;
+					// 					})}.map((route) => {
+					// 						if (!route.page && !route.endpoint) return null;
+
+					// 						const endpoint = route.endpoint;
+
+					// 						return {
+					// 							id: route.id,
+					// 							pattern: /^\\/$/,
+					// 							params: route.params,
+					// 							page: route.page,
+					// 							endpoint: endpoint
+					// 								? async () => {
+					// 										const url = path.resolve(cwd, endpoint.file);
+					// 										return await loud_ssr_load_module(url);
+					// 									}
+					// 								: null,
+					// 							endpoint_id: endpoint?.file
+					// 						};
+					// 					})
+					// 				),
+					// 				matchers: async () => {
+					// 					/** @type {Record<string, import('@sveltejs/kit').ParamMatcher>} */
+					// 					const matchers = {};
+
+					// 					for (const key in ${s(manifest_data.matchers)}) {
+					// 						const file = ${s(manifest_data.matchers)}[key];
+					// 						const url = path.resolve(cwd, file);
+					// 						const module = await import(/* @vite-ignore */ url);
+
+					// 						if (module.match) {
+					// 							matchers[key] = module.match;
+					// 						} else {
+					// 						 throw new Error(\`\${file} does not export a 'match' function\`);
+					// 						}
+					// 					}
+
+					// 					return matchers;
+					// 				}
+					// 			}
+					// 		};
+
+					// 		export let env = ${s(env)}
+
+					// 		export let remote_address = ${s(remote_address)}
+
+					// 		export let assets_directory = ${s(svelte_config.kit.files.assets)}
+					// 	`;
 				}
 			}
 		}
