@@ -527,7 +527,9 @@ async function kit({ svelte_config }) {
 
 					const manifest = dedent`
 						import * as path from 'path';
-						import { loud_ssr_load_module, resolve } from '../../packages/kit/src/exports/vite/dev/utils.js'
+						import { loud_ssr_load_module, create_resolve } from '../../packages/kit/src/exports/vite/dev/utils.js'
+
+						const resolve = create_resolve(${s(cwd)})
 
 						export let manifest = {
 							appDir: ${s(svelte_config.kit.appDir)},
@@ -610,8 +612,9 @@ async function kit({ svelte_config }) {
 														endpoint
 															? `
 																async () => {
-																	const url = path.resolve(process.cwd(), ${s(endpoint.file)});
-																	return await loud_ssr_load_module(url);
+																	const { module } = await resolve(${s(endpoint.file)});
+
+																	return module;
 																}
 															`
 															: 'null'
