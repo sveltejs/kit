@@ -9,7 +9,8 @@ function getUserAgentText(): string {
 	}
 }
 
-export const load: PageServerLoad = () => {
+export const load: PageServerLoad = ({ platform }) => {
+	console.log(platform);
 	return { userAgentText: getUserAgentText() };
 };
 
