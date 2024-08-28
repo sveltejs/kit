@@ -531,9 +531,18 @@ export async function dev(vite, vite_config, svelte_config, environment_context)
 				environment_context.env = env;
 				environment_context.remote_address = req.socket.remoteAddress;
 
+				const devEnv = vite.environments['vite-plugin-cloudflare-workerd-env'];
+
+				if (!devEnv) {
+					throw new Error('No Cloudflare dev environment is present');
+				}
+
 				const __dirname = fileURLToPath(new URL('.', import.meta.url));
-				const entrypoint = await module_runner.import(path.join(__dirname, 'node_entrypoint.js'));
-				const handler = entrypoint.default.fetch;
+				// const entrypoint = await module_runner.import(path.join(__dirname, 'node_entrypoint.js'));
+				// const handler = entrypoint.default.fetch;
+				const handler = await devEnv.api.getHandler({
+					entrypoint: path.join(__dirname, 'workerd_entrypoint.js')
+				});
 
 				const rendered = await handler(request);
 

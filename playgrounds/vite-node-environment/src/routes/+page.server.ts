@@ -9,7 +9,7 @@ function getUserAgentText(): string {
 	}
 }
 
-export const load: PageServerLoad = async () => {
+export const load: PageServerLoad = () => {
 	return { userAgentText: getUserAgentText() };
 };
 
