@@ -537,11 +537,6 @@ export async function dev(vite, vite_config, svelte_config, environment_context)
 
 				const rendered = await handler(request);
 
-				fs.writeFileSync(
-					'/Users/jopstad/Desktop/module_keys_2.json',
-					JSON.stringify([...module_runner.moduleCache.keys()])
-				);
-
 				// const rendered = await server.respond(request, {
 				// 	getClientAddress: () => {
 				// 		const { remoteAddress } = req.socket;
