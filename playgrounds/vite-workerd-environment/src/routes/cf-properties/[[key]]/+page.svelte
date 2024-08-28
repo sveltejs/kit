@@ -23,9 +23,3 @@
 		{/each}
 	</ul>
 </div>
-
-<style>
-	p {
-		font-weight: 700;
-	}
-</style>

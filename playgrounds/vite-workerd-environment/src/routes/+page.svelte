@@ -16,9 +16,22 @@
 </nav>
 	<hr />
 	<h2>{data.userAgentText}</h2>
-	<form method="POST">
-		<button>Click me</button>
-	</form>
+	<hr />
+	<h2>KV example</h2>
+	{#if data.value}
+		<p>Value: {data.value}</p>
+		<form method='POST' action='?/delete'>
+			<button>Delete</button>
+		</form>
+	{:else}
+		<p>No value</p>
+		<form method='POST' action='?/create'>
+			<label for="value">Set value: </label>
+			<input type="text" name="value" id="value" required />
+			<br />
+			<button>Save</button>
+		</form>
+	{/if}
 </div>
 
 <style>
