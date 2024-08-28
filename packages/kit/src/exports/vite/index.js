@@ -526,8 +526,7 @@ async function kit({ svelte_config }) {
 					const { manifest_data, env, remote_address } = environment_context;
 
 					const manifest = dedent`
-						import * as path from 'path';
-						import { loud_ssr_load_module, create_resolve } from '../../packages/kit/src/exports/vite/dev/utils.js'
+						import { create_resolve } from '../../packages/kit/src/exports/vite/dev/utils.js'
 
 						const resolve = create_resolve(${s(cwd)})
 
