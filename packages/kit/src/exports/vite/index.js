@@ -629,8 +629,9 @@ async function kit({ svelte_config }) {
 									const matchers = {};
 
 									for (const [key, file] of ${s(Object.entries(manifest_data.matchers))}) {
-										const url = path.resolve(cwd, file);
-										const module = await import(/* @vite-ignore */ url);
+										// const url = path.resolve(cwd, file);
+										// const module = await import(/* @vite-ignore */ url);
+										const { module } = await resolve(file);
 
 										if (module.match) {
 											matchers[key] = module.match;
