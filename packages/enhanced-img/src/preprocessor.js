@@ -5,8 +5,6 @@ import MagicString from 'magic-string';
 import { asyncWalk } from 'estree-walker';
 import { parse } from 'svelte-parse-markup';
 
-const ASSET_PREFIX = '___ASSET___';
-
 // TODO: expose this in vite-imagetools rather than duplicating it
 const OPTIMIZABLE = /^[^?]+\.(avif|heif|gif|jpeg|jpg|png|tiff|webp)(\?.*)?$/;
 
@@ -35,10 +33,19 @@ export function image(opts) {
 			const s = new MagicString(content);
 			const ast = parse(content, { filename });
 
-			// Import path to import name
-			// e.g. ./foo.png => ___ASSET___0
-			/** @type {Map<string, string>} */
+			/**
+			 * Import path to import name
+			 * e.g. ./foo.png => __IMPORTED_ASSET_0__
+			 * @type {Map<string, string>}
+			 */
 			const imports = new Map();
+
+			/**
+			 * Vite name to declaration name
+			 * e.g. __VITE_ASSET_0__ => __DECLARED_ASSET_0__
+			 * @type {Map<string, string>}
+			 */
+			const consts = new Map();
 
 			/**
 			 * @param {import('svelte/types/compiler/interfaces').TemplateNode} node
@@ -94,10 +101,10 @@ export function image(opts) {
 						image = await process(resolved_id, opts);
 						images.set(resolved_id, image);
 					}
-					s.update(node.start, node.end, img_to_picture(content, node, image));
+					s.update(node.start, node.end, img_to_picture(consts, content, node, image));
 				} else {
-					// e.g. <img src="./foo.svg" /> => <img src={___ASSET___0} />
-					const name = ASSET_PREFIX + imports.size;
+					// e.g. <img src="./foo.svg" /> => <img src={__IMPORTED_ASSET_0__} />
+					const name = '__IMPORTED_ASSET_' + imports.size + '__';
 					const { start, end } = src_attribute;
 					// update src with reference to imported asset
 					s.update(
@@ -131,15 +138,28 @@ export function image(opts) {
 
 			// add imports
 			if (imports.size) {
-				let import_text = '';
+				let text = '';
 				for (const [path, import_name] of imports.entries()) {
-					import_text += `import ${import_name} from "${path}";`;
+					text += `import ${import_name} from "${path}";`;
 				}
 				if (ast.instance) {
 					// @ts-ignore
-					s.appendLeft(ast.instance.content.start, import_text);
+					s.appendLeft(ast.instance.content.start, text);
 				} else {
-					s.append(`<script>${import_text}</script>`);
+					s.prepend(`<script>${text}</script>`);
+				}
+			}
+
+			if (consts.size) {
+				let text = '';
+				for (const [vite_name, declaration_name] of consts.entries()) {
+					text += `\tconst ${declaration_name} = "${vite_name}";\n`;
+				}
+				if (ast.module) {
+					// @ts-ignore
+					s.appendLeft(ast.module.content.start, text);
+				} else {
+					s.prepend(`<script context="module">\n${text}</script>\n`);
 				}
 			}
 
@@ -264,11 +284,12 @@ function stringToNumber(param) {
 }
 
 /**
+ * @param {Map<string,string>} consts
  * @param {string} content
  * @param {import('svelte/types/compiler/interfaces').TemplateNode} node
  * @param {import('vite-imagetools').Picture} image
  */
-function img_to_picture(content, node, image) {
+function img_to_picture(consts, content, node, image) {
 	/** @type {Array<import('svelte/types/compiler/interfaces').BaseDirective | import('svelte/types/compiler/interfaces').Attribute | import('svelte/types/compiler/interfaces').SpreadAttribute>} attributes */
 	const attributes = node.attributes;
 	const index = attributes.findIndex((attribute) => attribute.name === 'sizes');
@@ -281,11 +302,11 @@ function img_to_picture(content, node, image) {
 	let res = '<picture>';
 
 	for (const [format, srcset] of Object.entries(image.sources)) {
-		res += `<source srcset=${to_value(srcset)}${sizes_string} type="image/${format}" />`;
+		res += `<source srcset=${to_value(consts, srcset)}${sizes_string} type="image/${format}" />`;
 	}
 
 	res += `<img ${serialize_img_attributes(content, attributes, {
-		src: to_value(image.img.src),
+		src: to_value(consts, image.img.src),
 		width: image.img.w,
 		height: image.img.h
 	})} />`;
@@ -294,10 +315,19 @@ function img_to_picture(content, node, image) {
 }
 
 /**
+ * @param {Map<string, string>} consts
  * @param {string} src
  */
-function to_value(src) {
-	return src.startsWith('__VITE_ASSET__') ? `{"${src}"}` : `"${src}"`;
+function to_value(consts, src) {
+	if (src.startsWith('__VITE_ASSET__')) {
+		let var_name = consts.get(src);
+		if (!var_name) {
+			var_name = '__DECLARED_ASSET_' + consts.size + '__';
+			consts.set(src, var_name);
+		}
+		return `{${var_name}}`;
+	}
+	return `"${src}"`;
 }
 
 /**
