@@ -1,9 +1,9 @@
 import { Server } from '../../../runtime/server/index.js';
 
+const environment_context = await import('__sveltekit/environment_context');
+
 export default {
 	fetch: /** @param {Request} request **/ async (request) => {
-		const environment_context = await import('__sveltekit/environment_context');
-
 		const server = new Server(environment_context.manifest);
 
 		await server.init({

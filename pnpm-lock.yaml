@@ -428,6 +428,9 @@ importers:
       mrmime:
         specifier: ^2.0.0
         version: 2.0.0
+      pathe:
+        specifier: ^1.1.2
+        version: 1.1.2
       sade:
         specifier: ^1.8.1
         version: 1.8.1

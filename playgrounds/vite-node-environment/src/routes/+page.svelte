@@ -12,3 +12,9 @@
 		<button>Click me</button>
 	</form>
 </div>
+
+<style>
+	h1 {
+		color: red;
+	}
+</style>
