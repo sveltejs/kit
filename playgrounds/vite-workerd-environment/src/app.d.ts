@@ -1,3 +1,5 @@
+import { CacheStorage, IncomingRequestCfProperties } from '@cloudflare/workers-types';
+
 // See https://kit.svelte.dev/docs/types#app
 // for information about these interfaces
 declare global {
@@ -6,7 +8,9 @@ declare global {
 		// interface Locals {}
 		// interface PageData {}
 		interface Platform {
-			cf: any;
+			caches: CacheStorage;
+			cf: IncomingRequestCfProperties;
+			context: any;
 			env: any;
 		}
 	}

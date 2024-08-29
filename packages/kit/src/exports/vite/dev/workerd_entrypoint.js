@@ -2,11 +2,11 @@ import { Server } from '../../../runtime/server/index.js';
 
 export default {
 	/**
-	 * @param {Request & { cf: any }} req
+	 * @param {Request & { cf?: import('@cloudflare/workers-types').IncomingRequestCfProperties }} request
 	 * @param {any} env
-	 * @param {any} ctx
+	 * @param {any} context
 	 */
-	fetch: async (req, env, ctx) => {
+	fetch: async (request, env, context) => {
 		const environment_context = await import('__sveltekit/environment_context');
 		const server = new Server(environment_context.manifest);
 
@@ -14,7 +14,7 @@ export default {
 			env: environment_context.env
 		});
 
-		return server.respond(req, {
+		return server.respond(request, {
 			getClientAddress: () => {
 				if (!environment_context.remote_address) {
 					throw new Error('Could not determine clientAddress');
@@ -24,8 +24,8 @@ export default {
 			},
 			platform: {
 				env,
-				cf: req.cf,
-				ctx,
+				cf: request.cf,
+				context,
 				caches
 			}
 		});
