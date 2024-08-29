@@ -18,6 +18,7 @@ import { not_found } from '../utils.js';
 import { SCHEME } from '../../../utils/url.js';
 import { check_feature } from '../../../utils/features.js';
 import { sveltekit_environment_context } from '../module_ids.js';
+import { SSR_ENVIRONMENT_NAME } from '../constants.js';
 
 // const cwd = process.cwd();
 
@@ -441,7 +442,31 @@ export async function dev(vite, vite_config, svelte_config, environment_context)
 	environment_context.env = loadEnv(vite_config.mode, svelte_config.kit.env.dir, '');
 	// const emulator = await svelte_config.kit.adapter?.emulate?.();
 
-	return async () => {
+	/** @type { (import('vite').DevEnvironment & { api?: { getHandler: (opts: { entrypoint: string }) => Promise<(req: Request) => Promise<Response>> }}) } */
+	const devEnv = vite.environments[SSR_ENVIRONMENT_NAME];
+
+	const __dirname = fileURLToPath(new URL('.', import.meta.url));
+
+	if (!devEnv) {
+		throw new Error('No Cloudflare dev environment is present');
+	}
+
+	let handler;
+
+	if (devEnv.api) {
+		handler = await devEnv.api.getHandler({
+			entrypoint: path.join(__dirname, 'workerd_entrypoint.js')
+		});
+	} else {
+		const module_runner = createServerModuleRunner(vite.environments[SSR_ENVIRONMENT_NAME]);
+		const entrypoint = await module_runner.import(path.join(__dirname, 'node_entrypoint.js'));
+		handler = entrypoint.default.fetch;
+	}
+
+	// const entrypoint = await module_runner.import(path.join(__dirname, 'node_entrypoint.js'));
+	// const handler = entrypoint.default.fetch;
+
+	return () => {
 		const serve_static_middleware = vite.middlewares.stack.find(
 			(middleware) =>
 				/** @type {function} */ (middleware.handle).name === 'viteServeStaticMiddleware'
@@ -450,21 +475,6 @@ export async function dev(vite, vite_config, svelte_config, environment_context)
 		// Vite will give a 403 on URLs like /test, /static, and /package.json preventing us from
 		// serving routes with those names. See https://github.com/vitejs/vite/issues/7363
 		remove_static_middlewares(vite.middlewares);
-
-		const module_runner = createServerModuleRunner(vite.environments.node);
-
-		const devEnv = vite.environments['vite-plugin-cloudflare-workerd-env'];
-
-		if (!devEnv) {
-			throw new Error('No Cloudflare dev environment is present');
-		}
-
-		const __dirname = fileURLToPath(new URL('.', import.meta.url));
-		// const entrypoint = await module_runner.import(path.join(__dirname, 'node_entrypoint.js'));
-		// const handler = entrypoint.default.fetch;
-		const handler = await devEnv.api.getHandler({
-			entrypoint: path.join(__dirname, 'workerd_entrypoint.js')
-		});
 
 		vite.middlewares.use(async (req, res) => {
 			environment_context.remote_address = req.socket.remoteAddress;

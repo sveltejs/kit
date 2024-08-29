@@ -1,4 +1,5 @@
 import { join } from 'node:path';
+import { default_environment } from '../../exports/vite/dev/default_environment.js';
 
 /** @typedef {import('./types.js').Validator} Validator */
 
@@ -261,6 +262,10 @@ const options = object(
 			serviceWorker: object({
 				register: boolean(true),
 				files: fun((filename) => !/\.DS_Store/.test(filename))
+			}),
+
+			ssrEnvironment: validate(default_environment, (input) => {
+				return input;
 			}),
 
 			typescript: object({

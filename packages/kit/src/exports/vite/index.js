@@ -44,6 +44,7 @@ import {
 	sveltekit_environment_context
 } from './module_ids.js';
 import { resolve_peer_dependency } from '../../utils/import.js';
+import { SSR_ENVIRONMENT_NAME } from './constants.js';
 
 /** @type {import('types').EnvironmentContext} */
 const environment_context = {};
@@ -263,13 +264,6 @@ async function kit({ svelte_config }) {
 			// dev and preview config can be shared
 			/** @type {import('vite').UserConfig} */
 			const new_config = {
-				environments: {
-					node: {
-						dev: {
-							createEnvironment: vite.createNodeEnvironment
-						}
-					}
-				},
 				resolve: {
 					alias: [
 						{ find: '__SERVER__', replacement: `${generated}/server` },
@@ -1075,7 +1069,13 @@ async function kit({ svelte_config }) {
 		}
 	};
 
-	return [plugin_setup, plugin_virtual_modules, plugin_guard, plugin_compile];
+	return [
+		...svelte_config.kit.ssrEnvironment(SSR_ENVIRONMENT_NAME, {}),
+		plugin_setup,
+		plugin_virtual_modules,
+		plugin_guard,
+		plugin_compile
+	];
 }
 
 /**

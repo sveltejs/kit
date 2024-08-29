@@ -1,6 +1,7 @@
 import 'svelte'; // pick up `declare module "*.svelte"`
 import 'vite/client'; // pick up `declare module "*.jpg"`, etc.
 import '../types/ambient.js';
+import { Plugin } from 'vite';
 
 import { CompileOptions } from 'svelte/compiler';
 import {
@@ -55,8 +56,8 @@ export interface Adapter {
 export type LoadProperties<input extends Record<string, any> | void> = input extends void
 	? undefined // needs to be undefined, because void will break intellisense
 	: input extends Record<string, any>
-		? input
-		: unknown;
+	? input
+	: unknown;
 
 export type AwaitedActions<T extends Record<string, (...args: any) => any>> = OptionalUnion<
 	{
@@ -79,12 +80,11 @@ export interface ActionFailure<T extends Record<string, unknown> | undefined = u
 	[uniqueSymbol]: true; // necessary or else UnpackValidationError could wrongly unpack objects with the same shape as ActionFailure
 }
 
-type UnpackValidationError<T> =
-	T extends ActionFailure<infer X>
-		? X
-		: T extends void
-			? undefined // needs to be undefined, because void will corrupt union type
-			: T;
+type UnpackValidationError<T> = T extends ActionFailure<infer X>
+	? X
+	: T extends void
+	? undefined // needs to be undefined, because void will corrupt union type
+	: T;
 
 /**
  * This object is passed to the `adapt` function of adapters.
@@ -618,6 +618,7 @@ export interface KitConfig {
 		 */
 		files?(filepath: string): boolean;
 	};
+	ssrEnvironment?: (environmentName: string, options: any) => Plugin[];
 	typescript?: {
 		/**
 		 * A function that allows you to edit the generated `tsconfig.json`. You can mutate the config (recommended) or return a new one.
