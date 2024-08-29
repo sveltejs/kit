@@ -1,22 +1,21 @@
-import type { Actions, PageServerLoad } from './$types';
+import type { Actions, PageServerLoadEvent } from './$types';
 
 function getUserAgentText(): string {
 	if (typeof navigator === 'undefined') {
 		return 'navigator is undefined (running in Node.js?)';
-	} else {
-		const userAgent = navigator.userAgent;
-		return `navigator.userAgent = ${userAgent}`;
 	}
+
+	return `navigator.userAgent = ${navigator.userAgent}`;
 }
 
 const KEY = '__my-key__';
 
-export const load: PageServerLoad = async ({ platform }) => {
+export async function load({ platform }: PageServerLoadEvent) {
 	const { MY_KV } = platform.env;
 	const value = await MY_KV.get(KEY);
 
 	return { userAgentText: getUserAgentText(), value: value === 'null' ? null : value };
-};
+}
 
 export const actions = {
 	create: async ({ request, platform }) => {

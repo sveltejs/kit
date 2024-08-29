@@ -10,13 +10,12 @@
 	{#if data.key}
 		{#if data.value}
 			<h2>Cloudflare property: {data.key}</h2>
-			<h3>Value: {data.value}</h3>
+			<h2>Value: {data.value}</h2>
 		{:else}
 			<h2>Cloudflare property '{data.key}' not found</h2>
 		{/if}
-		<hr />
 	{/if}
-	<h2>Available Cloudflare properties:</h2>
+	<h3>Available Cloudflare properties:</h3>
 	<ul>
 		{#each data.keys as key}
 			<li><a href="/cf-properties/{key}">{key}</a></li>

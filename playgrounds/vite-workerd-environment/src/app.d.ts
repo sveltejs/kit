@@ -5,7 +5,10 @@ declare global {
 		// interface Error {}
 		// interface Locals {}
 		// interface PageData {}
-		// interface Platform {}
+		interface Platform {
+			cf: any;
+			env: any;
+		}
 	}
 }
 

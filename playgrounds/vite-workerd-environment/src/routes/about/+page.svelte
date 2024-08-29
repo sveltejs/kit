@@ -1,7 +1,7 @@
-<h1>About</h1>
+<h2>About</h2>
 
 <style>
-	h1 {
+	h2 {
 		color: blue;
 	}
 </style>

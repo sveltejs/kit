@@ -1,9 +1,9 @@
-import type { PageServerLoad } from './$types';
+import type { PageServerLoadEvent } from './$types';
 
-export const load: PageServerLoad = ({ params, platform }) => {
+export function load({ params, platform }: PageServerLoadEvent) {
 	const cf = platform.cf;
 	const key = params?.key;
-	const value = JSON.stringify(cf[key]);
+	const value = key && key in cf && JSON.stringify(cf[key]);
 
-	return { key, value: key && key in cf && value, keys: Object.keys(cf) };
-};
+	return { key, value, keys: Object.keys(cf) };
+}
