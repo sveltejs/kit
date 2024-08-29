@@ -45,7 +45,7 @@ import {
 } from './module_ids.js';
 import { resolve_peer_dependency } from '../../utils/import.js';
 
-/** @type {{ manifest_data: import('types').ManifestData, env: Record<string, string>, remote_address: string | undefined }} */
+/** @type {import('types').EnvironmentContext} */
 const environment_context = {};
 
 const cwd = process.cwd();
