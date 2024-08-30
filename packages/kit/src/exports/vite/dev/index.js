@@ -95,9 +95,6 @@ export async function dev(vite, vite_config, svelte_config, environment_context)
 		const module = await loud_ssr_load_module(url);
 
 		const module_node = await vite.moduleGraph.getModuleByUrl(url);
-
-		vite.environments.node.moduleGraph.getModuleByUrl;
-
 		if (!module_node) throw new Error(`Could not find node for ${url}`);
 
 		return { module, module_node, url };

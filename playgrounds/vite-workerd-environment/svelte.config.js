@@ -5,10 +5,10 @@ import { workerd as cloudflare } from '@dario-hacking/vite-6-alpha-environment-p
 /** @type {import('@sveltejs/kit').Config} */
 const config = {
 	kit: {
-		adapter: adapter()
-		// environments: {
-		// 	ssr: cloudflare({})
-		// }
+		adapter: adapter(),
+		environments: {
+			ssr: cloudflare({})
+		}
 	},
 	preprocess: [vitePreprocess()]
 };
