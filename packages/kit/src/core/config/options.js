@@ -121,9 +121,12 @@ const options = object(
 			}),
 
 			environments: object({
-				ssr: validate(default_environment, (input) => {
-					return input;
-				})
+				ssr: validate(
+					() => [],
+					(input) => {
+						return input;
+					}
+				)
 			}),
 
 			files: object({
