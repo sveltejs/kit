@@ -520,7 +520,7 @@ async function kit({ svelte_config }) {
 					const { manifest_data, env, remote_address } = environment_context;
 
 					const manifest = dedent`
-						import { create_resolve } from '../../packages/kit/src/exports/vite/dev/utils.js'
+						import { create_resolve } from ${s(`${runtime_base}/../exports/vite/dev/utils.js`)};
 
 						const resolve = create_resolve(${s(cwd)})
 

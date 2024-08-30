@@ -447,10 +447,6 @@ export async function dev(vite, vite_config, svelte_config, environment_context)
 
 	const __dirname = fileURLToPath(new URL('.', import.meta.url));
 
-	if (!devEnv) {
-		throw new Error('No Cloudflare dev environment is present');
-	}
-
 	let handler;
 
 	if (devEnv.api) {
