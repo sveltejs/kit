@@ -120,6 +120,12 @@ const options = object(
 				privatePrefix: string('')
 			}),
 
+			environments: object({
+				ssr: validate(default_environment, (input) => {
+					return input;
+				})
+			}),
+
 			files: object({
 				assets: string('static'),
 				hooks: object({
@@ -262,10 +268,6 @@ const options = object(
 			serviceWorker: object({
 				register: boolean(true),
 				files: fun((filename) => !/\.DS_Store/.test(filename))
-			}),
-
-			ssrEnvironment: validate(default_environment, (input) => {
-				return input;
 			}),
 
 			typescript: object({
