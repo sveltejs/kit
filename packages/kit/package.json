@@ -33,7 +33,6 @@
 		"tiny-glob": "^0.2.9"
 	},
 	"devDependencies": {
-		"@cloudflare/workers-types": "^4.20231121.0",
 		"@playwright/test": "^1.44.1",
 		"@sveltejs/vite-plugin-svelte": "^3.0.1",
 		"@types/connect": "^3.4.38",

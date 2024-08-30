@@ -2,7 +2,7 @@ import { Server } from '../../../runtime/server/index.js';
 
 export default {
 	/**
-	 * @param {Request & { cf?: import('@cloudflare/workers-types').IncomingRequestCfProperties }} request
+	 * @param {Request & { cf: any }} request
 	 * @param {any} env
 	 * @param {any} context
 	 */

@@ -444,9 +444,6 @@ importers:
         specifier: ^0.2.9
         version: 0.2.9
     devDependencies:
-      '@cloudflare/workers-types':
-        specifier: ^4.20231121.0
-        version: 4.20240405.0
       '@playwright/test':
         specifier: ^1.44.1
         version: 1.44.1
