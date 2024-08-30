@@ -1,5 +1,5 @@
-import colors from 'kleur';
 import fs from 'node:fs';
+import { styleText } from 'node:util';
 import prompts from 'prompts';
 import glob from 'tiny-glob/sync.js';
 import { bail, check_git, update_js_file, update_svelte_file } from '../../utils.js';
@@ -11,12 +11,11 @@ export async function migrate() {
 	}
 
 	console.log(
-		colors
-			.bold()
-			.yellow(
-				'\nThis will update files in the current directory\n' +
-					"If you're inside a monorepo, don't run this in the root directory, rather run it in all projects independently.\n"
-			)
+		styleText(
+			['bold', 'yellow'],
+			'\nThis will update files in the current directory\n' +
+				"If you're inside a monorepo, don't run this in the root directory, rather run it in all projects independently.\n"
+		)
 	);
 
 	const use_git = check_git();
@@ -87,11 +86,11 @@ export async function migrate() {
 		}
 	}
 
-	console.log(colors.bold().green('✔ Your project has been migrated'));
+	console.log(styleText(['bold', 'green'], '✔ Your project has been migrated'));
 
 	console.log('\nRecommended next steps:\n');
 
-	const cyan = colors.bold().cyan;
+	const cyan = (/** @type {string} */ text) => styleText(['bold', 'cyan'], text);
 
 	const tasks = [
 		use_git && cyan('git commit -m "migration to Svelte 4"'),

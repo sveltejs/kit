@@ -1,7 +1,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
-import colors from 'kleur';
+import { styleText } from 'node:util';
 import { posixify, to_fs } from '../utils/filesystem.js';
 
 /**
@@ -33,11 +33,10 @@ export function logger({ verbose }) {
 	/** @param {string} msg */
 	const err = (msg) => console.error(msg.replace(/^/gm, '  '));
 
-	log.success = (msg) => log(colors.green(`✔ ${msg}`));
-	log.error = (msg) => err(colors.bold().red(msg));
-	log.warn = (msg) => log(colors.bold().yellow(msg));
-
-	log.minor = verbose ? (msg) => log(colors.grey(msg)) : noop;
+	log.success = (msg) => log(styleText('green', `✔ ${msg}`));
+	log.error = (msg) => err(styleText(['bold', 'red'], msg));
+	log.warn = (msg) => log(styleText(['bold', 'yellow'], msg));
+	log.minor = verbose ? (msg) => log(styleText('grey', msg)) : noop;
 	log.info = verbose ? log : noop;
 
 	return log;

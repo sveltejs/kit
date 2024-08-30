@@ -1,6 +1,6 @@
 import fs from 'node:fs';
 import path from 'node:path';
-import colors from 'kleur';
+import { styleText } from 'node:util';
 import { guess_indent, posixify, walk } from '../../utils.js';
 
 /**
@@ -59,7 +59,8 @@ export function update_pkg_json(config, pkg, files) {
 	// See: https://pnpm.io/package_json#publishconfigdirectory
 	if (pkg.publishConfig?.directory || pkg.linkDirectory?.directory) {
 		console.log(
-			colors.yellow(
+			styleText(
+				'yellow',
 				'Detected "publishConfig.directory" or "linkDirectory.directory" fields in your package.json. ' +
 					'This migration removes them, which may or may not be what you want. Please review closely.'
 			)
@@ -102,7 +103,8 @@ export function update_pkg_json(config, pkg, files) {
 
 			if (clashes[key]) {
 				console.log(
-					colors.yellow(
+					styleText(
+						'yellow',
 						`Duplicate "${key}" export. Closely review your "exports" field in package.json after the migration.`
 					)
 				);
@@ -170,14 +172,16 @@ export function update_pkg_json(config, pkg, files) {
 				pkg.svelte = svelte_export;
 			} else {
 				console.log(
-					colors.yellow(
+					styleText(
+						'yellow',
 						'Cannot generate a "svelte" entry point because the "." entry in "exports" is not a string. Please specify a "svelte" entry point yourself\n'
 					)
 				);
 			}
 		} else {
 			console.log(
-				colors.yellow(
+				styleText(
+					'yellow',
 					'Cannot generate a "svelte" entry point because the "." entry in "exports" is missing. Please specify a "svelte" entry point yourself\n'
 				)
 			);

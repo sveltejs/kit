@@ -1,6 +1,6 @@
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
-import colors from 'kleur';
+import { styleText } from 'node:util';
 
 /**
  * @param {import("./types.js").Options} options
@@ -26,12 +26,13 @@ export function create_validator(options) {
 			// - maybe there's a custom post-build script that fixes some of these
 			if (warnings.length) {
 				console.log(
-					colors
-						.bold()
-						.yellow('@sveltejs/package found the following issues while packaging your library:')
+					styleText(
+						['bold', 'yellow'],
+						'@sveltejs/package found the following issues while packaging your library:'
+					)
 				);
 				for (const warning of warnings) {
-					console.log(colors.yellow(`${warning}\n`));
+					console.log(styleText('yellow', `${warning}\n`));
 				}
 			}
 		}
