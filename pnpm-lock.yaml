@@ -460,8 +460,8 @@ importers:
         specifier: ^2.4.7
         version: 2.4.7
       dts-buddy:
-        specifier: 0.4.6
-        version: 0.4.6(typescript@5.4.5)
+        specifier: ^0.5.3
+        version: 0.5.3(typescript@5.4.5)
       rollup:
         specifier: ^4.14.2
         version: 4.18.0
@@ -523,8 +523,8 @@ importers:
         specifier: ^7.0.3
         version: 7.0.3
       marked:
-        specifier: ^13.0.0
-        version: 13.0.0
+        specifier: ^14.0.0
+        version: 14.0.0
       svelte:
         specifier: ^4.2.10
         version: 4.2.17
@@ -2811,11 +2811,11 @@ packages:
   dropcss@1.0.16:
     resolution: {integrity: sha512-QgA6BUh2SoBYE/dSuMmeGhNdoGtGewt3Rn66xKyXoGNyjrKRXf163wuM+xeQ83p87l/3ALoB6Il1dgKyGS5pEw==}
 
-  dts-buddy@0.4.6:
-    resolution: {integrity: sha512-0gccY0vIuVCwbx4F9X5soE6ABKyjev2XVgwX2PYBx5hXfnrTeCBZwpf5F7MlVxzLo0pHfO9yNNo21cjZQZD/aw==}
+  dts-buddy@0.5.3:
+    resolution: {integrity: sha512-wS2DC5T+F6R+sG/YNlJ21yn8CKVhy1QQlpKA34G+uO4PUXkwz+JQWbGcIryUByxoJgbH98O0dTGzE2RqsRR3KA==}
     hasBin: true
     peerDependencies:
-      typescript: '>=5.0.4 <5.5'
+      typescript: '>=5.0.4 <5.6'
 
   e2e-test-dep-cjs-only@file:packages/kit/test/apps/dev-only/_test_dependencies/cjs-only:
     resolution: {directory: packages/kit/test/apps/dev-only/_test_dependencies/cjs-only, type: directory}
@@ -3424,8 +3424,8 @@ packages:
     engines: {node: '>= 18'}
     hasBin: true
 
-  marked@13.0.0:
-    resolution: {integrity: sha512-VTeDCd9txf4KLLljUZ0nljE/Incb9SrWuueE44QVuU0pkOdh4sfCeW1Z6lPcxyDRSVY6rm8db/0OPaN75RNUmw==}
+  marked@14.0.0:
+    resolution: {integrity: sha512-uIj4+faQ+MgHgwUW1l2PsPglZLOLOT1uErt06dAPtx2kjteLAkbsd/0FiYg/MGS+i7ZKLb7w2WClxHkzOOuryQ==}
     engines: {node: '>= 18'}
     hasBin: true
 
@@ -5802,7 +5802,7 @@ snapshots:
 
   dropcss@1.0.16: {}
 
-  dts-buddy@0.4.6(typescript@5.4.5):
+  dts-buddy@0.5.3(typescript@5.4.5):
     dependencies:
       '@jridgewell/source-map': 0.3.6
       '@jridgewell/sourcemap-codec': 1.5.0
@@ -6462,7 +6462,7 @@ snapshots:
 
   marked@12.0.1: {}
 
-  marked@13.0.0: {}
+  marked@14.0.0: {}
 
   mdn-data@2.0.30: {}
 

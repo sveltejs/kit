@@ -33,7 +33,7 @@
 			"vite": "6.0.0-alpha.18"
 		}
 	},
-	"packageManager": "pnpm@9.5.0",
+	"packageManager": "pnpm@9.9.0",
 	"engines": {
 		"pnpm": "^9.0.0"
 	}

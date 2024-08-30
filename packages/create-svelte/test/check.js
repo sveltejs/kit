@@ -106,36 +106,39 @@ for (const template of templates) {
 	if (template[0] === '.') continue;
 
 	for (const types of /** @type {const} */ (['checkjs', 'typescript'])) {
-		const cwd = path.join(test_workspace_dir, `${template}-${types}`);
-		fs.rmSync(cwd, { recursive: true, force: true });
+		for (const svelteVersion of /** @type {const} */ (['svelte4', 'svelte5'])) {
+			const test_id = `${template}-${types}-${svelteVersion}`;
+			const cwd = path.join(test_workspace_dir, test_id);
+			fs.rmSync(cwd, { recursive: true, force: true });
 
-		create(cwd, {
-			name: `create-svelte-test-${template}-${types}`,
-			template,
-			types,
-			prettier: true,
-			eslint: true,
-			playwright: false,
-			vitest: false,
-			svelte5: false
-		});
+			create(cwd, {
+				name: `create-svelte-test-${test_id}`,
+				template,
+				types,
+				prettier: true,
+				eslint: true,
+				playwright: false,
+				vitest: false,
+				svelte5: svelteVersion === 'svelte5'
+			});
 
-		const pkg = JSON.parse(fs.readFileSync(path.join(cwd, 'package.json'), 'utf-8'));
-		patch_package_json(pkg);
+			const pkg = JSON.parse(fs.readFileSync(path.join(cwd, 'package.json'), 'utf-8'));
+			patch_package_json(pkg);
 
-		fs.writeFileSync(path.join(cwd, 'package.json'), JSON.stringify(pkg, null, '\t') + '\n');
+			fs.writeFileSync(path.join(cwd, 'package.json'), JSON.stringify(pkg, null, '\t') + '\n');
 
-		// run provided scripts that are non-blocking. All of them should exit with 0
-		// package script requires lib dir
-		// TODO: lint should run before format
-		const scripts_to_test = ['format', 'lint', 'check', 'build', 'package'].filter(
-			(s) => s in pkg.scripts
-		);
+			// run provided scripts that are non-blocking. All of them should exit with 0
+			// package script requires lib dir
+			// TODO: lint should run before format
+			const scripts_to_test = ['format', 'lint', 'check', 'build', 'package'].filter(
+				(s) => s in pkg.scripts
+			);
 
-		for (const script of scripts_to_test) {
-			const tests = script_test_map.get(script) ?? [];
-			tests.push([`${template}-${types}`, () => exec_async(`pnpm ${script}`, { cwd })]);
-			script_test_map.set(script, tests);
+			for (const script of scripts_to_test) {
+				const tests = script_test_map.get(script) ?? [];
+				tests.push([test_id, () => exec_async(`pnpm ${script}`, { cwd })]);
+				script_test_map.set(script, tests);
+			}
 		}
 	}
 }

@@ -1,6 +1,6 @@
 {
 	"name": "@sveltejs/adapter-cloudflare",
-	"version": "4.7.0",
+	"version": "4.7.2",
 	"description": "Adapter for building SvelteKit applications on Cloudflare Pages with Workers integration",
 	"keywords": [
 		"adapter",
@@ -53,8 +53,5 @@
 	"peerDependencies": {
 		"@sveltejs/kit": "^2.0.0",
 		"wrangler": "^3.28.4"
-	},
-	"publishConfig": {
-		"access": "public"
 	}
 }
