@@ -4,16 +4,15 @@ import { fileURLToPath, URL } from 'node:url';
 import { AsyncLocalStorage } from 'node:async_hooks';
 import colors from 'kleur';
 import sirv from 'sirv';
-import { isCSSRequest, loadEnv, buildErrorMessage, createServerModuleRunner } from 'vite';
-import { createReadableStream, getRequest, setResponse } from '../../../exports/node/index.js';
+import { loadEnv, createServerModuleRunner } from 'vite';
+import { getRequest, setResponse } from '../../../exports/node/index.js';
 import { installPolyfills } from '../../../exports/node/polyfills.js';
 import { coalesce_to_error } from '../../../utils/error.js';
-import { from_fs, posixify, resolve_entry, to_fs } from '../../../utils/filesystem.js';
+import { posixify, resolve_entry, to_fs } from '../../../utils/filesystem.js';
 import { load_error_page } from '../../../core/config/index.js';
 import { SVELTE_KIT_ASSETS } from '../../../constants.js';
 import * as sync from '../../../core/sync/sync.js';
-import { get_mime_lookup, runtime_base } from '../../../core/utils.js';
-import { compact } from '../../../utils/array.js';
+import { runtime_base } from '../../../core/utils.js';
 import { not_found } from '../utils.js';
 import { SCHEME } from '../../../utils/url.js';
 import { check_feature } from '../../../utils/features.js';
@@ -103,7 +102,7 @@ export async function dev(vite, vite_config, svelte_config, environment_context)
 	// 	return { module, module_node, url };
 	// }
 
-	// this doesn't seem to be needed
+	// this may not be needed
 	function invalidate_environment_context_module() {
 		for (const environment in vite.environments) {
 			const module = vite.environments[environment].moduleGraph.getModuleById(
@@ -120,7 +119,7 @@ export async function dev(vite, vite_config, svelte_config, environment_context)
 		try {
 			environment_context.manifest_data = sync.create(svelte_config).manifest_data;
 
-			// invalidate_environment_context_module();
+			invalidate_environment_context_module();
 
 			if (manifest_error) {
 				manifest_error = null;
@@ -609,48 +608,48 @@ function remove_static_middlewares(server) {
 	}
 }
 
-/**
- * @param {import('vite').ViteDevServer} vite
- * @param {import('vite').ModuleNode} node
- * @param {Set<import('vite').ModuleNode>} deps
- */
-async function find_deps(vite, node, deps) {
-	// since `ssrTransformResult.deps` contains URLs instead of `ModuleNode`s, this process is asynchronous.
-	// instead of using `await`, we resolve all branches in parallel.
-	/** @type {Promise<void>[]} */
-	const branches = [];
+// /**
+//  * @param {import('vite').ViteDevServer} vite
+//  * @param {import('vite').ModuleNode} node
+//  * @param {Set<import('vite').ModuleNode>} deps
+//  */
+// async function find_deps(vite, node, deps) {
+// 	// since `ssrTransformResult.deps` contains URLs instead of `ModuleNode`s, this process is asynchronous.
+// 	// instead of using `await`, we resolve all branches in parallel.
+// 	/** @type {Promise<void>[]} */
+// 	const branches = [];
 
-	/** @param {import('vite').ModuleNode} node */
-	async function add(node) {
-		if (!deps.has(node)) {
-			deps.add(node);
-			await find_deps(vite, node, deps);
-		}
-	}
+// 	/** @param {import('vite').ModuleNode} node */
+// 	async function add(node) {
+// 		if (!deps.has(node)) {
+// 			deps.add(node);
+// 			await find_deps(vite, node, deps);
+// 		}
+// 	}
 
-	/** @param {string} url */
-	async function add_by_url(url) {
-		const node = await vite.moduleGraph.getModuleByUrl(url);
+// 	/** @param {string} url */
+// 	async function add_by_url(url) {
+// 		const node = await vite.moduleGraph.getModuleByUrl(url);
 
-		if (node) {
-			await add(node);
-		}
-	}
+// 		if (node) {
+// 			await add(node);
+// 		}
+// 	}
 
-	if (node.ssrTransformResult) {
-		if (node.ssrTransformResult.deps) {
-			node.ssrTransformResult.deps.forEach((url) => branches.push(add_by_url(url)));
-		}
+// 	if (node.ssrTransformResult) {
+// 		if (node.ssrTransformResult.deps) {
+// 			node.ssrTransformResult.deps.forEach((url) => branches.push(add_by_url(url)));
+// 		}
 
-		if (node.ssrTransformResult.dynamicDeps) {
-			node.ssrTransformResult.dynamicDeps.forEach((url) => branches.push(add_by_url(url)));
-		}
-	} else {
-		node.importedModules.forEach((node) => branches.push(add(node)));
-	}
+// 		if (node.ssrTransformResult.dynamicDeps) {
+// 			node.ssrTransformResult.dynamicDeps.forEach((url) => branches.push(add_by_url(url)));
+// 		}
+// 	} else {
+// 		node.importedModules.forEach((node) => branches.push(add(node)));
+// 	}
 
-	await Promise.all(branches);
-}
+// 	await Promise.all(branches);
+// }
 
 /**
  * Determine if a file is being requested with the correct case,

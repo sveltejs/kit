@@ -8,6 +8,7 @@ export function default_environment(environment_name) {
 	return [
 		{
 			name: 'default-environment-plugin',
+			// @ts-ignore should the options parameter for createNodeDevEnvironment be optional?
 			config: () => {
 				return {
 					environments: {

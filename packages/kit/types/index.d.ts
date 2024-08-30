@@ -2,6 +2,7 @@
 /// <reference types="vite/client" />
 
 declare module '@sveltejs/kit' {
+	import type { Plugin } from 'vite';
 	import type { CompileOptions } from 'svelte/compiler';
 	import type { PluginOptions } from '@sveltejs/vite-plugin-svelte';
 	/**
@@ -37,8 +38,8 @@ declare module '@sveltejs/kit' {
 	export type LoadProperties<input extends Record<string, any> | void> = input extends void
 		? undefined // needs to be undefined, because void will break intellisense
 		: input extends Record<string, any>
-			? input
-			: unknown;
+		? input
+		: unknown;
 
 	export type AwaitedActions<T extends Record<string, (...args: any) => any>> = OptionalUnion<
 		{
@@ -61,12 +62,11 @@ declare module '@sveltejs/kit' {
 		[uniqueSymbol]: true; // necessary or else UnpackValidationError could wrongly unpack objects with the same shape as ActionFailure
 	}
 
-	type UnpackValidationError<T> =
-		T extends ActionFailure<infer X>
-			? X
-			: T extends void
-				? undefined // needs to be undefined, because void will corrupt union type
-				: T;
+	type UnpackValidationError<T> = T extends ActionFailure<infer X>
+		? X
+		: T extends void
+		? undefined // needs to be undefined, because void will corrupt union type
+		: T;
 
 	/**
 	 * This object is passed to the `adapt` function of adapters.
@@ -600,6 +600,7 @@ declare module '@sveltejs/kit' {
 			 */
 			files?(filepath: string): boolean;
 		};
+		ssrEnvironment?: (environmentName: string, options: any) => Plugin[];
 		typescript?: {
 			/**
 			 * A function that allows you to edit the generated `tsconfig.json`. You can mutate the config (recommended) or return a new one.

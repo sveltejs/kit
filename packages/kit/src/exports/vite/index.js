@@ -46,8 +46,7 @@ import {
 import { resolve_peer_dependency } from '../../utils/import.js';
 import { SSR_ENVIRONMENT_NAME } from './constants.js';
 
-/** @type {import('types').EnvironmentContext} */
-const environment_context = {};
+const environment_context = /** @type {import('types').EnvironmentContext} */ ({});
 
 const cwd = process.cwd();
 
