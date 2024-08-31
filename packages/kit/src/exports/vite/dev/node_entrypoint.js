@@ -1,4 +1,5 @@
-import { Server } from '@sveltejs/kit';
+// This should be exported from @sveltejs/kit so that the path isn't relative
+import { Server } from '../../../runtime/server/index.js';
 
 export default {
 	/**
