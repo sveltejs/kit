@@ -518,10 +518,10 @@ async function kit({ svelte_config }) {
 				case sveltekit_environment_context: {
 					const { manifest_data, env, remote_address } = environment_context;
 
-					const manifest = dedent`
-						import { create_resolve } from ${s(`${runtime_base}/../exports/vite/dev/utils.js`)};
+					return dedent`
+						import { create_resolve } from "${runtime_base}/server/environment_context.js";
 
-						const resolve = create_resolve(${s(cwd)})
+						const resolve = create_resolve(${s(cwd)});
 
 						export let manifest = {
 							appDir: ${s(svelte_config.kit.appDir)},
@@ -530,8 +530,8 @@ async function kit({ svelte_config }) {
 							mimeTypes: ${s(get_mime_lookup(manifest_data))},
 							_: {
 								client: {
-									start: ${s(`${runtime_base}/client/entry.js`)},
-									app: ${s(`${to_fs(svelte_config.kit.outDir)}/generated/client/app.js`)},
+									start: "${runtime_base}/client/entry.js",
+									app: "${to_fs(svelte_config.kit.outDir)}/generated/client/app.js",
 									imports: [],
 									stylesheets: [],
 									fonts: [],
@@ -548,10 +548,8 @@ async function kit({ svelte_config }) {
 
 											return dedent`
 												async () => {
-													/** @type {import('types').SSRNode} */
 													const result = {};
 
-													/** @type {import('vite').ModuleNode[]} */
 													const module_nodes = [];
 
 													result.index = ${index};
@@ -618,12 +616,9 @@ async function kit({ svelte_config }) {
 									).join(',\n')}
 								],
 								matchers: async () => {
-									/** @type {Record<string, import('@sveltejs/kit').ParamMatcher>} */
 									const matchers = {};
 
 									for (const [key, file] of ${s(Object.entries(manifest_data.matchers))}) {
-										// const url = path.resolve(cwd, file);
-										// const module = await import(/* @vite-ignore */ url);
 										const { module } = await resolve(file);
 
 										if (module.match) {
@@ -638,14 +633,12 @@ async function kit({ svelte_config }) {
 							}
 						};
 
-						export let env = ${s(env)}
+						export let env = ${s(env)};
 
-						export let remote_address = ${s(remote_address)}
+						export let remote_address = ${s(remote_address)};
 
-						export let assets_directory = ${s(svelte_config.kit.files.assets)}
+						export let assets_directory = ${s(svelte_config.kit.files.assets)};
 					`;
-
-					return manifest;
 				}
 			}
 		}
