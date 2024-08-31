@@ -449,14 +449,18 @@ export async function dev(vite, vite_config, svelte_config, environment_context)
 	/** @type {((req: Request) => Promise<Response>) | undefined} */
 	let handler;
 
-	if (devEnv?.api) {
-		handler = await devEnv.api.getHandler({
-			entrypoint: path.join(__dirname, 'workerd_entrypoint.js')
-		});
-	} else {
-		// const module_runner = createServerModuleRunner(vite.environments[SSR_ENVIRONMENT_NAME]);
-		// const entrypoint = await module_runner.import(path.join(__dirname, 'node_entrypoint.js'));
-		// handler = entrypoint.default.fetch;
+	if (devEnv) {
+		if (devEnv.api) {
+			handler = await devEnv.api.getHandler({
+				entrypoint: path.join(__dirname, 'workerd_entrypoint.js')
+			});
+			console.log('Running in Cloudflare environment');
+		} else {
+			const module_runner = createServerModuleRunner(vite.environments[SSR_ENVIRONMENT_NAME]);
+			const entrypoint = await module_runner.import(path.join(__dirname, 'node_entrypoint.js'));
+			handler = entrypoint.default.fetch;
+			console.log('Running in Node environment');
+		}
 	}
 
 	return () => {
