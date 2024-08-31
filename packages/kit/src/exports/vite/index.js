@@ -1069,7 +1069,7 @@ async function kit({ svelte_config }) {
 	};
 
 	return [
-		...svelte_config.kit.environments.ssr(SSR_ENVIRONMENT_NAME, {}),
+		...(svelte_config.kit.environments.ssr?.(SSR_ENVIRONMENT_NAME, {}) ?? []),
 		plugin_setup,
 		plugin_virtual_modules,
 		plugin_guard,

@@ -1,5 +1,4 @@
 import { join } from 'node:path';
-import { default_environment } from '../../exports/vite/dev/default_environment.js';
 
 /** @typedef {import('./types.js').Validator} Validator */
 
@@ -121,12 +120,9 @@ const options = object(
 			}),
 
 			environments: object({
-				ssr: validate(
-					() => [],
-					(input) => {
-						return input;
-					}
-				)
+				ssr: validate(null, (input) => {
+					return input;
+				})
 			}),
 
 			files: object({

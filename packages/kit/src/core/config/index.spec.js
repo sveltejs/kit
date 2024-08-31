@@ -75,6 +75,9 @@ const get_defaults = (prefix = '') => ({
 			publicPrefix: 'PUBLIC_',
 			privatePrefix: ''
 		},
+		environments: {
+			ssr: null
+		},
 		files: {
 			assets: join(prefix, 'static'),
 			hooks: {
