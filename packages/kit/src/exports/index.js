@@ -2,6 +2,7 @@ import { HttpError, Redirect, ActionFailure } from '../runtime/control.js';
 import { BROWSER, DEV } from 'esm-env';
 
 export { VERSION } from '../version.js';
+export { Server } from '../runtime/server/index.js';
 
 // TODO 3.0: remove these types as they are not used anymore (we can't remove them yet because that would be a breaking change)
 /**

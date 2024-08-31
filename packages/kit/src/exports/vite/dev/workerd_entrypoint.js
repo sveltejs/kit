@@ -1,4 +1,4 @@
-import { Server } from '../../../runtime/server/index.js';
+import { Server } from '@sveltejs/kit';
 
 export default {
 	/**
