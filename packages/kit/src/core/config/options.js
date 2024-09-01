@@ -119,6 +119,7 @@ const options = object(
 				privatePrefix: string('')
 			}),
 
+			// New environments option. The fallback for each environment could eventually be a default Node environment.
 			environments: object({
 				ssr: validate(null, (input) => {
 					return input;

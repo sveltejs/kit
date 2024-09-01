@@ -3,6 +3,7 @@ import { Server } from '../../../runtime/server/index.js';
 
 export default {
 	/**
+	 * This fetch handler is the entrypoint for the environment.
 	 * @param {Request & { cf: any }} request
 	 * @param {any} env
 	 * @param {any} context
@@ -17,12 +18,10 @@ export default {
 
 		return server.respond(request, {
 			getClientAddress: () => {
-				if (!environment_context.remote_address) {
-					throw new Error('Could not determine clientAddress');
-				}
-
-				return environment_context.remote_address;
+				if (environment_context.remote_address) return environment_context.remote_address;
+				throw new Error('Could not determine clientAddress');
 			},
+			// We can provide the platform properties directly as the code is executed in a workerd environment.
 			platform: {
 				env,
 				cf: request.cf,

@@ -100,7 +100,9 @@ export async function dev(vite, vite_config, svelte_config, environment_context)
 		return { module, module_node, url };
 	}
 
-	// this may not be needed
+	/**
+	 * Used to invalidate the `sveltekit_environment_context` module when the manifest is updated.
+	 */
 	function invalidate_environment_context_module() {
 		for (const environment in vite.environments) {
 			const module = vite.environments[environment].moduleGraph.getModuleById(
@@ -117,7 +119,9 @@ export async function dev(vite, vite_config, svelte_config, environment_context)
 		try {
 			({ manifest_data } = sync.create(svelte_config));
 
+			// Update the `manifest_data` used in the `sveltekit_environment_context` virtual module.
 			environment_context.manifest_data = manifest_data;
+			// Invalidate the virtual module.
 			invalidate_environment_context_module();
 
 			if (manifest_error) {
@@ -438,10 +442,14 @@ export async function dev(vite, vite_config, svelte_config, environment_context)
 	});
 
 	const env = loadEnv(vite_config.mode, svelte_config.kit.env.dir, '');
+	// Update the `env` used in the `sveltekit_environment_context` virtual module.
 	environment_context.env = env;
 	const emulator = await svelte_config.kit.adapter?.emulate?.();
 
-	/** @type { ((import('vite').DevEnvironment & { api?: { getHandler: (opts: { entrypoint: string }) => Promise<(req: Request) => Promise<Response>> }})) | undefined } */
+	/**
+	 * The environment that was provided to `kit.environments.ssr` in the Svelte config.
+	 * @type { ((import('vite').DevEnvironment & { api?: { getHandler: (opts: { entrypoint: string }) => Promise<(req: Request) => Promise<Response>> }})) | undefined }
+	 */
 	const devEnv = vite.environments[SSR_ENVIRONMENT_NAME];
 
 	const __dirname = fileURLToPath(new URL('.', import.meta.url));
@@ -449,6 +457,7 @@ export async function dev(vite, vite_config, svelte_config, environment_context)
 	/** @type {((req: Request) => Promise<Response>) | undefined} */
 	let handler;
 
+	// Create the handler for the Cloudflare or Node environment if it exists.
 	if (devEnv) {
 		if (devEnv.api) {
 			handler = await devEnv.api.getHandler({
@@ -474,6 +483,7 @@ export async function dev(vite, vite_config, svelte_config, environment_context)
 		remove_static_middlewares(vite.middlewares);
 
 		vite.middlewares.use(async (req, res) => {
+			// Update the `remote_address` used in the `sveltekit_environment_context` virtual module.
 			environment_context.remote_address = req.socket.remoteAddress;
 
 			// Vite's base middleware strips out the base path. Restore it
@@ -565,6 +575,7 @@ export async function dev(vite, vite_config, svelte_config, environment_context)
 					return;
 				}
 
+				// Render using the environment handler if it has been created. Else, fallback to the default behaviour.
 				const rendered = handler
 					? await handler(request)
 					: await server.respond(request, {

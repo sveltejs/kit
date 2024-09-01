@@ -408,6 +408,9 @@ export interface KitConfig {
 		 */
 		privatePrefix?: string;
 	};
+	/**
+	 * The new `environments` option. The user provides a factory function that is then used to create the plugin.
+	 */
 	environments?: {
 		ssr?: (environmentName: string, options: any) => Plugin[];
 	};

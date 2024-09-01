@@ -1,7 +1,7 @@
 import { createNodeDevEnvironment } from 'vite';
 
 /**
- *
+ * A default Node environment to pass to kit.environments.ssr in the Svelte config. This could eventually be used as the fallback for this option.
  * @returns {(environment_name: string) => import('vite').Plugin[]}
  */
 export function node() {
@@ -9,7 +9,7 @@ export function node() {
 	return function default_environment(environment_name) {
 		return [
 			{
-				name: 'default-environment-plugin',
+				name: 'vite-plugin-sveltekit-default-environment',
 				config: () => {
 					return {
 						environments: {

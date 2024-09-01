@@ -3,6 +3,7 @@ import { Server } from '../../../runtime/server/index.js';
 
 export default {
 	/**
+	 * This fetch handler is the entrypoint for the environment.
 	 * @param {Request} request
 	 */
 	fetch: async (request) => {
@@ -15,11 +16,8 @@ export default {
 
 		return server.respond(request, {
 			getClientAddress: () => {
-				if (!environment_context.remote_address) {
-					throw new Error('Could not determine clientAddress');
-				}
-
-				return environment_context.remote_address;
+				if (environment_context.remote_address) return environment_context.remote_address;
+				throw new Error('Could not determine clientAddress');
 			}
 		});
 	}

@@ -46,6 +46,9 @@ import {
 import { resolve_peer_dependency } from '../../utils/import.js';
 import { SSR_ENVIRONMENT_NAME } from './constants.js';
 
+/**
+ * This is where we store the values that are needed in the `sveltekit_environment_context` virtual module.
+ */
 const environment_context = /** @type {import('types').EnvironmentContext} */ ({});
 
 const cwd = process.cwd();
@@ -515,6 +518,7 @@ async function kit({ svelte_config }) {
 					`;
 				}
 
+				// The virtual module that is imported in the environment entrypoint files. This provides all the data that is needed to create the `Server` instance.
 				case sveltekit_environment_context: {
 					const { manifest_data, env, remote_address } = environment_context;
 
@@ -636,8 +640,6 @@ async function kit({ svelte_config }) {
 						export let env = ${s(env)};
 
 						export let remote_address = ${s(remote_address)};
-
-						export let assets_directory = ${s(svelte_config.kit.files.assets)};
 					`;
 				}
 			}
@@ -808,6 +810,7 @@ async function kit({ svelte_config }) {
 		 * @see https://vitejs.dev/guide/api-plugin.html#configureserver
 		 */
 		async configureServer(vite) {
+			// We pass the `environment_context` object in so that we can update the values inside the `dev` function. Not ideal but avoids restructuring the code for the time being.
 			return await dev(vite, vite_config, svelte_config, environment_context);
 		},
 
@@ -1062,6 +1065,7 @@ async function kit({ svelte_config }) {
 	};
 
 	return [
+		// Creates the custom SSR environment if the factory function was passed to `kit.environments.ssr` in the Svelte config.
 		...(svelte_config.kit.environments.ssr?.(SSR_ENVIRONMENT_NAME, {}) ?? []),
 		plugin_setup,
 		plugin_virtual_modules,
