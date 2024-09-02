@@ -1,5 +1,5 @@
 {
-	"name": "vite-workerd-environment",
+	"name": "vite-cloudflare-environment",
 	"version": "0.0.0",
 	"private": true,
 	"scripts": {

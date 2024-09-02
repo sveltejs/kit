@@ -1239,58 +1239,7 @@ importers:
         specifier: 6.0.0-alpha.23
         version: 6.0.0-alpha.23(@types/node@18.19.31)(lightningcss@1.24.1)
 
-  playgrounds/vite-node-environment:
-    devDependencies:
-      '@sveltejs/adapter-auto':
-        specifier: workspace:*
-        version: link:../../packages/adapter-auto
-      '@sveltejs/adapter-cloudflare':
-        specifier: workspace:*
-        version: link:../../packages/adapter-cloudflare
-      '@sveltejs/adapter-cloudflare-workers':
-        specifier: workspace:*
-        version: link:../../packages/adapter-cloudflare-workers
-      '@sveltejs/adapter-netlify':
-        specifier: workspace:*
-        version: link:../../packages/adapter-netlify
-      '@sveltejs/adapter-node':
-        specifier: workspace:*
-        version: link:../../packages/adapter-node
-      '@sveltejs/adapter-static':
-        specifier: workspace:*
-        version: link:../../packages/adapter-static
-      '@sveltejs/adapter-vercel':
-        specifier: workspace:*
-        version: link:../../packages/adapter-vercel
-      '@sveltejs/amp':
-        specifier: workspace:*
-        version: link:../../packages/amp
-      '@sveltejs/kit':
-        specifier: workspace:*
-        version: link:../../packages/kit
-      '@sveltejs/package':
-        specifier: workspace:*
-        version: link:../../packages/package
-      '@sveltejs/vite-plugin-svelte':
-        specifier: ^3.0.1
-        version: 3.1.0(svelte@4.2.17)(vite@6.0.0-alpha.23(@types/node@18.19.31)(lightningcss@1.24.1))
-      publint:
-        specifier: ^0.2.0
-        version: 0.2.7
-      svelte:
-        specifier: ^4.2.10
-        version: 4.2.17
-      svelte-check:
-        specifier: ^3.6.3
-        version: 3.6.9(postcss-load-config@3.1.4(postcss@8.4.41))(postcss@8.4.41)(svelte@4.2.17)
-      typescript:
-        specifier: ^5.3.3
-        version: 5.4.5
-      vite:
-        specifier: 6.0.0-alpha.23
-        version: 6.0.0-alpha.23(@types/node@18.19.31)(lightningcss@1.24.1)
-
-  playgrounds/vite-workerd-environment:
+  playgrounds/vite-cloudflare-environment:
     devDependencies:
       '@cloudflare/workers-types':
         specifier: ^4.20231121.0
@@ -1349,6 +1298,57 @@ importers:
       wrangler:
         specifier: ^3.72.3
         version: 3.72.3(@cloudflare/workers-types@4.20240405.0)
+
+  playgrounds/vite-node-environment:
+    devDependencies:
+      '@sveltejs/adapter-auto':
+        specifier: workspace:*
+        version: link:../../packages/adapter-auto
+      '@sveltejs/adapter-cloudflare':
+        specifier: workspace:*
+        version: link:../../packages/adapter-cloudflare
+      '@sveltejs/adapter-cloudflare-workers':
+        specifier: workspace:*
+        version: link:../../packages/adapter-cloudflare-workers
+      '@sveltejs/adapter-netlify':
+        specifier: workspace:*
+        version: link:../../packages/adapter-netlify
+      '@sveltejs/adapter-node':
+        specifier: workspace:*
+        version: link:../../packages/adapter-node
+      '@sveltejs/adapter-static':
+        specifier: workspace:*
+        version: link:../../packages/adapter-static
+      '@sveltejs/adapter-vercel':
+        specifier: workspace:*
+        version: link:../../packages/adapter-vercel
+      '@sveltejs/amp':
+        specifier: workspace:*
+        version: link:../../packages/amp
+      '@sveltejs/kit':
+        specifier: workspace:*
+        version: link:../../packages/kit
+      '@sveltejs/package':
+        specifier: workspace:*
+        version: link:../../packages/package
+      '@sveltejs/vite-plugin-svelte':
+        specifier: ^3.0.1
+        version: 3.1.0(svelte@4.2.17)(vite@6.0.0-alpha.23(@types/node@18.19.31)(lightningcss@1.24.1))
+      publint:
+        specifier: ^0.2.0
+        version: 0.2.7
+      svelte:
+        specifier: ^4.2.10
+        version: 4.2.17
+      svelte-check:
+        specifier: ^3.6.3
+        version: 3.6.9(postcss-load-config@3.1.4(postcss@8.4.41))(postcss@8.4.41)(svelte@4.2.17)
+      typescript:
+        specifier: ^5.3.3
+        version: 5.4.5
+      vite:
+        specifier: 6.0.0-alpha.23
+        version: 6.0.0-alpha.23(@types/node@18.19.31)(lightningcss@1.24.1)
 
   sites/kit.svelte.dev:
     dependencies:
