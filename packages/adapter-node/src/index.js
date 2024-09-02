@@ -1,3 +1,4 @@
+import process from 'node:process';
 import { handler } from 'HANDLER';
 import { env } from 'ENV';
 import polka from 'polka';
