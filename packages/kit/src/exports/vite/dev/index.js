@@ -461,7 +461,7 @@ export async function dev(vite, vite_config, svelte_config, environment_context)
 	if (devEnv) {
 		if (devEnv.api) {
 			handler = await devEnv.api.getHandler({
-				entrypoint: path.join(__dirname, 'workerd_entrypoint.js')
+				entrypoint: path.join(__dirname, 'cloudflare_entrypoint.js')
 			});
 			console.log('Running in Cloudflare environment');
 		} else {

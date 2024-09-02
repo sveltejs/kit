@@ -390,8 +390,11 @@ declare module '@sveltejs/kit' {
 			 */
 			privatePrefix?: string;
 		};
+		/**
+		 * The new `environments` option. The user provides a factory function that is then used to create the plugin.
+		 */
 		environments?: {
-			ssr?: (environmentName: string, options: any) => Plugin[];
+			ssr?: (environmentName: string, options?: any) => Plugin[];
 		};
 		/**
 		 * Where to find various files within your project.

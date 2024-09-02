@@ -1,4 +1,4 @@
-function getUserAgentText(): string {
+function getUserAgentText() {
 	if (typeof navigator === 'undefined') {
 		return 'navigator is undefined (running in Node.js?)';
 	}

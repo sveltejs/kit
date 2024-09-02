@@ -1,5 +1,5 @@
 <header>
-	<h1>Svelte Kit with Vite Workerd Environment</h1>
+	<h1>Svelte Kit with Vite Cloudflare Environment</h1>
 	<nav>
 		<ul>
 			<li><a href="/">Home</a></li>

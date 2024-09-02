@@ -1,7 +1,5 @@
-import type { PageServerLoadEvent } from './$types';
-
-export function load({ params, platform }: PageServerLoadEvent) {
-	const cf = platform!.cf;
+export function load({ params, platform }) {
+	const cf = /** @type any */ (platform).cf;
 	const key = params?.key;
 	const value = key && key in cf ? JSON.stringify(cf[key]) : undefined;
 

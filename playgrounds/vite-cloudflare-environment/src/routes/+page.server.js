@@ -1,6 +1,4 @@
-import type { Actions, PageServerLoadEvent } from './$types';
-
-function getUserAgentText(): string {
+function getUserAgentText() {
 	if (typeof navigator === 'undefined') {
 		return 'navigator is undefined (running in Node.js?)';
 	}
@@ -10,8 +8,8 @@ function getUserAgentText(): string {
 
 const KEY = '__my-key__';
 
-export async function load({ platform }: PageServerLoadEvent) {
-	const { MY_KV } = platform!.env;
+export async function load({ platform }) {
+	const { MY_KV } = /** @type any */ (platform).env;
 	const value = await MY_KV.get(KEY);
 
 	return { userAgentText: getUserAgentText(), value: value === 'null' ? null : value };
@@ -19,17 +17,17 @@ export async function load({ platform }: PageServerLoadEvent) {
 
 export const actions = {
 	create: async ({ request, platform }) => {
-		const { MY_KV } = platform!.env;
+		const { MY_KV } = /** @type any */ (platform).env;
 		const formData = await request.formData();
-		const value = formData.get('value') as string;
+		const value = formData.get('value');
 		await MY_KV.put(KEY, value);
 
 		return null;
 	},
 	delete: async ({ platform }) => {
-		const { MY_KV } = platform!.env;
+		const { MY_KV } = /** @type any */ (platform).env;
 		await MY_KV.delete(KEY);
 
 		return null;
 	}
-} satisfies Actions;
+};
