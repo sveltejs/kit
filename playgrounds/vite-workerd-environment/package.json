@@ -14,7 +14,7 @@
 	},
 	"devDependencies": {
 		"@cloudflare/workers-types": "^4.20231121.0",
-		"@dario-hacking/vite-6-alpha-environment-provider-workerd": "^0.0.5",
+		"@flarelabs-net/vite-environment-provider-cloudflare": "^0.0.1",
 		"@sveltejs/adapter-auto": "workspace:*",
 		"@sveltejs/adapter-cloudflare": "workspace:*",
 		"@sveltejs/adapter-cloudflare-workers": "workspace:*",

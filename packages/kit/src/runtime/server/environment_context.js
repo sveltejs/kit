@@ -5,6 +5,8 @@ import * as pathe from 'pathe';
 async function loud_ssr_load_module(url) {
 	// We can use a dynamic import rather than `vite.ssrLoadModule` because it will be executed inside the environment module runner.
 	return await import(/* @vite-ignore */ url);
+
+	// TODO: report errors using import.meta.hot.send
 }
 
 /** @param {string} cwd */
@@ -17,5 +19,7 @@ export function create_resolve(cwd) {
 		const module = await loud_ssr_load_module(url);
 
 		return { module, url };
+
+		// TODO: return module nodes or use alternative approach to collect dependencies for inlining CSS
 	};
 }

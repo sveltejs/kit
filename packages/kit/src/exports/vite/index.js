@@ -519,6 +519,9 @@ async function kit({ svelte_config }) {
 				}
 
 				// The virtual module that is imported in the environment entrypoint files. This provides all the data that is needed to create the `Server` instance.
+				// Not implemented:
+				// - Server assets. The `read` function from `$app/server` can only be used in environments that support file system access.
+				// - Inlining styles. This requires communicating with the main process to collect dependencies. It should be possible (e.g. using import.meta.hot) but needs more investigation.
 				case sveltekit_environment_context: {
 					const { manifest_data, env, remote_address } = environment_context;
 
@@ -1066,7 +1069,7 @@ async function kit({ svelte_config }) {
 
 	return [
 		// Creates the custom SSR environment if the factory function was passed to `kit.environments.ssr` in the Svelte config.
-		...(svelte_config.kit.environments.ssr?.(SSR_ENVIRONMENT_NAME, {}) ?? []),
+		...(svelte_config.kit.environments.ssr?.(SSR_ENVIRONMENT_NAME) ?? []),
 		plugin_setup,
 		plugin_virtual_modules,
 		plugin_guard,
