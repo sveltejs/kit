@@ -1,5 +1,11 @@
 # @sveltejs/kit
 
+## 2.5.26
+### Patch Changes
+
+
+- fix: exclude service worker directory from tsconfig ([#12196](https://github.com/sveltejs/kit/pull/12196))
+
 ## 2.5.25
 ### Patch Changes
 

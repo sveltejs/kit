@@ -21,7 +21,7 @@
 		"sync-all": "node scripts/sync-all.js"
 	},
 	"devDependencies": {
-		"@changesets/cli": "^2.27.6",
+		"@changesets/cli": "^2.27.8",
 		"@sveltejs/eslint-config": "^8.0.1",
 		"@svitejs/changesets-changelog-github-compact": "^1.1.0",
 		"eslint": "^9.6.0",
