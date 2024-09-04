@@ -1,4 +1,5 @@
 import { devices } from '@playwright/test';
+import process from 'node:process';
 
 /** @type {import('@playwright/test').PlaywrightTestConfig} */
 export const config = {

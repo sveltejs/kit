@@ -1,4 +1,5 @@
 import * as imr from 'import-meta-resolve';
+import process from 'node:process';
 import { pathToFileURL } from 'node:url';
 
 /**

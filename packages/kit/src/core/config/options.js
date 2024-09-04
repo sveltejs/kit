@@ -1,4 +1,5 @@
 import { join } from 'node:path';
+import process from 'node:process';
 
 /** @typedef {import('./types.js').Validator} Validator */
 
