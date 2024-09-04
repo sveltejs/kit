@@ -1,6 +1,6 @@
 {
 	"name": "@sveltejs/kit",
-	"version": "2.5.25",
+	"version": "2.5.26",
 	"description": "SvelteKit is the fastest way to build Svelte apps",
 	"keywords": [
 		"framework",
