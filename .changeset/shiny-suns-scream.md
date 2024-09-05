@@ -2,4 +2,4 @@
 '@sveltejs/kit': patch
 ---
 
-fix: emulate `event.platform` during development even if route is undefined
+fix: emulate `event.platform` even when the route does not exist
