@@ -297,7 +297,7 @@ export async function respond(request, options, manifest, state) {
 			}
 		}
 
-		if (!event.platform && DEV && state.emulator?.platform) {
+ else if (state.emulator?.platform) {
 			event.platform = await state.emulator.platform({ config: {}, prerender: false });
 		}
 
