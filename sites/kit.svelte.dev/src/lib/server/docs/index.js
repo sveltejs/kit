@@ -40,9 +40,9 @@ export async function get_docs_data(base = CONTENT_BASE_PATHS.DOCS) {
 
 		const category_slug = match[1];
 
-		// Read the meta.json
+		// Read the index.md
 		const { title: category_title, draft = 'false' } = JSON.parse(
-			await readFile(`${base}/${category_dir}/meta.json`, 'utf-8')
+			await readFile(`${base}/${category_dir}/index.md`, 'utf-8')
 		);
 
 		if (draft === 'true') continue;
@@ -55,7 +55,7 @@ export async function get_docs_data(base = CONTENT_BASE_PATHS.DOCS) {
 		};
 
 		for (const page_md of (await readdir(`${base}/${category_dir}`)).filter(
-			(filename) => filename !== 'meta.json'
+			(filename) => filename !== 'index.md'
 		)) {
 			const match = /\d{2}-(.+)/.exec(page_md);
 			if (!match) continue;
