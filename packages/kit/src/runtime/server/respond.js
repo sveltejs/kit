@@ -295,9 +295,7 @@ export async function respond(request, options, manifest, state) {
 					event.platform = await state.emulator.platform({ config, prerender });
 				}
 			}
-		}
-
- else if (state.emulator?.platform) {
+		} else if (state.emulator?.platform) {
 			event.platform = await state.emulator.platform({
 				config: {},
 				prerender: !!state.prerendering?.fallback
