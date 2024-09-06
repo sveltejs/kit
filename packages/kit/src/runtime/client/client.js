@@ -434,7 +434,9 @@ function initialize(result, target, hydrate) {
 	root = new app.root({
 		target,
 		props: { ...result.props, stores, components },
-		hydrate
+		hydrate,
+		// @ts-ignore Svelte 5 specific: asynchronously instantiate the component, i.e. don't call flushSync
+		sync: false
 	});
 
 	restore_snapshot(current_navigation_index);
