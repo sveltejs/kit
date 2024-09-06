@@ -281,16 +281,23 @@ function img_to_picture(content, node, image) {
 	let res = '<picture>';
 
 	for (const [format, srcset] of Object.entries(image.sources)) {
-		res += `<source srcset={"${srcset}"}${sizes_string} type="image/${format}" />`;
+		res += `<source srcset=${to_value(srcset)}${sizes_string} type="image/${format}" />`;
 	}
 
 	res += `<img ${serialize_img_attributes(content, attributes, {
-		src: image.img.src.startsWith('__VITE_ASSET__') ? `{"${image.img.src}"}` : `"${image.img.src}"`,
+		src: to_value(image.img.src),
 		width: image.img.w,
 		height: image.img.h
 	})} />`;
 
 	return (res += '</picture>');
+}
+
+/**
+ * @param {string} src
+ */
+function to_value(src) {
+	return src.startsWith('__VITE_ASSET__') ? `{"${src}"}` : `"${src}"`;
 }
 
 /**

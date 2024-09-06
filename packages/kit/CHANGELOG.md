@@ -1,5 +1,17 @@
 # @sveltejs/kit
 
+## 2.5.26
+### Patch Changes
+
+
+- fix: exclude service worker directory from tsconfig ([#12196](https://github.com/sveltejs/kit/pull/12196))
+
+## 2.5.25
+### Patch Changes
+
+
+- chore: upgrade dts-buddy to 0.5.3 ([`6056ba30e29ac5747c356fbf1a42dd71f2c4aa1f`](https://github.com/sveltejs/kit/commit/6056ba30e29ac5747c356fbf1a42dd71f2c4aa1f))
+
 ## 2.5.24
 ### Patch Changes
 
