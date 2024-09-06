@@ -259,7 +259,9 @@ export function update_pkg(content, updates) {
 		update_pkg(...update);
 	}
 
-	return JSON.stringify(pkg, null, indent);
+	const result = JSON.stringify(pkg, null, indent);
+	if (content.endsWith('\n')) return result + '\n';
+	return result;
 }
 
 const logged_migrations = new Set();
