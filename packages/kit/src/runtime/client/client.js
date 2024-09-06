@@ -435,7 +435,7 @@ function initialize(result, target, hydrate) {
 		target,
 		props: { ...result.props, stores, components },
 		hydrate,
-		// @ts-ignore Svelte 5 specific
+		// @ts-ignore Svelte 5 specific: asynchronously instantiate the component, i.e. don't call flushSync
 		sync: false
 	});
 
