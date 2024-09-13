@@ -25,7 +25,7 @@
 
 <picture><source srcset={__DECLARED_ASSET_0__} type="image/avif" /><source srcset={__DECLARED_ASSET_1__} type="image/webp" /><source srcset={__DECLARED_ASSET_2__} type="image/png" /><img src={__DECLARED_ASSET_3__} alt="production test" width=1440 height=1440 /></picture>
 
-<picture><source srcset="/1 1440w, /2 960w" type="image/avif" /><source srcset="/3 1440w, /4 960w" type="image/webp" /><source srcset="5 1440w, /6 960w" type="image/png" /><img src="/7" width="5" height="10" alt="dimensions test" width=1440 height=1440 /></picture>
+<picture><source srcset="/1 1440w, /2 960w" type="image/avif" /><source srcset="/3 1440w, /4 960w" type="image/webp" /><source srcset="5 1440w, /6 960w" type="image/png" /><img src="/7" width="5" height="10" alt="dimensions test" /></picture>
 
 <picture><source srcset="/1 1440w, /2 960w" type="image/avif" /><source srcset="/3 1440w, /4 960w" type="image/webp" /><source srcset="5 1440w, /6 960w" type="image/png" /><img src="/7" alt="directive test" width=1440 height=1440 /></picture>
 
