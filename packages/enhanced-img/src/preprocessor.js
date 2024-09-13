@@ -3,6 +3,7 @@ import * as path from 'node:path';
 
 import MagicString from 'magic-string';
 import { asyncWalk } from 'estree-walker';
+import { VERSION } from 'svelte/compiler';
 import { parse } from 'svelte-parse-markup';
 
 // TODO: expose this in vite-imagetools rather than duplicating it
@@ -159,7 +160,9 @@ export function image(opts) {
 					// @ts-ignore
 					s.appendLeft(ast.module.content.start, text);
 				} else {
-					s.prepend(`<script context="module">\n${text}</script>\n`);
+					s.prepend(
+						`<script ${VERSION.startsWith('4') ? 'context="module"' : 'module'}>\n${text}</script>\n`
+					);
 				}
 			}
 
