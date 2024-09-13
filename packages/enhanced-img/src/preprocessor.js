@@ -256,8 +256,8 @@ function serialize_img_attributes(content, attributes, details) {
 	/** @type {number | undefined} */
 	let user_height;
 	for (const attribute of attributes) {
-		if (attribute.name === 'width') user_width = parseInt(attribute.value[0]);
-		if (attribute.name === 'height') user_height = parseInt(attribute.value[0]);
+		if (attribute.name === 'width') user_width = parseInt(attribute.value[0].raw);
+		if (attribute.name === 'height') user_height = parseInt(attribute.value[0].raw);
 	}
 	if (!user_width && !user_height) {
 		attribute_strings.push(`width=${details.width}`);
