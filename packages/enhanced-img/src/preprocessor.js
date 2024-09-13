@@ -155,7 +155,9 @@ export function image(opts) {
 				// @ts-ignore
 				s.appendLeft(ast.module.content.start, text);
 			} else {
-				s.prepend(`<script ${VERSION.startsWith('4') ? 'context="module"' : 'module'}>${text}</script>\n`);
+				s.prepend(
+					`<script ${VERSION.startsWith('4') ? 'context="module"' : 'module'}>${text}</script>\n`
+				);
 			}
 
 			return {
