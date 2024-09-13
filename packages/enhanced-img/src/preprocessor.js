@@ -137,33 +137,27 @@ export function image(opts) {
 				}
 			});
 
-			// add imports
+			// add imports and consts to <script module> block
+			let text = '';
 			if (imports.size) {
-				let text = '';
 				for (const [path, import_name] of imports.entries()) {
-					text += `import ${import_name} from "${path}";`;
-				}
-				if (ast.instance) {
-					// @ts-ignore
-					s.appendLeft(ast.instance.content.start, text);
-				} else {
-					s.prepend(`<script>${text}</script>`);
+					text += `\timport ${import_name} from "${path}";\n`;
 				}
 			}
 
 			if (consts.size) {
-				let text = '';
 				for (const [vite_name, declaration_name] of consts.entries()) {
 					text += `\tconst ${declaration_name} = "${vite_name}";\n`;
 				}
-				if (ast.module) {
-					// @ts-ignore
-					s.appendLeft(ast.module.content.start, text);
-				} else {
-					s.prepend(
-						`<script ${VERSION.startsWith('4') ? 'context="module"' : 'module'}>\n${text}</script>\n`
-					);
-				}
+			}
+
+			if (ast.module) {
+				// @ts-ignore
+				s.appendLeft(ast.module.content.start, text);
+			} else {
+				s.prepend(
+					`<script ${VERSION.startsWith('4') ? 'context="module"' : 'module'}>${text}</script>\n`
+				);
 			}
 
 			return {
