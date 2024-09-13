@@ -1,5 +1,11 @@
 # @sveltejs/enhanced-img
 
+## 0.3.5
+### Patch Changes
+
+
+- perf: hoist vite asset declarations to module block ([#12627](https://github.com/sveltejs/kit/pull/12627))
+
 ## 0.3.4
 ### Patch Changes
 
