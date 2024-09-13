@@ -1,5 +1,11 @@
 # @sveltejs/enhanced-img
 
+## 0.3.7
+### Patch Changes
+
+
+- fix: avoid duplicating width/height attributes ([#12673](https://github.com/sveltejs/kit/pull/12673))
+
 ## 0.3.6
 ### Patch Changes
 
