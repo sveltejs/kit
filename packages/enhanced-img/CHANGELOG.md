@@ -1,5 +1,11 @@
 # @sveltejs/enhanced-img
 
+## 0.3.6
+### Patch Changes
+
+
+- fix: address Svelte 5 warning ([`ec04dae73702c99652e4972d2b7363f2c11ccf5a`](https://github.com/sveltejs/kit/commit/ec04dae73702c99652e4972d2b7363f2c11ccf5a))
+
 ## 0.3.5
 ### Patch Changes
 
