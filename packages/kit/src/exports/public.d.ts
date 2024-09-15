@@ -1153,6 +1153,13 @@ export interface ResolveOptions {
 	 * @param input the type of the file and its path
 	 */
 	preload?(input: { type: 'font' | 'css' | 'js' | 'asset'; path: string }): boolean;
+
+	/**
+	 * Determines what should be added to the `<head>` tag to load it.
+	 * By default, `js` and `css` files will be preloaded.
+	 * @param input the type of the file and its path
+	 */
+	load?(input: { type: 'font' | 'css' | 'js' | 'asset'; path: string }): boolean;
 }
 
 export interface RouteDefinition<Config = any> {

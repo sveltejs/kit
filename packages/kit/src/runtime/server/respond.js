@@ -45,6 +45,9 @@ const default_filter = () => false;
 /** @type {import('types').RequiredResolveOptions['preload']} */
 const default_preload = ({ type }) => type === 'js' || type === 'css';
 
+/** @type {import('types').RequiredResolveOptions['load']} */
+const default_load = ({ type }) => type === 'js' || type === 'css';
+
 const page_methods = new Set(['GET', 'HEAD', 'POST']);
 
 const allowed_page_methods = new Set(['GET', 'HEAD', 'OPTIONS']);
@@ -211,7 +214,8 @@ export async function respond(request, options, manifest, state) {
 	let resolve_opts = {
 		transformPageChunk: default_transform,
 		filterSerializedResponseHeaders: default_filter,
-		preload: default_preload
+		preload: default_preload,
+		load: default_load
 	};
 
 	try {
@@ -412,7 +416,8 @@ export async function respond(request, options, manifest, state) {
 				resolve_opts = {
 					transformPageChunk: opts.transformPageChunk || default_transform,
 					filterSerializedResponseHeaders: opts.filterSerializedResponseHeaders || default_filter,
-					preload: opts.preload || default_preload
+					preload: opts.preload || default_preload,
+					load: opts.load || default_load
 				};
 			}
 
