@@ -39,7 +39,7 @@ export function update_pkg_json_content(content) {
 			'^5.5.0',
 			' (this might introduce new type errors due to breaking changes within TypeScript)'
 		],
-		['vite', '^5.4.4']		
+		['vite', '^5.4.4']
 	]);
 }
 
