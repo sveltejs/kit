@@ -1,5 +1,11 @@
 # create-svelte
 
+## 6.3.11
+### Patch Changes
+
+
+- fix: import `node:process` instead of using globals ([#12641](https://github.com/sveltejs/kit/pull/12641))
+
 ## 6.3.10
 ### Patch Changes
 
