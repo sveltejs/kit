@@ -26,8 +26,7 @@ export default [
 		rules: {
 			'@typescript-eslint/await-thenable': 'error',
 			'@typescript-eslint/no-unused-expressions': 'off',
-			'@typescript-eslint/require-await': 'error',
-			'n/prefer-global/process': ['error', 'never']
+			'@typescript-eslint/require-await': 'error'
 		},
 		ignores: [
 			'packages/adapter-node/rollup.config.js',
