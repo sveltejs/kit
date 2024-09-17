@@ -1,4 +1,5 @@
 import path from 'node:path';
+import process from 'node:process';
 import { imagetools } from 'vite-imagetools';
 import { image } from './preprocessor.js';
 

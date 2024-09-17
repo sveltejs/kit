@@ -14,7 +14,7 @@ export default [
 			'packages/adapter-static/test/apps/*/build',
 			'packages/adapter-cloudflare/files',
 			'packages/adapter-netlify/files',
-			'packages/adapter-node/files',
+			'packages/adapter-node/files'
 		]
 	},
 	{
@@ -27,6 +27,7 @@ export default [
 			'@typescript-eslint/await-thenable': 'error',
 			'@typescript-eslint/no-unused-expressions': 'off',
 			'@typescript-eslint/require-await': 'error',
+			'n/prefer-global/process': ['error', 'never']
 		},
 		ignores: [
 			'packages/adapter-node/rollup.config.js',

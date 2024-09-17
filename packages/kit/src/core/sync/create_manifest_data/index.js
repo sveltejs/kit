@@ -1,5 +1,6 @@
 import fs from 'node:fs';
 import path from 'node:path';
+import process from 'node:process';
 import colors from 'kleur';
 import { lookup } from 'mrmime';
 import { list_files, runtime_directory } from '../../utils.js';
