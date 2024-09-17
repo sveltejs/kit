@@ -1,5 +1,11 @@
 # @sveltejs/kit
 
+## 2.5.28
+### Patch Changes
+
+
+- fix: import `node:process` instead of using globals ([#12641](https://github.com/sveltejs/kit/pull/12641))
+
 ## 2.5.27
 ### Patch Changes
 
