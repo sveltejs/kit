@@ -44,6 +44,35 @@ hydrate(App, {
 	);
 });
 
+test('Updates component creation #3', () => {
+	const result = transform_module_code(
+		`import App from './App.svelte'
+
+const x = new App({
+  target: document.getElementById('app')!
+});
+
+function destroy() {
+	x.$destroy();
+}
+`
+	);
+	assert.equal(
+		result,
+		`import App from './App.svelte'
+import { mount, unmount } from "svelte";
+
+const x = mount(App, {
+  target: document.getElementById('app')!
+});
+
+function destroy() {
+	unmount(x);
+}
+`
+	);
+});
+
 test('Update package.json', () => {
 	const result = update_pkg_json_content(`{
 	"name": "svelte-app",
@@ -68,7 +97,7 @@ test('Update package.json', () => {
 		"svelte-preprocess": "^6.0.0"
 	},
 	"dependencies": {
-		"@sveltejs/kit": "^2.5.18"
+		"@sveltejs/kit": "^2.5.27"
 	}
 }`
 	);

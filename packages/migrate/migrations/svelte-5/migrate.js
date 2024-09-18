@@ -107,6 +107,23 @@ function update_component_instantiation(source) {
 						});
 					}
 
+					const declaration = parent
+						.getParentIfKind(ts.SyntaxKind.VariableDeclaration)
+						?.getNameNode();
+					if (Node.isIdentifier(declaration)) {
+						const usages = declaration.findReferencesAsNodes();
+						for (const usage of usages) {
+							const parent = usage.getParent();
+							if (Node.isPropertyAccessExpression(parent) && parent.getName() === '$destroy') {
+								const call_expr = parent.getParentIfKind(ts.SyntaxKind.CallExpression);
+								if (call_expr) {
+									call_expr.replaceWithText(`unmount(${usage.getText()})`);
+									source.getImportDeclaration('svelte')?.addNamedImport('unmount');
+								}
+							}
+						}
+					}
+
 					parent.replaceWithText(`${method}(${id.getText()}, ${args[0].getText()})`);
 				}
 			}
