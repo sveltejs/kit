@@ -67,11 +67,6 @@ export function transform_svelte_code(code, transform_code) {
  * @param {import('ts-morph').SourceFile} source
  */
 function update_component_instantiation(source) {
-	// const logger = log_on_ts_modification(
-	// 	source,
-	// 	'Updates component instantiation: https://svelte.dev/docs/svelte/TODO (you may need to update usages of the component instance)'
-	// );
-
 	const imports = source
 		.getImportDeclarations()
 		.filter((i) => i.getModuleSpecifierValue().endsWith('.svelte'))
@@ -129,8 +124,6 @@ function update_component_instantiation(source) {
 			}
 		}
 	}
-
-	// logger();
 }
 
 /**
