@@ -1,6 +1,7 @@
 import { resolve } from 'import-meta-resolve';
 import colors from 'kleur';
 import { execSync } from 'node:child_process';
+import process from 'node:process';
 import fs from 'node:fs';
 import { dirname } from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
