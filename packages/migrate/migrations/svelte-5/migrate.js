@@ -58,8 +58,7 @@ export function transform_module_code(code) {
  * @param {(source: code) => { code: string }} transform_code
  */
 export function transform_svelte_code(code, transform_code) {
-	// reuse component instantiation migration from module code
-	return transform_module_code(transform_code(code).code);
+	return transform_code(code).code;
 }
 
 /**

@@ -8,7 +8,7 @@ import { fileURLToPath, pathToFileURL } from 'node:url';
 import prompts from 'prompts';
 import semver from 'semver';
 import glob from 'tiny-glob/sync.js';
-import { bail, check_git, update_js_file } from '../../utils.js';
+import { bail, check_git, update_js_file, update_svelte_file } from '../../utils.js';
 import { migrate as migrate_svelte_4 } from '../svelte-4/index.js';
 import { transform_module_code, transform_svelte_code, update_pkg_json } from './migrate.js';
 
@@ -138,7 +138,9 @@ export async function migrate() {
 	for (const file of files) {
 		if (extensions.some((ext) => file.endsWith(ext))) {
 			if (svelte_extensions.some((ext) => file.endsWith(ext))) {
-				update_js_file(file, (code) => transform_svelte_code(code, migrate));
+				update_svelte_file(file, transform_module_code, (code) =>
+					transform_svelte_code(code, migrate)
+				);
 			} else {
 				update_js_file(file, transform_module_code);
 			}
