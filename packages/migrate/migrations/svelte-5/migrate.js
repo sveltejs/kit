@@ -1,6 +1,6 @@
 import fs from 'node:fs';
 import { Project, ts, Node } from 'ts-morph';
-import { log_on_ts_modification, update_pkg } from '../../utils.js';
+import { update_pkg } from '../../utils.js';
 
 export function update_pkg_json() {
 	fs.writeFileSync(
@@ -58,7 +58,8 @@ export function transform_module_code(code) {
  * @param {(source: code) => { code: string }} transform_code
  */
 export function transform_svelte_code(code, transform_code) {
-	return transform_code(code).code;
+	// reuse component instantiation migration from module code
+	return transform_module_code(transform_code(code).code);
 }
 
 /**
@@ -66,10 +67,10 @@ export function transform_svelte_code(code, transform_code) {
  * @param {import('ts-morph').SourceFile} source
  */
 function update_component_instantiation(source) {
-	const logger = log_on_ts_modification(
-		source,
-		'Updates component instantiation: https://svelte.dev/docs/svelte/TODO (you may need to update usages of the component instance)'
-	);
+	// const logger = log_on_ts_modification(
+	// 	source,
+	// 	'Updates component instantiation: https://svelte.dev/docs/svelte/TODO (you may need to update usages of the component instance)'
+	// );
 
 	const imports = source
 		.getImportDeclarations()
@@ -112,7 +113,7 @@ function update_component_instantiation(source) {
 		}
 	}
 
-	logger();
+	// logger();
 }
 
 /**
