@@ -1,5 +1,11 @@
 # @sveltejs/adapter-node
 
+## 5.2.4
+### Patch Changes
+
+
+- chore: upgrade polka to 1.0.0-next.28 ([#12693](https://github.com/sveltejs/kit/pull/12693))
+
 ## 5.2.3
 ### Patch Changes
 
