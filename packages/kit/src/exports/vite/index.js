@@ -570,6 +570,8 @@ async function kit({ svelte_config }) {
 													if (${component}) {
 														result.component = async () => {
 															const { module } = await resolve(${component});
+															
+															return module.default;
 														}
 													}
 
