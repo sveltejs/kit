@@ -164,8 +164,8 @@ importers:
         version: 4.18.0
     devDependencies:
       '@polka/url':
-        specifier: 1.0.0-next.25
-        version: 1.0.0-next.25
+        specifier: ^1.0.0-next.28
+        version: 1.0.0-next.28
       '@sveltejs/kit':
         specifier: workspace:^
         version: link:../kit
@@ -176,8 +176,8 @@ importers:
         specifier: ^18.19.48
         version: 18.19.50
       polka:
-        specifier: 1.0.0-next.25
-        version: 1.0.0-next.25
+        specifier: ^1.0.0-next.28
+        version: 1.0.0-next.28
       sirv:
         specifier: ^2.0.4
         version: 2.0.4
@@ -1957,8 +1957,8 @@ packages:
     engines: {node: '>=16'}
     hasBin: true
 
-  '@polka/url@1.0.0-next.25':
-    resolution: {integrity: sha512-j7P6Rgr3mmtdkeDGTe0E/aYyWEWVtc5yFXtHCRHs28/jptDEWfaVOc5T7cblqy1XKPPfCxJc/8DwQ5YgLOZOVQ==}
+  '@polka/url@1.0.0-next.28':
+    resolution: {integrity: sha512-8LduaNlMZGwdZ6qWrKlfa+2M4gahzFkprZiAt2TF8uS0qQgBizKXpXURqvTJ4WtmupWxaLqjRb2UCTe72mu+Aw==}
 
   '@rollup/plugin-commonjs@26.0.1':
     resolution: {integrity: sha512-UnsKoZK6/aGIH6AdkptXhNvhaqftcjq3zZdT+LY5Ftms6JR06nADcDsYp5hTU9E2lbJUEOhdlY5J4DNTneM+jQ==}
@@ -3521,8 +3521,8 @@ packages:
     engines: {node: '>=16'}
     hasBin: true
 
-  polka@1.0.0-next.25:
-    resolution: {integrity: sha512-LBgDEGL73aeb/5yAwO9JWsqCuqPdvEdwA/n25Y38F4kv6jqFaLbgIWVuZfsv9Sc9O052eoWWrAjGB75oCQvELw==}
+  polka@1.0.0-next.28:
+    resolution: {integrity: sha512-ryc8D/B5E/YnlWHkNMnRvNntPc4GwU1/+iDBjiXVz1SUjDRqlxYX5Ic0IaDLA/cQ+g7/x+jUzEjv2K16u1J+wA==}
     engines: {node: '>=8'}
 
   postcss-load-config@3.1.4:
@@ -4808,7 +4808,7 @@ snapshots:
     dependencies:
       playwright: 1.44.1
 
-  '@polka/url@1.0.0-next.25': {}
+  '@polka/url@1.0.0-next.28': {}
 
   '@rollup/plugin-commonjs@26.0.1(rollup@4.18.0)':
     dependencies:
@@ -6343,9 +6343,9 @@ snapshots:
     optionalDependencies:
       fsevents: 2.3.2
 
-  polka@1.0.0-next.25:
+  polka@1.0.0-next.28:
     dependencies:
-      '@polka/url': 1.0.0-next.25
+      '@polka/url': 1.0.0-next.28
       trouter: 4.0.0
 
   postcss-load-config@3.1.4(postcss@8.4.39):
@@ -6599,7 +6599,7 @@ snapshots:
 
   sirv@2.0.4:
     dependencies:
-      '@polka/url': 1.0.0-next.25
+      '@polka/url': 1.0.0-next.28
       mrmime: 2.0.0
       totalist: 3.0.1
 
