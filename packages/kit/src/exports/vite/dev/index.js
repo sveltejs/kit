@@ -1,11 +1,11 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import process from 'node:process';
-import { URL } from 'node:url';
+import { fileURLToPath, URL } from 'node:url';
 import { AsyncLocalStorage } from 'node:async_hooks';
 import colors from 'kleur';
 import sirv from 'sirv';
-import { isCSSRequest, loadEnv, buildErrorMessage } from 'vite';
+import { isCSSRequest, loadEnv, buildErrorMessage, createServerModuleRunner } from 'vite';
 import { createReadableStream, getRequest, setResponse } from '../../../exports/node/index.js';
 import { installPolyfills } from '../../../exports/node/polyfills.js';
 import { coalesce_to_error } from '../../../utils/error.js';
@@ -18,6 +18,8 @@ import { compact } from '../../../utils/array.js';
 import { not_found } from '../utils.js';
 import { SCHEME } from '../../../utils/url.js';
 import { check_feature } from '../../../utils/features.js';
+import { sveltekit_environment_context } from '../module_ids.js';
+import { SSR_ENVIRONMENT_NAME } from '../constants.js';
 
 const cwd = process.cwd();
 
@@ -25,9 +27,10 @@ const cwd = process.cwd();
  * @param {import('vite').ViteDevServer} vite
  * @param {import('vite').ResolvedConfig} vite_config
  * @param {import('types').ValidatedConfig} svelte_config
+ * @param {import('types').EnvironmentContext} environment_context
  * @return {Promise<Promise<() => void>>}
  */
-export async function dev(vite, vite_config, svelte_config) {
+export async function dev(vite, vite_config, svelte_config, environment_context) {
 	installPolyfills();
 
 	const async_local_storage = new AsyncLocalStorage();
@@ -98,9 +101,29 @@ export async function dev(vite, vite_config, svelte_config) {
 		return { module, module_node, url };
 	}
 
+	/**
+	 * Used to invalidate the `sveltekit_environment_context` module when the manifest is updated.
+	 */
+	function invalidate_environment_context_module() {
+		for (const environment in vite.environments) {
+			const module = vite.environments[environment].moduleGraph.getModuleById(
+				sveltekit_environment_context
+			);
+
+			if (module) {
+				vite.environments[environment].moduleGraph.invalidateModule(module);
+			}
+		}
+	}
+
 	function update_manifest() {
 		try {
 			({ manifest_data } = sync.create(svelte_config));
+
+			// Update the `manifest_data` used in the `sveltekit_environment_context` virtual module.
+			environment_context.manifest_data = manifest_data;
+			// Invalidate the virtual module.
+			invalidate_environment_context_module();
 
 			if (manifest_error) {
 				manifest_error = null;
@@ -420,7 +443,35 @@ export async function dev(vite, vite_config, svelte_config) {
 	});
 
 	const env = loadEnv(vite_config.mode, svelte_config.kit.env.dir, '');
+	// Update the `env` used in the `sveltekit_environment_context` virtual module.
+	environment_context.env = env;
 	const emulator = await svelte_config.kit.adapter?.emulate?.();
+
+	/**
+	 * The environment that was provided to `kit.environments.ssr` in the Svelte config.
+	 * @type { ((import('vite').DevEnvironment & { api?: { getHandler: (opts: { entrypoint: string }) => Promise<(req: Request) => Promise<Response>> }})) | undefined }
+	 */
+	const devEnv = vite.environments[SSR_ENVIRONMENT_NAME];
+
+	const __dirname = fileURLToPath(new URL('.', import.meta.url));
+
+	/** @type {((req: Request) => Promise<Response>) | undefined} */
+	let handler;
+
+	// Create the handler for the Cloudflare or Node environment if it exists.
+	if (devEnv) {
+		if (devEnv.api) {
+			handler = await devEnv.api.getHandler({
+				entrypoint: path.join(__dirname, 'cloudflare_entrypoint.js')
+			});
+			console.log('Running in Cloudflare environment');
+		} else {
+			const module_runner = createServerModuleRunner(vite.environments[SSR_ENVIRONMENT_NAME]);
+			const entrypoint = await module_runner.import(path.join(__dirname, 'node_entrypoint.js'));
+			handler = entrypoint.default.fetch;
+			console.log('Running in Node environment');
+		}
+	}
 
 	return () => {
 		const serve_static_middleware = vite.middlewares.stack.find(
@@ -433,6 +484,9 @@ export async function dev(vite, vite_config, svelte_config) {
 		remove_static_middlewares(vite.middlewares);
 
 		vite.middlewares.use(async (req, res) => {
+			// Update the `remote_address` used in the `sveltekit_environment_context` virtual module.
+			environment_context.remote_address = req.socket.remoteAddress;
+
 			// Vite's base middleware strips out the base path. Restore it
 			const original_url = req.url;
 			req.url = req.originalUrl;
@@ -522,18 +576,21 @@ export async function dev(vite, vite_config, svelte_config) {
 					return;
 				}
 
-				const rendered = await server.respond(request, {
-					getClientAddress: () => {
-						const { remoteAddress } = req.socket;
-						if (remoteAddress) return remoteAddress;
-						throw new Error('Could not determine clientAddress');
-					},
-					read: (file) => fs.readFileSync(path.join(svelte_config.kit.files.assets, file)),
-					before_handle: (event, config, prerender) => {
-						async_local_storage.enterWith({ event, config, prerender });
-					},
-					emulator
-				});
+				// Render using the environment handler if it has been created. Else, fallback to the default behaviour.
+				const rendered = handler
+					? await handler(request)
+					: await server.respond(request, {
+							getClientAddress: () => {
+								const { remoteAddress } = req.socket;
+								if (remoteAddress) return remoteAddress;
+								throw new Error('Could not determine clientAddress');
+							},
+							read: (file) => fs.readFileSync(path.join(svelte_config.kit.files.assets, file)),
+							before_handle: (event, config, prerender) => {
+								async_local_storage.enterWith({ event, config, prerender });
+							},
+							emulator
+						});
 
 				if (rendered.status === 404) {
 					// @ts-expect-error

@@ -1,6 +1,7 @@
 import 'svelte'; // pick up `declare module "*.svelte"`
 import 'vite/client'; // pick up `declare module "*.jpg"`, etc.
 import '../types/ambient.js';
+import { Plugin } from 'vite';
 
 import { CompileOptions } from 'svelte/compiler';
 import {
@@ -406,6 +407,12 @@ export interface KitConfig {
 		 * @since 1.21.0
 		 */
 		privatePrefix?: string;
+	};
+	/**
+	 * The new `environments` option. The user provides a factory function that is then used to create the plugin.
+	 */
+	environments?: {
+		ssr?: (environmentName: string, options?: any) => Plugin[];
 	};
 	/**
 	 * Where to find various files within your project.

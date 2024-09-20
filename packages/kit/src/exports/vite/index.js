@@ -4,11 +4,20 @@ import process from 'node:process';
 
 import colors from 'kleur';
 
-import { copy, mkdirp, posixify, read, resolve_entry, rimraf } from '../../utils/filesystem.js';
+import { compact } from '../../utils/array.js';
+import {
+	copy,
+	mkdirp,
+	posixify,
+	read,
+	resolve_entry,
+	rimraf,
+	to_fs
+} from '../../utils/filesystem.js';
 import { create_static_module, create_dynamic_module } from '../../core/env.js';
 import * as sync from '../../core/sync/sync.js';
 import { create_assets } from '../../core/sync/create_manifest_data/index.js';
-import { runtime_directory, logger } from '../../core/utils.js';
+import { runtime_directory, logger, get_mime_lookup, runtime_base } from '../../core/utils.js';
 import { load_config } from '../../core/config/index.js';
 import { generate_manifest } from '../../core/generate_manifest/index.js';
 import { build_server_nodes } from './build/build_server.js';
@@ -32,9 +41,16 @@ import {
 	service_worker,
 	sveltekit_environment,
 	sveltekit_paths,
-	sveltekit_server
+	sveltekit_server,
+	sveltekit_environment_context
 } from './module_ids.js';
 import { resolve_peer_dependency } from '../../utils/import.js';
+import { SSR_ENVIRONMENT_NAME } from './constants.js';
+
+/**
+ * This is where we store the values that are needed in the `sveltekit_environment_context` virtual module.
+ */
+const environment_context = /** @type {import('types').EnvironmentContext} */ ({});
 
 const cwd = process.cwd();
 
@@ -502,6 +518,136 @@ async function kit({ svelte_config }) {
 						}
 					`;
 				}
+
+				// The virtual module that is imported in the environment entrypoint files. This provides all the data that is needed to create the `Server` instance.
+				// Not implemented:
+				// - Server assets. The `read` function from `$app/server` can only be used in environments that support file system access.
+				// - Inlining styles. This requires communicating with the main process to collect dependencies. It should be possible (e.g. using import.meta.hot) but needs more investigation.
+				case sveltekit_environment_context: {
+					const { manifest_data, env, remote_address } = environment_context;
+
+					return dedent`
+						import { create_resolve } from "${runtime_base}/server/environment_context.js";
+
+						const resolve = create_resolve(${s(cwd)});
+
+						export let manifest = {
+							appDir: ${s(svelte_config.kit.appDir)},
+							appPath: ${s(svelte_config.kit.appDir)},
+							assets: new Set(${s(manifest_data.assets.map((asset) => asset.file))}),
+							mimeTypes: ${s(get_mime_lookup(manifest_data))},
+							_: {
+								client: {
+									start: "${runtime_base}/client/entry.js",
+									app: "${to_fs(svelte_config.kit.outDir)}/generated/client/app.js",
+									imports: [],
+									stylesheets: [],
+									fonts: [],
+									uses_env_dynamic_public: true
+								},
+								server_assets: {},
+								nodes: [
+									${manifest_data.nodes
+										.map((node, i) => {
+											const index = s(i);
+											const component = s(node.component);
+											const universal = s(node.universal);
+											const server = s(node.server);
+
+											return dedent`
+												async () => {
+													const result = {};
+
+													const module_nodes = [];
+
+													result.index = ${index};
+
+													// these are unused in dev, it's easier to include them
+													result.imports = [];
+													result.stylesheets = [];
+													result.fonts = [];
+
+													if (${component}) {
+														result.component = async () => {
+															const { module } = await resolve(${component});
+															
+															return module.default;
+														}
+													}
+
+													if (${universal}) {
+														const { module } = await resolve(${universal});
+
+														result.universal = module;
+														result.universal_id = ${universal};
+													}
+													
+													if (${server}) {
+														const { module } = await resolve(${server});
+
+														result.server = module;
+														result.server_id = ${server};
+													}
+
+													return result;
+												}
+										`;
+										})
+										.join(',\n')}
+								],
+								routes: [
+									${compact(
+										manifest_data.routes.map((route) => {
+											if (!route.page && !route.endpoint) return;
+
+											const endpoint = route.endpoint;
+
+											return dedent`
+												{
+													id: ${s(route.id)},
+													pattern: ${route.pattern},
+													params: ${s(route.params)},
+													page: ${s(route.page)},
+													endpoint: ${
+														endpoint
+															? `
+																async () => {
+																	const { module } = await resolve(${s(endpoint.file)});
+
+																	return module;
+																}
+															`
+															: 'null'
+													},
+													endpoint_id: ${s(endpoint?.file)}
+												}
+										`;
+										})
+									).join(',\n')}
+								],
+								matchers: async () => {
+									const matchers = {};
+
+									for (const [key, file] of ${s(Object.entries(manifest_data.matchers))}) {
+										const { module } = await resolve(file);
+
+										if (module.match) {
+											matchers[key] = module.match;
+										} else {
+											throw new Error(\`\${file} does not export a 'match' function\`);
+										}
+									}
+
+									return matchers;
+								}
+							}
+						};
+
+						export let env = ${s(env)};
+
+						export let remote_address = ${s(remote_address)};
+					`;
+				}
 			}
 		}
 	};
@@ -670,7 +816,8 @@ async function kit({ svelte_config }) {
 		 * @see https://vitejs.dev/guide/api-plugin.html#configureserver
 		 */
 		async configureServer(vite) {
-			return await dev(vite, vite_config, svelte_config);
+			// We pass the `environment_context` object in so that we can update the values inside the `dev` function. Not ideal but avoids restructuring the code for the time being.
+			return await dev(vite, vite_config, svelte_config, environment_context);
 		},
 
 		/**
@@ -923,7 +1070,14 @@ async function kit({ svelte_config }) {
 		}
 	};
 
-	return [plugin_setup, plugin_virtual_modules, plugin_guard, plugin_compile];
+	return [
+		// Creates the custom SSR environment if the factory function was passed to `kit.environments.ssr` in the Svelte config.
+		...(svelte_config.kit.environments.ssr?.(SSR_ENVIRONMENT_NAME) ?? []),
+		plugin_setup,
+		plugin_virtual_modules,
+		plugin_guard,
+		plugin_compile
+	];
 }
 
 /**

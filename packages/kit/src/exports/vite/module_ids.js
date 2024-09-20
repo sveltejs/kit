@@ -10,6 +10,8 @@ export const service_worker = '\0virtual:$service-worker';
 export const sveltekit_environment = '\0virtual:__sveltekit/environment';
 export const sveltekit_paths = '\0virtual:__sveltekit/paths';
 export const sveltekit_server = '\0virtual:__sveltekit/server';
+// The new virtual module to be imported in custom environments (probably not the best name!).
+export const sveltekit_environment_context = '\0virtual:__sveltekit/environment_context';
 
 export const app_server = fileURLToPath(
 	new URL('../../runtime/app/server/index.js', import.meta.url)

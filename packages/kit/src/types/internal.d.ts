@@ -121,6 +121,12 @@ export interface Env {
 	public: Record<string, string>;
 }
 
+export interface EnvironmentContext {
+	manifest_data: ManifestData;
+	env: Record<string, string>;
+	remote_address: string | undefined;
+}
+
 export class InternalServer extends Server {
 	init(options: ServerInitOptions): Promise<void>;
 	respond(
