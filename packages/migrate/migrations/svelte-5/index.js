@@ -17,6 +17,10 @@ export async function migrate() {
 		bail('Please re-run this script in a directory with a package.json');
 	}
 
+	console.log(
+		'This migration is experimental — please report any bugs to https://github.com/sveltejs/svelte/issues'
+	);
+
 	const pkg = JSON.parse(fs.readFileSync('package.json', 'utf8'));
 	const svelte_dep = pkg.devDependencies?.svelte ?? pkg.dependencies?.svelte;
 	if (svelte_dep && semver.validRange(svelte_dep) && semver.gtr('4.0.0', svelte_dep)) {
@@ -154,9 +158,13 @@ export async function migrate() {
 	const cyan = colors.bold().cyan;
 
 	const tasks = [
+		"install the updated dependencies ('npm i' / 'pnpm i' / etc) " +
+			'(note that there may be peer dependency issues when not all your libraries officially support Svelte 5 yet. In this case try installing with the --force option)',
 		use_git && cyan('git commit -m "migration to Svelte 5"'),
-		'Review the migration guide at https://svelte.dev/docs/svelte/v5-migration-guide',
-		'Read the updated docs at https://svelte.dev/docs/svelte'
+		'Review the breaking changes at https://svelte-5-preview.vercel.app/docs/breaking-changes'
+		// replace with this once it's live:
+		// 'Review the migration guide at https://svelte.dev/docs/svelte/v5-migration-guide',
+		// 'Read the updated docs at https://svelte.dev/docs/svelte'
 	].filter(Boolean);
 
 	tasks.forEach((task, i) => {
