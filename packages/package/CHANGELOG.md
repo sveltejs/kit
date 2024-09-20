@@ -1,5 +1,14 @@
 # @sveltejs/package
 
+## 2.3.5
+### Patch Changes
+
+
+- fix: use input tsconfig when calling emitDts ([#12612](https://github.com/sveltejs/kit/pull/12612))
+
+
+- chore(deps): update dependency chokidar to v4 ([#12671](https://github.com/sveltejs/kit/pull/12671))
+
 ## 2.3.4
 ### Patch Changes
 

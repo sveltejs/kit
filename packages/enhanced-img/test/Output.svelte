@@ -1,5 +1,11 @@
+<script context="module">	
+	import __IMPORTED_ASSET_0__ from "./foo.svg";
+	const __DECLARED_ASSET_0__ = "__VITE_ASSET__2AM7_y_a__ 1440w, __VITE_ASSET__2AM7_y_b__ 960w";
+	const __DECLARED_ASSET_1__ = "__VITE_ASSET__2AM7_y_c__ 1440w, __VITE_ASSET__2AM7_y_d__ 960w";
+	const __DECLARED_ASSET_2__ = "__VITE_ASSET__2AM7_y_e__ 1440w, __VITE_ASSET__2AM7_y_f__ 960w";
+	const __DECLARED_ASSET_3__ = "__VITE_ASSET__2AM7_y_g__";
+</script>
 <script lang="ts">
-	import ___ASSET___0 from "./foo.svg";
 	
 	import manual_image1 from './no.png';
 	
@@ -17,9 +23,9 @@
 
 <picture><source srcset="/1 1440w, /2 960w" type="image/avif" /><source srcset="/3 1440w, /4 960w" type="image/webp" /><source srcset="5 1440w, /6 960w" type="image/png" /><img src="/7" alt="dev test" width=1440 height=1440 /></picture>
 
-<picture><source srcset={"__VITE_ASSET__2AM7_y_a__ 1440w, __VITE_ASSET__2AM7_y_b__ 960w"} type="image/avif" /><source srcset={"__VITE_ASSET__2AM7_y_c__ 1440w, __VITE_ASSET__2AM7_y_d__ 960w"} type="image/webp" /><source srcset={"__VITE_ASSET__2AM7_y_e__ 1440w, __VITE_ASSET__2AM7_y_f__ 960w"} type="image/png" /><img src={"__VITE_ASSET__2AM7_y_g__"} alt="production test" width=1440 height=1440 /></picture>
+<picture><source srcset={__DECLARED_ASSET_0__} type="image/avif" /><source srcset={__DECLARED_ASSET_1__} type="image/webp" /><source srcset={__DECLARED_ASSET_2__} type="image/png" /><img src={__DECLARED_ASSET_3__} alt="production test" width=1440 height=1440 /></picture>
 
-<picture><source srcset="/1 1440w, /2 960w" type="image/avif" /><source srcset="/3 1440w, /4 960w" type="image/webp" /><source srcset="5 1440w, /6 960w" type="image/png" /><img src="/7" width="5" height="10" alt="dimensions test" width=1440 height=1440 /></picture>
+<picture><source srcset="/1 1440w, /2 960w" type="image/avif" /><source srcset="/3 1440w, /4 960w" type="image/webp" /><source srcset="5 1440w, /6 960w" type="image/png" /><img src="/7" width="5" height="10" alt="dimensions test" /></picture>
 
 <picture><source srcset="/1 1440w, /2 960w" type="image/avif" /><source srcset="/3 1440w, /4 960w" type="image/webp" /><source srcset="5 1440w, /6 960w" type="image/png" /><img src="/7" alt="directive test" width=1440 height=1440 /></picture>
 
@@ -44,7 +50,7 @@
 	</picture>
 {/if}
 
-<img src={___ASSET___0} alt="svg test" />
+<img src={__IMPORTED_ASSET_0__} alt="svg test" />
 
 {#each images as image}
 	{#if typeof image === 'string'}
