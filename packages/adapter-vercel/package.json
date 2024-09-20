@@ -1,6 +1,6 @@
 {
 	"name": "@sveltejs/adapter-vercel",
-	"version": "5.4.3",
+	"version": "5.4.4",
 	"description": "A SvelteKit adapter that creates a Vercel app",
 	"keywords": [
 		"adapter",
@@ -45,7 +45,7 @@
 	"devDependencies": {
 		"@sveltejs/kit": "workspace:^",
 		"@sveltejs/vite-plugin-svelte": "^3.0.1",
-		"@types/node": "^18.19.3",
+		"@types/node": "^18.19.48",
 		"typescript": "^5.3.3",
 		"vitest": "^2.0.1"
 	},

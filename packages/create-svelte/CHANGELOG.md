@@ -1,5 +1,17 @@
 # create-svelte
 
+## 6.3.11
+### Patch Changes
+
+
+- fix: import `node:process` instead of using globals ([#12641](https://github.com/sveltejs/kit/pull/12641))
+
+## 6.3.10
+### Patch Changes
+
+
+- chore: bump svelte-check to v4 ([#12642](https://github.com/sveltejs/kit/pull/12642))
+
 ## 6.3.9
 ### Patch Changes
 

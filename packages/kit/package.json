@@ -1,6 +1,6 @@
 {
 	"name": "@sveltejs/kit",
-	"version": "2.5.25",
+	"version": "2.5.28",
 	"description": "SvelteKit is the fastest way to build Svelte apps",
 	"keywords": [
 		"framework",
@@ -36,7 +36,7 @@
 		"@playwright/test": "^1.44.1",
 		"@sveltejs/vite-plugin-svelte": "^3.0.1",
 		"@types/connect": "^3.4.38",
-		"@types/node": "^18.19.3",
+		"@types/node": "^18.19.48",
 		"@types/set-cookie-parser": "^2.4.7",
 		"dts-buddy": "^0.5.3",
 		"rollup": "^4.14.2",

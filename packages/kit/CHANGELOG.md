@@ -1,5 +1,29 @@
 # @sveltejs/kit
 
+## 2.5.28
+### Patch Changes
+
+
+- fix: import `node:process` instead of using globals ([#12641](https://github.com/sveltejs/kit/pull/12641))
+
+## 2.5.27
+### Patch Changes
+
+
+- fix: asynchronously instantiate components when using Svelte 5 ([#12613](https://github.com/sveltejs/kit/pull/12613))
+
+
+- fix: use `{@render ...}` tag when generating default fallback page for svelte 5 apps ([#12653](https://github.com/sveltejs/kit/pull/12653))
+
+
+- fix: emulate `event.platform` even when the route does not exist ([#12513](https://github.com/sveltejs/kit/pull/12513))
+
+## 2.5.26
+### Patch Changes
+
+
+- fix: exclude service worker directory from tsconfig ([#12196](https://github.com/sveltejs/kit/pull/12196))
+
 ## 2.5.25
 ### Patch Changes
 

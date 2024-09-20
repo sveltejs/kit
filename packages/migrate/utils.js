@@ -3,6 +3,7 @@ import MagicString from 'magic-string';
 import { execFileSync, execSync } from 'node:child_process';
 import fs from 'node:fs';
 import path from 'node:path';
+import process from 'node:process';
 import semver from 'semver';
 import ts from 'typescript';
 

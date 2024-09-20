@@ -1,6 +1,7 @@
 import fs from 'node:fs';
 import colors from 'kleur';
 import path from 'node:path';
+import process from 'node:process';
 import prompts from 'prompts';
 import { pathToFileURL } from 'node:url';
 import { bail, check_git } from '../../utils.js';

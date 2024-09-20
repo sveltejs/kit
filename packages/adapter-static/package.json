@@ -1,6 +1,6 @@
 {
 	"name": "@sveltejs/adapter-static",
-	"version": "3.0.4",
+	"version": "3.0.5",
 	"description": "Adapter for SvelteKit apps that prerenders your entire site as a collection of static files",
 	"keywords": [
 		"adapter",
@@ -42,7 +42,7 @@
 		"@playwright/test": "^1.44.1",
 		"@sveltejs/kit": "workspace:^",
 		"@sveltejs/vite-plugin-svelte": "^3.0.1",
-		"@types/node": "^18.19.3",
+		"@types/node": "^18.19.48",
 		"sirv": "^2.0.4",
 		"svelte": "^4.2.10",
 		"typescript": "^5.3.3",
