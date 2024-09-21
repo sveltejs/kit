@@ -43,14 +43,7 @@ export default [
 	}
 ];
 
-const node_builtin_regex = new RegExp(
-	`(?:from|import)\\s*(['"])(${[...builtinModules].join('|')})(['"])`,
-	'g'
-);
-const dynamic_import_regex = new RegExp(
-	`import\\s*\\(\\s*(['"])(${[...builtinModules].join('|')})(['"])\\s*\\)`,
-	'g'
-);
+const node_builtin_regex = new RegExp(`from (['"])(${[...builtinModules].join('|')})(['"])`, 'g');
 
 /**
  * @returns {import('rollup').Plugin}
@@ -64,17 +57,10 @@ function prefix_node_builtins() {
 				if (file.type === 'chunk') {
 					/** @type {import('rollup').OutputChunk} */
 					const chunk = file;
-					chunk.code = chunk.code
-						.replace(
-							node_builtin_regex,
-							(match, quote, moduleName, endQuote) =>
-								`${match.startsWith('from') ? 'from' : 'import'} ${quote}node:${moduleName}${endQuote}`
-						)
-						.replace(
-							dynamic_import_regex,
-							(match, quote, moduleName, endQuote) =>
-								`import(${quote}node:${moduleName}${endQuote})`
-						);
+					chunk.code = chunk.code.replace(
+						node_builtin_regex,
+						(match, quote, moduleName) => `from ${quote}node:${moduleName}${quote}`
+					);
 				}
 			}
 		}
