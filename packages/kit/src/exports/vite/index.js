@@ -35,7 +35,7 @@ import {
 	sveltekit_server
 } from './module_ids.js';
 import { resolve_peer_dependency } from '../../utils/import.js';
-import { APP_VERSION_PLACEHOLDER, APP_VERSION_HASH_PLACEHOLDER } from '../../constants.js';
+import { APP_VERSION_PLACEHOLDER_BASE, APP_VERSION_HASH_PLACEHOLDER_BASE } from '../../constants.js';
 
 const cwd = process.cwd();
 
@@ -185,7 +185,16 @@ async function kit({ svelte_config }) {
 	const { kit } = svelte_config;
 	const out = `${kit.outDir}/output`;
 
-	const version_hash = hash(kit.version.name);
+	const app_version = kit.version.name;
+	const version_hash = hash(app_version);
+
+	// if the app version or hash is longer than the placeholder, we need to pad it to avoid
+	// source map damage
+	const app_version_placeholder = APP_VERSION_PLACEHOLDER_BASE.padEnd(app_version.length, '_');
+	const app_version_hash_placeholder = APP_VERSION_HASH_PLACEHOLDER_BASE.padEnd(
+		version_hash.length,
+		'_'
+	);
 
 	/** @type {import('vite').ResolvedConfig} */
 	let vite_config;
@@ -385,7 +394,7 @@ async function kit({ svelte_config }) {
 			const browser = !options?.ssr;
 
 			const global = is_build
-				? `globalThis.__sveltekit_${browser ? APP_VERSION_HASH_PLACEHOLDER : version_hash}`
+				? `globalThis.__sveltekit_${browser ? APP_VERSION_HASH_PLACEHOLDER_BASE : version_hash}`
 				: 'globalThis.__sveltekit_dev';
 
 			if (options?.ssr === false && process.env.TEST !== 'true') {
@@ -472,7 +481,7 @@ async function kit({ svelte_config }) {
 
 				case sveltekit_environment: {
 					return dedent`
-						export const version = ${is_build && browser ? APP_VERSION_PLACEHOLDER : s(kit.version.name)};
+						export const version = ${is_build && browser ? app_version_placeholder : s(kit.version.name)};
 						export let building = false;
 						export let prerendering = false;
 
@@ -934,21 +943,21 @@ async function kit({ svelte_config }) {
 				if (bundle[file].type !== 'chunk') continue;
 				let code = bundle[file].code;
 				if (
-					!(code.includes(APP_VERSION_PLACEHOLDER) || code.includes(APP_VERSION_HASH_PLACEHOLDER))
+					!(code.includes(app_version_placeholder) || code.includes(app_version_hash_placeholder))
 				)
 					continue;
 
 				// replace the version and version after the chunk hash has already been calculated
 				// to avoid affecting the chunk hash
 				const substitutions = [
-					[APP_VERSION_HASH_PLACEHOLDER, version_hash],
-					[APP_VERSION_PLACEHOLDER, JSON.stringify(kit.version.name)]
+					[app_version_hash_placeholder, version_hash],
+					[app_version_placeholder, JSON.stringify(kit.version.name)]
 				];
 
 				for (const [placeholder, replacement] of substitutions) {
 					code = code.replaceAll(
 						placeholder,
-						// pad the replacement to try and mitigate source map changes
+						// pad the replacement to mitigate source map changes
 						replacement.padEnd(placeholder.length, ' ')
 					);
 				}

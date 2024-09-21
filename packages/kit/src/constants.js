@@ -14,10 +14,10 @@ export const PAGE_METHODS = ['GET', 'POST', 'HEAD'];
  * Placeholders for the hash of the app version.
  * Later replaced in the generateBundle hook to avoid affecting the chunk hash.
  */
-export const APP_VERSION_HASH_PLACEHOLDER = '__SVELTEKIT_APP_VERSION_HASH__';
+export const APP_VERSION_HASH_PLACEHOLDER_BASE = '__SVELTEKIT_APP_VERSION_HASH__';
 
 /**
  * Placeholder for the app version.
  * Later replaced in the generateBundle hook to avoid affecting the chunk hash.
  */
-export const APP_VERSION_PLACEHOLDER = '__SVELTEKIT_APP_VERSION__';
+export const APP_VERSION_PLACEHOLDER_BASE = '__SVELTEKIT_APP_VERSION__';
