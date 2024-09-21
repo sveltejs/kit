@@ -944,7 +944,7 @@ async function kit({ svelte_config }) {
 				const code = bundle[file].code
 					.replaceAll(
 						SUBSTITUTION_APP_VERSION_HASH,
-						hash(version_hash).padEnd(SUBSTITUTION_APP_VERSION_HASH.length, ' ')
+						version_hash.padEnd(SUBSTITUTION_APP_VERSION_HASH.length, ' ')
 					)
 					.replaceAll(SUBSTITUTION_APP_VERSION, JSON.stringify(kit.version.name).slice(1, -1));
 
