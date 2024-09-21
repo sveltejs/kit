@@ -314,7 +314,7 @@ export function update_svelte_file(file_path, transform_script_code, transform_s
 		fs.writeFileSync(file_path, transform_svelte_code(updated, file_path), 'utf-8');
 	} catch (err) {
 		// TODO: change to import('svelte/compiler').Warning after upgrading to Svelte 5
-		const e = (/** @type {any} */ (err));
+		const e = /** @type {any} */ (err);
 		console.warn(buildExtendedLogMessage(e), e.frame);
 		console.info(e.stack);
 	}
@@ -332,7 +332,7 @@ export function update_js_file(file_path, transform_code) {
 		fs.writeFileSync(file_path, updated, 'utf-8');
 	} catch (err) {
 		// TODO: change to import('svelte/compiler').Warning after upgrading to Svelte 5
-		const e = (/** @type {any} */ (err));
+		const e = /** @type {any} */ (err);
 		console.warn(buildExtendedLogMessage(e), e.frame);
 		console.info(e.stack);
 	}
