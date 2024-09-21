@@ -59,7 +59,7 @@ function prefix_node_builtins() {
 					const chunk = file;
 					chunk.code = chunk.code.replace(
 						node_builtin_regex,
-						(match, moduleName) => `from 'node:${moduleName}'`
+						(match, module_name) => `from 'node:${module_name}'`
 					);
 				}
 			}
