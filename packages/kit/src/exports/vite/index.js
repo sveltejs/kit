@@ -933,8 +933,10 @@ async function kit({ svelte_config }) {
 			for (const file in bundle) {
 				if (bundle[file].type !== 'chunk') continue;
 				if (
-					!(bundle[file].code.includes(SUBSTITUTION_APP_VERSION) ||
-					bundle[file].code.includes(SUBSTITUTION_APP_VERSION_HASH))
+					!(
+						bundle[file].code.includes(SUBSTITUTION_APP_VERSION) ||
+						bundle[file].code.includes(SUBSTITUTION_APP_VERSION_HASH)
+					)
 				)
 					continue;
 
