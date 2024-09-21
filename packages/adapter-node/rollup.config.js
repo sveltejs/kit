@@ -50,8 +50,8 @@ function prefix_node_builtins() {
 	return {
 		name: 'prefix-node-builtins-in-bundle',
 		generateBundle(options, bundle) {
-			for (const fileName of Object.keys(bundle)) {
-				const file = bundle[fileName];
+			for (const file_name of Object.keys(bundle)) {
+				const file = bundle[file_name];
 				if (file.type === 'chunk') {
 					/** @type {import('rollup').OutputChunk} */
 					const chunk = file;
