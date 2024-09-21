@@ -35,7 +35,10 @@ import {
 	sveltekit_server
 } from './module_ids.js';
 import { resolve_peer_dependency } from '../../utils/import.js';
-import { APP_VERSION_PLACEHOLDER_BASE, APP_VERSION_HASH_PLACEHOLDER_BASE } from '../../constants.js';
+import {
+	APP_VERSION_PLACEHOLDER_BASE,
+	APP_VERSION_HASH_PLACEHOLDER_BASE
+} from '../../constants.js';
 
 const cwd = process.cwd();
 
