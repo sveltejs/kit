@@ -35,6 +35,7 @@ import {
 	sveltekit_server
 } from './module_ids.js';
 import { resolve_peer_dependency } from '../../utils/import.js';
+import { SUBSTITUTION_APP_VERSION, SUBSTITUTION_APP_VERSION_HASH } from '../../constants.js';
 
 const cwd = process.cwd();
 
@@ -384,7 +385,7 @@ async function kit({ svelte_config }) {
 			const browser = !options?.ssr;
 
 			const global = is_build
-				? `globalThis.__sveltekit_${version_hash}`
+				? `globalThis.__sveltekit_${browser ? SUBSTITUTION_APP_VERSION_HASH : version_hash}`
 				: 'globalThis.__sveltekit_dev';
 
 			if (options?.ssr === false && process.env.TEST !== 'true') {
@@ -470,10 +471,8 @@ async function kit({ svelte_config }) {
 				}
 
 				case sveltekit_environment: {
-					const { version } = svelte_config.kit;
-
 					return dedent`
-						export const version = ${s(version.name)};
+						export const version = ${s(is_build ? SUBSTITUTION_APP_VERSION : kit.version.name)};
 						export let building = false;
 						export let prerendering = false;
 
@@ -923,7 +922,42 @@ async function kit({ svelte_config }) {
 		}
 	};
 
-	return [plugin_setup, plugin_virtual_modules, plugin_guard, plugin_compile];
+	/** @type {import('vite').Plugin} */
+	const plugin_replace_version_and_hash = {
+		name: 'vite-plugin-svelte-replace-version-and-hash',
+		enforce: 'post',
+
+		generateBundle(_, bundle, __) {
+			if (vite_config.build.ssr) return;
+
+			for (const file in bundle) {
+				if (bundle[file].type !== 'chunk') continue;
+				if (
+					!(bundle[file].code.includes(SUBSTITUTION_APP_VERSION) ||
+					bundle[file].code.includes(SUBSTITUTION_APP_VERSION_HASH))
+				)
+					continue;
+
+				// replace the version after the chunk hash has already been calculated
+				const code = bundle[file].code
+					.replaceAll(
+						SUBSTITUTION_APP_VERSION_HASH,
+						hash(version_hash).padEnd(SUBSTITUTION_APP_VERSION_HASH.length, ' ')
+					)
+					.replaceAll(SUBSTITUTION_APP_VERSION, JSON.stringify(kit.version.name).slice(1, -1));
+
+				bundle[file].code = code;
+			}
+		}
+	};
+
+	return [
+		plugin_setup,
+		plugin_virtual_modules,
+		plugin_guard,
+		plugin_compile,
+		plugin_replace_version_and_hash
+	];
 }
 
 /**

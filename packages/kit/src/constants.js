@@ -9,3 +9,6 @@ export const GENERATED_COMMENT = '// this file is generated — do not edit it\n
 export const ENDPOINT_METHODS = ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS', 'HEAD'];
 
 export const PAGE_METHODS = ['GET', 'POST', 'HEAD'];
+
+export const SUBSTITUTION_APP_VERSION_HASH = '__SVELTEKIT_APP_VERSION_HASH__';
+export const SUBSTITUTION_APP_VERSION = '__SVELTEKIT_APP_VERSION__';
