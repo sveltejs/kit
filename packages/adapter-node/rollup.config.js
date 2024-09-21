@@ -43,6 +43,8 @@ export default [
 	}
 ];
 
+const node_builtin_regex = new RegExp(`from (['"])(${[...builtinModules].join('|')})(['"])`, 'g');
+
 /**
  * @returns {import('rollup').Plugin}
  */
@@ -56,8 +58,8 @@ function prefix_node_builtins() {
 					/** @type {import('rollup').OutputChunk} */
 					const chunk = file;
 					chunk.code = chunk.code.replace(
-						new RegExp(`(['"])(${[...builtinModules].join('|')})(['"])`, 'g'),
-						(match, quote, moduleName) => `${quote}node:${moduleName}${quote}`
+						node_builtin_regex,
+						(match, quote, moduleName) => `from ${quote}node:${moduleName}${quote}`
 					);
 				}
 			}
