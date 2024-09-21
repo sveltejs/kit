@@ -10,7 +10,7 @@ export default [
 			file: 'files/index.js',
 			format: 'esm'
 		},
-		plugins: [nodeResolve({ preferBuiltins: true }), commonjs(), json()],
+		plugins: [prefix_node_builtins(), nodeResolve({ preferBuiltins: true }), commonjs(), json()],
 		external: ['ENV', 'HANDLER', ...builtinModules]
 	},
 	{
@@ -19,7 +19,7 @@ export default [
 			file: 'files/env.js',
 			format: 'esm'
 		},
-		plugins: [nodeResolve(), commonjs(), json()],
+		plugins: [prefix_node_builtins(), nodeResolve({ preferBuiltins: true }), commonjs(), json()],
 		external: ['HANDLER', ...builtinModules]
 	},
 	{
@@ -29,7 +29,7 @@ export default [
 			format: 'esm',
 			inlineDynamicImports: true
 		},
-		plugins: [nodeResolve(), commonjs(), json()],
+		plugins: [prefix_node_builtins(), nodeResolve({ preferBuiltins: true }), commonjs(), json()],
 		external: ['ENV', 'MANIFEST', 'SERVER', 'SHIMS', ...builtinModules]
 	},
 	{
@@ -38,7 +38,29 @@ export default [
 			file: 'files/shims.js',
 			format: 'esm'
 		},
-		plugins: [nodeResolve(), commonjs()],
+		plugins: [prefix_node_builtins(), nodeResolve({ preferBuiltins: true }), commonjs()],
 		external: builtinModules
 	}
 ];
+
+/**
+ * @returns {import('rollup').Plugin}
+ */
+function prefix_node_builtins() {
+	return {
+		name: 'prefix-node-builtins-in-bundle',
+		generateBundle(options, bundle) {
+			for (const fileName of Object.keys(bundle)) {
+				const file = bundle[fileName];
+				if (file.type === 'chunk') {
+					/** @type {import('rollup').OutputChunk} */
+					const chunk = file;
+					chunk.code = chunk.code.replace(
+						new RegExp(`(['"])(${[...builtinModules].join('|')})(['"])`, 'g'),
+						(match, quote, moduleName) => `${quote}node:${moduleName}${quote}`
+					);
+				}
+			}
+		}
+	};
+}
