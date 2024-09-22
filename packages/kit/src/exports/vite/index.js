@@ -944,7 +944,8 @@ async function kit({ svelte_config }) {
 
 			for (const file in bundle) {
 				if (bundle[file].type !== 'chunk') continue;
-				let code = bundle[file].code;
+				const chunk = /** @type {import('rollup').OutputChunk} */ (bundle[file]);
+				let code = chunk.code;
 				if (
 					!(code.includes(app_version_placeholder) || code.includes(app_version_hash_placeholder))
 				)
@@ -965,7 +966,7 @@ async function kit({ svelte_config }) {
 					);
 				}
 
-				bundle[file].code = code;
+				chunk.code = code;
 			}
 		}
 	};
