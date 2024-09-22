@@ -397,7 +397,7 @@ async function kit({ svelte_config }) {
 			const browser = !options?.ssr;
 
 			const global = is_build
-				? `globalThis.__sveltekit_${browser ? APP_VERSION_HASH_PLACEHOLDER_BASE : version_hash}`
+				? `globalThis.__sveltekit_${browser ? app_version_hash_placeholder : version_hash}`
 				: 'globalThis.__sveltekit_dev';
 
 			if (options?.ssr === false && process.env.TEST !== 'true') {
