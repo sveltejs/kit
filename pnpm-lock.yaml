@@ -118,8 +118,8 @@ importers:
         specifier: ^2.4.1
         version: 2.6.0
       '@rollup/plugin-commonjs':
-        specifier: ^26.0.1
-        version: 26.0.1(rollup@4.18.0)
+        specifier: ^28.0.0
+        version: 28.0.0(rollup@4.18.0)
       '@rollup/plugin-json':
         specifier: ^6.1.0
         version: 6.1.0(rollup@4.18.0)
@@ -151,8 +151,8 @@ importers:
   packages/adapter-node:
     dependencies:
       '@rollup/plugin-commonjs':
-        specifier: ^26.0.1
-        version: 26.0.1(rollup@4.18.0)
+        specifier: ^28.0.0
+        version: 28.0.0(rollup@4.18.0)
       '@rollup/plugin-json':
         specifier: ^6.1.0
         version: 6.1.0(rollup@4.18.0)
@@ -1960,8 +1960,8 @@ packages:
   '@polka/url@1.0.0-next.28':
     resolution: {integrity: sha512-8LduaNlMZGwdZ6qWrKlfa+2M4gahzFkprZiAt2TF8uS0qQgBizKXpXURqvTJ4WtmupWxaLqjRb2UCTe72mu+Aw==}
 
-  '@rollup/plugin-commonjs@26.0.1':
-    resolution: {integrity: sha512-UnsKoZK6/aGIH6AdkptXhNvhaqftcjq3zZdT+LY5Ftms6JR06nADcDsYp5hTU9E2lbJUEOhdlY5J4DNTneM+jQ==}
+  '@rollup/plugin-commonjs@28.0.0':
+    resolution: {integrity: sha512-BJcu+a+Mpq476DMXG+hevgPSl56bkUoi88dKT8t3RyUp8kGuOh+2bU8Gs7zXDlu+fyZggnJ+iOBGrb/O1SorYg==}
     engines: {node: '>=16.0.0 || 14 >= 14.17'}
     peerDependencies:
       rollup: ^2.68.0||^3.0.0||^4.0.0
@@ -4810,14 +4810,15 @@ snapshots:
 
   '@polka/url@1.0.0-next.28': {}
 
-  '@rollup/plugin-commonjs@26.0.1(rollup@4.18.0)':
+  '@rollup/plugin-commonjs@28.0.0(rollup@4.18.0)':
     dependencies:
       '@rollup/pluginutils': 5.1.0(rollup@4.18.0)
       commondir: 1.0.1
       estree-walker: 2.0.2
-      glob: 10.4.1
+      fdir: 6.3.0(picomatch@2.3.1)
       is-reference: 1.2.1
       magic-string: 0.30.10
+      picomatch: 2.3.1
     optionalDependencies:
       rollup: 4.18.0
 
@@ -5724,7 +5725,9 @@ snapshots:
     dependencies:
       reusify: 1.0.4
 
-  fdir@6.3.0: {}
+  fdir@6.3.0(picomatch@2.3.1):
+    optionalDependencies:
+      picomatch: 2.3.1
 
   fenceparser@1.1.1: {}
 
@@ -6685,7 +6688,7 @@ snapshots:
     dependencies:
       '@jridgewell/trace-mapping': 0.3.25
       chokidar: 3.6.0
-      fdir: 6.3.0
+      fdir: 6.3.0(picomatch@2.3.1)
       picocolors: 1.0.1
       sade: 1.8.1
       svelte: 4.2.17
