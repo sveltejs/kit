@@ -2,18 +2,6 @@
 title: Types
 ---
 
-## Public types
-
-The following types can be imported from `@sveltejs/kit`:
-
-> TYPES: @sveltejs/kit
-
-## Private types
-
-The following are referenced by the public types documented above, but cannot be imported directly:
-
-> TYPES: Private types
-
 ## Generated types
 
 The `RequestHandler` and `Load` types both accept a `Params` argument allowing you to type the `params` object. For example this endpoint expects `foo`, `bar` and `baz` params:
@@ -44,7 +32,7 @@ type RouteParams = {
 	foo: string;
 	bar: string;
 	baz: string;
-}
+};
 
 export type PageServerLoad = Kit.ServerLoad<RouteParams>;
 export type PageLoad = Kit.Load<RouteParams>;
@@ -96,7 +84,7 @@ export async function load({ params, fetch }) {
 }
 ```
 
-> For this to work, your own `tsconfig.json` or `jsconfig.json` should extend from the generated `.svelte-kit/tsconfig.json` (where `.svelte-kit` is your [`outDir`](configuration#outdir)) and TypeScript should be installed as a dependency:
+> For this to work, your own `tsconfig.json` or `jsconfig.json` should extend from the generated `.svelte-kit/tsconfig.json` (where `.svelte-kit` is your [`outDir`](configuration#outdir)):
 >
 > `{ "extends": "./.svelte-kit/tsconfig.json" }`
 
@@ -152,6 +140,18 @@ Others are required for SvelteKit to work properly, and should also be left unto
 }
 ```
 
-## App
+## $lib
+
+This is a simple alias to `src/lib`, or whatever directory is specified as [`config.kit.files.lib`](/docs/kit/reference/configuration#files). It allows you to access common components and utility modules without `../../../../` nonsense.
+
+### $lib/server
+
+A subdirectory of `$lib`. SvelteKit will prevent you from importing any modules in `$lib/server` into client-side code. See [server-only modules](/docs/server-only-modules).
+
+## app.d.ts
+
+The `app.d.ts` file is home to the ambient types of your apps, i.e. types that are available without explicitly importing them.
+
+Always part of this file is the `App` namespace. This namespace contains several types that influence the shape of certain SvelteKit features you interact with.
 
 > TYPES: App
