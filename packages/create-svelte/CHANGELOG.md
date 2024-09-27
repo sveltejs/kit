@@ -1,5 +1,11 @@
 # create-svelte
 
+## 6.3.12
+### Patch Changes
+
+
+- chore: update typescript-eslint configs ([#12721](https://github.com/sveltejs/kit/pull/12721))
+
 ## 6.3.11
 ### Patch Changes
 
