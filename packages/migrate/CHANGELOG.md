@@ -1,5 +1,11 @@
 # svelte-migrate
 
+## 1.5.0
+### Minor Changes
+
+
+- feat: add Svelte 5 migration ([#12519](https://github.com/sveltejs/kit/pull/12519))
+
 ## 1.4.5
 ### Patch Changes
 
