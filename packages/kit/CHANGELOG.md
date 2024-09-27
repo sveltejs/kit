@@ -1,5 +1,11 @@
 # @sveltejs/kit
 
+## 2.6.1
+### Patch Changes
+
+
+- fix: better error message when calling push/replaceState before router is initialized ([#11968](https://github.com/sveltejs/kit/pull/11968))
+
 ## 2.6.0
 ### Minor Changes
 
