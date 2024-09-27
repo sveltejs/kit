@@ -1,5 +1,14 @@
 # @sveltejs/adapter-node
 
+## 5.2.5
+### Patch Changes
+
+
+- chore: upgrade rollup plugins ([#12706](https://github.com/sveltejs/kit/pull/12706))
+
+- Updated dependencies [[`a233f53f28fcb4c3ea63d2faf156fba09a18456c`](https://github.com/sveltejs/kit/commit/a233f53f28fcb4c3ea63d2faf156fba09a18456c), [`5b40b04608023a3fcb6c601a5f2d36485ce07196`](https://github.com/sveltejs/kit/commit/5b40b04608023a3fcb6c601a5f2d36485ce07196)]:
+  - @sveltejs/kit@2.6.0
+
 ## 5.2.4
 ### Patch Changes
 
