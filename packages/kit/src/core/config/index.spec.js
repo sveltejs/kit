@@ -84,6 +84,7 @@ const get_defaults = (prefix = '') => ({
 				universal: join(prefix, 'src/hooks')
 			},
 			lib: join(prefix, 'src/lib'),
+			nestedServerDirs: false,
 			params: join(prefix, 'src/params'),
 			routes: join(prefix, 'src/routes'),
 			serviceWorker: join(prefix, 'src/service-worker'),

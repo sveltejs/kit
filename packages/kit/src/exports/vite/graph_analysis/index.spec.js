@@ -5,8 +5,15 @@ import { module_guard } from './index.js';
  *
  * @param {Record<string, { importedIds?: string[]; dynamicallyImportedIds?: string[] }>} graph
  * @param {string} [expected_error]
+ * @param {boolean} [nestedServerDirs] if omitted, test both values
  */
-function check(graph, expected_error) {
+function check(graph, expected_error, nestedServerDirs) {
+	if (nestedServerDirs == null) {
+		check(graph, expected_error, false);
+		check(graph, expected_error, true);
+		return;
+	}
+
 	// @ts-expect-error
 	const context = /** @type {import('vite').Rollup.PluginContext} */ ({
 		/** @param {string} id */
@@ -19,10 +26,14 @@ function check(graph, expected_error) {
 		}
 	});
 
-	const guard = module_guard(context, {
-		cwd: '~',
-		lib: '~/src/lib'
-	});
+	const guard = module_guard(
+		context,
+		{
+			cwd: '~',
+			lib: '~/src/lib'
+		},
+		nestedServerDirs
+	);
 
 	if (expected_error) {
 		try {
@@ -135,6 +146,26 @@ test('throws an error when importing a $lib/server/**/*.js module', () => {
 	);
 });
 
+test('throws an error when importing a $lib/**/server/**/*.js module only when nestedServerDirs is enabled', () => {
+	const graph = {
+		'~/src/entry': {
+			importedIds: ['~/src/routes/home/+layout.svelte']
+		},
+		'~/src/routes/home/+layout.svelte': {
+			importedIds: ['~/src/lib/a/b/c/server/some/module.js']
+		},
+		'~/src/lib/a/b/c/server/some/module.js': {}
+	};
+	check(graph, undefined, false);
+	check(
+		graph,
+		`Cannot import $lib/a/b/c/server/some/module.js into client-side code:
+		- src/routes/home/+layout.svelte imports
+		 - $lib/a/b/c/server/some/module.js`,
+		true
+	);
+});
+
 test('ignores .server.js files in node_modules', () => {
 	check({
 		'~/src/entry': {
@@ -156,5 +187,17 @@ test('ignores .server.js files outside the project root', () => {
 			importedIds: ['/illegal.server.js']
 		},
 		'/illegal.server.js': {}
+	});
+});
+
+test('ignores server/**/module.js files outside the $lib directory', () => {
+	check({
+		'~/src/entry': {
+			importedIds: ['~/src/routes/+page.svelte']
+		},
+		'~/src/routes/+page.svelte': {
+			importedIds: ['~/src/server/random.js']
+		},
+		'~/src/server/random.js': {}
 	});
 });

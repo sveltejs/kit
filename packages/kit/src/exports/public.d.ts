@@ -440,6 +440,12 @@ export interface KitConfig {
 		 */
 		lib?: string;
 		/**
+		 * whether to consider any folder named `server` inside `$lib` as containing server-only modules,
+		 * instead of just one (`$lib/server/`).
+		 * @default false
+		 */
+		nestedServerDirs?: boolean;
+		/**
 		 * a directory containing [parameter matchers](https://kit.svelte.dev/docs/advanced-routing#matching)
 		 * @default "src/params"
 		 */
