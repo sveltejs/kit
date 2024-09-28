@@ -92,7 +92,7 @@ test('Update package.json', () => {
 	"name": "svelte-app",
 	"version": "1.0.0",
 	"devDependencies": {
-		"svelte": "^5.0.0",
+		"svelte": "^5.0.0-next.0",
 		"svelte-check": "^4.0.0",
 		"svelte-preprocess": "^6.0.0"
 	},
