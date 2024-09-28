@@ -1,5 +1,11 @@
 # svelte-migrate
 
+## 1.5.1
+### Patch Changes
+
+
+- fix: use `next` versions for `svelte` and `vite-plugin-svelte` ([#12729](https://github.com/sveltejs/kit/pull/12729))
+
 ## 1.5.0
 ### Minor Changes
 
