@@ -40,7 +40,7 @@ Svelte is an MIT-licensed open source project with its ongoing development made 
 
 - [Becoming a backer on Open Collective](https://opencollective.com/svelte).
 
-Funds donated via Open Collective will be used for compensating expenses related to Svelte's development such as hosting costs. If sufficient donations are received, funds may also be used to support Svelte's development more directly.
+Funds donated via Open Collective will be used for compensating expenses related to Svelte's development such as hosting costs. If sufficient donations are received, funds may also be used to support Svelte's development more directly. Ayesha...
 
 ## License
 
