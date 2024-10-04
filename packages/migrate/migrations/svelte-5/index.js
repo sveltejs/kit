@@ -10,6 +10,7 @@ import semver from 'semver';
 import glob from 'tiny-glob/sync.js';
 import { bail, check_git, update_js_file, update_svelte_file } from '../../utils.js';
 import { migrate as migrate_svelte_4 } from '../svelte-4/index.js';
+import { migrate as migrate_sveltekit_2 } from '../sveltekit-2/index.js';
 import { transform_module_code, transform_svelte_code, update_pkg_json } from './migrate.js';
 
 export async function migrate() {
@@ -22,6 +23,7 @@ export async function migrate() {
 	);
 
 	const pkg = JSON.parse(fs.readFileSync('package.json', 'utf8'));
+
 	const svelte_dep = pkg.devDependencies?.svelte ?? pkg.dependencies?.svelte;
 	if (svelte_dep && semver.validRange(svelte_dep) && semver.gtr('4.0.0', svelte_dep)) {
 		console.log(
@@ -43,6 +45,42 @@ export async function migrate() {
 			await migrate_svelte_4();
 			console.log(
 				colors.bold().green('`svelte-4` migration complete. Continue with `svelte-5` migration?\n')
+			);
+			const response = await prompts({
+				type: 'confirm',
+				name: 'value',
+				message: 'Continue?',
+				initial: false
+			});
+			if (!response.value) {
+				process.exit(1);
+			}
+		}
+	}
+
+	const kit_dep = pkg.devDependencies?.['@sveltejs/kit'] ?? pkg.dependencies?.['@sveltejs/kit'];
+	if (kit_dep && semver.validRange(kit_dep) && semver.gtr('2.0.0', kit_dep)) {
+		console.log(
+			colors
+				.bold()
+				.yellow(
+					'\nDetected SvelteKit 1. You need to upgrade to SvelteKit version 2 first (`npx svelte-migrate sveltekit-2`).\n'
+				)
+		);
+		const response = await prompts({
+			type: 'confirm',
+			name: 'value',
+			message: 'Run `sveltekit-2` migration now?',
+			initial: false
+		});
+		if (!response.value) {
+			process.exit(1);
+		} else {
+			await migrate_sveltekit_2();
+			console.log(
+				colors
+					.bold()
+					.green('`sveltekit-2` migration complete. Continue with `svelte-5` migration?\n')
 			);
 			const response = await prompts({
 				type: 'confirm',
