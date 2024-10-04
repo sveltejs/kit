@@ -143,7 +143,7 @@ export async function migrate() {
 		if (extensions.some((ext) => file.endsWith(ext))) {
 			if (svelte_extensions.some((ext) => file.endsWith(ext))) {
 				update_svelte_file(file, transform_module_code, (code) =>
-					transform_svelte_code(code, migrate)
+					transform_svelte_code(code, migrate, file)
 				);
 			} else {
 				update_js_file(file, transform_module_code);

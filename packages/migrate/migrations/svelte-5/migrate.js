@@ -55,10 +55,11 @@ export function transform_module_code(code) {
 
 /**
  * @param {string} code
- * @param {(source: code) => { code: string }} transform_code
+ * @param {(source: string, filename: string) => { code: string }} transform_code
+ * @param {string} filename
  */
-export function transform_svelte_code(code, transform_code) {
-	return transform_code(code).code;
+export function transform_svelte_code(code, transform_code, filename) {
+	return transform_code(code, filename).code;
 }
 
 /**
