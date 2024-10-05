@@ -30,13 +30,13 @@ export async function migrate() {
 			colors
 				.bold()
 				.yellow(
-					'\nDetected Svelte 3. We recommend running the `svelte-4` migration first (`npx svelte-migrate svelte-4`).\n'
+					'\nDetected Svelte 3. You need to upgrade to Svelte version 4 first (`npx svelte-migrate svelte-4`).\n'
 				)
 		);
 		const response = await prompts({
 			type: 'confirm',
 			name: 'value',
-			message: 'Run `svelte-4` migration now?',
+			message: 'Run svelte-4 migration now?',
 			initial: false
 		});
 		if (!response.value) {
@@ -44,17 +44,13 @@ export async function migrate() {
 		} else {
 			await migrate_svelte_4();
 			console.log(
-				colors.bold().green('`svelte-4` migration complete. Continue with `svelte-5` migration?\n')
+				colors
+					.bold()
+					.green(
+						'svelte-4 migration complete. Check that everything is ok, then run `npx svelte-migrate svelte-5` again to continue the Svelte 5 migration.\n'
+					)
 			);
-			const response = await prompts({
-				type: 'confirm',
-				name: 'value',
-				message: 'Continue?',
-				initial: false
-			});
-			if (!response.value) {
-				process.exit(1);
-			}
+			process.exit(0);
 		}
 	}
 
@@ -70,7 +66,7 @@ export async function migrate() {
 		const response = await prompts({
 			type: 'confirm',
 			name: 'value',
-			message: 'Run `sveltekit-2` migration now?',
+			message: 'Run sveltekit-2 migration now?',
 			initial: false
 		});
 		if (!response.value) {
@@ -80,17 +76,11 @@ export async function migrate() {
 			console.log(
 				colors
 					.bold()
-					.green('`sveltekit-2` migration complete. Continue with `svelte-5` migration?\n')
+					.green(
+						'sveltekit-2 migration complete. Check that everything is ok, then run `npx svelte-migrate svelte-5` again to continue the Svelte 5 migration.\n'
+					)
 			);
-			const response = await prompts({
-				type: 'confirm',
-				name: 'value',
-				message: 'Continue?',
-				initial: false
-			});
-			if (!response.value) {
-				process.exit(1);
-			}
+			process.exit(0);
 		}
 	}
 
