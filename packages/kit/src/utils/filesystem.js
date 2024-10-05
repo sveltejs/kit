@@ -181,7 +181,7 @@ export function resolve_entry(entry) {
 			const base = path.basename(entry);
 			const files = fs.readdirSync(dir);
 
-			const found = files.find((file) => file.replace(/\.[^.]+$/, '') === base);
+			const found = files.find((file) => file.replace(/\.(js|ts)$/, '') === base);
 
 			if (found) return path.join(dir, found);
 		}

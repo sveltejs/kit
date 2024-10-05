@@ -1,3 +1,5 @@
+import process from 'node:process';
+
 // List of adapters to check for. `version` is used to pin the installed adapter version and should point
 // to the latest version of the adapter that is compatible with adapter-auto's current peerDependency version of SvelteKit.
 export const adapters = [
@@ -30,5 +32,11 @@ export const adapters = [
 		test: () => !!process.env.SST,
 		module: 'svelte-kit-sst',
 		version: '2'
+	},
+	{
+		name: 'Google Cloud Run',
+		test: () => !!process.env.GCP_BUILDPACKS,
+		module: '@sveltejs/adapter-node',
+		version: '5'
 	}
 ];

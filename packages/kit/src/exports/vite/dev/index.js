@@ -1,5 +1,6 @@
 import fs from 'node:fs';
 import path from 'node:path';
+import process from 'node:process';
 import { URL } from 'node:url';
 import { AsyncLocalStorage } from 'node:async_hooks';
 import colors from 'kleur';
@@ -97,9 +98,9 @@ export async function dev(vite, vite_config, svelte_config) {
 		return { module, module_node, url };
 	}
 
-	async function update_manifest() {
+	function update_manifest() {
 		try {
-			({ manifest_data } = await sync.create(svelte_config));
+			({ manifest_data } = sync.create(svelte_config));
 
 			if (manifest_error) {
 				manifest_error = null;
@@ -273,7 +274,7 @@ export async function dev(vite, vite_config, svelte_config) {
 		return error.stack;
 	}
 
-	await update_manifest();
+	update_manifest();
 
 	/**
 	 * @param {string} event
@@ -389,7 +390,7 @@ export async function dev(vite, vite_config, svelte_config) {
 		return ws_send.apply(vite.ws, args);
 	};
 
-	vite.middlewares.use(async (req, res, next) => {
+	vite.middlewares.use((req, res, next) => {
 		try {
 			const base = `${vite.config.server.https ? 'https' : 'http'}://${
 				req.headers[':authority'] || req.headers.host

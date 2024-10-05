@@ -3,6 +3,7 @@ import { BROWSER, DEV } from 'esm-env';
 
 export { VERSION } from '../version.js';
 
+// TODO 3.0: remove these types as they are not used anymore (we can't remove them yet because that would be a breaking change)
 /**
  * @template {number} TNumber
  * @template {any[]} [TArray=[]]
@@ -15,6 +16,9 @@ export { VERSION } from '../version.js';
  * @typedef {Exclude<TEnd | LessThan<TEnd>, LessThan<TStart>>} NumericRange
  */
 
+// Keep the status codes as `number` because restricting to certain numbers makes it unnecessarily hard to use compared to the benefits
+// (we have runtime errors already to check for invalid codes). Also see https://github.com/sveltejs/kit/issues/11780
+
 // we have to repeat the JSDoc because the display for function overloads is broken
 // see https://github.com/microsoft/TypeScript/issues/55056
 
@@ -23,10 +27,10 @@ export { VERSION } from '../version.js';
  * When called during request handling, this will cause SvelteKit to
  * return an error response without invoking `handleError`.
  * Make sure you're not catching the thrown error, which would prevent SvelteKit from handling it.
- * @param {NumericRange<400, 599>} status The [HTTP status code](https://developer.mozilla.org/en-US/docs/Web/HTTP/Status#client_error_responses). Must be in the range 400-599.
+ * @param {number} status The [HTTP status code](https://developer.mozilla.org/en-US/docs/Web/HTTP/Status#client_error_responses). Must be in the range 400-599.
  * @param {App.Error} body An object that conforms to the App.Error type. If a string is passed, it will be used as the message property.
  * @overload
- * @param {NumericRange<400, 599>} status
+ * @param {number} status
  * @param {App.Error} body
  * @return {never}
  * @throws {HttpError} This error instructs SvelteKit to initiate HTTP error handling.
@@ -37,10 +41,10 @@ export { VERSION } from '../version.js';
  * When called during request handling, this will cause SvelteKit to
  * return an error response without invoking `handleError`.
  * Make sure you're not catching the thrown error, which would prevent SvelteKit from handling it.
- * @param {NumericRange<400, 599>} status The [HTTP status code](https://developer.mozilla.org/en-US/docs/Web/HTTP/Status#client_error_responses). Must be in the range 400-599.
+ * @param {number} status The [HTTP status code](https://developer.mozilla.org/en-US/docs/Web/HTTP/Status#client_error_responses). Must be in the range 400-599.
  * @param {{ message: string } extends App.Error ? App.Error | string | undefined : never} [body] An object that conforms to the App.Error type. If a string is passed, it will be used as the message property.
  * @overload
- * @param {NumericRange<400, 599>} status
+ * @param {number} status
  * @param {{ message: string } extends App.Error ? App.Error | string | undefined : never} [body]
  * @return {never}
  * @throws {HttpError} This error instructs SvelteKit to initiate HTTP error handling.
@@ -51,7 +55,7 @@ export { VERSION } from '../version.js';
  * When called during request handling, this will cause SvelteKit to
  * return an error response without invoking `handleError`.
  * Make sure you're not catching the thrown error, which would prevent SvelteKit from handling it.
- * @param {NumericRange<400, 599>} status The [HTTP status code](https://developer.mozilla.org/en-US/docs/Web/HTTP/Status#client_error_responses). Must be in the range 400-599.
+ * @param {number} status The [HTTP status code](https://developer.mozilla.org/en-US/docs/Web/HTTP/Status#client_error_responses). Must be in the range 400-599.
  * @param {{ message: string } extends App.Error ? App.Error | string | undefined : never} body An object that conforms to the App.Error type. If a string is passed, it will be used as the message property.
  * @return {never}
  * @throws {HttpError} This error instructs SvelteKit to initiate HTTP error handling.
@@ -80,7 +84,7 @@ export function isHttpError(e, status) {
 /**
  * Redirect a request. When called during request handling, SvelteKit will return a redirect response.
  * Make sure you're not catching the thrown redirect, which would prevent SvelteKit from handling it.
- * @param {NumericRange<300, 308>} status The [HTTP status code](https://developer.mozilla.org/en-US/docs/Web/HTTP/Status#redirection_messages). Must be in the range 300-308.
+ * @param {300 | 301 | 302 | 303 | 304 | 305 | 306 | 307 | 308 | ({} & number)} status The [HTTP status code](https://developer.mozilla.org/en-US/docs/Web/HTTP/Status#redirection_messages). Must be in the range 300-308.
  * @param {string | URL} location The location to redirect to.
  * @throws {Redirect} This error instructs SvelteKit to redirect to the specified location.
  * @throws {Error} If the provided status is invalid.
@@ -91,7 +95,11 @@ export function redirect(status, location) {
 		throw new Error('Invalid status code');
 	}
 
-	throw new Redirect(status, location.toString());
+	throw new Redirect(
+		// @ts-ignore
+		status,
+		location.toString()
+	);
 }
 
 /**

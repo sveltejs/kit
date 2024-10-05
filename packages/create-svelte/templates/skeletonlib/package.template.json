@@ -23,9 +23,8 @@
 		"@sveltejs/kit": "^2.0.0",
 		"@sveltejs/package": "^2.0.0",
 		"@sveltejs/vite-plugin-svelte": "^3.0.0",
-		"publint": "^0.1.9",
+		"publint": "^0.2.0",
 		"svelte": "^4.2.7",
-		"tslib": "^2.4.1",
 		"typescript": "^5.3.2",
 		"vite": "^5.0.11"
 	},
