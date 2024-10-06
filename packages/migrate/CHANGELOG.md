@@ -1,5 +1,17 @@
 # svelte-migrate
 
+## 1.6.0
+### Minor Changes
+
+
+- feat: pass filename to `migrate` to allow for `svelte:self` migration ([#12749](https://github.com/sveltejs/kit/pull/12749))
+
+
+### Patch Changes
+
+
+- fix: prompt SvelteKit 2 migration during Svelte 5 migration if necessary ([#12748](https://github.com/sveltejs/kit/pull/12748))
+
 ## 1.5.1
 ### Patch Changes
 
