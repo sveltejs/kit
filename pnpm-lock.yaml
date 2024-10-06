@@ -38,11 +38,7 @@ importers:
         version: link:../kit
       '@sveltejs/vite-plugin-svelte':
         specifier: ^3.0.1
-<<<<<<< HEAD
-        version: 3.1.0(svelte@4.2.17)(vite@6.0.0-beta.2(@types/node@18.19.31)(lightningcss@1.24.1))
-=======
-        version: 3.1.0(svelte@4.2.17)(vite@5.3.3(@types/node@18.19.50)(lightningcss@1.24.1))
->>>>>>> main
+        version: 3.1.0(svelte@4.2.17)(vite@6.0.0-beta.2(@types/node@18.19.50)(lightningcss@1.24.1))
       '@types/node':
         specifier: ^18.19.48
         version: 18.19.50
@@ -135,11 +131,7 @@ importers:
         version: link:../kit
       '@sveltejs/vite-plugin-svelte':
         specifier: ^3.0.1
-<<<<<<< HEAD
-        version: 3.1.0(svelte@4.2.17)(vite@6.0.0-beta.2(@types/node@18.19.31)(lightningcss@1.24.1))
-=======
-        version: 3.1.0(svelte@4.2.17)(vite@5.3.3(@types/node@18.19.50)(lightningcss@1.24.1))
->>>>>>> main
+        version: 3.1.0(svelte@4.2.17)(vite@6.0.0-beta.2(@types/node@18.19.50)(lightningcss@1.24.1))
       '@types/node':
         specifier: ^18.19.48
         version: 18.19.50
@@ -179,11 +171,7 @@ importers:
         version: link:../kit
       '@sveltejs/vite-plugin-svelte':
         specifier: ^3.0.1
-<<<<<<< HEAD
-        version: 3.1.0(svelte@4.2.17)(vite@6.0.0-beta.2(@types/node@18.19.31)(lightningcss@1.24.1))
-=======
-        version: 3.1.0(svelte@4.2.17)(vite@5.3.3(@types/node@18.19.50)(lightningcss@1.24.1))
->>>>>>> main
+        version: 3.1.0(svelte@4.2.17)(vite@6.0.0-beta.2(@types/node@18.19.50)(lightningcss@1.24.1))
       '@types/node':
         specifier: ^18.19.48
         version: 18.19.50
@@ -210,11 +198,7 @@ importers:
         version: link:../kit
       '@sveltejs/vite-plugin-svelte':
         specifier: ^3.0.1
-<<<<<<< HEAD
-        version: 3.1.0(svelte@4.2.17)(vite@6.0.0-beta.2(@types/node@18.19.31)(lightningcss@1.24.1))
-=======
-        version: 3.1.0(svelte@4.2.17)(vite@5.3.3(@types/node@18.19.50)(lightningcss@1.24.1))
->>>>>>> main
+        version: 3.1.0(svelte@4.2.17)(vite@6.0.0-beta.2(@types/node@18.19.50)(lightningcss@1.24.1))
       '@types/node':
         specifier: ^18.19.48
         version: 18.19.50
@@ -228,13 +212,8 @@ importers:
         specifier: ^5.3.3
         version: 5.4.5
       vite:
-<<<<<<< HEAD
         specifier: 6.0.0-beta.2
-        version: 6.0.0-beta.2(@types/node@18.19.31)(lightningcss@1.24.1)
-=======
-        specifier: ^5.3.2
-        version: 5.3.3(@types/node@18.19.50)(lightningcss@1.24.1)
->>>>>>> main
+        version: 6.0.0-beta.2(@types/node@18.19.50)(lightningcss@1.24.1)
 
   packages/adapter-static/test/apps/prerendered:
     devDependencies:
@@ -243,11 +222,7 @@ importers:
         version: link:../../../../kit
       '@sveltejs/vite-plugin-svelte':
         specifier: ^3.0.1
-<<<<<<< HEAD
-        version: 3.1.0(svelte@4.2.17)(vite@6.0.0-beta.2(@types/node@18.19.31)(lightningcss@1.24.1))
-=======
-        version: 3.1.0(svelte@4.2.17)(vite@5.3.3(@types/node@18.19.50)(lightningcss@1.24.1))
->>>>>>> main
+        version: 3.1.0(svelte@4.2.17)(vite@6.0.0-beta.2(@types/node@18.19.50)(lightningcss@1.24.1))
       sirv-cli:
         specifier: ^2.0.2
         version: 2.0.2
@@ -255,13 +230,8 @@ importers:
         specifier: ^4.2.10
         version: 4.2.17
       vite:
-<<<<<<< HEAD
         specifier: 6.0.0-beta.2
-        version: 6.0.0-beta.2(@types/node@18.19.31)(lightningcss@1.24.1)
-=======
-        specifier: ^5.3.2
-        version: 5.3.3(@types/node@18.19.50)(lightningcss@1.24.1)
->>>>>>> main
+        version: 6.0.0-beta.2(@types/node@18.19.50)(lightningcss@1.24.1)
 
   packages/adapter-static/test/apps/spa:
     devDependencies:
@@ -273,11 +243,7 @@ importers:
         version: link:../../../../kit
       '@sveltejs/vite-plugin-svelte':
         specifier: ^3.0.1
-<<<<<<< HEAD
-        version: 3.1.0(svelte@4.2.17)(vite@6.0.0-beta.2(@types/node@18.19.31)(lightningcss@1.24.1))
-=======
-        version: 3.1.0(svelte@4.2.17)(vite@5.3.3(@types/node@18.19.50)(lightningcss@1.24.1))
->>>>>>> main
+        version: 3.1.0(svelte@4.2.17)(vite@6.0.0-beta.2(@types/node@18.19.50)(lightningcss@1.24.1))
       sirv-cli:
         specifier: ^2.0.2
         version: 2.0.2
@@ -285,13 +251,8 @@ importers:
         specifier: ^4.2.10
         version: 4.2.17
       vite:
-<<<<<<< HEAD
         specifier: 6.0.0-beta.2
-        version: 6.0.0-beta.2(@types/node@18.19.31)(lightningcss@1.24.1)
-=======
-        specifier: ^5.3.2
-        version: 5.3.3(@types/node@18.19.50)(lightningcss@1.24.1)
->>>>>>> main
+        version: 6.0.0-beta.2(@types/node@18.19.50)(lightningcss@1.24.1)
 
   packages/adapter-vercel:
     dependencies:
@@ -307,11 +268,7 @@ importers:
         version: link:../kit
       '@sveltejs/vite-plugin-svelte':
         specifier: ^3.0.1
-<<<<<<< HEAD
-        version: 3.1.0(svelte@4.2.17)(vite@6.0.0-beta.2(@types/node@18.19.31)(lightningcss@1.24.1))
-=======
-        version: 3.1.0(svelte@4.2.17)(vite@5.3.3(@types/node@18.19.50)(lightningcss@1.24.1))
->>>>>>> main
+        version: 3.1.0(svelte@4.2.17)(vite@6.0.0-beta.2(@types/node@18.19.50)(lightningcss@1.24.1))
       '@types/node':
         specifier: ^18.19.48
         version: 18.19.50
@@ -326,7 +283,7 @@ importers:
     dependencies:
       '@sveltejs/kit':
         specifier: ^1.0.0 || ^2.0.0
-        version: 2.6.1(@sveltejs/vite-plugin-svelte@3.1.0(svelte@4.2.17)(vite@6.0.0-beta.2(@types/node@18.19.31)(lightningcss@1.24.1)))(svelte@4.2.17)(vite@6.0.0-beta.2(@types/node@18.19.31)(lightningcss@1.24.1))
+        version: 2.6.1(@sveltejs/vite-plugin-svelte@3.1.0(svelte@4.2.17)(vite@6.0.0-beta.2(@types/node@18.19.50)(lightningcss@1.24.1)))(svelte@4.2.17)(vite@6.0.0-beta.2(@types/node@18.19.50)(lightningcss@1.24.1))
     devDependencies:
       typescript:
         specifier: ^5.3.3
@@ -391,11 +348,7 @@ importers:
         version: link:../../../kit
       '@sveltejs/vite-plugin-svelte':
         specifier: ^3.0.0
-<<<<<<< HEAD
-        version: 3.1.0(svelte@4.2.17)(vite@6.0.0-beta.2(@types/node@18.19.31)(lightningcss@1.24.1))
-=======
-        version: 3.1.0(svelte@4.2.17)(vite@5.3.3(@types/node@18.19.50)(lightningcss@1.24.1))
->>>>>>> main
+        version: 3.1.0(svelte@4.2.17)(vite@6.0.0-beta.2(@types/node@18.19.50)(lightningcss@1.24.1))
       svelte:
         specifier: ^4.2.10
         version: 4.2.17
@@ -403,13 +356,8 @@ importers:
         specifier: ^5.3.3
         version: 5.4.5
       vite:
-<<<<<<< HEAD
         specifier: 6.0.0-beta.2
-        version: 6.0.0-beta.2(@types/node@18.19.31)(lightningcss@1.24.1)
-=======
-        specifier: ^5.3.2
-        version: 5.3.3(@types/node@18.19.50)(lightningcss@1.24.1)
->>>>>>> main
+        version: 6.0.0-beta.2(@types/node@18.19.50)(lightningcss@1.24.1)
 
   packages/create-svelte/templates/skeleton:
     devDependencies:
@@ -448,13 +396,8 @@ importers:
         specifier: ^5.3.3
         version: 5.4.5
       vite:
-<<<<<<< HEAD
         specifier: 6.0.0-beta.2
-        version: 6.0.0-beta.2(@types/node@18.19.31)(lightningcss@1.24.1)
-=======
-        specifier: ^5.3.2
-        version: 5.3.3(@types/node@18.19.50)(lightningcss@1.24.1)
->>>>>>> main
+        version: 6.0.0-beta.2(@types/node@18.19.50)(lightningcss@1.24.1)
       vitest:
         specifier: ^2.0.1
         version: 2.0.1(@types/node@18.19.50)(lightningcss@1.24.1)
@@ -503,11 +446,7 @@ importers:
         version: 1.44.1
       '@sveltejs/vite-plugin-svelte':
         specifier: ^3.0.1
-<<<<<<< HEAD
-        version: 3.1.0(svelte@4.2.17)(vite@6.0.0-beta.2(@types/node@18.19.31)(lightningcss@1.24.1))
-=======
-        version: 3.1.0(svelte@4.2.17)(vite@5.3.3(@types/node@18.19.50)(lightningcss@1.24.1))
->>>>>>> main
+        version: 3.1.0(svelte@4.2.17)(vite@6.0.0-beta.2(@types/node@18.19.50)(lightningcss@1.24.1))
       '@types/connect':
         specifier: ^3.4.38
         version: 3.4.38
@@ -533,13 +472,8 @@ importers:
         specifier: ^5.3.3
         version: 5.4.5
       vite:
-<<<<<<< HEAD
         specifier: 6.0.0-beta.2
-        version: 6.0.0-beta.2(@types/node@18.19.31)(lightningcss@1.24.1)
-=======
-        specifier: ^5.3.2
-        version: 5.3.3(@types/node@18.19.50)(lightningcss@1.24.1)
->>>>>>> main
+        version: 6.0.0-beta.2(@types/node@18.19.50)(lightningcss@1.24.1)
       vitest:
         specifier: ^2.0.1
         version: 2.0.1(@types/node@18.19.50)(lightningcss@1.24.1)
@@ -554,11 +488,7 @@ importers:
         version: link:../../..
       '@sveltejs/vite-plugin-svelte':
         specifier: ^3.0.1
-<<<<<<< HEAD
-        version: 3.1.0(svelte@4.2.17)(vite@6.0.0-beta.2(@types/node@18.19.31)(lightningcss@1.24.1))
-=======
-        version: 3.1.0(svelte@4.2.17)(vite@5.3.3(@types/node@18.19.50)(lightningcss@1.24.1))
->>>>>>> main
+        version: 3.1.0(svelte@4.2.17)(vite@6.0.0-beta.2(@types/node@18.19.50)(lightningcss@1.24.1))
       cross-env:
         specifier: ^7.0.3
         version: 7.0.3
@@ -569,24 +499,14 @@ importers:
         specifier: ^4.2.10
         version: 4.2.17
       svelte-check:
-<<<<<<< HEAD
-        specifier: ^3.6.3
-        version: 3.6.9(postcss-load-config@3.1.4(postcss@8.4.47))(postcss@8.4.47)(svelte@4.2.17)
-=======
         specifier: ^4.0.1
         version: 4.0.1(svelte@4.2.17)(typescript@5.4.5)
->>>>>>> main
       typescript:
         specifier: ^5.3.3
         version: 5.4.5
       vite:
-<<<<<<< HEAD
         specifier: 6.0.0-beta.2
-        version: 6.0.0-beta.2(@types/node@18.19.31)(lightningcss@1.24.1)
-=======
-        specifier: ^5.3.2
-        version: 5.3.3(@types/node@18.19.50)(lightningcss@1.24.1)
->>>>>>> main
+        version: 6.0.0-beta.2(@types/node@18.19.50)(lightningcss@1.24.1)
 
   packages/kit/test/apps/basics:
     devDependencies:
@@ -595,11 +515,7 @@ importers:
         version: link:../../..
       '@sveltejs/vite-plugin-svelte':
         specifier: ^3.0.1
-<<<<<<< HEAD
-        version: 3.1.0(svelte@4.2.17)(vite@6.0.0-beta.2(@types/node@18.19.31)(lightningcss@1.24.1))
-=======
-        version: 3.1.0(svelte@4.2.17)(vite@5.3.3(@types/node@18.19.50)(lightningcss@1.24.1))
->>>>>>> main
+        version: 3.1.0(svelte@4.2.17)(vite@6.0.0-beta.2(@types/node@18.19.50)(lightningcss@1.24.1))
       cross-env:
         specifier: ^7.0.3
         version: 7.0.3
@@ -610,24 +526,14 @@ importers:
         specifier: ^4.2.10
         version: 4.2.17
       svelte-check:
-<<<<<<< HEAD
-        specifier: ^3.6.3
-        version: 3.6.9(postcss-load-config@3.1.4(postcss@8.4.47))(postcss@8.4.47)(svelte@4.2.17)
-=======
         specifier: ^4.0.1
         version: 4.0.1(svelte@4.2.17)(typescript@5.4.5)
->>>>>>> main
       typescript:
         specifier: ^5.3.3
         version: 5.4.5
       vite:
-<<<<<<< HEAD
         specifier: 6.0.0-beta.2
-        version: 6.0.0-beta.2(@types/node@18.19.31)(lightningcss@1.24.1)
-=======
-        specifier: ^5.3.2
-        version: 5.3.3(@types/node@18.19.50)(lightningcss@1.24.1)
->>>>>>> main
+        version: 6.0.0-beta.2(@types/node@18.19.50)(lightningcss@1.24.1)
 
   packages/kit/test/apps/dev-only:
     devDependencies:
@@ -636,11 +542,7 @@ importers:
         version: link:../../..
       '@sveltejs/vite-plugin-svelte':
         specifier: ^3.0.1
-<<<<<<< HEAD
-        version: 3.1.0(svelte@4.2.17)(vite@6.0.0-beta.2(@types/node@18.19.31)(lightningcss@1.24.1))
-=======
-        version: 3.1.0(svelte@4.2.17)(vite@5.3.3(@types/node@18.19.50)(lightningcss@1.24.1))
->>>>>>> main
+        version: 3.1.0(svelte@4.2.17)(vite@6.0.0-beta.2(@types/node@18.19.50)(lightningcss@1.24.1))
       cross-env:
         specifier: ^7.0.3
         version: 7.0.3
@@ -678,24 +580,14 @@ importers:
         specifier: ^4.2.10
         version: 4.2.17
       svelte-check:
-<<<<<<< HEAD
-        specifier: ^3.6.3
-        version: 3.6.9(postcss-load-config@3.1.4(postcss@8.4.47))(postcss@8.4.47)(svelte@4.2.17)
-=======
         specifier: ^4.0.1
         version: 4.0.1(svelte@4.2.17)(typescript@5.4.5)
->>>>>>> main
       typescript:
         specifier: ^5.3.3
         version: 5.4.5
       vite:
-<<<<<<< HEAD
         specifier: 6.0.0-beta.2
-        version: 6.0.0-beta.2(@types/node@18.19.31)(lightningcss@1.24.1)
-=======
-        specifier: ^5.3.2
-        version: 5.3.3(@types/node@18.19.50)(lightningcss@1.24.1)
->>>>>>> main
+        version: 6.0.0-beta.2(@types/node@18.19.50)(lightningcss@1.24.1)
 
   packages/kit/test/apps/embed:
     devDependencies:
@@ -704,11 +596,7 @@ importers:
         version: link:../../..
       '@sveltejs/vite-plugin-svelte':
         specifier: ^3.0.1
-<<<<<<< HEAD
-        version: 3.1.0(svelte@4.2.17)(vite@6.0.0-beta.2(@types/node@18.19.31)(lightningcss@1.24.1))
-=======
-        version: 3.1.0(svelte@4.2.17)(vite@5.3.3(@types/node@18.19.50)(lightningcss@1.24.1))
->>>>>>> main
+        version: 3.1.0(svelte@4.2.17)(vite@6.0.0-beta.2(@types/node@18.19.50)(lightningcss@1.24.1))
       cross-env:
         specifier: ^7.0.3
         version: 7.0.3
@@ -716,24 +604,14 @@ importers:
         specifier: ^4.2.10
         version: 4.2.17
       svelte-check:
-<<<<<<< HEAD
-        specifier: ^3.6.3
-        version: 3.6.9(postcss-load-config@3.1.4(postcss@8.4.47))(postcss@8.4.47)(svelte@4.2.17)
-=======
         specifier: ^4.0.1
         version: 4.0.1(svelte@4.2.17)(typescript@5.4.5)
->>>>>>> main
       typescript:
         specifier: ^5.3.3
         version: 5.4.5
       vite:
-<<<<<<< HEAD
         specifier: 6.0.0-beta.2
-        version: 6.0.0-beta.2(@types/node@18.19.31)(lightningcss@1.24.1)
-=======
-        specifier: ^5.3.2
-        version: 5.3.3(@types/node@18.19.50)(lightningcss@1.24.1)
->>>>>>> main
+        version: 6.0.0-beta.2(@types/node@18.19.50)(lightningcss@1.24.1)
 
   packages/kit/test/apps/no-ssr:
     devDependencies:
@@ -742,11 +620,7 @@ importers:
         version: link:../../..
       '@sveltejs/vite-plugin-svelte':
         specifier: ^3.0.1
-<<<<<<< HEAD
-        version: 3.1.0(svelte@4.2.17)(vite@6.0.0-beta.2(@types/node@18.19.31)(lightningcss@1.24.1))
-=======
-        version: 3.1.0(svelte@4.2.17)(vite@5.3.3(@types/node@18.19.50)(lightningcss@1.24.1))
->>>>>>> main
+        version: 3.1.0(svelte@4.2.17)(vite@6.0.0-beta.2(@types/node@18.19.50)(lightningcss@1.24.1))
       cross-env:
         specifier: ^7.0.3
         version: 7.0.3
@@ -754,24 +628,14 @@ importers:
         specifier: ^4.2.10
         version: 4.2.17
       svelte-check:
-<<<<<<< HEAD
-        specifier: ^3.6.3
-        version: 3.6.9(postcss-load-config@3.1.4(postcss@8.4.47))(postcss@8.4.47)(svelte@4.2.17)
-=======
         specifier: ^4.0.1
         version: 4.0.1(svelte@4.2.17)(typescript@5.4.5)
->>>>>>> main
       typescript:
         specifier: ^5.3.3
         version: 5.4.5
       vite:
-<<<<<<< HEAD
         specifier: 6.0.0-beta.2
-        version: 6.0.0-beta.2(@types/node@18.19.31)(lightningcss@1.24.1)
-=======
-        specifier: ^5.3.2
-        version: 5.3.3(@types/node@18.19.50)(lightningcss@1.24.1)
->>>>>>> main
+        version: 6.0.0-beta.2(@types/node@18.19.50)(lightningcss@1.24.1)
 
   packages/kit/test/apps/options:
     devDependencies:
@@ -780,11 +644,7 @@ importers:
         version: link:../../..
       '@sveltejs/vite-plugin-svelte':
         specifier: ^3.0.1
-<<<<<<< HEAD
-        version: 3.1.0(svelte@4.2.17)(vite@6.0.0-beta.2(@types/node@18.19.31)(lightningcss@1.24.1))
-=======
-        version: 3.1.0(svelte@4.2.17)(vite@5.3.3(@types/node@18.19.50)(lightningcss@1.24.1))
->>>>>>> main
+        version: 3.1.0(svelte@4.2.17)(vite@6.0.0-beta.2(@types/node@18.19.50)(lightningcss@1.24.1))
       cross-env:
         specifier: ^7.0.3
         version: 7.0.3
@@ -792,24 +652,14 @@ importers:
         specifier: ^4.2.10
         version: 4.2.17
       svelte-check:
-<<<<<<< HEAD
-        specifier: ^3.6.3
-        version: 3.6.9(postcss-load-config@3.1.4(postcss@8.4.47))(postcss@8.4.47)(svelte@4.2.17)
-=======
         specifier: ^4.0.1
         version: 4.0.1(svelte@4.2.17)(typescript@5.4.5)
->>>>>>> main
       typescript:
         specifier: ^5.3.3
         version: 5.4.5
       vite:
-<<<<<<< HEAD
         specifier: 6.0.0-beta.2
-        version: 6.0.0-beta.2(@types/node@18.19.31)(lightningcss@1.24.1)
-=======
-        specifier: ^5.3.2
-        version: 5.3.3(@types/node@18.19.50)(lightningcss@1.24.1)
->>>>>>> main
+        version: 6.0.0-beta.2(@types/node@18.19.50)(lightningcss@1.24.1)
 
   packages/kit/test/apps/options-2:
     devDependencies:
@@ -821,11 +671,7 @@ importers:
         version: link:../../..
       '@sveltejs/vite-plugin-svelte':
         specifier: ^3.0.1
-<<<<<<< HEAD
-        version: 3.1.0(svelte@4.2.17)(vite@6.0.0-beta.2(@types/node@18.19.31)(lightningcss@1.24.1))
-=======
-        version: 3.1.0(svelte@4.2.17)(vite@5.3.3(@types/node@18.19.50)(lightningcss@1.24.1))
->>>>>>> main
+        version: 3.1.0(svelte@4.2.17)(vite@6.0.0-beta.2(@types/node@18.19.50)(lightningcss@1.24.1))
       cross-env:
         specifier: ^7.0.3
         version: 7.0.3
@@ -833,24 +679,14 @@ importers:
         specifier: ^4.2.10
         version: 4.2.17
       svelte-check:
-<<<<<<< HEAD
-        specifier: ^3.6.3
-        version: 3.6.9(postcss-load-config@3.1.4(postcss@8.4.47))(postcss@8.4.47)(svelte@4.2.17)
-=======
         specifier: ^4.0.1
         version: 4.0.1(svelte@4.2.17)(typescript@5.4.5)
->>>>>>> main
       typescript:
         specifier: ^5.3.3
         version: 5.4.5
       vite:
-<<<<<<< HEAD
         specifier: 6.0.0-beta.2
-        version: 6.0.0-beta.2(@types/node@18.19.31)(lightningcss@1.24.1)
-=======
-        specifier: ^5.3.2
-        version: 5.3.3(@types/node@18.19.50)(lightningcss@1.24.1)
->>>>>>> main
+        version: 6.0.0-beta.2(@types/node@18.19.50)(lightningcss@1.24.1)
 
   packages/kit/test/apps/writes:
     devDependencies:
@@ -859,11 +695,7 @@ importers:
         version: link:../../..
       '@sveltejs/vite-plugin-svelte':
         specifier: ^3.0.1
-<<<<<<< HEAD
-        version: 3.1.0(svelte@4.2.17)(vite@6.0.0-beta.2(@types/node@18.19.31)(lightningcss@1.24.1))
-=======
-        version: 3.1.0(svelte@4.2.17)(vite@5.3.3(@types/node@18.19.50)(lightningcss@1.24.1))
->>>>>>> main
+        version: 3.1.0(svelte@4.2.17)(vite@6.0.0-beta.2(@types/node@18.19.50)(lightningcss@1.24.1))
       cross-env:
         specifier: ^7.0.3
         version: 7.0.3
@@ -871,24 +703,14 @@ importers:
         specifier: ^4.2.10
         version: 4.2.17
       svelte-check:
-<<<<<<< HEAD
-        specifier: ^3.6.3
-        version: 3.6.9(postcss-load-config@3.1.4(postcss@8.4.47))(postcss@8.4.47)(svelte@4.2.17)
-=======
         specifier: ^4.0.1
         version: 4.0.1(svelte@4.2.17)(typescript@5.4.5)
->>>>>>> main
       typescript:
         specifier: ^5.3.3
         version: 5.4.5
       vite:
-<<<<<<< HEAD
         specifier: 6.0.0-beta.2
-        version: 6.0.0-beta.2(@types/node@18.19.31)(lightningcss@1.24.1)
-=======
-        specifier: ^5.3.2
-        version: 5.3.3(@types/node@18.19.50)(lightningcss@1.24.1)
->>>>>>> main
+        version: 6.0.0-beta.2(@types/node@18.19.50)(lightningcss@1.24.1)
 
   packages/kit/test/build-errors:
     devDependencies:
@@ -906,33 +728,19 @@ importers:
         version: link:../../../..
       '@sveltejs/vite-plugin-svelte':
         specifier: ^3.0.1
-<<<<<<< HEAD
-        version: 3.1.0(svelte@4.2.17)(vite@6.0.0-beta.2(@types/node@18.19.31)(lightningcss@1.24.1))
-=======
-        version: 3.1.0(svelte@4.2.17)(vite@5.3.3(@types/node@18.19.50)(lightningcss@1.24.1))
->>>>>>> main
+        version: 3.1.0(svelte@4.2.17)(vite@6.0.0-beta.2(@types/node@18.19.50)(lightningcss@1.24.1))
       svelte:
         specifier: ^4.2.10
         version: 4.2.17
       svelte-check:
-<<<<<<< HEAD
-        specifier: ^3.6.3
-        version: 3.6.9(postcss-load-config@3.1.4(postcss@8.4.47))(postcss@8.4.47)(svelte@4.2.17)
-=======
         specifier: ^4.0.1
         version: 4.0.1(svelte@4.2.17)(typescript@5.4.5)
->>>>>>> main
       typescript:
         specifier: ^5.3.3
         version: 5.4.5
       vite:
-<<<<<<< HEAD
         specifier: 6.0.0-beta.2
-        version: 6.0.0-beta.2(@types/node@18.19.31)(lightningcss@1.24.1)
-=======
-        specifier: ^5.3.2
-        version: 5.3.3(@types/node@18.19.50)(lightningcss@1.24.1)
->>>>>>> main
+        version: 6.0.0-beta.2(@types/node@18.19.50)(lightningcss@1.24.1)
 
   packages/kit/test/build-errors/apps/prerenderable-incorrect-fragment:
     devDependencies:
@@ -944,33 +752,19 @@ importers:
         version: link:../../../..
       '@sveltejs/vite-plugin-svelte':
         specifier: ^3.0.1
-<<<<<<< HEAD
-        version: 3.1.0(svelte@4.2.17)(vite@6.0.0-beta.2(@types/node@18.19.31)(lightningcss@1.24.1))
-=======
-        version: 3.1.0(svelte@4.2.17)(vite@5.3.3(@types/node@18.19.50)(lightningcss@1.24.1))
->>>>>>> main
+        version: 3.1.0(svelte@4.2.17)(vite@6.0.0-beta.2(@types/node@18.19.50)(lightningcss@1.24.1))
       svelte:
         specifier: ^4.2.10
         version: 4.2.17
       svelte-check:
-<<<<<<< HEAD
-        specifier: ^3.6.3
-        version: 3.6.9(postcss-load-config@3.1.4(postcss@8.4.47))(postcss@8.4.47)(svelte@4.2.17)
-=======
         specifier: ^4.0.1
         version: 4.0.1(svelte@4.2.17)(typescript@5.4.5)
->>>>>>> main
       typescript:
         specifier: ^5.3.3
         version: 5.4.5
       vite:
-<<<<<<< HEAD
         specifier: 6.0.0-beta.2
-        version: 6.0.0-beta.2(@types/node@18.19.31)(lightningcss@1.24.1)
-=======
-        specifier: ^5.3.2
-        version: 5.3.3(@types/node@18.19.50)(lightningcss@1.24.1)
->>>>>>> main
+        version: 6.0.0-beta.2(@types/node@18.19.50)(lightningcss@1.24.1)
 
   packages/kit/test/build-errors/apps/prerenderable-not-prerendered:
     devDependencies:
@@ -982,33 +776,19 @@ importers:
         version: link:../../../..
       '@sveltejs/vite-plugin-svelte':
         specifier: ^3.0.1
-<<<<<<< HEAD
-        version: 3.1.0(svelte@4.2.17)(vite@6.0.0-beta.2(@types/node@18.19.31)(lightningcss@1.24.1))
-=======
-        version: 3.1.0(svelte@4.2.17)(vite@5.3.3(@types/node@18.19.50)(lightningcss@1.24.1))
->>>>>>> main
+        version: 3.1.0(svelte@4.2.17)(vite@6.0.0-beta.2(@types/node@18.19.50)(lightningcss@1.24.1))
       svelte:
         specifier: ^4.2.10
         version: 4.2.17
       svelte-check:
-<<<<<<< HEAD
-        specifier: ^3.6.3
-        version: 3.6.9(postcss-load-config@3.1.4(postcss@8.4.47))(postcss@8.4.47)(svelte@4.2.17)
-=======
         specifier: ^4.0.1
         version: 4.0.1(svelte@4.2.17)(typescript@5.4.5)
->>>>>>> main
       typescript:
         specifier: ^5.3.3
         version: 5.4.5
       vite:
-<<<<<<< HEAD
         specifier: 6.0.0-beta.2
-        version: 6.0.0-beta.2(@types/node@18.19.31)(lightningcss@1.24.1)
-=======
-        specifier: ^5.3.2
-        version: 5.3.3(@types/node@18.19.50)(lightningcss@1.24.1)
->>>>>>> main
+        version: 6.0.0-beta.2(@types/node@18.19.50)(lightningcss@1.24.1)
 
   packages/kit/test/build-errors/apps/private-dynamic-env:
     devDependencies:
@@ -1017,33 +797,19 @@ importers:
         version: link:../../../..
       '@sveltejs/vite-plugin-svelte':
         specifier: ^3.0.1
-<<<<<<< HEAD
-        version: 3.1.0(svelte@4.2.17)(vite@6.0.0-beta.2(@types/node@18.19.31)(lightningcss@1.24.1))
-=======
-        version: 3.1.0(svelte@4.2.17)(vite@5.3.3(@types/node@18.19.50)(lightningcss@1.24.1))
->>>>>>> main
+        version: 3.1.0(svelte@4.2.17)(vite@6.0.0-beta.2(@types/node@18.19.50)(lightningcss@1.24.1))
       svelte:
         specifier: ^4.2.10
         version: 4.2.17
       svelte-check:
-<<<<<<< HEAD
-        specifier: ^3.6.3
-        version: 3.6.9(postcss-load-config@3.1.4(postcss@8.4.47))(postcss@8.4.47)(svelte@4.2.17)
-=======
         specifier: ^4.0.1
         version: 4.0.1(svelte@4.2.17)(typescript@5.4.5)
->>>>>>> main
       typescript:
         specifier: ^5.3.3
         version: 5.4.5
       vite:
-<<<<<<< HEAD
         specifier: 6.0.0-beta.2
-        version: 6.0.0-beta.2(@types/node@18.19.31)(lightningcss@1.24.1)
-=======
-        specifier: ^5.3.2
-        version: 5.3.3(@types/node@18.19.50)(lightningcss@1.24.1)
->>>>>>> main
+        version: 6.0.0-beta.2(@types/node@18.19.50)(lightningcss@1.24.1)
 
   packages/kit/test/build-errors/apps/private-dynamic-env-dynamic-import:
     devDependencies:
@@ -1052,33 +818,19 @@ importers:
         version: link:../../../..
       '@sveltejs/vite-plugin-svelte':
         specifier: ^3.0.1
-<<<<<<< HEAD
-        version: 3.1.0(svelte@4.2.17)(vite@6.0.0-beta.2(@types/node@18.19.31)(lightningcss@1.24.1))
-=======
-        version: 3.1.0(svelte@4.2.17)(vite@5.3.3(@types/node@18.19.50)(lightningcss@1.24.1))
->>>>>>> main
+        version: 3.1.0(svelte@4.2.17)(vite@6.0.0-beta.2(@types/node@18.19.50)(lightningcss@1.24.1))
       svelte:
         specifier: ^4.2.10
         version: 4.2.17
       svelte-check:
-<<<<<<< HEAD
-        specifier: ^3.6.3
-        version: 3.6.9(postcss-load-config@3.1.4(postcss@8.4.47))(postcss@8.4.47)(svelte@4.2.17)
-=======
         specifier: ^4.0.1
         version: 4.0.1(svelte@4.2.17)(typescript@5.4.5)
->>>>>>> main
       typescript:
         specifier: ^5.3.3
         version: 5.4.5
       vite:
-<<<<<<< HEAD
         specifier: 6.0.0-beta.2
-        version: 6.0.0-beta.2(@types/node@18.19.31)(lightningcss@1.24.1)
-=======
-        specifier: ^5.3.2
-        version: 5.3.3(@types/node@18.19.50)(lightningcss@1.24.1)
->>>>>>> main
+        version: 6.0.0-beta.2(@types/node@18.19.50)(lightningcss@1.24.1)
 
   packages/kit/test/build-errors/apps/private-static-env:
     devDependencies:
@@ -1087,11 +839,7 @@ importers:
         version: link:../../../..
       '@sveltejs/vite-plugin-svelte':
         specifier: ^3.0.1
-<<<<<<< HEAD
-        version: 3.1.0(svelte@4.2.17)(vite@6.0.0-beta.2(@types/node@18.19.31)(lightningcss@1.24.1))
-=======
-        version: 3.1.0(svelte@4.2.17)(vite@5.3.3(@types/node@18.19.50)(lightningcss@1.24.1))
->>>>>>> main
+        version: 3.1.0(svelte@4.2.17)(vite@6.0.0-beta.2(@types/node@18.19.50)(lightningcss@1.24.1))
       cross-env:
         specifier: ^7.0.3
         version: 7.0.3
@@ -1099,24 +847,14 @@ importers:
         specifier: ^4.2.10
         version: 4.2.17
       svelte-check:
-<<<<<<< HEAD
-        specifier: ^3.6.3
-        version: 3.6.9(postcss-load-config@3.1.4(postcss@8.4.47))(postcss@8.4.47)(svelte@4.2.17)
-=======
         specifier: ^4.0.1
         version: 4.0.1(svelte@4.2.17)(typescript@5.4.5)
->>>>>>> main
       typescript:
         specifier: ^5.3.3
         version: 5.4.5
       vite:
-<<<<<<< HEAD
         specifier: 6.0.0-beta.2
-        version: 6.0.0-beta.2(@types/node@18.19.31)(lightningcss@1.24.1)
-=======
-        specifier: ^5.3.2
-        version: 5.3.3(@types/node@18.19.50)(lightningcss@1.24.1)
->>>>>>> main
+        version: 6.0.0-beta.2(@types/node@18.19.50)(lightningcss@1.24.1)
 
   packages/kit/test/build-errors/apps/private-static-env-dynamic-import:
     devDependencies:
@@ -1125,33 +863,19 @@ importers:
         version: link:../../../..
       '@sveltejs/vite-plugin-svelte':
         specifier: ^3.0.1
-<<<<<<< HEAD
-        version: 3.1.0(svelte@4.2.17)(vite@6.0.0-beta.2(@types/node@18.19.31)(lightningcss@1.24.1))
-=======
-        version: 3.1.0(svelte@4.2.17)(vite@5.3.3(@types/node@18.19.50)(lightningcss@1.24.1))
->>>>>>> main
+        version: 3.1.0(svelte@4.2.17)(vite@6.0.0-beta.2(@types/node@18.19.50)(lightningcss@1.24.1))
       svelte:
         specifier: ^4.2.10
         version: 4.2.17
       svelte-check:
-<<<<<<< HEAD
-        specifier: ^3.6.3
-        version: 3.6.9(postcss-load-config@3.1.4(postcss@8.4.47))(postcss@8.4.47)(svelte@4.2.17)
-=======
         specifier: ^4.0.1
         version: 4.0.1(svelte@4.2.17)(typescript@5.4.5)
->>>>>>> main
       typescript:
         specifier: ^5.3.3
         version: 5.4.5
       vite:
-<<<<<<< HEAD
         specifier: 6.0.0-beta.2
-        version: 6.0.0-beta.2(@types/node@18.19.31)(lightningcss@1.24.1)
-=======
-        specifier: ^5.3.2
-        version: 5.3.3(@types/node@18.19.50)(lightningcss@1.24.1)
->>>>>>> main
+        version: 6.0.0-beta.2(@types/node@18.19.50)(lightningcss@1.24.1)
 
   packages/kit/test/build-errors/apps/server-only-folder:
     devDependencies:
@@ -1160,33 +884,19 @@ importers:
         version: link:../../../..
       '@sveltejs/vite-plugin-svelte':
         specifier: ^3.0.1
-<<<<<<< HEAD
-        version: 3.1.0(svelte@4.2.17)(vite@6.0.0-beta.2(@types/node@18.19.31)(lightningcss@1.24.1))
-=======
-        version: 3.1.0(svelte@4.2.17)(vite@5.3.3(@types/node@18.19.50)(lightningcss@1.24.1))
->>>>>>> main
+        version: 3.1.0(svelte@4.2.17)(vite@6.0.0-beta.2(@types/node@18.19.50)(lightningcss@1.24.1))
       svelte:
         specifier: ^4.2.10
         version: 4.2.17
       svelte-check:
-<<<<<<< HEAD
-        specifier: ^3.6.3
-        version: 3.6.9(postcss-load-config@3.1.4(postcss@8.4.47))(postcss@8.4.47)(svelte@4.2.17)
-=======
         specifier: ^4.0.1
         version: 4.0.1(svelte@4.2.17)(typescript@5.4.5)
->>>>>>> main
       typescript:
         specifier: ^5.3.3
         version: 5.4.5
       vite:
-<<<<<<< HEAD
         specifier: 6.0.0-beta.2
-        version: 6.0.0-beta.2(@types/node@18.19.31)(lightningcss@1.24.1)
-=======
-        specifier: ^5.3.2
-        version: 5.3.3(@types/node@18.19.50)(lightningcss@1.24.1)
->>>>>>> main
+        version: 6.0.0-beta.2(@types/node@18.19.50)(lightningcss@1.24.1)
 
   packages/kit/test/build-errors/apps/server-only-folder-dynamic-import:
     devDependencies:
@@ -1195,33 +905,19 @@ importers:
         version: link:../../../..
       '@sveltejs/vite-plugin-svelte':
         specifier: ^3.0.1
-<<<<<<< HEAD
-        version: 3.1.0(svelte@4.2.17)(vite@6.0.0-beta.2(@types/node@18.19.31)(lightningcss@1.24.1))
-=======
-        version: 3.1.0(svelte@4.2.17)(vite@5.3.3(@types/node@18.19.50)(lightningcss@1.24.1))
->>>>>>> main
+        version: 3.1.0(svelte@4.2.17)(vite@6.0.0-beta.2(@types/node@18.19.50)(lightningcss@1.24.1))
       svelte:
         specifier: ^4.2.10
         version: 4.2.17
       svelte-check:
-<<<<<<< HEAD
-        specifier: ^3.6.3
-        version: 3.6.9(postcss-load-config@3.1.4(postcss@8.4.47))(postcss@8.4.47)(svelte@4.2.17)
-=======
         specifier: ^4.0.1
         version: 4.0.1(svelte@4.2.17)(typescript@5.4.5)
->>>>>>> main
       typescript:
         specifier: ^5.3.3
         version: 5.4.5
       vite:
-<<<<<<< HEAD
         specifier: 6.0.0-beta.2
-        version: 6.0.0-beta.2(@types/node@18.19.31)(lightningcss@1.24.1)
-=======
-        specifier: ^5.3.2
-        version: 5.3.3(@types/node@18.19.50)(lightningcss@1.24.1)
->>>>>>> main
+        version: 6.0.0-beta.2(@types/node@18.19.50)(lightningcss@1.24.1)
 
   packages/kit/test/build-errors/apps/server-only-module:
     devDependencies:
@@ -1230,33 +926,19 @@ importers:
         version: link:../../../..
       '@sveltejs/vite-plugin-svelte':
         specifier: ^3.0.1
-<<<<<<< HEAD
-        version: 3.1.0(svelte@4.2.17)(vite@6.0.0-beta.2(@types/node@18.19.31)(lightningcss@1.24.1))
-=======
-        version: 3.1.0(svelte@4.2.17)(vite@5.3.3(@types/node@18.19.50)(lightningcss@1.24.1))
->>>>>>> main
+        version: 3.1.0(svelte@4.2.17)(vite@6.0.0-beta.2(@types/node@18.19.50)(lightningcss@1.24.1))
       svelte:
         specifier: ^4.2.10
         version: 4.2.17
       svelte-check:
-<<<<<<< HEAD
-        specifier: ^3.6.3
-        version: 3.6.9(postcss-load-config@3.1.4(postcss@8.4.47))(postcss@8.4.47)(svelte@4.2.17)
-=======
         specifier: ^4.0.1
         version: 4.0.1(svelte@4.2.17)(typescript@5.4.5)
->>>>>>> main
       typescript:
         specifier: ^5.3.3
         version: 5.4.5
       vite:
-<<<<<<< HEAD
         specifier: 6.0.0-beta.2
-        version: 6.0.0-beta.2(@types/node@18.19.31)(lightningcss@1.24.1)
-=======
-        specifier: ^5.3.2
-        version: 5.3.3(@types/node@18.19.50)(lightningcss@1.24.1)
->>>>>>> main
+        version: 6.0.0-beta.2(@types/node@18.19.50)(lightningcss@1.24.1)
 
   packages/kit/test/build-errors/apps/server-only-module-dynamic-import:
     devDependencies:
@@ -1265,33 +947,19 @@ importers:
         version: link:../../../..
       '@sveltejs/vite-plugin-svelte':
         specifier: ^3.0.1
-<<<<<<< HEAD
-        version: 3.1.0(svelte@4.2.17)(vite@6.0.0-beta.2(@types/node@18.19.31)(lightningcss@1.24.1))
-=======
-        version: 3.1.0(svelte@4.2.17)(vite@5.3.3(@types/node@18.19.50)(lightningcss@1.24.1))
->>>>>>> main
+        version: 3.1.0(svelte@4.2.17)(vite@6.0.0-beta.2(@types/node@18.19.50)(lightningcss@1.24.1))
       svelte:
         specifier: ^4.2.10
         version: 4.2.17
       svelte-check:
-<<<<<<< HEAD
-        specifier: ^3.6.3
-        version: 3.6.9(postcss-load-config@3.1.4(postcss@8.4.47))(postcss@8.4.47)(svelte@4.2.17)
-=======
         specifier: ^4.0.1
         version: 4.0.1(svelte@4.2.17)(typescript@5.4.5)
->>>>>>> main
       typescript:
         specifier: ^5.3.3
         version: 5.4.5
       vite:
-<<<<<<< HEAD
         specifier: 6.0.0-beta.2
-        version: 6.0.0-beta.2(@types/node@18.19.31)(lightningcss@1.24.1)
-=======
-        specifier: ^5.3.2
-        version: 5.3.3(@types/node@18.19.50)(lightningcss@1.24.1)
->>>>>>> main
+        version: 6.0.0-beta.2(@types/node@18.19.50)(lightningcss@1.24.1)
 
   packages/kit/test/build-errors/apps/service-worker-dynamic-public-env:
     devDependencies:
@@ -1300,33 +968,19 @@ importers:
         version: link:../../../..
       '@sveltejs/vite-plugin-svelte':
         specifier: ^3.0.1
-<<<<<<< HEAD
-        version: 3.1.0(svelte@4.2.17)(vite@6.0.0-beta.2(@types/node@18.19.31)(lightningcss@1.24.1))
-=======
-        version: 3.1.0(svelte@4.2.17)(vite@5.3.3(@types/node@18.19.50)(lightningcss@1.24.1))
->>>>>>> main
+        version: 3.1.0(svelte@4.2.17)(vite@6.0.0-beta.2(@types/node@18.19.50)(lightningcss@1.24.1))
       svelte:
         specifier: ^4.2.10
         version: 4.2.17
       svelte-check:
-<<<<<<< HEAD
-        specifier: ^3.6.3
-        version: 3.6.9(postcss-load-config@3.1.4(postcss@8.4.47))(postcss@8.4.47)(svelte@4.2.17)
-=======
         specifier: ^4.0.1
         version: 4.0.1(svelte@4.2.17)(typescript@5.4.5)
->>>>>>> main
       typescript:
         specifier: ^5.3.3
         version: 5.4.5
       vite:
-<<<<<<< HEAD
         specifier: 6.0.0-beta.2
-        version: 6.0.0-beta.2(@types/node@18.19.31)(lightningcss@1.24.1)
-=======
-        specifier: ^5.3.2
-        version: 5.3.3(@types/node@18.19.50)(lightningcss@1.24.1)
->>>>>>> main
+        version: 6.0.0-beta.2(@types/node@18.19.50)(lightningcss@1.24.1)
 
   packages/kit/test/build-errors/apps/service-worker-private-env:
     devDependencies:
@@ -1335,33 +989,19 @@ importers:
         version: link:../../../..
       '@sveltejs/vite-plugin-svelte':
         specifier: ^3.0.1
-<<<<<<< HEAD
-        version: 3.1.0(svelte@4.2.17)(vite@6.0.0-beta.2(@types/node@18.19.31)(lightningcss@1.24.1))
-=======
-        version: 3.1.0(svelte@4.2.17)(vite@5.3.3(@types/node@18.19.50)(lightningcss@1.24.1))
->>>>>>> main
+        version: 3.1.0(svelte@4.2.17)(vite@6.0.0-beta.2(@types/node@18.19.50)(lightningcss@1.24.1))
       svelte:
         specifier: ^4.2.10
         version: 4.2.17
       svelte-check:
-<<<<<<< HEAD
-        specifier: ^3.6.3
-        version: 3.6.9(postcss-load-config@3.1.4(postcss@8.4.47))(postcss@8.4.47)(svelte@4.2.17)
-=======
         specifier: ^4.0.1
         version: 4.0.1(svelte@4.2.17)(typescript@5.4.5)
->>>>>>> main
       typescript:
         specifier: ^5.3.3
         version: 5.4.5
       vite:
-<<<<<<< HEAD
         specifier: 6.0.0-beta.2
-        version: 6.0.0-beta.2(@types/node@18.19.31)(lightningcss@1.24.1)
-=======
-        specifier: ^5.3.2
-        version: 5.3.3(@types/node@18.19.50)(lightningcss@1.24.1)
->>>>>>> main
+        version: 6.0.0-beta.2(@types/node@18.19.50)(lightningcss@1.24.1)
 
   packages/kit/test/build-errors/apps/syntax-error:
     devDependencies:
@@ -1370,33 +1010,19 @@ importers:
         version: link:../../../..
       '@sveltejs/vite-plugin-svelte':
         specifier: ^3.0.1
-<<<<<<< HEAD
-        version: 3.1.0(svelte@4.2.17)(vite@6.0.0-beta.2(@types/node@18.19.31)(lightningcss@1.24.1))
-=======
-        version: 3.1.0(svelte@4.2.17)(vite@5.3.3(@types/node@18.19.50)(lightningcss@1.24.1))
->>>>>>> main
+        version: 3.1.0(svelte@4.2.17)(vite@6.0.0-beta.2(@types/node@18.19.50)(lightningcss@1.24.1))
       svelte:
         specifier: ^4.2.10
         version: 4.2.17
       svelte-check:
-<<<<<<< HEAD
-        specifier: ^3.6.3
-        version: 3.6.9(postcss-load-config@3.1.4(postcss@8.4.47))(postcss@8.4.47)(svelte@4.2.17)
-=======
         specifier: ^4.0.1
         version: 4.0.1(svelte@4.2.17)(typescript@5.4.5)
->>>>>>> main
       typescript:
         specifier: ^5.3.3
         version: 5.4.5
       vite:
-<<<<<<< HEAD
         specifier: 6.0.0-beta.2
-        version: 6.0.0-beta.2(@types/node@18.19.31)(lightningcss@1.24.1)
-=======
-        specifier: ^5.3.2
-        version: 5.3.3(@types/node@18.19.50)(lightningcss@1.24.1)
->>>>>>> main
+        version: 6.0.0-beta.2(@types/node@18.19.50)(lightningcss@1.24.1)
 
   packages/kit/test/prerendering/basics:
     devDependencies:
@@ -1405,33 +1031,19 @@ importers:
         version: link:../../..
       '@sveltejs/vite-plugin-svelte':
         specifier: ^3.0.1
-<<<<<<< HEAD
-        version: 3.1.0(svelte@4.2.17)(vite@6.0.0-beta.2(@types/node@18.19.31)(lightningcss@1.24.1))
-=======
-        version: 3.1.0(svelte@4.2.17)(vite@5.3.3(@types/node@18.19.50)(lightningcss@1.24.1))
->>>>>>> main
+        version: 3.1.0(svelte@4.2.17)(vite@6.0.0-beta.2(@types/node@18.19.50)(lightningcss@1.24.1))
       svelte:
         specifier: ^4.2.10
         version: 4.2.17
       svelte-check:
-<<<<<<< HEAD
-        specifier: ^3.6.3
-        version: 3.6.9(postcss-load-config@3.1.4(postcss@8.4.47))(postcss@8.4.47)(svelte@4.2.17)
-=======
         specifier: ^4.0.1
         version: 4.0.1(svelte@4.2.17)(typescript@5.4.5)
->>>>>>> main
       typescript:
         specifier: ^5.3.3
         version: 5.4.5
       vite:
-<<<<<<< HEAD
         specifier: 6.0.0-beta.2
-        version: 6.0.0-beta.2(@types/node@18.19.31)(lightningcss@1.24.1)
-=======
-        specifier: ^5.3.2
-        version: 5.3.3(@types/node@18.19.50)(lightningcss@1.24.1)
->>>>>>> main
+        version: 6.0.0-beta.2(@types/node@18.19.50)(lightningcss@1.24.1)
       vitest:
         specifier: ^2.0.1
         version: 2.0.1(@types/node@18.19.50)(lightningcss@1.24.1)
@@ -1443,33 +1055,19 @@ importers:
         version: link:../../..
       '@sveltejs/vite-plugin-svelte':
         specifier: ^3.0.1
-<<<<<<< HEAD
-        version: 3.1.0(svelte@4.2.17)(vite@6.0.0-beta.2(@types/node@18.19.31)(lightningcss@1.24.1))
-=======
-        version: 3.1.0(svelte@4.2.17)(vite@5.3.3(@types/node@18.19.50)(lightningcss@1.24.1))
->>>>>>> main
+        version: 3.1.0(svelte@4.2.17)(vite@6.0.0-beta.2(@types/node@18.19.50)(lightningcss@1.24.1))
       svelte:
         specifier: ^4.2.10
         version: 4.2.17
       svelte-check:
-<<<<<<< HEAD
-        specifier: ^3.6.3
-        version: 3.6.9(postcss-load-config@3.1.4(postcss@8.4.47))(postcss@8.4.47)(svelte@4.2.17)
-=======
         specifier: ^4.0.1
         version: 4.0.1(svelte@4.2.17)(typescript@5.4.5)
->>>>>>> main
       typescript:
         specifier: ^5.3.3
         version: 5.4.5
       vite:
-<<<<<<< HEAD
         specifier: 6.0.0-beta.2
-        version: 6.0.0-beta.2(@types/node@18.19.31)(lightningcss@1.24.1)
-=======
-        specifier: ^5.3.2
-        version: 5.3.3(@types/node@18.19.50)(lightningcss@1.24.1)
->>>>>>> main
+        version: 6.0.0-beta.2(@types/node@18.19.50)(lightningcss@1.24.1)
       vitest:
         specifier: ^2.0.1
         version: 2.0.1(@types/node@18.19.50)(lightningcss@1.24.1)
@@ -1481,33 +1079,19 @@ importers:
         version: link:../../..
       '@sveltejs/vite-plugin-svelte':
         specifier: ^3.0.1
-<<<<<<< HEAD
-        version: 3.1.0(svelte@4.2.17)(vite@6.0.0-beta.2(@types/node@18.19.31)(lightningcss@1.24.1))
-=======
-        version: 3.1.0(svelte@4.2.17)(vite@5.3.3(@types/node@18.19.50)(lightningcss@1.24.1))
->>>>>>> main
+        version: 3.1.0(svelte@4.2.17)(vite@6.0.0-beta.2(@types/node@18.19.50)(lightningcss@1.24.1))
       svelte:
         specifier: ^4.2.10
         version: 4.2.17
       svelte-check:
-<<<<<<< HEAD
-        specifier: ^3.6.3
-        version: 3.6.9(postcss-load-config@3.1.4(postcss@8.4.47))(postcss@8.4.47)(svelte@4.2.17)
-=======
         specifier: ^4.0.1
         version: 4.0.1(svelte@4.2.17)(typescript@5.4.5)
->>>>>>> main
       typescript:
         specifier: ^5.3.3
         version: 5.4.5
       vite:
-<<<<<<< HEAD
         specifier: 6.0.0-beta.2
-        version: 6.0.0-beta.2(@types/node@18.19.31)(lightningcss@1.24.1)
-=======
-        specifier: ^5.3.2
-        version: 5.3.3(@types/node@18.19.50)(lightningcss@1.24.1)
->>>>>>> main
+        version: 6.0.0-beta.2(@types/node@18.19.50)(lightningcss@1.24.1)
       vitest:
         specifier: ^2.0.1
         version: 2.0.1(@types/node@18.19.50)(lightningcss@1.24.1)
@@ -1581,11 +1165,7 @@ importers:
     devDependencies:
       '@sveltejs/vite-plugin-svelte':
         specifier: ^3.0.1
-<<<<<<< HEAD
-        version: 3.1.0(svelte@4.2.17)(vite@6.0.0-beta.2(@types/node@18.19.31)(lightningcss@1.24.1))
-=======
-        version: 3.1.0(svelte@4.2.17)(vite@5.3.3(@types/node@18.19.50)(lightningcss@1.24.1))
->>>>>>> main
+        version: 3.1.0(svelte@4.2.17)(vite@6.0.0-beta.2(@types/node@18.19.50)(lightningcss@1.24.1))
       '@types/node':
         specifier: ^18.19.48
         version: 18.19.50
@@ -1642,11 +1222,7 @@ importers:
         version: link:../../packages/package
       '@sveltejs/vite-plugin-svelte':
         specifier: ^3.0.1
-<<<<<<< HEAD
-        version: 3.1.0(svelte@4.2.17)(vite@6.0.0-beta.2(@types/node@18.19.31)(lightningcss@1.24.1))
-=======
-        version: 3.1.0(svelte@4.2.17)(vite@5.3.3(@types/node@18.19.50)(lightningcss@1.24.1))
->>>>>>> main
+        version: 3.1.0(svelte@4.2.17)(vite@6.0.0-beta.2(@types/node@18.19.50)(lightningcss@1.24.1))
       publint:
         specifier: ^0.2.0
         version: 0.2.7
@@ -1654,24 +1230,14 @@ importers:
         specifier: ^4.2.10
         version: 4.2.17
       svelte-check:
-<<<<<<< HEAD
-        specifier: ^3.6.3
-        version: 3.6.9(postcss-load-config@3.1.4(postcss@8.4.47))(postcss@8.4.47)(svelte@4.2.17)
-=======
         specifier: ^4.0.1
         version: 4.0.1(svelte@4.2.17)(typescript@5.4.5)
->>>>>>> main
       typescript:
         specifier: ^5.3.3
         version: 5.4.5
       vite:
-<<<<<<< HEAD
         specifier: 6.0.0-beta.2
-        version: 6.0.0-beta.2(@types/node@18.19.31)(lightningcss@1.24.1)
-=======
-        specifier: ^5.3.2
-        version: 5.3.3(@types/node@18.19.50)(lightningcss@1.24.1)
->>>>>>> main
+        version: 6.0.0-beta.2(@types/node@18.19.50)(lightningcss@1.24.1)
 
   sites/kit.svelte.dev:
     dependencies:
@@ -1702,11 +1268,7 @@ importers:
         version: 6.0.0-next.64(@sveltejs/kit@packages+kit)(svelte@4.2.17)
       '@sveltejs/vite-plugin-svelte':
         specifier: ^3.0.1
-<<<<<<< HEAD
-        version: 3.1.0(svelte@4.2.17)(vite@6.0.0-beta.2(@types/node@18.19.31)(lightningcss@1.24.1))
-=======
-        version: 3.1.0(svelte@4.2.17)(vite@5.3.3(@types/node@18.19.50)(lightningcss@1.24.1))
->>>>>>> main
+        version: 3.1.0(svelte@4.2.17)(vite@6.0.0-beta.2(@types/node@18.19.50)(lightningcss@1.24.1))
       '@types/d3-geo':
         specifier: ^3.1.0
         version: 3.1.0
@@ -1750,13 +1312,8 @@ importers:
         specifier: 5.0.4
         version: 5.0.4
       vite:
-<<<<<<< HEAD
         specifier: 6.0.0-beta.2
-        version: 6.0.0-beta.2(@types/node@18.19.31)(lightningcss@1.24.1)
-=======
-        specifier: ^5.3.2
-        version: 5.3.3(@types/node@18.19.50)(lightningcss@1.24.1)
->>>>>>> main
+        version: 6.0.0-beta.2(@types/node@18.19.50)(lightningcss@1.24.1)
       vitest:
         specifier: ^2.0.1
         version: 2.0.1(@types/node@18.19.50)(lightningcss@1.24.1)
@@ -3195,6 +2752,10 @@ packages:
     resolution: {integrity: sha512-YZ3GUyn/o8gfKJlnlX7g7xq4gyO6OSuhGPKaaGssGB2qgDUS0gPgtTvoyZLTt9Ab6dC4hfc9dV5arkvc/OCmrw==}
     engines: {node: '>= 0.6'}
 
+  cookie@0.6.0:
+    resolution: {integrity: sha512-U71cyTamuh1CRNCfpGY6to28lxvNwPG4Guz/EVjgf3Jmzv0vlDp1atT9eS5dDjMYHucpHbWns6Lwf3BKz6svdw==}
+    engines: {node: '>= 0.6'}
+
   cookie@0.7.0:
     resolution: {integrity: sha512-qCf+V4dtlNhSRXGAZatc1TasyFO6GjohcOul807YOb5ik3+kQSnb4d7iajeCL8QHaJ4uZEjCgiCJerKXwdRVlQ==}
     engines: {node: '>= 0.6'}
@@ -3584,13 +3145,8 @@ packages:
     resolution: {integrity: sha512-VaUJspBffn/LMCJVoMvSAdmscJyS1auj5Zulnn5UoYcY531UWmdwhRWkcGKnGU93m5HSXP9LP2usOryrBtQowA==}
     engines: {node: '>=16'}
 
-<<<<<<< HEAD
-  get-tsconfig@4.7.6:
-    resolution: {integrity: sha512-ZAqrLlu18NbDdRaHq+AKXzAmqIUPswPWKUchfytdAjiRFnCe5ojG2bstg6mRiZabkKfCoL/e98pbBELIV/YCeA==}
-=======
   get-tsconfig@4.8.1:
     resolution: {integrity: sha512-k9PN+cFBmaLWtVz29SkUoqU5O0slLuHJXt/2P+tMVFT+phsSGXGkp9t3rQIqdz0e+06EHNGs3oM6ZX1s2zHxRg==}
->>>>>>> main
 
   gitignore-parser@0.0.2:
     resolution: {integrity: sha512-X6mpqUv59uWLGD4n3hZ8Cu8KbF2PMWPSFYmxZjdkpm3yOU7hSUYnzTkZI1mcWqchphvqyuz3/BhgBR4E/JtkCg==}
@@ -4253,23 +3809,9 @@ packages:
     resolution: {integrity: sha512-0vzE+lAiG7hZl1/9I8yzKLx3aR9Xbof3fBHKunvMfOCYAtMhrsnccJY2iTURb9EZd5+pLuiNV9/c/GZJOHsgIw==}
     engines: {node: ^10 || ^12 || >=14}
 
-<<<<<<< HEAD
-  postcss@8.4.41:
-    resolution: {integrity: sha512-TesUflQ0WKZqAvg52PWL6kHgLKP6xB6heTOdoYM0Wt2UHyxNa4K25EZZMgKns3BH1RLVbZCREPpLY0rhnNoHVQ==}
-    engines: {node: ^10 || ^12 || >=14}
-
   postcss@8.4.47:
     resolution: {integrity: sha512-56rxCq7G/XfB4EkXq9Egn5GCqugWvDFjafDOThIdMBsI15iqPqR5r15TfSr1YPYeEI19YeaXMCbY6u88Y76GLQ==}
     engines: {node: ^10 || ^12 || >=14}
-
-  preferred-pm@3.1.3:
-    resolution: {integrity: sha512-MkXsENfftWSRpzCzImcp4FRsCc3y1opwB73CfCNWyzMqArju2CrlMHlqB7VexKiPEOjGMbttv1r9fSCn5S610w==}
-    engines: {node: '>=10'}
-=======
-  postcss@8.4.47:
-    resolution: {integrity: sha512-56rxCq7G/XfB4EkXq9Egn5GCqugWvDFjafDOThIdMBsI15iqPqR5r15TfSr1YPYeEI19YeaXMCbY6u88Y76GLQ==}
-    engines: {node: ^10 || ^12 || >=14}
->>>>>>> main
 
   prelude-ls@1.2.1:
     resolution: {integrity: sha512-vkcDPrRZo1QZLbn5RLGPpg/WmIQ65qoWWhcGKf/b5eplkkarX0m9z8ppCat4mlOqUsWpyNuYgO3VRyrYHSzX5g==}
@@ -5801,9 +5343,9 @@ snapshots:
       typescript: 5.4.5
       typescript-eslint: 8.4.0(eslint@9.6.0)(typescript@5.4.5)
 
-  '@sveltejs/kit@2.6.1(@sveltejs/vite-plugin-svelte@3.1.0(svelte@4.2.17)(vite@6.0.0-beta.2(@types/node@18.19.31)(lightningcss@1.24.1)))(svelte@4.2.17)(vite@6.0.0-beta.2(@types/node@18.19.31)(lightningcss@1.24.1))':
+  '@sveltejs/kit@2.6.1(@sveltejs/vite-plugin-svelte@3.1.0(svelte@4.2.17)(vite@6.0.0-beta.2(@types/node@18.19.50)(lightningcss@1.24.1)))(svelte@4.2.17)(vite@6.0.0-beta.2(@types/node@18.19.50)(lightningcss@1.24.1))':
     dependencies:
-      '@sveltejs/vite-plugin-svelte': 3.1.0(svelte@4.2.17)(vite@6.0.0-beta.2(@types/node@18.19.31)(lightningcss@1.24.1))
+      '@sveltejs/vite-plugin-svelte': 3.1.0(svelte@4.2.17)(vite@6.0.0-beta.2(@types/node@18.19.50)(lightningcss@1.24.1))
       '@types/cookie': 0.6.0
       cookie: 0.6.0
       devalue: 5.1.1
@@ -5817,7 +5359,7 @@ snapshots:
       sirv: 2.0.4
       svelte: 4.2.17
       tiny-glob: 0.2.9
-      vite: 6.0.0-beta.2(@types/node@18.19.31)(lightningcss@1.24.1)
+      vite: 6.0.0-beta.2(@types/node@18.19.50)(lightningcss@1.24.1)
 
   '@sveltejs/site-kit@6.0.0-next.64(@sveltejs/kit@packages+kit)(svelte@4.2.17)':
     dependencies:
@@ -5826,46 +5368,26 @@ snapshots:
       svelte: 4.2.17
       svelte-persisted-store: 0.9.4(svelte@4.2.17)
 
-<<<<<<< HEAD
-  '@sveltejs/vite-plugin-svelte-inspector@2.1.0(@sveltejs/vite-plugin-svelte@3.1.0(svelte@4.2.17)(vite@6.0.0-beta.2(@types/node@18.19.31)(lightningcss@1.24.1)))(svelte@4.2.17)(vite@6.0.0-beta.2(@types/node@18.19.31)(lightningcss@1.24.1))':
+  '@sveltejs/vite-plugin-svelte-inspector@2.1.0(@sveltejs/vite-plugin-svelte@3.1.0(svelte@4.2.17)(vite@6.0.0-beta.2(@types/node@18.19.50)(lightningcss@1.24.1)))(svelte@4.2.17)(vite@6.0.0-beta.2(@types/node@18.19.50)(lightningcss@1.24.1))':
     dependencies:
-      '@sveltejs/vite-plugin-svelte': 3.1.0(svelte@4.2.17)(vite@6.0.0-beta.2(@types/node@18.19.31)(lightningcss@1.24.1))
+      '@sveltejs/vite-plugin-svelte': 3.1.0(svelte@4.2.17)(vite@6.0.0-beta.2(@types/node@18.19.50)(lightningcss@1.24.1))
       debug: 4.3.5
       svelte: 4.2.17
-      vite: 6.0.0-beta.2(@types/node@18.19.31)(lightningcss@1.24.1)
+      vite: 6.0.0-beta.2(@types/node@18.19.50)(lightningcss@1.24.1)
     transitivePeerDependencies:
       - supports-color
 
-  '@sveltejs/vite-plugin-svelte@3.1.0(svelte@4.2.17)(vite@6.0.0-beta.2(@types/node@18.19.31)(lightningcss@1.24.1))':
+  '@sveltejs/vite-plugin-svelte@3.1.0(svelte@4.2.17)(vite@6.0.0-beta.2(@types/node@18.19.50)(lightningcss@1.24.1))':
     dependencies:
-      '@sveltejs/vite-plugin-svelte-inspector': 2.1.0(@sveltejs/vite-plugin-svelte@3.1.0(svelte@4.2.17)(vite@6.0.0-beta.2(@types/node@18.19.31)(lightningcss@1.24.1)))(svelte@4.2.17)(vite@6.0.0-beta.2(@types/node@18.19.31)(lightningcss@1.24.1))
-=======
-  '@sveltejs/vite-plugin-svelte-inspector@2.1.0(@sveltejs/vite-plugin-svelte@3.1.0(svelte@4.2.17)(vite@5.3.3(@types/node@18.19.50)(lightningcss@1.24.1)))(svelte@4.2.17)(vite@5.3.3(@types/node@18.19.50)(lightningcss@1.24.1))':
-    dependencies:
-      '@sveltejs/vite-plugin-svelte': 3.1.0(svelte@4.2.17)(vite@5.3.3(@types/node@18.19.50)(lightningcss@1.24.1))
-      debug: 4.3.5
-      svelte: 4.2.17
-      vite: 5.3.3(@types/node@18.19.50)(lightningcss@1.24.1)
-    transitivePeerDependencies:
-      - supports-color
-
-  '@sveltejs/vite-plugin-svelte@3.1.0(svelte@4.2.17)(vite@5.3.3(@types/node@18.19.50)(lightningcss@1.24.1))':
-    dependencies:
-      '@sveltejs/vite-plugin-svelte-inspector': 2.1.0(@sveltejs/vite-plugin-svelte@3.1.0(svelte@4.2.17)(vite@5.3.3(@types/node@18.19.50)(lightningcss@1.24.1)))(svelte@4.2.17)(vite@5.3.3(@types/node@18.19.50)(lightningcss@1.24.1))
->>>>>>> main
+      '@sveltejs/vite-plugin-svelte-inspector': 2.1.0(@sveltejs/vite-plugin-svelte@3.1.0(svelte@4.2.17)(vite@6.0.0-beta.2(@types/node@18.19.50)(lightningcss@1.24.1)))(svelte@4.2.17)(vite@6.0.0-beta.2(@types/node@18.19.50)(lightningcss@1.24.1))
       debug: 4.3.5
       deepmerge: 4.3.1
       kleur: 4.1.5
       magic-string: 0.30.10
       svelte: 4.2.17
       svelte-hmr: 0.16.0(svelte@4.2.17)
-<<<<<<< HEAD
-      vite: 6.0.0-beta.2(@types/node@18.19.31)(lightningcss@1.24.1)
-      vitefu: 0.2.5(vite@6.0.0-beta.2(@types/node@18.19.31)(lightningcss@1.24.1))
-=======
-      vite: 5.3.3(@types/node@18.19.50)(lightningcss@1.24.1)
-      vitefu: 0.2.5(vite@5.3.3(@types/node@18.19.50)(lightningcss@1.24.1))
->>>>>>> main
+      vite: 6.0.0-beta.2(@types/node@18.19.50)(lightningcss@1.24.1)
+      vitefu: 0.2.5(vite@6.0.0-beta.2(@types/node@18.19.50)(lightningcss@1.24.1))
     transitivePeerDependencies:
       - supports-color
 
@@ -6296,6 +5818,8 @@ snapshots:
 
   cookie@0.5.0: {}
 
+  cookie@0.6.0: {}
+
   cookie@0.7.0: {}
 
   cross-env@7.0.3:
@@ -6518,11 +6042,7 @@ snapshots:
       enhanced-resolve: 5.17.1
       eslint: 9.6.0
       eslint-plugin-es-x: 7.8.0(eslint@9.6.0)
-<<<<<<< HEAD
-      get-tsconfig: 4.7.6
-=======
       get-tsconfig: 4.8.1
->>>>>>> main
       globals: 15.9.0
       ignore: 5.3.2
       minimatch: 9.0.5
@@ -6536,15 +6056,9 @@ snapshots:
       eslint-compat-utils: 0.5.1(eslint@9.6.0)
       esutils: 2.0.3
       known-css-properties: 0.34.0
-<<<<<<< HEAD
-      postcss: 8.4.41
-      postcss-load-config: 3.1.4(postcss@8.4.41)
-      postcss-safe-parser: 6.0.0(postcss@8.4.41)
-=======
       postcss: 8.4.47
       postcss-load-config: 3.1.4(postcss@8.4.47)
       postcss-safe-parser: 6.0.0(postcss@8.4.47)
->>>>>>> main
       postcss-selector-parser: 6.1.2
       semver: 7.6.3
       svelte-eslint-parser: 0.39.2(svelte@4.2.17)
@@ -6771,11 +6285,7 @@ snapshots:
 
   get-stream@8.0.1: {}
 
-<<<<<<< HEAD
-  get-tsconfig@4.7.6:
-=======
   get-tsconfig@4.8.1:
->>>>>>> main
     dependencies:
       resolve-pkg-maps: 1.0.0
 
@@ -7312,35 +6822,11 @@ snapshots:
       '@polka/url': 1.0.0-next.28
       trouter: 4.0.0
 
-<<<<<<< HEAD
-  postcss-load-config@3.1.4(postcss@8.4.41):
-=======
-  postcss-load-config@3.1.4(postcss@8.4.47):
->>>>>>> main
-    dependencies:
-      lilconfig: 2.1.0
-      yaml: 1.10.2
-    optionalDependencies:
-<<<<<<< HEAD
-      postcss: 8.4.41
-
   postcss-load-config@3.1.4(postcss@8.4.47):
     dependencies:
       lilconfig: 2.1.0
       yaml: 1.10.2
     optionalDependencies:
-      postcss: 8.4.47
-    optional: true
-
-  postcss-safe-parser@6.0.0(postcss@8.4.41):
-    dependencies:
-      postcss: 8.4.41
-
-  postcss-scss@4.0.9(postcss@8.4.41):
-    dependencies:
-      postcss: 8.4.41
-
-=======
       postcss: 8.4.47
 
   postcss-safe-parser@6.0.0(postcss@8.4.47):
@@ -7351,7 +6837,6 @@ snapshots:
     dependencies:
       postcss: 8.4.47
 
->>>>>>> main
   postcss-selector-parser@6.1.2:
     dependencies:
       cssesc: 3.0.0
@@ -7363,23 +6848,7 @@ snapshots:
       picocolors: 1.0.1
       source-map-js: 1.2.0
 
-<<<<<<< HEAD
-  postcss@8.4.41:
-    dependencies:
-      nanoid: 3.3.7
-      picocolors: 1.0.1
-      source-map-js: 1.2.0
-
   postcss@8.4.47:
-    dependencies:
-      nanoid: 3.3.7
-      picocolors: 1.1.0
-      source-map-js: 1.2.1
-
-  preferred-pm@3.1.3:
-=======
-  postcss@8.4.47:
->>>>>>> main
     dependencies:
       nanoid: 3.3.7
       picocolors: 1.1.0
@@ -7718,11 +7187,7 @@ snapshots:
 
   supports-preserve-symlinks-flag@1.0.0: {}
 
-<<<<<<< HEAD
-  svelte-check@3.6.9(postcss-load-config@3.1.4(postcss@8.4.47))(postcss@8.4.47)(svelte@4.2.17):
-=======
   svelte-check@4.0.1(svelte@4.2.17)(typescript@5.4.5):
->>>>>>> main
     dependencies:
       '@jridgewell/trace-mapping': 0.3.25
       chokidar: 3.6.0
@@ -7730,10 +7195,6 @@ snapshots:
       picocolors: 1.0.1
       sade: 1.8.1
       svelte: 4.2.17
-<<<<<<< HEAD
-      svelte-preprocess: 5.1.3(postcss-load-config@3.1.4(postcss@8.4.47))(postcss@8.4.47)(svelte@4.2.17)(typescript@5.4.5)
-=======
->>>>>>> main
       typescript: 5.4.5
     transitivePeerDependencies:
       - picomatch
@@ -7743,13 +7204,8 @@ snapshots:
       eslint-scope: 7.2.2
       eslint-visitor-keys: 3.4.3
       espree: 9.6.1
-<<<<<<< HEAD
-      postcss: 8.4.41
-      postcss-scss: 4.0.9(postcss@8.4.41)
-=======
       postcss: 8.4.47
       postcss-scss: 4.0.9(postcss@8.4.47)
->>>>>>> main
     optionalDependencies:
       svelte: 4.2.17
 
@@ -7765,22 +7221,6 @@ snapshots:
     dependencies:
       svelte: 4.2.17
 
-<<<<<<< HEAD
-  svelte-preprocess@5.1.3(postcss-load-config@3.1.4(postcss@8.4.47))(postcss@8.4.47)(svelte@4.2.17)(typescript@5.4.5):
-    dependencies:
-      '@types/pug': 2.0.10
-      detect-indent: 6.1.0
-      magic-string: 0.30.10
-      sorcery: 0.11.0
-      strip-indent: 3.0.0
-      svelte: 4.2.17
-    optionalDependencies:
-      postcss: 8.4.47
-      postcss-load-config: 3.1.4(postcss@8.4.47)
-      typescript: 5.4.5
-
-=======
->>>>>>> main
   svelte-preprocess@6.0.0(postcss-load-config@3.1.4(postcss@8.4.47))(postcss@8.4.47)(svelte@4.2.17)(typescript@5.4.5):
     dependencies:
       detect-indent: 6.1.0
@@ -7977,25 +7417,19 @@ snapshots:
       fsevents: 2.3.3
       lightningcss: 1.24.1
 
-<<<<<<< HEAD
-  vite@6.0.0-beta.2(@types/node@18.19.31)(lightningcss@1.24.1):
+  vite@6.0.0-beta.2(@types/node@18.19.50)(lightningcss@1.24.1):
     dependencies:
       esbuild: 0.24.0
       postcss: 8.4.47
       rollup: 4.24.0
     optionalDependencies:
-      '@types/node': 18.19.31
+      '@types/node': 18.19.50
       fsevents: 2.3.3
       lightningcss: 1.24.1
 
-  vitefu@0.2.5(vite@6.0.0-beta.2(@types/node@18.19.31)(lightningcss@1.24.1)):
+  vitefu@0.2.5(vite@6.0.0-beta.2(@types/node@18.19.50)(lightningcss@1.24.1)):
     optionalDependencies:
-      vite: 6.0.0-beta.2(@types/node@18.19.31)(lightningcss@1.24.1)
-=======
-  vitefu@0.2.5(vite@5.3.3(@types/node@18.19.50)(lightningcss@1.24.1)):
-    optionalDependencies:
-      vite: 5.3.3(@types/node@18.19.50)(lightningcss@1.24.1)
->>>>>>> main
+      vite: 6.0.0-beta.2(@types/node@18.19.50)(lightningcss@1.24.1)
 
   vitest@2.0.1(@types/node@18.19.50)(lightningcss@1.24.1):
     dependencies:
